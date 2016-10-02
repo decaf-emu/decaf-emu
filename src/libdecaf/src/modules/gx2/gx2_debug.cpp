@@ -137,7 +137,7 @@ debugDumpTexture(const GX2Texture *texture)
    }
 
    // Write GTX file
-   gfd::File gtx;
+   gfd::Writer gtx;
    gtx.add(texture);
    gtx.write("dump/" + filename + ".gtx");
 }
@@ -160,7 +160,7 @@ debugDumpShader(const std::string &filename, const std::string &info, ShaderType
    debugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
    // Write GSH file
-   gfd::File gsh;
+   gfd::Writer gsh;
    gsh.add(shader);
    gsh.write("dump/" + filename + ".gsh");
 

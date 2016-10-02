@@ -66,16 +66,31 @@ struct BlockHeader
    be_val<uint32_t> index = 0;
 };
 
-#pragma pack(pop)
-
-struct Block
+struct RelocationHeader
 {
-   BlockHeader header;
-   std::vector<uint8_t> data;
+   static const uint32_t Magic = 0x7D424C4B;
+   be_val<uint32_t> magic = Magic;
+   be_val<uint32_t> headerSize = sizeof(RelocationHeader);
+   be_val<uint32_t> unk1;
+   be_val<uint32_t> unk2;
+   be_val<uint32_t> unk3;
+   be_val<uint32_t> textSize;
+   be_val<uint32_t> textOffset;
+   be_val<uint32_t> unk4;
+   be_val<uint32_t> patchCount;
+   be_val<uint32_t> patchOffset;
 };
 
-struct File
+#pragma pack(pop)
+
+struct Writer
 {
+   struct Block
+   {
+      BlockHeader header;
+      std::vector<uint8_t> data;
+   };
+
    FileHeader header;
    std::vector<Block> blocks;
 
@@ -100,6 +115,21 @@ struct File
    void add(const gx2::GX2VertexShader *shader);
    void add(const gx2::GX2PixelShader *shader);
    void add(const gx2::GX2GeometryShader *shader);
+};
+
+struct Reader
+{
+   struct Block
+   {
+      BlockHeader *header;
+      uint8_t *data;
+   };
+
+   FileHeader *header;
+   std::vector<Block> blocks;
+
+   bool parse(void *data, uint32_t size);
+   void relocateBlock(Block &block);
 };
 
 } // namespace gfd

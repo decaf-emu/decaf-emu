@@ -15,59 +15,107 @@ const uint32_t
 BlockHeader::Magic;
 
 /*
-Version 0:
+For now, let's only support Version1 because it matches our GX2 structs.
+
+BlockHeader::Version1 = 0:
 GX2VertexShader->regs is 0xF0 bytes
 GX2PixelShader is 0xD8 bytes (missing the UNK 4x4 at end)
 
-Version 1:
+BlockHeader::Version1 = 1:
 GX2VertexShader->regs is 0xD0 bytes
 GX2PixelShader is 0xE8 bytes
 */
 
 bool
-File::read(const std::string &filename)
+Reader::parse(void *data, uint32_t size)
 {
-   BinaryFile file;
+   auto data8 = reinterpret_cast<uint8_t *>(data);
 
-   if (!file.open(filename)) {
+   if (size < sizeof(FileHeader)) {
       return false;
    }
 
-   file.read(header);
+   header = reinterpret_cast<FileHeader *>(data8);
 
-   if (header.magic != FileHeader::Magic) {
+   if (header->magic != FileHeader::Magic) {
       return false;
    }
 
-   if (header.headerSize != sizeof(FileHeader)) {
+   if (header->headerSize != sizeof(FileHeader)) {
       return false;
    }
 
-   while (!file.eof()) {
-      Block block;
-      file.read(block.header);
+   decaf_check(header->version1 == 7);
 
-      if (block.header.magic != BlockHeader::Magic) {
+   for (auto pos = sizeof(FileHeader); pos + sizeof(BlockHeader) < size; ) {
+      auto blockHeader = reinterpret_cast<BlockHeader *>(data8 + pos);
+
+      if (blockHeader->magic != BlockHeader::Magic) {
          return false;
       }
 
-      if (block.header.headerSize != sizeof(BlockHeader)) {
+      if (blockHeader->headerSize != sizeof(BlockHeader)) {
          return false;
       }
 
-      if (block.header.dataSize) {
-         file.read(block.data, block.header.dataSize);
+      auto blockData = data8 + pos + sizeof(BlockHeader);
+
+      if (blockHeader->dataSize == 0) {
+         blockData = nullptr;
       }
 
-      blocks.emplace_back(block);
+      decaf_check(blockHeader->version1 == 1);
+
+      blocks.push_back({ blockHeader, blockData });
+
+      if (blockHeader->type == BlockType::VertexShaderHeader
+       || blockHeader->type == BlockType::PixelShaderHeader
+       || blockHeader->type == BlockType::GeometryShaderHeader
+       || blockHeader->type == BlockType::TextureHeader
+       || blockHeader->type == BlockType::FetchShaderHeader) {
+         relocateBlock(blocks.back());
+      }
+
+      pos += blockHeader->headerSize + blockHeader->dataSize;
    }
 
-   // TODO: Repair pointers inside blocks
    return true;
 }
 
+void
+Reader::relocateBlock(Block &block)
+{
+   if (block.header->dataSize < sizeof(RelocationHeader)) {
+      return;
+   }
+
+   auto headerOffset = block.header->dataSize - sizeof(RelocationHeader);
+   auto header = reinterpret_cast<RelocationHeader *>(block.data + headerOffset);
+
+   if (header->magic != RelocationHeader::Magic) {
+      return;
+   }
+
+   auto patchOffset = header->patchOffset & 0x000FFFFF;
+   auto patches = reinterpret_cast<be_val<uint32_t> *>(block.data + patchOffset);
+
+   for (auto i = 0u; i < header->patchCount; ++i) {
+      auto location = patches[i] & 0x000FFFFF;
+
+      if (!location) {
+         continue;
+      }
+
+      auto data = reinterpret_cast<be_val<uint32_t> *>(block.data + location);
+      auto value = *data & 0x000FFFFF;
+
+      assert(value < block.header->dataSize);
+      *data = mem::untranslate(block.data + value);
+   }
+}
+
 bool
-File::write(const std::string &filename)
+Writer::write(const std::string &filename)
 {
    auto file = std::ofstream { filename, std::ofstream::out | std::ofstream::binary };
 
@@ -81,23 +129,23 @@ File::write(const std::string &filename)
    // Write blocks
    for (auto &block : blocks) {
       block.header.dataSize = block.data.size();
-      file.write(reinterpret_cast<char*>(&block.header), sizeof(gfd::BlockHeader));
+      file.write(reinterpret_cast<char*>(&block.header), sizeof(BlockHeader));
       file.write(reinterpret_cast<char*>(block.data.data()), block.data.size());
    }
 
    // Write EOF block
-   auto eof = gfd::BlockHeader {};
-   eof.type = gfd::BlockType::EndOfFile;
-   file.write(reinterpret_cast<char*>(&eof), sizeof(gfd::BlockHeader));
+   auto eof = BlockHeader {};
+   eof.type = BlockType::EndOfFile;
+   file.write(reinterpret_cast<char*>(&eof), sizeof(BlockHeader));
    return true;
 }
 
-uint32_t File::getUniqueID()
+uint32_t Writer::getUniqueID()
 {
    return indices.id++;
 }
 
-uint32_t File::getIndex(BlockType::Type type)
+uint32_t Writer::getIndex(BlockType::Type type)
 {
    switch (type) {
    case BlockType::FetchShaderHeader:
@@ -116,10 +164,10 @@ uint32_t File::getIndex(BlockType::Type type)
 }
 
 void
-File::add(const gx2::GX2Texture *texture)
+Writer::add(const gx2::GX2Texture *texture)
 {
    // Add texture header block
-   gfd::Block headerBlock;
+   Block headerBlock;
    headerBlock.header.type = BlockType::TextureHeader;
    headerBlock.header.id = getUniqueID();
    headerBlock.header.index = getIndex(headerBlock.header.type);
@@ -129,8 +177,8 @@ File::add(const gx2::GX2Texture *texture)
 
    // Add texture image block
    if (texture->surface.image && texture->surface.imageSize) {
-      gfd::Block image;
-      image.header.type = gfd::BlockType::TextureImage;
+      Block image;
+      image.header.type = BlockType::TextureImage;
       image.header.id = getUniqueID();
       image.header.index = headerBlock.header.index;
       image.data.resize(texture->surface.imageSize);
@@ -140,8 +188,8 @@ File::add(const gx2::GX2Texture *texture)
 
    // Add texture mipmap block
    if (texture->surface.mipmaps && texture->surface.mipmapSize) {
-      gfd::Block image;
-      image.header.type = gfd::BlockType::TextureMipmap;
+      Block image;
+      image.header.type = BlockType::TextureMipmap;
       image.header.id = getUniqueID();
       image.header.index = headerBlock.header.index;
       image.data.resize(texture->surface.mipmapSize);
@@ -151,11 +199,11 @@ File::add(const gx2::GX2Texture *texture)
 }
 
 void
-File::add(const gx2::GX2FetchShader *shader)
+Writer::add(const gx2::GX2FetchShader *shader)
 {
    // Add shader header block
-   gfd::Block headerBlock;
-   headerBlock.header.type = gfd::BlockType::FetchShaderHeader;
+   Block headerBlock;
+   headerBlock.header.type = BlockType::FetchShaderHeader;
    headerBlock.header.id = getUniqueID();
    headerBlock.header.index = getIndex(headerBlock.header.type);
    headerBlock.data.resize(sizeof(gx2::GX2FetchShader));
@@ -164,8 +212,8 @@ File::add(const gx2::GX2FetchShader *shader)
 
    // Add shader program block
    if (shader->data && shader->size) {
-      gfd::Block program;
-      program.header.type = gfd::BlockType::FetchShaderProgram;
+      Block program;
+      program.header.type = BlockType::FetchShaderProgram;
       program.header.id = getUniqueID();
       program.header.index = headerBlock.header.index;
       program.data.resize(shader->size);
@@ -175,11 +223,11 @@ File::add(const gx2::GX2FetchShader *shader)
 }
 
 void
-File::add(const gx2::GX2VertexShader *shader)
+Writer::add(const gx2::GX2VertexShader *shader)
 {
    // Add shader header block
-   gfd::Block headerBlock;
-   headerBlock.header.type = gfd::BlockType::VertexShaderHeader;
+   Block headerBlock;
+   headerBlock.header.type = BlockType::VertexShaderHeader;
    headerBlock.header.id = getUniqueID();
    headerBlock.header.index = getIndex(headerBlock.header.type);
    headerBlock.data.resize(sizeof(gx2::GX2VertexShader));
@@ -188,8 +236,8 @@ File::add(const gx2::GX2VertexShader *shader)
 
    // Add shader program block
    if (shader->data && shader->size) {
-      gfd::Block program;
-      program.header.type = gfd::BlockType::VertexShaderProgram;
+      Block program;
+      program.header.type = BlockType::VertexShaderProgram;
       program.header.id = getUniqueID();
       program.header.index = headerBlock.header.index;
       program.data.resize(shader->size);
@@ -199,11 +247,11 @@ File::add(const gx2::GX2VertexShader *shader)
 }
 
 void
-File::add(const gx2::GX2PixelShader *shader)
+Writer::add(const gx2::GX2PixelShader *shader)
 {
    // Add shader header block
-   gfd::Block headerBlock;
-   headerBlock.header.type = gfd::BlockType::PixelShaderHeader;
+   Block headerBlock;
+   headerBlock.header.type = BlockType::PixelShaderHeader;
    headerBlock.header.id = getUniqueID();
    headerBlock.header.index = getIndex(headerBlock.header.type);
    headerBlock.data.resize(sizeof(gx2::GX2PixelShader));
@@ -212,8 +260,8 @@ File::add(const gx2::GX2PixelShader *shader)
 
    // Add shader program block
    if (shader->data && shader->size) {
-      gfd::Block program;
-      program.header.type = gfd::BlockType::PixelShaderProgram;
+      Block program;
+      program.header.type = BlockType::PixelShaderProgram;
       program.header.id = getUniqueID();
       program.header.index = headerBlock.header.index;
       program.data.resize(shader->size);
@@ -223,30 +271,27 @@ File::add(const gx2::GX2PixelShader *shader)
 }
 
 void
-File::add(const gx2::GX2GeometryShader *shader)
+Writer::add(const gx2::GX2GeometryShader *shader)
 {
-   // TODO: Enable when we have defined GX2GeometryShader
-#if 0
    // Add shader header block
-   gfd::Block headerBlock;
-   headerBlock.header.type = gfd::BlockType::GeometryShaderHeader;
+   Block headerBlock;
+   headerBlock.header.type = BlockType::GeometryShaderHeader;
    headerBlock.header.id = getUniqueID();
    headerBlock.header.index = getIndex(headerBlock.header.type);
-   headerBlock.data.resize(sizeof(GX2GeometryShader));
-   std::memcpy(headerBlock.data.data(), shader, sizeof(GX2GeometryShader));
+   headerBlock.data.resize(sizeof(gx2::GX2GeometryShader));
+   std::memcpy(headerBlock.data.data(), shader, sizeof(gx2::GX2GeometryShader));
    blocks.emplace_back(std::move(headerBlock));
 
    // Add shader program block
    if (shader->data && shader->size) {
-      gfd::Block program;
-      program.header.type = gfd::BlockType::PixelShaderProgram;
+      Block program;
+      program.header.type = BlockType::GeometryShaderProgram;
       program.header.id = getUniqueID();
       program.header.index = headerBlock.header.index;
       program.data.resize(shader->size);
       std::memcpy(program.data.data(), shader->data.get(), shader->size);
       blocks.emplace_back(std::move(program));
    }
-#endif
 }
 
 } // namespace gsh
