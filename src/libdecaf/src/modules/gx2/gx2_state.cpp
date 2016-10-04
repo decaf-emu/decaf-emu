@@ -49,6 +49,8 @@ GX2Init(be_val<uint32_t> *attributes)
       case GX2InitAttrib::ArgV:
          argv = make_virtual_ptr<char *>(value);
          break;
+      default:
+         gLog->warn("Unknown GX2InitAttrib {} = {}", id, value);
       }
    }
 
