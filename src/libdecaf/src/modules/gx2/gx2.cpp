@@ -299,8 +299,6 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2Init);
    RegisterKernelFunction(GX2Shutdown);
    RegisterKernelFunction(GX2Flush);
-   RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
-   RegisterKernelFunction(GX2GetRetiredTimeStamp);
 
    // Surface
    RegisterKernelFunction(GX2CalcSurfaceSizeAndAlignment);
