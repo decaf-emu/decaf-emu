@@ -397,7 +397,8 @@ processKernelTraceFilters(const std::string &module,
       for (auto &filter : filters) {
          if (filter.wildcard) {
             // Check this function name matches the filter partially
-            if (!filter.name.empty() && func->name.compare(0, filter.name.size(), filter.name.data(), filter.name.size()) != 0) {
+            if (!filter.name.empty()
+             && func->name.compare(0, filter.name.size(), filter.name.data(), filter.name.size()) != 0) {
                continue;
             }
          } else {
@@ -424,10 +425,12 @@ loadHleModule(const std::string &moduleName,
    std::vector<kernel::HleFunction *> funcSymbols;
    std::vector<kernel::HleData *> dataSymbols;
    uint32_t dataSize = 0, codeSize = 0;
-   auto &symbols = module->getSymbols();
+   auto &symbolMap = module->getSymbolMap();
 
-   // Get all function and data symbols exported from module
-   for (auto &symbol : symbols) {
+   // Get all function and data symbols
+   for (auto &pair : symbolMap) {
+      auto symbol = pair.second;
+
       if (symbol->type == kernel::HleSymbol::Function) {
          auto funcSymbol = static_cast<kernel::HleFunction *>(symbol);
          codeSize += 8;
@@ -476,7 +479,7 @@ loadHleModule(const std::string &moduleName,
          *(thunk + 1) = byte_swap(bclr.value);
 
          // Add to symbols list
-         loadedMod->symbols.emplace(func->name, Symbol{ addr, SymbolType::Function });
+         loadedMod->symbols.emplace(func->name, Symbol { addr, SymbolType::Function });
 
          // Save the PPC ptr for internal lookups
          func->ppcPtr = thunk;
@@ -496,20 +499,20 @@ loadHleModule(const std::string &moduleName,
       loadedMod->sections.emplace_back(LoadedSection { ".data", LoadedSectionType::Data, start, end });
 
       for (auto &data : dataSymbols) {
-         // Allocate the same for this export
+         // Allocate some space for the data
          auto thunk = dataRegion;
          auto addr = mem::untranslate(thunk);
          dataRegion += data->size;
 
-         // Add to exports list
-         loadedMod->symbols.emplace(data->name, Symbol{ addr, SymbolType::Data });
+         // Add to symbol list
+         loadedMod->symbols.emplace(data->name, Symbol { addr, SymbolType::Data });
 
          // Save the PPC ptr for internal lookups
          data->ppcPtr = thunk;
 
          // Map host memory pointer to PPC region
          if (data->hostPtr) {
-            for (uint32_t off = 0, i = 0; off < data->size; off += data->itemSize, i++) {
+            for (auto off = 0u, i = 0u; off < data->size; off += data->itemSize, i++) {
                reinterpret_cast<void **>(data->hostPtr)[i] = thunk + off;
             }
          }
@@ -517,10 +520,12 @@ loadHleModule(const std::string &moduleName,
    }
 
    // Export everything which is an export
-   auto &exports = module->getExports();
+   for (auto &pair : symbolMap) {
+      auto symbol = pair.second;
 
-   for (auto &exp : exports) {
-      loadedMod->exports.emplace(exp->name, mem::untranslate(exp->ppcPtr));
+      if (symbol->exported) {
+         loadedMod->exports.emplace(symbol->name, mem::untranslate(symbol->ppcPtr));
+      }
    }
 
    module->initialise();

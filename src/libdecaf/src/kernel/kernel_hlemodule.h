@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <map>
+#include <unordered_map>
 #include "common/log.h"
 #include "kernel_hlesymbol.h"
 #include "kernel_hlefunction.h"
@@ -35,7 +35,7 @@
 namespace kernel
 {
 
-typedef std::vector<HleSymbol*> HleSymbolList;
+using HleSymbolMap = std::unordered_map<std::string, HleSymbol *>;
 
 class HleModule
 {
@@ -43,9 +43,8 @@ public:
    virtual ~HleModule() = default;
 
    virtual void initialise() = 0;
-   virtual const HleSymbolList &getSymbols() const = 0;
-   virtual const HleSymbolList &getExports() const = 0;
-   virtual virtual_ptr<void> findExportAddress(const char *name) const = 0;
+   virtual const HleSymbolMap &getSymbolMap() const = 0;
+   virtual virtual_ptr<void> findExportAddress(const std::string &name) const = 0;
 };
 
 template<typename ModuleType>
@@ -54,121 +53,116 @@ class HleModuleImpl : public HleModule
 public:
    virtual ~HleModuleImpl() override = default;
 
-   virtual const HleSymbolList &
-   getSymbols() const override
+   virtual const HleSymbolMap &
+   getSymbolMap() const override
    {
-      return getStaticSymbolList();
+      return getStaticSymbolMap();
    }
 
-   virtual const HleSymbolList &
-   getExports() const override
-   {
-      return HleModuleImpl::getStaticExportList();
-   }
-
-   // TODO: This should be removed in place of hostPtr stuff
    virtual virtual_ptr<void>
-   findExportAddress(const char *name) const override
+   findExportAddress(const std::string &name) const override
    {
-      for (auto &i : getExports()) {
-         if (i->name.compare(name) == 0) {
-            return i->ppcPtr;
-         }
+      auto &symbols = getSymbolMap();
+      auto itr = symbols.find(name);
+
+      if (itr == symbols.end()) {
+         return nullptr;
       }
-      return nullptr;
+
+      return itr->second->ppcPtr;
    }
 
 protected:
    template<typename ReturnType, typename... Args>
-   static void RegisterKernelFunctionName(const std::string &name, ReturnType(*fn)(Args...))
+   static void RegisterKernelFunctionName(const char *name, ReturnType(*fn)(Args...))
    {
       registerExportedSymbol(name, kernel::makeFunction(fn));
    }
 
    template<typename ReturnType, typename Class, typename... Args>
-   static void RegisterKernelFunctionName(const std::string &name, ReturnType(Class::*fn)(Args...))
+   static void RegisterKernelFunctionName(const char *name, ReturnType(Class::*fn)(Args...))
    {
       registerExportedSymbol(name, kernel::makeFunction(fn));
    }
 
    template <typename ...Args>
-   static void _RegisterKernelFunctionConstructor(const std::string &name)
+   static void _RegisterKernelFunctionConstructor(const char *name)
    {
       registerExportedSymbol(name, kernel::makeConstructor<Args...>());
    }
 
    template <typename Type>
-   static void _RegisterKernelFunctionDestructor(const std::string &name)
+   static void _RegisterKernelFunctionDestructor(const char *name)
    {
       registerExportedSymbol(name, kernel::makeDestructor<Type>());
    }
 
    template <typename Type>
-   static void RegisterKernelDataName(const std::string &name, Type &data)
+   static void RegisterKernelDataName(const char *name, Type &data)
    {
       registerExportedSymbol(name, kernel::makeData(&data));
    }
 
    template <typename Type, size_t N>
-   static void RegisterKernelDataName(const std::string &name, std::array<Type*, N> &data)
+   static void RegisterKernelDataName(const char *name, std::array<Type*, N> &data)
    {
       registerExportedSymbol(name, kernel::makeData(&data[0], N));
    }
 
    template<typename HostType, typename ReturnType, typename... Args>
-   static void RegisterInternalFunctionName(const std::string &name, ReturnType(*fn)(Args...))
+   static void RegisterInternalFunctionName(const char *name, ReturnType(*fn)(Args...))
    {
       static_assert(std::is_same<wfunc_ptr<ReturnType, Args...>, HostType>::value, "Internal function declaration and variable types do not match.");
       registerSymbol(name, kernel::makeFunction(fn));
    }
 
    template<typename HostType, typename ReturnType, typename... Args>
-   static void RegisterInternalFunctionName(const std::string &name, ReturnType(*fn)(Args...), HostType &hostPtr)
+   static void RegisterInternalFunctionName(const char *name, ReturnType(*fn)(Args...), HostType &hostPtr)
    {
       static_assert(std::is_same<wfunc_ptr<ReturnType, Args...>, HostType>::value, "Internal function declaration and variable types do not match.");
       registerSymbol(name, kernel::makeFunction(fn, &hostPtr));
    }
 
    template <typename Type>
-   static void RegisterInternalDataName(const std::string &name, Type &data)
+   static void RegisterInternalDataName(const char *name, Type &data)
    {
       registerSymbol(name, kernel::makeData(&data));
    }
 
    template <typename Type, size_t N>
-   static void RegisterInternalDataName(const std::string &name, std::array<Type *, N> &data)
+   static void RegisterInternalDataName(const char *name, std::array<Type *, N> &data)
    {
       registerSymbol(name, kernel::makeData(&data[0], N));
    }
 
 private:
-   static HleSymbolList &
-   getStaticExportList()
+   static HleSymbolMap &
+   getStaticSymbolMap()
    {
-      static HleSymbolList sExport;
-      return sExport;
-   }
-
-   static HleSymbolList &
-   getStaticSymbolList()
-   {
-      static HleSymbolList sSymbol;
+      static HleSymbolMap sSymbol;
       return sSymbol;
    }
 
    static void
-   registerExportedSymbol(const std::string& name, HleSymbol *exp)
+   registerExportedSymbol(const char *name, HleSymbol *exp)
    {
+      auto &symbols = getStaticSymbolMap();
+      decaf_check(symbols.find(name) == symbols.end());
+
       exp->name = name;
-      getStaticExportList().push_back(exp);
-      getStaticSymbolList().push_back(exp);
+      exp->exported = true;
+      symbols.emplace(exp->name, exp);
    }
 
    static void
-   registerSymbol(const std::string& name, HleSymbol *exp)
+   registerSymbol(const char *name, HleSymbol *exp)
    {
+      auto &symbols = getStaticSymbolMap();
+      decaf_check(symbols.find(name) == symbols.end());
+
       exp->name = name;
-      getStaticSymbolList().push_back(exp);
+      exp->exported = false;
+      symbols.emplace(exp->name, exp);
    }
 };
 

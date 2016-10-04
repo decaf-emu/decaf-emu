@@ -30,10 +30,7 @@ namespace kernel
 {
 
 static std::map<std::string, HleModule*>
-gHleModules;
-
-static std::map<uint32_t, HleFunction*>
-gHleFuncs;
+sHleModules;
 
 static void
 kcstub(cpu::Core *state, void *data)
@@ -71,11 +68,11 @@ void
 registerHleFunc(HleFunction *func)
 {
    func->syscallID = cpu::registerKernelCall({ kcstub, func });
-   gHleFuncs[func->syscallID] = func;
 }
 
 uint32_t
-registerUnimplementedHleFunc(const std::string &module, const std::string &name)
+registerUnimplementedHleFunc(const std::string &module,
+                             const std::string &name)
 {
    auto ppcFn = new functions::HleFunctionImpl<void>();
    ppcFn->valid = false;
@@ -86,41 +83,44 @@ registerUnimplementedHleFunc(const std::string &module, const std::string &name)
    return ppcFn->syscallID;
 }
 
-HleModule *
-findHleModule(const std::string &name)
-{
-   auto itr = gHleModules.find(name);
-
-   if (itr == gHleModules.end()) {
-      return nullptr;
-   } else {
-      return itr->second;
-   }
-}
-
 void
-registerHleModule(const std::string &name, HleModule *module)
+registerHleModule(const std::string &name,
+                  HleModule *module)
 {
-   // TODO: Handle if there is a collision
-   gHleModules.emplace(name, module);
+   auto &symbolMap = module->getSymbolMap();
 
-   auto symbols = module->getSymbols();
+   // Register module
+   decaf_check(sHleModules.find(name) == sHleModules.end());
+   sHleModules.emplace(name, module);
 
-   for (auto &sym : symbols) {
-      if (sym->type == HleSymbol::Function) {
-         registerHleFunc(reinterpret_cast<HleFunction*>(sym));
+   // Register every function symbol
+   for (auto &pair : symbolMap) {
+      auto symbol = pair.second;
+
+      if (symbol->type == HleSymbol::Function) {
+         registerHleFunc(reinterpret_cast<HleFunction *>(symbol));
       }
    }
 }
 
 void
-registerHleModuleAlias(const std::string &module, const std::string &alias)
+registerHleModuleAlias(const std::string &module,
+                       const std::string &alias)
 {
-   auto itr = gHleModules.find(module);
+   auto itr = sHleModules.find(module);
+   decaf_check(itr != sHleModules.end());
+   sHleModules.emplace(alias, itr->second);
+}
 
-   // TODO: Error if the module is missing!
-   if (itr != gHleModules.end()) {
-      gHleModules.emplace(alias, itr->second);
+HleModule *
+findHleModule(const std::string &name)
+{
+   auto itr = sHleModules.find(name);
+
+   if (itr == sHleModules.end()) {
+      return nullptr;
+   } else {
+      return itr->second;
    }
 }
 

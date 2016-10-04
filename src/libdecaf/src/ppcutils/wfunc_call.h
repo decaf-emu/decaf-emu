@@ -18,6 +18,7 @@ ReturnType wfunc_ptr<ReturnType, Args...>::operator()(Args... args)
 
    // Write LR to the previous backchain address
    auto backchain = mem::read<uint32_t>(origStackPtr);
+
    if (backchain) {
       // This might be the very first call on a core...
       mem::write(backchain + 4, core->lr);

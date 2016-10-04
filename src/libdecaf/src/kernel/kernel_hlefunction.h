@@ -117,7 +117,7 @@ struct HleDestructorFunctionImpl : HleFunction
 // Regular Function
 template<typename ReturnType, typename... Args>
 inline HleFunction *
-makeFunction(ReturnType(*fptr)(Args...), void* hostPtr = nullptr)
+makeFunction(ReturnType (*fptr)(Args...), void *hostPtr = nullptr)
 {
    auto func = new kernel::functions::HleFunctionImpl<ReturnType, Args...>();
    func->valid = true;
@@ -129,7 +129,7 @@ makeFunction(ReturnType(*fptr)(Args...), void* hostPtr = nullptr)
 // Member Function
 template<typename ReturnType, typename Class, typename... Args>
 inline HleFunction *
-makeFunction(ReturnType(Class::*fptr)(Args...), void* hostPtr = nullptr)
+makeFunction(ReturnType (Class::*fptr)(Args...), void *hostPtr = nullptr)
 {
    auto func = new kernel::functions::HleMemberFunctionImpl<ReturnType, Class, Args...>();
    func->valid = true;
