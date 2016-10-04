@@ -70,19 +70,13 @@ using SectionList = std::vector<elf::XSection>;
 using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
 static std::atomic<uint32_t>
-sLoaderLock{ 0 };
+sLoaderLock { 0 };
 
 static std::map<std::string, LoadedModule*>
-gLoadedModules;
+sLoadedModules;
 
 static std::map<ppcaddr_t, std::string, std::greater<ppcaddr_t>>
-gGlobalSymbolLookup;
-
-static std::map<std::string, ppcaddr_t>
-gUnimplementedFunctions;
-
-static std::map<std::string, int>
-gUnimplementedData;
+sGlobalSymbolLookup;
 
 static ppcaddr_t
 sSyscallAddress = 0;
@@ -146,7 +140,7 @@ unlockLoader()
 std::map<std::string, LoadedModule*>
 getLoadedModules()
 {
-   return gLoadedModules;
+   return sLoadedModules;
 }
 
 static LoadedModule *
@@ -281,36 +275,37 @@ getTrampAddress(LoadedModule *loadedMod,
 
 static ppcaddr_t
 generateUnimplementedDataThunk(const std::string &module,
-                               const std::string& name)
+                               const std::string &name)
 {
-   auto itr = gUnimplementedData.find(name);
+   static std::map<std::string, int> sUnimplementedData;
+   auto itr = sUnimplementedData.find(name);
 
-   if (itr != gUnimplementedData.end()) {
+   if (itr != sUnimplementedData.end()) {
       return itr->second | 0x800;
    }
 
-   auto id = gsl::narrow_cast<uint32_t>(gUnimplementedData.size());
+   auto id = gsl::narrow_cast<uint32_t>(sUnimplementedData.size());
    auto fakeAddr = 0xFFF00000 | (id << 12);
    decaf_check(id <= 0xFF);
 
    gLog->info("Unimplemented data symbol {}::{} at {:08x}", module, name, fakeAddr);
-
-   gUnimplementedData.emplace(name, fakeAddr);
+   sUnimplementedData.emplace(name, fakeAddr);
    return fakeAddr | 0x800;
 }
 
 
 static ppcaddr_t
 generateUnimplementedFunctionThunk(const std::string &module,
-                                   const std::string &func)
+                                   const std::string &name)
 {
-   auto itr = gUnimplementedFunctions.find(func);
+   static std::map<std::string, ppcaddr_t> sUnimplementedFunctions;
+   auto itr = sUnimplementedFunctions.find(name);
 
-   if (itr != gUnimplementedFunctions.end()) {
+   if (itr != sUnimplementedFunctions.end()) {
       return itr->second;
    }
 
-   auto id = kernel::registerUnimplementedHleFunc(module, func);
+   auto id = kernel::registerUnimplementedHleFunc(module, name);
    auto thunk = static_cast<uint32_t*>(coreinit::internal::sysAlloc(8, 4));
    auto addr = mem::untranslate(thunk);
 
@@ -324,8 +319,8 @@ generateUnimplementedFunctionThunk(const std::string &module,
    bclr.bi = 0;
    *(thunk + 1) = byte_swap(bclr.value);
 
-   gLog->info("Unimplemented function {}::{} at {:08x}", module, func, addr);
-   gUnimplementedFunctions.emplace(func, addr);
+   gLog->info("Unimplemented function {}::{} at {:08x}", module, name, addr);
+   sUnimplementedFunctions.emplace(name, addr);
    return addr;
 }
 
@@ -452,7 +447,7 @@ loadHleModule(const std::string &moduleName,
 
    // Create module
    auto loadedMod = new LoadedModule {};
-   gLoadedModules.emplace(moduleName, loadedMod);
+   sLoadedModules.emplace(moduleName, loadedMod);
    loadedMod->name = name;
    loadedMod->handle = coreinit::internal::sysAlloc<LoadedModuleHandleData>();
    loadedMod->handle->ptr = loadedMod;
@@ -928,7 +923,7 @@ loadRPL(const std::string &moduleName,
    auto in = BigEndianView{ data };
    auto loadedMod = new LoadedModule();
    loadedMod->name = name;
-   gLoadedModules.emplace(moduleName, loadedMod);
+   sLoadedModules.emplace(moduleName, loadedMod);
 
    gLog->debug("Loading module {}", moduleName);
 
@@ -1146,7 +1141,7 @@ loadRPL(const std::string &moduleName,
       //  include information about which symbol, and relatedly, display data
       //  symbol names in the debugger.
       if (i.second.type == SymbolType::Function) {
-         gGlobalSymbolLookup.emplace(i.second.address, fmt::format("{}:{}", loadedMod->name, i.first));
+         sGlobalSymbolLookup.emplace(i.second.address, fmt::format("{}:{}", loadedMod->name, i.first));
       }
    }
 
@@ -1182,9 +1177,9 @@ loadRPLNoLock(const std::string &name)
    normalizeModuleName(name, moduleName, fileName);
 
    // Check if we already have this module loaded
-   auto itr = gLoadedModules.find(moduleName);
+   auto itr = sLoadedModules.find(moduleName);
 
-   if (itr != gLoadedModules.end()) {
+   if (itr != sLoadedModules.end()) {
       return itr->second;
    }
 
@@ -1213,7 +1208,7 @@ loadRPLNoLock(const std::string &name)
 
    if (!module) {
       gLog->error("Failed to load module {}", fileName);
-      gLoadedModules.erase(moduleName);
+      sLoadedModules.erase(moduleName);
       return nullptr;
    } else {
       gLog->info("Loaded module {}", fileName);
@@ -1245,9 +1240,9 @@ findModule(const std::string& name)
    normalizeModuleName(name, moduleName, fileName);
 
    // Check if we already have this module loaded
-   auto itr = gLoadedModules.find(moduleName);
+   auto itr = sLoadedModules.find(moduleName);
 
-   if (itr == gLoadedModules.end()) {
+   if (itr == sLoadedModules.end()) {
       return nullptr;
    }
 
@@ -1257,7 +1252,7 @@ findModule(const std::string& name)
 LoadedSection *
 findSectionForAddress(ppcaddr_t address)
 {
-   for (auto &mod : gLoadedModules) {
+   for (auto &mod : sLoadedModules) {
       for (auto &sec : mod.second->sections) {
          if (address >= sec.start && address < sec.end) {
             return &sec;
@@ -1270,9 +1265,9 @@ findSectionForAddress(ppcaddr_t address)
 std::string *
 findSymbolNameForAddress(ppcaddr_t address)
 {
-   auto symIter = gGlobalSymbolLookup.find(address);
+   auto symIter = sGlobalSymbolLookup.find(address);
 
-   if (symIter == gGlobalSymbolLookup.end()) {
+   if (symIter == sGlobalSymbolLookup.end()) {
       return nullptr;
    }
 
@@ -1282,9 +1277,9 @@ findSymbolNameForAddress(ppcaddr_t address)
 std::string
 findNearestSymbolNameForAddress(ppcaddr_t address)
 {
-   auto symIter = gGlobalSymbolLookup.lower_bound(address);
+   auto symIter = sGlobalSymbolLookup.lower_bound(address);
 
-   if (symIter == gGlobalSymbolLookup.end()) {
+   if (symIter == sGlobalSymbolLookup.end()) {
       return "?";
    }
 
