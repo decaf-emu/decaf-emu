@@ -107,7 +107,6 @@ struct Writer
    uint32_t getUniqueID();
    uint32_t getIndex(BlockType::Type type);
 
-   bool read(const std::string &filename);
    bool write(const std::string &filename);
 
    void add(const gx2::GX2Texture *texture);
