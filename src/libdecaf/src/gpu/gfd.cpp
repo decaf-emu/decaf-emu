@@ -14,6 +14,9 @@ FileHeader::Magic;
 const uint32_t
 BlockHeader::Magic;
 
+const uint32_t
+RelocationHeader::Magic;
+
 /*
 For now, let's only support Version1 because it matches our GX2 structs.
 
