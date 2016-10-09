@@ -24,6 +24,13 @@ struct GX2ShadowRegisters
    be_val<uint32_t> sampler[0xA2];
    PADDING((0xC0 - 0xA2) * 4);
 };
+CHECK_OFFSET(GX2ShadowRegisters, 0x0000, config);
+CHECK_OFFSET(GX2ShadowRegisters, 0x2C00, context);
+CHECK_OFFSET(GX2ShadowRegisters, 0x3C00, alu);
+CHECK_OFFSET(GX2ShadowRegisters, 0x5C00, loop);
+CHECK_OFFSET(GX2ShadowRegisters, 0x5E00, resource);
+CHECK_OFFSET(GX2ShadowRegisters, 0x9500, sampler);
+CHECK_SIZE(GX2ShadowRegisters, 0x9800);
 
 // Internal display list is used to create LOAD_ dlist for the shadow state
 struct GX2ContextState
@@ -39,8 +46,8 @@ struct GX2ContextState
 CHECK_OFFSET(GX2ContextState, 0x0000, shadowState);
 CHECK_OFFSET(GX2ContextState, 0x9800, profileMode);
 CHECK_OFFSET(GX2ContextState, 0x9804, shadowDisplayListSize);
-CHECK_OFFSET(GX2ContextState, 0x9e00, shadowDisplayList);
-CHECK_SIZE(GX2ContextState, 0xa100);
+CHECK_OFFSET(GX2ContextState, 0x9E00, shadowDisplayList);
+CHECK_SIZE(GX2ContextState, 0xA100);
 
 #pragma pack(pop)
 
