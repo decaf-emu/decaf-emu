@@ -1,8 +1,8 @@
 #include "gfd.h"
-#include "common/binaryfile.h"
 #include "common/decaf_assert.h"
 #include "modules/gx2/gx2_texture.h"
 #include "modules/gx2/gx2_shaders.h"
+#include <fstream>
 #include <spdlog/fmt/fmt.h>
 
 namespace gfd

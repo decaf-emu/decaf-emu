@@ -232,7 +232,6 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\pm4_capture.cpp" />
     <ClCompile Include="..\src\libdecaf\src\gpu\pm4_processor.cpp" />
     <ClCompile Include="..\src\libdecaf\src\input\input.cpp" />
-    <ClCompile Include="..\src\libdecaf\src\kernel\elf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_fibers.cpp" />
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_filesystem.cpp" />

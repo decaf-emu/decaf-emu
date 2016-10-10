@@ -1,7 +1,7 @@
 #include "kernel_loader.h"
 #include "common/align.h"
-#include "common/bigendianview.h"
 #include "common/decaf_assert.h"
+#include "common/frameallocator.h"
 #include "common/teenyheap.h"
 #include "common/strutils.h"
 #include "decaf_config.h"
@@ -13,51 +13,18 @@
 #include "kernel_hlefunction.h"
 #include "kernel_memory.h"
 #include "libcpu/mem.h"
+#include "modules/coreinit/coreinit_internal_idlock.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include <atomic>
+#include <gsl.h>
 #include <map>
 #include <unordered_map>
+#include <zlib.h>
 
-class SequentialMemoryTracker
-{
-public:
-   SequentialMemoryTracker(void *ptr, size_t size)
-      : mStart(static_cast<uint8_t*>(ptr)), mEnd(mStart + size), mPtr(mStart)
-   {
-   }
-
-   ppcaddr_t
-   getCurrentAddr() const
-   {
-      return mem::untranslate(mPtr);
-   }
-
-   void *
-   get(size_t size, uint32_t alignment = 4)
-   {
-      // Ensure section alignment
-      auto alignOffset = align_up(mPtr, alignment) - mPtr;
-      size += alignOffset;
-
-      // Double-check alignment
-      auto ptrOut = mPtr + alignOffset;
-      decaf_check(align_up(ptrOut, alignment) == ptrOut);
-
-      // Make sure we have room
-      decaf_check(mPtr + size <= mEnd);
-
-      mPtr += size;
-      return ptrOut;
-   }
-
-protected:
-   uint8_t *mStart;
-   uint8_t *mEnd;
-   uint8_t *mPtr;
-};
+const unsigned elf::Header::Magic;
 
 namespace kernel
 {
@@ -66,13 +33,13 @@ namespace loader
 {
 
 using TrampolineMap = std::map<ppcaddr_t, ppcaddr_t>;
-using SectionList = std::vector<elf::XSection>;
+using SectionList = std::vector<elf::Section>;
 using AddressRange = std::pair<ppcaddr_t, ppcaddr_t>;
 
-static std::atomic<uint32_t>
-sLoaderLock { 0 };
+static coreinit::internal::IdLock
+sLoaderLock;
 
-static std::map<std::string, LoadedModule*>
+static std::map<std::string, LoadedModule *>
 sLoadedModules;
 
 static std::map<ppcaddr_t, std::string, std::greater<ppcaddr_t>>
@@ -81,17 +48,18 @@ sGlobalSymbolLookup;
 static ppcaddr_t
 sSyscallAddress = 0;
 
+static uint32_t
+sModuleIndex = 0u;
+
 static TeenyHeap *
 sLoaderHeap = nullptr;
 
 static uint32_t
 sLoaderHeapRefs = 0;
 
-static uint32_t
-sModuleIndex = 0u;
-
 static void *
-loaderAlloc(uint32_t size, uint32_t alignment)
+loaderAlloc(uint32_t size,
+            uint32_t alignment)
 {
    sLoaderHeapRefs++;
 
@@ -118,61 +86,66 @@ loaderFree(void *mem)
    }
 }
 
-void
-lockLoader()
-{
-   uint32_t expected = 0;
-   auto core = 1 << cpu::this_core::id();
-
-   while (!sLoaderLock.compare_exchange_weak(expected, core, std::memory_order_acquire)) {
-      expected = 0;
-   }
-}
-
-void
-unlockLoader()
-{
-   auto core = 1 << cpu::this_core::id();
-   auto oldCore = sLoaderLock.exchange(0, std::memory_order_release);
-   decaf_check(oldCore == core);
-}
-
-std::map<std::string, LoadedModule*>
-getLoadedModules()
-{
-   return sLoadedModules;
-}
-
 static LoadedModule *
 loadRPLNoLock(const std::string& name);
 
-static ppcaddr_t
-getTrampAddress(LoadedModule *loadedMod,
-                SequentialMemoryTracker &codeSeg,
-                TrampolineMap &trampolines,
-                void *target,
-                const std::string& symbolName);
-
+// Read and decompress section data
 static bool
-readFileInfo(BigEndianView &in,
-             const SectionList &sections,
-             elf::FileInfo &info);
+readSectionData(const gsl::span<uint8_t> &file,
+                const elf::SectionHeader &header,
+                std::vector<uint8_t> &data)
+{
+   if (header.type == elf::SHT_NOBITS || header.size == 0) {
+      data.clear();
+      return true;
+   }
 
-static const elf::XSection *
-findSection(const SectionList &sections,
-            const char *shStrTab,
-            const std::string &name);
+   if (header.flags & elf::SHF_DEFLATED) {
+      auto stream = z_stream {};
+      auto ret = Z_OK;
 
-static elf::Symbol
-getSymbol(BigEndianView &symSecView,
-          uint32_t index);
+      // Read the deflated header
+      auto deflatedHeader = reinterpret_cast<elf::DeflatedHeader *>(file.data() + header.offset);
+      auto deflatedData = file.data() + header.offset + sizeof(elf::DeflatedHeader);
+      data.resize(deflatedHeader->inflatedSize);
 
-static ppcaddr_t
-calculateRelocatedAddress(ppcaddr_t address, const SectionList &sections);
+      // Inflate
+      memset(&stream, 0, sizeof(stream));
+      stream.zalloc = Z_NULL;
+      stream.zfree = Z_NULL;
+      stream.opaque = Z_NULL;
+
+      ret = inflateInit(&stream);
+
+      if (ret != Z_OK) {
+         gLog->error("Couldn't decompress .rpx section because inflateInit returned {}", ret);
+         data.clear();
+      } else {
+         stream.avail_in = header.size;
+         stream.next_in = const_cast<Bytef *>(deflatedData);
+         stream.avail_out = static_cast<uInt>(data.size());
+         stream.next_out = reinterpret_cast<Bytef *>(data.data());
+
+         ret = inflate(&stream, Z_FINISH);
+
+         if (ret != Z_OK && ret != Z_STREAM_END) {
+            gLog->error("Couldn't decompress .rpx section because inflate returned {}", ret);
+            data.clear();
+         }
+
+         inflateEnd(&stream);
+      }
+   } else {
+      data.resize(header.size);
+      std::memcpy(data.data(), file.data() + header.offset, header.size);
+   }
+
+   return data.size() > 0;
+}
 
 // Find and read the SHT_RPL_FILEINFO section
 static bool
-readFileInfo(BigEndianView &in,
+readFileInfo(const gsl::span<uint8_t> &file,
              const SectionList &sections,
              elf::FileInfo &info)
 {
@@ -183,10 +156,9 @@ readFileInfo(BigEndianView &in,
          continue;
       }
 
-      elf::readSectionData(in, section.header, data);
+      readSectionData(file, section.header, data);
 
-      BigEndianView be_view{ gsl::as_span(data) };
-      elf::readFileInfo(be_view, info);
+      info = *reinterpret_cast<elf::FileInfo *>(data.data());
       return true;
    }
 
@@ -196,7 +168,7 @@ readFileInfo(BigEndianView &in,
 
 
 // Find a section with a matching name
-static const elf::XSection *
+static const elf::Section *
 findSection(const SectionList &sections,
             const char *shStrTab,
             const std::string &name)
@@ -213,27 +185,35 @@ findSection(const SectionList &sections,
 }
 
 
-// Get symbol at index
-static elf::Symbol
-getSymbol(BigEndianView &symSecView,
-          uint32_t index)
+// Calculate relocated address
+static ppcaddr_t
+calculateRelocatedAddress(ppcaddr_t address,
+                          const SectionList &sections)
 {
-   elf::Symbol sym;
-   symSecView.seek(index * sizeof(elf::Symbol));
-   elf::readSymbol(symSecView, sym);
-   return sym;
+   for (auto &section : sections) {
+      if (section.header.addr <= address && section.header.addr + section.virtSize > address) {
+         if (section.virtAddress >= section.header.addr) {
+            address += section.virtAddress - section.header.addr;
+         } else {
+            address -= section.header.addr - section.virtAddress;
+         }
+
+         return address;
+      }
+   }
+
+   decaf_abort("Cannot relocate addresses which don't exist in any section");
 }
 
 
 // Returns address of trampoline for target
 static ppcaddr_t
 getTrampAddress(LoadedModule *loadedMod,
-                SequentialMemoryTracker &codeSeg,
+                FrameAllocator &codeSeg,
                 TrampolineMap &trampolines,
                 void *target,
                 const std::string& symbolName)
 {
-   auto trampAddr = codeSeg.getCurrentAddr();
    auto targetAddr = mem::untranslate(target);
    auto trampIter = trampolines.find(targetAddr);
 
@@ -241,11 +221,12 @@ getTrampAddress(LoadedModule *loadedMod,
       return trampIter->second;
    }
 
-   auto tramp = mem::translate<uint32_t>(trampAddr);
+   auto tramp = reinterpret_cast<uint32_t *>(codeSeg.top());
+   auto trampAddr = mem::untranslate(tramp);
    auto delta = static_cast<ptrdiff_t>(targetAddr) - static_cast<ptrdiff_t>(trampAddr);
 
    if (delta > -0x1FFFFFCll && delta < 0x1FFFFFCll) {
-      tramp = static_cast<uint32_t*>(codeSeg.get(4));
+      tramp = static_cast<uint32_t *>(codeSeg.allocate(4));
 
       // Short jump using b
       auto b = espresso::encodeInstruction(espresso::InstructionID::b);
@@ -254,7 +235,7 @@ getTrampAddress(LoadedModule *loadedMod,
       b.aa = 0;
       *tramp = byte_swap(b.value);
    } else if (targetAddr < 0x03fffffc) {
-      tramp = static_cast<uint32_t*>(codeSeg.get(4));
+      tramp = static_cast<uint32_t *>(codeSeg.allocate(4));
 
       // Absolute jump using b
       auto b = espresso::encodeInstruction(espresso::InstructionID::b);
@@ -267,7 +248,7 @@ getTrampAddress(LoadedModule *loadedMod,
       decaf_check(0);
    }
 
-   loadedMod->symbols.emplace(symbolName + "#thunk", Symbol{ trampAddr, SymbolType::Function });
+   loadedMod->symbols.emplace(symbolName + "#thunk", Symbol { trampAddr, SymbolType::Function });
    trampolines.emplace(targetAddr, trampAddr);
    return trampAddr;
 }
@@ -457,7 +438,7 @@ loadHleModule(const std::string &moduleName,
 
    // Load code section
    if (codeSize > 0) {
-      auto codeRegion = static_cast<uint8_t*>(coreinit::internal::sysAlloc(codeSize, 4));
+      auto codeRegion = static_cast<uint8_t *>(coreinit::internal::sysAlloc(codeSize));
       auto start = mem::untranslate(codeRegion);
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection { ".text", LoadedSectionType::Code, start, end });
@@ -493,7 +474,7 @@ loadHleModule(const std::string &moduleName,
 
    // Load data section
    if (dataSize > 0) {
-      auto dataRegion = static_cast<uint8_t *>(coreinit::internal::sysAlloc(dataSize, 4));
+      auto dataRegion = static_cast<uint8_t *>(coreinit::internal::sysAlloc(dataSize));
       auto start = mem::untranslate(dataRegion);
       auto end = start + codeSize;
       loadedMod->sections.emplace_back(LoadedSection { ".data", LoadedSectionType::Data, start, end });
@@ -535,42 +516,40 @@ loadHleModule(const std::string &moduleName,
 static bool
 processRelocations(LoadedModule *loadedMod,
                    const SectionList &sections,
-                   BigEndianView &in,
+                   const gsl::span<uint8_t> &file,
                    const char *shStrTab,
-                   SequentialMemoryTracker &codeSeg,
+                   FrameAllocator &codeSeg,
                    AddressRange &trampSeg)
 {
    auto trampolines = TrampolineMap{};
-   auto buffer = std::vector<uint8_t>{};
-   trampSeg.first = codeSeg.getCurrentAddr();
+   auto buffer = std::vector<uint8_t> {};
+   trampSeg.first = mem::untranslate(codeSeg.top());
 
    for (auto &section : sections) {
       if (section.header.type != elf::SHT_RELA) {
          continue;
       }
 
-      elf::readSectionData(in, section.header, buffer);
-      auto secIn = BigEndianView{ gsl::as_span(buffer) };
+      readSectionData(file, section.header, buffer);
 
       auto &symSec = sections[section.header.link];
       auto &targetSec = sections[section.header.info];
-      auto symSecView = BigEndianView{ symSec.memory, symSec.virtSize };
       auto &symStrTab = sections[symSec.header.link];
 
       auto targetBaseAddr = targetSec.header.addr;
       auto targetVirtAddr = targetSec.virtAddress;
 
-      while (!secIn.eof()) {
-         elf::Rela rela;
-         elf::readRelocationAddend(secIn, rela);
+      auto symbols = gsl::as_span(reinterpret_cast<elf::Symbol *>(symSec.memory), symSec.virtSize / sizeof(elf::Symbol));
+      auto relocations = gsl::as_span(reinterpret_cast<elf::Rela *>(buffer.data()), buffer.size() / sizeof(elf::Rela));
 
+      for (auto &rela : relocations) {
          auto index = rela.info >> 8;
          auto type = rela.info & 0xff;
          auto reloAddr = rela.offset - targetBaseAddr + targetVirtAddr;
 
-         auto symbol = getSymbol(symSecView, index);
+         auto &symbol = symbols[index];
          auto symbolName = reinterpret_cast<const char*>(symStrTab.memory) + symbol.name;
-         const elf::XSection *symbolSection = nullptr;
+         const elf::Section *symbolSection = nullptr;
 
          if (symbol.shndx == elf::SHN_UNDEF) {
             continue;
@@ -695,7 +674,7 @@ processRelocations(LoadedModule *loadedMod,
       }
    }
 
-   trampSeg.second = codeSeg.getCurrentAddr();
+   trampSeg.second = mem::untranslate(codeSeg.top());
    return true;
 }
 
@@ -737,17 +716,13 @@ processImports(LoadedModule *loadedMod,
          continue;
       }
 
-      auto strTab = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symIn = BigEndianView{ section.memory, section.virtSize };
+      auto stringTable = reinterpret_cast<const char*>(sections[section.header.link].memory);
+      auto symbols = gsl::as_span(reinterpret_cast<elf::Symbol *>(section.memory), section.virtSize / sizeof(elf::Symbol));
 
-      while (!symIn.eof()) {
-         elf::Symbol sym;
-         elf::readSymbol(symIn, sym);
-
-         // Create symbol data
-         auto name = strTab + sym.name;
-         auto binding = sym.info >> 4;
-         auto type = sym.info & 0xf;
+      for (auto &symbol : symbols) {
+         auto name = stringTable + symbol.name;
+         auto binding = symbol.info >> 4;
+         auto type = symbol.info & 0xf;
 
          if (binding != elf::STB_GLOBAL) {
             // No need to scan LOCAL symbols for imports
@@ -755,42 +730,40 @@ processImports(LoadedModule *loadedMod,
             continue;
          }
 
-         if (sym.shndx >= elf::SHN_LORESERVE) {
-            gLog->warn("Symbol {} in invalid section 0x{:X}", name, sym.shndx);
+         if (symbol.shndx >= elf::SHN_LORESERVE) {
+            gLog->warn("Symbol {} in invalid section 0x{:X}", name, symbol.shndx);
             continue;
          }
 
-         // Calculate relocated address
-         auto &impsec = sections[sym.shndx];
-         auto offset = sym.value - impsec.header.addr;
-         auto baseAddress = impsec.virtAddress;
-         auto virtAddress = baseAddress + offset;
+         auto &importSection = sections[symbol.shndx];
 
-         if (impsec.header.type == elf::SHT_NULL) {
+         if (importSection.header.type != elf::SHT_RPL_IMPORTS) {
             continue;
          }
 
-         if (impsec.header.type == elf::SHT_RPL_IMPORTS) {
-            auto symbolTargetIter = symbolTable.find(name);
-            auto symbolAddr = 0u;
+         // Find the symbol address
+         auto symbolTableItr = symbolTable.find(name);
+         auto symbolAddress = 0u;
 
-            if (symbolTargetIter == symbolTable.end()) {
-               if (type == elf::STT_FUNC) {
-                  symbolAddr = generateUnimplementedFunctionThunk(impsec.name, name);
-               } else if (type == elf::STT_OBJECT) {
-                  symbolAddr = generateUnimplementedDataThunk(impsec.name, name);
-               } else {
-                  decaf_abort("Unexpected import symbol type");
-               }
+         if (symbolTableItr == symbolTable.end()) {
+            if (type == elf::STT_FUNC) {
+               symbolAddress = generateUnimplementedFunctionThunk(importSection.name, name);
+            } else if (type == elf::STT_OBJECT) {
+               symbolAddress = generateUnimplementedDataThunk(importSection.name, name);
             } else {
-               decaf_check(type == elf::STT_FUNC || type == elf::STT_OBJECT || type == elf::STT_TLS);
-               symbolAddr = symbolTargetIter->second;
+               decaf_abort("Unexpected import symbol type");
             }
-
-            // Write the symbol address into .fimport or .dimport
-            decaf_check(type == elf::STT_TLS || symbolAddr);
-            mem::write(virtAddress, symbolAddr);
+         } else {
+            decaf_check(type == elf::STT_FUNC || type == elf::STT_OBJECT || type == elf::STT_TLS);
+            symbolAddress = symbolTableItr->second;
          }
+
+         decaf_check(type == elf::STT_TLS || symbolAddress);
+
+         // Write the symbol address into the .fimport or .dimport section
+         auto offset = symbol.value - importSection.header.addr;
+         auto importAddress = importSection.virtAddress + offset;
+         mem::write(importAddress, symbolAddress);
       }
    }
 
@@ -807,83 +780,62 @@ processSymbols(LoadedModule *loadedMod,
          continue;
       }
 
-      auto strTab = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symIn = BigEndianView{ section.memory, section.virtSize };
+      auto stringTable = reinterpret_cast<const char*>(sections[section.header.link].memory);
+      auto symbols = gsl::as_span(reinterpret_cast<elf::Symbol *>(section.memory), section.virtSize / sizeof(elf::Symbol));
 
-      while (!symIn.eof()) {
-         elf::Symbol sym;
-         elf::readSymbol(symIn, sym);
-
+      for (auto &symbol : symbols) {
          // Create symbol data
-         auto name = strTab + sym.name;
-         auto binding = sym.info >> 4;
-         auto type = sym.info & 0xf;
+         auto name = stringTable + symbol.name;
+         auto binding = symbol.info >> 4;
+         auto type = symbol.info & 0xf;
 
-         if (sym.shndx == elf::SHN_ABS && sym.value == 0) {
+         if (symbol.shndx == elf::SHN_ABS && symbol.value == 0) {
             // This is an no-value absolute symbol, probably for a FILE object.
             continue;
          }
 
-         if (sym.shndx == elf::SHN_HIRESERVE && sym.value == 0) {
+         if (symbol.shndx == elf::SHN_HIRESERVE && symbol.value == 0) {
             // Not actually sure what this is, but it doens't point to anything.
             continue;
          }
 
-         if (sym.shndx >= elf::SHN_LORESERVE) {
+         if (symbol.shndx >= elf::SHN_LORESERVE) {
             gLog->warn("Unexpected symbol definition: shndx {:04x}, info {:02x}, size {:08x}, other {:02x}, value {:08x}, name {}",
-               sym.shndx, sym.info, sym.size, sym.other, sym.value, name);
+                       symbol.shndx, symbol.info, symbol.size, symbol.other, symbol.value, name);
             continue;
          }
 
          // Calculate relocated address
-         auto &symsec = sections[sym.shndx];
-         auto offset = sym.value - symsec.header.addr;
+         auto &parentSection = sections[symbol.shndx];
 
-         if (!symsec.virtSize) {
+         if (!parentSection.virtSize) {
             // Ignore symbols in unused sections...
             continue;
          }
 
-         auto symType = SymbolType::Unknown;
+         auto symbolAddress = symbol.value;
+
+         if (type != elf::STT_TLS) {
+            // Relocate non-TLS symbols
+            auto offset = symbol.value - parentSection.header.addr;
+            symbolAddress = parentSection.virtAddress + offset;
+         }
+
+         auto symbolType = SymbolType::Unknown;
 
          if (type == elf::STT_OBJECT) {
-            symType = SymbolType::Data;
+            symbolType = SymbolType::Data;
          } else if (type == elf::STT_FUNC) {
-            symType = SymbolType::Function;
+            symbolType = SymbolType::Function;
+         } else if (type == elf::STT_TLS) {
+            symbolType = SymbolType::TLS;
          }
 
-         auto baseAddress = symsec.virtAddress;
-         auto virtAddress = baseAddress + offset;
-
-         if (type == elf::STT_TLS) {
-            // TLS symbols should not be relocated, use the original sym.value
-            symType = SymbolType::TLS;
-            virtAddress = sym.value;
-         }
-
-         loadedMod->symbols.emplace(name, Symbol { virtAddress, symType });
+         loadedMod->symbols.emplace(name, Symbol { symbolAddress, symbolType });
       }
    }
 
    return true;
-}
-
-static ppcaddr_t
-calculateRelocatedAddress(ppcaddr_t address, const SectionList &sections)
-{
-   for (auto &section : sections) {
-      if (section.header.addr <= address && section.header.addr + section.virtSize > address) {
-         if (section.virtAddress >= section.header.addr) {
-            address += section.virtAddress - section.header.addr;
-         } else {
-            address -= section.header.addr - section.virtAddress;
-         }
-
-         return address;
-      }
-   }
-
-   decaf_abort("Cannot relocate addresses which don't exist in any section");
 }
 
 static bool
@@ -925,7 +877,6 @@ loadRPL(const std::string &moduleName,
         const gsl::span<uint8_t> &data)
 {
    std::vector<uint8_t> buffer;
-   auto in = BigEndianView{ data };
    auto loadedMod = new LoadedModule();
    loadedMod->name = name;
    sLoadedModules.emplace(moduleName, loadedMod);
@@ -933,49 +884,76 @@ loadRPL(const std::string &moduleName,
    gLog->debug("Loading module {}", moduleName);
 
    // Read header
-   auto header = elf::Header{};
+   auto header = reinterpret_cast<elf::Header *>(data.data());
 
-   if (!elf::readHeader(in, header)) {
-      gLog->error("Failed elf::readHeader");
+   if (header->magic != elf::Header::Magic) {
+      gLog->error("Unexpected elf magic, found {:08x} expected {:08x}", header->magic, elf::Header::Magic);
       return nullptr;
    }
 
-   // Check it is a CAFE abi rpl
-   if (header.abi != elf::EABI_CAFE) {
-      gLog->error("Unexpected elf abi found {:02x} expected {:02x}", header.abi, elf::EABI_CAFE);
+   if (header->fileClass != elf::ELFCLASS32) {
+      gLog->error("Unexpected elf file class, found {:02x} expected {:02x}", header->fileClass, elf::ELFCLASS32);
+      return nullptr;
+   }
+
+   if (header->encoding != elf::ELFDATA2MSB) {
+      gLog->error("Unexpected elf encoding, found {:02x} expected {:02x}", header->encoding, elf::ELFDATA2MSB);
+      return nullptr;
+   }
+
+   if (header->machine != elf::EM_PPC) {
+      gLog->error("Unexpected elf machine, found {:04x} expected {:04x}", header->machine, elf::EM_PPC);
+      return nullptr;
+   }
+
+   if (header->elfVersion != elf::EV_CURRENT) {
+      gLog->error("Unexpected elf version, found {:02x} expected {:02x}", header->elfVersion, elf::EV_CURRENT);
+      return nullptr;
+   }
+
+   if (header->ehsize != sizeof(elf::Header)) {
+      gLog->error("Unexpected elf ehsize, found 0x{:X} expected 0x{:X}", header->ehsize, sizeof(elf::Header));
+      return nullptr;
+   }
+
+   if (header->shentsize != sizeof(elf::SectionHeader)) {
+      gLog->error("Unexpected elf shentsize, found 0x{:X} expected 0x{:X}", header->shentsize, sizeof(elf::SectionHeader));
+      return nullptr;
+   }
+
+   if (header->abi != elf::EABI_CAFE) {
+      gLog->error("Unexpected elf abi found {:02x} expected {:02x}", header->abi, elf::EABI_CAFE);
       return nullptr;
    }
 
    // Read sections
-   auto sections = std::vector<elf::XSection>{};
+   auto sectionHeaders = reinterpret_cast<elf::SectionHeader *>(data.data() + header->shoff);
+   auto sections = std::vector<elf::Section> { header->shnum };
 
-   if (!elf::readSectionHeaders(in, header, sections)) {
-      gLog->error("Failed elf::readSectionHeaders");
-      return nullptr;
+   for (auto i = 0u; i < sections.size(); ++i) {
+      sections[i].header = sectionHeaders[i];
    }
 
-   // Allocate memory segments for load / code / data
-   void *codeSegAddr, *loadSegAddr, *dataSegAddr;
+   // Read RPL file info
    elf::FileInfo info;
-
-   readFileInfo(in, sections, info);
+   readFileInfo(data, sections, info);
 
    // Allocate all our memory chunks which will be used
-   codeSegAddr = getCodeHeap()->alloc(info.textSize, info.textAlign);
+   auto codeSegment = getCodeHeap()->alloc(info.textSize, info.textAlign);
+   auto loadSegment = loaderAlloc(info.loadSize, info.loadAlign);
+   void *dataSegment = nullptr;
 
-   if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegAddr) != 0) {
-      dataSegAddr = nullptr;
+   if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegment) != 0) {
+      dataSegment = nullptr;
    }
 
-   loadSegAddr = loaderAlloc(info.loadSize, info.loadAlign);
+   decaf_check(codeSegment);
+   decaf_check(loadSegment);
+   decaf_check(loadSegment);
 
-   decaf_check(codeSegAddr);
-   decaf_check(dataSegAddr);
-   decaf_check(loadSegAddr);
-
-   auto codeSeg = SequentialMemoryTracker{ codeSegAddr, info.textSize };
-   auto dataSeg = SequentialMemoryTracker{ dataSegAddr, info.dataSize };
-   auto loadSeg = SequentialMemoryTracker{ loadSegAddr, info.loadSize };
+   auto codeAllocator = FrameAllocator { codeSegment, info.textSize };
+   auto dataAllocator = FrameAllocator { dataSegment, info.dataSize };
+   auto loadAllocator = FrameAllocator { loadSegment, info.loadSize };
 
    // Allocate sections from our memory segments
    for (auto &section : sections) {
@@ -987,7 +965,7 @@ loadRPL(const std::string &moduleName,
             buffer.clear();
             buffer.resize(section.header.size, 0);
          } else {
-            if (!elf::readSectionData(in, section.header, buffer)) {
+            if (!readSectionData(data, section.header, buffer)) {
                gLog->error("Failed to read section data");
                return nullptr;
             }
@@ -996,12 +974,12 @@ loadRPL(const std::string &moduleName,
          // Allocate from correct memory segment
          if (section.header.type == elf::SHT_PROGBITS || section.header.type == elf::SHT_NOBITS) {
             if (section.header.flags & elf::SHF_EXECINSTR) {
-               allocData = codeSeg.get(buffer.size(), section.header.addralign);
+               allocData = codeAllocator.allocate(buffer.size(), section.header.addralign);
             } else {
-               allocData = dataSeg.get(buffer.size(), section.header.addralign);
+               allocData = dataAllocator.allocate(buffer.size(), section.header.addralign);
             }
          } else {
-            allocData = loadSeg.get(buffer.size(), section.header.addralign);
+            allocData = loadAllocator.allocate(buffer.size(), section.header.addralign);
          }
 
          memcpy(allocData, buffer.data(), buffer.size());
@@ -1012,7 +990,7 @@ loadRPL(const std::string &moduleName,
    }
 
    // Read strtab
-   auto shStrTab = reinterpret_cast<const char*>(sections[header.shstrndx].memory);
+   auto shStrTab = reinterpret_cast<const char*>(sections[header->shstrndx].memory);
 
    if (!shStrTab) {
       gLog->error("Section name table missing");
@@ -1021,13 +999,14 @@ loadRPL(const std::string &moduleName,
 
    for (auto &section : sections) {
       auto sectionName = shStrTab + section.header.name;
+
       gLog->debug("  found section: type {:08x}, flags {:08x}, info {:08x}, addr {:08x}, size {:>8x}, name {}",
-         section.header.type,
-         section.header.flags,
-         section.header.info,
-         section.header.addr,
-         section.header.size,
-         sectionName);
+                  section.header.type,
+                  section.header.flags,
+                  section.header.info,
+                  section.header.addr,
+                  section.header.size,
+                  sectionName);
    }
 
    // Calculate SDA Bases
@@ -1087,9 +1066,9 @@ loadRPL(const std::string &moduleName,
    }
 
    // Process relocations
-   auto trampSeg = AddressRange{};
+   auto trampSeg = AddressRange { };
 
-   if (!processRelocations(loadedMod, sections, in, shStrTab, codeSeg, trampSeg)) {
+   if (!processRelocations(loadedMod, sections, data, shStrTab, codeAllocator, trampSeg)) {
       gLog->error("Error loading relocations");
       return nullptr;
    }
@@ -1111,7 +1090,7 @@ loadRPL(const std::string &moduleName,
    }
 
    // Relocate entry point
-   auto entryPoint = calculateRelocatedAddress(header.entry, sections);
+   auto entryPoint = calculateRelocatedAddress(header->entry, sections);
 
    // Create sections list
    for (auto &section : sections) {
@@ -1137,7 +1116,7 @@ loadRPL(const std::string &moduleName,
    loadedMod->symbols.emplace("__start", Symbol{ entryPoint, SymbolType::Function });
 
    // Free the load segment
-   loaderFree(loadSegAddr);
+   loaderFree(loadSegment);
 
    // Add all the modules symbols to the Global Symbol Map
    for (auto &i : loadedMod->symbols) {
@@ -1160,8 +1139,8 @@ loadRPL(const std::string &moduleName,
 
 static void
 normalizeModuleName(const std::string &name,
-      std::string &moduleName,
-      std::string &fileName)
+                    std::string &moduleName,
+                    std::string &fileName)
 {
    if (!ends_with(name, ".rpl") && !ends_with(name, ".rpx")) {
       moduleName = name;
@@ -1222,7 +1201,7 @@ loadRPLNoLock(const std::string &name)
 }
 
 LoadedModule *
-loadRPL(const std::string& name)
+loadRPL(const std::string &name)
 {
    // Use the scheduler lock to protect access to the loaders memory
    lockLoader();
@@ -1232,9 +1211,15 @@ loadRPL(const std::string& name)
 }
 
 void
-setSyscallAddress(ppcaddr_t address)
+lockLoader()
 {
-   sSyscallAddress = address;
+   coreinit::internal::acquireIdLock(sLoaderLock, cpu::this_core::id());
+}
+
+void
+unlockLoader()
+{
+   coreinit::internal::releaseIdLock(sLoaderLock, cpu::this_core::id());
 }
 
 LoadedModule *
@@ -1295,6 +1280,18 @@ findNearestSymbolNameForAddress(ppcaddr_t address)
    } else {
       return fmt::format("{} + 0x{:x}", symIter->second, delta);
    }
+}
+
+std::map<std::string, LoadedModule *>
+getLoadedModules()
+{
+   return sLoadedModules;
+}
+
+void
+setSyscallAddress(ppcaddr_t address)
+{
+   sSyscallAddress = address;
 }
 
 } // namespace loader

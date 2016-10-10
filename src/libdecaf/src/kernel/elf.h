@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
+#include <common/be_val.h>
+#include <common/structsize.h>
 #include "usermodule.h"
 
 class BigEndianView;
 
 namespace elf
 {
-
-#pragma pack(push, 1)
 
 enum // e_machine
 {
@@ -191,64 +191,234 @@ enum RelocationType // r_info & 0xff
    R_PPC_REL16_HA = 252,
 };
 
+#pragma pack(push, 1)
+
 struct Header
 {
-   static const unsigned Magic = 0x7f454c46;
+   static const unsigned Magic = 0x7F454C46;
 
-   uint32_t magic;       // File identification.
-   uint8_t fileClass;        // File class.
-   uint8_t encoding;     // Data encoding.
-   uint8_t elfVersion;  // File version.
-   uint16_t abi;         // OS/ABI identification. (EABI_*)
-   uint8_t pad[7];
+   //! File identification.
+   be_val<uint32_t> magic;
 
-   uint16_t type;        // Type of file (ET_*)
-   uint16_t machine;     // Required architecture for this file (EM_*)
-   uint32_t version;     // Must be equal to 1
-   uint32_t entry;       // Address to jump to in order to start program
-   uint32_t phoff;       // Program header table's file offset, in bytes
-   uint32_t shoff;       // Section header table's file offset, in bytes
-   uint32_t flags;       // Processor-specific flags
-   uint16_t ehsize;      // Size of ELF header, in bytes
-   uint16_t phentsize;   // Size of an entry in the program header table
-   uint16_t phnum;       // Number of entries in the program header table
-   uint16_t shentsize;   // Size of an entry in the section header table
-   uint16_t shnum;       // Number of entries in the section header table
-   uint16_t shstrndx;    // Sect hdr table index of sect name string table
+   //! File class.
+   be_val<uint8_t> fileClass;
+
+   //! Data encoding.
+   be_val<uint8_t> encoding;
+
+   //! File version.
+   be_val<uint8_t> elfVersion;
+
+   //! OS/ABI identification. (EABI_*)
+   be_val<uint16_t> abi;
+
+   PADDING(7);
+
+   //! Type of file (ET_*)
+   be_val<uint16_t> type;
+
+   //! Required architecture for this file (EM_*)
+   be_val<uint16_t> machine;
+
+   //! Must be equal to 1
+   be_val<uint32_t> version;
+
+   //! Address to jump to in order to start program
+   be_val<uint32_t> entry;
+
+   //! Program header table's file offset, in bytes
+   be_val<uint32_t> phoff;
+
+   //! Section header table's file offset, in bytes
+   be_val<uint32_t> shoff;
+
+   //! Processor-specific flags
+   be_val<uint32_t> flags;
+
+   //! Size of ELF header, in bytes
+   be_val<uint16_t> ehsize;
+
+   //! Size of an entry in the program header table
+   be_val<uint16_t> phentsize;
+
+   //! Number of entries in the program header table
+   be_val<uint16_t> phnum;
+
+   //! Size of an entry in the section header table
+   be_val<uint16_t> shentsize;
+
+   //! Number of entries in the section header table
+   be_val<uint16_t> shnum;
+
+   //! Sect hdr table index of sect name string table
+   be_val<uint16_t> shstrndx;
 };
+CHECK_OFFSET(Header, 0x00, magic);
+CHECK_OFFSET(Header, 0x04, fileClass);
+CHECK_OFFSET(Header, 0x05, encoding);
+CHECK_OFFSET(Header, 0x06, elfVersion);
+CHECK_OFFSET(Header, 0x07, abi);
+CHECK_OFFSET(Header, 0x10, type);
+CHECK_OFFSET(Header, 0x12, machine);
+CHECK_OFFSET(Header, 0x14, version);
+CHECK_OFFSET(Header, 0x18, entry);
+CHECK_OFFSET(Header, 0x1C, phoff);
+CHECK_OFFSET(Header, 0x20, shoff);
+CHECK_OFFSET(Header, 0x24, flags);
+CHECK_OFFSET(Header, 0x28, ehsize);
+CHECK_OFFSET(Header, 0x2A, phentsize);
+CHECK_OFFSET(Header, 0x2C, phnum);
+CHECK_OFFSET(Header, 0x2E, shentsize);
+CHECK_OFFSET(Header, 0x30, shnum);
+CHECK_OFFSET(Header, 0x32, shstrndx);
+CHECK_SIZE(Header, 0x34);
 
 struct SectionHeader
 {
-   uint32_t name;      // Section name (index into string table)
-   uint32_t type;      // Section type (SHT_*)
-   uint32_t flags;     // Section flags (SHF_*)
-   uint32_t addr;      // Address where section is to be loaded
-   uint32_t offset;    // File offset of section data, in bytes
-   uint32_t size;      // Size of section, in bytes
-   uint32_t link;      // Section type-specific header table index link
-   uint32_t info;      // Section type-specific extra information
-   uint32_t addralign; // Section address alignment
-   uint32_t entsize;   // Size of records contained within the section
+   //! Section name (index into string table)
+   be_val<uint32_t> name;
+
+   //! Section type (SHT_*)
+   be_val<uint32_t> type;
+
+   //! Section flags (SHF_*)
+   be_val<uint32_t> flags;
+
+   //! Address where section is to be loaded
+   be_val<uint32_t> addr;
+
+   //! File offset of section data, in bytes
+   be_val<uint32_t> offset;
+
+   //! Size of section, in bytes
+   be_val<uint32_t> size;
+
+   //! Section type-specific header table index link
+   be_val<uint32_t> link;
+
+   //! Section type-specific extra information
+   be_val<uint32_t> info;
+
+   //! Section address alignment
+   be_val<uint32_t> addralign;
+
+   //! Size of records contained within the section
+   be_val<uint32_t> entsize;
 };
+CHECK_OFFSET(SectionHeader, 0x00, name);
+CHECK_OFFSET(SectionHeader, 0x04, type);
+CHECK_OFFSET(SectionHeader, 0x08, flags);
+CHECK_OFFSET(SectionHeader, 0x0C, addr);
+CHECK_OFFSET(SectionHeader, 0x10, offset);
+CHECK_OFFSET(SectionHeader, 0x14, size);
+CHECK_OFFSET(SectionHeader, 0x18, link);
+CHECK_OFFSET(SectionHeader, 0x1C, info);
+CHECK_OFFSET(SectionHeader, 0x20, addralign);
+CHECK_OFFSET(SectionHeader, 0x24, entsize);
+CHECK_SIZE(SectionHeader, 0x28);
 
 struct Symbol
 {
-   uint32_t name;  // Symbol name (index into string table)
-   uint32_t value; // Value or address associated with the symbol
-   uint32_t size;  // Size of the symbol
-   uint8_t  info;  // Symbol's type and binding attributes
-   uint8_t  other; // Must be zero; reserved
-   uint16_t shndx; // Which section (header table index) it's defined in (SHN_*)
+   //! Symbol name (index into string table)
+   be_val<uint32_t> name;
+
+   //! Value or address associated with the symbol
+   be_val<uint32_t> value;
+
+   //! Size of the symbol
+   be_val<uint32_t> size;
+
+   //! Symbol's type and binding attributes
+   be_val<uint8_t> info;
+
+   //! Must be zero; reserved
+   be_val<uint8_t> other;
+
+   //! Which section (header table index) it's defined in (SHN_*)
+   be_val<uint16_t> shndx;
 };
+CHECK_OFFSET(Symbol, 0x00, name);
+CHECK_OFFSET(Symbol, 0x04, value);
+CHECK_OFFSET(Symbol, 0x08, size);
+CHECK_OFFSET(Symbol, 0x0C, info);
+CHECK_OFFSET(Symbol, 0x0D, other);
+CHECK_OFFSET(Symbol, 0x0E, shndx);
+CHECK_SIZE(Symbol, 0x10);
 
 struct Rela
 {
-   uint32_t offset;
-   uint32_t info;
-   int32_t addend;
+   be_val<uint32_t> offset;
+   be_val<uint32_t> info;
+   be_val<int32_t> addend;
 };
+CHECK_OFFSET(Rela, 0x00, offset);
+CHECK_OFFSET(Rela, 0x04, info);
+CHECK_OFFSET(Rela, 0x08, addend);
+CHECK_SIZE(Rela, 0x0C);
 
-struct XSection
+struct DeflatedHeader
+{
+   be_val<uint32_t> inflatedSize;
+};
+CHECK_OFFSET(DeflatedHeader, 0x00, inflatedSize);
+CHECK_SIZE(DeflatedHeader, 0x04);
+
+struct FileInfo
+{
+   be_val<uint32_t> version;
+   be_val<uint32_t> textSize;
+   be_val<uint32_t> textAlign;
+   be_val<uint32_t> dataSize;
+   be_val<uint32_t> dataAlign;
+   be_val<uint32_t> loadSize;
+   be_val<uint32_t> loadAlign;
+   be_val<uint32_t> tempSize;
+   be_val<uint32_t> trampAdjust;
+   be_val<uint32_t> sdaBase;
+   be_val<uint32_t> sda2Base;
+   be_val<uint32_t> stackSize;
+   be_val<uint32_t> filename;
+   be_val<uint32_t> flags;
+   be_val<uint32_t> heapSize;
+   be_val<uint32_t> tagOffset;
+   be_val<uint32_t> minVersion;
+   be_val<int32_t> compressionLevel;
+   be_val<uint32_t> trampAddition;
+   be_val<uint32_t> fileInfoPad;
+   be_val<uint32_t> cafeSdkVersion;
+   be_val<uint32_t> cafeSdkRevision;
+   be_val<uint16_t> tlsModuleIndex;
+   be_val<uint16_t> tlsAlignShift;
+   be_val<uint32_t> runtimeFileInfoSize;
+};
+CHECK_OFFSET(FileInfo, 0x00, version);
+CHECK_OFFSET(FileInfo, 0x04, textSize);
+CHECK_OFFSET(FileInfo, 0x08, textAlign);
+CHECK_OFFSET(FileInfo, 0x0C, dataSize);
+CHECK_OFFSET(FileInfo, 0x10, dataAlign);
+CHECK_OFFSET(FileInfo, 0x14, loadSize);
+CHECK_OFFSET(FileInfo, 0x18, loadAlign);
+CHECK_OFFSET(FileInfo, 0x1C, tempSize);
+CHECK_OFFSET(FileInfo, 0x20, trampAdjust);
+CHECK_OFFSET(FileInfo, 0x24, sdaBase);
+CHECK_OFFSET(FileInfo, 0x28, sda2Base);
+CHECK_OFFSET(FileInfo, 0x2C, stackSize);
+CHECK_OFFSET(FileInfo, 0x30, filename);
+CHECK_OFFSET(FileInfo, 0x34, flags);
+CHECK_OFFSET(FileInfo, 0x38, heapSize);
+CHECK_OFFSET(FileInfo, 0x3C, tagOffset);
+CHECK_OFFSET(FileInfo, 0x40, minVersion);
+CHECK_OFFSET(FileInfo, 0x44, compressionLevel);
+CHECK_OFFSET(FileInfo, 0x48, trampAddition);
+CHECK_OFFSET(FileInfo, 0x4C, fileInfoPad);
+CHECK_OFFSET(FileInfo, 0x50, cafeSdkVersion);
+CHECK_OFFSET(FileInfo, 0x54, cafeSdkRevision);
+CHECK_OFFSET(FileInfo, 0x58, tlsModuleIndex);
+CHECK_OFFSET(FileInfo, 0x5A, tlsAlignShift);
+CHECK_OFFSET(FileInfo, 0x5C, runtimeFileInfoSize);
+CHECK_SIZE(FileInfo, 0x60);
+
+struct Section
 {
    SectionHeader header;
    std::string name;
@@ -257,57 +427,6 @@ struct XSection
    uint32_t virtSize;
 };
 
-struct FileInfo
-{
-   uint32_t version;
-   uint32_t textSize;
-   uint32_t textAlign;
-   uint32_t dataSize;
-   uint32_t dataAlign;
-   uint32_t loadSize;
-   uint32_t loadAlign;
-   uint32_t tempSize;
-   uint32_t trampAdjust;
-   uint32_t sdaBase;
-   uint32_t sda2Base;
-   uint32_t stackSize;
-   uint32_t filename;
-   uint32_t flags;
-   uint32_t heapSize;
-   uint32_t tagOffset;
-   uint32_t minVersion;
-   int32_t compressionLevel;
-   uint32_t trampAddition;
-   uint32_t fileInfoPad;
-   uint32_t cafeSdkVersion;
-   uint32_t cafeSdkRevision;
-   uint16_t tlsModuleIndex;
-   uint16_t tlsAlignShift;
-   uint32_t runtimeFileInfoSize;
-};
-static_assert(sizeof(FileInfo) == 0x60, "FileInfo must be 0x60 bytes");
-
 #pragma pack(pop)
 
-bool
-readHeader(BigEndianView &in, Header &header);
-
-bool
-readSectionHeader(BigEndianView &in, SectionHeader &shdr);
-
-bool
-readSymbol(BigEndianView &in, Symbol &sym);
-
-bool
-readRelocationAddend(BigEndianView &in, Rela &rela);
-
-bool
-readFileInfo(BigEndianView &in, elf::FileInfo &info);
-
-bool
-readSectionHeaders(BigEndianView &in, Header &header, std::vector<XSection>& sections);
-
-bool
-readSectionData(BigEndianView &in, const SectionHeader& header, std::vector<uint8_t> &data);
-
-};
+}; // namespace elf

@@ -66,9 +66,6 @@
     <ClInclude Include="..\src\common\be_val.h" />
     <ClInclude Include="..\src\common\be_vec.h" />
     <ClInclude Include="..\src\common\be_volatile.h" />
-    <ClInclude Include="..\src\common\bigendianview.h" />
-    <ClInclude Include="..\src\common\binaryfile.h" />
-    <ClInclude Include="..\src\common\binaryview.h" />
     <ClInclude Include="..\src\common\bitfield.h" />
     <ClInclude Include="..\src\common\bitutils.h" />
     <ClInclude Include="..\src\common\bit_cast.h" />
@@ -83,6 +80,7 @@
     <ClInclude Include="..\src\common\fastregionmap.h" />
     <ClInclude Include="..\src\common\fixed.h" />
     <ClInclude Include="..\src\common\floatutils.h" />
+    <ClInclude Include="..\src\common\frameallocator.h" />
     <ClInclude Include="..\src\common\log.h" />
     <ClInclude Include="..\src\common\make_array.h" />
     <ClInclude Include="..\src\common\murmur3.h" />

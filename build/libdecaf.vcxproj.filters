@@ -696,9 +696,6 @@
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_draw.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_pm4.cpp">
-      <Filter>Source Files\gpu\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_registers.cpp">
       <Filter>Source Files\gpu\opengl</Filter>
     </ClCompile>
@@ -781,9 +778,6 @@
       <Filter>Source Files\modules\gx2</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_loader.cpp">
-      <Filter>Source Files\kernel</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libdecaf\src\kernel\elf.cpp">
       <Filter>Source Files\kernel</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libdecaf\src\kernel\kernel_memory.cpp">
