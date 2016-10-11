@@ -153,13 +153,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\libdecaf\decaf_debugger.cpp" />
-    <ClCompile Include="..\src\libdecaf\decaf_graphics.cpp" />
-    <ClCompile Include="..\src\libdecaf\decaf_nullgraphicsdriver.cpp" />
-    <ClCompile Include="..\src\libdecaf\decaf_input.cpp" />
-    <ClCompile Include="..\src\libdecaf\decaf_nullinputdriver.cpp" />
-    <ClCompile Include="..\src\libdecaf\decaf_pm4replay.cpp" />
-    <ClCompile Include="..\src\libdecaf\decaf_sound.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_analysis.cpp" />
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui.cpp" />
@@ -177,8 +170,15 @@
     <ClCompile Include="..\src\libdecaf\src\debugger\debugger_ui_voicesview.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_config.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_debugger.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_eventlistener.cpp" />
     <ClCompile Include="..\src\libdecaf\src\decaf_game.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_graphics.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_input.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_nullgraphicsdriver.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_nullinputdriver.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_pm4replay.cpp" />
+    <ClCompile Include="..\src\libdecaf\src\decaf_sound.cpp" />
     <ClCompile Include="..\src\libdecaf\src\emulog.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_filehandle.cpp" />
     <ClCompile Include="..\src\libdecaf\src\filesystem\filesystem_posix_host_folder.cpp">
