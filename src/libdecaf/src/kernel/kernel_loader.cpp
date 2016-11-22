@@ -190,6 +190,9 @@ static ppcaddr_t
 calculateRelocatedAddress(ppcaddr_t address,
                           const SectionList &sections)
 {
+   bool foundSectionEnd = true;
+   ppcaddr_t sectionEndAddress;
+
    for (auto &section : sections) {
       if (section.header.addr <= address && section.header.addr + section.virtSize > address) {
          if (section.virtAddress >= section.header.addr) {
@@ -199,7 +202,21 @@ calculateRelocatedAddress(ppcaddr_t address,
          }
 
          return address;
+
+      } else if (section.header.addr + section.virtSize == address) {
+
+         foundSectionEnd = true;
+         if (section.virtAddress >= section.header.addr) {
+            sectionEndAddress = address + section.virtAddress - section.header.addr;
+         } else {
+            sectionEndAddress = address - section.header.addr - section.virtAddress;
+         }
+
       }
+   }
+
+   if (foundSectionEnd) {
+      return sectionEndAddress;
    }
 
    decaf_abort("Cannot relocate addresses which don't exist in any section");
