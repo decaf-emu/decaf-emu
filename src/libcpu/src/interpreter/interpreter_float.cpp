@@ -215,6 +215,7 @@ roundForMultiply(double *a, double *c)
    // other operand becomes denormal, the product will round to zero in any
    // case, so we just abort and let the operation proceed normally.
    if (is_denormal(*c)) {
+      auto cSign = cBits.sign;
       while (cBits.exponent == 0) {
          cBits.uv <<= 1;
          if (aBits.exponent == 0) {
@@ -222,6 +223,7 @@ roundForMultiply(double *a, double *c)
          }
          aBits.exponent--;
       }
+      cBits.sign = cSign;
    }
 
    // Perform the rounding.  If this causes the value to go to infinity,
@@ -232,8 +234,11 @@ roundForMultiply(double *a, double *c)
    cBits.uv &= -static_cast<int64_t>(roundBit);
    cBits.uv += cBits.uv & roundBit;
    if (is_infinity(cBits.v)) {
+      cBits.exponent--;
       if (aBits.exponent == 0) {
+         auto aSign = aBits.sign;
          aBits.uv <<= 1;
+         aBits.sign = aSign;
       } else if (aBits.exponent < aBits.exponent_max - 1) {
          aBits.exponent++;
       } else {
@@ -241,7 +246,6 @@ roundForMultiply(double *a, double *c)
          // operand alone and let the host FPU raise exceptions as
          // appropriate.
       }
-      cBits.exponent--;
    }
 
    *a = aBits.v;
