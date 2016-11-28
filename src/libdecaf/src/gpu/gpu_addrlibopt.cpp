@@ -891,6 +891,59 @@ copySurfacePixels4(uint8_t *dstBasePtr,
       dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput, dstCoordFunc);
 }
 
+// Optimized for copying between linear buffers
+template<uint32_t Bpp>
+static bool
+copySurfacePixelsLinear(uint8_t *dstBasePtr,
+                        uint32_t dstWidth,
+                        uint32_t dstHeight,
+                        ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &dstAddrInput,
+                        uint8_t *srcBasePtr,
+                        uint32_t srcWidth,
+                        uint32_t srcHeight,
+                        ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &srcAddrInput)
+{
+   auto srcBaseAddr = ComputeSurfaceAddrFromCoordLinear<Bpp>(
+      0,
+      0,
+      srcAddrInput.slice,
+      srcAddrInput.sample,
+      srcAddrInput.pitch,
+      srcAddrInput.height,
+      srcAddrInput.numSlices);
+   auto dstBaseAddr = ComputeSurfaceAddrFromCoordLinear<Bpp>(
+      0,
+      0,
+      dstAddrInput.slice,
+      dstAddrInput.sample,
+      dstAddrInput.pitch,
+      dstAddrInput.height,
+      dstAddrInput.numSlices);
+
+   constexpr auto bytesPerPixel = Bpp / 8;
+   auto src = &srcBasePtr[srcBaseAddr];
+   auto dst = &dstBasePtr[dstBaseAddr];
+   auto srcPitch = srcAddrInput.pitch * bytesPerPixel;
+   auto dstPitch = dstAddrInput.pitch * bytesPerPixel;
+   auto srcXInc = (static_cast<uint64_t>(srcWidth) << 32) / dstWidth;
+   auto srcYInc = (static_cast<uint64_t>(srcHeight) << 32) / dstHeight;
+
+   uint64_t srcYFrac = 0;
+   for (auto y = 0u; y < dstHeight; ++y, dst += dstPitch, srcYFrac += srcYInc) {
+      auto srcY = static_cast<uint32_t>(srcYFrac >> 32);
+      auto srcRow = &src[srcY * srcPitch];
+      uint64_t srcXFrac = 0;
+      for (auto x = 0u; x < dstWidth; ++x, srcXFrac += srcXInc) {
+         auto srcX = static_cast<uint32_t>(srcXFrac >> 32);
+         std::memcpy(&dst[x * bytesPerPixel],
+                     &srcRow[srcX * bytesPerPixel],
+                     bytesPerPixel);
+      }
+   }
+
+   return true;
+}
+
 // Selects Bpp template
 template<uint32_t NumSamples, bool IsDepth>
 static bool
@@ -906,23 +959,59 @@ copySurfacePixels3(uint8_t *dstBasePtr,
 {
    switch (bpp) {
    case 8:
-      return copySurfacePixels4<NumSamples, IsDepth, 8>(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      if (TileModeTiling[dstAddrInput.tileMode] == TilingMode::Linear
+       && TileModeTiling[srcAddrInput.tileMode] == TilingMode::Linear) {
+         return copySurfacePixelsLinear<8>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      } else {
+         return copySurfacePixels4<NumSamples, IsDepth, 8>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      }
    case 16:
-      return copySurfacePixels4<NumSamples, IsDepth, 16>(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      if (TileModeTiling[dstAddrInput.tileMode] == TilingMode::Linear
+       && TileModeTiling[srcAddrInput.tileMode] == TilingMode::Linear) {
+         return copySurfacePixelsLinear<16>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      } else {
+         return copySurfacePixels4<NumSamples, IsDepth, 16>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      }
    case 32:
-      return copySurfacePixels4<NumSamples, IsDepth, 32>(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      if (TileModeTiling[dstAddrInput.tileMode] == TilingMode::Linear
+       && TileModeTiling[srcAddrInput.tileMode] == TilingMode::Linear) {
+         return copySurfacePixelsLinear<32>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      } else {
+         return copySurfacePixels4<NumSamples, IsDepth, 32>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      }
    case 64:
-      return copySurfacePixels4<NumSamples, IsDepth, 64>(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      if (TileModeTiling[dstAddrInput.tileMode] == TilingMode::Linear
+       && TileModeTiling[srcAddrInput.tileMode] == TilingMode::Linear) {
+         return copySurfacePixelsLinear<64>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      } else {
+         return copySurfacePixels4<NumSamples, IsDepth, 64>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      }
    case 96:
-      return copySurfacePixels4<NumSamples, IsDepth, 96>(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      if (TileModeTiling[dstAddrInput.tileMode] == TilingMode::Linear
+       && TileModeTiling[srcAddrInput.tileMode] == TilingMode::Linear) {
+         return copySurfacePixelsLinear<96>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      } else {
+         return copySurfacePixels4<NumSamples, IsDepth, 96>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      }
    case 128:
-      return copySurfacePixels4<NumSamples, IsDepth, 128>(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      if (TileModeTiling[dstAddrInput.tileMode] == TilingMode::Linear
+       && TileModeTiling[srcAddrInput.tileMode] == TilingMode::Linear) {
+         return copySurfacePixelsLinear<128>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      } else {
+         return copySurfacePixels4<NumSamples, IsDepth, 128>(
+            dstBasePtr, dstWidth, dstHeight, dstAddrInput, srcBasePtr, srcWidth, srcHeight, srcAddrInput);
+      }
    default:
       decaf_abort("Unexpected bits-per-pixel value");
    }
