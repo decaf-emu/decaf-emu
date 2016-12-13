@@ -35,9 +35,24 @@ getCommandLineParser()
 
    auto jit_options = parser.add_option_group("JIT Options")
       .add_option("jit",
-                  description { "Enables the JIT engine." })
+                  description { "Enable the JIT engine." })
+      .add_option("no-jit",
+                  description { "Disable the JIT engine." })
+      .add_option("jit-fast-math",
+                  description { "Enable JIT floating-point optimizations which may not exactly match PowerPC behavior.  May not work for all games." },
+                  default_value<std::string> { "full" },
+                  allowed<std::string> { {
+                     "full", "no-fpscr"
+                  } })
+      .add_option("jit-opt-level",
+                  description { "Set the JIT optimization level.  Higher levels give better performance but may cause longer translation delays.  Level 3 may not work for all games." },
+                  default_value<int> { 1 },
+                  allowed<int> { { 0, 1, 2, 3 } })
       .add_option("jit-verify",
-                  description { "Verify JIT implementation against interpreter." });
+                  description { "Verify JIT implementation against interpreter." })
+      .add_option("jit-verify-addr",
+                  description { "Select single code block for JIT verification." },
+                  default_value<uint32_t> { 0 });
 
    auto log_options = parser.add_option_group("Log Options")
       .add_option("log-file",
@@ -134,12 +149,79 @@ start(excmd::parser &parser,
    config::load(configPath);
 
    // Allow command line options to override config
+
+   if (options.has("jit")) {
+      decaf::config::jit::enabled = true;
+   } else if (options.has("no-jit")) {
+      decaf::config::jit::enabled = false;
+   }
+
    if (options.has("jit-verify")) {
       decaf::config::jit::verify = true;
    }
 
-   if (options.has("jit")) {
-      decaf::config::jit::enabled = true;
+   if (options.has("jit-verify-addr")) {
+      decaf::config::jit::verify_addr = options.get<uint32_t>("jit-verify-addr");
+   }
+
+   if (options.has("jit-opt-level")) {
+      auto level = options.get<int>("jit-opt-level");
+
+      decaf::config::jit::opt_flags.clear();
+
+      if (level >= 1) {
+         decaf::config::jit::opt_flags.push_back("BASIC");
+         decaf::config::jit::opt_flags.push_back("DECONDITON");
+         decaf::config::jit::opt_flags.push_back("DSE");
+         decaf::config::jit::opt_flags.push_back("FOLD_CONSTANTS");
+         decaf::config::jit::opt_flags.push_back("PPC_FORWARD_LOADS");
+         decaf::config::jit::opt_flags.push_back("PPC_PAIRED_LWARX_STWCX");
+         decaf::config::jit::opt_flags.push_back("X86_BRANCH_ALIGNMENT");
+         decaf::config::jit::opt_flags.push_back("X86_CONDITION_CODES");
+         decaf::config::jit::opt_flags.push_back("X86_FIXED_REGS");
+         decaf::config::jit::opt_flags.push_back("X86_FORWARD_CONDITIONS");
+         decaf::config::jit::opt_flags.push_back("X86_STORE_IMMEDIATE");
+      }
+
+      if (level >= 2) {
+         decaf::config::jit::opt_flags.push_back("CHAIN");
+         // Skip DEEP_DATA_FLOW if verifying because its whole purpose is
+         //  to eliminate dead stores to registers.
+         if (!decaf::config::jit::verify) {
+            decaf::config::jit::opt_flags.push_back("DEEP_DATA_FLOW");
+         }
+         decaf::config::jit::opt_flags.push_back("PPC_TRIM_CR_STORES");
+         decaf::config::jit::opt_flags.push_back("PPC_USE_SPLIT_FIELDS");
+         decaf::config::jit::opt_flags.push_back("X86_ADDRESS_OPERANDS");
+         decaf::config::jit::opt_flags.push_back("X86_MERGE_REGS");
+      }
+
+      if (level >= 3) {
+         decaf::config::jit::opt_flags.push_back("PPC_CONSTANT_GQRS");
+         decaf::config::jit::opt_flags.push_back("PPC_FAST_FCTIW");
+      }
+   }
+
+   if (options.has("jit-fast-math")) {
+      // PPC_NO_FPSCR_STATE by itself (--jit-fast-math=no-fpscr) is safe to
+      //  use with --jit-verify as long as the game doesn't actually look
+      //  at FPSCR status bits.  Other optimization flags may result in
+      //  verification differences even if the generated code is correct.
+      decaf::config::jit::opt_flags.push_back("PPC_NO_FPSCR_STATE");
+      if (options.get<std::string>("jit-fast-math").compare("full") == 0) {
+         decaf::config::jit::opt_flags.push_back("DSE_FP");
+         decaf::config::jit::opt_flags.push_back("FOLD_FP_CONSTANTS");
+         decaf::config::jit::opt_flags.push_back("NATIVE_IEEE_NAN");
+         decaf::config::jit::opt_flags.push_back("NATIVE_IEEE_UNDERFLOW");
+         decaf::config::jit::opt_flags.push_back("PPC_ASSUME_NO_SNAN");
+         decaf::config::jit::opt_flags.push_back("PPC_FAST_FMADDS");
+         decaf::config::jit::opt_flags.push_back("PPC_FAST_FMULS");
+         decaf::config::jit::opt_flags.push_back("PPC_FAST_STFS");
+         decaf::config::jit::opt_flags.push_back("PPC_FNMADD_ZERO_SIGN");
+         decaf::config::jit::opt_flags.push_back("PPC_IGNORE_FPSCR_VXFOO");
+         decaf::config::jit::opt_flags.push_back("PPC_NATIVE_RECIPROCAL");
+         decaf::config::jit::opt_flags.push_back("PPC_PS_STORE_DENORMALS");
+      }
    }
 
    if (options.has("log-no-stdout")) {

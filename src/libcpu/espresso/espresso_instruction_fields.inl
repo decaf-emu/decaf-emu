@@ -18,7 +18,7 @@ FLD(frS, 6, 10)
 FLD(frc, 31, 31) // Special version of rc for float operations
 FLD(i, 17, 19)
 FLD(imm, 16, 19)
-FLD(kcn, 6, 31)
+FLD(kcn, 6, 30)
 FLD(l, 10, 10)
 FLD(li, 6, 29)
 FLD(lk, 31, 31)

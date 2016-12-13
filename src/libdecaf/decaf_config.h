@@ -52,6 +52,18 @@ extern bool enabled;
 //! Use JIT in verification mode where it compares execution to interpreter
 extern bool verify;
 
+//! Select a single block (starting address) for verification (0 = verify everything)
+extern uint32_t verify_addr;
+
+//! JIT cache size in megabytes
+extern unsigned int cache_size_mb;
+
+//! List of JIT optimizations to enable
+extern std::vector<std::string> opt_flags;
+
+//! Treat .rodata sections as read-only regardless of RPL/RPX flags
+extern bool rodata_read_only;
+
 } // namespace jit
 
 namespace log

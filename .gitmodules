@@ -4,9 +4,9 @@
 [submodule "libraries/pugixml"]
 	path = libraries/pugixml
 	url = https://github.com/zeux/pugixml.git
-[submodule "libraries/asmjit"]
-	path = libraries/asmjit
-	url = https://github.com/kobalicek/asmjit.git
+[submodule "libraries/libbinrec"]
+	path = libraries/libbinrec
+	url = hg::https://bitbucket.org/achurch_/libbinrec
 [submodule "libraries/spdlog"]
 	path = libraries/spdlog
 	url = https://github.com/gabime/spdlog.git

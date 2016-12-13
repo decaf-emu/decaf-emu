@@ -5,10 +5,21 @@
 #include <common/log.h>
 #include "espresso/espresso_disassembler.h"
 #include "espresso/espresso_instructionset.h"
+#include "interpreter/interpreter_float.h"
 #include "interpreter/interpreter_insreg.h"
 #include "jit_internal.h"
 #include "jit_verify.h"
 #include "mem.h"
+
+#include <binrec++.h>
+
+// Define this to ignore differences in generated QNaN sign bits (PowerPC
+//  0x7FF8...0 vs Intel 0xFFF8...0) when any of the NATIVE_IEEE_NAN,
+//  PPC_IGNORE_FPSCR_VXFOO, or PPC_NO_FPSCR_STATE optimizations are
+//  enabled.  If this is defined and a difference in generated QNaN sign
+//  bit is found, the JIT-generated value will be copied to the verify
+//  block, which may mask JIT bugs!
+#define FIXUP_OPTIMIZED_QNAN
 
 
 namespace cpu
@@ -21,17 +32,9 @@ namespace jit
 static std::mutex
 memoryLock;
 
-void
-insertVerifyCall(PPCEmuAssembler &a,
-                 uint32_t instr,
-                 void *verifyWrapper)
-{
-   a.saveAll();
-   a.mov(asmjit::X86Mem(asmjit::x86::rsp, 32, 4), a.genCia);
-   a.mov(asmjit::X86Mem(asmjit::x86::rsp, 36, 4), instr);
-   a.call(asmjit::Ptr(verifyWrapper));
-}
-
+// Return whether the given instruction accesses memory.  We include HLE
+//  calls (the kc pseudoinstruction) in this set since HLE code could (and
+//  generally will) touch guest memory.
 static bool
 isMemoryInstruction(uint32_t instr)
 {
@@ -103,18 +106,21 @@ isMemoryInstruction(uint32_t instr)
        || data->id == espresso::InstructionID::psq_stu
        || data->id == espresso::InstructionID::psq_stx
        || data->id == espresso::InstructionID::psq_stux
+       || data->id == espresso::InstructionID::kc
 ;
 }
 
 static void
-lookupMemoryTarget(VerifyBuffer *verifyBuf,
+lookupMemoryTarget(Core *core,
+                   VerifyBuffer *verifyBuf,
                    espresso::Instruction instr)
 {
-   auto coreRegs = &verifyBuf->coreRegsCopy;
+   auto coreCopy = &verifyBuf->coreCopy;
    auto data = espresso::decodeInstruction(instr);
 
    if (!data) {  // Instruction word was invalid
       verifyBuf->memorySize = 0;
+      verifyBuf->memoryAddress = 0;
       return;
    }
 
@@ -165,7 +171,7 @@ lookupMemoryTarget(VerifyBuffer *verifyBuf,
       break;
 
    case espresso::InstructionID::stswx:
-      verifyBuf->memorySize = coreRegs->xer.byteCount;
+      verifyBuf->memorySize = coreCopy->xer.byteCount;
       break;
 
    case espresso::InstructionID::dcbz:
@@ -173,14 +179,43 @@ lookupMemoryTarget(VerifyBuffer *verifyBuf,
       verifyBuf->memorySize = 32;
       break;
 
-   case espresso::InstructionID::psq_st:
-   case espresso::InstructionID::psq_stu:
    case espresso::InstructionID::psq_stx:
    case espresso::InstructionID::psq_stux:
-      // TODO (fall through to default for now)
+   {
+      auto i = instr.qi;
+      auto w = instr.qw;
+      auto numStores = (w == 1) ? 1 : 2;
+      auto stt = static_cast<espresso::QuantizedDataType>(core->gqr[i].st_type);
+      if (stt == espresso::QuantizedDataType::Unsigned8 || stt == espresso::QuantizedDataType::Signed8) {
+         verifyBuf->memorySize = 1 * numStores;
+      } else if (stt == espresso::QuantizedDataType::Unsigned16 || stt == espresso::QuantizedDataType::Signed16) {
+         verifyBuf->memorySize = 2 * numStores;
+      } else {
+         verifyBuf->memorySize = 4 * numStores;
+      }
+      break;
+   }
+
+   case espresso::InstructionID::psq_st:
+   case espresso::InstructionID::psq_stu:
+   {
+      auto i = instr.i;
+      auto w = instr.w;
+      auto numStores = (w == 1) ? 1 : 2;
+      auto stt = static_cast<espresso::QuantizedDataType>(core->gqr[i].st_type);
+      if (stt == espresso::QuantizedDataType::Unsigned8 || stt == espresso::QuantizedDataType::Signed8) {
+         verifyBuf->memorySize = 1 * numStores;
+      } else if (stt == espresso::QuantizedDataType::Unsigned16 || stt == espresso::QuantizedDataType::Signed16) {
+         verifyBuf->memorySize = 2 * numStores;
+      } else {
+         verifyBuf->memorySize = 4 * numStores;
+      }
+      break;
+   }
 
    default:
       verifyBuf->memorySize = 0;
+      verifyBuf->memoryAddress = 0;
       return;
    }
 
@@ -199,9 +234,19 @@ lookupMemoryTarget(VerifyBuffer *verifyBuf,
       if (instr.rA == 0) {
          verifyBuf->memoryAddress = 0;
       } else {
-         verifyBuf->memoryAddress = coreRegs->gpr[instr.rA];
+         verifyBuf->memoryAddress = coreCopy->gpr[instr.rA];
       }
       verifyBuf->memoryAddress += sign_extend<16, int32_t>(instr.d);
+      break;
+
+   case espresso::InstructionID::psq_st:
+   case espresso::InstructionID::psq_stu:
+      if (instr.rA == 0) {
+         verifyBuf->memoryAddress = 0;
+      } else {
+         verifyBuf->memoryAddress = coreCopy->gpr[instr.rA];
+      }
+      verifyBuf->memoryAddress += sign_extend<12, int32_t>(instr.qd);
       break;
 
    case espresso::InstructionID::stbx:
@@ -219,19 +264,21 @@ lookupMemoryTarget(VerifyBuffer *verifyBuf,
    case espresso::InstructionID::stfiwx:
    case espresso::InstructionID::stfdx:
    case espresso::InstructionID::stfdux:
+   case espresso::InstructionID::psq_stx:
+   case espresso::InstructionID::psq_stux:
       if (instr.rA == 0) {
          verifyBuf->memoryAddress = 0;
       } else {
-         verifyBuf->memoryAddress = coreRegs->gpr[instr.rA];
+         verifyBuf->memoryAddress = coreCopy->gpr[instr.rA];
       }
-      verifyBuf->memoryAddress += coreRegs->gpr[instr.rB];
+      verifyBuf->memoryAddress += coreCopy->gpr[instr.rB];
       break;
 
    case espresso::InstructionID::stswi:
       if (instr.rA == 0) {
          verifyBuf->memoryAddress = 0;
       } else {
-         verifyBuf->memoryAddress = coreRegs->gpr[instr.rA];
+         verifyBuf->memoryAddress = coreCopy->gpr[instr.rA];
       }
       break;
 
@@ -240,17 +287,11 @@ lookupMemoryTarget(VerifyBuffer *verifyBuf,
       if (instr.rA == 0) {
          verifyBuf->memoryAddress = 0;
       } else {
-         verifyBuf->memoryAddress = coreRegs->gpr[instr.rA];
+         verifyBuf->memoryAddress = coreCopy->gpr[instr.rA];
       }
-      verifyBuf->memoryAddress += coreRegs->gpr[instr.rB];
+      verifyBuf->memoryAddress += coreCopy->gpr[instr.rB];
       verifyBuf->memoryAddress = align_down(verifyBuf->memoryAddress, 32);
       break;
-
-   case espresso::InstructionID::psq_st:
-   case espresso::InstructionID::psq_stu:
-   case espresso::InstructionID::psq_stx:
-   case espresso::InstructionID::psq_stux:
-      // TODO (fall through to default for now)
 
    default:
       decaf_abort("Missing memoryAddress calculation");
@@ -268,25 +309,57 @@ disassemble(uint32_t instr,
    return disassembly.text;
 }
 
+static bool
+shouldVerify(const espresso::InstructionInfo *data)
+{
+   return data != nullptr
+       && data->id != espresso::InstructionID::kc
+       && data->id != espresso::InstructionID::lwarx
+       && data->id != espresso::InstructionID::mftb
+       && data->id != espresso::InstructionID::stwcx;
+}
+
+
+void
+verifyInit(Core *core,
+           VerifyBuffer *verifyBuf)
+{
+   // We copy the core state once when entering the JIT block, then call
+   //  the interpreter repeatedly on this copy.  This lets the interpreter
+   //  behave correctly even if the JIT callbacks don't fully update the
+   //  state due to optimizations (and also avoids the cost of a copy on
+   //  every instruction).
+   memcpy(static_cast<CoreRegs *>(&verifyBuf->coreCopy),
+          static_cast<CoreRegs *>(core),
+          sizeof(CoreRegs));
+   // Regenerate FEX and VX because libbinrec doesn't store them in the
+   //  state block.
+   updateFEX_VX(&verifyBuf->coreCopy);
+}
+
 void
 verifyPre(Core *core,
           VerifyBuffer *verifyBuf,
           uint32_t cia,
           uint32_t instr)
 {
+   if (!shouldVerify(espresso::decodeInstruction(instr))) {
+      return;
+   }
+
    // If entering a load/store instruction, lock out other cores so we can
-   //  safely verify the instruction's behavior
-   if (isMemoryInstruction(instr)) {
+   //  safely verify the instruction's behavior.
+   verifyBuf->isMemoryInstr = isMemoryInstruction(instr);
+   if (verifyBuf->isMemoryInstr) {
       memoryLock.lock();
    }
 
-   // Save the current core state for interpreter execution in verifyPost()
-   memcpy(&verifyBuf->coreRegsCopy, static_cast<CoreRegs *>(core), sizeof(verifyBuf->coreRegsCopy));
-
-   // Save the initial contents of any memory touched by the instruction
-   lookupMemoryTarget(verifyBuf, static_cast<espresso::Instruction>(instr));
-   decaf_check(verifyBuf->memorySize <= sizeof(verifyBuf->preJitBuffer));
-   memcpy(verifyBuf->preJitBuffer, mem::translate(verifyBuf->memoryAddress), verifyBuf->memorySize);
+   // Save the initial contents of any memory touched by the instruction.
+   lookupMemoryTarget(core, verifyBuf, static_cast<espresso::Instruction>(instr));
+   if (verifyBuf->memorySize > 0) {
+      decaf_check(verifyBuf->memorySize <= sizeof(verifyBuf->preJitBuffer));
+      memcpy(verifyBuf->preJitBuffer, mem::translate(verifyBuf->memoryAddress), verifyBuf->memorySize);
+   }
 }
 
 void
@@ -295,123 +368,223 @@ verifyPost(Core *core,
            uint32_t cia,
            uint32_t instr)
 {
-   Core coreCopy;
-   memcpy(static_cast<CoreRegs *>(&coreCopy), &verifyBuf->coreRegsCopy, sizeof(verifyBuf->coreRegsCopy));
-
-   // Save the data written by JIT code...
-   memcpy(verifyBuf->postJitBuffer, mem::translate(verifyBuf->memoryAddress), verifyBuf->memorySize);
-   // ... and restore the original data for the interpreter
-   memcpy(mem::translate(verifyBuf->memoryAddress), verifyBuf->preJitBuffer, verifyBuf->memorySize);
-
-   // Execute the instruction using the interpreter implementation
    auto data = espresso::decodeInstruction(instr);
-   if (data) {
-      auto fptr = interpreter::getInstructionHandler(data->id);
-      decaf_assert(fptr, fmt::format("Unimplemented interpreter instruction {}", data->name));
-      coreCopy.nia = cia + 4;
-      fptr(&coreCopy, instr);
+   auto instrId = data ? data->id : static_cast<espresso::InstructionID>(-1);
+
+   if (!shouldVerify(data)) {
+      // We can't repeat the instruction without causing side effects, so
+      //  assume it worked and reinitialize the verify buffer from the
+      //  current core state, taking into account any optimizations that
+      //  may leave the active state block not up to date.
+
+      auto savedCR = verifyBuf->coreCopy.cr;
+      auto savedFPSCR = verifyBuf->coreCopy.fpscr;
+
+      verifyInit(core, verifyBuf);
+
+      if (gGuestOpt & binrec::Optimize::GuestPPC::USE_SPLIT_FIELDS) {
+         verifyBuf->coreCopy.cr.value = savedCR.value;
+         // stwcx. will properly update cr0.eq even if USE_SPLIT_FIELDS,
+         //  so copy that bit across.
+         if (instrId == espresso::InstructionID::stwcx) {
+            verifyBuf->coreCopy.cr.value &= ~(1<<29);
+            verifyBuf->coreCopy.cr.value |= core->cr.value & (1<<29);
+         }
+      }
+      if (gGuestOpt & binrec::Optimize::GuestPPC::NO_FPSCR_STATE) {
+         verifyBuf->coreCopy.fpscr.value &= 0xFF;
+         verifyBuf->coreCopy.fpscr.value |= savedFPSCR.value & 0xFFFFFF00;
+      } else if (gGuestOpt & binrec::Optimize::GuestPPC::USE_SPLIT_FIELDS) {
+         verifyBuf->coreCopy.fpscr.fr = savedFPSCR.fr;
+         verifyBuf->coreCopy.fpscr.fi = savedFPSCR.fi;
+         verifyBuf->coreCopy.fpscr.fprf = savedFPSCR.fprf;
+      } else if (gCommonOpt & binrec::Optimize::FOLD_FP_CONSTANTS) {
+         verifyBuf->coreCopy.fpscr.fr = savedFPSCR.fr;
+         verifyBuf->coreCopy.fpscr.fi = savedFPSCR.fi;
+      }
+
+      return;
    }
 
-   // Check all registers and any touched memory for discrepancies
+   auto coreCopy = &verifyBuf->coreCopy;
 
-   decaf_assert(core->nia == coreCopy.nia,
+   if (verifyBuf->memorySize > 0) {
+      // Save the data written by JIT code...
+      memcpy(verifyBuf->postJitBuffer, mem::translate(verifyBuf->memoryAddress), verifyBuf->memorySize);
+      // ... and restore the original data for the interpreter.
+      memcpy(mem::translate(verifyBuf->memoryAddress), verifyBuf->preJitBuffer, verifyBuf->memorySize);
+   }
+
+   // Execute the instruction using the interpreter implementation on the
+   //  saved copy of the core state.
+   if (data) {
+      auto fptr = interpreter::getInstructionHandler(instrId);
+      decaf_assert(fptr, fmt::format("Unimplemented interpreter instruction {}", data->name));
+      coreCopy->cia = cia;
+      coreCopy->nia = cia + 4;
+      fptr(coreCopy, instr);
+   }
+
+   uint8_t expectedMemory[128];
+   if (verifyBuf->memorySize > 0) {
+      // Save the expected data (as written by the interpreter).
+      memcpy(expectedMemory, mem::translate(verifyBuf->memoryAddress), verifyBuf->memorySize);
+   }
+
+   // If this was a load/store instruction, let other cores proceed again.
+   if (verifyBuf->isMemoryInstr) {
+      memoryLock.unlock();
+   }
+
+   // Check all registers and any touched memory for discrepancies.
+
+   decaf_assert(core->nia == coreCopy->nia,
                 fmt::format("Wrong NIA at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                             cia, disassemble(instr, cia),
-                            core->nia, coreCopy.nia));
+                            core->nia, coreCopy->nia));
 
    for (auto i = 0; i < 32; ++i) {
-      decaf_assert(core->gpr[i] == coreCopy.gpr[i],
+      decaf_assert(core->gpr[i] == coreCopy->gpr[i],
                    fmt::format("Wrong value in GPR {} at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                                i, cia, disassemble(instr, cia),
-                               core->gpr[i], coreCopy.gpr[i]));
+                               core->gpr[i], coreCopy->gpr[i]));
    }
 
    for (auto i = 0; i < 32; ++i) {
-      decaf_assert(core->fpr[i].idw == coreCopy.fpr[i].idw,
+#ifdef FIXUP_OPTIMIZED_QNAN
+      if ((gCommonOpt & binrec::Optimize::NATIVE_IEEE_NAN)
+       || (gGuestOpt & (binrec::Optimize::GuestPPC::IGNORE_FPSCR_VXFOO
+                        | binrec::Optimize::GuestPPC::NO_FPSCR_STATE))) {
+         if (core->fpr[i].idw == UINT64_C(0xFFF8000000000000)
+          && coreCopy->fpr[i].idw == UINT64_C(0x7FF8000000000000)) {
+            coreCopy->fpr[i].idw = core->fpr[i].idw;
+         }
+      }
+#endif
+      decaf_assert(core->fpr[i].idw == coreCopy->fpr[i].idw,
                    fmt::format("Wrong value in FPR {} at 0x{:X}: {}\n      Found: 0x{:08X}_{:08X} ({:g})\n   Expected: 0x{:08X}_{:08X} ({:g})",
                                i, cia, disassemble(instr, cia),
                                static_cast<uint32_t>(core->fpr[i].idw >> 32),
                                static_cast<uint32_t>(core->fpr[i].idw),
                                core->fpr[i].value,
-                               static_cast<uint32_t>(coreCopy.fpr[i].idw >> 32),
-                               static_cast<uint32_t>(coreCopy.fpr[i].idw),
-                               coreCopy.fpr[i].value));
+                               static_cast<uint32_t>(coreCopy->fpr[i].idw >> 32),
+                               static_cast<uint32_t>(coreCopy->fpr[i].idw),
+                               coreCopy->fpr[i].value));
    }
 
    for (auto i = 0; i < 32; ++i) {
-      decaf_assert(core->fpr[i].idw_paired1 == coreCopy.fpr[i].idw_paired1,
+#ifdef FIXUP_OPTIMIZED_QNAN
+      if ((gCommonOpt & binrec::Optimize::NATIVE_IEEE_NAN)
+       || (gGuestOpt & (binrec::Optimize::GuestPPC::IGNORE_FPSCR_VXFOO
+                        | binrec::Optimize::GuestPPC::NO_FPSCR_STATE))) {
+         if (core->fpr[i].idw_paired1 == UINT64_C(0xFFF8000000000000)
+          && coreCopy->fpr[i].idw_paired1 == UINT64_C(0x7FF8000000000000)) {
+            coreCopy->fpr[i].idw_paired1 = core->fpr[i].idw_paired1;
+         }
+      }
+#endif
+      decaf_assert(core->fpr[i].idw_paired1 == coreCopy->fpr[i].idw_paired1,
                    fmt::format("Wrong value in PS1 {} at 0x{:X}: {}\n      Found: 0x{:08X}_{:08X} ({:g})\n   Expected: 0x{:08X}_{:08X} ({:g})",
                                i, cia, disassemble(instr, cia),
                                static_cast<uint32_t>(core->fpr[i].idw_paired1 >> 32),
                                static_cast<uint32_t>(core->fpr[i].idw_paired1),
                                core->fpr[i].paired1,
-                               static_cast<uint32_t>(coreCopy.fpr[i].idw_paired1 >> 32),
-                               static_cast<uint32_t>(coreCopy.fpr[i].idw_paired1),
-                               coreCopy.fpr[i].paired1));
+                               static_cast<uint32_t>(coreCopy->fpr[i].idw_paired1 >> 32),
+                               static_cast<uint32_t>(coreCopy->fpr[i].idw_paired1),
+                               coreCopy->fpr[i].paired1));
    }
 
    for (auto i = 0; i < 8; ++i) {
-      decaf_assert(core->gqr[i].value == coreCopy.gqr[i].value,
+      decaf_assert(core->gqr[i].value == coreCopy->gqr[i].value,
                    fmt::format("Wrong value in GQR {} at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                                i, cia, disassemble(instr, cia),
-                               core->gqr[i].value, coreCopy.gqr[i].value));
+                               core->gqr[i].value, coreCopy->gqr[i].value));
    }
 
-   decaf_assert(core->lr == coreCopy.lr,
+   decaf_assert(core->lr == coreCopy->lr,
                 fmt::format("Wrong value in LR at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                             cia, disassemble(instr, cia),
-                            core->lr, coreCopy.lr));
+                            core->lr, coreCopy->lr));
 
-   decaf_assert(core->ctr == coreCopy.ctr,
+   decaf_assert(core->ctr == coreCopy->ctr,
                 fmt::format("Wrong value in CTR at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                             cia, disassemble(instr, cia),
-                            core->ctr, coreCopy.ctr));
+                            core->ctr, coreCopy->ctr));
 
-   decaf_assert(core->cr.value == coreCopy.cr.value,
-                fmt::format("Wrong value in CR at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
-                            cia, disassemble(instr, cia),
-                            core->cr.value, coreCopy.cr.value));
+   // Skip CR check if split fields are enabled, because the value in CR
+   //  may not be up to date.
+   if (!(gGuestOpt & binrec::Optimize::GuestPPC::USE_SPLIT_FIELDS)) {
+      decaf_assert(core->cr.value == coreCopy->cr.value,
+                   fmt::format("Wrong value in CR at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
+                               cia, disassemble(instr, cia),
+                               core->cr.value, coreCopy->cr.value));
+   }
 
-   decaf_assert(core->xer.value == coreCopy.xer.value,
+   decaf_assert(core->xer.value == coreCopy->xer.value,
                 fmt::format("Wrong value in XER at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                             cia, disassemble(instr, cia),
-                            core->xer.value, coreCopy.xer.value));
+                            core->xer.value, coreCopy->xer.value));
 
-   if (0)  // TODO: re-enable when JIT FP implementations update FPSCR
-   decaf_assert(core->fpscr.value == coreCopy.fpscr.value,
+   // Skip FPRF check for fctiw[z] and mffs, which leave it undefined (and
+   //  we don't attempt to mimic whatever the hardware actually does for
+   //  them).  For these instructions, we copy the JIT state into the
+   //  local copy so as not to trigger spurious failures on subsequent
+   //  instructions.
+   if (instrId == espresso::InstructionID::fctiw
+    || instrId == espresso::InstructionID::fctiwz
+    || instrId == espresso::InstructionID::mffs) {
+      coreCopy->fpscr.value &= ~0x0001F000;
+      coreCopy->fpscr.value |= core->fpscr.value & 0x0001F000;
+   }
+   // Regenerate FEX and VX because libbinrec doesn't store them in the
+   //  state block.
+   updateFEX_VX(core);
+   // Ignore parts of FPSCR which may not be up to date based on enabled
+   //  optimizations.
+   uint32_t fpscrMask;
+   if (gGuestOpt & binrec::Optimize::GuestPPC::NO_FPSCR_STATE) {
+      fpscrMask = 0xFF;
+   } else if (gGuestOpt & binrec::Optimize::GuestPPC::USE_SPLIT_FIELDS) {
+      fpscrMask = ~0x0007F000;
+   } else if (gCommonOpt & binrec::Optimize::FOLD_FP_CONSTANTS) {
+      fpscrMask = ~0x00060000;
+   } else {
+      fpscrMask = ~0u;
+   }
+   decaf_assert((core->fpscr.value & fpscrMask) == (coreCopy->fpscr.value & fpscrMask),
                 fmt::format("Wrong value in FPSCR at 0x{:X}: {}\n      Found: 0x{:08X}\n   Expected: 0x{:08X}",
                             cia, disassemble(instr, cia),
-                            core->fpscr.value, coreCopy.fpscr.value));
+                            core->fpscr.value, coreCopy->fpscr.value));
 
    for (auto i = 0u; i < verifyBuf->memorySize; ++i) {
       auto found = verifyBuf->postJitBuffer[i];
-      auto expected = mem::read<uint8_t>(verifyBuf->memoryAddress + i);
+      auto expected = expectedMemory[i];
       if (found != expected) {
          // Try and make the output reasonably useful
          std::string addressStr = fmt::format("0x{:X}", verifyBuf->memoryAddress);
          std::string foundStr, expectedStr;
-         if (data->id == espresso::InstructionID::stswi || data->id == espresso::InstructionID::stswx) {
+         if (instrId == espresso::InstructionID::stswi || instrId == espresso::InstructionID::stswx) {
             addressStr += fmt::format("+0x{:X}", i);
             foundStr = fmt::format("0x{:02X}", found);
             expectedStr = fmt::format("0x{:02X}", expected);
-         } else if (data->id == espresso::InstructionID::stmw) {
+         } else if (instrId == espresso::InstructionID::stmw) {
             auto offset = align_down(i, 4);
             addressStr += fmt::format("+0x{:X}", offset);
-            foundStr = fmt::format("0x{:02X}", byte_swap(*reinterpret_cast<uint32_t *>(&verifyBuf->postJitBuffer[offset])));
-            expectedStr = fmt::format("0x{:02X}", mem::read<uint32_t>(verifyBuf->memoryAddress + offset));
+            foundStr = fmt::format("0x{:08X}", byte_swap(*reinterpret_cast<uint32_t *>(&verifyBuf->postJitBuffer[offset])));
+            expectedStr = fmt::format("0x{:08X}", byte_swap(*reinterpret_cast<uint32_t *>(&expectedMemory[offset])));
          } else if (verifyBuf->memorySize == 8) {
             foundStr = fmt::format("0x{:08X}_{:08X}",
                                    byte_swap(*reinterpret_cast<uint32_t *>(verifyBuf->postJitBuffer)),
                                    byte_swap(*reinterpret_cast<uint32_t *>(&verifyBuf->postJitBuffer[4])));
             expectedStr = fmt::format("0x{:08X}_{:08X}",
-                                      mem::read<uint32_t>(verifyBuf->memoryAddress),
-                                      mem::read<uint32_t>(verifyBuf->memoryAddress + 4));
+                                      byte_swap(*reinterpret_cast<uint32_t *>(expectedMemory)),
+                                      byte_swap(*reinterpret_cast<uint32_t *>(&expectedMemory[4])));
          } else if (verifyBuf->memorySize == 4) {
             foundStr = fmt::format("0x{:08X}", byte_swap(*reinterpret_cast<uint32_t *>(verifyBuf->postJitBuffer)));
-            expectedStr = fmt::format("0x{:08X}", mem::read<uint32_t>(verifyBuf->memoryAddress));
+            expectedStr = fmt::format("0x{:08X}", byte_swap(*reinterpret_cast<uint32_t *>(expectedMemory)));
          } else if (verifyBuf->memorySize == 2) {
             foundStr = fmt::format("0x{:04X}", byte_swap(*reinterpret_cast<uint16_t *>(verifyBuf->postJitBuffer)));
-            expectedStr = fmt::format("0x{:04X}", mem::read<uint16_t>(verifyBuf->memoryAddress));
+            expectedStr = fmt::format("0x{:04X}", byte_swap(*reinterpret_cast<uint16_t *>(expectedMemory)));
          } else {
             foundStr = fmt::format("0x{:02X}", found);
             expectedStr = fmt::format("0x{:02X}", expected);
@@ -420,11 +593,6 @@ verifyPost(Core *core,
                                  addressStr, cia, disassemble(instr, cia),
                                  foundStr, expectedStr));
       }
-   }
-
-   // If this was a load/store instruction, let other cores proceed again
-   if (isMemoryInstruction(instr)) {
-      memoryLock.unlock();
    }
 }
 

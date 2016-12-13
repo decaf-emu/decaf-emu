@@ -273,7 +273,7 @@ initialiseInstructionTable()
       // Add the actual instruction entry
       auto field = instr.opcode.back().field;
       auto value = instr.opcode.back().value;
-      table->addTable(instr.opcode.back().field);
+      table->addTable(field);
       table->addInstruction(field, value, &instr);
    }
 }

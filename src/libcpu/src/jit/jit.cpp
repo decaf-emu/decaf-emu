@@ -1,23 +1,22 @@
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
+#include "interpreter/interpreter.h"
 #include "jit.h"
 #include "jit_internal.h"
-#include "jit_insreg.h"
 #include "jit_verify.h"
 #include "jit_vmemruntime.h"
 #include "mem.h"
 
-#include <algorithm>
-#include <array>
-#include <common/align.h>
+#include <cfenv>
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
 #include <common/fastregionmap.h>
 #include <common/log.h>
-#include <cfenv>
-#include <map>
-#include <vector>
+#include <common/platform_compiler.h>
+#include <cstdlib>
+
+#include <binrec++.h>
 
 namespace cpu
 {
@@ -25,614 +24,805 @@ namespace cpu
 namespace jit
 {
 
-static const bool JIT_DEBUG = true;
-static const int JIT_MAX_INST = 3000;
-static const bool JIT_REGCACHE = true;
+// Undefined this to disable all profiling logic.  The profiler is fairly
+//  non-intrusive if disabled, but it still costs a few cycles per JIT
+//  control transfer.
+#define JIT_ENABLE_PROFILING
 
-// Insert NOPs at the beginning of a generated block of code.
-//  The Visual Studio disassembler can get confused without these.
-static const bool JIT_INITIAL_NOPS =
-#ifdef _MSC_VER
-   true;
-#else
-   false;
-#endif
 
-static std::vector<jitinstrfptr_t>
-sInstructionMap;
+using JitEntry = void (*)(Core *core, uintptr_t membase);
 
+using BinrecHandle = binrec::Handle<Core *>;
+
+
+// Start address for single-unit verification (0 = verify all code)
+static ppcaddr_t
+sVerifyAddress;
+
+// Maximum size of JIT code cache
+static size_t
+sCacheSize;
+
+// JIT code cache manager
 static VMemRuntime*
 sRuntime;
 
-static FastRegionMap<JitCode>
+// Mapping from entry addresses to JIT code
+static FastRegionMap<JitEntry>
 sJitBlocks;
 
-static std::array<uint8_t, 32>
-sBaseRelocCode;
+// (Stats) Total size of generated code
+static uint64_t
+sTotalCodeSize;
+
+// (Stats) Bitmask of cores to profile
+static unsigned int
+sProfilingMask;
+
+// (Stats) Total time spent in JIT code (RDTSC cycles)
+static uint64_t
+sTotalProfileTime;
+
+// (Stats) Time spent in each JIT block (RDTSC cycles)
+static FastRegionMap<uint64_t>
+sBlockProfileTime;
+
+// (Stats) Number of calls to each JIT block
+static FastRegionMap<uint64_t>
+sBlockProfileCount;
+
+
+struct OptFlagInfo
+{
+   enum {
+      OPTFLAG_COMMON,
+      OPTFLAG_GUEST,
+      OPTFLAG_HOST,
+      OPTFLAG_CHAIN
+   } type;
+   unsigned int value;
+};
+
+static const std::map<std::string, OptFlagInfo>
+sOptFlags = {
+   {"BASIC",                    {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::BASIC}},
+   {"DECONDITION",              {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::DECONDITION}},
+   {"DEEP_DATA_FLOW",           {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::DEEP_DATA_FLOW}},
+   {"DSE",                      {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::DSE}},
+   {"DSE_FP",                   {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::DSE_FP}},
+   {"FOLD_CONSTANTS",           {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::FOLD_CONSTANTS}},
+   {"FOLD_FP_CONSTANTS",        {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::FOLD_FP_CONSTANTS}},
+   {"NATIVE_IEEE_NAN",          {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::NATIVE_IEEE_NAN}},
+   {"NATIVE_IEEE_UNDERFLOW",    {OptFlagInfo::OPTFLAG_COMMON,
+                                 binrec::Optimize::NATIVE_IEEE_UNDERFLOW}},
+
+   {"PPC_ASSUME_NO_SNAN",       {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::ASSUME_NO_SNAN}},
+   {"PPC_CONSTANT_GQRS",        {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::CONSTANT_GQRS}},
+   {"PPC_FAST_FCTIW",           {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::FAST_FCTIW}},
+   {"PPC_FAST_FMADDS",          {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::FAST_FMADDS}},
+   {"PPC_FAST_FMULS",           {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::FAST_FMULS}},
+   {"PPC_FAST_STFS",            {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::FAST_STFS}},
+   {"PPC_FNMADD_ZERO_SIGN",     {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::FNMADD_ZERO_SIGN}},
+   {"PPC_FORWARD_LOADS",        {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::FORWARD_LOADS}},
+   {"PPC_IGNORE_FPSCR_VXFOO",   {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::IGNORE_FPSCR_VXFOO}},
+   {"PPC_NATIVE_RECIPROCAL",    {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::NATIVE_RECIPROCAL}},
+   {"PPC_NO_FPSCR_STATE",       {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::NO_FPSCR_STATE}},
+   {"PPC_PAIRED_LWARX_STWCX",   {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::PAIRED_LWARX_STWCX}},
+   {"PPC_PS_STORE_DENORMALS",   {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::PS_STORE_DENORMALS}},
+   {"PPC_TRIM_CR_STORES",       {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::TRIM_CR_STORES}},
+   {"PPC_USE_SPLIT_FIELDS",     {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::USE_SPLIT_FIELDS}},
+
+   {"X86_ADDRESS_OPERANDS",     {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::ADDRESS_OPERANDS}},
+   {"X86_BRANCH_ALIGNMENT",     {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::BRANCH_ALIGNMENT}},
+   {"X86_CONDITION_CODES",      {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::CONDITION_CODES}},
+   {"X86_FIXED_REGS",           {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::FIXED_REGS}},
+   {"X86_FORWARD_CONDITIONS",   {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::FORWARD_CONDITIONS}},
+   {"X86_MERGE_REGS",           {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::MERGE_REGS}},
+   {"X86_STORE_IMMEDIATE",      {OptFlagInfo::OPTFLAG_HOST,
+                                 binrec::Optimize::HostX86::STORE_IMMEDIATE}},
+
+   // Maps to sUseChaining instead of a flag value
+   {"CHAIN",                    {OptFlagInfo::OPTFLAG_CHAIN}},
+};
+
+unsigned int
+gCommonOpt;
+
+unsigned int
+gGuestOpt;
+
+unsigned int
+gHostOpt;
+
+static bool
+sUseChaining;
+
+static std::vector<std::pair<ppcaddr_t, uint32_t>>
+sReadOnlyRanges;
+
+
+static inline JitEntry
+getJitEntry(Core *core, ppcaddr_t address);
+
+
+//////// JIT callback functions
 
 static void *
-sPreInstr;
+chainLookup(Core *core, ppcaddr_t address)
+{
+   return (void *)getJitEntry(core, address);
+}
 
-static void *
-sPostInstr;
 
-JitCall
-gCallFn;
+static uint64_t
+mftbHandler(Core *core)
+{
+   return core->tb();
+}
 
-JitFinale
-gFinaleFn;
-
-void
-registerUnwindTable(VMemRuntime *runtime, intptr_t jitCallAddr);
-
-void
-unregisterUnwindTable();
-
-JitCode
-jit_continue(uint32_t addr, JitCode *jumpSource);
 
 static void
-initStubs()
+scHandler(Core *core)
 {
-   PPCEmuAssembler a(sRuntime);
+   auto instr = mem::read<espresso::Instruction>(core->nia - 4);
+   auto id = instr.kcn;
+   auto kc = cpu::getKernelCall(id);
+   decaf_assert(kc, fmt::format("Encountered invalid Kernel Call ID {}", id));
 
-   if (JIT_DEBUG && JIT_INITIAL_NOPS) {
-      for (auto i = 0; i < 12; ++i) {
-         a.nop();
-      }
+   kc->func(core, kc->user_data);
+
+   // We might have been rescheduled on a new core.
+   core = this_core::state();
+
+   // If the next instruction is a blr, execute it ourselves rather than
+   // spending the overhead of calling into JIT for just that instruction.
+   auto next_instr = mem::read<uint32_t>(core->nia);
+   if (next_instr == 0x4E800020) {
+      core->nia = core->lr;
    }
 
-   auto introLabel = a.newLabel();
-   auto extroLabel = a.newLabel();
-   auto exitLabel = a.newLabel();
-   auto verifyPreLabel = a.newLabel();
-   auto verifyPostLabel = a.newLabel();
-
-   uint32_t stackSpace = 0x20;  // Windows shadow space
-   if (gJitMode == jit_mode::verify) {
-      // Leave space for the verification args/buffer on the stack:
-      //  RSP+32 = Address of instruction being verified
-      //  RSP+36 = Instruction word being verified
-      //  RSP+40 = verification buffer
-      stackSpace += 8 + static_cast<uint32_t>(sizeof(VerifyBuffer));
-   }
-   // Ensure the stack remains 16-byte aligned -- note that this depends
-   //  on the number of pushes below; we have an even number of pushes,
-   //  and the incoming CALL instruction adds 8 bytes, so we need to
-   //  reserve a stack size of 16n+8.
-   stackSpace = align_up(stackSpace - 8, 16) + 8;
-
-   // This is invoked to set up the neccessary state for
-   //  the JIT block we want to execute.
-   a.bind(introLabel);
-   a.push(asmjit::x86::rbp);
-   a.push(asmjit::x86::rbx);
-#ifdef PLATFORM_WINDOWS
-   a.push(asmjit::x86::rdi);  // RSI/RDI are callee-saved in Windows x64 ABI
-   a.push(asmjit::x86::rsi);
+#ifdef JIT_ENABLE_PROFILING
+   core->jitCalledHLE = true;  // Suppress profiling for this call.
 #endif
-   a.push(asmjit::x86::r12);
-   a.push(asmjit::x86::r13);
-   a.push(asmjit::x86::r14);
-   a.push(asmjit::x86::r15);
-   a.sub(asmjit::x86::rsp, stackSpace);
-   a.mov(a.stateReg, a.sysArgReg[0]);
-   a.mov(a.membaseReg, static_cast<uint64_t>(mem::base()));
-   a.jmp(a.sysArgReg[1]);
-
-   // This is the piece of code executed when we are finished
-   //  executing the block of code started above.
-   a.bind(extroLabel);
-
-   a.cmp(a.finaleNiaArgReg, CALLBACK_ADDR);
-   a.je(exitLabel);
-
-   // If we should continue generating, lets call the
-   //  generator instead to find our new address!
-   a.mov(asmjit::x86::rax, asmjit::Ptr(jit_continue));
-   a.call(asmjit::x86::rax);
-   a.jmp(asmjit::x86::rax);
-
-   // This is how we exit back to the caller
-   a.bind(exitLabel);
-   a.mov(a.niaMem, a.finaleNiaArgReg);
-   a.mov(asmjit::x86::rax, a.stateReg);
-   a.add(asmjit::x86::rsp, stackSpace);
-   a.pop(asmjit::x86::r15);
-   a.pop(asmjit::x86::r14);
-   a.pop(asmjit::x86::r13);
-   a.pop(asmjit::x86::r12);
-#ifdef PLATFORM_WINDOWS
-   a.pop(asmjit::x86::rsi);
-   a.pop(asmjit::x86::rdi);
-#endif
-   a.pop(asmjit::x86::rbx);
-   a.pop(asmjit::x86::rbp);
-   a.ret();
-
-   if (gJitMode == jit_mode::verify) {
-      // This wraps the instruction verification setup to minimize the
-      //  number of instructions inserted into the translated code stream.
-      //  We manually save and restore volatile registers so the process of
-      //  verification doesn't change the generated code.
-      auto verifyLabel = a.newLabel();
-      a.bind(verifyLabel);
-
-      // Save all registers in the JIT register pool
-      int extraStackSpace = 0x20;  // Windows shadow space
-      int savedGpRegs = 0;
-      auto numRegs = static_cast<int32_t>(a.mRegs.size());
-      for (int i = 0; i < numRegs; ++i) {
-         if (a.mRegs[i].regType == PPCEmuAssembler::RegType::Gp) {
-            const asmjit::X86GpReg &reg = a.mGpRegVals[a.mRegs[i].regId];
-            if (reg.getRegIndex() != asmjit::kX86RegIndexAx) {  // Saved by entry point
-               a.push(reg);
-            }
-            savedGpRegs++;
-         }
-      }
-      // Realign the stack -- we do this if the push count is even, because
-      //  there's a return address on the stack as well
-      if (savedGpRegs % 2 == 0) {
-         extraStackSpace += 8;
-      }
-      for (int i = 0; i < numRegs; ++i) {
-         if (a.mRegs[i].regType == PPCEmuAssembler::RegType::Xmm) {
-            extraStackSpace += 16;
-         }
-      }
-      a.sub(asmjit::x86::rsp, extraStackSpace);
-      int xmmPushOffset = 32;
-      for (int i = 0; i < numRegs; ++i) {
-         if (a.mRegs[i].regType == PPCEmuAssembler::RegType::Xmm) {
-            a.movdqa(asmjit::X86Mem(asmjit::x86::rsp, xmmPushOffset, 16), a.mXmmRegVals[a.mRegs[i].regId]);
-            xmmPushOffset += 16;
-         }
-      }
-
-      // Call the verification function
-      // Don't forget to take into account the CALL and pushes we just did
-      //  when generating these stack references!
-      int stackOffset = 8 + 8*savedGpRegs + extraStackSpace;
-      a.mov(a.sysArgReg[2], asmjit::X86Mem(asmjit::x86::rsp, stackOffset+32, 4));
-      a.mov(a.sysArgReg[3], asmjit::X86Mem(asmjit::x86::rsp, stackOffset+36, 4));
-      a.mov(a.sysArgReg[0], a.stateReg);
-      a.lea(a.sysArgReg[1], asmjit::X86Mem(asmjit::x86::rsp, stackOffset+40));
-      a.call(asmjit::x86::rax);
-
-      // Restore registers (in reverse order!) and return
-      for (int i = numRegs - 1; i >= 0; --i) {
-         if (a.mRegs[i].regType == PPCEmuAssembler::RegType::Xmm) {
-            xmmPushOffset -= 16;
-            a.movdqa(a.mXmmRegVals[a.mRegs[i].regId], asmjit::X86Mem(asmjit::x86::rsp, xmmPushOffset, 16));
-         }
-      }
-      a.add(asmjit::x86::rsp, extraStackSpace);
-      for (int i = numRegs - 1; i >= 0; --i) {
-         if (a.mRegs[i].regType == PPCEmuAssembler::RegType::Gp) {
-            a.pop(a.mGpRegVals[a.mRegs[i].regId]);
-         }
-      }
-      a.ret();
-
-      // Call target for pre-instruction verification setup
-      a.bind(verifyPreLabel);
-      a.push(asmjit::x86::rax);
-      a.mov(asmjit::x86::rax, asmjit::Ptr(verifyPre));
-      a.jmp(verifyLabel);
-
-      // Call target for post-instruction verification
-      a.bind(verifyPostLabel);
-      a.push(asmjit::x86::rax);
-      a.mov(asmjit::x86::rax, asmjit::Ptr(verifyPost));
-      a.jmp(verifyLabel);
-   }
-
-   auto basePtr = a.make();
-   gCallFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(introLabel));
-   gFinaleFn = asmjit_cast<JitCall>(basePtr, a.getLabelOffset(extroLabel));
-   if (gJitMode == jit_mode::verify) {
-      sPreInstr = asmjit_cast<void *>(basePtr, a.getLabelOffset(verifyPreLabel));
-      sPostInstr = asmjit_cast<void *>(basePtr, a.getLabelOffset(verifyPostLabel));
-   } else {
-      sPreInstr = nullptr;
-      sPostInstr = nullptr;
-   }
-
-   asmjit::StaticRuntime rr(sBaseRelocCode.data(), sBaseRelocCode.size());
-   asmjit::X86Assembler ra(&rr, asmjit::kArchX64);
-   ra.mov(a.finaleNiaArgReg, asmjit::imm_u(0x12345678));
-   decaf_check(ra.getOffset() == 5);
-   ra.mov(a.finaleJmpSrcArgReg, asmjit::imm_u(0x123456789abcdef0));
-   decaf_check(ra.getOffset() == 15);
-   for (auto i = 15; i < 32; ++i) {
-      ra.nop();
-   }
-   ra.make();
-   decaf_check(ra.getOffset() == 32);
 }
 
-void
-initialiseRuntime()
+
+static void
+trapHandler(Core *core)
 {
-   sRuntime = new VMemRuntime(0x20000, 0x40000000);
-   initStubs();
-   registerUnwindTable(sRuntime, reinterpret_cast<intptr_t>(gCallFn));
+   decaf_abort("Game raised a trap exception. It's probably panicking.");
 }
 
-void
+
+static void
+verifyPreHandler(Core *core, uint32_t address)
+{
+   auto instr = mem::read<uint32_t>(address);
+   verifyPre(core, core->jitVerifyBuffer, address, instr);
+}
+
+
+static void
+verifyPostHandler(Core *core, uint32_t address)
+{
+   auto instr = mem::read<uint32_t>(address);
+   verifyPost(core, core->jitVerifyBuffer, address, instr);
+}
+
+
+//////// Unwind table management (Windows-specific)
+
+// TODO: This code is completely untested.
+
+#ifdef PLATFORM_WINDOWS
+
+static void
+*sFunctionTableHandle;
+
+static RUNTIME_FUNCTION
+*sFunctionTable;
+
+static size_t
+sFunctionTableSize;
+
+static size_t
+sFunctionTableLen;
+
+static bool
+registerUnwindInfo(void *code, void *unwindInfo, size_t unwindSize)
+{
+   // TODO: RtlAddGrowableFunctionTable() is Windows 8+ only; Windows 7 and
+   //  earlier would need one table per function, or another method such as
+   //  RtlInstallFunctionTableCallback().
+   if (!sFunctionTable) {
+      // TODO: Assuming >=256 bytes/function on average to keep things simple.
+      sFunctionTableSize = sCacheSize / 256;
+      sFunctionTable = new RUNTIME_FUNCTION[sFunctionTableSize];
+      sFunctionTableLen = 0;
+
+      auto runtimeBase = static_cast<ULONG_PTR>(sRuntime->getRootAddress());
+      auto runtimeLimit = static_cast<ULONG_PTR>(sRuntime->getRootAddress() + sCacheSize);
+      NTSTATUS result = RtlAddGrowableFunctionTable(&sFunctionTableHandle,
+                                                    sFunctionTable,
+                                                    0,
+                                                    sFunctionTableSize,
+                                                    runtimeBase,
+                                                    runtimeLimit);
+      if (result != STATUS_SUCCESS) {
+         gLog->error("Failed to create unwind function table: {:08X}", result);
+         return false;
+      }
+   }
+
+   void *unwindBuf = sRuntime->allocate(unwindSize, 8);
+   if (!unwindBuf) {
+      gLog->error("Out of memory for unwind info at 0x{:X} ({} bytes)", address, unwindSize);
+      return false;
+   }
+   memcpy(unwindBuf, unwindInfo, unwindSize);
+
+   if (sFunctionTableLen >= sFunctionTableSize) {
+      gLog->error("Unwind function table is full");
+      return false;
+   }
+   auto index = sFunctionTableLen++;
+
+   sFunctionTable[index].BeginAddress = static_cast<DWORD>(static_cast<uintptr_t>(code) - sRuntime->getRootAddress());
+   sFunctionTable[index].EndAddress = sFunctionTable[index].EndAddress + codeSize;
+   sFunctionTable[index].UnwindData = static_cast<DWORD>(reinterpter_cast<uintptr_t>(unwindBuf) - sRuntime->getRootAddress);
+
+   RtlGrowFunctionTable(sFunctionTableHandle, sFunctionTableLen);
+
+   return true;
+}
+
+
+static void
+unregisterUnwindTable()
+{
+   if (sFunctionTable) {
+      RtlDeleteGrowableFunctionTable(sFunctionTable);
+      sFunctionTableHandle = nullptr;
+      delete[] sFunctionTable;
+      sFunctionTable = nullptr;
+   }
+}
+
+#endif  // PLATFORM_WINDOWS
+
+
+//////// Miscellaneous internal functions
+
+static void
+initRuntime()
+{
+   sRuntime = new VMemRuntime(0x20000, sCacheSize);
+}
+
+
+static void
 freeRuntime()
 {
-   if (sRuntime) {
-      unregisterUnwindTable();
-      delete sRuntime;
-      sRuntime = nullptr;
+#ifdef PLATFORM_WINDOWS
+   unregisterUnwindTable();
+#endif
+
+   delete sRuntime;
+   sRuntime = nullptr;
+}
+
+
+static void
+binrecLog(void *, binrec::LogLevel level, const char *message)
+{
+   switch (level) {
+   case BINREC_LOGLEVEL_ERROR:
+      gLog->error("[libbinrec] {}", message);
+      break;
+   case BINREC_LOGLEVEL_WARNING:
+      gLog->warn("[libbinrec] {}", message);
+      break;
+   case BINREC_LOGLEVEL_INFO:  // Nothing really important here, so output as debug instead
+      gLog->debug("[libbinrec] {}", message);
+      break;
    }
 }
 
-void
-initialise()
+
+static BinrecHandle *
+createBinrecHandle()
 {
-   initialiseRuntime();
+   binrec::Setup setup;
+   memset(&setup, 0, sizeof(setup));
+   setup.guest = binrec::Arch::BINREC_ARCH_PPC_7XX;
+#ifdef PLATFORM_WINDOWS
+   setup.host = binrec::Arch::BINREC_ARCH_X86_64_WINDOWS_SEH;
+#else
+   setup.host = binrec::native_arch();
+#endif
+   setup.host_features = binrec::native_features();
+   setup.guest_memory_base = (void *)mem::base();
+   setup.state_offset_gpr = offsetof2(Core,gpr);
+   setup.state_offset_fpr = offsetof2(Core,fpr);
+   setup.state_offset_gqr = offsetof2(Core,gqr);
+   setup.state_offset_cr = offsetof2(Core,cr);
+   setup.state_offset_lr = offsetof2(Core,lr);
+   setup.state_offset_ctr = offsetof2(Core,ctr);
+   setup.state_offset_xer = offsetof2(Core,xer);
+   setup.state_offset_fpscr = offsetof2(Core,fpscr);
+   setup.state_offset_reserve_flag = offsetof2(Core,reserveFlag);
+   setup.state_offset_reserve_state = offsetof2(Core,reserveData);
+   setup.state_offset_nia = offsetof2(Core,nia);
+   setup.state_offset_timebase_handler = offsetof2(Core,mftbHandler);
+   setup.state_offset_sc_handler = offsetof2(Core,scHandler);
+   setup.state_offset_trap_handler = offsetof2(Core,trapHandler);
+   setup.state_offset_chain_lookup = offsetof2(Core,chainLookup);
+   setup.state_offset_branch_exit_flag = offsetof2(Core,interrupt);
+   setup.state_offset_fres_lut = offsetof2(Core,fresTable);
+   setup.state_offset_frsqrte_lut = offsetof2(Core,frsqrteTable);
+   setup.log = binrecLog;
 
-   sInstructionMap.resize(static_cast<size_t>(espresso::InstructionID::InstructionCount), nullptr);
+   auto handle = new BinrecHandle;
+   if (!handle->initialize(setup)) {
+      delete handle;
+      return nullptr;
+   }
+   handle->set_optimization_flags(gCommonOpt, gGuestOpt, gHostOpt);
+   handle->enable_branch_exit_test(true);
+   handle->enable_chaining(sUseChaining);
 
-   // Register instruction handlers
-   registerBranchInstructions();
-   registerConditionInstructions();
-   registerFloatInstructions();
-   registerIntegerInstructions();
-   registerLoadStoreInstructions();
-   registerPairedInstructions();
-   registerSystemInstructions();
+   if (gJitMode == jit_mode::verify && sVerifyAddress == 0) {
+      handle->set_pre_insn_callback(verifyPreHandler);
+      handle->set_post_insn_callback(verifyPostHandler);
+   }
+
+   for (const auto &i : sReadOnlyRanges) {
+      handle->add_readonly_region(i.first, i.second);
+   }
+
+   return handle;
 }
 
-jitinstrfptr_t
-getInstructionHandler(espresso::InstructionID id)
-{
-   auto instrId = static_cast<size_t>(id);
 
-   if (instrId >= sInstructionMap.size()) {
+static NEVER_INLINE JitEntry
+createJitEntry(Core *core, ppcaddr_t address)
+{
+   // If the first instruction is an unconditional branch (such as for a
+   // function wrapping another one), just call the target's code directly.
+   // core->nia will eventually be set to a proper value, so we don't need
+   // to worry that it will be out of sync here.
+   auto instr = mem::read<espresso::Instruction>(address);
+   auto data = espresso::decodeInstruction(instr);
+   if (data && data->id == espresso::InstructionID::b && !instr.lk) {
+      // Watch out for cycles when looking up the target!
+      ppcaddr_t target = address;
+      for (int tries = 10;
+           tries > 0 && data && data->id == espresso::InstructionID::b && !instr.lk;
+           --tries) {
+         ppcaddr_t branchAddress = target;
+         target = sign_extend<26>(instr.li << 2);
+         if (!instr.aa) {
+            target += branchAddress;
+         }
+         instr = mem::read<uint32_t>(target);
+         data = espresso::decodeInstruction(instr);
+      }
+
+      if (target != address) {
+         auto targetEntry = getJitEntry(core, target);
+         if (targetEntry) {
+            sJitBlocks.set(address, targetEntry);
+            return targetEntry;
+         }
+      }
+   }
+
+   static thread_local BinrecHandle *handle;  // TODO: not cleaned up
+
+   if (!handle) {
+      handle = createBinrecHandle();
+      if (!handle) {
+         return nullptr;
+      }
+   }
+
+   if (gJitMode == jit_mode::verify && sVerifyAddress != 0) {
+      if (address == sVerifyAddress) {
+         handle->set_pre_insn_callback(verifyPreHandler);
+         handle->set_post_insn_callback(verifyPostHandler);
+      } else {
+         handle->set_pre_insn_callback(nullptr);
+         handle->set_post_insn_callback(nullptr);
+      }
+   }
+
+   // In extreme cases (such as dense floating-point code with no
+   // optimizations enabled), translation could fail due to internal
+   // libbinrec limits, so try repeatedly with smaller code ranges if
+   // the first translation attempt fails.
+   uint32_t limit = 4096;
+   void *code;
+   long size;
+   while (!handle->translate(core, address, address+limit-1, &code, &size)) {
+      limit /= 2;
+      if (limit < 256) {
+         gLog->warn("Failed to translate code at 0x{:X}", address);
+         return nullptr;
+      }
+   }
+
+#ifdef PLATFORM_WINDOWS
+   auto codeOffset = *reinterpret_cast<uint64_t *>(code);
+   auto unwindInfo = static_cast<void *>(static_cast<uintptr_t>(code) + 8);
+   auto unwindSize = codeOffset - 8;
+   code = static_cast<void *>(static_cast<uintptr_t>(code) + codeOffset);
+   size -= codeOffset;
+#endif
+
+   void *entryBuf = sRuntime->allocate(size, 16);
+   if (!entryBuf) {
+      gLog->error("Out of memory for translated code at 0x{:X} ({} bytes)", address, size);
+      free(code);
       return nullptr;
    }
 
-   return sInstructionMap[instrId];
+   memcpy(entryBuf, code, size);
+   sJitBlocks.set(address, (JitEntry)entryBuf);
+   sTotalCodeSize += size;
+
+#ifdef PLATFORM_WINDOWS
+   if (!registerUnwindInfo(entryBuf, size, unwindInfo, unwindSize)) {
+      free(code);
+      return nullptr;
+   }
+#endif
+
+   free(code);
+
+   // Clear any floating-point exceptions raised by the translation so
+   // the translated code doesn't pick them up.
+   std::feclearexcept(FE_ALL_EXCEPT);
+
+   return (JitEntry)entryBuf;
 }
+
+
+static inline JitEntry
+getJitEntry(Core *core, ppcaddr_t address)
+{
+   auto entry = sJitBlocks.find(address);
+   if (LIKELY(entry)) {
+      return entry;
+   }
+
+   return createJitEntry(core, address);
+}
+
+
+static inline uint64_t
+rdtsc()
+{
+#ifdef _MSC_VER
+   return __rdtsc();
+#else
+   uint64_t tsc;
+   __asm__ volatile("rdtsc; shl $32,%%rdx; or %%rdx,%%rax"
+                    : "=a" (tsc) : : "rdx");
+   return tsc;
+#endif
+}
+
+
+//////// libcpu interface
 
 void
-registerInstruction(espresso::InstructionID id, jitinstrfptr_t fptr)
+initialise(size_t cacheSize)
 {
-   sInstructionMap[static_cast<size_t>(id)] = fptr;
+   sCacheSize = cacheSize;
+   initRuntime();
 }
 
-bool
-hasInstruction(espresso::InstructionID instrId)
+
+void
+initCore(Core *core)
 {
-   return getInstructionHandler(instrId) != nullptr;
+   // See binrec.h.
+   static const uint16_t fresTable[64] = {
+      0x3FFC,0x3E1, 0x3C1C,0x3A7, 0x3875,0x371, 0x3504,0x340,
+      0x31C4,0x313, 0x2EB1,0x2EA, 0x2BC8,0x2C4, 0x2904,0x2A0,
+      0x2664,0x27F, 0x23E5,0x261, 0x2184,0x245, 0x1F40,0x22A,
+      0x1D16,0x212, 0x1B04,0x1FB, 0x190A,0x1E5, 0x1725,0x1D1,
+      0x1554,0x1BE, 0x1396,0x1AC, 0x11EB,0x19B, 0x104F,0x18B,
+      0x0EC4,0x17C, 0x0D48,0x16E, 0x0BD7,0x15B, 0x0A7C,0x15B,
+      0x0922,0x143, 0x07DF,0x143, 0x069C,0x12D, 0x056F,0x12D,
+      0x0442,0x11A, 0x0328,0x11A, 0x020E,0x108, 0x0106,0x106
+   };
+   static const uint16_t frsqrteTable[64] = {
+      0x7FF4,0x7A4, 0x7852,0x700, 0x7154,0x670, 0x6AE4,0x5F2,
+      0x64F2,0x584, 0x5F6E,0x524, 0x5A4C,0x4CC, 0x5580,0x47E,
+      0x5102,0x43A, 0x4CCA,0x3FA, 0x48D0,0x3C2, 0x450E,0x38E,
+      0x4182,0x35E, 0x3E24,0x332, 0x3AF2,0x30A, 0x37E8,0x2E6,
+      0x34FD,0x568, 0x2F97,0x4F3, 0x2AA5,0x48D, 0x2618,0x435,
+      0x21E4,0x3E7, 0x1DFE,0x3A2, 0x1A5C,0x365, 0x16F8,0x32E,
+      0x13CA,0x2FC, 0x10CE,0x2D0, 0x0DFE,0x2A8, 0x0B57,0x283,
+      0x08D4,0x261, 0x0673,0x243, 0x0431,0x226, 0x020B,0x20B
+   };
+
+   core->chainLookup = chainLookup;
+   core->mftbHandler = mftbHandler;
+   core->scHandler = scHandler;
+   core->trapHandler = trapHandler;
+   core->fresTable = fresTable;
+   core->frsqrteTable = frsqrteTable;
+
+#ifdef JIT_ENABLE_PROFILING
+   core->jitCalledHLE = false;
+#endif
 }
+
 
 void
 clearCache()
 {
-   // Note: This must not be called unless there is guarenteed to be
-   //  nobody currently executing code!
-
    freeRuntime();
-   initialiseRuntime();
-
+   initRuntime();
    sJitBlocks.clear();
+   sTotalCodeSize = 0;
+   sTotalProfileTime = 0;
+   sBlockProfileTime.clear();
+   sBlockProfileCount.clear();
 }
 
-using JumpTargetList = std::vector<uint32_t>;
 
 void
-jit_b_direct(PPCEmuAssembler& a, ppcaddr_t addr)
+setOptFlags(const std::vector<std::string> &optList)
 {
-   a.saveAll();
+   gCommonOpt = gGuestOpt = gHostOpt = 0;
 
-   auto target = sJitBlocks.find(addr);
-   if (target) {
-      // We already know where this function is, let's just jump
-      //  directly to it rather than wasting time going through
-      //  the JIT dispatcher!
-      a.jmp(asmjit::Ptr(target));
-   } else {
-      // We have not JIT'd this section yet.  Let's allocate some
-      //  space for an aligned MOV instruction, then mark it as a
-      //  relocation so it can be filled by the 'linker' below.
-      auto relocLbl = a.newLabel();
-      a.bind(relocLbl);
-
-      // Save 32 bytes of memory so we have room to do set up the
-      //  call during relocation once we know where its going to
-      //  reside in the host jit memory section.
-      for (auto i = 0; i < 32; ++i) {
-         a.int3();
-      }
-      a.jmp(asmjit::x86::rax);
-
-      a.relocLabels.emplace_back(addr, relocLbl);
-   }
-}
-
-bool
-gen(JitBlock &block)
-{
-   PPCEmuAssembler a(sRuntime);
-   a.relocLabels.reserve(10);
-
-   struct TargetLblPair {
-      uint32_t idx;
-      asmjit::Label label;
-   };
-   std::map<uint32_t, TargetLblPair> targetLbls;
-   for (uint32_t i = 0; i < block.targets.size(); ++i) {
-      targetLbls.emplace(block.targets[i].first, TargetLblPair{ i, a.newLabel() });
-   }
-
-   auto codeStart = a.newLabel();
-   uint32_t lclCia;
-   a.bind(codeStart);
-
-   if (JIT_DEBUG && JIT_INITIAL_NOPS) {
-      for (auto i = 0; i < 12; ++i) {
-         a.nop();
-      }
-   }
-
-   for (lclCia = block.start; lclCia < block.end; lclCia += 4)
-   {
-      auto targetIter = targetLbls.find(lclCia);
-      if (targetIter != targetLbls.end()) {
-         // This is a jump target, we should flush any register caches
-         //  and then also insert a label so we can find this location.
-         a.bind(targetIter->second.label);
-      }
-
-      if (JIT_DEBUG) {
-         a.mov(a.niaMem, lclCia + 4);
-      }
-
-      auto instr = mem::read<espresso::Instruction>(lclCia);
-      auto data = espresso::decodeInstruction(instr);
-
-      if (!data) {
-         a.ud2();
+   for (const auto &i : optList) {
+      auto flag = sOptFlags.find(i);
+      if (flag != sOptFlags.end()) {
+         if (flag->second.type == OptFlagInfo::OPTFLAG_CHAIN) {
+            sUseChaining = true;
+         } else {
+            unsigned int &flagVar =
+               flag->second.type == OptFlagInfo::OPTFLAG_GUEST ? gGuestOpt :
+               flag->second.type == OptFlagInfo::OPTFLAG_HOST ? gHostOpt :
+               gCommonOpt;
+            flagVar |= flag->second.value;
+         }
       } else {
-         // Don't attempt to verify non-repeatable instructions
-         bool doVerify = (gJitMode == jit_mode::verify
-                          && data->id != espresso::InstructionID::kc
-                          && data->id != espresso::InstructionID::lwarx
-                          && data->id != espresso::InstructionID::stwcx);
-         if (doVerify) {
-            insertVerifyCall(a, instr, sPreInstr);
-         }
-
-         a.genCia = lclCia;
-
-         auto genSuccess = false;
-
-         auto fptr = sInstructionMap[static_cast<size_t>(data->id)];
-         if (fptr) {
-            genSuccess = fptr(a, instr);
-         }
-
-         if (!genSuccess) {
-            a.int3();
-         }
-
-         if (doVerify) {
-            insertVerifyCall(a, instr, sPostInstr);
-         }
-      }
-
-      if (!JIT_REGCACHE) {
-         a.evictAll();
-      }
-
-      if (JIT_DEBUG) {
-         a.nop();
+         gLog->warn("Unknown optimization flag: {}", i);
       }
    }
-
-   jit_b_direct(a, lclCia);
-
-   auto func = asmjit_cast<JitCode>(a.make());
-
-   if (func == nullptr) {
-      gLog->error("JIT failed due to asmjit make failure");
-      return false;
-   }
-
-   // Write in the relocation data that jumps to the Finale, which can
-   //  later be overwritten atomically by the generator.
-   for (auto &reloc : a.relocLabels) {
-      // We use a trick here to save some bytes.  We write the addr
-      //  part of the info while relocating in spite of being able
-      //  to do it during initial generation, this allows us to move
-      //  it to before or after the aligned MOV which saves us some
-      //  bytes that would otherwise be wasted on NOP's.
-
-      auto targetAddr = asmjit::Ptr(gFinaleFn);
-
-      // Find our bytes of memory allocated above...
-      auto mem = asmjit_cast<uint8_t*>(func, a.getLabelOffset(reloc.second));
-
-      auto aligned_offset = align_up(mem + 15 + 2, 8) - mem;
-      auto aligned_mov_offset = aligned_offset - 2;
-      auto aligned_base_offset = reinterpret_cast<intptr_t>(mem + aligned_offset);
-
-      // Copy the pregenerated relocation code bytes
-      std::copy(sBaseRelocCode.begin(), sBaseRelocCode.end(), mem);
-
-      // Write addr of `MOV finaleNiaArgReg, addr`
-      *reinterpret_cast<uint32_t*>(&mem[1]) = reloc.first;
-
-      // Write relmem of `MOV finaleJmpSrcArgReg, relmem`
-      *reinterpret_cast<intptr_t*>(&mem[7]) = aligned_base_offset;
-
-      // Write `MOV RAX, target`
-      mem[aligned_mov_offset + 0] = 0x48;
-      mem[aligned_mov_offset + 1] = 0xB8;
-      auto atomicAddr = &mem[aligned_mov_offset + 2];
-      decaf_check(align_up(atomicAddr, 8) == atomicAddr);
-      *reinterpret_cast<uint64_t*>(atomicAddr) = targetAddr;
-   }
-
-   // Calculate the starting address of the block
-   auto baseAddr = asmjit_cast<JitCode>(func, a.getLabelOffset(codeStart));
-   block.entry = baseAddr;
-
-   // Generate all the offset labels for these relocations
-   for (auto &target : targetLbls) {
-      if (a.isLabelBound(target.second.label)) {
-         block.targets[target.second.idx].second =
-            asmjit_cast<JitCode>(func, a.getLabelOffset(target.second.label));
-      }
-   }
-
-   return true;
 }
 
-bool
-identBlock(JitBlock& block)
+
+void
+addReadOnlyRange(ppcaddr_t start, uint32_t size)
 {
-   auto fnStart = block.start;
-   auto fnEnd = fnStart;
-   auto lclCia = fnStart;
-
-   while (lclCia) {
-      auto instr = mem::read<espresso::Instruction>(lclCia);
-      auto data = espresso::decodeInstruction(instr);
-
-      if (!data) {
-         // Looks like we found a tail call function??
-         fnEnd = lclCia + 4;
-         gLog->warn("Bailing on JIT {:08x} ident due to failed decode at {:08x}", block.start, lclCia);
-         break;
-      }
-
-      // Targets should be added to block.targets if we know of any...
-
-      switch (data->id) {
-      case espresso::InstructionID::b:
-      case espresso::InstructionID::bc:
-      case espresso::InstructionID::bcctr:
-      case espresso::InstructionID::bclr:
-         fnEnd = lclCia + 4;
-         break;
-      default:
-         break;
-      }
-
-      if (fnEnd != fnStart) {
-         // If we found an end, lets stop searching!
-         break;
-      }
-
-      lclCia += 4;
-
-      if (((lclCia - fnStart) >> 2) > JIT_MAX_INST) {
-         fnEnd = lclCia;
-         gLog->trace("Bailing on JIT {:08x} due to max instruction limit at {:08x}", block.start, lclCia);
-         break;
-      }
-   }
-
-   block.end = fnEnd;
-
-   return true;
+   sReadOnlyRanges.emplace_back(start, size);
 }
 
-JitCode
-get(uint32_t addr)
+
+static void
+resumeWithVerify()
 {
-   auto foundBlock = sJitBlocks.find(addr);
-   if (foundBlock) {
-      return foundBlock;
-   }
+   auto core = this_core::state();
 
-   auto block = JitBlock { addr };
-
-   if (!identBlock(block)) {
-      return nullptr;
-   }
-
-   if (!gen(block)) {
-      return nullptr;
-   }
-
-   sJitBlocks.set(addr, block.entry);
-
-   for (auto i = block.targets.cbegin(); i != block.targets.cend(); ++i) {
-      if (i->second) {
-         sJitBlocks.set(i->first, i->second);
+   do {
+      if (core->interrupt.load()) {
+         this_core::checkInterrupts();
+         core = this_core::state();
       }
-   }
 
-   return block.entry;
+      const ppcaddr_t address = core->nia;
+      auto entry = getJitEntry(core, core->nia);
+
+      if (entry) {
+         VerifyBuffer verifyBuf;
+         core->jitVerifyBuffer = &verifyBuf;
+         if (!sVerifyAddress || address == sVerifyAddress) {
+            verifyInit(core, &verifyBuf);
+         }
+         entry(core, mem::base());
+      } else {
+         interpreter::step_one(core);
+      }
+
+      core = this_core::state();
+   } while (core->nia != CALLBACK_ADDR);
 }
 
-JitCode
-jit_continue(uint32_t nia, JitCode *jumpSource)
-{
-   // This would be strange...
-   decaf_check(nia != CALLBACK_ADDR);
-
-   // Log the branch if branch tracing is enabled
-   if (gBranchTraceHandler) {
-      gBranchTraceHandler(nia);
-   }
-
-   // Locate or generate the next JIT section
-   JitCode jitFn = get(nia);
-
-   // We do not update the jumpSource if branch tracing is enabled,
-   //  this is because it would cause those branches to avoid calling
-   //  here ever again...
-   if (jumpSource && !gBranchTraceHandler) {
-      // Aligned writes on x64 are guarenteed to be atomic
-      *jumpSource = jitFn;
-   }
-
-   return jitFn;
-}
-
-Core *
-execute(Core *core, JitCode block)
-{
-   return gCallFn(core, block);
-}
 
 void
 resume()
 {
-   // Before we resume, we need to update our states!
+   auto memBase = mem::base();
+
+   // Prepare FPU state for guest code execution.
    this_core::updateRoundingMode();
    std::feclearexcept(FE_ALL_EXCEPT);
 
-   // Grab the core as we currently know it
    auto core = this_core::state();
-
-   // Just to help when debugging
-   core->cia = 0xFFFFFFFD;
-
    decaf_check(core->nia != CALLBACK_ADDR);
 
-   JitCode jitFn = jit_continue(core->nia, nullptr);
-   core = execute(core, jitFn);
+   if (gJitMode == jit_mode::verify) {
+      // Use a separate routine for verify mode so we don't have to check
+      //  the current mode on every iteration through the loop.  Note that
+      //  we don't attempt to profile while verifying.
+      resumeWithVerify();
+      return;
+   }
 
-   decaf_check(core == this_core::state());
-   decaf_check(core->nia == CALLBACK_ADDR);
+   do {
+      if (UNLIKELY(core->interrupt.load())) {
+         this_core::checkInterrupts();
+         // We might have been rescheduled onto a different core.
+         core = this_core::state();
+      }
+
+      const ppcaddr_t address = core->nia;
+      auto entry = getJitEntry(core, address);
+
+      // To keep overhead in the non-profiling case as low as possible, we
+      //  only check for zeroness of the profiling mask here, which is just
+      //  a memory-immediate compare and a non-taken branch on x86.  If the
+      //  mask is nonzero, we'll check again for the specific core bit on
+      //  the profiling side of the test.
+#ifdef JIT_ENABLE_PROFILING
+      if (LIKELY(!sProfilingMask)) {
+#else
+      if (1) {
+#endif
+
+         if (LIKELY(entry)) {
+            entry(core, memBase);
+         } else {
+            // Step over the current instruction, in case it's confusing
+            // the translator.  TODO: Consider blacklisting the address to
+            // avoid trying to translate it every time we encounter it.
+            interpreter::step_one(core);
+         }
+
+         // If we just returned from a system call, we might have been
+         //  rescheduled onto a different core.
+         core = this_core::state();
+
+      } else {  // sProfilingMask != 0
+
+         const uint64_t start = rdtsc();
+
+         if (entry) {
+            entry(core, memBase);
+         } else {
+            interpreter::step_one(core);
+         }
+
+         core = this_core::state();
+
+         // Don't count profiling data for HLE calls since those have
+         //  nothing to do with JIT performance (and might also have
+         //  caused us to switch cores, so the RDTSC difference wouldn't
+         //  make any sense).
+         if (UNLIKELY(core->jitCalledHLE)) {
+            core->jitCalledHLE = false;
+         } else if (sProfilingMask & (1 << core->id)) {
+            const uint64_t time = rdtsc() - start;
+            sTotalProfileTime += time;
+            auto timePtr = sBlockProfileTime.getPtr(address);
+            timePtr->store(timePtr->load() + time);
+            auto countPtr = sBlockProfileCount.getPtr(address);
+            countPtr->store(countPtr->load() + 1);
+         }
+
+      }
+
+   } while (core->nia != CALLBACK_ADDR);
 }
 
-bool
-PPCEmuAssembler::ErrorHandler::handleError(asmjit::Error code, const char* message, void *origin) noexcept
-{
-   gLog->error("ASMJit Error {}: {}\n", code, message);
-   return true;
-}
 
 } // namespace jit
+
+
+void
+setJitVerifyAddress(ppcaddr_t address)
+{
+   jit::sVerifyAddress = address;
+}
+
+
+uint64_t
+getJitCodeSize()
+{
+   return jit::sTotalCodeSize;
+}
+
+
+void
+setJitProfilingMask(unsigned int coreMask)
+{
+   jit::sProfilingMask = coreMask;
+}
+
+
+unsigned int
+getJitProfilingMask()
+{
+   return jit::sProfilingMask;
+}
+
+
+uint64_t
+getJitProfileData(const FastRegionMap<uint64_t> **blockTime_ret,
+                  const FastRegionMap<uint64_t> **blockCount_ret)
+{
+   if (blockTime_ret) {
+      *blockTime_ret = &jit::sBlockProfileTime;
+   }
+
+   if (blockCount_ret) {
+      *blockCount_ret = &jit::sBlockProfileCount;
+   }
+
+   return jit::sTotalProfileTime;
+}
+
+
+const void *
+findJitEntry(ppcaddr_t address)
+{
+   return (void *)jit::sJitBlocks.find(address);
+}
+
+
+void
+resetJitProfileData()
+{
+   // Profiling data is only intended as an estimate, so we don't bother
+   //  with any sort of locking here (which means we have to iterate over
+   //  the table instead of just clearing it).
+
+   jit::sTotalProfileTime = 0;
+
+   uint32_t address;
+   uint64_t time;
+   if (jit::sBlockProfileTime.getFirstEntry(&address, &time)) {
+      do {
+         jit::sBlockProfileTime.set(address, 0);
+         jit::sBlockProfileCount.set(address, 0);
+      } while (jit::sBlockProfileTime.getNextEntry(&address, &time));
+   }
+}
+
 
 } // namespace cpu

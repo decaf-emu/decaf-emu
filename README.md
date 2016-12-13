@@ -1,7 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/fbhhy0nf6nym9pcf?svg=true)](https://ci.appveyor.com/project/exjam/decaf-emu) [![Build Status](https://travis-ci.org/decaf-emu/decaf-emu.svg?branch=master)](https://travis-ci.org/decaf-emu/decaf-emu)
 
 # decaf-emu
-Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 2 or later (GPLv2+).
+Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 3 or later (GPLv3+).
 
 You can find us for developer discussion at #wiiu-emu on freenode.
 
@@ -26,6 +26,8 @@ The latest Windows AppVeyor build is available from:
 
 This project makes use of submodules, please ensure you have cloned them properly using:
 - `git submodule update --init`
+
+The libbinrec submodule is a Mercurial repository, so install git-remote-hg from https://github.com/felipec/git-remote-hg (and set GIT_ALLOW_PROTOCOL=hg in your environment) or clone it manually.
 
 There are two decaf targets:
 - decaf-sdl - Default emulator target using SDL for window creation and input.
