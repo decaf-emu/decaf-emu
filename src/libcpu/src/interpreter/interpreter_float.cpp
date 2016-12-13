@@ -483,13 +483,16 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
       }
 
       if (std::is_same<Type, float>::value) {
-         state->fpr[instr.frD].paired0 = extend_float(static_cast<float>(d));
-         state->fpr[instr.frD].paired1 = extend_float(static_cast<float>(d));
+         float dFloat = static_cast<float>(d);
+         d = extend_float(dFloat);
+         state->fpr[instr.frD].paired0 = d;
+         state->fpr[instr.frD].paired1 = d;
+         updateFPRF(state, dFloat);
       } else {
          state->fpr[instr.frD].value = d;
+         updateFPRF(state, d);
       }
 
-      updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
 
@@ -726,14 +729,16 @@ fmaGeneric(cpu::Core *state, Instruction instr)
       }
 
       if (flags & FMASinglePrec) {
-         d = extend_float(static_cast<float>(d));
+         float dFloat = static_cast<float>(d);
+         d = extend_float(dFloat);
          state->fpr[instr.frD].paired0 = d;
          state->fpr[instr.frD].paired1 = d;
+         updateFPRF(state, dFloat);
       } else {
          state->fpr[instr.frD].value = d;
+         updateFPRF(state, d);
       }
 
-      updateFPRF(state, d);
       updateFPSCR(state, oldFPSCR);
    }
 

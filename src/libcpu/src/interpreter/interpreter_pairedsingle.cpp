@@ -235,7 +235,7 @@ psArithGeneric(cpu::Core *state, Instruction instr)
    }
 
    if (wrote0) {
-      updateFPRF(state, extend_float(d0));
+      updateFPRF(state, d0);
    }
    updateFPSCR(state, oldFPSCR);
 
@@ -292,7 +292,7 @@ psSumGeneric(cpu::Core *state, Instruction instr) CLANG_FPU_BUG_WORKAROUND
    float d;
 
    if (psArithSingle<PSAdd, 0, 1>(state, instr, &d)) {
-      updateFPRF(state, extend_float(d));
+      updateFPRF(state, d);
 
       if (slot == 0) {
           state->fpr[instr.frD].paired0 = extend_float(d);
@@ -436,7 +436,7 @@ fmaGeneric(cpu::Core *state, Instruction instr)
    }
 
    if (wrote0) {
-      updateFPRF(state, extend_float(d0));
+      updateFPRF(state, d0);
    }
    updateFPSCR(state, oldFPSCR);
 
