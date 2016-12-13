@@ -2,8 +2,9 @@
 #include <cmath>
 #include <numeric>
 #include "../cpu_internal.h"
-#include "interpreter_insreg.h"
 #include "interpreter.h"
+#include "interpreter_float.h"
+#include "interpreter_insreg.h"
 #include "common/bitutils.h"
 #include "common/floatutils.h"
 
@@ -443,6 +444,44 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
          }
       }
 
+      // The PowerPC signals underflow if the result is tiny before rounding;
+      // this differs from x86, which signals underflow only if the result
+      // is tiny after rounding.  Sadly, IEEE allows both of these behaviors,
+      // so we can't just say that one is broken, and we have to handle this
+      // case manually.  If the rounded result is equal in magnitude to the
+      // minimum normal value for the type, then the unrounded result may
+      // have had a smaller magnitude, so we temporarily set the rounding
+      // mode to round-toward-zero and repeat the operation, discarding the
+      // result but allowing it to set the underflow flag if appropriate.
+      // (In round-toward-zero mode, any value which is tiny before rounding
+      // will also be tiny after rounding.)
+      if (possibleUnderflow<Type>(d)) {
+         const int oldRound = fegetround();
+         fesetround(FE_TOWARDZERO);
+
+         // Use volatile variables to force the operation to be performed
+         // and prevent the previous result from being reused.
+         volatile double bTemp = b;
+         volatile Type dummy;
+         switch (op) {
+         case FPAdd:
+            dummy = static_cast<Type>(a + bTemp);
+            break;
+         case FPSub:
+            dummy = static_cast<Type>(a - bTemp);
+            break;
+         case FPMul:
+            // a and b have already been rounded if necessary.
+            dummy = static_cast<Type>(a * bTemp);
+            break;
+         case FPDiv:
+            dummy = static_cast<Type>(a / bTemp);
+            break;
+         }
+
+         fesetround(oldRound);
+      }
+
       if (std::is_same<Type, float>::value) {
          state->fpr[instr.frD].paired0 = extend_float(static_cast<float>(d));
          state->fpr[instr.frD].paired1 = extend_float(static_cast<float>(d));
@@ -658,6 +697,29 @@ fmaGeneric(cpu::Core *state, Instruction instr)
 
          d = std::fma(a, c, addend);
 
+         bool checkUnderflow;
+         if (flags & FMASinglePrec) {
+            checkUnderflow = possibleUnderflow<float>(static_cast<float>(d));
+         } else {
+            checkUnderflow = possibleUnderflow<double>(d);
+         }
+
+         if (checkUnderflow) {
+            const int oldRound = fegetround();
+            fesetround(FE_TOWARDZERO);
+
+            volatile double addendTemp = addend;
+            if (flags & FMASinglePrec) {
+               volatile float dummy;
+               dummy = static_cast<float>(std::fma(a, c, addendTemp));
+            } else {
+               volatile double dummy;
+               dummy = std::fma(a, c, addendTemp);
+            }
+
+            fesetround(oldRound);
+         }
+
          if (flags & FMANegate) {
             d = -d;
          }
@@ -669,14 +731,6 @@ fmaGeneric(cpu::Core *state, Instruction instr)
          state->fpr[instr.frD].paired1 = d;
       } else {
          state->fpr[instr.frD].value = d;
-         // Note that Intel CPUs report underflow based on the value _after_
-         // rounding, while the Espresso reports underflow _before_ rounding.
-         // (IEEE 754 allows an implementer to choose whether to report
-         // underflow before or after rounding, so both of these behaviors
-         // are technically compliant.)  Because of this, if an unrounded
-         // FMA result is slightly less in magnitude than the minimum normal
-         // value but is rounded to that value, the emulated FPSCR state will
-         // differ from a real Espresso in that the UX bit will not be set.
       }
 
       updateFPRF(state, d);

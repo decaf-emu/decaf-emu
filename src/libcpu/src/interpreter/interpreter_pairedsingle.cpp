@@ -191,6 +191,29 @@ psArithSingle(cpu::Core *state, Instruction instr, float *result)
          d = static_cast<float>(a / b);
          break;
       }
+
+      if (possibleUnderflow<float>(d)) {
+         const int oldRound = fegetround();
+         fesetround(FE_TOWARDZERO);
+
+         volatile double bTemp = b;
+         volatile float dummy;
+         switch (op) {
+         case PSAdd:
+            dummy = static_cast<float>(a + bTemp);
+            break;
+         case PSSub:
+            dummy = static_cast<float>(a - bTemp);
+            break;
+         case PSMul:
+            dummy = static_cast<float>(a * bTemp);
+            break;
+         case PSDiv:
+            dummy = static_cast<float>(a / bTemp);
+            break;
+         }
+         fesetround(oldRound);
+      }
    }
 
    *result = d;
@@ -377,6 +400,17 @@ fmaSingle(cpu::Core *state, Instruction instr, float *result)
       }
 
       d = static_cast<float>(std::fma(a, c, addend));
+
+      if (possibleUnderflow<float>(d)) {
+         const int oldRound = fegetround();
+         fesetround(FE_TOWARDZERO);
+
+         volatile double addendTemp = addend;
+         volatile float dummy;
+         dummy = std::fma(a, c, addendTemp);
+
+         fesetround(oldRound);
+      }
 
       if (flags & FMANegate) {
          d = -d;

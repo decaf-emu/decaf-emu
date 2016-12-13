@@ -1,5 +1,14 @@
 #pragma once
+#include "common/floatutils.h"
 #include "../state.h"
+
+template<typename Type>
+static inline bool
+possibleUnderflow(Type v)
+{
+   auto bits = get_float_bits(v);
+   return bits.exponent == 1 && bits.mantissa == 0;
+}
 
 float
 ppc_estimate_reciprocal(float v);
