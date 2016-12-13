@@ -7,6 +7,7 @@
 #include "interpreter_insreg.h"
 #include "common/bitutils.h"
 #include "common/floatutils.h"
+#include "common/platform_compiler.h"
 
 using espresso::FPSCRRegisterBits;
 using espresso::FloatingPointResultFlags;
@@ -348,6 +349,62 @@ roundForMultiply(double *a, double *c)
    *a = aBits.v;
    *c = cBits.v;
 }
+
+// Helper for fmadds to properly round to single precision.  Assumes
+// round-to-nearest mode.
+CLANG_FPU_BUG_WORKAROUND
+float
+roundFMAResultToSingle(double result, double a, double b, double c)
+{
+   if (is_zero(a) || is_zero(b) || is_zero(c)) {
+      return static_cast<float>(result);  // Can't lose precision if one addend is zero.
+   }
+
+   auto resultBits = get_float_bits(result);
+
+   if (resultBits.exponent < 874 || resultBits.exponent > 1150) {
+      return static_cast<float>(result);  // Out of range or inf/NaN.
+   }
+
+   uint64_t centerValue = 1<<28;
+   uint64_t centerMask = (centerValue << 1) - 1;
+   if (resultBits.exponent < 897) {
+      centerValue <<= 897 - resultBits.exponent;
+      centerMask <<= 897 - resultBits.exponent;
+   }
+   if ((resultBits.mantissa & centerMask) != centerValue) {
+      return static_cast<float>(result);  // Not exactly between two single-precision values.
+   }
+
+   // Repeat the operation in round-toward-zero mode to determine which way
+   // to round the result.
+   const int oldRound = fegetround();
+   fesetround(FE_TOWARDZERO);
+   feclearexcept(FE_INEXACT);
+
+   double test = fma(a, c, b);
+
+   fesetround(oldRound);
+
+   // We only need to adjust the result if there were dropped bits.
+   // If the truncated result is equal to the original (rounded) result,
+   // it means the infinitely precise result is greater than the rounded
+   // value, so we add 1 ulp (unit in the last place) to force the value
+   // to round up when we convert it to float; likewise, if the truncated
+   // result is different, we subtract 1 ulp to force rounding down.
+   // In both cases, we know the result mantissa is nonzero so it's safe
+   // to just increment or decrement the entire value as an integer.
+   if (fetestexcept(FE_INEXACT)) {
+      if (get_float_bits(test).uv == resultBits.uv) {
+         resultBits.uv++;
+      } else {
+         resultBits.uv--;
+      }
+   }
+
+   return static_cast<float>(resultBits.v);
+}
+
 
 // Floating Arithmetic
 enum FPArithOperator {
@@ -729,7 +786,12 @@ fmaGeneric(cpu::Core *state, Instruction instr)
       }
 
       if (flags & FMASinglePrec) {
-         float dFloat = static_cast<float>(d);
+         float dFloat;
+         if (state->fpscr.rn == FloatingPointRoundMode::Nearest) {
+            dFloat = roundFMAResultToSingle(d, a, addend, c);
+         } else {
+            dFloat = static_cast<float>(d);
+         }
          d = extend_float(dFloat);
          state->fpr[instr.frD].paired0 = d;
          state->fpr[instr.frD].paired1 = d;

@@ -34,6 +34,9 @@ updateFloatConditionRegister(cpu::Core *state);
 void
 roundForMultiply(double *a, double *c);
 
+float
+roundFMAResultToSingle(double result, double a, double b, double c);
+
 template<typename Type> Type
 getFpr(cpu::Core *state, unsigned fr);
 

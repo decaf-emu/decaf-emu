@@ -399,7 +399,12 @@ fmaSingle(cpu::Core *state, Instruction instr, float *result)
          roundForMultiply(&a, &c);  // Not necessary for slot 1.
       }
 
-      d = static_cast<float>(std::fma(a, c, addend));
+      double d64 = std::fma(a, c, addend);
+      if (state->fpscr.rn == espresso::FloatingPointRoundMode::Nearest) {
+         d = roundFMAResultToSingle(d64, a, addend, c);
+      } else {
+         d = static_cast<float>(d64);
+      }
 
       if (possibleUnderflow<float>(d)) {
          const int oldRound = fegetround();
