@@ -372,13 +372,16 @@ enum StoreFlags
 static void
 storeDoubleAsFloat(uint32_t ea, double d)
 {
-   float f;
-   if (!is_signalling_nan(d)) {
-      f = static_cast<float>(d);
+   auto dBits = get_float_bits(d);
+   uint32_t fBits;
+   if (dBits.exponent > 896 || dBits.uv << 1 == 0) {
+      // Not truncate_double()!  See the PowerPC documentation.
+      fBits = truncate_double_bits(dBits.uv);
    } else {
-      f = truncate_double(d);
+      fBits = ((1 << 23) | (dBits.mantissa >> 29)) >> (897 - dBits.exponent);
+      fBits |= dBits.sign << 31;
    }
-   mem::write<float>(ea, f);
+   mem::write<uint32_t>(ea, fBits);
 }
 
 template<unsigned flags = 0>
