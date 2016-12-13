@@ -50,7 +50,7 @@ INS(xori, (rA), (rS, uimm), (), (opcd == 26), "XOR Immediate")
 INS(xoris, (rA), (rS, uimm), (), (opcd == 27), "XOR Immediate Shifted")
 
 // Integer Rotate
-INS(rlwimi, (rA), (rS, rA, sh, mb, me), (rc), (opcd == 20), "Rotate Left Word Immediate then Mask Insert")
+INS(rlwimi, (rA), (rA, rS, sh, mb, me), (rc), (opcd == 20), "Rotate Left Word Immediate then Mask Insert")
 INS(rlwinm, (rA), (rS, sh, mb, me), (rc), (opcd == 21), "Rotate Left Word Immediate then AND with Mask")
 INS(rlwnm, (rA), (rS, rB, mb, me), (rc), (opcd == 23), "Rotate Left Word then AND with Mask")
 
