@@ -474,12 +474,19 @@ mergeGeneric(cpu::Core *state, Instruction instr)
       }
    }
 
-   // When inserting a double-precision value into slot 1, the mantissa
-   // is truncated rather than rounded.
+   // When inserting a double-precision value into slot 1, the value is
+   // truncated rather than rounded.
+   double d1_double;
    if (flags & MergeValue1) {
-      d1 = truncate_double(state->fpr[instr.frB].paired1);
+      d1_double = state->fpr[instr.frB].paired1;
    } else {
-      d1 = truncate_double(state->fpr[instr.frB].paired0);
+      d1_double = state->fpr[instr.frB].paired0;
+   }
+   auto d1_bits = get_float_bits(d1_double);
+   if (d1_bits.exponent >= 1151 && d1_bits.exponent < 2047) {
+      d1 = std::numeric_limits<float>::max();
+   } else {
+      d1 = truncate_double(d1_double);
    }
 
    state->fpr[instr.frD].paired0 = extend_float(d0);
