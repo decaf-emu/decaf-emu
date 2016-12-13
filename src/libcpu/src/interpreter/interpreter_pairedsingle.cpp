@@ -485,6 +485,9 @@ mergeGeneric(cpu::Core *state, Instruction instr)
    state->fpr[instr.frD].paired0 = extend_float(d0);
    state->fpr[instr.frD].paired1 = extend_float(d1);
 
+   // Don't leak any exceptions (inexact, overflow etc.) to later instructions.
+   std::feclearexcept(FE_ALL_EXCEPT);
+
    if (instr.rc) {
       updateFloatConditionRegister(state);
    }
@@ -536,26 +539,14 @@ ps_res(cpu::Core *state, Instruction instr)
    if ((vxsnan0 && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
       write = false;
    } else {
-      if (is_nan(b0)) {
-         d0 = make_quiet(truncate_double(b0));
-      } else if (vxsnan0) {
-         d0 = make_nan<float>();
-      } else {
-         d0 = static_cast<float>(ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b0))));
-      }
+      d0 = ppc_estimate_reciprocal(truncate_double(b0));
       updateFPRF(state, d0);
    }
 
    if ((vxsnan1 && state->fpscr.ve) || (zx1 && state->fpscr.ze)) {
       write = false;
    } else {
-      if (is_nan(b1)) {
-         d1 = make_quiet(truncate_double(b1));
-      } else if (vxsnan1) {
-         d1 = make_nan<float>();
-      } else {
-         d1 = static_cast<float>(ppc_estimate_reciprocal(static_cast<double>(static_cast<float>(b1))));
-      }
+      d1 = ppc_estimate_reciprocal(truncate_double(b1));
    }
 
    if (write) {
@@ -563,10 +554,15 @@ ps_res(cpu::Core *state, Instruction instr)
       state->fpr[instr.frD].paired1 = extend_float(d1);
    }
 
-   // ps_res never sets FPSCR[XX], so avoid setting it here.
-   const int xx = state->fpscr.xx;
-   updateFPSCR(state, oldFPSCR);
-   state->fpscr.xx = xx;
+   if (std::fetestexcept(FE_INEXACT)) {
+      // On inexact result, ps_res sets FPSCR[FI] without also setting
+      // FPSCR[XX] (like fres).
+      std::feclearexcept(FE_INEXACT);
+      updateFPSCR(state, oldFPSCR);
+      state->fpscr.fi = 1;
+   } else {
+      updateFPSCR(state, oldFPSCR);
+   }
 
    if (instr.rc) {
       updateFloatConditionRegister(state);
@@ -592,35 +588,43 @@ ps_rsqrte(cpu::Core *state, Instruction instr)
    state->fpscr.vxsqrt |= vxsqrt0 || vxsqrt1;
    state->fpscr.zx |= zx0 || zx1;
 
-   float d0, d1;
+   double d0, d1;
    bool write = true;
    if (((vxsnan0 || vxsqrt0) && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
       write = false;
    } else {
-      if (is_nan(b0)) {
-         d0 = make_quiet(truncate_double(b0));
-      } else if (vxsnan0 || vxsqrt0) {
-         d0 = make_nan<float>();
-      } else {
-         d0 = 1.0f / std::sqrt(static_cast<float>(b0));
-      }
+      d0 = ppc_estimate_reciprocal_root(b0);
       updateFPRF(state, d0);
    }
    if (((vxsnan1 || vxsqrt1) && state->fpscr.ve) || (zx1 && state->fpscr.ze)) {
       write = false;
    } else {
-      if (is_nan(b1)) {
-         d1 = make_quiet(truncate_double(b1));
-      } else if (vxsnan1 || vxsqrt1) {
-         d1 = make_nan<float>();
-      } else {
-         d1 = 1.0f / std::sqrt(static_cast<float>(b1));
-      }
+      d1 = ppc_estimate_reciprocal_root(b1);
    }
 
    if (write) {
-      state->fpr[instr.frD].paired0 = extend_float(d0);
-      state->fpr[instr.frD].paired1 = extend_float(d1);
+      // ps_rsqrte behaves strangely when the result's magnitude is out of
+      // range: ps0 keeps its double-precision exponent, while ps1 appears
+      // to get an arbitrary value from the floating-point circuitry.  The
+      // details of how ps1's exponent is affected are unknown, but the
+      // logic below works for double-precision inputs 0x7FE...FFF (maximum
+      // normal) and 0x000...001 (minimum denormal).
+
+      auto bits0 = get_float_bits(d0);
+      bits0.mantissa &= UINT64_C(0xFFFFFE0000000);
+      state->fpr[instr.frD].paired0 = bits0.v;
+
+      auto bits1 = get_float_bits(d1);
+      if (bits1.exponent == 0) {
+         // Leave as zero (reciprocal square root can never be a denormal).
+      } else if (bits1.exponent < 1151) {
+         int8_t exponent8 = (bits1.exponent - 1023) & 0xFF;
+         bits1.exponent = 1023 + exponent8;
+      } else if (bits1.exponent < 2047) {
+         bits1.exponent = 1022;
+      }
+      bits1.mantissa &= UINT64_C(0xFFFFFE0000000);
+      state->fpr[instr.frD].paired1 = bits1.v;
    }
 
    updateFPSCR(state, oldFPSCR);

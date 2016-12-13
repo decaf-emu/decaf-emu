@@ -11,59 +11,155 @@ using espresso::FPSCRRegisterBits;
 using espresso::FloatingPointResultFlags;
 using espresso::FloatingPointRoundMode;
 
-const int fres_expected_base[] =
+const uint16_t fres_base[] =
 {
-   0x7ff800, 0x783800, 0x70ea00, 0x6a0800,
-   0x638800, 0x5d6200, 0x579000, 0x520800,
-   0x4cc800, 0x47ca00, 0x430800, 0x3e8000,
-   0x3a2c00, 0x360800, 0x321400, 0x2e4a00,
-   0x2aa800, 0x272c00, 0x23d600, 0x209e00,
-   0x1d8800, 0x1a9000, 0x17ae00, 0x14f800,
-   0x124400, 0x0fbe00, 0x0d3800, 0x0ade00,
-   0x088400, 0x065000, 0x041c00, 0x020c00,
+   0x3FFC, 0x3C1C, 0x3875, 0x3504, 0x31C4, 0x2EB1, 0x2BC8, 0x2904, 
+   0x2664, 0x23E5, 0x2184, 0x1F40, 0x1D16, 0x1B04, 0x190A, 0x1725, 
+   0x1554, 0x1396, 0x11EB, 0x104F, 0x0EC4, 0x0D48, 0x0BD7, 0x0A7C, 
+   0x0922, 0x07DF, 0x069C, 0x056F, 0x0442, 0x0328, 0x020E, 0x0106, 
 };
 
-const int fres_expected_dec[] =
+const uint16_t fres_delta[] =
 {
-   0x3e1, 0x3a7, 0x371, 0x340,
-   0x313, 0x2ea, 0x2c4, 0x2a0,
-   0x27f, 0x261, 0x245, 0x22a,
-   0x212, 0x1fb, 0x1e5, 0x1d1,
-   0x1be, 0x1ac, 0x19b, 0x18b,
-   0x17c, 0x16e, 0x15b, 0x15b,
-   0x143, 0x143, 0x12d, 0x12d,
-   0x11a, 0x11a, 0x108, 0x106,
+   0x3E1, 0x3A7, 0x371, 0x340, 0x313, 0x2EA, 0x2C4, 0x2A0, 
+   0x27F, 0x261, 0x245, 0x22A, 0x212, 0x1FB, 0x1E5, 0x1D1, 
+   0x1BE, 0x1AC, 0x19B, 0x18B, 0x17C, 0x16E, 0x15B, 0x15B, 
+   0x143, 0x143, 0x12D, 0x12D, 0x11A, 0x11A, 0x108, 0x106, 
 };
 
-double
-ppc_estimate_reciprocal(double v)
+const uint16_t frsqrte_base[] =
+{
+   0x7FF4, 0x7852, 0x7154, 0x6AE4, 0x64F2, 0x5F6E, 0x5A4C, 0x5580, 
+   0x5102, 0x4CCA, 0x48D0, 0x450E, 0x4182, 0x3E24, 0x3AF2, 0x37E8, 
+   0x34FD, 0x2F97, 0x2AA5, 0x2618, 0x21E4, 0x1DFE, 0x1A5C, 0x16F8, 
+   0x13CA, 0x10CE, 0x0DFE, 0x0B57, 0x08D4, 0x0673, 0x0431, 0x020B, 
+};
+
+const uint16_t frsqrte_delta[] =
+{
+   0x7A4, 0x700, 0x670, 0x5F2, 0x584, 0x524, 0x4CC, 0x47E, 
+   0x43A, 0x3FA, 0x3C2, 0x38E, 0x35E, 0x332, 0x30A, 0x2E6, 
+   0x568, 0x4F3, 0x48D, 0x435, 0x3E7, 0x3A2, 0x365, 0x32E, 
+   0x2FC, 0x2D0, 0x2A8, 0x283, 0x261, 0x243, 0x226, 0x20B, 
+};
+
+float
+ppc_estimate_reciprocal(float v)
 {
    auto bits = get_float_bits(v);
 
-   if (bits.mantissa == 0 && bits.exponent == 0) {
-      return std::copysign(std::numeric_limits<double>::infinity(), v);
-   }
-
+   // Check for an infinite or NaN input.
    if (bits.exponent == bits.exponent_max) {
       if (bits.mantissa == 0) {
          return std::copysign(0.0, v);
+      } else {
+         std::feraiseexcept(FE_INVALID);
+         return make_quiet(v);
       }
-      return static_cast<float>(v);
    }
 
-   if (bits.exponent < 895) {
-      std::feraiseexcept(FE_OVERFLOW | FE_INEXACT);
-      return std::copysign(std::numeric_limits<float>::max(), v);
+   // Check for a zero or denormal input.
+   int exponent = bits.exponent;
+   uint32_t mantissa = bits.mantissa;
+   if (exponent == 0) {
+      if (mantissa == 0) {
+         std::feraiseexcept(FE_DIVBYZERO);
+         return std::copysign(std::numeric_limits<float>::infinity(), v);
+      } else if (mantissa < 0x200000) {
+         std::feraiseexcept(FE_OVERFLOW | FE_INEXACT);
+         return std::copysign(std::numeric_limits<float>::max(), v);
+      } else if (mantissa < 0x400000) {
+         exponent = -1;
+         mantissa = (mantissa << 2) & 0x7FFFFF;
+      } else {
+         mantissa = (mantissa << 1) & 0x7FFFFF;
+      }
    }
 
-   if (bits.exponent > 1150) {
-      std::feraiseexcept(FE_UNDERFLOW | FE_INEXACT);
-      return std::copysign(0.0, v);
+   // Calculate the result.  The lookup result has 24 bits; the high 23 bits
+   // are copied to the mantissa of the output (except for denormals), and
+   // the lowest bit is copied to FPSCR[FI].
+   int new_exponent = 253 - exponent;
+   int table_index = mantissa >> 18;
+   int delta_mult = (mantissa >> 8) & 0x3FF;
+   uint32_t lookup_result = ((fres_base[table_index] << 10)
+                             - (fres_delta[table_index] * delta_mult));
+   uint32_t new_mantissa = lookup_result >> 1;
+   bool fpscr_FI = lookup_result & 1;
+
+   // Denormalize the result if necessary.
+   if (new_exponent <= 0) {
+      fpscr_FI |= new_mantissa & 1;
+      new_mantissa = (new_mantissa >> 1) | 0x400000;
+      if (new_exponent < 0) {
+         fpscr_FI |= new_mantissa & 1;
+         new_mantissa >>= 1;
+         new_exponent = 0;
+      }
+      if (fpscr_FI) {
+         std::feraiseexcept(FE_UNDERFLOW);
+      }
    }
 
-   int idx = (int)(bits.mantissa >> 37);
-   bits.exponent = 0x7FD - bits.exponent;
-   bits.mantissa = (int64_t)(fres_expected_base[idx / 1024] - (fres_expected_dec[idx / 1024] * (idx % 1024) + 1) / 2) << 29;
+   if (fpscr_FI) {
+      std::feraiseexcept(FE_INEXACT);
+   }
+   bits.exponent = new_exponent;
+   bits.mantissa = new_mantissa;
+   return bits.v;
+}
+
+double
+ppc_estimate_reciprocal_root(double v)
+{
+   auto bits = get_float_bits(v);
+
+   // Check for an infinite or NaN input.
+   if (bits.exponent == bits.exponent_max) {
+      if (bits.mantissa == 0) {
+         if (bits.sign) {
+            std::feraiseexcept(FE_INVALID);
+            return make_nan<double>();
+         } else {
+            return 0.0;
+         }
+      } else {
+         std::feraiseexcept(FE_INVALID);
+         return make_quiet(v);
+      }
+   }
+
+   // Check for a zero or denormal input.
+   int exponent = bits.exponent;
+   uint64_t mantissa = bits.mantissa;
+   if (exponent == 0) {
+      if (mantissa == 0) {
+         std::feraiseexcept(FE_DIVBYZERO);
+         return std::copysign(std::numeric_limits<float>::infinity(), v);
+      } else {
+         int shift = clz64(mantissa) - 11;
+         mantissa = (mantissa << shift) & UINT64_C(0xFFFFFFFFFFFFF);
+         exponent -= shift - 1;
+      }
+   }
+
+   // Negative nonzero values are always invalid.  If we get this far, we
+   // know the value is not zero or NaN.
+   if (bits.sign) {
+      std::feraiseexcept(FE_INVALID);
+      return make_nan<double>();
+   }
+
+   // Calculate the result.
+   int new_exponent = (3068 - exponent) / 2;
+   int table_index = ((mantissa >> 48) & 15) | (exponent & 1 ? 0 : 16);
+   int delta_mult = (mantissa >> 37) & 0x7FF;
+   uint64_t lookup_result = ((frsqrte_base[table_index] << 11)
+                             - (frsqrte_delta[table_index] * delta_mult));
+   uint64_t new_mantissa = lookup_result << 26;
+
+   bits.exponent = new_exponent;
+   bits.mantissa = new_mantissa;
    return bits.v;
 }
 
@@ -439,7 +535,7 @@ fres(cpu::Core *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      d = static_cast<float>(ppc_estimate_reciprocal(b));
+      d = ppc_estimate_reciprocal(b);
       state->fpr[instr.frD].paired0 = d;
       state->fpr[instr.frD].paired1 = d;
       updateFPRF(state, d);
@@ -468,7 +564,7 @@ frsqrte(cpu::Core *state, Instruction instr)
    b = state->fpr[instr.frB].value;
 
    const bool vxsnan = is_signalling_nan(b);
-   const bool vxsqrt = !vxsnan && std::signbit(b) && !is_zero(b);
+   const bool vxsqrt = !vxsnan && b < 0.0;
    const bool zx = is_zero(b);
 
    const uint32_t oldFPSCR = state->fpscr.value;
@@ -481,11 +577,7 @@ frsqrte(cpu::Core *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      if (vxsqrt) {
-         d = make_nan<double>();
-      } else {
-         d = 1.0 / std::sqrt(b);
-      }
+      d = ppc_estimate_reciprocal_root(b);
       state->fpr[instr.frD].value = d;
       updateFPRF(state, d);
       state->fpscr.zx |= zx;

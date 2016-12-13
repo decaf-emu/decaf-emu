@@ -184,6 +184,21 @@ clz(uint32_t bits)
 #define clz __builtin_clz
 #endif
 
+#ifdef PLATFORM_WINDOWS
+inline int
+clz64(uint64_t bits)
+{
+   unsigned long a;
+   if (!_BitScanReverse64(&a, bits)) {
+      return 64;
+   } else {
+      return 63 - a;
+   }
+}
+#else
+#define clz64 __builtin_clzll
+#endif
+
 inline bool
 bit_scan_reverse(unsigned long *out_position, uint32_t bits)
 {

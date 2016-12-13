@@ -1,8 +1,11 @@
 #pragma once
 #include "../state.h"
 
+float
+ppc_estimate_reciprocal(float v);
+
 double
-ppc_estimate_reciprocal(double v);
+ppc_estimate_reciprocal_root(double v);
 
 void
 updateFEX_VX(cpu::Core *state);
