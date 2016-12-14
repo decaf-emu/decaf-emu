@@ -122,12 +122,11 @@ deleteShaderObject(PixelShader *shader)
    gl::glDeleteProgram(shader->object);
 }
 
-// Must be called with mResourceMutex locked; returns whether the shader
-//  was invalidated
 template <typename ShaderPtrType> static bool
-invalidateShaderIfChanged_locked(ShaderPtrType &shader,
-                                 uint64_t shaderKey,
-                                 std::unordered_map<uint64_t, ShaderPtrType> &shaders)
+invalidateShaderIfChanged(ShaderPtrType &shader,
+                          uint64_t shaderKey,
+                          std::unordered_map<uint64_t, ShaderPtrType> &shaders,
+                          ResourceMemoryMap &resourceMap)
 {
    if (!shader || !shader->needRebuild) {
       return false;
@@ -151,6 +150,7 @@ invalidateShaderIfChanged_locked(ShaderPtrType &shader,
 
    shader->refCount--;
    if (shader->refCount == 0) {
+      resourceMap.removeResource(shader);
       delete shader;
    }
    shader = nullptr;
@@ -259,11 +259,9 @@ bool GLDriver::checkActiveShader()
    // If the pipeline already exists, check whether any of its component
    //  shaders need to be rebuilt
    if (pipeline.object) {
-      std::unique_lock<std::mutex> lock(mResourceMutex);
-
-      if (invalidateShaderIfChanged_locked(pipeline.fetch, fsShaderKey, mFetchShaders)
-       || invalidateShaderIfChanged_locked(pipeline.vertex, vsShaderKey, mVertexShaders)
-       || invalidateShaderIfChanged_locked(pipeline.pixel, psShaderKey, mPixelShaders)) {
+      if (invalidateShaderIfChanged(pipeline.fetch, fsShaderKey, mFetchShaders, mResourceMap)
+       || invalidateShaderIfChanged(pipeline.vertex, vsShaderKey, mVertexShaders, mResourceMap)
+       || invalidateShaderIfChanged(pipeline.pixel, psShaderKey, mPixelShaders, mResourceMap)) {
          gl::glDeleteProgramPipelines(1, &pipeline.object);
          pipeline.object = 0;
       }
@@ -281,11 +279,9 @@ bool GLDriver::checkActiveShader()
 
    // Generate shader if needed
    if (!pipeline.object) {
-      std::unique_lock<std::mutex> lock(mResourceMutex);
-
       // Parse fetch shader if needed
       auto &fetchShader = mFetchShaders[fsShaderKey];
-      invalidateShaderIfChanged_locked(fetchShader, fsShaderKey, mFetchShaders);
+      invalidateShaderIfChanged(fetchShader, fsShaderKey, mFetchShaders, mResourceMap);
 
       if (!fetchShader) {
          auto aluDivisor0 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
@@ -298,6 +294,7 @@ bool GLDriver::checkActiveShader()
                              fetchShader->cpuMemEnd - fetchShader->cpuMemStart,
                              0, fetchShader->cpuMemHash);
          fetchShader->dirtyMemory = false;
+         mResourceMap.addResource(fetchShader);
 
          dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
          fetchShader->disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
@@ -365,7 +362,7 @@ bool GLDriver::checkActiveShader()
 
       // Compile vertex shader if needed
       auto &vertexShader = mVertexShaders[vsShaderKey];
-      invalidateShaderIfChanged_locked(vertexShader, vsShaderKey, mVertexShaders);
+      invalidateShaderIfChanged(vertexShader, vsShaderKey, mVertexShaders, mResourceMap);
 
       if (!vertexShader) {
          vertexShader = new VertexShader;
@@ -376,6 +373,7 @@ bool GLDriver::checkActiveShader()
                              vertexShader->cpuMemEnd - vertexShader->cpuMemStart,
                              0, vertexShader->cpuMemHash);
          vertexShader->dirtyMemory = false;
+         mResourceMap.addResource(vertexShader);
 
          dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
 
@@ -433,7 +431,7 @@ bool GLDriver::checkActiveShader()
 
          // Transform feedback disabled; compile pixel shader if needed
          auto &pixelShader = mPixelShaders[psShaderKey];
-         invalidateShaderIfChanged_locked(pixelShader, psShaderKey, mPixelShaders);
+         invalidateShaderIfChanged(pixelShader, psShaderKey, mPixelShaders, mResourceMap);
 
          if (!pixelShader) {
             pixelShader = new PixelShader;
@@ -444,6 +442,7 @@ bool GLDriver::checkActiveShader()
                                 pixelShader->cpuMemEnd - pixelShader->cpuMemStart,
                                 0, pixelShader->cpuMemHash);
             pixelShader->dirtyMemory = false;
+            mResourceMap.addResource(pixelShader);
 
             dumpRawShader("pixel", psPgmAddress, psPgmSize);
 
@@ -649,11 +648,7 @@ GLDriver::getDataBuffer(uint32_t address,
    decaf_check(size);
    decaf_check(isInput || isOutput);
 
-   DataBuffer *buffer;
-   {
-      std::unique_lock<std::mutex> lock(mResourceMutex);
-      buffer = &mDataBuffers[address];
-   }
+   DataBuffer *buffer = &mDataBuffers[address];
 
    if (buffer->object
     && buffer->allocatedSize >= size
@@ -665,6 +660,13 @@ GLDriver::getDataBuffer(uint32_t address,
    auto oldObject = buffer->object;
    auto oldSize = buffer->allocatedSize;
    auto oldMappedBuffer = buffer->mappedBuffer;
+
+   if (oldObject && (address != buffer->cpuMemStart || address + size != buffer->cpuMemEnd)) {
+      if (buffer->isOutput) {
+         mOutputBufferMap.removeResource(buffer);
+      }
+      mResourceMap.removeResource(buffer);
+   }
 
    buffer->cpuMemStart = address;
    buffer->cpuMemEnd = address + size;
@@ -746,6 +748,11 @@ GLDriver::getDataBuffer(uint32_t address,
       } else if (size > oldSize) {
          uploadDataBuffer(buffer, oldSize, size - oldSize);
       }
+   }
+
+   mResourceMap.addResource(buffer);
+   if (buffer->isOutput) {
+      mOutputBufferMap.addResource(buffer);
    }
 
    return buffer;

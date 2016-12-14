@@ -317,8 +317,6 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
 void
 GLDriver::surfaceSync(const pm4::SurfaceSync &data)
 {
-   std::unique_lock<std::mutex> lock(mResourceMutex);
-
    auto memStart = data.addr << 8;
    auto memEnd = memStart + (data.size << 8);
 
@@ -347,56 +345,39 @@ GLDriver::surfaceSync(const pm4::SurfaceSync &data)
       shaderExport = true;
    }
 
-   if (surfaces) {
-      for (auto &i : mSurfaces) {
-         SurfaceBuffer *surface = &i.second;
+   std::unique_lock<std::mutex> lock(mResourceMap.getMutex());
 
-         if (surface->cpuMemStart < memEnd && surface->cpuMemEnd > memStart) {
+   auto iter = mResourceMap.getIterator(memStart, memEnd - memStart);
+
+   Resource *resource;
+   while ((resource = iter.next()) != nullptr) {
+      switch (resource->type) {
+
+      case Resource::SURFACE:
+         if (surfaces) {
+            auto surface = reinterpret_cast<SurfaceBuffer *>(resource);
             surface->needUpload |= surface->dirtyMemory;
             surface->dirtyMemory = false;
          }
-      }
-   }
+         break;
 
-   if (shaders) {
-      for (auto &i : mFetchShaders) {
-         Shader *shader = i.second;
-
-         if (shader->cpuMemStart < memEnd && shader->cpuMemEnd > memStart) {
+      case Resource::SHADER:
+         if (shaders) {
+            auto shader = reinterpret_cast<Shader *>(resource);
             shader->needRebuild |= shader->dirtyMemory;
             shader->dirtyMemory = false;
          }
-      }
+         break;
 
-      for (auto &i : mVertexShaders) {
-         Shader *shader = i.second;
-
-         if (shader->cpuMemStart < memEnd && shader->cpuMemEnd > memStart) {
-            shader->needRebuild |= shader->dirtyMemory;
-            shader->dirtyMemory = false;
-         }
-      }
-
-      for (auto &i : mPixelShaders) {
-         Shader *shader = i.second;
-
-         if (shader->cpuMemStart < memEnd && shader->cpuMemEnd > memStart) {
-            shader->needRebuild |= shader->dirtyMemory;
-            shader->dirtyMemory = false;
-         }
-      }
-   }
-
-   for (auto &i : mDataBuffers) {
-      DataBuffer *buffer = &i.second;
-
-      if (buffer->cpuMemStart < memEnd && buffer->cpuMemEnd > memStart) {
-         auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
-         auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
-
-         if (buffer->isInput && buffer->dirtyMemory && (shaders || surfaces)) {
-            uploadDataBuffer(buffer, offset, size);
-            buffer->dirtyMemory = false;
+      case Resource::DATA_BUFFER:
+         if (shaders || surfaces) {
+            auto buffer = reinterpret_cast<DataBuffer *>(resource);
+            if (buffer->isInput && buffer->dirtyMemory) {
+               auto offset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
+               auto size = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - offset;
+               uploadDataBuffer(buffer, offset, size);
+               buffer->dirtyMemory = false;
+            }
          }
       }
    }
@@ -669,48 +650,13 @@ void
 GLDriver::notifyCpuFlush(void *ptr,
                          uint32_t size)
 {
-   std::unique_lock<std::mutex> lock(mResourceMutex);
-   auto memStart = mem::untranslate(ptr);
-   auto memEnd = memStart + size;
+   std::unique_lock<std::mutex> lock(mResourceMap.getMutex());
 
-   for (auto &i : mFetchShaders) {
-      auto resource = i.second;
+   auto iter = mResourceMap.getIterator(mem::untranslate(ptr), size);
 
-      if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
-         resource->dirtyMemory = true;
-      }
-   }
-
-   for (auto &i : mVertexShaders) {
-      auto resource = i.second;
-
-      if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
-         resource->dirtyMemory = true;
-      }
-   }
-
-   for (auto &i : mPixelShaders) {
-      auto resource = i.second;
-
-      if (resource && resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
-         resource->dirtyMemory = true;
-      }
-   }
-
-   for (auto &i : mSurfaces) {
-      auto resource = &i.second;
-
-      if (resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
-         resource->dirtyMemory = true;
-      }
-   }
-
-   for (auto &i : mDataBuffers) {
-      auto resource = &i.second;
-
-      if (resource->cpuMemStart < memEnd && resource->cpuMemEnd > memStart) {
-         resource->dirtyMemory = true;
-      }
+   Resource *resource;
+   while ((resource = iter.next()) != nullptr) {
+      resource->dirtyMemory = true;
    }
 }
 
@@ -718,14 +664,25 @@ void
 GLDriver::notifyGpuFlush(void *ptr,
                          uint32_t size)
 {
-   std::unique_lock<std::mutex> lock(mResourceMutex);
+   std::unique_lock<std::mutex> lock(mOutputBufferMap.getMutex());
 
    auto memStart = mem::untranslate(ptr);
    auto memEnd = memStart + size;
+   auto iter = mOutputBufferMap.getIterator(memStart, size);
 
-   for (auto &i : mDataBuffers) {
-      DataBuffer *buffer = &i.second;
-      if (buffer->isOutput && buffer->cpuMemStart < memEnd && buffer->cpuMemEnd > memStart) {
+   // This allows us to avoid downloading a buffer twice if we hit both its
+   //  endpoints in the scan (as will happen if memStart/memEnd coincide
+   //  with a buffer's range).
+   auto flushStamp = ++mGpuFlushCounter;
+
+   Resource *resource;
+   while ((resource = iter.next()) != nullptr) {
+      decaf_check(resource->type == Resource::DATA_BUFFER);
+      DataBuffer *buffer = reinterpret_cast<DataBuffer *>(resource);
+
+      if (buffer->lastGpuFlush != flushStamp) {
+         buffer->lastGpuFlush = flushStamp;
+
          auto copyOffset = std::max(memStart, buffer->cpuMemStart) - buffer->cpuMemStart;
          auto copySize = (std::min(memEnd, buffer->cpuMemEnd) - buffer->cpuMemStart) - copyOffset;
 

@@ -12,6 +12,7 @@
 #include "gpu/pm4_processor.h"
 #include "libdecaf/decaf_graphics.h"
 #include "libdecaf/decaf_opengl.h"
+#include "opengl_resource.h"
 #include <chrono>
 #include <condition_variable>
 #include <exception>
@@ -38,21 +39,6 @@ enum class SurfaceUseState : uint32_t
    GpuWritten
 };
 
-struct Resource
-{
-   //! The start of the CPU memory region this occupies
-   uint32_t cpuMemStart;
-
-   //! The end of the CPU memory region this occupies
-   uint32_t cpuMemEnd;
-
-   //! Hash of the memory contents, for detecting changes
-   uint64_t cpuMemHash[2] = { 0, 0 };
-
-   //! True if a DCFlush has been received for the memory region
-   bool dirtyMemory = true;
-};
-
 struct AttribBufferCache
 {
    gl::GLuint object = 0;
@@ -66,6 +52,8 @@ struct Shader : public Resource
 
    //! Number of references from ShaderPipelines (used for garbage collection)
    unsigned refCount = 0;
+
+   Shader() : Resource(Resource::SHADER) { }
 };
 
 struct FetchShader : public Shader
@@ -160,6 +148,8 @@ struct SurfaceBuffer : public Resource
       latte::SQ_FORMAT_COMP formatComp;
       uint32_t degamma;
    } dbgInfo;
+
+   SurfaceBuffer() : Resource(Resource::SURFACE) { }
 };
 
 struct ScanBufferChain
@@ -177,6 +167,9 @@ struct DataBuffer : public Resource
    bool isInput = false;  // Uniform or attribute buffers
    bool isOutput = false;  // Transform feedback buffers
    bool dirtyMap = false;  // True if we need to glFlushMappedBufferRange
+   uint32_t lastGpuFlush = 0;  // Last time we touched this buffer in notifyGpuFlush()
+
+   DataBuffer() : Resource(Resource::DATA_BUFFER) { }
 };
 
 struct Sampler
@@ -497,15 +490,16 @@ private:
    bool mDepthRangeDirty = false;
    bool mScissorDirty = false;
 
-   // Protects resource lists; used by notifyCpuFlush() to safely set dirty flags
-   std::mutex mResourceMutex;
+   std::unordered_map<uint64_t, FetchShader *> mFetchShaders;
+   std::unordered_map<uint64_t, VertexShader *> mVertexShaders;
+   std::unordered_map<uint64_t, PixelShader *> mPixelShaders;
+   std::map<ShaderPipelineKey, ShaderPipeline> mShaderPipelines;
+   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;
+   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;
 
-   std::unordered_map<uint64_t, FetchShader *> mFetchShaders;  // Protected by mResourceMutex
-   std::unordered_map<uint64_t, VertexShader *> mVertexShaders;  // Protected by mResourceMutex
-   std::unordered_map<uint64_t, PixelShader *> mPixelShaders;  // Protected by mResourceMutex
-   std::map<ShaderPipelineKey, ShaderPipeline> mShaderPipelines;  // Not touched by notifyCpuFlush()
-   std::unordered_map<uint64_t, SurfaceBuffer> mSurfaces;  // Protected by mResourceMutex
-   std::unordered_map<uint32_t, DataBuffer> mDataBuffers;  // Protected by mResourceMutex
+   ResourceMemoryMap mResourceMap;
+   ResourceMemoryMap mOutputBufferMap;
+   uint32_t mGpuFlushCounter = 0;
 
    std::array<Sampler, latte::MaxSamplers> mVertexSamplers;
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;

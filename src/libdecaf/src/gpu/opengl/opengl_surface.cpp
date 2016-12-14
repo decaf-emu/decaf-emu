@@ -751,9 +751,7 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
 
-   std::unique_lock<std::mutex> lock(mResourceMutex);
    auto &buffer = mSurfaces[surfaceKey];
-   lock.unlock();
 
    if (buffer.active &&
       buffer.active->width == width &&
@@ -784,6 +782,8 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
       // The memory bounds
       buffer.cpuMemStart = baseAddress;
       buffer.cpuMemEnd = baseAddress + getSurfaceBytes(pitch, height, depth, samples, dim, format);
+
+      mResourceMap.addResource(&buffer);
 
       auto newSurf = createHostSurface(baseAddress, pitch, width, height, depth, samples, dim, format, numFormat, formatComp, degamma, isDepthBuffer);
       buffer.active = newSurf;
@@ -891,7 +891,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    auto newMemEnd = buffer.cpuMemStart + getSurfaceBytes(pitch, height, depth, samples, dim, format);
 
    if (newMemEnd > buffer.cpuMemEnd) {
+      mResourceMap.removeResource(&buffer);
       buffer.cpuMemEnd = newMemEnd;
+      mResourceMap.addResource(&buffer);
    }
 
    if (!forWrite && buffer.needUpload) {
