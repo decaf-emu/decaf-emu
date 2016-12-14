@@ -159,7 +159,7 @@ static inline va_list *
 make_va_list(uint8_t gpr, uint8_t fpr)
 {
    auto core = cpu::this_core::state();
-   auto overflow = core->gpr[1] + 8;
+   auto overflow = core->gpr[1] + 8 + 8;  // +8 for kcstub() adjustment
 
    // Allocate space on stack, 8 bytes for weird PPC ABI storage
    core->gpr[1] -= 8 + sizeof(stack_va_list);
