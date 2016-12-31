@@ -560,8 +560,55 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
    // Execute command buffer
    runCommandBuffer(buffer->buffer, buffer->curSize);
 
-   // Release command buffer
-   gpu::retireCommandBuffer(buffer);
+   // Release command buffer when it finishes executing
+   addFenceSync([=](){
+      gpu::retireCommandBuffer(buffer);
+   });
+}
+
+void
+GLDriver::addFenceSync(std::function<void()> func)
+{
+   auto sync = gl::glFenceSync(gl::GL_SYNC_GPU_COMMANDS_COMPLETE, static_cast<gl::UnusedMask>(0));
+   mSyncList.emplace_back(sync, func);
+}
+
+void
+GLDriver::checkSyncObjects(gl::GLuint64 timeout)
+{
+   if (mSyncList.empty()) {
+      return;
+   }
+
+   // Ensure that all sync commands have been sent to the server.
+   gl::glFlush();
+
+   bool anySignaled = false;
+
+   // Iterate over the list from newest to oldest, so we never call a
+   //  fence function without also calling all previous fence functions
+   //  (as could happen if syncs complete while we're iterating forwards).
+   for (auto i = mSyncList.rbegin(); i != mSyncList.rend(); ++i) {
+      if (&*i == &mSyncList.front() && !anySignaled && timeout > 0) {
+         auto result = gl::glClientWaitSync(i->sync, static_cast<gl::SyncObjectMask>(0), timeout);
+         i->isSignaled = (result != gl::GL_TIMEOUT_EXPIRED);
+      } else {
+         gl::GLint syncState = static_cast<gl::GLint>(gl::GL_SIGNALED);  // avoid hanging on error
+         gl::glGetSynciv(i->sync, gl::GL_SYNC_STATUS, sizeof(syncState), nullptr, &syncState);
+         i->isSignaled = (syncState == gl::GL_SIGNALED);
+      }
+      anySignaled |= i->isSignaled;
+   }
+
+   // Now finalize and remove all signaled syncs from oldest to newest.
+   for (auto i = mSyncList.begin(); i != mSyncList.end(); ) {
+      if (i->isSignaled) {
+         i->func();
+         i = mSyncList.erase(i);
+      } else {
+         ++i;
+      }
+   }
 }
 
 void
@@ -649,8 +696,10 @@ GLDriver::syncPoll(const SwapFunction &swapFunc)
 
    mSwapFunc = swapFunc;
 
+   checkSyncObjects(0);
    while (auto buffer = gpu::tryUnqueueCommandBuffer()) {
       executeBuffer(buffer);
+      checkSyncObjects(0);
    }
 }
 
@@ -665,10 +714,19 @@ GLDriver::run()
    initGL();
 
    while (mRunState == RunState::Running) {
-      auto buffer = gpu::unqueueCommandBuffer();
+      pm4::Buffer *buffer;
+
+      if (mSyncList.empty()) {
+         buffer = gpu::unqueueCommandBuffer();
+      } else {
+         buffer = gpu::tryUnqueueCommandBuffer();
+      }
 
       if (buffer) {
          executeBuffer(buffer);
+         checkSyncObjects(0);
+      } else {
+         checkSyncObjects(10000);  // 10 usec
       }
    }
 }

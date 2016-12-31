@@ -270,6 +270,17 @@ struct RemoteThreadTask
    }
 };
 
+struct SyncObject
+{
+   gl::GLsync sync;
+   bool isSignaled;
+   std::function<void()> func;
+
+   SyncObject(gl::GLsync sync_, std::function<void()> func_) : sync(sync_), func(func_)
+   {
+   }
+};
+
 using GLContext = uint64_t;
 
 class GLDriver : public decaf::OpenGLDriver, public Pm4Processor
@@ -438,6 +449,12 @@ private:
                       size_t size);
 
    void
+   addFenceSync(std::function<void()> func);
+
+   void
+   checkSyncObjects(gl::GLuint64 timeout);
+
+   void
    runOnGLThread(std::function<void()> func);
 
    void
@@ -521,6 +538,7 @@ private:
    std::mutex mTaskListMutex;  // Protects mTaskList
    std::list<RemoteThreadTask> mTaskList;
 
+   std::list<SyncObject> mSyncList;
 };
 
 } // namespace opengl
