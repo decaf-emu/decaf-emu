@@ -23,7 +23,6 @@
 #include <list>
 #include <map>
 #include <mutex>
-#include <queue>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -185,22 +184,6 @@ struct FeedbackBufferState
    gl::GLuint object;
    uint32_t baseOffset;
    uint32_t currentOffset;
-};
-
-enum class SyncWaitType : uint32_t
-{
-   Fence,
-   Query
-};
-
-struct SyncWait
-{
-   SyncWaitType type;
-   union {
-      gl::GLsync fence;
-      gl::GLuint query;
-   };
-   std::function<void()> func;
 };
 
 struct ColorBufferCache
@@ -455,12 +438,6 @@ private:
                       size_t size);
 
    void
-   injectFence(std::function<void()> func);
-
-   void
-   checkSyncObjects();
-
-   void
    runOnGLThread(std::function<void()> func);
 
    void
@@ -516,15 +493,13 @@ private:
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 
-   std::queue<SyncWait> mSyncWaits;
-
    gl::GLuint mFeedbackQuery = 0;
    bool mFeedbackActive = false;
    gl::GLenum mFeedbackPrimitive;
    std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
    gl::GLuint mOccQuery = 0;
-   uint64_t mTotalSamplesPassed = 0;
+   uint32_t mLastOccQueryAddress = 0;
 
    GLStateCache mGLStateCache;
    bool mFramebufferChanged = false;
