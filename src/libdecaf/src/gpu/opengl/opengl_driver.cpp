@@ -409,6 +409,26 @@ GLDriver::getGpuClock()
    return coreinit::OSGetTime();
 }
 
+static uint64_t
+swapValueForWrite(uint64_t value, latte::CB_ENDIAN swap)
+{
+   switch (swap)
+   {
+   case latte::CB_ENDIAN::NONE:
+      break;
+   case latte::CB_ENDIAN::SWAP_8IN64:
+      value = byte_swap(value);
+      break;
+   case latte::CB_ENDIAN::SWAP_8IN32:
+      value = byte_swap(static_cast<uint32_t>(value));
+      break;
+   case latte::CB_ENDIAN::SWAP_8IN16:
+      decaf_abort(fmt::format("Unexpected MEM_WRITE/EVENT_WRITE endian swap {}", swap));
+   }
+
+   return value;
+}
+
 void
 GLDriver::memWrite(const pm4::MemWrite &data)
 {
@@ -421,19 +441,7 @@ GLDriver::memWrite(const pm4::MemWrite &data)
       value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
    }
 
-   switch (data.addrLo.ENDIAN_SWAP())
-   {
-   case latte::CB_ENDIAN::NONE:
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN16:
-      decaf_abort(fmt::format("Unexpected MEM_WRITE endian swap {}", data.addrLo.ENDIAN_SWAP()));
-   }
+   value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
 
    if (data.addrHi.DATA32()) {
       *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
@@ -462,7 +470,14 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
 
          decaf_check(mOccQuery);
          gl::glEndQuery(gl::GL_SAMPLES_PASSED);
-         gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &value);
+
+         // Perform the write when it completes instead of blocking here.
+         addQuerySync(mOccQuery, [=](){
+            uint64_t result;
+            gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &result);
+            result = swapValueForWrite(result, data.addrLo.ENDIAN_SWAP());
+            *reinterpret_cast<uint64_t *>(ptr) = result;
+         });
       } else {
          if (mLastOccQueryAddress) {
             gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
@@ -473,6 +488,16 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
          if (!mOccQuery) {
             gl::glGenQueries(1, &mOccQuery);
             decaf_check(mOccQuery);
+         } else {
+            // Ensure that any pending query has been written so we don't
+            //  clobber the result.
+            gl::GLint isReady;
+            while (isReady = static_cast<gl::GLint>(gl::GL_TRUE),
+                   gl::glGetQueryObjectiv(mOccQuery, gl::GL_QUERY_RESULT_AVAILABLE, &isReady),
+                   !isReady) {
+               std::this_thread::sleep_for(std::chrono::microseconds(10));
+            }
+            checkSyncObjects(0);
          }
 
          gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
@@ -482,18 +507,7 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
       decaf_abort(fmt::format("Unexpected event type {}", type));
    }
 
-   switch (data.addrLo.ENDIAN_SWAP()) {
-   case latte::CB_ENDIAN::NONE:
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN16:
-      decaf_abort("Unexpected EVENT_WRITE endian swap 8IN16");
-   }
+   value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
 
    *reinterpret_cast<uint64_t *>(ptr) = value;
 }
@@ -519,18 +533,7 @@ GLDriver::eventWriteEOP(const pm4::EventWriteEOP &data)
       decaf_abort(fmt::format("Unexpected EOP event type {}", data.eventInitiator.EVENT_TYPE()));
    }
 
-   switch (data.addrLo.ENDIAN_SWAP()) {
-   case latte::CB_ENDIAN::NONE:
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN16:
-      decaf_abort("Unexpected EVENT_WRITE_EOP endian swap 8IN16");
-   }
+   value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
 
    switch (data.addrHi.DATA_SEL()) {
    case pm4::EWP_DATA_DISCARD:
@@ -574,6 +577,12 @@ GLDriver::addFenceSync(std::function<void()> func)
 }
 
 void
+GLDriver::addQuerySync(gl::GLuint query, std::function<void()> func)
+{
+   mSyncList.emplace_back(query, func);
+}
+
+void
 GLDriver::checkSyncObjects(gl::GLuint64 timeout)
 {
    if (mSyncList.empty()) {
@@ -583,26 +592,53 @@ GLDriver::checkSyncObjects(gl::GLuint64 timeout)
    // Ensure that all sync commands have been sent to the server.
    gl::glFlush();
 
-   bool anySignaled = false;
+   bool anyComplete = false;
 
    // Iterate over the list from newest to oldest, so we never call a
    //  fence function without also calling all previous fence functions
    //  (as could happen if syncs complete while we're iterating forwards).
    for (auto i = mSyncList.rbegin(); i != mSyncList.rend(); ++i) {
-      if (&*i == &mSyncList.front() && !anySignaled && timeout > 0) {
-         auto result = gl::glClientWaitSync(i->sync, static_cast<gl::SyncObjectMask>(0), timeout);
-         i->isSignaled = (result != gl::GL_TIMEOUT_EXPIRED);
+      if (&*i == &mSyncList.front() && !anyComplete && timeout > 0) {
+         switch (i->type) {
+         case SyncObject::FENCE:
+            gl::GLenum result;
+            result = gl::glClientWaitSync(i->sync, static_cast<gl::SyncObjectMask>(0), timeout);
+            i->isComplete = (result != gl::GL_TIMEOUT_EXPIRED);
+            break;
+         case SyncObject::QUERY: {
+            gl::GLint isReady = static_cast<gl::GLint>(gl::GL_TRUE);
+            gl::glGetQueryObjectiv(mOccQuery, gl::GL_QUERY_RESULT_AVAILABLE, &isReady);
+            if (isReady) {
+               i->isComplete = true;
+            } else {
+               std::this_thread::sleep_for(std::chrono::nanoseconds(timeout));
+            }
+            break;
+         }
+         }
       } else {
-         gl::GLint syncState = static_cast<gl::GLint>(gl::GL_SIGNALED);  // avoid hanging on error
-         gl::glGetSynciv(i->sync, gl::GL_SYNC_STATUS, sizeof(syncState), nullptr, &syncState);
-         i->isSignaled = (syncState == gl::GL_SIGNALED);
+         switch (i->type) {
+         case SyncObject::FENCE: {
+            gl::GLint syncState;
+            syncState = static_cast<gl::GLint>(gl::GL_SIGNALED);  // avoid hanging on error
+            gl::glGetSynciv(i->sync, gl::GL_SYNC_STATUS, sizeof(syncState), nullptr, &syncState);
+            i->isComplete = (syncState == gl::GL_SIGNALED);
+            break;
+         }
+         case SyncObject::QUERY: {
+            gl::GLint isReady = static_cast<int>(gl::GL_TRUE);
+            gl::glGetQueryObjectiv(mOccQuery, gl::GL_QUERY_RESULT_AVAILABLE, &isReady);
+            i->isComplete = !!isReady;
+            break;
+         }
+         }
       }
-      anySignaled |= i->isSignaled;
+      anyComplete |= i->isComplete;
    }
 
    // Now finalize and remove all signaled syncs from oldest to newest.
    for (auto i = mSyncList.begin(); i != mSyncList.end(); ) {
-      if (i->isSignaled) {
+      if (i->isComplete) {
          i->func();
          i = mSyncList.erase(i);
       } else {

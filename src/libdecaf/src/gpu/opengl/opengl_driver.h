@@ -272,11 +272,23 @@ struct RemoteThreadTask
 
 struct SyncObject
 {
-   gl::GLsync sync;
-   bool isSignaled;
+   enum Type {
+      FENCE,
+      QUERY,
+   } type;
+
+   union {
+      gl::GLsync sync;
+      gl::GLuint query;
+   };
+   bool isComplete;
    std::function<void()> func;
 
-   SyncObject(gl::GLsync sync_, std::function<void()> func_) : sync(sync_), func(func_)
+   SyncObject(gl::GLsync sync_, std::function<void()> func_) : type(FENCE), sync(sync_), func(func_)
+   {
+   }
+
+   SyncObject(gl::GLuint query_, std::function<void()> func_) : type(QUERY), query(query_), func(func_)
    {
    }
 };
@@ -453,6 +465,9 @@ private:
 
    void
    addFenceSync(std::function<void()> func);
+
+   void
+   addQuerySync(gl::GLuint query, std::function<void()> func);
 
    void
    checkSyncObjects(gl::GLuint64 timeout);
