@@ -426,6 +426,9 @@ private:
    void
    endTransformFeedback();
 
+   void
+   updateTransformFeedbackOffsets();
+
    int
    countModifiedUniforms(latte::Register firstReg,
                          uint32_t lastUniformUpdate);
@@ -511,6 +514,8 @@ private:
    ScanBufferChain mDrcScanBuffers;
 
    gl::GLuint mFeedbackQuery = 0;
+   unsigned int mFeedbackQueryBuffers = 0;
+   std::array<unsigned int, latte::MaxStreamOutBuffers> mFeedbackQueryStride;
    bool mFeedbackActive = false;
    gl::GLenum mFeedbackPrimitive;
    std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
