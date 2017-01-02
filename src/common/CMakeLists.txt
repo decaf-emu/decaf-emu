@@ -16,7 +16,8 @@ target_link_libraries(common
     ${CEREAL_LIBRARIES}
     ${FIXED_POINT_LIBRARIES}
     ${GSL_LIBRARIES}
-    ${SPDLOG_LIBRARIES})
+    ${SPDLOG_LIBRARIES}
+    ${SDL2_LINK})
 
 if(MSVC)
     target_link_libraries(common Dbghelp)

@@ -2,6 +2,7 @@
 #include "clilog.h"
 #include <array>
 #include <fstream>
+#include <common/platform_opengl.h>
 #include <common/teenyheap.h>
 #include <libdecaf/decaf.h>
 #include <libdecaf/decaf_nullinputdriver.h>
@@ -353,6 +354,10 @@ SDLWindow::createWindow()
       gCliLog->error("Failed to load OpenGL library: {}", SDL_GetError());
       return false;
    }
+
+#ifndef DECAF_GLBINDING
+   platform::setGLLookupFunction(SDL_GL_GetProcAddress);
+#endif
 
    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);

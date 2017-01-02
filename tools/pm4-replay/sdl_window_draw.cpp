@@ -1,77 +1,93 @@
 #include "sdl_window.h"
-#include <glbinding/Binding.h>
-#include <glbinding/Meta.h>
+#include <common/gl.h>
 #include <common/log.h>
 #include <common/decaf_assert.h>
 
+#ifdef DECAF_GLBINDING
+#include <glbinding/Binding.h>
+#include <glbinding/Meta.h>
+#endif
+
 static std::string
-getGlDebugSource(gl::GLenum source)
+getGlDebugSource(GLenum source)
 {
    switch (source) {
-   case gl::GL_DEBUG_SOURCE_API:
+   case GL_DEBUG_SOURCE_API:
       return "API";
-   case gl::GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+   case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
       return "WINSYS";
-   case gl::GL_DEBUG_SOURCE_SHADER_COMPILER:
+   case GL_DEBUG_SOURCE_SHADER_COMPILER:
       return "COMPILER";
-   case gl::GL_DEBUG_SOURCE_THIRD_PARTY:
+   case GL_DEBUG_SOURCE_THIRD_PARTY:
       return "EXTERNAL";
-   case gl::GL_DEBUG_SOURCE_APPLICATION:
+   case GL_DEBUG_SOURCE_APPLICATION:
       return "APP";
-   case gl::GL_DEBUG_SOURCE_OTHER:
+   case GL_DEBUG_SOURCE_OTHER:
       return "OTHER";
    default:
+#ifdef DECAF_GLBINDING
       return glbinding::Meta::getString(source);
+#else
+      return "???";
+#endif
    }
 }
 
 static std::string
-getGlDebugType(gl::GLenum severity)
+getGlDebugType(GLenum severity)
 {
    switch (severity) {
-   case gl::GL_DEBUG_TYPE_ERROR:
+   case GL_DEBUG_TYPE_ERROR:
       return "ERROR";
-   case gl::GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+   case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
       return "DEPRECATED_BEHAVIOR";
-   case gl::GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+   case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
       return "UNDEFINED_BEHAVIOR";
-   case gl::GL_DEBUG_TYPE_PORTABILITY:
+   case GL_DEBUG_TYPE_PORTABILITY:
       return "PORTABILITY";
-   case gl::GL_DEBUG_TYPE_PERFORMANCE:
+   case GL_DEBUG_TYPE_PERFORMANCE:
       return "PERFORMANCE";
-   case gl::GL_DEBUG_TYPE_MARKER:
+   case GL_DEBUG_TYPE_MARKER:
       return "MARKER";
-   case gl::GL_DEBUG_TYPE_PUSH_GROUP:
+   case GL_DEBUG_TYPE_PUSH_GROUP:
       return "PUSH_GROUP";
-   case gl::GL_DEBUG_TYPE_POP_GROUP:
+   case GL_DEBUG_TYPE_POP_GROUP:
       return "POP_GROUP";
-   case gl::GL_DEBUG_TYPE_OTHER:
+   case GL_DEBUG_TYPE_OTHER:
       return "OTHER";
    default:
+#ifdef DECAF_GLBINDING
       return glbinding::Meta::getString(severity);
+#else
+      return "???";
+#endif
    }
 }
 
 static std::string
-getGlDebugSeverity(gl::GLenum severity)
+getGlDebugSeverity(GLenum severity)
 {
    switch (severity) {
-   case gl::GL_DEBUG_SEVERITY_HIGH:
+   case GL_DEBUG_SEVERITY_HIGH:
       return "HIGH";
-   case gl::GL_DEBUG_SEVERITY_MEDIUM:
+   case GL_DEBUG_SEVERITY_MEDIUM:
       return "MED";
-   case gl::GL_DEBUG_SEVERITY_LOW:
+   case GL_DEBUG_SEVERITY_LOW:
       return "LOW";
-   case gl::GL_DEBUG_SEVERITY_NOTIFICATION:
+   case GL_DEBUG_SEVERITY_NOTIFICATION:
       return "NOTIF";
    default:
+#ifdef DECAF_GLBINDING
       return glbinding::Meta::getString(severity);
+#else
+      return "???";
+#endif
    }
 }
 
-static void GL_APIENTRY
-debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
-                     gl::GLsizei length, const gl::GLchar* message, const void *userParam)
+static void APIENTRY
+debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                     GLsizei length, const GLchar* message, const void *userParam)
 {
    for (auto filterID : decaf::config::gpu::debug_filters) {
       if (filterID == id) {
@@ -85,13 +101,13 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
                                 getGlDebugSeverity(severity),
                                 message);
 
-   if (severity == gl::GL_DEBUG_SEVERITY_HIGH) {
+   if (severity == GL_DEBUG_SEVERITY_HIGH) {
       gLog->warn(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_MEDIUM) {
+   } else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
       gLog->debug(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_LOW) {
+   } else if (severity == GL_DEBUG_SEVERITY_LOW) {
       gLog->trace(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_NOTIFICATION) {
+   } else if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
       gLog->info(outputStr);
    } else {
       gLog->info(outputStr);
@@ -101,12 +117,13 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
 void
 SDLWindow::initialiseContext()
 {
+#ifdef DECAF_GLBINDING
    glbinding::Binding::initialize();
    glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
    glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
       auto error = glbinding::Binding::GetError.directCall();
 
-      if (error != gl::GL_NO_ERROR) {
+      if (error != GL_NO_ERROR) {
          fmt::MemoryWriter writer;
          writer << call.function->name() << "(";
 
@@ -125,11 +142,12 @@ SDLWindow::initialiseContext()
          gLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
       }
    });
+#endif
 
    if (decaf::config::gpu::debug) {
-      gl::glDebugMessageCallback(&debugMessageCallback, nullptr);
-      gl::glEnable(gl::GL_DEBUG_OUTPUT);
-      gl::glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
+      glDebugMessageCallback(&debugMessageCallback, nullptr);
+      glEnable(GL_DEBUG_OUTPUT);
+      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
    }
 }
 
@@ -164,20 +182,20 @@ SDLWindow::initialiseDraw()
       })";
 
    // Create vertex program
-   mVertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &vertexCode);
+   mVertexProgram = glCreateShaderProgramv(GL_VERTEX_SHADER, 1, &vertexCode);
 
    // Create pixel program
-   mPixelProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &pixelCode);
-   gl::glBindFragDataLocation(mPixelProgram, 0, "ps_color");
+   mPixelProgram = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 1, &pixelCode);
+   glBindFragDataLocation(mPixelProgram, 0, "ps_color");
 
    // Create pipeline
-   gl::glGenProgramPipelines(1, &mPipeline);
-   gl::glUseProgramStages(mPipeline, gl::GL_VERTEX_SHADER_BIT, mVertexProgram);
-   gl::glUseProgramStages(mPipeline, gl::GL_FRAGMENT_SHADER_BIT, mPixelProgram);
+   glGenProgramPipelines(1, &mPipeline);
+   glUseProgramStages(mPipeline, GL_VERTEX_SHADER_BIT, mVertexProgram);
+   glUseProgramStages(mPipeline, GL_FRAGMENT_SHADER_BIT, mPixelProgram);
 
    // (TL, TR, BR)    (BR, BL, TL)
    // Create vertex buffer
-   static const gl::GLfloat vertices[] = {
+   static const GLfloat vertices[] = {
       -1.0f,  -1.0f,   0.0f, 1.0f,
       1.0f,  -1.0f,   1.0f, 1.0f,
       1.0f, 1.0f,   1.0f, 0.0f,
@@ -187,44 +205,44 @@ SDLWindow::initialiseDraw()
       -1.0f,  -1.0f,   0.0f, 1.0f,
    };
 
-   gl::glCreateBuffers(1, &mVertBuffer);
-   gl::glNamedBufferData(mVertBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
+   glCreateBuffers(1, &mVertBuffer);
+   glNamedBufferData(mVertBuffer, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
    // Create vertex array
-   gl::glCreateVertexArrays(1, &mVertArray);
+   glCreateVertexArrays(1, &mVertArray);
 
-   auto fs_position = gl::glGetAttribLocation(mVertexProgram, "fs_position");
-   gl::glEnableVertexArrayAttrib(mVertArray, fs_position);
-   gl::glVertexArrayAttribFormat(mVertArray, fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 0);
-   gl::glVertexArrayAttribBinding(mVertArray, fs_position, 0);
+   auto fs_position = glGetAttribLocation(mVertexProgram, "fs_position");
+   glEnableVertexArrayAttrib(mVertArray, fs_position);
+   glVertexArrayAttribFormat(mVertArray, fs_position, 2, GL_FLOAT, GL_FALSE, 0);
+   glVertexArrayAttribBinding(mVertArray, fs_position, 0);
 
-   auto fs_texCoord = gl::glGetAttribLocation(mVertexProgram, "fs_texCoord");
-   gl::glEnableVertexArrayAttrib(mVertArray, fs_texCoord);
-   gl::glVertexArrayAttribFormat(mVertArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
-   gl::glVertexArrayAttribBinding(mVertArray, fs_texCoord, 0);
+   auto fs_texCoord = glGetAttribLocation(mVertexProgram, "fs_texCoord");
+   glEnableVertexArrayAttrib(mVertArray, fs_texCoord);
+   glVertexArrayAttribFormat(mVertArray, fs_texCoord, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat));
+   glVertexArrayAttribBinding(mVertArray, fs_texCoord, 0);
 
    // Create texture sampler
-   gl::glGenSamplers(1, &mSampler);
+   glGenSamplers(1, &mSampler);
 
-   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP));
-   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP));
-   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_LINEAR));
-   gl::glSamplerParameteri(mSampler, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_LINEAR));
+   glSamplerParameteri(mSampler, GL_TEXTURE_WRAP_S, static_cast<int>(GL_CLAMP));
+   glSamplerParameteri(mSampler, GL_TEXTURE_WRAP_S, static_cast<int>(GL_CLAMP));
+   glSamplerParameteri(mSampler, GL_TEXTURE_MIN_FILTER, static_cast<int>(GL_LINEAR));
+   glSamplerParameteri(mSampler, GL_TEXTURE_MAG_FILTER, static_cast<int>(GL_LINEAR));
 }
 
 void
-SDLWindow::drawScanBuffer(gl::GLuint object)
+SDLWindow::drawScanBuffer(GLuint object)
 {
    // Setup screen draw shader
-   gl::glBindVertexArray(mVertArray);
-   gl::glBindVertexBuffer(0, mVertBuffer, 0, 4 * sizeof(gl::GLfloat));
-   gl::glBindProgramPipeline(mPipeline);
+   glBindVertexArray(mVertArray);
+   glBindVertexBuffer(0, mVertBuffer, 0, 4 * sizeof(GLfloat));
+   glBindProgramPipeline(mPipeline);
 
    // Draw screen quad
-   gl::glBindSampler(0, mSampler);
-   gl::glBindTextureUnit(0, object);
+   glBindSampler(0, mSampler);
+   glBindTextureUnit(0, object);
 
-   gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
+   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void
@@ -302,28 +320,28 @@ SDLWindow::calculateScreenViewports(float(&tv)[4],
 }
 
 void
-SDLWindow::drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer)
+SDLWindow::drawScanBuffers(GLuint tvBuffer, GLuint drcBuffer)
 {
    float tvViewport[4], drcViewport[4];
    calculateScreenViewports(tvViewport, drcViewport);
 
    // Set up some needed GL state
-   gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
-   gl::glDisablei(gl::GL_BLEND, 0);
-   gl::glDisable(gl::GL_DEPTH_TEST);
-   gl::glDisable(gl::GL_STENCIL_TEST);
-   gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glDisable(gl::GL_CULL_FACE);
+   glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+   glDisablei(GL_BLEND, 0);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_STENCIL_TEST);
+   glDisable(GL_SCISSOR_TEST);
+   glDisable(GL_CULL_FACE);
 
    // Clear screen
-   gl::glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+   glClearColor(0.6f, 0.2f, 0.2f, 1.0f);
+   glClear(GL_COLOR_BUFFER_BIT);
 
    // Draw displays
-   gl::glViewportArrayv(0, 1, tvViewport);
+   glViewportArrayv(0, 1, tvViewport);
    drawScanBuffer(tvBuffer);
 
-   gl::glViewportArrayv(0, 1, drcViewport);
+   glViewportArrayv(0, 1, drcViewport);
    drawScanBuffer(drcBuffer);
 
    // Swap

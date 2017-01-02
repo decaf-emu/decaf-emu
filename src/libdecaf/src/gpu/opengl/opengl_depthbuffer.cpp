@@ -1,11 +1,11 @@
 #ifndef DECAF_NOGL
 
 #include <common/decaf_assert.h>
+#include <common/gl.h>
 #include "opengl_driver.h"
 #include "gpu/gpu_utilities.h"
 #include "gpu/latte_enum_db.h"
 #include "gpu/latte_enum_sq.h"
-#include <glbinding/gl/gl.h>
 
 namespace gpu
 {
@@ -52,27 +52,27 @@ bool GLDriver::checkActiveDepthBuffer()
     || z_enable != mDepthBufferCache.depthBound
     || stencil_enable != mDepthBufferCache.stencilBound) {
       if (z_enable && stencil_enable) {
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, surfaceObject, 0);
+         glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, surfaceObject, 0);
       } else if (!z_enable && !stencil_enable) {
          if (mDepthBufferCache.depthBound || mDepthBufferCache.stencilBound) {
-            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_STENCIL_ATTACHMENT, 0, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, 0, 0);
          }
       } else if (z_enable) {
          decaf_check(!stencil_enable);
 
          if (mDepthBufferCache.stencilBound) {
-            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, 0, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, 0, 0);
          }
 
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, surfaceObject, 0);
+         glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, surfaceObject, 0);
       } else {
          decaf_check(!z_enable && stencil_enable);
 
          if (mDepthBufferCache.depthBound) {
-            gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, 0, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, 0);
          }
 
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_STENCIL_ATTACHMENT, surfaceObject, 0);
+         glFramebufferTexture(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, surfaceObject, 0);
       }
 
       mFramebufferChanged = true;

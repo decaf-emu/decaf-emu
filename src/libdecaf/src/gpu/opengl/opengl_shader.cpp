@@ -9,12 +9,12 @@
 #include "opengl_driver.h"
 
 #include <common/decaf_assert.h>
+#include <common/gl.h>
 #include <common/log.h>
 #include <common/murmur3.h>
 #include <common/platform_dir.h>
 #include <common/strutils.h>
 #include <fstream>
-#include <glbinding/gl/gl.h>
 #include <libcpu/mem.h>
 #include <spdlog/spdlog.h>
 
@@ -82,25 +82,25 @@ dumpTranslatedShader(const std::string &type, ppcaddr_t data, const std::string 
    file << shaderSource << std::endl;
 }
 
-static gl::GLenum
+static GLenum
 getDataFormatGlType(latte::SQ_DATA_FORMAT format)
 {
    // Some Special Cases
    switch (format) {
    case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
    case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
-      return gl::GL_UNSIGNED_INT;
+      return GL_UNSIGNED_INT;
    }
 
    auto bitCount = getDataFormatComponentBits(format);
 
    switch (bitCount) {
    case 8:
-      return gl::GL_UNSIGNED_BYTE;
+      return GL_UNSIGNED_BYTE;
    case 16:
-      return gl::GL_UNSIGNED_SHORT;
+      return GL_UNSIGNED_SHORT;
    case 32:
-      return gl::GL_UNSIGNED_INT;
+      return GL_UNSIGNED_INT;
    default:
       decaf_abort(fmt::format("Unimplemented attribute bit count: {} for {}", bitCount, format));
    }
@@ -109,19 +109,19 @@ getDataFormatGlType(latte::SQ_DATA_FORMAT format)
 static void
 deleteShaderObject(FetchShader *shader)
 {
-   gl::glDeleteVertexArrays(1, &shader->object);
+   glDeleteVertexArrays(1, &shader->object);
 }
 
 static void
 deleteShaderObject(VertexShader *shader)
 {
-   gl::glDeleteProgram(shader->object);
+   glDeleteProgram(shader->object);
 }
 
 static void
 deleteShaderObject(PixelShader *shader)
 {
-   gl::glDeleteProgram(shader->object);
+   glDeleteProgram(shader->object);
 }
 
 template <typename ShaderPtrType> static bool
@@ -264,18 +264,18 @@ bool GLDriver::checkActiveShader()
       if (invalidateShaderIfChanged(pipeline.fetch, fsShaderKey, mFetchShaders, mResourceMap)
        || invalidateShaderIfChanged(pipeline.vertex, vsShaderKey, mVertexShaders, mResourceMap)
        || invalidateShaderIfChanged(pipeline.pixel, psShaderKey, mPixelShaders, mResourceMap)) {
-         gl::glDeleteProgramPipelines(1, &pipeline.object);
+         glDeleteProgramPipelines(1, &pipeline.object);
          pipeline.object = 0;
       }
    }
 
    auto getProgramLog = [](auto program) {
-      gl::GLint logLength = 0;
+      GLint logLength = 0;
       std::string logMessage;
-      gl::glGetProgramiv(program, gl::GL_INFO_LOG_LENGTH, &logLength);
+      glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 
       logMessage.resize(logLength);
-      gl::glGetProgramInfoLog(program, logLength, &logLength, &logMessage[0]);
+      glGetProgramInfoLog(program, logLength, &logLength, &logMessage[0]);
       return logMessage;
    };
 
@@ -307,10 +307,10 @@ bool GLDriver::checkActiveShader()
          }
 
          // Setup attrib format
-         gl::glCreateVertexArrays(1, &fetchShader->object);
+         glCreateVertexArrays(1, &fetchShader->object);
          if (decaf::config::gpu::debug) {
             std::string label = fmt::format("fetch shader @ 0x{:08X}", fsPgmAddress);
-            gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader->object, -1, label.c_str());
+            glObjectLabel(GL_VERTEX_ARRAY, fetchShader->object, -1, label.c_str());
          }
 
          auto bufferUsed = std::array<bool, latte::MaxAttributes> { false };
@@ -325,9 +325,9 @@ bool GLDriver::checkActiveShader()
                auto components = getDataFormatComponents(attrib.format);
                auto divisor = 0u;
 
-               gl::glEnableVertexArrayAttrib(fetchShader->object, attrib.location);
-               gl::glVertexArrayAttribIFormat(fetchShader->object, attrib.location, components, type, attrib.offset);
-               gl::glVertexArrayAttribBinding(fetchShader->object, attrib.location, attribBufferId);
+               glEnableVertexArrayAttrib(fetchShader->object, attrib.location);
+               glVertexArrayAttribIFormat(fetchShader->object, attrib.location, components, type, attrib.offset);
+               glVertexArrayAttribBinding(fetchShader->object, attrib.location, attribBufferId);
 
                if (attrib.type == latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA) {
                   if (attrib.srcSelX == latte::SQ_SEL::SEL_W) {
@@ -353,7 +353,7 @@ bool GLDriver::checkActiveShader()
 
          for (auto bufferId = 0; bufferId < latte::MaxAttributes; ++bufferId) {
             if (bufferUsed[bufferId]) {
-               gl::glVertexArrayBindingDivisor(fetchShader->object, bufferId, bufferDivisor[bufferId]);
+               glVertexArrayBindingDivisor(fetchShader->object, bufferId, bufferDivisor[bufferId]);
             }
          }
       }
@@ -387,16 +387,16 @@ bool GLDriver::checkActiveShader()
          dumpTranslatedShader("vertex", vsPgmAddress, vertexShader->code);
 
          // Create OpenGL Shader
-         const gl::GLchar *code[] = { vertexShader->code.c_str() };
-         vertexShader->object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
+         const GLchar *code[] = { vertexShader->code.c_str() };
+         vertexShader->object = glCreateShaderProgramv(GL_VERTEX_SHADER, 1, code);
          if (decaf::config::gpu::debug) {
             std::string label = fmt::format("vertex shader @ 0x{:08X}", vsPgmAddress);
-            gl::glObjectLabel(gl::GL_PROGRAM, vertexShader->object, -1, label.c_str());
+            glObjectLabel(GL_PROGRAM, vertexShader->object, -1, label.c_str());
          }
 
          // Check if shader compiled & linked properly
-         gl::GLint isLinked = 0;
-         gl::glGetProgramiv(vertexShader->object, gl::GL_LINK_STATUS, &isLinked);
+         GLint isLinked = 0;
+         glGetProgramiv(vertexShader->object, GL_LINK_STATUS, &isLinked);
 
          if (!isLinked) {
             auto log = getProgramLog(vertexShader->object);
@@ -408,15 +408,15 @@ bool GLDriver::checkActiveShader()
          }
 
          // Get uniform locations
-         vertexShader->uniformRegisters = gl::glGetUniformLocation(vertexShader->object, "VR");
-         vertexShader->uniformViewport = gl::glGetUniformLocation(vertexShader->object, "uViewport");
+         vertexShader->uniformRegisters = glGetUniformLocation(vertexShader->object, "VR");
+         vertexShader->uniformViewport = glGetUniformLocation(vertexShader->object, "uViewport");
 
          // Get attribute locations
          vertexShader->attribLocations.fill(0);
 
          for (auto &attrib : fetchShader->attribs) {
             auto name = fmt::format("fs_out_{}", attrib.location);
-            vertexShader->attribLocations[attrib.location] = gl::glGetAttribLocation(vertexShader->object, name.c_str());
+            vertexShader->attribLocations[attrib.location] = glGetAttribLocation(vertexShader->object, name.c_str());
          }
       }
 
@@ -456,17 +456,17 @@ bool GLDriver::checkActiveShader()
             dumpTranslatedShader("pixel", psPgmAddress, pixelShader->code);
 
             // Create OpenGL Shader
-            const gl::GLchar *code[] = { pixelShader->code.c_str() };
-            pixelShader->object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
+            const GLchar *code[] = { pixelShader->code.c_str() };
+            pixelShader->object = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 1, code);
 
             if (decaf::config::gpu::debug) {
                std::string label = fmt::format("pixel shader @ 0x{:08X}", psPgmAddress);
-               gl::glObjectLabel(gl::GL_PROGRAM, pixelShader->object, -1, label.c_str());
+               glObjectLabel(GL_PROGRAM, pixelShader->object, -1, label.c_str());
             }
 
             // Check if shader compiled & linked properly
-            gl::GLint isLinked = 0;
-            gl::glGetProgramiv(pixelShader->object, gl::GL_LINK_STATUS, &isLinked);
+            GLint isLinked = 0;
+            glGetProgramiv(pixelShader->object, GL_LINK_STATUS, &isLinked);
 
             if (!isLinked) {
                auto log = getProgramLog(pixelShader->object);
@@ -477,8 +477,8 @@ bool GLDriver::checkActiveShader()
             }
 
             // Get uniform locations
-            pixelShader->uniformRegisters = gl::glGetUniformLocation(pixelShader->object, "PR");
-            pixelShader->uniformAlphaRef = gl::glGetUniformLocation(pixelShader->object, "uAlphaRef");
+            pixelShader->uniformRegisters = glGetUniformLocation(pixelShader->object, "PR");
+            pixelShader->uniformAlphaRef = glGetUniformLocation(pixelShader->object, "uAlphaRef");
             pixelShader->sx_alpha_test_control = sx_alpha_test_control;
          }
 
@@ -489,7 +489,7 @@ bool GLDriver::checkActiveShader()
       pipeline.pixelKey = psShaderKey;
 
       // Create pipeline
-      gl::glCreateProgramPipelines(1, &pipeline.object);
+      glCreateProgramPipelines(1, &pipeline.object);
       if (decaf::config::gpu::debug) {
          std::string label;
 
@@ -499,11 +499,11 @@ bool GLDriver::checkActiveShader()
             label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = none", fsPgmAddress, vsPgmAddress);
          }
 
-         gl::glObjectLabel(gl::GL_PROGRAM_PIPELINE, pipeline.object, -1, label.c_str());
+         glObjectLabel(GL_PROGRAM_PIPELINE, pipeline.object, -1, label.c_str());
       }
 
-      gl::glUseProgramStages(pipeline.object, gl::GL_VERTEX_SHADER_BIT, pipeline.vertex->object);
-      gl::glUseProgramStages(pipeline.object, gl::GL_FRAGMENT_SHADER_BIT, pipeline.pixel ? pipeline.pixel->object : 0);
+      glUseProgramStages(pipeline.object, GL_VERTEX_SHADER_BIT, pipeline.vertex->object);
+      glUseProgramStages(pipeline.object, GL_FRAGMENT_SHADER_BIT, pipeline.pixel ? pipeline.pixel->object : 0);
    }
 
    // Set active shader
@@ -511,14 +511,14 @@ bool GLDriver::checkActiveShader()
 
    // Set alpha reference
    if (mActiveShader->pixel && alphaTestFunc != latte::REF_FUNC::ALWAYS && alphaTestFunc != latte::REF_FUNC::NEVER) {
-      gl::glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF());
+      glProgramUniform1f(mActiveShader->pixel->object, mActiveShader->pixel->uniformAlphaRef, sx_alpha_ref.ALPHA_REF());
    }
 
    // Bind fetch shader
-   gl::glBindVertexArray(pipeline.fetch->object);
+   glBindVertexArray(pipeline.fetch->object);
 
    // Bind vertex + pixel shader
-   gl::glBindProgramPipeline(pipeline.object);
+   glBindProgramPipeline(pipeline.object);
    return true;
 }
 
@@ -564,7 +564,7 @@ bool GLDriver::checkActiveUniforms()
 
          if (uploadCount > 0) {
             auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_256 / 4]);
-            gl::glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, uploadCount, values);
+            glProgramUniform4fv(mActiveShader->vertex->object, mActiveShader->vertex->uniformRegisters, uploadCount, values);
 
             mActiveShader->vertex->lastUniformUpdate = ++mUniformUpdateGen;
          }
@@ -575,7 +575,7 @@ bool GLDriver::checkActiveUniforms()
 
          if (uploadCount > 0) {
             auto values = reinterpret_cast<float *>(&mRegisters[latte::Register::SQ_ALU_CONSTANT0_0 / 4]);
-            gl::glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, uploadCount, values);
+            glProgramUniform4fv(mActiveShader->pixel->object, mActiveShader->pixel->uniformRegisters, uploadCount, values);
 
             mActiveShader->pixel->lastUniformUpdate = ++mUniformUpdateGen;
          }
@@ -586,7 +586,7 @@ bool GLDriver::checkActiveUniforms()
             auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
             auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
             auto used = mActiveShader->vertex->usedUniformBlocks[i];
-            auto bufferObject = gl::GLuint { 0 };
+            auto bufferObject = GLuint { 0 };
 
             if (!used || !sq_alu_const_buffer_size_vs) {
                bufferObject = 0;
@@ -606,7 +606,7 @@ bool GLDriver::checkActiveUniforms()
             // Bind (or unbind) block
             if (mUniformBlockCache[i].vsObject != bufferObject) {
                mUniformBlockCache[i].vsObject = bufferObject;
-               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, i, bufferObject);
+               glBindBufferBase(GL_UNIFORM_BUFFER, i, bufferObject);
             }
          }
       }
@@ -616,7 +616,7 @@ bool GLDriver::checkActiveUniforms()
             auto sq_alu_const_cache_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_PS_0 + 4 * i);
             auto sq_alu_const_buffer_size_ps = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + 4 * i);
             auto used = mActiveShader->pixel->usedUniformBlocks[i];
-            auto bufferObject = gl::GLuint { 0 };
+            auto bufferObject = GLuint { 0 };
 
             if (!used || !sq_alu_const_buffer_size_ps) {
                bufferObject = 0;
@@ -632,7 +632,7 @@ bool GLDriver::checkActiveUniforms()
             // Bind (or unbind) block
             if (mUniformBlockCache[i].psObject != bufferObject) {
                mUniformBlockCache[i].psObject = bufferObject;
-               gl::glBindBufferBase(gl::GL_UNIFORM_BUFFER, 16 + i, bufferObject);
+               glBindBufferBase(GL_UNIFORM_BUFFER, 16 + i, bufferObject);
             }
          }
       }
@@ -683,7 +683,7 @@ GLDriver::getDataBuffer(uint32_t address,
    //  driver can potentially wait just until that buffer is up to date
    //  without having to block on all other commands.
    auto shouldMap = USE_PERSISTENT_MAP && !buffer->isOutput;
-   gl::glCreateBuffers(1, &buffer->object);
+   glCreateBuffers(1, &buffer->object);
 
    if (decaf::config::gpu::debug) {
       const char *type = "output-only";
@@ -693,51 +693,51 @@ GLDriver::getDataBuffer(uint32_t address,
       }
 
       auto label = fmt::format("{} buffer @ 0x{:08X}", type, address);
-      gl::glObjectLabel(gl::GL_BUFFER, buffer->object, -1, label.c_str());
+      glObjectLabel(GL_BUFFER, buffer->object, -1, label.c_str());
    }
 
-   auto usage = gl::BufferStorageMask::GL_NONE_BIT;
+   auto usage = GLBINDING_ZERO(BufferStorageMask);
 
    if (buffer->isInput) {
       if (shouldMap) {
-         usage |= gl::GL_MAP_WRITE_BIT;
+         usage |= GL_MAP_WRITE_BIT;
       } else {
-         usage |= gl::GL_DYNAMIC_STORAGE_BIT;
+         usage |= GL_DYNAMIC_STORAGE_BIT;
       }
    }
 
    if (buffer->isOutput) {
-      usage |= gl::GL_CLIENT_STORAGE_BIT;
+      usage |= GL_CLIENT_STORAGE_BIT;
    }
 
    if (shouldMap) {
-      usage |= gl::GL_MAP_PERSISTENT_BIT;
+      usage |= GL_MAP_PERSISTENT_BIT;
    }
 
-   gl::glNamedBufferStorage(buffer->object, size + BUFFER_PADDING, nullptr, usage);
+   glNamedBufferStorage(buffer->object, size + BUFFER_PADDING, nullptr, usage);
 
    if (oldObject) {
       if (oldMappedBuffer) {
-         gl::glUnmapNamedBuffer(oldObject);
+         glUnmapNamedBuffer(oldObject);
          buffer->mappedBuffer = nullptr;
       }
 
-      gl::glCopyNamedBufferSubData(oldObject, buffer->object, 0, 0, std::min(oldSize, size));
-      gl::glDeleteBuffers(1, &oldObject);
+      glCopyNamedBufferSubData(oldObject, buffer->object, 0, 0, std::min(oldSize, size));
+      glDeleteBuffers(1, &oldObject);
    }
 
    if (shouldMap) {
-      auto access = gl::GL_MAP_PERSISTENT_BIT;
+      auto access = GL_MAP_PERSISTENT_BIT;
 
       if (buffer->isInput) {
-         access |= gl::GL_MAP_WRITE_BIT | gl::GL_MAP_FLUSH_EXPLICIT_BIT;
+         access |= GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT;
       }
 
       if (buffer->isOutput) {
-         access |= gl::GL_MAP_READ_BIT;
+         access |= GL_MAP_READ_BIT;
       }
 
-      buffer->mappedBuffer = gl::glMapNamedBufferRange(buffer->object, 0, size + BUFFER_PADDING, access);
+      buffer->mappedBuffer = glMapNamedBufferRange(buffer->object, 0, size + BUFFER_PADDING, access);
    }
 
    // Unconditionally upload the initial data store for attribute and
@@ -774,7 +774,7 @@ GLDriver::downloadDataBuffer(DataBuffer *buffer,
              static_cast<char *>(buffer->mappedBuffer) + offset,
              size);
    } else {
-      gl::glGetNamedBufferSubData(buffer->object, offset, size,
+      glGetNamedBufferSubData(buffer->object, offset, size,
                                   mem::translate<char>(buffer->cpuMemStart) + offset);
    }
 }
@@ -810,10 +810,10 @@ GLDriver::uploadDataBuffer(DataBuffer *buffer,
          memcpy(static_cast<char *>(buffer->mappedBuffer) + offset,
                 mem::translate<char>(buffer->cpuMemStart) + offset,
                 size);
-         gl::glFlushMappedNamedBufferRange(buffer->object, offset, size);
+         glFlushMappedNamedBufferRange(buffer->object, offset, size);
          buffer->dirtyMap = true;
       } else {
-         gl::glNamedBufferSubData(buffer->object, offset, size,
+         glNamedBufferSubData(buffer->object, offset, size,
                                   mem::translate<char>(buffer->cpuMemStart) + offset);
       }
    }
@@ -840,7 +840,7 @@ GLDriver::checkActiveAttribBuffers()
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS();
       auto size = sq_vtx_constant_word1.SIZE() + 1;
       auto stride = sq_vtx_constant_word2.STRIDE();
-      auto bufferObject = gl::GLuint { 0 };
+      auto bufferObject = GLuint { 0 };
 
       if (addr == 0 || size == 0) {
          bufferObject = 0;
@@ -857,12 +857,12 @@ GLDriver::checkActiveAttribBuffers()
        || mActiveShader->fetch->mAttribBufferCache[i].stride != stride) {
          mActiveShader->fetch->mAttribBufferCache[i].object = bufferObject;
          mActiveShader->fetch->mAttribBufferCache[i].stride = stride;
-         gl::glBindVertexBuffer(i, bufferObject, 0, stride);
+         glBindVertexBuffer(i, bufferObject, 0, stride);
       }
    }
 
    if (needMemoryBarrier) {
-      gl::glMemoryBarrier(gl::GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+      glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
    }
 
    return true;

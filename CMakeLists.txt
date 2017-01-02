@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.2)
 project(decaf-emu C CXX)
 option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_SDL "Build with SDL support" ON)
+option(DECAF_GLBINDING "Enable glbinding for OpenGL code validation" ON)
 option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
 
 find_package(Threads REQUIRED)
