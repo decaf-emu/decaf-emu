@@ -50,7 +50,7 @@ INS(xori, (rA), (rS, uimm), (), (opcd == 26), "XOR Immediate")
 INS(xoris, (rA), (rS, uimm), (), (opcd == 27), "XOR Immediate Shifted")
 
 // Integer Rotate
-INS(rlwimi, (rA), (rS, rA, sh, mb, me), (rc), (opcd == 20), "Rotate Left Word Immediate then Mask Insert")
+INS(rlwimi, (rA), (rA, rS, sh, mb, me), (rc), (opcd == 20), "Rotate Left Word Immediate then Mask Insert")
 INS(rlwinm, (rA), (rS, sh, mb, me), (rc), (opcd == 21), "Rotate Left Word Immediate then AND with Mask")
 INS(rlwnm, (rA), (rS, rB, mb, me), (rc), (opcd == 23), "Rotate Left Word then AND with Mask")
 
@@ -61,16 +61,16 @@ INS(srawi, (rA, XERC), (rS, sh), (rc), (opcd == 31, xo1 == 824), "Shift Right Ar
 INS(srw, (rA), (rS, rB), (rc), (opcd == 31, xo1 == 536), "Shift Right Word")
 
 // Floating-Point Arithmetic
-INS(fadd, (frD, FCRISI, FCRSNAN), (frA, frB), (frc), (opcd == 63, xo4 == 21, !_21_25), "Floating Add")
-INS(fadds, (frD, FCRISI, FCRSNAN), (frA, frB), (frc), (opcd == 59, xo4 == 21, !_21_25), "Floating Add Single")
-INS(fdiv, (frD, FCRZDZ, FCRIDI, FCRSNAN), (frA, frB), (frc), (opcd == 63, xo4 == 18, !_21_25), "Floating Divide")
-INS(fdivs, (frD), (frA, frB), (frc), (opcd == 59, xo4 == 18, !_21_25), "Floating Divide Single")
-INS(fmul, (frD), (frA, frC), (frc), (opcd == 63, xo4 == 25, !_16_20), "Floating Multiply")
-INS(fmuls, (frD), (frA, frC), (frc), (opcd == 59, xo4 == 25, !_16_20), "Floating Multiply Single")
-INS(fres, (frD), (frB), (frc), (opcd == 59, xo4 == 24, !_11_15, !_21_25), "Floating Reciprocal Estimate Single")
-INS(frsqrte, (frD), (frB), (frc), (opcd == 63, xo4 == 26, !_11_15, !_21_25), "Floating Reciprocal Square Root Estimate")
-INS(fsub, (frD), (frA, frB), (frc), (opcd == 63, xo4 == 20, !_21_25), "Floating Sub")
-INS(fsubs, (frD), (frA, frB), (frc), (opcd == 59, xo4 == 20, !_21_25), "Floating Sub Single")
+INS(fadd, (frD, FCRISI, FCRSNAN), (frA, frB), (frc), (opcd == 63, xo4 == 21), "Floating Add")
+INS(fadds, (frD, FCRISI, FCRSNAN), (frA, frB), (frc), (opcd == 59, xo4 == 21), "Floating Add Single")
+INS(fdiv, (frD, FCRZDZ, FCRIDI, FCRSNAN), (frA, frB), (frc), (opcd == 63, xo4 == 18), "Floating Divide")
+INS(fdivs, (frD), (frA, frB), (frc), (opcd == 59, xo4 == 18), "Floating Divide Single")
+INS(fmul, (frD), (frA, frC), (frc), (opcd == 63, xo4 == 25), "Floating Multiply")
+INS(fmuls, (frD), (frA, frC), (frc), (opcd == 59, xo4 == 25), "Floating Multiply Single")
+INS(fres, (frD), (frB), (frc), (opcd == 59, xo4 == 24), "Floating Reciprocal Estimate Single")
+INS(frsqrte, (frD), (frB), (frc), (opcd == 63, xo4 == 26), "Floating Reciprocal Square Root Estimate")
+INS(fsub, (frD), (frA, frB), (frc), (opcd == 63, xo4 == 20), "Floating Sub")
+INS(fsubs, (frD), (frA, frB), (frc), (opcd == 59, xo4 == 20), "Floating Sub Single")
 INS(fsel, (frD), (frA, frB, frC), (frc), (opcd == 63, xo4 == 23), "Floating Select")
 
 // Floating-Point Multiply-Add
@@ -84,9 +84,9 @@ INS(fnmsub, (frD), (frA, frC, frB), (rc), (opcd == 63, xo4 == 30), "Floating Neg
 INS(fnmsubs, (frD), (frA, frC, frB), (rc), (opcd == 59, xo4 == 30), "Floating Negative Multiply-Sub Single")
 
 // Floating-Point Rounding and Conversion
-INS(fctiw, (frD), (frB), (rc), (opcd == 63, xo1 == 14, !_11_15), "Floating Convert to Integer Word")
-INS(fctiwz, (frD), (frB), (rc), (opcd == 63, xo1 == 15, !_11_15), "Floating Convert to Integer Word with Round toward Zero")
-INS(frsp, (frD), (frB), (rc), (opcd == 63, xo1 == 12, !_11_15), "Floating Round to Single")
+INS(fctiw, (frD), (frB), (rc), (opcd == 63, xo1 == 14), "Floating Convert to Integer Word")
+INS(fctiwz, (frD), (frB), (rc), (opcd == 63, xo1 == 15), "Floating Convert to Integer Word with Round toward Zero")
+INS(frsp, (frD), (frB), (rc), (opcd == 63, xo1 == 12), "Floating Round to Single")
 
 // Floating-Point Compare
 INS(fcmpo, (crfD), (frA, frB), (), (opcd == 63, xo1 == 32, !_9_10, !_31), "Floating Compare Ordered")
@@ -257,16 +257,16 @@ INS(psq_stx, (frS), (rA, rB), (qw, qi), (opcd == 4, xo3 == 7, !_31), "Paired Sin
 INS(psq_stux, (frS), (rA, rB), (qw, qi), (opcd == 4, xo3 == 39, !_31), "Paired Single Store with Update Indexed")
 
 // Paired-Single Floating Point Arithmetic
-INS(ps_add, (frD, FPSCR), (frA, frB), (rc), (opcd == 4, xo4 == 21, !_21_25), "Paired Single Add")
-INS(ps_div, (frD, FPSCR), (frA, frB), (rc), (opcd == 4, xo4 == 18, !_21_25), "Paired Single Divide")
-INS(ps_mul, (frD, FPSCR), (frA, frC), (rc), (opcd == 4, xo4 == 25, !_16_20), "Paired Single Multiply")
-INS(ps_sub, (frD, FPSCR), (frA, frB), (rc), (opcd == 4, xo4 == 20, !_21_25), "Paired Single Subtract")
+INS(ps_add, (frD, FPSCR), (frA, frB), (rc), (opcd == 4, xo4 == 21), "Paired Single Add")
+INS(ps_div, (frD, FPSCR), (frA, frB), (rc), (opcd == 4, xo4 == 18), "Paired Single Divide")
+INS(ps_mul, (frD, FPSCR), (frA, frC), (rc), (opcd == 4, xo4 == 25), "Paired Single Multiply")
+INS(ps_sub, (frD, FPSCR), (frA, frB), (rc), (opcd == 4, xo4 == 20), "Paired Single Subtract")
 INS(ps_abs, (frD), (frB), (rc), (opcd == 4, xo1 == 264, !_11_15), "Paired Single Absolute")
 INS(ps_nabs, (frD), (frB), (rc), (opcd == 4, xo1 == 136, !_11_15), "Paired Single Negate Absolute")
 INS(ps_neg, (frD), (frB), (rc), (opcd == 4, xo1 == 40, !_11_15), "Paired Single Negate")
 INS(ps_sel, (frD), (frA, frC, frB), (rc), (opcd == 4, xo4 == 23), "Paired Single Select")
-INS(ps_res, (frD, FPSCR), (frB), (rc), (opcd == 4, xo4 == 24, !_11_15, !_21_25), "Paired Single Reciprocal")
-INS(ps_rsqrte, (frD, FPSCR), (frB), (rc), (opcd == 4, xo4 == 26, !_11_15, !_21_25), "Paired Single Reciprocal Square Root Estimate")
+INS(ps_res, (frD, FPSCR), (frB), (rc), (opcd == 4, xo4 == 24), "Paired Single Reciprocal")
+INS(ps_rsqrte, (frD, FPSCR), (frB), (rc), (opcd == 4, xo4 == 26), "Paired Single Reciprocal Square Root Estimate")
 INS(ps_msub, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 28), "Paired Single Multiply and Subtract")
 INS(ps_madd, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 29), "Paired Single Multiply and Add")
 INS(ps_nmsub, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 30), "Paired Single Negate Multiply and Subtract")
@@ -274,8 +274,8 @@ INS(ps_nmadd, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 31), "Pair
 INS(ps_mr, (frD), (frB), (rc), (opcd == 4, xo1 == 72, !_11_15), "Paired Single Move Register")
 INS(ps_sum0, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 10), "Paired Single Sum High")
 INS(ps_sum1, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 11), "Paired Single Sum Low")
-INS(ps_muls0, (frD, FPSCR), (frA, frC), (rc), (opcd == 4, xo4 == 12, !_16_20), "Paired Single Multiply Scalar High")
-INS(ps_muls1, (frD, FPSCR), (frA, frC), (rc), (opcd == 4, xo4 == 13, !_16_20), "Paired Single Multiply Scalar Low")
+INS(ps_muls0, (frD, FPSCR), (frA, frC), (rc), (opcd == 4, xo4 == 12), "Paired Single Multiply Scalar High")
+INS(ps_muls1, (frD, FPSCR), (frA, frC), (rc), (opcd == 4, xo4 == 13), "Paired Single Multiply Scalar Low")
 INS(ps_madds0, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 14), "Paired Single Multiply and Add Scalar High")
 INS(ps_madds1, (frD, FPSCR), (frA, frC, frB), (rc), (opcd == 4, xo4 == 15), "Paired Single Multiply and Add Scalar Low")
 INS(ps_cmpu0, (crfD, FPSCR), (frA, frB), (), (opcd == 4, xo1 == 0, !_9_10, !_31), "Paired Single Compare Unordered High")

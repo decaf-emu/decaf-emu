@@ -1,8 +1,20 @@
 #pragma once
+#include "common/floatutils.h"
 #include "../state.h"
 
+template<typename Type>
+static inline bool
+possibleUnderflow(Type v)
+{
+   auto bits = get_float_bits(v);
+   return bits.exponent == 1 && bits.mantissa == 0;
+}
+
+float
+ppc_estimate_reciprocal(float v);
+
 double
-ppc_estimate_reciprocal(double v);
+ppc_estimate_reciprocal_root(double v);
 
 void
 updateFEX_VX(cpu::Core *state);
@@ -21,6 +33,9 @@ updateFloatConditionRegister(cpu::Core *state);
 
 void
 roundForMultiply(double *a, double *c);
+
+float
+roundFMAResultToSingle(double result, double a, double b, double c);
 
 template<typename Type> Type
 getFpr(cpu::Core *state, unsigned fr);
