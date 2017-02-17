@@ -272,7 +272,7 @@ struct GLStateCache
    bool halfZClipSpace = false;
 
    bool primRestartEnable = false;  // See note in initGL()
-   gl::GLuint primRestartIndex = -1u;
+   gl::GLuint primRestartIndex = static_cast<gl::GLuint>(-1);
 };
 
 struct RemoteThreadTask
