@@ -634,7 +634,7 @@ fres(cpu::Core *state, Instruction instr)
       state->fpscr.zx = 1;
       updateFX_FEX_VX(state, oldFPSCR);
    } else {
-      d = ppc_estimate_reciprocal(b);
+      d = ppc_estimate_reciprocal(static_cast<float>(b));
       state->fpr[instr.frD].paired0 = d;
       state->fpr[instr.frD].paired1 = d;
       updateFPRF(state, d);
