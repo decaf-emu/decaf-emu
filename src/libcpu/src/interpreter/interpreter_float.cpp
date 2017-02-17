@@ -53,7 +53,7 @@ ppc_estimate_reciprocal(float v)
    // Check for an infinite or NaN input.
    if (bits.exponent == bits.exponent_max) {
       if (bits.mantissa == 0) {
-         return std::copysign(0.0, v);
+         return std::copysign(0.0f, v);
       } else {
          std::feraiseexcept(FE_INVALID);
          return make_quiet(v);
