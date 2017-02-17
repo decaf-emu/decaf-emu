@@ -951,6 +951,9 @@
     <ClCompile Include="..\src\libdecaf\src\decaf_sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libdecaf\src\gpu\opengl\opengl_resource.cpp">
+      <Filter>Source Files\gpu\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\libdecaf\src\modules\coreinit\coreinit.h">
@@ -1789,6 +1792,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libdecaf\src\gpu\pm4_processor.h">
       <Filter>Header Files\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libdecaf\src\gpu\opengl\opengl_resource.h">
+      <Filter>Header Files\gpu\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
