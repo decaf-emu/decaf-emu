@@ -1,32 +1,34 @@
-# Can't use -Werror=shadow because of excmd
-set(CMAKE_CXX_FLAGS "-Wshadow ${CMAKE_CXX_FLAGS}")
+project(decaf-sdl)
 
 include_directories(".")
 
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
-add_executable(decaf-sdl ${SOURCE_FILES} ${HEADER_FILES})
+if(MSVC)
+   set(RESOURCE_FILES ${CMAKE_SOURCE_DIR}/resources/decaf-sdl.rc)
+else()
+   set(RESOURCE_FILES "")
+endif()
+
+add_executable(decaf-sdl
+   ${SOURCE_FILES}
+   ${HEADER_FILES}
+   ${RESOURCE_FILES})
 
 target_link_libraries(decaf-sdl
+    common
     libdecaf
-    libcpu
-    common)
+    ${EXCMD_LIBRARIES}
+    ${SDL2_LINK})
 
-target_link_libraries(decaf-sdl
-    z
-    m
-    ${ADDRLIB_LIBRARIES}
-    ${ASMJIT_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${GLBINDING_LIBRARIES}
-    ${IMGUI_LIBRARIES}
-    ${PUGIXML_LIBRARIES}
-    ${SDL2_LIBRARIES}
-    ${OPENGL_LIBRARIES})
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(decaf-sdl X11)
-endif ()
+endif()
+
+if(MSVC)
+    set_target_properties(decaf-sdl PROPERTIES
+        LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+endif()
 
 install(TARGETS decaf-sdl RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

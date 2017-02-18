@@ -1,18 +1,25 @@
 #pragma once
-#include "../cpu.h"
-#include "../espresso/espresso_instructionid.h"
+#include "libcpu/cpu.h"
+#include "libcpu/espresso/espresso_instructionid.h"
 
 namespace cpu
 {
+
 namespace jit
 {
 
-void initialise();
+void
+initialise();
 
-void clearCache();
-void resume();
+void
+clearCache();
 
-bool hasInstruction(espresso::InstructionID instrId);
+void
+resume();
 
-}
-}
+bool
+hasInstruction(espresso::InstructionID instrId);
+
+} // namespace jit
+
+} // namespace cpu

@@ -1,5 +1,4 @@
-# Can't use -Werror=shadow because of excmd
-set(CMAKE_CXX_FLAGS "-Wshadow ${CMAKE_CXX_FLAGS}")
+project(pm4-replay)
 
 include_directories(".")
 include_directories("../../src/libdecaf/src")
@@ -8,26 +7,16 @@ file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
 add_executable(pm4-replay ${SOURCE_FILES} ${HEADER_FILES})
+set_target_properties(pm4-replay PROPERTIES FOLDER tools)
 
 target_link_libraries(pm4-replay
+    common
     libdecaf
-    libcpu
-    common)
+    ${EXCMD_LIBRARIES}
+    ${SDL2_LINK})
 
-target_link_libraries(pm4-replay
-    z
-    m
-    ${ADDRLIB_LIBRARIES}
-    ${ASMJIT_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${GLBINDING_LIBRARIES}
-    ${IMGUI_LIBRARIES}
-    ${PUGIXML_LIBRARIES}
-    ${SDL2_LIBRARIES}
-    ${OPENGL_LIBRARIES})
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(pm4-replay X11)
-endif ()
+endif()
 
 install(TARGETS pm4-replay RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

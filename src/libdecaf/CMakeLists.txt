@@ -1,4 +1,4 @@
-set(CMAKE_CXX_FLAGS "-Werror=shadow ${CMAKE_CXX_FLAGS}")
+project(libdecaf)
 
 include_directories(".")
 include_directories("src")
@@ -7,6 +7,20 @@ file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
 add_library(libdecaf STATIC ${SOURCE_FILES} ${HEADER_FILES})
+GroupSources(src)
 
-# glbinding has to be built first so it can generate glbinding_api.h
-add_dependencies(libdecaf glbinding)
+target_link_libraries(libdecaf
+    common
+    libcpu
+    ${ADDRLIB_LIBRARIES}
+    ${CEREAL_LIBRARIES}
+    ${FIXED_POINT_LIBRARIES}
+    ${GLBINDING_LIBRARIES}
+    ${IMGUI_LIBRARIES}
+    ${PUGIXML_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${ZLIB_LINK})
+
+if(MSVC)
+    target_compile_options(libdecaf PUBLIC /wd4251)
+endif()

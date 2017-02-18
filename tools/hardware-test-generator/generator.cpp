@@ -1,4 +1,3 @@
-#define NOMINMAX
 #include <cassert>
 #include <cstdint>
 #include <fstream>
@@ -15,6 +14,9 @@
 #include "generator_valuelist.h"
 
 using namespace espresso;
+
+std::shared_ptr<spdlog::logger>
+gLog;
 
 static void
 setCRB(hwtest::RegisterState &state, uint32_t bit, uint32_t value)
@@ -241,6 +243,10 @@ generateTests(InstructionInfo *data)
 
 int main(int argc, char **argv)
 {
+   std::vector<spdlog::sink_ptr> sinks;
+   sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
+   gLog = std::make_shared<spdlog::logger>("decaf", begin(sinks), end(sinks));
+
    initialiseInstructionSet();
 
    for (auto &group : gTestInstructions) {
