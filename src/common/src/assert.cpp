@@ -6,8 +6,9 @@
 #include <iostream>
 
 #ifdef PLATFORM_WINDOWS
-#include <cassert>
 #include <Windows.h>
+#undef NDEBUG
+#include <cassert>
 #endif
 
 void
