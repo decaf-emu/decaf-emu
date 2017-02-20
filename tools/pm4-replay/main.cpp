@@ -66,7 +66,7 @@ start(excmd::parser &parser,
 
    std::vector<spdlog::sink_ptr> sinks;
    sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
-   sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>("pm4-replay", "txt", 23, 59, true));
+   sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>("pm4-replay", "txt", 23, 59));
 
    gCliLog = std::make_shared<spdlog::logger>("decaf-pm4-replay", begin(sinks), end(sinks));
    gCliLog->set_level(spdlog::level::debug);

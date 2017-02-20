@@ -193,7 +193,7 @@ start(excmd::parser &parser,
    }
 
    if (config::log::to_file) {
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logFile, "txt", 23, 59, true));
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logFile, "txt", 23, 59));
    }
 
    if (config::log::async) {
