@@ -39,11 +39,11 @@ initialise(const std::string &configPath)
    sConfigPath = configPath;
    io.IniFilename = sConfigPath.c_str();
 
-   io.GetClipboardTextFn = []() {
+   io.GetClipboardTextFn = [](void *) {
       return sGetClipboardText ? sGetClipboardText() : "";
    };
 
-   io.SetClipboardTextFn = [](const char *text) {
+   io.SetClipboardTextFn = [](void *, const char *text) {
       if (sSetClipboardText) {
          sSetClipboardText(text);
       }
