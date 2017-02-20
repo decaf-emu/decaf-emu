@@ -1,17 +1,34 @@
-os:
-    - linux
-
 language: cpp
 
-sudo: required
-dist: trusty
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - sourceline: 'ppa:cginternals/backports-ppa'
+    packages:
+      - gcc-6
+      - g++-6
+      - xorg-dev
+      - libglu1-mesa-dev
+      - libsdl2-dev
+      - libx11-dev
+      - libxcursor-dev
+      - libglbinding-dev
+      - libglbinding-dbg
+      - zlib1g-dev
+
+cache:
+  directories:
+    - "$HOME/.local"
 
 install:
-  - cd ~
-  - sudo apt-add-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install gcc-5 g++-5 xorg-dev libglu1-mesa-dev libsdl2-dev libx11-dev libxcursor-dev
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 
 script:
   - cd "$TRAVIS_BUILD_DIR"
