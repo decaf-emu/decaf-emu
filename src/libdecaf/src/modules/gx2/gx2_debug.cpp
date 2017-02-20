@@ -53,7 +53,7 @@ GX2DebugTagUserStringVA(uint32_t unk,
    // Write NOP packet
    pm4::write(pm4::Nop {
       unk,
-      gsl::as_span(strWords)
+      gsl::make_span(strWords)
    });
 }
 
@@ -168,7 +168,7 @@ debugDumpShader(const std::string &filename, const std::string &info, ShaderType
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
 
    // Disassemble
-   output = latte::disassemble(gsl::as_span(shader->data.get(), shader->size), isSubroutine);
+   output = latte::disassemble(gsl::make_span(shader->data.get(), shader->size), isSubroutine);
 
    file
       << info << std::endl
@@ -342,7 +342,7 @@ void writeDebugMarker(const char *key, uint32_t id)
 
    pm4::write(pm4::DecafDebugMarker {
       id,
-      gsl::as_span(tmpBuf, alignedStrLen),
+      gsl::make_span(tmpBuf, alignedStrLen),
    });
 }
 

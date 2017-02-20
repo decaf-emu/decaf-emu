@@ -181,7 +181,7 @@ private:
 
       pm4::write(pm4::LoadConfigReg {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
-         gsl::as_span(LoadConfigRange)
+         gsl::make_span(LoadConfigRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -189,7 +189,7 @@ private:
 
       pm4::write(pm4::LoadContextReg {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
-         gsl::as_span(LoadContextRange)
+         gsl::make_span(LoadContextRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -197,7 +197,7 @@ private:
 
       pm4::write(pm4::LoadAluConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
-         gsl::as_span(LoadAluConstRange)
+         gsl::make_span(LoadAluConstRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -205,7 +205,7 @@ private:
 
       pm4::write(pm4::LoadResource {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
-         gsl::as_span(LoadResourceRange)
+         gsl::make_span(LoadResourceRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -213,7 +213,7 @@ private:
 
       pm4::write(pm4::LoadSampler {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
-         gsl::as_span(LoadSamplerRange)
+         gsl::make_span(LoadSamplerRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -221,7 +221,7 @@ private:
 
       pm4::write(pm4::LoadControlConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
-         gsl::as_span(LoadControlRange)
+         gsl::make_span(LoadControlRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -229,7 +229,7 @@ private:
 
       pm4::write(pm4::LoadLoopConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
-         gsl::as_span(LoadLoopRange)
+         gsl::make_span(LoadLoopRange)
       });
 
       static std::pair<uint32_t, uint32_t>
@@ -237,7 +237,7 @@ private:
 
       pm4::write(pm4::LoadLoopConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
-         gsl::as_span(LoadBoolRange)
+         gsl::make_span(LoadBoolRange)
       });
    }
 
@@ -287,7 +287,7 @@ private:
             size = header0.count() + 1;
 
             decaf_check(pos + size < numWords);
-            foundSwap |= scanType0(header0, gsl::as_span(&buffer[pos + 1], size));
+            foundSwap |= scanType0(header0, gsl::make_span(&buffer[pos + 1], size));
             break;
          }
          case pm4::Header::Type3:
@@ -296,7 +296,7 @@ private:
             size = header3.size() + 1;
 
             decaf_check(pos + size < numWords);
-            foundSwap |= scanType3(header3, gsl::as_span(&buffer[pos + 1], size));
+            foundSwap |= scanType3(header3, gsl::make_span(&buffer[pos + 1], size));
             break;
          }
          case pm4::Header::Type2:

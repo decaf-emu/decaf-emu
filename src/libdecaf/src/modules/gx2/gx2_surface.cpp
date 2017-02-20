@@ -233,7 +233,7 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
       db_depth_size.value,
       db_depth_view.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::as_span(values1) });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::make_span(values1) });
 
    auto addr = depthBuffer->surface.image.getAddress();
    auto addrHiZ = depthBuffer->hiZPtr.getAddress();
@@ -257,7 +257,7 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
       db_depth_info.value,
       addrHiZ >> 8,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, gsl::as_span(values2) });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, gsl::make_span(values2) });
 
    pm4::write(pm4::SetContextReg { latte::Register::DB_HTILE_SURFACE, db_htile_surface.value });
    pm4::write(pm4::SetContextReg { latte::Register::DB_PREFETCH_LIMIT, db_prefetch_limit.value });
@@ -268,7 +268,7 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
       depthBuffer->stencilClear,
       bit_cast<uint32_t, float>(depthBuffer->depthClear),
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::as_span(values3) });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values3) });
 }
 
 void

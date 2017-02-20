@@ -71,8 +71,8 @@ struct AluGroup
          }
       }
 
-      instructions = gsl::as_span(group, instructionCount);
-      literals = gsl::as_span(reinterpret_cast<const uint32_t *>(group + instructionCount), literalCount);
+      instructions = gsl::make_span(group, instructionCount);
+      literals = gsl::make_span(reinterpret_cast<const uint32_t *>(group + instructionCount), literalCount);
    }
 
    size_t getNextSlot(size_t slot)

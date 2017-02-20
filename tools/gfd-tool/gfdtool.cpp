@@ -820,7 +820,7 @@ printInfo(const std::string &filename)
             writeField(out, "size", block.header->dataSize);
 
             std::string disassembly;
-            disassembly = latte::disassemble(gsl::as_span(block.data, block.header->dataSize));
+            disassembly = latte::disassemble(gsl::make_span(block.data, block.header->dataSize));
             out.writer << '\n' << disassembly;
          }
          endGroup(out);
@@ -832,7 +832,7 @@ printInfo(const std::string &filename)
             writeField(out, "size", block.header->dataSize);
 
             std::string disassembly;
-            disassembly = latte::disassemble(gsl::as_span(block.data, block.header->dataSize));
+            disassembly = latte::disassemble(gsl::make_span(block.data, block.header->dataSize));
             out.writer << '\n' << disassembly;
          }
          endGroup(out);
@@ -844,7 +844,7 @@ printInfo(const std::string &filename)
             writeField(out, "size", block.header->dataSize);
 
             std::string disassembly;
-            disassembly = latte::disassemble(gsl::as_span(block.data, block.header->dataSize));
+            disassembly = latte::disassemble(gsl::make_span(block.data, block.header->dataSize));
             out.writer << '\n' << disassembly;
          }
          endGroup(out);

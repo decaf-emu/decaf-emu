@@ -284,7 +284,7 @@ private:
             size = header0.count() + 1;
 
             decaf_check(pos + size < bufferSize);
-            scanType0(header0, gsl::as_span(&buffer[pos + 1], size));
+            scanType0(header0, gsl::make_span(&buffer[pos + 1], size));
             break;
          }
          case pm4::Header::Type3:
@@ -293,7 +293,7 @@ private:
             size = header3.size() + 1;
 
             decaf_check(pos + size < bufferSize);
-            scanType3(header3, gsl::as_span(&buffer[pos + 1], size));
+            scanType3(header3, gsl::make_span(&buffer[pos + 1], size));
             break;
          }
          case pm4::Header::Type2:

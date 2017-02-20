@@ -203,13 +203,13 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
       pm4::write(pm4::DrawIndexImmdWriteOnly16LE {
          count,
          vgt_draw_initiator,
-         gsl::as_span(reinterpret_cast<uint16_t *>(indices), count)
+         gsl::make_span(reinterpret_cast<uint16_t *>(indices), count)
       });
    } else {
       pm4::write(pm4::DrawIndexImmd {
          count,
          vgt_draw_initiator,
-         gsl::as_span(reinterpret_cast<uint32_t *>(indices), numWords)
+         gsl::make_span(reinterpret_cast<uint32_t *>(indices), numWords)
       });
    }
 }

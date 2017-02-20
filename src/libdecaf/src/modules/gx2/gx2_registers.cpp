@@ -260,7 +260,7 @@ GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg)
    };
 
    auto values = reinterpret_cast<uint32_t *>(colors);
-   pm4::write(pm4::SetContextRegs { latte::Register::CB_BLEND_RED, gsl::as_span(values, 4) });
+   pm4::write(pm4::SetContextRegs { latte::Register::CB_BLEND_RED, gsl::make_span(values, 4) });
 }
 
 void
@@ -899,7 +899,7 @@ GX2SetPolygonOffsetReg(GX2PolygonOffsetReg *reg)
       pa_su_poly_offset_back_scale.value,
       pa_su_poly_offset_back_offset.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_SU_POLY_OFFSET_FRONT_SCALE, gsl::as_span(values) });
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_SU_POLY_OFFSET_FRONT_SCALE, gsl::make_span(values) });
 
    auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
    pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_CLAMP, pa_su_poly_offset_clamp.value });
@@ -965,7 +965,7 @@ GX2SetScissorReg(GX2ScissorReg *reg)
       pa_sc_generic_scissor_br.value,
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_GENERIC_SCISSOR_TL, gsl::as_span(values) });
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_GENERIC_SCISSOR_TL, gsl::make_span(values) });
 }
 
 void
@@ -1183,7 +1183,7 @@ GX2SetViewportReg(GX2ViewportReg *reg)
       pa_cl_vport_zscale.value,
       pa_cl_vport_zoffset.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_VPORT_XSCALE_0, gsl::as_span(values1) });
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_VPORT_XSCALE_0, gsl::make_span(values1) });
 
    auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
    auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
@@ -1195,7 +1195,7 @@ GX2SetViewportReg(GX2ViewportReg *reg)
       pa_cl_gb_horz_clip_adj.value,
       pa_cl_gb_horz_disc_adj.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_GB_VERT_CLIP_ADJ, gsl::as_span(values2) });
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_GB_VERT_CLIP_ADJ, gsl::make_span(values2) });
 
    auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
    auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
@@ -1203,7 +1203,7 @@ GX2SetViewportReg(GX2ViewportReg *reg)
       pa_sc_vport_zmin.value,
       pa_sc_vport_zmax.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_VPORT_ZMIN_0, gsl::as_span(values3) });
+   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_VPORT_ZMIN_0, gsl::make_span(values3) });
 }
 
 void

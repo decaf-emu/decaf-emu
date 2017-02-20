@@ -357,10 +357,10 @@ processKernelTraceFilters(const std::string &module,
       auto moduleWildcard = false;
 
       if (nameSeparator != std::string::npos) {
-         moduleName = gsl::as_span(filterText.c_str() + 1, nameSeparator - 1);
-         functionName = gsl::as_span(filterText.c_str() + nameSeparator + 2, filterText.size() - nameSeparator - 2);
+         moduleName = gsl::make_span(filterText.c_str() + 1, nameSeparator - 1);
+         functionName = gsl::make_span(filterText.c_str() + nameSeparator + 2, filterText.size() - nameSeparator - 2);
       } else {
-         moduleName = gsl::as_span(filterText.c_str() + 1, filterText.size() - 1);
+         moduleName = gsl::make_span(filterText.c_str() + 1, filterText.size() - 1);
          filter.wildcard = true;
       }
 
@@ -556,8 +556,8 @@ processRelocations(LoadedModule *loadedMod,
       auto targetBaseAddr = targetSec.header.addr;
       auto targetVirtAddr = targetSec.virtAddress;
 
-      auto symbols = gsl::as_span(reinterpret_cast<elf::Symbol *>(symSec.memory), symSec.virtSize / sizeof(elf::Symbol));
-      auto relocations = gsl::as_span(reinterpret_cast<elf::Rela *>(buffer.data()), buffer.size() / sizeof(elf::Rela));
+      auto symbols = gsl::make_span(reinterpret_cast<elf::Symbol *>(symSec.memory), symSec.virtSize / sizeof(elf::Symbol));
+      auto relocations = gsl::make_span(reinterpret_cast<elf::Rela *>(buffer.data()), buffer.size() / sizeof(elf::Rela));
 
       for (auto &rela : relocations) {
          auto index = rela.info >> 8;
@@ -734,7 +734,7 @@ processImports(LoadedModule *loadedMod,
       }
 
       auto stringTable = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symbols = gsl::as_span(reinterpret_cast<elf::Symbol *>(section.memory), section.virtSize / sizeof(elf::Symbol));
+      auto symbols = gsl::make_span(reinterpret_cast<elf::Symbol *>(section.memory), section.virtSize / sizeof(elf::Symbol));
 
       for (auto &symbol : symbols) {
          auto name = stringTable + symbol.name;
@@ -798,7 +798,7 @@ processSymbols(LoadedModule *loadedMod,
       }
 
       auto stringTable = reinterpret_cast<const char*>(sections[section.header.link].memory);
-      auto symbols = gsl::as_span(reinterpret_cast<elf::Symbol *>(section.memory), section.virtSize / sizeof(elf::Symbol));
+      auto symbols = gsl::make_span(reinterpret_cast<elf::Symbol *>(section.memory), section.virtSize / sizeof(elf::Symbol));
 
       for (auto &symbol : symbols) {
          // Create symbol data

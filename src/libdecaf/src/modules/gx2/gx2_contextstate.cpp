@@ -122,7 +122,7 @@ EmptyRange[] =
 };
 
 static auto
-EmptyRangeSpan = gsl::as_span(EmptyRange);
+EmptyRangeSpan = gsl::make_span(EmptyRange);
 
 static void
 loadState(GX2ContextState *state, bool skipLoad)
@@ -131,32 +131,32 @@ loadState(GX2ContextState *state, bool skipLoad)
 
    pm4::write(pm4::LoadConfigReg {
       state->shadowState.config,
-      skipLoad ? EmptyRangeSpan : gsl::as_span(ConfigRegisterRange)
+      skipLoad ? EmptyRangeSpan : gsl::make_span(ConfigRegisterRange)
    });
 
    pm4::write(pm4::LoadContextReg {
       state->shadowState.context,
-      skipLoad ? EmptyRangeSpan : gsl::as_span(ContextRegisterRange)
+      skipLoad ? EmptyRangeSpan : gsl::make_span(ContextRegisterRange)
    });
 
    pm4::write(pm4::LoadAluConst {
       state->shadowState.alu,
-      skipLoad ? EmptyRangeSpan : gsl::as_span(AluConstRange)
+      skipLoad ? EmptyRangeSpan : gsl::make_span(AluConstRange)
    });
 
    pm4::write(pm4::LoadLoopConst {
       state->shadowState.loop,
-      skipLoad ? EmptyRangeSpan : gsl::as_span(LoopConstRange)
+      skipLoad ? EmptyRangeSpan : gsl::make_span(LoopConstRange)
    });
 
    pm4::write(pm4::LoadResource {
       state->shadowState.resource,
-      skipLoad ? EmptyRangeSpan : gsl::as_span(ResourceRange)
+      skipLoad ? EmptyRangeSpan : gsl::make_span(ResourceRange)
    });
 
    pm4::write(pm4::LoadSampler {
       state->shadowState.sampler,
-      skipLoad ? EmptyRangeSpan : gsl::as_span(SamplerRange)
+      skipLoad ? EmptyRangeSpan : gsl::make_span(SamplerRange)
    });
 }
 
@@ -335,7 +335,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::PA_SC_SCREEN_SCISSOR_TL,
-      gsl::as_span(values28030_28034)
+      gsl::make_span(values28030_28034)
    });
 
    pm4::write(pm4::SetContextReg {
@@ -356,13 +356,13 @@ initRegisters()
    // PA_CL_POINT_X_RAD, PA_CL_POINT_Y_RAD, PA_CL_POINT_POINT_SIZE, PA_CL_POINT_POINT_CULL_RAD
    pm4::write(pm4::SetContextRegs {
       latte::Register::PA_CL_POINT_X_RAD,
-      gsl::as_span(zeroes.data(), 4)
+      gsl::make_span(zeroes.data(), 4)
    });
 
    // PA_CL_UCP_0_X ... PA_CL_UCP_5_W
    pm4::write(pm4::SetContextRegs {
       latte::Register::PA_CL_UCP_0_X,
-      gsl::as_span(zeroes.data(), 24)
+      gsl::make_span(zeroes.data(), 24)
    });
 
    pm4::write(pm4::SetContextReg {
@@ -397,7 +397,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::PA_SC_WINDOW_OFFSET,
-      gsl::as_span(values28200_28208)
+      gsl::make_span(values28200_28208)
    });
 
    pm4::write(pm4::SetContextReg {
@@ -418,7 +418,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::PA_SC_LINE_STIPPLE,
-      gsl::as_span(values28A0C_28A10)
+      gsl::make_span(values28A0C_28A10)
    });
 
    uint32_t values28250_28254[] = {
@@ -433,7 +433,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::PA_SC_VPORT_SCISSOR_0_TL,
-      gsl::as_span(values28250_28254)
+      gsl::make_span(values28250_28254)
    });
 
    // TODO: Register 0x8B24 unknown
@@ -517,7 +517,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::VGT_VERTEX_REUSE_BLOCK_CNTL,
-      gsl::as_span(values28C58_28C5C)
+      gsl::make_span(values28C58_28C5C)
    });
 
    pm4::write(pm4::SetContextReg {
@@ -552,7 +552,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::VGT_MAX_VTX_INDX,
-      gsl::as_span(values28400_28404)
+      gsl::make_span(values28400_28404)
    });
 
    pm4::write(pm4::SetConfigReg {
@@ -580,13 +580,13 @@ initRegisters()
    // SQ_ESTMP_RING_BASE ... SQ_REDUC_RING_SIZE
    pm4::write(pm4::SetConfigRegs {
       latte::Register::SQ_ESTMP_RING_BASE,
-      gsl::as_span(zeroes.data(), 12)
+      gsl::make_span(zeroes.data(), 12)
    });
 
    // SQ_ESTMP_RING_ITEMSIZE ... SQ_REDUC_RING_ITEMSIZE
    pm4::write(pm4::SetContextRegs {
       latte::Register::SQ_ESTMP_RING_ITEMSIZE,
-      gsl::as_span(zeroes.data(), 6)
+      gsl::make_span(zeroes.data(), 6)
    });
 
    pm4::write(pm4::SetControlConstant {
@@ -599,7 +599,7 @@ initRegisters()
    // SPI_FOG_CNTL ... SPI_FOG_FUNC_BIAS
    pm4::write(pm4::SetContextRegs {
       latte::Register::SPI_FOG_CNTL,
-      gsl::as_span(zeroes.data(), 3)
+      gsl::make_span(zeroes.data(), 3)
    });
 
    pm4::write(pm4::SetContextReg {
@@ -651,7 +651,7 @@ initRegisters()
 
    pm4::write(pm4::SetContextRegs {
       latte::Register::DB_SRESULTS_COMPARE_STATE0,
-      gsl::as_span(values28D28_28D2C)
+      gsl::make_span(values28D28_28D2C)
    });
 
    pm4::write(pm4::SetContextReg {
@@ -687,9 +687,9 @@ initRegisters()
       .value
    };
 
-   pm4::write(pm4::SetContextReg {
+   pm4::write(pm4::SetContextRegs {
       latte::Register::CB_CLRCMP_CONTROL,
-      gsl::as_span(values28C30_28C3C)
+      gsl::make_span(values28C30_28C3C)
    });
 
    // TODO: Register 0x9A1C unknown

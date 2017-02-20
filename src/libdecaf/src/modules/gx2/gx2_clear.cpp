@@ -65,7 +65,7 @@ GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer,
       bit_cast<uint32_t>(depthBuffer->depthClear)
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::as_span(values) });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values) });
    DecafClearDepthStencil(depthBuffer, clearFlags);
 }
 
@@ -79,7 +79,7 @@ GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
       bit_cast<uint32_t>(depth)
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::as_span(values) });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values) });
    DecafClearDepthStencil(depthBuffer, clearFlags);
 }
 
@@ -135,7 +135,7 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
       bit_cast<uint32_t>(depth)
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::as_span(values) });
+   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values) });
 }
 
 } // namespace gx2

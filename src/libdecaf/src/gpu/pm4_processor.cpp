@@ -39,7 +39,7 @@ Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          size = header3.size() + 1;
 
          decaf_check(pos + size <= buffer_size);
-         handlePacketType3(header3, gsl::as_span(&buffer[pos + 1], size));
+         handlePacketType3(header3, gsl::make_span(&buffer[pos + 1], size));
          break;
       }
       case pm4::Header::Type0:
@@ -48,7 +48,7 @@ Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          size = header0.count() + 1;
 
          decaf_check(pos + size <= buffer_size);
-         handlePacketType0(header0, gsl::as_span(&buffer[pos + 1], size));
+         handlePacketType0(header0, gsl::make_span(&buffer[pos + 1], size));
          break;
       }
       case pm4::Header::Type2:

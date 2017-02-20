@@ -55,7 +55,7 @@ dumpRawShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSub
    auto file = std::ofstream{ filePath, std::ofstream::out };
 
    // Disassemble
-   auto output = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(data), size), isSubroutine);
+   auto output = latte::disassemble(gsl::make_span(mem::translate<uint8_t>(data), size), isSubroutine);
 
    file << output << std::endl;
 }
@@ -297,7 +297,7 @@ bool GLDriver::checkActiveShader()
          mResourceMap.addResource(fetchShader);
 
          dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
-         fetchShader->disassembly = latte::disassemble(gsl::as_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
+         fetchShader->disassembly = latte::disassemble(gsl::make_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
          if (!parseFetchShader(*fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
@@ -990,9 +990,9 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       shader.uniformBlocksEnabled = true;
    }
 
-   vertex.disassembly = latte::disassemble(gsl::as_span(buffer, size));
+   vertex.disassembly = latte::disassemble(gsl::make_span(buffer, size));
 
-   if (!glsl2::translate(shader, gsl::as_span(buffer, size))) {
+   if (!glsl2::translate(shader, gsl::make_span(buffer, size))) {
       gLog->error("Failed to decode vertex shader\n{}", vertex.disassembly);
       return false;
    }
@@ -1416,9 +1416,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       shader.uniformBlocksEnabled = true;
    }
 
-   pixel.disassembly = latte::disassemble(gsl::as_span(buffer, size));
+   pixel.disassembly = latte::disassemble(gsl::make_span(buffer, size));
 
-   if (!glsl2::translate(shader, gsl::as_span(buffer, size))) {
+   if (!glsl2::translate(shader, gsl::make_span(buffer, size))) {
       gLog->error("Failed to decode pixel shader\n{}", pixel.disassembly);
       return false;
    }

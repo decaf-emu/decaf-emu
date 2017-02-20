@@ -30,13 +30,13 @@ GX2SetFetchShader(GX2FetchShader *shader)
       0x100000,
       sq_pgm_resources_fs.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, gsl::as_span(shaderRegData) });
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_FS, gsl::make_span(shaderRegData) });
 
    uint32_t vgt_instance_step_rates[] = {
       shader->divisors[0],
       shader->divisors[1],
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, gsl::as_span(vgt_instance_step_rates) });
+   pm4::write(pm4::SetContextRegs { latte::Register::VGT_INSTANCE_STEP_RATE_0, gsl::make_span(vgt_instance_step_rates) });
 
    internal::debugDumpShader(shader);
 }
@@ -80,7 +80,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
    };
 
    if (shader->mode != GX2ShaderMode::GeometryShader) {
-      pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::as_span(shaderRegData) });
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::make_span(shaderRegData) });
       pm4::write(pm4::SetContextReg { latte::Register::VGT_PRIMITIVEID_EN, vgt_primitiveid_en.value });
       pm4::write(pm4::SetContextReg { latte::Register::SPI_VS_OUT_CONFIG, spi_vs_out_config.value });
       pm4::write(pm4::SetContextReg { latte::Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
@@ -88,7 +88,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
       if (shader->regs.num_spi_vs_out_id > 0) {
          pm4::write(pm4::SetContextRegs {
             latte::Register::SPI_VS_OUT_ID_0,
-            gsl::as_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
+            gsl::make_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
          });
       }
 
@@ -103,7 +103,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
 
       pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_BUFFER_EN, vgt_strmout_buffer_en.value });
    } else {
-      pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_ES, gsl::as_span(shaderRegData) });
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_ES, gsl::make_span(shaderRegData) });
       pm4::write(pm4::SetContextReg { latte::Register::SQ_ESGS_RING_ITEMSIZE, ringItemsize });
    }
 
@@ -112,7 +112,7 @@ GX2SetVertexShader(GX2VertexShader *shader)
    if (shader->regs.num_sq_vtx_semantic > 0) {
       pm4::write(pm4::SetContextRegs {
          latte::Register::SQ_VTX_SEMANTIC_0,
-         gsl::as_span(&sq_vtx_semantic[0].value, shader->regs.num_sq_vtx_semantic)
+         gsl::make_span(&sq_vtx_semantic[0].value, shader->regs.num_sq_vtx_semantic)
       });
    }
 
@@ -161,18 +161,18 @@ GX2SetPixelShader(GX2PixelShader *shader)
       sq_pgm_resources_ps.value,
       sq_pgm_exports_ps.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_PS, gsl::as_span(shaderRegData) });
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_PS, gsl::make_span(shaderRegData) });
 
    uint32_t spi_ps_in_control[] = {
       spi_ps_in_control_0.value,
       spi_ps_in_control_1.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SPI_PS_IN_CONTROL_0, gsl::as_span(spi_ps_in_control) });
+   pm4::write(pm4::SetContextRegs { latte::Register::SPI_PS_IN_CONTROL_0, gsl::make_span(spi_ps_in_control) });
 
    if (num_spi_ps_input_cntl > 0) {
       pm4::write(pm4::SetContextRegs {
          latte::Register::SPI_PS_INPUT_CNTL_0,
-         gsl::as_span(&spi_ps_input_cntls[0].value, num_spi_ps_input_cntl),
+         gsl::make_span(&spi_ps_input_cntls[0].value, num_spi_ps_input_cntl),
       });
    }
 
@@ -219,7 +219,7 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
       0,
       sq_pgm_resources_gs.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_GS, gsl::as_span(shaderRegData) });
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_GS, gsl::make_span(shaderRegData) });
    pm4::write(pm4::SetContextReg { latte::Register::VGT_GS_OUT_PRIM_TYPE, vgt_gs_out_prim_type.value });
    pm4::write(pm4::SetContextReg { latte::Register::VGT_GS_MODE, vgt_gs_mode.value });
    pm4::write(pm4::SetContextReg { latte::Register::SQ_GS_VERT_ITEMSIZE, sq_gs_vert_itemsize.value });
@@ -257,13 +257,13 @@ GX2SetGeometryShader(GX2GeometryShader *shader)
       0,
       sq_pgm_resources_vs.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::as_span(vertexShaderRegData) });
+   pm4::write(pm4::SetContextRegs { latte::Register::SQ_PGM_START_VS, gsl::make_span(vertexShaderRegData) });
    pm4::write(pm4::SetContextReg { latte::Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
 
    if (shader->regs.num_spi_vs_out_id > 0) {
       pm4::write(pm4::SetContextRegs {
          latte::Register::SPI_VS_OUT_ID_0,
-         gsl::as_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
+         gsl::make_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
       });
    }
 
@@ -584,14 +584,14 @@ GX2SetShaderModeEx(GX2ShaderMode mode,
       sq_stack_resource_mgmt_1.value,
       sq_stack_resource_mgmt_2.value,
    };
-   pm4::write(pm4::SetConfigRegs { latte::Register::SQ_CONFIG, gsl::as_span(regData) });
+   pm4::write(pm4::SetConfigRegs { latte::Register::SQ_CONFIG, gsl::make_span(regData) });
 
    if (mode == GX2ShaderMode::ComputeShader) {
       uint32_t ringBaseData[] = { 0, 0xFFFFFF, 0, 0xFFFFFF };
-      pm4::write(pm4::SetConfigRegs { latte::Register::SQ_ESGS_RING_BASE, gsl::as_span(ringBaseData) });
+      pm4::write(pm4::SetConfigRegs { latte::Register::SQ_ESGS_RING_BASE, gsl::make_span(ringBaseData) });
 
       uint32_t ringItemSizes[] = { 0, 1 };
-      pm4::write(pm4::SetContextRegs { latte::Register::SQ_ESGS_RING_ITEMSIZE, gsl::as_span(ringItemSizes) });
+      pm4::write(pm4::SetContextRegs { latte::Register::SQ_ESGS_RING_ITEMSIZE, gsl::make_span(ringItemSizes) });
 
       pm4::write(pm4::SetContextReg { latte::Register::VGT_STRMOUT_EN, 0 });
    }
