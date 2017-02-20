@@ -10,6 +10,7 @@ You can find us for developer discussion at #wiiu-emu on freenode.
 - Linux with a modern C++14 friendly compiler
 - 64 bit
 - OpenGL 4.5
+- CMake v3.2+
 
 ## Compatibility
 - None
@@ -31,13 +32,12 @@ There are two decaf targets:
 - decaf-cli - Command line only which will run games with no graphics or inputs, useful for test .rpx files.
 
 ### Windows with VS2015 Update 3
-- Open decaf.sln and build.
-- cmake is not supported for windows.
-- `ReleaseDebug` is the recommended and only maintained build mode.
+- Use CMake to generate a solution
 
 ### Linux
-- The cmake builds will depend on your system's zlib, sdl2 and optionally valgrind - this is different to Windows where we use submodules for every dependency.
-- You can enable building with valgrind with -DDECAF_VALGRIND=ON
+- Use CMake 
+- It is suggested (but optional) to use your system's zlib, sdl2 and glbinding
+- You can enable building with valgrind with -DDECAF_VALGRIND=ON, this requires valgrind to be installed on your system
 - Requires a modern gcc or clang which supports C++11/14 features
 - `cmake ../decaf-emu && make`
 
