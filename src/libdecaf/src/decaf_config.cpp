@@ -78,6 +78,13 @@ double time_scale = 1.0;
 
 } // namespace system
 
+namespace ui
+{
+
+background_color_s background_color = {153, 51, 51};
+
+} // namespace ui
+
 } // namespace config
 
 } // namespace decaf
