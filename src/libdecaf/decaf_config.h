@@ -99,11 +99,11 @@ extern double time_scale;
 namespace ui
 {
 
-extern struct background_color_s {
+extern struct BackgroundColour {
     uint8_t r;
     uint8_t g;
     uint8_t b;
-} background_color;
+} background_colour;
 
 } // namespace ui
 

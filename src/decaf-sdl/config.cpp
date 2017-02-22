@@ -210,7 +210,7 @@ struct CerealUI
     void serialize(Archive &ar)
     {
         using namespace decaf::config::ui;
-        ar(CEREAL_NVP(background_color));
+        ar(CEREAL_NVP(background_colour));
     }
 };
 
@@ -344,10 +344,10 @@ namespace cereal
 {
     // background_color_s serialization
     template<class Archive>
-    void serialize(Archive &ar, decaf::config::ui::background_color_s &c)
+    void serialize(Archive &ar, decaf::config::ui::BackgroundColour &c)
     {
-        ar(::cereal::make_nvp("red", c.r),
-           ::cereal::make_nvp("green", c.g),
-           ::cereal::make_nvp("blue", c.b));
+        ar(make_nvp("red", c.r),
+           make_nvp("green", c.g),
+           make_nvp("blue", c.b));
     }
 }

@@ -104,11 +104,11 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
 
 DecafSDLOpenGL::DecafSDLOpenGL()
 {
-    using decaf::config::ui::background_color;
+    using decaf::config::ui::background_colour;
     
-    bg_col[0] = background_color.r / 255.0;
-    bg_col[1] = background_color.g / 255.0;
-    bg_col[2] = background_color.b / 255.0;
+    mBackgroundColour[0] = background_colour.r / 255.0;
+    mBackgroundColour[1] = background_colour.g / 255.0;
+    mBackgroundColour[2] = background_colour.b / 255.0;
 }
 
 DecafSDLOpenGL::~DecafSDLOpenGL()
@@ -268,7 +268,7 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
    gl::glDisable(gl::GL_CULL_FACE);
 
    // Clear screen
-   gl::glClearColor(bg_col[0], bg_col[1], bg_col[2], 1.0f);
+   gl::glClearColor(mBackgroundColour[0], mBackgroundColour[1], mBackgroundColour[2], 1.0f);
    gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
    // Draw displays

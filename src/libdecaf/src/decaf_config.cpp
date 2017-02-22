@@ -81,7 +81,7 @@ double time_scale = 1.0;
 namespace ui
 {
 
-background_color_s background_color = {153, 51, 51};
+BackgroundColour background_colour = {153, 51, 51};
 
 } // namespace ui
 
