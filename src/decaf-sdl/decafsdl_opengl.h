@@ -55,6 +55,8 @@ protected:
    gl::GLuint mVertArray;
    gl::GLuint mVertBuffer;
    gl::GLuint mSampler;
+   
+   gl::GLfloat mBackgroundColour[3];
 };
 
 #endif // DECAF_NOGL

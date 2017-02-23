@@ -96,6 +96,17 @@ extern double time_scale;
 
 } // namespace system
 
+namespace ui
+{
+
+extern struct BackgroundColour {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} background_colour;
+
+} // namespace ui
+
 } // namespace config
 
 } // namespace decaf

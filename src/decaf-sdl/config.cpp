@@ -204,6 +204,16 @@ struct CerealSystem
    }
 };
 
+struct CerealUI
+{
+    template <class Archive>
+    void serialize(Archive &ar)
+    {
+        using namespace decaf::config::ui;
+        ar(CEREAL_NVP(background_colour));
+    }
+};
+
 void
 initialize()
 {
@@ -301,7 +311,8 @@ load(const std::string &path,
             cereal::make_nvp("jit", CerealJit {}),
             cereal::make_nvp("log", CerealLog {}),
             cereal::make_nvp("sound", CerealSound {}),
-            cereal::make_nvp("system", CerealSystem {}));
+            cereal::make_nvp("system", CerealSystem {}),
+            cereal::make_nvp("ui", CerealUI {}));
    } catch (std::exception e) {
       error = e.what();
       return false;
@@ -322,7 +333,21 @@ save(const std::string &path)
           cereal::make_nvp("jit", CerealJit {}),
           cereal::make_nvp("log", CerealLog {}),
           cereal::make_nvp("sound", CerealSound {}),
-          cereal::make_nvp("system", CerealSystem {}));
+          cereal::make_nvp("system", CerealSystem {}),
+          cereal::make_nvp("ui", CerealUI {}));
 }
 
 } // namespace config
+
+// External serialization functions
+namespace cereal
+{
+    // background_color_s serialization
+    template<class Archive>
+    void serialize(Archive &ar, decaf::config::ui::BackgroundColour &c)
+    {
+        ar(make_nvp("red", c.r),
+           make_nvp("green", c.g),
+           make_nvp("blue", c.b));
+    }
+}
