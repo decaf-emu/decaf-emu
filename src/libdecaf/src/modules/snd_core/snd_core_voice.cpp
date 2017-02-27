@@ -1,5 +1,5 @@
-#include "common/decaf_assert.h"
-#include "common/platform_dir.h"
+#include <common/decaf_assert.h>
+#include <common/platform_dir.h>
 #include "decaf_config.h"
 #include "decaf_sound.h"
 #include "modules/coreinit/coreinit_memheap.h"

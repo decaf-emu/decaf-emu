@@ -1,10 +1,12 @@
 #pragma once
-#include <utility>
-#include "common/types.h"
 #include "gx2_enum.h"
 #include "gpu/latte_enum_cb.h"
 #include "gpu/latte_enum_db.h"
 #include "gpu/latte_enum_sq.h"
+
+#include <common/cbool.h>
+#include <cstdint>
+#include <utility>
 
 namespace gx2
 {

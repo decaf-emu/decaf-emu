@@ -1,5 +1,5 @@
 #pragma once
-#include "common/types.h"
+#include <common/cbool.h>
 
 namespace coreinit
 {

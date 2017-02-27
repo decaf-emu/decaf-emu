@@ -1,8 +1,8 @@
 #include "jit_insreg.h"
 #include "jit_float.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include <cstdint>
 
 namespace cpu

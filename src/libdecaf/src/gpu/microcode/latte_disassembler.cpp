@@ -1,4 +1,4 @@
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "latte_instructions.h"
 #include "latte_disassembler.h"
 #include <gsl.h>

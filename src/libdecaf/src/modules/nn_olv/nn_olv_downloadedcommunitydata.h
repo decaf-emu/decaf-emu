@@ -3,8 +3,8 @@
 #include "nn_olv_result.h"
 #include "modules/nn_ffl.h"
 #include "modules/nn_result.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
+#include <common/be_val.h>
+#include <common/structsize.h>
 
 /*
 Unimplemented functions:

@@ -5,7 +5,7 @@
 #include "libcpu/state.h"
 #include "libcpu/espresso/espresso_instruction.h"
 #include "libcpu/espresso/espresso_registers.h"
-#include "common/be_val.h"
+#include <common/be_val.h>
 
 namespace hwtest
 {

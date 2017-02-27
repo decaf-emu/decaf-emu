@@ -1,7 +1,7 @@
 #include "espresso_instructionset.h"
 #include "espresso_spr.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
 #include <algorithm>
 
 namespace espresso

@@ -1,7 +1,7 @@
 #pragma once
-#include "common/types.h"
-#include "common/platform_fiber.h"
 #include "modules/coreinit/coreinit_thread.h"
+
+#include <common/platform_fiber.h>
 
 namespace kernel
 {

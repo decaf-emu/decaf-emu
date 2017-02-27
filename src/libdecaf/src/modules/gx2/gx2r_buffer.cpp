@@ -3,8 +3,8 @@
 #include "gx2r_buffer.h"
 #include "gx2r_mem.h"
 #include "gx2r_resource.h"
-#include "common/align.h"
-#include "common/log.h"
+#include <common/align.h>
+#include <common/log.h>
 
 namespace gx2
 {

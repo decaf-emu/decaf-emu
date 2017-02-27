@@ -2,9 +2,12 @@
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_time.h"
 #include "gx2_enum.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/be_val.h>
+#include <common/be_ptr.h>
+#include <common/cbool.h>
+#include <common/structsize.h>
 
 namespace gx2
 {

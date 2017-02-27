@@ -5,7 +5,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_time.h"
 #include "ppcutils/stackobject.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {

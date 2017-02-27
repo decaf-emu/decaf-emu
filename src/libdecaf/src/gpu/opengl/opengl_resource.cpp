@@ -1,6 +1,6 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "opengl_resource.h"
 
 namespace gpu

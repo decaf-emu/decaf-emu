@@ -1,8 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_memunitheap.h"
-#include "common/align.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/align.h>
+#include <common/decaf_assert.h>
+#include <common/log.h>
 
 namespace coreinit
 {

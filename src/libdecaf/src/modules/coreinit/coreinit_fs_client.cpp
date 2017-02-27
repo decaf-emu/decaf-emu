@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "coreinit_fs.h"
 #include "coreinit_fs_client.h"
 #include "coreinit_memheap.h"

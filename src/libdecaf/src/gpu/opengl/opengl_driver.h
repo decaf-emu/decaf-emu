@@ -2,8 +2,6 @@
 
 #ifndef DECAF_NOGL
 
-#include "common/log.h"
-#include "common/platform.h"
 #include "gpu/glsl2/glsl2_translate.h"
 #include "gpu/latte_constants.h"
 #include "gpu/latte_contextstate.h"
@@ -13,11 +11,15 @@
 #include "libdecaf/decaf_graphics.h"
 #include "libdecaf/decaf_opengl.h"
 #include "opengl_resource.h"
+
 #include <chrono>
+#include <common/log.h>
+#include <common/platform.h>
 #include <condition_variable>
 #include <exception>
 #include <glbinding/gl/gl.h>
 #include <gsl.h>
+#include <libcpu/mem.h>
 #include <list>
 #include <map>
 #include <mutex>

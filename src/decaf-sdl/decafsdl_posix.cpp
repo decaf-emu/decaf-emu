@@ -1,4 +1,4 @@
-#include "common/platform.h"
+#include <common/platform.h>
 
 #ifdef PLATFORM_POSIX
 

@@ -1,6 +1,6 @@
 #pragma once
 #include <atomic>
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 static_assert(sizeof(std::atomic<void*>) == sizeof(void*), "This class assumes std::atomic has no overhead");
 

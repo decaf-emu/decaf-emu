@@ -1,5 +1,4 @@
 #pragma once
-#include "common/types.h"
 #include "gx2_enum.h"
 
 namespace gx2

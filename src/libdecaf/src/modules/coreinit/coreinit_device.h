@@ -1,7 +1,9 @@
 #pragma once
-#include "common/bitfield.h"
-#include "common/types.h"
 #include "coreinit_enum.h"
+
+#include <common/bitfield.h>
+#include <common/cbool.h>
+#include <cstdint>
 
 namespace coreinit
 {

@@ -1,8 +1,9 @@
 #pragma once
-#include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_thread.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/cbool.h>
 
 namespace coreinit
 {

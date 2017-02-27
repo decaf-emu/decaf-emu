@@ -1,7 +1,7 @@
 #ifndef PROC_UI_ENUM_H
 #define PROC_UI_ENUM_H
 
-#include "common/enum_start.h"
+#include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(proc_ui)
 
@@ -18,6 +18,6 @@ ENUM_END(ProcUIStatus)
 
 ENUM_NAMESPACE_END(proc_ui)
 
-#include "common/enum_end.h"
+#include <common/enum_end.h>
 
 #endif // PROC_UI_ENUM_H

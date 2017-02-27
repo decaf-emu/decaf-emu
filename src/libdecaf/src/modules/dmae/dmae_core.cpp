@@ -1,6 +1,9 @@
 #include "dmae.h"
 #include "modules/coreinit/coreinit_time.h"
 
+#include <common/cbool.h>
+#include <cstdint>
+
 namespace dmae
 {
 

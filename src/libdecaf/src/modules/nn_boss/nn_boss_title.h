@@ -1,10 +1,12 @@
 #pragma once
 #include "modules/coreinit/coreinit_ghs_typeinfo.h"
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
 #include "modules/nn_result.h"
 #include "nn_boss_titleid.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 /*
 Unimplemented functions:
@@ -43,9 +45,9 @@ private:
 
 protected:
    CHECK_MEMBER_OFFSET_START
-   CHECK_OFFSET(Title, 0x00, mAccountID);
-   CHECK_OFFSET(Title, 0x08, mTitleID);
-   CHECK_OFFSET(Title, 0x10, mVirtualTable);
+      CHECK_OFFSET(Title, 0x00, mAccountID);
+      CHECK_OFFSET(Title, 0x08, mTitleID);
+      CHECK_OFFSET(Title, 0x10, mVirtualTable);
    CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(Title, 0x18);

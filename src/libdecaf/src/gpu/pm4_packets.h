@@ -1,9 +1,11 @@
 #pragma once
-#include <gsl.h>
 #include "pm4_format.h"
 #include "latte_registers.h"
-#include "common/bitfield.h"
-#include "virtual_ptr.h"
+
+#include <common/bitfield.h>
+#include <common/be_val.h>
+#include <cstdint>
+#include <gsl.h>
 
 #pragma pack(push, 1)
 
@@ -171,7 +173,7 @@ struct DecafOSScreenFlip
    static const auto Opcode = type3::DECAF_OSSCREEN_FLIP;
 
    uint32_t screen;
-   virtual_ptr<void> buffer;
+   void *buffer;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -274,7 +276,7 @@ struct DrawIndex2
    static const auto Opcode = type3::DRAW_INDEX_2;
 
    uint32_t maxIndices;                      // VGT_DMA_MAX_SIZE
-   virtual_ptr<void> addr;                   // VGT_DMA_BASE
+   void *addr;                               // VGT_DMA_BASE
    uint32_t count;                           // VGT_DMA_SIZE
    latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
 
@@ -553,7 +555,7 @@ struct SetVtxResource
    static const auto Opcode = type3::SET_RESOURCE;
 
    uint32_t id;
-   virtual_ptr<const void> baseAddress;
+   const void *baseAddress;
    latte::SQ_VTX_CONSTANT_WORD1_N word1;
    latte::SQ_VTX_CONSTANT_WORD2_N word2;
    latte::SQ_VTX_CONSTANT_WORD3_N word3;
@@ -621,7 +623,7 @@ struct SetResources
 struct IndirectBufferCall
 {
    static const auto Opcode = type3::INDIRECT_BUFFER_PRIV;
-   virtual_ptr<void> addr;
+   void *addr;
    uint32_t size;
 
    template<typename Serialiser>
@@ -638,7 +640,7 @@ struct IndirectBufferCall
 struct LoadConfigReg
 {
    static const auto Opcode = type3::LOAD_CONFIG_REG;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -655,7 +657,7 @@ struct LoadConfigReg
 struct LoadContextReg
 {
    static const auto Opcode = type3::LOAD_CONTEXT_REG;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -672,7 +674,7 @@ struct LoadContextReg
 struct LoadAluConst
 {
    static const auto Opcode = type3::LOAD_ALU_CONST;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -689,7 +691,7 @@ struct LoadAluConst
 struct LoadBoolConst
 {
    static const auto Opcode = type3::LOAD_BOOL_CONST;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -706,7 +708,7 @@ struct LoadBoolConst
 struct LoadLoopConst
 {
    static const auto Opcode = type3::LOAD_LOOP_CONST;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -723,7 +725,7 @@ struct LoadLoopConst
 struct LoadResource
 {
    static const auto Opcode = type3::LOAD_RESOURCE;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -740,7 +742,7 @@ struct LoadResource
 struct LoadSampler
 {
    static const auto Opcode = type3::LOAD_SAMPLER;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -757,7 +759,7 @@ struct LoadSampler
 struct LoadControlConst
 {
    static const auto Opcode = type3::LOAD_CTL_CONST;
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>

@@ -1,9 +1,9 @@
 #include "coreinit.h"
 #include "coreinit_memexpheap.h"
-#include "common/bitfield.h"
-#include "libcpu/mem.h"
-#include "common/align.h"
-#include "virtual_ptr.h"
+
+#include <common/align.h>
+#include <common/bitfield.h>
+#include <libcpu/mem.h>
 
 namespace coreinit
 {

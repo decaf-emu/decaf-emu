@@ -6,7 +6,7 @@
 #include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
 #include "ppcutils/wfunc_call.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {

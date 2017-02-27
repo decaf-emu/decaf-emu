@@ -1,7 +1,7 @@
 #ifndef VPAD_ENUM_H
 #define VPAD_ENUM_H
 
-#include "common/enum_start.h"
+#include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(vpad)
 
@@ -45,6 +45,6 @@ ENUM_END(VPADReadError)
 
 ENUM_NAMESPACE_END(vpad)
 
-#include "common/enum_end.h"
+#include <common/enum_end.h>
 
 #endif // ifdef VPAD_ENUM_H

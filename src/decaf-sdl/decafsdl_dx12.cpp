@@ -1,7 +1,7 @@
 #ifdef DECAF_DX12
 
 #include "clilog.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "config.h"
 #include "decafsdl_dx12.h"
 

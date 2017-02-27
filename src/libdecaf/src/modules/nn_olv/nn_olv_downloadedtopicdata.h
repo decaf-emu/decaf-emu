@@ -1,7 +1,7 @@
 #pragma once
 #include "nn_olv.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
+#include <common/be_val.h>
+#include <common/structsize.h>
 
 namespace nn
 {

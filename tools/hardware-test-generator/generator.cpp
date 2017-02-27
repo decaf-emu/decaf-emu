@@ -5,8 +5,8 @@
 #include <memory>
 #include <vector>
 #include <spdlog/spdlog.h>
-#include "common/be_val.h"
-#include "common/bitutils.h"
+#include <common/be_val.h>
+#include <common/bitutils.h>
 #include "libcpu/state.h"
 #include "libcpu/espresso/espresso_instructionset.h"
 #include "hardware-test/hardwaretests.h"

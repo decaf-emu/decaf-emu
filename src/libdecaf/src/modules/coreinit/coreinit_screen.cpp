@@ -1,8 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_screen.h"
 #include "coreinit_screen_font.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include "gpu/gpu_commandqueue.h"
 #include "gpu/pm4_packets.h"
 #include "gpu/pm4_writer.h"

@@ -1,10 +1,12 @@
 #pragma once
-#include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_thread.h"
 #include "coreinit_mutex.h"
-#include "common/structsize.h"
-#include "virtual_ptr.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace coreinit
 {

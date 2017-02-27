@@ -1,7 +1,8 @@
 #pragma once
 #include "gx2_enum.h"
 #include "gx2r_buffer.h"
-#include "common/types.h"
+
+#include <cstdint>
 
 namespace gx2
 {

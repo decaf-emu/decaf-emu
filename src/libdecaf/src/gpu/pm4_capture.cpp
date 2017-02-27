@@ -618,7 +618,7 @@ private:
             indexByteSize = 2u;
          }
 
-         trackMemory(CaptureMemoryLoad::IndexBuffer, data.addr.getAddress(), data.count * indexByteSize);
+         trackMemory(CaptureMemoryLoad::IndexBuffer, mem::untranslate(data.addr), data.count * indexByteSize);
          trackReadyDraw();
          break;
       }
@@ -712,21 +712,21 @@ private:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0xB00 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, mem::untranslate(data.addr), 0xB00 * 4);
          break;
       }
       case pm4::type3::LOAD_CONTEXT_REG:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0x400 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, mem::untranslate(data.addr), 0x400 * 4);
          break;
       }
       case pm4::type3::LOAD_ALU_CONST:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0x800 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, mem::untranslate(data.addr), 0x800 * 4);
          break;
       }
       case pm4::type3::LOAD_BOOL_CONST:
@@ -740,21 +740,21 @@ private:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0x60 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, mem::untranslate(data.addr), 0x60 * 4);
          break;
       }
       case pm4::type3::LOAD_RESOURCE:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0xD9E * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, mem::untranslate(data.addr), 0xD9E * 4);
          break;
       }
       case pm4::type3::LOAD_SAMPLER:
       {
          auto data = pm4::read<pm4::LoadControlConst>(reader);
          scanLoadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, data.addr.getAddress(), 0xA2 * 4);
+         trackMemory(CaptureMemoryLoad::ShadowState, mem::untranslate(data.addr), 0xA2 * 4);
          break;
       }
       case pm4::type3::LOAD_CTL_CONST:
@@ -767,8 +767,8 @@ private:
       case pm4::type3::INDIRECT_BUFFER_PRIV:
       {
          auto data = pm4::read<pm4::IndirectBufferCall>(reader);
-         trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr.getAddress(), data.size * 4u);
-         scanCommandBuffer(reinterpret_cast<uint32_t *>(data.addr.get()), data.size);
+         trackMemory(CaptureMemoryLoad::CommandBuffer, mem::untranslate(data.addr), data.size * 4u);
+         scanCommandBuffer(reinterpret_cast<uint32_t *>(data.addr), data.size);
          break;
       }
       case pm4::type3::MEM_WRITE:

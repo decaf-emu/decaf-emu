@@ -1,8 +1,8 @@
 #pragma once
-#include "common/types.h"
 #include "modules/coreinit/coreinit_time.h"
-#include "virtual_ptr.h"
+
 #include <atomic>
+#include <cstdint>
 
 namespace pm4
 {

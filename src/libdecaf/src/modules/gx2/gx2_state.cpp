@@ -10,7 +10,7 @@
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "ppcutils/wfunc_call.h"
-#include "virtual_ptr.h"
+
 #include <common/log.h>
 #include <common/platform_dir.h>
 
@@ -24,7 +24,7 @@ void
 GX2Init(be_val<uint32_t> *attributes)
 {
    uint32_t *cbPoolBase = nullptr;
-   virtual_ptr<char *> argv = nullptr;
+   be_ptr<char *> argv = nullptr;
    auto cbPoolSize = 0x400000u;
    auto argc = 0u;
 
@@ -47,7 +47,7 @@ GX2Init(be_val<uint32_t> *attributes)
          argc = value;
          break;
       case GX2InitAttrib::ArgV:
-         argv = make_virtual_ptr<char *>(value);
+         argv = mem::translate<char *>(value);
          break;
       default:
          gLog->warn("Unknown GX2InitAttrib {} = {}", id, value);

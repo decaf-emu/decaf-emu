@@ -1,7 +1,7 @@
 #pragma once
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
-#include "common/align.h"
+#include <common/align.h>
 
 namespace ppcutils
 {

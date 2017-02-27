@@ -1,7 +1,7 @@
 #pragma once
 #include "modules/nn_result.h"
-#include "common/types.h"
-#include "common/structsize.h"
+
+#include <common/structsize.h>
 
 namespace nn
 {

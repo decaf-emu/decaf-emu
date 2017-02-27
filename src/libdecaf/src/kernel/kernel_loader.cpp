@@ -1,9 +1,4 @@
 #include "kernel_loader.h"
-#include "common/align.h"
-#include "common/decaf_assert.h"
-#include "common/frameallocator.h"
-#include "common/teenyheap.h"
-#include "common/strutils.h"
 #include "decaf_config.h"
 #include "elf.h"
 #include "filesystem/filesystem.h"
@@ -12,14 +7,20 @@
 #include "kernel_hlemodule.h"
 #include "kernel_hlefunction.h"
 #include "kernel_memory.h"
-#include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_internal_idlock.h"
 #include "modules/coreinit/coreinit_memory.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_dynload.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+
 #include <atomic>
+#include <common/align.h>
+#include <common/decaf_assert.h>
+#include <common/frameallocator.h>
+#include <common/teenyheap.h>
+#include <common/strutils.h>
 #include <gsl.h>
+#include <libcpu/mem.h>
 #include <map>
 #include <unordered_map>
 #include <zlib.h>

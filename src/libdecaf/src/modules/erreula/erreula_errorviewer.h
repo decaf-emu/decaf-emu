@@ -1,5 +1,6 @@
 #pragma once
-#include "common/types.h"
+#include <common/cbool.h>
+#include <cstdint>
 
 struct FSClient;
 

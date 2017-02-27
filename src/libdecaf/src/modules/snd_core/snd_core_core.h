@@ -2,6 +2,10 @@
 #include "ppcutils/wfunc_ptr.h"
 #include "snd_core_enum.h"
 
+#include <common/be_val.h>
+#include <common/cbool.h>
+#include <cstdint>
+
 namespace snd_core
 {
 

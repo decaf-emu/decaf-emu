@@ -1,6 +1,6 @@
 #pragma once
-#include "common/types.h"
 #include "ppcutils/va_list.h"
+#include <cstdint>
 
 namespace coreinit
 {

@@ -3,10 +3,10 @@
 #include "espresso/espresso_spr.h"
 #include "interpreter_insreg.h"
 #include "mem.h"
-#include "common/align.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/align.h>
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
+#include <common/log.h>
 
 using espresso::SPR;
 

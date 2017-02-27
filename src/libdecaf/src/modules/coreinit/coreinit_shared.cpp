@@ -1,11 +1,15 @@
-#include <array>
-#include <fstream>
-#include <gsl.h>
 #include "coreinit.h"
 #include "coreinit_shared.h"
-#include "libcpu/mem.h"
-#include "virtual_ptr.h"
-#include "common/teenyheap.h"
+
+#include <array>
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <common/teenyheap.h>
+#include <fstream>
+#include <gsl.h>
+#include <libcpu/mem.h>
+
 
 namespace coreinit
 {

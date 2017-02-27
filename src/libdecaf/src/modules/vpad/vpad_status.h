@@ -1,9 +1,10 @@
 #pragma once
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/be_vec.h"
-#include "common/structsize.h"
 #include "vpad_enum.h"
+
+#include <common/be_val.h>
+#include <common/be_vec.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace vpad
 {

@@ -4,7 +4,7 @@
 #include <gsl.h>
 #include <iostream>
 #include <spdlog/spdlog.h>
-#include "common/teenyheap.h"
+#include <common/teenyheap.h>
 #include "libcpu/mem.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_disassembler.h"

@@ -1,6 +1,6 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "decaf_config.h"
 #include "opengl_driver.h"
 #include <glbinding/gl/gl.h>

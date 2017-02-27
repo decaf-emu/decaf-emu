@@ -1,6 +1,6 @@
 #pragma once
+#include <cstdint>
 #include <string>
-#include "common/types.h"
 
 namespace kernel
 {

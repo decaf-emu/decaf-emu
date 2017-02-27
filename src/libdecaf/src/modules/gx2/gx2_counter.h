@@ -1,6 +1,7 @@
 #pragma once
+#include <common/cbool.h>
 #include <common/structsize.h>
-#include <common/types.h>
+#include <cstdint>
 
 namespace gx2
 {

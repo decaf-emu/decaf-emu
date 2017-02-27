@@ -3,10 +3,11 @@
 #include "pm4_format.h"
 #include "pm4_packets.h"
 #include "latte_registers.h"
-#include "virtual_ptr.h"
+
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <gsl.h>
+#include <libcpu/mem.h>
 
 namespace pm4
 {
@@ -28,9 +29,9 @@ public:
       return *this;
    }
 
-   // Write a virtual ptr as one word
+   // Write a pointer as one word
    template<typename Type>
-   PacketSizer &operator()(virtual_ptr<Type> value)
+   PacketSizer &operator()(Type *value)
    {
       mPayloadSize++;
       return *this;
@@ -122,11 +123,11 @@ public:
       return *this;
    }
 
-   // Write a virtual ptr as one word
+   // Write a pointer as one word
    template<typename Type>
-   PacketWriter &operator()(virtual_ptr<Type> value)
+   PacketWriter &operator()(Type *value)
    {
-      mBuffer->buffer[mBuffer->curSize++] = byte_swap(value.getAddress());
+      mBuffer->buffer[mBuffer->curSize++] = byte_swap(mem::untranslate(value));
       return *this;
    }
 

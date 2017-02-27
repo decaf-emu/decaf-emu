@@ -4,7 +4,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "libcpu/mem.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include <atomic>
 
 namespace coreinit

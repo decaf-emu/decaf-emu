@@ -3,8 +3,8 @@
 #include <cfenv>
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
-#include "common/platform_fiber.h"
-#include "common/platform_thread.h"
+#include <common/platform_fiber.h>
+#include <common/platform_thread.h>
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_ghs.h"

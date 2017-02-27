@@ -1,8 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_sprintf.h"
-#include "common/log.h"
-#include "common/make_array.h"
-#include "common/strutils.h"
+#include <common/log.h>
+#include <common/make_array.h>
+#include <common/strutils.h>
 #include "ppcutils/va_list.h"
 
 namespace coreinit

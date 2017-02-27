@@ -13,9 +13,9 @@
 #include "ppcutils/va_list.h"
 #include <fstream>
 #include <spdlog/spdlog.h>
-#include "common/align.h"
-#include "common/log.h"
-#include "common/platform_dir.h"
+#include <common/align.h>
+#include <common/log.h>
+#include <common/platform_dir.h>
 
 namespace gx2
 {

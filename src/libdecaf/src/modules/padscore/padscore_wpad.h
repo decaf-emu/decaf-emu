@@ -1,5 +1,7 @@
 #pragma once
-#include "common/types.h"
+#include <common/be_val.h>
+#include <common/cbool.h>
+#include <cstdint>
 
 namespace padscore
 {

@@ -1,8 +1,3 @@
-#include "common/log.h"
-#include "common/align.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
-#include "common/fastregionmap.h"
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
@@ -12,8 +7,14 @@
 #include "jit_verify.h"
 #include "jit_vmemruntime.h"
 #include "mem.h"
+
 #include <algorithm>
 #include <array>
+#include <common/align.h>
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
+#include <common/fastregionmap.h>
+#include <common/log.h>
 #include <cfenv>
 #include <map>
 #include <vector>

@@ -2,8 +2,8 @@
 #include <cmath>
 #include "interpreter_insreg.h"
 #include "interpreter_float.h"
-#include "common/floatutils.h"
-#include "common/platform_compiler.h"
+#include <common/floatutils.h>
+#include <common/platform_compiler.h>
 
 // Register move / sign bit manipulation
 enum MoveMode

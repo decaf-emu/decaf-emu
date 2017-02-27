@@ -6,8 +6,8 @@
 #include "gpu/gpu_commandqueue.h"
 #include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_core.h"
-#include "common/align.h"
-#include "common/decaf_assert.h"
+#include <common/align.h>
+#include <common/decaf_assert.h>
 #include <array>
 
 namespace gx2

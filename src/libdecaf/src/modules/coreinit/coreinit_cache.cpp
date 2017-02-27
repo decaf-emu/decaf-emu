@@ -1,7 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
 #include "gpu/gpu_flush.h"
-#include "common/align.h"
+
+#include <common/align.h>
 
 namespace coreinit
 {

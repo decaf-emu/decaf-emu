@@ -1,13 +1,15 @@
 #pragma once
-#include "common/types.h"
 #include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
-#include "common/be_array.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
-#include "virtual_ptr.h"
 #include "gx2_sampler.h"
 #include "gx2r_buffer.h"
+
+#include <common/be_array.h>
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/cbool.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace gx2
 {
@@ -16,7 +18,7 @@ namespace gx2
 
 struct GX2FetchShader
 {
-   be_val<GX2FetchShaderType > type;
+   be_val<GX2FetchShaderType> type;
 
    struct
    {

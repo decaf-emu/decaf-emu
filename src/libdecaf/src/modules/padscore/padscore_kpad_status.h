@@ -1,9 +1,9 @@
 #pragma once
 #include "modules/vpad/vpad_status.h"
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/be_vec.h"
-#include "common/structsize.h"
+
+#include <common/be_val.h>
+#include <common/be_vec.h>
+#include <common/structsize.h>
 
 namespace padscore
 {

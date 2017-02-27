@@ -1,7 +1,5 @@
 #pragma once
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
+#include <common/structsize.h>
 
 namespace nn
 {
@@ -31,7 +29,7 @@ private:
 
 protected:
    CHECK_MEMBER_OFFSET_START
-   CHECK_OFFSET(TaskID, 0x00, mTaskID);
+      CHECK_OFFSET(TaskID, 0x00, mTaskID);
    CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(TaskID, 8);

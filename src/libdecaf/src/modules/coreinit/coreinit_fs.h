@@ -1,10 +1,11 @@
 #pragma once
-#include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_messagequeue.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <cstdint>
 #include <functional>
 
 namespace coreinit

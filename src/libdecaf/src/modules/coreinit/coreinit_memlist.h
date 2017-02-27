@@ -1,7 +1,7 @@
 #pragma once
-#include "common/be_val.h"
-#include "common/structsize.h"
-#include "virtual_ptr.h"
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/structsize.h>
 
 namespace coreinit
 {

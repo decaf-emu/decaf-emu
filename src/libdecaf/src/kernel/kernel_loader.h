@@ -1,9 +1,10 @@
 #pragma once
+#include "ppcutils/wfunc_ptr.h"
+
+#include <common/decaf_assert.h>
+#include <libcpu/mem.h>
 #include <vector>
 #include <map>
-#include "common/types.h"
-#include "common/decaf_assert.h"
-#include "ppcutils/wfunc_ptr.h"
 
 namespace kernel
 {
@@ -115,13 +116,13 @@ struct LoadedModule
    std::string name;
    LoadedModuleHandleData *handle = nullptr;
    ppcaddr_t entryPoint = 0;
-   ppcsize_t defaultStackSize = 0;
+   uint32_t defaultStackSize = 0;
    ppcaddr_t sdaBase = 0;
    ppcaddr_t sda2Base = 0;
    uint32_t tlsModuleIndex = -1;
    ppcaddr_t tlsBase = 0;
-   ppcsize_t tlsAlignShift = 0;
-   ppcsize_t tlsSize = 0;
+   uint32_t tlsAlignShift = 0;
+   uint32_t tlsSize = 0;
    bool entryCalled = false;
    std::vector<LoadedSection> sections;
    std::map<std::string, ppcaddr_t> exports;

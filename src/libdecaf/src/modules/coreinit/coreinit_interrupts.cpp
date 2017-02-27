@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_core.h"
-#include "libcpu/cpu.h"
+
+#include <libcpu/cpu.h>
 
 namespace coreinit
 {

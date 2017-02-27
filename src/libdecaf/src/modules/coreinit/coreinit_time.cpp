@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_time.h"
 #include "coreinit_systeminfo.h"
-#include "common/platform_time.h"
+#include <common/platform_time.h>
 #include "decaf_config.h"
 #include "libcpu/cpu.h"
 

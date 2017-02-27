@@ -1,7 +1,8 @@
 #pragma once
-#include "common/bitfield.h"
-#include "common/types.h"
 #include "gpu/latte_enum_sq.h"
+
+#include <cstdint>
+#include <common/bitfield.h>
 
 namespace latte
 {

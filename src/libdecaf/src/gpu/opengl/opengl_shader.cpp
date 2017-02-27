@@ -1,10 +1,5 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
-#include "common/log.h"
-#include "common/murmur3.h"
-#include "common/platform_dir.h"
-#include "common/strutils.h"
 #include "decaf_config.h"
 #include "gpu/glsl2/glsl2_translate.h"
 #include "gpu/gpu_utilities.h"
@@ -12,8 +7,15 @@
 #include "gpu/microcode/latte_disassembler.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
+
+#include <common/decaf_assert.h>
+#include <common/log.h>
+#include <common/murmur3.h>
+#include <common/platform_dir.h>
+#include <common/strutils.h>
 #include <fstream>
 #include <glbinding/gl/gl.h>
+#include <libcpu/mem.h>
 #include <spdlog/spdlog.h>
 
 namespace gpu
@@ -299,7 +301,7 @@ bool GLDriver::checkActiveShader()
          dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
          fetchShader->disassembly = latte::disassemble(gsl::make_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
-         if (!parseFetchShader(*fetchShader, make_virtual_ptr<void>(fsPgmAddress), fsPgmSize)) {
+         if (!parseFetchShader(*fetchShader, mem::translate(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
          }
@@ -377,7 +379,7 @@ bool GLDriver::checkActiveShader()
 
          dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
 
-         if (!compileVertexShader(*vertexShader, *fetchShader, make_virtual_ptr<uint8_t>(vsPgmAddress), vsPgmSize, isScreenSpace)) {
+         if (!compileVertexShader(*vertexShader, *fetchShader, mem::translate(vsPgmAddress), vsPgmSize, isScreenSpace)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
@@ -446,7 +448,7 @@ bool GLDriver::checkActiveShader()
 
             dumpRawShader("pixel", psPgmAddress, psPgmSize);
 
-            if (!compilePixelShader(*pixelShader, *vertexShader, make_virtual_ptr<uint8_t>(psPgmAddress), psPgmSize)) {
+            if (!compilePixelShader(*pixelShader, *vertexShader, mem::translate(psPgmAddress), psPgmSize)) {
                gLog->error("Failed to recompile pixel shader");
                return false;
             }

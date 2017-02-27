@@ -2,8 +2,8 @@
 #include "kernel_filesystem.h"
 #include "kernel_gameinfo.h"
 #include "modules/coreinit/coreinit_enum.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include <pugixml.hpp>
 #include <vector>
 

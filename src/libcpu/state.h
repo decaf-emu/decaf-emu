@@ -1,8 +1,9 @@
 #pragma once
+#include "espresso/espresso_registers.h"
+
 #include <atomic>
 #include <chrono>
 #include <thread>
-#include "espresso/espresso_registers.h"
 
 struct Tracer;
 

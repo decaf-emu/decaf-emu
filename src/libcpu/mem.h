@@ -1,8 +1,8 @@
 #pragma once
-#include "common/byte_swap.h"
-#include "common/decaf_assert.h"
-#include "common/types.h"
-#include <cassert>
+#include <common/byte_swap.h>
+#include <common/decaf_assert.h>
+
+using ppcaddr_t = uint32_t;
 
 namespace mem
 {

@@ -1,5 +1,3 @@
-#include <algorithm>
-#include "common/be_val.h"
 #include "coreinit.h"
 #include "coreinit_dynload.h"
 #include "coreinit_memexpheap.h"
@@ -8,7 +6,9 @@
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_ptr.h"
 #include "ppcutils/wfunc_call.h"
-#include "virtual_ptr.h"
+
+#include <algorithm>
+#include <common/be_val.h>
 
 namespace coreinit
 {

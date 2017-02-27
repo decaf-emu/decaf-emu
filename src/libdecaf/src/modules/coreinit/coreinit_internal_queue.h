@@ -1,5 +1,5 @@
 #pragma once
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {

@@ -1,8 +1,9 @@
 #pragma once
-#include <type_traits>
 #include "ppctypeconv.h"
-#include "common/be_val.h"
-#include "virtual_ptr.h"
+
+#include <common/be_val.h>
+#include <libcpu/mem.h>
+#include <type_traits>
 
 namespace ppctypes
 {
@@ -19,7 +20,7 @@ getNextGPR(cpu::Core *state, size_t &r)
       // Need to skip the backchain from the caller (8 bytes), plus the backchain we
       //  precreate as part of our kcstub (8 bytes).  Args come after those.
       auto addr = state->gpr[1] + 8 + 8 + 4 * static_cast<uint32_t>(r - 11);
-      value = *make_virtual_ptr<be_val<uint32_t>>(addr);
+      value = *mem::translate<be_val<uint32_t>>(addr);
    } else {
       value = state->gpr[r];
    }
@@ -33,7 +34,7 @@ setNextGPR(cpu::Core *state, size_t &r, uint32_t value)
 {
    if (r > 10) {
       auto addr = state->gpr[1] + 8 + 8 + 4 * static_cast<uint32_t>(r - 11);
-      *make_virtual_ptr<be_val<uint32_t>>(addr) = value;
+      *mem::translate<be_val<uint32_t>>(addr) = value;
    } else {
       state->gpr[r] = value;
    }

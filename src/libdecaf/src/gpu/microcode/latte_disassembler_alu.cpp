@@ -1,6 +1,6 @@
-#include "common/bit_cast.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/bit_cast.h>
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include "latte_disassembler.h"
 #include "latte_decoders.h"
 

@@ -38,19 +38,19 @@ sLastSubmittedTimestamp { 0 };
 static std::atomic<int64_t>
 sRetiredTimestamp { 0 };
 
-static virtual_ptr<OSThreadQueue>
-sVsyncThreadQueue;
+static OSThreadQueue *
+sVsyncThreadQueue = nullptr;
 
-static virtual_ptr<OSThreadQueue>
-sFlipThreadQueue;
+static OSThreadQueue *
+sFlipThreadQueue = nullptr;
 
-static virtual_ptr<OSAlarm>
-sVsyncAlarm;
+static OSAlarm *
+sVsyncAlarm = nullptr;
 
 static AlarmCallback
 sVsyncAlarmHandler = nullptr;
 
-static virtual_ptr<OSThreadQueue>
+static OSThreadQueue *
 sWaitTimeStampQueue = nullptr;
 
 struct EventCallbackData
@@ -339,7 +339,7 @@ onFlip()
 void
 Module::initialiseVsync()
 {
-   sVsyncAlarmHandler = findExportAddress("internal_VsyncAlarmHandler");
+   sVsyncAlarmHandler = reinterpret_cast<AlarmCallback::FunctionType>(findExportAddress("internal_VsyncAlarmHandler"));
 }
 
 } // namespace gx2

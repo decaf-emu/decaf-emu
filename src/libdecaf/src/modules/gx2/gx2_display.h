@@ -2,9 +2,11 @@
 #include "modules/coreinit/coreinit_time.h"
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
-#include "common/types.h"
-#include "common/be_val.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/be_val.h>
+#include <common/cbool.h>
+#include <cstdint>
 
 namespace gx2
 {

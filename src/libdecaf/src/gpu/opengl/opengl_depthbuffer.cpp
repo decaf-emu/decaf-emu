@@ -1,6 +1,6 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "opengl_driver.h"
 #include "gpu/gpu_utilities.h"
 #include "gpu/latte_enum_db.h"

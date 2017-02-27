@@ -1,8 +1,10 @@
 #pragma once
-#include <array>
-#include "common/types.h"
 #include "modules/nn_ffl.h"
 #include "modules/nn_result.h"
+
+#include <array>
+#include <common/be_val.h>
+#include <cstdint>
 
 namespace nn
 {

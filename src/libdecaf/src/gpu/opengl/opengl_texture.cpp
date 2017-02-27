@@ -1,8 +1,8 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
-#include "common/log.h"
-#include "common/murmur3.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
+#include <common/murmur3.h>
 #include "decaf_config.h"
 #include "gpu/latte_enum_sq.h"
 #include "opengl_driver.h"

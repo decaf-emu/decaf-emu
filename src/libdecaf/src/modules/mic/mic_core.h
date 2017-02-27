@@ -1,6 +1,6 @@
 #pragma once
-#include "common/types.h"
-#include "common/be_val.h"
+#include <common/be_val.h>
+#include <cstdint>
 
 namespace mic
 {
@@ -17,6 +17,7 @@ int
 MICOpen(MICHandle handle);
 
 int
-MICGetStatus(MICHandle handle, void *statusOut);
+MICGetStatus(MICHandle handle,
+             void *statusOut);
 
 } // namespace mic

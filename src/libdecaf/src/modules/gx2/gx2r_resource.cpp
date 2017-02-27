@@ -1,7 +1,7 @@
 #include "gx2.h"
 #include "gx2r_resource.h"
 #include "modules/coreinit/coreinit_memheap.h"
-#include "common/align.h"
+#include <common/align.h>
 #include "ppcutils/wfunc_call.h"
 
 namespace gx2
@@ -68,8 +68,8 @@ Module::RegisterGX2RResourceFunctions()
 void
 Module::initialiseResourceAllocator()
 {
-   gGX2RMemAlloc = findExportAddress("internal_gx2rDefaultAlloc");
-   gGX2RMemFree = findExportAddress("internal_gx2rDefaultFree");
+   gGX2RMemAlloc = reinterpret_cast<GX2RAllocFuncPtr::FunctionType>(findExportAddress("internal_gx2rDefaultAlloc"));
+   gGX2RMemFree = reinterpret_cast<GX2RFreeFuncPtr::FunctionType>(findExportAddress("internal_gx2rDefaultFree"));
 }
 
 } // namespace gx2

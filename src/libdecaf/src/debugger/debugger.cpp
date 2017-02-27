@@ -1,7 +1,7 @@
 #include "decaf_config.h"
 #include "debugger/debugger_branchcalc.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
 #include "libcpu/cpu.h"

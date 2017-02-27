@@ -1,8 +1,9 @@
 #pragma once
-#include "common/bitfield.h"
-#include "common/be_val.h"
-#include "common/types.h"
 #include "latte_registers.h"
+
+#include <common/bitfield.h>
+#include <common/be_val.h>
+#include <cstdint>
 
 #pragma pack(push, 1)
 

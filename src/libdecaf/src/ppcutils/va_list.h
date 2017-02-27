@@ -1,11 +1,11 @@
 #pragma once
 #include <cstdint>
-#include "common/be_array.h"
-#include "common/be_val.h"
-#include "common/bitutils.h"
-#include "common/structsize.h"
-#include "libcpu/cpu.h"
-#include "virtual_ptr.h"
+#include <common/be_array.h>
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/bitutils.h>
+#include <common/structsize.h>
+#include <libcpu/cpu.h>
 
 namespace ppctypes
 {

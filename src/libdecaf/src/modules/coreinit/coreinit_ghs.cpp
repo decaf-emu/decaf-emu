@@ -8,11 +8,13 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_time.h"
 #include "kernel/kernel_loader.h"
-#include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
-#include "common/decaf_assert.h"
-#include "common/log.h"
+
 #include <array>
+#include <common/cbool.h>
+#include <common/decaf_assert.h>
+#include <common/log.h>
+#include <libcpu/trace.h>
 
 namespace coreinit
 {

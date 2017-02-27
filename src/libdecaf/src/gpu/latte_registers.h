@@ -1,5 +1,4 @@
 #pragma once
-#include "common/types.h"
 #include "latte_contextstate.h"
 #include "latte_registers_cb.h"
 #include "latte_registers_cp.h"
@@ -11,6 +10,8 @@
 #include "latte_registers_ta.h"
 #include "latte_registers_td.h"
 #include "latte_registers_vgt.h"
+
+#include <cstdint>
 
 namespace latte
 {

@@ -1,8 +1,8 @@
 #include "coreinit.h"
 #include "coreinit_enum_string.h"
 #include "coreinit_userconfig.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {

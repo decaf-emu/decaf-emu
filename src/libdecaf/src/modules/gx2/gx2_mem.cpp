@@ -1,10 +1,10 @@
-#include "common/log.h"
+#include <common/log.h>
 #include "gx2_aperture.h"
 #include "gx2_mem.h"
 #include "gx2_state.h"
 #include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_cache.h"
-#include "common/align.h"
+#include <common/align.h>
 
 namespace gx2
 {

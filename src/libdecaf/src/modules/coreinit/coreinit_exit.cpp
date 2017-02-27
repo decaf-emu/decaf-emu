@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_exit.h"
 #include "kernel/kernel.h"
-#include "common/log.h"
+#include <common/log.h>
 
 namespace coreinit
 {

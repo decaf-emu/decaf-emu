@@ -1,7 +1,9 @@
 #pragma once
-#include "common/types.h"
 #include "ppcutils/wfunc_ptr.h"
 #include "proc_ui_enum.h"
+
+#include <common/cbool.h>
+#include <cstdint>
 
 namespace proc_ui
 {

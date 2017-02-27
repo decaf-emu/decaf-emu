@@ -1,5 +1,5 @@
 #pragma once
-#include "common/type_list.h"
+#include <common/type_list.h>
 #include "decaf_config.h"
 #include "kernel_hlesymbol.h"
 #include "libcpu/state.h"

@@ -1,5 +1,5 @@
 #include "clilog.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "config.h"
 #include "libdecaf/decaf_config.h"
 #include <climits>

@@ -1,6 +1,7 @@
-#include "common/decaf_assert.h"
 #include "kernel_memory.h"
-#include "libcpu/mem.h"
+
+#include <common/decaf_assert.h>
+#include <libcpu/mem.h>
 
 namespace kernel
 {
@@ -26,14 +27,16 @@ getCodeHeap()
 }
 
 void
-getMEM1Bound(uint32_t *addr, uint32_t *size)
+getMEM1Bound(uint32_t *addr,
+             uint32_t *size)
 {
    *addr = mem::MEM1Base;
    *size = mem::MEM1Size;
 }
 
 void
-getMEM2Bound(uint32_t *addr, uint32_t *size)
+getMEM2Bound(uint32_t *addr,
+             uint32_t *size)
 {
    decaf_check(sCodeHeapSize > 0);
 

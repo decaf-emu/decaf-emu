@@ -1,6 +1,5 @@
 #pragma once
-#include "common/be_val.h"
-#include "virtual_ptr.h"
+#include <common/be_val.h>
 
 namespace ghs
 {

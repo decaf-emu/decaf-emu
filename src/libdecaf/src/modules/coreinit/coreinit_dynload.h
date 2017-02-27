@@ -1,6 +1,6 @@
 #pragma once
-#include "common/be_val.h"
-#include "virtual_ptr.h"
+#include <common/be_val.h>
+#include <libcpu/mem.h>
 
 namespace kernel
 {

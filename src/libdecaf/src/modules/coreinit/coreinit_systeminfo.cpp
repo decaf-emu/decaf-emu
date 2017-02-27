@@ -3,7 +3,7 @@
 #include "coreinit_systeminfo.h"
 #include "coreinit_memheap.h"
 #include "coreinit_time.h"
-#include "common/platform_time.h"
+#include <common/platform_time.h>
 #include "kernel/kernel.h"
 
 namespace coreinit

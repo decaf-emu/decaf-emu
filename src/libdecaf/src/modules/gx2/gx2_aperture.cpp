@@ -2,8 +2,8 @@
 #include "gx2_aperture.h"
 #include "gx2_surface.h"
 #include "libcpu/mem.h"
-#include "common/decaf_assert.h"
-#include "common/teenyheap.h"
+#include <common/decaf_assert.h>
+#include <common/teenyheap.h>
 #include <mutex>
 
 namespace gx2

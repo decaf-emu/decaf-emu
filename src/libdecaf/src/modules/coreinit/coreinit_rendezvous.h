@@ -1,8 +1,9 @@
 #pragma once
 #include "coreinit_time.h"
-#include "common/types.h"
-#include "common/structsize.h"
+
 #include <atomic>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace coreinit
 {

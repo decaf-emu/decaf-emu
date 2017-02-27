@@ -1,6 +1,5 @@
 #pragma once
-#include "common/types.h"
-#include "virtual_ptr.h"
+#include <cstdint>
 
 namespace pm4
 {

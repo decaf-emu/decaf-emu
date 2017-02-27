@@ -5,9 +5,9 @@
 #include "espresso/espresso_disassembler.h"
 #include "espresso/espresso_instructionset.h"
 #include "espresso/espresso_spr.h"
-#include "common/log.h"
-#include "common/debuglog.h"
-#include "common/decaf_assert.h"
+#include <common/log.h>
+#include <common/debuglog.h>
+#include <common/decaf_assert.h>
 
 using espresso::Instruction;
 using espresso::InstructionID;

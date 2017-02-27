@@ -1,7 +1,7 @@
 #pragma once
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 /*
 Unimplemented functions:
@@ -43,8 +43,8 @@ private:
 
 protected:
    CHECK_MEMBER_OFFSET_START
-   CHECK_OFFSET(TitleID, 0x00, mLower);
-   CHECK_OFFSET(TitleID, 0x04, mUpper);
+      CHECK_OFFSET(TitleID, 0x00, mLower);
+      CHECK_OFFSET(TitleID, 0x04, mUpper);
    CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(TitleID, 8);

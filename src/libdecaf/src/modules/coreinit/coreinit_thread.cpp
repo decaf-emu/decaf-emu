@@ -16,7 +16,7 @@
 #include "ppcutils/stackobject.h"
 #include "ppcutils/wfunc_call.h"
 #include "usermodule.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include <array>
 #include <limits>
 
@@ -51,17 +51,17 @@ void
 __OSClearThreadStack32(OSThread *thread,
                        uint32_t value)
 {
-   virtual_ptr<be_val<uint32_t>> clearStart, clearEnd;
+   be_val<uint32_t> *clearStart, *clearEnd;
 
    if (OSGetCurrentThread() == thread) {
       clearStart = thread->stackEnd + 4;
-      clearEnd = make_virtual_ptr<be_val<uint32_t>>(OSGetStackPointer());
+      clearEnd = mem::translate<be_val<uint32_t>>(OSGetStackPointer());
    } else {
       // We assume that the thread must be paused while this is happening...
       // This might be a bad assumption to make, but otherwise we run
       // into some sketchy race conditions.
       clearStart = thread->stackEnd + 4;
-      clearEnd = make_virtual_ptr<be_val<uint32_t>>(thread->context.gpr[1]);
+      clearEnd = mem::translate<be_val<uint32_t>>(thread->context.gpr[1]);
    }
 
    for (auto addr = clearStart; addr < clearEnd; addr += 4) {
@@ -133,7 +133,7 @@ OSCheckActiveThreads()
 int32_t
 OSCheckThreadStackUsage(OSThread *thread)
 {
-   virtual_ptr<be_val<uint32_t>> addr;
+   be_val<uint32_t> *addr;
    internal::lockScheduler();
 
    for (addr = thread->stackEnd + 4; addr < thread->stackStart; addr += 4) {
@@ -142,7 +142,7 @@ OSCheckThreadStackUsage(OSThread *thread)
       }
    }
 
-   auto result = static_cast<int32_t>(thread->stackStart.getAddress()) - static_cast<int32_t>(addr.getAddress());
+   auto result = static_cast<int32_t>(thread->stackStart.getAddress()) - static_cast<int32_t>(mem::untranslate(addr));
    internal::unlockScheduler();
    return result;
 }
@@ -985,7 +985,7 @@ tls_get_addr(tls_index *index)
 void
 Module::initialiseThreadFunctions()
 {
-   sSleepAlarmHandler = findExportAddress("internal_SleepAlarmHandler");
+   sSleepAlarmHandler = reinterpret_cast<AlarmCallback::FunctionType>(findExportAddress("internal_SleepAlarmHandler"));
    sDefaultThreads.fill(nullptr);
 }
 

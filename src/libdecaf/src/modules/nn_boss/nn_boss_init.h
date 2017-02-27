@@ -1,6 +1,5 @@
 #pragma once
 #include "modules/nn_result.h"
-#include "common/types.h"
 
 namespace nn
 {

@@ -2,9 +2,9 @@
 #include "coreinit_memheap.h"
 #include "coreinit_memblockheap.h"
 #include "coreinit_spinlock.h"
-#include "common/align.h"
-#include "common/decaf_assert.h"
-#include "common/structsize.h"
+#include <common/align.h>
+#include <common/decaf_assert.h>
+#include <common/structsize.h>
 #include <array>
 
 namespace coreinit

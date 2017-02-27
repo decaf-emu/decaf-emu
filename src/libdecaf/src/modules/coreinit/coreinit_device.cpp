@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_device.h"
 #include "coreinit_enum_string.h"
-#include "common/bitfield.h"
+#include <common/bitfield.h>
 #include "modules/vpad/vpad_status.h"
 
 static bool

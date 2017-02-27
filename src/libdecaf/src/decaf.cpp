@@ -1,4 +1,4 @@
-#include "common/platform_dir.h"
+#include <common/platform_dir.h>
 #include "decaf.h"
 #include "decaf_config.h"
 #include "decaf_graphics.h"

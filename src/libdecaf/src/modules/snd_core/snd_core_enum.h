@@ -1,7 +1,7 @@
 #ifndef SND_CORE_ENUM_H
 #define SND_CORE_ENUM_H
 
-#include "common/enum_start.h"
+#include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(snd_core)
 
@@ -161,6 +161,6 @@ ENUM_NAMESPACE_END(internal)
 
 ENUM_NAMESPACE_END(snd_core)
 
-#include "common/enum_end.h"
+#include <common/enum_end.h>
 
 #endif // ifdef SND_CORE_ENUM_H

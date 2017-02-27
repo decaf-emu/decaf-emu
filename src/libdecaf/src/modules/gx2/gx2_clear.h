@@ -1,6 +1,6 @@
 #pragma once
-#include "common/types.h"
 #include "modules/gx2/gx2_enum.h"
+#include <cstdint>
 
 namespace gx2
 {

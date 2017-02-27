@@ -1,5 +1,5 @@
 #pragma once
-#include "common/types.h"
+#include <cstdint>
 
 namespace padscore
 {
@@ -8,7 +8,8 @@ void
 KPADInit();
 
 void
-KPADInitEx(uint32_t unk1, uint32_t unk2);
+KPADInitEx(uint32_t unk1,
+           uint32_t unk2);
 
 uint32_t
 KPADGetMplsWorkSize();

@@ -1,5 +1,5 @@
 #pragma once
-#include "common/types.h"
+#include <cstdint>
 
 namespace snd_core
 {

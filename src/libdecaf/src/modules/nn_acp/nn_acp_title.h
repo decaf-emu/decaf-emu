@@ -1,7 +1,9 @@
 #pragma once
-#include "common/types.h"
 #include "modules/nn_result.h"
-#include "common/structsize.h"
+
+#include <common/structsize.h>
+
+#include <cstdint>
 
 namespace nn
 {
@@ -16,7 +18,8 @@ struct ACPMetaXml
 CHECK_SIZE(ACPMetaXml, 0x3440);
 
 nn::Result
-GetTitleMetaXml(uint64_t id, ACPMetaXml *data);
+GetTitleMetaXml(uint64_t id,
+                ACPMetaXml *data);
 
 }  // namespace acp
 

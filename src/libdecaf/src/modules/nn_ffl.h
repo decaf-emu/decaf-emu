@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
-#include "common/structsize.h"
+#include <common/structsize.h>
 
 // This structure is intentionally little-endian as the data
 //  is stored in a cross-platform manner for multiple devices.

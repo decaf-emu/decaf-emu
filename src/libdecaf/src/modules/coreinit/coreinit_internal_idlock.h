@@ -1,6 +1,6 @@
 #pragma once
 #include <atomic>
-#include "common/types.h"
+#include <cstdint>
 
 namespace coreinit
 {

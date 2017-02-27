@@ -1,8 +1,12 @@
 #pragma once
-#include "common/bitfield.h"
-#include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_memheap.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/bitfield.h>
+#include <common/cbool.h>
+#include <cstdint>
 
 namespace coreinit
 {

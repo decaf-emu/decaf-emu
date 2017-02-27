@@ -1,11 +1,13 @@
 #pragma once
 #include "modules/nn_result.h"
 #include "modules/coreinit/coreinit_ghs_typeinfo.h"
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
 #include "nn_boss_taskid.h"
 #include "nn_boss_titleid.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 /*
 Unimplemented functions:
@@ -98,10 +100,10 @@ protected:
 
 protected:
    CHECK_MEMBER_OFFSET_START
-   CHECK_OFFSET(Task, 0x00, mAccountID);
-   CHECK_OFFSET(Task, 0x08, mTaskID);
-   CHECK_OFFSET(Task, 0x10, mTitleID);
-   CHECK_OFFSET(Task, 0x18, mVirtualTable);
+      CHECK_OFFSET(Task, 0x00, mAccountID);
+      CHECK_OFFSET(Task, 0x08, mTaskID);
+      CHECK_OFFSET(Task, 0x10, mTitleID);
+      CHECK_OFFSET(Task, 0x18, mVirtualTable);
    CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(Task, 0x20);

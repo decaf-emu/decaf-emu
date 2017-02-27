@@ -1,8 +1,8 @@
 #pragma once
-#include "common/types.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/be_val.h>
+#include <common/structsize.h>
 
 namespace coreinit
 {

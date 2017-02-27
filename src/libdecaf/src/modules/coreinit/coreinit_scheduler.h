@@ -1,6 +1,6 @@
 #pragma once
-#include "common/types.h"
 #include "coreinit_thread.h"
+#include <cstdint>
 
 namespace coreinit
 {

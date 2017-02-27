@@ -4,7 +4,7 @@
 #include "coreinit_thread.h"
 #include "gpu/gpu_flush.h"
 #include "libcpu/mem.h"
-#include "common/teenyheap.h"
+#include <common/teenyheap.h>
 #include <array>
 
 namespace coreinit

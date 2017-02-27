@@ -1,11 +1,12 @@
 #pragma once
-#include "common/bitfield.h"
-#include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_memlist.h"
 #include "coreinit_spinlock.h"
-#include "common/structsize.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/bitfield.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace coreinit
 {

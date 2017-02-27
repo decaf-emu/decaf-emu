@@ -1,5 +1,5 @@
 #include "achurchtests.h"
-#include "common/log.h"
+#include <common/log.h>
 #include "libcpu/cpu.h"
 #include "libcpu/espresso/espresso_disassembler.h"
 #include "libcpu/mem.h"

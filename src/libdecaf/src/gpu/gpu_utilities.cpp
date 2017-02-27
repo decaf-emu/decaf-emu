@@ -1,5 +1,5 @@
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include "gpu_utilities.h"
 
 namespace gpu

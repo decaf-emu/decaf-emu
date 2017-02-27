@@ -1,4 +1,4 @@
-#include "common/platform.h"
+#include <common/platform.h>
 #include "jit_vmemruntime.h"
 
 #ifndef PLATFORM_WINDOWS

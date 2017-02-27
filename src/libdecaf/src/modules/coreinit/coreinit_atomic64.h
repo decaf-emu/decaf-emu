@@ -1,6 +1,7 @@
 #pragma once
-#include "common/types.h"
-#include "common/be_val.h"
+#include <cstdint>
+#include <common/be_val.h>
+#include <common/cbool.h>
 
 namespace coreinit
 {

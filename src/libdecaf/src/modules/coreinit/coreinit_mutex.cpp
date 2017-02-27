@@ -3,7 +3,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {

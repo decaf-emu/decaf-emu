@@ -1,5 +1,5 @@
 #include "jit_insreg.h"
-#include "common/bitutils.h"
+#include <common/bitutils.h>
 
 using espresso::XERegisterBits;
 using espresso::ConditionRegisterFlag;

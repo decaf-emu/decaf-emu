@@ -9,9 +9,10 @@
 #include "coreinit_internal_queue.h"
 #include "coreinit_internal_idlock.h"
 #include "ppcutils/wfunc_call.h"
-#include "libcpu/cpu.h"
-#include "common/decaf_assert.h"
+
 #include <array>
+#include <common/decaf_assert.h>
+#include <libcpu/cpu.h>
 
 namespace coreinit
 {

@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_mcp.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include "decaf_config.h"
 #include "kernel/kernel.h"
 

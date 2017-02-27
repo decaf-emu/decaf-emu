@@ -1,7 +1,5 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
-#include "common/murmur3.h"
 #include "decaf_config.h"
 #include "gpu/gpu_tiling.h"
 #include "gpu/gpu_utilities.h"
@@ -10,6 +8,10 @@
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
 #include "opengl_driver.h"
+
+#include <common/decaf_assert.h>
+#include <common/murmur3.h>
+#include <libcpu/mem.h>
 #include <glbinding/gl/gl.h>
 #include <glbinding/Meta.h>
 
@@ -532,7 +534,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
                         bool isDepthBuffer,
                         latte::SQ_TILE_MODE tileMode)
 {
-   auto imagePtr = make_virtual_ptr<uint8_t>(baseAddress);
+   auto imagePtr = mem::translate(baseAddress);
    auto bpp = getDataFormatBitsPerElement(format);
    auto srcWidth = width;
    auto srcHeight = height;

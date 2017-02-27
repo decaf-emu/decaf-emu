@@ -1,6 +1,6 @@
 #pragma once
-#include "common/types.h"
-#include "common/teenyheap.h"
+#include <common/teenyheap.h>
+#include <cstdint>
 
 namespace kernel
 {
@@ -12,9 +12,11 @@ TeenyHeap *
 getCodeHeap();
 
 void
-getMEM1Bound(uint32_t *addr, uint32_t *size);
+getMEM1Bound(uint32_t *addr,
+             uint32_t *size);
 
 void
-getMEM2Bound(uint32_t *addr, uint32_t *size);
+getMEM2Bound(uint32_t *addr,
+             uint32_t *size);
 
 } // namespace kernel

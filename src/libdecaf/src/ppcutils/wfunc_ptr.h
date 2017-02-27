@@ -1,8 +1,9 @@
 #pragma once
-#include <ostream>
-#include "common/bitutils.h"
+#include <common/bitutils.h>
 #include "ppctypeconv.h"
-#include "virtual_ptr.h"
+
+#include <ostream>
+#include <libcpu/mem.h>
 
 #pragma pack(push, 1)
 
@@ -12,6 +13,8 @@ struct be_wfunc_ptr;
 template<typename ReturnType, typename... Args>
 struct wfunc_ptr
 {
+   using FunctionType = ReturnType(*)(Args ...);
+
    wfunc_ptr()
    {
       setAddress(0);
@@ -27,15 +30,14 @@ struct wfunc_ptr
       setAddress(addr);
    }
 
+   wfunc_ptr(FunctionType func)
+   {
+      setAddress(mem::untranslate(func));
+   }
+
    wfunc_ptr(be_wfunc_ptr<ReturnType, Args...> func)
    {
       setAddress(func.getAddress());
-   }
-
-   template<bool Endian>
-   wfunc_ptr(const virtual_ptr<void, Endian> &ptr)
-   {
-      setAddress(ptr.getAddress());
    }
 
    void setAddress(ppcaddr_t addr)

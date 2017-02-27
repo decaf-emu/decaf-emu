@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
-#include "common/be_val.h"
-#include "common/structsize.h"
+#include <common/be_val.h>
+#include <common/structsize.h>
 
 namespace coreinit
 {

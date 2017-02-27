@@ -1,7 +1,7 @@
 #include "gx2_draw.h"
 #include "gx2_enum_string.h"
 #include "gpu/pm4_writer.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace gx2
 {

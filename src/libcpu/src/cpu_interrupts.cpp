@@ -1,6 +1,6 @@
 #include "cpu.h"
 #include "cpu_internal.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include <condition_variable>
 #include <atomic>
 

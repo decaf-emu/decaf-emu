@@ -18,7 +18,7 @@
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {
@@ -350,7 +350,7 @@ void checkRunningThreadNoLock(bool yielding)
    }
 
    // Make sure interrupts are enabled
-   BOOL prevState = coreinit::OSEnableInterrupts();
+   auto prevState = coreinit::OSEnableInterrupts();
 
    // Switch thread
    sCurrentThread[coreId] = next;

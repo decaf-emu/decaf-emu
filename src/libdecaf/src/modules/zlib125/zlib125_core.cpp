@@ -1,10 +1,10 @@
 #include "modules/coreinit/coreinit_memheap.h"
-#include "libcpu/mem.h"
 #include "ppcutils/wfunc_ptr.h"
 #include "ppcutils/wfunc_call.h"
-#include "virtual_ptr.h"
 #include "zlib125.h"
-#include "common/decaf_assert.h"
+
+#include <common/decaf_assert.h>
+#include <libcpu/mem.h>
 #include <zlib.h>
 
 namespace zlib125
@@ -64,7 +64,7 @@ zlibAllocWrapper(void *opaque,
                  unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   ZlibAllocFunc allocFunc = wstrm->zalloc;
+   auto allocFunc = reinterpret_cast<ZlibAllocFunc::FunctionType>(wstrm->zalloc.get());
 
    if (allocFunc) {
       return allocFunc(wstrm->opaque, items, size);
@@ -78,7 +78,7 @@ zlibFreeWrapper(void *opaque,
                 void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   ZlibFreeFunc freeFunc = wstrm->zfree;
+   auto freeFunc = reinterpret_cast<ZlibFreeFunc::FunctionType>(wstrm->zfree.get());
 
    if (freeFunc) {
       freeFunc(wstrm->opaque, address);

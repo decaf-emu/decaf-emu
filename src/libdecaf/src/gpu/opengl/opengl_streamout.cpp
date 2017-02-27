@@ -1,12 +1,14 @@
 #ifndef DECAF_NOGL
 
-#include "common/decaf_assert.h"
-#include "common/log.h"
 #include "decaf_config.h"
 #include "gpu/latte_registers.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
+
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include <glbinding/gl/gl.h>
+#include <libcpu/mem.h>
 
 namespace gpu
 {

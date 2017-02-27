@@ -1,6 +1,6 @@
 #include "latte_disassembler.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
 
 namespace latte
 {

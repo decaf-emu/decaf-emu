@@ -5,9 +5,9 @@
 #include "interpreter.h"
 #include "interpreter_float.h"
 #include "interpreter_insreg.h"
-#include "common/bitutils.h"
-#include "common/floatutils.h"
-#include "common/platform_compiler.h"
+#include <common/bitutils.h>
+#include <common/floatutils.h>
+#include <common/platform_compiler.h>
 
 using espresso::FPSCRRegisterBits;
 using espresso::FloatingPointResultFlags;

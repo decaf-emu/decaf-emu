@@ -1,10 +1,11 @@
 #pragma once
-#include "common/types.h"
 #include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
+
+#include <cstdint>
+#include <common/be_val.h>
+#include <common/structsize.h>
 
 namespace gx2
 {
@@ -50,12 +51,15 @@ void
 GX2InitTextureRegs(GX2Texture *texture);
 
 void
-GX2SetPixelTexture(GX2Texture *texture, uint32_t unit);
+GX2SetPixelTexture(GX2Texture *texture,
+                   uint32_t unit);
 
 void
-GX2SetVertexTexture(GX2Texture *texture, uint32_t unit);
+GX2SetVertexTexture(GX2Texture *texture,
+                    uint32_t unit);
 
 void
-GX2SetGeometryTexture(GX2Texture *texture, uint32_t unit);
+GX2SetGeometryTexture(GX2Texture *texture,
+                      uint32_t unit);
 
 } // namespace gx2

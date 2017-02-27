@@ -1,5 +1,5 @@
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include "glsl2_translate.h"
 #include "glsl2_cf.h"
 #include "gpu/latte_constants.h"

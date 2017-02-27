@@ -1,8 +1,9 @@
 #pragma once
 #include "pm4_buffer.h"
 #include "pm4_format.h"
-#include "virtual_ptr.h"
+
 #include <common/decaf_assert.h>
+#include <libcpu/mem.h>
 #include <gsl.h>
 
 namespace pm4
@@ -48,12 +49,12 @@ public:
       return *this;
    }
 
-   // Read one word as a virtual_ptr
+   // Read one word as a pointer
    template<typename Type>
-   PacketReader &operator()(virtual_ptr<Type> &value)
+   PacketReader &operator()(Type *&value)
    {
       checkSize(1);
-      value.setAddress(mBuffer[mPosition++]);
+      value = mem::translate<Type>(mBuffer[mPosition++]);
       return *this;
    }
 

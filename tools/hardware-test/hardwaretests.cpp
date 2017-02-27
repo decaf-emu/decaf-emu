@@ -5,10 +5,10 @@
 #include "libcpu/src/jit/jit.h"
 #include "hardwaretests.h"
 #include "libcpu/mem.h"
-#include "common/bit_cast.h"
-#include "common/floatutils.h"
-#include "common/log.h"
-#include "common/strutils.h"
+#include <common/bit_cast.h>
+#include <common/floatutils.h>
+#include <common/log.h>
+#include <common/strutils.h>
 #include "libdecaf/src/filesystem/filesystem.h"
 
 #include "libcpu/espresso/espresso_disassembler.h"

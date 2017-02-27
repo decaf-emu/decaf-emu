@@ -1,10 +1,11 @@
 #pragma once
-#include <cstdint>
-#include <atomic>
-#include <functional>
-#include <utility>
 #include "state.h"
-#include "common/types.h"
+
+#include <atomic>
+#include <cstdint>
+#include <functional>
+#include <libcpu/mem.h>
+#include <utility>
 
 struct Tracer;
 

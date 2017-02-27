@@ -1,8 +1,11 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_time.h"
-#include "common/be_val.h"
-#include "common/structsize.h"
+
+#include <common/be_val.h>
+#include <common/cbool.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace coreinit
 {

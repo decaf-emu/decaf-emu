@@ -2,8 +2,10 @@
 #include "modules/nn_result.h"
 #include "modules/coreinit/coreinit_ghs_typeinfo.h"
 #include "nn_boss_titleid.h"
-#include "common/types.h"
-#include "common/structsize.h"
+
+#include <common/be_ptr.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace nn
 {
@@ -39,8 +41,8 @@ protected:
 
 protected:
    CHECK_MEMBER_OFFSET_START
-   CHECK_OFFSET(TaskSetting, 0x00, mTaskSettingData);
-   CHECK_OFFSET(TaskSetting, 0x1000, mVirtualTable);
+      CHECK_OFFSET(TaskSetting, 0x00, mTaskSettingData);
+      CHECK_OFFSET(TaskSetting, 0x1000, mVirtualTable);
    CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(TaskSetting, 0x1004);

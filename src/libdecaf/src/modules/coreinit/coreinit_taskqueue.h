@@ -1,14 +1,16 @@
 #pragma once
-#include "common/types.h"
 #include "coreinit_core.h"
 #include "coreinit_enum.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_time.h"
-#include "common/be_val.h"
-#include "common/be_volatile.h"
-#include "common/structsize.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/be_volatile.h>
+#include <common/cbool.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace coreinit
 {

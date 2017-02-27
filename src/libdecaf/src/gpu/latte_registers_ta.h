@@ -1,6 +1,6 @@
 #pragma once
-#include "common/types.h"
-#include "common/bitfield.h"
+#include <common/bitfield.h>
+#include <cstdint>
 
 namespace latte
 {

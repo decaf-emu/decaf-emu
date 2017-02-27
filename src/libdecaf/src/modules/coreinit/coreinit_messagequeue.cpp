@@ -2,7 +2,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_messagequeue.h"
 #include "coreinit_scheduler.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 #include <array>
 
 namespace coreinit

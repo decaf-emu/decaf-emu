@@ -5,14 +5,14 @@
 #include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
 #include "kernel/kernel_memory.h"
-#include "libcpu/mem.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_call.h"
-#include "common/decaf_assert.h"
-#include "common/teenyheap.h"
-#include "common/strutils.h"
+
 #include <algorithm>
 #include <array>
+#include <common/decaf_assert.h>
+#include <common/teenyheap.h>
+#include <common/strutils.h>
+#include <libcpu/mem.h>
 
 namespace coreinit
 {
@@ -286,17 +286,17 @@ void initialiseDefaultHeaps()
 
    // Create expanding heap for MEM2
    OSGetMemBound(OSMemoryType::MEM2, &addr, &size);
-   auto mem2 = MEMCreateExpHeapEx(make_virtual_ptr<MEMExpHeap>(addr), size, mem2Attribs.value);
+   auto mem2 = MEMCreateExpHeapEx(mem::translate(addr), size, mem2Attribs.value);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, reinterpret_cast<MEMHeapHeader*>(mem2));
 
    // Create frame heap for MEM1
    OSGetMemBound(OSMemoryType::MEM1, &addr, &size);
-   auto mem1 = MEMCreateFrmHeapEx(make_virtual_ptr<MEMFrameHeap>(addr), size, 0);
+   auto mem1 = MEMCreateFrmHeapEx(mem::translate(addr), size, 0);
    MEMSetBaseHeapHandle(MEMBaseHeapType::MEM1, &mem1->header);
 
    // Create frame heap for Foreground
    OSGetForegroundBucketFreeArea(&addr, &size);
-   auto fg = MEMCreateFrmHeapEx(make_virtual_ptr<MEMFrameHeap>(addr), size, 0);
+   auto fg = MEMCreateFrmHeapEx(mem::translate(addr), size, 0);
    MEMSetBaseHeapHandle(MEMBaseHeapType::FG, &fg->header);
 }
 

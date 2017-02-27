@@ -3,8 +3,8 @@
 #include "ppcinvokeargs.h"
 #include "ppcinvokeresult.h"
 #include "ppcinvokelog.h"
-#include "common/log.h"
-#include "common/type_list.h"
+#include <common/log.h>
+#include <common/type_list.h>
 #include "libcpu/cpu.h"
 #include "libcpu/trace.h"
 #include "va_list.h"

@@ -4,7 +4,7 @@
 #include <list>
 #include "espresso_disassembler.h"
 #include "espresso_instructionset.h"
-#include "common/bitutils.h"
+#include <common/bitutils.h>
 
 namespace espresso
 {

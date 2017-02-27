@@ -1,6 +1,6 @@
 #include "jit_insreg.h"
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
 #include <algorithm>
 
 using espresso::XERegisterBits;

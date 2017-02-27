@@ -1,8 +1,9 @@
 #pragma once
-#include "common/types.h"
 #include "gx2_enum.h"
-#include "common/be_val.h"
-#include "virtual_ptr.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <cstdint>
 
 namespace gx2
 {

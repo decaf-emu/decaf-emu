@@ -1,4 +1,4 @@
-#include "common/log.h"
+#include <common/log.h>
 #include "pm4_processor.h"
 #include "pm4_reader.h"
 
@@ -8,7 +8,7 @@ namespace gpu
 void
 Pm4Processor::indirectBufferCall(const pm4::IndirectBufferCall &data)
 {
-   auto buffer = reinterpret_cast<uint32_t*>(data.addr.get());
+   auto buffer = reinterpret_cast<uint32_t *>(data.addr);
    runCommandBuffer(buffer, data.size);
 }
 

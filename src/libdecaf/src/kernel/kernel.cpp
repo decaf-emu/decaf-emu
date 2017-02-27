@@ -7,8 +7,8 @@
 #include "debugger/debugger.h"
 #include "decaf_events.h"
 #include "filesystem/filesystem.h"
-#include "common/platform_fiber.h"
-#include "common/platform_thread.h"
+#include <common/platform_fiber.h>
+#include <common/platform_thread.h>
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_core.h"
@@ -24,8 +24,8 @@
 #include "modules/gx2/gx2_event.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
-#include "common/decaf_assert.h"
-#include "common/teenyheap.h"
+#include <common/decaf_assert.h>
+#include <common/teenyheap.h>
 #include <pugixml.hpp>
 
 namespace coreinit

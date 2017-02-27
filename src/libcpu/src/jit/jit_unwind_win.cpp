@@ -1,5 +1,5 @@
-#include "common/decaf_assert.h"
-#include "common/platform.h"
+#include <common/decaf_assert.h>
+#include <common/platform.h>
 #include "jit_vmemruntime.h"
 
 #ifdef PLATFORM_WINDOWS

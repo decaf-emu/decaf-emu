@@ -1,7 +1,7 @@
 #include "gx2r_buffer.h"
 #include "gx2r_displaylist.h"
 #include "gx2_displaylist.h"
-#include "common/log.h"
+#include <common/log.h>
 
 namespace gx2
 {

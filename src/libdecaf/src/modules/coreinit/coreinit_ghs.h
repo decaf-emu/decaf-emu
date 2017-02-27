@@ -1,9 +1,10 @@
 #pragma once
-#include "common/be_val.h"
-#include "common/bitfield.h"
-#include "common/structsize.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/bitfield.h>
+#include <common/structsize.h>
 
 namespace coreinit
 {
@@ -14,13 +15,13 @@ GHS_FOPEN_MAX = 0x14;
 static const uint32_t
 GHS_FLOCK_MAX = 0x64;
 
-extern be_wfunc_ptr<void>*
+extern be_wfunc_ptr<void> *
 p__atexit_cleanup;
 
-extern be_wfunc_ptr<void>*
+extern be_wfunc_ptr<void> *
 p__stdio_cleanup;
 
-extern be_val<uint16_t>*
+extern be_val<uint16_t> *
 p__gh_FOPEN_MAX;
 
 BITFIELD(_ghs_iobuf_bits, uint32_t)

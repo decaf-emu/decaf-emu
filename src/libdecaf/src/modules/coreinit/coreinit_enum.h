@@ -1,7 +1,7 @@
 #ifndef COREINIT_ENUM_H
 #define COREINIT_ENUM_H
 
-#include "common/enum_start.h"
+#include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(coreinit)
 
@@ -367,6 +367,6 @@ ENUM_END(UCDataType)
 
 ENUM_NAMESPACE_END(coreinit)
 
-#include "common/enum_end.h"
+#include <common/enum_end.h>
 
 #endif // ifdef COREINIT_ENUM_H

@@ -1,12 +1,12 @@
 #pragma once
-#include <cstdint>
-#include <unordered_map>
-#include "common/log.h"
 #include "kernel_hlesymbol.h"
 #include "kernel_hlefunction.h"
 #include "kernel_hledata.h"
-#include "virtual_ptr.h"
 #include "ppcutils/wfunc_ptr.h"
+
+#include <common/log.h>
+#include <cstdint>
+#include <unordered_map>
 
 #define RegisterKernelFunction(fn) \
    RegisterKernelFunctionName(#fn, fn)
@@ -44,7 +44,7 @@ public:
 
    virtual void initialise() = 0;
    virtual const HleSymbolMap &getSymbolMap() const = 0;
-   virtual virtual_ptr<void> findExportAddress(const std::string &name) const = 0;
+   virtual void *findExportAddress(const std::string &name) const = 0;
 };
 
 template<typename ModuleType>
@@ -59,7 +59,7 @@ public:
       return getStaticSymbolMap();
    }
 
-   virtual virtual_ptr<void>
+   virtual void *
    findExportAddress(const std::string &name) const override
    {
       auto &symbols = getSymbolMap();

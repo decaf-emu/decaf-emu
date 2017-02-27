@@ -3,7 +3,7 @@
 #include "hardwaretests.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 std::shared_ptr<spdlog::logger>
 gLog;

@@ -1,7 +1,7 @@
 #ifndef LATTE_ENUM_PA_H
 #define LATTE_ENUM_PA_H
 
-#include "common/enum_start.h"
+#include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(latte)
 
@@ -40,6 +40,6 @@ ENUM_END(PA_SU_VTX_CNTL_QUANT_MODE)
 
 ENUM_NAMESPACE_END(latte)
 
-#include "common/enum_end.h"
+#include <common/enum_end.h>
 
 #endif // ifdef LATTE_ENUM_PA_H

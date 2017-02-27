@@ -1,12 +1,15 @@
 #pragma once
-#include "common/be_val.h"
-#include "common/fixed.h"
-#include "common/structsize.h"
-#include "common/types.h"
 #include "ppcutils/va_list.h"
 #include "snd_core_constants.h"
 #include "snd_core_device.h"
 #include "snd_core_enum.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/cbool.h>
+#include <common/fixed.h>
+#include <common/structsize.h>
+#include <cstdint>
 #include <vector>
 
 namespace snd_core

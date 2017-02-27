@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_semaphore.h"
 #include "coreinit_scheduler.h"
-#include "common/decaf_assert.h"
+#include <common/decaf_assert.h>
 
 namespace coreinit
 {

@@ -1,5 +1,5 @@
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter.h"

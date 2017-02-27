@@ -32,8 +32,8 @@ sFrameCallbackThreadEntryPoint;
 static coreinit::AlarmCallback
 sFrameAlarmHandler = nullptr;
 
-static virtual_ptr<coreinit::OSAlarm>
-sFrameAlarm;
+static coreinit::OSAlarm *
+sFrameAlarm = nullptr;
 
 static coreinit::OSThread *
 sFrameCallbackThread;
@@ -397,7 +397,7 @@ Module::registerCoreFunctions()
 void
 Module::initialiseCore()
 {
-   sFrameAlarmHandler = findExportAddress("internal_FrameAlarmHandler");
+   sFrameAlarmHandler = reinterpret_cast<coreinit::AlarmCallback::FunctionType>(findExportAddress("internal_FrameAlarmHandler"));
 }
 
 } // namespace snd_core

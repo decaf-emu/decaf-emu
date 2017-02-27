@@ -8,7 +8,8 @@ namespace acp
 {
 
 nn::Result
-GetTitleMetaXml(uint64_t id, ACPMetaXml *data)
+GetTitleMetaXml(uint64_t id,
+                ACPMetaXml *data)
 {
    decaf_warn_stub();
 

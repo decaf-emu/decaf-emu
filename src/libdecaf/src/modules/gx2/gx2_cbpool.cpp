@@ -1,6 +1,6 @@
-#include "common/align.h"
-#include "common/log.h"
-#include "common/decaf_assert.h"
+#include <common/align.h>
+#include <common/log.h>
+#include <common/decaf_assert.h>
 #include "gx2_cbpool.h"
 #include "gx2_event.h"
 #include "gx2_displaylist.h"

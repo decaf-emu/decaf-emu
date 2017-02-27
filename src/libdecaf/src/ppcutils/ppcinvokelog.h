@@ -1,8 +1,7 @@
 #pragma once
 #include <cstdio>
+#include <common/strutils.h>
 #include <string>
-#include "common/strutils.h"
-#include "virtual_ptr.h"
 #include <spdlog/fmt/fmt.h>
 
 namespace ppctypes
@@ -72,27 +71,12 @@ logArgument(LogState &state, const char *value)
    }
 }
 
-// virtual_ptr<Type>
-template<typename Type>
-inline void
-logArgument(LogState &state, virtual_ptr<Type> value)
-{
-   logArgument(state, value.getAddress());
-}
-
-// char *
-inline void
-logArgument(LogState &state, char *value)
-{
-   logArgument(state, make_virtual_ptr<char>(value));
-}
-
 // Type *
 template<typename Type>
 inline void
 logArgument(LogState &state, Type *value)
 {
-   logArgument(state, make_virtual_ptr<Type>(value));
+   logArgument(state, mem::untranslate(value));
 }
 
 // Log generic (not enum)

@@ -1,4 +1,4 @@
-#include "common/log.h"
+#include <common/log.h>
 #include "glsl2_translate.h"
 #include "gpu/microcode/latte_instructions.h"
 

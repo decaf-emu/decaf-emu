@@ -4,6 +4,6 @@
 #include "gx2_enum.h"
 
 #undef GX2_ENUM_H
-#include "common/enum_string_declare.h"
+#include <common/enum_string_declare.h>
 #include "gx2_enum.h"
-#include "common/enum_end.h"
+#include <common/enum_end.h>

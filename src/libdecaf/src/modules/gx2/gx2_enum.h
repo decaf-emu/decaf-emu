@@ -1,7 +1,7 @@
 #ifndef GX2_ENUM_H
 #define GX2_ENUM_H
 
-#include "common/enum_start.h"
+#include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(gx2)
 
@@ -197,6 +197,14 @@ ENUM_BEG(GX2FrontFace, uint32_t)
    ENUM_VALUE(CounterClockwise,     0)
    ENUM_VALUE(Clockwise,            1)
 ENUM_END(GX2FrontFace)
+
+ENUM_BEG(GX2InitAttrib, uint32_t)
+   ENUM_VALUE(End,                     0)
+   ENUM_VALUE(CommandBufferPoolBase,   1)
+   ENUM_VALUE(CommandBufferPoolSize,   2)
+   ENUM_VALUE(ArgC,                    7)
+   ENUM_VALUE(ArgV,                    8)
+ENUM_END(GX2InitAttrib)
 
 ENUM_BEG(GX2IndexType, uint32_t)
    ENUM_VALUE(U16_LE,               0x0)
@@ -546,6 +554,6 @@ ENUM_END(GX2ShaderVarType)
 
 ENUM_NAMESPACE_END(gx2)
 
-#include "common/enum_end.h"
+#include <common/enum_end.h>
 
 #endif // ifdef GX2_ENUM_H

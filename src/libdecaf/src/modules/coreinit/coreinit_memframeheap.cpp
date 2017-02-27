@@ -1,10 +1,10 @@
 #include "coreinit.h"
 #include "coreinit_memheap.h"
 #include "coreinit_memframeheap.h"
-#include "libcpu/mem.h"
-#include "libcpu/mem.h"
-#include "common/align.h"
-#include "virtual_ptr.h"
+
+#include <common/align.h>
+#include <libcpu/mem.h>
+#include <libcpu/mem.h>
 
 namespace coreinit
 {

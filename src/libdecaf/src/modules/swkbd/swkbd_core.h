@@ -1,5 +1,5 @@
 #pragma once
-#include "common/structsize.h"
+#include <common/structsize.h>
 #include "decaf_input.h"
 
 struct FSClient;

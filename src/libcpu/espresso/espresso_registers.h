@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdint>
 #include <atomic>
+#include <cstdint>
 
 namespace espresso
 {

@@ -1,6 +1,6 @@
 #pragma once
 #include "libcpu/cpu.h"
-#include "common/platform_fiber.h"
+#include <common/platform_fiber.h>
 #include "kernel_gameinfo.h"
 
 class TeenyHeap;

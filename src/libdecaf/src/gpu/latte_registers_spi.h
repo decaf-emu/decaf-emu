@@ -1,7 +1,8 @@
 #pragma once
-#include "common/types.h"
-#include "common/bitfield.h"
 #include "latte_enum_spi.h"
+
+#include <common/bitfield.h>
+#include <cstdint>
 
 namespace latte
 {

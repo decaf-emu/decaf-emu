@@ -5,7 +5,7 @@
 #include "coreinit_sprintf.h"
 #include "coreinit_thread.h"
 #include "kernel/kernel_loader.h"
-#include "common/log.h"
+#include <common/log.h>
 
 namespace coreinit
 {

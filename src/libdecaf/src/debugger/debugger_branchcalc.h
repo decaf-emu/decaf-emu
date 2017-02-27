@@ -1,6 +1,6 @@
 #pragma once
-#include "common/bitutils.h"
-#include "common/decaf_assert.h"
+#include <common/bitutils.h>
+#include <common/decaf_assert.h>
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 #include "libcpu/espresso/espresso_instructionset.h"

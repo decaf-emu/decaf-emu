@@ -1,8 +1,11 @@
 #pragma once
-#include "common/types.h"
 #include "coreinit_enum.h"
 #include "coreinit_ios.h"
-#include "common/structsize.h"
+
+#include <common/be_ptr.h>
+#include <common/be_val.h>
+#include <common/structsize.h>
+#include <cstdint>
 
 namespace coreinit
 {
