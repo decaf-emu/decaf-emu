@@ -32,7 +32,7 @@ struct wfunc_ptr
 
    wfunc_ptr(FunctionType func)
    {
-      setAddress(mem::untranslate(func));
+      setAddress(mem::untranslate(reinterpret_cast<void *>(func)));
    }
 
    wfunc_ptr(be_wfunc_ptr<ReturnType, Args...> func)
