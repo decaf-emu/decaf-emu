@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
    cpu::start();
    cpu::join();
 
+#ifdef _WIN32
    system("PAUSE");
+#endif
    return runResult;
 }
