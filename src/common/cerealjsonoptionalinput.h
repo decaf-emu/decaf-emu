@@ -45,11 +45,11 @@ namespace cereal
 class JSONOptionalInputArchive : public InputArchive<JSONOptionalInputArchive>, public traits::TextArchive
 {
 private:
-   using ReadStream = rapidjson::IStreamWrapper;
-   typedef rapidjson::GenericValue<rapidjson::UTF8<>> JSONValue;
+   using ReadStream = CEREAL_RAPIDJSON_NAMESPACE::IStreamWrapper;
+   typedef CEREAL_RAPIDJSON_NAMESPACE::GenericValue<CEREAL_RAPIDJSON_NAMESPACE::UTF8<>> JSONValue;
    typedef JSONValue::ConstMemberIterator MemberIterator;
    typedef JSONValue::ConstValueIterator ValueIterator;
-   typedef rapidjson::Document::GenericValue GenericValue;
+   typedef CEREAL_RAPIDJSON_NAMESPACE::Document::GenericValue GenericValue;
 
 public:
    /*! @name Common Functionality
@@ -63,12 +63,18 @@ public:
       itsNextName(nullptr),
       itsReadStream(stream)
    {
-      itsDocument.ParseStream<rapidjson::kParseFullPrecisionFlag | rapidjson::kParseCommentsFlag | rapidjson::kParseTrailingCommasFlag>(itsReadStream);
+      itsDocument.ParseStream<
+         CEREAL_RAPIDJSON_NAMESPACE::kParseCommentsFlag |
+         CEREAL_RAPIDJSON_NAMESPACE::kParseTrailingCommasFlag |
+         CEREAL_RAPIDJSON_NAMESPACE::kParseFullPrecisionFlag |
+         CEREAL_RAPIDJSON_NAMESPACE::kParseNanAndInfFlag>(itsReadStream);
       if (itsDocument.IsArray())
          itsIteratorStack.emplace_back(itsDocument.Begin(), itsDocument.End());
       else
          itsIteratorStack.emplace_back(itsDocument.MemberBegin(), itsDocument.MemberEnd());
    }
+
+   ~JSONOptionalInputArchive() CEREAL_NOEXCEPT = default;
 
    //! Loads some binary data, encoded as a base64 string
    /*! This will automatically start and finish a node to load the data, and can be called directly by
@@ -111,11 +117,15 @@ private:
       Iterator(MemberIterator begin, MemberIterator end) :
          itsMemberItBegin(begin), itsMemberItEnd(end), itsIndex(0), itsType(Member)
       {
+         if (std::distance(begin, end) == 0)
+            itsType = Null_;
       }
 
       Iterator(ValueIterator begin, ValueIterator end) :
          itsValueItBegin(begin), itsValueItEnd(end), itsIndex(0), itsType(Value)
       {
+         if (std::distance(begin, end) == 0)
+            itsType = Null_;
       }
 
       //! Advance to the next node
@@ -131,7 +141,7 @@ private:
          switch (itsType) {
          case Value: return itsValueItBegin[itsIndex];
          case Member: return itsMemberItBegin[itsIndex].value;
-         default: throw cereal::Exception("Invalid Iterator Type!");
+         default: throw cereal::Exception("JSONInputArchive internal error: null or empty iterator to object or array!");
          }
       }
 
@@ -166,10 +176,7 @@ private:
       MemberIterator itsMemberItBegin, itsMemberItEnd; //!< The member iterator (object)
       ValueIterator itsValueItBegin, itsValueItEnd;    //!< The value iterator (array)
       size_t itsIndex;                                 //!< The current index of this iterator
-      enum Type
-      {
-         Value, Member, Null_
-      } itsType;    //!< Whether this holds values (array) or members (objects) or nothing
+      enum Type {Value, Member, Null_} itsType;        //!< Whether this holds values (array) or members (objects) or nothing
    };
 
    //! Searches for the expectedName node if it doesn't match the actualName
@@ -442,7 +449,7 @@ private:
    const char * itsNextName;               //!< Next name set by NVP
    ReadStream itsReadStream;               //!< Rapidjson write stream
    std::vector<Iterator> itsIteratorStack; //!< 'Stack' of rapidJSON iterators
-   rapidjson::Document itsDocument;        //!< Rapidjson document
+   CEREAL_RAPIDJSON_NAMESPACE::Document itsDocument; //!< Rapidjson document
 };
 
 // ######################################################################
