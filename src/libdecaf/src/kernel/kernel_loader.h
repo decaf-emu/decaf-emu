@@ -3,6 +3,7 @@
 
 #include <common/decaf_assert.h>
 #include <libcpu/mem.h>
+#include <limits>
 #include <vector>
 #include <map>
 
@@ -119,7 +120,7 @@ struct LoadedModule
    uint32_t defaultStackSize = 0;
    ppcaddr_t sdaBase = 0;
    ppcaddr_t sda2Base = 0;
-   uint32_t tlsModuleIndex = -1;
+   uint32_t tlsModuleIndex = std::numeric_limits<uint32_t>::max();
    ppcaddr_t tlsBase = 0;
    uint32_t tlsAlignShift = 0;
    uint32_t tlsSize = 0;
