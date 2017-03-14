@@ -31,14 +31,14 @@ CHECK_SIZE(MCPSysProdSettings, 0x46);
 
 #pragma pack(pop)
 
-IOHandle
+IOSHandle
 MCP_Open();
 
 void
-MCP_Close(IOHandle handle);
+MCP_Close(IOSHandle handle);
 
-IOError
-MCP_GetSysProdSettings(IOHandle handle,
+MCPError
+MCP_GetSysProdSettings(IOSHandle handle,
                        MCPSysProdSettings *settings);
 
 /** @} */

@@ -1,12 +1,14 @@
 #pragma once
+#include "coreinit_enum.h"
+
 #include <cstdint>
 
 namespace coreinit
 {
 
-using IOHandle = uint32_t;
+using IOSHandle = uint32_t;
 
-static const IOHandle IOInvalidHandle = -1;
+static const IOSHandle IOSInvalidHandle = -1;
 
 /*
 Unimplemented IOS functions:
@@ -33,10 +35,5 @@ IOS_WriteAsync
 IOS_WriteAsyncEx
 */
 
-enum class IOError
-{
-   OK       = 0,
-   Generic  = -1
-};
 
 } // namespace coreinit

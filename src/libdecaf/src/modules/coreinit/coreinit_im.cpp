@@ -10,32 +10,32 @@ sAPDEnabled = TRUE;
 static BOOL
 sDimEnabled = TRUE;
 
-IOError
+IMError
 IMDisableAPD()
 {
    sAPDEnabled = FALSE;
-   return IOError::OK;
+   return IMError::OK;
 }
 
-IOError
+IMError
 IMDisableDim()
 {
    sDimEnabled = FALSE;
-   return IOError::OK;
+   return IMError::OK;
 }
 
-IOError
+IMError
 IMEnableAPD()
 {
    sAPDEnabled = TRUE;
-   return IOError::OK;
+   return IMError::OK;
 }
 
-IOError
+IMError
 IMEnableDim()
 {
    sDimEnabled = TRUE;
-   return IOError::OK;
+   return IMError::OK;
 }
 
 BOOL
@@ -56,20 +56,20 @@ IMIsDimEnabled()
    return sDimEnabled;
 }
 
-IOError
+IMError
 IMGetTimeBeforeAPD(be_val<uint32_t> *seconds)
 {
    // Let's just put it to 1 hour
    *seconds = 60 * 60;
-   return IOError::OK;
+   return IMError::OK;
 }
 
-IOError
+IMError
 IMGetTimeBeforeDimming(be_val<uint32_t> *seconds)
 {
    // Let's just put it to 30 minutes
    *seconds = 30 * 60;
-   return IOError::OK;
+   return IMError::OK;
 }
 
 void

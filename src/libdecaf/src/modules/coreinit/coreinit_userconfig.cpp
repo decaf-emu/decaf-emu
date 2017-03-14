@@ -17,7 +17,7 @@ struct UCConfigEntry
 static std::vector<UCConfigEntry>
 sUserConfig;
 
-static const IOHandle
+static const IOSHandle
 sUCHandle = 0x12345678;
 
 static bool
@@ -74,23 +74,25 @@ updateSetting(UCSysConfig &setting)
    return false;
 }
 
-IOHandle
+IOSHandle
 UCOpen()
 {
    return sUCHandle;
 }
 
 void
-UCClose(IOHandle handle)
+UCClose(IOSHandle handle)
 {
    decaf_check(handle == sUCHandle);
 }
 
-IOError
-UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
+UCError
+UCReadSysConfig(IOSHandle handle, uint32_t count, UCSysConfig *settings)
 {
-   if (handle != sUCHandle) {
-      return IOError::Generic;
+   decaf_check(handle == sUCHandle);
+
+   if (!settings) {
+      return UCError::InvalidBuffer;
    }
 
    for (auto i = 0u; i < count; ++i) {
@@ -101,14 +103,16 @@ UCReadSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
       }
    }
 
-   return IOError::OK;
+   return UCError::OK;
 }
 
-IOError
-UCWriteSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
+UCError
+UCWriteSysConfig(IOSHandle handle, uint32_t count, UCSysConfig *settings)
 {
-   if (handle != sUCHandle) {
-      return IOError::Generic;
+   decaf_check(handle == sUCHandle);
+
+   if (!settings) {
+      return UCError::InvalidBuffer;
    }
 
    for (auto i = 0u; i < count; ++i) {
@@ -127,7 +131,7 @@ UCWriteSysConfig(IOHandle handle, uint32_t count, UCSysConfig *settings)
       }
    }
 
-   return IOError::OK;
+   return UCError::OK;
 }
 
 static void

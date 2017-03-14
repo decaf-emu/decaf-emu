@@ -8,16 +8,16 @@
 namespace coreinit
 {
 
-IOError
+IMError
 IMDisableAPD();
 
-IOError
+IMError
 IMDisableDim();
 
-IOError
+IMError
 IMEnableAPD();
 
-IOError
+IMError
 IMEnableDim();
 
 BOOL
@@ -29,10 +29,10 @@ IMIsAPDEnabledBySysSettings();
 BOOL
 IMIsDimEnabled();
 
-IOError
+IMError
 IMGetTimeBeforeAPD(be_val<uint32_t> *seconds);
 
-IOError
+IMError
 IMGetTimeBeforeDimming(be_val<uint32_t> *seconds);
 
 } // namespace coreinit

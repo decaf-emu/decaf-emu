@@ -32,19 +32,19 @@ CHECK_SIZE(UCSysConfig, 0x54);
 
 #pragma pack(pop)
 
-IOHandle
+IOSHandle
 UCOpen();
 
 void
-UCClose(IOHandle handle);
+UCClose(IOSHandle handle);
 
-IOError
-UCReadSysConfig(IOHandle handle,
+UCError
+UCReadSysConfig(IOSHandle handle,
                 uint32_t count,
                 UCSysConfig *settings);
 
-IOError
-UCWriteSysConfig(IOHandle handle,
+UCError
+UCWriteSysConfig(IOSHandle handle,
                  uint32_t count,
                  UCSysConfig *settings);
 

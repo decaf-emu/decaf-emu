@@ -7,32 +7,34 @@
 namespace coreinit
 {
 
-static const IOHandle
+static const IOSHandle
 sMCPHandle = 0x12345678;
 
-IOHandle
+IOSHandle
 MCP_Open()
 {
    return sMCPHandle;
 }
 
 void
-MCP_Close(IOHandle handle)
+MCP_Close(IOSHandle handle)
 {
    decaf_check(handle == sMCPHandle);
 }
 
-IOError
-MCP_GetSysProdSettings(IOHandle handle, MCPSysProdSettings *settings)
+MCPError
+MCP_GetSysProdSettings(IOSHandle handle, MCPSysProdSettings *settings)
 {
-   if (handle != sMCPHandle) {
-      return IOError::Generic;
+   decaf_check(handle == sMCPHandle);
+
+   if (!settings) {
+      return MCPError::InvalidBuffer;
    }
 
    std::memset(settings, 0, sizeof(MCPSysProdSettings));
    settings->gameRegion = static_cast<SCIRegion>(kernel::getGameInfo().meta.region);
    settings->platformRegion = static_cast<SCIRegion>(decaf::config::system::region);
-   return IOError::OK;
+   return MCPError::OK;
 }
 
 void
