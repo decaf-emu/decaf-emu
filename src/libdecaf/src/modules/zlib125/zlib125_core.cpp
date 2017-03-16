@@ -64,7 +64,7 @@ zlibAllocWrapper(void *opaque,
                  unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   auto allocFunc = reinterpret_cast<ZlibAllocFunc::FunctionType>(wstrm->zalloc.get());
+   auto allocFunc = ZlibAllocFunc { reinterpret_cast<ZlibAllocFunc::FunctionType>(wstrm->zalloc.get()) };
 
    if (allocFunc) {
       return allocFunc(wstrm->opaque, items, size);
@@ -78,7 +78,7 @@ zlibFreeWrapper(void *opaque,
                 void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   auto freeFunc = reinterpret_cast<ZlibFreeFunc::FunctionType>(wstrm->zfree.get());
+   auto freeFunc = ZlibFreeFunc { reinterpret_cast<ZlibFreeFunc::FunctionType>(wstrm->zfree.get()) };
 
    if (freeFunc) {
       freeFunc(wstrm->opaque, address);
