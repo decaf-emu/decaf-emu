@@ -170,6 +170,10 @@ ENUM_BEG(OSSharedDataType, uint32_t)
    ENUM_VALUE(FontTaiwanese,        3)
 ENUM_END(OSSharedDataType)
 
+ENUM_BEG(OSShutdownReason, uint32_t)
+   ENUM_VALUE(NoShutdown,           0)
+ENUM_END(OSShutdownReason)
+
 ENUM_BEG(OSThreadAttributes, uint8_t)
    //! Allow the thread to run on CPU0.
    ENUM_VALUE(AffinityCPU0,         1 << 0)

@@ -83,6 +83,12 @@ OSGetOSID()
    return kernel::getGameInfo().app.os_version;
 }
 
+OSShutdownReason
+OSGetShutdownReason()
+{
+   return OSShutdownReason::NoShutdown;
+}
+
 void
 Module::initialiseSystemInformation()
 {
@@ -111,6 +117,7 @@ Module::registerSystemInfoFunctions()
    RegisterKernelFunction(OSBlockThreadsOnExit);
    RegisterKernelFunction(OSGetTitleID);
    RegisterKernelFunction(OSGetOSID);
+   RegisterKernelFunction(OSGetShutdownReason);
 
    RegisterInternalData(sSystemInfo);
 }

@@ -59,4 +59,7 @@ OSGetTitleID();
 uint64_t
 OSGetOSID();
 
+OSShutdownReason
+OSGetShutdownReason();
+
 } // namespace coreinit
