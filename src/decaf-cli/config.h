@@ -14,7 +14,6 @@ extern uint32_t timeout_ms;
 namespace log
 {
 
-extern bool async;
 extern bool to_file;
 extern bool to_stdout;
 extern std::string level;

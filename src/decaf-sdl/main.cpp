@@ -295,6 +295,8 @@ start(excmd::parser &parser,
 
    if (config::log::async) {
       spdlog::set_async_mode(1024);
+   } else {
+      spdlog::set_sync_mode();
    }
 
    for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {

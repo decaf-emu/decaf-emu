@@ -82,6 +82,10 @@ initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
    gLog = std::make_shared<spdlog::logger>("decaf", begin(sinks), end(sinks));
    gLog->set_level(level);
    gLog->set_formatter(std::make_shared<LogFormatter>());
+
+   if (!decaf::config::log::async) {
+      gLog->flush_on(spdlog::level::trace);
+   }
 }
 
 bool

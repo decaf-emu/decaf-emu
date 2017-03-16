@@ -42,6 +42,7 @@ bool verify = false;
 namespace log
 {
 
+bool async = false;
 bool kernel_trace = false;
 bool kernel_trace_res = false;
 bool branch_trace = false;

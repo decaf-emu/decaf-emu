@@ -57,6 +57,9 @@ extern bool verify;
 namespace log
 {
 
+//! Enable asynchronous logging
+extern bool async;
+
 //! Enable logging for all HLE function calls
 extern bool kernel_trace;
 
