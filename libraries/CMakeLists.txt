@@ -88,13 +88,14 @@ if(NOT glbinding_FOUND)
             -DOPTION_BUILD_EXAMPLES:string=off
             -DOPTION_BUILD_TESTS:string=off
             -DOPTION_BUILD_TOOLS:string=off
+            -DOPTION_BUILD_GPU_TESTS:string=off
         INSTALL_COMMAND "")
     externalproject_get_property(glbinding BINARY_DIR)
     externalproject_add_step(glbinding
         copy_to_binary
         DEPENDEES build
         DEPENDERS install
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/$(Configuration)" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
     set_target_properties(glbinding PROPERTIES FOLDER libraries)
 
     if (MSVC)
@@ -113,11 +114,15 @@ if(NOT glbinding_FOUND)
     set_target_properties(glbinding_import PROPERTIES ${GLBINDING_IMPORTED_LOCATION})
 
     add_library(glbinding_final INTERFACE)
+    add_dependencies(glbinding_final glbinding_import)
     target_include_directories(glbinding_final INTERFACE
         "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}/source/glbinding/include"
         "${BINARY_DIR}/source/glbinding/include")
     target_link_libraries(glbinding_final INTERFACE glbinding_import)
     set(GLBINDING_LIBRARIES glbinding_final PARENT_SCOPE)
+
+    install(FILES "${BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding$<$<CONFIG:Debug>:d>${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}")
 else()
     set(GLBINDING_LIBRARIES glbinding PARENT_SCOPE)
 endif()
@@ -180,7 +185,7 @@ if(DECAF_SDL)
             copy_to_binary
             DEPENDEES build
             DEPENDERS install
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/$(Configuration)" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
         set_target_properties(sdl2 PROPERTIES FOLDER libraries)
 
         if(MSVC)
@@ -200,6 +205,9 @@ if(DECAF_SDL)
 
         set(SDL2_LIBRARIES sdl2_import)
         set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/${SDL2_DIR}/include")
+
+        install(FILES "${BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}/${CMAKE_FIND_LIBRARY_PREFIXES}sdl2${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}")
     endif()
 
     add_library(sdl2_final INTERFACE)
@@ -243,7 +251,7 @@ if(NOT ZLIB_FOUND)
         copy_to_binary
         DEPENDEES build
         DEPENDERS install
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/$(Configuration)" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
     set_target_properties(zlib PROPERTIES FOLDER libraries)
 
     if(MSVC)
@@ -263,6 +271,9 @@ if(NOT ZLIB_FOUND)
 
     set(ZLIB_LIBRARIES zlib_import)
     set(ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${ZLIB_DIR} ${BINARY_DIR})
+
+    install(FILES "${BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}/${CMAKE_FIND_LIBRARY_PREFIXES}zlib$<$<CONFIG:Debug>:d>1${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}")
 endif()
 
 add_library(zlib_final INTERFACE)

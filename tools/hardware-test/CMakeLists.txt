@@ -13,4 +13,4 @@ target_link_libraries(hardware-test
     common
     libdecaf)
 
-install(TARGETS hardware-test RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+install(TARGETS hardware-test RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests")

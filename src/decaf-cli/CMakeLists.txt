@@ -12,4 +12,4 @@ target_link_libraries(decaf-cli
     libdecaf
     ${EXCMD_LIBRARIES})
 
-install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")

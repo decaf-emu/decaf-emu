@@ -12,4 +12,4 @@ target_link_libraries(hardware-test-generator
     common
     libcpu)
 
-install(TARGETS hardware-test-generator RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+install(TARGETS hardware-test-generator RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests")
