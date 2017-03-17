@@ -51,6 +51,7 @@ private:
    static void registerCacheFunctions();
    static void registerDebugFunctions();
    static void registerDeviceFunctions();
+   static void registerDriverFunctions();
    static void registerDynLoadFunctions();
    static void registerEventFunctions();
    static void registerExceptionFunctions();

@@ -44,6 +44,7 @@ Module::RegisterFunctions()
    registerCacheFunctions();
    registerDebugFunctions();
    registerDeviceFunctions();
+   registerDriverFunctions();
    registerDynLoadFunctions();
    registerEventFunctions();
    registerExceptionFunctions();

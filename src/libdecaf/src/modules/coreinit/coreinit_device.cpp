@@ -13,19 +13,6 @@ namespace coreinit
 static SIDevice
 sInputDevice = { 0 };
 
-static BOOL
-OSDriver_Register(uint32_t r3,
-                  uint32_t r4,
-                  void *r5,
-                  uint32_t r6,
-                  uint32_t r7,
-                  uint32_t *r8,
-                  uint32_t r9)
-{
-   // TODO: OSDriver_Register
-   return FALSE;
-}
-
 void
 OSEnforceInorderIO()
 {
