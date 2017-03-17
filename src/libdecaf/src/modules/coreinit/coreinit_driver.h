@@ -80,7 +80,7 @@ CHECK_SIZE(OSDriver, 0x4C);
 BOOL
 OSDriver_Register(ModuleHandle moduleHandle,
                   uint32_t inUnk1,
-                  OSDriverInterface driverInterface,
+                  OSDriverInterface *driverInterface,
                   uint32_t inUnk2,
                   uint32_t *outUnk1,
                   uint32_t *outUnk2,

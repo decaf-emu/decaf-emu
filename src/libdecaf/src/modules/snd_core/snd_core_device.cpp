@@ -664,7 +664,7 @@ AXSetDeviceMode(AXDeviceType type,
 
 AXResult
 AXGetDeviceFinalMixCallback(AXDeviceType type,
-                            be_AXDeviceFinalMixCallback *func)
+                            AXDeviceFinalMixCallback::be *func)
 {
    if (!func) {
       return AXResult::Success;
@@ -716,7 +716,7 @@ AXResult
 AXGetAuxCallback(AXDeviceType type,
                  uint32_t deviceId,
                  AXAuxId auxId,
-                 be_AXAuxCallback *callback,
+                 AXAuxCallback::be *callback,
                  be_ptr<void> *userData)
 {
    auto device = internal::getDevice(type, deviceId);

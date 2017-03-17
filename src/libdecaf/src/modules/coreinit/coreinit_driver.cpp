@@ -43,7 +43,7 @@ OSDriver_Register(rpl_entry.r3, 0xC8, ptr, 0) ProcUI
 BOOL
 OSDriver_Register(ModuleHandle moduleHandle,
                   uint32_t inUnk1,
-                  OSDriverInterface driverInterface,
+                  OSDriverInterface *driverInterface,
                   uint32_t inUnk2,
                   uint32_t *outUnk1,
                   uint32_t *outUnk2,

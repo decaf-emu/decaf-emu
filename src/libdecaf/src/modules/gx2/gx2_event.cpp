@@ -99,7 +99,7 @@ GX2SetEventCallback(GX2EventType type,
  */
 void
 GX2GetEventCallback(GX2EventType type,
-                    be_GX2EventCallbackFunction *funcOut,
+                    GX2EventCallbackFunction::be *funcOut,
                     be_ptr<void> *userDataOut)
 {
    if (type < GX2EventType::Max) {
