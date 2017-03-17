@@ -219,7 +219,7 @@ start(excmd::parser &parser,
    }
 
    if (options.has("log-async")) {
-      config::log::async = true;
+      decaf::config::log::async = true;
    }
 
    if (options.has("log-level")) {
@@ -293,7 +293,7 @@ start(excmd::parser &parser,
       sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logFile, "txt", 23, 59));
    }
 
-   if (config::log::async) {
+   if (decaf::config::log::async) {
       spdlog::set_async_mode(1024);
    } else {
       spdlog::set_sync_mode();
