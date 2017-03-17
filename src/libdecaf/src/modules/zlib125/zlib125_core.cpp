@@ -16,6 +16,9 @@ gStreamMap;
 // WiiU games will be using a 32bit zlib where stuff is in big endian order in memory
 // this means all structures like z_streamp have to be swapped endian to a temp structure
 
+using ZlibAllocFunc = wfunc_ptr<void *, void *, uint32_t, uint32_t>;
+using ZlibFreeFunc = wfunc_ptr<void, void *, void *>;
+
 struct WZStream
 {
    be_ptr<uint8_t> next_in;
@@ -29,8 +32,8 @@ struct WZStream
    be_ptr<char> msg;
    be_ptr<struct internal_state> state;
 
-   be_ptr<void> zalloc;
-   be_ptr<void> zfree;
+   ZlibAllocFunc::be zalloc;
+   ZlibFreeFunc::be zfree;
    be_ptr<void> opaque;
 
    be_val<int> data_type;
@@ -55,19 +58,15 @@ struct WZHeader
    be_val<int> done;
 };
 
-using ZlibAllocFunc = wfunc_ptr<void *, void *, uint32_t, uint32_t>;
-using ZlibFreeFunc = wfunc_ptr<void, void *, void *>;
-
 static void *
 zlibAllocWrapper(void *opaque,
                  unsigned items,
                  unsigned size)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   auto allocFunc = ZlibAllocFunc { reinterpret_cast<ZlibAllocFunc::FunctionType>(wstrm->zalloc.get()) };
 
-   if (allocFunc) {
-      return allocFunc(wstrm->opaque, items, size);
+   if (wstrm->zalloc) {
+      return wstrm->zalloc(wstrm->opaque, items, size);
    } else {
       return coreinit::internal::sysAlloc(items * size);
    }
@@ -78,10 +77,9 @@ zlibFreeWrapper(void *opaque,
                 void *address)
 {
    auto wstrm = reinterpret_cast<WZStream *>(opaque);
-   auto freeFunc = ZlibFreeFunc { reinterpret_cast<ZlibFreeFunc::FunctionType>(wstrm->zfree.get()) };
 
-   if (freeFunc) {
-      freeFunc(wstrm->opaque, address);
+   if (wstrm->zfree) {
+      wstrm->zfree(wstrm->opaque, address);
    } else {
       coreinit::internal::sysFree(address);
    }

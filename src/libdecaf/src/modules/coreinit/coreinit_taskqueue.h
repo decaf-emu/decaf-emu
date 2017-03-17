@@ -26,7 +26,6 @@ struct MPTaskQueue;
 #pragma pack(push, 1)
 
 using MPTaskFunc = wfunc_ptr<uint32_t, uint32_t, uint32_t>;
-using be_MPTaskFunc = be_wfunc_ptr<uint32_t, uint32_t, uint32_t>;
 
 struct MPTaskInfo
 {
@@ -46,7 +45,7 @@ struct MPTask
    be_ptr<MPTask> self;
    be_ptr<MPTaskQueue> queue;
    be_volatile<MPTaskState> state;
-   be_MPTaskFunc func;
+   MPTaskFunc::be func;
    be_val<uint32_t> userArg1;
    be_val<uint32_t> userArg2;
    be_val<uint32_t> result;

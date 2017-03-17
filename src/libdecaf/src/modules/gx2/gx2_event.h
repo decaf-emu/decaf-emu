@@ -31,7 +31,6 @@ CHECK_SIZE(GX2DisplayListOverrunData, 0x18);
 #pragma pack(pop)
 
 using GX2EventCallbackFunction = wfunc_ptr<void, GX2EventType, void *>;
-using be_GX2EventCallbackFunction = be_wfunc_ptr<void, GX2EventType, void *>;
 
 BOOL
 GX2DrawDone();
@@ -46,7 +45,7 @@ void
 GX2SetEventCallback(GX2EventType type, GX2EventCallbackFunction func, void *userData);
 
 void
-GX2GetEventCallback(GX2EventType type, be_GX2EventCallbackFunction *funcOut, be_ptr<void> *userDataOut);
+GX2GetEventCallback(GX2EventType type, GX2EventCallbackFunction::be *funcOut, be_ptr<void> *userDataOut);
 
 coreinit::OSTime
 GX2GetRetiredTimeStamp();

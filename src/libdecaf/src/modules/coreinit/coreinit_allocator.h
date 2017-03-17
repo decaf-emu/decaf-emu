@@ -20,15 +20,12 @@ struct MEMUnitHeap;
  */
 
 using MEMAllocatorAllocFn = wfunc_ptr<void *, MEMAllocator *, uint32_t>;
-using be_MEMAllocatorAllocFn = be_wfunc_ptr<void *, MEMAllocator *, uint32_t>;
-
 using MEMAllocatorFreeFn = wfunc_ptr<void, MEMAllocator *, void *>;
-using be_MEMAllocatorFreeFn = be_wfunc_ptr<void, MEMAllocator *, void *>;
 
 struct MEMAllocatorFunctions
 {
-   be_MEMAllocatorAllocFn alloc;
-   be_MEMAllocatorFreeFn free;
+   MEMAllocatorAllocFn::be alloc;
+   MEMAllocatorFreeFn::be free;
 };
 CHECK_OFFSET(MEMAllocatorFunctions, 0x0, alloc);
 CHECK_OFFSET(MEMAllocatorFunctions, 0x4, free);

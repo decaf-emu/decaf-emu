@@ -18,10 +18,7 @@ namespace snd_core
 using Pcm16Sample = sg14::make_fixed<15, 0, int16_t>;
 
 using AXVoiceCallbackFn = wfunc_ptr<void*>;
-using be_AXVoiceCallbackFn = be_wfunc_ptr<void*>;
-
 using AXVoiceCallbackExFn = wfunc_ptr<void*, uint32_t, uint32_t>;
-using be_AXVoiceCallbackExFn = be_wfunc_ptr<void*, uint32_t, uint32_t>;
 
 #pragma pack(push, 1)
 
@@ -77,7 +74,7 @@ struct AXVoice
    be_val<uint32_t> priority;
 
    //! The callback to call if this is force-free'd by another acquire
-   be_AXVoiceCallbackFn callback;
+   AXVoiceCallbackFn::be callback;
 
    //! The user context to send to the callbacks
    be_ptr<void> userContext;
@@ -91,7 +88,7 @@ struct AXVoice
    AXVoiceOffsets offsets;
 
    //! An extended version of the callback above
-   be_AXVoiceCallbackExFn callbackEx;
+   AXVoiceCallbackExFn::be callbackEx;
 
    //! The reason for the callback being invoked
    be_val<uint32_t> callbackReason;

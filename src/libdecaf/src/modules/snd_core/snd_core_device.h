@@ -39,9 +39,7 @@ CHECK_SIZE(AXDeviceFinalMixData, 0xc);
 #pragma pack(pop)
 
 using AXDeviceFinalMixCallback = wfunc_ptr<void, AXDeviceFinalMixData*>;
-using be_AXDeviceFinalMixCallback = be_wfunc_ptr<void, AXDeviceFinalMixData*>;
 using AXAuxCallback = wfunc_ptr<void, be_ptr<be_val<int32_t>>*, void *, AXAuxCallbackData *>;
-using be_AXAuxCallback = wfunc_ptr<void, be_ptr<be_val<int32_t>>*, void *, AXAuxCallbackData *>;
 
 AXResult
 AXGetDeviceMode(AXDeviceType type,
@@ -53,7 +51,7 @@ AXSetDeviceMode(AXDeviceType type,
 
 AXResult
 AXGetDeviceFinalMixCallback(AXDeviceType type,
-                            be_AXDeviceFinalMixCallback *func);
+                            AXDeviceFinalMixCallback::be *func);
 
 AXResult
 AXRegisterDeviceFinalMixCallback(AXDeviceType type,
@@ -63,7 +61,7 @@ AXResult
 AXGetAuxCallback(AXDeviceType type,
                  uint32_t deviceId,
                  AXAuxId auxId,
-                 be_AXAuxCallback *callback,
+                 AXAuxCallback::be *callback,
                  be_ptr<void> *userData);
 
 AXResult

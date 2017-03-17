@@ -45,10 +45,6 @@ using OSThreadEntryPointFn = wfunc_ptr<uint32_t, uint32_t, void*>;
 using OSThreadCleanupCallbackFn = wfunc_ptr<void, OSThread *, void *>;
 using OSThreadDeallocatorFn = wfunc_ptr<void, OSThread *, void *>;
 
-using be_OSThreadEntryPointFn = be_wfunc_ptr<uint32_t, uint32_t, void*>;
-using be_OSThreadCleanupCallbackFn = be_wfunc_ptr<void, OSThread *, void *>;
-using be_OSThreadDeallocatorFn = be_wfunc_ptr<void, OSThread *, void *>;
-
 struct OSContext
 {
    static const uint64_t Tag1 = 0x4F53436F6E747874ull;
@@ -240,7 +236,7 @@ struct OSThread
    be_ptr<be_val<uint32_t>> stackEnd;
 
    //! Thread entry point set in OSCreateThread
-   be_OSThreadEntryPointFn entryPoint;
+   OSThreadEntryPointFn::be entryPoint;
 
    UNKNOWN(0x408 - 0x3a0);
 
@@ -266,10 +262,10 @@ struct OSThread
    be_ptr<be_val<uint32_t>> userStackPointer;
 
    //! Called just before thread is terminated, set with OSSetThreadCleanupCallback
-   be_OSThreadCleanupCallbackFn cleanupCallback;
+   OSThreadCleanupCallbackFn::be cleanupCallback;
 
    //! Called just after a thread is terminated, set with OSSetThreadDeallocator
-   be_OSThreadDeallocatorFn deallocator;
+   OSThreadDeallocatorFn::be deallocator;
 
    //! Current thread cancel state, controls whether the thread is allowed to cancel or not
    be_val<OSThreadCancelState> cancelState;

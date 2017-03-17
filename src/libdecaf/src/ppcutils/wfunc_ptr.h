@@ -14,6 +14,7 @@ template<typename ReturnType, typename... Args>
 struct wfunc_ptr
 {
    using FunctionType = ReturnType(*)(Args ...);
+   using be = be_wfunc_ptr<ReturnType, Args...>;
 
    wfunc_ptr()
    {

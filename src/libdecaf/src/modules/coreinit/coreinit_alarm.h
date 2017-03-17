@@ -24,7 +24,6 @@ namespace coreinit
 struct OSAlarm;
 struct OSContext;
 using AlarmCallback = wfunc_ptr<void, OSAlarm *, OSContext *>;
-using be_AlarmCallback = be_wfunc_ptr<void, OSAlarm *, OSContext *>;
 
 struct OSAlarmQueue
 {
@@ -79,7 +78,7 @@ struct OSAlarm
    UNKNOWN(4);
 
    //! The callback to execute once the alarm is triggered.
-   be_AlarmCallback callback;
+   AlarmCallback::be callback;
 
    //! Used with OSCancelAlarms for bulk cancellation of alarms.
    be_val<uint32_t> group;
