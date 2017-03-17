@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <common/be_val.h>
 #include <common/be_ptr.h>
+#include <common/cbool.h>
 #include <common/structsize.h>
 
 namespace coreinit
