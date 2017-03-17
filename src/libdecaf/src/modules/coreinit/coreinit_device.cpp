@@ -10,7 +10,7 @@ sEnableVPADDevice = false;
 namespace coreinit
 {
 
-static OSInputDevice
+static SIDevice
 sInputDevice = { 0 };
 
 static BOOL
@@ -43,21 +43,21 @@ uint32_t
 OSReadRegister32Ex(OSDeviceID device,
                    uint32_t id)
 {
-   if (device == OSDeviceID::Input) {
-      auto reg = static_cast<OSDeviceInputRegisters>(id);
+   if (device == OSDeviceID::SI) {
+      auto reg = static_cast<SIRegisters>(id);
 
-      auto status0 = OSInputDevice::ControllerStatus0::get(0)
+      auto status0 = SIDevice::ControllerStatus0::get(0)
          .stickLX(128)
          .stickLY(128)
          .error(false);
 
-      auto status1 = OSInputDevice::ControllerStatus1::get(0)
+      auto status1 = SIDevice::ControllerStatus1::get(0)
          .stickRX(128)
          .stickRY(128);
 
       if (sEnableVPADDevice) {
-         if (reg == OSDeviceInputRegisters::Controller0Status0
-          || reg == OSDeviceInputRegisters::Controller0Status1) {
+         if (reg == SIRegisters::Controller0Status0
+          || reg == SIRegisters::Controller0Status1) {
             vpad::VPADStatus status;
 
             if (vpad::VPADRead(0, &status, 1, nullptr) == 1) {
@@ -91,29 +91,29 @@ OSReadRegister32Ex(OSDeviceID device,
       }
 
       switch (reg) {
-      case OSDeviceInputRegisters::DeviceStatus:
+      case SIRegisters::DeviceStatus:
          return sInputDevice.deviceStatus.value;
-      case OSDeviceInputRegisters::ControllerError:
+      case SIRegisters::ControllerError:
          return sInputDevice.controllerError.value;
-      case OSDeviceInputRegisters::PollControl:
+      case SIRegisters::PollControl:
          return sInputDevice.pollControl.value;
-      case OSDeviceInputRegisters::Controller0Command:
+      case SIRegisters::Controller0Command:
          return sInputDevice.controllers[0].command.value;
-      case OSDeviceInputRegisters::Controller1Command:
+      case SIRegisters::Controller1Command:
          return sInputDevice.controllers[1].command.value;
-      case OSDeviceInputRegisters::Controller2Command:
+      case SIRegisters::Controller2Command:
          return sInputDevice.controllers[2].command.value;
-      case OSDeviceInputRegisters::Controller3Command:
+      case SIRegisters::Controller3Command:
          return sInputDevice.controllers[3].command.value;
-      case OSDeviceInputRegisters::Controller0Status0:
-      case OSDeviceInputRegisters::Controller1Status0:
-      case OSDeviceInputRegisters::Controller2Status0:
-      case OSDeviceInputRegisters::Controller3Status0:
+      case SIRegisters::Controller0Status0:
+      case SIRegisters::Controller1Status0:
+      case SIRegisters::Controller2Status0:
+      case SIRegisters::Controller3Status0:
          return status0.value;
-      case OSDeviceInputRegisters::Controller0Status1:
-      case OSDeviceInputRegisters::Controller1Status1:
-      case OSDeviceInputRegisters::Controller2Status1:
-      case OSDeviceInputRegisters::Controller3Status1:
+      case SIRegisters::Controller0Status1:
+      case SIRegisters::Controller1Status1:
+      case SIRegisters::Controller2Status1:
+      case SIRegisters::Controller3Status1:
          return status1.value;
       default:
          gLog->warn("OSReadRegister - Unimplemented device {} register {}", enumAsString(device), enumAsString(reg));
@@ -130,30 +130,30 @@ OSWriteRegister32Ex(OSDeviceID device,
                     uint32_t id,
                     uint32_t value)
 {
-   if (device == OSDeviceID::Input) {
-      auto reg = static_cast<OSDeviceInputRegisters>(id);
+   if (device == OSDeviceID::SI) {
+      auto reg = static_cast<SIRegisters>(id);
 
       switch (id) {
-      case OSDeviceInputRegisters::Controller0Command:
-         sInputDevice.controllers[0].command = OSInputDevice::ControllerCommand::get(value);
+      case SIRegisters::Controller0Command:
+         sInputDevice.controllers[0].command = SIDevice::ControllerCommand::get(value);
          break;
-      case OSDeviceInputRegisters::Controller1Command:
-         sInputDevice.controllers[1].command = OSInputDevice::ControllerCommand::get(value);
+      case SIRegisters::Controller1Command:
+         sInputDevice.controllers[1].command = SIDevice::ControllerCommand::get(value);
          break;
-      case OSDeviceInputRegisters::Controller2Command:
-         sInputDevice.controllers[2].command = OSInputDevice::ControllerCommand::get(value);
+      case SIRegisters::Controller2Command:
+         sInputDevice.controllers[2].command = SIDevice::ControllerCommand::get(value);
          break;
-      case OSDeviceInputRegisters::Controller3Command:
-         sInputDevice.controllers[3].command = OSInputDevice::ControllerCommand::get(value);
+      case SIRegisters::Controller3Command:
+         sInputDevice.controllers[3].command = SIDevice::ControllerCommand::get(value);
          break;
-      case OSDeviceInputRegisters::PollControl:
-         sInputDevice.pollControl = OSInputDevice::PollControl::get(value);
+      case SIRegisters::PollControl:
+         sInputDevice.pollControl = SIDevice::PollControl::get(value);
          break;
-      case OSDeviceInputRegisters::DeviceStatus:
-         sInputDevice.deviceStatus = OSInputDevice::DeviceStatus::get(value);
+      case SIRegisters::DeviceStatus:
+         sInputDevice.deviceStatus = SIDevice::DeviceStatus::get(value);
          break;
-      case OSDeviceInputRegisters::ControllerError:
-         sInputDevice.controllerError = OSInputDevice::ControllerError::get(value);
+      case SIRegisters::ControllerError:
+         sInputDevice.controllerError = SIDevice::ControllerError::get(value);
          break;
       default:
          gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), enumAsString(reg), value);
@@ -174,7 +174,6 @@ OSWriteRegister16(OSDeviceID device,
 void
 Module::registerDeviceFunctions()
 {
-   RegisterKernelFunction(OSDriver_Register);
    RegisterKernelFunction(OSReadRegister16);
    RegisterKernelFunction(OSWriteRegister16);
    RegisterKernelFunction(OSEnforceInorderIO);

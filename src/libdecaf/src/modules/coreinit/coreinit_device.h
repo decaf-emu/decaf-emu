@@ -16,7 +16,7 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
-struct OSInputDevice
+struct SIDevice
 {
    BITFIELD(DeviceStatus, uint32_t)
       BITFIELD_ENTRY(0, 1, bool, device_busy);
