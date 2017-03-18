@@ -74,6 +74,13 @@ controllerTypeFromString(const std::string &typeStr)
 
 } // namespace input
 
+namespace sound
+{
+
+unsigned frame_length = 30;
+
+} // namespace sound
+
 namespace log
 {
 
@@ -188,8 +195,10 @@ struct CerealSound
    template <class Archive>
    void serialize(Archive &ar)
    {
-      using namespace decaf::config::sound;
-      ar(CEREAL_NVP(dump_sounds));
+      using namespace ::decaf::config::sound;
+      using namespace sound;
+      ar(CEREAL_NVP(dump_sounds),
+         CEREAL_NVP(frame_length));
    }
 };
 

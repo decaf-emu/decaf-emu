@@ -246,6 +246,14 @@ extern std::string name;
 
 } // namespace input
 
+namespace sound {
+
+// Frame length factor for audio data.
+// Default is 30 (x 48 = 1440 for 48kHz)
+extern unsigned frame_length;
+
+} // namespace sound
+
 void
 initialize();
 

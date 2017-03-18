@@ -1,5 +1,6 @@
 #include "clilog.h"
 #include <common/decaf_assert.h>
+#include "config.h"
 #include "decafsdl.h"
 #include <SDL.h>
 
@@ -9,7 +10,7 @@ DecafSDLSound::start(unsigned outputRate,
 {
    mNumChannelsIn = numChannels;
    mNumChannelsOut = std::min(numChannels, 2u);  // TODO: support surround output
-   mOutputFrameLen = 1024;  // TODO: make this configurable (latency control)
+   mOutputFrameLen = config::sound::frame_length * (outputRate / 1000);
 
    // Set up the ring buffer with enough space for 3 output frames of audio
    mOutputBuffer.resize(mOutputFrameLen * mNumChannelsOut * 3);
