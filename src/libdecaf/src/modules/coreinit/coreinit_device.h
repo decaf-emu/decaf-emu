@@ -49,13 +49,13 @@ struct SIDevice
       BITFIELD_ENTRY(20, 1, bool, btnTriggerZ);
       BITFIELD_ENTRY(21, 1, bool, btnTriggerR);
       BITFIELD_ENTRY(22, 1, bool, btnTriggerL);
-      BITFIELD_ENTRY(23, 1, bool, btnA);
-      BITFIELD_ENTRY(24, 1, bool, btnB);
-      BITFIELD_ENTRY(25, 1, bool, btnX);
-      BITFIELD_ENTRY(26, 1, bool, btnY);
-      BITFIELD_ENTRY(27, 1, bool, btnPlus);
-      // 28, 39 is included in the &0x3FFF bitmask for buttons, but dunno what buttons they are
-      // 30 : unk
+      BITFIELD_ENTRY(23, 1, bool, useOrigin);
+      BITFIELD_ENTRY(24, 1, bool, btnA);
+      BITFIELD_ENTRY(25, 1, bool, btnB);
+      BITFIELD_ENTRY(26, 1, bool, btnX);
+      BITFIELD_ENTRY(27, 1, bool, btnY);
+      BITFIELD_ENTRY(28, 1, bool, btnPlus);
+      BITFIELD_ENTRY(29, 1, bool, getOrigin);
       BITFIELD_ENTRY(31, 1, bool, error);
    BITFIELD_END
 
