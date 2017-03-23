@@ -164,6 +164,13 @@ nanosToTicks(OSTime nanoseconds)
 }
 
 OSTime
+msToTicks(OSTime milliseconds)
+{
+   auto timerSpeed = static_cast<uint64_t>(OSGetSystemInfo()->busSpeed / 4);
+   return static_cast<uint64_t>(milliseconds) * (timerSpeed / 1000);
+}
+
+OSTime
 getBaseTime()
 {
    return sBaseTicks.count();

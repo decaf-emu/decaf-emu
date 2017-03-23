@@ -78,6 +78,9 @@ OSTime
 nanosToTicks(OSTime nanoseconds);
 
 OSTime
+msToTicks(OSTime milliseconds);
+
+OSTime
 getBaseTime();
 
 std::chrono::time_point<std::chrono::system_clock>
