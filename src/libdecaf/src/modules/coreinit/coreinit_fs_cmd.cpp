@@ -24,6 +24,13 @@ readFileWithPosAsync(FSClient *client,
 
 } // namespace internal
 
+
+/**
+ * Change the client's working directory.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSChangeDir(FSClient *client,
             FSCmdBlock *block,
@@ -32,10 +39,20 @@ FSChangeDir(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSChangeDirAsync(client, block, path, errorMask, &asyncData);
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
 }
 
+
+/**
+ * Change the client's working directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSChangeDirAsync(FSClient *client,
                  FSCmdBlock *block,
@@ -70,6 +87,12 @@ FSChangeDirAsync(FSClient *client,
 }
 
 
+/**
+ * Close a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSCloseFile(FSClient *client,
             FSCmdBlock *block,
@@ -83,6 +106,12 @@ FSCloseFile(FSClient *client,
 }
 
 
+/**
+ * Close a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSCloseFileAsync(FSClient *client,
                  FSCmdBlock *block,
@@ -112,6 +141,12 @@ FSCloseFileAsync(FSClient *client,
 }
 
 
+/**
+ * Get the current working directory.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSGetCwd(FSClient *client,
          FSCmdBlock *block,
@@ -127,6 +162,12 @@ FSGetCwd(FSClient *client,
 }
 
 
+/**
+ * Get the current working directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSGetCwdAsync(FSClient *client,
               FSCmdBlock *block,
@@ -169,6 +210,12 @@ FSGetCwdAsync(FSClient *client,
 }
 
 
+/**
+ * Get the current read / write position of a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSGetPosFile(FSClient *client,
              FSCmdBlock *block,
@@ -184,6 +231,12 @@ FSGetPosFile(FSClient *client,
 }
 
 
+/**
+ * Get the current read / write position of a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSGetPosFileAsync(FSClient *client,
                   FSCmdBlock *block,
@@ -220,6 +273,21 @@ FSGetPosFileAsync(FSClient *client,
 }
 
 
+/**
+ * Open a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * File not found.
+ *
+ * \retval FSStatus::NotFile
+ * Used OpenFile on a non-file object such as a directory.
+ *
+ * \retval FSStatus::PermissionError
+ * Did not have permission to open file in specified mode.
+ */
 FSStatus
 FSOpenFile(FSClient *client,
            FSCmdBlock *block,
@@ -234,6 +302,21 @@ FSOpenFile(FSClient *client,
 }
 
 
+/**
+ * Open a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * File not found.
+ *
+ * \retval FSStatus::NotFile
+ * Used OpenFile on a non-file object such as a directory.
+ *
+ * \retval FSStatus::PermissionError
+ * Did not have permission to open file in specified mode.
+ */
 FSStatus
 FSOpenFileAsync(FSClient *client,
                 FSCmdBlock *block,
@@ -249,6 +332,21 @@ FSOpenFileAsync(FSClient *client,
 }
 
 
+/**
+ * Open a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * File not found.
+ *
+ * \retval FSStatus::NotFile
+ * Used OpenFile on a non-file object such as a directory.
+ *
+ * \retval FSStatus::PermissionError
+ * Did not have permission to open file in specified mode.
+ */
 FSStatus
 FSOpenFileEx(FSClient *client,
              FSCmdBlock *block,
@@ -271,6 +369,21 @@ FSOpenFileEx(FSClient *client,
 }
 
 
+/**
+ * Open a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * File not found.
+ *
+ * \retval FSStatus::NotFile
+ * Used OpenFile on a non-file object such as a directory.
+ *
+ * \retval FSStatus::PermissionError
+ * Did not have permission to open file in specified mode.
+ */
 FSStatus
 FSOpenFileExAsync(FSClient *client,
                   FSCmdBlock *block,
@@ -322,6 +435,12 @@ FSOpenFileExAsync(FSClient *client,
 }
 
 
+/**
+ * Read a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSReadFile(FSClient *client,
            FSCmdBlock *block,
@@ -342,6 +461,12 @@ FSReadFile(FSClient *client,
 }
 
 
+/**
+ * Read a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSReadFileAsync(FSClient *client,
                 FSCmdBlock *block,
@@ -360,6 +485,18 @@ FSReadFileAsync(FSClient *client,
 }
 
 
+/**
+ * Read a file at a specific position.
+ *
+ * The files position will be set before reading.
+ *
+ * This is equivalent to:
+ *    FSSetPosFile(file, pos)
+ *    FSReadFile(file, ...)
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSReadFileWithPos(FSClient *client,
                   FSCmdBlock *block,
@@ -382,6 +519,18 @@ FSReadFileWithPos(FSClient *client,
 }
 
 
+/**
+ * Read a file at a specific position (asynchronously).
+ *
+ * The files position will be set before reading.
+ *
+ * This is equivalent to:
+ *    FSSetPosFile(file, pos)
+ *    FSReadFile(file, ...)
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSReadFileWithPosAsync(FSClient *client,
                        FSCmdBlock *block,
@@ -401,6 +550,12 @@ FSReadFileWithPosAsync(FSClient *client,
 }
 
 
+/**
+ * Delete a file or directory.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSRemove(FSClient *client,
          FSCmdBlock *block,
@@ -417,6 +572,12 @@ FSRemove(FSClient *client,
 }
 
 
+/**
+ * Delete a file or directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSRemoveAsync(FSClient *client,
               FSCmdBlock *block,
@@ -451,6 +612,12 @@ FSRemoveAsync(FSClient *client,
 }
 
 
+/**
+ * Set the current read / write position for a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSSetPosFile(FSClient *client,
              FSCmdBlock *block,
@@ -469,6 +636,12 @@ FSSetPosFile(FSClient *client,
 }
 
 
+/**
+ * Set the current read / write position for a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSSetPosFileAsync(FSClient *client,
                   FSCmdBlock *block,
