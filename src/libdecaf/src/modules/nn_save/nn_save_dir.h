@@ -12,7 +12,7 @@ namespace save
 using coreinit::FSAsyncData;
 using coreinit::FSClient;
 using coreinit::FSCmdBlock;
-using coreinit::FSDirectoryHandle;
+using coreinit::FSDirHandle;
 
 SaveStatus
 SAVEInitSaveDir(uint8_t userID);
@@ -49,7 +49,7 @@ SAVEOpenDir(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,
             const char *path,
-            be_val<FSDirectoryHandle> *handle,
+            be_val<FSDirHandle> *handle,
             uint32_t flags);
 
 SaveStatus
@@ -57,7 +57,7 @@ SAVEOpenDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  uint8_t account,
                  const char *path,
-                 be_val<FSDirectoryHandle> *handle,
+                 be_val<FSDirHandle> *handle,
                  uint32_t flags,
                  FSAsyncData *asyncData);
 

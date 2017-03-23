@@ -5,6 +5,7 @@
 #include "coreinit_core.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_interrupts.h"
+#include "coreinit_ipc.h"
 #include "coreinit_event.h"
 #include "coreinit_fastmutex.h"
 #include "coreinit_memexpheap.h"
@@ -656,6 +657,8 @@ uint32_t
 defaultThreadEntry(uint32_t coreId,
                    void *argv)
 {
+   coreinit::IPCDriverInit();
+   coreinit::IPCDriverOpen();
    return 0;
 }
 

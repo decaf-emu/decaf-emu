@@ -1,283 +1,332 @@
-#include <algorithm>
-#include <common/decaf_assert.h>
+#include "coreinit.h"
+#include "coreinit_appio.h"
 #include "coreinit_fs.h"
 #include "coreinit_fs_client.h"
-#include "coreinit_memheap.h"
-#include "coreinit_internal_appio.h"
-#include "ppcutils/wfunc_call.h"
+#include "coreinit_fs_driver.h"
+#include "coreinit_fs_cmdblock.h"
+#include "coreinit_fsa_shim.h"
+
+#include <common/align.h>
+#include <common/log.h>
 
 namespace coreinit
 {
 
-static std::vector<FSClient*>
-sClients;
+static FSCmdQueueHandlerFn
+sHandleDequeuedCommand = nullptr;
 
-FSClient::FSClient()
-{
-   mWorkingPath = "/";
-
-   // Let's just ensure there is never a file handle 0 just in case it's not a valid handle
-   mOpenFiles.push_back(nullptr);
-   mOpenFolders.push_back(nullptr);
-}
+static IOSAsyncCallbackFn
+sHandleFsaAsyncCallback = nullptr;
 
 
-FSFileHandle
-FSClient::addOpenFile(fs::FileHandle *file)
-{
-   std::lock_guard<std::mutex> lock(mMutex);
-
-   // Try use an existing slot
-   for (auto i = 1; i < mOpenFiles.size(); ++i) {
-      if (mOpenFiles[i] == nullptr) {
-         mOpenFiles[i] = file;
-         return i;
-      }
-   }
-
-   // Add a new slot
-   auto handle = static_cast<FSFileHandle>(mOpenFiles.size());
-   mOpenFiles.push_back(file);
-   return handle;
-}
-
-
-FSDirectoryHandle
-FSClient::addOpenDirectory(fs::FolderHandle *folder)
-{
-   std::lock_guard<std::mutex> lock(mMutex);
-
-   // Try use an existing slot
-   for (auto i = 1; i < mOpenFolders.size(); ++i) {
-      if (mOpenFolders[i] == nullptr) {
-         mOpenFolders[i] = folder;
-         return i;
-      }
-   }
-
-   // Add a new slot
-   auto handle = static_cast<FSFileHandle>(mOpenFolders.size());
-   mOpenFolders.push_back(folder);
-   return handle;
-}
-
-
-fs::FileHandle *
-FSClient::getOpenFile(FSFileHandle handle)
-{
-   std::lock_guard<std::mutex> lock(mMutex);
-
-   if (handle > mOpenFiles.size()) {
-      return nullptr;
-   }
-
-   return mOpenFiles[handle];
-}
-
-
-fs::FolderHandle *
-FSClient::getOpenDirectory(FSDirectoryHandle handle)
-{
-   std::lock_guard<std::mutex> lock(mMutex);
-
-   if (handle > mOpenFolders.size()) {
-      return nullptr;
-   }
-
-   return mOpenFolders[handle];
-}
-
-
-void
-FSClient::removeOpenDirectory(FSDirectoryHandle handle)
-{
-   std::lock_guard<std::mutex> lock(mMutex);
-
-   if (handle > mOpenFolders.size()) {
-      return;
-   } else {
-      if (mOpenFolders[handle]) {
-         mOpenFolders[handle]->close();
-      }
-
-      delete mOpenFolders[handle];
-      mOpenFolders[handle] = nullptr;
-   }
-}
-
-
-void
-FSClient::removeOpenFile(FSFileHandle handle)
-{
-   std::lock_guard<std::mutex> lock(mMutex);
-
-   decaf_check(handle < mOpenFiles.size());
-   decaf_check(mOpenFiles[handle]);
-
-   mOpenFiles[handle]->close();
-
-   delete mOpenFiles[handle];
-   mOpenFiles[handle] = nullptr;
-}
-
-
-void
-FSClient::setLastError(FSError error)
-{
-   mLastError = error;
-}
-
-
-FSError
-FSClient::getLastError()
-{
-   return mLastError;
-}
-
-void
-FSClient::setWorkingPath(fs::Path path)
-{
-   mWorkingPath = path;
-}
-
-fs::Path
-FSClient::getWorkingPath()
-{
-   return mWorkingPath;
-}
-
+/**
+ * Create a new FSClient.
+ */
 FSStatus
 FSAddClient(FSClient *client,
-            uint32_t flags)
+            FSErrorFlag errorMask)
 {
-   return FSAddClientEx(client, 0, flags);
+   return FSAddClientEx(client, nullptr, errorMask);
 }
 
 
+/**
+ * Create a new FSClient.
+ */
 FSStatus
 FSAddClientEx(FSClient *client,
-              uint32_t unk,
-              uint32_t flags)
+              FSAttachParams *attachParams,
+              FSErrorFlag errorMask)
 {
-   new(client) FSClient();
-   sClients.push_back(client);
+   if (!internal::fsInitialised()) {
+      return FSStatus::FatalError;
+   }
+
+   if (!client) {
+      return FSStatus::FatalError;
+   }
+
+   if (internal::fsClientRegistered(client)) {
+      internal::fsClientHandleFatalError(internal::fsClientGetBody(client), FSAStatus::AlreadyExists);
+      return FSStatus::FatalError;
+   }
+
+   std::memset(client, 0, sizeof(FSClient));
+   auto clientBody = internal::fsClientGetBody(client);
+   auto clientHandle = internal::fsaShimOpen();
+
+   if (clientHandle < 0) {
+      return FSStatus::FatalError;
+   }
+
+   if (!internal::fsRegisterClient(clientBody)) {
+      internal::fsaShimClose(clientHandle);
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::MaxClients);
+      return FSStatus::FatalError;
+   }
+
+   internal::fsCmdQueueCreate(&clientBody->cmdQueue, sHandleDequeuedCommand, 1);
+
+   OSFastMutex_Init(&clientBody->mutex, nullptr);
+   OSCreateAlarm(&clientBody->fsmAlarm);
+
+   internal::fsmInit(&clientBody->fsm, clientBody);
+
+   clientBody->clientHandle = clientHandle;
+   clientBody->lastDequeuedCommand = nullptr;
+   clientBody->unk0x14C8_fsa_cmd_word0 = 0;
+   clientBody->unk0x14CC = 0;
+
+   if (attachParams) {
+      // 0x1240 = 4
+      // 0x1248 = attachParams.callback
+      // 0x124C = this
+      // 0x1254 = &(this + 0x1248)
+      // 0x1260 = 0xA // OSFunctionType::FsAttach ?
+
+      // 0x1428 = 0
+      // 0x1440 = attachParams.context
+   } else {
+      // 0x1240 = 0
+      // 0x1428 = 0
+   }
+
    return FSStatus::OK;
 }
 
-
-FSStatus
-FSDelClient(FSClient *client,
-            uint32_t flags)
-{
-   client->~FSClient();
-   sClients.erase(std::remove(sClients.begin(), sClients.end(), client), sClients.end());
-   return FSStatus::OK;
-}
-
-
-uint32_t
-FSGetClientNum()
-{
-   return static_cast<uint32_t>(sClients.size());
-}
-
-
-FSVolumeState
-FSGetVolumeState(FSClient *client)
-{
-   return FSVolumeState::Ready;
-}
-
-
-FSError
-FSGetErrorCodeForViewer(FSClient *client, FSCmdBlock *block)
-{
-   // TODO: Need to move error code into FSCmdBlock.
-   return client->getLastError();
-}
-
-
-FSError
-FSGetLastErrorCodeForViewer(FSClient *client)
-{
-   return client->getLastError();
-}
-
-
-void
-FSSetStateChangeNotification(FSClient *client,
-                             FSStateChangeInfo *info)
-{
-   // TODO: FSSetStateChangeNotification
-}
-
-FSAsyncResult *
-FSGetAsyncResult(OSMessage *ioMsg)
-{
-   return static_cast<FSAsyncResult *>(ioMsg->message.get());
-}
-
-void
-FSCancelCommand(FSClient *client,
-                FSCmdBlock *block)
-{
-   // TODO: FSCancelCommand
-   gLog->error("Unsupported FSCancelCommand");
-}
-
-void
-FSSetUserData(FSCmdBlock *block,
-              void *userData)
-{
-   block->userData = userData;
-}
-
-void *
-FSGetUserData(FSCmdBlock *block)
-{
-   return block->userData;
-}
-
-FSCmdBlock *
-FSGetCurrentCmdBlock(FSClient *client)
-{
-   // TODO: Not sure how this is meant to work atomically.
-   return nullptr;
-}
 
 namespace internal
 {
 
-FSStatus
-translateError(fs::Error error)
+static void
+fsClientHandleFsaAsyncCallback(IOSError error,
+                               void *context);
+
+static BOOL
+fsClientHandleDequeuedCommand(FSCmdBlockBody *blockBody);
+
+
+/**
+ * Get an aligned FSClientBody from an FSClient.
+ */
+FSClientBody *
+fsClientGetBody(FSClient *client)
 {
-   switch (error) {
-   case fs::Error::OK:
-      return FSStatus::OK;
-   case fs::Error::AlreadyExists:
-      return FSStatus::Exists;
-   case fs::Error::InvalidPermission:
-      return FSStatus::PermissionError;
-   case fs::Error::NotFound:
-      return FSStatus::NotFound;
-   case fs::Error::NotFile:
-      return FSStatus::NotFile;
-   case fs::Error::NotDirectory:
-      return FSStatus::NotDirectory;
-   case fs::Error::GenericError:
-   case fs::Error::UnsupportedOperation:
-   default:
+   auto body = mem::translate<FSClientBody>(align_up(mem::untranslate(client), 0x40));
+   body->client = client;
+   return body;
+}
+
+
+/**
+ * Handle a fatal error.
+ *
+ * Will transition the volume state to fatal.
+ */
+void
+fsClientHandleFatalError(FSClientBody *clientBody,
+                         FSAStatus error)
+{
+   clientBody->lastError = error;
+   clientBody->isLastErrorWithoutVolume = FALSE;
+   fsmEnterState(&clientBody->fsm, FSVolumeState::Fatal, clientBody);
+}
+
+
+/**
+ * Handle error returned from a fsaShimpPrepare* call.
+ *
+ * \return
+ * FSStatus error code.
+ */
+FSStatus
+fsClientHandleShimPrepareError(FSClientBody *clientBody,
+                               FSAStatus error)
+{
+   fsClientHandleFatalError(clientBody, error);
+   return fsDecodeFsaStatusToFsStatus(error);
+}
+
+
+/**
+ * Handle async result for a synchronous FS call.
+ *
+ * May block and wait for result to be received.
+ *
+ * \return
+ * Returns postive value on success, FSStatus error code otherwise.
+ */
+FSStatus
+fsClientHandleAsyncResult(FSClient *client,
+                          FSCmdBlock *block,
+                          FSStatus result,
+                          FSErrorFlag errorMask)
+{
+   auto errorFlags = FSErrorFlag::All;
+
+   if (result >= 0) {
+      auto message = OSMessage {};
+      auto blockBody = fsCmdBlockGetBody(block);
+      OSReceiveMessage(&blockBody->syncQueue, &message, OSMessageFlags::Blocking);
+
+      auto fsMessage = reinterpret_cast<FSMessage *>(&message);
+      if (fsMessage->type != OSFunctionType::FsCmdAsync) {
+         decaf_abort(fmt::format("Unsupported function type {}", fsMessage->type));
+      }
+
+      return FSGetAsyncResult(&message)->status;
+   }
+   
+   switch (result) {
+   case FSStatus::Max:
+      errorFlags = FSErrorFlag::Max;
+      break;
+   case FSStatus::AlreadyOpen:
+      errorFlags = FSErrorFlag::AlreadyOpen;
+      break;
+   case FSStatus::Exists:
+      errorFlags = FSErrorFlag::Exists;
+      break;
+   case FSStatus::NotFound:
+      errorFlags = FSErrorFlag::NotFound;
+      break;
+   case FSStatus::NotFile:
+      errorFlags = FSErrorFlag::NotFile;
+      break;
+   case FSStatus::NotDirectory:
+      errorFlags = FSErrorFlag::NotDir;
+      break;
+   case FSStatus::AccessError:
+      errorFlags = FSErrorFlag::AccessError;
+      break;
+   case FSStatus::PermissionError:
+      errorFlags = FSErrorFlag::PermissionError;
+      break;
+   case FSStatus::FileTooBig:
+      errorFlags = FSErrorFlag::FileTooBig;
+      break;
+   case FSStatus::StorageFull:
+      errorFlags = FSErrorFlag::StorageFull;
+      break;
+   case FSStatus::JournalFull:
+      errorFlags = FSErrorFlag::JournalFull;
+      break;
+   case FSStatus::UnsupportedCmd:
+      errorFlags = FSErrorFlag::UnsupportedCmd;
+      break;
+   }
+
+   if ((errorFlags & errorMask) == 0) {
+      auto clientBody = fsClientGetBody(client);
+      fsClientHandleFatalError(clientBody, clientBody->lastError);
       return FSStatus::FatalError;
+   }
+
+   return result;
+}
+
+
+/**
+ * Submit an FSCmdBlockBody to the client's FSCmdQueue.
+ */
+void
+fsClientSubmitCommand(FSClientBody *clientBody,
+                      FSCmdBlockBody *blockBody,
+                      FSFinishCmdFn finishCmdFn)
+{
+   auto queue = &clientBody->cmdQueue;
+   blockBody->finishCmdFn = finishCmdFn;
+   blockBody->status = FSCmdBlockStatus::QueuedCommand;
+
+   // Enqueue command
+   OSFastMutex_Lock(&queue->mutex);
+   fsCmdQueueEnqueue(queue, blockBody, false);
+   OSFastMutex_Unlock(&queue->mutex);
+
+   // Process command queue
+   fsCmdQueueProcessCmd(queue);
+}
+
+
+/**
+ * Handle the async IOS FSA IPC callback.
+ */
+void
+fsClientHandleFsaAsyncCallback(IOSError error,
+                               void *context)
+{
+   auto blockBody = reinterpret_cast<FSCmdBlockBody *>(context);
+   auto clientBody = blockBody->clientBody;
+   blockBody->iosError = error;
+   blockBody->status = FSCmdBlockStatus::Completed;
+   blockBody->fsaStatus = FSAShimDecodeIosErrorToFsaStatus(clientBody->clientHandle, error);
+
+   if (fsInitialised() && !fsDriverDone()) {
+      clientBody->fsCmdHandlerMsg.data = blockBody;
+      clientBody->fsCmdHandlerMsg.type = OSFunctionType::FsCmdHandler;
+      OSSendMessage(OSGetDefaultAppIOQueue(), reinterpret_cast<OSMessage *>(&clientBody->fsCmdHandlerMsg), OSMessageFlags::None);
    }
 }
 
-void
-handleAsyncCallback(FSAsyncResult *result)
+
+/**
+ * Handle a FS command which has been dequeued from FSCmdQueue.
+ *
+ * Submits the IOS FSA IPC request for the FS command.
+ *
+ * \retval TRUE
+ * Success.
+ *
+ * \retval FALSE
+ * Unexpected error occurred.
+ */
+BOOL
+fsClientHandleDequeuedCommand(FSCmdBlockBody *blockBody)
 {
-   auto callback = static_cast<FSAsyncCallback>(result->userParams.callback);
-   callback(result->client, result->block, result->status, result->userParams.param);
+   auto clientBody = blockBody->clientBody;
+   FSAStatus error;
+
+   do {
+      /*
+      if (blockBody->cmdData.mount.unk0x00 < 2) {
+         if (blockBody->fsaShimBuffer.command == FSACommand::Mount) {
+            // TODO: __handleDequeuedCmd FSACommand::Mount
+         } else if (blockBody->fsaShimBuffer.command == FSACommand::Unmount) {
+            // TODO: __handleDequeuedCmd FSACommand::Unmount
+         }
+      }
+      */
+
+      if (!fsInitialised() || fsDriverDone()) {
+         error = FSAStatus::NotInit;
+      } else {
+         error = fsaShimSubmitRequestAsync(&blockBody->fsaShimBuffer, clientBody->unk0x14C8_fsa_cmd_word0, sHandleFsaAsyncCallback, blockBody);
+      }
+
+      // TODO: more if cmd == mount shit
+
+      if (error == FSAStatus::OK) {
+         return TRUE;
+      } else if (error == FSAStatus::NotInit) {
+         gLog->error("Could not issue command {} due to uninitialised filesystem", blockBody->fsaShimBuffer.command);
+         return TRUE;
+      }
+   } while (error == FSAStatus::Busy);
+
+   gLog->error("Unexpected error {} whilst handling dequeued command {}", error, blockBody->fsaShimBuffer.command);
+   fsmEnterState(&clientBody->fsm, FSVolumeState::Fatal, clientBody);
+   return FALSE;
 }
 
 } // namespace internal
+
+void
+Module::registerFsClientFunctions()
+{
+   RegisterKernelFunction(FSAddClient);
+   RegisterKernelFunction(FSAddClientEx);
+   RegisterInternalFunction(internal::fsClientHandleFsaAsyncCallback, sHandleFsaAsyncCallback);
+   RegisterInternalFunction(internal::fsClientHandleDequeuedCommand, sHandleDequeuedCommand);
+}
 
 } // namespace coreinit

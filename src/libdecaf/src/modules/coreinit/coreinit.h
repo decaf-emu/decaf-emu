@@ -22,7 +22,6 @@ private:
    void initialiseClock();
 
    void initialiseAlarm();
-   void initialiseAppIo();
    void initialiseAllocatorFunctions();
    void initialiseEvent();
    void initialiseExceptions();
@@ -58,12 +57,20 @@ private:
    static void registerExitFunctions();
    static void registerExpHeapFunctions();
    static void registerFastMutexFunctions();
-   static void registerFileSystemFunctions();
+   static void registerFsFunctions();
+   static void registerFsCmdFunctions();
+   static void registerFsCmdBlockFunctions();
+   static void registerFsClientFunctions();
+   static void registerFsDriverFunctions();
+   static void registerFsFsmFunctions();
+   static void registerFsaShimFunctions();
    static void registerFrameHeapFunctions();
    static void registerGhsFunctions();
    static void registerGhsTypeInfoFunctions();
    static void registerImFunctions();
    static void registerInterruptFunctions();
+   static void registerIosFunctions();
+   static void registerIpcFunctions();
    static void registerLockedCacheFunctions();
    static void registerMcpFunctions();
    static void registerMembaseFunctions();

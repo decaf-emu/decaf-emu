@@ -1,0 +1,140 @@
+#pragma once
+#include "coreinit_enum.h"
+#include "coreinit_ios.h"
+#include "coreinit_fsa_request.h"
+#include "coreinit_fsa_response.h"
+#include "coreinit_messagequeue.h"
+
+#include <cstdint>
+#include <common/be_val.h>
+#include <common/be_ptr.h>
+#include <common/cbool.h>
+#include <common/structsize.h>
+
+namespace coreinit
+{
+
+/**
+ * \ingroup coreinit_fsa
+ * @{
+ */
+
+#pragma pack(push, 1)
+
+struct FSAShimBuffer;
+
+/**
+ * Stores data regarding FSA IPC requests.
+ */
+struct FSAShimBuffer
+{
+   //! Buffer for FSA IPC request.
+   FSARequest request;
+   UNKNOWN(0x60);
+
+   //! Buffer for FSA IPC response.
+   FSAResponse response;
+   UNKNOWN(0x880 - 0x813);
+
+   //! Memory to use for ioctlv calls, unknown maximum count - but at least 3.
+   IOSVec ioctlvVec[3];
+
+   UNKNOWN(0x900 - 0x8A4);
+
+   //! Command for FSA.
+   be_val<FSACommand> command;
+
+   //! Handle to FSA device.
+   be_val<IOSHandle> clientHandle;
+
+   //! IOS IPC request type to use.
+   be_val<FSAIpcRequestType> ipcReqType;
+
+   //! Number of ioctlv input vectors.
+   be_val<uint8_t> ioctlvVecIn;
+
+   //! Number of ioctlv output vectors.
+   be_val<uint8_t> ioctlvVecOut;
+
+   //! FSAAsyncResult used for FSA* functions.
+   FSAAsyncResult fsaAsyncResult;
+};
+CHECK_OFFSET(FSAShimBuffer, 0x0, request);
+CHECK_OFFSET(FSAShimBuffer, 0x580, response);
+CHECK_OFFSET(FSAShimBuffer, 0x880, ioctlvVec);
+CHECK_OFFSET(FSAShimBuffer, 0x900, command);
+CHECK_OFFSET(FSAShimBuffer, 0x904, clientHandle);
+CHECK_OFFSET(FSAShimBuffer, 0x908, ipcReqType);
+CHECK_OFFSET(FSAShimBuffer, 0x90A, ioctlvVecIn);
+CHECK_OFFSET(FSAShimBuffer, 0x90B, ioctlvVecOut);
+CHECK_OFFSET(FSAShimBuffer, 0x90C, fsaAsyncResult);
+CHECK_SIZE(FSAShimBuffer, 0x938);
+
+#pragma pack(pop)
+
+FSAStatus
+FSAShimDecodeIosErrorToFsaStatus(IOSHandle handle,
+                                 IOSError error);
+
+namespace internal
+{
+
+IOSError
+fsaShimOpen();
+
+IOSError
+fsaShimClose(IOSHandle handle);
+
+FSAStatus
+fsaShimSubmitRequest(FSAShimBuffer *shim,
+                     uint32_t requestWord0);
+
+FSAStatus
+fsaShimSubmitRequestAsync(FSAShimBuffer *shim,
+                          uint32_t requestWord0,
+                          IOSAsyncCallbackFn callback,
+                          void *context);
+
+FSAStatus
+fsaShimPrepareRequestChangeDir(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               const char *path);
+
+FSAStatus
+fsaShimPrepareRequestCloseFile(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               FSFileHandle fileHandle);
+
+FSAStatus
+fsaShimPrepareRequestGetCwd(FSAShimBuffer *shim,
+                            IOSHandle clientHandle);
+
+FSAStatus
+fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
+                                IOSHandle clientHandle,
+                                FSFileHandle fileHandle);
+
+FSAStatus
+fsaShimPrepareRequestOpenFile(FSAShimBuffer *shim,
+                              IOSHandle clientHandle,
+                              const char *path,
+                              const char *mode,
+                              uint32_t unk0x290,
+                              uint32_t unk0x294,
+                              uint32_t unk0x298);
+
+FSAStatus
+fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
+                              IOSHandle clientHandle,
+                              uint8_t *buffer,
+                              uint32_t size,
+                              uint32_t count,
+                              uint32_t pos,
+                              FSFileHandle handle,
+                              FSReadFlag readFlags);
+
+} // namespace internal
+
+/** @} */
+
+} // namespace coreinit

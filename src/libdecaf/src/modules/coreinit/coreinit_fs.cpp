@@ -1,306 +1,207 @@
 #include "coreinit.h"
+#include "coreinit_appio.h"
 #include "coreinit_fs.h"
 #include "coreinit_fs_client.h"
-#include "coreinit_fs_dir.h"
-#include "coreinit_fs_file.h"
-#include "coreinit_fs_path.h"
-#include "coreinit_fs_stat.h"
-#include "coreinit_internal_appio.h"
-#include "coreinit_memheap.h"
-#include "filesystem/filesystem.h"
-#include <condition_variable>
-#include <thread>
-#include <mutex>
-#include <queue>
+#include "coreinit_fs_driver.h"
 
 namespace coreinit
 {
 
+using ClientBodyQueue = internal::Queue<FSClientBodyQueue, FSClientBodyLink,
+                                        FSClientBody, &FSClientBody::link>;
+
 static bool
-sFsInitialised = false;
+sInitialised = false;
 
-static uint32_t
-sFsCoreId = 0;
+static FSClientBodyQueue
+sClientBodyQueue;
 
+
+/**
+ * Initialise filesystem.
+ */
 void
 FSInit()
 {
-   if (sFsInitialised) {
+   if (sInitialised || internal::fsDriverDone()) {
       return;
    }
 
-   sFsCoreId = cpu::this_core::id();
-   sFsInitialised = true;
+   sInitialised = true;
+   ClientBodyQueue::init(&sClientBodyQueue);
 }
 
 
+/**
+ * Shutdown filesystem.
+ */
 void
 FSShutdown()
 {
+   sInitialised = false;
 }
 
 
-void
-FSInitCmdBlock(FSCmdBlock *block)
+/**
+ * Get an FSAsyncResult from an OSMessage.
+ */
+FSAsyncResult *
+FSGetAsyncResult(OSMessage *message)
 {
-   memset(block, 0, sizeof(FSCmdBlock));
-   block->priority = 16;
+   return be_ptr<FSAsyncResult> { message->message };
 }
 
-
-FSStatus
-FSSetCmdPriority(FSCmdBlock *block,
-                 FSPriority priority)
-{
-   block->priority = priority;
-   return FSStatus::OK;
-}
-
-FSPriority
-FSGetCmdPriority(FSCmdBlock *block)
-{
-   return block->priority;
-}
 
 namespace internal
 {
-
-struct FSCmdBlockSortFn
-{
-   bool operator()(const FSCmdBlock *lhs, const FSCmdBlock *rhs) const
-   {
-      return lhs->priority < rhs->priority;
-   }
-};
-
-static std::thread
-sFsThread;
-
-static std::atomic_bool
-sFsThreadRunning;
-
-static std::mutex
-sFsQueueMutex;
-
-static std::condition_variable
-sFsQueueCond;
-
-static std::priority_queue<FSCmdBlock *, std::vector<FSCmdBlock *>, FSCmdBlockSortFn>
-sFsQueue;
-
-static std::queue<FSCmdBlock *>
-sFsDoneQueue;
-
-void
-handleFsDoneInterrupt()
-{
-   std::unique_lock<std::mutex> lock(sFsQueueMutex);
-
-   while (!sFsDoneQueue.empty()) {
-      auto item = sFsDoneQueue.front();
-      auto queue = item->result.userParams.queue;
-      auto &msg = item->result.ioMsg;
-      sFsDoneQueue.pop();
-
-      msg.message = &item->result;
-      msg.args[2] = AppIoEventType::FsAsyncCallback;
-
-      if (queue) {
-         OSSendMessage(queue, &msg, OSMessageFlags::None);
-      } else {
-         internal::sendMessage(&msg);
-      }
-   }
-}
-
-void
-fsThreadEntry()
-{
-   std::unique_lock<std::mutex> lock(sFsQueueMutex);
-
-   while (true)
-   {
-      if (!sFsQueue.empty()) {
-         auto item = sFsQueue.top();
-         sFsQueue.pop();
-         lock.unlock();
-
-         item->result.status = item->func();
-
-         lock.lock();
-         sFsDoneQueue.push(item);
-         cpu::interrupt(sFsCoreId, cpu::FS_DONE_INTERRUPT);
-      }
-
-      // This check needs to be here due to us unlocking the thread
-      //  to run the fs function.  This gives a window for the shutdown
-      //  notification to be missed.
-      if (!sFsThreadRunning.load()) {
-         break;
-      }
-
-      // Wait if we don't have any items to process
-      if (sFsQueue.empty()) {
-         sFsQueueCond.wait(lock);
-      }
-   }
-}
-
-void
-startFsThread()
-{
-   std::unique_lock<std::mutex> lock(sFsQueueMutex);
-   sFsThreadRunning.store(true);
-   sFsThread = std::thread(fsThreadEntry);
-}
-
-void
-shutdownFsThread()
-{
-   std::unique_lock<std::mutex> lock(sFsQueueMutex);
-   if (sFsThreadRunning.exchange(false)) {
-      sFsQueueCond.notify_all();
-      lock.unlock();
-
-      sFsThread.join();
-   }
-}
-
-FSAsyncData *
-prepareSyncOp(FSClient *client,
-              FSCmdBlock *block)
-{
-   OSInitMessageQueue(&block->syncQueue, block->syncQueueMsgs, 1);
-
-   FSAsyncData *asyncData = &block->result.userParams;
-   asyncData->callback = 0;
-   asyncData->param = 0;
-   asyncData->queue = &block->syncQueue;
-   return asyncData;
-}
-
-FSStatus
-resolveSyncOp(FSClient *client,
-              FSCmdBlock *block)
-{
-   OSMessage ioMsg;
-   OSReceiveMessage(&block->syncQueue, &ioMsg, OSMessageFlags::Blocking);
-
-   auto result = FSGetAsyncResult(&ioMsg);
-
-   if (result->status == FSStatus::FatalError) {
-      gLog->critical("An FS operation has failed with FatalError.");
-      OSExitThread(-1);
-   }
-
-   return result->status;
-}
-
-void
-queueFsWork(FSClient *client,
-            FSCmdBlock *block,
-            FSAsyncData *asyncData,
-            std::function<FSStatus()> func)
-{
-   auto &asyncRes = block->result;
-   asyncRes.userParams = *asyncData;
-   asyncRes.client = client;
-   asyncRes.block = block;
-
-   block->func = func;
-   std::unique_lock<std::mutex> lock(sFsQueueMutex);
-   sFsQueue.push(block);
-   sFsQueueCond.notify_all();
-}
-
-// We do not implement the following as I do not know the expected
-//  behaviour when someone tries to cancel a synchronous operation.
+   
+/**
+ * Returns true if filesystem has been intialised.
+ */
 bool
-cancelFsWork(FSCmdBlock *cmd)
+fsInitialised()
 {
-   return false;
+   return sInitialised;
 }
-void
-cancelAllFsWork()
+
+
+/**
+ * Returns true if client is registered.
+ */
+bool
+fsClientRegistered(FSClient *client)
 {
+   return fsClientRegistered(fsClientGetBody(client));
+}
+
+
+/**
+ * Returns true if client is registered.
+ */
+bool
+fsClientRegistered(FSClientBody *clientBody)
+{
+   return ClientBodyQueue::contains(&sClientBodyQueue, clientBody);
+}
+
+
+/**
+ * Register a client with the filesystem.
+ */
+bool
+fsRegisterClient(FSClientBody *clientBody)
+{
+   ClientBodyQueue::append(&sClientBodyQueue, clientBody);
+   return true;
+}
+
+
+/**
+ * Initialise an FSAsyncResult structure for an FS command.
+ *
+ * \retval FSStatus::OK
+ * Success.
+ */
+FSStatus
+fsAsyncResultInit(FSClientBody *clientBody,
+                  FSAsyncResult *asyncResult,
+                  const FSAsyncData *asyncData)
+{
+   asyncResult->asyncData = *asyncData;
+
+   if (!asyncData->ioMsgQueue) {
+      asyncResult->asyncData.ioMsgQueue = OSGetDefaultAppIOQueue();
+   }
+
+   asyncResult->client = clientBody->client;
+   asyncResult->ioMsg.data = asyncResult;
+   asyncResult->ioMsg.type = OSFunctionType::FsCmdAsync;
+   return FSStatus::OK;
+}
+
+
+/**
+ * Convert an FSAStatus error code to an FSStatus error code.
+ */
+FSStatus
+fsDecodeFsaStatusToFsStatus(FSAStatus error)
+{
+   switch (error) {
+   case FSAStatus::NotInit:
+   case FSAStatus::Busy:
+      return FSStatus::FatalError;
+   case FSAStatus::Cancelled:
+      return FSStatus::Cancelled;
+   case FSAStatus::EndOfDir:
+   case FSAStatus::EndOfFile:
+      return FSStatus::End;
+   case FSAStatus::MaxMountpoints:
+   case FSAStatus::MaxVolumes:
+   case FSAStatus::MaxClients:
+   case FSAStatus::MaxFiles:
+   case FSAStatus::MaxDirs:
+      return FSStatus::Max;
+   case FSAStatus::AlreadyOpen:
+      return FSStatus::AlreadyOpen;
+   case FSAStatus::AlreadyExists:
+      return FSStatus::Exists;
+   case FSAStatus::NotFound:
+      return FSStatus::NotFound;
+   case FSAStatus::NotEmpty:
+      return FSStatus::Exists;
+   case FSAStatus::AccessError:
+      return FSStatus::AccessError;
+   case FSAStatus::PermissionError:
+      return FSStatus::PermissionError;
+   case FSAStatus::DataCorrupted:
+      return FSStatus::FatalError;
+   case FSAStatus::StorageFull:
+      return FSStatus::StorageFull;
+   case FSAStatus::JournalFull:
+      return FSStatus::JournalFull;
+   case FSAStatus::LinkEntry:
+      return FSStatus::FatalError;
+   case FSAStatus::UnavailableCmd:
+      return FSStatus::FatalError;
+   case FSAStatus::UnsupportedCmd:
+      return FSStatus::UnsupportedCmd;
+   case FSAStatus::InvalidParam:
+   case FSAStatus::InvalidPath:
+   case FSAStatus::InvalidBuffer:
+   case FSAStatus::InvalidAlignment:
+   case FSAStatus::InvalidClientHandle:
+   case FSAStatus::InvalidFileHandle:
+   case FSAStatus::InvalidDirHandle:
+      return FSStatus::FatalError;
+   case FSAStatus::NotFile:
+      return FSStatus::NotFile;
+   case FSAStatus::NotDir:
+      return FSStatus::NotDirectory;
+   case FSAStatus::FileTooBig:
+      return FSStatus::FileTooBig;
+   case FSAStatus::OutOfRange:
+   case FSAStatus::OutOfResources:
+      return FSStatus::FatalError;
+   case FSAStatus::MediaNotReady:
+      return FSStatus::FatalError;
+   case FSAStatus::MediaError:
+      return FSStatus::MediaError;
+   case FSAStatus::WriteProtected:
+   case FSAStatus::InvalidMedia:
+      return FSStatus::FatalError;
+   }
+
+   return FSStatus::FatalError;
 }
 
 } // namespace internal
 
 void
-Module::registerFileSystemFunctions()
+Module::registerFsFunctions()
 {
    RegisterKernelFunction(FSInit);
    RegisterKernelFunction(FSShutdown);
-   RegisterKernelFunction(FSAddClient);
-   RegisterKernelFunction(FSAddClientEx);
-   RegisterKernelFunction(FSCancelCommand);
-   RegisterKernelFunction(FSDelClient);
-   RegisterKernelFunction(FSGetClientNum);
-   RegisterKernelFunction(FSInitCmdBlock);
-   RegisterKernelFunction(FSSetCmdPriority);
-   RegisterKernelFunction(FSGetCmdPriority);
-   RegisterKernelFunction(FSSetStateChangeNotification);
-   RegisterKernelFunction(FSGetVolumeState);
-   RegisterKernelFunction(FSGetErrorCodeForViewer);
-   RegisterKernelFunction(FSGetLastErrorCodeForViewer);
    RegisterKernelFunction(FSGetAsyncResult);
-   RegisterKernelFunction(FSGetUserData);
-   RegisterKernelFunction(FSSetUserData);
-   RegisterKernelFunction(FSGetCurrentCmdBlock);
-
-   // coreinit_fs_path
-   RegisterKernelFunction(FSGetCwd);
-   RegisterKernelFunction(FSChangeDir);
-   RegisterKernelFunction(FSChangeDirAsync);
-
-   // coreinit_fs_stat
-   RegisterKernelFunction(FSGetStat);
-   RegisterKernelFunction(FSGetStatAsync);
-   RegisterKernelFunction(FSGetStatFile);
-   RegisterKernelFunction(FSGetStatFileAsync);
-
-   // coreinit_fs_file
-   RegisterKernelFunction(FSOpenFile);
-   RegisterKernelFunction(FSOpenFileAsync);
-   RegisterKernelFunction(FSCloseFile);
-   RegisterKernelFunction(FSCloseFileAsync);
-   RegisterKernelFunction(FSReadFile);
-   RegisterKernelFunction(FSReadFileAsync);
-   RegisterKernelFunction(FSReadFileWithPos);
-   RegisterKernelFunction(FSReadFileWithPosAsync);
-   RegisterKernelFunction(FSWriteFile);
-   RegisterKernelFunction(FSWriteFileAsync);
-   RegisterKernelFunction(FSWriteFileWithPos);
-   RegisterKernelFunction(FSWriteFileWithPosAsync);
-   RegisterKernelFunction(FSIsEof);
-   RegisterKernelFunction(FSIsEofAsync);
-   RegisterKernelFunction(FSGetPosFile);
-   RegisterKernelFunction(FSGetPosFileAsync);
-   RegisterKernelFunction(FSSetPosFile);
-   RegisterKernelFunction(FSSetPosFileAsync);
-   RegisterKernelFunction(FSTruncateFile);
-   RegisterKernelFunction(FSTruncateFileAsync);
-
-   // coreinit_fs_dir
-   RegisterKernelFunction(FSOpenDir);
-   RegisterKernelFunction(FSOpenDirAsync);
-   RegisterKernelFunction(FSCloseDir);
-   RegisterKernelFunction(FSCloseDirAsync);
-   RegisterKernelFunction(FSMakeDir);
-   RegisterKernelFunction(FSMakeDirAsync);
-   RegisterKernelFunction(FSReadDir);
-   RegisterKernelFunction(FSReadDirAsync);
-   RegisterKernelFunction(FSRewindDir);
-   RegisterKernelFunction(FSRewindDirAsync);
-   RegisterKernelFunction(FSRemoveAsync);
-   RegisterKernelFunction(FSRemove);
-   RegisterKernelFunction(FSRename);
-   RegisterKernelFunction(FSRenameAsync);
-   RegisterKernelFunction(FSGetFreeSpaceSizeAsync);
-   RegisterKernelFunction(FSGetFreeSpaceSize);
-   RegisterKernelFunction(FSFlushQuotaAsync);
-   RegisterKernelFunction(FSFlushQuota);
 }
 
 } // namespace coreinit

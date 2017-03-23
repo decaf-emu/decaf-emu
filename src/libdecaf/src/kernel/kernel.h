@@ -13,6 +13,11 @@ struct OSContext;
 namespace kernel
 {
 
+/**
+* \defgroup kernel Kernel
+* @{
+*/
+
 namespace loader
 {
 struct LoadedModule;
@@ -22,6 +27,9 @@ struct Fiber;
 
 void
 initialise();
+
+void
+shutdown();
 
 void
 setExecutableFilename(const std::string& name);
@@ -52,5 +60,7 @@ getExitCode();
 
 const decaf::GameInfo &
 getGameInfo();
+
+/** @} */
 
 } // namespace kernel

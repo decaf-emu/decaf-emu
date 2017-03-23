@@ -21,46 +21,56 @@ using OSDriver_OnDoneFn = wfunc_ptr<void, uint32_t>;
 
 struct OSDriverInterface
 {
+   //! Return the driver name
    OSDriver_GetNameFn::be name;
+
+   //! Called to initialise the driver.
    OSDriver_OnInitFn::be onInit;
+
+   //! Called when application is brought to foreground.
    OSDriver_OnAcquiredForegroundFn::be onAcquiredForeground;
+
+   //! Called when application is sent to background.
    OSDriver_OnReleasedForegroundFn::be onReleasedForeground;
+
+   //! Called when driver is done.
    OSDriver_OnDoneFn::be onDone;
 };
 
 struct OSDriver
 {
-   /* Module handle of current RPL */
+   //! Module handle of current RPL.
    be_ModuleHandle moduleHandle;
 
-   /* Value set from r6 of OSDriver_Register
-    * First argument passed to all driver interface functions */
+   //! Value set from r6 of OSDriver_Register.
+   //! First argument passed to all driver interface functions.
    be_val<uint32_t> unk_r6_OSDriver_Register;
 
-   /* Set to 1 in OSDriever_Register */
+   //! Set to 1 in OSDriever_Register.
    be_val<uint32_t> unk0x08;
 
-   /* Whether OSDriver_Register was called when process is in foreground */
+   //! Whether OSDriver_Register was called when process is in foreground.
    be_val<BOOL> inForeground;
 
-   /* Value set from r4 of OSDriver_Register */
+   //! Value set from r4 of OSDriver_Register.
    be_val<uint32_t> unk_r4_OSDriver_Register;
 
-   /* Core on which OSDriver_Register was called */
+   //!Core on which OSDriver_Register was called.
    be_val<uint32_t> coreID;
 
-   /* Interface function pointers */
+   //! Interface function pointers.
    OSDriverInterface interfaceFunctions;
 
-   /* Module handles for each interface function */
+   //! Module handles for each interface function.
    be_ModuleHandle interfaceModuleHandles[5];
 
-   /* Pointer to this passed as r5 to syscall 0x3200 */
+   //! Pointer to this passed as r5 to syscall 0x3200.
    be_val<uint32_t> unk0x40;
 
-   /* Pointer to this passed as r6 to syscall 0x3200 */
+   //! Pointer to this passed as r6 to syscall 0x3200.
    be_val<uint32_t> unk0x44;
 
+   //! Pointer to next OSDriver in linked list.
    be_ptr<OSDriver> next;
 };
 CHECK_OFFSET(OSDriver, 0x00, moduleHandle);

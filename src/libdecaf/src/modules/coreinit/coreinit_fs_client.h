@@ -1,118 +1,180 @@
 #pragma once
-#include <mutex>
-#include <vector>
+#include "coreinit_alarm.h"
+#include "coreinit_enum.h"
+#include "coreinit_ios.h"
+#include "coreinit_fastmutex.h"
 #include "coreinit_fs.h"
-#include "filesystem/filesystem.h"
+#include "coreinit_fs_cmdblock.h"
+#include "coreinit_fs_cmdqueue.h"
+#include "coreinit_fs_statemachine.h"
+
+#include <cstdint>
+#include <common/be_val.h>
+#include <common/be_ptr.h>
+#include <common/structsize.h>
 
 namespace coreinit
 {
 
 /**
  * \ingroup coreinit_fs
+ * @{
  */
 
-class FSClient
+struct FSClient;
+struct FSClientBody;
+struct FSClientBodyLink;
+struct FSCmdBlockBody;
+
+
+/**
+ * Attach parameters passed to FSAddClientEx.
+ */
+struct FSAttachParams
 {
-public:
-   FSClient();
-
-   FSFileHandle
-   addOpenFile(fs::FileHandle *file);
-
-   FSDirectoryHandle
-   addOpenDirectory(fs::FolderHandle *folder);
-
-   fs::FileHandle *
-   getOpenFile(FSFileHandle handle);
-
-   fs::FolderHandle *
-   getOpenDirectory(FSDirectoryHandle handle);
-
-   void
-   removeOpenDirectory(FSDirectoryHandle handle);
-
-   void
-   removeOpenFile(FSFileHandle handle);
-
-   void
-   setLastError(FSError error);
-
-   FSError
-   getLastError();
-
-   void
-   setWorkingPath(fs::Path path);
-
-   fs::Path
-   getWorkingPath();
-
-private:
-   FSError mLastError;
-   std::mutex mMutex;
-   std::vector<fs::FileHandle *> mOpenFiles;
-   std::vector<fs::FolderHandle *> mOpenFolders;
-   fs::Path mWorkingPath;
+   be_ptr<void> userCallback;
+   be_ptr<void> userContext;
 };
+CHECK_OFFSET(FSAttachParams, 0x00, userCallback);
+CHECK_OFFSET(FSAttachParams, 0x04, userContext);
+CHECK_SIZE(FSAttachParams, 0x8);
 
-static_assert(sizeof(FSClient) < 0x1700, "FSClient must be less than 0x1700 bytes");
 
-FSStatus
-FSAddClient(FSClient *client,
-            uint32_t flags);
+/**
+ * Client container, use internal::getClientBody to get the actual data.
+ */
+struct FSClient
+{
+   uint8_t data[0x1700];
+};
+CHECK_SIZE(FSClient, 0x1700);
+
+
+/**
+ * Link entry used for FSClientBodyQueue.
+ */
+struct FSClientBodyLink
+{
+   be_ptr<FSClientBody> next;
+   be_ptr<FSClientBody> prev;
+};
+CHECK_OFFSET(FSClientBodyLink, 0x00, next);
+CHECK_OFFSET(FSClientBodyLink, 0x04, prev);
+CHECK_SIZE(FSClientBodyLink, 0x8);
+
+
+/**
+ * A queue structure to contain FSClientBody.
+ */
+struct FSClientBodyQueue
+{
+   be_ptr<FSClientBody> head;
+   be_ptr<FSClientBody> tail;
+};
+CHECK_OFFSET(FSClientBodyQueue, 0x00, head);
+CHECK_OFFSET(FSClientBodyQueue, 0x04, tail);
+CHECK_SIZE(FSClientBodyQueue, 0x08);
+
+
+/**
+ * The actual data of an FSClient.
+ */
+struct FSClientBody
+{
+   UNKNOWN(0x1444);
+
+   //! IOSHandle returned from fsaShimOpen.
+   be_val<IOSHandle> clientHandle;
+
+   //! State machine.
+   FSFsm fsm;
+
+   //! Command queue of FS commands.
+   FSCmdQueue cmdQueue;
+
+   //! The last dequeued command.
+   be_ptr<FSCmdBlockBody> lastDequeuedCommand;
+
+   be_val<uint32_t> unk0x14C8_fsa_cmd_word0;
+   be_val<uint32_t> unk0x14CC;
+   be_val<uint32_t> unk0x14D0;
+   UNKNOWN(0x1560 - 0x14D4);
+
+   //! Mutex used to protect FSClientBody data.
+   OSFastMutex mutex;
+
+   UNKNOWN(4);
+
+   //! Alarm used by fsm for unknown reasons.
+   OSAlarm fsmAlarm;
+
+   //! Error of last FS command.
+   be_val<FSAStatus> lastError;
+
+   be_val<BOOL> isLastErrorWithoutVolume;
+
+   //! Message used to send FsCmdHandler message when FSA async callback is received.
+   FSMessage fsCmdHandlerMsg;
+
+   UNKNOWN(0x1614 - 0x1600);
+
+   //! Link used for linked list of clients.
+   FSClientBodyLink link;
+
+   //! Pointer to unaligned FSClient structure.
+   be_ptr<FSClient> client;
+};
+CHECK_OFFSET(FSClientBody, 0x1444, clientHandle);
+CHECK_OFFSET(FSClientBody, 0x1448, fsm);
+CHECK_OFFSET(FSClientBody, 0x1480, cmdQueue);
+CHECK_OFFSET(FSClientBody, 0x14C4, lastDequeuedCommand);
+CHECK_OFFSET(FSClientBody, 0x14C8, unk0x14C8_fsa_cmd_word0);
+CHECK_OFFSET(FSClientBody, 0x14CC, unk0x14CC);
+CHECK_OFFSET(FSClientBody, 0x14D0, unk0x14D0);
+CHECK_OFFSET(FSClientBody, 0x1560, mutex);
+CHECK_OFFSET(FSClientBody, 0x1590, fsmAlarm);
+CHECK_OFFSET(FSClientBody, 0x15E8, lastError);
+CHECK_OFFSET(FSClientBody, 0x15EC, isLastErrorWithoutVolume);
+CHECK_OFFSET(FSClientBody, 0x15F0, fsCmdHandlerMsg);
+CHECK_OFFSET(FSClientBody, 0x1614, link);
+CHECK_OFFSET(FSClientBody, 0x161C, client);
 
 FSStatus
 FSAddClientEx(FSClient *client,
-              uint32_t unk,
-              uint32_t flags);
+              FSAttachParams *attachParams,
+              FSErrorFlag errorMask);
 
 FSStatus
-FSDelClient(FSClient *client,
-            uint32_t flags);
-
-uint32_t
-FSGetClientNum();
-
-FSVolumeState
-FSGetVolumeState(FSClient *client);
-
-FSError
-FSGetErrorCodeForViewer(FSClient *client, FSCmdBlock *block);
-
-FSError
-FSGetLastErrorCodeForViewer(FSClient *client);
-
-void
-FSSetStateChangeNotification(FSClient *client,
-                             FSStateChangeInfo *info);
-
-FSAsyncResult*
-FSGetAsyncResult(OSMessage *ioMsg);
-
-void
-FSCancelCommand(FSClient *client,
-                FSCmdBlock *block);
-
-void
-FSSetUserData(FSCmdBlock *block,
-              void *userData);
-
-void *
-FSGetUserData(FSCmdBlock *block);
-
-FSCmdBlock *
-FSGetCurrentCmdBlock(FSClient *client);
-
-/** @} */
+FSAddClient(FSClient *client,
+            FSErrorFlag errorMask);
 
 namespace internal
 {
 
-FSStatus
-translateError(fs::Error error);
+FSClientBody *
+fsClientGetBody(FSClient *client);
 
 void
-handleAsyncCallback(FSAsyncResult *result);
+fsClientHandleFatalError(FSClientBody *clientBody,
+                         FSAStatus error);
+
+FSStatus
+fsClientHandleShimPrepareError(FSClientBody *clientBody,
+                               FSAStatus error);
+
+FSStatus
+fsClientHandleAsyncResult(FSClient *client,
+                          FSCmdBlock *block,
+                          FSStatus result,
+                          FSErrorFlag errorMask);
+
+void
+fsClientSubmitCommand(FSClientBody *clientBody,
+                      FSCmdBlockBody *blockBody,
+                      FSFinishCmdFn finishCmdFn);
 
 } // namespace internal
+
+/** @} */
 
 } // namespace coreinit

@@ -1,5 +1,5 @@
 #include "coreinit.h"
-#include "coreinit_memheap.h"
+#include "coreinit_fsa.h"
 
 namespace coreinit
 {
@@ -15,7 +15,6 @@ Module::initialise()
    initialiseClock();
 
    initialiseAlarm();
-   initialiseAppIo();
    initialiseAllocatorFunctions();
    initialiseEvent();
    initialiseExceptions();
@@ -51,12 +50,24 @@ Module::RegisterFunctions()
    registerExitFunctions();
    registerExpHeapFunctions();
    registerFastMutexFunctions();
-   registerFileSystemFunctions();
+   registerFsFunctions();
+   registerFsCmdFunctions();
+   registerFsCmdBlockFunctions();
+   registerFsClientFunctions();
+   registerFsDriverFunctions();
+   registerFsFsmFunctions();
+
+   // coreinit_fsa
+   RegisterKernelFunction(FSAGetAsyncResult);
+
+   registerFsaShimFunctions();
    registerFrameHeapFunctions();
    registerGhsFunctions();
    registerGhsTypeInfoFunctions();
    registerImFunctions();
    registerInterruptFunctions();
+   registerIosFunctions();
+   registerIpcFunctions();
    registerLockedCacheFunctions();
    registerMcpFunctions();
    registerMemoryFunctions();
