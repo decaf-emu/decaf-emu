@@ -3,6 +3,7 @@
 #include "coreinit_fs.h"
 #include "coreinit_fs_client.h"
 #include "coreinit_fs_driver.h"
+#include "coreinit_fastmutex.h"
 
 namespace coreinit
 {
@@ -10,11 +11,15 @@ namespace coreinit
 using ClientBodyQueue = internal::Queue<FSClientBodyQueue, FSClientBodyLink,
                                         FSClientBody, &FSClientBody::link>;
 
-static bool
-sInitialised = false;
+struct FsData
+{
+   bool initialised;
+   OSFastMutex mutex;
+   FSClientBodyQueue clients;
+};
 
-static FSClientBodyQueue
-sClientBodyQueue;
+static FsData *
+sFsData;
 
 
 /**
@@ -23,12 +28,13 @@ sClientBodyQueue;
 void
 FSInit()
 {
-   if (sInitialised || internal::fsDriverDone()) {
+   if (sFsData->initialised || internal::fsDriverDone()) {
       return;
    }
 
-   sInitialised = true;
-   ClientBodyQueue::init(&sClientBodyQueue);
+   sFsData->initialised = true;
+   ClientBodyQueue::init(&sFsData->clients);
+   OSFastMutex_Init(&sFsData->mutex, nullptr);
 }
 
 
@@ -38,7 +44,7 @@ FSInit()
 void
 FSShutdown()
 {
-   sInitialised = false;
+   sFsData->initialised = false;
 }
 
 
@@ -54,14 +60,14 @@ FSGetAsyncResult(OSMessage *message)
 
 namespace internal
 {
-   
+
 /**
  * Returns true if filesystem has been intialised.
  */
 bool
 fsInitialised()
 {
-   return sInitialised;
+   return sFsData->initialised;
 }
 
 
@@ -81,7 +87,10 @@ fsClientRegistered(FSClient *client)
 bool
 fsClientRegistered(FSClientBody *clientBody)
 {
-   return ClientBodyQueue::contains(&sClientBodyQueue, clientBody);
+   OSFastMutex_Lock(&sFsData->mutex);
+   bool registered = ClientBodyQueue::contains(&sFsData->clients, clientBody);
+   OSFastMutex_Unlock(&sFsData->mutex);
+   return registered;
 }
 
 
@@ -91,7 +100,22 @@ fsClientRegistered(FSClientBody *clientBody)
 bool
 fsRegisterClient(FSClientBody *clientBody)
 {
-   ClientBodyQueue::append(&sClientBodyQueue, clientBody);
+   OSFastMutex_Lock(&sFsData->mutex);
+   ClientBodyQueue::append(&sFsData->clients, clientBody);
+   OSFastMutex_Unlock(&sFsData->mutex);
+   return true;
+}
+
+
+/**
+ * Deregister a client from the filesystem.
+ */
+bool
+fsDeregisterClient(FSClientBody *clientBody)
+{
+   OSFastMutex_Lock(&sFsData->mutex);
+   ClientBodyQueue::erase(&sFsData->clients, clientBody);
+   OSFastMutex_Unlock(&sFsData->mutex);
    return true;
 }
 
@@ -202,6 +226,7 @@ Module::registerFsFunctions()
    RegisterKernelFunction(FSInit);
    RegisterKernelFunction(FSShutdown);
    RegisterKernelFunction(FSGetAsyncResult);
+   RegisterInternalData(sFsData);
 }
 
 } // namespace coreinit

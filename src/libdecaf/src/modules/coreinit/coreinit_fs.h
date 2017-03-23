@@ -195,6 +195,9 @@ fsClientRegistered(FSClientBody *clientBody);
 bool
 fsRegisterClient(FSClientBody *clientBody);
 
+bool
+fsDeregisterClient(FSClientBody *clientBody);
+
 FSStatus
 fsAsyncResultInit(FSClientBody *clientBody,
                   FSAsyncResult *asyncResult,
