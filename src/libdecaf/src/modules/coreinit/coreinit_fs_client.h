@@ -148,6 +148,11 @@ FSStatus
 FSAddClient(FSClient *client,
             FSErrorFlag errorMask);
 
+FSStatus
+FSDelClient(FSClient *client,
+            FSErrorFlag errorMask);
+
+
 namespace internal
 {
 

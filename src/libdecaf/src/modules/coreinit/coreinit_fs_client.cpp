@@ -77,20 +77,80 @@ FSAddClientEx(FSClient *client,
    clientBody->unk0x14C8_fsa_cmd_word0 = 0;
    clientBody->unk0x14CC = 0;
 
+   // TODO: Initialise attach params related data
    if (attachParams) {
       // 0x1240 = 4
+
       // 0x1248 = attachParams.callback
       // 0x124C = this
-      // 0x1254 = &(this + 0x1248)
+
+      // 0x1254 = &(this + 0x1248) // FSMessage ?
       // 0x1260 = 0xA // OSFunctionType::FsAttach ?
 
       // 0x1428 = 0
+
       // 0x1440 = attachParams.context
    } else {
       // 0x1240 = 0
       // 0x1428 = 0
    }
 
+   return FSStatus::OK;
+}
+
+
+/**
+ * Destroy an FSClient.
+ *
+ * Might block thread to wait for last command to finish.
+ */
+FSStatus
+FSDelClient(FSClient *client,
+            FSErrorFlag errorMask)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+
+   if (!internal::fsInitialised()) {
+      return FSStatus::FatalError;
+   }
+
+   if (!clientBody->link.prev) {
+      // Already deleted.
+      return FSStatus::FatalError;
+   }
+
+   // Prevent any new commands from being started.
+   internal::fsCmdQueueSuspend(&clientBody->cmdQueue);
+
+   // Wait for last active command to be completed.
+   auto sleptMS = 0;
+   auto timeoutMS = 10;
+
+   while (clientBody->cmdQueue.activeCmds) {
+      if (clientBody->fsm.clientVolumeState != FSVolumeState::Fatal) {
+         // The FS client is in an error state.
+         break;
+      }
+
+      if (clientBody->lastDequeuedCommand &&
+          clientBody->lastDequeuedCommand->status == FSCmdBlockStatus::Completed) {
+         // The last command has completed.
+         break;
+      }
+
+      if (sleptMS == timeoutMS) {
+         // We have timed out waiting for last command to complete.
+         break;
+      }
+
+      OSSleepTicks(internal::msToTicks(1));
+      sleptMS += 1;
+   }
+
+   // Cleanup.
+   internal::fsCmdQueueDestroy(&clientBody->cmdQueue);
+   internal::fsaShimClose(clientBody->clientHandle);
+   internal::fsDeregisterClient(clientBody);
    return FSStatus::OK;
 }
 
@@ -176,7 +236,7 @@ fsClientHandleAsyncResult(FSClient *client,
 
       return FSGetAsyncResult(&message)->status;
    }
-   
+
    switch (result) {
    case FSStatus::Max:
       errorFlags = FSErrorFlag::Max;
@@ -325,6 +385,7 @@ Module::registerFsClientFunctions()
 {
    RegisterKernelFunction(FSAddClient);
    RegisterKernelFunction(FSAddClientEx);
+   RegisterKernelFunction(FSDelClient);
    RegisterInternalFunction(internal::fsClientHandleFsaAsyncCallback, sHandleFsaAsyncCallback);
    RegisterInternalFunction(internal::fsClientHandleDequeuedCommand, sHandleDequeuedCommand);
 }

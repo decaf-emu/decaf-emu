@@ -65,6 +65,18 @@ fsCmdQueueCreate(FSCmdQueue *queue,
                  uint32_t maxActiveCmds);
 
 void
+fsCmdQueueDestroy(FSCmdQueue *queue);
+
+void
+fsCmdQueueCancelAll(FSCmdQueue *queue);
+
+void
+fsCmdQueueSuspend(FSCmdQueue *queue);
+
+void
+fsCmdQueueResume(FSCmdQueue *queue);
+
+void
 fsCmdQueueEnqueue(FSCmdQueue *queue,
                   FSCmdBlockBody *blockBody,
                   bool sortLE);

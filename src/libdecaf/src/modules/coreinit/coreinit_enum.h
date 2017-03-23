@@ -328,6 +328,7 @@ ENUM_END(FSCmdCancelFlags)
 
 ENUM_BEG(FSCmdQueueStatus, uint32_t)
    ENUM_VALUE(MaxActiveCommands,       1)
+   ENUM_VALUE(Suspended,               0x10)
 ENUM_END(FSCmdQueueStatus)
 
 ENUM_BEG(FSErrorFlag, uint32_t)

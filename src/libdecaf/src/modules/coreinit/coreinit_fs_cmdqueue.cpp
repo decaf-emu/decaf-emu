@@ -57,6 +57,56 @@ fsCmdQueueCreate(FSCmdQueue *queue,
 
 
 /**
+ * Destroy a FSCmdQueue structure.
+ */
+void
+fsCmdQueueDestroy(FSCmdQueue *queue)
+{
+   fsCmdQueueCancelAll(queue);
+}
+
+
+/**
+ * Cancels all commands in a FSCmdQueue structure.
+ */
+void
+fsCmdQueueCancelAll(FSCmdQueue *queue)
+{
+   OSFastMutex_Lock(&queue->mutex);
+
+   while (auto cmd = fsCmdQueuePopFront(queue)) {
+      cmd->status = FSCmdBlockStatus::Cancelled;
+   }
+
+   OSFastMutex_Unlock(&queue->mutex);
+}
+
+
+/**
+ * Prevent the FSCmdQueue from dequeuing new commands.
+ *
+ * Sets the FSCmdQueueStatus::Suspended flag.
+ */
+void
+fsCmdQueueSuspend(FSCmdQueue *queue)
+{
+   queue->status |= FSCmdQueueStatus::Suspended;
+}
+
+
+/**
+ * Allow the FSCmdQueue to dequeuing new commands.
+ *
+ * Clears the FSCmdQueueStatus::Suspended flag.
+ */
+void
+fsCmdQueueResume(FSCmdQueue *queue)
+{
+   queue->status &= ~FSCmdQueueStatus::Suspended;
+}
+
+
+/**
  * Insert a command into the queue, sorted by priority.
  */
 void
@@ -72,7 +122,7 @@ fsCmdQueueEnqueue(FSCmdQueue *queue,
 }
 
 
-/** 
+/**
  * Insert a command at the front of the queue.
  */
 void
@@ -114,7 +164,8 @@ fsCmdQueuePopFront(FSCmdQueue *queue)
 bool
 fsCmdQueueBeginCmd(FSCmdQueue *queue)
 {
-   if (queue->status & FSCmdQueueStatus::MaxActiveCommands) {
+   if (queue->status & FSCmdQueueStatus::MaxActiveCommands ||
+       queue->status & FSCmdQueueStatus::Suspended) {
       return false;
    }
 
