@@ -71,6 +71,15 @@ CHECK_OFFSET(FSARequestReadFile, 0x10, handle);
 CHECK_OFFSET(FSARequestReadFile, 0x14, readFlags);
 CHECK_SIZE(FSARequestReadFile, 0x18);
 
+struct FSARequestSetPosFile
+{
+   be_val<FSFileHandle> handle;
+   be_val<FSFilePosition> pos;
+};
+CHECK_OFFSET(FSARequestSetPosFile, 0x0, handle);
+CHECK_OFFSET(FSARequestSetPosFile, 0x4, pos);
+CHECK_SIZE(FSARequestSetPosFile, 0x8);
+
 struct FSARequest
 {
    be_val<uint32_t> unk0x00;
@@ -82,6 +91,7 @@ struct FSARequest
       FSARequestGetPosFile getPosFile;
       FSARequestOpenFile openFile;
       FSARequestReadFile readFile;
+      FSARequestSetPosFile setPosFile;
       UNKNOWN(0x51C);
    };
 };

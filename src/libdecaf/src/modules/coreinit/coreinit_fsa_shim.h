@@ -133,6 +133,12 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
                               FSFileHandle handle,
                               FSReadFlag readFlags);
 
+FSAStatus
+fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
+                                IOSHandle clientHandle,
+                                FSFileHandle fileHandle,
+                                FSFilePosition pos);
+
 } // namespace internal
 
 /** @} */

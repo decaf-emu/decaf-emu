@@ -401,6 +401,55 @@ FSReadFileWithPosAsync(FSClient *client,
 }
 
 
+FSStatus
+FSSetPosFile(FSClient *client,
+             FSCmdBlock *block,
+             FSFileHandle handle,
+             FSFilePosition pos,
+             FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSSetPosFileAsync(client, block, handle, pos,
+                                   errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+
+FSStatus
+FSSetPosFileAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  FSFileHandle handle,
+                  FSFilePosition pos,
+                  FSErrorFlag errorMask,
+                  FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestSetPosFile(&blockBody->fsaShimBuffer,
+                                                          clientBody->clientHandle,
+                                                          handle,
+                                                          pos);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
 namespace internal
 {
 
@@ -479,6 +528,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSReadFileAsync);
    RegisterKernelFunction(FSReadFileWithPos);
    RegisterKernelFunction(FSReadFileWithPosAsync);
+   RegisterKernelFunction(FSSetPosFile);
+   RegisterKernelFunction(FSSetPosFileAsync);
 }
 
 } // namespace coreinit

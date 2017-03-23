@@ -311,6 +311,31 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
    return FSAStatus::OK;
 }
 
+
+/**
+ * Prepare a FSACommand::SetPosFile request.
+ */
+FSAStatus
+fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
+                                IOSHandle clientHandle,
+                                FSFileHandle fileHandle,
+                                FSFilePosition pos)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::SetPosFile;
+
+   auto request = &shim->request.setPosFile;
+   request->handle = fileHandle;
+   request->pos = pos;
+
+   return FSAStatus::OK;
+}
+
 } // namespace internal
 
 void

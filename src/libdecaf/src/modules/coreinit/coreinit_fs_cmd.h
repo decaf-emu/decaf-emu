@@ -144,4 +144,19 @@ FSReadFileWithPosAsync(FSClient *client,
                        FSErrorFlag errorMask,
                        FSAsyncData *asyncData);
 
+FSStatus
+FSSetPosFile(FSClient *client,
+             FSCmdBlock *block,
+             FSFileHandle handle,
+             FSFilePosition pos,
+             FSErrorFlag errorMask);
+
+FSStatus
+FSSetPosFileAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  FSFileHandle handle,
+                  FSFilePosition pos,
+                  FSErrorFlag errorMask,
+                  FSAsyncData *asyncData);
+
 } // namespace coreinit
