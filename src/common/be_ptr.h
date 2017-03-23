@@ -52,6 +52,12 @@ public:
       return get();
    }
 
+   template<typename OtherType>
+   explicit operator be_ptr<OtherType>() const
+   {
+      return be_ptr<OtherType>(reinterpret_cast<OtherType *>(get()));
+   }
+
    explicit operator bool() const
    {
       return !!mAddress;
