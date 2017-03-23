@@ -81,14 +81,14 @@ public:
    be_ptr
    operator +(T offset) const
    {
-      return { mem::translate<Type>(getAddress() + offset * sizeof(Type)) };
+      return { mem::translate<Type>(getAddress() + static_cast<uint32_t>(offset * sizeof(Type))) };
    }
 
    template<typename T>
    be_ptr
    operator -(T offset) const
    {
-      return { mem::translate<Type>(getAddress() - offset * sizeof(Type)) };
+      return { mem::translate<Type>(getAddress() - static_cast<uint32_t>(offset * sizeof(Type))) };
    }
 
    template<typename T>
