@@ -61,6 +61,21 @@ FSGetPosFileAsync(FSClient *client,
                   FSAsyncData *asyncData);
 
 FSStatus
+FSGetStat(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          FSStat *stat,
+          FSErrorFlag errorMask);
+
+FSStatus
+FSGetStatAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               FSStat *stat,
+               FSErrorFlag errorMask,
+               FSAsyncData *asyncData);
+
+FSStatus
 FSOpenFile(FSClient *client,
            FSCmdBlock *block,
            const char *path,

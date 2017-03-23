@@ -32,6 +32,15 @@ struct FSARequestChangeDir
 CHECK_OFFSET(FSARequestChangeDir, 0x0, path);
 CHECK_SIZE(FSARequestChangeDir, 0x280);
 
+struct FSARequestGetInfoByQuery
+{
+   char path[FSMaxPathLength + 1];
+   be_val<FSQueryInfoType> type;
+};
+CHECK_OFFSET(FSARequestGetInfoByQuery, 0x0, path);
+CHECK_OFFSET(FSARequestGetInfoByQuery, 0x280, type);
+CHECK_SIZE(FSARequestGetInfoByQuery, 0x284);
+
 struct FSARequestGetPosFile
 {
    be_val<FSFileHandle> handle;
@@ -95,6 +104,7 @@ struct FSARequest
    {
       FSARequestCloseFile closeFile;
       FSARequestChangeDir changeDir;
+      FSARequestGetInfoByQuery getInfoByQuery;
       FSARequestGetPosFile getPosFile;
       FSARequestOpenFile openFile;
       FSARequestReadFile readFile;

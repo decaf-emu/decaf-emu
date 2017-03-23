@@ -110,6 +110,12 @@ fsaShimPrepareRequestGetCwd(FSAShimBuffer *shim,
                             IOSHandle clientHandle);
 
 FSAStatus
+fsaShimPrepareRequestGetInfoByQuery(FSAShimBuffer *shim,
+                                    IOSHandle clientHandle,
+                                    const char *path,
+                                    FSQueryInfoType type);
+
+FSAStatus
 fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
                                 IOSHandle clientHandle,
                                 FSFileHandle fileHandle);

@@ -22,6 +22,15 @@ readFileWithPosAsync(FSClient *client,
                      FSErrorFlag errorMask,
                      FSAsyncData *asyncData);
 
+static FSStatus
+getInfoByQueryAsync(FSClient *client,
+                    FSCmdBlock *block,
+                    const char *path,
+                    FSQueryInfoType type,
+                    void *out,
+                    FSErrorFlag errorMask,
+                    FSAsyncData *asyncData);
+
 } // namespace internal
 
 
@@ -270,6 +279,55 @@ FSGetPosFileAsync(FSClient *client,
 
    internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
    return FSStatus::OK;
+}
+
+
+/**
+ * Get statistics about a filesystem entry.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Entry not found.
+ */
+FSStatus
+FSGetStat(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          FSStat *stat,
+          FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSGetStatAsync(client, block, path, stat,
+                                errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get statistics about a filesystem entry (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Entry not found.
+ */
+FSStatus
+FSGetStatAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               FSStat *stat,
+               FSErrorFlag errorMask,
+               FSAsyncData *asyncData)
+{
+   return internal::getInfoByQueryAsync(client, block, path,
+                                        FSQueryInfoType::Stat, stat,
+                                        errorMask, asyncData);
 }
 
 
@@ -730,6 +788,48 @@ readFileWithPosAsync(FSClient *client,
    return FSStatus::OK;
 }
 
+static FSStatus
+getInfoByQueryAsync(FSClient *client,
+                    FSCmdBlock *block,
+                    const char *path,
+                    FSQueryInfoType type,
+                    void *out,
+                    FSErrorFlag errorMask,
+                    FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!path) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   if (!out) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.getInfoByQuery.out = out;
+
+   auto error = internal::fsaShimPrepareRequestGetInfoByQuery(&blockBody->fsaShimBuffer,
+                                                              clientBody->clientHandle,
+                                                              path, type);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishReadCmdFn);
+   return FSStatus::OK;
+}
+
 } // namespace internal
 
 void
@@ -743,6 +843,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSGetCwdAsync);
    RegisterKernelFunction(FSGetPosFile);
    RegisterKernelFunction(FSGetPosFileAsync);
+   RegisterKernelFunction(FSGetStat);
+   RegisterKernelFunction(FSGetStatAsync);
    RegisterKernelFunction(FSOpenFile);
    RegisterKernelFunction(FSOpenFileAsync);
    RegisterKernelFunction(FSOpenFileEx);

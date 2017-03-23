@@ -203,6 +203,39 @@ fsaShimPrepareRequestGetCwd(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::GetInfoByQuery request.
+ */
+FSAStatus
+fsaShimPrepareRequestGetInfoByQuery(FSAShimBuffer *shim,
+                                    IOSHandle clientHandle,
+                                    const char *path,
+                                    FSQueryInfoType type)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   if (type > FSQueryInfoType::FragmentBlockInfo) {
+      return FSAStatus::InvalidParam;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::GetInfoByQuery;
+
+   auto request = &shim->request.getInfoByQuery;
+   std::strncpy(request->path, path, FSMaxPathLength);
+   request->type = type;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::GetPosFile request.
  */
 FSAStatus

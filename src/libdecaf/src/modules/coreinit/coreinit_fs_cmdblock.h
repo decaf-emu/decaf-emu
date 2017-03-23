@@ -57,6 +57,15 @@ struct FSCmdBlockCmdDataGetFileBlockAddress
 CHECK_OFFSET(FSCmdBlockCmdDataGetFileBlockAddress, 0x0, address);
 CHECK_SIZE(FSCmdBlockCmdDataGetFileBlockAddress, 0x4);
 
+union FSCmdBlockCmdDataGetInfoByQuery
+{
+   be_ptr<void> out;
+   be_ptr<FSStat> stat;
+};
+CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, out);
+CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, stat);
+CHECK_SIZE(FSCmdBlockCmdDataGetInfoByQuery, 0x4);
+
 struct FSCmdBlockCmdDataGetPosFile
 {
    be_ptr<be_val<FSFilePosition>> pos;
@@ -128,6 +137,7 @@ union FSCmdBlockCmdData
 {
    FSCmdBlockCmdDataGetCwd getCwd;
    FSCmdBlockCmdDataGetFileBlockAddress getFileBlockAddress;
+   FSCmdBlockCmdDataGetInfoByQuery getInfoByQuery;
    FSCmdBlockCmdDataGetPosFile getPosFile;
    FSCmdBlockCmdDataGetVolumeInfo getVolumeInfo;
    FSCmdBlockCmdDataOpenDir openDir;
