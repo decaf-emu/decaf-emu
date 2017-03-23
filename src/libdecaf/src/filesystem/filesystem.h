@@ -8,7 +8,9 @@
 #include "filesystem_link_folder.h"
 #include "filesystem_path.h"
 #include "filesystem_virtual_folder.h"
+
 #include <common/log.h>
+#include <memory>
 
 namespace fs
 {
@@ -143,7 +145,8 @@ public:
       return !!folder->addChild(new HostFile { src, dst.filename(), permissions });
    }
 
-   FileHandle *openFile(Path path, File::OpenMode mode)
+   FileHandle
+   openFile(Path path, File::OpenMode mode)
    {
       auto node = findNode(path.parentPath());
 
@@ -155,7 +158,8 @@ public:
       return file->openFile(path.filename(), mode);
    }
 
-   FolderHandle *openFolder(Path path)
+   FolderHandle
+   openFolder(Path path)
    {
       auto node = findNode(path);
 

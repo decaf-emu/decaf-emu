@@ -3,12 +3,11 @@
 #include "filesystem_node.h"
 #include "filesystem_error.h"
 #include "filesystem_file.h"
+#include "filesystem_filehandle.h"
+#include "filesystem_folderhandle.h"
 
 namespace fs
 {
-
-class FolderHandle;
-class FileHandle;
 
 class Folder : public Node
 {
@@ -28,10 +27,10 @@ public:
    virtual Node *
    findChild(const std::string &name) = 0;
 
-   virtual FolderHandle *
+   virtual FolderHandle
    openDirectory() = 0;
 
-   virtual FileHandle *
+   virtual FileHandle
    openFile(const std::string &name,
             File::OpenMode mode) = 0;
 

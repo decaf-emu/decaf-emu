@@ -1,14 +1,15 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace fs
 {
 
-class FileHandle
+class IFileHandle
 {
 public:
-   virtual ~FileHandle() = default;
+   virtual ~IFileHandle() = default;
 
    virtual bool
    open() = 0;
@@ -44,5 +45,7 @@ public:
          size_t size,
          size_t count) = 0;
 };
+
+using FileHandle = std::shared_ptr<IFileHandle>;
 
 } // namespace fs

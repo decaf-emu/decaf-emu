@@ -6,7 +6,7 @@
 namespace fs
 {
 
-struct HostFileHandle : public FileHandle
+struct HostFileHandle : public IFileHandle
 {
    HostFileHandle(const std::string &path, File::OpenMode mode);
 

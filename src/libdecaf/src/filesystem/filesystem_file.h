@@ -1,11 +1,10 @@
 #pragma once
 #include <string>
 #include "filesystem_node.h"
+#include "filesystem_filehandle.h"
 
 namespace fs
 {
-
-class FileHandle;
 
 class File : public Node
 {
@@ -28,7 +27,7 @@ public:
 
    virtual ~File() override = default;
 
-   virtual FileHandle *
+   virtual FileHandle
    open(OpenMode mode) = 0;
 
 protected:

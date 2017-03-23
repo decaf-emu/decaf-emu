@@ -67,7 +67,6 @@ loadAppXML(const char *path,
    auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size, 1);
    fh->close();
-   delete fh;
 
    // Parse app.xml
    pugi::xml_document doc;
@@ -108,7 +107,6 @@ loadCosXML(const char *path,
    auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size, 1);
    fh->close();
-   delete fh;
 
    // Parse app.xml
    pugi::xml_document doc;
@@ -189,7 +187,6 @@ loadMetaXML(const char *path,
    auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size, 1);
    fh->close();
-   delete fh;
 
    // Parse app.xml
    pugi::xml_document doc;

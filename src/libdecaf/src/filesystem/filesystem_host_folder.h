@@ -29,7 +29,7 @@ public:
    virtual Node *
    findChild(const std::string &name) override;
 
-   virtual FileHandle *
+   virtual FileHandle
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
@@ -68,7 +68,7 @@ public:
       mVirtual.setPermissions(permissions, flags);
    }
 
-   virtual FolderHandle *
+   virtual FolderHandle
    openDirectory() override
    {
       if (!checkPermission(Permissions::Read)) {
@@ -82,7 +82,7 @@ public:
          return nullptr;
       }
 
-      return handle;
+      return FolderHandle { handle };
    }
 
    static Error

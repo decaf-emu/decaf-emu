@@ -5,7 +5,7 @@
 namespace fs
 {
 
-class HostFolderHandle : public FolderHandle
+class HostFolderHandle : public IFolderHandle
 {
 public:
    HostFolderHandle(const HostPath &path) :

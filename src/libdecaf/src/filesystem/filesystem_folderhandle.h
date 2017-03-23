@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 namespace fs
 {
@@ -18,10 +19,10 @@ struct FolderEntry
    Type type = Unknown;
 };
 
-class FolderHandle
+class IFolderHandle
 {
 public:
-   virtual ~FolderHandle() = default;
+   virtual ~IFolderHandle() = default;
 
    virtual bool
    open() = 0;
@@ -35,5 +36,7 @@ public:
    virtual bool
    rewind() = 0;
 };
+
+using FolderHandle = std::shared_ptr<IFolderHandle>;
 
 } // namespace fs

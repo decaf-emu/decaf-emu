@@ -21,7 +21,7 @@ public:
       return mLink;
    }
 
-   virtual FileHandle *
+   virtual FileHandle
    open(OpenMode mode)  final override
    {
       return mLink->open(mode);

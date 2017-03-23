@@ -40,14 +40,14 @@ public:
       return mLink->findChild(name);
    }
 
-   virtual FileHandle *
+   virtual FileHandle
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
       return mLink->openFile(name, mode);
    }
 
-   virtual FolderHandle *
+   virtual FolderHandle
    openDirectory() final override
    {
       return mLink->openDirectory();

@@ -62,7 +62,7 @@ public:
       return node;
    }
 
-   virtual FileHandle *
+   virtual FileHandle
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
@@ -95,7 +95,7 @@ public:
       return nullptr;
    }
 
-   virtual FolderHandle *
+   virtual FolderHandle
    openDirectory() override
    {
       if (!checkPermission(Permissions::Read)) {
@@ -109,7 +109,7 @@ public:
          return nullptr;
       }
 
-      return handle;
+      return FolderHandle { handle };
    }
 
    virtual void

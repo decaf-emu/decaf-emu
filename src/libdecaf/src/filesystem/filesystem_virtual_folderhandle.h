@@ -6,7 +6,7 @@
 namespace fs
 {
 
-struct VirtualFolderHandle : public FolderHandle
+struct VirtualFolderHandle : public IFolderHandle
 {
    using iterator = std::vector<Node *>::const_iterator;
 
