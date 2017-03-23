@@ -514,6 +514,12 @@ tls_get_addr(tls_index *index);
 namespace internal
 {
 
+uint32_t
+pinThreadAffinity();
+
+void
+unpinThreadAffinity(uint32_t affinity);
+
 void
 queueThreadDeallocation(OSThread *thread);
 

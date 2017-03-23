@@ -621,7 +621,6 @@ OSRunThread(OSThread *thread,
    BOOL result = FALSE;
    internal::lockScheduler();
 
-
    if (OSIsThreadTerminated(thread)) {
       if (thread->state == OSThreadState::Moribund) {
          internal::markThreadInactiveNoLock(thread);
@@ -647,7 +646,6 @@ OSSetThreadAffinity(OSThread *thread,
                     uint32_t affinity)
 {
    internal::lockScheduler();
-
    internal::setThreadAffinityNoLock(thread, affinity);
 
    if (thread->state == OSThreadState::Ready && affinity != 0) {
@@ -1074,6 +1072,43 @@ Module::registerThreadFunctions()
 
 namespace internal
 {
+
+
+/**
+ * Set the current thread to run only on the current core.
+ *
+ * \return
+ * Returns the old thread affinity, to be restored with unpinThreadAffinity.
+ */
+uint32_t
+pinThreadAffinity()
+{
+   auto core = OSGetCoreId();
+   auto thread = OSGetCurrentThread();
+   internal::lockScheduler();
+
+   auto oldAffinity = thread->attr & OSThreadAttributes::AffinityAny;
+   thread->attr &= ~OSThreadAttributes::AffinityAny;
+   thread->attr |= 1 << core;
+
+   internal::unlockScheduler();
+   return oldAffinity;
+}
+
+
+/**
+ * Restores the thread affinity.
+ */
+void
+unpinThreadAffinity(uint32_t affinity)
+{
+   auto thread = OSGetCurrentThread();
+   internal::lockScheduler();
+   thread->attr &= ~OSThreadAttributes::AffinityAny;
+   thread->attr |= affinity;
+   internal::unlockScheduler();
+}
+
 
 void
 exitThreadNoLock(int value)
