@@ -145,6 +145,19 @@ FSReadFileWithPosAsync(FSClient *client,
                        FSAsyncData *asyncData);
 
 FSStatus
+FSRemove(FSClient *client,
+         FSCmdBlock *block,
+         const char *path,
+         FSErrorFlag errorMask);
+
+FSStatus
+FSRemoveAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *path,
+              FSErrorFlag errorMask,
+              FSAsyncData *asyncData);
+
+FSStatus
 FSSetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,

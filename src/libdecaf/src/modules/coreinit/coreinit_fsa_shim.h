@@ -134,6 +134,11 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
                               FSReadFlag readFlags);
 
 FSAStatus
+fsaShimPrepareRequestRemove(FSAShimBuffer *shim,
+                            IOSHandle clientHandle,
+                            const char *path);
+
+FSAStatus
 fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
                                 IOSHandle clientHandle,
                                 FSFileHandle fileHandle,

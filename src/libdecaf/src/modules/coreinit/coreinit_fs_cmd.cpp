@@ -402,6 +402,56 @@ FSReadFileWithPosAsync(FSClient *client,
 
 
 FSStatus
+FSRemove(FSClient *client,
+         FSCmdBlock *block,
+         const char *path,
+         FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSRemoveAsync(client, block, path, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+
+FSStatus
+FSRemoveAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *path,
+              FSErrorFlag errorMask,
+              FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!path) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   auto error = internal::fsaShimPrepareRequestRemove(&blockBody->fsaShimBuffer,
+                                                      clientBody->clientHandle,
+                                                      path);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+FSStatus
 FSSetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,
@@ -528,6 +578,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSReadFileAsync);
    RegisterKernelFunction(FSReadFileWithPos);
    RegisterKernelFunction(FSReadFileWithPosAsync);
+   RegisterKernelFunction(FSRemove);
+   RegisterKernelFunction(FSRemoveAsync);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSSetPosFileAsync);
 }

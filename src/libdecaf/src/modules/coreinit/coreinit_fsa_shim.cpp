@@ -313,6 +313,33 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::Remove request.
+ */
+FSAStatus
+fsaShimPrepareRequestRemove(FSAShimBuffer *shim,
+                            IOSHandle clientHandle,
+                            const char *path)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::Remove;
+
+   auto request = &shim->request.remove;
+   std::strncpy(request->path, path, FSMaxPathLength);
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::SetPosFile request.
  */
 FSAStatus
