@@ -23,6 +23,8 @@ add_coreinit_test(alarm/alarm_user_data.c)
 add_coreinit_test(coroutine/coroutine_multi.c)
 add_coreinit_test(coroutine/coroutine_single.c)
 
+add_coreinit_test(filesystem/filesystem_read.c)
+
 add_coreinit_test(memory/blockheap_simple.c)
 add_coreinit_test(memory/frameheap_multi.c)
 add_coreinit_test(memory/frameheap_simple.c)
