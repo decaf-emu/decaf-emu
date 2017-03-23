@@ -1,6 +1,7 @@
 build/
 dump/
 mlc/
+docs/
 .vs/
 *.txt
 !CMakeLists.txt
