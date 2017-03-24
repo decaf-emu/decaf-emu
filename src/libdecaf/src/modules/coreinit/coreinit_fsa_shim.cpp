@@ -184,6 +184,33 @@ fsaShimPrepareRequestCloseFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::FlushQuota request.
+ */
+FSAStatus
+fsaShimPrepareRequestFlushQuota(FSAShimBuffer *shim,
+                                IOSHandle clientHandle,
+                                const char *path)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::FlushQuota;
+
+   auto request = &shim->request.flushQuota;
+   std::strncpy(request->path, path, FSMaxPathLength);
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::GetCwd request.
  */
 FSAStatus

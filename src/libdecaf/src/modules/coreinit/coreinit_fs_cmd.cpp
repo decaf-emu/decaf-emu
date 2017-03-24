@@ -151,47 +151,61 @@ FSCloseFileAsync(FSClient *client,
 
 
 /**
- * Get free space for entry at path.
+ * I don't know what this does :).
  *
  * \return
  * Returns negative FSStatus error code on failure, FSStatus::OK on success.
- *
- * \retval FSStatus::NotFound
- * Entry not found.
  */
 FSStatus
-FSGetFreeSpaceSize(FSClient *client,
-                   FSCmdBlock *block,
-                   const char *path,
-                   be_val<uint64_t> *returnedFreeSize,
-                   FSErrorFlag errorMask)
+FSFlushQuota(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             FSErrorFlag errorMask)
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
-   auto result = FSGetFreeSpaceSizeAsync(client, block, path, returnedFreeSize,
-                                         errorMask, &asyncData);
+   auto result = FSFlushQuotaAsync(client, block, path, errorMask, &asyncData);
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
 
 /**
- * Get free space for entry at path.
+ * I don't know what this does :) (asynchronously).
  *
  * \return
  * Returns negative FSStatus error code on failure, FSStatus::OK on success.
  */
 FSStatus
-FSGetFreeSpaceSizeAsync(FSClient *client,
-                        FSCmdBlock *block,
-                        const char *path,
-                        be_val<uint64_t> *returnedFreeSize,
-                        FSErrorFlag errorMask,
-                        const FSAsyncData *asyncData)
+FSFlushQuotaAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  const char *path,
+                  FSErrorFlag errorMask,
+                  const FSAsyncData *asyncData)
 {
-   return internal::getInfoByQueryAsync(client, block, path,
-                                        FSQueryInfoType::FreeSpaceSize,
-                                        returnedFreeSize,
-                                        errorMask, asyncData);
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!path) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   auto error = internal::fsaShimPrepareRequestFlushQuota(&blockBody->fsaShimBuffer,
+                                                          clientBody->clientHandle,
+                                                          path);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
 }
 
 
@@ -261,6 +275,51 @@ FSGetCwdAsync(FSClient *client,
 
    internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
    return FSStatus::OK;
+}
+
+
+/**
+ * Get free space for entry at path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Entry not found.
+ */
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   be_val<uint64_t> *returnedFreeSize,
+                   FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+   auto result = FSGetFreeSpaceSizeAsync(client, block, path, returnedFreeSize,
+                                         errorMask, &asyncData);
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get free space for entry at path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetFreeSpaceSizeAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const char *path,
+                        be_val<uint64_t> *returnedFreeSize,
+                        FSErrorFlag errorMask,
+                        const FSAsyncData *asyncData)
+{
+   return internal::getInfoByQueryAsync(client, block, path,
+                                        FSQueryInfoType::FreeSpaceSize,
+                                        returnedFreeSize,
+                                        errorMask, asyncData);
 }
 
 

@@ -106,6 +106,11 @@ fsaShimPrepareRequestCloseFile(FSAShimBuffer *shim,
                                FSFileHandle fileHandle);
 
 FSAStatus
+fsaShimPrepareRequestFlushQuota(FSAShimBuffer *shim,
+                                IOSHandle clientHandle,
+                                const char *path);
+
+FSAStatus
 fsaShimPrepareRequestGetCwd(FSAShimBuffer *shim,
                             IOSHandle clientHandle);
 

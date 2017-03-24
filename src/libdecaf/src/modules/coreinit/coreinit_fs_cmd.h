@@ -31,19 +31,17 @@ FSCloseFileAsync(FSClient *client,
                  const FSAsyncData *asyncData);
 
 FSStatus
-FSGetFreeSpaceSize(FSClient *client,
-                   FSCmdBlock *block,
-                   const char *path,
-                   be_val<uint64_t> *returnedFreeSize,
-                   FSErrorFlag errorMask);
+FSFlushQuota(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             FSErrorFlag errorMask);
 
 FSStatus
-FSGetFreeSpaceSizeAsync(FSClient *client,
-                        FSCmdBlock *block,
-                        const char *path,
-                        be_val<uint64_t> *returnedFreeSize,
-                        FSErrorFlag errorMask,
-                        const FSAsyncData *asyncData);
+FSFlushQuotaAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  const char *path,
+                  FSErrorFlag errorMask,
+                  const FSAsyncData *asyncData);
 
 FSStatus
 FSGetCwd(FSClient *client,
@@ -59,6 +57,21 @@ FSGetCwdAsync(FSClient *client,
               uint32_t bytes,
               FSErrorFlag errorMask,
               const FSAsyncData *asyncData);
+
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   be_val<uint64_t> *returnedFreeSize,
+                   FSErrorFlag errorMask);
+
+FSStatus
+FSGetFreeSpaceSizeAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const char *path,
+                        be_val<uint64_t> *returnedFreeSize,
+                        FSErrorFlag errorMask,
+                        const FSAsyncData *asyncData);
 
 FSStatus
 FSGetPosFile(FSClient *client,

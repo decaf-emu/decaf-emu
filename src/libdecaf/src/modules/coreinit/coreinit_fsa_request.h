@@ -18,6 +18,13 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
+struct FSARequestChangeDir
+{
+   char path[FSMaxPathLength + 1];
+};
+CHECK_OFFSET(FSARequestChangeDir, 0x0, path);
+CHECK_SIZE(FSARequestChangeDir, 0x280);
+
 struct FSARequestCloseFile
 {
    be_val<FSFileHandle> handle;
@@ -25,12 +32,12 @@ struct FSARequestCloseFile
 CHECK_OFFSET(FSARequestCloseFile, 0x0, handle);
 CHECK_SIZE(FSARequestCloseFile, 0x4);
 
-struct FSARequestChangeDir
+struct FSARequestFlushQuota
 {
    char path[FSMaxPathLength + 1];
 };
-CHECK_OFFSET(FSARequestChangeDir, 0x0, path);
-CHECK_SIZE(FSARequestChangeDir, 0x280);
+CHECK_OFFSET(FSARequestFlushQuota, 0x0, path);
+CHECK_SIZE(FSARequestFlushQuota, 0x280);
 
 struct FSARequestGetInfoByQuery
 {
@@ -127,8 +134,9 @@ struct FSARequest
 
    union
    {
-      FSARequestCloseFile closeFile;
       FSARequestChangeDir changeDir;
+      FSARequestCloseFile closeFile;
+      FSARequestFlushQuota flushQuota;
       FSARequestGetInfoByQuery getInfoByQuery;
       FSARequestGetPosFile getPosFile;
       FSARequestMakeDir makeDir;
