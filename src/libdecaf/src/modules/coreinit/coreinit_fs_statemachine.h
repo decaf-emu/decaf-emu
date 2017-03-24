@@ -98,7 +98,7 @@ FSGetStateChangeInfo(OSMessage *message);
 
 namespace internal
 {
-   
+
 void
 fsmInit(FSFsm *fsm,
         FSClientBody *clientBody);

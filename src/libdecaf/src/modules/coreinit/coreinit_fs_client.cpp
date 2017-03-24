@@ -232,6 +232,21 @@ FSSetEmulatedError(FSClient *client,
 }
 
 
+/**
+ * Get the volume state for a client.
+ */
+FSVolumeState
+FSGetVolumeState(FSClient *client)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   if (!clientBody) {
+      return FSVolumeState::Invalid;
+   }
+
+   return clientBody->fsm.clientVolumeState;
+}
+
+
 namespace internal
 {
 
@@ -469,6 +484,7 @@ Module::registerFsClientFunctions()
    RegisterKernelFunction(FSGetCurrentCmdBlock);
    RegisterKernelFunction(FSGetEmulatedError);
    RegisterKernelFunction(FSSetEmulatedError);
+   RegisterKernelFunction(FSGetVolumeState);
 
    RegisterInternalFunction(internal::fsClientHandleFsaAsyncCallback, sHandleFsaAsyncCallback);
    RegisterInternalFunction(internal::fsClientHandleDequeuedCommand, sHandleDequeuedCommand);
