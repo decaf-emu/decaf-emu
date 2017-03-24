@@ -97,6 +97,60 @@ FSChangeDirAsync(FSClient *client,
 
 
 /**
+ * Close a directory.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSCloseDir(FSClient *client,
+           FSCmdBlock *block,
+           FSDirHandle handle,
+           FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+   auto result = FSCloseDirAsync(client, block, handle, errorMask, &asyncData);
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Close a directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSCloseDirAsync(FSClient *client,
+                FSCmdBlock *block,
+                FSDirHandle handle,
+                FSErrorFlag errorMask,
+                const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestCloseDir(&blockBody->fsaShimBuffer,
+                                                        clientBody->clientHandle,
+                                                        handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Close a file.
  *
  * \return
@@ -1135,6 +1189,8 @@ Module::registerFsCmdFunctions()
 {
    RegisterKernelFunction(FSChangeDir);
    RegisterKernelFunction(FSChangeDirAsync);
+   RegisterKernelFunction(FSCloseDir);
+   RegisterKernelFunction(FSCloseDirAsync);
    RegisterKernelFunction(FSCloseFile);
    RegisterKernelFunction(FSCloseFileAsync);
    RegisterKernelFunction(FSGetCwd);

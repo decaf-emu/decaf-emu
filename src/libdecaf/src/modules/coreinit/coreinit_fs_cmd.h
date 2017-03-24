@@ -18,6 +18,19 @@ FSChangeDirAsync(FSClient *client,
                  const FSAsyncData *asyncData);
 
 FSStatus
+FSCloseDir(FSClient *client,
+           FSCmdBlock *block,
+           FSDirHandle handle,
+           FSErrorFlag errorMask);
+
+FSStatus
+FSCloseDirAsync(FSClient *client,
+                FSCmdBlock *block,
+                FSDirHandle handle,
+                FSErrorFlag errorMask,
+                const FSAsyncData *asyncData);
+
+FSStatus
 FSCloseFile(FSClient *client,
             FSCmdBlock *block,
             FSFileHandle handle,

@@ -101,6 +101,11 @@ fsaShimPrepareRequestChangeDir(FSAShimBuffer *shim,
                                const char *path);
 
 FSAStatus
+fsaShimPrepareRequestCloseDir(FSAShimBuffer *shim,
+                              IOSHandle clientHandle,
+                              FSDirHandle dirHandle);
+
+FSAStatus
 fsaShimPrepareRequestCloseFile(FSAShimBuffer *shim,
                                IOSHandle clientHandle,
                                FSFileHandle fileHandle);

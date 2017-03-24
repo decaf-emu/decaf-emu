@@ -25,6 +25,13 @@ struct FSARequestChangeDir
 CHECK_OFFSET(FSARequestChangeDir, 0x0, path);
 CHECK_SIZE(FSARequestChangeDir, 0x280);
 
+struct FSARequestCloseDir
+{
+   be_val<FSDirHandle> handle;
+};
+CHECK_OFFSET(FSARequestCloseDir, 0x0, handle);
+CHECK_SIZE(FSARequestCloseDir, 0x4);
+
 struct FSARequestCloseFile
 {
    be_val<FSFileHandle> handle;
@@ -135,6 +142,7 @@ struct FSARequest
    union
    {
       FSARequestChangeDir changeDir;
+      FSARequestCloseDir closeDir;
       FSARequestCloseFile closeFile;
       FSARequestFlushQuota flushQuota;
       FSARequestGetInfoByQuery getInfoByQuery;

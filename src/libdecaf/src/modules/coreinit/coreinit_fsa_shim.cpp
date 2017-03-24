@@ -161,6 +161,29 @@ fsaShimPrepareRequestChangeDir(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::CloseDir request.
+ */
+FSAStatus
+fsaShimPrepareRequestCloseDir(FSAShimBuffer *shim,
+                              IOSHandle clientHandle,
+                              FSDirHandle dirHandle)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::CloseDir;
+
+   auto request = &shim->request.closeDir;
+   request->handle = dirHandle;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::CloseFile request.
  */
 FSAStatus
