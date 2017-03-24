@@ -233,6 +233,34 @@ FSSetEmulatedError(FSClient *client,
 
 
 /**
+ * Get last error for a cmd as an error code for the ErrEula error viewer.
+ */
+int32_t
+FSGetErrorCodeForViewer(FSClient *client,
+                        FSCmdBlock *block)
+{
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   if (!blockBody) {
+      return static_cast<FSAStatus>(FSStatus::FatalError);
+   }
+
+   // TODO: Translate error for FSGetErrorCodeForViewer
+   // This actually returns ->unk0x9f4, but we don't set it correctly...!
+   return blockBody->iosError;
+}
+
+
+/**
+ * Get last error as an error code for the ErrEula error viewer.
+ */
+int32_t
+FSGetLastErrorCodeForViewer(FSClient *client)
+{
+   return FSGetErrorCodeForViewer(client, FSGetCurrentCmdBlock(client));
+}
+
+
+/**
  * Get the error code for the last executed command.
  */
 FSAStatus
@@ -499,6 +527,8 @@ Module::registerFsClientFunctions()
    RegisterKernelFunction(FSGetCurrentCmdBlock);
    RegisterKernelFunction(FSGetEmulatedError);
    RegisterKernelFunction(FSSetEmulatedError);
+   RegisterKernelFunction(FSGetErrorCodeForViewer);
+   RegisterKernelFunction(FSGetLastErrorCodeForViewer);
    RegisterKernelFunction(FSGetLastError);
    RegisterKernelFunction(FSGetVolumeState);
 

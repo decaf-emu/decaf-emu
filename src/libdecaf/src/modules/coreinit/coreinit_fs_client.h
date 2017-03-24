@@ -164,6 +164,13 @@ FSStatus
 FSSetEmulatedError(FSClient *client,
                    FSAStatus error);
 
+int32_t
+FSGetErrorCodeForViewer(FSClient *client,
+                        FSCmdBlock *block);
+
+int32_t
+FSGetLastErrorCodeForViewer(FSClient *client);
+
 FSAStatus
 FSGetLastError(FSClient *client);
 
