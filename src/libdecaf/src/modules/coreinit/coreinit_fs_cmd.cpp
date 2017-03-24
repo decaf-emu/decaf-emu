@@ -533,13 +533,13 @@ FSStatus
 FSGetStat(FSClient *client,
           FSCmdBlock *block,
           const char *path,
-          FSStat *stat,
+          FSStat *returnedStat,
           FSErrorFlag errorMask)
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
 
-   auto result = FSGetStatAsync(client, block, path, stat,
+   auto result = FSGetStatAsync(client, block, path, returnedStat,
                                 errorMask, &asyncData);
 
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
@@ -556,13 +556,74 @@ FSStatus
 FSGetStatAsync(FSClient *client,
                FSCmdBlock *block,
                const char *path,
-               FSStat *stat,
+               FSStat *returnedStat,
                FSErrorFlag errorMask,
                const FSAsyncData *asyncData)
 {
    return internal::getInfoByQueryAsync(client, block, path,
-                                        FSQueryInfoType::Stat, stat,
+                                        FSQueryInfoType::Stat, returnedStat,
                                         errorMask, asyncData);
+}
+
+
+/**
+ * Get statistics about an opened file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetStatFile(FSClient *client,
+              FSCmdBlock *block,
+              FSFileHandle handle,
+              FSStat *returnedStat,
+              FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSGetStatFileAsync(client, block, handle, returnedStat,
+                                    errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get statistics about an opened file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetStatFileAsync(FSClient *client,
+                   FSCmdBlock *block,
+                   FSFileHandle handle,
+                   FSStat *returnedStat,
+                   FSErrorFlag errorMask,
+                   const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   blockBody->cmdData.statFile.stat = returnedStat;
+
+   auto error = internal::fsaShimPrepareRequestStatFile(&blockBody->fsaShimBuffer,
+                                                        clientBody->clientHandle,
+                                                        handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
 }
 
 
@@ -1701,6 +1762,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSGetPosFileAsync);
    RegisterKernelFunction(FSGetStat);
    RegisterKernelFunction(FSGetStatAsync);
+   RegisterKernelFunction(FSGetStatFile);
+   RegisterKernelFunction(FSGetStatFileAsync);
    RegisterKernelFunction(FSIsEof);
    RegisterKernelFunction(FSIsEofAsync);
    RegisterKernelFunction(FSMakeDir);

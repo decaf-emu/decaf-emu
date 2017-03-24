@@ -233,6 +233,17 @@ CHECK_SIZE(FSARequestSetPosFile, 0x8);
 
 
 /**
+ * Request data for FSACommand::StatFile
+ */
+struct FSARequestStatFile
+{
+   be_val<FSFileHandle> handle;
+};
+CHECK_OFFSET(FSARequestStatFile, 0x0, handle);
+CHECK_SIZE(FSARequestStatFile, 0x4);
+
+
+/**
  * Request data for FSACommand::TruncateFile
  */
 struct FSARequestTruncateFile
@@ -290,6 +301,7 @@ struct FSARequest
       FSARequestRename rename;
       FSARequestRewindDir rewindDir;
       FSARequestSetPosFile setPosFile;
+      FSARequestStatFile statFile;
       FSARequestTruncateFile truncateFile;
       FSARequestWriteFile writeFile;
       UNKNOWN(0x51C);

@@ -118,16 +118,31 @@ FSStatus
 FSGetStat(FSClient *client,
           FSCmdBlock *block,
           const char *path,
-          FSStat *stat,
+          FSStat *returnedStat,
           FSErrorFlag errorMask);
 
 FSStatus
 FSGetStatAsync(FSClient *client,
                FSCmdBlock *block,
                const char *path,
-               FSStat *stat,
+               FSStat *returnedStat,
                FSErrorFlag errorMask,
                const FSAsyncData *asyncData);
+
+FSStatus
+FSGetStatFile(FSClient *client,
+              FSCmdBlock *block,
+              FSFileHandle handle,
+              FSStat *returnedStat,
+              FSErrorFlag errorMask);
+
+FSStatus
+FSGetStatFileAsync(FSClient *client,
+                   FSCmdBlock *block,
+                   FSFileHandle handle,
+                   FSStat *returnedStat,
+                   FSErrorFlag errorMask,
+                   const FSAsyncData *asyncData);
 
 FSStatus
 FSIsEof(FSClient *client,
