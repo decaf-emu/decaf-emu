@@ -99,6 +99,17 @@ CHECK_SIZE(FSARequestGetPosFile, 0x4);
 
 
 /**
+ * Request data for FSACommand::IsEof
+ */
+struct FSARequestIsEof
+{
+   be_val<FSFileHandle> handle;
+};
+CHECK_OFFSET(FSARequestIsEof, 0x0, handle);
+CHECK_SIZE(FSARequestIsEof, 0x4);
+
+
+/**
  * Request data for FSACommand::MakeDir
  */
 struct FSARequestMakeDir
@@ -258,6 +269,7 @@ struct FSARequest
       FSARequestFlushQuota flushQuota;
       FSARequestGetInfoByQuery getInfoByQuery;
       FSARequestGetPosFile getPosFile;
+      FSARequestIsEof isEof;
       FSARequestMakeDir makeDir;
       FSARequestOpenDir openDir;
       FSARequestOpenFile openFile;

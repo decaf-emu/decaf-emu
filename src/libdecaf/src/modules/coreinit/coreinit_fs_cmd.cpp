@@ -567,6 +567,68 @@ FSGetStatAsync(FSClient *client,
 
 
 /**
+ * Checks if current file position is at the end of the file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::OK
+ * Returns FSStatus::OK when not at the end of the file.
+ *
+ * \retval FSStatus::End
+ * Returns FSStatus::End when at the end of the file.
+ */
+FSStatus
+FSIsEof(FSClient *client,
+        FSCmdBlock *block,
+        FSFileHandle handle,
+        FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSIsEofAsync(client, block, handle, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Checks if current file position is at the end of the file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSIsEofAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 FSFileHandle handle,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestIsEof(&blockBody->fsaShimBuffer,
+                                                     clientBody->clientHandle,
+                                                     handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Create a directory.
  *
  * \return
@@ -1583,6 +1645,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSGetPosFileAsync);
    RegisterKernelFunction(FSGetStat);
    RegisterKernelFunction(FSGetStatAsync);
+   RegisterKernelFunction(FSIsEof);
+   RegisterKernelFunction(FSIsEofAsync);
    RegisterKernelFunction(FSMakeDir);
    RegisterKernelFunction(FSMakeDirAsync);
    RegisterKernelFunction(FSOpenDir);

@@ -130,6 +130,19 @@ FSGetStatAsync(FSClient *client,
                const FSAsyncData *asyncData);
 
 FSStatus
+FSIsEof(FSClient *client,
+        FSCmdBlock *block,
+        FSFileHandle handle,
+        FSErrorFlag errorMask);
+
+FSStatus
+FSIsEofAsync(FSClient *client,
+             FSCmdBlock *block,
+             FSFileHandle handle,
+             FSErrorFlag errorMask,
+             const FSAsyncData *asyncData);
+
+FSStatus
 FSMakeDir(FSClient *client,
           FSCmdBlock *block,
           const char *path,

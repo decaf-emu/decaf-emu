@@ -332,6 +332,29 @@ fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::IsEof request.
+ */
+FSAStatus
+fsaShimPrepareRequestIsEof(FSAShimBuffer *shim,
+                           IOSHandle clientHandle,
+                           FSFileHandle fileHandle)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::IsEof;
+
+   auto request = &shim->request.isEof;
+   request->handle = fileHandle;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::MakeDir request.
  */
 FSAStatus
