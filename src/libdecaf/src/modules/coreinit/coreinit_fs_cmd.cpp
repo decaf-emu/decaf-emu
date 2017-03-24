@@ -20,7 +20,7 @@ readFileWithPosAsync(FSClient *client,
                      FSFileHandle handle,
                      FSReadFlag readFlags,
                      FSErrorFlag errorMask,
-                     FSAsyncData *asyncData);
+                     const FSAsyncData *asyncData);
 
 static FSStatus
 getInfoByQueryAsync(FSClient *client,
@@ -29,7 +29,7 @@ getInfoByQueryAsync(FSClient *client,
                     FSQueryInfoType type,
                     void *out,
                     FSErrorFlag errorMask,
-                    FSAsyncData *asyncData);
+                    const FSAsyncData *asyncData);
 
 } // namespace internal
 
@@ -67,7 +67,7 @@ FSChangeDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  const char *path,
                  FSErrorFlag errorMask,
-                 FSAsyncData *asyncData)
+                 const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -147,6 +147,51 @@ FSCloseFileAsync(FSClient *client,
 
    internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
    return FSStatus::OK;
+}
+
+
+/**
+ * Get free space for entry at path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Entry not found.
+ */
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   be_val<uint64_t> *returnedFreeSize,
+                   FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+   auto result = FSGetFreeSpaceSizeAsync(client, block, path, returnedFreeSize,
+                                         errorMask, &asyncData);
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get free space for entry at path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetFreeSpaceSizeAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const char *path,
+                        be_val<uint64_t> *returnedFreeSize,
+                        FSErrorFlag errorMask,
+                        const FSAsyncData *asyncData)
+{
+   return internal::getInfoByQueryAsync(client, block, path,
+                                        FSQueryInfoType::FreeSpaceSize,
+                                        returnedFreeSize,
+                                        errorMask, asyncData);
 }
 
 
@@ -252,7 +297,7 @@ FSGetPosFileAsync(FSClient *client,
                   FSFileHandle handle,
                   be_val<FSFilePosition> *returnedFpos,
                   FSErrorFlag errorMask,
-                  FSAsyncData *asyncData)
+                  const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -320,7 +365,7 @@ FSGetStatAsync(FSClient *client,
                const char *path,
                FSStat *stat,
                FSErrorFlag errorMask,
-               FSAsyncData *asyncData)
+               const FSAsyncData *asyncData)
 {
    return internal::getInfoByQueryAsync(client, block, path,
                                         FSQueryInfoType::Stat, stat,
@@ -361,7 +406,7 @@ FSMakeDirAsync(FSClient *client,
                FSCmdBlock *block,
                const char *path,
                FSErrorFlag errorMask,
-               FSAsyncData *asyncData)
+               const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -434,7 +479,7 @@ FSOpenDirAsync(FSClient *client,
                const char *path,
                be_val<FSDirHandle> *dirHandle,
                FSErrorFlag errorMask,
-               FSAsyncData *asyncData)
+               const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -654,7 +699,7 @@ FSReadFileAsync(FSClient *client,
                 FSFileHandle handle,
                 FSReadFlag readFlags,
                 FSErrorFlag errorMask,
-                FSAsyncData *asyncData)
+                const FSAsyncData *asyncData)
 {
    return internal::readFileWithPosAsync(client, block, buffer, size, count,
                                          0, handle,
@@ -719,7 +764,7 @@ FSReadFileWithPosAsync(FSClient *client,
                        FSFileHandle handle,
                        FSReadFlag readFlags,
                        FSErrorFlag errorMask,
-                       FSAsyncData *asyncData)
+                       const FSAsyncData *asyncData)
 {
    return internal::readFileWithPosAsync(client, block, buffer, size, count,
                                          0, handle,
@@ -761,7 +806,7 @@ FSRemoveAsync(FSClient *client,
               FSCmdBlock *block,
               const char *path,
               FSErrorFlag errorMask,
-              FSAsyncData *asyncData)
+              const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -829,7 +874,7 @@ FSRenameAsync(FSClient *client,
               const char *oldPath,
               const char *newPath,
               FSErrorFlag errorMask,
-              FSAsyncData *asyncData)
+              const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -900,7 +945,7 @@ FSSetPosFileAsync(FSClient *client,
                   FSFileHandle handle,
                   FSFilePosition pos,
                   FSErrorFlag errorMask,
-                  FSAsyncData *asyncData)
+                  const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -938,7 +983,7 @@ readFileWithPosAsync(FSClient *client,
                      FSFileHandle handle,
                      FSReadFlag readFlags,
                      FSErrorFlag errorMask,
-                     FSAsyncData *asyncData)
+                     const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -989,7 +1034,7 @@ getInfoByQueryAsync(FSClient *client,
                     FSQueryInfoType type,
                     void *out,
                     FSErrorFlag errorMask,
-                    FSAsyncData *asyncData)
+                    const FSAsyncData *asyncData)
 {
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
@@ -1035,6 +1080,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSCloseFileAsync);
    RegisterKernelFunction(FSGetCwd);
    RegisterKernelFunction(FSGetCwdAsync);
+   RegisterKernelFunction(FSGetFreeSpaceSize);
+   RegisterKernelFunction(FSGetFreeSpaceSizeAsync);
    RegisterKernelFunction(FSGetPosFile);
    RegisterKernelFunction(FSGetPosFileAsync);
    RegisterKernelFunction(FSGetStat);

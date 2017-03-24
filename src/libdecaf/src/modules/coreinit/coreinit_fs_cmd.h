@@ -15,7 +15,7 @@ FSChangeDirAsync(FSClient *client,
                  FSCmdBlock *block,
                  const char *path,
                  FSErrorFlag errorMask,
-                 FSAsyncData *asyncData);
+                 const FSAsyncData *asyncData);
 
 FSStatus
 FSCloseFile(FSClient *client,
@@ -29,6 +29,21 @@ FSCloseFileAsync(FSClient *client,
                  FSFileHandle handle,
                  FSErrorFlag errorMask,
                  const FSAsyncData *asyncData);
+
+FSStatus
+FSGetFreeSpaceSize(FSClient *client,
+                   FSCmdBlock *block,
+                   const char *path,
+                   be_val<uint64_t> *returnedFreeSize,
+                   FSErrorFlag errorMask);
+
+FSStatus
+FSGetFreeSpaceSizeAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const char *path,
+                        be_val<uint64_t> *returnedFreeSize,
+                        FSErrorFlag errorMask,
+                        const FSAsyncData *asyncData);
 
 FSStatus
 FSGetCwd(FSClient *client,
@@ -58,7 +73,7 @@ FSGetPosFileAsync(FSClient *client,
                   FSFileHandle handle,
                   be_val<FSFilePosition> *returnedFpos,
                   FSErrorFlag errorMask,
-                  FSAsyncData *asyncData);
+                  const FSAsyncData *asyncData);
 
 FSStatus
 FSGetStat(FSClient *client,
@@ -73,7 +88,7 @@ FSGetStatAsync(FSClient *client,
                const char *path,
                FSStat *stat,
                FSErrorFlag errorMask,
-               FSAsyncData *asyncData);
+               const FSAsyncData *asyncData);
 
 FSStatus
 FSMakeDir(FSClient *client,
@@ -86,7 +101,7 @@ FSMakeDirAsync(FSClient *client,
                FSCmdBlock *block,
                const char *path,
                FSErrorFlag errorMask,
-               FSAsyncData *asyncData);
+               const FSAsyncData *asyncData);
 
 FSStatus
 FSOpenDir(FSClient *client,
@@ -101,7 +116,7 @@ FSOpenDirAsync(FSClient *client,
                const char *path,
                be_val<FSDirHandle> *dirHandle,
                FSErrorFlag errorMask,
-               FSAsyncData *asyncData);
+               const FSAsyncData *asyncData);
 
 FSStatus
 FSOpenFile(FSClient *client,
@@ -162,7 +177,7 @@ FSReadFileAsync(FSClient *client,
                 FSFileHandle handle,
                 FSReadFlag readFlags,
                 FSErrorFlag errorMask,
-                FSAsyncData *asyncData);
+                const FSAsyncData *asyncData);
 
 FSStatus
 FSReadFileWithPos(FSClient *client,
@@ -185,7 +200,7 @@ FSReadFileWithPosAsync(FSClient *client,
                        FSFileHandle handle,
                        FSReadFlag readFlags,
                        FSErrorFlag errorMask,
-                       FSAsyncData *asyncData);
+                       const FSAsyncData *asyncData);
 
 FSStatus
 FSRemove(FSClient *client,
@@ -198,7 +213,7 @@ FSRemoveAsync(FSClient *client,
               FSCmdBlock *block,
               const char *path,
               FSErrorFlag errorMask,
-              FSAsyncData *asyncData);
+              const FSAsyncData *asyncData);
 
 FSStatus
 FSRename(FSClient *client,
@@ -213,7 +228,7 @@ FSRenameAsync(FSClient *client,
               const char *oldPath,
               const char *newPath,
               FSErrorFlag errorMask,
-              FSAsyncData *asyncData);
+              const FSAsyncData *asyncData);
 
 FSStatus
 FSSetPosFile(FSClient *client,
@@ -228,6 +243,6 @@ FSSetPosFileAsync(FSClient *client,
                   FSFileHandle handle,
                   FSFilePosition pos,
                   FSErrorFlag errorMask,
-                  FSAsyncData *asyncData);
+                  const FSAsyncData *asyncData);
 
 } // namespace coreinit
