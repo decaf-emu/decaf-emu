@@ -313,9 +313,6 @@ FSGetStat(FSClient *client,
  *
  * \return
  * Returns negative FSStatus error code on failure, FSStatus::OK on success.
- *
- * \retval FSStatus::NotFound
- * Entry not found.
  */
 FSStatus
 FSGetStatAsync(FSClient *client,
@@ -430,15 +427,6 @@ FSOpenDir(FSClient *client,
  *
  * \return
  * Returns negative FSStatus error code on failure, FSStatus::OK on success.
- *
- * \retval FSStatus::NotFound
- * Directory not found.
- *
- * \retval FSStatus::NotDirectory
- * Used OpenDir on a non-directory object such as a file.
- *
- * \retval FSStatus::PermissionError
- * Did not have permission to open the directory in specified mode.
  */
 FSStatus
 FSOpenDirAsync(FSClient *client,
@@ -515,15 +503,6 @@ FSOpenFile(FSClient *client,
  *
  * \return
  * Returns negative FSStatus error code on failure, FSStatus::OK on success.
- *
- * \retval FSStatus::NotFound
- * File not found.
- *
- * \retval FSStatus::NotFile
- * Used OpenFile on a non-file object such as a directory.
- *
- * \retval FSStatus::PermissionError
- * Did not have permission to open file in specified mode.
  */
 FSStatus
 FSOpenFileAsync(FSClient *client,
@@ -582,15 +561,6 @@ FSOpenFileEx(FSClient *client,
  *
  * \return
  * Returns negative FSStatus error code on failure, FSStatus::OK on success.
- *
- * \retval FSStatus::NotFound
- * File not found.
- *
- * \retval FSStatus::NotFile
- * Used OpenFile on a non-file object such as a directory.
- *
- * \retval FSStatus::PermissionError
- * Did not have permission to open file in specified mode.
  */
 FSStatus
 FSOpenFileExAsync(FSClient *client,
@@ -821,6 +791,80 @@ FSRemoveAsync(FSClient *client,
 
 
 /**
+ * Rename a file or directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Entry not found.
+ */
+FSStatus
+FSRename(FSClient *client,
+         FSCmdBlock *block,
+         const char *oldPath,
+         const char *newPath,
+         FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSRenameAsync(client, block, oldPath, newPath,
+                               errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+
+/**
+ * Rename a file or directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSRenameAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *oldPath,
+              const char *newPath,
+              FSErrorFlag errorMask,
+              FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!oldPath) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   if (!newPath) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   auto error = internal::fsaShimPrepareRequestRename(&blockBody->fsaShimBuffer,
+                                                      clientBody->clientHandle,
+                                                      oldPath,
+                                                      newPath);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Set the current read / write position for a file.
  *
  * \return
@@ -1009,6 +1053,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSReadFileWithPosAsync);
    RegisterKernelFunction(FSRemove);
    RegisterKernelFunction(FSRemoveAsync);
+   RegisterKernelFunction(FSRename);
+   RegisterKernelFunction(FSRenameAsync);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSSetPosFileAsync);
 }

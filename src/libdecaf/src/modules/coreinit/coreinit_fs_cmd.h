@@ -201,6 +201,21 @@ FSRemoveAsync(FSClient *client,
               FSAsyncData *asyncData);
 
 FSStatus
+FSRename(FSClient *client,
+         FSCmdBlock *block,
+         const char *oldPath,
+         const char *newPath,
+         FSErrorFlag errorMask);
+
+FSStatus
+FSRenameAsync(FSClient *client,
+              FSCmdBlock *block,
+              const char *oldPath,
+              const char *newPath,
+              FSErrorFlag errorMask,
+              FSAsyncData *asyncData);
+
+FSStatus
 FSSetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,

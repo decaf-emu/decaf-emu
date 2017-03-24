@@ -432,6 +432,39 @@ fsaShimPrepareRequestRemove(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::Rename request.
+ */
+FSAStatus
+fsaShimPrepareRequestRename(FSAShimBuffer *shim,
+                            IOSHandle clientHandle,
+                            const char *oldPath,
+                            const char *newPath)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!oldPath || strlen(oldPath) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   if (!newPath || strlen(newPath) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::Rename;
+
+   auto request = &shim->request.rename;
+   std::strncpy(request->oldPath, oldPath, FSMaxPathLength);
+   std::strncpy(request->newPath, newPath, FSMaxPathLength);
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::SetPosFile request.
  */
 FSAStatus

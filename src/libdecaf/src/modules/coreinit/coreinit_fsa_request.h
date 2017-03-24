@@ -103,6 +103,15 @@ struct FSARequestRemove
 CHECK_OFFSET(FSARequestRemove, 0x0, path);
 CHECK_SIZE(FSARequestRemove, 0x280);
 
+struct FSARequestRename
+{
+   char oldPath[FSMaxPathLength + 1];
+   char newPath[FSMaxPathLength + 1];
+};
+CHECK_OFFSET(FSARequestRename, 0x0, oldPath);
+CHECK_OFFSET(FSARequestRename, 0x280, newPath);
+CHECK_SIZE(FSARequestRename, 0x500);
+
 struct FSARequestSetPosFile
 {
    be_val<FSFileHandle> handle;
@@ -127,6 +136,7 @@ struct FSARequest
       FSARequestOpenFile openFile;
       FSARequestReadFile readFile;
       FSARequestRemove remove;
+      FSARequestRename rename;
       FSARequestSetPosFile setPosFile;
       UNKNOWN(0x51C);
    };

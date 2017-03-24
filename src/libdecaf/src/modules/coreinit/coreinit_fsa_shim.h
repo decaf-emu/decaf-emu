@@ -156,6 +156,12 @@ fsaShimPrepareRequestRemove(FSAShimBuffer *shim,
                             const char *path);
 
 FSAStatus
+fsaShimPrepareRequestRename(FSAShimBuffer *shim,
+                            IOSHandle clientHandle,
+                            const char *oldPath,
+                            const char *newPath);
+
+FSAStatus
 fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
                                 IOSHandle clientHandle,
                                 FSFileHandle fileHandle,
