@@ -405,6 +405,10 @@ ENUM_BEG(FSVolumeState, uint32_t)
    ENUM_VALUE(Invalid,              11)
 ENUM_END(FSVolumeState)
 
+ENUM_BEG(FSWriteFlag, uint32_t)
+   ENUM_VALUE(WriteWithPos,         0x1)
+ENUM_END(FSWriteFlag)
+
 ENUM_BEG(GHSSyscallID, uint32_t)
    ENUM_VALUE(time,                 0x0000E)
    ENUM_VALUE(close,                0x20005)

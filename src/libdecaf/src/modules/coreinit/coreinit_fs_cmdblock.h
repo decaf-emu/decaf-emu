@@ -130,6 +130,28 @@ struct FSCmdBlockCmdDataStatFile
 CHECK_OFFSET(FSCmdBlockCmdDataStatFile, 0x0, stat);
 CHECK_SIZE(FSCmdBlockCmdDataStatFile, 0x4);
 
+struct FSCmdBlockCmdDataWriteFile
+{
+   UNKNOWN(4);
+
+   //! Total number of bytes remaining to write.
+   be_val<uint32_t> bytesRemaining;
+
+   //! Total bytes written so far.
+   be_val<uint32_t> bytesWritten;
+
+   //! The size of each write chunk (size parameter on FSWriteFile).
+   be_val<uint32_t> chunkSize;
+
+   //! The amount of bytes to write per IPC request.
+   be_val<uint32_t> writeSize;
+};
+CHECK_OFFSET(FSCmdBlockCmdDataWriteFile, 0x4, bytesRemaining);
+CHECK_OFFSET(FSCmdBlockCmdDataWriteFile, 0x8, bytesWritten);
+CHECK_OFFSET(FSCmdBlockCmdDataWriteFile, 0xC, chunkSize);
+CHECK_OFFSET(FSCmdBlockCmdDataWriteFile, 0x10, writeSize);
+CHECK_SIZE(FSCmdBlockCmdDataWriteFile, 0x14);
+
 /**
  * Stores command specific data for an FSCmdBlockBody.
  */
@@ -145,6 +167,7 @@ union FSCmdBlockCmdData
    FSCmdBlockCmdDataReadDir readDir;
    FSCmdBlockCmdDataReadFile readFile;
    FSCmdBlockCmdDataStatFile statFile;
+   FSCmdBlockCmdDataWriteFile writeFile;
    UNKNOWN(0x14);
 };
 CHECK_SIZE(FSCmdBlockCmdData, 0x14);
@@ -284,6 +307,9 @@ fsCmdBlockFinishCmdFn;
 
 extern FSFinishCmdFn
 fsCmdBlockFinishReadCmdFn;
+
+extern FSFinishCmdFn
+fsCmdBlockFinishWriteCmdFn;
 
 } // namespace internal
 

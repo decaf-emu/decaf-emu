@@ -312,4 +312,49 @@ FSSetPosFileAsync(FSClient *client,
                   FSErrorFlag errorMask,
                   const FSAsyncData *asyncData);
 
+
+FSStatus
+FSWriteFile(FSClient *client,
+            FSCmdBlock *block,
+            const uint8_t *buffer,
+            uint32_t size,
+            uint32_t count,
+            FSFileHandle handle,
+            FSWriteFlag writeFlags,
+            FSErrorFlag errorMask);
+
+FSStatus
+FSWriteFileAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 const uint8_t *buffer,
+                 uint32_t size,
+                 uint32_t count,
+                 FSFileHandle handle,
+                 FSWriteFlag writeFlags,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData);
+
+FSStatus
+FSWriteFileWithPos(FSClient *client,
+                   FSCmdBlock *block,
+                   const uint8_t *buffer,
+                   uint32_t size,
+                   uint32_t count,
+                   FSFilePosition pos,
+                   FSFileHandle handle,
+                   FSWriteFlag writeFlags,
+                   FSErrorFlag errorMask);
+
+FSStatus
+FSWriteFileWithPosAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const uint8_t *buffer,
+                        uint32_t size,
+                        uint32_t count,
+                        FSFilePosition pos,
+                        FSFileHandle handle,
+                        FSWriteFlag writeFlags,
+                        FSErrorFlag errorMask,
+                        const FSAsyncData *asyncData);
+
 } // namespace coreinit

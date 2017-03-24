@@ -607,6 +607,51 @@ fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
    return FSAStatus::OK;
 }
 
+
+/**
+ * Prepare a FSACommand::WriteFile request.
+ */
+FSAStatus
+fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               const uint8_t *buffer,
+                               uint32_t size,
+                               uint32_t count,
+                               uint32_t pos,
+                               FSFileHandle handle,
+                               FSWriteFlag writeFlags)
+{
+   if (!shim || !buffer) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctlv;
+   shim->command = FSACommand::WriteFile;
+
+   shim->ioctlvVecIn = 2;
+   shim->ioctlvVecOut = 1;
+
+   shim->ioctlvVec[0].paddr = &shim->request;
+   shim->ioctlvVec[0].len = sizeof(FSARequest);
+
+   shim->ioctlvVec[1].paddr = const_cast<uint8_t *>(buffer); // thug life
+   shim->ioctlvVec[1].len = size * count;
+
+   shim->ioctlvVec[2].paddr = &shim->response;
+   shim->ioctlvVec[2].len = sizeof(FSAResponse);
+
+   auto request = &shim->request.writeFile;
+   request->buffer = buffer;
+   request->size = size;
+   request->count = count;
+   request->pos = pos;
+   request->handle = handle;
+   request->writeFlags = writeFlags;
+
+   return FSAStatus::OK;
+}
+
 } // namespace internal
 
 void

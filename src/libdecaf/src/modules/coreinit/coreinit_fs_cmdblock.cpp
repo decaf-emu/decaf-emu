@@ -136,6 +136,9 @@ fsCmdBlockFinishCmdFn = nullptr;
 FSFinishCmdFn
 fsCmdBlockFinishReadCmdFn = nullptr;
 
+FSFinishCmdFn
+fsCmdBlockFinishWriteCmdFn = nullptr;
+
 static void
 fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
                     FSStatus status);
@@ -143,6 +146,10 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
 static void
 fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
                         FSStatus status);
+
+static void
+fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
+                         FSStatus status);
 
 
 /**
@@ -566,6 +573,7 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
    }
 }
 
+
 /**
  * Finish a FSACommand::ReadFile command.
  *
@@ -618,6 +626,59 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
    fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE, fsCmdBlockFinishReadCmdFn);
 }
 
+
+/**
+ * Finish a FSACommand::WriteFile command.
+ *
+ * Files are written in chunks of up to FSMaxBytesPerRequest bytes per time,
+ * this finish function will keep requeuing the command until we have completed
+ * the full write.
+ */
+void
+fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
+                         FSStatus result)
+{
+   auto bytesWritten = static_cast<uint32_t>(result);
+
+   if (result < 0) {
+      return fsCmdBlockFinishCmd(blockBody, result);
+   }
+
+   // Update write state
+   auto writeState = &blockBody->cmdData.writeFile;
+   writeState->bytesWritten += bytesWritten;
+   writeState->bytesRemaining -= bytesWritten;
+
+   // Check if the write is complete
+   if (writeState->bytesRemaining == 0 || bytesWritten < writeState->writeSize) {
+      auto chunksWritten = writeState->bytesWritten / writeState->chunkSize;
+      return fsCmdBlockFinishCmd(blockBody, static_cast<FSStatus>(chunksWritten));
+   }
+
+   // Check if we can write the final chunk yet
+   if (writeState->bytesRemaining > FSMaxBytesPerRequest) {
+      writeState->writeSize = FSMaxBytesPerRequest;
+   } else {
+      writeState->writeSize = writeState->bytesRemaining;
+   }
+
+   // Queue a new write request
+   auto writeRequest = &blockBody->fsaShimBuffer.request.writeFile;
+   writeRequest->buffer = writeRequest->buffer + bytesWritten;
+   writeRequest->size = 1;
+   writeRequest->count = writeState->writeSize;
+
+   if (writeRequest->writeFlags & FSWriteFlag::WriteWithPos) {
+      writeRequest->pos += bytesWritten;
+   }
+
+   auto shim = &blockBody->fsaShimBuffer;
+   shim->ioctlvVec[1].paddr = const_cast<uint8_t *>(writeRequest->buffer.get());
+   shim->ioctlvVec[1].len = writeRequest->size;
+
+   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE, fsCmdBlockFinishWriteCmdFn);
+}
+
 } // namespace internal
 
 void
@@ -632,6 +693,7 @@ Module::registerFsCmdBlockFunctions()
 
    RegisterInternalFunction(internal::fsCmdBlockFinishCmd, internal::fsCmdBlockFinishCmdFn);
    RegisterInternalFunction(internal::fsCmdBlockFinishReadCmd, internal::fsCmdBlockFinishReadCmdFn);
+   RegisterInternalFunction(internal::fsCmdBlockFinishWriteCmd, internal::fsCmdBlockFinishWriteCmdFn);
 }
 
 } // namespace coreinit

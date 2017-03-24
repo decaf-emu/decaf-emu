@@ -222,6 +222,27 @@ CHECK_SIZE(FSARequestSetPosFile, 0x8);
 
 
 /**
+ * Request data for FSACommand::WriteFile
+ */
+struct FSARequestWriteFile
+{
+   be_ptr<const uint8_t> buffer;
+   be_val<uint32_t> size;
+   be_val<uint32_t> count;
+   be_val<FSFilePosition> pos;
+   be_val<FSFileHandle> handle;
+   be_val<FSWriteFlag> writeFlags;
+};
+CHECK_OFFSET(FSARequestWriteFile, 0x00, buffer);
+CHECK_OFFSET(FSARequestWriteFile, 0x04, size);
+CHECK_OFFSET(FSARequestWriteFile, 0x08, count);
+CHECK_OFFSET(FSARequestWriteFile, 0x0C, pos);
+CHECK_OFFSET(FSARequestWriteFile, 0x10, handle);
+CHECK_OFFSET(FSARequestWriteFile, 0x14, writeFlags);
+CHECK_SIZE(FSARequestWriteFile, 0x18);
+
+
+/**
  * IPC request data for FSA device.
  */
 struct FSARequest
@@ -246,6 +267,7 @@ struct FSARequest
       FSARequestRename rename;
       FSARequestRewindDir rewindDir;
       FSARequestSetPosFile setPosFile;
+      FSARequestWriteFile writeFile;
       UNKNOWN(0x51C);
    };
 };

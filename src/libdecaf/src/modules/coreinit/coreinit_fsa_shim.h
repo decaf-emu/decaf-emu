@@ -192,6 +192,16 @@ fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
                                 FSFileHandle fileHandle,
                                 FSFilePosition pos);
 
+FSAStatus
+fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               const uint8_t *buffer,
+                               uint32_t size,
+                               uint32_t count,
+                               uint32_t pos,
+                               FSFileHandle handle,
+                               FSWriteFlag writeFlags);
+
 } // namespace internal
 
 /** @} */

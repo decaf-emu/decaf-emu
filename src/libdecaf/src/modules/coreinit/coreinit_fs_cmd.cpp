@@ -23,6 +23,18 @@ readFileWithPosAsync(FSClient *client,
                      const FSAsyncData *asyncData);
 
 static FSStatus
+writeFileWithPosAsync(FSClient *client,
+                      FSCmdBlock *block,
+                      const uint8_t *buffer,
+                      uint32_t size,
+                      uint32_t count,
+                      FSFilePosition pos,
+                      FSFileHandle handle,
+                      FSWriteFlag writeFlags,
+                      FSErrorFlag errorMask,
+                      const FSAsyncData *asyncData);
+
+static FSStatus
 getInfoByQueryAsync(FSClient *client,
                     FSCmdBlock *block,
                     const char *path,
@@ -1274,6 +1286,121 @@ FSSetPosFileAsync(FSClient *client,
 }
 
 
+/**
+ * Write to a file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSWriteFile(FSClient *client,
+            FSCmdBlock *block,
+            const uint8_t *buffer,
+            uint32_t size,
+            uint32_t count,
+            FSFileHandle handle,
+            FSWriteFlag writeFlags,
+            FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSWriteFileAsync(client, block, buffer, size, count, handle,
+                                  writeFlags, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Write to a file (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSWriteFileAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 const uint8_t *buffer,
+                 uint32_t size,
+                 uint32_t count,
+                 FSFileHandle handle,
+                 FSWriteFlag writeFlags,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData)
+{
+   return internal::writeFileWithPosAsync(client, block, buffer, size, count,
+                                          0, handle,
+                                          static_cast<FSWriteFlag>(writeFlags & ~FSWriteFlag::WriteWithPos),
+                                          errorMask, asyncData);
+}
+
+
+/**
+ * Write to a file at a specific position.
+ *
+ * The files position will be set before writing.
+ *
+ * This is equivalent to:
+ *    FSSetPosFile(file, pos)
+ *    FSWriteFile(file, ...)
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSWriteFileWithPos(FSClient *client,
+                   FSCmdBlock *block,
+                   const uint8_t *buffer,
+                   uint32_t size,
+                   uint32_t count,
+                   FSFilePosition pos,
+                   FSFileHandle handle,
+                   FSWriteFlag writeFlags,
+                   FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSWriteFileWithPosAsync(client, block, buffer, size, count,
+                                         handle, pos, writeFlags, errorMask,
+                                         &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Write to a file at a specific position (asynchronously).
+ *
+ * The files position will be set before writing.
+ *
+ * This is equivalent to:
+ *    FSSetPosFile(file, pos)
+ *    FSWriteFile(file, ...)
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSWriteFileWithPosAsync(FSClient *client,
+                        FSCmdBlock *block,
+                        const uint8_t *buffer,
+                        uint32_t size,
+                        uint32_t count,
+                        FSFilePosition pos,
+                        FSFileHandle handle,
+                        FSWriteFlag writeFlags,
+                        FSErrorFlag errorMask,
+                        const FSAsyncData *asyncData)
+{
+   return internal::writeFileWithPosAsync(client, block, buffer, size, count,
+                                          0, handle,
+                                          static_cast<FSWriteFlag>(writeFlags | FSWriteFlag::WriteWithPos),
+                                          errorMask, asyncData);
+}
+
+
 namespace internal
 {
 
@@ -1320,8 +1447,11 @@ readFileWithPosAsync(FSClient *client,
    auto error = internal::fsaShimPrepareRequestReadFile(&blockBody->fsaShimBuffer,
                                                         clientBody->clientHandle,
                                                         buffer,
+                                                        1,
                                                         blockBody->cmdData.readFile.readSize,
-                                                        1, pos, handle, readFlags);
+                                                        pos,
+                                                        handle,
+                                                        readFlags);
 
    if (error) {
       return internal::fsClientHandleShimPrepareError(clientBody, error);
@@ -1373,6 +1503,63 @@ getInfoByQueryAsync(FSClient *client,
    return FSStatus::OK;
 }
 
+FSStatus
+writeFileWithPosAsync(FSClient *client,
+                      FSCmdBlock *block,
+                      const uint8_t *buffer,
+                      uint32_t size,
+                      uint32_t count,
+                      FSFilePosition pos,
+                      FSFileHandle handle,
+                      FSWriteFlag writeFlags,
+                      FSErrorFlag errorMask,
+                      const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   // Ensure size * count is not > 32 bit.
+   auto bytes = uint64_t { size } * uint64_t { count };
+
+   if (bytes > 0xFFFFFFFFull) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidParam);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.writeFile.chunkSize = size;
+   blockBody->cmdData.writeFile.bytesRemaining = size * count;
+   blockBody->cmdData.writeFile.bytesWritten = 0;
+
+   // We only read up to FSMaxBytesPerRequest per request.
+   if (size > FSMaxBytesPerRequest) {
+      blockBody->cmdData.writeFile.writeSize = FSMaxBytesPerRequest;
+   } else {
+      blockBody->cmdData.writeFile.writeSize = size;
+   }
+
+   auto error = internal::fsaShimPrepareRequestWriteFile(&blockBody->fsaShimBuffer,
+                                                         clientBody->clientHandle,
+                                                         buffer,
+                                                         1,
+                                                         blockBody->cmdData.writeFile.writeSize,
+                                                         pos,
+                                                         handle,
+                                                         writeFlags);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishWriteCmdFn);
+   return FSStatus::OK;
+}
+
 } // namespace internal
 
 void
@@ -1418,6 +1605,10 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSRewindDirAsync);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSSetPosFileAsync);
+   RegisterKernelFunction(FSWriteFile);
+   RegisterKernelFunction(FSWriteFileAsync);
+   RegisterKernelFunction(FSWriteFileWithPos);
+   RegisterKernelFunction(FSWriteFileWithPosAsync);
 }
 
 } // namespace coreinit
