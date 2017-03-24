@@ -259,6 +259,35 @@ fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::MakeDir request.
+ */
+FSAStatus
+fsaShimPrepareRequestMakeDir(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             const char *path,
+                             uint32_t permissions)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::MakeDir;
+
+   auto request = &shim->request.makeDir;
+   std::strncpy(request->path, path, FSMaxPathLength);
+   request->permission = permissions;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::OpenFile request.
  */
 FSAStatus

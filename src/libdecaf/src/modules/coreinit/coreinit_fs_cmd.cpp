@@ -332,6 +332,68 @@ FSGetStatAsync(FSClient *client,
 
 
 /**
+ * Create a directory.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSMakeDir(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSMakeDirAsync(client, block, path,
+                                errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Create a directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSMakeDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               FSErrorFlag errorMask,
+               FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!path) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   auto error = internal::fsaShimPrepareRequestMakeDir(&blockBody->fsaShimBuffer,
+                                                       clientBody->clientHandle,
+                                                       path, 0x660);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Open a directory for iterating it's content.
  *
  * \return
@@ -933,6 +995,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSGetPosFileAsync);
    RegisterKernelFunction(FSGetStat);
    RegisterKernelFunction(FSGetStatAsync);
+   RegisterKernelFunction(FSMakeDir);
+   RegisterKernelFunction(FSMakeDirAsync);
    RegisterKernelFunction(FSOpenDir);
    RegisterKernelFunction(FSOpenDirAsync);
    RegisterKernelFunction(FSOpenFile);
