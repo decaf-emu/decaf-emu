@@ -332,6 +332,94 @@ FSGetStatAsync(FSClient *client,
 
 
 /**
+ * Open a directory for iterating it's content.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Directory not found.
+ *
+ * \retval FSStatus::NotDirectory
+ * Used OpenDir on a non-directory object such as a file.
+ *
+ * \retval FSStatus::PermissionError
+ * Did not have permission to open the directory in specified mode.
+ */
+FSStatus
+FSOpenDir(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          be_val<FSDirHandle> *dirHandle,
+          FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSOpenDirAsync(client, block, path, dirHandle,
+                                errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Open a directory for iterating it's content (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Directory not found.
+ *
+ * \retval FSStatus::NotDirectory
+ * Used OpenDir on a non-directory object such as a file.
+ *
+ * \retval FSStatus::PermissionError
+ * Did not have permission to open the directory in specified mode.
+ */
+FSStatus
+FSOpenDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               be_val<FSDirHandle> *dirHandle,
+               FSErrorFlag errorMask,
+               FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!dirHandle) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   if (!path) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.openDir.handle = dirHandle;
+   auto error = internal::fsaShimPrepareRequestOpenDir(&blockBody->fsaShimBuffer,
+                                                        clientBody->clientHandle,
+                                                        path);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Open a file.
  *
  * \return
@@ -845,6 +933,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSGetPosFileAsync);
    RegisterKernelFunction(FSGetStat);
    RegisterKernelFunction(FSGetStatAsync);
+   RegisterKernelFunction(FSOpenDir);
+   RegisterKernelFunction(FSOpenDirAsync);
    RegisterKernelFunction(FSOpenFile);
    RegisterKernelFunction(FSOpenFileAsync);
    RegisterKernelFunction(FSOpenFileEx);

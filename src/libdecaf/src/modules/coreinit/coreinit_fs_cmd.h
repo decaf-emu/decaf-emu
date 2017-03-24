@@ -76,6 +76,21 @@ FSGetStatAsync(FSClient *client,
                FSAsyncData *asyncData);
 
 FSStatus
+FSOpenDir(FSClient *client,
+          FSCmdBlock *block,
+          const char *path,
+          be_val<FSDirHandle> *dirHandle,
+          FSErrorFlag errorMask);
+
+FSStatus
+FSOpenDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *path,
+               be_val<FSDirHandle> *dirHandle,
+               FSErrorFlag errorMask,
+               FSAsyncData *asyncData);
+
+FSStatus
 FSOpenFile(FSClient *client,
            FSCmdBlock *block,
            const char *path,

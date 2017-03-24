@@ -121,6 +121,11 @@ fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
                                 FSFileHandle fileHandle);
 
 FSAStatus
+fsaShimPrepareRequestOpenDir(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             const char *path);
+
+FSAStatus
 fsaShimPrepareRequestOpenFile(FSAShimBuffer *shim,
                               IOSHandle clientHandle,
                               const char *path,

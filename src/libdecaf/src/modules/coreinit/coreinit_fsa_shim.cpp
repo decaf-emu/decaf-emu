@@ -262,6 +262,36 @@ fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
  * Prepare a FSACommand::OpenFile request.
  */
 FSAStatus
+fsaShimPrepareRequestOpenDir(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             const char *path)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::OpenDir;
+
+   auto request = &shim->request.openDir;
+   std::strncpy(request->path, path, FSMaxPathLength);
+
+   auto response = &shim->response.openDir;
+   response->handle = -1;
+
+   return FSAStatus::OK;
+}
+
+
+/**
+ * Prepare a FSACommand::OpenFile request.
+ */
+FSAStatus
 fsaShimPrepareRequestOpenFile(FSAShimBuffer *shim,
                               IOSHandle clientHandle,
                               const char *path,
