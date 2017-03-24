@@ -52,6 +52,12 @@ FSGetCmdPriority(FSCmdBlock *block)
 
 /**
  * Set the command's priority.
+ *
+ * \retval FSStatus::OK
+ * Success.
+ *
+ * \retval FSStatus::FatalError
+ * FSCmdBlock in invalid state, or invalid priority.
  */
 FSStatus
 FSSetCmdPriority(FSCmdBlock *block,
@@ -78,7 +84,28 @@ FSSetCmdPriority(FSCmdBlock *block,
 
 
 /**
+ * Get the FSMessage structure in an FSCmdBlock.
+ *
+ * \return
+ * Returns the FSMessage structure from the FSCmdBlock's FSAsyncResult.
+ */
+FSMessage *
+FSGetFSMessage(FSCmdBlock *block)
+{
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   if (!blockBody) {
+      return nullptr;
+   }
+
+   return &blockBody->asyncResult.ioMsg;
+}
+
+
+/**
  * Get the value stored in FSCmdBlock by FSSetUserData.
+ *
+ * \return
+ * Returns pointer set by FSSetUserData.
  */
 void *
 FSGetUserData(FSCmdBlock *block)
@@ -599,6 +626,7 @@ Module::registerFsCmdBlockFunctions()
    RegisterKernelFunction(FSInitCmdBlock);
    RegisterKernelFunction(FSGetCmdPriority);
    RegisterKernelFunction(FSSetCmdPriority);
+   RegisterKernelFunction(FSGetFSMessage);
    RegisterKernelFunction(FSGetUserData);
    RegisterKernelFunction(FSSetUserData);
 

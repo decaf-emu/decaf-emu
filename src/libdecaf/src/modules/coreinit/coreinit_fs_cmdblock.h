@@ -235,6 +235,9 @@ FSStatus
 FSSetCmdPriority(FSCmdBlock *block,
                  uint32_t priority);
 
+FSMessage *
+FSGetFSMessage(FSCmdBlock *block);
+
 void *
 FSGetUserData(FSCmdBlock *block);
 
