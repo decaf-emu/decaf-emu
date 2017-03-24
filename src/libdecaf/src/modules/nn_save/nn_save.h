@@ -18,7 +18,7 @@ public:
 private:
    static void registerCoreFunctions();
    static void registerDirFunctions();
-   static void registerFileFunctions();
+   static void registerCmdFunctions();
 };
 
 } // namespace save
