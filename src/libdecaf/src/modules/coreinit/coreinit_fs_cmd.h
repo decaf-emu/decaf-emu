@@ -44,6 +44,19 @@ FSCloseFileAsync(FSClient *client,
                  const FSAsyncData *asyncData);
 
 FSStatus
+FSFlushFile(FSClient *client,
+            FSCmdBlock *block,
+            FSFileHandle handle,
+            FSErrorFlag errorMask);
+
+FSStatus
+FSFlushFileAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 FSFileHandle handle,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData);
+
+FSStatus
 FSFlushQuota(FSClient *client,
              FSCmdBlock *block,
              const char *path,

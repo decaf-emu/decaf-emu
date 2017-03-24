@@ -18,6 +18,10 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
+
+/**
+ * Request data for FSACommand::ChangeDir
+ */
 struct FSARequestChangeDir
 {
    char path[FSMaxPathLength + 1];
@@ -25,6 +29,10 @@ struct FSARequestChangeDir
 CHECK_OFFSET(FSARequestChangeDir, 0x0, path);
 CHECK_SIZE(FSARequestChangeDir, 0x280);
 
+
+/**
+ * Request data for FSACommand::CloseDir
+ */
 struct FSARequestCloseDir
 {
    be_val<FSDirHandle> handle;
@@ -32,6 +40,10 @@ struct FSARequestCloseDir
 CHECK_OFFSET(FSARequestCloseDir, 0x0, handle);
 CHECK_SIZE(FSARequestCloseDir, 0x4);
 
+
+/**
+ * Request data for FSACommand::CloseFile
+ */
 struct FSARequestCloseFile
 {
    be_val<FSFileHandle> handle;
@@ -39,6 +51,21 @@ struct FSARequestCloseFile
 CHECK_OFFSET(FSARequestCloseFile, 0x0, handle);
 CHECK_SIZE(FSARequestCloseFile, 0x4);
 
+
+/**
+ * Request data for FSACommand::FlushFile
+ */
+struct FSARequestFlushFile
+{
+   be_val<FSFileHandle> handle;
+};
+CHECK_OFFSET(FSARequestFlushFile, 0x0, handle);
+CHECK_SIZE(FSARequestFlushFile, 0x4);
+
+
+/**
+ * Request data for FSACommand::FlushQuota
+ */
 struct FSARequestFlushQuota
 {
    char path[FSMaxPathLength + 1];
@@ -46,6 +73,10 @@ struct FSARequestFlushQuota
 CHECK_OFFSET(FSARequestFlushQuota, 0x0, path);
 CHECK_SIZE(FSARequestFlushQuota, 0x280);
 
+
+/**
+ * Request data for FSACommand::GetInfoByQuery
+ */
 struct FSARequestGetInfoByQuery
 {
    char path[FSMaxPathLength + 1];
@@ -55,6 +86,10 @@ CHECK_OFFSET(FSARequestGetInfoByQuery, 0x0, path);
 CHECK_OFFSET(FSARequestGetInfoByQuery, 0x280, type);
 CHECK_SIZE(FSARequestGetInfoByQuery, 0x284);
 
+
+/**
+ * Request data for FSACommand::GetPosFile
+ */
 struct FSARequestGetPosFile
 {
    be_val<FSFileHandle> handle;
@@ -62,6 +97,10 @@ struct FSARequestGetPosFile
 CHECK_OFFSET(FSARequestGetPosFile, 0x0, handle);
 CHECK_SIZE(FSARequestGetPosFile, 0x4);
 
+
+/**
+ * Request data for FSACommand::MakeDir
+ */
 struct FSARequestMakeDir
 {
    char path[FSMaxPathLength + 1];
@@ -71,6 +110,10 @@ CHECK_OFFSET(FSARequestMakeDir, 0x0, path);
 CHECK_OFFSET(FSARequestMakeDir, 0x280, permission);
 CHECK_SIZE(FSARequestMakeDir, 0x284);
 
+
+/**
+ * Request data for FSACommand::OpenDir
+ */
 struct FSARequestOpenDir
 {
    char path[FSMaxPathLength + 1];
@@ -78,6 +121,10 @@ struct FSARequestOpenDir
 CHECK_OFFSET(FSARequestOpenDir, 0x0, path);
 CHECK_SIZE(FSARequestOpenDir, 0x280);
 
+
+/**
+ * Request data for FSACommand::OpenFile
+ */
 struct FSARequestOpenFile
 {
    char path[FSMaxPathLength + 1];
@@ -93,6 +140,10 @@ CHECK_OFFSET(FSARequestOpenFile, 0x294, unk0x294);
 CHECK_OFFSET(FSARequestOpenFile, 0x298, unk0x298);
 CHECK_SIZE(FSARequestOpenFile, 0x29C);
 
+
+/**
+ * Request data for FSACommand::ReadDir
+ */
 struct FSARequestReadDir
 {
    be_val<FSDirHandle> handle;
@@ -100,6 +151,10 @@ struct FSARequestReadDir
 CHECK_OFFSET(FSARequestReadDir, 0x0, handle);
 CHECK_SIZE(FSARequestReadDir, 0x4);
 
+
+/**
+ * Request data for FSACommand::ReadFile
+ */
 struct FSARequestReadFile
 {
    be_ptr<uint8_t> buffer;
@@ -117,6 +172,10 @@ CHECK_OFFSET(FSARequestReadFile, 0x10, handle);
 CHECK_OFFSET(FSARequestReadFile, 0x14, readFlags);
 CHECK_SIZE(FSARequestReadFile, 0x18);
 
+
+/**
+ * Request data for FSACommand::Remove
+ */
 struct FSARequestRemove
 {
    char path[FSMaxPathLength + 1];
@@ -124,6 +183,10 @@ struct FSARequestRemove
 CHECK_OFFSET(FSARequestRemove, 0x0, path);
 CHECK_SIZE(FSARequestRemove, 0x280);
 
+
+/**
+ * Request data for FSACommand::Rename
+ */
 struct FSARequestRename
 {
    char oldPath[FSMaxPathLength + 1];
@@ -133,6 +196,10 @@ CHECK_OFFSET(FSARequestRename, 0x0, oldPath);
 CHECK_OFFSET(FSARequestRename, 0x280, newPath);
 CHECK_SIZE(FSARequestRename, 0x500);
 
+
+/**
+ * Request data for FSACommand::RewindDir
+ */
 struct FSARequestRewindDir
 {
    be_val<FSDirHandle> handle;
@@ -140,6 +207,10 @@ struct FSARequestRewindDir
 CHECK_OFFSET(FSARequestRewindDir, 0x0, handle);
 CHECK_SIZE(FSARequestRewindDir, 0x4);
 
+
+/**
+ * Request data for FSACommand::SetPosFile
+ */
 struct FSARequestSetPosFile
 {
    be_val<FSFileHandle> handle;
@@ -149,6 +220,10 @@ CHECK_OFFSET(FSARequestSetPosFile, 0x0, handle);
 CHECK_OFFSET(FSARequestSetPosFile, 0x4, pos);
 CHECK_SIZE(FSARequestSetPosFile, 0x8);
 
+
+/**
+ * IPC request data for FSA device.
+ */
 struct FSARequest
 {
    be_val<uint32_t> unk0x00;
@@ -158,6 +233,7 @@ struct FSARequest
       FSARequestChangeDir changeDir;
       FSARequestCloseDir closeDir;
       FSARequestCloseFile closeFile;
+      FSARequestFlushFile flushFile;
       FSARequestFlushQuota flushQuota;
       FSARequestGetInfoByQuery getInfoByQuery;
       FSARequestGetPosFile getPosFile;

@@ -209,6 +209,62 @@ FSCloseFileAsync(FSClient *client,
 
 
 /**
+ * Flush the contents of a file to disk.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSFlushFile(FSClient *client,
+            FSCmdBlock *block,
+            FSFileHandle handle,
+            FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSFlushFileAsync(client, block, handle, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Flush the contents of a file to disk (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSFlushFileAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 FSFileHandle handle,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestFlushFile(&blockBody->fsaShimBuffer,
+                                                         clientBody->clientHandle,
+                                                         handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * I don't know what this does :).
  *
  * \return
@@ -1328,6 +1384,10 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSCloseDirAsync);
    RegisterKernelFunction(FSCloseFile);
    RegisterKernelFunction(FSCloseFileAsync);
+   RegisterKernelFunction(FSFlushFile);
+   RegisterKernelFunction(FSFlushFileAsync);
+   RegisterKernelFunction(FSFlushQuota);
+   RegisterKernelFunction(FSFlushQuotaAsync);
    RegisterKernelFunction(FSGetCwd);
    RegisterKernelFunction(FSGetCwdAsync);
    RegisterKernelFunction(FSGetFreeSpaceSize);

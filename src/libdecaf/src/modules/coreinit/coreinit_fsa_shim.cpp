@@ -207,6 +207,29 @@ fsaShimPrepareRequestCloseFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::FlushFile request.
+ */
+FSAStatus
+fsaShimPrepareRequestFlushFile(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               FSFileHandle fileHandle)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::FlushFile;
+
+   auto request = &shim->request.flushFile;
+   request->handle = fileHandle;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::FlushQuota request.
  */
 FSAStatus
