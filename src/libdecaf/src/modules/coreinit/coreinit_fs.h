@@ -189,6 +189,9 @@ FSShutdown();
 FSAsyncResult *
 FSGetAsyncResult(OSMessage *message);
 
+uint32_t
+FSGetClientNum();
+
 namespace internal
 {
 

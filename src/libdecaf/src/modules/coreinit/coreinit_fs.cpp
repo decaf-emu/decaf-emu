@@ -15,6 +15,7 @@ struct FsData
 {
    bool initialised;
    OSFastMutex mutex;
+   uint32_t numClients;
    FSClientBodyQueue clients;
 };
 
@@ -55,6 +56,16 @@ FSAsyncResult *
 FSGetAsyncResult(OSMessage *message)
 {
    return be_ptr<FSAsyncResult> { message->message };
+}
+
+
+/**
+ * Get the number of registered FS clients.
+ */
+uint32_t
+FSGetClientNum()
+{
+   return sFsData->numClients;
 }
 
 
@@ -102,6 +113,7 @@ fsRegisterClient(FSClientBody *clientBody)
 {
    OSFastMutex_Lock(&sFsData->mutex);
    ClientBodyQueue::append(&sFsData->clients, clientBody);
+   sFsData->numClients++;
    OSFastMutex_Unlock(&sFsData->mutex);
    return true;
 }
@@ -115,6 +127,7 @@ fsDeregisterClient(FSClientBody *clientBody)
 {
    OSFastMutex_Lock(&sFsData->mutex);
    ClientBodyQueue::erase(&sFsData->clients, clientBody);
+   sFsData->numClients--;
    OSFastMutex_Unlock(&sFsData->mutex);
    return true;
 }
@@ -226,6 +239,8 @@ Module::registerFsFunctions()
    RegisterKernelFunction(FSInit);
    RegisterKernelFunction(FSShutdown);
    RegisterKernelFunction(FSGetAsyncResult);
+   RegisterKernelFunction(FSGetClientNum);
+
    RegisterInternalData(sFsData);
 }
 
