@@ -198,6 +198,11 @@ fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
                                 FSFilePosition pos);
 
 FSAStatus
+fsaShimPrepareRequestTruncateFile(FSAShimBuffer *shim,
+                                  IOSHandle clientHandle,
+                                  FSFileHandle fileHandle);
+
+FSAStatus
 fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
                                IOSHandle clientHandle,
                                const uint8_t *buffer,

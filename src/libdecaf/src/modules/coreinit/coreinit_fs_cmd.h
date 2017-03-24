@@ -325,6 +325,18 @@ FSSetPosFileAsync(FSClient *client,
                   FSErrorFlag errorMask,
                   const FSAsyncData *asyncData);
 
+FSStatus
+FSTruncateFile(FSClient *client,
+               FSCmdBlock *block,
+               FSFileHandle handle,
+               FSErrorFlag errorMask);
+
+FSStatus
+FSTruncateFileAsync(FSClient *client,
+                    FSCmdBlock *block,
+                    FSFileHandle handle,
+                    FSErrorFlag errorMask,
+                    const FSAsyncData *asyncData);
 
 FSStatus
 FSWriteFile(FSClient *client,

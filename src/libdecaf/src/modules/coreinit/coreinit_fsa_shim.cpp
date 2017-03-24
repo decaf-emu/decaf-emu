@@ -632,6 +632,29 @@ fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::TruncateFile request.
+ */
+FSAStatus
+fsaShimPrepareRequestTruncateFile(FSAShimBuffer *shim,
+                                  IOSHandle clientHandle,
+                                  FSFileHandle fileHandle)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::TruncateFile;
+
+   auto request = &shim->request.truncateFile;
+   request->handle = fileHandle;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::WriteFile request.
  */
 FSAStatus

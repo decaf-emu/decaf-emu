@@ -1349,6 +1349,62 @@ FSSetPosFileAsync(FSClient *client,
 
 
 /**
+ * Truncate a file to it's current position.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSTruncateFile(FSClient *client,
+               FSCmdBlock *block,
+               FSFileHandle handle,
+               FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSTruncateFileAsync(client, block, handle, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Truncate a file to it's current position (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSTruncateFileAsync(FSClient *client,
+                    FSCmdBlock *block,
+                    FSFileHandle handle,
+                    FSErrorFlag errorMask,
+                    const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestTruncateFile(&blockBody->fsaShimBuffer,
+                                                            clientBody->clientHandle,
+                                                            handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Write to a file.
  *
  * \return
@@ -1669,6 +1725,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSRewindDirAsync);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSSetPosFileAsync);
+   RegisterKernelFunction(FSTruncateFile);
+   RegisterKernelFunction(FSTruncateFileAsync);
    RegisterKernelFunction(FSWriteFile);
    RegisterKernelFunction(FSWriteFileAsync);
    RegisterKernelFunction(FSWriteFileWithPos);
