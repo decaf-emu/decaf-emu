@@ -348,6 +348,11 @@ ENUM_BEG(FSErrorFlag, uint32_t)
    ENUM_VALUE(All,                     0xFFFFFFFF)
 ENUM_END(FSErrorFlag)
 
+ENUM_BEG(FSMountSourceType, uint32_t)
+   ENUM_VALUE(SdCard,                  0)
+   ENUM_VALUE(HostFileIO,              1)
+ENUM_END(FSMountSourceType)
+
 ENUM_BEG(FSQueryInfoType, uint32_t)
    ENUM_VALUE(FreeSpaceSize,           0)
    ENUM_VALUE(DirSize,                 1)

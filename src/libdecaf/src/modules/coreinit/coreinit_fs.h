@@ -137,6 +137,19 @@ CHECK_SIZE(FSAsyncResult, 0x28);
 
 
 /**
+ * Information about a mount.
+ */
+struct FSMountSource
+{
+   be_val<FSMountSourceType> sourceType;
+   char path[FSMaxPathLength];
+};
+CHECK_OFFSET(FSMountSource, 0x0, sourceType);
+CHECK_OFFSET(FSMountSource, 0x4, path);
+CHECK_SIZE(FSMountSource, 0x283);
+
+
+/**
  * Structure used by FSGetStat to return information about a file or directory.
  */
 struct FSStat
