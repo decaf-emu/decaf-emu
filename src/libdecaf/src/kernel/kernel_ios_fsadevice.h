@@ -52,7 +52,7 @@ public:
           size_t vecIn,
           size_t vecOut,
           IOSVec *vec) override;
-  
+
 private:
    fs::Path
    translatePath(const char *path) const;
@@ -62,7 +62,7 @@ private:
 
    FSAFileHandle
    mapFileHandle(fs::FileHandle handle);
-   
+
    fs::FileHandle
    mapFileHandle(FSAFileHandle handle);
 
@@ -86,6 +86,11 @@ private:
    readFile(size_t vecIn,
             size_t vecOut,
             IOSVec *vec);
+
+   IOSError
+   writeFile(size_t vecIn,
+             size_t vecOut,
+             IOSVec *vec);
 
 private:
    fs::FileSystem *mFS;
