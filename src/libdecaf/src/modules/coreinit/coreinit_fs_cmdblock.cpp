@@ -28,7 +28,52 @@ FSInitCmdBlock(FSCmdBlock *block)
 
    auto blockBody = internal::fsCmdBlockGetBody(block);
    blockBody->status = FSCmdBlockStatus::Initialised;
-   blockBody->priority = 16;
+   blockBody->priority = FSDefaultPriority;
+}
+
+
+/**
+ * Get the command's priority.
+ *
+ * \return
+ * Returns positive value on success, or FSStatus error code otherwise.
+ */
+FSStatus
+FSGetCmdPriority(FSCmdBlock *block)
+{
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   if (!blockBody) {
+      return FSStatus::FatalError;
+   }
+
+   return static_cast<FSStatus>(blockBody->priority.value());
+}
+
+
+/**
+ * Set the command's priority.
+ */
+FSStatus
+FSSetCmdPriority(FSCmdBlock *block,
+                 uint32_t priority)
+{
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   if (!blockBody) {
+      return FSStatus::FatalError;
+   }
+
+   if (priority < FSMinPriority || priority > FSMaxPriority) {
+      return FSStatus::FatalError;
+   }
+
+   if (blockBody->status != FSCmdBlockStatus::Initialised &&
+       blockBody->status != FSCmdBlockStatus::Cancelled) {
+      // Cannot adjust a commands priority once it has been queued.
+      return FSStatus::FatalError;
+   }
+
+   blockBody->priority = priority;
+   return FSStatus::OK;
 }
 
 
@@ -79,6 +124,10 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
 FSCmdBlockBody *
 fsCmdBlockGetBody(FSCmdBlock *cmdBlock)
 {
+   if (!cmdBlock) {
+      return nullptr;
+   }
+
    auto body = mem::translate<FSCmdBlockBody>(align_up(mem::untranslate(cmdBlock), 0x40));
    body->block = cmdBlock;
    return body;
@@ -548,6 +597,8 @@ void
 Module::registerFsCmdBlockFunctions()
 {
    RegisterKernelFunction(FSInitCmdBlock);
+   RegisterKernelFunction(FSGetCmdPriority);
+   RegisterKernelFunction(FSSetCmdPriority);
    RegisterKernelFunction(FSGetUserData);
    RegisterKernelFunction(FSSetUserData);
 

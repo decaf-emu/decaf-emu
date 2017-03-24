@@ -64,6 +64,15 @@ FSMaxBytesPerRequest = 0x100000;
 static constexpr uint32_t
 FSMaxPathLength = 0x27F;
 
+static constexpr uint32_t
+FSMinPriority = 0;
+
+static constexpr uint32_t
+FSDefaultPriority = 16;
+
+static constexpr uint32_t
+FSMaxPriority = 32;
+
 struct FSMessage
 {
    //! Message data

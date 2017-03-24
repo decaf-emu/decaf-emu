@@ -228,6 +228,13 @@ CHECK_OFFSET(FSCmdBlockBody, 0x9F8, block);
 void
 FSInitCmdBlock(FSCmdBlock *block);
 
+FSStatus
+FSGetCmdPriority(FSCmdBlock *block);
+
+FSStatus
+FSSetCmdPriority(FSCmdBlock *block,
+                 uint32_t priority);
+
 void *
 FSGetUserData(FSCmdBlock *block);
 
