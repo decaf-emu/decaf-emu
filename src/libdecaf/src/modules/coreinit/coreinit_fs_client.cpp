@@ -155,6 +155,31 @@ FSDelClient(FSClient *client,
 }
 
 
+/**
+ * Get the current active command block for a client.
+ *
+ * This is the command which has been sent over IOS IPC to the FSA device.
+ *
+ * \return
+ * Returns a pointer to FSCmdBlock or nullptr if there is no active command.
+ */
+FSCmdBlock *
+FSGetCurrentCmdBlock(FSClient *client)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   if (!clientBody) {
+      return nullptr;
+   }
+
+   auto lastDequeued = clientBody->lastDequeuedCommand;
+   if (!lastDequeued) {
+      return nullptr;
+   }
+
+   return lastDequeued->cmdBlock;
+}
+
+
 namespace internal
 {
 
@@ -386,6 +411,8 @@ Module::registerFsClientFunctions()
    RegisterKernelFunction(FSAddClient);
    RegisterKernelFunction(FSAddClientEx);
    RegisterKernelFunction(FSDelClient);
+   RegisterKernelFunction(FSGetCurrentCmdBlock);
+
    RegisterInternalFunction(internal::fsClientHandleFsaAsyncCallback, sHandleFsaAsyncCallback);
    RegisterInternalFunction(internal::fsClientHandleDequeuedCommand, sHandleDequeuedCommand);
 }

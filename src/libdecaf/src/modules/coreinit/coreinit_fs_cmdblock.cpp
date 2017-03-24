@@ -156,7 +156,7 @@ fsCmdBlockGetBody(FSCmdBlock *cmdBlock)
    }
 
    auto body = mem::translate<FSCmdBlockBody>(align_up(mem::untranslate(cmdBlock), 0x40));
-   body->block = cmdBlock;
+   body->cmdBlock = cmdBlock;
    return body;
 }
 
@@ -253,7 +253,7 @@ void
 fsCmdBlockSetResult(FSCmdBlockBody *blockBody,
                     FSStatus status)
 {
-   blockBody->asyncResult.block = blockBody->block;
+   blockBody->asyncResult.block = blockBody->cmdBlock;
    blockBody->asyncResult.status = status;
 
    if (!OSSendMessage(blockBody->asyncResult.asyncData.ioMsgQueue,

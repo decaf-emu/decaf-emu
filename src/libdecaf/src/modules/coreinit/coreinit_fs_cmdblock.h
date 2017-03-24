@@ -202,7 +202,7 @@ struct FSCmdBlockBody
    be_val<uint32_t> unk0x9F4;
 
    //! Pointer to unaligned FSCmdBlock.
-   be_ptr<FSCmdBlock> block;
+   be_ptr<FSCmdBlock> cmdBlock;
 };
 CHECK_OFFSET(FSCmdBlockBody, 0x0, fsaShimBuffer);
 CHECK_OFFSET(FSCmdBlockBody, 0x938, clientBody);
@@ -221,7 +221,7 @@ CHECK_OFFSET(FSCmdBlockBody, 0x9E8, priority);
 CHECK_OFFSET(FSCmdBlockBody, 0x9E9, unk0x9E9);
 CHECK_OFFSET(FSCmdBlockBody, 0x9EA, unk0x9EA);
 CHECK_OFFSET(FSCmdBlockBody, 0x9F4, unk0x9F4);
-CHECK_OFFSET(FSCmdBlockBody, 0x9F8, block);
+CHECK_OFFSET(FSCmdBlockBody, 0x9F8, cmdBlock);
 
 #pragma pack(pop)
 

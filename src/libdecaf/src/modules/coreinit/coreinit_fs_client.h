@@ -152,6 +152,8 @@ FSStatus
 FSDelClient(FSClient *client,
             FSErrorFlag errorMask);
 
+FSCmdBlock *
+FSGetCurrentCmdBlock(FSClient *client);
 
 namespace internal
 {
