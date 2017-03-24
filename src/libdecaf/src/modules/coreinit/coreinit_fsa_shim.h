@@ -151,6 +151,11 @@ fsaShimPrepareRequestOpenFile(FSAShimBuffer *shim,
                               uint32_t unk0x298);
 
 FSAStatus
+fsaShimPrepareRequestReadDir(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             FSDirHandle dirHandle);
+
+FSAStatus
 fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
                               IOSHandle clientHandle,
                               uint8_t *buffer,

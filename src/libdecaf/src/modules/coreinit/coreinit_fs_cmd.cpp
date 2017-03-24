@@ -784,6 +784,72 @@ FSOpenFileExAsync(FSClient *client,
 
 
 /**
+ * Read the next entry in a directory.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSReadDir(FSClient *client,
+          FSCmdBlock *block,
+          FSDirHandle handle,
+          FSDirEntry *returnedDirEntry,
+          FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSReadDirAsync(client, block, handle, returnedDirEntry,
+                                errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Read the next entry in a directory (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSReadDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               FSDirHandle handle,
+               FSDirEntry *returnedDirEntry,
+               FSErrorFlag errorMask,
+               const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!returnedDirEntry) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.readDir.entry = returnedDirEntry;
+
+   auto error = internal::fsaShimPrepareRequestReadDir(&blockBody->fsaShimBuffer,
+                                                       clientBody->clientHandle,
+                                                       handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Read a file.
  *
  * \return
@@ -1278,6 +1344,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSOpenFileAsync);
    RegisterKernelFunction(FSOpenFileEx);
    RegisterKernelFunction(FSOpenFileExAsync);
+   RegisterKernelFunction(FSReadDir);
+   RegisterKernelFunction(FSReadDirAsync);
    RegisterKernelFunction(FSReadFile);
    RegisterKernelFunction(FSReadFileAsync);
    RegisterKernelFunction(FSReadFileWithPos);

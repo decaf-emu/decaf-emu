@@ -185,6 +185,21 @@ FSOpenFileExAsync(FSClient *client,
                   const FSAsyncData *asyncData);
 
 FSStatus
+FSReadDir(FSClient *client,
+          FSCmdBlock *block,
+          FSDirHandle handle,
+          FSDirEntry *returnedDirEntry,
+          FSErrorFlag errorMask);
+
+FSStatus
+FSReadDirAsync(FSClient *client,
+               FSCmdBlock *block,
+               FSDirHandle handle,
+               FSDirEntry *returnedDirEntry,
+               FSErrorFlag errorMask,
+               const FSAsyncData *asyncData);
+
+FSStatus
 FSReadFile(FSClient *client,
            FSCmdBlock *block,
            uint8_t *buffer,

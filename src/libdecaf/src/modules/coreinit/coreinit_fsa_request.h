@@ -93,6 +93,13 @@ CHECK_OFFSET(FSARequestOpenFile, 0x294, unk0x294);
 CHECK_OFFSET(FSARequestOpenFile, 0x298, unk0x298);
 CHECK_SIZE(FSARequestOpenFile, 0x29C);
 
+struct FSARequestReadDir
+{
+   be_val<FSDirHandle> handle;
+};
+CHECK_OFFSET(FSARequestReadDir, 0x0, handle);
+CHECK_SIZE(FSARequestReadDir, 0x4);
+
 struct FSARequestReadFile
 {
    be_ptr<uint8_t> buffer;
@@ -157,6 +164,7 @@ struct FSARequest
       FSARequestMakeDir makeDir;
       FSARequestOpenDir openDir;
       FSARequestOpenFile openFile;
+      FSARequestReadDir readDir;
       FSARequestReadFile readFile;
       FSARequestRemove remove;
       FSARequestRename rename;

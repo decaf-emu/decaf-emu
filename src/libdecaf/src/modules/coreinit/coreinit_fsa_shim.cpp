@@ -410,6 +410,29 @@ fsaShimPrepareRequestOpenFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::ReadDir request.
+ */
+FSAStatus
+fsaShimPrepareRequestReadDir(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             FSDirHandle dirHandle)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::ReadDir;
+
+   auto request = &shim->request.readDir;
+   request->handle = dirHandle;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::ReadFile request.
  */
 FSAStatus
