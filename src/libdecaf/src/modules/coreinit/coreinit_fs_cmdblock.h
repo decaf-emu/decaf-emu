@@ -181,7 +181,8 @@ struct FSCmdBlockBody
    //! FSAsyncResult object used for this command.
    FSAsyncResult asyncResult;
 
-   UNKNOWN(0x998 - 0x994);
+   //! User data accessed with FS{Get,Set}UserData.
+   be_ptr<void> userData;
 
    //! Queue used for synchronous FS commands to wait for finish.
    OSMessageQueue syncQueue;
@@ -212,6 +213,7 @@ CHECK_OFFSET(FSCmdBlockBody, 0x960, fsaStatus);
 CHECK_OFFSET(FSCmdBlockBody, 0x964, iosError);
 CHECK_OFFSET(FSCmdBlockBody, 0x968, errorMask);
 CHECK_OFFSET(FSCmdBlockBody, 0x96C, asyncResult);
+CHECK_OFFSET(FSCmdBlockBody, 0x994, userData);
 CHECK_OFFSET(FSCmdBlockBody, 0x998, syncQueue);
 CHECK_OFFSET(FSCmdBlockBody, 0x9D4, syncQueueMsgs);
 CHECK_OFFSET(FSCmdBlockBody, 0x9E4, finishCmdFn);
@@ -225,6 +227,13 @@ CHECK_OFFSET(FSCmdBlockBody, 0x9F8, block);
 
 void
 FSInitCmdBlock(FSCmdBlock *block);
+
+void *
+FSGetUserData(FSCmdBlock *block);
+
+void
+FSSetUserData(FSCmdBlock *block,
+              void *userData);
 
 namespace internal
 {

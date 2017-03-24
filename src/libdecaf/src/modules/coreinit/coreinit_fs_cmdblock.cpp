@@ -32,6 +32,29 @@ FSInitCmdBlock(FSCmdBlock *block)
 }
 
 
+/**
+ * Get the value stored in FSCmdBlock by FSSetUserData.
+ */
+void *
+FSGetUserData(FSCmdBlock *block)
+{
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   return blockBody->userData;
+}
+
+
+/**
+ * Store a user value in FSCmdBlock which can be retrieved by FSGetUserData.
+ */
+void
+FSSetUserData(FSCmdBlock *block,
+              void *userData)
+{
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   blockBody->userData = userData;
+}
+
+
 namespace internal
 {
 
@@ -525,6 +548,9 @@ void
 Module::registerFsCmdBlockFunctions()
 {
    RegisterKernelFunction(FSInitCmdBlock);
+   RegisterKernelFunction(FSGetUserData);
+   RegisterKernelFunction(FSSetUserData);
+
    RegisterInternalFunction(internal::fsCmdBlockFinishCmd, internal::fsCmdBlockFinishCmdFn);
    RegisterInternalFunction(internal::fsCmdBlockFinishReadCmd, internal::fsCmdBlockFinishReadCmdFn);
 }
