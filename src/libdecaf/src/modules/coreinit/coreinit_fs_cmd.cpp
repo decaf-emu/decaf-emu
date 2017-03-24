@@ -409,6 +409,53 @@ FSGetCwdAsync(FSClient *client,
 
 
 /**
+ * Get directory size.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::NotFound
+ * Directory not found.
+ */
+FSStatus
+FSGetDirSize(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             be_val<uint64_t> *returnedDirSize,
+             FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSGetDirSizeAsync(client, block, path, returnedDirSize,
+                                   errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get directory size.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetDirSizeAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  const char *path,
+                  be_val<uint64_t> *returnedDirSize,
+                  FSErrorFlag errorMask,
+                  const FSAsyncData *asyncData)
+{
+   return internal::getInfoByQueryAsync(client, block, path,
+                                        FSQueryInfoType::DirSize,
+                                        returnedDirSize,
+                                        errorMask, asyncData);
+}
+
+
+/**
  * Get free space for entry at path.
  *
  * \return
@@ -1756,6 +1803,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSFlushQuotaAsync);
    RegisterKernelFunction(FSGetCwd);
    RegisterKernelFunction(FSGetCwdAsync);
+   RegisterKernelFunction(FSGetDirSize);
+   RegisterKernelFunction(FSGetDirSizeAsync);
    RegisterKernelFunction(FSGetFreeSpaceSize);
    RegisterKernelFunction(FSGetFreeSpaceSizeAsync);
    RegisterKernelFunction(FSGetPosFile);

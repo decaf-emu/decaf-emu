@@ -85,6 +85,21 @@ FSGetCwdAsync(FSClient *client,
               const FSAsyncData *asyncData);
 
 FSStatus
+FSGetDirSize(FSClient *client,
+             FSCmdBlock *block,
+             const char *path,
+             be_val<uint64_t> *returnedDirSize,
+             FSErrorFlag errorMask);
+
+FSStatus
+FSGetDirSizeAsync(FSClient *client,
+                  FSCmdBlock *block,
+                  const char *path,
+                  be_val<uint64_t> *returnedDirSize,
+                  FSErrorFlag errorMask,
+                  const FSAsyncData *asyncData);
+
+FSStatus
 FSGetFreeSpaceSize(FSClient *client,
                    FSCmdBlock *block,
                    const char *path,
