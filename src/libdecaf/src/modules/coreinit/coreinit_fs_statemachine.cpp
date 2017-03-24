@@ -16,6 +16,16 @@ sFsmAlarmCallback = nullptr;
 
 
 /**
+ * Get an FSStateChangeInfo from an OSMessage.
+ */
+FSStateChangeInfo *
+FSGetStateChangeInfo(OSMessage *message)
+{
+   return reinterpret_cast<FSStateChangeInfo *>(message->message.get());
+}
+
+
+/**
  * Register a callback or message queue for state change notifications.
  */
 void
@@ -41,19 +51,9 @@ FSSetStateChangeNotification(FSClient *client,
 }
 
 
-/**
- * Get an FSStateChangeInfo from an OSMessage.
- */
-FSStateChangeInfo *
-FSGetStateChangeInfo(OSMessage *message)
-{
-   return reinterpret_cast<FSStateChangeInfo *>(message->message.get());
-}
-
-
 namespace internal
 {
-   
+
 static FSVolumeState
 fsmOnStateChange(FSFsm *fsm,
                  FSVolumeState state,
@@ -477,6 +477,9 @@ fsmOnStateChangeFromFatal(FSFsm *fsm,
 void
 Module::registerFsFsmFunctions()
 {
+   RegisterKernelFunction(FSGetStateChangeInfo);
+   RegisterKernelFunction(FSSetStateChangeNotification);
+
    RegisterInternalFunction(internal::fsmAlarmHandler, sFsmAlarmCallback);
 }
 

@@ -89,12 +89,12 @@ CHECK_OFFSET(FSFsm, 0x10, sendStateChangeNotifications);
 CHECK_OFFSET(FSFsm, 0x14, stateChangeInfo);
 CHECK_SIZE(FSFsm, 0x38);
 
+FSStateChangeInfo *
+FSGetStateChangeInfo(OSMessage *message);
+
 void
 FSSetStateChangeNotification(FSClient *client,
                              FSStateChangeAsync *asyncData);
-
-FSStateChangeInfo *
-FSGetStateChangeInfo(OSMessage *message);
 
 namespace internal
 {
