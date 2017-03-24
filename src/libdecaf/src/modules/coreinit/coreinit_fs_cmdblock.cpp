@@ -496,7 +496,7 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
    case FSACommand::GetVolumeInfo:
    {
       auto info = blockBody->cmdData.getVolumeInfo.info;
-      std::memmove(info, &shim->response.getVolumeInfo.volumeInfo, sizeof(FSAVolumeInfo));
+      *info = shim->response.getVolumeInfo.volumeInfo;
       info->unk0x0C = 0;
       info->unk0x10 = 0;
       info->unk0x14 = -1;
@@ -514,7 +514,7 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
    case FSACommand::ReadDir:
    {
       auto entry = blockBody->cmdData.readDir.entry;
-      std::memmove(entry, &shim->response.readDir.entry, sizeof(FSDirEntry));
+      *entry = shim->response.readDir.entry;
       fsCmdBlockSetResult(blockBody, result);
       break;
    }
@@ -535,7 +535,7 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
    case FSACommand::StatFile:
    {
       auto stat = blockBody->cmdData.statFile.stat;
-      std::memmove(stat, &shim->response.statFile.stat, sizeof(FSStat));
+      *stat = shim->response.statFile.stat;
       fsCmdBlockSetResult(blockBody, result);
       break;
    }
@@ -566,8 +566,45 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
       break;
    }
    case FSACommand::GetInfoByQuery:
-      // TODO: Handle FSACommand::GetInfoByQuery
-      decaf_abort("TODO: Reverse me.");
+   {
+      switch (shim->request.getInfoByQuery.type) {
+      case FSQueryInfoType::FreeSpaceSize:
+      {
+         auto freeSpaceSize = blockBody->cmdData.getInfoByQuery.freeSpaceSize;
+         *freeSpaceSize = shim->response.getInfoByQuery.freeSpaceSize;
+         break;
+      }
+      case FSQueryInfoType::DirSize:
+      {
+         auto dirSize = blockBody->cmdData.getInfoByQuery.dirSize;
+         *dirSize = shim->response.getInfoByQuery.dirSize;
+         break;
+      }
+      case FSQueryInfoType::EntryNum:
+      {
+         auto entryNum = blockBody->cmdData.getInfoByQuery.entryNum;
+         *entryNum = shim->response.getInfoByQuery.entryNum;
+         break;
+      }
+      case FSQueryInfoType::FileSystemInfo:
+      {
+         auto fileSystemInfo = blockBody->cmdData.getInfoByQuery.fileSystemInfo;
+         *fileSystemInfo = shim->response.getInfoByQuery.fileSystemInfo;
+         break;
+      }
+      case FSQueryInfoType::Stat:
+      {
+         auto stat = blockBody->cmdData.getInfoByQuery.stat;
+         *stat = shim->response.getInfoByQuery.stat;
+         break;
+      }
+      default:
+         decaf_abort(fmt::format("Unexpected QueryInfoType: {}", shim->request.getInfoByQuery.type));
+      }
+
+      fsCmdBlockSetResult(blockBody, result);
+      break;
+   }
    default:
       decaf_abort(fmt::format("Invalid FSA command {}", shim->command));
    }

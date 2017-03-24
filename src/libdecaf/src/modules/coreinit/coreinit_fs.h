@@ -50,11 +50,13 @@ struct FSAsyncData;
 struct FSAsyncResult;
 struct FSMessage;
 
-struct FSStat;
 struct FSDirEntry;
+struct FSStat;
+struct FSMountSource;
 
-using FSFileHandle = uint32_t;
 using FSDirHandle = uint32_t;
+using FSEntryNum = uint32_t;
+using FSFileHandle = uint32_t;
 using FSFilePosition = uint32_t;
 using FSAsyncCallbackFn = wfunc_ptr<void, FSClient *, FSCmdBlock *, FSStatus, void *>;
 
@@ -134,6 +136,16 @@ CHECK_OFFSET(FSAsyncResult, 0x1c, client);
 CHECK_OFFSET(FSAsyncResult, 0x20, block);
 CHECK_OFFSET(FSAsyncResult, 0x24, status);
 CHECK_SIZE(FSAsyncResult, 0x28);
+
+
+/**
+ * File System information.
+ */
+struct FSFileSystemInfo
+{
+   UNKNOWN(0x1C);
+};
+CHECK_SIZE(FSFileSystemInfo, 0x1C);
 
 
 /**

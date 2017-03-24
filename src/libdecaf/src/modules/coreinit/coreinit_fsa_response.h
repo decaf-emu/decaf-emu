@@ -46,6 +46,20 @@ struct FSAResponseGetVolumeInfo
 CHECK_OFFSET(FSAResponseGetVolumeInfo, 0x0, volumeInfo);
 CHECK_SIZE(FSAResponseGetVolumeInfo, 0x1BC);
 
+union FSAResponseGetInfoByQuery
+{
+   be_val<uint64_t> dirSize;
+   be_val<FSEntryNum> entryNum;
+   be_val<uint64_t> freeSpaceSize;
+   FSFileSystemInfo fileSystemInfo;
+   FSStat stat;
+};
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, dirSize);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, entryNum);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, freeSpaceSize);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, stat);
+CHECK_SIZE(FSAResponseGetInfoByQuery, 0x64);
+
 struct FSAResponseOpenFile
 {
    be_val<FSFileHandle> handle;
@@ -84,6 +98,7 @@ struct FSAResponse
       FSAResponseGetFileBlockAddress getFileBlockAddress;
       FSAResponseGetPosFile getPosFile;
       FSAResponseGetVolumeInfo getVolumeInfo;
+      FSAResponseGetInfoByQuery getInfoByQuery;
       FSAResponseOpenDir openDir;
       FSAResponseOpenFile openFile;
       FSAResponseReadDir readDir;

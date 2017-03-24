@@ -60,9 +60,17 @@ CHECK_SIZE(FSCmdBlockCmdDataGetFileBlockAddress, 0x4);
 union FSCmdBlockCmdDataGetInfoByQuery
 {
    be_ptr<void> out;
+   be_ptr<be_val<uint64_t>> dirSize;
+   be_ptr<be_val<FSEntryNum>> entryNum;
+   be_ptr<FSFileSystemInfo> fileSystemInfo;
+   be_ptr<be_val<uint64_t>> freeSpaceSize;
    be_ptr<FSStat> stat;
 };
 CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, out);
+CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, dirSize);
+CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, entryNum);
+CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, fileSystemInfo);
+CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, freeSpaceSize);
 CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, stat);
 CHECK_SIZE(FSCmdBlockCmdDataGetInfoByQuery, 0x4);
 
