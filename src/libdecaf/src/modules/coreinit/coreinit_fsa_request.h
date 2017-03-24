@@ -226,7 +226,7 @@ CHECK_SIZE(FSARequestSetPosFile, 0x8);
  */
 struct FSARequest
 {
-   be_val<uint32_t> unk0x00;
+   be_val<FSAStatus> emulatedError;
 
    union
    {
@@ -249,7 +249,7 @@ struct FSARequest
       UNKNOWN(0x51C);
    };
 };
-CHECK_OFFSET(FSARequest, 0x00, unk0x00);
+CHECK_OFFSET(FSARequest, 0x00, emulatedError);
 CHECK_SIZE(FSARequest, 0x520);
 
 #pragma pack(pop)

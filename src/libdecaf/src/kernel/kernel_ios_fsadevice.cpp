@@ -54,6 +54,10 @@ FSADevice::ioctl(uint32_t cmd,
    decaf_check(inLen == sizeof(FSARequest));
    decaf_check(outLen == sizeof(FSAResponse));
 
+   if (request->emulatedError < 0) {
+      return static_cast<IOSError>(request->emulatedError.value());
+   }
+
    switch (static_cast<FSACommand>(cmd)) {
    case FSACommand::ChangeDir:
       return changeDir(request, response);
@@ -72,6 +76,13 @@ FSADevice::ioctlv(uint32_t cmd,
                   size_t vecOut,
                   IOSVec *vec)
 {
+   auto request = be_ptr<FSARequest> { vec[0].vaddr };
+   decaf_check(vec[0].len == sizeof(FSARequest));
+
+   if (request->emulatedError < 0) {
+      return static_cast<IOSError>(request->emulatedError.value());
+   }
+
    switch (static_cast<FSACommand>(cmd)) {
    case FSACommand::ReadFile:
       return readFile(vecIn, vecOut, vec);

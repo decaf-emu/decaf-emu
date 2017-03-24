@@ -95,7 +95,9 @@ struct FSClientBody
    //! The last dequeued command.
    be_ptr<FSCmdBlockBody> lastDequeuedCommand;
 
-   be_val<uint32_t> unk0x14C8_fsa_cmd_word0;
+   //! Emulated error, set with FSSetEmulatedError.
+   be_val<FSAStatus> emulatedError;
+
    be_val<uint32_t> unk0x14CC;
    be_val<uint32_t> unk0x14D0;
    UNKNOWN(0x1560 - 0x14D4);
@@ -128,7 +130,7 @@ CHECK_OFFSET(FSClientBody, 0x1444, clientHandle);
 CHECK_OFFSET(FSClientBody, 0x1448, fsm);
 CHECK_OFFSET(FSClientBody, 0x1480, cmdQueue);
 CHECK_OFFSET(FSClientBody, 0x14C4, lastDequeuedCommand);
-CHECK_OFFSET(FSClientBody, 0x14C8, unk0x14C8_fsa_cmd_word0);
+CHECK_OFFSET(FSClientBody, 0x14C8, emulatedError);
 CHECK_OFFSET(FSClientBody, 0x14CC, unk0x14CC);
 CHECK_OFFSET(FSClientBody, 0x14D0, unk0x14D0);
 CHECK_OFFSET(FSClientBody, 0x1560, mutex);
@@ -154,6 +156,13 @@ FSDelClient(FSClient *client,
 
 FSCmdBlock *
 FSGetCurrentCmdBlock(FSClient *client);
+
+FSAStatus
+FSGetEmulatedError(FSClient *client);
+
+FSStatus
+FSSetEmulatedError(FSClient *client,
+                   FSAStatus error);
 
 namespace internal
 {

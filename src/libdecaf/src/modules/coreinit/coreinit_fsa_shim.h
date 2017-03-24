@@ -87,11 +87,11 @@ fsaShimClose(IOSHandle handle);
 
 FSAStatus
 fsaShimSubmitRequest(FSAShimBuffer *shim,
-                     uint32_t requestWord0);
+                     FSAStatus emulatedError);
 
 FSAStatus
 fsaShimSubmitRequestAsync(FSAShimBuffer *shim,
-                          uint32_t requestWord0,
+                          FSAStatus emulatedError,
                           IOSAsyncCallbackFn callback,
                           void *context);
 

@@ -74,7 +74,7 @@ FSAddClientEx(FSClient *client,
 
    clientBody->clientHandle = clientHandle;
    clientBody->lastDequeuedCommand = nullptr;
-   clientBody->unk0x14C8_fsa_cmd_word0 = 0;
+   clientBody->emulatedError = FSAStatus::OK;
    clientBody->unk0x14CC = 0;
 
    // TODO: Initialise attach params related data
@@ -177,6 +177,58 @@ FSGetCurrentCmdBlock(FSClient *client)
    }
 
    return lastDequeued->cmdBlock;
+}
+
+
+/**
+ * Get the emulated error for a client.
+ *
+ * \return
+ * Emulated error code or a positive value on error.
+ */
+FSAStatus
+FSGetEmulatedError(FSClient *client)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   if (!clientBody) {
+      return static_cast<FSAStatus>(1);
+   }
+
+   return clientBody->emulatedError;
+}
+
+
+/**
+ * Set an emulated error for a client.
+ *
+ * All subsequent commands will fail with this error until it is cleared with
+ * FSSetEmulatedError(FSAStatus::OK).
+ *
+ * \retval FSStatus::OK
+ * Returned on success.
+ *
+ * \retval FSStatus::FatalError
+ * Returned on failure, returned if invalid client or error code.
+ */
+FSStatus
+FSSetEmulatedError(FSClient *client,
+                   FSAStatus error)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   if (!clientBody) {
+      return FSStatus::FatalError;
+   }
+
+   if (error >= FSAStatus::OK) {
+      return FSStatus::FatalError;
+   }
+
+   if (error == FSAStatus::MediaNotReady) {
+      return FSStatus::FatalError;
+   }
+
+   clientBody->emulatedError = error;
+   return FSStatus::OK;
 }
 
 
@@ -385,7 +437,10 @@ fsClientHandleDequeuedCommand(FSCmdBlockBody *blockBody)
       if (!fsInitialised() || fsDriverDone()) {
          error = FSAStatus::NotInit;
       } else {
-         error = fsaShimSubmitRequestAsync(&blockBody->fsaShimBuffer, clientBody->unk0x14C8_fsa_cmd_word0, sHandleFsaAsyncCallback, blockBody);
+         error = fsaShimSubmitRequestAsync(&blockBody->fsaShimBuffer,
+                                           clientBody->emulatedError,
+                                           sHandleFsaAsyncCallback,
+                                           blockBody);
       }
 
       // TODO: more if cmd == mount shit
@@ -412,6 +467,8 @@ Module::registerFsClientFunctions()
    RegisterKernelFunction(FSAddClientEx);
    RegisterKernelFunction(FSDelClient);
    RegisterKernelFunction(FSGetCurrentCmdBlock);
+   RegisterKernelFunction(FSGetEmulatedError);
+   RegisterKernelFunction(FSSetEmulatedError);
 
    RegisterInternalFunction(internal::fsClientHandleFsaAsyncCallback, sHandleFsaAsyncCallback);
    RegisterInternalFunction(internal::fsClientHandleDequeuedCommand, sHandleDequeuedCommand);

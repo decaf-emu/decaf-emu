@@ -60,7 +60,7 @@ fsaShimClose(IOSHandle handle)
  */
 FSAStatus
 fsaShimSubmitRequest(FSAShimBuffer *shim,
-                     uint32_t requestWord0)
+                     FSAStatus emulatedError)
 {
    auto iosError = IOSError::Invalid;
 
@@ -68,7 +68,7 @@ fsaShimSubmitRequest(FSAShimBuffer *shim,
       return FSAStatus::InvalidBuffer;
    }
 
-   shim->request.unk0x00 = requestWord0;
+   shim->request.emulatedError = emulatedError;
 
    if (shim->ipcReqType == FSAIpcRequestType::Ioctl) {
       iosError = IOS_Ioctl(shim->clientHandle,
@@ -96,7 +96,7 @@ fsaShimSubmitRequest(FSAShimBuffer *shim,
  */
 FSAStatus
 fsaShimSubmitRequestAsync(FSAShimBuffer *shim,
-                          uint32_t requestWord0,
+                          FSAStatus emulatedError,
                           IOSAsyncCallbackFn callback,
                           void *context)
 {
@@ -106,7 +106,7 @@ fsaShimSubmitRequestAsync(FSAShimBuffer *shim,
       return FSAStatus::InvalidBuffer;
    }
 
-   shim->request.unk0x00 = requestWord0;
+   shim->request.emulatedError = emulatedError;
 
    if (shim->ipcReqType == FSAIpcRequestType::Ioctl) {
       iosError = IOS_IoctlAsync(shim->clientHandle,
