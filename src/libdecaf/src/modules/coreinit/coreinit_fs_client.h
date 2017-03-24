@@ -164,6 +164,9 @@ FSStatus
 FSSetEmulatedError(FSClient *client,
                    FSAStatus error);
 
+FSAStatus
+FSGetLastError(FSClient *client);
+
 FSVolumeState
 FSGetVolumeState(FSClient *client);
 

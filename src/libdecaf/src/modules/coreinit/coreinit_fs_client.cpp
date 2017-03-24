@@ -233,6 +233,21 @@ FSSetEmulatedError(FSClient *client,
 
 
 /**
+ * Get the error code for the last executed command.
+ */
+FSAStatus
+FSGetLastError(FSClient *client)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   if (!clientBody) {
+      return static_cast<FSAStatus>(FSStatus::FatalError);
+   }
+
+   return clientBody->lastError;
+}
+
+
+/**
  * Get the volume state for a client.
  */
 FSVolumeState
@@ -484,6 +499,7 @@ Module::registerFsClientFunctions()
    RegisterKernelFunction(FSGetCurrentCmdBlock);
    RegisterKernelFunction(FSGetEmulatedError);
    RegisterKernelFunction(FSSetEmulatedError);
+   RegisterKernelFunction(FSGetLastError);
    RegisterKernelFunction(FSGetVolumeState);
 
    RegisterInternalFunction(internal::fsClientHandleFsaAsyncCallback, sHandleFsaAsyncCallback);
