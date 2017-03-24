@@ -257,6 +257,19 @@ FSRenameAsync(FSClient *client,
               const FSAsyncData *asyncData);
 
 FSStatus
+FSRewindDir(FSClient *client,
+            FSCmdBlock *block,
+            FSDirHandle handle,
+            FSErrorFlag errorMask);
+
+FSStatus
+FSRewindDirAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 FSDirHandle handle,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData);
+
+FSStatus
 FSSetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,

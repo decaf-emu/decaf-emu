@@ -515,6 +515,29 @@ fsaShimPrepareRequestRename(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::RewindDir request.
+ */
+FSAStatus
+fsaShimPrepareRequestRewindDir(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               FSDirHandle dirHandle)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::RewindDir;
+
+   auto request = &shim->request.rewindDir;
+   request->handle = dirHandle;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::SetPosFile request.
  */
 FSAStatus

@@ -126,6 +126,13 @@ CHECK_OFFSET(FSARequestRename, 0x0, oldPath);
 CHECK_OFFSET(FSARequestRename, 0x280, newPath);
 CHECK_SIZE(FSARequestRename, 0x500);
 
+struct FSARequestRewindDir
+{
+   be_val<FSDirHandle> handle;
+};
+CHECK_OFFSET(FSARequestRewindDir, 0x0, handle);
+CHECK_SIZE(FSARequestRewindDir, 0x4);
+
 struct FSARequestSetPosFile
 {
    be_val<FSFileHandle> handle;
@@ -153,6 +160,7 @@ struct FSARequest
       FSARequestReadFile readFile;
       FSARequestRemove remove;
       FSARequestRename rename;
+      FSARequestRewindDir rewindDir;
       FSARequestSetPosFile setPosFile;
       UNKNOWN(0x51C);
    };

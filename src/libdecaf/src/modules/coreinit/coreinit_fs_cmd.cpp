@@ -110,7 +110,9 @@ FSCloseDir(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSCloseDirAsync(client, block, handle, errorMask, &asyncData);
+
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
@@ -164,7 +166,9 @@ FSCloseFile(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSCloseFileAsync(client, block, handle, errorMask, &asyncData);
+
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
@@ -218,7 +222,9 @@ FSFlushQuota(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSFlushQuotaAsync(client, block, path, errorMask, &asyncData);
+
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
@@ -278,8 +284,10 @@ FSGetCwd(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSGetCwdAsync(client, block, returnedPath, bytes,
                                errorMask, &asyncData);
+
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
@@ -350,8 +358,10 @@ FSGetFreeSpaceSize(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSGetFreeSpaceSizeAsync(client, block, path, returnedFreeSize,
                                          errorMask, &asyncData);
+
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
@@ -392,8 +402,10 @@ FSGetPosFile(FSClient *client,
 {
    FSAsyncData asyncData;
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
    auto result = FSGetPosFileAsync(client, block, handle, returnedFpos,
                                    errorMask, &asyncData);
+
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
 }
 
@@ -1023,6 +1035,63 @@ FSRenameAsync(FSClient *client,
 
 
 /**
+ * Rewind the read directory iterator back to the beginning.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSRewindDir(FSClient *client,
+            FSCmdBlock *block,
+            FSDirHandle handle,
+            FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSRewindDirAsync(client, block, handle, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+
+/**
+ * Rewind the read directory iterator back to the beginning (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSRewindDirAsync(FSClient *client,
+                 FSCmdBlock *block,
+                 FSDirHandle handle,
+                 FSErrorFlag errorMask,
+                 const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestRewindDir(&blockBody->fsaShimBuffer,
+                                                         clientBody->clientHandle,
+                                                         handle);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Set the current read / write position for a file.
  *
  * \return
@@ -1217,6 +1286,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSRemoveAsync);
    RegisterKernelFunction(FSRename);
    RegisterKernelFunction(FSRenameAsync);
+   RegisterKernelFunction(FSRewindDir);
+   RegisterKernelFunction(FSRewindDirAsync);
    RegisterKernelFunction(FSSetPosFile);
    RegisterKernelFunction(FSSetPosFileAsync);
 }

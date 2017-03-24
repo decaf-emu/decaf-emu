@@ -172,6 +172,11 @@ fsaShimPrepareRequestRename(FSAShimBuffer *shim,
                             const char *newPath);
 
 FSAStatus
+fsaShimPrepareRequestRewindDir(FSAShimBuffer *shim,
+                               IOSHandle clientHandle,
+                               FSDirHandle dirHandle);
+
+FSAStatus
 fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
                                 IOSHandle clientHandle,
                                 FSFileHandle fileHandle,
