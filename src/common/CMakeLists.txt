@@ -5,7 +5,11 @@ include_directories(".")
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
-add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})
+if(MSVC)
+    add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES} "common.natvis")
+else()
+    add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})
+endif()
 GroupSources(src)
 
 target_link_libraries(common

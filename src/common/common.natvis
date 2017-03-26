@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="be_val&lt;*&gt;">
+    <DisplayString Condition="sizeof($T1) == 1">
+      {mValue}
+    </DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mValue) == 0xCCCC">(not set) 0xCCCC</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mValue) == 0xCDCD">(not set) 0xCDCD</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mValue) == 0xDDDD">(in freed object) 0xDDDD</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mValue) == 0xFEEE">(in freed object) 0xEEFE</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mValue) == 0xFDFD">(heap buffer overrun) 0xFDFD</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mValue) == 0xABAB">(heap buffer overrun) 0xABAB</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2">
+      {($T1)((((*(uint16_t*)&amp;mValue)&amp;0xFF)&lt;&lt;8)|(((*(uint16_t*)&amp;mValue)&amp;0xFF00)&gt;&gt;8))} ({($T1)((((*(uint16_t*)&amp;mValue)&amp;0xFF)&lt;&lt;8)|(((*(uint16_t*)&amp;mValue)&amp;0xFF00)&gt;&gt;8)),4x})
+    </DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mValue) == 0xCCCCCCCC">(not set) {($T1)0xCCCCCCCC}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mValue) == 0xCDCDCDCD">(not set) {($T1)0xCDCDCDCD}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mValue) == 0xDDDDDDDD">(in freed object) {($T1)0xDDDDDDDD}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mValue) == 0xFEEEFEEE">(in freed object) {($T1)0xEEFEEEFE}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mValue) == 0xFDFDFDFD">(heap buffer overrun) {($T1)0xFDFDFDFD}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mValue) == 0xABABABAB">(heap buffer overrun) {($T1)0xABABABAB}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4">
+      {($T1)((((*(uint32_t*)&amp;mValue)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mValue)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mValue)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mValue)&amp;0xFF000000)&gt;&gt;24))} ({((((*(uint32_t*)&amp;mValue)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mValue)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mValue)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mValue)&amp;0xFF000000)&gt;&gt;24)),8x})
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="sizeof($T1) == 1">
+        mValue
+      </ExpandedItem>
+      <ExpandedItem Condition="sizeof($T1) == 2">
+        ($T1)((((*(uint16_t*)&amp;mValue)&amp;0xFF)&lt;&lt;8)|(((*(uint16_t*)&amp;mValue)&amp;0xFF00)&gt;&gt;8))
+      </ExpandedItem>
+      <ExpandedItem Condition="sizeof($T1) == 4">
+        ($T1)((((*(uint32_t*)&amp;mValue)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mValue)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mValue)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mValue)&amp;0xFF000000)&gt;&gt;24))
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="be_ptr&lt;*&gt;">
+    <DisplayString Condition="mAddress==0">NULL</DisplayString>
+    <DisplayString Condition="mAddress == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="mAddress == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="mAddress == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="mAddress == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="mAddress == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mAddress == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mAddress!=0">
+      {($T1*)((size_t)mem::gMemoryBase+(size_t)((((*(uint32_t*)&amp;mAddress)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mAddress)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mAddress)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mAddress)&amp;0xFF000000)&gt;&gt;24)))}
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mAddress==0">
+        ($T1*)(nullptr)
+      </ExpandedItem>
+      <ExpandedItem Condition="mAddress!=0">
+        ($T1*)((size_t)mem::gMemoryBase+(size_t)((((*(uint32_t*)&amp;mAddress)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mAddress)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mAddress)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mAddress)&amp;0xFF000000)&gt;&gt;24)))
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="be_wfunc_ptr&lt;*&gt;">
+    <DisplayString>
+      {(uint32_t)((((*(uint32_t*)&amp;address)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;address)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;address)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;address)&amp;0xFF000000)&gt;&gt;24))}
+    </DisplayString>
+    <Expand></Expand>
+  </Type>
+  <Type Name="be_val&lt;float&gt;">
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0x0000807F">infinity</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0x000080FF">-infinity</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mValue) == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString>
+      { (1-(2*((*(unsigned *)(&amp;mValue) &amp; 0x80) >> 7))) *   (((long long)65536 &lt;&lt; ((((((*(unsigned *)(&amp;mValue)  &amp; 0xFF) &lt;&lt; 24) | ((*(unsigned *)(&amp;mValue) &amp; 0xFF00) &lt;&lt; 8) | ((*(unsigned *)(&amp;mValue) &amp; 0xFF0000) &gt;&gt; 8) | ((*(unsigned *)(&amp;mValue) &amp; 0xFF000000) &gt;&gt; 24)) &amp; 0x7F800000) >> 23) - 127)) / 65536.0f) *
+      (((((*(unsigned *)(&amp;mValue)  &amp; 0xFF) &lt;&lt; 24) | ((*(unsigned *)(&amp;mValue) &amp; 0xFF00) &lt;&lt; 8) | ((*(unsigned *)(&amp;mValue) &amp; 0xFF0000) &gt;&gt; 8) | ((*(unsigned *)(&amp;mValue) &amp; 0xFF000000) &gt;&gt; 24)) &amp; 0x7FFFFF) * 0.00000011920928955078125 + 1) ,g}
+    </DisplayString>
+  </Type>
+</AutoVisualizer>
