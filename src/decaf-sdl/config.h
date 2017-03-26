@@ -12,7 +12,8 @@ namespace display
 enum DisplayMode
 {
    Windowed,
-   Fullscreen
+   Fullscreen,
+   Popup
 };
 
 enum DisplayLayout

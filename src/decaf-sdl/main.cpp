@@ -14,8 +14,7 @@ gCliLog;
 using namespace decaf::input;
 
 static excmd::parser
-getCommandLineParser()
-{
+getCommandLineParser() {
    excmd::parser parser;
    using excmd::description;
    using excmd::optional;
@@ -25,93 +24,93 @@ getCommandLineParser()
 
    parser.global_options()
       .add_option("v,version",
-                  description { "Show version." })
+         description { "Show version." })
       .add_option("h,help",
-                  description { "Show help." });
+         description { "Show help." });
 
    parser.add_command("help")
       .add_argument("help-command",
-                    optional {},
-                    value<std::string> {});
+         optional {},
+         value<std::string> {});
 
    auto gpu_options = parser.add_option_group("GPU Options")
       .add_option("gpu-record",
-                  description { "Record a gpu pm4 trace." })
+         description { "Record a gpu pm4 trace." })
       .add_option("gpu-debug",
-                  description { "Enable extra gpu debug info." })
+         description { "Enable extra gpu debug info." })
       .add_option("gpu-force-sync",
-                  description { "Force rendering to sync with gpu flips." });
+         description { "Force rendering to sync with gpu flips." });
 
    auto input_options = parser.add_option_group("Input Options")
       .add_option("gamepad-type",
-                  description { "Select the input type for the emulated GamePad." },
-                  default_value<std::string> { "keyboard" },
-                  allowed<std::string> { {
-                     "none", "keyboard", "joystick"
-                  } });
+         description { "Select the input type for the emulated GamePad." },
+         default_value<std::string> { "keyboard" },
+         allowed<std::string> { { "none", "keyboard", "joystick" } });
 
    auto jit_options = parser.add_option_group("JIT Options")
       .add_option("jit",
-                  description { "Enables the JIT engine." })
+         description { "Enables the JIT engine." })
       .add_option("jit-verify",
-                  description { "Verify JIT implementation against interpreter." });
+         description { "Verify JIT implementation against interpreter." });
 
    auto log_options = parser.add_option_group("Log Options")
       .add_option("log-file",
-                  description { "Redirect log output to file." })
+         description { "Redirect log output to file." })
       .add_option("log-dir",
-                  description{ "Directory where log file will be written." },
-                  value<std::string> {})
+         description { "Directory where log file will be written." },
+         value<std::string> {})
       .add_option("log-async",
-                  description { "Enable asynchronous logging." })
+         description { "Enable asynchronous logging." })
       .add_option("log-no-stdout",
-                  description { "Disable logging to stdout." })
+         description { "Disable logging to stdout." })
       .add_option("log-level",
-                  description { "Only display logs with severity equal to or greater than this level." },
-                  default_value<std::string> { "trace" },
-                  allowed<std::string> { {
-                     "trace", "debug", "info", "notice", "warning",
-                     "error", "critical", "alert", "emerg", "off"
-                  } });
+         description { "Only display logs with severity equal to or greater than this level." },
+         default_value<std::string> { "trace" },
+         allowed<std::string> { {
+               "trace", "debug", "info", "notice", "warning",
+                "error", "critical", "alert", "emerg", "off" } });
 
    auto sys_options = parser.add_option_group("System Options")
+
       .add_option("config",
-                  description { "Specify path to configuration file." },
-                  value<std::string> {})
+         description { "Specify path to configuration file." },
+         value<std::string> {})
+
       .add_option("display-layout",
-                  description { "Set the window display layout." },
-                  default_value<std::string> { "split" },
-                  allowed<std::string> {
-                  {
-                     "split", "toggle"
-                  } })
+         description { "Set the window display layout." },
+         default_value<std::string> { "split" },
+         allowed<std::string> { { "split", "toggle" } })
+
       .add_option("display-mode",
-                  description{ "Set the window display mode." },
-                  default_value<std::string> { "windowed" },
-                  allowed<std::string> { {
-                     "windowed", "fullscreen"
-                  } })
+         description { "Set the window display mode." },
+         default_value<std::string> { "windowed" },
+         allowed<std::string> { { "windowed", "fullscreen", "popup" } })
+
       .add_option("display-stretch",
-                  description { "Enable display stretching, aspect ratio will not be maintained." })
+         description { "Enable display stretching, aspect ratio will not be maintained." })
+
       .add_option("region",
-                  description { "Set the system region." },
-                  default_value<std::string> { "US" },
-                  allowed<std::string> { {
-                     "EUR", "JAP", "US"
-                  } })
+         description { "Set the system region." },
+         default_value<std::string> { "US" },
+         allowed<std::string> { { "EUR", "JAP", "US" } })
+
       .add_option("sound",
-                  description { "Enable sound output." })
+         description { "Enable sound output." })
+
       .add_option("dx12",
-                  description { "Use DirectX 12 backend." })
+         description { "Use DirectX 12 backend." })
+
       .add_option("sys-path",
-                  description { "Where to locate any external system files." },
-                  value<std::string> {})
+         description { "Where to locate any external system files." },
+         value<std::string> {})
+
       .add_option("content-path",
-                  description { "Sets which path to mount to /vol/content, only set for standalone rpx files." },
-                  value<std::string> {})
+         description { "Sets which path to mount to /vol/content, only set for standalone rpx files." },
+         value<std::string> {})
+
       .add_option("time-scale",
-                  description { "Time scale factor for emulated clock." },
-                  default_value<double> { 1.0 });
+         description { "Time scale factor for emulated clock." },
+         default_value<double> { 1.0 });
 
    parser.add_command("play")
       .add_option_group(gpu_options)
@@ -125,8 +124,7 @@ getCommandLineParser()
 }
 
 static std::string
-getPathBasename(const std::string &path)
-{
+getPathBasename(const std::string &path) {
    auto pos = path.find_last_of("/\\");
 
    if (!pos) {
@@ -138,8 +136,7 @@ getPathBasename(const std::string &path)
 
 int
 start(excmd::parser &parser,
-      excmd::option_state &options)
-{
+   excmd::option_state &options) {
    // Print version
    if (options.has("version")) {
       // TODO: print git hash
@@ -177,17 +174,17 @@ start(excmd::parser &parser,
 
    // Allow command line options to override config
    if (options.has("gamepad-type")) {
-       auto type = options.get<std::string>("gamepad-type");
+      auto type = options.get<std::string>("gamepad-type");
 
-       if (type.compare("none") == 0) {
-           config::input::vpad0::type = config::input::None;
-       } else if (type.compare("keyboard") == 0) {
-           config::input::vpad0::type = config::input::Keyboard;
-       } else if (type.compare("joystick") == 0) {
-           config::input::vpad0::type = config::input::Joystick;
-       } else {
-           decaf_abort(fmt::format("Invalid input type {}", type));
-       }
+      if (type.compare("none") == 0) {
+         config::input::vpad0::type = config::input::None;
+      } else if (type.compare("keyboard") == 0) {
+         config::input::vpad0::type = config::input::Keyboard;
+      } else if (type.compare("joystick") == 0) {
+         config::input::vpad0::type = config::input::Joystick;
+      } else {
+         decaf_abort(fmt::format("Invalid input type {}", type));
+      }
    }
 
    if (options.has("jit-verify")) {
@@ -227,15 +224,17 @@ start(excmd::parser &parser,
    }
 
    if (options.has("display-mode")) {
-       auto mode = options.get<std::string>("display-mode");
+      auto mode = options.get<std::string>("display-mode");
 
-       if (mode.compare("windowed") == 0) {
-           config::display::mode = config::display::Windowed;
-       } else if (mode.compare("fullscreen") == 0) {
-          config::display::mode = config::display::Fullscreen;
-       } else {
-           decaf_abort(fmt::format("Invalid display mode {}", mode));
-       }
+      if (mode.compare("windowed") == 0) {
+         config::display::mode = config::display::Windowed;
+      } else if (mode.compare("fullscreen") == 0) {
+         config::display::mode = config::display::Fullscreen;
+      } else if (mode.compare("popup") == 0) {
+         config::display::mode = config::display::Popup;
+      } else {
+         decaf_abort(fmt::format("Invalid display mode {}", mode));
+      }
    }
 
    if (options.has("display-layout")) {
@@ -251,7 +250,7 @@ start(excmd::parser &parser,
    }
 
    if (options.has("display-stretch")) {
-       config::display::stretch = true;
+      config::display::stretch = true;
    }
 
    if (options.has("region")) {
@@ -369,10 +368,9 @@ start(excmd::parser &parser,
 #include <Windows.h>
 int WINAPI
 wWinMain(_In_ HINSTANCE hInstance,
-         _In_opt_ HINSTANCE hPrevInstance,
-         _In_ LPWSTR lpCmdLine,
-         _In_ int nShowCmd)
-{
+   _In_opt_ HINSTANCE hPrevInstance,
+   _In_ LPWSTR lpCmdLine,
+   _In_ int nShowCmd) {
    auto parser = getCommandLineParser();
    excmd::option_state options;
 

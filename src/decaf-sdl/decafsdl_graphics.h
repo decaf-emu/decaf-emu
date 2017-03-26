@@ -33,5 +33,6 @@ public:
    getWindow();
 
 protected:
-   SDL_Window *mWindow = nullptr;
+   SDL_Window *mWindow		= nullptr;
+   SDL_Window *mWindowDRC	= nullptr;
 };
