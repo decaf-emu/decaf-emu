@@ -37,7 +37,9 @@ translateMode(File::OpenMode mode)
    return out;
 }
 
-HostFileHandle::HostFileHandle(const std::string &path, File::OpenMode mode) :
+
+HostFileHandle::HostFileHandle(const std::string &path,
+                               File::OpenMode mode) :
    mMode(mode)
 {
    auto hostMode = translateMode(mode);
@@ -46,12 +48,16 @@ HostFileHandle::HostFileHandle(const std::string &path, File::OpenMode mode) :
    _wfopen_s(&mHandle, hostPath.c_str(), hostMode.c_str());
 }
 
-bool HostFileHandle::open()
+
+bool
+HostFileHandle::open()
 {
    return !!mHandle;
 }
 
-void HostFileHandle::close()
+
+void
+HostFileHandle::close()
 {
    if (mHandle) {
       fclose(mHandle);
@@ -60,25 +66,33 @@ void HostFileHandle::close()
    mHandle = nullptr;
 }
 
-bool HostFileHandle::eof()
+
+bool
+HostFileHandle::eof()
 {
    decaf_check(mHandle);
    return !!feof(mHandle);
 }
 
-bool HostFileHandle::flush()
+
+bool
+HostFileHandle::flush()
 {
    decaf_check(mHandle);
    return !!fflush(mHandle);
 }
 
-bool HostFileHandle::seek(size_t position)
+
+bool
+HostFileHandle::seek(size_t position)
 {
    decaf_check(mHandle);
    return _fseeki64(mHandle, position, SEEK_SET) == 0;
 }
 
-size_t HostFileHandle::tell()
+
+size_t
+HostFileHandle::tell()
 {
    decaf_check(mHandle);
    auto pos = _ftelli64(mHandle);
@@ -87,7 +101,9 @@ size_t HostFileHandle::tell()
    return static_cast<size_t>(pos);
 }
 
-size_t HostFileHandle::size()
+
+size_t
+HostFileHandle::size()
 {
    decaf_check(mHandle);
    auto pos = tell();
@@ -99,7 +115,9 @@ size_t HostFileHandle::size()
    return length;
 }
 
-size_t HostFileHandle::truncate()
+
+size_t
+HostFileHandle::truncate()
 {
    decaf_check(mHandle);
    decaf_check((mMode & File::Write) || (mMode & File::Update));
@@ -112,14 +130,22 @@ size_t HostFileHandle::truncate()
    return length;
 }
 
-size_t HostFileHandle::read(uint8_t *data, size_t size, size_t count)
+
+size_t
+HostFileHandle::read(uint8_t *data,
+                     size_t size,
+                     size_t count)
 {
    decaf_check(mHandle);
    decaf_check((mMode & File::Read) || (mMode & File::Update));
    return fread_s(data, size * count, size, count, mHandle);
 }
 
-size_t HostFileHandle::write(const uint8_t *data, size_t size, size_t count)
+
+size_t
+HostFileHandle::write(const uint8_t *data,
+                      size_t size,
+                      size_t count)
 {
    decaf_check(mHandle);
    decaf_check((mMode & File::Write) || (mMode & File::Update));

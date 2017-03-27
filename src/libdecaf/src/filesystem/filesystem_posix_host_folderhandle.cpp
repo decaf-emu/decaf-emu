@@ -15,7 +15,9 @@ struct PosixData
    DIR *handle;
 };
 
-bool HostFolderHandle::open()
+
+bool
+HostFolderHandle::open()
 {
    auto data = reinterpret_cast<PosixData *>(mFindData);
 
@@ -35,7 +37,9 @@ bool HostFolderHandle::open()
    return true;
 }
 
-void HostFolderHandle::close()
+
+void
+HostFolderHandle::close()
 {
    auto data = reinterpret_cast<PosixData *>(mFindData);
 
@@ -46,7 +50,9 @@ void HostFolderHandle::close()
    }
 }
 
-bool HostFolderHandle::read(FolderEntry &entry)
+
+bool
+HostFolderHandle::read(FolderEntry &entry)
 {
    if (!mFindData) {
       return false;
@@ -60,7 +66,7 @@ bool HostFolderHandle::read(FolderEntry &entry)
    }
 
    entry.name = item->d_name;
-   entry.size = 0; // TODO: Get size
+   entry.size = 0;
 
    if (item->d_type == DT_DIR) {
       entry.type = FolderEntry::Folder;
@@ -82,7 +88,9 @@ bool HostFolderHandle::read(FolderEntry &entry)
    return true;
 }
 
-bool HostFolderHandle::rewind()
+
+bool
+HostFolderHandle::rewind()
 {
    auto data = reinterpret_cast<PosixData *>(mFindData);
 

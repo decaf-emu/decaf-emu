@@ -5,6 +5,7 @@
 #include "filesystem_file.h"
 #include "filesystem_filehandle.h"
 #include "filesystem_folderhandle.h"
+#include "filesystem_result.h"
 
 namespace fs
 {
@@ -21,20 +22,20 @@ public:
 
    virtual ~Folder() override = default;
 
-   virtual Node *
+   virtual Result<Folder *>
    addFolder(const std::string &name) = 0;
 
    virtual Node *
    findChild(const std::string &name) = 0;
 
-   virtual FolderHandle
+   virtual Result<FolderHandle>
    openDirectory() = 0;
 
-   virtual FileHandle
+   virtual Result<FileHandle>
    openFile(const std::string &name,
             File::OpenMode mode) = 0;
 
-   virtual bool
+   virtual Result<Error>
    remove(const std::string &name) = 0;
 };
 

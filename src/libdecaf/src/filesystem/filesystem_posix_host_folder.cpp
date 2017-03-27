@@ -8,32 +8,33 @@
 namespace fs
 {
 
-Node *
+Result<Node *>
 HostFolder::addFolder(const std::string &name)
 {
    auto hostPath = mPath.join(name);
    auto child = findChild(name);
 
    if (child) {
-      if (child->type() == NodeType::FolderNode) {
-         return child;
+      if (child->type() != fs::Node::FolderNode) {
+         return { Error::AlreadyExists, nullptr };
       }
 
-      return nullptr;
+      return { Error::AlreadyExists, reinterpret_cast<Folder *>(child) };
    }
 
    if (!checkPermission(Permissions::Write)) {
-      return nullptr;
+      return Error::InvalidPermission;
    }
 
    if (mkdir(hostPath.path().c_str(), 0755)) {
-      return nullptr;
+      return Error::GenericError;
    }
 
    return registerFolder(hostPath, name);
 }
 
-bool
+
+Result<Error>
 HostFolder::remove(const std::string &name)
 {
    auto hostPath = mPath.join(name);
@@ -41,20 +42,21 @@ HostFolder::remove(const std::string &name)
 
    if (!child) {
       // File / Directory does not exist, nothing to do
-      return true;
+      return Error::NotFound;
    }
 
    if (!checkPermission(Permissions::Write)) {
-      return false;
+      return Error::InvalidPermission;
    }
 
    if (remove(hostPath.path().c_str())) {
-      return false;
+      return Error::GenericError;
    }
 
    mVirtual.deleteChild(child);
-   return true;
+   return Error::OK;
 }
+
 
 Node *
 HostFolder::findChild(const std::string &name)
@@ -86,7 +88,7 @@ HostFolder::findChild(const std::string &name)
 }
 
 
-Error
+Result<Error>
 HostFolder::hostMove(const HostPath &src,
                      const HostPath &dst)
 {

@@ -14,7 +14,9 @@ struct WindowsData
    HANDLE handle = INVALID_HANDLE_VALUE;
 };
 
-bool HostFolderHandle::open()
+
+bool
+HostFolderHandle::open()
 {
    auto data = reinterpret_cast<WindowsData *>(mFindData);
    auto hostPath = mPath.join("*");
@@ -36,7 +38,9 @@ bool HostFolderHandle::open()
    return true;
 }
 
-void HostFolderHandle::close()
+
+void
+HostFolderHandle::close()
 {
    auto data = reinterpret_cast<WindowsData *>(mFindData);
 
@@ -47,7 +51,9 @@ void HostFolderHandle::close()
    }
 }
 
-bool HostFolderHandle::read(FolderEntry &entry)
+
+bool
+HostFolderHandle::read(FolderEntry &entry)
 {
    if (!mFindData) {
       return false;
@@ -76,7 +82,9 @@ bool HostFolderHandle::read(FolderEntry &entry)
    return true;
 }
 
-bool HostFolderHandle::rewind()
+
+bool
+HostFolderHandle::rewind()
 {
    close();
    return open();

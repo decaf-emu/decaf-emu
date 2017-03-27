@@ -22,13 +22,13 @@ public:
       return mLink;
    }
 
-   virtual Node *
+   virtual Result<Folder *>
    addFolder(const std::string &name) final override
    {
       return mLink->addFolder(name);
    }
 
-   virtual bool
+   virtual Result<Error>
    remove(const std::string &name) final override
    {
       return mLink->remove(name);
@@ -40,14 +40,14 @@ public:
       return mLink->findChild(name);
    }
 
-   virtual FileHandle
+   virtual Result<FileHandle>
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
       return mLink->openFile(name, mode);
    }
 
-   virtual FolderHandle
+   virtual Result<FolderHandle>
    openDirectory() final override
    {
       return mLink->openDirectory();

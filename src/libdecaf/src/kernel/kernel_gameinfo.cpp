@@ -55,14 +55,15 @@ loadAppXML(const char *path,
            decaf::AppXML &app)
 {
    auto fs = getFileSystem();
-   auto fh = fs->openFile(path, fs::File::Read);
+   auto result = fs->openFile(path, fs::File::Read);
 
-   if (!fh) {
+   if (!result) {
       gLog->warn("Could not open {}, using default values", path);
       return false;
    }
 
    // Read whole file into buffer
+   auto fh = result.value();
    auto size = fh->size();
    auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size, 1);
@@ -95,14 +96,15 @@ loadCosXML(const char *path,
            decaf::CosXML &cos)
 {
    auto fs = getFileSystem();
-   auto fh = fs->openFile(path, fs::File::Read);
+   auto result = fs->openFile(path, fs::File::Read);
 
-   if (!fh) {
+   if (!result) {
       gLog->warn("Could not open {}, using default values", path);
       return false;
    }
 
    // Read whole file into buffer
+   auto fh = result.value();
    auto size = fh->size();
    auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size, 1);
@@ -175,14 +177,15 @@ loadMetaXML(const char *path,
             decaf::MetaXML &meta)
 {
    auto fs = getFileSystem();
-   auto fh = fs->openFile(path, fs::File::Read);
+   auto result = fs->openFile(path, fs::File::Read);
 
-   if (!fh) {
+   if (!result) {
       gLog->warn("Could not open {}, using default values", path);
       return false;
    }
 
    // Read whole file into buffer
+   auto fh = result.value();
    auto size = fh->size();
    auto buffer = std::vector<uint8_t>(size);
    fh->read(buffer.data(), size, 1);

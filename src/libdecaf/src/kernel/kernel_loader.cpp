@@ -1212,9 +1212,10 @@ loadRPLNoLock(const std::string &name)
    // Try to find module in the game code directory
    if (!module) {
       auto fs = kernel::getFileSystem();
-      auto fh = fs->openFile("/vol/code/" + fileName, fs::File::Read);
+      auto result = fs->openFile("/vol/code/" + fileName, fs::File::Read);
 
-      if (fh) {
+      if (result) {
+         auto fh = result.value();
          auto buffer = std::vector<uint8_t>(fh->size());
          fh->read(buffer.data(), buffer.size(), 1);
          fh->close();

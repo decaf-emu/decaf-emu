@@ -45,42 +45,47 @@ public:
       return true;
    }
 
-   virtual Node *
+   virtual Result<Folder *>
    addFolder(const std::string &name) override
    {
       if (!checkPermission(Permissions::Write)) {
-         return nullptr;
+         return Error::InvalidPermission;
       }
 
       auto node = findChild(name);
 
-      if (!node) {
-         node = new VirtualFolder { mPermissions, name };
-         addChild(node);
+      if (node) {
+         if (node->type() != fs::Node::FolderNode) {
+            return { Error::AlreadyExists, nullptr };
+         }
+
+         return { Error::AlreadyExists, reinterpret_cast<Folder *>(node) };
       }
 
-      return node;
+      node = new VirtualFolder { mPermissions, name };
+      addChild(node);
+      return Error::OK;
    }
 
-   virtual FileHandle
+   virtual Result<FileHandle>
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
       return nullptr;
    }
 
-   virtual bool
+   virtual Result<Error>
    remove(const std::string &name) override
    {
       auto node = findChild(name);
 
       if (!node) {
-         return false;
+         return Error::NotFound;
       }
 
       mChildren.erase(std::remove(mChildren.begin(), mChildren.end(), node), mChildren.end());
       delete node;
-      return true;
+      return Error::OK;
    }
 
    virtual Node *
@@ -95,18 +100,18 @@ public:
       return nullptr;
    }
 
-   virtual FolderHandle
+   virtual Result<FolderHandle>
    openDirectory() override
    {
       if (!checkPermission(Permissions::Read)) {
-         return nullptr;
+         return Error::InvalidPermission;
       }
 
       auto handle = new VirtualFolderHandle { mChildren.begin(), mChildren.end() };
 
       if (!handle->open()) {
          delete handle;
-         return nullptr;
+         return Error::UnsupportedOperation;
       }
 
       return FolderHandle { handle };

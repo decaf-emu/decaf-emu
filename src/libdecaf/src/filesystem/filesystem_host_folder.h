@@ -20,41 +20,46 @@ public:
 
    virtual ~HostFolder() override = default;
 
-   virtual Node *
+   virtual Result<Folder *>
    addFolder(const std::string &name) override;
 
-   virtual bool
+   virtual Result<Error>
    remove(const std::string &name) override;
 
    virtual Node *
    findChild(const std::string &name) override;
 
-   virtual FileHandle
+   virtual Result<FileHandle>
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
       auto hostPath = mPath.join(name);
       auto child = findChild(name);
 
-      if (!child && checkPermission(Permissions::Write)) {
-         if ((mode & File::Write) || (mode & File::Append)) {
-            // Create file in Write or Append mode
+      if ((mode & File::Write) || (mode & File::Append)) {
+         // Check we have write permission
+         if (!checkPermission(Permissions::Write)) {
+            return Error::InvalidPermission;
+         }
+
+         // In Write/Append mode create file if not found.
+         if (!child) {
             child = registerFile(hostPath, name);
          }
       }
 
       if (!child) {
-         return nullptr;
+         return Error::NotFound;
       }
 
       // Ensure we have read permissions
       if (!checkPermission(Permissions::Read)) {
-         return nullptr;
+         return Error::InvalidPermission;
       }
 
       // Ensure this is a file node
       if (child->type() != NodeType::FileNode) {
-         return nullptr;
+         return Error::NotFile;
       }
 
       return reinterpret_cast<File *>(child)->open(mode);
@@ -68,24 +73,24 @@ public:
       mVirtual.setPermissions(permissions, flags);
    }
 
-   virtual FolderHandle
+   virtual Result<FolderHandle>
    openDirectory() override
    {
       if (!checkPermission(Permissions::Read)) {
-         return nullptr;
+         return Error::InvalidPermission;
       }
 
       auto handle = new HostFolderHandle { mPath };
 
       if (!handle->open()) {
          delete handle;
-         return nullptr;
+         return Error::UnsupportedOperation;
       }
 
       return FolderHandle { handle };
    }
 
-   static Error
+   static Result<Error>
    move(HostFolder *srcFolder,
         const std::string &srcName,
         HostFolder *dstFolder,
