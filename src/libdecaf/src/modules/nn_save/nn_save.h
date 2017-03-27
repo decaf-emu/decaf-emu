@@ -17,7 +17,6 @@ public:
 
 private:
    static void registerCoreFunctions();
-   static void registerDirFunctions();
    static void registerCmdFunctions();
 };
 

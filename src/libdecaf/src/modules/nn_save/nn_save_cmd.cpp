@@ -1,6 +1,6 @@
 #include "nn_save.h"
 #include "nn_save_cmd.h"
-#include "nn_save_dir.h"
+#include "nn_save_core.h"
 #include "modules/coreinit/coreinit_fs_cmd.h"
 
 namespace nn

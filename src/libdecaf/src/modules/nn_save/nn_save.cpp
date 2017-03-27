@@ -15,7 +15,6 @@ void
 Module::RegisterFunctions()
 {
    registerCoreFunctions();
-   registerDirFunctions();
    registerCmdFunctions();
 }
 
