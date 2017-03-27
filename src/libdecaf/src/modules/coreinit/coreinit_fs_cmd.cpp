@@ -2008,7 +2008,7 @@ getInfoByQueryAsync(FSClient *client,
       return internal::fsClientHandleShimPrepareError(clientBody, error);
    }
 
-   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishReadCmdFn);
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
    return FSStatus::OK;
 }
 
