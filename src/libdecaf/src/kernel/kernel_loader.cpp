@@ -1042,13 +1042,28 @@ loadRPL(const std::string &moduleName,
 
    // Calculate TLS base
    auto thrdata = findSection(sections, shStrTab, ".thrdata");
+   auto thrbss = findSection(sections, shStrTab, ".thrbss");
 
-   if (thrdata) {
-      loadedMod->tlsBase = thrdata->virtAddress;
-
+   if (thrdata || thrbss) {
       // Calculate TLS size
-      auto start = thrdata->virtAddress;
-      auto end = thrdata->virtAddress + thrdata->virtSize;
+      uint32_t start, end;
+      if (thrdata) {
+         start = thrdata->virtAddress;
+         end = thrdata->virtAddress + thrdata->virtSize;
+         if (thrbss) {
+            decaf_assert(thrbss->virtAddress >= end, fmt::format(
+                            "Module {} has strange TLS section order: .thrdata = 0x{:08X}+0x{:X}, .thrbss = 0x{:08X}+0x{:X}",
+                            moduleName,
+                            thrdata->virtAddress, thrdata->virtAddress + thrdata->virtSize,
+                            thrbss->virtAddress, thrbss->virtAddress + thrbss->virtSize));
+            end = thrbss->virtAddress + thrbss->virtSize;
+         }
+      } else {
+         start = thrbss->virtAddress;
+         end = thrbss->virtAddress + thrbss->virtSize;
+      }
+
+      loadedMod->tlsBase = start;
 
       for (auto &section : sections) {
          if (section.header.flags & elf::SHF_TLS) {
