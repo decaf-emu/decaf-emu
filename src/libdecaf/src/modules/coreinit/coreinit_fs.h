@@ -7,6 +7,44 @@
 #include <common/be_ptr.h>
 #include <common/structsize.h>
 
+/*
+Unimplemented functions:
+FSAppendFile
+FSAppendFileAsync
+FSBindMount
+FSBindMountAsync
+FSBindUnmount
+FSBindUnmountAsync
+FSCancelAllCommands
+FSCancelCommand
+FSChangeMode
+FSChangeModeAsync
+FSDumpLastErrorLog
+FSFlushMultiQuota
+FSFlushMultiQuotaAsync
+FSGetEntryNum
+FSGetEntryNumAsync
+FSGetFileBlockAddress
+FSGetFileBlockAddressAsync
+FSGetFileSystemInfo
+FSGetFileSystemInfoAsync
+FSGetVolumeInfo
+FSGetVolumeInfoAsync
+FSMakeLink
+FSMakeLinkAsync
+FSMakeQuota
+FSMakeQuotaAsync
+FSOpenFileByStat
+FSOpenFileByStatAsync
+FSRegisterFlushQuota
+FSRegisterFlushQuotaAsync
+FSRemoveQuota
+FSRemoveQuotaAsync
+FSRollbackQuota
+FSRollbackQuotaAsync
+FSTimeToCalendarTime
+*/
+
 namespace coreinit
 {
 
