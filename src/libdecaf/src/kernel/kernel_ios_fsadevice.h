@@ -42,6 +42,7 @@ using coreinit::FSARequestGetInfoByQuery;
 using coreinit::FSARequestGetPosFile;
 using coreinit::FSARequestIsEof;
 using coreinit::FSARequestMakeDir;
+using coreinit::FSARequestMount;
 using coreinit::FSARequestOpenDir;
 using coreinit::FSARequestOpenFile;
 using coreinit::FSARequestReadDir;
@@ -141,18 +142,18 @@ private:
    FSAStatus getPosFile(FSARequestGetPosFile *request, FSAResponseGetPosFile *response);
    FSAStatus isEof(FSARequestIsEof *request);
    FSAStatus makeDir(FSARequestMakeDir *request);
+   FSAStatus mount(FSARequestMount *request);
    FSAStatus openDir(FSARequestOpenDir *request, FSAResponseOpenDir *response);
    FSAStatus openFile(FSARequestOpenFile *request, FSAResponseOpenFile *response);
    FSAStatus readDir(FSARequestReadDir *request, FSAResponseReadDir *response);
+   FSAStatus readFile(FSARequestReadFile *request, uint8_t *buffer, uint32_t bufferLen);
    FSAStatus remove(FSARequestRemove *request);
    FSAStatus rename(FSARequestRename *request);
    FSAStatus rewindDir(FSARequestRewindDir *request);
    FSAStatus setPosFile(FSARequestSetPosFile *request);
    FSAStatus statFile(FSARequestStatFile *request, FSAResponseStatFile *response);
    FSAStatus truncateFile(FSARequestTruncateFile *request);
-
-   FSAStatus readFile(size_t vecIn, size_t vecOut, IOSVec *vec);
-   FSAStatus writeFile(size_t vecIn, size_t vecOut, IOSVec *vec);
+   FSAStatus writeFile(FSARequestWriteFile *request, const uint8_t *buffer, uint32_t bufferLen);
 
 private:
    fs::FileSystem *mFS;

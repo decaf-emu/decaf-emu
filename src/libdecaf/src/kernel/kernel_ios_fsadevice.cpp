@@ -148,11 +148,30 @@ FSADevice::ioctlv(uint32_t cmd,
 
    switch (static_cast<FSACommand>(cmd)) {
    case FSACommand::ReadFile:
-      result = readFile(vecIn, vecOut, vec);
+   {
+      decaf_check(vecIn == 1);
+      decaf_check(vecOut == 2);
+      auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
+      auto length = vec[1].len;
+      result = readFile(&request->readFile, buffer, length);
       break;
+   }
    case FSACommand::WriteFile:
-      result = writeFile(vecIn, vecOut, vec);
+   {
+      decaf_check(vecIn == 2);
+      decaf_check(vecOut == 1);
+      auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
+      auto length = vec[1].len;
+      result = writeFile(&request->writeFile, buffer, length);
       break;
+   }
+   case FSACommand::Mount:
+   {
+      decaf_check(vecIn == 2);
+      decaf_check(vecOut == 1);
+      result = mount(&request->mount);
+      break;
+   }
    default:
       result = FSAStatus::UnsupportedCmd;
    }
@@ -501,6 +520,19 @@ FSADevice::makeDir(FSARequestMakeDir *request)
 
 
 FSAStatus
+FSADevice::mount(FSARequestMount *request)
+{
+   auto devicePath = translatePath(request->path);
+   auto targetPath = translatePath(request->target);
+
+   // Device is already mounted as a filesystem node, so we just make a link to it
+   auto result = mFS->makeLink(targetPath, devicePath);
+
+   return translateError(result);
+}
+
+
+FSAStatus
 FSADevice::openDir(FSARequestOpenDir *request,
                    FSAResponseOpenDir *response)
 {
@@ -552,6 +584,28 @@ FSADevice::readDir(FSARequestReadDir *request,
    translateStat(entry, &response->entry.stat);
    std::strcpy(response->entry.name, entry.name.c_str());
    return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::readFile(FSARequestReadFile *request,
+                    uint8_t *buffer,
+                    uint32_t bufferLen)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   if (request->readFlags & FSReadFlag::ReadWithPos) {
+      file->seek(request->pos);
+   }
+
+   auto elemsRead = file->read(buffer, request->size, request->count);
+   auto bytesRead = elemsRead * request->size;
+   return static_cast<FSAStatus>(bytesRead);
 }
 
 
@@ -648,59 +702,23 @@ FSADevice::truncateFile(FSARequestTruncateFile *request)
 
 
 FSAStatus
-FSADevice::readFile(size_t vecIn,
-                    size_t vecOut,
-                    IOSVec *vec)
+FSADevice::writeFile(FSARequestWriteFile *request,
+                     const uint8_t *buffer,
+                     uint32_t bufferLen)
 {
-   decaf_check(vecIn == 1);
-   decaf_check(vecOut == 2);
-
-   auto request = be_ptr<FSARequest> { vec[0].vaddr };
-   auto response = be_ptr<FSAResponse> { vec[2].vaddr };
-   auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
-   auto readRequest = &request->readFile;
    auto file = fs::FileHandle {};
-   auto error = mapHandle(readRequest->handle, file);
+   auto error = mapHandle(request->handle, file);
 
    if (error < 0) {
       return error;
    }
 
-   if (readRequest->readFlags & FSReadFlag::ReadWithPos) {
-      file->seek(readRequest->pos);
+   if (request->writeFlags & FSWriteFlag::WriteWithPos) {
+      file->seek(request->pos);
    }
 
-   auto elemsRead = file->read(buffer, readRequest->size, readRequest->count);
-   auto bytesRead = elemsRead * readRequest->size;
-   return static_cast<FSAStatus>(bytesRead);
-}
-
-
-FSAStatus
-FSADevice::writeFile(size_t vecIn,
-                     size_t vecOut,
-                     IOSVec *vec)
-{
-   decaf_check(vecIn == 2);
-   decaf_check(vecOut == 1);
-
-   auto request = be_ptr<FSARequest> { vec[0].vaddr };
-   auto response = be_ptr<FSAResponse> { vec[2].vaddr };
-   auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
-   auto writeRequest = &request->writeFile;
-   auto file = fs::FileHandle {};
-   auto error = mapHandle(writeRequest->handle, file);
-
-   if (error < 0) {
-      return error;
-   }
-
-   if (writeRequest->writeFlags & FSWriteFlag::WriteWithPos) {
-      file->seek(writeRequest->pos);
-   }
-
-   auto elemsWritten = file->write(buffer, writeRequest->size, writeRequest->count);
-   auto bytesWritten = elemsWritten * writeRequest->size;
+   auto elemsWritten = file->write(buffer, request->size, request->count);
+   auto bytesWritten = elemsWritten * request->size;
    return static_cast<FSAStatus>(bytesWritten);
 }
 
