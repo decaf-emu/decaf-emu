@@ -15,13 +15,57 @@ namespace kernel
  * @{
  */
 
-using FSAFileHandle = uint32_t;
+struct FSAHandle
+{
+   enum Type
+   {
+      Unused,
+      File,
+      Folder
+   };
+
+   Type type;
+   fs::FileHandle file;
+   fs::FolderHandle folder;
+};
+
+using coreinit::FSAStatus;
+
+using coreinit::FSARequest;
+using coreinit::FSARequestChangeDir;
+using coreinit::FSARequestCloseDir;
+using coreinit::FSARequestCloseFile;
+using coreinit::FSARequestFlushFile;
+using coreinit::FSARequestFlushQuota;
+using coreinit::FSARequestGetInfoByQuery;
+using coreinit::FSARequestGetPosFile;
+using coreinit::FSARequestIsEof;
+using coreinit::FSARequestMakeDir;
+using coreinit::FSARequestOpenDir;
+using coreinit::FSARequestOpenFile;
+using coreinit::FSARequestReadDir;
+using coreinit::FSARequestReadFile;
+using coreinit::FSARequestRemove;
+using coreinit::FSARequestRename;
+using coreinit::FSARequestRewindDir;
+using coreinit::FSARequestSetPosFile;
+using coreinit::FSARequestStatFile;
+using coreinit::FSARequestTruncateFile;
+using coreinit::FSARequestWriteFile;
+
+using coreinit::FSAResponse;
+using coreinit::FSAResponseGetCwd;
+using coreinit::FSAResponseGetFileBlockAddress;
+using coreinit::FSAResponseGetPosFile;
+using coreinit::FSAResponseGetVolumeInfo;
+using coreinit::FSAResponseGetInfoByQuery;
+using coreinit::FSAResponseOpenDir;
+using coreinit::FSAResponseOpenFile;
+using coreinit::FSAResponseReadDir;
+using coreinit::FSAResponseStatFile;
 
 class FSADevice : public IOSDevice
 {
-   using FSARequest = coreinit::FSARequest;
-   using FSAResponse = coreinit::FSAResponse;
-
 public:
    static constexpr const char *Name = "/dev/fsa";
 
@@ -54,48 +98,61 @@ public:
           IOSVec *vec) override;
 
 private:
+   FSAStatus
+   translateError(fs::Error error) const;
+
    fs::Path
    translatePath(const char *path) const;
 
    fs::File::OpenMode
    translateMode(const char *mode) const;
 
-   FSAFileHandle
-   mapFileHandle(fs::FileHandle handle);
+   uint32_t
+   mapHandle(fs::FileHandle file);
 
-   fs::FileHandle
-   mapFileHandle(FSAFileHandle handle);
+   uint32_t
+   mapHandle(fs::FolderHandle folder);
 
-   bool
-   removeFileHandle(FSAFileHandle handle);
+   FSAStatus
+   mapHandle(uint32_t handle,
+             fs::FileHandle &file);
+
+   FSAStatus
+   mapHandle(uint32_t handle,
+             fs::FolderHandle &folder);
+
+   FSAStatus
+   removeHandle(uint32_t index,
+                FSAHandle::Type type);
 
 private:
-   IOSError
-   changeDir(FSARequest *request,
-             FSAResponse *response);
+   FSAStatus changeDir(FSARequestChangeDir *request);
+   FSAStatus closeDir(FSARequestCloseDir *request);
+   FSAStatus closeFile(FSARequestCloseFile *request);
+   FSAStatus flushFile(FSARequestFlushFile *request);
+   FSAStatus flushQuota(FSARequestFlushQuota *request);
+   FSAStatus getCwd(FSAResponseGetCwd *response);
+   FSAStatus getInfoByQuery(FSARequestGetInfoByQuery *request, FSAResponseGetInfoByQuery *response);
+   FSAStatus getPosFile(FSARequestGetPosFile *request, FSAResponseGetPosFile *response);
+   FSAStatus isEof(FSARequestIsEof *request);
+   FSAStatus makeDir(FSARequestMakeDir *request);
+   FSAStatus openDir(FSARequestOpenDir *request, FSAResponseOpenDir *response);
+   FSAStatus openFile(FSARequestOpenFile *request, FSAResponseOpenFile *response);
+   FSAStatus readDir(FSARequestReadDir *request, FSAResponseReadDir *response);
+   FSAStatus remove(FSARequestRemove *request);
+   FSAStatus rename(FSARequestRename *request);
+   FSAStatus rewindDir(FSARequestRewindDir *request);
+   FSAStatus setPosFile(FSARequestSetPosFile *request);
+   FSAStatus statFile(FSARequestStatFile *request, FSAResponseStatFile *response);
+   FSAStatus truncateFile(FSARequestTruncateFile *request);
 
-   IOSError
-   openFile(FSARequest *request,
-            FSAResponse *response);
-
-   IOSError
-   closeFile(FSARequest *request,
-             FSAResponse *response);
-
-   IOSError
-   readFile(size_t vecIn,
-            size_t vecOut,
-            IOSVec *vec);
-
-   IOSError
-   writeFile(size_t vecIn,
-             size_t vecOut,
-             IOSVec *vec);
+   FSAStatus readFile(size_t vecIn, size_t vecOut, IOSVec *vec);
+   FSAStatus writeFile(size_t vecIn, size_t vecOut, IOSVec *vec);
 
 private:
    fs::FileSystem *mFS;
    fs::Path mWorkingPath;
-   std::vector<fs::FileHandle> mOpenFiles;
+   std::vector<FSAHandle> mHandles;
 };
 
 /** @} */

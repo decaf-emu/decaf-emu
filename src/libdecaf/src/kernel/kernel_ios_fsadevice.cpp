@@ -9,12 +9,14 @@
 namespace kernel
 {
 
-using FSACommand = coreinit::FSACommand;
-using FSARequest = coreinit::FSARequest;
-using FSAResponse = coreinit::FSAResponse;
-using FSAStatus = coreinit::FSAStatus;
-using FSReadFlag = coreinit::FSReadFlag;
-using FSWriteFlag = coreinit::FSWriteFlag;
+using coreinit::FSACommand;
+using coreinit::FSARequest;
+using coreinit::FSAResponse;
+using coreinit::FSAStatus;
+using coreinit::FSReadFlag;
+using coreinit::FSStatFlags;
+using coreinit::FSWriteFlag;
+using coreinit::FSQueryInfoType;
 
 IOSError
 FSADevice::open(IOSOpenMode mode)
@@ -23,11 +25,13 @@ FSADevice::open(IOSOpenMode mode)
    return IOSError::OK;
 }
 
+
 IOSError
 FSADevice::close()
 {
    return IOSError::OK;
 }
+
 
 IOSError
 FSADevice::read(void *buffer,
@@ -36,12 +40,14 @@ FSADevice::read(void *buffer,
    return static_cast<IOSError>(FSAStatus::UnsupportedCmd);
 }
 
+
 IOSError
 FSADevice::write(void *buffer,
                  size_t length)
 {
    return static_cast<IOSError>(FSAStatus::UnsupportedCmd);
 }
+
 
 IOSError
 FSADevice::ioctl(uint32_t cmd,
@@ -52,6 +58,7 @@ FSADevice::ioctl(uint32_t cmd,
 {
    auto request = reinterpret_cast<FSARequest *>(inBuf);
    auto response = reinterpret_cast<FSAResponse *>(outBuf);
+   auto result = FSAStatus::OK;
    decaf_check(inLen == sizeof(FSARequest));
    decaf_check(outLen == sizeof(FSAResponse));
 
@@ -61,15 +68,69 @@ FSADevice::ioctl(uint32_t cmd,
 
    switch (static_cast<FSACommand>(cmd)) {
    case FSACommand::ChangeDir:
-      return changeDir(request, response);
-   case FSACommand::OpenFile:
-      return openFile(request, response);
+      result = changeDir(&request->changeDir);
+      break;
+   case FSACommand::CloseDir:
+      result = closeDir(&request->closeDir);
+      break;
    case FSACommand::CloseFile:
-      return closeFile(request, response);
+      result = closeFile(&request->closeFile);
+      break;
+   case FSACommand::FlushFile:
+      result = flushFile(&request->flushFile);
+      break;
+   case FSACommand::FlushQuota:
+      result = flushQuota(&request->flushQuota);
+      break;
+   case FSACommand::GetCwd:
+      result = getCwd(&response->getCwd);
+      break;
+   case FSACommand::GetInfoByQuery:
+      result = getInfoByQuery(&request->getInfoByQuery, &response->getInfoByQuery);
+      break;
+   case FSACommand::GetPosFile:
+      result = getPosFile(&request->getPosFile, &response->getPosFile);
+      break;
+   case FSACommand::IsEof:
+      result = isEof(&request->isEof);
+      break;
+   case FSACommand::MakeDir:
+      result = makeDir(&request->makeDir);
+      break;
+   case FSACommand::OpenDir:
+      result = openDir(&request->openDir, &response->openDir);
+      break;
+   case FSACommand::OpenFile:
+      result = openFile(&request->openFile, &response->openFile);
+      break;
+   case FSACommand::ReadDir:
+      result = readDir(&request->readDir, &response->readDir);
+      break;
+   case FSACommand::Remove:
+      result = remove(&request->remove);
+      break;
+   case FSACommand::Rename:
+      result = rename(&request->rename);
+      break;
+   case FSACommand::RewindDir:
+      result = rewindDir(&request->rewindDir);
+      break;
+   case FSACommand::SetPosFile:
+      result = setPosFile(&request->setPosFile);
+      break;
+   case FSACommand::StatFile:
+      result = statFile(&request->statFile, &response->statFile);
+      break;
+   case FSACommand::TruncateFile:
+      result = truncateFile(&request->truncateFile);
+      break;
    default:
-      return static_cast<IOSError>(FSAStatus::UnsupportedCmd);
+      result = FSAStatus::UnsupportedCmd;
    }
+
+   return static_cast<IOSError>(result);
 }
+
 
 IOSError
 FSADevice::ioctlv(uint32_t cmd,
@@ -78,6 +139,7 @@ FSADevice::ioctlv(uint32_t cmd,
                   IOSVec *vec)
 {
    auto request = be_ptr<FSARequest> { vec[0].vaddr };
+   auto result = FSAStatus::OK;
    decaf_check(vec[0].len == sizeof(FSARequest));
 
    if (request->emulatedError < 0) {
@@ -86,13 +148,42 @@ FSADevice::ioctlv(uint32_t cmd,
 
    switch (static_cast<FSACommand>(cmd)) {
    case FSACommand::ReadFile:
-      return readFile(vecIn, vecOut, vec);
+      result = readFile(vecIn, vecOut, vec);
+      break;
    case FSACommand::WriteFile:
-      return writeFile(vecIn, vecOut, vec);
+      result = writeFile(vecIn, vecOut, vec);
+      break;
    default:
-      return static_cast<IOSError>(FSAStatus::UnsupportedCmd);
+      result = FSAStatus::UnsupportedCmd;
+   }
+
+   return static_cast<IOSError>(result);
+}
+
+
+FSAStatus
+FSADevice::translateError(fs::Error error) const
+{
+   switch (error) {
+   case fs::Error::OK:
+      return FSAStatus::OK;
+   case fs::Error::UnsupportedOperation:
+      return FSAStatus::UnsupportedCmd;
+   case fs::Error::NotFound:
+      return FSAStatus::NotFound;
+   case fs::Error::AlreadyExists:
+      return FSAStatus::AlreadyExists;
+   case fs::Error::InvalidPermission:
+      return FSAStatus::PermissionError;
+   case fs::Error::NotFile:
+      return FSAStatus::NotFile;
+   case fs::Error::NotDirectory:
+      return FSAStatus::NotDir;
+   default:
+      return FSAStatus::UnsupportedCmd;
    }
 }
+
 
 fs::Path
 FSADevice::translatePath(const char *path) const
@@ -103,6 +194,7 @@ FSADevice::translatePath(const char *path) const
       return mWorkingPath.join(path);
    }
 }
+
 
 fs::File::OpenMode
 FSADevice::translateMode(const char *mode) const
@@ -128,87 +220,424 @@ FSADevice::translateMode(const char *mode) const
    return static_cast<fs::File::OpenMode>(result);
 }
 
-FSAFileHandle
-FSADevice::mapFileHandle(fs::FileHandle handle)
+
+uint32_t
+FSADevice::mapHandle(fs::FileHandle file)
 {
    auto index = 0u;
 
-   for (index = 0u; index < mOpenFiles.size(); ++index) {
-      if (!mOpenFiles[index]) {
-         mOpenFiles[index] = handle;
+   for (index = 0u; index < mHandles.size(); ++index) {
+      if (mHandles[index].type == FSAHandle::Unused) {
+         mHandles[index].type = FSAHandle::File;
+         mHandles[index].file = file;
          break;
       }
    }
 
-   if (index == mOpenFiles.size()) {
-      mOpenFiles.push_back(handle);
+   if (index == mHandles.size()) {
+      mHandles.push_back({ FSAHandle::File, file, nullptr });
    }
 
-   return static_cast<FSAFileHandle>(index + 1);
+   return index + 1;
 }
 
-fs::FileHandle
-FSADevice::mapFileHandle(FSAFileHandle handle)
+
+uint32_t
+FSADevice::mapHandle(fs::FolderHandle folder)
 {
-   if (handle == 0 || handle > mOpenFiles.size()) {
-      return nullptr;
+   auto index = 0u;
+
+   for (index = 0u; index < mHandles.size(); ++index) {
+      if (mHandles[index].type == FSAHandle::Unused) {
+         mHandles[index].type = FSAHandle::Folder;
+         mHandles[index].folder = folder;
+         break;
+      }
    }
 
-   return mOpenFiles[handle - 1];
-}
-
-bool
-FSADevice::removeFileHandle(FSAFileHandle handle)
-{
-   if (handle == 0 || handle > mOpenFiles.size()) {
-      return false;
+   if (index == mHandles.size()) {
+      mHandles.push_back({ FSAHandle::Folder, nullptr, folder });
    }
 
-   mOpenFiles[handle - 1] = nullptr;
-   return true;
+   return index + 1;
 }
 
-IOSError
-FSADevice::changeDir(FSARequest *request,
-                     FSAResponse *response)
-{
-   mWorkingPath = translatePath(request->changeDir.path);
-   return IOSError::OK;
-}
 
-IOSError
-FSADevice::openFile(FSARequest *request,
-                    FSAResponse *response)
+FSAStatus
+FSADevice::mapHandle(uint32_t index,
+                     fs::FileHandle &file)
 {
-   auto path = translatePath(request->openFile.path);
-   auto mode = translateMode(request->openFile.mode);
-   auto fsHandle = mFS->openFile(path, mode);
-
-   if (!fsHandle) {
-      return static_cast<IOSError>(FSAStatus::NotFound);
+   if (index == 0 || index > mHandles.size()) {
+      return FSAStatus::InvalidFileHandle;
    }
 
-   auto fsaHandle = mapFileHandle(fsHandle);
-   response->openFile.handle = fsaHandle;
-   return IOSError::OK;
-}
+   auto &handle = mHandles[index - 1];
 
-IOSError
-FSADevice::closeFile(FSARequest *request,
-                     FSAResponse *response)
-{
-   auto fh = mapFileHandle(request->closeFile.handle);
-
-   if (!fh) {
-      return static_cast<IOSError>(FSAStatus::InvalidFileHandle);
+   if (handle.type != FSAHandle::File) {
+      return FSAStatus::NotFile;
    }
 
-   removeFileHandle(request->closeFile.handle);
-   fh->close();
-   return IOSError::OK;
+   file = handle.file;
+   return FSAStatus::OK;
 }
 
-IOSError
+
+FSAStatus
+FSADevice::mapHandle(uint32_t index,
+                     fs::FolderHandle &folder)
+{
+   if (index == 0 || index > mHandles.size()) {
+      return FSAStatus::InvalidDirHandle;
+   }
+
+   auto &handle = mHandles[index - 1];
+
+   if (handle.type != FSAHandle::Folder) {
+      return FSAStatus::NotDir;
+   }
+
+   folder = handle.folder;
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::removeHandle(uint32_t index,
+                        FSAHandle::Type type)
+{
+   if (index == 0 || index > mHandles.size()) {
+      if (type == FSAHandle::File) {
+         return FSAStatus::InvalidFileHandle;
+      } else {
+         return FSAStatus::InvalidDirHandle;
+      }
+   }
+
+   auto &handle = mHandles[index - 1];
+
+   if (handle.type != type) {
+      if (type == FSAHandle::File) {
+         return FSAStatus::NotFile;
+      } else {
+         return FSAStatus::NotDir;
+      }
+   }
+
+   handle.type = FSAHandle::Unused;
+   handle.file = nullptr;
+   handle.folder = nullptr;
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::changeDir(FSARequestChangeDir *request)
+{
+   mWorkingPath = translatePath(request->path);
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::closeDir(FSARequestCloseDir *request)
+{
+   auto dir = fs::FolderHandle {};
+   auto error = mapHandle(request->handle, dir);
+
+   if (error < 0) {
+      return error;
+   }
+
+   dir->close();
+   return removeHandle(request->handle, FSAHandle::Folder);
+}
+
+
+FSAStatus
+FSADevice::closeFile(FSARequestCloseFile *request)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   file->close();
+   return removeHandle(request->handle, FSAHandle::File);
+}
+
+
+FSAStatus
+FSADevice::flushFile(FSARequestFlushFile *request)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   file->flush();
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::flushQuota(FSARequestFlushQuota *request)
+{
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::getCwd(FSAResponseGetCwd *response)
+{
+   std::strncpy(response->path, mWorkingPath.path().c_str(), coreinit::FSMaxPathLength);
+   return FSAStatus::OK;
+}
+
+FSAStatus
+FSADevice::getInfoByQuery(FSARequestGetInfoByQuery *request,
+                          FSAResponseGetInfoByQuery *response)
+{
+   auto path = translatePath(request->path);
+
+   switch (request->type) {
+   case FSQueryInfoType::FreeSpaceSize:
+   {
+      response->freeSpaceSize = 128 * 1024 * 1024;
+      break;
+   }
+   case FSQueryInfoType::Stat:
+   {
+      auto result = mFS->findEntry(path);
+
+      if (!result) {
+         return translateError(result);
+      }
+
+      auto entry = result.value();
+      std::memset(&response->stat, 0, sizeof(response->stat));
+
+      if (entry.type == fs::FolderEntry::Folder) {
+         response->stat.flags = FSStatFlags::Directory;
+      } else {
+         response->stat.flags = static_cast<FSStatFlags>(0);
+      }
+
+      response->stat.permission = 0x660;
+      response->stat.owner = 0;
+      response->stat.group = 0;
+      response->stat.size = static_cast<uint32_t>(entry.size);
+      response->stat.entryId = 0;
+      response->stat.created = 0;
+      response->stat.modified = 0;
+      break;
+   }
+   default:
+      return FSAStatus::UnsupportedCmd;
+   }
+
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::getPosFile(FSARequestGetPosFile *request,
+                      FSAResponseGetPosFile *response)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   response->pos = static_cast<uint32_t>(file->tell());
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::isEof(FSARequestIsEof *request)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   if (file->eof()) {
+      error = FSAStatus::EndOfFile;
+   } else {
+      error = FSAStatus::OK;
+   }
+
+   return error;
+}
+
+
+FSAStatus
+FSADevice::makeDir(FSARequestMakeDir *request)
+{
+   auto path = translatePath(request->path);
+
+   if (!mFS->makeFolder(path)) {
+      return FSAStatus::PermissionError;
+   }
+
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::openDir(FSARequestOpenDir *request,
+                   FSAResponseOpenDir *response)
+{
+   auto path = translatePath(request->path);
+   auto result = mFS->openFolder(path);
+
+   if (!result) {
+      return translateError(result);
+   }
+
+   response->handle = mapHandle(result);
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::openFile(FSARequestOpenFile *request,
+                    FSAResponseOpenFile *response)
+{
+   auto path = translatePath(request->path);
+   auto mode = translateMode(request->mode);
+   auto result = mFS->openFile(path, mode);
+
+   if (!result) {
+      return translateError(result);
+   }
+
+   response->handle = mapHandle(result);
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::readDir(FSARequestReadDir *request,
+                   FSAResponseReadDir *response)
+{
+   auto entry = fs::FolderEntry { };
+   auto folder = fs::FolderHandle {};
+   auto error = mapHandle(request->handle, folder);
+
+   if (error < 0) {
+      return error;
+   }
+
+   if (!folder->read(entry)) {
+      return FSAStatus::EndOfDir;
+   }
+
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::remove(FSARequestRemove *request)
+{
+   auto path = translatePath(request->path);
+   return translateError(mFS->remove(path));
+}
+
+
+FSAStatus
+FSADevice::rename(FSARequestRename *request)
+{
+   auto src = translatePath(request->oldPath);
+   auto dst = translatePath(request->newPath);
+   auto result = mFS->move(src, dst);
+
+   if (!result) {
+      return translateError(result);
+   }
+
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::rewindDir(FSARequestRewindDir *request)
+{
+   auto folder = fs::FolderHandle {};
+   auto error = mapHandle(request->handle, folder);
+
+   if (error < 0) {
+      return error;
+   }
+
+   folder->rewind();
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::setPosFile(FSARequestSetPosFile *request)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   file->seek(request->pos);
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::statFile(FSARequestStatFile *request,
+                    FSAResponseStatFile *response)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   std::memset(&response->stat, 0, sizeof(response->stat));
+   response->stat.flags = static_cast<FSStatFlags>(0);
+   response->stat.permission = 0x660;
+   response->stat.owner = 0;
+   response->stat.group = 0;
+   response->stat.size = file->size();
+   response->stat.entryId = 0;
+   response->stat.created = 0;
+   response->stat.modified = 0;
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
+FSADevice::truncateFile(FSARequestTruncateFile *request)
+{
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(request->handle, file);
+
+   if (error < 0) {
+      return error;
+   }
+
+   file->truncate();
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
 FSADevice::readFile(size_t vecIn,
                     size_t vecOut,
                     IOSVec *vec)
@@ -220,23 +649,24 @@ FSADevice::readFile(size_t vecIn,
    auto response = be_ptr<FSAResponse> { vec[2].vaddr };
    auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
    auto readRequest = &request->readFile;
-   auto fh = mapFileHandle(readRequest->handle);
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(readRequest->handle, file);
 
-   if (!fh) {
-      return static_cast<IOSError>(FSAStatus::InvalidFileHandle);
+   if (error < 0) {
+      return error;
    }
 
    if (readRequest->readFlags & FSReadFlag::ReadWithPos) {
-      fh->seek(readRequest->pos);
+      file->seek(readRequest->pos);
    }
 
-   auto elemsRead = fh->read(buffer, readRequest->size, readRequest->count);
+   auto elemsRead = file->read(buffer, readRequest->size, readRequest->count);
    auto bytesRead = elemsRead * readRequest->size;
-   return static_cast<IOSError>(bytesRead);
+   return static_cast<FSAStatus>(bytesRead);
 }
 
 
-IOSError
+FSAStatus
 FSADevice::writeFile(size_t vecIn,
                      size_t vecOut,
                      IOSVec *vec)
@@ -248,19 +678,20 @@ FSADevice::writeFile(size_t vecIn,
    auto response = be_ptr<FSAResponse> { vec[2].vaddr };
    auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
    auto writeRequest = &request->writeFile;
-   auto fh = mapFileHandle(writeRequest->handle);
+   auto file = fs::FileHandle {};
+   auto error = mapHandle(writeRequest->handle, file);
 
-   if (!fh) {
-      return static_cast<IOSError>(FSAStatus::InvalidFileHandle);
+   if (error < 0) {
+      return error;
    }
 
    if (writeRequest->writeFlags & FSWriteFlag::WriteWithPos) {
-      fh->seek(writeRequest->pos);
+      file->seek(writeRequest->pos);
    }
 
-   auto elemsWritten = fh->write(buffer, writeRequest->size, writeRequest->count);
+   auto elemsWritten = file->write(buffer, writeRequest->size, writeRequest->count);
    auto bytesWritten = elemsWritten * writeRequest->size;
-   return static_cast<IOSError>(bytesWritten);
+   return static_cast<FSAStatus>(bytesWritten);
 }
 
 } // namespace kernel
