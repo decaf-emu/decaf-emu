@@ -329,7 +329,6 @@ fsCmdBlockHandleResult(FSCmdBlockBody *blockBody)
 {
    auto clientBody = blockBody->clientBody;
    auto result = static_cast<FSStatus>(blockBody->fsaStatus.value());
-   auto errorFlags = FSErrorFlag::All;
 
    if (!fsClientRegistered(clientBody)) {
       if (blockBody->finishCmdFn) {
@@ -350,32 +349,20 @@ fsCmdBlockHandleResult(FSCmdBlockBody *blockBody)
    }
 
    if (blockBody->fsaStatus < 0) {
+      auto errorFlags = FSErrorFlag::All;
+
       switch (blockBody->fsaStatus) {
-      case FSAStatus::NotInit:
-      case FSAStatus::OutOfRange:
-      case FSAStatus::OutOfResources:
-      case FSAStatus::LinkEntry:
-      case FSAStatus::UnavailableCmd:
-      case FSAStatus::InvalidParam:
-      case FSAStatus::InvalidPath:
-      case FSAStatus::InvalidBuffer:
-      case FSAStatus::InvalidAlignment:
-      case FSAStatus::InvalidClientHandle:
-      case FSAStatus::InvalidFileHandle:
-      case FSAStatus::InvalidDirHandle:
-         errorFlags = FSErrorFlag::None;
-         break;
       case FSAStatus::Busy:
          fsCmdBlockRequeue(&clientBody->cmdQueue, blockBody, TRUE, blockBody->finishCmdFn);
          return;
       case FSAStatus::Cancelled:
          result = FSStatus::Cancelled;
+         errorFlags = FSErrorFlag::None;
          break;
       case FSAStatus::EndOfDir:
-         result = FSStatus::End;
-         break;
       case FSAStatus::EndOfFile:
          result = FSStatus::End;
+         errorFlags = FSErrorFlag::None;
          break;
       case FSAStatus::MaxMountpoints:
       case FSAStatus::MaxVolumes:
@@ -438,12 +425,11 @@ fsCmdBlockHandleResult(FSCmdBlockBody *blockBody)
          // TODO: FSAStatus::MediaError
          decaf_abort("TODO: Reverse me.");
          break;
-      case FSAStatus::InvalidMedia:
-         errorFlags = FSErrorFlag::None;
-         return;
+      default:
+         errorFlags = FSErrorFlag::All;
       }
 
-      if (blockBody->errorMask & errorFlags) {
+      if (errorFlags != FSErrorFlag::None && (blockBody->errorMask & errorFlags) == 0) {
          fsmEnterState(&clientBody->fsm, FSVolumeState::Fatal, clientBody);
          return;
       }

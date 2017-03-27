@@ -382,6 +382,10 @@ fsClientHandleAsyncResult(FSClient *client,
    }
 
    switch (result) {
+   case FSStatus::Cancelled:
+   case FSStatus::End:
+      errorFlags = FSErrorFlag::None;
+      break;
    case FSStatus::Max:
       errorFlags = FSErrorFlag::Max;
       break;
@@ -420,7 +424,7 @@ fsClientHandleAsyncResult(FSClient *client,
       break;
    }
 
-   if ((errorFlags & errorMask) == 0) {
+   if (errorFlags != FSErrorFlag::None && (errorFlags & errorMask) == 0) {
       auto clientBody = fsClientGetBody(client);
       fsClientHandleFatalError(clientBody, clientBody->lastError);
       return FSStatus::FatalError;
