@@ -53,6 +53,7 @@ using coreinit::FSARequestRewindDir;
 using coreinit::FSARequestSetPosFile;
 using coreinit::FSARequestStatFile;
 using coreinit::FSARequestTruncateFile;
+using coreinit::FSARequestUnmount;
 using coreinit::FSARequestWriteFile;
 
 using coreinit::FSAResponse;
@@ -153,6 +154,7 @@ private:
    FSAStatus setPosFile(FSARequestSetPosFile *request);
    FSAStatus statFile(FSARequestStatFile *request, FSAResponseStatFile *response);
    FSAStatus truncateFile(FSARequestTruncateFile *request);
+   FSAStatus unmount(FSARequestUnmount *request);
    FSAStatus writeFile(FSARequestWriteFile *request, const uint8_t *buffer, uint32_t bufferLen);
 
 private:

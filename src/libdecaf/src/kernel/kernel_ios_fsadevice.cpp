@@ -702,6 +702,15 @@ FSADevice::truncateFile(FSARequestTruncateFile *request)
 
 
 FSAStatus
+FSADevice::unmount(FSARequestUnmount *request)
+{
+   auto path = translatePath(request->path);
+   auto result = mFS->remove(path);
+   return translateError(result);
+}
+
+
+FSAStatus
 FSADevice::writeFile(FSARequestWriteFile *request,
                      const uint8_t *buffer,
                      uint32_t bufferLen)
