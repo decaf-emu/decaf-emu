@@ -657,9 +657,12 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
    }
 
    auto shim = &blockBody->fsaShimBuffer;
+   shim->ioctlvVec[0].paddr = &shim->request;
+
    shim->ioctlvVec[1].paddr = readRequest->buffer;
    shim->ioctlvVec[1].len = readRequest->size;
 
+   shim->ioctlvVec[2].paddr = &shim->response;
    fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE, fsCmdBlockFinishReadCmdFn);
 }
 
@@ -710,9 +713,12 @@ fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
    }
 
    auto shim = &blockBody->fsaShimBuffer;
+   shim->ioctlvVec[0].paddr = &shim->request;
+
    shim->ioctlvVec[1].paddr = const_cast<uint8_t *>(writeRequest->buffer.get());
    shim->ioctlvVec[1].len = writeRequest->size;
 
+   shim->ioctlvVec[2].paddr = &shim->response;
    fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE, fsCmdBlockFinishWriteCmdFn);
 }
 

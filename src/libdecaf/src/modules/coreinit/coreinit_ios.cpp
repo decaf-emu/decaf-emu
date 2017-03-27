@@ -555,7 +555,7 @@ Module::registerIosFunctions()
 
 namespace internal
 {
-   
+
 /**
  * Prepares an IPCDriverRequest structure with the parameters for IOS_Open.
  *
@@ -580,7 +580,7 @@ ipcPrepareOpenRequest(IPCDriver *ipcDriver,
 
    std::memset(ipcBuffer->nameBuffer, 0, 0x20);
    std::memcpy(ipcBuffer->nameBuffer, device, deviceLen);
-   
+
    ipcBuffer->args[0] = 0;
    ipcBuffer->args[1] = deviceLen + 1;
    ipcBuffer->args[2] = mode;
