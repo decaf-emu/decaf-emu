@@ -124,10 +124,10 @@ public:
       auto dstHostPath = dstFolder->mPath.join(dstName);
 
       // Perform the move operation on the host device
-      auto error = hostMove(srcHostPath, dstHostPath);
+      auto result = hostMove(srcHostPath, dstHostPath);
 
-      if (error != Error::OK) {
-         return error;
+      if (!result) {
+         return result;
       }
 
       // Unregister the child from srcFolder as it no longer exists once moved
@@ -174,7 +174,7 @@ private:
       return child;
    }
 
-   static Error
+   static Result<Error>
    hostMove(const HostPath &src,
             const HostPath &dst);
 

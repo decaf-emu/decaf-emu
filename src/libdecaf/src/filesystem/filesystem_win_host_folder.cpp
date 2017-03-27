@@ -106,7 +106,7 @@ HostFolder::findChild(const std::string &name)
 }
 
 
-Error
+Result<Error>
 HostFolder::hostMove(const HostPath &src,
                      const HostPath &dst)
 {
