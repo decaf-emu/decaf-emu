@@ -1942,15 +1942,16 @@ readFileWithPosAsync(FSClient *client,
       return FSStatus::FatalError;
    }
 
+   auto bytesRemaining = size * count;
    blockBody->cmdData.readFile.chunkSize = size;
-   blockBody->cmdData.readFile.bytesRemaining = size * count;
+   blockBody->cmdData.readFile.bytesRemaining = bytesRemaining;
    blockBody->cmdData.readFile.bytesRead = 0;
 
    // We only read up to FSMaxBytesPerRequest per request.
-   if (size > FSMaxBytesPerRequest) {
+   if (bytesRemaining > FSMaxBytesPerRequest) {
       blockBody->cmdData.readFile.readSize = FSMaxBytesPerRequest;
    } else {
-      blockBody->cmdData.readFile.readSize = size;
+      blockBody->cmdData.readFile.readSize = bytesRemaining;
    }
 
    auto error = internal::fsaShimPrepareRequestReadFile(&blockBody->fsaShimBuffer,
@@ -2041,15 +2042,16 @@ writeFileWithPosAsync(FSClient *client,
       return FSStatus::FatalError;
    }
 
+   auto bytesRemaining = size * count;
    blockBody->cmdData.writeFile.chunkSize = size;
-   blockBody->cmdData.writeFile.bytesRemaining = size * count;
+   blockBody->cmdData.writeFile.bytesRemaining = bytesRemaining;
    blockBody->cmdData.writeFile.bytesWritten = 0;
 
    // We only read up to FSMaxBytesPerRequest per request.
-   if (size > FSMaxBytesPerRequest) {
+   if (bytesRemaining > FSMaxBytesPerRequest) {
       blockBody->cmdData.writeFile.writeSize = FSMaxBytesPerRequest;
    } else {
-      blockBody->cmdData.writeFile.writeSize = size;
+      blockBody->cmdData.writeFile.writeSize = bytesRemaining;
    }
 
    auto error = internal::fsaShimPrepareRequestWriteFile(&blockBody->fsaShimBuffer,
