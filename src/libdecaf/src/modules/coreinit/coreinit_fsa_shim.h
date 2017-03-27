@@ -217,6 +217,12 @@ fsaShimPrepareRequestTruncateFile(FSAShimBuffer *shim,
                                   FSFileHandle fileHandle);
 
 FSAStatus
+fsaShimPrepareRequestUnmount(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             const char *path,
+                             uint32_t unk0x280);
+
+FSAStatus
 fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
                                IOSHandle clientHandle,
                                const uint8_t *buffer,

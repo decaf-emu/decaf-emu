@@ -274,6 +274,19 @@ CHECK_SIZE(FSARequestTruncateFile, 0x4);
 
 
 /**
+ * Request data for FSACommand::Unmount
+ */
+struct FSARequestUnmount
+{
+   char path[FSMaxPathLength + 1];
+   be_val<uint32_t> unk0x280;
+};
+CHECK_OFFSET(FSARequestUnmount, 0x0, path);
+CHECK_OFFSET(FSARequestUnmount, 0x280, unk0x280);
+CHECK_SIZE(FSARequestUnmount, 0x284);
+
+
+/**
  * Request data for FSACommand::WriteFile
  */
 struct FSARequestWriteFile
@@ -323,6 +336,7 @@ struct FSARequest
       FSARequestSetPosFile setPosFile;
       FSARequestStatFile statFile;
       FSARequestTruncateFile truncateFile;
+      FSARequestUnmount unmount;
       FSARequestWriteFile writeFile;
       UNKNOWN(0x51C);
    };

@@ -724,6 +724,35 @@ fsaShimPrepareRequestTruncateFile(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::Unmount request.
+ */
+FSAStatus
+fsaShimPrepareRequestUnmount(FSAShimBuffer *shim,
+                             IOSHandle clientHandle,
+                             const char *path,
+                             uint32_t unk0x280)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::Unmount;
+
+   auto request = &shim->request.unmount;
+   std::strncpy(request->path, path, FSMaxPathLength);
+   request->unk0x280 = unk0x280;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::WriteFile request.
  */
 FSAStatus

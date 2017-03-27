@@ -414,6 +414,19 @@ FSTruncateFileAsync(FSClient *client,
                     const FSAsyncData *asyncData);
 
 FSStatus
+FSUnmount(FSClient *client,
+          FSCmdBlock *block,
+          const char *target,
+          FSErrorFlag errorMask);
+
+FSStatus
+FSUnmountAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *target,
+               FSErrorFlag errorMask,
+               const FSAsyncData *asyncData);
+
+FSStatus
 FSWriteFile(FSClient *client,
             FSCmdBlock *block,
             const uint8_t *buffer,

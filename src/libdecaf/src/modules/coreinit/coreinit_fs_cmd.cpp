@@ -1734,6 +1734,68 @@ FSTruncateFileAsync(FSClient *client,
 
 
 /**
+ * Unmount a target which was previously mounted with FSMount.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSUnmount(FSClient *client,
+          FSCmdBlock *block,
+          const char *target,
+          FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSUnmountAsync(client, block, target, errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Unmount a target which was previously mounted with FSMount (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSUnmountAsync(FSClient *client,
+               FSCmdBlock *block,
+               const char *target,
+               FSErrorFlag errorMask,
+               const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!target) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   auto error = internal::fsaShimPrepareRequestUnmount(&blockBody->fsaShimBuffer,
+                                                       clientBody->clientHandle,
+                                                       target,
+                                                       0x80000000);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Write to a file.
  *
  * \return
@@ -2066,6 +2128,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSSetPosFileAsync);
    RegisterKernelFunction(FSTruncateFile);
    RegisterKernelFunction(FSTruncateFileAsync);
+   RegisterKernelFunction(FSUnmount);
+   RegisterKernelFunction(FSUnmountAsync);
    RegisterKernelFunction(FSWriteFile);
    RegisterKernelFunction(FSWriteFileAsync);
    RegisterKernelFunction(FSWriteFileWithPos);
