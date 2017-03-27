@@ -52,6 +52,12 @@ OSGetConsoleType()
    return 0x3000050;
 }
 
+uint32_t
+OSGetSecurityLevel()
+{
+   return 0;
+}
+
 BOOL
 OSIsHomeButtonMenuEnabled()
 {
@@ -112,6 +118,7 @@ Module::registerSystemInfoFunctions()
    RegisterKernelFunction(OSSetScreenCapturePermission);
    RegisterKernelFunction(OSGetScreenCapturePermission);
    RegisterKernelFunction(OSGetConsoleType);
+   RegisterKernelFunction(OSGetSecurityLevel);
    RegisterKernelFunction(OSEnableHomeButtonMenu);
    RegisterKernelFunction(OSIsHomeButtonMenuEnabled);
    RegisterKernelFunction(OSBlockThreadsOnExit);

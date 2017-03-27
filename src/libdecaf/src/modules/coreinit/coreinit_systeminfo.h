@@ -44,6 +44,9 @@ OSGetScreenCapturePermission();
 uint32_t
 OSGetConsoleType();
 
+uint32_t
+OSGetSecurityLevel();
+
 BOOL
 OSEnableHomeButtonMenu(BOOL enable);
 
