@@ -99,6 +99,12 @@ public:
       mState = CaptureState::WaitEndNextFrame;
    }
 
+   void
+   setCaptureNumFrames(size_t count)
+   {
+      mCaptureNumFrames = count;
+   }
+
    CaptureState
    state() const
    {
@@ -112,8 +118,16 @@ public:
 
       if (mState == CaptureState::WaitStartNextFrame) {
          start();
+         mCapturedFrames = 0;
       } else if (mState == CaptureState::WaitEndNextFrame) {
          stop();
+         mCaptureNumFrames = 0;
+      }
+
+      ++mCapturedFrames;
+
+      if (mCapturedFrames == mCaptureNumFrames) {
+         mState = CaptureState::WaitEndNextFrame;
       }
    }
 
@@ -858,6 +872,8 @@ private:
    std::ofstream mOut;
    std::vector<RecordedMemory> mRecordedMemory;
    std::array<uint32_t, 0x10000> mRegisters;
+   size_t mCapturedFrames = 0;
+   size_t mCaptureNumFrames = 0;
 };
 
 static Recorder
@@ -892,6 +908,13 @@ void
 captureStopAtNextSwap()
 {
    gRecorder.requestStop();
+}
+
+bool
+captureNextFrame()
+{
+   gRecorder.setCaptureNumFrames(1);
+   return captureStartAtNextSwap();
 }
 
 CaptureState

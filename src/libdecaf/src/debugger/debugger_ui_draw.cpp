@@ -247,6 +247,12 @@ draw()
 
          ImGui::Separator();
 
+         if (ImGui::MenuItem("PM4 Capture Next Frame", nullptr, false, true)) {
+            pm4::captureNextFrame();
+         }
+
+         ImGui::Separator();
+
          if (ImGui::MenuItem("Kernel Trace Enabled", nullptr, decaf::config::log::kernel_trace, true)) {
             decaf::config::log::kernel_trace = !decaf::config::log::kernel_trace;
          }
@@ -264,7 +270,7 @@ draw()
             pm4Enable = true;
             break;
          case pm4::CaptureState::WaitEndNextFrame:
-            pm4Status = false;
+            pm4Status = true;
             pm4Enable = false;
             break;
          case pm4::CaptureState::WaitStartNextFrame:

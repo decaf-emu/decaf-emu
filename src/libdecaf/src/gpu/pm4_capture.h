@@ -21,6 +21,9 @@ captureStartAtNextSwap();
 void
 captureStopAtNextSwap();
 
+bool
+captureNextFrame();
+
 CaptureState
 captureState();
 
