@@ -8,7 +8,7 @@
 namespace fs
 {
 
-Result<Node *>
+Result<Folder *>
 HostFolder::addFolder(const std::string &name)
 {
    auto hostPath = mPath.join(name);
@@ -30,7 +30,7 @@ HostFolder::addFolder(const std::string &name)
       return Error::GenericError;
    }
 
-   return registerFolder(hostPath, name);
+   return reinterpret_cast<Folder *>(registerFolder(hostPath, name));
 }
 
 
