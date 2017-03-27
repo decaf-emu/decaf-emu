@@ -431,6 +431,13 @@ fsCmdBlockHandleResult(FSCmdBlockBody *blockBody)
 
       if (errorFlags != FSErrorFlag::None && (blockBody->errorMask & errorFlags) == 0) {
          fsmEnterState(&clientBody->fsm, FSVolumeState::Fatal, clientBody);
+
+         // The game told us not to return if we receive this error, so must mean
+         // that we really fucked something up :).
+         decaf_abort(fmt::format("Unrecoverable FS error, command = {}, error = {}.",
+                                 blockBody->fsaShimBuffer.command,
+                                 blockBody->fsaStatus));
+
          return;
       }
    }

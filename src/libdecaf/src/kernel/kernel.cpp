@@ -21,7 +21,6 @@
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
-#include "modules/nn_save/nn_save_dir.h"
 #include "modules/gx2/gx2_event.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
