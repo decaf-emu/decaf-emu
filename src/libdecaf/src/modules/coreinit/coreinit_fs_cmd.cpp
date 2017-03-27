@@ -1164,7 +1164,7 @@ FSReadFileWithPos(FSClient *client,
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
 
    auto result = FSReadFileWithPosAsync(client, block, buffer, size, count,
-                                        handle, pos, readFlags, errorMask,
+                                        pos, handle, readFlags, errorMask,
                                         &asyncData);
 
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
