@@ -503,6 +503,131 @@ FSGetFreeSpaceSizeAsync(FSClient *client,
 
 
 /**
+ * Get the first mount source which matches the specified type.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetMountSource(FSClient *client,
+                 FSCmdBlock *block,
+                 FSMountSourceType type,
+                 FSMountSource *source,
+                 FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSGetMountSourceAsync(client, block, type, source, errorMask,
+                                       &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get the first mount source which matches the specified type (asynchronously).
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetMountSourceAsync(FSClient *client,
+                      FSCmdBlock *block,
+                      FSMountSourceType type,
+                      FSMountSource *source,
+                      FSErrorFlag errorMask,
+                      const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+
+   if (!clientBody) {
+      return FSStatus::FatalError;
+   }
+
+   if (type != FSMountSourceType::SdCard && type != FSMountSourceType::HostFileIO) {
+      return FSStatus::FatalError;
+   }
+
+   clientBody->lastMountSourceDevice[0] = 0;
+   clientBody->findMountSourceType = type;
+
+   return FSGetMountSourceNextAsync(client, block, source, errorMask, asyncData);
+}
+
+
+/**
+ * Get the next mount source.
+ *
+ * This can be called repeatedly after FSGetMountSource until failure.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ *
+ * \retval FSStatus::End
+ * Returned when we have iterated over all the mount sources for this type.
+ */
+FSStatus
+FSGetMountSourceNext(FSClient *client,
+                     FSCmdBlock *block,
+                     FSMountSource *source,
+                     FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSGetMountSourceNextAsync(client, block, source, errorMask,
+                                           &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Get the next mount source (asynchronously).
+ *
+ * This can be called repeatedly after FSGetMountSource until failure.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSGetMountSourceNextAsync(FSClient *client,
+                          FSCmdBlock *block,
+                          FSMountSource *source,
+                          FSErrorFlag errorMask,
+                          const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!source) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.getMountSourceNext.source = source;
+   blockBody->cmdData.getMountSourceNext.dirHandle = -1;
+   auto error = internal::fsaShimPrepareRequestOpenDir(&blockBody->fsaShimBuffer,
+                                                       clientBody->clientHandle,
+                                                       "/dev");
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishGetMountSourceNextOpenCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Get the current read / write position of a file.
  *
  * \return
@@ -1813,6 +1938,10 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSGetStatAsync);
    RegisterKernelFunction(FSGetStatFile);
    RegisterKernelFunction(FSGetStatFileAsync);
+   RegisterKernelFunction(FSGetMountSource);
+   RegisterKernelFunction(FSGetMountSourceAsync);
+   RegisterKernelFunction(FSGetMountSourceNext);
+   RegisterKernelFunction(FSGetMountSourceNextAsync);
    RegisterKernelFunction(FSIsEof);
    RegisterKernelFunction(FSIsEofAsync);
    RegisterKernelFunction(FSMakeDir);

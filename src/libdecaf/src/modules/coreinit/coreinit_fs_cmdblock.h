@@ -74,6 +74,17 @@ CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, freeSpaceSize);
 CHECK_OFFSET(FSCmdBlockCmdDataGetInfoByQuery, 0x0, stat);
 CHECK_SIZE(FSCmdBlockCmdDataGetInfoByQuery, 0x4);
 
+struct FSCmdBlockCmdDataGetMountSourceNext
+{
+   be_ptr<FSMountSource> source;
+   be_val<FSDirHandle> dirHandle;
+   be_val<FSStatus> readError;
+};
+CHECK_OFFSET(FSCmdBlockCmdDataGetMountSourceNext, 0x0, source);
+CHECK_OFFSET(FSCmdBlockCmdDataGetMountSourceNext, 0x4, dirHandle);
+CHECK_OFFSET(FSCmdBlockCmdDataGetMountSourceNext, 0x8, readError);
+CHECK_SIZE(FSCmdBlockCmdDataGetMountSourceNext, 0xC);
+
 struct FSCmdBlockCmdDataGetPosFile
 {
    be_ptr<be_val<FSFilePosition>> pos;
@@ -168,6 +179,7 @@ union FSCmdBlockCmdData
    FSCmdBlockCmdDataGetCwd getCwd;
    FSCmdBlockCmdDataGetFileBlockAddress getFileBlockAddress;
    FSCmdBlockCmdDataGetInfoByQuery getInfoByQuery;
+   FSCmdBlockCmdDataGetMountSourceNext getMountSourceNext;
    FSCmdBlockCmdDataGetPosFile getPosFile;
    FSCmdBlockCmdDataGetVolumeInfo getVolumeInfo;
    FSCmdBlockCmdDataOpenDir openDir;
@@ -318,6 +330,15 @@ fsCmdBlockFinishReadCmdFn;
 
 extern FSFinishCmdFn
 fsCmdBlockFinishWriteCmdFn;
+
+extern FSFinishCmdFn
+fsCmdBlockFinishGetMountSourceNextOpenCmdFn;
+
+extern FSFinishCmdFn
+fsCmdBlockFinishGetMountSourceNextReadCmdFn;
+
+extern FSFinishCmdFn
+fsCmdBlockFinishGetMountSourceNextCloseCmdFn;
 
 } // namespace internal
 

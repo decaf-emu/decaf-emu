@@ -351,6 +351,7 @@ ENUM_END(FSErrorFlag)
 ENUM_BEG(FSMountSourceType, uint32_t)
    ENUM_VALUE(SdCard,                  0)
    ENUM_VALUE(HostFileIO,              1)
+   ENUM_VALUE(Invalid,                 2)
 ENUM_END(FSMountSourceType)
 
 ENUM_BEG(FSQueryInfoType, uint32_t)

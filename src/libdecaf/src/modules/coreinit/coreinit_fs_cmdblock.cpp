@@ -139,6 +139,15 @@ fsCmdBlockFinishReadCmdFn = nullptr;
 FSFinishCmdFn
 fsCmdBlockFinishWriteCmdFn = nullptr;
 
+FSFinishCmdFn
+fsCmdBlockFinishGetMountSourceNextOpenCmdFn = nullptr;
+
+FSFinishCmdFn
+fsCmdBlockFinishGetMountSourceNextReadCmdFn = nullptr;
+
+FSFinishCmdFn
+fsCmdBlockFinishGetMountSourceNextCloseCmdFn = nullptr;
+
 static void
 fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
                     FSStatus status);
@@ -150,6 +159,18 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
 static void
 fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
                          FSStatus status);
+
+static void
+fsCmdBlockFinishGetMountSourceNextOpenCmd(FSCmdBlockBody *blockBody,
+                                          FSStatus status);
+
+static void
+fsCmdBlockFinishGetMountSourceNextReadCmd(FSCmdBlockBody *blockBody,
+                                          FSStatus result);
+
+static void
+fsCmdBlockFinishGetMountSourceNextCloseCmd(FSCmdBlockBody *blockBody,
+                                             FSStatus result);
 
 
 /**
@@ -663,7 +684,8 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
    shim->ioctlvVec[1].len = readRequest->size;
 
    shim->ioctlvVec[2].paddr = &shim->response;
-   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE, fsCmdBlockFinishReadCmdFn);
+   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE,
+                     fsCmdBlockFinishReadCmdFn);
 }
 
 
@@ -719,7 +741,101 @@ fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
    shim->ioctlvVec[1].len = writeRequest->size;
 
    shim->ioctlvVec[2].paddr = &shim->response;
-   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE, fsCmdBlockFinishWriteCmdFn);
+   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, FALSE,
+                     fsCmdBlockFinishWriteCmdFn);
+}
+
+
+static void
+fsCmdBlockFinishGetMountSourceNextOpenCmd(FSCmdBlockBody *blockBody,
+                                          FSStatus result)
+{
+   auto clientBody = blockBody->clientBody;
+
+   if (result != FSStatus::OK) {
+      return fsCmdBlockFinishCmd(blockBody, result);
+   }
+
+   auto cmdData = &blockBody->cmdData.getMountSourceNext;
+
+   if (cmdData->dirHandle == -1) {
+      auto response = &blockBody->fsaShimBuffer.response.openDir;
+      cmdData->dirHandle = response->handle;
+   }
+
+   fsaShimPrepareRequestReadDir(&blockBody->fsaShimBuffer,
+                                clientBody->clientHandle,
+                                cmdData->dirHandle);
+
+   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, TRUE,
+                     fsCmdBlockFinishGetMountSourceNextReadCmdFn);
+}
+
+
+static void
+fsCmdBlockFinishGetMountSourceNextReadCmd(FSCmdBlockBody *blockBody,
+                                          FSStatus result)
+{
+   auto clientBody = blockBody->clientBody;
+   auto cmdData = &blockBody->cmdData.getMountSourceNext;
+   cmdData->readError = result;
+
+   if (result == FSStatus::OK) {
+      auto mountSourceType = FSMountSourceType::Invalid;
+      auto deviceName = blockBody->fsaShimBuffer.response.readDir.entry.name;
+
+      // Check the mount source type
+      if (strncmp(deviceName, "sdcard", 6) == 0) {
+         mountSourceType = FSMountSourceType::SdCard;
+      } else if (strncmp(deviceName, "hfio", 4) == 0) {
+         mountSourceType = FSMountSourceType::HostFileIO;
+      }
+
+      if (mountSourceType != clientBody->findMountSourceType) {
+         return fsCmdBlockFinishGetMountSourceNextOpenCmd(blockBody, FSStatus::OK);
+      }
+
+      /* Note that this strncmp will rely on the fact that open / read dir
+       * returns results in a consistent alphabetical order. If that is not the
+       * case then this comparison becomes unreliable.
+       *
+       * FIXME: Unfortunately that is indeed not the case with our filesystem,
+       * but fuck it because we will ?never? have more than 1 sdcard and 1 hfio.
+       */
+      if (strncmp(deviceName, clientBody->lastMountSourceDevice, 0x10) <= 0) {
+         // Already returned this device, get the next one!
+         return fsCmdBlockFinishGetMountSourceNextOpenCmd(blockBody, FSStatus::OK);
+      }
+
+      // Write to FSMountSource output
+      auto mountSource = cmdData->source;
+      mountSource->sourceType = mountSourceType;
+
+      if (mountSourceType == FSMountSourceType::SdCard) {
+         // Map sdcardXX -> externalXX
+         std::strncpy(mountSource->path, "external", 8);
+         std::strncpy(mountSource->path + 8, deviceName + 6, 2);
+         mountSource->path[10] = 0;
+      } else if (mountSourceType == FSMountSourceType::HostFileIO) {
+         std::strcpy(mountSource->path, deviceName);
+      }
+   }
+
+   fsaShimPrepareRequestCloseDir(&blockBody->fsaShimBuffer,
+                                 clientBody->clientHandle,
+                                 cmdData->dirHandle);
+
+   fsCmdBlockRequeue(&blockBody->clientBody->cmdQueue, blockBody, TRUE,
+                     fsCmdBlockFinishGetMountSourceNextCloseCmdFn);
+}
+
+
+static void
+fsCmdBlockFinishGetMountSourceNextCloseCmd(FSCmdBlockBody *blockBody,
+                                           FSStatus result)
+{
+   auto cmdData = &blockBody->cmdData.getMountSourceNext;
+   fsCmdBlockFinishCmd(blockBody, cmdData->readError);
 }
 
 } // namespace internal
@@ -734,9 +850,19 @@ Module::registerFsCmdBlockFunctions()
    RegisterKernelFunction(FSGetUserData);
    RegisterKernelFunction(FSSetUserData);
 
-   RegisterInternalFunction(internal::fsCmdBlockFinishCmd, internal::fsCmdBlockFinishCmdFn);
-   RegisterInternalFunction(internal::fsCmdBlockFinishReadCmd, internal::fsCmdBlockFinishReadCmdFn);
-   RegisterInternalFunction(internal::fsCmdBlockFinishWriteCmd, internal::fsCmdBlockFinishWriteCmdFn);
+   RegisterInternalFunction(internal::fsCmdBlockFinishCmd,
+                            internal::fsCmdBlockFinishCmdFn);
+   RegisterInternalFunction(internal::fsCmdBlockFinishReadCmd,
+                            internal::fsCmdBlockFinishReadCmdFn);
+   RegisterInternalFunction(internal::fsCmdBlockFinishWriteCmd,
+                            internal::fsCmdBlockFinishWriteCmdFn);
+
+   RegisterInternalFunction(internal::fsCmdBlockFinishGetMountSourceNextOpenCmd,
+                            internal::fsCmdBlockFinishGetMountSourceNextOpenCmdFn);
+   RegisterInternalFunction(internal::fsCmdBlockFinishGetMountSourceNextReadCmd,
+                            internal::fsCmdBlockFinishGetMountSourceNextReadCmdFn);
+   RegisterInternalFunction(internal::fsCmdBlockFinishGetMountSourceNextCloseCmd,
+                            internal::fsCmdBlockFinishGetMountSourceNextCloseCmdFn);
 }
 
 } // namespace coreinit

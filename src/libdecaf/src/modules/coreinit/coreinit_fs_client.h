@@ -118,7 +118,11 @@ struct FSClientBody
    //! Message used to send FsCmdHandler message when FSA async callback is received.
    FSMessage fsCmdHandlerMsg;
 
-   UNKNOWN(0x1614 - 0x1600);
+   //! Device name of the last mount source returned by FSGetMountSourceNext.
+   char lastMountSourceDevice[0x10];
+
+   //! Mount source type to find with FSGetMountSourceNext.
+   be_val<FSMountSourceType> findMountSourceType;
 
    //! Link used for linked list of clients.
    FSClientBodyLink link;
@@ -138,6 +142,8 @@ CHECK_OFFSET(FSClientBody, 0x1590, fsmAlarm);
 CHECK_OFFSET(FSClientBody, 0x15E8, lastError);
 CHECK_OFFSET(FSClientBody, 0x15EC, isLastErrorWithoutVolume);
 CHECK_OFFSET(FSClientBody, 0x15F0, fsCmdHandlerMsg);
+CHECK_OFFSET(FSClientBody, 0x1600, lastMountSourceDevice);
+CHECK_OFFSET(FSClientBody, 0x1610, findMountSourceType);
 CHECK_OFFSET(FSClientBody, 0x1614, link);
 CHECK_OFFSET(FSClientBody, 0x161C, client);
 

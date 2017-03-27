@@ -115,6 +115,34 @@ FSGetFreeSpaceSizeAsync(FSClient *client,
                         const FSAsyncData *asyncData);
 
 FSStatus
+FSGetMountSource(FSClient *client,
+                 FSCmdBlock *block,
+                 FSMountSourceType type,
+                 FSMountSource *source,
+                 FSErrorFlag errorMask);
+
+FSStatus
+FSGetMountSourceAsync(FSClient *client,
+                      FSCmdBlock *block,
+                      FSMountSourceType type,
+                      FSMountSource *source,
+                      FSErrorFlag errorMask,
+                      const FSAsyncData *asyncData);
+
+FSStatus
+FSGetMountSourceNext(FSClient *client,
+                     FSCmdBlock *block,
+                     FSMountSource *source,
+                     FSErrorFlag errorMask);
+
+FSStatus
+FSGetMountSourceNextAsync(FSClient *client,
+                          FSCmdBlock *block,
+                          FSMountSource *source,
+                          FSErrorFlag errorMask,
+                          const FSAsyncData *asyncData);
+
+FSStatus
 FSGetPosFile(FSClient *client,
              FSCmdBlock *block,
              FSFileHandle handle,
