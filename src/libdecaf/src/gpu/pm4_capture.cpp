@@ -120,7 +120,7 @@ public:
    void
    commandBuffer(pm4::Buffer *buffer)
    {
-      decaf_check(mState == CaptureState::Enabled);
+      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
       std::unique_lock<std::mutex> lock { mMutex };
       auto size = buffer->curSize * 4;
       scanCommandBuffer(buffer->buffer, buffer->curSize);
@@ -136,7 +136,7 @@ public:
    cpuFlush(void *buffer,
             uint32_t size)
    {
-      decaf_check(mState == CaptureState::Enabled);
+      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
       std::unique_lock<std::mutex> lock { mMutex };
       auto addr = mem::untranslate(buffer);
       trackMemory(CaptureMemoryLoad::CpuFlush, addr, size);
@@ -146,7 +146,7 @@ public:
    gpuFlush(void *buffer,
             uint32_t size)
    {
-      decaf_check(mState == CaptureState::Enabled);
+      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
       // Not sure if we need to do something here...
    }
 
@@ -903,7 +903,7 @@ captureState()
 void
 captureSwap()
 {
-   if (pm4::captureState() == pm4::CaptureState::WaitStartNextFrame) {
+   if (captureState() == pm4::CaptureState::WaitStartNextFrame) {
       pm4::write(pm4::DecafCapSyncRegisters {});
    }
 
@@ -916,7 +916,8 @@ captureSwap()
 void
 captureCommandBuffer(pm4::Buffer *buffer)
 {
-   if (captureState() == CaptureState::Enabled) {
+   if (captureState() == CaptureState::Enabled ||
+       captureState() == CaptureState::WaitEndNextFrame) {
       gRecorder.commandBuffer(buffer);
    }
 }
@@ -925,7 +926,8 @@ void
 captureCpuFlush(void *buffer,
                 uint32_t size)
 {
-   if (captureState() == CaptureState::Enabled) {
+   if (captureState() == CaptureState::Enabled ||
+       captureState() == CaptureState::WaitEndNextFrame) {
       gRecorder.cpuFlush(buffer, size);
    }
 }
@@ -934,7 +936,8 @@ void
 captureGpuFlush(void *buffer,
                 uint32_t size)
 {
-   if (captureState() == CaptureState::Enabled) {
+   if (captureState() == CaptureState::Enabled ||
+       captureState() == CaptureState::WaitEndNextFrame) {
       gRecorder.gpuFlush(buffer, size);
    }
 }
