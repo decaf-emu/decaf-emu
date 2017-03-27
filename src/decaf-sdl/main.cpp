@@ -272,6 +272,10 @@ start(excmd::parser &parser,
       decaf::config::system::mlc_path = options.get<std::string>("mlc-path");
    }
 
+   if (options.has("sdcard-path")) {
+      decaf::config::system::sdcard_path = options.get<std::string>("sdcard-path");
+   }
+
    if (options.has("content-path")) {
       decaf::config::system::content_path = options.get<std::string>("content-path");
    }

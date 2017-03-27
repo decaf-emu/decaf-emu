@@ -175,6 +175,10 @@ start(excmd::parser &parser,
       decaf::config::system::mlc_path = options.get<std::string>("mlc-path");
    }
 
+   if (options.has("sdcard-path")) {
+      decaf::config::system::sdcard_path = options.get<std::string>("sdcard-path");
+   }
+
    if (options.has("time-scale")) {
       decaf::config::system::time_scale = options.get<double>("time-scale");
    }

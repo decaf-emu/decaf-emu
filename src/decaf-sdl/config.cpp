@@ -209,7 +209,8 @@ struct CerealSystem
    {
       using namespace decaf::config::system;
       ar(CEREAL_NVP(region),
-         CEREAL_NVP(mlc_path));
+         CEREAL_NVP(mlc_path),
+         CEREAL_NVP(sdcard_path));
    }
 };
 

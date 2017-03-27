@@ -74,6 +74,7 @@ namespace system
 
 int region = static_cast<int>(coreinit::SCIRegion::USA);
 std::string mlc_path = "mlc";
+std::string sdcard_path = "sdcard";
 std::string content_path = {};
 double time_scale = 1.0;
 

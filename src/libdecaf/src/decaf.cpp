@@ -174,6 +174,13 @@ initialise(const std::string &gamePath)
    auto mlcPath = fs::HostPath { decaf::config::system::mlc_path };
    filesystem->mountHostFolder("/vol/storage_mlc01", mlcPath, fs::Permissions::Read);
 
+   // Ensure sdcard_path exists
+   platform::createDirectory(decaf::config::system::sdcard_path);
+
+   // Mount sdcard
+   auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
+   filesystem->mountHostFolder("/dev/sdcard01", sdcardPath, fs::Permissions::ReadWrite);
+
    return true;
 }
 
