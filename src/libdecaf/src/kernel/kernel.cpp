@@ -26,6 +26,7 @@
 #include "ppcutils/wfunc_call.h"
 #include <common/decaf_assert.h>
 #include <common/teenyheap.h>
+#include <common/platform_dir.h>
 #include <pugixml.hpp>
 
 namespace coreinit
@@ -407,6 +408,23 @@ launchGame()
 
    // Set mlc/usr to ReadWrite
    fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+
+   // Mount SD card if game has permission to use it
+   if ((sGameInfo.cos.permission_fs & decaf::CosXML::SdCardRead) ||
+       (sGameInfo.cos.permission_fs & decaf::CosXML::SdCardWrite)) {
+      // Ensure sdcard_path exists
+      platform::createDirectory(decaf::config::system::sdcard_path);
+
+      // Mount sdcard
+      auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
+      auto permission = fs::Permissions::Read;
+
+      if (sGameInfo.cos.permission_fs & decaf::CosXML::SdCardWrite) {
+         permission = fs::Permissions::ReadWrite;
+      }
+
+      fileSystem->mountHostFolder("/dev/sdcard01", sdcardPath, permission);
+   }
 
    // We need to set some default stuff up...
    auto core = cpu::this_core::state();

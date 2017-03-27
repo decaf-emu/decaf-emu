@@ -58,6 +58,36 @@ struct AppXML
 
 struct CosXML
 {
+   enum PermissionGroup
+   {
+      BSP = 1,
+      DK = 3,
+      USB = 9,
+      FS = 11,
+      UHS = 12,
+      MCP = 13,
+      NIM = 14,
+      ACT = 15,
+      FPD = 16,
+      BOSS = 17,
+      ACP = 18,
+      AC = 20,
+      NDM = 21,
+      NSEC = 22,
+   };
+
+   enum FSPermission
+   {
+      SdCardRead = 0x90000,
+      SdCardWrite = 0xA0000,
+   };
+
+   enum MCPPermission
+   {
+      AddOnContent = 0x80,
+      SciErrorLog = 0x200,
+   };
+
    unsigned version;
    unsigned cmdFlags;
    std::string argstr;
@@ -72,6 +102,8 @@ struct CosXML
    unsigned exception_stack0_size;
    unsigned exception_stack1_size;
    unsigned exception_stack2_size;
+   uint64_t permission_fs;
+   uint64_t permission_mcp;
 };
 
 struct GameInfo

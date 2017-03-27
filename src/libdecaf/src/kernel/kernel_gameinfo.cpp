@@ -136,6 +136,20 @@ loadCosXML(const char *path,
    cos.exception_stack1_size = xmlReadUnsigned(node.child("exception_stack1_size"));
    cos.exception_stack2_size = xmlReadUnsigned(node.child("exception_stack2_size"));
 
+   for (auto child : node.child("permissions").children()) {
+      auto group = xmlReadUnsigned(child.child("group"));
+      auto mask = xmlReadUnsigned64(child.child("mask"));
+
+      switch (group) {
+      case decaf::CosXML::FS:
+         cos.permission_fs = mask;
+         break;
+      case decaf::CosXML::MCP:
+         cos.permission_mcp = mask;
+         break;
+      }
+   }
+
    return true;
 }
 
@@ -268,6 +282,8 @@ loadGameInfo(decaf::GameInfo &info)
       info.cos.exception_stack0_size = 0x1000u;
       info.cos.exception_stack1_size = 0x1000u;
       info.cos.exception_stack2_size = 0x1000u;
+      info.cos.permission_fs = decaf::CosXML::SdCardWrite;
+      info.cos.permission_mcp = decaf::CosXML::AddOnContent;
    }
 
    if (!loadMetaXML("/vol/meta/meta.xml", info.meta)) {
