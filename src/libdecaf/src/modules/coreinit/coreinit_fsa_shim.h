@@ -147,6 +147,15 @@ fsaShimPrepareRequestMakeDir(FSAShimBuffer *shim,
                              uint32_t permissions);
 
 FSAStatus
+fsaShimPrepareRequestMount(FSAShimBuffer *shim,
+                           IOSHandle clientHandle,
+                           const char *path,
+                           const char *target,
+                           uint32_t unk0,
+                           void *unkBuf,
+                           uint32_t unkBufLen);
+
+FSAStatus
 fsaShimPrepareRequestOpenDir(FSAShimBuffer *shim,
                              IOSHandle clientHandle,
                              const char *path);

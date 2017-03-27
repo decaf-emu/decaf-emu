@@ -67,6 +67,9 @@ static constexpr uint32_t
 FSMaxPathLength = 0x27F;
 
 static constexpr uint32_t
+FSMaxMountPathLength = 0x80;
+
+static constexpr uint32_t
 FSMinPriority = 0;
 
 static constexpr uint32_t

@@ -924,6 +924,102 @@ FSMakeDirAsync(FSClient *client,
 
 
 /**
+ * Mount a mount source.
+ *
+ * The mounted path is returned in target.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSMount(FSClient *client,
+        FSCmdBlock *block,
+        FSMountSource *source,
+        char *target,
+        uint32_t bytes,
+        FSErrorFlag errorMask)
+{
+   FSAsyncData asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, &asyncData);
+
+   auto result = FSMountAsync(client, block, source, target, bytes,
+                              errorMask, &asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Mount a mount source (asynchronously).
+ *
+ * The mounted path is returned in target.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSMountAsync(FSClient *client,
+             FSCmdBlock *block,
+             FSMountSource *source,
+             char *target,
+             uint32_t bytes,
+             FSErrorFlag errorMask,
+             const FSAsyncData *asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!source || !target || bytes < FSMaxMountPathLength) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   if (source->sourceType != FSMountSourceType::SdCard &&
+       source->sourceType != FSMountSourceType::HostFileIO) {
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidParam);
+      return FSStatus::FatalError;
+   }
+
+   // Set target path as /vol/<source path>
+   std::memcpy(target, "/vol/", 5);
+   std::strncpy(target + 5, source->path, bytes - 4);
+
+   auto error = internal::fsaShimPrepareRequestMount(&blockBody->fsaShimBuffer,
+                                                     clientBody->clientHandle,
+                                                     source->path,
+                                                     target,
+                                                     0,
+                                                     nullptr, 0);
+
+   // Correct the device path.
+   auto devicePath = blockBody->fsaShimBuffer.request.mount.path;
+
+   if (strncmp(source->path, "external", 8) == 0) {
+      // external01 to /dev/sdcard01
+      std::strncpy(devicePath, "/dev/sdcard", 11);
+      std::strncpy(devicePath + 11, source->path + 8, 2);
+   } else {
+      // <source path> to /dev/<source path>
+      std::memcpy(devicePath, "/dev/", 5);
+      std::strncpy(devicePath + 5, source->path, FSMaxPathLength - 4);
+   }
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::fsCmdBlockFinishMountCmdFn);
+   return FSStatus::OK;
+}
+
+
+/**
  * Open a directory for iterating it's content.
  *
  * \return
@@ -1946,6 +2042,8 @@ Module::registerFsCmdFunctions()
    RegisterKernelFunction(FSIsEofAsync);
    RegisterKernelFunction(FSMakeDir);
    RegisterKernelFunction(FSMakeDirAsync);
+   RegisterKernelFunction(FSMount);
+   RegisterKernelFunction(FSMountAsync);
    RegisterKernelFunction(FSOpenDir);
    RegisterKernelFunction(FSOpenDirAsync);
    RegisterKernelFunction(FSOpenFile);

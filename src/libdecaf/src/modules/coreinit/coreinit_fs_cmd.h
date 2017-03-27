@@ -214,6 +214,23 @@ FSMakeDirAsync(FSClient *client,
                const FSAsyncData *asyncData);
 
 FSStatus
+FSMount(FSClient *client,
+        FSCmdBlock *block,
+        FSMountSource *source,
+        char *target,
+        uint32_t bytes,
+        FSErrorFlag errorMask);
+
+FSStatus
+FSMountAsync(FSClient *client,
+             FSCmdBlock *block,
+             FSMountSource *source,
+             char *target,
+             uint32_t bytes,
+             FSErrorFlag errorMask,
+             const FSAsyncData *asyncData);
+
+FSStatus
 FSOpenDir(FSClient *client,
           FSCmdBlock *block,
           const char *path,

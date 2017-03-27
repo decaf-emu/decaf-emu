@@ -326,6 +326,9 @@ extern FSFinishCmdFn
 fsCmdBlockFinishCmdFn;
 
 extern FSFinishCmdFn
+fsCmdBlockFinishMountCmdFn;
+
+extern FSFinishCmdFn
 fsCmdBlockFinishReadCmdFn;
 
 extern FSFinishCmdFn

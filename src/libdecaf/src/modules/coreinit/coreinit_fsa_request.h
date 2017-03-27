@@ -123,6 +123,25 @@ CHECK_SIZE(FSARequestMakeDir, 0x284);
 
 
 /**
+ * Request data for FSACommand::Mount
+ */
+struct FSARequestMount
+{
+   char path[FSMaxPathLength + 1];
+   char target[FSMaxPathLength + 1];
+   be_val<uint32_t> unk0x500;
+   be_val<uint32_t> unk0x504;
+   be_val<uint32_t> unk0x508;
+};
+CHECK_OFFSET(FSARequestMount, 0x0, path);
+CHECK_OFFSET(FSARequestMount, 0x280, target);
+CHECK_OFFSET(FSARequestMount, 0x500, unk0x500);
+CHECK_OFFSET(FSARequestMount, 0x504, unk0x504);
+CHECK_OFFSET(FSARequestMount, 0x508, unk0x508);
+CHECK_SIZE(FSARequestMount, 0x50C);
+
+
+/**
  * Request data for FSACommand::OpenDir
  */
 struct FSARequestOpenDir
@@ -293,6 +312,7 @@ struct FSARequest
       FSARequestGetPosFile getPosFile;
       FSARequestIsEof isEof;
       FSARequestMakeDir makeDir;
+      FSARequestMount mount;
       FSARequestOpenDir openDir;
       FSARequestOpenFile openFile;
       FSARequestReadDir readDir;

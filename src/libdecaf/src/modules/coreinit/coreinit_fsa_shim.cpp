@@ -384,6 +384,52 @@ fsaShimPrepareRequestMakeDir(FSAShimBuffer *shim,
 
 
 /**
+ * Prepare a FSACommand::Mount request.
+ */
+FSAStatus
+fsaShimPrepareRequestMount(FSAShimBuffer *shim,
+                           IOSHandle clientHandle,
+                           const char *path,
+                           const char *target,
+                           uint32_t unk0,
+                           void *unkBuf,
+                           uint32_t unkBufLen)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || strlen(path) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctlv;
+   shim->command = FSACommand::Mount;
+
+   auto request = &shim->request.mount;
+   std::strncpy(request->path, path, FSMaxPathLength);
+   std::strncpy(request->target, target, FSMaxPathLength);
+   request->unk0x500 = unk0;
+   request->unk0x508 = unkBufLen;
+
+   shim->ioctlvVecIn = 2;
+   shim->ioctlvVecOut = 1;
+
+   shim->ioctlvVec[0].paddr = &shim->request;
+   shim->ioctlvVec[0].len = sizeof(FSARequest);
+
+   shim->ioctlvVec[1].paddr = unkBuf;
+   shim->ioctlvVec[1].len = unkBufLen;
+
+   shim->ioctlvVec[2].paddr = &shim->response;
+   shim->ioctlvVec[2].len = sizeof(FSAResponse);
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::OpenFile request.
  */
 FSAStatus

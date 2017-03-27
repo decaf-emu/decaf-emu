@@ -134,6 +134,9 @@ FSFinishCmdFn
 fsCmdBlockFinishCmdFn = nullptr;
 
 FSFinishCmdFn
+fsCmdBlockFinishMountCmdFn = nullptr;
+
+FSFinishCmdFn
 fsCmdBlockFinishReadCmdFn = nullptr;
 
 FSFinishCmdFn
@@ -633,6 +636,21 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
 
 
 /**
+ * Finish a FSACommand::Mount command.
+ */
+void
+fsCmdBlockFinishMountCmd(FSCmdBlockBody *blockBody,
+                         FSStatus result)
+{
+   if (result != FSStatus::Exists) {
+      fsCmdBlockFinishCmd(blockBody, result);
+   } else {
+      fsCmdBlockFinishCmd(blockBody, FSStatus::OK);
+   }
+}
+
+
+/**
  * Finish a FSACommand::ReadFile command.
  *
  * Files are read in chunk of up to FSMaxBytesPerRequest bytes per time, this
@@ -852,6 +870,10 @@ Module::registerFsCmdBlockFunctions()
 
    RegisterInternalFunction(internal::fsCmdBlockFinishCmd,
                             internal::fsCmdBlockFinishCmdFn);
+
+   RegisterInternalFunction(internal::fsCmdBlockFinishMountCmd,
+                            internal::fsCmdBlockFinishMountCmdFn);
+
    RegisterInternalFunction(internal::fsCmdBlockFinishReadCmd,
                             internal::fsCmdBlockFinishReadCmdFn);
    RegisterInternalFunction(internal::fsCmdBlockFinishWriteCmd,
