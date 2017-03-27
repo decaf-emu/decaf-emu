@@ -240,13 +240,22 @@ FSGetErrorCodeForViewer(FSClient *client,
                         FSCmdBlock *block)
 {
    auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto clientBody = internal::fsClientGetBody(client);
+
    if (!blockBody) {
-      return static_cast<FSAStatus>(FSStatus::FatalError);
+      if (clientBody->fsm.clientVolumeState == FSVolumeState::Fatal) {
+         return static_cast<FSAStatus>(FSStatus::FatalError);
+      } else {
+         return static_cast<FSAStatus>(FSStatus::OK);
+      }
    }
 
-   // TODO: Translate error for FSGetErrorCodeForViewer
-   // This actually returns ->unk0x9f4, but we don't set it correctly...!
-   return blockBody->iosError;
+   if (blockBody->iosError >= 0) {
+      return static_cast<FSAStatus>(FSStatus::OK);
+   } else {
+      // TODO: Translate error block->unk0x9f4 for FSGetErrorCodeForViewer
+      return blockBody->iosError;
+   }
 }
 
 
