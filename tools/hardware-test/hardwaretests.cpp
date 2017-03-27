@@ -146,7 +146,13 @@ bool runTests(const std::string &path)
    fs::FolderEntry entry;
    fs::HostPath base = path;
    filesystem.mountHostFolder("/tests", base, fs::Permissions::Read);
-   auto folder = filesystem.openFolder("/tests");
+   auto fsResult = filesystem.openFolder("/tests");
+
+   if (!fsResult) {
+      return false;
+   }
+
+   auto folder = fsResult.value();
 
    while (folder->read(entry)) {
       std::ifstream file(base.join(entry.name).path(), std::ifstream::in | std::ifstream::binary);
