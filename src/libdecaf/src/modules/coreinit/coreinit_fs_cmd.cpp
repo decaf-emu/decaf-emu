@@ -969,7 +969,8 @@ FSMountAsync(FSClient *client,
    auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
    auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
-                                                  errorMask, asyncData);
+                                                  static_cast<FSErrorFlag>(errorMask | FSErrorFlag::Exists),
+                                                  asyncData);
 
    if (result != FSStatus::OK) {
       return result;
