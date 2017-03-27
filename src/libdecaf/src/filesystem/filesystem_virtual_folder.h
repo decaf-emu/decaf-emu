@@ -64,14 +64,14 @@ public:
 
       node = new VirtualFolder { mPermissions, name };
       addChild(node);
-      return Error::OK;
+      return reinterpret_cast<Folder *>(node);
    }
 
    virtual Result<FileHandle>
    openFile(const std::string &name,
             File::OpenMode mode) override
    {
-      return nullptr;
+      return { Error::UnsupportedOperation };
    }
 
    virtual Result<Error>
