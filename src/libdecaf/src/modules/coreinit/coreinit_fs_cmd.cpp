@@ -1418,7 +1418,7 @@ FSReadFileWithPosAsync(FSClient *client,
                        const FSAsyncData *asyncData)
 {
    return internal::readFileWithPosAsync(client, block, buffer, size, count,
-                                         0, handle,
+                                         pos, handle,
                                          static_cast<FSReadFlag>(readFlags | FSReadFlag::ReadWithPos),
                                          errorMask, asyncData);
 }
@@ -1873,7 +1873,7 @@ FSWriteFileWithPos(FSClient *client,
    internal::fsCmdBlockPrepareSync(client, block, &asyncData);
 
    auto result = FSWriteFileWithPosAsync(client, block, buffer, size, count,
-                                         handle, pos, writeFlags, errorMask,
+                                         pos, handle, writeFlags, errorMask,
                                          &asyncData);
 
    return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
@@ -1905,7 +1905,7 @@ FSWriteFileWithPosAsync(FSClient *client,
                         const FSAsyncData *asyncData)
 {
    return internal::writeFileWithPosAsync(client, block, buffer, size, count,
-                                          0, handle,
+                                          pos, handle,
                                           static_cast<FSWriteFlag>(writeFlags | FSWriteFlag::WriteWithPos),
                                           errorMask, asyncData);
 }
