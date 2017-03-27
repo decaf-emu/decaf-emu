@@ -30,6 +30,7 @@ struct FSAHandle
 };
 
 using coreinit::FSAStatus;
+using coreinit::FSStat;
 
 using coreinit::FSARequest;
 using coreinit::FSARequestChangeDir;
@@ -106,6 +107,10 @@ private:
 
    fs::File::OpenMode
    translateMode(const char *mode) const;
+
+   void
+   translateStat(const fs::FolderEntry &entry,
+                 FSStat *stat) const;
 
    uint32_t
    mapHandle(fs::FileHandle file);

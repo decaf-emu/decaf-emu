@@ -221,6 +221,28 @@ FSADevice::translateMode(const char *mode) const
 }
 
 
+void
+FSADevice::translateStat(const fs::FolderEntry &entry,
+                         FSStat *stat) const
+{
+   std::memset(stat, 0, sizeof(FSStat));
+
+   if (entry.type == fs::FolderEntry::Folder) {
+      stat->flags = FSStatFlags::Directory;
+   } else {
+      stat->flags = static_cast<FSStatFlags>(0);
+   }
+
+   stat->permission = 0x660;
+   stat->owner = 0;
+   stat->group = 0;
+   stat->size = static_cast<uint32_t>(entry.size);
+   stat->entryId = 0;
+   stat->created = 0;
+   stat->modified = 0;
+}
+
+
 uint32_t
 FSADevice::mapHandle(fs::FileHandle file)
 {
@@ -397,6 +419,7 @@ FSADevice::getCwd(FSAResponseGetCwd *response)
    return FSAStatus::OK;
 }
 
+
 FSAStatus
 FSADevice::getInfoByQuery(FSARequestGetInfoByQuery *request,
                           FSAResponseGetInfoByQuery *response)
@@ -417,22 +440,7 @@ FSADevice::getInfoByQuery(FSARequestGetInfoByQuery *request,
          return translateError(result);
       }
 
-      auto entry = result.value();
-      std::memset(&response->stat, 0, sizeof(response->stat));
-
-      if (entry.type == fs::FolderEntry::Folder) {
-         response->stat.flags = FSStatFlags::Directory;
-      } else {
-         response->stat.flags = static_cast<FSStatFlags>(0);
-      }
-
-      response->stat.permission = 0x660;
-      response->stat.owner = 0;
-      response->stat.group = 0;
-      response->stat.size = static_cast<uint32_t>(entry.size);
-      response->stat.entryId = 0;
-      response->stat.created = 0;
-      response->stat.modified = 0;
+      translateStat(result.value(), &response->stat);
       break;
    }
    default:
@@ -541,6 +549,8 @@ FSADevice::readDir(FSARequestReadDir *request,
       return FSAStatus::EndOfDir;
    }
 
+   translateStat(entry, &response->entry.stat);
+   std::strcpy(response->entry.name, entry.name.c_str());
    return FSAStatus::OK;
 }
 
