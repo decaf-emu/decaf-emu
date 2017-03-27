@@ -21,7 +21,7 @@ struct Account
 };
 
 static Account
-sUserAccount = { 1, 1, 1, 1, 1, 1, 1 };
+sUserAccount = { 1, 1, 0x80000001u, 1, 1, 1, 1 };
 
 static Account
 sSystemAccount = { nn::act::SystemSlot, 0, 0, 0, 0, 0, 0 };
