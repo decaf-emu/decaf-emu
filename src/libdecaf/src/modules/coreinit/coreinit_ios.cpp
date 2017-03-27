@@ -640,7 +640,7 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
    ipcBuffer->buffer1 = reinterpret_cast<void *>(vec);
 
    for (auto i = 0u; i < vecIn + vecOut; ++i) {
-      if (!vec[i].paddr) {
+      if (!vec[i].paddr && vec[i].len) {
          return IOSError::InvalidArg;
       }
 
