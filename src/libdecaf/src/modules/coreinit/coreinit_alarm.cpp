@@ -220,6 +220,21 @@ OSSetAlarm(OSAlarm *alarm,
 
 /**
  * Set a repeated alarm to execute a callback every interval from start.
+ *
+ * \param alarm
+ * The alarm to set.
+ *
+ * \param start
+ * The duration until the alarm should first be triggered.
+ *
+ * \param interval
+ * The interval between triggers after the first trigger.
+ *
+ * \param callback
+ * The alarm callback to call when the alarm is triggered.
+ *
+ * \return
+ * Returns TRUE if the alarm was succesfully set, FALSE otherwise.
  */
 BOOL
 OSSetPeriodicAlarm(OSAlarm *alarm,
@@ -287,7 +302,8 @@ OSSetAlarmUserData(OSAlarm *alarm,
 /**
  * Sleep the current thread until the alarm has been triggered or cancelled.
  *
- * \return Returns TRUE if alarm expired, FALSE if alarm cancelled
+ * \return
+ * Returns TRUE if alarm expired, FALSE if alarm cancelled
  */
 BOOL
 OSWaitAlarm(OSAlarm *alarm)

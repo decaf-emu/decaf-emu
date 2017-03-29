@@ -5,6 +5,12 @@
 namespace gx2
 {
 
+/**
+ * \defgroup gx2_clear Clear Functions
+ * \ingroup gx2
+ * @{
+ */
+
 struct GX2ColorBuffer;
 struct GX2DepthBuffer;
 
@@ -50,5 +56,7 @@ void
 GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
                         float depth,
                         uint8_t stencil);
+
+/** @} */
 
 } // namespace gx2

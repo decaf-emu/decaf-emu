@@ -10,7 +10,7 @@ namespace coreinit
 
 namespace internal
 {
-   
+
 bool
 fsDriverDone();
 

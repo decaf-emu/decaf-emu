@@ -31,25 +31,31 @@ namespace internal
 {
 
 void *
-gx2rAlloc(GX2RResourceFlags flags, uint32_t size, uint32_t align)
+gx2rAlloc(GX2RResourceFlags flags,
+          uint32_t size,
+          uint32_t align)
 {
    return gGX2RMemAlloc(flags, size, align);
 }
 
 void
-gx2rFree(GX2RResourceFlags flags, void *buffer)
+gx2rFree(GX2RResourceFlags flags,
+         void *buffer)
 {
    return gGX2RMemFree(flags, buffer);
 }
 
-void *
-gx2rDefaultAlloc(GX2RResourceFlags flags, uint32_t size, uint32_t align)
+static void *
+gx2rDefaultAlloc(GX2RResourceFlags flags,
+                 uint32_t size,
+                 uint32_t align)
 {
    return coreinit::internal::allocFromDefaultHeapEx(size, align);
 }
 
-void
-gx2rDefaultFree(GX2RResourceFlags flags, void *buffer)
+static void
+gx2rDefaultFree(GX2RResourceFlags flags,
+                void *buffer)
 {
    coreinit::internal::freeToDefaultHeap(buffer);
 }
@@ -61,15 +67,9 @@ Module::RegisterGX2RResourceFunctions()
 {
    RegisterKernelFunction(GX2RSetAllocator);
    RegisterKernelFunction(GX2RIsUserMemory);
-   RegisterKernelFunctionName("internal_gx2rDefaultAlloc", gx2::internal::gx2rDefaultAlloc);
-   RegisterKernelFunctionName("internal_gx2rDefaultFree", gx2::internal::gx2rDefaultFree);
-}
 
-void
-Module::initialiseResourceAllocator()
-{
-   gGX2RMemAlloc = reinterpret_cast<GX2RAllocFuncPtr::FunctionType>(findExportAddress("internal_gx2rDefaultAlloc"));
-   gGX2RMemFree = reinterpret_cast<GX2RFreeFuncPtr::FunctionType>(findExportAddress("internal_gx2rDefaultFree"));
+   RegisterInternalFunction(gx2::internal::gx2rDefaultAlloc, gGX2RMemAlloc);
+   RegisterInternalFunction(gx2::internal::gx2rDefaultFree, gGX2RMemFree);
 }
 
 } // namespace gx2

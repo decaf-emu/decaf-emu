@@ -271,8 +271,12 @@ AXPrepareEfxData(void *buffer, uint32_t size)
    // Nothing to do here, we have implicit cache coherency
 }
 
+namespace internal
+{
+
 uint32_t
-FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
+frameCallbackThreadEntry(uint32_t core_id,
+                         void *arg2)
 {
    static const int NumOutputSamples = 48000 * 3 / 1000;
    int numInputSamples = sOutputRate * 3 / 1000;
@@ -309,9 +313,6 @@ FrameCallbackThreadEntry(uint32_t core_id, void *arg2)
    return 0;
 }
 
-namespace internal
-{
-
 void
 startFrameAlarmThread()
 {
@@ -329,7 +330,8 @@ startFrameAlarmThread()
 }
 
 void
-frameAlarmHandler(coreinit::OSAlarm *alarm, coreinit::OSContext *context)
+frameAlarmHandler(coreinit::OSAlarm *alarm,
+                  coreinit::OSContext *context)
 {
    coreinit::internal::lockScheduler();
    coreinit::internal::wakeupThreadNoLock(sFrameCallbackThreadQueue);
@@ -353,7 +355,6 @@ initEvents()
    OSCreateAlarm(sFrameAlarm);
    OSSetPeriodicAlarm(sFrameAlarm, OSGetTime(), ticks, sFrameAlarmHandler);
 }
-
 
 int
 getOutputRate()
@@ -388,16 +389,11 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXRmtGetSamplesLeft);
    RegisterKernelFunction(AXRmtAdvancePtr);
    RegisterKernelFunction(AXPrepareEfxData);
-   RegisterKernelFunctionName("internal_FrameAlarmHandler", snd_core::internal::frameAlarmHandler);
-   RegisterInternalFunction(FrameCallbackThreadEntry, sFrameCallbackThreadEntryPoint);
+
+   RegisterInternalFunction(internal::frameAlarmHandler, sFrameAlarmHandler);
+   RegisterInternalFunction(internal::frameCallbackThreadEntry, sFrameCallbackThreadEntryPoint);
    RegisterInternalData(sFrameCallbackThreadQueue);
    RegisterInternalData(sFrameCallbackThread);
-}
-
-void
-Module::initialiseCore()
-{
-   sFrameAlarmHandler = reinterpret_cast<coreinit::AlarmCallback::FunctionType>(findExportAddress("internal_FrameAlarmHandler"));
 }
 
 } // namespace snd_core

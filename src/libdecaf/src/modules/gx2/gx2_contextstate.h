@@ -12,6 +12,11 @@
 namespace gx2
 {
 
+/**
+ * \defgroup gx2_contextstate Context State
+ * \ingroup gx2
+ * @{
+ */
 #pragma pack(push, 1)
 
 struct GX2ShadowRegisters
@@ -75,5 +80,7 @@ void
 initRegisters();
 
 } // namespace internal
+
+/** @} */
 
 } // namespace gx2

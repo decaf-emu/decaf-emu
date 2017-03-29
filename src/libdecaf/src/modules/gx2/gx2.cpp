@@ -34,8 +34,6 @@ namespace gx2
 void
 Module::initialise()
 {
-   initialiseVsync();
-   initialiseResourceAllocator();
 }
 
 void
@@ -114,7 +112,7 @@ Module::RegisterFunctions()
    RegisterKernelFunction(GX2GetRetiredTimeStamp);
    RegisterKernelFunction(GX2GetLastSubmittedTimeStamp);
    RegisterKernelFunction(GX2WaitTimeStamp);
-   RegisterKernelFunctionName("internal_VsyncAlarmHandler", gx2::internal::vsyncAlarmHandler);
+   RegisterVsyncFunctions();
 
    // Format
    RegisterKernelFunction(GX2GetAttribFormatBits);

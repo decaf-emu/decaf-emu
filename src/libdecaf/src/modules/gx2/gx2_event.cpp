@@ -135,10 +135,17 @@ GX2GetLastSubmittedTimeStamp()
 /**
  * Return the current swap status.
  *
- * swapCount is the number of swaps requested
- * flipCount is the number of swaps performed
- * lastFlip is the timestamp of the last flip
- * lastVsync is the timestamp of the last vsync
+ * \param swapCount
+ * Outputs the number of swaps requested.
+ *
+ * \param flipCount
+ * Outputs the number of swaps performed.
+ *
+ * \param lastFlip
+ * Outputs the timestamp of the last flip.
+ *
+ * \param lastVsync
+ * Outputs the timestamp of the last vsync.
  */
 void
 GX2GetSwapStatus(be_val<uint32_t> *swapCount,
@@ -146,11 +153,21 @@ GX2GetSwapStatus(be_val<uint32_t> *swapCount,
                  be_val<OSTime> *lastFlip,
                  be_val<OSTime> *lastVsync)
 {
-   *swapCount = sSwapCount.load(std::memory_order_acquire);
-   *flipCount = sFlipCount.load(std::memory_order_acquire);
+   if (swapCount) {
+      *swapCount = sSwapCount.load(std::memory_order_acquire);
+   }
 
-   *lastFlip = sLastFlip.load(std::memory_order_acquire);
-   *lastVsync = sLastVsync.load(std::memory_order_acquire);
+   if (flipCount) {
+      *flipCount = sFlipCount.load(std::memory_order_acquire);
+   }
+
+   if (lastFlip) {
+      *lastFlip = sLastFlip.load(std::memory_order_acquire);
+   }
+
+   if (lastVsync) {
+      *lastVsync = sLastVsync.load(std::memory_order_acquire);
+   }
 }
 
 
@@ -224,7 +241,7 @@ initEvents()
  * Wakes up any threads waiting for vsync.
  * If a vsync callback has been set, trigger it.
  */
-void
+static void
 vsyncAlarmHandler(OSAlarm *alarm, OSContext *context)
 {
    auto vsyncTime = OSGetSystemTime();
@@ -272,7 +289,8 @@ displayListOverrun(void *list, uint32_t size, uint32_t neededSize)
    return { nullptr, 0 };
 }
 
-/*
+
+/**
  * This is called by the GPU retire interrupt handler.
  * Will wakeup any threads waiting for a timestamp.
  */
@@ -281,6 +299,7 @@ handleGpuRetireInterrupt()
 {
    OSWakeupThread(sWaitTimeStampQueue);
 }
+
 
 /**
  * Update the retired timestamp.
@@ -313,10 +332,10 @@ onSwap()
 }
 
 
-/*
-* This is called by the GPU flip interrupt handler.
-* Will wakeup any threads waiting for a flip.
-*/
+/**
+ * This is called by the GPU flip interrupt handler.
+ * Will wakeup any threads waiting for a flip.
+ */
 void
 handleGpuFlipInterrupt()
 {
@@ -335,11 +354,10 @@ onFlip()
 
 } // namespace internal
 
-
 void
-Module::initialiseVsync()
+Module::RegisterVsyncFunctions()
 {
-   sVsyncAlarmHandler = reinterpret_cast<AlarmCallback::FunctionType>(findExportAddress("internal_VsyncAlarmHandler"));
+   RegisterInternalFunction(internal::vsyncAlarmHandler, sVsyncAlarmHandler);
 }
 
 } // namespace gx2

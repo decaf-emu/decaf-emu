@@ -20,8 +20,6 @@ private:
    static void registerVoiceFunctions();
    static void registerVSFunctions();
    static void registerFXFunctions();
-
-   void initialiseCore();
 };
 
 } // namespace snd_core

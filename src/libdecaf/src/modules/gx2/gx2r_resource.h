@@ -30,15 +30,6 @@ void
 gx2rFree(GX2RResourceFlags flags,
          void *buffer);
 
-void *
-gx2rDefaultAlloc(GX2RResourceFlags flags,
-                 uint32_t size,
-                 uint32_t align);
-
-void
-gx2rDefaultFree(GX2RResourceFlags flags,
-                void *buffer);
-
 } // namespace internal
 
 } // namespace gx2

@@ -8,6 +8,12 @@
 namespace gx2
 {
 
+/**
+ * \defgroup gx2_aperture Tiling Aperture
+ * \ingroup gx2
+ * @{
+ */
+
 struct GX2Surface;
 
 using GX2ApertureHandle = uint32_t;
@@ -33,5 +39,7 @@ lookupAperture(uint32_t address,
                uint32_t *physBase_ret);     // may be null
 
 } // namespace internal
+
+/** @} */
 
 } // namespace gx2

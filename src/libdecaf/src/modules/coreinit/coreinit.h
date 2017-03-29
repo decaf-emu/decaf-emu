@@ -33,7 +33,6 @@ private:
    void initialiseSchedulerFunctions();
    void initialiseShared();
    void initialiseSystemInformation();
-   void initialiseThreadFunctions();
    void initialiseUserConfig();
 
 public:

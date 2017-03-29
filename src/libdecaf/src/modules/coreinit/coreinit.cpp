@@ -26,7 +26,6 @@ Module::initialise()
    initialiseSchedulerFunctions();
    initialiseShared();
    initialiseSystemInformation();
-   initialiseThreadFunctions();
    initialiseUserConfig();
 }
 

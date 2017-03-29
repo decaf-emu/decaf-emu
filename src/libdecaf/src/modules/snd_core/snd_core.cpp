@@ -6,7 +6,6 @@ namespace snd_core
 void
 Module::initialise()
 {
-   initialiseCore();
 }
 
 void

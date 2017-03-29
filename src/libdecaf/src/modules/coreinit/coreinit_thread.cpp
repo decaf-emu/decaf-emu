@@ -27,7 +27,7 @@ const uint32_t
 OSThread::Tag;
 
 static std::array<OSThread *, CoreCount>
-sDefaultThreads;
+sDefaultThreads = { nullptr, nullptr, nullptr };
 
 static uint32_t
 sThreadId = 1;
@@ -979,14 +979,6 @@ tls_get_addr(tls_index *index)
    return mem::translate<void *>(section.data.getAddress() + index->offset);
 }
 
-
-void
-Module::initialiseThreadFunctions()
-{
-   sSleepAlarmHandler = reinterpret_cast<AlarmCallback::FunctionType>(findExportAddress("internal_SleepAlarmHandler"));
-   sDefaultThreads.fill(nullptr);
-}
-
 uint32_t
 DeallocatorThreadEntry(uint32_t coreId, void *arg2)
 {
@@ -1062,8 +1054,7 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSYieldThread);
    RegisterKernelFunctionName("__tls_get_addr", tls_get_addr);
 
-   RegisterKernelFunctionName("internal_SleepAlarmHandler", SleepAlarmHandler);
-
+   RegisterInternalFunction(SleepAlarmHandler, sSleepAlarmHandler);
    RegisterInternalFunction(DeallocatorThreadEntry, sDeallocatorThreadEntryPoint);
    RegisterInternalData(sDeallocatorThreadQueue);
    RegisterInternalData(sDeallocationQueue);
