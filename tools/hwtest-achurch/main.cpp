@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
 
    mem::initialise();
    cpu::initialise();
-
    cpu::setJitMode(cpu::jit_mode::enabled);
 
    // We need to run the tests on a core.

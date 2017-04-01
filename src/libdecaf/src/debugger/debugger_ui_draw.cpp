@@ -6,6 +6,8 @@
 #include "gpu/pm4_capture.h"
 #include "kernel/kernel_loader.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+
+#include <libcpu/jit_stats.h>
 #include <imgui.h>
 #include <map>
 
@@ -31,6 +33,12 @@ sActiveThread = nullptr;
 
 static std::map<uint32_t, bool>
 sBreakpoints;
+
+static bool
+sJitProfilingEnabled = false;
+
+static unsigned int
+sJitProfilingMask = 7;
 
 bool
 isPaused()
@@ -295,6 +303,38 @@ draw()
             decaf::config::gx2::dump_shaders = !decaf::config::gx2::dump_shaders;
          }
 
+         ImGui::Separator();
+
+         if (ImGui::MenuItem("JIT Profiling Enabled", "CTRL+F1/F2", sJitProfilingEnabled, true)) {
+            sJitProfilingEnabled = !sJitProfilingEnabled;
+            cpu::jit::setProfilingMask(sJitProfilingEnabled ? sJitProfilingMask : 0);
+         }
+
+         if (ImGui::MenuItem("Profile Core 0", nullptr, sJitProfilingMask & 1, true)) {
+            sJitProfilingMask ^= 1;
+            if (sJitProfilingEnabled) {
+               cpu::jit::setProfilingMask(sJitProfilingMask);
+            }
+         }
+
+         if (ImGui::MenuItem("Profile Core 1", nullptr, sJitProfilingMask & 2, true)) {
+            sJitProfilingMask ^= 2;
+            if (sJitProfilingEnabled) {
+               cpu::jit::setProfilingMask(sJitProfilingMask);
+            }
+         }
+
+         if (ImGui::MenuItem("Profile Core 2", nullptr, sJitProfilingMask & 4, true)) {
+            sJitProfilingMask ^= 4;
+            if (sJitProfilingEnabled) {
+               cpu::jit::setProfilingMask(sJitProfilingMask);
+            }
+         }
+
+         if (ImGui::MenuItem("Reset JIT Profile Data", "CTRL+F3", false, true)) {
+            cpu::jit::resetProfileStats();
+         }
+
          ImGui::EndMenu();
       }
 
@@ -366,6 +406,20 @@ draw()
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::P), false)) {
          VoicesView::gIsVisible = !VoicesView::gIsVisible;
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F1), false)) {
+         sJitProfilingEnabled = true;
+         cpu::jit::setProfilingMask(sJitProfilingMask);
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F2), false)) {
+         sJitProfilingEnabled = false;
+         cpu::jit::setProfilingMask(0);
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F3), false)) {
+         cpu::jit::resetProfileStats();
       }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {

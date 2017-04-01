@@ -1,11 +1,12 @@
 #pragma once
+#include "mem.h"
 #include "state.h"
 
 #include <atomic>
 #include <cstdint>
 #include <functional>
-#include <libcpu/mem.h>
 #include <utility>
+#include <gsl.h>
 
 struct Tracer;
 
@@ -52,7 +53,24 @@ void
 initialise();
 
 void
+clearInstructionCache(uint32_t address,
+                      uint32_t size);
+
+void
 setJitMode(jit_mode mode);
+
+void
+setJitVerifyAddress(ppcaddr_t address);
+
+void
+setJitCacheSize(size_t codeSize,
+                size_t dataSize);
+
+void
+setJitOptFlags(const std::vector<std::string> &flags);
+
+void
+addJitReadOnlyRange(ppcaddr_t address, uint32_t size);
 
 void
 setCoreEntrypointHandler(EntrypointHandler handler);
@@ -106,9 +124,6 @@ addBreakpoint(ppcaddr_t address,
 bool
 removeBreakpoint(ppcaddr_t address,
                  uint32_t flags);
-
-uint64_t *
-getJitFallbackStats();
 
 namespace this_core
 {

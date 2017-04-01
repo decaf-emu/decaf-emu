@@ -1,15 +1,18 @@
-#include <common/decaf_assert.h>
-#include <common/platform_thread.h>
-#include <common/platform_exception.h>
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
 #include "mem.h"
+
+#include "jit/binrec/jit_binrec.h"
+
 #include <atomic>
 #include <cfenv>
 #include <chrono>
+#include <common/decaf_assert.h>
+#include <common/platform_exception.h>
+#include <common/platform_thread.h>
 #include <condition_variable>
 #include <memory>
 #include <vector>
@@ -38,8 +41,20 @@ gBranchTraceHandler;
 jit_mode
 gJitMode = jit_mode::disabled;
 
-Core
-gCore[3];
+uint32_t
+gJitVerifyAddress = 0;
+
+static size_t
+sJitCodeCacheSize = 1024 * 1024 * 1024;
+
+static size_t
+sJitDataCacheSize = 512 * 1024 * 1024;
+
+static std::vector<std::string>
+sJitOptFlags;
+
+std::array<Core *, 3>
+gCore;
 
 static thread_local cpu::Core *
 tCurrentCore = nullptr;
@@ -50,9 +65,12 @@ sSegfaultAddr = 0;
 void
 initialise()
 {
+   auto backend = new jit::BinrecBackend { sJitCodeCacheSize, sJitDataCacheSize };
+   backend->setOptFlags(sJitOptFlags);
+   cpu::jit::setBackend(backend);
+
    espresso::initialiseInstructionSet();
    cpu::interpreter::initialise();
-   cpu::jit::initialise();
 
    sStartupTime = std::chrono::steady_clock::now();
 }
@@ -61,6 +79,39 @@ void
 setJitMode(jit_mode mode)
 {
    gJitMode = mode;
+}
+
+void
+setJitVerifyAddress(ppcaddr_t address)
+{
+   gJitVerifyAddress = address;
+}
+
+void
+clearInstructionCache(uint32_t address,
+                      uint32_t size)
+{
+   cpu::jit::clearCache(address, size);
+}
+
+void
+setJitCacheSize(size_t codeSize,
+                size_t dataSize)
+{
+   sJitCodeCacheSize = codeSize;
+   sJitDataCacheSize = dataSize;
+}
+
+void
+setJitOptFlags(const std::vector<std::string> &flags)
+{
+   sJitOptFlags = flags;
+}
+
+void
+addJitReadOnlyRange(ppcaddr_t address, uint32_t size)
+{
+   jit::addReadOnlyRange(address, size);
 }
 
 static void
@@ -133,14 +184,14 @@ start()
 
    gRunning.store(true);
 
-   for (auto i = 0; i < 3; ++i) {
-      auto &core = gCore[i];
-      core.id = i;
-      core.thread = std::thread(coreEntryPoint, &core);
-      core.next_alarm = std::chrono::steady_clock::time_point::max();
+   for (auto i = 0u; i < gCore.size(); ++i) {
+      auto core = jit::initialiseCore(i);
+      core->thread = std::thread { coreEntryPoint, core };
+      core->next_alarm = std::chrono::steady_clock::time_point::max();
+      gCore[i] = core;
 
       static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
-      platform::setThreadName(&core.thread, coreNames[core.id]);
+      platform::setThreadName(&core->thread, coreNames[i]);
    }
 
    gTimerThread = std::thread(timerEntryPoint);
@@ -150,9 +201,9 @@ start()
 void
 join()
 {
-   for (auto i = 0; i < 3; ++i) {
-      if (gCore[i].thread.joinable()) {
-         gCore[i].thread.join();
+   for (auto core : gCore) {
+      if (core && core->thread.joinable()) {
+         core->thread.join();
       }
    }
 

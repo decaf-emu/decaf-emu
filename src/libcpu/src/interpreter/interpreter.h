@@ -10,6 +10,9 @@ namespace interpreter
 void
 initialise();
 
+Core *
+step_one(Core *core);
+
 void
 resume();
 

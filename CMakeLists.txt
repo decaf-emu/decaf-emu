@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.2)
 project(decaf-emu C CXX)
 option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_SDL "Build with SDL support" ON)
+option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
 
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -20,11 +21,15 @@ if(DECAF_VALGRIND)
     add_definitions(-DDECAF_VALGRIND)
 endif()
 
+if(DECAF_JIT_ALLOW_PROFILING)
+    add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
+endif()
+
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
-    
+
     add_definitions(-DNOMINMAX)
     add_definitions(-DUNICODE -D_UNICODE)
 else()

@@ -2,13 +2,14 @@
 #include "cpu.h"
 #include "mem.h"
 
+#include <array>
 #include <condition_variable>
 
 namespace cpu
 {
 
-extern Core
-gCore[3];
+extern std::array<Core *, 3>
+gCore;
 
 extern std::atomic_bool
 gRunning;
@@ -24,6 +25,9 @@ gBranchTraceHandler;
 
 extern jit_mode
 gJitMode;
+
+extern uint32_t
+gJitVerifyAddress;
 
 extern std::condition_variable
 gTimerCondition;

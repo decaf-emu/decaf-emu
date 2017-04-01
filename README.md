@@ -1,7 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/fbhhy0nf6nym9pcf?svg=true)](https://ci.appveyor.com/project/exjam/decaf-emu) [![Build Status](https://travis-ci.org/decaf-emu/decaf-emu.svg?branch=master)](https://travis-ci.org/decaf-emu/decaf-emu)
 
 # decaf-emu
-Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 2 or later (GPLv2+).
+Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 3 or later (GPLv3+).
 
 You can find us for developer discussion at #wiiu-emu on freenode.
 

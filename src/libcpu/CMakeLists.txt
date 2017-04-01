@@ -12,9 +12,12 @@ GroupSources(src)
 
 target_link_libraries(libcpu
     common
-    ${ASMJIT_LIBRARIES})
+    ${BINREC_LIBRARIES})
 
-if(NOT MSVC)
+if(MSVC)
+    target_link_libraries(libcpu
+        ntdll)
+else()
     target_link_libraries(libcpu
         m
         ${CMAKE_THREAD_LIBS_INIT})

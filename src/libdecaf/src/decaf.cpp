@@ -105,9 +105,14 @@ initialise(const std::string &gamePath)
    if (decaf::config::jit::enabled) {
       if (decaf::config::jit::verify) {
          cpu::setJitMode(cpu::jit_mode::verify);
+         cpu::setJitVerifyAddress(decaf::config::jit::verify_addr);
       } else {
          cpu::setJitMode(cpu::jit_mode::enabled);
       }
+
+      cpu::setJitCacheSize(decaf::config::jit::code_cache_size_mb * 1024 * 1024,
+                           decaf::config::jit::data_cache_size_mb * 1024 * 1024);
+      cpu::setJitOptFlags(decaf::config::jit::opt_flags);
    } else {
       cpu::setJitMode(cpu::jit_mode::disabled);
    }

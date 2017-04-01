@@ -20,6 +20,7 @@
 #include <common/teenyheap.h>
 #include <common/strutils.h>
 #include <gsl.h>
+#include <libcpu/cpu.h>
 #include <libcpu/mem.h>
 #include <map>
 #include <unordered_map>
@@ -1124,6 +1125,24 @@ loadRPL(const std::string &moduleName,
 
    // Relocate entry point
    auto entryPoint = calculateRelocatedAddress(header->entry, sections);
+
+   // Mark read-only segments as read-only
+   for (auto &section : sections) {
+      if (section.header.type == elf::SHT_PROGBITS) {
+         bool isReadOnly;
+         auto sectionName = shStrTab + section.header.name;
+         if (decaf::config::jit::rodata_read_only
+          && strcmp(sectionName, ".rodata") == 0) {
+            isReadOnly = true;
+         } else {
+            isReadOnly = !(section.header.flags & elf::SHF_WRITE);
+         }
+
+         if (isReadOnly) {
+            cpu::addJitReadOnlyRange(section.virtAddress, section.virtSize);
+         }
+      }
+   }
 
    // Create sections list
    for (auto &section : sections) {

@@ -2,7 +2,6 @@
 #include <cfenv>
 #include <fstream>
 #include "libcpu/cpu.h"
-#include "libcpu/src/jit/jit.h"
 #include "hardwaretests.h"
 #include "libcpu/mem.h"
 #include <common/bit_cast.h>
@@ -205,7 +204,7 @@ bool runTests(const std::string &path)
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
-         cpu::jit::clearCache();
+         cpu::clearInstructionCache(mem::MEM2Base, mem::MEM2Size);
          cpu::this_core::executeSub();
 
          // Check XER (all bits)

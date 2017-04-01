@@ -1,6 +1,5 @@
 #pragma once
-#include "libcpu/cpu.h"
-#include "libcpu/espresso/espresso_instructionid.h"
+#include "jit_backend.h"
 
 namespace cpu
 {
@@ -8,17 +7,23 @@ namespace cpu
 namespace jit
 {
 
-void
-initialise();
+JitBackend *
+getBackend();
 
 void
-clearCache();
+setBackend(JitBackend *backend);
+
+Core *
+initialiseCore(uint32_t id);
+
+void
+clearCache(uint32_t address, uint32_t size);
+
+void
+addReadOnlyRange(uint32_t address, uint32_t size);
 
 void
 resume();
-
-bool
-hasInstruction(espresso::InstructionID instrId);
 
 } // namespace jit
 

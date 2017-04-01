@@ -17,41 +17,12 @@ target_include_directories(addrlib
    PUBLIC "${ADDRLIB_DIR}/include")
 set(ADDRLIB_LIBRARIES addrlib PARENT_SCOPE)
 
-# asmjit
-set(ASMJIT_DIR "asmjit")
-externalproject_add(asmjit
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${ASMJIT_DIR}"
-    CMAKE_CACHE_ARGS
-        -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
-        -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
-        -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
-        -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
-        -DASMJIT_STATIC:string=on
-        -DASMJIT_DISABLE_COMPILER:string=on
-    INSTALL_COMMAND "")
-externalproject_get_property(asmjit BINARY_DIR)
-set_target_properties(asmjit PROPERTIES FOLDER libraries)
-
-if(MSVC)
-    set(ASMJIT_IMPORTED_LOCATION
-        IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}asmjit${CMAKE_FIND_LIBRARY_SUFFIXES}"
-        IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/Release/${CMAKE_FIND_LIBRARY_PREFIXES}asmjit${CMAKE_FIND_LIBRARY_SUFFIXES}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}asmjit${CMAKE_FIND_LIBRARY_SUFFIXES}"
-        IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}asmjit${CMAKE_FIND_LIBRARY_SUFFIXES}")
-else()
-    set(ASMJIT_IMPORTED_LOCATION
-        IMPORTED_LOCATION "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}asmjit.a")
-endif()
-
-add_library(asmjit_import STATIC IMPORTED GLOBAL)
-add_dependencies(asmjit_import asmjit)
-set_target_properties(asmjit_import PROPERTIES ${ASMJIT_IMPORTED_LOCATION})
-
-add_library(asmjit_final INTERFACE)
-target_compile_definitions(asmjit_final INTERFACE "ASMJIT_STATIC")
-target_include_directories(asmjit_final INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${ASMJIT_DIR}/src")
-target_link_libraries(asmjit_final INTERFACE asmjit_import)
-set(ASMJIT_LIBRARIES asmjit_final PARENT_SCOPE)
+# libbinrec
+set(BINREC_ENABLE_RTL_DEBUG_OPTIMIZE FALSE CACHE BOOL "Enable debug output from optimization passes")
+set(BINREC_ENABLE_ASSERT FALSE CACHE BOOL "Enable basic assertion checks")
+add_subdirectory(libbinrec)
+set_target_properties(binrec PROPERTIES FOLDER libraries)
+set(BINREC_LIBRARIES binrec PARENT_SCOPE)
 
 # cereal
 set(CEREAL_DIR "cereal")
