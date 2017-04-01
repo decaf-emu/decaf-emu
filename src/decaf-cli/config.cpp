@@ -2,6 +2,8 @@
 #include "libdecaf/decaf_config.h"
 #include <climits>
 #include <fstream>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 #include <common/cerealjsonoptionalinput.h>
 
 namespace config
@@ -57,7 +59,10 @@ struct CerealJit
    {
       using namespace decaf::config::jit;
       ar(CEREAL_NVP(enabled),
-         CEREAL_NVP(verify));
+         CEREAL_NVP(verify),
+         CEREAL_NVP(cache_size_mb),
+         CEREAL_NVP(opt_flags),
+         CEREAL_NVP(rodata_read_only));
    }
 };
 

@@ -10,9 +10,12 @@ add_library(libcpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
 GroupSources(espresso)
 GroupSources(src)
 
+target_include_directories(libcpu
+    PRIVATE ${BINREC_INCLUDE_DIRS})
+
 target_link_libraries(libcpu
     common
-    ${ASMJIT_LIBRARIES})
+    ${BINREC_LIBRARIES})
 
 if(NOT MSVC)
     target_link_libraries(libcpu

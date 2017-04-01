@@ -97,8 +97,8 @@ loadGeneric(cpu::Core *state, Instruction instr)
    if (flags & LoadReserve) {
       static_assert(!(flags & LoadReserve) || sizeof(Type) == 4, "Reserved reads are only valid on 32-bit values");
 
-      auto reserveData = *reinterpret_cast<uint32_t*>(&memd);
-      state->reserve = (static_cast<uint64_t>(ea) << 32) | reserveData;
+      state->reserveFlag = true;
+      state->reserveData = *reinterpret_cast<uint32_t*>(&memd);
    }
 
    if (std::is_floating_point<Type>::value) {
@@ -424,14 +424,14 @@ struct ReservedWrite<true> {
 
       state->cr.cr0 = state->xer.so ? ConditionRegisterFlag::SummaryOverflow : 0;
 
-      auto reserveAddr = static_cast<uint32_t>(state->reserve >> 32);
-      auto reserveData = static_cast<uint32_t>(state->reserve & 0xffffffff);
-      state->reserve = 0xffffffffffffffff;
-
-      if (reserveAddr != ea) {
-         // The reservation address did not match the write address
+      bool reserveFlag = state->reserveFlag;
+      state->reserveFlag = false;
+      if (!reserveFlag) {
+         // The processor did not have a reservation
          return false;
       }
+
+      auto reserveData = state->reserveData;
 
       if (!atomicPtr->compare_exchange_strong(reserveData, s)) {
          // The data has been modified since it was reserved.

@@ -1,10 +1,11 @@
 #pragma once
+#include "mem.h"
 #include "state.h"
 
 #include <atomic>
+#include <common/fastregionmap.h>
 #include <cstdint>
 #include <functional>
-#include <libcpu/mem.h>
 #include <utility>
 
 struct Tracer;
@@ -53,6 +54,18 @@ initialise();
 
 void
 setJitMode(jit_mode mode);
+
+void
+setJitVerifyAddress(ppcaddr_t address);
+
+void
+setJitCacheSize(size_t size);
+
+void
+setJitOptFlags(const std::vector<std::string> &flags);
+
+void
+addJitReadOnlyRange(ppcaddr_t address, uint32_t size);
 
 void
 setCoreEntrypointHandler(EntrypointHandler handler);
@@ -107,8 +120,25 @@ bool
 removeBreakpoint(ppcaddr_t address,
                  uint32_t flags);
 
-uint64_t *
-getJitFallbackStats();
+uint64_t
+getJitCodeSize();
+
+void
+setJitProfilingMask(unsigned int coreMask);
+
+unsigned int
+getJitProfilingMask();
+
+// Returns total cycle count as return value
+uint64_t
+getJitProfileData(const FastRegionMap<uint64_t> **blockTime_ret,
+                  const FastRegionMap<uint64_t> **blockCount_ret);
+
+const void *
+findJitEntry(ppcaddr_t address);
+
+void
+resetJitProfileData();
 
 namespace this_core
 {

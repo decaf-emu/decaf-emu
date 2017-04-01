@@ -17,23 +17,43 @@ namespace ui
 namespace StatsView
 {
 
-static const size_t
-InstrCount = static_cast<size_t>(espresso::InstructionID::InstructionCount);
+static bool
+sActivateFocus = false;
+
+static std::vector<ppcaddr_t>
+sProfileList;
 
 bool
 gIsVisible = true;
 
 static bool
-sActivateFocus = false;
+sNeedProfileListUpdate = true;
 
-static std::vector<std::pair<size_t, uint64_t>>
-sJitFallbackStats;
 
-static std::chrono::time_point<std::chrono::system_clock>
-sFirstSeen = std::chrono::time_point<std::chrono::system_clock>::max();
+static void
+updateProfileList()
+{
+   using TimePair = std::pair<ppcaddr_t, uint64_t>;
+   std::vector<TimePair> tempList;
 
-static uint64_t
-sFirstSeenValues[InstrCount] = { 0 };
+   const FastRegionMap<uint64_t> *blockTime;
+   cpu::getJitProfileData(&blockTime, nullptr);
+   uint32_t address;
+   uint64_t time;
+   if (blockTime->getFirstEntry(&address, &time)) {
+      do {
+         tempList.emplace_back(address, time);
+      } while (blockTime->getNextEntry(&address, &time));
+   }
+
+   std::sort(tempList.begin(), tempList.end(),
+             [](TimePair a, TimePair b) { return a.second > b.second; });
+
+   sProfileList.resize(std::min(tempList.size(), static_cast<size_t>(50)));
+   for (auto i = 0u; i < sProfileList.size(); i++) {
+      sProfileList[i] = tempList[i].first;
+   }
+}
 
 void
 draw()
@@ -47,75 +67,75 @@ draw()
       sActivateFocus = false;
    }
 
-   ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
+   ImGui::SetNextWindowSize(ImVec2(700, 400), ImGuiSetCond_FirstUseEver);
 
    if (!ImGui::Begin("Stats", &gIsVisible)) {
       ImGui::End();
       return;
    }
 
-   ImGui::Columns(3, "statsList", false);
-   ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
-   ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.60f);
-   ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.80f);
+   ImGui::Columns(2, "totalSize", false);
 
-   ImGui::Text("Name"); ImGui::NextColumn();
-   ImGui::Text("Value"); ImGui::NextColumn();
-   ImGui::Text("IPS"); ImGui::NextColumn();
-   ImGui::Separator();
+   ImGui::Text("Total JIT Code Size");
+   ImGui::NextColumn();
+   uint64_t jitSize = cpu::getJitCodeSize();
+   ImGui::Text("%.2f MB", jitSize / 1.0e6);
+   ImGui::NextColumn();
 
-   if (ImGui::TreeNode("JIT Fallback"))
+   ImGui::Columns(1);
+
+   if (ImGui::TreeNode("JIT Profiling"))
    {
       ImGui::NextColumn();
-      ImGui::NextColumn();
-      ImGui::NextColumn();
 
-      uint64_t *fallbackStats = cpu::getJitFallbackStats();
+      ImGui::Columns(6, "statsList", false);
+      ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
+      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.18f);
+      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.40f);
+      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.55f);
+      ImGui::SetColumnOffset(4, ImGui::GetWindowWidth() * 0.70f);
+      ImGui::SetColumnOffset(5, ImGui::GetWindowWidth() * 0.85f);
 
-      if (sFirstSeen == std::chrono::time_point<std::chrono::system_clock>::max()) {
-         sFirstSeen = std::chrono::system_clock::now();
-
-         for (size_t i = 0; i < InstrCount; ++i) {
-            sFirstSeenValues[i] = fallbackStats[i];
-         }
+      if (sNeedProfileListUpdate) {
+         updateProfileList();
+         sNeedProfileListUpdate = false;
       }
 
-      sJitFallbackStats.clear();
+      ImGui::Text("Address"); ImGui::NextColumn();
+      ImGui::Text("Native Code"); ImGui::NextColumn();
+      ImGui::Text("Time %%"); ImGui::NextColumn();
+      ImGui::Text("Total Cycles"); ImGui::NextColumn();
+      ImGui::Text("Call Count"); ImGui::NextColumn();
+      ImGui::Text("Cycles/Call"); ImGui::NextColumn();
+      ImGui::Separator();
 
-      for (size_t i = 0; i < InstrCount; ++i) {
-         sJitFallbackStats.emplace_back(i, fallbackStats[i]);
-      }
+      const FastRegionMap<uint64_t> *blockTime;
+      const FastRegionMap<uint64_t> *blockCount;
+      auto totalTime = cpu::getJitProfileData(&blockTime, &blockCount);
 
-      std::sort(sJitFallbackStats.begin(), sJitFallbackStats.end(),
-         [](const std::pair<size_t, uint64_t> &a, const std::pair<size_t, uint64_t> &b) {
-            return b.second < a.second;
-         });
-
-      using seconds_duration = std::chrono::duration<float, std::chrono::seconds::period>;
-      auto timeDelta = std::chrono::system_clock::now() - sFirstSeen;
-      auto secondsDelta = std::chrono::duration_cast<seconds_duration>(timeDelta).count();
-
-      for (auto i = 0u; i < sJitFallbackStats.size(); ++i) {
-         auto instrIdx = sJitFallbackStats[i].first;
-         auto instrId = static_cast<espresso::InstructionID>(instrIdx);
-         auto info = espresso::findInstructionInfo(instrId);
-
-         if (!info) {
-            continue;
-         }
-
-         auto instrOps = sJitFallbackStats[i].second;
-         auto ips = static_cast<float>(instrOps - sFirstSeenValues[instrIdx]) / static_cast<float>(secondsDelta);
-
-         ImGui::Text("%s", info->name.c_str());
+      for (auto &address : sProfileList) {
+         auto time = blockTime->find(address);
+         auto count = blockCount->find(address);
+         ImGui::Text("%08X", address);
          ImGui::NextColumn();
-         ImGui::Text("%" PRIu64, instrOps);
+         ImGui::Text("%p", cpu::findJitEntry(address));
          ImGui::NextColumn();
-         ImGui::Text("%.0f", ips);
+         ImGui::Text("%.2f%%", 100.0 * time / totalTime);
+         ImGui::NextColumn();
+         ImGui::Text("%" PRIu64, time);
+         ImGui::NextColumn();
+         ImGui::Text("%" PRIu64, count);
+         ImGui::NextColumn();
+         ImGui::Text("%" PRIu64, count ? (time + count/2) / count : 0);
          ImGui::NextColumn();
       }
 
       ImGui::TreePop();
+   }
+   else
+   {
+      // Update the list the next time the node is expanded.
+      sNeedProfileListUpdate = true;
    }
 
    ImGui::Columns(1);

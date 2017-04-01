@@ -32,6 +32,12 @@ sActiveThread = nullptr;
 static std::map<uint32_t, bool>
 sBreakpoints;
 
+static bool
+sJitProfilingEnabled = false;
+
+static unsigned int
+sJitProfilingMask = 7;
+
 bool
 isPaused()
 {
@@ -295,6 +301,38 @@ draw()
             decaf::config::gx2::dump_shaders = !decaf::config::gx2::dump_shaders;
          }
 
+         ImGui::Separator();
+
+         if (ImGui::MenuItem("JIT Profiling Enabled", "CTRL+F1/F2", sJitProfilingEnabled, true)) {
+            sJitProfilingEnabled = !sJitProfilingEnabled;
+            cpu::setJitProfilingMask(sJitProfilingEnabled ? sJitProfilingMask : 0);
+         }
+
+         if (ImGui::MenuItem("Profile Core 0", nullptr, sJitProfilingMask & 1, true)) {
+            sJitProfilingMask ^= 1;
+            if (sJitProfilingEnabled) {
+               cpu::setJitProfilingMask(sJitProfilingMask);
+            }
+         }
+
+         if (ImGui::MenuItem("Profile Core 1", nullptr, sJitProfilingMask & 2, true)) {
+            sJitProfilingMask ^= 2;
+            if (sJitProfilingEnabled) {
+               cpu::setJitProfilingMask(sJitProfilingMask);
+            }
+         }
+
+         if (ImGui::MenuItem("Profile Core 2", nullptr, sJitProfilingMask & 4, true)) {
+            sJitProfilingMask ^= 4;
+            if (sJitProfilingEnabled) {
+               cpu::setJitProfilingMask(sJitProfilingMask);
+            }
+         }
+
+         if (ImGui::MenuItem("Reset JIT Profile Data", "CTRL+F3", false, true)) {
+            cpu::resetJitProfileData();
+         }
+
          ImGui::EndMenu();
       }
 
@@ -366,6 +404,18 @@ draw()
 
       if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::P), false)) {
          VoicesView::gIsVisible = !VoicesView::gIsVisible;
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F1), false)) {
+         cpu::setJitProfilingMask(true);
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F2), false)) {
+         cpu::setJitProfilingMask(false);
+      }
+
+      if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F3), false)) {
+         cpu::resetJitProfileData();
       }
 
       if (sIsPaused && ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::F5), false)) {

@@ -27,6 +27,17 @@ cache:
   directories:
     - "$HOME/.local"
 
+git:
+  submodules: false
+
+# TODO: pin libbinrec to a specific version once it has version tags
+before_install:
+  - sed -i '/libbinrec/d' .gitmodules
+  - git add .gitmodules
+  - git rm --cached libraries/libbinrec
+  - git submodule update --init --recursive
+  - hg clone https://bitbucket.org/achurch_/libbinrec libraries/libbinrec
+
 install:
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 

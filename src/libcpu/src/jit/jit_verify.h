@@ -10,8 +10,9 @@ namespace jit
 struct
 VerifyBuffer
 {
-   CoreRegs coreRegsCopy;       // Copy of core state before JIT execution
+   Core coreCopy;               // Copy of core state before JIT execution
 
+   bool isMemoryInstr;          // True if current instruction touches memory
    uint32_t memoryAddress;      // Address accessed by instruction (if any)
    uint32_t memorySize;         // Number of bytes accessed by instruction
    uint8_t preJitBuffer[128];   // Copy of memory before JIT execution
@@ -19,9 +20,8 @@ VerifyBuffer
 };
 
 void
-insertVerifyCall(PPCEmuAssembler &a,
-                 uint32_t instr,
-                 void *verifyWrapper);
+verifyInit(Core *core,
+           VerifyBuffer *verifyBuf);
 
 void
 verifyPre(Core *core,

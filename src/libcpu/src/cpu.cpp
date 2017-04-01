@@ -1,15 +1,16 @@
-#include <common/decaf_assert.h>
-#include <common/platform_thread.h>
-#include <common/platform_exception.h>
 #include "cpu.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
 #include "mem.h"
+
 #include <atomic>
 #include <cfenv>
 #include <chrono>
+#include <common/decaf_assert.h>
+#include <common/platform_exception.h>
+#include <common/platform_thread.h>
 #include <condition_variable>
 #include <memory>
 #include <vector>
@@ -38,6 +39,9 @@ gBranchTraceHandler;
 jit_mode
 gJitMode = jit_mode::disabled;
 
+static size_t
+sJitCacheSize = 0x40000000;
+
 Core
 gCore[3];
 
@@ -52,7 +56,7 @@ initialise()
 {
    espresso::initialiseInstructionSet();
    cpu::interpreter::initialise();
-   cpu::jit::initialise();
+   cpu::jit::initialise(sJitCacheSize);
 
    sStartupTime = std::chrono::steady_clock::now();
 }
@@ -61,6 +65,24 @@ void
 setJitMode(jit_mode mode)
 {
    gJitMode = mode;
+}
+
+void
+setJitCacheSize(size_t size)
+{
+   sJitCacheSize = size;
+}
+
+void
+setJitOptFlags(const std::vector<std::string> &flags)
+{
+   jit::setOptFlags(flags);
+}
+
+void
+addJitReadOnlyRange(ppcaddr_t address, uint32_t size)
+{
+   jit::addReadOnlyRange(address, size);
 }
 
 static void
@@ -138,6 +160,8 @@ start()
       core.id = i;
       core.thread = std::thread(coreEntryPoint, &core);
       core.next_alarm = std::chrono::steady_clock::time_point::max();
+
+      jit::initCore(&core);
 
       static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
       platform::setThreadName(&core.thread, coreNames[core.id]);

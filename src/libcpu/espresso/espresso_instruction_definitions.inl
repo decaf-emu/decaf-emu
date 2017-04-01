@@ -201,8 +201,8 @@ INS(mcrf, (crfD), (crfS), (), (opcd == 19, xo1 == 0, !_9_10, !_14_15, !_16_20, !
 
 // System Linkage
 INS(rfi, (), (), (), (opcd == 19, xo1 == 50, !_6_10, !_11_15, !_16_20, !_31), "")
+INS(kc, (), (kcn), (), (opcd == 17, _31 == 1), "krncall")  // Must come before sc for proper table setup
 INS(sc, (), (), (), (opcd == 17, !_6_10, !_11_15, !_16_29, _30 == 1, !_31), "Syscall")
-INS(kc, (), (kcn), (), (opcd == 1), "krncall")
 
 // Trap
 INS(tw, (), (to, rA, rB), (), (opcd == 31, xo1 == 4, !_31), "")

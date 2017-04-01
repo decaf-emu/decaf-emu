@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "platform.h"
+#include "platform_compiler.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -14,7 +15,7 @@
 #else
 
 #define decaf_handle_assert(x, e, m) \
-   if (!(x)) { \
+   if (UNLIKELY(!(x))) { \
       assertFailed(__FILE__, __LINE__, e, m); \
       __builtin_trap(); \
    }
