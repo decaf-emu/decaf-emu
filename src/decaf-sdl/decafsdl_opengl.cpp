@@ -8,9 +8,10 @@
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
 
+#include <iostream>
+
 static std::string
-getGlDebugSource(gl::GLenum source)
-{
+getGlDebugSource(gl::GLenum source) {
    switch (source) {
    case gl::GL_DEBUG_SOURCE_API:
       return "API";
@@ -30,8 +31,7 @@ getGlDebugSource(gl::GLenum source)
 }
 
 static std::string
-getGlDebugType(gl::GLenum severity)
-{
+getGlDebugType(gl::GLenum severity) {
    switch (severity) {
    case gl::GL_DEBUG_TYPE_ERROR:
       return "ERROR";
@@ -57,8 +57,7 @@ getGlDebugType(gl::GLenum severity)
 }
 
 static std::string
-getGlDebugSeverity(gl::GLenum severity)
-{
+getGlDebugSeverity(gl::GLenum severity) {
    switch (severity) {
    case gl::GL_DEBUG_SEVERITY_HIGH:
       return "HIGH";
@@ -75,8 +74,7 @@ getGlDebugSeverity(gl::GLenum severity)
 
 static void GL_APIENTRY
 debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
-   gl::GLsizei length, const gl::GLchar* message, const void *userParam)
-{
+   gl::GLsizei length, const gl::GLchar* message, const void *userParam) {
    for (auto filterID : decaf::config::gpu::debug_filters) {
       if (filterID == id) {
          return;
@@ -102,17 +100,15 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
    }
 }
 
-DecafSDLOpenGL::DecafSDLOpenGL()
-{
-    using decaf::config::ui::background_colour;
-    
-    mBackgroundColour[0] = background_colour.r / 255.0;
-    mBackgroundColour[1] = background_colour.g / 255.0;
-    mBackgroundColour[2] = background_colour.b / 255.0;
+DecafSDLOpenGL::DecafSDLOpenGL() {
+   using decaf::config::ui::background_colour;
+
+   mBackgroundColour[0] = background_colour.r / 255.0;
+   mBackgroundColour[1] = background_colour.g / 255.0;
+   mBackgroundColour[2] = background_colour.b / 255.0;
 }
 
-DecafSDLOpenGL::~DecafSDLOpenGL()
-{
+DecafSDLOpenGL::~DecafSDLOpenGL() {
    if (mContext) {
       SDL_GL_DeleteContext(mContext);
       mContext = nullptr;
@@ -122,14 +118,23 @@ DecafSDLOpenGL::~DecafSDLOpenGL()
       SDL_GL_DeleteContext(mThreadContext);
       mThreadContext = nullptr;
    }
+
+   if (mContextDRC) {
+      SDL_GL_DeleteContext(mContextDRC);
+      mContext = nullptr;
+   }
+
+   if (mThreadContextDRC) {
+      SDL_GL_DeleteContext(mThreadContextDRC);
+      mContext = nullptr;
+   }
 }
 
 void
-DecafSDLOpenGL::initialiseContext()
-{
+DecafSDLOpenGL::initialiseContext() {
    glbinding::Binding::initialize();
    glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
-   glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
+   glbinding::setAfterCallback([] (const glbinding::FunctionCall &call) {
       auto error = glbinding::Binding::GetError.directCall();
 
       if (error != gl::GL_NO_ERROR) {
@@ -160,8 +165,7 @@ DecafSDLOpenGL::initialiseContext()
 }
 
 void
-DecafSDLOpenGL::initialiseDraw()
-{
+DecafSDLOpenGL::initialiseDraw() {
    static auto vertexCode = R"(
       #version 420 core
       in vec2 fs_position;
@@ -239,8 +243,7 @@ DecafSDLOpenGL::initialiseDraw()
 }
 
 void
-DecafSDLOpenGL::drawScanBuffer(gl::GLuint object)
-{
+DecafSDLOpenGL::drawScanBuffer(gl::GLuint object) {
    // Setup screen draw shader
    gl::glBindVertexArray(mVertArray);
    gl::glBindVertexBuffer(0, mVertBuffer, 0, 4 * sizeof(gl::GLfloat));
@@ -253,19 +256,108 @@ DecafSDLOpenGL::drawScanBuffer(gl::GLuint object)
    gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
 }
 
+static const float ASPECT_RATIO = 16.0f / 9;
+
+void
+calculateAndExecuteViewportArray(int width, int height) {
+   // Variables for the viewport array
+   int vpWidth = 0, vpHeight = 0,
+      xPadding = 0, yPadding = 0;
+
+   // Check if the user has set the
+   // stretch option, if so just
+   // return the width and height
+   if (config::display::stretch) {
+      xPadding = 0;
+      yPadding = 0;
+
+      vpWidth  = width;
+      vpHeight = height;
+   } 
+   
+   // Apply jroweboy_'s aspect ratio fix
+   else {
+      float scale = std::min(static_cast<float>(width), height * ASPECT_RATIO);
+      vpWidth     = static_cast<int>(std::round(scale));
+      vpHeight    = static_cast<int>(std::round(scale / ASPECT_RATIO));
+      xPadding    = (width - vpWidth) / 2;
+      yPadding    = (height - vpHeight) / 2;
+   }
+
+   // Setup the viewport array
+   float viewportArea[] = {
+      xPadding, yPadding,
+      vpWidth,  vpHeight
+   };
+
+   // Set the viewport
+   gl::glViewportArrayv(0, 1, viewportArea);
+}
+
+void
+DecafSDLOpenGL::drawScanBuffer_MW(gl::GLuint screenBuffer,
+   gl::GLuint drcBuffer) {
+
+   /* Screen */ {
+      // Variables
+      int width = 0, height = 0;
+
+      // Setup the window and context
+      SDL_GL_MakeCurrent(mWindow, mContext);
+
+      // Clear screen
+      gl::glClearColor(mBackgroundColour[0], mBackgroundColour[1], mBackgroundColour[2], 1.0f);
+      gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+
+      // Get current dimensions
+      SDL_GL_GetDrawableSize(mWindow, &width, &height);
+
+      // Calculate viewport
+      calculateAndExecuteViewportArray(width, height);
+
+      // Render
+      drawScanBuffer(screenBuffer);
+
+      // Draw UI
+      decaf::debugger::drawUiGL(width, height);
+
+      // Swap the window
+      SDL_GL_SwapWindow(mWindow);
+   }
+
+   /* DRC */  {
+      // Variables
+      int width = 0, height = 0;
+
+      // Setup the window and context
+      SDL_GL_MakeCurrent(mWindowDRC, mContextDRC);
+
+      // Clear screen
+      gl::glClearColor(mBackgroundColour[0], mBackgroundColour[1], mBackgroundColour[2], 1.0f);
+      gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+
+      // Get current dimensions
+      SDL_GL_GetDrawableSize(mWindowDRC, &width, &height);
+
+      // Calculate viewport
+      calculateAndExecuteViewportArray(width, height);
+
+      // Render
+      drawScanBuffer(drcBuffer);
+
+      // Draw UI
+      decaf::debugger::drawUiGL(width, height);
+
+      // Swap the window
+      SDL_GL_SwapWindow(mWindowDRC);
+   }
+}
+
 void
 DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
-                                gl::GLuint tvBuffer,
-                                Viewport &drcViewport,
-                                gl::GLuint drcBuffer)
-{
-   // Set up some needed GL state
-   gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
-   gl::glDisablei(gl::GL_BLEND, 0);
-   gl::glDisable(gl::GL_DEPTH_TEST);
-   gl::glDisable(gl::GL_STENCIL_TEST);
-   gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glDisable(gl::GL_CULL_FACE);
+   gl::GLuint tvBuffer,
+   Viewport &drcViewport,
+   gl::GLuint drcBuffer) {
 
    // Clear screen
    gl::glClearColor(mBackgroundColour[0], mBackgroundColour[1], mBackgroundColour[2], 1.0f);
@@ -277,8 +369,8 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
 
    if (drawTV) {
       float viewportArray[] = {
-         tvViewport.x, tvViewport.y,
-         tvViewport.width, tvViewport.height
+          tvViewport.x, tvViewport.y,
+          tvViewport.width, tvViewport.height
       };
 
       gl::glViewportArrayv(0, 1, viewportArray);
@@ -287,8 +379,8 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
 
    if (drawDRC) {
       float viewportArray[] = {
-         drcViewport.x, drcViewport.y,
-         drcViewport.width, drcViewport.height
+          drcViewport.x, drcViewport.y,
+          drcViewport.width, drcViewport.height
       };
 
       gl::glViewportArrayv(0, 1, viewportArray);
@@ -305,8 +397,7 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
 }
 
 bool
-DecafSDLOpenGL::initialise(int width, int height)
-{
+DecafSDLOpenGL::initialise(int width, int height) {
    if (SDL_GL_LoadLibrary(NULL) != 0) {
       gCliLog->error("Failed to load OpenGL library: {}", SDL_GetError());
       return false;
@@ -325,6 +416,23 @@ DecafSDLOpenGL::initialise(int width, int height)
    // Enable debug context
    if (decaf::config::gpu::debug) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+   }
+
+   // Check if we are splitting the DRC and Screen into
+   // seperate windows
+   bool multi_window = config::display::mode == config::display::Popup;
+
+   if (multi_window) {
+      mWindowDRC = SDL_CreateWindow("Decaf DRC (Gamepad)",
+         SDL_WINDOWPOS_UNDEFINED,
+         SDL_WINDOWPOS_UNDEFINED,
+         width / 2, height / 2,
+         SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+
+      if (!mWindowDRC) {
+         gCliLog->error("Failed to create GL SDL window (DRC)");
+         return false;
+      }
    }
 
    // Create TV window
@@ -356,6 +464,24 @@ DecafSDLOpenGL::initialise(int width, int height)
       return false;
    }
 
+   // Check if display is on popup mode
+   if (config::display::mode == config::display::Popup) {
+      // DRC
+      mContextDRC = SDL_GL_CreateContext(mWindowDRC);
+
+      if (!mContextDRC) {
+         gCliLog->error("Failed to create Main OpenGL context, DRC: {}", SDL_GetError());
+         return false;
+      }
+
+      mThreadContextDRC = SDL_GL_CreateContext(mWindowDRC);
+
+      if (!mThreadContextDRC) {
+         gCliLog->error("Failed to create GPU OpenGL context, DRC: {}", SDL_GetError());
+         return false;
+      }
+   }
+
    SDL_GL_MakeCurrent(mWindow, mContext);
 
    // Setup decaf driver
@@ -364,18 +490,39 @@ DecafSDLOpenGL::initialise(int width, int height)
    mDecafDriver = reinterpret_cast<decaf::OpenGLDriver*>(glDriver);
 
    // Setup rendering
+   if (config::display::mode == config::display::Popup) {
+      SDL_GL_MakeCurrent(mWindowDRC, mContextDRC);
+
+      initialiseContext();
+      initialiseDraw();
+
+      decaf::debugger::initialiseUiGL();
+
+      SDL_GL_MakeCurrent(mWindowDRC, mContextDRC);
+
+      SDL_GL_MakeCurrent(mWindow, mContext);
+   }
+
    initialiseContext();
    initialiseDraw();
+
    decaf::debugger::initialiseUiGL();
 
    // Start graphics thread
    if (!config::gpu::force_sync) {
       SDL_GL_SetSwapInterval(1);
 
-      mGraphicsThread = std::thread{
+      mGraphicsThread = std::thread {
          [this]() {
+
+          if (config::display::mode == config::display::Popup) {
+              SDL_GL_MakeCurrent(mWindowDRC, mThreadContextDRC);
+              initialiseContext();
+          }
+
          SDL_GL_MakeCurrent(mWindow, mThreadContext);
          initialiseContext();
+
          mDecafDriver->run();
       } };
    } else {
@@ -390,14 +537,21 @@ DecafSDLOpenGL::initialise(int width, int height)
 
       // Initialise the context
       initialiseContext();
+
+      if (config::display::mode == config::display::Popup) {
+         // Setup the drc context
+         SDL_GL_MakeCurrent(mWindowDRC, mThreadContextDRC);
+
+         // Init the context
+         initialiseContext();
+      }
    }
 
    return true;
 }
 
 void
-DecafSDLOpenGL::shutdown()
-{
+DecafSDLOpenGL::shutdown() {
    // Shut down the GPU
    if (!config::gpu::force_sync) {
       mDecafDriver->stop();
@@ -406,25 +560,37 @@ DecafSDLOpenGL::shutdown()
 }
 
 void
-DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc)
-{
+DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc) {
+   // May not work if force_sync is disabled
    if (!config::gpu::force_sync) {
       gl::GLuint tvBuffer = 0;
       gl::GLuint drcBuffer = 0;
+
       mDecafDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
-      drawScanBuffers(tv, tvBuffer, drc, drcBuffer);
-   } else {
-      mDecafDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
-         SDL_GL_MakeCurrent(mWindow, mContext);
+
+      if (config::display::mode == config::display::Popup) {
+         drawScanBuffer_MW(tvBuffer, drcBuffer);
+      } else {
          drawScanBuffers(tv, tvBuffer, drc, drcBuffer);
-         SDL_GL_MakeCurrent(mWindow, mThreadContext);
+      }
+   } else {
+      mDecafDriver->syncPoll([&] (unsigned int tvBuffer, unsigned int drcBuffer) {
+         if (config::display::mode == config::display::Popup) {
+            drawScanBuffer_MW(tvBuffer, drcBuffer);
+
+            SDL_GL_MakeCurrent(mWindow, mThreadContext);
+         } else {
+            SDL_GL_MakeCurrent(mWindow, mContext);
+            drawScanBuffers(tv, tvBuffer, drc, drcBuffer);
+            SDL_GL_MakeCurrent(mWindow, mThreadContext);
+         }
+
       });
    }
 }
 
 decaf::GraphicsDriver *
-DecafSDLOpenGL::getDecafDriver()
-{
+DecafSDLOpenGL::getDecafDriver() {
    return mDecafDriver;
 }
 

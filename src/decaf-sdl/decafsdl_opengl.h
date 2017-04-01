@@ -37,6 +37,9 @@ protected:
                    gl::GLuint drcBuffer);
 
    void
+   drawScanBuffer_MW(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
+
+   void
    initialiseContext();
 
    void
@@ -44,10 +47,15 @@ protected:
 
 protected:
    std::thread mGraphicsThread;
-   decaf::OpenGLDriver *mDecafDriver = nullptr;
 
-   SDL_GLContext mContext = nullptr;
-   SDL_GLContext mThreadContext = nullptr;
+   decaf::OpenGLDriver *mDecafDriver		= nullptr;
+   decaf::OpenGLDriver *mDecafDriverDRC		= nullptr;
+
+   SDL_GLContext mContext					= nullptr;
+   SDL_GLContext mThreadContext				= nullptr;
+
+   SDL_GLContext mContextDRC				= nullptr;
+   SDL_GLContext mThreadContextDRC			= nullptr;
 
    gl::GLuint mVertexProgram;
    gl::GLuint mPixelProgram;
