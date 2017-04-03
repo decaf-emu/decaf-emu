@@ -60,6 +60,10 @@ public:
    clear();
 
    void
+   invalidate(uint32_t address,
+              uint32_t size);
+
+   void
    free();
 
    size_t

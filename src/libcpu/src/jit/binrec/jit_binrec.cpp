@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "cpu_breakpoints.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "jit_binrec.h"
@@ -95,8 +96,12 @@ BinrecBackend::addReadOnlyRange(uint32_t address, uint32_t size)
 void
 BinrecBackend::clearCache(uint32_t address, uint32_t size)
 {
-   mCodeCache.clear();
-   mTotalProfileTime = 0;
+   if (address == 0 && size == 0xFFFFFFFF) {
+      mCodeCache.clear();
+      mTotalProfileTime = 0;
+   } else {
+      mCodeCache.invalidate(address, size);
+   }
 }
 
 BinrecHandle *
@@ -223,6 +228,11 @@ BinrecBackend::getCodeBlock(BinrecCore *core, uint32_t address)
 
    // Do not try to recompile again if it failed before
    if (UNLIKELY(blockIndex == CodeBlockIndexError)) {
+      return nullptr;
+   }
+
+   // Do not compile if there is a breakpoint at address.
+   if (UNLIKELY(hasBreakpoint(address))) {
       return nullptr;
    }
 
@@ -496,7 +506,11 @@ brSyscallHandler(BinrecCore *core)
 void
 brTrapHandler(BinrecCore *core)
 {
-   decaf_abort("Game raised a trap exception.");
+   if (!cpu::hasBreakpoint(core->nia)) {
+      decaf_abort(fmt::format("Game raised a trap exception at 0x{:08X}.", core->nia));
+   }
+
+   // If we have a breakpoint, we will fall back to interpreter to handle it.
 }
 
 

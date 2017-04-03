@@ -37,16 +37,16 @@ struct CodeBlockProfileData
 
 struct CodeBlock
 {
-   //! Guest address of PPC code
+   //! Guest address of PPC code.
    uint32_t address;
 
-   //! Host address of compiled code
+   //! Host address of compiled code.
    void *code;
 
-   //! Size of compiled code
+   //! Size of compiled code.
    uint32_t codeSize;
 
-   //! Profiling data
+   //! Profiling data.
    CodeBlockProfileData profileData;
 
    //! Code block unwind info, only used on Windows.

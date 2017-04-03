@@ -88,8 +88,14 @@ setJitVerifyAddress(ppcaddr_t address)
 }
 
 void
-clearInstructionCache(uint32_t address,
-                      uint32_t size)
+clearInstructionCache()
+{
+   cpu::jit::clearCache(0, 0xFFFFFFFF);
+}
+
+void
+invalidateInstructionCache(uint32_t address,
+                           uint32_t size)
 {
    cpu::jit::clearCache(address, size);
 }
@@ -279,15 +285,6 @@ state()
 void
 resume()
 {
-   // If we have breakpoints set, we have to fall back to interpreter loop
-   // This is because JIT wont check for breakpoints on each instruction.
-   // TODO: Make JIT account for breakpoints by inserting breakpoint checks
-   // in the appropriate places in the instruction stream.
-   if (hasBreakpoints()) {
-      interpreter::resume();
-      return;
-   }
-
    // Use appropriate jit mode
    if (gJitMode != jit_mode::disabled) {
       jit::resume();

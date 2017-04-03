@@ -1,9 +1,10 @@
-#include <common/decaf_assert.h>
 #include "cpu.h"
+#include "cpu_breakpoints.h"
+#include "espresso/espresso_instructionset.h"
 #include "mem.h"
 
+#include <algorithm>
 #include <atomic>
-#include <cstring>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -11,268 +12,198 @@
 namespace cpu
 {
 
-static std::atomic<uint32_t*>
-gBreakpoints;
+static std::shared_ptr<BreakpointList>
+sActiveBreakpoints;
 
-using BreakpointListFn = std::function<uint32_t * (uint32_t*)>;
+using ModifyListFn = std::function<bool (BreakpointList &list)>;
 
 static inline void
-compareAndSwapBreakpoints(uint32_t *bpList, BreakpointListFn functor)
+updateBreakpointList(ModifyListFn fn)
 {
-   uint32_t *newBpList = nullptr;
+   auto newList = std::make_shared<BreakpointList>();
+   auto currentList = sActiveBreakpoints;
 
    do {
-      newBpList = functor(bpList);
-
-      if (newBpList == bpList) {
-         // No changes were made
-         return;
+      if (currentList) {
+         *newList = *currentList;
+      } else {
+         newList->clear();
       }
-   } while (!gBreakpoints.compare_exchange_strong(bpList, newBpList));
+
+      if (!fn(*newList)) {
+         // If function returns false, do not update breakpoint list.
+         break;
+      }
+   } while (!std::atomic_compare_exchange_strong(&sActiveBreakpoints, &currentList, newList));
 }
 
-static inline bool
-addBreakpoint(uint32_t* bpList, ppcaddr_t address, uint32_t flags)
+
+/**
+ * Add a breakpoint at an address.
+ */
+void
+addBreakpoint(uint32_t address,
+              Breakpoint::Type type)
 {
-   std::vector<uint32_t> newBpListVec;
-   bool bp_changed = true;
+   auto savedCode = mem::read<uint32_t>(address);
 
-   compareAndSwapBreakpoints(bpList, [&](auto oldList) {
-      // Reset from any last iteration attempt
-      newBpListVec.clear();
-      bp_changed = true;
+   updateBreakpointList([address, type, savedCode](BreakpointList &list) {
+      auto itr = std::find_if(list.begin(), list.end(),
+                              [address](auto &bp) {
+                                 return bp.address == address;
+                              });
 
-      // Copy all the existing BPs till the terminator
-      if (oldList) {
-         for (uint32_t *bpListIter = oldList; *bpListIter != 0xFFFFFFFF; ) {
-            auto bp_address = *bpListIter++;
-            auto bp_flags = *bpListIter++;
-
-            // If its already in the list, lets merge the flags
-            if (bp_address == address) {
-               // If it already has all the flags, we don't need to change anything
-               if ((bp_flags & flags) == flags) {
-                  bp_changed = false;
-                  return oldList;
-               }
-
-               // Flags are additive
-               flags |= bp_flags;
-               continue;
-            }
-
-            newBpListVec.push_back(bp_address);
-            newBpListVec.push_back(bp_flags);
+      if (itr != list.end()) {
+         if (itr->type == type) {
+            // Same type of breakpoint already at address, do not modify list.
+            return false;
          }
+
+         if (type == Breakpoint::SingleFire && itr->type == Breakpoint::MultiFire) {
+            // Already have a multi fire breakpoint, no need to set single fire.
+            return false;
+         }
+
+         // Update existing breakpoint type.
+         itr->type = type;
+         return true;
       }
 
-      // Add the new breakpoint to the list
-      newBpListVec.push_back(address);
-      newBpListVec.push_back(flags);
-
-      // Add the terminator to the end
-      newBpListVec.push_back(0xFFFFFFFF);
-
-      // Copy to heap memory and return it
-      auto newBpList = new uint32_t[newBpListVec.size()];
-      memcpy(newBpList, newBpListVec.data(), sizeof(uint32_t) * newBpListVec.size());
-      return newBpList;
+      list.push_back({ type, address, savedCode });
+      return true;
    });
 
-   return bp_changed;
+   // Set unconditional trap instruction at address.
+   auto trapInstr = espresso::encodeInstruction(espresso::InstructionID::tw);
+   trapInstr.to = 31;
+   trapInstr.rA = 0;
+   trapInstr.rB = 0;
+   mem::write<uint32_t>(address, trapInstr);
+
+   cpu::invalidateInstructionCache(address, 4);
 }
 
-static inline bool
-removeBreakpoint(uint32_t *bpList,
-                 ppcaddr_t address,
-                 uint32_t flags)
+
+/**
+ * Remove a breakpoint at an address.
+ */
+void
+removeBreakpoint(uint32_t address)
 {
-   std::vector<uint32_t> newBpListVec;
-   bool bp_matched = false;
+   updateBreakpointList([address](BreakpointList &list) {
+      auto itr = std::find_if(list.begin(), list.end(),
+                              [address](auto &bp) {
+                                 return bp.address == address;
+                              });
 
-   compareAndSwapBreakpoints(bpList, [&](auto oldList) {
-      // If there is no existing list, we have nothing to do
-      if (!oldList) {
-         return oldList;
+      if (itr == list.end()) {
+         return false;
       }
 
-      // Reset from any last iteration attempt
-      newBpListVec.clear();
-      bp_matched = false;
+      // Restore saved code.
+      mem::write<uint32_t>(address, itr->savedCode);
 
-      // Copy all the data which has the system flag, otherwise ignore it
-      for (uint32_t *bpListIter = oldList; *bpListIter != 0xFFFFFFFF; ) {
-         auto bp_address = *bpListIter++;
-         auto bp_flags = *bpListIter++;
-
-         if (bp_address == address) {
-            // If it has none of the flags, we have no changes to make
-            if ((bp_flags & flags) == 0) {
-               return oldList;
-            }
-
-            // If it has every flag, switch the return value
-            if ((bp_flags & flags) == flags) {
-               bp_matched = true;
-            }
-
-            // Flags are subtractive
-            bp_flags &= ~flags;
-         }
-
-         // Only put the breakpoint back in the list if it has flags left
-         if (bp_flags) {
-            newBpListVec.push_back(bp_address);
-            newBpListVec.push_back(bp_flags);
-         }
-      }
-
-      // If we have no breakpoints, just return no list
-      if (newBpListVec.size() == 0) {
-         return static_cast<uint32_t*>(nullptr);
-      }
-
-      // Add the terminator to the end
-      newBpListVec.push_back(0xFFFFFFFF);
-
-      // Copy to heap memory and return it
-      auto newBpList = new uint32_t[newBpListVec.size()];
-      memcpy(newBpList, newBpListVec.data(), sizeof(uint32_t) * newBpListVec.size());
-      return newBpList;
+      list.erase(itr);
+      return true;
    });
 
-   return bp_matched;
+   cpu::invalidateInstructionCache(address, 4);
 }
 
-static inline bool
-clearBreakpoints(uint32_t *bpList,
-                 uint32_t flags_mask)
+
+/**
+ * Returns true if we hit a breakpoint at the address.
+ *
+ * Will remove the breakpoint if it is a SingleFire breakpoint.
+ */
+bool
+testBreakpoint(uint32_t address)
 {
-   std::vector<uint32_t> newBpListVec;
-   bool bps_changed = false;
+   auto list = sActiveBreakpoints;
 
-   compareAndSwapBreakpoints(bpList, [&](auto oldList) {
-      // If there is no existing list, we have nothing to do
-      if (!oldList) {
-         return oldList;
-      }
+   if (!list) {
+      return false;
+   }
 
-      // Reset from any last iteration attempt
-      bps_changed = false;
-      newBpListVec.clear();
+   auto itr = std::find_if(list->begin(), list->end(),
+                           [address](auto &bp) {
+                              return bp.address == address;
+                           });
 
-      // Copy all the data which has the system flag, otherwise ignore it
-      for (uint32_t *bpListIter = oldList; *bpListIter != 0xFFFFFFFF; ) {
-         auto bp_address = *bpListIter++;
-         auto bp_flags = *bpListIter++;
+   if (itr == list->end()) {
+      return false;
+   }
 
-         // If it has any of these flags, clear them
-         if (bp_flags & flags_mask) {
-            bp_flags &= ~flags_mask;
-            bps_changed = true;
-         }
+   if (itr->type == Breakpoint::SingleFire) {
+      removeBreakpoint(address);
+   }
 
-         // If it still has flags, put it back on the list
-         if (bp_flags) {
-            newBpListVec.push_back(bp_address);
-            newBpListVec.push_back(bp_flags);
-         }
-      }
-
-      // If we have no changes, dont update
-      if (!bps_changed) {
-         return oldList;
-      }
-
-      // If we have no breakpoints, just return no list
-      if (newBpListVec.size() == 0) {
-         return static_cast<uint32_t*>(nullptr);
-      }
-
-      // Add the terminator to the end
-      newBpListVec.push_back(0xFFFFFFFF);
-
-      // Copy to heap memory and return it
-      auto newBpList = new uint32_t[newBpListVec.size()];
-      memcpy(newBpList, newBpListVec.data(), sizeof(uint32_t) * newBpListVec.size());
-      return newBpList;
-   });
-
-   return bps_changed;
+   return true;
 }
 
+
+/**
+ * Returns true if there are any breakpoints set.
+ */
 bool
 hasBreakpoints()
 {
-   return !!gBreakpoints.load(std::memory_order_acquire);
+   return sActiveBreakpoints != nullptr;
 }
 
-bool
-popBreakpoint(ppcaddr_t address)
-{
-   auto bpList = gBreakpoints.load(std::memory_order_acquire);
 
-   if (bpList == nullptr) {
-      // No breakpoints
+/**
+ * Returns true if there is a breakpoint at the specified address.
+ */
+bool
+hasBreakpoint(uint32_t address)
+{
+   auto list = sActiveBreakpoints;
+
+   if (!list) {
       return false;
    }
 
-   auto flags = 0u;
+   auto itr = std::find_if(list->begin(), list->end(),
+                           [address](auto &bp) {
+                              return bp.address == address;
+                           });
 
-   for (auto *bpListIter = bpList; *bpListIter != 0xFFFFFFFF; ) {
-      auto bp_address = *bpListIter++;
-      auto bp_flags = *bpListIter++;
+   return itr != list->end();
+}
 
-      if (bp_address == address) {
-         flags = bp_flags;
-         break;
+
+/**
+ * Get a list of all active breakpoints.
+ */
+std::shared_ptr<BreakpointList>
+getBreakpoints()
+{
+   return sActiveBreakpoints;
+}
+
+
+/**
+ * Get the instruction at an address before we edited it with a tw.
+ *
+ * If there is no breakpoint, reads the memory and returns the current instruction.
+ */
+uint32_t
+getBreakpointSavedCode(uint32_t address)
+{
+   auto list = sActiveBreakpoints;
+   if (list) {
+      auto itr = std::find_if(list->begin(), list->end(),
+                              [address](auto &bp) {
+                                 return bp.address == address;
+                              });
+
+      if (itr != list->end()) {
+         return itr->savedCode;
       }
    }
 
-   // Short circuit normal flags
-   if (!flags) {
-      return false;
-   } else if (!(flags & SYSTEM_BPFLAG)) {
-      return true;
-   }
-
-   // We have a system flag, which are one-hit this means we need to remove it
-   // remove_breakpoint will return false if it fails to find and remove that
-   // breakpoint.  We have no need to loop as we are guarenteed not to find it
-   // by looping again since we only pass remove_breakpoint one flag.
-   return removeBreakpoint(bpList, address, SYSTEM_BPFLAG);
-}
-
-bool
-clearBreakpoints(uint32_t flags_mask)
-{
-   auto bpList = gBreakpoints.load(std::memory_order_acquire);
-   return clearBreakpoints(bpList, flags_mask);
-}
-
-bool
-addBreakpoint(ppcaddr_t address,
-              uint32_t flags)
-{
-   if (address == 0xFFFFFFFF) {
-      // Cannot use this address as it is the terminator
-      decaf_abort("0xFFFFFFFF is not a valid address to set a breakpoint on");
-   }
-
-   if (!flags) {
-      decaf_abort("You must specify at least a single flag for a breakpoint");
-   }
-
-   auto bpList = gBreakpoints.load(std::memory_order_acquire);
-   return addBreakpoint(bpList, address, flags);
-}
-
-bool
-removeBreakpoint(ppcaddr_t address,
-                 uint32_t flags)
-{
-   auto bpList = gBreakpoints.load(std::memory_order_acquire);
-   return removeBreakpoint(bpList, address, flags);
+   return mem::read<uint32_t>(address);
 }
 
 } // namespace cpu

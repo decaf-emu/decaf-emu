@@ -8,6 +8,7 @@
 #include "modules/coreinit/coreinit_scheduler.h"
 
 #include <libcpu/jit_stats.h>
+#include <libcpu/cpu_breakpoints.h>
 #include <imgui.h>
 #include <map>
 
@@ -31,9 +32,6 @@ sResumeCount = 0;
 static coreinit::OSThread *
 sActiveThread = nullptr;
 
-static std::map<uint32_t, bool>
-sBreakpoints;
-
 static bool
 sJitProfilingEnabled = false;
 
@@ -46,22 +44,13 @@ isPaused()
    return sIsPaused;
 }
 
-bool
-hasBreakpoint(uint32_t address)
-{
-   auto bpIter = sBreakpoints.find(address);
-   return bpIter != sBreakpoints.end() && bpIter->second;
-}
-
 void
 toggleBreakpoint(uint32_t address)
 {
-   if (sBreakpoints[address]) {
-      cpu::removeBreakpoint(address, cpu::USER_BPFLAG);
-      sBreakpoints[address] = false;
+   if (cpu::hasBreakpoint(address)) {
+      cpu::removeBreakpoint(address);
    } else {
-      cpu::addBreakpoint(address, cpu::USER_BPFLAG);
-      sBreakpoints[address] = true;
+      cpu::addBreakpoint(address, cpu::Breakpoint::MultiFire);
    }
 }
 

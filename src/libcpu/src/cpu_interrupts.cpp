@@ -1,5 +1,7 @@
 #include "cpu.h"
+#include "cpu_breakpoints.h"
 #include "cpu_internal.h"
+
 #include <common/decaf_assert.h>
 #include <condition_variable>
 #include <atomic>
@@ -98,11 +100,6 @@ checkInterrupts()
    auto core = state();
    auto mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
    auto flags = core->interrupt.fetch_and(~mask);
-
-   // Check if we hit any breakpoints
-   if (popBreakpoint(core->nia)) {
-      flags |= DBGBREAK_INTERRUPT;
-   }
 
    if (flags & mask) {
       cpu::gInterruptHandler(flags);

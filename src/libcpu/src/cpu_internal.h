@@ -35,12 +35,6 @@ gTimerCondition;
 extern std::thread
 gTimerThread;
 
-bool
-hasBreakpoints();
-
-bool
-popBreakpoint(ppcaddr_t address);
-
 void
 timerEntryPoint();
 

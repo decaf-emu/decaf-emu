@@ -1,12 +1,14 @@
-#include <common/decaf_assert.h>
-#include <common/log.h>
+#include "cpu_breakpoints.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter.h"
 #include "interpreter_insreg.h"
 #include "mem.h"
 #include "trace.h"
+
 #include <cfenv>
+#include <common/decaf_assert.h>
+#include <common/log.h>
 
 namespace cpu
 {
@@ -59,14 +61,15 @@ hasInstruction(espresso::InstructionID id)
 Core *
 step_one(Core *core)
 {
-   // This is volatile because otherwise we appear to encounter
-   //  some kind of compiler optimization error, where the value
-   //  in cia is not correctly persisted.
-   uint32_t cia = core->nia;
-   core->nia = cia + 4;
+   // Check if we hit any breakpoints
+   if (testBreakpoint(core->nia)) {
+      core->interrupt.fetch_or(DBGBREAK_INTERRUPT);
+      this_core::checkInterrupts();
+   }
 
-   // For debugging purposes.
+   auto cia = core->nia;
    core->cia = cia;
+   core->nia = cia + 4;
 
    auto instr = mem::read<espresso::Instruction>(cia);
    auto data = espresso::decodeInstruction(instr);
@@ -94,7 +97,6 @@ step_one(Core *core)
 
    decaf_check(core->cia == cia);
    traceInstructionEnd(trace, instr, data, core);
-
    return core;
 }
 

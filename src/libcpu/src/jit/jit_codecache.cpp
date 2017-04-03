@@ -30,6 +30,9 @@ CodeCache::~CodeCache()
 }
 
 
+/**
+ * Initialise the code cache.
+ */
 bool
 CodeCache::initialise(size_t codeSize,
                       size_t dataSize)
@@ -68,6 +71,11 @@ CodeCache::initialise(size_t codeSize,
 }
 
 
+/**
+ * Clear the code cache.
+ *
+ * This will also unregister any unwind info with Windows.
+ */
 void
 CodeCache::clear()
 {
@@ -107,6 +115,39 @@ CodeCache::clear()
 }
 
 
+/**
+ * Invalidate a region of code.
+ *
+ * Because it's super complicated to do properly let's just be a leaky fuck,
+ * for now our "invalidation" is really just forgetting that we compiled a block.
+ */
+void
+CodeCache::invalidate(uint32_t base,
+                      uint32_t size)
+{
+   // Find any block containing this address and invalidate them!
+   auto blocks = getCompiledCodeBlocks();
+
+   for (auto &block : blocks) {
+      auto start = block.address;
+      auto end = start + 4096; // FIXME: Just assume 4096 limit for now..
+
+      if (base + size < start) {
+         continue;
+      }
+
+      if (base >= end) {
+         continue;
+      }
+
+      getIndexPointer(block.address)->store(CodeBlockIndexUncompiled);
+   }
+}
+
+
+/**
+ * Free the memory we are using for our JIT.
+ */
 void
 CodeCache::free()
 {
@@ -141,6 +182,9 @@ CodeCache::free()
 }
 
 
+/**
+ * Returns the amount of data allocated in the code cache.
+ */
 size_t
 CodeCache::getCodeCacheSize()
 {
@@ -148,6 +192,9 @@ CodeCache::getCodeCacheSize()
 }
 
 
+/**
+ * Returns the amount of data allocated in the data cache.
+ */
 size_t
 CodeCache::getDataCacheSize()
 {
@@ -155,6 +202,9 @@ CodeCache::getDataCacheSize()
 }
 
 
+/**
+ * Returns a list of all compiled code blocks.
+ */
 gsl::span<CodeBlock>
 CodeCache::getCompiledCodeBlocks()
 {
@@ -164,6 +214,9 @@ CodeCache::getCompiledCodeBlocks()
 }
 
 
+/**
+ * Find a compiled code block from it's address.
+ */
 CodeBlock *
 CodeCache::getBlockByAddress(uint32_t address)
 {
@@ -177,6 +230,9 @@ CodeCache::getBlockByAddress(uint32_t address)
 }
 
 
+/**
+ * Find a compiled code block from it's CodeBlockIndex.
+ */
 CodeBlock *
 CodeCache::getBlockByIndex(CodeBlockIndex index)
 {
@@ -185,6 +241,9 @@ CodeCache::getBlockByIndex(CodeBlockIndex index)
 }
 
 
+/**
+ * Find a compiled code block's CodeBlockIndex.
+ */
 CodeBlockIndex
 CodeCache::getIndex(uint32_t address)
 {
@@ -192,6 +251,9 @@ CodeCache::getIndex(uint32_t address)
 }
 
 
+/**
+ * Get a compiled code block's CodeBlockIndex.
+ */
 CodeBlockIndex
 CodeCache::getIndex(CodeBlock *block)
 {
@@ -201,6 +263,11 @@ CodeCache::getIndex(CodeBlock *block)
 }
 
 
+/**
+ * Get a pointer to the CodeBlockIndex for the address.
+ *
+ * This is used for registering the CodeBlock whilst compiling.
+ */
 std::atomic<CodeBlockIndex> *
 CodeCache::getIndexPointer(uint32_t address)
 {
@@ -241,6 +308,9 @@ CodeCache::getIndexPointer(uint32_t address)
 }
 
 
+/**
+ * Set a CodeBlockIndex for an address, useful for mirroring duplicate functions.
+ */
 void
 CodeCache::setBlockIndex(uint32_t address,
                          CodeBlockIndex index)
@@ -250,6 +320,11 @@ CodeCache::setBlockIndex(uint32_t address,
 }
 
 
+/**
+ * Register a block of code in the CodeCache.
+ *
+ * This will allocate memory for the code and data, and update the code block index.
+ */
 CodeBlock *
 CodeCache::registerCodeBlock(uint32_t address,
                              void *code,
@@ -291,6 +366,9 @@ CodeCache::registerCodeBlock(uint32_t address,
 }
 
 
+/**
+ * Allocate memory from the specified CodeCache::FrameAllocator.
+ */
 uintptr_t
 CodeCache::allocate(FrameAllocator &allocator,
                     size_t size,

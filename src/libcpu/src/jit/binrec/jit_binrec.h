@@ -44,6 +44,9 @@ struct BinrecCore : public Core
 
    // HLE call flag (for JIT profiler)
    bool calledHLE;
+
+   //! Trap Handler hit a breakpoint.
+   bool hitBreakpoint;
 };
 
 using BinrecHandle = binrec::Handle<BinrecCore *>;
@@ -127,7 +130,6 @@ private:
    std::atomic<uint64_t> mTotalProfileTime { 0 };
    uint32_t mProfilingMask = 0;
 };
-
 
 } // namespace jit
 

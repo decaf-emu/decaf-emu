@@ -13,9 +13,6 @@ namespace ui
 bool
 isPaused();
 
-bool
-hasBreakpoint(uint32_t address);
-
 void
 toggleBreakpoint(uint32_t address);
 

@@ -1,12 +1,16 @@
 #include "cpu.h"
+#include "cpu_breakpoints.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_spr.h"
+#include "espresso/espresso_instructionset.h"
 #include "interpreter_insreg.h"
 #include "mem.h"
+
 #include <common/align.h>
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <spdlog/fmt/fmt.h>
 
 using espresso::SPR;
 
@@ -278,11 +282,24 @@ kc(cpu::Core *state, Instruction instr)
    kc->func(state, kc->user_data);
 }
 
-// Trap Word (Debug Interrupt?)
+// Trap Word
 static void
 tw(cpu::Core *state, Instruction instr)
 {
-   decaf_abort("Game used TW instruction. It's probably panicking.");
+   if (!cpu::hasBreakpoint(state->cia)) {
+      decaf_abort(fmt::format("Game raised a trap exception at 0x{:08X}.", state->nia));
+   }
+
+   // By this point we have already handled the breakpoint thanks to checkInterrupts,
+   // so here we just need to execute the breakpoint's saved instruction!
+   auto savedInstr = cpu::getBreakpointSavedCode(state->cia);
+   auto data = espresso::decodeInstruction(savedInstr);
+   decaf_check(data);
+
+   auto handler = cpu::interpreter::getInstructionHandler(data->id);
+   decaf_check(handler);
+
+   handler(state, savedInstr);
 }
 
 void

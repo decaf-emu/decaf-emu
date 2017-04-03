@@ -204,7 +204,7 @@ bool runTests(const std::string &path)
 
          // Execute test
          mem::write(baseAddress, test.instr.value);
-         cpu::clearInstructionCache(mem::MEM2Base, mem::MEM2Size);
+         cpu::clearInstructionCache();
          cpu::this_core::executeSub();
 
          // Check XER (all bits)

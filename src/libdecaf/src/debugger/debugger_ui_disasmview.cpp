@@ -3,10 +3,12 @@
 #include "debugger_ui_internal.h"
 #include "decaf_input.h"
 #include "imgui_addrscroll.h"
-#include "libcpu/state.h"
-#include "libcpu/mem.h"
-#include "libcpu/espresso/espresso_disassembler.h"
-#include "libcpu/espresso/espresso_instructionset.h"
+
+#include <libcpu/cpu_breakpoints.h>
+#include <libcpu/espresso/espresso_disassembler.h>
+#include <libcpu/espresso/espresso_instructionset.h>
+#include <libcpu/mem.h>
+#include <libcpu/state.h>
 #include <imgui.h>
 #include <map>
 #include <sstream>
@@ -115,7 +117,7 @@ draw()
          auto selectedAddr = static_cast<uint32_t>(sSelectedAddr);
 
          if (mem::valid(selectedAddr)) {
-            auto instr = mem::read<espresso::Instruction>(selectedAddr);
+            auto instr = cpu::getBreakpointSavedCode(selectedAddr);
             auto data = espresso::decodeInstruction(instr);
 
             if (data && isBranchInstr(data)) {
@@ -202,7 +204,7 @@ draw()
 
    if (sSelectedAddr != -1) {
       auto selectedAddr = static_cast<uint32_t>(sSelectedAddr);
-      auto instr = mem::read<espresso::Instruction>(selectedAddr);
+      auto instr = cpu::getBreakpointSavedCode(selectedAddr);
       auto data = espresso::decodeInstruction(instr);
       auto info = analysis::get(selectedAddr);
 
@@ -316,6 +318,8 @@ draw()
 
       // Check if this is the current instruction
       // This should be simpler...  gActiveCoreIdx instead maybe?
+      auto hasBreakpoint = cpu::hasBreakpoint(addr);
+
       if (activeThread && addr == getThreadNia(activeThread)) {
          // Render a green BG behind the address
          auto lineMinC = ImVec2(lineMin.x - 1, lineMin.y);
@@ -325,7 +329,7 @@ draw()
          // Render the address for this line
          //  (custom colored text so it is easy to see)
          ImGui::TextColored(NiaColor, "%08X:", addr);
-      } else if (hasBreakpoint(addr)) {
+      } else if (hasBreakpoint) {
          // Render a red BG behind the address
          auto lineMinC = ImVec2(lineMin.x - 1, lineMin.y);
          auto lineMaxC = ImVec2(lineMin.x + (glyphWidth * 8) + 2, lineMax.y);
@@ -350,7 +354,7 @@ draw()
          continue;
       }
 
-      auto instr = mem::read<espresso::Instruction>(addr);
+      auto instr = cpu::getBreakpointSavedCode(addr);
       auto data = espresso::decodeInstruction(instr);
       auto info = analysis::get(addr);
 
@@ -360,10 +364,10 @@ draw()
       // Render the instructions bytes
       ImGui::SetCursorPos(linePos);
       ImGui::TextColored(DataColor, "%02x%02x%02x%02x",
-         mem::read<unsigned char>(addr + 0),
-         mem::read<unsigned char>(addr + 1),
-         mem::read<unsigned char>(addr + 2),
-         mem::read<unsigned char>(addr + 3));
+                         (instr >> 24) & 0xff,
+                         (instr >> 16) & 0xff,
+                         (instr >> 8) & 0xff,
+                         (instr >> 0) & 0xff);
 
       linePos.x += dataAdvance;
 

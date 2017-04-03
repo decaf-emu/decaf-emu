@@ -23,9 +23,6 @@ const uint32_t IPC_INTERRUPT = 1 << 6;
 const uint32_t INTERRUPT_MASK = 0xFFFFFFFF;
 const uint32_t NONMASKABLE_INTERRUPTS = SRESET_INTERRUPT;
 
-const uint32_t SYSTEM_BPFLAG = 1 << 0;
-const uint32_t USER_BPFLAG = 1 << 1;
-
 const uint32_t InvalidCoreId = 0xFF;
 
 enum class jit_mode {
@@ -53,8 +50,11 @@ void
 initialise();
 
 void
-clearInstructionCache(uint32_t address,
-                      uint32_t size);
+clearInstructionCache();
+
+void
+invalidateInstructionCache(uint32_t address,
+                           uint32_t size);
 
 void
 setJitMode(jit_mode mode);
@@ -113,17 +113,6 @@ freeTracer(Tracer *tracer);
 void
 interrupt(int core_idx,
           uint32_t flags);
-
-bool
-clearBreakpoints(uint32_t flags_mask);
-
-bool
-addBreakpoint(ppcaddr_t address,
-              uint32_t flags);
-
-bool
-removeBreakpoint(ppcaddr_t address,
-                 uint32_t flags);
 
 namespace this_core
 {

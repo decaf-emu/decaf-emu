@@ -1,12 +1,14 @@
 #include "decaf_config.h"
 #include "debugger/debugger_branchcalc.h"
-#include <common/decaf_assert.h>
-#include <common/log.h>
 #include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
-#include "libcpu/cpu.h"
-#include "libcpu/mem.h"
+
 #include <atomic>
+#include <common/decaf_assert.h>
+#include <common/log.h>
+#include <libcpu/cpu.h>
+#include <libcpu/cpu_breakpoints.h>
+#include <libcpu/mem.h>
 #include <condition_variable>
 
 namespace debugger
@@ -86,7 +88,7 @@ stepCore(uint32_t coreId, bool stepOver)
 
    const cpu::CoreRegs *state = sCorePauseState[coreId];
    uint32_t nextInstr = calculateNextInstr(state, stepOver);
-   cpu::addBreakpoint(nextInstr, cpu::SYSTEM_BPFLAG);
+   cpu::addBreakpoint(nextInstr, cpu::Breakpoint::SingleFire);
 
    resumeAll();
 }
@@ -111,20 +113,17 @@ handlePreLaunch()
       return;
    }
 
-   // Do not add entry breakpoints if it is disabled
-   if (!decaf::config::debugger::break_on_entry) {
-      return;
+   if (decaf::config::debugger::break_on_entry) {
+      auto appModule = kernel::getUserModule();
+      auto userPreinit = appModule->findExport("__preinit_user");
+
+      if (userPreinit) {
+         cpu::addBreakpoint(userPreinit, cpu::Breakpoint::SingleFire);
+      }
+
+      auto start = appModule->entryPoint;
+      cpu::addBreakpoint(start, cpu::Breakpoint::SingleFire);
    }
-
-   auto appModule = kernel::getUserModule();
-   auto userPreinit = appModule->findExport("__preinit_user");
-
-   if (userPreinit) {
-      cpu::addBreakpoint(userPreinit, cpu::SYSTEM_BPFLAG);
-   }
-
-   auto start = appModule->entryPoint;
-   cpu::addBreakpoint(start, cpu::SYSTEM_BPFLAG);
 }
 
 void
