@@ -73,6 +73,7 @@ BinrecBackend::initialiseCore(uint32_t id)
 
    auto core = new BinrecCore {};
    core->id = id;
+   core->backend = this;
    core->chainLookup = brChainLookup;
    core->mftbHandler = brTimeBaseHandler;
    core->scHandler = brSyscallHandler;
