@@ -105,10 +105,10 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
 DecafSDLOpenGL::DecafSDLOpenGL()
 {
     using decaf::config::ui::background_colour;
-    
-    mBackgroundColour[0] = background_colour.r / 255.0;
-    mBackgroundColour[1] = background_colour.g / 255.0;
-    mBackgroundColour[2] = background_colour.b / 255.0;
+
+    mBackgroundColour[0] = background_colour.r / 255.0f;
+    mBackgroundColour[1] = background_colour.g / 255.0f;
+    mBackgroundColour[2] = background_colour.b / 255.0f;
 }
 
 DecafSDLOpenGL::~DecafSDLOpenGL()
