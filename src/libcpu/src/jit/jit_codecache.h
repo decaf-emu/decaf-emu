@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <common/platform_compiler.h>
 #include <common/platform_memory.h>
 #include <gsl/gsl>
 #include <mutex>
@@ -78,8 +79,15 @@ public:
    CodeBlock *
    getBlockByAddress(uint32_t address);
 
+   /**
+    * Find a compiled code block from its CodeBlockIndex.
+    */
    CodeBlock *
-   getBlockByIndex(CodeBlockIndex index);
+   getBlockByIndex(CodeBlockIndex index)
+   {
+      auto blockAddress = mDataAllocator.baseAddress + index * sizeof(CodeBlock);
+      return reinterpret_cast<CodeBlock *>(blockAddress);
+   }
 
    CodeBlockIndex
    getIndex(uint32_t address);
@@ -89,6 +97,32 @@ public:
 
    std::atomic<CodeBlockIndex> *
    getIndexPointer(uint32_t address);
+
+   /**
+    * Get a const pointer to the CodeBlockIndex for the address, or null if
+    * no block is registered for the address.
+    *
+    * This is used for quickly looking up a code block for execution.
+    */
+   const std::atomic<CodeBlockIndex> *
+   getConstIndexPointer(uint32_t address)
+   {
+      auto index1 = (address & 0xFF000000) >> 24;
+      auto index2 = (address & 0x00FF0000) >> 16;
+      auto index3 = (address & 0x0000FFFC) >> 2;
+
+      auto level2 = mFastIndex[index1].load();
+      if (UNLIKELY(!level2)) {
+         return nullptr;
+      }
+
+      auto level3 = level2[index2].load();
+      if (UNLIKELY(!level3)) {
+         return nullptr;
+      }
+
+      return &level3[index3];
+   }
 
    void
    setBlockIndex(uint32_t address,
