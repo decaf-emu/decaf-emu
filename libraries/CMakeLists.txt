@@ -54,7 +54,7 @@ if(NOT glbinding_FOUND)
             -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
             -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
             -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
-            -DBUILD_SHARED_LIBS:string=on
+            -DBUILD_SHARED_LIBS:string=off
             -DOPTION_BUILD_DOCS:string=off
             -DOPTION_BUILD_EXAMPLES:string=off
             -DOPTION_BUILD_TESTS:string=off
@@ -77,7 +77,7 @@ if(NOT glbinding_FOUND)
             IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}")
     else ()
         set(GLBINDING_IMPORTED_LOCATION
-            IMPORTED_LOCATION "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.so")
+            IMPORTED_LOCATION "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
     endif ()
 
     add_library(glbinding_import STATIC IMPORTED GLOBAL)
