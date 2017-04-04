@@ -165,6 +165,29 @@ OSDynLoad_Acquire(char const *name,
 
 
 /**
+ * Check if a module is loaded and return the handle of a dynamic library.
+ *
+ * \return
+ * Returns 0 on success.
+ */
+int
+OSDynLoad_IsModuleLoaded(char const *name,
+                         be_ModuleHandle *outHandle)
+{
+   const auto &loadedModules = kernel::loader::getLoadedModules();
+   auto itr = loadedModules.find(name);
+
+   if (itr == loadedModules.end()) {
+      *outHandle = 0;
+      return 0;
+   }
+
+   *outHandle = itr->second->handle;
+   return 0;
+}
+
+
+/**
  * Find the export from a library handle.
  *
  * Note that for TLS there will be a symbol, but no section,
@@ -267,6 +290,7 @@ void
 Module::registerDynLoadFunctions()
 {
    RegisterKernelFunction(OSDynLoad_Acquire);
+   RegisterKernelFunction(OSDynLoad_IsModuleLoaded);
    RegisterKernelFunction(OSDynLoad_FindExport);
    RegisterKernelFunction(OSDynLoad_Release);
    RegisterKernelFunction(OSDynLoad_SetAllocator);

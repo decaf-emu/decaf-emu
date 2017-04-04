@@ -58,6 +58,10 @@ OSDynLoad_Acquire(char const *name,
                   be_ModuleHandle *outHandle);
 
 int
+OSDynLoad_IsModuleLoaded(char const *name,
+                         be_ModuleHandle *outHandle);
+
+int
 OSDynLoad_FindExport(ModuleHandle module,
                      int isData,
                      char const *name,

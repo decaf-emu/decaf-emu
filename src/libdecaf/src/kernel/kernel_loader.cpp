@@ -1355,7 +1355,7 @@ findNearestSymbolNameForAddress(ppcaddr_t address)
    }
 }
 
-std::map<std::string, LoadedModule *>
+const std::map<std::string, LoadedModule *> &
 getLoadedModules()
 {
    return sLoadedModules;

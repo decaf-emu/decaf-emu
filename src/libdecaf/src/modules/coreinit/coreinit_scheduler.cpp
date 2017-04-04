@@ -695,7 +695,7 @@ GameThreadEntry(uint32_t argc, void *argv)
       MEMSetBaseHeapHandle(MEMBaseHeapType::MEM2, *sMemoryHeapPointers[2]);
    }
 
-   auto loadedModules = kernel::loader::getLoadedModules();
+   const auto &loadedModules = kernel::loader::getLoadedModules();
    for (auto i : loadedModules) {
       auto loadedModule = i.second;
       if (loadedModule == appModule) {

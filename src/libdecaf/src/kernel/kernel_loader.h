@@ -154,7 +154,7 @@ findSymbolNameForAddress(ppcaddr_t address);
 std::string
 findNearestSymbolNameForAddress(ppcaddr_t address);
 
-std::map<std::string, LoadedModule*>
+const std::map<std::string, LoadedModule*> &
 getLoadedModules();
 
 } // namespace loader
