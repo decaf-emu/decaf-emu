@@ -45,7 +45,6 @@ FSInit()
 void
 FSShutdown()
 {
-   sFsData->initialised = false;
 }
 
 
