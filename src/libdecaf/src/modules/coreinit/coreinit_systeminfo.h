@@ -3,6 +3,7 @@
 #include "coreinit_time.h"
 
 #include <common/be_val.h>
+#include <common/be_ptr.h>
 #include <common/cbool.h>
 #include <common/structsize.h>
 #include <cstdint>
@@ -64,5 +65,9 @@ OSGetOSID();
 
 OSShutdownReason
 OSGetShutdownReason();
+
+void
+OSGetArgcArgv(be_val<uint32_t> *argc,
+              be_ptr<const char> *argv);
 
 } // namespace coreinit

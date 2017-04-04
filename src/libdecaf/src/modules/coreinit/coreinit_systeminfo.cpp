@@ -96,6 +96,14 @@ OSGetShutdownReason()
 }
 
 void
+OSGetArgcArgv(be_val<uint32_t> *argc,
+              be_ptr<const char> *argv)
+{
+   *argc = 0;
+   *argv = nullptr;
+}
+
+void
 Module::initialiseSystemInformation()
 {
    sSystemInfo->busSpeed = cpu::busClockSpeed;
@@ -125,6 +133,7 @@ Module::registerSystemInfoFunctions()
    RegisterKernelFunction(OSGetTitleID);
    RegisterKernelFunction(OSGetOSID);
    RegisterKernelFunction(OSGetShutdownReason);
+   RegisterKernelFunction(OSGetArgcArgv);
 
    RegisterInternalData(sSystemInfo);
 }
