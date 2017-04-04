@@ -299,6 +299,22 @@ BinrecBackend::getCodeBlock(BinrecCore *core, uint32_t address)
    return block;
 }
 
+inline CodeBlock *
+BinrecBackend::getCodeBlockFast(BinrecCore *core, uint32_t address)
+{
+   auto indexPtr = mCodeCache.getConstIndexPointer(address);
+   if (LIKELY(indexPtr)) {
+      auto blockIndex = indexPtr->load();
+      if (LIKELY(blockIndex >= 0)) {
+         auto block = mCodeCache.getBlockByIndex(blockIndex);
+         return block;
+      }
+   }
+
+   // Block is not yet compiled, so take the slow path.
+   return getCodeBlock(core, address);
+}
+
 static inline uint64_t
 rdtsc()
 {
@@ -339,7 +355,7 @@ BinrecBackend::resumeExecution()
       }
 
       const ppcaddr_t address = core->nia;
-      auto block = getCodeBlock(core, address);
+      auto block = getCodeBlockFast(core, address);
 
       // To keep overhead in the non-profiling case as low as possible, we
       //  only check for zeroness of the profiling mask here, which is just

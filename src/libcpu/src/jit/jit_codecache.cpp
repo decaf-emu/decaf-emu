@@ -231,17 +231,6 @@ CodeCache::getBlockByAddress(uint32_t address)
 
 
 /**
- * Find a compiled code block from it's CodeBlockIndex.
- */
-CodeBlock *
-CodeCache::getBlockByIndex(CodeBlockIndex index)
-{
-   auto blockAddress = mDataAllocator.baseAddress + index * sizeof(CodeBlock);
-   return reinterpret_cast<CodeBlock *>(blockAddress);
-}
-
-
-/**
  * Find a compiled code block's CodeBlockIndex.
  */
 CodeBlockIndex

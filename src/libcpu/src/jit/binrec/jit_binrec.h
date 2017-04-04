@@ -96,6 +96,9 @@ public:
 protected:
    BinrecHandle *createBinrecHandle();
 
+   inline CodeBlock *
+   getCodeBlockFast(BinrecCore *core, uint32_t address);
+
    CodeBlock *
    checkForCodeBlockTrampoline(uint32_t address);
 
