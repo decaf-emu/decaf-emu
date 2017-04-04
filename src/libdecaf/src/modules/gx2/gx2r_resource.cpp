@@ -1,8 +1,9 @@
 #include "gx2.h"
 #include "gx2r_resource.h"
 #include "modules/coreinit/coreinit_memheap.h"
-#include <common/align.h>
 #include "ppcutils/wfunc_call.h"
+
+#include <common/align.h>
 
 namespace gx2
 {
@@ -24,11 +25,18 @@ GX2RSetAllocator(GX2RAllocFuncPtr allocFn,
 BOOL
 GX2RIsUserMemory(GX2RResourceFlags flags)
 {
-   return (flags & GX2RResourceFlags::UserMemory) ? TRUE : FALSE;
+   return (flags & GX2RResourceFlags::Gx2rAllocated) ? FALSE : TRUE;
 }
 
 namespace internal
 {
+
+GX2RResourceFlags
+getOptionFlags(GX2RResourceFlags flags)
+{
+   // Allow flags in bits 19 to 23
+   return static_cast<GX2RResourceFlags>(flags & 0xF80000);
+}
 
 void *
 gx2rAlloc(GX2RResourceFlags flags,

@@ -21,6 +21,9 @@ GX2RIsUserMemory(GX2RResourceFlags flags);
 namespace internal
 {
 
+GX2RResourceFlags
+getOptionFlags(GX2RResourceFlags flags);
+
 void *
 gx2rAlloc(GX2RResourceFlags flags,
           uint32_t size,

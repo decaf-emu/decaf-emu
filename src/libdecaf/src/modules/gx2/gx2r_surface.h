@@ -9,11 +9,11 @@ namespace gx2
 
 struct GX2Surface;
 
-bool
+BOOL
 GX2RCreateSurface(GX2Surface *surface,
                   GX2RResourceFlags flags);
 
-bool
+BOOL
 GX2RCreateSurfaceUserMemory(GX2Surface *surface,
                             uint8_t *image,
                             uint8_t *mipmap,
