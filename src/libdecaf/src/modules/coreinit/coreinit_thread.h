@@ -259,7 +259,7 @@ struct OSThread
    be_ptr<OSAlarm> waitEventTimeoutAlarm;
 
    //! The stack pointer passed in OSCreateThread.
-   be_ptr<be_val<uint32_t>> userStackPointer;
+   be_val<uint32_t> userStackPointer;
 
    //! Called just before thread is terminated, set with OSSetThreadCleanupCallback
    OSThreadCleanupCallbackFn::be cleanupCallback;
@@ -516,6 +516,12 @@ tls_get_addr(tls_index *index);
 
 namespace internal
 {
+
+void
+setUserStackPointer(uint32_t stack);
+
+void
+removeUserStackPointer(uint32_t stack);
 
 uint32_t
 pinThreadAffinity();

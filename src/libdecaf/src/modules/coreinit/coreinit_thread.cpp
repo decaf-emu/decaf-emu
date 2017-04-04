@@ -256,9 +256,9 @@ OSCreateThread(OSThread *thread,
    // Setup OSThread
    memset(thread, 0, sizeof(OSThread));
    thread->tag = OSThread::Tag;
-   thread->userStackPointer = stack;
    thread->stackStart = stack;
    thread->stackEnd = reinterpret_cast<be_val<uint32_t>*>(reinterpret_cast<uint8_t*>(stack) - stackSize);
+   thread->userStackPointer = thread->stackStart.getAddress();
    thread->basePriority = priority;
    thread->priority = thread->basePriority;
    thread->attr = attributes;
@@ -417,7 +417,7 @@ OSGetUserStackPointer(OSThread *thread)
    internal::lockScheduler();
 
    if (OSIsThreadSuspended(thread)) {
-      stack = thread->userStackPointer.getAddress();
+      stack = thread->userStackPointer;
 
       if (!stack) {
          stack = thread->context.gpr[1];
@@ -1086,6 +1086,55 @@ Module::registerThreadFunctions()
 
 namespace internal
 {
+
+/**
+ * Set a user stack pointer for the current thread.
+ */
+void
+setUserStackPointer(uint32_t stack)
+{
+   auto thread = OSGetCurrentThread();
+
+   if (stack >= thread->stackEnd.getAddress() &&
+       stack < thread->stackStart.getAddress()) {
+      // Cannot modify stack to within current stack frame.
+      return;
+   }
+
+   auto current = OSGetStackPointer();
+
+   if (current < thread->stackEnd.getAddress() ||
+       current >= thread->stackStart.getAddress()) {
+      // If current stack is outside stack frame, then we must already have
+      // a user stack pointer, and we shouldn't overwrite it.
+      return;
+   }
+
+   thread->userStackPointer = stack;
+   OSTestThreadCancel();
+   thread->cancelState |= OSThreadCancelState::DisabledByUserStackPointer;
+}
+
+
+/**
+ * Remove the user stack pointer for the current thread.
+ */
+void
+removeUserStackPointer(uint32_t stack)
+{
+   auto thread = OSGetCurrentThread();
+
+   if (stack < thread->stackEnd.getAddress() ||
+       stack >= thread->stackStart.getAddress()) {
+      // If restore stack pointer is outside stack frame, then it is not
+      // really restoring the original stack.
+      return;
+   }
+
+   thread->cancelState &= ~OSThreadCancelState::DisabledByUserStackPointer;
+   thread->userStackPointer = 0;
+   OSTestThreadCancel();
+}
 
 
 /**

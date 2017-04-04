@@ -48,6 +48,7 @@ Module::RegisterFunctions()
    registerExitFunctions();
    registerExpHeapFunctions();
    registerFastMutexFunctions();
+   registerFiberFunctions();
    registerFsFunctions();
    registerFsCmdFunctions();
    registerFsCmdBlockFunctions();

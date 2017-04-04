@@ -153,19 +153,22 @@ ENUM_END(OSThreadAttributes)
 
 ENUM_BEG(OSThreadCancelState, uint32_t)
    //! Thread cancel is enabled
-   ENUM_VALUE(Enabled,              0)
+   ENUM_VALUE(Enabled,                       0)
 
    //! Thread cancel is disabled by OSSetThreadCancelState
-   ENUM_VALUE(Disabled,             1 << 0)
+   ENUM_VALUE(Disabled,                      1 << 0)
 
    //! Thread cancel is disabled because the thread owns a mutex
-   ENUM_VALUE(DisabledByMutex,      1 << 16)
+   ENUM_VALUE(DisabledByMutex,               1 << 16)
 
    //! Thread cancel is disabled because the thread owns an uninterruptible spinlock
-   ENUM_VALUE(DisabledBySpinlock,   1 << 17)
+   ENUM_VALUE(DisabledBySpinlock,            1 << 17)
+
+   //! Thread cancel is disabled because the thread has a user stack pointer
+   ENUM_VALUE(DisabledByUserStackPointer,    1 << 18)
 
    //! Thread cancel is disabled because the thread owns a fast mutex
-   ENUM_VALUE(DisabledByFastMutex,  1 << 19)
+   ENUM_VALUE(DisabledByFastMutex,           1 << 19)
 ENUM_END(OSThreadCancelState)
 
 ENUM_BEG(OSThreadRequest, uint32_t)

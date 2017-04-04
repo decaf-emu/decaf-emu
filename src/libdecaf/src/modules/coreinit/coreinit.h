@@ -56,6 +56,7 @@ private:
    static void registerExitFunctions();
    static void registerExpHeapFunctions();
    static void registerFastMutexFunctions();
+   static void registerFiberFunctions();
    static void registerFsFunctions();
    static void registerFsCmdFunctions();
    static void registerFsCmdBlockFunctions();
