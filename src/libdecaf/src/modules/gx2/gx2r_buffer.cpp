@@ -1,3 +1,4 @@
+#include "gx2.h"
 #include "gx2_mem.h"
 #include "gx2_shaders.h"
 #include "gx2r_buffer.h"
@@ -19,6 +20,13 @@ uint32_t
 GX2RGetBufferAllocationSize(GX2RBuffer *buffer)
 {
    return align_up(buffer->elemCount * buffer->elemSize, 64);
+}
+
+void
+GX2RSetBufferName(GX2RBuffer *buffer,
+                  const char *name)
+{
+   decaf_warn_stub();
 }
 
 BOOL

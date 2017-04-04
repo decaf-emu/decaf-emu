@@ -35,6 +35,10 @@ GX2RGetBufferAlignment(GX2RResourceFlags flags);
 uint32_t
 GX2RGetBufferAllocationSize(GX2RBuffer *buffer);
 
+void
+GX2RSetBufferName(GX2RBuffer *buffer,
+                  const char *name);
+
 BOOL
 GX2RBufferExists(GX2RBuffer *buffer);
 
