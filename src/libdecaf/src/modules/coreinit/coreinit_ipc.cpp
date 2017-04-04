@@ -48,7 +48,7 @@ IOSError
 IPCDriverOpen()
 {
    auto driver = internal::getIPCDriver();
-   
+
    // Verify driver state
    if (driver->status != IPCDriverStatus::Closed &&
        driver->status != IPCDriverStatus::Initialised) {

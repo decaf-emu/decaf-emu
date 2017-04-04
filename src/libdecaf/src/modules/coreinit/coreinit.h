@@ -62,6 +62,7 @@ private:
    static void registerFsClientFunctions();
    static void registerFsDriverFunctions();
    static void registerFsFsmFunctions();
+   static void registerFsaFunctions();
    static void registerFsaShimFunctions();
    static void registerFrameHeapFunctions();
    static void registerGhsFunctions();
@@ -70,6 +71,7 @@ private:
    static void registerInterruptFunctions();
    static void registerIosFunctions();
    static void registerIpcFunctions();
+   static void registerIpcBufPoolFunctions();
    static void registerLockedCacheFunctions();
    static void registerMcpFunctions();
    static void registerMembaseFunctions();

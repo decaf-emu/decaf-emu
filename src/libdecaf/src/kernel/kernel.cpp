@@ -16,6 +16,7 @@
 #include "modules/coreinit/coreinit_appio.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_enum.h"
+#include "modules/coreinit/coreinit_mcp.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
@@ -438,6 +439,9 @@ launchGame()
    coreinit::internal::startAppIoThreads();
    coreinit::internal::startDefaultCoreThreads();
    coreinit::internal::startDeallocatorThreads();
+
+   // Initialise CafeOS
+   coreinit::internal::mcpInit();
 
    // Notify frontend that game has loaded
    decaf::event::onGameLoaded(sGameInfo);

@@ -31,7 +31,7 @@ CHECK_SIZE(MCPSysProdSettings, 0x46);
 
 #pragma pack(pop)
 
-IOSHandle
+IOSError
 MCP_Open();
 
 void
@@ -40,6 +40,23 @@ MCP_Close(IOSHandle handle);
 MCPError
 MCP_GetSysProdSettings(IOSHandle handle,
                        MCPSysProdSettings *settings);
+
+namespace internal
+{
+
+void
+mcpInit();
+
+void *
+mcpAllocateMessage(uint32_t size);
+
+MCPError
+mcpFreeMessage(void *message);
+
+MCPError
+mcpDecodeIosErrorToMcpError(IOSError error);
+
+} // namespace internal
 
 /** @} */
 

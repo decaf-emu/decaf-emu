@@ -1,41 +1,142 @@
 #include "coreinit.h"
+#include "coreinit_ios.h"
+#include "coreinit_ipcbufpool.h"
 #include "coreinit_mcp.h"
+
 #include <common/decaf_assert.h>
-#include "decaf_config.h"
-#include "kernel/kernel.h"
 
 namespace coreinit
 {
 
-static const IOSHandle
-sMCPHandle = 0x12345678;
+struct MCPData
+{
+   static constexpr uint32_t SmallMessageCount = 0x100;
+   static constexpr uint32_t SmallMessageSize = 0x80;
 
-IOSHandle
+   static constexpr uint32_t LargeMessageCount = 4;
+   static constexpr uint32_t LargeMessageSize = 0x1000;
+
+   bool initialised;
+
+   IPCBufPool *smallMessagePool;
+   IPCBufPool *largeMessagePool;
+
+   std::array<uint8_t, SmallMessageCount * SmallMessageSize> smallMessageBuffer;
+   std::array<uint8_t, LargeMessageCount * LargeMessageSize> largeMessageBuffer;
+
+   be_val<uint32_t> smallMessageCount;
+   be_val<uint32_t> largeMessageCount;
+};
+
+static MCPData *
+sMcpData = nullptr;
+
+
+IOSError
 MCP_Open()
 {
-   return sMCPHandle;
+   return IOS_Open("/dev/mcp", IOSOpenMode::None);
 }
+
 
 void
 MCP_Close(IOSHandle handle)
 {
-   decaf_check(handle == sMCPHandle);
+   IOS_Close(handle);
+}
+
+
+MCPError
+MCP_GetSysProdSettings(IOSHandle handle,
+                       MCPSysProdSettings *settings)
+{
+   if (!settings) {
+      return MCPError::InvalidArg;
+   }
+
+   auto message = internal::mcpAllocateMessage(sizeof(IOSVec));
+
+   if (!message) {
+      return MCPError::AllocError;
+   }
+
+   auto outVec = reinterpret_cast<IOSVec *>(message);
+   outVec->paddr = settings;
+   outVec->len = sizeof(MCPSysProdSettings);
+
+   auto iosError = IOS_Ioctlv(handle, MCPCommand::GetSysProdSettings, 0, 1, outVec);
+   auto mcpError = internal::mcpDecodeIosErrorToMcpError(iosError);
+
+   internal::mcpFreeMessage(message);
+   return mcpError;
+}
+
+
+namespace internal
+{
+
+void
+mcpInit()
+{
+   sMcpData->smallMessagePool = IPCBufPoolCreate(sMcpData->smallMessageBuffer.data(),
+                                                 static_cast<uint32_t>(sMcpData->smallMessageBuffer.size()),
+                                                 MCPData::SmallMessageSize,
+                                                 &sMcpData->smallMessageCount,
+                                                 1);
+
+   sMcpData->largeMessagePool = IPCBufPoolCreate(sMcpData->largeMessageBuffer.data(),
+                                                 static_cast<uint32_t>(sMcpData->largeMessageBuffer.size()),
+                                                 MCPData::LargeMessageSize,
+                                                 &sMcpData->largeMessageCount,
+                                                 1);
+
+   sMcpData->initialised = true;
+}
+
+void *
+mcpAllocateMessage(uint32_t size)
+{
+   void *message = nullptr;
+
+   if (size == 0) {
+      return nullptr;
+   } else if (size <= MCPData::SmallMessageSize) {
+      message = IPCBufPoolAllocate(sMcpData->smallMessagePool, size);
+   } else {
+      message = IPCBufPoolAllocate(sMcpData->largeMessagePool, size);
+   }
+
+   std::memset(message, 0, size);
+   return message;
 }
 
 MCPError
-MCP_GetSysProdSettings(IOSHandle handle, MCPSysProdSettings *settings)
+mcpFreeMessage(void *message)
 {
-   decaf_check(handle == sMCPHandle);
-
-   if (!settings) {
-      return MCPError::InvalidBuffer;
+   if (IPCBufPoolFree(sMcpData->smallMessagePool, message) == IOSError::OK) {
+      return MCPError::OK;
    }
 
-   std::memset(settings, 0, sizeof(MCPSysProdSettings));
-   settings->gameRegion = static_cast<SCIRegion>(kernel::getGameInfo().meta.region);
-   settings->platformRegion = static_cast<SCIRegion>(decaf::config::system::region);
-   return MCPError::OK;
+   if (IPCBufPoolFree(sMcpData->largeMessagePool, message) == IOSError::OK) {
+      return MCPError::OK;
+   }
+
+   return MCPError::InvalidOp;
 }
+
+MCPError
+mcpDecodeIosErrorToMcpError(IOSError error)
+{
+   auto category = ((~error) >> 16) & 0x3FF;
+
+   if (error >= 0 || category == 0x4) {
+      return static_cast<MCPError>(error);
+   } else {
+      return static_cast<MCPError>(0xFFFF0000 | error);
+   }
+}
+
+} // namespace internal
 
 void
 Module::registerMcpFunctions()
@@ -43,6 +144,7 @@ Module::registerMcpFunctions()
    RegisterKernelFunction(MCP_Open);
    RegisterKernelFunction(MCP_Close);
    RegisterKernelFunction(MCP_GetSysProdSettings);
+   RegisterInternalData(sMcpData);
 }
 
 } // namespace coreinit

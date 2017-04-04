@@ -1,3 +1,4 @@
+#include "coreinit.h"
 #include "coreinit_fsa.h"
 #include "coreinit_messagequeue.h"
 
@@ -33,5 +34,11 @@ fsaAsyncResultInit(FSAAsyncResult *asyncResult,
 }
 
 } // namespace internal
+
+void
+Module::registerFsaFunctions()
+{
+   RegisterKernelFunction(FSAGetAsyncResult);
+}
 
 } // namespace coreinit

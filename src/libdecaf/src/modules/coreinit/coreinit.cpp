@@ -1,5 +1,4 @@
 #include "coreinit.h"
-#include "coreinit_fsa.h"
 
 namespace coreinit
 {
@@ -55,10 +54,7 @@ Module::RegisterFunctions()
    registerFsClientFunctions();
    registerFsDriverFunctions();
    registerFsFsmFunctions();
-
-   // coreinit_fsa
-   RegisterKernelFunction(FSAGetAsyncResult);
-
+   registerFsaFunctions();
    registerFsaShimFunctions();
    registerFrameHeapFunctions();
    registerGhsFunctions();
@@ -67,6 +63,7 @@ Module::RegisterFunctions()
    registerInterruptFunctions();
    registerIosFunctions();
    registerIpcFunctions();
+   registerIpcBufPoolFunctions();
    registerLockedCacheFunctions();
    registerMcpFunctions();
    registerMemoryFunctions();

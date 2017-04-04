@@ -2,6 +2,7 @@
 #include "kernel_ipc.h"
 #include "kernel_ios_device.h"
 #include "kernel_ios_fsadevice.h"
+#include "kernel_ios_mcpdevice.h"
 
 #include <map>
 #include <string>
@@ -198,6 +199,7 @@ void
 iosInitDevices()
 {
    addDevice<FSADevice>("/dev/fsa");
+   addDevice<MCPDevice>("/dev/mcp");
 }
 
 } // namespace kernel

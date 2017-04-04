@@ -96,7 +96,7 @@ struct IPCDriver
 {
    //! The current state of the IPCDriver
    be_val<IPCDriverStatus> status;
-   
+
    UNKNOWN(0x4);
 
    //! The core this driver was opened on.
