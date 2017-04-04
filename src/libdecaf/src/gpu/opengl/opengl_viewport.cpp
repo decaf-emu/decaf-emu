@@ -1,7 +1,7 @@
 #ifndef DECAF_NOGL
 
+#include "common/gl.h"
 #include "opengl_driver.h"
-#include <glbinding/gl/gl.h>
 
 namespace gpu
 {
@@ -18,7 +18,7 @@ GLDriver::checkViewport()
       auto pa_cl_vport_yscale = getRegister<latte::PA_CL_VPORT_YSCALE_N>(latte::Register::PA_CL_VPORT_YSCALE_0);
       auto pa_cl_vport_yoffset = getRegister<latte::PA_CL_VPORT_YOFFSET_N>(latte::Register::PA_CL_VPORT_YOFFSET_0);
 
-      gl::glProgramUniform4f(
+      glProgramUniform4f(
          mActiveShader->vertex->object,
          mActiveShader->vertex->uniformViewport,
          pa_cl_vport_xoffset.VPORT_XOFFSET(),
@@ -39,10 +39,10 @@ GLDriver::checkViewport()
       auto x = pa_cl_vport_xoffset.VPORT_XOFFSET() - pa_cl_vport_xscale.VPORT_XSCALE();
       auto y = pa_cl_vport_yoffset.VPORT_YOFFSET() - pa_cl_vport_yscale.VPORT_YSCALE();
 
-      gl::glViewport(gsl::narrow_cast<gl::GLint>(x),
-                     gsl::narrow_cast<gl::GLint>(y),
-                     gsl::narrow_cast<gl::GLint>(width),
-                     gsl::narrow_cast<gl::GLint>(height));
+      glViewport(gsl::narrow_cast<GLint>(x),
+                     gsl::narrow_cast<GLint>(y),
+                     gsl::narrow_cast<GLint>(width),
+                     gsl::narrow_cast<GLint>(height));
       mViewportDirty = false;
    }
 
@@ -62,7 +62,7 @@ GLDriver::checkViewport()
          nearZ = pa_sc_vport_zmax.VPORT_ZMAX();
       }
 
-      gl::glDepthRangef(nearZ, farZ);
+      glDepthRangef(nearZ, farZ);
       mDepthRangeDirty = false;
    }
 
@@ -75,7 +75,7 @@ GLDriver::checkViewport()
       auto width = pa_sc_generic_scissor_br.BR_X() - x;
       auto height = pa_sc_generic_scissor_br.BR_Y() - y;
 
-      gl::glScissor(x, y, width, height);
+      glScissor(x, y, width, height);
       mScissorDirty = false;
    }
 

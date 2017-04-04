@@ -1,6 +1,7 @@
 #ifndef DECAF_NOGL
 
 #include <common/decaf_assert.h>
+#include <common/gl.h>
 #include <common/log.h>
 #include "decaf_config.h"
 #include "gpu/gpu_commandqueue.h"
@@ -13,8 +14,6 @@
 #include "opengl_constants.h"
 #include "opengl_driver.h"
 #include <fstream>
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
 #include <gsl.h>
 
 namespace gpu
@@ -37,44 +36,44 @@ GLDriver::initGL()
    }
 
    mActiveShader = nullptr;
-   mDrawBuffers.fill(gl::GL_NONE);
+   mDrawBuffers.fill(GL_NONE);
    mGLStateCache.blendEnable.fill(false);
    mLastUniformUpdate.fill(0);
 
    // We always use the scissor test
-   gl::glEnable(gl::GL_SCISSOR_TEST);
+   glEnable(GL_SCISSOR_TEST);
 
    // We always use GL_UPPER_LEFT coordinates
-   gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
+   glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
 
    // The GL spec doesn't say whether these default to enabled or disabled.
    //  They're probably disabled, but let's play it safe.
-   gl::glDisable(gl::GL_DEPTH_CLAMP);
-   gl::glDisable(gl::GL_PRIMITIVE_RESTART);
+   glDisable(GL_DEPTH_CLAMP);
+   glDisable(GL_PRIMITIVE_RESTART);
 
    // Create our blit framebuffer
-   gl::glCreateFramebuffers(2, mBlitFrameBuffers);
+   glCreateFramebuffers(2, mBlitFrameBuffers);
 
    if (decaf::config::gpu::debug) {
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[0], -1, "blit target");
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[1], -1, "blit source");
+      glObjectLabel(GL_FRAMEBUFFER, mBlitFrameBuffers[0], -1, "blit target");
+      glObjectLabel(GL_FRAMEBUFFER, mBlitFrameBuffers[1], -1, "blit source");
    }
 
    // Create our default framebuffer
-   gl::glGenFramebuffers(1, &mFrameBuffer);
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer);
+   glGenFramebuffers(1, &mFrameBuffer);
+   glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
 
    // Create framebuffers for color-clear and depth-clear operations
-   gl::glCreateFramebuffers(1, &mColorClearFrameBuffer);
-   gl::glCreateFramebuffers(1, &mDepthClearFrameBuffer);
+   glCreateFramebuffers(1, &mColorClearFrameBuffer);
+   glCreateFramebuffers(1, &mDepthClearFrameBuffer);
 
    if (decaf::config::gpu::debug) {
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mColorClearFrameBuffer, -1, "color clear");
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mDepthClearFrameBuffer, -1, "depth clear");
+      glObjectLabel(GL_FRAMEBUFFER, mColorClearFrameBuffer, -1, "color clear");
+      glObjectLabel(GL_FRAMEBUFFER, mDepthClearFrameBuffer, -1, "depth clear");
    }
 
-   gl::GLint value;
-   gl::glGetIntegerv(gl::GL_MAX_UNIFORM_BLOCK_SIZE, &value);
+   GLint value;
+   glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &value);
    MaxUniformBlockSize = value;
 }
 
@@ -85,7 +84,7 @@ GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
 
    // Destroy any old chain
    if (chain->object) {
-      gl::glDeleteTextures(1, &chain->object);
+      glDeleteTextures(1, &chain->object);
       chain->object = 0;
    }
 
@@ -94,19 +93,19 @@ GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
    //  the games buffering mode, but in practice this is probably meaningless.
 
    // Create the chain
-   gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &chain->object);
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glTextureStorage2D(chain->object, 1, gl::GL_RGBA8, data.width, data.height);
+   glCreateTextures(GL_TEXTURE_2D, 1, &chain->object);
+   glTextureParameteri(chain->object, GL_TEXTURE_MAG_FILTER, static_cast<int>(GL_NEAREST));
+   glTextureParameteri(chain->object, GL_TEXTURE_MIN_FILTER, static_cast<int>(GL_NEAREST));
+   glTextureParameteri(chain->object, GL_TEXTURE_WRAP_S, static_cast<int>(GL_CLAMP_TO_EDGE));
+   glTextureParameteri(chain->object, GL_TEXTURE_WRAP_T, static_cast<int>(GL_CLAMP_TO_EDGE));
+   glTextureStorage2D(chain->object, 1, GL_RGBA8, data.width, data.height);
 
    chain->width = data.width;
    chain->height = data.height;
 
    if (decaf::config::gpu::debug) {
       const char *label = data.isTv ? "TV framebuffer" : "DRC framebuffer";
-      gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, label);
+      glObjectLabel(GL_TEXTURE, chain->object, -1, label);
    }
 
    // Initialize the pixels to a more useful color
@@ -120,7 +119,7 @@ GLDriver::decafSetBuffer(const pm4::DecafSetBuffer &data)
       tmpClearBuf[i] = clearColor;
    }
 
-   gl::glTextureSubImage2D(chain->object, 0, 0, 0, data.width, data.height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, tmpClearBuf);
+   glTextureSubImage2D(chain->object, 0, 0, 0, data.width, data.height, GL_RGBA, GL_UNSIGNED_BYTE, tmpClearBuf);
    delete[] tmpClearBuf;
 }
 
@@ -145,15 +144,15 @@ GLDriver::decafCopyColorToScan(const pm4::DecafCopyColorToScan &data)
       return;
    }
 
-   gl::glNamedFramebufferTexture(mBlitFrameBuffers[0], gl::GL_COLOR_ATTACHMENT0, target->object, 0);
-   gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
+   glNamedFramebufferTexture(mBlitFrameBuffers[0], GL_COLOR_ATTACHMENT0, target->object, 0);
+   glNamedFramebufferTexture(mBlitFrameBuffers[1], GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
 
-   gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
+   glDisable(GL_SCISSOR_TEST);
+   glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
                               0, 0, data.width, data.height,
                               0, 0, target->width, target->height,
-                              gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
-   gl::glEnable(gl::GL_SCISSOR_TEST);
+                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
+   glEnable(GL_SCISSOR_TEST);
 }
 
 void
@@ -217,32 +216,32 @@ GLDriver::decafOSScreenFlip(const pm4::DecafOSScreenFlip &data)
       height = mDrcScanBuffers.height;
    }
 
-   gl::glTextureSubImage2D(texture, 0, 0, 0, width, height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, data.buffer);
+   glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.buffer);
    decafSwapBuffers(pm4::DecafSwapBuffers {});
 }
 
 // TODO: Move all these GL things into a common place!
-static gl::GLenum
+static GLenum
 getTextureTarget(latte::SQ_TEX_DIM dim)
 {
    switch (dim)
    {
    case latte::SQ_TEX_DIM::DIM_1D:
-      return gl::GL_TEXTURE_1D;
+      return GL_TEXTURE_1D;
    case latte::SQ_TEX_DIM::DIM_2D:
-      return gl::GL_TEXTURE_2D;
+      return GL_TEXTURE_2D;
    case latte::SQ_TEX_DIM::DIM_3D:
-      return gl::GL_TEXTURE_3D;
+      return GL_TEXTURE_3D;
    case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      return gl::GL_TEXTURE_CUBE_MAP;
+      return GL_TEXTURE_CUBE_MAP;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      return gl::GL_TEXTURE_1D_ARRAY;
+      return GL_TEXTURE_1D_ARRAY;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-      return gl::GL_TEXTURE_2D_ARRAY;
+      return GL_TEXTURE_2D_ARRAY;
    case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-      return gl::GL_TEXTURE_2D_MULTISAMPLE;
+      return GL_TEXTURE_2D_MULTISAMPLE;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+      return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
    default:
       decaf_abort(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
    }
@@ -298,7 +297,7 @@ GLDriver::decafCopySurface(const pm4::DecafCopySurface &data)
       copyDepth *= 6;
    }
 
-   gl::glCopyImageSubData(
+   glCopyImageSubData(
       srcBuffer->active->object,
       getTextureTarget(data.dstDim),
       data.srcLevel,
@@ -473,7 +472,7 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
             writeData(mTotalSamplesPassed);
          });
       } else {
-         gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+         glEndQuery(GL_SAMPLES_PASSED);
 
          auto originalQuery = mOccQuery;
 
@@ -482,15 +481,15 @@ GLDriver::eventWrite(const pm4::EventWrite &data)
          wait.query = originalQuery;
          wait.func = [=]() {
             auto value = uint64_t{ 0 };
-            gl::glGetQueryObjectui64v(originalQuery, gl::GL_QUERY_RESULT, &value);
+            glGetQueryObjectui64v(originalQuery, GL_QUERY_RESULT, &value);
             mTotalSamplesPassed += value;
             writeData(mTotalSamplesPassed);
          };
          mSyncWaits.emplace(wait);
       }
 
-      gl::glGenQueries(1, &mOccQuery);
-      gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
+      glGenQueries(1, &mOccQuery);
+      glBeginQuery(GL_SAMPLES_PASSED, mOccQuery);
    } break;
    default:
       decaf_abort(fmt::format("Unexpected event type {}", type));
@@ -555,7 +554,7 @@ GLDriver::pfpSyncMe(const pm4::PfpSyncMe &data)
 void
 GLDriver::injectFence(std::function<void()> func)
 {
-   auto object = gl::glFenceSync(gl::GL_SYNC_GPU_COMMANDS_COMPLETE, gl::GL_NONE_BIT);
+   auto object = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
    SyncWait wait;
    wait.type = SyncWaitType::Fence;
@@ -575,25 +574,25 @@ GLDriver::checkSyncObjects()
       auto &wait = mSyncWaits.front();
 
       if (wait.type == SyncWaitType::Fence) {
-         gl::GLenum value;
-         gl::glGetSynciv(wait.fence, gl::GL_SYNC_STATUS, 4, nullptr, reinterpret_cast<gl::GLint*>(&value));
+         GLenum value;
+         glGetSynciv(wait.fence, GL_SYNC_STATUS, 4, nullptr, reinterpret_cast<GLint*>(&value));
 
-         if (value == gl::GL_UNSIGNALED) {
+         if (value == GL_UNSIGNALED) {
             break;
          }
 
          wait.func();
          glDeleteSync(wait.fence);
       } else if (wait.type == SyncWaitType::Query) {
-         gl::GLboolean value;
-         gl::glGetQueryObjectuiv(wait.query, gl::GL_QUERY_RESULT_AVAILABLE, reinterpret_cast<gl::GLuint*>(&value));
+         GLboolean value;
+         glGetQueryObjectuiv(wait.query, GL_QUERY_RESULT_AVAILABLE, reinterpret_cast<GLuint*>(&value));
 
-         if (value == gl::GL_FALSE) {
+         if (value == GL_FALSE) {
             break;
          }
 
          wait.func();
-         gl::glDeleteQueries(1, &wait.query);
+         glDeleteQueries(1, &wait.query);
       } else {
          decaf_abort("GPU thread encountered unknown sync type");
       }
@@ -617,7 +616,7 @@ GLDriver::executeBuffer(pm4::Buffer *buffer)
    });
 
    // Flush the OpenGL command stream
-   gl::glFlush();
+   glFlush();
 }
 
 void

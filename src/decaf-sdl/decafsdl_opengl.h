@@ -1,10 +1,10 @@
 #pragma once
 #ifndef DECAF_NOGL
+#include "common/gl.h"
 #include "decafsdl_graphics.h"
 #include "libdecaf/decaf.h"
 #include "libdecaf/decaf_opengl.h"
 #include <SDL.h>
-#include <glbinding/gl/gl.h>
 
 class DecafSDLOpenGL : public DecafSDLGraphics
 {
@@ -28,13 +28,13 @@ public:
 
 protected:
    void
-   drawScanBuffer(gl::GLuint object);
+   drawScanBuffer(GLuint object);
 
    void
    drawScanBuffers(Viewport &tvViewport,
-                   gl::GLuint tvBuffer,
+                   GLuint tvBuffer,
                    Viewport &drcViewport,
-                   gl::GLuint drcBuffer);
+                   GLuint drcBuffer);
 
    void
    initialiseContext();
@@ -49,14 +49,14 @@ protected:
    SDL_GLContext mContext = nullptr;
    SDL_GLContext mThreadContext = nullptr;
 
-   gl::GLuint mVertexProgram;
-   gl::GLuint mPixelProgram;
-   gl::GLuint mPipeline;
-   gl::GLuint mVertArray;
-   gl::GLuint mVertBuffer;
-   gl::GLuint mSampler;
+   GLuint mVertexProgram;
+   GLuint mPixelProgram;
+   GLuint mPipeline;
+   GLuint mVertArray;
+   GLuint mVertBuffer;
+   GLuint mSampler;
    
-   gl::GLfloat mBackgroundColour[3];
+   GLfloat mBackgroundColour[3];
 };
 
 #endif // DECAF_NOGL

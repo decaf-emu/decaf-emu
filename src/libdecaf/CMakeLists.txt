@@ -24,3 +24,8 @@ target_link_libraries(libdecaf
 if(MSVC)
     target_compile_options(libdecaf PUBLIC /wd4251)
 endif()
+
+# glbinding has to be built first so it can generate glbinding_api.h
+if (DECAF_GLBINDING)
+    add_dependencies(libdecaf glbinding)
+endif()

@@ -13,11 +13,11 @@
 #include "opengl_resource.h"
 
 #include <chrono>
+#include <common/gl.h>
 #include <common/log.h>
 #include <common/platform.h>
 #include <condition_variable>
 #include <exception>
-#include <glbinding/gl/gl.h>
 #include <gsl.h>
 #include <libcpu/mem.h>
 #include <list>
@@ -43,7 +43,7 @@ enum class SurfaceUseState : uint32_t
 
 struct AttribBufferCache
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    uint32_t stride = 0;
 };
 
@@ -75,7 +75,7 @@ struct FetchShader : public Shader
       latte::SQ_FORMAT_COMP formatComp;
    };
 
-   gl::GLuint object = 0;
+   GLuint object = 0;
    std::vector<Attrib> attribs;
    std::array<AttribBufferCache, latte::MaxAttributes> mAttribBufferCache;
    std::string disassembly;
@@ -83,11 +83,11 @@ struct FetchShader : public Shader
 
 struct VertexShader : public Shader
 {
-   gl::GLuint object = 0;
-   gl::GLuint uniformRegisters = 0;
-   gl::GLuint uniformViewport = 0;
+   GLuint object = 0;
+   GLuint uniformRegisters = 0;
+   GLuint uniformViewport = 0;
    bool isScreenSpace = false;
-   std::array<gl::GLuint, latte::MaxAttributes> attribLocations;
+   std::array<GLuint, latte::MaxAttributes> attribLocations;
    std::array<uint8_t, 256> outputMap;
    std::array<bool, 16> usedUniformBlocks;
    std::array<bool, 4> usedFeedbackBuffers;
@@ -98,9 +98,9 @@ struct VertexShader : public Shader
 
 struct PixelShader : public Shader
 {
-   gl::GLuint object = 0;
-   gl::GLuint uniformRegisters = 0;
-   gl::GLuint uniformAlphaRef = 0;
+   GLuint object = 0;
+   GLuint uniformRegisters = 0;
+   GLuint uniformAlphaRef = 0;
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
    std::array<glsl2::SamplerUsage, latte::MaxSamplers> samplerUsage;
    std::array<bool, 16> usedUniformBlocks;
@@ -113,7 +113,7 @@ using ShaderPipelineKey = std::tuple<uint64_t, uint64_t, uint64_t>;
 
 struct ShaderPipeline
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    FetchShader *fetch = nullptr;
    VertexShader *vertex = nullptr;
    PixelShader *pixel = nullptr;  // Null if rasterization is disabled
@@ -124,16 +124,16 @@ struct ShaderPipeline
 
 struct HostSurface
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    uint32_t width = 0;
    uint32_t height = 0;
    uint32_t depth = 0;
    uint32_t degamma = false;
    bool isDepthBuffer = false;
-   gl::GLenum swizzleR;
-   gl::GLenum swizzleG;
-   gl::GLenum swizzleB;
-   gl::GLenum swizzleA;
+   GLenum swizzleR;
+   GLenum swizzleG;
+   GLenum swizzleB;
+   GLenum swizzleA;
    HostSurface *next = nullptr;
 };
 
@@ -156,14 +156,14 @@ struct SurfaceBuffer : public Resource
 
 struct ScanBufferChain
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    uint32_t width;
    uint32_t height;
 };
 
 struct DataBuffer : public Resource
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    uint32_t allocatedSize = 0;
    void *mappedBuffer = nullptr;
    bool isInput = false;  // Uniform or attribute buffers
@@ -176,13 +176,13 @@ struct DataBuffer : public Resource
 
 struct Sampler
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
 };
 
 struct FeedbackBufferState
 {
    bool bound = false;
-   gl::GLuint object;
+   GLuint object;
    uint32_t baseOffset;
    uint32_t currentOffset;
 };
@@ -197,34 +197,34 @@ struct SyncWait
 {
    SyncWaitType type;
    union {
-      gl::GLsync fence;
-      gl::GLuint query;
+      GLsync fence;
+      GLuint query;
    };
    std::function<void()> func;
 };
 
 struct ColorBufferCache
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    uint32_t mask = 0;
 };
 
 struct DepthBufferCache
 {
-   gl::GLuint object = 0;
+   GLuint object = 0;
    bool depthBound = false;
    bool stencilBound = false;
 };
 
 struct UniformBlockCache
 {
-   gl::GLuint vsObject = 0;
-   gl::GLuint psObject = 0;
+   GLuint vsObject = 0;
+   GLuint psObject = 0;
 };
 
 struct TextureCache
 {
-   gl::GLuint surfaceObject = 0;
+   GLuint surfaceObject = 0;
    uint32_t word4 = 0;
 };
 
@@ -232,18 +232,18 @@ struct SamplerCache
 {
    glsl2::SamplerUsage usage;
 
-   gl::GLenum wrapS = gl::GL_REPEAT;
-   gl::GLenum wrapT = gl::GL_REPEAT;
-   gl::GLenum wrapR = gl::GL_REPEAT;
+   GLenum wrapS = GL_REPEAT;
+   GLenum wrapT = GL_REPEAT;
+   GLenum wrapR = GL_REPEAT;
 
-   gl::GLenum minFilter = gl::GL_NEAREST_MIPMAP_LINEAR;
-   gl::GLenum magFilter = gl::GL_LINEAR;
+   GLenum minFilter = GL_NEAREST_MIPMAP_LINEAR;
+   GLenum magFilter = GL_LINEAR;
 
    latte::SQ_TEX_BORDER_COLOR borderColorType = latte::SQ_TEX_BORDER_COLOR::TRANS_BLACK;
    std::array<float, 4> borderColorValue;
 
-   gl::GLenum depthCompareMode = gl::GL_NONE;
-   gl::GLenum depthCompareFunc = gl::GL_LEQUAL;
+   GLenum depthCompareMode = GL_NONE;
+   GLenum depthCompareFunc = GL_LEQUAL;
 
    ufixed_4_6_t minLod;
    ufixed_4_6_t maxLod;
@@ -255,12 +255,12 @@ struct GLStateCache
    std::array<bool, latte::MaxRenderTargets> blendEnable;
 
    bool cullFaceEnable = false;
-   gl::GLenum cullFace = gl::GL_BACK;
-   gl::GLenum frontFace = gl::GL_CCW;
+   GLenum cullFace = GL_BACK;
+   GLenum frontFace = GL_CCW;
 
    bool depthEnable = false;
    bool depthWrite = true;
-   gl::GLenum depthFunc = gl::GL_LESS;
+   GLenum depthFunc = GL_LESS;
 
    bool stencilEnable = false;
    uint32_t stencilState = 0;
@@ -274,7 +274,7 @@ struct GLStateCache
    bool halfZClipSpace = false;
 
    bool primRestartEnable = false;  // See note in initGL()
-   gl::GLuint primRestartIndex = static_cast<gl::GLuint>(-1);
+   GLuint primRestartIndex = static_cast<GLuint>(-1);
 };
 
 struct RemoteThreadTask
@@ -383,10 +383,10 @@ private:
 
    void
    setSurfaceSwizzle(SurfaceBuffer *surface,
-                     gl::GLenum swizzleR,
-                     gl::GLenum swizzleG,
-                     gl::GLenum swizzleB,
-                     gl::GLenum swizzleA);
+                     GLenum swizzleR,
+                     GLenum swizzleG,
+                     GLenum swizzleB,
+                     GLenum swizzleA);
 
    SurfaceBuffer *
    getColorBuffer(latte::CB_COLORN_BASE base,
@@ -427,7 +427,7 @@ private:
                       uint32_t size);
 
    void
-   beginTransformFeedback(gl::GLenum primitive);
+   beginTransformFeedback(GLenum primitive);
 
    void
    endTransformFeedback();
@@ -507,23 +507,23 @@ private:
    std::array<Sampler, latte::MaxSamplers> mPixelSamplers;
    std::array<Sampler, latte::MaxSamplers> mGeometrySamplers;
 
-   gl::GLuint mBlitFrameBuffers[2];
-   gl::GLuint mFrameBuffer;
-   gl::GLuint mColorClearFrameBuffer;
-   gl::GLuint mDepthClearFrameBuffer;
+   GLuint mBlitFrameBuffers[2];
+   GLuint mFrameBuffer;
+   GLuint mColorClearFrameBuffer;
+   GLuint mDepthClearFrameBuffer;
    ShaderPipeline *mActiveShader = nullptr;
-   std::array<gl::GLenum, latte::MaxRenderTargets> mDrawBuffers;
+   std::array<GLenum, latte::MaxRenderTargets> mDrawBuffers;
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 
    std::queue<SyncWait> mSyncWaits;
 
-   gl::GLuint mFeedbackQuery = 0;
+   GLuint mFeedbackQuery = 0;
    bool mFeedbackActive = false;
-   gl::GLenum mFeedbackPrimitive;
+   GLenum mFeedbackPrimitive;
    std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
-   gl::GLuint mOccQuery = 0;
+   GLuint mOccQuery = 0;
    uint64_t mTotalSamplesPassed = 0;
 
    GLStateCache mGLStateCache;

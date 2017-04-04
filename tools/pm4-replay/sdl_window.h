@@ -1,5 +1,5 @@
 #pragma once
-#include <glbinding/gl/gl.h>
+#include <common/gl.h>
 #include <libdecaf/decaf.h>
 #include <libdecaf/decaf_opengl.h>
 #include <SDL.h>
@@ -19,10 +19,10 @@ public:
 protected:
    void initialiseContext();
    void initialiseDraw();
-   void drawScanBuffer(gl::GLuint object);
+   void drawScanBuffer(GLuint object);
    void calculateScreenViewports(float(&tv)[4],
                                  float(&drc)[4]);
-   void drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
+   void drawScanBuffers(GLuint tvBuffer, GLuint drcBuffer);
 
 private:
    SDL_Window *mWindow = nullptr;
@@ -31,10 +31,10 @@ private:
 
    decaf::OpenGLDriver *mGraphicsDriver = nullptr;
 
-   gl::GLuint mVertexProgram;
-   gl::GLuint mPixelProgram;
-   gl::GLuint mPipeline;
-   gl::GLuint mVertArray;
-   gl::GLuint mVertBuffer;
-   gl::GLuint mSampler;
+   GLuint mVertexProgram;
+   GLuint mPixelProgram;
+   GLuint mPipeline;
+   GLuint mVertArray;
+   GLuint mVertBuffer;
+   GLuint mSampler;
 };
