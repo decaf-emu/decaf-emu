@@ -415,6 +415,9 @@ uint32_t
 OSGetStackPointer();
 
 uint32_t
+OSGetUserStackPointer(OSThread *thread);
+
+uint32_t
 OSGetThreadAffinity(OSThread *thread);
 
 const char *

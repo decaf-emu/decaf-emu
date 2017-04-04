@@ -408,6 +408,28 @@ OSGetStackPointer()
 
 
 /**
+ * Return user stack pointer.
+ */
+uint32_t
+OSGetUserStackPointer(OSThread *thread)
+{
+   auto stack = uint32_t { 0 };
+   internal::lockScheduler();
+
+   if (OSIsThreadSuspended(thread)) {
+      stack = thread->userStackPointer.getAddress();
+
+      if (!stack) {
+         stack = thread->context.gpr[1];
+      }
+   }
+
+   internal::unlockScheduler();
+   return stack;
+}
+
+
+/**
  * Get a thread's affinity.
  */
 uint32_t
@@ -1025,6 +1047,7 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSGetCurrentThread);
    RegisterKernelFunction(OSGetDefaultThread);
    RegisterKernelFunction(OSGetStackPointer);
+   RegisterKernelFunction(OSGetUserStackPointer);
    RegisterKernelFunction(OSGetThreadAffinity);
    RegisterKernelFunction(OSGetThreadName);
    RegisterKernelFunction(OSGetThreadPriority);
