@@ -8,6 +8,8 @@
 namespace coreinit
 {
 
+constexpr uint32_t IPCBufPool::MagicHeader;
+
 namespace internal
 {
 
