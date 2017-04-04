@@ -1209,6 +1209,7 @@ loadRPLNoLock(const std::string &name)
    LoadedModule *module = nullptr;
    std::string moduleName;
    std::string fileName;
+   fs::FileHandle fh;
 
    normalizeModuleName(name, moduleName, fileName);
 
@@ -1228,19 +1229,38 @@ loadRPLNoLock(const std::string &name)
       }
    }
 
-   // Try to find module in the game code directory
+   // Try to find module in the game code directory.
    if (!module) {
       auto fs = kernel::getFileSystem();
       auto result = fs->openFile("/vol/code/" + fileName, fs::File::Read);
 
       if (result) {
-         auto fh = result.value();
-         auto buffer = std::vector<uint8_t>(fh->size());
-         fh->read(buffer.data(), buffer.size(), 1);
-         fh->close();
-
-         module = loadRPL(moduleName, fileName, buffer);
+         fh = result.value();
       }
+   }
+
+   // Try to find module in the system library directory.
+   // Only if it is on the allowed lle_modules list.
+   if (!module && !fh &&
+       std::find(decaf::config::system::lle_modules.begin(),
+                 decaf::config::system::lle_modules.end(),
+                 fileName) != decaf::config::system::lle_modules.end()) {
+
+      auto fs = kernel::getFileSystem();
+      auto result = fs->openFile("/vol/storage_mlc01/sys/title/00050010/1000400A/code/" + fileName, fs::File::Read);
+
+      if (result) {
+         fh = result.value();
+      }
+   }
+
+   // Load from file
+   if (fh) {
+      auto buffer = std::vector<uint8_t>(fh->size());
+      fh->read(buffer.data(), buffer.size(), 1);
+      fh->close();
+
+      module = loadRPL(moduleName, fileName, buffer);
    }
 
    if (!module) {

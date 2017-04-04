@@ -1,3 +1,4 @@
+#include "decaf_config.h"
 #include "kernel_hle.h"
 #include "kernel_internal.h"
 #include "modules/camera/camera.h"
@@ -87,13 +88,20 @@ void
 registerHleModule(const std::string &name,
                   HleModule *module)
 {
-   auto &symbolMap = module->getSymbolMap();
+   if (std::find(decaf::config::system::lle_modules.begin(),
+                 decaf::config::system::lle_modules.end(),
+                 name) != decaf::config::system::lle_modules.end()) {
+      gLog->warn("Replacing HLE with LLE for module {}.", name);
+      return;
+   }
 
    // Register module
    decaf_check(sHleModules.find(name) == sHleModules.end());
    sHleModules.emplace(name, module);
 
    // Register every function symbol
+   auto &symbolMap = module->getSymbolMap();
+
    for (auto &pair : symbolMap) {
       auto symbol = pair.second;
 
@@ -107,6 +115,13 @@ void
 registerHleModuleAlias(const std::string &module,
                        const std::string &alias)
 {
+   if (std::find(decaf::config::system::lle_modules.begin(),
+                 decaf::config::system::lle_modules.end(),
+                 alias) != decaf::config::system::lle_modules.end()) {
+      gLog->warn("Replacing HLE with LLE for module {}.", alias);
+      return;
+   }
+
    auto itr = sHleModules.find(module);
    decaf_check(itr != sHleModules.end());
    sHleModules.emplace(alias, itr->second);

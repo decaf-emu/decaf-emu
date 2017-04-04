@@ -115,6 +115,9 @@ extern std::string content_path;
 //! Time scale factor for emulated clock
 extern double time_scale;
 
+//! List of system modules to load LLE instead of HLE.
+extern std::vector<std::string> lle_modules;
+
 } // namespace system
 
 namespace ui

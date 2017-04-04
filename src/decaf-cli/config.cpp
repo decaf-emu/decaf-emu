@@ -87,7 +87,8 @@ struct CerealSystem
       ar(CEREAL_NVP(region),
          CEREAL_NVP(mlc_path),
          CEREAL_NVP(sdcard_path),
-         CEREAL_NVP(timeout_ms));
+         CEREAL_NVP(timeout_ms),
+         CEREAL_NVP(lle_modules));
    }
 };
 

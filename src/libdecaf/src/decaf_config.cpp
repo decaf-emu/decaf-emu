@@ -95,6 +95,7 @@ std::string mlc_path = "mlc";
 std::string sdcard_path = "sdcard";
 std::string content_path = {};
 double time_scale = 1.0;
+std::vector<std::string> lle_modules;
 
 } // namespace system
 
