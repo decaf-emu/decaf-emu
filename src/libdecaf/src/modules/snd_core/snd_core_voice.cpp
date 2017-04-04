@@ -135,6 +135,12 @@ AXGetVoiceLoopCount(AXVoice *voice)
    return sVoiceExtras[voice->index].loopCount;
 }
 
+uint32_t
+AXGetVoiceMixerSelect(AXVoice *voice)
+{
+   return voice->renderer;
+}
+
 void
 AXGetVoiceOffsetsEx(AXVoice *voice,
                     AXVoiceOffsets *offsets,
@@ -389,6 +395,16 @@ AXSetVoiceLoop(AXVoice *voice,
    extras->syncBits |= internal::AXVoiceSyncBits::Loop;
 }
 
+uint32_t
+AXSetVoiceMixerSelect(AXVoice *voice,
+                      uint32_t mixerSelect)
+{
+   auto oldMiderSelect = voice->renderer;
+   decaf_warn_stub();
+   voice->renderer = static_cast<AXRenderer>(mixerSelect);
+   return oldMiderSelect;
+}
+
 void
 AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets)
@@ -439,6 +455,13 @@ AXSetVoicePriority(AXVoice *voice,
                    uint32_t priority)
 {
    voice->priority = priority;
+}
+
+void
+AXSetVoiceRmtOn(AXVoice *voice,
+                uint16_t on)
+{
+   decaf_warn_stub();
 }
 
 void
@@ -608,7 +631,9 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXGetMaxVoices);
    RegisterKernelFunction(AXGetVoiceCurrentOffsetEx);
    RegisterKernelFunction(AXGetVoiceLoopCount);
+   RegisterKernelFunction(AXGetVoiceMixerSelect);
    RegisterKernelFunction(AXGetVoiceOffsets);
+   RegisterKernelFunction(AXGetVoiceOffsetsEx);
    RegisterKernelFunction(AXIsVoiceRunning);
    RegisterKernelFunction(AXSetVoiceAdpcm);
    RegisterKernelFunction(AXSetVoiceAdpcmLoop);
@@ -620,9 +645,11 @@ Module::registerVoiceFunctions()
    RegisterKernelFunction(AXSetVoiceLoopOffset);
    RegisterKernelFunction(AXSetVoiceLoopOffsetEx);
    RegisterKernelFunction(AXSetVoiceLoop);
+   RegisterKernelFunction(AXSetVoiceMixerSelect);
    RegisterKernelFunction(AXSetVoiceOffsets);
    RegisterKernelFunction(AXSetVoiceOffsetsEx);
    RegisterKernelFunction(AXSetVoicePriority);
+   RegisterKernelFunction(AXSetVoiceRmtOn);
    RegisterKernelFunction(AXSetVoiceRmtIIRCoefs);
    RegisterKernelFunction(AXSetVoiceSrc);
    RegisterKernelFunction(AXSetVoiceSrcType);

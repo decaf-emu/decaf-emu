@@ -56,6 +56,9 @@ sMixBuffer;
 static std::array<int16_t, 6*144>
 sOutputBuffer;
 
+static uint32_t
+sDefaultMixerSelect = 0;
+
 void
 AXInit()
 {
@@ -104,21 +107,39 @@ AXIsInit()
 }
 
 void
-AXInitProfile(AXProfile *profile, uint32_t count)
+AXQuit()
 {
-   // TODO: AXInitProfile
+   decaf_warn_stub();
+   gAXInit = FALSE;
+}
+
+void
+AXInitProfile(AXProfile *profile,
+              uint32_t count)
+{
+   decaf_warn_stub();
 }
 
 uint32_t
-AXGetSwapProfile(AXProfile *profile, uint32_t count)
+AXGetSwapProfile(AXProfile *profile,
+                 uint32_t count)
 {
+   decaf_warn_stub();
    return 0;
 }
 
-AXResult
-AXSetDefaultMixerSelect(uint32_t)
+uint32_t
+AXGetDefaultMixerSelect()
 {
-   // TODO: AXSetDefaultMixerSelect
+   decaf_warn_stub();
+   return sDefaultMixerSelect;
+}
+
+AXResult
+AXSetDefaultMixerSelect(uint32_t defaultMixerSelect)
+{
+   decaf_warn_stub();
+   sDefaultMixerSelect = defaultMixerSelect;
    return AXResult::Success;
 }
 
@@ -370,8 +391,10 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXInit);
    RegisterKernelFunction(AXInitWithParams);
    RegisterKernelFunction(AXIsInit);
+   RegisterKernelFunction(AXQuit);
    RegisterKernelFunction(AXInitProfile);
    RegisterKernelFunction(AXGetSwapProfile);
+   RegisterKernelFunction(AXGetDefaultMixerSelect);
    RegisterKernelFunction(AXSetDefaultMixerSelect);
    RegisterKernelFunction(AXRegisterAppFrameCallback);
    RegisterKernelFunction(AXDeregisterAppFrameCallback);

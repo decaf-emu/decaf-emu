@@ -203,6 +203,9 @@ AXGetVoiceCurrentOffsetEx(AXVoice *voice,
 uint32_t
 AXGetVoiceLoopCount(AXVoice *voice);
 
+uint32_t
+AXGetVoiceMixerSelect(AXVoice *voice);
+
 void
 AXGetVoiceOffsetsEx(AXVoice *voice,
                     AXVoiceOffsets *offsets,
@@ -264,6 +267,10 @@ void
 AXSetVoiceLoop(AXVoice *voice,
                AXVoiceLoop loop);
 
+uint32_t
+AXSetVoiceMixerSelect(AXVoice *voice,
+                      uint32_t mixerSelect);
+
 void
 AXSetVoiceOffsets(AXVoice *voice,
                   AXVoiceOffsets *offsets);
@@ -276,6 +283,10 @@ AXSetVoiceOffsetsEx(AXVoice *voice,
 void
 AXSetVoicePriority(AXVoice *voice,
                    uint32_t priority);
+
+void
+AXSetVoiceRmtOn(AXVoice *voice,
+                uint16_t on);
 
 void
 AXSetVoiceRmtIIRCoefs(AXVoice *voice,

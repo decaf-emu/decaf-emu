@@ -34,6 +34,9 @@ BOOL
 AXIsInit();
 
 void
+AXQuit();
+
+void
 AXInitProfile(AXProfile *profile,
               uint32_t count);
 
