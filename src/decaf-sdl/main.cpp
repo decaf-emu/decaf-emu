@@ -227,7 +227,7 @@ start(excmd::parser &parser,
 
       if (level >= 1) {
          decaf::config::jit::opt_flags.push_back("BASIC");
-         decaf::config::jit::opt_flags.push_back("DECONDITON");
+         decaf::config::jit::opt_flags.push_back("DECONDITION");
          decaf::config::jit::opt_flags.push_back("DSE");
          decaf::config::jit::opt_flags.push_back("FOLD_CONSTANTS");
          decaf::config::jit::opt_flags.push_back("PPC_FORWARD_LOADS");
