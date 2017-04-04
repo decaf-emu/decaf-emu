@@ -254,6 +254,7 @@ start(excmd::parser &parser,
 
       if (level >= 3) {
          decaf::config::jit::opt_flags.push_back("PPC_CONSTANT_GQRS");
+         decaf::config::jit::opt_flags.push_back("PPC_DETECT_FCFI_EMUL");
          decaf::config::jit::opt_flags.push_back("PPC_FAST_FCTIW");
       }
    }
@@ -277,6 +278,7 @@ start(excmd::parser &parser,
          decaf::config::jit::opt_flags.push_back("PPC_IGNORE_FPSCR_VXFOO");
          decaf::config::jit::opt_flags.push_back("PPC_NATIVE_RECIPROCAL");
          decaf::config::jit::opt_flags.push_back("PPC_PS_STORE_DENORMALS");
+         decaf::config::jit::opt_flags.push_back("PPC_SINGLE_PREC_INPUTS");
       }
    }
 
