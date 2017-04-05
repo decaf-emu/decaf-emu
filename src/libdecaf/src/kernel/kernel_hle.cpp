@@ -18,6 +18,7 @@
 #include "modules/nn_olv/nn_olv.h"
 #include "modules/nn_save/nn_save.h"
 #include "modules/nn_temp/nn_temp.h"
+#include "modules/nsyskbd/nsyskbd.h"
 #include "modules/nsysnet/nsysnet.h"
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
@@ -159,6 +160,7 @@ initialiseHleMmodules()
    nn::olv::Module::RegisterFunctions();
    nn::save::Module::RegisterFunctions();
    nn::temp::Module::RegisterFunctions();
+   nsyskbd::Module::RegisterFunctions();
    nsysnet::Module::RegisterFunctions();
    padscore::Module::RegisterFunctions();
    proc_ui::Module::RegisterFunctions();
@@ -185,6 +187,7 @@ initialiseHleMmodules()
    registerHleModule("nn_olv.rpl", new nn::olv::Module{});
    registerHleModule("nn_save.rpl", new nn::save::Module{});
    registerHleModule("nn_temp.rpl", new nn::temp::Module{});
+   registerHleModule("nsyskbd.rpl", new nsyskbd::Module {});
    registerHleModule("nsysnet.rpl", new nsysnet::Module{});
    registerHleModule("padscore.rpl", new padscore::Module{});
    registerHleModule("proc_ui.rpl", new proc_ui::Module{});
