@@ -3,6 +3,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_appio App IO
+ * \ingroup coreinit
+ * @{
+ */
+
 struct OSMessageQueue;
 
 OSMessageQueue *
@@ -15,5 +21,7 @@ void
 startAppIoThreads();
 
 } // namespace internal
+
+/** @} */
 
 } // namespace coreinit

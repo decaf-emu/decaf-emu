@@ -7,14 +7,17 @@ namespace coreinit
 {
 
 void
-OSInitCoroutine(OSCoroutine *context, uint32_t entry, uint32_t stack)
+OSInitCoroutine(OSCoroutine *context,
+                uint32_t entry,
+                uint32_t stack)
 {
    context->nia = entry;
    context->gpr1 = stack;
 }
 
 void
-OSSwitchCoroutine(OSCoroutine *from, OSCoroutine *to)
+OSSwitchCoroutine(OSCoroutine *from,
+                  OSCoroutine *to)
 {
    OSThread *thread = OSGetCurrentThread();
 

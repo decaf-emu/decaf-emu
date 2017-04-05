@@ -5,6 +5,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_debug Debug
+ * \ingroup coreinit
+ * @{
+ */
+
 BOOL
 OSIsDebuggerPresent();
 
@@ -15,5 +21,7 @@ int
 ENVGetEnvironmentVariable(const char *key,
                           char *buffer,
                           uint32_t length);
+
+/** @} */
 
 } // namespace coreinit

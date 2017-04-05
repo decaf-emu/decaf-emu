@@ -1,11 +1,16 @@
 #pragma once
-
-#include <cstdint>
 #include <common/cbool.h>
 #include <common/be_val.h>
+#include <cstdint>
 
 namespace coreinit
 {
+
+/**
+ * \defgroup coreinit_clipboard Clipboard
+ * \ingroup coreinit
+ * @{
+ */
 
 BOOL
 OSCopyFromClipboard(void *buffer,
@@ -14,5 +19,7 @@ OSCopyFromClipboard(void *buffer,
 BOOL
 OSCopyToClipboard(const void *buffer,
                   uint32_t size);
+
+/** @} */
 
 } // namespace coreinit

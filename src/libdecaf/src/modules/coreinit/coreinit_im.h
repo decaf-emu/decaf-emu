@@ -8,6 +8,12 @@
 namespace coreinit
 {
 
+/**
+ * \defgroup coreinit_im IM
+ * \ingroup coreinit
+ * @{
+ */
+
 IMError
 IMDisableAPD();
 
@@ -34,5 +40,7 @@ IMGetTimeBeforeAPD(be_val<uint32_t> *seconds);
 
 IMError
 IMGetTimeBeforeDimming(be_val<uint32_t> *seconds);
+
+/** @} */
 
 } // namespace coreinit
