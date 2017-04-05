@@ -133,6 +133,7 @@ iosOpen(const char *name,
    // Open succeeded, register device to a unique handle
    auto handle = DeviceHandles++;
    device->setHandle(handle);
+   device->setName(deviceName);
    sOpenDeviceMap[handle] = device;
    return static_cast<IOSError>(handle);
 }

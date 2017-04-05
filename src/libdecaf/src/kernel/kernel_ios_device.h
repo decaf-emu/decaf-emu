@@ -62,14 +62,27 @@ public:
       return mHandle;
    }
 
+   const std::string &
+   name() const
+   {
+      return mName;
+   }
+
    void
    setHandle(IOSHandle handle)
    {
       mHandle = handle;
    }
 
-private:
+   void
+   setName(const std::string &name)
+   {
+      mName = name;
+   }
+
+protected:
    IOSHandle mHandle;
+   std::string mName;
 };
 
 } // namespace kernel
