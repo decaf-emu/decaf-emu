@@ -35,6 +35,13 @@ struct MCPTitleListType
 };
 CHECK_SIZE(MCPTitleListType, 0x61);
 
+struct MCPResponseGetTitleId
+{
+   be_val<uint64_t> titleId;
+};
+CHECK_OFFSET(MCPResponseGetTitleId, 0x00, titleId);
+CHECK_SIZE(MCPResponseGetTitleId, 8);
+
 #pragma pack(pop)
 
 IOSError
@@ -44,12 +51,16 @@ void
 MCP_Close(IOSHandle handle);
 
 MCPError
+MCP_GetOwnTitleInfo(IOSHandle handle,
+                    MCPTitleListType *titleInfo);
+
+MCPError
 MCP_GetSysProdSettings(IOSHandle handle,
                        MCPSysProdSettings *settings);
 
 MCPError
-MCP_GetOwnTitleInfo(IOSHandle handle,
-                    MCPTitleListType *titleInfo);
+MCP_GetTitleId(IOSHandle handle,
+               be_val<uint64_t> *titleId);
 
 namespace internal
 {

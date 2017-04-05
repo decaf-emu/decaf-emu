@@ -47,32 +47,6 @@ MCP_Close(IOSHandle handle)
 
 
 MCPError
-MCP_GetSysProdSettings(IOSHandle handle,
-                       MCPSysProdSettings *settings)
-{
-   if (!settings) {
-      return MCPError::InvalidArg;
-   }
-
-   auto message = internal::mcpAllocateMessage(sizeof(IOSVec));
-
-   if (!message) {
-      return MCPError::AllocError;
-   }
-
-   auto outVec = reinterpret_cast<IOSVec *>(message);
-   outVec->paddr = settings;
-   outVec->len = sizeof(MCPSysProdSettings);
-
-   auto iosError = IOS_Ioctlv(handle, MCPCommand::GetSysProdSettings, 0, 1, outVec);
-   auto mcpError = internal::mcpDecodeIosErrorToMcpError(iosError);
-
-   internal::mcpFreeMessage(message);
-   return mcpError;
-}
-
-
-MCPError
 MCP_GetOwnTitleInfo(IOSHandle handle,
                     MCPTitleListType *titleInfo)
 {
@@ -86,7 +60,7 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
 
    auto output = internal::mcpAllocateMessage(sizeof(MCPTitleListType));
 
-   if (!input) {
+   if (!output) {
       result = MCPError::AllocError;
       goto out;
    }
@@ -114,6 +88,68 @@ out:
       input = nullptr;
    }
 
+   if (output) {
+      internal::mcpFreeMessage(output);
+      output = nullptr;
+   }
+
+   return result;
+}
+
+
+MCPError
+MCP_GetSysProdSettings(IOSHandle handle,
+                       MCPSysProdSettings *settings)
+{
+   if (!settings) {
+      return MCPError::InvalidArg;
+   }
+
+   auto message = internal::mcpAllocateMessage(sizeof(IOSVec));
+
+   if (!message) {
+      return MCPError::AllocError;
+   }
+
+   auto outVec = reinterpret_cast<IOSVec *>(message);
+   outVec->paddr = settings;
+   outVec->len = sizeof(MCPSysProdSettings);
+
+   auto iosError = IOS_Ioctlv(handle, MCPCommand::GetSysProdSettings, 0, 1, outVec);
+   auto mcpError = internal::mcpDecodeIosErrorToMcpError(iosError);
+
+   internal::mcpFreeMessage(message);
+   return mcpError;
+}
+
+
+MCPError
+MCP_GetTitleId(IOSHandle handle,
+               be_val<uint64_t> *titleId)
+{
+   auto result = MCPError::OK;
+   auto output = internal::mcpAllocateMessage(sizeof(MCPResponseGetTitleId));
+
+   if (!output) {
+      result = MCPError::AllocError;
+      goto out;
+   }
+
+   auto iosError = IOS_Ioctl(handle,
+                             MCPCommand::GetTitleId,
+                             nullptr,
+                             0,
+                             output,
+                             sizeof(MCPResponseGetTitleId));
+
+   result = internal::mcpDecodeIosErrorToMcpError(iosError);
+
+   if (result >= 0) {
+      auto response = reinterpret_cast<MCPResponseGetTitleId *>(output);
+      *titleId = response->titleId;
+   }
+
+out:
    if (output) {
       internal::mcpFreeMessage(output);
       output = nullptr;
@@ -194,8 +230,9 @@ Module::registerMcpFunctions()
 {
    RegisterKernelFunction(MCP_Open);
    RegisterKernelFunction(MCP_Close);
-   RegisterKernelFunction(MCP_GetSysProdSettings);
    RegisterKernelFunction(MCP_GetOwnTitleInfo);
+   RegisterKernelFunction(MCP_GetSysProdSettings);
+   RegisterKernelFunction(MCP_GetTitleId);
    RegisterInternalData(sMcpData);
 }
 

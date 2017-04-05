@@ -437,6 +437,7 @@ ENUM_END(GHSSyscallID)
 ENUM_BEG(MCPCommand, uint32_t)
    ENUM_VALUE(GetSysProdSettings,   0x40)
    ENUM_VALUE(GetOwnTitleInfo,      0x4C)
+   ENUM_VALUE(GetTitleId,           0x5B)
 ENUM_END(MCPCommand)
 
 ENUM_BEG(MCPError, int32_t)
