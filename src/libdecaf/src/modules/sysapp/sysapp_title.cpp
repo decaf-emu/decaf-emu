@@ -2,6 +2,8 @@
 #include "sysapp_title.h"
 #include "modules/coreinit/coreinit_mcp.h"
 #include "modules/coreinit/coreinit_enum_string.h"
+#include "ppcutils/stackobject.h"
+
 #include <common/decaf_assert.h>
 
 namespace sysapp
@@ -98,14 +100,14 @@ sSysAppTitleId[][3] =
 uint64_t
 SYSGetSystemApplicationTitleId(SystemAppId id)
 {
+   ppcutils::StackObject<coreinit::MCPSysProdSettings> settings;
    decaf_check(id < SystemAppId::Max);
 
-   auto settings = coreinit::MCPSysProdSettings { 0 };
    auto mcp = coreinit::MCP_Open();
-   coreinit::MCP_GetSysProdSettings(mcp, &settings);
+   coreinit::MCP_GetSysProdSettings(mcp, settings);
    coreinit::MCP_Close(mcp);
 
-   auto region = settings.platformRegion;
+   auto region = settings->platformRegion;
 
    if (!region) {
       region = coreinit::SCIRegion::USA;
