@@ -15,6 +15,8 @@ namespace kernel
 using coreinit::MCPError;
 using coreinit::MCPSysProdSettings;
 
+using coreinit::MCPResponseGetTitleId;
+
 class MCPDevice : public IOSDevice
 {
 public:
@@ -50,6 +52,7 @@ public:
 
 private:
    MCPError getSysProdSettings(MCPSysProdSettings *settings);
+   MCPError getTitleId(MCPResponseGetTitleId *response);
 
 private:
 };

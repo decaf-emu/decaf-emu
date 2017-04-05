@@ -47,7 +47,19 @@ MCPDevice::ioctl(uint32_t cmd,
                  void *outBuf,
                  size_t outLen)
 {
-   return static_cast<IOSError>(MCPError::Unsupported);
+   auto result = MCPError::OK;
+
+   switch (static_cast<MCPCommand>(cmd)) {
+   case MCPCommand::GetTitleId:
+      decaf_check(inBuf == nullptr);
+      decaf_check(inLen == 0);
+      result = getTitleId(reinterpret_cast<MCPResponseGetTitleId *>(outBuf));
+      break;
+   default:
+      result = MCPError::Unsupported;
+   }
+
+   return static_cast<IOSError>(result);
 }
 
 
@@ -80,6 +92,14 @@ MCPDevice::getSysProdSettings(MCPSysProdSettings *settings)
    std::memset(settings, 0, sizeof(MCPSysProdSettings));
    settings->gameRegion = static_cast<SCIRegion>(kernel::getGameInfo().meta.region);
    settings->platformRegion = static_cast<SCIRegion>(decaf::config::system::region);
+   return MCPError::OK;
+}
+
+
+MCPError
+MCPDevice::getTitleId(MCPResponseGetTitleId *response)
+{
+   response->titleId = kernel::getGameInfo().meta.title_id;
    return MCPError::OK;
 }
 
