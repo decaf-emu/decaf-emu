@@ -54,15 +54,14 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
    auto input = internal::mcpAllocateMessage(sizeof(uint32_t));
 
    if (!input) {
-      result = MCPError::AllocError;
-      goto out;
+      return MCPError::AllocError;
    }
 
    auto output = internal::mcpAllocateMessage(sizeof(MCPTitleListType));
 
    if (!output) {
-      result = MCPError::AllocError;
-      goto out;
+      internal::mcpFreeMessage(input);
+      return MCPError::AllocError;
    }
 
    // TODO: __KernelGetInfo(0, &in32, 0xA8, 0);
@@ -82,17 +81,8 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
       std::memcpy(titleInfo, output, sizeof(MCPTitleListType));
    }
 
-out:
-   if (input) {
-      internal::mcpFreeMessage(input);
-      input = nullptr;
-   }
-
-   if (output) {
-      internal::mcpFreeMessage(output);
-      output = nullptr;
-   }
-
+   internal::mcpFreeMessage(input);
+   internal::mcpFreeMessage(output);
    return result;
 }
 
@@ -131,8 +121,7 @@ MCP_GetTitleId(IOSHandle handle,
    auto output = internal::mcpAllocateMessage(sizeof(MCPResponseGetTitleId));
 
    if (!output) {
-      result = MCPError::AllocError;
-      goto out;
+      return MCPError::AllocError;
    }
 
    auto iosError = IOS_Ioctl(handle,
@@ -149,12 +138,7 @@ MCP_GetTitleId(IOSHandle handle,
       *titleId = response->titleId;
    }
 
-out:
-   if (output) {
-      internal::mcpFreeMessage(output);
-      output = nullptr;
-   }
-
+   internal::mcpFreeMessage(output);
    return result;
 }
 
