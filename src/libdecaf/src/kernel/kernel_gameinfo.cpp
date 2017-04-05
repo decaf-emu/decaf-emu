@@ -50,7 +50,7 @@ xmlReadString(const pugi::xml_node &node)
    return node.child_value();
 }
 
-static bool
+bool
 loadAppXML(const char *path,
            decaf::AppXML &app)
 {
