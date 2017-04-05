@@ -91,7 +91,7 @@ loadAppXML(const char *path,
    return true;
 }
 
-static bool
+bool
 loadCosXML(const char *path,
            decaf::CosXML &cos)
 {
@@ -186,7 +186,7 @@ getLanguageSuffix(decaf::Language language)
    }
 }
 
-static bool
+bool
 loadMetaXML(const char *path,
             decaf::MetaXML &meta)
 {
