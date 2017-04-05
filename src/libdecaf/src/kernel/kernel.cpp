@@ -19,6 +19,7 @@
 #include "modules/coreinit/coreinit_mcp.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "modules/coreinit/coreinit_shared.h"
 #include "modules/coreinit/coreinit_systeminfo.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
@@ -442,6 +443,7 @@ launchGame()
 
    // Initialise CafeOS
    coreinit::internal::mcpInit();
+   coreinit::internal::loadSharedData();
 
    // Notify frontend that game has loaded
    decaf::event::onGameLoaded(sGameInfo);

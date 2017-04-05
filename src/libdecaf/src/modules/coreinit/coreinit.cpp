@@ -23,7 +23,6 @@ Module::initialise()
    initialiseMembase();
    initialiseMessageQueues();
    initialiseSchedulerFunctions();
-   initialiseShared();
    initialiseSystemInformation();
    initialiseUserConfig();
 }

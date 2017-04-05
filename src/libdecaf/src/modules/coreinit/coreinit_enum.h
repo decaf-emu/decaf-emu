@@ -125,6 +125,7 @@ ENUM_BEG(OSSharedDataType, uint32_t)
    ENUM_VALUE(FontKorean,           1)
    ENUM_VALUE(FontStandard,         2)
    ENUM_VALUE(FontTaiwanese,        3)
+   ENUM_VALUE(Max,                  4)
 ENUM_END(OSSharedDataType)
 
 ENUM_BEG(OSShutdownReason, uint32_t)
