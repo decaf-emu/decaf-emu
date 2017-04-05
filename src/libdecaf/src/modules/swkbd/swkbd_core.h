@@ -1,6 +1,9 @@
 #pragma once
-#include <common/structsize.h>
 #include "decaf_input.h"
+
+#include <common/structsize.h>
+#include <common/platform.h>
+#include <cstdint>
 
 struct FSClient;
 
@@ -20,7 +23,11 @@ struct ReceiverArg;
 struct IControllerEventObj;
 struct ISoundObj;
 
-using char_t = int16_t;
+#ifdef PLATFORM_WINDOWS
+using swkbd_char_t = int16_t;
+#else
+using swkbd_char_t = char16_t;
+#endif
 
 namespace ControllerType
 {
@@ -90,7 +97,7 @@ DrawTV();
 void
 GetDrawStringInfo(DrawStringInfo *info);
 
-const be_val<uint16_t> *
+const be_val<swkbd_char_t> *
 GetInputFormString();
 
 void
@@ -142,7 +149,7 @@ void
 SetEnableOkButton(bool enable);
 
 void
-SetInputFormString(const char_t *str);
+SetInputFormString(const be_val<swkbd_char_t> *str);
 
 void
 SetReceiver(const ReceiverArg *arg);

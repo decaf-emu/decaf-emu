@@ -122,19 +122,19 @@ GetDrawStringInfo(DrawStringInfo *info)
 }
 
 
-const be_val<uint16_t> *
+const be_val<swkbd_char_t> *
 GetInputFormString()
 {
-   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+   std::wstring_convert<std::codecvt_utf8_utf16<swkbd_char_t>, swkbd_char_t> converter;
    auto wide = converter.from_bytes(sInputBuffer);
-   auto result = reinterpret_cast<be_val<uint16_t> *>(sWorkMemory);
+   auto swapped = reinterpret_cast<be_val<swkbd_char_t> *>(sWorkMemory);
 
    for (auto i = 0; i < wide.size(); ++i) {
-      result[i] = static_cast<uint16_t>(wide[i]);
+      swapped[i] = static_cast<swkbd_char_t>(wide[i]);
    }
 
-   result[wide.size()] = 0;
-   return result;
+   swapped[wide.size()] = 0;
+   return swapped;
 }
 
 
@@ -245,8 +245,16 @@ SetEnableOkButton(bool enable)
 
 
 void
-SetInputFormString(const char_t *str)
+SetInputFormString(const be_val<swkbd_char_t> *swapped)
 {
+   std::wstring_convert<std::codecvt_utf8_utf16<swkbd_char_t>, swkbd_char_t> converter;
+   std::basic_string<swkbd_char_t> wide;
+
+   for (auto c = *swapped; c; c = *(++swapped)) {
+      wide.push_back(c);
+   }
+
+   sInputBuffer = converter.to_bytes(wide);
 }
 
 
