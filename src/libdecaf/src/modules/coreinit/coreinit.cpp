@@ -35,6 +35,7 @@ Module::RegisterFunctions()
    registerAllocatorFunctions();
    registerAtomic64Functions();
    registerBlockHeapFunctions();
+   registerClipboardFunctions();
    registerCoreFunctions();
    registerCoroutineFunctions();
    registerCacheFunctions();
