@@ -63,7 +63,7 @@ void
 AXInit()
 {
    AXInitParams params;
-   params.renderer = AXInitRenderer::Out32khz;
+   params.renderer = AXRendererFreq::Freq32khz;
    params.pipeline = AXInitPipeline::Single;
    AXInitWithParams(&params);
 }
@@ -76,10 +76,10 @@ AXInitWithParams(AXInitParams *params)
    }
 
    switch (params->renderer) {
-   case AXInitRenderer::Out32khz:
+   case AXRendererFreq::Freq32khz:
       sOutputRate = 32000;
       break;
-   case AXInitRenderer::Out48khz:
+   case AXRendererFreq::Freq48khz:
       sOutputRate = 48000;
       break;
    default:
@@ -118,6 +118,16 @@ AXInitProfile(AXProfile *profile,
               uint32_t count)
 {
    decaf_warn_stub();
+}
+
+AXRendererFreq
+AXGetRendererFreq()
+{
+   if (sOutputRate == 32000) {
+      return AXRendererFreq::Freq32khz;
+   } else {
+      return AXRendererFreq::Freq48khz;
+   }
 }
 
 uint32_t
@@ -393,6 +403,7 @@ Module::registerCoreFunctions()
    RegisterKernelFunction(AXIsInit);
    RegisterKernelFunction(AXQuit);
    RegisterKernelFunction(AXInitProfile);
+   RegisterKernelFunction(AXGetRendererFreq);
    RegisterKernelFunction(AXGetSwapProfile);
    RegisterKernelFunction(AXGetDefaultMixerSelect);
    RegisterKernelFunction(AXSetDefaultMixerSelect);

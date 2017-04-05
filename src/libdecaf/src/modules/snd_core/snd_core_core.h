@@ -15,7 +15,7 @@ struct AXProfile;
 
 struct AXInitParams
 {
-   be_val<AXInitRenderer> renderer;
+   be_val<AXRendererFreq> renderer;
    UNKNOWN(4);
    be_val<AXInitPipeline> pipeline;
 };
@@ -39,6 +39,9 @@ AXQuit();
 void
 AXInitProfile(AXProfile *profile,
               uint32_t count);
+
+AXRendererFreq
+AXGetRendererFreq();
 
 uint32_t
 AXGetSwapProfile(AXProfile *profile,

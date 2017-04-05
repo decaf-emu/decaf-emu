@@ -61,15 +61,15 @@ ENUM_BEG(AXDRCVSSurroundLevelGain, uint32_t)
    // Unknown
 ENUM_END(AXDRCVSSurroundLevelGain)
 
-ENUM_BEG(AXInitRenderer, uint32_t)
-   ENUM_VALUE(Out32khz,          0)
-   ENUM_VALUE(Out48khz,          1)
-ENUM_END(AXInitRenderer)
-
 ENUM_BEG(AXInitPipeline, uint32_t)
    ENUM_VALUE(Single,            0)
    ENUM_VALUE(FourStage,         1)
 ENUM_END(AXInitPipeline)
+
+ENUM_BEG(AXRendererFreq, uint32_t)
+   ENUM_VALUE(Freq32khz,          0)
+   ENUM_VALUE(Freq48khz,          1)
+ENUM_END(AXRendererFreq)
 
 ENUM_BEG(AXResult, int32_t)
    ENUM_VALUE(Success,           0)
