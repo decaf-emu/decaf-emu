@@ -29,6 +29,12 @@ CHECK_OFFSET(MCPSysProdSettings, 0x03, platformRegion);
 CHECK_OFFSET(MCPSysProdSettings, 0x0B, gameRegion);
 CHECK_SIZE(MCPSysProdSettings, 0x46);
 
+struct MCPTitleListType
+{
+   UNKNOWN(0x61);
+};
+CHECK_SIZE(MCPTitleListType, 0x61);
+
 #pragma pack(pop)
 
 IOSError
@@ -40,6 +46,10 @@ MCP_Close(IOSHandle handle);
 MCPError
 MCP_GetSysProdSettings(IOSHandle handle,
                        MCPSysProdSettings *settings);
+
+MCPError
+MCP_GetOwnTitleInfo(IOSHandle handle,
+                    MCPTitleListType *titleInfo);
 
 namespace internal
 {

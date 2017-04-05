@@ -72,6 +72,57 @@ MCP_GetSysProdSettings(IOSHandle handle,
 }
 
 
+MCPError
+MCP_GetOwnTitleInfo(IOSHandle handle,
+                    MCPTitleListType *titleInfo)
+{
+   auto result = MCPError::OK;
+   auto input = internal::mcpAllocateMessage(sizeof(uint32_t));
+
+   if (!input) {
+      result = MCPError::AllocError;
+      goto out;
+   }
+
+   auto output = internal::mcpAllocateMessage(sizeof(MCPTitleListType));
+
+   if (!input) {
+      result = MCPError::AllocError;
+      goto out;
+   }
+
+   // TODO: __KernelGetInfo(0, &in32, 0xA8, 0);
+   auto in32 = reinterpret_cast<be_val<uint32_t> *>(input);
+   *in32 = 0;
+
+   auto iosError = IOS_Ioctl(handle,
+                             MCPCommand::GetOwnTitleInfo,
+                             input,
+                             sizeof(uint32_t),
+                             output,
+                             sizeof(MCPTitleListType));
+
+   result = internal::mcpDecodeIosErrorToMcpError(iosError);
+
+   if (result >= 0) {
+      std::memcpy(titleInfo, output, sizeof(MCPTitleListType));
+   }
+
+out:
+   if (input) {
+      internal::mcpFreeMessage(input);
+      input = nullptr;
+   }
+
+   if (output) {
+      internal::mcpFreeMessage(output);
+      output = nullptr;
+   }
+
+   return result;
+}
+
+
 namespace internal
 {
 
@@ -144,6 +195,7 @@ Module::registerMcpFunctions()
    RegisterKernelFunction(MCP_Open);
    RegisterKernelFunction(MCP_Close);
    RegisterKernelFunction(MCP_GetSysProdSettings);
+   RegisterKernelFunction(MCP_GetOwnTitleInfo);
    RegisterInternalData(sMcpData);
 }
 
