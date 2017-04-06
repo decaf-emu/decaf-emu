@@ -13,7 +13,7 @@ ENUM_BEG(COSReportLevel, uint32_t)
 ENUM_END(COSReportLevel)
 
 ENUM_BEG(HardwareVersion, uint32_t)
-   ENUM_VALUE(UNKNOWN,                       0x00000000)
+   ENUM_VALUE(Unknown,                       0x00000000)
 
    // vWii Hardware Versions
    ENUM_VALUE(HOLLYWOOD_ENG_SAMPLE_1,        0x00000001)
@@ -114,11 +114,11 @@ ENUM_BEG(OSMemoryType, uint32_t)
    ENUM_VALUE(MEM2,                 2)
 ENUM_END(OSMemoryType)
 
-ENUM_BEG(OSMessageFlags, uint32_t)
-   ENUM_VALUE(None,                 0)
-   ENUM_VALUE(Blocking,             1 << 0)
-   ENUM_VALUE(HighPriority,         1 << 1)
-ENUM_END(OSMessageFlags)
+FLAGS_BEG(OSMessageFlags, uint32_t)
+   FLAGS_VALUE(None,                0)
+   FLAGS_VALUE(Blocking,            1 << 0)
+   FLAGS_VALUE(HighPriority,        1 << 1)
+FLAGS_END(OSMessageFlags)
 
 ENUM_BEG(OSSharedDataType, uint32_t)
    ENUM_VALUE(FontChinese,          0)
@@ -132,45 +132,45 @@ ENUM_BEG(OSShutdownReason, uint32_t)
    ENUM_VALUE(NoShutdown,           0)
 ENUM_END(OSShutdownReason)
 
-ENUM_BEG(OSThreadAttributes, uint8_t)
+FLAGS_BEG(OSThreadAttributes, uint8_t)
    //! Allow the thread to run on CPU0.
-   ENUM_VALUE(AffinityCPU0,         1 << 0)
+   FLAGS_VALUE(AffinityCPU0,        1 << 0)
 
    //! Allow the thread to run on CPU1.
-   ENUM_VALUE(AffinityCPU1,         1 << 1)
+   FLAGS_VALUE(AffinityCPU1,        1 << 1)
 
    //! Allow the thread to run on CPU2.
-   ENUM_VALUE(AffinityCPU2,         1 << 2)
+   FLAGS_VALUE(AffinityCPU2,        1 << 2)
 
    //! Allow the thread to run any CPU.
-   ENUM_VALUE(AffinityAny,          (1 << 0) | (1 << 1) | (1 << 2))
+   FLAGS_VALUE(AffinityAny,         (1 << 0) | (1 << 1) | (1 << 2))
 
    //! Start the thread detached.
-   ENUM_VALUE(Detached,             1 << 3)
+   FLAGS_VALUE(Detached,            1 << 3)
 
    //! Enables tracking of stack usage.
-   ENUM_VALUE(StackUsage,           1 << 5)
-ENUM_END(OSThreadAttributes)
+   FLAGS_VALUE(StackUsage,          1 << 5)
+FLAGS_END(OSThreadAttributes)
 
-ENUM_BEG(OSThreadCancelState, uint32_t)
+FLAGS_BEG(OSThreadCancelState, uint32_t)
    //! Thread cancel is enabled
-   ENUM_VALUE(Enabled,                       0)
+   FLAGS_VALUE(Enabled,                      0)
 
    //! Thread cancel is disabled by OSSetThreadCancelState
-   ENUM_VALUE(Disabled,                      1 << 0)
+   FLAGS_VALUE(Disabled,                     1 << 0)
 
    //! Thread cancel is disabled because the thread owns a mutex
-   ENUM_VALUE(DisabledByMutex,               1 << 16)
+   FLAGS_VALUE(DisabledByMutex,              1 << 16)
 
    //! Thread cancel is disabled because the thread owns an uninterruptible spinlock
-   ENUM_VALUE(DisabledBySpinlock,            1 << 17)
+   FLAGS_VALUE(DisabledBySpinlock,           1 << 17)
 
    //! Thread cancel is disabled because the thread has a user stack pointer
-   ENUM_VALUE(DisabledByUserStackPointer,    1 << 18)
+   FLAGS_VALUE(DisabledByUserStackPointer,   1 << 18)
 
    //! Thread cancel is disabled because the thread owns a fast mutex
-   ENUM_VALUE(DisabledByFastMutex,           1 << 19)
-ENUM_END(OSThreadCancelState)
+   FLAGS_VALUE(DisabledByFastMutex,          1 << 19)
+FLAGS_END(OSThreadCancelState)
 
 ENUM_BEG(OSThreadRequest, uint32_t)
    ENUM_VALUE(None,                 0)
@@ -178,21 +178,21 @@ ENUM_BEG(OSThreadRequest, uint32_t)
    ENUM_VALUE(Cancel,               2)
 ENUM_END(OSThreadRequest)
 
-ENUM_BEG(OSThreadState, uint8_t)
-   ENUM_VALUE(None,                 0)
+FLAGS_BEG(OSThreadState, uint8_t)
+   FLAGS_VALUE(None,                0)
 
    //! Thread is ready to run
-   ENUM_VALUE(Ready,                1 << 0)
+   FLAGS_VALUE(Ready,               1 << 0)
 
    //! Thread is running
-   ENUM_VALUE(Running,              1 << 1)
+   FLAGS_VALUE(Running,             1 << 1)
 
    //! Thread is waiting, i.e. on a mutex
-   ENUM_VALUE(Waiting,              1 << 2)
+   FLAGS_VALUE(Waiting,             1 << 2)
 
    //! Thread is about to terminate
-   ENUM_VALUE(Moribund,             1 << 3)
-ENUM_END(OSThreadState)
+   FLAGS_VALUE(Moribund,            1 << 3)
+FLAGS_END(OSThreadState)
 
 ENUM_BEG(FSACommand, uint32_t)
    ENUM_VALUE(Invalid,                 0x0)
@@ -435,9 +435,15 @@ ENUM_BEG(GHSSyscallID, uint32_t)
    ENUM_VALUE(stat,                 0x40019)
 ENUM_END(GHSSyscallID)
 
+ENUM_BEG(MCPAppType, uint32_t)
+   ENUM_VALUE(Unk0x0800000E,        0x0800000E)
+ENUM_END(MCPAppType)
+
 ENUM_BEG(MCPCommand, uint32_t)
    ENUM_VALUE(GetSysProdSettings,   0x40)
    ENUM_VALUE(GetOwnTitleInfo,      0x4C)
+   ENUM_VALUE(TitleCount,           0x4D)
+   ENUM_VALUE(SearchTitleList,      0x58)
    ENUM_VALUE(GetTitleId,           0x5B)
 ENUM_END(MCPCommand)
 
@@ -449,6 +455,16 @@ ENUM_BEG(MCPError, int32_t)
    ENUM_VALUE(InvalidType,          -0x140006)
    ENUM_VALUE(Unsupported,          -0x140007)
 ENUM_END(MCPError)
+
+FLAGS_BEG(MCPTitleListSearchFlags, uint32_t)
+   FLAGS_VALUE(None,                 0)
+   FLAGS_VALUE(TitleId,              1 << 0)
+   FLAGS_VALUE(AppType,              1 << 2)
+   FLAGS_VALUE(IndexedDevice,        1 << 6)
+   FLAGS_VALUE(Unk0x60,              1 << 8)
+   FLAGS_VALUE(Path,                 1 << 9)
+   FLAGS_VALUE(UniqueId,             1 << 10)
+FLAGS_END(MCPTitleListSearchFlags)
 
 ENUM_BEG(MEMBaseHeapType, uint32_t)
    ENUM_VALUE(MEM1,                 0)
@@ -468,10 +484,10 @@ ENUM_BEG(MEMExpHeapDirection, uint32_t)
    ENUM_VALUE(FromEnd,              1)
 ENUM_END(MEMExpHeapDirection)
 
-ENUM_BEG(MEMFrameHeapFreeMode, uint32_t)
-   ENUM_VALUE(Head,                 1 << 0)
-   ENUM_VALUE(Tail,                 1 << 1)
-ENUM_END(MEMFrameHeapFreeMode)
+FLAGS_BEG(MEMFrameHeapFreeMode, uint32_t)
+   FLAGS_VALUE(Head,                1 << 0)
+   FLAGS_VALUE(Tail,                1 << 1)
+FLAGS_END(MEMFrameHeapFreeMode)
 
 ENUM_BEG(MEMHeapTag, uint32_t)
    ENUM_VALUE(ExpandedHeap,         0x45585048)
@@ -488,25 +504,25 @@ ENUM_BEG(MEMHeapFillType, uint32_t)
    ENUM_VALUE(Max,                  0x3)
 ENUM_END(MEMHeapFillType)
 
-ENUM_BEG(MEMProtectMode, uint32_t)
-   ENUM_VALUE(ReadOnly,             1 << 0)
-   ENUM_VALUE(ReadWrite,            1 << 1)
-ENUM_END(MEMProtectMode)
+FLAGS_BEG(MEMProtectMode, uint32_t)
+   FLAGS_VALUE(ReadOnly,            1 << 0)
+   FLAGS_VALUE(ReadWrite,           1 << 1)
+FLAGS_END(MEMProtectMode)
 
-ENUM_BEG(MPTaskQueueState, uint32_t)
-   ENUM_VALUE(Initialised,          1 << 0)
-   ENUM_VALUE(Ready,                1 << 1)
-   ENUM_VALUE(Stopping,             1 << 2)
-   ENUM_VALUE(Stopped,              1 << 3)
-   ENUM_VALUE(Finished,             1 << 4)
-ENUM_END(MPTaskQueueState)
+FLAGS_BEG(MPTaskQueueState, uint32_t)
+   FLAGS_VALUE(Initialised,         1 << 0)
+   FLAGS_VALUE(Ready,               1 << 1)
+   FLAGS_VALUE(Stopping,            1 << 2)
+   FLAGS_VALUE(Stopped,             1 << 3)
+   FLAGS_VALUE(Finished,            1 << 4)
+FLAGS_END(MPTaskQueueState)
 
-ENUM_BEG(MPTaskState, uint32_t)
-   ENUM_VALUE(Initialised,          1 << 0)
-   ENUM_VALUE(Ready,                1 << 1)
-   ENUM_VALUE(Running,              1 << 2)
-   ENUM_VALUE(Finished,             1 << 3)
-ENUM_END(MPTaskState)
+FLAGS_BEG(MPTaskState, uint32_t)
+   FLAGS_VALUE(Initialised,         1 << 0)
+   FLAGS_VALUE(Ready,               1 << 1)
+   FLAGS_VALUE(Running,             1 << 2)
+   FLAGS_VALUE(Finished,            1 << 3)
+FLAGS_END(MPTaskState)
 
 ENUM_BEG(SCICountryCode, uint32_t)
    ENUM_VALUE(USA,                  0x31)

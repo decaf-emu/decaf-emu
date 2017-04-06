@@ -13,3 +13,18 @@
          return std::to_string(static_cast<int>(enumValue)); \
       } \
    }
+
+#define FLAGS_BEG(name, type) \
+   std::string enumAsString(name enumValue) { \
+      using namespace name##_; \
+      std::string out;
+
+#define FLAGS_VALUE(key, value) \
+      if (enumValue & value) { \
+         if (out.size()) { out += " | "; } \
+         out += #key; \
+      }
+
+#define FLAGS_END(name) \
+      return out; \
+   }
