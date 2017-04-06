@@ -2,8 +2,11 @@
 #include "coreinit_ios.h"
 #include "coreinit_ipcbufpool.h"
 #include "coreinit_mcp.h"
+#include "coreinit_mcp_request.h"
+#include "coreinit_mcp_response.h"
 
 #include <common/decaf_assert.h>
+#include <ppcutils/stackobject.h>
 
 namespace coreinit
 {
@@ -28,6 +31,7 @@ struct MCPData
    be_val<uint32_t> largeMessageCount;
 };
 
+
 static MCPData *
 sMcpData = nullptr;
 
@@ -51,38 +55,39 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
                     MCPTitleListType *titleInfo)
 {
    auto result = MCPError::OK;
-   auto input = internal::mcpAllocateMessage(sizeof(uint32_t));
+   auto request = reinterpret_cast<MCPRequestGetOwnTitleInfo *>(
+                     internal::mcpAllocateMessage(sizeof(MCPRequestGetOwnTitleInfo)));
 
-   if (!input) {
+   if (!request) {
       return MCPError::AllocError;
    }
 
-   auto output = internal::mcpAllocateMessage(sizeof(MCPTitleListType));
+   auto response = reinterpret_cast<MCPResponseGetOwnTitleInfo *>(
+                      internal::mcpAllocateMessage(sizeof(MCPResponseGetOwnTitleInfo)));
 
-   if (!output) {
-      internal::mcpFreeMessage(input);
+   if (!response) {
+      internal::mcpFreeMessage(request);
       return MCPError::AllocError;
    }
 
-   // TODO: __KernelGetInfo(0, &in32, 0xA8, 0);
-   auto in32 = reinterpret_cast<be_val<uint32_t> *>(input);
-   *in32 = 0;
+   // TODO: __KernelGetInfo(0, &request->unk0x00, 0xA8, 0);
+   request->unk0x00 = 0;
 
    auto iosError = IOS_Ioctl(handle,
                              MCPCommand::GetOwnTitleInfo,
-                             input,
+                             request,
                              sizeof(uint32_t),
-                             output,
-                             sizeof(MCPTitleListType));
+                             response,
+                             sizeof(MCPResponseGetOwnTitleInfo));
 
    result = internal::mcpDecodeIosErrorToMcpError(iosError);
 
    if (result >= 0) {
-      std::memcpy(titleInfo, output, sizeof(MCPTitleListType));
+      std::memcpy(titleInfo, &response->titleInfo, sizeof(MCPTitleListType));
    }
 
-   internal::mcpFreeMessage(input);
-   internal::mcpFreeMessage(output);
+   internal::mcpFreeMessage(request);
+   internal::mcpFreeMessage(response);
    return result;
 }
 
@@ -143,6 +148,164 @@ MCP_GetTitleId(IOSHandle handle,
 }
 
 
+MCPError
+MCP_GetTitleInfo(IOSHandle handle,
+                 uint64_t titleId,
+                 MCPTitleListType *titleInfo)
+{
+   auto searchTitle = MCPTitleListType { 0 };
+   searchTitle.titleId = titleId;
+
+   auto iosError = internal::mcpSearchTitleList(handle,
+                                                &searchTitle,
+                                                MCPTitleListSearchFlags::TitleId,
+                                                titleInfo,
+                                                1);
+
+   if (iosError != 1) {
+      // TODO: Name error code 0xFFFBFFFE.
+      return static_cast<MCPError>(0xFFFBFFFE);
+   }
+
+   return MCPError::OK;
+}
+
+
+MCPError
+MCP_TitleCount(IOSHandle handle)
+{
+   auto result = IOS_Ioctl(handle,
+                           MCPCommand::TitleCount,
+                           nullptr, 0,
+                           nullptr, 0);
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   return static_cast<MCPError>(result);
+}
+
+
+MCPError
+MCP_TitleList(IOSHandle handle,
+              uint32_t *titleCount,
+              MCPTitleListType *titleList,
+              uint32_t titleListSizeBytes)
+{
+   auto result = IOSError::OK;
+
+   if (!titleList || !titleListSizeBytes) {
+      result = static_cast<IOSError>(MCP_TitleCount(handle));
+   } else {
+      auto searchTitle = MCPTitleListType { 0 };
+
+      result = internal::mcpSearchTitleList(handle,
+                                            &searchTitle,
+                                            MCPTitleListSearchFlags::None,
+                                            titleList,
+                                            titleListSizeBytes / sizeof(MCPTitleListType));
+   }
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   *titleCount = static_cast<uint32_t>(result);
+   return MCPError::OK;
+}
+
+
+MCPError
+MCP_TitleListByAppType(IOSHandle handle,
+                       MCPAppType appType,
+                       uint32_t *titleCount,
+                       MCPTitleListType *titleList,
+                       uint32_t titleListSizeBytes)
+{
+   auto searchTitle = MCPTitleListType { 0 };
+   searchTitle.appType = appType;
+
+   auto result = internal::mcpSearchTitleList(handle,
+                                              &searchTitle,
+                                              MCPTitleListSearchFlags::AppType,
+                                              titleList,
+                                              titleListSizeBytes / sizeof(MCPTitleListType));
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   *titleCount = static_cast<uint32_t>(result);
+   return MCPError::OK;
+}
+
+
+MCPError
+MCP_TitleListByUniqueId(IOSHandle handle,
+                        uint32_t uniqueId,
+                        uint32_t *titleCount,
+                        MCPTitleListType *titleList,
+                        uint32_t titleListSizeBytes)
+{
+   auto searchTitle = MCPTitleListType { 0 };
+   searchTitle.titleId = uniqueId << 8;
+   searchTitle.appType = MCPAppType::Unk0x0800000E;
+
+   auto searchFlags = MCPTitleListSearchFlags::UniqueId
+                    | MCPTitleListSearchFlags::AppType;
+
+   auto result = internal::mcpSearchTitleList(handle,
+                                              &searchTitle,
+                                              searchFlags,
+                                              titleList,
+                                              titleListSizeBytes / sizeof(MCPTitleListType));
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   *titleCount = static_cast<uint32_t>(result);
+   return MCPError::OK;
+}
+
+
+MCPError
+MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
+                                                  uint32_t uniqueId,
+                                                  const char *indexedDevice,
+                                                  uint8_t unk0x60,
+                                                  MCPAppType appType,
+                                                  uint32_t *titleCount,
+                                                  MCPTitleListType *titleList,
+                                                  uint32_t titleListSizeBytes)
+{
+   auto searchTitle = MCPTitleListType { 0 };
+   searchTitle.titleId = uniqueId << 8;
+   searchTitle.appType = appType;
+   searchTitle.unk0x60 = unk0x60;
+   std::memcpy(searchTitle.indexedDevice, indexedDevice, 4);
+
+   auto searchFlags = MCPTitleListSearchFlags::UniqueId
+                    | MCPTitleListSearchFlags::AppType
+                    | MCPTitleListSearchFlags::Unk0x60
+                    | MCPTitleListSearchFlags::IndexedDevice;
+
+   auto result = internal::mcpSearchTitleList(handle,
+                                              &searchTitle,
+                                              searchFlags,
+                                              titleList,
+                                              titleListSizeBytes / sizeof(MCPTitleListType));
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   *titleCount = static_cast<uint32_t>(result);
+   return MCPError::OK;
+}
+
+
 namespace internal
 {
 
@@ -164,6 +327,7 @@ mcpInit()
    sMcpData->initialised = true;
 }
 
+
 void *
 mcpAllocateMessage(uint32_t size)
 {
@@ -181,6 +345,7 @@ mcpAllocateMessage(uint32_t size)
    return message;
 }
 
+
 MCPError
 mcpFreeMessage(void *message)
 {
@@ -195,6 +360,7 @@ mcpFreeMessage(void *message)
    return MCPError::InvalidOp;
 }
 
+
 MCPError
 mcpDecodeIosErrorToMcpError(IOSError error)
 {
@@ -207,6 +373,35 @@ mcpDecodeIosErrorToMcpError(IOSError error)
    }
 }
 
+
+IOSError
+mcpSearchTitleList(IOSHandle handle,
+                   MCPTitleListType *searchTitle,
+                   MCPTitleListSearchFlags searchFlags,
+                   MCPTitleListType *titleList,
+                   uint32_t titleListLength)
+{
+   auto message = mcpAllocateMessage(sizeof(MCPRequestSearchTitleList));
+
+   if (!message) {
+      return static_cast<IOSError>(MCPError::AllocError);
+   }
+
+   auto request = reinterpret_cast<MCPRequestSearchTitleList *>(message);
+   request->searchTitle = *searchTitle;
+   request->searchFlags = searchFlags;
+
+   auto iosError = IOS_Ioctl(handle,
+                             MCPCommand::SearchTitleList,
+                             request,
+                             sizeof(MCPRequestSearchTitleList),
+                             titleList,
+                             titleListLength * sizeof(MCPTitleListType));
+
+   mcpFreeMessage(message);
+   return iosError;
+}
+
 } // namespace internal
 
 void
@@ -217,6 +412,12 @@ Module::registerMcpFunctions()
    RegisterKernelFunction(MCP_GetOwnTitleInfo);
    RegisterKernelFunction(MCP_GetSysProdSettings);
    RegisterKernelFunction(MCP_GetTitleId);
+   RegisterKernelFunction(MCP_GetTitleInfo);
+   RegisterKernelFunction(MCP_TitleCount);
+   RegisterKernelFunction(MCP_TitleList);
+   RegisterKernelFunction(MCP_TitleListByAppType);
+   RegisterKernelFunction(MCP_TitleListByUniqueId);
+   RegisterKernelFunction(MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType);
    RegisterInternalData(sMcpData);
 }
 

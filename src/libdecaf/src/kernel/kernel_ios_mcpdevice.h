@@ -1,6 +1,8 @@
 #pragma once
 #include "kernel_ios_device.h"
 #include "modules/coreinit/coreinit_mcp.h"
+#include "modules/coreinit/coreinit_mcp_request.h"
+#include "modules/coreinit/coreinit_mcp_response.h"
 
 #include <cstdint>
 
