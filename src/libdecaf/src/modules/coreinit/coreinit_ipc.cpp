@@ -1,6 +1,9 @@
 #include "coreinit.h"
 #include "coreinit_core.h"
 #include "coreinit_ipc.h"
+#include "coreinit_thread.h"
+#include "coreinit_memheap.h"
+#include "coreinit_messagequeue.h"
 #include "kernel/kernel_ipc.h"
 #include "ppcutils/wfunc_call.h"
 
@@ -11,13 +14,25 @@ namespace coreinit
 
 struct IpcData
 {
+   struct PerCoreData
+   {
+      IPCDriver driver;
+      OSThread thread;
+      OSMessageQueue queue;
+      std::array<OSMessage, 0x30> messages;
+      std::array<uint8_t, 0x4000> stack;
+      std::array<IPCBuffer, IPCBufferCount> ipcBuffers;
+   };
+
    std::array<IPCBuffer, IPCBufferCount * CoreCount> ipcBuffers;
-   std::array<IPCDriver, CoreCount> drivers;
+   std::array<PerCoreData, CoreCount> coreData;
 };
 
 static IpcData *
 sIpcData = nullptr;
 
+static OSThreadEntryPointFn
+sIpcDriverEntryPoint = nullptr;
 
 /**
  * Initialise the IPC driver.
@@ -26,12 +41,33 @@ void
 IPCDriverInit()
 {
    auto coreId = OSGetCoreId();
-   auto driver = &sIpcData->drivers[coreId];
+   auto coreData = &sIpcData->coreData[coreId];
+   auto driver = &coreData->driver;
+   auto thread = &coreData->thread;
+   auto stack = coreData->stack.data();
+   auto stackSize = coreData->stack.size();
+   auto name = internal::sysStrDup(fmt::format("IPC Core {}", coreId));
 
    OSInitEvent(&driver->waitFreeFifoEvent, FALSE, OSEventMode::AutoReset);
    driver->status = IPCDriverStatus::Initialised;
    driver->coreId = coreId;
    driver->ipcBuffers = &sIpcData->ipcBuffers[IPCBufferCount * coreId];
+
+   OSInitMessageQueue(&coreData->queue,
+                      coreData->messages.data(),
+                      coreData->messages.size());
+
+   OSCreateThread(thread,
+                  sIpcDriverEntryPoint,
+                  coreId,
+                  nullptr,
+                  reinterpret_cast<be_val<uint32_t>*>(stack + stackSize),
+                  stackSize,
+                  -1,
+                  static_cast<OSThreadAttributes>(1 << coreId));
+
+   OSSetThreadName(thread, name);
+   OSResumeThread(thread);
 }
 
 
@@ -104,7 +140,7 @@ IPCDriver *
 getIPCDriver()
 {
    auto coreId = OSGetCoreId();
-   return &sIpcData->drivers[coreId];
+   return &sIpcData->coreData[coreId].driver;
 }
 
 
@@ -311,6 +347,7 @@ void
 ipcDriverProcessResponses()
 {
    auto driver = getIPCDriver();
+   auto coreData = &sIpcData->coreData[driver->coreId];
 
    for (auto i = 0u; i < driver->numResponses; ++i) {
       auto buffer = driver->responses[i];
@@ -324,7 +361,12 @@ ipcDriverProcessResponses()
       if (!request->asyncCallback) {
          OSSignalEvent(&request->finishEvent);
       } else {
-         request->asyncCallback(request->ipcBuffer->reply, request->asyncContext);
+         OSMessage message;
+         message.message = mem::translate<void>(request->asyncCallback.getAddress());
+         message.args[0] = request->ipcBuffer->reply;
+         message.args[1] = request->asyncContext.getAddress();
+         message.args[2] = 0;
+         OSSendMessage(&coreData->queue, &message, OSMessageFlags::None);
          ipcDriverFreeRequest(driver, request);
       }
 
@@ -333,6 +375,32 @@ ipcDriverProcessResponses()
    }
 
    driver->numResponses = 0;
+}
+
+
+static uint32_t
+ipcDriverThreadEntry(uint32_t coreId, void *arg2)
+{
+   auto coreData = &sIpcData->coreData[coreId];
+
+   while (true) {
+      OSMessage msg;
+      OSReceiveMessage(&coreData->queue, &msg, OSMessageFlags::Blocking);
+
+      if (msg.args[2]) {
+         // Received shutdown message
+         break;
+      }
+
+      // Received callback message
+      auto callback = IOSAsyncCallbackFn { msg.message.getAddress() };
+      auto error = static_cast<IOSError>(msg.args[0].value());
+      auto context = mem::translate<void>(msg.args[1]);
+      callback(error, context);
+   }
+
+   IPCDriverClose();
+   return 0;
 }
 
 } // namespace internal
@@ -344,6 +412,7 @@ Module::registerIpcFunctions()
    RegisterKernelFunction(IPCDriverOpen);
    RegisterKernelFunction(IPCDriverClose);
    RegisterInternalData(sIpcData);
+   RegisterInternalFunction(internal::ipcDriverThreadEntry, sIpcDriverEntryPoint);
 }
 
 } // namespace coreinit

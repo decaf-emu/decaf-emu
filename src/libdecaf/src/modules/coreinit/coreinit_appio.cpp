@@ -36,7 +36,7 @@ OSGetDefaultAppIOQueue()
 
 namespace internal
 {
-   
+
 static uint32_t
 appIoThreadEntry(uint32_t coreId, void *arg2)
 {
