@@ -33,6 +33,7 @@ Module::RegisterFunctions()
    registerAlarmFunctions();
    registerAppIoFunctions();
    registerAllocatorFunctions();
+   registerAtomicFunctions();
    registerAtomic64Functions();
    registerBlockHeapFunctions();
    registerClipboardFunctions();

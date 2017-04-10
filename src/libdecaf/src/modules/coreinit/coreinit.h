@@ -41,6 +41,7 @@ private:
    static void registerAlarmFunctions();
    static void registerAppIoFunctions();
    static void registerAllocatorFunctions();
+   static void registerAtomicFunctions();
    static void registerAtomic64Functions();
    static void registerBlockHeapFunctions();
    static void registerClipboardFunctions();
