@@ -396,7 +396,13 @@ GLDriver::getAverageFPS()
 {
    // TODO: This is not thread safe...
    static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
-   return static_cast<float>(second / mAverageFrameTime.count());
+   auto avgFrameTime = mAverageFrameTime.count();
+
+   if (avgFrameTime == 0.0) {
+      return 0.0f;
+   } else {
+      return static_cast<float>(second / avgFrameTime);
+   }
 }
 
 uint64_t
