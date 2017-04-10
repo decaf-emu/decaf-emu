@@ -28,7 +28,7 @@ BOOL
 OSCompareAndSwapAtomicEx64(be_val<uint64_t> *ptr,
                            uint64_t compare,
                            uint64_t value,
-                           uint64_t *old);
+                           be_val<uint64_t> *old);
 
 uint64_t
 OSSwapAtomic64(be_val<uint64_t> *ptr,
