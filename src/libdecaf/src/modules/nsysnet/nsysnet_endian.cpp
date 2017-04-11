@@ -9,25 +9,25 @@ namespace nsysnet
  */
 
 uint16_t
-htons(uint16_t value)
+htons_(uint16_t value)
 {
    return value;
 }
 
 uint32_t
-htonl(uint32_t value)
+htonl_(uint32_t value)
 {
    return value;
 }
 
 uint16_t
-ntohs(uint16_t value)
+ntohs_(uint16_t value)
 {
    return value;
 }
 
 uint32_t
-ntohl(uint32_t value)
+ntohl_(uint32_t value)
 {
    return value;
 }
@@ -35,10 +35,10 @@ ntohl(uint32_t value)
 void
 Module::registerEndianFunctions()
 {
-   RegisterKernelFunction(htons);
-   RegisterKernelFunction(htonl);
-   RegisterKernelFunction(ntohs);
-   RegisterKernelFunction(ntohl);
+   RegisterKernelFunctionName("htons", htons_);
+   RegisterKernelFunctionName("htonl", htonl_);
+   RegisterKernelFunctionName("ntohs", ntohs_);
+   RegisterKernelFunctionName("ntohl", ntohl_);
 }
 
 } // namespace nsysnet
