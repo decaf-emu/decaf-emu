@@ -35,7 +35,7 @@ reserveMemory(size_t address, size_t size)
 
    if (result != baseAddress) {
       if (result != nullptr) {
-         freeMemory(address, size);
+         munmap(result, size);
       }
 
       return false;
