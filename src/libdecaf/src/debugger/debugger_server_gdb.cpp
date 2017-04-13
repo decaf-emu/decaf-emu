@@ -252,6 +252,9 @@ void GdbServer::handleQuery(const std::string &command)
       }
 
       sendCommand(reply);
+   } else if (begins_with(command, "qTStatus")) {
+      // Trace not supported
+      sendCommand("");
    } else {
       mLog->warn("Unknown query command {}", command);
       sendCommand("");
