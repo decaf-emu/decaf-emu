@@ -299,7 +299,7 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
    // Draw UI
    int width, height;
    SDL_GetWindowSize(mWindow, &width, &height);
-   decaf::debugger::drawUiGL(width, height);
+   mDebugUiRenderer->draw(width, height);
 
    // Swap
    SDL_GL_SwapWindow(mWindow);
@@ -360,25 +360,24 @@ DecafSDLOpenGL::initialise(int width, int height)
    SDL_GL_MakeCurrent(mWindow, mContext);
 
    // Setup decaf driver
-   auto glDriver = decaf::createGLDriver();
-   decaf_check(glDriver);
-   mDecafDriver = reinterpret_cast<decaf::OpenGLDriver*>(glDriver);
+   mDecafDriver = reinterpret_cast<decaf::OpenGLDriver*>(decaf::createGLDriver());
+   mDebugUiRenderer = decaf::createDebugGLRenderer();
 
    // Setup rendering
    initialiseContext();
    initialiseDraw();
-   decaf::debugger::initialiseUiGL();
+   mDebugUiRenderer->initialise();
 
    // Start graphics thread
    if (!config::gpu::force_sync) {
       SDL_GL_SetSwapInterval(1);
 
-      mGraphicsThread = std::thread{
+      mGraphicsThread = std::thread {
          [this]() {
-         SDL_GL_MakeCurrent(mWindow, mThreadContext);
-         initialiseContext();
-         mDecafDriver->run();
-      } };
+            SDL_GL_MakeCurrent(mWindow, mThreadContext);
+            initialiseContext();
+            mDecafDriver->run();
+         } };
    } else {
       // Set the swap interval to 0 so that we don't slow
       //  down the GPU system when presenting...  The game should
@@ -427,6 +426,12 @@ decaf::GraphicsDriver *
 DecafSDLOpenGL::getDecafDriver()
 {
    return mDecafDriver;
+}
+
+decaf::DebugUiRenderer *
+DecafSDLOpenGL::getDecafDebugUiRenderer()
+{
+   return mDebugUiRenderer;
 }
 
 #endif // DECAF_NOGL

@@ -1,8 +1,8 @@
-#include "debugger_ui_internal.h"
+#include "debugger_ui_window_segments.h"
 #include "kernel/kernel_loader.h"
+
 #include <imgui.h>
-#include <spdlog/spdlog.h>
-#include <vector>
+#include <spdlog/fmt/fmt.h>
 
 namespace debugger
 {
@@ -10,25 +10,14 @@ namespace debugger
 namespace ui
 {
 
-namespace SegView
+SegmentsWindow::SegmentsWindow(const std::string &name) :
+   Window(name)
 {
-
-struct Segment
-{
-   std::string name;
-   uint32_t start;
-   uint32_t end;
-   std::vector<Segment> items;
-};
-
-bool
-gIsVisible = true;
-
-static std::vector<Segment>
-sSegmentsCache;
+}
 
 static void
-addSegmentItem(std::vector<Segment> &segments, const Segment &item)
+addSegmentItem(std::vector<Segment> &segments,
+               const Segment &item)
 {
    for (auto &seg : segments) {
       if (item.start >= seg.start && item.start < seg.end) {
@@ -40,19 +29,20 @@ addSegmentItem(std::vector<Segment> &segments, const Segment &item)
    segments.push_back(item);
 }
 
-static void
-drawSegments(const std::vector<Segment> &segments, std::string tabs)
+void
+SegmentsWindow::drawSegments(const std::vector<Segment> &segments,
+                             std::string tabs)
 {
    for (auto &seg : segments) {
       ImGui::Selectable(fmt::format("{}{}", tabs, seg.name).c_str()); ImGui::NextColumn();
 
       if (ImGui::BeginPopupContextItem(fmt::format("{}{}-actions", tabs, seg.name).c_str(), 1)) {
          if (ImGui::MenuItem("Go to in Debugger")) {
-            DisasmView::displayAddress(seg.start);
+            mStateTracker->gotoDisassemblyAddress(seg.start);
          }
 
          if (ImGui::MenuItem("Go to in Memory View")) {
-            MemView::displayAddress(seg.start);
+            mStateTracker->gotoMemoryAddress(seg.start);
          }
 
          ImGui::EndPopup();
@@ -65,35 +55,31 @@ drawSegments(const std::vector<Segment> &segments, std::string tabs)
 }
 
 void
-draw()
+SegmentsWindow::draw()
 {
-   if (!gIsVisible) {
-      return;
-   }
-
    ImGui::SetNextWindowSize(ImVec2 { 550.0f, 300.0f }, ImGuiSetCond_FirstUseEver);
 
-   if (!ImGui::Begin("Memory Segments", &gIsVisible)) {
+   if (!ImGui::Begin("Memory Segments", &mVisible)) {
       ImGui::End();
       return;
    }
 
-   sSegmentsCache.clear();
-   sSegmentsCache.push_back(Segment { "System", mem::SystemBase, mem::SystemEnd });
-   sSegmentsCache.push_back(Segment { "MEM2", mem::MEM2Base, mem::MEM2End });
-   sSegmentsCache.push_back(Segment { "OverlayArena", mem::OverlayArenaBase, mem::OverlayArenaEnd });
-   sSegmentsCache.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
-   sSegmentsCache.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
-   sSegmentsCache.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });
-   sSegmentsCache.push_back(Segment { "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
-   sSegmentsCache.push_back(Segment { "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
+   mSegmentsCache.clear();
+   mSegmentsCache.push_back(Segment { "System", mem::SystemBase, mem::SystemEnd });
+   mSegmentsCache.push_back(Segment { "MEM2", mem::MEM2Base, mem::MEM2End });
+   mSegmentsCache.push_back(Segment { "OverlayArena", mem::OverlayArenaBase, mem::OverlayArenaEnd });
+   mSegmentsCache.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
+   mSegmentsCache.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
+   mSegmentsCache.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });
+   mSegmentsCache.push_back(Segment { "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
+   mSegmentsCache.push_back(Segment { "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
    kernel::loader::lockLoader();
    const auto &modules = kernel::loader::getLoadedModules();
 
    for (auto &mod : modules) {
       for (auto &sec : mod.second->sections) {
-         addSegmentItem(sSegmentsCache, Segment {
+         addSegmentItem(mSegmentsCache, Segment {
             fmt::format("{}:{}", mod.second->name, sec.name),
             sec.start,
             sec.end
@@ -112,13 +98,11 @@ draw()
    ImGui::Text("Start"); ImGui::NextColumn();
    ImGui::Text("End"); ImGui::NextColumn();
    ImGui::Separator();
-   drawSegments(sSegmentsCache, "");
+   drawSegments(mSegmentsCache, "");
 
    ImGui::Columns(1);
    ImGui::End();
 }
-
-} // namespace SegView
 
 } // namespace ui
 

@@ -6,6 +6,12 @@
 #include "libcpu/espresso/espresso_instructionset.h"
 #include <spdlog/fmt/fmt.h>
 
+namespace debugger
+{
+
+namespace analysis
+{
+
 struct BranchMetaInfo
 {
    bool isVariable;
@@ -157,3 +163,7 @@ static uint32_t calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
       return state->nia + 4;
    }
 }
+
+} // namespace analysis
+
+} // namespace debugger

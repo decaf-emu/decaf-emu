@@ -1,38 +1,29 @@
 #pragma once
 #include <cstdint>
-#include "libcpu/state.h"
+#include <string>
 
 namespace debugger
 {
 
-bool
-enabled();
-
-bool
-paused();
-
-cpu::Core *
-getPausedCoreState(uint32_t coreId);
-
-uint32_t
-getPauseInitiatorCoreId();
+using ClipboardTextGetCallback = const char *(*)(void *);
+using ClipboardTextSetCallback = void(*)(void *, const char*);
 
 void
-pauseAll();
+initialise(const std::string &config,
+           ClipboardTextGetCallback getClipboardFn,
+           ClipboardTextSetCallback setClipboardFn);
 
 void
-resumeAll();
+shutdown();
 
 void
-stepCoreInto(uint32_t coreId);
+handleDebugBreakInterrupt();
 
 void
-stepCoreOver(uint32_t coreId);
+notifyEntry(uint32_t preinit,
+            uint32_t entryPoint);
 
 void
-handlePreLaunch();
-
-void
-handleDbgBreakInterrupt();
+draw(unsigned width, unsigned height);
 
 } // namespace debugger

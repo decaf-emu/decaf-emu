@@ -26,6 +26,9 @@ public:
    decaf::GraphicsDriver *
    getDecafDriver() override;
 
+   decaf::DebugUiRenderer *
+   getDecafDebugUiRenderer() override;
+
 protected:
    void
    drawScanBuffer(gl::GLuint object);
@@ -45,6 +48,7 @@ protected:
 protected:
    std::thread mGraphicsThread;
    decaf::OpenGLDriver *mDecafDriver = nullptr;
+   decaf::DebugUiRenderer *mDebugUiRenderer = nullptr;
 
    SDL_GLContext mContext = nullptr;
    SDL_GLContext mThreadContext = nullptr;
@@ -55,7 +59,7 @@ protected:
    gl::GLuint mVertArray;
    gl::GLuint mVertBuffer;
    gl::GLuint mSampler;
-   
+
    gl::GLfloat mBackgroundColour[3];
 };
 

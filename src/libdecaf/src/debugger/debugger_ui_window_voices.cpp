@@ -1,10 +1,8 @@
-#include "debugger_ui_internal.h"
+#include "debugger_ui_window_voices.h"
 #include "modules/snd_core/snd_core_enum.h"
 #include "modules/snd_core/snd_core_voice.h"
-#include <cinttypes>
+
 #include <imgui.h>
-#include <spdlog/spdlog.h>
-#include <vector>
 
 namespace debugger
 {
@@ -12,25 +10,20 @@ namespace debugger
 namespace ui
 {
 
-namespace VoicesView
-{
-
 static const ImVec4 CurrentColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 CurrentBgColor = HEXTOIMV4(0x00E676, 1.0f);
 
-bool
-gIsVisible = true;
+VoicesWindow::VoicesWindow(const std::string &name) :
+   Window(name)
+{
+}
 
 void
-draw()
+VoicesWindow::draw()
 {
-   if (!gIsVisible) {
-      return;
-   }
+   ImGui::SetNextWindowSize(ImVec2 { 600, 300 }, ImGuiSetCond_FirstUseEver);
 
-   ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
-
-   if (!ImGui::Begin("Audio Voices", &gIsVisible)) {
+   if (!ImGui::Begin(mName.c_str(), &mVisible)) {
       ImGui::End();
       return;
    }
@@ -102,8 +95,6 @@ draw()
    ImGui::Columns(1);
    ImGui::End();
 }
-
-} // namespace ThreadView
 
 } // namespace ui
 

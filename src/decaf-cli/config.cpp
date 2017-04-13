@@ -33,7 +33,9 @@ struct CerealDebugger
    {
       using namespace decaf::config::debugger;
       ar(CEREAL_NVP(enabled),
-         CEREAL_NVP(break_on_entry));
+         CEREAL_NVP(break_on_entry),
+         CEREAL_NVP(gdb_stub),
+         CEREAL_NVP(gdb_stub_port));
    }
 };
 

@@ -4,33 +4,43 @@
 #include <cmath>
 #include <imgui.h>
 
+namespace debugger
+{
+
+namespace ui
+{
+
 class AddressScroller
 {
 public:
-   AddressScroller()
-      : mNumColumns(1), mScrollPos(0x00000000), mScrollToAddress(0xFFFFFFFF)
+   AddressScroller() :
+      mNumColumns(1),
+      mScrollPos(0x00000000),
+      mScrollToAddress(0xFFFFFFFF)
    {
    }
 
-   void Begin(int64_t numColumns, ImVec2 size)
+   void
+   begin(int64_t numColumns,
+         ImVec2 size)
    {
-      ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+      auto flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
       ImGui::BeginChild("##scrolling", size, false, flags);
-      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-      ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2 { 0.0f, 0.0f });
+      ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 { 0.0f, 0.0f });
 
       // There is a differentiation between visible and rendered lines as if
       //  a line is half-visible, we don't want to count it as being a 'visible'
       //  line, on the other hand, we should render the half-line if we can.
-      float lineHeight = ImGui::GetTextLineHeight();
-      float clipHeight = ImGui::GetWindowHeight();
-      int64_t numVisibleLines = static_cast<int64_t>(std::floor(clipHeight / lineHeight));
-      int64_t numDrawLines = static_cast<int64_t>(std::ceil(clipHeight / lineHeight));
+      auto lineHeight = ImGui::GetTextLineHeight();
+      auto clipHeight = ImGui::GetWindowHeight();
+      auto numVisibleLines = static_cast<int64_t>(std::floor(clipHeight / lineHeight));
+      auto numDrawLines = static_cast<int64_t>(std::ceil(clipHeight / lineHeight));
 
       if (ImGui::IsWindowHovered()) {
          auto &io = ImGui::GetIO();
-         int64_t scrollDelta = -static_cast<int64_t>(io.MouseWheel);
-         SetScrollPos(mScrollPos + scrollDelta * numColumns);
+         auto scrollDelta = -static_cast<int64_t>(io.MouseWheel);
+         setScrollPos(mScrollPos + scrollDelta * numColumns);
       }
 
       mNumColumns = numColumns;
@@ -43,20 +53,19 @@ public:
          if (std::abs(mScrollToAddress - mScrollPos) >= 0x400) {
             // If we are making a significant jump, don't bother doing a friendly
             //  scroll, lets just put the address at the top of the view.
-
-            SetScrollPos(mScrollToAddress - mNumColumns);
+            setScrollPos(mScrollToAddress - mNumColumns);
          } else {
             // Try to just scroll the view so that the user can keep track
             //  of the icon easier after scrolling...
-
-            const int64_t minVisBound = mNumColumns;
-            const int64_t maxVisBound = (mNumVisibleLines * mNumColumns) - mNumColumns - mNumColumns;
+            const auto minVisBound = mNumColumns;
+            const auto maxVisBound = (mNumVisibleLines * mNumColumns) - mNumColumns - mNumColumns;
 
             if (mScrollToAddress < mScrollPos + minVisBound) {
-               SetScrollPos(mScrollToAddress - minVisBound);
+               setScrollPos(mScrollToAddress - minVisBound);
             }
+
             if (mScrollToAddress >= mScrollPos + maxVisBound) {
-               SetScrollPos(mScrollToAddress - maxVisBound);
+               setScrollPos(mScrollToAddress - maxVisBound);
             }
          }
 
@@ -64,59 +73,69 @@ public:
       }
    }
 
-   void End()
+   void
+   end()
    {
       ImGui::PopStyleVar(2);
       ImGui::EndChild();
    }
 
-   uint32_t Reset()
+   uint32_t
+   reset()
    {
       mIterPos = mScrollPos;
       return static_cast<uint32_t>(mIterPos);
    }
 
-   uint32_t Advance()
+   uint32_t
+   advance()
    {
       mIterPos += mNumColumns;
       return static_cast<uint32_t>(mIterPos);
    }
 
-   bool HasMore()
+   bool
+   hasMore() const
    {
       return mIterPos < mScrollPos + mNumDrawLines * mNumColumns && mIterPos < 0x100000000;
    }
 
-   bool IsValidOffset(uint32_t offset) {
+   bool
+   isValidOffset(uint32_t offset) const
+   {
       return mIterPos + static_cast<int64_t>(offset) < 0x100000000;
    }
 
-   void ScrollTo(uint32_t address)
+   void
+   scrollTo(uint32_t address)
    {
       mScrollToAddress = address;
    }
 
 private:
-   void SetScrollPos(int64_t position)
+   void setScrollPos(int64_t position)
    {
-      int64_t numTotalLines = (0x100000000 + mNumColumns - 1) / mNumColumns;
+      auto numTotalLines = (0x100000000 + mNumColumns - 1) / mNumColumns;
 
       // Make sure we stay within the bounds of our memory
-      int64_t maxScrollPos = (numTotalLines - mNumVisibleLines) * mNumColumns;
+      auto maxScrollPos = (numTotalLines - mNumVisibleLines) * mNumColumns;
       position = std::max<int64_t>(0, position);
       position = std::min<int64_t>(position, maxScrollPos);
 
       // Remap the scroll position to the closest line start
       position -= position % mNumColumns;
-
       mScrollPos = position;
    }
 
+private:
    int64_t mNumColumns;
    int64_t mScrollPos;
    int64_t mIterPos;
    int64_t mNumDrawLines;
    int64_t mNumVisibleLines;
    int64_t mScrollToAddress;
-
 };
+
+} // namespace ui
+
+} // namespace debugger

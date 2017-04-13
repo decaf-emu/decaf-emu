@@ -56,8 +56,8 @@ injectKeyInput(input::KeyboardKey key,
 void
 injectTextInput(const char *text);
 
-using ClipboardTextGetCallback = const char *(*)();
-using ClipboardTextSetCallback = void (*)(const char*);
+using ClipboardTextGetCallback = const char *(*)(void *);
+using ClipboardTextSetCallback = void (*)(void *, const char*);
 
 void
 setClipboardTextCallbacks(ClipboardTextGetCallback getter,

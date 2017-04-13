@@ -180,7 +180,7 @@ cpuFaultFiberEntryPoint(void *addr)
    // Alert the debugger if it cares.
    if (decaf::config::debugger::enabled) {
       coreinit::internal::pauseCoreTime(true);
-      debugger::handleDbgBreakInterrupt();
+      debugger::handleDebugBreakInterrupt();
       coreinit::internal::pauseCoreTime(false);
 
       // This will shut down the thread and reschedule.  This is required
@@ -248,9 +248,11 @@ cpuInterruptHandler(uint32_t interrupt_flags)
    }
 
    if (interrupt_flags & cpu::DBGBREAK_INTERRUPT) {
-      coreinit::internal::pauseCoreTime(true);
-      debugger::handleDbgBreakInterrupt();
-      coreinit::internal::pauseCoreTime(false);
+      if (decaf::config::debugger::enabled) {
+         coreinit::internal::pauseCoreTime(true);
+         debugger::handleDebugBreakInterrupt();
+         coreinit::internal::pauseCoreTime(false);
+      }
    }
 
    auto unsafeInterrupts = cpu::NONMASKABLE_INTERRUPTS | cpu::DBGBREAK_INTERRUPT;

@@ -1,11 +1,12 @@
-#include "debugger_ui_internal.h"
+#include "debugger_ui_window_threads.h"
+#include "debugger_threadutils.h"
 #include "modules/coreinit/coreinit_enum_string.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/coreinit/coreinit_thread.h"
+
 #include <cinttypes>
 #include <imgui.h>
-#include <spdlog/spdlog.h>
-#include <vector>
+#include <spdlog/fmt/fmt.h>
 
 namespace debugger
 {
@@ -13,46 +14,18 @@ namespace debugger
 namespace ui
 {
 
-namespace ThreadView
-{
-
 static const ImVec4 CurrentColor = HEXTOIMV4(0x000000, 1.0f);
 static const ImVec4 CurrentBgColor = HEXTOIMV4(0x00E676, 1.0f);
 
-struct ThreadInfo
+ThreadsWindow::ThreadsWindow(const std::string &name) :
+   Window(name)
 {
-   coreinit::OSThread *thread;
-   uint32_t id;
-   std::string name;
-   coreinit::OSThreadState state;
-   int32_t coreId;
-   uint64_t coreTimeNs;
-   int32_t priority;
-   int32_t basePriority;
-   uint32_t affinity;
-};
-
-bool
-gIsVisible = true;
-
-static std::vector<ThreadInfo>
-sThreadsCache;
+}
 
 void
-draw()
+ThreadsWindow::update()
 {
-   if (!gIsVisible) {
-      return;
-   }
-
-   ImGui::SetNextWindowSize(ImVec2(600, 300), ImGuiSetCond_FirstUseEver);
-
-   if (!ImGui::Begin("Threads", &gIsVisible)) {
-      ImGui::End();
-      return;
-   }
-
-   sThreadsCache.clear();
+   mThreadsCache.clear();
 
    coreinit::internal::lockScheduler();
    auto core0Thread = coreinit::internal::getCoreRunningThread(0);
@@ -61,35 +34,48 @@ draw()
    auto firstThread = coreinit::internal::getFirstActiveThread();
 
    for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
-      ThreadInfo tinfo;
-      tinfo.thread = thread;
-      tinfo.id = thread->id;
-      tinfo.name = thread->name ? thread->name.get() : "";
-      tinfo.state = thread->state;
-      tinfo.priority = thread->priority;
-      tinfo.basePriority = thread->basePriority;
-      tinfo.affinity = thread->attr & coreinit::OSThreadAttributes::AffinityAny;
+      auto info = ThreadInfo { };
+      info.thread = thread;
+      info.id = thread->id;
+      info.name = thread->name ? thread->name.get() : "";
+      info.state = thread->state;
+      info.priority = thread->priority;
+      info.basePriority = thread->basePriority;
+      info.affinity = thread->attr & coreinit::OSThreadAttributes::AffinityAny;
 
       if (thread == core0Thread) {
-         tinfo.coreId = 0;
+         info.coreId = 0;
       } else if (thread == core1Thread) {
-         tinfo.coreId = 1;
+         info.coreId = 1;
       } else if (thread == core2Thread) {
-         tinfo.coreId = 2;
+         info.coreId = 2;
       } else {
-         tinfo.coreId = -1;
+         info.coreId = -1;
       }
 
-      tinfo.coreTimeNs = thread->coreTimeConsumedNs;
+      info.coreTimeNs = thread->coreTimeConsumedNs;
 
-      if (tinfo.coreId != -1) {
-         tinfo.coreTimeNs += coreinit::internal::getCoreThreadRunningTime(0);
+      if (info.coreId != -1) {
+         info.coreTimeNs += coreinit::internal::getCoreThreadRunningTime(info.coreId);
       }
 
-      sThreadsCache.push_back(tinfo);
+      mThreadsCache.push_back(info);
    }
 
    coreinit::internal::unlockScheduler();
+}
+
+void
+ThreadsWindow::draw()
+{
+   ImGui::SetNextWindowSize(ImVec2 { 600, 300 }, ImGuiSetCond_FirstUseEver);
+
+   if (!ImGui::Begin(mName.c_str(), &mVisible)) {
+      ImGui::End();
+      return;
+   }
+
+   update();
 
    ImGui::Columns(8, "threadList", false);
    ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
@@ -111,19 +97,20 @@ draw()
    ImGui::Text("Core Time"); ImGui::NextColumn();
    ImGui::Separator();
 
-   for (auto &thread : sThreadsCache) {
+   for (auto &thread : mThreadsCache) {
       // ID
-      if (thread.thread == getActiveThread()) {
+      if (thread.thread == mStateTracker->getActiveThread()) {
          // Highlight the currently active thread
          // TODO: Clean this up
          auto idStr = fmt::format("{}", thread.id);
          auto drawList = ImGui::GetWindowDrawList();
          auto lineHeight = ImGui::GetTextLineHeight();
-         float glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
-         float idWidth = glyphWidth * idStr.length();
+         auto glyphWidth = ImGui::CalcTextSize("FF").x - ImGui::CalcTextSize("F").x;
+         auto idWidth = glyphWidth * idStr.length();
          auto rootPos = ImGui::GetCursorScreenPos();
-         auto idMin = ImVec2(rootPos.x - 1, rootPos.y);
-         auto idMax = ImVec2(rootPos.x + idWidth + 2, rootPos.y + lineHeight + 1);
+         auto idMin = ImVec2 { rootPos.x - 1, rootPos.y };
+         auto idMax = ImVec2 { rootPos.x + idWidth + 2, rootPos.y + lineHeight + 1 };
+
          drawList->AddRectFilled(idMin, idMax, ImColor(CurrentBgColor), 2.0f);
          ImGui::TextColored(CurrentColor, "%s", idStr.c_str());
       } else {
@@ -132,7 +119,7 @@ draw()
       ImGui::NextColumn();
 
       // Name
-      if (isPaused()) {
+      if (mDebugger->paused()) {
          auto threadName = thread.name;
 
          if (thread.name.size() == 0) {
@@ -140,7 +127,7 @@ draw()
          }
 
          if (ImGui::Selectable(threadName.c_str())) {
-            setActiveThread(thread.thread);
+            mStateTracker->setActiveThread(thread.thread);
          }
       } else {
          ImGui::Text("%s", thread.name.c_str());
@@ -149,8 +136,8 @@ draw()
       ImGui::NextColumn();
 
       // NIA
-      if (isPaused()) {
-         ImGui::Text("%08x", getThreadNia(thread.thread));
+      if (mDebugger->paused()) {
+         ImGui::Text("%08x", getThreadNia(mDebugger, thread.thread));
       } else {
          ImGui::Text("        ");
       }
@@ -206,8 +193,6 @@ draw()
    ImGui::Columns(1);
    ImGui::End();
 }
-
-} // namespace ThreadView
 
 } // namespace ui
 

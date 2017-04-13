@@ -18,6 +18,12 @@ extern bool enabled;
 //! Whether to break on entry point of game when debugger is enabled
 extern bool break_on_entry;
 
+//! Whether to run a gdb stub or not
+extern bool gdb_stub;
+
+//! What port to use for gdb stub
+extern unsigned gdb_stub_port;
+
 } // namespace debugger
 
 namespace gpu

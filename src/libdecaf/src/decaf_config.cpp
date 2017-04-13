@@ -12,6 +12,8 @@ namespace debugger
 
 bool enabled = true;
 bool break_on_entry = false;
+bool gdb_stub = false;
+unsigned gdb_stub_port = 2159;
 
 } // namespace debugger
 

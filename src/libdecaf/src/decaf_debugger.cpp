@@ -1,20 +1,28 @@
-#include "debugger/debugger_ui.h"
-#include "decaf.h"
-#include <string>
+#include "debugger/debugger_ui_opengl.h"
+#include "decaf_debugger.h"
 
 namespace decaf
 {
 
-namespace debugger
-{
+static DebugUiRenderer *
+sUiRenderer = nullptr;
 
-void
-initialise()
+DebugUiRenderer *
+createDebugGLRenderer()
 {
-   auto configPath = makeConfigPath("imgui.ini");
-   ::debugger::ui::initialise(configPath);
+   return new ::debugger::ui::RendererOpenGL { };
 }
 
-} // namespace debugger
+void
+setDebugUiRenderer(DebugUiRenderer *renderer)
+{
+   sUiRenderer = renderer;
+}
+
+DebugUiRenderer *
+getDebugUiRenderer()
+{
+   return sUiRenderer;
+}
 
 } // namespace decaf

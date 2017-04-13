@@ -14,7 +14,7 @@ createGLDriver()
 #ifndef DECAF_NOGL
    return new gpu::opengl::GLDriver();
 #else
-   decaf_abort("libdecaf was built width OpenGL support disabled");
+   decaf_abort("libdecaf was built with OpenGL support disabled");
 #endif
 }
 

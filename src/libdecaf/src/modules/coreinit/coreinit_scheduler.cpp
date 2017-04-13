@@ -677,7 +677,7 @@ GameThreadEntry(uint32_t argc, void *argv)
    auto userPreinit = appModule->findFuncExport<void, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*>("__preinit_user");
    auto startFn = kernel::loader::AppEntryPoint(appModule->entryPoint);
 
-   debugger::handlePreLaunch();
+   debugger::notifyEntry(userPreinit.getAddress(), appModule->entryPoint);
 
    // We cannot use stack for these pointers because apparently games can store
    // them and reference it later (see Yoshi's Wooly World).

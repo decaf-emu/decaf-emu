@@ -92,6 +92,9 @@ DecafSDL::run(const std::string &gamePath)
    auto graphicsDriver = mGraphicsDriver->getDecafDriver();
    decaf::setGraphicsDriver(graphicsDriver);
 
+   auto debugUiRenderer = mGraphicsDriver->getDecafDebugUiRenderer();
+   decaf::setDebugUiRenderer(debugUiRenderer);
+
    // Set input provider
    decaf::setInputDriver(this);
    decaf::addEventListener(this);
@@ -101,10 +104,10 @@ DecafSDL::run(const std::string &gamePath)
    decaf::setSoundDriver(mSoundDriver);
 
    decaf::setClipboardTextCallbacks(
-      []() -> const char * {
+      [](void *context) -> const char * {
          return SDL_GetClipboardText();
       },
-      [](const char *text) {
+      [](void *context, const char *text) {
          SDL_SetClipboardText(text);
       });
 
@@ -112,9 +115,6 @@ DecafSDL::run(const std::string &gamePath)
    if (!decaf::initialise(gamePath)) {
       return false;
    }
-
-   // Initialise the emulators debugger
-   decaf::debugger::initialise();
 
    // Start emulator
    decaf::start();

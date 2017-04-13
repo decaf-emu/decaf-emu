@@ -1,182 +1,106 @@
-#include "decaf_config.h"
-#include "debugger/debugger_branchcalc.h"
-#include "kernel/kernel.h"
-#include "kernel/kernel_loader.h"
-
-#include <atomic>
-#include <common/decaf_assert.h>
-#include <common/log.h>
-#include <libcpu/cpu.h>
-#include <libcpu/cpu_breakpoints.h>
-#include <libcpu/mem.h>
-#include <condition_variable>
+#include "debugger.h"
+#include "debugger_controller.h"
+#include "debugger_server_gdb.h"
+#include "debugger_ui.h"
+#include "debugger_ui_manager.h"
+#include "decaf.h"
 
 namespace debugger
 {
 
-static std::mutex
-sMutex;
+static Controller
+sController;
 
-static std::condition_variable
-sPauseReleaseCond;
+static ui::Manager
+sUiManager { &sController };
 
-static std::atomic<uint32_t>
-sIsPausing;
+static GdbServer
+sGdbServer { &sController, &sUiManager };
 
-static std::atomic<uint32_t>
-sIsResuming;
+void
+initialise(const std::string &config,
+           ClipboardTextGetCallback getClipboardFn,
+           ClipboardTextSetCallback setClipboardFn)
+{
+   sUiManager.load(config, getClipboardFn, setClipboardFn);
 
-static std::atomic_bool
-sIsPaused;
+   if (decaf::config::debugger::enabled
+    && decaf::config::debugger::gdb_stub) {
+      sGdbServer.start(decaf::config::debugger::gdb_stub_port);
+   }
+}
 
-static cpu::Core *
-sCorePauseState[3];
+void
+shutdown()
+{
+   // Force resume any paused cores.
+   sController.resume();
+}
 
-static uint32_t
-sPauseInitiatorCoreId;
+void
+handleDebugBreakInterrupt()
+{
+   sController.onDebugBreakInterrupt();
+}
+
+void
+notifyEntry(uint32_t preinit,
+            uint32_t entryPoint)
+{
+   if (decaf::config::debugger::enabled
+    && decaf::config::debugger::break_on_entry) {
+      if (preinit) {
+         sController.addBreakpoint(preinit);
+      }
+
+      sController.addBreakpoint(entryPoint);
+   }
+}
+
+void
+draw(unsigned width, unsigned height)
+{
+   sGdbServer.process();
+   sUiManager.draw(width, height);
+}
+
+namespace ui
+{
 
 bool
-enabled()
+onMouseAction(MouseButton button,
+              MouseAction action)
 {
-   return decaf::config::debugger::enabled;
+   return sUiManager.onMouseAction(button, action);
 }
 
 bool
-paused()
+onMouseMove(float x,
+            float y)
 {
-   return sIsPaused.load();
+   return sUiManager.onMouseMove(x, y);
 }
 
-cpu::Core *
-getPausedCoreState(uint32_t coreId)
+bool
+onMouseScroll(float x,
+              float y)
 {
-   decaf_check(paused());
-   return sCorePauseState[coreId];
+   return sUiManager.onMouseScroll(x, y);
 }
 
-uint32_t
-getPauseInitiatorCoreId()
+bool
+onKeyAction(KeyboardKey key,
+            KeyboardAction action)
 {
-   decaf_check(paused());
-   decaf_check(sPauseInitiatorCoreId < 3);
-   return sPauseInitiatorCoreId;
+   return sUiManager.onKeyAction(key, action);
 }
 
-void
-pauseAll()
+bool
+onText(const char *text)
 {
-   for (auto i = 0; i < 3; ++i) {
-      cpu::interrupt(i, cpu::DBGBREAK_INTERRUPT);
-   }
+   return sUiManager.onText(text);
 }
 
-void
-resumeAll()
-{
-   auto oldState = sIsPaused.exchange(false);
-   decaf_check(oldState);
-   for (auto i = 0; i < 3; ++i) {
-      sCorePauseState[i] = nullptr;
-   }
-   sPauseReleaseCond.notify_all();
-}
-
-static void
-stepCore(uint32_t coreId, bool stepOver)
-{
-   decaf_check(sIsPaused.load());
-
-   const cpu::CoreRegs *state = sCorePauseState[coreId];
-   uint32_t nextInstr = calculateNextInstr(state, stepOver);
-   cpu::addBreakpoint(nextInstr, cpu::Breakpoint::SingleFire);
-
-   resumeAll();
-}
-
-void
-stepCoreInto(uint32_t coreId)
-{
-   stepCore(coreId, false);
-}
-
-void
-stepCoreOver(uint32_t coreId)
-{
-   stepCore(coreId, true);
-}
-
-void
-handlePreLaunch()
-{
-   // Do not add entry breakpoints if debugger is disabled
-   if (!decaf::config::debugger::enabled) {
-      return;
-   }
-
-   if (decaf::config::debugger::break_on_entry) {
-      auto appModule = kernel::getUserModule();
-      auto userPreinit = appModule->findExport("__preinit_user");
-
-      if (userPreinit) {
-         cpu::addBreakpoint(userPreinit, cpu::Breakpoint::SingleFire);
-      }
-
-      auto start = appModule->entryPoint;
-      cpu::addBreakpoint(start, cpu::Breakpoint::SingleFire);
-   }
-}
-
-void
-handleDbgBreakInterrupt()
-{
-   // If we are not initialised, we should ignore DbgBreaks
-   if (!decaf::config::debugger::enabled) {
-      return;
-   }
-
-   std::unique_lock<std::mutex> lock(sMutex);
-   auto coreId = cpu::this_core::id();
-
-   // Store our core state before we flip isPaused
-   sCorePauseState[coreId] = cpu::this_core::state();
-
-   // Check to see if we were the last core to join on the fun
-   auto coreBit = 1 << coreId;
-   auto isPausing = sIsPausing.fetch_or(coreBit);
-
-   if (isPausing == 0) {
-      // This is the first core to hit a breakpoint
-      sPauseInitiatorCoreId = coreId;
-
-      // Signal the rest of the cores to stop
-      for (auto i = 0; i < 3; ++i) {
-         cpu::interrupt(i, cpu::DBGBREAK_INTERRUPT);
-      }
-   }
-
-   if ((isPausing | coreBit) == (1 | 2 | 4)) {
-      // This was the last core to join.
-      sIsPaused.store(true);
-      sIsPausing.store(0);
-      sIsResuming.store(0);
-   }
-
-   // Spin around the release condition while we are paused
-   while (sIsPausing.load() || sIsPaused.load()) {
-      sPauseReleaseCond.wait(lock);
-   }
-
-   // Clear any additional DbgBreaks that occured
-   cpu::this_core::clearInterrupt(cpu::DBGBREAK_INTERRUPT);
-
-   // Everyone needs to leave at once in case new breakpoints occur.
-   if ((sIsResuming.fetch_or(coreBit) | coreBit) == (1 | 2 | 4)) {
-      sPauseReleaseCond.notify_all();
-   } else {
-      while ((sIsResuming.load() | coreBit) != (1 | 2 | 4)) {
-         sPauseReleaseCond.wait(lock);
-      }
-   }
-}
+} // namespace ui
 
 } // namespace debugger

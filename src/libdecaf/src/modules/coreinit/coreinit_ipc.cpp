@@ -55,14 +55,14 @@ IPCDriverInit()
 
    OSInitMessageQueue(&coreData->queue,
                       coreData->messages.data(),
-                      coreData->messages.size());
+                      static_cast<int32_t>(coreData->messages.size()));
 
    OSCreateThread(thread,
                   sIpcDriverEntryPoint,
                   coreId,
                   nullptr,
                   reinterpret_cast<be_val<uint32_t>*>(stack + stackSize),
-                  stackSize,
+                  static_cast<uint32_t>(stackSize),
                   -1,
                   static_cast<OSThreadAttributes>(1 << coreId));
 

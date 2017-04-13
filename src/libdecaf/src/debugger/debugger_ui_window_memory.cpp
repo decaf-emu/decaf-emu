@@ -1,5 +1,5 @@
-#include "debugger_ui_internal.h"
-#include "imgui_addrscroll.h"
+#include "debugger_ui_window_memory.h"
+#include <algorithm>
 #include <imgui.h>
 #include <sstream>
 
@@ -9,64 +9,26 @@ namespace debugger
 namespace ui
 {
 
-namespace MemView
+MemoryWindow::MemoryWindow(const std::string &name) :
+   Window(name)
 {
-
-bool
-gIsVisible = true;
-
-static bool
-sActivateFocus = false;
-
-static AddressScroller
-sScroller;
-
-static bool
-sEditingEnabled = true;
-
-static int64_t
-sEditAddress = -1;
-
-static int64_t
-sLastEditAddress = -1;
-
-static int64_t
-sGotoTargetAddr = -1;
-
-static char
-sAddressInput[32] = { 0 };
-
-static char
-sDataInput[32] = { 0 };
-
-static void
-gotoAddress(uint32_t address)
-{
-   sScroller.ScrollTo(address);
-   sEditAddress = address;
+   mAddressScroller.scrollTo(mem::MEM2Base);
 }
 
 void
-displayAddress(uint32_t address)
+MemoryWindow::gotoAddress(uint32_t address)
 {
-   gotoAddress(address);
-   sActivateFocus = true;
-   gIsVisible = true;
+   mAddressScroller.scrollTo(address);
+   mEditAddress = address;
 }
 
 void
-draw()
+MemoryWindow::draw()
 {
-   if (!gIsVisible) {
-      return;
-   }
+   char addressInput[32] = { 0 };
+   char dataInput[32] = { 0 };
 
-   if (sActivateFocus) {
-      ImGui::SetNextWindowFocus();
-      sActivateFocus = false;
-   }
-
-   if (!ImGui::Begin("Memory", &gIsVisible)) {
+   if (!ImGui::Begin(mName.c_str(), &mVisible)) {
       ImGui::End();
       return;
    }
@@ -89,46 +51,45 @@ draw()
    numColumns = std::max<int64_t>(1, std::min<int64_t>(numColumns, 64));
 
    // Clear the last edit address whenever our current address is cleared
-   if (sEditAddress == -1) {
-      sLastEditAddress = -1;
+   if (mEditAddress == -1) {
+      mLastEditAddress = -1;
    }
 
    // Check if we need to move around or scroll
-   if (sEditAddress != -1)
-   {
-      auto originalAddress = sEditAddress;
+   if (mEditAddress != -1) {
+      auto originalAddress = mEditAddress;
 
       // Check if the user wants to move
       if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))) {
-         sEditAddress -= numColumns;
+         mEditAddress -= numColumns;
       } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))) {
-         sEditAddress += numColumns;
+         mEditAddress += numColumns;
       } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow))) {
-         sEditAddress--;
+         mEditAddress--;
       } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow))) {
-         sEditAddress++;
+         mEditAddress++;
       }
 
       // Clamp the edit address
-      sEditAddress = std::max<int64_t>(0, sEditAddress);
-      sEditAddress = std::min<int64_t>(sEditAddress, 0xFFFFFFFF);
+      mEditAddress = std::max<int64_t>(0, mEditAddress);
+      mEditAddress = std::min<int64_t>(mEditAddress, 0xFFFFFFFF);
 
       // Before we start processing an edit, lets make sure it's valid memory to be editing...
-      if (!mem::valid(static_cast<uint32_t>(sEditAddress))) {
-         sEditAddress = -1;
+      if (!mem::valid(static_cast<uint32_t>(mEditAddress))) {
+         mEditAddress = -1;
       }
 
       // Make sure that the address always stays visible!  We do this before
       //  checking for valid memory so you can still goto an invalid address.
-      if (sEditAddress != originalAddress && sEditAddress != -1) {
-         sScroller.ScrollTo(static_cast<uint32_t>(sEditAddress));
+      if (mEditAddress != originalAddress && mEditAddress != -1) {
+         mAddressScroller.scrollTo(static_cast<uint32_t>(mEditAddress));
       }
    }
 
-   auto editAddress = sEditAddress;
-   sScroller.Begin(numColumns, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+   auto editAddress = mEditAddress;
+   mAddressScroller.begin(numColumns, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
 
-   for (auto addr = sScroller.Reset(); sScroller.HasMore(); addr = sScroller.Advance()) {
+   for (auto addr = mAddressScroller.reset(); mAddressScroller.hasMore(); addr = mAddressScroller.advance()) {
       auto linePos = ImGui::GetCursorPos();
 
       // Render the address for this line
@@ -146,14 +107,14 @@ draw()
             // If the active edit address has changed, lets make sure to force
             //  the focus to the new input box.
             bool newlyFocused = false;
-            if (sLastEditAddress != editAddress) {
+            if (mLastEditAddress != editAddress) {
                ImGui::SetKeyboardFocusHere();
 
                uint32_t targetAddress = static_cast<uint32_t>(editAddress);
-               snprintf(sAddressInput, 32, "%08X", targetAddress);
-               snprintf(sDataInput, 32, "%02X", mem::read<unsigned char>(targetAddress));
+               snprintf(addressInput, 32, "%08X", targetAddress);
+               snprintf(dataInput, 32, "%02X", mem::read<unsigned char>(targetAddress));
 
-               sLastEditAddress = editAddress;
+               mLastEditAddress = editAddress;
                newlyFocused = true;
             }
 
@@ -170,32 +131,32 @@ draw()
 
             auto getCursorPos =
                [](auto data) {
-                  auto cursorPosPtr = static_cast<int*>(data->UserData);
+               auto cursorPosPtr = static_cast<int*>(data->UserData);
 
-                  if (!data->HasSelection()) {
-                     *cursorPosPtr = data->CursorPos;
-                  }
+               if (!data->HasSelection()) {
+                  *cursorPosPtr = data->CursorPos;
+               }
 
-                  return 0;
-               };
+               return 0;
+            };
 
-            if (ImGui::InputText("##data", sDataInput, 32, flags, getCursorPos, &cursorPos)) {
-               sEditAddress += 1;
+            if (ImGui::InputText("##data", dataInput, 32, flags, getCursorPos, &cursorPos)) {
+               mEditAddress += 1;
             } else if (!newlyFocused && !ImGui::IsItemActive()) {
-               sEditAddress = -1;
+               mEditAddress = -1;
             }
 
             if (cursorPos >= 2) {
-               sEditAddress += 1;
+               mEditAddress += 1;
             }
 
             ImGui::PopItemWidth();
             ImGui::PopID();
 
-            if (sEditAddress != sLastEditAddress) {
+            if (mEditAddress != mLastEditAddress) {
                // If the edit address has changed, we need to update
                //  the memory itself.
-               std::istringstream is(sDataInput);
+               std::istringstream is { dataInput };
                int data;
 
                if (is >> std::hex >> data) {
@@ -205,11 +166,11 @@ draw()
          } else {
             ImGui::SetCursorPos(linePos);
 
-            if (sScroller.IsValidOffset(i) && mem::valid(addr + i)) {
+            if (mAddressScroller.isValidOffset(i) && mem::valid(addr + i)) {
                ImGui::Text("%02X ", mem::read<unsigned char>(addr + i));
 
-               if (sEditingEnabled && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
-                  sEditAddress = addr + i;
+               if (mEditingEnabled && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
+                  mEditAddress = addr + i;
                }
             } else {
                ImGui::Text("??");
@@ -224,7 +185,7 @@ draw()
 
       // Draw all of the ASCII characters
       for (auto i = 0u; i < numColumns; ++i) {
-         if (sScroller.IsValidOffset(i) && mem::valid(addr + i)) {
+         if (mAddressScroller.isValidOffset(i) && mem::valid(addr + i)) {
             ImGui::SetCursorPos(linePos);
             unsigned char c = mem::read<unsigned char>(addr + i);
             ImGui::Text("%c", (c >= 32 && c < 128) ? c : '.');
@@ -234,7 +195,7 @@ draw()
       }
    }
 
-   sScroller.End();
+   mAddressScroller.end();
    ImGui::Separator();
 
    // Render the bottom bar for the window
@@ -243,8 +204,8 @@ draw()
    ImGui::SameLine();
    ImGui::PushItemWidth(70);
 
-   if (ImGui::InputText("##addr", sAddressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
-      std::istringstream is(sAddressInput);
+   if (ImGui::InputText("##addr", addressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
+      std::istringstream is { addressInput };
       uint32_t goto_addr;
 
       if ((is >> std::hex >> goto_addr)) {
@@ -255,12 +216,8 @@ draw()
    ImGui::PopItemWidth();
    ImGui::SameLine();
    ImGui::Text("Showing %d Columns", static_cast<int>(numColumns));
-
-   // End the memory view window
    ImGui::End();
 }
-
-} // namespace MemView
 
 } // namespace ui
 

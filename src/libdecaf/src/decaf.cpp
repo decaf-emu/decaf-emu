@@ -1,4 +1,3 @@
-#include <common/platform_dir.h>
 #include "decaf.h"
 #include "decaf_config.h"
 #include "decaf_graphics.h"
@@ -16,11 +15,24 @@
 #include "modules/coreinit/coreinit_fs.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 #include "modules/swkbd/swkbd_core.h"
+
+#include <common/platform.h>
+#include <common/platform_dir.h>
 #include <condition_variable>
 #include <mutex>
 
+#ifdef PLATFORM_WINDOWS
+#include <WinSock2.h>
+#endif
+
 namespace decaf
 {
+
+static ClipboardTextGetCallback
+sClipboardTextGetCallbackFn = nullptr;
+
+static ClipboardTextSetCallback
+sClipboardTextSetCallbackFn = nullptr;
 
 class LogFormatter : public spdlog::formatter
 {
@@ -36,9 +48,7 @@ public:
          << fmt::pad(static_cast<unsigned int>(micros), 6, '0');
 
       msg.formatted << ' ';
-
       msg.formatted << spdlog::level::to_str(msg.level);
-
       msg.formatted << ':';
 
       auto core = cpu::this_core::state();
@@ -54,7 +64,6 @@ public:
       }
 
       msg.formatted << "] ";
-
       msg.formatted << fmt::StringRef(msg.raw.data(), msg.raw.size());
       msg.formatted.write(spdlog::details::os::eol, spdlog::details::os::eol_size);
    }
@@ -101,6 +110,11 @@ initialise(const std::string &gamePath)
       return false;
    }
 
+#ifdef PLATFORM_WINDOWS
+   WSADATA wsaInitData;
+   WSAStartup(MAKEWORD(2, 2), &wsaInitData);
+#endif
+
    // Set JIT mode
    if (decaf::config::jit::enabled) {
       if (decaf::config::jit::verify) {
@@ -121,6 +135,9 @@ initialise(const std::string &gamePath)
    mem::initialise();
    cpu::initialise();
    kernel::initialise();
+   debugger::initialise(makeConfigPath("imgui.ini"),
+                         sClipboardTextGetCallbackFn,
+                         sClipboardTextSetCallbackFn);
 
    // Setup filesystem
    auto filesystem = new fs::FileSystem();
@@ -181,6 +198,7 @@ initialise(const std::string &gamePath)
    // Mount mlc
    auto mlcPath = fs::HostPath { decaf::config::system::mlc_path };
    filesystem->mountHostFolder("/vol/storage_mlc01", mlcPath, fs::Permissions::Read);
+   filesystem->mountHostFolder("/vol/storage_hfiomlc01", mlcPath, fs::Permissions::Read);
 
    return true;
 }
@@ -221,13 +239,8 @@ waitForExit()
 void
 shutdown()
 {
-   // Make sure the CPU stops being blocked by the debugger.
-   if (::debugger::paused()) {
-      // TODO: This is technically a race as the debugger is designed such that
-      //  it controls when the cores resume.  This might need to be routed through
-      //  debugger::ui for that reason.
-      ::debugger::resumeAll();
-   }
+   // Shut down debugger
+   debugger::shutdown();
 
    // Shut down CPU
    cpu::halt();
@@ -261,30 +274,28 @@ void
 injectMouseButtonInput(input::MouseButton button,
                        input::MouseAction action)
 {
-   ::debugger::ui::injectMouseButtonInput(button, action);
+   debugger::ui::onMouseAction(button, action);
 }
 
 void
 injectMousePos(float x,
                float y)
 {
-   ::debugger::ui::injectMousePos(x, y);
+   debugger::ui::onMouseMove(x, y);
 }
 
 void
 injectScrollInput(float xoffset,
                   float yoffset)
 {
-   ::debugger::ui::injectScrollInput(xoffset, yoffset);
+   debugger::ui::onMouseScroll(xoffset, yoffset);
 }
 
 void
 injectKeyInput(input::KeyboardKey key,
                input::KeyboardAction action)
 {
-   ::debugger::ui::injectKeyInput(key, action);
-
-   if (!::debugger::ui::isVisible()) {
+   if (!debugger::ui::onKeyAction(key, action)) {
       nn::swkbd::internal::injectKeyInput(key, action);
    }
 }
@@ -292,9 +303,7 @@ injectKeyInput(input::KeyboardKey key,
 void
 injectTextInput(const char *text)
 {
-   ::debugger::ui::injectTextInput(text);
-
-   if (!::debugger::ui::isVisible()) {
+   if (!debugger::ui::onText(text)) {
       nn::swkbd::internal::injectTextInput(text);
    }
 }
@@ -303,7 +312,8 @@ void
 setClipboardTextCallbacks(ClipboardTextGetCallback getter,
                           ClipboardTextSetCallback setter)
 {
-   ::debugger::ui::setClipboardTextCallbacks(getter, setter);
+   sClipboardTextGetCallbackFn = getter;
+   sClipboardTextSetCallbackFn = setter;
 }
 
 } // namespace decaf

@@ -1,35 +1,22 @@
 #pragma once
-#include <cstdint>
 
 namespace decaf
 {
 
-namespace debugger
+class DebugUiRenderer
 {
+public:
+   virtual void initialise() = 0;
+   virtual void draw(unsigned width, unsigned height) = 0;
+};
+
+DebugUiRenderer *
+createDebugGLRenderer();
 
 void
-initialise();
+setDebugUiRenderer(DebugUiRenderer *renderer);
 
-#ifndef DECAF_NOGL
-
-void
-initialiseUiGL();
-
-void
-drawUiGL(uint32_t width, uint32_t height);
-
-#endif // DECAF_NOGL
-
-#ifdef DECAF_DX12
-
-void
-initialiseUiDX12();
-
-void
-drawUiDX12(uint32_t width, uint32_t height);
-
-#endif
-
-} // namespace debugger
+DebugUiRenderer *
+getDebugUiRenderer();
 
 } // namespace decaf

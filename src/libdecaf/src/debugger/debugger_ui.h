@@ -1,6 +1,5 @@
 #pragma once
 #include "decaf_input.h"
-#include <string>
 
 namespace debugger
 {
@@ -8,43 +7,25 @@ namespace debugger
 namespace ui
 {
 
-void
-injectMouseButtonInput(decaf::input::MouseButton button,
-                       decaf::input::MouseAction action);
-
-void
-injectMousePos(float x,
-               float y);
-
-void
-injectScrollInput(float xoffset,
-                  float yoffset);
-
-void
-injectKeyInput(decaf::input::KeyboardKey key,
-               decaf::input::KeyboardAction action);
-
-void
-injectTextInput(const char *text);
-
-using ClipboardTextGetCallback = const char *(*)();
-using ClipboardTextSetCallback = void(*)(const char*);
-
-void
-setClipboardTextCallbacks(ClipboardTextGetCallback getter,
-                          ClipboardTextSetCallback setter);
-
-void
-initialise(const std::string &configPath);
+using decaf::input::KeyboardAction;
+using decaf::input::KeyboardKey;
+using decaf::input::MouseAction;
+using decaf::input::MouseButton;
 
 bool
-isVisible();
+onMouseAction(MouseButton button, MouseAction action);
 
-void
-updateInput();
+bool
+onMouseMove(float x, float y);
 
-void
-draw();
+bool
+onMouseScroll(float x, float y);
+
+bool
+onKeyAction(KeyboardKey key, KeyboardAction action);
+
+bool
+onText(const char *text);
 
 } // namespace ui
 
