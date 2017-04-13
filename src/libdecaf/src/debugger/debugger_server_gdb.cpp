@@ -5,6 +5,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 
 #include <algorithm>
+#include <common/platform_socket.h>
 #include <common/strutils.h>
 #include <common/log.h>
 #include <numeric>
@@ -127,19 +128,14 @@ bool GdbServer::start(int port)
       return false;
    }
 
-#ifdef PLATFORM_WINDOWS
-   u_long iMode = 1;
-   ioctlsocket(mListenSocket, FIONBIO, &iMode);
-#else
-   fcntl(socketfd, F_SETFL, fcntl(socketfd, F_GETFL, 0) | O_NONBLOCK);
-#endif
+   platform::socketSetBlocking(mListenSocket, false);
    return true;
 }
 
 void GdbServer::closeServer()
 {
    if (mListenSocket != InvalidSocket) {
-      closesocket(mListenSocket);
+      platform::socketClose(mListenSocket);
       mListenSocket = InvalidSocket;
    }
 }
@@ -147,7 +143,7 @@ void GdbServer::closeServer()
 void GdbServer::closeClient()
 {
    if (mClientSocket != InvalidSocket) {
-      closesocket(mClientSocket);
+      platform::socketClose(mClientSocket);
       mClientSocket = InvalidSocket;
    }
 }
@@ -590,7 +586,7 @@ void GdbServer::process()
          mLog->error("Failed to accept on socket");
       } else if (mClientSocket != InvalidSocket) {
          mLog->error("Rejecting connection because we already have a client connected.");
-         closesocket(clientSocket);
+         platform::socketClose(clientSocket);
       } else {
          mClientSocket = clientSocket;
       }
@@ -600,11 +596,7 @@ void GdbServer::process()
          auto result = recv(mClientSocket, &byte, 1, 0);
 
          if (result < 0) {
-#ifdef PLATFORM_WINDOWS
-            if (WSAGetLastError() == WSAEWOULDBLOCK) {
-#else
-            if (result == EWOULDBLOCK) {
-#endif
+            if (platform::socketWouldBlock(result)) {
                break;
             } else {
                mLog->debug("Client disconnected, recv returned {}", result);

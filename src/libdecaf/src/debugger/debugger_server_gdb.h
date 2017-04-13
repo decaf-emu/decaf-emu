@@ -4,27 +4,17 @@
 #include "debugger_ui_state.h"
 
 #include <common/platform.h>
+#include <common/platform_socket.h>
 #include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
-
-#ifdef PLATFORM_WINDOWS
-#include <WinSock2.h>
-#include <Ws2tcpip.h>
-#else
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-using SOCKET = int;
-#endif
 
 namespace debugger
 {
 
 class GdbServer : public DebuggerServer
 {
-   static constexpr SOCKET InvalidSocket = static_cast<SOCKET>(-1);
+   static constexpr platform::Socket InvalidSocket = static_cast<platform::Socket>(-1);
 
    enum class ReadState
    {
@@ -70,8 +60,8 @@ private:
    DebuggerInterface *mDebugger = nullptr;
    ui::StateTracker *mUiState = nullptr;
 
-   SOCKET mListenSocket = InvalidSocket;
-   SOCKET mClientSocket = InvalidSocket;
+   platform::Socket mListenSocket = InvalidSocket;
+   platform::Socket mClientSocket = InvalidSocket;
 
    ReadState mReadState = ReadState::ReadStart;
    std::string mChecksumBuffer;
