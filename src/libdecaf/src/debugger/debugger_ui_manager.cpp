@@ -28,6 +28,9 @@ namespace ui
 {
 
 static HotKey
+ToggleDebugger = HotKey { KeyboardKey::LeftControl, KeyboardKey::D };
+
+static HotKey
 PauseHotKey = HotKey {};
 
 static HotKey
@@ -40,10 +43,10 @@ static HotKey
 StepIntoHotKey = HotKey { KeyboardKey::F11, true };
 
 static HotKey
-JitProfileHotKey = HotKey { KeyboardKey::LeftControl, KeyboardKey::F1, true };
+JitProfileHotKey = HotKey { KeyboardKey::LeftControl, KeyboardKey::F1 };
 
 static HotKey
-ResetJitProfileHotKey = HotKey { KeyboardKey::LeftControl, KeyboardKey::F2, true };
+ResetJitProfileHotKey = HotKey { KeyboardKey::LeftControl, KeyboardKey::F2 };
 
 Manager::Manager(DebuggerInterface *debugger) :
    mDebugger(debugger)
@@ -164,6 +167,7 @@ void Manager::draw(unsigned width, unsigned height)
 {
    auto &io = ImGui::GetIO();
    updateMouseState();
+   checkHotKeys();
 
    // Update some per-frame state information
    io.DisplaySize = ImVec2 { static_cast<float>(width), static_cast<float>(height) };
@@ -191,7 +195,6 @@ void Manager::draw(unsigned width, unsigned height)
          mHasBeenActivated = true;
       }
 
-      checkHotKeys();
       drawMenu();
 
       for (auto &itr : mWindows) {
@@ -278,6 +281,10 @@ void Manager::onResumed()
 
 void Manager::checkHotKeys()
 {
+   if (checkHotKey(ToggleDebugger)) {
+      mVisible = !mVisible;
+   }
+
    // Check Window hotkeys
    for (auto &itr : mWindowHotKeys) {
       auto &id = itr.first;
