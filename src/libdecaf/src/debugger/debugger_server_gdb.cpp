@@ -491,6 +491,11 @@ void GdbServer::handleCommand(const std::string &command)
          handleVCont(vCommand);
       } else if (vCommand[0] == "vCont?") {
          handleVContQuery(vCommand);
+      } else if (vCommand[0] == "vMustReplyEmpty") {
+         sendCommand("");
+      } else {
+         mLog->warn("Unknown vCommand {}", command);
+         sendCommand("");
       }
       break;
    }
