@@ -4,9 +4,12 @@
 #include <chrono>
 #include <vector>
 
-namespace cpu::jit
+namespace cpu
+{
+namespace jit
 {
 struct CodeBlock;
+}
 }
 
 namespace debugger

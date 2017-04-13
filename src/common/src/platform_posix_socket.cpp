@@ -1,6 +1,9 @@
 #include "platform_socket.h"
 
 #ifdef PLATFORM_POSIX
+#include <errno.h>
+#include <unistd.h>
+
 namespace platform
 {
 
