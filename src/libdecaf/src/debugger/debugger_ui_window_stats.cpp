@@ -1,5 +1,6 @@
 #include "debugger_ui_window_stats.h"
 
+#include <algorithm>
 #include <cinttypes>
 #include <imgui.h>
 #include <libcpu/jit_stats.h>

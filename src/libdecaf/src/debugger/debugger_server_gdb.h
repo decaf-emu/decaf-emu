@@ -13,8 +13,10 @@
 #include <Ws2tcpip.h>
 #else
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+using SOCKET = int;
 #endif
 
 namespace debugger
