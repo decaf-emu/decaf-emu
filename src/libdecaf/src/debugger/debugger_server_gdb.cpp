@@ -637,14 +637,13 @@ void GdbServer::process()
                      mLog->error("Unexpected command checksum {} != {}", readChecksum, calculatedChecksum);
                      sendNack();
                   } else {
-                     handleCommand(mReadBuffer);
                      sendAck();
+                     handleCommand(mReadBuffer);
                   }
 
                   mReadState = ReadState::ReadStart;
                   mReadBuffer.clear();
                   mChecksumBuffer.clear();
-                  break;
                }
             }
          }
