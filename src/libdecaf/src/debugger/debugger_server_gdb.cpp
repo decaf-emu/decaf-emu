@@ -209,6 +209,8 @@ void GdbServer::handleQuery(const std::string &command)
 
       coreinit::internal::unlockScheduler();
       sendCommand(reply.str());
+   } else if (begins_with(command, "qAttached")) {
+      sendCommand("1");
    } else if (begins_with(command, "qsThreadInfo")) {
       sendCommand("l");
    } else if (begins_with(command, "qC")) {
