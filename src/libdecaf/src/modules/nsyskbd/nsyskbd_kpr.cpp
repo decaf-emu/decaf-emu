@@ -81,7 +81,7 @@ KPRLookAhead(KPRQueue *queue,
       return 0;
    }
 
-   auto length = queue->numCharsOut + queue->numCharsIn;
+   auto length = uint8_t { queue->numCharsOut + queue->numCharsIn };
 
    for (auto i = 0u; i < length && i < size; ++i) {
       buffer[i] = queue->buffer[i];

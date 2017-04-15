@@ -328,8 +328,8 @@ namespace internal
 
 struct AXCafeVoiceData
 {
-   be_val<uint16_t> loopFlag;
-   be_val<uint16_t> format;
+   be_val<AXVoiceLoop> loopFlag;
+   be_val<AXVoiceFormat> format;
    be_val<uint16_t> memPageNumber;
    be_val<uint32_t> loopOffsetAbs;
    be_val<uint32_t> endOffsetAbs;

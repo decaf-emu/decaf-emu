@@ -110,7 +110,6 @@ void
 AXQuit()
 {
    decaf_warn_stub();
-   gAXInit = FALSE;
 }
 
 void

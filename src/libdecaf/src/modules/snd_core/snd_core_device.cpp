@@ -298,7 +298,7 @@ sampleVoice(AXVoice *voice, Pcm16Sample *samples, int numSamples)
 
    decoder.toVoice(extras);
 
-   extras->src.currentOffsetFrac = ufixed1616_t(offsetFrac);
+   extras->src.currentOffsetFrac = ufixed016_t { offsetFrac };
 }
 
 void
