@@ -47,7 +47,7 @@ StackWindow::update()
 
       // Create the stack frame for the top piece
       while (true) {
-         if (addr < stackAddr) {
+         if (addr < stackAddr || !mem::valid(addr)) {
             // If we somehow jump outside of our valid range, lets stop
             break;
          }
