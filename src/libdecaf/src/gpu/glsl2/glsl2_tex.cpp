@@ -280,6 +280,74 @@ FETCH4(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetch
 }
 
 static void
+GET_GRADIENTS_H(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   auto resourceID = inst.word0.RESOURCE_ID();
+   auto samplerID = inst.word2.SAMPLER_ID();
+   decaf_check(resourceID == 0);
+   decaf_check(samplerID == 0);
+
+   auto dstSelX = inst.word1.DST_SEL_X();
+   auto dstSelY = inst.word1.DST_SEL_Y();
+   auto dstSelZ = inst.word1.DST_SEL_Z();
+   auto dstSelW = inst.word1.DST_SEL_W();
+
+   auto srcSelX = inst.word2.SRC_SEL_X();
+   auto srcSelY = inst.word2.SRC_SEL_Y();
+   auto srcSelZ = inst.word2.SRC_SEL_Z();
+   auto srcSelW = inst.word2.SRC_SEL_W();
+
+   auto numDstSels = 4u;
+   auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
+
+   auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
+   auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
+
+   if (numDstSels > 0) {
+      insertLineStart(state);
+      state.out << dst << "." << dstSelMask;
+      state.out << " = dFdx(";
+      insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, numDstSels);
+      state.out << ");";
+      insertLineEnd(state);
+   }
+}
+
+static void
+GET_GRADIENTS_V(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+   auto resourceID = inst.word0.RESOURCE_ID();
+   auto samplerID = inst.word2.SAMPLER_ID();
+   decaf_check(resourceID == 0);
+   decaf_check(samplerID == 0);
+
+   auto dstSelX = inst.word1.DST_SEL_X();
+   auto dstSelY = inst.word1.DST_SEL_Y();
+   auto dstSelZ = inst.word1.DST_SEL_Z();
+   auto dstSelW = inst.word1.DST_SEL_W();
+
+   auto srcSelX = inst.word2.SRC_SEL_X();
+   auto srcSelY = inst.word2.SRC_SEL_Y();
+   auto srcSelZ = inst.word2.SRC_SEL_Z();
+   auto srcSelW = inst.word2.SRC_SEL_W();
+
+   auto numDstSels = 4u;
+   auto dstSelMask = condenseSelections(dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
+
+   auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
+   auto src = getExportRegister(inst.word0.SRC_GPR(), inst.word0.SRC_REL());
+
+   if (numDstSels > 0) {
+      insertLineStart(state);
+      state.out << dst << "." << dstSelMask;
+      state.out << " = dFdy(";
+      insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, numDstSels);
+      state.out << ");";
+      insertLineEnd(state);
+   }
+}
+
+static void
 GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    auto dstSelX = inst.word1.DST_SEL_X();
@@ -394,6 +462,8 @@ void
 registerTexFunctions()
 {
    registerInstruction(SQ_TEX_INST_FETCH4, FETCH4);
+   registerInstruction(SQ_TEX_INST_GET_GRADIENTS_H, GET_GRADIENTS_H);
+   registerInstruction(SQ_TEX_INST_GET_GRADIENTS_V, GET_GRADIENTS_V);
    registerInstruction(SQ_TEX_INST_GET_TEXTURE_INFO, GET_TEXTURE_INFO);
    registerInstruction(SQ_TEX_INST_SET_CUBEMAP_INDEX, SET_CUBEMAP_INDEX);
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
