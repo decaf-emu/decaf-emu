@@ -28,4 +28,4 @@ uncommitMemory(size_t address, size_t size);
 bool
 protectMemory(size_t address, size_t size, ProtectFlags flags);
 
-}
+} // namespace platform

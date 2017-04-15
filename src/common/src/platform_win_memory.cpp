@@ -39,7 +39,7 @@ bool
 freeMemory(size_t address, size_t size)
 {
    auto baseAddress = reinterpret_cast<LPVOID>(address);
-   return VirtualFree(baseAddress, size, MEM_RELEASE) != 0;
+   return VirtualFree(baseAddress, 0, MEM_RELEASE) != 0;
 }
 
 bool
