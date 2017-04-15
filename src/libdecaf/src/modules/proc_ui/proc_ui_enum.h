@@ -6,7 +6,13 @@
 ENUM_NAMESPACE_BEG(proc_ui)
 
 ENUM_BEG(ProcUICallbackType, uint32_t)
-   // Unknown
+   ENUM_VALUE(Acquire,           0)
+   ENUM_VALUE(Release,           1)
+   ENUM_VALUE(Exit,              2)
+   ENUM_VALUE(NetIoStart,        3)
+   ENUM_VALUE(NetIoStop,         4)
+   ENUM_VALUE(HomeButtonDenied,  5)
+   ENUM_VALUE(Max,               6)
 ENUM_END(ProcUICallbackType)
 
 ENUM_BEG(ProcUIStatus, uint32_t)

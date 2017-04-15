@@ -8,7 +8,6 @@
 namespace proc_ui
 {
 
-// Unknown parameters.
 using ProcUISaveCallback = wfunc_ptr<void>;
 using ProcUISaveCallbackEx = wfunc_ptr<uint32_t, void*>;
 using ProcUICallback = wfunc_ptr<uint32_t, void *>;

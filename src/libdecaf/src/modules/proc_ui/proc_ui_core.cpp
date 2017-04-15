@@ -5,28 +5,40 @@ namespace proc_ui
 {
 
 static ProcUISaveCallback
-gSaveCallback;
+sSaveCallback;
 
 static ProcUISaveCallbackEx
-gSaveCallbackEx;
+sSaveCallbackEx;
 
 static void *
-gSaveCallbackExArg;
+sSaveCallbackExArg;
+
+struct RegisteredCallback
+{
+   ProcUICallback callback;
+   void *param;
+};
+
+std::array<RegisteredCallback, ProcUICallbackType::Max>
+sRegisteredCallbacks;
+
+static bool
+sSentAcquireMessage = false;
 
 void
 ProcUIInit(ProcUISaveCallback saveCallback)
 {
-   gSaveCallback = saveCallback;
-   gSaveCallbackEx = nullptr;
-   gSaveCallbackExArg = nullptr;
+   sSaveCallback = saveCallback;
+   sSaveCallbackEx = nullptr;
+   sSaveCallbackExArg = nullptr;
 }
 
 void
 ProcUIInitEx(ProcUISaveCallbackEx saveCallbackEx, void *arg)
 {
-   gSaveCallback = nullptr;
-   gSaveCallbackEx = saveCallbackEx;
-   gSaveCallbackExArg = arg;
+   sSaveCallback = nullptr;
+   sSaveCallbackEx = saveCallbackEx;
+   sSaveCallbackExArg = arg;
 }
 
 ProcUIStatus
@@ -49,7 +61,10 @@ ProcUIRegisterCallback(ProcUICallbackType type,
                        void *param,
                        uint32_t unk)
 {
-   // TODO: ProcUIRegisterCallback
+   if (type < sRegisteredCallbacks.size()) {
+      sRegisteredCallbacks[type].callback = callback;
+      sRegisteredCallbacks[type].param = param;
+   }
 }
 
 void
