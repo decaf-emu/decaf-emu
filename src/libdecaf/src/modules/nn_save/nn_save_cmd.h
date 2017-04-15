@@ -70,6 +70,25 @@ SAVEGetStatAsync(FSClient *client,
                  FSAsyncData *asyncData);
 
 SaveStatus
+SAVEGetStatOtherApplication(FSClient *client,
+                            FSCmdBlock *block,
+                            uint64_t titleId,
+                            uint8_t account,
+                            const char *path,
+                            FSStat *stat,
+                            FSErrorFlag errorMask);
+
+SaveStatus
+SAVEGetStatOtherApplicationAsync(FSClient *client,
+                                 FSCmdBlock *block,
+                                 uint64_t titleId,
+                                 uint8_t account,
+                                 const char *path,
+                                 FSStat *stat,
+                                 FSErrorFlag errorMask,
+                                 FSAsyncData *asyncData);
+
+SaveStatus
 SAVEMakeDir(FSClient *client,
             FSCmdBlock *block,
             uint8_t account,

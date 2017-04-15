@@ -128,6 +128,44 @@ SAVEGetStatAsync(FSClient *client,
                          asyncData);
 }
 
+SaveStatus
+SAVEGetStatOtherApplication(FSClient *client,
+                            FSCmdBlock *block,
+                            uint64_t titleId,
+                            uint8_t account,
+                            const char *path,
+                            FSStat *stat,
+                            FSErrorFlag errorMask)
+{
+   auto fsPath = internal::getTitleSavePath(titleId, account, path);
+
+   return FSGetStat(client,
+                    block,
+                    fsPath.path().c_str(),
+                    stat,
+                    errorMask);
+}
+
+SaveStatus
+SAVEGetStatOtherApplicationAsync(FSClient *client,
+                                 FSCmdBlock *block,
+                                 uint64_t titleId,
+                                 uint8_t account,
+                                 const char *path,
+                                 FSStat *stat,
+                                 FSErrorFlag errorMask,
+                                 FSAsyncData *asyncData)
+{
+   auto fsPath = internal::getTitleSavePath(titleId, account, path);
+
+   return FSGetStatAsync(client,
+                         block,
+                         fsPath.path().c_str(),
+                         stat,
+                         errorMask,
+                         asyncData);
+}
+
 
 SaveStatus
 SAVEMakeDir(FSClient *client,
@@ -321,13 +359,14 @@ void
 Module::registerCmdFunctions()
 {
    RegisterKernelFunction(SAVEChangeGroupAndOthersMode);
-
    RegisterKernelFunction(SAVEFlushQuotaAsync);
    RegisterKernelFunction(SAVEFlushQuota);
    RegisterKernelFunction(SAVEGetFreeSpaceSizeAsync);
    RegisterKernelFunction(SAVEGetFreeSpaceSize);
    RegisterKernelFunction(SAVEGetStatAsync);
    RegisterKernelFunction(SAVEGetStat);
+   RegisterKernelFunction(SAVEGetStatOtherApplication);
+   RegisterKernelFunction(SAVEGetStatOtherApplicationAsync);
    RegisterKernelFunction(SAVEMakeDir);
    RegisterKernelFunction(SAVEMakeDirAsync);
    RegisterKernelFunction(SAVEOpenDir);

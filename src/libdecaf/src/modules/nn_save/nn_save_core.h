@@ -35,11 +35,23 @@ namespace internal
 {
 
 fs::Path
-getSaveDirectory(uint32_t account);
+getSaveDirectory(uint32_t slot);
 
 fs::Path
-getSavePath(uint32_t account,
+getSavePath(uint32_t slot,
             const char *path);
+
+fs::Path
+getTitleSaveRoot(uint64_t title);
+
+fs::Path
+getTitleSaveDirectory(uint64_t title,
+                      uint32_t slot);
+
+fs::Path
+getTitleSavePath(uint64_t title,
+                 uint32_t slot,
+                 const char *path);
 
 } // namespace internal
 

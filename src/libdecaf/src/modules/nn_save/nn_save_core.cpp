@@ -21,14 +21,10 @@ SAVEInit()
       return SaveStatus::OK;
    }
 
+   // Create title save folder
    auto fs = kernel::getFileSystem();
    auto titleID = coreinit::OSGetTitleID();
-   auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
-   auto titleHi = static_cast<uint32_t>(titleID >> 32);
-
-   // Create title save folder
-   auto path = fmt::format("/vol/storage_mlc01/usr/save/{:08x}/{:08x}/user",
-                           titleHi, titleLo);
+   auto path = internal::getTitleSaveRoot(titleID);
    auto titleFolder = fs->makeFolder(path);
 
    if (!titleFolder) {
@@ -130,12 +126,42 @@ getSaveDirectory(uint32_t slot)
    return fmt::format("/vol/save/{:08X}", nn::act::GetPersistentIdEx(slot));
 }
 
-
 fs::Path
-getSavePath(uint32_t account,
+getSavePath(uint32_t slot,
             const char *path)
 {
-   return getSaveDirectory(account).join(path);
+   return getSaveDirectory(slot).join(path);
+}
+
+fs::Path
+getTitleSaveRoot(uint64_t title)
+{
+   auto titleLo = static_cast<uint32_t>(title & 0xffffffff);
+   auto titleHi = static_cast<uint32_t>(title >> 32);
+   return fmt::format("/vol/storage_mlc01/usr/save/{:08x}/{:08x}/user", titleHi, titleLo);
+}
+
+fs::Path
+getTitleSaveDirectory(uint64_t title,
+                      uint32_t slot)
+{
+   auto root = getTitleSaveRoot(title);
+
+   if (slot == nn::act::SystemSlot) {
+      return root.join("common");
+   } else if (slot == nn::act::CurrentUserSlot) {
+      slot = nn::act::GetSlotNo();
+   }
+
+   return root.join(fmt::format("{:08X}", nn::act::GetPersistentIdEx(slot)));
+}
+
+fs::Path
+getTitleSavePath(uint64_t title,
+                 uint32_t slot,
+                 const char *path)
+{
+   return getTitleSaveDirectory(title, slot).join(path);
 }
 
 } // namespace internal
