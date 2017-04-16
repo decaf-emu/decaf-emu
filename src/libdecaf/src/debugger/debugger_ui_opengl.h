@@ -1,4 +1,7 @@
 #pragma once
+
+#ifndef DECAF_NOGL
+
 #include "decaf_debugger.h"
 #include <glbinding/gl/gl.h>
 
@@ -36,3 +39,5 @@ private:
 } // namespace ui
 
 } // namespace debugger
+
+#endif // DECAF_NOGL

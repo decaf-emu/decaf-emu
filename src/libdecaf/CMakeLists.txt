@@ -15,11 +15,17 @@ target_link_libraries(libdecaf
     ${ADDRLIB_LIBRARIES}
     ${CEREAL_LIBRARIES}
     ${FIXED_POINT_LIBRARIES}
-    ${GLBINDING_LIBRARIES}
     ${IMGUI_LIBRARIES}
     ${PUGIXML_LIBRARIES}
-    ${OPENGL_LIBRARIES}
     ${ZLIB_LINK})
+
+if(APPLE)
+    target_compile_definitions(libdecaf PUBLIC DECAF_NOGL)
+else()
+    target_link_libraries(libdecaf
+        ${GLBINDING_LIBRARIES}
+        ${OPENGL_LIBRARIES})
+endif()
 
 if(MSVC)
     target_link_libraries(libdecaf ws2_32)
