@@ -424,6 +424,7 @@ ENUM_BEG(GX2SurfaceFormatType, uint32_t)
 ENUM_END(GX2SurfaceFormatType)
 
 FLAGS_BEG(GX2SurfaceUse, uint32_t)
+   FLAGS_VALUE(None,             0)
    FLAGS_VALUE(Texture,          1 << 0)
    FLAGS_VALUE(ColorBuffer,      1 << 1)
    FLAGS_VALUE(DepthBuffer,      1 << 2)

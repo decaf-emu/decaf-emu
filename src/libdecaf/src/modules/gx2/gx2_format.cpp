@@ -10,18 +10,19 @@ namespace gx2
 struct GX2SurfaceFormatData
 {
    uint8_t bpp;
-   uint8_t use;
+   GX2SurfaceUse use;
    uint8_t endian;
    uint8_t unk;
 };
 
-GX2SurfaceFormatData gSurfaceFormatData[] =
+static GX2SurfaceFormatData
+sSurfaceFormatData[] =
 {
-   { 0, 0, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
    { 8, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
    { 8, GX2SurfaceUse::Texture, 0, 1 },
-   { 0, 0, 0, 1 },
-   { 0, 0, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
    { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::DepthBuffer, 0, 0 },
    { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
    { 16, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
@@ -35,13 +36,13 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::DepthBuffer, 0, 0 },
-   { 0, 0, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
-   { 0, 0, 0, 1 },
-   { 0, 0, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
    { 32, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer | GX2SurfaceUse::ScanBuffer, 0, 1 },
@@ -50,12 +51,12 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
    { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
    { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
    { 64, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 1 },
-   { 0, 0, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
    { 128, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
    { 128, GX2SurfaceUse::Texture | GX2SurfaceUse::ColorBuffer, 0, 0 },
-   { 0, 0, 0, 1 },
-   { 0, 0, 0, 1 },
-   { 0, 0, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
+   { 0, GX2SurfaceUse::None, 0, 1 },
    { 16, GX2SurfaceUse::Texture, 0, 0 },
    { 16, GX2SurfaceUse::Texture, 0, 0 },
    { 32, GX2SurfaceUse::Texture, 0, 0 },
@@ -71,16 +72,16 @@ GX2SurfaceFormatData gSurfaceFormatData[] =
    { 128, GX2SurfaceUse::Texture, 0, 1 },
    { 64, GX2SurfaceUse::Texture, 0, 1 },
    { 128, GX2SurfaceUse::Texture, 0, 1 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
-   { 0, 0, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
+   { 0, GX2SurfaceUse::None, 0, 0 },
 };
 
 uint32_t
@@ -122,7 +123,7 @@ uint32_t
 GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
 {
    auto latteFormat = format & 0x3F;
-   auto bpp = gSurfaceFormatData[latteFormat].bpp;
+   auto bpp = sSurfaceFormatData[latteFormat].bpp;
 
    if (latteFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && latteFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       bpp >>= 4;
@@ -134,7 +135,7 @@ GX2GetSurfaceFormatBits(GX2SurfaceFormat format)
 uint32_t
 GX2GetSurfaceFormatBitsPerElement(GX2SurfaceFormat format)
 {
-   return gSurfaceFormatData[format & 0x3F].bpp;
+   return sSurfaceFormatData[format & 0x3F].bpp;
 }
 
 BOOL
@@ -248,19 +249,19 @@ getAttribFormatEndian(GX2AttribFormat format)
 uint32_t
 getSurfaceFormatBytesPerElement(GX2SurfaceFormat format)
 {
-   return gSurfaceFormatData[format & 0x3F].bpp / 8;
+   return sSurfaceFormatData[format & 0x3F].bpp / 8;
 }
 
 GX2SurfaceUse
 getSurfaceUse(GX2SurfaceFormat format)
 {
-   return static_cast<GX2SurfaceUse>(gSurfaceFormatData[format & 0x3F].use);
+   return static_cast<GX2SurfaceUse>(sSurfaceFormatData[format & 0x3F].use);
 }
 
 GX2EndianSwapMode
 getSurfaceFormatSwapMode(GX2SurfaceFormat format)
 {
-   return static_cast<GX2EndianSwapMode>(gSurfaceFormatData[format & 0x3F].endian);
+   return static_cast<GX2EndianSwapMode>(sSurfaceFormatData[format & 0x3F].endian);
 }
 
 latte::SQ_ENDIAN
