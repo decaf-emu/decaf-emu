@@ -5,6 +5,8 @@ matrix:
     - os: linux
       sudo: required
       dist: trusty
+    - os: osx
+      osx_image: xcode8.3
 
 addons:
   apt:
@@ -28,7 +30,8 @@ cache:
     - "$HOME/.local"
 
 install:
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
+  -  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90; fi
+  -  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install sdl2; fi
 
 script:
   - cd "$TRAVIS_BUILD_DIR"

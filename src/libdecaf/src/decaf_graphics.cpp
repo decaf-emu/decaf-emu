@@ -1,6 +1,7 @@
 #include "decaf_graphics.h"
 #include "gpu/opengl/opengl_driver.h"
 #include "gpu/dx12/dx12_driver.h"
+#include <common/decaf_assert.h>
 
 namespace decaf
 {

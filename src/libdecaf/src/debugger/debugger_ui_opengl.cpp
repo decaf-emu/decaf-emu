@@ -1,3 +1,5 @@
+#ifndef DECAF_NOGL
+
 #include "debugger.h"
 #include "debugger_ui_opengl.h"
 
@@ -259,3 +261,5 @@ void RendererOpenGL::draw(unsigned width, unsigned height)
 } // namespace ui
 
 } // namespace debugger
+
+#endif // DECAF_NOGL

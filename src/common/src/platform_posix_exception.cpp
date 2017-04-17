@@ -70,8 +70,12 @@ dispatchException(Exception *exception,
          return;
       } else {
          // Exception handled, switch execution to target function
-         auto ctx = reinterpret_cast<ucontext *>(context);
+         auto ctx = reinterpret_cast<ucontext_t *>(context);
+#ifdef PLATFORM_APPLE
+         ctx->uc_mcontext->__ss.__rip = reinterpret_cast<uint64_t>(func);
+#else
          ctx->uc_mcontext.gregs[REG_RIP] = reinterpret_cast<uint64_t>(func);
+#endif
          return;
       }
    }

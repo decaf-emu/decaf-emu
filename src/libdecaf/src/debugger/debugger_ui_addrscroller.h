@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
+#include <cstdlib>
 #include <imgui.h>
 
 namespace debugger
