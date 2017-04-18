@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/fbhhy0nf6nym9pcf?svg=true)](https://ci.appveyor.com/project/exjam/decaf-emu) [![Build Status](https://travis-ci.org/decaf-emu/decaf-emu.svg?branch=master)](https://travis-ci.org/decaf-emu/decaf-emu)
+[![Build status](https://ci.appveyor.com/api/projects/status/fbhhy0nf6nym9pcf/branch/master?svg=true)](https://ci.appveyor.com/project/exjam/decaf-emu) [![Build Status](https://travis-ci.org/decaf-emu/decaf-emu.svg?branch=master)](https://travis-ci.org/decaf-emu/decaf-emu)
 
 # decaf-emu
 Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 3 or later (GPLv3+).
