@@ -229,7 +229,9 @@ initEvents()
    sWaitTimeStampQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
    sFlipThreadQueue = coreinit::internal::sysAlloc<OSThreadQueue>();
 
-   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) / 60;
+   // NTSC 720p video is 59.94 (60 / 1.001) frames per second
+   auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) * 1001 / 60000;
+
    OSCreateAlarm(sVsyncAlarm);
    OSSetPeriodicAlarm(sVsyncAlarm, OSGetTime(), ticks, sVsyncAlarmHandler);
 }
