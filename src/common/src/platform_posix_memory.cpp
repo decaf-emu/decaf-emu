@@ -53,7 +53,11 @@ createMemoryMappedFile(size_t size)
                   size, errno);
    }
 
+#ifdef PLATFORM_APPLE
+   if (ftruncate(fd, size) == -1) {
+#else
    if (ftruncate64(fd, size) == -1) {
+#endif
       gLog->error("createMemoryMappedFile({}) ftruncate64 failed with error: {}",
                   size, errno);
    }
