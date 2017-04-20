@@ -364,7 +364,7 @@ void GdbServer::handleReadMemory(const std::string &command)
    for (auto i = 0u; i < size; ++i) {
       auto value = uint8_t { 0 };
 
-      if (cpu::isValidAddress(cpu::VirtualAddress { address + i })) {
+      if (cpu::isValidAddress(cpu::VirtualAddress { static_cast<uint32_t>(address + i) })) {
          value = mem::read<uint8_t>(address + i);
       }
 
