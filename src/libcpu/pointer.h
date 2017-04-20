@@ -35,7 +35,7 @@ struct pointer_dereference_type;
 template <typename T>
 struct pointer_dereference_type<T, typename std::enable_if<std::is_void<T>::value>::type>
 {
-   using type = nullptr_t;
+   using type = std::nullptr_t;
 };
 
 /*
