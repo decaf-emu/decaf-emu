@@ -20,6 +20,6 @@ target_link_libraries(common
 
 if(MSVC)
     target_link_libraries(common Dbghelp)
-else()
+elseif(UNIX AND NOT APPLE)
     target_link_libraries(common rt)
 endif()
