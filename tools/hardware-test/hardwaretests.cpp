@@ -135,11 +135,16 @@ compareFPSCR(fpscr_t input, fpscr_t expected, fpscr_t result)
 bool runTests(const std::string &path)
 {
    uint32_t testsFailed = 0, testsPassed = 0;
-   uint32_t baseAddress = mem::MEM2Base;
+   auto baseAddress = cpu::VirtualAddress { 0x02000000u };
+   auto basePhysicalAddress = cpu::PhysicalAddress { 0x50000000u };
+   auto codeSize = 2048u;
+
+   cpu::allocateVirtualAddress(baseAddress, codeSize);
+   cpu::mapMemory(baseAddress, basePhysicalAddress, codeSize, cpu::MapPermission::ReadWrite);
 
    Instruction bclr = encodeInstruction(InstructionID::bclr);
    bclr.bo = 0x1f;
-   mem::write(baseAddress + 4, bclr.value);
+   mem::write(baseAddress.getAddress() + 4, bclr.value);
 
    fs::FileSystem filesystem;
    fs::FolderEntry entry;
@@ -191,7 +196,7 @@ bool runTests(const std::string &path)
          cpu::CoreRegs *state = cpu::this_core::state();
          memset(state, 0, sizeof(cpu::CoreRegs));
          state->cia = 0;
-         state->nia = baseAddress;
+         state->nia = baseAddress.getAddress();
          state->xer = test.input.xer;
          state->cr = test.input.cr;
          state->fpscr = test.input.fpscr;
@@ -203,7 +208,7 @@ bool runTests(const std::string &path)
          }
 
          // Execute test
-         mem::write(baseAddress, test.instr.value);
+         mem::write(baseAddress.getAddress(), test.instr.value);
          cpu::clearInstructionCache();
          cpu::this_core::executeSub();
 
@@ -290,7 +295,7 @@ bool runTests(const std::string &path)
             Disassembly dis;
 
             // Print disassembly
-            disassemble(test.instr, dis, baseAddress);
+            disassemble(test.instr, dis, baseAddress.getAddress());
             gLog->debug(dis.text);
 
             // Print all test fields

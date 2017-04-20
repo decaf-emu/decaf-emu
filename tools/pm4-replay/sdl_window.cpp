@@ -11,9 +11,11 @@
 #include <libdecaf/src/gpu/pm4_packets.h>
 #include <libdecaf/src/gpu/pm4_reader.h>
 #include <libdecaf/src/gpu/pm4_writer.h>
+#include <libdecaf/src/kernel/kernel_memory.h>
 #include <libdecaf/src/modules/gx2/gx2_cbpool.h>
 #include <libdecaf/src/modules/gx2/gx2_state.h>
-#include <libcpu/mem.h>
+#include <libcpu/mmu.h>
+#include <libcpu/pointer.h>
 
 static TeenyHeap *
 gSystemHeap = nullptr;
@@ -422,7 +424,10 @@ SDLWindow::run(const std::string &tracePath)
    initialiseContext();
 
    // Setup decaf shit
-   gSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
+   kernel::initialiseVirtualMemory();
+   kernel::initialiseAppMemory(0x10000);
+   auto systemHeapBounds = kernel::getSystemHeapBounds();
+   gSystemHeap = new TeenyHeap { cpu::VirtualPointer<void> { systemHeapBounds.start }.getRawPointer(), systemHeapBounds.size };
 
    // Setup pm4 command buffer pool
    auto cbPoolSize = 0x2000;

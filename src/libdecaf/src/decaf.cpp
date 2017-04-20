@@ -132,7 +132,6 @@ initialise(const std::string &gamePath)
    }
 
    // Setup core
-   mem::initialise();
    cpu::initialise();
    kernel::initialise();
    debugger::initialise(makeConfigPath("imgui.ini"),

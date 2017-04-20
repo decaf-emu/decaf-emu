@@ -28,7 +28,7 @@ GX2Invalidate(GX2InvalidateMode mode,
    //  corresponding physical address.  We have to do this synchronously
    //  because by the time the graphics driver receives the packet, the
    //  aperture mapping may no longer be valid.
-   if (addr >= mem::AperturesBase && addr + size <= mem::AperturesEnd) {
+   if (gx2::internal::isApertureAddress(addr)) {
       // Convert from aperture address to physical address
       //  (we assume a single invalidate won't cover multiple apertures)
       uint32_t apertureBase, apertureSize, physBase;

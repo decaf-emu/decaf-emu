@@ -56,8 +56,23 @@ sModuleIndex = 0u;
 static TeenyHeap *
 sLoaderHeap = nullptr;
 
+static TeenyHeap *
+sCodeHeap = nullptr;
+
 static uint32_t
 sLoaderHeapRefs = 0;
+
+static void *
+codeAlloc(uint32_t size,
+          uint32_t alignment)
+{
+   if (!sCodeHeap) {
+      auto memory = kernel::getCodeBounds();
+      sCodeHeap = new TeenyHeap { cpu::VirtualPointer<void> { memory.start }.getRawPointer(), memory.size };
+   }
+
+   return sCodeHeap->alloc(size, alignment);
+}
 
 static void *
 loaderAlloc(uint32_t size,
@@ -66,11 +81,8 @@ loaderAlloc(uint32_t size,
    sLoaderHeapRefs++;
 
    if (!sLoaderHeap) {
-      if (!mem::commit(mem::LoaderBase, mem::LoaderSize)) {
-         decaf_abort("Failed to allocate loader temporary memory");
-      }
-
-      sLoaderHeap = new TeenyHeap(mem::translate(mem::LoaderBase), mem::LoaderSize);
+      auto memory = kernel::initialiseLoaderMemory();
+      sLoaderHeap = new TeenyHeap { cpu::VirtualPointer<void> { memory.start }.getRawPointer(),  memory.size };
    }
 
    return sLoaderHeap->alloc(size, alignment);
@@ -84,7 +96,7 @@ loaderFree(void *mem)
    if (sLoaderHeapRefs == 0) {
       delete sLoaderHeap;
       sLoaderHeap = nullptr;
-      mem::uncommit(mem::LoaderBase, mem::LoaderSize);
+      kernel::freeLoaderMemory();
    }
 }
 
@@ -958,7 +970,7 @@ loadRPL(const std::string &moduleName,
    readFileInfo(data, sections, info);
 
    // Allocate all our memory chunks which will be used
-   auto codeSegment = getCodeHeap()->alloc(info.textSize, info.textAlign);
+   auto codeSegment = codeAlloc(info.textSize, info.textAlign);
    auto loadSegment = loaderAlloc(info.loadSize, info.loadAlign);
    void *dataSegment = nullptr;
 

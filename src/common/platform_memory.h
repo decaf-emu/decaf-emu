@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <cstdint>
 
 namespace platform
 {
@@ -13,19 +14,49 @@ enum class ProtectFlags
    ReadWriteExecute
 };
 
-bool
-reserveMemory(size_t address, size_t size);
+using MapFileHandle = intptr_t;
+static constexpr MapFileHandle InvalidMapFileHandle = -1;
+
+size_t
+getSystemPageSize();
+
+MapFileHandle
+createMemoryMappedFile(size_t size);
 
 bool
-freeMemory(size_t address, size_t size);
+closeMemoryMappedFile(MapFileHandle handle);
+
+void *
+mapViewOfFile(MapFileHandle handle,
+              ProtectFlags flags,
+              size_t offset,
+              size_t size,
+              void *dst = nullptr);
 
 bool
-commitMemory(size_t address, size_t size, ProtectFlags flags = ProtectFlags::ReadWrite);
+unmapViewOfFile(void *view,
+                size_t size);
 
 bool
-uncommitMemory(size_t address, size_t size);
+reserveMemory(uintptr_t address,
+              size_t size);
 
 bool
-protectMemory(size_t address, size_t size, ProtectFlags flags);
+freeMemory(uintptr_t address,
+           size_t size);
+
+bool
+commitMemory(uintptr_t address,
+             size_t size,
+             ProtectFlags flags = ProtectFlags::ReadWrite);
+
+bool
+uncommitMemory(uintptr_t address,
+               size_t size);
+
+bool
+protectMemory(uintptr_t address,
+              size_t size,
+              ProtectFlags flags);
 
 } // namespace platform

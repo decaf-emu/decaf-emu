@@ -1,9 +1,10 @@
+#include "hardwaretests.h"
+
+#include <common/decaf_assert.h>
+#include <libcpu/cpu.h>
+#include <libcpu/mem.h>
 #include <memory>
 #include <spdlog/spdlog.h>
-#include "hardwaretests.h"
-#include "libcpu/cpu.h"
-#include "libcpu/mem.h"
-#include <common/decaf_assert.h>
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -15,9 +16,7 @@ int main(int argc, char *argv[])
    gLog = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
    gLog->set_level(spdlog::level::debug);
 
-   mem::initialise();
    cpu::initialise();
-
    cpu::setJitMode(cpu::jit_mode::enabled);
 
    // We need to run the tests on a core.
@@ -31,7 +30,5 @@ int main(int argc, char *argv[])
 
    cpu::start();
    cpu::join();
-
-   system("PAUSE");
    return runResult;
 }

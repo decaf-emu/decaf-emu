@@ -110,6 +110,7 @@ setExecutableFilename(const std::string& name)
 void
 initialise()
 {
+   initialiseVirtualMemory();
    ipcStart();
    iosInitDevices();
    initialiseHleMmodules();
@@ -122,7 +123,8 @@ initialise()
       cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
    }
 
-   sSystemHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
+   auto bounds = getSystemHeapBounds();
+   sSystemHeap = new TeenyHeap { cpu::VirtualPointer<void> { bounds.start }.getRawPointer(), bounds.size };
 }
 
 void
@@ -366,8 +368,8 @@ launchGame()
       return false;
    }
 
-   // Set up the code heap to load stuff to
-   initialiseCodeHeap(sGameInfo.cos.max_codesize);
+   // Set up the application memory with max_codesize
+   initialiseAppMemory(sGameInfo.cos.max_codesize);
 
    // Load the application-level kernel binding
    auto coreinitModule = loader::loadRPL("coreinit");

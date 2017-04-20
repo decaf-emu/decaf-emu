@@ -2,8 +2,9 @@
 #include "coreinit_core.h"
 #include "coreinit_lockedcache.h"
 #include "coreinit_thread.h"
+#include "kernel/kernel_memory.h"
 #include "gpu/gpu_flush.h"
-#include "libcpu/mem.h"
+
 #include <common/teenyheap.h>
 #include <array>
 
@@ -200,11 +201,14 @@ LCWaitDMAQueue(uint32_t queueLength)
 void
 Module::initialiseLockedCache()
 {
-   auto base = reinterpret_cast<uint8_t *>(mem::translate(mem::LockedCacheBase));
+   auto bounds = kernel::getLockedCacheBounds();
+   auto base = bounds.start;
    sDMAEnabled.fill(false);
 
    for (auto i = 0u; i < CoreCount; ++i) {
-      sLockedCache[i] = new TeenyHeap(base + (sLockedCacheSize * i), sLockedCacheSize);
+      auto ptr = cpu::VirtualPointer<void> { base }.getRawPointer();
+      sLockedCache[i] = new TeenyHeap { ptr, 16 * 1024 };
+      base += 16 * 1024;
    }
 }
 

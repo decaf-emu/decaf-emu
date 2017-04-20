@@ -1,22 +1,60 @@
 #pragma once
-#include <common/teenyheap.h>
 #include <cstdint>
+#include <libcpu/address.h>
+#include <libcpu/pointer.h>
 
 namespace kernel
 {
 
 void
-initialiseCodeHeap(uint32_t size);
+initialiseVirtualMemory();
 
-TeenyHeap *
-getCodeHeap();
-
-void
-getMEM1Bound(uint32_t *addr,
-             uint32_t *size);
+cpu::VirtualAddressRange
+initialiseLoaderMemory();
 
 void
-getMEM2Bound(uint32_t *addr,
-             uint32_t *size);
+freeLoaderMemory();
+
+cpu::VirtualAddressRange
+initialiseOverlayArena();
+
+void
+freeOverlayArena();
+
+cpu::VirtualAddressRange
+initialiseTilingApertures();
+
+void
+freeTilingApertures();
+
+bool
+initialiseAppMemory(uint32_t codeSize);
+
+void
+freeAppMemory();
+
+cpu::VirtualAddressRange
+getCodeBounds();
+
+cpu::VirtualAddressRange
+getForegroundBucketRange();
+
+cpu::VirtualAddressRange
+getLockedCacheBounds();
+
+cpu::VirtualAddressRange
+getMEM1Bound();
+
+cpu::VirtualAddressRange
+getMEM2Bound();
+
+cpu::VirtualAddressRange
+getSharedDataBounds();
+
+cpu::VirtualAddressRange
+getSystemHeapBounds();
+
+cpu::VirtualAddressRange
+getVirtualMapRange();
 
 } // namespace kernel

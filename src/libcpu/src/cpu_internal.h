@@ -41,6 +41,9 @@ timerEntryPoint();
 KernelCallEntry *
 getKernelCall(uint32_t id);
 
+bool
+initialiseMemory();
+
 namespace this_core
 {
 

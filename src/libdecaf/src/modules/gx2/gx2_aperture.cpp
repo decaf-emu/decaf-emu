@@ -1,9 +1,11 @@
+#include "kernel/kernel_memory.h"
 #include "gx2_addrlib.h"
 #include "gx2_aperture.h"
 #include "gx2_surface.h"
-#include "libcpu/mem.h"
+
 #include <common/decaf_assert.h>
 #include <common/teenyheap.h>
+#include <libcpu/mem.h>
 #include <mutex>
 
 namespace gx2
@@ -27,7 +29,7 @@ public:
    {
       if (mHeap) {
          delete mHeap;
-         mem::uncommit(mem::AperturesBase, mem::AperturesSize);
+         kernel::freeTilingApertures();
       }
    }
 
@@ -150,17 +152,24 @@ public:
       return false;
    }
 
-private:
-   void initialise()
+   bool
+   isApertureAddress(cpu::VirtualAddress address)
    {
-      if (!mem::commit(mem::AperturesBase, mem::AperturesSize)) {
-         decaf_abort("Failed to commit aperture memory region");
-      }
-
-      mHeap = new TeenyHeap { mem::translate(mem::AperturesBase), mem::AperturesSize };
+      return (address >= mMemoryBase && address < mMemoryBase + mMemorySize);
    }
 
 private:
+   void initialise()
+   {
+      auto range = kernel::initialiseTilingApertures();
+      mMemoryBase = range.start;
+      mMemorySize = range.size;
+      mHeap = new TeenyHeap { cpu::VirtualPointer<void> { mMemoryBase }.getRawPointer(), mMemorySize };
+   }
+
+private:
+   cpu::VirtualAddress mMemoryBase;
+   uint32_t mMemorySize;
    std::mutex mMutex;
    TeenyHeap *mHeap = nullptr;
    std::array<ActiveAperture, MaxApertures> mActiveApertures;
@@ -201,6 +210,12 @@ GX2FreeTilingAperture(GX2ApertureHandle handle)
 
 namespace internal
 {
+
+bool
+isApertureAddress(uint32_t address)
+{
+   return sApertureManager.isApertureAddress(cpu::VirtualAddress { address });
+}
 
 bool
 lookupAperture(uint32_t address,

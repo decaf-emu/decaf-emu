@@ -70,6 +70,10 @@ findFunctionEnd(uint32_t start)
    auto fnEnd = uint32_t { 0xFFFFFFFFu };
 
    for (auto addr = start; addr < start + MaxScannedBytes; addr += 4) {
+      if (!cpu::isValidAddress(cpu::VirtualAddress { addr })) {
+         break;
+      }
+
       auto instr = mem::read<espresso::Instruction>(addr);
       auto data = espresso::decodeInstruction(instr);
 

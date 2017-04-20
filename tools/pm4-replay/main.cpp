@@ -80,8 +80,7 @@ start(excmd::parser &parser,
    int result = -1;
 
    // We need to run the trace on a core.
-   mem::initialise();
-
+   cpu::initialise();
    cpu::setCoreEntrypointHandler(
       [&]() {
          if (cpu::this_core::id() == 1) {

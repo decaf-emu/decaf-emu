@@ -33,6 +33,9 @@ namespace internal
 {
 
 bool
+isApertureAddress(uint32_t address);
+
+bool
 lookupAperture(uint32_t address,
                uint32_t *apertureBase_ret,  // may be null
                uint32_t *apertureSize_ret,  // may be null

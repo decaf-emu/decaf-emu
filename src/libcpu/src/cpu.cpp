@@ -4,6 +4,7 @@
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
 #include "mem.h"
+#include "mmu.h"
 
 #include "jit/binrec/jit_binrec.h"
 
@@ -65,6 +66,8 @@ sSegfaultAddr = 0;
 void
 initialise()
 {
+   initialiseMemory();
+
    auto backend = new jit::BinrecBackend { sJitCodeCacheSize, sJitDataCacheSize };
    backend->setOptFlags(sJitOptFlags);
    cpu::jit::setBackend(backend);
@@ -157,7 +160,7 @@ exceptionHandler(platform::Exception *exception)
    auto address = info->address;
 
    // Only handle exceptions within the memory bounds
-   auto memBase = mem::base();
+   auto memBase = getBaseVirtualAddress();
    if (address != 0 && (address < memBase || address >= memBase + 0x100000000)) {
       return platform::UnhandledException;
    }

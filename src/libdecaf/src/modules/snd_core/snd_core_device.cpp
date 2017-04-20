@@ -6,8 +6,10 @@
 #include "decaf_sound.h"
 #include "ppcutils/stackobject.h"
 #include "ppcutils/wfunc_call.h"
+
 #include <array>
 #include <common/fixed.h>
+#include <libcpu/mmu.h>
 
 namespace snd_core
 {
@@ -91,7 +93,7 @@ getMemPageAddress(uint32_t memPageNumber)
    // We have to do this this way due to the way that mem::translate handles
    //  nullptr's.  In the case of AX here, our memPageNumber can be 0, causing
    //  mem::translate to return 0, which is not what we want.
-   return reinterpret_cast<Type*>(mem::base() + (memPageNumber << 29));
+   return reinterpret_cast<Type*>(cpu::getBaseVirtualAddress() + (memPageNumber << 29));
 }
 
 struct AudioDecoder

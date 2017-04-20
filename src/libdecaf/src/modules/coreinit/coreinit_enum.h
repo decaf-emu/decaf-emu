@@ -109,6 +109,11 @@ ENUM_BEG(OSFunctionType, uint32_t)
    ENUM_VALUE(FsStateChangeEvent,   11)
 ENUM_END(OSFunctionType)
 
+ENUM_BEG(OSMapMemoryPermission, uint32_t)
+   ENUM_VALUE(ReadOnly,             0x1)
+   ENUM_VALUE(ReadWrite,            0x2)
+ENUM_END(OSMapMemoryPermission)
+
 ENUM_BEG(OSMemoryType, uint32_t)
    ENUM_VALUE(MEM1,                 1)
    ENUM_VALUE(MEM2,                 2)
@@ -503,11 +508,6 @@ ENUM_BEG(MEMHeapFillType, uint32_t)
    ENUM_VALUE(Freed,                0x2)
    ENUM_VALUE(Max,                  0x3)
 ENUM_END(MEMHeapFillType)
-
-FLAGS_BEG(MEMProtectMode, uint32_t)
-   FLAGS_VALUE(ReadOnly,            1 << 0)
-   FLAGS_VALUE(ReadWrite,           1 << 1)
-FLAGS_END(MEMProtectMode)
 
 FLAGS_BEG(MPTaskQueueState, uint32_t)
    FLAGS_VALUE(Initialised,         1 << 0)

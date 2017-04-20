@@ -5,7 +5,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <common/teenyheap.h>
-#include "libcpu/mem.h"
+#include "libcpu/cpu.h"
 #include "gpu/gfd.h"
 #include "gpu/microcode/latte_disassembler.h"
 #include "gpu/pm4_buffer.h"
@@ -1080,8 +1080,10 @@ int main(int argc, char **argv)
    excmd::parser parser;
    excmd::option_state options;
 
-   mem::initialise();
-   gHeap = new TeenyHeap(mem::translate(mem::SystemBase), mem::SystemSize);
+   cpu::initialise();
+   cpu::allocateVirtualAddress(cpu::VirtualAddress { 0x10000000u }, 0x10000000u);
+   cpu::mapMemory(cpu::VirtualAddress { 0x10000000u }, cpu::PhysicalAddress { 0x50000000u }, 0x10000000u, cpu::MapPermission::ReadWrite);
+   gHeap = new TeenyHeap(mem::translate(0x10000000u), 0x10000000u);
 
    // Setup command line options
    parser.global_options()

@@ -1,6 +1,9 @@
 #include "debugger_ui_window_memory.h"
+#include "kernel/kernel_memory.h"
+
 #include <algorithm>
 #include <imgui.h>
+#include <libcpu/mmu.h>
 #include <sstream>
 
 namespace debugger
@@ -12,7 +15,7 @@ namespace ui
 MemoryWindow::MemoryWindow(const std::string &name) :
    Window(name)
 {
-   mAddressScroller.scrollTo(mem::MEM2Base);
+   mAddressScroller.scrollTo(kernel::getMEM2Bound().start.getAddress());
 }
 
 void
@@ -75,7 +78,7 @@ MemoryWindow::draw()
       mEditAddress = std::min<int64_t>(mEditAddress, 0xFFFFFFFF);
 
       // Before we start processing an edit, lets make sure it's valid memory to be editing...
-      if (!mem::valid(static_cast<uint32_t>(mEditAddress))) {
+      if (!cpu::isValidAddress(cpu::VirtualAddress { static_cast<uint32_t>(mEditAddress) })) {
          mEditAddress = -1;
       }
 
@@ -166,7 +169,7 @@ MemoryWindow::draw()
          } else {
             ImGui::SetCursorPos(linePos);
 
-            if (mAddressScroller.isValidOffset(i) && mem::valid(addr + i)) {
+            if (mAddressScroller.isValidOffset(i) && cpu::isValidAddress(cpu::VirtualAddress { addr + i })) {
                ImGui::Text("%02X ", mem::read<unsigned char>(addr + i));
 
                if (mEditingEnabled && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0)) {
@@ -185,7 +188,7 @@ MemoryWindow::draw()
 
       // Draw all of the ASCII characters
       for (auto i = 0u; i < numColumns; ++i) {
-         if (mAddressScroller.isValidOffset(i) && mem::valid(addr + i)) {
+         if (mAddressScroller.isValidOffset(i) && cpu::isValidAddress(cpu::VirtualAddress { addr + i })) {
             ImGui::SetCursorPos(linePos);
             unsigned char c = mem::read<unsigned char>(addr + i);
             ImGui::Text("%c", (c >= 32 && c < 128) ? c : '.');

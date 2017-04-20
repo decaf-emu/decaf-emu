@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
    gLog = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
    gLog->set_level(spdlog::level::debug);
 
-   mem::initialise();
    cpu::initialise();
    cpu::setJitMode(cpu::jit_mode::enabled);
 
@@ -30,9 +29,5 @@ int main(int argc, char *argv[])
 
    cpu::start();
    cpu::join();
-
-#ifdef _WIN32
-   system("PAUSE");
-#endif
    return runResult;
 }

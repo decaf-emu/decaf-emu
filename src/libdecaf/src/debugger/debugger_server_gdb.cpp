@@ -8,6 +8,7 @@
 #include <common/platform_socket.h>
 #include <common/strutils.h>
 #include <common/log.h>
+#include <libcpu/mmu.h>
 #include <numeric>
 
 namespace debugger
@@ -363,7 +364,7 @@ void GdbServer::handleReadMemory(const std::string &command)
    for (auto i = 0u; i < size; ++i) {
       auto value = uint8_t { 0 };
 
-      if (mem::valid(address + i)) {
+      if (cpu::isValidAddress(cpu::VirtualAddress { address + i })) {
          value = mem::read<uint8_t>(address + i);
       }
 

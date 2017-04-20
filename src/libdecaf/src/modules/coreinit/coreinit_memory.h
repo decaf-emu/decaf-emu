@@ -1,5 +1,6 @@
 #pragma once
 #include "coreinit_enum.h"
+#include "kernel/kernel_enum.h"
 
 #include <common/be_val.h>
 #include <common/cbool.h>
@@ -37,6 +38,14 @@ void
 OSGetAvailPhysAddrRange(be_val<ppcaddr_t> *start,
                         be_val<uint32_t> *size);
 
+void
+OSGetDataPhysAddrRange(be_val<ppcaddr_t> *start,
+                       be_val<uint32_t> *size);
+
+void
+OSGetMapVirtAddrRange(be_val<ppcaddr_t> *start,
+                      be_val<uint32_t> *size);
+
 ppcaddr_t
 OSAllocVirtAddr(ppcaddr_t address,
                 uint32_t size,
@@ -46,11 +55,14 @@ BOOL
 OSFreeVirtAddr(ppcaddr_t address,
                uint32_t size);
 
+kernel::VirtualMemoryType
+OSQueryVirtAddr(ppcaddr_t virtAddress);
+
 BOOL
 OSMapMemory(ppcaddr_t virtAddress,
             ppcaddr_t physAddress,
             uint32_t size,
-            MEMProtectMode mode);
+            kernel::MapPermission permission);
 
 BOOL
 OSUnmapMemory(ppcaddr_t virtAddress,

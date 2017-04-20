@@ -65,14 +65,6 @@ SegmentsWindow::draw()
    }
 
    mSegmentsCache.clear();
-   mSegmentsCache.push_back(Segment { "System", mem::SystemBase, mem::SystemEnd });
-   mSegmentsCache.push_back(Segment { "MEM2", mem::MEM2Base, mem::MEM2End });
-   mSegmentsCache.push_back(Segment { "OverlayArena", mem::OverlayArenaBase, mem::OverlayArenaEnd });
-   mSegmentsCache.push_back(Segment { "Apertures", mem::AperturesBase, mem::AperturesEnd });
-   mSegmentsCache.push_back(Segment { "Foreground", mem::ForegroundBase, mem::ForegroundEnd });
-   mSegmentsCache.push_back(Segment { "MEM1", mem::MEM1Base, mem::MEM1End });
-   mSegmentsCache.push_back(Segment { "LockedCache", mem::LockedCacheBase, mem::LockedCacheEnd });
-   mSegmentsCache.push_back(Segment { "SharedData", mem::SharedDataBase, mem::SharedDataEnd });
 
    kernel::loader::lockLoader();
    const auto &modules = kernel::loader::getLoadedModules();

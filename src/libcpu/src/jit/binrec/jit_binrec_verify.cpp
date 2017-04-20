@@ -8,6 +8,7 @@
 #include "interpreter/interpreter_insreg.h"
 #include "jit_binrec.h"
 #include "mem.h"
+#include "mmu.h"
 
 #include <binrec++.h>
 #include <common/align.h>
@@ -74,7 +75,7 @@ BinrecBackend::resumeVerifyExecution()
          }
 
          auto entry = reinterpret_cast<BinrecEntry>(codeBlock->code);
-         entry(core, mem::base());
+         entry(core, getBaseVirtualAddress());
       } else {
          interpreter::step_one(core);
       }

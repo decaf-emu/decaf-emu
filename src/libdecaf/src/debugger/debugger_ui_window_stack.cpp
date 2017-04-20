@@ -5,6 +5,7 @@
 #include "modules/coreinit/coreinit_thread.h"
 
 #include <imgui.h>
+#include <libcpu/mmu.h>
 
 namespace debugger
 {
@@ -47,7 +48,7 @@ StackWindow::update()
 
       // Create the stack frame for the top piece
       while (true) {
-         if (addr < stackAddr || !mem::valid(addr)) {
+         if (addr < stackAddr || !cpu::isValidAddress(cpu::VirtualAddress { addr })) {
             // If we somehow jump outside of our valid range, lets stop
             break;
          }
@@ -118,7 +119,7 @@ StackWindow::draw()
       mSelectedAddr = std::min<int64_t>(mSelectedAddr, 0xFFFFFFFF);
 
       // Before we start processing an edit, lets make sure it's valid memory to be editing...
-      if (!mem::valid(static_cast<uint32_t>(mSelectedAddr))) {
+      if (!cpu::isValidAddress(cpu::VirtualAddress { static_cast<uint32_t>(mSelectedAddr) })) {
          mSelectedAddr = -1;
       }
 
@@ -198,7 +199,7 @@ StackWindow::draw()
       }
 
       // Stop drawing if this is invalid memory
-      if (!mem::valid(addr)) {
+      if (!cpu::isValidAddress(cpu::VirtualAddress { addr })) {
          continue;
       }
 

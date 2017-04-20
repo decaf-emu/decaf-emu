@@ -5,6 +5,7 @@
 #include "jit_binrec.h"
 #include "interpreter/interpreter.h"
 #include "mem.h"
+#include "mmu.h"
 
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
@@ -119,7 +120,7 @@ BinrecBackend::createBinrecHandle()
 #endif
 
    setup.host_features = binrec::native_features();
-   setup.guest_memory_base = reinterpret_cast<void *>(mem::base());
+   setup.guest_memory_base = reinterpret_cast<void *>(getBaseVirtualAddress());
    setup.state_offset_gpr = offsetof2(BinrecCore, gpr);
    setup.state_offset_fpr = offsetof2(BinrecCore, fpr);
    setup.state_offset_gqr = offsetof2(BinrecCore, gqr);
@@ -332,7 +333,7 @@ rdtsc()
 void
 BinrecBackend::resumeExecution()
 {
-   auto memBase = mem::base();
+   auto memBase = cpu::getBaseVirtualAddress();
 
    // Prepare FPU state for guest code execution.
    this_core::updateRoundingMode();

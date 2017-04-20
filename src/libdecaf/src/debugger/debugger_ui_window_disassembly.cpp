@@ -10,6 +10,7 @@
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libcpu/mem.h>
+#include <libcpu/mmu.h>
 #include <libcpu/state.h>
 #include <imgui.h>
 #include <map>
@@ -87,7 +88,7 @@ DisassemblyWindow::draw()
       if (ImGui::IsKeyPressed(static_cast<int>(decaf::input::KeyboardKey::Enter))) {
          auto selectedAddr = static_cast<uint32_t>(mSelectedAddr);
 
-         if (mem::valid(selectedAddr)) {
+         if (cpu::isValidAddress(cpu::VirtualAddress { selectedAddr })) {
             auto instr = cpu::getBreakpointSavedCode(selectedAddr);
             auto data = espresso::decodeInstruction(instr);
 
@@ -113,7 +114,7 @@ DisassemblyWindow::draw()
       mSelectedAddr = std::min<int64_t>(mSelectedAddr, 0xFFFFFFFF);
 
       // Before we start processing an edit, lets make sure it's valid memory to be editing...
-      if (!mem::valid(static_cast<uint32_t>(mSelectedAddr))) {
+      if (!cpu::isValidAddress(cpu::VirtualAddress { static_cast<uint32_t>(mSelectedAddr) })) {
          mSelectedAddr = -1;
       }
 
@@ -324,7 +325,7 @@ DisassemblyWindow::draw()
       linePos.x += addrAdvance;
 
       // Stop drawing if this is invalid memory
-      if (!mem::valid(addr)) {
+      if (!cpu::isValidAddress(cpu::VirtualAddress { addr })) {
          continue;
       }
 

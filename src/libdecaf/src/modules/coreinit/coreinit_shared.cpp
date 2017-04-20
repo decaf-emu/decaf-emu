@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_shared.h"
-
 #include "kernel/kernel_filesystem.h"
+#include "kernel/kernel_memory.h"
 
 #include <array>
 #include <common/be_ptr.h>
@@ -75,7 +75,9 @@ void
 loadSharedData()
 {
    // Initialise shared heap
-   sSharedHeap = new TeenyHeap { mem::translate(mem::SharedDataBase), mem::SharedDataSize };
+   auto bounds = kernel::getSharedDataBounds();
+   auto ptr = cpu::VirtualPointer<void> { bounds.start }.getRawPointer();
+   sSharedHeap = new TeenyHeap { ptr, bounds.size };
 
    // Try and load the fonts from mlc.
    auto allFound = true;

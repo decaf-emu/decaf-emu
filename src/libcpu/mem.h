@@ -1,68 +1,12 @@
 #pragma once
 #include <common/byte_swap.h>
 #include <common/decaf_assert.h>
+#include "mmu.h"
 
 using ppcaddr_t = uint32_t;
 
 namespace mem
 {
-
-enum AddressSpace : ppcaddr_t
-{
-   SystemBase        = 0x01000000,
-   SystemEnd         = 0x02000000,
-   SystemSize        = SystemEnd - SystemBase,
-
-   MEM2Base          = 0x02000000,
-   MEM2End           = 0x42000000,
-   MEM2Size          = MEM2End - MEM2Base,
-
-   // Overlay Arena must be manually committed before use
-   OverlayArenaBase  = 0xA0000000,
-   OverlayArenaEnd   = 0xBC000000,
-   OverlayArenaSize  = OverlayArenaEnd - OverlayArenaBase,
-
-   // Apertures must be manually committed before use
-   AperturesBase     = 0xC0000000,
-   AperturesEnd      = 0xE0000000,
-   AperturesSize     = AperturesEnd - AperturesBase,
-
-   ForegroundBase    = 0xE0000000,
-   ForegroundEnd     = 0xE4000000,
-   ForegroundSize    = ForegroundEnd - ForegroundBase,
-
-   MEM1Base          = 0xF4000000,
-   MEM1End           = 0xF6000000,
-   MEM1Size          = MEM1End - MEM1Base,
-
-   LockedCacheBase   = 0xF6000000,
-   LockedCacheEnd    = 0xF600C000,
-   LockedCacheSize   = LockedCacheEnd - LockedCacheBase,
-
-   SharedDataBase    = 0xF8000000,
-   SharedDataEnd     = 0xFB000000,
-   SharedDataSize    = SharedDataEnd - SharedDataBase,
-
-   // Loader must be manually committed before use
-   LoaderBase        = 0xE6000000,
-   LoaderEnd         = 0xEA000000,
-   LoaderSize        = LoaderEnd - LoaderBase,
-};
-
-void
-initialise();
-
-size_t
-base();
-
-bool
-valid(ppcaddr_t address);
-
-bool
-commit(ppcaddr_t address, ppcaddr_t size);
-
-bool
-uncommit(ppcaddr_t address, ppcaddr_t size);
 
 // Translate WiiU virtual address to host address
 template<typename Type = uint8_t>
@@ -72,7 +16,7 @@ translate(ppcaddr_t address)
    if (!address) {
       return nullptr;
    } else {
-      return reinterpret_cast<Type*>(base() + address);
+      return reinterpret_cast<Type*>(cpu::getBaseVirtualAddress() + address);
    }
 }
 
@@ -85,7 +29,7 @@ untranslate(const void *ptr)
    }
 
    auto sptr = reinterpret_cast<size_t>(ptr);
-   auto sbase = base();
+   auto sbase = cpu::getBaseVirtualAddress();
    decaf_check(sptr > sbase);
    decaf_check(sptr <= sbase + 0xFFFFFFFF);
    return static_cast<ppcaddr_t>(sptr - sbase);
