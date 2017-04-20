@@ -5,12 +5,6 @@
 #include <common/platform.h>
 #include <common/platform_memory.h>
 
-#ifdef PLATFORM_WINDOWS
-#include <Windows.h>
-#endif
-
-#pragma optimize("", off)
-
 namespace cpu
 {
 
