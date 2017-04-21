@@ -72,5 +72,6 @@ add_subdirectory("tools")
 add_subdirectory("resources")
 
 if(DECAF_BUILD_TESTS OR DECAF_BUILD_WUT_TESTS)
+    enable_testing()
     add_subdirectory("tests")
 endif()

@@ -11,3 +11,7 @@ target_link_libraries(runner-achurch
     libcpu)
 
 install(TARGETS runner-achurch RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/cpu")
+
+add_test(NAME tests_cpu_achurch
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND runner-achurch)

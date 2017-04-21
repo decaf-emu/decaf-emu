@@ -132,7 +132,7 @@ compareFPSCR(fpscr_t input, fpscr_t expected, fpscr_t result)
    return failed;
 }
 
-bool runTests(const std::string &path)
+int runTests(const std::string &path)
 {
    uint32_t testsFailed = 0, testsPassed = 0;
    auto baseAddress = cpu::VirtualAddress { 0x02000000u };
@@ -153,7 +153,7 @@ bool runTests(const std::string &path)
    auto fsResult = filesystem.openFolder("/tests");
 
    if (!fsResult) {
-      return false;
+      return -1;
    }
 
    auto folder = fsResult.value();
@@ -323,7 +323,7 @@ bool runTests(const std::string &path)
       gLog->error("Failed {} of {} tests.", testsFailed, testsFailed + testsPassed);
    }
 
-   return true;
+   return testsFailed;
 }
 
 } // namespace hwtest

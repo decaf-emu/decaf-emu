@@ -69,6 +69,6 @@ struct TestFile
    }
 };
 
-bool runTests(const std::string &path);
+int runTests(const std::string &path);
 
 } // namespace hwtest

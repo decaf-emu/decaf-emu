@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
       []() {
          if (cpu::this_core::id() == 1) {
             // Run the tests on only a single core.
-            runResult = hwtest::runTests("data/wiiu") ? 0 : 1;
+            runResult = hwtest::runTests("data/wiiu");
          }
       });
 

@@ -12,3 +12,7 @@ target_link_libraries(runner-generated
     libdecaf)
 
 install(TARGETS runner-generated RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/cpu")
+
+add_test(NAME tests_cpu_generated
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND runner-generated)
