@@ -87,13 +87,13 @@ getDevice(AXDeviceType type,
 }
 
 template<typename Type>
-static Type*
+static Type *
 getMemPageAddress(uint32_t memPageNumber)
 {
    // We have to do this this way due to the way that mem::translate handles
    //  nullptr's.  In the case of AX here, our memPageNumber can be 0, causing
    //  mem::translate to return 0, which is not what we want.
-   return reinterpret_cast<Type*>(cpu::getBaseVirtualAddress() + (memPageNumber << 29));
+   return reinterpret_cast<Type *>(cpu::getBaseVirtualAddress() + (static_cast<uint64_t>(memPageNumber) << 29));
 }
 
 struct AudioDecoder
