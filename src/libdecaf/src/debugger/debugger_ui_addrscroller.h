@@ -129,12 +129,12 @@ private:
    }
 
 private:
-   int64_t mNumColumns;
-   int64_t mScrollPos;
-   int64_t mIterPos;
-   int64_t mNumDrawLines;
-   int64_t mNumVisibleLines;
-   int64_t mScrollToAddress;
+   int64_t mNumColumns = 1;
+   int64_t mScrollPos = 0;
+   int64_t mIterPos = 0;
+   int64_t mNumDrawLines = 0;
+   int64_t mNumVisibleLines = 0;
+   int64_t mScrollToAddress = 0xFFFFFFFF;
 };
 
 } // namespace ui
