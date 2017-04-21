@@ -204,7 +204,7 @@ static ppcaddr_t
 calculateRelocatedAddress(ppcaddr_t address,
                           const SectionList &sections)
 {
-   bool foundSectionEnd = true;
+   bool foundSectionEnd = false;
    ppcaddr_t sectionEndAddress;
 
    for (auto &section : sections) {
@@ -218,14 +218,13 @@ calculateRelocatedAddress(ppcaddr_t address,
          return address;
 
       } else if (section.header.addr + section.virtSize == address) {
-
          foundSectionEnd = true;
+
          if (section.virtAddress >= section.header.addr) {
             sectionEndAddress = address + section.virtAddress - section.header.addr;
          } else {
             sectionEndAddress = address - section.header.addr - section.virtAddress;
          }
-
       }
    }
 
