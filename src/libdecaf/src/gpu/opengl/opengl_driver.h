@@ -23,7 +23,6 @@
 #include <list>
 #include <map>
 #include <mutex>
-#include <queue>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -187,22 +186,6 @@ struct FeedbackBufferState
    uint32_t currentOffset;
 };
 
-enum class SyncWaitType : uint32_t
-{
-   Fence,
-   Query
-};
-
-struct SyncWait
-{
-   SyncWaitType type;
-   union {
-      gl::GLsync fence;
-      gl::GLuint query;
-   };
-   std::function<void()> func;
-};
-
 struct ColorBufferCache
 {
    gl::GLuint object = 0;
@@ -283,6 +266,29 @@ struct RemoteThreadTask
    std::condition_variable completionCV;
 
    RemoteThreadTask(std::function<void()> func_) : func(func_)
+   {
+   }
+};
+
+struct SyncObject
+{
+   enum Type {
+      FENCE,
+      QUERY,
+   } type;
+
+   union {
+      gl::GLsync sync;
+      gl::GLuint query;
+   };
+   bool isComplete;
+   std::function<void()> func;
+
+   SyncObject(gl::GLsync sync_, std::function<void()> func_) : type(FENCE), sync(sync_), func(func_)
+   {
+   }
+
+   SyncObject(gl::GLuint query_, std::function<void()> func_) : type(QUERY), query(query_), func(func_)
    {
    }
 };
@@ -432,6 +438,9 @@ private:
    void
    endTransformFeedback();
 
+   void
+   updateTransformFeedbackOffsets();
+
    int
    countModifiedUniforms(latte::Register firstReg,
                          uint32_t lastUniformUpdate);
@@ -455,10 +464,13 @@ private:
                       size_t size);
 
    void
-   injectFence(std::function<void()> func);
+   addFenceSync(std::function<void()> func);
 
    void
-   checkSyncObjects();
+   addQuerySync(gl::GLuint query, std::function<void()> func);
+
+   void
+   checkSyncObjects(gl::GLuint64 timeout);
 
    void
    runOnGLThread(std::function<void()> func);
@@ -516,15 +528,15 @@ private:
    ScanBufferChain mTvScanBuffers;
    ScanBufferChain mDrcScanBuffers;
 
-   std::queue<SyncWait> mSyncWaits;
-
    gl::GLuint mFeedbackQuery = 0;
+   unsigned int mFeedbackQueryBuffers = 0;
+   std::array<unsigned int, latte::MaxStreamOutBuffers> mFeedbackQueryStride;
    bool mFeedbackActive = false;
    gl::GLenum mFeedbackPrimitive;
    std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
    gl::GLuint mOccQuery = 0;
-   uint64_t mTotalSamplesPassed = 0;
+   uint32_t mLastOccQueryAddress = 0;
 
    GLStateCache mGLStateCache;
    bool mFramebufferChanged = false;
@@ -546,6 +558,7 @@ private:
    std::mutex mTaskListMutex;  // Protects mTaskList
    std::list<RemoteThreadTask> mTaskList;
 
+   std::list<SyncObject> mSyncList;
 };
 
 } // namespace opengl

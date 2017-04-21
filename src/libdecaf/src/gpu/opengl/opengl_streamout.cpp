@@ -107,11 +107,31 @@ GLDriver::endTransformFeedback()
    gl::glEndQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
 
    auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
+   mFeedbackQueryBuffers = vgt_strmout_buffer_en.value & 0xF;
+
+   for (auto i = 0u; i < 4; ++i) {
+      auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
+      mFeedbackQueryStride[i] = vgt_strmout_vtx_stride * 4;
+   }
+}
+
+void
+GLDriver::updateTransformFeedbackOffsets()
+{
+   if (mFeedbackQueryBuffers == 0) {
+      return;
+   }
 
    // The OpenGL specification and API reference differ on whether the
    //  TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN query returns a primitive count
    //  or a vertex count, but actual experiments (using an NVIDIA GPU)
    //  indicate that it's a primitive count, so we treat it as such.
+   //  We explicitly sleep until the query is ready because some drivers are
+   //  bad at waiting for queries on their own and introduce extra delay.
+   gl::GLint done = false;
+   while (gl::glGetQueryObjectiv(mFeedbackQuery, gl::GL_QUERY_RESULT_AVAILABLE, &done), !done) {
+      std::this_thread::sleep_for(std::chrono::microseconds(10));
+   }
    gl::GLuint numPrimitives = 0;
    glGetQueryObjectuiv(mFeedbackQuery, gl::GL_QUERY_RESULT, &numPrimitives);
 
@@ -131,12 +151,12 @@ GLDriver::endTransformFeedback()
    }
 
    for (auto i = 0u; i < 4; ++i) {
-      if (vgt_strmout_buffer_en.value & (1 << i)) {
-         auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
-         auto stride = vgt_strmout_vtx_stride * 4;
-         mFeedbackBufferState[i].currentOffset += numVertices * stride;
+      if (mFeedbackQueryBuffers & (1 << i)) {
+         mFeedbackBufferState[i].currentOffset += numVertices * mFeedbackQueryStride[i];
       }
    }
+
+   mFeedbackQueryBuffers = 0;
 }
 
 void
@@ -158,6 +178,7 @@ GLDriver::streamOutBufferUpdate(const pm4::StreamOutBufferUpdate &data)
          // End any in-progress transform feedback so we can get the buffer
          //  offset to store
          endTransformFeedback();
+         updateTransformFeedbackOffsets();
 
          auto offsetPtr = mem::translate<uint32_t>(addr);
          *offsetPtr = byte_swap(mFeedbackBufferState[bufferIndex].currentOffset >> 2);
