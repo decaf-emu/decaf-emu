@@ -139,7 +139,7 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
 {
    auto units = AluGroupUnits {};
    auto reduction = std::array<AluInst, 4> {};
-   std::memset(reduction.data(), 0, reduction.size());
+   std::memset(reduction.data(), 0, reduction.size() * sizeof(AluInst));
 
    // Ensure we have at least 4 instructions in this group
    if (group.instructions.size() < 4) {
