@@ -139,6 +139,8 @@ BinrecBackend::createBinrecHandle()
    setup.state_offset_branch_exit_flag = offsetof2(BinrecCore, interrupt);
    setup.state_offset_fres_lut = offsetof2(BinrecCore, fresTable);
    setup.state_offset_frsqrte_lut = offsetof2(BinrecCore, frsqrteTable);
+   setup.state_offset_pvr = offsetof2(BinrecCore, pvr);
+   setup.state_offset_pir = offsetof2(BinrecCore, id);
    setup.log = brLog;
 
    auto handle = new BinrecHandle {};
