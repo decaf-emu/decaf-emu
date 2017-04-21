@@ -394,8 +394,6 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
       if (tessMode == GX2TessellationMode::Adaptive) {
          switch (type) {
-         case GX2FetchShaderType::NoTessellation:
-            break;
          case GX2FetchShaderType::LineTessellation:
             numGPRs = 3;
             break;
