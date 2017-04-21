@@ -1,9 +1,10 @@
+#include "hardwaretests.h"
+
+#include <common/decaf_assert.h>
+#include <libcpu/cpu.h>
+#include <libcpu/mem.h>
 #include <memory>
 #include <spdlog/spdlog.h>
-#include "achurchtests.h"
-#include "libcpu/cpu.h"
-#include "libcpu/mem.h"
-#include <common/decaf_assert.h>
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
       []() {
          if (cpu::this_core::id() == 1) {
             // Run the tests on only a single core.
-            runResult = actest::runTests() ? 0 : 1;
+            runResult = hwtest::runTests("data/wiiu") ? 0 : 1;
          }
       });
 

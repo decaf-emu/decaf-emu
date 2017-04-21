@@ -477,8 +477,7 @@ executeInstrTest(uint32_t test_seed)
 
    {
       memcpy(mem::translate(dataBase), iMem, memSize);
-      // TODO: FIX ME!
-      //cpu::interpreter::executeSub(&iState);
+      cpu::interpreter::executeSub(&iState);
       memcpy(iMem, mem::translate(dataBase), memSize);
    }
 
@@ -486,8 +485,7 @@ executeInstrTest(uint32_t test_seed)
       cpu::jit::clearCache();
 
       memcpy(mem::translate(dataBase), jMem, memSize);
-      // TODO: FIX ME!
-      //cpu::jit::executeSub(&jState);
+      cpu::jit::executeSub(&jState);
       memcpy(jMem, mem::translate(dataBase), memSize);
    }
 

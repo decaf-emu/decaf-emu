@@ -4,6 +4,15 @@ project(decaf-emu C CXX)
 option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_SDL "Build with SDL support" ON)
 option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
+option(DECAF_BUILD_TESTS "Build tests" OFF)
+option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
+
+set(DEVKITPPC $ENV{DEVKITPPC} CACHE STRING "Path to devkitPPC install")
+set(WUT_ROOT $ENV{WUT_ROOT} CACHE STRING "Path to wut install")
+
+if(DECAF_BUILD_WUT_TESTS AND (NOT DEVKITPPC OR NOT WUT_ROOT))
+    message(FATAL_ERROR "You must have defined DEVKITPPC and WUT_ROOT to build wut tests.")
+endif()
 
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -61,3 +70,7 @@ add_subdirectory("libraries")
 add_subdirectory("src")
 add_subdirectory("tools")
 add_subdirectory("resources")
+
+if(DECAF_BUILD_TESTS OR DECAF_BUILD_WUT_TESTS)
+    add_subdirectory("tests")
+endif()

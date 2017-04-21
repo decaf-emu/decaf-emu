@@ -8,10 +8,7 @@ macro(add_coreinit_test source)
    get_filename_component(name ${source} NAME_WE)
    add_rpx(${name} ${source})
    target_link_libraries(${name} coreinit)
-   install(FILES $<TARGET_FILE:${name}>.rpx DESTINATION "bin")
 endmacro()
-
-include_directories(${CMAKE_SOURCE_DIR}/common)
 
 add_coreinit_test(alarm/alarm_cancel.c)
 add_coreinit_test(alarm/alarm_cancel_group.c)

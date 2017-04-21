@@ -1,18 +1,18 @@
+#include "hardwaretests.h"
+
 #include <cassert>
 #include <cfenv>
-#include <fstream>
-#include "libcpu/cpu.h"
-#include "hardwaretests.h"
-#include "libcpu/mem.h"
 #include <common/bit_cast.h>
 #include <common/floatutils.h>
 #include <common/log.h>
 #include <common/strutils.h>
-#include "libdecaf/src/filesystem/filesystem.h"
-
-#include "libcpu/espresso/espresso_disassembler.h"
-#include "libcpu/espresso/espresso_instructionset.h"
-#include "libcpu/espresso/espresso_registers.h"
+#include <fstream>
+#include <libcpu/cpu.h>
+#include <libcpu/mem.h>
+#include <libcpu/espresso/espresso_disassembler.h>
+#include <libcpu/espresso/espresso_instructionset.h>
+#include <libcpu/espresso/espresso_registers.h>
+#include <libdecaf/src/filesystem/filesystem.h>
 
 using namespace espresso;
 
@@ -168,8 +168,6 @@ bool runTests(const std::string &path)
       cerealInput(testFile);
 
       // Run tests
-      gLog->info("Checking {}", testFile.name);
-
       for (auto &test : testFile.tests) {
          bool failed = false;
 
@@ -321,7 +319,10 @@ bool runTests(const std::string &path)
       }
    }
 
-   gLog->info("Passed: {}, Failed: {}", testsPassed, testsFailed);
+   if (testsFailed) {
+      gLog->error("Failed {} of {} tests.", testsFailed, testsFailed + testsPassed);
+   }
+
    return true;
 }
 

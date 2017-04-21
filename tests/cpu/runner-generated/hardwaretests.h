@@ -2,9 +2,9 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/binary.hpp>
 #include <vector>
-#include "libcpu/state.h"
-#include "libcpu/espresso/espresso_instruction.h"
-#include "libcpu/espresso/espresso_registers.h"
+#include <libcpu/state.h>
+#include <libcpu/espresso/espresso_instruction.h>
+#include <libcpu/espresso/espresso_registers.h>
 #include <common/be_val.h>
 
 namespace hwtest

@@ -1,0 +1,14 @@
+include_directories(".")
+
+file(GLOB_RECURSE SOURCE_FILES *.cpp)
+file(GLOB_RECURSE HEADER_FILES *.h)
+
+add_executable(runner-generated ${SOURCE_FILES} ${HEADER_FILES})
+set_target_properties(runner-generated PROPERTIES FOLDER tools)
+
+target_link_libraries(runner-generated
+    common
+    libcpu
+    libdecaf)
+
+install(TARGETS runner-generated RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/cpu")
