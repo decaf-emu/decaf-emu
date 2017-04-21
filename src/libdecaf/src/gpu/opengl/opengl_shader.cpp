@@ -223,14 +223,14 @@ bool GLDriver::checkActiveShader()
 
    // Make VS key
    auto vsShaderKey = static_cast<uint64_t>(vsPgmAddress) << 32;
-   vsShaderKey ^= (isScreenSpace ? 1 : 0) << 31;
+   vsShaderKey ^= (isScreenSpace ? 1ull : 0ull) << 31;
 
    if (vgt_strmout_en.STREAMOUT()) {
       vsShaderKey |= 1;
 
       for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
          auto vgt_strmout_vtx_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + 16 * i);
-         vsShaderKey ^= vgt_strmout_vtx_stride << (1 + 7 * i);
+         vsShaderKey ^= vgt_strmout_vtx_stride << (1ull + 7 * i);
       }
    }
 
