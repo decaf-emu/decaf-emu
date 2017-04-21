@@ -36,6 +36,11 @@ void
 StackWindow::update()
 {
    auto activeThread = mStateTracker->getActiveThread();
+
+   if (!activeThread) {
+      return;
+   }
+
    auto stackAddr = getThreadStack(mDebugger, activeThread);
    auto stackStart = activeThread->stackStart.getAddress();
 

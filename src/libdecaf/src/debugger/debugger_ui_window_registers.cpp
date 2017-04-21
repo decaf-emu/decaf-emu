@@ -29,6 +29,10 @@ RegistersWindow::update()
    auto activeThread = mStateTracker->getActiveThread();
    auto resumeCount = mStateTracker->getResumeCount();
 
+   if (!activeThread) {
+      return;
+   }
+
    // Check if we need to update mPreviousRegisters
    if (mLastResumeCount != resumeCount || mLastActiveThread != activeThread) {
       mPreviousRegisters = mCurrentRegisters;
