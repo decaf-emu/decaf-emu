@@ -15,15 +15,18 @@ Title::VirtualTable = nullptr;
 ghs::TypeDescriptor *
 Title::TypeInfo = nullptr;
 
-Title::Title()
+Title::Title() :
+   mAccountID(0)
 {
    mVirtualTable = Title::VirtualTable;
+   decaf_warn_stub();
 }
 
 Title::Title(uint32_t account, TitleID *title) :
    mAccountID(account),
    mTitleID(title)
 {
+   mVirtualTable = Title::VirtualTable;
    decaf_warn_stub();
 }
 
