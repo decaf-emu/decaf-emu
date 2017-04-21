@@ -158,7 +158,7 @@ private:
    FSAStatus writeFile(FSARequestWriteFile *request, const uint8_t *buffer, uint32_t bufferLen);
 
 private:
-   fs::FileSystem *mFS;
+   fs::FileSystem *mFS = nullptr;
    fs::Path mWorkingPath;
    std::vector<FSAHandle> mHandles;
 };
