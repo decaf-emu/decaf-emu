@@ -37,6 +37,7 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    out << name;
 
    auto type = inst.exp.word0.TYPE();
+   auto memExpType = static_cast<SQ_MEM_EXPORT_TYPE>(inst.exp.word0.TYPE());
    auto arrayBase = inst.exp.word0.ARRAY_BASE();
 
    if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
@@ -55,10 +56,10 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
          break;
       }
    } else if (id >= SQ_CF_INST_MEM_STREAM0 && id <= SQ_CF_INST_MEM_STREAM3
-              && (type == SQ_MEM_EXPORT_TYPE::READ || type == SQ_MEM_EXPORT_TYPE::READ_IND)) {
+              && (memExpType == SQ_MEM_EXPORT_TYPE::READ || memExpType == SQ_MEM_EXPORT_TYPE::READ_IND)) {
       out << " INVALID_READ";
    } else {
-      if (type == SQ_MEM_EXPORT_TYPE::WRITE || type == SQ_MEM_EXPORT_TYPE::WRITE_IND) {
+      if (memExpType == SQ_MEM_EXPORT_TYPE::WRITE || memExpType == SQ_MEM_EXPORT_TYPE::WRITE_IND) {
          out << " WRITE(";
       } else {
          out << " READ(";
@@ -70,7 +71,7 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
          out << (arrayBase * 4);
       }
 
-      if (type == SQ_MEM_EXPORT_TYPE::WRITE_IND || type == SQ_MEM_EXPORT_TYPE::READ_IND) {
+      if (memExpType == SQ_MEM_EXPORT_TYPE::WRITE_IND || memExpType == SQ_MEM_EXPORT_TYPE::READ_IND) {
          out << " + R" << inst.exp.word0.INDEX_GPR();
       }
 
