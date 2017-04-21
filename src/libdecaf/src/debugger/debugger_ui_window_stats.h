@@ -32,7 +32,7 @@ public:
 
 private:
    std::chrono::time_point<std::chrono::system_clock> mLastProfileListUpdate;
-   bool mNeedProfileListUpdate;
+   bool mNeedProfileListUpdate = true;
    std::vector<cpu::jit::CodeBlock *> mProfileList;
 };
 
