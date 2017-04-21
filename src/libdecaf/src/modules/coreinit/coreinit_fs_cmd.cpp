@@ -1003,7 +1003,7 @@ FSMountAsync(FSClient *client,
 
    if (strncmp(source->path, "external", 8) == 0) {
       // external01 to /dev/sdcard01
-      std::strncpy(devicePath, "/dev/sdcard", 11);
+      std::memcpy(devicePath, "/dev/sdcard", 11);
       std::strncpy(devicePath + 11, source->path + 8, 2);
    } else {
       // <source path> to /dev/<source path>
