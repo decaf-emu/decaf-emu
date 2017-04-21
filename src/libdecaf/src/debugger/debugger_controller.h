@@ -47,7 +47,7 @@ private:
    std::array<cpu::Core *, 3> mPausedContexts;
 
    //! Which core initiated the pause by sending a DbgBreak interrupt.
-   unsigned mPauseInitiator;
+   unsigned mPauseInitiator = 0xFF;
 
    //! Which cores are trying to pause.
    std::atomic<unsigned> mCoresPausing;
