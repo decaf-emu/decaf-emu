@@ -3,19 +3,19 @@
 namespace kernel
 {
 
-fs::FileSystem *
+static std::unique_ptr<fs::FileSystem>
 sFileSystem = nullptr;
 
 void
-setFileSystem(fs::FileSystem *fs)
+setFileSystem(std::unique_ptr<fs::FileSystem> fs)
 {
-   sFileSystem = fs;
+   sFileSystem = std::move(fs);
 }
 
 fs::FileSystem *
 getFileSystem()
 {
-   return sFileSystem;
+   return sFileSystem.get();
 }
 
 } // namespace kernel

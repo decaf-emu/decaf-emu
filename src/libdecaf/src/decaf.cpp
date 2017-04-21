@@ -139,7 +139,7 @@ initialise(const std::string &gamePath)
                          sClipboardTextSetCallbackFn);
 
    // Setup filesystem
-   auto filesystem = new fs::FileSystem();
+   auto filesystem = std::make_unique<fs::FileSystem>();
 
    // Find a valid application to run
    auto path = fs::HostPath { gamePath };
@@ -188,9 +188,6 @@ initialise(const std::string &gamePath)
    // Add device folder
    filesystem->makeFolder("/dev");
 
-   // Setup kernel
-   kernel::setFileSystem(filesystem);
-
    // Ensure mlc_path exists
    platform::createDirectory(decaf::config::system::mlc_path);
 
@@ -199,6 +196,8 @@ initialise(const std::string &gamePath)
    filesystem->mountHostFolder("/vol/storage_mlc01", mlcPath, fs::Permissions::Read);
    filesystem->mountHostFolder("/vol/storage_hfiomlc01", mlcPath, fs::Permissions::Read);
 
+   // Setup kernel
+   kernel::setFileSystem(std::move(filesystem));
    return true;
 }
 
