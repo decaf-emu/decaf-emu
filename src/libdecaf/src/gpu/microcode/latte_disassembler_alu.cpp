@@ -362,7 +362,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
    }
 
    if (isTranscendentalOnly(flags)) {
-      switch (inst.word1.BANK_SWIZZLE()) {
+      switch (static_cast<SQ_ALU_SCL_BANK_SWIZZLE>(inst.word1.BANK_SWIZZLE())) {
       case SQ_ALU_SCL_BANK_SWIZZLE::SCL_210:
          out << " SCL_210";
          break;
