@@ -266,7 +266,7 @@ MEM_STREAM(State &state, const ControlFlowInst &cf)
    auto valueSize = cf.exp.buf.ARRAY_SIZE() + 1;
    auto src = getExportRegister(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL());
 
-   switch (type) {
+   switch (static_cast<SQ_MEM_EXPORT_TYPE>(type)) {
    case SQ_MEM_EXPORT_TYPE::WRITE:
       break;
    case SQ_MEM_EXPORT_TYPE::WRITE_IND:
