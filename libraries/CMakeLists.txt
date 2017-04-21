@@ -24,6 +24,12 @@ add_subdirectory(libbinrec)
 set_target_properties(binrec PROPERTIES FOLDER libraries)
 set(BINREC_LIBRARIES binrec PARENT_SCOPE)
 
+# catch
+set(CATCH_DIR "catch")
+add_library(catch INTERFACE)
+target_include_directories(catch INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CATCH_DIR}/include")
+set(CATCH_LIBRARIES catch PARENT_SCOPE)
+
 # cereal
 set(CEREAL_DIR "cereal")
 add_library(cereal INTERFACE)

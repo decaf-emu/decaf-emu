@@ -37,3 +37,6 @@
 [submodule "libraries/fixed_point"]
 	path = libraries/fixed_point
 	url = https://github.com/johnmcfarlane/fixed_point
+[submodule "libraries/catch"]
+	path = libraries/catch
+	url = https://github.com/philsquared/Catch.git

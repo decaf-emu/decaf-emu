@@ -1,6 +1,5 @@
 #pragma once
 #include "bigendianvalue.h"
-#include "be2_array.h"
 #include "pointer.h"
 #include "mmu.h"
 
@@ -47,3 +46,5 @@ inline virt_ptr<DstType> virt_cast(const be2_ptr<SrcType> &src)
 {
    return virt_ptr<DstType> { static_cast<virt_addr>(src) };
 }
+
+#include "be2_array.h"
