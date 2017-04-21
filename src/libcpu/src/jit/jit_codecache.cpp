@@ -18,12 +18,6 @@ namespace cpu
 namespace jit
 {
 
-CodeCache::CodeCache() :
-   mReserveAddress(0),
-   mReserveSize(0)
-{
-}
-
 CodeCache::~CodeCache()
 {
    free();

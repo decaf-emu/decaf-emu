@@ -50,7 +50,6 @@ class CodeCache
    static constexpr size_t Level3Size = 0x4000;
 
 public:
-   CodeCache();
    ~CodeCache();
 
    bool
@@ -143,11 +142,11 @@ private:
             size_t alignment);
 
 private:
-   size_t mReserveAddress;
-   size_t mReserveSize;
+   size_t mReserveAddress = 0;
+   size_t mReserveSize = 0;
    FrameAllocator mCodeAllocator;
    FrameAllocator mDataAllocator;
-   std::atomic<std::atomic<std::atomic<CodeBlockIndex> *> *> *mFastIndex;
+   std::atomic<std::atomic<std::atomic<CodeBlockIndex> *> *> *mFastIndex = nullptr;
 };
 
 } // namespace jit
