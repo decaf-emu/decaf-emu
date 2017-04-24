@@ -88,7 +88,7 @@ loadSharedData()
 
    if (!allFound) {
       // As a backup, try load Source Sans Pro from resources folder.
-      auto file = std::ifstream { "resources/fonts/SourceSansPro-Regular.ttf",
+      auto file = std::ifstream { decaf::config::system::resources_path + "/fonts/SourceSansPro-Regular.ttf",
                                   std::ifstream::in | std::ifstream::binary };
       auto sourceSansProSize = uint32_t { 0 };
       uint8_t *sourceSansProData = nullptr;

@@ -96,6 +96,7 @@ int region = static_cast<int>(coreinit::SCIRegion::USA);
 std::string mlc_path = "mlc";
 std::string sdcard_path = "sdcard";
 std::string content_path = {};
+std::string resources_path = "resources";
 double time_scale = 1.0;
 std::vector<std::string> lle_modules;
 
