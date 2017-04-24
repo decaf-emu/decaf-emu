@@ -79,9 +79,6 @@ getCommandLineParser()
                   allowed<std::string> { {
                      "EUR", "JAP", "US"
                   } })
-      .add_option("sys-path",
-                  description { "Where to locate any external system files." },
-                  value<std::string> {})
       .add_option("time-scale",
                   description { "Time scale factor for emulated clock." },
                   default_value<double> { 1.0 })

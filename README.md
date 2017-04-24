@@ -44,7 +44,7 @@ There are two decaf targets:
 
 `./decaf-sdl play <path to game>`
 
-It is recommend to run the emulator from the root git directory so that it is able to access `resources/fonts/*`
+It is recommended to run the emulator from the root git directory so that it is able to access `resources/fonts/*`.  Alternatively, set `resources_path` in the configuration file to point to the resources directory.
 
 Configuration files can be found at:
 - Windows - `%APPDATA%\decaf`

@@ -120,7 +120,8 @@ void Manager::load(const std::string &configPath,
    auto config = ImFontConfig { };
    config.MergeMode = true;
    config.MergeGlyphCenterV = true;
-   io.Fonts->AddFontFromFileTTF("resources/fonts/DejaVuSansMono.ttf", 13.0f, &config, iconsRanges);
+   auto fontPath = decaf::config::system::resources_path + "/fonts/DejaVuSansMono.ttf";
+   io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13.0f, &config, iconsRanges);
 
    // Set default syle
    auto &style = ImGui::GetStyle();

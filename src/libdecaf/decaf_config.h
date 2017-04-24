@@ -118,6 +118,9 @@ extern std::string sdcard_path;
 //! Path to /vol/content for standalone .rpx applications
 extern std::string content_path;
 
+//! Path to directory containing Decaf resources
+extern std::string resources_path;
+
 //! Time scale factor for emulated clock
 extern double time_scale;
 

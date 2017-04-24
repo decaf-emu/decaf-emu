@@ -118,11 +118,11 @@ getCommandLineParser()
                   description { "Enable sound output." })
       .add_option("dx12",
                   description { "Use DirectX 12 backend." })
-      .add_option("sys-path",
-                  description { "Where to locate any external system files." },
-                  value<std::string> {})
       .add_option("content-path",
                   description { "Sets which path to mount to /vol/content, only set for standalone rpx files." },
+                  value<std::string> {})
+      .add_option("resources-path",
+                  description { "Path to Decaf resource files." },
                   value<std::string> {})
       .add_option("time-scale",
                   description { "Time scale factor for emulated clock." },
@@ -362,6 +362,10 @@ start(excmd::parser &parser,
 
    if (options.has("content-path")) {
       decaf::config::system::content_path = options.get<std::string>("content-path");
+   }
+
+   if (options.has("resources-path")) {
+      decaf::config::system::resources_path = options.get<std::string>("resources-path");
    }
 
    if (options.has("time-scale")) {
