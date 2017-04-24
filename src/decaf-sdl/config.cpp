@@ -1,12 +1,14 @@
 #include "clilog.h"
-#include <common/decaf_assert.h>
 #include "config.h"
-#include "libdecaf/decaf_config.h"
+
 #include <climits>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 #include <common/cerealjsonoptionalinput.h>
+#include <common/decaf_assert.h>
 #include <fstream>
+#include <libdecaf/decaf_config.h>
+#include <libgpu/gpu_config.h>
 #include <SDL_keycode.h>
 
 namespace config
@@ -111,9 +113,10 @@ struct CerealGPU
    void serialize(Archive &ar)
    {
       using namespace gpu;
-      using namespace decaf::config::gpu;
+      using namespace ::gpu::config;
       ar(CEREAL_NVP(debug),
          CEREAL_NVP(debug_filters),
+         CEREAL_NVP(dump_shaders),
          CEREAL_NVP(force_sync));
    }
 };

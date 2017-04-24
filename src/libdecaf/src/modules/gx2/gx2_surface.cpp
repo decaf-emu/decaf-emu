@@ -1,12 +1,14 @@
 #include "gx2_addrlib.h"
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_surface.h"
-#include "gpu/gpu_tiling.h"
-#include "gpu/pm4_writer.h"
+
 #include <common/align.h>
 #include <common/log.h>
 #include <common/pow.h>
+#include <gsl.h>
+#include <libgpu/gpu_tiling.h>
 
 namespace gx2
 {
@@ -196,7 +198,8 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer,
       }
    }
 
-   if (colorBuffer->surface.tileMode >= GX2TileMode::Tiled2DThin1 && colorBuffer->surface.tileMode != GX2TileMode::LinearSpecial) {
+   if (colorBuffer->surface.tileMode >= GX2TileMode::Tiled2DThin1 &&
+       colorBuffer->surface.tileMode != GX2TileMode::LinearSpecial) {
       if (colorBuffer->viewMip < ((colorBuffer->surface.swizzle >> 16) & 0xFF)) {
          addr ^= colorBuffer->surface.swizzle & 0xFFFF;
       }
@@ -207,15 +210,40 @@ GX2SetColorBuffer(GX2ColorBuffer *colorBuffer,
       addrTile = addrFrag + colorBuffer->regs.cmask_offset;
    }
 
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_BASE + target * 4), addr >> 8 });
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_SIZE + target * 4), cb_color_size.value });
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_INFO + target * 4), cb_color_info.value });
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_BASE + target * 4),
+      addr >> 8
+   });
 
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_TILE + target * 4), addrTile >> 8 });
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_FRAG + target * 4), addrFrag >> 8 });
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_SIZE + target * 4),
+      cb_color_size.value
+   });
 
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_VIEW + target * 4), cb_color_view.value });
-   pm4::write(pm4::SetContextReg { reg(Register::CB_COLOR0_MASK + target * 4), cb_color_mask.value });
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_INFO + target * 4),
+      cb_color_info.value
+   });
+
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_TILE + target * 4),
+      addrTile >> 8
+   });
+
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_FRAG + target * 4),
+      addrFrag >> 8
+   });
+
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_VIEW + target * 4),
+      cb_color_view.value
+   });
+
+   internal::writePM4(latte::pm4::SetContextReg {
+      reg(Register::CB_COLOR0_MASK + target * 4),
+      cb_color_mask.value
+   });
 }
 
 void
@@ -233,7 +261,7 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
       db_depth_size.value,
       db_depth_view.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::make_span(values1) });
+   internal::writePM4(latte::pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::make_span(values1) });
 
    auto addr = depthBuffer->surface.image.getAddress();
    auto addrHiZ = depthBuffer->hiZPtr.getAddress();
@@ -257,18 +285,18 @@ GX2SetDepthBuffer(GX2DepthBuffer *depthBuffer)
       db_depth_info.value,
       addrHiZ >> 8,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, gsl::make_span(values2) });
+   internal::writePM4(latte::pm4::SetContextRegs { latte::Register::DB_DEPTH_BASE, gsl::make_span(values2) });
 
-   pm4::write(pm4::SetContextReg { latte::Register::DB_HTILE_SURFACE, db_htile_surface.value });
-   pm4::write(pm4::SetContextReg { latte::Register::DB_PREFETCH_LIMIT, db_prefetch_limit.value });
-   pm4::write(pm4::SetContextReg { latte::Register::DB_PRELOAD_CONTROL, db_preload_control.value });
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_DB_FMT_CNTL, pa_poly_offset_cntl.value });
+   internal::writePM4(latte::pm4::SetContextReg { latte::Register::DB_HTILE_SURFACE, db_htile_surface.value });
+   internal::writePM4(latte::pm4::SetContextReg { latte::Register::DB_PREFETCH_LIMIT, db_prefetch_limit.value });
+   internal::writePM4(latte::pm4::SetContextReg { latte::Register::DB_PRELOAD_CONTROL, db_preload_control.value });
+   internal::writePM4(latte::pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_DB_FMT_CNTL, pa_poly_offset_cntl.value });
 
    uint32_t values3[] = {
       depthBuffer->stencilClear,
       bit_cast<uint32_t, float>(depthBuffer->depthClear),
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values3) });
+   internal::writePM4(latte::pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values3) });
 }
 
 void
@@ -501,7 +529,7 @@ GX2CopySurface(GX2Surface *src,
       srcSamples = 8;
    }
 
-   pm4::write(pm4::DecafCopySurface{
+   internal::writePM4(latte::pm4::DecafCopySurface {
       dst->image.getAddress(),
       dst->mipmaps.getAddress(),
       dstLevel,

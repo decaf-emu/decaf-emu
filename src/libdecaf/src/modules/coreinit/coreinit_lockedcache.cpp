@@ -3,7 +3,7 @@
 #include "coreinit_lockedcache.h"
 #include "coreinit_thread.h"
 #include "kernel/kernel_memory.h"
-#include "gpu/gpu_flush.h"
+#include "modules/gx2/gx2_internal_flush.h"
 
 #include <common/teenyheap.h>
 #include <array>
@@ -156,7 +156,7 @@ LCLoadDMABlocks(void *dst,
 {
    // Signal the GPU to update the source range if necessary, as with
    //  DCInvalidateRange().
-   gpu::notifyGpuFlush(const_cast<void *>(src), size);
+   gx2::internal::notifyGpuFlush(const_cast<void *>(src), size);
 
    if (size == 0) {
       size = 128;
@@ -183,7 +183,7 @@ LCStoreDMABlocks(void *dst,
    std::memcpy(dst, src, size * 32);
 
    // Also signal the memory store to the GPU, as with DCFlushRange().
-   gpu::notifyCpuFlush(dst, size);
+   gx2::internal::notifyCpuFlush(dst, size);
 }
 
 

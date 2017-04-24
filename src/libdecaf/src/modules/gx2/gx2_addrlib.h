@@ -1,9 +1,10 @@
 #pragma once
+#include "gx2_enum.h"
+
 #include <addrlib/addrinterface.h>
 #include <cstdint>
+#include <libgpu/latte/latte_enum_sq.h>
 #include <vector>
-#include "gpu/latte_enum_sq.h"
-#include "gx2_enum.h"
 
 namespace gx2
 {

@@ -1,9 +1,11 @@
 #include "clilog.h"
-#include <common/decaf_assert.h>
 #include "config.h"
 #include "decafsdl.h"
-#include "libdecaf/decaf.h"
-#include "libdecaf/src/modules/coreinit/coreinit_enum.h"
+
+#include <common/decaf_assert.h>
+#include <libdecaf/decaf.h>
+#include <libgpu/gpu_config.h>
+#include <libdecaf/src/modules/coreinit/coreinit_enum.h> // NAUGHTY
 #include <pugixml.hpp>
 #include <excmd.h>
 #include <iostream>
@@ -283,7 +285,7 @@ start(excmd::parser &parser,
    }
 
    if (options.has("gpu-debug")) {
-      decaf::config::gpu::debug = true;
+      gpu::config::debug = true;
    }
 
    if (options.has("gpu-force-sync")) {

@@ -1,29 +1,33 @@
 #include "sdl_window.h"
 #include "clilog.h"
+
 #include <array>
 #include <fstream>
 #include <common/teenyheap.h>
+#include <libcpu/mmu.h>
+#include <libcpu/pointer.h>
 #include <libdecaf/decaf.h>
 #include <libdecaf/decaf_nullinputdriver.h>
 #include <libdecaf/decaf_pm4replay.h>
-#include <libdecaf/src/gpu/latte_registers.h>
-#include <libdecaf/src/gpu/pm4_format.h>
-#include <libdecaf/src/gpu/pm4_packets.h>
-#include <libdecaf/src/gpu/pm4_reader.h>
-#include <libdecaf/src/gpu/pm4_writer.h>
 #include <libdecaf/src/kernel/kernel_memory.h>
-#include <libdecaf/src/modules/gx2/gx2_cbpool.h>
+#include <libdecaf/src/modules/gx2/gx2_internal_cbpool.h>
 #include <libdecaf/src/modules/gx2/gx2_state.h>
-#include <libcpu/mmu.h>
-#include <libcpu/pointer.h>
+#include <libgpu/gpu_config.h>
+#include <libgpu/latte/latte_registers.h>
+#include <libgpu/latte/latte_pm4.h>
+#include <libgpu/latte/latte_pm4_commands.h>
+#include <libgpu/latte/latte_pm4_reader.h>
+#include <libgpu/latte/latte_pm4_writer.h>
 
 static TeenyHeap *
 gSystemHeap = nullptr;
 
+using namespace latte::pm4;
+
 class PM4Parser
 {
 public:
-   PM4Parser(decaf::GraphicsDriver *driver) :
+   PM4Parser(gpu::GraphicsDriver *driver) :
       mGraphicsDriver(driver)
    {
       mRegisterStorage = reinterpret_cast<uint32_t *>(gSystemHeap->alloc(0x10000 * 4, 0x100));
@@ -148,7 +152,7 @@ private:
    {
       auto isTv = (setBuffer.type == decaf::pm4::CaptureSetBuffer::TvBuffer) ? 1u : 0u;
 
-      pm4::write(pm4::DecafSetBuffer {
+      gx2::internal::writePM4(DecafSetBuffer {
          isTv,
          setBuffer.bufferingMode,
          setBuffer.width,
@@ -172,7 +176,7 @@ private:
 
       auto SHADOW_ENABLE = latte::CONTEXT_CONTROL_ENABLE::get(0);
 
-      pm4::write(pm4::ContextControl {
+      gx2::internal::writePM4(ContextControl {
          LOAD_CONTROL,
          SHADOW_ENABLE
       });
@@ -181,7 +185,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadConfigRange[] = { { 0, (latte::Register::ConfigRegisterEnd - latte::Register::ConfigRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadConfigReg {
+      gx2::internal::writePM4(LoadConfigReg {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
          gsl::make_span(LoadConfigRange)
       });
@@ -189,7 +193,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadContextRange[] = { { 0, (latte::Register::ContextRegisterEnd - latte::Register::ContextRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadContextReg {
+      gx2::internal::writePM4(LoadContextReg {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
          gsl::make_span(LoadContextRange)
       });
@@ -197,7 +201,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadAluConstRange[] = { { 0, (latte::Register::AluConstRegisterEnd - latte::Register::AluConstRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadAluConst {
+      gx2::internal::writePM4(LoadAluConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
          gsl::make_span(LoadAluConstRange)
       });
@@ -205,7 +209,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadResourceRange[] = { { 0, (latte::Register::ResourceRegisterEnd - latte::Register::ResourceRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadResource {
+      gx2::internal::writePM4(latte::pm4::LoadResource {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
          gsl::make_span(LoadResourceRange)
       });
@@ -213,7 +217,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadSamplerRange[] = { { 0, (latte::Register::SamplerRegisterEnd - latte::Register::SamplerRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadSampler {
+      gx2::internal::writePM4(LoadSampler {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
          gsl::make_span(LoadSamplerRange)
       });
@@ -221,7 +225,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadControlRange[] = { { 0, (latte::Register::ControlRegisterEnd - latte::Register::ControlRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadControlConst {
+      gx2::internal::writePM4(LoadControlConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
          gsl::make_span(LoadControlRange)
       });
@@ -229,7 +233,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadLoopRange[] = { { 0, (latte::Register::LoopConstRegisterEnd - latte::Register::LoopConstRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadLoopConst {
+      gx2::internal::writePM4(LoadLoopConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
          gsl::make_span(LoadLoopRange)
       });
@@ -237,7 +241,7 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadBoolRange[] = { { 0, (latte::Register::BoolConstRegisterEnd - latte::Register::BoolConstRegisterBase) / 4 }, };
 
-      pm4::write(pm4::LoadLoopConst {
+      gx2::internal::writePM4(LoadLoopConst {
          reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
          gsl::make_span(LoadBoolRange)
       });
@@ -250,21 +254,21 @@ private:
    }
 
    bool
-   scanType0(pm4::type0::Header header,
+   scanType0(HeaderType0 header,
              const gsl::span<be_val<uint32_t>> &data)
    {
       return false;
    }
 
    bool
-   scanType3(pm4::type3::Header header,
+   scanType3(HeaderType3 header,
              const gsl::span<be_val<uint32_t>> &data)
    {
-      if (header.opcode() == pm4::type3::DECAF_SWAP_BUFFERS) {
+      if (header.opcode() == IT_OPCODE::DECAF_SWAP_BUFFERS) {
          return true;
       }
 
-      if (header.opcode() == pm4::type3::INDIRECT_BUFFER_PRIV) {
+      if (header.opcode() == IT_OPCODE::INDIRECT_BUFFER_PRIV) {
          return scanCommandBuffer(mem::translate(data[0]), data[2]);
       }
 
@@ -279,34 +283,34 @@ private:
       auto foundSwap = false;
 
       for (auto pos = size_t { 0u }; pos < numWords; ) {
-         auto header = pm4::Header::get(buffer[pos]);
+         auto header = Header::get(buffer[pos]);
          auto size = size_t { 0u };
 
          switch (header.type()) {
-         case pm4::Header::Type0:
+         case PacketType::Type0:
          {
-            auto header0 = pm4::type0::Header::get(header.value);
+            auto header0 = HeaderType0::get(header.value);
             size = header0.count() + 1;
 
             decaf_check(pos + size < numWords);
             foundSwap |= scanType0(header0, gsl::make_span(&buffer[pos + 1], size));
             break;
          }
-         case pm4::Header::Type3:
+         case PacketType::Type3:
          {
-            auto header3 = pm4::type3::Header::get(header.value);
+            auto header3 = HeaderType3::get(header.value);
             size = header3.size() + 1;
 
             decaf_check(pos + size < numWords);
             foundSwap |= scanType3(header3, gsl::make_span(&buffer[pos + 1], size));
             break;
          }
-         case pm4::Header::Type2:
+         case PacketType::Type2:
          {
             // This is a filler packet, like a "nop", ignore it
             break;
          }
-         case pm4::Header::Type1:
+         case PacketType::Type1:
          default:
             size = numWords;
             break;
@@ -319,7 +323,7 @@ private:
    }
 
 private:
-   decaf::GraphicsDriver *mGraphicsDriver = nullptr;
+   gpu::GraphicsDriver *mGraphicsDriver = nullptr;
    std::ifstream mFile;
    std::vector<uint8_t *> mBuffers;
    uint32_t *mRegisterStorage = nullptr;
@@ -367,7 +371,7 @@ SDLWindow::createWindow()
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
    // Enable debug context
-   if (decaf::config::gpu::debug) {
+   if (gpu::config::debug) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
    }
 
@@ -410,8 +414,8 @@ SDLWindow::run(const std::string &tracePath)
    auto shouldQuit = false;
 
    // Setup OpenGL graphics driver
-   auto glDriver = decaf::createGLDriver();
-   mGraphicsDriver = reinterpret_cast<decaf::OpenGLDriver *>(glDriver);
+   auto glDriver = gpu::createGLDriver();
+   mGraphicsDriver = reinterpret_cast<gpu::OpenGLDriver *>(glDriver);
 
    // Setup rendering
    SDL_GL_MakeCurrent(mWindow, mWindowContext);

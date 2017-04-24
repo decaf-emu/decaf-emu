@@ -13,12 +13,13 @@
 #include "debugger_ui_window_stats.h"
 #include "debugger_ui_window_threads.h"
 #include "debugger_ui_window_voices.h"
-#include "gpu/pm4_capture.h"
 #include "kernel/kernel_loader.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
+#include "modules/gx2/gx2_internal_pm4cap.h"
 
 #include <libcpu/jit_stats.h>
+#include <libgpu/gpu_config.h>
 #include <imgui.h>
 
 namespace debugger
@@ -369,7 +370,7 @@ void Manager::drawMenu()
       ImGui::Separator();
 
       if (ImGui::MenuItem("PM4 Capture Next Frame", nullptr, false, true)) {
-         pm4::captureNextFrame();
+         gx2::internal::captureNextFrame();
       }
 
       ImGui::Separator();
@@ -381,20 +382,20 @@ void Manager::drawMenu()
       auto pm4Enable = false;
       auto pm4Status = false;
 
-      switch (pm4::captureState()) {
-      case pm4::CaptureState::Disabled:
+      switch (gx2::internal::captureState()) {
+      case gx2::internal::CaptureState::Disabled:
          pm4Status = false;
          pm4Enable = true;
          break;
-      case pm4::CaptureState::Enabled:
+      case gx2::internal::CaptureState::Enabled:
          pm4Status = true;
          pm4Enable = true;
          break;
-      case pm4::CaptureState::WaitEndNextFrame:
+      case gx2::internal::CaptureState::WaitEndNextFrame:
          pm4Status = true;
          pm4Enable = false;
          break;
-      case pm4::CaptureState::WaitStartNextFrame:
+      case gx2::internal::CaptureState::WaitStartNextFrame:
          pm4Status = true;
          pm4Enable = false;
          break;
@@ -402,9 +403,9 @@ void Manager::drawMenu()
 
       if (ImGui::MenuItem("PM4 Trace Enabled", nullptr, pm4Status, pm4Enable)) {
          if (!pm4Status) {
-            pm4::captureStartAtNextSwap();
+            gx2::internal::captureStartAtNextSwap();
          } else {
-            pm4::captureStopAtNextSwap();
+            gx2::internal::captureStopAtNextSwap();
          }
       }
 
@@ -414,6 +415,10 @@ void Manager::drawMenu()
 
       if (ImGui::MenuItem("GX2 Shader Dump Enabled", nullptr, decaf::config::gx2::dump_shaders, true)) {
          decaf::config::gx2::dump_shaders = !decaf::config::gx2::dump_shaders;
+      }
+
+      if (ImGui::MenuItem("GPU Shader Dump Enabled", nullptr, gpu::config::dump_shaders, true)) {
+         gpu::config::dump_shaders = !gpu::config::dump_shaders;
       }
 
       ImGui::Separator();

@@ -1,6 +1,7 @@
 #include "gx2_clear.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_surface.h"
-#include "gpu/pm4_writer.h"
+
 #include <common/bit_cast.h>
 
 namespace gx2
@@ -23,7 +24,7 @@ GX2ClearColor(GX2ColorBuffer *colorBuffer,
 
    GX2InitColorBufferRegs(colorBuffer);
 
-   pm4::write(pm4::DecafClearColor {
+   internal::writePM4(latte::pm4::DecafClearColor {
       red, green, blue, alpha,
       cb_color_base,
       cb_color_frag,
@@ -46,7 +47,7 @@ DecafClearDepthStencil(GX2DepthBuffer *depthBuffer,
 
    GX2InitDepthBufferRegs(depthBuffer);
 
-   pm4::write(pm4::DecafClearDepthStencil {
+   internal::writePM4(latte::pm4::DecafClearDepthStencil {
       clearFlags,
       db_depth_base,
       db_depth_htile_data_base,
@@ -65,7 +66,10 @@ GX2ClearDepthStencil(GX2DepthBuffer *depthBuffer,
       bit_cast<uint32_t>(depthBuffer->depthClear)
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values) });
+   internal::writePM4(latte::pm4::SetContextRegs {
+      latte::Register::DB_STENCIL_CLEAR,
+      gsl::make_span(values)
+   });
    DecafClearDepthStencil(depthBuffer, clearFlags);
 }
 
@@ -79,7 +83,10 @@ GX2ClearDepthStencilEx(GX2DepthBuffer *depthBuffer,
       bit_cast<uint32_t>(depth)
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values) });
+   internal::writePM4(latte::pm4::SetContextRegs {
+      latte::Register::DB_STENCIL_CLEAR,
+      gsl::make_span(values)
+   });
    DecafClearDepthStencil(depthBuffer, clearFlags);
 }
 
@@ -110,7 +117,10 @@ GX2SetClearDepth(GX2DepthBuffer *depthBuffer,
                  float depth)
 {
    depthBuffer->depthClear = depth;
-   pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CLEAR, bit_cast<uint32_t>(depth) });
+   internal::writePM4(latte::pm4::SetContextReg {
+      latte::Register::DB_DEPTH_CLEAR,
+      bit_cast<uint32_t>(depth)
+   });
 }
 
 void
@@ -118,7 +128,10 @@ GX2SetClearStencil(GX2DepthBuffer *depthBuffer,
                    uint8_t stencil)
 {
    depthBuffer->stencilClear = stencil;
-   pm4::write(pm4::SetContextReg { latte::Register::DB_STENCIL_CLEAR, stencil });
+   internal::writePM4(latte::pm4::SetContextReg {
+      latte::Register::DB_STENCIL_CLEAR,
+      stencil
+   });
 }
 
 
@@ -135,7 +148,10 @@ GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer,
       bit_cast<uint32_t>(depth)
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::DB_STENCIL_CLEAR, gsl::make_span(values) });
+   internal::writePM4(latte::pm4::SetContextRegs {
+      latte::Register::DB_STENCIL_CLEAR,
+      gsl::make_span(values)
+   });
 }
 
 } // namespace gx2

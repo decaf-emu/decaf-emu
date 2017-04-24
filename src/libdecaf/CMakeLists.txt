@@ -12,6 +12,7 @@ GroupSources(src)
 target_link_libraries(libdecaf
     common
     libcpu
+    libgpu
     ${ADDRLIB_LIBRARIES}
     ${CEREAL_LIBRARIES}
     ${FIXED_POINT_LIBRARIES}

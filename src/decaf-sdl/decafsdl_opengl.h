@@ -1,10 +1,11 @@
 #pragma once
 #ifndef DECAF_NOGL
 #include "decafsdl_graphics.h"
-#include "libdecaf/decaf.h"
-#include "libdecaf/decaf_opengl.h"
+
 #include <SDL.h>
 #include <glbinding/gl/gl.h>
+#include <libdecaf/decaf.h>
+#include <libgpu/gpu_opengldriver.h>
 
 class DecafSDLOpenGL : public DecafSDLGraphics
 {
@@ -23,7 +24,7 @@ public:
    renderFrame(Viewport &tv,
                Viewport &drc) override;
 
-   decaf::GraphicsDriver *
+   gpu::GraphicsDriver *
    getDecafDriver() override;
 
    decaf::DebugUiRenderer *
@@ -47,7 +48,7 @@ protected:
 
 protected:
    std::thread mGraphicsThread;
-   decaf::OpenGLDriver *mDecafDriver = nullptr;
+   gpu::OpenGLDriver *mDecafDriver = nullptr;
    decaf::DebugUiRenderer *mDebugUiRenderer = nullptr;
 
    SDL_GLContext mContext = nullptr;

@@ -17,14 +17,6 @@ unsigned gdb_stub_port = 2159;
 
 } // namespace debugger
 
-namespace gpu
-{
-
-bool debug = false;
-std::vector<unsigned> debug_filters = {};
-
-} // namespace gpu
-
 namespace gx2
 {
 

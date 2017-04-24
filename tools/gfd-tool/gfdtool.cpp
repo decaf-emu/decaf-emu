@@ -1,3 +1,4 @@
+#if 0
 #include <cassert>
 #include <excmd.h>
 #include <fstream>
@@ -1148,3 +1149,9 @@ getBuffer(uint32_t size)
 }
 
 } // namespace pm4
+#else
+int main(int argc, char** argv)
+{
+   return 0;
+}
+#endif

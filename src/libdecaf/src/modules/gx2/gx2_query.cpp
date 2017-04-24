@@ -1,7 +1,11 @@
+#include "gx2_internal_cbpool.h"
 #include "gx2_query.h"
 #include "gx2_mem.h"
-#include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_cache.h"
+
+#include <libcpu/mem.h>
+
+using namespace latte::pm4;
 
 namespace gx2
 {
@@ -14,14 +18,14 @@ GX2SampleTopGPUCycle(be_val<uint64_t> *result)
 {
    *result = -1;
 
-   auto addrLo = pm4::MW_ADDR_LO::get(0)
+   auto addrLo = MW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(result) >> 2)
       .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
 
-   auto addrHi = pm4::MW_ADDR_HI::get(0)
-      .CNTR_SEL(pm4::MW_WRITE_CLOCK);
+   auto addrHi = MW_ADDR_HI::get(0)
+      .CNTR_SEL(MW_WRITE_CLOCK);
 
-   pm4::write(pm4::MemWrite { addrLo, addrHi, 0, 0 });
+   internal::writePM4(MemWrite { addrLo, addrHi, 0, 0 });
 }
 
 void
@@ -32,14 +36,14 @@ GX2SampleBottomGPUCycle(be_val<uint64_t> *result)
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
 
-   auto addrLo = pm4::EW_ADDR_LO::get(0)
+   auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(result) >> 2)
       .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
 
-   auto addrHi = pm4::EWP_ADDR_HI::get(0)
-      .DATA_SEL(pm4::EWP_DATA_CLOCK);
+   auto addrHi = EWP_ADDR_HI::get(0)
+      .DATA_SEL(EWP_DATA_CLOCK);
 
-   pm4::write(pm4::EventWriteEOP { eventInitiator, addrLo, addrHi, 0, 0 });
+   internal::writePM4(EventWriteEOP { eventInitiator, addrLo, addrHi, 0, 0 });
 }
 
 uint64_t
@@ -77,10 +81,10 @@ beginOcclusionQuery(GX2QueryData *data,
       for (auto i = 0u; i < 8; ++i) {
          auto addr = mem::untranslate(data) + 8 * i;
 
-         auto addrLo = pm4::MW_ADDR_LO::get(0)
+         auto addrLo = MW_ADDR_LO::get(0)
             .ADDR_LO(addr >> 2);
 
-         auto addrHi = pm4::MW_ADDR_HI::get(0)
+         auto addrHi = MW_ADDR_HI::get(0)
             .WR_CONFIRM(true);
 
          auto dataHi = 0u;
@@ -89,10 +93,10 @@ beginOcclusionQuery(GX2QueryData *data,
             dataHi = 0x80000000;
          }
 
-         pm4::write(pm4::MemWrite { addrLo, addrHi, 0, dataHi });
+         internal::writePM4(MemWrite { addrLo, addrHi, 0, dataHi });
       }
 
-      pm4::write(pm4::PfpSyncMe {});
+      internal::writePM4(PfpSyncMe {});
    } else {
       std::memset(data, 0, sizeof(GX2QueryData));
 
@@ -106,19 +110,19 @@ beginOcclusionQuery(GX2QueryData *data,
    auto render_control = latte::DB_RENDER_CONTROL::get(0)
       .PERFECT_ZPASS_COUNTS(true);
 
-   pm4::write(pm4::SetContextReg { latte::Register::DB_RENDER_CONTROL, render_control.value });
+   internal::writePM4(SetContextReg { latte::Register::DB_RENDER_CONTROL, render_control.value });
 
    // EVENT_WRITE
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::ZPASS_DONE);
 
-   auto addrLo = pm4::EW_ADDR_LO::get(0)
+   auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(data) >> 2);
 
-   auto addrHi = pm4::EW_ADDR_HI::get(0);
+   auto addrHi = EW_ADDR_HI::get(0);
 
-   pm4::write(pm4::EventWrite { eventInitiator, addrLo, addrHi });
+   internal::writePM4(EventWrite { eventInitiator, addrLo, addrHi });
 }
 
 static void
@@ -130,18 +134,18 @@ endOcclusionQuery(GX2QueryData *data,
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::ZPASS_DONE);
 
-   auto addrLo = pm4::EW_ADDR_LO::get(0)
+   auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO((mem::untranslate(data) + 8) >> 2);
 
-   auto addrHi = pm4::EW_ADDR_HI::get(0);
+   auto addrHi = EW_ADDR_HI::get(0);
 
-   pm4::write(pm4::EventWrite { eventInitiator, addrLo, addrHi });
+   internal::writePM4(EventWrite { eventInitiator, addrLo, addrHi });
 
    // DB_RENDER_CONTROL
    auto render_control = latte::DB_RENDER_CONTROL::get(0)
       .PERFECT_ZPASS_COUNTS(false);
 
-   pm4::write(pm4::SetContextReg { latte::Register::DB_RENDER_CONTROL, render_control.value });
+   internal::writePM4(SetContextReg { latte::Register::DB_RENDER_CONTROL, render_control.value });
 }
 
 static void
@@ -162,16 +166,16 @@ beginStreamOutStatsQuery(GX2QueryData *data,
       for (auto i = 0u; i < 4; ++i) {
          auto addr = mem::untranslate(data) + 8 * i;
 
-         auto addrLo = pm4::MW_ADDR_LO::get(0)
+         auto addrLo = MW_ADDR_LO::get(0)
             .ADDR_LO(addr >> 2);
 
-         auto addrHi = pm4::MW_ADDR_HI::get(0)
+         auto addrHi = MW_ADDR_HI::get(0)
             .WR_CONFIRM(true);
 
-         pm4::write(pm4::MemWrite { addrLo, addrHi, 0, 0 });
+         internal::writePM4(MemWrite { addrLo, addrHi, 0, 0 });
       }
 
-      pm4::write(pm4::PfpSyncMe {});
+      internal::writePM4(PfpSyncMe {});
 
       endianSwap = latte::CB_ENDIAN::SWAP_8IN32;
    } else {
@@ -190,13 +194,13 @@ beginStreamOutStatsQuery(GX2QueryData *data,
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::SAMPLE_STREAMOUTSTATS)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT);
 
-   auto addrLo = pm4::EW_ADDR_LO::get(0)
+   auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(data) >> 2)
       .ENDIAN_SWAP(endianSwap);
 
-   auto addrHi = pm4::EW_ADDR_HI::get(0);
+   auto addrHi = EW_ADDR_HI::get(0);
 
-   pm4::write(pm4::EventWrite { eventInitiator, addrLo, addrHi });
+   internal::writePM4(EventWrite { eventInitiator, addrLo, addrHi });
 }
 
 static void
@@ -216,13 +220,13 @@ endStreamOutStatsQuery(GX2QueryData *data,
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::SAMPLE_STREAMOUTSTATS)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT);
 
-   auto addrLo = pm4::EW_ADDR_LO::get(0)
+   auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO(mem::untranslate(data) >> 2)
       .ENDIAN_SWAP(endianSwap);
 
-   auto addrHi = pm4::EW_ADDR_HI::get(0);
+   auto addrHi = EW_ADDR_HI::get(0);
 
-   pm4::write(pm4::EventWrite { eventInitiator, addrLo, addrHi });
+   internal::writePM4(EventWrite { eventInitiator, addrLo, addrHi });
 }
 
 void
@@ -280,24 +284,24 @@ GX2QueryBeginConditionalRender(GX2QueryType type,
 {
    auto addr = mem::untranslate(data);
    auto addrLo = 0u;
-   auto op = pm4::SP_PRED_OP_PRIMCOUNT;
+   auto op = SP_PRED_OP_PRIMCOUNT;
 
    if (type == 2) {
-      op = pm4::SP_PRED_OP_ZPASS;
+      op = SP_PRED_OP_ZPASS;
    }
 
-   auto set_pred = pm4::SET_PRED::get(0)
+   auto set_pred = SET_PRED::get(0)
       .PRED_OP(op)
       .HINT(!!hint)
       .PREDICATE(!!predicate);
 
-   pm4::write(pm4::SetPredication { addrLo, set_pred });
+   internal::writePM4(SetPredication { addrLo, set_pred });
 }
 
 void
 GX2QueryEndConditionalRender()
 {
-   pm4::write(pm4::SetPredication { 0, pm4::SET_PRED::get(0) });
+   internal::writePM4(SetPredication { 0, SET_PRED::get(0) });
 }
 
 } // namespace gx2

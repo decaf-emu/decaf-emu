@@ -1,9 +1,11 @@
 #include "gx2_debug.h"
 #include "gx2_event.h"
+#include "gx2_internal_cbpool.h"
+#include "gx2_internal_pm4cap.h"
 #include "gx2_surface.h"
 #include "gx2_swap.h"
-#include "gpu/pm4_capture.h"
-#include "gpu/pm4_writer.h"
+
+#include <common/log.h>
 
 namespace gx2
 {
@@ -25,7 +27,7 @@ GX2CopyColorBufferToScanBuffer(GX2ColorBuffer *buffer,
 
    GX2InitColorBufferRegs(buffer);
 
-   pm4::write(pm4::DecafCopyColorToScan {
+   internal::writePM4(latte::pm4::DecafCopyColorToScan {
       scanTarget,
       cb_color_base,
       cb_color_frag,
@@ -45,10 +47,9 @@ GX2SwapScanBuffers()
    static uint32_t debugSwapCount = 0;
    internal::writeDebugMarker("SwapScanBuffers", debugSwapCount++);
 
-   gx2::internal::onSwap();
-   pm4::write(pm4::DecafSwapBuffers { });
-
-   pm4::captureSwap();
+   internal::onSwap();
+   internal::writePM4(latte::pm4::DecafSwapBuffers { });
+   internal::captureSwap();
 }
 
 BOOL
@@ -80,7 +81,7 @@ GX2SetSwapInterval(uint32_t interval)
       }
 
       sSwapInterval = interval;
-      pm4::write(pm4::DecafSetSwapInterval { interval });
+      internal::writePM4(latte::pm4::DecafSetSwapInterval { interval });
    }
 }
 

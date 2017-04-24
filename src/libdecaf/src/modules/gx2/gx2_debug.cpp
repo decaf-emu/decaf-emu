@@ -1,21 +1,20 @@
 #include "decaf_config.h"
-#include "gpu/gpu_commandqueue.h"
-#include "gpu/gfd.h"
-#include "gpu/microcode/latte_disassembler.h"
-#include "gpu/pm4_writer.h"
 #include "gx2.h"
 #include "gx2_debug.h"
 #include "gx2_enum_string.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_shaders.h"
 #include "gx2_texture.h"
-#include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_sprintf.h"
 #include "ppcutils/va_list.h"
+
 #include <fstream>
 #include <spdlog/spdlog.h>
 #include <common/align.h>
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <libcpu/mem.h>
+#include <libgpu/latte/latte_disassembler.h>
 
 namespace gx2
 {
@@ -51,7 +50,7 @@ GX2DebugTagUserStringVA(uint32_t unk,
    std::memcpy(strWords.data(), buffer, length);
 
    // Write NOP packet
-   pm4::write(pm4::Nop {
+   internal::writePM4(latte::pm4::Nop {
       unk,
       gsl::make_span(strWords)
    });
@@ -137,9 +136,11 @@ debugDumpTexture(const GX2Texture *texture)
    }
 
    // Write GTX file
+#if 0
    gfd::Writer gtx;
    gtx.add(texture);
    gtx.write("dump/" + filename + ".gtx");
+#endif
 }
 
 template<typename ShaderType>
@@ -160,9 +161,11 @@ debugDumpShader(const std::string &filename, const std::string &info, ShaderType
    debugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
    // Write GSH file
+#if 0
    gfd::Writer gsh;
    gsh.add(shader);
    gsh.write("dump/" + filename + ".gsh");
+#endif
 
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
@@ -273,9 +276,9 @@ debugDumpShader(GX2FetchShader *shader)
       << "  size: " << shader->size << "\n";
 
    debugDumpShader("shader_fetch_" + pointerAsString(shader),
-                      out.str(),
-                      shader,
-                      true);
+                   out.str(),
+                   shader,
+                   true);
 }
 
 void
@@ -298,8 +301,8 @@ debugDumpShader(GX2PixelShader *shader)
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
    debugDumpShader("shader_pixel_" + pointerAsString(shader),
-                      out.str(),
-                      shader);
+                   out.str(),
+                   shader);
 }
 
 void
@@ -323,8 +326,8 @@ debugDumpShader(GX2VertexShader *shader)
    formatAttribVars(out, shader->attribVarCount, shader->attribVars);
 
    debugDumpShader("shader_vertex_" + pointerAsString(shader),
-                      out.str(),
-                      shader);
+                   out.str(),
+                   shader);
 }
 
 void writeDebugMarker(const char *key, uint32_t id)
@@ -340,7 +343,7 @@ void writeDebugMarker(const char *key, uint32_t id)
    memset(tmpBuf, 0, 128);
    memcpy(tmpBuf, key, strLen);
 
-   pm4::write(pm4::DecafDebugMarker {
+   internal::writePM4(latte::pm4::DecafDebugMarker {
       id,
       gsl::make_span(tmpBuf, alignedStrLen),
    });

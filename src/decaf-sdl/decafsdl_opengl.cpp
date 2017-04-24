@@ -1,9 +1,11 @@
 #ifndef DECAF_NOGL
-
 #include "clilog.h"
-#include <common/decaf_assert.h>
 #include "config.h"
 #include "decafsdl_opengl.h"
+
+#include <common/decaf_assert.h>
+#include <libgpu/gpu_config.h>
+#include <libgpu/gpu_opengldriver.h>
 #include <string>
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
@@ -77,7 +79,7 @@ static void GL_APIENTRY
 debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
    gl::GLsizei length, const gl::GLchar* message, const void *userParam)
 {
-   for (auto filterID : decaf::config::gpu::debug_filters) {
+   for (auto filterID : gpu::config::debug_filters) {
       if (filterID == id) {
          return;
       }
@@ -129,7 +131,7 @@ DecafSDLOpenGL::initialiseContext()
 {
    glbinding::Binding::initialize();
 
-   if (decaf::config::gpu::debug) {
+   if (gpu::config::debug) {
       glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
       glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
          auto error = glbinding::Binding::GetError.directCall();
@@ -324,7 +326,7 @@ DecafSDLOpenGL::initialise(int width, int height)
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
    // Enable debug context
-   if (decaf::config::gpu::debug) {
+   if (gpu::config::debug) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
    }
 
@@ -360,7 +362,7 @@ DecafSDLOpenGL::initialise(int width, int height)
    SDL_GL_MakeCurrent(mWindow, mContext);
 
    // Setup decaf driver
-   mDecafDriver = reinterpret_cast<decaf::OpenGLDriver*>(decaf::createGLDriver());
+   mDecafDriver = reinterpret_cast<gpu::OpenGLDriver*>(gpu::createGLDriver());
    mDebugUiRenderer = decaf::createDebugGLRenderer();
 
    // Setup rendering
@@ -422,7 +424,7 @@ DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc)
    }
 }
 
-decaf::GraphicsDriver *
+gpu::GraphicsDriver *
 DecafSDLOpenGL::getDecafDriver()
 {
    return mDecafDriver;

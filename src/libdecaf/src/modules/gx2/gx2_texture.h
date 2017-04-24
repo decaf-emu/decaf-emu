@@ -1,11 +1,11 @@
 #pragma once
-#include "gpu/latte_registers.h"
 #include "modules/gx2/gx2_enum.h"
 #include "modules/gx2/gx2_surface.h"
 
 #include <cstdint>
 #include <common/be_val.h>
 #include <common/structsize.h>
+#include <libgpu/latte/latte_registers.h>
 
 namespace gx2
 {

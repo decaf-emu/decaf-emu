@@ -27,7 +27,7 @@ public:
    renderFrame(Viewport &tv,
                Viewport &drc) = 0;
 
-   virtual decaf::GraphicsDriver *
+   virtual gpu::GraphicsDriver *
    getDecafDriver() = 0;
 
    virtual decaf::DebugUiRenderer *

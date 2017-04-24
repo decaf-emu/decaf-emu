@@ -1,9 +1,10 @@
-#include <common/decaf_assert.h>
 #include "gx2_display.h"
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
-#include "gpu/pm4_writer.h"
+#include "gx2_internal_cbpool.h"
 #include "ppcutils/wfunc_call.h"
+
+#include <common/decaf_assert.h>
 
 namespace gx2
 {
@@ -27,8 +28,10 @@ getTVSize(GX2TVRenderMode mode)
    case GX2TVRenderMode::Standard480p:
       return { 640, 480 };
    case GX2TVRenderMode::Wide480p:
-      return { 704, 480 };
+      return { 854, 480 };
    case GX2TVRenderMode::Wide720p:
+      return { 1280, 720 };
+   case GX2TVRenderMode::Unk720p:
       return { 1280, 720 };
    case GX2TVRenderMode::Wide1080p:
       return { 1920, 1080 };
@@ -101,6 +104,9 @@ GX2CalcDRCSize(GX2DrcRenderMode drcRenderMode,
    *unkOut = 0;
 }
 
+void AVMSetTVScale(uint32_t width, uint32_t height);
+void AVMSetTVBufferAttr(GX2BufferingMode bufferingMode, GX2TVRenderMode tvRenderMode, uint32_t pitch);
+
 void
 GX2SetTVBuffer(void *buffer,
                uint32_t size,
@@ -118,9 +124,13 @@ GX2SetTVBuffer(void *buffer,
    sTvBuffer.bufferingMode = bufferingMode;
    sTvBuffer.width = width;
    sTvBuffer.height = height;
-
+   /*
+   auto pitch = width;
+   AVMSetTVScale(width, height);
+   AVMSetTVBufferAttr(bufferingMode, tvRenderMode, pitch);
+   */
    // bufferingMode is conveniently equal to the number of buffers
-   pm4::write(pm4::DecafSetBuffer {
+   internal::writePM4(latte::pm4::DecafSetBuffer {
       1,
       bufferingMode,
       static_cast<uint32_t>(width),
@@ -146,7 +156,7 @@ GX2SetDRCBuffer(void *buffer,
    sDrcBuffer.height = height;
 
    // bufferingMode is conveniently equal to the number of buffers
-   pm4::write(pm4::DecafSetBuffer {
+   internal::writePM4(latte::pm4::DecafSetBuffer {
       0,
       bufferingMode,
       static_cast<uint32_t>(width),

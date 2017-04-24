@@ -1,11 +1,9 @@
 #include "decaf_config.h"
-#include "gpu/pm4_capture.h"
-#include "gpu/pm4_packets.h"
-#include "gpu/pm4_writer.h"
-#include "gx2_cbpool.h"
 #include "gx2_contextstate.h"
 #include "gx2_displaylist.h"
 #include "gx2_event.h"
+#include "gx2_internal_cbpool.h"
+#include "gx2_internal_pm4cap.h"
 #include "gx2_state.h"
 #include "modules/coreinit/coreinit_core.h"
 #include "modules/coreinit/coreinit_memheap.h"
@@ -13,6 +11,8 @@
 
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <libgpu/gpu.h>
+#include <libgpu/latte/latte_pm4_commands.h>
 
 namespace gx2
 {
@@ -67,6 +67,11 @@ GX2Init(be_val<uint32_t> *attributes)
    // Init event handler stuff (vsync, flips, etc)
    internal::initEvents();
 
+   // Initialise GPU callbacks
+   gpu::setFlipCallback(&gx2::internal::onFlip);
+   gpu::setSyncRegisterCallback(&internal::captureSyncGpuRegisters);
+   gpu::setRetireCallback(&internal::onRetireCommandBuffer);
+
    // Initialise command buffer pools
    internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
 
@@ -120,7 +125,7 @@ enableStateShadowing()
       .ENABLE_CTL_CONST(true)
       .ENABLE_ORDINAL(true);
 
-   pm4::write(pm4::ContextControl {
+   internal::writePM4(latte::pm4::ContextControl {
       LOAD_CONTROL,
       SHADOW_ENABLE
    });
@@ -135,7 +140,7 @@ disableStateShadowing()
    auto SHADOW_ENABLE = latte::CONTEXT_CONTROL_ENABLE::get(0)
       .ENABLE_ORDINAL(true);
 
-   pm4::write(pm4::ContextControl {
+   internal::writePM4(latte::pm4::ContextControl {
       LOAD_CONTROL,
       SHADOW_ENABLE
    });

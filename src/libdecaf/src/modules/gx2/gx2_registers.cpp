@@ -1,6 +1,7 @@
-#include "gpu/pm4_packets.h"
-#include "gpu/pm4_writer.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_registers.h"
+
+using namespace latte::pm4;
 
 namespace gx2
 {
@@ -56,7 +57,7 @@ void
 GX2SetAAMaskReg(GX2AAMaskReg *reg)
 {
    auto pa_sc_aa_mask = reg->pa_sc_aa_mask.value();
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SC_AA_MASK, pa_sc_aa_mask.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_SC_AA_MASK, pa_sc_aa_mask.value });
 }
 
 void
@@ -107,10 +108,10 @@ void
 GX2SetAlphaTestReg(GX2AlphaTestReg *reg)
 {
    auto sx_alpha_test_control = reg->sx_alpha_test_control.value();
-   pm4::write(pm4::SetContextReg { latte::Register::SX_ALPHA_TEST_CONTROL, sx_alpha_test_control.value });
+   internal::writePM4(SetContextReg { latte::Register::SX_ALPHA_TEST_CONTROL, sx_alpha_test_control.value });
 
    auto sx_alpha_ref = reg->sx_alpha_ref.value();
-   pm4::write(pm4::SetContextReg { latte::Register::SX_ALPHA_REF, sx_alpha_ref.value });
+   internal::writePM4(SetContextReg { latte::Register::SX_ALPHA_REF, sx_alpha_ref.value });
 }
 
 void
@@ -209,7 +210,7 @@ void
 GX2SetAlphaToMaskReg(GX2AlphaToMaskReg *reg)
 {
    auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
-   pm4::write(pm4::SetContextReg { latte::Register::DB_ALPHA_TO_MASK, db_alpha_to_mask.value });
+   internal::writePM4(SetContextReg { latte::Register::DB_ALPHA_TO_MASK, db_alpha_to_mask.value });
 }
 
 void
@@ -260,7 +261,7 @@ GX2SetBlendConstantColorReg(GX2BlendConstantColorReg *reg)
    };
 
    auto values = reinterpret_cast<uint32_t *>(colors);
-   pm4::write(pm4::SetContextRegs { latte::Register::CB_BLEND_RED, gsl::make_span(values, 4) });
+   internal::writePM4(SetContextRegs { latte::Register::CB_BLEND_RED, gsl::make_span(values, 4) });
 }
 
 void
@@ -339,7 +340,7 @@ GX2SetBlendControlReg(GX2BlendControlReg *reg)
 {
    auto cb_blend_control = reg->cb_blend_control.value();
    auto id = static_cast<latte::Register>(latte::Register::CB_BLEND0_CONTROL + reg->target * 4);
-   pm4::write(pm4::SetContextReg { id, cb_blend_control.value });
+   internal::writePM4(SetContextReg { id, cb_blend_control.value });
 }
 
 void
@@ -404,7 +405,7 @@ void
 GX2SetColorControlReg(GX2ColorControlReg *reg)
 {
    auto cb_color_control = reg->cb_color_control.value();
-   pm4::write(pm4::SetContextReg { latte::Register::CB_COLOR_CONTROL, cb_color_control.value });
+   internal::writePM4(SetContextReg { latte::Register::CB_COLOR_CONTROL, cb_color_control.value });
 }
 
 void
@@ -532,7 +533,7 @@ void
 GX2SetDepthStencilControlReg(GX2DepthStencilControlReg *reg)
 {
    auto db_depth_control = reg->db_depth_control.value();
-   pm4::write(pm4::SetContextReg { latte::Register::DB_DEPTH_CONTROL, db_depth_control.value });
+   internal::writePM4(SetContextReg { latte::Register::DB_DEPTH_CONTROL, db_depth_control.value });
 }
 
 void GX2SetStencilMask(uint8_t frontMask,
@@ -596,8 +597,8 @@ void GX2SetStencilMaskReg(GX2StencilMaskReg *reg)
 {
    auto db_stencilrefmask = reg->db_stencilrefmask.value();
    auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
-   pm4::write(pm4::SetContextReg { latte::Register::DB_STENCILREFMASK, db_stencilrefmask.value });
-   pm4::write(pm4::SetContextReg { latte::Register::DB_STENCILREFMASK_BF, db_stencilrefmask_bf.value });
+   internal::writePM4(SetContextReg { latte::Register::DB_STENCILREFMASK, db_stencilrefmask.value });
+   internal::writePM4(SetContextReg { latte::Register::DB_STENCILREFMASK_BF, db_stencilrefmask_bf.value });
 }
 
 void
@@ -632,7 +633,7 @@ void
 GX2SetLineWidthReg(GX2LineWidthReg *reg)
 {
    auto pa_su_line_cntl = reg->pa_su_line_cntl.value();
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_LINE_CNTL, pa_su_line_cntl.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_SU_LINE_CNTL, pa_su_line_cntl.value });
 }
 
 void
@@ -672,7 +673,7 @@ void
 GX2SetPointSizeReg(GX2PointSizeReg *reg)
 {
    auto pa_su_point_size = reg->pa_su_point_size.value();
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POINT_SIZE, pa_su_point_size.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_SU_POINT_SIZE, pa_su_point_size.value });
 }
 
 void
@@ -712,7 +713,7 @@ void
 GX2SetPointLimitsReg(GX2PointLimitsReg *reg)
 {
    auto pa_su_point_minmax = reg->pa_su_point_minmax.value();
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POINT_MINMAX, pa_su_point_minmax.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_SU_POINT_MINMAX, pa_su_point_minmax.value });
 }
 
 void
@@ -812,7 +813,7 @@ void
 GX2SetPolygonControlReg(GX2PolygonControlReg *reg)
 {
    auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_SC_MODE_CNTL, pa_su_sc_mode_cntl.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_SU_SC_MODE_CNTL, pa_su_sc_mode_cntl.value });
 }
 
 void
@@ -899,10 +900,10 @@ GX2SetPolygonOffsetReg(GX2PolygonOffsetReg *reg)
       pa_su_poly_offset_back_scale.value,
       pa_su_poly_offset_back_offset.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_SU_POLY_OFFSET_FRONT_SCALE, gsl::make_span(values) });
+   internal::writePM4(SetContextRegs { latte::Register::PA_SU_POLY_OFFSET_FRONT_SCALE, gsl::make_span(values) });
 
    auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
-   pm4::write(pm4::SetContextReg { latte::Register::PA_SU_POLY_OFFSET_CLAMP, pa_su_poly_offset_clamp.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_SU_POLY_OFFSET_CLAMP, pa_su_poly_offset_clamp.value });
 }
 
 void
@@ -965,7 +966,7 @@ GX2SetScissorReg(GX2ScissorReg *reg)
       pa_sc_generic_scissor_br.value,
    };
 
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_GENERIC_SCISSOR_TL, gsl::make_span(values) });
+   internal::writePM4(SetContextRegs { latte::Register::PA_SC_GENERIC_SCISSOR_TL, gsl::make_span(values) });
 }
 
 void
@@ -1044,7 +1045,7 @@ void
 GX2SetTargetChannelMasksReg(GX2TargetChannelMaskReg *reg)
 {
    auto cb_target_mask = reg->cb_target_mask.value();
-   pm4::write(pm4::SetContextReg { latte::Register::CB_TARGET_MASK, cb_target_mask.value });
+   internal::writePM4(SetContextReg { latte::Register::CB_TARGET_MASK, cb_target_mask.value });
 }
 
 void
@@ -1183,7 +1184,7 @@ GX2SetViewportReg(GX2ViewportReg *reg)
       pa_cl_vport_zscale.value,
       pa_cl_vport_zoffset.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_VPORT_XSCALE_0, gsl::make_span(values1) });
+   internal::writePM4(SetContextRegs { latte::Register::PA_CL_VPORT_XSCALE_0, gsl::make_span(values1) });
 
    auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
    auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
@@ -1195,7 +1196,7 @@ GX2SetViewportReg(GX2ViewportReg *reg)
       pa_cl_gb_horz_clip_adj.value,
       pa_cl_gb_horz_disc_adj.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_CL_GB_VERT_CLIP_ADJ, gsl::make_span(values2) });
+   internal::writePM4(SetContextRegs { latte::Register::PA_CL_GB_VERT_CLIP_ADJ, gsl::make_span(values2) });
 
    auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
    auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
@@ -1203,7 +1204,7 @@ GX2SetViewportReg(GX2ViewportReg *reg)
       pa_sc_vport_zmin.value,
       pa_sc_vport_zmax.value,
    };
-   pm4::write(pm4::SetContextRegs { latte::Register::PA_SC_VPORT_ZMIN_0, gsl::make_span(values3) });
+   internal::writePM4(SetContextRegs { latte::Register::PA_SC_VPORT_ZMIN_0, gsl::make_span(values3) });
 }
 
 void
@@ -1226,7 +1227,7 @@ GX2SetRasterizerClipControlEx(BOOL rasteriser,
       .ZCLIP_FAR_DISABLE(!zclipEnable)
       .DX_CLIP_SPACE_DEF(!!halfZ);
 
-   pm4::write(pm4::SetContextReg { latte::Register::PA_CL_CLIP_CNTL, pa_cl_clip_cntl.value });
+   internal::writePM4(SetContextReg { latte::Register::PA_CL_CLIP_CNTL, pa_cl_clip_cntl.value });
 }
 
 void

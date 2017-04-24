@@ -26,18 +26,6 @@ extern unsigned gdb_stub_port;
 
 } // namespace debugger
 
-namespace gpu
-{
-
-//! Enable OpenGL debugging
-extern bool debug;
-
-//! OpenGL debug message IDs to filter out
-// TODO: should really be a std::set, but cereal doesn't support those...
-extern std::vector<unsigned> debug_filters;
-
-} // namespace gpu
-
 namespace gx2
 {
 
