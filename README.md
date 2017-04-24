@@ -49,3 +49,5 @@ It is recommend to run the emulator from the root git directory so that it is ab
 Configuration files can be found at:
 - Windows - `%APPDATA%\decaf`
 - Linux - `~/.config/decaf`
+
+On Linux, a "Bus error" crash usually indicates an out-of-space error in the temporary directory.  Set the `TMPDIR` environment variable to a directory on a filesystem with at least 2GB free.

@@ -41,17 +41,28 @@ getSystemPageSize()
 MapFileHandle
 createMemoryMappedFile(size_t size)
 {
-   int fd = shm_open("/decaf", O_RDWR | O_CREAT | O_EXCL, 0600);
+   const char *tmpdir = getenv("TMPDIR");
+   if (!tmpdir || !*tmpdir) {
+      tmpdir = "/tmp";
+   }
+   const std::string pattern = fmt::format("{}/decafXXXXXX", tmpdir);
+   char *path = strdup(pattern.c_str());  // Must be a modifiable char array.
+   int old_umask = umask(0077);
+   int fd = mkstemp(path);
    if (fd == -1) {
-      gLog->error("createMemoryMappedFile({}) shm_open failed with error: {}",
+      gLog->error("createMemoryMappedFile({}) mkstemp failed with error: {}",
                   size, errno);
+      umask(old_umask);
       return InvalidMapFileHandle;
    }
+   umask(old_umask);
 
-   if (shm_unlink("/decaf") == -1) {
-      gLog->error("createMemoryMappedFile({}) shm_unlink failed with error: {}",
+   if (unlink(path) == -1) {
+      gLog->error("createMemoryMappedFile({}) unlink failed with error: {}",
                   size, errno);
    }
+
+   free(path);
 
 #ifdef PLATFORM_APPLE
    if (ftruncate(fd, size) == -1) {
