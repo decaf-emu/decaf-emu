@@ -1,6 +1,5 @@
 #include "decaf_pm4replay.h"
-#include "gpu/gpu_commandqueue.h"
-#include "modules/gx2/gx2_cbpool.h"
+#include "modules/gx2/gx2_internal_cbpool.h"
 
 namespace decaf
 {
