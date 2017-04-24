@@ -901,6 +901,129 @@ processExports(LoadedModule *loadedMod,
 }
 
 
+static std::string
+formatSHT(uint32_t type)
+{
+   switch (type) {
+   case elf::SHT_NULL:
+      return "SHT_NULL";
+   case elf::SHT_PROGBITS:
+      return "SHT_PROGBITS";
+   case elf::SHT_SYMTAB:
+      return "SHT_SYMTAB";
+   case elf::SHT_STRTAB:
+      return "SHT_STRTAB";
+   case elf::SHT_RELA:
+      return "SHT_RELA";
+   case elf::SHT_HASH:
+      return "SHT_HASH";
+   case elf::SHT_DYNAMIC:
+      return "SHT_DYNAMIC";
+   case elf::SHT_NOTE:
+      return "SHT_NOTE";
+   case elf::SHT_NOBITS:
+      return "SHT_NOBITS";
+   case elf::SHT_REL:
+      return "SHT_REL";
+   case elf::SHT_SHLIB:
+      return "SHT_SHLIB";
+   case elf::SHT_DYNSYM:
+      return "SHT_DYNSYM";
+   case elf::SHT_INIT_ARRAY:
+      return "SHT_INIT_ARRAY";
+   case elf::SHT_FINI_ARRAY:
+      return "SHT_FINI_ARRAY";
+   case elf::SHT_PREINIT_ARRAY:
+      return "SHT_PREINIT_ARRAY";
+   case elf::SHT_GROUP:
+      return "SHT_GROUP";
+   case elf::SHT_SYMTAB_SHNDX:
+      return "SHT_SYMTAB_SHNDX";
+   case elf::SHT_LOPROC:
+      return "SHT_LOPROC";
+   case elf::SHT_HIPROC:
+      return "SHT_HIPROC";
+   case elf::SHT_LOUSER:
+      return "SHT_LOUSER";
+   case elf::SHT_RPL_EXPORTS:
+      return "SHT_RPL_EXPORTS";
+   case elf::SHT_RPL_IMPORTS:
+      return "SHT_RPL_IMPORTS";
+   case elf::SHT_RPL_CRCS:
+      return "SHT_RPL_CRCS";
+   case elf::SHT_RPL_FILEINFO:
+      return "SHT_RPL_FILEINFO";
+   case elf::SHT_HIUSER:
+      return "SHT_HIUSER";
+   default:
+      return fmt::format("__UNK_{:08X}", type);
+   }
+}
+
+
+static std::string
+formatSHF(uint32_t flags)
+{
+   std::string result = "";
+
+   if (flags & elf::SHF_WRITE) {
+      result += "W";
+   }
+
+   if (flags & elf::SHF_ALLOC) {
+      result += "A";
+   }
+
+   if (flags & elf::SHF_EXECINSTR) {
+      result += "X";
+   }
+
+   if (flags & elf::SHF_TLS) {
+      result += "T";
+   }
+
+   if (flags & elf::SHF_DEFLATED) {
+      result += "Z";
+   }
+
+   return result;
+}
+
+
+static std::string
+formatSectionSummary(const char *shStrTab, const std::vector<elf::Section> &sections)
+{
+   fmt::MemoryWriter out;
+   out.write("Section Summary:\n");
+   out.write("  {:<4} {:<20} {:<16} {:<8} {:<8} {:<8} {:<2} {:<5} {:<2} {:<4} {:<5} {:<8} {:<8}\n",
+             "[Nr]", "Name", "Type", "Addr", "Off", "Size", "ES", "Flag", "Lk", "Info", "Align", "VAddr", "VSize");
+
+   for (auto i = 0u; i < sections.size(); ++i) {
+      auto &section = sections[i];
+      auto name = shStrTab + section.header.name;
+      auto type = formatSHT(section.header.type);
+      auto flags = formatSHF(section.header.flags);
+
+      out.write("  [{:>2}] {:<20} {:<16} {:08X} {:08X} {:08X} {:02X} {:>5} {:>2} {:>4} {:>5} {:08X} {:08X}\n",
+                i,
+                name,
+                type,
+                section.header.addr.value(),
+                section.header.offset.value(),
+                section.header.size.value(),
+                section.header.entsize.value(),
+                flags,
+                section.header.link.value(),
+                section.header.info.value(),
+                section.header.addralign.value(),
+                section.virtAddress,
+                section.virtSize);
+   }
+
+   return out.str();
+}
+
+
 LoadedModule *
 loadRPL(const std::string &moduleName,
         const std::string &name,
@@ -1027,17 +1150,8 @@ loadRPL(const std::string &moduleName,
       return nullptr;
    }
 
-   for (auto &section : sections) {
-      auto sectionName = shStrTab + section.header.name;
-
-      gLog->debug("  found section: type {:08x}, flags {:08x}, info {:08x}, addr {:08x}, size {:>8x}, name {}",
-                  section.header.type,
-                  section.header.flags,
-                  section.header.info,
-                  section.header.addr,
-                  section.header.size,
-                  sectionName);
-   }
+   // Log a section summary
+   gLog->debug(formatSectionSummary(shStrTab, sections));
 
    // Calculate SDA Bases
    auto sdata = findSection(sections, shStrTab, ".sdata");
