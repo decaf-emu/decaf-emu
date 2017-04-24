@@ -667,10 +667,6 @@ defaultThreadEntry(uint32_t coreId,
 void
 GameThreadEntry(uint32_t argc, void *argv)
 {
-   // Allocate some memory as if there were system libraries which were loaded...
-   auto mem2Heap = MEMGetBaseHeapHandle(MEMBaseHeapType::MEM2);
-   MEMAllocFromExpHeapEx(reinterpret_cast<MEMExpHeap*>(mem2Heap), 0x01000000, 4);
-
    // Start up the game!
    auto appModule = kernel::getUserModule();
 
