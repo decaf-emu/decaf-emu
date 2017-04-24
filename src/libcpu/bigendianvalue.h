@@ -275,28 +275,28 @@ public:
       return value().operator [](index);
    }
 
-   template<typename = decltype(std::declval<value_type>().operator ->())>
-   auto operator ->()
+   template<typename K = value_type>
+   auto operator ->() -> decltype(std::declval<K>().operator ->())
    {
       return value().operator ->();
    }
 
-   template<typename = decltype(std::declval<const value_type>().operator ->())>
-   auto operator ->() const
+   template<typename K = value_type>
+   auto operator ->() const -> decltype(std::declval<const K>().operator ->())
    {
       return value().operator ->();
    }
 
-   template<typename = decltype(std::declval<value_type>().operator *())>
-   auto operator *()
+   template<typename K = value_type>
+   auto operator *() -> decltype(std::declval<K>().operator *())
    {
       return value().operator *();
    }
 
-   template<typename = decltype(std::declval<const value_type>().operator *())>
-   auto operator *() const
+   template<typename K = value_type>
+   auto operator *() const -> decltype(std::declval<const K>().operator *())
    {
-      return value().operator *();
+      return value().operator ->();
    }
 
 private:
