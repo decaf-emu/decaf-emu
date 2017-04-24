@@ -105,7 +105,7 @@ static auto LoaderHeap = MemoryMap {
 };
 
 static auto OverlayArena = MemoryMap {
-   cpu::VirtualAddress { 0x60000000 },
+   cpu::VirtualAddress { 0xA0000000 },
    cpu::PhysicalAddress { 0x34000000 },
    448_mb
 };
