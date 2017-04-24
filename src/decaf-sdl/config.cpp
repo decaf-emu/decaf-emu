@@ -1,14 +1,5 @@
-#include "clilog.h"
 #include "config.h"
 
-#include <climits>
-#include <cereal/types/string.hpp>
-#include <cereal/types/vector.hpp>
-#include <common/cerealjsonoptionalinput.h>
-#include <common/decaf_assert.h>
-#include <fstream>
-#include <libdecaf/decaf_config.h>
-#include <libgpu/gpu_config.h>
 #include <SDL_keycode.h>
 
 namespace config
@@ -20,59 +11,16 @@ namespace display
 DisplayMode mode = DisplayMode::Windowed;
 DisplayLayout layout = DisplayLayout::Split;
 bool stretch = false;
+bool force_sync = false;
+Colour background_colour = { 153, 51, 51 };
 
 } // namespace display
-
-namespace gpu
-{
-
-bool force_sync = false;
-
-} // namespace gpu
 
 namespace input
 {
 
 std::vector<InputDevice> devices;
-
-namespace vpad0
-{
-
-ControllerType type = Keyboard;
-std::string name = "";
-
-} // namespace vpad0
-
-std::string
-controllerTypeToString(ControllerType type)
-{
-   switch (type) {
-   case None:
-      return "none";
-   case Keyboard:
-      return "keyboard";
-   case Joystick:
-      return "joystick";
-   }
-
-   decaf_abort(fmt::format("Invalid controller type {}", type));
-}
-
-ControllerType
-controllerTypeFromString(const std::string &typeStr)
-{
-   if (typeStr.compare("keyboard") == 0) {
-      return Keyboard;
-   } else if (typeStr.compare("joystick") == 0) {
-      return Joystick;
-   } else {
-      if (typeStr.compare("none") != 0) {
-         gCliLog->error("Invalid input type: {}", typeStr);
-      }
-
-      return None;
-   }
-}
+std::string vpad0 = "";
 
 } // namespace input
 
@@ -83,167 +31,26 @@ unsigned frame_length = 30;
 
 } // namespace sound
 
-namespace log
-{
-
-bool async = false;
-bool to_file = true;
-bool to_stdout = false;
-std::string level = "debug";
-std::string directory = ".";
-
-} // namespace log
-
-struct CerealDebugger
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace decaf::config::debugger;
-      ar(CEREAL_NVP(enabled),
-         CEREAL_NVP(break_on_entry),
-         CEREAL_NVP(gdb_stub),
-         CEREAL_NVP(gdb_stub_port));
-   }
-};
-
-struct CerealGPU
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace gpu;
-      using namespace ::gpu::config;
-      ar(CEREAL_NVP(debug),
-         CEREAL_NVP(debug_filters),
-         CEREAL_NVP(dump_shaders),
-         CEREAL_NVP(force_sync));
-   }
-};
-
-struct CerealGX2
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace decaf::config::gx2;
-      ar(CEREAL_NVP(dump_textures),
-         CEREAL_NVP(dump_shaders));
-   }
-};
-
-struct CerealInputVpad0
-{
-   template <class Archive>
-   void save(Archive &ar) const
-   {
-      using namespace config::input::vpad0;
-      ar(cereal::make_nvp("type", input::controllerTypeToString(type)),
-         CEREAL_NVP(name));
-   }
-
-   template <class Archive>
-   void load(Archive &ar)
-   {
-      using namespace config::input::vpad0;
-
-      std::string typeStr;
-      ar(typeStr,
-         CEREAL_NVP(name));
-
-      type = input::controllerTypeFromString(typeStr);
-   }
-};
-
-struct CerealInput
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace config::input;
-      ar(CEREAL_NVP(devices),
-         cereal::make_nvp("vpad0", CerealInputVpad0 {}));
-   }
-};
-
-struct CerealLog
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace config::log;
-      using namespace decaf::config::log;
-      ar(CEREAL_NVP(async),
-         CEREAL_NVP(to_file),
-         CEREAL_NVP(to_stdout),
-         CEREAL_NVP(kernel_trace),
-         CEREAL_NVP(kernel_trace_res),
-         CEREAL_NVP(kernel_trace_filters),
-         CEREAL_NVP(branch_trace),
-         CEREAL_NVP(level));
-   }
-};
-
-struct CerealJit
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace decaf::config::jit;
-      ar(CEREAL_NVP(enabled),
-         CEREAL_NVP(verify),
-         CEREAL_NVP(code_cache_size_mb),
-         CEREAL_NVP(data_cache_size_mb),
-         CEREAL_NVP(opt_flags),
-         CEREAL_NVP(rodata_read_only));
-   }
-};
-
-struct CerealSound
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace ::decaf::config::sound;
-      using namespace sound;
-      ar(CEREAL_NVP(dump_sounds),
-         CEREAL_NVP(frame_length));
-   }
-};
-
-struct CerealSystem
-{
-   template <class Archive>
-   void serialize(Archive &ar)
-   {
-      using namespace decaf::config::system;
-      ar(CEREAL_NVP(region),
-         CEREAL_NVP(mlc_path),
-         CEREAL_NVP(sdcard_path),
-         CEREAL_NVP(lle_modules));
-   }
-};
-
-struct CerealUI
-{
-    template <class Archive>
-    void serialize(Archive &ar)
-    {
-        using namespace decaf::config::ui;
-        ar(CEREAL_NVP(background_colour));
-    }
-};
-
 void
-initialize()
+setupDefaultInputDevices()
 {
-   input::devices.clear();
+   auto foundKeyboardDevice = false;
+   auto foundJoystickDevice = false;
+
+   for (auto &device : input::devices) {
+      if (device.type == input::ControllerType::Keyboard) {
+         foundKeyboardDevice = true;
+      } else if (device.type == input::ControllerType::Joystick) {
+         foundJoystickDevice = true;
+      }
+   }
 
    // Setup default keyboard device
-   {
+   if (!foundKeyboardDevice) {
       input::InputDevice device;
-
+      device.id = "default_keyboard";
       device.type = input::Keyboard;
+      device.device_name = "";
       device.button_up = SDL_SCANCODE_UP;
       device.button_down = SDL_SCANCODE_DOWN;
       device.button_left = SDL_SCANCODE_LEFT;
@@ -270,14 +77,14 @@ initialize()
       device.keyboard.right_stick_down = -1;
       device.keyboard.right_stick_left = -1;
       device.keyboard.right_stick_right = -1;
-
       input::devices.push_back(device);
    }
 
    // Setup default joystick device
-   {
+   if (!foundJoystickDevice) {
       input::InputDevice device;
-
+      device.id = "default_joystick";
+      device.device_name = "";
       device.type = input::Joystick;
       device.button_up = -2;
       device.button_down = -2;
@@ -305,69 +112,83 @@ initialize()
       device.joystick.right_stick_x_invert = false;
       device.joystick.right_stick_y = -2;
       device.joystick.right_stick_y_invert = false;
-
       input::devices.push_back(device);
    }
 }
 
 bool
-load(const std::string &path,
-     std::string &error)
+loadFrontendToml(std::string &error,
+                 std::shared_ptr<cpptoml::table> config)
 {
-   std::ifstream file { path, std::ios::binary };
+   auto devices = config->get_table_array_qualified("input.device");
 
-   if (!file.is_open()) {
-      // Create a default config file
-      save(path);
-      return false;
+   if (devices) {
+      for (const auto &cfgDevice : *devices) {
+         config::input::InputDevice device;
+         auto type = cfgDevice->get_as<std::string>("type").value_or("");
+
+         if (type == "keyboard") {
+            device.type = config::input::ControllerType::Keyboard;
+         } else if (type == "joystick") {
+            device.type = config::input::ControllerType::Joystick;
+         } else {
+            continue;
+         }
+
+         device.id = cfgDevice->get_as<std::string>("id").value_or("");
+         device.device_name = cfgDevice->get_as<std::string>("device_name").value_or("");
+         device.button_up = cfgDevice->get_as<int>("button_up").value_or(-1);
+         device.button_down = cfgDevice->get_as<int>("button_down").value_or(-1);
+         device.button_left = cfgDevice->get_as<int>("button_left").value_or(-1);
+         device.button_right = cfgDevice->get_as<int>("button_right").value_or(-1);
+         device.button_a = cfgDevice->get_as<int>("button_a").value_or(-1);
+         device.button_b = cfgDevice->get_as<int>("button_b").value_or(-1);
+         device.button_x = cfgDevice->get_as<int>("button_x").value_or(-1);
+         device.button_y = cfgDevice->get_as<int>("button_y").value_or(-1);
+         device.button_trigger_r = cfgDevice->get_as<int>("button_trigger_r").value_or(-1);
+         device.button_trigger_l = cfgDevice->get_as<int>("button_trigger_l").value_or(-1);
+         device.button_trigger_zr = cfgDevice->get_as<int>("button_trigger_zr").value_or(-1);
+         device.button_trigger_zl = cfgDevice->get_as<int>("button_trigger_zl").value_or(-1);
+         device.button_stick_l = cfgDevice->get_as<int>("button_stick_l").value_or(-1);
+         device.button_stick_r = cfgDevice->get_as<int>("button_stick_r").value_or(-1);
+         device.button_plus = cfgDevice->get_as<int>("button_plus").value_or(-1);
+         device.button_minus = cfgDevice->get_as<int>("button_minus").value_or(-1);
+         device.button_home = cfgDevice->get_as<int>("button_home").value_or(-1);
+         device.button_sync = cfgDevice->get_as<int>("button_sync").value_or(-1);
+
+         if (device.type == config::input::ControllerType::Keyboard) {
+            device.keyboard.left_stick_up = cfgDevice->get_as<int>("left_stick_up").value_or(-1);
+            device.keyboard.left_stick_down = cfgDevice->get_as<int>("left_stick_down").value_or(-1);
+            device.keyboard.left_stick_left = cfgDevice->get_as<int>("left_stick_left").value_or(-1);
+            device.keyboard.left_stick_right = cfgDevice->get_as<int>("left_stick_right").value_or(-1);
+            device.keyboard.right_stick_up = cfgDevice->get_as<int>("right_stick_up").value_or(-1);
+            device.keyboard.right_stick_down = cfgDevice->get_as<int>("right_stick_down").value_or(-1);
+            device.keyboard.right_stick_left = cfgDevice->get_as<int>("right_stick_left").value_or(-1);
+            device.keyboard.right_stick_right = cfgDevice->get_as<int>("right_stick_right").value_or(-1);
+         } else if (device.type == config::input::ControllerType::Joystick) {
+            device.joystick.left_stick_x = cfgDevice->get_as<int>("left_stick_x").value_or(-1);
+            device.joystick.left_stick_x_invert = cfgDevice->get_as<bool>("left_stick_x_invert").value_or(false);
+            device.joystick.left_stick_y = cfgDevice->get_as<int>("left_stick_y").value_or(-1);
+            device.joystick.left_stick_y_invert = cfgDevice->get_as<bool>("left_stick_y_invert").value_or(false);
+            device.joystick.right_stick_x = cfgDevice->get_as<int>("right_stick_x").value_or(-1);
+            device.joystick.right_stick_x_invert = cfgDevice->get_as<bool>("right_stick_x_invert").value_or(false);
+            device.joystick.right_stick_y = cfgDevice->get_as<int>("right_stick_y").value_or(-1);
+            device.joystick.right_stick_y_invert = cfgDevice->get_as<bool>("right_stick_y_invert").value_or(false);
+         }
+
+         config::input::devices.push_back(device);
+      }
    }
 
-   try {
-      cereal::JSONOptionalInputArchive input { file };
-      input(cereal::make_nvp("debugger", CerealDebugger {}),
-            cereal::make_nvp("gpu", CerealGPU{}),
-            cereal::make_nvp("gx2", CerealGX2 {}),
-            cereal::make_nvp("input", CerealInput {}),
-            cereal::make_nvp("jit", CerealJit {}),
-            cereal::make_nvp("log", CerealLog {}),
-            cereal::make_nvp("sound", CerealSound {}),
-            cereal::make_nvp("system", CerealSystem {}),
-            cereal::make_nvp("ui", CerealUI {}));
-   } catch (std::exception e) {
-      error = e.what();
-      return false;
+   config::input::vpad0 = config->get_qualified_as<std::string>("input.vpad0").value_or(config::input::vpad0);
+
+   if (auto bgColor = config->get_qualified_array_of<int64_t>("ui.background_colour")) {
+      config::display::background_colour.r = static_cast<int>(bgColor->at(0));
+      config::display::background_colour.g = static_cast<int>(bgColor->at(1));
+      config::display::background_colour.b = static_cast<int>(bgColor->at(2));
    }
 
    return true;
 }
 
-void
-save(const std::string &path)
-{
-   std::ofstream file { path, std::ios::binary };
-   cereal::JSONOutputArchive output { file };
-   output(cereal::make_nvp("debugger", CerealDebugger {}),
-          cereal::make_nvp("gpu", CerealGPU{}),
-          cereal::make_nvp("gx2", CerealGX2 {}),
-          cereal::make_nvp("input", CerealInput {}),
-          cereal::make_nvp("jit", CerealJit {}),
-          cereal::make_nvp("log", CerealLog {}),
-          cereal::make_nvp("sound", CerealSound {}),
-          cereal::make_nvp("system", CerealSystem {}),
-          cereal::make_nvp("ui", CerealUI {}));
-}
-
 } // namespace config
-
-// External serialization functions
-namespace cereal
-{
-    // background_color_s serialization
-    template<class Archive>
-    void serialize(Archive &ar, decaf::config::ui::BackgroundColour &c)
-    {
-        ar(make_nvp("red", c.r),
-           make_nvp("green", c.g),
-           make_nvp("blue", c.b));
-    }
-}

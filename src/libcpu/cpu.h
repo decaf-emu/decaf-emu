@@ -57,19 +57,6 @@ invalidateInstructionCache(uint32_t address,
                            uint32_t size);
 
 void
-setJitMode(jit_mode mode);
-
-void
-setJitVerifyAddress(ppcaddr_t address);
-
-void
-setJitCacheSize(size_t codeSize,
-                size_t dataSize);
-
-void
-setJitOptFlags(const std::vector<std::string> &flags);
-
-void
 addJitReadOnlyRange(ppcaddr_t address, uint32_t size);
 
 void

@@ -25,36 +25,14 @@ bool dump_shaders = false;
 
 } // namespace gx2
 
-namespace jit
-{
-
-bool enabled = true;
-bool verify = false;
-uint32_t verify_addr = 0;
-unsigned int code_cache_size_mb = 1024;
-unsigned int data_cache_size_mb = 512;
-bool rodata_read_only = true;
-
-std::vector<std::string> opt_flags =
-{
-   "BASIC",
-   "DECONDITION",
-   "DSE",
-   "FOLD_CONSTANTS",
-   "PPC_PAIRED_LWARX_STWCX",
-   "X86_BRANCH_ALIGNMENT",
-   "X86_CONDITION_CODES",
-   "X86_FIXED_REGS",
-   "X86_FORWARD_CONDITIONS",
-   "X86_STORE_IMMEDIATE",
-};
-
-} // namespace jit
-
 namespace log
 {
 
 bool async = false;
+bool to_file = true;
+bool to_stdout = false;
+std::string level = "debug";
+std::string directory = ".";
 bool kernel_trace = false;
 bool kernel_trace_res = false;
 bool branch_trace = false;
@@ -92,13 +70,6 @@ double time_scale = 1.0;
 std::vector<std::string> lle_modules;
 
 } // namespace system
-
-namespace ui
-{
-
-BackgroundColour background_colour = {153, 51, 51};
-
-} // namespace ui
 
 } // namespace config
 

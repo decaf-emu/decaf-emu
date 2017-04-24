@@ -18,8 +18,7 @@ bool
 createConfigDirectory();
 
 void
-initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
-                  spdlog::level::level_enum level);
+initialiseLogging(const std::string &filename);
 
 bool
 initialise(const std::string &gamePath);

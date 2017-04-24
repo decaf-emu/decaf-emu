@@ -1,12 +1,12 @@
 #include "cpu.h"
+#include "cpu_config.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter/interpreter.h"
 #include "jit/jit.h"
+#include "jit/binrec/jit_binrec.h"
 #include "mem.h"
 #include "mmu.h"
-
-#include "jit/binrec/jit_binrec.h"
 
 #include <atomic>
 #include <cfenv>
@@ -66,28 +66,33 @@ sSegfaultAddr = 0;
 void
 initialise()
 {
+   // Setup config options
+   if (config::jit::enabled) {
+      if (config::jit::verify) {
+         gJitMode = jit_mode::verify;
+         gJitVerifyAddress = config::jit::verify_addr;
+      } else {
+         gJitMode = jit_mode::enabled;
+      }
+
+      sJitCodeCacheSize = config::jit::code_cache_size_mb * 1024 * 1024;
+      sJitDataCacheSize = config::jit::data_cache_size_mb * 1024 * 1024;
+   } else {
+      gJitMode = jit_mode::disabled;
+   }
+
+   // Initalise cpu!
    initialiseMemory();
-
-   auto backend = new jit::BinrecBackend { sJitCodeCacheSize, sJitDataCacheSize };
-   backend->setOptFlags(sJitOptFlags);
-   cpu::jit::setBackend(backend);
-
    espresso::initialiseInstructionSet();
-   cpu::interpreter::initialise();
+   interpreter::initialise();
+
+   if (gJitMode != cpu::jit_mode::disabled) {
+      auto backend = new jit::BinrecBackend { sJitCodeCacheSize, sJitDataCacheSize };
+      backend->setOptFlags(config::jit::opt_flags);
+      jit::setBackend(backend);
+   }
 
    sStartupTime = std::chrono::steady_clock::now();
-}
-
-void
-setJitMode(jit_mode mode)
-{
-   gJitMode = mode;
-}
-
-void
-setJitVerifyAddress(ppcaddr_t address)
-{
-   gJitVerifyAddress = address;
 }
 
 void
@@ -101,20 +106,6 @@ invalidateInstructionCache(uint32_t address,
                            uint32_t size)
 {
    cpu::jit::clearCache(address, size);
-}
-
-void
-setJitCacheSize(size_t codeSize,
-                size_t dataSize)
-{
-   sJitCodeCacheSize = codeSize;
-   sJitDataCacheSize = dataSize;
-}
-
-void
-setJitOptFlags(const std::vector<std::string> &flags)
-{
-   sJitOptFlags = flags;
 }
 
 void

@@ -37,37 +37,23 @@ extern bool dump_shaders;
 
 } // namespace gx2
 
-namespace jit
-{
-
-//! Enable usage of jit
-extern bool enabled;
-
-//! Use JIT in verification mode where it compares execution to interpreter
-extern bool verify;
-
-//! Select a single block (starting address) for verification (0 = verify everything)
-extern uint32_t verify_addr;
-
-//! JIT code cache size in megabytes
-extern unsigned int code_cache_size_mb;
-
-//! JIT data cache size in megabytes
-extern unsigned int data_cache_size_mb;
-
-//! List of JIT optimizations to enable
-extern std::vector<std::string> opt_flags;
-
-//! Treat .rodata sections as read-only regardless of RPL/RPX flags
-extern bool rodata_read_only;
-
-} // namespace jit
-
 namespace log
 {
 
 //! Enable asynchronous logging
 extern bool async;
+
+//! Enable logging to file
+extern bool to_file;
+
+//! Enable logging to stdout
+extern bool to_stdout;
+
+//! Minimum log level to show
+extern std::string level;
+
+//! Directory to output log file to
+extern std::string directory;
 
 //! Enable logging for all HLE function calls
 extern bool kernel_trace;
@@ -113,17 +99,6 @@ extern double time_scale;
 extern std::vector<std::string> lle_modules;
 
 } // namespace system
-
-namespace ui
-{
-
-extern struct BackgroundColour {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-} background_colour;
-
-} // namespace ui
 
 } // namespace config
 
