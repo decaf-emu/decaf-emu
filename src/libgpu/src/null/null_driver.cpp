@@ -1,4 +1,3 @@
-#pragma once
 #include "null_driver.h"
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
