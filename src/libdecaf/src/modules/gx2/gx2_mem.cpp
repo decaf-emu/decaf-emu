@@ -1,10 +1,11 @@
-#include <common/log.h>
 #include "gx2_aperture.h"
 #include "gx2_mem.h"
 #include "gx2_state.h"
-#include "gpu/pm4_writer.h"
+#include "gx2_internal_cbpool.h"
 #include "modules/coreinit/coreinit_cache.h"
+
 #include <common/align.h>
+#include <common/log.h>
 
 namespace gx2
 {
@@ -111,7 +112,12 @@ GX2Invalidate(GX2InvalidateMode mode,
             .SX_ACTION_ENA(true);
       }
 
-      pm4::write(pm4::SurfaceSync { cp_coher_cntl, size >> 8, addr >> 8, 4 });
+      internal::writePM4(latte::pm4::SurfaceSync {
+         cp_coher_cntl,
+         size >> 8,
+         addr >> 8,
+         4
+      });
    }
 }
 

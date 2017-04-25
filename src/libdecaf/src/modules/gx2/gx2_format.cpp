@@ -1,7 +1,8 @@
-#include <common/decaf_assert.h>
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
-#include "gpu/latte_enum_sq.h"
+
+#include <common/decaf_assert.h>
+#include <libgpu/latte/latte_enum_sq.h>
 #include <spdlog/fmt/fmt.h>
 
 namespace gx2

@@ -1,11 +1,10 @@
-#include "gx2_cbpool.h"
 #include "gx2_displaylist.h"
 #include "gx2_enum_string.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_shaders.h"
 #include "gx2_state.h"
-#include "gpu/gpu_commandqueue.h"
-#include "gpu/pm4_writer.h"
 #include "modules/coreinit/coreinit_core.h"
+
 #include <common/align.h>
 #include <common/decaf_assert.h>
 #include <array>
@@ -74,7 +73,10 @@ void
 GX2CallDisplayList(void *displayList,
                    uint32_t bytes)
 {
-   pm4::write(pm4::IndirectBufferCall { displayList, bytes / 4 });
+   internal::writePM4(latte::pm4::IndirectBufferCall {
+      displayList,
+      bytes / 4
+   });
 }
 
 void

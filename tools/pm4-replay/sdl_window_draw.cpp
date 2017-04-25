@@ -1,8 +1,10 @@
 #include "sdl_window.h"
-#include <glbinding/Binding.h>
-#include <glbinding/Meta.h>
+
 #include <common/log.h>
 #include <common/decaf_assert.h>
+#include <libgpu/gpu_config.h>
+#include <glbinding/Binding.h>
+#include <glbinding/Meta.h>
 
 static std::string
 getGlDebugSource(gl::GLenum source)
@@ -73,7 +75,7 @@ static void GL_APIENTRY
 debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
                      gl::GLsizei length, const gl::GLchar* message, const void *userParam)
 {
-   for (auto filterID : decaf::config::gpu::debug_filters) {
+   for (auto filterID : gpu::config::debug_filters) {
       if (filterID == id) {
          return;
       }
@@ -103,7 +105,7 @@ SDLWindow::initialiseContext()
 {
    glbinding::Binding::initialize();
 
-   if (decaf::config::gpu::debug) {
+   if (gpu::config::debug) {
       glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
       glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
          auto error = glbinding::Binding::GetError.directCall();

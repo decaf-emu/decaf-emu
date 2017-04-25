@@ -85,14 +85,37 @@ createConfigDirectory()
 }
 
 void
-initialiseLogging(std::vector<spdlog::sink_ptr> &sinks,
-                  spdlog::level::level_enum level)
+initialiseLogging(const std::string &filename)
 {
+   std::vector<spdlog::sink_ptr> sinks;
+   auto logLevel = spdlog::level::info;
+
+   if (decaf::config::log::to_stdout) {
+      sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
+   }
+
+   if (decaf::config::log::to_file) {
+      auto path = decaf::config::log::directory + filename;
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(filename, "txt", 23, 59));
+   }
+
+   for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
+      auto level = static_cast<spdlog::level::level_enum>(i);
+
+      if (spdlog::level::to_str(level) == decaf::config::log::level) {
+         logLevel = level;
+         break;
+      }
+   }
+
    gLog = std::make_shared<spdlog::logger>("decaf", begin(sinks), end(sinks));
-   gLog->set_level(level);
+   gLog->set_level(logLevel);
    gLog->set_formatter(std::make_shared<LogFormatter>());
 
-   if (!decaf::config::log::async) {
+   if (decaf::config::log::async) {
+      spdlog::set_async_mode(1024);
+   } else {
+      spdlog::set_sync_mode();
       gLog->flush_on(spdlog::level::trace);
    }
 }
@@ -115,28 +138,12 @@ initialise(const std::string &gamePath)
    WSAStartup(MAKEWORD(2, 2), &wsaInitData);
 #endif
 
-   // Set JIT mode
-   if (decaf::config::jit::enabled) {
-      if (decaf::config::jit::verify) {
-         cpu::setJitMode(cpu::jit_mode::verify);
-         cpu::setJitVerifyAddress(decaf::config::jit::verify_addr);
-      } else {
-         cpu::setJitMode(cpu::jit_mode::enabled);
-      }
-
-      cpu::setJitCacheSize(decaf::config::jit::code_cache_size_mb * 1024 * 1024,
-                           decaf::config::jit::data_cache_size_mb * 1024 * 1024);
-      cpu::setJitOptFlags(decaf::config::jit::opt_flags);
-   } else {
-      cpu::setJitMode(cpu::jit_mode::disabled);
-   }
-
    // Setup core
    cpu::initialise();
    kernel::initialise();
    debugger::initialise(makeConfigPath("imgui.ini"),
-                         sClipboardTextGetCallbackFn,
-                         sClipboardTextSetCallbackFn);
+                        sClipboardTextGetCallbackFn,
+                        sClipboardTextSetCallbackFn);
 
    // Setup filesystem
    auto filesystem = std::make_unique<fs::FileSystem>();

@@ -1,5 +1,4 @@
 #pragma once
-#include "gpu/latte_contextstate.h"
 #include "modules/gx2/gx2_displaylist.h"
 #include "modules/gx2/gx2_enum.h"
 
@@ -8,6 +7,7 @@
 #include <common/cbool.h>
 #include <common/structsize.h>
 #include <cstdint>
+#include <libgpu/latte/latte_contextstate.h>
 
 namespace gx2
 {

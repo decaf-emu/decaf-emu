@@ -1,9 +1,10 @@
 #include "decafcli.h"
 #include "config.h"
-#include "libdecaf/decaf_nullgraphicsdriver.h"
-#include "libdecaf/decaf_nullinputdriver.h"
+
 #include <chrono>
 #include <condition_variable>
+#include <libgpu/gpu_graphicsdriver.h>
+#include <libdecaf/decaf_nullinputdriver.h>
 #include <mutex>
 #include <thread>
 
@@ -13,7 +14,7 @@ DecafCLI::run(const std::string &gamePath)
    int result = 0;
 
    // Setup drivers
-   decaf::setGraphicsDriver(new decaf::NullGraphicsDriver());
+   decaf::setGraphicsDriver(gpu::createNullDriver());
    decaf::setInputDriver(new decaf::NullInputDriver());
 
    // Initialise emulator

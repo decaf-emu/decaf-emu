@@ -1,4 +1,6 @@
 #include "sdl_window.h"
+
+#include <common/log.h>
 #include <excmd.h>
 #include <iostream>
 #include <spdlog/spdlog.h>
@@ -64,17 +66,17 @@ start(excmd::parser &parser,
 
    auto traceFile = options.get<std::string>("trace file");
 
-   std::vector<spdlog::sink_ptr> sinks;
-   sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
-   sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>("pm4-replay", "txt", 23, 59));
+   // Initialise libdecaf logger
+   decaf::config::log::to_file = true;
+   decaf::config::log::to_stdout = true;
+   decaf::config::log::level = "debug";
+   decaf::initialiseLogging("pm4-replay");
 
+   auto sinks = gLog->sinks();
    gCliLog = std::make_shared<spdlog::logger>("decaf-pm4-replay", begin(sinks), end(sinks));
    gCliLog->set_level(spdlog::level::debug);
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Trace path {}", traceFile);
-
-   // Initialise libdecaf logger
-   decaf::initialiseLogging(sinks, spdlog::level::debug);
 
    // Let's go boyssssss
    int result = -1;

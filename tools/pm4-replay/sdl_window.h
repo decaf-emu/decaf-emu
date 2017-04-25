@@ -1,7 +1,7 @@
 #pragma once
 #include <glbinding/gl/gl.h>
 #include <libdecaf/decaf.h>
-#include <libdecaf/decaf_opengl.h>
+#include <libgpu/gpu_opengldriver.h>
 #include <SDL.h>
 #include <string>
 
@@ -29,7 +29,7 @@ private:
    SDL_GLContext mWindowContext = nullptr;
    SDL_GLContext mGpuContext = nullptr;
 
-   decaf::OpenGLDriver *mGraphicsDriver = nullptr;
+   gpu::OpenGLDriver *mGraphicsDriver = nullptr;
 
    gl::GLuint mVertexProgram;
    gl::GLuint mPixelProgram;

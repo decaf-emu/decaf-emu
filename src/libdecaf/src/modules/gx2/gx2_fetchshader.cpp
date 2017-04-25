@@ -3,9 +3,10 @@
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
 #include "gx2_mem.h"
-#include "gpu/microcode/latte_instructions.h"
+
 #include <common/align.h>
 #include <common/decaf_assert.h>
+#include <libgpu/latte/latte_instructions.h>
 #include <spdlog/fmt/fmt.h>
 
 namespace gx2

@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
-#include "gpu/gpu_flush.h"
+#include "modules/gx2/gx2_internal_flush.h"
 
 #include <common/align.h>
 
@@ -12,12 +12,13 @@ namespace coreinit
  * Equivalent to dcbi instruction.
  */
 void
-DCInvalidateRange(void *addr, uint32_t size)
+DCInvalidateRange(void *addr,
+                  uint32_t size)
 {
    // TODO: DCInvalidateRange
 
    // Also signal the GPU to update the memory range.
-   gpu::notifyGpuFlush(addr, size);
+   gx2::internal::notifyGpuFlush(addr, size);
 }
 
 
@@ -25,12 +26,13 @@ DCInvalidateRange(void *addr, uint32_t size)
  * Equivalent to dcbf, sync, eieio.
  */
 void
-DCFlushRange(void *addr, uint32_t size)
+DCFlushRange(void *addr,
+             uint32_t size)
 {
    // TODO: DCFlushRange
 
    // Also signal the memory store to the GPU.
-   gpu::notifyCpuFlush(addr, size);
+   gx2::internal::notifyCpuFlush(addr, size);
 }
 
 
@@ -38,12 +40,13 @@ DCFlushRange(void *addr, uint32_t size)
  * Equivalent to dcbst, sync, eieio.
  */
 void
-DCStoreRange(void *addr, uint32_t size)
+DCStoreRange(void *addr,
+             uint32_t size)
 {
    // TODO: DCStoreRange
 
    // Also signal the memory store to the GPU.
-   gpu::notifyCpuFlush(addr, size);
+   gx2::internal::notifyCpuFlush(addr, size);
 }
 
 
@@ -53,7 +56,8 @@ DCStoreRange(void *addr, uint32_t size)
  * Does not perform sync, eieio like DCFlushRange.
  */
 void
-DCFlushRangeNoSync(void *addr, uint32_t size)
+DCFlushRangeNoSync(void *addr,
+                   uint32_t size)
 {
    // TODO: DCFlushRangeNoSync
 }
@@ -65,7 +69,8 @@ DCFlushRangeNoSync(void *addr, uint32_t size)
  * Does not perform sync, eieio like DCStoreRange.
  */
 void
-DCStoreRangeNoSync(void *addr, uint32_t size)
+DCStoreRangeNoSync(void *addr,
+                   uint32_t size)
 {
    // TODO: DCStoreRangeNoSync
 }
@@ -75,7 +80,8 @@ DCStoreRangeNoSync(void *addr, uint32_t size)
  * Equivalent to dcbz instruction.
  */
 void
-DCZeroRange(void *addr, uint32_t size)
+DCZeroRange(void *addr,
+            uint32_t size)
 {
    addr = align_down(addr, 32);
    size = align_up(size, 32);
@@ -87,7 +93,8 @@ DCZeroRange(void *addr, uint32_t size)
  * Equivalent to dcbt instruction.
  */
 void
-DCTouchRange(void *addr, uint32_t size)
+DCTouchRange(void *addr,
+             uint32_t size)
 {
    // TODO: DCTouchRange
 }

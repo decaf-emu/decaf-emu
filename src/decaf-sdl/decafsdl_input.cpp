@@ -243,12 +243,7 @@ DecafSDL::openInputDevices()
    mVpad0Controller = nullptr;
 
    for (const auto &device : config::input::devices) {
-      if (device.type != config::input::vpad0::type) {
-         continue;
-      }
-
-      if (!config::input::vpad0::name.empty()
-       && config::input::vpad0::name.compare(device.name) != 0) {
+      if (config::input::vpad0.compare(device.id) != 0) {
          continue;
       }
 
@@ -269,7 +264,7 @@ DecafSDL::openInputDevices()
 
             auto name = SDL_GameControllerName(controller);
 
-            if (!device.name.empty() && device.name.compare(name) != 0) {
+            if (!device.device_name.empty() && device.device_name.compare(name) != 0) {
                SDL_GameControllerClose(controller);
                continue;
             }

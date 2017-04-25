@@ -36,6 +36,12 @@ add_library(cereal INTERFACE)
 target_include_directories(cereal INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CEREAL_DIR}/include")
 set(CEREAL_LIBRARIES cereal PARENT_SCOPE)
 
+# cpptoml
+set(CPPTOML_DIR "cpptoml")
+add_library(cpptoml INTERFACE)
+target_include_directories(cpptoml INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CPPTOML_DIR}/include")
+set(CPPTOML_LIBRARIES cpptoml PARENT_SCOPE)
+
 # excmd
 set(EXCMD_DIR "excmd")
 add_library(excmd INTERFACE)

@@ -1,13 +1,17 @@
 #include "gx2.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_sampler.h"
-#include "gpu/pm4_writer.h"
+
 #include <algorithm>
 
 namespace gx2
 {
 
 inline uint32_t
-floatToFixedPoint(float value, uint32_t bits, float min, float max)
+floatToFixedPoint(float value,
+                  uint32_t bits,
+                  float min,
+                  float max)
 {
    return static_cast<uint32_t>((value - min) * (static_cast<float>(1 << bits) / (max - min)));
 }
@@ -182,7 +186,10 @@ GX2SetPixelSamplerBorderColor(uint32_t unit,
    };
 
    auto id = latte::Register::TD_PS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
-   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::make_span(values) });
+   internal::writePM4(latte::pm4::SetConfigRegs {
+      static_cast<latte::Register>(id),
+      gsl::make_span(values)
+   });
 }
 
 
@@ -201,7 +208,10 @@ GX2SetVertexSamplerBorderColor(uint32_t unit,
    };
 
    auto id = latte::Register::TD_VS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
-   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::make_span(values) });
+   internal::writePM4(latte::pm4::SetConfigRegs {
+      static_cast<latte::Register>(id),
+      gsl::make_span(values)
+   });
 }
 
 void
@@ -219,7 +229,10 @@ GX2SetGeometrySamplerBorderColor(uint32_t unit,
    };
 
    auto id = latte::Register::TD_GS_SAMPLER_BORDER0_RED + 4 * (unit * 4);
-   pm4::write(pm4::SetConfigRegs { static_cast<latte::Register>(id), gsl::make_span(values) });
+   internal::writePM4(latte::pm4::SetConfigRegs {
+      static_cast<latte::Register>(id),
+      gsl::make_span(values)
+   });
 }
 
 } // namespace gx2

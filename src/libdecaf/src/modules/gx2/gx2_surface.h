@@ -1,5 +1,4 @@
 #pragma once
-#include "gpu/latte_registers.h"
 #include "gx2_enum.h"
 
 #include <common/be_array.h>
@@ -8,6 +7,7 @@
 #include <common/cbool.h>
 #include <common/structsize.h>
 #include <cstdint>
+#include <libgpu/latte/latte_registers.h>
 
 namespace gx2
 {

@@ -1,10 +1,11 @@
-#include <cstdlib>
-#include <cstring>
-#include "gpu/gpu_tiling.h"
 #include "gx2_addrlib.h"
 #include "gx2_surface.h"
 #include "gx2_format.h"
+
+#include <cstdlib>
+#include <cstring>
 #include <common/align.h>
+#include <libgpu/gpu_tiling.h>
 
 namespace gx2
 {

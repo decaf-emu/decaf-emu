@@ -1,15 +1,15 @@
 #include "coreinit.h"
 #include "coreinit_screen.h"
 #include "coreinit_screen_font.h"
-#include <common/decaf_assert.h>
-#include <common/log.h>
-#include "gpu/gpu_commandqueue.h"
-#include "gpu/pm4_packets.h"
-#include "gpu/pm4_writer.h"
 #include "modules/gx2/gx2_display.h"
 #include "modules/gx2/gx2_event.h"
+#include "modules/gx2/gx2_internal_cbpool.h"
 #include "modules/gx2/gx2_state.h"
+
 #include <array>
+#include <common/decaf_assert.h>
+#include <common/log.h>
+#include <libgpu/latte/latte_pm4_commands.h>
 
 namespace coreinit
 {
@@ -167,7 +167,7 @@ OSScreenFlipBuffersEx(OSScreenID id)
    auto size = OSScreenGetBufferSizeEx(id);
 
    // Send the custom flip command
-   pm4::write(pm4::DecafOSScreenFlip {
+   gx2::internal::writePM4(latte::pm4::DecafOSScreenFlip {
       static_cast<uint32_t>(id),
       buffer
    });

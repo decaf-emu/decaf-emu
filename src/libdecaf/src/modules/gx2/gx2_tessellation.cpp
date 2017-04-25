@@ -1,6 +1,6 @@
 #include "gx2.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_tessellation.h"
-#include "gpu/pm4_writer.h"
 
 namespace gx2
 {
@@ -11,7 +11,6 @@ GX2SetTessellation(GX2TessellationMode tessellationMode,
                    GX2IndexType indexType)
 {
    decaf_warn_stub();
-
    // TODO: Set registers 0xA285, 0xA289, 0xA28A, 0xA28B, 0xA28C, 0xA28E, 0xA28D, 0xA28F
 }
 
@@ -23,7 +22,10 @@ GX2SetMinTessellationLevel(float min)
    vgt_hos_min_tess_level = vgt_hos_min_tess_level
       .MIN_TESS(min);
 
-   pm4::write(pm4::SetContextReg { latte::Register::VGT_HOS_MIN_TESS_LEVEL, vgt_hos_min_tess_level.value });
+   internal::writePM4(latte::pm4::SetContextReg {
+      latte::Register::VGT_HOS_MIN_TESS_LEVEL,
+      vgt_hos_min_tess_level.value
+   });
 }
 
 void
@@ -34,7 +36,10 @@ GX2SetMaxTessellationLevel(float max)
    vgt_hos_max_tess_level = vgt_hos_max_tess_level
       .MAX_TESS(max);
 
-   pm4::write(pm4::SetContextReg { latte::Register::VGT_HOS_MAX_TESS_LEVEL, vgt_hos_max_tess_level.value });
+   internal::writePM4(latte::pm4::SetContextReg {
+      latte::Register::VGT_HOS_MAX_TESS_LEVEL,
+      vgt_hos_max_tess_level.value
+   });
 }
 
 } // namespace gx2

@@ -1,4 +1,5 @@
 #pragma once
+#include <libconfig/config_toml.h>
 #include <string>
 
 namespace config
@@ -7,20 +8,12 @@ namespace config
 namespace system
 {
 
-extern uint32_t timeout_ms;
+extern int timeout_ms;
 
 } // namespace system
 
-namespace log
-{
-
-extern bool to_file;
-extern bool to_stdout;
-extern std::string level;
-
-} // namespace log
-
-bool load(const std::string &path);
-void save(const std::string &path);
+bool
+loadFrontendToml(std::string &error,
+                 std::shared_ptr<cpptoml::table> config);
 
 } // namespace config

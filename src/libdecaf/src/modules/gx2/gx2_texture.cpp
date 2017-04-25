@@ -1,9 +1,10 @@
-#include <common/decaf_assert.h>
 #include "gx2_debug.h"
 #include "gx2_format.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_texture.h"
-#include "gpu/latte_registers.h"
-#include "gpu/pm4_writer.h"
+
+#include <common/decaf_assert.h>
+#include <libgpu/latte/latte_registers.h>
 
 namespace gx2
 {
@@ -185,7 +186,7 @@ setTexture(GX2Texture *texture,
    auto word2 = latte::SQ_TEX_RESOURCE_WORD2_N::get(imageAddress >> 8);
    auto word3 = latte::SQ_TEX_RESOURCE_WORD3_N::get(mipAddress >> 8);
 
-   pm4::write(pm4::SetTexResource {
+   internal::writePM4(latte::pm4::SetTexResource {
       (offset + unit) * 7,
       texture->regs.word0,
       texture->regs.word1,

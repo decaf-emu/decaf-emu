@@ -12,6 +12,7 @@ set_target_properties(gfd-tool PROPERTIES FOLDER tools)
 target_link_libraries(gfd-tool
     common
     libdecaf
+    libgfd
     ${EXCMD_LIBRARIES})
 
 install(TARGETS gfd-tool RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")

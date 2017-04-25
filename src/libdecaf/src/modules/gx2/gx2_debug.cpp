@@ -1,21 +1,22 @@
 #include "decaf_config.h"
-#include "gpu/gpu_commandqueue.h"
-#include "gpu/gfd.h"
-#include "gpu/microcode/latte_disassembler.h"
-#include "gpu/pm4_writer.h"
 #include "gx2.h"
 #include "gx2_debug.h"
 #include "gx2_enum_string.h"
+#include "gx2_internal_cbpool.h"
+#include "gx2_internal_gfd.h"
 #include "gx2_shaders.h"
 #include "gx2_texture.h"
-#include "libcpu/mem.h"
 #include "modules/coreinit/coreinit_sprintf.h"
 #include "ppcutils/va_list.h"
+
 #include <fstream>
 #include <spdlog/spdlog.h>
 #include <common/align.h>
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <libcpu/mem.h>
+#include <libgpu/latte/latte_disassembler.h>
+#include <libgfd/gfd.h>
 
 namespace gx2
 {
@@ -51,7 +52,7 @@ GX2DebugTagUserStringVA(uint32_t unk,
    std::memcpy(strWords.data(), buffer, length);
 
    // Write NOP packet
-   pm4::write(pm4::Nop {
+   internal::writePM4(latte::pm4::Nop {
       unk,
       gsl::make_span(strWords)
    });
@@ -137,14 +138,49 @@ debugDumpTexture(const GX2Texture *texture)
    }
 
    // Write GTX file
-   gfd::Writer gtx;
-   gtx.add(texture);
-   gtx.write("dump/" + filename + ".gtx");
+   gfd::GFDFile gtx;
+   gfd::GFDTexture gfdTexture;
+   gx2ToGFDTexture(texture, gfdTexture);
+   gtx.textures.push_back(gfdTexture);
+   gfd::writeFile(gtx, "dump/" + filename + ".gtx");
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2VertexShader *shader)
+{
+   gfd::GFDVertexShader gfdShader;
+   gx2ToGFDVertexShader(shader, gfdShader);
+   file.vertexShaders.emplace_back(std::move(gfdShader));
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2PixelShader *shader)
+{
+   gfd::GFDPixelShader gfdShader;
+   gx2ToGFDPixelShader(shader, gfdShader);
+   file.pixelShaders.emplace_back(std::move(gfdShader));
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2GeometryShader *shader)
+{
+   gfd::GFDGeometryShader gfdShader;
+   gx2ToGFDGeometryShader(shader, gfdShader);
+   file.geometryShaders.emplace_back(std::move(gfdShader));
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2FetchShader *shader)
+{
+   // TODO: Add FetchShader support to .gsh
 }
 
 template<typename ShaderType>
 static void
-debugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, bool isSubroutine = false)
+debugDumpShader(const std::string &filename,
+                const std::string &info,
+                ShaderType *shader,
+                bool isSubroutine = false)
 {
    std::string output;
 
@@ -156,13 +192,12 @@ debugDumpShader(const std::string &filename, const std::string &info, ShaderType
    }
 
    gLog->debug("Dumping shader {}", filename);
-
    debugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
    // Write GSH file
-   gfd::Writer gsh;
-   gsh.add(shader);
-   gsh.write("dump/" + filename + ".gsh");
+   gfd::GFDFile gsh;
+   addShader(gsh, shader);
+   gfd::writeFile(gsh, "dump/" + filename + ".gsh");
 
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
@@ -273,9 +308,9 @@ debugDumpShader(GX2FetchShader *shader)
       << "  size: " << shader->size << "\n";
 
    debugDumpShader("shader_fetch_" + pointerAsString(shader),
-                      out.str(),
-                      shader,
-                      true);
+                   out.str(),
+                   shader,
+                   true);
 }
 
 void
@@ -298,8 +333,8 @@ debugDumpShader(GX2PixelShader *shader)
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
    debugDumpShader("shader_pixel_" + pointerAsString(shader),
-                      out.str(),
-                      shader);
+                   out.str(),
+                   shader);
 }
 
 void
@@ -323,8 +358,8 @@ debugDumpShader(GX2VertexShader *shader)
    formatAttribVars(out, shader->attribVarCount, shader->attribVars);
 
    debugDumpShader("shader_vertex_" + pointerAsString(shader),
-                      out.str(),
-                      shader);
+                   out.str(),
+                   shader);
 }
 
 void writeDebugMarker(const char *key, uint32_t id)
@@ -340,7 +375,7 @@ void writeDebugMarker(const char *key, uint32_t id)
    memset(tmpBuf, 0, 128);
    memcpy(tmpBuf, key, strLen);
 
-   pm4::write(pm4::DecafDebugMarker {
+   internal::writePM4(latte::pm4::DecafDebugMarker {
       id,
       gsl::make_span(tmpBuf, alignedStrLen),
    });

@@ -2,6 +2,7 @@
 #include <common/log.h>
 #include <fstream>
 #include <libcpu/cpu.h>
+#include <libcpu/cpu_config.h>
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/mem.h>
 #include <memory>
@@ -31,7 +32,7 @@ runTests()
    // Allocate code memory
    auto baseCodeAddress = cpu::VirtualAddress { 0x01000000u };
    auto baseCodePhysicalAddress = cpu::PhysicalAddress { 0x50000000u };
-   auto codeSize = align_up(file_size, cpu::PageSize);
+   auto codeSize = align_up(static_cast<uint32_t>(file_size), cpu::PageSize);
    cpu::allocateVirtualAddress(baseCodeAddress, codeSize);
    cpu::mapMemory(baseCodeAddress, baseCodePhysicalAddress, codeSize, cpu::MapPermission::ReadWrite);
 
@@ -89,8 +90,8 @@ int main(int argc, char *argv[])
    gLog = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
    gLog->set_level(spdlog::level::debug);
 
+   cpu::config::jit::enabled = true;
    cpu::initialise();
-   cpu::setJitMode(cpu::jit_mode::enabled);
 
    // We need to run the tests on a core.
    cpu::setCoreEntrypointHandler(

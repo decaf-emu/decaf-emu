@@ -40,3 +40,6 @@
 [submodule "libraries/catch"]
 	path = libraries/catch
 	url = https://github.com/philsquared/Catch.git
+[submodule "libraries/cpptoml"]
+	path = libraries/cpptoml
+	url = https://github.com/skystrife/cpptoml.git

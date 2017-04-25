@@ -1,9 +1,11 @@
 #ifndef DECAF_NOGL
-
 #include "clilog.h"
-#include <common/decaf_assert.h>
 #include "config.h"
 #include "decafsdl_opengl.h"
+
+#include <common/decaf_assert.h>
+#include <libgpu/gpu_config.h>
+#include <libgpu/gpu_opengldriver.h>
 #include <string>
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
@@ -77,7 +79,7 @@ static void GL_APIENTRY
 debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
    gl::GLsizei length, const gl::GLchar* message, const void *userParam)
 {
-   for (auto filterID : decaf::config::gpu::debug_filters) {
+   for (auto filterID : gpu::config::debug_filters) {
       if (filterID == id) {
          return;
       }
@@ -104,8 +106,7 @@ debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLen
 
 DecafSDLOpenGL::DecafSDLOpenGL()
 {
-    using decaf::config::ui::background_colour;
-
+    using config::display::background_colour;
     mBackgroundColour[0] = background_colour.r / 255.0f;
     mBackgroundColour[1] = background_colour.g / 255.0f;
     mBackgroundColour[2] = background_colour.b / 255.0f;
@@ -129,7 +130,7 @@ DecafSDLOpenGL::initialiseContext()
 {
    glbinding::Binding::initialize();
 
-   if (decaf::config::gpu::debug) {
+   if (gpu::config::debug) {
       glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
       glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
          auto error = glbinding::Binding::GetError.directCall();
@@ -324,7 +325,7 @@ DecafSDLOpenGL::initialise(int width, int height)
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
    // Enable debug context
-   if (decaf::config::gpu::debug) {
+   if (gpu::config::debug) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
    }
 
@@ -360,7 +361,7 @@ DecafSDLOpenGL::initialise(int width, int height)
    SDL_GL_MakeCurrent(mWindow, mContext);
 
    // Setup decaf driver
-   mDecafDriver = reinterpret_cast<decaf::OpenGLDriver*>(decaf::createGLDriver());
+   mDecafDriver = reinterpret_cast<gpu::OpenGLDriver*>(gpu::createGLDriver());
    mDebugUiRenderer = decaf::createDebugGLRenderer();
 
    // Setup rendering
@@ -369,7 +370,7 @@ DecafSDLOpenGL::initialise(int width, int height)
    mDebugUiRenderer->initialise();
 
    // Start graphics thread
-   if (!config::gpu::force_sync) {
+   if (!config::display::force_sync) {
       SDL_GL_SetSwapInterval(1);
 
       mGraphicsThread = std::thread {
@@ -399,7 +400,7 @@ void
 DecafSDLOpenGL::shutdown()
 {
    // Shut down the GPU
-   if (!config::gpu::force_sync) {
+   if (!config::display::force_sync) {
       mDecafDriver->stop();
       mGraphicsThread.join();
    }
@@ -408,7 +409,7 @@ DecafSDLOpenGL::shutdown()
 void
 DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc)
 {
-   if (!config::gpu::force_sync) {
+   if (!config::display::force_sync) {
       gl::GLuint tvBuffer = 0;
       gl::GLuint drcBuffer = 0;
       mDecafDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
@@ -422,7 +423,7 @@ DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc)
    }
 }
 
-decaf::GraphicsDriver *
+gpu::GraphicsDriver *
 DecafSDLOpenGL::getDecafDriver()
 {
    return mDecafDriver;
