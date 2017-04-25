@@ -12,6 +12,7 @@ GroupSources(src)
 target_link_libraries(libdecaf
     common
     libcpu
+    libgfd
     libgpu
     ${ADDRLIB_LIBRARIES}
     ${CEREAL_LIBRARIES}

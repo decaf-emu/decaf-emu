@@ -439,7 +439,7 @@ GX2CopySurface(GX2Surface *src,
    }
 
    if (src->tileMode == GX2TileMode::LinearSpecial ||
-      dst->tileMode == GX2TileMode::LinearSpecial)
+       dst->tileMode == GX2TileMode::LinearSpecial)
    {
       // LinearSpecial surfaces cause the copy to occur on the CPU.  This code
       //  assumes that if the texture was previously written by the GPU, that it

@@ -758,7 +758,7 @@ saveDDS(const std::string &filename,
         const void *imagePtr,
         const void *mipPtr)
 {
-   std::ofstream fh(filename, std::ofstream::binary);
+   std::ofstream fh { filename, std::ofstream::binary };
 
    if (!fh.is_open()) {
       return false;

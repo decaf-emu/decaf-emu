@@ -3,6 +3,7 @@
 #include "gx2_debug.h"
 #include "gx2_enum_string.h"
 #include "gx2_internal_cbpool.h"
+#include "gx2_internal_gfd.h"
 #include "gx2_shaders.h"
 #include "gx2_texture.h"
 #include "modules/coreinit/coreinit_sprintf.h"
@@ -15,6 +16,7 @@
 #include <common/platform_dir.h>
 #include <libcpu/mem.h>
 #include <libgpu/latte/latte_disassembler.h>
+#include <libgfd/gfd.h>
 
 namespace gx2
 {
@@ -136,16 +138,49 @@ debugDumpTexture(const GX2Texture *texture)
    }
 
    // Write GTX file
-#if 0
-   gfd::Writer gtx;
-   gtx.add(texture);
-   gtx.write("dump/" + filename + ".gtx");
-#endif
+   gfd::GFDFile gtx;
+   gfd::GFDTexture gfdTexture;
+   gx2ToGFDTexture(texture, gfdTexture);
+   gtx.textures.push_back(gfdTexture);
+   gfd::writeFile(gtx, "dump/" + filename + ".gtx");
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2VertexShader *shader)
+{
+   gfd::GFDVertexShader gfdShader;
+   gx2ToGFDVertexShader(shader, gfdShader);
+   file.vertexShaders.emplace_back(std::move(gfdShader));
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2PixelShader *shader)
+{
+   gfd::GFDPixelShader gfdShader;
+   gx2ToGFDPixelShader(shader, gfdShader);
+   file.pixelShaders.emplace_back(std::move(gfdShader));
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2GeometryShader *shader)
+{
+   gfd::GFDGeometryShader gfdShader;
+   gx2ToGFDGeometryShader(shader, gfdShader);
+   file.geometryShaders.emplace_back(std::move(gfdShader));
+}
+
+static void
+addShader(gfd::GFDFile &file, GX2FetchShader *shader)
+{
+   // TODO: Add FetchShader support to .gsh
 }
 
 template<typename ShaderType>
 static void
-debugDumpShader(const std::string &filename, const std::string &info, ShaderType *shader, bool isSubroutine = false)
+debugDumpShader(const std::string &filename,
+                const std::string &info,
+                ShaderType *shader,
+                bool isSubroutine = false)
 {
    std::string output;
 
@@ -157,15 +192,12 @@ debugDumpShader(const std::string &filename, const std::string &info, ShaderType
    }
 
    gLog->debug("Dumping shader {}", filename);
-
    debugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
 
    // Write GSH file
-#if 0
-   gfd::Writer gsh;
-   gsh.add(shader);
-   gsh.write("dump/" + filename + ".gsh");
-#endif
+   gfd::GFDFile gsh;
+   addShader(gsh, shader);
+   gfd::writeFile(gsh, "dump/" + filename + ".gsh");
 
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
