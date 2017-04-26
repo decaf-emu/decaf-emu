@@ -20,7 +20,7 @@ namespace input
 {
 
 std::vector<InputDevice> devices;
-std::string vpad0 = "";
+std::string vpad0 = "default_keyboard";
 
 } // namespace input
 
@@ -117,10 +117,10 @@ setupDefaultInputDevices()
 }
 
 bool
-loadFrontendToml(std::string &error,
-                 std::shared_ptr<cpptoml::table> config)
+loadFrontendToml(std::shared_ptr<cpptoml::table> config)
 {
    auto devices = config->get_table_array_qualified("input.device");
+   input::devices.clear();
 
    if (devices) {
       for (const auto &cfgDevice : *devices) {
@@ -188,6 +188,99 @@ loadFrontendToml(std::string &error,
       config::display::background_colour.b = static_cast<int>(bgColor->at(2));
    }
 
+   setupDefaultInputDevices();
+   return true;
+}
+
+bool
+saveFrontendToml(std::shared_ptr<cpptoml::table> config)
+{
+   setupDefaultInputDevices();
+
+   // input
+   auto input = config->get_table("input");
+   if (!input) {
+      input = cpptoml::make_table();
+   }
+
+   input->insert("vpad0", config::input::vpad0);
+
+   auto devices = config->get_table_array("devices");
+   if (!devices) {
+      devices = cpptoml::make_table_array();
+   }
+
+   for (const auto &device : config::input::devices) {
+      auto cfgDevice = cpptoml::make_table();
+      cfgDevice->insert("type", static_cast<int>(device.type));
+      cfgDevice->insert("id", device.id);
+      cfgDevice->insert("device_name", device.device_name);
+      cfgDevice->insert("button_up", device.button_up);
+      cfgDevice->insert("button_down", device.button_down);
+      cfgDevice->insert("button_left", device.button_left);
+      cfgDevice->insert("button_right", device.button_right);
+      cfgDevice->insert("button_a", device.button_a);
+      cfgDevice->insert("button_b", device.button_b);
+      cfgDevice->insert("button_x", device.button_x);
+      cfgDevice->insert("button_y", device.button_y);
+      cfgDevice->insert("button_trigger_r", device.button_trigger_r);
+      cfgDevice->insert("button_trigger_l", device.button_trigger_l);
+      cfgDevice->insert("button_trigger_zr", device.button_trigger_zr);
+      cfgDevice->insert("button_trigger_zl", device.button_trigger_zl);
+      cfgDevice->insert("button_stick_l", device.button_stick_l);
+      cfgDevice->insert("button_stick_r", device.button_stick_r);
+      cfgDevice->insert("button_plus", device.button_plus);
+      cfgDevice->insert("button_minus", device.button_minus);
+      cfgDevice->insert("button_home", device.button_home);
+      cfgDevice->insert("button_sync", device.button_sync);
+
+      if (device.type == config::input::ControllerType::Keyboard) {
+         cfgDevice->insert("left_stick_up", device.keyboard.left_stick_up);
+         cfgDevice->insert("left_stick_down", device.keyboard.left_stick_down);
+         cfgDevice->insert("left_stick_left", device.keyboard.left_stick_left);
+         cfgDevice->insert("left_stick_right", device.keyboard.left_stick_right);
+         cfgDevice->insert("right_stick_up", device.keyboard.right_stick_up);
+         cfgDevice->insert("right_stick_down", device.keyboard.right_stick_down);
+         cfgDevice->insert("right_stick_left", device.keyboard.right_stick_left);
+         cfgDevice->insert("right_stick_right", device.keyboard.right_stick_right);
+      } else if (device.type == config::input::ControllerType::Joystick) {
+         cfgDevice->insert("left_stick_x", device.joystick.left_stick_x);
+         cfgDevice->insert("left_stick_x_invert", device.joystick.left_stick_x_invert);
+         cfgDevice->insert("left_stick_y", device.joystick.left_stick_y);
+         cfgDevice->insert("left_stick_y_invert", device.joystick.left_stick_y_invert);
+         cfgDevice->insert("right_stick_x", device.joystick.right_stick_x);
+         cfgDevice->insert("right_stick_x_invert", device.joystick.right_stick_x_invert);
+         cfgDevice->insert("right_stick_y", device.joystick.right_stick_y);
+         cfgDevice->insert("right_stick_y_invert", device.joystick.right_stick_y_invert);
+      }
+
+      devices->push_back(cfgDevice);
+   }
+
+   input->insert("devices", devices);
+   config->insert("input", input);
+
+   // sound
+   auto sound = config->get_table("sound");
+   if (!sound) {
+      sound = cpptoml::make_table();
+   }
+
+   sound->insert("frame_length", config::sound::frame_length);
+   config->insert("sound", sound);
+
+   // ui
+   auto ui = config->get_table("ui");
+   if (!ui) {
+      ui = cpptoml::make_table();
+   }
+
+   auto background_colour = cpptoml::make_array();
+   background_colour->push_back(config::display::background_colour.r);
+   background_colour->push_back(config::display::background_colour.g);
+   background_colour->push_back(config::display::background_colour.b);
+   ui->insert("background_colour", background_colour);
+   config->insert("ui", ui);
    return true;
 }
 

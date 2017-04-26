@@ -1,7 +1,7 @@
 #pragma once
 #include <cpptoml.h>
-#include <functional>
 #include <string>
+#include <memory>
 
 namespace config
 {
@@ -20,11 +20,10 @@ readArray(const std::shared_ptr<cpptoml::table> &config, const char *name, std::
    value = config->get_qualified_array_of<Type>(name).value_or(value);
 }
 
-using TomlUserParserFn = std::function<bool(std::string &, std::shared_ptr<cpptoml::table>)>;
+bool
+loadFromTOML(std::shared_ptr<cpptoml::table> config);
 
 bool
-loadFromTOML(const std::string &path,
-             std::string &error,
-             TomlUserParserFn userParse = nullptr);
+saveToTOML(std::shared_ptr<cpptoml::table> config);
 
 } // namespace config

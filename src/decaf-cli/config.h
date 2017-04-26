@@ -13,7 +13,9 @@ extern int timeout_ms;
 } // namespace system
 
 bool
-loadFrontendToml(std::string &error,
-                 std::shared_ptr<cpptoml::table> config);
+loadFrontendToml(std::shared_ptr<cpptoml::table> config);
+
+bool
+saveFrontendToml(std::shared_ptr<cpptoml::table> config);
 
 } // namespace config

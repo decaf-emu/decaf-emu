@@ -4,6 +4,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <common/platform_dir.h>
 #include <libconfig/config_excmd.h>
 #include <libconfig/config_toml.h>
 #include <libdecaf/decaf.h>
@@ -130,9 +131,24 @@ start(excmd::parser &parser,
       configPath = decaf::makeConfigPath("config.toml");
    }
 
-   auto configLoaded = config::loadFromTOML(configPath, configError, &config::loadFrontendToml);
+   // If config file does not exist, create a default one.
+   if (!platform::fileExists(configPath)) {
+      auto toml = cpptoml::make_table();
+      config::saveToTOML(toml);
+      config::saveFrontendToml(toml);
+      std::ofstream out { configPath };
+      out << (*toml);
+   }
+
+   try {
+      auto toml = cpptoml::parse_file(configPath);
+      config::loadFromTOML(toml);
+      config::loadFrontendToml(toml);
+   } catch (cpptoml::parse_exception ex) {
+      configError = ex.what();
+   }
+
    config::loadFromExcmd(options);
-   config::setupDefaultInputDevices();
 
    // Now handle frontend config options
    if (options.has("vpad0")) {
@@ -187,13 +203,10 @@ start(excmd::parser &parser,
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Game path {}", gamePath);
 
-   if (configLoaded) {
+   if (configError.empty()) {
       gCliLog->info("Loaded config from {}", configPath);
-   } else if (configError.empty()) {
-      gCliLog->error("Created new config at {}", configPath);
    } else {
-      gCliLog->error("Failed to parse config {}:", configPath);
-      gCliLog->error("{}", configError);
+      gCliLog->error("Failed to parse config {}: {}", configPath, configError);
    }
 
    DecafSDL sdl;

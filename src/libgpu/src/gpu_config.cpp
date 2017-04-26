@@ -7,7 +7,7 @@ namespace config
 {
 
 bool debug = false;
-std::vector<unsigned> debug_filters = { };
+std::vector<int64_t> debug_filters = { };
 bool dump_shaders = false;
 
 } // namespace config
