@@ -95,13 +95,13 @@ mapViewOfFile(MapFileHandle handle,
                       offset);
 
    if (result == MAP_FAILED) {
-      gLog->error("mapViewOfFile(offset: {}, size: {}, dst: {}) mmap failed with error: {}",
+      gLog->error("mapViewOfFile(offset: 0x{:X}, size: 0x{:X}, dst: {}) mmap failed with error: {}",
                   offset, size, dst, errno);
       return nullptr;
    }
 
    if (result != dst) {
-      gLog->error("mapViewOfFile(offset: {}, size: {}, dst: {}) mmap returned unexpected address: {}",
+      gLog->error("mapViewOfFile(offset: 0x{:X}, size: 0x{:X}, dst: {}) mmap returned unexpected address: {}",
                   offset, size, dst, result);
 
       munmap(result, size);
@@ -117,7 +117,7 @@ unmapViewOfFile(void *view,
                 size_t size)
 {
    if (munmap(view, size) == -1) {
-      gLog->error("unmapViewOfFile(view: {}, size: {}) munmap failed with error: {}",
+      gLog->error("unmapViewOfFile(view: 0x{:X}, size: 0x{:X}) munmap failed with error: {}",
                   view, size, errno);
       return false;
    }
@@ -142,13 +142,13 @@ reserveMemory(uintptr_t address,
                       0);
 
    if (result == MAP_FAILED) {
-      gLog->error("reserveMemory(address: {}, size: {}) mmap failed with error: {}",
+      gLog->debug("reserveMemory(address: 0x{:08X}, size: 0x{:X}) mmap failed with error: {}",
                   address, size, errno);
       return false;
    }
 
    if (result != baseAddress) {
-      gLog->error("reserveMemory(address: {}, size: {}) returned unexpected address: {}",
+      gLog->debug("reserveMemory(address: 0x{:08X}, size: 0x{:X}) returned unexpected address: {}",
                   address, size, result);
 
       munmap(result, size);
@@ -165,7 +165,7 @@ freeMemory(uintptr_t address,
 {
    auto baseAddress = reinterpret_cast<void *>(address);
    if (munmap(baseAddress, size) == -1) {
-      gLog->error("freeMemory(address: {}, size: {}) munmap failed with error: {}",
+      gLog->error("freeMemory(address: 0x{:08X}, size: 0x{:X}) munmap failed with error: {}",
                   address, size, errno);
       return false;
    }
@@ -182,7 +182,7 @@ commitMemory(uintptr_t address,
    auto baseAddress = reinterpret_cast<void *>(address);
 
    if (mprotect(baseAddress, size, flagsToProt(flags)) == -1) {
-      gLog->error("commitMemory(address: {}, size: {}, flags: {}) mprotect failed with error: {}",
+      gLog->error("commitMemory(address: 0x{:08X}, size: 0x{:X}, flags: {}) mprotect failed with error: {}",
                   address, size, static_cast<int>(flags), errno);
       return false;
    }
