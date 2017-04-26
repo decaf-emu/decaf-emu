@@ -116,7 +116,7 @@ public:
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator +(const OtherType &other) -> decltype(std::declval<const K>().operator -(std::declval<const OtherType>())) const
+   auto operator -(const OtherType &other) -> decltype(std::declval<const K>().operator -(std::declval<const OtherType>())) const
    {
       return value() - other;
    }
