@@ -4,11 +4,13 @@ project(coreinit)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+if(NOT COMMAND add_coreinit_test)
 macro(add_coreinit_test source)
    get_filename_component(name ${source} NAME_WE)
    add_rpx(${name} ${source})
    target_link_libraries(${name} coreinit)
 endmacro()
+endif()
 
 add_coreinit_test(alarm/alarm_cancel.c)
 add_coreinit_test(alarm/alarm_cancel_group.c)

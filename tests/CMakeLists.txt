@@ -26,4 +26,14 @@ if(DECAF_BUILD_WUT_TESTS)
 
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/hle/content"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/hle")
+
+    set(HLE_TEST_CONTENT_PATH "${PROJECT_SOURCE_DIR}/hle/content")
+    macro(add_coreinit_test source)
+        get_filename_component(name ${source} NAME_WE)
+        add_test(NAME tests_hle_coreinit_${name}
+                 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+                 COMMAND decaf-cli play "${BINARY_DIR}/coreinit/${name}.rpx" --content-path "${HLE_TEST_CONTENT_PATH}")
+    endmacro()
+
+    add_subdirectory("hle")
 endif()
