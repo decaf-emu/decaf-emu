@@ -95,8 +95,8 @@ initialiseLogging(const std::string &filename)
    }
 
    if (decaf::config::log::to_file) {
-      auto path = decaf::config::log::directory + filename;
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(filename, "txt", 23, 59));
+      auto path = decaf::config::log::directory + "/" + filename;
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(path, "txt", 23, 59));
    }
 
    for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {

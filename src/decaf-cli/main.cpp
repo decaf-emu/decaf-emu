@@ -65,7 +65,7 @@ getPathBasename(const std::string &path)
    if (!pos) {
       return path;
    } else {
-      return path.substr(pos);
+      return path.substr(pos + 1);
    }
 }
 
@@ -113,7 +113,7 @@ start(excmd::parser &parser,
       config::saveToTOML(toml);
       config::saveFrontendToml(toml);
       std::ofstream out { configPath };
-      out << toml;
+      out << (*toml);
    }
 
    try {
