@@ -15,11 +15,10 @@ int main(int argc, char **argv)
    void *heapAddr = MEMAllocFromExpHeapEx(mem2, HeapSize, 4);
    test_assert(heapAddr);
 
-   // Unalign the base heap address
-   heapAddr += 1;
-
-   test_report("Creating frame heap at %p", heapAddr);
-   MEMFrameHeap *frameHeap = MEMCreateFrmHeapEx(heapAddr, HeapSize, 0);
+   // Unalign the frame heap base address
+   void *frameHeapAddr = heapAddr + 1;
+   test_report("Creating frame heap at %p", frameHeapAddr);
+   MEMFrameHeap *frameHeap = MEMCreateFrmHeapEx(frameHeapAddr, HeapSize, 0);
    test_report("Frame heap created at %p", frameHeap);
    test_assert(frameHeap);
    test_assert((((uint32_t)frameHeap) % 4) == 0);
