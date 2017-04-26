@@ -88,10 +88,14 @@ template<typename Type>
 inline VirtualAddress
 translate(Type *pointer)
 {
-   auto addr = reinterpret_cast<uintptr_t>(pointer);
-   decaf_check(addr >= internal::BaseVirtualAddress);
-   decaf_check(addr <= internal::BaseVirtualAddress + 0x100000000ull);
-   return VirtualAddress { static_cast<uint32_t>(addr - internal::BaseVirtualAddress) };
+   if (!pointer) {
+      return VirtualAddress { 0u };
+   } else {
+      auto addr = reinterpret_cast<uintptr_t>(pointer);
+      decaf_check(addr >= internal::BaseVirtualAddress);
+      decaf_check(addr <= internal::BaseVirtualAddress + 0x100000000ull);
+      return VirtualAddress { static_cast<uint32_t>(addr - internal::BaseVirtualAddress) };
+   }
 }
 
 inline uintptr_t
