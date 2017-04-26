@@ -6,7 +6,7 @@ Researching Wii U emulation. Licensed under the terms of the GNU General Public 
 You can find us for developer discussion at #wiiu-emu on freenode.
 
 ## Requirements
-- Windows with Visual Studio 2015 Update 3
+- Windows with Visual Studio 2017
 - Linux with a modern C++14 friendly compiler
 - 64 bit
 - OpenGL 4.5
@@ -27,18 +27,18 @@ The latest Windows AppVeyor build is available from:
 This project makes use of submodules, please ensure you have cloned them properly using:
 - `git submodule update --init`
 
-There are two decaf targets:
+There are two decaf frontends:
 - decaf-sdl - Default emulator target using SDL for window creation and input.
 - decaf-cli - Command line only which will run games with no graphics or inputs, useful for test .rpx files.
 
-### Windows with VS2015 Update 3
+### Windows with VS2017
 - Use CMake to generate a solution
 
 ### Linux
 - `cmake ../decaf-emu && make`
 - It is suggested (but optional) to use your system's zlib, sdl2 and glbinding
 - You can enable building with valgrind with -DDECAF_VALGRIND=ON, this requires valgrind to be installed on your system
-- Requires a modern gcc or clang which supports C++11/14 features
+- Requires a modern gcc or clang which supports C++14 features
 
 ## Running
 
