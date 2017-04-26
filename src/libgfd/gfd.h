@@ -3,6 +3,7 @@
 #include "gfd_gx2.h"
 
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 
 namespace gfd
@@ -77,21 +78,13 @@ static constexpr uint32_t GFDPatchMask = 0xFFF00000u;
 static constexpr uint32_t GFDPatchData = 0xD0600000u;
 static constexpr uint32_t GFDPatchText = 0xCA700000u;
 
-struct GFDReadException : public std::exception
+struct GFDReadException : public std::runtime_error
 {
 public:
    GFDReadException(const std::string &msg) :
-      mWhat(msg)
+      std::runtime_error(msg)
    {
    }
-
-   virtual char const *what() const override
-   {
-      return mWhat.c_str();
-   }
-
-private:
-   std::string mWhat;
 };
 
 bool
