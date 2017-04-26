@@ -15,12 +15,12 @@ int main(int argc, char **argv)
    FSInitCmdBlock(&cmdBlock);
 
    test_report("Open file");
-   status = FSOpenFile(&client, &cmdBlock, "/vol/content/short_text.txt", "r", &fh, 0);
+   status = FSOpenFile(&client, &cmdBlock, "/vol/content/short_text.txt", "r", &fh, -1);
    test_report("FSOpenFile status: %d fh: %u", status, fh);
    test_assert(status >= 0);
 
    test_report("Read file");
-   status = FSReadFile(&client, &cmdBlock, buffer, sizeof(buffer) - 1, 1, fh, 0, 0);
+   status = FSReadFile(&client, &cmdBlock, buffer, sizeof(buffer) - 1, 1, fh, 0, -1);
    buffer[5] = 0;
    test_report("FSReadFile status: %d, buffer: %s", status, buffer);
    test_assert(status >= 0);
