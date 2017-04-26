@@ -47,15 +47,15 @@ getExcmdGroups(excmd::parser &parser)
    groups.push_back(jit_options.group);
 
    auto log_options = parser.add_option_group("Log Options")
-      .add_option("log-file",
-                  description { "Redirect log output to file." })
+      .add_option("log-async",
+                  description { "Enable asynchronous logging." })
       .add_option("log-dir",
                   description{ "Directory where log file will be written." },
                   value<std::string> {})
-      .add_option("log-async",
-                  description { "Enable asynchronous logging." })
-      .add_option("log-no-stdout",
-                  description { "Disable logging to stdout." })
+      .add_option("log-file",
+                  description { "Enable logging to file." })
+      .add_option("log-stdout",
+                  description { "Enable logging to stdout." })
       .add_option("log-level",
                   description { "Only display logs with severity equal to or greater than this level." },
                   default_value<std::string> { decaf::config::log::level },
@@ -175,7 +175,7 @@ loadFromExcmd(excmd::option_state &options)
       gpu::config::debug = true;
    }
 
-   if (options.has("log-no-stdout")) {
+   if (options.has("log-stdout")) {
       decaf::config::log::to_stdout = true;
    }
 
