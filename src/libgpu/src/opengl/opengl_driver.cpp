@@ -443,6 +443,26 @@ GLDriver::getAverageFPS()
    }
 }
 
+float
+GLDriver::getAverageFrametime()
+{
+   return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
+}
+
+gpu::GraphicsDriver::GraphicsDebugInfo
+GLDriver::getGraphicsDebugInfo() {
+   auto graphicsDebugInfo = gpu::GraphicsDriver::GraphicsDebugInfo{
+      mFetchShaders.size(),
+      mVertexShaders.size(),
+      mPixelShaders.size(),
+      mShaderPipelines.size(),
+      mSurfaces.size(),
+      mDataBuffers.size()
+   };
+
+   return graphicsDebugInfo;
+}
+
 uint64_t
 GLDriver::getGpuClock()
 {

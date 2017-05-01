@@ -305,6 +305,12 @@ public:
    virtual float
    getAverageFPS() override;
 
+   virtual float
+   getAverageFrametime() override;
+
+   virtual GraphicsDebugInfo
+   getGraphicsDebugInfo() override;
+
    virtual void
    notifyCpuFlush(void *ptr,
                   uint32_t size) override;
