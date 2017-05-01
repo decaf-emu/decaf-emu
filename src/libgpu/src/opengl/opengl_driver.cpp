@@ -3,6 +3,7 @@
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
 #include "latte/latte_registers.h"
+#include "libdecaf/decaf_graphics_info.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
 
@@ -169,6 +170,13 @@ GLDriver::stopFrameCapture()
    mFrameCaptureDRC = false;
    return mFramesCaptured;
 }
+
+gpu::GraphicsDriver::DriverType
+GLDriver::type()
+{
+   return DRIVER_GL;
+}
+
 
 bool
 GLDriver::dumpScanBuffer(const std::string &filename, const ScanBufferChain &buf)
@@ -449,18 +457,16 @@ GLDriver::getAverageFrametime()
    return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
 }
 
-gpu::GraphicsDriver::GraphicsDebugInfo
+void*
 GLDriver::getGraphicsDebugInfo() {
-   auto graphicsDebugInfo = gpu::GraphicsDriver::GraphicsDebugInfo{
+   return static_cast<void*>(new decaf::GraphicsDebugInfoGL{
       mFetchShaders.size(),
       mVertexShaders.size(),
       mPixelShaders.size(),
       mShaderPipelines.size(),
       mSurfaces.size(),
       mDataBuffers.size()
-   };
-
-   return graphicsDebugInfo;
+   });
 }
 
 uint64_t

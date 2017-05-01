@@ -13,9 +13,10 @@ public:
    virtual void stop() override;
    virtual float getAverageFPS() override;
    virtual float getAverageFrametime() override;
-   virtual GraphicsDebugInfo getGraphicsDebugInfo() override;
+   virtual void* getGraphicsDebugInfo() override;
    virtual void notifyCpuFlush(void *ptr, uint32_t size) override;
    virtual void notifyGpuFlush(void *ptr, uint32_t size) override;
+   virtual DriverType type() override;
 
 private:
    bool mRunning = false;

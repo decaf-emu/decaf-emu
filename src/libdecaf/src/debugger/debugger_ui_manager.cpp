@@ -13,6 +13,7 @@
 #include "debugger_ui_window_stats.h"
 #include "debugger_ui_window_threads.h"
 #include "debugger_ui_window_voices.h"
+#include "debugger_ui_window_performance.h"
 #include "kernel/kernel_loader.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"
@@ -163,6 +164,10 @@ void Manager::load(const std::string &configPath,
    addWindow(WindowID::VoicesWindow,
              new VoicesWindow { "Voices" },
              { KeyboardKey::LeftControl, KeyboardKey::P });
+
+   addWindow(WindowID::PerformanceWindow,
+             PerformanceWindow::create("Performance"),
+             { KeyboardKey::LeftControl, KeyboardKey::O });
 }
 
 void Manager::draw(unsigned width, unsigned height)
