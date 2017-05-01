@@ -19,6 +19,8 @@ public:
    void run() override;
    void stop() override;
    float getAverageFPS() override;
+   float getAverageFrametime() override;
+   virtual GraphicsDebugInfo getGraphicsDebugInfo() override;
 
    void notifyCpuFlush(void *ptr, uint32_t size) override;
    void notifyGpuFlush(void *ptr, uint32_t size) override;
