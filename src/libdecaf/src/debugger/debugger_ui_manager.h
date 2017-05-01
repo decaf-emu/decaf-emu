@@ -33,6 +33,7 @@ enum class WindowID
    StatsWindow,
    ThreadsWindow,
    VoicesWindow,
+   PerformanceWindow,
 };
 
 struct HotKey

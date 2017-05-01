@@ -35,11 +35,6 @@ Driver::getAverageFrametime()
    return 0.0f;
 }
 
-gpu::GraphicsDriver::GraphicsDebugInfo
-Driver::getGraphicsDebugInfo() {
-   return gpu::GraphicsDriver::GraphicsDebugInfo{ 0 };
-}
-
 void
 Driver::notifyCpuFlush(void *ptr, uint32_t size)
 {
@@ -48,6 +43,12 @@ Driver::notifyCpuFlush(void *ptr, uint32_t size)
 void
 Driver::notifyGpuFlush(void *ptr, uint32_t size)
 {
+}
+
+DriverType
+Driver::type()
+{
+   return DriverType::DRIVER_DX;
 }
 
 } // namespace dx12

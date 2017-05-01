@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <memory>
 
 namespace gpu
 {
@@ -8,16 +9,12 @@ namespace gpu
 class GraphicsDriver
 {
 public:
-   struct GraphicsDebugInfo {
-      uint64_t fetchShaders;
-      uint64_t vertexShaders;
-      uint64_t pixelShaders;
-
-      uint64_t shaderPipelines;
-      uint64_t surfaces;
-      uint64_t dataBuffers;
-
-      // TODO: Samplers?
+   enum DriverType
+   {
+      DRIVER_NULL,
+      DRIVER_GL,
+      DRIVER_DX,
+      DRIVER_VULKAN,
    };
 
 public:
@@ -30,7 +27,7 @@ public:
    virtual float getAverageFPS() = 0;
    // In milliseconds
    virtual float getAverageFrametime() = 0;
-   virtual GraphicsDebugInfo getGraphicsDebugInfo() = 0;
+   virtual void* getGraphicsDebugInfo() = 0;
 
    // Called for stores to emulated physical RAM, such as via DCFlushRange().
    //  May be called from any CPU core!
@@ -56,6 +53,8 @@ public:
    {
       return 0;
    }
+
+   virtual DriverType type() = 0;
 };
 
 GraphicsDriver *

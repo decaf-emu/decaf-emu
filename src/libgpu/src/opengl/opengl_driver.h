@@ -308,7 +308,7 @@ public:
    virtual float
    getAverageFrametime() override;
 
-   virtual GraphicsDebugInfo
+   virtual void*
    getGraphicsDebugInfo() override;
 
    virtual void
@@ -333,6 +333,8 @@ public:
 
    virtual size_t
    stopFrameCapture() override;
+
+   DriverType type() override;
 
 private:
    void initGL();
