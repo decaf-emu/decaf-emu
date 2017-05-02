@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "gfd.h"
 
 #include <common/byte_swap.h>

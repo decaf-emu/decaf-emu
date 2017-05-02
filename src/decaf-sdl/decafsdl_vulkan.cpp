@@ -1,5 +1,4 @@
 #ifdef DECAF_VULKAN
-#pragma optimize("", off)
 #include "clilog.h"
 #include "config.h"
 #include "decafsdl_vulkan.h"

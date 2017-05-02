@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "gfd.h"
 #include <fstream>
 
