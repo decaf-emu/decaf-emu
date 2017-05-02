@@ -4,10 +4,12 @@ include_directories("../src")
 
 add_subdirectory(gfd-tool)
 
-if(DECAF_SDL)
-    add_subdirectory(pm4-replay)
-endif()
+if(DECAF_GL)
+   if(DECAF_SDL)
+       add_subdirectory(pm4-replay)
+   endif()
 
-if(DECAF_QT)
-    add_subdirectory(pm4-replay-qt)
+   if(DECAF_QT)
+       add_subdirectory(pm4-replay-qt)
+   endif()
 endif()
