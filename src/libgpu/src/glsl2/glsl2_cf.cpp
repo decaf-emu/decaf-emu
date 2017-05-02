@@ -53,10 +53,11 @@ JUMP(State &state, const ControlFlowInst &cf)
 static void
 KILL(State &state, const ControlFlowInst &cf)
 {
+   condStart(state, cf.word1.COND());
    insertLineStart(state);
    state.out << "discard;";
    insertLineEnd(state);
-
+   condEnd(state);
    state.shader->usesDiscard = true;
 }
 
