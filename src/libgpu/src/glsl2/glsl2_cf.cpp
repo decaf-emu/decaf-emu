@@ -62,6 +62,26 @@ KILL(State &state, const ControlFlowInst &cf)
 }
 
 static void
+LOOP_BREAK(State &state, const ControlFlowInst &cf)
+{
+   condStart(state, cf.word1.COND());
+   insertLineStart(state);
+   state.out << "activeMask = InactiveBreak;";
+   insertLineEnd(state);
+   condEnd(state);
+}
+
+static void
+LOOP_CONTINUE(State &state, const ControlFlowInst &cf)
+{
+   condStart(state, cf.word1.COND());
+   insertLineStart(state);
+   state.out << "activeMask = InactiveContinue;";
+   insertLineEnd(state);
+   condEnd(state);
+}
+
+static void
 LOOP_END(State &state, const ControlFlowInst &cf)
 {
    // TODO: LOOP_END has different behaviour depending on which LOOP_START
@@ -153,6 +173,8 @@ registerCfFunctions()
    registerInstruction(SQ_CF_INST_END_PROGRAM, END_PROGRAM);
    registerInstruction(SQ_CF_INST_JUMP, JUMP);
    registerInstruction(SQ_CF_INST_KILL, KILL);
+   registerInstruction(SQ_CF_INST_LOOP_BREAK, LOOP_BREAK);
+   registerInstruction(SQ_CF_INST_LOOP_CONTINUE, LOOP_CONTINUE);
    registerInstruction(SQ_CF_INST_LOOP_END, LOOP_END);
    registerInstruction(SQ_CF_INST_LOOP_START_DX10, LOOP_START_DX10);
    registerInstruction(SQ_CF_INST_NOP, NOP);
