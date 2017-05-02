@@ -2,6 +2,8 @@ project(pm4-replay)
 
 include_directories(".")
 include_directories("../../src/libdecaf/src")
+include_directories("../../src/libgpu")
+include_directories("../../src/libgpu/src")
 
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)

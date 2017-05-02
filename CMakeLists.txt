@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.2)
 
 project(decaf-emu C CXX)
-option(DECAF_VALGRIND "Build with Valgrind support" OFF)
-option(DECAF_SDL "Build with SDL support" ON)
-option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
 option(DECAF_BUILD_TESTS "Build tests" OFF)
 option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
+option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
 option(DECAF_GL "Build with OpenGL rendering support" ON)
+option(DECAF_SDL "Build with SDL support" ON)
+option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_VULKAN "Build with Vulkan rendering support" OFF)
+option(DECAF_QT "Build with Qt support" OFF)
 
 set(DEVKITPPC $ENV{DEVKITPPC} CACHE STRING "Path to devkitPPC install")
 set(WUT_ROOT $ENV{WUT_ROOT} CACHE STRING "Path to wut install")
@@ -23,13 +24,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 
 find_package(Threads REQUIRED)
 
-if(DECAF_SDL)
-    find_package(OpenGL REQUIRED)
-    add_definitions(-DDECAF_SDL)
+if(DECAF_JIT_ALLOW_PROFILING)
+    add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
 endif()
 
 if(DECAF_GL)
     add_definitions(-DDECAF_GL)
+endif()
+
+if(DECAF_SDL)
+    find_package(OpenGL REQUIRED)
+    add_definitions(-DDECAF_SDL)
 endif()
 
 if(DECAF_VULKAN)
@@ -41,8 +46,11 @@ if(DECAF_VALGRIND)
     add_definitions(-DDECAF_VALGRIND)
 endif()
 
-if(DECAF_JIT_ALLOW_PROFILING)
-    add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
+if(DECAF_QT)
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+    set(CMAKE_AUTOMOC ON)
+    find_package(Qt5Widgets)
+    add_definitions(-DDECAF_QT)
 endif()
 
 if(MSVC)

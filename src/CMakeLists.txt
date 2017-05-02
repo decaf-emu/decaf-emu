@@ -8,4 +8,7 @@ add_subdirectory(libgfd)
 add_subdirectory(libconfig)
 
 add_subdirectory(decaf-cli)
-add_subdirectory(decaf-sdl)
+
+if(DECAF_SDL)
+    add_subdirectory(decaf-sdl)
+endif()
