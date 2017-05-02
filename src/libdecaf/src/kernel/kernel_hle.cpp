@@ -23,6 +23,7 @@
 #include "modules/proc_ui/proc_ui.h"
 #include "modules/padscore/padscore.h"
 #include "modules/snd_core/snd_core.h"
+#include "modules/snd_user/snd_user.h"
 #include "modules/swkbd/swkbd.h"
 #include "modules/sysapp/sysapp.h"
 #include "modules/vpad/vpad.h"
@@ -165,6 +166,7 @@ initialiseHleMmodules()
    padscore::Module::RegisterFunctions();
    proc_ui::Module::RegisterFunctions();
    snd_core::Module::RegisterFunctions();
+   snd_user::Module::RegisterFunctions();
    nn::swkbd::Module::RegisterFunctions();
    sysapp::Module::RegisterFunctions();
    vpad::Module::RegisterFunctions();
@@ -193,6 +195,7 @@ initialiseHleMmodules()
    registerHleModule("proc_ui.rpl", new proc_ui::Module{});
    registerHleModule("snd_core.rpl", new snd_core::Module{});
    registerHleModuleAlias("snd_core.rpl", "sndcore2.rpl");
+   registerHleModule("snd_user.rpl", new snd_user::Module {});
    registerHleModule("swkbd.rpl", new nn::swkbd::Module{});
    registerHleModule("sysapp.rpl", new sysapp::Module{});
    registerHleModule("vpad.rpl", new vpad::Module{});
