@@ -3,6 +3,7 @@
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
+#include "coreinit_dynload.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_ipc.h"
@@ -638,11 +639,12 @@ void startDefaultCoreThreads()
 {
    auto appModule = kernel::getUserModule();
    auto stackSize = appModule->defaultStackSize;
+   uint8_t *stack = nullptr;
 
    for (auto i = 0u; i < coreinit::CoreCount; ++i) {
       auto thread = coreinit::internal::sysAlloc<coreinit::OSThread>();
-      auto stack = reinterpret_cast<uint8_t*>(coreinit::internal::sysAlloc(stackSize, 8));
       auto name = coreinit::internal::sysStrDup(fmt::format("Default Thread {}", i));
+      decaf_check(internal::dynLoadMemAlloc(stackSize, 8, reinterpret_cast<void **>(&stack)) == 0);
 
       coreinit::OSCreateThread(thread, sDefaultThreadEntryPoint, i, nullptr,
          reinterpret_cast<be_val<uint32_t>*>(stack + stackSize), stackSize, 16,
