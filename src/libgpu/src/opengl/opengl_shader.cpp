@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "glsl2/glsl2_translate.h"
 #include "gpu_config.h"
 #include "latte/latte_formats.h"
@@ -1649,4 +1649,4 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

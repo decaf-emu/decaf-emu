@@ -1,6 +1,5 @@
 #pragma once
-
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 
 #include "glsl2/glsl2_translate.h"
 #include "gpu_ringbuffer.h"
@@ -559,4 +558,4 @@ private:
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

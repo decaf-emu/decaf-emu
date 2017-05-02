@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "gpu_config.h"
 #include "latte/latte_registers.h"
 #include "opengl_constants.h"
@@ -221,4 +221,4 @@ GLDriver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

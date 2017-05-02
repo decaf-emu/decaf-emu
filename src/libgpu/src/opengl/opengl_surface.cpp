@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "gpu_config.h"
 #include "gpu_tiling.h"
 #include "latte/latte_formats.h"
@@ -930,4 +930,4 @@ GLDriver::setSurfaceSwizzle(SurfaceBuffer *surface,
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

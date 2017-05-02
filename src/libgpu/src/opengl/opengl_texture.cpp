@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "gpu_config.h"
 #include "latte/latte_enum_sq.h"
 #include "opengl_driver.h"
@@ -354,4 +354,4 @@ bool GLDriver::checkActiveSamplers()
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

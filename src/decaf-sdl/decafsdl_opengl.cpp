@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "clilog.h"
 #include "config.h"
 #include "decafsdl_opengl.h"
@@ -435,4 +435,4 @@ DecafSDLOpenGL::getDecafDebugUiRenderer()
    return mDebugUiRenderer;
 }
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

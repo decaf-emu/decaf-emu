@@ -194,7 +194,7 @@ start()
       platform::setThreadName(&core->thread, coreNames[i]);
    }
 
-   gTimerThread = std::thread(timerEntryPoint);
+   gTimerThread = std::thread { timerEntryPoint };
    platform::setThreadName(&gTimerThread, "Timer Thread");
 }
 

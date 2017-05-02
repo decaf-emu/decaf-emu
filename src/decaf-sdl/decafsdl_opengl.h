@@ -1,5 +1,5 @@
 #pragma once
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "decafsdl_graphics.h"
 
 #include <SDL.h>
@@ -64,4 +64,4 @@ protected:
    gl::GLfloat mBackgroundColour[3];
 };
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

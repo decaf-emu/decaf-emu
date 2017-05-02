@@ -28,12 +28,15 @@ public:
 };
 
 GraphicsDriver *
+createDX12Driver();
+
+GraphicsDriver *
 createGLDriver();
 
 GraphicsDriver *
 createNullDriver();
 
 GraphicsDriver *
-createDX12Driver();
+createVulkanDriver();
 
 } // namespace gpu

@@ -6,6 +6,8 @@ option(DECAF_SDL "Build with SDL support" ON)
 option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
 option(DECAF_BUILD_TESTS "Build tests" OFF)
 option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
+option(DECAF_GL "Build with OpenGL rendering support" ON)
+option(DECAF_VULKAN "Build with Vulkan rendering support" OFF)
 
 set(DEVKITPPC $ENV{DEVKITPPC} CACHE STRING "Path to devkitPPC install")
 set(WUT_ROOT $ENV{WUT_ROOT} CACHE STRING "Path to wut install")
@@ -14,16 +16,25 @@ if(DECAF_BUILD_WUT_TESTS AND (NOT DEVKITPPC OR NOT WUT_ROOT))
     message(FATAL_ERROR "You must have defined DEVKITPPC and WUT_ROOT to build wut tests.")
 endif()
 
-find_package(Threads REQUIRED)
-find_package(OpenGL REQUIRED)
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 
+find_package(Threads REQUIRED)
+
 if(DECAF_SDL)
+    find_package(OpenGL REQUIRED)
     add_definitions(-DDECAF_SDL)
+endif()
+
+if(DECAF_GL)
+    add_definitions(-DDECAF_GL)
+endif()
+
+if(DECAF_VULKAN)
+    find_package(Vulkan REQUIRED)
+    add_definitions(-DDECAF_VULKAN)
 endif()
 
 if(DECAF_VALGRIND)

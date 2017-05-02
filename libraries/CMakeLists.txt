@@ -223,6 +223,19 @@ add_library(spdlog INTERFACE)
 target_include_directories(spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${SPDLOG_DIR}/include")
 set(SPDLOG_LIBRARIES spdlog PARENT_SCOPE)
 
+# vulkan
+if(Vulkan_FOUND)
+    add_library(vulkan INTERFACE)
+    target_link_libraries(vulkan INTERFACE ${Vulkan_LIBRARIES})
+    target_include_directories(vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
+    if(MSVC)
+        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WIN32_KHR")
+    endif()
+    set(VULKAN_LIBRARIES vulkan PARENT_SCOPE)
+else ()
+    set(VULKAN_LIBRARIES " PARENT_SCOPE)
+endif()
+
 # zlib
 find_package(ZLIB QUIET)
 

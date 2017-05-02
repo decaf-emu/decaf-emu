@@ -2,10 +2,12 @@
 #include <common/decaf_assert.h>
 #include "config.h"
 #include "decafsdl.h"
-#include "decafsdl_opengl.h"
 #include "decafsdl_dx12.h"
+#include "decafsdl_opengl.h"
+#include "decafsdl_vulkan.h"
 
-static std::string sActiveGfx = "NOGFX";
+static std::string
+sActiveGfx = "NOGFX";
 
 void setWindowIcon(SDL_Window *window);
 
@@ -27,7 +29,7 @@ DecafSDL::initCore()
 bool
 DecafSDL::initGlGraphics()
 {
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
    mGraphicsDriver = new DecafSDLOpenGL();
 
    if (!mGraphicsDriver->initialise(WindowWidth, WindowHeight)) {
@@ -36,10 +38,9 @@ DecafSDL::initGlGraphics()
    }
 
    sActiveGfx = "GL";
-
    return true;
 #else
-   decaf_abort("GL support was excluded from this build");
+   decaf_abort("GL support was not included in this build");
 #endif
 }
 
@@ -55,10 +56,27 @@ DecafSDL::initDx12Graphics()
    }
 
    sActiveGfx = "DX12";
-
    return true;
 #else
    decaf_abort("DX12 support was not included in this build");
+#endif
+}
+
+bool
+DecafSDL::initVulkanGraphics()
+{
+#ifdef DECAF_VULKAN
+   mGraphicsDriver = new DecafSDLVulkan();
+
+   if (!mGraphicsDriver->initialise(WindowWidth, WindowHeight)) {
+      gCliLog->error("Failed to create Vulkan graphics window");
+      return false;
+   }
+
+   sActiveGfx = "Vulkan";
+   return true;
+#else
+   decaf_abort("Vulkan support was not included in this build");
 #endif
 }
 

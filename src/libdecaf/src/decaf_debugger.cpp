@@ -11,11 +11,11 @@ sUiRenderer = nullptr;
 DebugUiRenderer *
 createDebugGLRenderer()
 {
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
    return new ::debugger::ui::RendererOpenGL { };
 #else
    decaf_abort("libdecaf was built with OpenGL support disabled");
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL
 }
 
 void

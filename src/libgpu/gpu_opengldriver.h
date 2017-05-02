@@ -1,5 +1,5 @@
 #pragma once
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "gpu_graphicsdriver.h"
 #include <glbinding/gl/gl.h>
 
@@ -25,4 +25,4 @@ public:
 
 } // namespace gpu
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

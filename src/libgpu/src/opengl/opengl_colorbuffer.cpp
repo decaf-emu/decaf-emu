@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "opengl_driver.h"
 #include "latte/latte_enum_cb.h"
 #include "latte/latte_enum_sq.h"
@@ -145,4 +145,4 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

@@ -278,7 +278,6 @@ private:
    bool
    scanCommandBuffer(void *words, uint32_t numWords)
    {
-      std::vector<uint32_t> swapped;
       auto buffer = reinterpret_cast<be_val<uint32_t> *>(words);
       auto foundSwap = false;
 

@@ -1,5 +1,5 @@
 #pragma once
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include <map>
 #include <mutex>
 #include <unordered_map>
@@ -93,4 +93,4 @@ private:
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

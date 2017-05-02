@@ -15,14 +15,18 @@ target_link_libraries(libgpu
     libcpu
     ${ADDRLIB_LIBRARIES})
 
-if(APPLE)
-    target_compile_definitions(libgpu PUBLIC DECAF_NOGL)
-else()
+if(DECAF_GL)
     target_link_libraries(libgpu
         ${GLBINDING_LIBRARIES}
         ${OPENGL_LIBRARIES})
+
+   if(MSVC)
+       # GLbinding linker warning
+       target_compile_options(libgpu PUBLIC /wd4251)
+   endif()
 endif()
 
-if(MSVC)
-    target_compile_options(libgpu PUBLIC /wd4251)
+if(DECAF_VULKAN)
+    target_link_libraries(libgpu
+        ${VULKAN_LIBRARIES})
 endif()

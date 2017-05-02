@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "gpu_config.h"
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
@@ -779,4 +779,4 @@ GLDriver::stop()
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

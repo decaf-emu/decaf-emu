@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "opengl_driver.h"
 
 #include <common/decaf_assert.h>
@@ -447,4 +447,4 @@ getStencilFunc(latte::DB_STENCIL_FUNC func)
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

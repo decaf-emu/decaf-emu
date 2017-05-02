@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "opengl_driver.h"
 #include "latte/latte_enum_db.h"
 #include "latte/latte_enum_sq.h"
@@ -150,4 +150,4 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL

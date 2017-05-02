@@ -36,6 +36,9 @@ public:
    initDx12Graphics();
 
    bool
+   initVulkanGraphics();
+
+   bool
    initSound();
 
    bool

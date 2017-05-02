@@ -1,4 +1,4 @@
-#ifndef DECAF_NOGL
+#ifdef DECAF_GL
 #include "opengl_resource.h"
 #include <common/decaf_assert.h>
 
@@ -56,4 +56,4 @@ ResourceMemoryMap::removeResource(Resource *resource)
 
 } // namespace opengl
 
-#endif // DECAF_NOGL
+#endif // ifdef DECAF_GL
