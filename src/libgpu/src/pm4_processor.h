@@ -60,7 +60,7 @@ protected:
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
    void setRegister(latte::Register reg, uint32_t value);
-   void runCommandBuffer(cpu::VirtualPointer<uint32_t> buffer, uint32_t size);
+   void runCommandBuffer(uint32_t *buffer, uint32_t size);
 
    template<typename Type>
    Type getRegister(uint32_t id)

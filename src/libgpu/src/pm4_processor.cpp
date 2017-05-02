@@ -8,17 +8,17 @@ void
 Pm4Processor::indirectBufferCall(const IndirectBufferCall &data)
 {
    auto buffer = reinterpret_cast<uint32_t *>(data.addr);
-   runCommandBuffer(cpu::translate(buffer), data.size);
+   runCommandBuffer(buffer, data.size);
 }
 
 void
-Pm4Processor::runCommandBuffer(cpu::VirtualPointer<uint32_t> buffer, uint32_t buffer_size)
+Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
 {
    std::vector<uint32_t> swapped;
    swapped.resize(buffer_size);
 
    for (auto i = 0u; i < buffer_size; ++i) {
-      swapped[i] = buffer[i];
+      swapped[i] = byte_swap(buffer[i]);
    }
 
    for (auto pos = 0u; pos < buffer_size; ) {

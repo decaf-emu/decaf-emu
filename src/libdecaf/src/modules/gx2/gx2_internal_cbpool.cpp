@@ -243,7 +243,7 @@ submitCommandBuffer(CommandBuffer *cb)
    captureCommandBuffer(cb);
    cb->submitTime = coreinit::OSGetTime();
    gx2::internal::setLastSubmittedTimestamp(cb->submitTime);
-   gpu::ringbuffer::submit(cb, cpu::translate(cb->buffer), cb->curSize);
+   gpu::ringbuffer::submit(cb, cb->buffer, cb->curSize);
 }
 
 void

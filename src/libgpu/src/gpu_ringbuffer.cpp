@@ -10,14 +10,6 @@ namespace gpu
 namespace ringbuffer
 {
 
-
-/*
-INDIRECT_BUFFER_PRIV
-0: OSEffectiveToPhysical(dlist)
-4: 0
-8: numWords
-*/
-
 static std::mutex
 sQueueMutex;
 
@@ -37,7 +29,7 @@ appendItem(Item item)
 
 void
 submit(void *context,
-       cpu::VirtualPointer<uint32_t> buffer,
+       uint32_t *buffer,
        uint32_t numWords)
 {
    auto item = Item {};
