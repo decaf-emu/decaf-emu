@@ -4,6 +4,7 @@
 #include "gx2_internal_pm4cap.h"
 
 #include <array>
+#include <addrlib/addrinterface.h>
 #include <common/byte_swap.h>
 #include <common/log.h>
 #include <common/platform_dir.h>
@@ -18,29 +19,6 @@
 #include <libgpu/latte/latte_pm4_reader.h>
 #include <vector>
 
-/**
- * THIS IS AN UNFINISHED EXPERIMENTAL FEATURE
- *
- * Known Issues
- * - We should be a bit more clever about updating LOAD_* memory ranges, these are
- *   the ones used for context state so often change, however only a few values in
- *   these memory ranges actually change, and uploading the whole buffer when a small
- *   part has changed can lead to unnecessarirly large traces.
- *
- * - Currently we hash every single piece of memory the GPU will ever read, every draw
- *   this is probably toooo much. This was important for detecting changes to the LOAD_*
- *   context state shadowing memory, because there is not an GX2Invalidate call on
- *   context state because the GPU is the one which edits the memory of it. This
- *   combined with the previous issue means we really need a custom handler for shadow
- *   state memory, rather than using the flush based tracking everything else uses.
- *
- * - We should probably use some cheap compression algorithm such as snappy to save
- *   even more space.
- *
- * - There seems to be a big with surface size calculations and this can lead to properly
- *   fucking up the memory tracking and playback with missing ends of textures.
- */
-
 using decaf::pm4::CaptureMagic;
 using decaf::pm4::CapturePacket;
 using decaf::pm4::CaptureMemoryLoad;
@@ -48,7 +26,7 @@ using decaf::pm4::CaptureSetBuffer;
 using namespace latte::pm4;
 
 static const auto
-HashAllMemory = false;
+HashAllMemory = true;
 
 static const auto
 HashShadowState = true;
@@ -336,44 +314,96 @@ private:
    {
    }
 
-   uint32_t
-   getSurfaceBytes(uint32_t pitch,
-                   uint32_t height,
-                   uint32_t depth,
-                   latte::SQ_TEX_DIM dim,
-                   latte::SQ_DATA_FORMAT format)
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT
+   getSurfaceInfo(uint32_t pitch,
+                  uint32_t height,
+                  uint32_t depth,
+                  uint32_t aa,
+                  uint32_t level,
+                  bool isScanBuffer,
+                  bool isDepthBuffer,
+                  latte::SQ_TEX_DIM dim,
+                  latte::SQ_DATA_FORMAT format,
+                  latte::SQ_TILE_MODE tileMode)
    {
-      uint32_t numPixels = 0;
+      ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+      auto hwFormat = format;
+      auto width = std::max<uint32_t>(1u, pitch >> level);
+      auto numSlices = 1u;
 
       switch (dim) {
       case latte::SQ_TEX_DIM::DIM_1D:
-         numPixels = pitch;
+         height = 1;
+         numSlices = 1;
          break;
       case latte::SQ_TEX_DIM::DIM_2D:
-         numPixels = pitch * height;
-         break;
-      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-         numPixels = pitch * height * depth;
-         break;
-      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-         numPixels = pitch * height * 6;
+         height = std::max<uint32_t>(1u, height >> level);
+         numSlices = 1;
          break;
       case latte::SQ_TEX_DIM::DIM_3D:
-         numPixels = pitch * height * depth;
+         height = std::max<uint32_t>(1u, height >> level);
+         numSlices = std::max<uint32_t>(1u, depth >> level);
+         break;
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+         height = std::max<uint32_t>(1u, height >> level);
+         numSlices = std::max<uint32_t>(6u, depth);
          break;
       case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-         numPixels = pitch * height;
+         height = 1;
+         numSlices = depth;
          break;
-      default:
-         decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+         height = std::max<uint32_t>(1u, height >> level);
+         numSlices = depth;
+         break;
+      case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+         height = std::max<uint32_t>(1u, height >> level);
+         numSlices = 1;
+         break;
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+         height = std::max<uint32_t>(1u, height >> level);
+         numSlices = depth;
+         break;
       }
 
-      if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-         numPixels /= 4 * 4;
+      std::memset(&output, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT));
+      output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
+
+      ADDR_COMPUTE_SURFACE_INFO_INPUT input;
+      memset(&input, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT));
+      input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
+      input.tileMode = static_cast<AddrTileMode>(tileMode & 0xF);
+      input.format = static_cast<AddrFormat>(hwFormat);
+      input.bpp = latte::getDataFormatBitsPerElement(format);
+      input.width = width;
+      input.height = height;
+      input.numSlices = numSlices;
+
+      input.numSamples = 1 << aa;
+      input.numFrags = input.numSamples;
+
+      input.slice = 0;
+      input.mipLevel = level;
+
+      if (dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+         input.flags.cube = 1;
       }
 
-      auto bitsPerPixel = latte::getDataFormatBitsPerElement(format);
-      return numPixels * bitsPerPixel / 8;
+      if (dim == latte::SQ_TEX_DIM::DIM_3D) {
+         input.flags.volume = 1;
+      }
+
+      if (isDepthBuffer) {
+         input.flags.depth = 1;
+      }
+
+      if (isScanBuffer) {
+         input.flags.display = 1;
+      }
+
+      input.flags.inputBaseMap = (level == 0);
+      AddrComputeSurfaceInfo(gpu::getAddrLibHandle(), &input, &output);
+      return output;
    }
 
    void
@@ -381,6 +411,10 @@ private:
                 uint32_t pitch,
                 uint32_t height,
                 uint32_t depth,
+                uint32_t aa,
+                uint32_t level,
+                bool isDepthBuffer,
+                bool isScanBuffer,
                 latte::SQ_TEX_DIM dim,
                 latte::SQ_DATA_FORMAT format,
                 latte::SQ_TILE_MODE tileMode)
@@ -397,10 +431,12 @@ private:
       }
 
       // Calculate size
-      auto size = getSurfaceBytes(pitch, height, depth, dim, format);
+      auto info = getSurfaceInfo(pitch, height, depth, aa, level, isDepthBuffer, isScanBuffer, dim, format, tileMode);
+
+      // TODO: Use align? info.baseAlign;
 
       // Track that badboy
-      trackMemory(CaptureMemoryLoad::Surface, baseAddress, size);
+      trackMemory(CaptureMemoryLoad::Surface, baseAddress, info.surfSize);
    }
 
    void
@@ -509,9 +545,11 @@ private:
          auto depth = sq_tex_resource_word1.TEX_DEPTH() + 1;
          auto format = sq_tex_resource_word1.DATA_FORMAT();
          auto tileMode = sq_tex_resource_word0.TILE_MODE();
+         auto tileType = sq_tex_resource_word0.TILE_TYPE();
          auto dim = sq_tex_resource_word0.DIM();
+         auto aa = sq_tex_resource_word5.LAST_LEVEL();
 
-         trackSurface(baseAddress, pitch, height, depth, dim, format, tileMode);
+         trackSurface(baseAddress, pitch, height, depth, aa, 0, tileType == 1, false, dim, format, tileMode);
       }
    }
 
@@ -617,7 +655,7 @@ private:
       case IT_OPCODE::DECAF_COPY_SURFACE:
       {
          auto data = read<DecafCopySurface>(reader);
-         trackSurface(data.srcImage, data.srcPitch, data.srcHeight, data.srcDepth, data.srcDim, data.srcFormat, data.srcTileMode);
+         trackSurface(data.srcImage, data.srcPitch, data.srcHeight, data.srcDepth, 0, data.srcLevel, false, false, data.srcDim, data.srcFormat, data.srcTileMode);
          break;
       }
       case IT_OPCODE::DECAF_SET_SWAP_INTERVAL:
