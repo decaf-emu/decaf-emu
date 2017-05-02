@@ -36,5 +36,6 @@ install:
 script:
   - cd "$TRAVIS_BUILD_DIR"
   - mkdir cbuild && cd cbuild
-  - cmake ..
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake ..; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake -DDECAF_GL=OFF ..; fi
   - make -j4
