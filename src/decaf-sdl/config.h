@@ -33,6 +33,7 @@ extern DisplayLayout layout;
 extern bool stretch;
 extern bool force_sync;
 extern Colour background_colour;
+extern std::string backend;
 
 } // namespace display
 

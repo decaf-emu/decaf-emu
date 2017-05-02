@@ -13,6 +13,7 @@ DisplayLayout layout = DisplayLayout::Split;
 bool stretch = false;
 bool force_sync = false;
 Colour background_colour = { 153, 51, 51 };
+std::string backend = "opengl";
 
 } // namespace display
 
@@ -30,6 +31,56 @@ namespace sound
 unsigned frame_length = 30;
 
 } // namespace sound
+
+static display::DisplayMode
+translateDisplayMode(const std::string &str)
+{
+   if (str == "windowed") {
+      return display::DisplayMode::Windowed;
+   } else if (str == "fullscreen") {
+      return display::DisplayMode::Fullscreen;
+   } else {
+      return display::DisplayMode::Windowed; // Default to windowed
+   }
+}
+
+static std::string
+translateDisplayMode(display::DisplayMode mode)
+{
+   switch (mode) {
+   case display::DisplayMode::Windowed:
+      return "windowed";
+   case display::DisplayMode::Fullscreen:
+      return "fullscreen";
+   default:
+      return "windowed"; // Default to windowed
+   }
+}
+
+static display::DisplayLayout
+translateDisplayLayout(const std::string &str)
+{
+   if (str == "split") {
+      return display::DisplayLayout::Split;
+   } else if (str == "toggle") {
+      return display::DisplayLayout::Toggle;
+   } else {
+      return display::DisplayLayout::Split; // Default to split
+   }
+}
+
+static std::string
+translateDisplayLayout(display::DisplayLayout layout)
+{
+   switch (layout) {
+   case display::DisplayLayout::Split:
+      return "split";
+   case display::DisplayLayout::Toggle:
+      return "toggle";
+   default:
+      return "split"; // Default to split
+   }
+}
 
 void
 setupDefaultInputDevices()
@@ -119,6 +170,20 @@ setupDefaultInputDevices()
 bool
 loadFrontendToml(std::shared_ptr<cpptoml::table> config)
 {
+   // display
+   config::display::mode = translateDisplayMode(config->get_qualified_as<std::string>("display.mode").value_or(translateDisplayMode(config::display::mode)));
+   config::display::layout = translateDisplayLayout(config->get_qualified_as<std::string>("display.layout").value_or(translateDisplayLayout(config::display::layout)));
+   config::display::force_sync = config->get_qualified_as<bool>("display.force_sync").value_or(config::display::force_sync);
+   config::display::stretch = config->get_qualified_as<bool>("display.stretch").value_or(config::display::stretch);
+   config::display::backend = config->get_qualified_as<std::string>("display.backend").value_or(config::display::backend);
+
+   if (auto bgColor = config->get_qualified_array_of<int64_t>("ui.background_colour")) {
+      config::display::background_colour.r = static_cast<int>(bgColor->at(0));
+      config::display::background_colour.g = static_cast<int>(bgColor->at(1));
+      config::display::background_colour.b = static_cast<int>(bgColor->at(2));
+   }
+
+   // input
    auto devices = config->get_table_array_qualified("input.device");
    input::devices.clear();
 
@@ -181,14 +246,10 @@ loadFrontendToml(std::shared_ptr<cpptoml::table> config)
    }
 
    config::input::vpad0 = config->get_qualified_as<std::string>("input.vpad0").value_or(config::input::vpad0);
-
-   if (auto bgColor = config->get_qualified_array_of<int64_t>("ui.background_colour")) {
-      config::display::background_colour.r = static_cast<int>(bgColor->at(0));
-      config::display::background_colour.g = static_cast<int>(bgColor->at(1));
-      config::display::background_colour.b = static_cast<int>(bgColor->at(2));
-   }
-
    setupDefaultInputDevices();
+
+   // sound
+   config::sound::frame_length = config->get_qualified_as<unsigned int>("sound.frame_length").value_or(config::sound::frame_length);
    return true;
 }
 
@@ -196,6 +257,25 @@ bool
 saveFrontendToml(std::shared_ptr<cpptoml::table> config)
 {
    setupDefaultInputDevices();
+
+   // display
+   auto display = config->get_table("display");
+   if (!display) {
+      display = cpptoml::make_table();
+   }
+
+   display->insert("mode", translateDisplayMode(config::display::mode));
+   display->insert("layout", translateDisplayLayout(config::display::layout));
+   display->insert("force_sync", config::display::force_sync);
+   display->insert("stretch", config::display::stretch);
+   display->insert("backend", config::display::backend);
+
+   auto background_colour = cpptoml::make_array();
+   background_colour->push_back(config::display::background_colour.r);
+   background_colour->push_back(config::display::background_colour.g);
+   background_colour->push_back(config::display::background_colour.b);
+   display->insert("background_colour", background_colour);
+   config->insert("display", display);
 
    // input
    auto input = config->get_table("input");
@@ -268,19 +348,6 @@ saveFrontendToml(std::shared_ptr<cpptoml::table> config)
 
    sound->insert("frame_length", config::sound::frame_length);
    config->insert("sound", sound);
-
-   // ui
-   auto ui = config->get_table("ui");
-   if (!ui) {
-      ui = cpptoml::make_table();
-   }
-
-   auto background_colour = cpptoml::make_array();
-   background_colour->push_back(config::display::background_colour.r);
-   background_colour->push_back(config::display::background_colour.g);
-   background_colour->push_back(config::display::background_colour.b);
-   ui->insert("background_colour", background_colour);
-   config->insert("ui", ui);
    return true;
 }
 

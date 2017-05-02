@@ -187,6 +187,10 @@ start(excmd::parser &parser,
       config::display::force_sync = true;
    }
 
+   if (options.has("backend")) {
+      config::display::backend = options.get<std::string>("backend");
+   }
+
    // Initialise libdecaf logger
    auto logFile = getPathBasename(gamePath);
    decaf::initialiseLogging(logFile);
@@ -216,16 +220,19 @@ start(excmd::parser &parser,
       return -1;
    }
 
-   if (options.has("dx12")) {
+   if (config::display::backend == "dx12") {
       if (!sdl.initDx12Graphics()) {
-         gCliLog->error("Failed to initialise SDL DX12 graphics");
+         gCliLog->error("Failed to initialise DX12 backend.");
+         return -1;
+      }
+   } else if (config::display::backend == "opengl") {
+      if (!sdl.initGlGraphics()) {
+         gCliLog->error("Failed to initialise OpenGL backend.");
          return -1;
       }
    } else {
-      if (!sdl.initGlGraphics()) {
-         gCliLog->error("Failed to initialise SDL GL graphics");
-         return -1;
-      }
+      gCliLog->error("Unknown display backend {}", config::display::backend);
+      return -1;
    }
 
    if (options.has("sound") && !sdl.initSound()) {
