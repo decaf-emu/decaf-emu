@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 namespace platform
 {
@@ -22,6 +23,11 @@ getSystemPageSize();
 
 MapFileHandle
 createMemoryMappedFile(size_t size);
+
+MapFileHandle
+openMemoryMappedFile(const std::string &path,
+                     ProtectFlags flags,
+                     size_t *outSize);
 
 bool
 closeMemoryMappedFile(MapFileHandle handle);

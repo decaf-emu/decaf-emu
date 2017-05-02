@@ -3,6 +3,7 @@
 #include "log.h"
 
 #ifdef PLATFORM_POSIX
+#include <common/decaf_assert.h>
 #include <errno.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -24,6 +25,24 @@ flagsToProt(ProtectFlags flags)
       return PROT_READ | PROT_EXEC;
    case ProtectFlags::ReadWriteExecute:
       return PROT_READ | PROT_WRITE | PROT_EXEC;
+   case ProtectFlags::NoAccess:
+   default:
+      return PROT_WRITE;
+   }
+}
+
+static int
+flagsToOpen(ProtectFlags flags)
+{
+   switch (flags) {
+   case ProtectFlags::ReadOnly:
+      return O_RDONLY;
+   case ProtectFlags::ReadWrite:
+      return O_RDWR;
+   case ProtectFlags::ReadExecute:
+      return O_RDONLY;
+   case ProtectFlags::ReadWriteExecute:
+      return O_RDWR;
    case ProtectFlags::NoAccess:
    default:
       return PROT_WRITE;
@@ -73,6 +92,32 @@ createMemoryMappedFile(size_t size)
                   size, errno);
    }
 
+   return static_cast<MapFileHandle>(fd);
+}
+
+
+MapFileHandle
+openMemoryMappedFile(const std::string &path,
+                     ProtectFlags flags,
+                     size_t *outSize)
+{
+   // Only support READ ONLY for now
+   decaf_check(flags == ProtectFlags::ReadOnly);
+   struct stat st;
+   if (stat(path.c_str(), &st) == -1) {
+      gLog->error("openMemoryMappedFile(\"{}\") stat failed with error: {}",
+                  path, errno);
+      return InvalidMapFileHandle;
+   }
+
+   auto fd = open(path.c_str(), flagsToOpen(flags), 0);
+   if (fd == -1) {
+      gLog->error("openMemoryMappedFile(\"{}\") open failed with error: {}",
+                  path, errno);
+      return InvalidMapFileHandle;
+   }
+
+   *outSize = st.st_size;
    return static_cast<MapFileHandle>(fd);
 }
 

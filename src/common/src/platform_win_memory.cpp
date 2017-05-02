@@ -1,12 +1,22 @@
+#include "decaf_assert.h"
+#include "log.h"
 #include "platform.h"
 #include "platform_memory.h"
-#include "log.h"
 
 #ifdef PLATFORM_WINDOWS
+#include <map>
+#include <mutex>
 #include <Windows.h>
 
 namespace platform
 {
+
+static std::mutex
+sMemoryMutex;
+
+static std::map<HANDLE, HANDLE>
+sMemoryFileMap;
+
 
 static DWORD
 flagsToPageProtect(ProtectFlags flags)
@@ -77,11 +87,59 @@ createMemoryMappedFile(size_t size)
 }
 
 
-bool
-closeMemoryMappedFile(MapFileHandle handle)
+MapFileHandle
+openMemoryMappedFile(const std::string &path,
+                     ProtectFlags flags,
+                     size_t *outSize)
 {
-   if (!CloseHandle(reinterpret_cast<HANDLE>(handle))) {
-      gLog->error("closeMemoryMappedFile({}) failed with error: {}",
+   // Only support READ ONLY for now
+   decaf_check(flags == ProtectFlags::ReadOnly);
+   std::lock_guard<std::mutex> lock { sMemoryMutex };
+   OFSTRUCT of;
+   auto fileHandle = reinterpret_cast<HANDLE>(static_cast<uintptr_t>(OpenFile(path.c_str(), &of, OF_READ)));
+   if (!fileHandle) {
+      gLog->error("openMemoryMappedFile(\"{}\") OpenFile failed with error: {}",
+                  path, GetLastError());
+      return InvalidMapFileHandle;
+   }
+
+   auto mapHandle = CreateFileMapping(fileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+   if (!mapHandle) {
+      CloseHandle(fileHandle);
+      gLog->error("openMemoryMappedFile(\"{}\") CreateFileMapping failed with error: {}",
+                  path, GetLastError());
+      return InvalidMapFileHandle;
+   }
+
+   if (outSize) {
+      LARGE_INTEGER size;
+      GetFileSizeEx(fileHandle, &size);
+      *outSize = static_cast<size_t>(size.QuadPart);
+   }
+
+   sMemoryFileMap[mapHandle] = fileHandle;
+   return reinterpret_cast<MapFileHandle>(mapHandle);
+}
+
+
+bool
+closeMemoryMappedFile(MapFileHandle mapFileHandle)
+{
+   std::lock_guard<std::mutex> lock { sMemoryMutex };
+   auto handle = reinterpret_cast<HANDLE>(mapFileHandle);
+   auto itr = sMemoryFileMap.find(handle);
+
+   if (itr != sMemoryFileMap.end()) {
+      if (!CloseHandle(itr->second)) {
+         gLog->error("closeMemoryMappedFile({}) close file handle failed with error: {}",
+                     handle, GetLastError());
+      }
+
+      sMemoryFileMap.erase(itr);
+   }
+
+   if (!CloseHandle(handle)) {
+      gLog->error("closeMemoryMappedFile({}) close map handle failed with error: {}",
                   handle, GetLastError());
       return false;
    }
