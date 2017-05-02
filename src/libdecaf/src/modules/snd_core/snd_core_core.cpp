@@ -91,7 +91,7 @@ AXInitWithParams(AXInitParams *params)
    internal::initEvents();
 
    if (auto driver = decaf::getSoundDriver()) {
-      if (!driver->start(48000, sOutputChannels)) {
+      if (!driver->start(sOutputRate, sOutputChannels)) {
          gLog->error("Sound driver failed to start, disabling sound output");
          decaf::setSoundDriver(nullptr);
       }
