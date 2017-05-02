@@ -232,8 +232,8 @@ if(Vulkan_FOUND)
         target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WIN32_KHR")
     endif()
     set(VULKAN_LIBRARIES vulkan PARENT_SCOPE)
-else ()
-    set(VULKAN_LIBRARIES " PARENT_SCOPE)
+else()
+    set(VULKAN_LIBRARIES "" PARENT_SCOPE)
 endif()
 
 # zlib
