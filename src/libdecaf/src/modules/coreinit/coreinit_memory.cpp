@@ -183,8 +183,7 @@ OSAllocVirtAddr(ppcaddr_t address,
 {
    return kernel::syscall::allocVirtAddr(cpu::VirtualAddress { address },
                                          size,
-                                         alignment)
-         ? TRUE : FALSE;
+                                         alignment).getAddress();
 }
 
 BOOL
