@@ -362,6 +362,36 @@ MemoryMap::findFreeVirtualAddress(uint32_t size,
    return { VirtualAddress { 0u }, 0u };
 }
 
+VirtualAddressRange
+MemoryMap::findFreeVirtualAddressInRange(VirtualAddressRange range,
+                                         uint32_t size,
+                                         uint32_t align)
+{
+   auto rangeStart = range.start;
+   auto rangeEnd = range.start + (range.size - 1);
+   size = align_up(size, cpu::PageSize);
+
+   for (auto &reservation : mReservedMemory) {
+      if (rangeEnd < reservation.start || rangeStart > reservation.end) {
+         // Not in range
+         continue;
+      }
+
+      auto start = std::max(reservation.start, rangeStart);
+      auto end = std::min(reservation.end, rangeEnd);
+
+      auto alignedStart = align_up(align_up(start, align), cpu::PageSize);
+      auto alignedEnd = alignedStart + (size - 1);
+
+      // Ensure address is in range
+      if (start <= alignedStart && end >= alignedEnd) {
+         return { alignedStart, size };
+      }
+   }
+
+   return { VirtualAddress { 0u }, 0u };
+}
+
 bool
 MemoryMap::mapMemory(VirtualAddress virtualAddress,
                      PhysicalAddress physicalAddress,

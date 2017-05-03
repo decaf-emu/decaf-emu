@@ -51,6 +51,11 @@ public:
    findFreeVirtualAddress(uint32_t size,
                           uint32_t align);
 
+   VirtualAddressRange
+   findFreeVirtualAddressInRange(VirtualAddressRange range,
+                                 uint32_t size,
+                                 uint32_t align);
+
    bool
    virtualToPhysicalAddress(VirtualAddress virtualAddress,
                             PhysicalAddress &out);

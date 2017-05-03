@@ -94,6 +94,11 @@ struct AddressRange
 {
    using address_type = Address<Type>;
 
+   constexpr bool contains(AddressRange &other) const
+   {
+      return (start <= other.start && start + size >= other.start + other.size);
+   }
+
    address_type start;
    uint32_t size;
 };

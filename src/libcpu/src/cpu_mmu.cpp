@@ -34,6 +34,14 @@ findFreeVirtualAddress(uint32_t size,
    return sMemoryMap.findFreeVirtualAddress(size, align);
 }
 
+VirtualAddressRange
+findFreeVirtualAddressInRange(VirtualAddressRange range,
+                              uint32_t size,
+                              uint32_t align)
+{
+   return sMemoryMap.findFreeVirtualAddressInRange(range, size, align);
+}
+
 bool
 mapMemory(VirtualAddress virtualAddress,
           PhysicalAddress physicalAddress,
