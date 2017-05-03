@@ -24,15 +24,19 @@ allocVirtAddr(cpu::VirtualAddress address,
               uint32_t size,
               uint32_t alignment)
 {
-   if (!inVirtualMapRange(address, size)) {
-      return cpu::VirtualAddress { 0u };
+   if (alignment < cpu::PageSize) {
+      alignment = cpu::PageSize;
    }
 
    if (address) {
+      if (!inVirtualMapRange(address, size)) {
+         return cpu::VirtualAddress { 0u };
+      }
+
       address = align_up(address, alignment);
       size = align_up(size, alignment);
    } else {
-      auto range = cpu::findFreeVirtualAddress(size, alignment);
+      auto range = cpu::findFreeVirtualAddressInRange(kernel::getVirtualMapRange(), size, alignment);
       address = range.start;
       size = range.size;
    }
