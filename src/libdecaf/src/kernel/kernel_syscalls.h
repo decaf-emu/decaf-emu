@@ -20,10 +20,10 @@ freeVirtAddr(cpu::VirtualAddress address,
 cpu::VirtualAddressRange
 getMapVirtAddrRange();
 
-cpu::VirtualAddressRange
+cpu::PhysicalAddressRange
 getDataPhysAddrRange();
 
-cpu::VirtualAddressRange
+cpu::PhysicalAddressRange
 getAvailPhysAddrRange();
 
 bool

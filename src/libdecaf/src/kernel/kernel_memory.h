@@ -57,4 +57,10 @@ getSystemHeapBounds();
 cpu::VirtualAddressRange
 getVirtualMapRange();
 
+cpu::PhysicalAddressRange
+getAvailPhysicalRange();
+
+cpu::PhysicalAddressRange
+getDataPhysicalRange();
+
 } // namespace kernel

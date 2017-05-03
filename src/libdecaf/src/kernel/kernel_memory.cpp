@@ -69,6 +69,12 @@ struct MemoryMap
 
 // cute.
 static constexpr uint32_t
+operator""_kb(unsigned long long value)
+{
+   return static_cast<uint32_t>(value * 1024);
+}
+
+static constexpr uint32_t
 operator""_mb(unsigned long long value)
 {
    return static_cast<uint32_t>(value * 1024 * 1024);
@@ -134,6 +140,11 @@ static const auto CodeVirtualBase = cpu::VirtualAddress { 0x02000000 };
 static const auto DataVirtualBase = cpu::VirtualAddress { 0x10000000 };
 static auto sCodeSize = uint32_t { 0 };
 static auto sDataSize = uint32_t { 0 };
+
+// Maybe this is 1 page per core? cpu::PageSize = 128kb.
+// We're using the results from a Mii Maker rpx loading environment.
+static auto sAvailPhysicalBase = cpu::PhysicalAddress { 0 };
+static const auto AvailPhysicalSize = uint32_t { 128_kb * 3 };
 
 static bool
 map(MemoryMap &map)
@@ -244,13 +255,15 @@ initialiseAppMemory(uint32_t codeSize)
 {
    // Align code size to page size
    sCodeSize = align_up(codeSize, cpu::PageSize);
-   sDataSize = AppHeapPhysicalSize - sCodeSize;
+   sDataSize = AppHeapPhysicalSize - sCodeSize - AvailPhysicalSize;
 
    // Place data at start of physical memory
    auto physDataStart = AppHeapPhysicalBase;
 
    // Place code at end of physical memory
-   auto physCodeStart = AppHeapPhysicalBase + sDataSize;
+   sAvailPhysicalBase = AppHeapPhysicalBase + sDataSize;
+   auto physCodeStart = sAvailPhysicalBase + AvailPhysicalSize;
+
 
    if (!cpu::allocateVirtualAddress(CodeVirtualBase, sCodeSize)) {
       gLog->error("Unexpected failure allocating code virtual address 0x{:08X} - 0x{:08X}",
@@ -351,6 +364,18 @@ cpu::VirtualAddressRange
 getVirtualMapRange()
 {
    return { VirtualMapRange.virt, VirtualMapRange.size };
+}
+
+cpu::PhysicalAddressRange
+getAvailPhysicalRange()
+{
+   return { sAvailPhysicalBase, AvailPhysicalSize };
+}
+
+cpu::PhysicalAddressRange
+getDataPhysicalRange()
+{
+   return { AppHeapPhysicalBase, sDataSize };
 }
 
 } // namespace kernel

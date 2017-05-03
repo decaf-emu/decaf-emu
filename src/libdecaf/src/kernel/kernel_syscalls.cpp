@@ -61,16 +61,16 @@ getMapVirtAddrRange()
    return kernel::getVirtualMapRange();
 }
 
-cpu::VirtualAddressRange
+cpu::PhysicalAddressRange
 getDataPhysAddrRange()
 {
-   return { cpu::VirtualAddress { 0u }, 0u };
+   return kernel::getDataPhysicalRange();
 }
 
-cpu::VirtualAddressRange
+cpu::PhysicalAddressRange
 getAvailPhysAddrRange()
 {
-   return { cpu::VirtualAddress { 0u }, 0u };
+   return kernel::getAvailPhysicalRange();
 }
 
 bool
