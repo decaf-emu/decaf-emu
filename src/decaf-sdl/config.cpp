@@ -184,7 +184,7 @@ loadFrontendToml(std::shared_ptr<cpptoml::table> config)
    }
 
    // input
-   auto devices = config->get_table_array_qualified("input.device");
+   auto devices = config->get_table_array_qualified("input.devices");
    input::devices.clear();
 
    if (devices) {
@@ -292,7 +292,15 @@ saveFrontendToml(std::shared_ptr<cpptoml::table> config)
 
    for (const auto &device : config::input::devices) {
       auto cfgDevice = cpptoml::make_table();
-      cfgDevice->insert("type", static_cast<int>(device.type));
+
+      if (device.type == config::input::ControllerType::Joystick) {
+         cfgDevice->insert("type", "joystick");
+      } else if (device.type == config::input::ControllerType::Keyboard) {
+         cfgDevice->insert("type", "keyboard");
+      } else {
+         cfgDevice->insert("type", "unknown");
+      }
+
       cfgDevice->insert("id", device.id);
       cfgDevice->insert("device_name", device.device_name);
       cfgDevice->insert("button_up", device.button_up);
