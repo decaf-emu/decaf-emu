@@ -55,7 +55,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
 
                inst.op2 = inst.op2
                   .WRITE_MASK(false);
-            } else if (dst->name == "AluDstGpr") {
+            } else if (dst->name == "Gpr") {
                inst.word1 = inst.word1
                   .DST_GPR(parseNumber(*dst));
             } else if (dst->name == "AluRel") {
@@ -95,7 +95,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                   srcType = src->nodes[0]->nodes[0];
                }
 
-               if (srcType->name == "SrcGpr") {
+               if (srcType->name == "Gpr") {
                   sel = static_cast<latte::SQ_ALU_SRC>(latte::SQ_ALU_SRC::REGISTER_FIRST + parseNumber(*srcType));
                } else if (srcType->name == "ConstantCache0") {
                   sel = static_cast<latte::SQ_ALU_SRC>(latte::SQ_ALU_SRC::KCACHE_BANK0_FIRST + parseNumber(*srcType));

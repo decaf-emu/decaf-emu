@@ -53,7 +53,7 @@ compileExpInst(Shader &shader, peg::Ast &node)
             .ARRAY_BASE(index + 60);
       } else if (child->name == "ExpSrc") {
          for (auto &src : child->nodes) {
-            if (src->name == "SrcGpr") {
+            if (src->name == "Gpr") {
                inst.exp.word0 = inst.exp.word0
                   .RW_GPR(parseNumber(*src))
                   .RW_REL(latte::SQ_REL::ABS);
@@ -64,7 +64,7 @@ compileExpInst(Shader &shader, peg::Ast &node)
                   .SRC_SEL_Y(latte::SQ_SEL::SEL_Y)
                   .SRC_SEL_Z(latte::SQ_SEL::SEL_Z)
                   .SRC_SEL_W(latte::SQ_SEL::SEL_W);
-            } else if (src->name == "SrcGprRel") {
+            } else if (src->name == "GprRel") {
                inst.exp.word0 = inst.exp.word0
                   .RW_GPR(parseNumber(*src))
                   .RW_REL(latte::SQ_REL::REL);

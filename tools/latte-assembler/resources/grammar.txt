@@ -17,8 +17,8 @@ EndOfProgram <- 'END_OF_PROGRAM'
 
 InstCount <- <Number>
 VecGpr <- 'R' Number FourCompSwizzle?
-SrcGpr <- 'R' <Number>
-SrcGprRel <- 'R[AL' _ '+' _ <Number> _ ']'
+Gpr <- 'R' <Number>
+GprRel <- 'R[AL' _ '+' _ <Number> _ ']'
 ConstantFile <- 'C' <Number>
 ConstantCache0 <- 'KC0' _ '[' _ <Number> _ ']'
 ConstantCache1 <- 'KC1' _ '[' _ <Number> _ ']'
@@ -54,7 +54,7 @@ WHOLE_QUAD_MODE <- 'WHOLE_QUAD_MODE' / 'WHOLE_QUAD'
 NO_BARRIER <- 'NO_BARRIER'
 VALID_PIX <- 'VALID_PIX'
 
-ExpSrc <- (SrcGpr / SrcGprRel) FourCompSwizzle?
+ExpSrc <- (Gpr / GprRel) FourCompSwizzle?
 ExpOpcode <- 'EXP_DONE' / 'EXP'
 ExpPixTarget <- 'PIX' <Number>
 ExpPosTarget <- 'POS' <Number>
@@ -73,9 +73,9 @@ TexDestReg <- VecGpr
 TexSrcReg <- VecGpr
 TexResourceId <- 't' <Number>
 TexSamplerId <- 's' <Number>
-TexProperties <- ((WHOLE_QUAD_MODE / BC_FRAC_MODE / NORM / XOFFSET / YOFFSET / ZOFFSET / LOD) _)*
+TexProperties <- ((WHOLE_QUAD_MODE / BC_FRAC_MODE / NORM / LOD / XOFFSET / YOFFSET / ZOFFSET) _)*
 BC_FRAC_MODE <- 'BC_FRAC_MODE'
-NORM <- 'NORM(' [xyzwXYZW]+ ')'
+NORM <- 'NORM(' <[xyzwXYZW]+> ')'
 LOD <- 'LOD(' <Float> ')'
 XOFFSET <- 'XOFFSET(' <Float> ')'
 YOFFSET <- 'YOFFSET(' <Float> ')'
@@ -123,11 +123,10 @@ AluOpcode3 <- 'BFE_UINT' / 'BFE_INT' / 'BFI_INT' / 'FMA' / 'MULADD_64_D2'
    / 'MULADD_e' / 'MULADD' / 'CNDGE_INT' / 'CNDGE' / 'CNDGT_INT' / 'CNDGT' / 'CNDE_INT' / 'CNDE'
 AluOutputModifier <- '*2' / '*4' / '/2' / '/4'
 AluRel <- <'[AR.' [xyzwXYZW] ']'> / <'[AL]'>
-AluDstGpr <- 'R' <Number>
-AluDst <- (AluDstGpr AluRel? OneCompSwizzle?) / WriteMask
+AluDst <- (Gpr AluRel? OneCompSwizzle?) / WriteMask
 AluSrc <- Negate? (AluAbsSrcValue / AluSrcValue) AluRel? OneCompSwizzle?
 AluAbsSrcValue <- '|' _ AluSrcValue _ '|'
-AluSrcValue <- SrcGpr / ConstantCache0 / ConstantCache1 / ConstantFile / Literal / PreviousScalar / PreviousVector
+AluSrcValue <- Gpr / ConstantCache0 / ConstantCache1 / ConstantFile / Literal / PreviousScalar / PreviousVector
 AluProperties <- ((BANK_SWIZZLE / UPDATE_EXEC_MASK / UPDATE_PRED / PRED_SEL / CLAMP) _)*
 UPDATE_PRED <- 'UPDATE_PRED'
 PRED_SEL <- 'PRED_SEL_OFF' / 'PRED_SEL_ZERO' / 'PRED_SEL_ONE'
