@@ -98,7 +98,7 @@ const char *getInstructionName(SQ_OP2_INST id)
 
 SQ_OP2_INST getAluOp2InstructionByName(const std::string &findName)
 {
-#define ALU_OP2(name, value) if (findName == #name) { return SQ_OP2_INST_##name; }
+#define ALU_OP2(name, value, srcs, flags) if (findName == #name) { return SQ_OP2_INST_##name; }
 #include "latte/latte_instructions_def.inl"
 #undef ALU_OP2
    return SQ_OP2_INST_INVALID;
@@ -117,7 +117,7 @@ const char *getInstructionName(SQ_OP3_INST id)
 
 SQ_OP3_INST getAluOp3InstructionByName(const std::string &findName)
 {
-#define ALU_OP3(name, value) if (findName == #name) { return SQ_OP3_INST_##name; }
+#define ALU_OP3(name, value, srcs, flags) if (findName == #name) { return SQ_OP3_INST_##name; }
 #include "latte/latte_instructions_def.inl"
 #undef ALU_OP3
    return SQ_OP3_INST_INVALID;
