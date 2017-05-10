@@ -113,7 +113,9 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
 
                   if (literal.flags & LiteralValue::ReadFloat) {
                      if (literal.floatValue == 0.0f) {
-                        sel = latte::SQ_ALU_SRC::IMM_0;
+                        if ((literal.flags & LiteralValue::ReadHex) == 0 || literal.hexValue == 0) {
+                           sel = latte::SQ_ALU_SRC::IMM_0;
+                        }
                      } else if (literal.floatValue == 1.0f) {
                         sel = latte::SQ_ALU_SRC::IMM_1;
                      } else if (literal.floatValue == 0.5f) {
