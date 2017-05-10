@@ -1,6 +1,32 @@
 #include "shader_compiler.h"
 
-static bool
+static std::string
+decodeOpcodeAlias(const std::string &op)
+{
+   if (op == "SQRT_e") {
+      return "SQRT_IEEE";
+   } else if (op == "EXP_e") {
+      return "EXP_IEEE";
+   } else if (op == "LOG_e") {
+      return "LOG_IEEE";
+   } else if (op == "RSQ_e") {
+      return "RECIPSQRT_IEEE";
+   } else if (op == "RCP_e") {
+      return "RECIP_IEEE";
+   } else if (op == "LOG_sat") {
+      return "LOG_CLAMPED";
+   } else if (op == "MUL_e") {
+      return "MUL_IEEE";
+   } else if (op == "DOT4_e") {
+      return "DOT4_IEEE";
+   } else if (op == "MULADD_e") {
+      return "MULADD_IEEE";
+   } else {
+      return op;
+   }
+}
+
+static void
 compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs)
 {
    auto inst = latte::AluInst {};
@@ -20,8 +46,8 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                .DST_CHAN(aluUnit);
          }
       } else if (child->name == "AluOpcode0" || child->name == "AluOpcode1" || child->name == "AluOpcode2") {
-         const auto &name = child->token;
-         auto opcode = latte::getAluOp2InstructionByName(name);
+         const auto name = decodeOpcodeAlias(child->token);
+         const auto opcode = latte::getAluOp2InstructionByName(name);
 
          if (opcode == latte::SQ_OP2_INST_INVALID) {
             throw invalid_alu_op2_inst_exception { *child };
@@ -32,8 +58,8 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
          inst.op2 = inst.op2
             .ALU_INST(opcode);
       } else if (child->name == "AluOpcode3") {
-         const auto &name = child->token;
-         auto opcode = latte::getAluOp3InstructionByName(name);
+         const auto name = decodeOpcodeAlias(child->token);
+         const auto opcode = latte::getAluOp3InstructionByName(name);
 
          if (opcode == latte::SQ_OP3_INST_INVALID) {
             throw invalid_alu_op3_inst_exception { *child };
@@ -194,10 +220,9 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
    }
 
    group.insts.push_back(inst);
-   return true;
 }
 
-static bool
+static void
 compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
 {
    auto group = AluGroup {};
@@ -230,7 +255,6 @@ compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
 
    shader.clausePC++;
    clause.groups.push_back(std::move(group));
-   return true;
 }
 
 bool
