@@ -77,14 +77,14 @@ readFileHeader(MemoryFile &fh,
                                            header.headerSize) };
    }
 
-   header.version1 = read<uint32_t>(fh);
-   if (header.version1 != GFDFileVersion7) {
+   header.majorVersion = read<uint32_t>(fh);
+   if (header.majorVersion != GFDFileMajorVersion) {
       throw GFDReadException { fmt::format("Unsupported file version {}.{}.{}",
-                                           header.version1, header.version2, header.version3) };
+                                           header.majorVersion, header.minorVersion, header.gpuVersion) };
    }
 
-   header.version2 = read<uint32_t>(fh);
-   header.version3 = read<uint32_t>(fh);
+   header.minorVersion = read<uint32_t>(fh);
+   header.gpuVersion = read<uint32_t>(fh);
    header.align = read<uint32_t>(fh);
    header.unk1 = read<uint32_t>(fh);
    header.unk2 = read<uint32_t>(fh);
@@ -109,8 +109,8 @@ readBlockHeader(MemoryFile &fh,
       throw GFDReadException { fmt::format("Unexpected block header size {:X}", header.headerSize) };
    }
 
-   header.version1 = read<uint32_t>(fh);
-   header.version2 = read<uint32_t>(fh);
+   header.majorVersion = read<uint32_t>(fh);
+   header.minorVersion = read<uint32_t>(fh);
    header.type = static_cast<GFDBlockType>(read<uint32_t>(fh));
    header.dataSize = read<uint32_t>(fh);
    header.id = read<uint32_t>(fh);
@@ -399,7 +399,7 @@ readVertexShaderHeader(MemoryFile &fh,
 
    fh.pos = blockBase;
 
-   if (block.version1 == 1) {
+   if (block.majorVersion == 1) {
       vsh.regs.sq_pgm_resources_vs = latte::SQ_PGM_RESOURCES_VS::get(read<uint32_t>(fh));
       vsh.regs.vgt_primitiveid_en = latte::VGT_PRIMITIVEID_EN::get(read<uint32_t>(fh));
       vsh.regs.spi_vs_out_config = latte::SPI_VS_OUT_CONFIG::get(read<uint32_t>(fh));
@@ -423,7 +423,7 @@ readVertexShaderHeader(MemoryFile &fh,
       decaf_check(fh.pos - blockBase == 0xD0);
    } else {
       throw GFDReadException { fmt::format("Unsupported VertexShaderHeader version {}.{}",
-                                           block.version1, block.version2) };
+                                           block.majorVersion, block.minorVersion) };
    }
 
    vsh.data.reserve(read<uint32_t>(fh));
@@ -446,7 +446,7 @@ readVertexShaderHeader(MemoryFile &fh,
 
    readGx2rBuffer(fh, vsh.gx2rData);
 
-   if (block.version1 == 1) {
+   if (block.majorVersion == 1) {
       decaf_check(fh.pos - blockBase == 0x134);
    }
 
@@ -480,9 +480,9 @@ readPixelShaderHeader(MemoryFile &fh,
       return false;
    }
 
-   if (block.version1 != 0 && block.version1 != 1) {
+   if (block.majorVersion != 0 && block.majorVersion != 1) {
       throw GFDReadException { fmt::format("Unsupported PixelShaderHeader version {}.{}",
-                                           block.version1, block.version2) };
+                                           block.majorVersion, block.minorVersion) };
    }
 
    fh.pos = blockBase;
@@ -512,10 +512,10 @@ readPixelShaderHeader(MemoryFile &fh,
    readLoopVars(fh, blockBase, relocations, psh.loopVars);
    readSamplerVars(fh, blockBase, relocations, psh.samplerVars);
 
-   if (block.version1 == 0) {
+   if (block.majorVersion == 0) {
       std::memset(&psh.gx2rData, 0, sizeof(GFDRBuffer));
       decaf_check(fh.pos - blockBase == 0xD8);
-   } else if (block.version1 == 1) {
+   } else if (block.majorVersion == 1) {
       readGx2rBuffer(fh, psh.gx2rData);
       decaf_check(fh.pos - blockBase == 0xE8);
    }
@@ -550,9 +550,9 @@ readGeometryShaderHeader(MemoryFile &fh,
       return false;
    }
 
-   if (block.version1 != 1) {
+   if (block.majorVersion != 1) {
       throw GFDReadException { fmt::format("Unsupported GeometryShaderHeader version {}.{}",
-                                           block.version1, block.version2) };
+                                           block.majorVersion, block.minorVersion) };
    }
 
    fh.pos = blockBase;
@@ -595,7 +595,7 @@ readGeometryShaderHeader(MemoryFile &fh,
    readGx2rBuffer(fh, gsh.gx2rData);
    readGx2rBuffer(fh, gsh.gx2rVertexShaderData);
 
-   if (block.version1 == 1) {
+   if (block.majorVersion == 1) {
       decaf_check(fh.pos - blockBase == 0xC0);
    }
 
@@ -624,9 +624,9 @@ readTextureHeader(MemoryFile &fh,
 {
    auto blockBase = fh.pos;
 
-   if (block.version1 != 1) {
+   if (block.majorVersion != 1) {
       throw GFDReadException { fmt::format("Unsupported TextureHeader version {}.{}",
-                                           block.version1, block.version2) };
+                                           block.majorVersion, block.minorVersion) };
    }
 
    tex.surface.dim = static_cast<gx2::GX2SurfaceDim>(read<uint32_t>(fh));
@@ -665,7 +665,7 @@ readTextureHeader(MemoryFile &fh,
    tex.regs.word5 = latte::SQ_TEX_RESOURCE_WORD5_N::get(read<uint32_t>(fh));
    tex.regs.word6 = latte::SQ_TEX_RESOURCE_WORD6_N::get(read<uint32_t>(fh));
 
-   if (block.version1 == 1) {
+   if (block.majorVersion == 1) {
       decaf_check(fh.pos - blockBase == 0x9c);
    }
 

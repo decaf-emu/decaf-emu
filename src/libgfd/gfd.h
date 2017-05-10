@@ -15,9 +15,9 @@ struct GFDFileHeader
    static constexpr uint32_t HeaderSize = 8 * 4;
    uint32_t magic;
    uint32_t headerSize;
-   uint32_t version1;
-   uint32_t version2;
-   uint32_t version3;
+   uint32_t majorVersion;
+   uint32_t minorVersion;
+   uint32_t gpuVersion;
    uint32_t align;
    uint32_t unk1;
    uint32_t unk2;
@@ -29,8 +29,8 @@ struct GFDBlockHeader
    static constexpr uint32_t HeaderSize = 8 * 4;
    uint32_t magic;
    uint32_t headerSize;
-   uint32_t version1;
-   uint32_t version2;
+   uint32_t majorVersion;
+   uint32_t minorVersion;
    GFDBlockType type;
    uint32_t dataSize;
    uint32_t id;
@@ -73,7 +73,10 @@ struct GFDFile
    std::vector<GFDTexture> textures;
 };
 
-static constexpr uint32_t GFDFileVersion7 = 7u;
+static constexpr uint32_t GFDFileMajorVersion = 7u;
+static constexpr uint32_t GFDFileMinorVersion = 1u;
+static constexpr uint32_t GFDFileGpuVersion = 2u;
+static constexpr uint32_t GFDBlockMajorVersion = 1u;
 static constexpr uint32_t GFDPatchMask = 0xFFF00000u;
 static constexpr uint32_t GFDPatchData = 0xD0600000u;
 static constexpr uint32_t GFDPatchText = 0xCA700000u;

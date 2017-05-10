@@ -508,8 +508,8 @@ writeBlock(MemoryFile &fh,
 {
    write<uint32_t>(fh, GFDBlockHeader::Magic);
    write<uint32_t>(fh, GFDBlockHeader::HeaderSize);
-   write<uint32_t>(fh, header.version1);
-   write<uint32_t>(fh, header.version2);
+   write<uint32_t>(fh, header.majorVersion);
+   write<uint32_t>(fh, header.minorVersion);
    write<uint32_t>(fh, static_cast<uint32_t>(header.type));
    write<uint32_t>(fh, static_cast<uint32_t>(data.size()));
    write<uint32_t>(fh, header.id);
@@ -528,9 +528,9 @@ writeFile(const GFDFile &file,
    // Write File Header
    write<uint32_t>(fh, GFDFileHeader::Magic);
    write<uint32_t>(fh, GFDFileHeader::HeaderSize);
-   write<uint32_t>(fh, GFDFileVersion7);
-   write<uint32_t>(fh, 0); // version2
-   write<uint32_t>(fh, 0); // version3
+   write<uint32_t>(fh, GFDFileMajorVersion);
+   write<uint32_t>(fh, GFDFileMinorVersion);
+   write<uint32_t>(fh, GFDFileGpuVersion);
    write<uint32_t>(fh, 1); // align
    write<uint32_t>(fh, 0); // unk1
    write<uint32_t>(fh, 0); // unk2
@@ -541,16 +541,16 @@ writeFile(const GFDFile &file,
       writeVertexShader(vertexShaderHeader, file.vertexShaders[i]);
 
       GFDBlockHeader vshHeader;
-      vshHeader.version1 = 1;
-      vshHeader.version2 = 0;
+      vshHeader.majorVersion = GFDBlockMajorVersion;
+      vshHeader.minorVersion = 0;
       vshHeader.type = GFDBlockType::VertexShaderHeader;
       vshHeader.id = blockID++;
       vshHeader.index = i;
       writeBlock(fh, vshHeader, vertexShaderHeader);
 
       GFDBlockHeader dataHeader;
-      dataHeader.version1 = 1;
-      dataHeader.version2 = 0;
+      dataHeader.majorVersion = GFDBlockMajorVersion;
+      dataHeader.minorVersion = 0;
       dataHeader.type = GFDBlockType::VertexShaderProgram;
       dataHeader.id = blockID++;
       dataHeader.index = i;
@@ -563,16 +563,16 @@ writeFile(const GFDFile &file,
       writePixelShader(pixelShaderHeader, file.pixelShaders[i]);
 
       GFDBlockHeader pshHeader;
-      pshHeader.version1 = 1;
-      pshHeader.version2 = 0;
+      pshHeader.majorVersion = GFDBlockMajorVersion;
+      pshHeader.minorVersion = 0;
       pshHeader.type = GFDBlockType::PixelShaderHeader;
       pshHeader.id = blockID++;
       pshHeader.index = i;
       writeBlock(fh, pshHeader, pixelShaderHeader);
 
       GFDBlockHeader dataHeader;
-      dataHeader.version1 = 1;
-      dataHeader.version2 = 0;
+      dataHeader.majorVersion = GFDBlockMajorVersion;
+      dataHeader.minorVersion = 0;
       dataHeader.type = GFDBlockType::PixelShaderProgram;
       dataHeader.id = blockID++;
       dataHeader.index = i;
@@ -585,16 +585,16 @@ writeFile(const GFDFile &file,
       writeGeometryShader(geometryShaderHeader, file.geometryShaders[i]);
 
       GFDBlockHeader gshHeader;
-      gshHeader.version1 = 1;
-      gshHeader.version2 = 0;
+      gshHeader.majorVersion = GFDBlockMajorVersion;
+      gshHeader.minorVersion = 0;
       gshHeader.type = GFDBlockType::GeometryShaderHeader;
       gshHeader.id = blockID++;
       gshHeader.index = i;
       writeBlock(fh, gshHeader, geometryShaderHeader);
 
       GFDBlockHeader dataHeader;
-      dataHeader.version1 = 1;
-      dataHeader.version2 = 0;
+      dataHeader.majorVersion = GFDBlockMajorVersion;
+      dataHeader.minorVersion = 0;
       dataHeader.type = GFDBlockType::GeometryShaderProgram;
       dataHeader.id = blockID++;
       dataHeader.index = i;
@@ -607,16 +607,16 @@ writeFile(const GFDFile &file,
       writeTexture(textureHeader, file.textures[i]);
 
       GFDBlockHeader texHeader;
-      texHeader.version1 = 1;
-      texHeader.version2 = 0;
+      texHeader.majorVersion = GFDBlockMajorVersion;
+      texHeader.minorVersion = 0;
       texHeader.type = GFDBlockType::TextureHeader;
       texHeader.id = blockID++;
       texHeader.index = i;
       writeBlock(fh, texHeader, textureHeader);
 
       GFDBlockHeader imageHeader;
-      imageHeader.version1 = 1;
-      imageHeader.version2 = 0;
+      imageHeader.majorVersion = GFDBlockMajorVersion;
+      imageHeader.minorVersion = 0;
       imageHeader.type = GFDBlockType::TextureImage;
       imageHeader.id = blockID++;
       imageHeader.index = i;
@@ -624,8 +624,8 @@ writeFile(const GFDFile &file,
 
       if (file.textures[i].surface.mipmap.size()) {
          GFDBlockHeader mipmapHeader;
-         mipmapHeader.version1 = 1;
-         mipmapHeader.version2 = 0;
+         mipmapHeader.majorVersion = GFDBlockMajorVersion;
+         mipmapHeader.minorVersion = 0;
          mipmapHeader.type = GFDBlockType::TextureImage;
          mipmapHeader.id = blockID++;
          mipmapHeader.index = i;
