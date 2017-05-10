@@ -139,9 +139,9 @@ sampleFunc(State &state,
    auto srcSelZ = inst.word2.SRC_SEL_Z();
    auto srcSelW = inst.word2.SRC_SEL_W();
 
-   int32_t offsetX = sign_extend<5>(inst.word2.OFFSET_X());
-   int32_t offsetY = sign_extend<5>(inst.word2.OFFSET_Y());
-   int32_t offsetZ = sign_extend<5>(inst.word2.OFFSET_Z());
+   auto offsetX = static_cast<float>(inst.word2.OFFSET_X());
+   auto offsetY = static_cast<float>(inst.word2.OFFSET_Y());
+   auto offsetZ = static_cast<float>(inst.word2.OFFSET_Z());
 
    auto resourceID = inst.word0.RESOURCE_ID();
    auto samplerID = inst.word2.SAMPLER_ID();

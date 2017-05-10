@@ -2,6 +2,7 @@
 #include "latte_enum_sq.h"
 
 #include <cstdint>
+#include <common/fixed.h>
 #include <common/bitfield.h>
 
 namespace latte
@@ -227,7 +228,7 @@ BITFIELD(SQ_TEX_WORD1, uint32_t)
    BITFIELD_ENTRY(12, 3, SQ_SEL, DST_SEL_Y);
    BITFIELD_ENTRY(15, 3, SQ_SEL, DST_SEL_Z);
    BITFIELD_ENTRY(18, 3, SQ_SEL, DST_SEL_W);
-   BITFIELD_ENTRY(21, 7, uint32_t, LOD_BIAS);
+   BITFIELD_ENTRY(21, 7, sfixed_1_3_3_t, LOD_BIAS);
    BITFIELD_ENTRY(28, 1, SQ_TEX_COORD_TYPE, COORD_TYPE_X);
    BITFIELD_ENTRY(29, 1, SQ_TEX_COORD_TYPE, COORD_TYPE_Y);
    BITFIELD_ENTRY(30, 1, SQ_TEX_COORD_TYPE, COORD_TYPE_Z);
@@ -236,9 +237,9 @@ BITFIELD_END
 
 // Texture fetch clause instruction word 2
 BITFIELD(SQ_TEX_WORD2, uint32_t)
-   BITFIELD_ENTRY(0, 5, int32_t, OFFSET_X);
-   BITFIELD_ENTRY(5, 5, int32_t, OFFSET_Y);
-   BITFIELD_ENTRY(10, 5, int32_t, OFFSET_Z);
+   BITFIELD_ENTRY(0, 5, sfixed_1_3_1_t, OFFSET_X);
+   BITFIELD_ENTRY(5, 5, sfixed_1_3_1_t, OFFSET_Y);
+   BITFIELD_ENTRY(10, 5, sfixed_1_3_1_t, OFFSET_Z);
    BITFIELD_ENTRY(15, 5, uint32_t, SAMPLER_ID);
    BITFIELD_ENTRY(20, 3, SQ_SEL, SRC_SEL_X);
    BITFIELD_ENTRY(23, 3, SQ_SEL, SRC_SEL_Y);

@@ -104,7 +104,7 @@ GX2InitSamplerLOD(GX2Sampler *sampler,
    word1 = word1
       .MIN_LOD(ufixed_4_6_t { lodMin })
       .MAX_LOD(ufixed_4_6_t { lodMax })
-      .LOD_BIAS(sfixed_6_6_t { lodBias });
+      .LOD_BIAS(sfixed_1_5_6_t { lodBias });
 
    sampler->regs.word1 = word1;
 }

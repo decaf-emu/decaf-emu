@@ -16,5 +16,9 @@ typedef sg14::make_ufixed<16, 0, uint16_t> ufixed160_t;
 
 typedef sg14::make_ufixed<1, 5, uint32_t> ufixed_1_5_t;
 typedef sg14::make_ufixed<4, 6, uint32_t> ufixed_4_6_t;
-typedef sg14::make_fixed<5, 6, int32_t> sfixed_6_6_t;
 typedef sg14::make_ufixed<1, 15, uint16_t> ufixed_1_15_t;
+typedef sg14::make_fixed<5, 6, int32_t> sfixed_1_5_6_t;
+
+using sfixed_1_3_1_t = sg14::make_fixed<3, 1, int8_t>;
+using sfixed_1_3_3_t = sg14::make_fixed<3, 3, int8_t>;
+using sfixed_1_5_6_t = sg14::make_fixed<5, 6, int16_t>;

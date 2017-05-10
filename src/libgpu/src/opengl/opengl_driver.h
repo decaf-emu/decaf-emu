@@ -225,7 +225,7 @@ struct SamplerCache
 
    ufixed_4_6_t minLod;
    ufixed_4_6_t maxLod;
-   sfixed_6_6_t lodBias;
+   sfixed_1_5_6_t lodBias;
 };
 
 struct GLStateCache

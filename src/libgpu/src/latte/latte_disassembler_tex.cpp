@@ -1,6 +1,7 @@
 #include "latte/latte_disassembler.h"
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
+#include <common/fixed.h>
 
 namespace latte
 {
@@ -71,7 +72,7 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
       << ", s" << tex.word2.SAMPLER_ID();
 
    if (tex.word1.LOD_BIAS()) {
-      out << " LOD(" << sign_extend<7>(tex.word1.LOD_BIAS()) << ")";
+      out << " LOD(" << static_cast<float>(tex.word1.LOD_BIAS()) << ")";
    }
 
    if (tex.word0.FETCH_WHOLE_QUAD()) {
@@ -114,18 +115,15 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    }
 
    if (tex.word2.OFFSET_X()) {
-      auto offset = sign_extend<5>(tex.word2.OFFSET_X());
-      out << " XOFFSET(" << offset << ")";
+      out << " XOFFSET(" << static_cast<float>(tex.word2.OFFSET_X()) << ")";
    }
 
    if (tex.word2.OFFSET_Y()) {
-      auto offset = sign_extend<5>(tex.word2.OFFSET_Y());
-      out << " YOFFSET(" << offset << ")";
+      out << " YOFFSET(" << static_cast<float>(tex.word2.OFFSET_Y()) << ")";
    }
 
    if (tex.word2.OFFSET_Z()) {
-      auto offset = sign_extend<5>(tex.word2.OFFSET_Z());
-      out << " ZOFFSET(" << offset << ")";
+      out << " ZOFFSET(" << static_cast<float>(tex.word2.OFFSET_Z()) << ")";
    }
 }
 
