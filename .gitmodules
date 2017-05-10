@@ -43,3 +43,6 @@
 [submodule "libraries/cpptoml"]
 	path = libraries/cpptoml
 	url = https://github.com/skystrife/cpptoml.git
+[submodule "libraries/cpp-peglib"]
+	path = libraries/cpp-peglib
+	url = https://github.com/yhirose/cpp-peglib.git

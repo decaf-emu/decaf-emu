@@ -142,6 +142,12 @@ add_library(ovsocket INTERFACE)
 target_include_directories(ovsocket INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${OVSOCKET_DIR}/ovsocket")
 set(OVSOCKET_LIBRARIES ovsocket PARENT_SCOPE)
 
+# peglib
+set(PEGLIB_DIR "cpp-peglib")
+add_library(peglib INTERFACE)
+target_include_directories(peglib INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${PEGLIB_DIR}")
+set(PEGLIB_LIBRARIES peglib PARENT_SCOPE)
+
 # pugixml
 set(PUGIXML_DIR "pugixml")
 add_library(pugixml STATIC
