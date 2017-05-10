@@ -213,35 +213,32 @@ writeRelocationData(std::vector<uint8_t> &fh,
 
    auto textSize = fh.size() - textOffset;
 
-   if (dataPatches.size() || textPatches.size()) {
-      auto patchOffset = fh.size();
-      auto dataSize = patchOffset;
-      auto dataOffset = 0;
+   auto patchOffset = fh.size();
+   auto dataSize = patchOffset;
+   auto dataOffset = 0;
 
-      // Now write patches
-      for (auto &patch : dataPatches) {
-         writeAt<uint32_t>(fh, patch.offset, static_cast<uint32_t>(patch.target) | GFDPatchData);
-         write<uint32_t>(fh, static_cast<uint32_t>(patch.offset) | GFDPatchData);
-      }
-
-      for (auto &patch : textPatches) {
-         writeAt<uint32_t>(fh, patch.offset, static_cast<uint32_t>(patch.target) | GFDPatchText);
-         write<uint32_t>(fh, static_cast<uint32_t>(patch.offset) | GFDPatchText);
-      }
-
-      // Write relocation header
-      write<uint32_t>(fh, GFDRelocationHeader::Magic);
-      write<uint32_t>(fh, GFDRelocationHeader::HeaderSize);
-      write<uint32_t>(fh, 0); // unk1
-      write<uint32_t>(fh, static_cast<uint32_t>(dataSize));
-      write<uint32_t>(fh, static_cast<uint32_t>(dataOffset) | GFDPatchData);
-      write<uint32_t>(fh, static_cast<uint32_t>(textSize));
-      write<uint32_t>(fh, static_cast<uint32_t>(textOffset) | GFDPatchData);
-      write<uint32_t>(fh, 0); // patchBase
-      write<uint32_t>(fh, static_cast<uint32_t>(dataPatches.size() + textPatches.size()));
-      write<uint32_t>(fh, static_cast<uint32_t>(patchOffset) | GFDPatchData);
+   // Now write patches
+   for (auto &patch : dataPatches) {
+      writeAt<uint32_t>(fh, patch.offset, static_cast<uint32_t>(patch.target) | GFDPatchData);
+      write<uint32_t>(fh, static_cast<uint32_t>(patch.offset) | GFDPatchData);
    }
 
+   for (auto &patch : textPatches) {
+      writeAt<uint32_t>(fh, patch.offset, static_cast<uint32_t>(patch.target) | GFDPatchText);
+      write<uint32_t>(fh, static_cast<uint32_t>(patch.offset) | GFDPatchText);
+   }
+
+   // Write relocation header
+   write<uint32_t>(fh, GFDRelocationHeader::Magic);
+   write<uint32_t>(fh, GFDRelocationHeader::HeaderSize);
+   write<uint32_t>(fh, 0); // unk1
+   write<uint32_t>(fh, static_cast<uint32_t>(dataSize));
+   write<uint32_t>(fh, static_cast<uint32_t>(dataOffset) | GFDPatchData);
+   write<uint32_t>(fh, static_cast<uint32_t>(textSize));
+   write<uint32_t>(fh, static_cast<uint32_t>(textOffset) | GFDPatchData);
+   write<uint32_t>(fh, 0); // patchBase
+   write<uint32_t>(fh, static_cast<uint32_t>(dataPatches.size() + textPatches.size()));
+   write<uint32_t>(fh, static_cast<uint32_t>(patchOffset) | GFDPatchData);
    return true;
 }
 
