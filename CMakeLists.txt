@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 
 project(decaf-emu C CXX)
 option(DECAF_BUILD_TESTS "Build tests" OFF)
+option(DECAF_BUILD_TOOLS "Build tools" OFF)
 option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
 option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
 option(DECAF_GL "Build with OpenGL rendering support" ON)
@@ -87,8 +88,11 @@ endmacro()
 
 add_subdirectory("libraries")
 add_subdirectory("src")
-add_subdirectory("tools")
 add_subdirectory("resources")
+
+if(DECAF_BUILD_TOOLS)
+    add_subdirectory("tools")
+endif()
 
 if(DECAF_BUILD_TESTS OR DECAF_BUILD_WUT_TESTS)
     enable_testing()
