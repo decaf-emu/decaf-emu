@@ -34,7 +34,7 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
    auto id = inst.exp.word1.CF_INST();
    auto name = getInstructionName(id);
-   out << name;
+   out << name << ":";
 
    auto type = inst.exp.word0.TYPE();
    auto memExpType = static_cast<SQ_MEM_EXPORT_TYPE>(inst.exp.word0.TYPE());
@@ -43,7 +43,7 @@ disassembleExpInstruction(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
       switch (type) {
       case SQ_EXPORT_TYPE::PIXEL:
-         out << " PIXEL" << arrayBase;
+         out << " PIX" << arrayBase;
          break;
       case SQ_EXPORT_TYPE::POS:
          out << " POS" << (arrayBase - 60);

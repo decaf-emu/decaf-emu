@@ -84,7 +84,7 @@ disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    }
 
    if (inst.word1.POP_COUNT()) {
-      out << " POP_COUNT(" << inst.word1.POP_COUNT() << ")";
+      out << " POP_CNT(" << inst.word1.POP_COUNT() << ")";
    }
 
    if (inst.word1.VALID_PIXEL_MODE()) {
@@ -108,7 +108,7 @@ disassembleJump(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    disassembleCondition(out, inst);
 
    if (inst.word1.POP_COUNT()) {
-      out << " POP_COUNT(" << inst.word1.POP_COUNT() << ")";
+      out << " POP_CNT(" << inst.word1.POP_COUNT() << ")";
    }
 
    if (id == SQ_CF_INST_CALL || id == SQ_CF_INST_ELSE || id == SQ_CF_INST_JUMP) {
@@ -171,7 +171,7 @@ disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_POP_PUSH:
    case SQ_CF_INST_POP_PUSH_ELSE:
       if (inst.word1.POP_COUNT()) {
-         out << " POP_COUNT(" << inst.word1.POP_COUNT() << ")";
+         out << " POP_CNT(" << inst.word1.POP_COUNT() << ")";
       }
 
       if (inst.word1.VALID_PIXEL_MODE()) {
@@ -232,7 +232,8 @@ disassembleNormal(State &state, const ControlFlowInst &inst)
 } // namespace disassembler
 
 std::string
-disassemble(const gsl::span<const uint8_t> &binary, bool isSubroutine)
+disassemble(const gsl::span<const uint8_t> &binary,
+            bool isSubroutine)
 {
    disassembler::State state;
    state.binary = binary;
@@ -266,6 +267,7 @@ disassemble(const gsl::span<const uint8_t> &binary, bool isSubroutine)
       if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL
        || cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_EXPORT) {
          if (cf.word1.END_OF_PROGRAM()) {
+            state.out << "\nEND_OF_PROGRAM\n";
             break;
          }
       }

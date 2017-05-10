@@ -24,27 +24,27 @@ disassembleKcache(fmt::MemoryWriter &out,
    case SQ_CF_KCACHE_MODE::LOCK_1:
       out
          << " KCACHE" << id << "("
-         << "cb" << bank << ", "
+         << "CB" << bank << ":"
          << (16 * addr)
-         << " to "
+         << "-"
          << (16 * addr + 15)
          << ")";
       break;
    case SQ_CF_KCACHE_MODE::LOCK_2:
       out
          << " KCACHE" << id << "("
-         << "cb" << bank << ", "
+         << "CB" << bank << ":"
          << (16 * addr)
-         << " to "
+         << "-"
          << (16 * addr + 31)
          << ")";
       break;
    case SQ_CF_KCACHE_MODE::LOCK_LOOP_INDEX:
       out
          << " KCACHE" << id << "("
-         << "cb" << bank << ", "
+         << "CB" << bank << ":"
          << "AL+" << (16 * addr)
-         << " to "
+         << "-"
          << "AL+" << (16 * addr + 31)
          << ")";
       break;
@@ -75,10 +75,10 @@ disassembleAluSource(fmt::MemoryWriter &out,
 
    if (sel >= SQ_ALU_SRC::KCACHE_BANK0_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK0_LAST) {
       auto id = sel - SQ_ALU_SRC::KCACHE_BANK0_FIRST;
-      out << "KCACHE0[" << id << "]";
+      out << "KC0[" << id << "]";
    } else if (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK1_LAST) {
       auto id = sel - SQ_ALU_SRC::KCACHE_BANK1_FIRST;
-      out << "KCACHE1[" << id << "]";
+      out << "KC1[" << id << "]";
    } else if (sel >= SQ_ALU_SRC::REGISTER_FIRST && sel <= SQ_ALU_SRC::REGISTER_LAST) {
       out << "R" << (sel - SQ_ALU_SRC::REGISTER_FIRST);
    } else if (sel >= SQ_ALU_SRC::CONST_FILE_FIRST && sel <= SQ_ALU_SRC::CONST_FILE_LAST) {
@@ -251,7 +251,7 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
                           const gsl::span<const uint32_t> &literals,
                           int namePad)
 {
-   const char *name = nullptr;
+   std::string name;
    SQ_ALU_FLAGS flags;
    auto srcCount = 0u;
 
@@ -265,7 +265,25 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
       srcCount = getInstructionNumSrcs(inst.op3.ALU_INST());
    }
 
-   out << fmt::pad(name, namePad, ' ') << ' ';
+   if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2 && !inst.op2.UPDATE_EXECUTE_MASK()) {
+      switch (inst.op2.OMOD()) {
+      case SQ_ALU_OMOD::OFF:
+         break;
+      case SQ_ALU_OMOD::D2:
+         name += "/2";
+         break;
+      case SQ_ALU_OMOD::M2:
+         name += "*2";
+         break;
+      case SQ_ALU_OMOD::M4:
+         name += "*4";
+         break;
+      default:
+         decaf_abort(fmt::format("Unexpected OMOD {}", inst.op2.OMOD()));
+      }
+   }
+
+   out << fmt::pad(name.c_str(), namePad, ' ') << ' ';
 
    auto writeMask = true;
 
@@ -419,39 +437,23 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
 
    if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       if (inst.op2.UPDATE_EXECUTE_MASK()) {
-         out << " UPDATE_EXECUTE_MASK";
+         out << " UPDATE_EXEC_MASK";
 
          switch (inst.op2.EXECUTE_MASK_OP()) {
          case SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE:
-            out << " DEACTIVATE";
+            out << "(DEACTIVATE)";
             break;
          case SQ_ALU_EXECUTE_MASK_OP::BREAK:
-            out << " BREAK";
+            out << "(BREAK)";
             break;
          case SQ_ALU_EXECUTE_MASK_OP::CONTINUE:
-            out << " CONTINUE";
+            out << "(CONTINUE)";
             break;
          case SQ_ALU_EXECUTE_MASK_OP::KILL:
-            out << " KILL";
+            out << "(KILL)";
             break;
          default:
             decaf_abort(fmt::format("Unexpected EXECUTE_MASK_OP {}", inst.op2.EXECUTE_MASK_OP()));
-         }
-      } else {
-         switch (inst.op2.OMOD()) {
-         case SQ_ALU_OMOD::OFF:
-            break;
-         case SQ_ALU_OMOD::D2:
-            out << " OMOD_D2";
-            break;
-         case SQ_ALU_OMOD::M2:
-            out << " OMOD_M2";
-            break;
-         case SQ_ALU_OMOD::M4:
-            out << " OMOD_M4";
-            break;
-         default:
-            decaf_abort(fmt::format("Unexpected OMOD {}", inst.op2.OMOD()));
          }
       }
 
@@ -511,7 +513,7 @@ disassembleCfALUInstruction(fmt::MemoryWriter &out,
 
    out
       << name
-      << " ADDR(" << addr << ")"
+      << ": ADDR(" << addr << ")"
       << " CNT(" << count << ")";
 
 

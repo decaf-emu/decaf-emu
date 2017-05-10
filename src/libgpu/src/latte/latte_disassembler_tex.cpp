@@ -115,17 +115,17 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
 
    if (tex.word2.OFFSET_X()) {
       auto offset = sign_extend<5>(tex.word2.OFFSET_X());
-      out << " OFFSETX(" << offset << ")";
+      out << " XOFFSET(" << offset << ")";
    }
 
    if (tex.word2.OFFSET_Y()) {
       auto offset = sign_extend<5>(tex.word2.OFFSET_Y());
-      out << " OFFSETY(" << offset << ")";
+      out << " YOFFSET(" << offset << ")";
    }
 
    if (tex.word2.OFFSET_Z()) {
       auto offset = sign_extend<5>(tex.word2.OFFSET_Z());
-      out << " OFFSETZ(" << offset << ")";
+      out << " ZOFFSET(" << offset << ")";
    }
 }
 
@@ -170,7 +170,7 @@ disassembleCfTEX(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
    out
-      << " ADDR(" << addr << ")"
+      << ": ADDR(" << addr << ")"
       << " CNT(" << count << ")";
 
    if (!inst.word1.BARRIER()) {

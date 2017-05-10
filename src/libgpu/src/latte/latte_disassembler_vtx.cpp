@@ -62,15 +62,17 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
 
 
    // fetch_type
+   out << " FETCH_TYPE(";
    if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::VERTEX_DATA) {
-      out << " VERTEX_DATA";
+      out << "VERTEX_DATA";
    } else if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::INSTANCE_DATA) {
-      out << " INSTANCE_DATA";
+      out << "INSTANCE_DATA";
    } else if(vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::NO_INDEX_OFFSET) {
-      out << " NO_INDEX_OFFSET";
+      out << "NO_INDEX_OFFSET";
    } else {
-      out << " FETCH_TYPE(" << vtx.word0.FETCH_TYPE() << ")";
+      out << vtx.word0.FETCH_TYPE();
    }
+   out << ")";
 
 
    // format
@@ -98,8 +100,6 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
       out << " " << vtx.word1.SRF_MODE_ALL();
 
       out << ")";
-   } else {
-      out << " FMT_FROM_FETCH_CONSTANT";
    }
 
    if (vtx.word2.MEGA_FETCH()) {
@@ -164,7 +164,7 @@ disassembleCfVTX(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
    out
-      << " ADDR(" << addr << ")"
+      << ": ADDR(" << addr << ")"
       << " CNT(" << count << ")";
 
    if (!inst.word1.BARRIER()) {
