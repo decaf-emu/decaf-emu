@@ -618,6 +618,20 @@ readGeometryShaderProgram(MemoryFile &fh,
 }
 
 static bool
+readGeometryShaderCopyProgram(MemoryFile &fh,
+                              GFDBlockHeader &block,
+                              GFDGeometryShader &gsh)
+{
+   if (block.dataSize != gsh.vertexShaderData.capacity()) {
+      throw GFDReadException { fmt::format("GeometryShaderCopyProgram block.dataSize {} != gsh.vertexShaderSize {}",
+                                           block.dataSize, gsh.vertexShaderData.capacity()) };
+   }
+
+   readBinary(fh, gsh.vertexShaderData, block.dataSize);
+   return true;
+}
+
+static bool
 readTextureHeader(MemoryFile &fh,
                   GFDBlockHeader &block,
                   GFDTexture &tex)
@@ -759,6 +773,12 @@ readFile(GFDFile &file,
       {
          decaf_check(file.geometryShaders.size());
          readGeometryShaderProgram(fh, block.header, file.geometryShaders.back());
+         break;
+      }
+      case GFDBlockType::GeometryShaderCopyProgram:
+      {
+         decaf_check(file.geometryShaders.size());
+         readGeometryShaderCopyProgram(fh, block.header, file.geometryShaders.back());
          break;
       }
       case GFDBlockType::TextureHeader:

@@ -592,13 +592,25 @@ writeFile(const GFDFile &file,
       gshHeader.index = i;
       writeBlock(fh, gshHeader, geometryShaderHeader);
 
-      GFDBlockHeader dataHeader;
-      dataHeader.majorVersion = GFDBlockMajorVersion;
-      dataHeader.minorVersion = 0;
-      dataHeader.type = GFDBlockType::GeometryShaderProgram;
-      dataHeader.id = blockID++;
-      dataHeader.index = i;
-      writeBlock(fh, dataHeader, file.geometryShaders[i].data);
+      if (file.geometryShaders[i].data.size()) {
+         GFDBlockHeader dataHeader;
+         dataHeader.majorVersion = GFDBlockMajorVersion;
+         dataHeader.minorVersion = 0;
+         dataHeader.type = GFDBlockType::GeometryShaderProgram;
+         dataHeader.id = blockID++;
+         dataHeader.index = i;
+         writeBlock(fh, dataHeader, file.geometryShaders[i].data);
+      }
+
+      if (file.geometryShaders[i].vertexShaderData.size()) {
+         GFDBlockHeader dataHeader;
+         dataHeader.majorVersion = GFDBlockMajorVersion;
+         dataHeader.minorVersion = 0;
+         dataHeader.type = GFDBlockType::GeometryShaderCopyProgram;
+         dataHeader.id = blockID++;
+         dataHeader.index = i;
+         writeBlock(fh, dataHeader, file.geometryShaders[i].vertexShaderData);
+      }
    }
 
    // Write textures
