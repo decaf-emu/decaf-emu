@@ -1,0 +1,141 @@
+Program <- _ (Instruction / Comment)* _ EndOfProgram?
+Instruction <- _ (CfInst / CfExpInst / TexClause / AluClause)
+
+Number <- < [0-9]+ >
+HexNumber <- < '0x' [0-9A-Fa-f]+ >
+Float <- $< '-'? [0-9]+ ('.' [0-9]+ ('e-'[0-9]+)? )? 'f'? >
+EndOfLine <- '\r\n' / '\n' / '\r'
+EndOfFile <- !.
+End <- EndOfLine / EndOfFile
+
+Comment <- ';' [ \t]* <(!EndOfLine .)*> _
+CfInst <- (InstCount _ CfOpcode _ CfInstProperties _)
+CfExpInst <- (InstCount _ ExpOpcode ':' _ (ExpPixTarget / ExpPosTarget / ExpParamTarget) _ ',' _ ExpSrc _ CfInstProperties _)
+TexClause <- (InstCount _ TexClauseInstType _ ':' _ CfInstProperties _) (TexInst)*
+AluClause <- (InstCount _ AluClauseInstType _ ':' _ AluClauseProperties _) (AluGroup)*
+EndOfProgram <- 'END_OF_PROGRAM'
+
+InstCount <- <Number>
+VecGpr <- 'R' Number FourCompSwizzle?
+SrcGpr <- 'R' <Number>
+SrcGprRel <- 'R[AL' _ '+' _ <Number> _ ']'
+ConstantFile <- 'C' <Number>
+ConstantCache0 <- 'KC0' _ '[' _ <Number> _ ']'
+ConstantCache1 <- 'KC1' _ '[' _ <Number> _ ']'
+PreviousScalar <- 'PS' <Number>
+PreviousVector <- 'PV' <Number>
+OneCompSwizzle <- '.' <[xyzwXYZW]>
+FourCompSwizzle <-  '.' <[xyzwXYZW01_]+>
+Literal <- HexNumber / Float / '(' _ HexNumber _ ',' _ Float _ ')'
+WriteMask <- [_]+
+Negate <- [-]
+
+AluClauseInstType <- 'ALU_PUSH_BEFORE' / 'ALU_POP_AFTER' / 'ALU_POP2_AFTER'
+	/ 'ALU_EXT' / 'ALU_CONTINUE' / 'ALU_BREAK' / 'ALU_ELSE_AFTER' / 'ALU'
+TexClauseInstType <- 'TEX_ACK' / 'TEX'
+VtxClauseInstType <- 'VTX' / 'VTX_TC' / 'VTX_ACK' / 'VTX_TC_ACK'
+CfOpcode <- 'NOP' / 'LOOP_START_NO_AL' / 'LOOP_START_DX10' / 'LOOP_START'
+   / 'LOOP_END' / 'LOOP_CONTINUE' / 'LOOP_BREAK' / 'JUMP' / 'PUSH_ELSE' / 'PUSH'
+   / 'ELSE' / 'POP_PUSH_ELSE' / 'POP_PUSH' / 'POP_JUMP' / 'POP' / 'CALL_FS'
+   / 'CALL' / 'RETURN' / 'EMIT_CUT_VERTEX' / 'EMIT_VERTEX' / 'CUT_VERTEX'
+   / 'KILL' / 'WAIT_ACK' / 'END_PROGRAM'
+
+AluClauseProperties <- ((ADDR / CNT  / KCACHE0 / KCACHE1 / USES_WATERFALL / WHOLE_QUAD_MODE / NO_BARRIER) _)*
+CfInstProperties <- ((ADDR / CNT / POP_CNT / ELEM_SIZE / BURSTCNT / KCACHE0 / KCACHE1 / USES_WATERFALL / WHOLE_QUAD_MODE / NO_BARRIER / VALID_PIX) _)*
+KCACHE0 <- 'KCACHE0' _ '(' _ 'CB' Number _ ':' _ Number _ '-' _ Number _ ')'
+KCACHE1 <- 'KCACHE1' _ '(' _ 'CB' Number _ ':' _ Number _ '-' _ Number _ ')'
+BURSTCNT <- 'BURSTCNT(' <Number> ')'
+ELEM_SIZE <- 'ELEM_SIZE(' <Number> ')'
+POP_CNT <- 'POP_CNT(' <Number> ')'
+ADDR <- 'ADDR(' <Number> ')'
+CNT <- 'CNT(' <Number> ')'
+USES_WATERFALL <- 'USES_WATERFALL'
+WHOLE_QUAD_MODE <- 'WHOLE_QUAD_MODE' / 'WHOLE_QUAD'
+NO_BARRIER <- 'NO_BARRIER'
+VALID_PIX <- 'VALID_PIX'
+
+ExpSrc <- (SrcGpr / SrcGprRel) FourCompSwizzle?
+ExpOpcode <- 'EXP_DONE' / 'EXP'
+ExpPixTarget <- 'PIX' <Number>
+ExpPosTarget <- 'POS' <Number>
+ExpParamTarget <- 'PARAM' <Number>
+
+TexInst <- _ InstCount _ TexOpcode _ TexDestReg _ ',' _ TexSrcReg _ ',' _ TexResourceId _ ',' _ TexSamplerId _ TexProperties _
+TexOpcode <- 'VTX_FETCH' / 'VTX_SEMANTIC' / 'MEM' / 'LD' / 'GET_TEXTURE_INFO'
+   / 'GET_SAMPLE_INFO' / 'GET_COMP_TEX_LOD' / 'GET_GRADIENTS_H' / 'GET_GRADIENTS_V'
+   / 'GET_LERP' / 'KEEP_GRADIENTS' / 'SET_GRADIENTS_H' / 'SET_GRADIENTS_V' / 'PASS'
+   / 'SET_CUBEMAP_INDEX' / 'FETCH4' / 'SAMPLE_C_G_LZ' / 'SAMPLE_C_G_LB'
+   / 'SAMPLE_C_G_L' / 'SAMPLE_C_G' / 'SAMPLE_C_LZ' / 'SAMPLE_C_LB' / 'SAMPLE_C_L'
+   / 'SAMPLE_C' / 'SAMPLE_G_LZ' / 'SAMPLE_G_LB' / 'SAMPLE_G_L' / 'SAMPLE_G'
+   / 'SAMPLE_LZ' / 'SAMPLE_LB' / 'SAMPLE_L' / 'SAMPLE' / 'SET_TEXTURE_OFFSETS'
+   / 'GATHER4_C_O' / 'GATHER4_O' / 'GATHER4_C' / 'GATHER4'  / 'GET_BUFFER_RESINFO'
+TexDestReg <- VecGpr
+TexSrcReg <- VecGpr
+TexResourceId <- 't' <Number>
+TexSamplerId <- 's' <Number>
+TexProperties <- ((WHOLE_QUAD_MODE / BC_FRAC_MODE / NORM / XOFFSET / YOFFSET / ZOFFSET / LOD) _)*
+BC_FRAC_MODE <- 'BC_FRAC_MODE'
+NORM <- 'NORM(' [xyzwXYZW]+ ')'
+LOD <- 'LOD(' <Float> ')'
+XOFFSET <- 'XOFFSET(' <Float> ')'
+YOFFSET <- 'YOFFSET(' <Float> ')'
+ZOFFSET <- 'ZOFFSET(' <Float> ')'
+
+AluGroup <- _ InstCount _ ((AluScalar3 / AluScalar2 / AluScalar1 / AluScalar0) _)+ _
+AluUnit <- [xyzwt]
+AluScalar0 <- AluUnit ':' _ AluOpcode0 AluOutputModifier? _ AluDst _ AluProperties
+AluScalar1 <- AluUnit ':' _ AluOpcode1 AluOutputModifier? _ AluDst _ ',' _ AluSrc _ AluProperties
+AluScalar2 <- AluUnit ':' _ AluOpcode2 AluOutputModifier? _ AluDst _ ',' _ AluSrc _ ',' _ AluSrc _ AluProperties
+AluScalar3 <- AluUnit ':' _ AluOpcode3 _ AluDst _ ',' _ AluSrc _ ',' _ AluSrc _ ',' _ AluSrc _ AluProperties
+AluOpcode0 <- 'NOP' / 'SET_MODE' / 'SET_CF_IDX0' / 'SET_CF_IDX1'
+AluOpcode1 <- 'FLT64_TO_FLT32' / 'FLT32_TO_FLT64' / 'FREXP_64' / 'FRACT'
+   / 'TRUNC' / 'CEIL' / 'RNDNE' / 'FLOOR' / 'MOVA_FLOOR' / 'MOVA_INT' / 'MOVA'
+   / 'MOV' / 'EXP_IEEE' / 'LOG_CLAMPED' / 'LOG_IEEE'
+   / 'RECIP_CLAMPED' / 'RECIP_IEEE' / 'RECIP_UINT' / 'RECIP_INT' / 'RECIP_FF'
+   / 'RECIPSQRT_CLAMPED' / 'RECIPSQRT_IEEE' / 'RECIPSQRT_FF'
+   / 'SQRT_IEEE' / 'FLT_TO_INT' / 'INT_TO_FLT'
+   / 'UINT_TO_FLT' / 'FLT_TO_UINT' / 'SIN' / 'COS'/ 'FRACT_64'
+   / 'SQRT_e' / 'EXP_e' / 'LOG_e' / 'RSQ_e' / 'RCP_e' / 'LOG_sat'
+AluOpcode2 <- 'MULHI_INT24' / 'MULLO_INT' / 'MULHI_INT' / 'MULLO_UINT'
+   / 'MULHI_UINT' / 'MUL_INT24' / 'MUL_IEEE' / 'MUL_e' / 'MUL_64' / 'MUL'
+   / 'MAX_DX10' / 'MAX_UINT' / 'MAX_INT' / 'MAX' / 'MIN_DX10' / 'MIN_UINT'
+   / 'MIN_INT' / 'MIN' / 'SETE' / 'SETGT' / 'SETGE' / 'SETNE' / 'SETE_DX10'
+   / 'SETGT_DX10' / 'SETGE_DX10' / 'SETNE_DX10' / 'ADD_INT' / 'ADD_64' / 'ADD'
+   / 'PRED_SETGT_PUSH_INT' / 'PRED_SETGT_PUSH' / 'PRED_SETGT_UINT'
+   / 'PRED_SETGT_INT' / 'PRED_SETGT_64' / 'PRED_SETGT' / 'PRED_SETGE_PUSH_INT'
+   / 'PRED_SETGE_PUSH' / 'PRED_SETGE_UINT' / 'PRED_SETGE_INT' / 'PRED_SETGE_64'
+   / 'PRED_SETGE' / 'PRED_SETE_PUSH_INT' / 'PRED_SETE_INT' / 'PRED_SETE_PUSH'
+   / 'PRED_SETE_64' / 'PRED_SETE' / 'PRED_SETNE_PUSH_INT' / 'PRED_SETNE_PUSH'
+   / 'PRED_SETNE_INT' / 'PRED_SETNE' / 'PRED_SETLT_PUSH_INT'
+   / 'PRED_SETLE_PUSH_INT' / 'PRED_SET_INV' / 'PRED_SET_POP' / 'PRED_SET_CLR'
+   / 'PRED_SET_RESTORE' / 'KILLE' / 'KILLGT' / 'KILLGE' / 'KILLNE' / 'AND_INT'
+   / 'OR_INT' / 'XOR_INT' / 'NOT_INT' / 'SUB_INT' / 'SETE_INT' / 'SETGT_INT'
+   / 'SETGE_INT' / 'SETNE_INT' / 'SETGT_UINT' / 'SETGE_UINT' / 'KILLGT_UINT'
+   / 'KILLGE_UINT' / 'KILLE_INT' / 'KILLGT_INT' / 'KILLGE_INT' / 'KILLNE_INT'
+   / 'DOT4_IEEE' / 'DOT4_e' / 'DOT4' / 'CUBE' / 'MAX4' / 'GROUP_BARRIER'
+   / 'GROUP_SEQ_BEGIN' / 'GROUP_SEQ_END' / 'SET_LDS_SIZE' / 'MOVA_GPR_INT'
+   / 'ASHR_INT' / 'LSHR_INT' / 'LSHL_INT' / 'LDEXP_64'
+   / 'PREDGT'
+AluOpcode3 <- 'BFE_UINT' / 'BFE_INT' / 'BFI_INT' / 'FMA' / 'MULADD_64_D2'
+   / 'MULADD_64_M4' / 'MULADD_64_M2' / 'MULADD_64' / 'MUL_LIT_D2' / 'MUL_LIT_M4'
+   / 'MUL_LIT_M2' / 'MUL_LIT' / 'MULADD_IEEE_D2' / 'MULADD_IEEE_M4'
+   / 'MULADD_IEEE_M2' / 'MULADD_IEEE' / 'MULADD_D2' / 'MULADD_M4' / 'MULADD_M2'
+   / 'MULADD_e' / 'MULADD' / 'CNDGE_INT' / 'CNDGE' / 'CNDGT_INT' / 'CNDGT' / 'CNDE_INT' / 'CNDE'
+AluOutputModifier <- '*2' / '*4' / '/2' / '/4'
+AluRel <- <'[AR.' [xyzwXYZW] ']'> / <'[AL]'>
+AluDstGpr <- 'R' <Number>
+AluDst <- (AluDstGpr AluRel? OneCompSwizzle?) / WriteMask
+AluSrc <- Negate? (AluAbsSrcValue / AluSrcValue) AluRel? OneCompSwizzle?
+AluAbsSrcValue <- '|' _ AluSrcValue _ '|'
+AluSrcValue <- SrcGpr / ConstantCache0 / ConstantCache1 / ConstantFile / Literal / PreviousScalar / PreviousVector
+AluProperties <- ((BANK_SWIZZLE / UPDATE_EXEC_MASK / UPDATE_PRED / PRED_SEL / CLAMP) _)*
+UPDATE_PRED <- 'UPDATE_PRED'
+PRED_SEL <- 'PRED_SEL_OFF' / 'PRED_SEL_ZERO' / 'PRED_SEL_ONE'
+CLAMP <- 'CLAMP'
+UPDATE_EXEC_MASK <- 'UPDATE_EXEC_MASK' _ ('(' EXECUTE_MASK_OP ')')?
+EXECUTE_MASK_OP <- 'DEACTIVATE' / 'BREAK' / 'CONTINUE' / 'KILL'
+BANK_SWIZZLE <- 'SCL_210' / 'SCL_122' / 'SCL_212' / 'SCL_221' /
+   'VEC_012' / 'VEC_021' / 'VEC_120' / 'VEC_102' / 'VEC_201' / 'VEC_210'
+
+~_         <- [ \t\r\n]*
+~__        <- ![a-z0-9_] _

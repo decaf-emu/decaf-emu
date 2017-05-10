@@ -3,6 +3,7 @@ include_directories(".")
 include_directories("../src")
 
 add_subdirectory(gfd-tool)
+add_subdirectory(latte-assembler)
 
 if(DECAF_GL)
    if(DECAF_SDL)
