@@ -12,6 +12,7 @@ enum SQ_CF_INST : uint32_t
 #define CF_INST(name, value) SQ_CF_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef CF_INST
+   SQ_CF_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_CF_EXP_INST : uint32_t
@@ -19,6 +20,7 @@ enum SQ_CF_EXP_INST : uint32_t
 #define EXP_INST(name, value) SQ_CF_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef EXP_INST
+   SQ_CF_EXP_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_CF_ALU_INST : uint32_t
@@ -26,6 +28,7 @@ enum SQ_CF_ALU_INST : uint32_t
 #define ALU_INST(name, value) SQ_CF_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef ALU_INST
+   SQ_CF_ALU_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_OP2_INST : uint32_t
@@ -33,6 +36,7 @@ enum SQ_OP2_INST : uint32_t
 #define ALU_OP2(name, value, srcs, flags) SQ_OP2_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef ALU_OP2
+   SQ_OP2_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_OP3_INST : uint32_t
@@ -40,6 +44,7 @@ enum SQ_OP3_INST : uint32_t
 #define ALU_OP3(name, value, srcs, flags) SQ_OP3_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef ALU_OP3
+   SQ_OP3_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_TEX_INST : uint32_t
@@ -47,6 +52,7 @@ enum SQ_TEX_INST : uint32_t
 #define TEX_INST(name, value) SQ_TEX_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef TEX_INST
+   SQ_TEX_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_VTX_INST : uint32_t
@@ -54,6 +60,7 @@ enum SQ_VTX_INST : uint32_t
 #define VTX_INST(name, value) SQ_VTX_INST_##name = value,
 #include "latte_instructions_def.inl"
 #undef VTX_INST
+   SQ_VTX_INST_INVALID = 0xFFFFFFFF,
 };
 
 enum SQ_CF_INST_TYPE : uint32_t
@@ -351,6 +358,14 @@ const char *getInstructionName(SQ_OP2_INST id);
 const char *getInstructionName(SQ_OP3_INST id);
 const char *getInstructionName(SQ_TEX_INST id);
 const char *getInstructionName(SQ_VTX_INST id);
+
+SQ_CF_INST getCfInstructionByName(const std::string &name);
+SQ_CF_EXP_INST getCfExpInstructionByName(const std::string &name);
+SQ_CF_ALU_INST getCfAluInstructionByName(const std::string &name);
+SQ_OP2_INST getAluOp2InstructionByName(const std::string &name);
+SQ_OP3_INST getAluOp3InstructionByName(const std::string &name);
+SQ_TEX_INST getTexInstructionByName(const std::string &name);
+SQ_VTX_INST getVtxInstructionByName(const std::string &name);
 
 uint32_t getInstructionNumSrcs(SQ_OP2_INST id);
 uint32_t getInstructionNumSrcs(SQ_OP3_INST id);
