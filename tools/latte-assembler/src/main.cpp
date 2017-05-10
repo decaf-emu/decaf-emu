@@ -1,4 +1,5 @@
 #include "shader_compiler.h"
+#include "gfd_comment_parser.h"
 #include <excmd.h>
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -75,44 +76,52 @@ int main(int argc, char **argv)
 
    Shader shader;
 
-   if (options.has("compile")) {
-      auto dst = options.get<std::string>("gsh");
-      gfd::GFDFile gfd;
+   try {
+      if (options.has("compile")) {
+         auto dst = options.get<std::string>("gsh");
+         gfd::GFDFile gfd;
 
-      if (options.has("vsh")) {
-         auto src = options.get<std::string>("vsh");
-         Shader shader;
-         shader.path = src;
-         shader.type = ShaderType::VertexShader;
+         if (options.has("vsh")) {
+            auto src = options.get<std::string>("vsh");
+            Shader shader;
+            shader.path = src;
+            shader.type = ShaderType::VertexShader;
 
-         if (!compileFile(shader, src)) {
-            return -1;
+            if (!compileFile(shader, src)) {
+               return -1;
+            }
+
+            if (!gfdAddVertexShader(gfd, shader)) {
+               return -1;
+            }
          }
 
-         if (!gfdAddVertexShader(gfd, shader)) {
+         if (options.has("psh")) {
+            auto src = options.get<std::string>("psh");
+            Shader shader;
+            shader.path = src;
+            shader.type = ShaderType::PixelShader;
+
+            if (!compileFile(shader, src)) {
+               return -1;
+            }
+
+            if (!gfdAddPixelShader(gfd, shader)) {
+               return -1;
+            }
+         }
+
+         if (!gfd::writeFile(gfd, dst)) {
             return -1;
          }
-      }
-
-      if (options.has("psh")) {
-         auto src = options.get<std::string>("psh");
-         Shader shader;
-         shader.path = src;
-         shader.type = ShaderType::PixelShader;
-
-         if (!compileFile(shader, src)) {
-            return -1;
-         }
-
-         if (!gfdAddPixelShader(gfd, shader)) {
-            return -1;
-         }
-      }
-
-      if (!gfd::writeFile(gfd, dst)) {
+      } else {
          return -1;
       }
-   } else {
+   } catch (parse_exception e) {
+      std::cout << "Parse exception: " << e.what() << std::endl;
+      return -1;
+   } catch (gfd_header_parse_exception e) {
+      std::cout << "GFD header parse exception: " << e.what() << std::endl;
       return -1;
    }
 

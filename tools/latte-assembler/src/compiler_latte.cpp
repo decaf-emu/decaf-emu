@@ -24,7 +24,7 @@ parseAluBankSwizzle(peg::Ast &node)
    } else if (node.token == "VEC_210") {
       return latte::SQ_ALU_VEC_BANK_SWIZZLE::VEC_210;
    } else {
-      throw parse_exception(fmt::format("{}:{} Invalid ALU bank swizzle {}", node.line, node.column, node.token));
+      throw node_parse_exception { node, fmt::format("Invalid SQ_ALU_VEC_BANK_SWIZZLE {}", node.token) };
    }
 }
 
@@ -42,7 +42,7 @@ parseAluDstRelIndexMode(peg::Ast &node)
    } else if (node.token == "[AL]") {
       return latte::SQ_INDEX_MODE::LOOP;
    } else {
-      throw parse_exception(fmt::format("{}:{} Invalid ALU dst rel index mode {}", node.line, node.column, node.token));
+      throw node_parse_exception { node, fmt::format("Invalid SQ_INDEX_MODE {}", node.token) };
    }
 }
 
@@ -66,7 +66,7 @@ parseChan(peg::Ast &node)
    case 'T':
       return latte::SQ_CHAN::T;
    default:
-      throw parse_exception { fmt::format("{}:{} Invalid CHAN {}", node.line, node.column, node.token[0]) };
+      throw node_parse_exception { node, fmt::format("Invalid SQ_CHAN {}",  node.token[0]) };
    }
 }
 
@@ -75,16 +75,20 @@ parseExecuteMaskOp(peg::Ast &node)
 {
    if (!node.nodes.size()) {
       return latte::SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE;
-   } else if (node.nodes[0]->token == "DEACTIVATE") {
+   }
+
+   auto &op = node.nodes[0];
+
+   if (op->token == "DEACTIVATE") {
       return latte::SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE;
-   } else if (node.nodes[0]->token == "BREAK") {
+   } else if (op->token == "BREAK") {
       return latte::SQ_ALU_EXECUTE_MASK_OP::BREAK;
-   } else if (node.nodes[0]->token == "CONTINUE") {
+   } else if (op->token == "CONTINUE") {
       return latte::SQ_ALU_EXECUTE_MASK_OP::CONTINUE;
-   } else if (node.nodes[0]->token == "KILL") {
+   } else if (op->token == "KILL") {
       return latte::SQ_ALU_EXECUTE_MASK_OP::KILL;
    } else {
-      throw parse_exception(fmt::format("{}:{} Invalid ALU execute mask op {}", node.nodes[0]->line, node.nodes[0]->column, node.nodes[0]->token));
+      throw node_parse_exception { *op, fmt::format("Invalid SQ_ALU_EXECUTE_MASK_OP {}", op->token) };
    }
 }
 
@@ -131,7 +135,7 @@ parseOutputModifier(peg::Ast &node)
    } else if (node.token == "*4") {
       return latte::SQ_ALU_OMOD::M4;
    } else {
-      throw parse_exception(fmt::format("{}:{} Invalid output modifier {}", node.line, node.column, node.token));
+      throw node_parse_exception { node, fmt::format("Invalid SQ_ALU_OMOD {}", node.token) };
    }
 }
 
@@ -145,7 +149,7 @@ parsePredSel(peg::Ast &node)
    } else if (node.token == "PRED_SEL_ONE") {
       return latte::SQ_PRED_SEL::ONE;
    } else {
-      throw parse_exception(fmt::format("{}:{} Invalid ALU pred sel {}", node.line, node.column, node.token));
+      throw node_parse_exception { node, fmt::format("Invalid SQ_PRED_SEL {}", node.token) };
    }
 }
 
@@ -173,6 +177,6 @@ parseSel(peg::Ast &node,
    case '_':
       return latte::SQ_SEL::SEL_MASK;
    default:
-      throw parse_exception { fmt::format("{}:{} Invalid SEL {}", node.line, node.column + index, node.token[index]) };
+      throw node_parse_exception { node, fmt::format("Invalid SQ_SEL {}", node.token[index]) };
    }
 }

@@ -1,108 +1,171 @@
 #pragma once
-#include <libgfd/gfd.h>
-#include <libgpu/latte/latte_instructions.h>
+#include "shader.h"
 #include <peglib.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <spdlog/fmt/fmt.h>
 
 class parse_exception : public std::runtime_error
 {
 public:
    parse_exception(const std::string &m) :
-      std::runtime_error(m)
+      std::runtime_error { m }
    {
    }
-
-private:
-   std::string mMessage;
 };
 
-enum class ShaderType
+class node_parse_exception : public parse_exception
 {
-   PixelShader,
-   VertexShader,
-};
-
-struct LiteralValue
-{
-   enum Flags
+public:
+   node_parse_exception(peg::Ast &node, const std::string &m) :
+      parse_exception { fmt::format("{}:{} {}", node.line, node.column, m) }
    {
-      ReadHex = 1 << 0,
-      ReadFloat = 1 << 1,
-   };
-
-   unsigned flags;
-
-   union
-   {
-      uint32_t hexValue;
-      float floatValue;
-   };
-};
-
-struct AluGroup
-{
-   uint32_t clausePC = 0;
-   std::vector<latte::AluInst> insts;
-   std::vector<LiteralValue> literals;
-};
-
-struct AluClause
-{
-   std::shared_ptr<peg::Ast> addrNode;
-   std::shared_ptr<peg::Ast> countNode;
-   uint32_t cfPC = 0;
-   std::vector<AluGroup> groups;
-};
-
-struct Shader
-{
-   std::string path;
-
-   ShaderType type;
-   uint32_t clausePC = 0;
-   gfd::GFDPixelShader pixelShader;
-   gfd::GFDVertexShader vertexShader;
-   std::vector<latte::ControlFlowInst> cfInsts;
-   std::vector<AluClause> aluClauses;
-   uint32_t aluClauseBaseAddress;
-   std::vector<uint32_t> aluClauseData;
-   std::vector<std::string> comments;
-
-   unsigned long maxGPR = 0;
-   unsigned long maxStack = 0;
-   unsigned long maxPixelExport = 0;
-   unsigned long maxParamExport = 0;
-   unsigned long maxPosExport = 0;
-};
-
-struct CommentKeyValue
-{
-   bool isValue() const
-   {
-      return member.empty() && index.empty();
    }
+};
 
-   bool isObject() const
+class unhandled_node_exception : public node_parse_exception
+{
+public:
+   unhandled_node_exception(peg::Ast &node) :
+      node_parse_exception { node, fmt::format("Unxpected node {}", node.name) }
    {
-      return !member.empty() && index.empty();
    }
+};
 
-   bool isArrayOfValues() const
+class invalid_inst_exception : public node_parse_exception
+{
+public:
+   invalid_inst_exception(peg::Ast &node, const std::string &instType) :
+      node_parse_exception { node, fmt::format("Invalid {} instruction {}", instType, node.token) }
    {
-      return !index.empty() && member.empty();
    }
+};
 
-   bool isArrayOfObjects() const
+class invalid_alu_op2_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_alu_op2_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "ALU OP2" }
    {
-      return !member.empty() && !index.empty();
    }
+};
 
-   std::string obj;
-   std::string index;
-   std::string member;
-   std::string value;
+class invalid_alu_op3_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_alu_op3_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "ALU OP3" }
+   {
+   }
+};
+
+class invalid_cf_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_cf_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "CF" }
+   {
+   }
+};
+
+class invalid_cf_alu_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_cf_alu_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "CF ALU" }
+   {
+   }
+};
+
+class invalid_exp_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_exp_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "EXP" }
+   {
+   }
+};
+
+class invalid_inst_property_exception : public node_parse_exception
+{
+public:
+   invalid_inst_property_exception(peg::Ast &node, const std::string &instType) :
+      node_parse_exception { node, fmt::format("Invalid property {} for {} instruction", node.name, instType) }
+   {
+   }
+};
+
+class invalid_alu_property_exception : public invalid_inst_property_exception
+{
+public:
+   invalid_alu_property_exception(peg::Ast &node) :
+      invalid_inst_property_exception { node, "ALU" }
+   {
+   }
+};
+
+class invalid_cf_property_exception : public invalid_inst_property_exception
+{
+public:
+   invalid_cf_property_exception(peg::Ast &node) :
+      invalid_inst_property_exception { node, "CF" }
+   {
+   }
+};
+
+class invalid_cf_alu_property_exception : public invalid_inst_property_exception
+{
+public:
+   invalid_cf_alu_property_exception(peg::Ast &node) :
+      invalid_inst_property_exception { node, "CF ALU" }
+   {
+   }
+};
+
+class invalid_exp_property_exception : public invalid_inst_property_exception
+{
+public:
+   invalid_exp_property_exception(peg::Ast &node) :
+      invalid_inst_property_exception { node, "EXP" }
+   {
+   }
+};
+
+class incorrect_cf_pc_exception : public node_parse_exception
+{
+public:
+   incorrect_cf_pc_exception(peg::Ast &node, size_t found, size_t expected) :
+      node_parse_exception { node, fmt::format("Incorrect CF PC {}, expected {}", found, expected) }
+   {
+   }
+};
+
+class incorrect_clause_pc_exception : public node_parse_exception
+{
+public:
+   incorrect_clause_pc_exception(peg::Ast &node, size_t found, size_t expected) :
+      node_parse_exception { node, fmt::format("Incorrect clause PC {}, expected {}", found, expected) }
+   {
+   }
+};
+
+class incorrect_clause_addr_exception : public node_parse_exception
+{
+public:
+   incorrect_clause_addr_exception(peg::Ast &node, size_t found, size_t expected) :
+      node_parse_exception { node, fmt::format("Incorrect clause addr {}, expected {}", found, expected) }
+   {
+   }
+};
+
+class incorrect_clause_count_exception : public node_parse_exception
+{
+public:
+   incorrect_clause_count_exception(peg::Ast &node, size_t found, size_t expected) :
+      node_parse_exception { node, fmt::format("Incorrect clause count {}, expected {}", found, expected) }
+   {
+   }
 };
 
 // compiler_parse
@@ -155,10 +218,6 @@ parseSel(peg::Ast &node,
          unsigned index);
 
 // compiler_common
-bool
-parseComment(const std::string &comment,
-             CommentKeyValue &out);
-
 float
 parseFloat(peg::Ast &node);
 
@@ -170,46 +229,3 @@ parseNumber(peg::Ast &node);
 
 LiteralValue
 parseLiteral(peg::Ast &node);
-
-bool
-parseValueBool(const std::string &value);
-
-uint32_t
-parseValueNumber(const std::string &value);
-
-// compiler_gfd
-bool
-gfdAddVertexShader(gfd::GFDFile &file,
-                   Shader &shader);
-
-bool
-gfdAddPixelShader(gfd::GFDFile &file,
-                  Shader &shader);
-
-void
-ensureArrayOfObjects(const CommentKeyValue &kv);
-
-void
-ensureArrayOfValues(const CommentKeyValue &kv);
-
-void
-ensureObject(const CommentKeyValue &kv);
-
-void
-ensureValue(const CommentKeyValue &kv);
-
-gx2::GX2ShaderVarType
-parseShaderVarType(const std::string &v);
-
-gx2::GX2ShaderMode
-parseShaderMode(const std::string &v);
-
-// compiler_gfd_vsh
-bool
-parseShaderComments(gfd::GFDVertexShader &shader,
-                    std::vector<std::string> &comments);
-
-// compiler_gfd_psh
-bool
-parseShaderComments(gfd::GFDPixelShader &shader,
-                    std::vector<std::string> &comments);

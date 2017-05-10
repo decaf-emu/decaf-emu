@@ -1,13 +1,60 @@
-#include "shader_compiler.h"
+#include "gfd_comment_parser.h"
 #include <cstring>
 #include <vector>
 #include <libgfd/gfd.h>
+#include <regex>
+
+/*
+Matches:
+; $Something = true
+; $attribVars[1].type = "Float4"
+; $VGT_HOS_REUSE_DEPTH.REUSE_DEPTH = 16
+; $SQ_VTX_SEMANTIC_CLEAR.CLEAR = 0xFFFFFFFC
+*/
+static std::regex
+sCommentKeyValueRegex
+{
+   ";[[:space:]]*\\$([_[:alnum:]]+)(?:\\[([[:digit:]]+)\\])?(?:\\.([_[:alnum:]]+))?[[:space:]]*=[[:space:]]*(\"[^\"]+\"|[0-9]+|0x[0-9a-fA-F]+|true|false|TRUE|FALSE)"
+};
+
+static std::regex
+sCommentKeyValueStartRegex
+{
+   ";[[:space:]]*\\$"
+};
+
+bool
+parseComment(const std::string &comment,
+             CommentKeyValue &out)
+{
+   std::smatch match;
+   if (!std::regex_match(comment, match, sCommentKeyValueRegex)) {
+      if (std::regex_match(comment, match, sCommentKeyValueStartRegex)) {
+         throw gfd_header_parse_exception { fmt::format("Syntax error in comment {}", comment) };
+      }
+
+      return false;
+   }
+
+   out.obj = match[1];
+   out.index = match[2];
+   out.member = match[3];
+   out.value = match[4];
+
+   if (out.value.size() >= 2 && out.value[0] == '"') {
+      // Erase quotes from string value
+      out.value.erase(out.value.begin());
+      out.value.erase(out.value.end() - 1);
+   }
+
+   return true;
+}
 
 void
 ensureArrayOfObjects(const CommentKeyValue &kv)
 {
    if (!kv.isArrayOfObjects()) {
-      throw parse_exception(fmt::format("{} is an array of objects", kv.obj));
+      throw gfd_header_parse_exception { fmt::format("{} is an array of objects", kv.obj) };
    }
 }
 
@@ -15,7 +62,7 @@ void
 ensureArrayOfValues(const CommentKeyValue &kv)
 {
    if (!kv.isArrayOfValues()) {
-      throw parse_exception(fmt::format("{} is an array of values", kv.obj));
+      throw gfd_header_parse_exception { fmt::format("{} is an array of values", kv.obj) };
    }
 }
 
@@ -23,7 +70,7 @@ void
 ensureObject(const CommentKeyValue &kv)
 {
    if (!kv.isObject()) {
-      throw parse_exception(fmt::format("{} is an object", kv.obj));
+      throw gfd_header_parse_exception { fmt::format("{} is an object", kv.obj) };
    }
 }
 
@@ -31,7 +78,7 @@ void
 ensureValue(const CommentKeyValue &kv)
 {
    if (!kv.isValue()) {
-      throw parse_exception(fmt::format("{} is a value", kv.obj));
+      throw gfd_header_parse_exception { fmt::format("{} is a value", kv.obj) };
    }
 }
 
@@ -60,7 +107,7 @@ parseShaderVarType(const std::string &v)
    } else if (value == "MATRIX4X4") {
       return gx2::GX2ShaderVarType::Matrix4x4;
    } else {
-      throw parse_exception { fmt::format("Invalid GX2ShaderVarType {}", value) };
+      throw gfd_header_parse_exception { fmt::format("Invalid GX2ShaderVarType {}", value) };
    }
 }
 
@@ -79,8 +126,29 @@ parseShaderMode(const std::string &v)
    } else if (value == "COMPUTERSHADER") {
       return gx2::GX2ShaderMode::ComputeShader;
    } else {
-      throw parse_exception { fmt::format("Invalid GX2ShaderMode {}", value) };
+      throw gfd_header_parse_exception { fmt::format("Invalid GX2ShaderMode {}", value) };
    }
+}
+
+bool
+parseValueBool(const std::string &v)
+{
+   auto value = v;
+   std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+
+   if (value == "TRUE") {
+      return true;
+   } else if (value == "FALSE") {
+      return true;
+   } else {
+      throw gfd_header_parse_exception { fmt::format("Expected boolean value, found {}", value) };
+   }
+}
+
+uint32_t
+parseValueNumber(const std::string &v)
+{
+   return static_cast<uint32_t>(std::stoul(v, 0, 0));
 }
 
 static std::vector<uint8_t>

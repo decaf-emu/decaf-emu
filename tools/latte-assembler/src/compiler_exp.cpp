@@ -14,18 +14,19 @@ compileExpInst(Shader &shader, peg::Ast &node)
          auto cfPC = parseNumber(*child);
 
          if (cfPC != shader.cfInsts.size()) {
-            throw parse_exception(fmt::format("{}:{} Incorrect CF PC {}, expected {}", child->line, child->column, cfPC, shader.cfInsts.size()));
+            throw incorrect_cf_pc_exception { *child, cfPC, shader.cfInsts.size() };
          }
       } else if (child->name == "ExpOpcode") {
          auto &name = child->token;
          auto opcode = latte::getCfExpInstructionByName(name);
 
          if (opcode == latte::SQ_CF_EXP_INST_INVALID) {
-            throw parse_exception(fmt::format("Invalid CF EXP instruction name {}", name));
+            throw invalid_exp_inst_exception { *child };
          }
 
          if (opcode != latte::SQ_CF_INST_EXP && opcode != latte::SQ_CF_INST_EXP_DONE) {
-            throw parse_exception(fmt::format("Unsupported CF EXP instruction name {}", name));
+            // TODO: Only EXP and EXP_DONE are supported for now.
+            throw invalid_exp_inst_exception { *child };
          }
 
          inst.exp.word1 = inst.exp.word1.CF_INST(opcode);
@@ -101,11 +102,11 @@ compileExpInst(Shader &shader, peg::Ast &node)
             } else if (prop->name == "BURSTCNT") {
                inst.exp.word1 = inst.exp.word1.BURST_COUNT(parseNumber(*prop));
             } else {
-               throw parse_exception(fmt::format("{}:{} Unexpected CF property {}", prop->line, prop->column, prop->name));
+               throw invalid_exp_property_exception { *prop };
             }
          }
       } else {
-         throw parse_exception(fmt::format("{}:{} Unexpected node {}", child->line, child->column, child->name));
+         throw unhandled_node_exception { *child };
       }
    }
 

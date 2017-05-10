@@ -24,7 +24,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
          auto opcode = latte::getAluOp2InstructionByName(name);
 
          if (opcode == latte::SQ_OP2_INST_INVALID) {
-            throw parse_exception(fmt::format("{}:{} Invalid ALU instruction name {}", child->line, child->column, name));
+            throw invalid_alu_op2_inst_exception { *child };
          }
 
          inst.word1 = inst.word1
@@ -36,7 +36,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
          auto opcode = latte::getAluOp3InstructionByName(name);
 
          if (opcode == latte::SQ_OP3_INST_INVALID) {
-            throw parse_exception(fmt::format("{}:{} Invalid ALU instruction name {}", child->line, child->column, name));
+            throw invalid_alu_op3_inst_exception { *child };
          }
 
          inst.word1 = inst.word1
@@ -50,7 +50,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
          for (auto &dst : child->nodes) {
             if (dst->name == "WriteMask") {
                if (inst.word1.ENCODING() != latte::SQ_ALU_ENCODING::OP2) {
-                  throw parse_exception(fmt::format("{}:{} Write mask ____ is only valid on an OP2 instruction", dst->line, dst->column));
+                  throw node_parse_exception { *dst, fmt::format("Write mask ____ is only valid on an OP2 instruction") };
                }
 
                inst.op2 = inst.op2
@@ -68,7 +68,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                inst.word1 = inst.word1
                   .DST_CHAN(parseChan(*dst));
             } else {
-               throw parse_exception(fmt::format("{}:{} Unexpected node {}", dst->line, dst->column, dst->name));
+               throw unhandled_node_exception { *dst };
             }
          }
       } else if (child->name == "AluSrc") {
@@ -126,10 +126,10 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                      group.literals.push_back(literal);
                   }
                } else {
-                  throw parse_exception(fmt::format("{}:{} Unexpected node {}", srcType->line, srcType->column, srcType->name));
+                  throw unhandled_node_exception { *srcType };
                }
             } else {
-               throw parse_exception(fmt::format("{}:{} Unexpected node {}", src->line, src->column, src->name));
+               throw unhandled_node_exception { *src };
             }
          }
 
@@ -183,11 +183,11 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                inst.word1 = inst.word1
                   .CLAMP(true);
             } else {
-               throw parse_exception(fmt::format("{}:{} Unexpected node {}", prop->line, prop->column, prop->name));
+               throw invalid_alu_property_exception { *prop };
             }
          }
       } else {
-         throw parse_exception(fmt::format("{}:{} Unexpected node {}", child->line, child->column, child->name));
+         throw unhandled_node_exception { *child };
       }
    }
 
@@ -205,7 +205,7 @@ compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
          group.clausePC = parseNumber(*child);
 
          if (group.clausePC != shader.clausePC) {
-            throw parse_exception(fmt::format("{}:{} Incorrect clause PC {}, expected {}", child->line, child->column, group.clausePC, shader.clausePC));
+            throw incorrect_clause_pc_exception { *child, group.clausePC, shader.clausePC };
          }
       } else if (child->name == "AluScalar0") {
          compileAluInst(shader, group, *child, 0);
@@ -216,7 +216,7 @@ compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
       } else if (child->name == "AluScalar3") {
          compileAluInst(shader, group, *child, 3);
       } else {
-         throw parse_exception(fmt::format("{}:{} Unexpected node {}", child->line, child->column, child->name));
+         throw unhandled_node_exception { *child };
       }
    }
 
@@ -245,14 +245,14 @@ compileAluClause(Shader &shader, peg::Ast &node)
          clause.cfPC = parseNumber(*child);
 
          if (clause.cfPC != shader.cfInsts.size()) {
-            throw parse_exception(fmt::format("{}:{} Incorrect CF PC {}, expected {}", child->line, child->column, clause.cfPC, shader.cfInsts.size()));
+            throw incorrect_cf_pc_exception { *child, clause.cfPC, shader.cfInsts.size() };
          }
       } else if (child->name == "AluClauseInstType") {
          auto &name = child->token;
          auto opcode = latte::getCfAluInstructionByName(name);
 
          if (opcode == latte::SQ_CF_ALU_INST_INVALID) {
-            throw parse_exception(fmt::format("Invalid CF ALU instruction name {}", name));
+            throw invalid_cf_alu_inst_exception { *child };
          }
 
          cfInst.alu.word1 = cfInst.alu.word1
@@ -315,13 +315,13 @@ compileAluClause(Shader &shader, peg::Ast &node)
                cfInst.alu.word1 = cfInst.alu.word1
                   .ALT_CONST(true);
             } else {
-               throw parse_exception(fmt::format("{}:{} Unexpected CF property {}", prop->line, prop->column, prop->name));
+               throw invalid_cf_alu_property_exception { *prop };
             }
          }
       } else if (child->name == "AluGroup") {
          compileAluGroup(shader, clause, *child);
       } else {
-         throw parse_exception(fmt::format("{}:{} Unexpected node {}", child->line, child->column, child->name));
+         throw unhandled_node_exception { *child };
       }
    }
 

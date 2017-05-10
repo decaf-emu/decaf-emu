@@ -22,14 +22,14 @@ compileCfInst(Shader &shader, peg::Ast &node)
          auto cfPC = parseNumber(*child);
 
          if (cfPC != shader.cfInsts.size()) {
-            throw parse_exception(fmt::format("{}:{} Incorrect CF PC {}, expected {}", child->line, child->column, cfPC, shader.cfInsts.size()));
+            throw incorrect_cf_pc_exception { *child, cfPC, shader.cfInsts.size() };
          }
       } else if (child->name == "CfOpcode") {
          auto &name = child->token;
          auto opcode = latte::getCfInstructionByName(name);
 
          if (opcode == latte::SQ_CF_INST_INVALID) {
-            throw parse_exception(fmt::format("Invalid CF instruction name {}", name));
+            throw invalid_cf_inst_exception { *child };
          }
 
          inst.word1 = inst.word1.CF_INST(opcode);
@@ -42,11 +42,11 @@ compileCfInst(Shader &shader, peg::Ast &node)
             } else if (prop->name == "VALID_PIX") {
                inst.word1 = inst.word1.VALID_PIXEL_MODE(true);
             } else {
-               throw parse_exception(fmt::format("{}:{} Unexpected CF property {}", prop->line, prop->column, prop->name));
+               throw invalid_cf_property_exception { *prop };
             }
          }
       } else {
-         throw parse_exception(fmt::format("{}:{} Unexpected node {}", child->name));
+         throw unhandled_node_exception { *child };
       }
    }
 
@@ -64,7 +64,7 @@ compileInstruction(Shader &shader, peg::Ast &node)
    } else if (node.name == AluClauseNode) {
       return compileAluClause(shader, node);
    } else {
-      throw parse_exception(fmt::format("{}:{} Unexpected node {}", node.line, node.column, node.name));
+      throw unhandled_node_exception { node };
    }
 
    return false;
@@ -101,26 +101,26 @@ compileClauses(Shader &shader)
 
       if (clause.addrNode) {
          if (cfInst.alu.word0.ADDR() != addr) {
-            throw parse_exception(fmt::format("{}:{} Incorrect ALU address {} expected {}", clause.addrNode->line, clause.addrNode->column, cfInst.alu.word0.ADDR(), addr));
+            throw incorrect_clause_addr_exception { *clause.countNode, cfInst.alu.word0.ADDR(), addr };
          }
       } else {
          cfInst.alu.word0 = cfInst.alu.word0
-            .ADDR(addr);
+            .ADDR(static_cast<uint32_t>(addr));
       }
 
       if (clause.countNode) {
          if (cfInst.alu.word1.COUNT() != count) {
-            throw parse_exception(fmt::format("{}:{} Incorrect ALU count {} expected {}", clause.countNode->line, clause.countNode->column, cfInst.alu.word1.COUNT(), count));
+            throw incorrect_clause_count_exception { *clause.countNode, cfInst.alu.word1.COUNT(), count };
          }
       } else {
          cfInst.alu.word1 = cfInst.alu.word1
-            .COUNT(count);
+            .COUNT(static_cast<uint32_t>(count));
       }
    }
 
    // TODO: Same for TEX, VTX clauses
 
-   shader.aluClauseBaseAddress = baseAddress;
+   shader.aluClauseBaseAddress = static_cast<uint32_t>(baseAddress);
    shader.aluClauseData = std::move(aluClauseData);
    return true;
 }
@@ -168,7 +168,7 @@ compileAST(Shader &shader, std::shared_ptr<peg::Ast> ast)
             shader.comments.push_back(node->token);
          }
       } else {
-         throw parse_exception(fmt::format("{}:{} Unexpected node {}", node->line, node->column, node->name));
+         throw unhandled_node_exception { *node };
       }
    }
 

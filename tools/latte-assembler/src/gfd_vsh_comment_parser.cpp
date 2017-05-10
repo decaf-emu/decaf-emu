@@ -1,5 +1,4 @@
-#include "shader_compiler.h"
-#include <regex>
+#include "gfd_comment_parser.h"
 
 static void
 parseRegisterValue(latte::SQ_PGM_RESOURCES_VS &reg,
@@ -34,7 +33,7 @@ parseRegisterValue(latte::SQ_PGM_RESOURCES_VS &reg,
       reg = reg
          .PRIME_CACHE_ON_CONST(parseValueBool(value));
    } else {
-      throw parse_exception { fmt::format("SQ_PGM_RESOURCES_VS does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("SQ_PGM_RESOURCES_VS does not have member {}", member) };
    }
 }
 
@@ -47,7 +46,7 @@ parseRegisterValue(latte::VGT_PRIMITIVEID_EN &reg,
       reg = reg
          .PRIMITIVEID_EN(parseValueBool(value));
    } else {
-      throw parse_exception { fmt::format("VGT_PRIMITIVEID_EN does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("VGT_PRIMITIVEID_EN does not have member {}", member) };
    }
 }
 
@@ -69,7 +68,7 @@ parseRegisterValue(latte::SPI_VS_OUT_CONFIG &reg,
       reg = reg
          .VS_OUT_FOG_VEC_ADDR(parseValueNumber(value));
    } else {
-      throw parse_exception { fmt::format("SPI_VS_OUT_CONFIG does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("SPI_VS_OUT_CONFIG does not have member {}", member) };
    }
 }
 
@@ -80,7 +79,7 @@ parseRegisterValue(std::array<latte::SPI_VS_OUT_ID_N, 10> &spi_vs_out_id,
                    const std::string &value)
 {
    if (index >= spi_vs_out_id.size()) {
-      throw parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] invalid index, max: {}", index, spi_vs_out_id.size()) };
+      throw gfd_header_parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] invalid index, max: {}", index, spi_vs_out_id.size()) };
    }
 
    if (member == "SEMANTIC_0") {
@@ -96,7 +95,7 @@ parseRegisterValue(std::array<latte::SPI_VS_OUT_ID_N, 10> &spi_vs_out_id,
       spi_vs_out_id[index] = spi_vs_out_id[index]
          .SEMANTIC_3(parseValueNumber(value));
    } else {
-      throw parse_exception { fmt::format("SPI_VS_OUT_ID[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception { fmt::format("SPI_VS_OUT_ID[{}] does not have member {}", index, member) };
    }
 }
 
@@ -184,7 +183,7 @@ parseRegisterValue(latte::PA_CL_VS_OUT_CNTL &reg,
       reg = reg
          .USE_VTX_GS_CUT_FLAG(parseValueBool(value));
    } else {
-      throw parse_exception { fmt::format("SPI_VS_OUT_CONFIG does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("SPI_VS_OUT_CONFIG does not have member {}", member) };
    }
 }
 
@@ -197,7 +196,7 @@ parseRegisterValue(latte::SQ_VTX_SEMANTIC_CLEAR &reg,
       reg = reg
          .CLEAR(parseValueNumber(value));
    } else {
-      throw parse_exception { fmt::format("SQ_VTX_SEMANTIC_CLEAR does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("SQ_VTX_SEMANTIC_CLEAR does not have member {}", member) };
    }
 }
 
@@ -208,14 +207,14 @@ parseRegisterValue(std::array<latte::SQ_VTX_SEMANTIC_N, 32> &sq_vtx_semantic,
                    const std::string &value)
 {
    if (index >= sq_vtx_semantic.size()) {
-      throw parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] invalid index, max: {}", index, sq_vtx_semantic.size()) };
+      throw gfd_header_parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] invalid index, max: {}", index, sq_vtx_semantic.size()) };
    }
 
    if (member == "SEMANTIC_ID") {
       sq_vtx_semantic[index] = sq_vtx_semantic[index]
          .SEMANTIC_ID(parseValueNumber(value));
    } else {
-      throw parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] does not have member {}", index, member) };
    }
 }
 
@@ -237,7 +236,7 @@ parseRegisterValue(latte::VGT_STRMOUT_BUFFER_EN &reg,
       reg = reg
          .BUFFER_3_EN(parseValueBool(value));
    } else {
-      throw parse_exception { fmt::format("VGT_STRMOUT_BUFFER_EN does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("VGT_STRMOUT_BUFFER_EN does not have member {}", member) };
    }
 }
 
@@ -250,7 +249,7 @@ parseRegisterValue(latte::VGT_VERTEX_REUSE_BLOCK_CNTL &reg,
       reg = reg
          .VTX_REUSE_DEPTH(parseValueNumber(value));
    } else {
-      throw parse_exception { fmt::format("VGT_VERTEX_REUSE_BLOCK_CNTL does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("VGT_VERTEX_REUSE_BLOCK_CNTL does not have member {}", member) };
    }
 }
 
@@ -263,7 +262,7 @@ parseRegisterValue(latte::VGT_HOS_REUSE_DEPTH &reg,
       reg = reg
          .REUSE_DEPTH(parseValueNumber(value));
    } else {
-      throw parse_exception { fmt::format("VGT_HOS_REUSE_DEPTH does not have member {}", member) };
+      throw gfd_header_parse_exception { fmt::format("VGT_HOS_REUSE_DEPTH does not have member {}", member) };
    }
 }
 
@@ -274,7 +273,7 @@ parseAttribVars(std::vector<gfd::GFDAttribVar> &attribVars,
                 const std::string &value)
 {
    if (index >= 16) {
-      throw parse_exception { fmt::format("ATTRIB_VARS[{}] invalid index, max: {}", index, 16) };
+      throw gfd_header_parse_exception { fmt::format("ATTRIB_VARS[{}] invalid index, max: {}", index, 16) };
    }
 
    if (index >= attribVars.size()) {
@@ -293,7 +292,7 @@ parseAttribVars(std::vector<gfd::GFDAttribVar> &attribVars,
    } else if (member == "LOCATION") {
       attribVars[index].location = parseValueNumber(value);
    } else {
-      throw parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception { fmt::format("SQ_VTX_SEMANTIC[{}] does not have member {}", index, member) };
    }
 }
 
@@ -364,12 +363,12 @@ parseShaderComments(gfd::GFDVertexShader &shader,
          auto index = std::stoul(kv.index);
 
          if (index >= shader.streamOutStride.size()) {
-            throw parse_exception { fmt::format("STREAM_OUT_STRIDE[{}] invalid index, max: {}", index, shader.streamOutStride.size()) };
+            throw gfd_header_parse_exception { fmt::format("STREAM_OUT_STRIDE[{}] invalid index, max: {}", index, shader.streamOutStride.size()) };
          }
 
          shader.streamOutStride[index] = parseValueNumber(kv.value);
       } else {
-         throw parse_exception { fmt::format("Unknown key {}", kv.obj) };
+         throw gfd_header_parse_exception { fmt::format("Unknown key {}", kv.obj) };
       }
 
       /*
