@@ -2,11 +2,14 @@
 #include "latte_enum_sq.h"
 
 #include <cstdint>
-#include <common/fixed.h>
 #include <common/bitfield.h>
+#include <common/fixed.h>
+#include <common/structsize.h>
 
 namespace latte
 {
+
+#pragma pack(push, 1)
 
 enum SQ_CF_INST : uint32_t
 {
@@ -316,6 +319,7 @@ union ControlFlowInst
       };
    } exp;
 };
+CHECK_SIZE(ControlFlowInst, 8);
 
 struct AluInst
 {
@@ -328,6 +332,7 @@ struct AluInst
       SQ_ALU_WORD1_OP3 op3;
    };
 };
+CHECK_SIZE(AluInst, 8);
 
 struct VertexFetchInst
 {
@@ -343,6 +348,7 @@ struct VertexFetchInst
    SQ_VTX_WORD2 word2;
    uint32_t padding;
 };
+CHECK_SIZE(VertexFetchInst, 16);
 
 struct TextureFetchInst
 {
@@ -351,6 +357,9 @@ struct TextureFetchInst
    SQ_TEX_WORD2 word2;
    uint32_t padding;
 };
+CHECK_SIZE(TextureFetchInst, 16);
+
+#pragma pack(pop)
 
 const char *getInstructionName(SQ_CF_INST id);
 const char *getInstructionName(SQ_CF_EXP_INST id);
