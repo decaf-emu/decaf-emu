@@ -218,13 +218,18 @@ gfdAddVertexShader(gfd::GFDFile &file,
    auto numGpr = countNumGpr(shader);
 
    // Initialise some default values
-   out.mode = gx2::GX2ShaderMode::UniformRegister;
    out.ringItemSize = 0;
    out.hasStreamOut = false;
    out.streamOutStride.fill(0);
    out.gx2rData.elemCount = 0;
    out.gx2rData.elemSize = 0;
    out.gx2rData.flags = static_cast<gx2::GX2RResourceFlags>(0);
+
+   if (shader.uniformBlocksUsed) {
+      out.mode = gx2::GX2ShaderMode::UniformBlock;
+   } else {
+      out.mode = gx2::GX2ShaderMode::UniformRegister;
+   }
 
    std::memset(&out.regs, 0, sizeof(out.regs));
    out.regs.spi_vs_out_id.fill(latte::SPI_VS_OUT_ID_N::get(0xFFFFFFFF));
@@ -289,10 +294,15 @@ gfdAddPixelShader(gfd::GFDFile &file,
    auto numGpr = countNumGpr(shader);
 
    // Initialise some default values
-   out.mode = gx2::GX2ShaderMode::UniformRegister;
    out.gx2rData.elemCount = 0;
    out.gx2rData.elemSize = 0;
    out.gx2rData.flags = static_cast<gx2::GX2RResourceFlags>(0);
+
+   if (shader.uniformBlocksUsed) {
+      out.mode = gx2::GX2ShaderMode::UniformBlock;
+   } else {
+      out.mode = gx2::GX2ShaderMode::UniformRegister;
+   }
 
    std::memset(&out.regs, 0, sizeof(out.regs));
    out.regs.cb_shader_mask = out.regs.cb_shader_mask
