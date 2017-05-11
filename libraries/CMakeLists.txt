@@ -210,7 +210,7 @@ if(DECAF_SDL)
     set(SDL2_LINK sdl2_final PARENT_SCOPE)
 
     if(MSVC)
-        target_link_libraries(sdl2_final INTERFACE Mincore version Winmm)
+        target_link_libraries(sdl2_final INTERFACE version Winmm)
     endif()
 else()
     set(SDL2_LINK "" PARENT_SCOPE)
