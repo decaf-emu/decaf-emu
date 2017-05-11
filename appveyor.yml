@@ -26,17 +26,17 @@ build:
 
 after_build:
   - cd build\obj\Release
-  - 7z a decaf-bin.zip \
-      decaf-sdl.exe \
-      decaf-cli.exe \
-      gfd-tool.exe \
-      latte-assembler.exe \
-      pm4-replay.exe \
-      zlib1.dll \
-      glbinding.dll \
-      SDL2.dll \
-      resources\fonts\DejaVuSansMono.ttf \
-      resources\fonts\SourceSansPro-Regular.ttf \
+  - 7z a decaf-bin.zip
+      decaf-sdl.exe
+      decaf-cli.exe
+      gfd-tool.exe
+      latte-assembler.exe
+      pm4-replay.exe
+      zlib1.dll
+      glbinding.dll
+      SDL2.dll
+      resources\fonts\DejaVuSansMono.ttf
+      resources\fonts\SourceSansPro-Regular.ttf
       resources\fonts\LICENSE.txt
 
 artifacts:
