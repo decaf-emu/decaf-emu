@@ -91,7 +91,7 @@ LOOP_END(State &state, const ControlFlowInst &cf)
 
    // Sanity check to ensure we are at the cfPC
    decaf_check(state.cfPC == loopState.endPC);
-   decaf_check((cf.word0.ADDR - 1) == loopState.startPC);
+   decaf_check((cf.word0.ADDR() - 1) == loopState.startPC);
 
    state.loopStack.pop();
 
@@ -142,7 +142,7 @@ LOOP_START_DX10(State &state, const ControlFlowInst &cf)
 {
    LoopState loop;
    loop.startPC = state.cfPC;
-   loop.endPC = cf.word0.ADDR - 1;
+   loop.endPC = cf.word0.ADDR() - 1;
    state.loopStack.emplace(loop);
 
    condStart(state, cf.word1.COND());

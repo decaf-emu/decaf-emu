@@ -70,14 +70,14 @@ disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_LOOP_START:
    case SQ_CF_INST_LOOP_START_DX10:
    case SQ_CF_INST_LOOP_START_NO_AL:
-      out << " FAIL_JUMP_ADDR(" << inst.word0.ADDR << ")";
+      out << " FAIL_JUMP_ADDR(" << inst.word0.ADDR() << ")";
       break;
    case SQ_CF_INST_LOOP_CONTINUE:
    case SQ_CF_INST_LOOP_BREAK:
-      out << " ADDR(" << inst.word0.ADDR << ")";
+      out << " ADDR(" << inst.word0.ADDR() << ")";
       break;
    case SQ_CF_INST_LOOP_END:
-      out << " PASS_JUMP_ADDR(" << inst.word0.ADDR << ")";
+      out << " PASS_JUMP_ADDR(" << inst.word0.ADDR() << ")";
       break;
    default:
       out << " UNKNOWN_LOOP_CF_INST";
@@ -112,7 +112,7 @@ disassembleJump(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    }
 
    if (id == SQ_CF_INST_CALL || id == SQ_CF_INST_ELSE || id == SQ_CF_INST_JUMP) {
-      out << " ADDR(" << inst.word0.ADDR << ")";
+      out << " ADDR(" << inst.word0.ADDR() << ")";
    }
 
    if (inst.word1.VALID_PIXEL_MODE()) {

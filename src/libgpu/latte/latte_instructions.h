@@ -89,10 +89,9 @@ enum SQ_ALU_FLAGS : uint32_t
 };
 
 // Control flow instruction word 0
-struct SQ_CF_WORD0
-{
-   uint32_t ADDR;
-};
+BITFIELD(SQ_CF_WORD0, uint32_t)
+   BITFIELD_ENTRY(0, 32, uint32_t, ADDR);
+BITFIELD_END
 
 // Control flow instruction word 1
 BITFIELD(SQ_CF_WORD1, uint32_t)

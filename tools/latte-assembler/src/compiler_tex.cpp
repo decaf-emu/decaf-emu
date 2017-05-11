@@ -221,7 +221,8 @@ compileTexClause(Shader &shader,
          for (auto &prop : child->nodes) {
             if (prop->name == "ADDR") {
                clause.addrNode = prop;
-               cfInst.word0.ADDR = parseNumber(*prop);
+               cfInst.word0 = cfInst.word0
+                  .ADDR(parseNumber(*prop));
             } else if (prop->name == "CNT") {
                auto count = parseNumber(*prop) - 1;
                clause.countNode = prop;

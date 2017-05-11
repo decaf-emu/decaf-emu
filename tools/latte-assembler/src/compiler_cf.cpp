@@ -144,11 +144,12 @@ compileClauses(Shader &shader)
       auto count = (texClauseData.size() - offset) / 4;
 
       if (clause.addrNode) {
-         if (cfInst.word0.ADDR != addr) {
-            throw incorrect_clause_addr_exception { *clause.countNode, cfInst.word0.ADDR, addr };
+         if (cfInst.word0.ADDR() != addr) {
+            throw incorrect_clause_addr_exception { *clause.countNode, cfInst.word0.ADDR(), addr };
          }
       } else {
-         cfInst.word0.ADDR = static_cast<uint32_t>(addr);
+         cfInst.word0 = cfInst.word0
+            .ADDR(static_cast<uint32_t>(addr));
       }
 
       if (clause.countNode) {

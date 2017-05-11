@@ -130,7 +130,7 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
 void
 disassembleTEXClause(State &state, const ControlFlowInst &inst)
 {
-   auto addr = inst.word0.ADDR;
+   auto addr = inst.word0.ADDR();
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
    auto clause = reinterpret_cast<const TextureFetchInst *>(state.binary.data() + 8 * addr);
 
@@ -164,7 +164,7 @@ disassembleTEXClause(State &state, const ControlFlowInst &inst)
 void
 disassembleCfTEX(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   auto addr = inst.word0.ADDR;
+   auto addr = inst.word0.ADDR();
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
    out

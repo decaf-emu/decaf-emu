@@ -134,7 +134,7 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
 void
 disassembleVtxClause(State &state, const latte::ControlFlowInst &inst)
 {
-   auto addr = inst.word0.ADDR;
+   auto addr = inst.word0.ADDR();
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
    auto clause = reinterpret_cast<const VertexFetchInst *>(state.binary.data() + 8 * addr);
 
@@ -160,7 +160,7 @@ disassembleVtxClause(State &state, const latte::ControlFlowInst &inst)
 void
 disassembleCfVTX(fmt::MemoryWriter &out, const ControlFlowInst &inst)
 {
-   auto addr = inst.word0.ADDR;
+   auto addr = inst.word0.ADDR();
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
    out

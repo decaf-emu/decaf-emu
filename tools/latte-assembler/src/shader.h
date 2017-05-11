@@ -35,9 +35,9 @@ struct AluGroup
 
 struct AluClause
 {
+   uint32_t cfPC = 0;
    std::shared_ptr<peg::Ast> addrNode;
    std::shared_ptr<peg::Ast> countNode;
-   uint32_t cfPC = 0;
    std::vector<AluGroup> groups;
 };
 

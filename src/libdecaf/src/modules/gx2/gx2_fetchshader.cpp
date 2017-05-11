@@ -423,7 +423,8 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
 
          latte::ControlFlowInst inst;
          std::memset(&inst, 0, sizeof(inst));
-         inst.word0.ADDR = static_cast<uint32_t>((fetchOffset + sizeof(latte::VertexFetchInst) * i * FetchesPerControlFlow) / 8);
+         inst.word0 = inst.word0
+            .ADDR(static_cast<uint32_t>((fetchOffset + sizeof(latte::VertexFetchInst) * i * FetchesPerControlFlow) / 8));
          inst.word1 = inst.word1
             .COUNT((fetches - 1) & 0x7)
             .COUNT_3(((fetches - 1) >> 3) & 0x1)
