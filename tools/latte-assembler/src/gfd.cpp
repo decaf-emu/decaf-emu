@@ -155,8 +155,7 @@ static std::vector<uint8_t>
 getShaderBinary(Shader &shader)
 {
    std::vector<uint8_t> binary;
-   static_assert(sizeof(shader.cfInsts[0]) == 8);
-   auto cfStart = 0ull;
+   auto cfStart = size_t { 0 };
    auto cfSize = shader.cfInsts.size() * sizeof(shader.cfInsts[0]);
    auto cfEnd = cfStart + cfSize;
 
