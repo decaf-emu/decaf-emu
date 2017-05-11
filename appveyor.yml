@@ -40,5 +40,5 @@ after_build:
       resources\fonts\LICENSE.txt
 
 artifacts:
-  - path: decaf-bin.zip
+  - path: build\obj\Release\decaf-bin.zip
     name: decaf-bin
