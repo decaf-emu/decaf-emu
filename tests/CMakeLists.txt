@@ -63,5 +63,9 @@ if(DECAF_BUILD_WUT_TESTS)
                  COMMAND decaf-cli play "${BINARY_DIR}/coreinit/${name}.rpx" --content-path "${HLE_TEST_CONTENT_PATH_DST}")
     endmacro()
 
+    macro(add_gx2_test source)
+        # Until we setup a graphical test runner we will have to ignore gx2 for ctest.
+    endmacro()
+
     add_subdirectory("hle")
 endif()
