@@ -5,8 +5,9 @@ include_directories("src")
 
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
+file(GLOB_RECURSE INLINE_FILES *.inl)
 
-add_library(libgpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
+add_library(libgpu STATIC ${SOURCE_FILES} ${HEADER_FILES} ${INLINE_FILES})
 GroupSources(latte)
 GroupSources(src)
 
