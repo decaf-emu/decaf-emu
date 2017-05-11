@@ -345,7 +345,7 @@ initRegisters()
    internal::writePM4(SetContextReg {
       latte::Register::PA_SC_LINE_CNTL,
       latte::PA_SC_LINE_CNTL::get(0)
-      .value
+         .value
    });
 
    internal::writePM4(SetContextReg {
@@ -372,20 +372,20 @@ initRegisters()
    internal::writePM4(SetContextReg {
       latte::Register::PA_CL_VTE_CNTL,
       latte::PA_CL_VTE_CNTL::get(0)
-      .VPORT_X_SCALE_ENA(true)
-      .VPORT_X_OFFSET_ENA(true)
-      .VPORT_Y_SCALE_ENA(true)
-      .VPORT_Y_OFFSET_ENA(true)
-      .VPORT_Z_SCALE_ENA(true)
-      .VPORT_Z_OFFSET_ENA(true)
-      .VTX_W0_FMT(true)
-      .value
+         .VPORT_X_SCALE_ENA(true)
+         .VPORT_X_OFFSET_ENA(true)
+         .VPORT_Y_SCALE_ENA(true)
+         .VPORT_Y_OFFSET_ENA(true)
+         .VPORT_Z_SCALE_ENA(true)
+         .VPORT_Z_OFFSET_ENA(true)
+         .VTX_W0_FMT(true)
+         .value
    });
 
    internal::writePM4(SetContextReg {
       latte::Register::PA_CL_NANINF_CNTL,
       latte::PA_CL_NANINF_CNTL::get(0)
-      .value
+         .value
    });
 
    uint32_t values28200_28208[] = {
@@ -456,8 +456,8 @@ initRegisters()
    internal::writePM4(SetConfigReg {
       latte::Register::VGT_GS_VERTEX_REUSE,
       latte::VGT_GS_VERTEX_REUSE::get(0)
-      .VERT_REUSE(16)
-      .value
+         .VERT_REUSE(16)
+         .value
    });
 
    internal::writePM4(SetContextReg {
@@ -471,52 +471,52 @@ initRegisters()
    internal::writePM4(SetConfigReg {
       latte::Register::VGT_ES_PER_GS,
       latte::VGT_ES_PER_GS::get(0)
-      .ES_PER_GS(16 * 1 * 1)
-      .value
+         .ES_PER_GS(16 * 1 * 1)
+         .value
    });
 
    internal::writePM4(SetConfigReg {
       latte::Register::VGT_GS_PER_ES,
       latte::VGT_GS_PER_ES::get(0)
-      .GS_PER_ES(256)
-      .value
+         .GS_PER_ES(256)
+         .value
    });
 
    internal::writePM4(SetConfigReg {
       latte::Register::VGT_GS_PER_VS,
       latte::VGT_GS_PER_VS::get(0)
-      .GS_PER_VS(4)
-      .value
+         .GS_PER_VS(4)
+         .value
    });
 
    internal::writePM4(SetContextReg {
       latte::Register::VGT_INDX_OFFSET,
       latte::VGT_INDX_OFFSET::get(0)
-      .INDX_OFFSET(0)
-      .value
+         .INDX_OFFSET(0)
+         .value
    });
 
    internal::writePM4(SetContextReg {
       latte::Register::VGT_REUSE_OFF,
       latte::VGT_REUSE_OFF::get(0)
-      .REUSE_OFF(false)
-      .value
+         .REUSE_OFF(false)
+         .value
    });
 
    internal::writePM4(SetContextReg {
       latte::Register::VGT_MULTI_PRIM_IB_RESET_EN,
       latte::VGT_MULTI_PRIM_IB_RESET_EN::get(0)
-      .RESET_EN(true)
-      .value
+         .RESET_EN(true)
+         .value
    });
 
    uint32_t values28C58_28C5C[] = {
       latte::VGT_VERTEX_REUSE_BLOCK_CNTL::get(0)
-      .VTX_REUSE_DEPTH(14)
-      .value,
+         .VTX_REUSE_DEPTH(14)
+         .value,
       latte::VGT_OUT_DEALLOC_CNTL::get(0)
-      .DEALLOC_DIST(16)
-      .value,
+         .DEALLOC_DIST(16)
+         .value,
    };
 
    internal::writePM4(SetContextRegs {
@@ -527,31 +527,31 @@ initRegisters()
    internal::writePM4(SetContextReg {
       latte::Register::VGT_HOS_REUSE_DEPTH,
       latte::VGT_HOS_REUSE_DEPTH::get(0)
-      .REUSE_DEPTH(16)
-      .value
+         .REUSE_DEPTH(16)
+         .value
    });
 
    internal::writePM4(SetContextReg {
       latte::Register::VGT_STRMOUT_DRAW_OPAQUE_OFFSET,
       latte::VGT_STRMOUT_DRAW_OPAQUE_OFFSET::get(0)
-      .OFFSET(0)
-      .value
+         .OFFSET(0)
+         .value
    });
 
    internal::writePM4(SetContextReg {
       latte::Register::VGT_VTX_CNT_EN,
       latte::VGT_VTX_CNT_EN::get(0)
-      .VTX_CNT_EN(false)
-      .value
+         .VTX_CNT_EN(false)
+         .value
    });
 
    uint32_t values28400_28404[] = {
       latte::VGT_MAX_VTX_INDX::get(0)
-      .MAX_INDX(-1)
-      .value,
+         .MAX_INDX(-1)
+         .value,
       latte::VGT_MIN_VTX_INDX::get(0)
-      .MIN_INDX(0)
-      .value
+         .MIN_INDX(0)
+         .value
    };
 
    internal::writePM4(SetContextRegs {
@@ -562,11 +562,11 @@ initRegisters()
    internal::writePM4(SetConfigReg {
       latte::Register::TA_CNTL_AUX,
       latte::TA_CNTL_AUX::get(0)
-      .UNK0(true)
-      .SYNC_GRADIENT(true)
-      .SYNC_WALKER(true)
-      .SYNC_ALIGNER(true)
-      .value
+         .UNK0(true)
+         .SYNC_GRADIENT(true)
+         .SYNC_WALKER(true)
+         .SYNC_ALIGNER(true)
+         .value
    });
 
    // TODO: Register 0x9714 unknown
@@ -596,8 +596,8 @@ initRegisters()
    internal::writePM4(SetControlConstant {
       latte::Register::SQ_VTX_START_INST_LOC,
       latte::SQ_VTX_START_INST_LOC::get(0)
-      .OFFSET(0)
-      .value
+         .OFFSET(0)
+         .value
    });
 
    // SPI_FOG_CNTL ... SPI_FOG_FUNC_BIAS
@@ -609,20 +609,20 @@ initRegisters()
    internal::writePM4(SetContextReg {
       latte::Register::SPI_INTERP_CONTROL_0,
       latte::SPI_INTERP_CONTROL_0::get(0)
-      .FLAT_SHADE_ENA(true)
-      .PNT_SPRITE_ENA(false)
-      .PNT_SPRITE_OVRD_X(latte::SPI_PNT_SPRITE_SEL::SEL_S)
-      .PNT_SPRITE_OVRD_Y(latte::SPI_PNT_SPRITE_SEL::SEL_T)
-      .PNT_SPRITE_OVRD_Z(latte::SPI_PNT_SPRITE_SEL::SEL_0)
-      .PNT_SPRITE_OVRD_W(latte::SPI_PNT_SPRITE_SEL::SEL_1)
-      .PNT_SPRITE_TOP_1(true)
-      .value
+         .FLAT_SHADE_ENA(true)
+         .PNT_SPRITE_ENA(false)
+         .PNT_SPRITE_OVRD_X(latte::SPI_PNT_SPRITE_SEL::SEL_S)
+         .PNT_SPRITE_OVRD_Y(latte::SPI_PNT_SPRITE_SEL::SEL_T)
+         .PNT_SPRITE_OVRD_Z(latte::SPI_PNT_SPRITE_SEL::SEL_0)
+         .PNT_SPRITE_OVRD_W(latte::SPI_PNT_SPRITE_SEL::SEL_1)
+         .PNT_SPRITE_TOP_1(true)
+         .value
    });
 
    internal::writePM4(SetConfigReg {
       latte::Register::SPI_CONFIG_CNTL_1,
       latte::SPI_CONFIG_CNTL_1::get(0)
-      .value
+         .value
    });
 
    // TODO: Register 0x286C8 unknown
@@ -648,9 +648,9 @@ initRegisters()
 
    uint32_t values28D28_28D2C[] = {
       latte::DB_SRESULTS_COMPARE_STATE0::get(0)
-      .value,
+         .value,
       latte::DB_SRESULTS_COMPARE_STATE1::get(0)
-      .value
+         .value
    };
 
    internal::writePM4(SetContextRegs {
@@ -661,7 +661,7 @@ initRegisters()
    internal::writePM4(SetContextReg {
       latte::Register::DB_RENDER_OVERRIDE,
       latte::DB_RENDER_OVERRIDE::get(0)
-      .value
+         .value
    });
 
    // TODO: Register 0x9830 unknown
@@ -678,17 +678,17 @@ initRegisters()
 
    uint32_t values28C30_28C3C[] = {
       latte::CB_CLRCMP_CONTROL::get(0)
-      .CLRCMP_FCN_SEL(latte::CB_CLRCMP_SEL::SRC)
-      .value,
+         .CLRCMP_FCN_SEL(latte::CB_CLRCMP_SEL::SRC)
+         .value,
       latte::CB_CLRCMP_SRC::get(0)
-      .CLRCMP_SRC(0)
-      .value,
+         .CLRCMP_SRC(0)
+         .value,
       latte::CB_CLRCMP_DST::get(0)
-      .CLRCMP_DST(0)
-      .value,
+         .CLRCMP_DST(0)
+         .value,
       latte::CB_CLRCMP_MSK::get(0)
-      .CLRCMP_MSK(0xFFFFFFFF)
-      .value
+         .CLRCMP_MSK(0xFFFFFFFF)
+         .value
    };
 
    internal::writePM4(SetContextRegs {
@@ -705,11 +705,11 @@ initRegisters()
    internal::writePM4(SetContextReg {
       latte::Register::PA_SC_AA_MASK,
       latte::PA_SC_AA_MASK::get(0)
-      .AA_MASK_ULC(0xFF)
-      .AA_MASK_URC(0xFF)
-      .AA_MASK_LLC(0xFF)
-      .AA_MASK_LRC(0xFF)
-      .value
+         .AA_MASK_ULC(0xFF)
+         .AA_MASK_URC(0xFF)
+         .AA_MASK_LLC(0xFF)
+         .AA_MASK_LRC(0xFF)
+         .value
    });
 
    // TODO: Register 0x28230 unknown

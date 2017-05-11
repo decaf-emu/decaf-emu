@@ -256,7 +256,7 @@ BITFIELD_END
 
 // Offset >> 3
 BITFIELD(SQ_PGM_CF_OFFSET_PS, uint32_t)
-BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
+   BITFIELD_ENTRY(0, 32, uint32_t, PGM_OFFSET)
 BITFIELD_END
 
 // Defines the exports from the Pixel Shader Program.
