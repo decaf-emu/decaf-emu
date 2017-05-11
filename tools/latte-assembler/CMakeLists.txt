@@ -1,13 +1,14 @@
 project(latte-assembler)
 
 include_directories(".")
+include_directories(${PROJECT_BINARY_DIR})
 
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
 file(GLOB_RECURSE HEADER_FILES src/*.h)
 
 # Generates a grammar.h with the contents of grammar.txt in a C++ string
 set(GRAMMAR_FILE ${PROJECT_SOURCE_DIR}/resources/grammar.txt)
-set(GRAMMAR_CMAKE ${CMAKE_BINARY_DIR}/generate_grammar.cmake)
+set(GRAMMAR_CMAKE ${PROJECT_BINARY_DIR}/generate_grammar.cmake)
 
 file(WRITE ${GRAMMAR_CMAKE} "FILE(WRITE grammar.h \"const char *LatteGrammar = R\\\"(\\n\")\n")
 file(APPEND ${GRAMMAR_CMAKE} "FILE(READ ")
