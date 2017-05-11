@@ -188,19 +188,6 @@ parseRegisterValue(latte::PA_CL_VS_OUT_CNTL &reg,
 }
 
 static void
-parseRegisterValue(latte::SQ_VTX_SEMANTIC_CLEAR &reg,
-                   const std::string &member,
-                   const std::string &value)
-{
-   if (member == "CLEAR") {
-      reg = reg
-         .CLEAR(parseValueNumber(value));
-   } else {
-      throw gfd_header_parse_exception { fmt::format("SQ_VTX_SEMANTIC_CLEAR does not have member {}", member) };
-   }
-}
-
-static void
 parseRegisterValue(std::array<latte::SQ_VTX_SEMANTIC_N, 32> &sq_vtx_semantic,
                    uint32_t index,
                    const std::string &member,
@@ -329,8 +316,9 @@ parseShaderComments(gfd::GFDVertexShader &shader,
          ensureObject(kv);
          parseRegisterValue(shader.regs.pa_cl_vs_out_cntl, kv.member, kv.value);
       } else if (kv.obj == "SQ_VTX_SEMANTIC_CLEAR") {
-         ensureObject(kv);
-         parseRegisterValue(shader.regs.sq_vtx_semantic_clear, kv.member, kv.value);
+         ensureValue(kv);
+         shader.regs.sq_vtx_semantic_clear = shader.regs.sq_vtx_semantic_clear
+            .CLEAR(parseValueNumber(kv.value));
       } else if (kv.obj == "NUM_SQ_VTX_SEMANTIC") {
          ensureValue(kv);
          shader.regs.num_sq_vtx_semantic = parseValueNumber(kv.value);

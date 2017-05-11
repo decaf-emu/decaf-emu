@@ -84,6 +84,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
             } else if (dst->name == "Gpr") {
                inst.word1 = inst.word1
                   .DST_GPR(parseNumber(*dst));
+               markGprWritten(shader, inst.word1.DST_GPR());
             } else if (dst->name == "AluRel") {
                inst.word0 = inst.word0
                   .INDEX_MODE(parseAluDstRelIndexMode(*dst));
@@ -191,6 +192,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                .SRC2_REL(rel);
          }
 
+         markSrcRead(shader, sel);
          srcIndex++;
       } else if (child->name == "AluProperties") {
          for (auto &prop : child->nodes) {

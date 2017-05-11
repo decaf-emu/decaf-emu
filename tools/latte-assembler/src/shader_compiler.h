@@ -209,6 +209,7 @@ bool
 compileShaderCode(Shader &shader,
                   std::vector<char> &code);
 
+// compiler_cf
 void
 compileAST(Shader &shader,
            std::shared_ptr<peg::Ast> ast);
@@ -273,3 +274,15 @@ parseNumber(peg::Ast &node);
 
 LiteralValue
 parseLiteral(peg::Ast &node);
+
+void
+markGprRead(Shader &shader,
+            uint32_t gpr);
+
+void
+markSrcRead(Shader &shader,
+            latte::SQ_ALU_SRC src);
+
+void
+markGprWritten(Shader &shader,
+               uint32_t gpr);

@@ -64,6 +64,8 @@ compileExpInst(Shader &shader, peg::Ast &node)
                   .SRC_SEL_Y(latte::SQ_SEL::SEL_Y)
                   .SRC_SEL_Z(latte::SQ_SEL::SEL_Z)
                   .SRC_SEL_W(latte::SQ_SEL::SEL_W);
+
+               markGprRead(shader, inst.exp.word0.RW_GPR());
             } else if (src->name == "GprRel") {
                inst.exp.word0 = inst.exp.word0
                   .RW_GPR(parseNumber(*src))
@@ -75,6 +77,8 @@ compileExpInst(Shader &shader, peg::Ast &node)
                   .SRC_SEL_Y(latte::SQ_SEL::SEL_Y)
                   .SRC_SEL_Z(latte::SQ_SEL::SEL_Z)
                   .SRC_SEL_W(latte::SQ_SEL::SEL_W);
+
+               markGprRead(shader, inst.exp.word0.RW_GPR());
             } else if (src->name == "FourCompSwizzle") {
                auto selX = latte::SQ_SEL::SEL_0;
                auto selY = latte::SQ_SEL::SEL_0;

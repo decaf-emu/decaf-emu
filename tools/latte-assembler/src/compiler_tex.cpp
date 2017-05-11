@@ -62,6 +62,7 @@ compileTexInst(Shader &shader,
             } else if (dst->name == "Gpr") {
                inst.word1 = inst.word1
                   .DST_GPR(parseNumber(*dst));
+               markGprWritten(shader, inst.word1.DST_GPR());
             } else if (dst->name == "TexRel") {
                inst.word1 = inst.word1
                   .DST_REL(latte::SQ_REL::REL);
@@ -86,6 +87,7 @@ compileTexInst(Shader &shader,
             if (src->name == "Gpr") {
                inst.word0 = inst.word0
                   .SRC_GPR(parseNumber(*src));
+               markGprRead(shader, inst.word0.SRC_GPR());
             } else if (src->name == "TexRel") {
                inst.word0 = inst.word0
                   .SRC_REL(latte::SQ_REL::REL);

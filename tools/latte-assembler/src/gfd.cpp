@@ -176,11 +176,48 @@ getShaderBinary(Shader &shader)
    return std::move(binary);
 }
 
+static uint32_t
+countNumGpr(Shader &shader)
+{
+   auto highestRead = uint32_t { 0 };
+   auto highestWritten = uint32_t { 0 };
+
+   for (auto i = 0u; i < shader.gprRead.size(); ++i) {
+      if (!shader.gprRead[i]) {
+         continue;
+      }
+
+      if (i >= (latte::SQ_ALU_SRC::REGISTER_TEMP_FIRST - latte::SQ_ALU_SRC::REGISTER_FIRST)) {
+         // Ignore temporary registers
+         continue;
+      }
+
+      highestRead = std::max<uint32_t>(highestRead, i);
+   }
+
+   for (auto i = 0u; i < shader.gprWritten.size(); ++i) {
+      if (!shader.gprWritten[i]) {
+         continue;
+      }
+
+      if (i >= (latte::SQ_ALU_SRC::REGISTER_TEMP_FIRST - latte::SQ_ALU_SRC::REGISTER_FIRST)) {
+         // Ignore temporary registers
+         continue;
+      }
+
+      highestWritten = std::max<uint32_t>(highestWritten, i);
+   }
+
+   return std::max(highestRead, highestWritten) + 1;
+}
+
 bool
 gfdAddVertexShader(gfd::GFDFile &file,
                    Shader &shader)
 {
    auto out = gfd::GFDVertexShader {};
+   auto numGpr = countNumGpr(shader);
+
    // Initialise some default values
    out.mode = gx2::GX2ShaderMode::UniformRegister;
    out.ringItemSize = 0;
@@ -193,6 +230,10 @@ gfdAddVertexShader(gfd::GFDFile &file,
    std::memset(&out.regs, 0, sizeof(out.regs));
    out.regs.spi_vs_out_id.fill(latte::SPI_VS_OUT_ID_N::get(0xFFFFFFFF));
 
+   out.regs.sq_pgm_resources_vs = out.regs.sq_pgm_resources_vs
+      .NUM_GPRS(numGpr)
+      .STACK_SIZE(1);
+
    out.regs.vgt_hos_reuse_depth = out.regs.vgt_hos_reuse_depth
       .REUSE_DEPTH(16);
 
@@ -204,6 +245,39 @@ gfdAddVertexShader(gfd::GFDFile &file,
 
    // Parse shader comments
    parseShaderComments(out, shader.comments);
+
+   // NUM_GPRS should be the number of GPRs used in the shader
+   if (out.regs.sq_pgm_resources_vs.NUM_GPRS() != numGpr) {
+      throw gfd_header_parse_exception { fmt::format("Invalid SQ_PGM_RESOURCES_VS.NUM_GPRS {}, expected {}",
+                                                     out.regs.sq_pgm_resources_vs.NUM_GPRS(),
+                                                     numGpr) };
+   }
+
+   // NUM_SQ_VTX_SEMANTIC should reflect the size of ATTRIB_VARS array
+   if (out.regs.num_sq_vtx_semantic == 0) {
+      out.regs.num_sq_vtx_semantic = static_cast<uint32_t>(out.attribVars.size());
+
+      for (auto i = 0u; i < out.regs.num_sq_vtx_semantic; ++i) {
+         out.regs.sq_vtx_semantic[i] = out.regs.sq_vtx_semantic[i]
+            .SEMANTIC_ID(out.attribVars[i].location);
+      }
+   } else if (out.regs.num_sq_vtx_semantic != out.attribVars.size()) {
+      throw gfd_header_parse_exception { fmt::format("Invalid NUM_SQ_VTX_SEMANTIC {}, expected {}",
+                                                     out.regs.num_sq_vtx_semantic,
+                                                     numGpr) };
+   }
+
+   // SQ_VTX_SEMANTIC_CLEAR.CLEAR should reflect the value of NUM_SQ_VTX_SEMANTIC
+   auto semanticClear = static_cast<uint32_t>(~((1 << out.regs.num_sq_vtx_semantic) - 1));
+   if (out.regs.sq_vtx_semantic_clear.CLEAR() == 0) {
+      out.regs.sq_vtx_semantic_clear = out.regs.sq_vtx_semantic_clear
+         .CLEAR(semanticClear);
+   } else if (out.regs.sq_vtx_semantic_clear.CLEAR() != semanticClear) {
+      throw gfd_header_parse_exception { fmt::format("Invalid SQ_VTX_SEMANTIC_CLEAR {}, expected {}",
+                                                     out.regs.num_sq_vtx_semantic,
+                                                     numGpr) };
+   }
+
    file.vertexShaders.push_back(out);
    return true;
 }
@@ -213,6 +287,8 @@ gfdAddPixelShader(gfd::GFDFile &file,
                   Shader &shader)
 {
    auto out = gfd::GFDPixelShader {};
+   auto numGpr = countNumGpr(shader);
+
    // Initialise some default values
    out.mode = gx2::GX2ShaderMode::UniformRegister;
    out.gx2rData.elemCount = 0;
@@ -236,11 +312,32 @@ gfdAddPixelShader(gfd::GFDFile &file,
    out.regs.sq_pgm_exports_ps = out.regs.sq_pgm_exports_ps
       .EXPORT_MODE(2);
 
+   out.regs.sq_pgm_resources_ps = out.regs.sq_pgm_resources_ps
+      .NUM_GPRS(numGpr)
+      .STACK_SIZE(1);
+
    // Create binary
    out.data = getShaderBinary(shader);
 
    // Parse shader comments
    parseShaderComments(out, shader.comments);
+
+   // NUM_GPRS should be the number of GPRs used in the shader
+   if (out.regs.sq_pgm_resources_ps.NUM_GPRS() != numGpr) {
+      throw gfd_header_parse_exception { fmt::format("Invalid SQ_PGM_RESOURCES_PS.NUM_GPRS {}, expected {}",
+                                                     out.regs.sq_pgm_resources_ps.NUM_GPRS(),
+                                                     numGpr) };
+   }
+
+   if (out.regs.spi_ps_in_control_0.NUM_INTERP() == 0) {
+      out.regs.spi_ps_in_control_0 = out.regs.spi_ps_in_control_0
+         .NUM_INTERP(out.regs.num_spi_ps_input_cntl);
+   } else if (out.regs.spi_ps_in_control_0.NUM_INTERP() != out.regs.num_spi_ps_input_cntl) {
+      throw gfd_header_parse_exception { fmt::format("Expected SPI_PS_IN_CONTROL_0.NUM_INTERP {} to equal NUM_SPI_PS_INPUT_CNTL {}",
+                                                     out.regs.spi_ps_in_control_0.NUM_INTERP(),
+                                                     out.regs.num_spi_ps_input_cntl) };
+   }
+
    file.pixelShaders.push_back(out);
    return true;
 }
