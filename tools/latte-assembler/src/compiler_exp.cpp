@@ -1,6 +1,6 @@
 #include "shader_compiler.h"
 
-bool
+void
 compileExpInst(Shader &shader, peg::Ast &node)
 {
    auto inst = latte::ControlFlowInst { 0 };
@@ -111,5 +111,4 @@ compileExpInst(Shader &shader, peg::Ast &node)
    }
 
    shader.cfInsts.push_back(inst);
-   return true;
 }

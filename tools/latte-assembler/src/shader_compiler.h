@@ -78,11 +78,29 @@ public:
    }
 };
 
+class invalid_cf_tex_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_cf_tex_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "CF TEX" }
+   {
+   }
+};
+
 class invalid_exp_inst_exception : public invalid_inst_exception
 {
 public:
    invalid_exp_inst_exception(peg::Ast &node) :
       invalid_inst_exception { node, "EXP" }
+   {
+   }
+};
+
+class invalid_tex_inst_exception : public invalid_inst_exception
+{
+public:
+   invalid_tex_inst_exception(peg::Ast &node) :
+      invalid_inst_exception { node, "TEX" }
    {
    }
 };
@@ -123,11 +141,29 @@ public:
    }
 };
 
+class invalid_cf_tex_property_exception : public invalid_inst_property_exception
+{
+public:
+   invalid_cf_tex_property_exception(peg::Ast &node) :
+      invalid_inst_property_exception { node, "CF TEX" }
+   {
+   }
+};
+
 class invalid_exp_property_exception : public invalid_inst_property_exception
 {
 public:
    invalid_exp_property_exception(peg::Ast &node) :
       invalid_inst_property_exception { node, "EXP" }
+   {
+   }
+};
+
+class invalid_tex_property_exception : public invalid_inst_property_exception
+{
+public:
+   invalid_tex_property_exception(peg::Ast &node) :
+      invalid_inst_property_exception { node, "TEX" }
    {
    }
 };
@@ -173,19 +209,24 @@ bool
 compileShaderCode(Shader &shader,
                   std::vector<char> &code);
 
-bool
+void
 compileAST(Shader &shader,
            std::shared_ptr<peg::Ast> ast);
 
 // compiler_alu
-bool
+void
 compileAluClause(Shader &shader,
                  peg::Ast &node);
 
 // compiler_exp
-bool
+void
 compileExpInst(Shader &shader,
                peg::Ast &node);
+
+// compiler_tex
+void
+compileTexClause(Shader &shader,
+                 peg::Ast &node);
 
 // compiler_latte
 latte::SQ_ALU_VEC_BANK_SWIZZLE
@@ -193,6 +234,9 @@ parseAluBankSwizzle(peg::Ast &node);
 
 latte::SQ_INDEX_MODE
 parseAluDstRelIndexMode(peg::Ast &node);
+
+latte::SQ_CF_COND
+parseCfCond(peg::Ast &node);
 
 latte::SQ_CHAN
 parseChan(peg::Ast &node);

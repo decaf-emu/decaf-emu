@@ -257,8 +257,9 @@ compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
    clause.groups.push_back(std::move(group));
 }
 
-bool
-compileAluClause(Shader &shader, peg::Ast &node)
+void
+compileAluClause(Shader &shader,
+                 peg::Ast &node)
 {
    auto cfInst = latte::ControlFlowInst { 0 };
    auto clause = AluClause {};
@@ -353,5 +354,4 @@ compileAluClause(Shader &shader, peg::Ast &node)
 
    shader.aluClauses.push_back(std::move(clause));
    shader.cfInsts.push_back(cfInst);
-   return true;
 }

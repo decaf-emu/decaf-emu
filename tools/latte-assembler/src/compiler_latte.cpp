@@ -46,6 +46,22 @@ parseAluDstRelIndexMode(peg::Ast &node)
    }
 }
 
+latte::SQ_CF_COND
+parseCfCond(peg::Ast &node)
+{
+   if (node.token == "ACTIVE") {
+      return latte::SQ_CF_COND::ACTIVE;
+   } else if (node.token == "ALWAYS_FALSE") {
+      return latte::SQ_CF_COND::ALWAYS_FALSE;
+   } else if (node.token == "CF_BOOL") {
+      return latte::SQ_CF_COND::CF_BOOL;
+   } else if (node.token == "CF_NOT_BOOL") {
+      return latte::SQ_CF_COND::CF_NOT_BOOL;
+   } else {
+      throw node_parse_exception { node, fmt::format("Invalid SQ_CF_COND {}", node.token) };
+   }
+}
+
 latte::SQ_CHAN
 parseChan(peg::Ast &node)
 {

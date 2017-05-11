@@ -1,14 +1,14 @@
 #include "shader_compiler.h"
 #include <common/align.h>
+#include <common/bit_cast.h>
 
-static const char *RootNode = "Program";
-static const char *InstructionNode = "Instruction";
-static const char *CfInstNode = "CfInst";
-static const char *CfExpInstNode = "CfExpInst";
-static const char *AluClauseNode = "AluClause";
-static const char *EndOfProgramNode = "EndOfProgram";
+static const size_t
+AluClauseAlign = 256;
 
-static bool
+static const size_t
+TexClauseAlign = 128;
+
+static void
 compileCfInst(Shader &shader, peg::Ast &node)
 {
    auto inst = latte::ControlFlowInst { 0 };
@@ -51,34 +51,34 @@ compileCfInst(Shader &shader, peg::Ast &node)
    }
 
    shader.cfInsts.push_back(inst);
-   return true;
 }
 
-static bool
+static void
 compileInstruction(Shader &shader, peg::Ast &node)
 {
-   if (node.name == CfInstNode) {
-      return compileCfInst(shader, node);
-   } else if (node.name == CfExpInstNode) {
-      return compileExpInst(shader, node);
-   } else if (node.name == AluClauseNode) {
-      return compileAluClause(shader, node);
+   if (node.name == "CfInst") {
+      compileCfInst(shader, node);
+   } else if (node.name == "CfExpInst") {
+      compileExpInst(shader, node);
+   } else if (node.name == "AluClause") {
+      compileAluClause(shader, node);
+   } else if (node.name == "TexClause") {
+      compileTexClause(shader, node);
    } else {
       throw unhandled_node_exception { node };
    }
-
-   return false;
 }
 
-static bool
+static void
 compileClauses(Shader &shader)
 {
    auto aluClauseData = std::vector<uint32_t> {};
-   auto baseAddress = align_up(shader.cfInsts.size(), 256 / 8);
+   auto texClauseData = std::vector<uint32_t> {};
+   auto aluClauseBaseAddress = align_up(shader.cfInsts.size(), AluClauseAlign / 8);
 
    for (auto &clause : shader.aluClauses) {
       auto &cfInst = shader.cfInsts[clause.cfPC];
-      auto offset = aluClauseData.size() / 2;
+      auto offset = aluClauseData.size();
 
       for (auto &group : clause.groups) {
          for (auto inst : group.insts) {
@@ -87,7 +87,11 @@ compileClauses(Shader &shader)
          }
 
          for (auto literal : group.literals) {
-            aluClauseData.push_back(literal.hexValue);
+            if (literal.flags & LiteralValue::ReadHex) {
+               aluClauseData.push_back(literal.hexValue);
+            } else {
+               aluClauseData.push_back(bit_cast<uint32_t>(literal.floatValue));
+            }
          }
 
          if (group.literals.size() % 2) {
@@ -96,8 +100,8 @@ compileClauses(Shader &shader)
          }
       }
 
-      auto addr = baseAddress + offset;
-      auto count = ((aluClauseData.size() - offset) / 2) - 1; // Count is -1
+      auto addr = aluClauseBaseAddress + (offset / 2);
+      auto count = (aluClauseData.size() - offset) / 2;
 
       if (clause.addrNode) {
          if (cfInst.alu.word0.ADDR() != addr) {
@@ -109,23 +113,64 @@ compileClauses(Shader &shader)
       }
 
       if (clause.countNode) {
-         if (cfInst.alu.word1.COUNT() != count) {
-            throw incorrect_clause_count_exception { *clause.countNode, cfInst.alu.word1.COUNT(), count };
+         auto parsedCount = cfInst.alu.word1.COUNT() + 1;
+
+         if (parsedCount != count) {
+            throw incorrect_clause_count_exception { *clause.countNode, parsedCount, count };
          }
       } else {
          cfInst.alu.word1 = cfInst.alu.word1
-            .COUNT(static_cast<uint32_t>(count));
+            .COUNT(static_cast<uint32_t>(count - 1));
       }
    }
 
-   // TODO: Same for TEX, VTX clauses
-
-   shader.aluClauseBaseAddress = static_cast<uint32_t>(baseAddress);
+   shader.aluClauseBaseAddress = static_cast<uint32_t>(aluClauseBaseAddress);
    shader.aluClauseData = std::move(aluClauseData);
-   return true;
+
+   auto texClauseBaseAddress = align_up(aluClauseBaseAddress + shader.aluClauseData.size() / 2, TexClauseAlign / 8);
+
+   for (auto &clause : shader.texClauses) {
+      auto &cfInst = shader.cfInsts[clause.cfPC];
+      auto offset = texClauseData.size();
+
+      for (auto &inst : clause.insts) {
+         texClauseData.push_back(inst.word0.value);
+         texClauseData.push_back(inst.word1.value);
+         texClauseData.push_back(inst.word2.value);
+         texClauseData.push_back(inst.padding);
+      }
+
+      auto addr = texClauseBaseAddress + (offset / 2);
+      auto count = (texClauseData.size() - offset) / 4;
+
+      if (clause.addrNode) {
+         if (cfInst.word0.ADDR != addr) {
+            throw incorrect_clause_addr_exception { *clause.countNode, cfInst.word0.ADDR, addr };
+         }
+      } else {
+         cfInst.word0.ADDR = static_cast<uint32_t>(addr);
+      }
+
+      if (clause.countNode) {
+         auto parsedCount = (cfInst.word1.COUNT() + 1) | (cfInst.word1.COUNT_3() << 3);
+
+         if (parsedCount != count) {
+            throw incorrect_clause_count_exception { *clause.countNode, parsedCount, count };
+         }
+      } else {
+         cfInst.word1 = cfInst.word1
+            .COUNT(static_cast<uint32_t>((count - 1) & 0b111))
+            .COUNT_3(static_cast<uint32_t>((count - 1) >> 3));
+      }
+   }
+
+   shader.texClauseBaseAddress = static_cast<uint32_t>(texClauseBaseAddress);
+   shader.texClauseData = std::move(texClauseData);
+
+   // TODO: Same for VTX clauses
 }
 
-static bool
+static void
 compileEndOfProgram(Shader &shader)
 {
    if (shader.cfInsts.size()) {
@@ -134,7 +179,7 @@ compileEndOfProgram(Shader &shader)
        || last.word1.CF_INST_TYPE() == latte::SQ_CF_INST_TYPE_EXPORT) {
          last.word1 = last.word1
             .END_OF_PROGRAM(true);
-         return true;
+         return;
       }
    }
 
@@ -143,24 +188,23 @@ compileEndOfProgram(Shader &shader)
       .CF_INST(latte::SQ_CF_INST_NOP)
       .CF_INST_TYPE(latte::SQ_CF_INST_TYPE_NORMAL)
       .END_OF_PROGRAM(true);
-
-   return true;
 }
 
-bool
-compileAST(Shader &shader, std::shared_ptr<peg::Ast> ast)
+void
+compileAST(Shader &shader,
+           std::shared_ptr<peg::Ast> ast)
 {
    auto foundEOP = false;
 
-   if (ast->name != RootNode) {
-      return false;
+   if (ast->name != "Program") {
+      throw node_parse_exception { *ast, fmt::format("Expected root node to be Program, not {}", ast->name) };
    }
 
    for (auto &node : ast->nodes) {
-      if (node->name == InstructionNode) {
+      if (node->name == "Instruction") {
          assert(node->nodes.size() == 1);
          compileInstruction(shader, *node->nodes[0]);
-      } else if (node->name == EndOfProgramNode) {
+      } else if (node->name == "EndOfProgram") {
          compileEndOfProgram(shader);
          foundEOP = true;
       } else if (node->name == "Comment") {
@@ -177,9 +221,5 @@ compileAST(Shader &shader, std::shared_ptr<peg::Ast> ast)
       compileEndOfProgram(shader);
    }
 
-   if (!compileClauses(shader)) {
-      return false;
-   }
-
-   return true;
+   compileClauses(shader);
 }

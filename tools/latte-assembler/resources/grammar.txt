@@ -1,4 +1,4 @@
-Program <- _ (Instruction / Comment)* _ EndOfProgram?
+Program <- _ (Instruction / Comment)* _ EndOfProgram? _
 Instruction <- _ (CfInst / CfExpInst / TexClause / AluClause)
 
 Number <- < [0-9]+ >
@@ -11,12 +11,11 @@ End <- EndOfLine / EndOfFile
 Comment <- ';' [ \t]* <(!EndOfLine .)*> _
 CfInst <- (InstCount _ CfOpcode _ CfInstProperties _)
 CfExpInst <- (InstCount _ ExpOpcode ':' _ (ExpPixTarget / ExpPosTarget / ExpParamTarget) _ ',' _ ExpSrc _ CfInstProperties _)
-TexClause <- (InstCount _ TexClauseInstType _ ':' _ CfInstProperties _) (TexInst)*
+TexClause <- (InstCount _ TexClauseInstType _ ':' _ TexClauseProperties _) (TexInst)*
 AluClause <- (InstCount _ AluClauseInstType _ ':' _ AluClauseProperties _) (AluGroup)*
 EndOfProgram <- 'END_OF_PROGRAM'
 
 InstCount <- <Number>
-VecGpr <- 'R' Number FourCompSwizzle?
 Gpr <- 'R' <Number>
 GprRel <- 'R[AL' _ '+' _ <Number> _ ']'
 ConstantFile <- 'C' <Number>
@@ -40,19 +39,22 @@ CfOpcode <- 'NOP' / 'LOOP_START_NO_AL' / 'LOOP_START_DX10' / 'LOOP_START'
    / 'CALL' / 'RETURN' / 'EMIT_CUT_VERTEX' / 'EMIT_VERTEX' / 'CUT_VERTEX'
    / 'KILL' / 'WAIT_ACK' / 'END_PROGRAM'
 
+TexClauseProperties <- ((ADDR / CNT / CF_CONST / CND / WHOLE_QUAD_MODE / NO_BARRIER / VALID_PIX) _)*
 AluClauseProperties <- ((ADDR / CNT  / KCACHE0 / KCACHE1 / USES_WATERFALL / WHOLE_QUAD_MODE / NO_BARRIER) _)*
 CfInstProperties <- ((ADDR / CNT / POP_CNT / ELEM_SIZE / BURSTCNT / KCACHE0 / KCACHE1 / USES_WATERFALL / WHOLE_QUAD_MODE / NO_BARRIER / VALID_PIX) _)*
+BURSTCNT <- 'BURSTCNT(' _ <Number> _ ')'
+ADDR <- 'ADDR(' _ <Number> _ ')'
+CF_CONST <- 'CF_CONST(' _ <Number> _ ')'
+CNT <- 'CNT(' _ <Number> _ ')'
+CND <- 'CND(' _ <'ACTIVE' / 'FALSE' / 'BOOL' / 'NOT_BOOL'> _ ')'
+ELEM_SIZE <- 'ELEM_SIZE(' _ <Number> _ ')'
 KCACHE0 <- 'KCACHE0' _ '(' _ 'CB' Number _ ':' _ Number _ '-' _ Number _ ')'
 KCACHE1 <- 'KCACHE1' _ '(' _ 'CB' Number _ ':' _ Number _ '-' _ Number _ ')'
-BURSTCNT <- 'BURSTCNT(' <Number> ')'
-ELEM_SIZE <- 'ELEM_SIZE(' <Number> ')'
-POP_CNT <- 'POP_CNT(' <Number> ')'
-ADDR <- 'ADDR(' <Number> ')'
-CNT <- 'CNT(' <Number> ')'
-USES_WATERFALL <- 'USES_WATERFALL'
-WHOLE_QUAD_MODE <- 'WHOLE_QUAD_MODE' / 'WHOLE_QUAD'
 NO_BARRIER <- 'NO_BARRIER'
+POP_CNT <- 'POP_CNT(' _ <Number> _ ')'
+USES_WATERFALL <- 'USES_WATERFALL'
 VALID_PIX <- 'VALID_PIX'
+WHOLE_QUAD_MODE <- 'WHOLE_QUAD_MODE' / 'WHOLE_QUAD'
 
 ExpSrc <- (Gpr / GprRel) FourCompSwizzle?
 ExpOpcode <- 'EXP_DONE' / 'EXP'
@@ -60,7 +62,7 @@ ExpPixTarget <- 'PIX' <Number>
 ExpPosTarget <- 'POS' <Number>
 ExpParamTarget <- 'PARAM' <Number>
 
-TexInst <- _ InstCount _ TexOpcode _ TexDestReg _ ',' _ TexSrcReg _ ',' _ TexResourceId _ ',' _ TexSamplerId _ TexProperties _
+TexInst <- _ InstCount _ TexOpcode _ TexDst _ ',' _ TexSrc _ ',' _ TexResourceId _ ',' _ TexSamplerId _ TexProperties _
 TexOpcode <- 'VTX_FETCH' / 'VTX_SEMANTIC' / 'MEM' / 'LD' / 'GET_TEXTURE_INFO'
    / 'GET_SAMPLE_INFO' / 'GET_COMP_TEX_LOD' / 'GET_GRADIENTS_H' / 'GET_GRADIENTS_V'
    / 'GET_LERP' / 'KEEP_GRADIENTS' / 'SET_GRADIENTS_H' / 'SET_GRADIENTS_V' / 'PASS'
@@ -69,17 +71,20 @@ TexOpcode <- 'VTX_FETCH' / 'VTX_SEMANTIC' / 'MEM' / 'LD' / 'GET_TEXTURE_INFO'
    / 'SAMPLE_C' / 'SAMPLE_G_LZ' / 'SAMPLE_G_LB' / 'SAMPLE_G_L' / 'SAMPLE_G'
    / 'SAMPLE_LZ' / 'SAMPLE_LB' / 'SAMPLE_L' / 'SAMPLE' / 'SET_TEXTURE_OFFSETS'
    / 'GATHER4_C_O' / 'GATHER4_O' / 'GATHER4_C' / 'GATHER4'  / 'GET_BUFFER_RESINFO'
-TexDestReg <- VecGpr
-TexSrcReg <- VecGpr
+TexDst <- (Gpr TexRel? FourCompSwizzle?) / WriteMask
+TexSrc <- Gpr TexRel? FourCompSwizzle?
+TexRel <- '[AL]'
 TexResourceId <- 't' <Number>
 TexSamplerId <- 's' <Number>
-TexProperties <- ((WHOLE_QUAD_MODE / BC_FRAC_MODE / NORM / LOD / XOFFSET / YOFFSET / ZOFFSET) _)*
+TexProperties <- ((ALT_CONST / BC_FRAC_MODE / DENORM / NORM / LOD / WHOLE_QUAD_MODE / XOFFSET / YOFFSET / ZOFFSET) _)*
+ALT_CONST <- 'ALT_CONST'
 BC_FRAC_MODE <- 'BC_FRAC_MODE'
-NORM <- 'NORM(' <[xyzwXYZW]+> ')'
-LOD <- 'LOD(' <Float> ')'
-XOFFSET <- 'XOFFSET(' <Float> ')'
-YOFFSET <- 'YOFFSET(' <Float> ')'
-ZOFFSET <- 'ZOFFSET(' <Float> ')'
+DENORM <- 'DENORM(' _ <[xyzwXYZW]+> _ ')'
+NORM <- 'NORM(' _ <[xyzwXYZW]+> _ ')'
+LOD <- 'LOD(' _ <Float> _ ')'
+XOFFSET <- 'XOFFSET(' _ <Float> _ ')'
+YOFFSET <- 'YOFFSET(' _ <Float> _ ')'
+ZOFFSET <- 'ZOFFSET(' _ <Float> _ ')'
 
 AluGroup <- _ InstCount _ ((AluScalar3 / AluScalar2 / AluScalar1 / AluScalar0) _)+ _
 AluUnit <- [xyzwt]

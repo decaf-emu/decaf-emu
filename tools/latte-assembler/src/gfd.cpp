@@ -155,14 +155,24 @@ static std::vector<uint8_t>
 getShaderBinary(Shader &shader)
 {
    std::vector<uint8_t> binary;
-   binary.resize((shader.aluClauseBaseAddress * 8) + (shader.aluClauseData.size() * 4), 0);
-
    static_assert(sizeof(shader.cfInsts[0]) == 8);
-   std::memcpy(binary.data(), shader.cfInsts.data(), shader.cfInsts.size() * 8);
+   auto cfStart = 0ull;
+   auto cfSize = shader.cfInsts.size() * sizeof(shader.cfInsts[0]);
+   auto cfEnd = cfStart + cfSize;
 
-   static_assert(sizeof(shader.aluClauseData[0]) == 4);
-   std::memcpy(binary.data() + (shader.aluClauseBaseAddress * 8), shader.aluClauseData.data(), shader.aluClauseData.size() * 4);
+   auto aluStart = shader.aluClauseBaseAddress * 8;
+   auto aluSize = shader.aluClauseData.size() * sizeof(shader.aluClauseData[0]);
+   auto aluEnd = aluStart + aluSize;
 
+   auto texStart = shader.texClauseBaseAddress * 8;
+   auto texSize = shader.texClauseData.size() * sizeof(shader.texClauseData[0]);
+   auto texEnd = texStart + texSize;
+
+   binary.resize(std::max({ cfEnd, aluEnd, texEnd }), 0);
+
+   std::memcpy(binary.data() + cfStart, shader.cfInsts.data(), cfSize);
+   std::memcpy(binary.data() + aluStart, shader.aluClauseData.data(), aluSize);
+   std::memcpy(binary.data() + texStart, shader.texClauseData.data(), texSize);
    return std::move(binary);
 }
 

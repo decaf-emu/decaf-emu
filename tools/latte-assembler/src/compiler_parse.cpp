@@ -26,6 +26,6 @@ compileShaderCode(Shader &shader,
    }
 
    ast = peg::AstOptimizer(false).optimize(ast);
-   std::cout << peg::ast_to_s(ast) << std::endl;
-   return compileAST(shader, ast);
+   compileAST(shader, ast);
+   return true;
 }

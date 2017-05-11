@@ -20,12 +20,8 @@ struct LiteralValue
    };
 
    unsigned flags;
-
-   union
-   {
-      uint32_t hexValue;
-      float floatValue;
-   };
+   uint32_t hexValue = 0;
+   float floatValue = 0.0f;
 };
 
 struct AluGroup
@@ -43,16 +39,31 @@ struct AluClause
    std::vector<AluGroup> groups;
 };
 
+struct TexClause
+{
+   uint32_t cfPC = 0;
+   uint32_t clausePC = 0;
+   std::shared_ptr<peg::Ast> addrNode;
+   std::shared_ptr<peg::Ast> countNode;
+   std::vector<latte::TextureFetchInst> insts;
+};
+
 struct Shader
 {
+   ShaderType type;
    std::string path;
 
-   ShaderType type;
    uint32_t clausePC = 0;
    std::vector<latte::ControlFlowInst> cfInsts;
+
    std::vector<AluClause> aluClauses;
    uint32_t aluClauseBaseAddress;
    std::vector<uint32_t> aluClauseData;
+
+   std::vector<TexClause> texClauses;
+   uint32_t texClauseBaseAddress;
+   std::vector<uint32_t> texClauseData;
+
    std::vector<std::string> comments;
 
    unsigned long maxGPR = 0;
