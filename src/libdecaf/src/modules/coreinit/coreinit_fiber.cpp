@@ -9,9 +9,6 @@
 namespace coreinit
 {
 
-using OSFiberEntryFn = wfunc_ptr<void>;
-using OSFiberExEntryFn = wfunc_ptr<void, uint32_t, uint32_t, uint32_t, uint32_t>;
-
 
 /**
  * Switch to fiber.
