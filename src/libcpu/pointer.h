@@ -228,12 +228,12 @@ public:
 
    constexpr ptrdiff_t operator -(const Pointer &other) const
    {
-      return { (mAddress - other.mAddress) / sizeof(value_type) };
+      return (mAddress - other.mAddress) / sizeof(value_type);
    }
 
-   constexpr ptrdiff_t operator -(ptrdiff_t value) const
+   constexpr Pointer operator -(ptrdiff_t value) const
    {
-      return mAddress - (value * sizeof(value_type));
+      return Pointer { mAddress - (value * sizeof(value_type)) };
    }
 
 private:
