@@ -320,6 +320,14 @@ public:
    virtual void
    syncPoll(const SwapFunction &swapFunc) override;
 
+   virtual bool
+   startFrameCapture(const std::string &outPrefix,
+                     bool captureTV,
+                     bool captureDRC) override;
+
+   virtual size_t
+   stopFrameCapture() override;
+
 private:
    void initGL();
    void executeBuffer(const gpu::ringbuffer::Item &item);
@@ -482,6 +490,10 @@ private:
    drawPrimitivesIndexed(const void *indices,
                          uint32_t count);
 
+   bool
+   dumpScanBuffer(const std::string &filename,
+                  const ScanBufferChain &buf);
+
 private:
    enum class RunState
    {
@@ -554,6 +566,11 @@ private:
    std::list<RemoteThreadTask> mTaskList;
 
    std::list<SyncObject> mSyncList;
+
+   size_t mFramesCaptured = 0;
+   std::string mFrameCapturePrefix;
+   bool mFrameCaptureTV = false;
+   bool mFrameCaptureDRC = false;
 };
 
 } // namespace opengl

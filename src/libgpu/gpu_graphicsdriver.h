@@ -25,6 +25,21 @@ public:
    //  such as after DCInvalidateRange().  May be called from any CPU core!
    virtual void notifyGpuFlush(void *ptr,
                                uint32_t size) = 0;
+
+   // Begin a frame capture, frames will be dumped to outPrefix0.tga -> outPrefixN.tga
+   virtual bool
+   startFrameCapture(const std::string &outPrefix,
+                     bool captureTV,
+                     bool captureDRC)
+   {
+      return false;
+   }
+
+   virtual size_t
+   stopFrameCapture()
+   {
+      return 0;
+   }
 };
 
 GraphicsDriver *

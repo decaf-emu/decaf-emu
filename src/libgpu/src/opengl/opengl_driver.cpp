@@ -8,6 +8,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <common/tga_encoder.h>
 #include <fstream>
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
@@ -149,6 +150,35 @@ GLDriver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
    gl::glEnable(gl::GL_SCISSOR_TEST);
 }
 
+bool
+GLDriver::startFrameCapture(const std::string &outPrefix,
+                            bool captureTV,
+                            bool captureDRC)
+{
+   mFrameCapturePrefix = outPrefix;
+   mFrameCaptureTV = captureTV;
+   mFrameCaptureDRC = captureDRC;
+   return true;
+}
+
+size_t
+GLDriver::stopFrameCapture()
+{
+   mFrameCapturePrefix.clear();
+   mFrameCaptureTV = false;
+   mFrameCaptureDRC = false;
+   return mFramesCaptured;
+}
+
+bool
+GLDriver::dumpScanBuffer(const std::string &filename, const ScanBufferChain &buf)
+{
+   std::vector<uint8_t> buffer;
+   buffer.resize(buf.width * buf.height * 4);
+   gl::glGetTextureImage(buf.object, 0, gl::GL_BGRA, gl::GL_UNSIGNED_BYTE, buffer.size(), buffer.data());
+   return tga::writeFile(filename, 32, 8, buf.width, buf.height, buffer.data());
+}
+
 void
 GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
 {
@@ -171,6 +201,18 @@ GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
    }
 
    mLastSwap = now;
+
+   if (mFrameCapturePrefix.size()) {
+      if (mFrameCaptureTV) {
+         dumpScanBuffer(fmt::format("{}_tv_{}.tga", mFrameCapturePrefix, mFramesCaptured), mTvScanBuffers);
+      }
+
+      if (mFrameCaptureDRC) {
+         dumpScanBuffer(fmt::format("{}_drc_{}.tga", mFrameCapturePrefix, mFramesCaptured), mDrcScanBuffers);
+      }
+
+      mFramesCaptured++;
+   }
 
    if (mSwapFunc) {
       mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
