@@ -1,3 +1,4 @@
+#include "config.h"
 #include "sdl_window.h"
 
 #include <common/log.h>
@@ -7,6 +8,16 @@
 #include <libdecaf/decaf.h>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
+
+namespace config
+{
+
+bool dump_drc_frames = false;
+bool dump_tv_frames = false;
+std::string dump_frames_dir = "frames";
+
+} // namespace config
+
 
 std::shared_ptr<spdlog::logger>
 gCliLog;
@@ -20,6 +31,7 @@ getCommandLineParser()
    using excmd::default_value;
    using excmd::allowed;
    using excmd::value;
+   using excmd::make_default_value;
 
    parser.global_options()
       .add_option("v,version",
@@ -27,13 +39,24 @@ getCommandLineParser()
       .add_option("h,help",
                   description { "Show help." });
 
+   auto replayOptions = parser.add_option_group("Replay Options")
+      .add_option("dump-drc-frames",
+                  description { "Dump rendered DRC frames to file." })
+      .add_option("dump-tv-frames",
+                  description { "Dump rendered TV frames to file." })
+      .add_option("dump-frames-dir",
+                  description { "Folder to place dumped frames in" },
+                  make_default_value(config::dump_frames_dir));
+
    parser.add_command("help")
       .add_argument("help-command",
                     optional {},
                     value<std::string> {});
 
    parser.add_command("replay")
-      .add_argument("trace file", value<std::string> {});
+      .add_argument("trace file",
+                    value<std::string> {})
+      .add_option_group(replayOptions);
 
    return parser;
 }
@@ -62,6 +85,18 @@ start(excmd::parser &parser,
 
    if (!options.has("replay")) {
       return 0;
+   }
+
+   if (options.has("dump-drc-frames")) {
+      config::dump_drc_frames = true;
+   }
+
+   if (options.has("dump-tv-frames")) {
+      config::dump_tv_frames = true;
+   }
+
+   if (options.has("dump-frames-dir")) {
+      config::dump_frames_dir = options.get<std::string>("dump-frames-dir");
    }
 
    auto traceFile = options.get<std::string>("trace file");

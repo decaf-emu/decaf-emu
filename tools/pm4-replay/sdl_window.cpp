@@ -1,9 +1,11 @@
 #include "sdl_window.h"
 #include "clilog.h"
+#include "config.h"
 
 #include <array>
 #include <fstream>
 #include <common/teenyheap.h>
+#include <common/platform_dir.h>
 #include <libcpu/mmu.h>
 #include <libcpu/pointer.h>
 #include <libdecaf/decaf.h>
@@ -415,6 +417,13 @@ SDLWindow::run(const std::string &tracePath)
    // Setup OpenGL graphics driver
    auto glDriver = gpu::createGLDriver();
    mGraphicsDriver = reinterpret_cast<gpu::OpenGLDriver *>(glDriver);
+
+   if (config::dump_drc_frames || config::dump_tv_frames) {
+      platform::createDirectory(config::dump_frames_dir);
+      mGraphicsDriver->startFrameCapture(config::dump_frames_dir + "/replay",
+                                         config::dump_tv_frames,
+                                         config::dump_drc_frames);
+   }
 
    // Setup rendering
    SDL_GL_MakeCurrent(mWindow, mWindowContext);
