@@ -32,6 +32,26 @@ unsigned frame_length = 30;
 
 } // namespace sound
 
+namespace test
+{
+
+//! Maximum time to run for before termination in milliseconds.
+int timeout_ms = -1;
+
+//! Maximum number of frames to render before termination.
+int timeout_frames = -1;
+
+//! Whether to dump rendered DRC frames to file;
+bool dump_drc_frames = false;
+
+//! Whether to dump rendered TV frames to file;
+bool dump_tv_frames = false;
+
+//! What directory to place dumped frames in.
+std::string dump_frames_dir = "frames";
+
+} // namespace test
+
 static display::DisplayMode
 translateDisplayMode(const std::string &str)
 {
@@ -250,6 +270,13 @@ loadFrontendToml(std::shared_ptr<cpptoml::table> config)
 
    // sound
    config::sound::frame_length = config->get_qualified_as<unsigned int>("sound.frame_length").value_or(config::sound::frame_length);
+
+   // test
+   config::test::timeout_ms = config->get_qualified_as<int>("test.timeout_ms").value_or(config::test::timeout_ms);
+   config::test::timeout_frames = config->get_qualified_as<int>("test.timeout_frames").value_or(config::test::timeout_frames);
+   config::test::dump_drc_frames = config->get_qualified_as<bool>("test.dump_drc_frames").value_or(config::test::dump_drc_frames);
+   config::test::dump_tv_frames = config->get_qualified_as<bool>("test.dump_tv_frames").value_or(config::test::dump_tv_frames);
+   config::test::dump_frames_dir = config->get_qualified_as<std::string>("test.dump_frames_dir").value_or(config::test::dump_frames_dir);
    return true;
 }
 
@@ -356,6 +383,19 @@ saveFrontendToml(std::shared_ptr<cpptoml::table> config)
 
    sound->insert("frame_length", config::sound::frame_length);
    config->insert("sound", sound);
+
+   // test
+   auto test = config->get_table("test");
+   if (!test) {
+      test = cpptoml::make_table();
+   }
+
+   test->insert("timeout_ms", config::test::timeout_ms);
+   test->insert("timeout_frames", config::test::timeout_frames);
+   test->insert("dump_drc_frames", config::test::dump_drc_frames);
+   test->insert("dump_tv_frames", config::test::dump_tv_frames);
+   test->insert("dump_frames_dir", config::test::dump_frames_dir);
+   config->insert("test", test);
    return true;
 }
 

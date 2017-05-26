@@ -4,6 +4,7 @@
 #include "decafsdl_opengl.h"
 
 #include <common/decaf_assert.h>
+#include <common/platform_dir.h>
 #include <libgpu/gpu_config.h>
 #include <libgpu/gpu_opengldriver.h>
 #include <string>
@@ -304,6 +305,11 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
 
    // Swap
    SDL_GL_SwapWindow(mWindow);
+   mFramesPresented++;
+
+   if (config::test::timeout_frames != -1 && mFramesPresented >= config::test::timeout_frames) {
+      decaf::shutdown();
+   }
 }
 
 bool
@@ -363,6 +369,13 @@ DecafSDLOpenGL::initialise(int width, int height)
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::OpenGLDriver*>(gpu::createGLDriver());
    mDebugUiRenderer = decaf::createDebugGLRenderer();
+
+   if (config::test::dump_drc_frames || config::test::dump_tv_frames) {
+      platform::createDirectory(config::test::dump_frames_dir);
+      mDecafDriver->startFrameCapture(config::test::dump_frames_dir + "/dump",
+                                      config::test::dump_tv_frames,
+                                      config::test::dump_drc_frames);
+   }
 
    // Setup rendering
    initialiseContext();

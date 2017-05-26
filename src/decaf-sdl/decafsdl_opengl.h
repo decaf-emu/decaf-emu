@@ -62,6 +62,8 @@ protected:
    gl::GLuint mSampler;
 
    gl::GLfloat mBackgroundColour[3];
+
+   size_t mFramesPresented = 0;
 };
 
 #endif // ifdef DECAF_GL

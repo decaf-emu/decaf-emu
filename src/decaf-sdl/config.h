@@ -119,6 +119,26 @@ extern unsigned frame_length;
 
 } // namespace sound
 
+namespace test
+{
+
+//! Maximum time to run for before termination in milliseconds.
+extern int timeout_ms;
+
+//! Maximum number of frames to render before termination.
+extern int timeout_frames;
+
+//! Whether to dump rendered DRC frames to file;
+extern bool dump_drc_frames;
+
+//! Whether to dump rendered TV frames to file;
+extern bool dump_tv_frames;
+
+//! What directory to place dumped frames in.
+extern std::string dump_frames_dir;
+
+} // namespace test
+
 void
 setupDefaultInputDevices();
 
