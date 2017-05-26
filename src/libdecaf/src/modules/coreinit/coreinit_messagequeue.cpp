@@ -53,9 +53,12 @@ OSInitMessageQueueEx(OSMessageQueue *queue,
 /**
  * Insert a message into the queue.
  *
- * If flags has OSMessageFlags::Blocking then the current thread will block
- * until there is space in the queue to insert the message, else it will
+ * If the OSMessageFlags::HighPriority flag is set then the current thread will
+ * block until there is space in the queue to insert the message, else it will
  * return immediately with the return value of FALSE.
+ *
+ * If the OSMessageFlags::HighPriority flag is set then the message will be
+ * inserted at the front of the queue, otherwise it will be inserted at the back.
  *
  * \return Returns TRUE if the message was inserted in the queue.
  */
