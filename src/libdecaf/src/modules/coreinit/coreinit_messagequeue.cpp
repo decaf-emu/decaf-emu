@@ -64,76 +64,38 @@ OSSendMessage(OSMessageQueue *queue,
               OSMessage *message,
               OSMessageFlags flags)
 {
+   unsigned index;
    internal::lockScheduler();
    decaf_check(queue && queue->tag == OSMessageQueue::Tag);
    decaf_check(message);
 
    if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
-      // Do not block waiting for space to insert message
+      // Do not block waiting for space to insert message.
       internal::unlockScheduler();
       return FALSE;
    }
 
-   // Wait for space in the message queue
+   // Wait for space in the message queue.
    while (queue->used == queue->size) {
       internal::sleepThreadNoLock(&queue->sendQueue);
       internal::rescheduleSelfNoLock();
    }
 
-   // Copy into message array
-   auto index = (queue->first + queue->used) % queue->size;
-   auto dst = static_cast<OSMessage*>(queue->messages) + index;
-   std::memcpy(dst, message, sizeof(OSMessage));
-   queue->used++;
+   if (flags & OSMessageFlags::HighPriority) {
+      // High priorty messages are pushed to the front of the queue.
+      if (queue->first == 0) {
+         queue->first = queue->size - 1;
+      } else {
+         queue->first--;
+      }
 
-   // Wakeup threads waiting to read message
-   internal::wakeupThreadNoLock(&queue->recvQueue);
-   internal::rescheduleAllCoreNoLock();
-
-   internal::unlockScheduler();
-   return TRUE;
-}
-
-
-/**
- * Insert a message into the front of the queue.
- *
- * If flags has OSMessageFlags::Blocking then the current thread will block
- * until there is space in the queue to insert the message, else it will
- * return immediately with the return value of FALSE.
- *
- * \return Returns TRUE if the message was inserted in the queue.
- */
-BOOL
-OSJamMessage(OSMessageQueue *queue,
-             OSMessage *message,
-             OSMessageFlags flags)
-{
-   internal::lockScheduler();
-   decaf_check(queue && queue->tag == OSMessageQueue::Tag);
-   decaf_check(message);
-
-   if (!(flags & OSMessageFlags::Blocking) && queue->used == queue->size) {
-      // Do not block waiting for space to insert message
-      internal::unlockScheduler();
-      return FALSE;
-   }
-
-   // Wait for space in the message queue
-   while (queue->used == queue->size) {
-      internal::sleepThreadNoLock(&queue->sendQueue);
-      internal::rescheduleSelfNoLock();
-   }
-
-   if (queue->first == 0) {
-      queue->first = queue->size - 1;
+      index = queue->first;
    } else {
-      queue->first--;
+      // Normal messages are pushed to back of the queue.
+      index = (queue->first + queue->used) % queue->size;
    }
 
-   // Copy into message array
-   auto dst = static_cast<OSMessage*>(queue->messages) + queue->first;
-   memcpy(dst, message, sizeof(OSMessage));
+   std::memcpy(queue->messages + index, message, sizeof(OSMessage));
    queue->used++;
 
    // Wakeup threads waiting to read message
@@ -233,7 +195,6 @@ Module::registerMessageQueueFunctions()
    RegisterKernelFunction(OSInitMessageQueue);
    RegisterKernelFunction(OSInitMessageQueueEx);
    RegisterKernelFunction(OSSendMessage);
-   RegisterKernelFunction(OSJamMessage);
    RegisterKernelFunction(OSReceiveMessage);
    RegisterKernelFunction(OSPeekMessage);
    RegisterKernelFunction(OSGetSystemMessageQueue);
