@@ -29,4 +29,10 @@ add_coreinit_test(memory/frameheap_multi.c)
 add_coreinit_test(memory/frameheap_simple.c)
 add_coreinit_test(memory/frameheap_unaligned.c)
 
+add_coreinit_test(messagequeue/messagequeue_block_receive.c)
+add_coreinit_test(messagequeue/messagequeue_full_block_send.c)
+add_coreinit_test(messagequeue/messagequeue_full_fail_send.c)
+add_coreinit_test(messagequeue/messagequeue_high_priority.c)
+add_coreinit_test(messagequeue/messagequeue_simple.c)
+
 add_coreinit_test(thread/thread_cancel.c)
