@@ -1,11 +1,9 @@
 #include <hle_test.h>
-#include <coreinit/mutex.h>
 #include <coreinit/systeminfo.h>
 #include <coreinit/thread.h>
 #include <coreinit/time.h>
 
 OSThread gThread;
-OSMutex gMutex;
 uint8_t gThreadStack[4096];
 
 int cancelThreadEntry(int argc, const char **argv)
@@ -28,7 +26,6 @@ int cancelThreadEntry(int argc, const char **argv)
 int main(int argc, char **argv)
 {
    test_report("Setup");
-   OSInitMutex(&gMutex);
    OSCreateThread(&gThread, cancelThreadEntry, 0, NULL, gThreadStack + 4096, 4096, 20, 0);
 
    test_report("Start the thread");
