@@ -25,6 +25,7 @@ getCommandLineParser()
    using excmd::default_value;
    using excmd::allowed;
    using excmd::value;
+   using excmd::make_default_value;
 
    parser.global_options()
       .add_option("v,version",
@@ -63,7 +64,7 @@ getCommandLineParser()
    auto input_options = parser.add_option_group("Input Options")
       .add_option("vpad0",
                   description { "Select the input device for VPAD0." },
-                  default_value<std::string> { "default_keyboard" });
+                  make_default_value(config::input::vpad0));
 
    auto config_options = config::getExcmdGroups(parser);
 
