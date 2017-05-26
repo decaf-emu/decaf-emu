@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
    test_report("Read file");
    readSize = sizeof(buffer) - 1;
-   status = FSReadFile(&client, &cmdBlock, buffer, readSize, 1, fh, 0, -1);
+   status = FSReadFile(&client, &cmdBlock, buffer, 1, readSize, fh, 0, -1);
    buffer[readSize] = 0;
    test_report("FSReadFile status: %d, buffer: %s", status, buffer);
    test_eq(status, readSize);
