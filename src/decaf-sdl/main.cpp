@@ -58,9 +58,7 @@ getCommandLineParser()
       .add_option("display-stretch",
                   description { "Enable display stretching, aspect ratio will not be maintained." })
       .add_option("sound",
-                  description { "Enable sound output." })
-      .add_option("dx12",
-                  description { "Use DirectX 12 backend." });
+                  description { "Enable sound output." });
 
    auto input_options = parser.add_option_group("Input Options")
       .add_option("vpad0",
