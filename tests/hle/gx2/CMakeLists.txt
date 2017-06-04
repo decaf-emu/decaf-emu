@@ -8,7 +8,7 @@ if(NOT COMMAND add_gx2_test)
 macro(add_gx2_test source)
    get_filename_component(name ${source} NAME_WE)
    add_rpx_lite(${name} ${source})
-   target_link_libraries(${name} whb gfd defaultheap coreinit gx2 proc_ui)
+   target_link_libraries(${name} whb gfd defaultheap coreinit gx2 proc_ui sysapp nsysnet)
 endmacro()
 endif()
 

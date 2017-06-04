@@ -25,7 +25,8 @@ if(DECAF_BUILD_WUT_TESTS)
         macro(assemble_shader target gsh psh vsh)
             add_custom_command(TARGET hle-content
                                COMMAND latte-assembler compile --psh ${psh} --vsh ${vsh} ${gsh}
-                               ADD_DEPENDENCIES ${psh} ${vsh})
+                               DEPENDS ${psh} ${vsh}
+                               COMMENT "Compiling ${gsh}")
         endmacro()
 
         assemble_shader(shader_pos_colour
@@ -45,6 +46,12 @@ if(DECAF_BUILD_WUT_TESTS)
     externalproject_get_property(hle-rpx BINARY_DIR)
     set_target_properties(hle-rpx PROPERTIES FOLDER tests)
     add_dependencies(hle-rpx hle-content)
+
+    externalproject_add_step(hle-rpx forcebuild
+        COMMAND ${CMAKE_COMMAND} -E echo "Force build of hle-rpx"
+        DEPENDEES  "configure"
+        DEPENDERS "build"
+        ALWAYS 1)
 
     install(DIRECTORY "${BINARY_DIR}/"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/hle"
