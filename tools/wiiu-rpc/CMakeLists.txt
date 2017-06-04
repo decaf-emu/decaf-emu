@@ -15,5 +15,5 @@ target_link_libraries(wiiu-rpc
     coreinit
     sysapp
     nsysnet
-    vpad
-    nn_ac)
+    nn_ac
+    proc_ui)

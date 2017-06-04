@@ -16,12 +16,12 @@
 #include <nn_ac/nn_ac.h>
 #include <nsysnet/socket.h>
 #include <sysapp/launch.h>
-#include <vpad/input.h>
 #include <whb/crash.h>
 #include <whb/file.h>
 #include <whb/gfx.h>
 #include <whb/log.h>
 #include <whb/log_udp.h>
+#include <whb/proc.h>
 
 #include <string.h>
 #include <malloc.h>
@@ -306,11 +306,9 @@ packetHandler(Server *server, PacketReader *packet)
 int
 main(int argc, char **argv)
 {
-   VPADStatus vpad;
-   int vpadError = -1;
    Server server;
 
-   VPADInit();
+   WHBProcInit(TRUE);
    consoleInit();
    socket_lib_init();
    ACInitialize();
@@ -319,16 +317,10 @@ main(int argc, char **argv)
    WHBInitCrashHandler();
 
    if (serverStart(&server, 1337) == 0) {
-      while(true) {
+      while(WHBProcIsRunning()) {
          consoleDraw();
-
-         VPADRead(0, &vpad, 1, &vpadError);
-         if(vpadError == 0 && ((vpad.hold | vpad.trigger) & VPAD_BUTTON_HOME)) {
-            break;
-         } else {
-            serverProcess(&server, &packetHandler);
-            OSSleepTicks(OSMilliseconds(30));
-         }
+         serverProcess(&server, &packetHandler);
+         OSSleepTicks(OSMilliseconds(30));
       }
    } else {
       WHBLogPrintf("Failed to start server.");
@@ -338,9 +330,7 @@ main(int argc, char **argv)
    serverClose(&server);
    socket_lib_finish();
    ACFinalize();
-   VPADShutdown();
    consoleFree();
-
-   SYSRelaunchTitle(0, 0);
+   WHBProcShutdown();
    return 0;
 }
