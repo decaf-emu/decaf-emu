@@ -11,40 +11,50 @@
 
 #define NUM_LINES (16)
 #define LINE_LENGTH (128)
+#define FRAME_HEAP_TAG (0x000DECAF)
 
 static char sConsoleBuffer[NUM_LINES][LINE_LENGTH];
 static int sLineNum = 0;
-static void *bufferTV, *bufferDRC;
-static uint32_t bufferSizeTV, bufferSizeDRC;
+static void *sBufferTV, *sBufferDRC;
+static uint32_t sBufferSizeTV, sBufferSizeDRC;
 
-void
+BOOL
 consoleInit()
 {
-   MEMHeapHandle mem1;
+   MEMHeapHandle heap = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
+   MEMRecordStateForFrmHeap(heap, FRAME_HEAP_TAG);
 
    OSScreenInit();
-   bufferSizeTV = OSScreenGetBufferSizeEx(SCREEN_TV);
-   bufferSizeDRC = OSScreenGetBufferSizeEx(SCREEN_DRC);
+   sBufferSizeTV = OSScreenGetBufferSizeEx(SCREEN_TV);
+   sBufferSizeDRC = OSScreenGetBufferSizeEx(SCREEN_DRC);
 
-   mem1 = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM2);
-   bufferTV = MEMAllocFromExpHeapEx(mem1, bufferSizeTV, 4);
-   bufferDRC = MEMAllocFromExpHeapEx(mem1, bufferSizeDRC, 4);
+   sBufferTV = MEMAllocFromFrmHeapEx(heap, sBufferSizeTV, 4);
+   if (!sBufferTV) {
+      WHBLogPrintf("sBufferTV = MEMAllocFromFrmHeapEx(heap, 0x%X, 4) returned NULL", sBufferSizeTV);
+      return FALSE;
+   }
 
-   OSScreenSetBufferEx(SCREEN_TV, bufferTV);
-   OSScreenSetBufferEx(SCREEN_DRC, bufferDRC);
+   sBufferDRC = MEMAllocFromFrmHeapEx(heap, sBufferSizeDRC, 4);
+   if (!sBufferDRC) {
+      WHBLogPrintf("sBufferDRC = MEMAllocFromFrmHeapEx(heap, 0x%X, 4) returned NULL", sBufferSizeDRC);
+      return FALSE;
+   }
+
+   OSScreenSetBufferEx(SCREEN_TV, sBufferTV);
+   OSScreenSetBufferEx(SCREEN_DRC, sBufferDRC);
 
    OSScreenEnableEx(SCREEN_TV, 1);
    OSScreenEnableEx(SCREEN_DRC, 1);
    WHBAddLogHandler(consoleAddLine);
+   return TRUE;
 }
 
 void
 consoleFree()
 {
+   MEMHeapHandle heap = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
    OSScreenShutdown();
-   MEMHeapHandle mem1 = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM2);
-   MEMFreeToExpHeap(mem1, bufferTV);
-   MEMFreeToExpHeap(mem1, bufferDRC);
+   MEMFreeByStateToFrmHeap(heap, FRAME_HEAP_TAG);
 }
 
 void
@@ -58,8 +68,8 @@ consoleDraw()
       OSScreenPutFontEx(SCREEN_DRC, 0, y, sConsoleBuffer[y]);
    }
 
-   DCFlushRange(bufferTV, bufferSizeTV);
-   DCFlushRange(bufferDRC, bufferSizeDRC);
+   DCFlushRange(sBufferTV, sBufferSizeTV);
+   DCFlushRange(sBufferDRC, sBufferSizeDRC);
    OSScreenFlipBuffersEx(SCREEN_TV);
    OSScreenFlipBuffersEx(SCREEN_DRC);
 }

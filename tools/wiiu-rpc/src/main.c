@@ -307,14 +307,19 @@ int
 main(int argc, char **argv)
 {
    Server server;
+   int result = 0;
 
    WHBProcInit(TRUE);
-   consoleInit();
-   socket_lib_init();
-   ACInitialize();
-
    WHBLogUdpInit();
    WHBInitCrashHandler();
+
+   if (!consoleInit()) {
+      result = -1;
+      goto exit;
+   }
+
+   socket_lib_init();
+   ACInitialize();
 
    if (serverStart(&server, 1337) == 0) {
       while(WHBProcIsRunning()) {
@@ -326,11 +331,12 @@ main(int argc, char **argv)
       WHBLogPrintf("Failed to start server.");
    }
 
+exit:
    WHBLogPrintf("Exiting...");
    serverClose(&server);
    socket_lib_finish();
    ACFinalize();
    consoleFree();
    WHBProcShutdown();
-   return 0;
+   return result;
 }

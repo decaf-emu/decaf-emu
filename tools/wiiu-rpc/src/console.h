@@ -3,7 +3,7 @@
 
 #include <coreinit/internal.h>
 
-void
+BOOL
 consoleInit();
 
 void
