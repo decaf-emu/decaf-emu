@@ -8,16 +8,20 @@
 #include <coreinit/baseheap.h>
 #include <coreinit/filesystem.h>
 #include <coreinit/ios.h>
+#include <coreinit/screen.h>
 #include <coreinit/thread.h>
 #include <coreinit/time.h>
 #include <coreinit/foreground.h>
 #include <coreinit/systeminfo.h>
 #include <nn_ac/nn_ac.h>
 #include <nsysnet/socket.h>
-#include <vpad/input.h>
-
-#include <coreinit/screen.h>
 #include <sysapp/launch.h>
+#include <vpad/input.h>
+#include <whb/crash.h>
+#include <whb/file.h>
+#include <whb/gfx.h>
+#include <whb/log.h>
+#include <whb/log_udp.h>
 
 #include <string.h>
 #include <malloc.h>
@@ -51,42 +55,42 @@ typedef enum ArgTypes
 static uint32_t
 callFuncArgs0(void *func)
 {
-   consoleLog("%p()", func);
+   WHBLogPrintf("%p()", func);
    return ((uint32_t (*)())func)();
 }
 
 static uint32_t
 callFuncArgs1(void *func, uint32_t *args)
 {
-   consoleLog("%p(%x)", func, args[0]);
+   WHBLogPrintf("%p(%x)", func, args[0]);
    return ((uint32_t (*)(uint32_t))func)(args[0]);
 }
 
 static uint32_t
 callFuncArgs2(void *func, uint32_t *args)
 {
-   consoleLog("%p(%x, %x)", func, args[0], args[1]);
+   WHBLogPrintf("%p(%x, %x)", func, args[0], args[1]);
    return ((uint32_t (*)(uint32_t, uint32_t))func)(args[0], args[1]);
 }
 
 static uint32_t
 callFuncArgs3(void *func, uint32_t *args)
 {
-   consoleLog("%p(%x, %x, %x)", func, args[0], args[1], args[2]);
+   WHBLogPrintf("%p(%x, %x, %x)", func, args[0], args[1], args[2]);
    return ((uint32_t (*)(uint32_t, uint32_t, uint32_t))func)(args[0], args[1], args[2]);
 }
 
 static uint32_t
 callFuncArgs4(void *func, uint32_t *args)
 {
-   consoleLog("%p(%x, %x, %x, %x)", func, args[0], args[1], args[2], args[3]);
+   WHBLogPrintf("%p(%x, %x, %x, %x)", func, args[0], args[1], args[2], args[3]);
    return ((uint32_t (*)(uint32_t, uint32_t, uint32_t, uint32_t))func)(args[0], args[1], args[2], args[3]);
 }
 
 static uint32_t
 callFuncArgs5(void *func, uint32_t *args)
 {
-   consoleLog("%p(%x, %x, %x, %x, %x)", func, args[0], args[1], args[2], args[3], args[4]);
+   WHBLogPrintf("%p(%x, %x, %x, %x, %x)", func, args[0], args[1], args[2], args[3], args[4]);
    return ((uint32_t (*)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t))func)(args[0], args[1], args[2], args[3], args[4]);
 }
 
@@ -103,7 +107,7 @@ packetHandler(Server *server, PacketReader *packet)
       OSDynLoadModule module = NULL;
       int result;
 
-      consoleLog("OSDynLoad_Acquire(\"%s\")", name);
+      WHBLogPrintf("OSDynLoad_Acquire(\"%s\")", name);
       result = OSDynLoad_Acquire(name, &module);
 
       pakWriteAlloc(&out, CMD_DYNLOAD_ACQUIRE);
@@ -117,7 +121,7 @@ packetHandler(Server *server, PacketReader *packet)
    {
       OSDynLoadModule *module = (OSDynLoadModule *)pakReadPointer(packet);
 
-      consoleLog("OSDynLoad_Release(%p)", module);
+      WHBLogPrintf("OSDynLoad_Release(%p)", module);
       OSDynLoad_Release(module);
 
       pakWriteAlloc(&out, CMD_DYNLOAD_RELEASE);
@@ -133,7 +137,7 @@ packetHandler(Server *server, PacketReader *packet)
       void *addr = NULL;
       int result = 0;
 
-      consoleLog("OSDynLoad_FindExport(%p, %d, \"%s\")", module, isData, name);
+      WHBLogPrintf("OSDynLoad_FindExport(%p, %d, \"%s\")", module, isData, name);
       result = OSDynLoad_FindExport(module, isData, name, &addr);
 
       pakWriteAlloc(&out, CMD_DYNLOAD_FINDEXPORT);
@@ -178,7 +182,7 @@ packetHandler(Server *server, PacketReader *packet)
       uint32_t numTmpData = 0;
       uint32_t result = 0;
 
-      consoleLog("Call function %p", func);
+      WHBLogPrintf("Call function %p", func);
 
       for (int i = 0; i < numArgs; i++) {
          uint32_t argType = pakReadUint32(packet);
@@ -292,7 +296,7 @@ packetHandler(Server *server, PacketReader *packet)
       break;
    }
    default:
-      consoleLog("Unknown packet command: %d", packet->command);
+      WHBLogPrintf("Unknown packet command: %d", packet->command);
       return -1;
    }
 
@@ -311,6 +315,9 @@ main(int argc, char **argv)
    socket_lib_init();
    ACInitialize();
 
+   WHBLogUdpInit();
+   WHBInitCrashHandler();
+
    if (serverStart(&server, 1337) == 0) {
       while(true) {
          consoleDraw();
@@ -324,10 +331,10 @@ main(int argc, char **argv)
          }
       }
    } else {
-      consoleLog("Failed to start server.");
+      WHBLogPrintf("Failed to start server.");
    }
 
-   consoleLog("Exiting...");
+   WHBLogPrintf("Exiting...");
    serverClose(&server);
    socket_lib_finish();
    ACFinalize();

@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <malloc.h>
+#include <whb/log.h>
 
 #define INITIAL_WRITE_PACKET_SIZE 1024
 
@@ -14,7 +15,7 @@ pakReadUint32(PacketReader *packet)
    packet->pos += sizeof(uint32_t);
 
    if (packet->pos > packet->dataLength) {
-      consoleLog("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
+      WHBLogPrintf("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
    }
 
    return value;
@@ -28,7 +29,7 @@ pakReadUint64(PacketReader *packet)
    packet->pos += sizeof(uint64_t);
 
    if (packet->pos > packet->dataLength) {
-      consoleLog("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
+      WHBLogPrintf("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
    }
 
    return value;
@@ -61,7 +62,7 @@ pakReadData(PacketReader *packet, uint32_t *length)
    packet->pos += *length;
 
    if (packet->pos > packet->dataLength) {
-      consoleLog("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
+      WHBLogPrintf("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
    }
 
    return data;
@@ -75,7 +76,7 @@ pakReadString(PacketReader *packet)
    packet->pos += length;
 
    if (packet->pos > packet->dataLength) {
-      consoleLog("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
+      WHBLogPrintf("Read past end of packet! pos: %d length: %d", packet->pos, packet->dataLength);
    }
 
    return str;

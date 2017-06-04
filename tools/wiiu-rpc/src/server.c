@@ -6,6 +6,7 @@
 #include <nn_ac/nn_ac.h>
 #include <string.h>
 #include <malloc.h>
+#include <whb/log.h>
 
 int
 serverStart(Server *server, int port)
@@ -26,7 +27,7 @@ serverStart(Server *server, int port)
    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
    if (fd < 0) {
-      consoleLog("Error creating socket: %d", socketlasterr());
+      WHBLogPrintf("Error creating socket: %d", socketlasterr());
       return -1;
    }
 
@@ -42,13 +43,13 @@ serverStart(Server *server, int port)
 
    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
       socketclose(fd);
-      consoleLog("Error binding socket: %d", socketlasterr());
+      WHBLogPrintf("Error binding socket: %d", socketlasterr());
       return -1;
    }
 
    if (listen(fd, 3) < 0) {
       socketclose(fd);
-      consoleLog("Error listening on socket: %d", socketlasterr());
+      WHBLogPrintf("Error listening on socket: %d", socketlasterr());
       return -1;
    }
 
@@ -57,7 +58,7 @@ serverStart(Server *server, int port)
    ACGetAssignedAddress(&ipAddress);
 
    ip_addr.s_addr = ipAddress;
-   consoleLog("Started server on %s:%d", inet_ntoa(ip_addr), port);
+   WHBLogPrintf("Started server on %s:%d", inet_ntoa(ip_addr), port);
    server->fd = fd;
    return 0;
 }
@@ -98,8 +99,8 @@ serverAccept(Server *server)
       if (clientFd < 0) {
          int error = socketlasterr();
 
-         if (error != EWOULDBLOCK) {
-            consoleLog("Error, accept returned %d", clientFd);
+         if (error != NSN_EWOULDBLOCK) {
+            WHBLogPrintf("Error, accept returned %d", clientFd);
             return error;
          }
 
@@ -107,12 +108,12 @@ serverAccept(Server *server)
       }
 
       if (server->client != -1) {
-         consoleLog("Max clients reached, reject %s", inet_ntoa(addr.sin_addr));
+         WHBLogPrintf("Max clients reached, reject %s", inet_ntoa(addr.sin_addr));
          socketclose(clientFd);
          return 0;
       }
 
-      consoleLog("Accepted connection from %s", inet_ntoa(addr.sin_addr));
+      WHBLogPrintf("Accepted connection from %s", inet_ntoa(addr.sin_addr));
       server->client = clientFd;
    }
 
@@ -153,15 +154,15 @@ serverRead(Server *server, PacketHandlerFn fn)
       if (read < 0) {
          int error = socketlasterr();
 
-         if (error != EWOULDBLOCK) {
-            consoleLog("Error receiving from socket: %d", error);
+         if (error != NSN_EWOULDBLOCK) {
+            WHBLogPrintf("Error receiving from socket: %d", error);
             serverCloseClient(server);
             return error;
          }
 
          return 0;
       } else if (read == 0) {
-         consoleLog("Client disconnected gracefully.");
+         WHBLogPrintf("Client disconnected gracefully.");
          serverCloseClient(server);
          return read;
       }

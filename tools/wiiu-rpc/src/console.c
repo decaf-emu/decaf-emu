@@ -7,6 +7,7 @@
 #include <coreinit/screen.h>
 
 #include <string.h>
+#include <whb/log.h>
 
 #define NUM_LINES (16)
 #define LINE_LENGTH (128)
@@ -34,6 +35,7 @@ consoleInit()
 
    OSScreenEnableEx(SCREEN_TV, 1);
    OSScreenEnableEx(SCREEN_DRC, 1);
+   WHBAddLogHandler(consoleAddLine);
 }
 
 void
