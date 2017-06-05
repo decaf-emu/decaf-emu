@@ -247,6 +247,7 @@ ENUM_BEG(SQ_SEL, uint32_t)
    ENUM_VALUE(SEL_W,                      3)
    ENUM_VALUE(SEL_0,                      4)
    ENUM_VALUE(SEL_1,                      5)
+   ENUM_VALUE(SEL_BIAS,                      6)
    ENUM_VALUE(SEL_MASK,                   7)
 ENUM_END(SQ_SEL)
 

@@ -15,8 +15,9 @@ MaxSamplers = 16u;
 static const unsigned
 MaxStreamOutBuffers = 4u;
 
+//The limit should be 18 for gx2
 static const unsigned
-MaxTextures = 16u;
+MaxTextures = 18u;
 
 static const unsigned
 MaxUniformRegisters = 256u;

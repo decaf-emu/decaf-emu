@@ -586,9 +586,9 @@ insertFileHeader(State &state)
       }
    }
 
-   // Samplers
-   for (auto id = 0u; id < state.shader->samplerDim.size(); ++id) {
-      auto dim = state.shader->samplerDim[id];
+   // Samplers,use the number of samplerUsage for cycle
+   for (auto id = 0u; id < state.shader->samplerUsage.size(); ++id) {
+      auto dim = state.shader->samplerDim[id%state.shader->samplerDim.size()];
       auto usage = state.shader->samplerUsage[id];
 
       // If the sampler was never used, we don't need to record it
