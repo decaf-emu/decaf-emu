@@ -18,7 +18,6 @@ KEEP_GRADIENTS
 SET_GRADIENTS_H
 SET_GRADIENTS_V
 PASS
-SAMPLE_LB
 SAMPLE_G
 SAMPLE_G_L
 SAMPLE_G_LB
@@ -148,13 +147,13 @@ sampleFunc(State &state,
    auto lodBias = inst.word1.LOD_BIAS();
 
    auto samplerDim = state.shader->samplerDim[samplerID];
-   //Use resourceID to set the Usage
+   // Use resourceID to set the Usage.Usage array size equalls to MaxTextures
    auto samplerUsage = registerSamplerID(state, resourceID, isShadowOp);
 
-   //The statement 'resourceID == samplerID' is true when the texture number is below 16.
-   //However, while sampler ID is limited to 16 max,max texture number allowed is 18. 
-   //So when use texture at index 16 and texture at index 17,the sampler id will be 0 and 1.
-   //When compile shader, the compiler will warn about this sampler overlap.
+   // The statement 'resourceID == samplerID' is true when the texture number is below 16.
+   // However, while sampler ID is limited to 16 max,max texture number allowed is 18. 
+   // So when use texture at index 16 and texture at index 17,the sampler id will be 0 and 1.
+   // When compile shader, the compiler will warn about this sampler overlap.
    if (resourceID%16 != samplerID) {
       throw translate_exception("Unsupported sample with RESOURCE_ID%16 != SAMPLER_ID");
    }
@@ -188,7 +187,9 @@ sampleFunc(State &state,
          state.out << func;
       }
 	  
-	  //Here we should not use samplerID
+	  // Here we should not use samplerID. Because this function is used to output glsl statement
+	  // like 'texTmp = texture(sampler_16,....' to sample designated texture. The designated texture's id
+	  // should be resouceID, not samplerID. Else when use texture at index 16,the designated texture's name will be wrong.
       state.out << "(sampler_" << resourceID << ", ";
 
       if (isShadowOp) {

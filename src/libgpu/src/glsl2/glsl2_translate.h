@@ -69,8 +69,8 @@ struct Shader
    std::string codeBody;
    std::vector<Export> exports;
    std::array<std::vector<Feedback>, latte::MaxStreamOutBuffers> feedbacks;
-   //The Usage array should be length of MaxTexture.Because the last 2 texture 
-   //will use the same sample setting as texture0 and texture1
+   // The Usage array should be length of MaxTexture. Because the last 2 textures
+   // will use the same sample setting as texture0 and texture1
    std::array<SamplerUsage, latte::MaxTextures> samplerUsage;
    std::array<bool, latte::MaxUniformBlocks> usedUniformBlocks;
    bool usesDiscard = false;

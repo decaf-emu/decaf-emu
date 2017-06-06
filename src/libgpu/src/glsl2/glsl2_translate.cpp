@@ -586,9 +586,12 @@ insertFileHeader(State &state)
       }
    }
 
-   // Samplers,use the number of samplerUsage for cycle
+   // Samplers,use the number of samplerUsage for cycle, so we will output the correct number of
+   // textures when texture number exceeds 16.
    for (auto id = 0u; id < state.shader->samplerUsage.size(); ++id) {
-      auto dim = state.shader->samplerDim[id%state.shader->samplerDim.size()];
+   // Here we use modulo operator to get he sampler used by current id. When id is 16 and 17, the
+   // sampler at index 0 and sampler at index 1 will be reused.
+      auto dim = state.shader->samplerDim[ id % state.shader->samplerDim.size() ];
       auto usage = state.shader->samplerUsage[id];
 
       // If the sampler was never used, we don't need to record it
