@@ -98,7 +98,7 @@ struct va_list
             decaf_abort("How the fuck do we handle va_list with FPR overflow");
          }
 
-         mGpr++;
+         mFpr++;
          return value;
       }
 
