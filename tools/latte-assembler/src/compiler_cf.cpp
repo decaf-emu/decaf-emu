@@ -124,8 +124,12 @@ compileClauses(Shader &shader)
       }
    }
 
-   shader.aluClauseBaseAddress = static_cast<uint32_t>(aluClauseBaseAddress);
-   shader.aluClauseData = std::move(aluClauseData);
+   if (aluClauseData.size()) {
+      shader.aluClauseBaseAddress = static_cast<uint32_t>(aluClauseBaseAddress);
+      shader.aluClauseData = std::move(aluClauseData);
+   } else {
+      shader.aluClauseBaseAddress = 0;
+   }
 
    auto texClauseBaseAddress = align_up(aluClauseBaseAddress + shader.aluClauseData.size() / 2, TexClauseAlign / 8);
 
@@ -165,8 +169,12 @@ compileClauses(Shader &shader)
       }
    }
 
-   shader.texClauseBaseAddress = static_cast<uint32_t>(texClauseBaseAddress);
-   shader.texClauseData = std::move(texClauseData);
+   if (texClauseData.size()) {
+      shader.texClauseBaseAddress = static_cast<uint32_t>(texClauseBaseAddress);
+      shader.texClauseData = std::move(texClauseData);
+   } else {
+      shader.texClauseBaseAddress = 0;
+   }
 
    // TODO: Same for VTX clauses
 }
