@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "platform.h"
 #include "platform_memory.h"
 #include "log.h"
