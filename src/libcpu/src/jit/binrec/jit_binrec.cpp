@@ -7,10 +7,11 @@
 #include "mem.h"
 #include "mmu.h"
 
+#include <cfenv>
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
-#include <cfenv>
+#include <cstdlib>
 
 #define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
