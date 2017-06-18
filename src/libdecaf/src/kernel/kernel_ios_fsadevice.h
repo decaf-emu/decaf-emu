@@ -159,7 +159,7 @@ private:
 
 private:
    fs::FileSystem *mFS = nullptr;
-   fs::Path mWorkingPath;
+   fs::Path mWorkingPath = "/";
    std::vector<FSAHandle> mHandles;
 };
 
