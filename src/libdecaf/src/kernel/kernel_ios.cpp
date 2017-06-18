@@ -1,6 +1,7 @@
 #include "kernel_ios.h"
 #include "kernel_ipc.h"
 #include "kernel_ios_device.h"
+#include "kernel_ios_device_im.h"
 #include "kernel_ios_fsadevice.h"
 #include "kernel_ios_mcpdevice.h"
 
@@ -201,6 +202,7 @@ iosInitDevices()
 {
    addDevice<FSADevice>("/dev/fsa");
    addDevice<MCPDevice>("/dev/mcp");
+   addDevice<IMDevice>("/dev/im");
 }
 
 } // namespace kernel

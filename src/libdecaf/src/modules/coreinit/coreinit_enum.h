@@ -47,10 +47,6 @@ ENUM_BEG(HardwareVersion, uint32_t)
    ENUM_VALUE(LATTE_B1X_CAFE,                0x26100028)
 ENUM_END(HardwareVersion)
 
-ENUM_BEG(IMError, int32_t)
-   ENUM_VALUE(OK,                  0)
-ENUM_END(IMError)
-
 ENUM_BEG(IPCDriverStatus, uint32_t)
    ENUM_VALUE(Closed,               1)
    ENUM_VALUE(Initialised,          2)
