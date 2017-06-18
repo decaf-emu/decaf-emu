@@ -1,9 +1,9 @@
 #include "kernel_ios.h"
 #include "kernel_ipc.h"
 #include "kernel_ios_device.h"
+#include "kernel_ios_device_fsa.h"
 #include "kernel_ios_device_im.h"
-#include "kernel_ios_fsadevice.h"
-#include "kernel_ios_mcpdevice.h"
+#include "kernel_ios_device_mcp.h"
 
 #include <map>
 #include <string>

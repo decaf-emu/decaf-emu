@@ -1,4 +1,4 @@
-#include "kernel_ios_debugoutdevice.h"
+#include "kernel_ios_device_debugout.h"
 
 #include <common/log.h>
 #include <libcpu/mem.h>

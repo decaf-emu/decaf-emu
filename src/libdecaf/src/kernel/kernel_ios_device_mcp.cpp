@@ -1,5 +1,5 @@
 #include "decaf_config.h"
-#include "kernel_ios_mcpdevice.h"
+#include "kernel_ios_device_mcp.h"
 #include "kernel.h"
 
 #include <cstring>
