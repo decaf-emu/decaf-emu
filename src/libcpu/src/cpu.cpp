@@ -186,6 +186,11 @@ start()
 
    for (auto i = 0u; i < gCore.size(); ++i) {
       auto core = jit::initialiseCore(i);
+      if (!core) {
+         core = new Core {};
+         core->id = i;
+      }
+
       core->thread = std::thread { coreEntryPoint, core };
       core->next_alarm = std::chrono::steady_clock::time_point::max();
       gCore[i] = core;
