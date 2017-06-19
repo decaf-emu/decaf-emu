@@ -13,9 +13,11 @@ namespace nsysnet
 using kernel::ios::socket::SocketAddrIn;
 using kernel::ios::socket::SocketCommand;
 using kernel::ios::socket::SocketError;
+using kernel::ios::socket::SocketFamily;
 
-using kernel::ios::socket::SocketConnectRequest;
+using kernel::ios::socket::SocketBindRequest;
 using kernel::ios::socket::SocketCloseRequest;
+using kernel::ios::socket::SocketConnectRequest;
 using kernel::ios::socket::SocketSocketRequest;
 
 struct SocketLibData
@@ -24,7 +26,7 @@ struct SocketLibData
    static constexpr uint32_t MessageSize = 0x100;
 
    coreinit::OSMutex lock;
-   coreinit::IOSHandle handle = -1;
+   coreinit::IOSHandle handle;
    coreinit::IPCBufPool *messagePool;
    std::array<uint8_t, MessageCount * MessageSize> messageBuffer;
    be_val<uint32_t> messageCount;
@@ -163,6 +165,46 @@ socket_lib_finish()
 
 
 int32_t
+bind(int32_t fd,
+     SocketAddr *addr,
+     int addrlen)
+{
+   if (!internal::soIsInitialised()) {
+      coreinit::ghs_set_errno(SocketError::NotInitialised);
+      return -1;
+   }
+
+   if (!addr || addr->sa_family != SocketFamily::Inet || addrlen != sizeof(SocketAddrIn)) {
+      coreinit::ghs_set_errno(SocketError::Inval);
+      return -1;
+   }
+
+   auto buf = internal::soAllocateIpcBuffer(sizeof(SocketBindRequest));
+   if (!buf) {
+      coreinit::ghs_set_errno(SocketError::NoMem);
+      return -1;
+   }
+
+   auto request = reinterpret_cast<SocketBindRequest *>(buf);
+   request->fd = fd;
+   request->addr = *reinterpret_cast<SocketAddrIn *>(addr);
+   request->addrlen = addrlen;
+
+   auto error = coreinit::IOS_Ioctl(sSocketLibData->handle,
+                                    SocketCommand::Bind,
+                                    request,
+                                    sizeof(SocketBindRequest),
+                                    NULL,
+                                    0);
+
+   auto result = internal::soDecodeIosError(error);
+
+   internal::soFreeIpcBuffer(buf);
+   return result;
+}
+
+
+int32_t
 connect(int32_t fd,
         SocketAddr *addr,
         int addrlen)
@@ -172,7 +214,7 @@ connect(int32_t fd,
       return -1;
    }
 
-   if (!addr || addr->sa_family != 2 || addrlen != sizeof(SocketAddrIn)) {
+   if (!addr || addr->sa_family != SocketFamily::Inet || addrlen != sizeof(SocketAddrIn)) {
       coreinit::ghs_set_errno(SocketError::Inval);
       return -1;
    }
@@ -282,6 +324,7 @@ Module::registerSocketLibFunctions()
 {
    RegisterKernelFunction(socket_lib_init);
    RegisterKernelFunction(socket_lib_finish);
+   RegisterKernelFunction(bind);
    RegisterKernelFunction(connect);
    RegisterKernelFunction(socket);
    RegisterKernelFunction(socketclose);
@@ -292,6 +335,7 @@ Module::registerSocketLibFunctions()
 void
 Module::initialiseSocketLib()
 {
+   sSocketLibData->handle = -1;
    coreinit::OSInitMutex(&sSocketLibData->lock);
 }
 

@@ -10,6 +10,7 @@ ENUM_NAMESPACE_BEG(ios)
 ENUM_NAMESPACE_BEG(socket)
 
 ENUM_BEG(SocketCommand, uint32_t)
+   ENUM_VALUE(Bind,              0x2)
    ENUM_VALUE(Close,             0x3)
    ENUM_VALUE(Connect,           0x4)
    ENUM_VALUE(Socket,            0x11)
@@ -57,6 +58,10 @@ ENUM_BEG(SocketError, uint32_t)
    ENUM_VALUE(Aborted,           50)
    ENUM_VALUE(MFile,             51)
 ENUM_END(SocketError)
+
+ENUM_BEG(SocketFamily, uint32_t)
+   ENUM_VALUE(Inet,              0x2)
+ENUM_END(SocketFamily)
 
 ENUM_NAMESPACE_END(socket)
 

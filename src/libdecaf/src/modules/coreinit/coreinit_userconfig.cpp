@@ -196,7 +196,7 @@ Module::initialiseUserConfig()
    addValue("cafe.eula_version",          UCDataType::Uint32,  0);
    addValue("cafe.fast_boot",             UCDataType::Uint8,   0);
    addValue("cafe.initial_launch",        UCDataType::Uint8,   0);
-   addValue("cafe.language",              UCDataType::Uint32, kernel::ios::mcp::MCPLanguage::English);
+   addValue("cafe.language",              UCDataType::Uint32,  kernel::ios::mcp::MCPLanguage::English);
    addValue("cafe.version",               UCDataType::Uint16,  0);
 
    addGroup("caffeine");

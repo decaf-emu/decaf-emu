@@ -14,6 +14,11 @@ int32_t
 socket_lib_finish();
 
 int32_t
+bind(int32_t fd,
+     SocketAddr *addr,
+     int addrlen);
+
+int32_t
 connect(int32_t fd,
         SocketAddr *addr,
         int addrlen);
