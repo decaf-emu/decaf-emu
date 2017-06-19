@@ -5,6 +5,7 @@
 #include "ios/fsa/fsa_device.h"
 #include "ios/im/im_device.h"
 #include "ios/mcp/mcp_device.h"
+#include "ios/socket/socket_device.h"
 
 #include <map>
 #include <string>
@@ -202,8 +203,9 @@ void
 iosInitDevices()
 {
    addDevice<ios::fsa::FSADevice>("/dev/fsa");
-   addDevice<ios::mcp::MCPDevice>("/dev/mcp");
    addDevice<ios::im::IMDevice>("/dev/im");
+   addDevice<ios::mcp::MCPDevice>("/dev/mcp");
+   addDevice<ios::socket::SocketDevice>("/dev/socket");
 }
 
 } // namespace kernel

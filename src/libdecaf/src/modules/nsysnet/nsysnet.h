@@ -11,6 +11,8 @@ public:
 
    virtual void initialise() override;
 
+   void initialiseSocketLib();
+
 public:
    static void RegisterFunctions();
 

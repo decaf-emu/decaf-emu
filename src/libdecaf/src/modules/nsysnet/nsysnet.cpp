@@ -10,6 +10,7 @@ Module::Module()
 void
 Module::initialise()
 {
+   initialiseSocketLib();
 }
 
 void
