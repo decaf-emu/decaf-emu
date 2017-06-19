@@ -44,6 +44,15 @@ CHECK_OFFSET(_ghs_iobuf, 0x8, bytes_left);
 CHECK_OFFSET(_ghs_iobuf, 0xc, info);
 CHECK_SIZE(_ghs_iobuf, 0x10);
 
+be_val<int32_t> *
+ghs_errno_ptr();
+
+int32_t
+ghs_get_errno();
+
+void
+ghs_set_errno(int32_t err);
+
 namespace internal
 {
 

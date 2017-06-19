@@ -22,40 +22,40 @@ namespace coreinit
 static OSSpinLock *
 ghsSpinLock;
 
-be_val<uint32_t>*
+be_val<int32_t> *
 p__gh_errno;
 
-be_wfunc_ptr<void>*
+be_wfunc_ptr<void> *
 p__atexit_cleanup;
 
-be_wfunc_ptr<void>*
+be_wfunc_ptr<void> *
 p__stdio_cleanup;
 
-be_wfunc_ptr<void, be_ptr<void>*>*
+be_wfunc_ptr<void, be_ptr<void>*> *
 p__cpp_exception_init_ptr;
 
-be_wfunc_ptr<void, be_ptr<void>*>*
+be_wfunc_ptr<void, be_ptr<void>*> *
 p__cpp_exception_cleanup_ptr;
 
-be_val<uint16_t>*
+be_val<uint16_t> *
 p__gh_FOPEN_MAX;
 
-static be_ptr<char>*
+static be_ptr<char> *
 p_environEmpty;
 
-static be_ptr<be_ptr<char>>*
+static be_ptr<be_ptr<char>> *
 p_environ;
 
-static std::array<_ghs_iobuf*, GHS_FOPEN_MAX>
+static std::array<_ghs_iobuf *, GHS_FOPEN_MAX>
 p_iob;
 
-static std::array<be_val<uint32_t>*, GHS_FOPEN_MAX + 1>
+static std::array<be_val<uint32_t> *, GHS_FOPEN_MAX + 1>
 p_iob_lock;
 
-static std::array<OSMutex*, GHS_FLOCK_MAX>
+static std::array<OSMutex *, GHS_FLOCK_MAX>
 p_iob_mutexes;
 
-static std::array<bool*, GHS_FLOCK_MAX>
+static std::array<bool *, GHS_FLOCK_MAX>
 p_iob_mutex_used;
 
 static wfunc_ptr<int32_t, uint32_t>
@@ -129,20 +129,20 @@ ghs_flock_ptr(void *file)
    return p_iob_lock[index];
 }
 
-be_val<uint32_t>*
+be_val<int32_t> *
 ghs_errno_ptr()
 {
    return p__gh_errno;
 }
 
-uint32_t
+int32_t
 ghs_get_errno()
 {
    return *p__gh_errno;
 }
 
 void
-ghs_set_errno(uint32_t err)
+ghs_set_errno(int32_t err)
 {
    *p__gh_errno = err;
 }
