@@ -1,6 +1,6 @@
 #pragma once
 #include "coreinit_ios.h"
-#include "kernel/kernel_enum.h"
+#include "kernel/ios/im.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -17,76 +17,20 @@ namespace coreinit
  * @{
  */
 
-using IMCommand = kernel::IMCommand;
-using IMError = kernel::IMError;
-using IMParameter = kernel::IMParameter;
-using IMTimer = kernel::IMTimer;
+using kernel::ios::im::IMCommand;
+using kernel::ios::im::IMError;
+using kernel::ios::im::IMParameter;
+using kernel::ios::im::IMTimer;
 
-struct IMGetHomeButtonParamResponse
-{
-   be_val<uint32_t> unknown0x00;
-   be_val<uint32_t> unknown0x04;
-};
-CHECK_OFFSET(IMGetHomeButtonParamResponse, 0x00, unknown0x00);
-CHECK_OFFSET(IMGetHomeButtonParamResponse, 0x04, unknown0x04);
-
-struct IMGetParameterRequest
-{
-   be_val<IMParameter> parameter;
-};
-CHECK_OFFSET(IMGetParameterRequest, 0x00, parameter);
-
-struct IMGetParameterResponse
-{
-   be_val<IMParameter> parameter;
-   be_val<uint32_t> value;
-};
-CHECK_OFFSET(IMGetParameterResponse, 0x00, parameter);
-CHECK_OFFSET(IMGetParameterResponse, 0x04, value);
-
-struct IMGetNvParameterRequest
-{
-   be_val<IMParameter> parameter;
-};
-CHECK_OFFSET(IMGetNvParameterRequest, 0x00, parameter);
-
-struct IMGetNvParameterResponse
-{
-   be_val<IMParameter> parameter;
-   be_val<uint32_t> value;
-};
-CHECK_OFFSET(IMGetNvParameterResponse, 0x00, parameter);
-CHECK_OFFSET(IMGetNvParameterResponse, 0x04, value);
-
-struct IMGetTimerRemainingRequest
-{
-   be_val<IMTimer> timer;
-};
-CHECK_OFFSET(IMGetTimerRemainingRequest, 0x00, timer);
-
-struct IMGetTimerRemainingResponse
-{
-   be_val<IMTimer> timer;
-   be_val<uint32_t> value;
-};
-CHECK_OFFSET(IMGetTimerRemainingResponse, 0x00, timer);
-CHECK_OFFSET(IMGetTimerRemainingResponse, 0x04, value);
-
-struct IMSetParameterRequest
-{
-   be_val<IMParameter> parameter;
-   be_val<uint32_t> value;
-};
-CHECK_OFFSET(IMSetParameterRequest, 0x00, parameter);
-CHECK_OFFSET(IMSetParameterRequest, 0x04, value);
-
-struct IMSetNvParameterRequest
-{
-   be_val<IMParameter> parameter;
-   be_val<uint32_t> value;
-};
-CHECK_OFFSET(IMSetNvParameterRequest, 0x00, parameter);
-CHECK_OFFSET(IMSetNvParameterRequest, 0x04, value);
+using kernel::ios::im::IMGetNvParameterRequest;
+using kernel::ios::im::IMGetNvParameterResponse;
+using kernel::ios::im::IMGetParameterRequest;
+using kernel::ios::im::IMGetParameterResponse;
+using kernel::ios::im::IMGetHomeButtonParamResponse;
+using kernel::ios::im::IMSetParameterRequest;
+using kernel::ios::im::IMSetNvParameterRequest;
+using kernel::ios::im::IMGetTimerRemainingRequest;
+using kernel::ios::im::IMGetTimerRemainingResponse;
 
 struct IMParameters
 {

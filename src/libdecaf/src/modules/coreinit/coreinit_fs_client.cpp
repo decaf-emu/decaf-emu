@@ -348,7 +348,7 @@ fsClientHandleShimPrepareError(FSClientBody *clientBody,
                                FSAStatus error)
 {
    fsClientHandleFatalError(clientBody, error);
-   return fsDecodeFsaStatusToFsStatus(error);
+   return fsaDecodeFsaStatusToFsStatus(error);
 }
 
 

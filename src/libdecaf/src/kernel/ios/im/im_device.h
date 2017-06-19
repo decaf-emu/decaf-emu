@@ -1,25 +1,25 @@
 #pragma once
-#include "kernel_ios_device.h"
-#include "modules/coreinit/coreinit_im.h"
+#include "im_enum.h"
+#include "im_request.h"
+#include "im_response.h"
+#include "kernel/kernel_ios_device.h"
 
 #include <cstdint>
+#include <common/cbool.h>
 
 namespace kernel
 {
 
+namespace ios
+{
+
+namespace im
+{
+
 /**
- * \ingroup kernel_ios
+ * \ingroup kernel_ios_im
  * @{
  */
-using coreinit::IMGetNvParameterRequest;
-using coreinit::IMGetNvParameterResponse;
-using coreinit::IMGetParameterRequest;
-using coreinit::IMGetParameterResponse;
-using coreinit::IMGetHomeButtonParamResponse;
-using coreinit::IMSetParameterRequest;
-using coreinit::IMSetNvParameterRequest;
-using coreinit::IMGetTimerRemainingRequest;
-using coreinit::IMGetTimerRemainingResponse;
 
 class IMDevice : public IOSDevice
 {
@@ -59,13 +59,16 @@ private:
    getHomeButtonParams(IMGetHomeButtonParamResponse *response);
 
    IMError
-   getParameter(IMGetParameterRequest *request, IMGetParameterResponse *response);
+   getParameter(IMGetParameterRequest *request,
+                IMGetParameterResponse *response);
 
    IMError
-   getNvParameter(IMGetNvParameterRequest *request, IMGetNvParameterResponse *response);
+   getNvParameter(IMGetNvParameterRequest *request,
+                  IMGetNvParameterResponse *response);
 
    IMError
-   getTimerRemaining(IMGetTimerRemainingRequest *request, IMGetTimerRemainingResponse *response);
+   getTimerRemaining(IMGetTimerRemainingRequest *request,
+                     IMGetTimerRemainingResponse *response);
 
    IMError
    setParameter(IMSetParameterRequest *request);
@@ -84,5 +87,9 @@ private:
 };
 
 /** @} */
+
+} // namespace im
+
+} // namespace ios
 
 } // namespace kernel

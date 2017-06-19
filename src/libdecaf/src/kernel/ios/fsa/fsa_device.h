@@ -1,17 +1,24 @@
 #pragma once
-#include "kernel_ios_device.h"
-#include "kernel_filesystem.h"
-#include "modules/coreinit/coreinit_fs.h"
-#include "modules/coreinit/coreinit_fsa_request.h"
-#include "modules/coreinit/coreinit_fsa_response.h"
+#include "fsa_enum.h"
+#include "fsa_request.h"
+#include "fsa_response.h"
+#include "fsa_types.h"
+#include "kernel/kernel_ios_device.h"
+#include "kernel/kernel_filesystem.h"
 
 #include <cstdint>
 
 namespace kernel
 {
 
+namespace ios
+{
+
+namespace fsa
+{
+
 /**
- * \ingroup kernel_ios
+ * \ingroup kernel_ios_fsa
  * @{
  */
 
@@ -28,44 +35,6 @@ struct FSAHandle
    fs::FileHandle file;
    fs::FolderHandle folder;
 };
-
-using coreinit::FSAStatus;
-using coreinit::FSStat;
-
-using coreinit::FSARequest;
-using coreinit::FSARequestChangeDir;
-using coreinit::FSARequestCloseDir;
-using coreinit::FSARequestCloseFile;
-using coreinit::FSARequestFlushFile;
-using coreinit::FSARequestFlushQuota;
-using coreinit::FSARequestGetInfoByQuery;
-using coreinit::FSARequestGetPosFile;
-using coreinit::FSARequestIsEof;
-using coreinit::FSARequestMakeDir;
-using coreinit::FSARequestMount;
-using coreinit::FSARequestOpenDir;
-using coreinit::FSARequestOpenFile;
-using coreinit::FSARequestReadDir;
-using coreinit::FSARequestReadFile;
-using coreinit::FSARequestRemove;
-using coreinit::FSARequestRename;
-using coreinit::FSARequestRewindDir;
-using coreinit::FSARequestSetPosFile;
-using coreinit::FSARequestStatFile;
-using coreinit::FSARequestTruncateFile;
-using coreinit::FSARequestUnmount;
-using coreinit::FSARequestWriteFile;
-
-using coreinit::FSAResponse;
-using coreinit::FSAResponseGetCwd;
-using coreinit::FSAResponseGetFileBlockAddress;
-using coreinit::FSAResponseGetPosFile;
-using coreinit::FSAResponseGetVolumeInfo;
-using coreinit::FSAResponseGetInfoByQuery;
-using coreinit::FSAResponseOpenDir;
-using coreinit::FSAResponseOpenFile;
-using coreinit::FSAResponseReadDir;
-using coreinit::FSAResponseStatFile;
 
 class FSADevice : public IOSDevice
 {
@@ -112,7 +81,7 @@ private:
 
    void
    translateStat(const fs::FolderEntry &entry,
-                 FSStat *stat) const;
+                 FSAStat *stat) const;
 
    uint32_t
    mapHandle(fs::FileHandle file);
@@ -164,5 +133,9 @@ private:
 };
 
 /** @} */
+
+} // namespace fsa
+
+} // namespace ios
 
 } // namespace kernel

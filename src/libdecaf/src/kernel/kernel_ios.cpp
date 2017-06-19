@@ -1,9 +1,10 @@
+#include "kernel_enum.h"
 #include "kernel_ios.h"
 #include "kernel_ipc.h"
 #include "kernel_ios_device.h"
-#include "kernel_ios_device_fsa.h"
-#include "kernel_ios_device_im.h"
-#include "kernel_ios_device_mcp.h"
+#include "ios/fsa/fsa_device.h"
+#include "ios/im/im_device.h"
+#include "ios/mcp/mcp_device.h"
 
 #include <map>
 #include <string>
@@ -200,9 +201,9 @@ addDevice(const std::string &name)
 void
 iosInitDevices()
 {
-   addDevice<FSADevice>("/dev/fsa");
-   addDevice<MCPDevice>("/dev/mcp");
-   addDevice<IMDevice>("/dev/im");
+   addDevice<ios::fsa::FSADevice>("/dev/fsa");
+   addDevice<ios::mcp::MCPDevice>("/dev/mcp");
+   addDevice<ios::im::IMDevice>("/dev/im");
 }
 
 } // namespace kernel

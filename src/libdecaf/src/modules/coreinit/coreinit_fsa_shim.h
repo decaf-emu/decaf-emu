@@ -1,8 +1,8 @@
 #pragma once
 #include "coreinit_enum.h"
+#include "coreinit_fs.h"
+#include "coreinit_fsa.h"
 #include "coreinit_ios.h"
-#include "coreinit_fsa_request.h"
-#include "coreinit_fsa_response.h"
 #include "coreinit_messagequeue.h"
 
 #include <cstdint>
@@ -128,7 +128,7 @@ FSAStatus
 fsaShimPrepareRequestGetInfoByQuery(FSAShimBuffer *shim,
                                     IOSHandle clientHandle,
                                     const char *path,
-                                    FSQueryInfoType type);
+                                    FSAQueryInfoType type);
 
 FSAStatus
 fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
@@ -182,7 +182,7 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
                               uint32_t count,
                               uint32_t pos,
                               FSFileHandle handle,
-                              FSReadFlag readFlags);
+                              FSAReadFlag readFlags);
 
 FSAStatus
 fsaShimPrepareRequestRemove(FSAShimBuffer *shim,
@@ -230,7 +230,7 @@ fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
                                uint32_t count,
                                uint32_t pos,
                                FSFileHandle handle,
-                               FSWriteFlag writeFlags);
+                               FSAWriteFlag writeFlags);
 
 } // namespace internal
 

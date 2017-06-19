@@ -1,5 +1,5 @@
 #include "decaf_config.h"
-#include "modules/coreinit/coreinit_enum.h"
+#include "kernel/ios/mcp.h"
 
 namespace decaf
 {
@@ -62,7 +62,7 @@ bool dump_sounds = false;
 namespace system
 {
 
-int region = static_cast<int>(coreinit::SCIRegion::USA);
+int region = static_cast<int>(kernel::ios::mcp::MCPRegion::USA);
 std::string mlc_path = "mlc";
 std::string sdcard_path = "sdcard";
 std::string content_path = {};

@@ -1,22 +1,16 @@
-#include "kernel_ios_device_fsa.h"
-#include "kernel_filesystem.h"
-#include "modules/coreinit/coreinit_fs.h"
-#include "modules/coreinit/coreinit_fsa_request.h"
-#include "modules/coreinit/coreinit_fsa_response.h"
+#include "fsa_device.h"
+#include "kernel/kernel_filesystem.h"
 
 #include <cstring>
 
 namespace kernel
 {
 
-using coreinit::FSACommand;
-using coreinit::FSARequest;
-using coreinit::FSAResponse;
-using coreinit::FSAStatus;
-using coreinit::FSReadFlag;
-using coreinit::FSStatFlags;
-using coreinit::FSWriteFlag;
-using coreinit::FSQueryInfoType;
+namespace ios
+{
+
+namespace fsa
+{
 
 IOSError
 FSADevice::open(IOSOpenMode mode)
@@ -242,14 +236,14 @@ FSADevice::translateMode(const char *mode) const
 
 void
 FSADevice::translateStat(const fs::FolderEntry &entry,
-                         FSStat *stat) const
+                         FSAStat *stat) const
 {
-   std::memset(stat, 0, sizeof(FSStat));
+   std::memset(stat, 0, sizeof(FSAStat));
 
    if (entry.type == fs::FolderEntry::Folder) {
-      stat->flags = FSStatFlags::Directory;
+      stat->flags = FSAStatFlags::Directory;
    } else {
-      stat->flags = static_cast<FSStatFlags>(0);
+      stat->flags = static_cast<FSAStatFlags>(0);
    }
 
    stat->permission = 0x660;
@@ -434,7 +428,7 @@ FSADevice::flushQuota(FSARequestFlushQuota *request)
 FSAStatus
 FSADevice::getCwd(FSAResponseGetCwd *response)
 {
-   std::strncpy(response->path, mWorkingPath.path().c_str(), coreinit::FSMaxPathLength);
+   std::strncpy(response->path, mWorkingPath.path().c_str(), FSAMaxPathLength);
    return FSAStatus::OK;
 }
 
@@ -446,12 +440,12 @@ FSADevice::getInfoByQuery(FSARequestGetInfoByQuery *request,
    auto path = translatePath(request->path);
 
    switch (request->type) {
-   case FSQueryInfoType::FreeSpaceSize:
+   case FSAQueryInfoType::FreeSpaceSize:
    {
       response->freeSpaceSize = 128 * 1024 * 1024;
       break;
    }
-   case FSQueryInfoType::Stat:
+   case FSAQueryInfoType::Stat:
    {
       auto result = mFS->findEntry(path);
 
@@ -599,7 +593,7 @@ FSADevice::readFile(FSARequestReadFile *request,
       return error;
    }
 
-   if (request->readFlags & FSReadFlag::ReadWithPos) {
+   if (request->readFlags & FSAReadFlag::ReadWithPos) {
       file->seek(request->pos);
    }
 
@@ -674,7 +668,7 @@ FSADevice::statFile(FSARequestStatFile *request,
    }
 
    std::memset(&response->stat, 0, sizeof(response->stat));
-   response->stat.flags = static_cast<FSStatFlags>(0);
+   response->stat.flags = static_cast<FSAStatFlags>(0);
    response->stat.permission = 0x660;
    response->stat.owner = 0;
    response->stat.group = 0;
@@ -722,7 +716,7 @@ FSADevice::writeFile(FSARequestWriteFile *request,
       return error;
    }
 
-   if (request->writeFlags & FSWriteFlag::WriteWithPos) {
+   if (request->writeFlags & FSAWriteFlag::WriteWithPos) {
       file->seek(request->pos);
    }
 
@@ -730,5 +724,9 @@ FSADevice::writeFile(FSARequestWriteFile *request,
    auto bytesWritten = elemsWritten * request->size;
    return static_cast<FSAStatus>(bytesWritten);
 }
+
+} // namespace fsa
+
+} // namespace ios
 
 } // namespace kernel

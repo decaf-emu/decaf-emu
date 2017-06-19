@@ -1,6 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_fs.h"
+#include "kernel/ios/fsa.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -18,8 +19,16 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
-struct FSARequest;
-struct FSAResponse;
+using FSACommand = kernel::ios::fsa::FSACommand;
+using FSAFileSystemInfo = kernel::ios::fsa::FSAFileSystemInfo;
+using FSAQueryInfoType = kernel::ios::fsa::FSAQueryInfoType;
+using FSAReadFlag = kernel::ios::fsa::FSAReadFlag;
+using FSARequest = kernel::ios::fsa::FSARequest;
+using FSAResponse = kernel::ios::fsa::FSAResponse;
+using FSAStatus = kernel::ios::fsa::FSAStatus;
+using FSAVolumeInfo = kernel::ios::fsa::FSAVolumeInfo;
+using FSAWriteFlag = kernel::ios::fsa::FSAWriteFlag;
+
 struct OSMessage;
 struct OSMessageQueue;
 
@@ -80,33 +89,6 @@ CHECK_OFFSET(FSAAsyncResult, 0x24, response);
 CHECK_OFFSET(FSAAsyncResult, 0x28, userContext);
 CHECK_SIZE(FSAAsyncResult, 0x2C);
 
-struct FSAVolumeInfo
-{
-   be_val<uint32_t> flags;
-   be_val<FSAMediaState> mediaState;
-   UNKNOWN(0x4);
-   be_val<uint32_t> unk0x0C;
-   be_val<uint32_t> unk0x10;
-   be_val<int32_t> unk0x14;
-   be_val<int32_t> unk0x18;
-   UNKNOWN(0x10);
-   char volumeLabel[128];
-   char volumeId[128];
-   char devicePath[16];
-   char mountPath[128];
-};
-CHECK_OFFSET(FSAVolumeInfo, 0x00, flags);
-CHECK_OFFSET(FSAVolumeInfo, 0x04, mediaState);
-CHECK_OFFSET(FSAVolumeInfo, 0x0C, unk0x0C);
-CHECK_OFFSET(FSAVolumeInfo, 0x10, unk0x10);
-CHECK_OFFSET(FSAVolumeInfo, 0x14, unk0x14);
-CHECK_OFFSET(FSAVolumeInfo, 0x18, unk0x18);
-CHECK_OFFSET(FSAVolumeInfo, 0x2C, volumeLabel);
-CHECK_OFFSET(FSAVolumeInfo, 0xAC, volumeId);
-CHECK_OFFSET(FSAVolumeInfo, 0x12C, devicePath);
-CHECK_OFFSET(FSAVolumeInfo, 0x13C, mountPath);
-CHECK_SIZE(FSAVolumeInfo, 0x1BC);
-
 #pragma pack(pop)
 
 FSAAsyncResult *
@@ -119,6 +101,9 @@ void
 fsaAsyncResultInit(FSAAsyncResult *asyncResult,
                    const FSAAsyncData *asyncData,
                    OSFunctionType func);
+
+FSStatus
+fsaDecodeFsaStatusToFsStatus(FSAStatus error);
 
 } // namespace internal
 

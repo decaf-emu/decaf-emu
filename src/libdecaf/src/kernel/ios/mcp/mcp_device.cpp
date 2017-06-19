@@ -1,14 +1,17 @@
+#include "mcp_device.h"
 #include "decaf_config.h"
-#include "kernel_ios_device_mcp.h"
-#include "kernel.h"
+#include "kernel/kernel.h"
 
 #include <cstring>
 
 namespace kernel
 {
 
-using coreinit::MCPCommand;
-using coreinit::SCIRegion;
+namespace ios
+{
+
+namespace mcp
+{
 
 IOSError
 MCPDevice::open(IOSOpenMode mode)
@@ -90,8 +93,8 @@ MCPError
 MCPDevice::getSysProdSettings(MCPSysProdSettings *settings)
 {
    std::memset(settings, 0, sizeof(MCPSysProdSettings));
-   settings->gameRegion = static_cast<SCIRegion>(kernel::getGameInfo().meta.region);
-   settings->platformRegion = static_cast<SCIRegion>(decaf::config::system::region);
+   settings->gameRegion = static_cast<MCPRegion>(kernel::getGameInfo().meta.region);
+   settings->platformRegion = static_cast<MCPRegion>(decaf::config::system::region);
    return MCPError::OK;
 }
 
@@ -102,5 +105,9 @@ MCPDevice::getTitleId(MCPResponseGetTitleId *response)
    response->titleId = kernel::getGameInfo().meta.title_id;
    return MCPError::OK;
 }
+
+} // namespace mcp
+
+} // namespace ios
 
 } // namespace kernel

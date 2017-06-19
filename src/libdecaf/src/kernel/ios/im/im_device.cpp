@@ -1,7 +1,13 @@
-#include "kernel_ios_device_im.h"
-#include "kernel.h"
+#include "im_device.h"
+#include "kernel/kernel.h"
 
 namespace kernel
+{
+
+namespace ios
+{
+
+namespace im
 {
 
 IOSError
@@ -244,5 +250,9 @@ IMDevice::setNvParameter(IMSetNvParameterRequest *request)
 
    return result;
 }
+
+} // namespace im
+
+} // namespace ios
 
 } // namespace kernel

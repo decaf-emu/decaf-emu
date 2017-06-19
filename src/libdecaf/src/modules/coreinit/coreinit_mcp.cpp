@@ -1,15 +1,23 @@
 #include "coreinit.h"
+#include "coreinit_fsa.h"
 #include "coreinit_ios.h"
 #include "coreinit_ipcbufpool.h"
 #include "coreinit_mcp.h"
-#include "coreinit_mcp_request.h"
-#include "coreinit_mcp_response.h"
+#include "kernel/kernel_ios_error.h"
 
 #include <common/decaf_assert.h>
 #include <ppcutils/stackobject.h>
 
 namespace coreinit
 {
+
+using kernel::ios::mcp::MCPCommand;
+using kernel::ios::mcp::MCPResponseGetTitleId;
+using kernel::ios::mcp::MCPResponseGetOwnTitleInfo;
+using kernel::ios::mcp::MCPRequestGetOwnTitleInfo;
+using kernel::ios::mcp::MCPRequestSearchTitleList;
+using kernel::ios::mcp::MCPTitleListSearchFlags;
+using kernel::ios::mcp::operator |; // For MCPTitleListSearchFlags operator | (ewww)
 
 struct MCPData
 {
@@ -364,13 +372,39 @@ mcpFreeMessage(void *message)
 MCPError
 mcpDecodeIosErrorToMcpError(IOSError error)
 {
-   auto category = ((~error) >> 16) & 0x3FF;
+   auto category = kernel::iosGetErrorCategory(error);
+   auto code = kernel::iosGetErrorCode(error);
+   auto mcpError = static_cast<MCPError>(error);
 
-   if (error >= 0 || category == 0x4) {
-      return static_cast<MCPError>(error);
-   } else {
-      return static_cast<MCPError>(0xFFFF0000 | error);
+   if (error < 0) {
+      switch (category) {
+      case kernel::IOSErrorCategory::Kernel:
+         if (code > -1000) {
+            mcpError = static_cast<MCPError>(code + MCPError::KernelErrorBase);
+         } else if(code < -1999) {
+            mcpError = static_cast<MCPError>(code - (kernel::IOSErrorCategory::MCP << 16));
+         }
+         break;
+      case kernel::IOSErrorCategory::FSA:
+         if (code == FSAStatus::AlreadyOpen) {
+            mcpError = MCPError::AlreadyOpen;
+         } else if (code == FSAStatus::DataCorrupted) {
+            mcpError = MCPError::DataCorrupted;
+         } else if (code == FSAStatus::StorageFull) {
+            mcpError = MCPError::StorageFull;
+         } else if (code == FSAStatus::WriteProtected) {
+            mcpError = MCPError::WriteProtected;
+         } else {
+            mcpError = static_cast<MCPError>(error + 0xFFFF0000 - 4000);
+         }
+         break;
+      case kernel::IOSErrorCategory::MCP:
+         mcpError = static_cast<MCPError>(error);
+         break;
+      }
    }
+
+   return mcpError;
 }
 
 

@@ -1,23 +1,25 @@
 #pragma once
-#include "kernel_ios_device.h"
-#include "modules/coreinit/coreinit_mcp.h"
-#include "modules/coreinit/coreinit_mcp_request.h"
-#include "modules/coreinit/coreinit_mcp_response.h"
+#include "mcp_enum.h"
+#include "mcp_request.h"
+#include "mcp_response.h"
+#include "mcp_types.h"
+#include "kernel/kernel_ios_device.h"
 
 #include <cstdint>
 
 namespace kernel
 {
 
+namespace ios
+{
+
+namespace mcp
+{
+
 /**
- * \ingroup kernel_ios
+ * \ingroup kernel_ios_mcp
  * @{
  */
-
-using coreinit::MCPError;
-using coreinit::MCPSysProdSettings;
-
-using coreinit::MCPResponseGetTitleId;
 
 class MCPDevice : public IOSDevice
 {
@@ -60,5 +62,9 @@ private:
 };
 
 /** @} */
+
+} // namespace mcp
+
+} // namespace ios
 
 } // namespace kernel

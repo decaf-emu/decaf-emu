@@ -1,5 +1,6 @@
 #pragma once
 #include "coreinit_fs.h"
+#include "coreinit_fsa.h"
 
 namespace coreinit
 {

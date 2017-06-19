@@ -1,6 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_messagequeue.h"
+#include "kernel/ios/fsa.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -88,21 +89,24 @@ struct FSAsyncData;
 struct FSAsyncResult;
 struct FSMessage;
 
-struct FSDirEntry;
-struct FSStat;
 struct FSMountSource;
 
-using FSDirHandle = uint32_t;
-using FSEntryNum = uint32_t;
-using FSFileHandle = uint32_t;
-using FSFilePosition = uint32_t;
+using FSDirEntry = kernel::ios::fsa::FSADirEntry;
+using FSDirHandle = kernel::ios::fsa::FSADirHandle;
+using FSEntryNum = kernel::ios::fsa::FSAEntryNum;
+using FSFileHandle = kernel::ios::fsa::FSAFileHandle;
+using FSFilePosition = kernel::ios::fsa::FSAFilePosition;
+using FSReadFlag = kernel::ios::fsa::FSAReadFlag;
+using FSStat = kernel::ios::fsa::FSAStat;
+using FSWriteFlag = kernel::ios::fsa::FSAWriteFlag;
+
 using FSAsyncCallbackFn = wfunc_ptr<void, FSClient *, FSCmdBlock *, FSStatus, void *>;
 
 static constexpr uint32_t
 FSMaxBytesPerRequest = 0x100000;
 
 static constexpr uint32_t
-FSMaxPathLength = 0x27F;
+FSMaxPathLength = kernel::ios::fsa::FSAMaxPathLength;
 
 static constexpr uint32_t
 FSMaxMountPathLength = 0x80;
@@ -180,16 +184,6 @@ CHECK_SIZE(FSAsyncResult, 0x28);
 
 
 /**
- * File System information.
- */
-struct FSFileSystemInfo
-{
-   UNKNOWN(0x1C);
-};
-CHECK_SIZE(FSFileSystemInfo, 0x1C);
-
-
-/**
  * Information about a mount.
  */
 struct FSMountSource
@@ -200,49 +194,6 @@ struct FSMountSource
 CHECK_OFFSET(FSMountSource, 0x0, sourceType);
 CHECK_OFFSET(FSMountSource, 0x4, path);
 CHECK_SIZE(FSMountSource, 0x283);
-
-
-/**
- * Structure used by FSGetStat to return information about a file or directory.
- */
-struct FSStat
-{
-   be_val<FSStatFlags> flags;
-   be_val<uint32_t> permission;
-   be_val<uint32_t> owner;
-   be_val<uint32_t> group;
-   be_val<uint32_t> size;
-   UNKNOWN(0xC);
-   be_val<uint32_t> entryId;
-   be_val<OSTime> created;
-   be_val<OSTime> modified;
-   UNKNOWN(0x30);
-};
-CHECK_OFFSET(FSStat, 0x00, flags);
-CHECK_OFFSET(FSStat, 0x04, permission);
-CHECK_OFFSET(FSStat, 0x08, owner);
-CHECK_OFFSET(FSStat, 0x0C, group);
-CHECK_OFFSET(FSStat, 0x10, size);
-CHECK_OFFSET(FSStat, 0x20, entryId);
-CHECK_OFFSET(FSStat, 0x24, created);
-CHECK_OFFSET(FSStat, 0x2C, modified);
-CHECK_SIZE(FSStat, 0x64);
-
-
-/**
- * Structure used by FSReadDir to iterate the contents of a directory.
- */
-struct FSDirEntry
-{
-   //! File stat.
-   FSStat stat;
-
-   //! File name.
-   char name[256];
-};
-CHECK_OFFSET(FSDirEntry, 0x00, stat);
-CHECK_OFFSET(FSDirEntry, 0x64, name);
-CHECK_SIZE(FSDirEntry, 0x164);
 
 #pragma pack(pop)
 
@@ -280,9 +231,6 @@ FSStatus
 fsAsyncResultInit(FSClientBody *clientBody,
                   FSAsyncResult *asyncResult,
                   const FSAsyncData *asyncData);
-
-FSStatus
-fsDecodeFsaStatusToFsStatus(FSAStatus error);
 
 } // namespace internal
 

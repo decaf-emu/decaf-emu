@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_fsa_shim.h"
+#include "kernel/kernel_ios_error.h"
 
 #include <common/decaf_assert.h>
 #include <spdlog/fmt/fmt.h>
@@ -21,14 +22,40 @@ FSAStatus
 FSAShimDecodeIosErrorToFsaStatus(IOSHandle handle,
                                  IOSError error)
 {
-   auto category = ((~error) >> 16) & 0x3FF;
+   auto category = kernel::iosGetErrorCategory(error);
+   auto code = kernel::iosGetErrorCode(error);
+   auto fsaStatus = static_cast<FSAStatus>(error);
 
-   if (error >= 0 || category == 0x3) {
-      return static_cast<FSAStatus>(error);
-   } else {
-      auto status = static_cast<FSAStatus>(0xFFFF0000 | error);
-      return status;
+   if (error < 0) {
+      switch (category) {
+      case kernel::IOSErrorCategory::Kernel:
+         if (code == kernel::IOSError::Access) {
+            fsaStatus = FSAStatus::InvalidBuffer;
+         } else if (code == kernel::IOSError::Invalid || code == kernel::IOSError::NoExists) {
+            fsaStatus = FSAStatus::InvalidClientHandle;
+         } else if (code == kernel::IOSError::QFull) {
+            fsaStatus = FSAStatus::Busy;
+         } else {
+            fsaStatus = static_cast<FSAStatus>(code);
+         }
+         break;
+      case kernel::IOSErrorCategory::FSA:
+      case kernel::IOSErrorCategory::Unknown7:
+      case kernel::IOSErrorCategory::Unknown8:
+      case kernel::IOSErrorCategory::Unknown15:
+      case kernel::IOSErrorCategory::Unknown19:
+      case kernel::IOSErrorCategory::Unknown30:
+      case kernel::IOSErrorCategory::Unknown45:
+         if (kernel::iosIsKernelError(code)) {
+            fsaStatus = static_cast<FSAStatus>(code - (kernel::IOSErrorCategory::FSA << 16));
+         } else {
+            fsaStatus = static_cast<FSAStatus>(code);
+         }
+         break;
+      }
    }
+
+   return fsaStatus;
 }
 
 
@@ -282,7 +309,7 @@ FSAStatus
 fsaShimPrepareRequestGetInfoByQuery(FSAShimBuffer *shim,
                                     IOSHandle clientHandle,
                                     const char *path,
-                                    FSQueryInfoType type)
+                                    FSAQueryInfoType type)
 {
    if (!shim) {
       return FSAStatus::InvalidBuffer;
@@ -292,7 +319,7 @@ fsaShimPrepareRequestGetInfoByQuery(FSAShimBuffer *shim,
       return FSAStatus::InvalidPath;
    }
 
-   if (type > FSQueryInfoType::FragmentBlockInfo) {
+   if (type > FSAQueryInfoType::FragmentBlockInfo) {
       return FSAStatus::InvalidParam;
    }
 
@@ -535,7 +562,7 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
                               uint32_t count,
                               uint32_t pos,
                               FSFileHandle handle,
-                              FSReadFlag readFlags)
+                              FSAReadFlag readFlags)
 {
    if (!shim || !buffer) {
       return FSAStatus::InvalidBuffer;
@@ -763,7 +790,7 @@ fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
                                uint32_t count,
                                uint32_t pos,
                                FSFileHandle handle,
-                               FSWriteFlag writeFlags)
+                               FSAWriteFlag writeFlags)
 {
    if (!shim || !buffer) {
       return FSAStatus::InvalidBuffer;

@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_enum_string.h"
 #include "coreinit_userconfig.h"
+#include "kernel/ios/mcp.h"
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
 
@@ -189,13 +190,13 @@ Module::initialiseUserConfig()
    sUserConfig.clear();
 
    addGroup("cafe");
-   addValue("cafe.cntry_reg",             UCDataType::Uint32,  SCICountryCode::USA);
+   addValue("cafe.cntry_reg",             UCDataType::Uint32,  kernel::ios::mcp::MCPCountryCode::USA);
    addValue("cafe.eco",                   UCDataType::Uint8,   0);
    addValue("cafe.eula_agree",            UCDataType::Uint8,   1);
    addValue("cafe.eula_version",          UCDataType::Uint32,  0);
    addValue("cafe.fast_boot",             UCDataType::Uint8,   0);
    addValue("cafe.initial_launch",        UCDataType::Uint8,   0);
-   addValue("cafe.language",              UCDataType::Uint32,  SCILanguage::English);
+   addValue("cafe.language",              UCDataType::Uint32, kernel::ios::mcp::MCPLanguage::English);
    addValue("cafe.version",               UCDataType::Uint16,  0);
 
    addGroup("caffeine");

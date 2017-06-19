@@ -1,12 +1,25 @@
 #pragma once
-#include "coreinit_mcp.h"
+#include "mcp_enum.h"
+#include "mcp_types.h"
 
-#include <common/be_val.h>
-#include <common/structsize.h>
 #include <cstdint>
+#include <common/be_val.h>
+#include <common/be_ptr.h>
+#include <common/structsize.h>
 
-namespace coreinit
+namespace kernel
 {
+
+namespace ios
+{
+
+namespace mcp
+{
+
+/**
+ * \ingroup kernel_ios_mcp
+ * @{
+ */
 
 #pragma pack(push, 1)
 
@@ -26,4 +39,10 @@ CHECK_SIZE(MCPResponseGetOwnTitleInfo, 0x61);
 
 #pragma pack(pop)
 
-} // namespace coreinit
+/** @} */
+
+} // namespace mcp
+
+} // namespace ios
+
+} // namespace kernel

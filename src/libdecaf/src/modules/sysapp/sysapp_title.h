@@ -1,5 +1,5 @@
 #pragma once
-#include "modules/coreinit/coreinit_enum.h"
+#include "modules/coreinit/coreinit_mcp.h"
 #include "sysapp_enum.h"
 
 #include <cstdint>
@@ -12,6 +12,6 @@ SYSGetSystemApplicationTitleId(SystemAppId id);
 
 uint64_t
 SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
-                                         coreinit::SCIRegion region);
+                                         coreinit::MCPRegion region);
 
 } // namespace sysapp

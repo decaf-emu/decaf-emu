@@ -110,7 +110,7 @@ SYSGetSystemApplicationTitleId(SystemAppId id)
    auto region = settings->platformRegion;
 
    if (!region) {
-      region = coreinit::SCIRegion::USA;
+      region = coreinit::MCPRegion::USA;
    }
 
    return SYSGetSystemApplicationTitleIdByProdArea(id, region);
@@ -118,18 +118,18 @@ SYSGetSystemApplicationTitleId(SystemAppId id)
 
 uint64_t
 SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
-                                         coreinit::SCIRegion region)
+                                         coreinit::MCPRegion region)
 {
    auto regionIdx = 1u;
 
-   if (region == coreinit::SCIRegion::JAP) {
+   if (region == coreinit::MCPRegion::JAP) {
       regionIdx = 0u;
-   } else if (region == coreinit::SCIRegion::USA) {
+   } else if (region == coreinit::MCPRegion::USA) {
       regionIdx = 1u;
-   } else if (region == coreinit::SCIRegion::EUR) {
+   } else if (region == coreinit::MCPRegion::EUR) {
       regionIdx = 2u;
    } else {
-      decaf_abort(fmt::format("Unknown region {}", coreinit::enumAsString(region)));
+      decaf_abort(fmt::format("Unknown region {}", region));
    }
 
    return sSysAppTitleId[id][regionIdx];

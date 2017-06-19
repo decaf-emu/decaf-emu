@@ -1,6 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_fs.h"
+#include "coreinit_fsa.h"
 #include "coreinit_fsa_shim.h"
 #include "coreinit_messagequeue.h"
 
@@ -62,7 +63,7 @@ union FSCmdBlockCmdDataGetInfoByQuery
    be_ptr<void> out;
    be_ptr<be_val<uint64_t>> dirSize;
    be_ptr<be_val<FSEntryNum>> entryNum;
-   be_ptr<FSFileSystemInfo> fileSystemInfo;
+   be_ptr<FSAFileSystemInfo> fileSystemInfo;
    be_ptr<be_val<uint64_t>> freeSpaceSize;
    be_ptr<FSStat> stat;
 };

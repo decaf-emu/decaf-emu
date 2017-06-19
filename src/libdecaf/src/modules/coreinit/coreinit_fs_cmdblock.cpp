@@ -585,31 +585,31 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
    case FSACommand::GetInfoByQuery:
    {
       switch (shim->request.getInfoByQuery.type) {
-      case FSQueryInfoType::FreeSpaceSize:
+      case FSAQueryInfoType::FreeSpaceSize:
       {
          auto freeSpaceSize = blockBody->cmdData.getInfoByQuery.freeSpaceSize;
          *freeSpaceSize = shim->response.getInfoByQuery.freeSpaceSize;
          break;
       }
-      case FSQueryInfoType::DirSize:
+      case FSAQueryInfoType::DirSize:
       {
          auto dirSize = blockBody->cmdData.getInfoByQuery.dirSize;
          *dirSize = shim->response.getInfoByQuery.dirSize;
          break;
       }
-      case FSQueryInfoType::EntryNum:
+      case FSAQueryInfoType::EntryNum:
       {
          auto entryNum = blockBody->cmdData.getInfoByQuery.entryNum;
          *entryNum = shim->response.getInfoByQuery.entryNum;
          break;
       }
-      case FSQueryInfoType::FileSystemInfo:
+      case FSAQueryInfoType::FileSystemInfo:
       {
          auto fileSystemInfo = blockBody->cmdData.getInfoByQuery.fileSystemInfo;
          *fileSystemInfo = shim->response.getInfoByQuery.fileSystemInfo;
          break;
       }
-      case FSQueryInfoType::Stat:
+      case FSAQueryInfoType::Stat:
       {
          auto stat = blockBody->cmdData.getInfoByQuery.stat;
          *stat = shim->response.getInfoByQuery.stat;

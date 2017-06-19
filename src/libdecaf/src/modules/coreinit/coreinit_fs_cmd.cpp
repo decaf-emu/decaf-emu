@@ -38,7 +38,7 @@ static FSStatus
 getInfoByQueryAsync(FSClient *client,
                     FSCmdBlock *block,
                     const char *path,
-                    FSQueryInfoType type,
+                    FSAQueryInfoType type,
                     void *out,
                     FSErrorFlag errorMask,
                     const FSAsyncData *asyncData);
@@ -449,7 +449,7 @@ FSGetDirSizeAsync(FSClient *client,
                   const FSAsyncData *asyncData)
 {
    return internal::getInfoByQueryAsync(client, block, path,
-                                        FSQueryInfoType::DirSize,
+                                        FSAQueryInfoType::DirSize,
                                         returnedDirSize,
                                         errorMask, asyncData);
 }
@@ -496,7 +496,7 @@ FSGetFreeSpaceSizeAsync(FSClient *client,
                         const FSAsyncData *asyncData)
 {
    return internal::getInfoByQueryAsync(client, block, path,
-                                        FSQueryInfoType::FreeSpaceSize,
+                                        FSAQueryInfoType::FreeSpaceSize,
                                         returnedFreeSize,
                                         errorMask, asyncData);
 }
@@ -733,7 +733,7 @@ FSGetStatAsync(FSClient *client,
                const FSAsyncData *asyncData)
 {
    return internal::getInfoByQueryAsync(client, block, path,
-                                        FSQueryInfoType::Stat, returnedStat,
+                                        FSAQueryInfoType::Stat, returnedStat,
                                         errorMask, asyncData);
 }
 
@@ -1976,7 +1976,7 @@ static FSStatus
 getInfoByQueryAsync(FSClient *client,
                     FSCmdBlock *block,
                     const char *path,
-                    FSQueryInfoType type,
+                    FSAQueryInfoType type,
                     void *out,
                     FSErrorFlag errorMask,
                     const FSAsyncData *asyncData)
