@@ -19,6 +19,15 @@ namespace socket
 
 #pragma pack(push, 1)
 
+struct SocketAddr
+{
+   be_val<uint16_t> sa_family;
+   uint8_t sa_data[14];
+};
+CHECK_OFFSET(SocketAddr, 0x00, sa_family);
+CHECK_OFFSET(SocketAddr, 0x02, sa_data);
+CHECK_SIZE(SocketAddr, 0x10);
+
 struct SockerInAddr
 {
    be_val<uint32_t> s_addr;

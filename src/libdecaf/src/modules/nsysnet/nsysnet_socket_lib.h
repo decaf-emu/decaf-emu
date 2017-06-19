@@ -1,14 +1,22 @@
 #pragma once
+#include "kernel/ios/socket.h"
 #include <cstdint>
 
 namespace nsysnet
 {
+
+using kernel::ios::socket::SocketAddr;
 
 int32_t
 socket_lib_init();
 
 int32_t
 socket_lib_finish();
+
+int32_t
+connect(int32_t fd,
+        SocketAddr *addr,
+        int addrlen);
 
 int32_t
 socket(int32_t family,

@@ -10,20 +10,21 @@
 namespace nsysnet
 {
 
+using kernel::ios::socket::SocketAddrIn;
 using kernel::ios::socket::SocketCommand;
 using kernel::ios::socket::SocketError;
 
+using kernel::ios::socket::SocketConnectRequest;
 using kernel::ios::socket::SocketCloseRequest;
 using kernel::ios::socket::SocketSocketRequest;
 
 struct SocketLibData
 {
-   coreinit::OSMutex lock;
-   coreinit::IOSHandle handle;
-
    static constexpr uint32_t MessageCount = 0x20;
    static constexpr uint32_t MessageSize = 0x100;
 
+   coreinit::OSMutex lock;
+   coreinit::IOSHandle handle = -1;
    coreinit::IPCBufPool *messagePool;
    std::array<uint8_t, MessageCount * MessageSize> messageBuffer;
    be_val<uint32_t> messageCount;
@@ -162,6 +163,48 @@ socket_lib_finish()
 
 
 int32_t
+connect(int32_t fd,
+        SocketAddr *addr,
+        int addrlen)
+{
+   if (!internal::soIsInitialised()) {
+      coreinit::ghs_set_errno(SocketError::NotInitialised);
+      return -1;
+   }
+
+   if (!addr || addr->sa_family != 2 || addrlen != sizeof(SocketAddrIn)) {
+      coreinit::ghs_set_errno(SocketError::Inval);
+      return -1;
+   }
+
+   // TODO: if set_multicast_state(TRUE)
+
+   auto buf = internal::soAllocateIpcBuffer(sizeof(SocketConnectRequest));
+   if (!buf) {
+      coreinit::ghs_set_errno(SocketError::NoMem);
+      return -1;
+   }
+
+   auto request = reinterpret_cast<SocketConnectRequest *>(buf);
+   request->fd = fd;
+   request->addr = *reinterpret_cast<SocketAddrIn *>(addr);
+   request->addrlen = addrlen;
+
+   auto error = coreinit::IOS_Ioctl(sSocketLibData->handle,
+                                    SocketCommand::Connect,
+                                    request,
+                                    sizeof(SocketConnectRequest),
+                                    NULL,
+                                    0);
+
+   auto result = internal::soDecodeIosError(error);
+
+   internal::soFreeIpcBuffer(buf);
+   return result;
+}
+
+
+int32_t
 socket(int32_t family,
        int32_t type,
        int32_t proto)
@@ -239,6 +282,7 @@ Module::registerSocketLibFunctions()
 {
    RegisterKernelFunction(socket_lib_init);
    RegisterKernelFunction(socket_lib_finish);
+   RegisterKernelFunction(connect);
    RegisterKernelFunction(socket);
    RegisterKernelFunction(socketclose);
 
@@ -248,7 +292,6 @@ Module::registerSocketLibFunctions()
 void
 Module::initialiseSocketLib()
 {
-   sSocketLibData->handle = -1;
    coreinit::OSInitMutex(&sSocketLibData->lock);
 }
 

@@ -11,6 +11,7 @@ ENUM_NAMESPACE_BEG(socket)
 
 ENUM_BEG(SocketCommand, uint32_t)
    ENUM_VALUE(Close,             0x3)
+   ENUM_VALUE(Connect,           0x4)
    ENUM_VALUE(Socket,            0x11)
 ENUM_END(SocketCommand)
 

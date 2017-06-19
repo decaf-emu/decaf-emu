@@ -1,5 +1,6 @@
 #pragma once
 #include "socket_enum.h"
+#include "socket_types.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -40,11 +41,23 @@ CHECK_OFFSET(SocketSocketRequest, 0x04, type);
 CHECK_OFFSET(SocketSocketRequest, 0x08, proto);
 CHECK_SIZE(SocketSocketRequest, 0x0C);
 
+struct SocketConnectRequest
+{
+   be_val<int32_t> fd;
+   SocketAddrIn addr;
+   be_val<int32_t> addrlen;
+};
+CHECK_OFFSET(SocketConnectRequest, 0x00, fd);
+CHECK_OFFSET(SocketConnectRequest, 0x04, addr);
+CHECK_OFFSET(SocketConnectRequest, 0x14, addrlen);
+CHECK_SIZE(SocketConnectRequest, 0x18);
+
 struct SocketRequest
 {
    union
    {
       SocketCloseRequest closeRequest;
+      SocketConnectRequest connectRequest;
       SocketSocketRequest socketRequest;
    };
 };
