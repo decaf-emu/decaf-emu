@@ -222,7 +222,7 @@ class Client:
       return partial(self.callFunction, addr)
 
    def acquireLibrary(self, name):
-      [result, handle] = self.OSDynLoad_Acquire("coreinit.rpl")
+      [result, handle] = self.OSDynLoad_Acquire(name)
       if result != 0:
          raise Exception("Module %s not found" % name)
       return handle
