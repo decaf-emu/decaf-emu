@@ -2,10 +2,11 @@
 #include "console.h"
 #include "packet.h"
 
+#include <coreinit/baseheap.h>
+#include <coreinit/expandedheap.h>
 #include <nsysnet/socket.h>
 #include <nn_ac/nn_ac.h>
 #include <string.h>
-#include <malloc.h>
 #include <whb/log.h>
 
 int
@@ -16,13 +17,14 @@ serverStart(Server *server, int port)
    struct in_addr ip_addr;
    uint32_t ipAddress;
    ACConfigId startupId;
+   MEMHeapHandle mem2 = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM2);
 
    server->fd = -1;
    server->client = -1;
    server->readPos = 0;
    server->readLength = 0;
    server->readMax = 1024 * 1024;
-   server->readBuffer = (uint8_t *)malloc(server->readMax);
+   server->readBuffer = (uint8_t *)MEMAllocFromExpHeapEx(mem2, server->readMax, 0x100);
 
    fd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
@@ -65,6 +67,7 @@ serverStart(Server *server, int port)
 
 int serverClose(Server *server)
 {
+   MEMHeapHandle mem2 = MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM2);
    serverCloseClient(server);
 
    if (server->fd != -1) {
@@ -73,7 +76,7 @@ int serverClose(Server *server)
    }
 
    server->readMax = 0;
-   free(server->readBuffer);
+   MEMFreeToExpHeap(mem2, server->readBuffer);
    return 0;
 }
 
