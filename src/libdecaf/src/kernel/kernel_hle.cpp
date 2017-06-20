@@ -12,6 +12,7 @@
 #include "modules/nn_acp/nn_acp.h"
 #include "modules/nn_act/nn_act.h"
 #include "modules/nn_boss/nn_boss.h"
+#include "modules/nn_cmpt/nn_cmpt.h"
 #include "modules/nn_fp/nn_fp.h"
 #include "modules/nn_ndm/nn_ndm.h"
 #include "modules/nn_nfp/nn_nfp.h"
@@ -155,6 +156,7 @@ initialiseHleMmodules()
    nn::acp::Module::RegisterFunctions();
    nn::act::Module::RegisterFunctions();
    nn::boss::Module::RegisterFunctions();
+   nn::cmpt::Module::RegisterFunctions();
    nn::fp::Module::RegisterFunctions();
    nn::ndm::Module::RegisterFunctions();
    nn::nfp::Module::RegisterFunctions();
@@ -183,6 +185,7 @@ initialiseHleMmodules()
    registerHleModule("nn_acp.rpl", new nn::acp::Module{});
    registerHleModule("nn_act.rpl", new nn::act::Module{});
    registerHleModule("nn_boss.rpl", new nn::boss::Module{});
+   registerHleModule("nn_cmpt.rpl", new nn::cmpt::Module {});
    registerHleModule("nn_fp.rpl", new nn::fp::Module{});
    registerHleModule("nn_nfp.rpl", new nn::nfp::Module{});
    registerHleModule("nn_ndm.rpl", new nn::ndm::Module{});
