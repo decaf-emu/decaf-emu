@@ -232,6 +232,20 @@ public:
    }
 
    bool
+   fileExists(Path path)
+   {
+      auto node = findNode(path);
+      return node && node->type() == Node::FileNode;
+   }
+
+   bool
+   folderExists(Path path)
+   {
+      auto node = findNode(path);
+      return node && node->type() == Node::FolderNode;
+   }
+
+   bool
    setPermissions(Path path,
                   Permissions permissions,
                   PermissionFlags flags)
