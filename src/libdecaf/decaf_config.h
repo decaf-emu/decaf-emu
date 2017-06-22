@@ -86,6 +86,9 @@ extern int region;
 //! Path to /vol/storage_mlc01 files
 extern std::string mlc_path;
 
+//! Path to /vol/storage_slc files
+extern std::string slc_path;
+
 //! Path to /vol/sdcard01 files
 extern std::string sdcard_path;
 

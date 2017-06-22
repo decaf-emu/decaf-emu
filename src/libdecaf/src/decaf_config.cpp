@@ -64,6 +64,7 @@ namespace system
 
 int region = static_cast<int>(kernel::ios::mcp::MCPRegion::USA);
 std::string mlc_path = "mlc";
+std::string slc_path = "slc";
 std::string sdcard_path = "sdcard";
 std::string content_path = {};
 std::string resources_path = "resources";

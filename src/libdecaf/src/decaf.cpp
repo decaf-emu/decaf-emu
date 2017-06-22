@@ -203,6 +203,13 @@ initialise(const std::string &gamePath)
    filesystem->mountHostFolder("/vol/storage_mlc01", mlcPath, fs::Permissions::Read);
    filesystem->mountHostFolder("/vol/storage_hfiomlc01", mlcPath, fs::Permissions::Read);
 
+   // Ensure slc_path exists
+   platform::createDirectory(decaf::config::system::slc_path);
+
+   // Mount slc
+   auto slcPath = fs::HostPath { decaf::config::system::slc_path };
+   filesystem->mountHostFolder("/vol/storage_slc", slcPath, fs::Permissions::Read);
+
    // Setup kernel
    kernel::setFileSystem(std::move(filesystem));
    return true;

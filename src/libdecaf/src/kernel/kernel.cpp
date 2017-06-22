@@ -348,6 +348,52 @@ cpuEntrypoint()
    }
 }
 
+static bool
+prepareMLC(fs::FileSystem *fileSystem)
+{
+   // Temporarily set mlc to write so we can create folders
+   fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+
+   // Create title folder
+   auto titleID = sGameInfo.app.title_id;
+   auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
+   auto titleHi = static_cast<uint32_t>(titleID >> 32);
+   auto titlePath = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/{:08x}", titleHi, titleLo);
+   auto titleFolder = fileSystem->makeFolder(titlePath);
+
+   // Create Mii database folder
+   fileSystem->makeFolder("/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db");
+
+   // Restore mlc to Read only
+   fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::Read, fs::PermissionFlags::Recursive);
+
+   // Set title folder to ReadWrite
+   fileSystem->setPermissions(titlePath, fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+
+   // Set mlc/usr to ReadWrite
+   fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   return true;
+}
+
+static bool
+prepareSLC(fs::FileSystem *fileSystem)
+{
+   // Temporarily set slc to write so we can create folders
+   fileSystem->setPermissions("/vol/storage_slc", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+
+   // Create user config folder
+   fileSystem->makeFolder("/vol/storage_slc/proc/prefs");
+
+   // TODO: Create default configurations xml
+
+   // Restore slc to Read only
+   fileSystem->setPermissions("/vol/storage_slc", fs::Permissions::Read, fs::PermissionFlags::Recursive);
+
+   // Set configuration folder to ReadWrite
+   fileSystem->setPermissions("/vol/storage_slc/proc/prefs", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   return true;
+}
+
 bool
 launchGame()
 {
@@ -393,27 +439,15 @@ launchGame()
    // Setup title path
    auto fileSystem = getFileSystem();
 
-   // Temporarily set mlc to write so we can create folders
-   fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   if (prepareMLC(fileSystem)) {
+      gLog->error("Failed to prepare MLC");
+      return false;
+   }
 
-   // Create title folder
-   auto titleID = sGameInfo.app.title_id;
-   auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
-   auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto titlePath = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/{:08x}", titleHi, titleLo);
-   auto titleFolder = fileSystem->makeFolder(titlePath);
-
-   // Create Mii database folder
-   fileSystem->makeFolder("/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db");
-
-   // Restore mlc to Read only
-   fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::Read, fs::PermissionFlags::Recursive);
-
-   // Set title folder to ReadWrite
-   fileSystem->setPermissions(titlePath, fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
-
-   // Set mlc/usr to ReadWrite
-   fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   if (prepareSLC(fileSystem)) {
+      gLog->error("Failed to prepare SLC");
+      return false;
+   }
 
    // Mount SD card if game has permission to use it
    if ((sGameInfo.cos.permission_fs & decaf::CosXML::SdCardRead) ||

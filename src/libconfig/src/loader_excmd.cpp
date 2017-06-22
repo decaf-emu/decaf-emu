@@ -219,6 +219,10 @@ loadFromExcmd(excmd::option_state &options)
       decaf::config::system::sdcard_path = options.get<std::string>("sdcard-path");
    }
 
+   if (options.has("slc-path")) {
+      decaf::config::system::slc_path = options.get<std::string>("slc-path");
+   }
+
    if (options.has("content-path")) {
       decaf::config::system::content_path = options.get<std::string>("content-path");
    }

@@ -47,6 +47,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config)
    readValue(config, "system.mlc_path", decaf::config::system::mlc_path);
    readValue(config, "system.resources_path", decaf::config::system::resources_path);
    readValue(config, "system.sdcard_path", decaf::config::system::sdcard_path);
+   readValue(config, "system.slc_path", decaf::config::system::slc_path);
    readValue(config, "system.content_path", decaf::config::system::content_path);
    readValue(config, "system.time_scale", decaf::config::system::time_scale);
    readArray(config, "system.lle_modules", decaf::config::system::lle_modules);
@@ -158,6 +159,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config)
    system->insert("mlc_path", decaf::config::system::mlc_path);
    system->insert("resources_path", decaf::config::system::resources_path);
    system->insert("sdcard_path", decaf::config::system::sdcard_path);
+   system->insert("slc_path", decaf::config::system::slc_path);
    system->insert("content_path", decaf::config::system::content_path);
    system->insert("time_scale", decaf::config::system::time_scale);
 
