@@ -300,7 +300,7 @@ OSWaitEventWithTimeout(OSEvent *event,
    data->timeout = FALSE;
 
    // Create an alarm to trigger timeout
-   auto timeoutTicks = internal::nanosToTicks(timeoutNS);
+   auto timeoutTicks = internal::nsToTicks(timeoutNS);
    OSCreateAlarm(alarm);
    internal::setAlarmInternal(alarm, timeoutTicks, sEventAlarmHandler, data);
 

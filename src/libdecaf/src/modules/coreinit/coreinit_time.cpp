@@ -156,18 +156,25 @@ namespace internal
 {
 
 OSTime
-nanosToTicks(OSTime nanoseconds)
-{
-   // Division is done in two parts to try to maintain accuracy, 31250 * 32000 = 1*10^9
-   auto timerSpeed = static_cast<uint64_t>(OSGetSystemInfo()->busSpeed / 4);
-   return (static_cast<uint64_t>(nanoseconds) * (timerSpeed / 31250)) / 32000;
-}
-
-OSTime
 msToTicks(OSTime milliseconds)
 {
    auto timerSpeed = static_cast<uint64_t>(OSGetSystemInfo()->busSpeed / 4);
    return static_cast<uint64_t>(milliseconds) * (timerSpeed / 1000);
+}
+
+OSTime
+usToTicks(OSTime microseconds)
+{
+   auto timerSpeed = static_cast<uint64_t>(OSGetSystemInfo()->busSpeed / 4);
+   return static_cast<uint64_t>(microseconds) * (timerSpeed / 1000000);
+}
+
+OSTime
+nsToTicks(OSTime nanoseconds)
+{
+   // Division is done in two parts to try to maintain accuracy, 31250 * 32000 = 1*10^9
+   auto timerSpeed = static_cast<uint64_t>(OSGetSystemInfo()->busSpeed / 4);
+   return (static_cast<uint64_t>(nanoseconds) * (timerSpeed / 31250)) / 32000;
 }
 
 OSTime

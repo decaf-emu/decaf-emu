@@ -142,7 +142,7 @@ BOOL
 OSTryAcquireSpinLockWithTimeout(OSSpinLock *spinlock,
                                 OSTime timeoutNS)
 {
-   auto timeoutTicks = internal::nanosToTicks(timeoutNS);
+   auto timeoutTicks = internal::nsToTicks(timeoutNS);
    OSTestThreadCancel();
    return spinTryLockWithTimeout(spinlock, timeoutTicks) ? TRUE : FALSE;
 }
@@ -218,7 +218,7 @@ BOOL
 OSUninterruptibleSpinLock_TryAcquireWithTimeout(OSSpinLock *spinlock,
                                                 OSTime timeoutNS)
 {
-   auto timeoutTicks = internal::nanosToTicks(timeoutNS);
+   auto timeoutTicks = internal::nsToTicks(timeoutNS);
 
    if (!spinTryLockWithTimeout(spinlock, timeoutTicks)) {
       return FALSE;

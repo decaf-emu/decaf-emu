@@ -75,10 +75,13 @@ namespace internal
 {
 
 OSTime
-nanosToTicks(OSTime nanoseconds);
+msToTicks(OSTime milliseconds);
 
 OSTime
-msToTicks(OSTime milliseconds);
+usToTicks(OSTime microseconds);
+
+OSTime
+nsToTicks(OSTime nanoseconds);
 
 OSTime
 getBaseTime();
