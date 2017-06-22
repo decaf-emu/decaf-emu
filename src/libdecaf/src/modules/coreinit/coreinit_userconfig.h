@@ -1,6 +1,8 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_ios.h"
+#include "kernel/ios/usr_cfg.h"
+#include "ppcutils/wfunc_ptr.h"
 
 #include <common/be_ptr.h>
 #include <common/be_val.h>
@@ -18,25 +20,49 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
-struct UCSysConfig
+using kernel::ios::usr_cfg::UCCommand;
+using kernel::ios::usr_cfg::UCDataType;
+using kernel::ios::usr_cfg::UCError;
+using kernel::ios::usr_cfg::UCSysConfig;
+
+using UCAsyncCallback = wfunc_ptr<void,
+                                  UCError /* result */,
+                                  UCCommand /* command */,
+                                  uint32_t /* count */,
+                                  UCSysConfig * /* settings */,
+                                  void * /* context */>;
+
+struct UCAsyncParams
 {
-   char name[32];
-   UNKNOWN(32);
-   be_val<uint32_t> unk1; // access rights? 0x777
-   be_val<UCDataType> dataType;
-   be_val<uint32_t> unk3; // usually 0x00?
-   be_val<uint32_t> dataSize;
-   be_ptr<void> data;
+   UCAsyncCallback::be callback;
+   be_ptr<void> context;
+   be_val<UCCommand> command;
+   be_val<uint32_t> unk0x0C;
+   be_val<uint32_t> count;
+   be_ptr<UCSysConfig> settings;
+   be_ptr<IOSVec> vecs;
 };
-CHECK_SIZE(UCSysConfig, 0x54);
+CHECK_OFFSET(UCAsyncParams, 0x00, callback);
+CHECK_OFFSET(UCAsyncParams, 0x04, context);
+CHECK_OFFSET(UCAsyncParams, 0x08, command);
+CHECK_OFFSET(UCAsyncParams, 0x0C, unk0x0C);
+CHECK_OFFSET(UCAsyncParams, 0x10, count);
+CHECK_OFFSET(UCAsyncParams, 0x14, settings);
+CHECK_OFFSET(UCAsyncParams, 0x18, vecs);
+CHECK_SIZE(UCAsyncParams, 0x1C);
 
 #pragma pack(pop)
 
-IOSHandle
+UCError
 UCOpen();
 
-void
+UCError
 UCClose(IOSHandle handle);
+
+UCError
+UCDeleteSysConfig(IOSHandle handle,
+                  uint32_t count,
+                  UCSysConfig *settings);
 
 UCError
 UCReadSysConfig(IOSHandle handle,
@@ -44,9 +70,21 @@ UCReadSysConfig(IOSHandle handle,
                 UCSysConfig *settings);
 
 UCError
+UCReadSysConfigAsync(IOSHandle handle,
+                     uint32_t count,
+                     UCSysConfig *settings,
+                     UCAsyncParams *asyncParams);
+
+UCError
 UCWriteSysConfig(IOSHandle handle,
                  uint32_t count,
                  UCSysConfig *settings);
+
+UCError
+UCWriteSysConfigAsync(IOSHandle handle,
+                      uint32_t count,
+                      UCSysConfig *settings,
+                      UCAsyncParams *asyncParams);
 
 /** @} */
 

@@ -1,217 +1,489 @@
 #include "coreinit.h"
-#include "coreinit_enum_string.h"
+#include "coreinit_ios.h"
+#include "coreinit_ipcbufpool.h"
+#include "coreinit_mutex.h"
 #include "coreinit_userconfig.h"
-#include "kernel/ios/mcp.h"
-#include <common/bitutils.h>
-#include <common/decaf_assert.h>
 
 namespace coreinit
 {
 
-struct UCConfigEntry
+using kernel::ios::usr_cfg::UCReadSysConfigRequest;
+using kernel::ios::usr_cfg::UCWriteSysConfigRequest;
+
+struct UserConfigData
 {
-   std::string name;
-   UCDataType type;
-   std::vector<uint8_t> data;
+   OSMutex lock;
+
+   static constexpr uint32_t SmallMessageCount = 0x100;
+   static constexpr uint32_t SmallMessageSize = 0x80;
+
+   static constexpr uint32_t LargeMessageCount = 0x40;
+   static constexpr uint32_t LargeMessageSize = 0x1000;
+
+   bool initialised;
+
+   IPCBufPool *smallMessagePool;
+   IPCBufPool *largeMessagePool;
+
+   std::array<uint8_t, SmallMessageCount * SmallMessageSize> smallMessageBuffer;
+   std::array<uint8_t, LargeMessageCount * LargeMessageSize> largeMessageBuffer;
+
+   be_val<uint32_t> smallMessageCount;
+   be_val<uint32_t> largeMessageCount;
 };
 
-static std::vector<UCConfigEntry>
-sUserConfig;
+static UserConfigData *
+sUserConfigData;
 
-static const IOSHandle
-sUCHandle = 0x12345678;
+static IOSAsyncCallbackFn
+sIosAsyncCallbackFn = nullptr;
 
-static bool
-readSetting(UCSysConfig &setting)
+namespace internal
 {
-   for (auto &entry : sUserConfig) {
-      if (entry.name.compare(setting.name) != 0) {
-         continue;
-      }
 
-      if (setting.data && setting.dataSize) {
-         if (entry.type != setting.dataType) {
-            gLog->error("Mismatch userconfig data type for {}, found {} expected {}", entry.name, setting.dataType, entry.type);
-         }
+static void *
+ucAllocateMessage(uint32_t size)
+{
+   void *message = nullptr;
 
-         if (entry.data.size() != setting.dataSize) {
-            gLog->error("Mismatch userconfig data size for {}, found {} expected {}", entry.name, setting.dataSize, entry.data.size());
-            entry.data.resize(setting.dataSize);
-         }
-
-         std::memcpy(setting.data.get(), entry.data.data(), setting.dataSize);
-      }
-
-      return true;
+   if (size == 0) {
+      return nullptr;
+   } else if (size <= UserConfigData::SmallMessageSize) {
+      message = IPCBufPoolAllocate(sUserConfigData->smallMessagePool, size);
+   } else {
+      message = IPCBufPoolAllocate(sUserConfigData->largeMessagePool, size);
    }
 
-   return false;
+   std::memset(message, 0, size);
+   return message;
 }
 
-static bool
-updateSetting(UCSysConfig &setting)
+
+static void
+ucFreeMessage(void *message)
 {
-   for (auto &entry : sUserConfig) {
-      if (entry.name.compare(setting.name) != 0) {
-         continue;
-      }
+   IPCBufPoolFree(sUserConfigData->smallMessagePool, message);
+   IPCBufPoolFree(sUserConfigData->largeMessagePool, message);
+}
 
-      if (setting.data && setting.dataSize) {
-         if (entry.type != setting.dataType) {
-            gLog->error("Mismatch userconfig data type for {}, found {} expected {}", entry.name, setting.dataType, entry.type);
-         }
 
-         if (entry.data.size() != setting.dataSize) {
-            gLog->error("Mismatch userconfig data size for {}, found {} expected {}", entry.name, setting.dataSize, entry.data.size());
-            entry.data.resize(setting.dataSize);
-         }
-
-         std::memcpy(entry.data.data(), setting.data.get(), setting.dataSize);
-      }
-
-      return true;
+static UCError
+ucSetupAsyncParams(UCCommand command,
+                   uint32_t unk_r4,
+                   uint32_t count,
+                   UCSysConfig *settings,
+                   IOSVec *vecs,
+                   UCAsyncParams *asyncParams)
+{
+   if (!settings || !vecs || !asyncParams) {
+      return UCError::InvalidBuffer;
    }
 
-   return false;
+   asyncParams->command = command;
+   asyncParams->unk0x0C = unk_r4;
+   asyncParams->count = count;
+   asyncParams->settings = settings;
+   asyncParams->vecs = vecs;
+   return UCError::OK;
 }
 
-IOSHandle
+
+static UCError
+ucHandleIosResult(UCError result,
+                  UCCommand command,
+                  uint32_t unk_r5,
+                  uint32_t count,
+                  UCSysConfig *settings,
+                  IOSVec *vecs,
+                  UCAsyncParams *asyncParams,
+                  UCAsyncCallback callback,
+                  void *callbackContext)
+{
+   if (!settings && !vecs) {
+      if (result == IOSError::OK) {
+         return UCError::InvalidBuffer;
+      } else {
+         return static_cast<UCError>(result);
+      }
+   }
+
+   if (result != UCError::OutOfMemory) {
+      if (settings && vecs) {
+         if (result == UCError::OK && asyncParams) {
+            // Return as we have a pending async result...!
+            return UCError::OK;
+         }
+
+         if (command == UCCommand::ReadSysConfig) {
+            auto request = reinterpret_cast<UCReadSysConfigRequest *>(vecs[0].paddr.get());
+
+            for (auto i = 0u; i < count; ++i) {
+               settings[i].error = request->settings[i].error;
+
+               if (settings[i].error) {
+                  result = settings[i].error;
+               }
+
+               if (!settings[i].data) {
+                  result = UCError::InvalidBuffer;
+               }
+
+               if (settings[i].error == UCError::OK) {
+                  switch (settings[i].dataSize) {
+                  case 1:
+                     *be_ptr<uint8_t> { settings[i].data } = *be_ptr<uint8_t> { vecs[i + 1].paddr };
+                     break;
+                  case 2:
+                     *be_ptr<uint16_t> { settings[i].data } = *be_ptr<uint16_t> { vecs[i + 1].paddr };
+                     break;
+                  case 4:
+                     *be_ptr<uint32_t> { settings[i].data } = *be_ptr<uint32_t> { vecs[i + 1].paddr };
+                     break;
+                  default:
+                     std::memset(settings[i].data, 0, 4); // why???
+                     std::memcpy(settings[i].data, vecs[i + 1].paddr, settings[i].dataSize);
+                  }
+               }
+            }
+         } else if (command == UCCommand::WriteSysConfig) {
+            auto request = reinterpret_cast<UCWriteSysConfigRequest *>(vecs[0].paddr.get());
+
+            for (auto i = 0u; i < count; ++i) {
+               settings[i].error = request->settings[i].error;
+
+               if (settings[i].error) {
+                  result = settings[i].error;
+               }
+            }
+         } else {
+            decaf_abort(fmt::format("Unimplemented result handler for UCCommand {}", command));
+         }
+      }
+
+      if (callback) {
+         callback(result, command, count, settings, callbackContext);
+      }
+   }
+
+   if (vecs) {
+      for (auto i = 0u; i < count + 1; ++i) {
+         internal::ucFreeMessage(vecs[i].paddr);
+      }
+
+      internal::ucFreeMessage(vecs);
+   }
+
+   return static_cast<UCError>(result);
+}
+
+
+static void
+ucIosAsyncCallback(IOSError status, void *context)
+{
+   auto asyncParams = reinterpret_cast<UCAsyncParams *>(context);
+   ucHandleIosResult(UCError::OK,
+                     asyncParams->command,
+                     asyncParams->unk0x0C,
+                     asyncParams->count,
+                     asyncParams->settings,
+                     asyncParams->vecs,
+                     nullptr,
+                     asyncParams->callback,
+                     asyncParams->context);
+}
+
+} // namespace internal
+
+
+UCError
 UCOpen()
 {
-   return sUCHandle;
+   OSLockMutex(&sUserConfigData->lock);
+
+   if (!sUserConfigData->initialised) {
+      if (!sUserConfigData->smallMessagePool) {
+         sUserConfigData->smallMessagePool = IPCBufPoolCreate(sUserConfigData->smallMessageBuffer.data(),
+                                                              static_cast<uint32_t>(sUserConfigData->smallMessageBuffer.size()),
+                                                              UserConfigData::SmallMessageSize,
+                                                              &sUserConfigData->smallMessageCount,
+                                                              1);
+      }
+
+      if (!sUserConfigData->largeMessagePool) {
+         sUserConfigData->largeMessagePool = IPCBufPoolCreate(sUserConfigData->largeMessageBuffer.data(),
+                                                              static_cast<uint32_t>(sUserConfigData->largeMessageBuffer.size()),
+                                                              UserConfigData::LargeMessageSize,
+                                                              &sUserConfigData->largeMessageCount,
+                                                              1);
+      }
+
+      if (sUserConfigData->smallMessagePool && sUserConfigData->largeMessagePool) {
+         sUserConfigData->initialised = true;
+      }
+   }
+
+   OSUnlockMutex(&sUserConfigData->lock);
+
+   if (!sUserConfigData->initialised) {
+      return UCError::Error;
+   }
+
+   return static_cast<UCError>(IOS_Open("/dev/usr_cfg", IOSOpenMode::None));
 }
 
-void
+
+UCError
 UCClose(IOSHandle handle)
 {
-   decaf_check(handle == sUCHandle);
+   return static_cast<UCError>(IOS_Close(handle));
 }
 
+
 UCError
-UCReadSysConfig(IOSHandle handle, uint32_t count, UCSysConfig *settings)
+UCDeleteSysConfig(IOSHandle handle,
+                  uint32_t count,
+                  UCSysConfig *settings)
 {
-   decaf_check(handle == sUCHandle);
-
-   if (!settings) {
-      return UCError::InvalidBuffer;
-   }
-
-   for (auto i = 0u; i < count; ++i) {
-      auto &setting = settings[i];
-
-      if (!readSetting(setting)) {
-         gLog->warn("UCReadSysConfig unknown setting {} (type: {} size: {})", setting.name, setting.dataType, setting.dataSize);
-      }
-   }
-
    return UCError::OK;
 }
 
+
 UCError
-UCWriteSysConfig(IOSHandle handle, uint32_t count, UCSysConfig *settings)
+UCReadSysConfig(IOSHandle handle,
+                uint32_t count,
+                UCSysConfig *settings)
 {
-   decaf_check(handle == sUCHandle);
+   return UCReadSysConfigAsync(handle, count, settings, nullptr);
+}
+
+
+UCError
+UCReadSysConfigAsync(IOSHandle handle,
+                     uint32_t count,
+                     UCSysConfig *settings,
+                     UCAsyncParams *asyncParams)
+{
+   auto result = UCError::OK;
 
    if (!settings) {
-      return UCError::InvalidBuffer;
+      result = UCError::InvalidBuffer;
+      goto fail;
    }
 
+   auto msgBufSize = (sizeof(UCSysConfig) * (count + 1)) + sizeof(UCReadSysConfigRequest);
+   auto msgBuf = internal::ucAllocateMessage(msgBufSize);
+   if (!msgBuf) {
+      result = UCError::OutOfMemory;
+      goto fail;
+   }
+
+   auto request = reinterpret_cast<UCReadSysConfigRequest *>(msgBuf);
+   request->count = count;
+   request->size = sizeof(UCSysConfig);
+   std::memcpy(request->settings, settings, sizeof(UCSysConfig) * count);
+
+   auto vecBufSize = sizeof(IOSVec) * (count + 1);
+   auto vecBuf = internal::ucAllocateMessage(vecBufSize);
+   if (!vecBuf) {
+      result = UCError::OutOfMemory;
+      goto fail;
+   }
+
+   auto vecs = reinterpret_cast<IOSVec *>(vecBuf);
+   vecs[0].paddr = msgBuf;
+   vecs[0].len = msgBufSize;
+
    for (auto i = 0u; i < count; ++i) {
-      auto &setting = settings[i];
+      auto size = settings[i].dataSize;
+      vecs[1 + i].len = size;
 
-      if (!updateSetting(setting)) {
-         gLog->debug("UCWriteSysConfig new setting {} (type: {} size: {})", setting.name, setting.dataType, setting.dataSize);
-
-         // Create new entry
-         auto entry = UCConfigEntry {};
-         entry.name = setting.name;
-         entry.type = setting.dataType;
-         entry.data.resize(setting.dataSize);
-         std::memcpy(entry.data.data(), setting.data.get(), setting.dataSize);
-         sUserConfig.emplace_back(std::move(entry));
+      if (size > 0) {
+         vecs[1 + i].paddr = internal::ucAllocateMessage(size);
+         if (!vecs[1 + i].paddr) {
+            result = UCError::OutOfMemory;
+            goto fail;
+         }
+      } else {
+         vecs[1 + i].paddr = nullptr;
       }
    }
 
-   return UCError::OK;
-}
+   if (!asyncParams) {
+      result = static_cast<UCError>(IOS_Ioctlv(handle,
+                                               UCCommand::ReadSysConfig,
+                                               0,
+                                               count + 1,
+                                               vecs));
+   } else {
+      internal::ucSetupAsyncParams(UCCommand::ReadSysConfig,
+                                   0,
+                                   count,
+                                   settings,
+                                   vecs,
+                                   asyncParams);
 
-static void
-addGroup(const std::string &name)
-{
-   auto entry = UCConfigEntry {};
-   entry.name = name;
-   entry.type = UCDataType::Group;
-   sUserConfig.emplace_back(std::move(entry));
-}
-
-static void
-addValue(const std::string &name, UCDataType type, uint32_t value)
-{
-   auto entry = UCConfigEntry {};
-   entry.name = name;
-   entry.type = type;
-
-   switch (type) {
-   case UCDataType::Uint8:
-      entry.data.resize(1);
-      *reinterpret_cast<be_val<uint8_t> *>(entry.data.data()) = value;
-      break;
-   case UCDataType::Uint16:
-      entry.data.resize(2);
-      *reinterpret_cast<be_val<uint16_t> *>(entry.data.data()) = value;
-      break;
-   case UCDataType::Uint32:
-      entry.data.resize(4);
-      *reinterpret_cast<be_val<uint32_t> *>(entry.data.data()) = value;
-      break;
-   default:
-      decaf_abort(fmt::format("Invalid user config type {}", enumAsString(type)));
+      result = static_cast<UCError>(IOS_IoctlvAsync(handle,
+                                                    UCCommand::ReadSysConfig,
+                                                    0,
+                                                    count + 1,
+                                                    vecs,
+                                                    sIosAsyncCallbackFn,
+                                                    asyncParams));
    }
 
-   sUserConfig.emplace_back(std::move(entry));
+   goto out;
+
+fail:
+   if (msgBuf) {
+      internal::ucFreeMessage(msgBuf);
+      msgBuf = nullptr;
+   }
+
+   if (vecBuf) {
+      for (auto i = 0u; i < count; ++i) {
+         if (vecs[1 + i].paddr) {
+            internal::ucFreeMessage(vecs[1 + i].paddr);
+         }
+      }
+
+      internal::ucFreeMessage(vecBuf);
+      vecBuf = nullptr;
+      vecs = nullptr;
+   }
+
+out:
+   return internal::ucHandleIosResult(result,
+                                      UCCommand::ReadSysConfig,
+                                      0,
+                                      count,
+                                      settings,
+                                      vecs,
+                                      asyncParams,
+                                      nullptr,
+                                      nullptr);
 }
 
-static void
-addBlob(const std::string &name, const std::vector<uint8_t> &data)
+
+UCError
+UCWriteSysConfig(IOSHandle handle,
+                 uint32_t count,
+                 UCSysConfig *settings)
 {
-   auto entry = UCConfigEntry {};
-   entry.name = name;
-   entry.type = UCDataType::Blob;
-   entry.data = data;
-   sUserConfig.emplace_back(std::move(entry));
+   return UCWriteSysConfigAsync(handle, count, settings, nullptr);
 }
+
+
+UCError
+UCWriteSysConfigAsync(IOSHandle handle,
+                      uint32_t count,
+                      UCSysConfig *settings,
+                      UCAsyncParams *asyncParams)
+{
+   auto result = UCError::OK;
+
+   if (!settings) {
+      result = UCError::InvalidBuffer;
+      goto fail;
+   }
+
+   auto msgBufSize = (sizeof(UCSysConfig) * (count + 1)) + sizeof(UCWriteSysConfigRequest);
+   auto msgBuf = internal::ucAllocateMessage(msgBufSize);
+   if (!msgBuf) {
+      result = UCError::OutOfMemory;
+      goto fail;
+   }
+
+   auto request = reinterpret_cast<UCWriteSysConfigRequest *>(msgBuf);
+   request->count = count;
+   request->size = sizeof(UCSysConfig);
+   std::memcpy(request->settings, settings, sizeof(UCSysConfig) * count);
+
+   auto vecBufSize = sizeof(IOSVec) * (count + 1);
+   auto vecBuf = internal::ucAllocateMessage(vecBufSize);
+   if (!vecBuf) {
+      result = UCError::OutOfMemory;
+      goto fail;
+   }
+
+   auto vecs = reinterpret_cast<IOSVec *>(vecBuf);
+   vecs[0].paddr = msgBuf;
+   vecs[0].len = msgBufSize;
+
+   for (auto i = 0u; i < count; ++i) {
+      auto size = settings[i].dataSize;
+      vecs[1 + i].len = size;
+
+      if (size > 0) {
+         vecs[1 + i].paddr = internal::ucAllocateMessage(size);
+         if (!vecs[1 + i].paddr) {
+            result = UCError::OutOfMemory;
+            goto fail;
+         }
+      } else {
+         vecs[1 + i].paddr = nullptr;
+      }
+   }
+
+   if (!asyncParams) {
+      result = static_cast<UCError>(IOS_Ioctlv(handle,
+                                               UCCommand::WriteSysConfig,
+                                               0,
+                                               count + 1,
+                                               vecs));
+   } else {
+      internal::ucSetupAsyncParams(UCCommand::WriteSysConfig,
+                                   0,
+                                   count,
+                                   settings,
+                                   vecs,
+                                   asyncParams);
+
+      result = static_cast<UCError>(IOS_IoctlvAsync(handle,
+                                                    UCCommand::WriteSysConfig,
+                                                    0,
+                                                    count + 1,
+                                                    vecs,
+                                                    sIosAsyncCallbackFn,
+                                                    asyncParams));
+   }
+
+   goto out;
+
+fail:
+   if (msgBuf) {
+      internal::ucFreeMessage(msgBuf);
+      msgBuf = nullptr;
+   }
+
+   if (vecBuf) {
+      for (auto i = 0u; i < count; ++i) {
+         if (vecs[1 + i].paddr) {
+            internal::ucFreeMessage(vecs[1 + i].paddr);
+         }
+      }
+
+      internal::ucFreeMessage(vecBuf);
+      vecBuf = nullptr;
+      vecs = nullptr;
+   }
+
+out:
+   return internal::ucHandleIosResult(result,
+                                      UCCommand::WriteSysConfig,
+                                      0,
+                                      count,
+                                      settings,
+                                      vecs,
+                                      asyncParams,
+                                      nullptr,
+                                      nullptr);
+}
+
 
 void
 Module::initialiseUserConfig()
 {
-   auto invisible_titles = std::vector<uint8_t> {};
-   invisible_titles.resize(512, 0);
-
-   sUserConfig.clear();
-
-   addGroup("cafe");
-   addValue("cafe.cntry_reg",             UCDataType::Uint32,  kernel::ios::mcp::MCPCountryCode::USA);
-   addValue("cafe.eco",                   UCDataType::Uint8,   0);
-   addValue("cafe.eula_agree",            UCDataType::Uint8,   1);
-   addValue("cafe.eula_version",          UCDataType::Uint32,  0);
-   addValue("cafe.fast_boot",             UCDataType::Uint8,   0);
-   addValue("cafe.initial_launch",        UCDataType::Uint8,   0);
-   addValue("cafe.language",              UCDataType::Uint32,  kernel::ios::mcp::MCPLanguage::English);
-   addValue("cafe.version",               UCDataType::Uint16,  0);
-
-   addGroup("caffeine");
-   addValue("caffeine.version",           UCDataType::Uint16,  0);
-   addValue("caffeine.enable",            UCDataType::Uint8,   0);
-   addValue("caffeine.ad_enable",         UCDataType::Uint8,   0);
-   addValue("caffeine.push_enable",       UCDataType::Uint8,   1);
-   addValue("caffeine.push_time_slot",    UCDataType::Uint32,  0);
-   addValue("caffeine.push_interval",     UCDataType::Uint16,  0);
-   addValue("caffeine.drcled_enable",     UCDataType::Uint8,   0);
-   addValue("caffeine.push_capabilty",    UCDataType::Uint16,  0);
-   addBlob ("caffeine.invisible_titles",  invisible_titles);
-
-   addGroup("parent");
-   addValue("parent.enable",              UCDataType::Uint8,   0);
+   OSInitMutex(&sUserConfigData->lock);
 }
 
 void
@@ -220,7 +492,12 @@ Module::registerUserConfigFunctions()
    RegisterKernelFunction(UCOpen);
    RegisterKernelFunction(UCClose);
    RegisterKernelFunction(UCReadSysConfig);
+   RegisterKernelFunction(UCReadSysConfigAsync);
    RegisterKernelFunction(UCWriteSysConfig);
+   RegisterKernelFunction(UCWriteSysConfigAsync);
+
+   RegisterInternalData(sUserConfigData);
+   RegisterInternalFunction(internal::ucIosAsyncCallback, sIosAsyncCallbackFn);
 }
 
 } // namespace coreinit
