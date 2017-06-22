@@ -365,19 +365,6 @@ ENUM_BEG(SIRegisters, uint32_t)
    ENUM_VALUE(ControllerError,      14)
 ENUM_END(SIRegisters)
 
-ENUM_BEG(UCDataType, uint32_t)
-   ENUM_VALUE(Uint8,                0x01)
-   ENUM_VALUE(Uint16,               0x02)
-   ENUM_VALUE(Uint32,               0x03)
-   ENUM_VALUE(Blob,                 0x07)
-   ENUM_VALUE(Group,                0x08)
-ENUM_END(UCDataType)
-
-ENUM_BEG(UCError, int32_t)
-   ENUM_VALUE(OK,                   0)
-   ENUM_VALUE(InvalidBuffer,        -0x200005)
-ENUM_END(UCError)
-
 ENUM_NAMESPACE_END(coreinit)
 
 #include <common/enum_end.h>
