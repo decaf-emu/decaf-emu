@@ -82,6 +82,10 @@ int32_t
 resumeThreadNoLock(OSThread *thread,
                    int32_t counter);
 
+bool
+setThreadRunQuantumNoLock(OSThread *thread,
+                          OSTime ticks);
+
 void
 sleepThreadNoLock(OSThreadQueue *queue);
 

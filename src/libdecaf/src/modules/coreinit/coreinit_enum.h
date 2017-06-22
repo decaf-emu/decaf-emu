@@ -173,6 +173,12 @@ FLAGS_BEG(OSThreadCancelState, uint32_t)
    FLAGS_VALUE(DisabledByFastMutex,          1 << 19)
 FLAGS_END(OSThreadCancelState)
 
+ENUM_BEG(OSThreadQuantum, uint32_t)
+   ENUM_VALUE(Infinite,             0)
+   ENUM_VALUE(MinMicroseconds,      10)
+   ENUM_VALUE(MaxMicroseconds,      0xFFFFF)
+ENUM_END(OSThreadQuantum)
+
 ENUM_BEG(OSThreadRequest, uint32_t)
    ENUM_VALUE(None,                 0)
    ENUM_VALUE(Suspend,              1)

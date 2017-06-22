@@ -772,10 +772,25 @@ OSSetThreadPriority(OSThread *thread,
  */
 BOOL
 OSSetThreadRunQuantum(OSThread *thread,
-                      uint32_t quantum)
+                      uint32_t quantumUS)
 {
-   decaf_abort("Unsupported call to OSSetThreadRunQuantum");
-   return FALSE;
+   if (quantumUS != OSThreadQuantum::Infinite) {
+      if (quantumUS < OSThreadQuantum::MinMicroseconds) {
+         return FALSE;
+      }
+
+      if (quantumUS > OSThreadQuantum::MaxMicroseconds) {
+         return FALSE;
+      }
+   }
+
+   auto ticks = internal::usToTicks(quantumUS);
+   auto result = FALSE;
+
+   internal::lockScheduler();
+   result = internal::setThreadRunQuantumNoLock(thread, ticks);
+   internal::unlockScheduler();
+   return result;
 }
 
 

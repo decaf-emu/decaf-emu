@@ -349,6 +349,7 @@ void checkRunningThreadNoLock(bool yielding)
       auto diff = now - sLastSwitchTime[coreId];
       thread->coreTimeConsumedNs += diff.count();
    }
+
    sLastSwitchTime[coreId] = now;
    if (next) {
       next->wakeCount++;
@@ -429,6 +430,14 @@ resumeThreadNoLock(OSThread *thread, int32_t counter)
    }
 
    return old;
+}
+
+bool
+setThreadRunQuantumNoLock(OSThread *thread,
+                          OSTime ticks)
+{
+   decaf_check(isSchedulerLocked());
+   decaf_abort("Unsupported call to setThreadRunQuantumNoLock");
 }
 
 void

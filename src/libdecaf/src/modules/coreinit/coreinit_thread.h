@@ -282,7 +282,10 @@ struct OSThread
    //! Queue of threads waiting for a thread to be suspended.
    OSThreadQueue suspendQueue;
 
-   UNKNOWN(0xC);
+   UNKNOWN(0x4);
+
+   //! How many ticks the thread should run for before suspension.
+   be_val<uint64_t> runQuantumTicks;
 
    //! The total amount of core time consumed by this thread (Does not include time while Running)
    be_val<uint64_t> coreTimeConsumedNs;
@@ -350,6 +353,7 @@ CHECK_OFFSET(OSThread, 0x5D8, requestFlag);
 CHECK_OFFSET(OSThread, 0x5DC, needSuspend);
 CHECK_OFFSET(OSThread, 0x5E0, suspendResult);
 CHECK_OFFSET(OSThread, 0x5E4, suspendQueue);
+CHECK_OFFSET(OSThread, 0x5F8, runQuantumTicks);
 CHECK_OFFSET(OSThread, 0x600, coreTimeConsumedNs);
 CHECK_OFFSET(OSThread, 0x608, wakeCount);
 CHECK_OFFSET(OSThread, 0x664, tlsSectionCount);
@@ -482,7 +486,7 @@ OSSetThreadPriority(OSThread* thread,
 
 BOOL
 OSSetThreadRunQuantum(OSThread* thread,
-                      uint32_t quantum);
+                      uint32_t quantumUS);
 
 void
 OSSetThreadSpecific(uint32_t id,
