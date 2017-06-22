@@ -19,7 +19,6 @@ namespace coreinit
 using kernel::ios::mcp::MCPAppType;
 using kernel::ios::mcp::MCPCountryCode;
 using kernel::ios::mcp::MCPError;
-using kernel::ios::mcp::MCPLanguage;
 using kernel::ios::mcp::MCPRegion;
 using kernel::ios::mcp::MCPSysProdSettings;
 using kernel::ios::mcp::MCPTitleListType;
