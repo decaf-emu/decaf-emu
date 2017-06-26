@@ -61,6 +61,9 @@ getExitCode();
 const decaf::GameInfo &
 getGameInfo();
 
+void
+kernelEntry();
+
 /** @} */
 
 } // namespace kernel

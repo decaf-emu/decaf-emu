@@ -192,23 +192,37 @@ initialise(const std::string &gamePath)
       return false;
    }
 
+   // Ensure mlc_path and slc_path exists on host file system
+   platform::createDirectory(decaf::config::system::mlc_path);
+   platform::createDirectory(decaf::config::system::slc_path);
+
    // Add device folder
    filesystem->makeFolder("/dev");
 
-   // Ensure mlc_path exists
-   platform::createDirectory(decaf::config::system::mlc_path);
-
-   // Mount mlc
+   // Mount mlc device
    auto mlcPath = fs::HostPath { decaf::config::system::mlc_path };
-   filesystem->mountHostFolder("/vol/storage_mlc01", mlcPath, fs::Permissions::Read);
-   filesystem->mountHostFolder("/vol/storage_hfiomlc01", mlcPath, fs::Permissions::Read);
+   filesystem->mountHostFolder("/dev/mlc01", mlcPath, fs::Permissions::Read);
 
-   // Ensure slc_path exists
-   platform::createDirectory(decaf::config::system::slc_path);
-
-   // Mount slc
+   // Mount slc device
    auto slcPath = fs::HostPath { decaf::config::system::slc_path };
-   filesystem->mountHostFolder("/vol/storage_slc", slcPath, fs::Permissions::Read);
+   filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
+   filesystem->makeFolder("/dev/slc01/sys");
+   filesystem->makeFolder("/dev/slc01/sys/proc");
+   filesystem->makeFolder("/dev/slc01/sys/proc/prefs");
+
+   // TODO: ramdisk device, requires virtual file system modification
+
+   filesystem->makeLink("/vol/storage_slc", "/dev/slc01");
+   filesystem->makeLink("/vol/storage_mlc01", "/dev/mlc01");
+
+   filesystem->makeLink("/vol/system_slc", "/dev/slc01/sys");
+   // TODO: filesystem->makeLink("/vol/system_ram", "/dev/ramdisk01/sys");
+   filesystem->makeLink("/vol/system", "/vol/system_slc");
+
+   filesystem->makeFolder("/vol/sys");
+   filesystem->makeLink("/vol/sys/proc", "/vol/system/proc");
+   filesystem->makeLink("/vol/sys/proc_slc", "/vol/system_slc/proc");
+   // TODO: filesystem->makeLink("/vol/sys/proc_ram", "/vol/system_ram/proc");
 
    // Setup kernel
    kernel::setFileSystem(std::move(filesystem));

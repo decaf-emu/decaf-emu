@@ -24,8 +24,14 @@
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_interrupts.h"
 #include "modules/gx2/gx2_event.h"
+#include "modules/sci/sci_cafe_settings.h"
+#include "modules/sci/sci_caffeine_settings.h"
+#include "modules/sci/sci_parental_account_settings_uc.h"
+#include "modules/sci/sci_parental_settings.h"
+#include "modules/sci/sci_spot_pass_settings.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
+#include "ppcutils/stackobject.h"
 #include <common/decaf_assert.h>
 #include <common/teenyheap.h>
 #include <common/platform_dir.h>
@@ -349,8 +355,10 @@ cpuEntrypoint()
 }
 
 static bool
-prepareMLC(fs::FileSystem *fileSystem)
+prepareMLC()
 {
+   auto fileSystem = getFileSystem();
+
    // Temporarily set mlc to write so we can create folders
    fileSystem->setPermissions("/vol/storage_mlc01", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
 
@@ -376,21 +384,34 @@ prepareMLC(fs::FileSystem *fileSystem)
 }
 
 static bool
-prepareSLC(fs::FileSystem *fileSystem)
+prepareSLC()
 {
+   auto fileSystem = getFileSystem();
+
    // Temporarily set slc to write so we can create folders
-   fileSystem->setPermissions("/vol/storage_slc", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   fileSystem->setPermissions("/vol/system_slc", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
 
-   // Create user config folder
-   fileSystem->makeFolder("/vol/storage_slc/proc/prefs");
+   // Initialise settings
+   ppcutils::StackObject<sci::SCICafeSettings> cafe;
+   sci::SCIInitCafeSettings(cafe);
 
-   // TODO: Create default configurations xml
+   ppcutils::StackObject<sci::SCICaffeineSettings> caffeine;
+   sci::SCIInitCaffeineSettings(caffeine);
+
+   ppcutils::StackObject<sci::SCIParentalAccountSettingsUC> parentAccountUC;
+   sci::SCIInitParentalAccountSettingsUC(parentAccountUC, 1);
+
+   ppcutils::StackObject<sci::SCIParentalSettings> parental;
+   sci::SCIInitParentalSettings(parental);
+
+   ppcutils::StackObject<sci::SCISpotPassSettings> spotPass;
+   sci::SCIInitSpotPassSettings(spotPass);
 
    // Restore slc to Read only
-   fileSystem->setPermissions("/vol/storage_slc", fs::Permissions::Read, fs::PermissionFlags::Recursive);
+   fileSystem->setPermissions("/vol/system_slc", fs::Permissions::Read, fs::PermissionFlags::Recursive);
 
    // Set configuration folder to ReadWrite
-   fileSystem->setPermissions("/vol/storage_slc/proc/prefs", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   fileSystem->setPermissions("/vol/system_slc/proc/prefs", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
    return true;
 }
 
@@ -439,13 +460,8 @@ launchGame()
    // Setup title path
    auto fileSystem = getFileSystem();
 
-   if (prepareMLC(fileSystem)) {
+   if (!prepareMLC()) {
       gLog->error("Failed to prepare MLC");
-      return false;
-   }
-
-   if (prepareSLC(fileSystem)) {
-      gLog->error("Failed to prepare SLC");
       return false;
    }
 
@@ -491,6 +507,14 @@ launchGame()
    coreinit::OSRunThread(coreinit::OSGetDefaultThread(1), gameThreadEntry, 0, nullptr);
 
    return true;
+}
+
+void
+kernelEntry()
+{
+   if (!prepareSLC()) {
+      gLog->error("Failed to prepare SLC");
+   }
 }
 
 loader::LoadedModule *

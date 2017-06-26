@@ -678,11 +678,14 @@ defaultThreadEntry(uint32_t coreId,
 void
 GameThreadEntry(uint32_t argc, void *argv)
 {
+   // Run kernel entry point
+   kernel::kernelEntry();
+
    // Start up the game!
    auto appModule = kernel::getUserModule();
 
    auto userPreinit = appModule->findFuncExport<void, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*, be_ptr<MEMHeapHeader>*>("__preinit_user");
-   auto startFn = kernel::loader::AppEntryPoint(appModule->entryPoint);
+   auto startFn = kernel::loader::AppEntryPoint { appModule->entryPoint };
 
    debugger::notifyEntry(userPreinit.getAddress(), appModule->entryPoint);
 
