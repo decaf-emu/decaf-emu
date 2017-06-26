@@ -4,6 +4,8 @@
 #include "coreinit_mutex.h"
 #include "coreinit_userconfig.h"
 
+#include "ppcutils/wfunc_call.h"
+
 namespace coreinit
 {
 
@@ -76,7 +78,7 @@ ucSetupAsyncParams(UCCommand command,
                    UCAsyncParams *asyncParams)
 {
    if (!settings || !vecs || !asyncParams) {
-      return UCError::InvalidBuffer;
+      return UCError::InvalidParam;
    }
 
    asyncParams->command = command;
@@ -101,13 +103,13 @@ ucHandleIosResult(UCError result,
 {
    if (!settings && !vecs) {
       if (result == IOSError::OK) {
-         return UCError::InvalidBuffer;
+         return UCError::InvalidParam;
       } else {
          return static_cast<UCError>(result);
       }
    }
 
-   if (result != UCError::OutOfMemory) {
+   if (result != UCError::NoIPCBuffers) {
       if (settings && vecs) {
          if (result == UCError::OK && asyncParams) {
             // Return as we have a pending async result...!
@@ -125,7 +127,7 @@ ucHandleIosResult(UCError result,
                }
 
                if (!settings[i].data) {
-                  result = UCError::InvalidBuffer;
+                  result = UCError::InvalidParam;
                }
 
                if (settings[i].error == UCError::OK) {
@@ -268,14 +270,14 @@ UCReadSysConfigAsync(IOSHandle handle,
    auto result = UCError::OK;
 
    if (!settings) {
-      result = UCError::InvalidBuffer;
+      result = UCError::InvalidParam;
       goto fail;
    }
 
    auto msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCReadSysConfigRequest));
    auto msgBuf = internal::ucAllocateMessage(msgBufSize);
    if (!msgBuf) {
-      result = UCError::OutOfMemory;
+      result = UCError::NoIPCBuffers;
       goto fail;
    }
 
@@ -287,7 +289,7 @@ UCReadSysConfigAsync(IOSHandle handle,
    auto vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
    auto vecBuf = internal::ucAllocateMessage(vecBufSize);
    if (!vecBuf) {
-      result = UCError::OutOfMemory;
+      result = UCError::NoIPCBuffers;
       goto fail;
    }
 
@@ -302,7 +304,7 @@ UCReadSysConfigAsync(IOSHandle handle,
       if (size > 0) {
          vecs[1 + i].vaddr = cpu::translate(internal::ucAllocateMessage(size));
          if (!vecs[1 + i].vaddr) {
-            result = UCError::OutOfMemory;
+            result = UCError::NoIPCBuffers;
             goto fail;
          }
       } else {
@@ -384,14 +386,14 @@ UCWriteSysConfigAsync(IOSHandle handle,
    auto result = UCError::OK;
 
    if (!settings) {
-      result = UCError::InvalidBuffer;
+      result = UCError::InvalidParam;
       goto fail;
    }
 
    auto msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCWriteSysConfigRequest));
    auto msgBuf = internal::ucAllocateMessage(msgBufSize);
    if (!msgBuf) {
-      result = UCError::OutOfMemory;
+      result = UCError::NoIPCBuffers;
       goto fail;
    }
 
@@ -403,7 +405,7 @@ UCWriteSysConfigAsync(IOSHandle handle,
    auto vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
    auto vecBuf = internal::ucAllocateMessage(vecBufSize);
    if (!vecBuf) {
-      result = UCError::OutOfMemory;
+      result = UCError::NoIPCBuffers;
       goto fail;
    }
 
@@ -418,7 +420,7 @@ UCWriteSysConfigAsync(IOSHandle handle,
       if (size > 0) {
          vecs[1 + i].vaddr = cpu::translate(internal::ucAllocateMessage(size));
          if (!vecs[1 + i].vaddr) {
-            result = UCError::OutOfMemory;
+            result = UCError::NoIPCBuffers;
             goto fail;
          }
       } else {

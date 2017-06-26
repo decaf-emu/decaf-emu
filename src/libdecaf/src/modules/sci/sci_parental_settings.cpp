@@ -75,21 +75,21 @@ SCIInitParentalSettings(SCIParentalSettings *data)
    std::memset(data, 0, sizeof(SCIParentalSettings));
 
    UCSysConfig settings[] = {
-      { "parent",                      0x777, UCDataType::Group,  UCError::OK, 0, nullptr },
-      { "parent.version",              0x777, UCDataType::Uint16, UCError::OK, sizeof(data->version), &data->version },
-      { "parent.enable",               0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->enable), &data->enable },
-      { "parent.pin_code",             0x777, UCDataType::String, UCError::OK, sizeof(data->pin_code), &data->pin_code },
-      { "parent.sec_question",         0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->sec_question), &data->sec_question },
-      { "parent.sec_answer",           0x777, UCDataType::String, UCError::OK, sizeof(data->sec_answer), &data->sec_answer },
-      { "parent.custom_sec_question",  0x777, UCDataType::String, UCError::OK, sizeof(data->custom_sec_question), &data->custom_sec_question },
-      { "parent.email_address",        0x777, UCDataType::String, UCError::OK, sizeof(data->email_address), &data->email_address },
-      { "parent.permit_delete_all",    0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->permit_delete_all), &data->permit_delete_all },
-      { "parent.rating_organization",  0x777, UCDataType::Uint32, UCError::OK, sizeof(data->rating_organization), &data->rating_organization },
+      { "parent",                      0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
+      { "parent.version",              0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version), &data->version },
+      { "parent.enable",               0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->enable), &data->enable },
+      { "parent.pin_code",             0x777, UCDataType::String,          UCError::OK, sizeof(data->pin_code), &data->pin_code },
+      { "parent.sec_question",         0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->sec_question), &data->sec_question },
+      { "parent.sec_answer",           0x777, UCDataType::String,          UCError::OK, sizeof(data->sec_answer), &data->sec_answer },
+      { "parent.custom_sec_question",  0x777, UCDataType::String,          UCError::OK, sizeof(data->custom_sec_question), &data->custom_sec_question },
+      { "parent.email_address",        0x777, UCDataType::String,          UCError::OK, sizeof(data->email_address), &data->email_address },
+      { "parent.permit_delete_all",    0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->permit_delete_all), &data->permit_delete_all },
+      { "parent.rating_organization",  0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->rating_organization), &data->rating_organization },
    };
 
    result = coreinit::UCReadSysConfig(handle, COUNT_OF(settings), settings);
    if (result != UCError::OK) {
-      if (result != UCError::UnkError9) {
+      if (result != UCError::KeyNotFound) {
          coreinit::UCDeleteSysConfig(handle, 1, settings);
 
          data->version = 10;

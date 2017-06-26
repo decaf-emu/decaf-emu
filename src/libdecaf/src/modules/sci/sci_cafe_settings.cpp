@@ -80,20 +80,20 @@ SCIInitCafeSettings(SCICafeSettings *data)
    std::memset(data, 0, sizeof(SCICafeSettings));
 
    UCSysConfig settings[] = {
-      { "cafe",                  0x777, UCDataType::Group,  UCError::OK, 0, nullptr },
-      { "cafe.version",          0x777, UCDataType::Uint16, UCError::OK, sizeof(data->version), &data->version },
-      { "cafe.language",         0x777, UCDataType::Uint32, UCError::OK, sizeof(data->language), &data->language },
-      { "cafe.cntry_reg",        0x777, UCDataType::Uint32, UCError::OK, sizeof(data->cntry_reg), &data->cntry_reg },
-      { "cafe.eula_agree",       0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->eula_agree), &data->eula_agree },
-      { "cafe.eula_version",     0x777, UCDataType::Uint32, UCError::OK, sizeof(data->eula_version), &data->eula_version },
-      { "cafe.initial_launch",   0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->initial_launch), &data->initial_launch },
-      { "cafe.eco",              0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->eco), &data->eco },
-      { "cafe.fast_boot",        0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->fast_boot), &data->fast_boot },
+      { "cafe",                  0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
+      { "cafe.version",          0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version), &data->version },
+      { "cafe.language",         0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->language), &data->language },
+      { "cafe.cntry_reg",        0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->cntry_reg), &data->cntry_reg },
+      { "cafe.eula_agree",       0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->eula_agree), &data->eula_agree },
+      { "cafe.eula_version",     0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->eula_version), &data->eula_version },
+      { "cafe.initial_launch",   0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->initial_launch), &data->initial_launch },
+      { "cafe.eco",              0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->eco), &data->eco },
+      { "cafe.fast_boot",        0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->fast_boot), &data->fast_boot },
    };
 
    result = coreinit::UCReadSysConfig(handle, COUNT_OF(settings), settings);
    if (result != UCError::OK) {
-      if (result != UCError::UnkError9) {
+      if (result != UCError::KeyNotFound) {
          coreinit::UCDeleteSysConfig(handle, 1, settings);
 
          data->version = 5;

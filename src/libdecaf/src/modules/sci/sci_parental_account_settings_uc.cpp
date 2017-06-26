@@ -105,21 +105,21 @@ SCIInitParentalAccountSettingsUC(SCIParentalAccountSettingsUC *data,
    std::memset(data, 0, sizeof(SCIParentalAccountSettingsUC));
 
    UCSysConfig settings[] = {
-      { {}, 0x777, UCDataType::Group,  UCError::OK, 0, nullptr },
-      { {}, 0x777, UCDataType::Uint16, UCError::OK, sizeof(data->version), &data->version },
-      { {}, 0x777, UCDataType::Uint32, UCError::OK, sizeof(data->game_rating), &data->game_rating },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->eshop_purchase), &data->eshop_purchase },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->friend_reg), &data->friend_reg },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->acct_modify), &data->acct_modify },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->data_manage), &data->data_manage },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->int_setting), &data->int_setting },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->country_setting), &data->country_setting },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->sys_init), &data->sys_init },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->int_browser), &data->int_browser },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->int_movie), &data->int_movie },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->net_communication_on_game), &data->net_communication_on_game },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->network_launcher), &data->network_launcher },
-      { {}, 0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->entertainment_launcher), &data->entertainment_launcher },
+      { {}, 0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
+      { {}, 0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version), &data->version },
+      { {}, 0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->game_rating), &data->game_rating },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->eshop_purchase), &data->eshop_purchase },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->friend_reg), &data->friend_reg },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->acct_modify), &data->acct_modify },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->data_manage), &data->data_manage },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->int_setting), &data->int_setting },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->country_setting), &data->country_setting },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->sys_init), &data->sys_init },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->int_browser), &data->int_browser },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->int_movie), &data->int_movie },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->net_communication_on_game), &data->net_communication_on_game },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->network_launcher), &data->network_launcher },
+      { {}, 0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->entertainment_launcher), &data->entertainment_launcher },
    };
 
    snprintf(settings[0].name, sizeof(settings[0].name), "p_acct%d", account);
@@ -140,7 +140,7 @@ SCIInitParentalAccountSettingsUC(SCIParentalAccountSettingsUC *data,
 
    result = coreinit::UCReadSysConfig(handle, COUNT_OF(settings), settings);
    if (result != UCError::OK) {
-      if (result != UCError::UnkError9) {
+      if (result != UCError::KeyNotFound) {
          coreinit::UCDeleteSysConfig(handle, 1, settings);
 
          data->version = 10;

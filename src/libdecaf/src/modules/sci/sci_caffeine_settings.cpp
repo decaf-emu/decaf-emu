@@ -85,21 +85,21 @@ SCIInitCaffeineSettings(SCICaffeineSettings *data)
    std::memset(data, 0, sizeof(SCICaffeineSettings));
 
    UCSysConfig settings[] = {
-      { "caffeine",                    0x777, UCDataType::Group,  UCError::OK, 0, nullptr },
-      { "caffeine.version",            0x777, UCDataType::Uint16, UCError::OK, sizeof(data->version), &data->version },
-      { "caffeine.enable",             0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->enable), &data->enable },
-      { "caffeine.ad_enable",          0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->ad_enable), &data->ad_enable },
-      { "caffeine.push_enable",        0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->push_enable), &data->push_enable },
-      { "caffeine.push_time_slot",     0x777, UCDataType::Uint32, UCError::OK, sizeof(data->push_time_slot), &data->push_time_slot },
-      { "caffeine.push_interval",      0x777, UCDataType::Uint16, UCError::OK, sizeof(data->push_interval), &data->push_interval },
-      { "caffeine.drcled_enable",      0x777, UCDataType::Uint8,  UCError::OK, sizeof(data->drcled_enable), &data->drcled_enable },
-      { "caffeine.push_capabilty",     0x777, UCDataType::Uint16, UCError::OK, sizeof(data->push_capabilty), &data->push_capabilty },
-      { "caffeine.invisible_titles",   0x777, UCDataType::Uint32, UCError::OK, sizeof(data->invisible_titles), &data->invisible_titles },
+      { "caffeine",                    0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
+      { "caffeine.version",            0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version), &data->version },
+      { "caffeine.enable",             0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->enable), &data->enable },
+      { "caffeine.ad_enable",          0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->ad_enable), &data->ad_enable },
+      { "caffeine.push_enable",        0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->push_enable), &data->push_enable },
+      { "caffeine.push_time_slot",     0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->push_time_slot), &data->push_time_slot },
+      { "caffeine.push_interval",      0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_interval), &data->push_interval },
+      { "caffeine.drcled_enable",      0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->drcled_enable), &data->drcled_enable },
+      { "caffeine.push_capabilty",     0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_capabilty), &data->push_capabilty },
+      { "caffeine.invisible_titles",   0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->invisible_titles), &data->invisible_titles },
    };
 
    result = coreinit::UCReadSysConfig(handle, 10, settings);
    if (result != UCError::OK) {
-      if (result != UCError::UnkError9) {
+      if (result != UCError::KeyNotFound) {
          coreinit::UCDeleteSysConfig(handle, 1, settings);
 
          data->version = 3;
