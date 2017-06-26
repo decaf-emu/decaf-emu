@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "cpu.h"
 #include "cpu_breakpoints.h"
 #include "cpu_internal.h"
