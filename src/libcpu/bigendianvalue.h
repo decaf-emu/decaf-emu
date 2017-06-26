@@ -1,8 +1,15 @@
 #pragma once
+#include "address.h"
 #include <common/byte_swap.h>
 
 namespace cpu
 {
+
+template<typename ValueType, typename AddressType>
+class Pointer;
+
+template<typename Value>
+using VirtualPointer = Pointer<Value, VirtualAddress>;
 
 template<typename Type>
 class BigEndianValue
@@ -297,6 +304,20 @@ public:
    auto operator *() const -> decltype(std::declval<const K>().operator *())
    {
       return value().operator ->();
+   }
+
+   VirtualPointer<Type> operator &();
+
+   template<typename K = value_type>
+   auto getAddress() -> decltype(std::declval<const K>().getAddress()) const
+   {
+      return value().getAddress();
+   }
+
+   template<typename K = value_type>
+   auto getRawPointer() -> decltype(std::declval<const K>().getRawPointer()) const
+   {
+      return value().getRawPointer();
    }
 
 private:

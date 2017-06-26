@@ -103,6 +103,20 @@ translate(Type *pointer)
    }
 }
 
+template<typename Type>
+inline PhysicalAddress
+translatePhysical(Type *pointer)
+{
+   if (!pointer) {
+      return PhysicalAddress { 0u };
+   } else {
+      auto addr = reinterpret_cast<uintptr_t>(pointer);
+      decaf_check(addr >= internal::BasePhysicalAddress);
+      decaf_check(addr <= internal::BasePhysicalAddress + 0x100000000ull);
+      return PhysicalAddress { static_cast<uint32_t>(addr - internal::BasePhysicalAddress) };
+   }
+}
+
 inline uintptr_t
 getBaseVirtualAddress()
 {
