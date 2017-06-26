@@ -168,7 +168,7 @@ IM_GetParameters(IMParameters *parameters)
                             &parameters->unknown0x00,
                             nullptr,
                             nullptr);
-   if (result != IOSError::OK) {
+   if (result != IMError::OK) {
       goto out;
    }
 
@@ -178,7 +178,7 @@ IM_GetParameters(IMParameters *parameters)
                             &parameters->dimEnabled,
                             nullptr,
                             nullptr);
-   if (result != IOSError::OK) {
+   if (result != IMError::OK) {
       goto out;
    }
 
@@ -188,7 +188,7 @@ IM_GetParameters(IMParameters *parameters)
                             &parameters->dimPeriod,
                             nullptr,
                             nullptr);
-   if (result != IOSError::OK) {
+   if (result != IMError::OK) {
       goto out;
    }
 
@@ -198,7 +198,7 @@ IM_GetParameters(IMParameters *parameters)
                             &parameters->apdEnabled,
                             nullptr,
                             nullptr);
-   if (result != IOSError::OK) {
+   if (result != IMError::OK) {
       goto out;
    }
 
@@ -208,7 +208,7 @@ IM_GetParameters(IMParameters *parameters)
                             &parameters->apdPeriod,
                             nullptr,
                             nullptr);
-   if (result != IOSError::OK) {
+   if (result != IMError::OK) {
       goto out;
    }
 
