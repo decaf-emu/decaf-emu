@@ -122,11 +122,11 @@ SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
 {
    auto regionIdx = 1u;
 
-   if (region == coreinit::MCPRegion::JAP) {
+   if (region == coreinit::MCPRegion::Japan) {
       regionIdx = 0u;
    } else if (region == coreinit::MCPRegion::USA) {
       regionIdx = 1u;
-   } else if (region == coreinit::MCPRegion::EUR) {
+   } else if (region == coreinit::MCPRegion::Europe) {
       regionIdx = 2u;
    } else {
       decaf_abort(fmt::format("Unknown region {}", region));
