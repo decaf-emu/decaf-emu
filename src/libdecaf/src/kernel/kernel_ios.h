@@ -10,7 +10,6 @@ namespace kernel
 {
 
 struct IPCBuffer;
-class IOSDevice;
 
 /**
  * \defgroup kernel_ios IOS
@@ -42,9 +41,6 @@ CHECK_SIZE(IOSVec, 0x0C);
 
 void
 iosDispatchIpcRequest(IPCBuffer *buffer);
-
-IOSDevice *
-iosGetDevice(IOSHandle handle);
 
 void
 iosInitDevices();

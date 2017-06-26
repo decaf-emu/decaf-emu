@@ -35,6 +35,9 @@ iosOpen(const char *name,
 static IOSError
 iosClose(IOSHandle handle);
 
+static IOSDevice *
+iosGetDevice(IOSHandle handle);
+
 
 /**
  * Handles an incoming IPC request.
