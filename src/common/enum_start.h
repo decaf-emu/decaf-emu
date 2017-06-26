@@ -18,11 +18,12 @@
 #endif
 
 #ifndef FLAGS_END
-#define FLAGS_END(E) }; }; using E = E##_::Value; \
-   inline E operator | (E lhs, E rhs) { return static_cast<E>(static_cast<std::underlying_type_t<E>>(lhs) | static_cast<std::underlying_type_t<E>>(rhs)); } \
-   inline E operator & (E lhs, E rhs) { return static_cast<E>(static_cast<std::underlying_type_t<E>>(lhs) & static_cast<std::underlying_type_t<E>>(rhs)); } \
-   inline E operator ^ (E lhs, E rhs) { return static_cast<E>(static_cast<std::underlying_type_t<E>>(lhs) ^ static_cast<std::underlying_type_t<E>>(rhs)); } \
-   inline E operator ~ (E lhs) { return static_cast<E>(~static_cast<std::underlying_type_t<E>>(lhs)); }
+#define FLAGS_END(E) }; \
+   inline Value operator | (Value lhs, Value rhs) { return static_cast<Value>(static_cast<std::underlying_type_t<Value>>(lhs) | static_cast<std::underlying_type_t<Value>>(rhs)); } \
+   inline Value operator & (Value lhs, Value rhs) { return static_cast<Value>(static_cast<std::underlying_type_t<Value>>(lhs) & static_cast<std::underlying_type_t<Value>>(rhs)); } \
+   inline Value operator ^ (Value lhs, Value rhs) { return static_cast<Value>(static_cast<std::underlying_type_t<Value>>(lhs) ^ static_cast<std::underlying_type_t<Value>>(rhs)); } \
+   inline Value operator ~ (Value lhs) { return static_cast<Value>(~static_cast<std::underlying_type_t<Value>>(lhs)); } \
+   }; using E = E##_::Value;
 #endif
 
 #ifndef FLAGS_VALUE
