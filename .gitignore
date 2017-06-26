@@ -1,6 +1,7 @@
 build/
 dump/
 mlc/
+slc/
 docs/
 .vs/
 *.txt
