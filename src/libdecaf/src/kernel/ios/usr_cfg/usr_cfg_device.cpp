@@ -340,7 +340,7 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
       fh->close();
 
       // Parse XML
-      auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
+      auto parseResult = doc.load_buffer(buffer.data(), buffer.size());
       if (!parseResult) {
          setting.error = UCError::MalformedXML;
          continue;
@@ -364,8 +364,6 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
       }
 
       auto nodeLength = node.attribute("length").as_uint();
-      auto is = std::istringstream { node.value() };
-
       if (setting.dataType != UCDataType::Complex && !setting.data) {
          setting.error = UCError::InvalidParam;
          continue;
@@ -522,7 +520,7 @@ UserConfigDevice::writeSysConfig(UCWriteSysConfigRequest *request)
          fh->read(buffer.data(), size, 1);
          fh->close();
 
-         auto parseResult = doc.load_buffer_inplace(buffer.data(), buffer.size());
+         auto parseResult = doc.load_buffer(buffer.data(), buffer.size());
          if (!parseResult) {
             setting.error = UCError::MalformedXML;
             continue;
@@ -665,7 +663,7 @@ UserConfigDevice::writeSysConfig(UCWriteSysConfigRequest *request)
       }
 
       std::stringstream ss;
-      doc.save(ss, "  ");
+      doc.save(ss, "  ", 1, pugi::encoding_utf8);
 
       auto xmlStr = ss.str();
       auto fh = result.value();
