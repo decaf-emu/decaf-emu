@@ -204,6 +204,35 @@ getDataTypeByName(const char *name)
    }
 }
 
+
+static uint32_t
+getAccessFromString(const char *str)
+{
+   auto access = 0u;
+
+   if (!str || strlen(str) != 3) {
+      return 0;
+   }
+
+   for (auto i = 0u; i < 3; ++i) {
+      auto val = str[i] - '0';
+      if (val < 0 || val > 7) {
+         return 0;
+      }
+
+      access |= val << (4 * i);
+   }
+
+   return access;
+}
+
+static std::string
+getAccessString(uint32_t access)
+{
+   return fmt::format("{}{}{}", (access >> 8) & 0xf, (access >> 4) & 0xf, access & 0xf);
+}
+
+
 IOSError
 UserConfigDevice::open(IOSOpenMode mode)
 {
@@ -340,6 +369,11 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
       if (setting.dataType != UCDataType::Complex && !setting.data) {
          setting.error = UCError::InvalidParam;
          continue;
+      }
+
+      auto nodeAccess = node.attribute("access");
+      if (nodeAccess) {
+         setting.access = getAccessFromString(nodeAccess.value());
       }
 
       switch (setting.dataType) {
@@ -517,7 +551,7 @@ UserConfigDevice::writeSysConfig(UCWriteSysConfigRequest *request)
          }
 
          if (setting.access) {
-            node.attribute("access").set_value(setting.access);
+            node.attribute("access").set_value(getAccessString(setting.access).c_str());
          }
       } else {
          auto nodePath = key.path;
@@ -562,7 +596,7 @@ UserConfigDevice::writeSysConfig(UCWriteSysConfigRequest *request)
          }
 
          if (setting.access) {
-            node.attribute("access").set_value(setting.access);
+            node.attribute("access").set_value(getAccessString(setting.access).c_str());
          }
 
          switch (setting.dataType) {
