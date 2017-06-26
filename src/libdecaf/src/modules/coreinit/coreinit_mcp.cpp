@@ -17,7 +17,6 @@ using kernel::ios::mcp::MCPResponseGetOwnTitleInfo;
 using kernel::ios::mcp::MCPRequestGetOwnTitleInfo;
 using kernel::ios::mcp::MCPRequestSearchTitleList;
 using kernel::ios::mcp::MCPTitleListSearchFlags;
-using kernel::ios::mcp::operator |; // For MCPTitleListSearchFlags operator | (ewww)
 
 struct MCPData
 {
