@@ -379,7 +379,7 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
       switch (setting.dataType) {
       case UCDataType::UnsignedByte:
          if (setting.dataSize >= 1) {
-            *be_ptr<uint8_t> { setting.data } = static_cast<uint8_t>(node.text().as_uint());
+            *be_ptr<be_val<uint8_t>> { setting.data } = static_cast<uint8_t>(node.text().as_uint());
          } else {
             setting.error = UCError::InvalidParam;
             continue;
@@ -387,7 +387,7 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
          break;
       case UCDataType::UnsignedShort:
          if (setting.dataSize >= 2) {
-            *be_ptr<uint16_t> { setting.data } = static_cast<uint16_t>(node.text().as_uint());
+            *be_ptr<be_val<uint16_t>> { setting.data } = static_cast<uint16_t>(node.text().as_uint());
          } else {
             setting.error = UCError::InvalidParam;
             continue;
@@ -395,7 +395,7 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
          break;
       case UCDataType::UnsignedInt:
          if (setting.dataSize >= 4) {
-            *be_ptr<uint32_t> { setting.data } = static_cast<uint32_t>(node.text().as_uint());
+            *be_ptr<be_val<uint32_t>> { setting.data } = static_cast<uint32_t>(node.text().as_uint());
          } else {
             setting.error = UCError::InvalidParam;
             continue;
@@ -403,7 +403,7 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
          break;
       case UCDataType::SignedInt:
          if (setting.dataSize >= 4) {
-            *be_ptr<int32_t> { setting.data } = static_cast<int32_t>(node.text().as_int());
+            *be_ptr<be_val<int32_t>> { setting.data } = static_cast<int32_t>(node.text().as_int());
          } else {
             setting.error = UCError::InvalidParam;
             continue;
@@ -411,7 +411,7 @@ UserConfigDevice::readSysConfig(UCReadSysConfigRequest *request)
          break;
       case UCDataType::Float:
          if (setting.dataSize >= 4) {
-            *be_ptr<float> { setting.data } = node.text().as_float();
+            *be_ptr<be_val<float>> { setting.data } = node.text().as_float();
          } else {
             setting.error = UCError::InvalidParam;
             continue;
@@ -602,53 +602,53 @@ UserConfigDevice::writeSysConfig(UCWriteSysConfigRequest *request)
          switch (setting.dataType) {
          case UCDataType::UnsignedByte:
             if (setting.data) {
-               node.set_value(std::to_string(*be_ptr<uint8_t> { setting.data }).c_str());
+               node.text().set(*be_ptr<be_val<uint8_t>> { setting.data });
             } else {
-               node.set_value("0");
+               node.text().set(0);
             }
             break;
          case UCDataType::UnsignedShort:
             if (setting.data) {
-               node.set_value(std::to_string(*be_ptr<uint16_t> { setting.data }).c_str());
+               node.text().set(*be_ptr<be_val<uint16_t>> { setting.data });
             } else {
-               node.set_value("0");
+               node.text().set(0);
             }
             break;
          case UCDataType::UnsignedInt:
             if (setting.data) {
-               node.set_value(std::to_string(*be_ptr<uint32_t> { setting.data }).c_str());
+               node.text().set(*be_ptr<be_val<uint32_t>> { setting.data });
             } else {
-               node.set_value("0");
+               node.text().set(0);
             }
             break;
          case UCDataType::SignedInt:
             if (setting.data) {
-               node.set_value(std::to_string(*be_ptr<int32_t> { setting.data }).c_str());
+               node.text().set(*be_ptr<be_val<int32_t>> { setting.data });
             } else {
-               node.set_value("0");
+               node.text().set(0);
             }
             break;
          case UCDataType::Float:
             if (setting.data) {
-               node.set_value(std::to_string(*be_ptr<float> { setting.data }).c_str());
+               node.text().set(*be_ptr<be_val<float>> { setting.data });
             } else {
-               node.set_value("0.0");
+               node.text().set(0.0f);
             }
             break;
          case UCDataType::String:
             if (setting.data) {
                // TODO: Check text format, maybe utf8/utf16 etc?
-               node.set_value(be_ptr<char> { setting.data }.get());
+               node.text().set(be_ptr<char> { setting.data }.get());
             } else {
-               node.set_value("");
+               node.text().set("");
             }
             break;
          case UCDataType::HexBinary:
             if (setting.data) {
-               node.set_value(to_string(be_ptr<uint8_t> { setting.data }, setting.dataSize).c_str());
+               node.text().set(to_string(be_ptr<uint8_t> { setting.data }, setting.dataSize).c_str());
             } else {
                std::string value(static_cast<size_t>(setting.dataSize * 2), '0');
-               node.set_value(value.c_str());
+               node.text().set(value.c_str());
             }
             break;
          default:
