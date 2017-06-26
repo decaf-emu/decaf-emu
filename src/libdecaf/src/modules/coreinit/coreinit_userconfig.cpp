@@ -117,7 +117,7 @@ ucHandleIosResult(UCError result,
          }
 
          if (command == UCCommand::ReadSysConfig) {
-            auto request = virt_ptr<UCReadSysConfigRequest> { vecs[0].vaddr };
+            auto request = virt_ptr<UCReadSysConfigRequest> { vecs[0].vaddr.value() };
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -131,7 +131,7 @@ ucHandleIosResult(UCError result,
                }
 
                if (settings[i].error == UCError::OK) {
-                  auto src = virt_ptr<void> { vecs[i + 1].vaddr };
+                  auto src = virt_ptr<void> { vecs[i + 1].vaddr.value() };
 
                   switch (settings[i].dataSize) {
                   case 0:
@@ -152,7 +152,7 @@ ucHandleIosResult(UCError result,
                }
             }
          } else if (command == UCCommand::WriteSysConfig) {
-            auto request = virt_ptr<UCWriteSysConfigRequest> { vecs[0].vaddr };
+            auto request = virt_ptr<UCWriteSysConfigRequest> { vecs[0].vaddr.value() };
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -173,7 +173,7 @@ ucHandleIosResult(UCError result,
 
    if (vecs) {
       for (auto i = 0u; i < count + 1; ++i) {
-         internal::ucFreeMessage(virt_ptr<void> { vecs[i].vaddr }.getRawPointer());
+         internal::ucFreeMessage(virt_ptr<void> { vecs[i].vaddr.value() }.getRawPointer());
       }
 
       internal::ucFreeMessage(vecs);
@@ -270,32 +270,36 @@ UCReadSysConfigAsync(IOSHandle handle,
                      UCAsyncParams *asyncParams)
 {
    auto result = UCError::OK;
+   uint32_t msgBufSize = 0, vecBufSize = 0;
+   void *msgBuf = nullptr, *vecBuf = nullptr;
+   UCReadSysConfigRequest *request = nullptr;
+   IOSVec *vecs = nullptr;
 
    if (!settings) {
       result = UCError::InvalidParam;
       goto fail;
    }
 
-   auto msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCReadSysConfigRequest));
-   auto msgBuf = internal::ucAllocateMessage(msgBufSize);
+   msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCReadSysConfigRequest));
+   msgBuf = internal::ucAllocateMessage(msgBufSize);
    if (!msgBuf) {
       result = UCError::NoIPCBuffers;
       goto fail;
    }
 
-   auto request = reinterpret_cast<UCReadSysConfigRequest *>(msgBuf);
+   request = reinterpret_cast<UCReadSysConfigRequest *>(msgBuf);
    request->count = count;
    request->size = static_cast<uint32_t>(sizeof(UCSysConfig));
    std::memcpy(request->settings, settings, sizeof(UCSysConfig) * count);
 
-   auto vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
-   auto vecBuf = internal::ucAllocateMessage(vecBufSize);
+   vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
+   vecBuf = internal::ucAllocateMessage(vecBufSize);
    if (!vecBuf) {
       result = UCError::NoIPCBuffers;
       goto fail;
    }
 
-   auto vecs = reinterpret_cast<IOSVec *>(vecBuf);
+   vecs = reinterpret_cast<IOSVec *>(vecBuf);
    vecs[0].vaddr = cpu::translate(msgBuf);
    vecs[0].len = msgBufSize;
 
@@ -348,7 +352,7 @@ fail:
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
          if (vecs[1 + i].vaddr) {
-            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
+            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr.value() }.getRawPointer());
          }
       }
 
@@ -386,32 +390,36 @@ UCWriteSysConfigAsync(IOSHandle handle,
                       UCAsyncParams *asyncParams)
 {
    auto result = UCError::OK;
+   uint32_t msgBufSize = 0, vecBufSize = 0;
+   void *vecBuf = nullptr, *msgBuf = nullptr;
+   UCWriteSysConfigRequest *request = nullptr;
+   IOSVec *vecs = nullptr;
 
    if (!settings) {
       result = UCError::InvalidParam;
       goto fail;
    }
 
-   auto msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCWriteSysConfigRequest));
-   auto msgBuf = internal::ucAllocateMessage(msgBufSize);
+   msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCWriteSysConfigRequest));
+   msgBuf = internal::ucAllocateMessage(msgBufSize);
    if (!msgBuf) {
       result = UCError::NoIPCBuffers;
       goto fail;
    }
 
-   auto request = reinterpret_cast<UCWriteSysConfigRequest *>(msgBuf);
+   request = reinterpret_cast<UCWriteSysConfigRequest *>(msgBuf);
    request->count = count;
    request->size = static_cast<uint32_t>(sizeof(UCSysConfig));
    std::memcpy(request->settings, settings, count * sizeof(UCSysConfig));
 
-   auto vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
-   auto vecBuf = internal::ucAllocateMessage(vecBufSize);
+   vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
+   vecBuf = internal::ucAllocateMessage(vecBufSize);
    if (!vecBuf) {
       result = UCError::NoIPCBuffers;
       goto fail;
    }
 
-   auto vecs = reinterpret_cast<IOSVec *>(vecBuf);
+   vecs = reinterpret_cast<IOSVec *>(vecBuf);
    vecs[0].vaddr = cpu::translate(msgBuf);
    vecs[0].len = msgBufSize;
 
@@ -464,7 +472,7 @@ fail:
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
          if (vecs[1 + i].vaddr) {
-            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
+            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr.value() }.getRawPointer());
          }
       }
 
