@@ -61,11 +61,14 @@ IMDevice::ioctlv(uint32_t cmd,
 
    switch (static_cast<IMCommand>(cmd)) {
    case IMCommand::SetNvParameter:
+   {
       decaf_check(vecIn == 0);
       decaf_check(vecOut == 1);
       decaf_check(vec[0].len == sizeof(IMSetNvParameterRequest));
-      result = setNvParameter(be_ptr<IMSetNvParameterRequest> { vec[0].vaddr });
+      auto request = cpu::PhysicalPointer<IMSetNvParameterRequest> { vec[0].paddr };
+      result = setNvParameter(request.getRawPointer());
       break;
+   }
    case IMCommand::SetParameter:
    case IMCommand::GetParameter:
    case IMCommand::GetHomeButtonParams:

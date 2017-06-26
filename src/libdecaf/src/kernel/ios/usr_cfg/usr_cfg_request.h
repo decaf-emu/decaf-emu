@@ -27,23 +27,23 @@ struct UCReadSysConfigRequest
 {
    be_val<uint32_t> count;
    be_val<uint32_t> size;
-   UCSysConfig settings[0];
+   UCSysConfig settings[1];
 };
 CHECK_OFFSET(UCReadSysConfigRequest, 0x0, count);
 CHECK_OFFSET(UCReadSysConfigRequest, 0x4, size);
 CHECK_OFFSET(UCReadSysConfigRequest, 0x8, settings);
-CHECK_SIZE(UCReadSysConfigRequest, 0x8);
+CHECK_SIZE(UCReadSysConfigRequest, 0x5C);
 
 struct UCWriteSysConfigRequest
 {
    be_val<uint32_t> count;
    be_val<uint32_t> size;
-   UCSysConfig settings[0];
+   UCSysConfig settings[1];
 };
 CHECK_OFFSET(UCWriteSysConfigRequest, 0x0, count);
 CHECK_OFFSET(UCWriteSysConfigRequest, 0x4, size);
 CHECK_OFFSET(UCWriteSysConfigRequest, 0x8, settings);
-CHECK_SIZE(UCWriteSysConfigRequest, 0x8);
+CHECK_SIZE(UCWriteSysConfigRequest, 0x5C);
 
 struct UCRequest
 {

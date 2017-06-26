@@ -113,11 +113,11 @@ MCP_GetSysProdSettings(IOSHandle handle,
       return MCPError::AllocError;
    }
 
-   auto outVec = reinterpret_cast<IOSVec *>(message);
-   outVec->paddr = settings;
-   outVec->len = sizeof(MCPSysProdSettings);
+   auto outVecs = reinterpret_cast<IOSVec *>(message);
+   outVecs[0].vaddr = cpu::translate(settings);
+   outVecs[0].len = static_cast<uint32_t>(sizeof(MCPSysProdSettings));
 
-   auto iosError = IOS_Ioctlv(handle, MCPCommand::GetSysProdSettings, 0, 1, outVec);
+   auto iosError = IOS_Ioctlv(handle, MCPCommand::GetSysProdSettings, 0, 1, outVecs);
    auto mcpError = internal::mcpDecodeIosErrorToMcpError(iosError);
 
    internal::mcpFreeMessage(message);

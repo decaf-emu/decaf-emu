@@ -443,14 +443,14 @@ fsaShimPrepareRequestMount(FSAShimBuffer *shim,
    shim->ioctlvVecIn = 2;
    shim->ioctlvVecOut = 1;
 
-   shim->ioctlvVec[0].paddr = &shim->request;
-   shim->ioctlvVec[0].len = sizeof(FSARequest);
+   shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
+   shim->ioctlvVec[0].len = static_cast<uint32_t>(sizeof(FSARequest));
 
-   shim->ioctlvVec[1].paddr = unkBuf;
+   shim->ioctlvVec[1].vaddr = cpu::translate(unkBuf);
    shim->ioctlvVec[1].len = unkBufLen;
 
-   shim->ioctlvVec[2].paddr = &shim->response;
-   shim->ioctlvVec[2].len = sizeof(FSAResponse);
+   shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
+   shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    return FSAStatus::OK;
 }
@@ -575,14 +575,14 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
    shim->ioctlvVecIn = 1;
    shim->ioctlvVecOut = 2;
 
-   shim->ioctlvVec[0].paddr = &shim->request;
-   shim->ioctlvVec[0].len = sizeof(FSARequest);
+   shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
+   shim->ioctlvVec[0].len = static_cast<uint32_t>(sizeof(FSARequest));
 
-   shim->ioctlvVec[1].paddr = buffer;
+   shim->ioctlvVec[1].vaddr = cpu::translate(buffer);
    shim->ioctlvVec[1].len = size * count;
 
-   shim->ioctlvVec[2].paddr = &shim->response;
-   shim->ioctlvVec[2].len = sizeof(FSAResponse);
+   shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
+   shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto request = &shim->request.readFile;
    request->buffer = buffer;
@@ -803,14 +803,14 @@ fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
    shim->ioctlvVecIn = 2;
    shim->ioctlvVecOut = 1;
 
-   shim->ioctlvVec[0].paddr = &shim->request;
-   shim->ioctlvVec[0].len = sizeof(FSARequest);
+   shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
+   shim->ioctlvVec[0].len = static_cast<uint32_t>(sizeof(FSARequest));
 
-   shim->ioctlvVec[1].paddr = const_cast<uint8_t *>(buffer); // thug life
+   shim->ioctlvVec[1].vaddr = cpu::translate(buffer);
    shim->ioctlvVec[1].len = size * count;
 
-   shim->ioctlvVec[2].paddr = &shim->response;
-   shim->ioctlvVec[2].len = sizeof(FSAResponse);
+   shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
+   shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto request = &shim->request.writeFile;
    request->buffer = buffer;

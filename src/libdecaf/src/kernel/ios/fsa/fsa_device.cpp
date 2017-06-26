@@ -132,7 +132,7 @@ FSADevice::ioctlv(uint32_t cmd,
                   size_t vecOut,
                   IOSVec *vec)
 {
-   auto request = be_ptr<FSARequest> { vec[0].vaddr };
+   auto request = cpu::PhysicalPointer<FSARequest> { vec[0].paddr };
    auto result = FSAStatus::OK;
    decaf_check(vec[0].len == sizeof(FSARequest));
 
@@ -145,18 +145,18 @@ FSADevice::ioctlv(uint32_t cmd,
    {
       decaf_check(vecIn == 1);
       decaf_check(vecOut == 2);
-      auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
+      auto buffer = cpu::PhysicalPointer<uint8_t> { vec[1].paddr };
       auto length = vec[1].len;
-      result = readFile(&request->readFile, buffer, length);
+      result = readFile(&request->readFile, buffer.getRawPointer(), length);
       break;
    }
    case FSACommand::WriteFile:
    {
       decaf_check(vecIn == 2);
       decaf_check(vecOut == 1);
-      auto buffer = be_ptr<uint8_t> { vec[1].vaddr };
+      auto buffer = cpu::PhysicalPointer<uint8_t> { vec[1].paddr };
       auto length = vec[1].len;
-      result = writeFile(&request->writeFile, buffer, length);
+      result = writeFile(&request->writeFile, buffer.getRawPointer(), length);
       break;
    }
    case FSACommand::Mount:

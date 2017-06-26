@@ -107,8 +107,8 @@ IM_GetHomeButtonParams(IOSHandle handle,
 {
    std::memset(request, 0, sizeof(IMRequest));
 
-   request->ioctlVecs[0].paddr = &request->getHomeButtomParamResponse;
-   request->ioctlVecs[0].len = 8;
+   request->ioctlVecs[0].vaddr = cpu::translate(&request->getHomeButtomParamResponse);
+   request->ioctlVecs[0].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::GetHomeButtonParams;
@@ -133,11 +133,11 @@ IM_GetParameter(IOSHandle handle,
    std::memset(request, 0, sizeof(IMRequest));
 
    request->getNvParameterRequest.parameter = parameter;
-   request->ioctlVecs[0].paddr = &request->getParameterRequest;
-   request->ioctlVecs[0].len = 8;
+   request->ioctlVecs[0].vaddr = cpu::translate(&request->getParameterRequest);
+   request->ioctlVecs[0].len = 8u;
 
-   request->ioctlVecs[1].paddr = &request->getParameterResponse;
-   request->ioctlVecs[1].len = 8;
+   request->ioctlVecs[1].vaddr = cpu::translate(&request->getParameterResponse);
+   request->ioctlVecs[1].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::GetParameter;
@@ -230,11 +230,11 @@ IM_GetNvParameter(IOSHandle handle,
    std::memset(request, 0, sizeof(IMRequest));
 
    request->getNvParameterRequest.parameter = parameter;
-   request->ioctlVecs[0].paddr = &request->getNvParameterRequest;
-   request->ioctlVecs[0].len = 8;
+   request->ioctlVecs[0].vaddr = cpu::translate(&request->getNvParameterRequest);
+   request->ioctlVecs[0].len = 8u;
 
-   request->ioctlVecs[1].paddr = &request->getNvParameterResponse;
-   request->ioctlVecs[1].len = 8;
+   request->ioctlVecs[1].vaddr = cpu::translate(&request->getNvParameterResponse);
+   request->ioctlVecs[1].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::GetNvParameter;
@@ -295,11 +295,11 @@ IM_GetTimerRemaining(IOSHandle handle,
    std::memset(request, 0, sizeof(IMRequest));
 
    request->getTimerRemainingRequest.timer = timer;
-   request->ioctlVecs[0].paddr = &request->getTimerRemainingRequest;
-   request->ioctlVecs[0].len = 8;
+   request->ioctlVecs[0].vaddr = cpu::translate(&request->getTimerRemainingRequest);
+   request->ioctlVecs[0].len = 8u;
 
-   request->ioctlVecs[1].paddr = &request->getTimerRemainingResponse;
-   request->ioctlVecs[1].len = sizeof(IMGetTimerRemainingResponse);
+   request->ioctlVecs[1].vaddr = cpu::translate(&request->getTimerRemainingResponse);
+   request->ioctlVecs[1].len = static_cast<uint32_t>(sizeof(IMGetTimerRemainingResponse));
 
    request->handle = handle;
    request->request = IMCommand::GetTimerRemaining;
@@ -343,8 +343,8 @@ IM_SetParameter(IOSHandle handle,
 
    request->setParameterRequest.parameter = parameter;
    request->setParameterRequest.value = value;
-   request->ioctlVecs[0].paddr = &request->setParameterRequest;
-   request->ioctlVecs[0].len = 8;
+   request->ioctlVecs[0].vaddr = cpu::translate(&request->setParameterRequest);
+   request->ioctlVecs[0].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::SetParameter;
@@ -367,8 +367,8 @@ IM_SetNvParameter(IOSHandle handle,
 
    request->setNvParameterRequest.parameter = parameter;
    request->setNvParameterRequest.value = value;
-   request->ioctlVecs[0].paddr = &request->setNvParameterRequest;
-   request->ioctlVecs[0].len = 8;
+   request->ioctlVecs[0].vaddr = cpu::translate(&request->setNvParameterRequest);
+   request->ioctlVecs[0].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::SetNvParameter;

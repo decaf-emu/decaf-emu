@@ -85,12 +85,14 @@ DebugOutDevice::ioctlv(uint32_t request,
            request, vecIn, vecOut, mem::untranslate(vec));
 
    for (auto i = 0u; i < vecIn; ++i) {
-      writeMemory(w, fmt::format("\nin[{}]", i), vec[i].vaddr, vec[i].len);
+      auto ptr = cpu::PhysicalPointer<void> { vec[i].paddr };
+      writeMemory(w, fmt::format("\nin[{}]", i), ptr.getRawPointer(), vec[i].len);
    }
 
    for (auto i = vecIn; i < vecIn + vecOut; ++i) {
-      w.write("\nout [ptr = {:08X} len = {}]:", mem::untranslate(vec[i].vaddr), vec[i].len);
-      std::memset(vec[i].vaddr, 0, vec[i].len);
+      auto ptr = cpu::PhysicalPointer<void> { vec[i].paddr };
+      w.write("\nout [ptr = {:08X} len = {}]:", vec[i].paddr.getAddress(), vec[i].len);
+      std::memset(ptr.getRawPointer(), 0, vec[i].len);
    }
 
    gLog->warn(w.str());

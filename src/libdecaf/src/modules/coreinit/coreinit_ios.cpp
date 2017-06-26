@@ -578,13 +578,13 @@ ipcPrepareOpenRequest(IPCDriver *ipcDriver,
       return IOSError::Max;
    }
 
-   std::memset(ipcBuffer->nameBuffer, 0, 0x20);
-   std::memcpy(ipcBuffer->nameBuffer, device, deviceLen);
+   ipcBuffer->nameBuffer.fill(0);
+   std::memcpy(&ipcBuffer->nameBuffer, device, deviceLen);
 
    ipcBuffer->args[0] = 0;
    ipcBuffer->args[1] = deviceLen + 1;
    ipcBuffer->args[2] = mode;
-   ipcBuffer->buffer1 = ipcBuffer->nameBuffer;
+   ipcBuffer->buffer1 = &ipcBuffer->nameBuffer[0];
    return IOSError::OK;
 }
 
@@ -640,12 +640,17 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
    ipcBuffer->buffer1 = reinterpret_cast<void *>(vec);
 
    for (auto i = 0u; i < vecIn + vecOut; ++i) {
-      if (!vec[i].paddr && vec[i].len) {
+      auto paddr = cpu::PhysicalAddress { };
+
+      if (!vec[i].vaddr && vec[i].len) {
          return IOSError::InvalidArg;
       }
 
-      vec[i].vaddr = vec[i].paddr;
-      vec[i].paddr = nullptr;
+      if (!cpu::virtualToPhysicalAddress(vec[i].vaddr, paddr)) {
+         return IOSError::InvalidArg;
+      }
+
+      vec[i].paddr = paddr;
    }
 
    return IOSError::OK;

@@ -115,7 +115,7 @@ ucHandleIosResult(UCError result,
          }
 
          if (command == UCCommand::ReadSysConfig) {
-            auto request = reinterpret_cast<UCReadSysConfigRequest *>(vecs[0].paddr.get());
+            auto request = virt_ptr<UCReadSysConfigRequest> { vecs[0].vaddr };
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -129,24 +129,26 @@ ucHandleIosResult(UCError result,
                }
 
                if (settings[i].error == UCError::OK) {
+                  auto src = virt_ptr<void> { vecs[i + 1].vaddr };
+
                   switch (settings[i].dataSize) {
                   case 1:
-                     *be_ptr<uint8_t> { settings[i].data } = *be_ptr<uint8_t> { vecs[i + 1].paddr };
+                     *be_ptr<uint8_t> { settings[i].data } = *virt_cast<uint8_t>(src);
                      break;
                   case 2:
-                     *be_ptr<uint16_t> { settings[i].data } = *be_ptr<uint16_t> { vecs[i + 1].paddr };
+                     *be_ptr<uint16_t> { settings[i].data } = *virt_cast<uint16_t>(src);
                      break;
                   case 4:
-                     *be_ptr<uint32_t> { settings[i].data } = *be_ptr<uint32_t> { vecs[i + 1].paddr };
+                     *be_ptr<uint32_t> { settings[i].data } = *virt_cast<uint32_t>(src);
                      break;
                   default:
                      std::memset(settings[i].data, 0, 4); // why???
-                     std::memcpy(settings[i].data, vecs[i + 1].paddr, settings[i].dataSize);
+                     std::memcpy(settings[i].data, src.getRawPointer(), settings[i].dataSize);
                   }
                }
             }
          } else if (command == UCCommand::WriteSysConfig) {
-            auto request = reinterpret_cast<UCWriteSysConfigRequest *>(vecs[0].paddr.get());
+            auto request = virt_ptr<UCWriteSysConfigRequest> { vecs[0].vaddr };
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -167,7 +169,7 @@ ucHandleIosResult(UCError result,
 
    if (vecs) {
       for (auto i = 0u; i < count + 1; ++i) {
-         internal::ucFreeMessage(vecs[i].paddr);
+         internal::ucFreeMessage(virt_ptr<void> { vecs[i].vaddr }.getRawPointer());
       }
 
       internal::ucFreeMessage(vecs);
@@ -270,7 +272,7 @@ UCReadSysConfigAsync(IOSHandle handle,
       goto fail;
    }
 
-   auto msgBufSize = (sizeof(UCSysConfig) * (count + 1)) + sizeof(UCReadSysConfigRequest);
+   auto msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCReadSysConfigRequest));
    auto msgBuf = internal::ucAllocateMessage(msgBufSize);
    if (!msgBuf) {
       result = UCError::OutOfMemory;
@@ -279,10 +281,10 @@ UCReadSysConfigAsync(IOSHandle handle,
 
    auto request = reinterpret_cast<UCReadSysConfigRequest *>(msgBuf);
    request->count = count;
-   request->size = sizeof(UCSysConfig);
+   request->size = static_cast<uint32_t>(sizeof(UCSysConfig));
    std::memcpy(request->settings, settings, sizeof(UCSysConfig) * count);
 
-   auto vecBufSize = sizeof(IOSVec) * (count + 1);
+   auto vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
    auto vecBuf = internal::ucAllocateMessage(vecBufSize);
    if (!vecBuf) {
       result = UCError::OutOfMemory;
@@ -290,7 +292,7 @@ UCReadSysConfigAsync(IOSHandle handle,
    }
 
    auto vecs = reinterpret_cast<IOSVec *>(vecBuf);
-   vecs[0].paddr = msgBuf;
+   vecs[0].vaddr = cpu::translate(msgBuf);
    vecs[0].len = msgBufSize;
 
    for (auto i = 0u; i < count; ++i) {
@@ -298,13 +300,13 @@ UCReadSysConfigAsync(IOSHandle handle,
       vecs[1 + i].len = size;
 
       if (size > 0) {
-         vecs[1 + i].paddr = internal::ucAllocateMessage(size);
-         if (!vecs[1 + i].paddr) {
+         vecs[1 + i].vaddr = cpu::translate(internal::ucAllocateMessage(size));
+         if (!vecs[1 + i].vaddr) {
             result = UCError::OutOfMemory;
             goto fail;
          }
       } else {
-         vecs[1 + i].paddr = nullptr;
+         vecs[1 + i].vaddr = 0u;
       }
    }
 
@@ -341,8 +343,8 @@ fail:
 
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
-         if (vecs[1 + i].paddr) {
-            internal::ucFreeMessage(vecs[1 + i].paddr);
+         if (vecs[1 + i].vaddr) {
+            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
          }
       }
 
@@ -386,7 +388,7 @@ UCWriteSysConfigAsync(IOSHandle handle,
       goto fail;
    }
 
-   auto msgBufSize = (sizeof(UCSysConfig) * (count + 1)) + sizeof(UCWriteSysConfigRequest);
+   auto msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCWriteSysConfigRequest));
    auto msgBuf = internal::ucAllocateMessage(msgBufSize);
    if (!msgBuf) {
       result = UCError::OutOfMemory;
@@ -395,10 +397,10 @@ UCWriteSysConfigAsync(IOSHandle handle,
 
    auto request = reinterpret_cast<UCWriteSysConfigRequest *>(msgBuf);
    request->count = count;
-   request->size = sizeof(UCSysConfig);
-   std::memcpy(request->settings, settings, sizeof(UCSysConfig) * count);
+   request->size = static_cast<uint32_t>(sizeof(UCSysConfig));
+   std::memcpy(request->settings, settings, count * sizeof(UCSysConfig));
 
-   auto vecBufSize = sizeof(IOSVec) * (count + 1);
+   auto vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
    auto vecBuf = internal::ucAllocateMessage(vecBufSize);
    if (!vecBuf) {
       result = UCError::OutOfMemory;
@@ -406,7 +408,7 @@ UCWriteSysConfigAsync(IOSHandle handle,
    }
 
    auto vecs = reinterpret_cast<IOSVec *>(vecBuf);
-   vecs[0].paddr = msgBuf;
+   vecs[0].vaddr = cpu::translate(msgBuf);
    vecs[0].len = msgBufSize;
 
    for (auto i = 0u; i < count; ++i) {
@@ -414,13 +416,13 @@ UCWriteSysConfigAsync(IOSHandle handle,
       vecs[1 + i].len = size;
 
       if (size > 0) {
-         vecs[1 + i].paddr = internal::ucAllocateMessage(size);
-         if (!vecs[1 + i].paddr) {
+         vecs[1 + i].vaddr = cpu::translate(internal::ucAllocateMessage(size));
+         if (!vecs[1 + i].vaddr) {
             result = UCError::OutOfMemory;
             goto fail;
          }
       } else {
-         vecs[1 + i].paddr = nullptr;
+         vecs[1 + i].vaddr = 0u;
       }
    }
 
@@ -457,8 +459,8 @@ fail:
 
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
-         if (vecs[1 + i].paddr) {
-            internal::ucFreeMessage(vecs[1 + i].paddr);
+         if (vecs[1 + i].vaddr) {
+            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
          }
       }
 

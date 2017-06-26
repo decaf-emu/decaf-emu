@@ -2,6 +2,7 @@
 #include "kernel_enum.h"
 #include "kernel_ios.h"
 
+#include <array>
 #include <common/be_val.h>
 #include <common/be_ptr.h>
 #include <common/structsize.h>
@@ -63,7 +64,7 @@ struct IPCBuffer
    be_ptr<void> buffer2;
 
    //! Buffer to copy device name to for IOS_Open
-   char nameBuffer[0x20];
+   std::array<char, 0x20> nameBuffer;
 
    UNKNOWN(0x80 - 0x68);
 };

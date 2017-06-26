@@ -76,11 +76,14 @@ MCPDevice::ioctlv(uint32_t cmd,
 
    switch (static_cast<MCPCommand>(cmd)) {
    case MCPCommand::GetSysProdSettings:
+   {
       decaf_check(vecIn == 0);
       decaf_check(vecOut == 1);
       decaf_check(vec[0].len == sizeof(MCPSysProdSettings));
-      result = getSysProdSettings(be_ptr<MCPSysProdSettings> { vec[0].vaddr });
+      auto settings = cpu::PhysicalPointer<MCPSysProdSettings> { vec[0].paddr };
+      result = getSysProdSettings(settings.getRawPointer());
       break;
+   }
    default:
       result = MCPError::Unsupported;
    }
