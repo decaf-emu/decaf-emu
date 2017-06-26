@@ -155,7 +155,7 @@ IMError
 IM_GetParameters(IMParameters *parameters)
 {
    auto result = static_cast<IMError>(IOS_Open("/dev/im", IOSOpenMode::None));
-   if (result != IOSError::OK) {
+   if (result < 0) {
       return static_cast<IMError>(result);
    }
 
@@ -253,7 +253,7 @@ IM_GetNvParameterWithoutHandleAndItb(IMParameter parameter,
                                      be_val<uint32_t> *value)
 {
    auto result = static_cast<IMError>(IOS_Open("/dev/im", IOSOpenMode::None));
-   if (result != IOSError::OK) {
+   if (result < 0) {
       return static_cast<IMError>(result);
    }
 
@@ -271,7 +271,7 @@ IM_GetRuntimeParameter(IMParameter parameter,
                        be_val<uint32_t> *value)
 {
    auto result = static_cast<IMError>(IOS_Open("/dev/im", IOSOpenMode::None));
-   if (result != IOSError::OK) {
+   if (result < 0) {
       return static_cast<IMError>(result);
    }
 
@@ -318,7 +318,7 @@ IM_GetTimerRemainingSeconds(IMTimer timer,
                             be_val<uint32_t> *seconds)
 {
    auto result = static_cast<IMError>(IOS_Open("/dev/im", IOSOpenMode::None));
-   if (result != IOSError::OK) {
+   if (result < 0) {
       return static_cast<IMError>(result);
    }
 
@@ -384,7 +384,7 @@ IM_SetRuntimeParameter(IMParameter parameter,
                        uint32_t value)
 {
    auto result = static_cast<IMError>(IOS_Open("/dev/im", IOSOpenMode::None));
-   if (result != IOSError::OK) {
+   if (result < 0) {
       return static_cast<IMError>(result);
    }
 
