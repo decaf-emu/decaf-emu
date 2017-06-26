@@ -642,8 +642,13 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
    for (auto i = 0u; i < vecIn + vecOut; ++i) {
       auto paddr = cpu::PhysicalAddress { };
 
-      if (!vec[i].vaddr && vec[i].len) {
-         return IOSError::InvalidArg;
+      if (!vec[i].vaddr) {
+         if (vec[i].len) {
+            return IOSError::InvalidArg;
+         } else {
+            vec[i].paddr = 0u;
+            continue;
+         }
       }
 
       if (!cpu::virtualToPhysicalAddress(vec[i].vaddr, paddr)) {
