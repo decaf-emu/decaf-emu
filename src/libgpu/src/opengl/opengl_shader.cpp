@@ -828,10 +828,10 @@ GLDriver::checkActiveAttribBuffers()
 
    for (auto i = 0u; i < latte::MaxAttributes; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
-      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
-      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_VTX_CONSTANT_WORD1_0 + 4 * resourceOffset);
-      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_VTX_CONSTANT_WORD2_0 + 4 * resourceOffset);
-      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_VTX_CONSTANT_WORD6_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_RESOURCE_WORD2_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_RESOURCE_WORD6_0 + 4 * resourceOffset);
 
       auto addr = sq_vtx_constant_word0.BASE_ADDRESS();
       auto size = sq_vtx_constant_word1.SIZE() + 1;
@@ -873,7 +873,7 @@ GLDriver::checkAttribBuffersBound()
    for (auto i = 0; i < mActiveShader->fetch->attribs.size(); ++i) {
       auto &attrib = mActiveShader->fetch->attribs[i];
       auto resourceOffset = (latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0 + attrib.buffer) * 7;
-      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_VTX_CONSTANT_WORD0_0 + 4 * resourceOffset);
+      auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
       if (!sq_vtx_constant_word0.BASE_ADDRESS()) {
          return false;
@@ -977,7 +977,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
    for (auto i = 0; i < latte::MaxSamplers; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0 + i) * 7;
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
       shader.samplerDim[i] = sq_tex_resource_word0.DIM();
    }
@@ -1402,7 +1402,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    // Gather Samplers
    for (auto i = 0; i < latte::MaxSamplers; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
-      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_TEX_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
 
       shader.samplerDim[i] = sq_tex_resource_word0.DIM();
    }

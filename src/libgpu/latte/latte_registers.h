@@ -551,20 +551,13 @@ enum Value : uint32_t
 
    // Resource Registers
    ResourceRegisterBase             = 0x38000,
-   SQ_TEX_RESOURCE_WORD0_0          = 0x38000,
-   SQ_TEX_RESOURCE_WORD1_0          = 0x38004,
-   SQ_TEX_RESOURCE_WORD2_0          = 0x38008,
-   SQ_TEX_RESOURCE_WORD3_0          = 0x3800C,
-   SQ_TEX_RESOURCE_WORD4_0          = 0x38010,
-   SQ_TEX_RESOURCE_WORD5_0          = 0x38014,
-   SQ_TEX_RESOURCE_WORD6_0          = 0x38018,
-   SQ_VTX_CONSTANT_WORD0_0          = 0x38000,
-   SQ_VTX_CONSTANT_WORD1_0          = 0x38004,
-   SQ_VTX_CONSTANT_WORD2_0          = 0x38008,
-   SQ_VTX_CONSTANT_WORD3_0          = 0x3800C,
-   SQ_VTX_CONSTANT_WORD4_0          = 0x38010,
-   SQ_VTX_CONSTANT_WORD5_0          = 0x38014,
-   SQ_VTX_CONSTANT_WORD6_0          = 0x38018,
+   SQ_RESOURCE_WORD0_0              = 0x38000,
+   SQ_RESOURCE_WORD1_0              = 0x38004,
+   SQ_RESOURCE_WORD2_0              = 0x38008,
+   SQ_RESOURCE_WORD3_0              = 0x3800C,
+   SQ_RESOURCE_WORD4_0              = 0x38010,
+   SQ_RESOURCE_WORD5_0              = 0x38014,
+   SQ_RESOURCE_WORD6_0              = 0x38018,
    ResourceRegisterEnd              = 0x3B678,
 
    // Sampler Registers
