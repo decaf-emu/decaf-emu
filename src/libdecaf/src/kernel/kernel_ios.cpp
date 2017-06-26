@@ -6,6 +6,7 @@
 #include "ios/im/im_device.h"
 #include "ios/mcp/mcp_device.h"
 #include "ios/socket/socket_device.h"
+#include "ios/usr_cfg/usr_cfg_device.h"
 
 #include <map>
 #include <string>
@@ -209,6 +210,7 @@ iosInitDevices()
    addDevice<ios::im::IMDevice>("/dev/im");
    addDevice<ios::mcp::MCPDevice>("/dev/mcp");
    addDevice<ios::socket::SocketDevice>("/dev/socket");
+   addDevice<ios::usr_cfg::UserConfigDevice>("/dev/usr_cfg");
 }
 
 } // namespace kernel
