@@ -134,6 +134,8 @@ ucHandleIosResult(UCError result,
                   auto src = virt_ptr<void> { vecs[i + 1].vaddr };
 
                   switch (settings[i].dataSize) {
+                  case 0:
+                     continue;
                   case 1:
                      *be_ptr<uint8_t> { settings[i].data } = *virt_cast<uint8_t>(src);
                      break;
