@@ -2,6 +2,7 @@
 #include "coreinit_im.h"
 #include "coreinit_ios.h"
 #include "coreinit_mutex.h"
+#include "ppcutils/wfunc_call.h"
 #include <cstring>
 
 namespace coreinit
