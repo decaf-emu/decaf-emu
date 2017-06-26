@@ -62,19 +62,64 @@ IMDevice::ioctlv(uint32_t cmd,
    switch (static_cast<IMCommand>(cmd)) {
    case IMCommand::SetNvParameter:
    {
-      decaf_check(vecIn == 0);
-      decaf_check(vecOut == 1);
+      decaf_check(vecIn == 1);
+      decaf_check(vecOut == 0);
       decaf_check(vec[0].len == sizeof(IMSetNvParameterRequest));
       auto request = cpu::PhysicalPointer<IMSetNvParameterRequest> { vec[0].paddr };
       result = setNvParameter(request.getRawPointer());
       break;
    }
    case IMCommand::SetParameter:
-   case IMCommand::GetParameter:
-   case IMCommand::GetHomeButtonParams:
-   case IMCommand::GetTimerRemaining:
-   case IMCommand::GetNvParameter:
+   {
+      decaf_check(vecIn == 1);
+      decaf_check(vecOut == 0);
+      decaf_check(vec[0].len == sizeof(IMSetParameterRequest));
+      auto request = cpu::PhysicalPointer<IMSetParameterRequest> { vec[0].paddr };
+      result = setParameter(request.getRawPointer());
       break;
+   }
+   case IMCommand::GetParameter:
+   {
+      decaf_check(vecIn == 1);
+      decaf_check(vecOut == 1);
+      decaf_check(vec[0].len == sizeof(IMGetParameterRequest));
+      decaf_check(vec[1].len == sizeof(IMGetParameterResponse));
+      auto request = cpu::PhysicalPointer<IMGetParameterRequest> { vec[0].paddr };
+      auto response = cpu::PhysicalPointer<IMGetParameterResponse> { vec[1].paddr };
+      result = getParameter(request.getRawPointer(), response.getRawPointer());
+      break;
+   }
+   case IMCommand::GetNvParameter:
+   {
+      decaf_check(vecIn == 1);
+      decaf_check(vecOut == 1);
+      decaf_check(vec[0].len == sizeof(IMGetNvParameterRequest));
+      decaf_check(vec[1].len == sizeof(IMGetNvParameterResponse));
+      auto request = cpu::PhysicalPointer<IMGetNvParameterRequest> { vec[0].paddr };
+      auto response = cpu::PhysicalPointer<IMGetNvParameterResponse> { vec[1].paddr };
+      result = getNvParameter(request.getRawPointer(), response.getRawPointer());
+      break;
+   }
+   case IMCommand::GetHomeButtonParams:
+   {
+      decaf_check(vecIn == 0);
+      decaf_check(vecOut == 1);
+      decaf_check(vec[0].len == sizeof(IMGetHomeButtonParamResponse));
+      auto response = cpu::PhysicalPointer<IMGetHomeButtonParamResponse> { vec[0].paddr };
+      result = getHomeButtonParams(response.getRawPointer());
+      break;
+   }
+   case IMCommand::GetTimerRemaining:
+   {
+      decaf_check(vecIn == 1);
+      decaf_check(vecOut == 1);
+      decaf_check(vec[0].len == sizeof(IMGetTimerRemainingRequest));
+      decaf_check(vec[1].len == sizeof(IMGetTimerRemainingResponse));
+      auto request = cpu::PhysicalPointer<IMGetTimerRemainingRequest> { vec[0].paddr };
+      auto response = cpu::PhysicalPointer<IMGetTimerRemainingResponse> { vec[1].paddr };
+      result = getTimerRemaining(request.getRawPointer(), response.getRawPointer());
+      break;
+   }
    default:
       result = static_cast<IMError>(IOSError::Invalid);
    }
