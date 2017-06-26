@@ -102,6 +102,11 @@ public:
    {
    }
 
+   Pointer(BigEndianValue<address_type> address) :
+      mAddress(address.value())
+   {
+   }
+
    Pointer(std::nullptr_t) :
       mAddress(0)
    {

@@ -102,7 +102,7 @@ ucHandleIosResult(UCError result,
                   void *callbackContext)
 {
    if (!settings && !vecs) {
-      if (result == IOSError::OK) {
+      if (result == UCError::OK) {
          return UCError::InvalidParam;
       } else {
          return static_cast<UCError>(result);
@@ -117,7 +117,7 @@ ucHandleIosResult(UCError result,
          }
 
          if (command == UCCommand::ReadSysConfig) {
-            auto request = virt_ptr<UCReadSysConfigRequest> { vecs[0].vaddr.value() };
+            auto request = virt_ptr<UCReadSysConfigRequest> { vecs[0].vaddr };
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -131,7 +131,7 @@ ucHandleIosResult(UCError result,
                }
 
                if (settings[i].error == UCError::OK) {
-                  auto src = virt_ptr<void> { vecs[i + 1].vaddr.value() };
+                  auto src = virt_ptr<void> { vecs[i + 1].vaddr };
 
                   switch (settings[i].dataSize) {
                   case 0:
@@ -152,7 +152,7 @@ ucHandleIosResult(UCError result,
                }
             }
          } else if (command == UCCommand::WriteSysConfig) {
-            auto request = virt_ptr<UCWriteSysConfigRequest> { vecs[0].vaddr.value() };
+            auto request = virt_ptr<UCWriteSysConfigRequest> { vecs[0].vaddr };
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -173,7 +173,7 @@ ucHandleIosResult(UCError result,
 
    if (vecs) {
       for (auto i = 0u; i < count + 1; ++i) {
-         internal::ucFreeMessage(virt_ptr<void> { vecs[i].vaddr.value() }.getRawPointer());
+         internal::ucFreeMessage(virt_ptr<void> { vecs[i].vaddr }.getRawPointer());
       }
 
       internal::ucFreeMessage(vecs);
@@ -352,7 +352,7 @@ fail:
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
          if (vecs[1 + i].vaddr) {
-            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr.value() }.getRawPointer());
+            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
          }
       }
 
@@ -472,7 +472,7 @@ fail:
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
          if (vecs[1 + i].vaddr) {
-            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr.value() }.getRawPointer());
+            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
          }
       }
 
