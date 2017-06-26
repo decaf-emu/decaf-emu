@@ -132,7 +132,7 @@ IM_GetParameter(IOSHandle handle,
 {
    std::memset(request, 0, sizeof(IMRequest));
 
-   request->getNvParameterRequest.parameter = parameter;
+   request->getParameterRequest.parameter = parameter;
    request->ioctlVecs[0].vaddr = cpu::translate(&request->getParameterRequest);
    request->ioctlVecs[0].len = 8u;
 
