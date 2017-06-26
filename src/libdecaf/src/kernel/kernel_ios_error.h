@@ -13,7 +13,7 @@ iosGetErrorCategory(IOSError error)
 constexpr int32_t
 iosGetErrorCode(IOSError error)
 {
-   return (error & 0x8000) ? (error | 0xFFFF) : (error & 0xFFFF);
+   return (error & 0x8000) ? (error | 0xFFFF0000) : (error & 0xFFFF);
 }
 
 constexpr bool
