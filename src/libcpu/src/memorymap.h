@@ -95,6 +95,7 @@ private:
 private:
    platform::MapFileHandle mMem1 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mMem2 = platform::InvalidMapFileHandle;
+   platform::MapFileHandle mLockedCache = platform::InvalidMapFileHandle;
    uintptr_t mVirtualBase = 0;
    uintptr_t mPhysicalBase = 0;
    std::vector<VirtualMemoryMap> mMappedMemory;

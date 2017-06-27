@@ -45,6 +45,7 @@ enum class PhysicalMemoryType
    Invalid,
    MEM1,
    MEM2,
+   LockedCache,
 };
 
 static constexpr uint32_t PageSize = 128 * 1024;

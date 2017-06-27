@@ -25,12 +25,13 @@ struct MemoryMap
  * Physical Address Space
  * 0x00000000 - 0x01ffffff = MEM1 (32 MB)
  *
+ * 0x02000000 - 0x0201ffff = LockedCache (only 16 KB per core, but 128KB is page size)
+ *
  * 0x08000000 - 0x0811FFFF = unused { MEM0 }
  * 0x0C000000 - 0x0C?????? = unused { registers }
  * 0x0D000000 - 0x0D?????? = unused { registers }
  *
- * 0x10000000 - 0x1001ffff = LockedCacheCore (only 16 KB per core, but 128KB is page size)
- * 0x10020000 - 0x13ffffff = unused { ios data }
+ * 0x10000000 - 0x13ffffff = IOS Heap { 64MB }
  * 0x14000000 - 0x17ffffff = ForegroundBucket (64 MB)
  * 0x18000000 - 0x1affffff = SharedData (48 MB)
  * 0x1b000000 - 0x1fffffff = LoaderHeap (80 MB)
@@ -118,7 +119,7 @@ static auto OverlayArena = MemoryMap {
 
 static auto LockedCache = MemoryMap {
    cpu::VirtualAddress { 0xFFC00000 },
-   cpu::PhysicalAddress { 0x10000000 },
+   cpu::PhysicalAddress { 0x02000000 },
    cpu::PageSize
 };
 
@@ -133,6 +134,9 @@ static auto VirtualMapRange = MemoryMap {
    cpu::PhysicalAddress { 0 },
    1024_mb
 };
+
+static const auto IosHeapPhysicalBase = cpu::PhysicalAddress { 0x10000000 };
+static const auto IosHeapPhysicalSize = 64_mb;
 
 static const auto AppHeapPhysicalBase = cpu::PhysicalAddress { 0x50000000 };
 static const auto AppHeapPhysicalSize = 1024_mb;
@@ -376,6 +380,12 @@ cpu::PhysicalAddressRange
 getDataPhysicalRange()
 {
    return { AppHeapPhysicalBase, sDataSize };
+}
+
+cpu::PhysicalAddressRange
+getIosHeapPhysicalRange()
+{
+   return { IosHeapPhysicalBase, IosHeapPhysicalSize };
 }
 
 } // namespace kernel

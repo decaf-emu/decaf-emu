@@ -17,12 +17,16 @@ uintptr_t BasePhysicalAddress = 0;
 } // namespace internal
 
 static constexpr PhysicalAddress MEM1BaseAddress = PhysicalAddress { 0 };
-static constexpr PhysicalAddress MEM1EndAddress = PhysicalAddress { 0x01FFFFFF };
+static constexpr PhysicalAddress MEM1EndAddress  = PhysicalAddress { 0x01FFFFFF };
 static constexpr size_t MEM1Size = (MEM1EndAddress - MEM1BaseAddress) + 1;
 
 static constexpr PhysicalAddress MEM2BaseAddress = PhysicalAddress { 0x10000000 };
-static constexpr PhysicalAddress MEM2EndAddress = PhysicalAddress { 0x8FFFFFFF };
+static constexpr PhysicalAddress MEM2EndAddress  = PhysicalAddress { 0x8FFFFFFF };
 static constexpr size_t MEM2Size = (MEM2EndAddress - MEM2BaseAddress) + 1;
+
+static constexpr PhysicalAddress LCBaseAddress = PhysicalAddress { 0x02000000 };
+static constexpr PhysicalAddress LCEndAddress  = PhysicalAddress { 0x0201ffff };
+static constexpr size_t LCSize = (LCEndAddress - LCBaseAddress) + 1;
 
 
 MemoryMap::~MemoryMap()
@@ -74,13 +78,20 @@ MemoryMap::reserve()
       return false;
    }
 
+   // Commit LC
+   mLockedCache = platform::createMemoryMappedFile(LCSize);
+   if (mLockedCache == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create LC mapping");
+      free();
+      return false;
+   }
+
    // Release our reserved memory so we can map it
    if (!platform::freeMemory(mPhysicalBase, 0x100000000ull)) {
       gLog->error("Unable to release physical address space");
       free();
       return false;
    }
-
 
    // Map mem1 and mem2 to physical address space
    auto ptrMem1 = getPhysicalPointer(MEM1BaseAddress);
@@ -95,6 +106,14 @@ MemoryMap::reserve()
    auto view2 = platform::mapViewOfFile(mMem2, platform::ProtectFlags::ReadWrite, 0, MEM2Size, ptrMem2);
    if (view2 != ptrMem2) {
       gLog->error("Unable to map MEM2 to physical address space");
+      free();
+      return false;
+   }
+
+   auto ptrLC = getPhysicalPointer(LCBaseAddress);
+   auto viewLC = platform::mapViewOfFile(mLockedCache, platform::ProtectFlags::ReadWrite, 0, LCSize, ptrLC);
+   if (viewLC != ptrLC) {
+      gLog->error("Unable to map LC to physical address space");
       free();
       return false;
    }
@@ -125,6 +144,12 @@ MemoryMap::free()
       platform::unmapViewOfFile(getPhysicalPointer(MEM2BaseAddress), MEM2Size);
       platform::closeMemoryMappedFile(mMem2);
       mMem2 = platform::InvalidMapFileHandle;
+   }
+
+   if (mLockedCache != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(LCBaseAddress), LCSize);
+      platform::closeMemoryMappedFile(mLockedCache);
+      mLockedCache = platform::InvalidMapFileHandle;
    }
 
    // Release virtual memory
@@ -188,6 +213,8 @@ MemoryMap::queryPhysicalAddress(PhysicalAddress physicalAddress)
       return PhysicalMemoryType::MEM1;
    } else if (physicalAddress >= MEM2BaseAddress && physicalAddress <= MEM2EndAddress) {
       return PhysicalMemoryType::MEM2;
+   } else if (physicalAddress >= LCBaseAddress && physicalAddress <= LCEndAddress) {
+      return PhysicalMemoryType::LockedCache;
    }
 
    return PhysicalMemoryType::Invalid;
@@ -428,8 +455,11 @@ MemoryMap::mapMemory(VirtualAddress virtualAddress,
 
    if (physicalMemoryType == PhysicalMemoryType::MEM1) {
       view = platform::mapViewOfFile(mMem1, protectFlags, physicalAddress - MEM1BaseAddress, size, virtualPtr);
-   } else {
+   } else if (physicalMemoryType == PhysicalMemoryType::MEM2) {
       view = platform::mapViewOfFile(mMem2, protectFlags, physicalAddress - MEM2BaseAddress, size, virtualPtr);
+   } else {
+      gLog->error("Invalid physicalMemoryType {} for mapMemory", static_cast<int>(physicalMemoryType));
+      return false;
    }
 
    // Add to the memory map

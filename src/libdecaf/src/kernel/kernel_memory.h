@@ -63,4 +63,7 @@ getAvailPhysicalRange();
 cpu::PhysicalAddressRange
 getDataPhysicalRange();
 
+cpu::PhysicalAddressRange
+getIosHeapPhysicalRange();
+
 } // namespace kernel
