@@ -97,22 +97,48 @@ public:
 
    Pointer() = default;
 
+   /**
+    * Constructs a pointer from an address.
+    */
    Pointer(address_type address) :
       mAddress(address)
    {
    }
 
+   /**
+    * Constructs a pointer from a BigEndianValue address.
+    */
    Pointer(BigEndianValue<address_type> address) :
       mAddress(address.value())
    {
    }
 
+   /**
+    * Constructs a pointer from a nullptr
+    */
    Pointer(std::nullptr_t) :
       mAddress(0)
    {
    }
 
-   Pointer(const Pointer<typename std::remove_const<value_type>::type, address_type> &other) :
+   /**
+    * Constructs a const pointer from a non-const pointer of same type
+    * Pointer<const Type, Address> from Pointer<Type, Address>
+    */
+   template<typename V = ValueType, typename A = AddressType>
+   Pointer(const Pointer<typename std::remove_const<V>::type, A> &other,
+           typename std::enable_if<std::is_const<V>::value>::type * = nullptr) :
+      mAddress(address_type { other })
+   {
+   }
+
+   /**
+    * Constructs a void pointer from a non-void pointer
+    * Pointer<void, Address> from Pointer<OtherType, Address>
+    */
+   template<typename O, typename V = ValueType, typename A = AddressType>
+   Pointer(const Pointer<O, A> &other,
+           typename std::enable_if<std::is_void<V>::value>::type * = 0) :
       mAddress(address_type { other })
    {
    }
