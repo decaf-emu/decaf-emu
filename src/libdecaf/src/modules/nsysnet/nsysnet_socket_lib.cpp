@@ -1,5 +1,5 @@
-#include "kernel/kernel_ios_error.h"
-#include "kernel/ios/socket.h"
+#include "ios/dev/socket.h"
+#include "ios/ios_error.h"
 #include "modules/coreinit/coreinit_ghs.h"
 #include "modules/coreinit/coreinit_ios.h"
 #include "modules/coreinit/coreinit_mutex.h"
@@ -10,15 +10,15 @@
 namespace nsysnet
 {
 
-using kernel::ios::socket::SocketAddrIn;
-using kernel::ios::socket::SocketCommand;
-using kernel::ios::socket::SocketError;
-using kernel::ios::socket::SocketFamily;
+using ios::dev::socket::SocketAddrIn;
+using ios::dev::socket::SocketCommand;
+using ios::dev::socket::SocketError;
+using ios::dev::socket::SocketFamily;
 
-using kernel::ios::socket::SocketBindRequest;
-using kernel::ios::socket::SocketCloseRequest;
-using kernel::ios::socket::SocketConnectRequest;
-using kernel::ios::socket::SocketSocketRequest;
+using ios::dev::socket::SocketBindRequest;
+using ios::dev::socket::SocketCloseRequest;
+using ios::dev::socket::SocketConnectRequest;
+using ios::dev::socket::SocketSocketRequest;
 
 struct SocketLibData
 {
@@ -77,20 +77,20 @@ soDecodeIosError(coreinit::IOSError err)
       return err;
    }
 
-   auto category = kernel::iosGetErrorCategory(err);
-   auto code = kernel::iosGetErrorCode(err);
+   auto category = ios::iosGetErrorCategory(err);
+   auto code = ios::iosGetErrorCode(err);
    auto error = SocketError::Unknown;
 
    switch (category) {
-   case kernel::IOSErrorCategory::Socket:
+   case ios::IOSErrorCategory::Socket:
       error = static_cast<SocketError>(code);
       break;
-   case kernel::IOSErrorCategory::Kernel:
-      if (code == kernel::IOSError::Access) {
+   case ios::IOSErrorCategory::Kernel:
+      if (code == ios::IOSError::Access) {
          error = SocketError::Inval;
-      } else if (code == kernel::IOSError::Intr) {
+      } else if (code == ios::IOSError::Intr) {
          error = SocketError::Aborted;
-      } else if (code == kernel::IOSError::QFull) {
+      } else if (code == ios::IOSError::QFull) {
          error = SocketError::Busy;
       } else {
          error = SocketError::Unknown;
@@ -275,8 +275,8 @@ socket(int32_t family,
                                     NULL,
                                     0);
 
-   if (kernel::iosGetErrorCategory(error) == kernel::IOSErrorCategory::Socket
-    && kernel::iosGetErrorCode(error) == SocketError::GenericError) {
+   if (ios::iosGetErrorCategory(error) == ios::IOSErrorCategory::Socket
+    && ios::iosGetErrorCode(error) == SocketError::GenericError) {
       // Map generic socket error to no memory.
       coreinit::ghs_set_errno(SocketError::NoMem);
       result = -1;

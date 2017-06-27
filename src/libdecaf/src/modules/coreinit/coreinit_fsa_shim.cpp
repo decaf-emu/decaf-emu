@@ -1,6 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_fsa_shim.h"
-#include "kernel/kernel_ios_error.h"
+#include "ios/ios_error.h"
 
 #include <common/decaf_assert.h>
 #include <spdlog/fmt/fmt.h>
@@ -22,32 +22,32 @@ FSAStatus
 FSAShimDecodeIosErrorToFsaStatus(IOSHandle handle,
                                  IOSError error)
 {
-   auto category = kernel::iosGetErrorCategory(error);
-   auto code = kernel::iosGetErrorCode(error);
+   auto category = ios::iosGetErrorCategory(error);
+   auto code = ios::iosGetErrorCode(error);
    auto fsaStatus = static_cast<FSAStatus>(error);
 
    if (error < 0) {
       switch (category) {
-      case kernel::IOSErrorCategory::Kernel:
-         if (code == kernel::IOSError::Access) {
+      case IOSErrorCategory::Kernel:
+         if (code == IOSError::Access) {
             fsaStatus = FSAStatus::InvalidBuffer;
-         } else if (code == kernel::IOSError::Invalid || code == kernel::IOSError::NoExists) {
+         } else if (code == IOSError::Invalid || code == IOSError::NoExists) {
             fsaStatus = FSAStatus::InvalidClientHandle;
-         } else if (code == kernel::IOSError::QFull) {
+         } else if (code == IOSError::QFull) {
             fsaStatus = FSAStatus::Busy;
          } else {
             fsaStatus = static_cast<FSAStatus>(code);
          }
          break;
-      case kernel::IOSErrorCategory::FSA:
-      case kernel::IOSErrorCategory::Unknown7:
-      case kernel::IOSErrorCategory::Unknown8:
-      case kernel::IOSErrorCategory::Unknown15:
-      case kernel::IOSErrorCategory::Unknown19:
-      case kernel::IOSErrorCategory::Unknown30:
-      case kernel::IOSErrorCategory::Unknown45:
-         if (kernel::iosIsKernelError(code)) {
-            fsaStatus = static_cast<FSAStatus>(code - (kernel::IOSErrorCategory::FSA << 16));
+      case IOSErrorCategory::FSA:
+      case IOSErrorCategory::Unknown7:
+      case IOSErrorCategory::Unknown8:
+      case IOSErrorCategory::Unknown15:
+      case IOSErrorCategory::Unknown19:
+      case IOSErrorCategory::Unknown30:
+      case IOSErrorCategory::Unknown45:
+         if (ios::iosIsKernelError(code)) {
+            fsaStatus = static_cast<FSAStatus>(code - (IOSErrorCategory::FSA << 16));
          } else {
             fsaStatus = static_cast<FSAStatus>(code);
          }

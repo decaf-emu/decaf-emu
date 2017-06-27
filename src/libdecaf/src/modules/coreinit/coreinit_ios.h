@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "ppcutils/wfunc_ptr.h"
-#include "kernel/kernel_ios.h"
+#include "ios/ios_ipc.h"
 
 #include <cstdint>
 
@@ -34,11 +34,12 @@ IOS_WriteAsync
 IOS_WriteAsyncEx
 */
 
-using IOSCommand = kernel::IOSCommand;
-using IOSError = kernel::IOSError;
-using IOSHandle = kernel::IOSHandle;
-using IOSOpenMode = kernel::IOSOpenMode;
-using IOSVec = kernel::IOSVec;
+using IOSCommand = ios::IOSCommand;
+using IOSError = ios::IOSError;
+using IOSErrorCategory = ios::IOSErrorCategory;
+using IOSHandle = ios::IOSHandle;
+using IOSOpenMode = ios::IOSOpenMode;
+using IOSVec = ios::IOSVec;
 using IOSAsyncCallbackFn = wfunc_ptr<void, IOSError /* status */, void * /* context */>;
 
 IOSError

@@ -1,16 +1,14 @@
+#include "debugger/debugger.h"
+#include "decaf_events.h"
+#include "filesystem/filesystem.h"
 #include "kernel.h"
 #include "kernel_hle.h"
 #include "kernel_internal.h"
-#include "kernel_ios.h"
 #include "kernel_ipc.h"
 #include "kernel_loader.h"
 #include "kernel_memory.h"
 #include "kernel_filesystem.h"
-#include "debugger/debugger.h"
-#include "decaf_events.h"
-#include "filesystem/filesystem.h"
-#include <common/platform_fiber.h>
-#include <common/platform_thread.h>
+#include "ios/ios_ipc.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_appio.h"
@@ -29,12 +27,15 @@
 #include "modules/sci/sci_parental_account_settings_uc.h"
 #include "modules/sci/sci_parental_settings.h"
 #include "modules/sci/sci_spot_pass_settings.h"
-#include "libcpu/mem.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
+
 #include <common/decaf_assert.h>
-#include <common/teenyheap.h>
 #include <common/platform_dir.h>
+#include <common/platform_fiber.h>
+#include <common/platform_thread.h>
+#include <common/teenyheap.h>
+#include <libcpu/mem.h>
 #include <pugixml.hpp>
 
 namespace coreinit
@@ -118,7 +119,7 @@ initialise()
 {
    initialiseVirtualMemory();
    ipcStart();
-   iosInitDevices();
+   ios::iosInitDevices();
    initialiseHleMmodules();
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
    cpu::setSegfaultHandler(&cpuSegfaultHandler);

@@ -1,6 +1,6 @@
 #pragma once
 #include "coreinit_ios.h"
-#include "kernel/ios/im.h"
+#include "ios/dev/im.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -17,20 +17,20 @@ namespace coreinit
  * @{
  */
 
-using kernel::ios::im::IMCommand;
-using kernel::ios::im::IMError;
-using kernel::ios::im::IMParameter;
-using kernel::ios::im::IMTimer;
+using ios::dev::im::IMCommand;
+using ios::dev::im::IMError;
+using ios::dev::im::IMParameter;
+using ios::dev::im::IMTimer;
 
-using kernel::ios::im::IMGetNvParameterRequest;
-using kernel::ios::im::IMGetNvParameterResponse;
-using kernel::ios::im::IMGetParameterRequest;
-using kernel::ios::im::IMGetParameterResponse;
-using kernel::ios::im::IMGetHomeButtonParamResponse;
-using kernel::ios::im::IMSetParameterRequest;
-using kernel::ios::im::IMSetNvParameterRequest;
-using kernel::ios::im::IMGetTimerRemainingRequest;
-using kernel::ios::im::IMGetTimerRemainingResponse;
+using ios::dev::im::IMGetNvParameterRequest;
+using ios::dev::im::IMGetNvParameterResponse;
+using ios::dev::im::IMGetParameterRequest;
+using ios::dev::im::IMGetParameterResponse;
+using ios::dev::im::IMGetHomeButtonParamResponse;
+using ios::dev::im::IMSetParameterRequest;
+using ios::dev::im::IMSetNvParameterRequest;
+using ios::dev::im::IMGetTimerRemainingRequest;
+using ios::dev::im::IMGetTimerRemainingResponse;
 
 struct IMParameters
 {

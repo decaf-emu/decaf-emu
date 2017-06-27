@@ -23,6 +23,12 @@ using be2_val = cpu::BigEndianValue<Type>;
 template<typename Type>
 using be2_ptr = be2_val<virt_ptr<Type>>;
 
+template<typename Type>
+using be2_virt_ptr = be2_ptr<Type>;
+
+template<typename Type>
+using be2_phys_ptr = be2_val<phys_ptr<Type>>;
+
 
 /*
  * reinterpret_cast for virt_ptr<X> to virt_ptr<Y>

@@ -556,6 +556,7 @@ Module::registerIosFunctions()
 namespace internal
 {
 
+
 /**
  * Prepares an IPCDriverRequest structure with the parameters for IOS_Open.
  *
@@ -581,12 +582,16 @@ ipcPrepareOpenRequest(IPCDriver *ipcDriver,
    ipcBuffer->nameBuffer.fill(0);
    std::memcpy(&ipcBuffer->nameBuffer, device, deviceLen);
 
-   ipcBuffer->args[0] = 0;
-   ipcBuffer->args[1] = deviceLen + 1;
-   ipcBuffer->args[2] = mode;
-   ipcBuffer->buffer1 = &ipcBuffer->nameBuffer[0];
+   ipcBuffer->args[0] = 0u;
+   ipcBuffer->args[1] = static_cast<uint32_t>(deviceLen + 1);
+   ipcBuffer->args[2] = static_cast<uint32_t>(mode);
+
+   auto paddr1 = phys_addr {};
+   cpu::virtualToPhysicalAddress(cpu::translate(&ipcBuffer->nameBuffer[0]), paddr1);
+   ipcBuffer->buffer1 = paddr1;
    return IOSError::OK;
 }
+
 
 /**
  * Prepares an IPCDriverRequest structure with the parameters for IOS_Ioctl.
@@ -605,12 +610,18 @@ ipcPrepareIoctlRequest(IPCDriver *ipcDriver,
 {
    auto ipcBuffer = ipcRequest->ipcBuffer;
    ipcBuffer->args[0] = ioctlRequest;
-   ipcBuffer->args[1] = 0;
+   ipcBuffer->args[1] = 0u;
    ipcBuffer->args[2] = inLen;
-   ipcBuffer->args[3] = 0;
+   ipcBuffer->args[3] = 0u;
    ipcBuffer->args[4] = outLen;
-   ipcBuffer->buffer1 = inBuf;
-   ipcBuffer->buffer2 = outBuf;
+
+   auto paddr1 = phys_addr { };
+   cpu::virtualToPhysicalAddress(cpu::translate(inBuf), paddr1);
+   ipcBuffer->buffer1 = paddr1;
+
+   auto paddr2 = phys_addr {};
+   cpu::virtualToPhysicalAddress(cpu::translate(outBuf), paddr2);
+   ipcBuffer->buffer2 = paddr2;
    return IOSError::OK;
 }
 
@@ -636,8 +647,11 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
    ipcBuffer->args[0] = ioctlvRequest;
    ipcBuffer->args[1] = vecIn;
    ipcBuffer->args[2] = vecOut;
-   ipcBuffer->args[3] = mem::untranslate(vec);
-   ipcBuffer->buffer1 = reinterpret_cast<void *>(vec);
+   ipcBuffer->args[3] = 0u;
+
+   auto paddr1 = phys_addr {};
+   cpu::virtualToPhysicalAddress(cpu::translate(vec), paddr1);
+   ipcBuffer->buffer1 = paddr1;
 
    for (auto i = 0u; i < vecIn + vecOut; ++i) {
       auto paddr = cpu::PhysicalAddress { };

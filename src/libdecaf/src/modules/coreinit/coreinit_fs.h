@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_messagequeue.h"
-#include "kernel/ios/fsa.h"
+#include "ios/dev/fsa.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -91,14 +91,14 @@ struct FSMessage;
 
 struct FSMountSource;
 
-using FSDirEntry = kernel::ios::fsa::FSADirEntry;
-using FSDirHandle = kernel::ios::fsa::FSADirHandle;
-using FSEntryNum = kernel::ios::fsa::FSAEntryNum;
-using FSFileHandle = kernel::ios::fsa::FSAFileHandle;
-using FSFilePosition = kernel::ios::fsa::FSAFilePosition;
-using FSReadFlag = kernel::ios::fsa::FSAReadFlag;
-using FSStat = kernel::ios::fsa::FSAStat;
-using FSWriteFlag = kernel::ios::fsa::FSAWriteFlag;
+using FSDirEntry = ios::dev::fsa::FSADirEntry;
+using FSDirHandle = ios::dev::fsa::FSADirHandle;
+using FSEntryNum = ios::dev::fsa::FSAEntryNum;
+using FSFileHandle = ios::dev::fsa::FSAFileHandle;
+using FSFilePosition = ios::dev::fsa::FSAFilePosition;
+using FSReadFlag = ios::dev::fsa::FSAReadFlag;
+using FSStat = ios::dev::fsa::FSAStat;
+using FSWriteFlag = ios::dev::fsa::FSAWriteFlag;
 
 using FSAsyncCallbackFn = wfunc_ptr<void, FSClient *, FSCmdBlock *, FSStatus, void *>;
 
@@ -106,7 +106,7 @@ static constexpr uint32_t
 FSMaxBytesPerRequest = 0x100000;
 
 static constexpr uint32_t
-FSMaxPathLength = kernel::ios::fsa::FSAMaxPathLength;
+FSMaxPathLength = ios::dev::fsa::FSAMaxPathLength;
 
 static constexpr uint32_t
 FSMaxMountPathLength = 0x80;

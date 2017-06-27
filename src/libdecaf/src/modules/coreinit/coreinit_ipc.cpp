@@ -271,8 +271,8 @@ ipcDriverAllocateRequest(IPCDriver *driver,
 
    ipcBuffer->command = command;
    ipcBuffer->handle = handle;
-   ipcBuffer->flags = 0;
-   ipcBuffer->processId = 0;
+   ipcBuffer->flags = 0u;
+   ipcBuffer->processId = 0u;
    ipcBuffer->reply = IOSError::OK;
 
    *requestOut = request;

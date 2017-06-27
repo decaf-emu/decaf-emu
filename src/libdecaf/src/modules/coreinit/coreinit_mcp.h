@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_ios.h"
-#include "kernel/ios/mcp.h"
+#include "ios/dev/mcp.h"
 
 #include <common/be_val.h>
 #include <common/structsize.h>
@@ -16,13 +16,13 @@ namespace coreinit
  * @{
  */
 
-using kernel::ios::mcp::MCPAppType;
-using kernel::ios::mcp::MCPCountryCode;
-using kernel::ios::mcp::MCPError;
-using kernel::ios::mcp::MCPRegion;
-using kernel::ios::mcp::MCPSysProdSettings;
-using kernel::ios::mcp::MCPTitleListType;
-using kernel::ios::mcp::MCPTitleListSearchFlags;
+using ios::dev::mcp::MCPAppType;
+using ios::dev::mcp::MCPCountryCode;
+using ios::dev::mcp::MCPError;
+using ios::dev::mcp::MCPRegion;
+using ios::dev::mcp::MCPSysProdSettings;
+using ios::dev::mcp::MCPTitleListType;
+using ios::dev::mcp::MCPTitleListSearchFlags;
 
 IOSError
 MCP_Open();

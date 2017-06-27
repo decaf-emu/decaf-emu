@@ -9,8 +9,8 @@
 namespace coreinit
 {
 
-using kernel::ios::usr_cfg::UCReadSysConfigRequest;
-using kernel::ios::usr_cfg::UCWriteSysConfigRequest;
+using ios::dev::usr_cfg::UCReadSysConfigRequest;
+using ios::dev::usr_cfg::UCWriteSysConfigRequest;
 
 struct UserConfigData
 {

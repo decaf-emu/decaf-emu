@@ -1,4 +1,4 @@
-#include "kernel_ios.h"
+#include "ios/ios_ipc.h"
 #include "kernel_ipc.h"
 #include "modules/coreinit/coreinit_ipc.h"
 
@@ -69,13 +69,13 @@ ipcDriverKernelSubmitRequest(IPCBuffer *buffer)
 {
    switch (cpu::this_core::id()) {
    case 0:
-      buffer->cpuId = IOSCpuId::PPC0;
+      buffer->cpuId = ios::IOSCpuId::PPC0;
       break;
    case 1:
-      buffer->cpuId = IOSCpuId::PPC1;
+      buffer->cpuId = ios::IOSCpuId::PPC1;
       break;
    case 2:
-      buffer->cpuId = IOSCpuId::PPC2;
+      buffer->cpuId = ios::IOSCpuId::PPC2;
       break;
    default:
       decaf_abort("Unexpected core id");
@@ -131,19 +131,19 @@ ipcThreadEntry()
          auto request = sIpcRequests.front();
          sIpcRequests.pop();
          lock.unlock();
-         iosDispatchIpcRequest(request);
+         ios::iosDispatchIpcRequest(request);
          lock.lock();
 
          switch (request->cpuId) {
-         case IOSCpuId::PPC0:
+         case ios::IOSCpuId::PPC0:
             sIpcResponses[0].push(request);
             cpu::interrupt(0, cpu::IPC_INTERRUPT);
             break;
-         case IOSCpuId::PPC1:
+         case ios::IOSCpuId::PPC1:
             sIpcResponses[1].push(request);
             cpu::interrupt(1, cpu::IPC_INTERRUPT);
             break;
-         case IOSCpuId::PPC2:
+         case ios::IOSCpuId::PPC2:
             sIpcResponses[2].push(request);
             cpu::interrupt(2, cpu::IPC_INTERRUPT);
             break;
