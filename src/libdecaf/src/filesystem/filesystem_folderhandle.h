@@ -15,7 +15,7 @@ struct FolderEntry
    };
 
    std::string name;
-   size_t size;
+   size_t size = 0;
    Type type = Unknown;
 };
 
