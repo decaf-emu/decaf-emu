@@ -138,7 +138,7 @@ gx2ToGFDVertexShader(const GX2VertexShader *src,
 
    dst.initialValues.resize(src->initialValueCount);
    for (auto i = 0u; i < src->initialValueCount; ++i) {
-      for (auto j = 0u; j < dst.initialValues[i].value.size(); ++i) {
+      for (auto j = 0u; j < dst.initialValues[i].value.size(); ++j) {
          dst.initialValues[i].value[j] = src->initialValues[i].value[j];
       }
 
@@ -225,7 +225,7 @@ gx2ToGFDPixelShader(const GX2PixelShader *src,
 
    dst.initialValues.resize(src->initialValueCount);
    for (auto i = 0u; i < src->initialValueCount; ++i) {
-      for (auto j = 0u; j < dst.initialValues[i].value.size(); ++i) {
+      for (auto j = 0u; j < dst.initialValues[i].value.size(); ++j) {
          dst.initialValues[i].value[j] = src->initialValues[i].value[j];
       }
 
@@ -301,7 +301,7 @@ gx2ToGFDGeometryShader(const GX2GeometryShader *src,
 
    dst.initialValues.resize(src->initialValueCount);
    for (auto i = 0u; i < src->initialValueCount; ++i) {
-      for (auto j = 0u; j < dst.initialValues[i].value.size(); ++i) {
+      for (auto j = 0u; j < dst.initialValues[i].value.size(); ++j) {
          dst.initialValues[i].value[j] = src->initialValues[i].value[j];
       }
 
