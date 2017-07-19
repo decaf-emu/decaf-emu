@@ -306,8 +306,6 @@ public:
       return value().operator ->();
    }
 
-   VirtualPointer<Type> operator &();
-
    template<typename K = value_type>
    auto getAddress() -> decltype(std::declval<const K>().getAddress()) const
    {
@@ -319,6 +317,9 @@ public:
    {
       return value().getRawPointer();
    }
+
+   // Please use virt_addrof or phys_addrof instead
+   VirtualPointer<Type> operator &() = delete;
 
 private:
    value_type mStorage;

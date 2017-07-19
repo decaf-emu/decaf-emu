@@ -277,10 +277,4 @@ using VirtualPointer = Pointer<Value, VirtualAddress>;
 template<typename Value>
 using PhysicalPointer = Pointer<Value, PhysicalAddress>;
 
-template<typename Type>
-VirtualPointer<Type> BigEndianValue<Type>::operator &()
-{
-   return { translate(this) };
-}
-
 } // namespace cpu
