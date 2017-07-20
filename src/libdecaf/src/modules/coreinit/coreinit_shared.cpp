@@ -50,10 +50,11 @@ namespace internal
 {
 
 static bool
-loadFont(OSSharedDataType type, const char *filename)
+loadMlcFont(OSSharedDataType type,
+            const char *filename)
 {
    auto fs = kernel::getFileSystem();
-   auto path = fs::Path("/vol/storage_mlc01/sys/title/0005001B/10042400/content").join(filename);
+   auto path = fs::Path { "/vol/storage_mlc01/sys/title/0005001B/10042400/content" }.join(filename);
    auto result = fs->openFile(path, fs::File::Read);
    auto &font = sSharedData[type];
 
@@ -71,6 +72,29 @@ loadFont(OSSharedDataType type, const char *filename)
    return true;
 }
 
+static bool
+loadResourcesFont(OSSharedDataType type,
+                  const char *filename)
+{
+   auto file = std::ifstream { decaf::config::system::resources_path + "/fonts/" + filename,
+                               std::ifstream::in | std::ifstream::binary };
+
+   if (!file.is_open()) {
+      return false;
+   }
+
+   file.seekg(0, std::ifstream::end);
+   auto size = gsl::narrow_cast<uint32_t>(file.tellg());
+   auto data = reinterpret_cast<uint8_t *>(sSharedHeap->alloc(size));
+   file.seekg(0, std::ifstream::beg);
+   file.read(reinterpret_cast<char*>(data), size);
+   file.close();
+
+   sSharedData[type].data = data;
+   sSharedData[type].size = size;
+   return true;
+}
+
 void
 loadSharedData()
 {
@@ -79,47 +103,22 @@ loadSharedData()
    auto ptr = cpu::VirtualPointer<void> { bounds.start }.getRawPointer();
    sSharedHeap = new TeenyHeap { ptr, bounds.size };
 
-   // Try and load the fonts from mlc.
-   auto allFound = true;
-   allFound = allFound && loadFont(OSSharedDataType::FontChinese, "CafeCn.ttf");
-   allFound = allFound && loadFont(OSSharedDataType::FontKorean, "CafeKr.ttf");
-   allFound = allFound && loadFont(OSSharedDataType::FontStandard, "CafeStd.ttf");
-   allFound = allFound && loadFont(OSSharedDataType::FontTaiwanese, "CafeTw.ttf");
+   // Try and load the fonts from mlc, if that fails try fall back
+   // to resources/fonts.
+   if (!loadMlcFont(OSSharedDataType::FontChinese, "CafeCn.ttf")) {
+      loadResourcesFont(OSSharedDataType::FontChinese, "CafeCn.ttf");
+   }
 
-   if (!allFound) {
-      // As a backup, try load Source Sans Pro from resources folder.
-      auto file = std::ifstream { decaf::config::system::resources_path + "/fonts/SourceSansPro-Regular.ttf",
-                                  std::ifstream::in | std::ifstream::binary };
-      auto sourceSansProSize = uint32_t { 0 };
-      uint8_t *sourceSansProData = nullptr;
+   if (!loadMlcFont(OSSharedDataType::FontKorean, "CafeKr.ttf")) {
+      loadResourcesFont(OSSharedDataType::FontKorean, "CafeKr.ttf");
+   }
 
-      if (file.is_open()) {
-         file.seekg(0, std::ifstream::end);
-         sourceSansProSize = gsl::narrow_cast<uint32_t>(file.tellg());
-         sourceSansProData = reinterpret_cast<uint8_t *>(sSharedHeap->alloc(sourceSansProSize));
-         file.seekg(0, std::ifstream::beg);
-         file.read(reinterpret_cast<char*>(sourceSansProData), sourceSansProSize);
-      }
+   if (!loadMlcFont(OSSharedDataType::FontStandard, "CafeStd.ttf")) {
+      loadResourcesFont(OSSharedDataType::FontStandard, "CafeStd.ttf");
+   }
 
-      if (!sSharedData[OSSharedDataType::FontChinese].size) {
-         sSharedData[OSSharedDataType::FontChinese].data = sourceSansProData;
-         sSharedData[OSSharedDataType::FontChinese].size = sourceSansProSize;
-      }
-
-      if (!sSharedData[OSSharedDataType::FontKorean].size) {
-         sSharedData[OSSharedDataType::FontKorean].data = sourceSansProData;
-         sSharedData[OSSharedDataType::FontKorean].size = sourceSansProSize;
-      }
-
-      if (!sSharedData[OSSharedDataType::FontStandard].size) {
-         sSharedData[OSSharedDataType::FontStandard].data = sourceSansProData;
-         sSharedData[OSSharedDataType::FontStandard].size = sourceSansProSize;
-      }
-
-      if (!sSharedData[OSSharedDataType::FontTaiwanese].size) {
-         sSharedData[OSSharedDataType::FontTaiwanese].data = sourceSansProData;
-         sSharedData[OSSharedDataType::FontTaiwanese].size = sourceSansProSize;
-      }
+   if (!loadMlcFont(OSSharedDataType::FontTaiwanese, "CafeTw.ttf")) {
+      loadResourcesFont(OSSharedDataType::FontTaiwanese, "CafeTw.ttf");
    }
 }
 
