@@ -27,7 +27,6 @@ public:
    virtual float getAverageFPS() = 0;
    // In milliseconds
    virtual float getAverageFrametime() = 0;
-   virtual void* getGraphicsDebugInfo() = 0;
 
    // Called for stores to emulated physical RAM, such as via DCFlushRange().
    //  May be called from any CPU core!
