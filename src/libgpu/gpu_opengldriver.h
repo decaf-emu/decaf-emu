@@ -1,6 +1,8 @@
 #pragma once
 #ifdef DECAF_GL
 #include "gpu_graphicsdriver.h"
+#include "libdecaf/decaf_graphics_info.h"
+
 #include <glbinding/gl/gl.h>
 
 namespace gpu
@@ -21,6 +23,9 @@ public:
 
    virtual void
    syncPoll(const SwapFunction &swapFunc) = 0;
+
+   virtual decaf::GraphicsDebugInfoGL*
+   getGraphicsDebugInfoPtr() = 0;
 };
 
 } // namespace gpu

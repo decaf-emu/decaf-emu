@@ -308,8 +308,8 @@ public:
    virtual float
    getAverageFrametime() override;
 
-   virtual void*
-   getGraphicsDebugInfo() override;
+   virtual decaf::GraphicsDebugInfoGL*
+   getGraphicsDebugInfoPtr() override;
 
    virtual void
    notifyCpuFlush(void *ptr,
@@ -502,6 +502,9 @@ private:
    dumpScanBuffer(const std::string &filename,
                   const ScanBufferChain &buf);
 
+   void
+   updateGraphicsDebugInfo();
+
 private:
    enum class RunState
    {
@@ -579,6 +582,8 @@ private:
    std::string mFrameCapturePrefix;
    bool mFrameCaptureTV = false;
    bool mFrameCaptureDRC = false;
+
+   std::shared_ptr<decaf::GraphicsDebugInfoGL> mDebugInfo;
 };
 
 } // namespace opengl

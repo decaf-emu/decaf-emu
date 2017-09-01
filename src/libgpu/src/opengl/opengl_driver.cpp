@@ -21,6 +21,7 @@ namespace opengl
 GLDriver::GLDriver()
 {
    mRegisters.fill(0);
+   mDebugInfo = std::make_shared<decaf::GraphicsDebugInfoGL>();
 }
 
 void
@@ -225,6 +226,8 @@ GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
    if (mSwapFunc) {
       mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
    }
+
+   updateGraphicsDebugInfo();
 }
 
 void
@@ -457,16 +460,22 @@ GLDriver::getAverageFrametime()
    return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
 }
 
-void*
-GLDriver::getGraphicsDebugInfo() {
-   return static_cast<void*>(new decaf::GraphicsDebugInfoGL{
+decaf::GraphicsDebugInfoGL*
+GLDriver::getGraphicsDebugInfoPtr() {
+   return mDebugInfo.get();
+}
+
+void
+GLDriver::updateGraphicsDebugInfo()
+{
+   *mDebugInfo = decaf::GraphicsDebugInfoGL{
       mFetchShaders.size(),
       mVertexShaders.size(),
       mPixelShaders.size(),
       mShaderPipelines.size(),
       mSurfaces.size(),
       mDataBuffers.size()
-   });
+   };
 }
 
 uint64_t

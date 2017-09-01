@@ -1,8 +1,9 @@
 #include "debugger_ui_window_performance_gl.h"
 #include "decaf_graphics.h"
+#include "decaf_graphics_info.h"
+#include "libgpu/gpu_opengldriver.h"
 
 #include <imgui.h>
-#include "decaf_graphics_info.h"
 
 namespace debugger
 {
@@ -18,6 +19,8 @@ static const ImVec4
 PerformanceWindowGL::PerformanceWindowGL(const std::string &name) :
    PerformanceWindow(name)
 {
+   auto debugInfo = reinterpret_cast<gpu::OpenGLDriver*>(decaf::getGraphicsDriver());
+   mDebugInfo.reset(debugInfo->getGraphicsDebugInfoPtr());
 }
 
 void PerformanceWindowGL::draw()
@@ -34,12 +37,8 @@ void PerformanceWindowGL::draw()
       ImGui::PopStyleColor();
    };
 
-   auto* debugInfo = decaf::getGraphicsDriver()->getGraphicsDebugInfo();
-
-   if (!debugInfo)
+   if (!mDebugInfo)
       return;
-
-   auto& glDebugInfo = *static_cast<decaf::GraphicsDebugInfoGL*>(debugInfo);
 
    // Graphics info
    ImGui::Separator();
@@ -47,18 +46,17 @@ void PerformanceWindowGL::draw()
 
    ImGui::Columns(2);
 
-   drawTextAndValue("Vertex Shaders:", glDebugInfo.vertexShaders);
-   drawTextAndValue("Pixel  Shaders:", glDebugInfo.pixelShaders);
-   drawTextAndValue("Fetch  Shaders:", glDebugInfo.fetchShaders);
+   drawTextAndValue("Vertex Shaders:", mDebugInfo->vertexShaders);
+   drawTextAndValue("Pixel  Shaders:", mDebugInfo->pixelShaders);
+   drawTextAndValue("Fetch  Shaders:", mDebugInfo->fetchShaders);
 
    ImGui::NextColumn();
 
-   drawTextAndValue("Shader Pipelines:", glDebugInfo.shaderPipelines);
-   drawTextAndValue("Surfaces:", glDebugInfo.surfaces);
-   drawTextAndValue("Data Buffers:", glDebugInfo.dataBuffers);
+   drawTextAndValue("Shader Pipelines:", mDebugInfo->shaderPipelines);
+   drawTextAndValue("Surfaces:", mDebugInfo->surfaces);
+   drawTextAndValue("Data Buffers:", mDebugInfo->dataBuffers);
 
    ImGui::End();
-   delete &glDebugInfo;
 }
 
 } // namespace ui
