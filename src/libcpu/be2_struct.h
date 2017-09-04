@@ -51,9 +51,29 @@ inline virt_ptr<DstType> virt_cast(const be2_ptr<SrcType> &src)
 
 
 /*
+ * reinterpret_cast for phys_ptr<X> to phys_ptr<Y>
+ */
+template<typename DstType, typename SrcType>
+inline phys_ptr<DstType> phys_cast(const phys_ptr<SrcType> &src)
+{
+   return phys_ptr<DstType> { static_cast<phys_addr>(src) };
+}
+
+
+/*
+ * reinterpret_cast for be2_ptr<X> to phys_ptr<Y>
+ */
+template<typename DstType, typename SrcType>
+inline phys_ptr<DstType> phys_cast(const be2_phys_ptr<SrcType> &src)
+{
+   return phys_ptr<DstType> { static_cast<phys_addr>(src) };
+}
+
+
+/*
  * be2_struct is a wrapper intended to be used around struct value type members
- * in structs which reside in PPC memory. This allows operator& to be magically
- * mapped to a virt_ptr with the goal of providing more memory safety.
+ * in structs which reside in PPC memory. This is so we can use members with
+ * virt_addrof or phys_addrof.
  */
 template<typename Type>
 struct be2_struct : Type
