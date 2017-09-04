@@ -81,8 +81,7 @@ struct va_list
             mGpr++;
          }
 
-         auto value = uint64_t { 0 };
-         value = static_cast<uint64_t>(nextGpr32()) << 32;
+         auto value = static_cast<uint64_t>(nextGpr32()) << 32;
          value |= nextGpr32();
          return value;
       }

@@ -52,6 +52,10 @@ SocketDevice::ioctl(uint32_t cmd,
 
    switch (static_cast<SocketCommand>(cmd)) {
    case SocketCommand::Close:
+      if (inLen != 4) {
+         return static_cast<IOSError>(0xFFF5000B);
+      }
+
       result = closeRequest(&request->closeRequest);
       break;
    case SocketCommand::Socket:

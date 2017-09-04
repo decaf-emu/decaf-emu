@@ -725,7 +725,9 @@ GLDriver::getSurfaceBuffer(ppcaddr_t baseAddress,
    //  are compatible across.  Note that at some point, we may
    //  need to make format not be part of the key as well...
    auto surfaceKey = static_cast<uint64_t>(baseAddress) << 32;
-   surfaceKey ^= format << 22 ^ numFormat << 28 ^ formatComp << 30;
+   surfaceKey ^= static_cast<uint64_t>(format) << 22;
+   surfaceKey ^= static_cast<uint64_t>(numFormat) << 28;
+   surfaceKey ^= static_cast<uint64_t>(formatComp) << 30;
 
    switch (dim) {
    case latte::SQ_TEX_DIM::DIM_1D:

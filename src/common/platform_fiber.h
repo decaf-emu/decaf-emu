@@ -12,12 +12,14 @@ Fiber *
 getThreadFiber();
 
 Fiber *
-createFiber(FiberEntryPoint entry, void *entryParam);
+createFiber(FiberEntryPoint entry,
+            void *entryParam);
 
 void
 destroyFiber(Fiber *fiber);
 
 void
-swapToFiber(Fiber *current, Fiber *target);
+swapToFiber(Fiber *current,
+            Fiber *target);
 
 } // namespace platform

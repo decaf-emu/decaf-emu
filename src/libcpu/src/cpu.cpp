@@ -181,7 +181,6 @@ void
 start()
 {
    installExceptionHandler();
-
    gRunning.store(true);
 
    for (auto i = 0u; i < gCore.size(); ++i) {
