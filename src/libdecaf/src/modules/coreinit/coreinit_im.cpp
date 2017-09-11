@@ -3,6 +3,7 @@
 #include "coreinit_ios.h"
 #include "coreinit_mutex.h"
 #include "ppcutils/wfunc_call.h"
+#include "ppcutils/stackobject.h"
 #include <cstring>
 
 namespace coreinit
@@ -420,14 +421,14 @@ IMDisableDim()
 IMError
 IMEnableAPD()
 {
-   be_val<uint32_t> previous;
-   auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::APDEnabled, &previous);
+   ppcutils::StackObject<be_val<uint32_t>> previous;
+   auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::APDEnabled, previous);
 
    if (result != IMError::OK) {
       return result;
    }
 
-   if (previous == TRUE) {
+   if (*previous == TRUE) {
       return IMError::OK;
    }
 
@@ -438,13 +439,13 @@ IMEnableAPD()
 IMError
 IMEnableDim()
 {
-   be_val<uint32_t> previous;
-   auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::DimEnabled, &previous);
+   ppcutils::StackObject<be_val<uint32_t>> previous;
+   auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::DimEnabled, previous);
    if (result != IMError::OK) {
       return result;
    }
 
-   if (previous == TRUE) {
+   if (*previous == TRUE) {
       return IMError::OK;
    }
 
@@ -453,12 +454,12 @@ IMEnableDim()
       return result;
    }
 
-   result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::Unknown5, &previous);
+   result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::Unknown5, previous);
    if (result != IMError::OK) {
       return result;
    }
 
-   if (previous == TRUE) {
+   if (*previous == TRUE) {
       return IMError::OK;
    }
 
@@ -546,14 +547,14 @@ IMSetDimEnableTv(BOOL value)
 IMError
 IMStartAPDVideoMode()
 {
-   be_val<uint32_t> previous;
-   auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::APDPeriod, &previous);
+   ppcutils::StackObject<be_val<uint32_t>> previous;
+   auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::APDPeriod, previous);
 
    if (result != IMError::OK) {
       return result;
    }
 
-   if (previous == 14400) {
+   if (*previous == 14400) {
       return IMError::OK;
    }
 
