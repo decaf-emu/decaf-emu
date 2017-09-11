@@ -457,6 +457,8 @@ MemoryMap::mapMemory(VirtualAddress virtualAddress,
       view = platform::mapViewOfFile(mMem1, protectFlags, physicalAddress - MEM1BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::MEM2) {
       view = platform::mapViewOfFile(mMem2, protectFlags, physicalAddress - MEM2BaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::LockedCache) {
+      view = platform::mapViewOfFile(mLockedCache, protectFlags, physicalAddress - LCBaseAddress, size, virtualPtr);
    } else {
       gLog->error("Invalid physicalMemoryType {} for mapMemory", static_cast<int>(physicalMemoryType));
       return false;
