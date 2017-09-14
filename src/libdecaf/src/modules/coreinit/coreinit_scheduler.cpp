@@ -497,7 +497,7 @@ void
 wakeupOneThreadNoLock(OSThread *thread)
 {
    if (thread->state == OSThreadState::Running ||
-      thread->state == OSThreadState::Ready) {
+       thread->state == OSThreadState::Ready) {
       // This thread is already running or ready
       return;
    }
