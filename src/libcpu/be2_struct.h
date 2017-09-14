@@ -76,7 +76,7 @@ inline phys_ptr<DstType> phys_cast(const be2_phys_ptr<SrcType> &src)
  * virt_addrof or phys_addrof.
  */
 template<typename Type>
-struct be2_struct : Type
+struct be2_struct : public Type
 {
    // Please use virt_addrof or phys_addrof instead
    cpu::VirtualPointer<Type> operator &() = delete;
@@ -137,7 +137,7 @@ public:
       return { cpu::translate(this) };
    }
 
-   phys_ptr<Type> pys_data() const
+   phys_ptr<Type> phys_data() const
    {
       return { cpu::translatePhysical(this) };
    }
@@ -202,13 +202,11 @@ inline virt_ptr<Type> virt_addrof(const be2_struct<Type> &ref)
    return virt_ptr<Type> { cpu::translate(std::addressof(ref)) };
 }
 
-
 template<typename Type>
 inline virt_ptr<Type> virt_addrof(const be2_val<Type> &ref)
 {
    return virt_ptr<Type> { cpu::translate(std::addressof(ref)) };
 }
-
 
 template<typename Type, std::size_t Size>
 virt_ptr<Type> virt_addrof(const be2_array<Type, Size> &ref)
@@ -232,13 +230,11 @@ inline phys_ptr<Type> phys_addrof(const be2_struct<Type> &ref)
    return phys_ptr<Type> { cpu::translatePhysical(std::addressof(ref)) };
 }
 
-
 template<typename Type>
 inline phys_ptr<Type> phys_addrof(const be2_val<Type> &ref)
 {
    return phys_ptr<Type> { cpu::translatePhysical(std::addressof(ref)) };
 }
-
 
 template<typename Type, std::size_t Size>
 inline phys_ptr<Type> phys_addrof(const be2_array<Type, Size> &ref)
