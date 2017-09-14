@@ -294,7 +294,7 @@ BinrecBackend::getCodeBlock(BinrecCore *core, uint32_t address)
    auto unwindSize = size_t { 0 };
 #endif
 
-   auto block = mCodeCache.registerCodeBlock(address, code, size, unwindInfo, unwindSize);
+   auto block = mCodeCache.registerCodeBlock(address, code, codeSize, unwindInfo, unwindSize);
    decaf_check(block);
    free(buffer);
 
