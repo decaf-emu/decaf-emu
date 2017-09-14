@@ -34,12 +34,12 @@ IOS_WriteAsync
 IOS_WriteAsyncEx
 */
 
-using IOSCommand = ios::IOSCommand;
-using IOSError = ios::IOSError;
-using IOSErrorCategory = ios::IOSErrorCategory;
-using IOSHandle = ios::IOSHandle;
-using IOSOpenMode = ios::IOSOpenMode;
-using IOSVec = ios::IOSVec;
+using IOSCommand = ios::Command;
+using IOSError = ios::Error;
+using IOSErrorCategory = ios::ErrorCategory;
+using IOSHandle = ios::IpcHandle;
+using IOSOpenMode = ios::OpenMode;
+using IOSVec = ios::IoctlVec;
 using IOSAsyncCallbackFn = wfunc_ptr<void, IOSError /* status */, void * /* context */>;
 
 IOSError

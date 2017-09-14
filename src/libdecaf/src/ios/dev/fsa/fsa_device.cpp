@@ -12,38 +12,38 @@ namespace dev
 namespace fsa
 {
 
-IOSError
-FSADevice::open(IOSOpenMode mode)
+Error
+FSADevice::open(OpenMode mode)
 {
    mFS = kernel::getFileSystem();
-   return IOSError::OK;
+   return Error::OK;
 }
 
 
-IOSError
+Error
 FSADevice::close()
 {
-   return IOSError::OK;
+   return Error::OK;
 }
 
 
-IOSError
+Error
 FSADevice::read(void *buffer,
                 size_t length)
 {
-   return static_cast<IOSError>(FSAStatus::UnsupportedCmd);
+   return static_cast<Error>(FSAStatus::UnsupportedCmd);
 }
 
 
-IOSError
+Error
 FSADevice::write(void *buffer,
                  size_t length)
 {
-   return static_cast<IOSError>(FSAStatus::UnsupportedCmd);
+   return static_cast<Error>(FSAStatus::UnsupportedCmd);
 }
 
 
-IOSError
+Error
 FSADevice::ioctl(uint32_t cmd,
                  void *inBuf,
                  size_t inLen,
@@ -57,7 +57,7 @@ FSADevice::ioctl(uint32_t cmd,
    decaf_check(outLen == sizeof(FSAResponse));
 
    if (request->emulatedError < 0) {
-      return static_cast<IOSError>(request->emulatedError.value());
+      return static_cast<Error>(request->emulatedError.value());
    }
 
    switch (static_cast<FSACommand>(cmd)) {
@@ -122,22 +122,22 @@ FSADevice::ioctl(uint32_t cmd,
       result = FSAStatus::UnsupportedCmd;
    }
 
-   return static_cast<IOSError>(result);
+   return static_cast<Error>(result);
 }
 
 
-IOSError
+Error
 FSADevice::ioctlv(uint32_t cmd,
                   size_t vecIn,
                   size_t vecOut,
-                  IOSVec *vec)
+                  IoctlVec *vec)
 {
    auto request = phys_ptr<FSARequest> { vec[0].paddr };
    auto result = FSAStatus::OK;
    decaf_check(vec[0].len == sizeof(FSARequest));
 
    if (request->emulatedError < 0) {
-      return static_cast<IOSError>(request->emulatedError.value());
+      return static_cast<Error>(request->emulatedError.value());
    }
 
    switch (static_cast<FSACommand>(cmd)) {
@@ -170,7 +170,7 @@ FSADevice::ioctlv(uint32_t cmd,
       result = FSAStatus::UnsupportedCmd;
    }
 
-   return static_cast<IOSError>(result);
+   return static_cast<Error>(result);
 }
 
 

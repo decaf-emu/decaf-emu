@@ -10,52 +10,52 @@ namespace dev
 namespace im
 {
 
-IOSError
-IMDevice::open(IOSOpenMode mode)
+Error
+IMDevice::open(OpenMode mode)
 {
-   return IOSError::OK;
+   return Error::OK;
 }
 
 
-IOSError
+Error
 IMDevice::close()
 {
-   return IOSError::OK;
+   return Error::OK;
 }
 
 
-IOSError
+Error
 IMDevice::read(void *buffer,
                size_t length)
 {
-   return IOSError::Invalid;
+   return Error::Invalid;
 }
 
 
-IOSError
+Error
 IMDevice::write(void *buffer,
                 size_t length)
 {
-   return IOSError::Invalid;
+   return Error::Invalid;
 }
 
 
-IOSError
+Error
 IMDevice::ioctl(uint32_t cmd,
                 void *inBuf,
                 size_t inLen,
                 void *outBuf,
                 size_t outLen)
 {
-   return IOSError::Invalid;
+   return Error::Invalid;
 }
 
 
-IOSError
+Error
 IMDevice::ioctlv(uint32_t cmd,
                  size_t vecIn,
                  size_t vecOut,
-                 IOSVec *vec)
+                 IoctlVec *vec)
 {
    auto result = IMError::OK;
 
@@ -121,10 +121,10 @@ IMDevice::ioctlv(uint32_t cmd,
       break;
    }
    default:
-      result = static_cast<IMError>(IOSError::Invalid);
+      result = static_cast<IMError>(Error::Invalid);
    }
 
-   return static_cast<IOSError>(result);
+   return static_cast<Error>(result);
 }
 
 
@@ -166,7 +166,7 @@ IMDevice::getParameter(IMGetParameterRequest *request,
       response->value = mDimEnableDrc;
       break;
    default:
-      result = static_cast<IMError>(IOSError::InvalidArg);
+      result = static_cast<IMError>(Error::InvalidArg);
    }
 
    return result;
@@ -202,7 +202,7 @@ IMDevice::getNvParameter(IMGetNvParameterRequest *request,
       response->value = mDimEnableDrc;
       break;
    default:
-      result = static_cast<IMError>(IOSError::InvalidArg);
+      result = static_cast<IMError>(Error::InvalidArg);
    }
 
    return result;
@@ -223,7 +223,7 @@ IMDevice::getTimerRemaining(IMGetTimerRemainingRequest *request,
       response->value = mDimPeriodSeconds;
       break;
    default:
-      result = static_cast<IMError>(IOSError::InvalidArg);
+      result = static_cast<IMError>(Error::InvalidArg);
    }
 
    return result;
@@ -258,7 +258,7 @@ IMDevice::setParameter(IMSetParameterRequest *request)
       mDimEnableDrc = request->value;
       break;
    default:
-      result = static_cast<IMError>(IOSError::InvalidArg);
+      result = static_cast<IMError>(Error::InvalidArg);
    }
 
    return result;
@@ -293,7 +293,7 @@ IMDevice::setNvParameter(IMSetNvParameterRequest *request)
       mDimEnableDrc = request->value;
       break;
    default:
-      result = static_cast<IMError>(IOSError::InvalidArg);
+      result = static_cast<IMError>(Error::InvalidArg);
    }
 
    return result;

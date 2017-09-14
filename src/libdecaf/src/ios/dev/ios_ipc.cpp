@@ -1,14 +1,15 @@
+#if 0
 #include "ios_device.h"
 #include "ios_ipc.h"
-#include "dev/fsa/fsa_device.h"
-#include "dev/im/im_device.h"
-#include "dev/mcp/mcp_device.h"
-#include "dev/socket/socket_device.h"
-#include "dev/usr_cfg/usr_cfg_device.h"
+#include "fsa/fsa_device.h"
+#include "im/im_device.h"
+#include "mcp/mcp_device.h"
+#include "socket/socket_device.h"
+#include "usr_cfg/usr_cfg_device.h"
 
 #include <map>
 #include <string>
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 
 namespace ios
 {
@@ -212,3 +213,4 @@ iosInitDevices()
 }
 
 } // namespace ios
+#endif

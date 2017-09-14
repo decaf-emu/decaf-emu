@@ -8,6 +8,7 @@
 #include <common/be_ptr.h>
 #include <common/be_val.h>
 #include <common/structsize.h>
+#include <libcpu/be2_struct.h>
 
 namespace coreinit
 {
@@ -18,10 +19,38 @@ namespace coreinit
  * @{
  */
 
-using IPCBuffer = kernel::IPCBuffer;
-
 constexpr size_t
 IPCBufferCount = 0x30;
+
+struct IPCBuffer
+{
+   //! Actual IPC request
+   kernel::IpcRequest request;
+
+   //! Previous IPC command
+   be_val<IOSCommand> prevCommand;
+
+   //! Previous IPC handle
+   be_val<IOSHandle> prevHandle;
+
+   //! Buffer argument 1
+   be2_virt_ptr<void> buffer1;
+
+   //! Buffer argument 2
+   be2_virt_ptr<void> buffer2;
+
+   //! Buffer to copy device name to for IOS_Open
+   std::array<char, 0x20> nameBuffer;
+
+   UNKNOWN(0x80 - 0x68);
+};
+CHECK_OFFSET(IPCBuffer, 0x00, request);
+CHECK_OFFSET(IPCBuffer, 0x38, prevCommand);
+CHECK_OFFSET(IPCBuffer, 0x3C, prevHandle);
+CHECK_OFFSET(IPCBuffer, 0x40, buffer1);
+CHECK_OFFSET(IPCBuffer, 0x44, buffer2);
+CHECK_OFFSET(IPCBuffer, 0x48, nameBuffer);
+CHECK_SIZE(IPCBuffer, 0x80);
 
 /**
  * Contains all data required for IPCDriver about an IPC request.

@@ -1,5 +1,5 @@
 #pragma once
-#include "ios/ios_device.h"
+#include "ios/dev/ios_device.h"
 #include "mcp_enum.h"
 #include "mcp_request.h"
 #include "mcp_response.h"
@@ -28,32 +28,32 @@ public:
    static constexpr const char *Name = "/dev/mcp";
 
 public:
-   virtual IOSError
-   open(IOSOpenMode mode) override;
+   virtual Error
+   open(OpenMode mode) override;
 
-   virtual IOSError
+   virtual Error
    close() override;
 
-   virtual IOSError
+   virtual Error
    read(void *buffer,
         size_t length) override;
 
-   virtual IOSError
+   virtual Error
    write(void *buffer,
          size_t length) override;
 
-   virtual IOSError
+   virtual Error
    ioctl(uint32_t request,
          void *inBuf,
          size_t inLen,
          void *outBuf,
          size_t outLen) override;
 
-   virtual IOSError
+   virtual Error
    ioctlv(uint32_t request,
           size_t vecIn,
           size_t vecOut,
-          IOSVec *vec) override;
+          IoctlVec *vec) override;
 
 private:
    MCPError getSysProdSettings(MCPSysProdSettings *settings);

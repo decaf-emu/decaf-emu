@@ -1,42 +1,43 @@
 #include "ios_device_debug.h"
 
 #include <common/log.h>
+#include <fmt/format.h>
 #include <libcpu/mem.h>
 
 namespace ios
 {
 
-IOSError
-DebugDevice::open(IOSOpenMode mode)
+Error
+DebugDevice::open(OpenMode mode)
 {
    gLog->warn("{}: open({})", mName, mode);
-   return IOSError::OK;
+   return Error::OK;
 }
 
-IOSError
+Error
 DebugDevice::close()
 {
    gLog->warn("{}: close()", mName);
-   return IOSError::OK;
+   return Error::OK;
 }
 
-IOSError
+Error
 DebugDevice::read(void *buffer,
                   size_t length)
 {
    gLog->warn("{}: read({:08X}, {})", mName,
               mem::untranslate(buffer), length);
-   return IOSError::FailInternal;
+   return Error::FailInternal;
 }
 
-IOSError
+Error
 DebugDevice::write(void *buffer,
                    size_t length)
 {
    gLog->warn("{}: write({:08X}, {})", mName,
               mem::untranslate(buffer), length);
 
-   return IOSError::FailInternal;
+   return Error::FailInternal;
 }
 
 static void
@@ -56,7 +57,7 @@ writeMemory(fmt::MemoryWriter &out,
    }
 }
 
-IOSError
+Error
 DebugDevice::ioctl(uint32_t request,
                    void *inBuf,
                    size_t inLen,
@@ -71,14 +72,14 @@ DebugDevice::ioctl(uint32_t request,
 
    writeMemory(w, "in", inBuf, inLen);
    gLog->warn(w.str());
-   return IOSError::OK;
+   return Error::OK;
 }
 
-IOSError
+Error
 DebugDevice::ioctlv(uint32_t request,
                     size_t vecIn,
                     size_t vecOut,
-                    IOSVec *vec)
+                    IoctlVec *vec)
 {
    fmt::MemoryWriter w;
    w.write("{}: ioctlv({}, {}, {}, {:08X}): ", mName,
@@ -96,7 +97,7 @@ DebugDevice::ioctlv(uint32_t request,
    }
 
    gLog->warn(w.str());
-   return IOSError::OK;
+   return Error::OK;
 }
 
 } // namespace ios

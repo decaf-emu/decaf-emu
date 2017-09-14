@@ -10,37 +10,37 @@ namespace dev
 namespace socket
 {
 
-IOSError
-SocketDevice::open(IOSOpenMode mode)
+Error
+SocketDevice::open(OpenMode mode)
 {
-   return IOSError::OK;
+   return Error::OK;
 }
 
 
-IOSError
+Error
 SocketDevice::close()
 {
-   return IOSError::OK;
+   return Error::OK;
 }
 
 
-IOSError
+Error
 SocketDevice::read(void *buffer,
                    size_t length)
 {
-   return IOSError::Invalid;
+   return Error::Invalid;
 }
 
 
-IOSError
+Error
 SocketDevice::write(void *buffer,
                     size_t length)
 {
-   return IOSError::Invalid;
+   return Error::Invalid;
 }
 
 
-IOSError
+Error
 SocketDevice::ioctl(uint32_t cmd,
                     void *inBuf,
                     size_t inLen,
@@ -53,7 +53,7 @@ SocketDevice::ioctl(uint32_t cmd,
    switch (static_cast<SocketCommand>(cmd)) {
    case SocketCommand::Close:
       if (inLen != 4) {
-         return static_cast<IOSError>(0xFFF5000B);
+         return static_cast<Error>(0xFFF5000B);
       }
 
       result = closeRequest(&request->closeRequest);
@@ -65,17 +65,17 @@ SocketDevice::ioctl(uint32_t cmd,
       result = SocketError::Inval;
    }
 
-   return static_cast<IOSError>(result);
+   return static_cast<Error>(result);
 }
 
 
-IOSError
+Error
 SocketDevice::ioctlv(uint32_t cmd,
                      size_t vecIn,
                      size_t vecOut,
-                     IOSVec *vec)
+                     IoctlVec *vec)
 {
-   return IOSError::Invalid;
+   return Error::Invalid;
 }
 
 

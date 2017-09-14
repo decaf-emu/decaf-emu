@@ -1,0 +1,112 @@
+#ifndef IOS_KERNEL_ENUM_H
+#define IOS_KERNEL_ENUM_H
+
+#include <common/enum_start.h>
+
+ENUM_NAMESPACE_BEG(ios)
+
+ENUM_NAMESPACE_BEG(kernel)
+
+ENUM_BEG(DeviceID, uint32_t)
+   ENUM_VALUE(NandInterfaceAHBALL,  1)
+   ENUM_VALUE(AesEngineAHBALL,      2)
+   ENUM_VALUE(Sha1EngineAHBALL,     3)
+   ENUM_VALUE(UsbEhci,              4)
+   ENUM_VALUE(UsbOhci0,             5)
+   ENUM_VALUE(UsbOhci1,             6)
+   ENUM_VALUE(SdHostController,     7)
+   ENUM_VALUE(Wireless80211,        8)
+   ENUM_VALUE(SysProt,              10)
+   ENUM_VALUE(PowerButton,          15)
+   ENUM_VALUE(DriveInterface,       16)
+   ENUM_VALUE(ExiRtc,               18)
+   ENUM_VALUE(Sata,                 26)
+   ENUM_VALUE(IpcStarbuckCompat,    29)
+   ENUM_VALUE(Unknown30,            30)
+   ENUM_VALUE(Unknown31,            31)
+   ENUM_VALUE(Unknown32,            32)
+   ENUM_VALUE(Unknown33,            33)
+   ENUM_VALUE(Drh,                  34)
+   ENUM_VALUE(Unknown35,            35)
+   ENUM_VALUE(Unknown36,            36)
+   ENUM_VALUE(Unknown37,            37)
+   ENUM_VALUE(AesEngineAHBLT,       38)
+   ENUM_VALUE(Sha1EngineAHBLT,      39)
+   ENUM_VALUE(Unknown40,            40)
+   ENUM_VALUE(Unknown41,            41)
+   ENUM_VALUE(Unknown42,            42)
+   ENUM_VALUE(I2CEspresso,          43)
+   ENUM_VALUE(I2CStarbuck,          44)
+   ENUM_VALUE(IpcStarbuckCore2,     45)
+   ENUM_VALUE(IpcStarbuckCore1,     46)
+   ENUM_VALUE(IpcStarbuckCore0,     47)
+ENUM_END(DeviceID)
+
+FLAGS_BEG(HeapFlags, uint32_t)
+   FLAGS_VALUE(LocalProcessHeap,    1 << 0)
+   FLAGS_VALUE(CrossProcessHeap,    1 << 1)
+FLAGS_END(HeapFlags)
+
+ENUM_BEG(HeapBlockState, uint32_t)
+   ENUM_VALUE(Free,                 0xBABE0000)
+   ENUM_VALUE(Allocated,            0xBABE0001)
+   ENUM_VALUE(InnerBlock,           0xBABE0002)
+ENUM_END(HeapBlockState)
+
+FLAGS_BEG(MessageFlags, uint8_t)
+   FLAGS_VALUE(None,                      0)
+   FLAGS_VALUE(NonBlocking,               1)
+FLAGS_END(MessageFlags)
+
+FLAGS_BEG(MessageQueueFlags, uint8_t)
+   FLAGS_VALUE(None,                      0)
+   FLAGS_VALUE(RegisteredEventHandler,    1)
+FLAGS_END(MessageQueueFlags)
+
+ENUM_BEG(ResourceHandleState, int32_t)
+   ENUM_VALUE(Free,                 0x00)
+   ENUM_VALUE(Opening,              0x11)
+   ENUM_VALUE(Open,                 0x22)
+   ENUM_VALUE(Closed,               0x33)
+ENUM_END(ResourceHandleState)
+
+ENUM_BEG(ResourcePermissionGroup, int32_t)
+   ENUM_VALUE(BSP,                  1)
+   ENUM_VALUE(DK,                   3)
+   ENUM_VALUE(FS,                   11)
+   ENUM_VALUE(UHS,                  12)
+   ENUM_VALUE(MCP,                  13)
+   ENUM_VALUE(NIM,                  14)
+   ENUM_VALUE(ACT,                  15)
+   ENUM_VALUE(FPD,                  16)
+   ENUM_VALUE(BOSS,                 17)
+   ENUM_VALUE(ACP,                  18)
+   ENUM_VALUE(PDM,                  19)
+   ENUM_VALUE(AC,                   20)
+   ENUM_VALUE(NDM,                  21)
+   ENUM_VALUE(NSEC,                 22)
+ENUM_END(ResourcePermissionGroup)
+
+FLAGS_BEG(ThreadFlags, uint32_t)
+   FLAGS_VALUE(Detached,               1 << 0)
+   FLAGS_VALUE(AllocateIpcBufferPool,  1 << 1)
+FLAGS_END(ThreadFlags)
+
+ENUM_BEG(ThreadState, uint32_t)
+   ENUM_VALUE(Available,               0x00)
+   ENUM_VALUE(Ready,                   0x01)
+   ENUM_VALUE(Running,                 0x02)
+   ENUM_VALUE(Stopped,                 0x03)
+   ENUM_VALUE(Waiting,                 0x04)
+   ENUM_VALUE(Dead,                    0x05)
+   ENUM_VALUE(Faulted,                 0x06)
+   ENUM_VALUE(Unknown,                 0x07)
+ENUM_END(ThreadState)
+
+ENUM_NAMESPACE_END(kernel)
+
+ENUM_NAMESPACE_END(ios)
+
+#include <common/enum_end.h>
+
+#endif // ifdef IOS_KERNEL_ENUM_H
