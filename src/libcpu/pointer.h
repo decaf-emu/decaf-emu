@@ -267,7 +267,7 @@ public:
       return Pointer { mAddress - (value * sizeof(value_type)) };
    }
 
-private:
+protected:
    address_type mAddress;
 };
 

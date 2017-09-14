@@ -185,7 +185,7 @@ public:
    // Please use virt_addrof or phys_addrof instead
    cpu::VirtualPointer<Type> operator &() = delete;
 
-private:
+protected:
    value_type mValues[Size];
 };
 
