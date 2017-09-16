@@ -3,7 +3,6 @@
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
 #include "latte/latte_registers.h"
-#include "libdecaf/decaf_graphics_info.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
 
@@ -22,7 +21,12 @@ namespace opengl
 GLDriver::GLDriver()
 {
    mRegisters.fill(0);
-   mDebugInfo = std::make_shared<decaf::GraphicsDebugInfoGL>();
+}
+
+gpu::GraphicsDriverType
+GLDriver::type()
+{
+   return gpu::GraphicsDriverType::OpenGL;
 }
 
 void
@@ -171,12 +175,6 @@ GLDriver::stopFrameCapture()
    mFrameCaptureTV = false;
    mFrameCaptureDRC = false;
    return mFramesCaptured;
-}
-
-gpu::GraphicsDriver::DriverType
-GLDriver::type()
-{
-   return DRIVER_GL;
 }
 
 
@@ -457,27 +455,25 @@ GLDriver::getAverageFPS()
 }
 
 float
-GLDriver::getAverageFrametime()
+GLDriver::getAverageFrametimeMS()
 {
    return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
 }
 
-decaf::GraphicsDebugInfoGL*
-GLDriver::getGraphicsDebugInfoPtr() {
-   return mDebugInfo.get();
+gpu::OpenGLDriver::DebuggerInfo *
+GLDriver::getGraphicsDebuggerInfo() {
+   return &mDebuggerInfo;
 }
 
 void
 GLDriver::updateGraphicsDebugInfo()
 {
-   *mDebugInfo = decaf::GraphicsDebugInfoGL{
-      mFetchShaders.size(),
-      mVertexShaders.size(),
-      mPixelShaders.size(),
-      mShaderPipelines.size(),
-      mSurfaces.size(),
-      mDataBuffers.size()
-   };
+   mDebuggerInfo.numFetchShaders = mFetchShaders.size();
+   mDebuggerInfo.numVertexShaders = mVertexShaders.size();
+   mDebuggerInfo.numPixelShaders = mPixelShaders.size();
+   mDebuggerInfo.numShaderPipelines = mShaderPipelines.size();
+   mDebuggerInfo.numSurfaces = mSurfaces.size();
+   mDebuggerInfo.numDataBuffers = mDataBuffers.size();
 }
 
 uint64_t

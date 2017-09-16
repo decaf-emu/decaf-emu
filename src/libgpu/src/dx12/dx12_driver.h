@@ -16,18 +16,15 @@ public:
    Driver();
    virtual ~Driver() = default;
 
-   void run() override;
-   void stop() override;
-   float getAverageFPS() override;
-   float getAverageFrametime() override;
+   virtual void run() override;
+   virtual void stop() override;
+   virtual gpu::GraphicsDriverType type() override;
 
-   void notifyCpuFlush(void *ptr, uint32_t size) override;
-   void notifyGpuFlush(void *ptr, uint32_t size) override;
+   virtual float getAverageFPS() override;
+   virtual float getAverageFrametimeMS() override;
 
-   DriverType type() override;
-
-private:
-
+   virtual void notifyCpuFlush(void *ptr, uint32_t size) override;
+   virtual void notifyGpuFlush(void *ptr, uint32_t size) override;
 };
 
 } // namespace dx12

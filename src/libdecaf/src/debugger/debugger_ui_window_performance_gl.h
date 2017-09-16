@@ -1,7 +1,8 @@
 #pragma once
+#ifdef DECAF_GL
 #include "debugger_ui_window.h"
 #include "debugger_ui_window_performance.h"
-#include "decaf_graphics_info.h"
+#include <libgpu/gpu_opengldriver.h>
 
 namespace debugger
 {
@@ -18,9 +19,11 @@ public:
    void draw() override;
 
 private:
-   std::shared_ptr<decaf::GraphicsDebugInfoGL> mDebugInfo;
+   gpu::OpenGLDriver::DebuggerInfo *mInfo;
 };
 
 } // namespace ui
 
 } // namespace debugger
+
+#endif // ifdef DECAF_GL

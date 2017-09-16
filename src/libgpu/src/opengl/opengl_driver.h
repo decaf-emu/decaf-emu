@@ -302,14 +302,17 @@ public:
    virtual void
    stop() override;
 
+   virtual gpu::GraphicsDriverType
+   type() override;
+
    virtual float
    getAverageFPS() override;
 
    virtual float
-   getAverageFrametime() override;
+   getAverageFrametimeMS() override;
 
-   virtual decaf::GraphicsDebugInfoGL*
-   getGraphicsDebugInfoPtr() override;
+   virtual gpu::OpenGLDriver::DebuggerInfo *
+   getGraphicsDebuggerInfo() override;
 
    virtual void
    notifyCpuFlush(void *ptr,
@@ -333,8 +336,6 @@ public:
 
    virtual size_t
    stopFrameCapture() override;
-
-   DriverType type() override;
 
 private:
    void initGL();
@@ -583,7 +584,7 @@ private:
    bool mFrameCaptureTV = false;
    bool mFrameCaptureDRC = false;
 
-   std::shared_ptr<decaf::GraphicsDebugInfoGL> mDebugInfo;
+   gpu::OpenGLDriver::DebuggerInfo mDebuggerInfo;
 };
 
 } // namespace opengl

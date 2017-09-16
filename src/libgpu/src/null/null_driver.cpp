@@ -28,6 +28,12 @@ Driver::stop()
    gpu::ringbuffer::awaken();
 }
 
+gpu::GraphicsDriverType
+Driver::type()
+{
+   return gpu::GraphicsDriverType::Null;
+}
+
 float
 Driver::getAverageFPS()
 {
@@ -35,31 +41,21 @@ Driver::getAverageFPS()
 }
 
 float
-Driver::getAverageFrametime()
+Driver::getAverageFrametimeMS()
 {
    return 0.0f;
 }
 
-void* Driver::getGraphicsDebugInfo()
-{
-   return nullptr;
-}
-
-   void
+void
 Driver::notifyCpuFlush(void *ptr,
-                           uint32_t size)
+                       uint32_t size)
 {
 }
 
 void
 Driver::notifyGpuFlush(void *ptr,
-                           uint32_t size)
+                       uint32_t size)
 {
 }
 
-gpu::GraphicsDriver::DriverType
-Driver::type()
-{
-   return DRIVER_NULL;
-}
 } // namespace null

@@ -1,32 +1,29 @@
 #pragma once
 #include <cstdint>
 #include <functional>
-#include <memory>
 
 namespace gpu
 {
 
+enum class GraphicsDriverType
+{
+   Null,
+   OpenGL,
+   DirectX,
+   Vulkan
+};
+
 class GraphicsDriver
 {
 public:
-   enum DriverType
-   {
-      DRIVER_NULL,
-      DRIVER_GL,
-      DRIVER_DX,
-      DRIVER_VULKAN,
-   };
-
-public:
-   virtual ~GraphicsDriver()
-   {
-   }
+   virtual ~GraphicsDriver() = default;
 
    virtual void run() = 0;
    virtual void stop() = 0;
+   virtual GraphicsDriverType type() = 0;
+   
    virtual float getAverageFPS() = 0;
-   // In milliseconds
-   virtual float getAverageFrametime() = 0;
+   virtual float getAverageFrametimeMS() = 0;
 
    // Called for stores to emulated physical RAM, such as via DCFlushRange().
    //  May be called from any CPU core!
@@ -52,8 +49,6 @@ public:
    {
       return 0;
    }
-
-   virtual DriverType type() = 0;
 };
 
 GraphicsDriver *

@@ -1,8 +1,6 @@
 #pragma once
 #ifdef DECAF_GL
 #include "gpu_graphicsdriver.h"
-#include "libdecaf/decaf_graphics_info.h"
-
 #include <glbinding/gl/gl.h>
 
 namespace gpu
@@ -11,11 +9,19 @@ namespace gpu
 class OpenGLDriver : public GraphicsDriver
 {
 public:
-   using SwapFunction = std::function<void(gl::GLuint, gl::GLuint)>;
-
-   virtual ~OpenGLDriver()
+   struct DebuggerInfo
    {
-   }
+      uint64_t numFetchShaders = 0;
+      uint64_t numVertexShaders = 0;
+      uint64_t numPixelShaders = 0;
+      uint64_t numShaderPipelines = 0;
+      uint64_t numSurfaces = 0;
+      uint64_t numDataBuffers = 0;
+   };
+
+   virtual ~OpenGLDriver() = default;
+
+   using SwapFunction = std::function<void(gl::GLuint, gl::GLuint)>;
 
    virtual void
    getSwapBuffers(gl::GLuint *tv,
@@ -24,8 +30,8 @@ public:
    virtual void
    syncPoll(const SwapFunction &swapFunc) = 0;
 
-   virtual decaf::GraphicsDebugInfoGL*
-   getGraphicsDebugInfoPtr() = 0;
+   virtual DebuggerInfo *
+   getGraphicsDebuggerInfo() = 0;
 };
 
 } // namespace gpu
