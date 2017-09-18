@@ -364,7 +364,7 @@ ipcDriverProcessResponses()
       } else {
          OSMessage message;
          message.message = mem::translate<void>(request->asyncCallback.getAddress());
-         message.args[0] = request->ipcBuffer->reply;
+         message.args[0] = static_cast<uint32_t>(request->ipcBuffer->reply.value());
          message.args[1] = request->asyncContext.getAddress();
          message.args[2] = 0;
          OSSendMessage(&coreData->queue, &message, OSMessageFlags::None);

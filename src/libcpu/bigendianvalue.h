@@ -44,30 +44,47 @@ public:
       return value();
    }
 
-   template<typename = typename std::enable_if<std::is_constructible<bool, value_type>::value>::type>
+   template<typename = typename std::enable_if<std::is_convertible<value_type, bool>::value>::type>
    explicit operator bool() const
    {
       return static_cast<bool>(value());
    }
 
-   template<typename OtherType, typename = typename std::enable_if<std::is_constructible<value_type, const OtherType &>::value>::type>
+   template<typename OtherType, typename = typename std::enable_if<std::is_constructible<value_type, const OtherType &>::value ||
+                                                                   std::is_convertible<const OtherType &, value_type>::value>::type>
    BigEndianValue & operator =(const OtherType &other)
    {
-      setValue(value_type { other });
+      if constexpr (std::is_constructible<value_type, const OtherType &>::value) {
+         setValue(value_type { other });
+      } else {
+         setValue(static_cast<value_type>(other));
+      }
+
       return *this;
    }
 
-   template<typename OtherType, typename = typename std::enable_if<std::is_constructible<value_type, const OtherType &>::value>::type>
+   template<typename OtherType, typename = typename std::enable_if<std::is_convertible<const OtherType &, value_type>::value ||
+                                                                   std::is_constructible<value_type, const OtherType &>::value>::type>
    BigEndianValue & operator =(const BigEndianValue<OtherType> &other)
    {
-      setValue(value_type { other.value() });
+      if constexpr (std::is_constructible<value_type, const OtherType &>::value) {
+         setValue(value_type { other.value() });
+      } else {
+         setValue(static_cast<value_type>(other.value()));
+      }
+
       return *this;
    }
 
-   template<typename OtherType, typename = typename std::enable_if<std::is_constructible<OtherType, Type>::value>::type>
+   template<typename OtherType, typename = typename std::enable_if<std::is_convertible<Type, OtherType>::value ||
+                                                                   std::is_constructible<OtherType, Type>::value>::type>
    explicit operator OtherType() const
    {
-      return static_cast<OtherType>(value());
+      if constexpr (std::is_constructible<OtherType, value_type>::value) {
+         return OtherType { value() };
+      } else {
+         return static_cast<OtherType>(value());
+      }
    }
 
    template<typename OtherType, typename K = value_type>
@@ -251,7 +268,7 @@ public:
    template<typename = decltype(std::declval<const value_type>() + 1)>
    BigEndianValue &operator ++()
    {
-      *this = value() + 1;
+      setValue(value() + 1);
       return *this;
    }
 
@@ -259,14 +276,14 @@ public:
    BigEndianValue operator ++(int)
    {
       auto before = *this;
-      *this = value() + 1;
+      setValue(value() + 1);
       return before;
    }
 
    template<typename = decltype(std::declval<const value_type>() - 1)>
    BigEndianValue &operator --()
    {
-      *this = value() - 1;
+      setValue(value() - 1);
       return *this;
    }
 
@@ -274,7 +291,7 @@ public:
    BigEndianValue operator --(int)
    {
       auto before = *this;
-      *this = value() - 1;
+      setValue(value() - 1);
       return before;
    }
 
