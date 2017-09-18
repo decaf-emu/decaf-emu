@@ -113,20 +113,22 @@ drawPrimitives2(gl::GLenum mode,
                 uint32_t numInstances,
                 uint32_t baseInstance)
 {
+   static_assert(std::is_same<IndexType, uint16_t>::value || std::is_same<IndexType, uint32_t>::value);
+
    if (numInstances == 1) {
       if (!indices) {
          gl::glDrawArrays(mode, baseVertex, count);
-      } else if (std::is_same<IndexType, uint16_t>()) {
+      } else if constexpr (std::is_same<IndexType, uint16_t>()) {
          gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, baseVertex);
-      } else if (std::is_same<IndexType, uint32_t>()) {
+      } else if constexpr (std::is_same<IndexType, uint32_t>()) {
          gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, baseVertex);
       }
    } else {
       if (!indices) {
          gl::glDrawArraysInstancedBaseInstance(mode, 0, count, numInstances, baseInstance);
-      } else if (std::is_same<IndexType, uint16_t>()) {
+      } else if constexpr (std::is_same<IndexType, uint16_t>()) {
          gl::glDrawElementsInstancedBaseInstance(mode, count, gl::GL_UNSIGNED_SHORT, indices, numInstances, baseInstance);
-      } else if (std::is_same<IndexType, uint32_t>()) {
+      } else if constexpr (std::is_same<IndexType, uint32_t>()) {
          gl::glDrawElementsInstancedBaseInstance(mode, count, gl::GL_UNSIGNED_INT, indices, numInstances, baseInstance);
       }
    }
