@@ -176,7 +176,8 @@ GLDriver::dumpScanBuffer(const std::string &filename, const ScanBufferChain &buf
 {
    std::vector<uint8_t> buffer;
    buffer.resize(buf.width * buf.height * 4);
-   gl::glGetTextureImage(buf.object, 0, gl::GL_BGRA, gl::GL_UNSIGNED_BYTE, buffer.size(), buffer.data());
+   gl::glGetTextureImage(buf.object, 0, gl::GL_BGRA, gl::GL_UNSIGNED_BYTE,
+                         static_cast<gl::GLsizei>(buffer.size()), buffer.data());
    return tga::writeFile(filename, 32, 8, buf.width, buf.height, buffer.data());
 }
 
