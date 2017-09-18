@@ -490,7 +490,7 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
          case FPMul:
             // But!  The second operand to a single-precision multiply
             // operation is rounded to 24 bits.
-            if (std::is_same<Type, float>::value) {
+            if constexpr (std::is_same<Type, float>::value) {
                roundForMultiply(&a, &b);
             }
             d = static_cast<Type>(a * b);
@@ -539,7 +539,7 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
          fesetround(oldRound);
       }
 
-      if (std::is_same<Type, float>::value) {
+      if constexpr (std::is_same<Type, float>::value) {
          float dFloat = static_cast<float>(d);
          d = extend_float(dFloat);
          state->fpr[instr.frD].paired0 = d;
