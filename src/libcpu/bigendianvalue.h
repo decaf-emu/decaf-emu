@@ -265,14 +265,14 @@ public:
       return *this;
    }
 
-   template<typename = decltype(std::declval<const value_type>() + 1)>
+   template<typename T = Type, typename = decltype(std::declval<const T>() + 1)>
    BigEndianValue &operator ++()
    {
       setValue(value() + 1);
       return *this;
    }
 
-   template<typename = decltype(std::declval<const value_type>() + 1)>
+   template<typename T = Type, typename = decltype(std::declval<const T>() + 1)>
    BigEndianValue operator ++(int)
    {
       auto before = *this;
@@ -280,14 +280,14 @@ public:
       return before;
    }
 
-   template<typename = decltype(std::declval<const value_type>() - 1)>
+   template<typename T = Type, typename = decltype(std::declval<const T>() - 1)>
    BigEndianValue &operator --()
    {
       setValue(value() - 1);
       return *this;
    }
 
-   template<typename = decltype(std::declval<const value_type>() - 1)>
+   template<typename T = Type, typename = decltype(std::declval<const T>() - 1)>
    BigEndianValue operator --(int)
    {
       auto before = *this;
