@@ -1,6 +1,8 @@
 #pragma once
 #include "address.h"
+
 #include <common/byte_swap.h>
+#include <ostream>
 
 namespace cpu
 {
@@ -324,5 +326,12 @@ public:
 private:
    value_type mStorage;
 };
+
+template<typename Type>
+inline std::ostream &
+operator <<(std::ostream &os, const BigEndianValue<Type> &val)
+{
+   return os << val.value();
+}
 
 } // namespace cpu

@@ -3,6 +3,7 @@
 #include "bigendianvalue.h"
 #include "mmu.h"
 
+#include <ostream>
 #include <type_traits>
 
 namespace cpu
@@ -270,6 +271,13 @@ public:
 protected:
    address_type mAddress;
 };
+
+template<typename ValueType, typename AddressType>
+inline std::ostream &
+operator <<(std::ostream &os, const Pointer<ValueType, AddressType> &val)
+{
+   return os << val.getRawPointer();
+}
 
 template<typename Value>
 using VirtualPointer = Pointer<Value, VirtualAddress>;

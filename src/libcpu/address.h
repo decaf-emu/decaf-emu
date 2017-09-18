@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <common/align.h>
+#include <ostream>
 
 namespace cpu
 {
@@ -90,9 +91,28 @@ private:
 };
 
 template<typename Type>
+inline std::ostream &
+operator <<(std::ostream &os, const Address<Type> &val)
+{
+   return os << val.getAddress();
+}
+
+template<typename Type>
 struct AddressRange
 {
    using address_type = Address<Type>;
+
+   AddressRange(address_type start, uint32_t size) :
+      start(start),
+      size(size)
+   {
+   }
+
+   AddressRange(address_type start, address_type end) :
+      start(start),
+      size(static_cast<uint32_t>(end - start + 1))
+   {
+   }
 
    constexpr bool contains(AddressRange &other) const
    {
