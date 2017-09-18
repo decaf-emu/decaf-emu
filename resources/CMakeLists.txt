@@ -1,9 +1,13 @@
 project(resources)
 
 set(Fonts
+   fonts/CafeCn.ttf
+   fonts/CafeKr.ttf
+   fonts/CafeStd.ttf
+   fonts/CafeTw.ttf
+   fonts/NotoSansCJK.LICENSE
    fonts/DejaVuSansMono.ttf
-   fonts/SourceSansPro-Regular.ttf
-   fonts/LICENSE.txt)
+   fonts/DejaVuSansMono.LICENSE)
 
 set(ResourceFiles ${Fonts})
 
