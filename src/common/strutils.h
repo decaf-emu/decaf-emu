@@ -1,9 +1,11 @@
 #pragma once
 #include "platform.h"
+
 #include <algorithm>
 #include <cstdarg>
 #include <cstdio>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifdef PLATFORM_WINDOWS
@@ -64,7 +66,7 @@ join_string(IteratorType begin, IteratorType end, char delim, std::string &out)
 
 // Returns true if source begins with prefix
 inline bool
-begins_with(const std::string &source, const std::string &prefix)
+begins_with(const std::string_view &source, const std::string_view &prefix)
 {
    if (prefix.size() > source.size()) {
       return false;
@@ -75,7 +77,7 @@ begins_with(const std::string &source, const std::string &prefix)
 
 // Returns true if source ends with suffix
 inline bool
-ends_with(const std::string &source, const std::string &suffix)
+ends_with(const std::string_view &source, const std::string_view &suffix)
 {
    if (suffix.size() > source.size()) {
       return false;
