@@ -196,8 +196,6 @@ reserveMemory(uintptr_t address,
    auto result = VirtualAlloc(baseAddress, size, MEM_RESERVE, PAGE_NOACCESS);
 
    if (result != baseAddress) {
-      gLog->debug("reserveMemory(address: 0x{:X}, size: 0x{:X}) failed with error: {}",
-                  address, size, GetLastError());
       return false;
    }
 
