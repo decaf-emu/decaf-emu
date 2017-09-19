@@ -92,12 +92,12 @@ initialiseLogging(const std::string &filename)
    auto logLevel = spdlog::level::info;
 
    if (decaf::config::log::to_stdout) {
-      sinks.push_back(spdlog::sinks::stdout_sink_st::instance());
+      sinks.push_back(spdlog::sinks::stdout_sink_mt::instance());
    }
 
    if (decaf::config::log::to_file) {
-      auto path = decaf::config::log::directory + "/" + filename;
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(path, "txt", 23, 59));
+      auto path = fs::HostPath { decaf::config::log::directory } .join(filename);
+      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(path.path(), 23, 59));
    }
 
    for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
@@ -109,7 +109,7 @@ initialiseLogging(const std::string &filename)
       }
    }
 
-   gLog = std::make_shared<spdlog::logger>("decaf", begin(sinks), end(sinks));
+   gLog = spdlog::create("decaf", begin(sinks), end(sinks));
    gLog->set_level(logLevel);
    gLog->set_formatter(std::make_shared<LogFormatter>());
 
