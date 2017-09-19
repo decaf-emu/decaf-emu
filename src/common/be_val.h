@@ -1,6 +1,7 @@
 #pragma once
 #include "byte_swap.h"
-#include <ostream>
+
+#include <fmt/format.h>
 #include <type_traits>
 
 template<typename Type>
@@ -72,8 +73,11 @@ protected:
 };
 
 template<typename Type>
-inline std::ostream&
-operator<<(std::ostream& os, const be_val<Type>& val)
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const be_val<Type> &val)
 {
-   return os << static_cast<Type>(val);
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.value()));
 }

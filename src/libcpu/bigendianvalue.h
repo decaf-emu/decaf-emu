@@ -2,7 +2,7 @@
 #include "address.h"
 
 #include <common/byte_swap.h>
-#include <ostream>
+#include <fmt/format.h>
 
 namespace cpu
 {
@@ -345,10 +345,13 @@ private:
 };
 
 template<typename Type>
-inline std::ostream &
-operator <<(std::ostream &os, const BigEndianValue<Type> &val)
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const cpu::BigEndianValue<Type> &val)
 {
-   return os << val.value();
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.value()));
 }
 
 } // namespace cpu

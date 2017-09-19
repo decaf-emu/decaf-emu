@@ -1,8 +1,8 @@
 #pragma once
-#include <common/bitutils.h>
 #include "ppctypeconv.h"
 
-#include <ostream>
+#include <common/bitutils.h>
+#include <fmt/format.h>
 #include <libcpu/mem.h>
 
 #pragma pack(push, 1)
@@ -107,10 +107,13 @@ struct be_wfunc_ptr
 #pragma pack(pop)
 
 template<typename ReturnType, typename... Args>
-inline std::ostream &
-operator<<(std::ostream &os, const wfunc_ptr<ReturnType, Args...> &val)
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const wfunc_ptr<ReturnType, Args...> &val)
 {
-   return os << static_cast<ppcaddr_t>(val);
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getAddress()));
 }
 
 namespace ppctypes

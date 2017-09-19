@@ -1,6 +1,6 @@
 #pragma once
 #include "byte_swap.h"
-#include <ostream>
+#include <fmt/format.h>
 #include <type_traits>
 
 // Should be identical to be_val except volatile mValue
@@ -75,8 +75,11 @@ protected:
 };
 
 template<typename Type>
-inline std::ostream&
-operator<<(std::ostream& os, const be_volatile<Type>& val)
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const be_volatile<Type> &val)
 {
-   return os << static_cast<Type>(val);
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.value()));
 }

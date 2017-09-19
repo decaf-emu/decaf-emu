@@ -3,7 +3,7 @@
 #include "bigendianvalue.h"
 #include "mmu.h"
 
-#include <ostream>
+#include <fmt/format.h>
 #include <type_traits>
 
 namespace cpu
@@ -285,10 +285,13 @@ protected:
 };
 
 template<typename ValueType, typename AddressType>
-inline std::ostream &
-operator <<(std::ostream &os, const Pointer<ValueType, AddressType> &val)
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const Pointer<ValueType, AddressType> &val)
 {
-   return os << val.getRawPointer();
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
 }
 
 template<typename Value>

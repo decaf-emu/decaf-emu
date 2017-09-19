@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <common/align.h>
-#include <ostream>
+#include <fmt/format.h>
 
 namespace cpu
 {
@@ -91,10 +91,13 @@ private:
 };
 
 template<typename Type>
-inline std::ostream &
-operator <<(std::ostream &os, const Address<Type> &val)
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const Address<Type> &val)
 {
-   return os << val.getAddress();
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getAddress()));
 }
 
 template<typename Type>
