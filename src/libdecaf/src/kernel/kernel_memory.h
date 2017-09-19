@@ -1,4 +1,5 @@
 #pragma once
+#include "kernel_enum.h"
 #include <cstdint>
 #include <libcpu/address.h>
 #include <libcpu/pointer.h>
@@ -34,36 +35,15 @@ void
 freeAppMemory();
 
 cpu::VirtualAddressRange
-getCodeBounds();
+getVirtualRange(VirtualRegion region);
 
-cpu::VirtualAddressRange
-getForegroundBucketRange();
-
-cpu::VirtualAddressRange
-getLockedCacheBounds();
-
-cpu::VirtualAddressRange
-getMEM1Bound();
-
-cpu::VirtualAddressRange
-getMEM2Bound();
-
-cpu::VirtualAddressRange
-getSharedDataBounds();
-
-cpu::VirtualAddressRange
-getSystemHeapBounds();
-
-cpu::VirtualAddressRange
-getVirtualMapRange();
+cpu::PhysicalAddressRange
+getPhysicalRange(PhysicalRegion region);
 
 cpu::PhysicalAddressRange
 getAvailPhysicalRange();
 
 cpu::PhysicalAddressRange
 getDataPhysicalRange();
-
-cpu::PhysicalAddressRange
-getIosHeapPhysicalRange();
 
 } // namespace kernel

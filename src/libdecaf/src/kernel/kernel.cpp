@@ -131,7 +131,7 @@ initialise()
       cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
    }
 
-   auto bounds = getSystemHeapBounds();
+   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::SystemHeap);
    sSystemHeap = new TeenyHeap { cpu::VirtualPointer<void> { bounds.start }.getRawPointer(), bounds.size };
 }
 

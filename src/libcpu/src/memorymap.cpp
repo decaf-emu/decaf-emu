@@ -20,13 +20,28 @@ static constexpr PhysicalAddress MEM1BaseAddress = PhysicalAddress { 0 };
 static constexpr PhysicalAddress MEM1EndAddress  = PhysicalAddress { 0x01FFFFFF };
 static constexpr size_t MEM1Size = (MEM1EndAddress - MEM1BaseAddress) + 1;
 
+// HACK: Doesn't exist at this physical address on hardware. _DECAF ONLY_
+// HACK: Set to page size (128kb) even though it's actually 16kb per core,
+// due to memory map restrictions.
+static constexpr PhysicalAddress LCBaseAddress = PhysicalAddress { 0x02000000 };
+static constexpr PhysicalAddress LCEndAddress = PhysicalAddress { 0x0201FFFF };
+static constexpr size_t LCSize = (LCEndAddress - LCBaseAddress) + 1;
+
+static constexpr PhysicalAddress MEM0BaseAddress = PhysicalAddress { 0x08000000 };
+static constexpr PhysicalAddress MEM0EndAddress = PhysicalAddress { 0x082DFFFF };
+static constexpr size_t MEM0Size = (MEM0EndAddress - MEM0BaseAddress) + 1;
+
 static constexpr PhysicalAddress MEM2BaseAddress = PhysicalAddress { 0x10000000 };
 static constexpr PhysicalAddress MEM2EndAddress  = PhysicalAddress { 0x8FFFFFFF };
 static constexpr size_t MEM2Size = (MEM2EndAddress - MEM2BaseAddress) + 1;
 
-static constexpr PhysicalAddress LCBaseAddress = PhysicalAddress { 0x02000000 };
-static constexpr PhysicalAddress LCEndAddress  = PhysicalAddress { 0x0201ffff };
-static constexpr size_t LCSize = (LCEndAddress - LCBaseAddress) + 1;
+static constexpr PhysicalAddress SRAM1BaseAddress = PhysicalAddress { 0xFFF00000 };
+static constexpr PhysicalAddress SRAM1EndAddress = PhysicalAddress { 0xFFF07FFF };
+static constexpr size_t SRAM1Size = (SRAM1EndAddress - SRAM1BaseAddress) + 1;
+
+static constexpr PhysicalAddress SRAM0BaseAddress = PhysicalAddress { 0xFFFF0000 };
+static constexpr PhysicalAddress SRAM0EndAddress = PhysicalAddress { 0xFFFFFFFF };
+static constexpr size_t SRAM0Size = (SRAM0EndAddress - SRAM0BaseAddress) + 1;
 
 
 MemoryMap::~MemoryMap()
@@ -62,6 +77,14 @@ MemoryMap::reserve()
    internal::BasePhysicalAddress = mPhysicalBase;
    mReservedMemory.push_back({ VirtualAddress { 0 }, VirtualAddress { 0xFFFFFFFF } });
 
+   // Commit MEM0
+   mMem0 = platform::createMemoryMappedFile(MEM0Size);
+   if (mMem0 == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create MEM1 mapping");
+      free();
+      return false;
+   }
+
    // Commit MEM1
    mMem1 = platform::createMemoryMappedFile(MEM1Size);
    if (mMem1 == platform::InvalidMapFileHandle) {
@@ -86,6 +109,22 @@ MemoryMap::reserve()
       return false;
    }
 
+   // Commit SRAM0
+   mSram0 = platform::createMemoryMappedFile(SRAM0Size);
+   if (mSram0 == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create SRAM0 mapping");
+      free();
+      return false;
+   }
+
+   // Commit SRAM1
+   mSram1 = platform::createMemoryMappedFile(SRAM1Size);
+   if (mSram1 == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create SRAM1 mapping");
+      free();
+      return false;
+   }
+
    // Release our reserved memory so we can map it
    if (!platform::freeMemory(mPhysicalBase, 0x100000000ull)) {
       gLog->error("Unable to release physical address space");
@@ -93,18 +132,26 @@ MemoryMap::reserve()
       return false;
    }
 
-   // Map mem1 and mem2 to physical address space
+   // Map physical address space
+   auto ptrMem0 = getPhysicalPointer(MEM0BaseAddress);
+   auto viewMem0 = platform::mapViewOfFile(mMem0, platform::ProtectFlags::ReadWrite, 0, MEM0Size, ptrMem0);
+   if (viewMem0 != ptrMem0) {
+      gLog->error("Unable to map MEM0 to physical address space");
+      free();
+      return false;
+   }
+
    auto ptrMem1 = getPhysicalPointer(MEM1BaseAddress);
-   auto view1 = platform::mapViewOfFile(mMem1, platform::ProtectFlags::ReadWrite, 0, MEM1Size, ptrMem1);
-   if (view1 != ptrMem1) {
+   auto viewMem1 = platform::mapViewOfFile(mMem1, platform::ProtectFlags::ReadWrite, 0, MEM1Size, ptrMem1);
+   if (viewMem1 != ptrMem1) {
       gLog->error("Unable to map MEM1 to physical address space");
       free();
       return false;
    }
 
    auto ptrMem2 = getPhysicalPointer(MEM2BaseAddress);
-   auto view2 = platform::mapViewOfFile(mMem2, platform::ProtectFlags::ReadWrite, 0, MEM2Size, ptrMem2);
-   if (view2 != ptrMem2) {
+   auto viewMem2 = platform::mapViewOfFile(mMem2, platform::ProtectFlags::ReadWrite, 0, MEM2Size, ptrMem2);
+   if (viewMem2 != ptrMem2) {
       gLog->error("Unable to map MEM2 to physical address space");
       free();
       return false;
@@ -114,6 +161,22 @@ MemoryMap::reserve()
    auto viewLC = platform::mapViewOfFile(mLockedCache, platform::ProtectFlags::ReadWrite, 0, LCSize, ptrLC);
    if (viewLC != ptrLC) {
       gLog->error("Unable to map LC to physical address space");
+      free();
+      return false;
+   }
+
+   auto ptrSram0 = getPhysicalPointer(SRAM0BaseAddress);
+   auto viewSram0 = platform::mapViewOfFile(mSram0, platform::ProtectFlags::ReadWrite, 0, SRAM0Size, ptrSram0);
+   if (viewSram0 != ptrSram0) {
+      gLog->error("Unable to map SRAM0 to physical address space");
+      free();
+      return false;
+   }
+
+   auto ptrSram1 = getPhysicalPointer(SRAM1BaseAddress);
+   auto viewSram1 = platform::mapViewOfFile(mSram1, platform::ProtectFlags::ReadWrite, 0, SRAM1Size, ptrSram1);
+   if (viewSram1 != ptrSram1) {
+      gLog->error("Unable to map SRAM1 to physical address space");
       free();
       return false;
    }
@@ -134,6 +197,12 @@ MemoryMap::free()
    mReservedMemory.clear();
 
    // Close file mappings
+   if (mMem0 != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(MEM0BaseAddress), MEM0Size);
+      platform::closeMemoryMappedFile(mMem0);
+      mMem0 = platform::InvalidMapFileHandle;
+   }
+
    if (mMem1 != platform::InvalidMapFileHandle) {
       platform::unmapViewOfFile(getPhysicalPointer(MEM1BaseAddress), MEM1Size);
       platform::closeMemoryMappedFile(mMem1);
@@ -150,6 +219,18 @@ MemoryMap::free()
       platform::unmapViewOfFile(getPhysicalPointer(LCBaseAddress), LCSize);
       platform::closeMemoryMappedFile(mLockedCache);
       mLockedCache = platform::InvalidMapFileHandle;
+   }
+
+   if (mSram0 != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(SRAM0BaseAddress), SRAM0Size);
+      platform::closeMemoryMappedFile(mSram0);
+      mSram0 = platform::InvalidMapFileHandle;
+   }
+
+   if (mSram1 != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(SRAM1BaseAddress), SRAM1Size);
+      platform::closeMemoryMappedFile(mSram1);
+      mSram1 = platform::InvalidMapFileHandle;
    }
 
    // Release virtual memory
@@ -209,12 +290,18 @@ MemoryMap::queryVirtualAddress(VirtualAddress virtualAddress)
 PhysicalMemoryType
 MemoryMap::queryPhysicalAddress(PhysicalAddress physicalAddress)
 {
-   if (physicalAddress >= MEM1BaseAddress && physicalAddress <= MEM1EndAddress) {
+   if (physicalAddress >= MEM0BaseAddress && physicalAddress <= MEM0EndAddress) {
+      return PhysicalMemoryType::LockedCache;
+   } else if (physicalAddress >= MEM1BaseAddress && physicalAddress <= MEM1EndAddress) {
       return PhysicalMemoryType::MEM1;
    } else if (physicalAddress >= MEM2BaseAddress && physicalAddress <= MEM2EndAddress) {
       return PhysicalMemoryType::MEM2;
    } else if (physicalAddress >= LCBaseAddress && physicalAddress <= LCEndAddress) {
       return PhysicalMemoryType::LockedCache;
+   } else if (physicalAddress >= SRAM0BaseAddress && physicalAddress <= SRAM0EndAddress) {
+      return PhysicalMemoryType::SRAM0;
+   } else if (physicalAddress >= SRAM1BaseAddress && physicalAddress <= SRAM1EndAddress) {
+      return PhysicalMemoryType::SRAM1;
    }
 
    return PhysicalMemoryType::Invalid;
@@ -453,12 +540,18 @@ MemoryMap::mapMemory(VirtualAddress virtualAddress,
       return false;
    }
 
-   if (physicalMemoryType == PhysicalMemoryType::MEM1) {
+   if (physicalMemoryType == PhysicalMemoryType::MEM0) {
+      view = platform::mapViewOfFile(mMem0, protectFlags, physicalAddress - MEM0BaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::MEM1) {
       view = platform::mapViewOfFile(mMem1, protectFlags, physicalAddress - MEM1BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::MEM2) {
       view = platform::mapViewOfFile(mMem2, protectFlags, physicalAddress - MEM2BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::LockedCache) {
       view = platform::mapViewOfFile(mLockedCache, protectFlags, physicalAddress - LCBaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::SRAM0) {
+      view = platform::mapViewOfFile(mSram0, protectFlags, physicalAddress - SRAM0BaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::SRAM1) {
+      view = platform::mapViewOfFile(mSram1, protectFlags, physicalAddress - SRAM1BaseAddress, size, virtualPtr);
    } else {
       gLog->error("Invalid physicalMemoryType {} for mapMemory", static_cast<int>(physicalMemoryType));
       return false;

@@ -43,9 +43,12 @@ enum class VirtualMemoryType
 enum class PhysicalMemoryType
 {
    Invalid,
+   MEM0,
    MEM1,
    MEM2,
    LockedCache,
+   SRAM0,
+   SRAM1,
 };
 
 static constexpr uint32_t PageSize = 128 * 1024;

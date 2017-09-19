@@ -438,7 +438,7 @@ SDLWindow::run(const std::string &tracePath)
    // Setup decaf shit
    kernel::initialiseVirtualMemory();
    kernel::initialiseAppMemory(0x10000);
-   auto systemHeapBounds = kernel::getSystemHeapBounds();
+   auto systemHeapBounds = kernel::getVirtualRange(kernel::VirtualRegion::SystemHeap);
    gSystemHeap = new TeenyHeap { cpu::VirtualPointer<void> { systemHeapBounds.start }.getRawPointer(), systemHeapBounds.size };
 
    // Setup pm4 command buffer pool

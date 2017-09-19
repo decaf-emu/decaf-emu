@@ -38,7 +38,7 @@ void Decaf::mainCoreEntry()
    // Setup decaf
    kernel::initialiseVirtualMemory();
    kernel::initialiseAppMemory(0x10000);
-   auto systemHeapBounds = kernel::getSystemHeapBounds();
+   auto systemHeapBounds = kernel::getVirtualRange(kernel::VirtualRegion::SystemHeap);
    mHeap = new TeenyHeap { cpu::VirtualPointer<void> { systemHeapBounds.start }.getRawPointer(), systemHeapBounds.size };
 
    // Setup pm4 command buffer pool

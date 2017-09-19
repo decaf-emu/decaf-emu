@@ -99,7 +99,7 @@ void
 loadSharedData()
 {
    // Initialise shared heap
-   auto bounds = kernel::getSharedDataBounds();
+   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::SharedData);
    auto ptr = cpu::VirtualPointer<void> { bounds.start }.getRawPointer();
    sSharedHeap = new TeenyHeap { ptr, bounds.size };
 

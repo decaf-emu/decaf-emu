@@ -1,3 +1,4 @@
+#include "kernel_enum.h"
 #include "kernel_memory.h"
 
 #include <algorithm>
@@ -13,156 +14,132 @@
 namespace kernel
 {
 
-struct MemoryMap
+struct PhysicalMemoryMap
 {
-   cpu::VirtualAddress virt;
-   cpu::PhysicalAddress phys;
-   uint32_t size;
+   cpu::PhysicalAddress start;
+   cpu::PhysicalAddress end;
+   PhysicalRegion id;
+
+   uint32_t size() const
+   {
+      return static_cast<uint32_t>(end - start + 1);
+   }
+};
+
+struct VirtualMemoryMap
+{
+   cpu::VirtualAddress start;
+   cpu::VirtualAddress end;
+   VirtualRegion id;
+   PhysicalRegion physicalRegion;
    bool mapped = false;
+
+   uint32_t size() const
+   {
+      return static_cast<uint32_t>(end - start + 1);
+   }
 };
 
-/*
- * Physical Address Space
- * 0x00000000 - 0x01ffffff = MEM1 (32 MB)
- *
- * 0x02000000 - 0x0201ffff = LockedCache (only 16 KB per core, but 128KB is page size)
- *
- * 0x08000000 - 0x0811FFFF = unused { MEM0 }
- * 0x0C000000 - 0x0C?????? = unused { registers }
- * 0x0D000000 - 0x0D?????? = unused { registers }
- *
- * 0x10000000 - 0x13ffffff = IOS Heap { 64MB }
- * 0x14000000 - 0x17ffffff = ForegroundBucket (64 MB)
- * 0x18000000 - 0x1affffff = SharedData (48 MB)
- * 0x1b000000 - 0x1fffffff = LoaderHeap (80 MB)
- * 0x20000000 - 0x2FFFFFFF = TilingApertures (256 MB)
- * 0x30000000 - 0x31FFFFFF = unused { root.rpx }
- * 0x32000000 - 0x327FFFFF = SystemHeap (8 MB)
- * 0x32800000 - 0x32ffffff = unused { unknown }
- * 0x33000000 - 0x33FFFFFF = unused { error display }
- * 0x34000000 - 0x4fffffff = OverlayArena (448 MB)
- * 0x50000000 - 0x8FFFFFFF = AppHeap (1 GB)
- */
-
-/*
- * Virtual Address Space
- * 0x01000000 - 0x017FFFFF = SystemHeap
- *
- * 0x02000000 - 0x0FFFFFFF = AppHeap.code
- * 0x10000000 - 0x4FFFFFFF = AppHeap.data
- *
- * 0x60000000 - 0x7BFFFFFF = OverlayArena
- *
- * 0x80000000 - 0x8FFFFFFF = TilingApertures
- *
- * 0xA0000000 - 0xDFFFFFFF = VirtualMapRange used by coreinit virtual mapping
- *
- * 0xE0000000 - 0xE3FFFFFF = ForegroundBucket
- *
- * 0xE6000000 - 0xE9FFFFFF = LoaderHeap
- *
- * 0xF4000000 - 0xF5FFFFFF = MEM1
- *
- * 0xF8000000 - 0xFAFFFFFF = SharedData
- *
- * 0xFFC00000 - 0xFFC20000 = Locked Cache
- */
-
-// cute.
-static constexpr uint32_t
-operator""_kb(unsigned long long value)
+static cpu::PhysicalAddress operator "" _paddr(unsigned long long int x)
 {
-   return static_cast<uint32_t>(value * 1024);
+   return cpu::PhysicalAddress { static_cast<uint32_t>(x) };
 }
 
-static constexpr uint32_t
-operator""_mb(unsigned long long value)
+static cpu::VirtualAddress operator "" _vaddr(unsigned long long int x)
 {
-   return static_cast<uint32_t>(value * 1024 * 1024);
+   return cpu::VirtualAddress { static_cast<uint32_t>(x) };
 }
 
-static auto SystemHeap = MemoryMap {
-   cpu::VirtualAddress { 0x01000000 },
-   cpu::PhysicalAddress { 0x32000000 },
-   8_mb
+static PhysicalMemoryMap
+sPhysicalMemoryMap[] = {
+   // MEM1 - 32 MB
+   { 0x00000000_paddr , 0x01FFFFFF_paddr, PhysicalRegion::MEM1 },
+
+   // LockedCache (not present on hardware) - 16 KB per core
+   // Note we have to use the page size, 128kb, as that is the minimum we can map.
+   { 0x02000000_paddr, 0x0201FFFF_paddr, PhysicalRegion::LockedCache },
+
+   // MEM0 - 2.68 MB / 2,752 KB
+   //0x08000000   --   0x0811FFFF = unused
+   { 0x08000000_paddr, 0x082DFFFF_paddr, PhysicalRegion::MEM0 },
+   { 0x08120000_paddr, 0x081BFFFF_paddr, PhysicalRegion::MEM0IosKernel },         // 640 KB
+   { 0x081C0000_paddr, 0x0827FFFF_paddr, PhysicalRegion::MEM0IosMcp },            // 768 KB
+   { 0x08280000_paddr, 0x082AFFFF_paddr, PhysicalRegion::MEM0IosCrypto },         // 192 KB
+   //0x082C0000   --   0x082DFFFF = unused
+
+   // MMIO / Registers
+   //  0x0C000000  --  0x0C?????? = unused
+   //  0x0D000000  --  0x0D?????? = unused
+
+   // MEM2 - 2 GB
+   { 0x10000000_paddr, 0x8FFFFFFF_paddr, PhysicalRegion::MEM2 },
+   { 0x10000000_paddr, 0x13FFFFFF_paddr, PhysicalRegion::MEM2IosHeap },           // 64 MB
+   { 0x14000000_paddr, 0x17FFFFFF_paddr, PhysicalRegion::MEM2ForegroundBucket },  // 64 MB
+   { 0x18000000_paddr, 0x1AFFFFFF_paddr, PhysicalRegion::MEM2SharedData },        // 48 MB
+   { 0x1B000000_paddr, 0x1FFFFFFF_paddr, PhysicalRegion::MEM2LoaderHeap },        // 80 MB
+   { 0x20000000_paddr, 0x2FFFFFFF_paddr, PhysicalRegion::MEM2TilingApertures },   // 256 MB
+   //0x30000000   --   0x31FFFFFF = unused { root.rpx }
+   { 0x32000000_paddr, 0x327FFFFF_paddr, PhysicalRegion::MEM2SystemHeap },        // 8 MB
+   //0x32800000   --   0x32ffffff = unused { unknown }
+   //0x33000000   --   0x33FFFFFF = unused { error display }
+   { 0x34000000_paddr, 0x4FFFFFFF_paddr, PhysicalRegion::MEM2OverlayArena },      // 448 MB
+   { 0x50000000_paddr, 0x8FFFFFFF_paddr, PhysicalRegion::MEM2AppHeap },           // 1 GB
+
+   // SRAM1 - 32 KB
+   { 0xFFF00000_paddr, 0xFFF07FFF_paddr, PhysicalRegion::SRAM1 },
+   { 0xFFF00000_paddr, 0xFFF07FFF_paddr, PhysicalRegion::SRAM1C2W },              // 32 KB
+
+   // SRAM0 - 64 KB
+   { 0xFFFF0000_paddr, 0xFFFFFFFF_paddr, PhysicalRegion::SRAM0 },
+   { 0xFFFF0000_paddr, 0xFFFFFFFF_paddr, PhysicalRegion::SRAM0IosKernel },        // 64 KB
 };
 
-static auto ForegroundBucket = MemoryMap {
-   cpu::VirtualAddress { 0xE0000000 },
-   cpu::PhysicalAddress { 0x14000000 },
-   64_mb
+static VirtualMemoryMap
+sVirtualMemoryMap[] = {
+   { 0x01000000_vaddr, 0x017FFFFF_vaddr, VirtualRegion::SystemHeap,         PhysicalRegion::MEM2SystemHeap },         // 8 MB
+   //0x01800000   --   0x01FFFFFF = unused
+   { 0x02000000_vaddr, 0x0FFFFFFF_vaddr, VirtualRegion::AppHeapCode,        PhysicalRegion::MEM2AppHeap },            // AppHeap 1GB
+   { 0x10000000_vaddr, 0x4FFFFFFF_vaddr, VirtualRegion::AppHeapData,        PhysicalRegion::MEM2AppHeap },
+   //0x50000000   --   0x5FFFFFFF = unused
+   { 0x60000000_vaddr, 0x7BFFFFFF_vaddr, VirtualRegion::OverlayArena,       PhysicalRegion::MEM2OverlayArena },       // 448 MB
+   //0x7C000000   --   0x7FFFFFFF = unused
+   { 0x80000000_vaddr, 0x8FFFFFFF_vaddr, VirtualRegion::TilingApertures,    PhysicalRegion::MEM2TilingApertures },    // 256 MB
+   //0x90000000   --   0x9FFFFFFF = unused
+   { 0xA0000000_vaddr, 0xDFFFFFFF_vaddr, VirtualRegion::VirtualMapRange,    PhysicalRegion::Invalid },                // 1024 MB
+   { 0xE0000000_vaddr, 0xE3FFFFFF_vaddr, VirtualRegion::ForegroundBucket,   PhysicalRegion::MEM2ForegroundBucket },   // 64 MB
+   //0xE4000000   --   0xE5FFFFFF = unused
+   { 0xE6000000_vaddr, 0xEAFFFFFF_vaddr, VirtualRegion::LoaderHeap,         PhysicalRegion::MEM2LoaderHeap },         // 80 MB
+   //0xEB000000   --   0xF3FFFFFF = unused
+   { 0xF4000000_vaddr, 0xF5FFFFFF_vaddr, VirtualRegion::MEM1,               PhysicalRegion::MEM1 },                   // 32 MB
+   //0xF6000000   --   0xF7FFFFFF = unused
+   { 0xF8000000_vaddr, 0xFAFFFFFF_vaddr, VirtualRegion::SharedData,         PhysicalRegion::MEM2SharedData },         // 48 MB
+   //0xFB000000   --   0xFFBFFFFF = unused
+   { 0xFFC00000_vaddr, 0xFFC1FFFF_vaddr, VirtualRegion::LockedCache,        PhysicalRegion::LockedCache },            // 128 KB
 };
 
-static auto Mem1 = MemoryMap {
-   cpu::VirtualAddress { 0xF4000000 },
-   cpu::PhysicalAddress { 0 },
-   32_mb
-};
-
-static auto SharedData = MemoryMap {
-   cpu::VirtualAddress { 0xF8000000 },
-   cpu::PhysicalAddress { 0x18000000 },
-   48_mb
-};
-
-static auto LoaderHeap = MemoryMap {
-   cpu::VirtualAddress { 0xE6000000 },
-   cpu::PhysicalAddress { 0x1B000000 },
-   80_mb
-};
-
-static auto OverlayArena = MemoryMap {
-   cpu::VirtualAddress { 0xA0000000 },
-   cpu::PhysicalAddress { 0x34000000 },
-   448_mb
-};
-
-static auto LockedCache = MemoryMap {
-   cpu::VirtualAddress { 0xFFC00000 },
-   cpu::PhysicalAddress { 0x02000000 },
-   cpu::PageSize
-};
-
-static auto TilingApertures = MemoryMap {
-   cpu::VirtualAddress { 0x80000000 },
-   cpu::PhysicalAddress { 0x20000000 },
-   256_mb
-};
-
-static auto VirtualMapRange = MemoryMap {
-   cpu::VirtualAddress { 0xA0000000 },
-   cpu::PhysicalAddress { 0 },
-   1024_mb
-};
-
-static const auto IosHeapPhysicalBase = cpu::PhysicalAddress { 0x10000000 };
-static const auto IosHeapPhysicalSize = 64_mb;
-
-static const auto AppHeapPhysicalBase = cpu::PhysicalAddress { 0x50000000 };
-static const auto AppHeapPhysicalSize = 1024_mb;
-static const auto CodeVirtualBase = cpu::VirtualAddress { 0x02000000 };
-static const auto DataVirtualBase = cpu::VirtualAddress { 0x10000000 };
-static auto sCodeSize = uint32_t { 0 };
-static auto sDataSize = uint32_t { 0 };
-
-// Maybe this is 1 page per core? cpu::PageSize = 128kb.
+// Maybe this is 1 page per core?
 // We're using the results from a Mii Maker rpx loading environment.
 static auto sAvailPhysicalBase = cpu::PhysicalAddress { 0 };
-static const auto AvailPhysicalSize = uint32_t { 128_kb * 3 };
+static const auto AvailPhysicalSize = uint32_t { 3 * 128 * 1024 };
 
 static bool
-map(MemoryMap &map)
+map(VirtualMemoryMap &map)
 {
+   auto &physicalRegion = sPhysicalMemoryMap[map.physicalRegion];
+   auto physSize = static_cast<uint32_t>(physicalRegion.end - physicalRegion.start + 1);
+   auto size = static_cast<uint32_t>(map.end - map.start + 1);
+   decaf_check(physSize == size);
+
    if (!map.mapped) {
-      if (!cpu::allocateVirtualAddress(map.virt, map.size)) {
+      if (!cpu::allocateVirtualAddress(map.start, size)) {
          gLog->error("Unexpected failure allocating virtual address 0x{:08X} - 0x{:08X}",
-                     map.virt.getAddress(), map.virt.getAddress() + map.size);
+                     map.start.getAddress(), map.end.getAddress());
          return false;
       }
 
-      if (!cpu::mapMemory(map.virt, map.phys, map.size, cpu::MapPermission::ReadWrite)) {
+      if (!cpu::mapMemory(map.start, physicalRegion.start, size, cpu::MapPermission::ReadWrite)) {
          gLog->error("Unexpected failure allocating mapping virtual address 0x{:08X} to physical address 0x{:08X}",
-                     map.virt.getAddress(), map.phys.getAddress());
+                     map.start.getAddress(), physicalRegion.start.getAddress());
          return false;
       }
 
@@ -173,17 +150,18 @@ map(MemoryMap &map)
 }
 
 static void
-unmap(MemoryMap &map)
+unmap(VirtualMemoryMap &map)
 {
    if (map.mapped) {
-      if (!cpu::unmapMemory(map.virt, map.size)) {
+      auto size = static_cast<uint32_t>(map.end - map.start + 1);
+      if (!cpu::unmapMemory(map.start, size)) {
          gLog->error("Unexpected failure unmapping virtual address 0x{:08X} - 0x{:08X}",
-                     map.virt.getAddress(), map.virt.getAddress() + map.size);
+                     map.start.getAddress(), map.end.getAddress());
       }
 
-      if (!cpu::freeVirtualAddress(map.virt, map.size)) {
+      if (!cpu::freeVirtualAddress(map.start, size)) {
          gLog->error("Unexpected failure freeing virtual address 0x{:08X} - 0x{:08X}",
-                     map.virt.getAddress(), map.virt.getAddress() + map.size);
+                     map.start.getAddress(), map.end.getAddress());
       }
 
       map.mapped = false;
@@ -193,21 +171,21 @@ unmap(MemoryMap &map)
 void
 initialiseVirtualMemory()
 {
-   map(SystemHeap);
-   map(ForegroundBucket);
-   map(Mem1);
-   map(SharedData);
-   map(LockedCache);
+   map(sVirtualMemoryMap[VirtualRegion::SystemHeap]);
+   map(sVirtualMemoryMap[VirtualRegion::ForegroundBucket]);
+   map(sVirtualMemoryMap[VirtualRegion::MEM1]);
+   map(sVirtualMemoryMap[VirtualRegion::SharedData]);
+   map(sVirtualMemoryMap[VirtualRegion::LockedCache]);
 }
 
 void
 freeVirtualMemory()
 {
-   unmap(SystemHeap);
-   unmap(ForegroundBucket);
-   unmap(Mem1);
-   unmap(SharedData);
-   unmap(LockedCache);
+   unmap(sVirtualMemoryMap[VirtualRegion::SystemHeap]);
+   unmap(sVirtualMemoryMap[VirtualRegion::ForegroundBucket]);
+   unmap(sVirtualMemoryMap[VirtualRegion::MEM1]);
+   unmap(sVirtualMemoryMap[VirtualRegion::SharedData]);
+   unmap(sVirtualMemoryMap[VirtualRegion::LockedCache]);
 
    freeLoaderMemory();
    freeOverlayArena();
@@ -218,156 +196,131 @@ freeVirtualMemory()
 cpu::VirtualAddressRange
 initialiseLoaderMemory()
 {
-   map(LoaderHeap);
-   return { LoaderHeap.virt, LoaderHeap.size };
+   auto &region = sVirtualMemoryMap[VirtualRegion::LoaderHeap];
+   map(region);
+   return { region.start, region.end };
 }
 
 void
 freeLoaderMemory()
 {
-   unmap(LoaderHeap);
+   unmap(sVirtualMemoryMap[VirtualRegion::LoaderHeap]);
 }
 
 cpu::VirtualAddressRange
 initialiseOverlayArena()
 {
-   map(OverlayArena);
-   return { OverlayArena.virt, OverlayArena.size };
+   auto &region = sVirtualMemoryMap[VirtualRegion::OverlayArena];
+   map(region);
+   return { region.start, region.end };
 }
 
 void
 freeOverlayArena()
 {
-   unmap(OverlayArena);
+   unmap(sVirtualMemoryMap[VirtualRegion::OverlayArena]);
 }
 
 cpu::VirtualAddressRange
 initialiseTilingApertures()
 {
-   map(TilingApertures);
-   return { TilingApertures.virt, TilingApertures.size };
+   auto &region = sVirtualMemoryMap[VirtualRegion::TilingApertures];
+   map(region);
+   return { region.start, region.end };
 }
 
 void
 freeTilingApertures()
 {
-   unmap(TilingApertures);
+   unmap(sVirtualMemoryMap[VirtualRegion::TilingApertures]);
 }
 
 bool
 initialiseAppMemory(uint32_t codeSize)
 {
+   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::AppHeapCode];
+   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::AppHeapData];
+   auto &appHeap = sPhysicalMemoryMap[PhysicalRegion::MEM2AppHeap];
+
    // Align code size to page size
-   sCodeSize = align_up(codeSize, cpu::PageSize);
-   sDataSize = AppHeapPhysicalSize - sCodeSize - AvailPhysicalSize;
+   codeSize = align_up(codeSize, cpu::PageSize);
+   auto dataSize = appHeap.size() - codeSize - AvailPhysicalSize;
+
+   appHeapData.end = appHeapData.start + dataSize - 1;
+   appHeapCode.end = appHeapCode.start + codeSize - 1;
 
    // Place data at start of physical memory
-   auto physDataStart = AppHeapPhysicalBase;
+   auto physDataStart = appHeap.start;
 
    // Place code at end of physical memory
-   sAvailPhysicalBase = AppHeapPhysicalBase + sDataSize;
+   sAvailPhysicalBase = appHeap.start + dataSize;
    auto physCodeStart = sAvailPhysicalBase + AvailPhysicalSize;
 
-
-   if (!cpu::allocateVirtualAddress(CodeVirtualBase, sCodeSize)) {
+   if (!cpu::allocateVirtualAddress(appHeapCode.start, codeSize)) {
       gLog->error("Unexpected failure allocating code virtual address 0x{:08X} - 0x{:08X}",
-                  CodeVirtualBase.getAddress(), CodeVirtualBase.getAddress() + sCodeSize);
+                  appHeapCode.start.getAddress(), appHeapCode.end.getAddress());
       return false;
    }
 
-   if (!cpu::allocateVirtualAddress(DataVirtualBase, sDataSize)) {
+   if (!cpu::allocateVirtualAddress(appHeapData.start, dataSize)) {
       gLog->error("Unexpected failure allocating data virtual address 0x{:08X} - 0x{:08X}",
-                  DataVirtualBase.getAddress(), DataVirtualBase.getAddress() + sDataSize);
+                  appHeapData.start.getAddress(), appHeapData.end.getAddress());
       return false;
    }
 
-   if (!cpu::mapMemory(CodeVirtualBase,
+   if (!cpu::mapMemory(appHeapCode.start,
                        physCodeStart,
-                       sCodeSize,
+                       codeSize,
                        cpu::MapPermission::ReadWrite)) {
       gLog->error("Unexpected failure mapping data virtual address 0x{:08X} - 0x{:08X} to physical address 0x{:08X}",
-                  CodeVirtualBase.getAddress(),
-                  CodeVirtualBase.getAddress() + sCodeSize,
-                  physCodeStart.getAddress());
+                  appHeapCode.start.getAddress(), appHeapCode.end.getAddress(), physCodeStart.getAddress());
       return false;
    }
 
-   if (!cpu::mapMemory(DataVirtualBase,
+   appHeapCode.mapped = true;
+
+   if (!cpu::mapMemory(appHeapData.start,
                        physDataStart,
-                       sDataSize,
+                       dataSize,
                        cpu::MapPermission::ReadWrite)) {
       gLog->error("Unexpected failure mapping data virtual address 0x{:08X} - 0x{:08X} to physical address 0x{:08X}",
-                  DataVirtualBase.getAddress(),
-                  DataVirtualBase.getAddress() + sDataSize,
-                  physDataStart.getAddress());
+                  appHeapData.start.getAddress(), appHeapData.end.getAddress(), physDataStart.getAddress());
       return false;
    }
 
+   appHeapData.mapped = true;
    return true;
 }
 
 void
 freeAppMemory()
 {
-   if (sCodeSize) {
-      cpu::unmapMemory(CodeVirtualBase, sCodeSize);
-      cpu::freeVirtualAddress(CodeVirtualBase, sCodeSize);
-      sCodeSize = 0;
+   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::AppHeapCode];
+   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::AppHeapData];
+
+   if (appHeapCode.mapped) {
+      cpu::unmapMemory(appHeapCode.start, appHeapCode.size());
+      cpu::freeVirtualAddress(appHeapCode.start, appHeapCode.size());
+      appHeapCode.mapped = false;
    }
 
-   if (sDataSize) {
-      cpu::unmapMemory(DataVirtualBase, sDataSize);
-      cpu::freeVirtualAddress(DataVirtualBase, sDataSize);
-      sDataSize = 0;
+   if (appHeapData.mapped) {
+      cpu::unmapMemory(appHeapData.start, appHeapData.size());
+      cpu::freeVirtualAddress(appHeapData.start, appHeapData.size());
+      appHeapData.mapped = false;
    }
 }
 
 cpu::VirtualAddressRange
-getCodeBounds()
+getVirtualRange(VirtualRegion region)
 {
-   return { CodeVirtualBase, sCodeSize };
+   return { sVirtualMemoryMap[region].start, sVirtualMemoryMap[region].end };
 }
 
-cpu::VirtualAddressRange
-getForegroundBucketRange()
+cpu::PhysicalAddressRange
+getPhysicalRange(PhysicalRegion region)
 {
-   return { ForegroundBucket.virt, ForegroundBucket.size };
-}
-
-cpu::VirtualAddressRange
-getLockedCacheBounds()
-{
-   return { LockedCache.virt, LockedCache.size };
-}
-
-cpu::VirtualAddressRange
-getMEM1Bound()
-{
-   return { Mem1.virt, Mem1.size };
-}
-
-cpu::VirtualAddressRange
-getMEM2Bound()
-{
-   return { DataVirtualBase, sDataSize };
-}
-
-cpu::VirtualAddressRange
-getSharedDataBounds()
-{
-   return { SharedData.virt, SharedData.size };
-}
-
-cpu::VirtualAddressRange
-getSystemHeapBounds()
-{
-   return { SystemHeap.virt, SystemHeap.size };
-}
-
-cpu::VirtualAddressRange
-getVirtualMapRange()
-{
-   return { VirtualMapRange.virt, VirtualMapRange.size };
+   return { sPhysicalMemoryMap[region].start, sPhysicalMemoryMap[region].end };
 }
 
 cpu::PhysicalAddressRange
@@ -379,13 +332,8 @@ getAvailPhysicalRange()
 cpu::PhysicalAddressRange
 getDataPhysicalRange()
 {
-   return { AppHeapPhysicalBase, sDataSize };
-}
-
-cpu::PhysicalAddressRange
-getIosHeapPhysicalRange()
-{
-   return { IosHeapPhysicalBase, IosHeapPhysicalSize };
+   return { sPhysicalMemoryMap[PhysicalRegion::MEM2AppHeap].start,
+            sVirtualMemoryMap[VirtualRegion::AppHeapData].size() };
 }
 
 } // namespace kernel

@@ -67,14 +67,14 @@ OSGetMemBound(OSMemoryType type,
    switch (type) {
    case OSMemoryType::MEM1:
    {
-      auto bounds = kernel::getMEM1Bound();
+      auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::MEM1);
       memAddr = bounds.start.getAddress();
       memSize = bounds.size;
       break;
    }
    case OSMemoryType::MEM2:
    {
-      auto bounds = kernel::getMEM2Bound();
+      auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::AppHeapData);
       memAddr = bounds.start.getAddress();
       memSize = bounds.size;
       break;
@@ -92,7 +92,7 @@ BOOL
 OSGetForegroundBucket(be_val<uint32_t> *addr,
                       be_val<uint32_t> *size)
 {
-   auto bounds = kernel::getForegroundBucketRange();
+   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::ForegroundBucket);
 
    if (addr) {
       *addr = bounds.start.getAddress();
@@ -109,7 +109,7 @@ BOOL
 OSGetForegroundBucketFreeArea(be_val<uint32_t> *addr,
                               be_val<uint32_t> *size)
 {
-   auto bounds = kernel::getForegroundBucketRange();
+   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::ForegroundBucket);
 
    if (addr) {
       *addr = bounds.start.getAddress();

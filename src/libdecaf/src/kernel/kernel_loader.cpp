@@ -69,7 +69,7 @@ codeAlloc(uint32_t size,
           uint32_t alignment)
 {
    if (!sCodeHeap) {
-      auto memory = kernel::getCodeBounds();
+      auto memory = kernel::getVirtualRange(VirtualRegion::AppHeapCode);
       sCodeHeap = new TeenyHeap { cpu::VirtualPointer<void> { memory.start }.getRawPointer(), memory.size };
    }
 

@@ -15,7 +15,7 @@ static bool
 inVirtualMapRange(cpu::VirtualAddress address,
                   uint32_t size)
 {
-   auto range = kernel::getVirtualMapRange();
+   auto range = kernel::getVirtualRange(kernel::VirtualRegion::VirtualMapRange);
    return (range.start <= address && address + size <= range.start + range.size);
 }
 
@@ -36,7 +36,8 @@ allocVirtAddr(cpu::VirtualAddress address,
       address = align_up(address, alignment);
       size = align_up(size, alignment);
    } else {
-      auto range = cpu::findFreeVirtualAddressInRange(kernel::getVirtualMapRange(), size, alignment);
+      auto virtualMapRange = kernel::getVirtualRange(kernel::VirtualRegion::VirtualMapRange);
+      auto range = cpu::findFreeVirtualAddressInRange(virtualMapRange, size, alignment);
       address = range.start;
       size = range.size;
    }
@@ -62,7 +63,7 @@ freeVirtAddr(cpu::VirtualAddress address,
 cpu::VirtualAddressRange
 getMapVirtAddrRange()
 {
-   return kernel::getVirtualMapRange();
+   return kernel::getVirtualRange(kernel::VirtualRegion::VirtualMapRange);
 }
 
 cpu::PhysicalAddressRange

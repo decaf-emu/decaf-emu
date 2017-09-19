@@ -201,7 +201,7 @@ LCWaitDMAQueue(uint32_t queueLength)
 void
 Module::initialiseLockedCache()
 {
-   auto bounds = kernel::getLockedCacheBounds();
+   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::LockedCache);
    auto base = bounds.start;
    sDMAEnabled.fill(false);
 
