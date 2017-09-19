@@ -155,7 +155,7 @@ GX2PatchDisplayList(void *displayList,
       break;
    }
    default:
-      decaf_abort(fmt::format("Unsupported GX2PatchShaderType {}", enumAsString(type)));
+      decaf_abort(fmt::format("Unsupported GX2PatchShaderType {}", to_string(type)));
    }
 
    // Apply the actual patch

@@ -145,7 +145,7 @@ ThreadsWindow::draw()
       ImGui::NextColumn();
 
       // Thread State
-      ImGui::Text("%s", coreinit::enumAsString(thread.state).c_str());
+      ImGui::Text("%s", coreinit::to_string(thread.state).c_str());
       ImGui::NextColumn();
 
       // Priority

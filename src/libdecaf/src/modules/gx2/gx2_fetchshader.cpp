@@ -105,7 +105,7 @@ GX2FetchInstsPerAttrib(GX2FetchShaderType type)
    case GX2FetchShaderType::QuadTessellation:
       return 4;
    default:
-      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", enumAsString(type)));
+      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", to_string(type)));
    }
 }
 
@@ -120,7 +120,7 @@ GX2FSCalcNumFetchInsts(uint32_t attribs, GX2FetchShaderType type)
    case GX2FetchShaderType::QuadTessellation:
       return GX2FetchInstsPerAttrib(type) * (attribs - 2);
    default:
-      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", enumAsString(type)));
+      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", to_string(type)));
    }
 }
 
@@ -221,11 +221,11 @@ GX2InitFetchShaderEx(GX2FetchShader *fetchShader,
                      GX2TessellationMode tessMode)
 {
    if (type != GX2FetchShaderType::NoTessellation) {
-      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", enumAsString(type)));
+      decaf_abort(fmt::format("Invalid GX2FetchShaderType {}", to_string(type)));
    }
 
    if (tessMode != GX2TessellationMode::Discrete) {
-      decaf_abort(fmt::format("Invalid GX2TessellationMode {}", enumAsString(tessMode)));
+      decaf_abort(fmt::format("Invalid GX2TessellationMode {}", to_string(tessMode)));
    }
 
    auto someTessVar1 = 128u;

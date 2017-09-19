@@ -1,7 +1,9 @@
+#pragma optimize("", off)
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
 #include "coreinit_dynload.h"
+#include "coreinit_enum_string.h"
 #include "coreinit_fastmutex.h"
 #include "coreinit_ghs.h"
 #include "coreinit_interrupts.h"
@@ -278,10 +280,9 @@ OSCreateThread(OSThread *thread,
 
    internal::unlockScheduler();
 
-   gLog->info("Thread Created: ptr {:08x}, id {:x}, basePriority {}, attr {:08x}, entry {:08x}, stackStart {:08x}, stackEnd {:08x}",
-      mem::untranslate(thread), static_cast<uint16_t>(thread->id),
-      static_cast<int32_t>(thread->basePriority), static_cast<uint32_t>(thread->attr),
-      entry, thread->stackStart.getAddress(), thread->stackEnd.getAddress());
+   gLog->info("Thread Created: ptr 0x{:08X}, id 0x{:X}, basePriority {}, attr 0x{:02X}, entry 0x{:08X}, stackStart 0x{:08X}, stackEnd 0x{:08X}",
+      mem::untranslate(thread), thread->id, thread->basePriority, thread->attr,
+      entry.address, thread->stackStart.getAddress(), thread->stackEnd.getAddress());
 
    return TRUE;
 }
@@ -297,7 +298,7 @@ OSDetachThread(OSThread *thread)
 
    // HACK: Unfortunately this check is not valid in all games.  One Piece performs
    //  OSJoinThread on a thread, and then subsequently calls OSDetachThread on it
-   //  for whetever reason.  Coreinit doesnt check this, so we can't do this check.
+   //  for whatever reason.  Coreinit doesnt check this, so we can't do this check.
    //decaf_check(internal::isThreadActiveNoLock(thread));
 
    thread->attr |= OSThreadAttributes::Detached;

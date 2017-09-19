@@ -116,7 +116,7 @@ GX2GetAttribFormatBits(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
       return 128;
    default:
-      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", to_string(format)));
    }
 }
 
@@ -205,7 +205,7 @@ getAttribFormatDataFormat(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
       return latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT;
    default:
-      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", to_string(format)));
    }
 }
 
@@ -237,7 +237,7 @@ getAttribFormatSwapMode(GX2AttribFormat format)
    case GX2AttribFormatType::TYPE_32_32_32_32_FLOAT:
       return GX2EndianSwapMode::Swap8In32;
    default:
-      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", enumAsString(format)));
+      decaf_abort(fmt::format("Invalid GX2AttribFormat {}", to_string(format)));
    }
 }
 
@@ -367,7 +367,7 @@ getSurfaceFormatColorFormat(GX2SurfaceFormat format)
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
       return latte::CB_FORMAT::COLOR_32_32_32_32_FLOAT;
    default:
-      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
+      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", to_string(format)));
    }
 }
 
@@ -388,7 +388,7 @@ getSurfaceFormatColorNumberType(GX2SurfaceFormat format)
    case GX2SurfaceFormatType::FLOAT:
       return latte::CB_NUMBER_TYPE::FLOAT;
    default:
-      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", enumAsString(format)));
+      decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", to_string(format)));
    }
 }
 
@@ -405,7 +405,7 @@ getSwapModeEndian(GX2EndianSwapMode mode)
    case GX2EndianSwapMode::Default:
       return latte::SQ_ENDIAN::AUTO;
    default:
-      decaf_abort(fmt::format("Invalid GX2EndianSwapMode {}", enumAsString(mode)));
+      decaf_abort(fmt::format("Invalid GX2EndianSwapMode {}", to_string(mode)));
    }
 }
 

@@ -103,12 +103,12 @@ OSReadRegister32Ex(OSDeviceID device,
       case SIRegisters::Controller3Status1:
          return status1.value;
       default:
-         gLog->warn("OSReadRegister - Unimplemented device {} register {}", enumAsString(device), enumAsString(reg));
+         gLog->warn("OSReadRegister - Unimplemented device {} register {}", to_string(device), to_string(reg));
          return 0;
       }
    }
 
-   gLog->warn("OSReadRegister - Unimplemented device {} register {}", enumAsString(device), id);
+   gLog->warn("OSReadRegister - Unimplemented device {} register {}", to_string(device), id);
    return 0;
 }
 
@@ -143,10 +143,10 @@ OSWriteRegister32Ex(OSDeviceID device,
          sInputDevice.controllerError = SIDevice::ControllerError::get(value);
          break;
       default:
-         gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), enumAsString(reg), value);
+         gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", to_string(device), to_string(reg), value);
       }
    } else {
-      gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), id, value);
+      gLog->warn("OSWriteRegister32 - Unimplemented device {} register {} = 0x{:08X}", to_string(device), id, value);
    }
 }
 
@@ -155,7 +155,7 @@ OSWriteRegister16(OSDeviceID device,
                   uint32_t id,
                   uint16_t value)
 {
-   gLog->warn("OSWriteRegister16 - Unimplemented device {} register {} = 0x{:08X}", enumAsString(device), id, value);
+   gLog->warn("OSWriteRegister16 - Unimplemented device {} register {} = 0x{:08X}", to_string(device), id, value);
 }
 
 void

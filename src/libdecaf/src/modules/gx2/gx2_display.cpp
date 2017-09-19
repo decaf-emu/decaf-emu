@@ -37,7 +37,7 @@ getTVSize(GX2TVRenderMode mode)
    case GX2TVRenderMode::Wide1080p:
       return { 1920, 1080 };
    default:
-      decaf_abort(fmt::format("Invalid GX2TVRenderMode {}", enumAsString(mode)));
+      decaf_abort(fmt::format("Invalid GX2TVRenderMode {}", to_string(mode)));
    }
 }
 
@@ -45,7 +45,7 @@ static unsigned
 getBpp(GX2SurfaceFormat format)
 {
    auto bpp = internal::getSurfaceFormatBytesPerElement(format);
-   decaf_assert(bpp > 0, fmt::format("Unexpected GX2SurfaceFormat {}", enumAsString(format)));
+   decaf_assert(bpp > 0, fmt::format("Unexpected GX2SurfaceFormat {}", to_string(format)));
    return bpp;
 }
 
@@ -60,7 +60,7 @@ getNumBuffers(GX2BufferingMode mode)
    case GX2BufferingMode::Triple:
       return 3;
    default:
-      decaf_abort(fmt::format("Invalid GX2BufferingMode {}", enumAsString(mode)));
+      decaf_abort(fmt::format("Invalid GX2BufferingMode {}", to_string(mode)));
    }
 }
 
@@ -202,7 +202,7 @@ GX2GetSystemTVAspectRatio()
    case GX2TVScanMode::P1080:
       return GX2AspectRatio::Widescreen;
    default:
-      decaf_abort(fmt::format("Invalid GX2TVScanMode {}", enumAsString(sTvScanMode)));
+      decaf_abort(fmt::format("Invalid GX2TVScanMode {}", to_string(sTvScanMode)));
    }
 }
 

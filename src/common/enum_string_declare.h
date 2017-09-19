@@ -1,15 +1,13 @@
 
 #define ENUM_BEG(name, type) \
-   std::string enumAsString(name enumValue); \
-   std::ostream &operator<<(std::ostream& os, name enumValue);
+   std::string to_string(name enumValue);
 
 #define ENUM_VALUE(key, value)
 
 #define ENUM_END(name)
 
 #define FLAGS_BEG(name, type) \
-   std::string enumAsString(name enumValue); \
-   std::ostream &operator<<(std::ostream& os, name enumValue);
+   std::string to_string(name enumValue);
 
 #define FLAGS_VALUE(key, value)
 

@@ -114,7 +114,7 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
       swap_mode = latte::VGT_DMA_SWAP::NONE;
       break;
    default:
-      decaf_abort(fmt::format("Invalid GX2IndexType {}", enumAsString(indexType)));
+      decaf_abort(fmt::format("Invalid GX2IndexType {}", to_string(indexType)));
    }
 
    auto vgt_dma_index_type = latte::VGT_DMA_INDEX_TYPE::get(0)
@@ -210,7 +210,7 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
       swap_mode = latte::VGT_DMA_SWAP::NONE;
       break;
    default:
-      decaf_abort(fmt::format("Invalid GX2IndexType {}", enumAsString(indexType)));
+      decaf_abort(fmt::format("Invalid GX2IndexType {}", to_string(indexType)));
    }
 
    auto vgt_dma_index_type = latte::VGT_DMA_INDEX_TYPE::get(0)

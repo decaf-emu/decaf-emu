@@ -79,7 +79,7 @@ printInfo(const std::string &filename)
       startGroup(out, "VertexShaderHeader");
       {
          writeField(out, "size", shader.data.size());
-         writeField(out, "mode", gx2::enumAsString(shader.mode));
+         writeField(out, "mode", gx2::to_string(shader.mode));
 
          writeField(out, "uniformBlockCount", shader.uniformBlocks.size());
 
@@ -101,7 +101,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.uniformVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "offset", var.offset);
                writeField(out, "block", var.block);
@@ -143,7 +143,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.samplerVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "location", var.location);
             }
             endGroup(out);
@@ -156,7 +156,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.attribVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "location", var.location);
             }
@@ -306,7 +306,7 @@ printInfo(const std::string &filename)
       startGroup(out, "PixelShaderHeader");
       {
          writeField(out, "size", shader.data.size());
-         writeField(out, "mode", gx2::enumAsString(shader.mode));
+         writeField(out, "mode", gx2::to_string(shader.mode));
 
          writeField(out, "uniformBlockCount", shader.uniformBlocks.size());
 
@@ -328,7 +328,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.uniformVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "offset", var.offset);
                writeField(out, "block", var.block);
@@ -370,7 +370,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.samplerVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "location", var.location);
             }
             endGroup(out);
@@ -520,7 +520,7 @@ printInfo(const std::string &filename)
       {
          writeField(out, "size", shader.data.size());
          writeField(out, "vshSize", shader.vertexShaderData.size());
-         writeField(out, "mode", gx2::enumAsString(shader.mode));
+         writeField(out, "mode", gx2::to_string(shader.mode));
 
          writeField(out, "uniformBlockCount", shader.uniformBlocks.size());
 
@@ -542,7 +542,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.uniformVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "offset", var.offset);
                writeField(out, "block", var.block);
@@ -584,7 +584,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.samplerVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::enumAsString(var.type));
+               writeField(out, "type", gx2::to_string(var.type));
                writeField(out, "location", var.location);
             }
             endGroup(out);
@@ -741,17 +741,17 @@ printInfo(const std::string &filename)
 
       startGroup(out, "TextureHeader");
       {
-         writeField(out, "dim", gx2::enumAsString(tex.surface.dim));
+         writeField(out, "dim", gx2::to_string(tex.surface.dim));
          writeField(out, "width", tex.surface.width);
          writeField(out, "height", tex.surface.height);
          writeField(out, "depth", tex.surface.depth);
          writeField(out, "mipLevels", tex.surface.mipLevels);
-         writeField(out, "format", gx2::enumAsString(tex.surface.format));
-         writeField(out, "aa", gx2::enumAsString(tex.surface.aa));
-         writeField(out, "use", gx2::enumAsString(tex.surface.use));
+         writeField(out, "format", gx2::to_string(tex.surface.format));
+         writeField(out, "aa", gx2::to_string(tex.surface.aa));
+         writeField(out, "use", gx2::to_string(tex.surface.use));
          writeField(out, "imageSize", tex.surface.image.size());
          writeField(out, "mipmapSize", tex.surface.mipmap.size());
-         writeField(out, "tileMode", gx2::enumAsString(tex.surface.tileMode));
+         writeField(out, "tileMode", gx2::to_string(tex.surface.tileMode));
          writeField(out, "swizzle", tex.surface.swizzle);
          writeField(out, "alignment", tex.surface.alignment);
          writeField(out, "pitch", tex.surface.pitch);

@@ -1,6 +1,6 @@
 
 #define ENUM_BEG(name, type) \
-   std::string enumAsString(name enumValue) { \
+   std::string to_string(name enumValue) { \
       using namespace name##_; \
       switch (enumValue) {
 
@@ -12,13 +12,10 @@
       default: \
          return std::to_string(static_cast<int>(enumValue)); \
       } \
-   } \
-   std::ostream &operator<<(std::ostream& os, name enumValue) { \
-      return os << enumAsString(enumValue); \
    }
 
 #define FLAGS_BEG(name, type) \
-   std::string enumAsString(name enumValue) { \
+   std::string to_string(name enumValue) { \
       using namespace name##_; \
       std::string out;
 
@@ -30,7 +27,4 @@
 
 #define FLAGS_END(name) \
       return out; \
-   } \
-   std::ostream &operator<<(std::ostream& os, name enumValue) { \
-      return os << enumAsString(enumValue); \
    }

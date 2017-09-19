@@ -42,7 +42,7 @@ COSVReport(uint32_t module,
 {
    auto str = std::string { };
    internal::formatStringV(fmt, list, str);
-   gLog->info("[COSVReport {} {}] {}", module, enumAsString(level), str);
+   gLog->info("[COSVReport {} {}] {}", module, to_string(level), str);
 }
 
 static void
