@@ -6,6 +6,7 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <common/murmur3.h>
+#include <fmt/format.h>
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
 #include <gsl.h>

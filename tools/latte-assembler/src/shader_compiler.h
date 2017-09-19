@@ -1,10 +1,11 @@
 #pragma once
 #include "shader.h"
+
+#include <fmt/format.h>
 #include <peglib.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <spdlog/fmt/fmt.h>
 
 class parse_exception : public std::runtime_error
 {

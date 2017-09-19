@@ -1,4 +1,5 @@
 #include "shader_compiler.h"
+#include <fmt/format.h>
 
 static std::string
 decodeOpcodeAlias(const std::string &op)

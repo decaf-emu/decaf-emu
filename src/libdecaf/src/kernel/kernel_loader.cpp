@@ -19,6 +19,7 @@
 #include <common/frameallocator.h>
 #include <common/teenyheap.h>
 #include <common/strutils.h>
+#include <fmt/format.h>
 #include <gsl.h>
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_config.h>

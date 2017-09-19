@@ -6,6 +6,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <fmt/format.h>
 #include <glbinding/gl/gl.h>
 #include <libcpu/mem.h>
 

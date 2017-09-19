@@ -1,6 +1,8 @@
 #include "latte/latte_formats.h"
+
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <fmt/format.h>
 
 namespace latte
 {

@@ -1,4 +1,5 @@
 #include "glsl2_cf.h"
+#include <fmt/format.h>
 
 using namespace latte;
 

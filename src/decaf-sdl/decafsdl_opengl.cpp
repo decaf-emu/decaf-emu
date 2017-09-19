@@ -5,11 +5,12 @@
 
 #include <common/decaf_assert.h>
 #include <common/platform_dir.h>
+#include <fmt/format.h>
+#include <glbinding/Binding.h>
+#include <glbinding/Meta.h>
 #include <libgpu/gpu_config.h>
 #include <libgpu/gpu_opengldriver.h>
 #include <string>
-#include <glbinding/Binding.h>
-#include <glbinding/Meta.h>
 
 static std::string
 getGlDebugSource(gl::GLenum source)

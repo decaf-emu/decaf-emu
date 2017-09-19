@@ -1,8 +1,10 @@
 #include "gfd_comment_parser.h"
+
 #include <cstring>
-#include <vector>
+#include <fmt/format.h>
 #include <libgfd/gfd.h>
 #include <regex>
+#include <vector>
 
 /*
 Matches:

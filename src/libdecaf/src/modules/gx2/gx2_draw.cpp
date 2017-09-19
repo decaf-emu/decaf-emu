@@ -4,6 +4,7 @@
 
 #include <common/decaf_assert.h>
 #include <cstring>
+#include <fmt/format.h>
 
 namespace gx2
 {

@@ -1,6 +1,8 @@
 #include "shader_compiler.h"
+
 #include <common/align.h>
 #include <common/bit_cast.h>
+#include <fmt/format.h>
 
 static const size_t
 AluClauseAlign = 256;

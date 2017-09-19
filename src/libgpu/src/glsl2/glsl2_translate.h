@@ -4,11 +4,11 @@
 
 #include <array>
 #include <exception>
+#include <fmt/format.h>
 #include <gsl.h>
 #include <stack>
 #include <stdexcept>
 #include <string>
-#include <spdlog/fmt/fmt.h>
 #include <vector>
 
 namespace glsl2

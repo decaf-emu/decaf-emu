@@ -1,8 +1,8 @@
 #include "debugger_ui_window_segments.h"
 #include "kernel/kernel_loader.h"
 
+#include <fmt/format.h>
 #include <imgui.h>
-#include <spdlog/fmt/fmt.h>
 
 namespace debugger
 {

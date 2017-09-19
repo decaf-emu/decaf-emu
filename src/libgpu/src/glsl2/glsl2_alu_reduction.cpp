@@ -1,5 +1,6 @@
 #include "glsl2_alu.h"
 #include "glsl2_translate.h"
+#include <fmt/format.h>
 
 using namespace latte;
 

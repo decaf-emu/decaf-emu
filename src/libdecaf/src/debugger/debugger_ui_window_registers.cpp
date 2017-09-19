@@ -2,8 +2,8 @@
 #include "debugger_threadutils.h"
 #include "modules/coreinit/coreinit_scheduler.h"
 
+#include <fmt/format.h>
 #include <imgui.h>
-#include <spdlog/fmt/fmt.h>
 
 namespace debugger
 {

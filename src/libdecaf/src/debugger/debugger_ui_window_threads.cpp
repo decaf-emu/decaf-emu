@@ -5,8 +5,8 @@
 #include "modules/coreinit/coreinit_thread.h"
 
 #include <cinttypes>
+#include <fmt/format.h>
 #include <imgui.h>
-#include <spdlog/fmt/fmt.h>
 
 namespace debugger
 {

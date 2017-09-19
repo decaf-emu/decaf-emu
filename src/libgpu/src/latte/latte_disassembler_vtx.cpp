@@ -1,5 +1,7 @@
 #include "latte/latte_disassembler.h"
+
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 
 namespace latte
 {

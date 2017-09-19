@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <common/be_val.h>
+#include <fmt/format.h>
 
 namespace coreinit
 {

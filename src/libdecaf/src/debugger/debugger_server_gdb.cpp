@@ -8,6 +8,7 @@
 #include <common/platform_socket.h>
 #include <common/strutils.h>
 #include <common/log.h>
+#include <fmt/format.h>
 #include <libcpu/mmu.h>
 #include <numeric>
 

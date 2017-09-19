@@ -6,6 +6,7 @@
 
 #include <common/align.h>
 #include <common/log.h>
+#include <fmt/format.h>
 
 namespace gx2
 {

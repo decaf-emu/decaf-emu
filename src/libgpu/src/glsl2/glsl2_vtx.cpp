@@ -1,5 +1,6 @@
 #include "glsl2_translate.h"
 #include "latte/latte_instructions.h"
+#include <fmt/format.h>
 
 using namespace latte;
 

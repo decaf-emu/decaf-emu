@@ -5,6 +5,8 @@
 #include "nn_save.h"
 #include "nn_save_core.h"
 
+#include <fmt/format.h>
+
 namespace nn
 {
 

@@ -1,10 +1,12 @@
 #include "clilog.h"
-#include <common/decaf_assert.h>
 #include "config.h"
 #include "decafsdl.h"
 #include "decafsdl_dx12.h"
 #include "decafsdl_opengl.h"
 #include "decafsdl_vulkan.h"
+
+#include <common/decaf_assert.h>
+#include <fmt/format.h>
 
 static std::string
 sActiveGfx = "NOGFX";

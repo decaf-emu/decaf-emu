@@ -6,9 +6,10 @@
 
 #include <common/decaf_assert.h>
 #include <common/murmur3.h>
-#include <libcpu/mem.h>
+#include <fmt/format.h>
 #include <glbinding/gl/gl.h>
 #include <glbinding/Meta.h>
+#include <libcpu/mem.h>
 
 namespace opengl
 {

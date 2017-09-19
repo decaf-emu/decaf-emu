@@ -2,8 +2,8 @@
 #include "gx2_format.h"
 
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 #include <libgpu/latte/latte_enum_sq.h>
-#include <spdlog/fmt/fmt.h>
 
 namespace gx2
 {

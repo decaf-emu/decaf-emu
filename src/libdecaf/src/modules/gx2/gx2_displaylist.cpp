@@ -5,9 +5,10 @@
 #include "gx2_state.h"
 #include "modules/coreinit/coreinit_core.h"
 
+#include <array>
 #include <common/align.h>
 #include <common/decaf_assert.h>
-#include <array>
+#include <fmt/format.h>
 
 namespace gx2
 {

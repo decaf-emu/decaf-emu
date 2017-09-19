@@ -12,6 +12,7 @@
 
 #include <array>
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 #include <libcpu/cpu.h>
 
 namespace coreinit

@@ -10,10 +10,10 @@
 #include "ppcutils/va_list.h"
 
 #include <fstream>
-#include <spdlog/spdlog.h>
 #include <common/align.h>
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <fmt/format.h>
 #include <libcpu/mem.h>
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgfd/gfd.h>

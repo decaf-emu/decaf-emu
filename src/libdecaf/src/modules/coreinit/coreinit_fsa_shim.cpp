@@ -3,7 +3,7 @@
 #include "ios/ios_error.h"
 
 #include <common/decaf_assert.h>
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 
 namespace coreinit
 {

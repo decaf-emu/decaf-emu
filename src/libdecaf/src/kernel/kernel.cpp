@@ -35,6 +35,7 @@
 #include <common/platform_fiber.h>
 #include <common/platform_thread.h>
 #include <common/teenyheap.h>
+#include <fmt/format.h>
 #include <libcpu/mem.h>
 #include <pugixml.hpp>
 

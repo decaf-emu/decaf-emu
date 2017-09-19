@@ -5,6 +5,7 @@
 #include "latte/latte_formats.h"
 
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 #include <glbinding/gl/gl.h>
 
 namespace opengl

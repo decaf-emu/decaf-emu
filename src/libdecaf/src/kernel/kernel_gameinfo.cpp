@@ -5,6 +5,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <fmt/format.h>
 #include <pugixml.hpp>
 #include <vector>
 

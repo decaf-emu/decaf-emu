@@ -4,6 +4,7 @@
 #include <common/bit_cast.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <fmt/format.h>
 
 namespace latte
 {

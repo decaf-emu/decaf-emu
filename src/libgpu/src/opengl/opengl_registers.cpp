@@ -2,6 +2,7 @@
 #include "opengl_driver.h"
 
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 #include <glbinding/gl/gl.h>
 
 namespace opengl

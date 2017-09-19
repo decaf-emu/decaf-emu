@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdio>
 #include <common/strutils.h>
+#include <fmt/format.h>
 #include <string>
-#include <spdlog/fmt/fmt.h>
 
 namespace ppctypes
 {

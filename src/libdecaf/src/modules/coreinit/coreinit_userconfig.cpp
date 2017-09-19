@@ -3,8 +3,9 @@
 #include "coreinit_ipcbufpool.h"
 #include "coreinit_mutex.h"
 #include "coreinit_userconfig.h"
-
 #include "ppcutils/wfunc_call.h"
+
+#include <fmt/format.h>
 
 namespace coreinit
 {

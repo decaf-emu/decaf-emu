@@ -14,7 +14,6 @@
 #include <libcpu/state.h>
 #include <imgui.h>
 #include <map>
-#include <spdlog/fmt/fmt.h>
 #include <sstream>
 
 namespace debugger

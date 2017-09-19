@@ -1,4 +1,5 @@
 #include "glsl2_translate.h"
+#include <fmt/format.h>
 
 namespace glsl2
 {

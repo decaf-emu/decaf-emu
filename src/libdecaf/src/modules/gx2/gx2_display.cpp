@@ -5,6 +5,7 @@
 #include "ppcutils/wfunc_call.h"
 
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 
 namespace gx2
 {

@@ -9,6 +9,8 @@
 #include "coreinit_memheap.h"
 #include "ppcutils/wfunc_call.h"
 
+#include <fmt/format.h>
+
 namespace coreinit
 {
 

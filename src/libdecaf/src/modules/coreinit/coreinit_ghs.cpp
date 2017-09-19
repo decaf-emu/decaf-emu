@@ -14,6 +14,7 @@
 #include <common/cbool.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
+#include <fmt/format.h>
 #include <libcpu/trace.h>
 
 namespace coreinit

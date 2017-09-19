@@ -6,6 +6,7 @@
 #include <common/decaf_assert.h>
 #include <cstdlib>
 #include <errno.h>
+#include <fmt/format.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <time.h>

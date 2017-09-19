@@ -3,8 +3,8 @@
 
 #include <common/decaf_assert.h>
 #include <algorithm>
+#include <fmt/format.h>
 #include <gsl.h>
-#include <spdlog/fmt/fmt.h>
 #include <stdexcept>
 
 namespace latte

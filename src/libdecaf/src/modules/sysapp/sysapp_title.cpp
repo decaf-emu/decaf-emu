@@ -5,6 +5,7 @@
 #include "ppcutils/stackobject.h"
 
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 
 namespace sysapp
 {

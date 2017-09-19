@@ -19,6 +19,7 @@
 #include <common/platform.h>
 #include <common/platform_dir.h>
 #include <condition_variable>
+#include <fmt/format.h>
 #include <mutex>
 
 #ifdef PLATFORM_WINDOWS

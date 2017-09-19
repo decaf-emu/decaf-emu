@@ -9,6 +9,7 @@
 #include <common/log.h>
 #include <common/platform_dir.h>
 #include <common/murmur3.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <gsl.h>
 #include <libgpu/gpu_tiling.h>
@@ -436,7 +437,7 @@ private:
       // TODO: Use align? info.baseAlign;
 
       // Track that badboy
-      trackMemory(CaptureMemoryLoad::Surface, baseAddress, info.surfSize);
+      trackMemory(CaptureMemoryLoad::Surface, baseAddress, static_cast<uint32_t>(info.surfSize));
    }
 
    void

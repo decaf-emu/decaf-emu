@@ -1,12 +1,14 @@
-#include <common/decaf_assert.h>
-#include <common/platform_dir.h>
 #include "decaf_config.h"
 #include "decaf_sound.h"
 #include "modules/coreinit/coreinit_memheap.h"
 #include "snd_core.h"
 #include "snd_core_core.h"
 #include "snd_core_voice.h"
+
+#include <common/decaf_assert.h>
+#include <common/platform_dir.h>
 #include <array>
+#include <fmt/format.h>
 #include <fstream>
 #include <queue>
 

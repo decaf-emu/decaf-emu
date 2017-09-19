@@ -12,10 +12,10 @@
 #include <common/murmur3.h>
 #include <common/platform_dir.h>
 #include <common/strutils.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <glbinding/gl/gl.h>
 #include <libcpu/mem.h>
-#include <spdlog/spdlog.h>
 
 namespace opengl
 {

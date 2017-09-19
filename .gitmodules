@@ -46,3 +46,6 @@
 [submodule "libraries/cpp-peglib"]
 	path = libraries/cpp-peglib
 	url = https://github.com/yhirose/cpp-peglib.git
+[submodule "libraries/fmt"]
+	path = libraries/fmt
+	url = https://github.com/fmtlib/fmt.git

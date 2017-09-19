@@ -1,12 +1,12 @@
 #include <libgfd/gfd.h>
 
 #include <cassert>
+#include <common/teenyheap.h>
 #include <excmd.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <gsl.h>
 #include <iostream>
-#include <spdlog/spdlog.h>
-#include <common/teenyheap.h>
 #include <libcpu/cpu.h>
 #include <libgfd/gfd.h>
 #include <libgpu/gpu_tiling.h>
@@ -15,6 +15,7 @@
 #include <libdecaf/src/modules/gx2/gx2_dds.h>
 #include <libdecaf/src/modules/gx2/gx2_enum_string.h>
 #include <libdecaf/src/modules/gx2/gx2_internal_gfd.h>
+#include <spdlog/spdlog.h>
 
 std::shared_ptr<spdlog::logger>
 gLog;

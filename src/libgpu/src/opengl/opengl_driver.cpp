@@ -9,6 +9,7 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <common/tga_encoder.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>

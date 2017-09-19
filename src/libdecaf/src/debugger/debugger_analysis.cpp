@@ -3,8 +3,9 @@
 #include "libcpu/espresso/espresso_instructionset.h"
 #include "libcpu/mem.h"
 #include "kernel/kernel_loader.h"
+
+#include <fmt/format.h>
 #include <map>
-#include <spdlog/formatter.h>
 #include <unordered_map>
 
 namespace debugger

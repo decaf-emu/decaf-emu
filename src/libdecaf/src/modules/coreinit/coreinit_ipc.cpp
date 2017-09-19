@@ -8,6 +8,7 @@
 #include "ppcutils/wfunc_call.h"
 
 #include <array>
+#include <fmt/format.h>
 
 namespace coreinit
 {

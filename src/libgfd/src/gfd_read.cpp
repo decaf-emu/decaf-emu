@@ -1,8 +1,9 @@
 #include "gfd.h"
 
 #include <common/byte_swap.h>
-#include <string>
 #include <fstream>
+#include <fmt/format.h>
+#include <string>
 
 namespace gfd
 {

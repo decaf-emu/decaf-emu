@@ -9,6 +9,7 @@
 
 #include <common/align.h>
 #include <common/log.h>
+#include <fmt/format.h>
 #include <libcpu/mem.h>
 
 namespace coreinit

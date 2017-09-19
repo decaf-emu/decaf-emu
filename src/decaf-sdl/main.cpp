@@ -5,11 +5,12 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <excmd.h>
+#include <fmt/format.h>
+#include <iostream>
 #include <libconfig/config_excmd.h>
 #include <libconfig/config_toml.h>
 #include <libdecaf/decaf.h>
-#include <excmd.h>
-#include <iostream>
 
 std::shared_ptr<spdlog::logger>
 gCliLog;

@@ -15,6 +15,7 @@ GroupSources(src)
 target_link_libraries(common
     ${CEREAL_LIBRARIES}
     ${FIXED_POINT_LIBRARIES}
+    ${FMT_LIBRARIES}
     ${GSL_LIBRARIES}
     ${SPDLOG_LIBRARIES})
 

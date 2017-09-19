@@ -16,8 +16,10 @@
 #include "ppcutils/stackobject.h"
 #include "ppcutils/wfunc_call.h"
 #include "usermodule.h"
-#include <common/decaf_assert.h>
+
 #include <array>
+#include <common/decaf_assert.h>
+#include <fmt/format.h>
 #include <limits>
 
 namespace coreinit

@@ -55,6 +55,11 @@ add_library(fixed_point INTERFACE)
 target_include_directories(fixed_point INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${FIXED_POINT_DIR}/include")
 set(FIXED_POINT_LIBRARIES fixed_point PARENT_SCOPE)
 
+# fmt
+add_subdirectory(fmt)
+set_target_properties(fmt PROPERTIES FOLDER libraries)
+set(FMT_LIBRARIES fmt PARENT_SCOPE)
+
 # glbinding
 find_package(glbinding QUIET)
 
@@ -227,6 +232,8 @@ endif()
 set(SPDLOG_DIR "spdlog")
 add_library(spdlog INTERFACE)
 target_include_directories(spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${SPDLOG_DIR}/include")
+target_compile_definitions(spdlog INTERFACE "SPDLOG_FMT_EXTERNAL")
+target_link_libraries(spdlog INTERFACE ${FMT_LIBRARIES})
 set(SPDLOG_LIBRARIES spdlog PARENT_SCOPE)
 
 # vulkan

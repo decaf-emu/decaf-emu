@@ -1,5 +1,3 @@
-#include <array>
-#include <chrono>
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
@@ -20,7 +18,11 @@
 #include "libcpu/trace.h"
 #include "ppcutils/wfunc_call.h"
 #include "ppcutils/stackobject.h"
+
+#include <array>
+#include <chrono>
 #include <common/decaf_assert.h>
+#include <fmt/format.h>
 
 namespace coreinit
 {

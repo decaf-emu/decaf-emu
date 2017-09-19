@@ -12,6 +12,8 @@
 #include "ppcutils/wfunc_ptr.h"
 #include "ppcutils/wfunc_call.h"
 
+#include <fmt/format.h>
+
 namespace snd_core
 {
 
