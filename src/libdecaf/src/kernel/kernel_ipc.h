@@ -16,13 +16,16 @@ namespace kernel
  * @{
  */
 
-using IpcRequest = ios::IpcRequest;
+using IPCBuffer = ios::IPCBuffer;
 
 void
-ipcDriverKernelSubmitRequest(IpcRequest *request);
+ipcStart();
 
 void
-ipcDriverKernelSubmitReply(IpcRequest *reply);
+ipcShutdown();
+
+void
+ipcDriverKernelSubmitRequest(IPCBuffer *buffer);
 
 void
 ipcDriverKernelHandleInterrupt();

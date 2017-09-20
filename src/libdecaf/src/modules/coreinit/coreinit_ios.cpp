@@ -582,11 +582,13 @@ ipcPrepareOpenRequest(IPCDriver *ipcDriver,
    ipcBuffer->nameBuffer.fill(0);
    std::memcpy(&ipcBuffer->nameBuffer, device, deviceLen);
 
-   ipcBuffer->request.args.open.name = nullptr;
-   ipcBuffer->request.args.open.nameLen = static_cast<uint32_t>(deviceLen + 1);
-   ipcBuffer->request.args.open.mode = static_cast<ios::OpenMode>(mode);
+   ipcBuffer->args[0] = 0u;
+   ipcBuffer->args[1] = static_cast<uint32_t>(deviceLen + 1);
+   ipcBuffer->args[2] = static_cast<uint32_t>(mode);
 
-   ipcBuffer->buffer1 = cpu::translate(&ipcBuffer->nameBuffer[0]);
+   auto paddr1 = phys_addr {};
+   cpu::virtualToPhysicalAddress(cpu::translate(&ipcBuffer->nameBuffer[0]), paddr1);
+   ipcBuffer->buffer1 = paddr1;
    return IOSError::OK;
 }
 
@@ -607,14 +609,19 @@ ipcPrepareIoctlRequest(IPCDriver *ipcDriver,
                        uint32_t outLen)
 {
    auto ipcBuffer = ipcRequest->ipcBuffer;
-   ipcBuffer->request.args.ioctl.command = ioctlRequest;
-   ipcBuffer->request.args.ioctl.inputBuffer = nullptr;
-   ipcBuffer->request.args.ioctl.inputLength = inLen;
-   ipcBuffer->request.args.ioctl.outputBuffer = nullptr;
-   ipcBuffer->request.args.ioctl.outputLength = outLen;
+   ipcBuffer->args[0] = ioctlRequest;
+   ipcBuffer->args[1] = 0u;
+   ipcBuffer->args[2] = inLen;
+   ipcBuffer->args[3] = 0u;
+   ipcBuffer->args[4] = outLen;
 
-   ipcBuffer->buffer1 = cpu::translate(inBuf);
-   ipcBuffer->buffer2 = cpu::translate(outBuf);
+   auto paddr1 = phys_addr { };
+   cpu::virtualToPhysicalAddress(cpu::translate(inBuf), paddr1);
+   ipcBuffer->buffer1 = paddr1;
+
+   auto paddr2 = phys_addr {};
+   cpu::virtualToPhysicalAddress(cpu::translate(outBuf), paddr2);
+   ipcBuffer->buffer2 = paddr2;
    return IOSError::OK;
 }
 
@@ -637,12 +644,14 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
                         IOSVec *vec)
 {
    auto ipcBuffer = ipcRequest->ipcBuffer;
-   ipcBuffer->request.args.ioctlv.command = ioctlvRequest;
-   ipcBuffer->request.args.ioctlv.numVecIn = vecIn;
-   ipcBuffer->request.args.ioctlv.numVecOut = vecOut;
-   ipcBuffer->request.args.ioctlv.vecs = nullptr;
+   ipcBuffer->args[0] = ioctlvRequest;
+   ipcBuffer->args[1] = vecIn;
+   ipcBuffer->args[2] = vecOut;
+   ipcBuffer->args[3] = 0u;
 
-   ipcBuffer->buffer1 = cpu::translate(vec);
+   auto paddr1 = phys_addr {};
+   cpu::virtualToPhysicalAddress(cpu::translate(vec), paddr1);
+   ipcBuffer->buffer1 = paddr1;
 
    for (auto i = 0u; i < vecIn + vecOut; ++i) {
       auto paddr = cpu::PhysicalAddress { };

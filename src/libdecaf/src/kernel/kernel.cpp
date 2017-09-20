@@ -8,7 +8,7 @@
 #include "kernel_loader.h"
 #include "kernel_memory.h"
 #include "kernel_filesystem.h"
-#include "ios/ios.h"
+#include "ios/ios_ipc.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/coreinit/coreinit_alarm.h"
 #include "modules/coreinit/coreinit_appio.h"
@@ -119,7 +119,8 @@ void
 initialise()
 {
    initialiseVirtualMemory();
-   ios::start();
+   ipcStart();
+   ios::iosInitDevices();
    initialiseHleMmodules();
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
    cpu::setSegfaultHandler(&cpuSegfaultHandler);
@@ -137,7 +138,7 @@ initialise()
 void
 shutdown()
 {
-   ios::join();
+   ipcShutdown();
 }
 
 TeenyHeap *

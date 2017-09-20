@@ -13,37 +13,37 @@ namespace dev
 namespace mcp
 {
 
-Error
-MCPDevice::open(OpenMode mode)
+IOSError
+MCPDevice::open(IOSOpenMode mode)
 {
-   return Error::OK;
+   return IOSError::OK;
 }
 
 
-Error
+IOSError
 MCPDevice::close()
 {
-   return Error::OK;
+   return IOSError::OK;
 }
 
 
-Error
+IOSError
 MCPDevice::read(void *buffer,
                 size_t length)
 {
-   return static_cast<Error>(MCPError::Unsupported);
+   return static_cast<IOSError>(MCPError::Unsupported);
 }
 
 
-Error
+IOSError
 MCPDevice::write(void *buffer,
                  size_t length)
 {
-   return static_cast<Error>(MCPError::Unsupported);
+   return static_cast<IOSError>(MCPError::Unsupported);
 }
 
 
-Error
+IOSError
 MCPDevice::ioctl(uint32_t cmd,
                  void *inBuf,
                  size_t inLen,
@@ -62,15 +62,15 @@ MCPDevice::ioctl(uint32_t cmd,
       result = MCPError::Unsupported;
    }
 
-   return static_cast<Error>(result);
+   return static_cast<IOSError>(result);
 }
 
 
-Error
+IOSError
 MCPDevice::ioctlv(uint32_t cmd,
                   size_t vecIn,
                   size_t vecOut,
-                  IoctlVec *vec)
+                  IOSVec *vec)
 {
    auto result = MCPError::OK;
 
@@ -88,7 +88,7 @@ MCPDevice::ioctlv(uint32_t cmd,
       result = MCPError::Unsupported;
    }
 
-   return static_cast<Error>(result);
+   return static_cast<IOSError>(result);
 }
 
 

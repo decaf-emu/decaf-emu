@@ -9,32 +9,32 @@ class DebugDevice : public IOSDevice
 public:
    virtual ~DebugDevice() = default;
 
-   virtual Error
-   open(OpenMode mode);
+   virtual IOSError
+   open(IOSOpenMode mode);
 
-   virtual Error
+   virtual IOSError
    close();
 
-   virtual Error
+   virtual IOSError
    read(void *buffer,
          size_t length);
 
-   virtual Error
+   virtual IOSError
    write(void *buffer,
          size_t length);
 
-   virtual Error
+   virtual IOSError
    ioctl(uint32_t request,
          void *inBuf,
          size_t inLen,
          void *outBuf,
          size_t outLen);
 
-   virtual Error
+   virtual IOSError
    ioctlv(uint32_t request,
-          size_t vecIn,
-          size_t vecOut,
-          IoctlVec *vec);
+            size_t vecIn,
+            size_t vecOut,
+            IOSVec *vec);
 
 private:
 };

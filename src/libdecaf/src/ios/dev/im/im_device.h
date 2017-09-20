@@ -2,7 +2,7 @@
 #include "im_enum.h"
 #include "im_request.h"
 #include "im_response.h"
-#include "ios/dev/ios_device.h"
+#include "ios/ios_device.h"
 
 #include <cstdint>
 #include <common/cbool.h>
@@ -28,32 +28,32 @@ public:
    static constexpr const char *Name = "/dev/im";
 
 public:
-   virtual Error
-   open(OpenMode mode) override;
+   virtual IOSError
+   open(IOSOpenMode mode) override;
 
-   virtual Error
+   virtual IOSError
    close() override;
 
-   virtual Error
+   virtual IOSError
    read(void *buffer,
         size_t length) override;
 
-   virtual Error
+   virtual IOSError
    write(void *buffer,
          size_t length) override;
 
-   virtual Error
+   virtual IOSError
    ioctl(uint32_t request,
          void *inBuf,
          size_t inLen,
          void *outBuf,
          size_t outLen) override;
 
-   virtual Error
+   virtual IOSError
    ioctlv(uint32_t request,
           size_t vecIn,
           size_t vecOut,
-          IoctlVec *vec) override;
+          IOSVec *vec) override;
 
 private:
    IMError

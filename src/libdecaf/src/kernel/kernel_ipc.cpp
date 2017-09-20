@@ -1,5 +1,4 @@
-#include "ios/dev/ios_ipc.h"
-#include "ios/kernel/ios_kernel_ipc_thread.h"
+#include "ios/ios_ipc.h"
 #include "kernel_ipc.h"
 #include "modules/coreinit/coreinit_ipc.h"
 
@@ -11,51 +10,81 @@
 namespace kernel
 {
 
+static std::thread
+sIpcThread;
+
+static std::atomic_bool
+sIpcThreadRunning;
+
 static std::mutex
 sIpcMutex;
 
-static std::queue<IpcRequest *>
+static std::condition_variable
+sIpcCond;
+
+static std::queue<IPCBuffer *>
+sIpcRequests;
+
+static std::queue<IPCBuffer *>
 sIpcResponses[3];
+
+static void
+ipcThreadEntry();
 
 
 /**
- * Submit a request to the IOS side IPC queue.
+ * Start the IPC thread.
  */
 void
-ipcDriverKernelSubmitRequest(IpcRequest *request)
+ipcStart()
+{
+   std::unique_lock<std::mutex> lock { sIpcMutex };
+   sIpcThreadRunning.store(true);
+   sIpcThread = std::thread { ipcThreadEntry };
+}
+
+
+/**
+ * Stop the IPC thread.
+ */
+void
+ipcShutdown()
+{
+   std::unique_lock<std::mutex> lock { sIpcMutex };
+
+   if (sIpcThreadRunning.exchange(false)) {
+      sIpcCond.notify_all();
+      lock.unlock();
+
+      sIpcThread.join();
+   }
+}
+
+
+/**
+ * Submit an buffer to the IPC queue.
+ */
+void
+ipcDriverKernelSubmitRequest(IPCBuffer *buffer)
 {
    switch (cpu::this_core::id()) {
    case 0:
-      request->cpuID = ios::CpuID::PPC0;
+      buffer->cpuId = ios::IOSCpuId::PPC0;
       break;
    case 1:
-      request->cpuID = ios::CpuID::PPC1;
+      buffer->cpuId = ios::IOSCpuId::PPC1;
       break;
    case 2:
-      request->cpuID = ios::CpuID::PPC2;
+      buffer->cpuId = ios::IOSCpuId::PPC2;
       break;
    default:
       decaf_abort("Unexpected core id");
    }
 
-   ios::kernel::submitIpcRequest(cpu::translatePhysical(request));
-}
-
-
-/**
- * Submit a reply to the PPC side IPC queue.
- */
-void
-ipcDriverKernelSubmitReply(IpcRequest *reply)
-{
-   auto coreID = reply->cpuID - ios::CpuID::PPC0;
-   auto &responses = sIpcResponses[coreID];
-
    sIpcMutex.lock();
-   responses.push(reply);
+   sIpcRequests.push(buffer);
+   sIpcCond.notify_all();
    sIpcMutex.unlock();
-
-   cpu::interrupt(coreID, cpu::IPC_INTERRUPT);
 }
 
 
@@ -72,7 +101,7 @@ ipcDriverKernelHandleInterrupt()
    sIpcMutex.lock();
 
    while (responses.size()) {
-      driver->responses[driver->numResponses] = reinterpret_cast<coreinit::IPCBuffer *>(responses.front());
+      driver->responses[driver->numResponses] = responses.front();
       driver->numResponses++;
       responses.pop();
    }
@@ -81,6 +110,58 @@ ipcDriverKernelHandleInterrupt()
 
    // Call userland IPCDriver callback
    coreinit::internal::ipcDriverProcessResponses();
+}
+
+
+/**
+ * Main thread entry point for the IPC thread.
+ *
+ * This thread represents the IOS side of the IPC mechanism.
+ *
+ * Responsible for receiving IPC requests and dispatching them to the
+ * correct IOS device.
+ */
+void
+ipcThreadEntry()
+{
+   std::unique_lock<std::mutex> lock { sIpcMutex };
+
+   while (true) {
+      if (!sIpcRequests.empty()) {
+         auto request = sIpcRequests.front();
+         sIpcRequests.pop();
+         lock.unlock();
+         ios::iosDispatchIpcRequest(request);
+         lock.lock();
+
+         switch (request->cpuId) {
+         case ios::IOSCpuId::PPC0:
+            sIpcResponses[0].push(request);
+            cpu::interrupt(0, cpu::IPC_INTERRUPT);
+            break;
+         case ios::IOSCpuId::PPC1:
+            sIpcResponses[1].push(request);
+            cpu::interrupt(1, cpu::IPC_INTERRUPT);
+            break;
+         case ios::IOSCpuId::PPC2:
+            sIpcResponses[2].push(request);
+            cpu::interrupt(2, cpu::IPC_INTERRUPT);
+            break;
+         default:
+            decaf_abort("Unexpected cpu id");
+         }
+      }
+
+      if (!sIpcThreadRunning.load()) {
+         break;
+      }
+
+      if (sIpcRequests.empty()) {
+         sIpcCond.wait(lock);
+      }
+   }
+
+   sIpcThreadRunning.store(false);
 }
 
 } // namespace kernel

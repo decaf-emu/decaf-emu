@@ -77,20 +77,20 @@ soDecodeIosError(coreinit::IOSError err)
       return err;
    }
 
-   auto category = ios::getErrorCategory(err);
-   auto code = ios::getErrorCode(err);
+   auto category = ios::iosGetErrorCategory(err);
+   auto code = ios::iosGetErrorCode(err);
    auto error = SocketError::Unknown;
 
    switch (category) {
-   case ios::ErrorCategory::Socket:
+   case ios::IOSErrorCategory::Socket:
       error = static_cast<SocketError>(code);
       break;
-   case ios::ErrorCategory::Kernel:
-      if (code == ios::Error::Access) {
+   case ios::IOSErrorCategory::Kernel:
+      if (code == ios::IOSError::Access) {
          error = SocketError::Inval;
-      } else if (code == ios::Error::Intr) {
+      } else if (code == ios::IOSError::Intr) {
          error = SocketError::Aborted;
-      } else if (code == ios::Error::QFull) {
+      } else if (code == ios::IOSError::QFull) {
          error = SocketError::Busy;
       } else {
          error = SocketError::Unknown;
@@ -275,8 +275,8 @@ socket(int32_t family,
                                     NULL,
                                     0);
 
-   if (ios::getErrorCategory(error) == ios::ErrorCategory::Socket
-    && ios::getErrorCode(error) == SocketError::GenericError) {
+   if (ios::iosGetErrorCategory(error) == ios::IOSErrorCategory::Socket
+    && ios::iosGetErrorCode(error) == SocketError::GenericError) {
       // Map generic socket error to no memory.
       coreinit::ghs_set_errno(SocketError::NoMem);
       result = -1;

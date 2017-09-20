@@ -4,7 +4,6 @@
 
 #include <array>
 #include <common/strutils.h>
-#include <fmt/format.h>
 #include <pugixml.hpp>
 #include <sstream>
 
@@ -233,52 +232,52 @@ getAccessString(uint32_t access)
 }
 
 
-Error
-UserConfigDevice::open(OpenMode mode)
+IOSError
+UserConfigDevice::open(IOSOpenMode mode)
 {
-   return Error::OK;
+   return IOSError::OK;
 }
 
 
-Error
+IOSError
 UserConfigDevice::close()
 {
-   return Error::OK;
+   return IOSError::OK;
 }
 
 
-Error
+IOSError
 UserConfigDevice::read(void *buffer,
                        size_t length)
 {
-   return static_cast<Error>(UCError::Unsupported);
+   return static_cast<IOSError>(UCError::Unsupported);
 }
 
 
-Error
+IOSError
 UserConfigDevice::write(void *buffer,
                         size_t length)
 {
-   return static_cast<Error>(UCError::Unsupported);
+   return static_cast<IOSError>(UCError::Unsupported);
 }
 
 
-Error
+IOSError
 UserConfigDevice::ioctl(uint32_t cmd,
                         void *inBuf,
                         size_t inLen,
                         void *outBuf,
                         size_t outLen)
 {
-   return static_cast<Error>(UCError::Unsupported);
+   return static_cast<IOSError>(UCError::Unsupported);
 }
 
 
-Error
+IOSError
 UserConfigDevice::ioctlv(uint32_t cmd,
                          size_t vecIn,
                          size_t vecOut,
-                         IoctlVec *vec)
+                         IOSVec *vec)
 {
    auto request = phys_ptr<UCRequest> { vec[0].paddr };
    auto result = UCError::OK;
@@ -294,7 +293,7 @@ UserConfigDevice::ioctlv(uint32_t cmd,
       result = UCError::Unsupported;
    }
 
-   return static_cast<Error>(result);
+   return static_cast<IOSError>(result);
 }
 
 
