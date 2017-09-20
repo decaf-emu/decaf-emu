@@ -44,7 +44,7 @@ public:
       return value();
    }
 
-   template<typename = typename std::enable_if<std::is_convertible<value_type, bool>::value>::type>
+   template<typename T = Type, typename = typename std::enable_if<std::is_convertible<T, bool>::value>::type>
    explicit operator bool() const
    {
       return static_cast<bool>(value());
