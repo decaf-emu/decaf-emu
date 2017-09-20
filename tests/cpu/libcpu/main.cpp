@@ -5,15 +5,15 @@
 
 TEST_CASE("be_* address of returns virt_ptr")
 {
-   // "operator &be_val<uint32_t>" returns "virt_ptr<uint32_t>"
-   REQUIRE((std::is_same<virt_ptr<uint32_t>, decltype(&std::declval<be2_val<uint32_t>>())>::value));
+   // "virt_addrof be_val<uint32_t>" returns "virt_ptr<uint32_t>"
+   REQUIRE((std::is_same<virt_ptr<uint32_t>, decltype(virt_addrof(std::declval<be2_val<uint32_t>>()))>::value));
 
-   // "operator &be_struct<SomeStructure>" returns "virt_ptr<SomeStructure>"
+   // "virt_addrof be_struct<SomeStructure>" returns "virt_ptr<SomeStructure>"
    struct SomeStructure { };
-   REQUIRE((std::is_same<virt_ptr<SomeStructure>, decltype(&std::declval<be2_struct<SomeStructure>>())>::value));
+   REQUIRE((std::is_same<virt_ptr<SomeStructure>, decltype(virt_addrof(std::declval<be2_struct<SomeStructure>>()))>::value));
 
-   // "operator &be_array<char, 100>" returns "vitr_ptr<char>"
-   REQUIRE((std::is_same<virt_ptr<char>, decltype(&std::declval<be2_array<char, 100>>())>::value));
+   // "virt_addrof be_array<char, 100>" returns "vitr_ptr<char>"
+   REQUIRE((std::is_same<virt_ptr<char>, decltype(virt_addrof(std::declval<be2_array<char, 100>>()))>::value));
 }
 
 TEST_CASE("virt_ptr dereference")
