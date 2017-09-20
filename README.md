@@ -6,8 +6,8 @@ Researching Wii U emulation. Licensed under the terms of the GNU General Public 
 You can find us for developer discussion at #wiiu-emu on freenode.
 
 ## Requirements
-- Windows with Visual Studio 2017
-- Linux with a modern C++14 friendly compiler
+- Windows with Visual Studio 2017 Update 3
+- Linux with a modern C++17 friendly compiler
 - 64 bit
 - OpenGL 4.5
 - CMake v3.2+
