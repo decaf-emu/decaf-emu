@@ -36,8 +36,12 @@ after_build:
       glbinding.dll
       SDL2.dll
       resources\fonts\DejaVuSansMono.ttf
-      resources\fonts\SourceSansPro-Regular.ttf
-      resources\fonts\LICENSE.txt
+      resources\fonts\DejaVuSansMono.LICENSE
+      resources\fonts\CafeCn.ttf
+      resources\fonts\CafeKr.ttf
+      resources\fonts\CafeStd.ttf
+      resources\fonts\CafeTw.ttf
+      resources\fonts\NotoSansCJK.LICENSE
 
 artifacts:
   - path: build\obj\Release\decaf-bin.zip
