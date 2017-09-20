@@ -63,7 +63,7 @@ if(MSVC)
     add_definitions(-DUNICODE -D_UNICODE)
 else()
     add_definitions(-DDECAF_USE_STDLAYOUT_BITFIELD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
     if(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
