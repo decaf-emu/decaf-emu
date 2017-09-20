@@ -14,8 +14,8 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:cginternals/backports-ppa'
     packages:
-      - gcc-6
-      - g++-6
+      - gcc-7
+      - g++-7
       - xorg-dev
       - libglu1-mesa-dev
       - libsdl2-dev
