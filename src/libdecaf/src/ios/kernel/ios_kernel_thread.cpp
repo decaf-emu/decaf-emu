@@ -30,7 +30,7 @@ iosFiberEntryPoint(void *context);
 
 } // namespace internal
 
-Result<ThreadID>
+Error
 IOS_CreateThread(ThreadEntryFn entry,
                  phys_ptr<void> context,
                  phys_ptr<uint8_t> stackTop,
@@ -128,7 +128,7 @@ IOS_CreateThread(ThreadEntryFn entry,
 #endif
 
    internal::unlockScheduler();
-   return ThreadID { thread->id };
+   return static_cast<Error>(thread->id.value());
 }
 
 Error
@@ -317,7 +317,7 @@ IOS_YieldCurrentThread()
    return Error::Invalid;
 }
 
-Result<ThreadID>
+Error
 IOS_GetCurrentThreadId()
 {
    auto thread = internal::getCurrentThread();
@@ -325,10 +325,10 @@ IOS_GetCurrentThreadId()
       return Error::Invalid;
    }
 
-   return ThreadID { thread->id };
+   return static_cast<Error>(thread->id.value());
 }
 
-Result<ThreadPriority>
+Error
 IOS_GetThreadPriority(ThreadID id)
 {
    auto currentThread = internal::getCurrentThread();
@@ -345,7 +345,7 @@ IOS_GetThreadPriority(ThreadID id)
       return Error::Invalid;
    }
 
-   return ThreadPriority { thread->priority };
+   return static_cast<Error>(thread->priority.value());
 }
 
 Error

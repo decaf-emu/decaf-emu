@@ -318,9 +318,96 @@ Error
 dispatchIosOpen(std::string_view name,
                 OpenMode mode,
                 phys_ptr<MessageQueue> queue,
-                phys_ptr<IpcRequest> request,
+                phys_ptr<IpcRequest> ipcRequest,
                 ProcessID pid,
                 CpuID cpuID);
+
+Error
+dispatchIosClose(ResourceHandleID resourceHandleID,
+                 phys_ptr<MessageQueue> queue,
+                 phys_ptr<IpcRequest> ipcRequest,
+                 uint32_t unkArg0,
+                 ProcessID pid,
+                 CpuID cpuID);
+
+Error
+dispatchIosRead(ResourceHandleID resourceHandleID,
+                phys_ptr<void> buffer,
+                uint32_t length,
+                phys_ptr<MessageQueue> queue,
+                phys_ptr<IpcRequest> ipcRequest,
+                ProcessID pid,
+                CpuID cpuID);
+
+Error
+dispatchIosWrite(ResourceHandleID resourceHandleID,
+                 phys_ptr<const void> buffer,
+                 uint32_t length,
+                 phys_ptr<MessageQueue> queue,
+                 phys_ptr<IpcRequest> ipcRequest,
+                 ProcessID pid,
+                 CpuID cpuID);
+
+Error
+dispatchIosSeek(ResourceHandleID resourceHandleID,
+                  uint32_t offset,
+                  SeekOrigin origin,
+                  phys_ptr<MessageQueue> queue,
+                  phys_ptr<IpcRequest> ipcRequest,
+                  ProcessID pid,
+                  CpuID cpuID);
+
+Error
+dispatchIosIoctl(ResourceHandleID resourceHandleID,
+                 uint32_t ioctlRequest,
+                 phys_ptr<void> inputBuffer,
+                 uint32_t inputLength,
+                 phys_ptr<void> outputBuffer,
+                 uint32_t outputLength,
+                 phys_ptr<MessageQueue> queue,
+                 phys_ptr<IpcRequest> ipcRequest,
+                 ProcessID pid,
+                 CpuID cpuID);
+
+Error
+dispatchIosIoctlv(ResourceHandleID resourceHandleID,
+                  uint32_t ioctlRequest,
+                  uint32_t numVecIn,
+                  uint32_t numVecOut,
+                  phys_ptr<IoctlVec> vecs,
+                  phys_ptr<MessageQueue> queue,
+                  phys_ptr<IpcRequest> ipcRequest,
+                  ProcessID pid,
+                  CpuID cpuID);
+
+Error
+dispatchIosResume(ResourceHandleID resourceHandleID,
+                  uint32_t unkArg0,
+                  uint32_t unkArg1,
+                  phys_ptr<MessageQueue> queue,
+                  phys_ptr<IpcRequest> ipcRequest,
+                  ProcessID pid,
+                  CpuID cpuID);
+
+Error
+dispatchIosSuspend(ResourceHandleID resourceHandleID,
+                   uint32_t unkArg0,
+                   uint32_t unkArg1,
+                   phys_ptr<MessageQueue> queue,
+                   phys_ptr<IpcRequest> ipcRequest,
+                   ProcessID pid,
+                   CpuID cpuID);
+
+Error
+dispatchIosSvcMsg(ResourceHandleID resourceHandleID,
+                  uint32_t unkArg0,
+                  uint32_t unkArg1,
+                  uint32_t unkArg2,
+                  uint32_t unkArg3,
+                  phys_ptr<MessageQueue> queue,
+                  phys_ptr<IpcRequest> ipcRequest,
+                  ProcessID pid,
+                  CpuID cpuID);
 
 void
 kernelInitialiseResourceManager();

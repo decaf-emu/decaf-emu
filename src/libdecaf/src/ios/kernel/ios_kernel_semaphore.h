@@ -1,7 +1,6 @@
 #pragma once
 #include "ios_kernel_threadqueue.h"
 #include "ios/ios_enum.h"
-#include "ios/ios_result.h"
 
 #include <common/cbool.h>
 #include <common/structsize.h>
@@ -53,7 +52,7 @@ CHECK_OFFSET(Semaphore, 0x18, prevFreeSemaphoreIndex);
 CHECK_OFFSET(Semaphore, 0x1A, nextFreeSemaphoreIndex);
 CHECK_SIZE(Semaphore, 0x1C);
 
-Result<SemaphoreID>
+Error
 IOS_CreateSemaphore(int32_t maxCount,
                     int32_t initialCount);
 

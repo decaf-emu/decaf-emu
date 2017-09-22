@@ -81,12 +81,12 @@ start()
    internal::kernelInitialiseThread();
 
    // Create root kernel thread
-   auto [error, threadID] = IOS_CreateThread(kernelEntryPoint,
-                                             nullptr,
-                                             phys_addr { 0xFFFF4CF8 },
-                                             0x2000u,
-                                             126,
-                                             ThreadFlags::Detached);
+   auto error = IOS_CreateThread(kernelEntryPoint,
+                                 nullptr,
+                                 phys_addr { 0xFFFF4CF8 },
+                                 0x2000u,
+                                 126,
+                                 ThreadFlags::Detached);
    if (error < Error::OK) {
       return error;
    }
@@ -94,6 +94,7 @@ start()
    // Force start the root kernel thread. We cannot use IOS_StartThread
    // because it reschedules and we are not running on an IOS thread.
    internal::lockScheduler();
+   auto threadID = static_cast<ThreadID>(error);
    auto thread = internal::getThread(threadID);
    thread->state = ThreadState::Ready;
    internal::queueThreadNoLock(thread);

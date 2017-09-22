@@ -133,6 +133,12 @@ ENUM_BEG(ProcessID, int32_t)
    ENUM_VALUE(Max,                  22)
 ENUM_END(ProcessID)
 
+ENUM_BEG(SeekOrigin, uint32_t)
+   ENUM_VALUE(Beg,                  0)
+   ENUM_VALUE(Cur,                  1)
+   ENUM_VALUE(End,                  2)
+ENUM_END(SeekOrigin)
+
 ENUM_BEG(SyscallID, uint32_t)
    ENUM_VALUE(CreateThread,            0x00)
    ENUM_VALUE(JoinThread,              0x01)

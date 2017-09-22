@@ -8,61 +8,59 @@
 namespace ios::kernel
 {
 
-static std::array<Heap, 48>
-sHeaps;
+constexpr auto MaxNumHeaps = 48u;
+constexpr auto MaxNumProcessHeaps = 14u;
+constexpr auto SharedHeapID = HeapID { 1 };
+constexpr auto CrossProcessHeapID = HeapID { 0xCAFE };
+constexpr auto LocalProcessHeapID = HeapID { 0xCAFE };
+constexpr auto HeapAllocSizeAlign = 32u;
+constexpr auto HeapAllocAlignAlign = 32u;
 
-static std::array<HeapID, 14>
-sLocalProcessHeaps;
-
-static std::array<HeapID, 14>
-sCrossProcessHeaps;
-
-static constexpr auto
-SharedHeapID = HeapID { 1 };
-
-static constexpr auto
-CrossProcessHeapID = HeapID { 0xCAFE };
-
-static constexpr auto
-LocalProcessHeapID = HeapID { 0xCAFE };
-
-static constexpr auto
-HeapAllocSizeAlign = 32u;
-
-static constexpr auto
-HeapAllocAlignAlign = 32u;
-
-static Result<Heap *>
-getHeap(HeapID id,
-        bool checkPermission)
+struct HeapData
 {
-   auto [error, pid] = IOS_GetCurrentProcessID();
+   be2_array<Heap, MaxNumHeaps> heaps;
+   be2_array<HeapID, MaxNumProcessHeaps> localProcessHeaps;
+   be2_array<HeapID, MaxNumProcessHeaps> crossProcessHeaps;
+};
+
+static phys_ptr<HeapData>
+sData;
+
+static Error
+getHeap(HeapID id,
+        bool checkPermission,
+        phys_ptr<Heap> *outHeap)
+{
+   auto error = IOS_GetCurrentProcessID();
    if (error < Error::OK) {
       return Error::Invalid;
    }
 
+   auto pid = static_cast<ProcessID>(error);
+
    if (id == 0 || id == CrossProcessHeapID) {
-      id = sCrossProcessHeaps[pid];
+      id = sData->crossProcessHeaps[pid];
    } else if (id == LocalProcessHeapID) {
-      id = sLocalProcessHeaps[pid];
+      id = sData->localProcessHeaps[pid];
    }
 
-   if (id >= sHeaps.size()) {
+   if (id >= sData->heaps.size()) {
       return Error::Invalid;
    }
 
-   if (sHeaps[id].pid < 0 || !sHeaps[id].base) {
+   if (sData->heaps[id].pid < 0 || !sData->heaps[id].base) {
       return Error::NoExists;
    }
 
-   if (checkPermission && sHeaps[id].pid != pid) {
+   if (checkPermission && sData->heaps[id].pid != pid) {
       return Error::Access;
    }
 
-   return &sHeaps[id];
+   *outHeap = phys_addrof(sData->heaps[id]);
+   return Error::OK;
 }
 
-Result<HeapID>
+Error
 IOS_CreateHeap(phys_ptr<void> ptr,
                uint32_t size)
 {
@@ -72,20 +70,22 @@ IOS_CreateHeap(phys_ptr<void> ptr,
       return Error::Alignment;
    }
 
-   for (id = HeapID { 2 }; id < sHeaps.size(); ++id) {
-      if (!sHeaps[id].base) {
+   for (id = HeapID { 2 }; id < sData->heaps.size(); ++id) {
+      if (!sData->heaps[id].base) {
          break;
       }
    }
 
-   if (id >= sHeaps.size()) {
+   if (id >= sData->heaps.size()) {
       return Error::Max;
    }
 
-   auto [error, pid] = IOS_GetCurrentProcessID();
+   auto error = IOS_GetCurrentProcessID();
    if (error < Error::OK) {
       return error;
    }
+
+   auto pid = static_cast<ProcessID>(error);
 
    // Initialise first heap block
    auto firstBlock = phys_cast<HeapBlock>(ptr);
@@ -95,62 +95,69 @@ IOS_CreateHeap(phys_ptr<void> ptr,
    firstBlock->prev = nullptr;
 
    // Initialise heap
-   auto &heap = sHeaps[id];
+   auto &heap = sData->heaps[id];
    heap.id = id;
    heap.base = ptr;
    heap.size = size;
    heap.firstFreeBlock = firstBlock;
    heap.pid = pid;
 
-   return id;
+   return static_cast<Error>(id);
 }
 
-Result<HeapID>
+Error
 IOS_CreateLocalProcessHeap(phys_ptr<void> ptr,
                            uint32_t size)
 {
-   auto [error, pid] = IOS_GetCurrentProcessID();
+   phys_ptr<Heap> heap;
+
+   auto error = IOS_GetCurrentProcessID();
    if (error < Error::OK) {
       return error;
    }
 
-   if (pid >= sLocalProcessHeaps.size()) {
+   auto pid = static_cast<ProcessID>(error);
+   if (pid >= sData->localProcessHeaps.size()) {
       return Error::Invalid;
    }
 
-   if (sLocalProcessHeaps[pid] >= 0) {
-      return sLocalProcessHeaps[pid];
+   if (sData->localProcessHeaps[pid] >= 0) {
+      return static_cast<Error>(sData->localProcessHeaps[pid].value());
    }
 
-   auto [error, id] = IOS_CreateHeap(ptr, size);
+   error = IOS_CreateHeap(ptr, size);
    if (error < Error::OK) {
       return error;
    }
 
-   auto [error, heap] = getHeap(id, true);
+   auto heapID = static_cast<HeapID>(error);
+   error = getHeap(heapID, true, &heap);
    if (error < Error::OK) {
       return error;
    }
 
    heap->flags |= HeapFlags::LocalProcessHeap;
-   sLocalProcessHeaps[pid] = id;
-   return id;
+   sData->localProcessHeaps[pid] = heapID;
+   return static_cast<Error>(heapID);
 }
 
-Result<HeapID>
+Error
 IOS_CreateCrossProcessHeap(uint32_t size)
 {
-   auto [error, pid] = IOS_GetCurrentProcessID();
+   phys_ptr<Heap> heap;
+
+   auto error = IOS_GetCurrentProcessID();
    if (error < Error::OK) {
       return error;
    }
 
-   if (pid >= sCrossProcessHeaps.size()) {
+   auto pid = static_cast<ProcessID>(error);
+   if (pid >= sData->crossProcessHeaps.size()) {
       return Error::Invalid;
    }
 
-   if (sCrossProcessHeaps[pid] >= 0) {
-      return sCrossProcessHeaps[pid];
+   if (sData->crossProcessHeaps[pid] >= 0) {
+      return static_cast<Error>(sData->crossProcessHeaps[pid].value());
    }
 
    auto ptr = IOS_HeapAlloc(SharedHeapID, size);
@@ -158,38 +165,41 @@ IOS_CreateCrossProcessHeap(uint32_t size)
       return Error::NoResource;
    }
 
-   auto [error, id] = IOS_CreateHeap(ptr, size);
+   error = IOS_CreateHeap(ptr, size);
    if (error < Error::OK) {
       return error;
    }
 
-   auto [error, heap] = getHeap(id, true);
+   auto heapID = static_cast<HeapID>(error);
+   error = getHeap(heapID, true, &heap);
    if (error < Error::OK) {
       return error;
    }
 
    heap->flags |= HeapFlags::CrossProcessHeap;
-   sCrossProcessHeaps[pid] = id;
-   return Error::Max;
+   sData->crossProcessHeaps[pid] = heapID;
+   return static_cast<Error>(heapID);
 }
 
 Error
-IOS_DestroyHeap(HeapID id)
+IOS_DestroyHeap(HeapID heapID)
 {
-   if (id == SharedHeapID) {
+   phys_ptr<Heap> heap;
+
+   if (heapID == SharedHeapID) {
       return Error::Invalid;
    }
 
-   auto [error, heap] = getHeap(id, true);
+   auto error = getHeap(heapID, true, &heap);
    if (error < Error::OK) {
       return Error::Invalid;
    }
 
-   std::memset(heap, 0, sizeof(Heap));
+   std::memset(heap.getRawPointer(), 0, sizeof(Heap));
    heap->pid = ProcessID::Invalid;
 
-   if (id == LocalProcessHeapID) {
-      sLocalProcessHeaps[internal::getCurrentProcessID()] = -4;
+   if (heapID == LocalProcessHeapID) {
+      sData->localProcessHeaps[internal::getCurrentProcessID()] = -4;
    }
 
    return Error::OK;
@@ -203,11 +213,13 @@ IOS_HeapAlloc(HeapID id,
 }
 
 phys_ptr<void>
-IOS_HeapAllocAligned(HeapID id,
+IOS_HeapAllocAligned(HeapID heapID,
                      uint32_t size,
                      uint32_t alignment)
 {
-   auto [error, heap] = getHeap(id, true);
+   phys_ptr<Heap> heap;
+
+   auto error = getHeap(heapID, true, &heap);
    if (error < Error::OK || size == 0 || alignment == 0) {
       return nullptr;
    }
@@ -302,7 +314,7 @@ IOS_HeapAllocAligned(HeapID id,
 }
 
 static bool
-heapContainsPtr(Heap *heap,
+heapContainsPtr(phys_ptr<Heap> heap,
                 phys_ptr<void> ptr)
 {
    auto start = phys_cast<uint8_t>(heap->base);
@@ -336,15 +348,17 @@ tryMergeConsecutiveBlocks(phys_ptr<HeapBlock> first,
 }
 
 static Error
-heapFree(HeapID id,
+heapFree(HeapID heapID,
          phys_ptr<void> ptr,
          bool clearMemory)
 {
+   phys_ptr<Heap> heap;
+
    if (!ptr) {
       return Error::Invalid;
    }
 
-   auto [error, heap] = getHeap(id, true);
+   auto error = getHeap(heapID, true, &heap);
    if (error < Error::OK) {
       return error;
    }
@@ -408,11 +422,13 @@ heapFree(HeapID id,
 }
 
 phys_ptr<void>
-IOS_HeapRealloc(HeapID id,
+IOS_HeapRealloc(HeapID heapID,
                 phys_ptr<void> ptr,
                 uint32_t size)
 {
-   auto [error, heap] = getHeap(id, true);
+   phys_ptr<Heap> heap;
+
+   auto error = getHeap(heapID, true, &heap);
    if (error < Error::OK || !ptr) {
       return nullptr;
    }
@@ -428,7 +444,7 @@ IOS_HeapRealloc(HeapID id,
 
    if (size == 0) {
       // Realloc to size 0 just means we should free the memory.
-      heapFree(id, ptr, false);
+      heapFree(heapID, ptr, false);
       return nullptr;
    } else if (block->size == size) {
       // Realloc to same size, no changes required.
@@ -436,12 +452,12 @@ IOS_HeapRealloc(HeapID id,
    }
 
    // Just allocate a new block and copy the data across.
-   auto newPtr = IOS_HeapAllocAligned(id, size, HeapAllocAlignAlign);
+   auto newPtr = IOS_HeapAllocAligned(heapID, size, HeapAllocAlignAlign);
    if (newPtr) {
       std::memcpy(newPtr.getRawPointer(),
                   ptr.getRawPointer(),
                   std::min<uint32_t>(size, block->size));
-      heapFree(id, ptr, false);
+      heapFree(heapID, ptr, false);
    }
 
    return newPtr;

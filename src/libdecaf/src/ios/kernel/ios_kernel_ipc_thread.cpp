@@ -45,12 +45,13 @@ Error
 ipcThreadMain(phys_ptr<void> context)
 {
    StackObject<Message> message;
-   auto [error, queueID] = IOS_CreateMessageQueue(phys_addr { 0xFFFF20F }, 0x100);
+   auto error = IOS_CreateMessageQueue(phys_addr { 0xFFFF20F }, 0x100);
    if (error < Error::OK) {
       return error;
    }
 
    // Register interrupt handlers and enable the interrupts.
+   auto queueID = static_cast<MessageQueueID>(error);
    auto queue = internal::getMessageQueue(queueID);
    sIpcMessageQueueID = queueID;
 

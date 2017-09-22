@@ -24,7 +24,7 @@ sData;
 /**
  * Create a message queue.
  */
-Result<MessageQueueID>
+Error
 IOS_CreateMessageQueue(phys_ptr<Message> messages,
                        uint32_t size)
 {
@@ -56,7 +56,8 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
 
    sData->numCreatedQueues++;
    internal::unlockScheduler();
-   return MessageQueueID { queue->uid };
+
+   return static_cast<Error>(queue->uid.value());
 }
 
 

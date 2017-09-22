@@ -1,7 +1,7 @@
 #pragma once
 #include "ios_kernel_enum.h"
 #include "ios_kernel_threadqueue.h"
-#include "ios/ios_result.h"
+#include "ios/ios_enum.h"
 
 #include <cstdint>
 #include <common/structsize.h>
@@ -97,7 +97,7 @@ CHECK_SIZE(Thread, 0xC8);
 
 #pragma pack(pop)
 
-Result<ThreadID>
+Error
 IOS_CreateThread(ThreadEntryFn entry,
                  phys_ptr<void> context,
                  phys_ptr<uint8_t> stackTop,
@@ -122,10 +122,10 @@ IOS_SuspendThread(ThreadID id);
 Error
 IOS_YieldCurrentThread();
 
-Result<ThreadID>
+Error
 IOS_GetCurrentThreadId();
 
-Result<ThreadPriority>
+Error
 IOS_GetThreadPriority(ThreadID id);
 
 Error

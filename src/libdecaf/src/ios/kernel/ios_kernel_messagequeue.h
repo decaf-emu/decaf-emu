@@ -1,7 +1,6 @@
 #pragma once
 #include "ios_kernel_enum.h"
 #include "ios_kernel_threadqueue.h"
-#include "ios/ios_result.h"
 
 #include <common/cbool.h>
 #include <common/structsize.h>
@@ -42,7 +41,7 @@ CHECK_OFFSET(MessageQueue, 0x1D, flags);
 CHECK_OFFSET(MessageQueue, 0x1E, unk0x1E);
 CHECK_SIZE(MessageQueue, 0x20);
 
-Result<MessageQueueID>
+Error
 IOS_CreateMessageQueue(phys_ptr<Message> messageBuffer,
                        uint32_t numMessages);
 

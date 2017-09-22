@@ -37,7 +37,7 @@ getSemaphore(SemaphoreID id)
    return semaphore;
 }
 
-Result<SemaphoreID>
+Error
 IOS_CreateSemaphore(int32_t maxCount,
                     int32_t initialCount)
 {
@@ -72,7 +72,7 @@ IOS_CreateSemaphore(int32_t maxCount,
    ThreadQueue_Initialise(phys_addrof(semaphore->waitThreadQueue));
 
    internal::unlockScheduler();
-   return static_cast<SemaphoreID>(semaphore->id);
+   return static_cast<Error>(semaphore->id.value());
 }
 
 Error

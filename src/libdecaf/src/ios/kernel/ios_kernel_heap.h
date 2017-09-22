@@ -1,6 +1,6 @@
 #pragma once
 #include "ios_kernel_enum.h"
-#include "ios/ios_result.h"
+#include "ios/ios_enum.h"
 
 #include <cstdint>
 #include <libcpu/be2_struct.h>
@@ -62,15 +62,15 @@ CHECK_OFFSET(HeapBlock, 0x08, prev);
 CHECK_OFFSET(HeapBlock, 0x0C, next);
 CHECK_SIZE(HeapBlock, 0x10);
 
-Result<HeapID>
+Error
 IOS_CreateHeap(phys_ptr<void> ptr,
                uint32_t size);
 
-Result<HeapID>
+Error
 IOS_CreateLocalProcessHeap(phys_ptr<void> ptr,
                            uint32_t size);
 
-Result<HeapID>
+Error
 IOS_CreateCrossProcessHeap(uint32_t size);
 
 Error

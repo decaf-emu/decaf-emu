@@ -52,12 +52,13 @@ fsaThreadMain(phys_ptr<void> /*context*/)
 bool
 startFsaThread()
 {
-   auto [error, queueID] = kernel::IOS_CreateMessageQueue(phys_addrof(sData->fsaMessageBuffer),
-                                                          static_cast<uint32_t>(sData->fsaMessageBuffer.size()));
+   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->fsaMessageBuffer),
+                                               static_cast<uint32_t>(sData->fsaMessageBuffer.size()));
    if (error < Error::OK) {
       return false;
    }
 
+   auto queueID = static_cast<kernel::MessageQueueID>(error);
    sData->fsaMessageQueue = queueID;
 
    if (!kernel::IOS_RegisterResourceManager("/dev/fsa", sData->fsaMessageQueue)) {
@@ -68,17 +69,18 @@ startFsaThread()
       return false;
    }
 
-   auto [error, thread] = kernel::IOS_CreateThread(fsaThreadMain,
-                                                   nullptr,
-                                                   sData->fsaThreadStack.phys_data() + sData->fsaThreadStack.size(),
-                                                   static_cast<uint32_t>(sData->fsaThreadStack.size()),
-                                                   78,
-                                                   kernel::ThreadFlags::Detached);
+   error = kernel::IOS_CreateThread(fsaThreadMain,
+                                    nullptr,
+                                    sData->fsaThreadStack.phys_data() + sData->fsaThreadStack.size(),
+                                    static_cast<uint32_t>(sData->fsaThreadStack.size()),
+                                    78,
+                                    kernel::ThreadFlags::Detached);
    if (error < Error::OK) {
       return false;
    }
 
-   sData->fsaThread = thread;
+   auto threadID = static_cast<kernel::ThreadID>(error);
+   sData->fsaThread = threadID;
    if (!kernel::IOS_StartThread(sData->fsaThread)) {
       return false;
    }

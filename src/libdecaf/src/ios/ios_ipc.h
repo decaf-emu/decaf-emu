@@ -40,9 +40,16 @@ CHECK_OFFSET(IpcRequestArgsOpen, 0x04, nameLen);
 CHECK_OFFSET(IpcRequestArgsOpen, 0x08, mode);
 CHECK_SIZE(IpcRequestArgsOpen, 0x0C);
 
+struct IpcRequestArgsClose
+{
+   be2_val<uint32_t> unk0x00;
+};
+CHECK_OFFSET(IpcRequestArgsClose, 0x00, unk0x00);
+CHECK_SIZE(IpcRequestArgsClose, 0x04);
+
 struct IpcRequestArgsRead
 {
-   be2_phys_ptr<std::byte> data;
+   be2_phys_ptr<void> data;
    be2_val<uint32_t> length;
 };
 CHECK_OFFSET(IpcRequestArgsRead, 0x00, data);
@@ -51,7 +58,7 @@ CHECK_SIZE(IpcRequestArgsRead, 0x08);
 
 struct IpcRequestArgsWrite
 {
-   be2_phys_ptr<const std::byte> data;
+   be2_phys_ptr<const void> data;
    be2_val<uint32_t> length;
 };
 CHECK_OFFSET(IpcRequestArgsWrite, 0x00, data);
@@ -61,7 +68,7 @@ CHECK_SIZE(IpcRequestArgsWrite, 0x08);
 struct IpcRequestArgsSeek
 {
    be2_val<uint32_t> offset;
-   be2_val<uint32_t> origin;
+   be2_val<SeekOrigin> origin;
 };
 CHECK_OFFSET(IpcRequestArgsSeek, 0x00, offset);
 CHECK_OFFSET(IpcRequestArgsSeek, 0x04, origin);
@@ -69,13 +76,13 @@ CHECK_SIZE(IpcRequestArgsSeek, 0x08);
 
 struct IpcRequestArgsIoctl
 {
-   be2_val<uint32_t> command;
-   be2_phys_ptr<const std::byte> inputBuffer;
+   be2_val<uint32_t> request;
+   be2_phys_ptr<const void> inputBuffer;
    be2_val<uint32_t> inputLength;
-   be2_phys_ptr<std::byte> outputBuffer;
+   be2_phys_ptr<void> outputBuffer;
    be2_val<uint32_t> outputLength;
 };
-CHECK_OFFSET(IpcRequestArgsIoctl, 0x00, command);
+CHECK_OFFSET(IpcRequestArgsIoctl, 0x00, request);
 CHECK_OFFSET(IpcRequestArgsIoctl, 0x04, inputBuffer);
 CHECK_OFFSET(IpcRequestArgsIoctl, 0x08, inputLength);
 CHECK_OFFSET(IpcRequestArgsIoctl, 0x0C, outputBuffer);
@@ -84,27 +91,62 @@ CHECK_SIZE(IpcRequestArgsIoctl, 0x14);
 
 struct IpcRequestArgsIoctlv
 {
-   be2_val<uint32_t> command;
+   be2_val<uint32_t> request;
    be2_val<uint32_t> numVecIn;
    be2_val<uint32_t> numVecOut;
    be2_phys_ptr<IoctlVec> vecs;
 };
-CHECK_OFFSET(IpcRequestArgsIoctlv, 0x00, command);
+CHECK_OFFSET(IpcRequestArgsIoctlv, 0x00, request);
 CHECK_OFFSET(IpcRequestArgsIoctlv, 0x04, numVecIn);
 CHECK_OFFSET(IpcRequestArgsIoctlv, 0x08, numVecOut);
 CHECK_OFFSET(IpcRequestArgsIoctlv, 0x0C, vecs);
 CHECK_SIZE(IpcRequestArgsIoctlv, 0x10);
+
+struct IpcRequestArgsResume
+{
+   be2_val<uint32_t> unkArg0;
+   be2_val<uint32_t> unkArg1;
+};
+CHECK_OFFSET(IpcRequestArgsResume, 0x00, unkArg0);
+CHECK_OFFSET(IpcRequestArgsResume, 0x04, unkArg1);
+CHECK_SIZE(IpcRequestArgsResume, 0x08);
+
+struct IpcRequestArgsSuspend
+{
+   be2_val<uint32_t> unkArg0;
+   be2_val<uint32_t> unkArg1;
+};
+CHECK_OFFSET(IpcRequestArgsSuspend, 0x00, unkArg0);
+CHECK_OFFSET(IpcRequestArgsSuspend, 0x04, unkArg1);
+CHECK_SIZE(IpcRequestArgsSuspend, 0x08);
+
+struct IpcRequestArgsSvcMsg
+{
+   be2_val<uint32_t> unkArg0;
+   be2_val<uint32_t> unkArg1;
+   be2_val<uint32_t> unkArg2;
+   be2_val<uint32_t> unkArg3;
+};
+CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x00, unkArg0);
+CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x04, unkArg1);
+CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x08, unkArg2);
+CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x0C, unkArg3);
+CHECK_SIZE(IpcRequestArgsSvcMsg, 0x10);
 
 struct IpcRequestArgs
 {
    union
    {
       be2_struct<IpcRequestArgsOpen> open;
+      be2_struct<IpcRequestArgsClose> close;
       be2_struct<IpcRequestArgsRead> read;
       be2_struct<IpcRequestArgsWrite> write;
       be2_struct<IpcRequestArgsSeek> seek;
       be2_struct<IpcRequestArgsIoctl> ioctl;
       be2_struct<IpcRequestArgsIoctlv> ioctlv;
+      be2_struct<IpcRequestArgsResume> resume;
+      be2_struct<IpcRequestArgsSuspend> suspend;
+      be2_struct<IpcRequestArgsSvcMsg> svcMsg;
       be2_array<uint32_t, 5> args;
    };
 };

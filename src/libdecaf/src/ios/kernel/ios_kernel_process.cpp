@@ -5,7 +5,7 @@
 namespace ios::kernel
 {
 
-Result<ProcessID>
+Error
 IOS_GetCurrentProcessID()
 {
    auto thread = internal::getCurrentThread();
@@ -13,7 +13,7 @@ IOS_GetCurrentProcessID()
       return Error::Invalid;
    }
 
-   return ProcessID { thread->pid };
+   return static_cast<Error>(thread->pid.value());
 }
 
 Error

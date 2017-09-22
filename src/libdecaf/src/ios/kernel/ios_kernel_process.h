@@ -1,12 +1,11 @@
 #pragma once
 #include "ios/ios_enum.h"
-#include "ios/ios_result.h"
 #include <cstdint>
 
 namespace ios::kernel
 {
 
-Result<ProcessID>
+Error
 IOS_GetCurrentProcessID();
 
 Error
