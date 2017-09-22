@@ -22,8 +22,8 @@ FSAStatus
 FSAShimDecodeIosErrorToFsaStatus(IOSHandle handle,
                                  IOSError error)
 {
-   auto category = ios::iosGetErrorCategory(error);
-   auto code = ios::iosGetErrorCode(error);
+   auto category = ios::getErrorCategory(error);
+   auto code = ios::getErrorCode(error);
    auto fsaStatus = static_cast<FSAStatus>(error);
 
    if (error < 0) {
@@ -46,7 +46,7 @@ FSAShimDecodeIosErrorToFsaStatus(IOSHandle handle,
       case IOSErrorCategory::Unknown19:
       case IOSErrorCategory::Unknown30:
       case IOSErrorCategory::Unknown45:
-         if (ios::iosIsKernelError(code)) {
+         if (ios::isKernelError(code)) {
             fsaStatus = static_cast<FSAStatus>(code - (IOSErrorCategory::FSA << 16));
          } else {
             fsaStatus = static_cast<FSAStatus>(code);

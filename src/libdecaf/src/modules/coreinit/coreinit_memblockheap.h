@@ -93,14 +93,7 @@ CHECK_SIZE(MEMBlockHeap, 0x74);
 #pragma pack(pop)
 
 /*
-Name                                Address  Ordinal
-----                                -------  -------
-MEMAllocFromBlockHeapAt             02039AE4
-MEMDestroyBlockHeap                 020397A0
-MEMGetAllocatableSizeForBlockHeapEx 0203A2D8
-MEMGetTotalFreeSizeForBlockHeap     0203A1D4
-MEMGetTrackingLeftInBlockHeap       0203A170
-MEMInitAllocatorForBlockHeap        02033B80
+TODO: MEMInitAllocatorForBlockHeap
 */
 
 MEMBlockHeap *

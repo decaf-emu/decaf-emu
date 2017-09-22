@@ -371,8 +371,8 @@ mcpFreeMessage(void *message)
 MCPError
 mcpDecodeIosErrorToMcpError(IOSError error)
 {
-   auto category = ios::iosGetErrorCategory(error);
-   auto code = ios::iosGetErrorCode(error);
+   auto category = ios::getErrorCategory(error);
+   auto code = ios::getErrorCode(error);
    auto mcpError = static_cast<MCPError>(error);
 
    if (error < 0) {

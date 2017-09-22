@@ -262,19 +262,18 @@ ipcDriverAllocateRequest(IPCDriver *driver,
       return error;
    }
 
-   auto ipcBuffer = request->ipcBuffer;
-   memset(ipcBuffer->args, 0, sizeof(uint32_t) * IPCBuffer::ArgCount);
-
    request->allocated = TRUE;
    request->unk0x04 = requestUnk0x04;
    request->asyncCallback = asyncCallback;
    request->asyncContext = asyncContext;
 
-   ipcBuffer->command = command;
-   ipcBuffer->handle = handle;
-   ipcBuffer->flags = 0u;
-   ipcBuffer->processId = 0u;
-   ipcBuffer->reply = IOSError::OK;
+   auto ipcBuffer = request->ipcBuffer;
+   std::memset(&ipcBuffer->request, 0, sizeof(kernel::IpcRequest));
+   ipcBuffer->request.command = command;
+   ipcBuffer->request.handle = handle;
+   ipcBuffer->request.flags = 0u;
+   ipcBuffer->request.clientPid = 0;
+   ipcBuffer->request.reply = IOSError::OK;
 
    *requestOut = request;
    return IOSError::OK;
@@ -317,7 +316,7 @@ ipcDriverSubmitRequest(IPCDriver *driver,
 {
    OSInitEvent(&request->finishEvent, FALSE, OSEventMode::AutoReset);
    driver->requestsSubmitted++;
-   kernel::ipcDriverKernelSubmitRequest(request->ipcBuffer);
+   kernel::ipcDriverKernelSubmitRequest(&request->ipcBuffer->request);
    return IOSError::OK;
 }
 
@@ -334,7 +333,7 @@ ipcDriverWaitResponse(IPCDriver *ipcDriver,
 {
    auto reply = IOSError::OK;
    OSWaitEvent(&ipcRequest->finishEvent);
-   reply = ipcRequest->ipcBuffer->reply;
+   reply = ipcRequest->ipcBuffer->request.reply;
    ipcDriverFreeRequest(ipcDriver, ipcRequest);
    OSSignalEventAll(&ipcDriver->waitFreeFifoEvent);
    return reply;
@@ -364,7 +363,7 @@ ipcDriverProcessResponses()
       } else {
          OSMessage message;
          message.message = mem::translate<void>(request->asyncCallback.getAddress());
-         message.args[0] = static_cast<uint32_t>(request->ipcBuffer->reply.value());
+         message.args[0] = static_cast<uint32_t>(request->ipcBuffer->request.reply.value());
          message.args[1] = request->asyncContext.getAddress();
          message.args[2] = 0;
          OSSendMessage(&coreData->queue, &message, OSMessageFlags::None);

@@ -1,0 +1,183 @@
+#include "ios_kernel_process.h"
+#include "ios_kernel_semaphore.h"
+#include "ios_kernel_scheduler.h"
+#include "ios_kernel_thread.h"
+#include <array>
+#include <mutex>
+
+namespace ios::kernel
+{
+
+struct SemaphoreData
+{
+   be2_val<uint32_t> numCreatedSemaphores = 0;
+   be2_val<int16_t> firstFreeSemaphoreIndex = 0;
+   be2_val<int16_t> lastFreeSemaphoreIndex = 0;
+   be2_array<Semaphore, 750> semaphores;
+};
+
+static phys_ptr<SemaphoreData>
+sData;
+
+static phys_ptr<Semaphore>
+getSemaphore(SemaphoreID id)
+{
+   id &= 0xFFF;
+
+   if (id >= sData->semaphores.size()) {
+      return nullptr;
+   }
+
+   auto semaphore = phys_addrof(sData->semaphores[id]);
+   if (semaphore->pid != internal::getCurrentProcessID()) {
+      // Can only access semaphores belonging to same process.
+      return nullptr;
+   }
+
+   return semaphore;
+}
+
+Result<SemaphoreID>
+IOS_CreateSemaphore(int32_t maxCount,
+                    int32_t initialCount)
+{
+   internal::lockScheduler();
+
+   if (sData->firstFreeSemaphoreIndex < 0) {
+      internal::unlockScheduler();
+      return Error::Max;
+   }
+
+   auto semaphore = phys_addrof(sData->semaphores[sData->firstFreeSemaphoreIndex]);
+   auto semaphoreID = sData->firstFreeSemaphoreIndex;
+
+   // Remove semaphore from free semaphore linked list
+   sData->firstFreeSemaphoreIndex = semaphore->nextFreeSemaphoreIndex;
+
+   if (semaphore->nextFreeSemaphoreIndex >= 0) {
+      sData->semaphores[semaphore->nextFreeSemaphoreIndex].prevFreeSemaphoreIndex = int16_t { -1 };
+   } else {
+      sData->lastFreeSemaphoreIndex = int16_t { -1 };
+   }
+
+   semaphore->nextFreeSemaphoreIndex = int16_t { -1 };
+   semaphore->prevFreeSemaphoreIndex = int16_t { -1 };
+
+   sData->numCreatedSemaphores++;
+   semaphore->id = static_cast<SemaphoreID>(semaphoreID | (sData->numCreatedSemaphores << 12));
+   semaphore->count = initialCount;
+   semaphore->maxCount = maxCount;
+   semaphore->pid = internal::getCurrentProcessID();
+   semaphore->unknown0x04 = nullptr;
+   ThreadQueue_Initialise(phys_addrof(semaphore->waitThreadQueue));
+
+   internal::unlockScheduler();
+   return static_cast<SemaphoreID>(semaphore->id);
+}
+
+Error
+IOS_DestroySempahore(SemaphoreID id)
+{
+   internal::lockScheduler();
+   auto semaphore = getSemaphore(id);
+   if (!semaphore) {
+      internal::unlockScheduler();
+      return Error::Invalid;
+   }
+
+   semaphore->count = 0;
+   semaphore->maxCount = 0;
+
+   // Add semaphore to the free semaphore linked list.
+   auto index = static_cast<int16_t>(semaphore - sData->semaphores.phys_data());
+   auto prevSemaphoreIndex = sData->lastFreeSemaphoreIndex;
+
+   if (prevSemaphoreIndex >= 0) {
+      auto prevSemaphore = phys_addrof(sData->semaphores[sData->lastFreeSemaphoreIndex]);
+      prevSemaphore->nextFreeSemaphoreIndex = index;
+   }
+
+   semaphore->prevFreeSemaphoreIndex = prevSemaphoreIndex;
+   semaphore->nextFreeSemaphoreIndex = int16_t { -1 };
+
+   sData->lastFreeSemaphoreIndex = index;
+
+   if (sData->firstFreeSemaphoreIndex < 0) {
+      sData->firstFreeSemaphoreIndex = index;
+   }
+
+   internal::wakeupAllThreadsNoLock(phys_addrof(semaphore->waitThreadQueue),
+                                    Error::Intr);
+   internal::rescheduleAllNoLock();
+   internal::unlockScheduler();
+   return Error::Invalid;
+}
+
+Error
+IOS_WaitSemaphore(SemaphoreID id,
+                  BOOL tryWait)
+{
+   internal::lockScheduler();
+   auto semaphore = getSemaphore(id);
+   if (!semaphore) {
+      internal::unlockScheduler();
+      return Error::Invalid;
+   }
+
+   if (semaphore->count <= 0 && tryWait) {
+      internal::unlockScheduler();
+      return Error::SemUnavailable;
+   }
+
+   while (semaphore->count <= 0) {
+      internal::sleepThreadNoLock(phys_addrof(semaphore->waitThreadQueue));
+      internal::rescheduleSelfNoLock();
+
+      auto thread = internal::getCurrentThread();
+      if (thread->context.queueWaitResult != Error::OK) {
+         return thread->context.queueWaitResult;
+      }
+   }
+
+   semaphore->count -= 1;
+   internal::unlockScheduler();
+   return Error::OK;
+}
+
+Error
+IOS_SignalSempahore(SemaphoreID id)
+{
+   internal::lockScheduler();
+   auto semaphore = getSemaphore(id);
+   if (!semaphore) {
+      internal::unlockScheduler();
+      return Error::Invalid;
+   }
+
+   if (semaphore->count < semaphore->maxCount) {
+      semaphore->count += 1;
+   }
+
+   internal::wakeupOneThreadNoLock(phys_addrof(semaphore->waitThreadQueue),
+                                    Error::OK);
+   internal::rescheduleAllNoLock();
+   internal::unlockScheduler();
+   return Error::OK;
+}
+
+namespace internal
+{
+
+void
+kernelInitialiseSemaphore()
+{
+   // sData->lastFreeSemaphoreIdx = 0x08173B98
+   // sData->firstFreeSemaphoreIdx = 0x08173B9A
+   // sData->semaphores = 0x081AC004
+   sData = phys_addr { 0xFFFF4D78 };
+   std::memset(sData.getRawPointer(), 0, sizeof(SemaphoreData));
+}
+
+} // namespace internal
+
+} // namespace ios::kernel

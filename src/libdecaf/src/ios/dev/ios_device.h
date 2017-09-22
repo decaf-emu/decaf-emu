@@ -1,6 +1,6 @@
 #pragma once
-#include "ios_enum.h"
-#include "ios_ipc.h"
+#include "ios/ios_enum.h"
+#include "ios/ios_ipc.h"
 
 #include <cstdint>
 
@@ -12,52 +12,52 @@ class IOSDevice
 public:
    virtual ~IOSDevice() = default;
 
-   virtual IOSError
-   open(IOSOpenMode mode)
+   virtual Error
+   open(OpenMode mode)
    {
-      return IOSError::OK;
+      return Error::OK;
    }
 
-   virtual IOSError
+   virtual Error
    close()
    {
-      return IOSError::OK;
+      return Error::OK;
    }
 
-   virtual IOSError
+   virtual Error
    read(void *buffer,
         size_t length)
    {
-      return IOSError::FailInternal;
+      return Error::FailInternal;
    }
 
-   virtual IOSError
+   virtual Error
    write(void *buffer,
          size_t length)
    {
-      return IOSError::FailInternal;
+      return Error::FailInternal;
    }
 
-   virtual IOSError
+   virtual Error
    ioctl(uint32_t request,
          void *inBuf,
          size_t inLen,
          void *outBuf,
          size_t outLen)
    {
-      return IOSError::FailInternal;
+      return Error::FailInternal;
    }
 
-   virtual IOSError
+   virtual Error
    ioctlv(uint32_t request,
           size_t vecIn,
           size_t vecOut,
-          IOSVec *vec)
+          IoctlVec *vec)
    {
-      return IOSError::FailInternal;
+      return Error::FailInternal;
    }
 
-   IOSHandle
+   int32_t
    handle() const
    {
       return mHandle;
@@ -70,7 +70,7 @@ public:
    }
 
    void
-   setHandle(IOSHandle handle)
+   setHandle(int32_t handle)
    {
       mHandle = handle;
    }
@@ -82,7 +82,7 @@ public:
    }
 
 protected:
-   IOSHandle mHandle;
+   int32_t mHandle;
    std::string mName;
 };
 
