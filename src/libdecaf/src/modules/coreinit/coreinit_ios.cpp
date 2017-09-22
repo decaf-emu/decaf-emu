@@ -607,7 +607,7 @@ ipcPrepareIoctlRequest(IPCDriver *ipcDriver,
                        uint32_t outLen)
 {
    auto ipcBuffer = ipcRequest->ipcBuffer;
-   ipcBuffer->request.args.ioctl.command = ioctlRequest;
+   ipcBuffer->request.args.ioctl.request = ioctlRequest;
    ipcBuffer->request.args.ioctl.inputBuffer = nullptr;
    ipcBuffer->request.args.ioctl.inputLength = inLen;
    ipcBuffer->request.args.ioctl.outputBuffer = nullptr;
@@ -637,7 +637,7 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
                         IOSVec *vec)
 {
    auto ipcBuffer = ipcRequest->ipcBuffer;
-   ipcBuffer->request.args.ioctlv.command = ioctlvRequest;
+   ipcBuffer->request.args.ioctlv.request = ioctlvRequest;
    ipcBuffer->request.args.ioctlv.numVecIn = vecIn;
    ipcBuffer->request.args.ioctlv.numVecOut = vecOut;
    ipcBuffer->request.args.ioctlv.vecs = nullptr;

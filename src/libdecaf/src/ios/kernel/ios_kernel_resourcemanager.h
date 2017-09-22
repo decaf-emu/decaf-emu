@@ -360,7 +360,7 @@ dispatchIosSeek(ResourceHandleID resourceHandleID,
 Error
 dispatchIosIoctl(ResourceHandleID resourceHandleID,
                  uint32_t ioctlRequest,
-                 phys_ptr<void> inputBuffer,
+                 phys_ptr<const void> inputBuffer,
                  uint32_t inputLength,
                  phys_ptr<void> outputBuffer,
                  uint32_t outputLength,

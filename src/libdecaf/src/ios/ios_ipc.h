@@ -42,9 +42,9 @@ CHECK_SIZE(IpcRequestArgsOpen, 0x0C);
 
 struct IpcRequestArgsClose
 {
-   be2_val<uint32_t> unk0x00;
+   be2_val<uint32_t> unkArg0;
 };
-CHECK_OFFSET(IpcRequestArgsClose, 0x00, unk0x00);
+CHECK_OFFSET(IpcRequestArgsClose, 0x00, unkArg0);
 CHECK_SIZE(IpcRequestArgsClose, 0x04);
 
 struct IpcRequestArgsRead

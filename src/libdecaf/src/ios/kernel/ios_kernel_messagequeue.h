@@ -1,6 +1,7 @@
 #pragma once
 #include "ios_kernel_enum.h"
 #include "ios_kernel_threadqueue.h"
+#include "ios/ios_enum.h"
 
 #include <common/cbool.h>
 #include <common/structsize.h>

@@ -721,7 +721,7 @@ dispatchIosClose(ResourceHandleID resourceHandleID,
    resourceRequest->requestData.command = Command::Close;
    resourceRequest->resourceHandleID = resourceHandleID;
    resourceRequest->requestData.handle = resourceHandle->handle;
-   resourceRequest->requestData.args.close.unk0x00 = unkArg0;
+   resourceRequest->requestData.args.close.unkArg0 = unkArg0;
 
    auto previousResourceHandleState = resourceHandle->state;
    resourceHandle->state = ResourceHandleState::Closed;
@@ -820,12 +820,12 @@ dispatchIosWrite(ResourceHandleID resourceHandleID,
    }
 
    // Try allocate a resource request.
-   auto error = allocResourceRequest(resourceHandleManager,
-                                     cpuID,
-                                     resourceHandle->resourceManager,
-                                     queue,
-                                     ipcRequest,
-                                     &resourceRequest);
+   error = allocResourceRequest(resourceHandleManager,
+                                cpuID,
+                                resourceHandle->resourceManager,
+                                queue,
+                                ipcRequest,
+                                &resourceRequest);
    if (error < Error::OK) {
       return error;
    }
@@ -905,7 +905,7 @@ dispatchIosSeek(ResourceHandleID resourceHandleID,
 Error
 dispatchIosIoctl(ResourceHandleID resourceHandleID,
                  uint32_t ioctlRequest,
-                 phys_ptr<void> inputBuffer,
+                 phys_ptr<const void> inputBuffer,
                  uint32_t inputLength,
                  phys_ptr<void> outputBuffer,
                  uint32_t outputLength,
