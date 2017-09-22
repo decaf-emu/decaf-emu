@@ -3,6 +3,7 @@
 #include "ios_kernel_messagequeue.h"
 #include "ios_kernel_resourcemanager.h"
 #include "ios/ios_stackobject.h"
+#include "kernel/kernel_ipc.h"
 
 #include <common/atomicqueue.h>
 #include <common/log.h>
@@ -98,11 +99,74 @@ ipcThreadMain(phys_ptr<void> context)
                                                  pid,
                                                  request->cpuID);
                break;
+            case Command::Close:
+               error = internal::dispatchIosClose(request->handle,
+                                                  queue,
+                                                  request,
+                                                  request->args.close.unkArg0,
+                                                  pid,
+                                                  request->cpuID);
+               break;
+            case Command::Read:
+               error = internal::dispatchIosRead(request->handle,
+                                                 request->args.read.data,
+                                                 request->args.read.length,
+                                                 queue,
+                                                 request,
+                                                 pid,
+                                                 request->cpuID);
+               break;
+            case Command::Write:
+               error = internal::dispatchIosWrite(request->handle,
+                                                  request->args.write.data,
+                                                  request->args.write.length,
+                                                  queue,
+                                                  request,
+                                                  pid,
+                                                  request->cpuID);
+               break;
+            case Command::Seek:
+               error = internal::dispatchIosSeek(request->handle,
+                                                 request->args.seek.offset,
+                                                 request->args.seek.origin,
+                                                 queue,
+                                                 request,
+                                                 pid,
+                                                 request->cpuID);
+               break;
+            case Command::Ioctl:
+               error = internal::dispatchIosIoctl(request->handle,
+                                                  request->args.ioctl.request,
+                                                  request->args.ioctl.inputBuffer,
+                                                  request->args.ioctl.inputLength,
+                                                  request->args.ioctl.outputBuffer,
+                                                  request->args.ioctl.outputLength,
+                                                  queue,
+                                                  request,
+                                                  pid,
+                                                  request->cpuID);
+               break;
+            case Command::Ioctlv:
+               error = internal::dispatchIosIoctlv(request->handle,
+                                                   request->args.ioctlv.request,
+                                                   request->args.ioctlv.numVecIn,
+                                                   request->args.ioctlv.numVecOut,
+                                                   request->args.ioctlv.vecs,
+                                                   queue,
+                                                   request,
+                                                   pid,
+                                                   request->cpuID);
+               break;
+            default:
+               error = Error::Invalid;
             }
          }
 
          if (error < Error::OK) {
-            // send reply!
+            // Reply with error!
+            request->command = Command::Reply;
+            request->reply = error;
+            ::kernel::ipcDriverKernelSubmitReply(request.getRawPointer());
             continue;
          }
       }
