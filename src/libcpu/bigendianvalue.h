@@ -344,14 +344,40 @@ private:
    value_type mStorage;
 };
 
-template<typename Type>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
+} // namespace cpu
+
+// Hijack fmtlib to forward BigEndianValue<Type> formatter to Type formatter.
+namespace fmt
+{
+
+namespace internal
+{
+
+// Ensure that fmt::internal::MakeValue sees BigEndianValue as a custom type.
+template <typename T>
+struct ConvertToInt<cpu::BigEndianValue<T>>
+{
+   enum
+   {
+      enable_conversion = false,
+   };
+   enum
+   {
+      value = false,
+   };
+};
+
+} // namespace internal
+
+template <typename ArgFormatter, typename Char, typename Type>
+inline void
+format_arg(BasicFormatter<Char, ArgFormatter> &f,
+           const Char *&format_str,
            const cpu::BigEndianValue<Type> &val)
 {
+   // Forward BigEndianValue<Type> format to Type formatter.
    format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.value()));
+                         internal::MakeArg<fmt::BasicFormatter<Char, ArgFormatter>>(val.value()));
 }
 
-} // namespace cpu
+} // namespace fmt

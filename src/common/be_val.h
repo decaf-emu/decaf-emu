@@ -72,12 +72,38 @@ protected:
    Type mValue {};
 };
 
-template<typename Type>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
+// Hijack fmtlib to forward be_val<Type> formatter to Type formatter.
+namespace fmt
+{
+
+namespace internal
+{
+
+// Ensure that fmt::internal::MakeValue sees be_val as a custom type.
+template <typename T>
+struct ConvertToInt<be_val<T>>
+{
+   enum
+   {
+      enable_conversion = false,
+   };
+   enum
+   {
+      value = false,
+   };
+};
+
+} // namespace internal
+
+template <typename ArgFormatter, typename Char, typename Type>
+inline void
+format_arg(BasicFormatter<Char, ArgFormatter> &f,
+           const Char *&format_str,
            const be_val<Type> &val)
 {
+   // Forward be_val<Type> format to Type formatter.
    format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.value()));
+                         internal::MakeArg<fmt::BasicFormatter<Char, ArgFormatter>>(val.value()));
 }
+
+} // namespace fmt
