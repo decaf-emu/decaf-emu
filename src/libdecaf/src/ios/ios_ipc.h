@@ -10,8 +10,6 @@ namespace ios
 
 #pragma pack(push, 1)
 
-using IpcHandle = uint32_t;
-
 /**
  * Structure used for ioctlv arguments.
  */
@@ -151,8 +149,8 @@ struct IpcRequest
    //! IPC command result
    be2_val<Error> reply;
 
-   //! IPC Handle
-   be2_val<IpcHandle> handle;
+   //! Handle for the IOS resource
+   be2_val<int32_t> handle;
 
    //! Flags, always 0
    be2_val<uint32_t> flags;

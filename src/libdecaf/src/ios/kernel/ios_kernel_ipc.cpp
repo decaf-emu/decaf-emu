@@ -16,7 +16,7 @@ waitRequestReply(phys_ptr<MessageQueue> queue,
 
 } // namespace internal
 
-Result<IpcHandle>
+Result<ResourceHandleID>
 IOS_Open(std::string_view device,
          OpenMode mode)
 {
@@ -39,7 +39,7 @@ IOS_Open(std::string_view device,
       return error;
    }
 
-   return static_cast<IpcHandle>(error);
+   return static_cast<ResourceHandleID>(error);
 }
 
 namespace internal

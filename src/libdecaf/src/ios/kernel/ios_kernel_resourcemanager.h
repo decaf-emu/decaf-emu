@@ -122,7 +122,7 @@ CHECK_SIZE(ResourceManagerList, 0x180C);
 
 struct ResourceHandle
 {
-   //! The handle returned by a succesful IOS_Open request.
+   //! The internal process handle returned by a successful IOS_Open request.
    be2_val<int32_t> handle;
 
    //! The unique id of this resource handle.

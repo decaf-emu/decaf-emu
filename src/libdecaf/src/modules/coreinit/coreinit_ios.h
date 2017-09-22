@@ -37,7 +37,7 @@ IOS_WriteAsyncEx
 using IOSCommand = ios::Command;
 using IOSError = ios::Error;
 using IOSErrorCategory = ios::ErrorCategory;
-using IOSHandle = ios::IpcHandle;
+using IOSHandle = int32_t;
 using IOSOpenMode = ios::OpenMode;
 using IOSVec = ios::IoctlVec;
 using IOSAsyncCallbackFn = wfunc_ptr<void, IOSError /* status */, void * /* context */>;
