@@ -20,7 +20,7 @@ You can find us for developer discussion at #wiiu-emu on freenode.
 
 ## Binaries
 The latest Windows AppVeyor build is available from:
-- https://ci.appveyor.com/api/projects/exjam/decaf-emu/artifacts/decaf-bin.zip?branch=master
+- https://ci.appveyor.com/project/exjam/decaf-emu/build/artifacts
 
 ## Building from Source
 
