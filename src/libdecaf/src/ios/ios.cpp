@@ -50,14 +50,14 @@ getCoreCount()
    return NumIosCores;
 }
 
-CoreID
-getCurrentCoreID()
+CoreId
+getCurrentCoreId()
 {
    return sCurrentCore->id;
 }
 
 void
-interruptCore(CoreID core,
+interruptCore(CoreId core,
               CoreInterruptFlags flags)
 {
    sCores[core].interruptFlags.fetch_or(flags);

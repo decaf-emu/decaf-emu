@@ -43,7 +43,7 @@ struct IPCBuffer
    be2_val<uint32_t> flags;
 
    //! CPU the request originated from
-   be2_val<IOSCpuID> cpuID;
+   be2_val<IOSCpuId> cpuId;
 
    //! Process ID the request originated from
    be2_val<uint32_t> processId;

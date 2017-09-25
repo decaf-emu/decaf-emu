@@ -8,11 +8,11 @@
 namespace ios
 {
 
-using CoreID = uint32_t;
+using CoreId = uint32_t;
 
 struct Core
 {
-   CoreID id;
+   CoreId id;
    std::thread thread;
    platform::Fiber *fiber;
    std::atomic<uint32_t> interruptFlags;
@@ -24,14 +24,14 @@ namespace internal
 Core *
 getCurrentCore();
 
-CoreID
-getCurrentCoreID();
+CoreId
+getCurrentCoreId();
 
 uint32_t
 getCoreCount();
 
 void
-interruptCore(CoreID core,
+interruptCore(CoreId core,
               CoreInterruptFlags flags);
 
 void

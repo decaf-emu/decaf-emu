@@ -7,7 +7,7 @@ ENUM_NAMESPACE_BEG(ios)
 
 ENUM_NAMESPACE_BEG(kernel)
 
-ENUM_BEG(DeviceID, uint32_t)
+ENUM_BEG(DeviceId, uint32_t)
    ENUM_VALUE(NandInterfaceAHBALL,  1)
    ENUM_VALUE(AesEngineAHBALL,      2)
    ENUM_VALUE(Sha1EngineAHBALL,     3)
@@ -40,7 +40,7 @@ ENUM_BEG(DeviceID, uint32_t)
    ENUM_VALUE(IpcStarbuckCore2,     45)
    ENUM_VALUE(IpcStarbuckCore1,     46)
    ENUM_VALUE(IpcStarbuckCore0,     47)
-ENUM_END(DeviceID)
+ENUM_END(DeviceId)
 
 FLAGS_BEG(HeapFlags, uint32_t)
    FLAGS_VALUE(LocalProcessHeap,    1 << 0)

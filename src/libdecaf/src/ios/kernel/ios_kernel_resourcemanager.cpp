@@ -18,7 +18,7 @@ struct ResourceData
 {
    ResourceManagerList resourceManagerList;
    ResourceRequestList resourceRequestList;
-   be2_array<ResourceHandleManager, ProcessID::Max> resourceHandleManagers;
+   be2_array<ResourceHandleManager, ProcessId::Max> resourceHandleManagers;
    be2_val<uint32_t> totalOpenedHandles;
 };
 
@@ -33,11 +33,11 @@ findResourceManager(std::string_view device,
                     phys_ptr<ResourceManager> *outResourceManager);
 
 static phys_ptr<ResourceHandleManager>
-getResourceHandleManager(ProcessID id);
+getResourceHandleManager(ProcessId id);
 
 static Error
 allocResourceRequest(phys_ptr<ResourceHandleManager> resourceHandleManager,
-                     CpuID cpuID,
+                     CpuId cpuId,
                      phys_ptr<ResourceManager> resourceManager,
                      phys_ptr<MessageQueue> messageQueue,
                      phys_ptr<IpcRequest> ipcRequest,
@@ -49,14 +49,14 @@ freeResourceRequest(phys_ptr<ResourceRequest> resourceRequest);
 static Error
 allocResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
                     phys_ptr<ResourceManager> resourceManager,
-                    ResourceHandleID *outResourceHandleID);
+                    ResourceHandleId *outResourceHandleId);
 
 static Error
 freeResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
-                   ResourceHandleID id);
+                   ResourceHandleId id);
 
 static Error
-getResourceHandle(ResourceHandleID id,
+getResourceHandle(ResourceHandleId id,
                   phys_ptr<ResourceHandleManager> resourceHandleManager,
                   phys_ptr<ResourceHandle> *outResourceHandle);
 
@@ -75,9 +75,9 @@ dispatchRequest(phys_ptr<ResourceRequest> request);
  */
 Error
 IOS_RegisterResourceManager(std::string_view device,
-                            MessageQueueID queue)
+                            MessageQueueId queue)
 {
-   auto pid = internal::getCurrentProcessID();
+   auto pid = internal::getCurrentProcessId();
    auto resourceHandleManager = internal::getResourceHandleManager(pid);
    if (!resourceHandleManager) {
       return Error::Invalid;
@@ -149,7 +149,7 @@ IOS_SetResourcePermissionGroup(std::string_view device,
                                uint32_t group)
 {
    phys_ptr<ResourceManager> resourceManager;
-   auto pid = internal::getCurrentProcessID();
+   auto pid = internal::getCurrentProcessId();
    auto error = internal::findResourceManager(device, &resourceManager);
    if (error < Error::OK) {
       return error;
@@ -174,7 +174,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    phys_ptr<ResourceHandle> resourceHandle;
 
    // Get the resource handle manager for the current process
-   auto pid = internal::getCurrentProcessID();
+   auto pid = internal::getCurrentProcessId();
    auto resourceHandleManager = internal::getResourceHandleManager(pid);
    if (!resourceHandleManager) {
       resourceHandleManager->failedRegisterMaxResourceRequests++;
@@ -196,7 +196,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       return Error::Invalid;
    }
 
-   auto error = internal::getResourceHandle(resourceRequest->resourceHandleID,
+   auto error = internal::getResourceHandle(resourceRequest->resourceHandleId,
                                             resourceHandleManager,
                                             &resourceHandle);
    if (error < Error::OK) {
@@ -208,7 +208,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       if (reply < Error::OK) {
          // Resource open failed, free the resource handle.
          internal::freeResourceHandle(resourceHandleManager,
-                                      resourceRequest->resourceHandleID);
+                                      resourceRequest->resourceHandleId);
       } else {
          // Resource open succeeded, save the resource handle.
          resourceHandle->handle = static_cast<int32_t>(reply);
@@ -218,7 +218,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    } else if (resourceRequest->requestData.command == Command::Close) {
       // Resource closed, close the resource handle.
       internal::freeResourceHandle(resourceHandleManager,
-                                   resourceRequest->resourceHandleID);
+                                   resourceRequest->resourceHandleId);
    }
 
    return internal::dispatchResourceReply(resourceRequest, reply, true);
@@ -263,9 +263,9 @@ findResourceManager(std::string_view device,
  * Get the ResourceHandleManager for the specified process.
  */
 static phys_ptr<ResourceHandleManager>
-getResourceHandleManager(ProcessID id)
+getResourceHandleManager(ProcessId id)
 {
-   if (id >= ProcessID::Max) {
+   if (id >= ProcessId::Max) {
       return nullptr;
    }
 
@@ -278,7 +278,7 @@ getResourceHandleManager(ProcessID id)
  */
 static Error
 allocResourceRequest(phys_ptr<ResourceHandleManager> resourceHandleManager,
-                     CpuID cpuID,
+                     CpuId cpuId,
                      phys_ptr<ResourceManager> resourceManager,
                      phys_ptr<MessageQueue> messageQueue,
                      phys_ptr<IpcRequest> ipcRequest,
@@ -307,15 +307,15 @@ allocResourceRequest(phys_ptr<ResourceHandleManager> resourceHandleManager,
       resourceRequestList.firstFreeIdx = nextFreeIdx;
    }
 
-   resourceRequest->resourceHandleID = static_cast<ResourceHandleID>(Error::Invalid);
+   resourceRequest->resourceHandleId = static_cast<ResourceHandleId>(Error::Invalid);
    resourceRequest->messageQueueId = messageQueue->uid;
    resourceRequest->messageQueue = messageQueue;
    resourceRequest->resourceHandleManager = resourceHandleManager;
    resourceRequest->resourceManager = resourceManager;
    resourceRequest->ipcRequest = ipcRequest;
 
-   resourceRequest->requestData.cpuID = cpuID;
-   resourceRequest->requestData.clientPid = resourceHandleManager->pid;
+   resourceRequest->requestData.cpuId = cpuId;
+   resourceRequest->requestData.processId = resourceHandleManager->pid;
    resourceRequest->requestData.titleId = resourceHandleManager->tid;
    resourceRequest->requestData.gid = resourceHandleManager->gid;
 
@@ -418,7 +418,7 @@ freeResourceRequest(phys_ptr<ResourceRequest> resourceRequest)
 static Error
 allocResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
                     phys_ptr<ResourceManager> resourceManager,
-                    ResourceHandleID *outResourceHandleID)
+                    ResourceHandleId *outResourceHandleId)
 {
    // Check if we have a free resource handle to register.
    if (resourceHandleManager->numResourceHandles >= resourceHandleManager->maxResourceHandles) {
@@ -442,12 +442,12 @@ allocResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
       return Error::Max;
    }
 
-   resourceHandle->id = static_cast<ResourceHandleID>(resourceHandleIdx | (sData->totalOpenedHandles << 12));
+   resourceHandle->id = static_cast<ResourceHandleId>(resourceHandleIdx | (sData->totalOpenedHandles << 12));
    resourceHandle->resourceManager = resourceManager;
    resourceHandle->state = ResourceHandleState::Opening;
    resourceHandle->handle = -10;
 
-   *outResourceHandleID = resourceHandle->id;
+   *outResourceHandleId = resourceHandle->id;
    return Error::OK;
 }
 
@@ -457,7 +457,7 @@ allocResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
  */
 static Error
 freeResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
-                   ResourceHandleID id)
+                   ResourceHandleId id)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    auto error = getResourceHandle(id, resourceHandleManager, &resourceHandle);
@@ -469,7 +469,7 @@ freeResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
    resourceHandle->handle = -4;
    resourceHandle->resourceManager = nullptr;
    resourceHandle->state = ResourceHandleState::Free;
-   resourceHandle->id = static_cast<ResourceHandleID>(Error::Invalid);
+   resourceHandle->id = static_cast<ResourceHandleId>(Error::Invalid);
 
    resourceHandleManager->numResourceHandles--;
    resourceManager->numHandles--;
@@ -481,7 +481,7 @@ freeResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
  * Get ResourceHandle by id.
  */
 static Error
-getResourceHandle(ResourceHandleID id,
+getResourceHandle(ResourceHandleId id,
                   phys_ptr<ResourceHandleManager> resourceHandleManager,
                   phys_ptr<ResourceHandle> *outResourceHandle)
 {
@@ -506,8 +506,8 @@ getResourceHandle(ResourceHandleID id,
  * Lookup an open resource handle.
  */
 static Error
-getOpenResource(ProcessID pid,
-                ResourceHandleID id,
+getOpenResource(ProcessId pid,
+                ResourceHandleId id,
                 phys_ptr<ResourceHandleManager> *outResourceHandleManager,
                 phys_ptr<ResourceHandle> *outResourceHandle)
 {
@@ -545,7 +545,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    ipcRequest->command = Command::Reply;
    ipcRequest->reply = reply;
 
-   if (resourceRequest->messageQueueId == getIpcMessageQueueID()) {
+   if (resourceRequest->messageQueueId == getIpcMessageQueueId()) {
       ::kernel::ipcDriverKernelSubmitReply(ipcRequest.getRawPointer());
       error = Error::OK;
    } else {
@@ -593,12 +593,13 @@ dispatchIosOpen(std::string_view device,
                 OpenMode mode,
                 phys_ptr<MessageQueue> queue,
                 phys_ptr<IpcRequest> ipcRequest,
-                ProcessID pid,
-                CpuID cpuID)
+                ProcessId pid,
+                CpuId cpuId)
 {
+   phys_ptr<ClientCapability> clientCapability;
    phys_ptr<ResourceManager> resourceManager;
    phys_ptr<ResourceRequest> resourceRequest;
-   ResourceHandleID resourceHandleID;
+   ResourceHandleId resourceHandleId;
 
    // Try get the resource handle manager for this process.
    auto resourceHandleManager = internal::getResourceHandleManager(pid);
@@ -612,9 +613,17 @@ dispatchIosOpen(std::string_view device,
       return error;
    }
 
+   // Try get the cap bits
+   error = getClientCapability(resourceHandleManager,
+                               resourceManager->permissionGroup,
+                               &clientCapability);
+   if (error < Error::OK) {
+      return Error::Access;
+   }
+
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceManager,
                                 queue,
                                 ipcRequest,
@@ -628,6 +637,7 @@ dispatchIosOpen(std::string_view device,
    // Set the IOS_Open arguments
    resourceRequest->requestData.args.open.name = phys_addrof(resourceRequest->openNameBuffer);
    resourceRequest->requestData.args.open.mode = mode;
+   resourceRequest->requestData.args.open.caps = clientCapability->mask;
 
    std::strncpy(resourceRequest->openNameBuffer.phys_begin().getRawPointer(),
                 device.data(),
@@ -636,13 +646,13 @@ dispatchIosOpen(std::string_view device,
    // Try allocate a resource handle.
    error = allocResourceHandle(resourceHandleManager,
                                resourceManager,
-                               &resourceHandleID);
+                               &resourceHandleId);
    if (error < Error::OK) {
       freeResourceRequest(resourceRequest);
       return error;
    }
 
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
 
    // Increment our counters!
    sData->totalOpenedHandles++;
@@ -652,7 +662,7 @@ dispatchIosOpen(std::string_view device,
    // Try dispatch the request to the relevant resource manager.
    error = dispatchRequest(resourceRequest);
    if (error < Error::OK) {
-      freeResourceHandle(resourceHandleManager, resourceHandleID);
+      freeResourceHandle(resourceHandleManager, resourceHandleId);
       freeResourceRequest(resourceRequest);
       return error;
    }
@@ -665,12 +675,12 @@ dispatchIosOpen(std::string_view device,
  * Dispatch an IOS_Close request.
  */
 Error
-dispatchIosClose(ResourceHandleID resourceHandleID,
+dispatchIosClose(ResourceHandleId resourceHandleId,
                  phys_ptr<MessageQueue> queue,
                  phys_ptr<IpcRequest> ipcRequest,
                  uint32_t unkArg0,
-                 ProcessID pid,
-                 CpuID cpuID)
+                 ProcessId pid,
+                 CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceRequest> resourceRequest;
@@ -682,7 +692,7 @@ dispatchIosClose(ResourceHandleID resourceHandleID,
    }
 
    // Try lookup the resource handle.
-   auto error = getResourceHandle(resourceHandleID,
+   auto error = getResourceHandle(resourceHandleId,
                                   resourceHandleManager,
                                   &resourceHandle);
    if (error < Error::OK) {
@@ -696,20 +706,20 @@ dispatchIosClose(ResourceHandleID resourceHandleID,
       ios::StackObject<ResourceRequest> resourceRequest;
       std::memset(resourceRequest.getRawPointer(), 0, sizeof(ResourceRequest));
       resourceRequest->requestData.command = Command::Close;
-      resourceRequest->requestData.cpuID = cpuID;
-      resourceRequest->requestData.clientPid = pid;
-      resourceRequest->requestData.handle = resourceHandleID;
+      resourceRequest->requestData.cpuId = cpuId;
+      resourceRequest->requestData.processId = pid;
+      resourceRequest->requestData.handle = resourceHandleId;
       resourceRequest->ipcRequest = ipcRequest;
       resourceRequest->messageQueue = queue;
       resourceRequest->messageQueueId = queue->uid;
 
-      freeResourceHandle(resourceHandleManager, resourceHandleID);
+      freeResourceHandle(resourceHandleManager, resourceHandleId);
       return dispatchRequest(resourceRequest);
    }
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceManager,
                                 queue,
                                 ipcRequest,
@@ -719,7 +729,7 @@ dispatchIosClose(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Close;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.close.unkArg0 = unkArg0;
 
@@ -742,19 +752,19 @@ dispatchIosClose(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_Read request.
  */
 Error
-dispatchIosRead(ResourceHandleID resourceHandleID,
+dispatchIosRead(ResourceHandleId resourceHandleId,
                 phys_ptr<void> buffer,
                 uint32_t length,
                 phys_ptr<MessageQueue> queue,
                 phys_ptr<IpcRequest> ipcRequest,
-                ProcessID pid,
-                CpuID cpuID)
+                ProcessId pid,
+                CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
-   auto error = getOpenResource(pid, resourceHandleID, &resourceHandleManager, &resourceHandle);
+   auto error = getOpenResource(pid, resourceHandleId, &resourceHandleManager, &resourceHandle);
    if (error < Error::OK) {
       return error;
    }
@@ -765,7 +775,7 @@ dispatchIosRead(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -775,7 +785,7 @@ dispatchIosRead(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Read;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.read.data = buffer;
    resourceRequest->requestData.args.read.length = length;
@@ -795,20 +805,20 @@ dispatchIosRead(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_Write request.
  */
 Error
-dispatchIosWrite(ResourceHandleID resourceHandleID,
+dispatchIosWrite(ResourceHandleId resourceHandleId,
                  phys_ptr<const void> buffer,
                  uint32_t length,
                  phys_ptr<MessageQueue> queue,
                  phys_ptr<IpcRequest> ipcRequest,
-                 ProcessID pid,
-                 CpuID cpuID)
+                 ProcessId pid,
+                 CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -821,7 +831,7 @@ dispatchIosWrite(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -831,7 +841,7 @@ dispatchIosWrite(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Write;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.write.data = buffer;
    resourceRequest->requestData.args.write.length = length;
@@ -851,20 +861,20 @@ dispatchIosWrite(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_Seek request.
  */
 Error
-dispatchIosSeek(ResourceHandleID resourceHandleID,
+dispatchIosSeek(ResourceHandleId resourceHandleId,
                 uint32_t offset,
                 SeekOrigin origin,
                 phys_ptr<MessageQueue> queue,
                 phys_ptr<IpcRequest> ipcRequest,
-                ProcessID pid,
-                CpuID cpuID)
+                ProcessId pid,
+                CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -873,7 +883,7 @@ dispatchIosSeek(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -883,7 +893,7 @@ dispatchIosSeek(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Seek;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.seek.offset = offset;
    resourceRequest->requestData.args.seek.origin = origin;
@@ -903,7 +913,7 @@ dispatchIosSeek(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_Ioctl request.
  */
 Error
-dispatchIosIoctl(ResourceHandleID resourceHandleID,
+dispatchIosIoctl(ResourceHandleId resourceHandleId,
                  uint32_t ioctlRequest,
                  phys_ptr<const void> inputBuffer,
                  uint32_t inputLength,
@@ -911,15 +921,15 @@ dispatchIosIoctl(ResourceHandleID resourceHandleID,
                  uint32_t outputLength,
                  phys_ptr<MessageQueue> queue,
                  phys_ptr<IpcRequest> ipcRequest,
-                 ProcessID pid,
-                 CpuID cpuID)
+                 ProcessId pid,
+                 CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -932,7 +942,7 @@ dispatchIosIoctl(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -942,7 +952,7 @@ dispatchIosIoctl(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Ioctl;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.ioctl.request = ioctlRequest;
    resourceRequest->requestData.args.ioctl.inputBuffer = inputBuffer;
@@ -965,22 +975,22 @@ dispatchIosIoctl(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_Ioctlv request.
  */
 Error
-dispatchIosIoctlv(ResourceHandleID resourceHandleID,
+dispatchIosIoctlv(ResourceHandleId resourceHandleId,
                   uint32_t ioctlRequest,
                   uint32_t numVecIn,
                   uint32_t numVecOut,
                   phys_ptr<IoctlVec> vecs,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID)
+                  ProcessId pid,
+                  CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -993,7 +1003,7 @@ dispatchIosIoctlv(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -1003,7 +1013,7 @@ dispatchIosIoctlv(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Ioctlv;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.ioctlv.request = ioctlRequest;
    resourceRequest->requestData.args.ioctlv.numVecIn = numVecIn;
@@ -1025,20 +1035,20 @@ dispatchIosIoctlv(ResourceHandleID resourceHandleID,
 * Dispatch an IOS_Resume request.
 */
 Error
-dispatchIosResume(ResourceHandleID resourceHandleID,
+dispatchIosResume(ResourceHandleId resourceHandleId,
                   uint32_t unkArg0,
                   uint32_t unkArg1,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID)
+                  ProcessId pid,
+                  CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -1047,7 +1057,7 @@ dispatchIosResume(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -1057,7 +1067,7 @@ dispatchIosResume(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Resume;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.resume.unkArg0 = unkArg0;
    resourceRequest->requestData.args.resume.unkArg1 = unkArg1;
@@ -1077,20 +1087,20 @@ dispatchIosResume(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_Suspend request.
  */
 Error
-dispatchIosSuspend(ResourceHandleID resourceHandleID,
+dispatchIosSuspend(ResourceHandleId resourceHandleId,
                    uint32_t unkArg0,
                    uint32_t unkArg1,
                    phys_ptr<MessageQueue> queue,
                    phys_ptr<IpcRequest> ipcRequest,
-                   ProcessID pid,
-                   CpuID cpuID)
+                   ProcessId pid,
+                   CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -1099,7 +1109,7 @@ dispatchIosSuspend(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -1109,7 +1119,7 @@ dispatchIosSuspend(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::Suspend;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.suspend.unkArg0 = unkArg0;
    resourceRequest->requestData.args.suspend.unkArg1 = unkArg1;
@@ -1129,22 +1139,22 @@ dispatchIosSuspend(ResourceHandleID resourceHandleID,
  * Dispatch an IOS_SvcMsg request.
  */
 Error
-dispatchIosSvcMsg(ResourceHandleID resourceHandleID,
+dispatchIosSvcMsg(ResourceHandleId resourceHandleId,
                   uint32_t unkArg0,
                   uint32_t unkArg1,
                   uint32_t unkArg2,
                   uint32_t unkArg3,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID)
+                  ProcessId pid,
+                  CpuId cpuId)
 {
    phys_ptr<ResourceHandle> resourceHandle;
    phys_ptr<ResourceHandleManager> resourceHandleManager;
    phys_ptr<ResourceRequest> resourceRequest;
 
    auto error = getOpenResource(pid,
-                                resourceHandleID,
+                                resourceHandleId,
                                 &resourceHandleManager,
                                 &resourceHandle);
    if (error < Error::OK) {
@@ -1153,7 +1163,7 @@ dispatchIosSvcMsg(ResourceHandleID resourceHandleID,
 
    // Try allocate a resource request.
    error = allocResourceRequest(resourceHandleManager,
-                                cpuID,
+                                cpuId,
                                 resourceHandle->resourceManager,
                                 queue,
                                 ipcRequest,
@@ -1163,7 +1173,7 @@ dispatchIosSvcMsg(ResourceHandleID resourceHandleID,
    }
 
    resourceRequest->requestData.command = Command::SvcMsg;
-   resourceRequest->resourceHandleID = resourceHandleID;
+   resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
    resourceRequest->requestData.args.svcMsg.unkArg0 = unkArg0;
    resourceRequest->requestData.args.svcMsg.unkArg1 = unkArg1;
@@ -1186,12 +1196,12 @@ dispatchIosSvcMsg(ResourceHandleID resourceHandleID,
  */
 Error
 getClientCapability(phys_ptr<ResourceHandleManager> resourceHandleManager,
-                    FeatureID featureID,
+                    FeatureId featureId,
                     phys_ptr<ClientCapability> *outClientCapability)
 {
    for (auto i = 0u; i < resourceHandleManager->clientCapabilities.size(); ++i) {
       auto caps = phys_addrof(resourceHandleManager->clientCapabilities[i]);
-      if (caps->featureID == featureID) {
+      if (caps->featureId == featureId) {
          if (outClientCapability) {
             *outClientCapability = caps;
          }
@@ -1208,8 +1218,8 @@ getClientCapability(phys_ptr<ResourceHandleManager> resourceHandleManager,
  * Set the client capability mask for a specific process & feature ID.
  */
 Error
-setClientCapability(ProcessID pid,
-                    FeatureID featureID,
+setClientCapability(ProcessId pid,
+                    FeatureId featureId,
                     uint64_t mask)
 {
    phys_ptr<ClientCapability> clientCapability;
@@ -1220,12 +1230,12 @@ setClientCapability(ProcessID pid,
    }
 
    auto error = getClientCapability(resourceHandleManager,
-                                    featureID,
+                                    featureId,
                                     &clientCapability);
    if (error >= Error::OK) {
       if (mask == 0) {
          // Delete client cap
-         clientCapability->featureID = -1;
+         clientCapability->featureId = -1;
          clientCapability->mask = 0ull;
          return Error::OK;
       }
@@ -1245,7 +1255,7 @@ setClientCapability(ProcessID pid,
    for (auto i = 0u; i < resourceHandleManager->clientCapabilities.size(); ++i) {
       auto cap = phys_addrof(resourceHandleManager->clientCapabilities[i]);
 
-      if (cap->featureID == -1) {
+      if (cap->featureId == -1) {
          clientCapability = cap;
          break;
       }
@@ -1255,7 +1265,7 @@ setClientCapability(ProcessID pid,
       return Error::FailAlloc;
    }
 
-   clientCapability->featureID = featureID;
+   clientCapability->featureId = featureId;
    clientCapability->mask = mask;
    return Error::OK;
 }
@@ -1301,11 +1311,11 @@ kernelInitialiseResourceManager()
    for (auto i = 0u; i < resourceHandleManagers.size(); ++i) {
       auto &resourceHandleManager = resourceHandleManagers[i];
 
-      resourceHandleManager.pid = static_cast<ProcessID>(i);
+      resourceHandleManager.pid = static_cast<ProcessId>(i);
       resourceHandleManager.maxResourceHandles = MaxNumResourceHandlesPerProcess;
       resourceHandleManager.maxResourceRequests = MaxNumResourceRequestsPerProcess;
 
-      if (resourceHandleManager.pid >= ProcessID::COSKERNEL) {
+      if (resourceHandleManager.pid >= ProcessId::COSKERNEL) {
          resourceHandleManager.maxResourceManagers = 0u;
       } else {
          resourceHandleManager.maxResourceManagers = MaxNumResourceManagersPerProcess;
@@ -1321,7 +1331,7 @@ kernelInitialiseResourceManager()
 
       for (auto j = 0u; j < MaxNumClientCapabilitiesPerProcess; ++j) {
          auto &caps = resourceHandleManager.clientCapabilities[j];
-         caps.featureID = -1;
+         caps.featureId = -1;
          caps.mask = 0ull;
       }
 

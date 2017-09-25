@@ -10,6 +10,9 @@ namespace ios
 
 #pragma pack(push, 1)
 
+using GroupId = uint32_t;
+using TitleId = uint64_t;
+
 /**
  * Structure used for ioctlv arguments.
  */
@@ -34,11 +37,13 @@ struct IpcRequestArgsOpen
    be2_phys_ptr<const char> name;
    be2_val<uint32_t> nameLen;
    be2_val<OpenMode> mode;
+   be2_val<uint64_t> caps;
 };
 CHECK_OFFSET(IpcRequestArgsOpen, 0x00, name);
 CHECK_OFFSET(IpcRequestArgsOpen, 0x04, nameLen);
 CHECK_OFFSET(IpcRequestArgsOpen, 0x08, mode);
-CHECK_SIZE(IpcRequestArgsOpen, 0x0C);
+CHECK_OFFSET(IpcRequestArgsOpen, 0x0C, caps);
+CHECK_SIZE(IpcRequestArgsOpen, 0x14);
 
 struct IpcRequestArgsClose
 {
@@ -160,23 +165,6 @@ CHECK_OFFSET(IpcRequestArgs, 0x00, args);
 CHECK_SIZE(IpcRequestArgs, 0x14);
 
 
-struct IpcRequestOrigin
-{
-   //! Process ID the request originated from
-   be2_val<uint32_t> clientPid;
-
-   //! Title ID the request originated from
-   be2_val<uint64_t> titleId;
-
-   //! What is a gid???
-   be2_val<uint32_t> gid;
-};
-CHECK_OFFSET(IpcRequestOrigin, 0x00, clientPid);
-CHECK_OFFSET(IpcRequestOrigin, 0x04, titleId);
-CHECK_OFFSET(IpcRequestOrigin, 0x0C, gid);
-CHECK_SIZE(IpcRequestOrigin, 0x10);
-
-
 /**
  * The actual data which is sent as an IPC request between IOSU (ARM) and
  * PowerPC cores.
@@ -198,16 +186,24 @@ struct IpcRequest
    be2_val<uint32_t> flags;
 
    //! CPU the request originated from
-   be2_val<CpuID> cpuID;
+   be2_val<CpuId> cpuId;
 
-   //! Process ID the request originated from
-   be2_val<int32_t> clientPid;
+   union
+   {
+      //! Cafe/PowerPC process ID the request originated from, only valid when
+      //! receiving the request in the kernel ipc thread.
+      be2_val<int32_t> clientPid;
+
+      //! IOS ProcessId the request originated from, this is the value that
+      //! should be used everywhere except from the kernel ipc thread.
+      be2_val<ProcessId> processId;
+   };
 
    //! Title ID the request originated from
-   be2_val<uint64_t> titleId;
+   be2_val<TitleId> titleId;
 
-   //! 'gid' ??
-   be2_val<uint32_t> gid;
+   //! Group ID
+   be2_val<GroupId> groupId;
 
    //! IPC command args
    be2_struct<IpcRequestArgs> args;
@@ -216,10 +212,11 @@ CHECK_OFFSET(IpcRequest, 0x00, command);
 CHECK_OFFSET(IpcRequest, 0x04, reply);
 CHECK_OFFSET(IpcRequest, 0x08, handle);
 CHECK_OFFSET(IpcRequest, 0x0C, flags);
-CHECK_OFFSET(IpcRequest, 0x10, cpuID);
+CHECK_OFFSET(IpcRequest, 0x10, cpuId);
 CHECK_OFFSET(IpcRequest, 0x14, clientPid);
+CHECK_OFFSET(IpcRequest, 0x14, processId);
 CHECK_OFFSET(IpcRequest, 0x18, titleId);
-CHECK_OFFSET(IpcRequest, 0x20, gid);
+CHECK_OFFSET(IpcRequest, 0x20, groupId);
 CHECK_OFFSET(IpcRequest, 0x24, args);
 CHECK_SIZE(IpcRequest, 0x38);
 

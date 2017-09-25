@@ -27,8 +27,8 @@ getCurrentThread()
    return sCurrentThreadContext;
 }
 
-ThreadID
-getCurrentThreadID()
+ThreadId
+getCurrentThreadId()
 {
    return sCurrentThreadContext->id;
 }
@@ -86,7 +86,7 @@ isThreadInRunQueue(phys_ptr<Thread> thread)
 void
 rescheduleOtherNoLock()
 {
-   auto curCore = ios::internal::getCurrentCoreID();
+   auto curCore = ios::internal::getCurrentCoreId();
    for (auto i = 0u; i < ios::internal::getCoreCount(); ++i) {
       if (i == curCore) {
          continue;

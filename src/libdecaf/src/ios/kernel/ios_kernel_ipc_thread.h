@@ -11,8 +11,8 @@ submitIpcRequest(phys_ptr<IpcRequest> request);
 namespace internal
 {
 
-MessageQueueID
-getIpcMessageQueueID();
+MessageQueueId
+getIpcMessageQueueId();
 
 } // namespace internal
 

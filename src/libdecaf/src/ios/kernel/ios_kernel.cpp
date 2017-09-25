@@ -11,7 +11,7 @@ namespace ios::kernel
 
 struct ProcessInfo
 {
-   std::function<int32_t(ProcessID)> entryPoint;
+   std::function<int32_t(ProcessId)> entryPoint;
    int32_t priority;
    uint32_t stackSize;
    uint32_t stackPtr;
@@ -94,8 +94,8 @@ start()
    // Force start the root kernel thread. We cannot use IOS_StartThread
    // because it reschedules and we are not running on an IOS thread.
    internal::lockScheduler();
-   auto threadID = static_cast<ThreadID>(error);
-   auto thread = internal::getThread(threadID);
+   auto threadId = static_cast<ThreadId>(error);
+   auto thread = internal::getThread(threadId);
    thread->state = ThreadState::Ready;
    internal::queueThreadNoLock(thread);
    internal::unlockScheduler();

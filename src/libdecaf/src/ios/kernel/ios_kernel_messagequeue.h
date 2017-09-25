@@ -14,7 +14,7 @@ static constexpr auto MaxNumMessageQueues = 750u;
 
 struct Thread;
 
-using MessageQueueID = int32_t;
+using MessageQueueId = int32_t;
 using Message = uint32_t;
 
 struct MessageQueue
@@ -47,20 +47,20 @@ IOS_CreateMessageQueue(phys_ptr<Message> messageBuffer,
                        uint32_t numMessages);
 
 Error
-IOS_DestroyMessageQueue(MessageQueueID id);
+IOS_DestroyMessageQueue(MessageQueueId id);
 
 Error
-IOS_SendMessage(MessageQueueID id,
+IOS_SendMessage(MessageQueueId id,
                 Message message,
                 MessageFlags flags);
 
 Error
-IOS_JamMessage(MessageQueueID id,
+IOS_JamMessage(MessageQueueId id,
                Message message,
                MessageFlags flags);
 
 Error
-IOS_ReceiveMessage(MessageQueueID id,
+IOS_ReceiveMessage(MessageQueueId id,
                    phys_ptr<Message> message,
                    MessageFlags flags);
 
@@ -68,7 +68,7 @@ namespace internal
 {
 
 phys_ptr<MessageQueue>
-getMessageQueue(MessageQueueID id);
+getMessageQueue(MessageQueueId id);
 
 phys_ptr<MessageQueue>
 getCurrentThreadMessageQueue();

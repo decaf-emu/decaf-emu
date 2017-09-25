@@ -17,8 +17,9 @@ static constexpr auto MaxNumResourceManagersPerProcess = 32u;
 static constexpr auto MaxNumResourceRequestsPerProcess = 32u;
 static constexpr auto MaxNumClientCapabilitiesPerProcess = 20u;
 
-using ResourceHandleID = int32_t;
-using FeatureID = int32_t;
+using ResourceHandleId = int32_t;
+using FeatureId = int32_t;
+using ClientCapabilityMask = uint64_t;
 
 struct ResourceManager;
 struct ResourceManagerList;
@@ -37,7 +38,7 @@ struct ResourceManager
    be2_array<char, 32> device;
 
    //! ID of the message queue associated with this resource.
-   be2_val<MessageQueueID> queueId = 0u;
+   be2_val<MessageQueueId> queueId = 0u;
 
    //! Pointer to the resource handle manager for this resource manager.
    be2_phys_ptr<ResourceHandleManager> resourceHandleManager = nullptr;
@@ -126,7 +127,7 @@ struct ResourceHandle
    be2_val<int32_t> handle;
 
    //! The unique id of this resource handle.
-   be2_val<ResourceHandleID> id;
+   be2_val<ResourceHandleId> id;
 
    //! The resource manager this handle belongs to.
    be2_phys_ptr<ResourceManager> resourceManager;
@@ -142,10 +143,10 @@ CHECK_SIZE(ResourceHandle, 0x10);
 
 struct ClientCapability
 {
-   be2_val<FeatureID> featureID;
-   be2_val<uint64_t> mask;
+   be2_val<FeatureId> featureId;
+   be2_val<ClientCapabilityMask> mask;
 };
-CHECK_OFFSET(ClientCapability, 0x00, featureID);
+CHECK_OFFSET(ClientCapability, 0x00, featureId);
 CHECK_OFFSET(ClientCapability, 0x04, mask);
 CHECK_SIZE(ClientCapability, 0x0C);
 
@@ -155,13 +156,13 @@ CHECK_SIZE(ClientCapability, 0x0C);
 struct ResourceHandleManager
 {
    //! Title ID this resource handle manager belongs to.
-   be2_val<uint64_t> tid;
+   be2_val<TitleId> tid;
 
    //! 'gid'?? this resource handle manager belongs to.
    be2_val<uint32_t> gid;
 
    //! Process this resource handle manager belongs to.
-   be2_val<ProcessID> pid;
+   be2_val<ProcessId> pid;
 
    //! Number of current resource handles.
    be2_val<uint32_t> numResourceHandles;
@@ -225,7 +226,7 @@ struct ResourceRequest
    be2_phys_ptr<MessageQueue> messageQueue;
 
    //! Message queue id, why store this and message queue, who knows..?
-   be2_val<MessageQueueID> messageQueueId;
+   be2_val<MessageQueueId> messageQueueId;
 
    //! Pointer to the IpcRequest that this resource request originated from.
    be2_phys_ptr<IpcRequest> ipcRequest;
@@ -237,7 +238,7 @@ struct ResourceRequest
    be2_phys_ptr<ResourceManager> resourceManager;
 
    //! ID of the resource handle associated with this request.
-   be2_val<ResourceHandleID> resourceHandleID;
+   be2_val<ResourceHandleId> resourceHandleId;
 
    //! Index of the next resource request, used for either free or registered
    //! list in ResourceRequestList.
@@ -258,7 +259,7 @@ CHECK_OFFSET(ResourceRequest, 0x3C, messageQueueId);
 CHECK_OFFSET(ResourceRequest, 0x40, ipcRequest);
 CHECK_OFFSET(ResourceRequest, 0x44, resourceHandleManager);
 CHECK_OFFSET(ResourceRequest, 0x48, resourceManager);
-CHECK_OFFSET(ResourceRequest, 0x4C, resourceHandleID);
+CHECK_OFFSET(ResourceRequest, 0x4C, resourceHandleId);
 CHECK_OFFSET(ResourceRequest, 0x50, nextIdx);
 CHECK_OFFSET(ResourceRequest, 0x52, prevIdx);
 CHECK_OFFSET(ResourceRequest, 0x54, openNameBuffer);
@@ -301,7 +302,7 @@ CHECK_SIZE(ResourceRequestList, 0xB40C);
 
 Error
 IOS_RegisterResourceManager(std::string_view device,
-                            MessageQueueID queue);
+                            MessageQueueId queue);
 
 Error
 IOS_SetResourcePermissionGroup(std::string_view device,
@@ -319,46 +320,46 @@ dispatchIosOpen(std::string_view name,
                 OpenMode mode,
                 phys_ptr<MessageQueue> queue,
                 phys_ptr<IpcRequest> ipcRequest,
-                ProcessID pid,
-                CpuID cpuID);
+                ProcessId pid,
+                CpuId cpuId);
 
 Error
-dispatchIosClose(ResourceHandleID resourceHandleID,
+dispatchIosClose(ResourceHandleId resourceHandleId,
                  phys_ptr<MessageQueue> queue,
                  phys_ptr<IpcRequest> ipcRequest,
                  uint32_t unkArg0,
-                 ProcessID pid,
-                 CpuID cpuID);
+                 ProcessId pid,
+                 CpuId cpuId);
 
 Error
-dispatchIosRead(ResourceHandleID resourceHandleID,
+dispatchIosRead(ResourceHandleId resourceHandleId,
                 phys_ptr<void> buffer,
                 uint32_t length,
                 phys_ptr<MessageQueue> queue,
                 phys_ptr<IpcRequest> ipcRequest,
-                ProcessID pid,
-                CpuID cpuID);
+                ProcessId pid,
+                CpuId cpuId);
 
 Error
-dispatchIosWrite(ResourceHandleID resourceHandleID,
+dispatchIosWrite(ResourceHandleId resourceHandleId,
                  phys_ptr<const void> buffer,
                  uint32_t length,
                  phys_ptr<MessageQueue> queue,
                  phys_ptr<IpcRequest> ipcRequest,
-                 ProcessID pid,
-                 CpuID cpuID);
+                 ProcessId pid,
+                 CpuId cpuId);
 
 Error
-dispatchIosSeek(ResourceHandleID resourceHandleID,
+dispatchIosSeek(ResourceHandleId resourceHandleId,
                   uint32_t offset,
                   SeekOrigin origin,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID);
+                  ProcessId pid,
+                  CpuId cpuId);
 
 Error
-dispatchIosIoctl(ResourceHandleID resourceHandleID,
+dispatchIosIoctl(ResourceHandleId resourceHandleId,
                  uint32_t ioctlRequest,
                  phys_ptr<const void> inputBuffer,
                  uint32_t inputLength,
@@ -366,48 +367,48 @@ dispatchIosIoctl(ResourceHandleID resourceHandleID,
                  uint32_t outputLength,
                  phys_ptr<MessageQueue> queue,
                  phys_ptr<IpcRequest> ipcRequest,
-                 ProcessID pid,
-                 CpuID cpuID);
+                 ProcessId pid,
+                 CpuId cpuId);
 
 Error
-dispatchIosIoctlv(ResourceHandleID resourceHandleID,
+dispatchIosIoctlv(ResourceHandleId resourceHandleId,
                   uint32_t ioctlRequest,
                   uint32_t numVecIn,
                   uint32_t numVecOut,
                   phys_ptr<IoctlVec> vecs,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID);
+                  ProcessId pid,
+                  CpuId cpuId);
 
 Error
-dispatchIosResume(ResourceHandleID resourceHandleID,
+dispatchIosResume(ResourceHandleId resourceHandleId,
                   uint32_t unkArg0,
                   uint32_t unkArg1,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID);
+                  ProcessId pid,
+                  CpuId cpuId);
 
 Error
-dispatchIosSuspend(ResourceHandleID resourceHandleID,
+dispatchIosSuspend(ResourceHandleId resourceHandleId,
                    uint32_t unkArg0,
                    uint32_t unkArg1,
                    phys_ptr<MessageQueue> queue,
                    phys_ptr<IpcRequest> ipcRequest,
-                   ProcessID pid,
-                   CpuID cpuID);
+                   ProcessId pid,
+                   CpuId cpuId);
 
 Error
-dispatchIosSvcMsg(ResourceHandleID resourceHandleID,
+dispatchIosSvcMsg(ResourceHandleId resourceHandleId,
                   uint32_t unkArg0,
                   uint32_t unkArg1,
                   uint32_t unkArg2,
                   uint32_t unkArg3,
                   phys_ptr<MessageQueue> queue,
                   phys_ptr<IpcRequest> ipcRequest,
-                  ProcessID pid,
-                  CpuID cpuID);
+                  ProcessId pid,
+                  CpuId cpuId);
 
 void
 kernelInitialiseResourceManager();

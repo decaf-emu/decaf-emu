@@ -78,7 +78,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    if (currentThread) {
       thread->pid = currentThread->pid;
    } else {
-      thread->pid = ProcessID::KERNEL;
+      thread->pid = ProcessId::KERNEL;
    }
 
    thread->state = ThreadState::Stopped;
@@ -132,7 +132,7 @@ IOS_CreateThread(ThreadEntryFn entry,
 }
 
 Error
-IOS_JoinThread(ThreadID id,
+IOS_JoinThread(ThreadId id,
                phys_ptr<Error> returnedValue)
 {
    internal::lockScheduler();
@@ -186,7 +186,7 @@ IOS_JoinThread(ThreadID id,
 }
 
 Error
-IOS_CancelThread(ThreadID id,
+IOS_CancelThread(ThreadId id,
                  Error exitValue)
 {
    internal::lockScheduler();
@@ -230,7 +230,7 @@ IOS_CancelThread(ThreadID id,
 }
 
 Error
-IOS_StartThread(ThreadID id)
+IOS_StartThread(ThreadId id)
 {
    internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
@@ -269,7 +269,7 @@ IOS_StartThread(ThreadID id)
 }
 
 Error
-IOS_SuspendThread(ThreadID id)
+IOS_SuspendThread(ThreadId id)
 {
    internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
@@ -329,7 +329,7 @@ IOS_GetCurrentThreadId()
 }
 
 Error
-IOS_GetThreadPriority(ThreadID id)
+IOS_GetThreadPriority(ThreadId id)
 {
    auto currentThread = internal::getCurrentThread();
 
@@ -349,7 +349,7 @@ IOS_GetThreadPriority(ThreadID id)
 }
 
 Error
-IOS_SetThreadPriority(ThreadID id,
+IOS_SetThreadPriority(ThreadId id,
                       ThreadPriority priority)
 {
    internal::lockScheduler();
@@ -418,7 +418,7 @@ iosFiberEntryPoint(void *context)
 }
 
 phys_ptr<Thread>
-getThread(ThreadID id)
+getThread(ThreadId id)
 {
    auto thread = phys_addrof(sData->threads[id]);
    if (thread->id == id) {

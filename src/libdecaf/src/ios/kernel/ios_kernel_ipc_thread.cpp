@@ -13,8 +13,8 @@
 namespace ios::kernel
 {
 
-static MessageQueueID
-sIpcMessageQueueID;
+static MessageQueueId
+sIpcMessageQueueId;
 
 static AtomicQueue<phys_ptr<IpcRequest>, 128>
 sIpcRequestQueue;
@@ -26,14 +26,14 @@ submitIpcRequest(phys_ptr<IpcRequest> request)
    decaf_check(!sIpcRequestQueue.wasFull());
    sIpcRequestQueue.push(request);
 
-   switch (request->cpuID) {
-   case CpuID::PPC0:
+   switch (request->cpuId) {
+   case CpuId::PPC0:
       internal::setInterruptAhbLt(AHBLT::get(0).IpcEspressoCore0(true));
       break;
-   case CpuID::PPC1:
+   case CpuId::PPC1:
       internal::setInterruptAhbLt(AHBLT::get(0).IpcEspressoCore1(true));
       break;
-   case CpuID::PPC2:
+   case CpuId::PPC2:
       internal::setInterruptAhbLt(AHBLT::get(0).IpcEspressoCore2(true));
       break;
    }
@@ -52,24 +52,24 @@ ipcThreadMain(phys_ptr<void> context)
    }
 
    // Register interrupt handlers and enable the interrupts.
-   auto queueID = static_cast<MessageQueueID>(error);
-   auto queue = internal::getMessageQueue(queueID);
-   sIpcMessageQueueID = queueID;
+   auto queueId = static_cast<MessageQueueId>(error);
+   auto queue = internal::getMessageQueue(queueId);
+   sIpcMessageQueueId = queueId;
 
-   IOS_HandleEvent(DeviceID::IpcStarbuckCore0, queueID, Message { Command::IpcMsg0 });
-   IOS_ClearAndEnable(DeviceID::IpcStarbuckCore0);
+   IOS_HandleEvent(DeviceId::IpcStarbuckCore0, queueId, Message { Command::IpcMsg0 });
+   IOS_ClearAndEnable(DeviceId::IpcStarbuckCore0);
 
-   IOS_HandleEvent(DeviceID::IpcStarbuckCore1, queueID, Message { Command::IpcMsg1 });
-   IOS_ClearAndEnable(DeviceID::IpcStarbuckCore1);
+   IOS_HandleEvent(DeviceId::IpcStarbuckCore1, queueId, Message { Command::IpcMsg1 });
+   IOS_ClearAndEnable(DeviceId::IpcStarbuckCore1);
 
-   IOS_HandleEvent(DeviceID::IpcStarbuckCore2, queueID, Message { Command::IpcMsg2 });
-   IOS_ClearAndEnable(DeviceID::IpcStarbuckCore2);
+   IOS_HandleEvent(DeviceId::IpcStarbuckCore2, queueId, Message { Command::IpcMsg2 });
+   IOS_ClearAndEnable(DeviceId::IpcStarbuckCore2);
 
-   IOS_HandleEvent(DeviceID::IpcStarbuckCompat, queueID, Message { Command::IpcMsg1 });
-   IOS_ClearAndEnable(DeviceID::IpcStarbuckCompat);
+   IOS_HandleEvent(DeviceId::IpcStarbuckCompat, queueId, Message { Command::IpcMsg1 });
+   IOS_ClearAndEnable(DeviceId::IpcStarbuckCompat);
 
    while (true) {
-      auto error = IOS_ReceiveMessage(queueID, message, MessageFlags::None);
+      auto error = IOS_ReceiveMessage(queueId, message, MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
@@ -87,7 +87,7 @@ ipcThreadMain(phys_ptr<void> context)
             gLog->error("Received IPC request with invalid clientPid of {}", request->clientPid);
             error = Error::Invalid;
          } else {
-            auto pid = static_cast<ProcessID>(request->clientPid + ProcessID::COSKERNEL);
+            auto pid = static_cast<ProcessId>(request->clientPid + ProcessId::COSKERNEL);
             auto error = Error::OK;
 
             switch (request->command) {
@@ -97,7 +97,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                  queue,
                                                  request,
                                                  pid,
-                                                 request->cpuID);
+                                                 request->cpuId);
                break;
             case Command::Close:
                error = internal::dispatchIosClose(request->handle,
@@ -105,7 +105,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                   request,
                                                   request->args.close.unkArg0,
                                                   pid,
-                                                  request->cpuID);
+                                                  request->cpuId);
                break;
             case Command::Read:
                error = internal::dispatchIosRead(request->handle,
@@ -114,7 +114,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                  queue,
                                                  request,
                                                  pid,
-                                                 request->cpuID);
+                                                 request->cpuId);
                break;
             case Command::Write:
                error = internal::dispatchIosWrite(request->handle,
@@ -123,7 +123,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                   queue,
                                                   request,
                                                   pid,
-                                                  request->cpuID);
+                                                  request->cpuId);
                break;
             case Command::Seek:
                error = internal::dispatchIosSeek(request->handle,
@@ -132,7 +132,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                  queue,
                                                  request,
                                                  pid,
-                                                 request->cpuID);
+                                                 request->cpuId);
                break;
             case Command::Ioctl:
                error = internal::dispatchIosIoctl(request->handle,
@@ -144,7 +144,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                   queue,
                                                   request,
                                                   pid,
-                                                  request->cpuID);
+                                                  request->cpuId);
                break;
             case Command::Ioctlv:
                error = internal::dispatchIosIoctlv(request->handle,
@@ -155,7 +155,7 @@ ipcThreadMain(phys_ptr<void> context)
                                                    queue,
                                                    request,
                                                    pid,
-                                                   request->cpuID);
+                                                   request->cpuId);
                break;
             default:
                error = Error::Invalid;
@@ -171,16 +171,16 @@ ipcThreadMain(phys_ptr<void> context)
          }
       }
 
-      IOS_ClearAndEnable(DeviceID::IpcStarbuckCore0);
-      IOS_ClearAndEnable(DeviceID::IpcStarbuckCore1);
-      IOS_ClearAndEnable(DeviceID::IpcStarbuckCore2);
+      IOS_ClearAndEnable(DeviceId::IpcStarbuckCore0);
+      IOS_ClearAndEnable(DeviceId::IpcStarbuckCore1);
+      IOS_ClearAndEnable(DeviceId::IpcStarbuckCore2);
    }
 }
 
-MessageQueueID
-getIpcMessageQueueID()
+MessageQueueId
+getIpcMessageQueueId()
 {
-   return sIpcMessageQueueID;
+   return sIpcMessageQueueId;
 }
 
 } // namespace internal

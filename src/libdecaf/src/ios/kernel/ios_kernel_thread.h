@@ -15,7 +15,7 @@ static constexpr auto MaxNumThreads = 180u;
 
 #pragma pack(push, 1)
 
-using ThreadID = uint32_t;
+using ThreadId = uint32_t;
 using ThreadPriority = int32_t;
 using ThreadEntryFn = Error(*)(phys_ptr<void>);
 
@@ -54,8 +54,8 @@ struct Thread
    be2_val<ThreadPriority> minPriority;
    be2_val<ThreadPriority> priority;
    be2_val<ThreadState> state;
-   be2_val<ProcessID> pid;
-   be2_val<ThreadID> id;
+   be2_val<ProcessId> pid;
+   be2_val<ThreadId> id;
    be2_val<ThreadFlags> flags;
    be2_val<Error> exitValue;
 
@@ -106,18 +106,18 @@ IOS_CreateThread(ThreadEntryFn entry,
                  ThreadFlags flags);
 
 Error
-IOS_JoinThread(ThreadID id,
+IOS_JoinThread(ThreadId id,
                phys_ptr<int32_t> returnedValue);
 
 Error
-IOS_CancelThread(ThreadID id,
+IOS_CancelThread(ThreadId id,
                  Error exitValue);
 
 Error
-IOS_StartThread(ThreadID id);
+IOS_StartThread(ThreadId id);
 
 Error
-IOS_SuspendThread(ThreadID id);
+IOS_SuspendThread(ThreadId id);
 
 Error
 IOS_YieldCurrentThread();
@@ -126,10 +126,10 @@ Error
 IOS_GetCurrentThreadId();
 
 Error
-IOS_GetThreadPriority(ThreadID id);
+IOS_GetThreadPriority(ThreadId id);
 
 Error
-IOS_SetThreadPriority(ThreadID id,
+IOS_SetThreadPriority(ThreadId id,
                       ThreadPriority priority);
 
 namespace internal
@@ -138,11 +138,11 @@ namespace internal
 phys_ptr<Thread>
 getCurrentThread();
 
-ThreadID
-getCurrentThreadID();
+ThreadId
+getCurrentThreadId();
 
 phys_ptr<Thread>
-getThread(ThreadID id);
+getThread(ThreadId id);
 
 void
 kernelInitialiseThread();

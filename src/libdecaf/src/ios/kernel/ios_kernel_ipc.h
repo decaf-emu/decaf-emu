@@ -11,24 +11,24 @@ IOS_Open(std::string_view device,
          OpenMode mode);
 
 Error
-IOS_Close(ResourceHandleID handle);
+IOS_Close(ResourceHandleId handle);
 
 Error
-IOS_Read(ResourceHandleID handle,
+IOS_Read(ResourceHandleId handle,
          phys_ptr<void> buffer,
          uint32_t length);
 
 Error
-IOS_Write(ResourceHandleID handle,
+IOS_Write(ResourceHandleId handle,
           phys_ptr<const void> buffer,
           uint32_t length);
 Error
-IOS_Seek(ResourceHandleID handle,
+IOS_Seek(ResourceHandleId handle,
          uint32_t offset,
          uint32_t origin);
 
 Error
-IOS_Ioctl(ResourceHandleID handle,
+IOS_Ioctl(ResourceHandleId handle,
           uint32_t request,
           phys_ptr<const void> inputBuffer,
           uint32_t inputBufferLength,
@@ -36,24 +36,24 @@ IOS_Ioctl(ResourceHandleID handle,
           uint32_t outputBufferLength);
 
 Error
-IOS_Ioctlv(ResourceHandleID handle,
+IOS_Ioctlv(ResourceHandleId handle,
            uint32_t request,
            uint32_t numVecIn,
            uint32_t numVecOut,
            phys_ptr<IoctlVec> vecs);
 
 Error
-IOS_Resume(ResourceHandleID handle,
+IOS_Resume(ResourceHandleId handle,
            uint32_t unkArg0,
            uint32_t unkArg1);
 
 Error
-IOS_Suspend(ResourceHandleID handle,
+IOS_Suspend(ResourceHandleId handle,
             uint32_t unkArg0,
             uint32_t unkArg1);
 
 Error
-IOS_SvcMsg(ResourceHandleID handle,
+IOS_SvcMsg(ResourceHandleId handle,
            uint32_t unkArg0,
            uint32_t unkArg1,
            uint32_t unkArg2,

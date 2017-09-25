@@ -14,7 +14,7 @@ struct EventHandler
 {
    be2_phys_ptr<MessageQueue> queue;
    be2_val<Message> message;
-   be2_val<ProcessID> pid;
+   be2_val<ProcessId> pid;
    PADDING(0x4);
 };
 CHECK_OFFSET(EventHandler, 0x00, queue);
@@ -79,8 +79,8 @@ clearAndEnableAhbLt(AHBLT mask)
 }
 
 Error
-IOS_HandleEvent(DeviceID id,
-                MessageQueueID qid,
+IOS_HandleEvent(DeviceId id,
+                MessageQueueId qid,
                 Message message)
 {
    auto queue = internal::getMessageQueue(qid);
@@ -97,123 +97,123 @@ IOS_HandleEvent(DeviceID id,
    auto &handler = sData->eventHandlers[id];
    handler.message = message;
    handler.queue = queue;
-   handler.pid = internal::getCurrentProcessID();
+   handler.pid = internal::getCurrentProcessId();
 
    return Error::OK;
 }
 
 Error
-IOS_ClearAndEnable(DeviceID id)
+IOS_ClearAndEnable(DeviceId id)
 {
    auto thread = internal::getCurrentThread();
 
    switch (id) {
-   case DeviceID::NandInterfaceAHBALL:
+   case DeviceId::NandInterfaceAHBALL:
       clearAndEnableAhbAll(AHBALL::get(0).NandInterface(true));
       break;
-   case DeviceID::AesEngineAHBALL:
+   case DeviceId::AesEngineAHBALL:
       decaf_check(thread->pid == 3);
       clearAndEnableAhbAll(AHBALL::get(0).AesEngine(true));
       break;
-   case DeviceID::Sha1EngineAHBALL:
+   case DeviceId::Sha1EngineAHBALL:
       decaf_check(thread->pid == 3);
       clearAndEnableAhbAll(AHBALL::get(0).Sha1Engine(true));
       break;
-   case DeviceID::UsbEhci:
+   case DeviceId::UsbEhci:
       clearAndEnableAhbAll(AHBALL::get(0).UsbEhci(true));
       break;
-   case DeviceID::UsbOhci0:
+   case DeviceId::UsbOhci0:
       clearAndEnableAhbAll(AHBALL::get(0).UsbOhci0(true));
       break;
-   case DeviceID::UsbOhci1:
+   case DeviceId::UsbOhci1:
       clearAndEnableAhbAll(AHBALL::get(0).UsbOhci1(true));
       break;
-   case DeviceID::SdHostController:
+   case DeviceId::SdHostController:
       clearAndEnableAhbAll(AHBALL::get(0).SdHostController(true));
       break;
-   case DeviceID::Wireless80211:
+   case DeviceId::Wireless80211:
       clearAndEnableAhbAll(AHBALL::get(0).Wireless80211(true));
       break;
    case 9:
       // TODO: latte gpio int flag = 1
       // TODO: latte gpio int mask |= 1
       break;
-   case DeviceID::SysProt:
+   case DeviceId::SysProt:
       decaf_check(thread->pid == 0);
       clearAndEnableAhbAll(AHBALL::get(0).SysProt(true));
       break;
-   case DeviceID::PowerButton:
+   case DeviceId::PowerButton:
       clearAndEnableAhbAll(AHBALL::get(0).PowerButton(true));
       break;
-   case DeviceID::DriveInterface:
+   case DeviceId::DriveInterface:
       clearAndEnableAhbAll(AHBALL::get(0).DriveInterface(true));
       break;
-   case DeviceID::ExiRtc:
+   case DeviceId::ExiRtc:
       clearAndEnableAhbAll(AHBALL::get(0).ExiRtc(true));
       break;
-   case DeviceID::Sata:
+   case DeviceId::Sata:
       clearAndEnableAhbAll(AHBALL::get(0).Sata(true));
       break;
-   case DeviceID::IpcStarbuckCompat:
+   case DeviceId::IpcStarbuckCompat:
       decaf_check(thread->pid == 0);
       clearAndEnableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
       break;
-   case DeviceID::Unknown30:
+   case DeviceId::Unknown30:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown0(true));
       break;
-   case DeviceID::Unknown31:
+   case DeviceId::Unknown31:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown1(true));
       break;
-   case DeviceID::Unknown32:
+   case DeviceId::Unknown32:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown2(true));
       break;
-   case DeviceID::Unknown33:
+   case DeviceId::Unknown33:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown3(true));
       break;
-   case DeviceID::Drh:
+   case DeviceId::Drh:
       clearAndEnableAhbLt(AHBLT::get(0).Drh(true));
       break;
-   case DeviceID::Unknown35:
+   case DeviceId::Unknown35:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown5(true));
       break;
-   case DeviceID::Unknown36:
+   case DeviceId::Unknown36:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown6(true));
       break;
-   case DeviceID::Unknown37:
+   case DeviceId::Unknown37:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown7(true));
       break;
-   case DeviceID::AesEngineAHBLT:
+   case DeviceId::AesEngineAHBLT:
       decaf_check(thread->pid == 3);
       clearAndEnableAhbLt(AHBLT::get(0).AesEngine(true));
       break;
-   case DeviceID::Sha1EngineAHBLT:
+   case DeviceId::Sha1EngineAHBLT:
       decaf_check(thread->pid == 3);
       clearAndEnableAhbLt(AHBLT::get(0).Sha1Engine(true));
       break;
-   case DeviceID::Unknown40:
+   case DeviceId::Unknown40:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown10(true));
       break;
-   case DeviceID::Unknown41:
+   case DeviceId::Unknown41:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown11(true));
       break;
-   case DeviceID::Unknown42:
+   case DeviceId::Unknown42:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown12(true));
       break;
-   case DeviceID::I2CEspresso:
+   case DeviceId::I2CEspresso:
       clearAndEnableAhbLt(AHBLT::get(0).I2CEspresso(true));
       break;
-   case DeviceID::I2CStarbuck:
+   case DeviceId::I2CStarbuck:
       clearAndEnableAhbLt(AHBLT::get(0).I2CStarbuck(true));
       break;
-   case DeviceID::IpcStarbuckCore2:
+   case DeviceId::IpcStarbuckCore2:
       decaf_check(thread->pid == 0);
       clearAndEnableAhbLt(AHBLT::get(0).IpcStarbuckCore2(true));
       break;
-   case DeviceID::IpcStarbuckCore1:
+   case DeviceId::IpcStarbuckCore1:
       decaf_check(thread->pid == 0);
       clearAndEnableAhbLt(AHBLT::get(0).IpcStarbuckCore1(true));
       break;
-   case DeviceID::IpcStarbuckCore0:
+   case DeviceId::IpcStarbuckCore0:
       decaf_check(thread->pid == 0);
       clearAndEnableAhbLt(AHBLT::get(0).IpcStarbuckCore0(true));
       break;
@@ -233,7 +233,7 @@ namespace internal
  * We cannot use IOS_SendMessage due to different scheduling requirements here.
  */
 static void
-sendEventHandlerMessageNoLock(DeviceID id)
+sendEventHandlerMessageNoLock(DeviceId id)
 {
    auto &handler = sData->eventHandlers[id];
    auto queue = handler.queue;
@@ -259,72 +259,72 @@ handleAhbInterrupts()
 
    if (ahbAll.NandInterface()) {
       clearAndDisableAhbAll(AHBALL::get(0).NandInterface(true));
-      sendEventHandlerMessageNoLock(DeviceID::NandInterfaceAHBALL);
+      sendEventHandlerMessageNoLock(DeviceId::NandInterfaceAHBALL);
    }
 
    if (ahbAll.AesEngine()) {
       clearAndDisableAhbAll(AHBALL::get(0).AesEngine(true));
-      sendEventHandlerMessageNoLock(DeviceID::AesEngineAHBALL);
+      sendEventHandlerMessageNoLock(DeviceId::AesEngineAHBALL);
    }
 
    if (ahbAll.Sha1Engine()) {
       clearAndDisableAhbAll(AHBALL::get(0).Sha1Engine(true));
-      sendEventHandlerMessageNoLock(DeviceID::Sha1EngineAHBALL);
+      sendEventHandlerMessageNoLock(DeviceId::Sha1EngineAHBALL);
    }
 
    if (ahbAll.UsbEhci()) {
       clearAndDisableAhbAll(AHBALL::get(0).UsbEhci(true));
-      sendEventHandlerMessageNoLock(DeviceID::UsbEhci);
+      sendEventHandlerMessageNoLock(DeviceId::UsbEhci);
    }
 
    if (ahbAll.UsbOhci0()) {
       clearAndDisableAhbAll(AHBALL::get(0).UsbOhci0(true));
-      sendEventHandlerMessageNoLock(DeviceID::UsbOhci0);
+      sendEventHandlerMessageNoLock(DeviceId::UsbOhci0);
    }
 
    if (ahbAll.UsbOhci1()) {
       clearAndDisableAhbAll(AHBALL::get(0).UsbOhci1(true));
-      sendEventHandlerMessageNoLock(DeviceID::UsbOhci1);
+      sendEventHandlerMessageNoLock(DeviceId::UsbOhci1);
    }
 
    if (ahbAll.SdHostController()) {
       clearAndDisableAhbAll(AHBALL::get(0).SdHostController(true));
-      sendEventHandlerMessageNoLock(DeviceID::SdHostController);
+      sendEventHandlerMessageNoLock(DeviceId::SdHostController);
    }
 
    if (ahbAll.Wireless80211()) {
       clearAndDisableAhbAll(AHBALL::get(0).Wireless80211(true));
-      sendEventHandlerMessageNoLock(DeviceID::Wireless80211);
+      sendEventHandlerMessageNoLock(DeviceId::Wireless80211);
    }
 
    if (ahbAll.SysProt()) {
       clearAndDisableAhbAll(AHBALL::get(0).SysProt(true));
-      sendEventHandlerMessageNoLock(DeviceID::SysProt);
+      sendEventHandlerMessageNoLock(DeviceId::SysProt);
    }
 
    if (ahbAll.PowerButton()) {
       clearAndDisableAhbAll(AHBALL::get(0).PowerButton(true));
-      sendEventHandlerMessageNoLock(DeviceID::PowerButton);
+      sendEventHandlerMessageNoLock(DeviceId::PowerButton);
    }
 
    if (ahbAll.DriveInterface()) {
       clearAndDisableAhbAll(AHBALL::get(0).DriveInterface(true));
-      sendEventHandlerMessageNoLock(DeviceID::DriveInterface);
+      sendEventHandlerMessageNoLock(DeviceId::DriveInterface);
    }
 
    if (ahbAll.ExiRtc()) {
       clearAndDisableAhbAll(AHBALL::get(0).ExiRtc(true));
-      sendEventHandlerMessageNoLock(DeviceID::ExiRtc);
+      sendEventHandlerMessageNoLock(DeviceId::ExiRtc);
    }
 
    if (ahbAll.Sata()) {
       clearAndDisableAhbAll(AHBALL::get(0).Sata(true));
-      sendEventHandlerMessageNoLock(DeviceID::Sata);
+      sendEventHandlerMessageNoLock(DeviceId::Sata);
    }
 
    if (ahbAll.IpcStarbuckCompat()) {
       clearAndDisableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
-      sendEventHandlerMessageNoLock(DeviceID::IpcStarbuckCompat);
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCompat);
    }
 
    auto ahbLatte = AHBLT::get(LT_INTSR_AHBLT_ARM.load() &
@@ -332,92 +332,92 @@ handleAhbInterrupts()
 
    if (ahbLatte.Unknown0()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown0(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown30);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown30);
    }
 
    if (ahbLatte.Unknown1()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown1(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown31);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown31);
    }
 
    if (ahbLatte.Unknown2()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown2(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown32);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown32);
    }
 
    if (ahbLatte.Unknown3()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown3(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown33);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown33);
    }
 
    if (ahbLatte.Drh()) {
       clearAndDisableAhbLt(AHBLT::get(0).Drh(true));
-      sendEventHandlerMessageNoLock(DeviceID::Drh);
+      sendEventHandlerMessageNoLock(DeviceId::Drh);
    }
 
    if (ahbLatte.Unknown5()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown5(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown35);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown35);
    }
 
    if (ahbLatte.Unknown6()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown6(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown36);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown36);
    }
 
    if (ahbLatte.Unknown7()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown7(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown37);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown37);
    }
 
    if (ahbLatte.AesEngine()) {
       clearAndDisableAhbLt(AHBLT::get(0).AesEngine(true));
-      sendEventHandlerMessageNoLock(DeviceID::AesEngineAHBLT);
+      sendEventHandlerMessageNoLock(DeviceId::AesEngineAHBLT);
    }
 
    if (ahbLatte.Sha1Engine()) {
       clearAndDisableAhbLt(AHBLT::get(0).Sha1Engine(true));
-      sendEventHandlerMessageNoLock(DeviceID::Sha1EngineAHBLT);
+      sendEventHandlerMessageNoLock(DeviceId::Sha1EngineAHBLT);
    }
 
    if (ahbLatte.Unknown10()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown10(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown40);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown40);
    }
 
    if (ahbLatte.Unknown11()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown11(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown41);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown41);
    }
 
    if (ahbLatte.Unknown12()) {
       clearAndDisableAhbLt(AHBLT::get(0).Unknown12(true));
-      sendEventHandlerMessageNoLock(DeviceID::Unknown42);
+      sendEventHandlerMessageNoLock(DeviceId::Unknown42);
    }
 
    if (ahbLatte.I2CEspresso()) {
       clearAndDisableAhbLt(AHBLT::get(0).I2CEspresso(true));
-      sendEventHandlerMessageNoLock(DeviceID::I2CEspresso);
+      sendEventHandlerMessageNoLock(DeviceId::I2CEspresso);
    }
 
    if (ahbLatte.I2CStarbuck()) {
       clearAndDisableAhbLt(AHBLT::get(0).I2CStarbuck(true));
-      sendEventHandlerMessageNoLock(DeviceID::I2CStarbuck);
+      sendEventHandlerMessageNoLock(DeviceId::I2CStarbuck);
    }
 
    if (ahbLatte.IpcStarbuckCore0()) {
       clearAndDisableAhbLt(AHBLT::get(0).IpcStarbuckCore0(true));
-      sendEventHandlerMessageNoLock(DeviceID::IpcStarbuckCore0);
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore0);
    }
 
    if (ahbLatte.IpcStarbuckCore1()) {
       clearAndDisableAhbLt(AHBLT::get(0).IpcStarbuckCore1(true));
-      sendEventHandlerMessageNoLock(DeviceID::IpcStarbuckCore1);
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore1);
    }
 
    if (ahbLatte.IpcStarbuckCore2()) {
       clearAndDisableAhbLt(AHBLT::get(0).IpcStarbuckCore2(true));
-      sendEventHandlerMessageNoLock(DeviceID::IpcStarbuckCore2);
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore2);
    }
 
    internal::rescheduleSelfNoLock();

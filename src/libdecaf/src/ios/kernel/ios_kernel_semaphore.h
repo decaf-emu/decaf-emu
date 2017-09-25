@@ -11,8 +11,8 @@ namespace ios::kernel
 
 // Max num semaphores: 750
 
-// SemaphoreID seems to be (id | (something << 12));
-using SemaphoreID = int32_t;
+// SemaphoreId seems to be (id | (something << 12));
+using SemaphoreId = int32_t;
 
 struct Thread;
 
@@ -25,10 +25,10 @@ struct Semaphore
    be2_phys_ptr<Thread> unknown0x04;
 
    //! Unique semaphore identifier.
-   be2_val<SemaphoreID> id;
+   be2_val<SemaphoreId> id;
 
    //! Process this semaphore belongs to.
-   be2_val<ProcessID> pid;
+   be2_val<ProcessId> pid;
 
    //! Current semaphore signal count.
    be2_val<int32_t> count;
@@ -57,13 +57,13 @@ IOS_CreateSemaphore(int32_t maxCount,
                     int32_t initialCount);
 
 Error
-IOS_DestroySempahore(SemaphoreID id);
+IOS_DestroySempahore(SemaphoreId id);
 
 Error
-IOS_WaitSemaphore(SemaphoreID id,
+IOS_WaitSemaphore(SemaphoreId id,
                   BOOL tryWait);
 
 Error
-IOS_SignalSempahore(SemaphoreID id);
+IOS_SignalSempahore(SemaphoreId id);
 
 } // namespace ios::kernel

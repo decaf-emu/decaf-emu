@@ -9,13 +9,13 @@
 namespace ios::kernel
 {
 
-using HeapID = int32_t;
+using HeapId = int32_t;
 struct HeapBlock;
 
 struct Heap
 {
    be2_phys_ptr<void> base;
-   be2_val<ProcessID> pid;
+   be2_val<ProcessId> pid;
    be2_val<uint32_t> size;
    be2_phys_ptr<HeapBlock> firstFreeBlock;
    be2_val<uint32_t> errorCountAllocOutOfMemory;
@@ -29,7 +29,7 @@ struct Heap
    be2_val<uint32_t> totalFreeCount;
    be2_val<uint32_t> errorCountFreeUnallocatedBlock;
    be2_val<uint32_t> errorCountAllocInvalidHeap;
-   be2_val<HeapID> id;
+   be2_val<HeapId> id;
 };
 CHECK_OFFSET(Heap, 0x00, base);
 CHECK_OFFSET(Heap, 0x04, pid);
@@ -74,28 +74,28 @@ Error
 IOS_CreateCrossProcessHeap(uint32_t size);
 
 Error
-IOS_DestroyHeap(HeapID id);
+IOS_DestroyHeap(HeapId id);
 
 phys_ptr<void>
-IOS_HeapAlloc(HeapID id,
+IOS_HeapAlloc(HeapId id,
               uint32_t size);
 
 phys_ptr<void>
-IOS_HeapAllocAligned(HeapID id,
+IOS_HeapAllocAligned(HeapId id,
                      uint32_t size,
                      uint32_t alignment);
 
 phys_ptr<void>
-IOS_HeapRealloc(HeapID id,
+IOS_HeapRealloc(HeapId id,
                 phys_ptr<void> ptr,
                 uint32_t size);
 
 Error
-IOS_HeapFree(HeapID id,
+IOS_HeapFree(HeapId id,
              phys_ptr<void> ptr);
 
 Error
-IOS_HeapFreeAndZero(HeapID id,
+IOS_HeapFreeAndZero(HeapId id,
                     phys_ptr<void> ptr);
 
 } // namespace ios::kernel

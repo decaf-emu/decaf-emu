@@ -7,7 +7,7 @@ namespace mcp
 {
 
 int32_t
-processEntryPoint(ProcessID id)
+processEntryPoint(ProcessId id)
 {
    return 0;
 }

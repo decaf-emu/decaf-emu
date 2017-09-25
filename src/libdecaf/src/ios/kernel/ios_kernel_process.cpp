@@ -6,7 +6,7 @@ namespace ios::kernel
 {
 
 Error
-IOS_GetCurrentProcessID()
+IOS_GetCurrentProcessId()
 {
    auto thread = internal::getCurrentThread();
    if (!thread) {
@@ -17,76 +17,76 @@ IOS_GetCurrentProcessID()
 }
 
 Error
-IOS_GetProcessName(ProcessID process,
+IOS_GetProcessName(ProcessId process,
                    char *buffer)
 {
    const char *name = nullptr;
 
    switch (process) {
-   case ProcessID::KERNEL:
+   case ProcessId::KERNEL:
       name = "IOS-KERNEL";
       break;
-   case ProcessID::MCP:
+   case ProcessId::MCP:
       name = "IOS-MCP";
       break;
-   case ProcessID::BSP:
+   case ProcessId::BSP:
       name = "IOS-BSP";
       break;
-   case ProcessID::CRYPTO:
+   case ProcessId::CRYPTO:
       name = "IOS-CRYPTO";
       break;
-   case ProcessID::USB:
+   case ProcessId::USB:
       name = "IOS-USB";
       break;
-   case ProcessID::FS:
+   case ProcessId::FS:
       name = "IOS-FS";
       break;
-   case ProcessID::PAD:
+   case ProcessId::PAD:
       name = "IOS-PAD";
       break;
-   case ProcessID::NET:
+   case ProcessId::NET:
       name = "IOS-NET";
       break;
-   case ProcessID::ACP:
+   case ProcessId::ACP:
       name = "IOS-ACP";
       break;
-   case ProcessID::NSEC:
+   case ProcessId::NSEC:
       name = "IOS-NSEC";
       break;
-   case ProcessID::AUXIL:
+   case ProcessId::AUXIL:
       name = "IOS-AUXIL";
       break;
-   case ProcessID::NIM:
+   case ProcessId::NIM:
       name = "IOS-NIM";
       break;
-   case ProcessID::FPD:
+   case ProcessId::FPD:
       name = "IOS-FPD";
       break;
-   case ProcessID::IOSTEST:
+   case ProcessId::IOSTEST:
       name = "IOS-TEST";
       break;
-   case ProcessID::COSKERNEL:
+   case ProcessId::COSKERNEL:
       name = "COS-KERNEL";
       break;
-   case ProcessID::COSROOT:
+   case ProcessId::COSROOT:
       name = "COS-ROOT";
       break;
-   case ProcessID::COS02:
+   case ProcessId::COS02:
       name = "COS-02";
       break;
-   case ProcessID::COS03:
+   case ProcessId::COS03:
       name = "COS-03";
       break;
-   case ProcessID::COSOVERLAY:
+   case ProcessId::COSOVERLAY:
       name = "COS-OVERLAY";
       break;
-   case ProcessID::COSHBM:
+   case ProcessId::COSHBM:
       name = "COS-HBM";
       break;
-   case ProcessID::COSERROR:
+   case ProcessId::COSERROR:
       name = "COS-ERROR";
       break;
-   case ProcessID::COSMASTER:
+   case ProcessId::COSMASTER:
       name = "COS-MASTER";
       break;
    default:
@@ -100,12 +100,12 @@ IOS_GetProcessName(ProcessID process,
 namespace internal
 {
 
-ProcessID
-getCurrentProcessID()
+ProcessId
+getCurrentProcessId()
 {
    auto thread = getCurrentThread();
    if (!thread) {
-      return ProcessID::KERNEL;
+      return ProcessId::KERNEL;
    }
 
    return thread->pid;

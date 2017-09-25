@@ -6,17 +6,17 @@ namespace ios::kernel
 {
 
 Error
-IOS_GetCurrentProcessID();
+IOS_GetCurrentProcessId();
 
 Error
-IOS_GetProcessName(ProcessID process,
+IOS_GetProcessName(ProcessId process,
                    char *buffer);
 
 namespace internal
 {
 
-ProcessID
-getCurrentProcessID();
+ProcessId
+getCurrentProcessId();
 
 } // namespace internal
 

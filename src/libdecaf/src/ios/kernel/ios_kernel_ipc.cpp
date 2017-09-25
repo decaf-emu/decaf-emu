@@ -28,8 +28,8 @@ IOS_Open(std::string_view device,
                                           mode,
                                           queue,
                                           request,
-                                          internal::getCurrentProcessID(),
-                                          CpuID::ARM);
+                                          internal::getCurrentProcessId(),
+                                          CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }
@@ -43,7 +43,7 @@ IOS_Open(std::string_view device,
 }
 
 Error
-IOS_Close(ResourceHandleID handle)
+IOS_Close(ResourceHandleId handle)
 {
    StackObject<IpcRequest> request;
    std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
@@ -53,8 +53,8 @@ IOS_Close(ResourceHandleID handle)
                                            queue,
                                            request,
                                            0,
-                                           internal::getCurrentProcessID(),
-                                           CpuID::ARM);
+                                           internal::getCurrentProcessId(),
+                                           CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }
@@ -63,7 +63,7 @@ IOS_Close(ResourceHandleID handle)
 }
 
 Error
-IOS_Read(ResourceHandleID handle,
+IOS_Read(ResourceHandleId handle,
          phys_ptr<void> buffer,
          uint32_t length)
 {
@@ -71,7 +71,7 @@ IOS_Read(ResourceHandleID handle,
 }
 
 Error
-IOS_Write(ResourceHandleID handle,
+IOS_Write(ResourceHandleId handle,
           phys_ptr<const void> buffer,
           uint32_t length)
 {
@@ -79,7 +79,7 @@ IOS_Write(ResourceHandleID handle,
 }
 
 Error
-IOS_Seek(ResourceHandleID handle,
+IOS_Seek(ResourceHandleId handle,
          uint32_t offset,
          uint32_t origin)
 {
@@ -87,7 +87,7 @@ IOS_Seek(ResourceHandleID handle,
 }
 
 Error
-IOS_Ioctl(ResourceHandleID handle,
+IOS_Ioctl(ResourceHandleId handle,
           uint32_t ioctlRequest,
           phys_ptr<const void> inputBuffer,
           uint32_t inputBufferLength,
@@ -106,8 +106,8 @@ IOS_Ioctl(ResourceHandleID handle,
                                            outputBufferLength,
                                            queue,
                                            request,
-                                           internal::getCurrentProcessID(),
-                                           CpuID::ARM);
+                                           internal::getCurrentProcessId(),
+                                           CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }
@@ -116,7 +116,7 @@ IOS_Ioctl(ResourceHandleID handle,
 }
 
 Error
-IOS_Ioctlv(ResourceHandleID handle,
+IOS_Ioctlv(ResourceHandleId handle,
            uint32_t ioctlRequest,
            uint32_t numVecIn,
            uint32_t numVecOut,
@@ -133,8 +133,8 @@ IOS_Ioctlv(ResourceHandleID handle,
                                             vecs,
                                             queue,
                                             request,
-                                            internal::getCurrentProcessID(),
-                                            CpuID::ARM);
+                                            internal::getCurrentProcessId(),
+                                            CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }
@@ -143,7 +143,7 @@ IOS_Ioctlv(ResourceHandleID handle,
 }
 
 Error
-IOS_Resume(ResourceHandleID handle,
+IOS_Resume(ResourceHandleId handle,
            uint32_t unkArg0,
            uint32_t unkArg1)
 {
@@ -156,8 +156,8 @@ IOS_Resume(ResourceHandleID handle,
                                             unkArg1,
                                             queue,
                                             request,
-                                            internal::getCurrentProcessID(),
-                                            CpuID::ARM);
+                                            internal::getCurrentProcessId(),
+                                            CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }
@@ -166,7 +166,7 @@ IOS_Resume(ResourceHandleID handle,
 }
 
 Error
-IOS_Suspend(ResourceHandleID handle,
+IOS_Suspend(ResourceHandleId handle,
             uint32_t unkArg0,
             uint32_t unkArg1)
 {
@@ -179,8 +179,8 @@ IOS_Suspend(ResourceHandleID handle,
                                              unkArg1,
                                              queue,
                                              request,
-                                             internal::getCurrentProcessID(),
-                                             CpuID::ARM);
+                                             internal::getCurrentProcessId(),
+                                             CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }
@@ -189,7 +189,7 @@ IOS_Suspend(ResourceHandleID handle,
 }
 
 Error
-IOS_SvcMsg(ResourceHandleID handle,
+IOS_SvcMsg(ResourceHandleId handle,
            uint32_t unkArg0,
            uint32_t unkArg1,
            uint32_t unkArg2,
@@ -206,8 +206,8 @@ IOS_SvcMsg(ResourceHandleID handle,
                                             unkArg3,
                                             queue,
                                             request,
-                                            internal::getCurrentProcessID(),
-                                            CpuID::ARM);
+                                            internal::getCurrentProcessId(),
+                                            CpuId::ARM);
    if (error < Error::OK) {
       return error;
    }

@@ -20,7 +20,7 @@ static phys_ptr<SemaphoreData>
 sData;
 
 static phys_ptr<Semaphore>
-getSemaphore(SemaphoreID id)
+getSemaphore(SemaphoreId id)
 {
    id &= 0xFFF;
 
@@ -29,7 +29,7 @@ getSemaphore(SemaphoreID id)
    }
 
    auto semaphore = phys_addrof(sData->semaphores[id]);
-   if (semaphore->pid != internal::getCurrentProcessID()) {
+   if (semaphore->pid != internal::getCurrentProcessId()) {
       // Can only access semaphores belonging to same process.
       return nullptr;
    }
@@ -49,7 +49,7 @@ IOS_CreateSemaphore(int32_t maxCount,
    }
 
    auto semaphore = phys_addrof(sData->semaphores[sData->firstFreeSemaphoreIndex]);
-   auto semaphoreID = sData->firstFreeSemaphoreIndex;
+   auto semaphoreId = sData->firstFreeSemaphoreIndex;
 
    // Remove semaphore from free semaphore linked list
    sData->firstFreeSemaphoreIndex = semaphore->nextFreeSemaphoreIndex;
@@ -64,10 +64,10 @@ IOS_CreateSemaphore(int32_t maxCount,
    semaphore->prevFreeSemaphoreIndex = int16_t { -1 };
 
    sData->numCreatedSemaphores++;
-   semaphore->id = static_cast<SemaphoreID>(semaphoreID | (sData->numCreatedSemaphores << 12));
+   semaphore->id = static_cast<SemaphoreId>(semaphoreId | (sData->numCreatedSemaphores << 12));
    semaphore->count = initialCount;
    semaphore->maxCount = maxCount;
-   semaphore->pid = internal::getCurrentProcessID();
+   semaphore->pid = internal::getCurrentProcessId();
    semaphore->unknown0x04 = nullptr;
    ThreadQueue_Initialise(phys_addrof(semaphore->waitThreadQueue));
 
@@ -76,7 +76,7 @@ IOS_CreateSemaphore(int32_t maxCount,
 }
 
 Error
-IOS_DestroySempahore(SemaphoreID id)
+IOS_DestroySempahore(SemaphoreId id)
 {
    internal::lockScheduler();
    auto semaphore = getSemaphore(id);
@@ -114,7 +114,7 @@ IOS_DestroySempahore(SemaphoreID id)
 }
 
 Error
-IOS_WaitSemaphore(SemaphoreID id,
+IOS_WaitSemaphore(SemaphoreId id,
                   BOOL tryWait)
 {
    internal::lockScheduler();
@@ -145,7 +145,7 @@ IOS_WaitSemaphore(SemaphoreID id,
 }
 
 Error
-IOS_SignalSempahore(SemaphoreID id)
+IOS_SignalSempahore(SemaphoreId id)
 {
    internal::lockScheduler();
    auto semaphore = getSemaphore(id);

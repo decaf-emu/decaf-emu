@@ -49,7 +49,7 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
    queue->size = size;
    queue->messages = messages;
    queue->flags = MessageQueueFlags::None;
-   queue->pid = static_cast<uint8_t>(internal::getCurrentProcessID());
+   queue->pid = static_cast<uint8_t>(internal::getCurrentProcessId());
 
    ThreadQueue_Initialise(phys_addrof(queue->receiveQueue));
    ThreadQueue_Initialise(phys_addrof(queue->sendQueue));
@@ -67,7 +67,7 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
  * Interrupts any threads waiting on the receive or send queue.
  */
 Error
-IOS_DestroyMessageQueue(MessageQueueID id)
+IOS_DestroyMessageQueue(MessageQueueId id)
 {
    internal::lockScheduler();
    auto queue = internal::getMessageQueue(id);
@@ -99,7 +99,7 @@ IOS_DestroyMessageQueue(MessageQueueID id)
  * Insert a message to the back of the message queue.
  */
 Error
-IOS_SendMessage(MessageQueueID id,
+IOS_SendMessage(MessageQueueId id,
                 Message message,
                 MessageFlags flags)
 {
@@ -116,7 +116,7 @@ IOS_SendMessage(MessageQueueID id,
  * Insert a message to front of the message queue.
  */
 Error
-IOS_JamMessage(MessageQueueID id,
+IOS_JamMessage(MessageQueueId id,
                Message message,
                MessageFlags flags)
 {
@@ -162,7 +162,7 @@ IOS_JamMessage(MessageQueueID id,
  * Receive a message from the front of the message queue.
  */
 Error
-IOS_ReceiveMessage(MessageQueueID id,
+IOS_ReceiveMessage(MessageQueueId id,
                    phys_ptr<Message> message,
                    MessageFlags flags)
 {
@@ -182,7 +182,7 @@ namespace internal
  * Find a message queue from it's ID.
  */
 phys_ptr<MessageQueue>
-getMessageQueue(MessageQueueID id)
+getMessageQueue(MessageQueueId id)
 {
    id &= 0xFFF;
 
@@ -191,7 +191,7 @@ getMessageQueue(MessageQueueID id)
    }
 
    auto queue = phys_addrof(sData->queues[id]);
-   if (queue->pid != internal::getCurrentProcessID()) {
+   if (queue->pid != internal::getCurrentProcessId()) {
       // Can only access queues belonging to same process.
       // TODO: Return Error::Access
       return nullptr;
@@ -209,7 +209,7 @@ getMessageQueue(MessageQueueID id)
 phys_ptr<MessageQueue>
 getCurrentThreadMessageQueue()
 {
-   return phys_addrof(sData->perThreadQueues[internal::getCurrentThreadID()]);
+   return phys_addrof(sData->perThreadQueues[internal::getCurrentThreadId()]);
 }
 
 

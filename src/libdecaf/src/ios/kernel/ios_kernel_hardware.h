@@ -59,12 +59,12 @@ BITFIELD(AHBLT, uint32_t)
 BITFIELD_END
 
 Error
-IOS_HandleEvent(DeviceID id,
-                MessageQueueID queue,
+IOS_HandleEvent(DeviceId id,
+                MessageQueueId queue,
                 Message message);
 
 Error
-IOS_ClearAndEnable(DeviceID id);
+IOS_ClearAndEnable(DeviceId id);
 
 namespace internal
 {
