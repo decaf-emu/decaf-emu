@@ -54,7 +54,7 @@ IOS_Suspend(ResourceHandleId handle,
 
 Error
 IOS_SvcMsg(ResourceHandleId handle,
-           uint32_t unkArg0,
+           uint32_t command,
            uint32_t unkArg1,
            uint32_t unkArg2,
            uint32_t unkArg3);

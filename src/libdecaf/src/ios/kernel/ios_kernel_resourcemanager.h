@@ -401,7 +401,7 @@ dispatchIosSuspend(ResourceHandleId resourceHandleId,
 
 Error
 dispatchIosSvcMsg(ResourceHandleId resourceHandleId,
-                  uint32_t unkArg0,
+                  uint32_t command,
                   uint32_t unkArg1,
                   uint32_t unkArg2,
                   uint32_t unkArg3,

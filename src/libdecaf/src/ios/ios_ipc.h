@@ -127,12 +127,12 @@ CHECK_SIZE(IpcRequestArgsSuspend, 0x08);
 
 struct IpcRequestArgsSvcMsg
 {
-   be2_val<uint32_t> unkArg0;
+   be2_val<uint32_t> command;
    be2_val<uint32_t> unkArg1;
    be2_val<uint32_t> unkArg2;
    be2_val<uint32_t> unkArg3;
 };
-CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x00, unkArg0);
+CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x00, command);
 CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x04, unkArg1);
 CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x08, unkArg2);
 CHECK_OFFSET(IpcRequestArgsSvcMsg, 0x0C, unkArg3);

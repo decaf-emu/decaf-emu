@@ -1140,7 +1140,7 @@ dispatchIosSuspend(ResourceHandleId resourceHandleId,
  */
 Error
 dispatchIosSvcMsg(ResourceHandleId resourceHandleId,
-                  uint32_t unkArg0,
+                  uint32_t command,
                   uint32_t unkArg1,
                   uint32_t unkArg2,
                   uint32_t unkArg3,
@@ -1175,7 +1175,7 @@ dispatchIosSvcMsg(ResourceHandleId resourceHandleId,
    resourceRequest->requestData.command = Command::SvcMsg;
    resourceRequest->resourceHandleId = resourceHandleId;
    resourceRequest->requestData.handle = resourceHandle->handle;
-   resourceRequest->requestData.args.svcMsg.unkArg0 = unkArg0;
+   resourceRequest->requestData.args.svcMsg.command = command;
    resourceRequest->requestData.args.svcMsg.unkArg1 = unkArg1;
    resourceRequest->requestData.args.svcMsg.unkArg2 = unkArg2;
    resourceRequest->requestData.args.svcMsg.unkArg3 = unkArg3;
