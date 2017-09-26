@@ -1,3 +1,4 @@
+#include "common/platform_winapi_string.h"
 #include "decaf.h"
 #include "decaf_config.h"
 #include "decaf_graphics.h"
@@ -19,12 +20,15 @@
 #include <common/platform.h>
 #include <common/platform_dir.h>
 #include <condition_variable>
+#include <filesystem>
 #include <fmt/format.h>
 #include <mutex>
 
 #ifdef PLATFORM_WINDOWS
 #include <WinSock2.h>
 #endif
+
+namespace fs_std = std::experimental::filesystem::v1;
 
 namespace decaf
 {
@@ -154,13 +158,31 @@ initialise(const std::string &gamePath)
    auto volPath = fs::HostPath { };
    auto rpxPath = fs::HostPath { };
 
+   // Checks for any .rpx on the directory given
+   // Updates rpxPath with the first .rpx it finds
+   auto checkRpx = [&](fs::HostPath& pathToCheck) {
+      auto dirIter = fs_std::directory_iterator(pathToCheck.path());
+
+      for (fs_std::directory_entry file : dirIter)
+         if (file.path().extension().compare("rpx"))
+            rpxPath = file.path().generic_string();
+   };
+
+   auto codeDir = path.join("code");
+   auto altCodeDir = path.join("data").join("code");
+
    if (platform::isDirectory(path.path())) {
-      if (platform::isFile(path.join("code").join("cos.xml").path())) {
+      if (platform::isFile(codeDir.join("cos.xml").path())) {
          // Found path/code/cos.xml
          volPath = path.path();
-      } else if (platform::isFile(path.join("data").join("code").join("cos.xml").path())) {
+      } else if (platform::isFile(altCodeDir.join("cos.xml").path())) {
          // Found path/data/code/cos.xml
          volPath = path.join("data").path();
+      } else {
+         // Search for path/code/*.rpx
+         checkRpx(path.join("code"));
+         // Search for path/data/code/*.rpx
+         checkRpx(path.join("data").join("code"));
       }
    } else if (platform::isFile(path.path())) {
       auto parent1 = fs::HostPath { path.parentPath() };
