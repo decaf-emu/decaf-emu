@@ -15,6 +15,7 @@ ENUM_END(MCPAppType)
 
 ENUM_BEG(MCPCommand, uint32_t)
    ENUM_VALUE(GetSysProdSettings,   0x40)
+   ENUM_VALUE(SetSysProdSettings,   0x41)
    ENUM_VALUE(GetOwnTitleInfo,      0x4C)
    ENUM_VALUE(TitleCount,           0x4D)
    ENUM_VALUE(SearchTitleList,      0x58)
