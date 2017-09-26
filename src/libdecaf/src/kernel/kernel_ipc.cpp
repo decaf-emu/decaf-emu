@@ -26,13 +26,13 @@ ipcDriverKernelSubmitRequest(IpcRequest *request)
 {
    switch (cpu::this_core::id()) {
    case 0:
-      request->cpuID = ios::CpuID::PPC0;
+      request->cpuId = ios::CpuId::PPC0;
       break;
    case 1:
-      request->cpuID = ios::CpuID::PPC1;
+      request->cpuId = ios::CpuId::PPC1;
       break;
    case 2:
-      request->cpuID = ios::CpuID::PPC2;
+      request->cpuId = ios::CpuId::PPC2;
       break;
    default:
       decaf_abort("Unexpected core id");
@@ -48,14 +48,14 @@ ipcDriverKernelSubmitRequest(IpcRequest *request)
 void
 ipcDriverKernelSubmitReply(IpcRequest *reply)
 {
-   auto coreID = reply->cpuID - ios::CpuID::PPC0;
-   auto &responses = sIpcResponses[coreID];
+   auto coreId = reply->cpuId - ios::CpuId::PPC0;
+   auto &responses = sIpcResponses[coreId];
 
    sIpcMutex.lock();
    responses.push(reply);
    sIpcMutex.unlock();
 
-   cpu::interrupt(coreID, cpu::IPC_INTERRUPT);
+   cpu::interrupt(coreId, cpu::IPC_INTERRUPT);
 }
 
 
