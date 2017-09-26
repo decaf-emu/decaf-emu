@@ -10,9 +10,7 @@ namespace ios::kernel
 
 constexpr auto MaxNumHeaps = 48u;
 constexpr auto MaxNumProcessHeaps = 14u;
-constexpr auto SharedHeapId = HeapId { 1 };
-constexpr auto CrossProcessHeapId = HeapId { 0xCAFE };
-constexpr auto LocalProcessHeapId = HeapId { 0xCAFE };
+
 constexpr auto HeapAllocSizeAlign = 32u;
 constexpr auto HeapAllocAlignAlign = 32u;
 

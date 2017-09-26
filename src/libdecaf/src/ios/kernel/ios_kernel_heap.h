@@ -10,14 +10,17 @@ namespace ios::kernel
 {
 
 using HeapId = int32_t;
-struct HeapBlock;
+
+constexpr auto SharedHeapId = HeapId { 1 };
+constexpr auto LocalProcessHeapId = HeapId { 0xCAFE };
+constexpr auto CrossProcessHeapId = HeapId { 0xCAFF };
 
 struct Heap
 {
    be2_phys_ptr<void> base;
    be2_val<ProcessId> pid;
    be2_val<uint32_t> size;
-   be2_phys_ptr<HeapBlock> firstFreeBlock;
+   be2_phys_ptr<struct HeapBlock> firstFreeBlock;
    be2_val<uint32_t> errorCountAllocOutOfMemory;
    be2_val<uint32_t> errorCountFreeBlockNotInHeap;
    be2_val<uint32_t> errorCountExpandInvalidBlock;
