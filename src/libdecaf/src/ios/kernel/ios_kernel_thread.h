@@ -19,6 +19,8 @@ using ThreadId = uint32_t;
 using ThreadPriority = int32_t;
 using ThreadEntryFn = Error(*)(phys_ptr<void>);
 
+constexpr auto CurrentThread = ThreadId { 0 };
+
 #ifdef IOS_EMULATE_ARM
 struct ContextLLE
 {
