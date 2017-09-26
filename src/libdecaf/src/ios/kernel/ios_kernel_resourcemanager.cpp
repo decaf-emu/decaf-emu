@@ -213,7 +213,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
          // Resource open succeeded, save the resource handle.
          resourceHandle->handle = static_cast<int32_t>(reply);
          resourceHandle->state = ResourceHandleState::Open;
-         reply = static_cast<Error>(resourceHandle->id.value());
+         reply = static_cast<Error>(resourceHandle->id);
       }
    } else if (resourceRequest->requestData.command == Command::Close) {
       // Resource closed, close the resource handle.

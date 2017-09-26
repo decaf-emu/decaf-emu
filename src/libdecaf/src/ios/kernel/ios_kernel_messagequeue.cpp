@@ -57,7 +57,7 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
    sData->numCreatedQueues++;
    internal::unlockScheduler();
 
-   return static_cast<Error>(queue->uid.value());
+   return static_cast<Error>(queue->uid);
 }
 
 

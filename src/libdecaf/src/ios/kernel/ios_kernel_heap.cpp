@@ -120,7 +120,7 @@ IOS_CreateLocalProcessHeap(phys_ptr<void> ptr,
    }
 
    if (sData->localProcessHeaps[pid] >= 0) {
-      return static_cast<Error>(sData->localProcessHeaps[pid].value());
+      return static_cast<Error>(sData->localProcessHeaps[pid]);
    }
 
    error = IOS_CreateHeap(ptr, size);
@@ -155,7 +155,7 @@ IOS_CreateCrossProcessHeap(uint32_t size)
    }
 
    if (sData->crossProcessHeaps[pid] >= 0) {
-      return static_cast<Error>(sData->crossProcessHeaps[pid].value());
+      return static_cast<Error>(sData->crossProcessHeaps[pid]);
    }
 
    auto ptr = IOS_HeapAlloc(SharedHeapId, size);

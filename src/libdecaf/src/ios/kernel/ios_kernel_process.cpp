@@ -13,7 +13,7 @@ IOS_GetCurrentProcessId()
       return Error::Invalid;
    }
 
-   return static_cast<Error>(thread->pid.value());
+   return static_cast<Error>(thread->pid);
 }
 
 Error

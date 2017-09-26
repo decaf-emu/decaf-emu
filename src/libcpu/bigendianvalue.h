@@ -13,6 +13,14 @@ class Pointer;
 template<typename Value>
 using VirtualPointer = Pointer<Value, VirtualAddress>;
 
+template<class T, bool = std::is_enum<T>::value>
+struct safe_underlying_type : std::underlying_type<T> {};
+
+template<class T>
+struct safe_underlying_type<T, false> {
+   using type = T;
+};
+
 template<typename Type>
 class BigEndianValue
 {
@@ -44,10 +52,20 @@ public:
       return value();
    }
 
-   template<typename T = Type, typename = typename std::enable_if<std::is_convertible<T, bool>::value>::type>
+   template<typename T = Type, typename = typename std::enable_if<std::is_convertible_v<T, bool> ||
+                                                                  std::is_constructible_v<bool, T>>::type>
    explicit operator bool() const
    {
       return static_cast<bool>(value());
+   }
+
+   template<typename OtherType, typename = typename std::enable_if<std::is_convertible_v<Type, OtherType> ||
+                                                                    std::is_constructible_v<OtherType, Type> ||
+                                                                    std::is_convertible_v<Type, safe_underlying_type<OtherType>::type>
+                                                                   >::type>
+   explicit operator OtherType() const
+   {
+      return static_cast<OtherType>(value());
    }
 
    template<typename OtherType, typename = typename std::enable_if<std::is_constructible<value_type, const OtherType &>::value ||
@@ -74,17 +92,6 @@ public:
       }
 
       return *this;
-   }
-
-   template<typename OtherType, typename = typename std::enable_if<std::is_convertible<Type, OtherType>::value ||
-                                                                   std::is_constructible<OtherType, Type>::value>::type>
-   explicit operator OtherType() const
-   {
-      if constexpr (std::is_constructible<OtherType, value_type>::value) {
-         return OtherType { value() };
-      } else {
-         return static_cast<OtherType>(value());
-      }
    }
 
    template<typename OtherType, typename K = value_type>

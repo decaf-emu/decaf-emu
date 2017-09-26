@@ -287,7 +287,7 @@ fsaThreadMain(phys_ptr<void> /*context*/)
       case Command::Ioctl:
       {
          fsaDeviceIoctl(request,
-                        static_cast<FSACommand>(request->requestData.args.ioctl.request.value()),
+                        static_cast<FSACommand>(request->requestData.args.ioctl.request),
                         request->requestData.args.ioctl.inputBuffer,
                         request->requestData.args.ioctl.outputBuffer);
          break;
@@ -296,7 +296,7 @@ fsaThreadMain(phys_ptr<void> /*context*/)
       case Command::Ioctlv:
       {
          fsaDeviceIoctlv(request,
-                         static_cast<FSACommand>(request->requestData.args.ioctlv.request.value()),
+                         static_cast<FSACommand>(request->requestData.args.ioctlv.request),
                          request->requestData.args.ioctlv.vecs);
          break;
       }

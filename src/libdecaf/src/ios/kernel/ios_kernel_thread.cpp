@@ -128,7 +128,7 @@ IOS_CreateThread(ThreadEntryFn entry,
 #endif
 
    internal::unlockScheduler();
-   return static_cast<Error>(thread->id.value());
+   return static_cast<Error>(thread->id);
 }
 
 Error
@@ -325,7 +325,7 @@ IOS_GetCurrentThreadId()
       return Error::Invalid;
    }
 
-   return static_cast<Error>(thread->id.value());
+   return static_cast<Error>(thread->id);
 }
 
 Error
@@ -345,7 +345,7 @@ IOS_GetThreadPriority(ThreadId id)
       return Error::Invalid;
    }
 
-   return static_cast<Error>(thread->priority.value());
+   return static_cast<Error>(thread->priority);
 }
 
 Error
