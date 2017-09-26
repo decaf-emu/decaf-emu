@@ -156,13 +156,13 @@ CHECK_SIZE(ClientCapability, 0x0C);
 struct ResourceHandleManager
 {
    //! Title ID this resource handle manager belongs to.
-   be2_val<TitleId> tid;
+   be2_val<TitleId> titleId;
 
-   //! 'gid'?? this resource handle manager belongs to.
-   be2_val<uint32_t> gid;
+   //! Group ID this resource handle manager belongs to.
+   be2_val<GroupId> groupId;
 
    //! Process this resource handle manager belongs to.
-   be2_val<ProcessId> pid;
+   be2_val<ProcessId> processId;
 
    //! Number of current resource handles.
    be2_val<uint32_t> numResourceHandles;
@@ -200,9 +200,9 @@ struct ResourceHandleManager
    //! Number of times IOS_ResourceReply failed
    be2_val<uint32_t> failedResourceReplies;
 };
-CHECK_OFFSET(ResourceHandleManager, 0x00, tid);
-CHECK_OFFSET(ResourceHandleManager, 0x08, gid);
-CHECK_OFFSET(ResourceHandleManager, 0x0C, pid);
+CHECK_OFFSET(ResourceHandleManager, 0x00, titleId);
+CHECK_OFFSET(ResourceHandleManager, 0x08, groupId);
+CHECK_OFFSET(ResourceHandleManager, 0x0C, processId);
 CHECK_OFFSET(ResourceHandleManager, 0x10, numResourceHandles);
 CHECK_OFFSET(ResourceHandleManager, 0x14, mostResourceHandles);
 CHECK_OFFSET(ResourceHandleManager, 0x18, maxResourceHandles);
@@ -409,6 +409,16 @@ dispatchIosSvcMsg(ResourceHandleId resourceHandleId,
                   phys_ptr<IpcRequest> ipcRequest,
                   ProcessId pid,
                   CpuId cpuId);
+
+Error
+getClientCapability(phys_ptr<ResourceHandleManager> resourceHandleManager,
+                    FeatureId featureId,
+                    phys_ptr<ClientCapability> *outClientCapability);
+
+Error
+setClientCapability(ProcessId pid,
+                    FeatureId featureId,
+                    uint64_t mask);
 
 void
 kernelInitialiseResourceManager();

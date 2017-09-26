@@ -999,16 +999,16 @@ FSMountAsync(FSClient *client,
                                                      nullptr, 0);
 
    // Correct the device path.
-   auto devicePath = blockBody->fsaShimBuffer.request.mount.path;
+   auto devicePath = virt_addrof(blockBody->fsaShimBuffer.request.mount.path);
 
    if (strncmp(source->path, "external", 8) == 0) {
       // external01 to /dev/sdcard01
-      std::memcpy(devicePath, "/dev/sdcard", 11);
-      std::strncpy(devicePath + 11, source->path + 8, 2);
+      std::memcpy(devicePath.getRawPointer(), "/dev/sdcard", 11);
+      std::strncpy(devicePath.getRawPointer() + 11, source->path + 8, 2);
    } else {
       // <source path> to /dev/<source path>
-      std::memcpy(devicePath, "/dev/", 5);
-      std::strncpy(devicePath + 5, source->path, FSMaxPathLength - 4);
+      std::memcpy(devicePath.getRawPointer(), "/dev/", 5);
+      std::strncpy(devicePath.getRawPointer() + 5, source->path, FSMaxPathLength - 4);
    }
 
    if (error) {

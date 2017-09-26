@@ -155,7 +155,7 @@ IOS_SetResourcePermissionGroup(std::string_view device,
       return error;
    }
 
-   if (pid != resourceManager->resourceHandleManager->pid) {
+   if (pid != resourceManager->resourceHandleManager->processId) {
       return Error::Access;
    }
 
@@ -315,9 +315,9 @@ allocResourceRequest(phys_ptr<ResourceHandleManager> resourceHandleManager,
    resourceRequest->ipcRequest = ipcRequest;
 
    resourceRequest->requestData.cpuId = cpuId;
-   resourceRequest->requestData.processId = resourceHandleManager->pid;
-   resourceRequest->requestData.titleId = resourceHandleManager->tid;
-   resourceRequest->requestData.gid = resourceHandleManager->gid;
+   resourceRequest->requestData.processId = resourceHandleManager->processId;
+   resourceRequest->requestData.titleId = resourceHandleManager->titleId;
+   resourceRequest->requestData.groupId = resourceHandleManager->groupId;
 
    // Insert into the allocated request list.
    resourceRequest->nextIdx = int16_t { -1 };
@@ -1311,11 +1311,11 @@ kernelInitialiseResourceManager()
    for (auto i = 0u; i < resourceHandleManagers.size(); ++i) {
       auto &resourceHandleManager = resourceHandleManagers[i];
 
-      resourceHandleManager.pid = static_cast<ProcessId>(i);
+      resourceHandleManager.processId = static_cast<ProcessId>(i);
       resourceHandleManager.maxResourceHandles = MaxNumResourceHandlesPerProcess;
       resourceHandleManager.maxResourceRequests = MaxNumResourceRequestsPerProcess;
 
-      if (resourceHandleManager.pid >= ProcessId::COSKERNEL) {
+      if (resourceHandleManager.processId >= ProcessId::COSKERNEL) {
          resourceHandleManager.maxResourceManagers = 0u;
       } else {
          resourceHandleManager.maxResourceManagers = MaxNumResourceManagersPerProcess;
@@ -1335,7 +1335,7 @@ kernelInitialiseResourceManager()
          caps.mask = 0ull;
       }
 
-      setClientCapability(resourceHandleManager.pid, 0, 0xFFFFFFFFFFFFFFFFull);
+      setClientCapability(resourceHandleManager.processId, 0, 0xFFFFFFFFFFFFFFFFull);
    }
 }
 

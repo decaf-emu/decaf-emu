@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_fs.h"
-#include "ios/dev/fsa.h"
+#include "ios/fs/ios_fs_fsa.h"
 
 #include <cstdint>
 #include <common/be_val.h>
@@ -19,15 +19,15 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
-using FSACommand = ios::dev::fsa::FSACommand;
-using FSAFileSystemInfo = ios::dev::fsa::FSAFileSystemInfo;
-using FSAQueryInfoType = ios::dev::fsa::FSAQueryInfoType;
-using FSAReadFlag = ios::dev::fsa::FSAReadFlag;
-using FSARequest = ios::dev::fsa::FSARequest;
-using FSAResponse = ios::dev::fsa::FSAResponse;
-using FSAStatus = ios::dev::fsa::FSAStatus;
-using FSAVolumeInfo = ios::dev::fsa::FSAVolumeInfo;
-using FSAWriteFlag = ios::dev::fsa::FSAWriteFlag;
+using FSACommand = ios::fs::FSACommand;
+using FSAFileSystemInfo = ios::fs::FSAFileSystemInfo;
+using FSAQueryInfoType = ios::fs::FSAQueryInfoType;
+using FSAReadFlag = ios::fs::FSAReadFlag;
+using FSARequest = ios::fs::FSARequest;
+using FSAResponse = ios::fs::FSAResponse;
+using FSAStatus = ios::fs::FSAStatus;
+using FSAVolumeInfo = ios::fs::FSAVolumeInfo;
+using FSAWriteFlag = ios::fs::FSAWriteFlag;
 
 struct OSMessage;
 struct OSMessageQueue;

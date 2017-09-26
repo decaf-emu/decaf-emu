@@ -4,7 +4,7 @@
 #include <common/structsize.h>
 #include <libcpu/be2_struct.h>
 
-namespace ios::fs
+namespace ios::fs::internal
 {
 
 struct Mutex
@@ -26,4 +26,4 @@ lockMutex(phys_ptr<Mutex> mutex);
 Error
 unlockMutex(phys_ptr<Mutex> mutex);
 
-} // namespace ios::fs
+} // namespace ios::fs::internal

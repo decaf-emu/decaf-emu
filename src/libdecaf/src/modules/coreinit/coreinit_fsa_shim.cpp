@@ -180,8 +180,8 @@ fsaShimPrepareRequestChangeDir(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::ChangeDir;
 
-   auto request = &shim->request.changeDir;
-   std::strncpy(request->path, path, FSMaxPathLength);
+   auto request = virt_addrof(shim->request.changeDir);
+   std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -203,7 +203,7 @@ fsaShimPrepareRequestCloseDir(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::CloseDir;
 
-   auto request = &shim->request.closeDir;
+   auto request = virt_addrof(shim->request.closeDir);
    request->handle = dirHandle;
 
    return FSAStatus::OK;
@@ -226,7 +226,7 @@ fsaShimPrepareRequestCloseFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::CloseFile;
 
-   auto request = &shim->request.closeFile;
+   auto request = virt_addrof(shim->request.closeFile);
    request->handle = fileHandle;
 
    return FSAStatus::OK;
@@ -249,7 +249,7 @@ fsaShimPrepareRequestFlushFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::FlushFile;
 
-   auto request = &shim->request.flushFile;
+   auto request = virt_addrof(shim->request.flushFile);
    request->handle = fileHandle;
 
    return FSAStatus::OK;
@@ -276,8 +276,8 @@ fsaShimPrepareRequestFlushQuota(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::FlushQuota;
 
-   auto request = &shim->request.flushQuota;
-   std::strncpy(request->path, path, FSMaxPathLength);
+   auto request = virt_addrof(shim->request.flushQuota);
+   std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -327,8 +327,8 @@ fsaShimPrepareRequestGetInfoByQuery(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::GetInfoByQuery;
 
-   auto request = &shim->request.getInfoByQuery;
-   std::strncpy(request->path, path, FSMaxPathLength);
+   auto request = virt_addrof(shim->request.getInfoByQuery);
+   std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
    request->type = type;
 
    return FSAStatus::OK;
@@ -351,7 +351,7 @@ fsaShimPrepareRequestGetPosFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::GetPosFile;
 
-   auto request = &shim->request.getPosFile;
+   auto request = virt_addrof(shim->request.getPosFile);
    request->handle = fileHandle;
 
    return FSAStatus::OK;
@@ -374,7 +374,7 @@ fsaShimPrepareRequestIsEof(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::IsEof;
 
-   auto request = &shim->request.isEof;
+   auto request = virt_addrof(shim->request.isEof);
    request->handle = fileHandle;
 
    return FSAStatus::OK;
@@ -402,8 +402,8 @@ fsaShimPrepareRequestMakeDir(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::MakeDir;
 
-   auto request = &shim->request.makeDir;
-   std::strncpy(request->path, path, FSMaxPathLength);
+   auto request = virt_addrof(shim->request.makeDir);
+   std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
    request->permission = permissions;
 
    return FSAStatus::OK;
@@ -434,9 +434,9 @@ fsaShimPrepareRequestMount(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctlv;
    shim->command = FSACommand::Mount;
 
-   auto request = &shim->request.mount;
-   std::strncpy(request->path, path, FSMaxPathLength);
-   std::strncpy(request->target, target, FSMaxPathLength);
+   auto request = virt_addrof(shim->request.mount);
+   std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
+   std::strncpy(virt_addrof(request->target).getRawPointer(), target, FSMaxPathLength);
    request->unk0x500 = unk0;
    request->unk0x508 = unkBufLen;
 
@@ -476,10 +476,10 @@ fsaShimPrepareRequestOpenDir(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::OpenDir;
 
-   auto request = &shim->request.openDir;
-   std::strncpy(request->path, path, FSMaxPathLength);
+   auto request = virt_addrof(shim->request.openDir);
+   std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
 
-   auto response = &shim->response.openDir;
+   auto response = virt_addrof(shim->response.openDir);
    response->handle = -1;
 
    return FSAStatus::OK;
@@ -514,15 +514,15 @@ fsaShimPrepareRequestOpenFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::OpenFile;
 
-   auto request = &shim->request.openFile;
-   std::strncpy(request->path, path, FSMaxPathLength);
-   std::strncpy(request->mode, mode, 16);
-   request->unk0x290 = unk0x290;
-   request->unk0x294 = unk0x294;
-   request->unk0x298 = unk0x298;
+   auto &request = shim->request.openFile;
+   std::strncpy(virt_addrof(request.path).getRawPointer(), path, FSMaxPathLength);
+   std::strncpy(virt_addrof(request.mode).getRawPointer(), mode, 16);
+   request.unk0x290 = unk0x290;
+   request.unk0x294 = unk0x294;
+   request.unk0x298 = unk0x298;
 
-   auto response = &shim->response.openFile;
-   response->handle = -1;
+   auto &response = shim->response.openFile;
+   response.handle = -1;
 
    return FSAStatus::OK;
 }
@@ -544,8 +544,8 @@ fsaShimPrepareRequestReadDir(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::ReadDir;
 
-   auto request = &shim->request.readDir;
-   request->handle = dirHandle;
+   auto &request = shim->request.readDir;
+   request.handle = dirHandle;
 
    return FSAStatus::OK;
 }
@@ -584,13 +584,13 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
    shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
    shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
-   auto request = &shim->request.readFile;
-   request->buffer = buffer;
-   request->size = size;
-   request->count = count;
-   request->pos = pos;
-   request->handle = handle;
-   request->readFlags = readFlags;
+   auto &request = shim->request.readFile;
+   request.buffer = cpu::translate(buffer);
+   request.size = size;
+   request.count = count;
+   request.pos = pos;
+   request.handle = handle;
+   request.readFlags = readFlags;
 
    return FSAStatus::OK;
 }
@@ -616,8 +616,8 @@ fsaShimPrepareRequestRemove(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::Remove;
 
-   auto request = &shim->request.remove;
-   std::strncpy(request->path, path, FSMaxPathLength);
+   auto &request = shim->request.remove;
+   std::strncpy(virt_addrof(request.path).getRawPointer(), path, FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -648,9 +648,9 @@ fsaShimPrepareRequestRename(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::Rename;
 
-   auto request = &shim->request.rename;
-   std::strncpy(request->oldPath, oldPath, FSMaxPathLength);
-   std::strncpy(request->newPath, newPath, FSMaxPathLength);
+   auto &request =shim->request.rename;
+   std::strncpy(virt_addrof(request.oldPath).getRawPointer(), oldPath, FSMaxPathLength);
+   std::strncpy(virt_addrof(request.newPath).getRawPointer(), newPath, FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -672,8 +672,8 @@ fsaShimPrepareRequestRewindDir(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::RewindDir;
 
-   auto request = &shim->request.rewindDir;
-   request->handle = dirHandle;
+   auto &request = shim->request.rewindDir;
+   request.handle = dirHandle;
 
    return FSAStatus::OK;
 }
@@ -696,9 +696,9 @@ fsaShimPrepareRequestSetPosFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::SetPosFile;
 
-   auto request = &shim->request.setPosFile;
-   request->handle = fileHandle;
-   request->pos = pos;
+   auto &request = shim->request.setPosFile;
+   request.handle = fileHandle;
+   request.pos = pos;
 
    return FSAStatus::OK;
 }
@@ -720,8 +720,8 @@ fsaShimPrepareRequestStatFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::StatFile;
 
-   auto request = &shim->request.statFile;
-   request->handle = fileHandle;
+   auto &request = shim->request.statFile;
+   request.handle = fileHandle;
 
    return FSAStatus::OK;
 }
@@ -743,8 +743,8 @@ fsaShimPrepareRequestTruncateFile(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::TruncateFile;
 
-   auto request = &shim->request.truncateFile;
-   request->handle = fileHandle;
+   auto &request = shim->request.truncateFile;
+   request.handle = fileHandle;
 
    return FSAStatus::OK;
 }
@@ -771,9 +771,9 @@ fsaShimPrepareRequestUnmount(FSAShimBuffer *shim,
    shim->ipcReqType = FSAIpcRequestType::Ioctl;
    shim->command = FSACommand::Unmount;
 
-   auto request = &shim->request.unmount;
-   std::strncpy(request->path, path, FSMaxPathLength);
-   request->unk0x280 = unk0x280;
+   auto &request = shim->request.unmount;
+   std::strncpy(virt_addrof(request.path).getRawPointer(), path, FSMaxPathLength);
+   request.unk0x280 = unk0x280;
 
    return FSAStatus::OK;
 }
@@ -812,13 +812,13 @@ fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
    shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
    shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
-   auto request = &shim->request.writeFile;
-   request->buffer = buffer;
-   request->size = size;
-   request->count = count;
-   request->pos = pos;
-   request->handle = handle;
-   request->writeFlags = writeFlags;
+   auto &request = shim->request.writeFile;
+   request.buffer = cpu::translate(buffer);
+   request.size = size;
+   request.count = count;
+   request.pos = pos;
+   request.handle = handle;
+   request.writeFlags = writeFlags;
 
    return FSAStatus::OK;
 }

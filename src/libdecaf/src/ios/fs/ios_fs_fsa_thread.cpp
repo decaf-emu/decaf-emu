@@ -1,4 +1,4 @@
-#include "ios_fs_fsa.h"
+#include "ios_fs_fsa_device.h"
 #include "ios_fs_mutex.h"
 
 #include "ios/kernel/ios_kernel_messagequeue.h"
@@ -8,7 +8,7 @@
 #include "ios/ios_ipc.h"
 #include "ios/ios_stackobject.h"
 
-namespace ios::fs
+namespace ios::fs::internal
 {
 
 using FSADeviceHandle = int32_t;
@@ -99,6 +99,21 @@ fsaDeviceOpen(phys_ptr<RequestOrigin> origin,
 }
 
 static FSAStatus
+fsaDeviceClose(FSADeviceHandle handle,
+               phys_ptr<kernel::ResourceRequest> resourceRequest)
+{
+   auto device = getDevice(handle);
+   if (!device) {
+      return FSAStatus::InvalidClientHandle;
+   }
+
+   // TODO: Handle cleanup of async operations
+
+   sDevices[handle] = nullptr;
+   return FSAStatus::OK;
+}
+
+static FSAStatus
 fsaDeviceIoctl(phys_ptr<kernel::ResourceRequest> resourceRequest,
                FSACommand command,
                be2_phys_ptr<const void> inputBuffer,
@@ -110,23 +125,125 @@ fsaDeviceIoctl(phys_ptr<kernel::ResourceRequest> resourceRequest,
    auto response = phys_cast<FSAResponse>(outputBuffer);
 
    if (!device) {
-      status = FSAStatus::InvalidClientHandle;
+     status = FSAStatus::InvalidClientHandle;
    } else if (!inputBuffer && !outputBuffer) {
-      status = FSAStatus::InvalidParam;
+     status = FSAStatus::InvalidParam;
+   } else if (request->emulatedError < 0) {
+      return request->emulatedError;
    } else {
       switch (command) {
+      case FSACommand::ChangeDir:
+         status = device->changeDir(phys_addrof(request->changeDir));
+         break;
+      case FSACommand::CloseDir:
+         status = device->closeDir(phys_addrof(request->closeDir));
+         break;
+      case FSACommand::CloseFile:
+         status = device->closeFile(phys_addrof(request->closeFile));
+         break;
+      case FSACommand::FlushFile:
+         status = device->flushFile(phys_addrof(request->flushFile));
+         break;
+      case FSACommand::FlushQuota:
+         status = device->flushQuota(phys_addrof(request->flushQuota));
+         break;
       case FSACommand::GetCwd:
-         status = device->getCwd(response->getCwd);
+         status = device->getCwd(phys_addrof(response->getCwd));
+         break;
+      case FSACommand::GetInfoByQuery:
+         status = device->getInfoByQuery(phys_addrof(request->getInfoByQuery), phys_addrof(response->getInfoByQuery));
+         break;
+      case FSACommand::GetPosFile:
+         status = device->getPosFile(phys_addrof(request->getPosFile), phys_addrof(response->getPosFile));
+         break;
+      case FSACommand::IsEof:
+         status = device->isEof(phys_addrof(request->isEof));
+         break;
+      case FSACommand::MakeDir:
+         status = device->makeDir(phys_addrof(request->makeDir));
+         break;
+      case FSACommand::OpenDir:
+         status = device->openDir(phys_addrof(request->openDir), phys_addrof(response->openDir));
+         break;
+      case FSACommand::OpenFile:
+         status = device->openFile(phys_addrof(request->openFile), phys_addrof(response->openFile));
+         break;
+      case FSACommand::ReadDir:
+         status = device->readDir(phys_addrof(request->readDir), phys_addrof(response->readDir));
+         break;
+      case FSACommand::Remove:
+         status = device->remove(phys_addrof(request->remove));
+         break;
+      case FSACommand::Rename:
+         status = device->rename(phys_addrof(request->rename));
+         break;
+      case FSACommand::RewindDir:
+         status = device->rewindDir(phys_addrof(request->rewindDir));
+         break;
+      case FSACommand::SetPosFile:
+         status = device->setPosFile(phys_addrof(request->setPosFile));
+         break;
+      case FSACommand::StatFile:
+         status = device->statFile(phys_addrof(request->statFile), phys_addrof(response->statFile));
+         break;
+      case FSACommand::TruncateFile:
+         status = device->truncateFile(phys_addrof(request->truncateFile));
          break;
       default:
-
+         status = FSAStatus::UnsupportedCmd;
       }
    }
 
+   // TODO: Move this reply once we do asynchronous filesystem commands
    kernel::IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
+   return status;
 }
 
-Error
+static FSAStatus
+fsaDeviceIoctlv(phys_ptr<kernel::ResourceRequest> resourceRequest,
+                FSACommand command,
+                be2_phys_ptr<IoctlVec> vecs)
+{
+   auto request = phys_ptr<FSARequest> { vecs[0].paddr };
+   auto device = getDevice(resourceRequest->requestData.handle);
+   auto status = FSAStatus::OK;
+
+   if (!device) {
+      status = FSAStatus::InvalidClientHandle;
+   } else if (request->emulatedError < 0) {
+      status = request->emulatedError;
+   } else {
+      switch (command) {
+      case FSACommand::ReadFile:
+      {
+         auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
+         auto length = vecs[1].len;
+         status = device->readFile(phys_addrof(request->readFile), buffer, length);
+         break;
+      }
+      case FSACommand::WriteFile:
+      {
+         auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
+         auto length = vecs[1].len;
+         status = device->writeFile(phys_addrof(request->writeFile), buffer, length);
+         break;
+      }
+      case FSACommand::Mount:
+      {
+         status = device->mount(phys_addrof(request->mount));
+         break;
+      }
+      default:
+         status = FSAStatus::UnsupportedCmd;
+      }
+   }
+
+   // TODO: Move this reply once we do asynchronous filesystem commands
+   kernel::IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
+   return status;
+}
+
+static Error
 fsaThreadMain(phys_ptr<void> /*context*/)
 {
    StackObject<kernel::Message> message;
@@ -144,11 +261,11 @@ fsaThreadMain(phys_ptr<void> /*context*/)
       switch (request->requestData.command) {
       case Command::Open:
       {
+         FSADeviceHandle fsaHandle;
          origin->titleId = request->requestData.titleId;
          origin->processId = request->requestData.processId;
          origin->groupId = request->requestData.groupId;
 
-         FSADeviceHandle fsaHandle;
          auto error = fsaDeviceOpen(origin,
                                     &fsaHandle,
                                     request->requestData.args.open.caps);
@@ -162,22 +279,25 @@ fsaThreadMain(phys_ptr<void> /*context*/)
 
       case Command::Close:
       {
-         // Close an FSADevice
+         auto error = fsaDeviceClose(request->requestData.handle, request);
+         kernel::IOS_ResourceReply(request, static_cast<Error>(error));
          break;
       }
 
       case Command::Ioctl:
       {
-         auto error = fsaDeviceIoctl(request,
-                                     static_cast<FSACommand>(request->requestData.args.ioctl.request.value()),
-                                     request->requestData.args.ioctl.inputBuffer,
-                                     request->requestData.args.ioctl.outputBuffer);
+         fsaDeviceIoctl(request,
+                        static_cast<FSACommand>(request->requestData.args.ioctl.request.value()),
+                        request->requestData.args.ioctl.inputBuffer,
+                        request->requestData.args.ioctl.outputBuffer);
          break;
       }
 
       case Command::Ioctlv:
       {
-         // FSADevice::ioctlv
+         fsaDeviceIoctlv(request,
+                         static_cast<FSACommand>(request->requestData.args.ioctlv.request.value()),
+                         request->requestData.args.ioctlv.vecs);
          break;
       }
 
@@ -226,4 +346,4 @@ startFsaThread()
    return true;
 }
 
-} // namespace ios::fs
+} // namespace ios::fs::internal

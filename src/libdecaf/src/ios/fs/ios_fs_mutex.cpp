@@ -1,6 +1,6 @@
 #include "ios_fs_mutex.h"
 
-namespace ios::fs
+namespace ios::fs::internal
 {
 
 Error
@@ -35,4 +35,4 @@ unlockMutex(phys_ptr<Mutex> mutex)
    return kernel::IOS_SignalSempahore(mutex->semaphore);
 }
 
-} // namespace ios::fs
+} // namespace ios::fs::internal

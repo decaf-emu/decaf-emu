@@ -515,8 +515,8 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
    {
       auto info = blockBody->cmdData.getVolumeInfo.info;
       *info = shim->response.getVolumeInfo.volumeInfo;
-      info->unk0x0C = 0;
-      info->unk0x10 = 0;
+      info->unk0x0C = 0u;
+      info->unk0x10 = 0u;
       info->unk0x14 = -1;
       info->unk0x18 = -1;
       fsCmdBlockSetResult(blockBody, result);
@@ -574,9 +574,10 @@ fsCmdBlockFinishCmd(FSCmdBlockBody *blockBody,
       auto returnedPath = blockBody->cmdData.getCwd.returnedPath;
 
       if (bytes) {
-         auto len = static_cast<uint32_t>(strlen(shim->response.getCwd.path));
+         auto path = virt_addrof(shim->response.getCwd.path);
+         auto len = static_cast<uint32_t>(std::strlen(path.getRawPointer()));
          decaf_check(len < bytes);
-         std::strncpy(returnedPath, shim->response.getCwd.path, bytes);
+         std::strncpy(returnedPath, path.getRawPointer(), bytes);
          std::memset(returnedPath + len, 0, bytes - len);
       }
 
@@ -680,10 +681,10 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
    }
 
    // Queue a new read request
-   auto readRequest = &blockBody->fsaShimBuffer.request.readFile;
+   auto readRequest = virt_addrof(blockBody->fsaShimBuffer.request.readFile);
    readRequest->buffer = readRequest->buffer + bytesRead;
    readRequest->size = readState->readSize;
-   readRequest->count = 1;
+   readRequest->count = 1u;
 
    if (readRequest->readFlags & FSReadFlag::ReadWithPos) {
       readRequest->pos += bytesRead;
@@ -692,7 +693,7 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
    auto shim = &blockBody->fsaShimBuffer;
    shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
 
-   shim->ioctlvVec[1].vaddr = cpu::translate(readRequest->buffer.get());
+   shim->ioctlvVec[1].vaddr = readRequest->buffer;
    shim->ioctlvVec[1].len = readRequest->size;
 
    shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
@@ -737,9 +738,9 @@ fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
    }
 
    // Queue a new write request
-   auto writeRequest = &blockBody->fsaShimBuffer.request.writeFile;
+   auto writeRequest = virt_addrof(blockBody->fsaShimBuffer.request.writeFile);
    writeRequest->buffer = writeRequest->buffer + bytesWritten;
-   writeRequest->size = 1;
+   writeRequest->size = 1u;
    writeRequest->count = writeState->writeSize;
 
    if (writeRequest->writeFlags & FSWriteFlag::WriteWithPos) {
@@ -749,7 +750,7 @@ fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
    auto shim = &blockBody->fsaShimBuffer;
    shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
 
-   shim->ioctlvVec[1].vaddr = cpu::translate(writeRequest->buffer.get());
+   shim->ioctlvVec[1].vaddr = writeRequest->buffer;
    shim->ioctlvVec[1].len = writeRequest->size;
 
    shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
@@ -771,7 +772,7 @@ fsCmdBlockFinishGetMountSourceNextOpenCmd(FSCmdBlockBody *blockBody,
    auto cmdData = &blockBody->cmdData.getMountSourceNext;
 
    if (cmdData->dirHandle == -1) {
-      auto response = &blockBody->fsaShimBuffer.response.openDir;
+      auto response = virt_addrof(blockBody->fsaShimBuffer.response.openDir);
       cmdData->dirHandle = response->handle;
    }
 
@@ -794,12 +795,12 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(FSCmdBlockBody *blockBody,
 
    if (result == FSStatus::OK) {
       auto mountSourceType = FSMountSourceType::Invalid;
-      auto deviceName = blockBody->fsaShimBuffer.response.readDir.entry.name;
+      auto deviceName = virt_addrof(blockBody->fsaShimBuffer.response.readDir.entry.name);
 
       // Check the mount source type
-      if (strncmp(deviceName, "sdcard", 6) == 0) {
+      if (strncmp(deviceName.getRawPointer(), "sdcard", 6) == 0) {
          mountSourceType = FSMountSourceType::SdCard;
-      } else if (strncmp(deviceName, "hfio", 4) == 0) {
+      } else if (strncmp(deviceName.getRawPointer(), "hfio", 4) == 0) {
          mountSourceType = FSMountSourceType::HostFileIO;
       }
 
@@ -814,7 +815,7 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(FSCmdBlockBody *blockBody,
        * FIXME: Unfortunately that is indeed not the case with our filesystem,
        * but fuck it because we will ?never? have more than 1 sdcard and 1 hfio.
        */
-      if (strncmp(deviceName, clientBody->lastMountSourceDevice, 0x10) <= 0) {
+      if (strncmp(deviceName.getRawPointer(), clientBody->lastMountSourceDevice, 0x10) <= 0) {
          // Already returned this device, get the next one!
          return fsCmdBlockFinishGetMountSourceNextOpenCmd(blockBody, FSStatus::OK);
       }
@@ -826,10 +827,10 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(FSCmdBlockBody *blockBody,
       if (mountSourceType == FSMountSourceType::SdCard) {
          // Map sdcardXX -> externalXX
          std::strncpy(mountSource->path, "external", 8);
-         std::strncpy(mountSource->path + 8, deviceName + 6, 2);
+         std::strncpy(mountSource->path + 8, deviceName.getRawPointer() + 6, 2);
          mountSource->path[10] = 0;
       } else if (mountSourceType == FSMountSourceType::HostFileIO) {
-         std::strcpy(mountSource->path, deviceName);
+         std::strcpy(mountSource->path, deviceName.getRawPointer());
       }
    }
 

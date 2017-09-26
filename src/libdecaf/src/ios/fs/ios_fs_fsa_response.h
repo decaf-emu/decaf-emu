@@ -44,13 +44,16 @@ struct FSAResponseGetVolumeInfo
 CHECK_OFFSET(FSAResponseGetVolumeInfo, 0x0, volumeInfo);
 CHECK_SIZE(FSAResponseGetVolumeInfo, 0x1BC);
 
-union FSAResponseGetInfoByQuery
+struct FSAResponseGetInfoByQuery
 {
-   be2_val<uint64_t> dirSize;
-   be2_val<FSAEntryNum> entryNum;
-   be2_val<uint64_t> freeSpaceSize;
-   be2_struct<FSAFileSystemInfo> fileSystemInfo;
-   be2_struct<FSAStat> stat;
+   union
+   {
+      be2_val<uint64_t> dirSize;
+      be2_val<FSAEntryNum> entryNum;
+      be2_val<uint64_t> freeSpaceSize;
+      be2_struct<FSAFileSystemInfo> fileSystemInfo;
+      be2_struct<FSAStat> stat;
+   };
 };
 CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, dirSize);
 CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, entryNum);

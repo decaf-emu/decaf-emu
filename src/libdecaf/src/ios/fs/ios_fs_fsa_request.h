@@ -185,7 +185,8 @@ CHECK_SIZE(FSARequestReadDir, 0x4);
  */
 struct FSARequestReadFile
 {
-   be2_phys_ptr<uint8_t> buffer;
+   //! Virtual pointer used only by Cafe, for IOS we should use ioctlv.vecs[1]
+   be2_virt_ptr<uint8_t> buffer;
    be2_val<uint32_t> size;
    be2_val<uint32_t> count;
    be2_val<FSAFilePosition> pos;
@@ -289,7 +290,8 @@ CHECK_SIZE(FSARequestUnmount, 0x284);
  */
 struct FSARequestWriteFile
 {
-   be2_phys_ptr<const uint8_t> buffer;
+   //! Virtual pointer used only by Cafe, for IOS we should use ioctlv.vecs[1]
+   be2_virt_ptr<const uint8_t> buffer;
    be2_val<uint32_t> size;
    be2_val<uint32_t> count;
    be2_val<FSAFilePosition> pos;
