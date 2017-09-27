@@ -7,4 +7,7 @@ namespace ios::auxil::internal
 Error
 startImThread();
 
+Error
+stopImThread();
+
 } // namespace ios::auxil::internal

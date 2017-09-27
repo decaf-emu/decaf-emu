@@ -1,3 +1,4 @@
+#include "ios_auxil.h"
 #include "ios_auxil_usr_cfg_thread.h"
 #include "ios_auxil_usr_cfg_service_thread.h"
 
@@ -120,7 +121,6 @@ processEntryPoint(phys_ptr<void> context)
          kernel::IOS_ResourceReply(request, Error::Invalid);
       }
    }
-
 }
 
 } // namespace ios::auxil
