@@ -442,7 +442,7 @@ allocResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
       return Error::Max;
    }
 
-   resourceHandle->id = static_cast<ResourceHandleId>(resourceHandleIdx | (sData->totalOpenedHandles << 12));
+   resourceHandle->id = static_cast<ResourceHandleId>(resourceHandleIdx | ((sData->totalOpenedHandles << 12) & 0x7FFFFFFF));
    resourceHandle->resourceManager = resourceManager;
    resourceHandle->state = ResourceHandleState::Opening;
    resourceHandle->handle = -10;
@@ -485,19 +485,17 @@ getResourceHandle(ResourceHandleId id,
                   phys_ptr<ResourceHandleManager> resourceHandleManager,
                   phys_ptr<ResourceHandle> *outResourceHandle)
 {
-   if (id >= 0) {
-      id &= 0xFFF;
-   }
+   auto index = id & 0xFFF;
 
-   if (id >= resourceHandleManager->handles.size()) {
+   if (id < 0 || index >= resourceHandleManager->handles.size()) {
       return Error::Invalid;
    }
 
-   if (resourceHandleManager->handles[id].id != id) {
+   if (resourceHandleManager->handles[index].id != id) {
       return Error::NoExists;
    }
 
-   *outResourceHandle = phys_addrof(resourceHandleManager->handles[id]);
+   *outResourceHandle = phys_addrof(resourceHandleManager->handles[index]);
    return Error::OK;
 }
 
