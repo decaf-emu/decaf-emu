@@ -79,6 +79,16 @@ public:
    }
 
    Error
+   closeAll()
+   {
+      for (auto &handle : mHandles) {
+         handle.value = nullptr;
+      }
+
+      return Error::OK;
+   }
+
+   Error
    get(HandleType handle,
        ValueType **outData)
    {
