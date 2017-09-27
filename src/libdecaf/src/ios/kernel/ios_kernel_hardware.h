@@ -2,6 +2,7 @@
 #include "ios_kernel_enum.h"
 #include "ios_kernel_messagequeue.h"
 
+#include <chrono>
 #include <common/bitfield.h>
 
 namespace ios::kernel

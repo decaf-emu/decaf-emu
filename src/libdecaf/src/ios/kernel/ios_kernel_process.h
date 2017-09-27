@@ -5,6 +5,8 @@
 namespace ios::kernel
 {
 
+constexpr auto NumIosProcess = 14;
+
 Error
 IOS_GetCurrentProcessId();
 

@@ -8,6 +8,7 @@ ENUM_NAMESPACE_BEG(ios)
 ENUM_NAMESPACE_BEG(kernel)
 
 ENUM_BEG(DeviceId, uint32_t)
+   ENUM_VALUE(Timer,                0)
    ENUM_VALUE(NandInterfaceAHBALL,  1)
    ENUM_VALUE(AesEngineAHBALL,      2)
    ENUM_VALUE(Sha1EngineAHBALL,     3)
@@ -102,6 +103,13 @@ ENUM_BEG(ThreadState, uint32_t)
    ENUM_VALUE(Faulted,                 0x06)
    ENUM_VALUE(Unknown,                 0x07)
 ENUM_END(ThreadState)
+
+ENUM_BEG(TimerState, uint32_t)
+   ENUM_VALUE(Free,                    0x00)
+   ENUM_VALUE(Ready,                   0x01)
+   ENUM_VALUE(Running,                 0x02)
+   ENUM_VALUE(Stopped,                 0x04)
+ENUM_END(TimerState)
 
 ENUM_NAMESPACE_END(kernel)
 

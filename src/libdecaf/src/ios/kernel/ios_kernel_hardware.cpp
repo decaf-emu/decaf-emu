@@ -47,6 +47,12 @@ static std::atomic<uint32_t>
 LT_INTSR_AHBLT_ARM { 0 };
 
 static void
+clearAhbAll(AHBALL mask)
+{
+   LT_INTSR_AHBALL_ARM &= ~mask.value;
+}
+
+static void
 clearAndDisableAhbAll(AHBALL mask)
 {
    LT_INTSR_AHBALL_ARM &= ~mask.value;
@@ -83,9 +89,10 @@ IOS_HandleEvent(DeviceId id,
                 MessageQueueId qid,
                 Message message)
 {
-   auto queue = internal::getMessageQueue(qid);
-   if (!queue) {
-      return Error::Invalid;
+   phys_ptr<MessageQueue> queue;
+   auto error = internal::getMessageQueue(qid, &queue);
+   if (error < Error::OK) {
+      return error;
    }
 
    if (id >= sData->eventHandlers.size()) {
@@ -108,6 +115,9 @@ IOS_ClearAndEnable(DeviceId id)
    auto thread = internal::getCurrentThread();
 
    switch (id) {
+   case DeviceId::Timer:
+      clearAndEnableAhbAll(AHBALL::get(0).Timer(true));
+      break;
    case DeviceId::NandInterfaceAHBALL:
       clearAndEnableAhbAll(AHBALL::get(0).NandInterface(true));
       break;
@@ -256,6 +266,11 @@ handleAhbInterrupts()
    internal::lockScheduler();
    auto ahbAll = AHBALL::get(LT_INTSR_AHBALL_ARM.load() &
                              LT_INTMR_AHBALL_ARM.load());
+
+   if (ahbAll.Timer()) {
+      clearAhbAll(AHBALL::get(0).Timer(true));
+      sendEventHandlerMessageNoLock(DeviceId::Timer);
+   }
 
    if (ahbAll.NandInterface()) {
       clearAndDisableAhbAll(AHBALL::get(0).NandInterface(true));
@@ -436,6 +451,11 @@ setInterruptAhbLt(AHBLT mask)
 {
    LT_INTSR_AHBLT_ARM |= mask.value;
    ios::internal::interrupt(InterruptFlags::Ahb);
+}
+
+void
+setAlarm(std::chrono::steady_clock::time_point when)
+{
 }
 
 } // namespace internal
