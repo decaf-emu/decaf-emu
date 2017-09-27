@@ -67,8 +67,9 @@ IOS_ReceiveMessage(MessageQueueId id,
 namespace internal
 {
 
-phys_ptr<MessageQueue>
-getMessageQueue(MessageQueueId id);
+Error
+getMessageQueue(MessageQueueId id,
+                phys_ptr<MessageQueue> *outQueue);
 
 phys_ptr<MessageQueue>
 getCurrentThreadMessageQueue();

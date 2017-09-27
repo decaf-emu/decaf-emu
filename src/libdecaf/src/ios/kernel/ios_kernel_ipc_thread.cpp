@@ -46,6 +46,8 @@ Error
 ipcThreadMain(phys_ptr<void> context)
 {
    StackObject<Message> message;
+   phys_ptr<MessageQueue> queue;
+
    auto error = IOS_CreateMessageQueue(phys_addr { 0xFFFF20F }, 0x100);
    if (error < Error::OK) {
       return error;
@@ -53,7 +55,7 @@ ipcThreadMain(phys_ptr<void> context)
 
    // Register interrupt handlers and enable the interrupts.
    auto queueId = static_cast<MessageQueueId>(error);
-   auto queue = internal::getMessageQueue(queueId);
+   auto error = internal::getMessageQueue(queueId, &queue);
    sIpcMessageQueueId = queueId;
 
    IOS_HandleEvent(DeviceId::IpcStarbuckCore0, queueId, Message { Command::IpcMsg0 });

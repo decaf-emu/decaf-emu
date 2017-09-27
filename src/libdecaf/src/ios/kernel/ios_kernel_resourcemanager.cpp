@@ -554,7 +554,8 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       if (resourceRequest->messageQueueId < 0) {
          queue = resourceRequest->messageQueue;
       } else {
-         queue = getMessageQueue(resourceRequest->messageQueueId);
+         error = getMessageQueue(resourceRequest->messageQueueId,
+                                 &queue);
       }
 
       if (queue) {

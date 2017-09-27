@@ -70,10 +70,11 @@ Error
 IOS_DestroyMessageQueue(MessageQueueId id)
 {
    internal::lockScheduler();
-   auto queue = internal::getMessageQueue(id);
-   if (!queue) {
+   phys_ptr<MessageQueue> queue;
+   auto error = internal::getMessageQueue(id, &queue);
+   if (error < Error::OK) {
       internal::unlockScheduler();
-      return Error::Invalid;
+      return error;
    }
 
    if (queue->flags & MessageQueueFlags::RegisteredEventHandler) {
@@ -103,9 +104,10 @@ IOS_SendMessage(MessageQueueId id,
                 Message message,
                 MessageFlags flags)
 {
-   auto queue = internal::getMessageQueue(id);
-   if (!queue) {
-      return Error::Invalid;
+   phys_ptr<MessageQueue> queue;
+   auto error = internal::getMessageQueue(id, &queue);
+   if (error < Error::OK) {
+      return error;
    }
 
    return internal::sendMessage(queue, message, flags);
@@ -121,10 +123,11 @@ IOS_JamMessage(MessageQueueId id,
                MessageFlags flags)
 {
    internal::lockScheduler();
-   auto queue = internal::getMessageQueue(id);
-   if (!queue) {
+   phys_ptr<MessageQueue> queue;
+   auto error = internal::getMessageQueue(id, &queue);
+   if (error < Error::OK) {
       internal::unlockScheduler();
-      return Error::Invalid;
+      return error;
    }
 
    while (queue->used == queue->size) {
@@ -166,9 +169,11 @@ IOS_ReceiveMessage(MessageQueueId id,
                    phys_ptr<Message> message,
                    MessageFlags flags)
 {
-   auto queue = internal::getMessageQueue(id);
-   if (!queue) {
-      return Error::Invalid;
+   phys_ptr<MessageQueue> queue;
+   auto error = internal::getMessageQueue(id, &queue);
+   if (error < Error::OK) {
+      internal::unlockScheduler();
+      return error;
    }
 
    return internal::receiveMessage(queue, message, flags);
@@ -181,23 +186,27 @@ namespace internal
 /**
  * Find a message queue from it's ID.
  */
-phys_ptr<MessageQueue>
-getMessageQueue(MessageQueueId id)
+Error
+getMessageQueue(MessageQueueId id,
+                phys_ptr<MessageQueue> *outQueue)
 {
    id &= 0xFFF;
 
    if (id >= sData->queues.size()) {
-      return nullptr;
+      return Error::Invalid;
    }
 
    auto queue = phys_addrof(sData->queues[id]);
    if (queue->pid != internal::getCurrentProcessId()) {
       // Can only access queues belonging to same process.
-      // TODO: Return Error::Access
-      return nullptr;
+      return Error::Access;
    }
 
-   return queue;
+   if (outQueue) {
+      *outQueue = queue;
+   }
+
+   return Error::OK;
 }
 
 
