@@ -15,7 +15,7 @@ static const uint32_t coreClockSpeed = 1243125000;
 static const uint32_t busClockSpeed = 248625000;
 static const uint32_t timerClockSpeed = busClockSpeed / 4;
 
-using TimerDuration = std::chrono::duration < uint64_t, std::ratio<1, timerClockSpeed>>;
+using TimerDuration = std::chrono::duration<uint64_t, std::ratio<1, timerClockSpeed>>;
 
 struct CoreRegs
 {

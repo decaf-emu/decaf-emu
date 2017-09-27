@@ -258,7 +258,7 @@ setBranchTraceHandler(BranchTraceHandler handler)
 std::chrono::steady_clock::time_point
 tbToTimePoint(uint64_t ticks)
 {
-   auto cpuTicks = TimerDuration(ticks);
+   auto cpuTicks = TimerDuration { ticks };
    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(cpuTicks);
    return sStartupTime + nanos;
 }

@@ -137,7 +137,7 @@ Module::initialiseClock()
 
    sBaseClock = std::chrono::system_clock::now();
    auto ticksSinceEpoch = std::chrono::duration_cast<cpu::TimerDuration>(sBaseClock - sEpochTime);
-   auto ticksSinceStart = cpu::TimerDuration(cpu::this_core::state()->tb());
+   auto ticksSinceStart = cpu::TimerDuration { cpu::this_core::state()->tb() };
    sBaseTicks = ticksSinceEpoch - ticksSinceStart;
 }
 
