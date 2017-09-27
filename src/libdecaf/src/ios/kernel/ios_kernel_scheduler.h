@@ -38,7 +38,7 @@ void
 rescheduleAllNoLock();
 
 void
-rescheduleSelfNoLock();
+rescheduleSelfNoLock(bool yielding = false);
 
 void
 handleSchedulerInterrupt();

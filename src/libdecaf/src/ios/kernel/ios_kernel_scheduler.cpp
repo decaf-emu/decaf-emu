@@ -100,7 +100,7 @@ void
 rescheduleAllNoLock()
 {
    rescheduleOtherNoLock();
-   rescheduleSelfNoLock();
+   rescheduleSelfNoLock(false);
 }
 
 void

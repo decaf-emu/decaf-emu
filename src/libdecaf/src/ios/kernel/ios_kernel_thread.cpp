@@ -312,7 +312,7 @@ Error
 IOS_YieldCurrentThread()
 {
    internal::lockScheduler();
-   internal::rescheduleSelfNoLock();
+   internal::rescheduleSelfNoLock(true);
    internal::unlockScheduler();
    return Error::Invalid;
 }
