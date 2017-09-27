@@ -1,9 +1,10 @@
+#include "ios_fs.h"
+#include "ios_fs_fsa_thread.h"
 
 namespace ios::fs
 {
 
-
-void
+static void
 fs_svc_thread()
 {
    /*
@@ -24,6 +25,17 @@ fs_svc_thread()
    /dev/timetrace
    /dev/tcp_pcfs
    */
+}
+
+Error
+processEntryPoint(phys_ptr<void> context)
+{
+   auto error = internal::startFsaThread();
+   if (error < Error::OK) {
+      return error;
+   }
+
+   return Error::OK;
 }
 
 } // namespace ios

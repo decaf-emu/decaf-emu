@@ -307,24 +307,28 @@ fsaThreadMain(phys_ptr<void> /*context*/)
    }
 }
 
-bool
+Error
 startFsaThread()
 {
    auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->fsaMessageBuffer),
                                                static_cast<uint32_t>(sData->fsaMessageBuffer.size()));
    if (error < Error::OK) {
-      return false;
+      return error;
    }
 
    auto queueId = static_cast<kernel::MessageQueueId>(error);
    sData->fsaMessageQueue = queueId;
 
-   if (!kernel::IOS_RegisterResourceManager("/dev/fsa", sData->fsaMessageQueue)) {
-      return false;
+   error = kernel::IOS_RegisterResourceManager("/dev/fsa",
+                                               sData->fsaMessageQueue);
+   if (error < Error::OK) {
+      return error;
    }
 
-   if (!kernel::IOS_SetResourcePermissionGroup("/dev/fsa", kernel::ResourcePermissionGroup::FS)) {
-      return false;
+   error = kernel::IOS_SetResourcePermissionGroup("/dev/fsa",
+                                                  kernel::ResourcePermissionGroup::FS);
+   if (error < Error::OK) {
+      return error;
    }
 
    error = kernel::IOS_CreateThread(fsaThreadMain,
@@ -334,16 +338,18 @@ startFsaThread()
                                     78,
                                     kernel::ThreadFlags::Detached);
    if (error < Error::OK) {
-      return false;
+      return error;
    }
 
    auto threadId = static_cast<kernel::ThreadId>(error);
    sData->fsaThread = threadId;
-   if (!kernel::IOS_StartThread(sData->fsaThread)) {
-      return false;
+
+   error = kernel::IOS_StartThread(sData->fsaThread);
+   if (error < Error::OK) {
+      return error;
    }
 
-   return true;
+   return Error::OK;
 }
 
 } // namespace ios::fs::internal
