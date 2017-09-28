@@ -14,11 +14,10 @@
 namespace kernel
 {
 
-struct PhysicalMemoryMap
+struct PhysicalRange
 {
    cpu::PhysicalAddress start;
    cpu::PhysicalAddress end;
-   PhysicalRegion id;
 
    uint32_t size() const
    {
@@ -26,11 +25,10 @@ struct PhysicalMemoryMap
    }
 };
 
-struct VirtualMemoryMap
+struct VirtualMap
 {
    cpu::VirtualAddress start;
    cpu::VirtualAddress end;
-   VirtualRegion id;
    PhysicalRegion physicalRegion;
    bool mapped = false;
 
@@ -50,71 +48,88 @@ static cpu::VirtualAddress operator "" _vaddr(unsigned long long int x)
    return cpu::VirtualAddress { static_cast<uint32_t>(x) };
 }
 
-static PhysicalMemoryMap
-sPhysicalMemoryMap[] = {
+static std::map<PhysicalRegion, PhysicalRange>
+sPhysicalMemoryMap {
    // MEM1 - 32 MB
-   { 0x00000000_paddr , 0x01FFFFFF_paddr, PhysicalRegion::MEM1 },
+   { PhysicalRegion::MEM1,                   { 0x00000000_paddr , 0x01FFFFFF_paddr } },
 
    // LockedCache (not present on hardware) - 16 KB per core
    // Note we have to use the page size, 128kb, as that is the minimum we can map.
-   { 0x02000000_paddr, 0x0201FFFF_paddr, PhysicalRegion::LockedCache },
+   { PhysicalRegion::LockedCache,            { 0x02000000_paddr, 0x0201FFFF_paddr } },
 
    // MEM0 - 2.68 MB / 2,752 KB
-   //0x08000000   --   0x0811FFFF = unused
-   { 0x08000000_paddr, 0x082DFFFF_paddr, PhysicalRegion::MEM0 },
-   { 0x08120000_paddr, 0x081BFFFF_paddr, PhysicalRegion::MEM0IosKernel },         // 640 KB
-   { 0x081C0000_paddr, 0x0827FFFF_paddr, PhysicalRegion::MEM0IosMcp },            // 768 KB
-   { 0x08280000_paddr, 0x082AFFFF_paddr, PhysicalRegion::MEM0IosCrypto },         // 192 KB
-   //0x082C0000   --   0x082DFFFF = unused
+   // unused                                   0x08000000   --   0x0811FFFF
+   { PhysicalRegion::MEM0,                   { 0x08000000_paddr, 0x082DFFFF_paddr } },
+   { PhysicalRegion::MEM0IosKernel,          { 0x08120000_paddr, 0x081BFFFF_paddr } },
+   { PhysicalRegion::MEM0IosMcp,             { 0x081C0000_paddr, 0x0827FFFF_paddr } },
+   { PhysicalRegion::MEM0IosCrypto,          { 0x08280000_paddr, 0x082BFFFF_paddr } },
+   // IOS BSP unknown                          0x082C0000   --   0x082DFFFF
 
    // MMIO / Registers
-   //  0x0C000000  --  0x0C?????? = unused
-   //  0x0D000000  --  0x0D?????? = unused
+   //  0x0C000000  --  0x0C??????
+   //  0x0D000000  --  0x0D??????
 
    // MEM2 - 2 GB
-   { 0x10000000_paddr, 0x8FFFFFFF_paddr, PhysicalRegion::MEM2 },
-   { 0x10000000_paddr, 0x13FFFFFF_paddr, PhysicalRegion::MEM2IosHeap },           // 64 MB
-   { 0x14000000_paddr, 0x17FFFFFF_paddr, PhysicalRegion::MEM2ForegroundBucket },  // 64 MB
-   { 0x18000000_paddr, 0x1AFFFFFF_paddr, PhysicalRegion::MEM2SharedData },        // 48 MB
-   { 0x1B000000_paddr, 0x1FFFFFFF_paddr, PhysicalRegion::MEM2LoaderHeap },        // 80 MB
-   { 0x20000000_paddr, 0x2FFFFFFF_paddr, PhysicalRegion::MEM2TilingApertures },   // 256 MB
-   //0x30000000   --   0x31FFFFFF = unused { root.rpx }
-   { 0x32000000_paddr, 0x327FFFFF_paddr, PhysicalRegion::MEM2SystemHeap },        // 8 MB
-   //0x32800000   --   0x32ffffff = unused { unknown }
-   //0x33000000   --   0x33FFFFFF = unused { error display }
-   { 0x34000000_paddr, 0x4FFFFFFF_paddr, PhysicalRegion::MEM2OverlayArena },      // 448 MB
-   { 0x50000000_paddr, 0x8FFFFFFF_paddr, PhysicalRegion::MEM2AppHeap },           // 1 GB
+   { PhysicalRegion::MEM2,                   { 0x10000000_paddr, 0x8FFFFFFF_paddr } },
+   // IOS MCP unknown                          0x10000000   --   0x100FFFFF
+   { PhysicalRegion::MEM2IosUsb,             { 0x10100000_paddr, 0x106FFFFF_paddr } },
+   { PhysicalRegion::MEM2IosFs,              { 0x10700000_paddr, 0x11EFFFFF_paddr } },
+   { PhysicalRegion::MEM2IosPad,             { 0x11F00000_paddr, 0x122FFFFF_paddr } },
+   { PhysicalRegion::MEM2IosNet,             { 0x12300000_paddr, 0x128FFFFF_paddr } },
+   { PhysicalRegion::MEM2IosAcp,             { 0x12900000_paddr, 0x12BBFFFF_paddr } },
+   { PhysicalRegion::MEM2IosNsec,            { 0x12BC0000_paddr, 0x12EBFFFF_paddr } },
+   { PhysicalRegion::MEM2IosNimBoss,         { 0x12EC0000_paddr, 0x1363FFFF_paddr } },
+   { PhysicalRegion::MEM2IosFpd,             { 0x13640000_paddr, 0x13A3FFFF_paddr } },
+   { PhysicalRegion::MEM2IosTest,            { 0x13A40000_paddr, 0x13BFFFFF_paddr } },
+   { PhysicalRegion::MEM2IosAuxil,           { 0x13C00000_paddr, 0x13CBFFFF_paddr } },
+   { PhysicalRegion::MEM2IosBsp,             { 0x13CC0000_paddr, 0x13D7FFFF_paddr } },
+   // IOS MCP unknown                          0x13D80000   --   0x13DBFFFF
+   { PhysicalRegion::MEM2ForegroundBucket,   { 0x14000000_paddr, 0x17FFFFFF_paddr } },
+   { PhysicalRegion::MEM2SharedData,         { 0x18000000_paddr, 0x1AFFFFFF_paddr } },
+   { PhysicalRegion::MEM2LoaderHeap,         { 0x1B000000_paddr, 0x1CFFFFFF_paddr } },
+   { PhysicalRegion::MEM2IosSharedHeap,      { 0x1D000000_paddr, 0x1FAFFFFF_paddr } },
+   // IOS NET iobuf                            0x1FB00000   --   0x1FDFFFFF
+   // IOS MCP unknown                          0x1FE00000   --   0x1FE3FFFF
+   // IOS MCP unknown                          0x1FE40000   --   0x1FFFFFFF
+   // IOS FS ramdisk                           0x20000000   --   0x27FFFFFF
+   { PhysicalRegion::MEM2TilingApertures,    { 0x20000000_paddr, 0x2FFFFFFF_paddr } }, // TODO: Move tiling apertures away from ramdisk memory.
+   // root.rpx                                 0x30000000   --   0x31FFFFFF
+   { PhysicalRegion::MEM2SystemHeap,         { 0x32000000_paddr, 0x327FFFFF_paddr } },
+   // unknown                                  0x32800000   --   0x32FFFFFF
+   // Error Display                            0x33000000   --   0x33FFFFFF
+   { PhysicalRegion::MEM2OverlayArena,       { 0x34000000_paddr, 0x4FFFFFFF_paddr } },
+   { PhysicalRegion::MEM2AppHeap,            { 0x50000000_paddr, 0x8FFFFFFF_paddr } },
 
    // SRAM1 - 32 KB
-   { 0xFFF00000_paddr, 0xFFF07FFF_paddr, PhysicalRegion::SRAM1 },
-   { 0xFFF00000_paddr, 0xFFF07FFF_paddr, PhysicalRegion::SRAM1C2W },              // 32 KB
+   //0xFFF00000   --   0xFFF07FFF = IOS MCP sram1
+   { PhysicalRegion::SRAM1,                  { 0xFFF00000_paddr, 0xFFF07FFF_paddr } },
+   { PhysicalRegion::SRAM1C2W,               { 0xFFF00000_paddr, 0xFFF07FFF_paddr } },
 
    // SRAM0 - 64 KB
-   { 0xFFFF0000_paddr, 0xFFFFFFFF_paddr, PhysicalRegion::SRAM0 },
-   { 0xFFFF0000_paddr, 0xFFFFFFFF_paddr, PhysicalRegion::SRAM0IosKernel },        // 64 KB
+   //0xFFFF0000   --   0xFFFFFFFF = IOS kernel sram0
+   { PhysicalRegion::SRAM0,                  { 0xFFFF0000_paddr, 0xFFFFFFFF_paddr } },
+   { PhysicalRegion::SRAM0IosKernel,         { 0xFFFF0000_paddr, 0xFFFFFFFF_paddr } },
 };
 
-static VirtualMemoryMap
-sVirtualMemoryMap[] = {
-   { 0x01000000_vaddr, 0x017FFFFF_vaddr, VirtualRegion::SystemHeap,         PhysicalRegion::MEM2SystemHeap },         // 8 MB
-   //0x01800000   --   0x01FFFFFF = unused
-   { 0x02000000_vaddr, 0x0FFFFFFF_vaddr, VirtualRegion::AppHeapCode,        PhysicalRegion::MEM2AppHeap },            // AppHeap 1GB
-   { 0x10000000_vaddr, 0x4FFFFFFF_vaddr, VirtualRegion::AppHeapData,        PhysicalRegion::MEM2AppHeap },
-   //0x50000000   --   0x5FFFFFFF = unused
-   { 0x60000000_vaddr, 0x7BFFFFFF_vaddr, VirtualRegion::OverlayArena,       PhysicalRegion::MEM2OverlayArena },       // 448 MB
-   //0x7C000000   --   0x7FFFFFFF = unused
-   { 0x80000000_vaddr, 0x8FFFFFFF_vaddr, VirtualRegion::TilingApertures,    PhysicalRegion::MEM2TilingApertures },    // 256 MB
-   //0x90000000   --   0x9FFFFFFF = unused
-   { 0xA0000000_vaddr, 0xDFFFFFFF_vaddr, VirtualRegion::VirtualMapRange,    PhysicalRegion::Invalid },                // 1024 MB
-   { 0xE0000000_vaddr, 0xE3FFFFFF_vaddr, VirtualRegion::ForegroundBucket,   PhysicalRegion::MEM2ForegroundBucket },   // 64 MB
-   //0xE4000000   --   0xE5FFFFFF = unused
-   { 0xE6000000_vaddr, 0xEAFFFFFF_vaddr, VirtualRegion::LoaderHeap,         PhysicalRegion::MEM2LoaderHeap },         // 80 MB
-   //0xEB000000   --   0xF3FFFFFF = unused
-   { 0xF4000000_vaddr, 0xF5FFFFFF_vaddr, VirtualRegion::MEM1,               PhysicalRegion::MEM1 },                   // 32 MB
-   //0xF6000000   --   0xF7FFFFFF = unused
-   { 0xF8000000_vaddr, 0xFAFFFFFF_vaddr, VirtualRegion::SharedData,         PhysicalRegion::MEM2SharedData },         // 48 MB
-   //0xFB000000   --   0xFFBFFFFF = unused
-   { 0xFFC00000_vaddr, 0xFFC1FFFF_vaddr, VirtualRegion::LockedCache,        PhysicalRegion::LockedCache },            // 128 KB
+static std::map<VirtualRegion, VirtualMap>
+sVirtualMemoryMap {
+   { VirtualRegion::SystemHeap,              { 0x01000000_vaddr, 0x017FFFFF_vaddr, PhysicalRegion::MEM2SystemHeap } },
+
+   { VirtualRegion::AppHeapCode,             { 0x02000000_vaddr, 0x0FFFFFFF_vaddr, PhysicalRegion::MEM2AppHeap } },
+   { VirtualRegion::AppHeapData,             { 0x10000000_vaddr, 0x4FFFFFFF_vaddr, PhysicalRegion::MEM2AppHeap } },
+
+   { VirtualRegion::OverlayArena,            { 0x60000000_vaddr, 0x7BFFFFFF_vaddr, PhysicalRegion::MEM2OverlayArena } },
+
+   { VirtualRegion::TilingApertures,         { 0x80000000_vaddr, 0x8FFFFFFF_vaddr, PhysicalRegion::MEM2TilingApertures } },
+
+   { VirtualRegion::VirtualMapRange,         { 0xA0000000_vaddr, 0xDFFFFFFF_vaddr, PhysicalRegion::Invalid } },
+   { VirtualRegion::ForegroundBucket,        { 0xE0000000_vaddr, 0xE3FFFFFF_vaddr, PhysicalRegion::MEM2ForegroundBucket } },
+
+   { VirtualRegion::MEM1,                    { 0xF4000000_vaddr, 0xF5FFFFFF_vaddr, PhysicalRegion::MEM1 } },
+
+   { VirtualRegion::SharedData,              { 0xF8000000_vaddr, 0xFAFFFFFF_vaddr, PhysicalRegion::MEM2SharedData } },
+
+   { VirtualRegion::LockedCache,             { 0xFFC00000_vaddr, 0xFFC1FFFF_vaddr, PhysicalRegion::LockedCache } },
 };
 
 // Maybe this is 1 page per core?
@@ -123,7 +138,7 @@ static auto sAvailPhysicalBase = cpu::PhysicalAddress { 0 };
 static const auto AvailPhysicalSize = uint32_t { 3 * 128 * 1024 };
 
 static bool
-map(VirtualMemoryMap &map)
+map(VirtualMap &map)
 {
    auto &physicalRegion = sPhysicalMemoryMap[map.physicalRegion];
    auto physSize = static_cast<uint32_t>(physicalRegion.end - physicalRegion.start + 1);
@@ -150,7 +165,7 @@ map(VirtualMemoryMap &map)
 }
 
 static void
-unmap(VirtualMemoryMap &map)
+unmap(VirtualMap &map)
 {
    if (map.mapped) {
       auto size = static_cast<uint32_t>(map.end - map.start + 1);
@@ -187,24 +202,9 @@ freeVirtualMemory()
    unmap(sVirtualMemoryMap[VirtualRegion::SharedData]);
    unmap(sVirtualMemoryMap[VirtualRegion::LockedCache]);
 
-   freeLoaderMemory();
    freeOverlayArena();
    freeTilingApertures();
    freeAppMemory();
-}
-
-cpu::VirtualAddressRange
-initialiseLoaderMemory()
-{
-   auto &region = sVirtualMemoryMap[VirtualRegion::LoaderHeap];
-   map(region);
-   return { region.start, region.end };
-}
-
-void
-freeLoaderMemory()
-{
-   unmap(sVirtualMemoryMap[VirtualRegion::LoaderHeap]);
 }
 
 cpu::VirtualAddressRange

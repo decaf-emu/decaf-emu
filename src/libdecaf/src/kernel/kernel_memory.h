@@ -11,12 +11,6 @@ void
 initialiseVirtualMemory();
 
 cpu::VirtualAddressRange
-initialiseLoaderMemory();
-
-void
-freeLoaderMemory();
-
-cpu::VirtualAddressRange
 initialiseOverlayArena();
 
 void
