@@ -536,6 +536,13 @@ processRelocations(LoadedModule *loadedMod,
       auto &targetSec = sections[section.header.info];
       auto &symStrTab = sections[symSec.header.link];
 
+      if (targetSec.header.type == elf::SHT_RPL_EXPORTS ||
+          targetSec.header.type == elf::SHT_RPL_IMPORTS ||
+          targetSec.header.type == elf::SHT_SYMTAB) {
+         // We already manually relocate in process{Imports,Exports,Symbols}.
+         continue;
+      }
+
       auto targetBaseAddr = targetSec.header.addr;
       auto targetVirtAddr = targetSec.virtAddress;
 
@@ -1114,8 +1121,7 @@ loadRPL(const std::string &moduleName,
             section.loaderBuffer = buffer;
             section.memory = section.loaderBuffer.data();
             section.virtAddress = 0;
-            section.virtSize = buffer.size();
-            // allocData = loadAllocator.allocate(buffer.size(), section.header.addralign);
+            section.virtSize = static_cast<uint32_t>(buffer.size());
          }
 
       }
