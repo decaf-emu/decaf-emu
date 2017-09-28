@@ -1,9 +1,17 @@
 #include "ios_kernel_process.h"
 #include "ios_kernel_thread.h"
+
+#include "kernel/kernel_memory.h"
+
+#include <array>
 #include <cstring>
+#include <common/frameallocator.h>
 
 namespace ios::kernel
 {
+
+static std::array<FrameAllocator, NumIosProcess>
+sProcessStaticAllocators;
 
 Error
 IOS_GetCurrentProcessId()
@@ -100,6 +108,42 @@ IOS_GetProcessName(ProcessId process,
 namespace internal
 {
 
+static void
+initialiseAllocator(FrameAllocator &allocator, cpu::PhysicalAddressRange range)
+{
+   allocator = FrameAllocator {
+      phys_ptr<uint8_t> { range.start }.getRawPointer(),
+      range.size
+   };
+}
+
+void
+initialiseProcessStaticAllocators()
+{
+   using ::kernel::getPhysicalRange;
+   using ::kernel::PhysicalRegion;
+
+   /*
+   ENUM_VALUE(BSP,                  2)
+   ENUM_VALUE(CRYPTO,               3)
+   ENUM_VALUE(USB,                  4)
+   ENUM_VALUE(FS,                   5)
+   ENUM_VALUE(PAD,                  6)
+   ENUM_VALUE(NET,                  7)
+   ENUM_VALUE(ACP,                  8)
+   ENUM_VALUE(NSEC,                 9)
+   ENUM_VALUE(AUXIL,                10)
+   ENUM_VALUE(NIM,                  11)
+   ENUM_VALUE(FPD,                  12)
+   ENUM_VALUE(IOSTEST,              13)
+   */
+   initialiseAllocator(sProcessStaticAllocators[ProcessId::KERNEL],
+                       getPhysicalRange(PhysicalRegion::MEM0IosKernel));
+
+   initialiseAllocator(sProcessStaticAllocators[ProcessId::MCP],
+                       getPhysicalRange(PhysicalRegion::MEM0IosMcp));
+}
+
 ProcessId
 getCurrentProcessId()
 {
@@ -109,6 +153,18 @@ getCurrentProcessId()
    }
 
    return thread->pid;
+}
+
+phys_ptr<void>
+allocProcessStatic(size_t size)
+{
+   auto pid = getCurrentProcessId();
+   decaf_check(pid < sProcessStaticAllocators.size());
+
+   auto &allocator = sProcessStaticAllocators[pid];
+   auto buffer = allocator.allocate(size);
+   std::memset(buffer, 0, size);
+   return cpu::translatePhysical(buffer);
 }
 
 } // namespace internal
