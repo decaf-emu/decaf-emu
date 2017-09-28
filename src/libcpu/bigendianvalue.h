@@ -52,16 +52,17 @@ public:
       return value();
    }
 
-   template<typename T = Type, typename = typename std::enable_if<std::is_convertible_v<T, bool> ||
-                                                                  std::is_constructible_v<bool, T>>::type>
+   template<typename T = Type, typename = typename std::enable_if<std::is_convertible<T, bool>::value ||
+                                                                  std::is_constructible<bool, T>::value
+                                                                 >::type>
    explicit operator bool() const
    {
       return static_cast<bool>(value());
    }
 
-   template<typename OtherType, typename = typename std::enable_if<std::is_convertible_v<Type, OtherType> ||
-                                                                    std::is_constructible_v<OtherType, Type> ||
-                                                                    std::is_convertible_v<Type, safe_underlying_type<OtherType>::type>
+   template<typename OtherType, typename = typename std::enable_if<std::is_convertible<Type, OtherType>::value ||
+                                                                    std::is_constructible<OtherType, Type>::value ||
+                                                                    std::is_convertible<Type, safe_underlying_type<OtherType>::type>::value
                                                                    >::type>
    explicit operator OtherType() const
    {
