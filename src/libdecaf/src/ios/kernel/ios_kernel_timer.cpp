@@ -2,6 +2,9 @@
 #include "ios_kernel_messagequeue.h"
 #include "ios_kernel_process.h"
 #include "ios_kernel_thread.h"
+
+#include "ios/ios_stackobject.h"
+
 #include <chrono>
 
 namespace ios::kernel
@@ -29,20 +32,18 @@ sStartupTime;
 namespace internal
 {
 
-bool
+uint32_t
 startTimer(phys_ptr<Timer> timer);
 
 void
-setAlarm(TimerValue when);
+setAlarm(TimerTicks when);
 
 } // namespace internal
 
-TimerValue
-IOS_GetTimerValue()
+TimerTicks
+IOS_GetTimerTicks()
 {
-   auto now = std::chrono::steady_clock::now();
-   auto ticks = std::chrono::duration_cast<TimerDuration>(now - sStartupTime);
-   return static_cast<TimerValue>(ticks.count());
+   return internal::timeToTicks(std::chrono::steady_clock::now());
 }
 
 Error
@@ -86,9 +87,9 @@ IOS_CreateTimer(std::chrono::microseconds delay,
 
    timer.uid = timerIdx | ((timerManager.totalCreatedTimers << 12) & 0x7FFFFFFF);
    timer.state = TimerState::Ready;
-   timer.nextTriggerTime = TimerValue { 0 };
+   timer.nextTriggerTime = TimerTicks { 0 };
    timer.period = static_cast<TimeMicroseconds>(period.count());
-   timer.queue = queue;
+   timer.queueId = queue;
    timer.message = message;
    timer.processId = pid;
    timer.prevTimerIdx = int16_t { -1 };
@@ -100,7 +101,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
    }
 
    if (delay.count() || period.count()) {
-      timer.nextTriggerTime = IOS_GetTimerValue() + delay;
+      timer.nextTriggerTime = IOS_GetTimerTicks() + internal::durationToTicks(delay);
       if (internal::startTimer(phys_addrof(timer)) == 0) {
          internal::setAlarm(timer.nextTriggerTime);
       }
@@ -136,7 +137,7 @@ IOS_DestroyTimer(TimerId timerId)
    timer->queueId = MessageQueueId { -4 };
    timer->message = Message { 0 };
    timer->period = 0u;
-   timer->nextTriggerTime = TimerValue { 0 };
+   timer->nextTriggerTime = TimerTicks{ 0 };
 
    if (timerManager.lastFreeIdx < 0) {
       timerManager.firstFreeIdx = timer->index;
@@ -197,13 +198,13 @@ IOS_RestartTimer(TimerId timerId,
       }
    }
 
-   timer->nextTriggerTime = TimerValue { 0 };
+   timer->nextTriggerTime = TimerTicks { 0 };
    timer->period = static_cast<TimeMicroseconds>(period.count());
 
    if (delay.count() || period.count()) {
-      timer->nextTriggerTime = IOS_GetTimerValue() + delay;
+      timer->nextTriggerTime = IOS_GetTimerTicks() + internal::durationToTicks(delay);
       if (internal::startTimer(timer) == 0) {
-         internal::setAlarm(timer.nextTriggerTime);
+         internal::setAlarm(timer->nextTriggerTime);
       }
    }
 
@@ -226,20 +227,28 @@ timerThreadEntry(phys_ptr<void> /*context*/)
          return error;
       }
 
-      auto now = IOS_GetTimerValue();
+      auto now = IOS_GetTimerTicks();
       while (true) {
          // Trigger all ready timers
+
       }
    }
 }
 
 void
-setAlarm(TimerValue when)
+setAlarm(TimerTicks when)
 {
    // TODO: Hook this up to a timer which triggers a timer interrupt
 }
 
-void
+TimerTicks
+timeToTicks(std::chrono::steady_clock::time_point time)
+{
+   auto dt = time - sStartupTime;
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(dt).count();
+}
+
+Error
 startTimerThread()
 {
    sStartupTime = std::chrono::steady_clock::now();

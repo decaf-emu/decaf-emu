@@ -17,16 +17,16 @@ constexpr auto MaxNumTimers = 256u;
 constexpr auto MaxNumTimersPerProcess = 64u;
 
 using TimerId = uint32_t;
-using TimerValue = uint64_t;
+using TimerTicks = uint64_t;
 using TimeMicroseconds = uint32_t;
 
 struct Timer
 {
    be2_val<TimerId> uid;
    be2_val<TimerState> state;
-   be2_val<TimerValue> nextTriggerTime;
+   be2_val<TimerTicks> nextTriggerTime;
    be2_val<TimeMicroseconds> period;
-   be2_val<MessageQueueId> queue;
+   be2_val<MessageQueueId> queueId;
    be2_val<Message> message;
    be2_val<ProcessId> processId;
 
@@ -47,7 +47,7 @@ CHECK_OFFSET(Timer, 0x00, uid);
 CHECK_OFFSET(Timer, 0x04, state);
 CHECK_OFFSET(Timer, 0x08, nextTriggerTime);
 CHECK_OFFSET(Timer, 0x10, period);
-CHECK_OFFSET(Timer, 0x14, queue);
+CHECK_OFFSET(Timer, 0x14, queueId);
 CHECK_OFFSET(Timer, 0x18, message);
 CHECK_OFFSET(Timer, 0x1C, processId);
 CHECK_OFFSET(Timer, 0x20, index);
@@ -103,8 +103,8 @@ CHECK_OFFSET(TimerManager, 0x30, timers);
 
 #pragma pack(pop)
 
-TimerValue
-IOS_GetTimerValue();
+TimerTicks
+IOS_GetTimerTicks();
 
 Error
 IOS_CreateTimer(std::chrono::microseconds delay,
@@ -132,6 +132,16 @@ getTimer(TimerId id,
 
 Error
 stopTimer(phys_ptr<Timer> timer);
+
+TimerTicks
+timeToTicks(std::chrono::steady_clock::time_point time);
+
+template<class Rep, class Period>
+TimerTicks
+durationToTicks(std::chrono::duration<Rep, Period> duration)
+{
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+}
 
 } // namespace internal
 
