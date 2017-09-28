@@ -43,6 +43,9 @@ rescheduleSelfNoLock(bool yielding = false);
 void
 handleSchedulerInterrupt();
 
+void
+initialiseStaticSchedulerData();
+
 } // namespace internal
 
 } // namespace ios::kernel

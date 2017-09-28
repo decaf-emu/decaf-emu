@@ -14,7 +14,7 @@
 namespace ios::kernel
 {
 
-struct ResourceData
+struct StaticData
 {
    ResourceManagerList resourceManagerList;
    ResourceRequestList resourceRequestList;
@@ -22,7 +22,7 @@ struct ResourceData
    be2_val<uint32_t> totalOpenedHandles;
 };
 
-static phys_ptr<ResourceData>
+static phys_ptr<StaticData>
 sData;
 
 namespace internal
@@ -1270,9 +1270,9 @@ setClientCapability(ProcessId pid,
 }
 
 void
-kernelInitialiseResourceManager()
+initialiseStaticResourceManagerData()
 {
-   // TODO: Allocate & zero sData
+   sData = allocProcessStatic<StaticData>();
 
    // Initialise resourceManagerList
    auto &resourceManagerList = sData->resourceManagerList;

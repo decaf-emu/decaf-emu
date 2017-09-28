@@ -8,7 +8,7 @@
 namespace ios::kernel
 {
 
-struct MessageQueueData
+struct StaticData
 {
    be2_array<MessageQueue, MaxNumMessageQueues> queues;
    be2_val<uint32_t> numCreatedQueues;
@@ -17,7 +17,7 @@ struct MessageQueueData
    be2_array<Message, MaxNumThreads> perThreadMesssages;
 };
 
-static phys_ptr<MessageQueueData>
+static phys_ptr<StaticData>
 sData;
 
 
@@ -292,9 +292,9 @@ receiveMessage(phys_ptr<MessageQueue> queue,
 }
 
 void
-kernelInitialiseMessageQueue()
+initialiseStaticMessageQueueData()
 {
-   // TODO: Allocate & zero sData
+   sData = allocProcessStatic<StaticData>();
 
    for (auto i = 0u; i < sData->perThreadQueues.size(); ++i) {
       auto &queue = sData->perThreadQueues[i];

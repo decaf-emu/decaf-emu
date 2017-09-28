@@ -1,5 +1,6 @@
 #include "ios_kernel_thread.h"
 #include "ios_kernel_threadqueue.h"
+#include "ios_kernel_process.h"
 #include "ios_kernel_scheduler.h"
 
 #include <array>
@@ -8,13 +9,13 @@
 namespace ios::kernel
 {
 
-struct ThreadData
+struct StaticData
 {
    be2_array<Thread, MaxNumThreads> threads;
    be2_val<uint32_t> numActiveThreads = 0;
 };
 
-static phys_ptr<ThreadData>
+static phys_ptr<StaticData>
 sData;
 
 namespace internal
@@ -429,10 +430,9 @@ getThread(ThreadId id)
 }
 
 void
-kernelInitialiseThread()
+initialiseStaticThreadData()
 {
-   sData = phys_addr { 0xFFFF4D78 };
-   std::memset(sData.getRawPointer(), 0, sizeof(ThreadData));
+   sData = allocProcessStatic<StaticData>();
 }
 
 } // namespace internal

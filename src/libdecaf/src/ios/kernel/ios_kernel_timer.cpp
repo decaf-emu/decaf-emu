@@ -14,7 +14,7 @@ constexpr auto NumMessages = 1u;
 constexpr auto ThreadStackSize = 0x400u;
 constexpr auto ThreadPriority = 125u;
 
-struct TimerData
+struct StaticData
 {
    be2_val<ThreadId> threadId;
    be2_val<MessageQueueId> messageQueueId;
@@ -23,7 +23,7 @@ struct TimerData
    be2_struct<TimerManager> timerManager;
 };
 
-static phys_ptr<TimerData>
+static phys_ptr<StaticData>
 sData;
 
 static std::chrono::time_point<std::chrono::steady_clock>
@@ -253,9 +253,6 @@ startTimerThread()
 {
    sStartupTime = std::chrono::steady_clock::now();
 
-   // TODO: Alloc sData
-   // TODO: Initialise sData as per kernel::initTimerThread
-
    // Create message queue
    auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer), sData->messageBuffer.size());
    if (error < Error::OK) {
@@ -383,6 +380,28 @@ stopTimer(phys_ptr<Timer> timer)
    timer->nextTimerIdx = int16_t { -1 };
    timerManager.numRunningTimers--;
    return Error::OK;
+}
+
+void
+initialiseStaticTimerData()
+{
+   sData = allocProcessStatic<StaticData>();
+
+   for (auto i = 0; i < sData->timerManager.timers.size(); ++i) {
+      auto &timer = sData->timerManager.timers[i];
+      timer.uid = TimerId { -4 };
+      timer.processId = ProcessId { -4 };
+      timer.state = TimerState::Free;
+      timer.prevTimerIdx = static_cast<int16_t>(i - 1);
+      timer.index = static_cast<int16_t>(i);
+      timer.nextTimerIdx = static_cast<int16_t>(i + 1);
+   }
+
+   sData->timerManager.timers[sData->timerManager.timers.size() - 1].nextTimerIdx = int16_t { -1 };
+   sData->timerManager.firstFreeIdx = int16_t { 0 };
+   sData->timerManager.lastFreeIdx = int16_t { 255 };
+   sData->timerManager.firstRunningTimerIdx = int16_t { -1 };
+   sData->timerManager.lastRunningTimerIdx = int16_t { -1 };
 }
 
 } // namespace internal

@@ -143,6 +143,12 @@ durationToTicks(std::chrono::duration<Rep, Period> duration)
    return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 }
 
+Error
+startTimerThread();
+
+void
+initialiseStaticTimerData();
+
 } // namespace internal
 
 } // namespace ios::kernel

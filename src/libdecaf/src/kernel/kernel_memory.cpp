@@ -78,7 +78,7 @@ sPhysicalMemoryMap {
    { PhysicalRegion::MEM2IosNet,             { 0x12300000_paddr, 0x128FFFFF_paddr } },
    { PhysicalRegion::MEM2IosAcp,             { 0x12900000_paddr, 0x12BBFFFF_paddr } },
    { PhysicalRegion::MEM2IosNsec,            { 0x12BC0000_paddr, 0x12EBFFFF_paddr } },
-   { PhysicalRegion::MEM2IosNimBoss,         { 0x12EC0000_paddr, 0x1363FFFF_paddr } },
+   { PhysicalRegion::MEM2IosNim,             { 0x12EC0000_paddr, 0x1363FFFF_paddr } },
    { PhysicalRegion::MEM2IosFpd,             { 0x13640000_paddr, 0x13A3FFFF_paddr } },
    { PhysicalRegion::MEM2IosTest,            { 0x13A40000_paddr, 0x13BFFFFF_paddr } },
    { PhysicalRegion::MEM2IosAuxil,           { 0x13C00000_paddr, 0x13CBFFFF_paddr } },

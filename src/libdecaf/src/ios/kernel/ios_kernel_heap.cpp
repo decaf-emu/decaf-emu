@@ -14,14 +14,14 @@ constexpr auto MaxNumProcessHeaps = 14u;
 constexpr auto HeapAllocSizeAlign = 32u;
 constexpr auto HeapAllocAlignAlign = 32u;
 
-struct HeapData
+struct StaticData
 {
    be2_array<Heap, MaxNumHeaps> heaps;
    be2_array<HeapId, MaxNumProcessHeaps> localProcessHeaps;
    be2_array<HeapId, MaxNumProcessHeaps> crossProcessHeaps;
 };
 
-static phys_ptr<HeapData>
+static phys_ptr<StaticData>
 sData;
 
 static Error
@@ -474,5 +474,27 @@ IOS_HeapFreeAndZero(HeapId id,
 {
    return heapFree(id, ptr, true);
 }
+
+namespace internal
+{
+
+void
+initialiseStaticHeapData()
+{
+   sData = allocProcessStatic<StaticData>();
+   for (auto i = 0u; i < sData->heaps.size(); ++i) {
+      sData->heaps[i].pid = ProcessId { -4 };
+   }
+
+   for (auto i = 0u; i < sData->localProcessHeaps.size(); ++i) {
+      sData->localProcessHeaps[i] = HeapId { -4 };
+   }
+
+   for (auto i = 0u; i < sData->crossProcessHeaps.size(); ++i) {
+      sData->crossProcessHeaps[i] = HeapId { -4 };
+   }
+}
+
+} // namespace internal
 
 } // namespace ios::kernel

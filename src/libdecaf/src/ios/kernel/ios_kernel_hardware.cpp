@@ -22,12 +22,12 @@ CHECK_OFFSET(EventHandler, 0x04, message);
 CHECK_OFFSET(EventHandler, 0x08, pid);
 CHECK_SIZE(EventHandler, 0x10);
 
-struct HardwareData
+struct StaticData
 {
    be2_array<EventHandler, 0x30> eventHandlers;
 };
 
-static phys_ptr<HardwareData>
+static phys_ptr<StaticData>
 sData;
 
 //! Interrupt mask for ARM AHB IRQs
@@ -456,6 +456,12 @@ setInterruptAhbLt(AHBLT mask)
 void
 setAlarm(std::chrono::steady_clock::time_point when)
 {
+}
+
+void
+initialiseStaticHardwareData()
+{
+   sData = allocProcessStatic<StaticData>();
 }
 
 } // namespace internal

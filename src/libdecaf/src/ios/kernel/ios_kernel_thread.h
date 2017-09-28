@@ -147,7 +147,7 @@ phys_ptr<Thread>
 getThread(ThreadId id);
 
 void
-kernelInitialiseThread();
+initialiseStaticThreadData();
 
 } // namespace internal
 

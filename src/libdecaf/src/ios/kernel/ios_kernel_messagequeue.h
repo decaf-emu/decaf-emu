@@ -85,7 +85,7 @@ receiveMessage(phys_ptr<MessageQueue> queue,
                MessageFlags flags);
 
 void
-kernelInitialiseMessageQueue();
+initialiseStaticMessageQueueData();
 
 } // namespace internal
 

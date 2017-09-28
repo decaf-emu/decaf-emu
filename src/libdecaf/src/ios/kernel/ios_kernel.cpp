@@ -1,7 +1,13 @@
 #include "ios/ios_enum.h"
 #include "ios_kernel.h"
-#include "ios_kernel_thread.h"
+#include "ios_kernel_hardware.h"
+#include "ios_kernel_heap.h"
+#include "ios_kernel_process.h"
+#include "ios_kernel_resourcemanager.h"
+#include "ios_kernel_semaphore.h"
 #include "ios_kernel_scheduler.h"
+#include "ios_kernel_thread.h"
+#include "ios_kernel_timer.h"
 
 #include <common/log.h>
 #include <functional>
@@ -49,11 +55,14 @@ kernelEntryPoint(phys_ptr<void> context)
 {
    setupMMU();
 
-   // TODO: Initialise semaphore list
-   // TODO: Initialise heap list
+   internal::startTimerThread();
+   internal::setClientCapability(ProcessId::KERNEL, FeatureId { 0x7FFFFFFF }, -1);
+   internal::setClientCapability(ProcessId::MCP, FeatureId { 0x7FFFFFFF }, -1);
+   internal::setClientCapability(ProcessId::BSP, FeatureId { 0x7FFFFFFF }, -1);
 
-   // TODO: Initialise kernel timer
-
+   for (auto i = +ProcessId::CRYPTO; i < NumIosProcess; ++i) {
+      internal::setClientCapability(ProcessId { i }, 1, 0xF);
+   }
    // TODO: Create heap 0x1D000000, 0x2B00000
 
    // TODO: IOS_CreateCrossProcessHeap 0x20000
@@ -77,8 +86,17 @@ kernelEntryPoint(phys_ptr<void> context)
 Error
 start()
 {
-   // Initialise memory
-   internal::kernelInitialiseThread();
+   // Initialise static memory
+   internal::initialiseProcessStaticAllocators();
+
+   internal::initialiseStaticHardwareData();
+   internal::initialiseStaticHeapData();
+   internal::initialiseStaticSchedulerData();
+   internal::initialiseStaticMessageQueueData();
+   internal::initialiseStaticResourceManagerData();
+   internal::initialiseStaticSemaphoreData();
+   internal::initialiseStaticThreadData();
+   internal::initialiseStaticTimerData();
 
    // Create root kernel thread
    auto error = IOS_CreateThread(kernelEntryPoint,

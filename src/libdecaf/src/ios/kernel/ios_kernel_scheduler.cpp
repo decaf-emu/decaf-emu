@@ -1,18 +1,19 @@
 #include "ios_kernel_scheduler.h"
 #include "ios_kernel_thread.h"
 #include "ios_kernel_threadqueue.h"
+#include "ios_kernel_process.h"
 #include "ios/ios_core.h"
 #include <mutex>
 
 namespace ios::kernel::internal
 {
 
-struct SchedulerData
+struct StaticData
 {
    be2_struct<ThreadQueue> runQueue;
 };
 
-static phys_ptr<SchedulerData>
+static phys_ptr<StaticData>
 sData = nullptr;
 
 static std::mutex
@@ -148,6 +149,12 @@ handleSchedulerInterrupt()
    internal::lockScheduler();
    rescheduleSelfNoLock(false);
    internal::unlockScheduler();
+}
+
+void
+initialiseStaticSchedulerData()
+{
+   sData = allocProcessStatic<StaticData>();
 }
 
 } // namespace ios::kernel::internal

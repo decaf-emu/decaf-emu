@@ -101,4 +101,12 @@ Error
 IOS_HeapFreeAndZero(HeapId id,
                     phys_ptr<void> ptr);
 
+namespace internal
+{
+
+void
+initialiseStaticHeapData();
+
+} // namespace internal
+
 } // namespace ios::kernel

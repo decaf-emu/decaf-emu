@@ -79,6 +79,9 @@ setInterruptAhbAll(AHBALL mask);
 void
 setInterruptAhbLt(AHBLT mask);
 
+void
+initialiseStaticHardwareData();
+
 } // namespace internal
 
 } // namespace ios::kernel

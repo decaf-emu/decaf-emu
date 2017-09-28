@@ -66,4 +66,12 @@ IOS_WaitSemaphore(SemaphoreId id,
 Error
 IOS_SignalSempahore(SemaphoreId id);
 
+namespace internal
+{
+
+void
+initialiseStaticSemaphoreData();
+
+} // namespace internal
+
 } // namespace ios::kernel

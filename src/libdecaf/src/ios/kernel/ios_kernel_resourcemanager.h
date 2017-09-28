@@ -421,7 +421,7 @@ setClientCapability(ProcessId pid,
                     uint64_t mask);
 
 void
-kernelInitialiseResourceManager();
+initialiseStaticResourceManagerData();
 
 } // namespace internal
 

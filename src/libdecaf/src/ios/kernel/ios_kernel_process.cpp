@@ -108,40 +108,36 @@ IOS_GetProcessName(ProcessId process,
 namespace internal
 {
 
-static void
-initialiseAllocator(FrameAllocator &allocator, cpu::PhysicalAddressRange range)
-{
-   allocator = FrameAllocator {
-      phys_ptr<uint8_t> { range.start }.getRawPointer(),
-      range.size
-   };
-}
-
 void
 initialiseProcessStaticAllocators()
 {
    using ::kernel::getPhysicalRange;
    using ::kernel::PhysicalRegion;
+   static constexpr std::pair<ProcessId, PhysicalRegion>
+   processRegionMap[] = {
+      { ProcessId::KERNEL,    PhysicalRegion::MEM0IosKernel },
+      { ProcessId::MCP,       PhysicalRegion::MEM0IosMcp },
+      { ProcessId::BSP,       PhysicalRegion::MEM2IosBsp },
+      { ProcessId::CRYPTO,    PhysicalRegion::MEM0IosCrypto },
+      { ProcessId::USB,       PhysicalRegion::MEM2IosUsb },
+      { ProcessId::FS,        PhysicalRegion::MEM2IosFs },
+      { ProcessId::PAD,       PhysicalRegion::MEM2IosPad },
+      { ProcessId::NET,       PhysicalRegion::MEM2IosNet },
+      { ProcessId::ACP,       PhysicalRegion::MEM2IosAcp },
+      { ProcessId::NSEC,      PhysicalRegion::MEM2IosNsec },
+      { ProcessId::AUXIL,     PhysicalRegion::MEM2IosAuxil },
+      { ProcessId::NIM,       PhysicalRegion::MEM2IosNim },
+      { ProcessId::FPD,       PhysicalRegion::MEM2IosFpd },
+      { ProcessId::IOSTEST,   PhysicalRegion::MEM2IosTest },
+   };
 
-   /*
-   ENUM_VALUE(BSP,                  2)
-   ENUM_VALUE(CRYPTO,               3)
-   ENUM_VALUE(USB,                  4)
-   ENUM_VALUE(FS,                   5)
-   ENUM_VALUE(PAD,                  6)
-   ENUM_VALUE(NET,                  7)
-   ENUM_VALUE(ACP,                  8)
-   ENUM_VALUE(NSEC,                 9)
-   ENUM_VALUE(AUXIL,                10)
-   ENUM_VALUE(NIM,                  11)
-   ENUM_VALUE(FPD,                  12)
-   ENUM_VALUE(IOSTEST,              13)
-   */
-   initialiseAllocator(sProcessStaticAllocators[ProcessId::KERNEL],
-                       getPhysicalRange(PhysicalRegion::MEM0IosKernel));
-
-   initialiseAllocator(sProcessStaticAllocators[ProcessId::MCP],
-                       getPhysicalRange(PhysicalRegion::MEM0IosMcp));
+   for (auto &processMap : processRegionMap) {
+      auto range = getPhysicalRange(processMap.second);
+      sProcessStaticAllocators[processMap.first] = FrameAllocator {
+            phys_ptr<uint8_t> { range.start }.getRawPointer(),
+            range.size
+         };
+   }
 }
 
 ProcessId
