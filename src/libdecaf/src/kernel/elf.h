@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <common/be_val.h>
 #include <common/structsize.h>
-#include "usermodule.h"
+#include <vector>
 
 class BigEndianView;
 
@@ -425,6 +425,7 @@ struct Section
    uint8_t *memory;
    uint32_t virtAddress;
    uint32_t virtSize;
+   std::vector<uint8_t> loaderBuffer;
 };
 
 #pragma pack(pop)

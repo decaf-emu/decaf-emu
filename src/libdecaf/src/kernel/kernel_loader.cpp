@@ -56,13 +56,7 @@ static uint32_t
 sModuleIndex = 0u;
 
 static TeenyHeap *
-sLoaderHeap = nullptr;
-
-static TeenyHeap *
 sCodeHeap = nullptr;
-
-static uint32_t
-sLoaderHeapRefs = 0;
 
 static void *
 codeAlloc(uint32_t size,
@@ -74,32 +68,6 @@ codeAlloc(uint32_t size,
    }
 
    return sCodeHeap->alloc(size, alignment);
-}
-
-static void *
-loaderAlloc(uint32_t size,
-            uint32_t alignment)
-{
-   sLoaderHeapRefs++;
-
-   if (!sLoaderHeap) {
-      auto memory = kernel::initialiseLoaderMemory();
-      sLoaderHeap = new TeenyHeap { cpu::VirtualPointer<void> { memory.start }.getRawPointer(),  memory.size };
-   }
-
-   return sLoaderHeap->alloc(size, alignment);
-}
-
-static void
-loaderFree(void *mem)
-{
-   sLoaderHeapRefs--;
-
-   if (sLoaderHeapRefs == 0) {
-      delete sLoaderHeap;
-      sLoaderHeap = nullptr;
-      kernel::freeLoaderMemory();
-   }
 }
 
 static LoadedModule *
@@ -603,7 +571,7 @@ processRelocations(LoadedModule *loadedMod,
 
                if (symbolSection->header.type == elf::SHT_RPL_IMPORTS) {
                   decaf_check(symAddr);
-                  symAddr = mem::read<uint32_t>(symAddr);
+                  symAddr = *reinterpret_cast<const uint32_t *>(symbolSection->loaderBuffer.data() + symAddr);
                }
 
                if (type != elf::R_PPC_DTPREL32 && type != elf::R_PPC_DTPMOD32) {
@@ -795,7 +763,14 @@ processImports(LoadedModule *loadedMod,
          // Write the symbol address into the .fimport or .dimport section
          auto offset = symbol.value - importSection.header.addr;
          auto importAddress = importSection.virtAddress + offset;
-         mem::write(importAddress, symbolAddress);
+
+         if (importSection.virtAddress) {
+            mem::write(importAddress, symbolAddress);
+         } else if (!importSection.loaderBuffer.empty()) {
+            *reinterpret_cast<uint32_t *>(importSection.loaderBuffer.data() + importAddress) = symbolAddress;
+         } else {
+            decaf_abort("Invalid importSection");
+         }
       }
    }
 
@@ -1095,7 +1070,6 @@ loadRPL(const std::string &moduleName,
 
    // Allocate all our memory chunks which will be used
    auto codeSegment = codeAlloc(info.textSize, info.textAlign);
-   auto loadSegment = loaderAlloc(info.loadSize, info.loadAlign);
    void *dataSegment = nullptr;
 
    if (coreinit::internal::dynLoadMemAlloc(info.dataSize, info.dataAlign, &dataSegment) != 0) {
@@ -1103,12 +1077,10 @@ loadRPL(const std::string &moduleName,
    }
 
    decaf_check(codeSegment);
-   decaf_check(loadSegment);
-   decaf_check(loadSegment);
+   decaf_check(dataSegment);
 
    auto codeAllocator = FrameAllocator { codeSegment, info.textSize };
    auto dataAllocator = FrameAllocator { dataSegment, info.dataSize };
-   auto loadAllocator = FrameAllocator { loadSegment, info.loadSize };
 
    // Allocate sections from our memory segments
    for (auto &section : sections) {
@@ -1133,19 +1105,24 @@ loadRPL(const std::string &moduleName,
             } else {
                allocData = dataAllocator.allocate(buffer.size(), section.header.addralign);
             }
+
+            memcpy(allocData, buffer.data(), buffer.size());
+            section.memory = reinterpret_cast<uint8_t*>(allocData);
+            section.virtAddress = mem::untranslate(allocData);
+            section.virtSize = static_cast<uint32_t>(buffer.size());
          } else {
-            allocData = loadAllocator.allocate(buffer.size(), section.header.addralign);
+            section.loaderBuffer = buffer;
+            section.memory = section.loaderBuffer.data();
+            section.virtAddress = 0;
+            section.virtSize = buffer.size();
+            // allocData = loadAllocator.allocate(buffer.size(), section.header.addralign);
          }
 
-         memcpy(allocData, buffer.data(), buffer.size());
-         section.memory = reinterpret_cast<uint8_t*>(allocData);
-         section.virtAddress = mem::untranslate(allocData);
-         section.virtSize = static_cast<uint32_t>(buffer.size());
       }
    }
 
    // Read strtab
-   auto shStrTab = reinterpret_cast<const char*>(sections[header->shstrndx].memory);
+   auto shStrTab = reinterpret_cast<const char *>(sections[header->shstrndx].memory);
 
    if (!shStrTab) {
       gLog->error("Section name table missing");
@@ -1292,10 +1269,7 @@ loadRPL(const std::string &moduleName,
    }
 
    // Add the modules entry point as an symbol called 'start'
-   loadedMod->symbols.emplace("__start", Symbol{ entryPoint, SymbolType::Function });
-
-   // Free the load segment
-   loaderFree(loadSegment);
+   loadedMod->symbols.emplace("__start", Symbol { entryPoint, SymbolType::Function });
 
    // Add all the modules symbols to the Global Symbol Map
    for (auto &i : loadedMod->symbols) {
