@@ -1,6 +1,6 @@
-#include "ios_mcp.h"
+#include "ios_nim.h"
 
-namespace ios::mcp
+namespace ios::nim
 {
 
 Error
@@ -9,4 +9,4 @@ processEntryPoint(phys_ptr<void> /* context */)
    return Error::OK;
 }
 
-} // namespace ios::mcp
+} // namespace ios::nim
