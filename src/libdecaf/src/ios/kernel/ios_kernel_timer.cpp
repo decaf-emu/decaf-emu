@@ -10,16 +10,16 @@
 namespace ios::kernel
 {
 
-constexpr auto NumMessages = 1u;
-constexpr auto ThreadStackSize = 0x400u;
-constexpr auto ThreadPriority = 125u;
+constexpr auto TimerThreadNumMessages = 1u;
+constexpr auto TimerThreadStackSize = 0x400u;
+constexpr auto TimerThreadPriority = 125u;
 
 struct StaticData
 {
    be2_val<ThreadId> threadId;
    be2_val<MessageQueueId> messageQueueId;
-   be2_array<Message, NumMessages> messageBuffer;
-   be2_array<uint8_t, ThreadStackSize> threadStack;
+   be2_array<Message, TimerThreadNumMessages> messageBuffer;
+   be2_array<uint8_t, TimerThreadStackSize> threadStack;
    be2_struct<TimerManager> timerManager;
 };
 
@@ -85,7 +85,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
 
    timerManager.totalCreatedTimers++;
 
-   timer.uid = timerIdx | ((timerManager.totalCreatedTimers << 12) & 0x7FFFFFFF);
+   timer.uid = timerIdx | static_cast<int32_t>((timerManager.totalCreatedTimers << 12) & 0x7FFFFFFF);
    timer.state = TimerState::Ready;
    timer.nextTriggerTime = TimerTicks { 0 };
    timer.period = static_cast<TimeMicroseconds>(period.count());
@@ -249,33 +249,6 @@ timeToTicks(std::chrono::steady_clock::time_point time)
 }
 
 Error
-startTimerThread()
-{
-   sStartupTime = std::chrono::steady_clock::now();
-
-   // Create message queue
-   auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer), sData->messageBuffer.size());
-   if (error < Error::OK) {
-      return error;
-   }
-   sData->messageQueueId = static_cast<MessageQueueId>(error);
-
-   // Create thread
-   error = kernel::IOS_CreateThread(&timerThreadEntry, nullptr,
-                                    phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    sData->threadStack.size(),
-                                    ThreadPriority,
-                                    kernel::ThreadFlags::Detached);
-   if (error < Error::OK) {
-      kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
-      return error;
-   }
-
-   sData->threadId = static_cast<kernel::ThreadId>(error);
-   return kernel::IOS_StartThread(sData->threadId);
-}
-
-Error
 getTimer(TimerId id,
          phys_ptr<Timer> *outTimer)
 {
@@ -382,9 +355,36 @@ stopTimer(phys_ptr<Timer> timer)
    return Error::OK;
 }
 
+Error
+startTimerThread()
+{
+   // Create message queue
+   auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                       static_cast<uint32_t>(sData->messageBuffer.size()));
+   if (error < Error::OK) {
+      return error;
+   }
+   sData->messageQueueId = static_cast<MessageQueueId>(error);
+
+   // Create thread
+   error = kernel::IOS_CreateThread(&timerThreadEntry, nullptr,
+                                    phys_addrof(sData->threadStack) + sData->threadStack.size(),
+                                    static_cast<uint32_t>(sData->threadStack.size()),
+                                    TimerThreadPriority,
+                                    kernel::ThreadFlags::Detached);
+   if (error < Error::OK) {
+      kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
+      return error;
+   }
+
+   sData->threadId = static_cast<kernel::ThreadId>(error);
+   return kernel::IOS_StartThread(sData->threadId);
+}
+
 void
 initialiseStaticTimerData()
 {
+   sStartupTime = std::chrono::steady_clock::now();
    sData = allocProcessStatic<StaticData>();
 
    for (auto i = 0; i < sData->timerManager.timers.size(); ++i) {

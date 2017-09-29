@@ -16,7 +16,7 @@ namespace ios::kernel
 constexpr auto MaxNumTimers = 256u;
 constexpr auto MaxNumTimersPerProcess = 64u;
 
-using TimerId = uint32_t;
+using TimerId = int32_t;
 using TimerTicks = uint64_t;
 using TimeMicroseconds = uint32_t;
 
@@ -140,7 +140,7 @@ template<class Rep, class Period>
 TimerTicks
 durationToTicks(std::chrono::duration<Rep, Period> duration)
 {
-   return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 }
 
 Error
