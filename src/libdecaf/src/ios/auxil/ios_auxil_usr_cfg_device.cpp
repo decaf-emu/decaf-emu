@@ -276,7 +276,6 @@ UCDevice::readSysConfig(uint32_t numVecIn,
                         phys_ptr<IoctlVec> vecs)
 {
    auto request = phys_ptr<UCReadSysConfigRequest> { vecs[0].paddr };
-   decaf_check(request->size == sizeof(UCSysConfig));
 
    for (auto i = 0u; i < request->count; ++i) {
       auto &setting = request->settings[i];
@@ -445,7 +444,6 @@ UCDevice::writeSysConfig(uint32_t numVecIn,
                          phys_ptr<IoctlVec> vecs)
 {
    auto request = phys_ptr<UCWriteSysConfigRequest> { vecs[0].paddr };
-   decaf_check(request->size == sizeof(UCSysConfig));
 
    for (auto i = 0u; i < request->count; ++i) {
       auto &setting = request->settings[i];
@@ -619,7 +617,7 @@ UCDevice::writeSysConfig(uint32_t numVecIn,
 
       auto xmlStr = ss.str();
 
-      fileSize = xmlStr.size() + 1;
+      fileSize = static_cast<uint32_t>(xmlStr.size() + 1);
       fileBuffer = UCAllocFileData(fileSize);
       if (!fileBuffer) {
          setting.error = UCError::Alloc;

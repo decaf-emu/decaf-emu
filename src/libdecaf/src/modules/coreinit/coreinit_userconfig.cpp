@@ -289,8 +289,8 @@ UCReadSysConfigAsync(IOSHandle handle,
    }
 
    request = reinterpret_cast<UCReadSysConfigRequest *>(msgBuf);
+   request->unk0x00 = 0u;
    request->count = count;
-   request->size = static_cast<uint32_t>(sizeof(UCSysConfig));
    std::memcpy(request->settings, settings, sizeof(UCSysConfig) * count);
 
    vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
@@ -409,8 +409,8 @@ UCWriteSysConfigAsync(IOSHandle handle,
    }
 
    request = reinterpret_cast<UCWriteSysConfigRequest *>(msgBuf);
+   request->unk0x00 = 0u;
    request->count = count;
-   request->size = static_cast<uint32_t>(sizeof(UCSysConfig));
    std::memcpy(request->settings, settings, count * sizeof(UCSysConfig));
 
    vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));

@@ -18,23 +18,23 @@ namespace ios::auxil
 
 struct UCReadSysConfigRequest
 {
+   be2_val<uint32_t> unk0x00;
    be2_val<uint32_t> count;
-   be2_val<uint32_t> size;
    be2_struct<UCSysConfig> settings[1]; // Size=N
 };
-CHECK_OFFSET(UCReadSysConfigRequest, 0x0, count);
-CHECK_OFFSET(UCReadSysConfigRequest, 0x4, size);
+CHECK_OFFSET(UCReadSysConfigRequest, 0x0, unk0x00);
+CHECK_OFFSET(UCReadSysConfigRequest, 0x4, count);
 CHECK_OFFSET(UCReadSysConfigRequest, 0x8, settings);
 CHECK_SIZE(UCReadSysConfigRequest, 0x5C);
 
 struct UCWriteSysConfigRequest
 {
+   be2_val<uint32_t> unk0x00;
    be2_val<uint32_t> count;
-   be2_val<uint32_t> size;
    be2_struct<UCSysConfig> settings[1]; // Size=N
 };
-CHECK_OFFSET(UCWriteSysConfigRequest, 0x0, count);
-CHECK_OFFSET(UCWriteSysConfigRequest, 0x4, size);
+CHECK_OFFSET(UCWriteSysConfigRequest, 0x0, unk0x00);
+CHECK_OFFSET(UCWriteSysConfigRequest, 0x4, count);
 CHECK_OFFSET(UCWriteSysConfigRequest, 0x8, settings);
 CHECK_SIZE(UCWriteSysConfigRequest, 0x5C);
 
@@ -46,7 +46,6 @@ struct UCRequest
       be2_struct<UCWriteSysConfigRequest> writeSysConfigRequest;
    };
 };
-
 
 #pragma pack(pop)
 
