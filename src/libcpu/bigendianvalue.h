@@ -334,12 +334,6 @@ public:
    }
 
    template<typename K = value_type>
-   auto getAddress() -> decltype(std::declval<const K>().getAddress()) const
-   {
-      return value().getAddress();
-   }
-
-   template<typename K = value_type>
    auto getRawPointer() -> decltype(std::declval<const K>().getRawPointer()) const
    {
       return value().getRawPointer();
