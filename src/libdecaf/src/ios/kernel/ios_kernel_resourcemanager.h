@@ -38,36 +38,36 @@ struct ResourceManager
    be2_array<char, 32> device;
 
    //! ID of the message queue associated with this resource.
-   be2_val<MessageQueueId> queueId = 0u;
+   be2_val<MessageQueueId> queueId;
 
    //! Pointer to the resource handle manager for this resource manager.
-   be2_phys_ptr<ResourceHandleManager> resourceHandleManager = nullptr;
+   be2_phys_ptr<ResourceHandleManager> resourceHandleManager;
 
    //! Permission Group this resource belongs to, this matches values in cos.xml.
-   be2_val<uint32_t> permissionGroup = 0u;
+   be2_val<uint32_t> permissionGroup;
 
    //! Length of the string in this->device
-   be2_val<uint16_t> deviceLen = 0u;
+   be2_val<uint16_t> deviceLen;
 
    //! Index of the first resource request for this resource in the global
    //! resource request list.
-   be2_val<int16_t> firstRequestIdx = -1;
+   be2_val<int16_t> firstRequestIdx;
 
    //! Index of the last resource request for this resource in the global
    //! resource request list.
-   be2_val<int16_t> lastRequestIdx = -1;
+   be2_val<int16_t> lastRequestIdx;
 
    //! Number of resource requests active for this resource.
-   be2_val<uint16_t> numRequests = 0u;
+   be2_val<uint16_t> numRequests;
 
    //! Number of resource handles active for this resource.
-   be2_val<uint16_t> numHandles = 0u;
+   be2_val<uint16_t> numHandles;
 
    //! Index of the next active resource manager.
-   be2_val<int16_t> nextResourceManagerIdx = -1;
+   be2_val<int16_t> nextResourceManagerIdx;
 
    //! Index of the previous active resource manager.
-   be2_val<int16_t> prevResourceManagerIdx = -1;
+   be2_val<int16_t> prevResourceManagerIdx;
 
    be2_val<uint16_t> unk0x3A;
    be2_val<uint16_t> unk0x3C;
