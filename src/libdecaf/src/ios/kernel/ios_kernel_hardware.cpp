@@ -461,6 +461,10 @@ setAlarm(std::chrono::steady_clock::time_point when)
 void
 initialiseStaticHardwareData()
 {
+   LT_INTMR_AHBALL_ARM.store(0);
+   LT_INTSR_AHBALL_ARM.store(0);
+   LT_INTMR_AHBLT_ARM.store(0);
+   LT_INTSR_AHBLT_ARM.store(0);
    sData = allocProcessStatic<StaticData>();
 }
 
