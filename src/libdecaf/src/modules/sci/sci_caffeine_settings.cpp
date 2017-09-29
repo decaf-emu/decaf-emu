@@ -14,10 +14,10 @@ namespace internal
 {
 
 static SCIError
-sciCheckPushInterval(be_val<uint16_t> *value)
+sciCheckPushInterval(virt_ptr<uint16_t> value)
 {
-   if (*value > 1440) {
-      *value = 1440;
+   if (*value > 1440u) {
+      *value = uint16_t { 1440 };
       return SCIError::Error;
    }
 
@@ -25,10 +25,10 @@ sciCheckPushInterval(be_val<uint16_t> *value)
 }
 
 static SCIError
-sciCheckPushTimeSlot(be_val<uint32_t> *value)
+sciCheckPushTimeSlot(virt_ptr<uint32_t> value)
 {
-   if (*value & 0x80000000) {
-      *value &= 0x7FFFFFFF;
+   if (*value & 0x80000000u) {
+      *value &= 0x7FFFFFFFu;
       return SCIError::Error;
    }
 
@@ -40,31 +40,31 @@ sciCheckCaffeineSettings(SCICaffeineSettings *data)
 {
    auto result = SCIError::OK;
 
-   if (sciCheckPushTimeSlot(&data->push_time_slot) != SCIError::OK) {
+   if (sciCheckPushTimeSlot(virt_addrof(data->push_time_slot)) != SCIError::OK) {
       result = SCIError::Error;
    }
 
-   if (sciCheckPushInterval(&data->push_interval) != SCIError::OK) {
+   if (sciCheckPushInterval(virt_addrof(data->push_interval)) != SCIError::OK) {
       result = SCIError::Error;
    }
 
-   if (data->enable > 1) {
-      data->enable = 1;
+   if (data->enable > 1u) {
+      data->enable = uint8_t { 1 };
       result = SCIError::Error;
    }
 
-   if (data->ad_enable > 1) {
-      data->ad_enable = 1;
+   if (data->ad_enable > 1u) {
+      data->ad_enable = uint8_t { 1 };
       result = SCIError::Error;
    }
 
-   if (data->push_enable > 1) {
-      data->push_enable = 1;
+   if (data->push_enable > 1u) {
+      data->push_enable = uint8_t { 1 };
       result = SCIError::Error;
    }
 
-   if (data->drcled_enable > 1) {
-      data->drcled_enable = 1;
+   if (data->drcled_enable > 1u) {
+      data->drcled_enable = uint8_t { 1 };
       result = SCIError::Error;
    }
 
@@ -86,15 +86,15 @@ SCIInitCaffeineSettings(SCICaffeineSettings *data)
 
    UCSysConfig settings[] = {
       { "caffeine",                    0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
-      { "caffeine.version",            0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version), &data->version },
-      { "caffeine.enable",             0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->enable), &data->enable },
-      { "caffeine.ad_enable",          0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->ad_enable), &data->ad_enable },
-      { "caffeine.push_enable",        0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->push_enable), &data->push_enable },
-      { "caffeine.push_time_slot",     0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->push_time_slot), &data->push_time_slot },
-      { "caffeine.push_interval",      0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_interval), &data->push_interval },
-      { "caffeine.drcled_enable",      0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->drcled_enable), &data->drcled_enable },
-      { "caffeine.push_capabilty",     0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_capabilty), &data->push_capabilty },
-      { "caffeine.invisible_titles",   0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->invisible_titles), &data->invisible_titles },
+      { "caffeine.version",            0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version),          virt_addrof(data->version) },
+      { "caffeine.enable",             0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->enable),           virt_addrof(data->enable) },
+      { "caffeine.ad_enable",          0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->ad_enable),        virt_addrof(data->ad_enable) },
+      { "caffeine.push_enable",        0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->push_enable),      virt_addrof(data->push_enable) },
+      { "caffeine.push_time_slot",     0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->push_time_slot),   virt_addrof(data->push_time_slot) },
+      { "caffeine.push_interval",      0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_interval),    virt_addrof(data->push_interval) },
+      { "caffeine.drcled_enable",      0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->drcled_enable),    virt_addrof(data->drcled_enable) },
+      { "caffeine.push_capabilty",     0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_capabilty),   virt_addrof(data->push_capabilty) },
+      { "caffeine.invisible_titles",   0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->invisible_titles), virt_addrof(data->invisible_titles) },
    };
 
    result = coreinit::UCReadSysConfig(handle, 10, settings);
@@ -102,15 +102,15 @@ SCIInitCaffeineSettings(SCICaffeineSettings *data)
       if (result != UCError::KeyNotFound) {
          coreinit::UCDeleteSysConfig(handle, 1, settings);
 
-         data->version = 3;
-         data->enable = 1;
-         data->ad_enable = 1;
-         data->push_enable = 0;
-         data->push_time_slot = 0x7F1FFE00;
-         data->push_interval = 0x1A4;
-         data->drcled_enable = 1;
-         data->push_capabilty = 0xFFFF;
-         data->invisible_titles.fill(0);
+         data->version = uint16_t { 3 };
+         data->enable = uint8_t { 1 };
+         data->ad_enable = uint8_t { 1 };
+         data->push_enable = uint8_t { 0 };
+         data->push_time_slot = uint32_t { 0x7F1FFE00u };
+         data->push_interval = uint16_t { 0x1A4 };
+         data->drcled_enable = uint8_t { 1 };
+         data->push_capabilty = uint16_t { 0xFFFFu };
+         data->invisible_titles.fill(0u);
       }
 
       result = coreinit::UCWriteSysConfig(handle, 10, settings);

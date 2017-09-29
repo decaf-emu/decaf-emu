@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_ios.h"
-#include "ios/dev/usr_cfg.h"
+#include "ios/auxil/ios_auxil_usr_cfg.h"
 #include "ppcutils/wfunc_ptr.h"
 
 #include <common/be_ptr.h>
@@ -20,10 +20,10 @@ namespace coreinit
 
 #pragma pack(push, 1)
 
-using ios::dev::usr_cfg::UCCommand;
-using ios::dev::usr_cfg::UCDataType;
-using ios::dev::usr_cfg::UCError;
-using ios::dev::usr_cfg::UCSysConfig;
+using ios::auxil::UCCommand;
+using ios::auxil::UCDataType;
+using ios::auxil::UCError;
+using ios::auxil::UCSysConfig;
 
 using UCAsyncCallback = wfunc_ptr<void,
                                   UCError /* result */,

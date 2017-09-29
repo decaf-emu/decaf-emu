@@ -51,10 +51,12 @@ usrCfgThreadEntry(phys_ptr<void> /*context*/)
             auto command = static_cast<UCCommand>(request->requestData.args.ioctlv.request);
             switch (command) {
             case UCCommand::ReadSysConfig:
+               error = static_cast<Error>(device->readSysConfig(request->requestData.args.ioctlv.numVecIn,
+                                                                request->requestData.args.ioctlv.vecs));
                break;
             case UCCommand::WriteSysConfig:
-               break;
-            case UCCommand::DeleteSysConfig:
+               error = static_cast<Error>(device->writeSysConfig(request->requestData.args.ioctlv.numVecIn,
+                                                                 request->requestData.args.ioctlv.vecs));
                break;
             default:
                error = Error::InvalidArg;

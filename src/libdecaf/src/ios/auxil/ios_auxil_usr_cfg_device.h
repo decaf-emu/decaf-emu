@@ -19,10 +19,12 @@ public:
    decrementRefCount();
 
    UCError
-   readSysConfig(phys_ptr<UCReadSysConfigRequest> request);
+   readSysConfig(uint32_t numVecIn,
+                 phys_ptr<IoctlVec> vecs);
 
    UCError
-   writeSysConfig(phys_ptr<UCWriteSysConfigRequest> request);
+   writeSysConfig(uint32_t numVecIn,
+                  phys_ptr<IoctlVec> vecs);
 
 private:
    int mRefCount = 1;

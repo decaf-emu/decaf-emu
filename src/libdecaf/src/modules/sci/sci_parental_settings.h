@@ -1,9 +1,8 @@
 #pragma once
 #include "sci_enum.h"
 
-#include <array>
 #include <cstdint>
-#include <common/be_val.h>
+#include <libcpu/be2_struct.h>
 #include <common/structsize.h>
 
 namespace sci
@@ -11,15 +10,15 @@ namespace sci
 
 struct SCIParentalSettings
 {
-   be_val<uint16_t> version;
-   be_val<uint8_t> enable;
-   std::array<char, 5> pin_code;
-   be_val<uint8_t> sec_question;
-   std::array<char, 0x101> sec_answer;
-   std::array<char, 0xCD> custom_sec_question;
-   std::array<char, 0x401> email_address;
-   be_val<uint8_t> permit_delete_all;
-   be_val<uint32_t> rating_organization;
+   be2_val<uint16_t> version;
+   be2_val<uint8_t> enable;
+   be2_array<char, 5> pin_code;
+   be2_val<uint8_t> sec_question;
+   be2_array<char, 0x101> sec_answer;
+   be2_array<char, 0xCD> custom_sec_question;
+   be2_array<char, 0x401> email_address;
+   be2_val<uint8_t> permit_delete_all;
+   be2_val<uint32_t> rating_organization;
 };
 CHECK_OFFSET(SCIParentalSettings, 0x00, version);
 CHECK_OFFSET(SCIParentalSettings, 0x02, enable);

@@ -22,7 +22,7 @@ struct UCSysConfig
    be2_val<UCDataType> dataType;
    be2_val<UCError> error;
    be2_val<uint32_t> dataSize;
-   be2_phys_ptr<void> data;
+   be2_virt_ptr<void> data;
 };
 CHECK_OFFSET(UCSysConfig, 0x00, name);
 CHECK_OFFSET(UCSysConfig, 0x40, access);

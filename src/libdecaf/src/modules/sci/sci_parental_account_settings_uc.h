@@ -2,7 +2,7 @@
 #include "sci_enum.h"
 
 #include <cstdint>
-#include <common/be_val.h>
+#include <libcpu/be2_struct.h>
 #include <common/structsize.h>
 
 namespace sci
@@ -10,21 +10,21 @@ namespace sci
 
 struct SCIParentalAccountSettingsUC
 {
-   be_val<uint16_t> version;
+   be2_val<uint16_t> version;
    PADDING(2);
-   be_val<uint32_t> game_rating;
-   be_val<uint8_t> eshop_purchase;
-   be_val<uint8_t> friend_reg;
-   be_val<uint8_t> acct_modify;
-   be_val<uint8_t> data_manage;
-   be_val<uint8_t> int_setting;
-   be_val<uint8_t> country_setting;
-   be_val<uint8_t> sys_init;
-   be_val<uint8_t> int_browser;
-   be_val<uint8_t> int_movie;
-   be_val<uint8_t> net_communication_on_game;
-   be_val<uint8_t> network_launcher;
-   be_val<uint8_t> entertainment_launcher;
+   be2_val<uint32_t> game_rating;
+   be2_val<uint8_t> eshop_purchase;
+   be2_val<uint8_t> friend_reg;
+   be2_val<uint8_t> acct_modify;
+   be2_val<uint8_t> data_manage;
+   be2_val<uint8_t> int_setting;
+   be2_val<uint8_t> country_setting;
+   be2_val<uint8_t> sys_init;
+   be2_val<uint8_t> int_browser;
+   be2_val<uint8_t> int_movie;
+   be2_val<uint8_t> net_communication_on_game;
+   be2_val<uint8_t> network_launcher;
+   be2_val<uint8_t> entertainment_launcher;
 };
 CHECK_OFFSET(SCIParentalAccountSettingsUC, 0x00, version);
 CHECK_OFFSET(SCIParentalAccountSettingsUC, 0x04, game_rating);

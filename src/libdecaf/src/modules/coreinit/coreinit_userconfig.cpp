@@ -10,8 +10,8 @@
 namespace coreinit
 {
 
-using ios::dev::usr_cfg::UCReadSysConfigRequest;
-using ios::dev::usr_cfg::UCWriteSysConfigRequest;
+using ios::auxil::UCReadSysConfigRequest;
+using ios::auxil::UCWriteSysConfigRequest;
 
 struct UserConfigData
 {
@@ -138,17 +138,17 @@ ucHandleIosResult(UCError result,
                   case 0:
                      continue;
                   case 1:
-                     *be_ptr<uint8_t> { settings[i].data } = *virt_cast<uint8_t>(src);
+                     *virt_cast<uint8_t>(settings[i].data) = *virt_cast<uint8_t>(src);
                      break;
                   case 2:
-                     *be_ptr<uint16_t> { settings[i].data } = *virt_cast<uint16_t>(src);
+                     *virt_cast<uint16_t>(settings[i].data) = *virt_cast<uint16_t>(src);
                      break;
                   case 4:
-                     *be_ptr<uint32_t> { settings[i].data } = *virt_cast<uint32_t>(src);
+                     *virt_cast<uint32_t>(settings[i].data) = *virt_cast<uint32_t>(src);
                      break;
                   default:
-                     std::memset(settings[i].data, 0, 4); // why???
-                     std::memcpy(settings[i].data, src.getRawPointer(), settings[i].dataSize);
+                     std::memset(settings[i].data.getRawPointer(), 0, 4); // why???
+                     std::memcpy(settings[i].data.getRawPointer(), src.getRawPointer(), settings[i].dataSize);
                   }
                }
             }
