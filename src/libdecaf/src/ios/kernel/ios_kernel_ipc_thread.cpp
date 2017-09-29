@@ -1,6 +1,7 @@
 #include "ios_kernel_hardware.h"
 #include "ios_kernel_ipc_thread.h"
 #include "ios_kernel_messagequeue.h"
+#include "ios_kernel_process.h"
 #include "ios_kernel_resourcemanager.h"
 #include "ios/ios_stackobject.h"
 #include "kernel/kernel_ipc.h"
@@ -12,6 +13,21 @@
 
 namespace ios::kernel
 {
+
+constexpr auto IpcThreadNumMessages = 0x100u;
+constexpr auto IpcThreadStackSize = 0x800u;
+constexpr auto IpcThreadPriority = 95u;
+
+struct StaticData
+{
+   be2_val<MessageQueueId> messageQueueId;
+   be2_array<Message, IpcThreadNumMessages> messageBuffer;
+   be2_val<ThreadId> threadId;
+   be2_array<uint8_t, IpcThreadStackSize> threadStack;
+};
+
+static phys_ptr<StaticData>
+sData;
 
 static MessageQueueId
 sIpcMessageQueueId;
@@ -42,21 +58,22 @@ submitIpcRequest(phys_ptr<IpcRequest> request)
 namespace internal
 {
 
-Error
-ipcThreadMain(phys_ptr<void> context)
+static Error
+ipcThreadEntry(phys_ptr<void> context)
 {
    StackObject<Message> message;
    phys_ptr<MessageQueue> queue;
 
-   auto error = IOS_CreateMessageQueue(phys_addr { 0xFFFF20F }, 0x100);
+   auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                       static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
 
    // Register interrupt handlers and enable the interrupts.
    auto queueId = static_cast<MessageQueueId>(error);
-   auto error = internal::getMessageQueue(queueId, &queue);
-   sIpcMessageQueueId = queueId;
+   error = internal::getMessageQueue(queueId, &queue);
+   sData->messageQueueId = queueId;
 
    IOS_HandleEvent(DeviceId::IpcStarbuckCore0, queueId, Message { Command::IpcMsg0 });
    IOS_ClearAndEnable(DeviceId::IpcStarbuckCore0);
@@ -183,6 +200,26 @@ MessageQueueId
 getIpcMessageQueueId()
 {
    return sIpcMessageQueueId;
+}
+
+Error
+startIpcThread()
+{
+   sData = allocProcessStatic<StaticData>();
+
+   // Create thread
+   auto error = IOS_CreateThread(&ipcThreadEntry, nullptr,
+                                 phys_addrof(sData->threadStack) + sData->threadStack.size(),
+                                 static_cast<uint32_t>(sData->threadStack.size()),
+                                 IpcThreadPriority,
+                                 kernel::ThreadFlags::Detached);
+   if (error < Error::OK) {
+      kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
+      return error;
+   }
+
+   sData->threadId = static_cast<kernel::ThreadId>(error);
+   return kernel::IOS_StartThread(sData->threadId);
 }
 
 } // namespace internal

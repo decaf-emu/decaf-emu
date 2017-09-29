@@ -14,6 +14,9 @@ namespace internal
 MessageQueueId
 getIpcMessageQueueId();
 
+Error
+startIpcThread();
+
 } // namespace internal
 
 } // namespace ios::kernel
