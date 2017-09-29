@@ -1,12 +1,11 @@
 #pragma once
 #include "coreinit_ios.h"
-#include "ios/dev/im.h"
+#include "ios/auxil/ios_auxil_im.h"
 
 #include <cstdint>
-#include <common/be_val.h>
-#include <common/be_ptr.h>
 #include <common/cbool.h>
 #include <common/structsize.h>
+#include <libcpu/be2_struct.h>
 
 namespace coreinit
 {
@@ -17,30 +16,31 @@ namespace coreinit
  * @{
  */
 
-using ios::dev::im::IMCommand;
-using ios::dev::im::IMError;
-using ios::dev::im::IMParameter;
-using ios::dev::im::IMTimer;
+using IMError = ios::Error;
 
-using ios::dev::im::IMGetNvParameterRequest;
-using ios::dev::im::IMGetNvParameterResponse;
-using ios::dev::im::IMGetParameterRequest;
-using ios::dev::im::IMGetParameterResponse;
-using ios::dev::im::IMGetHomeButtonParamResponse;
-using ios::dev::im::IMSetParameterRequest;
-using ios::dev::im::IMSetNvParameterRequest;
-using ios::dev::im::IMGetTimerRemainingRequest;
-using ios::dev::im::IMGetTimerRemainingResponse;
+using ios::auxil::IMCommand;
+using ios::auxil::IMParameter;
+using ios::auxil::IMTimer;
+
+using ios::auxil::IMGetNvParameterRequest;
+using ios::auxil::IMGetNvParameterResponse;
+using ios::auxil::IMGetParameterRequest;
+using ios::auxil::IMGetParameterResponse;
+using ios::auxil::IMGetHomeButtonParamResponse;
+using ios::auxil::IMSetParameterRequest;
+using ios::auxil::IMSetNvParameterRequest;
+using ios::auxil::IMGetTimerRemainingRequest;
+using ios::auxil::IMGetTimerRemainingResponse;
 
 struct IMParameters
 {
-   be_val<uint32_t> unknown0x00;
-   be_val<uint32_t> dimEnabled;
-   be_val<uint32_t> dimPeriod;
-   be_val<uint32_t> apdEnabled;
-   be_val<uint32_t> apdPeriod;
+   be2_val<uint32_t> resetEnabled;
+   be2_val<uint32_t> dimEnabled;
+   be2_val<uint32_t> dimPeriod;
+   be2_val<uint32_t> apdEnabled;
+   be2_val<uint32_t> apdPeriod;
 };
-CHECK_OFFSET(IMParameters, 0x00, unknown0x00);
+CHECK_OFFSET(IMParameters, 0x00, resetEnabled);
 CHECK_OFFSET(IMParameters, 0x04, dimEnabled);
 CHECK_OFFSET(IMParameters, 0x08, dimPeriod);
 CHECK_OFFSET(IMParameters, 0x0C, apdEnabled);
@@ -50,26 +50,26 @@ struct IMRequest
 {
    union
    {
-      IMGetNvParameterRequest getNvParameterRequest;
-      IMGetNvParameterResponse getNvParameterResponse;
-      IMGetParameterRequest getParameterRequest;
-      IMGetParameterResponse getParameterResponse;
-      IMGetHomeButtonParamResponse getHomeButtomParamResponse;
-      IMSetParameterRequest setParameterRequest;
-      IMSetNvParameterRequest setNvParameterRequest;
-      IMGetTimerRemainingRequest getTimerRemainingRequest;
-      IMGetTimerRemainingResponse getTimerRemainingResponse;
-      uint8_t args[0x80];
+      be2_struct<IMGetNvParameterRequest> getNvParameterRequest;
+      be2_struct<IMGetNvParameterResponse> getNvParameterResponse;
+      be2_struct<IMGetParameterRequest> getParameterRequest;
+      be2_struct<IMGetParameterResponse> getParameterResponse;
+      be2_struct<IMGetHomeButtonParamResponse> getHomeButtomParamResponse;
+      be2_struct<IMSetParameterRequest> setParameterRequest;
+      be2_struct<IMSetNvParameterRequest> setNvParameterRequest;
+      be2_struct<IMGetTimerRemainingRequest> getTimerRemainingRequest;
+      be2_struct<IMGetTimerRemainingResponse> getTimerRemainingResponse;
+      be2_array<uint8_t, 0x80> args;
    };
 
-   IOSVec ioctlVecs[2];
-   be_val<IOSHandle> handle;
-   be_val<IMCommand> request;
-   IOSAsyncCallbackFn asyncCallback;
-   be_ptr<void> asyncCallbackContext;
-   be_ptr<void> copySrc;
-   be_ptr<void> copyDst;
-   be_val<uint32_t> copySize;
+   be2_array<IOSVec, 2> ioctlVecs;
+   be2_val<IOSHandle> handle;
+   be2_val<IMCommand> request;
+   IOSAsyncCallbackFn::be asyncCallback;
+   be2_virt_ptr<void> asyncCallbackContext;
+   be2_virt_ptr<void> copySrc;
+   be2_virt_ptr<void> copyDst;
+   be2_val<uint32_t> copySize;
 };
 CHECK_OFFSET(IMRequest, 0x80, ioctlVecs);
 CHECK_OFFSET(IMRequest, 0x98, handle);

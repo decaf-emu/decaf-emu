@@ -42,4 +42,7 @@ private:
 void
 initialiseStaticImDeviceData();
 
+Error
+initialiseImParameters();
+
 } // namespace ios::auxil::internal

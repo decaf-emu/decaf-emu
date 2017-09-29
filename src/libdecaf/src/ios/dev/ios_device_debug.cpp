@@ -92,7 +92,7 @@ DebugDevice::ioctlv(uint32_t request,
 
    for (auto i = vecIn; i < vecIn + vecOut; ++i) {
       auto ptr = cpu::PhysicalPointer<void> { vec[i].paddr };
-      w.write("\nout [ptr = {:08X} len = {}]:", vec[i].paddr.getAddress(), vec[i].len.value());
+      w.write("\nout [ptr = {:08X} len = {}]:", vec[i].paddr, vec[i].len.value());
       std::memset(ptr.getRawPointer(), 0, vec[i].len);
    }
 

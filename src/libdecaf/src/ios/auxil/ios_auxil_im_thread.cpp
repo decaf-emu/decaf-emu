@@ -90,6 +90,8 @@ imThreadEntry(phys_ptr<void> /*context*/)
    StackObject<kernel::Message> message;
    auto error = Error::OK;
 
+   initialiseImParameters();
+
    while (true) {
       error = kernel::IOS_ReceiveMessage(sData->messageQueueId,
                                          message,
