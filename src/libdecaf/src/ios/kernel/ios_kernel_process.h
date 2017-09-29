@@ -17,6 +17,23 @@ Error
 IOS_GetProcessName(ProcessId process,
                    char *buffer);
 
+phys_ptr<void>
+allocProcessStatic(size_t size);
+
+phys_ptr<void>
+allocProcessStatic(ProcessId pid,
+                   size_t size);
+
+template<typename Type, typename... Args>
+phys_ptr<Type>
+allocProcessStatic(Args&&... args)
+{
+   auto ptr = phys_cast<Type>(allocProcessStatic(sizeof(Type)));
+   // Construct Type at memory
+   new (ptr.getRawPointer()) Type { std::forward(args)... };
+   return ptr;
+}
+
 namespace internal
 {
 
@@ -25,29 +42,6 @@ getCurrentProcessId();
 
 void
 initialiseProcessStaticAllocators();
-
-phys_ptr<void>
-allocProcessStatic(size_t size);
-
-template<typename Type, typename... Args>
-phys_ptr<Type>
-allocProcessStatic(Args &&args...)
-{
-   auto ptr = phys_cast<Type>(allocProcessStatic(sizeof(Type)));
-   // Construct Type at memory
-   new (ptr.getRawPointer()) Type { std::forward(args)... };
-   return ptr;
-}
-
-template<typename Type>
-phys_ptr<Type>
-allocProcessStatic()
-{
-   auto ptr = phys_cast<Type>(allocProcessStatic(sizeof(Type)));
-   // Construct Type at memory
-   new (ptr.getRawPointer()) Type { };
-   return ptr;
-}
 
 } // namespace internal
 

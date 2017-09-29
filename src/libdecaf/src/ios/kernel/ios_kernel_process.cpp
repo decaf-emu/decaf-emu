@@ -70,7 +70,7 @@ IOS_GetProcessName(ProcessId process,
    case ProcessId::FPD:
       name = "IOS-FPD";
       break;
-   case ProcessId::IOSTEST:
+   case ProcessId::TEST:
       name = "IOS-TEST";
       break;
    case ProcessId::COSKERNEL:
@@ -105,6 +105,23 @@ IOS_GetProcessName(ProcessId process,
    return Error::OK;
 }
 
+phys_ptr<void>
+allocProcessStatic(size_t size)
+{
+   return allocProcessStatic(internal::getCurrentProcessId(), size);
+}
+
+phys_ptr<void>
+allocProcessStatic(ProcessId pid,
+                   size_t size)
+{
+   decaf_check(pid < sProcessStaticAllocators.size());
+   auto &allocator = sProcessStaticAllocators[pid];
+   auto buffer = allocator.allocate(size);
+   std::memset(buffer, 0, size);
+   return cpu::translatePhysical(buffer);
+}
+
 namespace internal
 {
 
@@ -128,7 +145,7 @@ initialiseProcessStaticAllocators()
       { ProcessId::AUXIL,     PhysicalRegion::MEM2IosAuxil },
       { ProcessId::NIM,       PhysicalRegion::MEM2IosNim },
       { ProcessId::FPD,       PhysicalRegion::MEM2IosFpd },
-      { ProcessId::IOSTEST,   PhysicalRegion::MEM2IosTest },
+      { ProcessId::TEST,      PhysicalRegion::MEM2IosTest },
    };
 
    for (auto &processMap : processRegionMap) {
@@ -149,18 +166,6 @@ getCurrentProcessId()
    }
 
    return thread->pid;
-}
-
-phys_ptr<void>
-allocProcessStatic(size_t size)
-{
-   auto pid = getCurrentProcessId();
-   decaf_check(pid < sProcessStaticAllocators.size());
-
-   auto &allocator = sProcessStaticAllocators[pid];
-   auto buffer = allocator.allocate(size);
-   std::memset(buffer, 0, size);
-   return cpu::translatePhysical(buffer);
 }
 
 } // namespace internal
