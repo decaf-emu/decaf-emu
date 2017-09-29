@@ -64,6 +64,12 @@ IOS_ReceiveMessage(MessageQueueId id,
                    phys_ptr<Message> message,
                    MessageFlags flags);
 
+template<typename Type>
+Message makeMessage(phys_ptr<Type> ptr)
+{
+   return static_cast<Message>(phys_addr { ptr }.getAddress());
+}
+
 namespace internal
 {
 

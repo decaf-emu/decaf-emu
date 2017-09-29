@@ -16,8 +16,8 @@ namespace ios::kernel
 
 struct StaticData
 {
-   ResourceManagerList resourceManagerList;
-   ResourceRequestList resourceRequestList;
+   be2_struct<ResourceManagerList> resourceManagerList;
+   be2_struct<ResourceRequestList> resourceRequestList;
    be2_array<ResourceHandleManager, ProcessId::Max> resourceHandleManagers;
    be2_val<uint32_t> totalOpenedHandles;
 };
@@ -558,7 +558,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
 
       if (queue) {
          error = sendMessage(queue,
-                             static_cast<Message>(phys_addr { ipcRequest }.getAddress()),
+                             makeMessage(ipcRequest),
                              MessageFlags::NonBlocking);
       }
    }
@@ -578,7 +578,7 @@ static Error
 dispatchRequest(phys_ptr<ResourceRequest> request)
 {
    return IOS_SendMessage(request->messageQueueId,
-                          static_cast<Message>(phys_addr { request }.getAddress()),
+                          makeMessage(request),
                           MessageFlags::NonBlocking);
 
 }
