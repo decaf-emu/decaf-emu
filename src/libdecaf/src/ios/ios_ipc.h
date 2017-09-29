@@ -140,6 +140,8 @@ CHECK_SIZE(IpcRequestArgsSvcMsg, 0x10);
 
 struct IpcRequestArgs
 {
+   IpcRequestArgs() { }
+
    union
    {
       be2_struct<IpcRequestArgsOpen> open;
