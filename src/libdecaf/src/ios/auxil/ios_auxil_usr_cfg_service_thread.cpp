@@ -1,7 +1,10 @@
 #include "ios_auxil_usr_cfg_thread.h"
 #include "ios_auxil_usr_cfg_service_thread.h"
-#include "ios/kernel/ios_kernel_thread.h"
+
+#include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
+#include "ios/kernel/ios_kernel_thread.h"
+
 #include "ios/ios_handlemanager.h"
 #include "ios/ios_stackobject.h"
 
@@ -13,14 +16,7 @@ constexpr auto ThreadStackSize = 0x2000u;
 constexpr auto ThreadPriority = 70u;
 constexpr auto MaxNumDevices = 96u;
 
-struct UsrCfgDevice
-{
-   be2_val<BOOL> allocated;
-   be2_val<int32_t> refCount;
-   be2_phys_ptr<kernel::ResourceRequest> closeRequest;
-};
-
-struct UsrCfgServiceData
+struct StaticData
 {
    be2_val<bool> serviceRunning;
    be2_val<kernel::ThreadId> threadId;
@@ -29,7 +25,7 @@ struct UsrCfgServiceData
    be2_array<uint8_t, ThreadStackSize> threadStack;
 };
 
-static phys_ptr<UsrCfgServiceData>
+static phys_ptr<StaticData>
 sData = nullptr;
 
 static HandleManager<UCDevice, UCDeviceHandle, MaxNumDevices>
@@ -166,6 +162,13 @@ kernel::MessageQueueId
 getUsrCfgServiceMessageQueueId()
 {
    return sData->messageQueueId;
+}
+
+void
+initialiseStaticUsrCfgServiceThreadData()
+{
+   sData = kernel::allocProcessStatic<StaticData>();
+   sDevices.closeAll();
 }
 
 } // namespace ios::auxil::internal

@@ -1,6 +1,7 @@
 #include "ios_auxil_im_device.h"
 #include "ios_auxil_im_thread.h"
 
+#include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
 #include "ios/kernel/ios_kernel_timer.h"
@@ -20,7 +21,7 @@ constexpr auto NumMessages = 20u;
 constexpr auto ThreadStackSize = 0x800u;
 constexpr auto ThreadPriority = 69u;
 
-struct ImThreadData
+struct StaticData
 {
    be2_val<kernel::ThreadId> threadId;
    be2_val<kernel::MessageQueueId> messageQueueId;
@@ -29,7 +30,7 @@ struct ImThreadData
    be2_val<Command> stopMessageBuffer;
 };
 
-static phys_ptr<ImThreadData>
+static phys_ptr<StaticData>
 sData;
 
 static HandleManager<IMDevice, IMDeviceHandle, MaxNumIMDevices>
@@ -175,9 +176,9 @@ startImThread()
 Error
 stopImThread()
 {
-   sData->stopMessageCommand = Command::IpcMsg2;
+   sData->stopMessageBuffer = Command::IpcMsg2;
 
-   auto message = static_cast<Message>(phys_addr { phys_addrof(sData->stopMessageBuffer) });
+   auto message = kernel::makeMessage(phys_addrof(sData->stopMessageBuffer));
    auto error = kernel::IOS_SendMessage(sData->messageQueueId, message, kernel::MessageFlags::None);
    if (error < Error::OK) {
       return error;
@@ -194,6 +195,13 @@ stopImThread()
    }
 
    return Error::OK;
+}
+
+void
+initialiseStaticImThreadData()
+{
+   sData = kernel::allocProcessStatic<StaticData>();
+   sDevices.closeAll();
 }
 
 } // namespace ios::auxil::internal

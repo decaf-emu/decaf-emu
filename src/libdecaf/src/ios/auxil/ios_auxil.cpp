@@ -1,10 +1,12 @@
 #include "ios_auxil.h"
+#include "ios_auxil_im_device.h"
 #include "ios_auxil_usr_cfg_thread.h"
 #include "ios_auxil_usr_cfg_service_thread.h"
 
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_thread.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
+#include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 
 #include "ios/ios_enum.h"
@@ -16,15 +18,12 @@
 namespace ios::auxil
 {
 
-// Use a stack allocator for static data?
-
 constexpr auto LocalHeapSize = 0x20000u;
 constexpr auto CrossHeapSize = 0x80000u;
 
 constexpr auto NumMessages = 10u;
 
-
-struct AuxilData
+struct StaticData
 {
    be2_val<kernel::MessageQueueId> messageQueueId;
    be2_array<kernel::Message, NumMessages> messageBuffer;
@@ -32,16 +31,32 @@ struct AuxilData
    be2_array<std::byte, LocalHeapSize> localHeapBuffer;
 };
 
-static phys_ptr<AuxilData>
+static phys_ptr<StaticData>
 sData = nullptr;
+
+namespace internal
+{
+
+static void
+initialiseStaticData()
+{
+   sData = kernel::allocProcessStatic<StaticData>();
+}
+
+} // namespace internal
 
 Error
 processEntryPoint(phys_ptr<void> context)
 {
-   kernel::IOS_SetThreadPriority(kernel::CurrentThread, 70);
+   // Initialise static memory
+   internal::initialiseStaticData();
+   internal::initialiseStaticImDeviceData();
+   internal::initialiseStaticUsrCfgThreadData();
+   internal::initialiseStaticUsrCfgServiceThreadData();
 
    // Initialise process heaps
-   auto error = kernel::IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer), sData->localHeapBuffer.size());
+   auto error = kernel::IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer),
+                                                   sData->localHeapBuffer.size());
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to create local process heap, error = {}.", error);
       return error;

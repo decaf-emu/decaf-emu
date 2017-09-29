@@ -21,4 +21,7 @@ getUCDevice(UCDeviceHandle handle,
 void
 destroyUCDevice(UCDevice *device);
 
+void
+initialiseStaticUsrCfgServiceThreadData();
+
 } // namespace ios::auxil::internal

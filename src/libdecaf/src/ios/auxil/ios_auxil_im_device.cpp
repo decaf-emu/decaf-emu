@@ -1,16 +1,17 @@
 #include "ios_auxil_im_device.h"
+#include "ios/kernel/ios_kernel_process.h"
 
 namespace ios::auxil::internal
 {
 
-struct ImDeviceData
+struct StaticData
 {
    be2_array<uint32_t, IMParameter::Max> parameters;
    be2_array<uint32_t, IMParameter::Max> nvParameters;
 };
 
-static phys_ptr<ImDeviceData>
-sData;
+static phys_ptr<StaticData>
+sData = nullptr;
 
 Error
 IMDevice::copyParameterFromNv()
@@ -89,6 +90,12 @@ IMDevice::setNvParameter(IMParameter parameter,
 
    sData->nvParameters[parameter] = *value;
    return Error::OK;
+}
+
+void
+initialiseStaticImDeviceData()
+{
+   sData = kernel::allocProcessStatic<StaticData>();
 }
 
 } // namespace ios::auxil::internal

@@ -2,6 +2,7 @@
 #include "ios_auxil_usr_cfg_thread.h"
 #include "ios_auxil_usr_cfg_service_thread.h"
 
+#include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
 
@@ -14,7 +15,7 @@ constexpr auto NumMessages = 10u;
 constexpr auto ThreadStackSize = 0x2000u;
 constexpr auto ThreadPriority = 70u;
 
-struct UsrCfgData
+struct StaticData
 {
    be2_val<kernel::ThreadId> threadId;
    be2_val<kernel::MessageQueueId> messageQueueId;
@@ -22,7 +23,7 @@ struct UsrCfgData
    be2_array<uint8_t, ThreadStackSize> threadStack;
 };
 
-static phys_ptr<UsrCfgData>
+static phys_ptr<StaticData>
 sData = nullptr;
 
 static Error
@@ -95,6 +96,12 @@ kernel::MessageQueueId
 getUsrCfgMessageQueueId()
 {
    return sData->messageQueueId;
+}
+
+void
+initialiseStaticUsrCfgThreadData()
+{
+   sData = kernel::allocProcessStatic<StaticData>();
 }
 
 } // namespace ios::auxil::internal

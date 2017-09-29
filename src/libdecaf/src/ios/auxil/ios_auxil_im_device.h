@@ -39,4 +39,7 @@ public:
 private:
 };
 
+void
+initialiseStaticImDeviceData();
+
 } // namespace ios::auxil::internal

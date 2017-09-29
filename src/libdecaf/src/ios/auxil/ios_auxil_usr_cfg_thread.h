@@ -11,4 +11,7 @@ startUsrCfgThread();
 kernel::MessageQueueId
 getUsrCfgMessageQueueId();
 
+void
+initialiseStaticUsrCfgThreadData();
+
 } // namespace ios::auxil::internal

@@ -10,4 +10,7 @@ startImThread();
 Error
 stopImThread();
 
+void
+initialiseStaticImThreadData();
+
 } // namespace ios::auxil::internal
