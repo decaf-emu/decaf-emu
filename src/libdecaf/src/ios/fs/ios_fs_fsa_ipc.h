@@ -5,18 +5,26 @@
 namespace ios::fs
 {
 
+using FSAHandle = kernel::ResourceHandleId;
+
+Error
+FSAOpen();
+
+Error
+FSAClose(FSAHandle handle);
+
 FSAStatus
-FSAOpenFile(kernel::ResourceHandleId resourceHandleId,
+FSAOpenFile(FSAHandle handle,
             std::string_view name,
             std::string_view mode,
             FSAFileHandle *outHandle);
 
 FSAStatus
-FSACloseFile(kernel::ResourceHandleId resourceHandleId,
+FSACloseFile(FSAHandle handle,
              FSAFileHandle fileHandle);
 
 FSAStatus
-FSAReadFile(kernel::ResourceHandleId resourceHandleId,
+FSAReadFile(FSAHandle handle,
             phys_ptr<void> buffer,
             uint32_t size,
             uint32_t count,
@@ -24,7 +32,7 @@ FSAReadFile(kernel::ResourceHandleId resourceHandleId,
             FSAReadFlag readFlags);
 
 FSAStatus
-FSAWriteFile(kernel::ResourceHandleId resourceHandleId,
+FSAWriteFile(FSAHandle handle,
              phys_ptr<const void> buffer,
              uint32_t size,
              uint32_t count,
@@ -32,7 +40,7 @@ FSAWriteFile(kernel::ResourceHandleId resourceHandleId,
              FSAWriteFlag writeFlags);
 
 FSAStatus
-FSAStatFile(kernel::ResourceHandleId resourceHandleId,
+FSAStatFile(FSAHandle handle,
             FSAFileHandle fileHandle,
             phys_ptr<FSAStat> stat);
 

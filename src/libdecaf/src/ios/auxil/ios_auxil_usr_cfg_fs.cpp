@@ -11,13 +11,13 @@ using namespace ios::kernel;
 namespace ios::auxil::internal
 {
 
-static ResourceHandleId
+static FSAHandle
 sFsaHandle;
 
 Error
 UCInitFSA()
 {
-   auto error = IOS_Open("/dev/fsa", OpenMode::None);
+   auto error = FSAOpen();
    if (error < Error::OK) {
       return Error::NoResource;
    }
