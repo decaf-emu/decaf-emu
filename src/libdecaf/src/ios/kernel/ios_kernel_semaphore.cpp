@@ -89,7 +89,7 @@ IOS_DestroySempahore(SemaphoreId id)
    semaphore->maxCount = 0;
 
    // Add semaphore to the free semaphore linked list.
-   auto index = static_cast<int16_t>(semaphore - sData->semaphores.phys_data());
+   auto index = static_cast<int16_t>(semaphore - phys_addrof(sData->semaphores));
    auto prevSemaphoreIndex = sData->lastFreeSemaphoreIndex;
 
    if (prevSemaphoreIndex >= 0) {

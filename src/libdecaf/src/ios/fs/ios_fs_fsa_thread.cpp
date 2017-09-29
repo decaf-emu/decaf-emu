@@ -306,7 +306,7 @@ startFsaThread()
 
    error = kernel::IOS_CreateThread(fsaThreadMain,
                                     nullptr,
-                                    sData->fsaThreadStack.phys_data() + sData->fsaThreadStack.size(),
+                                    phys_addrof(sData->fsaThreadStack) + sData->fsaThreadStack.size(),
                                     static_cast<uint32_t>(sData->fsaThreadStack.size()),
                                     78,
                                     kernel::ThreadFlags::Detached);

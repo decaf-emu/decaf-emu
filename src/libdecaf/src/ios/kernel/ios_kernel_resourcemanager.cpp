@@ -240,7 +240,7 @@ findResourceManager(std::string_view device,
    while (index > 0) {
       auto &resourceManager = sData->resourceManagerList.resourceManagers[index];
       auto resourceManagerDevice = std::string_view {
-            resourceManager.device.phys_begin().getRawPointer(),
+            phys_addrof(resourceManager.device).getRawPointer(),
             resourceManager.deviceLen
          };
 
@@ -638,7 +638,7 @@ dispatchIosOpen(std::string_view device,
    resourceRequest->requestData.args.open.mode = mode;
    resourceRequest->requestData.args.open.caps = clientCapability->mask;
 
-   std::strncpy(resourceRequest->openNameBuffer.phys_begin().getRawPointer(),
+   std::strncpy(phys_addrof(resourceRequest->openNameBuffer).getRawPointer(),
                 device.data(),
                 resourceRequest->openNameBuffer.size());
 
