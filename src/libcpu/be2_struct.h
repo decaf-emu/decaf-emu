@@ -138,6 +138,15 @@ public:
       mValues[src.size()] = char { 0 };
    }
 
+   template<typename U = Type, typename = typename std::enable_if<std::is_same<char, U>::value>::type>
+   be2_array &operator =(const std::string_view &src)
+   {
+      decaf_check(src.size() < Size);
+      std::copy(src.begin(), src.end(), mValues);
+      mValues[src.size()] = char { 0 };
+      return *this;
+   }
+
    constexpr reference at(size_type pos)
    {
       if (pos >= Size) {
