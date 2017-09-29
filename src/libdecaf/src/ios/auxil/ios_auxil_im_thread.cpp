@@ -17,16 +17,16 @@ namespace ios::auxil::internal
 using IMDeviceHandle = uint32_t;
 
 constexpr auto MaxNumIMDevices = 96u;
-constexpr auto NumMessages = 20u;
-constexpr auto ThreadStackSize = 0x800u;
-constexpr auto ThreadPriority = 69u;
+constexpr auto ImNumMessages = 20u;
+constexpr auto ImThreadStackSize = 0x800u;
+constexpr auto ImThreadPriority = 69u;
 
 struct StaticData
 {
    be2_val<kernel::ThreadId> threadId;
    be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, NumMessages> messageBuffer;
-   be2_array<uint8_t, ThreadStackSize> threadStack;
+   be2_array<kernel::Message, ImNumMessages> messageBuffer;
+   be2_array<uint8_t, ImThreadStackSize> threadStack;
    be2_val<Command> stopMessageBuffer;
 };
 
@@ -152,7 +152,8 @@ Error
 startImThread()
 {
    // Create message queue
-   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer), sData->messageBuffer.size());
+   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                               static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
@@ -161,8 +162,8 @@ startImThread()
    // Create thread
    error = kernel::IOS_CreateThread(&imThreadEntry, nullptr,
                                     phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    sData->threadStack.size(),
-                                    ThreadPriority,
+                                    static_cast<uint32_t>(sData->threadStack.size()),
+                                    ImThreadPriority,
                                     kernel::ThreadFlags::Detached);
    if (error < Error::OK) {
       kernel::IOS_DestroyMessageQueue(sData->messageQueueId);

@@ -11,16 +11,16 @@
 namespace ios::auxil::internal
 {
 
-constexpr auto NumMessages = 10u;
-constexpr auto ThreadStackSize = 0x2000u;
-constexpr auto ThreadPriority = 70u;
+constexpr auto UsrCfgThreadNumMessages = 10u;
+constexpr auto UsrCfgThreadStackSize = 0x2000u;
+constexpr auto UsrCfgThreadPriority = 70u;
 
 struct StaticData
 {
    be2_val<kernel::ThreadId> threadId;
    be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, NumMessages> messageBuffer;
-   be2_array<uint8_t, ThreadStackSize> threadStack;
+   be2_array<kernel::Message, UsrCfgThreadNumMessages> messageBuffer;
+   be2_array<uint8_t, UsrCfgThreadStackSize> threadStack;
 };
 
 static phys_ptr<StaticData>
@@ -71,7 +71,8 @@ Error
 startUsrCfgThread()
 {
    // Create message queue
-   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer), sData->messageBuffer.size());
+   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                               static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
@@ -80,8 +81,8 @@ startUsrCfgThread()
    // Create thread
    error = kernel::IOS_CreateThread(&usrCfgThreadEntry, nullptr,
                                     phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    sData->threadStack.size(),
-                                    ThreadPriority,
+                                    static_cast<uint32_t>(sData->threadStack.size()),
+                                    UsrCfgThreadPriority,
                                     kernel::ThreadFlags::Detached);
    if (error < Error::OK) {
       kernel::IOS_DestroyMessageQueue(sData->messageQueueId);

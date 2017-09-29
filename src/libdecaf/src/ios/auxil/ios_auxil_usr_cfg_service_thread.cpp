@@ -11,9 +11,9 @@
 namespace ios::auxil::internal
 {
 
-constexpr auto NumMessages = 10u;
-constexpr auto ThreadStackSize = 0x2000u;
-constexpr auto ThreadPriority = 70u;
+constexpr auto UCServiceNumMessages = 10u;
+constexpr auto UCServiceThreadStackSize = 0x2000u;
+constexpr auto UCServiceThreadPriority = 70u;
 constexpr auto MaxNumDevices = 96u;
 
 struct StaticData
@@ -21,8 +21,8 @@ struct StaticData
    be2_val<bool> serviceRunning;
    be2_val<kernel::ThreadId> threadId;
    be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, NumMessages> messageBuffer;
-   be2_array<uint8_t, ThreadStackSize> threadStack;
+   be2_array<kernel::Message, UCServiceNumMessages> messageBuffer;
+   be2_array<uint8_t, UCServiceThreadStackSize> threadStack;
 };
 
 static phys_ptr<StaticData>
@@ -130,7 +130,8 @@ Error
 startUsrCfgServiceThread()
 {
    // Create message queue
-   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer), sData->messageBuffer.size());
+   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                               static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
@@ -147,8 +148,8 @@ startUsrCfgServiceThread()
    // Create thread
    error = kernel::IOS_CreateThread(&usrCfgServiceThreadEntry, nullptr,
                                     phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    sData->threadStack.size(),
-                                    ThreadPriority,
+                                    static_cast<uint32_t>(sData->threadStack.size()),
+                                    UCServiceThreadPriority,
                                     kernel::ThreadFlags::Detached);
    if (error < Error::OK) {
       kernel::IOS_DestroyMessageQueue(sData->messageQueueId);

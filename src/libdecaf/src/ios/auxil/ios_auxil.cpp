@@ -56,7 +56,7 @@ processEntryPoint(phys_ptr<void> context)
 
    // Initialise process heaps
    auto error = kernel::IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer),
-                                                   sData->localHeapBuffer.size());
+                                                   static_cast<uint32_t>(sData->localHeapBuffer.size()));
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to create local process heap, error = {}.", error);
       return error;
@@ -82,7 +82,8 @@ processEntryPoint(phys_ptr<void> context)
    }
 
    // Setup auxilproc
-   error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer), sData->messageBuffer.size());
+   error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                          static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to create auxil proc message queue, error = {}.", error);
       return error;
