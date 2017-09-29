@@ -2,9 +2,12 @@
 #include "ios_fs_mutex.h"
 
 #include "ios/kernel/ios_kernel_messagequeue.h"
+#include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
+
 #include "ios/ios_enum.h"
+#include "ios/ios_handlemanager.h"
 #include "ios/ios_ipc.h"
 #include "ios/ios_stackobject.h"
 
@@ -21,30 +24,7 @@ struct RequestOrigin
    be2_val<GroupId> groupId;
 };
 
-struct FsaPerProcessData
-{
-   be2_val<BOOL> initialised;
-   be2_struct<RequestOrigin> origin;
-   UNKNOWN(4);
-   be2_val<kernel::ClientCapabilityMask> clientCapabilityMask;
-   UNKNOWN(0x34 - 0x20);
-   be2_val<uint32_t> numFilesOpen;
-   UNKNOWN(0x4538 - 0x38);
-   be2_array<char, FSAPathLength> unkPath0x4538;
-   be2_array<char, FSAPathLength> unkPath0x47B8;
-   be2_struct<Mutex> mutex;
-};
-
-struct FsaDeviceData
-{
-   be2_val<BOOL> initialised;
-   be2_phys_ptr<FsaPerProcessData> perProcessData;
-   UNKNOWN(0xAC - 0x08);
-   be2_array<char, FSAPathLength> workingPath;
-   UNKNOWN(0x4);
-};
-
-struct FsaData
+struct StaticData
 {
    be2_val<kernel::MessageQueueId> fsaMessageQueue;
    be2_array<kernel::Message, 0x160> fsaMessageBuffer;
@@ -53,48 +33,34 @@ struct FsaData
    be2_array<uint8_t, 0x4000> fsaThreadStack;
 };
 
-static phys_ptr<FsaData>
+static phys_ptr<StaticData>
 sData = nullptr;
 
-static std::vector<std::unique_ptr<FSADevice>>
+static HandleManager<FSADevice, FSADeviceHandle, FSAMaxClients>
 sDevices;
 
-FSADevice *
-getDevice(FSADeviceHandle handle)
+FSAStatus
+getDevice(FSADeviceHandle handle, FSADevice **outDevice)
 {
-   if (handle < 0 || handle >= sDevices.size()) {
-      return nullptr;
+   auto error = sDevices.get(handle, outDevice);
+   if (error < Error::OK) {
+      return FSAStatus::InvalidClientHandle;
    }
 
-   return sDevices[handle].get();
+   return FSAStatus::OK;
 }
 
 static FSAStatus
 fsaDeviceOpen(phys_ptr<RequestOrigin> origin,
-              FSADeviceHandle *outFsaHandle,
+              FSADeviceHandle *outHandle,
               kernel::ClientCapabilityMask clientCapabilityMask)
 {
-   auto handle = FSADeviceHandle { -1 };
-
-   for (auto i = 0u; i < sDevices.size(); ++i) {
-      if (!sDevices[i]) {
-         handle = static_cast<FSADeviceHandle>(i);
-         break;
-      }
+   auto error = sDevices.open();
+   if(error < Error::OK) {
+      return FSAStatus::MaxClients;
    }
 
-   if (handle < 0) {
-      if (sDevices.size() >= FSAMaxClients) {
-         return FSAStatus::MaxClients;
-      }
-
-      handle = static_cast<FSADeviceHandle>(sDevices.size());
-      sDevices.emplace_back(std::make_unique<FSADevice>());
-   } else {
-      sDevices[handle] = std::make_unique<FSADevice>();
-   }
-
-   *outFsaHandle = handle;
+   *outHandle = static_cast<FSADeviceHandle>(error);
    return FSAStatus::OK;
 }
 
@@ -102,14 +68,15 @@ static FSAStatus
 fsaDeviceClose(FSADeviceHandle handle,
                phys_ptr<kernel::ResourceRequest> resourceRequest)
 {
-   auto device = getDevice(handle);
-   if (!device) {
-      return FSAStatus::InvalidClientHandle;
+   FSADevice *device = nullptr;
+   auto status = getDevice(handle, &device);
+   if (status < FSAStatus::OK) {
+      return status;
    }
 
    // TODO: Handle cleanup of async operations
 
-   sDevices[handle] = nullptr;
+   sDevices.close(device);
    return FSAStatus::OK;
 }
 
@@ -119,8 +86,12 @@ fsaDeviceIoctl(phys_ptr<kernel::ResourceRequest> resourceRequest,
                be2_phys_ptr<const void> inputBuffer,
                be2_phys_ptr<void> outputBuffer)
 {
-   auto status = FSAStatus::OK;
-   auto device = getDevice(resourceRequest->requestData.handle);
+   FSADevice *device = nullptr;
+   auto status = getDevice(resourceRequest->requestData.handle, &device);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
    auto request = phys_cast<const FSARequest>(inputBuffer);
    auto response = phys_cast<FSAResponse>(outputBuffer);
 
@@ -205,36 +176,38 @@ fsaDeviceIoctlv(phys_ptr<kernel::ResourceRequest> resourceRequest,
                 be2_phys_ptr<IoctlVec> vecs)
 {
    auto request = phys_ptr<FSARequest> { vecs[0].paddr };
-   auto device = getDevice(resourceRequest->requestData.handle);
    auto status = FSAStatus::OK;
 
-   if (!device) {
-      status = FSAStatus::InvalidClientHandle;
-   } else if (request->emulatedError < 0) {
+   if (request->emulatedError < FSAStatus::OK) {
       status = request->emulatedError;
    } else {
-      switch (command) {
-      case FSACommand::ReadFile:
-      {
-         auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
-         auto length = vecs[1].len;
-         status = device->readFile(phys_addrof(request->readFile), buffer, length);
-         break;
-      }
-      case FSACommand::WriteFile:
-      {
-         auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
-         auto length = vecs[1].len;
-         status = device->writeFile(phys_addrof(request->writeFile), buffer, length);
-         break;
-      }
-      case FSACommand::Mount:
-      {
-         status = device->mount(phys_addrof(request->mount));
-         break;
-      }
-      default:
-         status = FSAStatus::UnsupportedCmd;
+      FSADevice *device = nullptr;
+      status = getDevice(resourceRequest->requestData.handle, &device);
+
+      if (status >= FSAStatus::OK) {
+         switch (command) {
+         case FSACommand::ReadFile:
+         {
+            auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
+            auto length = vecs[1].len;
+            status = device->readFile(phys_addrof(request->readFile), buffer, length);
+            break;
+         }
+         case FSACommand::WriteFile:
+         {
+            auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
+            auto length = vecs[1].len;
+            status = device->writeFile(phys_addrof(request->writeFile), buffer, length);
+            break;
+         }
+         case FSACommand::Mount:
+         {
+            status = device->mount(phys_addrof(request->mount));
+            break;
+         }
+         default:
+            status = FSAStatus::UnsupportedCmd;
+         }
       }
    }
 
@@ -350,6 +323,13 @@ startFsaThread()
    }
 
    return Error::OK;
+}
+
+void
+initialiseStaticFsaThreadData()
+{
+   sData = kernel::allocProcessStatic<StaticData>();
+   sDevices.closeAll();
 }
 
 } // namespace ios::fs::internal
