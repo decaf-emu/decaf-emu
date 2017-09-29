@@ -70,6 +70,9 @@ FSAOpenFile(kernel::ResourceHandleId resourceHandleId,
       return status;
    }
 
+   ipcData->command = FSACommand::OpenFile;
+   ipcData->resourceHandle = resourceHandleId;
+
    auto request = phys_addrof(ipcData->request);
    std::strncpy(phys_addrof(request->openFile.path).getRawPointer(),
                 name.data(),
@@ -81,8 +84,8 @@ FSAOpenFile(kernel::ResourceHandleId resourceHandleId,
 
    request->openFile.unk0x290 = 0x60000u;
 
-   auto error = kernel::IOS_Ioctl(resourceHandleId,
-                                  FSACommand::OpenFile,
+   auto error = kernel::IOS_Ioctl(ipcData->resourceHandle,
+                                  ipcData->command,
                                   phys_addrof(ipcData->request),
                                   sizeof(FSARequest),
                                   phys_addrof(ipcData->response),
@@ -106,11 +109,14 @@ FSACloseFile(kernel::ResourceHandleId resourceHandleId,
       return status;
    }
 
+   ipcData->command = FSACommand::CloseFile;
+   ipcData->resourceHandle = resourceHandleId;
+
    auto request = phys_addrof(ipcData->request);
    request->closeFile.handle = fileHandle;
 
-   auto error = kernel::IOS_Ioctl(resourceHandleId,
-                                  FSACommand::OpenFile,
+   auto error = kernel::IOS_Ioctl(ipcData->resourceHandle,
+                                  ipcData->command,
                                   phys_addrof(ipcData->request),
                                   sizeof(FSARequest),
                                   phys_addrof(ipcData->response),
@@ -135,6 +141,9 @@ FSAReadFile(kernel::ResourceHandleId resourceHandleId,
       return status;
    }
 
+   ipcData->command = FSACommand::ReadFile;
+   ipcData->resourceHandle = resourceHandleId;
+
    auto request = phys_addrof(ipcData->request);
    request->readFile.handle = fileHandle;
    request->readFile.size = size;
@@ -151,8 +160,8 @@ FSAReadFile(kernel::ResourceHandleId resourceHandleId,
    vecs[2].paddr = phys_addrof(ipcData->response);
    vecs[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
-   auto error = kernel::IOS_Ioctlv(resourceHandleId,
-                                   FSACommand::ReadFile,
+   auto error = kernel::IOS_Ioctlv(ipcData->resourceHandle,
+                                   ipcData->command,
                                    1u,
                                    2u,
                                    phys_addrof(ipcData->vecs));
@@ -176,6 +185,9 @@ FSAWriteFile(kernel::ResourceHandleId resourceHandleId,
       return status;
    }
 
+   ipcData->command = FSACommand::WriteFile;
+   ipcData->resourceHandle = resourceHandleId;
+
    auto request = phys_addrof(ipcData->request);
    request->writeFile.handle = fileHandle;
    request->writeFile.size = size;
@@ -192,11 +204,48 @@ FSAWriteFile(kernel::ResourceHandleId resourceHandleId,
    vecs[2].paddr = phys_addrof(ipcData->response);
    vecs[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
-   auto error = kernel::IOS_Ioctlv(resourceHandleId,
-                                   FSACommand::WriteFile,
+   auto error = kernel::IOS_Ioctlv(ipcData->resourceHandle,
+                                   ipcData->command,
                                    2u,
                                    1u,
                                    phys_addrof(ipcData->vecs));
+
+   freeFsaIpcData(ipcData);
+   return static_cast<FSAStatus>(error);
+}
+
+FSAStatus
+FSAStatFile(kernel::ResourceHandleId resourceHandleId,
+            FSAFileHandle fileHandle,
+            phys_ptr<FSAStat> stat)
+{
+   phys_ptr<FSAIpcData> ipcData;
+
+   auto status = allocFsaIpcData(&ipcData);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   ipcData->command = FSACommand::StatFile;
+   ipcData->resourceHandle = resourceHandleId;
+
+   // Setup request
+   auto request = phys_addrof(ipcData->request);
+   request->statFile.handle = fileHandle;
+
+   // Perform ioctl
+   auto error = kernel::IOS_Ioctl(ipcData->resourceHandle,
+                                  ipcData->command,
+                                  phys_addrof(ipcData->request),
+                                  sizeof(FSARequest),
+                                  phys_addrof(ipcData->response),
+                                  sizeof(FSAResponse));
+
+   // Copy FSAStat
+   auto response = phys_addrof(ipcData->response);
+   std::memcpy(stat.getRawPointer(),
+               phys_addrof(response->statFile.stat).getRawPointer(),
+               sizeof(FSAStat));
 
    freeFsaIpcData(ipcData);
    return static_cast<FSAStatus>(error);

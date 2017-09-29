@@ -31,8 +31,12 @@ FSAWriteFile(kernel::ResourceHandleId resourceHandleId,
              FSAFileHandle fileHandle,
              FSAWriteFlag writeFlags);
 
+FSAStatus
+FSAStatFile(kernel::ResourceHandleId resourceHandleId,
+            FSAFileHandle fileHandle,
+            phys_ptr<FSAStat> stat);
+
 // MakeDir
-// StatFile
 // Rename
 // Remove
 

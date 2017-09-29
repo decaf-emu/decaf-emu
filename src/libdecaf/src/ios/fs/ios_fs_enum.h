@@ -96,6 +96,7 @@ ENUM_BEG(FSAQueryInfoType, uint32_t)
 ENUM_END(FSAQueryInfoType)
 
 ENUM_BEG(FSAReadFlag, uint32_t)
+   ENUM_VALUE(None,                    0x0)
    ENUM_VALUE(ReadWithPos,             0x1)
 ENUM_END(FSAReadFlag)
 
@@ -146,6 +147,7 @@ ENUM_BEG(FSAStatus, int32_t)
 ENUM_END(FSAStatus)
 
 ENUM_BEG(FSAWriteFlag, uint32_t)
+   ENUM_VALUE(None,                    0x0)
    ENUM_VALUE(WriteWithPos,            0x1)
 ENUM_END(FSAWriteFlag)
 
