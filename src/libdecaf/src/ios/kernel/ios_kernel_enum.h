@@ -64,6 +64,11 @@ FLAGS_BEG(MessageQueueFlags, uint8_t)
    FLAGS_VALUE(RegisteredEventHandler,    1)
 FLAGS_END(MessageQueueFlags)
 
+ENUM_BEG(RootThreadCommand, int32_t)
+   ENUM_VALUE(Timer,                0x100)
+   ENUM_VALUE(SysprotEvent,         0x101)
+ENUM_END(RootThreadCommand)
+
 ENUM_BEG(ResourceHandleState, int32_t)
    ENUM_VALUE(Free,                 0x00)
    ENUM_VALUE(Opening,              0x11)
