@@ -65,9 +65,24 @@ IOS_ReceiveMessage(MessageQueueId id,
                    MessageFlags flags);
 
 template<typename Type>
-Message makeMessage(phys_ptr<Type> ptr)
+Message
+makeMessage(phys_ptr<Type> ptr)
 {
    return static_cast<Message>(phys_addr { ptr }.getAddress());
+}
+
+template<typename Type>
+Message
+makeMessage(be2_phys_ptr<Type> ptr)
+{
+   return static_cast<Message>(phys_addr { ptr }.getAddress());
+}
+
+template<typename Type>
+phys_ptr<Type>
+parseMessage(phys_ptr<Message> message)
+{
+   return phys_ptr<Type>(phys_addr { static_cast<Message>(*message) });
 }
 
 namespace internal
