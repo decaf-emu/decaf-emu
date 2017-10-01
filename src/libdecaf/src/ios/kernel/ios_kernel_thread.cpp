@@ -412,10 +412,17 @@ iosFiberEntryPoint(void *context)
 {
    auto thread = reinterpret_cast<Thread *>(context);
 #ifndef IOS_EMULATE_ARM
-   thread->exitValue = thread->context.entryPoint(thread->context.entryPointArg);
+   auto exitValue = thread->context.entryPoint(thread->context.entryPointArg);
 #else
    decaf_abort("iosFiberEntryPoint for IOS_EMULATE_ARM unimplemented");
 #endif
+
+   if (thread->flags & ThreadFlags::Detached) {
+      IOS_CancelThread(thread->id, exitValue);
+   } else {
+      thread->exitValue = exitValue;
+      IOS_SuspendThread(thread->id);
+   }
 }
 
 phys_ptr<Thread>
