@@ -16,6 +16,7 @@ namespace ios::kernel
 
 struct StaticData
 {
+   be2_val<BOOL> registrationEnabled;
    be2_struct<ResourceManagerList> resourceManagerList;
    be2_struct<ResourceRequestList> resourceRequestList;
    be2_array<ResourceHandleManager, ProcessId::Max> resourceHandleManagers;
@@ -70,6 +71,29 @@ dispatchRequest(phys_ptr<ResourceRequest> request);
 
 } // namespace internal
 
+
+/**
+ * Enable or disable any further resource manager registrations.
+ *
+ * \returns Error:Access
+ * Registration can only be disabled or enabled from the MCP process.
+ *
+ * \returns Error::Busy
+ * For some reason this function returns Error::Busy on success.
+ */
+Error
+IOS_SetResourceManagerRegistrationDisabled(bool disable)
+{
+   auto pid = internal::getCurrentProcessId();
+   if (pid != ProcessId::MCP) {
+      return Error::Access;
+   }
+
+   sData->registrationEnabled = disable ? FALSE : TRUE;
+   return Error::Busy;
+}
+
+
 /**
  * Register a message queue to receive messages for a device.
  */
@@ -86,6 +110,10 @@ IOS_RegisterResourceManager(std::string_view device,
    auto error = internal::findResourceManager(device, nullptr);
    if (error < Error::OK) {
       return Error::Exists;
+   }
+
+   if (!sData->registrationEnabled) {
+      return Error::NotReady;
    }
 
    auto &resourceManagerList = sData->resourceManagerList;
@@ -1273,6 +1301,7 @@ void
 initialiseStaticResourceManagerData()
 {
    sData = allocProcessStatic<StaticData>();
+   sData->registrationEnabled = TRUE;
 
    // Initialise resourceManagerList
    auto &resourceManagerList = sData->resourceManagerList;

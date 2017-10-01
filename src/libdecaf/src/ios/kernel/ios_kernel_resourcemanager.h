@@ -301,6 +301,9 @@ CHECK_SIZE(ResourceRequestList, 0xB40C);
 #pragma pack(pop)
 
 Error
+IOS_SetResourceManagerRegistrationDisabled(bool enable);
+
+Error
 IOS_RegisterResourceManager(std::string_view device,
                             MessageQueueId queue);
 
