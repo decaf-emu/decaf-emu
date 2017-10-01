@@ -5,6 +5,8 @@
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
 
+#include "ios/mcp/ios_mcp_ipc.h"
+
 #include "ios/ios_handlemanager.h"
 #include "ios/ios_stackobject.h"
 
@@ -138,8 +140,7 @@ startUsrCfgServiceThread()
    sData->messageQueueId = static_cast<kernel::MessageQueueId>(error);
 
    // Register the device
-   error = kernel::IOS_RegisterResourceManager("/dev/usr_cfg",
-                                               sData->messageQueueId);
+   error = mcp::MCP_RegisterResourceManager("/dev/usr_cfg", sData->messageQueueId);
    if (error < Error::OK) {
       kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
       return error;

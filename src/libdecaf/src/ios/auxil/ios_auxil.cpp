@@ -10,6 +10,8 @@
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 
+#include "ios/mcp/ios_mcp_ipc.h"
+
 #include "ios/ios_enum.h"
 #include "ios/ios_stackobject.h"
 
@@ -91,7 +93,7 @@ processEntryPoint(phys_ptr<void> context)
    }
    sData->messageQueueId = static_cast<kernel::MessageQueueId>(error);
 
-   error = kernel::IOS_RegisterResourceManager("/dev/auxilproc", sData->messageQueueId);
+   error = mcp::MCP_RegisterResourceManager("/dev/auxilproc", sData->messageQueueId);
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to register /dev/auxilproc, error = {}.", error);
       return error;
