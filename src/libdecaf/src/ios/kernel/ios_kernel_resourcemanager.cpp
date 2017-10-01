@@ -253,6 +253,24 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
 }
 
 
+/**
+ * Set the client capability mask for a specific process & feature ID.
+ *
+ * Can only be set by the MCP process.
+ */
+Error
+IOS_SetClientCapabilities(ProcessId pid,
+                          FeatureId featureId,
+                          phys_ptr<uint64_t> mask)
+{
+   if (internal::getCurrentProcessId() != ProcessId::MCP) {
+      return Error::Access;
+   }
+
+   return internal::setClientCapability(pid, featureId, *mask);
+}
+
+
 namespace internal
 {
 

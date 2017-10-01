@@ -315,6 +315,11 @@ Error
 IOS_ResourceReply(phys_ptr<ResourceRequest> request,
                   Error reply);
 
+Error
+IOS_SetClientCapabilities(ProcessId pid,
+                          FeatureId featureId,
+                          phys_ptr<uint64_t> mask);
+
 namespace internal
 {
 
