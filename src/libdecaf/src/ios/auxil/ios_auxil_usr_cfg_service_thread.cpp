@@ -13,6 +13,8 @@
 namespace ios::auxil::internal
 {
 
+using namespace kernel;
+
 constexpr auto UCServiceNumMessages = 10u;
 constexpr auto UCServiceThreadStackSize = 0x2000u;
 constexpr auto UCServiceThreadPriority = 70u;
@@ -21,9 +23,9 @@ constexpr auto MaxNumDevices = 96u;
 struct StaticData
 {
    be2_val<bool> serviceRunning;
-   be2_val<kernel::ThreadId> threadId;
-   be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, UCServiceNumMessages> messageBuffer;
+   be2_val<ThreadId> threadId;
+   be2_val<MessageQueueId> messageQueueId;
+   be2_array<Message, UCServiceNumMessages> messageBuffer;
    be2_array<uint8_t, UCServiceThreadStackSize> threadStack;
 };
 
@@ -49,22 +51,22 @@ getUCDevice(UCDeviceHandle handle,
 static Error
 usrCfgServiceThreadEntry(phys_ptr<void> /*context*/)
 {
-   StackObject<kernel::Message> message;
+   StackObject<Message> message;
 
    while (true) {
-      auto error = kernel::IOS_ReceiveMessage(sData->messageQueueId,
-                                              message,
-                                              kernel::MessageFlags::NonBlocking);
+      auto error = IOS_ReceiveMessage(sData->messageQueueId,
+                                      message,
+                                      MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
 
-      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
+      auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Open:
       {
          error = sDevices.open();
-         kernel::IOS_ResourceReply(request, error);
+         IOS_ResourceReply(request, error);
          break;
       }
 
@@ -74,7 +76,7 @@ usrCfgServiceThreadEntry(phys_ptr<void> /*context*/)
          auto handle = static_cast<UCDeviceHandle>(request->requestData.handle);
          error = sDevices.get(handle, &device);
          if (error < Error::OK) {
-            kernel::IOS_ResourceReply(request, error);
+            IOS_ResourceReply(request, error);
             continue;
          }
 
@@ -88,21 +90,21 @@ usrCfgServiceThreadEntry(phys_ptr<void> /*context*/)
          UCDevice *device = nullptr;
 
          if (!sData->serviceRunning) {
-            kernel::IOS_ResourceReply(request, Error::NotReady);
+            IOS_ResourceReply(request, Error::NotReady);
             continue;
          }
 
          auto handle = static_cast<UCDeviceHandle>(request->requestData.handle);
          error = sDevices.get(handle, &device);
          if (error < Error::OK) {
-            kernel::IOS_ResourceReply(request, error);
+            IOS_ResourceReply(request, error);
             continue;
          }
 
          device->incrementRefCount();
-         kernel::IOS_SendMessage(getUsrCfgMessageQueueId(),
-                                 *message,
-                                 kernel::MessageFlags::None);
+         IOS_SendMessage(getUsrCfgMessageQueueId(),
+                         *message,
+                         MessageFlags::None);
          break;
       }
 
@@ -110,7 +112,7 @@ usrCfgServiceThreadEntry(phys_ptr<void> /*context*/)
       {
          // TODO: Close FSA Handle
          sData->serviceRunning = false;
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       }
 
@@ -118,12 +120,12 @@ usrCfgServiceThreadEntry(phys_ptr<void> /*context*/)
       {
          // TODO: Open FSA Handle
          sData->serviceRunning = true;
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       }
 
       default:
-         kernel::IOS_ResourceReply(request, Error::InvalidArg);
+         IOS_ResourceReply(request, Error::InvalidArg);
       }
    }
 }
@@ -132,35 +134,36 @@ Error
 startUsrCfgServiceThread()
 {
    // Create message queue
-   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
-                                               static_cast<uint32_t>(sData->messageBuffer.size()));
+   auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                       static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
-   sData->messageQueueId = static_cast<kernel::MessageQueueId>(error);
+   sData->messageQueueId = static_cast<MessageQueueId>(error);
 
    // Register the device
    error = mcp::MCP_RegisterResourceManager("/dev/usr_cfg", sData->messageQueueId);
    if (error < Error::OK) {
-      kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
+      IOS_DestroyMessageQueue(sData->messageQueueId);
       return error;
    }
 
    // Create thread
-   error = kernel::IOS_CreateThread(&usrCfgServiceThreadEntry, nullptr,
-                                    phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    static_cast<uint32_t>(sData->threadStack.size()),
-                                    UCServiceThreadPriority,
-                                    kernel::ThreadFlags::Detached);
+   error = IOS_CreateThread(&usrCfgServiceThreadEntry, nullptr,
+                            phys_addrof(sData->threadStack) + sData->threadStack.size(),
+                            static_cast<uint32_t>(sData->threadStack.size()),
+                            UCServiceThreadPriority,
+                            ThreadFlags::Detached);
    if (error < Error::OK) {
-      kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
+      IOS_DestroyMessageQueue(sData->messageQueueId);
       return error;
    }
-   sData->threadId = static_cast<kernel::ThreadId>(error);
-   return kernel::IOS_StartThread(sData->threadId);
+
+   sData->threadId = static_cast<ThreadId>(error);
+   return IOS_StartThread(sData->threadId);
 }
 
-kernel::MessageQueueId
+MessageQueueId
 getUsrCfgServiceMessageQueueId()
 {
    return sData->messageQueueId;
@@ -169,7 +172,7 @@ getUsrCfgServiceMessageQueueId()
 void
 initialiseStaticUsrCfgServiceThreadData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = allocProcessStatic<StaticData>();
    sDevices.closeAll();
 }
 
