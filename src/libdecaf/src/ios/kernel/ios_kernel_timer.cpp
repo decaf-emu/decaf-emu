@@ -40,10 +40,11 @@ setAlarm(TimerTicks when);
 
 } // namespace internal
 
-TimerTicks
-IOS_GetTimerTicks()
+Error
+IOS_GetUpTime64(phys_ptr<TimerTicks> outTime)
 {
-   return internal::timeToTicks(std::chrono::steady_clock::now());
+   *outTime = internal::getUpTime64();
+   return Error::OK;
 }
 
 Error
@@ -88,7 +89,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
    timer.uid = timerIdx | static_cast<int32_t>((timerManager.totalCreatedTimers << 12) & 0x7FFFFFFF);
    timer.state = TimerState::Ready;
    timer.nextTriggerTime = TimerTicks { 0 };
-   timer.period = static_cast<TimeMicroseconds>(period.count());
+   timer.period = static_cast<TimeMicroseconds32>(period.count());
    timer.queueId = queue;
    timer.message = message;
    timer.processId = pid;
@@ -101,7 +102,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
    }
 
    if (delay.count() || period.count()) {
-      timer.nextTriggerTime = IOS_GetTimerTicks() + internal::durationToTicks(delay);
+      timer.nextTriggerTime = internal::getUpTime64() + internal::durationToTicks(delay);
       if (internal::startTimer(phys_addrof(timer)) == 0) {
          internal::setAlarm(timer.nextTriggerTime);
       }
@@ -199,10 +200,10 @@ IOS_RestartTimer(TimerId timerId,
    }
 
    timer->nextTriggerTime = TimerTicks { 0 };
-   timer->period = static_cast<TimeMicroseconds>(period.count());
+   timer->period = static_cast<TimeMicroseconds32>(period.count());
 
    if (delay.count() || period.count()) {
-      timer->nextTriggerTime = IOS_GetTimerTicks() + internal::durationToTicks(delay);
+      timer->nextTriggerTime = internal::getUpTime64() + internal::durationToTicks(delay);
       if (internal::startTimer(timer) == 0) {
          internal::setAlarm(timer->nextTriggerTime);
       }
@@ -227,7 +228,7 @@ timerThreadEntry(phys_ptr<void> /*context*/)
          return error;
       }
 
-      auto now = IOS_GetTimerTicks();
+      auto now = internal::getUpTime64();
       while (true) {
          // Trigger all ready timers
 
@@ -387,7 +388,7 @@ initialiseStaticTimerData()
    sStartupTime = std::chrono::steady_clock::now();
    sData = allocProcessStatic<StaticData>();
 
-   for (auto i = 0; i < sData->timerManager.timers.size(); ++i) {
+   for (auto i = 0u; i < sData->timerManager.timers.size(); ++i) {
       auto &timer = sData->timerManager.timers[i];
       timer.uid = TimerId { -4 };
       timer.processId = ProcessId { -4 };
@@ -402,6 +403,12 @@ initialiseStaticTimerData()
    sData->timerManager.lastFreeIdx = int16_t { 255 };
    sData->timerManager.firstRunningTimerIdx = int16_t { -1 };
    sData->timerManager.lastRunningTimerIdx = int16_t { -1 };
+}
+
+TimerTicks
+getUpTime64()
+{
+   return internal::timeToTicks(std::chrono::steady_clock::now());
 }
 
 } // namespace internal

@@ -18,14 +18,15 @@ constexpr auto MaxNumTimersPerProcess = 64u;
 
 using TimerId = int32_t;
 using TimerTicks = uint64_t;
-using TimeMicroseconds = uint32_t;
+using TimeMicroseconds32 = uint32_t;
+using TimeMicroseconds64 = uint64_t;
 
 struct Timer
 {
    be2_val<TimerId> uid;
    be2_val<TimerState> state;
    be2_val<TimerTicks> nextTriggerTime;
-   be2_val<TimeMicroseconds> period;
+   be2_val<TimeMicroseconds32> period;
    be2_val<MessageQueueId> queueId;
    be2_val<Message> message;
    be2_val<ProcessId> processId;
@@ -103,8 +104,8 @@ CHECK_OFFSET(TimerManager, 0x30, timers);
 
 #pragma pack(pop)
 
-TimerTicks
-IOS_GetTimerTicks();
+Error
+IOS_GetUpTime64(phys_ptr<TimerTicks> outTime);
 
 Error
 IOS_CreateTimer(std::chrono::microseconds delay,
@@ -148,6 +149,9 @@ startTimerThread();
 
 void
 initialiseStaticTimerData();
+
+TimerTicks
+getUpTime64();
 
 } // namespace internal
 
