@@ -80,6 +80,14 @@ inline phys_ptr<DstType> phys_cast(const be2_phys_ptr<SrcType> &src)
 template<typename Type>
 struct be2_struct : public Type
 {
+   be2_struct &operator=(const be2_struct &x) = default;
+
+   be2_struct &operator=(const Type &x)
+   {
+      *reinterpret_cast<Type *>(this) = x;
+      return *this;
+   }
+
    // Please use virt_addrof or phys_addrof instead
    cpu::VirtualPointer<Type> operator &() = delete;
 };
@@ -318,6 +326,7 @@ private:
    size_type mIndex;
    array_type &mArray;
 };
+
 
 /**
  * Returns a virt_ptr to a big endian value type.
