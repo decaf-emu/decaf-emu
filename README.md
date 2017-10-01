@@ -38,7 +38,7 @@ There are two decaf frontends:
 - `cmake ../decaf-emu && make`
 - It is suggested (but optional) to use your system's zlib, sdl2 and glbinding
 - You can enable building with valgrind with -DDECAF_VALGRIND=ON, this requires valgrind to be installed on your system
-- Requires a modern gcc or clang which supports C++14 features
+- Requires a modern gcc or clang which supports C++17 features
 
 ## Running
 
