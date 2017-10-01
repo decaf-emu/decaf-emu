@@ -30,4 +30,37 @@ public:
    }
 };
 
+template<typename Type, size_t Size>
+class StackArray : public phys_ptr<Type>
+{
+   static constexpr size_t AlignedSize = align_up(sizeof(Type) * Size, 4);
+
+public:
+   StackArray()
+   {
+      auto thread = kernel::internal::getCurrentThread();
+      auto ptr = phys_cast<uint8_t>(thread->stackPointer) - AlignedSize;
+      mAddress = static_cast<phys_addr>(ptr);
+      thread->stackPointer = ptr;
+   }
+
+   ~StackArray()
+   {
+      auto thread = kernel::internal::getCurrentThread();
+      auto ptr = phys_cast<uint8_t>(thread->stackPointer);
+      decaf_check(ptr == mAddress);
+      thread->stackPointer = ptr + AlignedSize;
+   }
+
+   constexpr auto &operator[](std::size_t index)
+   {
+      return getRawPointer()[index];
+   }
+
+   constexpr const auto &operator[](std::size_t index) const
+   {
+      return getRawPointer()[index];
+   }
+};
+
 } // namespace ios
