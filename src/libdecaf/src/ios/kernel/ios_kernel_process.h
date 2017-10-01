@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <libcpu/be2_struct.h>
+#include <string_view>
 #include <utility>
 
 namespace ios::kernel
@@ -23,6 +24,9 @@ allocProcessStatic(size_t size);
 phys_ptr<void>
 allocProcessStatic(ProcessId pid,
                    size_t size);
+
+phys_ptr<char>
+allocProcessStatic(std::string_view str);
 
 template<typename Type, typename... Args>
 phys_ptr<Type>

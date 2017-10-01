@@ -105,11 +105,23 @@ IOS_GetProcessName(ProcessId process,
    return Error::OK;
 }
 
+
 phys_ptr<void>
 allocProcessStatic(size_t size)
 {
    return allocProcessStatic(internal::getCurrentProcessId(), size);
 }
+
+
+phys_ptr<char>
+allocProcessStatic(std::string_view str)
+{
+   auto buffer = phys_cast<char>(allocProcessStatic(str.size() + 1));
+   std::copy(str.begin(), str.end(), buffer.getRawPointer());
+   buffer[str.size()] = char { 0 };
+   return buffer;
+}
+
 
 phys_ptr<void>
 allocProcessStatic(ProcessId pid,
