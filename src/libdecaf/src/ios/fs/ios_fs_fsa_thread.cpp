@@ -230,7 +230,7 @@ fsaThreadMain(phys_ptr<void> /*context*/)
          return error;
       }
 
-      auto request = phys_ptr<kernel::ResourceRequest>(phys_addr { static_cast<kernel::Message>(*message) });
+      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Open:
       {
@@ -298,8 +298,8 @@ startFsaThread()
       return error;
    }
 
-   error = kernel::IOS_SetResourcePermissionGroup("/dev/fsa",
-                                                  kernel::ResourcePermissionGroup::FS);
+   error = kernel::IOS_AssociateResourceManager("/dev/fsa",
+                                                kernel::ResourcePermissionGroup::FS);
    if (error < Error::OK) {
       return error;
    }

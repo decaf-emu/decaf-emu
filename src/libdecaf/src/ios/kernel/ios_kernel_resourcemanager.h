@@ -44,7 +44,7 @@ struct ResourceManager
    be2_phys_ptr<ResourceHandleManager> resourceHandleManager;
 
    //! Permission Group this resource belongs to, this matches values in cos.xml.
-   be2_val<uint32_t> permissionGroup;
+   be2_val<ResourcePermissionGroup> permissionGroup;
 
    //! Length of the string in this->device
    be2_val<uint16_t> deviceLen;
@@ -308,8 +308,8 @@ IOS_RegisterResourceManager(std::string_view device,
                             MessageQueueId queue);
 
 Error
-IOS_SetResourcePermissionGroup(std::string_view device,
-                               uint32_t group);
+IOS_AssociateResourceManager(std::string_view device,
+                             ResourcePermissionGroup group);
 
 Error
 IOS_ResourceReply(phys_ptr<ResourceRequest> request,

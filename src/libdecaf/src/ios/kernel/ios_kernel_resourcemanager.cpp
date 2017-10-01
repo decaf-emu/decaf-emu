@@ -170,11 +170,11 @@ IOS_RegisterResourceManager(std::string_view device,
 
 
 /**
- * Register a device with a permission group (matching cos.xml)
+ * Associate a resource manager with a permission group (matching cos.xml)
  */
 Error
-IOS_SetResourcePermissionGroup(std::string_view device,
-                               uint32_t group)
+IOS_AssociateResourceManager(std::string_view device,
+                             ResourcePermissionGroup group)
 {
    phys_ptr<ResourceManager> resourceManager;
    auto pid = internal::getCurrentProcessId();
