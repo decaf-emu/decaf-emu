@@ -29,6 +29,7 @@ ENUM_BEG(Command, int32_t)
    ENUM_VALUE(Suspend,              12)
    ENUM_VALUE(Resume,               13)
    ENUM_VALUE(SvcMsg,               14)
+   ENUM_VALUE(McpRegister,          16)
 ENUM_END(Command)
 
 ENUM_BEG(CpuId, uint32_t)
