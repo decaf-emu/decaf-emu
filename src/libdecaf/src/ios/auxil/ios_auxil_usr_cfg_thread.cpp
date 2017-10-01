@@ -40,7 +40,7 @@ usrCfgThreadEntry(phys_ptr<void> /*context*/)
       }
 
       UCDevice *device = nullptr;
-      auto request = phys_ptr<kernel::ResourceRequest>(phys_addr { static_cast<kernel::Message>(*message) });
+      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
       auto handle = static_cast<UCDeviceHandle>(request->requestData.handle);
       error = getUCDevice(handle, &device);
 

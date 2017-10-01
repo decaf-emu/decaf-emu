@@ -134,8 +134,7 @@ initialiseStaticImDeviceData()
 Error
 initialiseImParameters()
 {
-   StackObject<be2_array<UCSysConfig, IMParameter::Max>> sysConfigPtr;
-   auto &sysConfig = *sysConfigPtr;
+   StackArray<UCSysConfig, IMParameter::Max> sysConfig;
 
    auto error = UCOpen();
    if (error < Error::OK) {
@@ -158,7 +157,7 @@ initialiseImParameters()
 
    auto ucError = UCReadSysConfig(sData->ucHandle,
                                   IMParameter::Max,
-                                  phys_addrof(sysConfig));
+                                  sysConfig);
    if (ucError < UCError::OK) {
       return Error::Invalid;
    }
@@ -175,7 +174,7 @@ initialiseImParameters()
    if (numErrorParams > 0) {
       ucError = UCWriteSysConfig(sData->ucHandle,
                                  IMParameter::Max,
-                                 phys_addrof(sysConfig));
+                                 sysConfig);
       if (ucError < UCError::OK) {
          error = Error::Invalid;
       }

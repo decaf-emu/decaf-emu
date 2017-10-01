@@ -57,7 +57,7 @@ usrCfgServiceThreadEntry(phys_ptr<void> /*context*/)
          return error;
       }
 
-      auto request = phys_ptr<kernel::ResourceRequest>(phys_addr { static_cast<kernel::Message>(*message) });
+      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Open:
       {

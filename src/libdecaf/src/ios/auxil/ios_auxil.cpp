@@ -1,5 +1,6 @@
 #include "ios_auxil.h"
 #include "ios_auxil_im_device.h"
+#include "ios_auxil_im_thread.h"
 #include "ios_auxil_usr_cfg_thread.h"
 #include "ios_auxil_usr_cfg_service_thread.h"
 
@@ -107,18 +108,18 @@ processEntryPoint(phys_ptr<void> context)
          return error;
       }
 
-      auto request = phys_ptr<kernel::ResourceRequest>(phys_addr { static_cast<kernel::Message>(*message) });
+      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Suspend:
       {
-         // TODO: Stop /dev/im thread
+         internal::stopImThread();
          kernel::IOS_ResourceReply(request, Error::OK);
          break;
       }
 
       case Command::Resume:
       {
-         // TODO: Start /dev/im thread
+         internal::startImThread();
          kernel::IOS_ResourceReply(request, Error::OK);
          break;
       }
