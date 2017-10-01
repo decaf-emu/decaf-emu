@@ -138,6 +138,13 @@ public:
       mValues[src.size()] = char { 0 };
    }
 
+   be2_array(const std::array<Type, Size> &other)
+   {
+      for (auto i = 0u; i < Size; ++i) {
+         mValues[i] = other[i];
+      }
+   }
+
    template<typename U = Type, typename = typename std::enable_if<std::is_same<char, U>::value>::type>
    be2_array &operator =(const std::string_view &src)
    {
