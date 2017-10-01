@@ -22,7 +22,7 @@ using namespace kernel;
 using RegisteredResourceManagerId = int32_t;
 
 constexpr auto MaxNumRmQueueMessages = 0x80u;
-constexpr auto MaxNumresourceManagers = 0x56u;
+constexpr auto MaxNumResourceManagers = 0x56u;
 
 constexpr auto PmThreadStackSize = 0x2000u;
 constexpr auto PmThreadPriority = 123u;
@@ -76,7 +76,7 @@ struct StaticData
    be2_val<ThreadId> threadId;
    be2_array<uint8_t, PmThreadStackSize> threadStack;
 
-   be2_array<ResourceManagerRegistration, MaxNumresourceManagers> resourceManagers;
+   be2_array<ResourceManagerRegistration, MaxNumResourceManagers> resourceManagers;
 
    be2_val<MessageQueueId> resourceManagerMessageQueueId;
    be2_val<TimerId> resourceManagerTimerId;
@@ -105,7 +105,7 @@ getResourceManagerId(std::string_view name)
 }
 
 static Error
-registerResourceManager(RegisteredResourceManagerId id)
+sendRegisterResourceManagerMessage(RegisteredResourceManagerId id)
 {
    if (id < 0 || id >= sData->resourceManagers.size()) {
       return Error::InvalidArg;
@@ -120,7 +120,7 @@ registerResourceManager(RegisteredResourceManagerId id)
       return Error::InvalidArg;
    }
 
-   resourceManager.data.messageBuffer->command = Command::McpRegister;
+   resourceManager.data.messageBuffer->command = static_cast<Command>(ResourceManagerCommand::Register);
    resourceManager.data.messageBuffer->handle = id;
 
    return IOS_SendMessage(sData->resourceManagerMessageQueueId,
@@ -142,7 +142,7 @@ pmIoctl(PMCommand command,
       error = getResourceManagerId(phys_cast<const char>(inputBuffer).getRawPointer());
       break;
    case PMCommand::RegisterResourceManager:
-      error = registerResourceManager(*phys_cast<const RegisteredResourceManagerId>(inputBuffer));
+      error = sendRegisterResourceManagerMessage(*phys_cast<const RegisteredResourceManagerId>(inputBuffer));
       break;
    default:
       error = Error::InvalidArg;
@@ -198,6 +198,24 @@ pmThreadEntry(phys_ptr<void> /*context*/)
    }
 
    return error;
+}
+
+Error
+registerResourceManager(std::string_view device,
+                        MessageQueueId queue)
+{
+   auto error = getResourceManagerId(device);
+   if (error < Error::OK) {
+      return error;
+   }
+
+   auto resourceManagerId = static_cast<RegisteredResourceManagerId>(error);
+   error = IOS_RegisterResourceManager(device, queue);
+   if (error < Error::OK) {
+      return error;
+   }
+
+   return sendRegisterResourceManagerMessage(resourceManagerId);
 }
 
 Error
@@ -347,10 +365,11 @@ handleResourceManagerRegistrations()
       }
 
       auto request = parseMessage<IpcRequest>(message);
-      if (request->command == static_cast<Command>(Error::Timeout)) {
+      auto command = static_cast<ResourceManagerCommand>(request->command);
+      if (command == ResourceManagerCommand::Timeout) {
          gLog->error("Unexpected timeout whilst waiting for resource manager message");
          return Error::Timeout;
-      } else if (request->command == Command::McpRegister) {
+      } else if (command == ResourceManagerCommand::Register) {
          auto &rm = sData->resourceManagers[request->handle];
 
          // Open a resource handle
@@ -375,7 +394,7 @@ handleResourceManagerRegistrations()
          decaf_check(rm.data.state == ResourceManagerRegistrationState::NotRegistered);
          rm.data.state = ResourceManagerRegistrationState::Registered;
          rm.data.resourceHandle = static_cast<ResourceHandleId>(error);
-      } else if (request->command == Command::Reply) {
+      } else if (command == ResourceManagerCommand::ResumeReply) {
          // This is a reply to our resume request - transition from Pending to Resumed.
          auto resumeId = request->handle;
          auto &resumeRm = sData->resourceManagers[resumeId];

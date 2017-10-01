@@ -52,6 +52,11 @@ public:
       thread->stackPointer = ptr + AlignedSize;
    }
 
+   constexpr uint32_t size() const
+   {
+      return Size;
+   }
+
    constexpr auto &operator[](std::size_t index)
    {
       return getRawPointer()[index];
