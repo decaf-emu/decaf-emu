@@ -438,7 +438,7 @@ fsaShimPrepareRequestMount(FSAShimBuffer *shim,
    std::strncpy(virt_addrof(request->path).getRawPointer(), path, FSMaxPathLength);
    std::strncpy(virt_addrof(request->target).getRawPointer(), target, FSMaxPathLength);
    request->unk0x500 = unk0;
-   request->unk0x508 = unkBufLen;
+   request->unkBufLen = unkBufLen;
 
    shim->ioctlvVecIn = 2;
    shim->ioctlvVecOut = 1;
