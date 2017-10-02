@@ -107,6 +107,13 @@ ENUM_BEG(UCError, int32_t)
    ENUM_VALUE(SysProt,              -0x200028)
 ENUM_END(UCError)
 
+ENUM_BEG(UCFileSys, uint32_t)
+   ENUM_VALUE(Invalid,              0x00)
+   ENUM_VALUE(Sys,                  0x01)
+   ENUM_VALUE(Slc,                  0x02)
+   ENUM_VALUE(Ram,                  0x03)
+ENUM_END(UCFileSys)
+
 ENUM_NAMESPACE_END(auxil)
 
 ENUM_NAMESPACE_END(ios)
