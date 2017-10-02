@@ -36,7 +36,7 @@ struct ResourceManagerRegistration
       be2_val<Error> error;
       be2_phys_ptr<IpcRequest> messageBuffer;
       be2_val<ResourceManagerRegistrationState> state;
-      be2_val<uint32_t> unk0x14;
+      be2_val<uint32_t> systemModeFlags;
       be2_val<ProcessId> processId;
       be2_val<uint32_t> unk0x1C;
       be2_val<TimeMicroseconds64> timeResumeStart;
@@ -59,7 +59,7 @@ CHECK_OFFSET(ResourceManagerRegistration::Data, 0x04, resourceHandle);
 CHECK_OFFSET(ResourceManagerRegistration::Data, 0x08, error);
 CHECK_OFFSET(ResourceManagerRegistration::Data, 0x0C, messageBuffer);
 CHECK_OFFSET(ResourceManagerRegistration::Data, 0x10, state);
-CHECK_OFFSET(ResourceManagerRegistration::Data, 0x14, unk0x14);
+CHECK_OFFSET(ResourceManagerRegistration::Data, 0x14, systemModeFlags);
 CHECK_OFFSET(ResourceManagerRegistration::Data, 0x18, processId);
 CHECK_OFFSET(ResourceManagerRegistration::Data, 0x1C, unk0x1C);
 CHECK_OFFSET(ResourceManagerRegistration::Data, 0x20, timeResumeStart);
@@ -310,7 +310,8 @@ waitAsyncReplyWithTimeout(MessageQueueId queue,
  * registered and resumed.
  */
 Error
-handleResourceManagerRegistrations()
+handleResourceManagerRegistrations(uint32_t systemModeFlags,
+                                   uint32_t bootFlags)
 {
    StackObject<Message> message;
    auto id = 0u;
@@ -328,6 +329,12 @@ handleResourceManagerRegistrations()
             continue;
          }
       } else {
+         if ((sData->resourceManagers[id].data.systemModeFlags & systemModeFlags) == 0) {
+            // Skip this device if it is not enable for the current system mode.
+            ++id;
+            continue;
+         }
+
          if (sData->resourceManagers[id].data.state == ResourceManagerRegistrationState::Registered) {
             auto &rm = sData->resourceManagers[id];
 
@@ -337,8 +344,8 @@ handleResourceManagerRegistrations()
             rm.data.error = Error::Invalid;
 
             error = IOS_ResumeAsync(rm.data.resourceHandle,
-                                    0,
-                                    0,
+                                    systemModeFlags,
+                                    bootFlags,
                                     sData->resourceManagerMessageQueueId,
                                     rm.data.messageBuffer);
             if (error < Error::OK) {
@@ -437,12 +444,12 @@ initialiseStaticPmThreadData()
       {
          return allocProcessStatic("/dev/crypto");
       };
-   auto rm = [](uint32_t unk0x14, ProcessId pid, uint32_t unk0x1C)
+   auto rm = [](uint32_t systemModeFlags, ProcessId pid, uint32_t unk0x1C)
       {
          return ResourceManagerRegistration::Data
             {
                FALSE, 0, Error::OK, nullptr, static_cast<ResourceManagerRegistrationState>(0),
-               unk0x14, pid, unk0x1C, 0, 0, 0, 0, 0, 0
+               systemModeFlags, pid, unk0x1C, 0, 0, 0, 0, 0, 0
             };
       };
 
@@ -536,8 +543,6 @@ initialiseStaticPmThreadData()
          { ss("/dev/ppc_app"),         1, rm(0x180000, ProcessId::MCP, 2) },
          dummyRM,
       };
-
-
 }
 
 } // namespace ios::mcp::internal

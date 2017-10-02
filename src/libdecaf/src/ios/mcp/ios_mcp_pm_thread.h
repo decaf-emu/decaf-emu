@@ -15,7 +15,8 @@ registerResourceManager(std::string_view device,
                         kernel::MessageQueueId queue);
 
 Error
-handleResourceManagerRegistrations();
+handleResourceManagerRegistrations(uint32_t systemModeFlags,
+                                   uint32_t bootFlags);
 
 void
 initialiseStaticPmThreadData();

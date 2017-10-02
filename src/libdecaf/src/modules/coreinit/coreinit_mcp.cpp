@@ -11,12 +11,12 @@
 namespace coreinit
 {
 
-using ios::dev::mcp::MCPCommand;
-using ios::dev::mcp::MCPResponseGetTitleId;
-using ios::dev::mcp::MCPResponseGetOwnTitleInfo;
-using ios::dev::mcp::MCPRequestGetOwnTitleInfo;
-using ios::dev::mcp::MCPRequestSearchTitleList;
-using ios::dev::mcp::MCPTitleListSearchFlags;
+using ios::mcp::MCPCommand;
+using ios::mcp::MCPResponseGetTitleId;
+using ios::mcp::MCPResponseGetOwnTitleInfo;
+using ios::mcp::MCPRequestGetOwnTitleInfo;
+using ios::mcp::MCPRequestSearchTitleList;
+using ios::mcp::MCPTitleListSearchFlags;
 
 struct MCPData
 {
@@ -66,7 +66,7 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
                      internal::mcpAllocateMessage(sizeof(MCPRequestGetOwnTitleInfo)));
 
    if (!request) {
-      return MCPError::AllocError;
+      return MCPError::Alloc;
    }
 
    auto response = reinterpret_cast<MCPResponseGetOwnTitleInfo *>(
@@ -74,11 +74,11 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
 
    if (!response) {
       internal::mcpFreeMessage(request);
-      return MCPError::AllocError;
+      return MCPError::Alloc;
    }
 
    // TODO: __KernelGetInfo(0, &request->unk0x00, 0xA8, 0);
-   request->unk0x00 = 0;
+   request->unk0x00 = 0u;
 
    auto iosError = IOS_Ioctl(handle,
                              MCPCommand::GetOwnTitleInfo,
@@ -90,7 +90,9 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
    result = internal::mcpDecodeIosErrorToMcpError(iosError);
 
    if (result >= 0) {
-      std::memcpy(titleInfo, &response->titleInfo, sizeof(MCPTitleListType));
+      std::memcpy(titleInfo,
+                  virt_addrof(response->titleInfo).getRawPointer(),
+                  sizeof(MCPTitleListType));
    }
 
    internal::mcpFreeMessage(request);
@@ -104,13 +106,13 @@ MCP_GetSysProdSettings(IOSHandle handle,
                        MCPSysProdSettings *settings)
 {
    if (!settings) {
-      return MCPError::InvalidArg;
+      return MCPError::InvalidParam;
    }
 
    auto message = internal::mcpAllocateMessage(sizeof(IOSVec));
 
    if (!message) {
-      return MCPError::AllocError;
+      return MCPError::Alloc;
    }
 
    auto outVecs = reinterpret_cast<IOSVec *>(message);
@@ -133,7 +135,7 @@ MCP_GetTitleId(IOSHandle handle,
    auto output = internal::mcpAllocateMessage(sizeof(MCPResponseGetTitleId));
 
    if (!output) {
-      return MCPError::AllocError;
+      return MCPError::Alloc;
    }
 
    auto iosError = IOS_Ioctl(handle,
@@ -291,7 +293,9 @@ MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
    searchTitle.titleId = uniqueId << 8;
    searchTitle.appType = appType;
    searchTitle.unk0x60 = unk0x60;
-   std::memcpy(searchTitle.indexedDevice, indexedDevice, 4);
+   std::memcpy(virt_addrof(searchTitle.indexedDevice).getRawPointer(),
+               indexedDevice,
+               4);
 
    auto searchFlags = MCPTitleListSearchFlags::UniqueId
                     | MCPTitleListSearchFlags::AppType
@@ -364,7 +368,7 @@ mcpFreeMessage(void *message)
       return MCPError::OK;
    }
 
-   return MCPError::InvalidOp;
+   return MCPError::Opcode;
 }
 
 
@@ -417,7 +421,7 @@ mcpSearchTitleList(IOSHandle handle,
    auto message = mcpAllocateMessage(sizeof(MCPRequestSearchTitleList));
 
    if (!message) {
-      return static_cast<IOSError>(MCPError::AllocError);
+      return static_cast<IOSError>(MCPError::Alloc);
    }
 
    auto request = reinterpret_cast<MCPRequestSearchTitleList *>(message);

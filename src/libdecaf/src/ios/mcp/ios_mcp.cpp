@@ -1,8 +1,10 @@
 #include "ios_mcp.h"
+#include "ios_mcp_config.h"
 #include "ios_mcp_enum.h"
 #include "ios_mcp_mcp_thread.h"
 #include "ios_mcp_pm_thread.h"
 
+#include "ios/kernel/ios_kernel_debug.h"
 #include "ios/kernel/ios_kernel_hardware.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
@@ -23,8 +25,11 @@ constexpr auto MainThreadNumMessages = 30u;
 
 struct StaticData
 {
-   be2_array<std::byte, LocalHeapSize> localHeapBuffer;
+   be2_val<uint32_t> bootFlags;
+   be2_val<uint32_t> systemModeFlags;
+   be2_val<SystemFileSys> systemFileSys;
 
+   be2_array<std::byte, LocalHeapSize> localHeapBuffer;
    be2_struct<IpcRequest> sysEventMsg;
    be2_val<kernel::MessageQueueId> messageQueueId;
    be2_array<kernel::Message, MainThreadNumMessages> messageBuffer;
@@ -103,6 +108,24 @@ mainThreadLoop()
    }
 }
 
+uint32_t
+getBootFlags()
+{
+   return sData->bootFlags;
+}
+
+uint32_t
+getSystemModeFlags()
+{
+   return sData->systemModeFlags;
+}
+
+SystemFileSys
+getSystemFileSys()
+{
+   return sData->systemFileSys;
+}
+
 } // namespace internal
 
 Error
@@ -110,6 +133,7 @@ processEntryPoint(phys_ptr<void> /* context */)
 {
    // Initialise process static data
    internal::initialiseStaticData();
+   internal::initialiseStaticConfigData();
    internal::initialiseStaticMcpThreadData();
    internal::initialiseStaticPmThreadData();
 
@@ -127,7 +151,11 @@ processEntryPoint(phys_ptr<void> /* context */)
       return error;
    }
 
-   // TODO: Lots of unknown stuff
+   // Set normal system flags
+   sData->bootFlags = 0x2000u;
+   sData->systemModeFlags = 0x100000u;
+   sData->systemFileSys = SystemFileSys::Nand;
+   IOS_SetSecurityLevel(SecurityLevel::Normal);
 
    // Start pm thread
    error = internal::startPmThread();
@@ -164,13 +192,13 @@ processEntryPoint(phys_ptr<void> /* context */)
    }
 
    // Handle all pending resource manager registrations
-   error = internal::handleResourceManagerRegistrations();
+   error = internal::handleResourceManagerRegistrations(sData->systemModeFlags,
+                                                        sData->bootFlags);
    if (error < Error::OK) {
       gLog->error("Failed to handle resource manager registrations, error = {}.", error);
       return error;
    }
 
-   // Main thread is a IOS_HandleEvent DeviceId 9 message loop
    return internal::mainThreadLoop();
 }
 
