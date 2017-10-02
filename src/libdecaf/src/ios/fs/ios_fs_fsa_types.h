@@ -32,13 +32,33 @@ using FSAFilePosition = uint32_t;
 
 
 /**
+ * Block information.
+ */
+struct FSABlockInfo
+{
+   UNKNOWN(0x14);
+};
+CHECK_SIZE(FSABlockInfo, 0x14);
+
+
+/**
+ * Device information.
+ */
+struct FSADeviceInfo
+{
+   UNKNOWN(0x28);
+};
+CHECK_SIZE(FSADeviceInfo, 0x28);
+
+
+/**
  * File System information.
  */
 struct FSAFileSystemInfo
 {
-   UNKNOWN(0x1C);
+   UNKNOWN(0x1E);
 };
-CHECK_SIZE(FSAFileSystemInfo, 0x1C);
+CHECK_SIZE(FSAFileSystemInfo, 0x1E);
 
 
 /**

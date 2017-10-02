@@ -48,16 +48,25 @@ struct FSAResponseGetInfoByQuery
 {
    union
    {
+      be2_struct<FSABlockInfo> badBlockInfo;
+      be2_struct<FSADeviceInfo> deviceInfo;
       be2_val<uint64_t> dirSize;
       be2_val<FSAEntryNum> entryNum;
-      be2_val<uint64_t> freeSpaceSize;
       be2_struct<FSAFileSystemInfo> fileSystemInfo;
+      be2_struct<FSABlockInfo> fragmentBlockInfo;
+      be2_val<uint64_t> freeSpaceSize;
+      be2_val<uint64_t> journalFreeSpaceSize;
       be2_struct<FSAStat> stat;
    };
 };
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, badBlockInfo);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, deviceInfo);
 CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, dirSize);
 CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, entryNum);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, fragmentBlockInfo);
 CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, freeSpaceSize);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, fileSystemInfo);
+CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, journalFreeSpaceSize);
 CHECK_OFFSET(FSAResponseGetInfoByQuery, 0x0, stat);
 CHECK_SIZE(FSAResponseGetInfoByQuery, 0x64);
 
