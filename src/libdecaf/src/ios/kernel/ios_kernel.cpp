@@ -1,4 +1,5 @@
 #include "ios_kernel.h"
+#include "ios_kernel_debug.h"
 #include "ios_kernel_hardware.h"
 #include "ios_kernel_heap.h"
 #include "ios_kernel_ipc_thread.h"
@@ -186,6 +187,7 @@ kernelEntryPoint(phys_ptr<void> context)
    internal::startTimerThread();
 
    // Set initial process caps
+   internal::setSecurityLevel(SecurityLevel::Normal);
    internal::setClientCapability(ProcessId::KERNEL, FeatureId { 0x7FFFFFFF }, -1);
    internal::setClientCapability(ProcessId::MCP, FeatureId { 0x7FFFFFFF }, -1);
    internal::setClientCapability(ProcessId::BSP, FeatureId { 0x7FFFFFFF }, -1);

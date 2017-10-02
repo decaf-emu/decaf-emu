@@ -94,6 +94,12 @@ ENUM_BEG(ResourcePermissionGroup, int32_t)
    ENUM_VALUE(NSEC,                 22)
 ENUM_END(ResourcePermissionGroup)
 
+ENUM_BEG(SecurityLevel, uint32_t)
+   ENUM_VALUE(Test,                 10)
+   ENUM_VALUE(Debug,                20)
+   ENUM_VALUE(Normal,               30)
+ENUM_END(SecurityLevel)
+
 FLAGS_BEG(ThreadFlags, uint32_t)
    FLAGS_VALUE(Detached,               1 << 0)
    FLAGS_VALUE(AllocateIpcBufferPool,  1 << 1)
