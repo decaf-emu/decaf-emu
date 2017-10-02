@@ -6,6 +6,9 @@
 #include <fmt/format.h>
 #include <type_traits>
 
+template<typename Type>
+struct be2_struct;
+
 namespace cpu
 {
 
@@ -68,14 +71,14 @@ struct pointer_dereference_type<T, typename std::enable_if<(std::is_arithmetic<T
 
 /*
  * If Type is an class type, or union type, and NOT a cpu::Pointer<> type, then
- * we must dereference to Type.
+ * we must dereference to be2_struct<Type>.
  */
 template <typename T>
 struct pointer_dereference_type<T, typename std::enable_if<(std::is_class<T>::value || std::is_union<T>::value)
                                                          && !is_cpu_pointer<T>::value
                                                          && !is_cpu_address<T>::value>::type>
 {
-   using type = T;
+   using type = be2_struct<T>;
 };
 
 template<typename ValueType, typename AddressType>
