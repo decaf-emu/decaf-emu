@@ -223,7 +223,7 @@ timerThreadEntry(phys_ptr<void> /*context*/)
    while (true) {
       auto error = IOS_ReceiveMessage(sData->messageQueueId,
                                       message,
-                                      MessageFlags::NonBlocking);
+                                      MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
