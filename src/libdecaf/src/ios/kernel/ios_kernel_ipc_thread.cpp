@@ -44,13 +44,13 @@ submitIpcRequest(phys_ptr<IpcRequest> request)
 
    switch (request->cpuId) {
    case CpuId::PPC0:
-      internal::setInterruptAhbLt(AHBLT::get(0).IpcEspressoCore0(true));
+      internal::setInterruptAhbLt(AHBLT::get(0).IpcStarbuckCore0(true));
       break;
    case CpuId::PPC1:
-      internal::setInterruptAhbLt(AHBLT::get(0).IpcEspressoCore1(true));
+      internal::setInterruptAhbLt(AHBLT::get(0).IpcStarbuckCore1(true));
       break;
    case CpuId::PPC2:
-      internal::setInterruptAhbLt(AHBLT::get(0).IpcEspressoCore2(true));
+      internal::setInterruptAhbLt(AHBLT::get(0).IpcStarbuckCore2(true));
       break;
    }
 }
