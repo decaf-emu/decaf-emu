@@ -14,15 +14,15 @@ constexpr auto MaxNumProcessHeaps = 14u;
 constexpr auto HeapAllocSizeAlign = 32u;
 constexpr auto HeapAllocAlignAlign = 32u;
 
-struct StaticData
+struct StaticHeapData
 {
    be2_array<Heap, MaxNumHeaps> heaps;
    be2_array<HeapId, MaxNumProcessHeaps> localProcessHeaps;
    be2_array<HeapId, MaxNumProcessHeaps> crossProcessHeaps;
 };
 
-static phys_ptr<StaticData>
-sData;
+static phys_ptr<StaticHeapData>
+sHeapData;
 
 static Error
 getHeap(HeapId id,
@@ -37,24 +37,24 @@ getHeap(HeapId id,
    auto pid = static_cast<ProcessId>(error);
 
    if (id == 0 || id == CrossProcessHeapId) {
-      id = sData->crossProcessHeaps[pid];
+      id = sHeapData->crossProcessHeaps[pid];
    } else if (id == LocalProcessHeapId) {
-      id = sData->localProcessHeaps[pid];
+      id = sHeapData->localProcessHeaps[pid];
    }
 
-   if (id >= sData->heaps.size()) {
+   if (id >= sHeapData->heaps.size()) {
       return Error::Invalid;
    }
 
-   if (sData->heaps[id].pid < 0 || !sData->heaps[id].base) {
+   if (sHeapData->heaps[id].pid < 0 || !sHeapData->heaps[id].base) {
       return Error::NoExists;
    }
 
-   if (checkPermission && sData->heaps[id].pid != pid) {
+   if (checkPermission && id != SharedHeapId && sHeapData->heaps[id].pid != pid) {
       return Error::Access;
    }
 
-   *outHeap = phys_addrof(sData->heaps[id]);
+   *outHeap = phys_addrof(sHeapData->heaps[id]);
    return Error::OK;
 }
 
@@ -68,13 +68,13 @@ IOS_CreateHeap(phys_ptr<void> ptr,
       return Error::Alignment;
    }
 
-   for (id = HeapId { 2 }; id < sData->heaps.size(); ++id) {
-      if (!sData->heaps[id].base) {
+   for (id = HeapId { 1 }; id < sHeapData->heaps.size(); ++id) {
+      if (!sHeapData->heaps[id].base) {
          break;
       }
    }
 
-   if (id >= sData->heaps.size()) {
+   if (id >= sHeapData->heaps.size()) {
       return Error::Max;
    }
 
@@ -93,7 +93,7 @@ IOS_CreateHeap(phys_ptr<void> ptr,
    firstBlock->prev = nullptr;
 
    // Initialise heap
-   auto &heap = sData->heaps[id];
+   auto &heap = sHeapData->heaps[id];
    heap.id = id;
    heap.base = ptr;
    heap.size = size;
@@ -115,12 +115,12 @@ IOS_CreateLocalProcessHeap(phys_ptr<void> ptr,
    }
 
    auto pid = static_cast<ProcessId>(error);
-   if (pid >= sData->localProcessHeaps.size()) {
+   if (pid >= sHeapData->localProcessHeaps.size()) {
       return Error::Invalid;
    }
 
-   if (sData->localProcessHeaps[pid] >= 0) {
-      return static_cast<Error>(sData->localProcessHeaps[pid]);
+   if (sHeapData->localProcessHeaps[pid] >= 0) {
+      return static_cast<Error>(sHeapData->localProcessHeaps[pid]);
    }
 
    error = IOS_CreateHeap(ptr, size);
@@ -135,7 +135,7 @@ IOS_CreateLocalProcessHeap(phys_ptr<void> ptr,
    }
 
    heap->flags |= HeapFlags::LocalProcessHeap;
-   sData->localProcessHeaps[pid] = heapId;
+   sHeapData->localProcessHeaps[pid] = heapId;
    return static_cast<Error>(heapId);
 }
 
@@ -150,12 +150,12 @@ IOS_CreateCrossProcessHeap(uint32_t size)
    }
 
    auto pid = static_cast<ProcessId>(error);
-   if (pid >= sData->crossProcessHeaps.size()) {
+   if (pid >= sHeapData->crossProcessHeaps.size()) {
       return Error::Invalid;
    }
 
-   if (sData->crossProcessHeaps[pid] >= 0) {
-      return static_cast<Error>(sData->crossProcessHeaps[pid]);
+   if (sHeapData->crossProcessHeaps[pid] >= 0) {
+      return static_cast<Error>(sHeapData->crossProcessHeaps[pid]);
    }
 
    auto ptr = IOS_HeapAlloc(SharedHeapId, size);
@@ -175,7 +175,7 @@ IOS_CreateCrossProcessHeap(uint32_t size)
    }
 
    heap->flags |= HeapFlags::CrossProcessHeap;
-   sData->crossProcessHeaps[pid] = heapId;
+   sHeapData->crossProcessHeaps[pid] = heapId;
    return static_cast<Error>(heapId);
 }
 
@@ -197,7 +197,7 @@ IOS_DestroyHeap(HeapId heapId)
    heap->pid = ProcessId::Invalid;
 
    if (heapId == LocalProcessHeapId) {
-      sData->localProcessHeaps[internal::getCurrentProcessId()] = -4;
+      sHeapData->localProcessHeaps[internal::getCurrentProcessId()] = -4;
    }
 
    return Error::OK;
@@ -233,6 +233,7 @@ IOS_HeapAllocAligned(HeapId heapId,
       auto base = phys_cast<uint8_t>(block) + sizeof(HeapBlock);
       auto baseAddr = phys_addr { base };
       auto alignedBaseAddr = align_up(phys_addr { base }, alignment);
+      auto alignOffset = alignedBaseAddr - baseAddr;
 
       decaf_check(block->state == HeapBlockState::Free);
 
@@ -245,17 +246,17 @@ IOS_HeapAllocAligned(HeapId heapId,
          }
       } else if (alignedBaseAddr - baseAddr >= sizeof(HeapBlock)) {
          // Requires alignment, and has space for a HeapBlock
-         if (block->size >= size + alignment) {
+         if (block->size >= size + alignOffset) {
             allocBlock = block;
             allocBase = alignedBaseAddr;
-            size += alignment;
+            size += alignOffset;
             break;
          }
-      } else if (block->size >= size + alignment * 2) {
+      } else if (block->size >= size + alignOffset + alignment) {
          // Base required double align to have space for HeapBlock
          allocBlock = block;
          allocBase = align_up(alignedBaseAddr + 1, alignment);
-         size += alignment * 2;
+         size += alignOffset + alignment;
          break;
       }
    }
@@ -270,7 +271,7 @@ IOS_HeapAllocAligned(HeapId heapId,
       // Create inner block for aligned allocations if needed
       auto offset = phys_cast<uint8_t>(innerBlock) - phys_cast<uint8_t>(allocBlock);
       innerBlock->state = HeapBlockState::InnerBlock;
-      innerBlock->size = static_cast<uint32_t>(size - offset - sizeof(HeapBlock));
+      innerBlock->size = static_cast<uint32_t>(size - offset);
       innerBlock->prev = allocBlock;
       innerBlock->next = nullptr;
    }
@@ -280,6 +281,7 @@ IOS_HeapAllocAligned(HeapId heapId,
    if (allocBlock->size - size > 0x40) {
       auto allocBlockEnd = phys_cast<uint8_t>(allocBlock) + sizeof(HeapBlock) + allocBlock->size;
       auto freeBlock = phys_cast<HeapBlock>(phys_cast<uint8_t>(allocBlock) + sizeof(HeapBlock) + size);
+      freeBlock->state = HeapBlockState::Free;
       freeBlock->size = static_cast<uint32_t>(allocBlockEnd - phys_cast<uint8_t>(freeBlock) - sizeof(HeapBlock));
       freeBlock->prev = allocBlock->prev;
       freeBlock->next = allocBlock->next;
@@ -481,17 +483,17 @@ namespace internal
 void
 initialiseStaticHeapData()
 {
-   sData = allocProcessStatic<StaticData>();
-   for (auto i = 0u; i < sData->heaps.size(); ++i) {
-      sData->heaps[i].pid = ProcessId { -4 };
+   sHeapData = allocProcessStatic<StaticHeapData>();
+   for (auto i = 0u; i < sHeapData->heaps.size(); ++i) {
+      sHeapData->heaps[i].pid = ProcessId { -4 };
    }
 
-   for (auto i = 0u; i < sData->localProcessHeaps.size(); ++i) {
-      sData->localProcessHeaps[i] = HeapId { -4 };
+   for (auto i = 0u; i < sHeapData->localProcessHeaps.size(); ++i) {
+      sHeapData->localProcessHeaps[i] = HeapId { -4 };
    }
 
-   for (auto i = 0u; i < sData->crossProcessHeaps.size(); ++i) {
-      sData->crossProcessHeaps[i] = HeapId { -4 };
+   for (auto i = 0u; i < sHeapData->crossProcessHeaps.size(); ++i) {
+      sHeapData->crossProcessHeaps[i] = HeapId { -4 };
    }
 }
 
