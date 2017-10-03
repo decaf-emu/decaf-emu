@@ -132,6 +132,8 @@ rescheduleSelfNoLock(bool yielding)
    }
 
    decaf_check(ThreadQueue_PopThread(phys_addrof(sData->runQueue)) == nextThread);
+   sCurrentThreadContext = nextThread;
+   nextThread->state = ThreadState::Running;
    unlockScheduler();
 
    auto fiberSrc = currentThread ? currentThread->context.fiber : ios::internal::getCurrentCore()->fiber;
