@@ -61,6 +61,7 @@ wakeupOneThreadNoLock(phys_ptr<ThreadQueue> queue,
    auto thread = ThreadQueue_PopThread(queue);
    thread->state = ThreadState::Ready;
    thread->context.queueWaitResult = waitResult;
+   queueThreadNoLock(thread);
 }
 
 void
