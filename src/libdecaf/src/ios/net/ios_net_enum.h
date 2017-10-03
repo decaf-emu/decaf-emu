@@ -1,13 +1,11 @@
-#ifndef IOS_SOCKET_ENUM_H
-#define IOS_SOCKET_ENUM_H
+#ifndef IOS_NET_ENUM_H
+#define IOS_NET_ENUM_H
 
 #include <common/enum_start.h>
 
 ENUM_NAMESPACE_BEG(ios)
 
-ENUM_NAMESPACE_BEG(dev)
-
-ENUM_NAMESPACE_BEG(socket)
+ENUM_NAMESPACE_BEG(net)
 
 ENUM_BEG(SocketCommand, uint32_t)
    ENUM_VALUE(Bind,              0x2)
@@ -63,12 +61,10 @@ ENUM_BEG(SocketFamily, uint32_t)
    ENUM_VALUE(Inet,              0x2)
 ENUM_END(SocketFamily)
 
-ENUM_NAMESPACE_END(socket)
-
-ENUM_NAMESPACE_END(dev)
+ENUM_NAMESPACE_END(net)
 
 ENUM_NAMESPACE_END(ios)
 
 #include <common/enum_end.h>
 
-#endif // ifdef IOS_SOCKET_ENUM_H
+#endif // ifdef IOS_NET_ENUM_H

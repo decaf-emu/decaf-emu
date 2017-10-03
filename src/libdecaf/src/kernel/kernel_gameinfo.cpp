@@ -1,5 +1,4 @@
 #include "decaf_game.h"
-#include "ios/dev/mcp.h"
 #include "kernel_filesystem.h"
 #include "kernel_gameinfo.h"
 
@@ -299,7 +298,7 @@ loadGameInfo(decaf::GameInfo &info)
       info.meta.common_boss_size = 0u;
       info.meta.account_boss_size = 0u;
       info.meta.olv_accesskey = 1337u;
-      info.meta.region = ios::dev::mcp::MCPRegion::USA;
+      info.meta.region = 1u;
    }
 
    return true;

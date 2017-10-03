@@ -109,7 +109,7 @@ IOS_CreateThread(ThreadEntryFn entry,
 
 Error
 IOS_JoinThread(ThreadId id,
-               phys_ptr<int32_t> returnedValue);
+               phys_ptr<Error> returnedValue);
 
 Error
 IOS_CancelThread(ThreadId id,

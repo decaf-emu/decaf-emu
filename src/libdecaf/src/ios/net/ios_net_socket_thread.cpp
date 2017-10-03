@@ -1,4 +1,7 @@
-#include "ios_net_socket.h"
+#include "ios_net_socket_device.h"
+#include "ios_net_socket_thread.h"
+#include "ios_net_socket_request.h"
+#include "ios_net_socket_response.h"
 
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/kernel/ios_kernel_process.h"
@@ -7,9 +10,12 @@
 
 #include "ios/ios_stackobject.h"
 
+#include <array>
+
 namespace ios::net::internal
 {
 
+using SocketDeviceHandle = int32_t;
 using namespace kernel;
 
 constexpr auto NumSocketMessages = 40u;
@@ -28,6 +34,93 @@ struct StaticData
 static phys_ptr<StaticData>
 sData = nullptr;
 
+static std::array<std::unique_ptr<SocketDevice>, ProcessId::Max>
+sDevices;
+
+static SocketDevice *
+getDevice(SocketDeviceHandle handle)
+{
+   if (handle < 0 || handle >= sDevices.size()) {
+      return nullptr;
+   }
+
+   return sDevices[handle].get();
+}
+
+static Error
+socketOpen(phys_ptr<ResourceRequest> request)
+{
+   // There is one socket device per process
+   auto pid = request->requestData.clientPid;
+   auto idx = static_cast<size_t>(pid);
+
+   if (!sDevices[idx]) {
+      sDevices[idx] = std::make_unique<SocketDevice>();
+   }
+
+   return static_cast<Error>(idx);
+}
+
+static Error
+socketClose(phys_ptr<ResourceRequest> request)
+{
+   auto pid = request->requestData.clientPid;
+   auto idx = static_cast<size_t>(pid);
+
+   if (idx != request->requestData.handle) {
+      return Error::Exists;
+   }
+
+   sDevices[idx] = nullptr;
+   return Error::OK;
+}
+
+static Error
+socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
+{
+   auto error = Error::OK;
+   auto device = getDevice(resourceRequest->requestData.handle);
+
+   if (!device) {
+      return Error::InvalidHandle;
+   }
+
+   auto request = phys_cast<SocketRequest>(resourceRequest->requestData.args.ioctl.inputBuffer);
+
+   switch (static_cast<SocketCommand>(resourceRequest->requestData.command)) {
+   case SocketCommand::Close:
+      error = device->closeSocket(request->close.fd);
+      break;
+   case SocketCommand::Socket:
+      error = device->createSocket(request->socket.family,
+                                   request->socket.type,
+                                   request->socket.proto);
+      break;
+   default:
+      error = Error::InvalidArg;
+   }
+
+   return error;
+}
+
+static Error
+socketIoctlv(phys_ptr<ResourceRequest> request)
+{
+   auto error = Error::OK;
+   auto device = getDevice(request->requestData.handle);
+
+   if (!device) {
+      return Error::InvalidHandle;
+   }
+
+   switch (static_cast<SocketCommand>(request->requestData.command)) {
+   default:
+      error = Error::InvalidArg;
+   }
+
+   return error;
+}
+
 static Error
 socketThreadEntry(phys_ptr<void> /*context*/)
 {
@@ -44,7 +137,16 @@ socketThreadEntry(phys_ptr<void> /*context*/)
       auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Open:
-         // Seems like one /dev/socket per title id x process id
+         IOS_ResourceReply(request, socketOpen(request));
+         break;
+      case Command::Close:
+         IOS_ResourceReply(request, socketClose(request));
+         break;
+      case Command::Ioctl:
+         IOS_ResourceReply(request, socketIoctl(request));
+         break;
+      case Command::Ioctlv:
+         IOS_ResourceReply(request, socketIoctlv(request));
          break;
       case Command::Suspend:
          // TODO: Do any necessary cleanup!

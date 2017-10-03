@@ -1,4 +1,4 @@
-#include "ios/dev/socket.h"
+#include "ios/net/ios_net_socket.h"
 #include "ios/ios_error.h"
 #include "modules/coreinit/coreinit_ghs.h"
 #include "modules/coreinit/coreinit_ios.h"
@@ -10,15 +10,16 @@
 namespace nsysnet
 {
 
-using ios::dev::socket::SocketAddrIn;
-using ios::dev::socket::SocketCommand;
-using ios::dev::socket::SocketError;
-using ios::dev::socket::SocketFamily;
+using ios::net::SocketAddr;
+using ios::net::SocketAddrIn;
+using ios::net::SocketCommand;
+using ios::net::SocketError;
+using ios::net::SocketFamily;
 
-using ios::dev::socket::SocketBindRequest;
-using ios::dev::socket::SocketCloseRequest;
-using ios::dev::socket::SocketConnectRequest;
-using ios::dev::socket::SocketSocketRequest;
+using ios::net::SocketBindRequest;
+using ios::net::SocketCloseRequest;
+using ios::net::SocketConnectRequest;
+using ios::net::SocketSocketRequest;
 
 struct SocketLibData
 {

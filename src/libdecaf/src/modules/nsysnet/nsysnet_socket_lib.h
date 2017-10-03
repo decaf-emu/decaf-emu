@@ -1,11 +1,9 @@
 #pragma once
-#include "ios/dev/socket.h"
+#include "ios/net/ios_net_socket.h"
 #include <cstdint>
 
 namespace nsysnet
 {
-
-using ios::dev::socket::SocketAddr;
 
 int32_t
 socket_lib_init();
@@ -15,12 +13,12 @@ socket_lib_finish();
 
 int32_t
 bind(int32_t fd,
-     SocketAddr *addr,
+     ios::net::SocketAddr *addr,
      int addrlen);
 
 int32_t
 connect(int32_t fd,
-        SocketAddr *addr,
+        ios::net::SocketAddr *addr,
         int addrlen);
 
 int32_t

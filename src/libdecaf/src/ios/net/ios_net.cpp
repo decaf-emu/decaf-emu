@@ -1,6 +1,6 @@
 #include "ios_net.h"
 #include "ios_net_subsys.h"
-#include "ios_net_socket.h"
+#include "ios_net_socket_thread.h"
 
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"

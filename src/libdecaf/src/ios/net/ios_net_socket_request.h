@@ -1,23 +1,16 @@
 #pragma once
-#include "socket_enum.h"
-#include "socket_types.h"
+#include "ios_net_enum.h"
+#include "ios_net_socket_types.h"
 
 #include <cstdint>
-#include <common/be_val.h>
-#include <common/be_ptr.h>
+#include <libcpu/be2_struct.h>
 #include <common/structsize.h>
 
-namespace ios
-{
-
-namespace dev
-{
-
-namespace socket
+namespace ios::net
 {
 
 /**
- * \ingroup ios_dev_socket
+ * \ingroup ios_net
  * @{
  */
 
@@ -25,9 +18,9 @@ namespace socket
 
 struct SocketBindRequest
 {
-   be_val<int32_t> fd;
-   SocketAddrIn addr;
-   be_val<int32_t> addrlen;
+   be2_val<SocketHandle> fd;
+   be2_struct<SocketAddrIn> addr;
+   be2_val<int32_t> addrlen;
 };
 CHECK_OFFSET(SocketBindRequest, 0x00, fd);
 CHECK_OFFSET(SocketBindRequest, 0x04, addr);
@@ -36,16 +29,16 @@ CHECK_SIZE(SocketBindRequest, 0x18);
 
 struct SocketCloseRequest
 {
-   be_val<int32_t> fd;
+   be2_val<SocketHandle> fd;
 };
 CHECK_OFFSET(SocketCloseRequest, 0x00, fd);
 CHECK_SIZE(SocketCloseRequest, 0x04);
 
 struct SocketConnectRequest
 {
-   be_val<int32_t> fd;
-   SocketAddrIn addr;
-   be_val<int32_t> addrlen;
+   be2_val<SocketHandle> fd;
+   be2_struct<SocketAddrIn> addr;
+   be2_val<int32_t> addrlen;
 };
 CHECK_OFFSET(SocketConnectRequest, 0x00, fd);
 CHECK_OFFSET(SocketConnectRequest, 0x04, addr);
@@ -54,9 +47,9 @@ CHECK_SIZE(SocketConnectRequest, 0x18);
 
 struct SocketSocketRequest
 {
-   be_val<int32_t> family;
-   be_val<int32_t> type;
-   be_val<int32_t> proto;
+   be2_val<int32_t> family;
+   be2_val<int32_t> type;
+   be2_val<int32_t> proto;
 };
 CHECK_OFFSET(SocketSocketRequest, 0x00, family);
 CHECK_OFFSET(SocketSocketRequest, 0x04, type);
@@ -67,10 +60,10 @@ struct SocketRequest
 {
    union
    {
-      SocketCloseRequest bindRequest;
-      SocketCloseRequest closeRequest;
-      SocketConnectRequest connectRequest;
-      SocketSocketRequest socketRequest;
+      be2_struct<SocketCloseRequest> bind;
+      be2_struct<SocketCloseRequest> close;
+      be2_struct<SocketConnectRequest> connect;
+      be2_struct<SocketSocketRequest> socket;
    };
 };
 
@@ -78,8 +71,4 @@ struct SocketRequest
 
 /** @} */
 
-} // namespace im
-
-} // namespace dev
-
-} // namespace ios
+} // namespace ios::net

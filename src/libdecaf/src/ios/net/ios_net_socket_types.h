@@ -1,28 +1,23 @@
 #pragma once
-#include <cstdint>
-#include <common/be_val.h>
+#include <libcpu/be2_struct.h>
 #include <common/structsize.h>
 
-namespace ios
-{
-
-namespace dev
-{
-
-namespace socket
+namespace ios::net
 {
 
 /**
- * \ingroup ios_dev_socket
+ * \ingroup ios_net
  * @{
  */
 
 #pragma pack(push, 1)
 
+using SocketHandle = int32_t;
+
 struct SocketAddr
 {
-   be_val<uint16_t> sa_family;
-   uint8_t sa_data[14];
+   be2_val<uint16_t> sa_family;
+   be2_array<uint8_t, 14> sa_data;
 };
 CHECK_OFFSET(SocketAddr, 0x00, sa_family);
 CHECK_OFFSET(SocketAddr, 0x02, sa_data);
@@ -30,17 +25,17 @@ CHECK_SIZE(SocketAddr, 0x10);
 
 struct SockerInAddr
 {
-   be_val<uint32_t> s_addr;
+   be2_val<uint32_t> s_addr;
 };
 CHECK_OFFSET(SockerInAddr, 0x00, s_addr);
 CHECK_SIZE(SockerInAddr, 0x04);
 
 struct SocketAddrIn
 {
-   be_val<uint16_t> sin_family;
-   be_val<uint16_t> sin_port;
-   SockerInAddr sin_addr;
-   uint8_t sin_zero[8];
+   be2_val<uint16_t> sin_family;
+   be2_val<uint16_t> sin_port;
+   be2_struct<SockerInAddr> sin_addr;
+   be2_array<uint8_t, 8> sin_zero;
 };
 CHECK_OFFSET(SocketAddrIn, 0x00, sin_family);
 CHECK_OFFSET(SocketAddrIn, 0x02, sin_port);
@@ -52,8 +47,4 @@ CHECK_SIZE(SocketAddrIn, 0x10);
 
 /** @} */
 
-} // namespace socket
-
-} // namespace dev
-
-} // namespace ios
+} // namespace ios::net

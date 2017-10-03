@@ -1,19 +1,5 @@
 #pragma once
-#include "ios/ios_enum.h"
-
-namespace ios::net::internal
-{
-
-Error
-registerSocketResourceManager();
-
-Error
-startSocketThread();
-
-Error
-stopSocketThread();
-
-void
-initialiseStaticSocketData();
-
-} // namespace ios::net::internal
+#include "ios_net_enum.h"
+#include "ios_net_socket_request.h"
+#include "ios_net_socket_response.h"
+#include "ios_net_socket_types.h"

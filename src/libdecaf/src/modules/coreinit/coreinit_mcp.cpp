@@ -172,8 +172,7 @@ MCP_GetTitleInfo(IOSHandle handle,
                                                 1);
 
    if (iosError != 1) {
-      // TODO: Name error code 0xFFFBFFFE.
-      return static_cast<MCPError>(0xFFFBFFFE);
+      return MCPError::System;
    }
 
    return MCPError::OK;
