@@ -99,10 +99,9 @@ startProcesses(bool bootOnlyBSP)
       }
 
       auto stackPtr = allocProcessStatic(info.pid, info.stackSize);
-      auto stackTop = phys_cast<uint8_t>(stackPtr) + info.stackSize;
       auto error = IOS_CreateThread(info.entry,
                                     phys_addr { static_cast<uint32_t>(info.pid) },
-                                    stackTop,
+                                    phys_cast<uint8_t>(stackPtr) + info.stackSize,
                                     info.stackSize,
                                     info.priority,
                                     ThreadFlags::AllocateIpcBufferPool | ThreadFlags::Detached);
@@ -289,7 +288,7 @@ start()
    // Create root kernel thread
    auto error = IOS_CreateThread(kernelEntryPoint,
                                  nullptr,
-                                 phys_addrof(sData->threadStack),
+                                 phys_addrof(sData->threadStack) + sData->threadStack.size(),
                                  static_cast<uint32_t>(sData->threadStack.size()),
                                  RootThreadPriority,
                                  ThreadFlags::Detached);
