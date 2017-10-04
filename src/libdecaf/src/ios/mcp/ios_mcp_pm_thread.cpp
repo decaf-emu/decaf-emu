@@ -442,7 +442,7 @@ initialiseStaticPmThreadData()
 
    auto ss = [](const char *str)
       {
-         return allocProcessStatic("/dev/crypto");
+         return allocProcessStatic(str);
       };
    auto rm = [](uint32_t systemModeFlags, ProcessId pid, uint32_t unk0x1C)
       {
