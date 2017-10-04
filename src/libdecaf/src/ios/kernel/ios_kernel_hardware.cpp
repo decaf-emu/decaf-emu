@@ -90,7 +90,7 @@ IOS_HandleEvent(DeviceId id,
                 Message message)
 {
    phys_ptr<MessageQueue> queue;
-   auto error = internal::getMessageQueue(qid, &queue);
+   auto error = internal::getMessageQueueSafe(qid, &queue);
    if (error < Error::OK) {
       return error;
    }

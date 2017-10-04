@@ -45,7 +45,7 @@ IOS_OpenAsync(std::string_view device,
 {
    phys_ptr<MessageQueue> queue;
 
-   auto error = internal::getMessageQueue(asyncNotifyQueue, &queue);
+   auto error = internal::getMessageQueueSafe(asyncNotifyQueue, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -85,7 +85,7 @@ IOS_CloseAsync(ResourceHandleId handle,
 {
    phys_ptr<MessageQueue> queue;
 
-   auto error = internal::getMessageQueue(asyncNotifyQueue, &queue);
+   auto error = internal::getMessageQueueSafe(asyncNotifyQueue, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -199,7 +199,7 @@ IOS_IoctlAsync(ResourceHandleId handle,
 {
    phys_ptr<MessageQueue> queue;
 
-   auto error = internal::getMessageQueue(asyncNotifyQueue, &queue);
+   auto error = internal::getMessageQueueSafe(asyncNotifyQueue, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -254,7 +254,7 @@ IOS_IoctlvAsync(ResourceHandleId handle,
 {
    phys_ptr<MessageQueue> queue;
 
-   auto error = internal::getMessageQueue(asyncNotifyQueue, &queue);
+   auto error = internal::getMessageQueueSafe(asyncNotifyQueue, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -302,7 +302,7 @@ IOS_ResumeAsync(ResourceHandleId handle,
 {
    phys_ptr<MessageQueue> queue;
 
-   auto error = internal::getMessageQueue(asyncNotifyQueue, &queue);
+   auto error = internal::getMessageQueueSafe(asyncNotifyQueue, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -348,7 +348,7 @@ IOS_SuspendAsync(ResourceHandleId handle,
 {
    phys_ptr<MessageQueue> queue;
 
-   auto error = internal::getMessageQueue(asyncNotifyQueue, &queue);
+   auto error = internal::getMessageQueueSafe(asyncNotifyQueue, &queue);
    if (error < Error::OK) {
       return error;
    }

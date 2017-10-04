@@ -72,7 +72,7 @@ IOS_DestroyMessageQueue(MessageQueueId id)
 {
    internal::lockScheduler();
    phys_ptr<MessageQueue> queue;
-   auto error = internal::getMessageQueue(id, &queue);
+   auto error = internal::getMessageQueueSafe(id, &queue);
    if (error < Error::OK) {
       internal::unlockScheduler();
       return error;
@@ -104,7 +104,7 @@ IOS_SendMessage(MessageQueueId id,
                 MessageFlags flags)
 {
    phys_ptr<MessageQueue> queue;
-   auto error = internal::getMessageQueue(id, &queue);
+   auto error = internal::getMessageQueueSafe(id, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -123,7 +123,7 @@ IOS_JamMessage(MessageQueueId id,
 {
    internal::lockScheduler();
    phys_ptr<MessageQueue> queue;
-   auto error = internal::getMessageQueue(id, &queue);
+   auto error = internal::getMessageQueueSafe(id, &queue);
    if (error < Error::OK) {
       internal::unlockScheduler();
       return error;
@@ -170,7 +170,7 @@ IOS_ReceiveMessage(MessageQueueId id,
                    MessageFlags flags)
 {
    phys_ptr<MessageQueue> queue;
-   auto error = internal::getMessageQueue(id, &queue);
+   auto error = internal::getMessageQueueSafe(id, &queue);
    if (error < Error::OK) {
       return error;
    }
@@ -188,6 +188,29 @@ namespace internal
 Error
 getMessageQueue(MessageQueueId id,
                 phys_ptr<MessageQueue> *outQueue)
+{
+   id &= 0xFFF;
+
+   if (id >= sData->queues.size()) {
+      return Error::Invalid;
+   }
+
+   auto queue = phys_addrof(sData->queues[id]);
+   if (outQueue) {
+      *outQueue = queue;
+   }
+
+   return Error::OK;
+}
+
+/**
+ * Find a message queue from it's ID.
+ *
+ * Verifies that the queue belongs to the caller process.
+ */
+Error
+getMessageQueueSafe(MessageQueueId id,
+                    phys_ptr<MessageQueue> *outQueue)
 {
    id &= 0xFFF;
 

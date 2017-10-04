@@ -56,7 +56,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
    auto &timerManager = sData->timerManager;
 
    // Verify the message queue exists.
-   auto error = internal::getMessageQueue(queue, nullptr);
+   auto error = internal::getMessageQueueSafe(queue, nullptr);
    if (error < Error::OK) {
       return error;
    }

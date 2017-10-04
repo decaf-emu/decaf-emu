@@ -92,6 +92,10 @@ Error
 getMessageQueue(MessageQueueId id,
                 phys_ptr<MessageQueue> *outQueue);
 
+Error
+getMessageQueueSafe(MessageQueueId id,
+                    phys_ptr<MessageQueue> *outQueue);
+
 phys_ptr<MessageQueue>
 getCurrentThreadMessageQueue();
 

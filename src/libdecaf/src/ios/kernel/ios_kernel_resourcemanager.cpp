@@ -632,8 +632,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       if (resourceRequest->messageQueueId < 0) {
          queue = resourceRequest->messageQueue;
       } else {
-         error = getMessageQueue(resourceRequest->messageQueueId,
-                                 &queue);
+         error = getMessageQueue(resourceRequest->messageQueueId, &queue);
       }
 
       if (queue) {
@@ -657,10 +656,13 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
 static Error
 dispatchRequest(phys_ptr<ResourceRequest> request)
 {
-   return IOS_SendMessage(request->messageQueueId,
-                          makeMessage(request),
-                          MessageFlags::NonBlocking);
+   phys_ptr<MessageQueue> queue;
+   auto error = getMessageQueue(request->resourceManager->queueId, &queue);
+   if (error < Error::OK) {
+      return error;
+   }
 
+   return sendMessage(queue, makeMessage(request), MessageFlags::NonBlocking);
 }
 
 
