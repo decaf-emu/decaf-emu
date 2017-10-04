@@ -384,7 +384,7 @@ allocResourceRequest(phys_ptr<ResourceHandleManager> resourceHandleManager,
       resourceRequestList.lastFreeIdx = int16_t { -1 };
    } else {
       auto &nextFreeResourceRequest = resourceRequestList.resourceRequests[nextFreeIdx];
-      nextFreeResourceRequest.nextIdx = int16_t { -1 };
+      nextFreeResourceRequest.prevIdx = int16_t { -1 };
       resourceRequestList.firstFreeIdx = nextFreeIdx;
    }
 
