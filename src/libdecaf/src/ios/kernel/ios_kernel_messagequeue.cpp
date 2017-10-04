@@ -140,6 +140,7 @@ IOS_JamMessage(MessageQueueId id,
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
+         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
@@ -172,7 +173,6 @@ IOS_ReceiveMessage(MessageQueueId id,
    phys_ptr<MessageQueue> queue;
    auto error = internal::getMessageQueue(id, &queue);
    if (error < Error::OK) {
-      internal::unlockScheduler();
       return error;
    }
 
@@ -233,6 +233,7 @@ sendMessage(phys_ptr<MessageQueue> queue,
    internal::lockScheduler();
    while (queue->used == queue->size) {
       if (flags & MessageFlags::NonBlocking) {
+         internal::unlockScheduler();
          return Error::Max;
       }
 
@@ -241,6 +242,7 @@ sendMessage(phys_ptr<MessageQueue> queue,
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
+         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
@@ -268,6 +270,7 @@ receiveMessage(phys_ptr<MessageQueue> queue,
    internal::lockScheduler();
    while (queue->used == 0) {
       if (flags & MessageFlags::NonBlocking) {
+         internal::unlockScheduler();
          return Error::Max;
       }
 
@@ -276,6 +279,7 @@ receiveMessage(phys_ptr<MessageQueue> queue,
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
+         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }

@@ -135,6 +135,7 @@ IOS_WaitSemaphore(SemaphoreId id,
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
+         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
