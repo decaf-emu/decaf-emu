@@ -29,7 +29,7 @@ struct StaticData
    be2_val<uint32_t> systemModeFlags;
    be2_val<SystemFileSys> systemFileSys;
 
-   be2_array<std::byte, LocalHeapSize> localHeapBuffer;
+   alignas(0x20) be2_array<std::byte, LocalHeapSize> localHeapBuffer;
    be2_struct<IpcRequest> sysEventMsg;
    be2_val<kernel::MessageQueueId> messageQueueId;
    be2_array<kernel::Message, MainThreadNumMessages> messageBuffer;
