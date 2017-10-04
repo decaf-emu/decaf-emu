@@ -190,6 +190,7 @@ pmThreadEntry(phys_ptr<void> /*context*/)
                          request->requestData.args.ioctl.inputLength,
                          request->requestData.args.ioctl.outputBuffer,
                          request->requestData.args.ioctl.outputLength);
+         IOS_ResourceReply(request, error);
          break;
       }
       default:
