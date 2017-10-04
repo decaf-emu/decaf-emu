@@ -303,8 +303,8 @@ public:
       return before;
    }
 
-   template<typename IndexType>
-   auto operator [](const IndexType &index)
+   template<typename IndexType, typename K = value_type>
+   auto operator [](const IndexType &index) -> decltype(std::declval<K>().operator [](std::declval<IndexType>()))
    {
       return value().operator [](index);
    }
