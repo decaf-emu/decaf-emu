@@ -244,8 +244,9 @@ IOS_StartThread(ThreadId id)
    }
 
    auto thread = phys_addrof(sData->threads[id]);
-   if (thread->pid != currentThread->pid) {
+   if (currentThread->pid != ProcessId::KERNEL && thread->pid != currentThread->pid) {
       // Can only start threads belonging to the same process.
+      // Unless we're the kernel of course.
       internal::unlockScheduler();
       return Error::Invalid;
    }
