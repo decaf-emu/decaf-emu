@@ -162,7 +162,41 @@ IOS_RegisterResourceManager(std::string_view device,
       resourceManagerList.firstRegisteredIdx = resourceManagerIdx;
       resourceManagerList.lastRegisteredIdx = resourceManagerIdx;
    } else {
-      // TODO: Insert ordered
+      auto insertBeforeIndex = resourceManagerList.firstRegisteredIdx;
+      while (insertBeforeIndex >= 0) {
+         auto &other = resourceManagerList.resourceManagers[insertBeforeIndex];
+         if (device.compare(phys_addrof(other.device).getRawPointer()) < 0) {
+            break;
+         }
+
+         insertBeforeIndex = other.nextResourceManagerIdx;
+      }
+
+      if (insertBeforeIndex == resourceManagerList.firstRegisteredIdx) {
+         // Insert at front
+         auto &insertBefore = resourceManagerList.resourceManagers[insertBeforeIndex];
+         insertBefore.prevResourceManagerIdx = resourceManagerIdx;
+         resourceManager.nextResourceManagerIdx = insertBeforeIndex;
+         resourceManagerList.firstRegisteredIdx = resourceManagerIdx;
+      } else if (insertBeforeIndex < 0) {
+         // Insert at back
+         auto insertAfterIndex = resourceManagerList.lastRegisteredIdx;
+         auto &insertAfter = resourceManagerList.resourceManagers[insertAfterIndex];
+         insertAfter.nextResourceManagerIdx = resourceManagerIdx;
+         resourceManager.prevResourceManagerIdx = insertAfterIndex;
+         resourceManagerList.lastRegisteredIdx = resourceManagerIdx;
+      } else {
+         // Insert in middle
+         auto &insertBefore = resourceManagerList.resourceManagers[insertBeforeIndex];
+         auto insertAfterIndex = insertBefore.prevResourceManagerIdx;
+         auto &insertAfter = resourceManagerList.resourceManagers[insertAfterIndex];
+
+         insertAfter.nextResourceManagerIdx = resourceManagerIdx;
+         insertBefore.prevResourceManagerIdx = resourceManagerIdx;
+
+         resourceManager.nextResourceManagerIdx = insertBeforeIndex;
+         resourceManager.prevResourceManagerIdx = insertAfterIndex;
+      }
    }
 
    return Error::OK;
