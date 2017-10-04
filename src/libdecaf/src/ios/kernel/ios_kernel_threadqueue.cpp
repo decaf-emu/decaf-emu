@@ -22,7 +22,7 @@ ThreadQueue_PushThread(phys_ptr<ThreadQueue> queue,
    auto next = queue->first;
 
    for (auto itr = queue->first; itr; itr = itr->threadQueueNext) {
-      if (thread->priority < itr->priority) {
+      if (thread->priority >= itr->priority) {
          break;
       }
 
