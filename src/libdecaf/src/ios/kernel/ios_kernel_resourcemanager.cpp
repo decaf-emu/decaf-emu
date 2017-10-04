@@ -108,7 +108,7 @@ IOS_RegisterResourceManager(std::string_view device,
    }
 
    auto error = internal::findResourceManager(device, nullptr);
-   if (error < Error::OK) {
+   if (error >= Error::OK) {
       return Error::Exists;
    }
 
