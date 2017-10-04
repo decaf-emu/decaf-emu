@@ -8,7 +8,7 @@
 namespace ios::kernel
 {
 
-struct StaticData
+struct StaticSemaphoreData
 {
    be2_val<uint32_t> numCreatedSemaphores = 0;
    be2_val<int16_t> firstFreeSemaphoreIndex = 0;
@@ -16,7 +16,7 @@ struct StaticData
    be2_array<Semaphore, 750> semaphores;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticSemaphoreData>
 sData;
 
 static phys_ptr<Semaphore>
@@ -172,7 +172,7 @@ namespace internal
 void
 initialiseStaticSemaphoreData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticSemaphoreData>(allocProcessStatic(sizeof(StaticSemaphoreData)));
 }
 
 } // namespace internal

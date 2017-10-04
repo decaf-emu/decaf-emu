@@ -8,12 +8,12 @@
 namespace ios::kernel::internal
 {
 
-struct StaticData
+struct StaticSchedulerData
 {
    be2_struct<ThreadQueue> runQueue;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticSchedulerData>
 sData = nullptr;
 
 static std::mutex
@@ -157,7 +157,7 @@ handleSchedulerInterrupt()
 void
 initialiseStaticSchedulerData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticSchedulerData>(allocProcessStatic(sizeof(StaticSchedulerData)));
 }
 
 } // namespace ios::kernel::internal

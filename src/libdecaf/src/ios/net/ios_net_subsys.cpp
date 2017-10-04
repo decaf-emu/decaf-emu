@@ -15,14 +15,14 @@ constexpr auto InitThreadPriority = 69u;
 
 using namespace kernel;
 
-struct StaticData
+struct StaticSubsysData
 {
    be2_val<HeapId> heap;
    be2_array<uint8_t, NetHeapSize> heapBuffer;
    be2_array<uint8_t, InitThreadStackSize> threadStack;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticSubsysData>
 sData;
 
 static Error
@@ -91,7 +91,7 @@ stopSubsys()
 void
 initialiseStaticSubsysData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticSubsysData>(allocProcessStatic(sizeof(StaticSubsysData)));
 }
 
 } // namespace ios::net::internal

@@ -9,6 +9,8 @@
 
 #include <common/log.h>
 
+using namespace ios::kernel;
+
 namespace ios::net
 {
 
@@ -20,14 +22,16 @@ constexpr auto CrossHeapSize = 0xC0000u;
 
 constexpr auto NumNetworkMessages = 10u;
 
-struct StaticData
+struct StaticNetData
 {
    be2_val<bool> subsysStarted;
-   be2_array<std::byte, LocalHeapSize> localHeapBuffer;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticNetData>
 sData = nullptr;
+
+static phys_ptr<void>
+sLocalHeapBuffer = nullptr;
 
 namespace internal
 {
@@ -35,14 +39,15 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticNetData>(allocProcessStatic(sizeof(StaticNetData)));
+   sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);
 }
 
 static Error
 networkLoop()
 {
    StackArray<Message, NumNetworkMessages> messageBuffer;
-   StackObject<kernel::Message> message;
+   StackObject<Message> message;
 
    // Create message queue
    auto error = IOS_CreateMessageQueue(messageBuffer, messageBuffer.size());
@@ -61,18 +66,16 @@ networkLoop()
    }
 
    while (true) {
-      auto error = kernel::IOS_ReceiveMessage(messageQueueId,
-                                              message,
-                                              kernel::MessageFlags::None);
+      auto error = IOS_ReceiveMessage(messageQueueId, message, MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
 
-      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
+      auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Open:
       case Command::Close:
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       case Command::Resume:
          if (!sData->subsysStarted) {
@@ -81,7 +84,7 @@ networkLoop()
             error = Error::OK;
          }
 
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       case Command::Suspend:
          if (sData->subsysStarted) {
@@ -90,10 +93,10 @@ networkLoop()
             error = Error::OK;
          }
 
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       default:
-         kernel::IOS_ResourceReply(request, Error::InvalidArg);
+         IOS_ResourceReply(request, Error::InvalidArg);
       }
    }
 
@@ -112,8 +115,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    internal::initialiseStaticSubsysData();
 
    // Initialise process heaps
-   auto error = IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer),
-                                                   static_cast<uint32_t>(sData->localHeapBuffer.size()));
+   auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
       gLog->error("NET: Failed to create local process heap, error = {}.", error);
       return error;

@@ -18,6 +18,8 @@
 #include <common/log.h>
 #include <libcpu/be2_struct.h>
 
+using namespace ios::kernel;
+
 namespace ios::auxil
 {
 
@@ -26,16 +28,17 @@ constexpr auto CrossHeapSize = 0x80000u;
 
 constexpr auto NumMessages = 10u;
 
-struct StaticData
+struct StaticAuxilData
 {
-   be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, NumMessages> messageBuffer;
-
-   be2_array<std::byte, LocalHeapSize> localHeapBuffer;
+   be2_val<MessageQueueId> messageQueueId;
+   be2_array<Message, NumMessages> messageBuffer;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticAuxilData>
 sData = nullptr;
+
+static phys_ptr<void>
+sLocalHeapBuffer = nullptr;
 
 namespace internal
 {
@@ -43,7 +46,8 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticAuxilData>(allocProcessStatic(sizeof(StaticAuxilData)));
+   sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);
 }
 
 } // namespace internal
@@ -58,14 +62,13 @@ processEntryPoint(phys_ptr<void> context)
    internal::initialiseStaticUsrCfgServiceThreadData();
 
    // Initialise process heaps
-   auto error = kernel::IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer),
-                                                   static_cast<uint32_t>(sData->localHeapBuffer.size()));
+   auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to create local process heap, error = {}.", error);
       return error;
    }
 
-   error = kernel::IOS_CreateCrossProcessHeap(CrossHeapSize);
+   error = IOS_CreateCrossProcessHeap(CrossHeapSize);
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to create cross process heap, error = {}.", error);
       return error;
@@ -85,13 +88,13 @@ processEntryPoint(phys_ptr<void> context)
    }
 
    // Setup auxilproc
-   error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
-                                          static_cast<uint32_t>(sData->messageBuffer.size()));
+   error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                  static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       gLog->error("AUXIL: Failed to create auxil proc message queue, error = {}.", error);
       return error;
    }
-   sData->messageQueueId = static_cast<kernel::MessageQueueId>(error);
+   sData->messageQueueId = static_cast<MessageQueueId>(error);
 
    error = mcp::MCP_RegisterResourceManager("/dev/auxilproc", sData->messageQueueId);
    if (error < Error::OK) {
@@ -100,29 +103,29 @@ processEntryPoint(phys_ptr<void> context)
    }
 
    // Run auxilproc thread
-   StackObject<kernel::Message> message;
+   StackObject<Message> message;
 
    while (true) {
-      auto error = kernel::IOS_ReceiveMessage(sData->messageQueueId,
-                                              message,
-                                              kernel::MessageFlags::None);
+      auto error = IOS_ReceiveMessage(sData->messageQueueId,
+                                      message,
+                                      MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
 
-      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
+      auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Suspend:
       {
          internal::stopImThread();
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       }
 
       case Command::Resume:
       {
          internal::startImThread();
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       }
 
@@ -132,12 +135,12 @@ processEntryPoint(phys_ptr<void> context)
             // TODO: "fast relaunch"
          }
 
-         kernel::IOS_ResourceReply(request, Error::OK);
+         IOS_ResourceReply(request, Error::OK);
          break;
       }
 
       default:
-         kernel::IOS_ResourceReply(request, Error::Invalid);
+         IOS_ResourceReply(request, Error::Invalid);
       }
    }
 }

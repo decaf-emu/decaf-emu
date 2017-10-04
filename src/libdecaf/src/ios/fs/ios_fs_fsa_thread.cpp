@@ -11,6 +11,8 @@
 #include "ios/ios_ipc.h"
 #include "ios/ios_stackobject.h"
 
+using namespace ios::kernel;
+
 namespace ios::fs::internal
 {
 
@@ -24,23 +26,24 @@ struct RequestOrigin
    be2_val<GroupId> groupId;
 };
 
-struct StaticData
+struct StaticFsaThreadData
 {
-   be2_val<kernel::MessageQueueId> fsaMessageQueue;
-   be2_array<kernel::Message, 0x160> fsaMessageBuffer;
+   be2_val<MessageQueueId> fsaMessageQueue;
+   be2_array<Message, 0x160> fsaMessageBuffer;
 
-   be2_val<kernel::ThreadId> fsaThread;
+   be2_val<ThreadId> fsaThread;
    be2_array<uint8_t, 0x4000> fsaThreadStack;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticFsaThreadData>
 sData = nullptr;
 
 static HandleManager<FSADevice, FSADeviceHandle, FSAMaxClients>
 sDevices;
 
 FSAStatus
-getDevice(FSADeviceHandle handle, FSADevice **outDevice)
+getDevice(FSADeviceHandle handle,
+          FSADevice **outDevice)
 {
    auto error = sDevices.get(handle, outDevice);
    if (error < Error::OK) {
@@ -53,7 +56,7 @@ getDevice(FSADeviceHandle handle, FSADevice **outDevice)
 static FSAStatus
 fsaDeviceOpen(phys_ptr<RequestOrigin> origin,
               FSADeviceHandle *outHandle,
-              kernel::ClientCapabilityMask clientCapabilityMask)
+              ClientCapabilityMask clientCapabilityMask)
 {
    auto error = sDevices.open();
    if(error < Error::OK) {
@@ -66,7 +69,7 @@ fsaDeviceOpen(phys_ptr<RequestOrigin> origin,
 
 static FSAStatus
 fsaDeviceClose(FSADeviceHandle handle,
-               phys_ptr<kernel::ResourceRequest> resourceRequest)
+               phys_ptr<ResourceRequest> resourceRequest)
 {
    FSADevice *device = nullptr;
    auto status = getDevice(handle, &device);
@@ -81,7 +84,7 @@ fsaDeviceClose(FSADeviceHandle handle,
 }
 
 static FSAStatus
-fsaDeviceIoctl(phys_ptr<kernel::ResourceRequest> resourceRequest,
+fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
                FSACommand command,
                be2_phys_ptr<const void> inputBuffer,
                be2_phys_ptr<void> outputBuffer)
@@ -166,12 +169,12 @@ fsaDeviceIoctl(phys_ptr<kernel::ResourceRequest> resourceRequest,
    }
 
    // TODO: Move this reply once we do asynchronous filesystem commands
-   kernel::IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
+   IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
    return status;
 }
 
 static FSAStatus
-fsaDeviceIoctlv(phys_ptr<kernel::ResourceRequest> resourceRequest,
+fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
                 FSACommand command,
                 be2_phys_ptr<IoctlVec> vecs)
 {
@@ -212,25 +215,25 @@ fsaDeviceIoctlv(phys_ptr<kernel::ResourceRequest> resourceRequest,
    }
 
    // TODO: Move this reply once we do asynchronous filesystem commands
-   kernel::IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
+   IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
    return status;
 }
 
 static Error
 fsaThreadMain(phys_ptr<void> /*context*/)
 {
-   StackObject<kernel::Message> message;
+   StackObject<Message> message;
    StackObject<RequestOrigin> origin;
 
    while (true) {
-      auto error = kernel::IOS_ReceiveMessage(sData->fsaMessageQueue,
-                                              message,
-                                              kernel::MessageFlags::None);
+      auto error = IOS_ReceiveMessage(sData->fsaMessageQueue,
+                                      message,
+                                      MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
 
-      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
+      auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
       case Command::Open:
       {
@@ -246,14 +249,14 @@ fsaThreadMain(phys_ptr<void> /*context*/)
             error = static_cast<FSAStatus>(fsaHandle);
          }
 
-         kernel::IOS_ResourceReply(request, static_cast<Error>(error));
+         IOS_ResourceReply(request, static_cast<Error>(error));
          break;
       }
 
       case Command::Close:
       {
          auto error = fsaDeviceClose(request->requestData.handle, request);
-         kernel::IOS_ResourceReply(request, static_cast<Error>(error));
+         IOS_ResourceReply(request, static_cast<Error>(error));
          break;
       }
 
@@ -275,7 +278,7 @@ fsaThreadMain(phys_ptr<void> /*context*/)
       }
 
       default:
-         kernel::IOS_ResourceReply(request, Error::Invalid);
+         IOS_ResourceReply(request, Error::Invalid);
       }
    }
 }
@@ -283,41 +286,39 @@ fsaThreadMain(phys_ptr<void> /*context*/)
 Error
 startFsaThread()
 {
-   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->fsaMessageBuffer),
-                                               static_cast<uint32_t>(sData->fsaMessageBuffer.size()));
+   auto error = IOS_CreateMessageQueue(phys_addrof(sData->fsaMessageBuffer),
+                                       static_cast<uint32_t>(sData->fsaMessageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
 
-   auto queueId = static_cast<kernel::MessageQueueId>(error);
+   auto queueId = static_cast<MessageQueueId>(error);
    sData->fsaMessageQueue = queueId;
 
-   error = kernel::IOS_RegisterResourceManager("/dev/fsa",
-                                               sData->fsaMessageQueue);
+   error = IOS_RegisterResourceManager("/dev/fsa", sData->fsaMessageQueue);
    if (error < Error::OK) {
       return error;
    }
 
-   error = kernel::IOS_AssociateResourceManager("/dev/fsa",
-                                                kernel::ResourcePermissionGroup::FS);
+   error = IOS_AssociateResourceManager("/dev/fsa", ResourcePermissionGroup::FS);
    if (error < Error::OK) {
       return error;
    }
 
-   error = kernel::IOS_CreateThread(fsaThreadMain,
-                                    nullptr,
-                                    phys_addrof(sData->fsaThreadStack) + sData->fsaThreadStack.size(),
-                                    static_cast<uint32_t>(sData->fsaThreadStack.size()),
-                                    78,
-                                    kernel::ThreadFlags::Detached);
+   error = IOS_CreateThread(fsaThreadMain,
+                            nullptr,
+                            phys_addrof(sData->fsaThreadStack) + sData->fsaThreadStack.size(),
+                            static_cast<uint32_t>(sData->fsaThreadStack.size()),
+                            78,
+                            ThreadFlags::Detached);
    if (error < Error::OK) {
       return error;
    }
 
-   auto threadId = static_cast<kernel::ThreadId>(error);
+   auto threadId = static_cast<ThreadId>(error);
    sData->fsaThread = threadId;
 
-   error = kernel::IOS_StartThread(sData->fsaThread);
+   error = IOS_StartThread(sData->fsaThread);
    if (error < Error::OK) {
       return error;
    }
@@ -328,7 +329,7 @@ startFsaThread()
 void
 initialiseStaticFsaThreadData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticFsaThreadData>(allocProcessStatic(sizeof(StaticFsaThreadData)));
    sDevices.closeAll();
 }
 

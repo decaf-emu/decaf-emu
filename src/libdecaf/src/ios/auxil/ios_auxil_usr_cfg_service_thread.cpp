@@ -20,7 +20,7 @@ constexpr auto UCServiceThreadStackSize = 0x2000u;
 constexpr auto UCServiceThreadPriority = 70u;
 constexpr auto MaxNumDevices = 96u;
 
-struct StaticData
+struct StaticUsrCfgServiceData
 {
    be2_val<bool> serviceRunning;
    be2_val<ThreadId> threadId;
@@ -29,7 +29,7 @@ struct StaticData
    be2_array<uint8_t, UCServiceThreadStackSize> threadStack;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticUsrCfgServiceData>
 sData = nullptr;
 
 static HandleManager<UCDevice, UCDeviceHandle, MaxNumDevices>
@@ -172,7 +172,7 @@ getUsrCfgServiceMessageQueueId()
 void
 initialiseStaticUsrCfgServiceThreadData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticUsrCfgServiceData>(allocProcessStatic(sizeof(StaticUsrCfgServiceData)));
    sDevices.closeAll();
 }
 

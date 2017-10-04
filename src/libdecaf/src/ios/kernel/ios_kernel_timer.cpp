@@ -14,7 +14,7 @@ constexpr auto TimerThreadNumMessages = 1u;
 constexpr auto TimerThreadStackSize = 0x400u;
 constexpr auto TimerThreadPriority = 125u;
 
-struct StaticData
+struct StaticTimerData
 {
    be2_val<ThreadId> threadId;
    be2_val<MessageQueueId> messageQueueId;
@@ -23,7 +23,7 @@ struct StaticData
    be2_struct<TimerManager> timerManager;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticTimerData>
 sData;
 
 static std::chrono::time_point<std::chrono::steady_clock>
@@ -386,7 +386,7 @@ void
 initialiseStaticTimerData()
 {
    sStartupTime = std::chrono::steady_clock::now();
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticTimerData>(allocProcessStatic(sizeof(StaticTimerData)));
 
    for (auto i = 0u; i < sData->timerManager.timers.size(); ++i) {
       auto &timer = sData->timerManager.timers[i];

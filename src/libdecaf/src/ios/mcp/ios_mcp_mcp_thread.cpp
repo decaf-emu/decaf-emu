@@ -33,7 +33,7 @@ using MCPHandle = int32_t;
 using namespace fs;
 using namespace kernel;
 
-struct StaticData
+struct StaticMcpThreadData
 {
    be2_val<uint32_t> systemMode;
    be2_val<FSAHandle> fsaHandle;
@@ -43,7 +43,7 @@ struct StaticData
    be2_array<uint8_t, MaxNumMcpHandles / 8> handleOpenBitset;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticMcpThreadData>
 sData;
 
 static MCPError
@@ -593,7 +593,7 @@ startMcpThread()
 void
 initialiseStaticMcpThreadData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticMcpThreadData>(allocProcessStatic(sizeof(StaticMcpThreadData)));
 }
 
 } // namespace ios::mcp::internal

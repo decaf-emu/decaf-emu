@@ -13,30 +13,31 @@
 
 #include <common/log.h>
 
+using namespace ios::kernel;
+
 namespace ios::mcp
 {
-
-using namespace ios::kernel;
 
 constexpr auto LocalHeapSize = 0x8000u;
 constexpr auto CrossHeapSize = 0x31E000u;
 
 constexpr auto MainThreadNumMessages = 30u;
 
-struct StaticData
+struct StaticMcpData
 {
    be2_val<uint32_t> bootFlags;
    be2_val<uint32_t> systemModeFlags;
    be2_val<SystemFileSys> systemFileSys;
-
-   alignas(0x20) be2_array<std::byte, LocalHeapSize> localHeapBuffer;
    be2_struct<IpcRequest> sysEventMsg;
-   be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, MainThreadNumMessages> messageBuffer;
+   be2_val<MessageQueueId> messageQueueId;
+   be2_array<Message, MainThreadNumMessages> messageBuffer;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticMcpData>
 sData = nullptr;
+
+static phys_ptr<void>
+sLocalHeapBuffer = nullptr;
 
 namespace internal
 {
@@ -44,8 +45,10 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticMcpData>(allocProcessStatic(sizeof(StaticMcpData)));
    sData->sysEventMsg.command = static_cast<Command>(MainThreadCommand::SysEvent);
+
+   sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);
 }
 
 static void
@@ -90,20 +93,18 @@ initialiseClientCaps()
 static Error
 mainThreadLoop()
 {
-   StackObject<kernel::Message> message;
+   StackObject<Message> message;
 
    while (true) {
-      auto error = kernel::IOS_ReceiveMessage(sData->messageQueueId,
-                                              message,
-                                              kernel::MessageFlags::None);
+      auto error = IOS_ReceiveMessage(sData->messageQueueId, message, MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
 
-      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
+      auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
       default:
-         kernel::IOS_ResourceReply(request, Error::InvalidArg);
+         IOS_ResourceReply(request, Error::InvalidArg);
       }
    }
 }
@@ -138,8 +139,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    internal::initialiseStaticPmThreadData();
 
    // Initialise process heaps
-   auto error = IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer),
-                                           static_cast<uint32_t>(sData->localHeapBuffer.size()));
+   auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
       gLog->error("Failed to create local process heap, error = {}.", error);
       return error;

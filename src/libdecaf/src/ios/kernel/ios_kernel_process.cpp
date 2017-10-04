@@ -134,6 +134,18 @@ allocProcessStatic(ProcessId pid,
    return cpu::translatePhysical(buffer);
 }
 
+
+phys_ptr<void>
+allocProcessLocalHeap(size_t size)
+{
+   auto pid = internal::getCurrentProcessId();
+   auto &allocator = sProcessStaticAllocators[pid];
+   auto buffer = allocator.allocate(size, 0x20);
+   std::memset(buffer, 0, size);
+   return cpu::translatePhysical(buffer);
+}
+
+
 namespace internal
 {
 

@@ -47,7 +47,7 @@ struct RootThreadMessage
 };
 CHECK_SIZE(RootThreadMessage, 0x38);
 
-struct StaticData
+struct StaticKernelData
 {
    be2_val<ThreadId> threadId;
    be2_val<TimerId> timerId;
@@ -58,7 +58,7 @@ struct StaticData
    be2_struct<RootThreadMessage> sysprotEventMessage;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticKernelData>
 sData;
 
 struct ProcessInfo
@@ -281,7 +281,7 @@ start()
    internal::initialiseStaticThreadData();
    internal::initialiseStaticTimerData();
 
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticKernelData>(allocProcessStatic(sizeof(StaticKernelData)));
    sData->rootTimerMessage.command = RootThreadCommand::Timer;
    sData->sysprotEventMessage.command = RootThreadCommand::SysprotEvent;
 

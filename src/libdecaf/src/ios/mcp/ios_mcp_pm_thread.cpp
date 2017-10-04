@@ -71,7 +71,7 @@ CHECK_OFFSET(ResourceManagerRegistration::Data, 0x48, timeOpenFinished);
 CHECK_SIZE(ResourceManagerRegistration::Data, 0x50);
 CHECK_SIZE(ResourceManagerRegistration, 0x58);
 
-struct StaticData
+struct StaticPmThreadData
 {
    be2_val<ThreadId> threadId;
    be2_array<uint8_t, PmThreadStackSize> threadStack;
@@ -84,7 +84,7 @@ struct StaticData
    be2_array<Message, MaxNumRmQueueMessages> resourceManagerMessageBuffer;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticPmThreadData>
 sData;
 
 static Error
@@ -429,7 +429,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
 void
 initialiseStaticPmThreadData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticPmThreadData>(allocProcessStatic(sizeof(StaticPmThreadData)));
    sData->resourceManagerTimeoutMessage.command = static_cast<Command>(Error::Timeout);
 
    auto dummyRM = ResourceManagerRegistration {

@@ -22,12 +22,12 @@ CHECK_OFFSET(EventHandler, 0x04, message);
 CHECK_OFFSET(EventHandler, 0x08, pid);
 CHECK_SIZE(EventHandler, 0x10);
 
-struct StaticData
+struct StaticHardwareData
 {
    be2_array<EventHandler, 0x30> eventHandlers;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticHardwareData>
 sData;
 
 //! Interrupt mask for ARM AHB IRQs
@@ -493,7 +493,7 @@ initialiseStaticHardwareData()
    LT_INTSR_AHBALL_ARM.store(0);
    LT_INTMR_AHBLT_ARM.store(0);
    LT_INTSR_AHBLT_ARM.store(0);
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticHardwareData>(allocProcessStatic(sizeof(StaticHardwareData)));
 }
 
 } // namespace internal

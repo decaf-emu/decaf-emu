@@ -23,7 +23,7 @@ constexpr auto ImNumMessages = 20u;
 constexpr auto ImThreadStackSize = 0x800u;
 constexpr auto ImThreadPriority = 69u;
 
-struct StaticData
+struct StaticImThreadData
 {
    be2_val<ThreadId> threadId;
    be2_val<MessageQueueId> messageQueueId;
@@ -32,7 +32,7 @@ struct StaticData
    be2_val<Command> stopMessageBuffer;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticImThreadData>
 sData;
 
 static HandleManager<IMDevice, IMDeviceHandle, MaxNumIMDevices>
@@ -211,7 +211,7 @@ stopImThread()
 void
 initialiseStaticImThreadData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticImThreadData>(allocProcessStatic(sizeof(StaticImThreadData)));
    sDevices.closeAll();
 }
 

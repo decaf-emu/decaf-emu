@@ -22,7 +22,7 @@ constexpr auto NumSocketMessages = 40u;
 constexpr auto SocketThreadStackSize = 0x4000u;
 constexpr auto SocketThreadPriority = 69u;
 
-struct StaticData
+struct StaticSocketThreadData
 {
    be2_val<ThreadId> threadId;
    be2_val<MessageQueueId> messageQueueId;
@@ -31,7 +31,7 @@ struct StaticData
    be2_array<uint8_t, SocketThreadStackSize> threadStack;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticSocketThreadData>
 sData = nullptr;
 
 static std::array<std::unique_ptr<SocketDevice>, ProcessId::Max>
@@ -198,7 +198,7 @@ stopSocketThread()
 void
 initialiseStaticSocketData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticSocketThreadData>(allocProcessStatic(sizeof(StaticSocketThreadData)));
    sData->stopMessage.command = Command::Suspend;
 }
 

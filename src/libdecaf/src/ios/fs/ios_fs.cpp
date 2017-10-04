@@ -13,13 +13,8 @@ namespace ios::fs
 constexpr auto LocalHeapSize = 0x56000u;
 constexpr auto CrossHeapSize = 0x1D80000u;
 
-struct StaticData
-{
-   be2_array<std::byte, LocalHeapSize> localHeapBuffer;
-};
-
-static phys_ptr<StaticData>
-sData = nullptr;
+static phys_ptr<void>
+sLocalHeapBuffer = nullptr;
 
 namespace internal
 {
@@ -27,7 +22,7 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sLocalHeapBuffer = kernel::allocProcessLocalHeap(LocalHeapSize);
 }
 
 } // namespace internal
@@ -66,8 +61,7 @@ processEntryPoint(phys_ptr<void> context)
    internal::initialiseStaticFsaThreadData();
 
    // Initialise process heaps
-   auto error = kernel::IOS_CreateLocalProcessHeap(phys_addrof(sData->localHeapBuffer),
-                                                   static_cast<uint32_t>(sData->localHeapBuffer.size()));
+   auto error = kernel::IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
       gLog->error("Failed to create local process heap, error = {}.", error);
       return error;

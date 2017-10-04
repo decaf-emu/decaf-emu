@@ -73,6 +73,7 @@ ipcDriverKernelSubmitRequest(virt_ptr<IpcRequest> request)
       break;
    }
    default:
+      break;
    }
 
    switch (cpu::this_core::id()) {

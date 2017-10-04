@@ -22,21 +22,14 @@ phys_ptr<void>
 allocProcessStatic(size_t size);
 
 phys_ptr<void>
+allocProcessLocalHeap(size_t size);
+
+phys_ptr<void>
 allocProcessStatic(ProcessId pid,
                    size_t size);
 
 phys_ptr<char>
 allocProcessStatic(std::string_view str);
-
-template<typename Type, typename... Args>
-phys_ptr<Type>
-allocProcessStatic(Args&&... args)
-{
-   auto ptr = phys_cast<Type>(allocProcessStatic(sizeof(Type)));
-   // Construct Type at memory
-   new (ptr.getRawPointer()) Type { std::forward(args)... };
-   return ptr;
-}
 
 namespace internal
 {

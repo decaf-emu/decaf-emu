@@ -9,7 +9,7 @@
 namespace ios::auxil::internal
 {
 
-struct StaticData
+struct StaticImDeviceData
 {
    be2_val<UCHandle> ucHandle;
    be2_array<uint32_t, IMParameter::Max> parameters;
@@ -17,7 +17,7 @@ struct StaticData
    be2_array<uint32_t, IMParameter::Max> defaultValues;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticImDeviceData>
 sData = nullptr;
 
 static std::map<IMParameter, const char *>
@@ -117,7 +117,7 @@ IMDevice::setNvParameter(IMParameter parameter,
 void
 initialiseStaticImDeviceData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticImDeviceData>(kernel::allocProcessStatic(sizeof(StaticImDeviceData)));
    sData->defaultValues[IMParameter::InactiveSeconds] = 0xAu;
    sData->defaultValues[IMParameter::DimEnabled]      = 1u;
    sData->defaultValues[IMParameter::DimPeriod]       = 300u;

@@ -18,7 +18,7 @@ constexpr auto IpcThreadNumMessages = 0x100u;
 constexpr auto IpcThreadStackSize = 0x800u;
 constexpr auto IpcThreadPriority = 95u;
 
-struct StaticData
+struct StaticIpcData
 {
    be2_val<MessageQueueId> messageQueueId;
    be2_array<Message, IpcThreadNumMessages> messageBuffer;
@@ -26,8 +26,8 @@ struct StaticData
    be2_array<uint8_t, IpcThreadStackSize> threadStack;
 };
 
-static phys_ptr<StaticData>
-sData;
+static phys_ptr<StaticIpcData>
+sData = nullptr;
 
 static MessageQueueId
 sIpcMessageQueueId;
@@ -205,7 +205,7 @@ getIpcMessageQueueId()
 Error
 startIpcThread()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticIpcData>(allocProcessStatic(sizeof(StaticIpcData)));
 
    // Create thread
    auto error = IOS_CreateThread(&ipcThreadEntry, nullptr,

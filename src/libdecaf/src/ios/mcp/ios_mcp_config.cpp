@@ -12,14 +12,14 @@ using namespace ios::kernel;
 namespace ios::mcp::internal
 {
 
-struct StaticData
+struct StaticConfigData
 {
    be2_struct<RtcConfig> rtcConfig;
    be2_struct<SystemConfig> systemConfig;
    be2_struct<SysProdConfig> sysProdConfig;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticConfigData>
 sData = nullptr;
 
 static std::array<const char *, 5>
@@ -475,7 +475,7 @@ getSysProdConfig()
 void
 initialiseStaticConfigData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticConfigData>(allocProcessStatic(sizeof(StaticConfigData)));
 }
 
 } // namespace ios::mcp::internal

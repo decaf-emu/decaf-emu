@@ -9,14 +9,14 @@
 namespace ios::kernel
 {
 
-struct StaticData
+struct StaticThreadData
 {
    be2_array<Thread, MaxNumThreads> threads;
    be2_val<uint32_t> numActiveThreads = 0;
 };
 
-static phys_ptr<StaticData>
-sData;
+static phys_ptr<StaticThreadData>
+sData = nullptr;
 
 namespace internal
 {
@@ -440,7 +440,7 @@ getThread(ThreadId id)
 void
 initialiseStaticThreadData()
 {
-   sData = allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticThreadData>(allocProcessStatic(sizeof(StaticThreadData)));
 }
 
 } // namespace internal

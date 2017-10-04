@@ -8,6 +8,8 @@
 
 #include "ios/ios_stackobject.h"
 
+using namespace ios::kernel;
+
 namespace ios::auxil::internal
 {
 
@@ -15,32 +17,32 @@ constexpr auto UsrCfgThreadNumMessages = 10u;
 constexpr auto UsrCfgThreadStackSize = 0x2000u;
 constexpr auto UsrCfgThreadPriority = 70u;
 
-struct StaticData
+struct StaticUsrCfgThreadData
 {
-   be2_val<kernel::ThreadId> threadId;
-   be2_val<kernel::MessageQueueId> messageQueueId;
-   be2_array<kernel::Message, UsrCfgThreadNumMessages> messageBuffer;
+   be2_val<ThreadId> threadId;
+   be2_val<MessageQueueId> messageQueueId;
+   be2_array<Message, UsrCfgThreadNumMessages> messageBuffer;
    be2_array<uint8_t, UsrCfgThreadStackSize> threadStack;
 };
 
-static phys_ptr<StaticData>
+static phys_ptr<StaticUsrCfgThreadData>
 sData = nullptr;
 
 static Error
 usrCfgThreadEntry(phys_ptr<void> /*context*/)
 {
-   StackObject<kernel::Message> message;
+   StackObject<Message> message;
 
    while (true) {
-      auto error = kernel::IOS_ReceiveMessage(sData->messageQueueId,
-                                              message,
-                                              kernel::MessageFlags::None);
+      auto error = IOS_ReceiveMessage(sData->messageQueueId,
+                                      message,
+                                      MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
 
       UCDevice *device = nullptr;
-      auto request = kernel::parseMessage<kernel::ResourceRequest>(message);
+      auto request = parseMessage<ResourceRequest>(message);
       auto handle = static_cast<UCDeviceHandle>(request->requestData.handle);
       error = getUCDevice(handle, &device);
 
@@ -64,7 +66,7 @@ usrCfgThreadEntry(phys_ptr<void> /*context*/)
          }
       }
 
-      kernel::IOS_ResourceReply(request, error);
+      IOS_ResourceReply(request, error);
       device->decrementRefCount();
    }
 }
@@ -73,29 +75,29 @@ Error
 startUsrCfgThread()
 {
    // Create message queue
-   auto error = kernel::IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
-                                               static_cast<uint32_t>(sData->messageBuffer.size()));
+   auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
+                                       static_cast<uint32_t>(sData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
-   sData->messageQueueId = static_cast<kernel::MessageQueueId>(error);
+   sData->messageQueueId = static_cast<MessageQueueId>(error);
 
    // Create thread
-   error = kernel::IOS_CreateThread(&usrCfgThreadEntry, nullptr,
-                                    phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    static_cast<uint32_t>(sData->threadStack.size()),
-                                    UsrCfgThreadPriority,
-                                    kernel::ThreadFlags::Detached);
+   error = IOS_CreateThread(&usrCfgThreadEntry, nullptr,
+                            phys_addrof(sData->threadStack) + sData->threadStack.size(),
+                            static_cast<uint32_t>(sData->threadStack.size()),
+                            UsrCfgThreadPriority,
+                            ThreadFlags::Detached);
    if (error < Error::OK) {
-      kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
+      IOS_DestroyMessageQueue(sData->messageQueueId);
       return error;
    }
 
-   sData->threadId = static_cast<kernel::ThreadId>(error);
-   return kernel::IOS_StartThread(sData->threadId);
+   sData->threadId = static_cast<ThreadId>(error);
+   return IOS_StartThread(sData->threadId);
 }
 
-kernel::MessageQueueId
+MessageQueueId
 getUsrCfgMessageQueueId()
 {
    return sData->messageQueueId;
@@ -104,7 +106,7 @@ getUsrCfgMessageQueueId()
 void
 initialiseStaticUsrCfgThreadData()
 {
-   sData = kernel::allocProcessStatic<StaticData>();
+   sData = phys_cast<StaticUsrCfgThreadData>(allocProcessStatic(sizeof(StaticUsrCfgThreadData)));
 }
 
 } // namespace ios::auxil::internal
