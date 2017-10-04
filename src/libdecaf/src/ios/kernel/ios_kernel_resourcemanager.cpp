@@ -318,7 +318,7 @@ findResourceManager(std::string_view device,
                     phys_ptr<ResourceManager> *outResourceManager)
 {
    auto index = sData->resourceManagerList.firstRegisteredIdx;
-   while (index > 0) {
+   while (index >= 0) {
       auto &resourceManager = sData->resourceManagerList.resourceManagers[index];
       auto resourceManagerDevice = std::string_view {
             phys_addrof(resourceManager.device).getRawPointer(),
