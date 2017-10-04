@@ -482,7 +482,7 @@ freeResourceRequest(phys_ptr<ResourceRequest> resourceRequest)
    // Reinsert into free list
    resourceRequestList.lastFreeIdx = resourceRequestIndex;
 
-   if (lastFreeIdx <= 0) {
+   if (lastFreeIdx < 0) {
       resourceRequestList.firstFreeIdx = resourceRequestIndex;
    } else {
       auto &lastFreeResourceRequest = resourceRequestList.resourceRequests[lastFreeIdx];
