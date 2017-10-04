@@ -329,6 +329,12 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
             continue;
          }
       } else {
+         if (!sData->resourceManagers[id].name) {
+            // Skip this unimplemented resource.
+            ++id;
+            continue;
+         }
+
          if ((sData->resourceManagers[id].data.systemModeFlags & systemModeFlags) == 0) {
             // Skip this device if it is not enable for the current system mode.
             ++id;
@@ -385,13 +391,6 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
          IOS_GetUpTime64(phys_addrof(rm.data.timeOpenFinished));
 
          if (error < Error::OK) {
-            if (error == Error::NoExists) {
-               // On hardware this would be a hard error, but on decaf we might
-               // not have implemented every single device yet.
-               ++id;
-               continue;
-            }
-
             gLog->error("Unexpected error for IOS_Open on resource manager {}, error = {}",
                         rm.name.getRawPointer(), error);
             return error;
@@ -457,24 +456,24 @@ initialiseStaticPmThreadData()
    sData->resourceManagers = std::array<ResourceManagerRegistration, 86>
       {
          dummyRM,
-         { ss("/dev/crypto"),          1, rm(0x1E8000, ProcessId::CRYPTO, 0) },
+         //{ ss("/dev/crypto"),          1, rm(0x1E8000, ProcessId::CRYPTO, 0) },
          { ss("/dev/ahcimgr"),         1, rm(0x1E8000, ProcessId::FS, 0) },
-         { ss("/dev/usbproc1"),        1, rm(0x1C0000, ProcessId::USB, 0) },
+         //{ ss("/dev/usbproc1"),        1, rm(0x1C0000, ProcessId::USB, 0) },
          dummyRM,
-         { ss("/dev/usb_cdc"),         1, rm(0x1C0000, ProcessId::USB, 0) },
+         //{ ss("/dev/usb_cdc"),         1, rm(0x1C0000, ProcessId::USB, 0) },
          dummyRM,
-         { ss("/dev/testproc1"),       1, rm(0x1C0000, ProcessId::TEST, 0) },
+         //{ ss("/dev/testproc1"),       1, rm(0x1C0000, ProcessId::TEST, 0) },
          dummyRM,
-         { ss("/dev/usb_syslog"),      0, rm(0x1E8000, ProcessId::MCP, 0) },
+         //{ ss("/dev/usb_syslog"),      0, rm(0x1E8000, ProcessId::MCP, 0) },
          { ss("/dev/mmc"),             1, rm(0x1E8000, ProcessId::FS, 0) },
-         { ss("/dev/odm"),             1, rm(0x1E8000, ProcessId::FS, 0) },
+         //{ ss("/dev/odm"),             1, rm(0x1E8000, ProcessId::FS, 0) },
          { ss("/dev/shdd"),            1, rm(0x1E8000, ProcessId::FS, 0) },
          { ss("/dev/fla"),             1, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
-         { ss("/dev/dk"),              1, rm(0x1E8000, ProcessId::FS, 0) },
-         { ss("/dev/ramdisk_svc"),     1, rm(0x1E8000, ProcessId::FS, 0) },
+         //{ ss("/dev/dk"),              1, rm(0x1E8000, ProcessId::FS, 0) },
+         //{ ss("/dev/ramdisk_svc"),     1, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
-         { ss("/dev/dk_syslog"),       0, rm(0x1E8000, ProcessId::MCP, 0) },
+         //{ ss("/dev/dk_syslog"),       0, rm(0x1E8000, ProcessId::MCP, 0) },
          { ss("/dev/df"),              1, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
          { ss("/dev/atfs"),            1, rm(0x1E8000, ProcessId::FS, 0) },
@@ -490,57 +489,57 @@ initialiseStaticPmThreadData()
          { ss("/dev/pcfs"),            1, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
          { ss("/dev/mcp"),             1, rm(0x1A8000, ProcessId::MCP, 0) },
-         { ss("/dev/mcp_recovery"),    0, rm( 0x40000, ProcessId::MCP, 0) },
+         //{ ss("/dev/mcp_recovery"),    0, rm( 0x40000, ProcessId::MCP, 0) },
          dummyRM,
-         { ss("/dev/usbproc2"),        1, rm(0x1C0000, ProcessId::USB, 0) },
+         //{ ss("/dev/usbproc2"),        1, rm(0x1C0000, ProcessId::USB, 0) },
          { ss("/dev/usr_cfg"),         1, rm(0x180000, ProcessId::AUXIL, 0) },
-         { ss("/dev/usb_hid"),         1, rm(0x100000, ProcessId::USB, 0) },
-         { ss("/dev/usb_uac"),         1, rm(0x100000, ProcessId::USB, 0) },
-         { ss("/dev/usb_midi"),        1, rm(0x100000, ProcessId::USB, 0) },
+         //{ ss("/dev/usb_hid"),         1, rm(0x100000, ProcessId::USB, 0) },
+         //{ ss("/dev/usb_uac"),         1, rm(0x100000, ProcessId::USB, 0) },
+         //{ ss("/dev/usb_midi"),        1, rm(0x100000, ProcessId::USB, 0) },
          dummyRM,
-         { ss("/dev/ppc_kernel"),      1, rm(0x180000, ProcessId::MCP, 0) },
-         { ss("/dev/ccr_io"),          1, rm(0x1C8000, ProcessId::PAD, 0) },
-         { ss("/dev/usb/early_btrm"),  0, rm(0x1C0000, ProcessId::PAD, 3) },
-         { ss("/dev/testproc2"),       1, rm(0x1C0000, ProcessId::TEST, 0) },
+         //{ ss("/dev/ppc_kernel"),      1, rm(0x180000, ProcessId::MCP, 0) },
+         //{ ss("/dev/ccr_io"),          1, rm(0x1C8000, ProcessId::PAD, 0) },
+         //{ ss("/dev/usb/early_btrm"),  0, rm(0x1C0000, ProcessId::PAD, 3) },
+         //{ ss("/dev/testproc2"),       1, rm(0x1C0000, ProcessId::TEST, 0) },
          dummyRM,
-         { ss("/dev/ums"),             1, rm(0x1C0000, ProcessId::USB, 0) },
-         { ss("/dev/wifi24"),          0, rm(0x188000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
+         { ss("/dev/ums"),             1, rm(0x1C0000, ProcessId::USB, 0) }, //  WTF?? Should be FS surely?
+         //{ ss("/dev/wifi24"),          0, rm(0x188000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
          dummyRM,
          { ss("/dev/auxilproc"),       1, rm(0x100000, ProcessId::AUXIL, 1) },
          { ss("/dev/network"),         1, rm(0x180000, ProcessId::NET, 0) },
          dummyRM,
-         { ss("/dev/nsec"),            1, rm(0x180000, ProcessId::NET, 0) },
-         { ss("/dev/usb/btrm"),        0, rm(0x1C0000, ProcessId::PAD, 1) },
-         { ss("/dev/acpproc"),         1, rm(0x188000, ProcessId::ACP, 0) },
+         //{ ss("/dev/nsec"),            1, rm(0x180000, ProcessId::NET, 0) },
+         //{ ss("/dev/usb/btrm"),        0, rm(0x1C0000, ProcessId::PAD, 1) },
+         //{ ss("/dev/acpproc"),         1, rm(0x188000, ProcessId::ACP, 0) },
          dummyRM,
-         { ss("/dev/ifuds"),           1, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
-         { ss("/dev/udscntrl"),        1, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
+         //{ ss("/dev/ifuds"),           1, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
+         //{ ss("/dev/udscntrl"),        1, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
          dummyRM,
-         { ss("/dev/nnsm"),            1, rm(0x180000, ProcessId::ACP, 0) },
+         //{ ss("/dev/nnsm"),            1, rm(0x180000, ProcessId::ACP, 0) },
          dummyRM,
-         { ss("/dev/dlp"),             1, rm(0x100000, ProcessId::NET, 0) },
+         //{ ss("/dev/dlp"),             1, rm(0x100000, ProcessId::NET, 0) },
          dummyRM,
-         { ss("/dev/ac_main"),         1, rm(0x180000, ProcessId::NET, 1) },
+         //{ ss("/dev/ac_main"),         1, rm(0x180000, ProcessId::NET, 1) },
          dummyRM,
          { ss("/dev/tcp_pcfs"),        1, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
-         { ss("/dev/act"),             1, rm(0x180000, ProcessId::FPD, 1) },
+         //{ ss("/dev/act"),             1, rm(0x180000, ProcessId::FPD, 1) },
          dummyRM,
-         { ss("/dev/fpd"),             1, rm(0x180000, ProcessId::FPD, 1) },
+         //{ ss("/dev/fpd"),             1, rm(0x180000, ProcessId::FPD, 1) },
          dummyRM,
-         { ss("/dev/acp_main"),        1, rm(0x180000, ProcessId::ACP, 1) },
+         //{ ss("/dev/acp_main"),        1, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,
-         { ss("/dev/pdm"),             1, rm(0x180000, ProcessId::ACP, 1) },
+         //{ ss("/dev/pdm"),             1, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,
-         { ss("/dev/boss"),            1, rm(0x180000, ProcessId::NIM, 1) },
+         //{ ss("/dev/boss"),            1, rm(0x180000, ProcessId::NIM, 1) },
          dummyRM,
-         { ss("/dev/nim"),             1, rm(0x180000, ProcessId::NIM, 1) },
+         //{ ss("/dev/nim"),             1, rm(0x180000, ProcessId::NIM, 1) },
          dummyRM,
-         { ss("/dev/ndm"),             1, rm(0x180000, ProcessId::NET, 1) },
+         //{ ss("/dev/ndm"),             1, rm(0x180000, ProcessId::NET, 1) },
          dummyRM,
-         { ss("/dev/emd"),             1, rm(0x180000, ProcessId::ACP, 1) },
+         //{ ss("/dev/emd"),             1, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,
-         { ss("/dev/ppc_app"),         1, rm(0x180000, ProcessId::MCP, 2) },
+         //{ ss("/dev/ppc_app"),         1, rm(0x180000, ProcessId::MCP, 2) },
          dummyRM,
       };
 }
