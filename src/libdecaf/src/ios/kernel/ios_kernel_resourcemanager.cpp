@@ -239,7 +239,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    auto pid = internal::getCurrentProcessId();
    auto resourceHandleManager = internal::getResourceHandleManager(pid);
    if (!resourceHandleManager) {
-      resourceHandleManager->failedRegisterMaxResourceRequests++;
+      resourceHandleManager->failedResourceReplies++;
       return Error::Invalid;
    }
 
@@ -248,28 +248,29 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    auto resourceRequestIndex = resourceRequest - phys_addrof(resourceRequestList.resourceRequests[0]);
    if (resourceRequestIndex < 0 ||
        resourceRequestIndex >= resourceRequestList.resourceRequests.size()) {
-      resourceHandleManager->failedRegisterMaxResourceRequests++;
+      resourceHandleManager->failedResourceReplies++;
       return Error::Invalid;
    }
 
    if (resourceRequest != phys_addrof(resourceRequestList.resourceRequests[resourceRequestIndex]) ||
       resourceHandleManager != resourceRequest->resourceManager->resourceHandleManager) {
-      resourceHandleManager->failedRegisterMaxResourceRequests++;
+      resourceHandleManager->failedResourceReplies++;
       return Error::Invalid;
    }
 
+   auto requestHandleManager = resourceRequest->resourceHandleManager;
    auto error = internal::getResourceHandle(resourceRequest->resourceHandleId,
-                                            resourceHandleManager,
+                                            requestHandleManager,
                                             &resourceHandle);
    if (error < Error::OK) {
       gLog->warn("IOS_ResourceReply(0x{:08X}, {}) passed invalid resource request.",
                  phys_addr { resourceRequest },
                  reply);
-      resourceHandleManager->failedRegisterMaxResourceRequests++;
+      resourceHandleManager->failedResourceReplies++;
    } else if (resourceRequest->requestData.command == Command::Open) {
       if (reply < Error::OK) {
          // Resource open failed, free the resource handle.
-         internal::freeResourceHandle(resourceHandleManager,
+         internal::freeResourceHandle(requestHandleManager,
                                       resourceRequest->resourceHandleId);
       } else {
          // Resource open succeeded, save the resource handle.
@@ -279,7 +280,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       }
    } else if (resourceRequest->requestData.command == Command::Close) {
       // Resource closed, close the resource handle.
-      internal::freeResourceHandle(resourceHandleManager,
+      internal::freeResourceHandle(requestHandleManager,
                                    resourceRequest->resourceHandleId);
    }
 
@@ -468,7 +469,7 @@ freeResourceRequest(phys_ptr<ResourceRequest> resourceRequest)
    }
 
    // Decrement our counters!
-   auto resourceHandleManager = resourceManager->resourceHandleManager;
+   auto resourceHandleManager = resourceRequest->resourceHandleManager;
    resourceHandleManager->numResourceRequests--;
    resourceRequestList.numRegistered--;
    resourceManager->numRequests--;
