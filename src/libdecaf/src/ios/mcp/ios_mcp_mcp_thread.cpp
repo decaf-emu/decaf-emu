@@ -101,7 +101,7 @@ isOpenHandle(MCPHandle handle)
 
    auto handleIndex = handle >> 16;
    if (handleIndex >= MaxNumMcpHandles) {
-      return Error::InvalidHandle;
+      return false;
    }
 
    auto byteIndex = handleIndex / 8;
@@ -528,7 +528,7 @@ mcpThreadEntry(phys_ptr<void> /*context*/)
    while (true) {
       error = IOS_ReceiveMessage(messageQueueId,
                                  message,
-                                 MessageFlags::NonBlocking);
+                                 MessageFlags::None);
       if (error < Error::OK) {
          break;
       }

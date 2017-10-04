@@ -105,7 +105,7 @@ processEntryPoint(phys_ptr<void> context)
    while (true) {
       auto error = kernel::IOS_ReceiveMessage(sData->messageQueueId,
                                               message,
-                                              kernel::MessageFlags::NonBlocking);
+                                              kernel::MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }

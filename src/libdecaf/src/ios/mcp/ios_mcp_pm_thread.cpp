@@ -172,7 +172,7 @@ pmThreadEntry(phys_ptr<void> /*context*/)
    while (true) {
       error = IOS_ReceiveMessage(messageQueueId,
                                  message,
-                                 MessageFlags::NonBlocking);
+                                 MessageFlags::None);
       if (error < Error::OK) {
          break;
       }
