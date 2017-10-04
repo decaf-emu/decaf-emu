@@ -185,7 +185,7 @@ ipcThreadEntry(phys_ptr<void> context)
             // Reply with error!
             request->command = Command::Reply;
             request->reply = error;
-            ::kernel::ipcDriverKernelSubmitReply(request.getRawPointer());
+            ::kernel::ipcDriverKernelSubmitReply(request);
             continue;
          }
       }

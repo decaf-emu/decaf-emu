@@ -590,7 +590,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    ipcRequest->reply = reply;
 
    if (resourceRequest->messageQueueId == getIpcMessageQueueId()) {
-      ::kernel::ipcDriverKernelSubmitReply(ipcRequest.getRawPointer());
+      ::kernel::ipcDriverKernelSubmitReply(ipcRequest);
       error = Error::OK;
    } else {
       phys_ptr<MessageQueue> queue = nullptr;

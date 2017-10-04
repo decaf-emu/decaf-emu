@@ -268,7 +268,7 @@ ipcDriverAllocateRequest(IPCDriver *driver,
    request->asyncContext = asyncContext;
 
    auto ipcBuffer = request->ipcBuffer;
-   std::memset(&ipcBuffer->request, 0, sizeof(kernel::IpcRequest));
+   std::memset(virt_addrof(ipcBuffer->request).getRawPointer(), 0, sizeof(kernel::IpcRequest));
    ipcBuffer->request.command = command;
    ipcBuffer->request.handle = handle;
    ipcBuffer->request.flags = 0u;
@@ -316,7 +316,7 @@ ipcDriverSubmitRequest(IPCDriver *driver,
 {
    OSInitEvent(&request->finishEvent, FALSE, OSEventMode::AutoReset);
    driver->requestsSubmitted++;
-   kernel::ipcDriverKernelSubmitRequest(&request->ipcBuffer->request);
+   kernel::ipcDriverKernelSubmitRequest(virt_addr { request->ipcBuffer.getAddress() });
    return IOSError::OK;
 }
 

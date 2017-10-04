@@ -1,5 +1,6 @@
 #include "ios/kernel/ios_kernel_ipc_thread.h"
 #include "kernel_ipc.h"
+#include "kernel_memory.h"
 #include "modules/coreinit/coreinit_ipc.h"
 
 #include <condition_variable>
@@ -13,33 +14,92 @@ namespace kernel
 static std::mutex
 sIpcMutex;
 
-static std::queue<IpcRequest *>
+static std::queue<virt_ptr<IpcRequest>>
 sIpcResponses[3];
 
+static std::vector<std::pair<virt_ptr<IpcRequest>, phys_ptr<ios::IpcRequest>>>
+sPendingRequests;
 
 /**
  * Submit a request to the IOS side IPC queue.
  */
-void
-ipcDriverKernelSubmitRequest(IpcRequest *request)
+ios::Error
+ipcDriverKernelSubmitRequest(virt_ptr<IpcRequest> request)
 {
+   phys_addr paddr;
+
+   // Translate all virtual addresses to physical before performing IPC request
+   switch (request->request.command) {
+   case ios::Command::Open:
+      if (!cpu::virtualToPhysicalAddress(virt_addr { request->buffer1 }, paddr)) {
+         return ios::Error::InvalidArg;
+      } else {
+         request->request.args.open.name = paddr;
+      }
+      break;
+   case ios::Command::Ioctl:
+      if (request->buffer1 && !cpu::virtualToPhysicalAddress(virt_addr { request->buffer1 }, paddr)) {
+         return ios::Error::InvalidArg;
+      } else {
+         request->request.args.ioctl.inputBuffer = paddr;
+      }
+
+      if (request->buffer2 && !cpu::virtualToPhysicalAddress(virt_addr { request->buffer2 }, paddr)) {
+         return ios::Error::InvalidArg;
+      } else {
+         request->request.args.ioctl.outputBuffer = paddr;
+      }
+      break;
+   case ios::Command::Ioctlv:
+   {
+      auto &ioctlv = request->request.args.ioctlv;
+      if (request->buffer1 && !cpu::virtualToPhysicalAddress(virt_addr { request->buffer1 }, paddr)) {
+         return ios::Error::InvalidArg;
+      } else {
+         ioctlv.vecs = paddr;
+      }
+
+      for (auto i = 0u; i < ioctlv.numVecIn + ioctlv.numVecOut; ++i) {
+         if (!ioctlv.vecs[i].vaddr) {
+            continue;
+         }
+
+         if (!cpu::virtualToPhysicalAddress(ioctlv.vecs[i].vaddr, paddr)) {
+            return ios::Error::InvalidArg;
+         }
+
+         ioctlv.vecs[i].paddr = paddr;
+      }
+      break;
+   }
+   default:
+   }
+
    switch (cpu::this_core::id()) {
    case 0:
-      request->cpuId = ios::CpuId::PPC0;
+      request->request.cpuId = ios::CpuId::PPC0;
       break;
    case 1:
-      request->cpuId = ios::CpuId::PPC1;
+      request->request.cpuId = ios::CpuId::PPC1;
       break;
    case 2:
-      request->cpuId = ios::CpuId::PPC2;
+      request->request.cpuId = ios::CpuId::PPC2;
       break;
    default:
       decaf_abort("Unexpected core id");
    }
 
-   phys_addr paddr;
-   decaf_check(cpu::virtualToPhysicalAddress(cpu::translate(request), paddr));
+   auto ipcRequest = virt_addrof(request->request);
+   if (!cpu::virtualToPhysicalAddress(virt_addr { ipcRequest }, paddr)) {
+      return ios::Error::InvalidArg;
+   }
+
    ios::kernel::submitIpcRequest(paddr);
+
+   sIpcMutex.lock();
+   sPendingRequests.push_back({ request, paddr });
+   sIpcMutex.unlock();
+   return ios::Error::OK;
 }
 
 
@@ -47,13 +107,24 @@ ipcDriverKernelSubmitRequest(IpcRequest *request)
  * Submit a reply to the PPC side IPC queue.
  */
 void
-ipcDriverKernelSubmitReply(IpcRequest *reply)
+ipcDriverKernelSubmitReply(phys_ptr<ios::IpcRequest> reply)
 {
    auto coreId = reply->cpuId - ios::CpuId::PPC0;
    auto &responses = sIpcResponses[coreId];
 
+   // Find the matching pending request
+   virt_ptr<IpcRequest> request = nullptr;
+
    sIpcMutex.lock();
-   responses.push(reply);
+   for (auto itr = sPendingRequests.begin(); itr != sPendingRequests.end(); ++itr) {
+      if (itr->second == reply) {
+         request = itr->first;
+         sPendingRequests.erase(itr);
+         break;
+      }
+   }
+
+   responses.push(request);
    sIpcMutex.unlock();
 
    cpu::interrupt(coreId, cpu::IPC_INTERRUPT);
@@ -73,7 +144,7 @@ ipcDriverKernelHandleInterrupt()
    sIpcMutex.lock();
 
    while (responses.size()) {
-      driver->responses[driver->numResponses] = reinterpret_cast<coreinit::IPCBuffer *>(responses.front());
+      driver->responses[driver->numResponses] = reinterpret_cast<coreinit::IPCBuffer *>(responses.front().getRawPointer());
       driver->numResponses++;
       responses.pop();
    }
