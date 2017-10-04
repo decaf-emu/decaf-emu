@@ -37,7 +37,9 @@ ipcDriverKernelSubmitRequest(IpcRequest *request)
       decaf_abort("Unexpected core id");
    }
 
-   ios::kernel::submitIpcRequest(cpu::translatePhysical(request));
+   phys_addr paddr;
+   decaf_check(cpu::virtualToPhysicalAddress(cpu::translate(request), paddr));
+   ios::kernel::submitIpcRequest(paddr);
 }
 
 
