@@ -599,7 +599,7 @@ getOpenResource(ProcessId pid,
    }
 
    auto error = getResourceHandle(id, resourceHandleManager, &resourceHandle);
-   if (resourceHandle->state != ResourceHandleState::Closed) {
+   if (resourceHandle->state == ResourceHandleState::Closed) {
       return Error::StaleHandle;
    } else if (resourceHandle->state != ResourceHandleState::Open) {
       return Error::Invalid;
