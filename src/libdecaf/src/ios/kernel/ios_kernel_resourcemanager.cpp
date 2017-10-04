@@ -512,7 +512,7 @@ allocResourceHandle(phys_ptr<ResourceHandleManager> resourceHandleManager,
 
    for (auto i = 0u; i < resourceHandleManager->handles.size(); ++i) {
       if (resourceHandleManager->handles[i].state == ResourceHandleState::Free) {
-         resourceHandle = phys_addrof(resourceHandleManager->handles);
+         resourceHandle = phys_addrof(resourceHandleManager->handles[i]);
          resourceHandleIdx = i;
          break;
       }
