@@ -108,7 +108,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
       }
    }
 
-   return Error::OK;
+   return static_cast<Error>(timer.uid);
 }
 
 Error
