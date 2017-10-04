@@ -65,6 +65,9 @@ IOS_HandleEvent(DeviceId id,
                 Message message);
 
 Error
+IOS_UnregisterEventHandler(DeviceId id);
+
+Error
 IOS_ClearAndEnable(DeviceId id);
 
 namespace internal
@@ -78,6 +81,9 @@ setInterruptAhbAll(AHBALL mask);
 
 void
 setInterruptAhbLt(AHBLT mask);
+
+void
+unregisterEventHandlerQueue(MessageQueueId queue);
 
 void
 initialiseStaticHardwareData();

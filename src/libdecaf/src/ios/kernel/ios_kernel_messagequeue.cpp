@@ -1,3 +1,4 @@
+#include "ios_kernel_hardware.h"
 #include "ios_kernel_messagequeue.h"
 #include "ios_kernel_process.h"
 #include "ios_kernel_scheduler.h"
@@ -78,9 +79,7 @@ IOS_DestroyMessageQueue(MessageQueueId id)
    }
 
    if (queue->flags & MessageQueueFlags::RegisteredEventHandler) {
-      gLog->warn("Destroying queue registered to event.");
-
-      // TODO: Unregister MessageQueue from device event handler
+      internal::unregisterEventHandlerQueue(queue->uid);
       queue->flags &= ~MessageQueueFlags::RegisteredEventHandler;
    }
 

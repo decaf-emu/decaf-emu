@@ -110,6 +110,23 @@ IOS_HandleEvent(DeviceId id,
 }
 
 Error
+IOS_UnregisterEventHandler(DeviceId id)
+{
+   if (id >= sData->eventHandlers.size()) {
+      return Error::Invalid;
+   }
+
+   auto &handler = sData->eventHandlers[id];
+
+   if (handler.queue) {
+      handler.queue->flags &= ~MessageQueueFlags::RegisteredEventHandler;
+   }
+
+   std::memset(phys_addrof(handler).getRawPointer(), 0, sizeof(handler));
+   return Error::OK;
+}
+
+Error
 IOS_ClearAndEnable(DeviceId id)
 {
    auto thread = internal::getCurrentThread();
@@ -456,6 +473,17 @@ setInterruptAhbLt(AHBLT mask)
 void
 setAlarm(std::chrono::steady_clock::time_point when)
 {
+}
+
+void
+unregisterEventHandlerQueue(MessageQueueId queue)
+{
+   for (auto &handler : sData->eventHandlers) {
+      if (handler.queue->uid == queue) {
+         std::memset(phys_addrof(handler).getRawPointer(), 0, sizeof(handler));
+         break;
+      }
+   }
 }
 
 void
