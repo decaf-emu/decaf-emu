@@ -1280,7 +1280,7 @@ getClientCapability(phys_ptr<ResourceHandleManager> resourceHandleManager,
 {
    for (auto i = 0u; i < resourceHandleManager->clientCapabilities.size(); ++i) {
       auto caps = phys_addrof(resourceHandleManager->clientCapabilities[i]);
-      if (caps->featureId == featureId) {
+      if (caps->featureId == 0x7FFFFFFF || caps->featureId == featureId) {
          if (outClientCapability) {
             *outClientCapability = caps;
          }

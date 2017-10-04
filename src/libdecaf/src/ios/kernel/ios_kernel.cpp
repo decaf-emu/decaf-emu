@@ -192,7 +192,7 @@ kernelEntryPoint(phys_ptr<void> context)
    internal::setClientCapability(ProcessId::BSP, FeatureId { 0x7FFFFFFF }, -1);
 
    for (auto i = +ProcessId::CRYPTO; i < NumIosProcess; ++i) {
-      internal::setClientCapability(ProcessId { i }, 1, 0xF);
+      internal::setClientCapability(ProcessId { i }, FeatureId { 1 }, 0xF);
    }
 
    // Initialise shared heap
