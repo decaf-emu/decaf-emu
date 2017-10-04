@@ -129,7 +129,7 @@ allocProcessStatic(ProcessId pid,
 {
    decaf_check(pid < sProcessStaticAllocators.size());
    auto &allocator = sProcessStaticAllocators[pid];
-   auto buffer = allocator.allocate(size);
+   auto buffer = allocator.allocate(size, 16);
    std::memset(buffer, 0, size);
    return cpu::translatePhysical(buffer);
 }
