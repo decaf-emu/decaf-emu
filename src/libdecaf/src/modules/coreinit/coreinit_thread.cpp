@@ -280,8 +280,10 @@ OSCreateThread(OSThread *thread,
 
    internal::unlockScheduler();
 
+   be_val<uint8_t> threadAttr = (uint8_t)thread->attr;
    gLog->info("Thread Created: ptr 0x{:08X}, id 0x{:X}, basePriority {}, attr 0x{:02X}, entry 0x{:08X}, stackStart 0x{:08X}, stackEnd 0x{:08X}",
-      mem::untranslate(thread), thread->id, thread->basePriority, thread->attr,
+      //mem::untranslate(thread), thread->id, thread->basePriority, thread->attr,
+      mem::untranslate(thread), thread->id, thread->basePriority, threadAttr,
       entry.address, thread->stackStart.getAddress(), thread->stackEnd.getAddress());
 
    return TRUE;

@@ -111,7 +111,9 @@ fsaShimSubmitRequest(FSAShimBuffer *shim,
                             shim->ioctlvVecOut,
                             shim->ioctlvVec);
    } else {
-      decaf_abort(fmt::format("Invalid reqType {}", shim->ipcReqType));
+      be_val<uint8_t> reqType = (uint8_t)shim->ipcReqType;
+      decaf_abort(fmt::format("Invalid reqType {}", reqType));
+      //decaf_abort(fmt::format("Invalid reqType {}", shim->ipcReqType));
    }
 
    return FSAShimDecodeIosErrorToFsaStatus(shim->clientHandle, iosError);
@@ -153,7 +155,9 @@ fsaShimSubmitRequestAsync(FSAShimBuffer *shim,
                                  callback,
                                  context);
    } else {
-      decaf_abort(fmt::format("Invalid reqType {}", shim->ipcReqType));
+      be_val<uint8_t> reqType = (uint8_t)shim->ipcReqType;
+      decaf_abort(fmt::format("Invalid reqType {}", reqType));
+      //decaf_abort(fmt::format("Invalid reqType {}", shim->ipcReqType));
    }
 
    return FSAShimDecodeIosErrorToFsaStatus(shim->clientHandle, iosError);
