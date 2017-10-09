@@ -111,7 +111,7 @@ fsaShimSubmitRequest(FSAShimBuffer *shim,
                             shim->ioctlvVecOut,
                             shim->ioctlvVec);
    } else {
-      be_val<uint8_t> reqType = (uint8_t)shim->ipcReqType;
+      be_val<uint16_t> reqType = (uint16_t)shim->ipcReqType;
       decaf_abort(fmt::format("Invalid reqType {}", reqType));
       //decaf_abort(fmt::format("Invalid reqType {}", shim->ipcReqType));
    }
@@ -155,7 +155,7 @@ fsaShimSubmitRequestAsync(FSAShimBuffer *shim,
                                  callback,
                                  context);
    } else {
-      be_val<uint8_t> reqType = (uint8_t)shim->ipcReqType;
+      be_val<uint16_t> reqType = (uint16_t)shim->ipcReqType;
       decaf_abort(fmt::format("Invalid reqType {}", reqType));
       //decaf_abort(fmt::format("Invalid reqType {}", shim->ipcReqType));
    }
