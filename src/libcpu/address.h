@@ -81,6 +81,11 @@ public:
       return mAddress - other.mAddress;
    }
 
+   constexpr Address operator & (uint32_t value) const
+   {
+      return Address { static_cast<StorageType>(mAddress & value) };
+   }
+
    constexpr StorageType getAddress() const
    {
       return mAddress;
