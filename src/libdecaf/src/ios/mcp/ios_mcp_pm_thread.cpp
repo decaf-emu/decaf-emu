@@ -498,7 +498,7 @@ initialiseStaticPmThreadData()
          //{ ss("/dev/usb_uac"),         1, rm(0x100000, ProcessId::USB, 0) },
          //{ ss("/dev/usb_midi"),        1, rm(0x100000, ProcessId::USB, 0) },
          dummyRM,
-         //{ ss("/dev/ppc_kernel"),      1, rm(0x180000, ProcessId::MCP, 0) },
+         { ss("/dev/ppc_kernel"),      1, rm(0x180000, ProcessId::MCP, 0) },
          //{ ss("/dev/ccr_io"),          1, rm(0x1C8000, ProcessId::PAD, 0) },
          //{ ss("/dev/usb/early_btrm"),  0, rm(0x1C0000, ProcessId::PAD, 3) },
          //{ ss("/dev/testproc2"),       1, rm(0x1C0000, ProcessId::TEST, 0) },
@@ -540,7 +540,7 @@ initialiseStaticPmThreadData()
          dummyRM,
          //{ ss("/dev/emd"),             1, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,
-         //{ ss("/dev/ppc_app"),         1, rm(0x180000, ProcessId::MCP, 2) },
+         { ss("/dev/ppc_app"),         1, rm(0x180000, ProcessId::MCP, 2) },
          dummyRM,
       };
 }
