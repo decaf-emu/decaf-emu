@@ -16,10 +16,25 @@ private:
    };
 
 public:
-   TeenyHeap(void *buffer, size_t size) :
-      mBuffer(static_cast<uint8_t *>(buffer)),
-      mSize(size)
+   TeenyHeap() :
+      mBuffer(nullptr),
+      mSize(0)
    {
+   }
+
+   TeenyHeap(void *buffer, size_t size)
+   {
+      reset(buffer, size);
+   }
+
+   void
+   reset(void *buffer, size_t size)
+   {
+      mAllocatedBlocks.clear();
+      mFreeBlocks.clear();
+
+      mBuffer = static_cast<uint8_t *>(buffer);
+      mSize = size;
       mFreeBlocks.emplace_back(MemoryBlock { mBuffer, mSize });
    }
 
