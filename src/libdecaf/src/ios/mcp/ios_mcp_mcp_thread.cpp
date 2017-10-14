@@ -41,6 +41,7 @@ struct StaticMcpThreadData
    be2_array<uint8_t, McpThreadStackSize> threadStack;
    be2_array<Message, MaxNumMessages> messageBuffer;
    be2_array<uint8_t, MaxNumMcpHandles / 8> handleOpenBitset;
+   be2_array<char, 0x100> cafeTitlePath;
 };
 
 static phys_ptr<StaticMcpThreadData>
@@ -473,6 +474,12 @@ mcpResume()
       gLog->error("Failed to initialise sys_prod config");
       return mcpError;
    }
+
+   // Format the Cafe OS title path
+   auto default_os_id = getSystemConfig()->default_os_id;
+   sData->cafeTitlePath = fmt::format("/vol/system/title/{:08x}/{:08x}/code",
+                                      default_os_id >> 32,
+                                      default_os_id & 0xFFFFFFFF);
 
    // Init client caps
    mcpError = initialiseClientCaps();
