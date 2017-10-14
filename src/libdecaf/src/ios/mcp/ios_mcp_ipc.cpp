@@ -33,7 +33,7 @@ freeIpcData(phys_ptr<void> data)
 Error
 MCP_Open()
 {
-   return IOS_Open("/dev/fsa", OpenMode::None);
+   return IOS_Open("/dev/mcp", OpenMode::None);
 }
 
 Error
