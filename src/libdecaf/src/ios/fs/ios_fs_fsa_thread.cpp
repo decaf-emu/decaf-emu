@@ -95,8 +95,8 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       return status;
    }
 
-   auto request = phys_cast<const FSARequest>(inputBuffer);
-   auto response = phys_cast<FSAResponse>(outputBuffer);
+   auto request = phys_cast<const FSARequest *>(inputBuffer);
+   auto response = phys_cast<FSAResponse *>(outputBuffer);
 
    if (!device) {
      status = FSAStatus::InvalidClientHandle;
@@ -178,7 +178,7 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
                 FSACommand command,
                 be2_phys_ptr<IoctlVec> vecs)
 {
-   auto request = phys_ptr<FSARequest> { vecs[0].paddr };
+   auto request = phys_cast<FSARequest *>(vecs[0].paddr);
    auto status = FSAStatus::OK;
 
    if (request->emulatedError < FSAStatus::OK) {
@@ -191,14 +191,14 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
          switch (command) {
          case FSACommand::ReadFile:
          {
-            auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
+            auto buffer = phys_cast<uint8_t *>(vecs[1].paddr);
             auto length = vecs[1].len;
             status = device->readFile(phys_addrof(request->readFile), buffer, length);
             break;
          }
          case FSACommand::WriteFile:
          {
-            auto buffer = phys_ptr<uint8_t> { vecs[1].paddr };
+            auto buffer = phys_cast<uint8_t *>(vecs[1].paddr);
             auto length = vecs[1].len;
             status = device->writeFile(phys_addrof(request->writeFile), buffer, length);
             break;
@@ -329,7 +329,7 @@ startFsaThread()
 void
 initialiseStaticFsaThreadData()
 {
-   sData = phys_cast<StaticFsaThreadData>(allocProcessStatic(sizeof(StaticFsaThreadData)));
+   sData = phys_cast<StaticFsaThreadData *>(allocProcessStatic(sizeof(StaticFsaThreadData)));
    sDevices.closeAll();
 }
 

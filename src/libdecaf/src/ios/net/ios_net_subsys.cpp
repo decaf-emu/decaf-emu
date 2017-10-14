@@ -91,7 +91,7 @@ stopSubsys()
 void
 initialiseStaticSubsysData()
 {
-   sData = phys_cast<StaticSubsysData>(allocProcessStatic(sizeof(StaticSubsysData)));
+   sData = phys_cast<StaticSubsysData *>(allocProcessStatic(sizeof(StaticSubsysData)));
 }
 
 } // namespace ios::net::internal

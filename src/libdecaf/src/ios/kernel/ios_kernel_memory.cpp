@@ -49,7 +49,7 @@ freeSRAM1(phys_ptr<void> ptr)
 void
 kernelInitialiseMemory()
 {
-   sMem0Heap = new TeenyHeap { phys_ptr<void> { phys_addr { 0x08120000 } }.getRawPointer(), 0xA0000 };
+   sMem0Heap = new TeenyHeap { phys_cast<void *>(phys_addr { 0x08120000 }).getRawPointer(), 0xA0000 };
 }
 
 } // namespace ios::kernel

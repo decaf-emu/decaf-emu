@@ -85,7 +85,7 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
       return Error::InvalidHandle;
    }
 
-   auto request = phys_cast<SocketRequest>(resourceRequest->requestData.args.ioctl.inputBuffer);
+   auto request = phys_cast<SocketRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
 
    switch (static_cast<SocketCommand>(resourceRequest->requestData.command)) {
    case SocketCommand::Close:
@@ -198,7 +198,7 @@ stopSocketThread()
 void
 initialiseStaticSocketData()
 {
-   sData = phys_cast<StaticSocketThreadData>(allocProcessStatic(sizeof(StaticSocketThreadData)));
+   sData = phys_cast<StaticSocketThreadData *>(allocProcessStatic(sizeof(StaticSocketThreadData)));
    sData->stopMessage.command = Command::Suspend;
 }
 

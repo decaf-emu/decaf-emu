@@ -117,7 +117,7 @@ IMDevice::setNvParameter(IMParameter parameter,
 void
 initialiseStaticImDeviceData()
 {
-   sData = phys_cast<StaticImDeviceData>(kernel::allocProcessStatic(sizeof(StaticImDeviceData)));
+   sData = phys_cast<StaticImDeviceData *>(kernel::allocProcessStatic(sizeof(StaticImDeviceData)));
    sData->defaultValues[IMParameter::InactiveSeconds] = 0xAu;
    sData->defaultValues[IMParameter::DimEnabled]      = 1u;
    sData->defaultValues[IMParameter::DimPeriod]       = 300u;
@@ -147,7 +147,7 @@ initialiseImParameters()
       auto parameter = static_cast<IMParameter>(i);
       auto &cfg = sysConfig[i];
       cfg.name = std::string { "slc:im_cfg." } + sParameterKey[parameter];
-      cfg.data = virt_addr { phys_addr { phys_addrof(sData->nvParameters[i]) }.getAddress() }; // EW!!!
+      cfg.data = virt_cast<void *>(virt_addr { phys_cast<phys_addr>(phys_addrof(sData->nvParameters[i])).getAddress() }); // EW!!!
       cfg.dataSize = 4u;
       cfg.dataType = UCDataType::UnsignedInt;
       cfg.error = UCError::OK;

@@ -56,7 +56,7 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
    case MCPCommand::GetTitleId:
       if (ioctl.outputLength == sizeof(MCPResponseGetTitleId)) {
          error = mcpGetTitleId(request,
-                               phys_cast<MCPResponseGetTitleId>(ioctl.outputBuffer));
+                               phys_cast<MCPResponseGetTitleId *>(ioctl.outputBuffer));
       } else {
          error = MCPError::InvalidParam;
       }
@@ -80,7 +80,7 @@ mcpIoctlv(phys_ptr<ResourceRequest> request)
           ioctlv.numVecOut == 1 &&
           ioctlv.vecs[0].paddr &&
           ioctlv.vecs[0].len == sizeof(MCPResponseGetSysProdSettings)) {
-         error = mcpGetSysProdSettings(phys_ptr<MCPResponseGetSysProdSettings>(ioctlv.vecs[0].paddr));
+         error = mcpGetSysProdSettings(phys_cast<MCPResponseGetSysProdSettings *>(ioctlv.vecs[0].paddr));
       } else {
          error = MCPError::InvalidParam;
       }
@@ -593,7 +593,7 @@ startMcpThread()
 void
 initialiseStaticMcpThreadData()
 {
-   sData = phys_cast<StaticMcpThreadData>(allocProcessStatic(sizeof(StaticMcpThreadData)));
+   sData = phys_cast<StaticMcpThreadData *>(allocProcessStatic(sizeof(StaticMcpThreadData)));
 }
 
 } // namespace ios::mcp::internal

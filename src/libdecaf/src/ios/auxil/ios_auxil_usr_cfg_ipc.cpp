@@ -65,14 +65,14 @@ UCReadSysConfig(UCHandle handle,
       goto out;
    }
 
-   request = phys_cast<UCReadSysConfigRequest>(reqBuffer);
+   request = phys_cast<UCReadSysConfigRequest *>(reqBuffer);
    request->unk0x00 = 0u;
    request->count = count;
    std::memcpy(request->settings, settings.getRawPointer(), sizeof(UCSysConfig) * count);
 
-   vecs = phys_cast<IoctlVec>(vecBuffer);
+   vecs = phys_cast<IoctlVec *>(vecBuffer);
    vecs[0].len = reqBufSize;
-   vecs[0].paddr = reqBuffer;
+   vecs[0].paddr = phys_cast<phys_addr>(reqBuffer);
 
    for (auto i = 0u; i < count; ++i) {
       auto size = settings[i].dataSize;
@@ -85,7 +85,7 @@ UCReadSysConfig(UCHandle handle,
             goto out;
          }
 
-         vecs[1 + i].paddr = dataBuffer;
+         vecs[1 + i].paddr = phys_cast<phys_addr>(dataBuffer);
       } else {
          vecs[1 + i].paddr = phys_addr { 0u };
       }
@@ -101,8 +101,8 @@ UCReadSysConfig(UCHandle handle,
       settings[i].error = request->settings[i].error;
 
       if (auto len = vecs[i + 1].len) {
-         auto dst = phys_ptr<void> { phys_addr { virt_addr { settings[i].data }.getAddress() } };
-         auto src = phys_ptr<const void> { vecs[i + 1].paddr };
+         auto dst = phys_cast<void *>(phys_addr { virt_cast<virt_addr>(settings[i].data).getAddress() });
+         auto src = phys_cast<const void *>(vecs[i + 1].paddr);
          std::memcpy(dst.getRawPointer(), src.getRawPointer(), len);
       }
    }
@@ -110,7 +110,7 @@ UCReadSysConfig(UCHandle handle,
 out:
    for (auto i = 0u; i < count; ++i) {
       if (vecs[i + 1].paddr) {
-         freeIpcData(vecs[i + 1].paddr);
+         freeIpcData(phys_cast<void *>(vecs[i + 1].paddr));
       }
    }
 
@@ -147,14 +147,14 @@ UCWriteSysConfig(UCHandle handle,
       goto out;
    }
 
-   request = phys_cast<UCWriteSysConfigRequest>(reqBuffer);
+   request = phys_cast<UCWriteSysConfigRequest *>(reqBuffer);
    request->unk0x00 = 0u;
    request->count = count;
    std::memcpy(request->settings, settings.getRawPointer(), sizeof(UCSysConfig) * count);
 
-   vecs = phys_cast<IoctlVec>(vecBuffer);
+   vecs = phys_cast<IoctlVec *>(vecBuffer);
    vecs[0].len = reqBufSize;
-   vecs[0].paddr = reqBuffer;
+   vecs[0].paddr = phys_cast<phys_addr>(reqBuffer);
 
    for (auto i = 0u; i < count; ++i) {
       auto size = settings[i].dataSize;
@@ -167,10 +167,10 @@ UCWriteSysConfig(UCHandle handle,
             goto out;
          }
 
-         vecs[1 + i].paddr = dataBuffer;
+         vecs[1 + i].paddr = phys_cast<phys_addr>(dataBuffer);
 
-         auto src = phys_ptr<const void> { phys_addr { virt_addr { settings[i].data }.getAddress() } };
-         auto dst = phys_ptr<void> { vecs[i + 1].paddr };
+         auto src = phys_cast<const void *>(phys_addr { virt_cast<virt_addr>(settings[i].data).getAddress() });
+         auto dst = phys_cast<void *>(vecs[i + 1].paddr);
          std::memcpy(dst.getRawPointer(), src.getRawPointer(), size);
       } else {
          vecs[1 + i].paddr = phys_addr { 0u };
@@ -190,7 +190,7 @@ UCWriteSysConfig(UCHandle handle,
 out:
    for (auto i = 0u; i < count; ++i) {
       if (vecs[i + 1].paddr) {
-         freeIpcData(vecs[i + 1].paddr);
+         freeIpcData(phys_cast<void *>(vecs[i + 1].paddr));
       }
    }
 

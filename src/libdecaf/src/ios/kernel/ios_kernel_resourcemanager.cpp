@@ -264,7 +264,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
                                             &resourceHandle);
    if (error < Error::OK) {
       gLog->warn("IOS_ResourceReply(0x{:08X}, {}) passed invalid resource request.",
-                 phys_addr { resourceRequest },
+                 phys_cast<phys_addr>(resourceRequest),
                  reply);
       resourceHandleManager->failedResourceReplies++;
    } else if (resourceRequest->requestData.command == Command::Open) {
@@ -1355,7 +1355,7 @@ setClientCapability(ProcessId pid,
 void
 initialiseStaticResourceManagerData()
 {
-   sData = phys_cast<StaticResourceManagerData>(allocProcessStatic(sizeof(StaticResourceManagerData)));
+   sData = phys_cast<StaticResourceManagerData *>(allocProcessStatic(sizeof(StaticResourceManagerData)));
    sData->registrationEnabled = TRUE;
 
    // Initialise resourceManagerList

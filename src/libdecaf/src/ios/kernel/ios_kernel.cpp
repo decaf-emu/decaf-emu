@@ -100,8 +100,8 @@ startProcesses(bool bootOnlyBSP)
 
       auto stackPtr = allocProcessStatic(info.pid, info.stackSize);
       auto error = IOS_CreateThread(info.entry,
-                                    phys_addr { static_cast<uint32_t>(info.pid) },
-                                    phys_cast<uint8_t>(stackPtr) + info.stackSize,
+                                    phys_cast<void *>(phys_addr { static_cast<uint32_t>(info.pid) }),
+                                    phys_cast<uint8_t *>(stackPtr) + info.stackSize,
                                     info.stackSize,
                                     info.priority,
                                     ThreadFlags::AllocateIpcBufferPool | ThreadFlags::Detached);
@@ -197,7 +197,7 @@ kernelEntryPoint(phys_ptr<void> context)
 
    // Initialise shared heap
    auto sharedHeapRange = ::kernel::getPhysicalRange(::kernel::PhysicalRegion::MEM2IosSharedHeap);
-   auto error = IOS_CreateHeap(sharedHeapRange.start,
+   auto error = IOS_CreateHeap(phys_cast<void *>(sharedHeapRange.start),
                                sharedHeapRange.size);
    if (error < Error::OK) {
       gLog->error("Failed to create shared heap, error = {}", error);
@@ -252,7 +252,7 @@ kernelEntryPoint(phys_ptr<void> context)
          return error;
       }
 
-      auto rootThreadMessage = phys_ptr<RootThreadMessage> { phys_addr { message } };
+      auto rootThreadMessage = parseMessage<RootThreadMessage>(message);
       switch (rootThreadMessage->command) {
       case RootThreadCommand::Timer:
          error = handleTimerEvent();
@@ -281,7 +281,7 @@ start()
    internal::initialiseStaticThreadData();
    internal::initialiseStaticTimerData();
 
-   sData = phys_cast<StaticKernelData>(allocProcessStatic(sizeof(StaticKernelData)));
+   sData = phys_cast<StaticKernelData *>(allocProcessStatic(sizeof(StaticKernelData)));
    sData->rootTimerMessage.command = RootThreadCommand::Timer;
    sData->sysprotEventMessage.command = RootThreadCommand::SysprotEvent;
 

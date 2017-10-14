@@ -35,7 +35,7 @@ UCAllocFileData(uint32_t size)
       std::memset(ptr.getRawPointer(), 0, size);
    }
 
-   return phys_cast<uint8_t>(ptr);
+   return phys_cast<uint8_t *>(ptr);
 }
 
 

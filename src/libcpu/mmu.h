@@ -51,7 +51,7 @@ enum class PhysicalMemoryType
    SRAM1,
 };
 
-static constexpr uint32_t PageSize = 128 * 1024;
+constexpr auto PageSize = uint32_t { 128 * 1024 };
 
 bool
 initialiseMemory();

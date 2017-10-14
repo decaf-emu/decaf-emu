@@ -1,6 +1,7 @@
 #include "memorymap.h"
 
 #include <algorithm>
+#include <common/align.h>
 #include <common/log.h>
 #include <common/platform.h>
 #include <common/platform_memory.h>

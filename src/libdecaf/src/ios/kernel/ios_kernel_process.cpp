@@ -116,7 +116,7 @@ allocProcessStatic(size_t size)
 phys_ptr<char>
 allocProcessStatic(std::string_view str)
 {
-   auto buffer = phys_cast<char>(allocProcessStatic(str.size() + 1));
+   auto buffer = phys_cast<char *>(allocProcessStatic(str.size() + 1));
    std::copy(str.begin(), str.end(), buffer.getRawPointer());
    buffer[str.size()] = char { 0 };
    return buffer;
@@ -131,7 +131,7 @@ allocProcessStatic(ProcessId pid,
    auto &allocator = sProcessStaticAllocators[pid];
    auto buffer = allocator.allocate(size, 16);
    std::memset(buffer, 0, size);
-   return cpu::translatePhysical(buffer);
+   return phys_cast<void *>(cpu::translatePhysical(buffer));
 }
 
 
@@ -142,7 +142,7 @@ allocProcessLocalHeap(size_t size)
    auto &allocator = sProcessStaticAllocators[pid];
    auto buffer = allocator.allocate(size, 0x20);
    std::memset(buffer, 0, size);
-   return cpu::translatePhysical(buffer);
+   return phys_cast<void *>(cpu::translatePhysical(buffer));
 }
 
 
@@ -175,7 +175,7 @@ initialiseProcessStaticAllocators()
    for (auto &processMap : processRegionMap) {
       auto range = getPhysicalRange(processMap.second);
       sProcessStaticAllocators[processMap.first] = FrameAllocator {
-            phys_ptr<uint8_t> { range.start }.getRawPointer(),
+            phys_cast<uint8_t *>(range.start).getRawPointer(),
             range.size
          };
    }

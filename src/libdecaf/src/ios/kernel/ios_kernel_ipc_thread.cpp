@@ -205,7 +205,7 @@ getIpcMessageQueueId()
 Error
 startIpcThread()
 {
-   sData = phys_cast<StaticIpcData>(allocProcessStatic(sizeof(StaticIpcData)));
+   sData = phys_cast<StaticIpcData *>(allocProcessStatic(sizeof(StaticIpcData)));
 
    // Create thread
    auto error = IOS_CreateThread(&ipcThreadEntry, nullptr,

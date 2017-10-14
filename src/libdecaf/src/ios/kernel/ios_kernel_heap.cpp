@@ -64,7 +64,7 @@ IOS_CreateHeap(phys_ptr<void> ptr,
 {
    HeapId id;
 
-   if (phys_addr { ptr }.getAddress() & 0x1F) {
+   if (phys_cast<phys_addr>(ptr).getAddress() & 0x1F) {
       return Error::Alignment;
    }
 
@@ -86,7 +86,7 @@ IOS_CreateHeap(phys_ptr<void> ptr,
    auto pid = static_cast<ProcessId>(error);
 
    // Initialise first heap block
-   auto firstBlock = phys_cast<HeapBlock>(ptr);
+   auto firstBlock = phys_cast<HeapBlock *>(ptr);
    firstBlock->state = HeapBlockState::Free;
    firstBlock->size = static_cast<uint32_t>(size - sizeof(HeapBlock));
    firstBlock->next = nullptr;
@@ -230,9 +230,9 @@ IOS_HeapAllocAligned(HeapId heapId,
    alignment = align_up(alignment, HeapAllocAlignAlign);
 
    for (auto block = phys_ptr<HeapBlock> { heap->firstFreeBlock }; block; block = block->next) {
-      auto base = phys_cast<uint8_t>(block) + sizeof(HeapBlock);
-      auto baseAddr = phys_addr { base };
-      auto alignedBaseAddr = align_up(phys_addr { base }, alignment);
+      auto base = phys_cast<uint8_t *>(block) + sizeof(HeapBlock);
+      auto baseAddr = phys_cast<phys_addr>(base);
+      auto alignedBaseAddr = align_up(phys_cast<phys_addr>(base), alignment);
       auto alignOffset = alignedBaseAddr - baseAddr;
 
       decaf_check(block->state == HeapBlockState::Free);
@@ -248,14 +248,14 @@ IOS_HeapAllocAligned(HeapId heapId,
          // Requires alignment, and has space for a HeapBlock
          if (block->size >= size + alignOffset) {
             allocBlock = block;
-            allocBase = alignedBaseAddr;
+            allocBase = phys_cast<uint8_t *>(alignedBaseAddr);
             size += alignOffset;
             break;
          }
       } else if (block->size >= size + alignOffset + alignment) {
          // Base required double align to have space for HeapBlock
          allocBlock = block;
-         allocBase = align_up(alignedBaseAddr + 1, alignment);
+         allocBase = phys_cast<uint8_t *>(align_up(alignedBaseAddr + 1, alignment));
          size += alignOffset + alignment;
          break;
       }
@@ -266,10 +266,10 @@ IOS_HeapAllocAligned(HeapId heapId,
       return nullptr;
    }
 
-   auto innerBlock = phys_cast<HeapBlock>(allocBase - sizeof(HeapBlock));
+   auto innerBlock = phys_cast<HeapBlock *>(allocBase - sizeof(HeapBlock));
    if (innerBlock != allocBlock) {
       // Create inner block for aligned allocations if needed
-      auto offset = phys_cast<uint8_t>(innerBlock) - phys_cast<uint8_t>(allocBlock);
+      auto offset = phys_cast<uint8_t *>(innerBlock) - phys_cast<uint8_t *>(allocBlock);
       innerBlock->state = HeapBlockState::InnerBlock;
       innerBlock->size = static_cast<uint32_t>(size - offset);
       innerBlock->prev = allocBlock;
@@ -279,10 +279,10 @@ IOS_HeapAllocAligned(HeapId heapId,
    // Check if there is enough size remaining to make it worth creating a new
    // free block.
    if (allocBlock->size - size > 0x40) {
-      auto allocBlockEnd = phys_cast<uint8_t>(allocBlock) + sizeof(HeapBlock) + allocBlock->size;
-      auto freeBlock = phys_cast<HeapBlock>(phys_cast<uint8_t>(allocBlock) + sizeof(HeapBlock) + size);
+      auto allocBlockEnd = phys_cast<uint8_t *>(allocBlock) + sizeof(HeapBlock) + allocBlock->size;
+      auto freeBlock = phys_cast<HeapBlock *>(phys_cast<uint8_t *>(allocBlock) + sizeof(HeapBlock) + size);
       freeBlock->state = HeapBlockState::Free;
-      freeBlock->size = static_cast<uint32_t>(allocBlockEnd - phys_cast<uint8_t>(freeBlock) - sizeof(HeapBlock));
+      freeBlock->size = static_cast<uint32_t>(allocBlockEnd - phys_cast<uint8_t *>(freeBlock) - sizeof(HeapBlock));
       freeBlock->prev = allocBlock->prev;
       freeBlock->next = allocBlock->next;
 
@@ -317,14 +317,14 @@ static bool
 heapContainsPtr(phys_ptr<Heap> heap,
                 phys_ptr<void> ptr)
 {
-   auto start = phys_cast<uint8_t>(heap->base);
+   auto start = phys_cast<uint8_t *>(heap->base);
    auto end = start + heap->size;
 
-   if (phys_cast<uint8_t>(ptr) < start + sizeof(Heap) + sizeof(HeapBlock)) {
+   if (phys_cast<uint8_t *>(ptr) < start + sizeof(Heap) + sizeof(HeapBlock)) {
       return false;
    }
 
-   if (phys_cast<uint8_t>(ptr) >= end) {
+   if (phys_cast<uint8_t *>(ptr) >= end) {
       return false;
    }
 
@@ -335,9 +335,9 @@ static void
 tryMergeConsecutiveBlocks(phys_ptr<HeapBlock> first,
                           phys_ptr<HeapBlock> second)
 {
-   auto firstEnd = phys_cast<uint8_t>(first) + sizeof(HeapBlock) + first->size;
+   auto firstEnd = phys_cast<uint8_t *>(first) + sizeof(HeapBlock) + first->size;
 
-   if (phys_addr { firstEnd } == phys_addr { second }) {
+   if (phys_cast<phys_addr>(firstEnd) == phys_cast<phys_addr>(second)) {
       first->size += static_cast<uint32_t>(second->size + sizeof(HeapBlock));
       first->next = second->next;
 
@@ -368,7 +368,7 @@ heapFree(HeapId heapId,
       return Error::Invalid;
    }
 
-   auto freeBlock = phys_cast<HeapBlock>(phys_cast<uint8_t>(ptr) - sizeof(HeapBlock));
+   auto freeBlock = phys_cast<HeapBlock *>(phys_cast<uint8_t *>(ptr) - sizeof(HeapBlock));
    if (freeBlock->state == HeapBlockState::InnerBlock) {
       freeBlock = freeBlock->prev;
    }
@@ -381,7 +381,7 @@ heapFree(HeapId heapId,
    freeBlock->state = HeapBlockState::Free;
 
    if (clearMemory) {
-      auto base = phys_cast<uint8_t>(freeBlock) + sizeof(HeapBlock);
+      auto base = phys_cast<uint8_t *>(freeBlock) + sizeof(HeapBlock);
       auto size = freeBlock->size;
       std::memset(base.getRawPointer(), 0, size);
    }
@@ -391,7 +391,7 @@ heapFree(HeapId heapId,
    auto nextBlock = heap->firstFreeBlock;
    auto prevBlock = nextBlock->prev;
    while (nextBlock) {
-      if (phys_addr { freeBlock } < phys_addr { nextBlock }) {
+      if (phys_cast<phys_addr>(freeBlock) < phys_cast<phys_addr>(nextBlock)) {
          break;
       }
 
@@ -438,7 +438,7 @@ IOS_HeapRealloc(HeapId heapId,
       return nullptr;
    }
 
-   auto block = phys_cast<HeapBlock>(phys_cast<uint8_t>(ptr) - sizeof(HeapBlock));
+   auto block = phys_cast<HeapBlock *>(phys_cast<uint8_t *>(ptr) - sizeof(HeapBlock));
    auto blockSize = block->size;
    size = align_up(size, HeapAllocSizeAlign);
 
@@ -483,7 +483,7 @@ namespace internal
 void
 initialiseStaticHeapData()
 {
-   sHeapData = phys_cast<StaticHeapData>(allocProcessStatic(sizeof(StaticHeapData)));
+   sHeapData = phys_cast<StaticHeapData *>(allocProcessStatic(sizeof(StaticHeapData)));
    for (auto i = 0u; i < sHeapData->heaps.size(); ++i) {
       sHeapData->heaps[i].pid = ProcessId { -4 };
    }

@@ -50,7 +50,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    }
 
    // Check stack pointer and alignment
-   if (!stackTop || (phys_addr { stackTop }.getAddress() & 3)) {
+   if (!stackTop || (phys_cast<phys_addr>(stackTop) & 3)) {
       internal::unlockScheduler();
       return Error::Invalid;
    }
@@ -401,7 +401,7 @@ memset32(phys_ptr<void> ptr,
          uint32_t value,
          uint32_t bytes)
 {
-   auto ptr32 = phys_cast<uint32_t>(ptr);
+   auto ptr32 = phys_cast<uint32_t *>(ptr);
 
    for (auto i = 0u; i < bytes / 4; ++i) {
       ptr32[i] = value;
@@ -440,7 +440,7 @@ getThread(ThreadId id)
 void
 initialiseStaticThreadData()
 {
-   sData = phys_cast<StaticThreadData>(allocProcessStatic(sizeof(StaticThreadData)));
+   sData = phys_cast<StaticThreadData *>(allocProcessStatic(sizeof(StaticThreadData)));
 }
 
 } // namespace internal

@@ -475,7 +475,7 @@ getSysProdConfig()
 void
 initialiseStaticConfigData()
 {
-   sData = phys_cast<StaticConfigData>(allocProcessStatic(sizeof(StaticConfigData)));
+   sData = phys_cast<StaticConfigData *>(allocProcessStatic(sizeof(StaticConfigData)));
 }
 
 } // namespace ios::mcp::internal

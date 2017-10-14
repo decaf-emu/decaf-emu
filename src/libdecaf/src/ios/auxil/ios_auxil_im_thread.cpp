@@ -49,8 +49,8 @@ imDeviceIoctlv(IMDeviceHandle handle,
       return error;
    }
 
-   auto request = phys_ptr<IMRequest> { vecs[0].paddr };
-   auto response = phys_ptr<IMResponse> { vecs[1].paddr };
+   auto request = phys_cast<IMRequest *>(vecs[0].paddr);
+   auto response = phys_cast<IMResponse *>(vecs[1].paddr);
 
    switch (command) {
    case IMCommand::CopyParameterFromNv:
@@ -211,7 +211,7 @@ stopImThread()
 void
 initialiseStaticImThreadData()
 {
-   sData = phys_cast<StaticImThreadData>(allocProcessStatic(sizeof(StaticImThreadData)));
+   sData = phys_cast<StaticImThreadData *>(allocProcessStatic(sizeof(StaticImThreadData)));
    sDevices.closeAll();
 }
 

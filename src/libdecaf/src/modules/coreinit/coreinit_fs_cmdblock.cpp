@@ -693,7 +693,7 @@ fsCmdBlockFinishReadCmd(FSCmdBlockBody *blockBody,
    auto shim = &blockBody->fsaShimBuffer;
    shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
 
-   shim->ioctlvVec[1].vaddr = readRequest->buffer;
+   shim->ioctlvVec[1].vaddr = virt_cast<virt_addr>(readRequest->buffer);
    shim->ioctlvVec[1].len = readRequest->size;
 
    shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);
@@ -750,7 +750,7 @@ fsCmdBlockFinishWriteCmd(FSCmdBlockBody *blockBody,
    auto shim = &blockBody->fsaShimBuffer;
    shim->ioctlvVec[0].vaddr = cpu::translate(&shim->request);
 
-   shim->ioctlvVec[1].vaddr = writeRequest->buffer;
+   shim->ioctlvVec[1].vaddr = virt_cast<virt_addr>(writeRequest->buffer);
    shim->ioctlvVec[1].len = writeRequest->size;
 
    shim->ioctlvVec[2].vaddr = cpu::translate(&shim->response);

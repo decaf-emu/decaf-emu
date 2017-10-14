@@ -54,7 +54,7 @@ MCP_RegisterResourceManager(std::string_view device,
 
    // Alloc a cross process buffer to copy the name to
    auto handle = static_cast<ResourceHandleId>(error);
-   auto nameBuffer = phys_cast<char>(allocIpcData(DeviceNameLength + 1));
+   auto nameBuffer = phys_cast<char *>(allocIpcData(DeviceNameLength + 1));
    if (!nameBuffer) {
       error = Error::FailAlloc;
       goto out;

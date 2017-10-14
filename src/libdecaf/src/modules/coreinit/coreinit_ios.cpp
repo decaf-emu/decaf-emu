@@ -586,7 +586,7 @@ ipcPrepareOpenRequest(IPCDriver *ipcDriver,
    ipcBuffer->request.args.open.nameLen = static_cast<uint32_t>(deviceLen + 1);
    ipcBuffer->request.args.open.mode = static_cast<ios::OpenMode>(mode);
 
-   ipcBuffer->buffer1 = cpu::translate(&ipcBuffer->nameBuffer[0]);
+   ipcBuffer->buffer1 = virt_cast<void *>(cpu::translate(&ipcBuffer->nameBuffer[0]));
    return IOSError::OK;
 }
 
@@ -613,8 +613,8 @@ ipcPrepareIoctlRequest(IPCDriver *ipcDriver,
    ipcBuffer->request.args.ioctl.outputBuffer = nullptr;
    ipcBuffer->request.args.ioctl.outputLength = outLen;
 
-   ipcBuffer->buffer1 = cpu::translate(inBuf);
-   ipcBuffer->buffer2 = cpu::translate(outBuf);
+   ipcBuffer->buffer1 = virt_cast<void *>(cpu::translate(inBuf));
+   ipcBuffer->buffer2 = virt_cast<void *>(cpu::translate(outBuf));
    return IOSError::OK;
 }
 
@@ -642,7 +642,7 @@ ipcPrepareIoctlvRequest(IPCDriver *ipcDriver,
    ipcBuffer->request.args.ioctlv.numVecOut = vecOut;
    ipcBuffer->request.args.ioctlv.vecs = nullptr;
 
-   ipcBuffer->buffer1 = cpu::translate(vec);
+   ipcBuffer->buffer1 = virt_cast<void *>(cpu::translate(vec));
 
    for (auto i = 0u; i < vecIn + vecOut; ++i) {
       if (!vec[i].vaddr && vec[i].len) {

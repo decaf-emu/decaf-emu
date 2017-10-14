@@ -139,10 +139,10 @@ pmIoctl(PMCommand command,
 
    switch (command) {
    case PMCommand::GetResourceManagerId:
-      error = getResourceManagerId(phys_cast<const char>(inputBuffer).getRawPointer());
+      error = getResourceManagerId(phys_cast<const char *>(inputBuffer).getRawPointer());
       break;
    case PMCommand::RegisterResourceManager:
-      error = sendRegisterResourceManagerMessage(*phys_cast<const RegisteredResourceManagerId>(inputBuffer));
+      error = sendRegisterResourceManagerMessage(*phys_cast<const RegisteredResourceManagerId *>(inputBuffer));
       break;
    default:
       error = Error::InvalidArg;
@@ -256,7 +256,7 @@ startPmThread()
             return error;
          }
 
-         rm.data.messageBuffer = phys_cast<IpcRequest>(buffer);
+         rm.data.messageBuffer = phys_cast<IpcRequest *>(buffer);
       }
    }
 
@@ -429,7 +429,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
 void
 initialiseStaticPmThreadData()
 {
-   sData = phys_cast<StaticPmThreadData>(allocProcessStatic(sizeof(StaticPmThreadData)));
+   sData = phys_cast<StaticPmThreadData *>(allocProcessStatic(sizeof(StaticPmThreadData)));
    sData->resourceManagerTimeoutMessage.command = static_cast<Command>(Error::Timeout);
 
    auto dummyRM = ResourceManagerRegistration {

@@ -118,7 +118,7 @@ ucHandleIosResult(UCError result,
          }
 
          if (command == UCCommand::ReadSysConfig) {
-            auto request = virt_ptr<UCReadSysConfigRequest> { vecs[0].vaddr };
+            auto request = virt_cast<UCReadSysConfigRequest *>(vecs[0].vaddr);
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -132,19 +132,19 @@ ucHandleIosResult(UCError result,
                }
 
                if (settings[i].error == UCError::OK) {
-                  auto src = virt_ptr<void> { vecs[i + 1].vaddr };
+                  auto src = virt_cast<void *>(vecs[i + 1].vaddr);
 
                   switch (settings[i].dataSize) {
                   case 0:
                      continue;
                   case 1:
-                     *virt_cast<uint8_t>(settings[i].data) = *virt_cast<uint8_t>(src);
+                     *virt_cast<uint8_t *>(settings[i].data) = *virt_cast<uint8_t *>(src);
                      break;
                   case 2:
-                     *virt_cast<uint16_t>(settings[i].data) = *virt_cast<uint16_t>(src);
+                     *virt_cast<uint16_t *>(settings[i].data) = *virt_cast<uint16_t *>(src);
                      break;
                   case 4:
-                     *virt_cast<uint32_t>(settings[i].data) = *virt_cast<uint32_t>(src);
+                     *virt_cast<uint32_t *>(settings[i].data) = *virt_cast<uint32_t *>(src);
                      break;
                   default:
                      std::memset(settings[i].data.getRawPointer(), 0, 4); // why???
@@ -153,7 +153,7 @@ ucHandleIosResult(UCError result,
                }
             }
          } else if (command == UCCommand::WriteSysConfig) {
-            auto request = virt_ptr<UCWriteSysConfigRequest> { vecs[0].vaddr };
+            auto request = virt_cast<UCWriteSysConfigRequest *>(vecs[0].vaddr);
 
             for (auto i = 0u; i < count; ++i) {
                settings[i].error = request->settings[i].error;
@@ -174,7 +174,7 @@ ucHandleIosResult(UCError result,
 
    if (vecs) {
       for (auto i = 0u; i < count + 1; ++i) {
-         internal::ucFreeMessage(virt_ptr<void> { vecs[i].vaddr }.getRawPointer());
+         internal::ucFreeMessage(virt_cast<void *>(vecs[i].vaddr).getRawPointer());
       }
 
       internal::ucFreeMessage(vecs);
@@ -353,7 +353,7 @@ fail:
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
          if (vecs[1 + i].vaddr) {
-            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
+            internal::ucFreeMessage(virt_cast<void *>(vecs[1 + i].vaddr).getRawPointer());
          }
       }
 
@@ -473,7 +473,7 @@ fail:
    if (vecBuf) {
       for (auto i = 0u; i < count; ++i) {
          if (vecs[1 + i].vaddr) {
-            internal::ucFreeMessage(virt_ptr<void> { vecs[1 + i].vaddr }.getRawPointer());
+            internal::ucFreeMessage(virt_cast<void *>(vecs[1 + i].vaddr).getRawPointer());
          }
       }
 

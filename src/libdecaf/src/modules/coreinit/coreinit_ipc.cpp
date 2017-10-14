@@ -316,7 +316,7 @@ ipcDriverSubmitRequest(IPCDriver *driver,
 {
    OSInitEvent(&request->finishEvent, FALSE, OSEventMode::AutoReset);
    driver->requestsSubmitted++;
-   kernel::ipcDriverKernelSubmitRequest(virt_addr { request->ipcBuffer.getAddress() });
+   kernel::ipcDriverKernelSubmitRequest(virt_cast<kernel::IpcRequest *>(virt_addr { request->ipcBuffer.getAddress() }));
    return IOSError::OK;
 }
 

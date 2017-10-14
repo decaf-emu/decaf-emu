@@ -206,7 +206,7 @@ Module::initialiseLockedCache()
    sDMAEnabled.fill(false);
 
    for (auto i = 0u; i < CoreCount; ++i) {
-      auto ptr = cpu::VirtualPointer<void> { base }.getRawPointer();
+      auto ptr = virt_cast<void *>(base).getRawPointer();
       sLockedCache[i] = new TeenyHeap { ptr, 16 * 1024 };
       base += 16 * 1024;
    }

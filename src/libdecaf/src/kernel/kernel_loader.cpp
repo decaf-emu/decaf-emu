@@ -21,6 +21,7 @@
 #include <common/strutils.h>
 #include <fmt/format.h>
 #include <gsl.h>
+#include <libcpu/be2_struct.h>
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_config.h>
 #include <libcpu/mem.h>
@@ -64,7 +65,7 @@ codeAlloc(uint32_t size,
 {
    if (!sCodeHeap) {
       auto memory = kernel::getVirtualRange(VirtualRegion::AppHeapCode);
-      sCodeHeap = new TeenyHeap { cpu::VirtualPointer<void> { memory.start }.getRawPointer(), memory.size };
+      sCodeHeap = new TeenyHeap { virt_cast<void *>(memory.start).getRawPointer(), memory.size };
    }
 
    return sCodeHeap->alloc(size, alignment);

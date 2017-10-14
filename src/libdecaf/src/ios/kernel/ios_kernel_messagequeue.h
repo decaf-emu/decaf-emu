@@ -68,21 +68,21 @@ template<typename Type>
 Message
 makeMessage(phys_ptr<Type> ptr)
 {
-   return static_cast<Message>(phys_addr { ptr }.getAddress());
+   return static_cast<Message>(phys_cast<phys_addr>(ptr).getAddress());
 }
 
 template<typename Type>
 Message
 makeMessage(be2_phys_ptr<Type> ptr)
 {
-   return static_cast<Message>(phys_addr { ptr }.getAddress());
+   return static_cast<Message>(phys_cast<phys_addr>(ptr).getAddress());
 }
 
 template<typename Type>
 phys_ptr<Type>
 parseMessage(phys_ptr<Message> message)
 {
-   return phys_ptr<Type>(phys_addr { static_cast<Message>(*message) });
+   return phys_cast<Type *>(phys_addr { static_cast<Message>(*message) });
 }
 
 namespace internal

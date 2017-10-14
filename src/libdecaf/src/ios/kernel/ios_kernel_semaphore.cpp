@@ -172,7 +172,7 @@ namespace internal
 void
 initialiseStaticSemaphoreData()
 {
-   sData = phys_cast<StaticSemaphoreData>(allocProcessStatic(sizeof(StaticSemaphoreData)));
+   sData = phys_cast<StaticSemaphoreData *>(allocProcessStatic(sizeof(StaticSemaphoreData)));
 }
 
 } // namespace internal

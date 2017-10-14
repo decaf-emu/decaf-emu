@@ -142,8 +142,8 @@ UCError
 UCDevice::readSysConfig(uint32_t numVecIn,
                         phys_ptr<IoctlVec> vecs)
 {
-   auto request = phys_ptr<UCReadSysConfigRequest> { vecs[0].paddr };
-   auto items = phys_cast<UCItem>(phys_addrof(request->settings[0]));
+   auto request = phys_cast<UCReadSysConfigRequest *>(vecs[0].paddr);
+   auto items = phys_cast<UCItem *>(phys_addrof(request->settings[0]));
 
    if (request->count == 0) {
       return UCError::OK;
@@ -167,8 +167,8 @@ UCError
 UCDevice::writeSysConfig(uint32_t numVecIn,
                          phys_ptr<IoctlVec> vecs)
 {
-   auto request = phys_ptr<UCWriteSysConfigRequest> { vecs[0].paddr };
-   auto items = phys_cast<UCItem>(phys_addrof(request->settings[0]));
+   auto request = phys_cast<UCWriteSysConfigRequest *>(vecs[0].paddr);
+   auto items = phys_cast<UCItem *>(phys_addrof(request->settings[0]));
 
    if (request->count == 0) {
       return UCError::OK;

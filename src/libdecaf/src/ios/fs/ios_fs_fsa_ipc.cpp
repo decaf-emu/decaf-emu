@@ -37,7 +37,7 @@ allocFsaIpcData(phys_ptr<FSAIpcData> *outIpcData)
    }
 
    std::memset(buffer.getRawPointer(), 0, sizeof(FSAIpcData));
-   *outIpcData = phys_cast<FSAIpcData>(buffer);
+   *outIpcData = phys_cast<FSAIpcData *>(buffer);
    return FSAStatus::OK;
 }
 
@@ -166,13 +166,13 @@ FSAReadFile(FSAHandle handle,
    request->readFile.readFlags = readFlags;
 
    auto &vecs = ipcData->vecs;
-   vecs[0].paddr = request;
+   vecs[0].paddr = phys_cast<phys_addr>(request);
    vecs[0].len = static_cast<uint32_t>(sizeof(FSARequest));
 
-   vecs[1].paddr = buffer;
+   vecs[1].paddr = phys_cast<phys_addr>(buffer);
    vecs[1].len = size * count;
 
-   vecs[2].paddr = phys_addrof(ipcData->response);
+   vecs[2].paddr = phys_cast<phys_addr>(phys_addrof(ipcData->response));
    vecs[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto error = IOS_Ioctlv(ipcData->resourceHandle,
@@ -210,13 +210,13 @@ FSAWriteFile(FSAHandle handle,
    request->writeFile.writeFlags = writeFlags;
 
    auto &vecs = ipcData->vecs;
-   vecs[0].paddr = request;
+   vecs[0].paddr = phys_cast<phys_addr>(request);
    vecs[0].len = static_cast<uint32_t>(sizeof(FSARequest));
 
-   vecs[1].paddr = buffer;
+   vecs[1].paddr = phys_cast<phys_addr>(buffer);
    vecs[1].len = size * count;
 
-   vecs[2].paddr = phys_addrof(ipcData->response);
+   vecs[2].paddr = phys_cast<phys_addr>(phys_addrof(ipcData->response));
    vecs[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto error = IOS_Ioctlv(ipcData->resourceHandle,
@@ -404,13 +404,13 @@ FSAMount(FSAHandle handle,
 
    // Perform ioctlv
    auto &vecs = ipcData->vecs;
-   vecs[0].paddr = request;
+   vecs[0].paddr = phys_cast<phys_addr>(request);
    vecs[0].len = static_cast<uint32_t>(sizeof(FSARequest));
 
-   vecs[1].paddr = unkBuf;
+   vecs[1].paddr = phys_cast<phys_addr>(unkBuf);
    vecs[1].len = unkBufLen;
 
-   vecs[2].paddr = phys_addrof(ipcData->response);
+   vecs[2].paddr = phys_cast<phys_addr>(phys_addrof(ipcData->response));
    vecs[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto error = IOS_Ioctlv(ipcData->resourceHandle,

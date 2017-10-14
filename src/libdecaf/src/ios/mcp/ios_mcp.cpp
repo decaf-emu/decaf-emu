@@ -45,7 +45,7 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = phys_cast<StaticMcpData>(allocProcessStatic(sizeof(StaticMcpData)));
+   sData = phys_cast<StaticMcpData *>(allocProcessStatic(sizeof(StaticMcpData)));
    sData->sysEventMsg.command = static_cast<Command>(MainThreadCommand::SysEvent);
 
    sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);

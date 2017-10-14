@@ -31,32 +31,32 @@ ipcDriverKernelSubmitRequest(virt_ptr<IpcRequest> request)
    // Translate all virtual addresses to physical before performing IPC request
    switch (request->request.command) {
    case ios::Command::Open:
-      if (!cpu::virtualToPhysicalAddress(virt_addr { request->buffer1 }, paddr)) {
+      if (!cpu::virtualToPhysicalAddress(virt_cast<virt_addr>(request->buffer1), paddr)) {
          return ios::Error::InvalidArg;
       } else {
-         request->request.args.open.name = paddr;
+         request->request.args.open.name = phys_cast<const char *>(paddr);
       }
       break;
    case ios::Command::Ioctl:
-      if (request->buffer1 && !cpu::virtualToPhysicalAddress(virt_addr { request->buffer1 }, paddr)) {
+      if (request->buffer1 && !cpu::virtualToPhysicalAddress(virt_cast<virt_addr>(request->buffer1), paddr)) {
          return ios::Error::InvalidArg;
       } else {
-         request->request.args.ioctl.inputBuffer = paddr;
+         request->request.args.ioctl.inputBuffer = phys_cast<const void *>(paddr);
       }
 
-      if (request->buffer2 && !cpu::virtualToPhysicalAddress(virt_addr { request->buffer2 }, paddr)) {
+      if (request->buffer2 && !cpu::virtualToPhysicalAddress(virt_cast<virt_addr>(request->buffer2), paddr)) {
          return ios::Error::InvalidArg;
       } else {
-         request->request.args.ioctl.outputBuffer = paddr;
+         request->request.args.ioctl.outputBuffer = phys_cast<void *>(paddr);
       }
       break;
    case ios::Command::Ioctlv:
    {
       auto &ioctlv = request->request.args.ioctlv;
-      if (request->buffer1 && !cpu::virtualToPhysicalAddress(virt_addr { request->buffer1 }, paddr)) {
+      if (request->buffer1 && !cpu::virtualToPhysicalAddress(virt_cast<virt_addr>(request->buffer1), paddr)) {
          return ios::Error::InvalidArg;
       } else {
-         ioctlv.vecs = paddr;
+         ioctlv.vecs = phys_cast<ios::IoctlVec *>(paddr);
       }
 
       for (auto i = 0u; i < ioctlv.numVecIn + ioctlv.numVecOut; ++i) {
@@ -91,14 +91,14 @@ ipcDriverKernelSubmitRequest(virt_ptr<IpcRequest> request)
    }
 
    auto ipcRequest = virt_addrof(request->request);
-   if (!cpu::virtualToPhysicalAddress(virt_addr { ipcRequest }, paddr)) {
+   if (!cpu::virtualToPhysicalAddress(virt_cast<virt_addr>(ipcRequest), paddr)) {
       return ios::Error::InvalidArg;
    }
 
-   ios::kernel::submitIpcRequest(paddr);
+   ios::kernel::submitIpcRequest(phys_cast<ios::IpcRequest *>(paddr));
 
    sIpcMutex.lock();
-   sPendingRequests.push_back({ request, paddr });
+   sPendingRequests.push_back({ request, phys_cast<ios::IpcRequest *>(paddr) });
    sIpcMutex.unlock();
    return ios::Error::OK;
 }

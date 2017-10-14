@@ -157,7 +157,7 @@ handleSchedulerInterrupt()
 void
 initialiseStaticSchedulerData()
 {
-   sData = phys_cast<StaticSchedulerData>(allocProcessStatic(sizeof(StaticSchedulerData)));
+   sData = phys_cast<StaticSchedulerData *>(allocProcessStatic(sizeof(StaticSchedulerData)));
 }
 
 } // namespace ios::kernel::internal

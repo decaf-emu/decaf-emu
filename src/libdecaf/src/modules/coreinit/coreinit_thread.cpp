@@ -1225,7 +1225,7 @@ exitThreadNoLock(int value)
    internal::rescheduleSelfNoLock();
 
    // We do not need to unlockScheduler as OSExitThread never returns.
-   decaf_abort("Exited thread was rcheduled...");
+   decaf_abort("Exited thread was rescheduled...");
 }
 
 void

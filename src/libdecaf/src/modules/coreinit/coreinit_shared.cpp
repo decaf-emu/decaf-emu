@@ -100,7 +100,7 @@ loadSharedData()
 {
    // Initialise shared heap
    auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::SharedData);
-   auto ptr = cpu::VirtualPointer<void> { bounds.start }.getRawPointer();
+   auto ptr = virt_cast<void *>(bounds.start).getRawPointer();
    sSharedHeap = new TeenyHeap { ptr, bounds.size };
 
    // Try and load the fonts from mlc, if that fails try fall back

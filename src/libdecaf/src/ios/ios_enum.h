@@ -15,6 +15,7 @@ FLAGS_BEG(InterruptFlags, uint32_t)
 FLAGS_END(InterruptFlags)
 
 ENUM_BEG(Command, int32_t)
+   ENUM_VALUE(Invalid,              0)
    ENUM_VALUE(Open,                 1)
    ENUM_VALUE(Close,                2)
    ENUM_VALUE(Read,                 3)

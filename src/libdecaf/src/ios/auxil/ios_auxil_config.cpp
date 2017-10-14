@@ -66,7 +66,7 @@ allocFileData(uint32_t size)
       std::memset(ptr.getRawPointer(), 0, size);
    }
 
-   return phys_cast<uint8_t>(ptr);
+   return phys_cast<uint8_t *>(ptr);
 }
 
 static void
@@ -462,7 +462,7 @@ readItems(std::string_view fileSysPath,
       phys_ptr<void> itemData;
 
       if (vecs) {
-         itemData = vecs[i + 1].paddr;
+         itemData = phys_cast<void *>(vecs[i + 1].paddr);
       } else {
          itemData = item->data;
       }
@@ -470,7 +470,7 @@ readItems(std::string_view fileSysPath,
       switch (item->dataType) {
       case UCDataType::UnsignedByte:
          if (item->dataSize >= 1) {
-            *phys_cast<uint8_t>(itemData) = static_cast<uint8_t>(node.text().as_uint());
+            *phys_cast<uint8_t *>(itemData) = static_cast<uint8_t>(node.text().as_uint());
          } else {
             item->error = UCError::InvalidParam;
             continue;
@@ -478,7 +478,7 @@ readItems(std::string_view fileSysPath,
          break;
       case UCDataType::UnsignedShort:
          if (item->dataSize >= 2) {
-            *phys_cast<uint16_t>(itemData) = static_cast<uint16_t>(node.text().as_uint());
+            *phys_cast<uint16_t *>(itemData) = static_cast<uint16_t>(node.text().as_uint());
          } else {
             item->error = UCError::InvalidParam;
             continue;
@@ -486,7 +486,7 @@ readItems(std::string_view fileSysPath,
          break;
       case UCDataType::UnsignedInt:
          if (item->dataSize >= 4) {
-            *phys_cast<uint32_t>(itemData) = static_cast<uint32_t>(node.text().as_uint());
+            *phys_cast<uint32_t *>(itemData) = static_cast<uint32_t>(node.text().as_uint());
          } else {
             item->error = UCError::InvalidParam;
             continue;
@@ -494,7 +494,7 @@ readItems(std::string_view fileSysPath,
          break;
       case UCDataType::SignedInt:
          if (item->dataSize >= 4) {
-            *phys_cast<int32_t>(itemData) = static_cast<int32_t>(node.text().as_int());
+            *phys_cast<int32_t *>(itemData) = static_cast<int32_t>(node.text().as_int());
          } else {
             item->error = UCError::InvalidParam;
             continue;
@@ -502,7 +502,7 @@ readItems(std::string_view fileSysPath,
          break;
       case UCDataType::Float:
          if (item->dataSize >= 4) {
-            *phys_cast<float>(itemData) = node.text().as_float();
+            *phys_cast<float *>(itemData) = node.text().as_float();
          } else {
             item->error = UCError::InvalidParam;
             continue;
@@ -528,7 +528,7 @@ readItems(std::string_view fileSysPath,
          auto size = strlen(src) / 2;
 
          if (size <= item->dataSize) {
-            auto dst = phys_cast<uint8_t>(itemData);
+            auto dst = phys_cast<uint8_t *>(itemData);
 
             for (auto i = 0u; i < size; ++i) {
                auto value = uint8_t { 0 };
@@ -677,7 +677,7 @@ writeItems(std::string_view fileSysPath,
          phys_ptr<void> itemData;
 
          if (vecs) {
-            itemData = vecs[i + 1].paddr;
+            itemData = phys_cast<void *>(vecs[i + 1].paddr);
          } else {
             itemData = item->data;
          }
@@ -685,35 +685,35 @@ writeItems(std::string_view fileSysPath,
          switch (item->dataType) {
          case UCDataType::UnsignedByte:
             if (item->data) {
-               node.text().set(*phys_cast<uint8_t>(itemData));
+               node.text().set(*phys_cast<uint8_t *>(itemData));
             } else {
                node.text().set(0);
             }
             break;
          case UCDataType::UnsignedShort:
             if (item->data) {
-               node.text().set(*phys_cast<uint16_t>(itemData));
+               node.text().set(*phys_cast<uint16_t *>(itemData));
             } else {
                node.text().set(0);
             }
             break;
          case UCDataType::UnsignedInt:
             if (item->data) {
-               node.text().set(*phys_cast<uint32_t>(itemData));
+               node.text().set(*phys_cast<uint32_t *>(itemData));
             } else {
                node.text().set(0);
             }
             break;
          case UCDataType::SignedInt:
             if (item->data) {
-               node.text().set(*phys_cast<int32_t>(itemData));
+               node.text().set(*phys_cast<int32_t *>(itemData));
             } else {
                node.text().set(0);
             }
             break;
          case UCDataType::Float:
             if (item->data) {
-               node.text().set(*phys_cast<float>(itemData));
+               node.text().set(*phys_cast<float *>(itemData));
             } else {
                node.text().set(0.0f);
             }
@@ -721,14 +721,14 @@ writeItems(std::string_view fileSysPath,
          case UCDataType::String:
             if (item->data) {
                // TODO: Check text format, maybe utf8/utf16 etc?
-               node.text().set(phys_cast<char>(itemData).getRawPointer());
+               node.text().set(phys_cast<char *>(itemData).getRawPointer());
             } else {
                node.text().set("");
             }
             break;
          case UCDataType::HexBinary:
             if (item->data) {
-               node.text().set(to_string(phys_cast<uint8_t>(itemData).getRawPointer(), item->dataSize).c_str());
+               node.text().set(to_string(phys_cast<uint8_t *>(itemData).getRawPointer(), item->dataSize).c_str());
             } else {
                std::string value(static_cast<size_t>(item->dataSize * 2), '0');
                node.text().set(value.c_str());

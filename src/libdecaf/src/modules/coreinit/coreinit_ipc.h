@@ -195,7 +195,7 @@ struct IPCDriver
    be_val<uint32_t> invalidReplyCommand;
    be_val<uint32_t> failedAllocateRequestBlock;
    be_val<uint32_t> failedFreeRequestBlock;
-   UNKNOWN(4);
+   be_val<uint32_t> failedRequestSubmitOutboundFIFOFull;
 
    //! FIFO of free IPCDriverRequests.
    IPCDriverFIFO freeFifo;
@@ -310,6 +310,7 @@ CHECK_OFFSET(IPCDriver, 0x158, invalidReplyMessagePointerNotAlloc);
 CHECK_OFFSET(IPCDriver, 0x15C, invalidReplyCommand);
 CHECK_OFFSET(IPCDriver, 0x160, failedAllocateRequestBlock);
 CHECK_OFFSET(IPCDriver, 0x164, failedFreeRequestBlock);
+CHECK_OFFSET(IPCDriver, 0x168, failedRequestSubmitOutboundFIFOFull);
 CHECK_OFFSET(IPCDriver, 0x16C, freeFifo);
 CHECK_OFFSET(IPCDriver, 0x23C, outboundFifo);
 CHECK_OFFSET(IPCDriver, 0x30C, waitFreeFifoEvent);

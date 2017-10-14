@@ -131,7 +131,7 @@ initialise()
    }
 
    auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::SystemHeap);
-   sSystemHeap = new TeenyHeap { cpu::VirtualPointer<void> { bounds.start }.getRawPointer(), bounds.size };
+   sSystemHeap = new TeenyHeap { virt_cast<void *>(bounds.start).getRawPointer(), bounds.size };
 }
 
 void

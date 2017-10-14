@@ -179,7 +179,7 @@ startServiceThread()
 void
 initialiseStaticServiceThreadData()
 {
-   sData = phys_cast<StaticServiceThreadData>(allocProcessStatic(sizeof(StaticServiceThreadData)));
+   sData = phys_cast<StaticServiceThreadData *>(allocProcessStatic(sizeof(StaticServiceThreadData)));
    for (auto &device : sServiceDevices) {
       device.open = false;
       device.resumed = false;

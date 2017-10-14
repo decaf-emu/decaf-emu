@@ -5,7 +5,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/teenyheap.h>
-#include <libcpu/mem.h>
+#include <libcpu/be2_struct.h>
 #include <mutex>
 
 namespace gx2
@@ -164,7 +164,7 @@ private:
       auto range = kernel::initialiseTilingApertures();
       mMemoryBase = range.start;
       mMemorySize = range.size;
-      mHeap = new TeenyHeap { cpu::VirtualPointer<void> { mMemoryBase }.getRawPointer(), mMemorySize };
+      mHeap = new TeenyHeap { virt_cast<void *>(mMemoryBase).getRawPointer(), mMemorySize };
    }
 
 private:

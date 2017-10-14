@@ -16,16 +16,16 @@ public:
    StackObject()
    {
       auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t>(thread->stackPointer) - AlignedSize;
-      mAddress = static_cast<phys_addr>(ptr);
+      auto ptr = phys_cast<uint8_t *>(thread->stackPointer) - AlignedSize;
+      mAddress = phys_cast<phys_addr>(ptr);
       thread->stackPointer = ptr;
    }
 
    ~StackObject()
    {
       auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t>(thread->stackPointer);
-      decaf_check(ptr == mAddress);
+      auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
+      decaf_check(phys_cast<phys_addr>(ptr) == mAddress);
       thread->stackPointer = ptr + AlignedSize;
    }
 };
@@ -39,16 +39,16 @@ public:
    StackArray()
    {
       auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t>(thread->stackPointer) - AlignedSize;
-      mAddress = static_cast<phys_addr>(ptr);
+      auto ptr = phys_cast<uint8_t *>(thread->stackPointer) - AlignedSize;
+      mAddress = phys_cast<phys_addr>(ptr);
       thread->stackPointer = ptr;
    }
 
    ~StackArray()
    {
       auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t>(thread->stackPointer);
-      decaf_check(ptr == mAddress);
+      auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
+      decaf_check(phys_cast<phys_addr>(ptr) == mAddress);
       thread->stackPointer = ptr + AlignedSize;
    }
 

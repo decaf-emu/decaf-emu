@@ -111,15 +111,15 @@ IM_GetHomeButtonParams(IOSHandle handle,
 {
    std::memset(request, 0, sizeof(IMRequest));
 
-   request->ioctlVecs[0].vaddr = virt_addrof(request->getHomeButtomParamResponse);
+   request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getHomeButtomParamResponse));
    request->ioctlVecs[0].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::GetHomeButtonParams;
    request->asyncCallback = asyncCallback;
-   request->asyncCallbackContext = cpu::translate(asyncCallbackContext);
+   request->asyncCallbackContext = virt_cast<void *>(cpu::translate(asyncCallbackContext));
    request->copySrc = virt_addrof(request->getHomeButtomParamResponse);
-   request->copyDst = cpu::translate(output);
+   request->copyDst = virt_cast<void *>(cpu::translate(output));
    request->copySize = 8u;
 
    return internal::imSendRequest(request, 0, 1);
@@ -137,18 +137,18 @@ IM_GetParameter(IOSHandle handle,
    std::memset(request, 0, sizeof(IMRequest));
 
    request->getParameterRequest.parameter = parameter;
-   request->ioctlVecs[0].vaddr = virt_addrof(request->getParameterRequest);
+   request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getParameterRequest));
    request->ioctlVecs[0].len = 8u;
 
-   request->ioctlVecs[1].vaddr = virt_addrof(request->getParameterResponse);
+   request->ioctlVecs[1].vaddr = virt_cast<virt_addr>(virt_addrof(request->getParameterResponse));
    request->ioctlVecs[1].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::GetParameter;
    request->asyncCallback = asyncCallback;
-   request->asyncCallbackContext = cpu::translate(asyncCallbackContext);
+   request->asyncCallbackContext = virt_cast<void *>(cpu::translate(asyncCallbackContext));
    request->copySrc = virt_addrof(request->getParameterResponse.value);
-   request->copyDst = cpu::translate(output);
+   request->copyDst = virt_cast<void *>(cpu::translate(output));
    request->copySize = 4u;
 
    return internal::imSendRequest(request, 1, 1);
@@ -234,18 +234,18 @@ IM_GetNvParameter(IOSHandle handle,
    std::memset(request, 0, sizeof(IMRequest));
 
    request->getNvParameterRequest.parameter = parameter;
-   request->ioctlVecs[0].vaddr = virt_addrof(request->getNvParameterRequest);
+   request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getNvParameterRequest));
    request->ioctlVecs[0].len = 8u;
 
-   request->ioctlVecs[1].vaddr = virt_addrof(request->getNvParameterResponse);
+   request->ioctlVecs[1].vaddr = virt_cast<virt_addr>(virt_addrof(request->getNvParameterResponse));
    request->ioctlVecs[1].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::GetNvParameter;
    request->asyncCallback = asyncCallback;
-   request->asyncCallbackContext = cpu::translate(asyncCallbackContext);
+   request->asyncCallbackContext = virt_cast<void *>(cpu::translate(asyncCallbackContext));
    request->copySrc = virt_addrof(request->getNvParameterResponse.value);
-   request->copyDst = cpu::translate(output);
+   request->copyDst = virt_cast<void *>(cpu::translate(output));
    request->copySize = 4u;
 
    return internal::imSendRequest(request, 1, 1);
@@ -299,18 +299,18 @@ IM_GetTimerRemaining(IOSHandle handle,
    std::memset(request, 0, sizeof(IMRequest));
 
    request->getTimerRemainingRequest.timer = timer;
-   request->ioctlVecs[0].vaddr = virt_addrof(request->getTimerRemainingRequest);
+   request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getTimerRemainingRequest));
    request->ioctlVecs[0].len = 8u;
 
-   request->ioctlVecs[1].vaddr = virt_addrof(request->getTimerRemainingResponse);
+   request->ioctlVecs[1].vaddr = virt_cast<virt_addr>(virt_addrof(request->getTimerRemainingResponse));
    request->ioctlVecs[1].len = static_cast<uint32_t>(sizeof(IMGetTimerRemainingResponse));
 
    request->handle = handle;
    request->request = IMCommand::GetTimerRemaining;
    request->asyncCallback = asyncCallback;
-   request->asyncCallbackContext = cpu::translate(asyncCallbackContext);
+   request->asyncCallbackContext = virt_cast<void *>(cpu::translate(asyncCallbackContext));
    request->copySrc = virt_addrof(request->getTimerRemainingResponse.value);
-   request->copyDst = cpu::translate(output);
+   request->copyDst = virt_cast<void *>(cpu::translate(output));
    request->copySize = 4u;
 
    return internal::imSendRequest(request, 1, 1);
@@ -347,13 +347,13 @@ IM_SetParameter(IOSHandle handle,
 
    request->setParameterRequest.parameter = parameter;
    request->setParameterRequest.value = value;
-   request->ioctlVecs[0].vaddr = virt_addrof(request->setParameterRequest);
+   request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->setParameterRequest));
    request->ioctlVecs[0].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::SetParameter;
    request->asyncCallback = asyncCallback;
-   request->asyncCallbackContext = cpu::translate(asyncCallbackContext);
+   request->asyncCallbackContext = virt_cast<void *>(cpu::translate(asyncCallbackContext));
 
    return internal::imSendRequest(request, 1, 0);
 }
@@ -371,13 +371,13 @@ IM_SetNvParameter(IOSHandle handle,
 
    request->setNvParameterRequest.parameter = parameter;
    request->setNvParameterRequest.value = value;
-   request->ioctlVecs[0].vaddr = virt_addrof(request->setNvParameterRequest);
+   request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->setNvParameterRequest));
    request->ioctlVecs[0].len = 8u;
 
    request->handle = handle;
    request->request = IMCommand::SetNvParameter;
    request->asyncCallback = asyncCallback;
-   request->asyncCallbackContext = cpu::translate(asyncCallbackContext);
+   request->asyncCallbackContext = virt_cast<void *>(cpu::translate(asyncCallbackContext));
 
    return internal::imSendRequest(request, 1, 0);
 }

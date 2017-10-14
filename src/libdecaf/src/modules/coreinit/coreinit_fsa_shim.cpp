@@ -585,7 +585,7 @@ fsaShimPrepareRequestReadFile(FSAShimBuffer *shim,
    shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto &request = shim->request.readFile;
-   request.buffer = cpu::translate(buffer);
+   request.buffer = virt_cast<uint8_t *>(cpu::translate(buffer));
    request.size = size;
    request.count = count;
    request.pos = pos;
@@ -813,7 +813,7 @@ fsaShimPrepareRequestWriteFile(FSAShimBuffer *shim,
    shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto &request = shim->request.writeFile;
-   request.buffer = cpu::translate(buffer);
+   request.buffer = virt_cast<uint8_t *>(cpu::translate(buffer));
    request.size = size;
    request.count = count;
    request.pos = pos;
