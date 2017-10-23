@@ -181,7 +181,9 @@ AXGetVoiceOffsets(AXVoice *voice,
       offsets->endOffset = pageAddress + extras->data.endOffsetAbs - baseAddress;
       offsets->currentOffset = pageAddress + extras->data.currentOffsetAbs - baseAddress;
    } else {
-      decaf_abort(fmt::format("Unexpected voice data format {}", extras->data.format))
+      be_val<uint16_t> dataFormat = (uint16_t)extras->data.format;
+      decaf_abort(fmt::format("Unexpected voice data format {}", dataFormat));
+      //decaf_abort(fmt::format("Unexpected voice data format {}", extras->data.format))
    }
 }
 
@@ -225,7 +227,9 @@ AXSetVoiceCurrentOffset(AXVoice *voice,
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
       extras->data.currentOffsetAbs = baseAddress + offset;
    } else {
-      decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
+      be_val<uint16_t> dataFormat = (uint16_t)extras->data.format;
+      decaf_abort(fmt::format("Unexpected voice data format {}", dataFormat));
+      //decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
    }
 
    extras->syncBits |= internal::AXVoiceSyncBits::CurrentOffset;
@@ -309,7 +313,9 @@ AXSetVoiceEndOffset(AXVoice *voice,
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
       extras->data.endOffsetAbs = baseAddress + offset;
    } else {
-      decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
+      be_val<uint16_t> dataFormat = (uint16_t)extras->data.format;
+      decaf_abort(fmt::format("Unexpected voice data format {}", dataFormat));
+      //decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
    }
 
    extras->syncBits |= internal::AXVoiceSyncBits::EndOffset;
@@ -366,7 +372,9 @@ AXSetVoiceLoopOffset(AXVoice *voice,
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
       extras->data.loopOffsetAbs = baseAddress + offset;
    } else {
-      decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
+      be_val<uint16_t> dataFormat = (uint16_t)extras->data.format;
+      decaf_abort(fmt::format("Unexpected voice data format {}", dataFormat));
+      //decaf_abort(fmt::format("Unexpected voice data type {}", extras->data.format));
    }
 
    extras->syncBits |= internal::AXVoiceSyncBits::LoopOffset;
@@ -437,7 +445,9 @@ AXSetVoiceOffsets(AXVoice *voice,
       absOffsets.currentOffsetAbs = (samples + offsets->currentOffset) & 0x1fffffff;
       absOffsets.memPageNumber = (samples + offsets->currentOffset) >> 29;
    } else {
-      decaf_abort(fmt::format("Unexpected voice data type {}", offsets->dataType));
+      be_val<uint16_t> offsetDataType = (uint16_t)offsets->dataType;
+      decaf_abort(fmt::format("Unexpected voice data type {}", offsetDataType));
+      //decaf_abort(fmt::format("Unexpected voice data type {}", offsets->dataType));
    }
 
    internal::setVoiceAddresses(voice, &absOffsets);
@@ -597,7 +607,9 @@ setVoiceAddresses(AXVoice *voice,
       extras->adpcm.gain = 0x800;
       voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
    } else {
-      decaf_abort(fmt::format("Unexpected audio data format {}", offsets->format));
+      be_val<uint16_t> offsetFormat = (uint16_t)offsets->format;
+      decaf_abort(fmt::format("Unexpected audio data format {}", offsetFormat));
+      //decaf_abort(fmt::format("Unexpected audio data format {}", offsets->format));
    }
 
    voice->syncBits &= ~(

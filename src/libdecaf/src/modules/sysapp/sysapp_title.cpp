@@ -130,7 +130,9 @@ SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
    } else if (region == coreinit::MCPRegion::Europe) {
       regionIdx = 2u;
    } else {
-      decaf_abort(fmt::format("Unknown region {}", region));
+      be_val<uint8_t> customRegion = (uint8_t)region;
+      decaf_abort(fmt::format("Unknown region {}", customRegion));
+      //decaf_abort(fmt::format("Unknown region {}", region));
    }
 
    return sSysAppTitleId[id][regionIdx];
