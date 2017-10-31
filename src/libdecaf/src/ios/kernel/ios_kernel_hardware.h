@@ -35,7 +35,7 @@ BITFIELD(AHBALL, uint32_t)
 BITFIELD_END
 
 BITFIELD(AHBLT, uint32_t)
-   BITFIELD_ENTRY(0, 1, bool, Unknown0)
+   BITFIELD_ENTRY(0, 1, bool, SdHostController)
    BITFIELD_ENTRY(1, 1, bool, Unknown1)
    BITFIELD_ENTRY(2, 1, bool, Unknown2)
    BITFIELD_ENTRY(3, 1, bool, Unknown3)

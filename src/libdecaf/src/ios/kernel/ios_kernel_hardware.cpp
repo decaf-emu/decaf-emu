@@ -186,7 +186,7 @@ IOS_ClearAndEnable(DeviceId id)
       clearAndEnableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
       break;
    case DeviceId::Unknown30:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown0(true));
+      clearAndEnableAhbLt(AHBLT::get(0).SdHostController(true));
       break;
    case DeviceId::Unknown31:
       clearAndEnableAhbLt(AHBLT::get(0).Unknown1(true));
@@ -362,8 +362,8 @@ handleAhbInterrupts()
    auto ahbLatte = AHBLT::get(LT_INTSR_AHBLT_ARM.load() &
                               LT_INTMR_AHBLT_ARM.load());
 
-   if (ahbLatte.Unknown0()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown0(true));
+   if (ahbLatte.SdHostController()) {
+      clearAndDisableAhbLt(AHBLT::get(0).SdHostController(true));
       sendEventHandlerMessageNoLock(DeviceId::Unknown30);
    }
 
