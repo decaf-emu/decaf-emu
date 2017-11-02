@@ -2,6 +2,7 @@
 #include <string>
 #include "platform.h"
 #include "platform_compiler.h"
+#include "platform_stacktrace.h"
 
 #ifdef PLATFORM_WINDOWS
 
@@ -12,6 +13,11 @@
       abort(); \
    }
 
+#define decaf_host_fault(f, t) \
+   hostFaultWithStackTrace(f, t); \
+   __debugbreak(); \
+   abort();
+
 #else
 
 #define decaf_handle_assert(x, e, m) \
@@ -19,6 +25,10 @@
       assertFailed(__FILE__, __LINE__, e, m); \
       __builtin_trap(); \
    }
+
+#define decaf_host_fault(f, t) \
+   hostFaultWithStackTrace(f, t); \
+   __builtin_trap();
 
 #endif
 
@@ -36,3 +46,7 @@ assertFailed(const char *file,
              unsigned line,
              const char *expression,
              const std::string &message);
+
+void
+hostFaultWithStackTrace(const std::string &fault,
+                        platform::StackTrace *stackTrace);

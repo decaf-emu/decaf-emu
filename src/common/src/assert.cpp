@@ -59,3 +59,35 @@ assertFailed(const char *file,
    }
 #endif
 }
+
+void
+hostFaultWithStackTrace(const std::string &fault,
+                        platform::StackTrace *stackTrace)
+{
+   auto trace = platform::formatStackTrace(stackTrace);
+
+   fmt::MemoryWriter out;
+   out << "Encountered host cpu fault:\n";
+   out << "Fault: " << fault << "\n";
+
+   if (trace.size()) {
+      out << "Stacktrace:\n" << trace << "\n";
+   }
+
+   if (gLog) {
+      gLog->critical("{}", out.str());
+   }
+
+   std::cerr << out.str() << std::endl;
+
+#ifdef PLATFORM_WINDOWS
+   if (IsDebuggerPresent()) {
+      OutputDebugStringW(platform::toWinApiString(out.c_str()).c_str());
+   } else {
+      MessageBoxW(NULL,
+                  platform::toWinApiString(fault).c_str(),
+                  L"Encountered host cpu fault",
+                  MB_OK | MB_ICONERROR);
+   }
+#endif
+}
