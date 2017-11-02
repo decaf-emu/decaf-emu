@@ -131,6 +131,33 @@ waitForInterrupt()
 }
 
 void
+waitNextInterrupt(std::chrono::steady_clock::time_point until)
+{
+   auto core = this_core::state();
+   std::unique_lock<std::mutex> lock { gInterruptMutex };
+
+   if (!(core->interrupt_mask & ~NONMASKABLE_INTERRUPTS)) {
+      decaf_abort("WFI thread found all maskable interrupts were disabled");
+   }
+
+   auto mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
+   auto flags = core->interrupt.fetch_and(~mask);
+
+   if (!(flags & mask)) {
+      gInterruptCondition.wait_until(lock, until);
+
+      mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
+      flags = core->interrupt.fetch_and(~mask);
+   }
+
+   lock.unlock();
+
+   if (flags & mask) {
+      gInterruptHandler(core, flags);
+   }
+}
+
+void
 setNextAlarm(std::chrono::steady_clock::time_point time)
 {
    auto core = this_core::state();

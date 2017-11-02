@@ -119,6 +119,9 @@ checkInterrupts();
 void
 waitForInterrupt();
 
+void
+waitNextInterrupt(std::chrono::steady_clock::time_point until);
+
 uint32_t
 interruptMask();
 
