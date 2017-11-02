@@ -5,6 +5,7 @@
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>
 #include <Dbghelp.h>
+#include <memory>
 
 namespace platform
 {
@@ -17,7 +18,7 @@ struct StackTrace
 
 struct MySymbol : SYMBOL_INFO
 {
-   char NameExt[512];
+   CHAR NameExt[MAX_SYM_NAME];
 };
 
 StackTrace *
@@ -45,18 +46,17 @@ formatStackTrace(StackTrace *trace)
       symInitialise = true;
    }
 
-   auto symbol = new MySymbol();
-   symbol->MaxNameLen = 256;
+   auto symbol = std::make_unique<MySymbol>();
+   symbol->MaxNameLen = MAX_SYM_NAME;
    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
    fmt::MemoryWriter out;
 
    for (auto i = 0u; i < trace->frames; ++i) {
-      SymFromAddr(process, (DWORD64)trace->data[i], 0, symbol);
+      SymFromAddr(process, (DWORD64)trace->data[i], 0, symbol.get());
       out.write("{}: {} - 0x{:X}x\n", trace->frames - i - 1, (const char*)symbol->Name, symbol->Address);
    }
 
-   delete symbol;
    return out.str();
 }
 
