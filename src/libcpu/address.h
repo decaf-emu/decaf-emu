@@ -24,6 +24,11 @@ public:
       return !!mAddress;
    }
 
+   explicit operator uint32_t() const
+   {
+      return mAddress;
+   }
+
    constexpr bool operator == (const Address &other) const
    {
       return mAddress == other.mAddress;
