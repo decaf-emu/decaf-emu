@@ -33,12 +33,12 @@ enum class jit_mode {
 
 static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
-using EntrypointHandler = std::function<void()>;
-using InterruptHandler = void (*)(uint32_t interrupt_flags);
-using SegfaultHandler = void(*)(uint32_t address);
-using IllInstHandler = void(*)();
-using BranchTraceHandler = void(*)(uint32_t target);
-using KernelCallFunction = void(*)(Core *state, void *userData);
+using EntrypointHandler = std::function<void(Core *core)>;
+using InterruptHandler = void (*)(Core *core, uint32_t interrupt_flags);
+using SegfaultHandler = void(*)(Core *core, uint32_t address);
+using IllInstHandler = void(*)(Core *core);
+using BranchTraceHandler = void(*)(Core *core, uint32_t target);
+using KernelCallFunction = void(*)(Core *core, void *userData);
 
 struct KernelCallEntry
 {

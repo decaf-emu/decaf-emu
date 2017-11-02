@@ -117,14 +117,14 @@ addJitReadOnlyRange(ppcaddr_t address, uint32_t size)
 static void
 coreSegfaultEntry()
 {
-   gSegfaultHandler(sSegfaultAddr);
+   gSegfaultHandler(tCurrentCore, sSegfaultAddr);
    decaf_abort("The CPU segfault handler must never return.");
 }
 
 static void
 coreIllInstEntry()
 {
-   gIllInstHandler();
+   gIllInstHandler(tCurrentCore);
    decaf_abort("The CPU illegal instruction handler must never return.");
 }
 
@@ -150,7 +150,7 @@ exceptionHandler(platform::Exception *exception)
    auto info = reinterpret_cast<platform::AccessViolationException *>(exception);
    auto address = info->address;
 
-   // Only handle exceptions within the memory bounds
+   // Only handle exceptions within the virtual memory bounds
    auto memBase = getBaseVirtualAddress();
    if (address != 0 && (address < memBase || address >= memBase + 0x100000000)) {
       return platform::UnhandledException;
@@ -174,7 +174,7 @@ void
 coreEntryPoint(Core *core)
 {
    tCurrentCore = core;
-   gCoreEntryPointHandler();
+   gCoreEntryPointHandler(core);
 }
 
 void

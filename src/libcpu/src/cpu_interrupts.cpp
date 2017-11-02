@@ -102,7 +102,7 @@ checkInterrupts()
    auto flags = core->interrupt.fetch_and(~mask);
 
    if (flags & mask) {
-      cpu::gInterruptHandler(flags);
+      cpu::gInterruptHandler(core, flags);
    }
 }
 
@@ -122,7 +122,7 @@ waitForInterrupt()
 
       if (flags & mask) {
          lock.unlock();
-         gInterruptHandler(flags);
+         gInterruptHandler(core, flags);
          lock.lock();
       } else {
          gInterruptCondition.wait(lock);
