@@ -19,7 +19,7 @@ b(cpu::Core *state, Instruction instr)
    }
 
    if (cpu::gBranchTraceHandler) {
-      cpu::gBranchTraceHandler(state->nia);
+      cpu::gBranchTraceHandler(state, state->nia);
    }
 }
 
@@ -89,7 +89,7 @@ bcGeneric(cpu::Core *state, Instruction instr)
    }
 
    if (cpu::gBranchTraceHandler) {
-      cpu::gBranchTraceHandler(state->nia);
+      cpu::gBranchTraceHandler(state, state->nia);
    }
 }
 
