@@ -11,6 +11,7 @@ namespace ios
 #pragma pack(push, 1)
 
 using GroupId = uint32_t;
+using Handle = int32_t;
 using TitleId = uint64_t;
 
 /**
@@ -182,7 +183,7 @@ struct IpcRequest
    be2_val<Error> reply;
 
    //! Handle for the IOS resource
-   be2_val<int32_t> handle;
+   be2_val<Handle> handle;
 
    //! Flags, always 0
    be2_val<uint32_t> flags;
