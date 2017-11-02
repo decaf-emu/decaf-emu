@@ -13,7 +13,8 @@ public:
    {
    }
 
-   FrameAllocator(void *base, size_t size) :
+   FrameAllocator(void *base,
+                  size_t size) :
       mBase(reinterpret_cast<uint8_t *>(base)),
       mSize(size),
       mOffset(0)
@@ -34,7 +35,7 @@ public:
 
    void *
    allocate(size_t size,
-            uint32_t alignment = 4)
+            size_t alignment = 4)
    {
       // Ensure section alignment
       auto alignOffset = align_up(top(), alignment) - top();
