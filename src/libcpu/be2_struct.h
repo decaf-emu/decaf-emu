@@ -13,6 +13,9 @@
 using virt_addr = cpu::VirtualAddress;
 using phys_addr = cpu::PhysicalAddress;
 
+using virt_addr_range = cpu::VirtualAddressRange;
+using phys_addr_range = cpu::PhysicalAddressRange;
+
 template<typename T>
 using virt_ptr = cpu::Pointer<T, virt_addr>;
 
