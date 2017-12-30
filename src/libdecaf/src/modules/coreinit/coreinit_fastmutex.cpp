@@ -194,7 +194,7 @@ fastMutexHardUnlock(OSFastMutex *mutex)
 }
 
 static void
-OSFastMutex_Unlock_common(OSFastMutex *mutex) {
+OSFastMutex_Unlock_one_NoLock(OSFastMutex *mutex) {
     decaf_check(mutex);
     decaf_check(mutex->tag == OSFastMutex::Tag);
     decaf_check(mutex->count > 0);
@@ -235,15 +235,15 @@ OSFastMutex_Unlock_common(OSFastMutex *mutex) {
 }
 
 void
-OSFastMutex_UnlockWithoutScheduler(OSFastMutex *mutex) {
+OSFastMutex_UnlockNoScheduler(OSFastMutex *mutex) {
     decaf_check(!internal::isSchedulerEnabled());
-    OSFastMutex_Unlock_common(mutex);
+    OSFastMutex_Unlock_one_NoLock(mutex);
 }
 
 void
 OSFastMutex_Unlock(OSFastMutex *mutex)
 {
-   OSFastMutex_Unlock_common(mutex);
+   OSFastMutex_Unlock_one_NoLock(mutex);
 
    auto thread = OSGetCurrentThread();
    // Clear the cancel state if we dont hold any more mutexes
@@ -387,7 +387,7 @@ unlockAllFastMutexNoLock(OSThread *thread)
    decaf_check(!isSchedulerEnabled());
    decaf_check(isSchedulerLocked());
    while(thread->fastMutexQueue.head) {
-      OSFastMutex_UnlockWithoutScheduler(thread->fastMutexQueue.head);
+      OSFastMutex_UnlockNoScheduler(thread->fastMutexQueue.head);
    }
 }
 
