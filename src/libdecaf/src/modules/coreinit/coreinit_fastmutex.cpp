@@ -193,46 +193,59 @@ fastMutexHardUnlock(OSFastMutex *mutex)
    internal::unlockScheduler();
 }
 
+static void
+OSFastMutex_Unlock_one_NoLock(OSFastMutex *mutex) {
+    decaf_check(mutex);
+    decaf_check(mutex->tag == OSFastMutex::Tag);
+    decaf_check(mutex->count > 0);
+
+
+    auto thread = OSGetCurrentThread();
+    auto lockValue = mutex->lock.load();
+    auto lockThread = mem::translate<OSThread>(lockValue & ~1);
+    decaf_check(lockThread == thread);
+
+    // Reduce mutex count
+    mutex->count--;
+
+    if (mutex->count != 0) {
+       // If count is not 0, then we have not unlocked!
+       return;
+    }
+
+    // Remove ourselves from the queue
+    FastMutexQueue::erase(&thread->fastMutexQueue, mutex);
+    lockValue = mutex->lock.load();
+
+    while (true) {
+       // If someone contended on their lock, we need to hardUnlock
+       if (lockValue & 1) {
+          fastMutexHardUnlock(mutex);
+          return;
+       }
+
+       // Try to clear the lock
+       if (!mutex->lock.compare_exchange_weak(lockValue, 0)) {
+          continue;
+       }
+
+       // Success!
+       break;
+    }
+}
+
+void
+OSFastMutex_UnlockNoScheduler(OSFastMutex *mutex) {
+    decaf_check(!internal::isSchedulerEnabled());
+    OSFastMutex_Unlock_one_NoLock(mutex);
+}
+
 void
 OSFastMutex_Unlock(OSFastMutex *mutex)
 {
-   decaf_check(mutex);
-   decaf_check(mutex->tag == OSFastMutex::Tag);
-   decaf_check(mutex->count > 0);
+   OSFastMutex_Unlock_one_NoLock(mutex);
 
    auto thread = OSGetCurrentThread();
-   auto lockValue = mutex->lock.load();
-   auto lockThread = mem::translate<OSThread>(lockValue & ~1);
-   decaf_check(lockThread == thread);
-
-   // Reduce mutex count
-   mutex->count--;
-
-   if (mutex->count != 0) {
-      // If count is not 0, then we have not unlocked!
-      return;
-   }
-
-   // Remove ourselves from the queue
-   FastMutexQueue::erase(&thread->fastMutexQueue, mutex);
-   lockValue = mutex->lock.load();
-
-   while (true) {
-      // If someone contended on their lock, we need to hardUnlock
-      if (lockValue & 1) {
-         fastMutexHardUnlock(mutex);
-         return;
-      }
-
-      // Try to clear the lock
-      if (!mutex->lock.compare_exchange_weak(lockValue, 0)) {
-         continue;
-      }
-
-      // Success!
-      break;
-   }
-
    // Clear the cancel state if we dont hold any more mutexes
    if (!thread->fastMutexQueue.head) {
       thread->cancelState &= ~OSThreadCancelState::DisabledByFastMutex;
@@ -370,10 +383,12 @@ void
 unlockAllFastMutexNoLock(OSThread *thread)
 {
    // This function is meant to forcibly unlock all of the fast
-   //  mutexes that are currently owned by this thread.  I'm
-   //  sick and tired of reversing atomics though, so I'll just
-   //  assert that they don't hold any mutexes...
-   decaf_check(!thread->fastMutexQueue.head);
+   //  mutexes that are currently owned by this thread.
+   decaf_check(!isSchedulerEnabled());
+   decaf_check(isSchedulerLocked());
+   while(thread->fastMutexQueue.head) {
+      OSFastMutex_UnlockNoScheduler(thread->fastMutexQueue.head);
+   }
 }
 
 } // namespace internal
