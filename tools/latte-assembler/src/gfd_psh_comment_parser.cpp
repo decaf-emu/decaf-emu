@@ -377,6 +377,21 @@ parseShaderComments(gfd::GFDPixelShader &shader,
       } else if (kv.obj == "SPI_INPUT_Z") {
          ensureArrayOfObjects(kv);
          parseRegisterValue(shader.regs.spi_input_z, kv.member, kv.value);
+      } else if (kv.obj == "UNIFORM_BLOCKS") {
+         ensureArrayOfObjects(kv);
+         parseUniformBlocks(shader.uniformBlocks, std::stoul(kv.index), kv.member, kv.value);
+      } else if (kv.obj == "UNIFORM_VARS") {
+         ensureArrayOfObjects(kv);
+         parseUniformVars(shader.uniformVars, std::stoul(kv.index), kv.member, kv.value);
+      } else if (kv.obj == "INITIAL_VALUES") {
+         ensureArrayOfObjects(kv);
+         parseInitialValues(shader.initialValues, std::stoul(kv.index), kv.member, kv.value);
+      } else if (kv.obj == "LOOP_VARS") {
+         ensureArrayOfObjects(kv);
+         parseLoopVars(shader.loopVars, std::stoul(kv.index), kv.member, kv.value);
+      } else if (kv.obj == "SAMPLER_VARS") {
+         ensureArrayOfObjects(kv);
+         parseSamplerVars(shader.samplerVars, std::stoul(kv.index), kv.member, kv.value);
       } else if (kv.obj == "MODE") {
          ensureValue(kv);
          shader.mode = parseShaderMode(kv.value);
@@ -386,11 +401,6 @@ parseShaderComments(gfd::GFDPixelShader &shader,
 
       /*
       TODO:
-      std::vector<GFDUniformBlock> uniformBlocks;
-      std::vector<GFDUniformVar> uniformVars;
-      std::vector<GFDUniformInitialValue> initialValues;
-      std::vector<GFDLoopVar> loopVars;
-      std::vector<GFDSamplerVar> samplerVars;
       GFDRBuffer gx2rData;
       */
    }
