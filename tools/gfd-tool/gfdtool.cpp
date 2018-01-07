@@ -735,6 +735,16 @@ printInfo(const std::string &filename)
          out.writer << '\n' << disassembly;
       }
       endGroup(out);
+
+      startGroup(out, "GeometryShaderCopyProgram");
+      {
+         writeField(out, "size", shader.vertexShaderData.size());
+
+         std::string disassembly;
+         disassembly = latte::disassemble(gsl::make_span(shader.vertexShaderData));
+         out.writer << '\n' << disassembly;
+      }
+      endGroup(out);
    }
 
    for (auto &tex : file.textures) {
