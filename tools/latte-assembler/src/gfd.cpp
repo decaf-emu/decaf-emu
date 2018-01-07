@@ -1,4 +1,5 @@
 #include "gfd_comment_parser.h"
+#include <libgpu/latte/latte_constants.h>
 
 #include <cstring>
 #include <fmt/format.h>
@@ -113,6 +114,25 @@ parseShaderVarType(const std::string &v)
    }
 }
 
+gx2::GX2SamplerVarType
+parseSamplerVarType(const std::string &v)
+{
+   auto value = v;
+   std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+
+   if (value == "SAMPLER1D") {
+      return gx2::GX2SamplerVarType::Sampler1D;
+   } else if (value == "SAMPLER2D") {
+      return gx2::GX2SamplerVarType::Sampler2D;
+   } else if (value == "SAMPLER3D") {
+      return gx2::GX2SamplerVarType::Sampler3D;
+   } else if (value == "SAMPLERCUBE") {
+      return gx2::GX2SamplerVarType::SamplerCube;
+   } else {
+      throw gfd_header_parse_exception { fmt::format("Invalid GX2SamplerVarType {}", value) };
+   }
+}
+
 gx2::GX2ShaderMode
 parseShaderMode(const std::string &v)
 {
@@ -129,6 +149,143 @@ parseShaderMode(const std::string &v)
       return gx2::GX2ShaderMode::ComputeShader;
    } else {
       throw gfd_header_parse_exception { fmt::format("Invalid GX2ShaderMode {}", value) };
+   }
+}
+
+void
+parseUniformBlocks(std::vector<gfd::GFDUniformBlock> &UniformBlocks,
+                uint32_t index,
+                const std::string &member,
+                const std::string &value)
+{
+   if (index >= latte::MaxUniformBlocks) {
+      throw gfd_header_parse_exception { fmt::format("UNIFORM_BLOCKS[{}] invalid index, max: {}", index, latte::MaxUniformBlocks) };
+   }
+
+   if (index >= UniformBlocks.size()) {
+      UniformBlocks.resize(index + 1);
+      UniformBlocks[index].offset = index + 1;
+      UniformBlocks[index].size = 16;
+   }
+
+   if (member == "NAME") {
+      UniformBlocks[index].name = value;
+   } else if (member == "OFFSET") {
+      UniformBlocks[index].offset = parseValueNumber(value);
+   } else if (member == "SIZE") {
+      UniformBlocks[index].size = parseValueNumber(value);
+      if (UniformBlocks[index].size >= latte::MaxUniformBlockSize) {
+         throw gfd_header_parse_exception { fmt::format("UNIFORM_BLOCKS[{}] invalid index, max: {}", index, latte::MaxUniformBlocks) };
+      }
+   } else {
+      throw gfd_header_parse_exception { fmt::format("UNIFORM_BLOCKS[{}] does not have member {}", index, member) };
+   }
+}
+
+void
+parseUniformVars(std::vector<gfd::GFDUniformVar> &uniformVars,
+                uint32_t index,
+                const std::string &member,
+                const std::string &value)
+{
+   if (index >= latte::MaxUniformRegisters) {
+      throw gfd_header_parse_exception { fmt::format("UNIFORM_VARS[{}] invalid index, max: {}", index, latte::MaxUniformRegisters) };
+   }
+
+   if (index >= uniformVars.size()) {
+      uniformVars.resize(index + 1);
+      uniformVars[index].type = gx2::GX2ShaderVarType::Float4;
+      uniformVars[index].count = 1;
+   }
+
+   if (member == "NAME") {
+      uniformVars[index].name = value;
+   } else if (member == "BLOCK") {
+      uniformVars[index].block = parseValueNumber(value);
+   } else if (member == "COUNT") {
+      uniformVars[index].count = parseValueNumber(value);
+   } else if (member == "OFFSET") {
+      uniformVars[index].offset = parseValueNumber(value);
+   } else if (member == "TYPE") {
+      uniformVars[index].type = parseShaderVarType(value);
+   } else {
+      throw gfd_header_parse_exception { fmt::format("UNIFORM_VARS[{}] does not have member {}", index, member) };
+   }
+}
+
+void
+parseInitialValues(std::vector<gfd::GFDUniformInitialValue> &initialValues,
+                uint32_t index,
+                const std::string &member,
+                const std::string &value)
+{
+   if (index >= latte::MaxUniformRegisters) {
+      throw gfd_header_parse_exception { fmt::format("INITIAL_VALUES[{}] invalid index, max: {}", index, latte::MaxUniformRegisters) };
+   }
+
+   if (index >= initialValues.size()) {
+      initialValues.resize(index + 1);
+   }
+
+   if (member == "OFFSET") {
+      initialValues[index].offset = parseValueNumber(value);
+   } else if (member == "VALUE[0]") {
+      initialValues[index].value[0] = parseValueFloat(value);
+   } else if (member == "VALUE[1]") {
+      initialValues[index].value[1] = parseValueFloat(value);
+   } else if (member == "VALUE[2]") {
+      initialValues[index].value[2] = parseValueFloat(value);
+   } else if (member == "VALUE[3]") {
+      initialValues[index].value[3] = parseValueFloat(value);
+   } else {
+      throw gfd_header_parse_exception { fmt::format("INITIAL_VALUES[{}] does not have member {}", index, member) };
+   }
+}
+
+void
+parseLoopVars(std::vector<gfd::GFDLoopVar> &loopVars,
+                uint32_t index,
+                const std::string &member,
+                const std::string &value)
+{
+   if (index >= loopVars.size()) {
+      loopVars.resize(index + 1);
+      loopVars[index].offset = index;
+   }
+
+   if (member == "OFFSET") {
+      loopVars[index].offset = parseValueNumber(value);
+   } else if (member == "VALUE") {
+      loopVars[index].value = parseValueNumber(value);
+   } else {
+      throw gfd_header_parse_exception { fmt::format("LOOP_VARS[{}] does not have member {}", index, member) };
+   }
+}
+
+void
+parseSamplerVars(std::vector<gfd::GFDSamplerVar> &samplerVars,
+                uint32_t index,
+                const std::string &member,
+                const std::string &value)
+{
+   if (index >= latte::MaxSamplers) {
+      throw gfd_header_parse_exception { fmt::format("SAMPLER_VARS[{}] invalid index, max: {}", index, latte::MaxSamplers) };
+   }
+
+   if (index >= samplerVars.size()) {
+      samplerVars.resize(index + 1);
+      samplerVars[index].type = gx2::GX2SamplerVarType::Sampler2D;
+      samplerVars[index].location = index;
+   }
+
+   if (member == "NAME") {
+      samplerVars[index].name = value;
+   } else if (member == "LOCATION") {
+      samplerVars[index].location = parseValueNumber(value);
+   } else if (member == "TYPE") {
+      samplerVars[index].type = parseSamplerVarType(value);
+   } else {
+      throw gfd_header_parse_exception { fmt::format("SAMPLER_VARS[{}] does not have member {}", index, member) };
    }
 }
 
@@ -151,6 +308,12 @@ uint32_t
 parseValueNumber(const std::string &v)
 {
    return static_cast<uint32_t>(std::stoul(v, 0, 0));
+}
+
+float
+parseValueFloat(const std::string &v)
+{
+   return static_cast<float>(std::stof(v));
 }
 
 static std::vector<uint8_t>
@@ -270,7 +433,12 @@ gfdAddVertexShader(gfd::GFDFile &file,
    } else if (out.regs.num_sq_vtx_semantic != out.attribVars.size()) {
       throw gfd_header_parse_exception { fmt::format("Invalid NUM_SQ_VTX_SEMANTIC {}, expected {}",
                                                      out.regs.num_sq_vtx_semantic,
-                                                     numGpr) };
+                                                     out.attribVars.size()) };
+   }
+
+   for (auto i = out.regs.num_sq_vtx_semantic; i < out.regs.sq_vtx_semantic.size(); ++i) {
+      out.regs.sq_vtx_semantic[i] = out.regs.sq_vtx_semantic[i]
+         .SEMANTIC_ID(0xFF);
    }
 
    // SQ_VTX_SEMANTIC_CLEAR.CLEAR should reflect the value of NUM_SQ_VTX_SEMANTIC
@@ -279,9 +447,9 @@ gfdAddVertexShader(gfd::GFDFile &file,
       out.regs.sq_vtx_semantic_clear = out.regs.sq_vtx_semantic_clear
          .CLEAR(semanticClear);
    } else if (out.regs.sq_vtx_semantic_clear.CLEAR() != semanticClear) {
-      throw gfd_header_parse_exception { fmt::format("Invalid SQ_VTX_SEMANTIC_CLEAR {}, expected {}",
-                                                     out.regs.num_sq_vtx_semantic,
-                                                     numGpr) };
+      throw gfd_header_parse_exception { fmt::format("Invalid SQ_VTX_SEMANTIC_CLEAR {:#x}, expected {:#x}",
+                                                     out.regs.sq_vtx_semantic_clear.CLEAR(),
+                                                     semanticClear) };
    }
 
    file.vertexShaders.push_back(out);
@@ -325,7 +493,7 @@ gfdAddPixelShader(gfd::GFDFile &file,
 
    out.regs.sq_pgm_resources_ps = out.regs.sq_pgm_resources_ps
       .NUM_GPRS(numGpr)
-      .STACK_SIZE(1);
+      .STACK_SIZE(out.loopVars.size() * 2);
 
    // Create binary
    out.data = getShaderBinary(shader);
