@@ -35,3 +35,10 @@ align_check(Type *value, size_t alignment)
 {
    return (reinterpret_cast<size_t>(value) & (alignment - 1)) == 0;
 }
+
+template<typename Type>
+constexpr bool
+align_check(Type value, size_t alignment)
+{
+   return (static_cast<size_t>(value) & (alignment - 1)) == 0;
+}
