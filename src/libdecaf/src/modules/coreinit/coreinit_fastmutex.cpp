@@ -23,7 +23,7 @@ OSFastMutex_Init(OSFastMutex *mutex,
    mutex->tag = OSFastMutex::Tag;
    mutex->name = name;
    mutex->isContended = FALSE;
-   mutex->lock = 0;
+   mutex->lock.store(0);
    mutex->count = 0;
    ThreadSimpleQueue::init(&mutex->queue);
    FastMutexQueue::initLink(mutex);
@@ -189,7 +189,6 @@ fastMutexHardUnlock(OSFastMutex *mutex)
 
    internal::testThreadCancelNoLock();
    internal::rescheduleSelfNoLock();
-
    internal::unlockScheduler();
 }
 
@@ -370,11 +369,35 @@ namespace internal
 void
 unlockAllFastMutexNoLock(OSThread *thread)
 {
-   // This function is meant to forcibly unlock all of the fast
-   //  mutexes that are currently owned by this thread.  I'm
-   //  sick and tired of reversing atomics though, so I'll just
-   //  assert that they don't hold any mutexes...
+   decaf_check(isSchedulerLocked());
+
+   while (thread->fastMutexQueue.head) {
+      auto mutex = thread->fastMutexQueue.head;
+
+      // Ensure thread owns the mutex
+      auto lockValue = mutex->lock.load();
+      auto lockThread = mem::translate<OSThread>(lockValue & ~1);
+      decaf_check(lockThread == thread);
+
+      // Erase mutex from thread's mutex queue
+      FastMutexQueue::erase(&thread->fastMutexQueue, mutex);
+
+      // Erase mutex from thread's contended queue if necessary
+      if (mutex->isContended) {
+         ContendedQueue::erase(&thread->contendedFastMutexes, mutex);
+         mutex->isContended = FALSE;
+      }
+
+      // Unlock the mutex
+      wakeupThreadNoLock(&mutex->queue);
+      mutex->count = 0;
+      mutex->lock.store(0);
+   }
+
    decaf_check(!thread->fastMutexQueue.head);
+   decaf_check(!thread->fastMutexQueue.tail);
+   decaf_check(!thread->contendedFastMutexes.head);
+   decaf_check(!thread->contendedFastMutexes.tail);
 }
 
 } // namespace internal
