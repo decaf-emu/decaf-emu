@@ -46,7 +46,7 @@ struct OSFastMutex
    be_ptr<const char> name;
 
    //! Is this thread in the queue
-   uint32_t isContended;
+   be_val<BOOL> isContended;
 
    //! Queue of threads waiting for this mutex to unlock.
    OSThreadSimpleQueue queue;

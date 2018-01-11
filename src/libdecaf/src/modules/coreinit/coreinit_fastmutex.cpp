@@ -22,7 +22,7 @@ OSFastMutex_Init(OSFastMutex *mutex,
    decaf_check(mutex);
    mutex->tag = OSFastMutex::Tag;
    mutex->name = name;
-   mutex->isContended = 0;
+   mutex->isContended = FALSE;
    mutex->lock = 0;
    mutex->count = 0;
    ThreadSimpleQueue::init(&mutex->queue);
@@ -55,7 +55,7 @@ fastMutexHardLock(OSFastMutex *mutex)
 
          if (!mutex->isContended) {
             ContendedQueue::append(&thread->contendedFastMutexes, mutex);
-            mutex->isContended = 1;
+            mutex->isContended = TRUE;
          }
 
          // Record which fast mutex we are trying to lock before we sleep
@@ -166,9 +166,9 @@ fastMutexHardUnlock(OSFastMutex *mutex)
    decaf_check(lockValue & 1);
    decaf_check(mutex->count == 0);
 
-   if (!mutex->isContended) {
+   if (mutex->isContended) {
       ContendedQueue::erase(&thread->contendedFastMutexes, mutex);
-      mutex->isContended = 0;
+      mutex->isContended = FALSE;
    }
 
    // Adjust the priority if needed
@@ -314,8 +314,9 @@ OSFastCond_Wait(OSFastCondition *condition,
    decaf_check(lockValue & 1);
    decaf_check(lockThread == thread);
 
-   if (!mutex->isContended) {
+   if (mutex->isContended) {
       ContendedQueue::erase(&thread->contendedFastMutexes, mutex);
+      mutex->isContended = FALSE;
    }
 
    if (thread->priority > thread->basePriority) {
