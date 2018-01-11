@@ -40,7 +40,7 @@ writeNullTerminatedString(MemoryFile &fh, const char *str)
 {
    auto pos = fh.size();
    auto len = strlen(str) + 1;
-   fh.resize(pos + len);
+   fh.resize((pos + len + 3) & ~3); // align to 32-bit
    std::memcpy(fh.data() + pos, str, len);
 }
 
@@ -102,6 +102,7 @@ writeUniformVarsData(std::vector<uint8_t> &fh,
          textPatches.push_back(TextPatch { fh.size(), 0, var.name.c_str() });
          write<uint32_t>(fh, 0); // var.name
          write<uint32_t>(fh, static_cast<uint32_t>(var.type));
+         write<uint32_t>(fh, var.count);
          write<uint32_t>(fh, var.offset);
          write<int32_t>(fh, var.block);
       }
@@ -515,9 +516,35 @@ writeBlock(MemoryFile &fh,
    return true;
 }
 
+#include <stdio.h>
+static bool alignNextBlock(MemoryFile &fh,
+                           uint32_t &blockID)
+{
+   auto paddingSize = (0x200 - ((fh.size() + sizeof(GFDBlockHeader)) & 0x1FF)) & 0x1FF;
+
+   if(paddingSize)
+   {
+      if(paddingSize < sizeof(GFDBlockHeader))
+         paddingSize += 0x200;
+
+      paddingSize -= sizeof(GFDBlockHeader);
+
+      GFDBlockHeader paddingHeader;
+      paddingHeader.majorVersion = GFDBlockMajorVersion;
+      paddingHeader.minorVersion = 0;
+      paddingHeader.type = GFDBlockType::Padding;
+      paddingHeader.id = blockID++;
+      paddingHeader.index = 0;
+
+      writeBlock(fh, paddingHeader, std::vector<uint8_t>(paddingSize, 0));
+   }
+
+   return true;
+}
+
 bool
 writeFile(const GFDFile &file,
-          const std::string &path)
+          const std::string &path, bool align)
 {
    MemoryFile fh;
    auto blockID = uint32_t { 0 };
@@ -528,7 +555,7 @@ writeFile(const GFDFile &file,
    write<uint32_t>(fh, GFDFileMajorVersion);
    write<uint32_t>(fh, GFDFileMinorVersion);
    write<uint32_t>(fh, GFDFileGpuVersion);
-   write<uint32_t>(fh, 1); // align
+   write<uint32_t>(fh, align ? 1 : 0); // align
    write<uint32_t>(fh, 0); // unk1
    write<uint32_t>(fh, 0); // unk2
 
@@ -544,6 +571,9 @@ writeFile(const GFDFile &file,
       vshHeader.id = blockID++;
       vshHeader.index = i;
       writeBlock(fh, vshHeader, vertexShaderHeader);
+
+      if(align)
+         alignNextBlock(fh, blockID);
 
       GFDBlockHeader dataHeader;
       dataHeader.majorVersion = GFDBlockMajorVersion;
@@ -567,6 +597,9 @@ writeFile(const GFDFile &file,
       pshHeader.index = i;
       writeBlock(fh, pshHeader, pixelShaderHeader);
 
+      if(align)
+         alignNextBlock(fh, blockID);
+
       GFDBlockHeader dataHeader;
       dataHeader.majorVersion = GFDBlockMajorVersion;
       dataHeader.minorVersion = 0;
@@ -589,6 +622,9 @@ writeFile(const GFDFile &file,
       gshHeader.index = i;
       writeBlock(fh, gshHeader, geometryShaderHeader);
 
+      if(align)
+         alignNextBlock(fh, blockID);
+
       if (file.geometryShaders[i].data.size()) {
          GFDBlockHeader dataHeader;
          dataHeader.majorVersion = GFDBlockMajorVersion;
@@ -598,6 +634,9 @@ writeFile(const GFDFile &file,
          dataHeader.index = i;
          writeBlock(fh, dataHeader, file.geometryShaders[i].data);
       }
+
+      if(align)
+         alignNextBlock(fh, blockID);
 
       if (file.geometryShaders[i].vertexShaderData.size()) {
          GFDBlockHeader dataHeader;
@@ -623,6 +662,9 @@ writeFile(const GFDFile &file,
       texHeader.index = i;
       writeBlock(fh, texHeader, textureHeader);
 
+      if(align)
+         alignNextBlock(fh, blockID);
+
       GFDBlockHeader imageHeader;
       imageHeader.majorVersion = GFDBlockMajorVersion;
       imageHeader.minorVersion = 0;
@@ -630,6 +672,9 @@ writeFile(const GFDFile &file,
       imageHeader.id = blockID++;
       imageHeader.index = i;
       writeBlock(fh, imageHeader, file.textures[i].surface.image);
+
+      if(align)
+         alignNextBlock(fh, blockID);
 
       if (file.textures[i].surface.mipmap.size()) {
          GFDBlockHeader mipmapHeader;

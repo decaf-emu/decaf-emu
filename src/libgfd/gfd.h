@@ -96,6 +96,7 @@ readFile(GFDFile &file,
 
 bool
 writeFile(const GFDFile &file,
-          const std::string &path);
+          const std::string &path,
+          bool align = false);
 
 } // namespace gfd
