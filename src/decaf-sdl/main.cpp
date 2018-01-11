@@ -230,7 +230,7 @@ start(excmd::parser &parser,
 
    // Initialise libdecaf logger
    auto logFile = getPathBasename(target);
-   decaf::initialiseLogging(logFile);
+   decaf::initialiseLogging(logFile + ".txt");
 
    // Initialise frontend logger
    auto sinks = gLog->sinks();

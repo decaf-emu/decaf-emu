@@ -105,7 +105,7 @@ start(excmd::parser &parser,
    decaf::config::log::to_file = true;
    decaf::config::log::to_stdout = true;
    decaf::config::log::level = "debug";
-   decaf::initialiseLogging("pm4-replay");
+   decaf::initialiseLogging("pm4-replay.txt");
 
    auto sinks = gLog->sinks();
    gCliLog = std::make_shared<spdlog::logger>("decaf-pm4-replay", begin(sinks), end(sinks));
