@@ -3,14 +3,17 @@
 #include <common/align.h>
 #include <common/decaf_assert.h>
 #include <libcpu/be2_struct.h>
+#include <memory>
 
 namespace ios
 {
 
-template<typename Type>
+template<typename Type, size_t NumElements = 1>
 class StackObject : public phys_ptr<Type>
 {
-   static constexpr size_t AlignedSize = align_up(sizeof(Type), 4);
+   static constexpr auto
+   AlignedSize = align_up(static_cast<uint32_t>(sizeof(Type) * NumElements),
+                          std::max(alignof(Type), 4u));
 
 public:
    StackObject()
@@ -19,10 +22,14 @@ public:
       auto ptr = phys_cast<uint8_t *>(thread->stackPointer) - AlignedSize;
       mAddress = phys_cast<phys_addr>(ptr);
       thread->stackPointer = ptr;
+
+      std::uninitialized_default_construct_n(getRawPointer(), NumElements);
    }
 
    ~StackObject()
    {
+      std::destroy_n(getRawPointer(), NumElements);
+
       auto thread = kernel::internal::getCurrentThread();
       auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
       decaf_check(phys_cast<phys_addr>(ptr) == mAddress);
@@ -30,27 +37,11 @@ public:
    }
 };
 
-template<typename Type, size_t Size>
-class StackArray : public phys_ptr<Type>
+template<typename Type, size_t NumElements>
+class StackArray : public StackObject<Type, NumElements>
 {
-   static constexpr size_t AlignedSize = align_up(sizeof(Type) * Size, 4);
-
 public:
-   StackArray()
-   {
-      auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t *>(thread->stackPointer) - AlignedSize;
-      mAddress = phys_cast<phys_addr>(ptr);
-      thread->stackPointer = ptr;
-   }
-
-   ~StackArray()
-   {
-      auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
-      decaf_check(phys_cast<phys_addr>(ptr) == mAddress);
-      thread->stackPointer = ptr + AlignedSize;
-   }
+   using StackObject::StackObject;
 
    constexpr uint32_t size() const
    {
