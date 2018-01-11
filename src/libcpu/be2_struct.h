@@ -6,7 +6,9 @@
 #include "pointer.h"
 #include "mmu.h"
 
+#include <cstdint>
 #include <cstdlib>
+#include <common/cbool.h>
 #include <common/structsize.h>
 #include <string_view>
 
@@ -22,11 +24,11 @@ using virt_ptr = cpu::Pointer<T, virt_addr>;
 template<typename T>
 using phys_ptr = cpu::Pointer<T, phys_addr>;
 
-template<typename R, typename... As>
-using virt_func_ptr = cpu::FunctionPointer<virt_addr, R, As...>;
+template<typename Ft>
+using virt_func_ptr = cpu::FunctionPointer<virt_addr, Ft>;
 
-template<typename R, typename... As>
-using phys_func_ptr = cpu::FunctionPointer<phys_addr, R, As...>;
+template<typename Ft>
+using phys_func_ptr = cpu::FunctionPointer<phys_addr, Ft>;
 
 template<typename Type>
 using be2_ptr = be2_val<virt_ptr<Type>>;
@@ -37,11 +39,11 @@ using be2_virt_ptr = be2_ptr<Type>;
 template<typename Type>
 using be2_phys_ptr = be2_val<phys_ptr<Type>>;
 
-template<typename R, typename... As>
-using be2_virt_func_ptr = be2_val<virt_func_ptr<R, As...>>;
+template<typename Ft>
+using be2_virt_func_ptr = be2_val<virt_func_ptr<Ft>>;
 
-template<typename R, typename... As>
-using be2_phys_func_ptr = be2_val<phys_func_ptr<R, As...>>;
+template<typename Ft>
+using be2_phys_func_ptr = be2_val<phys_func_ptr<Ft>>;
 
 /*
 * be2_struct is a wrapper intended to be used around struct value type members
@@ -101,31 +103,31 @@ inline auto phys_cast(const be2_phys_ptr<SrcType> &src)
 }
 
 // reinterpret_cast for virt_addr to virt_func_ptr<X>
-template<typename ReturnType, typename... ArgTypes>
+template<typename FunctionType>
 inline auto virt_func_cast(virt_addr src)
 {
-   return cpu::func_pointer_cast_impl<cpu::VirtualAddress, ReturnType, ArgTypes...>::cast(src);
+   return cpu::func_pointer_cast_impl<cpu::VirtualAddress, FunctionType>::cast(src);
 }
 
 // reinterpret_cast for virt_func_ptr<X> to virt_addr
-template<typename ReturnType, typename... ArgTypes>
-inline auto virt_func_cast(virt_func_ptr<ReturnType, ArgTypes...> src)
+template<typename FunctionType>
+inline auto virt_func_cast(virt_func_ptr<FunctionType> src)
 {
-   return cpu::func_pointer_cast_impl<cpu::VirtualAddress, ReturnType, ArgTypes...>::cast(src);
+   return cpu::func_pointer_cast_impl<cpu::VirtualAddress, FunctionType>::cast(src);
 }
 
 // reinterpret_cast for phys_addr to phys_func_ptr<X>
-template<typename ReturnType, typename... ArgTypes>
+template<typename FunctionType>
 inline auto phys_func_cast(phys_addr src)
 {
-   return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, ReturnType, ArgTypes...>::cast(src);
+   return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, FunctionType>::cast(src);
 }
 
 // reinterpret_cast for phys_func_ptr<X> to phys_addr
-template<typename ReturnType, typename... ArgTypes>
-inline auto phys_func_cast(phys_func_ptr<ReturnType, ArgTypes...> src)
+template<typename FunctionType>
+inline auto phys_func_cast(phys_func_ptr<FunctionType> src)
 {
-   return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, ReturnType, ArgTypes...>::cast(src);
+   return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, FunctionType>::cast(src);
 }
 
 /**

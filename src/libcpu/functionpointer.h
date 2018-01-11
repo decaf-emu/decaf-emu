@@ -4,10 +4,13 @@
 namespace cpu
 {
 
-template<typename AddressType, typename ReturnType, typename... ArgTypes>
+template<typename AddressType, typename FunctionType>
 struct func_pointer_cast_impl;
 
-template<typename AddressType, typename ReturnType, typename... ArgTypes>
+template<typename AddressType, typename FunctionType>
+class FunctionPointer;
+
+template<typename AddressType, typename FunctionType>
 class FunctionPointer
 {
 public:
@@ -51,22 +54,40 @@ public:
    }
 
 protected:
-   template<typename AddressType, typename ReturnType, typename... ArgTypes>
+   template<typename AddressType, typename FunctionType>
    friend struct func_pointer_cast_impl;
 
    AddressType mAddress;
 };
 
-template<typename ReturnType, typename... ArgTypes>
-using VirtualFunctionPointer = FunctionPointer<VirtualAddress, ReturnType, ArgTypes...>;
+template<typename FunctionType>
+using VirtualFunctionPointer = FunctionPointer<VirtualAddress, FunctionType>;
 
-template<typename ReturnType, typename... ArgTypes>
-using PhysicalFunctionPointer = FunctionPointer<PhysicalAddress, ReturnType, ArgTypes...>;
+template<typename FunctionType>
+using PhysicalFunctionPointer = FunctionPointer<PhysicalAddress, FunctionType>;
 
-template<typename AddressType, typename ReturnType, typename... ArgTypes>
-struct func_pointer_cast_impl<AddressType, ReturnType, ArgTypes...>
+template<typename AddressType, typename FunctionType>
+struct func_pointer_cast_impl
 {
-   using FunctionPointerType = FunctionPointer<AddressType, ReturnType, ArgTypes...>;
+   using FunctionPointerType = FunctionPointer<AddressType, FunctionType>;
+
+   static constexpr AddressType cast(FunctionPointerType src)
+   {
+      return src.mAddress;
+   }
+
+   static constexpr FunctionPointerType cast(AddressType src)
+   {
+      FunctionPointerType dst;
+      dst.mAddress = src;
+      return dst;
+   }
+};
+
+template<typename AddressType, typename FunctionType>
+struct func_pointer_cast_impl<AddressType, FunctionPointer<AddressType, FunctionType>>
+{
+   using FunctionPointerType = FunctionPointer<AddressType, FunctionType>;
 
    static constexpr AddressType cast(FunctionPointerType src)
    {
