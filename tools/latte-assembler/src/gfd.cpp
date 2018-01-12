@@ -33,7 +33,9 @@ parseComment(const std::string &comment,
    std::smatch match;
    if (!std::regex_match(comment, match, sCommentKeyValueRegex)) {
       if (std::regex_match(comment, match, sCommentKeyValueStartRegex)) {
-         throw gfd_header_parse_exception { fmt::format("Syntax error in comment {}", comment) };
+         throw gfd_header_parse_exception {
+            fmt::format("Syntax error in comment {}", comment)
+         };
       }
 
       return false;
@@ -57,7 +59,9 @@ void
 ensureArrayOfObjects(const CommentKeyValue &kv)
 {
    if (!kv.isArrayOfObjects()) {
-      throw gfd_header_parse_exception { fmt::format("{} is an array of objects", kv.obj) };
+      throw gfd_header_parse_exception {
+         fmt::format("{} is an array of objects", kv.obj)
+      };
    }
 }
 
@@ -65,7 +69,9 @@ void
 ensureArrayOfValues(const CommentKeyValue &kv)
 {
    if (!kv.isArrayOfValues()) {
-      throw gfd_header_parse_exception { fmt::format("{} is an array of values", kv.obj) };
+      throw gfd_header_parse_exception {
+         fmt::format("{} is an array of values", kv.obj)
+      };
    }
 }
 
@@ -73,7 +79,9 @@ void
 ensureObject(const CommentKeyValue &kv)
 {
    if (!kv.isObject()) {
-      throw gfd_header_parse_exception { fmt::format("{} is an object", kv.obj) };
+      throw gfd_header_parse_exception {
+         fmt::format("{} is an object", kv.obj)
+      };
    }
 }
 
@@ -81,7 +89,9 @@ void
 ensureValue(const CommentKeyValue &kv)
 {
    if (!kv.isValue()) {
-      throw gfd_header_parse_exception { fmt::format("{} is a value", kv.obj) };
+      throw gfd_header_parse_exception {
+         fmt::format("{} is a value", kv.obj)
+      };
    }
 }
 
@@ -110,7 +120,9 @@ parseShaderVarType(const std::string &v)
    } else if (value == "MATRIX4X4") {
       return gx2::GX2ShaderVarType::Matrix4x4;
    } else {
-      throw gfd_header_parse_exception { fmt::format("Invalid GX2ShaderVarType {}", value) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid GX2ShaderVarType {}", value)
+      };
    }
 }
 
@@ -129,7 +141,9 @@ parseSamplerVarType(const std::string &v)
    } else if (value == "SAMPLERCUBE") {
       return gx2::GX2SamplerVarType::SamplerCube;
    } else {
-      throw gfd_header_parse_exception { fmt::format("Invalid GX2SamplerVarType {}", value) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid GX2SamplerVarType {}", value)
+      };
    }
 }
 
@@ -148,18 +162,23 @@ parseShaderMode(const std::string &v)
    } else if (value == "COMPUTERSHADER") {
       return gx2::GX2ShaderMode::ComputeShader;
    } else {
-      throw gfd_header_parse_exception { fmt::format("Invalid GX2ShaderMode {}", value) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid GX2ShaderMode {}", value)
+      };
    }
 }
 
 void
 parseUniformBlocks(std::vector<gfd::GFDUniformBlock> &UniformBlocks,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value)
+                   uint32_t index,
+                   const std::string &member,
+                   const std::string &value)
 {
    if (index >= latte::MaxUniformBlocks) {
-      throw gfd_header_parse_exception { fmt::format("UNIFORM_BLOCKS[{}] invalid index, max: {}", index, latte::MaxUniformBlocks) };
+      throw gfd_header_parse_exception {
+         fmt::format("UNIFORM_BLOCKS[{}] invalid index, max: {}",
+                     index, latte::MaxUniformBlocks)
+      };
    }
 
    if (index >= UniformBlocks.size()) {
@@ -175,21 +194,30 @@ parseUniformBlocks(std::vector<gfd::GFDUniformBlock> &UniformBlocks,
    } else if (member == "SIZE") {
       UniformBlocks[index].size = parseValueNumber(value);
       if (UniformBlocks[index].size >= latte::MaxUniformBlockSize) {
-         throw gfd_header_parse_exception { fmt::format("UNIFORM_BLOCKS[{}] invalid index, max: {}", index, latte::MaxUniformBlocks) };
+         throw gfd_header_parse_exception {
+            fmt::format("UNIFORM_BLOCKS[{}] invalid index, max: {}",
+                        index, latte::MaxUniformBlocks)
+         };
       }
    } else {
-      throw gfd_header_parse_exception { fmt::format("UNIFORM_BLOCKS[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception {
+         fmt::format("UNIFORM_BLOCKS[{}] does not have member {}",
+                     index, member)
+      };
    }
 }
 
 void
 parseUniformVars(std::vector<gfd::GFDUniformVar> &uniformVars,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value)
+                 uint32_t index,
+                 const std::string &member,
+                 const std::string &value)
 {
    if (index >= latte::MaxUniformRegisters) {
-      throw gfd_header_parse_exception { fmt::format("UNIFORM_VARS[{}] invalid index, max: {}", index, latte::MaxUniformRegisters) };
+      throw gfd_header_parse_exception {
+         fmt::format("UNIFORM_VARS[{}] invalid index, max: {}",
+                     index, latte::MaxUniformRegisters)
+      };
    }
 
    if (index >= uniformVars.size()) {
@@ -209,18 +237,23 @@ parseUniformVars(std::vector<gfd::GFDUniformVar> &uniformVars,
    } else if (member == "TYPE") {
       uniformVars[index].type = parseShaderVarType(value);
    } else {
-      throw gfd_header_parse_exception { fmt::format("UNIFORM_VARS[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception {
+         fmt::format("UNIFORM_VARS[{}] does not have member {}", index, member)
+      };
    }
 }
 
 void
 parseInitialValues(std::vector<gfd::GFDUniformInitialValue> &initialValues,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value)
+                   uint32_t index,
+                   const std::string &member,
+                   const std::string &value)
 {
    if (index >= latte::MaxUniformRegisters) {
-      throw gfd_header_parse_exception { fmt::format("INITIAL_VALUES[{}] invalid index, max: {}", index, latte::MaxUniformRegisters) };
+      throw gfd_header_parse_exception {
+         fmt::format("INITIAL_VALUES[{}] invalid index, max: {}",
+                     index, latte::MaxUniformRegisters)
+      };
    }
 
    if (index >= initialValues.size()) {
@@ -238,15 +271,18 @@ parseInitialValues(std::vector<gfd::GFDUniformInitialValue> &initialValues,
    } else if (member == "VALUE[3]") {
       initialValues[index].value[3] = parseValueFloat(value);
    } else {
-      throw gfd_header_parse_exception { fmt::format("INITIAL_VALUES[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception {
+         fmt::format("INITIAL_VALUES[{}] does not have member {}",
+                     index, member)
+      };
    }
 }
 
 void
 parseLoopVars(std::vector<gfd::GFDLoopVar> &loopVars,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value)
+              uint32_t index,
+              const std::string &member,
+              const std::string &value)
 {
    if (index >= loopVars.size()) {
       loopVars.resize(index + 1);
@@ -258,18 +294,23 @@ parseLoopVars(std::vector<gfd::GFDLoopVar> &loopVars,
    } else if (member == "VALUE") {
       loopVars[index].value = parseValueNumber(value);
    } else {
-      throw gfd_header_parse_exception { fmt::format("LOOP_VARS[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception {
+         fmt::format("LOOP_VARS[{}] does not have member {}", index, member)
+      };
    }
 }
 
 void
 parseSamplerVars(std::vector<gfd::GFDSamplerVar> &samplerVars,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value)
+                 uint32_t index,
+                 const std::string &member,
+                 const std::string &value)
 {
    if (index >= latte::MaxSamplers) {
-      throw gfd_header_parse_exception { fmt::format("SAMPLER_VARS[{}] invalid index, max: {}", index, latte::MaxSamplers) };
+      throw gfd_header_parse_exception {
+         fmt::format("SAMPLER_VARS[{}] invalid index, max: {}",
+                     index, latte::MaxSamplers)
+      };
    }
 
    if (index >= samplerVars.size()) {
@@ -285,7 +326,10 @@ parseSamplerVars(std::vector<gfd::GFDSamplerVar> &samplerVars,
    } else if (member == "TYPE") {
       samplerVars[index].type = parseSamplerVarType(value);
    } else {
-      throw gfd_header_parse_exception { fmt::format("SAMPLER_VARS[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SAMPLER_VARS[{}] does not have member {}",
+                     index, member)
+      };
    }
 }
 
@@ -300,7 +344,9 @@ parseValueBool(const std::string &v)
    } else if (value == "FALSE") {
       return true;
    } else {
-      throw gfd_header_parse_exception { fmt::format("Expected boolean value, found {}", value) };
+      throw gfd_header_parse_exception {
+         fmt::format("Expected boolean value, found {}", value)
+      };
    }
 }
 
@@ -417,9 +463,10 @@ gfdAddVertexShader(gfd::GFDFile &file,
 
    // NUM_GPRS should be the number of GPRs used in the shader
    if (out.regs.sq_pgm_resources_vs.NUM_GPRS() != numGpr) {
-      throw gfd_header_parse_exception { fmt::format("Invalid SQ_PGM_RESOURCES_VS.NUM_GPRS {}, expected {}",
-                                                     out.regs.sq_pgm_resources_vs.NUM_GPRS(),
-                                                     numGpr) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid SQ_PGM_RESOURCES_VS.NUM_GPRS {}, expected {}",
+                     out.regs.sq_pgm_resources_vs.NUM_GPRS(), numGpr)
+      };
    }
 
    // NUM_SQ_VTX_SEMANTIC should reflect the size of ATTRIB_VARS array
@@ -431,9 +478,10 @@ gfdAddVertexShader(gfd::GFDFile &file,
             .SEMANTIC_ID(out.attribVars[i].location);
       }
    } else if (out.regs.num_sq_vtx_semantic != out.attribVars.size()) {
-      throw gfd_header_parse_exception { fmt::format("Invalid NUM_SQ_VTX_SEMANTIC {}, expected {}",
-                                                     out.regs.num_sq_vtx_semantic,
-                                                     out.attribVars.size()) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid NUM_SQ_VTX_SEMANTIC {}, expected {}",
+                     out.regs.num_sq_vtx_semantic, out.attribVars.size())
+      };
    }
 
    for (auto i = out.regs.num_sq_vtx_semantic; i < out.regs.sq_vtx_semantic.size(); ++i) {
@@ -447,9 +495,10 @@ gfdAddVertexShader(gfd::GFDFile &file,
       out.regs.sq_vtx_semantic_clear = out.regs.sq_vtx_semantic_clear
          .CLEAR(semanticClear);
    } else if (out.regs.sq_vtx_semantic_clear.CLEAR() != semanticClear) {
-      throw gfd_header_parse_exception { fmt::format("Invalid SQ_VTX_SEMANTIC_CLEAR {:#x}, expected {:#x}",
-                                                     out.regs.sq_vtx_semantic_clear.CLEAR(),
-                                                     semanticClear) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid SQ_VTX_SEMANTIC_CLEAR {:#x}, expected {:#x}",
+                     out.regs.sq_vtx_semantic_clear.CLEAR(), semanticClear)
+      };
    }
 
    file.vertexShaders.push_back(out);
@@ -503,18 +552,21 @@ gfdAddPixelShader(gfd::GFDFile &file,
 
    // NUM_GPRS should be the number of GPRs used in the shader
    if (out.regs.sq_pgm_resources_ps.NUM_GPRS() != numGpr) {
-      throw gfd_header_parse_exception { fmt::format("Invalid SQ_PGM_RESOURCES_PS.NUM_GPRS {}, expected {}",
-                                                     out.regs.sq_pgm_resources_ps.NUM_GPRS(),
-                                                     numGpr) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid SQ_PGM_RESOURCES_PS.NUM_GPRS {}, expected {}",
+                     out.regs.sq_pgm_resources_ps.NUM_GPRS(), numGpr)
+      };
    }
 
    if (out.regs.spi_ps_in_control_0.NUM_INTERP() == 0) {
       out.regs.spi_ps_in_control_0 = out.regs.spi_ps_in_control_0
          .NUM_INTERP(out.regs.num_spi_ps_input_cntl);
    } else if (out.regs.spi_ps_in_control_0.NUM_INTERP() != out.regs.num_spi_ps_input_cntl) {
-      throw gfd_header_parse_exception { fmt::format("Expected SPI_PS_IN_CONTROL_0.NUM_INTERP {} to equal NUM_SPI_PS_INPUT_CNTL {}",
-                                                     out.regs.spi_ps_in_control_0.NUM_INTERP(),
-                                                     out.regs.num_spi_ps_input_cntl) };
+      throw gfd_header_parse_exception {
+         fmt::format("Expected SPI_PS_IN_CONTROL_0.NUM_INTERP {} to equal NUM_SPI_PS_INPUT_CNTL {}",
+                     out.regs.spi_ps_in_control_0.NUM_INTERP(),
+                     out.regs.num_spi_ps_input_cntl)
+      };
    }
 
    file.pixelShaders.push_back(out);

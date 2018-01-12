@@ -37,7 +37,9 @@ parseRegisterValue(latte::SQ_PGM_RESOURCES_PS &reg,
       reg = reg
          .CLAMP_CONSTS(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("SQ_PGM_RESOURCES_PS does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SQ_PGM_RESOURCES_PS does not have member {}", member)
+      };
    }
 }
 
@@ -50,7 +52,9 @@ parseRegisterValue(latte::SQ_PGM_EXPORTS_PS &reg,
       reg = reg
          .EXPORT_MODE(parseValueNumber(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("SQ_PGM_EXPORTS_PS does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SQ_PGM_EXPORTS_PS does not have member {}", member)
+      };
    }
 }
 
@@ -67,7 +71,9 @@ parseSpiBarycCntl(const std::string &v)
    } else if (value == "CENTROIDS_AND_CENTERS") {
       return latte::SPI_BARYC_CNTL::CENTROIDS_AND_CENTERS;
    } else {
-      throw gfd_header_parse_exception { fmt::format("Invalid SPI_BARYC_CNTL {}", value) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid SPI_BARYC_CNTL {}", value)
+      };
    }
 }
 
@@ -86,7 +92,9 @@ parseDbZOrder(const std::string &v)
    } else if (value == "EARLY_Z_THEN_RE_Z") {
       return latte::DB_Z_ORDER::EARLY_Z_THEN_RE_Z;
    } else {
-      throw gfd_header_parse_exception { fmt::format("Invalid DB_Z_ORDER {}", value) };
+      throw gfd_header_parse_exception {
+         fmt::format("Invalid DB_Z_ORDER {}", value)
+      };
    }
 }
 
@@ -129,7 +137,9 @@ parseRegisterValue(latte::SPI_PS_IN_CONTROL_0 &reg,
       reg = reg
          .BARYC_AT_SAMPLE_ENA(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("SPI_PS_IN_CONTROL_0 does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SPI_PS_IN_CONTROL_0 does not have member {}", member)
+      };
    }
 }
 
@@ -169,7 +179,9 @@ parseRegisterValue(latte::SPI_PS_IN_CONTROL_1 &reg,
       reg = reg
          .POSITION_ULC(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("SPI_PS_IN_CONTROL_1 does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SPI_PS_IN_CONTROL_1 does not have member {}", member)
+      };
    }
 }
 
@@ -180,7 +192,10 @@ parseRegisterValue(std::array<latte::SPI_PS_INPUT_CNTL_N, 32> &spi_ps_input_cntl
                    const std::string &value)
 {
    if (index >= spi_ps_input_cntls.size()) {
-      throw gfd_header_parse_exception { fmt::format("SPI_PS_INPUT_CNTL[{}] invalid index, max: {}", index, spi_ps_input_cntls.size()) };
+      throw gfd_header_parse_exception {
+         fmt::format("SPI_PS_INPUT_CNTL[{}] invalid index, max: {}",
+                     index, spi_ps_input_cntls.size())
+      };
    }
 
    if (member == "SEMANTIC") {
@@ -208,7 +223,10 @@ parseRegisterValue(std::array<latte::SPI_PS_INPUT_CNTL_N, 32> &spi_ps_input_cntl
       spi_ps_input_cntls[index] = spi_ps_input_cntls[index]
          .SEL_SAMPLE(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("SPI_PS_INPUT_CNTL[{}] does not have member {}", index, member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SPI_PS_INPUT_CNTL[{}] does not have member {}",
+                     index, member)
+      };
    }
 }
 
@@ -242,7 +260,9 @@ parseRegisterValue(latte::CB_SHADER_MASK &reg,
       reg = reg
          .OUTPUT7_ENABLE(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("CB_SHADER_MASK does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("CB_SHADER_MASK does not have member {}", member)
+      };
    }
 }
 
@@ -276,7 +296,9 @@ parseRegisterValue(latte::CB_SHADER_CONTROL &reg,
       reg = reg
          .RT7_ENABLE(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("CB_SHADER_CONTROL does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("CB_SHADER_CONTROL does not have member {}", member)
+      };
    }
 }
 
@@ -316,7 +338,9 @@ parseRegisterValue(latte::DB_SHADER_CONTROL &reg,
       reg = reg
          .ALPHA_TO_MASK_DISABLE(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("DB_SHADER_CONTROL does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("DB_SHADER_CONTROL does not have member {}", member)
+      };
    }
 }
 
@@ -329,7 +353,9 @@ parseRegisterValue(latte::SPI_INPUT_Z &reg,
       reg = reg
          .PROVIDE_Z_TO_SPI(parseValueBool(value));
    } else {
-      throw gfd_header_parse_exception { fmt::format("SPI_INPUT_Z does not have member {}", member) };
+      throw gfd_header_parse_exception {
+         fmt::format("SPI_INPUT_Z does not have member {}", member)
+      };
    }
 }
 

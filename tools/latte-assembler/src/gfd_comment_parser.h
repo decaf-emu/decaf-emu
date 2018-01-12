@@ -90,31 +90,31 @@ parseShaderMode(const std::string &v);
 
 void
 parseUniformBlocks(std::vector<gfd::GFDUniformBlock> &UniformBlocks,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value);
+                   uint32_t index,
+                   const std::string &member,
+                   const std::string &value);
 
 void
 parseUniformVars(std::vector<gfd::GFDUniformVar> &uniformVars,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value);
+                 uint32_t index,
+                 const std::string &member,
+                 const std::string &value);
 void
 parseInitialValues(std::vector<gfd::GFDUniformInitialValue> &initialValues,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value);
+                   uint32_t index,
+                   const std::string &member,
+                   const std::string &value);
 void
 parseLoopVars(std::vector<gfd::GFDLoopVar> &loopVars,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value);
+              uint32_t index,
+              const std::string &member,
+              const std::string &value);
 
 void
 parseSamplerVars(std::vector<gfd::GFDSamplerVar> &samplerVars,
-                uint32_t index,
-                const std::string &member,
-                const std::string &value);
+                 uint32_t index,
+                 const std::string &member,
+                 const std::string &value);
 
 // compiler_gfd_vsh
 bool
