@@ -29,6 +29,12 @@ Driver::getAverageFPS()
    return 0.0f;
 }
 
+float
+Driver::getAverageFrametime()
+{
+   return 0.0f;
+}
+
 void
 Driver::notifyCpuFlush(void *ptr, uint32_t size)
 {
@@ -37,6 +43,12 @@ Driver::notifyCpuFlush(void *ptr, uint32_t size)
 void
 Driver::notifyGpuFlush(void *ptr, uint32_t size)
 {
+}
+
+DriverType
+Driver::type()
+{
+   return DriverType::DRIVER_DX;
 }
 
 } // namespace dx12

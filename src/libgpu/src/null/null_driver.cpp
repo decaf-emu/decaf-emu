@@ -34,7 +34,18 @@ Driver::getAverageFPS()
    return 0.0f;
 }
 
-void
+float
+Driver::getAverageFrametime()
+{
+   return 0.0f;
+}
+
+void* Driver::getGraphicsDebugInfo()
+{
+   return nullptr;
+}
+
+   void
 Driver::notifyCpuFlush(void *ptr,
                            uint32_t size)
 {
@@ -46,4 +57,9 @@ Driver::notifyGpuFlush(void *ptr,
 {
 }
 
+gpu::GraphicsDriver::DriverType
+Driver::type()
+{
+   return DRIVER_NULL;
+}
 } // namespace null

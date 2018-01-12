@@ -19,9 +19,12 @@ public:
    void run() override;
    void stop() override;
    float getAverageFPS() override;
+   float getAverageFrametime() override;
 
    void notifyCpuFlush(void *ptr, uint32_t size) override;
    void notifyGpuFlush(void *ptr, uint32_t size) override;
+
+   DriverType type() override;
 
 private:
 

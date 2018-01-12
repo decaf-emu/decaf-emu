@@ -305,6 +305,12 @@ public:
    virtual float
    getAverageFPS() override;
 
+   virtual float
+   getAverageFrametime() override;
+
+   virtual decaf::GraphicsDebugInfoGL*
+   getGraphicsDebugInfoPtr() override;
+
    virtual void
    notifyCpuFlush(void *ptr,
                   uint32_t size) override;
@@ -327,6 +333,8 @@ public:
 
    virtual size_t
    stopFrameCapture() override;
+
+   DriverType type() override;
 
 private:
    void initGL();
@@ -494,6 +502,9 @@ private:
    dumpScanBuffer(const std::string &filename,
                   const ScanBufferChain &buf);
 
+   void
+   updateGraphicsDebugInfo();
+
 private:
    enum class RunState
    {
@@ -571,6 +582,8 @@ private:
    std::string mFrameCapturePrefix;
    bool mFrameCaptureTV = false;
    bool mFrameCaptureDRC = false;
+
+   std::shared_ptr<decaf::GraphicsDebugInfoGL> mDebugInfo;
 };
 
 } // namespace opengl
