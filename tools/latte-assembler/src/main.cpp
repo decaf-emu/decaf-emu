@@ -8,7 +8,8 @@ std::shared_ptr<spdlog::logger>
 gLog;
 
 static bool
-readFile(const std::string &path, std::vector<char> &buff)
+readFile(const std::string &path,
+         std::vector<char> &buff)
 {
    std::ifstream ifs { path, std::ios::in | std::ios::binary };
    if (ifs.fail()) {
@@ -23,7 +24,8 @@ readFile(const std::string &path, std::vector<char> &buff)
 }
 
 static bool
-compileFile(Shader &shader, const std::string &path)
+compileFile(Shader &shader,
+            const std::string &path)
 {
    std::vector<char> src;
 
@@ -47,7 +49,9 @@ int main(int argc, char **argv)
                   excmd::value<std::string> {})
       .add_option("psh",
                   excmd::description { "Pixel shader to compile to gsh." },
-                  excmd::value<std::string> {});
+                  excmd::value<std::string> {})
+      .add_option("align",
+                  excmd::description { "align data." });
 
    parser.add_command("help")
       .add_argument("command", excmd::value<std::string> { });
@@ -111,7 +115,7 @@ int main(int argc, char **argv)
             }
          }
 
-         if (!gfd::writeFile(gfd, dst)) {
+         if (!gfd::writeFile(gfd, dst, options.has("align"))) {
             return -1;
          }
       } else {
