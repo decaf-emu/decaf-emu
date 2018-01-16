@@ -4,6 +4,7 @@
 
 #include <common/decaf_assert.h>
 #include <imgui.h>
+#include <inttypes.h>
 #include <libgpu/gpu_opengldriver.h>
 
 namespace debugger
@@ -40,7 +41,7 @@ void PerformanceWindowGL::draw()
          ImGui::Text(text);
          ImGui::PushStyleColor(ImGuiCol_Text, ValueTextColor);
          ImGui::SameLine();
-         ImGui::Text("%ull", val);
+         ImGui::Text("%" PRIu64, val);
          ImGui::PopStyleColor();
       };
 
