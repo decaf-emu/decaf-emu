@@ -135,7 +135,7 @@ getCommandName(ReplayIndex::Command &command)
    case PacketType::Type3:
    {
       auto header3 = HeaderType3::get(command.header.value);
-      return latte::pm4::enumAsString(header3.opcode());
+      return latte::pm4::to_string(header3.opcode());
    }
    default:
       return "Unknown";
