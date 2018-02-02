@@ -1,7 +1,6 @@
 #include "clilog.h"
 #include "config.h"
 #include "decafsdl.h"
-#include "decafsdl_dx12.h"
 #include "decafsdl_opengl.h"
 #include "decafsdl_vulkan.h"
 
@@ -43,24 +42,6 @@ DecafSDL::initGlGraphics()
    return true;
 #else
    decaf_abort("GL support was not included in this build");
-#endif
-}
-
-bool
-DecafSDL::initDx12Graphics()
-{
-#ifdef DECAF_DX12
-   mGraphicsDriver = new DecafSDLDX12();
-
-   if (!mGraphicsDriver->initialise(WindowWidth, WindowHeight)) {
-      gCliLog->error("Failed to create DX12 graphics window");
-      return false;
-   }
-
-   sActiveGfx = "DX12";
-   return true;
-#else
-   decaf_abort("DX12 support was not included in this build");
 #endif
 }
 
