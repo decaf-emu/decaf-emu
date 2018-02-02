@@ -9,7 +9,6 @@ enum class GraphicsDriverType
 {
    Null,
    OpenGL,
-   DirectX,
    Vulkan
 };
 
@@ -50,9 +49,6 @@ public:
       return 0;
    }
 };
-
-GraphicsDriver *
-createDX12Driver();
 
 GraphicsDriver *
 createGLDriver();

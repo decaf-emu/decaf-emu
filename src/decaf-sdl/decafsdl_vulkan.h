@@ -32,4 +32,4 @@ protected:
    gpu::VulkanDriver *mDecafDriver = nullptr;
 };
 
-#endif // DECAF_DX12
+#endif // DECAF_VULKAN

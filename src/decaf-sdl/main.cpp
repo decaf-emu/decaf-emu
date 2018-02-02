@@ -257,12 +257,7 @@ start(excmd::parser &parser,
       return -1;
    }
 
-   if (config::display::backend == "dx12") {
-      if (!sdl.initDx12Graphics()) {
-         gCliLog->error("Failed to initialise DX12 backend.");
-         return -1;
-      }
-   } else if (config::display::backend == "vulkan") {
+   if (config::display::backend == "vulkan") {
       if (!sdl.initVulkanGraphics()) {
          gCliLog->error("Failed to initialise Vulkan backend.");
          return -1;

@@ -33,9 +33,6 @@ public:
    initGlGraphics();
 
    bool
-   initDx12Graphics();
-
-   bool
    initVulkanGraphics();
 
    bool
