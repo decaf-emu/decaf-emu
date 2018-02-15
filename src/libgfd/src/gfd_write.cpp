@@ -701,7 +701,11 @@ writeFile(const GFDFile &file,
 
    // Write EOF
    GFDBlockHeader eofHeader;
+   eofHeader.majorVersion = GFDBlockMajorVersion;
+   eofHeader.minorVersion = 0;
    eofHeader.type = GFDBlockType::EndOfFile;
+   eofHeader.id = blockID++;
+   eofHeader.index = 0;
    writeBlock(fh, eofHeader, {});
 
    std::ofstream out { path, std::ofstream::binary };
