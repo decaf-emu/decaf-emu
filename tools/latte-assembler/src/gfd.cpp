@@ -342,7 +342,7 @@ parseValueBool(const std::string &v)
    if (value == "TRUE") {
       return true;
    } else if (value == "FALSE") {
-      return true;
+      return false;
    } else {
       throw gfd_header_parse_exception {
          fmt::format("Expected boolean value, found {}", value)
