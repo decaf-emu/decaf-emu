@@ -291,7 +291,7 @@ format_arg(fmt::BasicFormatter<char> &f,
            const Pointer<ValueType, AddressType> &val)
 {
    format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(static_cast<AddressType>(val)));
 }
 
 template<typename Value>
