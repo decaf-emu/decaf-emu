@@ -130,6 +130,14 @@ public:
    {
    }
 
+   // Pointer<void>(be2_val<Pointer<Type>>)
+   template<typename O, typename V = ValueType>
+   Pointer(const be2_val<Pointer<O, AddressType>> &other,
+           typename std::enable_if<std::is_void<V>::value>::type * = nullptr) :
+      mAddress(other.mAddress)
+   {
+   }
+
    // Pointer<const Type> = const Pointer<Type> &
    template<typename V = ValueType,
             typename = std::enable_if<std::is_const<ValueType>::value>::type>
@@ -195,32 +203,74 @@ public:
       return !static_cast<bool>(mAddress);
    }
 
-   constexpr bool operator == (const Pointer &other) const
+   template<typename O>
+   constexpr bool operator == (const Pointer<O, AddressType> &other) const
    {
       return mAddress == other.mAddress;
    }
 
-   constexpr bool operator != (const Pointer &other) const
+   template<typename O>
+   constexpr bool operator == (const be2_val<Pointer<O, AddressType>> &other) const
+   {
+      return mAddress == other.mAddress;
+   }
+
+   template<typename O>
+   constexpr bool operator != (const Pointer<O, AddressType> &other) const
    {
       return mAddress != other.mAddress;
    }
 
-   constexpr bool operator >= (const Pointer &other) const
+   template<typename O>
+   constexpr bool operator != (const be2_val<Pointer<O, AddressType>> &other) const
+   {
+      return mAddress != other.mAddress;
+   }
+
+   template<typename O>
+   constexpr bool operator >= (const Pointer<O, AddressType> &other) const
    {
       return mAddress >= other.mAddress;
    }
 
-   constexpr bool operator <= (const Pointer &other) const
+   template<typename O>
+   constexpr bool operator >= (const be2_val<Pointer<O, AddressType>> &other) const
+   {
+      return mAddress >= other.mAddress;
+   }
+
+   template<typename O>
+   constexpr bool operator <= (const Pointer<O, AddressType> &other) const
    {
       return mAddress <= other.mAddress;
    }
 
-   constexpr bool operator > (const Pointer &other) const
+   template<typename O>
+   constexpr bool operator <= (const be2_val<Pointer<O, AddressType>> &other) const
+   {
+      return mAddress <= other.mAddress;
+   }
+
+   template<typename O>
+   constexpr bool operator > (const Pointer<O, AddressType> &other) const
    {
       return mAddress > other.mAddress;
    }
 
-   constexpr bool operator < (const Pointer &other) const
+   template<typename O>
+   constexpr bool operator > (const be2_val<Pointer<O, AddressType>> &other) const
+   {
+      return mAddress > other.mAddress;
+   }
+
+   template<typename O>
+   constexpr bool operator < (const Pointer<O, AddressType> &other) const
+   {
+      return mAddress < other.mAddress;
+   }
+
+   template<typename O>
+   constexpr bool operator < (const be2_val<Pointer<O, AddressType>> &other) const
    {
       return mAddress < other.mAddress;
    }
