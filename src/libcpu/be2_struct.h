@@ -61,42 +61,53 @@ struct be2_struct : public Type
 };
 
 // reinterpret_cast for virt_addr to virt_ptr<X>
-template<typename DstType, typename = std::enable_if<std::is_pointer<DstType>::value>::type>
+template<typename DstType,
+         typename = typename std::enable_if<std::is_pointer<DstType>::value>::type>
 inline auto virt_cast(virt_addr src)
 {
    return cpu::pointer_cast_impl<cpu::VirtualAddress, virt_addr, DstType>::cast(src);
 }
 
 // reinterpret_cast for virt_ptr<X> to virt_ptr<Y> or virt_addr
-template<typename DstType, typename SrcType, typename = std::enable_if<std::is_pointer<DstType>::value || std::is_same<DstType, virt_addr>::value>::type>
+template<typename DstType, typename SrcType,
+         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
+                                            std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_cast(const virt_ptr<SrcType> &src)
 {
    return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType, DstType>::cast(src);
 }
 
 // reinterpret_cast for be2_ptr<X> to virt_ptr<Y> or virt_addr
-template<typename DstType, typename SrcType, typename = std::enable_if<std::is_pointer<DstType>::value || std::is_same<DstType, virt_addr>::value>::type>
+template<typename DstType, typename SrcType,
+         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
+                                            std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_cast(const be2_virt_ptr<SrcType> &src)
 {
    return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType, DstType>::cast(src);
 }
 
 // reinterpret_cast for phys_addr to phys_ptr<X>
-template<typename DstType, typename = std::enable_if<std::is_pointer<DstType>::value || std::is_same<DstType, virt_addr>::value>::type>
+template<typename DstType,
+         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
+                                            std::is_same<DstType, virt_addr>::value>::type>
 inline auto phys_cast(phys_addr src)
 {
    return cpu::pointer_cast_impl<cpu::PhysicalAddress, phys_addr, DstType>::cast(src);
 }
 
 // reinterpret_cast for phys_ptr<X> to phys_ptr<Y> or phys_addr
-template<typename DstType, typename SrcType, typename = std::enable_if<std::is_pointer<DstType>::value || std::is_same<DstType, phys_addr>::value>::type>
+template<typename DstType, typename SrcType,
+         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
+                                            std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_cast(const phys_ptr<SrcType> &src)
 {
    return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType, DstType>::cast(src);
 }
 
 // reinterpret_cast for be2_ptr<X> to phys_ptr<Y> or phys_addr
-template<typename DstType, typename SrcType, typename = std::enable_if<std::is_pointer<DstType>::value || std::is_same<DstType, phys_addr>::value>::type>
+template<typename DstType, typename SrcType,
+         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
+                                            std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_cast(const be2_phys_ptr<SrcType> &src)
 {
    return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType, DstType>::cast(src);
