@@ -54,7 +54,7 @@ public:
    }
 
 protected:
-   template<typename AddressType, typename FunctionType>
+   template<typename, typename>
    friend struct func_pointer_cast_impl;
 
    AddressType mAddress;
