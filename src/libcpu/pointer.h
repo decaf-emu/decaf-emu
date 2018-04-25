@@ -139,9 +139,9 @@ public:
    }
 
    // Pointer<const Type> = const Pointer<Type> &
-   template<typename V = ValueType,
-            typename = std::enable_if<std::is_const<ValueType>::value>::type>
-   Pointer &operator =(const Pointer<typename std::remove_const<V>::type, AddressType> &other)
+   template<typename V = ValueType>
+            typename std::enable_if<std::is_const<V>::value, Pointer>::type &
+   operator =(const Pointer<typename std::remove_const<V>::type, AddressType> &other)
    {
       mAddress = other.mAddress;
       return *this;
@@ -163,37 +163,43 @@ public:
    }
 
    template<typename K = ValueType>
-   typename std::enable_if<!std::is_void<K>::value, dereference_type &>::type operator *()
+   typename std::enable_if<!std::is_void<K>::value, dereference_type &>::type
+   operator *()
    {
       return *internal::translate<dereference_type>(mAddress);
    }
 
    template<typename K = ValueType>
-   typename std::enable_if<!std::is_void<K>::value, const dereference_type &>::type operator *() const
+   typename std::enable_if<!std::is_void<K>::value, const dereference_type &>::type
+   operator *() const
    {
       return *internal::translate<const dereference_type>(mAddress);
    }
 
    template<typename K = ValueType>
-   typename std::enable_if<!std::is_void<K>::value, dereference_type *>::type operator ->()
+   typename std::enable_if<!std::is_void<K>::value, dereference_type *>::type
+   operator ->()
    {
       return internal::translate<dereference_type>(mAddress);
    }
 
    template<typename K = ValueType>
-   typename std::enable_if<!std::is_void<K>::value, const dereference_type *>::type operator ->() const
+   typename std::enable_if<!std::is_void<K>::value, const dereference_type *>::type
+   operator ->() const
    {
       return internal::translate<const dereference_type>(mAddress);
    }
 
    template<typename K = ValueType>
-   typename std::enable_if<!std::is_void<K>::value, dereference_type &>::type operator [](size_t index)
+   typename std::enable_if<!std::is_void<K>::value, dereference_type &>::type
+   operator [](size_t index)
    {
       return internal::translate<dereference_type>(mAddress)[index];
    }
 
    template<typename K = ValueType>
-   typename std::enable_if<!std::is_void<K>::value, const dereference_type &>::type operator [](size_t index) const
+   typename std::enable_if<!std::is_void<K>::value, const dereference_type &>::type
+   operator [](size_t index) const
    {
       return internal::translate<const dereference_type>(mAddress)[index];
    }
@@ -325,7 +331,7 @@ public:
    }
 
 protected:
-   template<typename AddressType, typename SrcType, typename DstType>
+   template<typename, typename, typename>
    friend struct pointer_cast_impl;
 
    template<typename AddressType2, typename ValueType2>
