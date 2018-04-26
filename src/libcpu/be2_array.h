@@ -57,7 +57,8 @@ public:
    be2_array() = default;
 
    template<typename U = Type>
-   be2_array(std::string_view src, typename std::enable_if<std::is_same<char, U>::value>::type * = 0)
+   be2_array(std::string_view src,
+             typename std::enable_if<std::is_same<char, U>::value>::type * = 0)
    {
       auto count = (src.size() < Size) ? src.size() : Size - 1;
       std::copy_n(src.begin(), count, mValues);
@@ -71,7 +72,8 @@ public:
       }
    }
 
-   template<typename U = Type, typename = typename std::enable_if<std::is_same<char, U>::value>::type>
+   template<typename U = Type,
+            typename = typename std::enable_if<std::is_same<char, U>::value>::type>
    be2_array &operator =(const std::string_view &src)
    {
       auto count = (src.size() < Size) ? src.size() : Size - 1;
@@ -86,7 +88,7 @@ public:
          throw std::out_of_range("invalid be2_array<T, N> subscript");
       }
 
-      return mValues[index];
+      return mValues[pos];
    }
 
    constexpr const auto &at(size_type pos) const
@@ -95,17 +97,17 @@ public:
          throw std::out_of_range("invalid be2_array<T, N> subscript");
       }
 
-      return mValues[index];
+      return mValues[pos];
    }
 
-   constexpr auto &operator[](std::size_t index)
+   constexpr auto &operator[](size_type pos)
    {
-      return mValues[index];
+      return mValues[pos];
    }
 
-   constexpr const auto &operator[](std::size_t index) const
+   constexpr const auto &operator[](size_type pos) const
    {
-      return mValues[index];
+      return mValues[pos];
    }
 
    constexpr auto &front()
@@ -133,12 +135,12 @@ public:
       return Size > 0;
    }
 
-   constexpr uint32_t size() const
+   constexpr size_type size() const
    {
       return Size;
    }
 
-   constexpr uint32_t max_size() const
+   constexpr size_type max_size() const
    {
       return Size;
    }
