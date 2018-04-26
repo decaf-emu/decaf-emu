@@ -159,7 +159,7 @@ inline virt_ptr<Type> virt_addrof(const be2_val<Type> &ref)
    return virt_cast<Type *>(cpu::translate(std::addressof(ref)));
 }
 
-template<typename Type, std::size_t Size>
+template<typename Type, uint32_t Size>
 virt_ptr<Type> virt_addrof(const be2_array<Type, Size> &ref)
 {
    return virt_cast<Type *>(cpu::translate(std::addressof(ref)));
@@ -187,7 +187,7 @@ inline phys_ptr<Type> phys_addrof(const be2_val<Type> &ref)
    return phys_cast<Type *>(cpu::translatePhysical(std::addressof(ref)));
 }
 
-template<typename Type, std::size_t Size>
+template<typename Type, uint32_t Size>
 inline phys_ptr<Type> phys_addrof(const be2_array<Type, Size> &ref)
 {
    return phys_cast<Type *>(cpu::translatePhysical(std::addressof(ref)));
