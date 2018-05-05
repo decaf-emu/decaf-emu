@@ -168,7 +168,7 @@ if(DECAF_SDL)
     endif()
 
     if(NOT SDL2_FOUND)
-        set(SDL2_DIR "SDL-mirror")
+        set(SDL2_DIR "SDL-Master")
         include_directories("${SDL2_DIR}/include")
         externalproject_add(sdl2
             SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${SDL2_DIR}"
