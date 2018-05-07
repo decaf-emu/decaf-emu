@@ -38,7 +38,6 @@ sIpcRequestQueue;
 void
 submitIpcRequest(phys_ptr<IpcRequest> request)
 {
-   auto x = sizeof(sIpcRequestQueue);
    decaf_check(!sIpcRequestQueue.wasFull());
    sIpcRequestQueue.push(request);
 

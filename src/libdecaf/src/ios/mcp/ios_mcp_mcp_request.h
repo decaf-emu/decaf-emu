@@ -23,21 +23,21 @@ struct MCPRequestGetOwnTitleInfo
 CHECK_OFFSET(MCPRequestGetOwnTitleInfo, 0x00, unk0x00);
 CHECK_SIZE(MCPRequestGetOwnTitleInfo, 0x04);
 
-struct MCPRequestLoadLibraryChunk
+struct MCPRequestLoadFile
 {
    UNKNOWN(0x10);
    be2_val<uint32_t> pos;
-   be2_val<MCPLibraryType> type;
+   be2_val<MCPFileType> fileType;
    be2_val<uint32_t> cafeProcessId;
    UNKNOWN(0xC);
    be2_array<char, 0x40> name;
    UNKNOWN(0x12D8 - 0x68);
 };
-CHECK_OFFSET(MCPRequestLoadLibraryChunk, 0x10, pos);
-CHECK_OFFSET(MCPRequestLoadLibraryChunk, 0x14, type);
-CHECK_OFFSET(MCPRequestLoadLibraryChunk, 0x18, cafeProcessId);
-CHECK_OFFSET(MCPRequestLoadLibraryChunk, 0x28, name);
-CHECK_SIZE(MCPRequestLoadLibraryChunk, 0x12D8);
+CHECK_OFFSET(MCPRequestLoadFile, 0x10, pos);
+CHECK_OFFSET(MCPRequestLoadFile, 0x14, fileType);
+CHECK_OFFSET(MCPRequestLoadFile, 0x18, cafeProcessId);
+CHECK_OFFSET(MCPRequestLoadFile, 0x28, name);
+CHECK_SIZE(MCPRequestLoadFile, 0x12D8);
 
 struct MCPRequestSearchTitleList
 {
