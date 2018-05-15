@@ -1,4 +1,6 @@
 project(pm4-replay-qt)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories(".")
 include_directories("../../src/libdecaf/src")
