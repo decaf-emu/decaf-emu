@@ -64,20 +64,23 @@ set(FMT_LIBRARIES fmt PARENT_SCOPE)
 find_package(glbinding QUIET)
 
 if(NOT glbinding_FOUND)
+    set(GLBINDING_DIR "glbinding")
+    set(GLBINDING_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
     if (MSVC)
         set(GLBINDING_BUILD_SHARED on)
+        set(GLBINDING_CXX_FLAGS "${GLBINDING_CXX_FLAGS} -D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING")
     else ()
         set(GLBINDING_BUILD_SHARED off)
     endif ()
 
-    set(GLBINDING_DIR "glbinding")
     externalproject_add(glbinding
         SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}"
         CMAKE_CACHE_ARGS
             -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
             -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
             -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
-            -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
+            -DCMAKE_CXX_FLAGS:string=${GLBINDING_CXX_FLAGS}
             -DBUILD_SHARED_LIBS:string=${GLBINDING_BUILD_SHARED}
             -DOPTION_BUILD_DOCS:string=off
             -DOPTION_BUILD_EXAMPLES:string=off
