@@ -264,7 +264,7 @@ void
 compileAluClause(Shader &shader,
                  peg::Ast &node)
 {
-   auto cfInst = latte::ControlFlowInst { 0 };
+   auto cfInst = latte::ControlFlowInst { };
    auto clause = AluClause {};
 
    cfInst.alu.word1 = cfInst.alu.word1

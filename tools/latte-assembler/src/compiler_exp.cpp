@@ -3,7 +3,7 @@
 void
 compileExpInst(Shader &shader, peg::Ast &node)
 {
-   auto inst = latte::ControlFlowInst { 0 };
+   auto inst = latte::ControlFlowInst { };
 
    inst.word1 = inst.word1
       .CF_INST_TYPE(latte::SQ_CF_INST_TYPE_EXPORT)

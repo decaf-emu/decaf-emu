@@ -22,7 +22,7 @@ parseHexNumber(peg::Ast &node)
 LiteralValue
 parseLiteral(peg::Ast &node)
 {
-   auto literal = LiteralValue { 0 };
+   auto literal = LiteralValue { };
 
    for (auto child : node.nodes) {
       if (child->name == "HexNumber") {

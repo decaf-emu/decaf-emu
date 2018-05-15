@@ -192,7 +192,7 @@ void
 compileTexClause(Shader &shader,
                  peg::Ast &node)
 {
-   auto cfInst = latte::ControlFlowInst { 0 };
+   auto cfInst = latte::ControlFlowInst { };
    auto clause = TexClause {};
    clause.clausePC = shader.clausePC;
 

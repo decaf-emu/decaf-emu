@@ -13,7 +13,7 @@ TexClauseAlign = 128;
 static void
 compileCfInst(Shader &shader, peg::Ast &node)
 {
-   auto inst = latte::ControlFlowInst { 0 };
+   auto inst = latte::ControlFlowInst { };
 
    inst.word1 = inst.word1
       .CF_INST_TYPE(latte::SQ_CF_INST_TYPE_NORMAL)
@@ -194,7 +194,7 @@ compileEndOfProgram(Shader &shader)
       }
    }
 
-   auto inst = latte::ControlFlowInst { 0 };
+   auto inst = latte::ControlFlowInst { };
    inst.word1 = inst.word1
       .CF_INST(latte::SQ_CF_INST_NOP)
       .CF_INST_TYPE(latte::SQ_CF_INST_TYPE_NORMAL)
