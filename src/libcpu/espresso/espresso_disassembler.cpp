@@ -169,7 +169,7 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
    case InstructionField::oe:
    case InstructionField::rc:
 
-   // Ogmpre ,arker fields
+   // Ignore marker fields
    case InstructionField::PS:
    case InstructionField::XERO:
    case InstructionField::XERSO:
