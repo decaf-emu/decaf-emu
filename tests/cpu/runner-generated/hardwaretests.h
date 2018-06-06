@@ -4,7 +4,7 @@
 #include <vector>
 #include <libcpu/state.h>
 #include <libcpu/espresso/espresso_instruction.h>
-#include <libcpu/espresso/espresso_registers.h>
+#include <libcpu/espresso/espresso_registerformats.h>
 #include <common/be_val.h>
 
 namespace hwtest
@@ -17,9 +17,9 @@ static const auto CRB_BASE = 8;
 
 struct RegisterState
 {
-   espresso::xer_t xer;
-   espresso::cr_t cr;
-   espresso::fpscr_t fpscr;
+   espresso::FixedPointExceptionRegister xer;
+   espresso::ConditionRegister cr;
+   espresso::FloatingPointStatusAndControlRegister fpscr;
    uint32_t ctr;
    uint32_t gpr[4];
    double fr[4];

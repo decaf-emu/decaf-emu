@@ -6,7 +6,7 @@
 #include <common/floatutils.h>
 
 using espresso::ConditionRegisterFlag;
-using espresso::FPSCRRegisterBits;
+using espresso::FpscrFlags;
 
 // TODO: Move these getCRX functions
 
@@ -307,7 +307,7 @@ mcrfs(cpu::Core *state, Instruction instr)
 
    // All exception bits copied are cleared; other bits are left alone.
    // FEX and VX are updated following the normal rules.
-   const uint32_t exceptionBits = FPSCRRegisterBits::FX | FPSCRRegisterBits::AllExceptions;
+   const uint32_t exceptionBits = FpscrFlags::FX | FpscrFlags::AllExceptions;
    const uint32_t bitsToClear = exceptionBits & (0xF << shiftS);
    state->fpscr.value &= ~bitsToClear;
    updateFEX_VX(state);

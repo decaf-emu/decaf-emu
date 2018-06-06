@@ -379,7 +379,7 @@ storeDoubleAsFloat(uint32_t ea, double d)
       // Not truncate_double()!  See the PowerPC documentation.
       fBits = truncate_double_bits(dBits.uv);
    } else {
-      fBits = ((1 << 23) | (dBits.mantissa >> 29)) >> (897 - dBits.exponent);
+      fBits = static_cast<uint32_t>(((1u << 23) | (dBits.mantissa >> 29)) >> (897 - dBits.exponent));
       fBits |= dBits.sign << 31;
    }
    mem::write<uint32_t>(ea, fBits);

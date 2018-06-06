@@ -1,5 +1,5 @@
 #pragma once
-#include "espresso/espresso_registers.h"
+#include "espresso/espresso_registerformats.h"
 #include "mem.h"
 
 #include <atomic>
@@ -19,23 +19,44 @@ using TimerDuration = std::chrono::duration<uint64_t, std::ratio<1, timerClockSp
 
 struct CoreRegs
 {
-   uint32_t cia;              // Current execution address
-   uint32_t nia;              // Next execution address
+   //! Current execution address
+   uint32_t cia;
 
-   espresso::gpr_t gpr[32];   // Integer Registers
-   espresso::fpr_t fpr[32];   // Floating-point Registers
-   espresso::cr_t cr;         // Condition Register
-   espresso::xer_t xer;       // XER Carry/Overflow register
-   uint32_t lr;               // Link Register
-   uint32_t ctr;              // Count Register
+   //! Next execution address
+   uint32_t nia;
 
-   espresso::fpscr_t fpscr;   // Floating-Point Status and Control Register
+   //! Integer Registers
+   espresso::Register gpr[32];
 
-   espresso::pvr_t pvr;       // Processor Version Register
-   espresso::msr_t msr;       // Machine State Register
-   uint32_t sr[16];           // Segment Registers
+   //! Floating-point Registers
+   espresso::FloatingPointRegister fpr[32];
 
-   espresso::gqr_t gqr[8];    // Graphics Quantization Registers
+   //! Condition Register
+   espresso::ConditionRegister cr;
+
+   //! XER Carry/Overflow register
+   espresso::FixedPointExceptionRegister xer;
+
+   //! Link Register
+   uint32_t lr;
+
+   //! Count Register
+   uint32_t ctr;
+
+   //! Floating-Point Status and Control Register
+   espresso::FloatingPointStatusAndControlRegister fpscr;
+
+   //! Processor Version Register
+   espresso::ProcessorVersionRegister pvr;
+
+   //! Machine State Register
+   espresso::MachineStateRegister msr;
+
+   //! Segment Registers
+   uint32_t sr[16];
+
+   //! Graphics Quantization Registers
+   espresso::GraphicsQuantisationRegister gqr[8];
 };
 
 struct Core : CoreRegs

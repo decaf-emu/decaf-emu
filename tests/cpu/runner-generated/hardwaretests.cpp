@@ -11,7 +11,7 @@
 #include <libcpu/mem.h>
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>
-#include <libcpu/espresso/espresso_registers.h>
+#include <libcpu/espresso/espresso_registerformats.h>
 #include <libdecaf/src/filesystem/filesystem.h>
 
 using namespace espresso;
@@ -100,7 +100,9 @@ printTestField(InstructionField field, Instruction instr, RegisterState *input, 
 
 // Compare all individual fields in fpscr
 static bool
-compareFPSCR(fpscr_t input, fpscr_t expected, fpscr_t result)
+compareFPSCR(FloatingPointStatusAndControlRegister input,
+             FloatingPointStatusAndControlRegister expected,
+             FloatingPointStatusAndControlRegister result)
 {
    auto failed = false;
    CompareFPSCRField(rn);

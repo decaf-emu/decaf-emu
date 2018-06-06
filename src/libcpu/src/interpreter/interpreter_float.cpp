@@ -9,7 +9,7 @@
 #include <common/floatutils.h>
 #include <common/platform_compiler.h>
 
-using espresso::FPSCRRegisterBits;
+using espresso::FpscrFlags;
 using espresso::FloatingPointResultFlags;
 using espresso::FloatingPointRoundMode;
 
@@ -201,7 +201,7 @@ updateFX_FEX_VX(cpu::Core *state, uint32_t oldValue)
 
    // FP Exception Summary
    const uint32_t newBits = (oldValue ^ fpscr.value) & fpscr.value;
-   if (newBits & FPSCRRegisterBits::AllExceptions) {
+   if (newBits & FpscrFlags::AllExceptions) {
       fpscr.fx = 1;
    }
 }
@@ -540,11 +540,10 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
       }
 
       if constexpr (std::is_same<Type, float>::value) {
-         float dFloat = static_cast<float>(d);
-         d = extend_float(dFloat);
-         state->fpr[instr.frD].paired0 = d;
-         state->fpr[instr.frD].paired1 = d;
-         updateFPRF(state, dFloat);
+         double dd = extend_float(d);
+         state->fpr[instr.frD].paired0 = dd;
+         state->fpr[instr.frD].paired1 = dd;
+         updateFPRF(state, d);
       } else {
          state->fpr[instr.frD].value = d;
          updateFPRF(state, d);
