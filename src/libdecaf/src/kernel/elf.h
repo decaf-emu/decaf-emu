@@ -186,9 +186,9 @@ enum RelocationType // r_info & 0xff
    R_PPC_TLSLD = 96,
    R_PPC_EMB_SDA21 = 109,
    R_PPC_REL16 = 249,
-   R_PPC_REL16_LO = 250,
-   R_PPC_REL16_HI = 251,
-   R_PPC_REL16_HA = 252,
+   R_PPC_GHS_REL16_HA = 251,
+   R_PPC_GHS_REL16_HI = 252,
+   R_PPC_GHS_REL16_LO = 253,
 };
 
 #pragma pack(push, 1)

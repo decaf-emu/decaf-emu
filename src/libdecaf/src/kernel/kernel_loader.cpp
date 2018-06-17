@@ -606,6 +606,18 @@ processRelocations(LoadedModule *loadedMod,
          case elf::R_PPC_ADDR16_HA:
             *ptr16 = byte_swap<uint16_t>((symAddr + 0x8000) >> 16);
             break;
+         case elf::R_PPC_GHS_REL16_LO:
+         {
+            auto delta = static_cast<ptrdiff_t>(symAddr) - static_cast<ptrdiff_t>(reloAddr);
+            *ptr16 = byte_swap(gsl::narrow_cast<uint16_t>(delta & 0xFFFF));
+            break;
+         }
+         case elf::R_PPC_GHS_REL16_HI:
+         {
+            auto delta = static_cast<ptrdiff_t>(symAddr) - static_cast<ptrdiff_t>(reloAddr);
+            *ptr16 = byte_swap(gsl::narrow_cast<uint16_t>((delta >> 16) & 0xFFFF));
+            break;
+         }
          case elf::R_PPC_REL24:
          {
             auto ins = espresso::Instruction{ byte_swap(*ptr32) };
