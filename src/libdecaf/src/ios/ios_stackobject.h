@@ -1,5 +1,6 @@
 #pragma once
 #include "kernel/ios_kernel_thread.h"
+#include <algorithm>
 #include <common/align.h>
 #include <common/decaf_assert.h>
 #include <libcpu/be2_struct.h>
@@ -13,7 +14,7 @@ class StackObject : public phys_ptr<Type>
 {
    static constexpr auto
    AlignedSize = align_up(static_cast<uint32_t>(sizeof(Type) * NumElements),
-                          std::max(alignof(Type), 4u));
+                          std::max<size_t>(alignof(Type), size_t { 4 }));
 
 public:
    StackObject()
