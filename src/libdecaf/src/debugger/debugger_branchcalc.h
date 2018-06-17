@@ -146,7 +146,7 @@ static uint32_t calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
    auto instr = mem::read<espresso::Instruction>(state->nia);
    auto data = espresso::decodeInstruction(instr);
 
-   if (isBranchInstr(data)) {
+   if (data && isBranchInstr(data)) {
       auto meta = getBranchMeta(state->nia, instr, data, state);
 
       if (meta.isCall && stepOver) {
