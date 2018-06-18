@@ -7,6 +7,7 @@
 #include "debugger/debugger_ui.h"
 #include "filesystem/filesystem.h"
 #include "input/input.h"
+#include "ios/ios.h"
 #include "kernel/kernel.h"
 #include "kernel/kernel_filesystem.h"
 #include "kernel/kernel_hlefunction.h"
@@ -139,9 +140,7 @@ initialise(const std::string &gamePath)
    WSAStartup(MAKEWORD(2, 2), &wsaInitData);
 #endif
 
-   // Setup core
-   cpu::initialise();
-   kernel::initialise();
+   // Setup debugger
    debugger::initialise(makeConfigPath("imgui.ini"),
                         sClipboardTextGetCallbackFn,
                         sClipboardTextSetCallbackFn);
@@ -211,38 +210,16 @@ initialise(const std::string &gamePath)
    filesystem->makeFolder("/dev/slc01/sys/proc");
    filesystem->makeFolder("/dev/slc01/sys/proc/prefs");
 
-   // TODO: ramdisk device, requires virtual file system modification
-
-   filesystem->makeLink("/vol/storage_slc", "/dev/slc01");
-   filesystem->makeLink("/vol/storage_mlc01", "/dev/mlc01");
-
-   filesystem->makeLink("/vol/system_slc", "/dev/slc01/sys");
-   // TODO: filesystem->makeLink("/vol/system_ram", "/dev/ramdisk01/sys");
-   filesystem->makeLink("/vol/system", "/vol/system_slc");
-
-   filesystem->makeFolder("/vol/sys");
-   filesystem->makeLink("/vol/sys/proc", "/vol/system/proc");
-   filesystem->makeLink("/vol/sys/proc_slc", "/vol/system_slc/proc");
-   // TODO: filesystem->makeLink("/vol/sys/proc_ram", "/vol/system_ram/proc");
-
-   // Setup kernel
-   kernel::setFileSystem(std::move(filesystem));
+   // Setup ios
+   ios::setFileSystem(std::move(filesystem));
    return true;
 }
 
 void
 start()
 {
-   cpu::start();
-
-   volatile int zero = 0;
-   if (zero) {
-      tracePrint(nullptr, 0, 0);
-      traceReg(nullptr, 0, 0);
-      traceRegStart(nullptr, 0, 0);
-      traceRegNext(0);
-      traceRegContinue();
-   }
+   // Start ios
+   ios::start();
 }
 
 bool

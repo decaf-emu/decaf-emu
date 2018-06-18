@@ -8,7 +8,7 @@
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
 
-#include "cafe/kernel/cafe_kernel.h"
+#include "kernel/kernel.h"
 
 namespace ios::mcp::internal
 {
@@ -76,7 +76,7 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
          if (name.compare("/dev/ppc_kernel") == 0) {
             error = static_cast<Error>(PpcKernelHandle);
          } else if (name.compare("/dev/ppc_app") == 0) {
-            error = static_cast<Error>(PpcAppHandle); // 'ppa'
+            error = static_cast<Error>(PpcAppHandle);
          }
 
          IOS_ResourceReply(request, error);
@@ -92,7 +92,14 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       case Command::Resume:
       {
          if (request->requestData.handle == PpcKernelHandle) {
-            cafe::kernel::startKernel();
+            // Initialise PPC cpu
+            ::cpu::initialise();
+
+            // Initialise PPC kernel
+            ::kernel::initialise();
+
+            // Boot the PPC!
+            ::cpu::start();
          }
          break;
       }

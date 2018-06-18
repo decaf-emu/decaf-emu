@@ -119,7 +119,6 @@ void
 initialise()
 {
    initialiseVirtualMemory();
-   ios::start();
    initialiseHleModules();
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
    cpu::setSegfaultHandler(&cpuSegfaultHandler);

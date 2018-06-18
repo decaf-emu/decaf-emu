@@ -3,6 +3,7 @@
 #include "ios_mcp_enum.h"
 #include "ios_mcp_mcp_thread.h"
 #include "ios_mcp_pm_thread.h"
+#include "ios_mcp_ppc_thread.h"
 
 #include "ios/kernel/ios_kernel_debug.h"
 #include "ios/kernel/ios_kernel_hardware.h"
@@ -180,7 +181,8 @@ processEntryPoint(phys_ptr<void> /* context */)
    // Stat mcp thread
    internal::startMcpThread();
 
-   // TODO: startPpcKernelThread (/dev/ppc_kernel)
+   // Start PPC thread
+   internal::startPpcThread();
 
    // Register main thread as SysEvent handler
    error = IOS_HandleEvent(DeviceId::SysEvent,
