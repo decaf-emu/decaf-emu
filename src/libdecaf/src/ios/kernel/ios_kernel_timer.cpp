@@ -1,8 +1,10 @@
 #include "ios_kernel_timer.h"
+#include "ios_kernel_hardware.h"
 #include "ios_kernel_messagequeue.h"
 #include "ios_kernel_process.h"
 #include "ios_kernel_thread.h"
 
+#include "ios/ios_alarm_thread.h"
 #include "ios/ios_stackobject.h"
 
 #include <chrono>
@@ -102,6 +104,7 @@ IOS_CreateTimer(std::chrono::microseconds delay,
    }
 
    if (delay.count() || period.count()) {
+      auto now = std::chrono::steady_clock::now();
       timer.nextTriggerTime = internal::getUpTime64() + internal::durationToTicks(delay);
       if (internal::startTimer(phys_addrof(timer)) == 0) {
          internal::setAlarm(timer.nextTriggerTime);
@@ -219,6 +222,7 @@ static Error
 timerThreadEntry(phys_ptr<void> /*context*/)
 {
    StackObject<Message> message;
+   auto &timerManager = sData->timerManager;
 
    while (true) {
       auto error = IOS_ReceiveMessage(sData->messageQueueId,
@@ -229,9 +233,40 @@ timerThreadEntry(phys_ptr<void> /*context*/)
       }
 
       auto now = internal::getUpTime64();
-      while (true) {
-         // Trigger all ready timers
+      while (timerManager.firstRunningTimerIdx >= 0) {
+         auto &timer = timerManager.timers[timerManager.firstRunningTimerIdx];
+         auto queue = phys_ptr<MessageQueue>(nullptr);
+         if (timer.nextTriggerTime >= now) {
+            // No more timers to run
+            break;
+         }
 
+         // Send message to notify any waiters on the timer
+         error = internal::getMessageQueue(timer.queueId, &queue);
+         if (error >= 0) {
+            internal::sendMessage(queue, timer.message, MessageFlags::NonBlocking);
+         }
+
+         // Remove timer from queue
+         timerManager.firstRunningTimerIdx = timer.nextTimerIdx;
+         if (timerManager.firstRunningTimerIdx < 0) {
+            timerManager.lastRunningTimerIdx = int16_t { -1 };
+         } else {
+            timerManager.timers[timerManager.firstRunningTimerIdx].prevTimerIdx = int16_t { -1 };
+         }
+
+         // Update timer
+         timer.prevTimerIdx = int16_t { -1 };
+         timer.nextTimerIdx = int16_t { -1 };
+         timer.state = TimerState::Triggered;
+
+         if (!timer.period) {
+            continue;
+         }
+
+         // Setup periodic timer next trigger
+         timer.nextTriggerTime += timer.period;
+         startTimer(phys_addrof(timer));
       }
    }
 }
@@ -239,7 +274,8 @@ timerThreadEntry(phys_ptr<void> /*context*/)
 void
 setAlarm(TimerTicks when)
 {
-   // TODO: Hook this up to a timer which triggers a timer interrupt
+   auto nextAlarm = std::chrono::nanoseconds { when } + sStartupTime;
+   ios::internal::setNextAlarm(nextAlarm);
 }
 
 TimerTicks
@@ -255,7 +291,7 @@ getTimer(TimerId id,
 {
    auto index = id & 0xFFF;
 
-   if (id < 0 || index >= sData->timerManager.timers.size()) {
+   if (id < 0 || index >= static_cast<TimerId>(sData->timerManager.timers.size())) {
       return Error::Invalid;
    }
 
@@ -291,13 +327,16 @@ startTimer(phys_ptr<Timer> timer)
    } else {
       auto prevTimerIdx = int16_t { -1 };
       auto nextTimerIdx = int16_t { -1 };
+      auto itrTimerIdx = timerManager.firstRunningTimerIdx;
 
-      for (auto i = timerManager.firstRunningTimerIdx; i < timerManager.lastRunningTimerIdx; ++i) {
-         if (timerManager.timers[i].nextTriggerTime >= timer->nextTriggerTime) {
+      while (itrTimerIdx >= 0) {
+         const auto &itrTimer = timerManager.timers[itrTimerIdx];
+         if (itrTimer.nextTriggerTime >= timer->nextTriggerTime) {
             break;
          }
 
-         prevTimerIdx = i;
+         itrTimerIdx = itrTimer.nextTimerIdx;
+         timerQueuePosition++;
       }
 
       if (prevTimerIdx < 0) {
@@ -323,7 +362,7 @@ startTimer(phys_ptr<Timer> timer)
 
    timer->state = TimerState::Running;
    timerManager.numRunningTimers++;
-   return timerManager.firstRunningTimerIdx == timer->index;
+   return timerQueuePosition;
 }
 
 Error
@@ -367,12 +406,18 @@ startTimerThread()
    }
    sData->messageQueueId = static_cast<MessageQueueId>(error);
 
+   // Set timer event handler
+   error = IOS_HandleEvent(DeviceId::Timer, sData->messageQueueId, 0);
+   if (error < Error::OK) {
+      return error;
+   }
+
    // Create thread
-   error = kernel::IOS_CreateThread(&timerThreadEntry, nullptr,
-                                    phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                                    static_cast<uint32_t>(sData->threadStack.size()),
-                                    TimerThreadPriority,
-                                    kernel::ThreadFlags::Detached);
+   error = IOS_CreateThread(&timerThreadEntry, nullptr,
+                            phys_addrof(sData->threadStack) + sData->threadStack.size(),
+                            static_cast<uint32_t>(sData->threadStack.size()),
+                            TimerThreadPriority,
+                            kernel::ThreadFlags::Detached);
    if (error < Error::OK) {
       kernel::IOS_DestroyMessageQueue(sData->messageQueueId);
       return error;

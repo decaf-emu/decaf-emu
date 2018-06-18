@@ -120,6 +120,7 @@ ENUM_BEG(TimerState, uint32_t)
    ENUM_VALUE(Free,                    0x00)
    ENUM_VALUE(Ready,                   0x01)
    ENUM_VALUE(Running,                 0x02)
+   ENUM_VALUE(Triggered,               0x03)
    ENUM_VALUE(Stopped,                 0x04)
 ENUM_END(TimerState)
 

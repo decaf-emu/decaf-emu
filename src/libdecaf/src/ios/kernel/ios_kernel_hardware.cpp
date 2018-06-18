@@ -471,11 +471,6 @@ setInterruptAhbLt(AHBLT mask)
 }
 
 void
-setAlarm(std::chrono::steady_clock::time_point when)
-{
-}
-
-void
 unregisterEventHandlerQueue(MessageQueueId queue)
 {
    for (auto &handler : sData->eventHandlers) {
@@ -489,7 +484,7 @@ unregisterEventHandlerQueue(MessageQueueId queue)
 void
 initialiseStaticHardwareData()
 {
-   LT_INTMR_AHBALL_ARM.store(0);
+   LT_INTMR_AHBALL_ARM.store(0x20801);
    LT_INTSR_AHBALL_ARM.store(0);
    LT_INTMR_AHBLT_ARM.store(0);
    LT_INTSR_AHBLT_ARM.store(0);
