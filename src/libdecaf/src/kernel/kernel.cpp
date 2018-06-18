@@ -65,19 +65,19 @@ enum class FaultReason : uint32_t {
 };
 
 static void
-cpuEntrypoint();
+cpuEntrypoint(cpu::Core *core);
 
 static void
-cpuInterruptHandler(uint32_t interrupt_flags);
+cpuInterruptHandler(cpu::Core *core, uint32_t interrupt_flags);
 
 static void
-cpuSegfaultHandler(uint32_t address);
+cpuSegfaultHandler(cpu::Core *core, uint32_t address);
 
 static void
-cpuIllInstHandler();
+cpuIllInstHandler(cpu::Core *core);
 
 static void
-cpuBranchTraceHandler(uint32_t target);
+cpuBranchTraceHandler(cpu::Core *core, uint32_t target);
 
 static bool
 launchGame();
@@ -147,7 +147,7 @@ getSystemHeap()
 }
 
 static void
-cpuBranchTraceHandler(uint32_t target)
+cpuBranchTraceHandler(cpu::Core *core, uint32_t target)
 {
    auto symNamePtr = loader::findSymbolNameForAddress(target);
    if (!symNamePtr) {
@@ -215,7 +215,7 @@ cpuFaultFiberEntryPoint(void *addr)
 }
 
 static void
-cpuSegfaultHandler(uint32_t address)
+cpuSegfaultHandler(cpu::Core *core, uint32_t address)
 {
    sFaultReason = FaultReason::Segfault;
    sSegfaultAddress = address;
@@ -227,7 +227,7 @@ cpuSegfaultHandler(uint32_t address)
 }
 
 static void
-cpuIllInstHandler()
+cpuIllInstHandler(cpu::Core *core)
 {
    sFaultReason = FaultReason::IllInst;
 
@@ -250,7 +250,7 @@ initCoreInterruptContext()
 }
 
 void
-cpuInterruptHandler(uint32_t interrupt_flags)
+cpuInterruptHandler(cpu::Core *core, uint32_t interrupt_flags)
 {
    if (interrupt_flags & cpu::SRESET_INTERRUPT) {
       platform::exitThread(0);
@@ -319,9 +319,9 @@ cpuInterruptHandler(uint32_t interrupt_flags)
 }
 
 void
-cpuEntrypoint()
+cpuEntrypoint(cpu::Core *core)
 {
-   // Make a fibre, we need to be cautious not to allocate here
+   // Make a fiber, we need to be cautious not to allocate here
    //  as this fibre can be arbitrarily destroyed.
    initCoreFiber();
 
@@ -330,7 +330,6 @@ cpuEntrypoint()
 
    // We set up a dummy stack on each core to help us invoke needed stuff
    auto rootStack = static_cast<uint8_t*>(coreinit::internal::sysAlloc(256, 4));
-   auto core = cpu::this_core::state();
    core->gpr[1] = mem::untranslate(rootStack + 256 - 4);
 
    // Maybe launch the game
