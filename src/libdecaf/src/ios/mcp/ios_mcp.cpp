@@ -153,7 +153,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    }
 
    // Set normal system flags
-   sData->bootFlags = 0x2000u;
+   sData->bootFlags = 0xC200000u;
    sData->systemModeFlags = 0x100000u;
    sData->systemFileSys = SystemFileSys::Nand;
    IOS_SetSecurityLevel(SecurityLevel::Normal);
