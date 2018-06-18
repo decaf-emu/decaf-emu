@@ -293,7 +293,7 @@ getRootKey(std::string_view name)
 
    auto rootKeyEnd = name.find_first_of('.');
    if (rootKeyEnd == std::string_view::npos) {
-      return name;
+      return name.substr(rootKeyStart);
    }
 
    return name.substr(rootKeyStart, rootKeyEnd - rootKeyStart);
