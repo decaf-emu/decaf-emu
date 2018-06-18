@@ -209,9 +209,6 @@ initialise(const std::string &gamePath)
    // Mount slc device
    auto slcPath = fs::HostPath { decaf::config::system::slc_path };
    filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
-   filesystem->makeFolder("/dev/slc01/sys");
-   filesystem->makeFolder("/dev/slc01/sys/proc");
-   filesystem->makeFolder("/dev/slc01/sys/proc/prefs");
 
    // Mount sdcard
    auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
