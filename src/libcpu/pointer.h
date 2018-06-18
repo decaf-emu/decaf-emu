@@ -218,7 +218,7 @@ public:
    template<typename O>
    constexpr bool operator == (const be2_val<Pointer<O, AddressType>> &other) const
    {
-      return mAddress == other.mAddress;
+      return mAddress == other.value().mAddress;
    }
 
    template<typename O>
@@ -230,7 +230,7 @@ public:
    template<typename O>
    constexpr bool operator != (const be2_val<Pointer<O, AddressType>> &other) const
    {
-      return mAddress != other.mAddress;
+      return mAddress != other.value().mAddress;
    }
 
    template<typename O>
@@ -242,7 +242,7 @@ public:
    template<typename O>
    constexpr bool operator >= (const be2_val<Pointer<O, AddressType>> &other) const
    {
-      return mAddress >= other.mAddress;
+      return mAddress >= other.value().mAddress;
    }
 
    template<typename O>
@@ -254,7 +254,7 @@ public:
    template<typename O>
    constexpr bool operator <= (const be2_val<Pointer<O, AddressType>> &other) const
    {
-      return mAddress <= other.mAddress;
+      return mAddress <= other.value().mAddress;
    }
 
    template<typename O>
@@ -266,7 +266,7 @@ public:
    template<typename O>
    constexpr bool operator > (const be2_val<Pointer<O, AddressType>> &other) const
    {
-      return mAddress > other.mAddress;
+      return mAddress > other.value().mAddress;
    }
 
    template<typename O>
@@ -278,7 +278,7 @@ public:
    template<typename O>
    constexpr bool operator < (const be2_val<Pointer<O, AddressType>> &other) const
    {
-      return mAddress < other.mAddress;
+      return mAddress < other.value().mAddress;
    }
 
    template<typename T = ValueType>
