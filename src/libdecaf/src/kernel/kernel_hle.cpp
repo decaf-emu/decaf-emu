@@ -143,7 +143,7 @@ findHleModule(const std::string &name)
 }
 
 void
-initialiseHleMmodules()
+initialiseHleModules()
 {
    camera::Module::RegisterFunctions();
    coreinit::Module::RegisterFunctions();

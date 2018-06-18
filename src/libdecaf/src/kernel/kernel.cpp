@@ -120,7 +120,7 @@ initialise()
 {
    initialiseVirtualMemory();
    ios::start();
-   initialiseHleMmodules();
+   initialiseHleModules();
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
    cpu::setSegfaultHandler(&cpuSegfaultHandler);
    cpu::setIllInstHandler(&cpuIllInstHandler);

@@ -8,7 +8,7 @@ namespace kernel
 class HleModule;
 
 void
-initialiseHleMmodules();
+initialiseHleModules();
 
 HleModule *
 findHleModule(const std::string &name);
