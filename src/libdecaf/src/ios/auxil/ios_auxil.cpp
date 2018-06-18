@@ -115,6 +115,13 @@ processEntryPoint(phys_ptr<void> context)
 
       auto request = parseMessage<ResourceRequest>(message);
       switch (request->requestData.command) {
+      case Command::Open:
+      case Command::Close:
+      {
+         IOS_ResourceReply(request, Error::OK);
+         break;
+      }
+
       case Command::Suspend:
       {
          internal::stopImThread();
