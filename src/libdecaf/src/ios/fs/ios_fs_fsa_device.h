@@ -41,6 +41,8 @@ class FSADevice
    };
 
 public:
+   FSADevice();
+
    FSAStatus changeDir(phys_ptr<FSARequestChangeDir> request);
    FSAStatus closeDir(phys_ptr<FSARequestCloseDir> request);
    FSAStatus closeFile(phys_ptr<FSARequestCloseFile> request);

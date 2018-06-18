@@ -215,6 +215,7 @@ initialise(const std::string &gamePath)
    filesystem->mountHostFolder("/dev/sdcard01", sdcardPath, fs::Permissions::ReadWrite);
 
    // Setup ios
+   kernel::setFileSystem(filesystem.get());
    ios::setFileSystem(std::move(filesystem));
    return true;
 }

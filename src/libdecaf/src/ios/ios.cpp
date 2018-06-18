@@ -1,3 +1,4 @@
+#include "ios.h"
 #include "ios_alarm_thread.h"
 #include "ios_core.h"
 #include "kernel/ios_kernel.h"
@@ -35,6 +36,9 @@ sInterruptMutex;
 
 static std::atomic<uint32_t>
 sInterruptFlags = 0u;
+
+static std::unique_ptr<::fs::FileSystem>
+sFileSystem;
 
 namespace internal
 {
@@ -153,6 +157,18 @@ join()
          sCores[i].thread.join();
       }
    }
+}
+
+void
+setFileSystem(std::unique_ptr<::fs::FileSystem> fs)
+{
+   sFileSystem = std::move(fs);
+}
+
+::fs::FileSystem *
+getFileSystem()
+{
+   return sFileSystem.get();
 }
 
 } // namespace ios

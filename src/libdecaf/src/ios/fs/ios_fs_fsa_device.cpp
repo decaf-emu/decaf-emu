@@ -1,4 +1,5 @@
 #include "ios_fs_fsa_device.h"
+#include "ios/ios.h"
 
 namespace ios::fs::internal
 {
@@ -10,6 +11,11 @@ using FileSystem = ::fs::FileSystem;
 using FileHandle = ::fs::FileHandle;
 using FolderEntry = ::fs::FolderEntry;
 using FolderHandle = ::fs::FolderHandle;
+
+FSADevice::FSADevice() :
+   mFS(ios::getFileSystem())
+{
+}
 
 FSAStatus
 FSADevice::translateError(FSError error) const
