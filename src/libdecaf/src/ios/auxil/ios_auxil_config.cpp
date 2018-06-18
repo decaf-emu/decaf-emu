@@ -749,11 +749,14 @@ writeItems(std::string_view fileSysPath,
 
    auto xmlStr = ss.str();
 
-   fileSize = static_cast<uint32_t>(xmlStr.size() + 1);
+   // Copy to a physical memory buffer
+   fileSize = static_cast<uint32_t>(xmlStr.size());
    fileBuffer = allocFileData(fileSize);
    if (!fileBuffer) {
       return UCError::Alloc;
    }
+
+   std::memcpy(fileBuffer.getRawPointer(), xmlStr.data(), xmlStr.size());
 
    error = writeFile(path, fileBuffer, fileSize);
    freeFileData(fileBuffer, fileSize);
