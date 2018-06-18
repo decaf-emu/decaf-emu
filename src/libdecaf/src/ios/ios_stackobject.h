@@ -46,7 +46,7 @@ public:
 
    constexpr uint32_t size() const
    {
-      return Size;
+      return NumElements;
    }
 
    constexpr auto &operator[](std::size_t index)
