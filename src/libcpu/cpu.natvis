@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="be2_val&lt;*&gt;">
+    <DisplayString Condition="sizeof($T1) == 1">
+      {mStorage}
+    </DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mStorage) == 0xCCCC">(not set) 0xCCCC</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mStorage) == 0xCDCD">(not set) 0xCDCD</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mStorage) == 0xDDDD">(in freed object) 0xDDDD</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mStorage) == 0xFEEE">(in freed object) 0xEEFE</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mStorage) == 0xFDFD">(heap buffer overrun) 0xFDFD</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2 &amp;&amp; *(unsigned short *)(&amp;mStorage) == 0xABAB">(heap buffer overrun) 0xABAB</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 2">
+      {($T1)((((*(uint16_t*)&amp;mStorage)&amp;0xFF)&lt;&lt;8)|(((*(uint16_t*)&amp;mStorage)&amp;0xFF00)&gt;&gt;8))} ({($T1)((((*(uint16_t*)&amp;mStorage)&amp;0xFF)&lt;&lt;8)|(((*(uint16_t*)&amp;mStorage)&amp;0xFF00)&gt;&gt;8)),4x})
+    </DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mStorage) == 0xCCCCCCCC">(not set) {($T1)0xCCCCCCCC}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mStorage) == 0xCDCDCDCD">(not set) {($T1)0xCDCDCDCD}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mStorage) == 0xDDDDDDDD">(in freed object) {($T1)0xDDDDDDDD}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mStorage) == 0xFEEEFEEE">(in freed object) {($T1)0xEEFEEEFE}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mStorage) == 0xFDFDFDFD">(heap buffer overrun) {($T1)0xFDFDFDFD}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4 &amp;&amp; *(unsigned *)(&amp;mStorage) == 0xABABABAB">(heap buffer overrun) {($T1)0xABABABAB}</DisplayString>
+    <DisplayString Condition="sizeof($T1) == 4">
+      {($T1)((((*(uint32_t*)&amp;mStorage)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF000000)&gt;&gt;24))} ({((((*(uint32_t*)&amp;mStorage)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF000000)&gt;&gt;24)),8x})
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="sizeof($T1) == 1">
+        mStorage
+      </ExpandedItem>
+      <ExpandedItem Condition="sizeof($T1) == 2">
+        ($T1)((((*(uint16_t*)&amp;mStorage)&amp;0xFF)&lt;&lt;8)|(((*(uint16_t*)&amp;mStorage)&amp;0xFF00)&gt;&gt;8))
+      </ExpandedItem>
+      <ExpandedItem Condition="sizeof($T1) == 4">
+        ($T1)((((*(uint32_t*)&amp;mStorage)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage)&amp;0xFF000000)&gt;&gt;24))
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="cpu::Pointer&lt;*, cpu::Address&lt;cpu::Virtual&gt;&gt;">
+    <DisplayString Condition="mAddress.mAddress ==0">NULL</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress !=0">
+      {($T1*)((size_t)cpu::internal::BaseVirtualAddress+(size_t)mAddress.mAddress)}
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mAddress.mAddress == 0">
+        ($T1*)(nullptr)
+      </ExpandedItem>
+      <ExpandedItem Condition="mAddress.mAddress != 0">
+        ($T1*)((size_t)cpu::internal::BaseVirtualAddress+(size_t)mAddress.mAddress)
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="cpu::Pointer&lt;*, cpu::Address&lt;cpu::Physical&gt;&gt;">
+    <DisplayString Condition="mAddress.mAddress ==0">NULL</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mAddress.mAddress !=0">
+      {($T1*)((size_t)cpu::internal::BasePhysicalAddress+(size_t)mAddress.mAddress)}
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mAddress.mAddress == 0">
+        ($T1*)(nullptr)
+      </ExpandedItem>
+      <ExpandedItem Condition="mAddress.mAddress != 0">
+        ($T1*)((size_t)cpu::internal::BasePhysicalAddress+(size_t)mAddress.mAddress)
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="be2_val&lt;cpu::Pointer&lt;*, cpu::Address&lt;cpu::Virtual&gt;&gt;&gt;">
+    <DisplayString Condition="mStorage.mAddress.mAddress ==0">NULL</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress !=0">
+      {($T1*)((size_t)cpu::internal::BaseVirtualAddress+(size_t)((((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF000000)&gt;&gt;24)))}
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mStorage.mAddress.mAddress == 0">
+        ($T1*)(nullptr)
+      </ExpandedItem>
+      <ExpandedItem Condition="mStorage.mAddress.mAddress != 0">
+        ($T1*)((size_t)cpu::internal::BaseVirtualAddress+(size_t)((((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF000000)&gt;&gt;24)))
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="be2_val&lt;cpu::Pointer&lt;*, cpu::Address&lt;cpu::Physical&gt;&gt;&gt;">
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0">NULL</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="mStorage.mAddress.mAddress != 0">
+      {($T1*)((size_t)cpu::internal::BasePhysicalAddress+(size_t)((((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF000000)&gt;&gt;24)))}
+    </DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mStorage.mAddress.mAddress == 0">
+        ($T1*)(nullptr)
+      </ExpandedItem>
+      <ExpandedItem Condition="mStorage.mAddress.mAddress != 0">
+        ($T1*)((size_t)cpu::internal::BasePhysicalAddress+(size_t)((((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF)&lt;&lt;24)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF00)&lt;&lt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF0000)&gt;&gt;8)|(((*(uint32_t*)&amp;mStorage.mAddress.mAddress)&amp;0xFF000000)&gt;&gt;24)))
+      </ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="be2_val&lt;float&gt;">
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0x0000807F">infinity</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0x000080FF">-infinity</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0xCCCCCCCC">(not set)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0xCDCDCDCD">(not set)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0xDDDDDDDD">(in freed object)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0xFEEEFEEE">(in freed object)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0xFDFDFDFD">(heap buffer overrun)</DisplayString>
+    <DisplayString Condition="*(unsigned *)(&amp;mStorage) == 0xABABABAB">(heap buffer overrun)</DisplayString>
+    <DisplayString>
+      { (1-(2*((*(unsigned *)(&amp;mStorage) &amp; 0x80) >> 7))) *   (((long long)65536 &lt;&lt; ((((((*(unsigned *)(&amp;mStorage)  &amp; 0xFF) &lt;&lt; 24) | ((*(unsigned *)(&amp;mStorage) &amp; 0xFF00) &lt;&lt; 8) | ((*(unsigned *)(&amp;mStorage) &amp; 0xFF0000) &gt;&gt; 8) | ((*(unsigned *)(&amp;mStorage) &amp; 0xFF000000) &gt;&gt; 24)) &amp; 0x7F800000) >> 23) - 127)) / 65536.0f) *
+      (((((*(unsigned *)(&amp;mStorage)  &amp; 0xFF) &lt;&lt; 24) | ((*(unsigned *)(&amp;mStorage) &amp; 0xFF00) &lt;&lt; 8) | ((*(unsigned *)(&amp;mStorage) &amp; 0xFF0000) &gt;&gt; 8) | ((*(unsigned *)(&amp;mStorage) &amp; 0xFF000000) &gt;&gt; 24)) &amp; 0x7FFFFF) * 0.00000011920928955078125 + 1) ,g}
+    </DisplayString>
+  </Type>
+</AutoVisualizer>
