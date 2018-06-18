@@ -92,8 +92,6 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       case Command::Resume:
       {
          if (request->requestData.handle == PpcKernelHandle) {
-            // Initialise PPC cpu
-            ::cpu::initialise();
 
             // Initialise PPC kernel
             ::kernel::initialise();

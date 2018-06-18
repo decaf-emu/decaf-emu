@@ -140,6 +140,9 @@ initialise(const std::string &gamePath)
    WSAStartup(MAKEWORD(2, 2), &wsaInitData);
 #endif
 
+   // Initialise cpu (because this initialises memory)
+   ::cpu::initialise();
+
    // Setup debugger
    debugger::initialise(makeConfigPath("imgui.ini"),
                         sClipboardTextGetCallbackFn,
