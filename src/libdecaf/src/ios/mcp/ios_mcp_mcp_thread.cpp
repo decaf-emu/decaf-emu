@@ -308,6 +308,9 @@ initialiseDirectories()
    auto systemFileSys = getSystemFileSys();
    auto systemModeFlags = getSystemModeFlags();
 
+   // TODO: Remove this hack which force creates all directories
+   systemModeFlags |= 0xFFFFFFFF;
+
    for (auto &dir : sDirs) {
       auto dirSystemMode = dir.sysModeNand;
 
