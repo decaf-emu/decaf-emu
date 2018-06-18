@@ -204,7 +204,7 @@ initialise(const std::string &gamePath)
 
    // Mount mlc device
    auto mlcPath = fs::HostPath { decaf::config::system::mlc_path };
-   filesystem->mountHostFolder("/dev/mlc01", mlcPath, fs::Permissions::Read);
+   filesystem->mountHostFolder("/dev/mlc01", mlcPath, fs::Permissions::ReadWrite);
 
    // Mount slc device
    auto slcPath = fs::HostPath { decaf::config::system::slc_path };
