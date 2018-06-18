@@ -1,4 +1,5 @@
 #include "ios_mcp_config.h"
+#include "ios/kernel/ios_kernel_debug.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/ios_stackobject.h"
 
@@ -35,6 +36,12 @@ sValidRootKeys =
 static bool
 isValidRootKey(std::string_view key)
 {
+   auto securityLevel = IOS_GetSecurityLevel();
+   if (securityLevel != ios::kernel::SecurityLevel::Debug &&
+       securityLevel != ios::kernel::SecurityLevel::Test) {
+      return true;
+   }
+
    for (auto validKey : sValidRootKeys) {
       if (key.compare(validKey) == 0) {
          return true;
