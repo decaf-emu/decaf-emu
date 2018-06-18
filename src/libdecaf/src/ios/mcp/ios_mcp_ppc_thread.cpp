@@ -92,6 +92,12 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       case Command::Resume:
       {
          if (request->requestData.handle == PpcKernelHandle) {
+            // TODO: For now all IPC requests come in as COSKERNEL, and we do
+            // not have proper title launching setup yet, so let's give kernel
+            // filesystem permissions for now.
+            StackObject<uint64_t> mask;
+            *mask = 0xFFFFFFFFFFFFFFFFull;
+            IOS_SetClientCapabilities(ProcessId::COSKERNEL, 11, mask);
 
             // Initialise PPC kernel
             ::kernel::initialise();
