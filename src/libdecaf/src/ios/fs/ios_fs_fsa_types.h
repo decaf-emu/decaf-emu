@@ -1,4 +1,5 @@
 #pragma once
+#include "ios/ios_enum.h"
 #include "ios_fs_enum.h"
 
 #include <common/structsize.h>
@@ -133,6 +134,22 @@ CHECK_OFFSET(FSAVolumeInfo, 0xAC, volumeId);
 CHECK_OFFSET(FSAVolumeInfo, 0x12C, devicePath);
 CHECK_OFFSET(FSAVolumeInfo, 0x13C, mountPath);
 CHECK_SIZE(FSAVolumeInfo, 0x1BC);
+
+/**
+ * Owner information for FSAChangeOwner
+ */
+struct FSAOwnerInfo
+{
+   be2_val<uint32_t> unk_0x00;
+   be2_val<uint32_t> unk_0x04;
+   be2_val<ProcessId> pid;
+   be2_val<uint32_t> unk_0x0C;
+};
+CHECK_OFFSET(FSAOwnerInfo, 0x00, unk_0x00);
+CHECK_OFFSET(FSAOwnerInfo, 0x04, unk_0x04);
+CHECK_OFFSET(FSAOwnerInfo, 0x08, pid);
+CHECK_OFFSET(FSAOwnerInfo, 0x0C, unk_0x0C);
+CHECK_SIZE(FSAOwnerInfo, 0x10);
 
 #pragma pack(pop)
 

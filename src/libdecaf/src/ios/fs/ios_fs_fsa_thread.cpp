@@ -136,6 +136,9 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       case FSACommand::MakeDir:
          status = device->makeDir(phys_addrof(request->makeDir));
          break;
+      case FSACommand::MakeQuota:
+         status = device->makeQuota(phys_addrof(request->makeQuota));
+         break;
       case FSACommand::OpenDir:
          status = device->openDir(phys_addrof(request->openDir), phys_addrof(response->openDir));
          break;

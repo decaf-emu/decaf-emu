@@ -353,6 +353,19 @@ FSADevice::makeDir(phys_ptr<FSARequestMakeDir> request)
 
 
 FSAStatus
+FSADevice::makeQuota(phys_ptr<FSARequestMakeQuota> request)
+{
+   auto path = translatePath(phys_addrof(request->path));
+
+   if (!mFS->makeFolder(path)) {
+      return FSAStatus::PermissionError;
+   }
+
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
 FSADevice::mount(phys_ptr<FSARequestMount> request)
 {
    auto devicePath = translatePath(phys_addrof(request->path));

@@ -51,6 +51,7 @@ public:
    FSAStatus getPosFile(phys_ptr<FSARequestGetPosFile> request, phys_ptr<FSAResponseGetPosFile> response);
    FSAStatus isEof(phys_ptr<FSARequestIsEof> request);
    FSAStatus makeDir(phys_ptr<FSARequestMakeDir> request);
+   FSAStatus makeQuota(phys_ptr<FSARequestMakeQuota> request);
    FSAStatus mount(phys_ptr<FSARequestMount> request);
    FSAStatus openDir(phys_ptr<FSARequestOpenDir> request, phys_ptr<FSAResponseOpenDir> response);
    FSAStatus openFile(phys_ptr<FSARequestOpenFile> request, phys_ptr<FSAResponseOpenFile> response);
