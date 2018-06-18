@@ -225,7 +225,7 @@ loadRtcConfig()
    auto error = readConfigItems(items, items.size());
    if (error < MCPError::OK || config->version < 21) {
       // Factory reset items
-      std::memset(config.getRawPointer(), 0, sizeof(SysProdConfig));
+      std::memset(config.getRawPointer(), 0, sizeof(RtcConfig));
       config->version = 1u;
       config->rtc_offset = 0x4EFFA200u;
 
@@ -346,7 +346,7 @@ loadSystemConfig()
    auto error = readConfigItems(items, items.size());
    if (error < MCPError::OK || config->version < 21) {
       // Factory reset items
-      std::memset(config.getRawPointer(), 0, sizeof(SysProdConfig));
+      std::memset(config.getRawPointer(), 0, sizeof(SystemConfig));
       config->version = 21u;
       config->dev_mode = 0u;
       config->default_eco_title_id = 0x0005001010066000ull;
