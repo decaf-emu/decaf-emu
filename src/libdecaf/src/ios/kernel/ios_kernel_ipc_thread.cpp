@@ -29,9 +29,6 @@ struct StaticIpcData
 static phys_ptr<StaticIpcData>
 sData = nullptr;
 
-static MessageQueueId
-sIpcMessageQueueId;
-
 static AtomicQueue<phys_ptr<IpcRequest>, 128>
 sIpcRequestQueue;
 
@@ -198,7 +195,7 @@ ipcThreadEntry(phys_ptr<void> context)
 MessageQueueId
 getIpcMessageQueueId()
 {
-   return sIpcMessageQueueId;
+   return sData->messageQueueId;
 }
 
 Error
