@@ -568,7 +568,7 @@ getResourceHandle(ResourceHandleId id,
 {
    auto index = id & 0xFFF;
 
-   if (id < 0 || index >= resourceHandleManager->handles.size()) {
+   if (id < 0 || index >= static_cast<ResourceHandleId>(resourceHandleManager->handles.size())) {
       return Error::Invalid;
    }
 

@@ -42,7 +42,7 @@ getHeap(HeapId id,
       id = sHeapData->localProcessHeaps[pid];
    }
 
-   if (id >= sHeapData->heaps.size()) {
+   if (id >= static_cast<HeapId>(sHeapData->heaps.size())) {
       return Error::Invalid;
    }
 
@@ -68,13 +68,13 @@ IOS_CreateHeap(phys_ptr<void> ptr,
       return Error::Alignment;
    }
 
-   for (id = HeapId { 1 }; id < sHeapData->heaps.size(); ++id) {
+   for (id = HeapId { 1 }; id < static_cast<HeapId>(sHeapData->heaps.size()); ++id) {
       if (!sHeapData->heaps[id].base) {
          break;
       }
    }
 
-   if (id >= sHeapData->heaps.size()) {
+   if (id >= static_cast<HeapId>(sHeapData->heaps.size())) {
       return Error::Max;
    }
 
@@ -115,7 +115,7 @@ IOS_CreateLocalProcessHeap(phys_ptr<void> ptr,
    }
 
    auto pid = static_cast<ProcessId>(error);
-   if (pid >= sHeapData->localProcessHeaps.size()) {
+   if (pid >= static_cast<ProcessId>(sHeapData->localProcessHeaps.size())) {
       return Error::Invalid;
    }
 
@@ -150,7 +150,7 @@ IOS_CreateCrossProcessHeap(uint32_t size)
    }
 
    auto pid = static_cast<ProcessId>(error);
-   if (pid >= sHeapData->crossProcessHeaps.size()) {
+   if (pid >= static_cast<ProcessId>(sHeapData->crossProcessHeaps.size())) {
       return Error::Invalid;
    }
 

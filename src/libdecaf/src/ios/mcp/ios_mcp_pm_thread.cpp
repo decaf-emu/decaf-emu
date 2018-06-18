@@ -107,7 +107,7 @@ getResourceManagerId(std::string_view name)
 static Error
 sendRegisterResourceManagerMessage(RegisteredResourceManagerId id)
 {
-   if (id < 0 || id >= sData->resourceManagers.size()) {
+   if (id < 0 || id >= static_cast<RegisteredResourceManagerId>(sData->resourceManagers.size())) {
       return Error::InvalidArg;
    }
 
