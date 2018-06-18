@@ -210,6 +210,10 @@ initialise(const std::string &gamePath)
    filesystem->makeFolder("/dev/slc01/sys/proc");
    filesystem->makeFolder("/dev/slc01/sys/proc/prefs");
 
+   // Mount sdcard
+   auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
+   filesystem->mountHostFolder("/dev/sdcard01", sdcardPath, fs::Permissions::ReadWrite);
+
    // Setup ios
    ios::setFileSystem(std::move(filesystem));
    return true;

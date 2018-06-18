@@ -456,29 +456,10 @@ launchGame()
    gLog->debug("Succesfully loaded {}", rpx);
    sUserModule = appModule;
 
-   // Setup title path
-   auto fileSystem = getFileSystem();
-
+   // Prepare MLC
    if (!prepareMLC()) {
       gLog->error("Failed to prepare MLC");
       return false;
-   }
-
-   // Mount SD card if game has permission to use it
-   if ((sGameInfo.cos.permission_fs & decaf::CosXML::SdCardRead) ||
-       (sGameInfo.cos.permission_fs & decaf::CosXML::SdCardWrite)) {
-      // Ensure sdcard_path exists
-      platform::createDirectory(decaf::config::system::sdcard_path);
-
-      // Mount sdcard
-      auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
-      auto permission = fs::Permissions::Read;
-
-      if (sGameInfo.cos.permission_fs & decaf::CosXML::SdCardWrite) {
-         permission = fs::Permissions::ReadWrite;
-      }
-
-      fileSystem->mountHostFolder("/dev/sdcard01", sdcardPath, permission);
    }
 
    // We need to set some default stuff up...
