@@ -1,8 +1,9 @@
 #pragma once
 #include <assert.h>
 #include <type_traits>
-#include "libcpu/state.h"
-#include "libcpu/mem.h"
+#include <libcpu/be2_struct.h>
+#include <libcpu/state.h>
+#include <libcpu/mem.h>
 
 namespace ppctypes
 {
@@ -35,6 +36,26 @@ struct ppctype_converter_t<Type *>
          return nullptr;
       } else {
          return reinterpret_cast<Type*>(mem::translate(in));
+      }
+   }
+};
+
+template<typename Type>
+struct ppctype_converter_t<virt_ptr<Type>>
+{
+   static const PpcType ppc_type = PpcType::WORD;
+
+   static inline void to_ppc(Type *ptr, virt_ptr<Type> &out)
+   {
+      out = virt_cast<Type *>(static_cast<virt_addr>(mem::untranslate(ptr)));
+   }
+
+   static inline virt_ptr<Type> from_ppc(uint32_t in)
+   {
+      if (in == 0) {
+         return nullptr;
+      } else {
+         return virt_cast<Type *>(static_cast<virt_addr>(in));
       }
    }
 };

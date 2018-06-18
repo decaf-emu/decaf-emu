@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <common/strutils.h>
 #include <fmt/format.h>
+#include <libcpu/be2_struct.h>
 #include <string>
 
 namespace ppctypes
@@ -77,6 +78,14 @@ inline void
 logArgument(LogState &state, Type *value)
 {
    logArgument(state, mem::untranslate(value));
+}
+
+// virt_ptr<Type>
+template<typename Type>
+inline void
+logArgument(LogState &state, virt_ptr<Type> value)
+{
+   logArgument(state, static_cast<uint32_t>(virt_cast<virt_addr>(value)));
 }
 
 // Log generic (not enum)
