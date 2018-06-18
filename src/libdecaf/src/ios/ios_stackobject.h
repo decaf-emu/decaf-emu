@@ -14,7 +14,7 @@ class StackObject : public phys_ptr<Type>
 {
    static constexpr auto
    AlignedSize = align_up(static_cast<uint32_t>(sizeof(Type) * NumElements),
-                          std::max<size_t>(alignof(Type), size_t { 4 }));
+                          std::max<std::size_t>(alignof(Type), 4u));
 
 public:
    StackObject()
@@ -59,5 +59,14 @@ public:
       return getRawPointer()[index];
    }
 };
+
+template<std::size_t N>
+inline auto
+make_stack_string(const char (&hostStr)[N])
+{
+   StackArray<const char, N + 1> guestStr;
+   std::strcpy(guestStr.getRawPointer(), hostStr);
+   return guestStr;
+}
 
 } // namespace ios
