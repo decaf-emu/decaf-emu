@@ -6,6 +6,7 @@
 #include "modules/gx2/gx2_internal_flush.h"
 
 #include <common/teenyheap.h>
+#include <libcpu/be2_struct.h>
 #include <array>
 
 namespace coreinit

@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_driver.h"
+#include <libcpu/be2_struct.h>
 
 namespace coreinit
 {

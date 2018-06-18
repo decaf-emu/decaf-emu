@@ -10,6 +10,7 @@
 #include <common/teenyheap.h>
 #include <fstream>
 #include <gsl.h>
+#include <libcpu/be2_struct.h>
 #include <libcpu/mem.h>
 
 
