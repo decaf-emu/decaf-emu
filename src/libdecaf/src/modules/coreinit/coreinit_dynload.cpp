@@ -2,6 +2,8 @@
 #include "coreinit_dynload.h"
 #include "coreinit_memexpheap.h"
 #include "coreinit_memheap.h"
+
+#include "cafe/cafe_stackobject.h"
 #include "kernel/kernel_loader.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_ptr.h"
@@ -316,10 +318,9 @@ dynLoadMemAlloc(int size,
                 int alignment,
                 void **outPtr)
 {
-   auto value = coreinit::internal::sysAlloc<be_ptr<void>>();
-   auto result = sMemAlloc(size, alignment, value);
+   cafe::StackObject<be_ptr<void>> value;
+   auto result = sMemAlloc(size, alignment, value.getRawPointer());
    *outPtr = *value;
-   coreinit::internal::sysFree(value);
    return result;
 }
 
