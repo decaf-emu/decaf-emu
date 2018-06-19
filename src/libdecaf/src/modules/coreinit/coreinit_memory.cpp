@@ -74,7 +74,7 @@ OSGetMemBound(OSMemoryType type,
    }
    case OSMemoryType::MEM2:
    {
-      auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::AppHeapData);
+      auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::MainAppData);
       memAddr = bounds.start.getAddress();
       memSize = bounds.size;
       break;

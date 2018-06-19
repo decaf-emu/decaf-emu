@@ -53,13 +53,14 @@ sPhysicalMemoryMap {
    // MEM1 - 32 MB
    { PhysicalRegion::MEM1,                   { 0x00000000_paddr , 0x01FFFFFF_paddr } },
 
-   // LockedCache (not present on hardware) - 16 KB per core
+   // HACK: LockedCache (not present on hardware) - 16 KB per core
    // Note we have to use the page size, 128kb, as that is the minimum we can map.
    { PhysicalRegion::LockedCache,            { 0x02000000_paddr, 0x0201FFFF_paddr } },
 
    // MEM0 - 2.68 MB / 2,752 KB
-   // unused                                   0x08000000   --   0x0811FFFF
    { PhysicalRegion::MEM0,                   { 0x08000000_paddr, 0x082DFFFF_paddr } },
+   { PhysicalRegion::MEM0CafeKernel,         { 0x08000000_paddr, 0x080DFFFF_paddr } },
+   // unused cafe kernel                       0x080E0000    --  0x0811FFFF
    { PhysicalRegion::MEM0IosKernel,          { 0x08120000_paddr, 0x081BFFFF_paddr } },
    { PhysicalRegion::MEM0IosMcp,             { 0x081C0000_paddr, 0x0827FFFF_paddr } },
    { PhysicalRegion::MEM0IosCrypto,          { 0x08280000_paddr, 0x082BFFFF_paddr } },
@@ -86,19 +87,24 @@ sPhysicalMemoryMap {
    // IOS MCP unknown                          0x13D80000   --   0x13DBFFFF
    { PhysicalRegion::MEM2ForegroundBucket,   { 0x14000000_paddr, 0x17FFFFFF_paddr } },
    { PhysicalRegion::MEM2SharedData,         { 0x18000000_paddr, 0x1AFFFFFF_paddr } },
-   { PhysicalRegion::MEM2LoaderHeap,         { 0x1B000000_paddr, 0x1CFFFFFF_paddr } },
+   { PhysicalRegion::MEM2CafeKernelHeap,     { 0x1B000000_paddr, 0x1BFFFFFF_paddr } },
+   { PhysicalRegion::MEM2LoaderHeap,         { 0x1C000000_paddr, 0x1CFFFFFF_paddr } },
    { PhysicalRegion::MEM2IosSharedHeap,      { 0x1D000000_paddr, 0x1FAFFFFF_paddr } },
-   // IOS NET iobuf                            0x1FB00000   --   0x1FDFFFFF
+   { PhysicalRegion::MEM2IosNetIobuf,        { 0x1FB00000_paddr, 0x1FDFFFFF_paddr } },
    // IOS MCP unknown                          0x1FE00000   --   0x1FE3FFFF
    // IOS MCP unknown                          0x1FE40000   --   0x1FFFFFFF
-   // IOS FS ramdisk                           0x20000000   --   0x27FFFFFF
-   { PhysicalRegion::MEM2TilingApertures,    { 0x20000000_paddr, 0x2FFFFFFF_paddr } }, // TODO: Move tiling apertures away from ramdisk memory.
-   // root.rpx                                 0x30000000   --   0x31FFFFFF
-   { PhysicalRegion::MEM2SystemHeap,         { 0x32000000_paddr, 0x327FFFFF_paddr } },
-   // unknown                                  0x32800000   --   0x32FFFFFF
-   // Error Display                            0x33000000   --   0x33FFFFFF
-   { PhysicalRegion::MEM2OverlayArena,       { 0x34000000_paddr, 0x4FFFFFFF_paddr } },
-   { PhysicalRegion::MEM2AppHeap,            { 0x50000000_paddr, 0x8FFFFFFF_paddr } },
+   { PhysicalRegion::MEM2IosFsRamdisk,       { 0x20000000_paddr, 0x27FFFFFF_paddr } },
+   { PhysicalRegion::MEM2HomeMenu,           { 0x28000000_paddr, 0x2FFFFFFF_paddr } },
+   { PhysicalRegion::MEM2Root,               { 0x30000000_paddr, 0x31FFFFFF_paddr } },
+   { PhysicalRegion::MEM2CafeOS,             { 0x32000000_paddr, 0x327FFFFF_paddr } },
+   // unknown? maybe reserved for CafeOS increase? 0x32800000 -- 0x32FFFFFF
+   { PhysicalRegion::MEM2ErrorDisplay,       { 0x33000000_paddr, 0x33FFFFFF_paddr } },
+   { PhysicalRegion::MEM2OverlayApp,         { 0x34000000_paddr, 0x4FFFFFFF_paddr } },
+   { PhysicalRegion::MEM2MainApp,            { 0x50000000_paddr, 0x8FFFFFFF_paddr } },
+   { PhysicalRegion::MEM2DevKit,             { 0x90000000_paddr, 0xCFFFFFFF_paddr } },
+
+   // HACK: Tiling Apertures (not present on hardware)
+   { PhysicalRegion::TilingApertures,        { 0xD0000000_paddr, 0xDFFFFFFF_paddr } },
 
    // SRAM1 - 32 KB
    //0xFFF00000   --   0xFFF07FFF = IOS MCP sram1
@@ -113,14 +119,14 @@ sPhysicalMemoryMap {
 
 static std::map<VirtualRegion, VirtualMap>
 sVirtualMemoryMap {
-   { VirtualRegion::SystemHeap,              { 0x01000000_vaddr, 0x017FFFFF_vaddr, PhysicalRegion::MEM2SystemHeap } },
+   { VirtualRegion::CafeOS,                  { 0x01000000_vaddr, 0x017FFFFF_vaddr, PhysicalRegion::MEM2CafeOS } },
 
-   { VirtualRegion::AppHeapCode,             { 0x02000000_vaddr, 0x0FFFFFFF_vaddr, PhysicalRegion::MEM2AppHeap } },
-   { VirtualRegion::AppHeapData,             { 0x10000000_vaddr, 0x4FFFFFFF_vaddr, PhysicalRegion::MEM2AppHeap } },
+   { VirtualRegion::MainAppCode,             { 0x02000000_vaddr, 0x0FFFFFFF_vaddr, PhysicalRegion::MEM2MainApp } },
+   { VirtualRegion::MainAppData,             { 0x10000000_vaddr, 0x4FFFFFFF_vaddr, PhysicalRegion::MEM2MainApp } },
 
-   { VirtualRegion::OverlayArena,            { 0x60000000_vaddr, 0x7BFFFFFF_vaddr, PhysicalRegion::MEM2OverlayArena } },
+   { VirtualRegion::OverlayArena,            { 0x60000000_vaddr, 0x7BFFFFFF_vaddr, PhysicalRegion::MEM2OverlayApp } },
 
-   { VirtualRegion::TilingApertures,         { 0x80000000_vaddr, 0x8FFFFFFF_vaddr, PhysicalRegion::MEM2TilingApertures } },
+   { VirtualRegion::TilingApertures,         { 0x80000000_vaddr, 0x8FFFFFFF_vaddr, PhysicalRegion::TilingApertures } },
 
    { VirtualRegion::VirtualMapRange,         { 0xA0000000_vaddr, 0xDFFFFFFF_vaddr, PhysicalRegion::Invalid } },
    { VirtualRegion::ForegroundBucket,        { 0xE0000000_vaddr, 0xE3FFFFFF_vaddr, PhysicalRegion::MEM2ForegroundBucket } },
@@ -186,7 +192,7 @@ unmap(VirtualMap &map)
 void
 initialiseVirtualMemory()
 {
-   map(sVirtualMemoryMap[VirtualRegion::SystemHeap]);
+   map(sVirtualMemoryMap[VirtualRegion::CafeOS]);
    map(sVirtualMemoryMap[VirtualRegion::ForegroundBucket]);
    map(sVirtualMemoryMap[VirtualRegion::MEM1]);
    map(sVirtualMemoryMap[VirtualRegion::SharedData]);
@@ -196,7 +202,7 @@ initialiseVirtualMemory()
 void
 freeVirtualMemory()
 {
-   unmap(sVirtualMemoryMap[VirtualRegion::SystemHeap]);
+   unmap(sVirtualMemoryMap[VirtualRegion::CafeOS]);
    unmap(sVirtualMemoryMap[VirtualRegion::ForegroundBucket]);
    unmap(sVirtualMemoryMap[VirtualRegion::MEM1]);
    unmap(sVirtualMemoryMap[VirtualRegion::SharedData]);
@@ -238,9 +244,9 @@ freeTilingApertures()
 bool
 initialiseAppMemory(uint32_t codeSize)
 {
-   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::AppHeapCode];
-   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::AppHeapData];
-   auto &appHeap = sPhysicalMemoryMap[PhysicalRegion::MEM2AppHeap];
+   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::MainAppCode];
+   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::MainAppData];
+   auto &appHeap = sPhysicalMemoryMap[PhysicalRegion::MEM2MainApp];
 
    // Align code size to page size
    codeSize = align_up(codeSize, cpu::PageSize);
@@ -295,8 +301,8 @@ initialiseAppMemory(uint32_t codeSize)
 void
 freeAppMemory()
 {
-   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::AppHeapCode];
-   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::AppHeapData];
+   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::MainAppCode];
+   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::MainAppData];
 
    if (appHeapCode.mapped) {
       cpu::unmapMemory(appHeapCode.start, appHeapCode.size());
@@ -332,8 +338,8 @@ getAvailPhysicalRange()
 cpu::PhysicalAddressRange
 getDataPhysicalRange()
 {
-   return { sPhysicalMemoryMap[PhysicalRegion::MEM2AppHeap].start,
-            sVirtualMemoryMap[VirtualRegion::AppHeapData].size() };
+   return { sPhysicalMemoryMap[PhysicalRegion::MEM2MainApp].start,
+            sVirtualMemoryMap[VirtualRegion::MainAppData].size() };
 }
 
 } // namespace kernel

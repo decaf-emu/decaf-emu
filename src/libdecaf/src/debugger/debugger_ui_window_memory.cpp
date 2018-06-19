@@ -15,7 +15,7 @@ namespace ui
 MemoryWindow::MemoryWindow(const std::string &name) :
    Window(name)
 {
-   mAddressScroller.scrollTo(kernel::getVirtualRange(kernel::VirtualRegion::AppHeapData).start.getAddress());
+   mAddressScroller.scrollTo(kernel::getVirtualRange(kernel::VirtualRegion::MainAppData).start.getAddress());
 }
 
 void

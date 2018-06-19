@@ -129,7 +129,7 @@ initialise()
       cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
    }
 
-   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::SystemHeap);
+   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::CafeOS);
    sSystemHeap = new TeenyHeap { virt_cast<void *>(bounds.start).getRawPointer(), bounds.size };
 }
 
@@ -356,6 +356,7 @@ cpuEntrypoint(cpu::Core *core)
 static bool
 prepareMLC()
 {
+   /*
    auto fileSystem = getFileSystem();
 
    // Temporarily set mlc to write so we can create folders
@@ -379,12 +380,14 @@ prepareMLC()
 
    // Set mlc/usr to ReadWrite
    fileSystem->setPermissions("/vol/storage_mlc01/usr", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   */
    return true;
 }
 
 static bool
 prepareSLC()
 {
+   /*
    auto fileSystem = getFileSystem();
 
    // Temporarily set slc to write so we can create folders
@@ -411,6 +414,7 @@ prepareSLC()
 
    // Set configuration folder to ReadWrite
    fileSystem->setPermissions("/vol/system_slc/proc/prefs", fs::Permissions::ReadWrite, fs::PermissionFlags::Recursive);
+   */
    return true;
 }
 
