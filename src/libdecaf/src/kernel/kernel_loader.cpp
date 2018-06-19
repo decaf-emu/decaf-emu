@@ -1340,6 +1340,21 @@ loadRPLNoLock(const std::string &name)
       return itr->second;
    }
 
+   // Try to find module in the system library directory.
+   // Only if it is on the allowed lle_modules list.
+   if (!module && !fh &&
+       std::find(decaf::config::system::lle_modules.begin(),
+                 decaf::config::system::lle_modules.end(),
+                 fileName) != decaf::config::system::lle_modules.end()) {
+
+      auto fs = kernel::getFileSystem();
+      auto result = fs->openFile("/vol/storage_mlc01/sys/title/00050010/1000400A/code/" + fileName, fs::File::Read);
+
+      if (result) {
+         fh = result.value();
+      }
+   }
+
    // Try to find module in system kernel library list
    if (!module) {
       auto kernelModule = kernel::findHleModule(fileName);
@@ -1353,21 +1368,6 @@ loadRPLNoLock(const std::string &name)
    if (!module) {
       auto fs = kernel::getFileSystem();
       auto result = fs->openFile("/vol/code/" + fileName, fs::File::Read);
-
-      if (result) {
-         fh = result.value();
-      }
-   }
-
-   // Try to find module in the system library directory.
-   // Only if it is on the allowed lle_modules list.
-   if (!module && !fh &&
-       std::find(decaf::config::system::lle_modules.begin(),
-                 decaf::config::system::lle_modules.end(),
-                 fileName) != decaf::config::system::lle_modules.end()) {
-
-      auto fs = kernel::getFileSystem();
-      auto result = fs->openFile("/vol/storage_mlc01/sys/title/00050010/1000400A/code/" + fileName, fs::File::Read);
 
       if (result) {
          fh = result.value();
