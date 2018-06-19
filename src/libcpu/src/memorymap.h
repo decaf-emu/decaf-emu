@@ -96,9 +96,10 @@ private:
    platform::MapFileHandle mMem0 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mMem1 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mMem2 = platform::InvalidMapFileHandle;
-   platform::MapFileHandle mLockedCache = platform::InvalidMapFileHandle;
    platform::MapFileHandle mSram0 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mSram1 = platform::InvalidMapFileHandle;
+   platform::MapFileHandle mLockedCache = platform::InvalidMapFileHandle;
+   platform::MapFileHandle mTilingAperture = platform::InvalidMapFileHandle;
 
    uintptr_t mVirtualBase = 0;
    uintptr_t mPhysicalBase = 0;

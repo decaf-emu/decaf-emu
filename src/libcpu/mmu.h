@@ -46,9 +46,10 @@ enum class PhysicalMemoryType
    MEM0,
    MEM1,
    MEM2,
-   LockedCache,
    SRAM0,
    SRAM1,
+   LockedCache,
+   TilingAperture,
 };
 
 constexpr auto PageSize = uint32_t { 128 * 1024 };

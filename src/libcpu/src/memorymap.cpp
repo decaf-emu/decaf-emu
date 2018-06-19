@@ -21,13 +21,6 @@ static constexpr PhysicalAddress MEM1BaseAddress = PhysicalAddress { 0 };
 static constexpr PhysicalAddress MEM1EndAddress  = PhysicalAddress { 0x01FFFFFF };
 static constexpr size_t MEM1Size = (MEM1EndAddress - MEM1BaseAddress) + 1;
 
-// HACK: Doesn't exist at this physical address on hardware. _DECAF ONLY_
-// HACK: Set to page size (128kb) even though it's actually 16kb per core,
-// due to memory map restrictions.
-static constexpr PhysicalAddress LCBaseAddress = PhysicalAddress { 0x02000000 };
-static constexpr PhysicalAddress LCEndAddress = PhysicalAddress { 0x0201FFFF };
-static constexpr size_t LCSize = (LCEndAddress - LCBaseAddress) + 1;
-
 static constexpr PhysicalAddress MEM0BaseAddress = PhysicalAddress { 0x08000000 };
 static constexpr PhysicalAddress MEM0EndAddress = PhysicalAddress { 0x082DFFFF };
 static constexpr size_t MEM0Size = (MEM0EndAddress - MEM0BaseAddress) + 1;
@@ -43,6 +36,21 @@ static constexpr size_t SRAM1Size = (SRAM1EndAddress - SRAM1BaseAddress) + 1;
 static constexpr PhysicalAddress SRAM0BaseAddress = PhysicalAddress { 0xFFFF0000 };
 static constexpr PhysicalAddress SRAM0EndAddress = PhysicalAddress { 0xFFFFFFFF };
 static constexpr size_t SRAM0Size = (SRAM0EndAddress - SRAM0BaseAddress) + 1;
+
+// HACK: Doesn't exist at this physical address on hardware. _DECAF ONLY_
+// HACK: Set to page size (128kb) even though it's actually 16kb per core,
+// due to memory map restrictions.
+static constexpr PhysicalAddress LCBaseAddress = PhysicalAddress { 0x02000000 };
+static constexpr PhysicalAddress LCEndAddress = PhysicalAddress { 0x0201FFFF };
+static constexpr size_t LCSize = (LCEndAddress - LCBaseAddress) + 1;
+
+// Tiling Aperture dedicated memory.
+// HACK: Doesn't exist at this physical address on hardware. _DECAF ONLY_
+// On hardware the memory controller maps apertures using fancy logic,
+// we can't do that so we need a dedicated memory region for it.
+static constexpr size_t TASize = 256 * 1024 * 1024;
+static constexpr PhysicalAddress TABaseAddress = PhysicalAddress { 0xD0000000 };
+static constexpr PhysicalAddress TAEndAddress = TABaseAddress + TASize - 1;
 
 
 MemoryMap::~MemoryMap()
@@ -102,14 +110,6 @@ MemoryMap::reserve()
       return false;
    }
 
-   // Commit LC
-   mLockedCache = platform::createMemoryMappedFile(LCSize);
-   if (mLockedCache == platform::InvalidMapFileHandle) {
-      gLog->error("Unable to create LC mapping");
-      free();
-      return false;
-   }
-
    // Commit SRAM0
    mSram0 = platform::createMemoryMappedFile(SRAM0Size);
    if (mSram0 == platform::InvalidMapFileHandle) {
@@ -122,6 +122,22 @@ MemoryMap::reserve()
    mSram1 = platform::createMemoryMappedFile(SRAM1Size);
    if (mSram1 == platform::InvalidMapFileHandle) {
       gLog->error("Unable to create SRAM1 mapping");
+      free();
+      return false;
+   }
+
+   // Commit LC
+   mLockedCache = platform::createMemoryMappedFile(LCSize);
+   if (mLockedCache == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create Locked Cache mapping");
+      free();
+      return false;
+   }
+
+   // Commit Tiling Apertures
+   mTilingAperture = platform::createMemoryMappedFile(TASize);
+   if (mTilingAperture == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create Tiling Aperture mapping");
       free();
       return false;
    }
@@ -158,14 +174,6 @@ MemoryMap::reserve()
       return false;
    }
 
-   auto ptrLC = getPhysicalPointer(LCBaseAddress);
-   auto viewLC = platform::mapViewOfFile(mLockedCache, platform::ProtectFlags::ReadWrite, 0, LCSize, ptrLC);
-   if (viewLC != ptrLC) {
-      gLog->error("Unable to map LC to physical address space");
-      free();
-      return false;
-   }
-
    auto ptrSram0 = getPhysicalPointer(SRAM0BaseAddress);
    auto viewSram0 = platform::mapViewOfFile(mSram0, platform::ProtectFlags::ReadWrite, 0, SRAM0Size, ptrSram0);
    if (viewSram0 != ptrSram0) {
@@ -178,6 +186,22 @@ MemoryMap::reserve()
    auto viewSram1 = platform::mapViewOfFile(mSram1, platform::ProtectFlags::ReadWrite, 0, SRAM1Size, ptrSram1);
    if (viewSram1 != ptrSram1) {
       gLog->error("Unable to map SRAM1 to physical address space");
+      free();
+      return false;
+   }
+
+   auto ptrLC = getPhysicalPointer(LCBaseAddress);
+   auto viewLC = platform::mapViewOfFile(mLockedCache, platform::ProtectFlags::ReadWrite, 0, LCSize, ptrLC);
+   if (viewLC != ptrLC) {
+      gLog->error("Unable to map Locked Cache to physical address space");
+      free();
+      return false;
+   }
+
+   auto ptrTA = getPhysicalPointer(TABaseAddress);
+   auto viewTA = platform::mapViewOfFile(mTilingAperture, platform::ProtectFlags::ReadWrite, 0, TASize, ptrTA);
+   if (viewTA != ptrTA) {
+      gLog->error("Unable to map Tiling Aperture to physical address space");
       free();
       return false;
    }
@@ -216,12 +240,6 @@ MemoryMap::free()
       mMem2 = platform::InvalidMapFileHandle;
    }
 
-   if (mLockedCache != platform::InvalidMapFileHandle) {
-      platform::unmapViewOfFile(getPhysicalPointer(LCBaseAddress), LCSize);
-      platform::closeMemoryMappedFile(mLockedCache);
-      mLockedCache = platform::InvalidMapFileHandle;
-   }
-
    if (mSram0 != platform::InvalidMapFileHandle) {
       platform::unmapViewOfFile(getPhysicalPointer(SRAM0BaseAddress), SRAM0Size);
       platform::closeMemoryMappedFile(mSram0);
@@ -232,6 +250,18 @@ MemoryMap::free()
       platform::unmapViewOfFile(getPhysicalPointer(SRAM1BaseAddress), SRAM1Size);
       platform::closeMemoryMappedFile(mSram1);
       mSram1 = platform::InvalidMapFileHandle;
+   }
+
+   if (mLockedCache != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(LCBaseAddress), LCSize);
+      platform::closeMemoryMappedFile(mLockedCache);
+      mLockedCache = platform::InvalidMapFileHandle;
+   }
+
+   if (mTilingAperture != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(TABaseAddress), TASize);
+      platform::closeMemoryMappedFile(mTilingAperture);
+      mTilingAperture = platform::InvalidMapFileHandle;
    }
 
    // Release virtual memory
@@ -292,17 +322,19 @@ PhysicalMemoryType
 MemoryMap::queryPhysicalAddress(PhysicalAddress physicalAddress)
 {
    if (physicalAddress >= MEM0BaseAddress && physicalAddress <= MEM0EndAddress) {
-      return PhysicalMemoryType::LockedCache;
+      return PhysicalMemoryType::MEM0;
    } else if (physicalAddress >= MEM1BaseAddress && physicalAddress <= MEM1EndAddress) {
       return PhysicalMemoryType::MEM1;
    } else if (physicalAddress >= MEM2BaseAddress && physicalAddress <= MEM2EndAddress) {
       return PhysicalMemoryType::MEM2;
-   } else if (physicalAddress >= LCBaseAddress && physicalAddress <= LCEndAddress) {
-      return PhysicalMemoryType::LockedCache;
    } else if (physicalAddress >= SRAM0BaseAddress && physicalAddress <= SRAM0EndAddress) {
       return PhysicalMemoryType::SRAM0;
    } else if (physicalAddress >= SRAM1BaseAddress && physicalAddress <= SRAM1EndAddress) {
       return PhysicalMemoryType::SRAM1;
+   } else if (physicalAddress >= LCBaseAddress && physicalAddress <= LCEndAddress) {
+      return PhysicalMemoryType::LockedCache;
+   } else if (physicalAddress >= TABaseAddress && physicalAddress <= TAEndAddress) {
+      return PhysicalMemoryType::TilingAperture;
    }
 
    return PhysicalMemoryType::Invalid;
@@ -547,12 +579,14 @@ MemoryMap::mapMemory(VirtualAddress virtualAddress,
       view = platform::mapViewOfFile(mMem1, protectFlags, physicalAddress - MEM1BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::MEM2) {
       view = platform::mapViewOfFile(mMem2, protectFlags, physicalAddress - MEM2BaseAddress, size, virtualPtr);
-   } else if (physicalMemoryType == PhysicalMemoryType::LockedCache) {
-      view = platform::mapViewOfFile(mLockedCache, protectFlags, physicalAddress - LCBaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::SRAM0) {
       view = platform::mapViewOfFile(mSram0, protectFlags, physicalAddress - SRAM0BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::SRAM1) {
       view = platform::mapViewOfFile(mSram1, protectFlags, physicalAddress - SRAM1BaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::LockedCache) {
+      view = platform::mapViewOfFile(mLockedCache, protectFlags, physicalAddress - LCBaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::TilingAperture) {
+      view = platform::mapViewOfFile(mTilingAperture, protectFlags, physicalAddress - TABaseAddress, size, virtualPtr);
    } else {
       gLog->error("Invalid physicalMemoryType {} for mapMemory", static_cast<int>(physicalMemoryType));
       return false;
