@@ -85,7 +85,9 @@ void
 freeTilingApertures();
 
 bool
-initialiseAppMemory(uint32_t codeSize);
+initialiseAppMemory(uint32_t codeSize,
+                    uint32_t codeGenSize,
+                    uint32_t availSize);
 
 void
 freeAppMemory();

@@ -138,10 +138,17 @@ sVirtualMemoryMap {
    { VirtualRegion::LockedCache,             { 0xFFC00000_vaddr, 0xFFC1FFFF_vaddr, PhysicalRegion::LockedCache } },
 };
 
-// Maybe this is 1 page per core?
-// We're using the results from a Mii Maker rpx loading environment.
+static constexpr uint32_t MinCodeSize = 0x20000;
+static constexpr uint32_t MaxCodeSize = 0xE000000;
+
+static auto sUnknownReservedCodeBase = cpu::PhysicalAddress { 0 };
+static auto sUnknownReservedCodeSize = uint32_t { 0 };
+
 static auto sAvailPhysicalBase = cpu::PhysicalAddress { 0 };
-static const auto AvailPhysicalSize = uint32_t { 3 * 128 * 1024 };
+static auto sAvailPhysicalSize = uint32_t { 0 };
+
+static auto sCodeGenPhysicalBase = cpu::PhysicalAddress { 0 };
+static auto sCodeGenPhysicalSize = uint32_t { 0 };
 
 static bool
 map(VirtualMap &map)
@@ -242,59 +249,75 @@ freeTilingApertures()
 }
 
 bool
-initialiseAppMemory(uint32_t codeSize)
+initialiseAppMemory(uint32_t codeSize,
+                    uint32_t codeGenSize,
+                    uint32_t availSize)
 {
-   auto &appHeapCode = sVirtualMemoryMap[VirtualRegion::MainAppCode];
-   auto &appHeapData = sVirtualMemoryMap[VirtualRegion::MainAppData];
-   auto &appHeap = sPhysicalMemoryMap[PhysicalRegion::MEM2MainApp];
+   const auto &physicalAppHeap = sPhysicalMemoryMap[PhysicalRegion::MEM2MainApp];
+   auto reservedSize = uint32_t { 0 };
 
-   // Align code size to page size
+   codeSize = std::max(std::min(codeSize, MaxCodeSize), MinCodeSize);
    codeSize = align_up(codeSize, cpu::PageSize);
-   auto dataSize = appHeap.size() - codeSize - AvailPhysicalSize;
+   codeGenSize = align_up(codeGenSize, cpu::PageSize);
+   availSize = align_up(availSize, cpu::PageSize);
+   reservedSize = align_up(0x60000, cpu::PageSize);
 
-   appHeapData.end = appHeapData.start + dataSize - 1;
-   appHeapCode.end = appHeapCode.start + codeSize - 1;
+   // Calculate physical mapping, the order going backwards from end is:
+   // PhysicalAppHeap.end -> code -> code gen -> unknown -> avail
+   auto physicalDataStart = physicalAppHeap.start;
+   auto physicalDataEnd = physicalAppHeap.end - codeSize - codeGenSize - reservedSize - availSize;
+   auto physicalCodeStart = physicalAppHeap.end - codeSize + 1;
+   auto physicalCodeEnd = physicalAppHeap.end;
+   auto dataSize = physicalDataEnd - physicalDataStart;
 
-   // Place data at start of physical memory
-   auto physDataStart = appHeap.start;
+   sCodeGenPhysicalSize = codeGenSize;
+   sCodeGenPhysicalBase = physicalCodeStart - sCodeGenPhysicalSize;
 
-   // Place code at end of physical memory
-   sAvailPhysicalBase = appHeap.start + dataSize;
-   auto physCodeStart = sAvailPhysicalBase + AvailPhysicalSize;
+   sUnknownReservedCodeSize = reservedSize;
+   sUnknownReservedCodeBase = sCodeGenPhysicalBase - sUnknownReservedCodeSize;
 
-   if (!cpu::allocateVirtualAddress(appHeapCode.start, codeSize)) {
+   sAvailPhysicalSize = availSize;
+   sAvailPhysicalBase = sUnknownReservedCodeBase - sAvailPhysicalSize;
+
+   // Adjust virtual mapping
+   auto &virtualCodeMap = sVirtualMemoryMap[VirtualRegion::MainAppCode];
+   auto &virtualDataMap = sVirtualMemoryMap[VirtualRegion::MainAppData];
+   virtualCodeMap.end = virtualCodeMap.start + codeSize - 1;
+   virtualDataMap.end = virtualDataMap.start + dataSize - 1;
+
+   if (!cpu::allocateVirtualAddress(virtualCodeMap.start, codeSize)) {
       gLog->error("Unexpected failure allocating code virtual address 0x{:08X} - 0x{:08X}",
-                  appHeapCode.start.getAddress(), appHeapCode.end.getAddress());
+                  virtualCodeMap.start.getAddress(), virtualCodeMap.end.getAddress());
       return false;
    }
 
-   if (!cpu::allocateVirtualAddress(appHeapData.start, dataSize)) {
+   if (!cpu::allocateVirtualAddress(virtualDataMap.start, dataSize)) {
       gLog->error("Unexpected failure allocating data virtual address 0x{:08X} - 0x{:08X}",
-                  appHeapData.start.getAddress(), appHeapData.end.getAddress());
+                  virtualDataMap.start.getAddress(), virtualDataMap.end.getAddress());
       return false;
    }
 
-   if (!cpu::mapMemory(appHeapCode.start,
-                       physCodeStart,
+   if (!cpu::mapMemory(virtualCodeMap.start,
+                       physicalCodeStart,
                        codeSize,
                        cpu::MapPermission::ReadWrite)) {
       gLog->error("Unexpected failure mapping data virtual address 0x{:08X} - 0x{:08X} to physical address 0x{:08X}",
-                  appHeapCode.start.getAddress(), appHeapCode.end.getAddress(), physCodeStart.getAddress());
+                  virtualCodeMap.start.getAddress(), virtualCodeMap.end.getAddress(), physicalCodeStart.getAddress());
       return false;
    }
 
-   appHeapCode.mapped = true;
+   virtualCodeMap.mapped = true;
 
-   if (!cpu::mapMemory(appHeapData.start,
-                       physDataStart,
+   if (!cpu::mapMemory(virtualDataMap.start,
+                       physicalDataStart,
                        dataSize,
                        cpu::MapPermission::ReadWrite)) {
       gLog->error("Unexpected failure mapping data virtual address 0x{:08X} - 0x{:08X} to physical address 0x{:08X}",
-                  appHeapData.start.getAddress(), appHeapData.end.getAddress(), physDataStart.getAddress());
+                  virtualDataMap.start.getAddress(), virtualDataMap.end.getAddress(), physicalDataStart.getAddress());
       return false;
    }
 
-   appHeapData.mapped = true;
+   virtualDataMap.mapped = true;
    return true;
 }
 
@@ -332,7 +355,7 @@ getPhysicalRange(PhysicalRegion region)
 cpu::PhysicalAddressRange
 getAvailPhysicalRange()
 {
-   return { sAvailPhysicalBase, AvailPhysicalSize };
+   return { sAvailPhysicalBase, sAvailPhysicalSize };
 }
 
 cpu::PhysicalAddressRange

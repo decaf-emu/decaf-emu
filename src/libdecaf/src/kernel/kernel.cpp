@@ -369,7 +369,7 @@ prepareMLC()
    auto titlePath = fmt::format("/vol/storage_mlc01/sys/title/{:08x}/{:08x}", titleHi, titleLo);
    auto titleFolder = fileSystem->makeFolder(titlePath);
 
-   // Create Mii database folder
+   // Create Mii database folder (TODO: Move to ios acp or fpd?)
    fileSystem->makeFolder("/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db");
 
    // Restore mlc to Read only
@@ -439,7 +439,9 @@ launchGame()
    }
 
    // Set up the application memory with max_codesize
-   initialiseAppMemory(sGameInfo.cos.max_codesize);
+   initialiseAppMemory(sGameInfo.cos.max_codesize,
+                       sGameInfo.cos.codegen_size,
+                       sGameInfo.cos.avail_size);
 
    // Load the application-level kernel binding
    auto coreinitModule = loader::loadRPL("coreinit");
