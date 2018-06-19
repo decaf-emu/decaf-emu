@@ -109,6 +109,12 @@ sInterruptContext[3];
 static decaf::GameInfo
 sGameInfo;
 
+static std::array<const char *, 14>
+sSharedLibraries = {
+   "coreinit", "tve", "nsysccr", "nsysnet", "uvc", "tcl", "nn_pdm", "dmae",
+   "dc", "vpadbase", "vpad", "avm", "gx2", "snd_core"
+};
+
 void
 setExecutableFilename(const std::string& name)
 {
@@ -443,12 +449,13 @@ launchGame()
                        sGameInfo.cos.codegen_size,
                        sGameInfo.cos.avail_size);
 
-   // Load the application-level kernel binding
-   auto coreinitModule = loader::loadRPL("coreinit");
+   // Load the default shared libraries
+   for (auto &name : sSharedLibraries) {
+      auto sharedModule = loader::loadRPL(name);
 
-   if (!coreinitModule) {
-      gLog->error("Could not load system coreinit library");
-      return false;
+      if (!sharedModule) {
+         gLog->warn("Could not load shared library {}", name);
+      }
    }
 
    // Load the application
