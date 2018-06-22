@@ -134,7 +134,7 @@ public:
    template<typename O, typename V = ValueType>
    Pointer(const be2_val<Pointer<O, AddressType>> &other,
            typename std::enable_if<std::is_void<V>::value>::type * = nullptr) :
-      mAddress(other.mAddress)
+      mAddress(other.value().mAddress)
    {
    }
 
