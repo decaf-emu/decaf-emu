@@ -162,7 +162,7 @@ MCP_GetTitleInfo(IOSHandle handle,
                  uint64_t titleId,
                  MCPTitleListType *titleInfo)
 {
-   auto searchTitle = MCPTitleListType { 0 };
+   auto searchTitle = MCPTitleListType { };
    searchTitle.titleId = titleId;
 
    auto iosError = internal::mcpSearchTitleList(handle,
@@ -206,7 +206,7 @@ MCP_TitleList(IOSHandle handle,
    if (!titleList || !titleListSizeBytes) {
       result = static_cast<IOSError>(MCP_TitleCount(handle));
    } else {
-      auto searchTitle = MCPTitleListType { 0 };
+      auto searchTitle = MCPTitleListType { };
 
       result = internal::mcpSearchTitleList(handle,
                                             &searchTitle,
@@ -231,7 +231,7 @@ MCP_TitleListByAppType(IOSHandle handle,
                        MCPTitleListType *titleList,
                        uint32_t titleListSizeBytes)
 {
-   auto searchTitle = MCPTitleListType { 0 };
+   auto searchTitle = MCPTitleListType { };
    searchTitle.appType = appType;
 
    auto result = internal::mcpSearchTitleList(handle,
@@ -256,7 +256,7 @@ MCP_TitleListByUniqueId(IOSHandle handle,
                         MCPTitleListType *titleList,
                         uint32_t titleListSizeBytes)
 {
-   auto searchTitle = MCPTitleListType { 0 };
+   auto searchTitle = MCPTitleListType { };
    searchTitle.titleId = uniqueId << 8;
    searchTitle.appType = MCPAppType::Unk0x0800000E;
 
@@ -288,7 +288,7 @@ MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
                                                   MCPTitleListType *titleList,
                                                   uint32_t titleListSizeBytes)
 {
-   auto searchTitle = MCPTitleListType { 0 };
+   auto searchTitle = MCPTitleListType { };
    searchTitle.titleId = uniqueId << 8;
    searchTitle.appType = appType;
    searchTitle.unk0x60 = unk0x60;
