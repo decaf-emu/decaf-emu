@@ -7,7 +7,7 @@
 #include <common/teenyheap.h>
 #include <common/platform_dir.h>
 #include <libcpu/mmu.h>
-#include <libcpu/pointer.h>
+#include <libcpu/be2_struct.h>
 #include <libdecaf/decaf.h>
 #include <libdecaf/decaf_nullinputdriver.h>
 #include <libdecaf/decaf_pm4replay.h>
@@ -437,9 +437,9 @@ SDLWindow::run(const std::string &tracePath)
 
    // Setup decaf shit
    kernel::initialiseVirtualMemory();
-   kernel::initialiseAppMemory(0x10000);
-   auto systemHeapBounds = kernel::getVirtualRange(kernel::VirtualRegion::SystemHeap);
-   gSystemHeap = new TeenyHeap { cpu::VirtualPointer<void> { systemHeapBounds.start }.getRawPointer(), systemHeapBounds.size };
+   kernel::initialiseAppMemory(0x10000, 0, 0);
+   auto systemHeapBounds = kernel::getVirtualRange(kernel::VirtualRegion::CafeOS);
+   gSystemHeap = new TeenyHeap { virt_cast<void *>(static_cast<virt_addr>(systemHeapBounds.start)).getRawPointer(), systemHeapBounds.size };
 
    // Setup pm4 command buffer pool
    auto cbPoolSize = 0x2000;

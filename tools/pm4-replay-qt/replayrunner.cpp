@@ -10,6 +10,7 @@
 #include <libdecaf/src/modules/gx2/gx2_state.h>
 #include <libcpu/cpu.h>
 #include <libcpu/pointer.h>
+#include <libcpu/be2_struct.h>
 #include <libgpu/gpu_config.h>
 #include <libgpu/gpu_opengldriver.h>
 #include <spdlog/spdlog.h>
@@ -208,7 +209,7 @@ bool ReplayRunner::runPacket(ReplayIndex::Packet &packet)
    {
       auto loadPacket = reinterpret_cast<decaf::pm4::CaptureMemoryLoad *>(packet.data);
       auto loadData = packet.data + sizeof(decaf::pm4::CaptureMemoryLoad);
-      auto dst = cpu::VirtualPointer<uint8_t> { cpu::VirtualAddress { loadPacket->address } };
+      auto dst = virt_cast<void *>(static_cast<virt_addr>(loadPacket->address));
       std::memcpy(dst.getRawPointer(), loadData, packet.size - sizeof(decaf::pm4::CaptureMemoryLoad));
       break;
    }

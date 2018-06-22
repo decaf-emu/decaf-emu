@@ -119,8 +119,8 @@ start(excmd::parser &parser,
    // We need to run the trace on a core.
    cpu::initialise();
    cpu::setCoreEntrypointHandler(
-      [&]() {
-         if (cpu::this_core::id() == 1) {
+      [&](cpu::Core *core) {
+         if (core->id == 1) {
             SDLWindow window;
 
             if (!window.createWindow()) {
