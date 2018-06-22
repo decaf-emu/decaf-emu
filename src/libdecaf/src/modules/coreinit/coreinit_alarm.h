@@ -1,4 +1,5 @@
 #pragma once
+#include "coreinit_context.h"
 #include "coreinit_enum.h"
 #include "coreinit_thread.h"
 #include "coreinit_time.h"
@@ -22,7 +23,6 @@ namespace coreinit
 #pragma pack(push, 1)
 
 struct OSAlarm;
-struct OSContext;
 using AlarmCallback = wfunc_ptr<void, OSAlarm *, OSContext *>;
 
 struct OSAlarmQueue

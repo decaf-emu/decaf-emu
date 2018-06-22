@@ -31,7 +31,7 @@ enum class PhysicalRegion
    MEM2IosBsp,
    MEM2ForegroundBucket,
    MEM2SharedData,
-   MEM2CafeKernelHeap,
+   MEM2CafeKernelWorkAreaHeap,
    MEM2LoaderHeap,
    MEM2IosSharedHeap,
    MEM2IosNetIobuf,
@@ -66,7 +66,7 @@ enum class VirtualRegion
    SharedData,
    LockedCache,
    KernelStatic,
-   KernelHeap,
+   KernelWorkAreaHeap,
 };
 
 void

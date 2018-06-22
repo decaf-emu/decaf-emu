@@ -12,6 +12,7 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
 #include "coreinit_thread.h"
+#include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
 #include "libcpu/mem.h"
 #include "libcpu/cpu.h"
@@ -38,6 +39,9 @@ sThreadId = 1;
 
 static AlarmCallback
 sSleepAlarmHandler = nullptr;
+
+static OSThreadEntryPointFn
+sThreadEntryPoint;
 
 static OSThreadEntryPointFn
 sDeallocatorThreadEntryPoint;
@@ -183,6 +187,20 @@ OSContinueThread(OSThread *thread)
 
 
 /**
+ * Thread entry.
+ */
+static uint32_t
+ThreadEntry(uint32_t argc, void *argv)
+{
+   auto thread = OSGetCurrentThread();
+   auto interruptsState = OSDisableInterrupts();
+   coreinit::internal::ghsInitExceptions();
+   OSRestoreInterrupts(interruptsState);
+   return thread->entryPoint(argc, argv);
+}
+
+
+/**
  * Setup thread run state, shared by OSRunThread and OSCreateThread
  */
 static void
@@ -195,20 +213,21 @@ InitialiseThreadState(OSThread *thread,
    auto sdaBase = module ? module->sdaBase : 0u;
    auto sda2Base = module ? module->sda2Base : 0u;
 
-   decaf_check(thread->context.fiber == nullptr);
+   decaf_check(thread->context.hostContext == nullptr);
 
    // Setup context
-   thread->context.gpr[0] = 0;
+   thread->context.gpr[0] = 0u;
    thread->context.gpr[1] = thread->stackStart.getAddress() - 8;
    thread->context.gpr[2] = sda2Base;
    thread->context.gpr[3] = argc;
    thread->context.gpr[4] = mem::untranslate(argv);
    thread->context.gpr[13] = sdaBase;
-   thread->context.fpscr = 4;
-   thread->context.gqr[2] = 0x40004;
-   thread->context.gqr[3] = 0x50005;
-   thread->context.gqr[4] = 0x60006;
-   thread->context.gqr[5] = 0x70007;
+   thread->context.fpscr = 4u;
+   thread->context.gqr[2] = 0x40004u;
+   thread->context.gqr[3] = 0x50005u;
+   thread->context.gqr[4] = 0x60006u;
+   thread->context.gqr[5] = 0x70007u;
+   thread->context.lr = kernel::loader::findModule("coreinit")->findExport("OSExitThread");
 
    // Clear the backchain to 0
    auto stackPtr = mem::translate<uint32_t>(thread->context.gpr[1]);
@@ -216,7 +235,7 @@ InitialiseThreadState(OSThread *thread,
    stackPtr[1] = 0;
 
    // Setup context Decaf special stuff
-   thread->context.nia = entry;
+   thread->context.nia = sThreadEntryPoint;
    thread->context.cia = 0xFFFFFFFF;
 
    // Setup thread
@@ -1094,6 +1113,7 @@ Module::registerThreadFunctions()
    RegisterKernelFunction(OSYieldThread);
    RegisterKernelFunctionName("__tls_get_addr", tls_get_addr);
 
+   RegisterInternalFunction(ThreadEntry, sThreadEntryPoint);
    RegisterInternalFunction(SleepAlarmHandler, sSleepAlarmHandler);
    RegisterInternalFunction(DeallocatorThreadEntry, sDeallocatorThreadEntryPoint);
    RegisterInternalData(sDeallocatorThreadQueue);
@@ -1221,7 +1241,7 @@ exitThreadNoLock(int value)
    internal::rescheduleAllCoreNoLock();
    internal::enableScheduler();
 
-   kernel::exitThreadNoLock();
+   cafe::kernel::exitThreadNoLock();
    internal::rescheduleSelfNoLock();
 
    // We do not need to unlockScheduler as OSExitThread never returns.

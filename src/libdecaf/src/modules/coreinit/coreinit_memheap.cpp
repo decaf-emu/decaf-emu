@@ -4,6 +4,7 @@
 #include "coreinit_memexpheap.h"
 #include "coreinit_memframeheap.h"
 #include "coreinit_memunitheap.h"
+#include "kernel/kernel.h"
 #include "kernel/kernel_memory.h"
 #include "ppcutils/wfunc_call.h"
 

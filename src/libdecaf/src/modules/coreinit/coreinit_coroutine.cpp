@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_coroutine.h"
 #include "coreinit_thread.h"
-#include "kernel/kernel_internal.h"
+#include "cafe/kernel/cafe_kernel_context.h"
 
 namespace coreinit
 {
@@ -37,7 +37,7 @@ OSLoadCoroutine(virt_ptr<OSCoroutine> coroutine,
    }
 
    // Copy context to CPU registers
-   kernel::restoreContext(context);
+   cafe::kernel::copyContextToCpu(virt_cast<cafe::kernel::Context *>(cpu::translate(context)));
    return returnValue;
 }
 
@@ -47,7 +47,7 @@ OSSaveCoroutine(virt_ptr<OSCoroutine> coroutine)
    // Copy CPU registers to context
    auto thread = OSGetCurrentThread();
    auto context = &thread->context;
-   kernel::saveContext(context);
+   cafe::kernel::copyContextFromCpu(virt_cast<cafe::kernel::Context *>(cpu::translate(context)));
 
    // Update the coroutine with context registers
    coroutine->lr = context->lr;

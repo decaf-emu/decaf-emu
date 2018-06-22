@@ -12,6 +12,7 @@
 #include "coreinit_mutex.h"
 #include "coreinit_thread.h"
 #include "coreinit_internal_queue.h"
+#include "cafe/kernel/cafe_kernel_context.h"
 #include "debugger/debugger.h"
 #include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
@@ -364,7 +365,7 @@ void checkRunningThreadNoLock(bool yielding)
    sCurrentThread[coreId] = next;
 
    internal::unlockScheduler();
-   kernel::setContext(&next->context);
+   cafe::kernel::switchContext(virt_cast<OSContext *>(cpu::translate(&next->context)));
    internal::lockScheduler();
 
    // Restore interrupts to whatever state they were in
@@ -652,6 +653,7 @@ void startDefaultCoreThreads()
    auto stackSize = appModule->defaultStackSize;
    uint8_t *stack = nullptr;
 
+   // Initialise all default threads
    for (auto i = 0u; i < coreinit::CoreCount; ++i) {
       auto thread = coreinit::internal::sysAlloc<coreinit::OSThread>();
       auto name = coreinit::internal::sysStrDup(fmt::format("Default Thread {}", i));
@@ -662,7 +664,16 @@ void startDefaultCoreThreads()
          static_cast<coreinit::OSThreadAttributes>(1 << i));
       coreinit::internal::setDefaultThread(i, thread);
       coreinit::OSSetThreadName(thread, name);
-      coreinit::OSResumeThread(thread);
+   }
+
+   // Run all default threads
+   for (auto i = 0u; i < coreinit::CoreCount; ++i) {
+      auto thread = OSGetDefaultThread(i);
+      if (i == OSGetCoreId()) {
+         sCurrentThread[i] = thread;
+      } else {
+         coreinit::OSResumeThread(thread);
+      }
    }
 }
 
@@ -680,9 +691,6 @@ defaultThreadEntry(uint32_t coreId,
 void
 GameThreadEntry(uint32_t argc, void *argv)
 {
-   // Run kernel entry point
-   kernel::kernelEntry();
-
    // Start up the game!
    auto appModule = kernel::getUserModule();
 

@@ -14,6 +14,7 @@
 #include "debugger_ui_window_threads.h"
 #include "debugger_ui_window_voices.h"
 #include "debugger_ui_window_performance.h"
+#include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
 #include "modules/coreinit/coreinit_thread.h"
 #include "modules/coreinit/coreinit_scheduler.h"

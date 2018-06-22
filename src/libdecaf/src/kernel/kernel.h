@@ -5,11 +5,6 @@
 
 class TeenyHeap;
 
-namespace coreinit
-{
-struct OSContext;
-}
-
 namespace kernel
 {
 
@@ -34,14 +29,8 @@ shutdown();
 void
 setExecutableFilename(const std::string& name);
 
-void
-exitThreadNoLock();
-
 TeenyHeap *
 getSystemHeap();
-
-void
-setContext(coreinit::OSContext *next);
 
 loader::LoadedModule *
 getUserModule();
@@ -60,9 +49,6 @@ getExitCode();
 
 const decaf::GameInfo &
 getGameInfo();
-
-void
-kernelEntry();
 
 /** @} */
 

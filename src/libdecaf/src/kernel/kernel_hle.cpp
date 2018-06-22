@@ -1,6 +1,5 @@
 #include "decaf_config.h"
 #include "kernel_hle.h"
-#include "kernel_internal.h"
 #include "modules/camera/camera.h"
 #include "modules/coreinit/coreinit.h"
 #include "modules/dmae/dmae.h"

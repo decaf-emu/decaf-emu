@@ -1,9 +1,9 @@
 #pragma once
+#include "coreinit_context.h"
 #include "coreinit_enum.h"
 #include "coreinit_time.h"
 #include "coreinit_internal_queue.h"
 #include "ppcutils/wfunc_ptr.h"
-#include "kernel/kernel.h"
 
 #include <common/be_ptr.h>
 #include <common/be_val.h>
@@ -44,71 +44,6 @@ struct OSThread;
 using OSThreadEntryPointFn = wfunc_ptr<uint32_t, uint32_t, void*>;
 using OSThreadCleanupCallbackFn = wfunc_ptr<void, OSThread *, void *>;
 using OSThreadDeallocatorFn = wfunc_ptr<void, OSThread *, void *>;
-
-struct OSContext
-{
-   static const uint64_t Tag1 = 0x4F53436F6E747874ull;
-
-   //! Should always be set to the value OSContext::Tag.
-   be_val<uint64_t> tag;
-   be_val<uint32_t> gpr[32];
-   be_val<uint32_t> cr;
-   be_val<uint32_t> lr;
-   be_val<uint32_t> ctr;
-   be_val<uint32_t> xer;
-
-   // srr0 and srr1 would usually be here, however because these are used
-   //  for operating system things and we are HLE, it should be safe to
-   //  override them with our internal HLE linkup.
-   be_val<uint32_t> nia;
-   be_val<uint32_t> cia;
-
-   UNKNOWN(0x14);
-   be_val<uint32_t> fpscr;
-   be_val<double> fpr[32];
-   be_val<uint16_t> spinLockCount;
-   be_val<uint16_t> state;
-   be_val<uint32_t> gqr[8];
-   UNKNOWN(4);
-   be_val<double> psf[32];
-   be_val<uint64_t> coretime[3];
-   be_val<uint64_t> starttime;
-   be_val<uint32_t> error;
-   UNKNOWN(4);
-   be_val<uint32_t> pmc1;
-   be_val<uint32_t> pmc2;
-
-   // pmc3 and pmc4 would usually be here, however because these are used
-   //  for operating system things, it should be safe to use them.
-   kernel::Fiber *fiber;
-
-   be_val<uint32_t> mmcr0;
-   be_val<uint32_t> mmcr1;
-};
-CHECK_OFFSET(OSContext, 0x00, tag);
-CHECK_OFFSET(OSContext, 0x08, gpr);
-CHECK_OFFSET(OSContext, 0x88, cr);
-CHECK_OFFSET(OSContext, 0x8c, lr);
-CHECK_OFFSET(OSContext, 0x90, ctr);
-CHECK_OFFSET(OSContext, 0x94, xer);
-//CHECK_OFFSET(OSContext, 0x98, srr0);
-//CHECK_OFFSET(OSContext, 0x9c, srr1);
-CHECK_OFFSET(OSContext, 0xb4, fpscr);
-CHECK_OFFSET(OSContext, 0xb8, fpr);
-CHECK_OFFSET(OSContext, 0x1b8, spinLockCount);
-CHECK_OFFSET(OSContext, 0x1ba, state);
-CHECK_OFFSET(OSContext, 0x1bc, gqr);
-CHECK_OFFSET(OSContext, 0x1e0, psf);
-CHECK_OFFSET(OSContext, 0x2e0, coretime);
-CHECK_OFFSET(OSContext, 0x2f8, starttime);
-CHECK_OFFSET(OSContext, 0x300, error);
-CHECK_OFFSET(OSContext, 0x308, pmc1);
-CHECK_OFFSET(OSContext, 0x30c, pmc2);
-//CHECK_OFFSET(OSContext, 0x310, pmc3);
-//CHECK_OFFSET(OSContext, 0x314, pmc4);
-CHECK_OFFSET(OSContext, 0x318, mmcr0);
-CHECK_OFFSET(OSContext, 0x31c, mmcr1);
-CHECK_SIZE(OSContext, 0x320);
 
 struct OSMutex;
 

@@ -4,6 +4,7 @@
 #include "coreinit_memheap.h"
 
 #include "cafe/cafe_stackobject.h"
+#include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
 #include "libcpu/mem.h"
 #include "ppcutils/wfunc_ptr.h"
