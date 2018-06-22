@@ -22,7 +22,7 @@ class alignas(64) AtomicQueue
 public:
    constexpr std::size_t capacity() const
    {
-      return N - 1;
+      return Size - 1;
    }
 
    bool wasFull() const
