@@ -72,22 +72,6 @@ logArgument(LogState &state, const char *value)
    }
 }
 
-// Type *
-template<typename Type>
-inline void
-logArgument(LogState &state, Type *value)
-{
-   logArgument(state, mem::untranslate(value));
-}
-
-// virt_ptr<Type>
-template<typename Type>
-inline void
-logArgument(LogState &state, virt_ptr<Type> value)
-{
-   logArgument(state, static_cast<uint32_t>(virt_cast<virt_addr>(value)));
-}
-
 // Log generic (not enum)
 template<typename Type>
 inline
@@ -115,6 +99,22 @@ logArgument(LogState &state, Type value)
    } else {
       state.out << value;
    }
+}
+
+// Type *
+template<typename Type>
+inline void
+logArgument(LogState &state, Type *value)
+{
+   logArgument(state, mem::untranslate(value));
+}
+
+// virt_ptr<Type>
+template<typename Type>
+inline void
+logArgument(LogState &state, virt_ptr<Type> value)
+{
+   logArgument(state, static_cast<uint32_t>(virt_cast<virt_addr>(value)));
 }
 
 // Log enum (cast to int so stream out succeeds)
