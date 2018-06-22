@@ -159,7 +159,7 @@ public:
 
    explicit operator Pointer<void, address_type>() const
    {
-      return { mAddress };
+      return { *this };
    }
 
    template<typename K = ValueType>
