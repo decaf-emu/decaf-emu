@@ -29,19 +29,20 @@ public:
               8);
 
       core->gpr[1] = newStackTop.getAddress();
-      mAddress = virt_addr { newStackTop + 8 };
-      std::uninitialized_default_construct_n(getRawPointer(), NumElements);
+      virt_ptr<Type>::mAddress = virt_addr { newStackTop + 8 };
+      std::uninitialized_default_construct_n(virt_ptr<Type>::getRawPointer(),
+                                             NumElements);
    }
 
    ~StackObject()
    {
-      std::destroy_n(getRawPointer(), NumElements);
+      std::destroy_n(virt_ptr<Type>::getRawPointer(), NumElements);
 
       auto core = cpu::this_core::state();
       auto oldStackTop = virt_addr { core->gpr[1] };
       auto newStackTop = virt_addr { core->gpr[1] + AlignedSize };
       auto ptrAddr = oldStackTop + 8;
-      decaf_check(mAddress == ptrAddr);
+      decaf_check(virt_ptr<Type>::mAddress == ptrAddr);
 
       core->gpr[1] = newStackTop.getAddress();
       memmove(virt_cast<void *>(newStackTop).getRawPointer(),
@@ -54,7 +55,7 @@ template<typename Type, size_t NumElements>
 class StackArray : public StackObject<Type, NumElements>
 {
 public:
-   using StackObject::StackObject;
+   using StackObject<Type, NumElements>::StackObject;
 
    constexpr uint32_t size() const
    {
@@ -63,12 +64,12 @@ public:
 
    constexpr auto &operator[](std::size_t index)
    {
-      return getRawPointer()[index];
+      return virt_ptr<Type>::getRawPointer()[index];
    }
 
    constexpr const auto &operator[](std::size_t index) const
    {
-      return getRawPointer()[index];
+      return virt_ptr<Type>::getRawPointer()[index];
    }
 };
 

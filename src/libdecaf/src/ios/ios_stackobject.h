@@ -21,19 +21,20 @@ public:
    {
       auto thread = kernel::internal::getCurrentThread();
       auto ptr = phys_cast<uint8_t *>(thread->stackPointer) - AlignedSize;
-      mAddress = phys_cast<phys_addr>(ptr);
+      phys_ptr<Type>::mAddress = phys_cast<phys_addr>(ptr);
       thread->stackPointer = ptr;
 
-      std::uninitialized_default_construct_n(getRawPointer(), NumElements);
+      std::uninitialized_default_construct_n(phys_ptr<Type>::getRawPointer(),
+                                             NumElements);
    }
 
    ~StackObject()
    {
-      std::destroy_n(getRawPointer(), NumElements);
+      std::destroy_n(phys_ptr<Type>::getRawPointer(), NumElements);
 
       auto thread = kernel::internal::getCurrentThread();
       auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
-      decaf_check(phys_cast<phys_addr>(ptr) == mAddress);
+      decaf_check(phys_cast<phys_addr>(ptr) == phys_ptr<Type>::mAddress);
       thread->stackPointer = ptr + AlignedSize;
    }
 };
@@ -42,7 +43,7 @@ template<typename Type, size_t NumElements>
 class StackArray : public StackObject<Type, NumElements>
 {
 public:
-   using StackObject::StackObject;
+   using StackObject<Type, NumElements>::StackObject;
 
    constexpr uint32_t size() const
    {
@@ -51,12 +52,12 @@ public:
 
    constexpr auto &operator[](std::size_t index)
    {
-      return getRawPointer()[index];
+      return phys_ptr<Type>::getRawPointer()[index];
    }
 
    constexpr const auto &operator[](std::size_t index) const
    {
-      return getRawPointer()[index];
+      return phys_ptr<Type>::getRawPointer()[index];
    }
 };
 
