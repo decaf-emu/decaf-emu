@@ -20,9 +20,52 @@ public:
 
    be2_val() = default;
 
-   be2_val(const value_type &value) :
-      mStorage(byte_swap(value))
+   template<typename OtherType,
+            typename = typename std::enable_if<std::is_constructible<value_type, const OtherType &>::value ||
+                                               std::is_convertible<const OtherType &, value_type>::value>::type>
+   be2_val(const OtherType &other)
    {
+      if constexpr (std::is_constructible<value_type, const OtherType &>::value) {
+         setValue(value_type { other });
+      } else {
+         setValue(static_cast<value_type>(other));
+      }
+   }
+
+   template<typename OtherType,
+            typename = typename std::enable_if<std::is_constructible<value_type, const OtherType &>::value ||
+                                               std::is_convertible<const OtherType &, value_type>::value>::type>
+   be2_val(OtherType &&other)
+   {
+      if constexpr (std::is_constructible<value_type, const OtherType &>::value) {
+         setValue(value_type { std::forward<OtherType>(other) });
+      } else {
+         setValue(static_cast<value_type>(std::forward<OtherType>(other)));
+      }
+   }
+
+   template<typename OtherType,
+            typename = typename std::enable_if<std::is_convertible<const OtherType &, value_type>::value ||
+                                               std::is_constructible<value_type, const OtherType &>::value>::type>
+   be2_val(const be2_val<OtherType> &other)
+   {
+      if constexpr (std::is_constructible<value_type, const OtherType &>::value) {
+         setValue(value_type { other.value() });
+      } else {
+         setValue(static_cast<value_type>(other.value()));
+      }
+   }
+
+   template<typename OtherType,
+            typename = typename std::enable_if<std::is_convertible<const OtherType &, value_type>::value ||
+                                               std::is_constructible<value_type, const OtherType &>::value>::type>
+   be2_val(be2_val<OtherType> &&other)
+   {
+      if constexpr (std::is_constructible<value_type, const OtherType &>::value) {
+         setValue(value_type { other.value() });
+      } else {
+         setValue(static_cast<value_type>(other.value()));
+      }
    }
 
    value_type value() const
