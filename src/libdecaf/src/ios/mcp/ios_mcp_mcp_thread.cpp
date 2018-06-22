@@ -383,19 +383,19 @@ mcpResume()
 
    // Mount the system devices
    auto fsaStatus = FSAMount(sData->fsaHandle, "/dev/slc01", "/vol/system_slc", 0, nullptr, 0);
-   if (fsaStatus < Error::OK) {
+   if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /dev/slc01 to /vol/system_slc");
       return MCPError::Invalid;
    }
 
    fsaStatus = FSAMount(sData->fsaHandle, "/dev/mlc01", "/vol/storage_mlc01", 0, nullptr, 0);
-   if (fsaStatus < Error::OK) {
+   if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /dev/mlc01 to /vol/storage_mlc01");
       return MCPError::Invalid;
    }
 
    fsaStatus = FSAMount(sData->fsaHandle, "/dev/ramdisk01", "/vol/system_ram", 0, nullptr, 0);
-   if (fsaStatus < Error::OK) {
+   if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /dev/ramdisk01 to /vol/system_ram");
       // This is an expected failure for now
       //return MCPError::Invalid;
@@ -404,7 +404,7 @@ mcpResume()
    auto securityLevel = IOS_GetSecurityLevel();
    if (getSystemFileSys() == SystemFileSys::Pcfs && securityLevel != SecurityLevel::Normal) {
       fsaStatus = FSAMount(sData->fsaHandle, "/dev/hfio01", "/vol/system_hfio", 0, nullptr, 0);
-      if (fsaStatus < Error::OK) {
+      if (fsaStatus < FSAStatus::OK) {
          gLog->error("Failed to mount /dev/hfio01 to /vol/system_hfio");
          return MCPError::Invalid;
       }
@@ -422,13 +422,13 @@ mcpResume()
    // Mount /vol/system
    if (getSystemFileSys() == SystemFileSys::Pcfs) {
       fsaStatus = FSAMount(sData->fsaHandle, "/vol/system_hfio", "/vol/system", 0, nullptr, 0);
-      if (fsaStatus < Error::OK) {
+      if (fsaStatus < FSAStatus::OK) {
          gLog->error("Failed to mount /vol/system_hfio to /vol/system");
          return MCPError::Invalid;
       }
    } else {
       fsaStatus = FSAMount(sData->fsaHandle, "/vol/system_slc", "/vol/system", 0, nullptr, 0);
-      if (fsaStatus < Error::OK) {
+      if (fsaStatus < FSAStatus::OK) {
          gLog->error("Failed to mount /vol/system_slc to /vol/system");
          return MCPError::Invalid;
       }
@@ -436,19 +436,19 @@ mcpResume()
 
    // Mount /vol/sys/proc
    fsaStatus = FSAMount(sData->fsaHandle, "/vol/system/proc", "/vol/sys/proc", 0, nullptr, 0);
-   if (fsaStatus < Error::OK) {
+   if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /vol/system/proc to /vol/sys/proc");
       return MCPError::Invalid;
    }
 
    fsaStatus = FSAMount(sData->fsaHandle, "/vol/system_slc/proc", "/vol/sys/proc_slc", 0, nullptr, 0);
-   if (fsaStatus < Error::OK) {
+   if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /vol/system_slc/proc to /vol/sys/proc_slc");
       return MCPError::Invalid;
    }
 
    fsaStatus = FSAMount(sData->fsaHandle, "/vol/system_ram/proc", "/vol/sys/proc_ram", 0, nullptr, 0);
-   if (fsaStatus < Error::OK) {
+   if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /vol/system_ram/proc to /vol/sys/proc_ram");
       return MCPError::Invalid;
    }
@@ -494,7 +494,7 @@ mcpResume()
 
    if (securityLevel == SecurityLevel::Debug || securityLevel == SecurityLevel::Test) {
       fsaStatus = FSAMount(sData->fsaHandle, "/dev/hfio01", "/vol/storage_hfiomlc01", 0, nullptr, 0);
-      if (fsaStatus < Error::OK) {
+      if (fsaStatus < FSAStatus::OK) {
          gLog->error("Failed to mount /dev/hfio01 to /vol/storage_hfiomlc01");
          return MCPError::Invalid;
       }

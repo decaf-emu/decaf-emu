@@ -10,9 +10,9 @@ namespace ios::kernel
 
 struct StaticSemaphoreData
 {
-   be2_val<uint32_t> numCreatedSemaphores = 0;
-   be2_val<int16_t> firstFreeSemaphoreIndex = 0;
-   be2_val<int16_t> lastFreeSemaphoreIndex = 0;
+   be2_val<uint32_t> numCreatedSemaphores = uint32_t { 0 };
+   be2_val<int16_t> firstFreeSemaphoreIndex = int16_t { 0 };
+   be2_val<int16_t> lastFreeSemaphoreIndex = int16_t { 0 };
    be2_array<Semaphore, 750> semaphores;
 };
 

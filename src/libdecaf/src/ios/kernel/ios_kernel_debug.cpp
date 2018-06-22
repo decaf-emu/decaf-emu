@@ -10,7 +10,7 @@ sSecurityLevel = SecurityLevel::Normal;
 Error
 IOS_SetSecurityLevel(SecurityLevel level)
 {
-   if (IOS_GetCurrentProcessId() != ProcessId::MCP) {
+   if (IOS_GetCurrentProcessId() != static_cast<Error>(ProcessId::MCP)) {
       return Error::Access;
    }
 

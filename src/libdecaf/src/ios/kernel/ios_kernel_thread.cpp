@@ -12,7 +12,7 @@ namespace ios::kernel
 struct StaticThreadData
 {
    be2_array<Thread, MaxNumThreads> threads;
-   be2_val<uint32_t> numActiveThreads = 0;
+   be2_val<uint32_t> numActiveThreads = uint32_t { 0 };
 };
 
 static phys_ptr<StaticThreadData>
