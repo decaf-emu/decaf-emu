@@ -1,7 +1,8 @@
 #pragma once
+#include <cstdint>
 
 #ifndef BOOL
-using BOOL = int;
+using BOOL = int32_t;
 #endif
 
 #ifndef TRUE
