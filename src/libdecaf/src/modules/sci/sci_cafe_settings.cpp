@@ -80,15 +80,15 @@ SCIInitCafeSettings(SCICafeSettings *data)
    std::memset(data, 0, sizeof(SCICafeSettings));
 
    UCSysConfig settings[] = {
-      { "cafe",                  0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
-      { "cafe.version",          0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version),          virt_addrof(data->version) },
-      { "cafe.language",         0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->language),         virt_addrof(data->language) },
-      { "cafe.cntry_reg",        0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->cntry_reg),        virt_addrof(data->cntry_reg) },
-      { "cafe.eula_agree",       0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->eula_agree),       virt_addrof(data->eula_agree) },
-      { "cafe.eula_version",     0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->eula_version),     virt_addrof(data->eula_version) },
-      { "cafe.initial_launch",   0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->initial_launch),   virt_addrof(data->initial_launch) },
-      { "cafe.eco",              0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->eco),              virt_addrof(data->eco) },
-      { "cafe.fast_boot",        0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->fast_boot),        virt_addrof(data->fast_boot) },
+      { "cafe",                  0x777u, UCDataType::Complex,         UCError::OK, 0u, nullptr },
+      { "cafe.version",          0x777u, UCDataType::UnsignedShort,   UCError::OK, static_cast<uint32_t>(sizeof(data->version)),          virt_addrof(data->version) },
+      { "cafe.language",         0x777u, UCDataType::UnsignedInt,     UCError::OK, static_cast<uint32_t>(sizeof(data->language)),         virt_addrof(data->language) },
+      { "cafe.cntry_reg",        0x777u, UCDataType::UnsignedInt,     UCError::OK, static_cast<uint32_t>(sizeof(data->cntry_reg)),        virt_addrof(data->cntry_reg) },
+      { "cafe.eula_agree",       0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->eula_agree)),       virt_addrof(data->eula_agree) },
+      { "cafe.eula_version",     0x777u, UCDataType::UnsignedInt,     UCError::OK, static_cast<uint32_t>(sizeof(data->eula_version)),     virt_addrof(data->eula_version) },
+      { "cafe.initial_launch",   0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->initial_launch)),   virt_addrof(data->initial_launch) },
+      { "cafe.eco",              0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->eco)),              virt_addrof(data->eco) },
+      { "cafe.fast_boot",        0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->fast_boot)),        virt_addrof(data->fast_boot) },
    };
 
    result = coreinit::UCReadSysConfig(handle, COUNT_OF(settings), settings);

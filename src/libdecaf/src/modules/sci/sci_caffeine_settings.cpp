@@ -85,16 +85,16 @@ SCIInitCaffeineSettings(SCICaffeineSettings *data)
    std::memset(data, 0, sizeof(SCICaffeineSettings));
 
    UCSysConfig settings[] = {
-      { "caffeine",                    0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
-      { "caffeine.version",            0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version),          virt_addrof(data->version) },
-      { "caffeine.enable",             0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->enable),           virt_addrof(data->enable) },
-      { "caffeine.ad_enable",          0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->ad_enable),        virt_addrof(data->ad_enable) },
-      { "caffeine.push_enable",        0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->push_enable),      virt_addrof(data->push_enable) },
-      { "caffeine.push_time_slot",     0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->push_time_slot),   virt_addrof(data->push_time_slot) },
-      { "caffeine.push_interval",      0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_interval),    virt_addrof(data->push_interval) },
-      { "caffeine.drcled_enable",      0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->drcled_enable),    virt_addrof(data->drcled_enable) },
-      { "caffeine.push_capabilty",     0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->push_capabilty),   virt_addrof(data->push_capabilty) },
-      { "caffeine.invisible_titles",   0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->invisible_titles), virt_addrof(data->invisible_titles) },
+      { "caffeine",                    0x777u, UCDataType::Complex,         UCError::OK, 0u, nullptr },
+      { "caffeine.version",            0x777u, UCDataType::UnsignedShort,   UCError::OK, static_cast<uint32_t>(sizeof(data->version)),          virt_addrof(data->version) },
+      { "caffeine.enable",             0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->enable)),           virt_addrof(data->enable) },
+      { "caffeine.ad_enable",          0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->ad_enable)),        virt_addrof(data->ad_enable) },
+      { "caffeine.push_enable",        0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->push_enable)),      virt_addrof(data->push_enable) },
+      { "caffeine.push_time_slot",     0x777u, UCDataType::UnsignedInt,     UCError::OK, static_cast<uint32_t>(sizeof(data->push_time_slot)),   virt_addrof(data->push_time_slot) },
+      { "caffeine.push_interval",      0x777u, UCDataType::UnsignedShort,   UCError::OK, static_cast<uint32_t>(sizeof(data->push_interval)),    virt_addrof(data->push_interval) },
+      { "caffeine.drcled_enable",      0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->drcled_enable)),    virt_addrof(data->drcled_enable) },
+      { "caffeine.push_capabilty",     0x777u, UCDataType::UnsignedShort,   UCError::OK, static_cast<uint32_t>(sizeof(data->push_capabilty)),   virt_addrof(data->push_capabilty) },
+      { "caffeine.invisible_titles",   0x777u, UCDataType::UnsignedInt,     UCError::OK, static_cast<uint32_t>(sizeof(data->invisible_titles)), virt_addrof(data->invisible_titles) },
    };
 
    result = coreinit::UCReadSysConfig(handle, 10, settings);

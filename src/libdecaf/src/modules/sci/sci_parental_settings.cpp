@@ -75,16 +75,16 @@ SCIInitParentalSettings(SCIParentalSettings *data)
    std::memset(data, 0, sizeof(SCIParentalSettings));
 
    UCSysConfig settings[] = {
-      { "parent",                      0x777, UCDataType::Complex,         UCError::OK, 0, nullptr },
-      { "parent.version",              0x777, UCDataType::UnsignedShort,   UCError::OK, sizeof(data->version),             virt_addrof(data->version) },
-      { "parent.enable",               0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->enable),              virt_addrof(data->enable) },
-      { "parent.pin_code",             0x777, UCDataType::String,          UCError::OK, sizeof(data->pin_code),            virt_addrof(data->pin_code) },
-      { "parent.sec_question",         0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->sec_question),        virt_addrof(data->sec_question) },
-      { "parent.sec_answer",           0x777, UCDataType::String,          UCError::OK, sizeof(data->sec_answer),          virt_addrof(data->sec_answer) },
-      { "parent.custom_sec_question",  0x777, UCDataType::String,          UCError::OK, sizeof(data->custom_sec_question), virt_addrof(data->custom_sec_question) },
-      { "parent.email_address",        0x777, UCDataType::String,          UCError::OK, sizeof(data->email_address),       virt_addrof(data->email_address) },
-      { "parent.permit_delete_all",    0x777, UCDataType::UnsignedByte,    UCError::OK, sizeof(data->permit_delete_all),   virt_addrof(data->permit_delete_all) },
-      { "parent.rating_organization",  0x777, UCDataType::UnsignedInt,     UCError::OK, sizeof(data->rating_organization), virt_addrof(data->rating_organization) },
+      { "parent",                      0x777u, UCDataType::Complex,         UCError::OK, 0u, nullptr },
+      { "parent.version",              0x777u, UCDataType::UnsignedShort,   UCError::OK, static_cast<uint32_t>(sizeof(data->version)),             virt_addrof(data->version) },
+      { "parent.enable",               0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->enable)),              virt_addrof(data->enable) },
+      { "parent.pin_code",             0x777u, UCDataType::String,          UCError::OK, static_cast<uint32_t>(sizeof(data->pin_code)),            virt_addrof(data->pin_code) },
+      { "parent.sec_question",         0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->sec_question)),        virt_addrof(data->sec_question) },
+      { "parent.sec_answer",           0x777u, UCDataType::String,          UCError::OK, static_cast<uint32_t>(sizeof(data->sec_answer)),          virt_addrof(data->sec_answer) },
+      { "parent.custom_sec_question",  0x777u, UCDataType::String,          UCError::OK, static_cast<uint32_t>(sizeof(data->custom_sec_question)), virt_addrof(data->custom_sec_question) },
+      { "parent.email_address",        0x777u, UCDataType::String,          UCError::OK, static_cast<uint32_t>(sizeof(data->email_address)),       virt_addrof(data->email_address) },
+      { "parent.permit_delete_all",    0x777u, UCDataType::UnsignedByte,    UCError::OK, static_cast<uint32_t>(sizeof(data->permit_delete_all)),   virt_addrof(data->permit_delete_all) },
+      { "parent.rating_organization",  0x777u, UCDataType::UnsignedInt,     UCError::OK, static_cast<uint32_t>(sizeof(data->rating_organization)), virt_addrof(data->rating_organization) },
    };
 
    result = coreinit::UCReadSysConfig(handle, COUNT_OF(settings), settings);
