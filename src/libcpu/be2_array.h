@@ -56,6 +56,13 @@ public:
 
    be2_array() = default;
 
+   template<size_t N>
+   be2_array(const char (&src)[N],
+             typename std::enable_if<Size >= N && std::is_same<char, Type>::value>::type * = 0)
+   {
+      std::copy_n(src, N, mValues);
+   }
+
    template<typename U = Type>
    be2_array(std::string_view src,
              typename std::enable_if<std::is_same<char, U>::value>::type * = 0)
@@ -70,6 +77,14 @@ public:
       for (auto i = 0u; i < Size; ++i) {
          mValues[i] = other[i];
       }
+   }
+
+   template<size_t N,
+            typename = typename std::enable_if<Size >= N && std::is_same<char, Type>::value>::type>
+   be2_array &operator =(const char (&src)[N])
+   {
+      std::copy_n(src, N, mValues);
+      return *this;
    }
 
    template<typename U = Type,
