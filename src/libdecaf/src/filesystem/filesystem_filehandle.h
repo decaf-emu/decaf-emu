@@ -36,12 +36,12 @@ public:
    truncate() = 0;
 
    virtual size_t
-   read(uint8_t *data,
+   read(void *data,
         size_t size,
         size_t count) = 0;
 
    virtual size_t
-   write(const uint8_t *data,
+   write(const void *data,
          size_t size,
          size_t count) = 0;
 };
