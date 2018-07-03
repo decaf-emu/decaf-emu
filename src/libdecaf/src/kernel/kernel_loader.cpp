@@ -1356,7 +1356,7 @@ loadRPLNoLock(const std::string &name)
    }
 
    // Try to find module in system kernel library list
-   if (!module) {
+   if (!module && !fh) {
       auto kernelModule = kernel::findHleModule(fileName);
 
       if (kernelModule) {
@@ -1365,7 +1365,7 @@ loadRPLNoLock(const std::string &name)
    }
 
    // Try to find module in the game code directory.
-   if (!module) {
+   if (!module && !fh) {
       auto fs = kernel::getFileSystem();
       auto result = fs->openFile("/vol/code/" + fileName, fs::File::Read);
 
