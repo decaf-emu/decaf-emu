@@ -87,7 +87,7 @@ sPhysicalMemoryMap {
    // IOS MCP unknown                                0x13D80000   --   0x13DBFFFF
    { PhysicalRegion::MEM2ForegroundBucket,         { 0x14000000_paddr, 0x17FFFFFF_paddr } },
    { PhysicalRegion::MEM2SharedData,               { 0x18000000_paddr, 0x1AFFFFFF_paddr } },
-   // Unknown                                        0x1B000000   --   0x1B7FFFFF
+   { PhysicalRegion::MEM2LoaderBounceBuffer,       { 0x1B000000_paddr, 0x1B7FFFFF_paddr } },
    { PhysicalRegion::MEM2CafeKernelWorkAreaHeap,   { 0x1B800000_paddr, 0x1B87FFFF_paddr } },
    // Unknown                                        0x1B880000   --   0x1BFFFFFF
    { PhysicalRegion::MEM2LoaderHeap,               { 0x1C000000_paddr, 0x1CFFFFFF_paddr } },
@@ -129,6 +129,7 @@ sVirtualMemoryMap {
    { VirtualRegion::VirtualMapRange,         { 0xA0000000_vaddr, 0xDFFFFFFF_vaddr, PhysicalRegion::Invalid } },
    { VirtualRegion::ForegroundBucket,        { 0xE0000000_vaddr, 0xE3FFFFFF_vaddr, PhysicalRegion::MEM2ForegroundBucket } },
    { VirtualRegion::MEM1,                    { 0xF4000000_vaddr, 0xF5FFFFFF_vaddr, PhysicalRegion::MEM1 } },
+   { VirtualRegion::LoaderBounceBuffer,      { 0xF6000000_vaddr, 0xF67FFFFF_vaddr, PhysicalRegion::MEM2LoaderBounceBuffer } },
    { VirtualRegion::SharedData,              { 0xF8000000_vaddr, 0xFAFFFFFF_vaddr, PhysicalRegion::MEM2SharedData } },
    { VirtualRegion::KernelWorkAreaHeap,      { 0xFF200000_vaddr, 0xFF27FFFF_vaddr, PhysicalRegion::MEM2CafeKernelWorkAreaHeap } },
    { VirtualRegion::LockedCache,             { 0xFFC00000_vaddr, 0xFFC1FFFF_vaddr, PhysicalRegion::LockedCache } },
@@ -148,7 +149,7 @@ MemoryMap <0xE8000000,  0x2000000, 0xD0000000, 0x78200004> // unk 32mb
 MemoryMap <0xEFE00000,    0x80000, 0x1B900000, 0x28109010> // kernel <-> loader IPC data
 MemoryMap <0xF4000000,  0x2000000,          0, 0x28204004> // MEM1
 MemoryMap <0xF6000000,   0x800000, 0x1B000000, 0x3CA08002> // loader bounce buffer, 8mb
-MemoryMap <0xF8000000,  0x3000000, 0x18000000, 0x2CA08002> // loader shared read heap
+MemoryMap <0xF8000000,  0x3000000, 0x18000000, 0x2CA08002> // shared data
 MemoryMap <0xFB000000,   0x800000, 0x1C800000, 0x28200002> // unknown 8mb
 MemoryMap <0xFC000000,    0xC0000,  0xC000000, 0x70100022> // registers
 MemoryMap <0xFC0C0000,   0x120000,  0xC0C0000, 0x70100022> // registers
@@ -247,6 +248,7 @@ initialiseVirtualMemory()
    map(sVirtualMemoryMap[VirtualRegion::CafeOS]);
    map(sVirtualMemoryMap[VirtualRegion::ForegroundBucket]);
    map(sVirtualMemoryMap[VirtualRegion::MEM1]);
+   map(sVirtualMemoryMap[VirtualRegion::LoaderBounceBuffer]);
    map(sVirtualMemoryMap[VirtualRegion::SharedData]);
    map(sVirtualMemoryMap[VirtualRegion::LockedCache]);
    map(sVirtualMemoryMap[VirtualRegion::KernelWorkAreaHeap]);
@@ -259,6 +261,7 @@ freeVirtualMemory()
    unmap(sVirtualMemoryMap[VirtualRegion::CafeOS]);
    unmap(sVirtualMemoryMap[VirtualRegion::ForegroundBucket]);
    unmap(sVirtualMemoryMap[VirtualRegion::MEM1]);
+   unmap(sVirtualMemoryMap[VirtualRegion::LoaderBounceBuffer]);
    unmap(sVirtualMemoryMap[VirtualRegion::SharedData]);
    unmap(sVirtualMemoryMap[VirtualRegion::LockedCache]);
    unmap(sVirtualMemoryMap[VirtualRegion::KernelWorkAreaHeap]);
