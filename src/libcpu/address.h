@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <common/align.h>
 #include <fmt/format.h>
+#include <type_traits>
 
 namespace cpu
 {
@@ -24,9 +25,11 @@ public:
       return !!mAddress;
    }
 
-   explicit operator uint32_t() const
+   template<typename OtherType,
+            typename = typename std::enable_if<std::is_integral<OtherType>::value>::type>
+   explicit operator OtherType() const
    {
-      return mAddress;
+      return static_cast<OtherType>(mAddress);
    }
 
    constexpr bool operator == (const Address &other) const
