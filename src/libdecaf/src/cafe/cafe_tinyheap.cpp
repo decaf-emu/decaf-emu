@@ -465,4 +465,134 @@ TinyHeap_GetLargestFree(virt_ptr<TinyHeap> heap)
    return largestFree;
 }
 
+virt_ptr<void>
+TinyHeap_Enum(virt_ptr<TinyHeap> heap,
+              virt_ptr<void> prevBlockPtr,
+              virt_ptr<void> *outPtr,
+              uint32_t *outSize)
+{
+   if (!heap) {
+      return nullptr;
+   }
+
+   auto blocks = getTrackingBlocks(heap);
+   auto block = blocks + heap->firstBlockIdx;
+
+   if (prevBlockPtr) {
+      // Iterate through list to make sure prevBlockPtr is actually in it.
+      auto prevBlock = virt_cast<TrackingBlock *>(prevBlockPtr);
+      while (block != prevBlock) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      // Now we're at prevBlock, let's go to the next block
+      if (block->nextBlockIdx == -1) {
+         goto error;
+      }
+
+      block = blocks + block->nextBlockIdx;
+   }
+
+   if (block) {
+      // Find the next allocated block
+      while (block->size <= 0) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      if (outPtr) {
+         *outPtr = block->data;
+      }
+
+      if (outSize) {
+         *outSize = static_cast<uint32_t>(block->size);
+      }
+
+      return block;
+   }
+
+error:
+   if (outPtr) {
+      *outPtr = nullptr;
+   }
+
+   if (outSize) {
+      *outSize = 0;
+   }
+
+   return nullptr;
+}
+
+virt_ptr<void>
+TinyHeap_EnumFree(virt_ptr<TinyHeap> heap,
+                  virt_ptr<void> prevBlockPtr,
+                  virt_ptr<void> *outPtr,
+                  uint32_t *outSize)
+{
+   if (!heap) {
+      return nullptr;
+   }
+
+   auto blocks = getTrackingBlocks(heap);
+   auto block = blocks + heap->firstBlockIdx;
+
+   if (prevBlockPtr) {
+      // Iterate through list to make sure prevBlockPtr is actually in it.
+      auto prevBlock = virt_cast<TrackingBlock *>(prevBlockPtr);
+      while (block != prevBlock) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      // Now we're at prevBlock, let's go to the next block
+      if (block->nextBlockIdx == -1) {
+         goto error;
+      }
+
+      block = blocks + block->nextBlockIdx;
+   }
+
+   if (block) {
+      // Find the next free block
+      while (block->size >= 0) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      if (outPtr) {
+         *outPtr = block->data;
+      }
+
+      if (outSize) {
+         *outSize = static_cast<uint32_t>(-block->size);
+      }
+
+      return block;
+   }
+
+error:
+   if (outPtr) {
+      *outPtr = nullptr;
+   }
+
+   if (outSize) {
+      *outSize = 0;
+   }
+
+   return nullptr;
+}
+
 } // namespace cafe::tinyheap
