@@ -88,19 +88,22 @@ template<typename ValueType, typename AddressType>
 class Pointer
 {
 public:
-   static_assert(!is_big_endian_value<ValueType>::value,
-                 "be2_val should not be used as ValueType for pointer, it is implied implicitly.");
-
-   static_assert(std::is_class<ValueType>::value
-              || std::is_union<ValueType>::value
-              || std::is_arithmetic<ValueType>::value
-              || std::is_enum<ValueType>::value
-              || std::is_void<ValueType>::value,
-                 "Invalid ValueType for Pointer");
-
    using value_type = ValueType;
    using address_type = AddressType;
    using dereference_type = typename pointer_dereference_type<value_type>::type;
+
+   static_assert(!std::is_pointer<value_type>::value,
+                 "cpu::Pointer should point to another cpu::Pointer, not a raw T* pointer.");
+
+   static_assert(!is_big_endian_value<value_type>::value,
+                 "be2_val should not be used as ValueType for pointer, it is implied implicitly.");
+
+   static_assert(std::is_class<value_type>::value
+              || std::is_union<value_type>::value
+              || std::is_arithmetic<value_type>::value
+              || std::is_enum<value_type>::value
+              || std::is_void<value_type>::value,
+                 "Invalid ValueType for Pointer");
 
    Pointer() = default;
    Pointer(const Pointer &) = default;
@@ -115,41 +118,41 @@ public:
    }
 
     // Pointer<const Type>(Pointer<Type>)
-   template<typename V = ValueType>
-   Pointer(const Pointer<typename std::remove_const<V>::type, AddressType> &other,
+   template<typename V = value_type>
+   Pointer(const Pointer<typename std::remove_const<V>::type, address_type> &other,
            typename std::enable_if<std::is_const<V>::value>::type * = nullptr) :
       mAddress(other.mAddress)
    {
    }
 
    // Pointer<void>(Pointer<Type>)
-   template<typename O, typename V = ValueType>
-   Pointer(const Pointer<O, AddressType> &other,
+   template<typename O, typename V = value_type>
+   Pointer(const Pointer<O, address_type> &other,
            typename std::enable_if<std::is_void<V>::value>::type * = nullptr) :
       mAddress(other.mAddress)
    {
    }
 
    // Pointer<void>(be2_val<Pointer<Type>>)
-   template<typename O, typename V = ValueType>
-   Pointer(const be2_val<Pointer<O, AddressType>> &other,
+   template<typename O, typename V = value_type>
+   Pointer(const be2_val<Pointer<O, address_type>> &other,
            typename std::enable_if<std::is_void<V>::value>::type * = nullptr) :
       mAddress(other.value().mAddress)
    {
    }
 
    // Pointer<const Type> = const Pointer<Type> &
-   template<typename V = ValueType>
+   template<typename V = value_type>
             typename std::enable_if<std::is_const<V>::value, Pointer>::type &
-   operator =(const Pointer<typename std::remove_const<V>::type, AddressType> &other)
+   operator =(const Pointer<typename std::remove_const<V>::type, address_type> &other)
    {
       mAddress = other.mAddress;
       return *this;
    }
 
-   ValueType *getRawPointer() const
+   value_type *getRawPointer() const
    {
-      return internal::translate<ValueType>(mAddress);
+      return internal::translate<value_type>(mAddress);
    }
 
    explicit operator bool() const
@@ -162,42 +165,42 @@ public:
       return { *this };
    }
 
-   template<typename K = ValueType>
+   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, dereference_type &>::type
    operator *()
    {
       return *internal::translate<dereference_type>(mAddress);
    }
 
-   template<typename K = ValueType>
+   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, const dereference_type &>::type
    operator *() const
    {
       return *internal::translate<const dereference_type>(mAddress);
    }
 
-   template<typename K = ValueType>
+   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, dereference_type *>::type
    operator ->()
    {
       return internal::translate<dereference_type>(mAddress);
    }
 
-   template<typename K = ValueType>
+   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, const dereference_type *>::type
    operator ->() const
    {
       return internal::translate<const dereference_type>(mAddress);
    }
 
-   template<typename K = ValueType>
+   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, dereference_type &>::type
    operator [](size_t index)
    {
       return internal::translate<dereference_type>(mAddress)[index];
    }
 
-   template<typename K = ValueType>
+   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, const dereference_type &>::type
    operator [](size_t index) const
    {
@@ -210,78 +213,78 @@ public:
    }
 
    template<typename O>
-   constexpr bool operator == (const Pointer<O, AddressType> &other) const
+   constexpr bool operator == (const Pointer<O, address_type> &other) const
    {
       return mAddress == other.mAddress;
    }
 
    template<typename O>
-   constexpr bool operator == (const be2_val<Pointer<O, AddressType>> &other) const
+   constexpr bool operator == (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress == other.value().mAddress;
    }
 
    template<typename O>
-   constexpr bool operator != (const Pointer<O, AddressType> &other) const
+   constexpr bool operator != (const Pointer<O, address_type> &other) const
    {
       return mAddress != other.mAddress;
    }
 
    template<typename O>
-   constexpr bool operator != (const be2_val<Pointer<O, AddressType>> &other) const
+   constexpr bool operator != (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress != other.value().mAddress;
    }
 
    template<typename O>
-   constexpr bool operator >= (const Pointer<O, AddressType> &other) const
+   constexpr bool operator >= (const Pointer<O, address_type> &other) const
    {
       return mAddress >= other.mAddress;
    }
 
    template<typename O>
-   constexpr bool operator >= (const be2_val<Pointer<O, AddressType>> &other) const
+   constexpr bool operator >= (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress >= other.value().mAddress;
    }
 
    template<typename O>
-   constexpr bool operator <= (const Pointer<O, AddressType> &other) const
+   constexpr bool operator <= (const Pointer<O, address_type> &other) const
    {
       return mAddress <= other.mAddress;
    }
 
    template<typename O>
-   constexpr bool operator <= (const be2_val<Pointer<O, AddressType>> &other) const
+   constexpr bool operator <= (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress <= other.value().mAddress;
    }
 
    template<typename O>
-   constexpr bool operator > (const Pointer<O, AddressType> &other) const
+   constexpr bool operator > (const Pointer<O, address_type> &other) const
    {
       return mAddress > other.mAddress;
    }
 
    template<typename O>
-   constexpr bool operator > (const be2_val<Pointer<O, AddressType>> &other) const
+   constexpr bool operator > (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress > other.value().mAddress;
    }
 
    template<typename O>
-   constexpr bool operator < (const Pointer<O, AddressType> &other) const
+   constexpr bool operator < (const Pointer<O, address_type> &other) const
    {
       return mAddress < other.mAddress;
    }
 
    template<typename O>
-   constexpr bool operator < (const be2_val<Pointer<O, AddressType>> &other) const
+   constexpr bool operator < (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress < other.value().mAddress;
    }
 
-   template<typename T = ValueType>
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, Pointer &>::type
    operator ++ ()
    {
@@ -289,7 +292,7 @@ public:
       return *this;
    }
 
-   template<typename T = ValueType>
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, Pointer &>::type
    operator += (ptrdiff_t value)
    {
@@ -297,7 +300,7 @@ public:
       return *this;
    }
 
-   template<typename T = ValueType>
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, Pointer &>::type
    operator -= (ptrdiff_t value)
    {
@@ -305,7 +308,7 @@ public:
       return *this;
    }
 
-   template<typename T = ValueType>
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, Pointer>::type
    operator + (ptrdiff_t value) const
    {
@@ -314,14 +317,14 @@ public:
       return dst;
    }
 
-   template<typename T = ValueType>
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, ptrdiff_t>::type
    operator -(const Pointer &other) const
    {
       return (mAddress - other.mAddress) / sizeof(value_type);
    }
 
-   template<typename T = ValueType>
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, Pointer>::type
    operator -(ptrdiff_t value) const
    {
