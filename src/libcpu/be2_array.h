@@ -197,6 +197,22 @@ public:
       return const_iterator { *this, Size };
    }
 
+   std::array<Type, Size> value() const
+   {
+      std::array<Type, Size> result;
+
+      for (auto i = 0u; i < Size; ++i) {
+         result[i] = mValues[i];
+      }
+
+      return result;
+   }
+
+   operator std::array<Type, Size>() const
+   {
+      return value();
+   }
+
    // Please use virt_addrof or phys_addrof instead
    auto operator &() = delete;
 
