@@ -88,8 +88,7 @@ inline auto virt_cast(const be2_virt_ptr<SrcType> &src)
 
 // reinterpret_cast for phys_addr to phys_ptr<X>
 template<typename DstType,
-         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
-                                            std::is_same<DstType, virt_addr>::value>::type>
+         typename = typename std::enable_if<std::is_pointer<DstType>::value>::type>
 inline auto phys_cast(phys_addr src)
 {
    return cpu::pointer_cast_impl<cpu::PhysicalAddress, phys_addr, DstType>::cast(src);
@@ -121,8 +120,17 @@ inline auto virt_func_cast(virt_addr src)
 }
 
 // reinterpret_cast for virt_func_ptr<X> to virt_addr
-template<typename FunctionType>
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_func_cast(virt_func_ptr<FunctionType> src)
+{
+   return cpu::func_pointer_cast_impl<cpu::VirtualAddress, FunctionType>::cast(src);
+}
+
+// reinterpret_cast for be2_virt_func_ptr<X> to virt_addr
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, virt_addr>::value>::type>
+inline auto virt_func_cast(be2_virt_func_ptr<FunctionType> src)
 {
    return cpu::func_pointer_cast_impl<cpu::VirtualAddress, FunctionType>::cast(src);
 }
@@ -135,8 +143,17 @@ inline auto phys_func_cast(phys_addr src)
 }
 
 // reinterpret_cast for phys_func_ptr<X> to phys_addr
-template<typename FunctionType>
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_func_cast(phys_func_ptr<FunctionType> src)
+{
+   return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, FunctionType>::cast(src);
+}
+
+// reinterpret_cast for be2_phys_func_ptr<X> to phys_addr
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, phys_addr>::value>::type>
+inline auto phys_func_cast(be2_phys_func_ptr<FunctionType> src)
 {
    return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, FunctionType>::cast(src);
 }
@@ -199,6 +216,13 @@ struct is_virt_ptr : std::false_type { };
 
 template<typename T>
 struct is_virt_ptr<virt_ptr<T>> : std::true_type { };
+
+// Equivalent to std:true_type if type T is a virt_func_ptr.
+template<typename>
+struct is_virt_func_ptr : std::false_type { };
+
+template<typename T>
+struct is_virt_func_ptr<virt_func_ptr<T>> : std::true_type { };
 
 // Equivalent to std:true_type if type T is a phys_ptr.
 template<typename>
