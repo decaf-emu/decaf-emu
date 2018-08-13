@@ -1,5 +1,6 @@
 #pragma once
 #include "cafe_ppc_interface.h"
+
 #include <libcpu/cpu.h>
 #include <libcpu/functionpointer.h>
 #include <libcpu/be2_val.h>
@@ -10,17 +11,21 @@ namespace cafe
 namespace detail
 {
 
-template<typename ArgType, RegisterType regType, std::size_t regIndex>
+template<typename ArgType, RegisterType regType, auto regIndex>
 inline ArgType
 readParam(cpu::Core *core,
           param_info_t<ArgType, regType, regIndex>)
 {
+   using ValueType = std::remove_cv_t<ArgType>;
    if constexpr (regType == RegisterType::Gpr32) {
-      if constexpr (is_virt_ptr<ArgType>::value) {
+      if constexpr (is_virt_ptr<ValueType>::value) {
          return virt_cast<typename ArgType::value_type *>(static_cast<virt_addr>(core->gpr[regIndex]));
-      } else if (std::is_pointer<ArgType>::value) {
-         // TODO: Remove this when CafeOS no longer uses raw pointers.
-         return virt_cast<typename ArgType::value_type *>(static_cast<virt_addr>(core->gpr[regIndex])).getRawPointer();
+      } else if constexpr (is_phys_ptr<ValueType>::value) {
+         return phys_cast<typename ArgType::value_type *>(static_cast<phys_addr>(core->gpr[regIndex]));
+      } else if constexpr (is_virt_func_ptr<ValueType>::value) {
+         return virt_func_cast<typename ArgType::function_type>(static_cast<virt_addr>(core->gpr[regIndex]));
+      } else if constexpr (is_bitfield_type<ValueType>::value) {
+         return ArgType::get(core->gpr[regIndex]);
       } else {
          return static_cast<ArgType>(core->gpr[regIndex]);
       }
@@ -28,21 +33,30 @@ readParam(cpu::Core *core,
       return static_cast<ArgType>((static_cast<uint64_t>(core->gpr[regIndex]) << 32) | static_cast<uint64_t>(core->gpr[regIndex + 1]));
    } else if constexpr (regType == RegisterType::Fpr) {
       return static_cast<ArgType>(core->fpr[regIndex].paired0);
+   } else if constexpr (regType == RegisterType::VarArgs) {
+      return var_args { (regIndex & 0xFF), (regIndex >> 8) };
    }
 }
 
-template<typename ArgType, RegisterType regType, std::size_t regIndex>
+template<typename ArgType, RegisterType regType, auto regIndex>
 inline void
 writeParam(cpu::Core *core,
            param_info_t<ArgType, regType, regIndex>,
-           ArgType &&value)
+           const std::remove_cv_t<ArgType> &value)
 {
+   using ValueType = std::remove_cv_t<ArgType>;
+   static_assert(regType != RegisterType::VarArgs,
+                 "writeParam not supported with VarArgs");
+
    if constexpr (regType == RegisterType::Gpr32) {
-      if constexpr (is_virt_ptr<ArgType>::value) {
+      if constexpr (is_virt_ptr<ValueType>::value) {
          core->gpr[regIndex] = static_cast<uint32_t>(virt_cast<virt_addr>(value));
-      } else if (std::is_pointer<ArgType>::value) {
-         // TODO: Remove this when CafeOS no longer uses raw pointers.
-         core->gpr[regIndex] = static_cast<uint32_t>(cpu::translate(value));
+      } else if constexpr (is_phys_ptr<ValueType>::value) {
+         core->gpr[regIndex] = static_cast<uint32_t>(phys_cast<phys_addr>(value));
+      } else if constexpr (is_virt_func_ptr<ValueType>::value) {
+         core->gpr[regIndex] = static_cast<uint32_t>(virt_func_cast<virt_addr>(value));
+      } else if constexpr (is_bitfield_type<ValueType>::value) {
+         core->gpr[regIndex] = static_cast<uint32_t>(value.value);
       } else {
          core->gpr[regIndex] = static_cast<uint32_t>(value);
       }
@@ -52,6 +66,15 @@ writeParam(cpu::Core *core,
    } else if constexpr (regType == RegisterType::Fpr) {
       core->fpr[regIndex].paired0 = static_cast<double>(value);
    }
+}
+
+template<typename ArgType, RegisterType regType, auto regIndex>
+inline void
+writeParam(cpu::Core *core,
+           param_info_t<ArgType, regType, regIndex> p,
+           const be2_val<ArgType> &value)
+{
+   writeParam<ArgType, regType, regIndex>(core, p, value.value());
 }
 
 template<typename HostFunctionType, typename FunctionTraitsType, std::size_t... I>
@@ -92,12 +115,12 @@ invoke_guest_impl(cpu::Core *core,
                   cpu::VirtualAddress address,
                   FunctionTraitsType &&,
                   std::index_sequence<I...>,
-                  ArgTypes &&... args)
+                  const ArgTypes &... args)
 {
    if constexpr (FunctionTraitsType::num_args > 0) {
       // Write arguments to registers
       auto param_info = typename FunctionTraitsType::param_info { };
-      (writeParam(core, std::get<I>(param_info), std::forward<ArgTypes>(args)), ...);
+      (writeParam(core, std::get<I>(param_info), args), ...);
    }
 
    // Save a stack pointer so we can compare after to ensure no stack overflow
@@ -159,14 +182,14 @@ template<typename FunctionType, typename... ArgTypes>
 decltype(auto)
 invoke(cpu::Core *core,
        cpu::FunctionPointer<cpu::VirtualAddress, FunctionType> fn,
-       ArgTypes &&... args)
+       const ArgTypes &... args)
 {
    using func_traits = detail::function_traits<FunctionType>;
    return invoke_guest_impl(core,
                             fn.getAddress(),
                             func_traits { },
                             std::make_index_sequence<func_traits::num_args> {},
-                            std::forward<ArgTypes>(args)...);
+                            args...);
 }
 
 // Invoke a be2_val guest function from a host context
@@ -174,14 +197,14 @@ template<typename FunctionType, typename... ArgTypes>
 decltype(auto)
 invoke(cpu::Core *core,
        be2_val<cpu::FunctionPointer<cpu::VirtualAddress, FunctionType>> fn,
-       ArgTypes &&... args)
+       const ArgTypes &... args)
 {
    using func_traits = detail::function_traits<FunctionType>;
    return invoke_guest_impl(core,
                             fn.getAddress(),
                             func_traits { },
                             std::make_index_sequence<func_traits::num_args> {},
-                            std::forward<ArgTypes>(args)...);
+                            args...);
 }
 
 } // namespace cafe
