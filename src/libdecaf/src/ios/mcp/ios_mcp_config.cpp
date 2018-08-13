@@ -445,7 +445,9 @@ loadSysProdConfig()
       // Factory reset items
       std::memset(config.getRawPointer(), 0, sizeof(SysProdConfig));
       config->version = 5u;
+      config->eeprom_version = uint16_t { 1 };
       config->game_region = MCPRegion::Europe;
+      config->product_area = MCPRegion::Europe;
       config->wifi_5ghz_country_code = "EU";
       config->wifi_5ghz_country_code_revision = uint8_t { 24 };
       config->ntsc_pal = "PAL";
