@@ -21,7 +21,7 @@ class Pointer;
 template<typename AddressType, typename FunctonType>
 class FunctionPointer;
 
-template<typename AddressType, typename SrcType, typename DstType>
+template<typename AddressType, typename SrcType, typename DstType, typename = void>
 struct pointer_cast_impl;
 
 template<typename>
@@ -385,7 +385,7 @@ public:
    }
 
 protected:
-   template<typename, typename, typename>
+   template<typename, typename, typename, typename>
    friend struct pointer_cast_impl;
 
    template<typename AddressType2, typename ValueType2>
@@ -400,11 +400,12 @@ using VirtualPointer = Pointer<Value, VirtualAddress>;
 template<typename Value>
 using PhysicalPointer = Pointer<Value, PhysicalAddress>;
 
-template<typename AddressType, typename SrcType, typename DstTypePtr>
-struct pointer_cast_impl
+template<typename AddressType, typename SrcTypePtr, typename DstTypePtr>
+struct pointer_cast_impl<AddressType, SrcTypePtr, DstTypePtr,
+   typename std::enable_if<std::is_pointer<SrcTypePtr>::value && std::is_pointer<DstTypePtr>::value>::type>
 {
-   static_assert(std::is_pointer<DstTypePtr>::value);
    using DstType = typename std::remove_pointer<DstTypePtr>::type;
+   using SrcType = typename std::remove_pointer<SrcTypePtr>::type;
 
    // Pointer<X, AddressType> to Pointer<Y, AddressType>
    static constexpr Pointer<DstType, AddressType> cast(Pointer<SrcType, AddressType> src)
@@ -416,7 +417,8 @@ struct pointer_cast_impl
 };
 
 template<typename AddressType, typename DstTypePtr>
-struct pointer_cast_impl<AddressType, AddressType, DstTypePtr>
+struct pointer_cast_impl<AddressType, AddressType, DstTypePtr,
+   typename std::enable_if<std::is_pointer<DstTypePtr>::value>::type>
 {
    static_assert(std::is_pointer<DstTypePtr>::value);
    using DstType = typename std::remove_pointer<DstTypePtr>::type;
@@ -430,9 +432,12 @@ struct pointer_cast_impl<AddressType, AddressType, DstTypePtr>
    }
 };
 
-template<typename AddressType, typename SrcType>
-struct pointer_cast_impl<AddressType, SrcType, AddressType>
+template<typename AddressType, typename SrcTypePtr>
+struct pointer_cast_impl<AddressType, SrcTypePtr, AddressType,
+   typename std::enable_if<std::is_pointer<SrcTypePtr>::value>::type>
 {
+   using SrcType = typename std::remove_pointer<SrcTypePtr>::type;
+
    // Pointer<X, AddressType> to AddressType
    static constexpr AddressType cast(Pointer<SrcType, AddressType> src)
    {
@@ -456,7 +461,7 @@ format_arg(fmt::BasicFormatter<char> &f,
            const char *&format_str,
            const Pointer<ValueType, AddressType> &val)
 {
-   auto addr = pointer_cast_impl<AddressType, ValueType, AddressType>::cast(val);
+   auto addr = pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(val);
    format_str = f.format(format_str,
                          fmt::internal::MakeArg<fmt::BasicFormatter<char>>(addr));
 }

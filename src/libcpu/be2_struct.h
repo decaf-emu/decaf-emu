@@ -75,7 +75,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_cast(const virt_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for be2_ptr<X> to virt_ptr<Y> or virt_addr
@@ -84,7 +84,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_cast(const be2_virt_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for phys_addr to phys_ptr<X>
@@ -101,7 +101,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_cast(const phys_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for be2_ptr<X> to phys_ptr<Y> or phys_addr
@@ -110,7 +110,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_cast(const be2_phys_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for virt_addr to virt_func_ptr<X>
@@ -237,7 +237,7 @@ constexpr inline cpu::Pointer<ValueType, AddressType>
 align_up(cpu::Pointer<ValueType, AddressType> value,
          size_t alignment)
 {
-   auto address = cpu::pointer_cast_impl<AddressType, ValueType, AddressType>::cast(value);
+   auto address = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(value);
    address = static_cast<AddressType>(align_up(address.getAddress(), alignment));
    return cpu::pointer_cast_impl<AddressType, AddressType, ValueType *>::cast(address);
 }
@@ -247,7 +247,7 @@ constexpr inline cpu::Pointer<ValueType, AddressType>
 align_down(cpu::Pointer<ValueType, AddressType> value,
            size_t alignment)
 {
-   auto address = cpu::pointer_cast_impl<AddressType, ValueType, AddressType>::cast(value);
+   auto address = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(value);
    address = static_cast<AddressType>(align_down(address.getAddress(), alignment));
    return cpu::pointer_cast_impl<AddressType, AddressType, ValueType *>::cast(address);
 }
