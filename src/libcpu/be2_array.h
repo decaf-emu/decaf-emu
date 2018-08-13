@@ -8,12 +8,15 @@
 template<typename Type>
 struct be2_struct;
 
-// Equivalent to std:true_type if type T is a virt_ptr or phys_ptr.
+// Equivalent to std:true_type if type T is a virt_ptr or phys_ptr or virt_func_ptr.
 template<typename>
 struct is_cpu_ptr : std::false_type { };
 
 template<typename T, typename A>
 struct is_cpu_ptr<cpu::Pointer<T, A>> : std::true_type { };
+
+template<typename T, typename A>
+struct is_cpu_ptr<cpu::FunctionPointer<T, A>> : std::true_type { };
 
 // Detects the actual type to be used for be2_array members.
 template <typename T, typename = void>
