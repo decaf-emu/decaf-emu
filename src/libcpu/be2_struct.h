@@ -230,4 +230,40 @@ template<typename>
 struct is_phys_ptr : std::false_type { };
 
 template<typename T>
-struct is_phys_ptr<virt_ptr<T>> : std::true_type { };
+struct is_phys_ptr<phys_ptr<T>> : std::true_type { };
+
+template<typename ValueType, typename AddressType>
+constexpr inline cpu::Pointer<ValueType, AddressType>
+align_up(cpu::Pointer<ValueType, AddressType> value,
+         size_t alignment)
+{
+   auto address = cpu::pointer_cast_impl<AddressType, ValueType, AddressType>::cast(value);
+   address = static_cast<AddressType>(align_up(address.getAddress(), alignment));
+   return cpu::pointer_cast_impl<AddressType, AddressType, ValueType *>::cast(address);
+}
+
+template<typename ValueType, typename AddressType>
+constexpr inline cpu::Pointer<ValueType, AddressType>
+align_down(cpu::Pointer<ValueType, AddressType> value,
+           size_t alignment)
+{
+   auto address = cpu::pointer_cast_impl<AddressType, ValueType, AddressType>::cast(value);
+   address = static_cast<AddressType>(align_down(address.getAddress(), alignment));
+   return cpu::pointer_cast_impl<AddressType, AddressType, ValueType *>::cast(address);
+}
+
+template<typename Type>
+constexpr inline Type
+align_up(be2_val<Type> value,
+         size_t alignment)
+{
+   return align_up(value.value(), alignment);
+}
+
+template<typename Type>
+constexpr inline Type
+align_down(be2_val<Type> value,
+           size_t alignment)
+{
+   return align_down(value.value(), alignment);
+}
