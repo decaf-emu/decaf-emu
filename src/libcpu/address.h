@@ -74,6 +74,18 @@ public:
       return *this;
    }
 
+   constexpr Address &operator &= (StorageType value)
+   {
+      mAddress = mAddress & value;
+      return *this;
+   }
+
+   constexpr Address &operator ^= (StorageType value)
+   {
+      mAddress = mAddress ^ value;
+      return *this;
+   }
+
    constexpr Address operator + (ptrdiff_t value) const
    {
       return Address { static_cast<StorageType>(mAddress + value) };
@@ -89,9 +101,34 @@ public:
       return mAddress - other.mAddress;
    }
 
-   constexpr Address operator & (uint32_t value) const
+   constexpr Address operator & (StorageType value) const
    {
       return Address { static_cast<StorageType>(mAddress & value) };
+   }
+
+   constexpr Address operator ^ (StorageType value) const
+   {
+      return Address { static_cast<StorageType>(mAddress ^ value) };
+   }
+
+   constexpr StorageType operator % (StorageType value) const
+   {
+      return mAddress % value;
+   }
+
+   constexpr StorageType operator / (StorageType value) const
+   {
+      return mAddress / value;
+   }
+
+   constexpr StorageType operator << (StorageType value) const
+   {
+      return mAddress << value;
+   }
+
+   constexpr StorageType operator >> (StorageType value) const
+   {
+      return mAddress >> value;
    }
 
    constexpr StorageType getAddress() const
