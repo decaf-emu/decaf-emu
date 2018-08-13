@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <string_view>
 
 namespace fs
 {
@@ -63,18 +64,23 @@ public:
    {
    }
 
-   GenericPath(const char *src) :
-      GenericPath(std::string(src))
-   {
-   }
-
    template<char OtherSeperator>
    GenericPath(const GenericPath<OtherSeperator> &src) :
       GenericPath(src.path())
    {
    }
 
-   GenericPath(const std::string &src)
+   GenericPath(const std::string &src) :
+      GenericPath(std::string_view { src })
+   {
+   }
+
+   GenericPath(const char *src) :
+      GenericPath(std::string_view { src })
+   {
+   }
+
+   GenericPath(std::string_view src)
    {
       static const char ParentSeparator[4] = { Separator, '.', '.', 0 };
       mPath = src;
