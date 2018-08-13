@@ -9,11 +9,17 @@
 template<typename Type>
 struct be2_struct;
 
+template<typename Type, uint32_t Size>
+class be2_array;
+
 namespace cpu
 {
 
 template<typename ValueType, typename AddressType>
 class Pointer;
+
+template<typename AddressType, typename FunctonType>
+class FunctionPointer;
 
 template<typename AddressType, typename SrcType, typename DstType>
 struct pointer_cast_impl;
@@ -36,6 +42,12 @@ struct is_cpu_address : std::false_type { };
 template<typename AddressType>
 struct is_cpu_address<Address<AddressType>> : std::true_type { };
 
+template<typename>
+struct is_cpu_func_pointer : std::false_type { };
+
+template<typename AddressType, typename FunctionType>
+struct is_cpu_func_pointer<FunctionPointer<AddressType, FunctionType>> : std::true_type { };
+
 template <typename T, typename = void>
 struct pointer_dereference_type;
 
@@ -50,11 +62,13 @@ struct pointer_dereference_type<T, typename std::enable_if<std::is_void<T>::valu
  * must dereference to a be2_val.
  */
 template <typename T>
-struct pointer_dereference_type<T, typename std::enable_if<(std::is_arithmetic<T>::value
-                                                        || std::is_enum<T>::value
-                                                        || is_cpu_pointer<T>::value
-                                                        || is_cpu_address<T>::value)
-                                                        && !std::is_const<T>::value>::type>
+struct pointer_dereference_type<T,
+   typename std::enable_if<(std::is_arithmetic<T>::value
+                         || std::is_enum<T>::value
+                         || is_cpu_address<T>::value
+                         || is_cpu_pointer<T>::value
+                         || is_cpu_func_pointer<T>::value)
+                         && !std::is_const<T>::value>::type>
 {
    using type = be2_val<T>;
 };
@@ -63,13 +77,25 @@ struct pointer_dereference_type<T, typename std::enable_if<(std::is_arithmetic<T
  * const version of above
  */
 template <typename T>
-struct pointer_dereference_type<T, typename std::enable_if<(std::is_arithmetic<T>::value
-                                                        || std::is_enum<T>::value
-                                                        || is_cpu_pointer<T>::value
-                                                        || is_cpu_address<T>::value)
-                                                        && std::is_const<T>::value>::type>
+struct pointer_dereference_type<T,
+   typename std::enable_if<(std::is_arithmetic<T>::value
+                         || std::is_enum<T>::value
+                         || is_cpu_address<typename std::remove_const<T>::type>::value
+                         || is_cpu_pointer<typename std::remove_const<T>::type>::value
+                         || is_cpu_func_pointer<typename std::remove_const<T>::type>::value)
+                         && std::is_const<T>::value>::type>
 {
    using type = const be2_val<T>;
+};
+
+/*
+ * If Type is an array then we must dereference to be2_array.
+ */
+template <typename T>
+struct pointer_dereference_type<T,
+   typename std::enable_if<std::is_array<T>::value>::type>
+{
+   using type = be2_array<typename std::remove_all_extents<T>::type, std::extent<T>::value>;
 };
 
 /*
@@ -77,9 +103,12 @@ struct pointer_dereference_type<T, typename std::enable_if<(std::is_arithmetic<T
  * we must dereference to be2_struct<Type>.
  */
 template <typename T>
-struct pointer_dereference_type<T, typename std::enable_if<(std::is_class<T>::value || std::is_union<T>::value)
-                                                         && !is_cpu_pointer<T>::value
-                                                         && !is_cpu_address<T>::value>::type>
+struct pointer_dereference_type<T,
+   typename std::enable_if<(std::is_class<T>::value || std::is_union<T>::value)
+                         && !is_cpu_pointer<T>::value
+                         && !is_cpu_address<T>::value
+                         && !is_cpu_func_pointer<T>::value
+                         && !std::is_array<T>::value>::type>
 {
    using type = be2_struct<T>;
 };
@@ -102,7 +131,8 @@ public:
               || std::is_union<value_type>::value
               || std::is_arithmetic<value_type>::value
               || std::is_enum<value_type>::value
-              || std::is_void<value_type>::value,
+              || std::is_void<value_type>::value
+              || std::is_array<value_type>::value,
                  "Invalid ValueType for Pointer");
 
    Pointer() = default;
@@ -143,7 +173,7 @@ public:
 
    // Pointer<const Type> = const Pointer<Type> &
    template<typename V = value_type>
-            typename std::enable_if<std::is_const<V>::value, Pointer>::type &
+   typename std::enable_if<std::is_const<V>::value, Pointer>::type &
    operator =(const Pointer<typename std::remove_const<V>::type, address_type> &other)
    {
       mAddress = other.mAddress;
@@ -163,6 +193,13 @@ public:
    explicit operator Pointer<void, address_type>() const
    {
       return { *this };
+   }
+
+   Pointer &
+   operator =(std::nullptr_t)
+   {
+      mAddress = AddressType { 0u };
+      return *this;
    }
 
    template<typename K = value_type>
@@ -207,7 +244,7 @@ public:
       return internal::translate<const dereference_type>(mAddress)[index];
    }
 
-   constexpr bool operator ==(std::nullptr_t) const
+   constexpr bool operator == (std::nullptr_t) const
    {
       return !static_cast<bool>(mAddress);
    }
@@ -222,6 +259,11 @@ public:
    constexpr bool operator == (const be2_val<Pointer<O, address_type>> &other) const
    {
       return mAddress == other.value().mAddress;
+   }
+
+   constexpr bool operator != (std::nullptr_t) const
+   {
+      return static_cast<bool>(mAddress);
    }
 
    template<typename O>
@@ -293,6 +335,15 @@ public:
    }
 
    template<typename T = value_type>
+   constexpr typename std::enable_if<!std::is_void<T>::value, Pointer>::type
+   operator ++ (int)
+   {
+      auto prev = *this;
+      mAddress += sizeof(value_type);
+      return prev;
+   }
+
+   template<typename T = value_type>
    constexpr typename std::enable_if<!std::is_void<T>::value, Pointer &>::type
    operator += (ptrdiff_t value)
    {
@@ -343,16 +394,6 @@ protected:
    address_type mAddress;
 };
 
-template<typename ValueType, typename AddressType>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const Pointer<ValueType, AddressType> &val)
-{
-   format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(static_cast<AddressType>(val)));
-}
-
 template<typename Value>
 using VirtualPointer = Pointer<Value, VirtualAddress>;
 
@@ -398,5 +439,26 @@ struct pointer_cast_impl<AddressType, SrcType, AddressType>
       return src.mAddress;
    }
 };
+
+template<typename AddressType>
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const Pointer<char, AddressType> &val)
+{
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
+}
+
+template<typename ValueType, typename AddressType>
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const Pointer<ValueType, AddressType> &val)
+{
+   auto addr = pointer_cast_impl<AddressType, ValueType, AddressType>::cast(val);
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(addr));
+}
 
 } // namespace cpu
