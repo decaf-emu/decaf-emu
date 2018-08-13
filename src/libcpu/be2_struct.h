@@ -53,8 +53,9 @@ using be2_phys_func_ptr = be2_val<phys_func_ptr<Ft>>;
 template<typename Type>
 struct be2_struct : public Type
 {
-   using Type::Type;
-   using Type::operator =;
+   using value_type = std::remove_cv_t<Type>;
+   using value_type::value_type;
+   using value_type::operator =;
 
    // Please use virt_addrof or phys_addrof instead
    auto operator &() = delete;
