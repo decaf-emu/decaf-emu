@@ -14,6 +14,8 @@ template<typename AddressType, typename FunctionType>
 class FunctionPointer
 {
 public:
+   using function_type = FunctionType;
+
    FunctionPointer() = default;
    FunctionPointer(const FunctionPointer &other) = default;
    FunctionPointer(FunctionPointer &&other) = default;
@@ -36,6 +38,13 @@ public:
    explicit operator bool() const
    {
       return static_cast<bool>(mAddress);
+   }
+
+   FunctionPointer &
+   operator =(std::nullptr_t)
+   {
+      mAddress = AddressType { 0 };
+      return *this;
    }
 
    constexpr bool operator ==(std::nullptr_t) const
