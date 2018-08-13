@@ -5,6 +5,7 @@
 #include <libcpu/cpu.h>
 #include <libcpu/be2_struct.h>
 #include <memory>
+#include <string_view>
 
 namespace cafe
 {
@@ -29,20 +30,20 @@ public:
               8);
 
       core->gpr[1] = newStackTop.getAddress();
-      virt_ptr<Type>::mAddress = virt_addr { newStackTop + 8 };
-      std::uninitialized_default_construct_n(virt_ptr<Type>::getRawPointer(),
+      mAddress = virt_addr { newStackTop + 8 };
+      std::uninitialized_default_construct_n(getRawPointer(),
                                              NumElements);
    }
 
    ~StackObject()
    {
-      std::destroy_n(virt_ptr<Type>::getRawPointer(), NumElements);
+      std::destroy_n(getRawPointer(), NumElements);
 
       auto core = cpu::this_core::state();
       auto oldStackTop = virt_addr { core->gpr[1] };
       auto newStackTop = virt_addr { core->gpr[1] + AlignedSize };
       auto ptrAddr = oldStackTop + 8;
-      decaf_check(virt_ptr<Type>::mAddress == ptrAddr);
+      decaf_check(mAddress == ptrAddr);
 
       core->gpr[1] = newStackTop.getAddress();
       memmove(virt_cast<void *>(newStackTop).getRawPointer(),
@@ -64,22 +65,76 @@ public:
 
    constexpr auto &operator[](std::size_t index)
    {
-      return virt_ptr<Type>::getRawPointer()[index];
+      return getRawPointer()[index];
    }
 
    constexpr const auto &operator[](std::size_t index) const
    {
-      return virt_ptr<Type>::getRawPointer()[index];
+      return getRawPointer()[index];
    }
 };
 
-template<std::size_t N>
-inline auto
-make_stack_string(const char (&hostStr)[N])
+class StackString : public virt_ptr<char>
 {
-   StackArray<const char, N + 1> guestStr;
-   std::strcpy(guestStr.getRawPointer(), hostStr);
-   return guestStr;
+public:
+   StackString(std::string_view hostString) :
+      mSize(align_up(static_cast<uint32_t>(hostString.size()) + 1, 4))
+   {
+      auto core = cpu::this_core::state();
+      auto oldStackTop = virt_addr { core->gpr[1] };
+      auto newStackTop = oldStackTop - mSize;
+      auto ptrAddr = newStackTop + 8;
+
+      memmove(virt_cast<void *>(newStackTop).getRawPointer(),
+              virt_cast<void *>(oldStackTop).getRawPointer(),
+              8);
+
+      core->gpr[1] = newStackTop.getAddress();
+      mAddress = virt_addr { newStackTop + 8 };
+
+      std::memcpy(getRawPointer(), hostString.data(), hostString.size());
+      getRawPointer()[hostString.size()] = char { 0 };
+   }
+
+   StackString(StackString &&from) :
+      mSize(from.mSize)
+   {
+      from.mSize = 0u;
+      mAddress = from.mAddress;
+   }
+
+   ~StackString()
+   {
+      if (mSize) {
+         auto core = cpu::this_core::state();
+         auto oldStackTop = virt_addr { core->gpr[1] };
+         auto newStackTop = virt_addr { core->gpr[1] + mSize };
+         auto ptrAddr = oldStackTop + 8;
+         decaf_check(mAddress == ptrAddr);
+
+         core->gpr[1] = newStackTop.getAddress();
+         memmove(virt_cast<void *>(newStackTop).getRawPointer(),
+                 virt_cast<void *>(oldStackTop).getRawPointer(),
+                 8);
+      }
+   }
+
+   StackString &operator =(StackString &&from)
+   {
+      mSize = from.mSize;
+      mAddress = from.mAddress;
+      from.mSize = 0u;
+      return *this;
+   }
+
+private:
+   uint32_t mSize;
+};
+
+inline StackString
+make_stack_string(std::string_view str)
+{
+   return { str };
 }
 
 } // namespace cafe
