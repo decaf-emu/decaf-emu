@@ -119,12 +119,9 @@ SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
 
    if (prodArea == coreinit::MCPRegion::Japan) {
       regionIdx = 0u;
-   } else if (prodArea == coreinit::MCPRegion::USA) {
-      regionIdx = 1u;
-   } else if (prodArea == coreinit::MCPRegion::Europe) {
+   } else if (prodArea == coreinit::MCPRegion::Europe ||
+              prodArea == coreinit::MCPRegion::Unknown8) {
       regionIdx = 2u;
-   } else {
-      decaf_abort(fmt::format("Unknown prodArea {}", prodArea));
    }
 
    return sSysAppTitleId[id][regionIdx];
