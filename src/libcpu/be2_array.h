@@ -25,17 +25,24 @@ struct be2_array_item_type;
 template <typename T>
 struct be2_array_item_type<T, typename std::enable_if<std::is_arithmetic<T>::value
                                                    || std::is_enum<T>::value
-                                                   || is_cpu_ptr<T>::value>::type>
+                                                   || is_cpu_ptr<std::remove_cv_t<T>>::value>::type>
 {
    using type = be2_val<T>;
 };
 
 template <typename T>
-struct be2_array_item_type<T, typename std::enable_if<!is_cpu_ptr<T>::value
-                                                   && (std::is_class<T>::value
-                                                    || std::is_union<T>::value)>::type>
+struct be2_array_item_type<T, typename std::enable_if<!is_cpu_ptr<std::remove_cv_t<T>>::value
+                                                   && std::is_class<T>::value
+                                                   && !std::is_union<T>::value>::type>
 {
    using type = be2_struct<T>;
+};
+
+template <typename T>
+struct be2_array_item_type<T, typename std::enable_if<std::is_union<T>::value>::type>
+{
+   // Unfortunately we cannot wrap union
+   using type = T;
 };
 
 
