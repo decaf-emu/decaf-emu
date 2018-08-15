@@ -706,6 +706,44 @@ MemoryMap::unmapMemory(VirtualAddress virtualAddress,
 
 
 bool
+MemoryMap::resetVirtualMemory()
+{
+   // First unmap all memory
+   for (auto &mapping : mMappedMemory) {
+      if (!platform::unmapViewOfFile(getVirtualPointer(mapping.virtualAddress),
+                                     mapping.size)) {
+         gLog->error("Unexpected error whilst unmapping virtual address 0x{:08X}",
+                     mapping.virtualAddress.getAddress());
+      }
+   }
+
+   mMappedMemory.clear();
+
+   if (mReservedMemory.size() == 1) {
+      // If there is only 1 reservation then we should be good to go.
+      decaf_check(mReservedMemory[0].start == VirtualAddress { 0 });
+      decaf_check(mReservedMemory[0].end == VirtualAddress { 0xFFFFFFFF });
+      return true;
+   }
+
+   // Cleanup reservations
+   for (auto &reservation : mReservedMemory) {
+      if (!releaseReservation(reservation)) {
+         gLog->error("Unexpected error whilst releasing virtual address 0x{:08X}",
+                     reservation.start.getAddress());
+      }
+   }
+
+   mReservedMemory.clear();
+
+   // Reserve whole range
+   acquireReservation({ VirtualAddress { 0 }, VirtualAddress { 0xFFFFFFFF } });
+   mReservedMemory.push_back({ VirtualAddress { 0 }, VirtualAddress { 0xFFFFFFFF } });
+   return true;
+}
+
+
+bool
 MemoryMap::acquireReservation(VirtualReservation reservation)
 {
    return platform::reserveMemory(mVirtualBase + reservation.start.getAddress(),

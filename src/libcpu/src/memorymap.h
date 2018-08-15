@@ -70,6 +70,9 @@ public:
    unmapMemory(VirtualAddress virtualAddress,
                uint32_t size);
 
+   bool
+   resetVirtualMemory();
+
    PhysicalMemoryType
    queryPhysicalAddress(PhysicalAddress physicalAddress);
 

@@ -85,6 +85,9 @@ bool
 unmapMemory(VirtualAddress virtualAddress,
             uint32_t size);
 
+bool
+resetVirtualMemory();
+
 VirtualMemoryType
 queryVirtualAddress(VirtualAddress virtualAddress);
 
