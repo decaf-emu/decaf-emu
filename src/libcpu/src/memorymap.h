@@ -96,6 +96,7 @@ private:
    platform::MapFileHandle mMem0 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mMem1 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mMem2 = platform::InvalidMapFileHandle;
+   platform::MapFileHandle mUnkRam = platform::InvalidMapFileHandle;
    platform::MapFileHandle mSram0 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mSram1 = platform::InvalidMapFileHandle;
    platform::MapFileHandle mLockedCache = platform::InvalidMapFileHandle;

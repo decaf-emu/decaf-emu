@@ -48,6 +48,7 @@ enum class PhysicalMemoryType
    MEM2,
    SRAM0,
    SRAM1,
+   UNKRAM,
    LockedCache,
    TilingAperture,
 };
