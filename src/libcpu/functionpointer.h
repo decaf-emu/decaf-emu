@@ -111,4 +111,15 @@ struct func_pointer_cast_impl<AddressType, FunctionPointer<AddressType, Function
    }
 };
 
+template<typename AddressType, typename FunctionType>
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const FunctionPointer<AddressType, FunctionType> &val)
+{
+   auto addr = func_pointer_cast_impl<AddressType, FunctionType>::cast(val);
+   format_str = f.format(format_str,
+                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(addr));
+}
+
 } // namespace cpu
