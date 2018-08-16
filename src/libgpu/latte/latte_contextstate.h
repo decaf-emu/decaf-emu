@@ -2,7 +2,7 @@
 #include "latte_registers.h"
 
 #include <common/bitfield.h>
-#include <common/be_val.h>
+#include <libcpu/be2_struct.h>
 #include <cstdint>
 
 #pragma pack(push, 1)
@@ -26,14 +26,14 @@ struct ShadowState
 {
    CONTEXT_CONTROL_ENABLE LOAD_CONTROL = CONTEXT_CONTROL_ENABLE::get(0);
    CONTEXT_CONTROL_ENABLE SHADOW_ENABLE = CONTEXT_CONTROL_ENABLE::get(0);
-   be_val<uint32_t> *CONFIG_REG_BASE = nullptr;
-   be_val<uint32_t> *CONTEXT_REG_BASE = nullptr;
-   be_val<uint32_t> *ALU_CONST_BASE = nullptr;
-   be_val<uint32_t> *BOOL_CONST_BASE = nullptr;
-   be_val<uint32_t> *LOOP_CONST_BASE = nullptr;
-   be_val<uint32_t> *RESOURCE_CONST_BASE = nullptr;
-   be_val<uint32_t> *SAMPLER_CONST_BASE = nullptr;
-   be_val<uint32_t> *CTL_CONST_BASE = nullptr;
+   virt_ptr<uint32_t> CONFIG_REG_BASE = nullptr;
+   virt_ptr<uint32_t> CONTEXT_REG_BASE = nullptr;
+   virt_ptr<uint32_t> ALU_CONST_BASE = nullptr;
+   virt_ptr<uint32_t> BOOL_CONST_BASE = nullptr;
+   virt_ptr<uint32_t> LOOP_CONST_BASE = nullptr;
+   virt_ptr<uint32_t> RESOURCE_CONST_BASE = nullptr;
+   virt_ptr<uint32_t> SAMPLER_CONST_BASE = nullptr;
+   virt_ptr<uint32_t> CTL_CONST_BASE = nullptr;
 };
 
 } // namespace latte
