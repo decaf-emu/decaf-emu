@@ -1,7 +1,7 @@
 #pragma once
-#include <common/cbool.h>
+#include <libcpu/be2_struct.h>
 
-namespace snd_user
+namespace cafe::snduser2
 {
 
 BOOL
@@ -16,4 +16,4 @@ AXFXReverbHiSettings();
 BOOL
 AXFXMultiChReverbInit();
 
-} // namespace snd_user
+} // namespace cafe::snduser2
