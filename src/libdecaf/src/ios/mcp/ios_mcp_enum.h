@@ -87,7 +87,7 @@ ENUM_BEG(MCPFileType, uint32_t)
    //! Load from a system data title's content directory (0005001B-x)/content/%s
    ENUM_VALUE(SystemDataContent,    0x02)
 
-   //! Load from a system data title's code directory (0005001B-x)/content/%s
+   //! Load from a system data title's code directory (0005001B-x)/code/%s
    ENUM_VALUE(SystemDataCode,       0x03)
 ENUM_END(MCPFileType)
 
@@ -95,6 +95,7 @@ ENUM_BEG(MCPRegion, uint32_t)
    ENUM_VALUE(Japan,                0x01)
    ENUM_VALUE(USA,                  0x02)
    ENUM_VALUE(Europe,               0x04)
+   ENUM_VALUE(Unknown8,             0x08)
    ENUM_VALUE(China,                0x10)
    ENUM_VALUE(Korea,                0x20)
    ENUM_VALUE(Taiwan,               0x40)
