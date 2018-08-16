@@ -76,53 +76,55 @@ StatsWindow::draw()
    ImGui::NextColumn();
    ImGui::Columns(1);
 
-   if (ImGui::TreeNode("JIT Profiling") && sampled) {
-      ImGui::NextColumn();
+   if (sampled) {
+      if (ImGui::TreeNode("JIT Profiling")) {
+         ImGui::NextColumn();
 
-      ImGui::Columns(6, "statsList", false);
-      ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
-      ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.18f);
-      ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.40f);
-      ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.55f);
-      ImGui::SetColumnOffset(4, ImGui::GetWindowWidth() * 0.70f);
-      ImGui::SetColumnOffset(5, ImGui::GetWindowWidth() * 0.85f);
+         ImGui::Columns(6, "statsList", false);
+         ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.00f);
+         ImGui::SetColumnOffset(1, ImGui::GetWindowWidth() * 0.18f);
+         ImGui::SetColumnOffset(2, ImGui::GetWindowWidth() * 0.40f);
+         ImGui::SetColumnOffset(3, ImGui::GetWindowWidth() * 0.55f);
+         ImGui::SetColumnOffset(4, ImGui::GetWindowWidth() * 0.70f);
+         ImGui::SetColumnOffset(5, ImGui::GetWindowWidth() * 0.85f);
 
-      if (mNeedProfileListUpdate) {
-         update();
-         mNeedProfileListUpdate = false;
+         if (mNeedProfileListUpdate) {
+            update();
+            mNeedProfileListUpdate = false;
+         }
+
+         ImGui::Text("Address"); ImGui::NextColumn();
+         ImGui::Text("Native Code"); ImGui::NextColumn();
+         ImGui::Text("Time %%"); ImGui::NextColumn();
+         ImGui::Text("Total Cycles"); ImGui::NextColumn();
+         ImGui::Text("Call Count"); ImGui::NextColumn();
+         ImGui::Text("Cycles/Call"); ImGui::NextColumn();
+         ImGui::Separator();
+
+         auto totalTime = stats.totalTimeInCodeBlocks;
+
+         for (auto &block : mProfileList) {
+            auto time = block->profileData.time.load();
+            auto count = block->profileData.count.load();
+            ImGui::Text("%08X", block->address);
+            ImGui::NextColumn();
+            ImGui::Text("%p", block->code);
+            ImGui::NextColumn();
+            ImGui::Text("%.2f%%", 100.0 * time / totalTime);
+            ImGui::NextColumn();
+            ImGui::Text("%" PRIu64, time);
+            ImGui::NextColumn();
+            ImGui::Text("%" PRIu64, count);
+            ImGui::NextColumn();
+            ImGui::Text("%" PRIu64, count ? (time + count / 2) / count : 0);
+            ImGui::NextColumn();
+         }
+
+         ImGui::TreePop();
+      } else {
+         // Update the list the next time the node is expanded.
+         mNeedProfileListUpdate = true;
       }
-
-      ImGui::Text("Address"); ImGui::NextColumn();
-      ImGui::Text("Native Code"); ImGui::NextColumn();
-      ImGui::Text("Time %%"); ImGui::NextColumn();
-      ImGui::Text("Total Cycles"); ImGui::NextColumn();
-      ImGui::Text("Call Count"); ImGui::NextColumn();
-      ImGui::Text("Cycles/Call"); ImGui::NextColumn();
-      ImGui::Separator();
-
-      auto totalTime = stats.totalTimeInCodeBlocks;
-
-      for (auto &block : mProfileList) {
-         auto time = block->profileData.time.load();
-         auto count = block->profileData.count.load();
-         ImGui::Text("%08X", block->address);
-         ImGui::NextColumn();
-         ImGui::Text("%p", block->code);
-         ImGui::NextColumn();
-         ImGui::Text("%.2f%%", 100.0 * time / totalTime);
-         ImGui::NextColumn();
-         ImGui::Text("%" PRIu64, time);
-         ImGui::NextColumn();
-         ImGui::Text("%" PRIu64, count);
-         ImGui::NextColumn();
-         ImGui::Text("%" PRIu64, count ? (time + count / 2) / count : 0);
-         ImGui::NextColumn();
-      }
-
-      ImGui::TreePop();
-   } else {
-      // Update the list the next time the node is expanded.
-      mNeedProfileListUpdate = true;
    }
 
    ImGui::Columns(1);
