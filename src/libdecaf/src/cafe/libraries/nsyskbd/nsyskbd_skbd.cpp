@@ -21,7 +21,7 @@ SKBDTeardown()
 }
 
 SKBDError
-SKBDGetChannelStatus(uint32_t channel,
+SKBDGetChannelStatus(SKBDChannel channel,
                      virt_ptr<SKBDChannelStatus> outStatus)
 {
    decaf_warn_stub();
@@ -36,7 +36,7 @@ SKBDGetChannelStatus(uint32_t channel,
 }
 
 SKBDError
-SKBDGetKey(uint32_t channel,
+SKBDGetKey(SKBDChannel channel,
            virt_ptr<SKBDKeyData> keyData)
 {
    decaf_warn_stub();
@@ -46,7 +46,7 @@ SKBDGetKey(uint32_t channel,
 }
 
 SKBDError
-SKBDGetModState(uint32_t channel,
+SKBDGetModState(SKBDChannel channel,
                 virt_ptr<SKBDModState> outModState)
 {
    decaf_warn_stub();
@@ -55,14 +55,14 @@ SKBDGetModState(uint32_t channel,
 }
 
 SKBDError
-SKBDResetChannel(uint32_t channel)
+SKBDResetChannel(SKBDChannel channel)
 {
    decaf_warn_stub();
    return SKBDError::OK;
 }
 
 SKBDError
-SKBDSetCountry(uint32_t channel,
+SKBDSetCountry(SKBDChannel channel,
                SKBDCountry country)
 {
    decaf_warn_stub();

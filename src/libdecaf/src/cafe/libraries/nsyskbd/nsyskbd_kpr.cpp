@@ -27,9 +27,9 @@ KPRSetMode(virt_ptr<KPRQueue> queue,
 void
 KPRClearQueue(virt_ptr<KPRQueue> queue)
 {
-   queue->numCharsOut = 0;
-   queue->numCharsIn = 0;
-   queue->unk0x14 = 0;
+   queue->numCharsOut = uint8_t { 0 };
+   queue->numCharsIn = uint8_t { 0 };
+   queue->unk0x14 = 0u;
 }
 
 kpr_char_t
@@ -88,7 +88,7 @@ KPRLookAhead(virt_ptr<KPRQueue> queue,
    }
 
    if (length < size) {
-      buffer[length] = 0;
+      buffer[length] = kpr_char_t { 0 };
    }
 
    return length;

@@ -14,9 +14,11 @@ namespace cafe::nsyskbd
 
 #pragma pack(push, 1)
 
+using SKBDChannel = uint8_t;
+
 struct SKBDKeyData
 {
-   be2_val<uint8_t> channel;
+   be2_val<SKBDChannel> channel;
    UNKNOWN(0x0F);
 };
 CHECK_OFFSET(SKBDKeyData, 0x00, channel);
@@ -31,22 +33,22 @@ SKBDError
 SKBDTeardown();
 
 SKBDError
-SKBDGetChannelStatus(uint32_t channel,
+SKBDGetChannelStatus(SKBDChannel channel,
                      virt_ptr<SKBDChannelStatus> outStatus);
 
 SKBDError
-SKBDGetKey(uint32_t channel,
+SKBDGetKey(SKBDChannel channel,
            virt_ptr<SKBDKeyData> keyData);
 
 SKBDError
-SKBDGetModState(uint32_t channel,
+SKBDGetModState(SKBDChannel channel,
                 virt_ptr<SKBDModState> outModState);
 
 SKBDError
-SKBDResetChannel(uint32_t channel);
+SKBDResetChannel(SKBDChannel channel);
 
 SKBDError
-SKBDSetCountry(uint32_t channel,
+SKBDSetCountry(SKBDChannel channel,
                SKBDCountry country);
 
 SKBDError
