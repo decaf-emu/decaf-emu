@@ -211,6 +211,27 @@ inline phys_ptr<Type> phys_addrof(const be2_array<Type, Size> &ref)
    return phys_cast<Type *>(cpu::translatePhysical(std::addressof(ref)));
 }
 
+
+/**
+ * Used to translate the this pointer to a virt_ptr.
+ */
+template<typename Type>
+inline virt_ptr<Type> virt_this(Type *self)
+{
+   return virt_cast<Type *>(cpu::translate(self));
+}
+
+
+/**
+ * Used to translate the this pointer to a virt_ptr.
+ */
+template<typename Type>
+inline phys_ptr<Type> phys_this(Type *self)
+{
+   return phys_ptr<Type *>(cpu::translate(self));
+}
+
+
 // Equivalent to std:true_type if type T is a virt_ptr.
 template<typename>
 struct is_virt_ptr : std::false_type { };
