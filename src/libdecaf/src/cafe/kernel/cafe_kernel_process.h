@@ -60,7 +60,10 @@ struct ProcessData
    ios::mcp::MCPPPrepareTitleInfo titleInfo;
    bool overlayArenaEnabled;
    std::string argstr;
+   int exitCode;
 };
+// CHECK_OFFSET(ProcessData, 0x1698, perCoreStartInfo);
+// CHECK_SIZE(ProcessData, 0x17a0);
 
 void
 initialiseRamPartitionConfig();
@@ -89,5 +92,11 @@ loadGameProcess(std::string_view rpx,
 
 void
 finishInitAndPreload();
+
+void
+exitProcess(int code);
+
+int
+getProcessExitCode(RamPartitionId rampid);
 
 } // namespace cafe::kernel

@@ -4,8 +4,6 @@
 #include "sndcore2_device.h"
 #include "sndcore2_voice.h"
 #include "decaf_sound.h"
-#include "ppcutils/stackobject.h"
-#include "ppcutils/wfunc_call.h"
 
 #include <array>
 #include <common/fixed.h>

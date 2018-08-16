@@ -92,7 +92,7 @@ initialiseLibraries()
    registerLibrary(new dc::Library { });
    registerLibrary(new dmae::Library { });
    registerLibrary(new drmapp::Library { });
-   registerLibrary(new erreula::Library { });
+   registerLibrary(new nn::erreula::Library { });
    registerLibrary(new gx2::Library { });
    registerLibrary(new h264::Library { });
    registerLibrary(new lzma920::Library { });

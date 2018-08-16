@@ -6,8 +6,9 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_osreport.h"
+
 #include "cafe/cafe_ppc_interface_invoke.h"
-#include "kernel/kernel.h"
+#include "cafe/kernel/cafe_kernel_process.h"
 
 #include <common/bitfield.h>
 #include <libcpu/cpu.h>
@@ -149,7 +150,7 @@ void
 ghs_PPCExit(int32_t code)
 {
    internal::driverOnDone();
-   ::kernel::exitProcess(code);
+   kernel::exitProcess(code);
 }
 
 /**

@@ -13,6 +13,9 @@
 #include "kernel/kernel_hlefunction.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
+
+#include "cafe/kernel/cafe_kernel.h"
+#include "cafe/kernel/cafe_kernel_process.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/swkbd/swkbd_keyboard.h"
@@ -189,7 +192,7 @@ initialise(const std::string &gamePath)
          filesystem->mountHostFolder("/vol/content", decaf::config::system::content_path, fs::Permissions::Read);
       }
 
-      kernel::setExecutableFilename(rpxPath.filename());
+      cafe::kernel::setExecutableFilename(rpxPath.filename());
    } else {
       gLog->error("Could not find valid application at {}", path.path());
       return false;
@@ -230,19 +233,22 @@ start()
 bool
 hasExited()
 {
-   return kernel::hasExited();
+   return cafe::kernel::hasExited();
 }
 
 int
 waitForExit()
 {
-   // Wait for CPU to finish
-   cpu::join();
+   // Wait for IOS to finish
+   ios::join();
+
+   // Wait for PPC to finish
+   cafe::kernel::join();
 
    // Make sure we clean up
    decaf::shutdown();
 
-   return kernel::getExitCode();
+   return cafe::kernel::getProcessExitCode(cafe::kernel::RamPartitionId::MainApplication);
 }
 
 void
@@ -251,14 +257,11 @@ shutdown()
    // Shut down debugger
    debugger::shutdown();
 
-   // Shut down CPU
-   cpu::halt();
+   // Wait for IOS to finish
+   ios::join();
 
-   // Wait for CPU to finish
-   cpu::join();
-
-   // Stop any kernel threads
-   kernel::shutdown();
+   // Wait for PPC to finish
+   cafe::kernel::join();
 
    // Stop graphics driver
    auto graphicsDriver = getGraphicsDriver();

@@ -1,3 +1,4 @@
+#include "cafe_kernel.h"
 #include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
@@ -18,15 +19,15 @@ constexpr auto MaxCodeSize = 0xE000000u;
 constexpr auto MinDataSize = 0x700000u;
 constexpr auto UnkReserveSize = 0x60000u;
 
+static std::array<ProcessData, NumRamPartitions>
+sProcessData;
+
 struct RamPartitionConfig
 {
    RamPartitionId id;
    phys_addr base;
    uint32_t size;
 };
-
-// CHECK_OFFSET(ProcessData, 0x1698, perCoreStartInfo);
-// CHECK_SIZE(ProcessData, 0x17a0);
 
 static constexpr RamPartitionConfig DevRamPartitionConfig[] = {
    { RamPartitionId::Kernel,           phys_addr { 0 },                    0 },
@@ -46,7 +47,8 @@ static constexpr RamPartitionConfig RetailRamPartitionConfig[] = {
    { RamPartitionId::MainApplication,  phys_addr { 0x50000000 },  0x40000000 },
 };
 
-static const RamPartitionConfig *sRamPartitionConfig = RetailRamPartitionConfig;
+static const RamPartitionConfig *
+sRamPartitionConfig = RetailRamPartitionConfig;
 
 void
 initialiseRamPartitionConfig()
@@ -93,8 +95,6 @@ allocateRamPartition(RamPartitionId rampid,
    info->unk0x1C = 0;
    decaf_check(info->availStart - info->dataStart >= MinDataSize);
 }
-
-static std::array<ProcessData, NumRamPartitions> sProcessData;
 
 ProcessData *
 getCurrentProcessData()
@@ -301,6 +301,20 @@ finishInitAndPreload()
    cafe::invoke(cpu::this_core::state(),
                 virt_func_cast<EntryPointFn>(entryPoint));
 
+}
+
+void
+exitProcess(int code)
+{
+   auto processData = getCurrentProcessData();
+   processData->exitCode = code;
+   internal::exit();
+}
+
+int
+getProcessExitCode(RamPartitionId rampid)
+{
+   return sProcessData[static_cast<size_t>(rampid)].exitCode;
 }
 
 } // namespace cafe::kernel

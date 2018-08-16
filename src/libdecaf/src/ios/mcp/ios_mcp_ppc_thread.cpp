@@ -2,13 +2,12 @@
 #include "ios_mcp_pm_thread.h"
 #include "ios_mcp_ppc_thread.h"
 
+#include "cafe/kernel/cafe_kernel.h"
 #include "ios/ios_stackobject.h"
 #include "ios/kernel/ios_kernel_ipc.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
-
-#include "kernel/kernel.h"
 
 namespace ios::mcp::internal
 {
@@ -99,11 +98,8 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
             *mask = 0xFFFFFFFFFFFFFFFFull;
             IOS_SetClientCapabilities(ProcessId::COSKERNEL, 11, mask);
 
-            // Initialise PPC kernel
-            ::kernel::initialise();
-
-            // Boot the PPC!
-            ::cpu::start();
+            // Boot the PPC kernel!
+            cafe::kernel::start();
          }
          break;
       }

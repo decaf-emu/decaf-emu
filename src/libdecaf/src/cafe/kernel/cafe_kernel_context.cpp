@@ -2,6 +2,7 @@
 #include "cafe_kernel_heap.h"
 
 #include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/kernel/cafe_kernel.h"
 #include "cafe/libraries/cafe_hle.h"
 
 #include <array>
@@ -286,8 +287,18 @@ hijackCurrentHostContext(virt_ptr<Context> context)
    decaf_check(current == sIdleContext[1]);
 
    context->hostContext = current->hostContext;
-   current->hostContext = nullptr;
    sCurrentContext[coreId] = context;
+
+   // Reset the current core to an idle context
+   current->hostContext = nullptr;
+   setContextFiberEntry(
+      current,
+      [](void *core)
+      {
+         internal::idleCoreLoop(reinterpret_cast<cpu::Core *>(core));
+         gLog->debug("Core1 exit");
+      },
+      cpu::this_core::state());
 }
 
 namespace internal
