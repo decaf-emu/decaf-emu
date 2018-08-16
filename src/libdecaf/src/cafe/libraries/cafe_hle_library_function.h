@@ -3,6 +3,8 @@
 #include "cafe/cafe_ppc_interface_invoke.h"
 #include "cafe/cafe_ppc_interface_invoke_trace.h"
 
+#include "decaf_config.h"
+
 #include <libcpu/cpu.h>
 #include <memory>
 
@@ -25,13 +27,13 @@ struct LibraryFunction : public LibrarySymbol
 
    virtual void call(cpu::Core *state) = 0;
 
-   //! ID number of syscall
+   //! ID number of syscall.
    uint32_t syscallID;
 
-   // TODO: Reimplement function tracing!
+   //! Whether trace logging is enabled for this function or not.
    bool traceEnabled = true;
 
-   //! Pointer to host function pointer, only set for internal functions
+   //! Pointer to host function pointer, only set for internal functions.
    virt_ptr<void> *hostPtr;
 };
 
@@ -48,7 +50,7 @@ struct LibraryFunctionCall : LibraryFunction
 
    virtual void call(cpu::Core *state) override
    {
-      if (traceEnabled) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          invoke_trace(state, func, name.c_str());
       }
 
@@ -69,7 +71,7 @@ struct LibraryConstructorFunction : LibraryFunction
 
    virtual void call(cpu::Core *state) override
    {
-      if (traceEnabled) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          invoke_trace(state, &LibraryConstructorFunction::wrapper, name.c_str());
       }
 
@@ -90,7 +92,7 @@ struct LibraryDestructorFunction : LibraryFunction
 
    virtual void call(cpu::Core *state) override
    {
-      if (traceEnabled) {
+      if (decaf::config::log::kernel_trace && traceEnabled) {
          invoke_trace(state, &LibraryDestructorFunction::wrapper, name.c_str());
       }
 
