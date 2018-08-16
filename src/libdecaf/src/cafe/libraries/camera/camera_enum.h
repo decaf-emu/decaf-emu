@@ -6,7 +6,7 @@
 ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(camera)
 
-ENUM_BEG(CAMError, uint32_t)
+ENUM_BEG(CAMError, int32_t)
    ENUM_VALUE(OK,                      0)
    ENUM_VALUE(GenericError,            -1)
    ENUM_VALUE(AlreadyInitialised,      -12)
