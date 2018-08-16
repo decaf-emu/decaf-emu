@@ -38,7 +38,7 @@ AOC_ListTitle(virt_ptr<uint32_t> outTitleCount,
               uint32_t workBufferSize)
 {
    decaf_warn_stub();
-   *outTitleCount = 0;
+   *outTitleCount = 0u;
    return AOCError::OK;
 }
 
