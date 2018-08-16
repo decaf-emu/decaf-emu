@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
+ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(nn)
-
 ENUM_NAMESPACE_BEG(nfp)
 
 ENUM_BEG(State, uint32_t)
@@ -14,8 +14,8 @@ ENUM_BEG(State, uint32_t)
 ENUM_END(State)
 
 ENUM_NAMESPACE_END(nfp)
-
 ENUM_NAMESPACE_END(nn)
+ENUM_NAMESPACE_END(cafe)
 
 #include <common/enum_end.h>
 

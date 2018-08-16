@@ -16,6 +16,8 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerLibSymbols();
 }
 
 } // namespace cafe::nn::nfp
