@@ -1,10 +1,10 @@
 #pragma once
-#include "modules/coreinit/coreinit_mcp.h"
+#include "cafe/libraries/coreinit/coreinit_mcp.h"
 #include "sysapp_enum.h"
 
 #include <cstdint>
 
-namespace sysapp
+namespace cafe::sysapp
 {
 
 uint64_t
@@ -14,4 +14,4 @@ uint64_t
 SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
                                          coreinit::MCPRegion region);
 
-} // namespace sysapp
+} // namespace cafe::sysapp

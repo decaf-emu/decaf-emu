@@ -3,6 +3,7 @@
 
 #include <common/enum_start.h>
 
+ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(sysapp)
 
 ENUM_BEG(SystemAppId, int32_t)
@@ -22,6 +23,7 @@ ENUM_BEG(SystemAppId, int32_t)
 ENUM_END(SystemAppId)
 
 ENUM_NAMESPACE_END(sysapp)
+ENUM_NAMESPACE_END(cafe)
 
 #include <common/enum_end.h>
 

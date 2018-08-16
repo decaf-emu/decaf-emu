@@ -1,14 +1,16 @@
 #include "sysapp.h"
 #include "sysapp_title.h"
-#include "modules/coreinit/coreinit_mcp.h"
-#include "modules/coreinit/coreinit_enum_string.h"
-#include "ppcutils/stackobject.h"
+#include "cafe/libraries/coreinit/coreinit_mcp.h"
+#include "cafe/libraries/coreinit/coreinit_enum_string.h"
+#include "cafe/cafe_stackobject.h"
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
 
-namespace sysapp
+namespace cafe::sysapp
 {
+
+using namespace cafe::coreinit;
 
 static const uint64_t
 sSysAppTitleId[][3] =
@@ -98,43 +100,50 @@ sSysAppTitleId[][3] =
    },
 };
 
+
+/**
+ * _SYSGetSystemApplicationTitleId
+ */
 uint64_t
 SYSGetSystemApplicationTitleId(SystemAppId id)
 {
-   ppcutils::StackObject<coreinit::MCPSysProdSettings> settings;
+   StackObject<MCPSysProdSettings> settings;
    decaf_check(id < SystemAppId::Max);
 
-   auto mcp = coreinit::MCP_Open();
-   coreinit::MCP_GetSysProdSettings(mcp, settings);
-   coreinit::MCP_Close(mcp);
+   auto mcp = MCP_Open();
+   MCP_GetSysProdSettings(mcp, settings);
+   MCP_Close(mcp);
 
    return SYSGetSystemApplicationTitleIdByProdArea(id, settings->product_area);
 }
 
+
+/**
+ * _SYSGetSystemApplicationTitleIdByProdArea
+ */
 uint64_t
 SYSGetSystemApplicationTitleIdByProdArea(SystemAppId id,
-                                         coreinit::MCPRegion prodArea)
+                                         MCPRegion prodArea)
 {
    auto regionIdx = 1u;
 
    if (prodArea == coreinit::MCPRegion::Japan) {
       regionIdx = 0u;
-   } else if (prodArea == coreinit::MCPRegion::USA) {
-      regionIdx = 1u;
-   } else if (prodArea == coreinit::MCPRegion::Europe) {
+   } else if (prodArea == coreinit::MCPRegion::Europe ||
+              prodArea == coreinit::MCPRegion::Unknown8) {
       regionIdx = 2u;
-   } else {
-      decaf_abort(fmt::format("Unknown prodArea {}", prodArea));
    }
 
    return sSysAppTitleId[id][regionIdx];
 }
 
 void
-Module::registerTitleFunctions()
+Library::registerTitleSymbols()
 {
-   RegisterKernelFunctionName("_SYSGetSystemApplicationTitleId", SYSGetSystemApplicationTitleId);
-   RegisterKernelFunctionName("_SYSGetSystemApplicationTitleIdByProdArea", SYSGetSystemApplicationTitleIdByProdArea);
+   RegisterFunctionExportName("_SYSGetSystemApplicationTitleId",
+                              SYSGetSystemApplicationTitleId);
+   RegisterFunctionExportName("_SYSGetSystemApplicationTitleIdByProdArea",
+                              SYSGetSystemApplicationTitleIdByProdArea);
 }
 
-} // namespace sysapp
+} // namespace cafe::sysapp
