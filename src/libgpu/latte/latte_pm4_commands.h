@@ -5,6 +5,7 @@
 
 #include <common/bitfield.h>
 #include <common/be_val.h>
+#include <libcpu/be2_struct.h>
 #include <cstdint>
 #include <gsl.h>
 
@@ -644,7 +645,7 @@ struct IndirectBufferCall
 struct LoadConfigReg
 {
    static const auto Opcode = IT_OPCODE::LOAD_CONFIG_REG;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -661,7 +662,7 @@ struct LoadConfigReg
 struct LoadContextReg
 {
    static const auto Opcode = IT_OPCODE::LOAD_CONTEXT_REG;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -678,7 +679,7 @@ struct LoadContextReg
 struct LoadAluConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_ALU_CONST;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -695,7 +696,7 @@ struct LoadAluConst
 struct LoadBoolConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_BOOL_CONST;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -712,7 +713,7 @@ struct LoadBoolConst
 struct LoadLoopConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_LOOP_CONST;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -729,7 +730,7 @@ struct LoadLoopConst
 struct LoadResource
 {
    static const auto Opcode = IT_OPCODE::LOAD_RESOURCE;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -746,7 +747,7 @@ struct LoadResource
 struct LoadSampler
 {
    static const auto Opcode = IT_OPCODE::LOAD_SAMPLER;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -763,7 +764,7 @@ struct LoadSampler
 struct LoadControlConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_CTL_CONST;
-   be_val<uint32_t> *addr;
+   virt_ptr<uint32_t> addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
