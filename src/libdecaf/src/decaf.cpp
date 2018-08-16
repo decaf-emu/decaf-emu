@@ -13,8 +13,8 @@
 #include "kernel/kernel_hlefunction.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
-#include "modules/coreinit/coreinit_fs.h"
-#include "modules/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "modules/swkbd/swkbd_core.h"
 
 #include <common/platform.h>
@@ -55,9 +55,9 @@ public:
 
       auto core = cpu::this_core::state();
       if (core) {
-         auto thread = coreinit::internal::getCurrentThread();
+         auto thread = cafe::coreinit::internal::getCurrentThread();
          if (thread) {
-            msg.formatted.write("w{:01X}{:02X}", core->id, static_cast<uint16_t>(thread->id));
+            msg.formatted.write("w{:01X}{:02X}", core->id, thread->id);
          } else {
             msg.formatted.write("w{:01X}{:02X}", core->id, 0xFF);
          }
