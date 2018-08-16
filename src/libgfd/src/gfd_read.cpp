@@ -243,7 +243,7 @@ readUniformVars(MemoryFile &fh,
 
    for (auto &var : uniformVars) {
       var.name = readString(fh, blockBase, relocations);
-      var.type = static_cast<gx2::GX2ShaderVarType>(read<uint32_t>(fh));
+      var.type = static_cast<GX2ShaderVarType>(read<uint32_t>(fh));
       var.count = read<uint32_t>(fh);
       var.offset = read<uint32_t>(fh);
       var.block = read<int32_t>(fh);
@@ -336,7 +336,7 @@ readSamplerVars(MemoryFile &fh,
 
    for (auto &var : samplerVars) {
       var.name = readString(fh, blockBase, relocations);
-      var.type = static_cast<gx2::GX2SamplerVarType>(read<uint32_t>(fh));
+      var.type = static_cast<GX2SamplerVarType>(read<uint32_t>(fh));
       var.location = read<uint32_t>(fh);
    }
 
@@ -366,7 +366,7 @@ readAttribVars(MemoryFile &fh,
 
    for (auto &var : attribVars) {
       var.name = readString(fh, blockBase, relocations);
-      var.type = static_cast<gx2::GX2ShaderVarType>(read<uint32_t>(fh));
+      var.type = static_cast<GX2ShaderVarType>(read<uint32_t>(fh));
       var.count = read<uint32_t>(fh);
       var.location = read<uint32_t>(fh);
    }
@@ -379,7 +379,7 @@ static bool
 readGx2rBuffer(MemoryFile &fh,
                GFDRBuffer &gx2r)
 {
-   gx2r.flags = static_cast<gx2::GX2RResourceFlags>(read<uint32_t>(fh));
+   gx2r.flags = static_cast<GX2RResourceFlags>(read<uint32_t>(fh));
    gx2r.elemSize = read<uint32_t>(fh);
    gx2r.elemCount = read<uint32_t>(fh);
    decaf_check(read<uint32_t>(fh) == 0);
@@ -429,7 +429,7 @@ readVertexShaderHeader(MemoryFile &fh,
 
    vsh.data.reserve(read<uint32_t>(fh));
    decaf_check(read<uint32_t>(fh) == 0); // vsh.data
-   vsh.mode = static_cast<gx2::GX2ShaderMode>(read<uint32_t>(fh));
+   vsh.mode = static_cast<GX2ShaderMode>(read<uint32_t>(fh));
 
    readUniformBlocks(fh, blockBase, relocations, vsh.uniformBlocks);
    readUniformVars(fh, blockBase, relocations, vsh.uniformVars);
@@ -505,7 +505,7 @@ readPixelShaderHeader(MemoryFile &fh,
 
    psh.data.reserve(read<uint32_t>(fh));
    decaf_check(read<uint32_t>(fh) == 0); // psh.data
-   psh.mode = static_cast<gx2::GX2ShaderMode>(read<uint32_t>(fh));
+   psh.mode = static_cast<GX2ShaderMode>(read<uint32_t>(fh));
 
    readUniformBlocks(fh, blockBase, relocations, psh.uniformBlocks);
    readUniformVars(fh, blockBase, relocations, psh.uniformVars);
@@ -579,7 +579,7 @@ readGeometryShaderHeader(MemoryFile &fh,
    gsh.vertexShaderData.reserve(read<uint32_t>(fh));
    decaf_check(read<uint32_t>(fh) == 0); // psh.vertexShaderData
 
-   gsh.mode = static_cast<gx2::GX2ShaderMode>(read<uint32_t>(fh));
+   gsh.mode = static_cast<GX2ShaderMode>(read<uint32_t>(fh));
    readUniformBlocks(fh, blockBase, relocations, gsh.uniformBlocks);
    readUniformVars(fh, blockBase, relocations, gsh.uniformVars);
    readInitialValues(fh, blockBase, relocations, gsh.initialValues);
@@ -644,14 +644,14 @@ readTextureHeader(MemoryFile &fh,
                                            block.majorVersion, block.minorVersion) };
    }
 
-   tex.surface.dim = static_cast<gx2::GX2SurfaceDim>(read<uint32_t>(fh));
+   tex.surface.dim = static_cast<GX2SurfaceDim>(read<uint32_t>(fh));
    tex.surface.width = read<uint32_t>(fh);
    tex.surface.height = read<uint32_t>(fh);
    tex.surface.depth = read<uint32_t>(fh);
    tex.surface.mipLevels = read<uint32_t>(fh);
-   tex.surface.format = static_cast<gx2::GX2SurfaceFormat>(read<uint32_t>(fh));
-   tex.surface.aa = static_cast<gx2::GX2AAMode>(read<uint32_t>(fh));
-   tex.surface.use = static_cast<gx2::GX2SurfaceUse>(read<uint32_t>(fh));
+   tex.surface.format = static_cast<GX2SurfaceFormat>(read<uint32_t>(fh));
+   tex.surface.aa = static_cast<GX2AAMode>(read<uint32_t>(fh));
+   tex.surface.use = static_cast<GX2SurfaceUse>(read<uint32_t>(fh));
 
    tex.surface.image.reserve(read<uint32_t>(fh));
    decaf_check(read<uint32_t>(fh) == 0); // tex.surface.image
@@ -659,7 +659,7 @@ readTextureHeader(MemoryFile &fh,
    tex.surface.mipmap.reserve(read<uint32_t>(fh));
    decaf_check(read<uint32_t>(fh) == 0); // tex.surface.mipmap
 
-   tex.surface.tileMode = static_cast<gx2::GX2TileMode>(read<uint32_t>(fh));
+   tex.surface.tileMode = static_cast<GX2TileMode>(read<uint32_t>(fh));
    tex.surface.swizzle = read<uint32_t>(fh);
    tex.surface.alignment = read<uint32_t>(fh);
    tex.surface.pitch = read<uint32_t>(fh);
