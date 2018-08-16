@@ -6,6 +6,9 @@
 namespace cafe::nn::boss
 {
 
+virt_ptr<hle::VirtualTable> TaskSetting::VirtualTable = nullptr;
+virt_ptr<hle::TypeDescriptor> TaskSetting::TypeDescriptor = nullptr;
+
 TaskSetting::TaskSetting() :
    mVirtualTable(TaskSetting::VirtualTable)
 {

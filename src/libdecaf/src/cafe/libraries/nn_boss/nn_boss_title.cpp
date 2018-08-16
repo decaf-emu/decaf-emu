@@ -8,6 +8,9 @@
 namespace cafe::nn::boss
 {
 
+virt_ptr<hle::VirtualTable> Title::VirtualTable = nullptr;
+virt_ptr<hle::TypeDescriptor> Title::TypeDescriptor = nullptr;
+
 Title::Title() :
    mAccountID(0u),
    mTitleID(0ull),
