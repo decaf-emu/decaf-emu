@@ -1,4 +1,4 @@
-#include "gx2_dds.h"
+#include "gx2_debug_dds.h"
 #include "gx2_format.h"
 #include "gx2_surface.h"
 
