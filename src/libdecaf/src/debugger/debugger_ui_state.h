@@ -1,6 +1,7 @@
 #pragma once
+#include <libcpu/be2_struct.h>
 
-namespace coreinit
+namespace cafe::coreinit
 {
 struct OSThread;
 }
@@ -15,11 +16,11 @@ class StateTracker
 {
 public:
    //! Returns the current thread that the ui should display info for.
-   virtual coreinit::OSThread *
+   virtual virt_ptr<cafe::coreinit::OSThread>
    getActiveThread() = 0;
 
    virtual void
-   setActiveThread(coreinit::OSThread *thread) = 0;
+   setActiveThread(virt_ptr<cafe::coreinit::OSThread> thread) = 0;
 
    virtual unsigned
    getResumeCount() = 0;

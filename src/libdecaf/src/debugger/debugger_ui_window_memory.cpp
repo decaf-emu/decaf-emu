@@ -1,5 +1,5 @@
+#include "cafe/kernel/cafe_kernel_mmu.h"
 #include "debugger_ui_window_memory.h"
-#include "kernel/kernel_memory.h"
 
 #include <algorithm>
 #include <imgui.h>
@@ -15,7 +15,7 @@ namespace ui
 MemoryWindow::MemoryWindow(const std::string &name) :
    Window(name)
 {
-   mAddressScroller.scrollTo(kernel::getVirtualRange(kernel::VirtualRegion::MainAppData).start.getAddress());
+   mAddressScroller.scrollTo(cafe::kernel::getVirtualMemoryMap(cafe::kernel::VirtualMemoryRegion::AppData).vaddr.getAddress());
 }
 
 void

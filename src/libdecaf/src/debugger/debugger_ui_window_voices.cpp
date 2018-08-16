@@ -1,6 +1,6 @@
 #include "debugger_ui_window_voices.h"
-#include "modules/snd_core/snd_core_enum.h"
-#include "modules/snd_core/snd_core_voice.h"
+#include "cafe/libraries/sndcore2/sndcore2_enum.h"
+#include "cafe/libraries/sndcore2/sndcore2_voice.h"
 
 #include <imgui.h>
 
@@ -41,42 +41,42 @@ VoicesWindow::draw()
    ImGui::Text("Loop Mode"); ImGui::NextColumn();
    ImGui::Separator();
 
-   auto voices = snd_core::internal::getAcquiredVoices();
+   auto voices = cafe::sndcore2::internal::getAcquiredVoices();
 
    for (auto &voice : voices) {
-      auto extras = snd_core::internal::getVoiceExtras(voice->index);
+      auto extras = cafe::sndcore2::internal::getVoiceExtras(voice->index);
 
       ImGui::Text("%d", voice->index.value());
       ImGui::NextColumn();
 
-      if (voice->state == snd_core::AXVoiceState::Playing) {
+      if (voice->state == cafe::sndcore2::AXVoiceState::Playing) {
          ImGui::Text("Playing");
       } else {
          ImGui::Text("Stopped");
       }
       ImGui::NextColumn();
 
-      if (voice->offsets.dataType == snd_core::AXVoiceFormat::ADPCM) {
+      if (voice->offsets.dataType == cafe::sndcore2::AXVoiceFormat::ADPCM) {
          ImGui::Text("ADPCM");
-      } else if (voice->offsets.dataType == snd_core::AXVoiceFormat::LPCM16) {
+      } else if (voice->offsets.dataType == cafe::sndcore2::AXVoiceFormat::LPCM16) {
          ImGui::Text("LPCM16");
-      } else if (voice->offsets.dataType == snd_core::AXVoiceFormat::LPCM8) {
+      } else if (voice->offsets.dataType == cafe::sndcore2::AXVoiceFormat::LPCM8) {
          ImGui::Text("LPCM8");
       } else {
          ImGui::Text("Unknown");
       }
       ImGui::NextColumn();
 
-      if (extras->type == snd_core::AXVoiceType::Default) {
+      if (extras->type == cafe::sndcore2::AXVoiceType::Default) {
          ImGui::Text("Default");
-      } else if (extras->type == snd_core::AXVoiceType::Streaming) {
+      } else if (extras->type == cafe::sndcore2::AXVoiceType::Streaming) {
          ImGui::Text("Stream");
       } else {
          ImGui::Text("Unknown");
       }
       ImGui::NextColumn();
 
-      ImGui::Text("%08x", voice->offsets.data.getAddress());
+      ImGui::Text("%08x", virt_cast<virt_addr>(voice->offsets.data).getAddress());
       ImGui::NextColumn();
 
       ImGui::Text("%x", voice->offsets.currentOffset.value());

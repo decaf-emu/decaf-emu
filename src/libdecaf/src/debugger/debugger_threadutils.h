@@ -1,6 +1,6 @@
 #pragma once
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "debugger_interface.h"
 
 namespace debugger
@@ -10,11 +10,11 @@ static uint32_t
 ThreadNotRunning = -1;
 
 inline uint32_t
-getThreadCoreId(coreinit::OSThread *thread)
+getThreadCoreId(virt_ptr<cafe::coreinit::OSThread> thread)
 {
    if (thread) {
       for (auto i = 0u; i < 3; ++i) {
-         if (thread == coreinit::internal::getCoreRunningThread(i)) {
+         if (thread == cafe::coreinit::internal::getCoreRunningThread(i)) {
             return i;
          }
       }
@@ -27,7 +27,7 @@ inline uint32_t
 getCoreIdByThreadId(uint32_t id)
 {
    for (auto i = 0u; i < 3; ++i) {
-      auto thread = coreinit::internal::getCoreRunningThread(i);
+      auto thread = cafe::coreinit::internal::getCoreRunningThread(i);
 
       if (thread && thread->id == id) {
          return i;
@@ -39,7 +39,7 @@ getCoreIdByThreadId(uint32_t id)
 
 inline cpu::CoreRegs *
 getThreadCoreContext(DebuggerInterface *debugger,
-                     coreinit::OSThread *thread)
+                     virt_ptr<cafe::coreinit::OSThread> thread)
 {
    auto core = getThreadCoreId(thread);
 
@@ -52,7 +52,7 @@ getThreadCoreContext(DebuggerInterface *debugger,
 
 inline uint32_t
 getThreadNia(DebuggerInterface *debugger,
-             coreinit::OSThread *thread)
+             virt_ptr<cafe::coreinit::OSThread> thread)
 {
    auto context = getThreadCoreContext(debugger, thread);
 
@@ -67,7 +67,7 @@ getThreadNia(DebuggerInterface *debugger,
 
 inline uint32_t
 getThreadStack(DebuggerInterface *debugger,
-               coreinit::OSThread *thread)
+               virt_ptr<cafe::coreinit::OSThread> thread)
 {
    auto context = getThreadCoreContext(debugger, thread);
 
@@ -80,20 +80,20 @@ getThreadStack(DebuggerInterface *debugger,
    }
 }
 
-inline coreinit::OSThread *
+inline virt_ptr<cafe::coreinit::OSThread>
 getThreadById(uint32_t id)
 {
-   coreinit::internal::lockScheduler();
-   auto firstThread = coreinit::internal::getFirstActiveThread();
+   cafe::coreinit::internal::lockScheduler();
+   auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
    for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
       if (thread->id == id) {
-         coreinit::internal::unlockScheduler();
+         cafe::coreinit::internal::unlockScheduler();
          return thread;
       }
    }
 
-   coreinit::internal::unlockScheduler();
+   cafe::coreinit::internal::unlockScheduler();
    return nullptr;
 }
 

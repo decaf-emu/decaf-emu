@@ -1,8 +1,8 @@
 #include "debugger_ui_window_stack.h"
 #include "debugger_threadutils.h"
 #include "kernel/kernel_loader.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <imgui.h>
 #include <libcpu/mmu.h>
@@ -42,7 +42,7 @@ StackWindow::update()
    }
 
    auto stackAddr = getThreadStack(mDebugger, activeThread);
-   auto stackStart = activeThread->stackStart.getAddress();
+   auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
 
    if (mStackFrameCacheAddr != stackAddr) {
       StackFrame frame;
@@ -192,8 +192,8 @@ StackWindow::draw()
 
       // Stop drawing if this is outside the threads stack range
       if (activeThread) {
-         auto stackStart = activeThread->stackStart.getAddress();
-         auto stackEnd = activeThread->stackEnd.getAddress();
+         auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
+         auto stackEnd = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackEnd));
 
          // Make sure we are inside the stack first
          if (activeThreadStack >= stackEnd && activeThreadStack < stackStart) {
@@ -252,8 +252,8 @@ StackWindow::draw()
    ImGui::AlignFirstTextHeightToWidgets();
 
    if (activeThread) {
-      auto stackStart = activeThread->stackStart.getAddress();
-      auto stackEnd = activeThread->stackEnd.getAddress();
+      auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
+      auto stackEnd = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackEnd));
       ImGui::Text("Showing stack from start %08x to end %08x", stackStart, stackEnd);
    } else {
       ImGui::Text("Showing stack from start ???????? to end ????????");

@@ -1,8 +1,8 @@
 #include "debugger_server_gdb.h"
 #include "debugger_threadutils.h"
 #include "decaf_config.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <algorithm>
 #include <common/platform_socket.h>
@@ -192,8 +192,8 @@ void GdbServer::handleQuery(const std::string &command)
       sendCommand(features);
    } else if (begins_with(command, "qfThreadInfo")) {
       fmt::MemoryWriter reply;
-      coreinit::internal::lockScheduler();
-      auto firstThread = coreinit::internal::getFirstActiveThread();
+      cafe::coreinit::internal::lockScheduler();
+      auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
       if (firstThread) {
          reply.write("m");
@@ -209,7 +209,7 @@ void GdbServer::handleQuery(const std::string &command)
          reply.write("{:04X}", thread->id.value());
       }
 
-      coreinit::internal::unlockScheduler();
+      cafe::coreinit::internal::unlockScheduler();
       sendCommand(reply.str());
    } else if (begins_with(command, "qAttached")) {
       sendCommand("1");

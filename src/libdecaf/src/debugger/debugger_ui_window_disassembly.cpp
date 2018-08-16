@@ -3,7 +3,7 @@
 #include "debugger_branchcalc.h"
 #include "debugger_threadutils.h"
 #include "debugger_ui_window_disassembly.h"
-#include "modules/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
 
 #include <algorithm>
 #include <libcpu/cpu_breakpoints.h>

@@ -1,6 +1,6 @@
 #include "debugger_ui_window_registers.h"
 #include "debugger_threadutils.h"
-#include "modules/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
 
 #include <fmt/format.h>
 #include <imgui.h>
@@ -45,7 +45,7 @@ RegistersWindow::update()
       std::memcpy(&mCurrentRegisters, pauseContext, sizeof(cpu::CoreRegs));
    } else {
       // If the thread is not running on a core, read from the thread's context.
-      auto context = &activeThread->context;
+      auto context = virt_addrof(activeThread->context);
       auto state = &mCurrentRegisters;
       std::memset(&mCurrentRegisters, 0xF1, sizeof(cpu::CoreRegs));
 
