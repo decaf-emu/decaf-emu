@@ -92,6 +92,8 @@ Library::registerFsDriverSymbols()
    RegisterFunctionInternal(internal::fsDriverOnAcquiredForeground, sFsDriverOnAcquiredForeground);
    RegisterFunctionInternal(internal::fsDriverOnReleasedForeground, sFsDriverOnReleasedForeground);
    RegisterFunctionInternal(internal::fsDriverOnDone, sFsDriverOnDone);
+
+   RegisterDataInternal(sFsDriverData);
 }
 
 } // namespace cafe::coreinit
