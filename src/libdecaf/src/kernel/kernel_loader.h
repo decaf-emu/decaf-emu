@@ -130,32 +130,57 @@ struct LoadedModule
    std::map<std::string, Symbol> symbols;
 };
 
-void
-lockLoader();
+static inline void
+lockLoader()
+{
+}
 
-void
-unlockLoader();
+static inline void
+unlockLoader()
+{
+}
 
-LoadedModule *
-loadRPL(const std::string& name);
+static inline LoadedModule *
+loadRPL(const std::string& name)
+{
+   return nullptr;
+}
 
-void
-setSyscallAddress(ppcaddr_t address);
+static inline void
+setSyscallAddress(ppcaddr_t address)
+{
+}
 
-LoadedModule *
-findModule(const std::string& name);
+static inline LoadedModule *
+findModule(const std::string& name)
+{
+   return nullptr;
+}
 
-LoadedSection *
-findSectionForAddress(ppcaddr_t address);
+static inline LoadedSection *
+findSectionForAddress(ppcaddr_t address)
+{
+   return nullptr;
+}
 
-std::string *
-findSymbolNameForAddress(ppcaddr_t address);
+static inline std::string *
+findSymbolNameForAddress(ppcaddr_t address)
+{
+   return nullptr;
+}
 
-std::string
-findNearestSymbolNameForAddress(ppcaddr_t address);
+static inline std::string
+findNearestSymbolNameForAddress(ppcaddr_t address)
+{
+   return "fuk u";
+}
 
-const std::map<std::string, LoadedModule*> &
-getLoadedModules();
+static inline const std::map<std::string, LoadedModule*> &
+getLoadedModules()
+{
+   static std::map<std::string, LoadedModule*> lul;
+   return lul;
+}
 
 } // namespace loader
 

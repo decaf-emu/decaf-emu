@@ -137,6 +137,42 @@ loadCosXML(const char *path,
    cos.exception_stack1_size = xmlReadUnsigned(node.child("exception_stack1_size"));
    cos.exception_stack2_size = xmlReadUnsigned(node.child("exception_stack2_size"));
 
+   if (!node.child("num_codearea_heap_blocks")) {
+      cos.num_codearea_heap_blocks = 0;
+   } else {
+      cos.num_codearea_heap_blocks = xmlReadUnsigned(node.child("num_codearea_heap_blocks"));
+   }
+
+   if (!node.child("num_workarea_heap_blocks")) {
+      cos.num_workarea_heap_blocks = 0;
+   } else {
+      cos.num_workarea_heap_blocks = xmlReadUnsigned(node.child("num_workarea_heap_blocks"));
+   }
+
+   if (!node.child("overlay_arena")) {
+      cos.overlay_arena = 0;
+   } else {
+      cos.overlay_arena = xmlReadUnsigned(node.child("overlay_arena"));
+   }
+
+   if (!node.child("default_redzone0_size")) {
+      cos.default_redzone0_size = 0;
+   } else {
+      cos.default_redzone0_size = xmlReadUnsigned(node.child("default_redzone0_size"));
+   }
+
+   if (!node.child("default_redzone1_size")) {
+      cos.default_redzone1_size = 0;
+   } else {
+      cos.default_redzone1_size = xmlReadUnsigned(node.child("default_redzone1_size"));
+   }
+
+   if (!node.child("default_redzone2_size")) {
+      cos.default_redzone2_size = 0;
+   } else {
+      cos.default_redzone2_size = xmlReadUnsigned(node.child("default_redzone2_size"));
+   }
+
    for (auto child : node.child("permissions").children()) {
       auto group = xmlReadUnsigned(child.child("group"));
       auto mask = xmlReadUnsigned64(child.child("mask"));
@@ -148,6 +184,13 @@ loadCosXML(const char *path,
       case decaf::CosXML::MCP:
          cos.permission_mcp = mask;
          break;
+      }
+
+      auto name = child.name();
+      auto index = std::atoi(name + 1);
+      if (index >= 0 && index < cos.permissions.size()) {
+         cos.permissions[index].group = group;
+         cos.permissions[index].mask = mask;
       }
    }
 

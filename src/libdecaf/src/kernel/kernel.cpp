@@ -1,37 +1,29 @@
+#pragma optimize("", off)
 #include "debugger/debugger.h"
 #include "decaf_events.h"
+#include "decaf_config.h"
 #include "filesystem/filesystem.h"
 #include "kernel.h"
 #include "kernel_hle.h"
-#include "kernel_ipc.h"
 #include "kernel_loader.h"
-#include "kernel_memory.h"
 #include "kernel_filesystem.h"
 #include "ios/ios.h"
-#include "modules/coreinit/coreinit.h"
-#include "modules/coreinit/coreinit_alarm.h"
-#include "modules/coreinit/coreinit_appio.h"
-#include "modules/coreinit/coreinit_core.h"
-#include "modules/coreinit/coreinit_enum.h"
-#include "modules/coreinit/coreinit_ipc.h"
-#include "modules/coreinit/coreinit_mcp.h"
-#include "modules/coreinit/coreinit_memheap.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_shared.h"
-#include "modules/coreinit/coreinit_systeminfo.h"
-#include "modules/coreinit/coreinit_thread.h"
-#include "modules/coreinit/coreinit_interrupts.h"
-#include "modules/gx2/gx2_event.h"
+#include "cafe/libraries/gx2/gx2_event.h"
 #include "modules/sci/sci_cafe_settings.h"
 #include "modules/sci/sci_caffeine_settings.h"
 #include "modules/sci/sci_parental_account_settings_uc.h"
 #include "modules/sci/sci_parental_settings.h"
 #include "modules/sci/sci_spot_pass_settings.h"
-#include "ppcutils/wfunc_call.h"
-#include "ppcutils/stackobject.h"
 
+#include "cafe/libraries/cafe_hle.h"
+#include "cafe/libraries/cafe_hle_library.h"
+#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/loader/cafe_loader_globals.h"
+#include "cafe/kernel/cafe_kernel_loader.h"
 #include "cafe/kernel/cafe_kernel_exception.h"
 #include "cafe/kernel/cafe_kernel_heap.h"
+#include "cafe/kernel/cafe_kernel_mmu.h"
+#include "ios/mcp/ios_mcp_mcp_types.h"
 
 #include <common/decaf_assert.h>
 #include <common/platform_dir.h>
@@ -39,6 +31,7 @@
 #include <common/platform_thread.h>
 #include <common/teenyheap.h>
 #include <fmt/format.h>
+#include <libcpu/trace.h>
 #include <libcpu/mem.h>
 #include <pugixml.hpp>
 
@@ -67,14 +60,14 @@ cpuEntrypoint(cpu::Core *core);
 static void
 cpuBranchTraceHandler(cpu::Core *core, uint32_t target);
 
+static void
+cpuKernelCallHandler(cpu::Core *core, uint32_t id);
+
 static std::atomic_bool
 sRunning { true };
 
 static std::string
 sExecutableName;
-
-static TeenyHeap *
-sSystemHeap = nullptr;
 
 static loader::LoadedModule *
 sUserModule;
@@ -97,6 +90,19 @@ sSharedLibraries = {
    "dc", "vpadbase", "vpad", "avm", "gx2", "snd_core"
 };
 
+struct PerProcessData
+{
+   virt_addr stackStart[3];
+   virt_addr stackTop[3];
+   virt_addr exceptionStackStart[3];
+   virt_addr exceptionStackTop[3];
+};
+
+static PerProcessData
+sProcessData;
+
+static cafe::kernel::internal::AddressSpace
+sKernelAddressSpace;
 
 void
 setExecutableFilename(const std::string& name)
@@ -107,8 +113,18 @@ setExecutableFilename(const std::string& name)
 void
 initialise()
 {
+   cafe::hle::initialiseLibraries();
+
    // Initialise memory
-   initialiseVirtualMemory();
+   cafe::kernel::internal::initialiseAddressSpace(&sKernelAddressSpace,
+                                                  cafe::kernel::RamPartitionId::Kernel,
+                                                  phys_addr { 0x72000000 }, 0x0E000000,
+                                                  phys_addr { 0x20000000 }, 0x52000000,
+                                                  0, 0,
+                                                  phys_addr { 0 }, 0,
+                                                  phys_addr { 0 }, 0,
+                                                  0, false);
+   cafe::kernel::internal::loadAddressSpace(&sKernelAddressSpace);
    cafe::kernel::internal::initialiseStaticDataHeap();
 
    // Initialise static data
@@ -116,7 +132,7 @@ initialise()
    cafe::kernel::internal::initialiseStaticExceptionData();
 
    // Initialise HLE modules
-   initialiseHleModules();
+   // initialiseHleModules();
 
    // Setup cpu
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
@@ -126,8 +142,7 @@ initialise()
       cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
    }
 
-   auto bounds = kernel::getVirtualRange(kernel::VirtualRegion::CafeOS);
-   sSystemHeap = new TeenyHeap { virt_cast<void *>(bounds.start).getRawPointer(), bounds.size };
+   cpu::setKernelCallHandler(&cpuKernelCallHandler);
 }
 
 void
@@ -136,21 +151,21 @@ shutdown()
    ios::join();
 }
 
-TeenyHeap *
-getSystemHeap()
-{
-   return sSystemHeap;
-}
-
 static void
 cpuBranchTraceHandler(cpu::Core *core, uint32_t target)
 {
-   auto symNamePtr = loader::findSymbolNameForAddress(target);
+   /*auto symNamePtr = loader::findSymbolNameForAddress(target);
    if (!symNamePtr) {
       return;
    }
 
-   gLog->debug("CPU branched to: {}", *symNamePtr);
+   gLog->debug("CPU branched to: {}", *symNamePtr);*/
+}
+
+static void
+cpuKernelCallHandler(cpu::Core *core, uint32_t id)
+{
+   cafe::hle::Library::handleKernelCall(core, id);
 }
 
 static void
@@ -193,14 +208,44 @@ core1EntryPoint(cpu::Core *core)
       return;
    }
 
-   // Set up the application memory with max_codesize
-   initialiseAppMemory(sGameInfo.cos.max_codesize,
-                       sGameInfo.cos.codegen_size,
-                       sGameInfo.cos.avail_size);
+   // Load and run the game
+   ios::mcp::MCPPPrepareTitleInfo titleInfo;
+   titleInfo.version = static_cast<uint32_t>(sGameInfo.cos.version);
+   titleInfo.titleId = static_cast<uint64_t>(sGameInfo.app.title_id);
+   titleInfo.cmdFlags = static_cast<uint32_t>(sGameInfo.cos.cmdFlags);
+   titleInfo.argstr = sGameInfo.cos.argstr;
+   titleInfo.max_size = static_cast<uint32_t>(sGameInfo.cos.max_size);
+   titleInfo.avail_size = static_cast<uint32_t>(sGameInfo.cos.avail_size);
+   titleInfo.codegen_size = static_cast<uint32_t>(sGameInfo.cos.codegen_size);
+   titleInfo.codegen_core = static_cast<uint32_t>(sGameInfo.cos.codegen_core);
+   titleInfo.max_codesize = static_cast<uint32_t>(sGameInfo.cos.max_codesize);
+   titleInfo.overlay_arena = static_cast<uint32_t>(sGameInfo.cos.overlay_arena);
+   titleInfo.num_workarea_heap_blocks = static_cast<uint32_t>(sGameInfo.cos.num_workarea_heap_blocks);
+   titleInfo.num_codearea_heap_blocks = static_cast<uint32_t>(sGameInfo.cos.num_codearea_heap_blocks);
+   titleInfo.default_stack0_size = static_cast<uint32_t>(sGameInfo.cos.default_stack0_size);
+   titleInfo.default_stack1_size = static_cast<uint32_t>(sGameInfo.cos.default_stack1_size);
+   titleInfo.default_stack2_size = static_cast<uint32_t>(sGameInfo.cos.default_stack2_size);
+   titleInfo.default_redzone0_size = static_cast<uint32_t>(sGameInfo.cos.default_redzone0_size);
+   titleInfo.default_redzone1_size = static_cast<uint32_t>(sGameInfo.cos.default_redzone1_size);
+   titleInfo.default_redzone2_size = static_cast<uint32_t>(sGameInfo.cos.default_redzone2_size);
+   titleInfo.exception_stack0_size = static_cast<uint32_t>(sGameInfo.cos.exception_stack0_size);
+   titleInfo.exception_stack1_size = static_cast<uint32_t>(sGameInfo.cos.exception_stack1_size);
+   titleInfo.exception_stack2_size = static_cast<uint32_t>(sGameInfo.cos.exception_stack2_size);
 
+   for (auto i = 0u; i < titleInfo.permissions.size(); ++i) {
+      titleInfo.permissions[i].group = static_cast<uint32_t>(sGameInfo.cos.permissions[i].group);
+      titleInfo.permissions[i].mask = static_cast<uint64_t>(sGameInfo.cos.permissions[i].mask);
+   }
+
+   titleInfo.sdkVersion = static_cast<uint32_t>(sGameInfo.app.sdk_version);
+   titleInfo.titleVersion = static_cast<uint32_t>(sGameInfo.app.title_version);
+
+   cafe::kernel::loadGameProcess(rpx, titleInfo);
+   cafe::kernel::finishInitAndPreload();
+
+#if 0
    // Load the default shared libraries, but NOT run their entry points
    auto coreinitModule = loader::loadRPL("coreinit");
-#if 0
    for (auto &name : sSharedLibraries) {
       auto sharedModule = loader::loadRPL(name);
 
@@ -208,7 +253,6 @@ core1EntryPoint(cpu::Core *core)
          gLog->warn("Could not load shared library {}", name);
       }
    }
-#endif
 
    // Load the application
    auto appModule = loader::loadRPL(rpx);
@@ -247,7 +291,7 @@ core1EntryPoint(cpu::Core *core)
    auto thread = coreinit::OSGetDefaultThread(1);
    thread->entryPoint = gameThreadEntry;
    coreinit::OSResumeThread(thread);
-
+#endif
    // Trip an interrupt to force game thread to run
    cpu::interrupt(1, cpu::GENERIC_INTERRUPT);
    coreWfiLoop(core);
@@ -290,20 +334,12 @@ cpuEntrypoint(cpu::Core *core)
 loader::LoadedModule *
 getUserModule()
 {
-   return sUserModule;
+   return nullptr;
 }
 
 loader::LoadedModule *
 getTLSModule(uint32_t index)
 {
-   auto modules = loader::getLoadedModules();
-
-   for (auto &module : modules) {
-      if (module.second->tlsModuleIndex == index) {
-         return module.second;
-      }
-   }
-
    return nullptr;
 }
 

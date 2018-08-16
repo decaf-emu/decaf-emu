@@ -1,30 +1,29 @@
+#include "cafe_kernel_ipckdriver.h"
 #include "ios/kernel/ios_kernel_ipc_thread.h"
-#include "kernel_ipc.h"
-#include "kernel_memory.h"
-#include "modules/coreinit/coreinit_ipc.h"
+#include "cafe/libraries/coreinit/coreinit_ipcdriver.h"
 
 #include <condition_variable>
 #include <libcpu/cpu.h>
 #include <mutex>
 #include <queue>
 
-namespace kernel
+namespace cafe::kernel
 {
 
 static std::mutex
 sIpcMutex;
 
-static std::queue<virt_ptr<IpcRequest>>
+static std::queue<virt_ptr<IPCKDriverRequest>>
 sIpcResponses[3];
 
-static std::vector<std::pair<virt_ptr<IpcRequest>, phys_ptr<ios::IpcRequest>>>
+static std::vector<std::pair<virt_ptr<IPCKDriverRequest>, phys_ptr<ios::IpcRequest>>>
 sPendingRequests;
 
 /**
  * Submit a request to the IOS side IPC queue.
  */
 ios::Error
-ipcDriverKernelSubmitRequest(virt_ptr<IpcRequest> request)
+ipcDriverKernelSubmitRequest(virt_ptr<IPCKDriverRequest> request)
 {
    phys_addr paddr;
 
@@ -114,7 +113,7 @@ ipcDriverKernelSubmitReply(phys_ptr<ios::IpcRequest> reply)
    auto &responses = sIpcResponses[coreId];
 
    // Find the matching pending request
-   virt_ptr<IpcRequest> request = nullptr;
+   auto request = virt_ptr<IPCKDriverRequest> { nullptr };
 
    sIpcMutex.lock();
    for (auto itr = sPendingRequests.begin(); itr != sPendingRequests.end(); ++itr) {
@@ -145,7 +144,7 @@ ipcDriverKernelHandleInterrupt()
    sIpcMutex.lock();
 
    while (responses.size()) {
-      driver->responses[driver->numResponses] = reinterpret_cast<coreinit::IPCBuffer *>(responses.front().getRawPointer());
+      driver->responses[driver->numResponses] = responses.front();
       driver->numResponses++;
       responses.pop();
    }
@@ -156,4 +155,4 @@ ipcDriverKernelHandleInterrupt()
    coreinit::internal::ipcDriverProcessResponses();
 }
 
-} // namespace kernel
+} // namespace cafe::kernel

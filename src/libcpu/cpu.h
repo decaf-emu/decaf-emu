@@ -38,13 +38,7 @@ using InterruptHandler = void (*)(Core *core, uint32_t interrupt_flags);
 using SegfaultHandler = void(*)(Core *core, uint32_t address);
 using IllInstHandler = void(*)(Core *core);
 using BranchTraceHandler = void(*)(Core *core, uint32_t target);
-using KernelCallFunction = void(*)(Core *core, void *userData);
-
-struct KernelCallEntry
-{
-   KernelCallFunction func;
-   void *user_data;
-};
+using KernelCallHandler = void(*)(Core *core, uint32_t id);
 
 void
 initialise();
@@ -74,8 +68,8 @@ setIllInstHandler(IllInstHandler handler);
 void
 setBranchTraceHandler(BranchTraceHandler handler);
 
-uint32_t
-registerKernelCall(const KernelCallEntry &entry);
+void
+setKernelCallHandler(KernelCallHandler handler);
 
 void
 start();

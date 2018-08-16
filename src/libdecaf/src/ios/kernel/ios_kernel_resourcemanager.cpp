@@ -4,7 +4,7 @@
 #include "ios_kernel_process.h"
 #include "ios/ios_enum_string.h"
 #include "ios/ios_stackobject.h"
-#include "kernel/kernel_ipc.h"
+#include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <common/log.h>
 #include <map>
@@ -625,7 +625,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    ipcRequest->reply = reply;
 
    if (resourceRequest->messageQueueId == getIpcMessageQueueId()) {
-      ::kernel::ipcDriverKernelSubmitReply(ipcRequest);
+      cafe::kernel::ipcDriverKernelSubmitReply(ipcRequest);
       error = Error::OK;
    } else {
       phys_ptr<MessageQueue> queue = nullptr;

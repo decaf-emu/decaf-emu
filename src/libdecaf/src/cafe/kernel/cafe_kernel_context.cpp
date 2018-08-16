@@ -1,9 +1,12 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_heap.h"
+
 #include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/libraries/cafe_hle.h"
 
 #include <array>
 #include <common/platform_fiber.h>
+#include <common/log.h>
 #include <libcpu/cpu.h>
 
 namespace cafe::kernel
@@ -95,7 +98,7 @@ copyContextToCpu(virt_ptr<Context> context)
    state->fpscr.value = context->fpscr;
 }
 
-static void
+void
 sleepCurrentContext()
 {
    // Grab the current core and context information
@@ -114,7 +117,7 @@ sleepCurrentContext()
    cpu::this_core::setTracer(nullptr);
 }
 
-static void
+void
 wakeCurrentContext()
 {
    // Clean up any dead fibers
@@ -135,9 +138,9 @@ wakeCurrentContext()
 }
 
 static void
-fiberEntryPoint(void*)
+fiberEntryPoint(void *)
 {
-   // Load up the context set up by the InitialiseThreadEntry method.
+   // Load up the context
    wakeCurrentContext();
 
    // Invoke the PPC thread entry point, note we do not pass any arguments
@@ -146,6 +149,7 @@ fiberEntryPoint(void*)
    auto core = cpu::this_core::state();
    auto exitPoint = virt_func_cast<ContextEntryPoint>(static_cast<virt_addr>(core->lr));
    auto entryPoint = virt_func_cast<ContextEntryPoint>(static_cast<virt_addr>(core->nia));
+
    invoke(core, entryPoint);
    invoke(core, exitPoint);
    decaf_check("Control flow returned to fiber entry point");
@@ -215,9 +219,22 @@ resetFaultedContextFiber(virt_ptr<Context> context,
                          void *param)
 {
    auto oldFiber = context->hostContext->fiber;
-   auto newFiber = platform::createFiber(entry, param);
-   context->hostContext->fiber = newFiber;
-   platform::swapToFiber(oldFiber, newFiber);
+   setContextFiberEntry(context, entry, param);
+   platform::swapToFiber(oldFiber, context->hostContext->fiber);
+}
+
+void
+setContextFiberEntry(virt_ptr<Context> context,
+                     platform::FiberEntryPoint entry,
+                     void *param)
+{
+   if (!context->hostContext) {
+      context->hostContext = new HostContext();
+      context->hostContext->tracer = cpu::allocTracer(1024 * 10 * 10);
+      context->hostContext->context = context;
+   }
+
+   context->hostContext->fiber = platform::createFiber(entry, param);
 }
 
 virt_ptr<Context>
@@ -225,18 +242,6 @@ getCurrentContext()
 {
    auto coreId = cpu::this_core::id();
    auto current = sCurrentContext[coreId];
-   return current;
-}
-
-virt_ptr<Context>
-setCurrentContext(virt_ptr<Context> next)
-{
-   auto coreId = cpu::this_core::id();
-   auto current = sCurrentContext[coreId];
-   copyContextFromCpu(current);
-
-   copyContextToCpu(next);
-   sCurrentContext[coreId] = next;
    return current;
 }
 
@@ -261,10 +266,28 @@ switchContext(virt_ptr<Context> next)
    // after this point, as this context may have been switched to
    // a new core.
    sCurrentContext[coreId] = next;
-   platform::swapToFiber(getContextFiber(current), getContextFiber(next));
+   platform::swapToFiber(getContextFiber(current),
+                         getContextFiber(next));
 
    // Perform restoral operations after the switch
    wakeCurrentContext();
+}
+
+
+/**
+ * This should only be run from coreinit entry point, it will hijack the idle
+ * context for core 1 and adopt it into coreinit's default thread 1.
+ */
+void
+hijackCurrentHostContext(virt_ptr<Context> context)
+{
+   auto coreId = cpu::this_core::id();
+   auto current = sCurrentContext[coreId];
+   decaf_check(current == sIdleContext[1]);
+
+   context->hostContext = current->hostContext;
+   current->hostContext = nullptr;
+   sCurrentContext[coreId] = context;
 }
 
 namespace internal

@@ -1,20 +1,17 @@
 #pragma once
 #include <cstdint>
-#include <string>
+#include <string_view>
 
 namespace kernel
 {
 
 class HleModule;
 
-void
-initialiseHleModules();
-
 HleModule *
-findHleModule(const std::string &name);
+findHleModule(const std::string_view &name);
 
 uint32_t
-registerUnimplementedHleFunc(const std::string &module,
-                             const std::string &name);
+registerUnimplementedHleFunc(const std::string_view &module,
+                             const std::string_view &name);
 
 } // namespace kernel

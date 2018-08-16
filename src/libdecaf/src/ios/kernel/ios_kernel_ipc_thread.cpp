@@ -4,7 +4,7 @@
 #include "ios_kernel_process.h"
 #include "ios_kernel_resourcemanager.h"
 #include "ios/ios_stackobject.h"
-#include "kernel/kernel_ipc.h"
+#include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <common/atomicqueue.h>
 #include <common/log.h>
@@ -181,7 +181,7 @@ ipcThreadEntry(phys_ptr<void> context)
             // Reply with error!
             request->command = Command::Reply;
             request->reply = error;
-            ::kernel::ipcDriverKernelSubmitReply(request);
+            cafe::kernel::ipcDriverKernelSubmitReply(request);
             continue;
          }
       }

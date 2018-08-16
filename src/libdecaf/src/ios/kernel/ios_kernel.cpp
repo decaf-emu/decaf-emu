@@ -27,8 +27,6 @@
 #include "ios/ios_enum.h"
 #include "ios/ios_stackobject.h"
 
-#include "kernel/kernel_memory.h"
-
 #include <common/log.h>
 #include <functional>
 
@@ -196,9 +194,8 @@ kernelEntryPoint(phys_ptr<void> context)
    }
 
    // Initialise shared heap
-   auto sharedHeapRange = ::kernel::getPhysicalRange(::kernel::PhysicalRegion::MEM2IosSharedHeap);
-   auto error = IOS_CreateHeap(phys_cast<void *>(sharedHeapRange.start),
-                               sharedHeapRange.size);
+   auto error = IOS_CreateHeap(phys_cast<void *>(phys_addr { 0x1D000000 }),
+                               0x2B00000);
    if (error < Error::OK) {
       gLog->error("Failed to create shared heap, error = {}", error);
       return error;

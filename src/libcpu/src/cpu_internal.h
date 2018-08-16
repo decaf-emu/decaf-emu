@@ -38,8 +38,9 @@ gTimerThread;
 void
 timerEntryPoint();
 
-KernelCallEntry *
-getKernelCall(uint32_t id);
+void
+onKernelCall(cpu::Core *core,
+             uint32_t id);
 
 bool
 initialiseMemory();

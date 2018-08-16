@@ -1,15 +1,15 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_exception.h"
 #include "cafe_kernel_heap.h"
+#include "cafe_kernel_ipckdriver.h"
 #include "cafe/cafe_ppc_interface_invoke.h"
 
 #include "decaf_config.h"
 #include "debugger/debugger.h"
-#include "kernel/kernel_ipc.h"
-#include "modules/coreinit/coreinit_alarm.h"
-#include "modules/coreinit/coreinit_interrupts.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/gx2/gx2_event.h"
+#include "cafe/libraries/coreinit/coreinit_alarm.h"
+#include "cafe/libraries/coreinit/coreinit_interrupts.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/gx2/gx2_event.h"
 
 #include <array>
 #include <common/log.h>
@@ -35,6 +35,38 @@ sExceptionData;
 
 namespace internal
 {
+
+static void
+exceptionContextFiberEntry(void *)
+{
+   // Load up the context
+   wakeCurrentContext();
+
+   while (true) {
+      auto context = getCurrentContext();
+      auto interruptedContext = virt_cast<Context *>(virt_addr { context->gpr[3].value() });
+      auto flags = context->gpr[4];
+
+      if (flags & cpu::ALARM_INTERRUPT) {
+         coreinit::internal::handleAlarmInterrupt(interruptedContext);
+      }
+
+      if (flags & cpu::GPU_RETIRE_INTERRUPT) {
+         gx2::internal::handleGpuRetireInterrupt();
+      }
+
+      if (flags & cpu::GPU_FLIP_INTERRUPT) {
+         gx2::internal::handleGpuFlipInterrupt();
+      }
+
+      if (flags & cpu::IPC_INTERRUPT) {
+         ipcDriverKernelHandleInterrupt();
+      }
+
+      // Return to interrupted context
+      switchContext(interruptedContext);
+   }
+}
 
 static void
 handleCpuInterrupt(cpu::Core *core,
@@ -68,34 +100,18 @@ handleCpuInterrupt(cpu::Core *core,
    // happen and will cause bugs.
 
    decaf_check(coreinit::internal::isSchedulerEnabled());
-
-   auto exceptionContext = virt_addrof(sExceptionData->exceptionThreadContext[core->id]);
-   auto interruptedContext = setCurrentContext(exceptionContext);
-
    auto originalInterruptState = coreinit::OSDisableInterrupts();
    coreinit::internal::disableScheduler();
 
-   if (flags & cpu::ALARM_INTERRUPT) {
-      coreinit::internal::handleAlarmInterrupt(reinterpret_cast<coreinit::OSContext *>(interruptedContext.getRawPointer()));
-   }
-
-   if (flags & cpu::GPU_RETIRE_INTERRUPT) {
-      gx2::internal::handleGpuRetireInterrupt();
-   }
-
-   if (flags & cpu::GPU_FLIP_INTERRUPT) {
-      gx2::internal::handleGpuFlipInterrupt();
-   }
-
-   if (flags & cpu::IPC_INTERRUPT) {
-      ::kernel::ipcDriverKernelHandleInterrupt();
-   }
+   // Switch to the exception context fiber
+   auto exceptionContext = virt_addrof(sExceptionData->exceptionThreadContext[core->id]);
+   auto interruptedContext = getCurrentContext();
+   exceptionContext->gpr[3] = static_cast<uint32_t>(virt_cast<virt_addr>(interruptedContext));
+   exceptionContext->gpr[4] = flags;
+   switchContext(exceptionContext);
 
    coreinit::internal::enableScheduler();
    coreinit::OSRestoreInterrupts(originalInterruptState);
-
-   // Restore the interrupted context and return to continue execution!
-   setCurrentContext(interruptedContext);
 
    // We must never receive an interrupt while processing a kernel
    // function as if the scheduler is locked, we are in for some shit.
@@ -207,6 +223,9 @@ initialiseExceptionContext(cpu::Core *core)
 
    memset(context.getRawPointer(), 0, sizeof(Context));
    context->gpr[1] = virt_cast<virt_addr>(stack).getAddress() + ExceptionThreadStackSize;
+   context->attr |= 1 << core->id;
+
+   setContextFiberEntry(context, exceptionContextFiberEntry, nullptr);
 }
 
 void

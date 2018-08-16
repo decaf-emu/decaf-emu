@@ -500,11 +500,7 @@ void
 brSyscallHandler(BinrecCore *core)
 {
    auto instr = mem::read<espresso::Instruction>(core->nia - 4);
-   auto id = instr.kcn;
-   auto kc = cpu::getKernelCall(id);
-   decaf_assert(kc, fmt::format("Encountered invalid Kernel Call ID {}", id));
-
-   kc->func(core, kc->user_data);
+   cpu::onKernelCall(core, instr.kcn);
 
    // We might have been rescheduled on a new core.
    core = reinterpret_cast<BinrecCore *>(this_core::state());

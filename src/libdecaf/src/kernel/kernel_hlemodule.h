@@ -29,9 +29,6 @@
 #define RegisterInternalData(data) \
    RegisterInternalDataName(#data, data)
 
-#define FindSymbol(sym) \
-   findSymbol<decltype(sym)>(#sym)
-
 namespace kernel
 {
 
@@ -43,8 +40,12 @@ public:
    virtual ~HleModule() = default;
 
    virtual void initialise() = 0;
+
    virtual const HleSymbolMap &getSymbolMap() const = 0;
    virtual void *findExportAddress(const std::string &name) const = 0;
+
+   virtual void setRpl(std::vector<uint8_t> &&data) = 0;
+   virtual const std::vector<uint8_t> &getRpl() const = 0;
 };
 
 template<typename ModuleType>
@@ -70,6 +71,17 @@ public:
       }
 
       return itr->second->ppcPtr;
+   }
+
+   std::vector<uint8_t> rplData;
+   virtual void setRpl(std::vector<uint8_t> &&data)
+   {
+      rplData = std::move(data);
+   }
+
+   virtual const std::vector<uint8_t> &getRpl() const
+   {
+      return rplData;
    }
 
 protected:

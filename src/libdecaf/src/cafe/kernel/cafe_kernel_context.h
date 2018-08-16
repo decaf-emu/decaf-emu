@@ -12,7 +12,7 @@ struct HostContext;
 
 struct Context
 {
-   static const uint64_t Tag1 = 0x4F53436F6E747874ull;
+   static const uint64_t Tag = 0x4F53436F6E747874ull;
 
    //! Should always be set to the value OSContext::Tag.
    be2_val<uint64_t> tag;
@@ -36,11 +36,11 @@ struct Context
    be2_val<uint16_t> spinLockCount;
    be2_val<uint16_t> state;
    be2_array<uint32_t, 8> gqr;
-   UNKNOWN(4);
+   be2_val<uint32_t> pir;
    be2_array<double, 32> psf;
-   be2_array<uint64_t, 3> coretime;
-   be2_val<uint64_t> starttime;
-   be2_val<uint32_t> error;
+   be2_array<int64_t, 3> coretime;
+   be2_val<int64_t> starttime;
+   be2_val<int32_t> error;
    be2_val<uint32_t> attr;
    be2_val<uint32_t> pmc1;
    be2_val<uint32_t> pmc2;
@@ -70,6 +70,7 @@ CHECK_OFFSET(Context, 0xb8, fpr);
 CHECK_OFFSET(Context, 0x1b8, spinLockCount);
 CHECK_OFFSET(Context, 0x1ba, state);
 CHECK_OFFSET(Context, 0x1bc, gqr);
+CHECK_OFFSET(Context, 0x1DC, pir);
 CHECK_OFFSET(Context, 0x1e0, psf);
 CHECK_OFFSET(Context, 0x2e0, coretime);
 CHECK_OFFSET(Context, 0x2f8, starttime);
@@ -98,14 +99,25 @@ resetFaultedContextFiber(virt_ptr<Context> context,
                          platform::FiberEntryPoint entry,
                          void *param);
 
+void
+setContextFiberEntry(virt_ptr<Context> context,
+                     platform::FiberEntryPoint entry,
+                     void *param);
+
 virt_ptr<Context>
 getCurrentContext();
 
-virt_ptr<Context>
-setCurrentContext(virt_ptr<Context> next);
-
 void
 switchContext(virt_ptr<Context> next);
+
+void
+hijackCurrentHostContext(virt_ptr<Context> context);
+
+void
+sleepCurrentContext();
+
+void
+wakeCurrentContext();
 
 namespace internal
 {
