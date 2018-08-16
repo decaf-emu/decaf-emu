@@ -311,7 +311,7 @@ LiCpu_RelocAdd(bool isRpx,
 
          auto mtctr = espresso::encodeInstruction(espresso::InstructionID::mtspr);
          mtctr.rS = 11;
-         mtctr.spr = static_cast<uint32_t>(espresso::SPR::CTR);
+         espresso::encodeSPR(mtctr, espresso::SPR::CTR);
 
          auto bctr = espresso::encodeInstruction(espresso::InstructionID::bc);
          bctr.bo = 0b10100;
