@@ -7,7 +7,7 @@ namespace cafe::nn::cmpt
 CMPTError
 CMPTGetDataSize(virt_ptr<uint32_t> outDataSize)
 {
-   *outDataSize = 12 * 1024 * 1024;
+   *outDataSize = 12u * 1024u * 1024u;
    return CMPTError::OK;
 }
 
