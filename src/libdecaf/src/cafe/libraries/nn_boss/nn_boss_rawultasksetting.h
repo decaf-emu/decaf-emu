@@ -35,12 +35,12 @@ public:
    nn::Result
    RegisterPreprocess(uint32_t a1,
                       virt_ptr<TitleID> a2,
-                      virt_ptr<const char *> a3);
+                      virt_ptr<const char> a3);
 
    void
    RegisterPostprocess(uint32_t a1,
                        virt_ptr<TitleID> a2,
-                       virt_ptr<const char *> a3,
+                       virt_ptr<const char> a3,
                        virt_ptr<nn::Result> a4);
 
 protected:

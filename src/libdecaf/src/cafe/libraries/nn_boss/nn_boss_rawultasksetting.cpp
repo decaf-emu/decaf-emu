@@ -28,7 +28,7 @@ RawUlTaskSetting::~RawUlTaskSetting()
 nn::Result
 RawUlTaskSetting::RegisterPreprocess(uint32_t a1,
                                      virt_ptr<TitleID> a2,
-                                     virt_ptr<const char *> a3)
+                                     virt_ptr<const char> a3)
 {
    decaf_warn_stub();
    return InvalidParameter;
@@ -37,7 +37,7 @@ RawUlTaskSetting::RegisterPreprocess(uint32_t a1,
 void
 RawUlTaskSetting::RegisterPostprocess(uint32_t a1,
                                       virt_ptr<TitleID> a2,
-                                      virt_ptr<const char *> a3,
+                                      virt_ptr<const char> a3,
                                       virt_ptr<nn::Result> a4)
 {
    decaf_warn_stub();
