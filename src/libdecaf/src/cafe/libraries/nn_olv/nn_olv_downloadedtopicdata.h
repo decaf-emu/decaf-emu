@@ -1,12 +1,7 @@
 #pragma once
-#include "nn_olv.h"
-#include <common/be_val.h>
-#include <common/structsize.h>
+#include <libcpu/be2_struct.h>
 
-namespace nn
-{
-
-namespace olv
+namespace cafe::nn::olv
 {
 
 class DownloadedTopicData
@@ -21,8 +16,8 @@ public:
    GetUserCount();
 
 protected:
-   be_val<uint32_t> mUnk1;
-   be_val<uint32_t> mCommunityId;
+   be2_val<uint32_t> mUnk1;
+   be2_val<uint32_t> mCommunityId;
    UNKNOWN(0xFF8);
 
 private:
@@ -33,6 +28,4 @@ private:
 };
 CHECK_SIZE(DownloadedTopicData, 0x1000);
 
-}  // namespace olv
-
-}  // namespace nn
+}  // namespace cafe::nn::olv

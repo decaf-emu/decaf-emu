@@ -1,10 +1,7 @@
 #pragma once
-#include "nn_olv.h"
 #include "nn_olv_result.h"
-#include "modules/nn_ffl.h"
-#include "modules/nn_result.h"
-#include <common/be_val.h>
-#include <common/structsize.h>
+#include "cafe/libraries/nn_ffl.h"
+#include <libcpu/be2_struct.h>
 
 /*
 Unimplemented functions:
@@ -12,10 +9,7 @@ Unimplemented functions:
    GetCommunityCode__Q3_2nn3olv23DownloadedCommunityDataCFPcUi
 */
 
-namespace nn
-{
-
-namespace olv
+namespace cafe::nn::olv
 {
 
 class DownloadedCommunityData
@@ -38,46 +32,52 @@ public:
    GetAppDataSize();
 
    nn::Result
-   GetAppData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize);
+   GetAppData(virt_ptr<uint8_t> buffer,
+              virt_ptr<uint32_t> outDataSize,
+              uint32_t bufferSize);
 
    uint32_t
    GetCommunityId();
 
    nn::Result
-   GetDescriptionText(char16_t *buffer, uint32_t bufferSize);
+   GetDescriptionText(virt_ptr<char16_t> buffer,
+                      uint32_t bufferSize);
 
    nn::Result
-   GetIconData(uint8_t *buffer, be_val<uint32_t> *size, uint32_t bufferSize);
+   GetIconData(virt_ptr<uint8_t> buffer,
+               virt_ptr<uint32_t> outIconSize,
+               uint32_t bufferSize);
 
    nn::Result
-   GetOwnerMiiData(FFLStoreData *data);
+   GetOwnerMiiData(virt_ptr<FFLStoreData> data);
 
-   char16_t *
+   virt_ptr<char16_t>
    GetOwnerMiiNickname();
 
    uint32_t
    GetOwnerPid();
 
    nn::Result
-   GetTitleText(char16_t *buffer, uint32_t bufferSize);
+   GetTitleText(virt_ptr<char16_t> buffer,
+                uint32_t bufferSize);
 
    bool
    TestFlags(uint32_t flags);
 
 protected:
-   be_val<uint32_t> mFlags;
-   be_val<uint32_t> mCommunityId;
-   be_val<uint32_t> mOwnerPid;
-   char16_t mTitleText[128];
-   be_val<uint32_t> mTitleTextLength;
-   char16_t mDescriptionText[256];
-   be_val<uint32_t> mDescriptionTextLength;
-   uint8_t mAppData[1024];
-   be_val<uint32_t> mAppDataLength;
-   uint8_t mIconData[0x1002C];
-   be_val<uint32_t> mIconDataLength;
-   uint8_t mOwnerMiiData[96];
-   char16_t mOwnerMiiNickname[32];
+   be2_val<uint32_t> mFlags;
+   be2_val<uint32_t> mCommunityId;
+   be2_val<uint32_t> mOwnerPid;
+   be2_array<char16_t, 128> mTitleText;
+   be2_val<uint32_t> mTitleTextLength;
+   be2_array<char16_t, 256> mDescriptionText;
+   be2_val<uint32_t> mDescriptionTextLength;
+   be2_array<uint8_t, 1024> mAppData;
+   be2_val<uint32_t> mAppDataLength;
+   be2_array<uint8_t, 0x1002C> mIconData;
+   be2_val<uint32_t> mIconDataLength;
+   be2_array<uint8_t, 96> mOwnerMiiData;
+   be2_array<char16_t, 32> mOwnerMiiNickname;
    UNKNOWN(0x1818);
 
 private:
@@ -99,6 +99,4 @@ private:
 };
 CHECK_SIZE(DownloadedCommunityData, 0x12000);
 
-}  // namespace olv
-
-}  // namespace nn
+}  // namespace cafe::nn::olv
