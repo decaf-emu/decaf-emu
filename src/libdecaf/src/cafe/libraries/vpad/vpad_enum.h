@@ -3,9 +3,10 @@
 
 #include <common/enum_start.h>
 
+ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(vpad)
 
-FLAGS_BEG(Buttons, uint32_t)
+FLAGS_BEG(VPADButtons, uint32_t)
    FLAGS_VALUE(Sync,        1 << 0)
    FLAGS_VALUE(Home,        1 << 1)
    FLAGS_VALUE(Minus,       1 << 2)
@@ -24,9 +25,14 @@ FLAGS_BEG(Buttons, uint32_t)
    FLAGS_VALUE(A,           1 << 15)
    FLAGS_VALUE(StickR,      1 << 17)
    FLAGS_VALUE(StickL,      1 << 18)
-FLAGS_END(Buttons)
+FLAGS_END(VPADButtons)
 
-FLAGS_BEG(TouchPadValidity, uint16_t)
+ENUM_BEG(VPADChan, int32_t)
+   ENUM_VALUE(Chan0,                   0)
+   ENUM_VALUE(Chan1,                   1)
+ENUM_END(VPADChan)
+
+FLAGS_BEG(VPADTouchPadValidity, uint16_t)
    //! Both X and Y touchpad positions are accurate
    FLAGS_VALUE(Valid,       0)
 
@@ -35,7 +41,7 @@ FLAGS_BEG(TouchPadValidity, uint16_t)
 
    //! Y position is inaccurate
    FLAGS_VALUE(InvalidY,    1 << 1)
-FLAGS_END(TouchPadValidity)
+FLAGS_END(VPADTouchPadValidity)
 
 ENUM_BEG(VPADReadError, int32_t)
    ENUM_VALUE(Success,            0)
@@ -44,6 +50,7 @@ ENUM_BEG(VPADReadError, int32_t)
 ENUM_END(VPADReadError)
 
 ENUM_NAMESPACE_END(vpad)
+ENUM_NAMESPACE_END(cafe)
 
 #include <common/enum_end.h>
 
