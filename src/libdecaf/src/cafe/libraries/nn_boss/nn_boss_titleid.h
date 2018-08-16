@@ -1,25 +1,14 @@
 #pragma once
-#include <common/be_val.h>
-#include <common/structsize.h>
-#include <cstdint>
+#include <libcpu/be2_struct.h>
 
-/*
-Unimplemented functions:
-nn::boss::TitleID::operator==(nn::boss::TitleID const &) const
-nn::boss::TitleID::operator!=(nn::boss::TitleID const &) const
-*/
-
-namespace nn
-{
-
-namespace boss
+namespace cafe::nn::boss
 {
 
 class TitleID
 {
 public:
    TitleID();
-   TitleID(TitleID *other);
+   TitleID(virt_ptr<TitleID> other);
    TitleID(uint64_t id);
 
    bool
@@ -37,9 +26,15 @@ public:
    uint32_t
    GetUniqueId();
 
+   bool
+   operator ==(virt_ptr<TitleID> other);
+
+   bool
+   operator !=(virt_ptr<TitleID> other);
+
 private:
-   be_val<uint32_t> mLower;
-   be_val<uint32_t> mUpper;
+   be2_val<uint32_t> mLower;
+   be2_val<uint32_t> mUpper;
 
 protected:
    CHECK_MEMBER_OFFSET_START
@@ -49,6 +44,4 @@ protected:
 };
 CHECK_SIZE(TitleID, 8);
 
-} // namespace boss
-
-} // namespace nn
+} // namespace cafe::nn::boss

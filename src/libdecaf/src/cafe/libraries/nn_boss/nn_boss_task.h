@@ -1,13 +1,11 @@
 #pragma once
-#include "modules/nn_result.h"
-#include "modules/coreinit/coreinit_ghs_typeinfo.h"
 #include "nn_boss_taskid.h"
 #include "nn_boss_titleid.h"
 
-#include <common/be_ptr.h>
-#include <common/be_val.h>
-#include <common/structsize.h>
-#include <cstdint>
+#include "cafe/libraries/nn_result.h"
+#include "cafe/libraries/cafe_hle_library_typeinfo.h"
+
+#include <libcpu/be2_struct.h>
 
 /*
 Unimplemented functions:
@@ -47,33 +45,34 @@ nn::boss::Task::Wait(nn::boss::TaskWaitState)
 nn::boss::Task::Wait(unsigned int, nn::boss::TaskWaitState)
 */
 
-namespace nn
-{
-
-namespace boss
+namespace cafe::nn::boss
 {
 
 class Task
 {
 public:
-   static ghs::VirtualTableEntry *VirtualTable;
-   static ghs::TypeDescriptor *TypeInfo;
+   static virt_ptr<hle::VirtualTable> VirtualTable;
+   static virt_ptr<hle::TypeDescriptor> TypeDescriptor;
 
 public:
    Task();
-   Task(const char *taskID);
-   Task(const char *taskID, uint32_t accountID);
-   Task(uint8_t slot, const char *taskID);
+   Task(virt_ptr<const char> taskId);
+   Task(virt_ptr<const char> taskId,
+        uint32_t accountId);
+   Task(uint8_t slot,
+        virt_ptr<const char> taskId);
    ~Task();
 
    nn::Result
-   Initialize(const char *taskID);
+   Initialize(virt_ptr<const char> taskId);
 
    nn::Result
-   Initialize(const char *taskID, uint32_t accountID);
+   Initialize(virt_ptr<const char> taskId,
+              uint32_t accountId);
 
    nn::Result
-   Initialize(uint8_t slot, const char *taskID);
+   Initialize(uint8_t slot,
+              virt_ptr<const char> taskId);
 
    void
    Finalize();
@@ -85,29 +84,27 @@ public:
    GetAccountID();
 
    void
-   GetTaskID(TaskID *id);
+   GetTaskID(virt_ptr<TaskID> id);
 
    void
-   GetTitleID(TitleID *id);
+   GetTitleID(virt_ptr<TitleID> id);
 
 protected:
-   be_val<uint32_t> mAccountID;
+   be2_val<uint32_t> mAccountId;
    UNKNOWN(4);
-   TaskID mTaskID;
-   TitleID mTitleID;
-   be_ptr<ghs::VirtualTableEntry> mVirtualTable;
+   be2_struct<TaskID> mTaskId;
+   be2_struct<TitleID> mTitleId;
+   be2_virt_ptr<hle::VirtualTable> mVirtualTable;
    UNKNOWN(4);
 
 protected:
    CHECK_MEMBER_OFFSET_START
-      CHECK_OFFSET(Task, 0x00, mAccountID);
-      CHECK_OFFSET(Task, 0x08, mTaskID);
-      CHECK_OFFSET(Task, 0x10, mTitleID);
+      CHECK_OFFSET(Task, 0x00, mAccountId);
+      CHECK_OFFSET(Task, 0x08, mTaskId);
+      CHECK_OFFSET(Task, 0x10, mTitleId);
       CHECK_OFFSET(Task, 0x18, mVirtualTable);
    CHECK_MEMBER_OFFSET_END
 };
 CHECK_SIZE(Task, 0x20);
 
-} // namespace boss
-
-} // namespace nn
+} // namespace cafe::nn::boss

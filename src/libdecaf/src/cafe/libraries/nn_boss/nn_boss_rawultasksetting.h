@@ -1,6 +1,11 @@
 #pragma once
 #include "nn_boss_nettasksetting.h"
 
+#include "cafe/libraries/nn_result.h"
+#include "cafe/libraries/cafe_hle_library_typeinfo.h"
+
+#include <libcpu/be2_struct.h>
+
 /*
 Unimplemented functions:
 nn::boss::RawUlTaskSetting::AddLargeHttpHeader(char const *, char const *)
@@ -14,33 +19,35 @@ nn::boss::RawUlTaskSetting::SetOption(unsigned int)
 nn::boss::RawUlTaskSetting::SetRawUlTaskSettingToRecord(char const *)
 */
 
-namespace nn
-{
-
-namespace boss
+namespace cafe::nn::boss
 {
 
 class RawUlTaskSetting : public NetTaskSetting
 {
 public:
-   static ghs::VirtualTableEntry *VirtualTable;
-   static ghs::TypeDescriptor *TypeInfo;
+   static virt_ptr<hle::VirtualTable> VirtualTable;
+   static virt_ptr<hle::TypeDescriptor> TypeDescriptor;
 
 public:
    RawUlTaskSetting();
    ~RawUlTaskSetting();
 
    nn::Result
-   RegisterPreprocess(uint32_t, nn::boss::TitleID *id, const char *);
+   RegisterPreprocess(uint32_t a1,
+                      virt_ptr<TitleID> a2,
+                      virt_ptr<const char *> a3);
 
    void
-   RegisterPostprocess(uint32_t, nn::boss::TitleID *id, const char *, nn::Result *);
+   RegisterPostprocess(uint32_t a1,
+                       virt_ptr<TitleID> a2,
+                       virt_ptr<const char *> a3,
+                       virt_ptr<nn::Result> a4);
 
 protected:
-   uint32_t mRawUlUnk1;
-   uint32_t mRawUlUnk2;
-   uint32_t mRawUlUnk3;
-   char mRawUlData[0x200];
+   be2_val<uint32_t> mRawUlUnk1;
+   be2_val<uint32_t> mRawUlUnk2;
+   be2_val<uint32_t> mRawUlUnk3;
+   be2_array<char, 0x200> mRawUlData;
 
 protected:
    CHECK_MEMBER_OFFSET_START
@@ -52,6 +59,4 @@ protected:
 };
 CHECK_SIZE(RawUlTaskSetting, 0x1210);
 
-}  // namespace boss
-
-}  // namespace nn
+}  // namespace cafe::nn::boss

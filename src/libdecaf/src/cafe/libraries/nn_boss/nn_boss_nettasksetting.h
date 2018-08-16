@@ -1,6 +1,11 @@
 #pragma once
 #include "nn_boss_tasksetting.h"
 
+#include "cafe/libraries/nn_result.h"
+#include "cafe/libraries/cafe_hle_library_typeinfo.h"
+
+#include <libcpu/be2_struct.h>
+
 /*
 Unimplemented functions:
 nn::boss::NetTaskSetting::AddCaCert(char const *)
@@ -20,17 +25,14 @@ nn::boss::NetTaskSetting::SetInternalClientCert(signed char)
 nn::boss::NetTaskSetting::SetServiceToken(unsigned char const *)
 */
 
-namespace nn
-{
-
-namespace boss
+namespace cafe::nn::boss
 {
 
 class NetTaskSetting : public TaskSetting
 {
 public:
-   static ghs::VirtualTableEntry *VirtualTable;
-   static ghs::TypeDescriptor *TypeInfo;
+   static virt_ptr<hle::VirtualTable> VirtualTable;
+   static virt_ptr<hle::TypeDescriptor> TypeDescriptor;
 
 public:
    NetTaskSetting();
@@ -40,6 +42,4 @@ protected:
 };
 CHECK_SIZE(NetTaskSetting, 0x1004);
 
-}  // namespace boss
-
-}  // namespace nn
+}  // namespace cafe::nn::boss
