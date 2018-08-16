@@ -1,11 +1,9 @@
 #pragma once
 #include "nsyskbd_enum.h"
 
-#include <cstdint>
-#include <common/be_val.h>
-#include <common/structsize.h>
+#include <libcpu/be2_struct.h>
 
-namespace nsyskbd
+namespace cafe::nsyskbd
 {
 
 /**
@@ -25,12 +23,12 @@ using kpr_char_t = int16_t;
 
 struct KPRQueue
 {
-   be_val<kpr_char_t> buffer[6];
-   be_val<KPRMode> mode;
-   uint8_t numCharsOut;
-   uint8_t numCharsIn;
+   be2_array<kpr_char_t, 6> buffer;
+   be2_val<KPRMode> mode;
+   be2_val<uint8_t> numCharsOut;
+   be2_val<uint8_t> numCharsIn;
    PADDING(2);
-   be_val<uint32_t> unk0x14;
+   be2_val<uint32_t> unk0x14;
 };
 CHECK_OFFSET(KPRQueue, 0x00, buffer);
 CHECK_OFFSET(KPRQueue, 0x0C, mode);
@@ -42,33 +40,33 @@ CHECK_SIZE(KPRQueue, 0x18);
 #pragma pack(pop)
 
 void
-KPRInitQueue(KPRQueue *queue);
+KPRInitQueue(virt_ptr<KPRQueue> queue);
 
 void
-KPRSetMode(KPRQueue *queue,
+KPRSetMode(virt_ptr<KPRQueue> queue,
            KPRMode mode);
 
 KPRMode
-KPRGetMode(KPRQueue *queue);
+KPRGetMode(virt_ptr<KPRQueue> queue);
 
 void
-KPRClearQueue(KPRQueue *queue);
+KPRClearQueue(virt_ptr<KPRQueue> queue);
 
 uint8_t
-KPRPutChar(KPRQueue *queue,
+KPRPutChar(virt_ptr<KPRQueue> queue,
            kpr_char_t chr);
 
 kpr_char_t
-KPRGetChar(KPRQueue *queue);
+KPRGetChar(virt_ptr<KPRQueue> queue);
 
 kpr_char_t
-KPRRemoveChar(KPRQueue *queue);
+KPRRemoveChar(virt_ptr<KPRQueue> queue);
 
 uint8_t
-KPRLookAhead(KPRQueue *queue,
-             be_val<kpr_char_t> *buffer,
+KPRLookAhead(virt_ptr<KPRQueue> queue,
+             virt_ptr<kpr_char_t> buffer,
              uint32_t size);
 
 /** @} */
 
-} // namespace nsyskbd
+} // namespace cafe::nsyskbd

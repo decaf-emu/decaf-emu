@@ -1,10 +1,9 @@
 #pragma once
 #include "nsyskbd_enum.h"
 
-#include <cstdint>
-#include <common/be_val.h>
+#include <libcpu/be2_struct.h>
 
-namespace nsyskbd
+namespace cafe::nsyskbd
 {
 
 /**
@@ -17,7 +16,7 @@ namespace nsyskbd
 
 struct SKBDKeyData
 {
-   be_val<uint8_t> channel;
+   be2_val<uint8_t> channel;
    UNKNOWN(0x0F);
 };
 CHECK_OFFSET(SKBDKeyData, 0x00, channel);
@@ -33,15 +32,15 @@ SKBDTeardown();
 
 SKBDError
 SKBDGetChannelStatus(uint32_t channel,
-                     be_val<SKBDChannelStatus> *status);
+                     virt_ptr<SKBDChannelStatus> outStatus);
 
 SKBDError
 SKBDGetKey(uint32_t channel,
-           SKBDKeyData *keyData);
+           virt_ptr<SKBDKeyData> keyData);
 
 SKBDError
 SKBDGetModState(uint32_t channel,
-                SKBDModState *modState);
+                virt_ptr<SKBDModState> outModState);
 
 SKBDError
 SKBDResetChannel(uint32_t channel);
@@ -55,4 +54,4 @@ SKBDSetMode(uint32_t mode);
 
 /** @} */
 
-} // namespace nsyskbd
+} // namespace cafe::nsyskbd

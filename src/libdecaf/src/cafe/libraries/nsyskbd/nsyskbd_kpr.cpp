@@ -1,23 +1,23 @@
 #include "nsyskbd.h"
 #include "nsyskbd_kpr.h"
 
-namespace nsyskbd
+namespace cafe::nsyskbd
 {
 
 void
-KPRInitQueue(KPRQueue *queue)
+KPRInitQueue(virt_ptr<KPRQueue> queue)
 {
    KPRSetMode(queue, KPRMode::AltCode);
 }
 
 KPRMode
-KPRGetMode(KPRQueue *queue)
+KPRGetMode(virt_ptr<KPRQueue> queue)
 {
    return queue->mode;
 }
 
 void
-KPRSetMode(KPRQueue *queue,
+KPRSetMode(virt_ptr<KPRQueue> queue,
            KPRMode mode)
 {
    queue->mode = mode;
@@ -25,7 +25,7 @@ KPRSetMode(KPRQueue *queue,
 }
 
 void
-KPRClearQueue(KPRQueue *queue)
+KPRClearQueue(virt_ptr<KPRQueue> queue)
 {
    queue->numCharsOut = 0;
    queue->numCharsIn = 0;
@@ -33,7 +33,7 @@ KPRClearQueue(KPRQueue *queue)
 }
 
 kpr_char_t
-KPRGetChar(KPRQueue *queue)
+KPRGetChar(virt_ptr<KPRQueue> queue)
 {
    auto result = kpr_char_t { 0 };
 
@@ -47,7 +47,7 @@ KPRGetChar(KPRQueue *queue)
 }
 
 uint8_t
-KPRPutChar(KPRQueue *queue,
+KPRPutChar(virt_ptr<KPRQueue> queue,
            kpr_char_t chr)
 {
    decaf_check(queue->numCharsOut + queue->numCharsIn < 5);
@@ -60,7 +60,7 @@ KPRPutChar(KPRQueue *queue,
 }
 
 kpr_char_t
-KPRRemoveChar(KPRQueue *queue)
+KPRRemoveChar(virt_ptr<KPRQueue> queue)
 {
    if (queue->numCharsIn == 0) {
       return 0;
@@ -73,8 +73,8 @@ KPRRemoveChar(KPRQueue *queue)
 }
 
 uint8_t
-KPRLookAhead(KPRQueue *queue,
-             be_val<kpr_char_t> *buffer,
+KPRLookAhead(virt_ptr<KPRQueue> queue,
+             virt_ptr<kpr_char_t> buffer,
              uint32_t size)
 {
    if (!buffer || !size) {
@@ -95,16 +95,16 @@ KPRLookAhead(KPRQueue *queue,
 }
 
 void
-Module::registerKprFunctions()
+Library::registerKprSymbols()
 {
-   RegisterKernelFunction(KPRInitQueue);
-   RegisterKernelFunction(KPRSetMode);
-   RegisterKernelFunction(KPRGetMode);
-   RegisterKernelFunction(KPRClearQueue);
-   RegisterKernelFunction(KPRPutChar);
-   RegisterKernelFunction(KPRGetChar);
-   RegisterKernelFunction(KPRRemoveChar);
-   RegisterKernelFunction(KPRLookAhead);
+   RegisterFunctionExport(KPRInitQueue);
+   RegisterFunctionExport(KPRSetMode);
+   RegisterFunctionExport(KPRGetMode);
+   RegisterFunctionExport(KPRClearQueue);
+   RegisterFunctionExport(KPRPutChar);
+   RegisterFunctionExport(KPRGetChar);
+   RegisterFunctionExport(KPRRemoveChar);
+   RegisterFunctionExport(KPRLookAhead);
 }
 
-} // namespace nsyskbd
+} // namespace cafe::nsyskbd

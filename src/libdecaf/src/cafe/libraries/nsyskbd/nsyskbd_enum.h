@@ -1,8 +1,9 @@
-#ifndef NSYSKBD_ENUM_H
-#define NSYSKBD_ENUM_H
+#ifndef CAFE_NSYSKBD_ENUM_H
+#define CAFE_NSYSKBD_ENUM_H
 
 #include <common/enum_start.h>
 
+ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(nsyskbd)
 
 ENUM_BEG(KPRMode, uint32_t)
@@ -28,7 +29,8 @@ ENUM_BEG(SKBDModState, uint32_t)
 ENUM_END(SKBDModState)
 
 ENUM_NAMESPACE_END(nsyskbd)
+ENUM_NAMESPACE_END(cafe)
 
 #include <common/enum_end.h>
 
-#endif // ifdef NSYSKBD_ENUM_H
+#endif // ifdef CAFE_NSYSKBD_ENUM_H
