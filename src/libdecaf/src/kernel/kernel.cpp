@@ -163,9 +163,26 @@ cpuBranchTraceHandler(cpu::Core *core, uint32_t target)
 }
 
 static void
-cpuKernelCallHandler(cpu::Core *core, uint32_t id)
+cpuKernelCallHandler(cpu::Core *core,
+                     uint32_t id)
 {
+   // Save our original stack pointer for the backchain
+   auto backchainSp = core->gpr[1];
+
+   // Allocate callee backchain and lr space.
+   core->gpr[1] -= 2 * 4;
+
+   // Write the backchain pointer
+   *virt_cast<uint32_t *>(virt_addr { core->gpr[1] }) = backchainSp;
+
+   // Handle the HLE function call
    cafe::hle::Library::handleKernelCall(core, id);
+
+   // Grab the most recent core state as it may have changed.
+   core = cpu::this_core::state();
+
+   // Release callee backchain and lr space.
+   core->gpr[1] += 2 * 4;
 }
 
 static void
