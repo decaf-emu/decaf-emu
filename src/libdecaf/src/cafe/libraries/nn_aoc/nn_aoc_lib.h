@@ -1,14 +1,9 @@
 #pragma once
 #include "nn_aoc_enum.h"
 
-#include <common/be_val.h>
-#include <common/structsize.h>
-#include <cstdint>
+#include <libcpu/be2_struct.h>
 
-namespace nn
-{
-
-namespace aoc
+namespace cafe::nn::aoc
 {
 
 #pragma pack(push, 1)
@@ -21,22 +16,20 @@ CHECK_SIZE(AOCTitle, 0x61);
 
 #pragma pack(pop)
 
-AOCResult
+AOCError
 AOC_Initialize();
 
-AOCResult
+AOCError
 AOC_Finalize();
 
 uint32_t
 AOC_CalculateWorkBufferSize(uint32_t maxTitles);
 
-AOCResult
-AOC_ListTitle(be_val<uint32_t> *titleCount,
-              AOCTitle *titles,
+AOCError
+AOC_ListTitle(virt_ptr<uint32_t> outTitleCount,
+              virt_ptr<AOCTitle> titles,
               uint32_t maxTitles,
-              void *workBuffer,
+              virt_ptr<void> workBuffer,
               uint32_t workBufferSize);
 
-}  // namespace aoc
-
-}  // namespace nn
+} // namespace cafe::nn::aoc
