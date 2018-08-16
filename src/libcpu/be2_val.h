@@ -288,7 +288,7 @@ public:
             typename = decltype(std::declval<const value_type>() + std::declval<const OtherType>())>
    be2_val &operator +=(const OtherType &other)
    {
-      *this = value() + other;
+      *this = static_cast<value_type>(value() + other);
       return *this;
    }
 
@@ -296,7 +296,7 @@ public:
             typename = decltype(std::declval<const value_type>() - std::declval<const OtherType>())>
    be2_val &operator -=(const OtherType &other)
    {
-      *this = value() - other;
+      *this = static_cast<value_type>(value() - other);
       return *this;
    }
 
@@ -304,7 +304,7 @@ public:
             typename = decltype(std::declval<const value_type>() * std::declval<const OtherType>())>
    be2_val &operator *=(const OtherType &other)
    {
-      *this = value() * other;
+      *this = static_cast<value_type>(value() * other);
       return *this;
    }
 
@@ -312,7 +312,7 @@ public:
             typename = decltype(std::declval<const value_type>() / std::declval<const OtherType>())>
    be2_val &operator /=(const OtherType &other)
    {
-      *this = value() / other;
+      *this = static_cast<value_type>(value() / other);
       return *this;
    }
 
@@ -320,7 +320,7 @@ public:
             typename = decltype(std::declval<const value_type>() % std::declval<const OtherType>())>
    be2_val &operator %=(const OtherType &other)
    {
-      *this = value() % other;
+      *this = static_cast<value_type>(value() % other);
       return *this;
    }
 
@@ -328,7 +328,7 @@ public:
             typename = decltype(std::declval<const value_type>() | std::declval<const OtherType>())>
    be2_val &operator |=(const OtherType &other)
    {
-      *this = static_cast<Type>(value() | other);
+      *this = static_cast<value_type>(value() | other);
       return *this;
    }
 
@@ -336,7 +336,7 @@ public:
             typename = decltype(std::declval<const value_type>() & std::declval<const OtherType>())>
    be2_val &operator &=(const OtherType &other)
    {
-      *this = static_cast<Type>(value() & other);
+      *this = static_cast<value_type>(value() & other);
       return *this;
    }
 
@@ -344,7 +344,7 @@ public:
             typename = decltype(std::declval<const value_type>() ^ std::declval<const OtherType>())>
    be2_val &operator ^=(const OtherType &other)
    {
-      *this = static_cast<Type>(value() ^ other);
+      *this = static_cast<value_type>(value() ^ other);
       return *this;
    }
 
