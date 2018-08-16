@@ -15,7 +15,7 @@
 #include "libcpu/mem.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
-#include "modules/swkbd/swkbd_core.h"
+#include "cafe/libraries/swkbd/swkbd_keyboard.h"
 
 #include <common/platform.h>
 #include <common/platform_dir.h>
@@ -305,7 +305,7 @@ injectKeyInput(input::KeyboardKey key,
                input::KeyboardAction action)
 {
    if (!debugger::ui::onKeyAction(key, action)) {
-      nn::swkbd::internal::injectKeyInput(key, action);
+      cafe::swkbd::internal::injectKeyInput(key, action);
    }
 }
 
@@ -313,7 +313,7 @@ void
 injectTextInput(const char *text)
 {
    if (!debugger::ui::onText(text)) {
-      nn::swkbd::internal::injectTextInput(text);
+      cafe::swkbd::internal::injectTextInput(text);
    }
 }
 
