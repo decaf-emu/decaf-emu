@@ -29,7 +29,7 @@ struct WPADStatus
 {
    UNKNOWN(0x28);
    be2_val<WPADExtensionType> extensionType;
-   be2_val<uint8_t> err;
+   be2_val<int8_t> err;
    PADDING(2);
 };
 CHECK_OFFSET(WPADStatus, 0x28, extensionType);
@@ -44,6 +44,7 @@ struct WPADStatusProController
    be2_struct<WPADVec2D> rightStick;
    UNKNOWN(8);
    be2_val<WPADDataFormat> dataFormat;
+   PADDING(3);
 };
 CHECK_OFFSET(WPADStatusProController, 0x00, base);
 CHECK_OFFSET(WPADStatusProController, 0x2C, buttons);

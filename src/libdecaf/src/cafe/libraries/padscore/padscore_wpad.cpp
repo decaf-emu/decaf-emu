@@ -101,7 +101,7 @@ WPADRead(WPADChan chan,
 
    if (data) {
       auto baseStatus = virt_cast<WPADStatus *>(data);
-      baseStatus->err = WPADError::NoController;
+      baseStatus->err = static_cast<int8_t>(WPADError::NoController);
       baseStatus->extensionType = WPADExtensionType::NoController;
    }
 }

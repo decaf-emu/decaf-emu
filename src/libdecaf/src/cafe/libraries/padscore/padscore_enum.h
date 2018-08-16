@@ -76,7 +76,7 @@ ENUM_BEG(WPADExtensionType, uint8_t)
    ENUM_VALUE(NoController,            253)
 ENUM_END(WPADExtensionType)
 
-ENUM_BEG(WPADError, uint32_t)
+ENUM_BEG(WPADError, int32_t)
    ENUM_VALUE(OK,                      0)
    ENUM_VALUE(NoController,            -1)
 ENUM_END(WPADError)
