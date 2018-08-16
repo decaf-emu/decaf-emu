@@ -2,8 +2,10 @@
 #include "ios/net/ios_net_socket.h"
 #include <cstdint>
 
-namespace nsysnet
+namespace cafe::nsysnet
 {
+
+using ios::net::SocketAddr;
 
 int32_t
 socket_lib_init();
@@ -13,13 +15,13 @@ socket_lib_finish();
 
 int32_t
 bind(int32_t fd,
-     ios::net::SocketAddr *addr,
-     int addrlen);
+     virt_ptr<SocketAddr> addr,
+     int32_t addrlen);
 
 int32_t
 connect(int32_t fd,
-        ios::net::SocketAddr *addr,
-        int addrlen);
+        virt_ptr<SocketAddr> addr,
+        int32_t addrlen);
 
 int32_t
 socket(int32_t family,
@@ -29,4 +31,12 @@ socket(int32_t family,
 int32_t
 socketclose(int32_t fd);
 
-} // namespace nsysnet
+namespace internal
+{
+
+void
+initialiseSocketLib();
+
+} // namespace internal
+
+} // namespace cafe::nsysnet
