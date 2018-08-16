@@ -1,26 +1,19 @@
 #pragma once
-#include <common/be_val.h>
-#include <common/structsize.h>
+#include "camera_enum.h"
+#include <libcpu/be2_struct.h>
 
-namespace camera
+namespace cafe::camera
 {
 
 #pragma pack(push, 1)
 
 using CAMHandle = int32_t;
 
-enum CAMError : int32_t
-{
-   OK                   = 0,
-   GenericError         = -1,
-   AlreadyInitialised   = -12,
-};
-
 struct CAMMemoryInfo
 {
-   be_val<uint32_t> unk0;
-   be_val<uint32_t> width;
-   be_val<uint32_t> height;
+   be2_val<uint32_t> unk0;
+   be2_val<uint32_t> width;
+   be2_val<uint32_t> height;
 };
 CHECK_OFFSET(CAMMemoryInfo, 0x00, unk0);
 CHECK_OFFSET(CAMMemoryInfo, 0x04, width);
@@ -30,8 +23,8 @@ CHECK_SIZE(CAMMemoryInfo, 0x0C);
 struct CAMInitInfo
 {
    CAMMemoryInfo memInfo;
-   be_ptr<void> workMemory;
-   be_val<uint32_t> workMemorySize;
+   be2_virt_ptr<void> workMemory;
+   be2_val<uint32_t> workMemorySize;
    // 0x14 = some function pointer
    UNKNOWN(0x20);
 };
@@ -44,8 +37,8 @@ CHECK_SIZE(CAMInitInfo, 0x34);
 
 CAMHandle
 CAMInit(uint32_t id,
-        CAMInitInfo *info,
-        be_val<CAMError> *error);
+        virt_ptr<CAMInitInfo> info,
+        virt_ptr<CAMError> outError);
 
 void
 CAMExit(CAMHandle handle);
@@ -57,6 +50,6 @@ int32_t
 CAMClose(CAMHandle handle);
 
 int32_t
-CAMGetMemReq(CAMMemoryInfo *info);
+CAMGetMemReq(virt_ptr<CAMMemoryInfo> info);
 
-} // namespace camera
+} // namespace cafe::camera

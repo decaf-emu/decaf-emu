@@ -1,17 +1,17 @@
 #include "camera.h"
-#include "camera_core.h"
+#include "camera_cam.h"
+#include "cafe/libraries/cafe_hle_stub.h"
 
-namespace camera
+namespace cafe::camera
 {
 
 CAMHandle
 CAMInit(uint32_t id,
-        CAMInitInfo *info,
-        be_val<CAMError> *error)
+        virt_ptr<CAMInitInfo> info,
+        virt_ptr<CAMError> outError)
 {
    decaf_warn_stub();
-
-   *error = CAMError::OK;
+   *outError = CAMError::OK;
    return id;
 }
 
@@ -25,7 +25,6 @@ int32_t
 CAMOpen(CAMHandle handle)
 {
    decaf_warn_stub();
-
    return CAMError::OK;
 }
 
@@ -33,12 +32,11 @@ int32_t
 CAMClose(CAMHandle handle)
 {
    decaf_warn_stub();
-
    return CAMError::OK;
 }
 
 int32_t
-CAMGetMemReq(CAMMemoryInfo *info)
+CAMGetMemReq(virt_ptr<CAMMemoryInfo> info)
 {
    decaf_warn_stub();
 
@@ -52,13 +50,13 @@ CAMGetMemReq(CAMMemoryInfo *info)
 }
 
 void
-Module::registerCoreFunctions()
+Library::registerCamSymbols()
 {
-   RegisterKernelFunction(CAMInit);
-   RegisterKernelFunction(CAMExit);
-   RegisterKernelFunction(CAMOpen);
-   RegisterKernelFunction(CAMClose);
-   RegisterKernelFunction(CAMGetMemReq);
+   RegisterFunctionExport(CAMInit);
+   RegisterFunctionExport(CAMExit);
+   RegisterFunctionExport(CAMOpen);
+   RegisterFunctionExport(CAMClose);
+   RegisterFunctionExport(CAMGetMemReq);
 }
 
-} // namespace camera
+} // namespace cafe::camera
