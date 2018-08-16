@@ -11,10 +11,10 @@ virt_ptr<hle::VirtualTable> PlayReportSetting::VirtualTable = nullptr;
 virt_ptr<hle::TypeDescriptor> PlayReportSetting::TypeDescriptor = nullptr;
 
 PlayReportSetting::PlayReportSetting() :
-   mPlayReportUnk1(0),
-   mPlayReportUnk2(0),
-   mPlayReportUnk3(0),
-   mPlayReportUnk4(0)
+   mPlayReportUnk1(0u),
+   mPlayReportUnk2(0u),
+   mPlayReportUnk3(0u),
+   mPlayReportUnk4(0u)
 {
    mVirtualTable = PlayReportSetting::VirtualTable;
 }

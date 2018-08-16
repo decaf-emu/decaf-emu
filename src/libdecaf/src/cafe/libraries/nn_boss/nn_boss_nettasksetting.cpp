@@ -12,7 +12,7 @@ virt_ptr<hle::TypeDescriptor> NetTaskSetting::TypeDescriptor = nullptr;
 NetTaskSetting::NetTaskSetting()
 {
    mVirtualTable = NetTaskSetting::VirtualTable;
-   mTaskSettingData.unk0x18C = 120;
+   mTaskSettingData.unk0x18C = 120u;
 }
 
 NetTaskSetting::~NetTaskSetting()
