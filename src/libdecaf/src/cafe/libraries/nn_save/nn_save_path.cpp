@@ -2,7 +2,8 @@
 #include "nn_save_path.h"
 
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
-#include "cafe/libraries/nn_act/nn_act_stubs.h"
+#include "cafe/libraries/nn_act/nn_act_lib.h"
+
 #include "filesystem/filesystem.h"
 #include "kernel/kernel_filesystem.h"
 
