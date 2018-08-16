@@ -1,30 +1,33 @@
+#include "nn_save.h"
+#include "nn_save_path.h"
+
+#include "cafe/libraries/coreinit/coreinit_systeminfo.h"
+#include "cafe/libraries/nn_act/nn_act_stubs.h"
 #include "filesystem/filesystem.h"
 #include "kernel/kernel_filesystem.h"
-#include "modules/coreinit/coreinit_systeminfo.h"
-#include "modules/nn_act/nn_act_core.h"
-#include "nn_save.h"
-#include "nn_save_core.h"
 
 #include <fmt/format.h>
 
-namespace nn
+namespace cafe::nn::save
 {
 
-namespace save
+struct StaticPathData
 {
+   be2_val<bool> initialised;
+};
 
-static bool
-sSaveInitialised = false;
+static virt_ptr<StaticPathData>
+sPathData = nullptr;
 
 SaveStatus
 SAVEInit()
 {
-   if (sSaveInitialised) {
+   if (sPathData->initialised) {
       return SaveStatus::OK;
    }
 
    // Create title save folder
-   auto fs = kernel::getFileSystem();
+   auto fs = ::kernel::getFileSystem();
    auto titleID = coreinit::OSGetTitleID();
    auto path = internal::getTitleSaveRoot(titleID);
    auto titleFolder = fs->makeFolder(path);
@@ -45,7 +48,7 @@ SAVEInit()
       return SaveStatus::FatalError;
    }
 
-   sSaveInitialised = true;
+   sPathData->initialised = true;
    return SaveStatus::OK;
 }
 
@@ -53,17 +56,17 @@ void
 SAVEShutdown()
 {
    // TODO: Must we unmount /vol/save ?
-   sSaveInitialised = false;
+   sPathData->initialised = false;
 }
 
 SaveStatus
 SAVEInitSaveDir(uint8_t userID)
 {
-   decaf_check(sSaveInitialised);
+   decaf_check(sPathData->initialised);
 
    // Create user's save folder
    auto savePath = internal::getSaveDirectory(userID);
-   auto fs = kernel::getFileSystem();
+   auto fs = ::kernel::getFileSystem();
 
    if (!fs->makeFolder(savePath)) {
       return SaveStatus::FatalError;
@@ -75,15 +78,15 @@ SAVEInitSaveDir(uint8_t userID)
 
 SaveStatus
 SAVEGetSharedDataTitlePath(uint64_t titleID,
-                           const char *dir,
-                           char *buffer,
+                           virt_ptr<const char> dir,
+                           virt_ptr<char> buffer,
                            uint32_t bufferSize)
 {
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto result = snprintf(buffer, bufferSize,
+   auto result = snprintf(buffer.getRawPointer(), bufferSize,
                           "/vol/storage_mlc01/sys/title/%08x/%08x/content/%s",
-                          titleHi, titleLo, dir);
+                          titleHi, titleLo, dir.getRawPointer());
 
    if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;
@@ -95,15 +98,15 @@ SAVEGetSharedDataTitlePath(uint64_t titleID,
 
 SaveStatus
 SAVEGetSharedSaveDataPath(uint64_t titleID,
-                          const char *dir,
-                          char *buffer,
+                          virt_ptr<const char> dir,
+                          virt_ptr<char> buffer,
                           uint32_t bufferSize)
 {
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto result = snprintf(buffer, bufferSize,
+   auto result = snprintf(buffer.getRawPointer(), bufferSize,
                           "/vol/storage_mlc01/usr/save/%08x/%08x/user/common/%s",
-                          titleHi, titleLo, dir);
+                          titleHi, titleLo, dir.getRawPointer());
 
    if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;
@@ -130,7 +133,7 @@ getSaveDirectory(uint32_t slot)
 
 fs::Path
 getSavePath(uint32_t slot,
-            const char *path)
+            std::string_view path)
 {
    return getSaveDirectory(slot).join(path);
 }
@@ -161,7 +164,7 @@ getTitleSaveDirectory(uint64_t title,
 fs::Path
 getTitleSavePath(uint64_t title,
                  uint32_t slot,
-                 const char *path)
+                 std::string_view path)
 {
    return getTitleSaveDirectory(title, slot).join(path);
 }
@@ -169,15 +172,15 @@ getTitleSavePath(uint64_t title,
 } // namespace internal
 
 void
-Module::registerCoreFunctions()
+Library::registerPathSymbols()
 {
-   RegisterKernelFunction(SAVEInit);
-   RegisterKernelFunction(SAVEShutdown);
-   RegisterKernelFunction(SAVEInitSaveDir);
-   RegisterKernelFunction(SAVEGetSharedDataTitlePath);
-   RegisterKernelFunction(SAVEGetSharedSaveDataPath);
+   RegisterFunctionExport(SAVEInit);
+   RegisterFunctionExport(SAVEShutdown);
+   RegisterFunctionExport(SAVEInitSaveDir);
+   RegisterFunctionExport(SAVEGetSharedDataTitlePath);
+   RegisterFunctionExport(SAVEGetSharedSaveDataPath);
+
+   RegisterDataInternal(sPathData);
 }
 
-} // namespace save
-
-} // namespace nn
+} // namespace cafe::nn::save
