@@ -1,14 +1,14 @@
-#include "snd_core.h"
-#include "snd_core_vs.h"
+#include "sndcore2.h"
+#include "sndcore2_vs.h"
+#include "cafe/libraries/cafe_hle_stub.h"
 
-namespace snd_core
+namespace cafe::sndcore2
 {
 
 AXResult
-AXGetDRCVSMode(be_val<AXDRCVSMode> *mode)
+AXGetDRCVSMode(virt_ptr<AXDRCVSMode> outMode)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -16,7 +16,6 @@ AXResult
 AXSetDRCVSMode(AXDRCVSMode mode)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -25,7 +24,6 @@ AXSetDRCVSDownmixBalance(AXDRCOutput output,
                          float balance)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -33,7 +31,6 @@ AXResult
 AXSetDRCVSLC(AXDRCVSLC lc)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -41,7 +38,6 @@ AXResult
 AXSetDRCVSLimiter(BOOL limit)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -49,7 +45,6 @@ AXResult
 AXSetDRCVSLimiterThreshold(float threshold)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -58,7 +53,6 @@ AXSetDRCVSOutputGain(AXDRCOutput output,
                      float gain)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -67,7 +61,6 @@ AXSetDRCVSSpeakerPosition(AXDRCOutput output,
                           AXDRCVSSpeakerPosition pos)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -76,7 +69,6 @@ AXSetDRCVSSurroundDepth(AXDRCOutput output,
                         float depth)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
@@ -84,23 +76,22 @@ AXResult
 AXSetDRCVSSurroundLevelGain(AXDRCVSSurroundLevelGain gain)
 {
    decaf_warn_stub();
-
    return AXResult::Success;
 }
 
 void
-Module::registerVSFunctions()
+Library::registerVsSymbols()
 {
-   RegisterKernelFunction(AXGetDRCVSMode);
-   RegisterKernelFunction(AXSetDRCVSMode);
-   RegisterKernelFunction(AXSetDRCVSDownmixBalance);
-   RegisterKernelFunction(AXSetDRCVSLC);
-   RegisterKernelFunction(AXSetDRCVSLimiter);
-   RegisterKernelFunction(AXSetDRCVSLimiterThreshold);
-   RegisterKernelFunction(AXSetDRCVSOutputGain);
-   RegisterKernelFunction(AXSetDRCVSSpeakerPosition);
-   RegisterKernelFunction(AXSetDRCVSSurroundDepth);
-   RegisterKernelFunction(AXSetDRCVSSurroundLevelGain);
+   RegisterFunctionExport(AXGetDRCVSMode);
+   RegisterFunctionExport(AXSetDRCVSMode);
+   RegisterFunctionExport(AXSetDRCVSDownmixBalance);
+   RegisterFunctionExport(AXSetDRCVSLC);
+   RegisterFunctionExport(AXSetDRCVSLimiter);
+   RegisterFunctionExport(AXSetDRCVSLimiterThreshold);
+   RegisterFunctionExport(AXSetDRCVSOutputGain);
+   RegisterFunctionExport(AXSetDRCVSSpeakerPosition);
+   RegisterFunctionExport(AXSetDRCVSSurroundDepth);
+   RegisterFunctionExport(AXSetDRCVSSurroundLevelGain);
 }
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

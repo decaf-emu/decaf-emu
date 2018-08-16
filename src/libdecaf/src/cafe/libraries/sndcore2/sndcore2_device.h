@@ -1,21 +1,16 @@
 #pragma once
-#include "ppcutils/wfunc_ptr.h"
-#include "snd_core_enum.h"
+#include "sndcore2_enum.h"
+#include <libcpu/be2_struct.h>
 
-#include <common/be_ptr.h>
-#include <common/be_val.h>
-#include <common/cbool.h>
-#include <cstdint>
-
-namespace snd_core
+namespace cafe::sndcore2
 {
 
 #pragma pack(push, 1)
 
 struct AXAuxCallbackData
 {
-   be_val<uint32_t> channels;
-   be_val<uint32_t> samples;
+   be2_val<uint32_t> channels;
+   be2_val<uint32_t> samples;
 };
 CHECK_OFFSET(AXAuxCallbackData, 0x0, channels);
 CHECK_OFFSET(AXAuxCallbackData, 0x4, samples);
@@ -23,11 +18,11 @@ CHECK_SIZE(AXAuxCallbackData, 0x8);
 
 struct AXDeviceFinalMixData
 {
-   be_ptr<be_ptr<be_val<int32_t>>> data;
-   be_val<uint16_t> channels;
-   be_val<uint16_t> samples;
-   be_val<uint16_t> numDevices;
-   be_val<uint16_t> channelsOut;
+   be2_virt_ptr<virt_ptr<int32_t>> data;
+   be2_val<uint16_t> channels;
+   be2_val<uint16_t> samples;
+   be2_val<uint16_t> numDevices;
+   be2_val<uint16_t> channelsOut;
 };
 CHECK_OFFSET(AXDeviceFinalMixData, 0x0, data);
 CHECK_OFFSET(AXDeviceFinalMixData, 0x4, channels);
@@ -38,12 +33,17 @@ CHECK_SIZE(AXDeviceFinalMixData, 0xc);
 
 #pragma pack(pop)
 
-using AXDeviceFinalMixCallback = wfunc_ptr<void, AXDeviceFinalMixData*>;
-using AXAuxCallback = wfunc_ptr<void, be_ptr<be_val<int32_t>>*, void *, AXAuxCallbackData *>;
+using AXDeviceFinalMixCallback = virt_func_ptr<
+   void(virt_ptr<AXDeviceFinalMixData>)
+>;
+
+using AXAuxCallback = virt_func_ptr<
+   void(virt_ptr<virt_ptr<int32_t>>, virt_ptr<void>, virt_ptr<AXAuxCallbackData>)
+>;
 
 AXResult
 AXGetDeviceMode(AXDeviceType type,
-                be_val<AXDeviceMode> *mode);
+                virt_ptr<AXDeviceMode> mode);
 
 AXResult
 AXSetDeviceMode(AXDeviceType type,
@@ -51,25 +51,25 @@ AXSetDeviceMode(AXDeviceType type,
 
 AXResult
 AXGetDeviceFinalMixCallback(AXDeviceType type,
-                            AXDeviceFinalMixCallback::be *func);
+                            virt_ptr<AXDeviceFinalMixCallback> outCallback);
 
 AXResult
 AXRegisterDeviceFinalMixCallback(AXDeviceType type,
-                                 AXDeviceFinalMixCallback func);
+                                 AXDeviceFinalMixCallback callback);
 
 AXResult
 AXGetAuxCallback(AXDeviceType type,
                  uint32_t deviceId,
                  AXAuxId auxId,
-                 AXAuxCallback::be *callback,
-                 be_ptr<void> *userData);
+                 virt_ptr<AXAuxCallback> outCallback,
+                 virt_ptr<virt_ptr<void>> outUserData);
 
 AXResult
 AXRegisterAuxCallback(AXDeviceType type,
                       uint32_t deviceId,
                       AXAuxId auxId,
                       AXAuxCallback callback,
-                      void *userData);
+                      virt_ptr<void> userData);
 
 AXResult
 AXSetDeviceLinearUpsampler(AXDeviceType type,
@@ -82,7 +82,7 @@ AXSetDeviceCompressor(AXDeviceType type,
 
 AXResult
 AXGetDeviceUpsampleStage(AXDeviceType type,
-                         BOOL *upsampleAfterFinalMixCallback);
+                         virt_ptr<BOOL> outUpsampleAfterFinalMixCallback);
 
 AXResult
 AXSetDeviceUpsampleStage(AXDeviceType type,
@@ -91,7 +91,7 @@ AXSetDeviceUpsampleStage(AXDeviceType type,
 AXResult
 AXGetDeviceVolume(AXDeviceType type,
                   uint32_t deviceId,
-                  be_val<uint16_t> *volume);
+                  virt_ptr<uint16_t> outVolume);
 
 AXResult
 AXSetDeviceVolume(AXDeviceType type,
@@ -102,7 +102,7 @@ AXResult
 AXGetAuxReturnVolume(AXDeviceType type,
                      uint32_t deviceId,
                      AXAuxId auxId,
-                     be_val<uint16_t> *volume);
+                     virt_ptr<uint16_t> outVolume);
 
 AXResult
 AXSetAuxReturnVolume(AXDeviceType type,
@@ -114,10 +114,10 @@ namespace internal
 {
 
 void
-mixOutput(int32_t *buffer,
+mixOutput(virt_ptr<int32_t> buffer,
           int numSamples,
           int numChannels);
 
 } // namespace internal
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

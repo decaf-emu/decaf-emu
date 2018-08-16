@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace snd_core
+namespace cafe::sndcore2
 {
 
 uint32_t
@@ -16,4 +16,4 @@ AI2GetDMALength();
 uint32_t
 AI2GetDMAStartAddr();
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

@@ -1,12 +1,8 @@
 #pragma once
-#include "ppcutils/wfunc_ptr.h"
-#include "snd_core_enum.h"
+#include "sndcore2_enum.h"
+#include <libcpu/be2_struct.h>
 
-#include <common/be_val.h>
-#include <common/cbool.h>
-#include <cstdint>
-
-namespace snd_core
+namespace cafe::sndcore2
 {
 
 #pragma pack(push, 1)
@@ -15,20 +11,25 @@ struct AXProfile;
 
 struct AXInitParams
 {
-   be_val<AXRendererFreq> renderer;
+   be2_val<AXRendererFreq> renderer;
    UNKNOWN(4);
-   be_val<AXInitPipeline> pipeline;
+   be2_val<AXInitPipeline> pipeline;
 };
+CHECK_OFFSET(AXInitParams, 0x00, renderer);
+CHECK_OFFSET(AXInitParams, 0x08, pipeline);
+CHECK_SIZE(AXInitParams, 0x0C);
 
 #pragma pack(pop)
 
-using AXFrameCallback = wfunc_ptr<void>;
+using AXFrameCallback = virt_func_ptr<
+   void()
+>;
 
 void
 AXInit();
 
 void
-AXInitWithParams(AXInitParams *params);
+AXInitWithParams(virt_ptr<AXInitParams> params);
 
 BOOL
 AXIsInit();
@@ -37,14 +38,14 @@ void
 AXQuit();
 
 void
-AXInitProfile(AXProfile *profile,
+AXInitProfile(virt_ptr<AXProfile> profile,
               uint32_t count);
 
 AXRendererFreq
 AXGetRendererFreq();
 
 uint32_t
-AXGetSwapProfile(AXProfile *profile,
+AXGetSwapProfile(virt_ptr<AXProfile> profile,
                  uint32_t count);
 
 AXResult
@@ -65,19 +66,18 @@ AXGetInputSamplesPerFrame();
 uint32_t
 AXGetInputSamplesPerSec();
 
-int32_t
-AXRmtGetSamplesLeft();
-
-int32_t
-AXRmtGetSamples(int32_t,
-                be_val<uint8_t> *buffer,
-                int32_t samples);
-
-int32_t
-AXRmtAdvancePtr(int32_t);
-
 void
-AXPrepareEfxData(void *buffer, uint32_t size);
+AXPrepareEfxData(virt_ptr<void> buffer,
+                 uint32_t size);
+
+int32_t
+AXUserBegin();
+
+int32_t
+AXUserEnd();
+
+BOOL
+AXUserIsProtected();
 
 namespace internal
 {
@@ -90,4 +90,4 @@ getOutputRate();
 
 } // namespace internal
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

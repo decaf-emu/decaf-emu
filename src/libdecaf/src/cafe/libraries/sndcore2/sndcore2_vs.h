@@ -1,14 +1,12 @@
 #pragma once
-#include "snd_core_enum.h"
+#include "sndcore2_enum.h"
+#include <libcpu/be2_struct.h>
 
-#include <common/be_val.h>
-#include <common/cbool.h>
-
-namespace snd_core
+namespace cafe::sndcore2
 {
 
 AXResult
-AXGetDRCVSMode(be_val<AXDRCVSMode> *mode);
+AXGetDRCVSMode(virt_ptr<AXDRCVSMode> outMode);
 
 AXResult
 AXSetDRCVSMode(AXDRCVSMode mode);
@@ -41,4 +39,4 @@ AXSetDRCVSSurroundDepth(AXDRCOutput output,
 AXResult
 AXSetDRCVSSurroundLevelGain(AXDRCVSSurroundLevelGain gain);
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

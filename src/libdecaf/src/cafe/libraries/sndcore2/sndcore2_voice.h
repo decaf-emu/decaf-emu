@@ -1,24 +1,25 @@
 #pragma once
-#include "ppcutils/va_list.h"
-#include "snd_core_constants.h"
-#include "snd_core_device.h"
-#include "snd_core_enum.h"
+#include "sndcore2_constants.h"
+#include "sndcore2_device.h"
+#include "sndcore2_enum.h"
+#include "cafe/cafe_ppc_interface.h"
 
-#include <common/be_ptr.h>
-#include <common/be_val.h>
-#include <common/cbool.h>
 #include <common/fixed.h>
-#include <common/structsize.h>
 #include <cstdint>
+#include <libcpu/be2_struct.h>
 #include <vector>
 
-namespace snd_core
+namespace cafe::sndcore2
 {
 
 using Pcm16Sample = sg14::make_fixed<15, 0, int16_t>;
 
-using AXVoiceCallbackFn = wfunc_ptr<void*>;
-using AXVoiceCallbackExFn = wfunc_ptr<void*, uint32_t, uint32_t>;
+using AXVoiceCallbackFn = virt_func_ptr<
+   virt_ptr<void>()
+>;
+using AXVoiceCallbackExFn = virt_func_ptr<
+   virt_ptr<void>(uint32_t, uint32_t)
+>;
 
 #pragma pack(push, 1)
 
@@ -26,8 +27,8 @@ struct AXVoice;
 
 struct AXVoiceLink
 {
-   be_ptr<AXVoice> next;
-   be_ptr<AXVoice> prev;
+   be2_virt_ptr<AXVoice> next;
+   be2_virt_ptr<AXVoice> prev;
 };
 CHECK_OFFSET(AXVoiceLink, 0x0, next);
 CHECK_OFFSET(AXVoiceLink, 0x4, prev);
@@ -35,12 +36,12 @@ CHECK_SIZE(AXVoiceLink, 0x8);
 
 struct AXVoiceOffsets
 {
-   be_val<AXVoiceFormat> dataType;
-   be_val<AXVoiceLoop> loopingEnabled;
-   be_val<uint32_t> loopOffset;
-   be_val<uint32_t> endOffset;
-   be_val<uint32_t> currentOffset;
-   be_ptr<const void> data;
+   be2_val<AXVoiceFormat> dataType;
+   be2_val<AXVoiceLoop> loopingEnabled;
+   be2_val<uint32_t> loopOffset;
+   be2_val<uint32_t> endOffset;
+   be2_val<uint32_t> currentOffset;
+   be2_virt_ptr<const void> data;
 };
 CHECK_OFFSET(AXVoiceOffsets, 0x0, dataType);
 CHECK_OFFSET(AXVoiceOffsets, 0x2, loopingEnabled);
@@ -53,48 +54,48 @@ CHECK_SIZE(AXVoiceOffsets, 0x14);
 struct AXVoice
 {
    //! The index of this voice out of the total voices
-   be_val<uint32_t> index;
+   be2_val<uint32_t> index;
 
    //! Current play state of this voice
-   be_val<AXVoiceState> state;
+   be2_val<AXVoiceState> state;
 
    //! Current volume of this voice
-   be_val<uint32_t> volume;
+   be2_val<uint32_t> volume;
 
    //! The renderer to use for this voice
-   be_val<AXRenderer> renderer;
+   be2_val<AXRenderer> renderer;
 
    //! this is a link used in the stack, we do this in host-memory currently
-   AXVoiceLink link;
+   be2_struct<AXVoiceLink> link;
 
    //! A link to the next callback to invoke
-   be_ptr<AXVoice> cbNext;
+   be2_virt_ptr<AXVoice> cbNext;
 
    //! The priority of this voice used for force-acquiring a voice
-   be_val<uint32_t> priority;
+   be2_val<uint32_t> priority;
 
    //! The callback to call if this is force-free'd by another acquire
-   AXVoiceCallbackFn::be callback;
+   be2_val<AXVoiceCallbackFn> callback;
 
    //! The user context to send to the callbacks
-   be_ptr<void> userContext;
+   be2_virt_ptr<void> userContext;
 
    //! A bitfield representing different things needing to be synced.
-   be_val<uint32_t> syncBits;
+   be2_val<uint32_t> syncBits;
 
    UNKNOWN(0x8);
 
    //! The current offset data!
-   AXVoiceOffsets offsets;
+   be2_struct<AXVoiceOffsets> offsets;
 
    //! An extended version of the callback above
-   AXVoiceCallbackExFn::be callbackEx;
+   be2_val<AXVoiceCallbackExFn> callbackEx;
 
    //! The reason for the callback being invoked
-   be_val<uint32_t> callbackReason;
+   be2_val<uint32_t> callbackReason;
 
-   be_val<float> unk0;
-   be_val<float> unk1;
+   be2_val<float> unk0;
+   be2_val<float> unk1;
 };
 CHECK_OFFSET(AXVoice, 0x0, index);
 CHECK_OFFSET(AXVoice, 0x4, state);
@@ -115,8 +116,8 @@ CHECK_SIZE(AXVoice, 0x58);
 
 struct AXVoiceDeviceBusMixData
 {
-   be_val<uint16_t> volume;
-   be_val<int16_t> delta;
+   be2_val<uint16_t> volume;
+   be2_val<int16_t> delta;
 };
 CHECK_OFFSET(AXVoiceDeviceBusMixData, 0x0, volume);
 CHECK_OFFSET(AXVoiceDeviceBusMixData, 0x2, delta);
@@ -124,15 +125,15 @@ CHECK_SIZE(AXVoiceDeviceBusMixData, 0x4);
 
 struct AXVoiceDeviceMixData
 {
-   AXVoiceDeviceBusMixData bus[4];
+   be2_array<AXVoiceDeviceBusMixData, 4> bus;
 };
 CHECK_OFFSET(AXVoiceDeviceMixData, 0x0, bus);
 CHECK_SIZE(AXVoiceDeviceMixData, 0x10);
 
 struct AXVoiceVeData
 {
-   be_val<uint16_t> volume;
-   be_val<int16_t> delta;
+   be2_val<uint16_t> volume;
+   be2_val<int16_t> delta;
 };
 CHECK_OFFSET(AXVoiceVeData, 0x0, volume);
 CHECK_OFFSET(AXVoiceVeData, 0x2, delta);
@@ -140,8 +141,8 @@ CHECK_SIZE(AXVoiceVeData, 0x4);
 
 struct AXVoiceAdpcmLoopData
 {
-   be_val<uint16_t> predScale;
-   be_val<int16_t> prevSample[2];
+   be2_val<uint16_t> predScale;
+   be2_array<int16_t, 2> prevSample;
 };
 CHECK_OFFSET(AXVoiceAdpcmLoopData, 0x0, predScale);
 CHECK_OFFSET(AXVoiceAdpcmLoopData, 0x2, prevSample);
@@ -149,10 +150,10 @@ CHECK_SIZE(AXVoiceAdpcmLoopData, 0x6);
 
 struct AXVoiceAdpcm
 {
-   be_val<int16_t> coefficients[16];
-   be_val<uint16_t> gain;
-   be_val<uint16_t> predScale;
-   be_val<int16_t> prevSample[2];
+   be2_array<int16_t, 16> coefficients;
+   be2_val<uint16_t> gain;
+   be2_val<uint16_t> predScale;
+   be2_array<int16_t, 2> prevSample;
 };
 CHECK_OFFSET(AXVoiceAdpcm, 0x0, coefficients);
 CHECK_OFFSET(AXVoiceAdpcm, 0x20, gain);
@@ -164,11 +165,11 @@ CHECK_SIZE(AXVoiceAdpcm, 0x28);
 struct AXVoiceSrc
 {
    // Playback rate
-   be_val<ufixed1616_t> ratio;
+   be2_val<ufixed1616_t> ratio;
 
    // Used by the resampler
-   be_val<ufixed016_t> currentOffsetFrac;
-   be_val<int16_t> lastSample[4];
+   be2_val<ufixed016_t> currentOffsetFrac;
+   be2_array<int16_t, 4> lastSample;
 };
 CHECK_OFFSET(AXVoiceSrc, 0x0, ratio);
 CHECK_OFFSET(AXVoiceSrc, 0x4, currentOffsetFrac);
@@ -177,148 +178,148 @@ CHECK_SIZE(AXVoiceSrc, 0xe);
 
 #pragma pack(pop)
 
-AXVoice *
+virt_ptr<AXVoice>
 AXAcquireVoice(uint32_t priority,
                AXVoiceCallbackFn callback,
-               void *userContext);
+               virt_ptr<void> userContext);
 
-AXVoice *
+virt_ptr<AXVoice>
 AXAcquireVoiceEx(uint32_t priority,
                  AXVoiceCallbackExFn callback,
-                 void *userContext);
+                 virt_ptr<void> userContext);
 
 BOOL
-AXCheckVoiceOffsets(AXVoiceOffsets *offsets);
+AXCheckVoiceOffsets(virt_ptr<AXVoiceOffsets> offsets);
 
 void
-AXFreeVoice(AXVoice *voice);
+AXFreeVoice(virt_ptr<AXVoice> voice);
 
 uint32_t
 AXGetMaxVoices();
 
 uint32_t
-AXGetVoiceCurrentOffsetEx(AXVoice *voice,
-                          const void *samples);
+AXGetVoiceCurrentOffsetEx(virt_ptr<AXVoice> voice,
+                          virt_ptr<const void> samples);
 
 uint32_t
-AXGetVoiceLoopCount(AXVoice *voice);
+AXGetVoiceLoopCount(virt_ptr<AXVoice> voice);
 
 uint32_t
-AXGetVoiceMixerSelect(AXVoice *voice);
+AXGetVoiceMixerSelect(virt_ptr<AXVoice> voice);
 
 void
-AXGetVoiceOffsetsEx(AXVoice *voice,
-                    AXVoiceOffsets *offsets,
-                    const void *samples);
+AXGetVoiceOffsetsEx(virt_ptr<AXVoice> voice,
+                    virt_ptr<AXVoiceOffsets> offsets,
+                    virt_ptr<const void> samples);
 
 void
-AXGetVoiceOffsets(AXVoice *voice,
-                  AXVoiceOffsets *offsets);
+AXGetVoiceOffsets(virt_ptr<AXVoice> voice,
+                  virt_ptr<AXVoiceOffsets> offsets);
 
 BOOL
-AXIsVoiceRunning(AXVoice *voice);
+AXIsVoiceRunning(virt_ptr<AXVoice> voice);
 
 void
-AXSetVoiceAdpcm(AXVoice *voice,
-                AXVoiceAdpcm *adpcm);
+AXSetVoiceAdpcm(virt_ptr<AXVoice> voice,
+                virt_ptr<AXVoiceAdpcm> adpcm);
 
 void
-AXSetVoiceAdpcmLoop(AXVoice *voice,
-                    AXVoiceAdpcmLoopData *loopData);
+AXSetVoiceAdpcmLoop(virt_ptr<AXVoice> voice,
+                    virt_ptr<AXVoiceAdpcmLoopData> loopData);
 
 void
-AXSetVoiceCurrentOffset(AXVoice *voice,
+AXSetVoiceCurrentOffset(virt_ptr<AXVoice> voice,
                         uint32_t offset);
 
 void
-AXSetVoiceCurrentOffsetEx(AXVoice *voice,
+AXSetVoiceCurrentOffsetEx(virt_ptr<AXVoice> voice,
                           uint32_t offset,
-                          const void *samples);
+                          virt_ptr<const void> samples);
 
 AXResult
-AXSetVoiceDeviceMix(AXVoice *voice,
+AXSetVoiceDeviceMix(virt_ptr<AXVoice> voice,
                     AXDeviceType type,
                     uint32_t id,
-                    AXVoiceDeviceMixData *mixData);
+                    virt_ptr<AXVoiceDeviceMixData> mixData);
 
 void
-AXSetVoiceEndOffset(AXVoice *voice,
+AXSetVoiceEndOffset(virt_ptr<AXVoice> voice,
                     uint32_t offset);
 
 void
-AXSetVoiceEndOffsetEx(AXVoice *voice,
+AXSetVoiceEndOffsetEx(virt_ptr<AXVoice> voice,
                       uint32_t offset,
-                      const void *samples);
+                      virt_ptr<const void> samples);
 
 AXResult
-AXSetVoiceInitialTimeDelay(AXVoice *voice,
+AXSetVoiceInitialTimeDelay(virt_ptr<AXVoice> voice,
                            uint16_t delay);
 
 void
-AXSetVoiceLoopOffset(AXVoice *voice,
+AXSetVoiceLoopOffset(virt_ptr<AXVoice> voice,
                      uint32_t offset);
 
 void
-AXSetVoiceLoopOffsetEx(AXVoice *voice,
+AXSetVoiceLoopOffsetEx(virt_ptr<AXVoice> voice,
                        uint32_t offset,
-                       const void *samples);
+                       virt_ptr<const void> samples);
 
 void
-AXSetVoiceLoop(AXVoice *voice,
+AXSetVoiceLoop(virt_ptr<AXVoice> voice,
                AXVoiceLoop loop);
 
 uint32_t
-AXSetVoiceMixerSelect(AXVoice *voice,
+AXSetVoiceMixerSelect(virt_ptr<AXVoice> voice,
                       uint32_t mixerSelect);
 
 void
-AXSetVoiceOffsets(AXVoice *voice,
-                  AXVoiceOffsets *offsets);
+AXSetVoiceOffsets(virt_ptr<AXVoice> voice,
+                  virt_ptr<AXVoiceOffsets> offsets);
 
 void
-AXSetVoiceOffsetsEx(AXVoice *voice,
-                    AXVoiceOffsets *offsets,
-                    void *samples);
+AXSetVoiceOffsetsEx(virt_ptr<AXVoice> voice,
+                    virt_ptr<AXVoiceOffsets> offsets,
+                    virt_ptr<void> samples);
 
 void
-AXSetVoicePriority(AXVoice *voice,
+AXSetVoicePriority(virt_ptr<AXVoice> voice,
                    uint32_t priority);
 
 void
-AXSetVoiceRmtOn(AXVoice *voice,
+AXSetVoiceRmtOn(virt_ptr<AXVoice> voice,
                 uint16_t on);
 
 void
-AXSetVoiceRmtIIRCoefs(AXVoice *voice,
+AXSetVoiceRmtIIRCoefs(virt_ptr<AXVoice> voice,
                       uint16_t filter,
-                      ppctypes::VarArgs);
+                      var_args);
 
 void
-AXSetVoiceSrc(AXVoice *voice,
-              AXVoiceSrc *src);
+AXSetVoiceSrc(virt_ptr<AXVoice> voice,
+              virt_ptr<AXVoiceSrc> src);
 
 AXVoiceSrcRatioResult
-AXSetVoiceSrcRatio(AXVoice *voice,
+AXSetVoiceSrcRatio(virt_ptr<AXVoice> voice,
                    float ratio);
 
 void
-AXSetVoiceSrcType(AXVoice *voice,
+AXSetVoiceSrcType(virt_ptr<AXVoice> voice,
                   AXVoiceSrcType type);
 
 void
-AXSetVoiceState(AXVoice *voice,
+AXSetVoiceState(virt_ptr<AXVoice> voice,
                 AXVoiceState state);
 
 void
-AXSetVoiceType(AXVoice *voice,
+AXSetVoiceType(virt_ptr<AXVoice> voice,
                AXVoiceType type);
 
 void
-AXSetVoiceVe(AXVoice *voice,
-             AXVoiceVeData *veData);
+AXSetVoiceVe(virt_ptr<AXVoice> voice,
+             virt_ptr<AXVoiceVeData> veData);
 
 void
-AXSetVoiceVeDelta(AXVoice *voice,
+AXSetVoiceVeDelta(virt_ptr<AXVoice> voice,
                   int16_t delta);
 
 namespace internal
@@ -328,12 +329,12 @@ namespace internal
 
 struct AXCafeVoiceData
 {
-   be_val<AXVoiceLoop> loopFlag;
-   be_val<AXVoiceFormat> format;
-   be_val<uint16_t> memPageNumber;
-   be_val<uint32_t> loopOffsetAbs;
-   be_val<uint32_t> endOffsetAbs;
-   be_val<uint32_t> currentOffsetAbs;
+   be2_val<AXVoiceLoop> loopFlag;
+   be2_val<AXVoiceFormat> format;
+   be2_val<uint16_t> memPageNumber;
+   be2_val<virt_addr> loopOffsetAbs;
+   be2_val<virt_addr> endOffsetAbs;
+   be2_val<virt_addr> currentOffsetAbs;
 };
 CHECK_OFFSET(AXCafeVoiceData, 0x0, loopFlag);
 CHECK_OFFSET(AXCafeVoiceData, 0x2, format);
@@ -347,38 +348,38 @@ struct AXCafeVoiceExtras
 {
    UNKNOWN(0x8);
 
-   uint16_t srcMode;
-   uint16_t srcModeUnk;
+   be2_val<uint16_t> srcMode;
+   be2_val<uint16_t> srcModeUnk;
 
    UNKNOWN(0x2);
 
-   AXVoiceType type;
+   be2_val<AXVoiceType> type;
 
    UNKNOWN(0x15a);
 
-   uint16_t state;
+   be2_val<uint16_t> state;
 
-   uint16_t itdOn;
+   be2_val<uint16_t> itdOn;
 
    UNKNOWN(0x2);
 
-   uint16_t itdDelay;
+   be2_val<uint16_t> itdDelay;
 
    UNKNOWN(0x8);
 
-   AXVoiceVeData ve;
+   be2_struct<AXVoiceVeData> ve;
 
-   AXCafeVoiceData data;
+   be2_struct<AXCafeVoiceData> data;
 
-   AXVoiceAdpcm adpcm;
+   be2_struct<AXVoiceAdpcm> adpcm;
 
-   AXVoiceSrc src;
+   be2_struct<AXVoiceSrc> src;
 
-   AXVoiceAdpcmLoopData adpcmLoop;
+   be2_struct<AXVoiceAdpcmLoopData> adpcmLoop;
 
    UNKNOWN(0xe4);
 
-   uint32_t syncBits;
+   be2_val<uint32_t> syncBits;
 
    UNKNOWN(0xc);
 };
@@ -428,15 +429,15 @@ void
 initVoices();
 
 void
-setVoiceAddresses(AXVoice *voice,
-                  AXCafeVoiceData *offsets);
+setVoiceAddresses(virt_ptr<AXVoice> voice,
+                  AXCafeVoiceData &offsets);
 
-const std::vector<AXVoice*>
+const std::vector<virt_ptr<AXVoice>>
 getAcquiredVoices();
 
-AXVoiceExtras *
+virt_ptr<AXVoiceExtras>
 getVoiceExtras(int index);
 
 } // namespace internal
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

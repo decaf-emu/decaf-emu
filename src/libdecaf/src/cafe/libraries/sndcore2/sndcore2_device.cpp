@@ -1,8 +1,8 @@
-#include "snd_core.h"
-#include "snd_core_core.h"
-#include "snd_core_constants.h"
-#include "snd_core_device.h"
-#include "snd_core_voice.h"
+#include "sndcore2.h"
+#include "sndcore2_config.h"
+#include "sndcore2_constants.h"
+#include "sndcore2_device.h"
+#include "sndcore2_voice.h"
 #include "decaf_sound.h"
 #include "ppcutils/stackobject.h"
 #include "ppcutils/wfunc_call.h"
@@ -11,31 +11,16 @@
 #include <common/fixed.h>
 #include <libcpu/mmu.h>
 
-namespace snd_core
+namespace cafe::sndcore2
 {
 
-struct PpcCallbackData
-{
-   be_ptr<be_val<int32_t>> samplePtrs[8];
-   be_val<int32_t> samples[8][144];
-
-   AXAuxCallbackData auxCallbackData;
-   AXDeviceFinalMixData finalMixCallbackData;
-};
-
-static const int
-NumOutputSamples = 48000 * 3 / 1000;
-
-static const ufixed_1_15_t
-DefaultVolume = ufixed_1_15_t::from_data(0x8000);
-
-static PpcCallbackData *
-sCallbackData = nullptr;
+constexpr auto NumOutputSamples = 48000 * 3 / 1000;
+constexpr auto DefaultVolume = ufixed_1_15_t::from_data(0x8000);
 
 struct AuxData
 {
    AXAuxCallback callback = nullptr;
-   void *userData = nullptr;
+   virt_ptr<void> userData = nullptr;
    ufixed_1_15_t returnVolume = DefaultVolume;
 };
 
@@ -55,14 +40,20 @@ struct DeviceTypeData
    AXDeviceMode mode;
 };
 
-static DeviceTypeData
-gTvDevices;
+struct StaticDeviceData
+{
+   be2_struct<DeviceTypeData> tvDevices;
+   be2_struct<DeviceTypeData> drcDevices;
+   be2_struct<DeviceTypeData> rmtDevices;
 
-static DeviceTypeData
-gDrcDevices;
+   be2_array<virt_ptr<int32_t>, 8> samplePtrs;
+   be2_val<int32_t> samples[8][144];
+   be2_struct<AXAuxCallbackData> auxCallbackData;
+   be2_struct<AXDeviceFinalMixData> finalMixCallbackData;
+};
 
-static DeviceTypeData
-gRmtDevices;
+static virt_ptr<StaticDeviceData>
+sDeviceData = nullptr;
 
 namespace internal
 {
@@ -74,13 +65,13 @@ getDevice(AXDeviceType type,
    switch (type) {
    case AXDeviceType::TV:
       decaf_check(deviceId < AXNumTvDevices);
-      return &gTvDevices.devices[deviceId];
+      return &sDeviceData->tvDevices.devices[deviceId];
    case AXDeviceType::DRC:
       decaf_check(deviceId < AXNumDrcDevices);
-      return &gDrcDevices.devices[deviceId];
+      return &sDeviceData->drcDevices.devices[deviceId];
    case AXDeviceType::RMT:
       decaf_check(deviceId < AXNumRmtDevices);
-      return &gRmtDevices.devices[deviceId];
+      return &sDeviceData->rmtDevices.devices[deviceId];
    default:
       return nullptr;
    }
@@ -106,7 +97,7 @@ struct AudioDecoder
    AXVoiceAdpcmLoopData adpcmLoop;
    bool isEof;
 
-   void fromVoice(AXVoiceExtras *extras)
+   void fromVoice(virt_ptr<AXVoiceExtras> extras)
    {
       offsets = extras->data;
       type = extras->type;
@@ -117,7 +108,7 @@ struct AudioDecoder
       isEof = false;
    }
 
-   void toVoice(AXVoiceExtras *extras)
+   void toVoice(virt_ptr<AXVoiceExtras> extras)
    {
       extras->data = offsets;
       extras->loopCount = loopCount;
@@ -154,8 +145,8 @@ struct AudioDecoder
 
          if (offsets.format == AXVoiceFormat::ADPCM) {
             // Read next header if were there
-            if ((offsets.currentOffsetAbs & 0xf) < 2) {
-               decaf_check((offsets.currentOffsetAbs & 0xf) == 0);
+            if ((offsets.currentOffsetAbs & 0xf) < virt_addr { 2 }) {
+               decaf_check((offsets.currentOffsetAbs & 0xf) == virt_addr { 0 });
 
                auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
 
@@ -176,8 +167,7 @@ struct AudioDecoder
    Pcm16Sample read()
    {
       decaf_check(!isEof);
-
-      auto sampleIndex = offsets.currentOffsetAbs;
+      auto sampleIndex = static_cast<uint32_t>(offsets.currentOffsetAbs);
 
       if (offsets.format == AXVoiceFormat::ADPCM) {
          decaf_check((sampleIndex & 0xf) >= 2);
@@ -213,7 +203,7 @@ struct AudioDecoder
          // Write to the output
          return Pcm16Sample::from_data(clampedSample);
       } else if (offsets.format == AXVoiceFormat::LPCM16) {
-         auto data = getMemPageAddress<be_val<int16_t>>(offsets.memPageNumber);
+         auto data = getMemPageAddress<be2_val<int16_t>>(offsets.memPageNumber);
          return Pcm16Sample::from_data(data[sampleIndex]);
       } else if (offsets.format == AXVoiceFormat::LPCM8) {
          auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
@@ -225,7 +215,9 @@ struct AudioDecoder
 };
 
 void
-sampleVoice(AXVoice *voice, Pcm16Sample *samples, int numSamples)
+sampleVoice(virt_ptr<AXVoice> voice,
+            Pcm16Sample *samples,
+            int numSamples)
 {
    static const auto FpOne = ufixed1616_t(1);
    static const auto FpZero = ufixed1616_t(0);
@@ -333,32 +325,41 @@ static void
 invokeAuxCallback(AuxData &aux, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[6][144])
 {
    if (aux.callback) {
-      auto auxCbData = &sCallbackData->auxCallbackData;
+      auto auxCbData = virt_addrof(sDeviceData->auxCallbackData);
       auxCbData->samples = numSamples;
       auxCbData->channels = numChannels;
 
       for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
-            sCallbackData->samples[ch][i] = static_cast<int32_t>(samples[ch][i]);
+            sDeviceData->samples[ch][i] = static_cast<int32_t>(samples[ch][i]);
          }
-         sCallbackData->samplePtrs[ch] = &sCallbackData->samples[ch][0];
+
+         sDeviceData->samplePtrs[ch] = virt_addrof(sDeviceData->samples[ch][0]);
       }
 
-      aux.callback(sCallbackData->samplePtrs, aux.userData, auxCbData);
+      cafe::invoke(cpu::this_core::state(),
+                   aux.callback,
+                   virt_addrof(sDeviceData->samplePtrs),
+                   aux.userData,
+                   auxCbData);
 
       for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
-            samples[ch][i] = Pcm16Sample::from_data(sCallbackData->samples[ch][i]);
+            samples[ch][i] = Pcm16Sample::from_data(sDeviceData->samples[ch][i]);
          }
       }
    }
 }
 
 static void
-invokeFinalMixCallback(DeviceTypeData &device, uint32_t numDevices, uint32_t numChannels, uint32_t numSamples, Pcm16Sample samples[4][6][144])
+invokeFinalMixCallback(DeviceTypeData &device,
+                       uint16_t numDevices,
+                       uint16_t numChannels,
+                       uint16_t numSamples,
+                       Pcm16Sample samples[4][6][144])
 {
    if (device.finalMixCallback) {
-      auto mixCbData = &sCallbackData->finalMixCallbackData;
+      auto mixCbData = virt_addrof(sDeviceData->finalMixCallbackData);
       mixCbData->channels = numChannels;
       mixCbData->samples = numSamples;
       mixCbData->numDevices = numDevices;
@@ -369,22 +370,24 @@ invokeFinalMixCallback(DeviceTypeData &device, uint32_t numDevices, uint32_t num
             auto axChanId = (dev * numChannels) + ch;
 
             for (auto i = 0u; i < numSamples; ++i) {
-               sCallbackData->samples[axChanId][i] = static_cast<int32_t>(samples[dev][ch][i]);
+               sDeviceData->samples[axChanId][i] = static_cast<int32_t>(samples[dev][ch][i]);
             }
 
-            sCallbackData->samplePtrs[axChanId] = &sCallbackData->samples[axChanId][0];
+            sDeviceData->samplePtrs[axChanId] = virt_addrof(sDeviceData->samples[axChanId][0]);
          }
       }
-      mixCbData->data = sCallbackData->samplePtrs;
+      mixCbData->data = virt_addrof(sDeviceData->samplePtrs);
 
-      device.finalMixCallback(mixCbData);
+      cafe::invoke(cpu::this_core::state(),
+                   device.finalMixCallback,
+                   mixCbData);
 
       for (auto dev = 0u; dev < numDevices; ++dev) {
          for (auto ch = 0u; ch < numChannels; ++ch) {
             auto axChanId = (dev * numChannels) + ch;
 
             for (auto i = 0u; i < numSamples; ++i) {
-               samples[dev][ch][i] = Pcm16Sample::from_data(sCallbackData->samples[axChanId][i]);
+               samples[dev][ch][i] = Pcm16Sample::from_data(sDeviceData->samples[axChanId][i]);
             }
          }
       }
@@ -392,7 +395,11 @@ invokeFinalMixCallback(DeviceTypeData &device, uint32_t numDevices, uint32_t num
 }
 
 AXVoiceExtras::MixVolume &
-getVoiceMixVolume(AXVoiceExtras *extras, AXDeviceType type, uint32_t device, uint32_t channel, uint32_t bus)
+getVoiceMixVolume(virt_ptr<AXVoiceExtras> extras,
+                  AXDeviceType type,
+                  uint32_t device,
+                  uint32_t channel,
+                  uint32_t bus)
 {
    if (type == AXDeviceType::TV) {
       decaf_check(device < AXNumTvDevices);
@@ -414,16 +421,16 @@ getVoiceMixVolume(AXVoiceExtras *extras, AXDeviceType type, uint32_t device, uin
    }
 }
 
-static DeviceTypeData *
+static virt_ptr<DeviceTypeData>
 getDeviceGroup(AXDeviceType type)
 {
    switch (type) {
    case AXDeviceType::TV:
-      return &gTvDevices;
+      return virt_addrof(sDeviceData->tvDevices);
    case AXDeviceType::DRC:
-      return &gDrcDevices;
+      return virt_addrof(sDeviceData->drcDevices);
    case AXDeviceType::RMT:
-      return &gRmtDevices;
+      return virt_addrof(sDeviceData->rmtDevices);
    default:
       decaf_abort("Unexpected device type");
    }
@@ -594,7 +601,9 @@ mixDevice(AXDeviceType type, uint32_t numSamples)
 }
 
 void
-mixOutput(int32_t *buffer, int numSamples, int numChannels)
+mixOutput(virt_ptr<int32_t> buffer,
+          int numSamples,
+          int numChannels)
 {
    static const int NumOutputSamples = 48000 * 3 / 1000;
 
@@ -618,21 +627,21 @@ mixOutput(int32_t *buffer, int numSamples, int numChannels)
 
 AXResult
 AXGetDeviceMode(AXDeviceType type,
-                be_val<AXDeviceMode> *mode)
+                virt_ptr<AXDeviceMode> outMode)
 {
-   if (!mode) {
+   if (!outMode) {
       return AXResult::Success;
    }
 
    switch (type) {
    case AXDeviceType::TV:
-      *mode = gTvDevices.mode;
+      *outMode = sDeviceData->tvDevices.mode;
       break;
    case AXDeviceType::DRC:
-      *mode = gDrcDevices.mode;
+      *outMode = sDeviceData->drcDevices.mode;
       break;
    case AXDeviceType::RMT:
-      *mode = gRmtDevices.mode;
+      *outMode = sDeviceData->rmtDevices.mode;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -666,9 +675,9 @@ AXSetDeviceMode(AXDeviceType type,
 
 AXResult
 AXGetDeviceFinalMixCallback(AXDeviceType type,
-                            AXDeviceFinalMixCallback::be *func)
+                            virt_ptr<AXDeviceFinalMixCallback> outFunc)
 {
-   if (!func) {
+   if (!outFunc) {
       return AXResult::Success;
    }
 
@@ -676,13 +685,13 @@ AXGetDeviceFinalMixCallback(AXDeviceType type,
 
    switch (type) {
    case AXDeviceType::TV:
-      *func= devices->finalMixCallback;
+      *outFunc = devices->finalMixCallback;
       break;
    case AXDeviceType::DRC:
-      *func = devices->finalMixCallback;
+      *outFunc = devices->finalMixCallback;
       break;
    case AXDeviceType::RMT:
-      *func = devices->finalMixCallback;
+      *outFunc = devices->finalMixCallback;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -718,8 +727,8 @@ AXResult
 AXGetAuxCallback(AXDeviceType type,
                  uint32_t deviceId,
                  AXAuxId auxId,
-                 AXAuxCallback::be *callback,
-                 be_ptr<void> *userData)
+                 virt_ptr<AXAuxCallback> outCallback,
+                 virt_ptr<virt_ptr<void>> outUserData)
 {
    auto device = internal::getDevice(type, deviceId);
 
@@ -727,12 +736,12 @@ AXGetAuxCallback(AXDeviceType type,
       return AXResult::InvalidDeviceType;
    }
 
-   if (callback) {
-      *callback = device->aux[auxId].callback;
+   if (outCallback) {
+      *outCallback = device->aux[auxId].callback;
    }
 
-   if (userData) {
-      *userData = device->aux[auxId].userData;
+   if (outUserData) {
+      *outUserData = device->aux[auxId].userData;
    }
 
    return AXResult::Success;
@@ -743,7 +752,7 @@ AXRegisterAuxCallback(AXDeviceType type,
                       uint32_t deviceId,
                       AXAuxId auxId,
                       AXAuxCallback callback,
-                      void *userData)
+                      virt_ptr<void> userData)
 {
    auto device = internal::getDevice(type, deviceId);
 
@@ -778,13 +787,13 @@ AXSetDeviceCompressor(AXDeviceType type,
 {
    switch (type) {
    case AXDeviceType::TV:
-      gTvDevices.compressor = !!compressor;
+      sDeviceData->tvDevices.compressor = !!compressor;
       break;
    case AXDeviceType::DRC:
-      gDrcDevices.compressor = !!compressor;
+      sDeviceData->drcDevices.compressor = !!compressor;
       break;
    case AXDeviceType::RMT:
-      gRmtDevices.compressor = !!compressor;
+      sDeviceData->rmtDevices.compressor = !!compressor;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -795,21 +804,21 @@ AXSetDeviceCompressor(AXDeviceType type,
 
 AXResult
 AXGetDeviceUpsampleStage(AXDeviceType type,
-                         BOOL *upsampleAfterFinalMixCallback)
+                         virt_ptr<BOOL> outUpsampleAfterFinalMixCallback)
 {
-   if (!upsampleAfterFinalMixCallback) {
+   if (!outUpsampleAfterFinalMixCallback) {
       return AXResult::Success;
    }
 
    switch (type) {
    case AXDeviceType::TV:
-      *upsampleAfterFinalMixCallback = gTvDevices.upsampleAfterFinalMix ? TRUE : FALSE;
+      *outUpsampleAfterFinalMixCallback = sDeviceData->tvDevices.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    case AXDeviceType::DRC:
-      *upsampleAfterFinalMixCallback = gDrcDevices.upsampleAfterFinalMix ? TRUE : FALSE;
+      *outUpsampleAfterFinalMixCallback = sDeviceData->drcDevices.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    case AXDeviceType::RMT:
-      *upsampleAfterFinalMixCallback = gRmtDevices.upsampleAfterFinalMix ? TRUE : FALSE;
+      *outUpsampleAfterFinalMixCallback = sDeviceData->rmtDevices.upsampleAfterFinalMix ? TRUE : FALSE;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -824,13 +833,13 @@ AXSetDeviceUpsampleStage(AXDeviceType type,
 {
    switch (type) {
    case AXDeviceType::TV:
-      gTvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      sDeviceData->tvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    case AXDeviceType::DRC:
-      gTvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      sDeviceData->drcDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    case AXDeviceType::RMT:
-      gTvDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
+      sDeviceData->rmtDevices.upsampleAfterFinalMix = !!upsampleAfterFinalMixCallback;
       break;
    default:
       return AXResult::InvalidDeviceType;
@@ -842,7 +851,7 @@ AXSetDeviceUpsampleStage(AXDeviceType type,
 AXResult
 AXGetDeviceVolume(AXDeviceType type,
                   uint32_t deviceId,
-                  be_val<uint16_t> *volume)
+                  virt_ptr<uint16_t> outVolume)
 {
    auto device = internal::getDevice(type, deviceId);
 
@@ -850,8 +859,8 @@ AXGetDeviceVolume(AXDeviceType type,
       return AXResult::InvalidDeviceType;
    }
 
-   if (volume) {
-      *volume = device->volume.data();
+   if (outVolume) {
+      *outVolume = device->volume.data();
    }
 
    return AXResult::Success;
@@ -876,7 +885,7 @@ AXResult
 AXGetAuxReturnVolume(AXDeviceType type,
                      uint32_t deviceId,
                      AXAuxId auxId,
-                     be_val<uint16_t> *volume)
+                     virt_ptr<uint16_t> outVolume)
 {
    auto device = internal::getDevice(type, deviceId);
 
@@ -884,8 +893,8 @@ AXGetAuxReturnVolume(AXDeviceType type,
       return AXResult::InvalidDeviceType;
    }
 
-   if (volume) {
-      *volume = device->aux[auxId].returnVolume.data();
+   if (outVolume) {
+      *outVolume = device->aux[auxId].returnVolume.data();
    }
 
    return AXResult::Success;
@@ -908,24 +917,24 @@ AXSetAuxReturnVolume(AXDeviceType type,
 }
 
 void
-Module::registerDeviceFunctions()
+Library::registerDeviceSymbols()
 {
-   RegisterKernelFunction(AXGetDeviceMode);
-   RegisterKernelFunction(AXSetDeviceMode);
-   RegisterKernelFunction(AXGetDeviceFinalMixCallback);
-   RegisterKernelFunction(AXRegisterDeviceFinalMixCallback);
-   RegisterKernelFunction(AXGetAuxCallback);
-   RegisterKernelFunction(AXRegisterAuxCallback);
-   RegisterKernelFunction(AXSetDeviceLinearUpsampler);
-   RegisterKernelFunction(AXSetDeviceCompressor);
-   RegisterKernelFunction(AXGetDeviceUpsampleStage);
-   RegisterKernelFunction(AXSetDeviceUpsampleStage);
-   RegisterKernelFunction(AXGetDeviceVolume);
-   RegisterKernelFunction(AXSetDeviceVolume);
-   RegisterKernelFunction(AXGetAuxReturnVolume);
-   RegisterKernelFunction(AXSetAuxReturnVolume);
+   RegisterFunctionExport(AXGetDeviceMode);
+   RegisterFunctionExport(AXSetDeviceMode);
+   RegisterFunctionExport(AXGetDeviceFinalMixCallback);
+   RegisterFunctionExport(AXRegisterDeviceFinalMixCallback);
+   RegisterFunctionExport(AXGetAuxCallback);
+   RegisterFunctionExport(AXRegisterAuxCallback);
+   RegisterFunctionExport(AXSetDeviceLinearUpsampler);
+   RegisterFunctionExport(AXSetDeviceCompressor);
+   RegisterFunctionExport(AXGetDeviceUpsampleStage);
+   RegisterFunctionExport(AXSetDeviceUpsampleStage);
+   RegisterFunctionExport(AXGetDeviceVolume);
+   RegisterFunctionExport(AXSetDeviceVolume);
+   RegisterFunctionExport(AXGetAuxReturnVolume);
+   RegisterFunctionExport(AXSetAuxReturnVolume);
 
-   RegisterInternalData(sCallbackData);
+   RegisterDataInternal(sDeviceData);
 }
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

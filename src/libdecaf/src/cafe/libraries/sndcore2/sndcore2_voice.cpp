@@ -1,9 +1,12 @@
+#include "sndcore2.h"
+#include "sndcore2_config.h"
+#include "sndcore2_constants.h"
+#include "sndcore2_voice.h"
+
+#include "cafe/cafe_stackobject.h"
+#include "cafe/libraries/cafe_hle_stub.h"
 #include "decaf_config.h"
 #include "decaf_sound.h"
-#include "modules/coreinit/coreinit_memheap.h"
-#include "snd_core.h"
-#include "snd_core_core.h"
-#include "snd_core_voice.h"
 
 #include <common/decaf_assert.h>
 #include <common/platform_dir.h>
@@ -12,49 +15,40 @@
 #include <fstream>
 #include <queue>
 
-namespace snd_core
+namespace cafe::sndcore2
 {
 
-static const auto
-MaxVoices = 96u;
+struct StaticVoiceData
+{
+   be2_array<AXVoice, AXMaxNumVoices> voices;
+   be2_array<internal::AXVoiceExtras, AXMaxNumVoices> voiceExtras;
+};
 
-static std::vector<AXVoice*>
+// TODO: Move away from std::vector
+static std::vector<virt_ptr<AXVoice>>
 sAcquiredVoices;
 
-static std::queue<AXVoice*>
+// TODO: Move away from std::queue
+static std::queue<virt_ptr<AXVoice>>
 sAvailVoiceStack;
 
-static std::array<internal::AXVoiceExtras, MaxVoices>
-sVoiceExtras;
+static virt_ptr<StaticVoiceData>
+sVoiceData = nullptr;
 
-static void
-createDumpDirectory()
-{
-   platform::createDirectory("dump");
-}
-
-static std::string
-pointerAsString(const void *pointer)
-{
-   fmt::MemoryWriter format;
-   format.write("{:08X}", mem::untranslate(pointer));
-   return format.str();
-}
-
-AXVoice *
+virt_ptr<AXVoice>
 AXAcquireVoice(uint32_t priority,
                AXVoiceCallbackFn callback,
-               void *userContext)
+               virt_ptr<void> userContext)
 {
-   // Because the callback first parameter matches, we can simply forward
-   //  it to AXAcquireVoiceEx and get the same effect. COS does this too.
-   return AXAcquireVoiceEx(priority, callback.getAddress(), userContext);
+   return AXAcquireVoiceEx(priority,
+                           virt_func_cast<AXVoiceCallbackExFn>(virt_func_cast<virt_addr>(callback)),
+                           userContext);
 }
 
-AXVoice *
+virt_ptr<AXVoice>
 AXAcquireVoiceEx(uint32_t priority,
                  AXVoiceCallbackExFn callback,
-                 void *userContext)
+                 virt_ptr<void> userContext)
 {
    if (sAvailVoiceStack.empty()) {
       // If there are no available voices, try to force-deallocate one...
@@ -73,12 +67,12 @@ AXAcquireVoiceEx(uint32_t priority,
    }
 
    // Grab our voice from the stack
-   AXVoice *foundVoice = sAvailVoiceStack.front();
+   auto foundVoice = sAvailVoiceStack.front();
    sAvailVoiceStack.pop();
 
    // Reset the voice
    auto voiceIndex = foundVoice->index;
-   memset(foundVoice, 0, sizeof(AXVoice));
+   std::memset(foundVoice.getRawPointer(), 0, sizeof(AXVoice));
    foundVoice->index = voiceIndex;
 
    // Configure the voice with stuff we know about
@@ -87,7 +81,7 @@ AXAcquireVoiceEx(uint32_t priority,
    foundVoice->userContext = userContext;
 
    auto extras = internal::getVoiceExtras(foundVoice->index);
-   std::memset(extras, 0, sizeof(internal::AXVoiceExtras));
+   std::memset(extras.getRawPointer(), 0, sizeof(internal::AXVoiceExtras));
    extras->src.ratio = ufixed1616_t { 1.0 };
 
    // Save this to the acquired voice list so that it can be
@@ -98,13 +92,13 @@ AXAcquireVoiceEx(uint32_t priority,
 }
 
 BOOL
-AXCheckVoiceOffsets(AXVoiceOffsets *offsets)
+AXCheckVoiceOffsets(virt_ptr<AXVoiceOffsets> offsets)
 {
    return TRUE;
 }
 
 void
-AXFreeVoice(AXVoice *voice)
+AXFreeVoice(virt_ptr<AXVoice> voice)
 {
    auto voiceIter = std::find(sAcquiredVoices.begin(), sAcquiredVoices.end(), voice);
    decaf_check(voiceIter != sAcquiredVoices.end());
@@ -119,34 +113,34 @@ AXFreeVoice(AXVoice *voice)
 uint32_t
 AXGetMaxVoices()
 {
-   return MaxVoices;
+   return AXMaxNumVoices;
 }
 
 uint32_t
-AXGetVoiceCurrentOffsetEx(AXVoice *voice,
-                          const void *samples)
+AXGetVoiceCurrentOffsetEx(virt_ptr<AXVoice> voice,
+                          virt_ptr<const void> samples)
 {
-   AXVoiceOffsets offsets;
-   AXGetVoiceOffsetsEx(voice, &offsets, samples);
-   return offsets.currentOffset;
+   StackObject<AXVoiceOffsets> offsets;
+   AXGetVoiceOffsetsEx(voice, offsets, samples);
+   return offsets->currentOffset;
 }
 
 uint32_t
-AXGetVoiceLoopCount(AXVoice *voice)
+AXGetVoiceLoopCount(virt_ptr<AXVoice> voice)
 {
-   return sVoiceExtras[voice->index].loopCount;
+   return sVoiceData->voiceExtras[voice->index].loopCount;
 }
 
 uint32_t
-AXGetVoiceMixerSelect(AXVoice *voice)
+AXGetVoiceMixerSelect(virt_ptr<AXVoice> voice)
 {
    return voice->renderer;
 }
 
 void
-AXGetVoiceOffsetsEx(AXVoice *voice,
-                    AXVoiceOffsets *offsets,
-                    const void *samples)
+AXGetVoiceOffsetsEx(virt_ptr<AXVoice> voice,
+                    virt_ptr<AXVoiceOffsets> offsets,
+                    virt_ptr<const void> samples)
 {
    voice->offsets.data = samples;
    AXGetVoiceOffsets(voice, offsets);
@@ -154,47 +148,45 @@ AXGetVoiceOffsetsEx(AXVoice *voice,
 }
 
 void
-AXGetVoiceOffsets(AXVoice *voice,
-                  AXVoiceOffsets *offsets)
+AXGetVoiceOffsets(virt_ptr<AXVoice> voice,
+                  virt_ptr<AXVoiceOffsets> offsets)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-
    *offsets = voice->offsets;
 
    auto pageAddress = extras->data.memPageNumber << 29;
-   auto baseAddress = offsets->data.getAddress();
+   auto baseAddress = virt_cast<virt_addr>(offsets->data);
    if (extras->data.format == AXVoiceFormat::ADPCM) {
-      // We cheat an use our 64-bitness to avoid more complicated math requirements here
-      auto pageAddressSamples = static_cast<uint64_t>(pageAddress) << 1;
-      auto baseAddressSamples = static_cast<uint64_t>(baseAddress) << 1;
-      offsets->loopOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<uint64_t>(extras->data.loopOffsetAbs) - baseAddressSamples);
-      offsets->endOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<uint64_t>(extras->data.endOffsetAbs) - baseAddressSamples);
-      offsets->currentOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<uint64_t>(extras->data.currentOffsetAbs) - baseAddressSamples);
+      auto pageAddressSamples = static_cast<int64_t>(pageAddress) << 1;
+      auto baseAddressSamples = static_cast<int64_t>(baseAddress) << 1;
+      offsets->loopOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<int64_t>(extras->data.loopOffsetAbs) - baseAddressSamples);
+      offsets->endOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<int64_t>(extras->data.endOffsetAbs) - baseAddressSamples);
+      offsets->currentOffset = static_cast<uint32_t>(pageAddressSamples + static_cast<int64_t>(extras->data.currentOffsetAbs) - baseAddressSamples);
    } else if (extras->data.format == AXVoiceFormat::LPCM16) {
       auto pageAddressSamples = pageAddress >> 1;
       auto baseAddressSamples = baseAddress >> 1;
-      offsets->loopOffset = pageAddressSamples + extras->data.loopOffsetAbs - baseAddressSamples;
-      offsets->endOffset = pageAddressSamples + extras->data.endOffsetAbs - baseAddressSamples;
-      offsets->currentOffset = pageAddressSamples + extras->data.currentOffsetAbs - baseAddressSamples;
+      offsets->loopOffset = static_cast<uint32_t>(extras->data.loopOffsetAbs + pageAddressSamples - baseAddressSamples);
+      offsets->endOffset = static_cast<uint32_t>(extras->data.endOffsetAbs + pageAddressSamples - baseAddressSamples);
+      offsets->currentOffset = static_cast<uint32_t>(extras->data.currentOffsetAbs + pageAddressSamples - baseAddressSamples);
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
-      offsets->loopOffset = pageAddress + extras->data.loopOffsetAbs - baseAddress;
-      offsets->endOffset = pageAddress + extras->data.endOffsetAbs - baseAddress;
-      offsets->currentOffset = pageAddress + extras->data.currentOffsetAbs - baseAddress;
+      offsets->loopOffset = static_cast<uint32_t>(extras->data.loopOffsetAbs + pageAddress - baseAddress);
+      offsets->endOffset = static_cast<uint32_t>(extras->data.endOffsetAbs + pageAddress - baseAddress);
+      offsets->currentOffset = static_cast<uint32_t>(extras->data.currentOffsetAbs + pageAddress - baseAddress);
    } else {
       decaf_abort(fmt::format("Unexpected voice data format {}", extras->data.format))
    }
 }
 
 BOOL
-AXIsVoiceRunning(AXVoice *voice)
+AXIsVoiceRunning(virt_ptr<AXVoice> voice)
 {
    auto extras = internal::getVoiceExtras(voice->index);
    return (extras->state != AXVoiceState::Stopped) ? 1 : 0;
 }
 
 void
-AXSetVoiceAdpcm(AXVoice *voice,
-                AXVoiceAdpcm *adpcm)
+AXSetVoiceAdpcm(virt_ptr<AXVoice> voice,
+                virt_ptr<AXVoiceAdpcm> adpcm)
 {
    auto extras = internal::getVoiceExtras(voice->index);
    extras->adpcm = *adpcm;
@@ -202,8 +194,8 @@ AXSetVoiceAdpcm(AXVoice *voice,
 }
 
 void
-AXSetVoiceAdpcmLoop(AXVoice *voice,
-                    AXVoiceAdpcmLoopData *loopData)
+AXSetVoiceAdpcmLoop(virt_ptr<AXVoice> voice,
+                    virt_ptr<AXVoiceAdpcmLoopData> loopData)
 {
    auto extras = internal::getVoiceExtras(voice->index);
    extras->adpcmLoop = *loopData;
@@ -211,12 +203,11 @@ AXSetVoiceAdpcmLoop(AXVoice *voice,
 }
 
 void
-AXSetVoiceCurrentOffset(AXVoice *voice,
+AXSetVoiceCurrentOffset(virt_ptr<AXVoice> voice,
                         uint32_t offset)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-
-   auto baseAddress = voice->offsets.data.getAddress() & 0x1FFFFFFF;
+   auto baseAddress = virt_cast<virt_addr>(voice->offsets.data) & 0x1FFFFFFF;
 
    if (extras->data.format == AXVoiceFormat::ADPCM) {
       extras->data.currentOffsetAbs = (baseAddress << 1) + offset;
@@ -232,24 +223,23 @@ AXSetVoiceCurrentOffset(AXVoice *voice,
 }
 
 void
-AXSetVoiceCurrentOffsetEx(AXVoice *voice,
+AXSetVoiceCurrentOffsetEx(virt_ptr<AXVoice> voice,
                           uint32_t offset,
-                          const void *samples)
+                          virt_ptr<const void> samples)
 {
+   StackObject<AXVoiceOffsets> offsets;
    voice->offsets.data = samples;
 
-   AXVoiceOffsets offsets;
-   AXGetVoiceOffsets(voice, &offsets);
-
+   AXGetVoiceOffsets(voice, offsets);
    AXSetVoiceCurrentOffset(voice, offset);
 }
 
 
 AXResult
-AXSetVoiceDeviceMix(AXVoice *voice,
+AXSetVoiceDeviceMix(virt_ptr<AXVoice> voice,
                     AXDeviceType type,
                     uint32_t deviceId,
-                    AXVoiceDeviceMixData *mixData)
+                    virt_ptr<AXVoiceDeviceMixData> mixData)
 {
    auto extras = internal::getVoiceExtras(voice->index);
 
@@ -293,19 +283,17 @@ AXSetVoiceDeviceMix(AXVoice *voice,
 }
 
 void
-AXSetVoiceEndOffset(AXVoice *voice,
+AXSetVoiceEndOffset(virt_ptr<AXVoice> voice,
                     uint32_t offset)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-
+   auto baseAddress = virt_cast<virt_addr>(voice->offsets.data) & 0x1FFFFFFF;
    voice->offsets.endOffset = offset;
 
-   auto baseAddress = voice->offsets.data.getAddress() & 0x1FFFFFFF;
-
    if (extras->data.format == AXVoiceFormat::ADPCM) {
-      extras->data.endOffsetAbs = (baseAddress << 1) + offset;
+      extras->data.endOffsetAbs = virt_addr { (baseAddress << 1) + offset };
    } else if (extras->data.format == AXVoiceFormat::LPCM16) {
-      extras->data.endOffsetAbs = (baseAddress >> 1) + offset;
+      extras->data.endOffsetAbs = virt_addr { (baseAddress >> 1) + offset };
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
       extras->data.endOffsetAbs = baseAddress + offset;
    } else {
@@ -316,20 +304,19 @@ AXSetVoiceEndOffset(AXVoice *voice,
 }
 
 void
-AXSetVoiceEndOffsetEx(AXVoice *voice,
+AXSetVoiceEndOffsetEx(virt_ptr<AXVoice> voice,
                       uint32_t offset,
-                      const void *samples)
+                      virt_ptr<const void> samples)
 {
+   StackObject<AXVoiceOffsets> offsets;
    voice->offsets.data = samples;
 
-   AXVoiceOffsets offsets;
-   AXGetVoiceOffsets(voice, &offsets);
-
+   AXGetVoiceOffsets(voice, offsets);
    AXSetVoiceEndOffset(voice, offset);
 }
 
 AXResult
-AXSetVoiceInitialTimeDelay(AXVoice *voice,
+AXSetVoiceInitialTimeDelay(virt_ptr<AXVoice> voice,
                            uint16_t delay)
 {
    if (AXIsVoiceRunning(voice)) {
@@ -341,7 +328,7 @@ AXSetVoiceInitialTimeDelay(AXVoice *voice,
    }
 
    auto extras = internal::getVoiceExtras(voice->index);
-   extras->itdOn = 1;
+   extras->itdOn = uint16_t { 1 };
    extras->itdDelay = delay;
    extras->syncBits |= internal::AXVoiceSyncBits::Itd;
    voice->syncBits |= internal::AXVoiceSyncBits::Itd;
@@ -350,19 +337,17 @@ AXSetVoiceInitialTimeDelay(AXVoice *voice,
 }
 
 void
-AXSetVoiceLoopOffset(AXVoice *voice,
+AXSetVoiceLoopOffset(virt_ptr<AXVoice> voice,
                      uint32_t offset)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-
+   auto baseAddress = virt_cast<virt_addr>(voice->offsets.data) & 0x1FFFFFFF;
    voice->offsets.loopOffset = offset;
 
-   auto baseAddress = voice->offsets.data.getAddress() & 0x1FFFFFFF;
-
    if (extras->data.format == AXVoiceFormat::ADPCM) {
-      extras->data.loopOffsetAbs = (baseAddress << 1) + offset;
+      extras->data.loopOffsetAbs = virt_addr { (baseAddress << 1) + offset };
    } else if (extras->data.format == AXVoiceFormat::LPCM16) {
-      extras->data.loopOffsetAbs = (baseAddress >> 1) + offset;
+      extras->data.loopOffsetAbs = virt_addr { (baseAddress >> 1) + offset };
    } else if (extras->data.format == AXVoiceFormat::LPCM8) {
       extras->data.loopOffsetAbs = baseAddress + offset;
    } else {
@@ -373,20 +358,19 @@ AXSetVoiceLoopOffset(AXVoice *voice,
 }
 
 void
-AXSetVoiceLoopOffsetEx(AXVoice *voice,
+AXSetVoiceLoopOffsetEx(virt_ptr<AXVoice> voice,
                        uint32_t offset,
-                       const void *samples)
+                       virt_ptr<const void> samples)
 {
    voice->offsets.data = samples;
 
-   AXVoiceOffsets offsets;
-   AXGetVoiceOffsets(voice, &offsets);
-
+   StackObject<AXVoiceOffsets> offsets;
+   AXGetVoiceOffsets(voice, offsets);
    AXSetVoiceLoopOffset(voice, offset);
 }
 
 void
-AXSetVoiceLoop(AXVoice *voice,
+AXSetVoiceLoop(virt_ptr<AXVoice> voice,
                AXVoiceLoop loop)
 {
    auto extras = internal::getVoiceExtras(voice->index);
@@ -398,7 +382,7 @@ AXSetVoiceLoop(AXVoice *voice,
 }
 
 uint32_t
-AXSetVoiceMixerSelect(AXVoice *voice,
+AXSetVoiceMixerSelect(virt_ptr<AXVoice> voice,
                       uint32_t mixerSelect)
 {
    auto oldMiderSelect = voice->renderer;
@@ -408,75 +392,76 @@ AXSetVoiceMixerSelect(AXVoice *voice,
 }
 
 void
-AXSetVoiceOffsets(AXVoice *voice,
-                  AXVoiceOffsets *offsets)
+AXSetVoiceOffsets(virt_ptr<AXVoice> voice,
+                  virt_ptr<AXVoiceOffsets> offsets)
 {
    decaf_check(offsets->data);
 
    voice->offsets = *offsets;
 
    internal::AXCafeVoiceData absOffsets;
-
    absOffsets.format = offsets->dataType;
    absOffsets.loopFlag = offsets->loopingEnabled;
-   auto samples = offsets->data.getAddress();
+   auto samples = virt_cast<virt_addr>(offsets->data);
 
    if (offsets->dataType == AXVoiceFormat::ADPCM) {
       absOffsets.loopOffsetAbs = ((samples << 1) + offsets->loopOffset) & 0x3fffffff;
       absOffsets.endOffsetAbs = ((samples << 1) + offsets->endOffset) & 0x3fffffff;
       absOffsets.currentOffsetAbs = ((samples << 1) + offsets->currentOffset) & 0x3fffffff;
-      absOffsets.memPageNumber = (samples + (offsets->currentOffset >> 1)) >> 29;
+      absOffsets.memPageNumber = static_cast<uint16_t>((samples + (offsets->currentOffset >> 1)) >> 29);
    } else if (offsets->dataType == AXVoiceFormat::LPCM16) {
       absOffsets.loopOffsetAbs = ((samples >> 1) + offsets->loopOffset) & 0x0fffffff;
       absOffsets.endOffsetAbs = ((samples >> 1) + offsets->endOffset) & 0x0fffffff;
       absOffsets.currentOffsetAbs = ((samples >> 1) + offsets->currentOffset) & 0x0fffffff;
-      absOffsets.memPageNumber = (samples + (offsets->currentOffset << 1)) >> 29;
+      absOffsets.memPageNumber = static_cast<uint16_t>((samples + (offsets->currentOffset << 1)) >> 29);
    } else if (offsets->dataType == AXVoiceFormat::LPCM8) {
       absOffsets.loopOffsetAbs = (samples + offsets->loopOffset) & 0x1fffffff;
       absOffsets.endOffsetAbs = (samples + offsets->endOffset) & 0x1fffffff;
       absOffsets.currentOffsetAbs = (samples + offsets->currentOffset) & 0x1fffffff;
-      absOffsets.memPageNumber = (samples + offsets->currentOffset) >> 29;
+      absOffsets.memPageNumber = static_cast<uint16_t>((samples + offsets->currentOffset) >> 29);
    } else {
       decaf_abort(fmt::format("Unexpected voice data type {}", offsets->dataType));
    }
 
-   internal::setVoiceAddresses(voice, &absOffsets);
+   internal::setVoiceAddresses(voice, absOffsets);
 }
 
 void
-AXSetVoiceOffsetsEx(AXVoice *voice,
-                    AXVoiceOffsets *offsets,
-                    void *samples)
+AXSetVoiceOffsetsEx(virt_ptr<AXVoice> voice,
+                    virt_ptr<AXVoiceOffsets> offsets,
+                    virt_ptr<void> samples)
 {
-   auto adjOffsets = *offsets;
-   AXSetVoiceOffsets(voice, &adjOffsets);
+   StackObject<AXVoiceOffsets> adjOffsets;
+   *adjOffsets = *offsets;
+   adjOffsets->data = samples;
+   AXSetVoiceOffsets(voice, adjOffsets);
 }
 
 void
-AXSetVoicePriority(AXVoice *voice,
+AXSetVoicePriority(virt_ptr<AXVoice> voice,
                    uint32_t priority)
 {
    voice->priority = priority;
 }
 
 void
-AXSetVoiceRmtOn(AXVoice *voice,
+AXSetVoiceRmtOn(virt_ptr<AXVoice> voice,
                 uint16_t on)
 {
    decaf_warn_stub();
 }
 
 void
-AXSetVoiceRmtIIRCoefs(AXVoice *voice,
+AXSetVoiceRmtIIRCoefs(virt_ptr<AXVoice> voice,
                       uint16_t filter,
-                      ppctypes::VarArgs)
+                      var_args)
 {
    decaf_warn_stub();
 }
 
 void
-AXSetVoiceSrc(AXVoice *voice,
-              AXVoiceSrc *src)
+AXSetVoiceSrc(virt_ptr<AXVoice> voice,
+              virt_ptr<AXVoiceSrc> src)
 {
    auto extras = internal::getVoiceExtras(voice->index);
    extras->src = *src;
@@ -484,7 +469,7 @@ AXSetVoiceSrc(AXVoice *voice,
 }
 
 AXVoiceSrcRatioResult
-AXSetVoiceSrcRatio(AXVoice *voice,
+AXSetVoiceSrcRatio(virt_ptr<AXVoice> voice,
                    float ratio)
 {
    if (ratio < 0.0f) {
@@ -499,43 +484,43 @@ AXSetVoiceSrcRatio(AXVoice *voice,
 }
 
 void
-AXSetVoiceSrcType(AXVoice *voice,
+AXSetVoiceSrcType(virt_ptr<AXVoice> voice,
                   AXVoiceSrcType type)
 {
    auto extras = internal::getVoiceExtras(voice->index);
 
    if (type == AXVoiceSrcType::None) {
-      extras->srcMode = 2;
+      extras->srcMode = uint16_t { 2 };
    } else if (type == AXVoiceSrcType::Linear) {
-      extras->srcMode = 1;
+      extras->srcMode = uint16_t { 1 };
    } else if (type == AXVoiceSrcType::Unk0) {
-      extras->srcMode = 0;
-      extras->srcModeUnk = 0;
+      extras->srcMode = uint16_t { 0 };
+      extras->srcModeUnk = uint16_t { 0 };
    } else if (type == AXVoiceSrcType::Unk1) {
-      extras->srcMode = 0;
-      extras->srcModeUnk = 1;
+      extras->srcMode = uint16_t { 0 };
+      extras->srcModeUnk = uint16_t { 1 };
    } else if (type == AXVoiceSrcType::Unk2) {
-      extras->srcMode = 0;
-      extras->srcModeUnk = 2;
+      extras->srcMode = uint16_t { 0 };
+      extras->srcModeUnk = uint16_t { 2 };
    }
 
    voice->syncBits |= internal::AXVoiceSyncBits::SrcType;
 }
 
 void
-AXSetVoiceState(AXVoice *voice,
+AXSetVoiceState(virt_ptr<AXVoice> voice,
                 AXVoiceState state)
 {
    auto extras = internal::getVoiceExtras(voice->index);
    if (voice->state != state) {
-      extras->state = state;
+      extras->state = static_cast<uint16_t>(state);
       voice->state = state;
       voice->syncBits |= internal::AXVoiceSyncBits::State;
    }
 }
 
 void
-AXSetVoiceType(AXVoice *voice,
+AXSetVoiceType(virt_ptr<AXVoice> voice,
                AXVoiceType type)
 {
    auto extras = internal::getVoiceExtras(voice->index);
@@ -544,8 +529,8 @@ AXSetVoiceType(AXVoice *voice,
 }
 
 void
-AXSetVoiceVe(AXVoice *voice,
-             AXVoiceVeData *veData)
+AXSetVoiceVe(virt_ptr<AXVoice> voice,
+             virt_ptr<AXVoiceVeData> veData)
 {
    auto extras = internal::getVoiceExtras(voice->index);
    extras->ve = *veData;
@@ -553,7 +538,7 @@ AXSetVoiceVe(AXVoice *voice,
 }
 
 void
-AXSetVoiceVeDelta(AXVoice *voice,
+AXSetVoiceVeDelta(virt_ptr<AXVoice> voice,
                   int16_t delta)
 {
    auto extras = internal::getVoiceExtras(voice->index);
@@ -563,41 +548,67 @@ AXSetVoiceVeDelta(AXVoice *voice,
    }
 }
 
+int32_t
+AXVoiceBegin(virt_ptr<AXVoice> voice)
+{
+   decaf_warn_stub();
+
+   // TODO: Implement this properly
+   return AXUserBegin();
+}
+
+int32_t
+AXVoiceEnd(virt_ptr<AXVoice> voice)
+{
+   decaf_warn_stub();
+
+   // TODO: Implement this properly
+   return AXUserEnd();
+}
+
+BOOL
+AXVoiceIsProtected(virt_ptr<AXVoice> voice)
+{
+   decaf_warn_stub();
+
+   return FALSE;
+}
+
 namespace internal
 {
 
 void
 initVoices()
 {
-   for (auto i = 0; i < MaxVoices; ++i) {
-      auto newVoice = coreinit::internal::sysAlloc<AXVoice>();
-      newVoice->index = i;
-      sAvailVoiceStack.push(newVoice);
+   auto index = 0u;
+   for (auto &voice : sVoiceData->voices) {
+      voice.index = index++;
+      sAvailVoiceStack.push(virt_addrof(voice));
    }
 }
 
 void
-setVoiceAddresses(AXVoice *voice,
-                  AXCafeVoiceData *offsets)
+setVoiceAddresses(virt_ptr<AXVoice> voice,
+                  AXCafeVoiceData &offsets)
 {
    auto extras = internal::getVoiceExtras(voice->index);
+   extras->data = offsets;
 
-   extras->data = *offsets;
-
-   if (offsets->format == AXVoiceFormat::ADPCM) {
-      decaf_check((offsets->loopOffsetAbs & 0xF) >= 2);
-      decaf_check((offsets->endOffsetAbs & 0xF) >= 2);
-      decaf_check((offsets->currentOffsetAbs & 0xF) >= 2);
-   } else if (offsets->format == AXVoiceFormat::LPCM8) {
-      memset(&extras->adpcm, 0, sizeof(AXVoiceAdpcm));
-      extras->adpcm.gain = 0x100;
+   if (offsets.format == AXVoiceFormat::ADPCM) {
+      // Ensure offset not on ADPCM header
+      decaf_check((offsets.loopOffsetAbs & 0xF) >= virt_addr { 2 });
+      decaf_check((offsets.endOffsetAbs & 0xF) >= virt_addr { 2 });
+      decaf_check((offsets.currentOffsetAbs & 0xF) >= virt_addr { 2 });
+   } else if (offsets.format == AXVoiceFormat::LPCM8) {
+      std::memset(virt_addrof(extras->adpcm).getRawPointer(), 0, sizeof(AXVoiceAdpcm));
+      extras->adpcm.gain = uint16_t { 0x100 };
       voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
-   } else if (offsets->format == AXVoiceFormat::LPCM16) {
-      memset(&extras->adpcm, 0, sizeof(AXVoiceAdpcm));
-      extras->adpcm.gain = 0x800;
+   } else if (offsets.format == AXVoiceFormat::LPCM16) {
+      std::memset(virt_addrof(extras->adpcm).getRawPointer(), 0, sizeof(AXVoiceAdpcm));
+      extras->adpcm.gain = uint16_t { 0x800 };
       voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
    } else {
-      decaf_abort(fmt::format("Unexpected audio data format {}", offsets->format));
+      decaf_abort(fmt::format("Unexpected audio data format {}", offsets.format));
    }
 
    voice->syncBits &= ~(
@@ -608,58 +619,63 @@ setVoiceAddresses(AXVoice *voice,
    voice->syncBits |= internal::AXVoiceSyncBits::Addr;
 }
 
-const std::vector<AXVoice*>
+const std::vector<virt_ptr<AXVoice>>
 getAcquiredVoices()
 {
    return sAcquiredVoices;
 }
 
-AXVoiceExtras *
+virt_ptr<AXVoiceExtras>
 getVoiceExtras(int index)
 {
-   decaf_check(index >= 0 && index < MaxVoices);
-   return &sVoiceExtras[index];
+   decaf_check(index >= 0 && index < AXMaxNumVoices);
+   return virt_addrof(sVoiceData->voiceExtras[index]);
 }
 
 } // namespace internal
 
 void
-Module::registerVoiceFunctions()
+Library::registerVoiceSymbols()
 {
-   RegisterKernelFunction(AXAcquireVoice);
-   RegisterKernelFunction(AXAcquireVoiceEx);
-   RegisterKernelFunction(AXCheckVoiceOffsets);
-   RegisterKernelFunction(AXFreeVoice);
-   RegisterKernelFunction(AXGetMaxVoices);
-   RegisterKernelFunction(AXGetVoiceCurrentOffsetEx);
-   RegisterKernelFunction(AXGetVoiceLoopCount);
-   RegisterKernelFunction(AXGetVoiceMixerSelect);
-   RegisterKernelFunction(AXGetVoiceOffsets);
-   RegisterKernelFunction(AXGetVoiceOffsetsEx);
-   RegisterKernelFunction(AXIsVoiceRunning);
-   RegisterKernelFunction(AXSetVoiceAdpcm);
-   RegisterKernelFunction(AXSetVoiceAdpcmLoop);
-   RegisterKernelFunction(AXSetVoiceCurrentOffset);
-   RegisterKernelFunction(AXSetVoiceDeviceMix);
-   RegisterKernelFunction(AXSetVoiceEndOffset);
-   RegisterKernelFunction(AXSetVoiceEndOffsetEx);
-   RegisterKernelFunction(AXSetVoiceInitialTimeDelay);
-   RegisterKernelFunction(AXSetVoiceLoopOffset);
-   RegisterKernelFunction(AXSetVoiceLoopOffsetEx);
-   RegisterKernelFunction(AXSetVoiceLoop);
-   RegisterKernelFunction(AXSetVoiceMixerSelect);
-   RegisterKernelFunction(AXSetVoiceOffsets);
-   RegisterKernelFunction(AXSetVoiceOffsetsEx);
-   RegisterKernelFunction(AXSetVoicePriority);
-   RegisterKernelFunction(AXSetVoiceRmtOn);
-   RegisterKernelFunction(AXSetVoiceRmtIIRCoefs);
-   RegisterKernelFunction(AXSetVoiceSrc);
-   RegisterKernelFunction(AXSetVoiceSrcType);
-   RegisterKernelFunction(AXSetVoiceSrcRatio);
-   RegisterKernelFunction(AXSetVoiceState);
-   RegisterKernelFunction(AXSetVoiceType);
-   RegisterKernelFunction(AXSetVoiceVe);
-   RegisterKernelFunction(AXSetVoiceVeDelta);
+   RegisterFunctionExport(AXAcquireVoice);
+   RegisterFunctionExport(AXAcquireVoiceEx);
+   RegisterFunctionExport(AXCheckVoiceOffsets);
+   RegisterFunctionExport(AXFreeVoice);
+   RegisterFunctionExport(AXGetMaxVoices);
+   RegisterFunctionExport(AXGetVoiceCurrentOffsetEx);
+   RegisterFunctionExport(AXGetVoiceLoopCount);
+   RegisterFunctionExport(AXGetVoiceMixerSelect);
+   RegisterFunctionExport(AXGetVoiceOffsets);
+   RegisterFunctionExport(AXGetVoiceOffsetsEx);
+   RegisterFunctionExport(AXIsVoiceRunning);
+   RegisterFunctionExport(AXSetVoiceAdpcm);
+   RegisterFunctionExport(AXSetVoiceAdpcmLoop);
+   RegisterFunctionExport(AXSetVoiceCurrentOffset);
+   RegisterFunctionExport(AXSetVoiceDeviceMix);
+   RegisterFunctionExport(AXSetVoiceEndOffset);
+   RegisterFunctionExport(AXSetVoiceEndOffsetEx);
+   RegisterFunctionExport(AXSetVoiceInitialTimeDelay);
+   RegisterFunctionExport(AXSetVoiceLoopOffset);
+   RegisterFunctionExport(AXSetVoiceLoopOffsetEx);
+   RegisterFunctionExport(AXSetVoiceLoop);
+   RegisterFunctionExport(AXSetVoiceMixerSelect);
+   RegisterFunctionExport(AXSetVoiceOffsets);
+   RegisterFunctionExport(AXSetVoiceOffsetsEx);
+   RegisterFunctionExport(AXSetVoicePriority);
+   RegisterFunctionExport(AXSetVoiceRmtOn);
+   RegisterFunctionExport(AXSetVoiceRmtIIRCoefs);
+   RegisterFunctionExport(AXSetVoiceSrc);
+   RegisterFunctionExport(AXSetVoiceSrcType);
+   RegisterFunctionExport(AXSetVoiceSrcRatio);
+   RegisterFunctionExport(AXSetVoiceState);
+   RegisterFunctionExport(AXSetVoiceType);
+   RegisterFunctionExport(AXSetVoiceVe);
+   RegisterFunctionExport(AXSetVoiceVeDelta);
+   RegisterFunctionExport(AXVoiceBegin);
+   RegisterFunctionExport(AXVoiceEnd);
+   RegisterFunctionExport(AXVoiceIsProtected);
+
+   RegisterDataInternal(sVoiceData);
 }
 
-} // namespace snd_core
+} // namespace cafe::sndcore2

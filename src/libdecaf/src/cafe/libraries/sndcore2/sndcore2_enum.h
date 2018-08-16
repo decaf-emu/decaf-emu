@@ -1,9 +1,10 @@
-#ifndef SND_CORE_ENUM_H
-#define SND_CORE_ENUM_H
+#ifndef CAFE_SNDCORE2_ENUM_H
+#define CAFE_SNDCORE2_ENUM_H
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(snd_core)
+ENUM_NAMESPACE_BEG(cafe)
+ENUM_NAMESPACE_BEG(sndcore2)
 
 ENUM_BEG(AXAuxId, uint32_t)
    ENUM_VALUE(A,                 0)
@@ -159,8 +160,9 @@ ENUM_END(AXVoiceSyncBits)
 
 ENUM_NAMESPACE_END(internal)
 
-ENUM_NAMESPACE_END(snd_core)
+ENUM_NAMESPACE_END(sndcore2)
+ENUM_NAMESPACE_END(cafe)
 
 #include <common/enum_end.h>
 
-#endif // ifdef SND_CORE_ENUM_H
+#endif // ifdef CAFE_SNDCORE2_ENUM_H
