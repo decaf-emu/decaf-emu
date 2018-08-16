@@ -1,5 +1,6 @@
 #include "cafe_tinyheap.h"
 #include <common/align.h>
+#include <common/log.h>
 #include <cstring>
 #include <libcpu/be2_struct.h>
 
@@ -30,6 +31,24 @@ static virt_ptr<TrackingBlock>
 getTrackingBlocks(virt_ptr<TinyHeap> heap)
 {
    return virt_cast<TrackingBlock *>(virt_cast<virt_addr>(heap) + sizeof(TinyHeap));
+}
+
+static void
+dumpHeap(virt_ptr<TinyHeap> heap)
+{
+   auto idx = heap->firstBlockIdx;
+   auto blocks = getTrackingBlocks(heap);
+
+   gLog->debug("Heap at 0x{:08X} - 0x{:08X}", heap->dataHeapStart, heap->dataHeapEnd);
+   while (idx != -1) {
+      auto addr = virt_cast<virt_addr>(blocks[idx].data);
+      auto size = blocks[idx].size;
+      if (size < 0) {
+         size = -size;
+      }
+      gLog->debug("block 0x{:08X} - 0x{:08X} {}", addr, addr + size, blocks[idx].size < 0 ? "free" : "alloc");
+      idx = blocks[idx].nextBlockIdx;
+   }
 }
 
 static int32_t
@@ -384,8 +403,14 @@ TinyHeap_AllocAt(virt_ptr<TinyHeap> heap,
       return TinyHeapError::AllocAtFailed;
    }
 
-   auto beforeOffset = virt_cast<uint8_t *>(ptr) - virt_cast<uint8_t *>(block.data);
-   auto afterOffset = (virt_cast<uint8_t *>(ptr) + -block.size) - (virt_cast<uint8_t *>(block.data) + size);
+   auto beforeOffset =
+      static_cast<int32_t>(virt_cast<uint8_t *>(ptr) -
+                           virt_cast<uint8_t *>(block.data));
+
+   auto afterOffset =
+      (virt_cast<uint8_t *>(ptr) + -block.size) -
+      (virt_cast<uint8_t *>(block.data) + size);
+
    if (afterOffset < 0) {
       // Not enough space
       return TinyHeapError::AllocAtFailed;
