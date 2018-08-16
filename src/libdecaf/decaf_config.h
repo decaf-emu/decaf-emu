@@ -104,6 +104,9 @@ extern double time_scale;
 //! List of system modules to load LLE instead of HLE.
 extern std::vector<std::string> lle_modules;
 
+//! Whether to dump HLE generated .rpl
+extern bool dump_hle_rpl;
+
 } // namespace system
 
 } // namespace config

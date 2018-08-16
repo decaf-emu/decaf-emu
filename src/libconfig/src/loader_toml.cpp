@@ -51,6 +51,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config)
    readValue(config, "system.content_path", decaf::config::system::content_path);
    readValue(config, "system.time_scale", decaf::config::system::time_scale);
    readArray(config, "system.lle_modules", decaf::config::system::lle_modules);
+   readValue(config, "system.dump_hle_rpl", decaf::config::system::dump_hle_rpl);
    return true;
 }
 
