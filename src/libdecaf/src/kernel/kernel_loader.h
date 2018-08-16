@@ -1,6 +1,4 @@
 #pragma once
-#include "ppcutils/wfunc_ptr.h"
-
 #include <common/decaf_assert.h>
 #include <libcpu/mem.h>
 #include <limits>
@@ -12,12 +10,6 @@ namespace kernel
 
 namespace loader
 {
-
-// int AppEntryPoint(uint32_t argc, const char *argv);
-using AppEntryPoint = wfunc_ptr<int, uint32_t, void*>;
-
-// int RplEntryPoint(void *moduleHandle, int reason);
-using RplEntryPoint = wfunc_ptr<int, void*, int>;
 
 // Reason codes for RPL entrypoint invocation
 static const int
@@ -86,13 +78,6 @@ struct LoadedModule
       }
 
       return nullptr;
-   }
-
-   template<typename ReturnType, typename... Args>
-   wfunc_ptr<ReturnType, Args...>
-   findFuncExport(const std::string& funcName) const
-   {
-      return wfunc_ptr<ReturnType, Args...>(findExport(funcName));
    }
 
    template<typename Type>

@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "ppcutils/wfunc_ptr.h"
 
 class KernelModule;
 struct KernelFunction;
@@ -117,12 +116,6 @@ struct UserModule
    inline uint32_t
    findExport(const std::string &name) {
       return 0;
-   }
-
-   template<typename ReturnValue, typename... Args>
-   inline wfunc_ptr<ReturnValue, Args...>
-   findExport(const std::string &name) {
-      return wfunc_ptr<ReturnValue, Args...>(findExport(name));
    }
 
    inline Section *

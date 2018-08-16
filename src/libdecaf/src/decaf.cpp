@@ -8,9 +8,7 @@
 #include "filesystem/filesystem.h"
 #include "input/input.h"
 #include "ios/ios.h"
-#include "kernel/kernel.h"
 #include "kernel/kernel_filesystem.h"
-#include "kernel/kernel_hlefunction.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
 
