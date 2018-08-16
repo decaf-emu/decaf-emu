@@ -126,7 +126,4 @@ struct GameInfo
    MetaXML meta;
 };
 
-const GameInfo &
-getGameInfo();
-
 } // namespace decaf
