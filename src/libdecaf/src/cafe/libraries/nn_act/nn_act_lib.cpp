@@ -1,7 +1,13 @@
 #include "nn_act.h"
-#include "nn_act_core.h"
 #include "nn_act_result.h"
+#include "nn_act_lib.h"
+
+#include "cafe/cafe_stackobject.h"
+
 #include <algorithm>
+
+namespace cafe::nn::act
+{
 
 static const uint8_t
 DeviceHash[] = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6 };
@@ -24,17 +30,12 @@ static Account
 sUserAccount = { 1, 1, 0x80000001u, 1, 1, 1, 1 };
 
 static Account
-sSystemAccount = { nn::act::SystemSlot, 0, 0, 0, 0, 0, 0 };
-
-namespace nn
-{
-
-namespace act
-{
+sSystemAccount = { SystemSlot, 0, 0, 0, 0, 0, 0 };
 
 nn::Result
 Initialize()
 {
+   // TODO: This whole library is supposed to just be IOS calls to /dev/act
    return nn::Result::Success;
 }
 
@@ -73,13 +74,13 @@ GetSlotNo()
 }
 
 nn::Result
-GetUuid(UUID *uuid)
+GetUuid(virt_ptr<UUID> uuid)
 {
    return GetUuidEx(uuid, GetSlotNo());
 }
 
 nn::Result
-GetUuidEx(UUID *uuid,
+GetUuidEx(virt_ptr<UUID> uuid,
           uint8_t slot)
 {
    // System account
@@ -100,21 +101,21 @@ GetUuidEx(UUID *uuid,
       return nn::Result::Success;
    }
 
-   return nn::act::AccountNotFound;
+   return AccountNotFound;
 }
 
 nn::Result
-GetAccountId(char *accountId)
+GetAccountId(virt_ptr<char> accountId)
 {
    return GetAccountIdEx(accountId, GetSlotNo());
 }
 
 nn::Result
-GetAccountIdEx(char *accountId,
+GetAccountIdEx(virt_ptr<char> accountId,
                uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    *accountId = '\0';
@@ -124,20 +125,21 @@ GetAccountIdEx(char *accountId,
 uint8_t
 GetParentalControlSlotNo()
 {
-   uint8_t parentSlot = 0;
-   GetParentalControlSlotNoEx(&parentSlot, GetSlotNo());
-   return parentSlot;
+   StackObject<uint8_t> parentSlot;
+   GetParentalControlSlotNoEx(parentSlot, GetSlotNo());
+   return *parentSlot;
 }
 
 nn::Result
-GetParentalControlSlotNoEx(uint8_t *parentSlot, uint8_t slot)
+GetParentalControlSlotNoEx(virt_ptr<uint8_t> parentSlot,
+                           uint8_t slot)
 {
    if (slot == SystemSlot) {
       *parentSlot = SystemSlot;
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *parentSlot = sUserAccount.slot;
    } else {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    return nn::Result::Success;
@@ -164,13 +166,13 @@ GetPersistentIdEx(uint8_t slot)
 uint32_t
 GetPrincipalId()
 {
-   be_val<uint32_t> id;
-   GetPrincipalIdEx(&id, CurrentUserSlot);
-   return id;
+   StackObject<uint32_t> id;
+   GetPrincipalIdEx(id, CurrentUserSlot);
+   return *id;
 }
 
 nn::Result
-GetPrincipalIdEx(be_val<uint32_t> *principalId,
+GetPrincipalIdEx(virt_ptr<uint32_t> principalId,
                  uint8_t slot)
 {
    if (slot == SystemSlot) {
@@ -178,7 +180,7 @@ GetPrincipalIdEx(be_val<uint32_t> *principalId,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *principalId = sUserAccount.principalId;
    } else {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    return nn::Result::Success;
@@ -187,13 +189,13 @@ GetPrincipalIdEx(be_val<uint32_t> *principalId,
 uint32_t
 GetSimpleAddressId()
 {
-   be_val<uint32_t> id;
-   GetSimpleAddressIdEx(&id, CurrentUserSlot);
-   return id;
+   StackObject<uint32_t> id;
+   GetSimpleAddressIdEx(id, CurrentUserSlot);
+   return *id;
 }
 
 nn::Result
-GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,
+GetSimpleAddressIdEx(virt_ptr<uint32_t> simpleAddressId,
                      uint8_t slot)
 {
    if (slot == SystemSlot) {
@@ -201,7 +203,7 @@ GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *simpleAddressId = sUserAccount.simpleAddressId;
    } else {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    return nn::Result::Success;
@@ -210,13 +212,13 @@ GetSimpleAddressIdEx(be_val<uint32_t> *simpleAddressId,
 uint64_t
 GetTransferableId(uint32_t unk1)
 {
-   be_val<uint64_t> id;
-   GetTransferableIdEx(&id, unk1, CurrentUserSlot);
-   return id;
+   StackObject<uint64_t> id;
+   GetTransferableIdEx(id, unk1, CurrentUserSlot);
+   return *id;
 }
 
 nn::Result
-GetTransferableIdEx(be_val<uint64_t> *transferableId,
+GetTransferableIdEx(virt_ptr<uint64_t> transferableId,
                     uint32_t unk1,
                     uint8_t slot)
 {
@@ -225,21 +227,22 @@ GetTransferableIdEx(be_val<uint64_t> *transferableId,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *transferableId = sUserAccount.transferableId;
    } else {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    return nn::Result::Success;
 }
 
 nn::Result
-GetMii(FFLStoreData *data)
+GetMii(virt_ptr<FFLStoreData> data)
 {
    return GetMiiEx(data, CurrentUserSlot);
 }
 
 // This is taken from http://wiibrew.org/wiki/Mii_Data
 static uint16_t
-calculateMiiCRC(const uint8_t *bytes, uint32_t length)
+calculateMiiCRC(virt_ptr<const uint8_t> bytes,
+                uint32_t length)
 {
    uint32_t crc = 0x0000;
 
@@ -258,15 +261,15 @@ calculateMiiCRC(const uint8_t *bytes, uint32_t length)
 }
 
 nn::Result
-GetMiiEx(FFLStoreData *data,
+GetMiiEx(virt_ptr<FFLStoreData> data,
          uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    // Set our Mii Data!
-   std::memset(data, 0, sizeof(FFLStoreData));
+   std::memset(data.getRawPointer(), 0, sizeof(FFLStoreData));
    std::copy(std::begin(DeviceHash), std::end(DeviceHash), std::begin(data->deviceHash));
    std::copy(std::begin(SystemId), std::end(SystemId), std::begin(data->systemId));
    data->miiId = 0x10000000;
@@ -291,22 +294,22 @@ GetMiiEx(FFLStoreData *data,
    data->creator[4] = 'f';
    data->creator[5] = 'C';
 
-   data->crc = calculateMiiCRC(reinterpret_cast<uint8_t *>(data), sizeof(FFLStoreData) - 2);
+   data->crc = calculateMiiCRC(virt_cast<uint8_t *>(data), sizeof(FFLStoreData) - 2);
    return nn::Result::Success;
 }
 
 nn::Result
-GetMiiName(be_val<char16_t> *name)
+GetMiiName(virt_ptr<char16_t> name)
 {
    return GetMiiNameEx(name, CurrentUserSlot);
 }
 
 nn::Result
-GetMiiNameEx(be_val<char16_t> *name,
+GetMiiNameEx(virt_ptr<char16_t> name,
              uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
-      return nn::act::AccountNotFound;
+      return AccountNotFound;
    }
 
    auto miiName = u"decafM";
@@ -336,9 +339,9 @@ IsNetworkAccountEx(uint8_t slot)
 }
 
 nn::Result
-GetDeviceHash(uint8_t *data)
+GetDeviceHash(virt_ptr<uint8_t> data)
 {
-   memcpy(data, DeviceHash, 6);
+   std::memcpy(data.getRawPointer(), DeviceHash, 6);
    return nn::Result::Success;
 }
 
@@ -349,39 +352,66 @@ IsCommittedEx(uint8_t slot)
 }
 
 void
-Module::registerCoreFunctions()
+Library::registerLibSymbols()
 {
-   RegisterKernelFunctionName("Initialize__Q2_2nn3actFv", nn::act::Initialize);
-   RegisterKernelFunctionName("Finalize__Q2_2nn3actFv", nn::act::Finalize);
-   RegisterKernelFunctionName("Cancel__Q2_2nn3actFv", nn::act::Cancel);
-   RegisterKernelFunctionName("IsSlotOccupied__Q2_2nn3actFUc", nn::act::IsSlotOccupied);
-   RegisterKernelFunctionName("GetSlotNo__Q2_2nn3actFv", nn::act::GetSlotNo);
-   RegisterKernelFunctionName("GetMii__Q2_2nn3actFP12FFLStoreData", nn::act::GetMii);
-   RegisterKernelFunctionName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc", nn::act::GetMiiEx);
-   RegisterKernelFunctionName("GetMiiName__Q2_2nn3actFPw", nn::act::GetMiiName);
-   RegisterKernelFunctionName("GetMiiNameEx__Q2_2nn3actFPwUc", nn::act::GetMiiNameEx);
-   RegisterKernelFunctionName("IsParentalControlCheckEnabled__Q2_2nn3actFv", nn::act::IsParentalControlCheckEnabled);
-   RegisterKernelFunctionName("IsNetworkAccount__Q2_2nn3actFv", nn::act::IsNetworkAccount);
-   RegisterKernelFunctionName("IsNetworkAccountEx__Q2_2nn3actFUc", nn::act::IsNetworkAccountEx);
-   RegisterKernelFunctionName("GetNumOfAccounts__Q2_2nn3actFv", nn::act::GetNumOfAccounts);
-   RegisterKernelFunctionName("GetUuid__Q2_2nn3actFP7ACTUuid", nn::act::GetUuid);
-   RegisterKernelFunctionName("GetUuidEx__Q2_2nn3actFP7ACTUuidUc", nn::act::GetUuidEx);
-   RegisterKernelFunctionName("GetAccountId__Q2_2nn3actFPc", nn::act::GetAccountId);
-   RegisterKernelFunctionName("GetAccountIdEx__Q2_2nn3actFPcUc", nn::act::GetAccountIdEx);
-   RegisterKernelFunctionName("GetParentalControlSlotNo__Q2_2nn3actFv", nn::act::GetParentalControlSlotNo);
-   RegisterKernelFunctionName("GetParentalControlSlotNoEx__Q2_2nn3actFPUcUc", nn::act::GetParentalControlSlotNoEx);
-   RegisterKernelFunctionName("GetPersistentId__Q2_2nn3actFv", nn::act::GetPersistentId);
-   RegisterKernelFunctionName("GetPersistentIdEx__Q2_2nn3actFUc", nn::act::GetPersistentIdEx);
-   RegisterKernelFunctionName("GetPrincipalId__Q2_2nn3actFv", nn::act::GetPrincipalId);
-   RegisterKernelFunctionName("GetPrincipalIdEx__Q2_2nn3actFPUiUc", nn::act::GetPrincipalIdEx);
-   RegisterKernelFunctionName("GetSimpleAddressId__Q2_2nn3actFv", nn::act::GetSimpleAddressId);
-   RegisterKernelFunctionName("GetSimpleAddressIdEx__Q2_2nn3actFPUiUc", nn::act::GetSimpleAddressIdEx);
-   RegisterKernelFunctionName("GetTransferableId__Q2_2nn3actFUi", nn::act::GetTransferableId);
-   RegisterKernelFunctionName("GetTransferableIdEx__Q2_2nn3actFPULUiUc", nn::act::GetTransferableIdEx);
-   RegisterKernelFunctionName("GetDeviceHash__Q2_2nn3actFPUL", nn::act::GetDeviceHash);
-   RegisterKernelFunctionName("IsCommittedEx__Q2_2nn3actFUc", nn::act::IsCommittedEx);
+   RegisterFunctionExportName("Initialize__Q2_2nn3actFv",
+                              Initialize);
+   RegisterFunctionExportName("Finalize__Q2_2nn3actFv",
+                              Finalize);
+   RegisterFunctionExportName("Cancel__Q2_2nn3actFv",
+                              Cancel);
+   RegisterFunctionExportName("IsSlotOccupied__Q2_2nn3actFUc",
+                              IsSlotOccupied);
+   RegisterFunctionExportName("GetSlotNo__Q2_2nn3actFv",
+                              GetSlotNo);
+   RegisterFunctionExportName("GetMii__Q2_2nn3actFP12FFLStoreData",
+                              GetMii);
+   RegisterFunctionExportName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc",
+                              GetMiiEx);
+   RegisterFunctionExportName("GetMiiName__Q2_2nn3actFPw",
+                              GetMiiName);
+   RegisterFunctionExportName("GetMiiNameEx__Q2_2nn3actFPwUc",
+                              GetMiiNameEx);
+   RegisterFunctionExportName("IsParentalControlCheckEnabled__Q2_2nn3actFv",
+                              IsParentalControlCheckEnabled);
+   RegisterFunctionExportName("IsNetworkAccount__Q2_2nn3actFv",
+                              IsNetworkAccount);
+   RegisterFunctionExportName("IsNetworkAccountEx__Q2_2nn3actFUc",
+                              IsNetworkAccountEx);
+   RegisterFunctionExportName("GetNumOfAccounts__Q2_2nn3actFv",
+                              GetNumOfAccounts);
+   RegisterFunctionExportName("GetUuid__Q2_2nn3actFP7ACTUuid",
+                              GetUuid);
+   RegisterFunctionExportName("GetUuidEx__Q2_2nn3actFP7ACTUuidUc",
+                              GetUuidEx);
+   RegisterFunctionExportName("GetAccountId__Q2_2nn3actFPc",
+                              GetAccountId);
+   RegisterFunctionExportName("GetAccountIdEx__Q2_2nn3actFPcUc",
+                              GetAccountIdEx);
+   RegisterFunctionExportName("GetParentalControlSlotNo__Q2_2nn3actFv",
+                              GetParentalControlSlotNo);
+   RegisterFunctionExportName("GetParentalControlSlotNoEx__Q2_2nn3actFPUcUc",
+                              GetParentalControlSlotNoEx);
+   RegisterFunctionExportName("GetPersistentId__Q2_2nn3actFv",
+                              GetPersistentId);
+   RegisterFunctionExportName("GetPersistentIdEx__Q2_2nn3actFUc",
+                              GetPersistentIdEx);
+   RegisterFunctionExportName("GetPrincipalId__Q2_2nn3actFv",
+                              GetPrincipalId);
+   RegisterFunctionExportName("GetPrincipalIdEx__Q2_2nn3actFPUiUc",
+                              GetPrincipalIdEx);
+   RegisterFunctionExportName("GetSimpleAddressId__Q2_2nn3actFv",
+                              GetSimpleAddressId);
+   RegisterFunctionExportName("GetSimpleAddressIdEx__Q2_2nn3actFPUiUc",
+                              GetSimpleAddressIdEx);
+   RegisterFunctionExportName("GetTransferableId__Q2_2nn3actFUi",
+                              GetTransferableId);
+   RegisterFunctionExportName("GetTransferableIdEx__Q2_2nn3actFPULUiUc",
+                              GetTransferableIdEx);
+   RegisterFunctionExportName("GetDeviceHash__Q2_2nn3actFPUL",
+                              GetDeviceHash);
+   RegisterFunctionExportName("IsCommittedEx__Q2_2nn3actFUc",
+                              IsCommittedEx);
 }
 
-} // namespace act
-
-} // namespace nn
+} // namespace cafe::nn::act
