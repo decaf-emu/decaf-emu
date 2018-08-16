@@ -1,66 +1,26 @@
 #pragma once
-#include <common/cbool.h>
-#include <cstdint>
+#include "erreula_enum.h"
+#include "cafe/libraries/coreinit/coreinit_fs_client.h"
+#include <libcpu/be2_struct.h>
 
-struct FSClient;
-
-namespace nn
+namespace cafe::nn::erreula
 {
 
-namespace erreula
-{
-
-enum class ResultType
-{
-   // Unknown
-};
-
-enum class RegionType
-{
-   // Unknown
-};
-
-enum class LangType
-{
-   // Unknown
-};
-
-enum class ControllerType
-{
-   // Unknown
-};
-
-struct AppearArg
-{
-   // Unknown
-};
-
-struct ControllerInfo
-{
-   // Unknown
-};
-
-struct HomeNixSignArg
-{
-   // Unknown
-};
-
-enum class ErrorViewerState : uint32_t
-{
-   None
-};
+struct AppearArg;
+struct ControllerInfo;
+struct HomeNixSignArg;
 
 void
-ErrEulaAppearError(nn::erreula::AppearArg *args);
+ErrEulaAppearError(virt_ptr<nn::erreula::AppearArg> args);
 
 void
-ErrEulaCalc(nn::erreula::ControllerInfo *info);
+ErrEulaCalc(virt_ptr<nn::erreula::ControllerInfo> info);
 
 BOOL
-ErrEulaCreate(uint8_t *workMemory,
+ErrEulaCreate(virt_ptr<uint8_t> workMemory,
               nn::erreula::RegionType region,
               nn::erreula::LangType language,
-              FSClient *fsClient);
+              virt_ptr<coreinit::FSClient> fsClient);
 
 void
 ErrEulaDestroy();
@@ -90,7 +50,7 @@ void
 ErrEulaSetControllerRemo(nn::erreula::ControllerType type);
 
 void
-ErrEulaAppearHomeNixSign(nn::erreula::HomeNixSignArg *arg);
+ErrEulaAppearHomeNixSign(virt_ptr<nn::erreula::HomeNixSignArg> arg);
 
 BOOL
 ErrEulaIsAppearHomeNixSign();
@@ -114,14 +74,13 @@ uint32_t
 ErrEulaGetSelectButtonNumError();
 
 void
-ErrEulaSetVersion(int version);
+ErrEulaSetVersion(int32_t version);
 
 void
 ErrEulaPlayAppearSE(bool value);
 
 bool
-ErrEulaJump(char const *, unsigned int);
+ErrEulaJump(virt_ptr<char const> a1,
+            uint32_t a2);
 
-} // namespace erreula
-
-} // namespace nn
+} // namespace cafe::nn::erreula
