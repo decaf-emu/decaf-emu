@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace gx2
+namespace cafe::gx2
 {
 
 struct GX2Surface;
@@ -17,4 +17,4 @@ saveDDS(const std::string &filename,
 
 } // namespace debug
 
-} // namespace gx2
+} // namespace cafe::gx2

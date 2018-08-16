@@ -1,9 +1,11 @@
-#include <fstream>
-#include <vector>
+#include "gx2_dds.h"
 #include "gx2_format.h"
 #include "gx2_surface.h"
 
-namespace gx2
+#include <fstream>
+#include <vector>
+
+namespace cafe::gx2
 {
 
 constexpr inline uint32_t
@@ -845,4 +847,4 @@ saveDDS(const std::string &filename,
 
 } // namespace debug
 
-} // namepsace gx2
+} // namepsace cafe::gx2

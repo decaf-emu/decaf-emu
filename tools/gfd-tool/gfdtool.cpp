@@ -12,9 +12,9 @@
 #include <libgpu/gpu_tiling.h>
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgpu/latte/latte_formats.h>
-#include <libdecaf/src/modules/gx2/gx2_dds.h>
-#include <libdecaf/src/modules/gx2/gx2_enum_string.h>
-#include <libdecaf/src/modules/gx2/gx2_internal_gfd.h>
+#include <libdecaf/src/cafe/libraries/gx2/gx2_debug_dds.h>
+#include <libdecaf/src/cafe/libraries/gx2/gx2_enum_string.h>
+#include <libdecaf/src/cafe/libraries/gx2/gx2_internal_gfd.h>
 #include <spdlog/spdlog.h>
 
 std::shared_ptr<spdlog::logger>
@@ -79,7 +79,7 @@ printInfo(const std::string &filename)
       startGroup(out, "VertexShaderHeader");
       {
          writeField(out, "size", shader.data.size());
-         writeField(out, "mode", gx2::to_string(shader.mode));
+         writeField(out, "mode", cafe::gx2::to_string(shader.mode));
 
          writeField(out, "uniformBlockCount", shader.uniformBlocks.size());
 
@@ -101,7 +101,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.uniformVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "offset", var.offset);
                writeField(out, "block", var.block);
@@ -143,7 +143,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.samplerVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "location", var.location);
             }
             endGroup(out);
@@ -156,7 +156,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.attribVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "location", var.location);
             }
@@ -306,7 +306,7 @@ printInfo(const std::string &filename)
       startGroup(out, "PixelShaderHeader");
       {
          writeField(out, "size", shader.data.size());
-         writeField(out, "mode", gx2::to_string(shader.mode));
+         writeField(out, "mode", cafe::gx2::to_string(shader.mode));
 
          writeField(out, "uniformBlockCount", shader.uniformBlocks.size());
 
@@ -328,7 +328,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.uniformVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "offset", var.offset);
                writeField(out, "block", var.block);
@@ -370,7 +370,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.samplerVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "location", var.location);
             }
             endGroup(out);
@@ -520,7 +520,7 @@ printInfo(const std::string &filename)
       {
          writeField(out, "size", shader.data.size());
          writeField(out, "vshSize", shader.vertexShaderData.size());
-         writeField(out, "mode", gx2::to_string(shader.mode));
+         writeField(out, "mode", cafe::gx2::to_string(shader.mode));
 
          writeField(out, "uniformBlockCount", shader.uniformBlocks.size());
 
@@ -542,7 +542,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.uniformVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "count", var.count);
                writeField(out, "offset", var.offset);
                writeField(out, "block", var.block);
@@ -584,7 +584,7 @@ printInfo(const std::string &filename)
             {
                auto &var = shader.samplerVars[i];
                writeField(out, "name", var.name);
-               writeField(out, "type", gx2::to_string(var.type));
+               writeField(out, "type", cafe::gx2::to_string(var.type));
                writeField(out, "location", var.location);
             }
             endGroup(out);
@@ -751,17 +751,17 @@ printInfo(const std::string &filename)
 
       startGroup(out, "TextureHeader");
       {
-         writeField(out, "dim", gx2::to_string(tex.surface.dim));
+         writeField(out, "dim", cafe::gx2::to_string(tex.surface.dim));
          writeField(out, "width", tex.surface.width);
          writeField(out, "height", tex.surface.height);
          writeField(out, "depth", tex.surface.depth);
          writeField(out, "mipLevels", tex.surface.mipLevels);
-         writeField(out, "format", gx2::to_string(tex.surface.format));
-         writeField(out, "aa", gx2::to_string(tex.surface.aa));
-         writeField(out, "use", gx2::to_string(tex.surface.use));
+         writeField(out, "format", cafe::gx2::to_string(tex.surface.format));
+         writeField(out, "aa", cafe::gx2::to_string(tex.surface.aa));
+         writeField(out, "use", cafe::gx2::to_string(tex.surface.use));
          writeField(out, "imageSize", tex.surface.image.size());
          writeField(out, "mipmapSize", tex.surface.mipmap.size());
-         writeField(out, "tileMode", gx2::to_string(tex.surface.tileMode));
+         writeField(out, "tileMode", cafe::gx2::to_string(tex.surface.tileMode));
          writeField(out, "swizzle", tex.surface.swizzle);
          writeField(out, "alignment", tex.surface.alignment);
          writeField(out, "pitch", tex.surface.pitch);
@@ -940,12 +940,12 @@ convertTexture(const std::string &path)
          uploadPitch = uploadWidth / 4;
       }
 
-      if (tex.surface.dim == gx2::GX2SurfaceDim::TextureCube) {
+      if (tex.surface.dim == cafe::gx2::GX2SurfaceDim::TextureCube) {
          uploadDepth *= 6;
       }
 
       auto dstImageSize = srcWidth * srcHeight * uploadDepth * bpp / 8;
-      auto isDepthBufer = !!(tex.surface.use & gx2::GX2SurfaceUse::DepthBuffer);
+      auto isDepthBufer = !!(tex.surface.use & cafe::gx2::GX2SurfaceUse::DepthBuffer);
 
       std::vector<uint8_t> image;
       image.resize(dstImageSize);
@@ -969,11 +969,11 @@ convertTexture(const std::string &path)
          outname = fmt::format("{}.gtx.dds", basename);
       }
 
-      gx2::GX2Surface gx2surface;
-      gx2::internal::gfdToGX2Surface(tex.surface, &gx2surface);
+      cafe::gx2::GX2Surface gx2surface;
+      cafe::gx2::internal::gfdToGX2Surface(tex.surface, &gx2surface);
 
       // TODO: Mipmap convert and save to DDS
-      gx2::debug::saveDDS(outname, &gx2surface, image.data(), {});
+      cafe::gx2::debug::saveDDS(outname, &gx2surface, image.data(), {});
    }
 
    return true;
