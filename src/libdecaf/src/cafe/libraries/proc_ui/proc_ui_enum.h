@@ -1,8 +1,9 @@
-#ifndef PROC_UI_ENUM_H
-#define PROC_UI_ENUM_H
+#ifndef CAFE_PROC_UI_ENUM_H
+#define CAFE_PROC_UI_ENUM_H
 
 #include <common/enum_start.h>
 
+ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(proc_ui)
 
 ENUM_BEG(ProcUICallbackType, uint32_t)
@@ -23,7 +24,8 @@ ENUM_BEG(ProcUIStatus, uint32_t)
 ENUM_END(ProcUIStatus)
 
 ENUM_NAMESPACE_END(proc_ui)
+ENUM_NAMESPACE_END(cafe)
 
 #include <common/enum_end.h>
 
-#endif // PROC_UI_ENUM_H
+#endif // CAFE_PROC_UI_ENUM_H
