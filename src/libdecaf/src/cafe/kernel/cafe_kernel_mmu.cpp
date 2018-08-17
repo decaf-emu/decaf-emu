@@ -4,6 +4,7 @@
 #include <array>
 #include <common/log.h>
 #include <libcpu/be2_struct.h>
+#include <libcpu/cpu.h>
 #include <libcpu/mmu.h>
 
 namespace cafe::kernel
@@ -288,6 +289,23 @@ unmapMemory(cpu::VirtualAddress addr,
    return cpu::unmapMemory(addr, size);
 }
 
+bool
+validateAddressRange(virt_addr address,
+                     uint32_t size)
+{
+   auto addressSpace = internal::getActiveAddressSpace();
+   auto view = addressSpace->perCoreView[cpu::this_core::id()];
+
+   for (auto i = 0u; i < view->numMappings; ++i) {
+      if (address >= view->mappings[i].vaddr &&
+         (address + size) <= (view->mappings[i].vaddr + view->mappings[i].size)) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
 namespace internal
 {
 
@@ -309,6 +327,12 @@ setAddressSpaceView(AddressSpaceView *view,
          view->mappings[view->numMappings++] = mapping;
       }
    }
+}
+
+AddressSpace *
+getActiveAddressSpace()
+{
+   return &getCurrentProcessData()->addressSpace;
 }
 
 bool

@@ -120,6 +120,10 @@ bool
 unmapMemory(cpu::VirtualAddress addr,
             uint32_t size);
 
+bool
+validateAddressRange(virt_addr address,
+                     uint32_t size);
+
 namespace internal
 {
 
@@ -147,6 +151,9 @@ struct AddressSpace
    AddressSpaceView view1;
    AddressSpaceView view2;
 };
+
+AddressSpace *
+getActiveAddressSpace();
 
 bool
 initialiseAddressSpace(AddressSpace *map,
