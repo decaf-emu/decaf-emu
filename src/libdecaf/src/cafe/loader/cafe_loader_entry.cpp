@@ -9,6 +9,8 @@
 #include "cafe_loader_log.h"
 #include "cafe_loader_query.h"
 
+#include <mutex>
+
 namespace cafe::loader
 {
 
@@ -19,6 +21,7 @@ static bool gpLoaderEntry_LoaderIntsAllowed = false;
 static kernel::ProcessFlags gProcFlags = kernel::ProcessFlags::get(0);
 static uint32_t gProcTitleLoc = 0;
 static bool sLoaderInUserMode = true;
+static std::mutex sLoaderMutex;
 
 static int32_t
 LOADER_Entry(virt_ptr<LOADER_EntryParams> entryParams)
@@ -81,6 +84,7 @@ int32_t
 LoaderStart(BOOL isDispatch,
             virt_ptr<LOADER_EntryParams> entryParams)
 {
+   std::unique_lock<std::mutex> lock { sLoaderMutex };
    sLoaderInUserMode = true;
 
    if (isDispatch) {
@@ -142,6 +146,31 @@ LoaderStart(BOOL isDispatch,
    }
 
    return 0;
+}
+
+void
+lockLoader()
+{
+   sLoaderMutex.lock();
+}
+
+void
+unlockLoader()
+{
+   sLoaderMutex.unlock();
+}
+
+
+virt_ptr<LOADED_RPL>
+getLoadedRpx()
+{
+   return getGlobalStorage()->loadedRpx;
+}
+
+virt_ptr<LOADED_RPL>
+getLoadedRplLinkedList()
+{
+   return getGlobalStorage()->firstLoadedRpl;
 }
 
 namespace internal

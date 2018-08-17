@@ -8,6 +8,8 @@
 namespace cafe::loader
 {
 
+struct LOADED_RPL;
+
 enum class LOADER_Code : int32_t
 {
    Invalid                    = -1,
@@ -60,6 +62,18 @@ CHECK_SIZE(LOADER_EntryParams, 0x38);
 int32_t
 LoaderStart(BOOL isEntryCall,
             virt_ptr<LOADER_EntryParams> entryParams);
+
+void
+lockLoader();
+
+void
+unlockLoader();
+
+virt_ptr<LOADED_RPL>
+getLoadedRpx();
+
+virt_ptr<LOADED_RPL>
+getLoadedRplLinkedList();
 
 namespace internal
 {
