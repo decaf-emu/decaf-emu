@@ -115,33 +115,6 @@ struct LoadedModule
    std::map<std::string, Symbol> symbols;
 };
 
-static inline void
-lockLoader()
-{
-}
-
-static inline void
-unlockLoader()
-{
-}
-
-static inline LoadedModule *
-loadRPL(const std::string& name)
-{
-   return nullptr;
-}
-
-static inline void
-setSyscallAddress(ppcaddr_t address)
-{
-}
-
-static inline LoadedModule *
-findModule(const std::string& name)
-{
-   return nullptr;
-}
-
 static inline LoadedSection *
 findSectionForAddress(ppcaddr_t address)
 {
@@ -158,13 +131,6 @@ static inline std::string
 findNearestSymbolNameForAddress(ppcaddr_t address)
 {
    return "fuk u";
-}
-
-static inline const std::map<std::string, LoadedModule*> &
-getLoadedModules()
-{
-   static std::map<std::string, LoadedModule*> lul;
-   return lul;
 }
 
 } // namespace loader

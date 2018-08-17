@@ -18,12 +18,6 @@ namespace loader
 struct LoadedModule;
 }
 
-loader::LoadedModule *
-getUserModule();
-
-loader::LoadedModule *
-getTLSModule(uint32_t index);
-
 /** @} */
 
 } // namespace kernel
