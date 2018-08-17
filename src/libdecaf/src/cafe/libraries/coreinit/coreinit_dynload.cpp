@@ -243,12 +243,21 @@ OSDynLoad_SetTLSAllocator(OSDynLoad_AllocFn allocFn,
    return OSDynLoad_Error::OK;
 }
 
+
 OSDynLoad_Error
 OSDynLoad_Acquire(virt_ptr<const char> modulePath,
                   virt_ptr<OSDynLoad_ModuleHandle> outModuleHandle)
 {
    return OSDynLoad_Error::OutOfMemory;
 }
+
+
+OSDynLoad_Error
+OSDynLoad_Release(OSDynLoad_ModuleHandle moduleHandle)
+{
+   return OSDynLoad_Error::OutOfMemory;
+}
+
 
 OSDynLoad_Error
 OSDynLoad_AcquireContainingModule(virt_ptr<void> ptr,
@@ -257,6 +266,7 @@ OSDynLoad_AcquireContainingModule(virt_ptr<void> ptr,
 {
    return OSDynLoad_Error::OK;
 }
+
 
 static virt_ptr<loader::rpl::Export>
 searchExport(virt_ptr<loader::rpl::Export> exports,
@@ -284,6 +294,7 @@ searchExport(virt_ptr<loader::rpl::Export> exports,
       }
    }
 }
+
 
 /**
  * Find an export from a library handle.
@@ -353,6 +364,7 @@ OSDynLoad_FindExport(OSDynLoad_ModuleHandle moduleHandle,
    return error;
 }
 
+
 OSDynLoad_Error
 OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
                         virt_ptr<char> buffer,
@@ -363,8 +375,8 @@ OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
 
 
 /**
-* Check if a module is loaded and return the handle of a dynamic library.
-*/
+ * Check if a module is loaded and return the handle of a dynamic library.
+ */
 OSDynLoad_Error
 OSDynLoad_IsModuleLoaded(virt_ptr<const char> name,
                          virt_ptr<OSDynLoad_ModuleHandle> outHandle)
@@ -373,22 +385,69 @@ OSDynLoad_IsModuleLoaded(virt_ptr<const char> name,
 }
 
 
-OSDynLoad_Error
-OSDynLoad_Release(OSDynLoad_ModuleHandle moduleHandle)
-{
-   return OSDynLoad_Error::OutOfMemory;
-}
-
-uint32_t
-OSGetSymbolName(uint32_t address,
+/**
+ * Find a symbol name for the given address.
+ *
+ * \return
+ * Returns the address of the nearest symbol.
+ */
+virt_addr
+OSGetSymbolName(virt_addr address,
                 virt_ptr<char> buffer,
                 uint32_t bufferSize)
 {
-   if (buffer && bufferSize > 0) {
-      *buffer = char { 0 };
+   StackObject<uint32_t> symbolDistance;
+   StackArray<char, 256> symbolNameBuffer;
+   StackArray<char, 256> moduleNameBuffer;
+
+   *buffer = char { 0 };
+   if (bufferSize < 16) {
+      return address;
    }
 
-   return 0;
+   symbolNameBuffer[0] = char { 0 };
+   moduleNameBuffer[0] = char { 0 };
+
+   auto error = kernel::findClosestSymbol(address,
+                                          symbolDistance,
+                                          symbolNameBuffer,
+                                          symbolNameBuffer.size(),
+                                          moduleNameBuffer,
+                                          moduleNameBuffer.size());
+
+   if (error || (!symbolNameBuffer[0] && !moduleNameBuffer[0])) {
+      std::strncpy(buffer.getRawPointer(), "unknown", bufferSize);
+      buffer[bufferSize - 1] = char { 0 };
+      return address;
+   }
+
+   auto symbolAddress = address - *symbolDistance;
+   auto moduleNameLength = strlen(moduleNameBuffer.getRawPointer());
+   auto symbolNameLength = strlen(symbolNameBuffer.getRawPointer());
+
+   if (moduleNameLength) {
+      std::strncpy(buffer.getRawPointer(),
+                   moduleNameBuffer.getRawPointer(),
+                   bufferSize);
+
+      if (moduleNameLength + 1 >= bufferSize) {
+         buffer[bufferSize - 1] = char { 0 };
+         return symbolAddress;
+      }
+
+      if (symbolNameLength) {
+         buffer[moduleNameLength] = char { '|' };
+         moduleNameLength++;
+      }
+   }
+
+   if (symbolNameLength) {
+      std::strncpy(buffer.getRawPointer() + moduleNameLength,
+                   symbolNameBuffer.getRawPointer(),
+                   bufferSize - moduleNameLength);
+   }
+
+   return symbolAddress;
 }
 
 

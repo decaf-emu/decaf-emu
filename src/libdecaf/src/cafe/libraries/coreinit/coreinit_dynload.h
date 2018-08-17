@@ -123,8 +123,8 @@ OSDynLoad_IsModuleLoaded(virt_ptr<const char> name,
 OSDynLoad_Error
 OSDynLoad_Release(OSDynLoad_ModuleHandle moduleHandle);
 
-uint32_t
-OSGetSymbolName(uint32_t address,
+virt_addr
+OSGetSymbolName(virt_addr address,
                 virt_ptr<char> buffer,
                 uint32_t bufferSize);
 
