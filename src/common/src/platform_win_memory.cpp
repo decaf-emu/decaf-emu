@@ -11,12 +11,11 @@
 namespace platform
 {
 
-static std::mutex
-sMemoryMutex;
-
-static std::map<HANDLE, HANDLE>
-sMemoryFileMap;
-
+struct WindowsMapFileHandle
+{
+   HANDLE fileHandle;
+   HANDLE mappingHandle;
+};
 
 static DWORD
 flagsToPageProtect(ProtectFlags flags)
@@ -83,7 +82,10 @@ createMemoryMappedFile(size_t size)
       return InvalidMapFileHandle;
    }
 
-   return reinterpret_cast<MapFileHandle>(handle);
+   auto windowsHandle = new WindowsMapFileHandle { };
+   windowsHandle->mappingHandle = handle;
+   windowsHandle->fileHandle = NULL;
+   return reinterpret_cast<MapFileHandle>(windowsHandle);
 }
 
 
@@ -94,7 +96,6 @@ openMemoryMappedFile(const std::string &path,
 {
    // Only support READ ONLY for now
    decaf_check(flags == ProtectFlags::ReadOnly);
-   std::lock_guard<std::mutex> lock { sMemoryMutex };
    OFSTRUCT of;
    auto fileHandle = reinterpret_cast<HANDLE>(static_cast<uintptr_t>(OpenFile(path.c_str(), &of, OF_READ)));
    if (!fileHandle) {
@@ -103,7 +104,7 @@ openMemoryMappedFile(const std::string &path,
       return InvalidMapFileHandle;
    }
 
-   auto mapHandle = CreateFileMapping(fileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+   auto mapHandle = CreateFileMappingW(fileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
    if (!mapHandle) {
       CloseHandle(fileHandle);
       gLog->error("openMemoryMappedFile(\"{}\") CreateFileMapping failed with error: {}",
@@ -117,33 +118,38 @@ openMemoryMappedFile(const std::string &path,
       *outSize = static_cast<size_t>(size.QuadPart);
    }
 
-   sMemoryFileMap[mapHandle] = fileHandle;
-   return reinterpret_cast<MapFileHandle>(mapHandle);
+   auto windowsHandle = new WindowsMapFileHandle { };
+   windowsHandle->mappingHandle = mapHandle;
+   windowsHandle->fileHandle = fileHandle;
+   return reinterpret_cast<MapFileHandle>(windowsHandle);
 }
 
 
 bool
-closeMemoryMappedFile(MapFileHandle mapFileHandle)
+closeMemoryMappedFile(MapFileHandle handle)
 {
-   std::lock_guard<std::mutex> lock { sMemoryMutex };
-   auto handle = reinterpret_cast<HANDLE>(mapFileHandle);
-   auto itr = sMemoryFileMap.find(handle);
+   auto windowsHandle = reinterpret_cast<WindowsMapFileHandle *>(handle);
 
-   if (itr != sMemoryFileMap.end()) {
-      if (!CloseHandle(itr->second)) {
+   if (windowsHandle->fileHandle) {
+      if (!CloseHandle(windowsHandle->fileHandle)) {
          gLog->error("closeMemoryMappedFile({}) close file handle failed with error: {}",
                      handle, GetLastError());
       }
 
-      sMemoryFileMap.erase(itr);
+      windowsHandle->fileHandle = NULL;
    }
 
-   if (!CloseHandle(handle)) {
-      gLog->error("closeMemoryMappedFile({}) close map handle failed with error: {}",
-                  handle, GetLastError());
-      return false;
+   if (windowsHandle->mappingHandle) {
+      if (!CloseHandle(windowsHandle->mappingHandle)) {
+         gLog->error("closeMemoryMappedFile({}) close map handle failed with error: {}",
+                     handle, GetLastError());
+         return false;
+      }
+
+      windowsHandle->mappingHandle = NULL;
    }
 
+   delete windowsHandle;
    return true;
 }
 
@@ -155,10 +161,11 @@ mapViewOfFile(MapFileHandle handle,
               size_t size,
               void *dst)
 {
+   auto windowsHandle = reinterpret_cast<WindowsMapFileHandle *>(handle);
    auto access = flagsToFileMap(flags);
    auto offsetLo = static_cast<DWORD>(offset & 0xFFFFFFFFu);
    auto offsetHi = static_cast<DWORD>((offset >> 32) & 0xFFFFFFFFu);
-   auto result = MapViewOfFileEx(reinterpret_cast<HANDLE>(handle),
+   auto result = MapViewOfFileEx(reinterpret_cast<HANDLE>(windowsHandle->mappingHandle),
                                  access,
                                  offsetHi,
                                  offsetLo,
