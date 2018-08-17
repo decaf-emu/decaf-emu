@@ -80,7 +80,7 @@ struct LOADER_UserFileInfo
    be2_val<int16_t> tlsModuleIndex;
    be2_val<int16_t> tlsAlignShift;
    be2_val<virt_addr> tlsAddressStart;
-   be2_val<virt_addr> tlsAddressEnd;
+   be2_val<uint32_t> tlsSectionSize;
    be2_val<uint32_t> shstrndx;
    be2_val<uint32_t> titleLocation;
    UNKNOWN(0x60 - 0x28);
@@ -93,7 +93,7 @@ CHECK_OFFSET(LOADER_UserFileInfo, 0x10, fileInfoFlags);
 CHECK_OFFSET(LOADER_UserFileInfo, 0x14, tlsModuleIndex);
 CHECK_OFFSET(LOADER_UserFileInfo, 0x16, tlsAlignShift);
 CHECK_OFFSET(LOADER_UserFileInfo, 0x18, tlsAddressStart);
-CHECK_OFFSET(LOADER_UserFileInfo, 0x1C, tlsAddressEnd);
+CHECK_OFFSET(LOADER_UserFileInfo, 0x1C, tlsSectionSize);
 CHECK_OFFSET(LOADER_UserFileInfo, 0x20, shstrndx);
 CHECK_OFFSET(LOADER_UserFileInfo, 0x24, titleLocation);
 CHECK_SIZE(LOADER_UserFileInfo, 0x60);

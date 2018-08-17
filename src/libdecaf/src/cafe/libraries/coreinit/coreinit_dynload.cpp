@@ -1,9 +1,11 @@
 #include "coreinit.h"
+#include "coreinit_cosreport.h"
 #include "coreinit_dynload.h"
 #include "coreinit_ghs.h"
 #include "coreinit_handle.h"
 #include "coreinit_mutex.h"
 #include "coreinit_memheap.h"
+#include "coreinit_osreport.h"
 #include "coreinit_systemheap.h"
 #include "coreinit_systeminfo.h"
 
@@ -389,6 +391,7 @@ OSGetSymbolName(uint32_t address,
    return 0;
 }
 
+
 /**
  * __tls_get_addr
  * Gets the TLS data for tls_index.
@@ -396,40 +399,102 @@ OSGetSymbolName(uint32_t address,
 virt_ptr<void>
 tls_get_addr(virt_ptr<tls_index> index)
 {
-   /*
+   if (!sDynLoadData->tlsHeader) {
+      internal::COSError(COSReportModule::Unknown2,
+                         "*** __OSDynLoad_gTLSHeader not initialized.");
+      internal::OSPanic("OSDynLoad_Acquire.c", 299,
+                        "__OSDynLoad_gTLSHeader not initialized.");
+   }
+
+   if (index->moduleIndex < 0) {
+      internal::COSError(COSReportModule::Unknown2,
+                         "*** __OSDynLoad_gTLSHeader not initialized.");
+      internal::OSPanic("OSDynLoad_Acquire.c", 304,
+                        "__OSDynLoad_gTLSHeader not initialized.");
+   }
+
+   if (sDynLoadData->tlsHeader <= index->moduleIndex) {
+      internal::COSError(COSReportModule::Unknown2,
+                         "*** __OSDynLoad_gTLSHeader not initialized.");
+      internal::OSPanic("OSDynLoad_Acquire.c", 309,
+                        "__OSDynLoad_gTLSHeader not initialized.");
+   }
+
    auto thread = OSGetCurrentThread();
-   auto module = kernel::getTLSModule(index->moduleIndex);
-   decaf_check(module);
-
    if (thread->tlsSectionCount <= index->moduleIndex) {
-      auto oldSections = thread->tlsSections;
-      auto oldCount = thread->tlsSectionCount;
-      thread->tlsSectionCount = index->moduleIndex + 1;
+      StackObject<virt_ptr<void>> allocPtr;
 
-      // Allocate and zero new tlsSections
-      internal::dynLoadTLSAlloc(thread->tlsSectionCount * sizeof(OSTLSSection), 4, virt_addrof(thread->tlsSections));
-      memset(virt_addrof(thread->tlsSections[oldCount]),
-             0,
-             sizeof(OSTLSSection) * (thread->tlsSectionCount - oldCount));
-
-      // Copy and free old tlsSections
-      if (oldSections) {
-         memcpy(thread->tlsSections, oldSections, oldCount * sizeof(OSTLSSection));
-         internal::dynLoadTLSFree(oldSections);
+      // Allocate new TLS section data
+      if (auto error = cafe::invoke(cpu::this_core::state(),
+                                    sDynLoadData->tlsAllocFn,
+                                    sizeof(OSTLSSection) * sDynLoadData->tlsHeader,
+                                    4,
+                                    allocPtr)) {
+         internal::COSError(COSReportModule::Unknown2,
+                            "*** Couldn't allocate internal TLS framework blocks.");
+         internal::OSPanic("OSDynLoad_Acquire.c", 317, "out of memory.");
       }
+
+      std::memset(allocPtr->getRawPointer(),
+                  0,
+                  sizeof(OSTLSSection) * sDynLoadData->tlsHeader);
+
+      // Copy and free old TLS section data
+      if (thread->tlsSectionCount) {
+         std::memcpy(allocPtr->getRawPointer(),
+                     thread->tlsSections.getRawPointer(),
+                     sizeof(OSTLSSection) * sDynLoadData->tlsHeader);
+
+         cafe::invoke(cpu::this_core::state(),
+                      sDynLoadData->tlsFreeFn,
+                      thread->tlsSections);
+      }
+
+      thread->tlsSections = virt_cast<OSTLSSection *>(*allocPtr);
+      thread->tlsSectionCount = sDynLoadData->tlsHeader;
    }
 
-   auto &section = thread->tlsSections[index->moduleIndex];
+   if (!thread->tlsSections[index->moduleIndex].data) {
+      // Find the module for this tls index
+      auto module = virt_ptr<RPL_DATA> { nullptr };
+      for (module = sDynLoadData->rplDataList; module; module = module->next) {
+         if (module->userFileInfo->tlsModuleIndex == index->moduleIndex) {
+            break;
+         }
+      }
 
-   if (!section.data) {
-      // Allocate and copy TLS data
-      internal::dynLoadTLSAlloc(module->tlsSize, 1u << module->tlsAlignShift, &section.data);
-      memcpy(section.data, module->tlsBase, module->tlsSize);
+      if (!module ||
+          !(module->userFileInfo->fileInfoFlags & loader::rpl::RPL_HAS_TLS) ||
+          !module->userFileInfo->tlsAddressStart ||
+          !module->userFileInfo->tlsSectionSize) {
+         internal::COSError(COSReportModule::Unknown2,
+                            "*** Can not find module for TLS data.");
+         internal::OSPanic("OSDynLoad_Acquire.c", 343,
+                           "Can not find module for TLS data.");
+      }
+
+      // Allocate tls image for this module
+      StackObject<virt_ptr<void>> allocPtr;
+      if (auto error = cafe::invoke(cpu::this_core::state(),
+                                    sDynLoadData->tlsAllocFn,
+                                    module->userFileInfo->tlsSectionSize,
+                                    1u << module->userFileInfo->tlsAlignShift,
+                                    allocPtr)) {
+         internal::COSError(COSReportModule::Unknown2,
+                            "*** Couldn't allocate thread TLS image.");
+         internal::OSPanic("OSDynLoad_Acquire.c", 352, "out of memory.");
+      }
+
+      std::memcpy(allocPtr->getRawPointer(),
+                  virt_cast<void *>(module->userFileInfo->tlsAddressStart).getRawPointer(),
+                  module->userFileInfo->tlsSectionSize);
+      thread->tlsSections[index->moduleIndex].data = *allocPtr;
    }
 
-   return mem::translate<void *>(section.data.getAddress() + index->offset);
-   */
-   return nullptr;
+   return
+      virt_cast<void *>(
+         virt_cast<virt_addr>(thread->tlsSections[index->moduleIndex].data)
+         + index->offset);
 }
 
 namespace internal
@@ -493,7 +558,8 @@ findTlsSection(virt_ptr<RPL_DATA> rplData)
       decaf_check(tlsAddressEnd != virt_addr { 0 });
 
       rplData->userFileInfo->tlsAddressStart = tlsAddressStart;
-      rplData->userFileInfo->tlsAddressEnd = tlsAddressEnd;
+      rplData->userFileInfo->tlsSectionSize =
+         static_cast<uint32_t>(tlsAddressEnd - tlsAddressStart);
    }
 }
 
