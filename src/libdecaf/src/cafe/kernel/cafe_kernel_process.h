@@ -54,6 +54,8 @@ struct RamPartitionAllocation
 struct ProcessData
 {
    loader::RPL_STARTINFO startInfo;
+   virt_ptr<loader::LOADED_RPL> loadedRpx;
+   virt_ptr<loader::LOADED_RPL> loadedModuleList;
    std::array<ProcessPerCoreStartInfo, 3> perCoreStartInfo;
    RamPartitionAllocation ramPartitionAllocation;
    internal::AddressSpace addressSpace;
@@ -62,6 +64,20 @@ struct ProcessData
    std::string argstr;
    int exitCode;
 };
+// CHECK_OFFSET(ProcessData, 0x04, rampId);
+// CHECK_OFFSET(ProcessData, 0x08, titleId);
+// CHECK_OFFSET(ProcessData, 0x10, sdkVersion);
+// CHECK_OFFSET(ProcessData, 0x14, titleVersion);
+// CHECK_OFFSET(ProcessData, 0x50, addressSpace);
+// CHECK_OFFSET(ProcessData, 0xE58, cmdFlags);
+// CHECK_OFFSET(ProcessData, 0xE80, ramPartitionAllocation);
+// CHECK_OFFSET(ProcessData, 0xEA0, numCodeAreaHeapBlocks);
+// CHECK_OFFSET(ProcessData, 0xEA4, argstr);
+// CHECK_OFFSET(ProcessData, 0xEA8, loadedRpx);
+// CHECK_OFFSET(ProcessData, 0xEAC, loadedModuleList);
+// CHECK_OFFSET(ProcessData, 0xECC, titleInfo);
+// CHECK_OFFSET(ProcessData, 0x1344, titleLoc);
+// CHECK_OFFSET(ProcessData, 0x1348, overlay_arena);
 // CHECK_OFFSET(ProcessData, 0x1698, perCoreStartInfo);
 // CHECK_SIZE(ProcessData, 0x17a0);
 

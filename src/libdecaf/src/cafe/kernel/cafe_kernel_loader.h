@@ -26,6 +26,14 @@ loaderQuery(loader::LOADER_Handle handle,
 int32_t
 loaderUserGainControl();
 
+int32_t
+findClosestSymbol(virt_addr addr,
+                  virt_ptr<uint32_t> outSymbolDistance,
+                  virt_ptr<char> symbolNameBuffer,
+                  uint32_t symbolNameBufferLength,
+                  virt_ptr<char> moduleNameBuffer,
+                  uint32_t moduleNameBufferLength);
+
 namespace internal
 {
 
@@ -37,6 +45,22 @@ KiRPLStartup(UniqueProcessId callerProcessId,
              uint32_t maxCodeSize,
              uint32_t maxDataSize,
              uint32_t titleLoc);
+
+int32_t
+findClosestSymbol(virt_addr addr,
+                  virt_ptr<uint32_t> outSymbolDistance,
+                  virt_ptr<char> symbolNameBuffer,
+                  uint32_t symbolNameBufferLength,
+                  virt_ptr<char> moduleNameBuffer,
+                  uint32_t moduleNameBufferLength);
+
+int32_t
+findClosestSymbol(virt_addr addr,
+                  uint32_t *outSymbolDistance,
+                  char *symbolNameBuffer,
+                  uint32_t symbolNameBufferLength,
+                  char *moduleNameBuffer,
+                  uint32_t moduleNameBufferLength);
 
 } // namespace internal
 

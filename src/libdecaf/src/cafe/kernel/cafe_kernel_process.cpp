@@ -289,7 +289,10 @@ void
 finishInitAndPreload()
 {
    auto processData = getCurrentProcessData();
-   processData->startInfo = cafe::loader::getKernelIpcStorage()->startInfo;
+   auto loaderIpcStorage = cafe::loader::getKernelIpcStorage();
+   processData->startInfo = loaderIpcStorage->startInfo;
+   processData->loadedRpx = loaderIpcStorage->rpxModule;
+   processData->loadedModuleList = loaderIpcStorage->loadedModuleList;
 
    initialisePerCoreStartInfo(&processData->perCoreStartInfo[0],
                               &processData->perCoreStartInfo[1],

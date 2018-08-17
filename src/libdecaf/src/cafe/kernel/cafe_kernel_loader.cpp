@@ -1,7 +1,10 @@
 #include "cafe_kernel_loader.h"
+#include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
+
 #include "cafe/loader/cafe_loader_entry.h"
 #include "cafe/loader/cafe_loader_globals.h"
+#include "cafe/loader/cafe_loader_loaded_rpl.h"
 
 #include <cstdint>
 #include <libcpu/cpu.h>
@@ -69,6 +72,51 @@ loaderUserGainControl()
    return internal::loaderEntry();
 }
 
+int32_t
+findClosestSymbol(virt_addr addr,
+                  virt_ptr<uint32_t> outSymbolDistance,
+                  virt_ptr<char> symbolNameBuffer,
+                  uint32_t symbolNameBufferLength,
+                  virt_ptr<char> moduleNameBuffer,
+                  uint32_t moduleNameBufferLength)
+{
+   // Verify parameters
+   if (outSymbolDistance &&
+      (virt_cast<virt_addr>(outSymbolDistance) < virt_addr { 0x10000000 } ||
+       virt_cast<virt_addr>(outSymbolDistance) >= virt_addr { 0xC0000000 } ||
+       virt_cast<virt_addr>(outSymbolDistance) & 3 ||
+       !validateAddressRange(virt_cast<virt_addr>(outSymbolDistance), 4))) {
+      return 0xBAD20008;
+   }
+
+   if (symbolNameBufferLength) {
+      if (virt_cast<virt_addr>(symbolNameBuffer) < virt_addr { 0x10000000 } ||
+          virt_cast<virt_addr>(symbolNameBuffer) >= virt_addr { 0xC0000000 } ||
+          !validateAddressRange(virt_cast<virt_addr>(symbolNameBuffer), symbolNameBufferLength)) {
+          return 0xBAD2000A;
+      }
+   } else {
+      symbolNameBuffer = nullptr;
+   }
+
+   if (moduleNameBufferLength) {
+      if (virt_cast<virt_addr>(moduleNameBuffer) < virt_addr { 0x10000000 } ||
+          virt_cast<virt_addr>(moduleNameBuffer) >= virt_addr { 0xC0000000 } ||
+          !validateAddressRange(virt_cast<virt_addr>(moduleNameBuffer), moduleNameBufferLength)) {
+       return 0xBAD2000A;
+      }
+   } else {
+      moduleNameBuffer = nullptr;
+   }
+
+   return internal::findClosestSymbol(addr,
+                                      outSymbolDistance,
+                                      symbolNameBuffer,
+                                      symbolNameBufferLength,
+                                      moduleNameBuffer,
+                                      moduleNameBufferLength);
+}
+
 namespace internal
 {
 
@@ -116,7 +164,7 @@ loaderEntry()
    return loader::LoaderStart(TRUE, virt_addrof(loaderIpc->entryParams));
 }
 
-void
+static void
 KiRPLLoaderSetup(ProcessFlags processFlags,
                  UniqueProcessId callerProcessId,
                  UniqueProcessId targetProcessId)
@@ -187,6 +235,158 @@ KiRPLStartup(UniqueProcessId callerProcessId,
                0, sizeof(loader::LOADER_EntryDispatch));
 
    KiRPLLoaderSetup(processFlags, callerProcessId, targetProcessId);
+}
+
+int32_t
+findClosestSymbol(virt_addr addr,
+                  uint32_t *outSymbolDistance,
+                  char *symbolNameBuffer,
+                  uint32_t symbolNameBufferLength,
+                  char *moduleNameBuffer,
+                  uint32_t moduleNameBufferLength)
+{
+   if (!getCurrentProcessData()) {
+      return 0xBAD20002;
+   }
+
+   if (outSymbolDistance) {
+      *outSymbolDistance = static_cast<uint32_t>(addr);
+   }
+
+   if (symbolNameBuffer) {
+      symbolNameBuffer[0] = char { 0 };
+   }
+
+   if (moduleNameBuffer) {
+      moduleNameBuffer[0] = char { 0 };
+   }
+
+   // Find the module and section containing the given address
+   auto containingModule = virt_ptr<loader::LOADED_RPL> { nullptr };
+   auto containingSectionIndex = 0u;
+
+   for (auto rpl = getCurrentProcessData()->loadedModuleList; rpl; rpl = rpl->nextLoadedRpl) {
+      for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
+         auto sectionAddress = rpl->sectionAddressBuffer[i];
+         if (!sectionAddress) {
+            continue;
+         }
+
+         auto sectionHeader =
+            virt_cast<loader::rpl::SectionHeader *>(
+               virt_cast<virt_addr>(rpl->sectionHeaderBuffer) +
+               rpl->elfHeader.shentsize * i);
+
+         if (addr >= sectionAddress &&
+             addr < sectionAddress + sectionHeader->size) {
+            containingModule = rpl;
+            containingSectionIndex = i;
+            break;
+         }
+      }
+   }
+
+   // Search the module's symbol table for the nearest symbol
+   auto nearestSymbolName = virt_ptr<const char> { nullptr };
+   auto nearestSymbolValue = virt_addr { 0 };
+
+   if (containingModule) {
+      auto nearestSymbolDistance = uint32_t { 0xFFFFFFFFu };
+      for (auto i = 0u; i < containingModule->elfHeader.shnum; ++i) {
+         auto sectionAddress = containingModule->sectionAddressBuffer[i];
+         auto sectionHeader =
+            virt_cast<loader::rpl::SectionHeader *>(
+               virt_cast<virt_addr>(containingModule->sectionHeaderBuffer) +
+               containingModule->elfHeader.shentsize * i);
+
+         if (sectionHeader->type == loader::rpl::SHT_SYMTAB) {
+            auto strTab = containingModule->sectionAddressBuffer[sectionHeader->link];
+            auto symTabEntSize =
+               sectionHeader->entsize ?
+               static_cast<uint32_t>(sectionHeader->entsize) :
+               sizeof(loader::rpl::Symbol);
+            auto numSymbols = sectionHeader->size / symTabEntSize;
+
+            for (auto j = 0u; j < numSymbols; ++j) {
+               auto symbol =
+                  virt_cast<loader::rpl::Symbol *>(sectionAddress + j * symTabEntSize);
+               auto symbolAddr = virt_addr { static_cast<uint32_t>(symbol->value) };
+               if (symbol->shndx != containingSectionIndex ||
+                   symbolAddr > addr) {
+                  continue;
+               }
+
+               // Ignore symbols beginning with $ or .
+               auto symbolName = virt_cast<const char *>(strTab + symbol->name);
+               if (symbolName[0] == '$' || symbolName[0] == '.') {
+                  continue;
+               }
+
+               if (addr - symbolAddr < nearestSymbolDistance) {
+                  nearestSymbolName = symbolName;
+                  nearestSymbolDistance = static_cast<uint32_t>(addr - symbolAddr);
+                  nearestSymbolValue = symbolAddr;
+
+                  if (nearestSymbolDistance == 0) {
+                     break;
+                  }
+               }
+            }
+
+            if (nearestSymbolDistance == 0) {
+               break;
+            }
+         }
+      }
+   }
+
+   // Set the output
+   if (moduleNameBuffer) {
+      if (containingModule) {
+         std::strncpy(moduleNameBuffer,
+                      containingModule->moduleNameBuffer.getRawPointer(),
+                      moduleNameBufferLength);
+      } else {
+         moduleNameBuffer[0] = char { 0 };
+      }
+   }
+
+   if (symbolNameBuffer) {
+      if (nearestSymbolName && nearestSymbolName[0]) {
+         std::strncpy(symbolNameBuffer,
+                      nearestSymbolName.getRawPointer(),
+                      symbolNameBufferLength);
+      } else {
+         std::strncpy(symbolNameBuffer,
+                      "<unknown>",
+                      symbolNameBufferLength);
+      }
+   }
+
+   if (outSymbolDistance) {
+      *outSymbolDistance = static_cast<uint32_t>(addr - nearestSymbolValue);
+   }
+
+   return 0;
+}
+
+int32_t
+findClosestSymbol(virt_addr addr,
+                  virt_ptr<uint32_t> outSymbolDistance,
+                  virt_ptr<char> symbolNameBuffer,
+                  uint32_t symbolNameBufferLength,
+                  virt_ptr<char> moduleNameBuffer,
+                  uint32_t moduleNameBufferLength)
+{
+   auto symbolDistance = uint32_t { 0 };
+   auto result = findClosestSymbol(addr,
+                                   &symbolDistance,
+                                   symbolNameBuffer.getRawPointer(),
+                                   symbolNameBufferLength,
+                                   moduleNameBuffer.getRawPointer(),
+                                   moduleNameBufferLength);
+   *outSymbolDistance = symbolDistance;
+   return result;
 }
 
 } // namespace internal
