@@ -2,6 +2,7 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_exception.h"
 #include "cafe_kernel_heap.h"
+#include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
 
@@ -16,6 +17,22 @@
 
 namespace cafe::kernel
 {
+
+struct StaticKernelData
+{
+   struct CoreData
+   {
+      // Used for cpu branch trace handler
+      be2_val<uint32_t> symbolDistance;
+      be2_array<char, 256> symbolNameBuffer;
+      be2_array<char, 256> moduleNameBuffer;
+   };
+
+   be2_array<CoreData, 3> coreData;
+};
+
+static virt_ptr<StaticKernelData>
+sKernelData = nullptr;
 
 static internal::AddressSpace
 sKernelAddressSpace;
@@ -108,15 +125,26 @@ static void
 cpuBranchTraceHandler(cpu::Core *core,
                       uint32_t target)
 {
-   /*
-   auto symNamePtr = loader::findSymbolNameForAddress(target);
-   if (!symNamePtr) {
-   return;
-   }
+   if (decaf::config::log::branch_trace) {
+      auto &data = sKernelData->coreData[core->id];
+      auto error =
+         internal::findClosestSymbol(virt_addr { target },
+                                     virt_addrof(data.symbolDistance),
+                                     virt_addrof(data.symbolNameBuffer),
+                                     data.symbolNameBuffer.size(),
+                                     virt_addrof(data.moduleNameBuffer),
+                                     data.moduleNameBuffer.size());
 
-   gLog->debug("CPU branched to: {}", *symNamePtr);
-   */
-   gLog->trace("CPU branched to: 0x{:08X}", target);
+      if (!error && data.moduleNameBuffer[0] && data.symbolNameBuffer[0]) {
+         gLog->trace("CPU branched to: 0x{:08X} {}|{}+0x{:X}",
+                     target,
+                     virt_addrof(data.moduleNameBuffer).getRawPointer(),
+                     virt_addrof(data.symbolNameBuffer).getRawPointer(),
+                     data.symbolDistance);
+      } else {
+         gLog->trace("CPU branched to: 0x{:08X}", target);
+      }
+   }
 }
 
 static void
@@ -160,6 +188,7 @@ start()
    internal::initialiseStaticDataHeap();
 
    // Initialise static data
+   sKernelData = internal::allocStaticData<StaticKernelData>();
    internal::initialiseStaticContextData();
    internal::initialiseStaticExceptionData();
 
