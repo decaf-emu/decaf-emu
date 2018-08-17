@@ -14,8 +14,6 @@
 #include "debugger_ui_window_threads.h"
 #include "debugger_ui_window_voices.h"
 #include "debugger_ui_window_performance.h"
-#include "kernel/kernel.h"
-#include "kernel/kernel_loader.h"
 
 #include "cafe/loader/cafe_loader_entry.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"

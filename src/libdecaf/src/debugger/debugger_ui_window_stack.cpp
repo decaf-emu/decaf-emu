@@ -1,6 +1,7 @@
 #include "debugger_ui_window_stack.h"
 #include "debugger_threadutils.h"
-#include "kernel/kernel_loader.h"
+
+#include "cafe/kernel/cafe_kernel_loader.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 
@@ -234,14 +235,31 @@ StackWindow::draw()
       }
       linePos.x += frameLineAdvance;
 
-      // Check if this is a symbol?
-      auto data = mem::read<uint32_t>(addr);
-      auto sec = kernel::loader::findSectionForAddress(data);
+      // Find symbol for value in stack
+      static std::array<char, 256> symbolNameBuffer;
+      static std::array<char, 256> moduleNameBuffer;
 
-      if (sec && sec->type == kernel::loader::LoadedSectionType::Code) {
-         auto symInfo = kernel::loader::findNearestSymbolNameForAddress(data);
+      auto data = mem::read<uint32_t>(addr);
+      if (!data || data > 0x10000000) {
+         continue;
+      }
+
+      auto symbolDistance = uint32_t { 0 };
+      auto error =
+         cafe::kernel::internal::findClosestSymbol(
+            virt_addr { data },
+            &symbolDistance,
+            symbolNameBuffer.data(),
+            static_cast<uint32_t>(symbolNameBuffer.size()),
+            moduleNameBuffer.data(),
+            static_cast<uint32_t>(moduleNameBuffer.size()));
+
+      if (!error && moduleNameBuffer[0] && symbolNameBuffer[0]) {
          ImGui::SetCursorPos(linePos);
-         ImGui::Text("<%s>", symInfo.c_str());
+         ImGui::Text("<%s|%s+0x%X>",
+                     symbolNameBuffer.data(),
+                     moduleNameBuffer.data(),
+                     symbolDistance);
       }
    }
    mAddressScroller.end();
