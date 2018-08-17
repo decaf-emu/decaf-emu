@@ -16,6 +16,9 @@
 #include "debugger_ui_window_performance.h"
 #include "kernel/kernel.h"
 #include "kernel/kernel_loader.h"
+
+#include "cafe/loader/cafe_loader_entry.h"
+#include "cafe/loader/cafe_loader_loaded_rpl.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/gx2/gx2_internal_pm4cap.h"
@@ -235,20 +238,21 @@ void Manager::draw(unsigned width, unsigned height)
 
 void Manager::onFirstActivation()
 {
-   auto userModule = kernel::getUserModule();
+   auto disassemblyStartAddress = virt_addr { 0x02000000 };
+   auto memoryStartAddress = virt_addr { 0x10000000 };
 
-   // Automatically analyse the primary user module
-   for (auto &sec : userModule->sections) {
-      if (sec.name.compare(".text") == 0) {
-         analysis::analyse(sec.start, sec.end);
-         break;
-      }
+   if (auto rpx = cafe::loader::getLoadedRpx()) {
+      disassemblyStartAddress = rpx->textAddr;
+      memoryStartAddress = rpx->dataAddr;
+
+      analysis::analyse(static_cast<uint32_t>(rpx->textAddr),
+                        static_cast<uint32_t>(rpx->textAddr) + rpx->textSize);
    }
 
    // Place the views somewhere sane to start in case pausing did not place it somewhere
    if (!mDebugger->paused()) {
-      gotoMemoryAddress(userModule->entryPoint);
-      gotoDisassemblyAddress(userModule->entryPoint);
+      gotoMemoryAddress(0x10000000);
+      gotoDisassemblyAddress(0x02000000);
    }
 }
 
