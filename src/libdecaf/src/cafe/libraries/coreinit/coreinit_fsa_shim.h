@@ -97,6 +97,13 @@ fsaShimPrepareRequestChangeDir(virt_ptr<FSAShimBuffer> shim,
                                virt_ptr<const char> path);
 
 FSAStatus
+fsaShimPrepareRequestChangeMode(virt_ptr<FSAShimBuffer> shim,
+                                IOSHandle clientHandle,
+                                virt_ptr<const char> path,
+                                uint32_t mode1,
+                                uint32_t mode2);
+
+FSAStatus
 fsaShimPrepareRequestCloseDir(virt_ptr<FSAShimBuffer> shim,
                               IOSHandle clientHandle,
                               FSDirHandle dirHandle);

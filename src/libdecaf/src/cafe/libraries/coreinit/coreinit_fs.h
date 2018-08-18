@@ -9,14 +9,10 @@
 Unimplemented functions:
 FSAppendFile
 FSAppendFileAsync
-FSBindMount
-FSBindMountAsync
 FSBindUnmount
 FSBindUnmountAsync
 FSCancelAllCommands
 FSCancelCommand
-FSChangeMode
-FSChangeModeAsync
 FSDumpLastErrorLog
 FSFlushMultiQuota
 FSFlushMultiQuotaAsync

@@ -191,6 +191,39 @@ fsaShimPrepareRequestChangeDir(virt_ptr<FSAShimBuffer> shim,
 
 
 /**
+ * Prepare a FSACommand::ChangeMode request.
+ */
+FSAStatus
+fsaShimPrepareRequestChangeMode(virt_ptr<FSAShimBuffer> shim,
+                                IOSHandle clientHandle,
+                                virt_ptr<const char> path,
+                                uint32_t mode1,
+                                uint32_t mode2)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   if (!path || std::strlen(path.getRawPointer()) >= FSMaxPathLength) {
+      return FSAStatus::InvalidPath;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::ChangeMode;
+
+   auto request = virt_addrof(shim->request.changeMode);
+   std::strncpy(virt_addrof(request->path).getRawPointer(),
+                path.getRawPointer(),
+                FSMaxPathLength);
+   request->mode1 = mode1;
+   request->mode2 = mode2;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::CloseDir request.
  */
 FSAStatus

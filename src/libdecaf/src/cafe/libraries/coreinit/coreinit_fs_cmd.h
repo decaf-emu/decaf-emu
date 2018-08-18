@@ -34,6 +34,23 @@ FSChangeDirAsync(virt_ptr<FSClient> client,
                  virt_ptr<const FSAsyncData> asyncData);
 
 FSStatus
+FSChangeMode(virt_ptr<FSClient> client,
+             virt_ptr<FSCmdBlock> block,
+             virt_ptr<const char> path,
+             uint32_t mode1,
+             uint32_t mode2,
+             FSErrorFlag errorMask);
+
+FSStatus
+FSChangeModeAsync(virt_ptr<FSClient> client,
+                  virt_ptr<FSCmdBlock> block,
+                  virt_ptr<const char> path,
+                  uint32_t mode1,
+                  uint32_t mode2,
+                  FSErrorFlag errorMask,
+                  virt_ptr<const FSAsyncData> asyncData);
+
+FSStatus
 FSCloseDir(virt_ptr<FSClient> client,
            virt_ptr<FSCmdBlock> block,
            FSDirHandle handle,

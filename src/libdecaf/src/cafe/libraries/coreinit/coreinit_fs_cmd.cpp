@@ -204,6 +204,78 @@ FSChangeDirAsync(virt_ptr<FSClient> client,
 
 
 /**
+ * Change file mode.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSChangeMode(virt_ptr<FSClient> client,
+             virt_ptr<FSCmdBlock> block,
+             virt_ptr<const char> path,
+             uint32_t mode1,
+             uint32_t mode2,
+             FSErrorFlag errorMask)
+{
+   StackObject<FSAsyncData> asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, asyncData);
+
+   auto result = FSChangeModeAsync(client, block, path, mode1, mode2,
+                                   errorMask, asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+}
+
+
+/**
+ * Change file mode.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSChangeModeAsync(virt_ptr<FSClient> client,
+                  virt_ptr<FSCmdBlock> block,
+                  virt_ptr<const char> path,
+                  uint32_t mode1,
+                  uint32_t mode2,
+                  FSErrorFlag errorMask,
+                  virt_ptr<const FSAsyncData> asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!path) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSChangeMode: path is null.");
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   auto error =
+      internal::fsaShimPrepareRequestChangeMode(
+         virt_addrof(blockBody->fsaShimBuffer),
+         clientBody->clientHandle,
+         path,
+         mode1,
+         mode2);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::FinishCmd);
+   return FSStatus::OK;
+}
+
+
+/**
  * Close a directory.
  *
  * \return
@@ -2194,6 +2266,8 @@ Library::registerFsCmdSymbols()
    RegisterFunctionExport(FSBindMountAsync);
    RegisterFunctionExport(FSChangeDir);
    RegisterFunctionExport(FSChangeDirAsync);
+   RegisterFunctionExport(FSChangeMode);
+   RegisterFunctionExport(FSChangeModeAsync);
    RegisterFunctionExport(FSCloseDir);
    RegisterFunctionExport(FSCloseDirAsync);
    RegisterFunctionExport(FSCloseFile);

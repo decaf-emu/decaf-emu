@@ -29,6 +29,21 @@ CHECK_SIZE(FSARequestChangeDir, 0x280);
 
 
 /**
+ * Request data for Command::ChangeMode
+ */
+struct FSARequestChangeMode
+{
+   be2_array<char, FSAPathLength> path;
+   be2_val<uint32_t> mode1;
+   be2_val<uint32_t> mode2;
+};
+CHECK_OFFSET(FSARequestChangeMode, 0x0, path);
+CHECK_OFFSET(FSARequestChangeMode, 0x280, mode1);
+CHECK_OFFSET(FSARequestChangeMode, 0x284, mode2);
+CHECK_SIZE(FSARequestChangeMode, 0x288);
+
+
+/**
  * Request data for Command::CloseDir
  */
 struct FSARequestCloseDir
@@ -331,6 +346,7 @@ struct FSARequest
    union
    {
       be2_struct<FSARequestChangeDir> changeDir;
+      be2_struct<FSARequestChangeMode> changeMode;
       be2_struct<FSARequestCloseDir> closeDir;
       be2_struct<FSARequestCloseFile> closeFile;
       be2_struct<FSARequestFlushFile> flushFile;
