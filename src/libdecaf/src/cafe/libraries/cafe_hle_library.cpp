@@ -207,7 +207,19 @@ void
 Library::handleKernelCall(cpu::Core *state,
                           uint32_t id)
 {
-   sKernelCalls[id]->call(state);
+   if (!(id & 0x800000)) {
+      sKernelCalls[id]->call(state);
+   } else {
+      auto unimpl = sUnimplementedKernelCalls[id & 0x7FFFFF];
+      gLog->warn("Unimplemented function call {}::{} from 0x{:08X}",
+                 unimpl->library ? unimpl->library->name().c_str() : "<unknown>",
+                 unimpl->name,
+                 state->lr);
+
+      // Set r3 to some nonsense value to try and catch errors from
+      // unimplemented functions sooner.
+      state->gpr[3] = 0xC5C5C5C5u;
+   }
 }
 
 void

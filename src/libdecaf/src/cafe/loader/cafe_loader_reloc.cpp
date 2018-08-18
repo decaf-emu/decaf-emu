@@ -321,6 +321,14 @@ LiCpu_RelocAdd(bool isRpx,
          tramp[2] = mtctr.value;
          tramp[3] = bctr.value;
 
+         if ((value & 0xCE000000) == 0xCE000000) {
+            // This is an unimplemented HLE function, so let's change the bctr
+            // to a kc so we can handle it in the kernel call handler.
+            auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
+            kc.kcn = 0x800000 | (value & ~0xCE000000);
+            tramp[3] = kc.value;
+         }
+
          symbolValue = static_cast<uint32_t>(virt_cast<virt_addr>(tramp));
          value = symbolValue + addend;
          distance = static_cast<int32_t>(value) - static_cast<int32_t>(target);
