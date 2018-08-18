@@ -89,6 +89,7 @@ using FSFileHandle = ios::fs::FSAFileHandle;
 using FSFilePosition = ios::fs::FSAFilePosition;
 using FSReadFlag = ios::fs::FSAReadFlag;
 using FSStat = ios::fs::FSAStat;
+using FSStatFlags = ios::fs::FSAStatFlags;
 using FSWriteFlag = ios::fs::FSAWriteFlag;
 
 using FSAsyncCallbackFn = virt_func_ptr<void(virt_ptr<FSClient>,
