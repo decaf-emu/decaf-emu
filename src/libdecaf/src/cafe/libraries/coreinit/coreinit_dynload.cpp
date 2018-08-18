@@ -487,7 +487,7 @@ tls_get_addr(virt_ptr<tls_index> index)
       // Allocate new TLS section data
       if (auto error = cafe::invoke(cpu::this_core::state(),
                                     sDynLoadData->tlsAllocFn,
-                                    sizeof(OSTLSSection) * sDynLoadData->tlsHeader,
+                                    static_cast<uint32_t>(sizeof(OSTLSSection) * sDynLoadData->tlsHeader),
                                     4,
                                     allocPtr)) {
          internal::COSError(COSReportModule::Unknown2,

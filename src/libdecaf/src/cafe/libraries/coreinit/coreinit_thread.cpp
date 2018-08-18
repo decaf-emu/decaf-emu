@@ -744,12 +744,16 @@ OSRunThread(virt_ptr<OSThread> thread,
          internal::markThreadInactiveNoLock(thread);
       }
 
+      auto stackSize =
+         virt_cast<virt_addr>(thread->stackStart) -
+         virt_cast<virt_addr>(thread->stackEnd);
+
       initialiseThreadState(thread,
                             entry,
                             argc,
                             argv,
                             thread->stackStart,
-                            virt_cast<virt_addr>(thread->stackStart) - virt_cast<virt_addr>(thread->stackEnd),
+                            static_cast<uint32_t>(stackSize),
                             thread->basePriority,
                             thread->context.pir,
                             thread->type);
