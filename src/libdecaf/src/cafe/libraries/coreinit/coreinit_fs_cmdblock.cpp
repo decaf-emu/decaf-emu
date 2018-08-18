@@ -785,7 +785,7 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
    cmdData.readError = result;
 
    if (result == FSStatus::OK) {
-      auto mountSourceType = FSMountSourceType::Invalid;
+      auto mountSourceType = FSMountSourceType::Bind;
       auto deviceName = virt_addrof(blockBody->fsaShimBuffer.response.readDir.entry.name);
 
       // Check the mount source type

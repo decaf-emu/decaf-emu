@@ -9,8 +9,6 @@
 Unimplemented functions:
 FSAppendFile
 FSAppendFileAsync
-FSBindUnmount
-FSBindUnmountAsync
 FSCancelAllCommands
 FSCancelCommand
 FSDumpLastErrorLog

@@ -103,10 +103,11 @@ CHECK_SIZE(FSCmdBlockCmdDataGetVolumeInfo, 0x4);
 
 struct FSCmdBlockCmdDataMount
 {
-   be2_val<uint32_t> unk0x00;
+   UNKNOWN(0x4);
+   be2_val<FSMountSourceType> sourceType;
 };
-CHECK_OFFSET(FSCmdBlockCmdDataMount, 0x0, unk0x00);
-CHECK_SIZE(FSCmdBlockCmdDataMount, 0x4);
+CHECK_OFFSET(FSCmdBlockCmdDataMount, 0x4, sourceType);
+CHECK_SIZE(FSCmdBlockCmdDataMount, 0x8);
 
 struct FSCmdBlockCmdDataOpenDir
 {
@@ -158,6 +159,14 @@ struct FSCmdBlockCmdDataStatFile
 CHECK_OFFSET(FSCmdBlockCmdDataStatFile, 0x0, stat);
 CHECK_SIZE(FSCmdBlockCmdDataStatFile, 0x4);
 
+struct FSCmdBlockCmdDataUnmount
+{
+   UNKNOWN(0x4);
+   be2_val<FSMountSourceType> sourceType;
+};
+CHECK_OFFSET(FSCmdBlockCmdDataUnmount, 0x4, sourceType);
+CHECK_SIZE(FSCmdBlockCmdDataUnmount, 0x8);
+
 struct FSCmdBlockCmdDataWriteFile
 {
    UNKNOWN(4);
@@ -199,6 +208,7 @@ struct FSCmdBlockCmdData
       be2_struct<FSCmdBlockCmdDataReadDir> readDir;
       be2_struct<FSCmdBlockCmdDataReadFile> readFile;
       be2_struct<FSCmdBlockCmdDataStatFile> statFile;
+      be2_struct<FSCmdBlockCmdDataUnmount> unmount;
       be2_struct<FSCmdBlockCmdDataWriteFile> writeFile;
       UNKNOWN(0x14);
    };

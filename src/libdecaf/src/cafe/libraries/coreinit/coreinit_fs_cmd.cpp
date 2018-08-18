@@ -48,6 +48,12 @@ getInfoByQueryAsync(virt_ptr<FSClient> client,
 } // namespace internal
 
 
+/**
+ * Mount source path to target path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSBindMount(virt_ptr<FSClient> client,
             virt_ptr<FSCmdBlock> block,
@@ -65,6 +71,13 @@ FSBindMount(virt_ptr<FSClient> client,
                                               result, errorMask);
 }
 
+
+/**
+ * Mount source path to target path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
 FSStatus
 FSBindMountAsync(virt_ptr<FSClient> client,
                  virt_ptr<FSCmdBlock> block,
@@ -78,7 +91,6 @@ FSBindMountAsync(virt_ptr<FSClient> client,
    auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
                                                   errorMask | FSErrorFlag::NotFound,
                                                   asyncData);
-
    if (result != FSStatus::OK) {
       return result;
    }
@@ -123,7 +135,7 @@ FSBindMountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   blockBody->cmdData.mount.unk0x00 = 2u;
+   blockBody->cmdData.mount.sourceType = FSMountSourceType::Bind;
    auto error = internal::fsaShimPrepareRequestMount(virt_addrof(blockBody->fsaShimBuffer),
                                                      clientBody->clientHandle,
                                                      sourcePath,
@@ -131,6 +143,91 @@ FSBindMountAsync(virt_ptr<FSClient> client,
                                                      1,
                                                      nullptr,
                                                      0);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::FinishCmd);
+   return FSStatus::OK;
+}
+
+
+/**
+ * Unmount target path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSBindUnmount(virt_ptr<FSClient> client,
+              virt_ptr<FSCmdBlock> block,
+              virt_ptr<const char> targetPath,
+              FSErrorFlag errorMask)
+{
+   StackObject<FSAsyncData> asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, asyncData);
+
+   auto result = FSBindUnmountAsync(client, block, targetPath, errorMask,
+                                    asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+
+/**
+ * Unmount target path.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSBindUnmountAsync(virt_ptr<FSClient> client,
+                   virt_ptr<FSCmdBlock> block,
+                   virt_ptr<const char> targetPath,
+                   FSErrorFlag errorMask,
+                   virt_ptr<const FSAsyncData> asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask | FSErrorFlag::NotFound,
+                                                  asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!targetPath) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindUnmount: target is null.");
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   if (targetPath[0] == '/') {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindUnmount: target must be absolute path, specified path is {}",
+                         targetPath.getRawPointer());
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   if (strncmp(targetPath.getRawPointer(), "/vol/external", 13) == 0 ||
+       strncmp(targetPath.getRawPointer(), "/vol/hfio", 9) == 0) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindUnmount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
+                         targetPath.getRawPointer());
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::PermissionError);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.unmount.sourceType = FSMountSourceType::Bind;
+   auto error = internal::fsaShimPrepareRequestUnmount(virt_addrof(blockBody->fsaShimBuffer),
+                                                       clientBody->clientHandle,
+                                                       targetPath,
+                                                       0x80000000);
 
    if (error) {
       return internal::fsClientHandleShimPrepareError(clientBody, error);
@@ -1162,7 +1259,7 @@ FSMountAsync(virt_ptr<FSClient> client,
                 virt_addrof(source->path).getRawPointer(),
                 bytes - 4);
 
-   blockBody->cmdData.mount.unk0x00 = 0u;
+   blockBody->cmdData.mount.sourceType = source->sourceType;
    auto error = internal::fsaShimPrepareRequestMount(virt_addrof(blockBody->fsaShimBuffer),
                                                      clientBody->clientHandle,
                                                      virt_addrof(source->path),
@@ -1957,6 +2054,19 @@ FSUnmountAsync(virt_ptr<FSClient> client,
    }
 
    if (!target) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSUnmount: target is null.");
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   if (strncmp(target.getRawPointer(), "/vol/external01", 15) == 0) {
+      blockBody->cmdData.unmount.sourceType = FSMountSourceType::SdCard;
+   } else if (strncmp(target.getRawPointer(), "/vol/hfio01", 11) == 0) {
+      blockBody->cmdData.unmount.sourceType = FSMountSourceType::HostFileIO;
+   } else {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSUnmount: target specifies invalid mount path.");
       internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
       return FSStatus::FatalError;
    }
@@ -2264,6 +2374,8 @@ Library::registerFsCmdSymbols()
 {
    RegisterFunctionExport(FSBindMount);
    RegisterFunctionExport(FSBindMountAsync);
+   RegisterFunctionExport(FSBindUnmount);
+   RegisterFunctionExport(FSBindUnmountAsync);
    RegisterFunctionExport(FSChangeDir);
    RegisterFunctionExport(FSChangeDirAsync);
    RegisterFunctionExport(FSChangeMode);
