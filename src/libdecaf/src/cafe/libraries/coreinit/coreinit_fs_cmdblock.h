@@ -101,6 +101,13 @@ struct FSCmdBlockCmdDataGetVolumeInfo
 CHECK_OFFSET(FSCmdBlockCmdDataGetVolumeInfo, 0x0, info);
 CHECK_SIZE(FSCmdBlockCmdDataGetVolumeInfo, 0x4);
 
+struct FSCmdBlockCmdDataMount
+{
+   be2_val<uint32_t> unk0x00;
+};
+CHECK_OFFSET(FSCmdBlockCmdDataMount, 0x0, unk0x00);
+CHECK_SIZE(FSCmdBlockCmdDataMount, 0x4);
+
 struct FSCmdBlockCmdDataOpenDir
 {
    be2_virt_ptr<FSDirHandle> handle;
@@ -186,6 +193,7 @@ struct FSCmdBlockCmdData
       be2_struct<FSCmdBlockCmdDataGetMountSourceNext> getMountSourceNext;
       be2_struct<FSCmdBlockCmdDataGetPosFile> getPosFile;
       be2_struct<FSCmdBlockCmdDataGetVolumeInfo> getVolumeInfo;
+      be2_struct<FSCmdBlockCmdDataMount> mount;
       be2_struct<FSCmdBlockCmdDataOpenDir> openDir;
       be2_struct<FSCmdBlockCmdDataOpenFile> openFile;
       be2_struct<FSCmdBlockCmdDataReadDir> readDir;

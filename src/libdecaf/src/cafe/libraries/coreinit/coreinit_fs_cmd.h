@@ -6,6 +6,21 @@ namespace cafe::coreinit
 {
 
 FSStatus
+FSBindMount(virt_ptr<FSClient> client,
+            virt_ptr<FSCmdBlock> block,
+            virt_ptr<const char> sourcePath,
+            virt_ptr<const char> targetPath,
+            FSErrorFlag errorMask);
+
+FSStatus
+FSBindMountAsync(virt_ptr<FSClient> client,
+                 virt_ptr<FSCmdBlock> block,
+                 virt_ptr<const char> sourcePath,
+                 virt_ptr<const char> targetPath,
+                 FSErrorFlag errorMask,
+                 virt_ptr<const FSAsyncData> asyncData);
+
+FSStatus
 FSChangeDir(virt_ptr<FSClient> client,
             virt_ptr<FSCmdBlock> block,
             virt_ptr<const char> path,

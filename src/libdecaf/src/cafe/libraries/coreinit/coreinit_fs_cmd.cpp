@@ -1,4 +1,5 @@
 #include "coreinit.h"
+#include "coreinit_cosreport.h"
 #include "coreinit_fs_client.h"
 #include "coreinit_fs_cmd.h"
 #include "coreinit_fs_cmdblock.h"
@@ -45,6 +46,99 @@ getInfoByQueryAsync(virt_ptr<FSClient> client,
                     virt_ptr<const FSAsyncData> asyncData);
 
 } // namespace internal
+
+
+FSStatus
+FSBindMount(virt_ptr<FSClient> client,
+            virt_ptr<FSCmdBlock> block,
+            virt_ptr<const char> sourcePath,
+            virt_ptr<const char> targetPath,
+            FSErrorFlag errorMask)
+{
+   StackObject<FSAsyncData> asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, asyncData);
+
+   auto result = FSBindMountAsync(client, block, sourcePath, targetPath,
+                                  errorMask, asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+FSStatus
+FSBindMountAsync(virt_ptr<FSClient> client,
+                 virt_ptr<FSCmdBlock> block,
+                 virt_ptr<const char> sourcePath,
+                 virt_ptr<const char> targetPath,
+                 FSErrorFlag errorMask,
+                 virt_ptr<const FSAsyncData> asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask | FSErrorFlag::NotFound,
+                                                  asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   if (!sourcePath || !targetPath) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindMount: source or target is null.");
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidBuffer);
+      return FSStatus::FatalError;
+   }
+
+   if (sourcePath[0] == '/') {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindMount: source must be absolute path, specified path is {}",
+                         sourcePath.getRawPointer());
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   if (targetPath[0] == '/') {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindMount: target must be absolute path, specified path is {}",
+                         targetPath.getRawPointer());
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
+      return FSStatus::FatalError;
+   }
+
+   if (strncmp(sourcePath.getRawPointer(), "/vol/storage_", 13)) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindMount: source must start with \"/vol/storage_\", specified path is {}",
+                         sourcePath.getRawPointer());
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::PermissionError);
+      return FSStatus::FatalError;
+   }
+
+   if (strncmp(targetPath.getRawPointer(), "/vol/external", 13) == 0 ||
+       strncmp(targetPath.getRawPointer(), "/vol/hfio", 9) == 0) {
+      internal::COSError(COSReportModule::Unknown5,
+                         "FS: FSBindMount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
+                         targetPath.getRawPointer());
+      internal::fsClientHandleFatalError(clientBody, FSAStatus::PermissionError);
+      return FSStatus::FatalError;
+   }
+
+   blockBody->cmdData.mount.unk0x00 = 2u;
+   auto error = internal::fsaShimPrepareRequestMount(virt_addrof(blockBody->fsaShimBuffer),
+                                                     clientBody->clientHandle,
+                                                     sourcePath,
+                                                     targetPath,
+                                                     1,
+                                                     nullptr,
+                                                     0);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::FinishCmd);
+   return FSStatus::OK;
+}
 
 
 /**
@@ -996,6 +1090,7 @@ FSMountAsync(virt_ptr<FSClient> client,
                 virt_addrof(source->path).getRawPointer(),
                 bytes - 4);
 
+   blockBody->cmdData.mount.unk0x00 = 0u;
    auto error = internal::fsaShimPrepareRequestMount(virt_addrof(blockBody->fsaShimBuffer),
                                                      clientBody->clientHandle,
                                                      virt_addrof(source->path),
@@ -2095,6 +2190,8 @@ writeFileWithPosAsync(virt_ptr<FSClient> client,
 void
 Library::registerFsCmdSymbols()
 {
+   RegisterFunctionExport(FSBindMount);
+   RegisterFunctionExport(FSBindMountAsync);
    RegisterFunctionExport(FSChangeDir);
    RegisterFunctionExport(FSChangeDirAsync);
    RegisterFunctionExport(FSCloseDir);
