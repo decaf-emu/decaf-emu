@@ -302,7 +302,7 @@ LiCpu_RelocAdd(bool isRpx,
          auto lis = espresso::encodeInstruction(espresso::InstructionID::addis);
          lis.rD = 11;
          lis.rA = 0;
-         lis.simm = value & 0xFFFF;
+         lis.simm = (value >> 16) & 0xFFFF;
 
          auto addi = espresso::encodeInstruction(espresso::InstructionID::addi);
          addi.rD = 11;
@@ -313,7 +313,7 @@ LiCpu_RelocAdd(bool isRpx,
          mtctr.rS = 11;
          espresso::encodeSPR(mtctr, espresso::SPR::CTR);
 
-         auto bctr = espresso::encodeInstruction(espresso::InstructionID::bc);
+         auto bctr = espresso::encodeInstruction(espresso::InstructionID::bcctr);
          bctr.bo = 0b10100;
 
          tramp[0] = lis.value;
