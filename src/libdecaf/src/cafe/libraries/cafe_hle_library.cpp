@@ -200,6 +200,8 @@ registerUnimplementedSymbol(std::string_view module,
 
    library->addUnimplementedFunctionExport(unimpl);
    sUnimplementedKernelCalls.push_back(unimpl);
+
+   gLog->debug("Unimplemented function import {}::{}", module, name);
    return unimpl->syscallID;
 }
 
