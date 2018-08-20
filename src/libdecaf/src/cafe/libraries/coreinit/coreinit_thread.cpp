@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
@@ -356,6 +355,7 @@ OSCreateThread(virt_ptr<OSThread> thread,
 
    // Setup thread state
    internal::lockScheduler();
+   std::memset(thread.getRawPointer(), 0, sizeof(OSThread));
    initialiseThreadState(thread, entry, argc, argv, stack, stackSize, priority,
                          OSGetCoreId(), OSThreadType::App);
    thread->name = nullptr;
