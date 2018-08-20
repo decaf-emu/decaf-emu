@@ -309,8 +309,11 @@ initialiseCoreContext(cpu::Core *core)
 {
    // Allocate the root context
    auto context = virt_addrof(sContextData->coreThreadContext[core->id]);
-   auto stack = virt_addrof(sContextData->coreThreadStackBuffer[CoreThreadStackSize * 3]);
+   memset(context.getRawPointer(), 0, sizeof(Context));
+
+   auto stack = virt_addrof(sContextData->coreThreadStackBuffer[core->id * CoreThreadStackSize]);
    context->gpr[1] = virt_cast<virt_addr>(stack).getAddress() + CoreThreadStackSize - 8;
+   context->attr |= 1 << core->id;
 
    // Setup host context for the root fiber
    context->hostContext = new HostContext();
