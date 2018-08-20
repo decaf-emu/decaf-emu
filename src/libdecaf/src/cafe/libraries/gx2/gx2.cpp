@@ -16,6 +16,36 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerApertureSymbols();
+   registerClearSymbols();
+   registerContextStateSymbols();
+   registerCounterSymbols();
+   registerDebugSymbols();
+   registerDisplaySymbols();
+   registerDisplayListSymbols();
+   registerDrawSymbols();
+   registerEventSymbols();
+   registerFetchShadersSymbols();
+   registerFormatSymbols();
+   registerMemorySymbols();
+   registerQuerySymbols();
+   registerRegistersSymbols();
+   registerSamplerSymbols();
+   registerShadersSymbols();
+   registerStateSymbols();
+   registerSurfaceSymbols();
+   registerSwapSymbols();
+   registerTempSymbols();
+   registerTessellationSymbols();
+   registerTextureSymbols();
+   registerGx2rBufferSymbols();
+   registerGx2rDisplayListSymbols();
+   registerGx2rDrawSymbols();
+   registerGx2rMemorySymbols();
+   registerGx2rResourceSymbols();
+   registerGx2rShadersSymbols();
+   registerGx2rSurfaceSymbols();
 }
 
 } // namespace cafe::gx2
