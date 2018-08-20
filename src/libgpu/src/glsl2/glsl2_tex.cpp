@@ -19,7 +19,6 @@ KEEP_GRADIENTS
 SET_GRADIENTS_H
 SET_GRADIENTS_V
 PASS
-SAMPLE_LB
 SAMPLE_G
 SAMPLE_G_L
 SAMPLE_G_LB
@@ -146,12 +145,18 @@ sampleFunc(State &state,
 
    auto resourceID = inst.word0.RESOURCE_ID();
    auto samplerID = inst.word2.SAMPLER_ID();
+   auto lodBias = inst.word1.LOD_BIAS();
 
    auto samplerDim = state.shader->samplerDim[samplerID];
-   auto samplerUsage = registerSamplerID(state, samplerID, isShadowOp);
+   // Use resourceID to set the Usage.Usage array size equalls to MaxTextures
+   auto samplerUsage = registerSamplerID(state, resourceID, isShadowOp);
 
-   if (resourceID != samplerID) {
-      throw translate_exception("Unsupported sample with RESOURCE_ID != SAMPLER_ID");
+   // The statement 'resourceID == samplerID' is true when the texture number is below 16.
+   // However, while sampler ID is limited to 16 max,max texture number allowed is 18. 
+   // So when use texture at index 16 and texture at index 17,the sampler id will be 0 and 1.
+   // When compile shader, the compiler will warn about this sampler overlap.
+   if (resourceID%16 != samplerID) {
+      throw translate_exception("Unsupported sample with RESOURCE_ID%16 != SAMPLER_ID");
    }
 
    auto dst = getExportRegister(inst.word1.DST_GPR(), inst.word1.DST_REL());
@@ -182,8 +187,11 @@ sampleFunc(State &state,
          decaf_check(func.size());
          state.out << func;
       }
-
-      state.out << "(sampler_" << samplerID << ", ";
+	  
+	  // Here we should not use samplerID. Because this function is used to output glsl statement
+	  // like 'texTmp = texture(sampler_16,....' to sample designated texture. The designated texture's id
+	  // should be resouceID, not samplerID. Else when use texture at index 16,the designated texture's name will be wrong.
+      state.out << "(sampler_" << resourceID << ", ";
 
       if (isShadowOp) {
          /* In r600 the .w channel holds the compare value whereas OpenGL
@@ -257,6 +265,10 @@ sampleFunc(State &state,
          }
       }
 
+	  if (extraArg == latte::SQ_SEL::SEL_BIAS)
+	  {
+		  state.out << "," << static_cast<int>(lodBias);
+	  }
       if (getSamplerIsMsaa(samplerDim)) {
          // Write the sample number if this is an MSAA sampler
          state.out << ", 0";
@@ -446,6 +458,13 @@ SAMPLE_L(State &state, const latte::ControlFlowInst &cf, const latte::TextureFet
 }
 
 static void
+SAMPLE_LB(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
+{
+	// Sample with LOD bias
+	sampleFunc(state, cf, inst, "texture", "textureOffset", false, latte::SQ_SEL::SEL_BIAS);
+}
+
+static void
 SAMPLE_LZ(State &state, const latte::ControlFlowInst &cf, const latte::TextureFetchInst &inst)
 {
    // Sample with LOD Zero
@@ -470,6 +489,7 @@ registerTexFunctions()
    registerInstruction(SQ_TEX_INST_SAMPLE, SAMPLE);
    registerInstruction(SQ_TEX_INST_SAMPLE_C, SAMPLE_C);
    registerInstruction(SQ_TEX_INST_SAMPLE_L, SAMPLE_L);
+   registerInstruction(SQ_TEX_INST_SAMPLE_LB, SAMPLE_LB);
    registerInstruction(SQ_TEX_INST_SAMPLE_LZ, SAMPLE_LZ);
    registerInstruction(SQ_TEX_INST_LD, LD);
 }

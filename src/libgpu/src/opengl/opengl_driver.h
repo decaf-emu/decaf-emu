@@ -96,7 +96,7 @@ struct PixelShader : public Shader
    gl::GLuint uniformRegisters = 0;
    gl::GLuint uniformAlphaRef = 0;
    latte::SX_ALPHA_TEST_CONTROL sx_alpha_test_control;
-   std::array<glsl2::SamplerUsage, latte::MaxSamplers> samplerUsage;
+   std::array<glsl2::SamplerUsage, latte::MaxTextures> samplerUsage;
    std::array<bool, 16> usedUniformBlocks;
    uint32_t lastUniformUpdate = 0;
    std::string code;
