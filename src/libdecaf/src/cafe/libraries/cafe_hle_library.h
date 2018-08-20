@@ -213,6 +213,12 @@ public:
       return nullptr;
    }
 
+   const auto &
+   getSymbolMap() const
+   {
+      return mSymbolMap;
+   }
+
 protected:
    virtual void
    registerSymbols() = 0;

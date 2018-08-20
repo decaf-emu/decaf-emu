@@ -67,13 +67,19 @@
 #include "vpad/vpad.h"
 #include "zlib125/zlib125.h"
 
+#include "decaf_config.h"
+
 #include <array>
+#include <regex>
 
 namespace cafe::hle
 {
 
 static std::array<Library *, static_cast<size_t>(LibraryId::Max)>
 sLibraries;
+
+static void
+applyTraceFilters();
 
 static void
 registerLibrary(Library *library)
@@ -152,6 +158,7 @@ initialiseLibraries()
    registerLibrary(new vpadbase::Library { });
    registerLibrary(new vpad::Library { });
    registerLibrary(new zlib125::Library { });
+   applyTraceFilters();
 }
 
 Library *
@@ -181,6 +188,70 @@ relocateLibrary(std::string_view name,
    auto library = getLibrary(libraryName);
    if (library) {
       library->relocate(textBaseAddress, dataBaseAddress);
+   }
+}
+
+static void
+applyTraceFilters()
+{
+   struct TraceFilter2
+   {
+      bool enable;
+      std::regex re;
+   };
+
+   std::vector<TraceFilter2> filters;
+   filters.reserve(decaf::config::log::kernel_trace_filters.size());
+
+   for (auto &filterString : decaf::config::log::kernel_trace_filters) {
+      auto &filter = filters.emplace_back();
+
+      // First character is + enable or - disable
+      if (filterString[0] == '+') {
+         filter.enable = true;
+      } else if (filterString[0] == '-') {
+         filter.enable = false;
+      } else {
+         decaf_abort(fmt::format(
+            "Invalid trace filter {}, expected to begin with + or -",
+            filterString));
+      }
+
+      try {
+         filter.re = filterString.c_str() + 1;
+      } catch (std::regex_error e) {
+         decaf_abort(fmt::format(
+            "Invalid trace filter {}, regex error {}",
+             filterString, e.what()));
+      }
+   }
+
+   auto buffer = std::string { };
+   buffer.reserve(512);
+
+   for (auto library : sLibraries) {
+      auto libraryNameSize = library->name().size();
+      buffer.insert(0, library->name());
+
+      const auto &symbolMap = library->getSymbolMap();
+      for (auto &[symbolName, symbol] : symbolMap) {
+         if (symbol->type != LibrarySymbol::Function) {
+            continue;
+         }
+
+         auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
+
+         // Match regex against libraryName::functionName
+         buffer.resize(libraryNameSize);
+         buffer += "::";
+         buffer += funcSymbol->name;
+
+         for (auto &filter : filters) {
+            if (std::regex_match(buffer, filter.re)) {
+               funcSymbol->traceEnabled = filter.enable;
+            }
+         }
+      }
    }
 }
 
