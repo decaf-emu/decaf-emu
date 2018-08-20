@@ -16,6 +16,7 @@
 #include "cafe_loader_utils.h"
 #include "cafe/cafe_stackobject.h"
 
+#include "cafe/libraries/cafe_hle_library.h"
 #include <zlib.h>
 
 namespace cafe::loader::internal
@@ -68,11 +69,13 @@ CHECK_OFFSET(LoaderShared, 0x10, numUsedTrackCompBlocks);
 CHECK_OFFSET(LoaderShared, 0x14, usedTrackCompBlocks);
 CHECK_SIZE(LoaderShared, 0x18);
 
-static virt_ptr<LoaderShared> gpLoaderShared;
-static virt_ptr<TinyHeap> gpSharedCodeHeapTracking;
-static virt_ptr<TinyHeap> gpSharedReadHeapTracking;
-static virt_ptr<TinyHeap> sgpTrackComp;
+static virt_ptr<LoaderShared> gpLoaderShared = nullptr;
+static virt_ptr<TinyHeap> gpSharedCodeHeapTracking = nullptr;
+static virt_ptr<TinyHeap> gpSharedReadHeapTracking = nullptr;
+static virt_ptr<TinyHeap> sgpTrackComp = nullptr;
 static std::array<uint8_t, 0x1FF8> sRelocBuffer;
+static virt_ptr<void> sHleUnimplementedStubMemory = nullptr;
+static uint32_t sHleUnimplementedStubMemorySize = 0;
 
 static int32_t
 sLoadOneShared(std::string_view filename)
@@ -271,7 +274,10 @@ sLoadOneShared(std::string_view filename)
    for (auto i = 1; i < rpl->elfHeader.shnum - 2; ++i) {
       auto sectionHeader = getSectionHeader(rpl, i);
       if (sectionHeader->size && sectionHeader->type == rpl::SHT_NOBITS) {
-         auto tinyHeapError = TinyHeap_AllocAt(sgpTrackComp, virt_cast<void *>(rpl->sectionAddressBuffer[i]), sectionHeader->size);
+         auto tinyHeapError =
+            TinyHeap_AllocAt(sgpTrackComp,
+                             virt_cast<void *>(rpl->sectionAddressBuffer[i]),
+                             sectionHeader->size);
          if (tinyHeapError != TinyHeapError::OK) {
             Loader_Panic(0x13000B, "*** Critical error in tracking shared bss.");
          }
@@ -279,7 +285,9 @@ sLoadOneShared(std::string_view filename)
    }
 
    if (rpl->compressedRelocationsBuffer) {
-      LiCacheLineCorrectFreeEx(gpSharedCodeHeapTracking, rpl->compressedRelocationsBuffer, rpl->compressedRelocationsBufferSize);
+      LiCacheLineCorrectFreeEx(gpSharedCodeHeapTracking,
+                               rpl->compressedRelocationsBuffer,
+                               rpl->compressedRelocationsBufferSize);
       rpl->compressedRelocationsBuffer = nullptr;
    }
 
@@ -305,7 +313,9 @@ LiInitSharedForAll()
    Loader_LogEntry(2, 1, 512, "LiInitSharedForAll");
 
    // Setup tracking compression block heap
-   auto tinyHeapError = TinyHeap_Alloc(gpSharedCodeHeapTracking, 0x430, -4, &outAllocPtr);
+   auto tinyHeapError = TinyHeap_Alloc(gpSharedCodeHeapTracking,
+                                       0x430, -4,
+                                       &outAllocPtr);
    if (tinyHeapError < TinyHeapError::OK) {
       Loader_Panic(0x13000C, "***Could not allocate memory for tracking compression blocks for shared data.");
    }
@@ -574,6 +584,17 @@ LiInitSharedForProcess(virt_ptr<RPL_STARTINFO> initData)
       auto error = LiInitSharedForAll();
       if (!error) {
          initData->dataAreaStart = virt_cast<virt_addr>(gpLoaderShared->dataBufferHead);
+
+         // Allocate some memory to place HLE unimplemented function call stubs
+         sHleUnimplementedStubMemorySize =
+            TinyHeap_GetLargestFree(gpSharedCodeHeapTracking) - 4;
+         TinyHeap_Alloc(gpSharedCodeHeapTracking,
+                        sHleUnimplementedStubMemorySize,
+                        4,
+                        &sHleUnimplementedStubMemory);
+
+         hle::setUnimplementedFunctionStubMemory(sHleUnimplementedStubMemory,
+                                                 sHleUnimplementedStubMemorySize);
       }
 
       Loader_LogEntry(2, 1, 1024, "LiInitSharedForProcess");

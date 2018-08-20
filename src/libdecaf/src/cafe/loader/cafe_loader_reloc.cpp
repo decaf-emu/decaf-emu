@@ -117,23 +117,22 @@ sFixupOneSymbolTable(virt_ptr<LOADED_RPL> rpl,
       auto symbolExport = LiBinSearchExport(import.exports,
                                             import.numExports,
                                             symbolName);
-      if (!symbolExport) {
-         auto id = cafe::hle::registerUnimplementedSymbol(
-                     std::string_view {
-                        import.rpl->moduleNameBuffer.getRawPointer(),
-                        import.rpl->moduleNameLen
-                     },
-                     symbolName.getRawPointer());
-         if (id == 0xFFFFFFFFu) {
+      if (symbolExport) {
+         symbol->value = symbolExport->value;
+      } else {
+         symbol->value =
+            cafe::hle::registerUnimplementedSymbol(
+               std::string_view {
+                  import.rpl->moduleNameBuffer.getRawPointer(),
+                  import.rpl->moduleNameLen
+               },
+               symbolName.getRawPointer());
+         if (!symbol->value) {
             // Must not be from a HLE library, so let's error out like normal
             Loader_ReportError("*** could not find imported symbol \"{}\".", symbolName);
             LiSetFatalError(0x18729Bu, rpl->fileType, 1, "sFixupOneSymbolTable", 551);
             return -470005;
          }
-
-         symbol->value = 0xCE000000u | id;
-      } else {
-         symbol->value = symbolExport->value;
       }
    }
 
@@ -319,19 +318,6 @@ LiCpu_RelocAdd(bool isRpx,
          tramp[1] = addi.value;
          tramp[2] = mtctr.value;
          tramp[3] = bctr.value;
-
-         if ((value & 0xCE000000) == 0xCE000000) {
-            // This is an unimplemented HLE function, so let's change the mtctr
-            // to a kc so we can handle it in the kernel call handler.
-            auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
-            kc.kcn = 0x800000 | (value & ~0xCE000000);
-            tramp[2] = kc.value;
-
-            // And the bctr to a blr so we return
-            auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
-            bclr.bo = 0b10100;
-            tramp[3] = bclr.value;
-         }
 
          symbolValue = static_cast<uint32_t>(virt_cast<virt_addr>(tramp));
          value = symbolValue + addend;

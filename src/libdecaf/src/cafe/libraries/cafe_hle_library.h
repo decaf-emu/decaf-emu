@@ -327,8 +327,12 @@ private:
    std::vector<UnimplementedLibraryFunction *> mUnimplementedFunctionExports;
 };
 
-uint32_t
+virt_addr
 registerUnimplementedSymbol(std::string_view module,
                             std::string_view name);
+
+void
+setUnimplementedFunctionStubMemory(virt_ptr<void> base,
+                                   uint32_t size);
 
 } // namespace cafe::hle

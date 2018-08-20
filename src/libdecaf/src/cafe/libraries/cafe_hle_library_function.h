@@ -16,6 +16,7 @@ struct UnimplementedLibraryFunction
    class Library *library;
    std::string name;
    uint32_t syscallID;
+   virt_addr value;
 };
 
 struct LibraryFunction : public LibrarySymbol

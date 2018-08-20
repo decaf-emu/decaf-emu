@@ -16,20 +16,127 @@ namespace rpl = cafe::loader::rpl;
 namespace cafe::hle
 {
 
-constexpr auto LibraryFunctionStubSize = 8u;
-constexpr auto CodeBaseAddress = 0x02000000u;
-constexpr auto DataBaseAddress = 0x10000000u;
-constexpr auto LoadBaseAddress = 0xC0000000u;
+static std::vector<UnimplementedLibraryFunction *> sUnimplementedKernelCalls;
+static std::vector<LibraryFunction *> sKernelCalls;
+static virt_ptr<void> sUnimplementedFunctionStubMemory = nullptr;
+static uint32_t sUnimplementedFunctionStubPos = 0u;
+static uint32_t sUnimplementedFunctionStubSize = 0u;
 
-// NULL, .text, .fexports, .data, .dexports, .rela.fexports, .rela.dexports,
-// .symtab, .strtab, .shstrtab, SHT_RPL_CRCS, SHT_RPL_FILEINFO
-constexpr auto NumSections = 12;
-
-struct Section
+virt_addr
+registerUnimplementedSymbol(std::string_view module,
+                            std::string_view name)
 {
-   rpl::SectionHeader header;
-   std::vector<uint8_t> data;
-};
+   auto libraryName = std::string { module } + ".rpl";
+   auto library = getLibrary(libraryName);
+   if (!library) {
+      return virt_addr { 0u };
+   }
+
+   // Check if we already created an unimplemented function stub.
+   if (auto unimpl = library->findUnimplementedFunctionExport(name)) {
+      return unimpl->value;
+   }
+
+   // Ensure we have sufficient stub memory
+   if (sUnimplementedFunctionStubPos + 8 >= sUnimplementedFunctionStubSize) {
+      gLog->error("Out of stub memory for unimplemented function {}::{}",
+                  module, name);
+      return virt_addr { 0u };
+   }
+
+   // Create a new unimplemented function
+   auto unimpl = new UnimplementedLibraryFunction { };
+   unimpl->library = library;
+   unimpl->syscallID = sUnimplementedKernelCalls.size();
+   unimpl->name = name;
+   unimpl->value = virt_cast<virt_addr>(sUnimplementedFunctionStubMemory)
+                   + sUnimplementedFunctionStubPos;
+
+   // Generate a kc, blr stub
+   auto stub = virt_cast<uint32_t *>(unimpl->value);
+   auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
+   kc.kcn = 0x800000 | unimpl->syscallID;
+   stub[0] = kc.value;
+
+   auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
+   bclr.bo = 0b10100;
+   stub[1] = bclr.value;
+   sUnimplementedFunctionStubPos += 8;
+
+   // Add to the list
+   library->addUnimplementedFunctionExport(unimpl);
+   sUnimplementedKernelCalls.push_back(unimpl);
+   gLog->debug("Unimplemented function import {}::{} added at 0x{:08X}",
+               module, name, unimpl->value);
+   return unimpl->value;
+}
+
+void
+setUnimplementedFunctionStubMemory(virt_ptr<void> base,
+                                   uint32_t size)
+{
+   sUnimplementedFunctionStubPos = 0;
+   sUnimplementedFunctionStubSize = size;
+   sUnimplementedFunctionStubMemory = base;
+}
+
+void
+Library::handleKernelCall(cpu::Core *state,
+                          uint32_t id)
+{
+   if (!(id & 0x800000)) {
+      sKernelCalls[id]->call(state);
+   } else {
+      auto unimpl = sUnimplementedKernelCalls[id & 0x7FFFFF];
+      gLog->warn("Unimplemented function call {}::{} from 0x{:08X}",
+                 unimpl->library ? unimpl->library->name().c_str() : "<unknown>",
+                 unimpl->name,
+                 state->lr);
+
+      // Set r3 to some nonsense value to try and catch errors from
+      // unimplemented functions sooner.
+      state->gpr[3] = 0xC5C5C5C5u;
+   }
+}
+
+void
+Library::registerKernelCalls()
+{
+   for (auto &pair : mSymbolMap) {
+      auto &symbol = pair.second;
+
+      if (symbol->type == LibrarySymbol::Function) {
+         auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
+         funcSymbol->syscallID = static_cast<uint32_t>(sKernelCalls.size());
+         sKernelCalls.push_back(funcSymbol);
+      }
+   }
+}
+
+void
+Library::relocate(virt_addr textBaseAddress,
+                  virt_addr dataBaseAddress)
+{
+   for (auto &pair : mSymbolMap) {
+      auto &symbol = pair.second;
+
+      if (symbol->type == LibrarySymbol::Function) {
+         auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
+         funcSymbol->address = textBaseAddress + funcSymbol->offset;
+
+         if (funcSymbol->hostPtr) {
+            *(funcSymbol->hostPtr) = virt_cast<void *>(funcSymbol->address);
+         }
+      } else if (symbol->type == LibrarySymbol::Data) {
+         auto dataSymbol = static_cast<LibraryData *>(symbol.get());
+         dataSymbol->address = dataBaseAddress + dataSymbol->offset;
+
+         if (dataSymbol->hostPointer) {
+            *(dataSymbol->hostPointer) = virt_cast<void *>(dataSymbol->address);
+         }
+      }
+   }
+}
 
 static uint32_t
 addSectionString(std::vector<uint8_t> &data,
@@ -173,95 +280,20 @@ generateTypeDescriptors(Library *library,
    }
 }
 
-static std::vector<UnimplementedLibraryFunction *>
-sUnimplementedKernelCalls;
+constexpr auto LibraryFunctionStubSize = 8u;
+constexpr auto CodeBaseAddress = 0x02000000u;
+constexpr auto DataBaseAddress = 0x10000000u;
+constexpr auto LoadBaseAddress = 0xC0000000u;
 
-static std::vector<LibraryFunction *>
-sKernelCalls;
+// NULL, .text, .fexports, .data, .dexports, .rela.fexports, .rela.dexports,
+// .symtab, .strtab, .shstrtab, SHT_RPL_CRCS, SHT_RPL_FILEINFO
+constexpr auto NumSections = 12;
 
-uint32_t
-registerUnimplementedSymbol(std::string_view module,
-                            std::string_view name)
+struct Section
 {
-   auto libraryName = std::string { module } + ".rpl";
-   auto library = getLibrary(libraryName);
-   if (!library) {
-      return 0xFFFFFFFFu;
-   }
-
-   if (auto unimpl = library->findUnimplementedFunctionExport(name)) {
-      return unimpl->syscallID;
-   }
-
-   auto unimpl = new UnimplementedLibraryFunction { };
-   unimpl->library = library;
-   unimpl->syscallID = sUnimplementedKernelCalls.size();
-   unimpl->name = name;
-
-   library->addUnimplementedFunctionExport(unimpl);
-   sUnimplementedKernelCalls.push_back(unimpl);
-
-   gLog->debug("Unimplemented function import {}::{}", module, name);
-   return unimpl->syscallID;
-}
-
-void
-Library::handleKernelCall(cpu::Core *state,
-                          uint32_t id)
-{
-   if (!(id & 0x800000)) {
-      sKernelCalls[id]->call(state);
-   } else {
-      auto unimpl = sUnimplementedKernelCalls[id & 0x7FFFFF];
-      gLog->warn("Unimplemented function call {}::{} from 0x{:08X}",
-                 unimpl->library ? unimpl->library->name().c_str() : "<unknown>",
-                 unimpl->name,
-                 state->lr);
-
-      // Set r3 to some nonsense value to try and catch errors from
-      // unimplemented functions sooner.
-      state->gpr[3] = 0xC5C5C5C5u;
-   }
-}
-
-void
-Library::registerKernelCalls()
-{
-   for (auto &pair : mSymbolMap) {
-      auto &symbol = pair.second;
-
-      if (symbol->type == LibrarySymbol::Function) {
-         auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
-         funcSymbol->syscallID = static_cast<uint32_t>(sKernelCalls.size());
-         sKernelCalls.push_back(funcSymbol);
-      }
-   }
-}
-
-void
-Library::relocate(virt_addr textBaseAddress,
-                  virt_addr dataBaseAddress)
-{
-   for (auto &pair : mSymbolMap) {
-      auto &symbol = pair.second;
-
-      if (symbol->type == LibrarySymbol::Function) {
-         auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
-         funcSymbol->address = textBaseAddress + funcSymbol->offset;
-
-         if (funcSymbol->hostPtr) {
-            *(funcSymbol->hostPtr) = virt_cast<void *>(funcSymbol->address);
-         }
-      } else if (symbol->type == LibrarySymbol::Data) {
-         auto dataSymbol = static_cast<LibraryData *>(symbol.get());
-         dataSymbol->address = dataBaseAddress + dataSymbol->offset;
-
-         if (dataSymbol->hostPointer) {
-            *(dataSymbol->hostPointer) = virt_cast<void *>(dataSymbol->address);
-         }
-      }
-   }
-}
+   rpl::SectionHeader header;
+   std::vector<uint8_t> data;
+};
 
 void
 Library::generateRpl()
