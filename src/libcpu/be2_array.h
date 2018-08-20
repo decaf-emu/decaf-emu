@@ -41,8 +41,7 @@ struct be2_array_item_type<T, typename std::enable_if<!is_cpu_ptr<std::remove_cv
 template <typename T>
 struct be2_array_item_type<T, typename std::enable_if<std::is_union<T>::value>::type>
 {
-   // Unfortunately we cannot wrap union
-   using type = T;
+   using type = be2_val<T>;
 };
 
 
