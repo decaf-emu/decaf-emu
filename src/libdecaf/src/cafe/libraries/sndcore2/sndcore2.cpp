@@ -16,6 +16,15 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerAiSymbols();
+   registerConfigSymbols();
+   registerDeviceSymbols();
+   registerFxSymbols();
+   registerMixSymbols();
+   registerRmtSymbols();
+   registerVoiceSymbols();
+   registerVsSymbols();
 }
 
 } // namespace cafe::sndcore2
