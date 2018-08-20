@@ -71,7 +71,7 @@ findBlockIdxContaining(virt_ptr<TinyHeap> heap,
          auto blockStart = virt_cast<uint8_t *>(block.data);
          auto blockEnd = blockStart + (block.size >= 0 ? +block.size : -block.size);
 
-         if (ptr >= blockStart && ptr <= blockEnd) {
+         if (ptr >= blockStart && ptr < blockEnd) {
             return idx;
          }
 
@@ -85,7 +85,7 @@ findBlockIdxContaining(virt_ptr<TinyHeap> heap,
          auto blockStart = virt_cast<uint8_t *>(block.data);
          auto blockEnd = blockStart + (block.size >= 0 ? +block.size : -block.size);
 
-         if (ptr >= blockStart && ptr <= blockEnd) {
+         if (ptr >= blockStart && ptr < blockEnd) {
             return idx;
          }
 
