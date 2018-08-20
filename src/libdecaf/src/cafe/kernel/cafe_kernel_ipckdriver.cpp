@@ -94,11 +94,12 @@ ipcDriverKernelSubmitRequest(virt_ptr<IPCKDriverRequest> request)
       return ios::Error::InvalidArg;
    }
 
-   ios::kernel::submitIpcRequest(phys_cast<ios::IpcRequest *>(paddr));
 
    sIpcMutex.lock();
    sPendingRequests.push_back({ request, phys_cast<ios::IpcRequest *>(paddr) });
    sIpcMutex.unlock();
+
+   ios::kernel::submitIpcRequest(phys_cast<ios::IpcRequest *>(paddr));
    return ios::Error::OK;
 }
 
