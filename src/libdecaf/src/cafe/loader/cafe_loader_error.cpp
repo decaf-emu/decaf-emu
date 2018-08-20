@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_loader_error.h"
 
 #include <cstdint>

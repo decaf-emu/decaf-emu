@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_loader_globals.h"
 
 namespace cafe::loader

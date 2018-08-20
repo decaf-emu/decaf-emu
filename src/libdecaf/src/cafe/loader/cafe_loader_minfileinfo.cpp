@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_loader_error.h"
 #include "cafe_loader_log.h"
 #include "cafe_loader_loaded_rpl.h"

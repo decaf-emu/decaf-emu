@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_loader_iop.h"
 #include "cafe_loader_zlib.h"
 #include <zlib.h>

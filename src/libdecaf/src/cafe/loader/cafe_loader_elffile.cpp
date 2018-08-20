@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_loader_elffile.h"
 #include <common/byte_swap.h>
 

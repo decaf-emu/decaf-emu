@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_loader_basics.h"
 #include "cafe_loader_bounce.h"
 #include "cafe_loader_elffile.h"
