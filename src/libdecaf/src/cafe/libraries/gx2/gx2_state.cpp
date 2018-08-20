@@ -179,6 +179,8 @@ Library::registerStateSymbols()
    RegisterFunctionExport(GX2Init);
    RegisterFunctionExport(GX2Shutdown);
    RegisterFunctionExport(GX2Flush);
+
+   RegisterDataInternal(sStateData);
 }
 
 } // namespace cafe::gx2
