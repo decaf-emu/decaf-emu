@@ -219,7 +219,7 @@ void
 initialiseExceptionContext(cpu::Core *core)
 {
    auto context = virt_addrof(sExceptionData->exceptionThreadContext[core->id]);
-   auto stack = virt_addrof(sExceptionData->exceptionStackBuffer[ExceptionThreadStackSize * 3]);
+   auto stack = virt_addrof(sExceptionData->exceptionStackBuffer[core->id * ExceptionThreadStackSize]);
 
    memset(context.getRawPointer(), 0, sizeof(Context));
    context->gpr[1] = virt_cast<virt_addr>(stack).getAddress() + ExceptionThreadStackSize - 8;
