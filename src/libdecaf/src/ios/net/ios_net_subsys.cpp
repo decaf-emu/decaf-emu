@@ -9,7 +9,7 @@
 namespace ios::net::internal
 {
 
-constexpr auto NetHeapSize = 0x23A000u;
+constexpr auto SubsysHeapSize = 0x23A000u;
 constexpr auto InitThreadStackSize = 0x4000u;
 constexpr auto InitThreadPriority = 69u;
 
@@ -18,12 +18,14 @@ using namespace kernel;
 struct StaticSubsysData
 {
    be2_val<HeapId> heap;
-   be2_array<uint8_t, NetHeapSize> heapBuffer;
    be2_array<uint8_t, InitThreadStackSize> threadStack;
 };
 
 static phys_ptr<StaticSubsysData>
 sData;
+
+static phys_ptr<void>
+sSubsysHeapBuffer;
 
 static Error
 subsysInitThread(phys_ptr<void> /*context*/)
@@ -63,7 +65,7 @@ initSubsys()
 Error
 startSubsys()
 {
-   auto error = IOS_CreateHeap(phys_addrof(sData->heapBuffer), NetHeapSize);
+   auto error = IOS_CreateHeap(sSubsysHeapBuffer, SubsysHeapSize);
    if (error < Error::OK) {
       return error;
    }
@@ -92,6 +94,7 @@ void
 initialiseStaticSubsysData()
 {
    sData = phys_cast<StaticSubsysData *>(allocProcessStatic(sizeof(StaticSubsysData)));
+   sSubsysHeapBuffer = allocProcessLocalHeap(SubsysHeapSize);
 }
 
 } // namespace ios::net::internal
