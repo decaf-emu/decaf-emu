@@ -12,6 +12,13 @@ public:
    {
    }
 
+   // Constructor for snd_core to use
+   Library(hle::LibraryId id,
+           const char *name) :
+      hle::Library(id, name)
+   {
+   }
+
 protected:
    virtual void registerSymbols() override;
 
