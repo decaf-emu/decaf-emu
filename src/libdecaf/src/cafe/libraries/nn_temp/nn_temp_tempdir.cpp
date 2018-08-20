@@ -514,7 +514,6 @@ tempShutdownBody(bool isDriverDone)
       sTempDirData->initCount--;
    }
 
-out:
    OSUnlockMutex(virt_addrof(sTempDirData->mutex));
    TEMPLOGINFO("_TEMPShutdownBody", 754, "(EXIT)")
 }
