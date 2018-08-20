@@ -94,7 +94,6 @@ ipcDriverKernelSubmitRequest(virt_ptr<IPCKDriverRequest> request)
       return ios::Error::InvalidArg;
    }
 
-
    sIpcMutex.lock();
    sPendingRequests.push_back({ request, phys_cast<ios::IpcRequest *>(paddr) });
    sIpcMutex.unlock();
@@ -141,7 +140,7 @@ ipcDriverKernelHandleInterrupt()
    auto driver = coreinit::internal::getIPCDriver();
    auto &responses = sIpcResponses[driver->coreId];
 
-   // Copy respones to IPCDriver structure
+   // Copy responses to IPCDriver structure
    sIpcMutex.lock();
 
    while (responses.size()) {
