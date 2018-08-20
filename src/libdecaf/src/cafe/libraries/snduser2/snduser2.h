@@ -12,6 +12,13 @@ public:
    {
    }
 
+   // For snd_user.rpl to use
+   Library(hle::LibraryId id,
+           const char *name) :
+      hle::Library(id, name)
+   {
+   }
+
 protected:
    virtual void registerSymbols() override;
 
