@@ -101,6 +101,8 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
             // Boot the PPC kernel!
             cafe::kernel::start();
          }
+
+         IOS_ResourceReply(request, Error::OK);
          break;
       }
 
