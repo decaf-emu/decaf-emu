@@ -11,6 +11,20 @@ namespace cafe
 namespace detail
 {
 
+template<auto regIndex>
+inline uint32_t
+readGpr(cpu::Core *core)
+{
+   if constexpr (regIndex <= 10) {
+      return core->gpr[regIndex];
+   } else {
+      // Need to skip the backchain from the caller (8 bytes), plus the backchain we
+      //  precreate as part of our kcstub (8 bytes).  Args come after those.
+      auto addr = core->gpr[1] + 8 + 8 + 4 * static_cast<uint32_t>(regIndex - 11);
+      return *virt_cast<uint32_t *>(virt_addr { addr });
+   }
+}
+
 template<typename ArgType, RegisterType regType, auto regIndex>
 inline ArgType
 readParam(cpu::Core *core,
@@ -18,19 +32,23 @@ readParam(cpu::Core *core,
 {
    using ValueType = std::remove_cv_t<ArgType>;
    if constexpr (regType == RegisterType::Gpr32) {
+      auto value = readGpr<regIndex>(core);
+
       if constexpr (is_virt_ptr<ValueType>::value) {
-         return virt_cast<typename ArgType::value_type *>(static_cast<virt_addr>(core->gpr[regIndex]));
+         return virt_cast<typename ArgType::value_type *>(static_cast<virt_addr>(value));
       } else if constexpr (is_phys_ptr<ValueType>::value) {
-         return phys_cast<typename ArgType::value_type *>(static_cast<phys_addr>(core->gpr[regIndex]));
+         return phys_cast<typename ArgType::value_type *>(static_cast<phys_addr>(value));
       } else if constexpr (is_virt_func_ptr<ValueType>::value) {
-         return virt_func_cast<typename ArgType::function_type>(static_cast<virt_addr>(core->gpr[regIndex]));
+         return virt_func_cast<typename ArgType::function_type>(static_cast<virt_addr>(value));
       } else if constexpr (is_bitfield_type<ValueType>::value) {
-         return ArgType::get(core->gpr[regIndex]);
+         return ArgType::get(value);
       } else {
-         return static_cast<ArgType>(core->gpr[regIndex]);
+         return static_cast<ArgType>(value);
       }
    } else if constexpr (regType == RegisterType::Gpr64) {
-      return static_cast<ArgType>((static_cast<uint64_t>(core->gpr[regIndex]) << 32) | static_cast<uint64_t>(core->gpr[regIndex + 1]));
+      auto hi = static_cast<uint64_t>(readGpr<regIndex>(core)) << 32;
+      auto lo = static_cast<uint64_t>(readGpr<regIndex + 1>(core));
+      return static_cast<ArgType>(hi | lo);
    } else if constexpr (regType == RegisterType::Fpr) {
       return static_cast<ArgType>(core->fpr[regIndex].paired0);
    } else if constexpr (regType == RegisterType::VarArgs) {
