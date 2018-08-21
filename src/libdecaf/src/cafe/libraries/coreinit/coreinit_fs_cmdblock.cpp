@@ -749,7 +749,7 @@ fsCmdBlockFinishWriteCmd(virt_ptr<FSCmdBlockBody> blockBody,
 }
 
 
-static void
+void
 fsCmdBlockFinishGetMountSourceNextOpenCmd(virt_ptr<FSCmdBlockBody> blockBody,
                                           FSStatus result)
 {
@@ -776,7 +776,7 @@ fsCmdBlockFinishGetMountSourceNextOpenCmd(virt_ptr<FSCmdBlockBody> blockBody,
 }
 
 
-static void
+void
 fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
                                           FSStatus result)
 {
@@ -846,7 +846,7 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
 }
 
 
-static void
+void
 fsCmdBlockFinishGetMountSourceNextCloseCmd(virt_ptr<FSCmdBlockBody> blockBody,
                                            FSStatus result)
 {
