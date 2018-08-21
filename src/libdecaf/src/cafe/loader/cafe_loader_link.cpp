@@ -176,7 +176,7 @@ LiFindRPLByName(virt_ptr<char> name)
       resolvedName = resolvedName.substr(0, 63);
    }
 
-   std::transform(resolvedName.begin(), resolvedName.end(), buffer, std::tolower);
+   std::transform(resolvedName.begin(), resolvedName.end(), buffer, ::tolower);
    buffer[resolvedName.size()] = 0;
    resolvedName = buffer;
 
