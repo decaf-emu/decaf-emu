@@ -161,15 +161,15 @@ zlib125_deflate(virt_ptr<zlib125_stream> wstrm,
    auto result = deflate(zstrm, flush);
 
    wstrm->next_in = virt_cast<Bytef *>(cpu::translate(zstrm->next_in));
-   wstrm->avail_in = zstrm->avail_in;
-   wstrm->total_in = zstrm->total_in;
+   wstrm->avail_in = static_cast<uint32_t>(zstrm->avail_in);
+   wstrm->total_in = static_cast<uint32_t>(zstrm->total_in);
 
    wstrm->next_out = virt_cast<Bytef *>(cpu::translate(zstrm->next_out));
-   wstrm->avail_out = zstrm->avail_out;
-   wstrm->total_out = zstrm->total_out;
+   wstrm->avail_out = static_cast<uint32_t>(zstrm->avail_out);
+   wstrm->total_out = static_cast<uint32_t>(zstrm->total_out);
 
-   wstrm->data_type = zstrm->data_type;
-   wstrm->adler = zstrm->adler;
+   wstrm->data_type = static_cast<int32_t>(zstrm->data_type);
+   wstrm->adler = static_cast<uint32_t>(zstrm->adler);
 
    return result;
 }
@@ -252,15 +252,15 @@ zlib125_inflate(virt_ptr<zlib125_stream> wstrm,
    auto result = inflate(zstrm, flush);
 
    wstrm->next_in = virt_cast<Bytef *>(cpu::translate(zstrm->next_in));
-   wstrm->avail_in = zstrm->avail_in;
-   wstrm->total_in = zstrm->total_in;
+   wstrm->avail_in = static_cast<uint32_t>(zstrm->avail_in);
+   wstrm->total_in = static_cast<uint32_t>(zstrm->total_in);
 
    wstrm->next_out = virt_cast<Bytef *>(cpu::translate(zstrm->next_out));
-   wstrm->avail_out = zstrm->avail_out;
-   wstrm->total_out = zstrm->total_out;
+   wstrm->avail_out = static_cast<uint32_t>(zstrm->avail_out);
+   wstrm->total_out = static_cast<uint32_t>(zstrm->total_out);
 
-   wstrm->data_type = zstrm->data_type;
-   wstrm->adler = zstrm->adler;
+   wstrm->data_type = static_cast<int32_t>(zstrm->data_type);
+   wstrm->adler = static_cast<uint32_t>(zstrm->adler);
 
    return result;
 }
