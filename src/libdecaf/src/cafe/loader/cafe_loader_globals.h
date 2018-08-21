@@ -22,16 +22,16 @@ CHECK_SIZE(RootRPX, 0x1000);
 // 0xEFE01000 - 0xEFE02000 = Loader global variables
 struct GlobalStorage
 {
-   be2_val<kernel::UniqueProcessId> currentUpid = kernel::UniqueProcessId::Invalid;
-   be2_virt_ptr<TinyHeap> processCodeHeap = nullptr;
-   be2_val<uint32_t> processCodeHeapTrackingBlockSize = 0;
-   be2_val<uint32_t> numCodeAreaHeapBlocks = 0;
-   be2_val<uint32_t> availableCodeSize = 0;
-   be2_val<uint32_t> maxCodeSize = 0;
-   be2_val<uint32_t> maxDataSize = 0;
-   be2_val<uint32_t> sdaBase = 0;
-   be2_val<uint32_t> sda2Base = 0;
-   be2_val<BOOL> userHasControl = FALSE;
+   be2_val<kernel::UniqueProcessId> currentUpid;
+   be2_virt_ptr<TinyHeap> processCodeHeap;
+   be2_val<uint32_t> processCodeHeapTrackingBlockSize;
+   be2_val<uint32_t> numCodeAreaHeapBlocks;
+   be2_val<uint32_t> availableCodeSize;
+   be2_val<uint32_t> maxCodeSize;
+   be2_val<uint32_t> maxDataSize;
+   be2_val<uint32_t> sdaBase;
+   be2_val<uint32_t> sda2Base;
+   be2_val<BOOL> userHasControl;
    be2_virt_ptr<LOADED_RPL> loadedRpx;
    be2_virt_ptr<LOADED_RPL> firstLoadedRpl;
    be2_virt_ptr<LOADED_RPL> lastLoadedRpl;
