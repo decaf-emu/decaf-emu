@@ -1,6 +1,7 @@
 #pragma once
 #include "mem.h"
 #include "state.h"
+#include "be2_struct.h"
 
 #include <atomic>
 #include <cstdint>
@@ -51,7 +52,8 @@ invalidateInstructionCache(uint32_t address,
                            uint32_t size);
 
 void
-addJitReadOnlyRange(ppcaddr_t address, uint32_t size);
+addJitReadOnlyRange(virt_addr address,
+                    uint32_t size);
 
 void
 setCoreEntrypointHandler(EntrypointHandler handler);

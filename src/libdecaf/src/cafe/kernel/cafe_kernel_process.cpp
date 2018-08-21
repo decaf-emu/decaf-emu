@@ -9,6 +9,7 @@
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
 
 #include <array>
+#include <libcpu/cpu_config.h>
 
 namespace cafe::kernel
 {
@@ -270,6 +271,42 @@ loadGameProcess(std::string_view rpx,
       static_cast<uint32_t>(processData->ramPartitionAllocation.codeEnd - processData->ramPartitionAllocation.codeStart),
       static_cast<uint32_t>(processData->ramPartitionAllocation.availStart - processData->ramPartitionAllocation.dataStart),
       0);
+
+   // Notify jit of read only sections in the RPX
+   if (cpu::config::jit::rodata_read_only) {
+      auto rpx = cafe::loader::getGlobalStorage()->loadedRpx;
+      auto shStrSection = virt_ptr<char> { nullptr };
+      rpx->sectionHeaderBuffer;
+      if (auto shstrndx = rpx->elfHeader.shstrndx) {
+         shStrSection = virt_cast<char *>(rpx->sectionAddressBuffer[shstrndx]);
+      }
+
+      for (auto i = 0u; i < rpx->elfHeader.shnum; ++i) {
+         auto sectionHeader =
+            virt_cast<loader::rpl::SectionHeader *>(
+               virt_cast<virt_addr>(rpx->sectionHeaderBuffer) +
+               (i * rpx->elfHeader.shentsize));
+         auto sectionAddress = rpx->sectionAddressBuffer[i];
+         if (!sectionAddress  ||
+             sectionHeader->type != loader::rpl::SHT_PROGBITS) {
+            continue;
+         }
+
+         if (shStrSection && sectionHeader->name) {
+            auto name = shStrSection + sectionHeader->name;
+            if (strcmp(name.getRawPointer(), ".rodata") == 0) {
+               cpu::addJitReadOnlyRange(sectionAddress,
+                                        sectionHeader->size);
+               continue;
+            }
+         }
+
+         if (!(sectionHeader->flags & loader::rpl::SHF_WRITE)) {
+            cpu::addJitReadOnlyRange(sectionAddress,
+                                     sectionHeader->size);
+         }
+      }
+   }
 
    // Run the HLE relocation for coreinit.
    auto &startInfo = cafe::loader::getKernelIpcStorage()->startInfo;
