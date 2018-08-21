@@ -182,7 +182,6 @@ LiFindRPLByName(virt_ptr<char> name)
 
    auto globals = getGlobalStorage();
    for (auto module = globals->firstLoadedRpl; module; module = module->nextLoadedRpl) {
-      OutputDebugStringA((std::string { std::string_view { module->moduleNameBuffer.getRawPointer(), module->moduleNameLen } } + "\n").c_str());
       if (module->moduleNameLen != resolvedName.size()) {
          continue;
       }
