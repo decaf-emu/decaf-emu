@@ -402,6 +402,7 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    auto allocSize = uint32_t { 0 };
    auto largestFree = uint32_t { 0 };
    auto sectionCrcs = virt_ptr<uint32_t> { nullptr };
+   auto fileInfoCrc = uint32_t { 0 };
 
    if (fileInfo->textSize) {
       error = LiCacheLineCorrectAllocEx(codeHeapTracking,
@@ -607,7 +608,7 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    rpl->sectionAddressBuffer[rpl->elfHeader.shnum - 1] =
       virt_cast<virt_addr>(rpl->fileInfoBuffer);
 
-   auto fileInfoCrc = LiCalcCRC32(0, rpl->fileInfoBuffer, shRplFileInfo->size);
+   fileInfoCrc = LiCalcCRC32(0, rpl->fileInfoBuffer, shRplFileInfo->size);
    if (fileInfoCrc != sectionCrcs[rpl->elfHeader.shnum - 1]) {
       Loader_ReportError("***FileInfo CRC failed check.");
       LiSetFatalError(0x18729B, loadArgs->fileType, 1, "LiLoadRPLBasics", 0x433);
