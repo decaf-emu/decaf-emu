@@ -433,7 +433,7 @@ LiInitSharedForAll()
       if (((100 * compressedBlockSize) / block.size) <= 90) {
          // Stored the compressed initialisation data when compressed size < 90%
          tinyHeapError = TinyHeap_Alloc(gpSharedReadHeapTracking,
-                                        compressedBlockSize,
+                                        static_cast<int32_t>(compressedBlockSize),
                                         -4,
                                         virt_addrof(block.intialisationData));
          if (tinyHeapError != TinyHeapError::OK) {
@@ -442,7 +442,7 @@ LiInitSharedForAll()
             break;
          }
 
-         block.compressedSize = compressedBlockSize;
+         block.compressedSize = static_cast<uint32_t>(compressedBlockSize);
 
          std::memcpy(block.intialisationData.getRawPointer(),
                      compressedInitialisationData.getRawPointer(),
