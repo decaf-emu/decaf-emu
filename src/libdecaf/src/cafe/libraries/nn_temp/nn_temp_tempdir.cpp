@@ -12,20 +12,35 @@
 
 using namespace cafe::coreinit;
 
-#define TEMPLOGINFO(f, l, m, ...)                     \
-   coreinit::internal::COSInfo(                       \
-      COSReportModule::Unknown1,                      \
-      "TEMP: [INFO]:%s(%d):" m, __VA_ARGS__, f, l);
+template<typename... Args>
+void tempLogInfo(const char *file, unsigned line, const char *msg,
+                 const Args &... args)
+{
+   auto str = fmt::format(msg, args...);
+   cafe::coreinit::internal::COSInfo(
+      cafe::coreinit::COSReportModule::Unknown1,
+      "TEMP: [INFO]:%s(%d):%s", file, line, str.c_str());
+}
 
-#define TEMPLOGWARN(f, l, m, ...)                     \
-   coreinit::internal::COSWarn(                       \
-      COSReportModule::Unknown1,                      \
-      "TEMP: [WARN]:%s(%d):" m, __VA_ARGS__, f, l);
+template<typename... Args>
+void tempLogWarn(const char *file, unsigned line, const char *msg,
+                 const Args &... args)
+{
+   auto str = fmt::format(msg, args...);
+   cafe::coreinit::internal::COSInfo(
+      cafe::coreinit::COSReportModule::Unknown1,
+      "TEMP: [WARN]:%s(%d):%s", file, line, str.c_str());
+}
 
-#define TEMPLOGERR(f, l, m, ...)                      \
-   coreinit::internal::COSError(                      \
-      COSReportModule::Unknown1,                      \
-      "TEMP: [ERROR]:%s(%d):" m, __VA_ARGS__, f, l);
+template<typename... Args>
+void tempLogError(const char *file, unsigned line, const char *msg,
+                  const Args &... args)
+{
+   auto str = fmt::format(msg, args...);
+   cafe::coreinit::internal::COSInfo(
+      cafe::coreinit::COSReportModule::Unknown1,
+      "TEMP: [ERROR]:%s(%d):%s", file, line, str.c_str());
+}
 
 namespace cafe::nn::temp
 {
@@ -96,7 +111,7 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
                       make_stack_string("/vol/storage_mlc01"),
                       freeMlcSize,
                       FSErrorFlag::None);
-   TEMPLOGINFO("UpdatePreferentialDeviceInfo", 544,
+   tempLogInfo("UpdatePreferentialDeviceInfo", 544,
                "MLC freeSpaceSize={}", freeMlcSize);
 
    // TODO: Use nn::spm to find device index for USB
@@ -107,7 +122,7 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
                           FSErrorFlag::All) != FSStatus::OK) {
       *freeUsbSize = 0ull;
    }
-   TEMPLOGINFO("UpdatePreferentialDeviceInfo", 562,
+   tempLogInfo("UpdatePreferentialDeviceInfo", 562,
                "USB freeSpaceSize={}", freeUsbSize);
 
    if ((devicePreference == TEMPDevicePreference::USB
@@ -122,14 +137,14 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
       setDeviceInfo(deviceInfo, TEMPDeviceType::Invalid, 0,
                     make_stack_string(""));
 
-      TEMPLOGINFO("UpdatePreferentialDeviceInfo", 648,
+      tempLogInfo("UpdatePreferentialDeviceInfo", 648,
                   "Cannot create temp dir: ({})",  -12);
-      return static_cast<TEMPStatus>(FSStatus::StorageFull);
+      return static_cast<TEMPStatus>(TEMPStatus::StorageFull);
    }
 
-   TEMPLOGINFO("UpdatePreferentialDeviceInfo", 644,
+   tempLogInfo("UpdatePreferentialDeviceInfo", 644,
                "Preferential Device Path for temp dir: {}",
-               deviceInfo->targetPath);
+               virt_addrof(deviceInfo->targetPath));
 
    return TEMPStatus::OK;
 }
@@ -137,23 +152,23 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
 static TEMPStatus
 createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
 {
-   TEMPLOGINFO("CreateAndMountTempDir", 297,
+   tempLogInfo("CreateAndMountTempDir", 297,
                "(ENTR): dirID={}, targetPath={}",
-               deviceInfo->dirId, deviceInfo->targetPath);
+               deviceInfo->dirId, virt_addrof(deviceInfo->targetPath));
 
    auto error = static_cast<TEMPStatus>(
       FSMakeDir(virt_addrof(sTempDirData->fsClient),
                 virt_addrof(sTempDirData->fsCmdBlock),
                 virt_addrof(deviceInfo->targetPath),
                 FSErrorFlag::All));
-   TEMPLOGINFO("CreateAndMountTempDir", 305,
+   tempLogInfo("CreateAndMountTempDir", 305,
                "Make dir done at {}, returned {}",
-               deviceInfo->targetPath, error);
-   if (error == FSStatus::StorageFull) {
+               virt_addrof(deviceInfo->targetPath), error);
+   if (error == TEMPStatus::StorageFull) {
       goto out;
    }
 
-   if (error != FSStatus::Exists) {
+   if (error != TEMPStatus::Exists) {
       error = static_cast<TEMPStatus>(
          FSChangeMode(virt_addrof(sTempDirData->fsClient),
                       virt_addrof(sTempDirData->fsCmdBlock),
@@ -161,9 +176,9 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
                       0x666,
                       0x666,
                       FSErrorFlag::None));
-      TEMPLOGINFO("CreateAndMountTempDir", 316,
+      tempLogInfo("CreateAndMountTempDir", 316,
                   "Change mode done at {}, returned {}",
-                  deviceInfo->targetPath, error);
+                  virt_addrof(deviceInfo->targetPath), error);
    }
 
    if (error = TEMPGetDirGlobalPath(deviceInfo->dirId,
@@ -171,7 +186,7 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
                                     GlobalPathMaxLength)) {
       goto out;
    }
-   TEMPLOGINFO("CreateAndMountTempDir", 325,
+   tempLogInfo("CreateAndMountTempDir", 325,
                "Global Path={}", virt_addrof(sTempDirData->globalDirPath));
 
    error = static_cast<TEMPStatus>(
@@ -179,10 +194,10 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
                 virt_addrof(sTempDirData->fsCmdBlock),
                 virt_addrof(sTempDirData->globalDirPath),
                 FSErrorFlag::All));
-   TEMPLOGINFO("CreateAndMountTempDir", 333,
+   tempLogInfo("CreateAndMountTempDir", 333,
                "Make dir done at {}, returned {}",
                virt_addrof(sTempDirData->globalDirPath), error);
-   if (error == FSStatus::StorageFull) {
+   if (error == TEMPStatus::StorageFull) {
       goto out;
    }
 
@@ -191,7 +206,7 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
                               sTempDirData->dirPath.size())) {
       goto out;
    }
-   TEMPLOGINFO("CreateAndMountTempDir", 346,
+   tempLogInfo("CreateAndMountTempDir", 346,
                "Dir Path={}", virt_addrof(sTempDirData->dirPath));
 
    error = static_cast<TEMPStatus>(
@@ -200,12 +215,12 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
                   virt_addrof(sTempDirData->globalDirPath),
                   virt_addrof(sTempDirData->dirPath),
                   FSErrorFlag::None));
-   TEMPLOGINFO("CreateAndMountTempDir", 353,
+   tempLogInfo("CreateAndMountTempDir", 353,
                "Bind mount done to {}, returned {}",
                virt_addrof(sTempDirData->dirPath), error);
 
 out:
-   TEMPLOGINFO("CreateAndMountTempDir", 356,
+   tempLogInfo("CreateAndMountTempDir", 356,
                "(EXIT): return {}", error);
    return error;
 }
@@ -241,7 +256,7 @@ getDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
                     "/vol/storage_usb%02d/usr/tmp/app",
                     deviceIndex);
    } else {
-      return static_cast<TEMPStatus>(FSStatus::NotFound);
+      return static_cast<TEMPStatus>(TEMPStatus::NotFound);
    }
 
    return TEMPStatus::OK;
@@ -265,7 +280,7 @@ removeDirectoryEntry(virt_ptr<FSClient> client,
    auto error = static_cast<TEMPStatus>(
       FSOpenDir(client, block, path, handle, FSErrorFlag::All));
    if (error) {
-      TEMPLOGERR("RemoveDirectoryEntry", 264,
+      tempLogError("RemoveDirectoryEntry", 264,
                  "FSOpenDir failed with {}", error);
       return error;
    }
@@ -306,31 +321,31 @@ removeRecursiveBody(virt_ptr<FSClient> client,
    auto error = TEMPStatus::OK;
 
    if (statFlags & FSStatFlags::Quota) {
-      TEMPLOGWARN("RemoveRecursiveBody", 219,
+      tempLogWarn("RemoveRecursiveBody", 219,
                   "Quota is found inside temp directory!");
       // TODO: FSRemoveQuota
    } else if (statFlags & FSStatFlags::Directory) {
       error = removeDirectoryEntry(client, block, path, pathBufferSize);
 
       if (error == TEMPStatus::OK) {
-         TEMPLOGINFO("RemoveRecursiveBody", 242,
+         tempLogInfo("RemoveRecursiveBody", 242,
                      "Removing {}", path);
 
          error = static_cast<TEMPStatus>(
             FSRemove(client, block, path, FSErrorFlag::All));
          if (error) {
-            TEMPLOGERR("RemoveRecursiveBody", 236,
+            tempLogError("RemoveRecursiveBody", 236,
                        "FSRemove failed with {}", error);
          }
       }
    } else {
-      TEMPLOGINFO("RemoveRecursiveBody", 242,
+      tempLogInfo("RemoveRecursiveBody", 242,
                   "Removing {}", path);
 
       error = static_cast<TEMPStatus>(
          FSRemove(client, block, path, FSErrorFlag::All));
       if (error) {
-         TEMPLOGERR("RemoveRecursiveBody", 236,
+         tempLogError("RemoveRecursiveBody", 236,
                     "FSRemove failed with {}", error);
       }
    }
@@ -348,7 +363,7 @@ removeRecursive(virt_ptr<FSClient> client,
    auto error = static_cast<TEMPStatus>(
       FSGetStat(client, block, path, stat, FSErrorFlag::All));
    if (error) {
-      TEMPLOGERR("RemoveRecursive", 202,
+      tempLogError("RemoveRecursive", 202,
                  "FSGetStat failed with {}", error);
       return error;
    }
@@ -362,7 +377,7 @@ teardownTempDir(TEMPDirId id)
    TEMPGetDirPath(id,
                   virt_addrof(sTempDirData->globalDirPath),
                   GlobalPathMaxLength);
-   TEMPLOGINFO("TeardownTempDir", 365,
+   tempLogInfo("TeardownTempDir", 365,
                "(ENTR): path={}", virt_addrof(sTempDirData->globalDirPath));
 
    auto error =
@@ -372,19 +387,19 @@ teardownTempDir(TEMPDirId id)
          virt_addrof(sTempDirData->globalDirPath),
          sTempDirData->globalDirPath.size() - 1);
    if (error) {
-      TEMPLOGERR("TeardownTempDir", 373,
+      tempLogError("TeardownTempDir", 373,
                  "Failed to clean up temp dir, status={}", error);
    } else {
       FSBindUnmount(virt_addrof(sTempDirData->fsClient),
                     virt_addrof(sTempDirData->fsCmdBlock),
                     virt_addrof(sTempDirData->globalDirPath),
                     FSErrorFlag::None);
-      TEMPLOGINFO("TeardownTempDir", 379,
+      tempLogInfo("TeardownTempDir", 379,
                   "TEMP: [INFO]:%s(%d):Bind unmount done at {}",
                   virt_addrof(sTempDirData->globalDirPath));
    }
 
-   TEMPLOGINFO("TeardownTempDir", 382, "(EXIT): return {}", error);
+   tempLogInfo("TeardownTempDir", 382, "(EXIT): return {}", error);
    return error;
 }
 
@@ -430,7 +445,7 @@ forceRemoveTempDir(virt_ptr<const char> rootPath)
                      GlobalPathMaxLength,
                      "%s/%08x",
                      rootPath.getRawPointer(),
-                     OSGetUPID()) >= GlobalPathMaxLength) {
+                     static_cast<uint32_t>(OSGetUPID())) >= GlobalPathMaxLength) {
       coreinit::internal::OSPanic(
          "temp.cpp", 442,
          fmt::format("The specified path is too long: {}",
@@ -476,7 +491,7 @@ forceRemoveTempDir(virt_ptr<const char> rootPath)
                                      virt_addrof(sTempDirData->globalDirPath),
                                      sTempDirData->globalDirPath.size() - 1);
    if (error) {
-      TEMPLOGERR("ForceRemoveTempDir", 478,
+      tempLogError("ForceRemoveTempDir", 478,
                  "Failed to clean up temp dir, status={}", error);
    }
 
@@ -486,36 +501,40 @@ forceRemoveTempDir(virt_ptr<const char> rootPath)
 static void
 tempShutdownBody(bool isDriverDone)
 {
-   TEMPLOGINFO("_TEMPShutdownBody", 695, "(ENTRY)")
+   tempLogInfo("_TEMPShutdownBody", 695, "(ENTRY)");
    OSLockMutex(virt_addrof(sTempDirData->mutex));
 
    if (sTempDirData->initCount <= 0) {
       if (!isDriverDone) {
-         TEMPLOGWARN("_TEMPShutdownBody", 749, "Library is not initialized.");
+         tempLogWarn("_TEMPShutdownBody", 749,
+                     "Library is not initialized.");
       }
    } else if (sTempDirData->initCount == 1) {
       auto error =
          forceRemoveTempDir(make_stack_string("/vol/storage_mlc01/usr/tmp/app"));
-      if (error && error != FSStatus::NotFound) {
-         TEMPLOGERR("_TEMPShutdownBody", 708, "Failed to delete temp dir in MLC.");
+      if (error && error != TEMPStatus::NotFound) {
+         tempLogError("_TEMPShutdownBody", 708,
+                    "Failed to delete temp dir in MLC.");
       }
 
       // TODO: Use nn::spm to find device index for USB
       error =
          forceRemoveTempDir(make_stack_string("/vol/storage_usb01/usr/tmp/app"));
-      if (error && error != FSStatus::NotFound) {
-         TEMPLOGERR("_TEMPShutdownBody", 729, "Failed to delete temp dir in USB.");
+      if (error && error != TEMPStatus::NotFound) {
+         tempLogError("_TEMPShutdownBody", 729,
+                    "Failed to delete temp dir in USB.");
       }
 
       FSDelClient(virt_addrof(sTempDirData->fsClient), FSErrorFlag::None);
       sTempDirData->initCount = 0;
-      TEMPLOGINFO("_TEMPShutdownBody", 737, "Deleted client");
+      tempLogInfo("_TEMPShutdownBody", 737,
+                  "Deleted client");
    } else {
       sTempDirData->initCount--;
    }
 
    OSUnlockMutex(virt_addrof(sTempDirData->mutex));
-   TEMPLOGINFO("_TEMPShutdownBody", 754, "(EXIT)")
+   tempLogInfo("_TEMPShutdownBody", 754, "(EXIT)");
 }
 
 } // namespace internal
@@ -523,8 +542,7 @@ tempShutdownBody(bool isDriverDone)
 TEMPStatus
 TEMPInit()
 {
-   TEMPLOGINFO("TEMPInit", 668, "(ENTR)");
-
+   tempLogInfo("TEMPInit", 668, "(ENTR)");
    OSLockMutex(virt_addrof(sTempDirData->mutex));
 
    if (!sTempDirData->initCount) {
@@ -532,13 +550,12 @@ TEMPInit()
       FSAddClient(virt_addrof(sTempDirData->fsClient), FSErrorFlag::None);
       FSInitCmdBlock(virt_addrof(sTempDirData->fsCmdBlock));
    } else {
-      TEMPLOGINFO("TEMPInit", 661, "Library is already initialized.");
+      tempLogInfo("TEMPInit", 661, "Library is already initialized.");
    }
 
    sTempDirData->initCount++;
    OSUnlockMutex(virt_addrof(sTempDirData->mutex));
-
-   TEMPLOGINFO("TEMPInit", 668, "(EXIT): return {}", 0);
+   tempLogInfo("TEMPInit", 668, "(EXIT): return {}", 0);
    return TEMPStatus::OK;
 }
 
@@ -556,7 +573,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
    StackObject<TEMPDeviceInfo> deviceInfo;
    auto error = TEMPStatus::OK;
 
-   TEMPLOGINFO("TEMPCreateAndInitTempDir", 779,
+   tempLogInfo("TEMPCreateAndInitTempDir", 779,
                "(ENTR): maxSize={}, pref={}", maxSize, devicePreference);
    OSLockMutex(virt_addrof(sTempDirData->mutex));
 
@@ -566,7 +583,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
    }
 
    if (!outDirId) {
-      TEMPLOGERR("TEMPCreateAndInitTempDir", 793,
+      tempLogError("TEMPCreateAndInitTempDir", 793,
                  "pDirID was NULL.");
       error = TEMPStatus::InvalidParam;
       goto out;
@@ -574,7 +591,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
 
    if (devicePreference != TEMPDevicePreference::LargestFreeSpace &&
        devicePreference != TEMPDevicePreference::USB) {
-      TEMPLOGERR("TEMPCreateAndInitTempDir", 800,
+      tempLogError("TEMPCreateAndInitTempDir", 800,
                  "Invalid value was specified to pref.");
       error = TEMPStatus::InvalidParam;
       goto out;
@@ -596,7 +613,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
 
 out:
    OSUnlockMutex(virt_addrof(sTempDirData->mutex));
-   TEMPLOGINFO("TEMPCreateAndInitTempDir", 826,
+   tempLogInfo("TEMPCreateAndInitTempDir", 826,
                "(EXIT): return {}", error);
    return error;
 }
@@ -613,13 +630,13 @@ TEMPGetDirPath(TEMPDirId dirId,
    }
 
    if (!pathBuffer) {
-      TEMPLOGERR("TEMPGetDirPath", 865,
+      tempLogError("TEMPGetDirPath", 865,
                  "path was NULL");
       return TEMPStatus::InvalidParam;
    }
 
    if (pathBufferSize < DirPathMaxLength) {
-      TEMPLOGERR("TEMPGetDirPath", 870,
+      tempLogError("TEMPGetDirPath", 870,
                  "pathLen(={}) was too short. Must be equal or bigger than TEMP_DIR_PATH_LENGTH_MAX(={})",
                  pathBufferSize, DirPathMaxLength);
       return TEMPStatus::InvalidParam;
@@ -627,9 +644,9 @@ TEMPGetDirPath(TEMPDirId dirId,
 
    if (std::snprintf(pathBuffer.getRawPointer(),
                      pathBufferSize,
-                     "/vol/temp/%016llx",
+                     "/vol/temp/%016" PRIu64 "x",
                      dirId) >= DirPathMaxLength) {
-      TEMPLOGERR("TEMPGetDirPath", 881,
+      tempLogError("TEMPGetDirPath", 881,
                  "Failed to generate path");
       return TEMPStatus::FatalError;
    }
@@ -645,17 +662,17 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
    StackObject<TEMPDeviceInfo> deviceInfo;
 
    if (!internal::checkIsInitialised()) {
-      return static_cast<TEMPStatus>(FSStatus::FatalError);
+      return static_cast<TEMPStatus>(TEMPStatus::FatalError);
    }
 
    if (!pathBuffer) {
-      TEMPLOGERR("TEMPGetDirGlobalPath", 898,
+      tempLogError("TEMPGetDirGlobalPath", 898,
                  "path was NULL");
       return TEMPStatus::InvalidParam;
    }
 
    if (pathBufferSize < GlobalPathMaxLength) {
-      TEMPLOGERR("TEMPGetDirGlobalPath", 903,
+      tempLogError("TEMPGetDirGlobalPath", 903,
                  "pathLen(={}) was too short. Must be equal or bigger than TEMP_DIR_PATH_LENGTH_MAX(={})",
                  pathBufferSize, DirPathMaxLength);
       return TEMPStatus::InvalidParam;
@@ -670,7 +687,7 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
                      "%s/%08x",
                      virt_addrof(deviceInfo->targetPath).getRawPointer(),
                      static_cast<uint32_t>(deviceInfo->dirId & 0xFFFFFFFF)) >= GlobalPathMaxLength) {
-      TEMPLOGERR("TEMPGetDirGlobalPath", 922,
+      tempLogError("TEMPGetDirGlobalPath", 922,
                  "Failed to generate path");
       return TEMPStatus::FatalError;
    }
@@ -681,7 +698,7 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
 TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id)
 {
-   TEMPLOGINFO("TEMPShutdownTempDir", 834,
+   tempLogInfo("TEMPShutdownTempDir", 834,
                "(ENTR): dirID={}", id);
 
    OSLockMutex(virt_addrof(sTempDirData->mutex));
@@ -691,13 +708,13 @@ TEMPShutdownTempDir(TEMPDirId id)
    }
 
    auto error = internal::teardownTempDir(id);
-   if (error && error != FSStatus::NotFound) {
-      TEMPLOGERR("TEMPShutdownTempDir", 848,
+   if (error && error != TEMPStatus::NotFound) {
+      tempLogError("TEMPShutdownTempDir", 848,
                  "Failed to delete temp dir ({}).", id);
    }
 
    OSUnlockMutex(virt_addrof(sTempDirData->mutex));
-   TEMPLOGINFO("TEMPShutdownTempDir", 853,
+   tempLogInfo("TEMPShutdownTempDir", 853,
                "(EXIT): return {}", error);
    return error;
 }
