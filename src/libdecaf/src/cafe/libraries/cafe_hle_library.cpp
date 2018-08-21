@@ -47,7 +47,7 @@ registerUnimplementedSymbol(std::string_view module,
    // Create a new unimplemented function
    auto unimpl = new UnimplementedLibraryFunction { };
    unimpl->library = library;
-   unimpl->syscallID = sUnimplementedKernelCalls.size();
+   unimpl->syscallID = static_cast<uint32_t>(sUnimplementedKernelCalls.size());
    unimpl->name = name;
    unimpl->value = virt_cast<virt_addr>(sUnimplementedFunctionStubMemory)
                    + sUnimplementedFunctionStubPos;
