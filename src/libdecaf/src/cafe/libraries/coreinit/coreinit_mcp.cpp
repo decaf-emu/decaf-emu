@@ -24,16 +24,16 @@ static constexpr uint32_t LargeMessageSize = 0x1000;
 
 struct StaticMcpData
 {
-   be2_val<BOOL> initialised = FALSE;
+   be2_val<BOOL> initialised;
 
-   be2_virt_ptr<IPCBufPool> smallMessagePool = nullptr;
-   be2_virt_ptr<IPCBufPool> largeMessagePool = nullptr;
+   be2_virt_ptr<IPCBufPool> smallMessagePool;
+   be2_virt_ptr<IPCBufPool> largeMessagePool;
 
    be2_array<uint8_t, SmallMessageCount * SmallMessageSize> smallMessageBuffer;
    be2_array<uint8_t, LargeMessageCount * LargeMessageSize> largeMessageBuffer;
 
-   be2_val<uint32_t> smallMessageCount = 0;
-   be2_val<uint32_t> largeMessageCount = 0;
+   be2_val<uint32_t> smallMessageCount;
+   be2_val<uint32_t> largeMessageCount;
 };
 
 
