@@ -329,7 +329,7 @@ LiSetupOneAllocSection(kernel::UniqueProcessId upid,
 
    if (!unk_a9 && sectionHeader->type == rpl::SHT_NOBITS && unk_a5) {
       auto userHasControl =
-         (upid == kernel::UniqueProcessId::Invalid) ? true : globals->userHasControl;
+         (upid == kernel::UniqueProcessId::Invalid) ? true : !!globals->userHasControl;
       LiClearUserBss(userHasControl, upid, virt_cast<void *>(sectionAddress), sectionHeader->size);
    } else {
       auto bytesAvailable = uint32_t { 0 };
