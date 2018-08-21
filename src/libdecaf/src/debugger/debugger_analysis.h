@@ -34,7 +34,6 @@ struct InstrInfo
 
 FuncData* getFunction(uint32_t address);
 InstrInfo get(uint32_t address);
-void markAsFunction(uint32_t address);
 void toggleAsFunction(uint32_t address);
 void analyse(uint32_t start, uint32_t end);
 
