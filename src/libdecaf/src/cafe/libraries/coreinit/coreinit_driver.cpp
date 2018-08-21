@@ -12,6 +12,7 @@
 #include "cafe/cafe_stackobject.h"
 
 #include <common/decaf_assert.h>
+#include <common/strutils.h>
 #include <libcpu/cpu.h>
 
 namespace cafe::coreinit
@@ -236,7 +237,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       auto otherName = cafe::invoke(cpu::this_core::state(),
                                     other->interfaceFunctions.getName,
                                     other->userDriverId);
-      if (!stricmp(otherName.getRawPointer(), name.getRawPointer())) {
+      if (iequals(otherName.getRawPointer(), name.getRawPointer())) {
          error = OSDriver_Error::AlreadyRegistered;
          OSUninterruptibleSpinLock_Release(virt_addrof(sDriverData->lock));
          goto error;
