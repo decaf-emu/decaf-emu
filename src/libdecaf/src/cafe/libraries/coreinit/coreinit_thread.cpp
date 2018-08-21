@@ -30,9 +30,6 @@
 namespace cafe::coreinit
 {
 
-const uint32_t
-OSThread::Tag;
-
 static uint16_t
 sThreadId = 1;
 

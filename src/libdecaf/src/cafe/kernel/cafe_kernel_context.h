@@ -12,7 +12,7 @@ struct HostContext;
 
 struct Context
 {
-   static const uint64_t Tag = 0x4F53436F6E747874ull;
+   static constexpr uint64_t Tag = 0x4F53436F6E747874ull;
 
    //! Should always be set to the value OSContext::Tag.
    be2_val<uint64_t> tag;

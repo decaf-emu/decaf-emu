@@ -109,7 +109,7 @@ CHECK_SIZE(OSTLSSection, 0x08);
 
 struct OSThread
 {
-   static const uint32_t Tag = 0x74487244;
+   static constexpr uint32_t Tag = 0x74487244;
 
    //! Kernel thread context
    be2_struct<OSContext> context;

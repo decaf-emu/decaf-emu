@@ -63,7 +63,7 @@ CHECK_SIZE(OSAlarmLink, 0x08);
 
 struct OSAlarm
 {
-   static const uint32_t Tag = 0x614C724D;
+   static constexpr uint32_t Tag = 0x614C724D;
 
    //! Should always be set to the value OSAlarm::Tag.
    be2_val<uint32_t> tag;

@@ -6,9 +6,6 @@
 namespace cafe::coreinit
 {
 
-constexpr uint32_t
-OSSemaphore::Tag;
-
 
 /**
  * Initialise semaphore object with count.
