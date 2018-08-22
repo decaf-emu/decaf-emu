@@ -38,11 +38,10 @@ OSAllocFromSystem(uint32_t size,
    auto ptr = MEMAllocFromExpHeapEx(sSystemHeapData->handle, size, align);
 
    if (internal::isAppDebugLevelVerbose()) {
-      internal::COSInfo(COSReportModule::Unknown2,
-              "SYSTEM_HEAP:%d,ALLOC,=\"0%08x\",-%d\n",
-              sSystemHeapData->numAllocs,
-              virt_cast<virt_addr>(ptr).getAddress(),
-              size);
+      internal::COSInfo(
+         COSReportModule::Unknown2,
+         fmt::format("SYSTEM_HEAP:{},ALLOC,=\"0x{:08x}\",-{}",
+                     sSystemHeapData->numAllocs, ptr, size));
       ++sSystemHeapData->numAllocs;
    }
 
@@ -61,11 +60,10 @@ void
 OSFreeToSystem(virt_ptr<void> ptr)
 {
    if (internal::isAppDebugLevelVerbose()) {
-      internal::COSInfo(COSReportModule::Unknown2,
-              "SYSTEM_HEAP:%d,FREE,=\"0%08x\",%d\n",
-              sSystemHeapData->numAllocs,
-              virt_cast<virt_addr>(ptr).getAddress(),
-              0);
+      internal::COSInfo(
+         COSReportModule::Unknown2,
+         fmt::format("SYSTEM_HEAP:{},FREE,=\"0x{:08x}\",{}",
+                     sSystemHeapData->numAllocs, ptr, 0));
       ++sSystemHeapData->numAllocs;
    }
 
@@ -87,10 +85,11 @@ initialiseSystemHeap(virt_ptr<void> base,
 {
    if (internal::isAppDebugLevelVerbose()) {
       COSInfo(COSReportModule::Unknown2,
-              "RPL_SYSHEAP:Event,Change,Hex Addr,Bytes,Available\n");
-      COSInfo(COSReportModule::Unknown2,
-              "RPL_SYSHEAP:SYSHEAP START,CREATE,=\"0%08x\",%d\n",
-              virt_cast<virt_addr>(base).getAddress(), size);
+              "RPL_SYSHEAP:Event,Change,Hex Addr,Bytes,Available");
+      COSInfo(
+         COSReportModule::Unknown2,
+         fmt::format("RPL_SYSHEAP:SYSHEAP START,CREATE,=\"0x{08x}\",{}",
+                     base, size));
    }
 
    sSystemHeapData->handle = MEMCreateExpHeapEx(base,

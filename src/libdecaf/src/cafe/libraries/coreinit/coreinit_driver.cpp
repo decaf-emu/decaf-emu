@@ -139,9 +139,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    if (internal::isAppDebugLevelUnknown3()) {
       internal::COSInfo(
          COSReportModule::Unknown2,
-         "RPL_SYSHEAP:DRIVER_REG,ALLOC,=\"0%08x\",-%d\n",
-         virt_cast<virt_addr>(driver),
-         sizeof(OSDriver));
+         fmt::format(
+            "RPL_SYSHEAP:DRIVER_REG,ALLOC,=\"0x{:08x}\",-{}",
+            driver, sizeof(OSDriver)));
    }
 
    if (!driver) {
@@ -164,8 +164,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    if (dynloadError != OSDynLoad_Error::OK) {
       internal::COSWarn(
          COSReportModule::Unknown1,
-         "*** OSDriver_Register - failed to acquire containing module for driver \"%s\" Name() @ 0x%08X\n",
-         name.getRawPointer(), driverInterface->getName.getAddress());
+         fmt::format(
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" Name() @ 0x{:08X}",
+            name, driverInterface->getName));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
    }
@@ -179,8 +180,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    if (dynloadError != OSDynLoad_Error::OK) {
       internal::COSWarn(
          COSReportModule::Unknown1,
-         "*** OSDriver_Register - failed to acquire containing module for driver \"%s\" AutoInit() @ 0x%08X\n",
-         name.getRawPointer(), driverInterface->onInit.getAddress());
+         fmt::format(
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoInit() @ 0x{:08X}",
+            name, driverInterface->onInit));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
    }
@@ -194,8 +196,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    if (dynloadError != OSDynLoad_Error::OK) {
       internal::COSWarn(
          COSReportModule::Unknown1,
-         "*** OSDriver_Register - failed to acquire containing module for driver \"%s\" OnAcquiredForeground() @ 0x%08X\n",
-         name.getRawPointer(), driverInterface->onAcquiredForeground.getAddress());
+         fmt::format(
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnAcquiredForeground() @ 0x{:08X}",
+            name, driverInterface->onAcquiredForeground));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
    }
@@ -209,8 +212,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    if (dynloadError != OSDynLoad_Error::OK) {
       internal::COSWarn(
          COSReportModule::Unknown1,
-         "*** OSDriver_Register - failed to acquire containing module for driver \"%s\" OnReleasedForeground() @ 0x%08X\n",
-         name.getRawPointer(), driverInterface->onReleasedForeground.getAddress());
+         fmt::format(
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnReleasedForeground() @ 0x{:08X}",
+            name, driverInterface->onReleasedForeground));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
    }
@@ -224,8 +228,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    if (dynloadError != OSDynLoad_Error::OK) {
       internal::COSWarn(
          COSReportModule::Unknown1,
-         "*** OSDriver_Register - failed to acquire containing module for driver \"%s\" AutoDone() @ 0x%08X\n",
-         name.getRawPointer(), driverInterface->onDone.getAddress());
+         fmt::format(
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoDone() @ 0x{:08X}",
+            name, driverInterface->onDone));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
    }
@@ -309,10 +314,11 @@ error:
    OSDynLoad_Release(*callerModule);
 
    if (internal::isAppDebugLevelUnknown3()) {
-      internal::COSInfo(COSReportModule::Unknown2,
-                        "RPL_SYSHEAP:DRIVER_REG, FREE, =\"0%08x\",%d\n",
-                        virt_cast<virt_addr>(driver),
-                        sizeof(OSDriver));
+      internal::COSInfo(
+         COSReportModule::Unknown2,
+         fmt::format(
+            "RPL_SYSHEAP:DRIVER_REG, FREE, =\"0x{:08x}\",{}",
+            driver, sizeof(OSDriver)));
    }
    OSFreeToSystem(driver);
    return error;
@@ -395,10 +401,11 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
    }
 
    if (internal::isAppDebugLevelUnknown3()) {
-      internal::COSInfo(COSReportModule::Unknown2,
-                        "RPL_SYSHEAP:DRIVER_REG, FREE, =\"0%08x\",%d\n",
-                        virt_cast<virt_addr>(driver),
-                        sizeof(OSDriver));
+      internal::COSInfo(
+         COSReportModule::Unknown2,
+         fmt::format(
+            "RPL_SYSHEAP:DRIVER_REG, FREE, =\"0x{:08x}\",{}\n",
+            driver, sizeof(OSDriver)));
    }
 
    // Free the driver

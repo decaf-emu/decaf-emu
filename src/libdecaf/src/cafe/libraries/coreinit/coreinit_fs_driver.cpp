@@ -77,9 +77,9 @@ initialiseFsDriver()
                         nullptr,
                         nullptr);
 
-   COSVerbose(COSReportModule::Unknown5,
-              "FS: Registered to OSDriver: result %d\n",
-              static_cast<int32_t>(driverError));
+   COSVerbose(
+      COSReportModule::Unknown5,
+      fmt::format("FS: Registered to OSDriver: result {}", driverError));
 }
 
 } // namespace internal

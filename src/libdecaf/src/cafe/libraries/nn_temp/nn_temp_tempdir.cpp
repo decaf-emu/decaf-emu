@@ -19,7 +19,7 @@ void tempLogInfo(const char *file, unsigned line, const char *msg,
    auto str = fmt::format(msg, args...);
    cafe::coreinit::internal::COSInfo(
       cafe::coreinit::COSReportModule::Unknown1,
-      "TEMP: [INFO]:%s(%d):%s", file, line, str.c_str());
+      fmt::format("TEMP: [INFO]:{}({}):{}", file, line, str.c_str()));
 }
 
 template<typename... Args>
@@ -29,7 +29,7 @@ void tempLogWarn(const char *file, unsigned line, const char *msg,
    auto str = fmt::format(msg, args...);
    cafe::coreinit::internal::COSInfo(
       cafe::coreinit::COSReportModule::Unknown1,
-      "TEMP: [WARN]:%s(%d):%s", file, line, str.c_str());
+      fmt::format("TEMP: [WARN]:{}({}):{}", file, line, str.c_str()));
 }
 
 template<typename... Args>
@@ -39,7 +39,7 @@ void tempLogError(const char *file, unsigned line, const char *msg,
    auto str = fmt::format(msg, args...);
    cafe::coreinit::internal::COSInfo(
       cafe::coreinit::COSReportModule::Unknown1,
-      "TEMP: [ERROR]:%s(%d):%s", file, line, str.c_str());
+      fmt::format("TEMP: [ERROR]:{}({}):{}", file, line, str.c_str()));
 }
 
 namespace cafe::nn::temp

@@ -1,8 +1,12 @@
 #pragma once
 #include "coreinit_enum.h"
+#include "coreinit_systeminfo.h"
+
 #include "cafe/cafe_ppc_interface_varargs.h"
+
 #include <cstdarg>
 #include <libcpu/be2_struct.h>
+#include <string_view>
 
 namespace cafe::coreinit
 {
@@ -39,28 +43,41 @@ namespace internal
 void
 COSVReport(COSReportModule module,
            COSReportLevel level,
-           const char *fmt,
-           std::va_list va);
+           const std::string_view &msg);
 
-void
+inline void
 COSError(COSReportModule module,
-         const char *fmt,
-         ...);
+         const std::string_view &msg)
+{
+   COSVReport(module, COSReportLevel::Error, msg);
+}
 
-void
+inline void
 COSWarn(COSReportModule module,
-        const char *fmt,
-        ...);
+        const std::string_view &msg)
+{
+   if (OSGetAppFlags().debugLevel() >= OSAppFlagsDebugLevel::Warn) {
+      COSVReport(module, COSReportLevel::Warn, msg);
+   }
+}
 
-void
+inline void
 COSInfo(COSReportModule module,
-        const char *fmt,
-        ...);
+        const std::string_view &msg)
+{
+   if (OSGetAppFlags().debugLevel() >= OSAppFlagsDebugLevel::Info) {
+      COSVReport(module, COSReportLevel::Info, msg);
+   }
+}
 
-void
+inline void
 COSVerbose(COSReportModule module,
-           const char *fmt,
-           ...);
+           const std::string_view &msg)
+{
+   if (OSGetAppFlags().debugLevel() >= OSAppFlagsDebugLevel::Verbose) {
+      COSVReport(module, COSReportLevel::Verbose, msg);
+   }
+}
 
 } // namespace internal
 

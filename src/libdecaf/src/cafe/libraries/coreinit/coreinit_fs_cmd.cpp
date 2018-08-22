@@ -103,34 +103,41 @@ FSBindMountAsync(virt_ptr<FSClient> client,
    }
 
    if (sourcePath[0] == '/') {
-      internal::COSError(COSReportModule::Unknown5,
-                         "FS: FSBindMount: source must be absolute path, specified path is {}",
-                         sourcePath.getRawPointer());
+      internal::COSError(
+         COSReportModule::Unknown5,
+         fmt::format(
+            "FS: FSBindMount: source must be absolute path, specified path is {}",
+            sourcePath));
       internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
       return FSStatus::FatalError;
    }
 
    if (targetPath[0] == '/') {
-      internal::COSError(COSReportModule::Unknown5,
-                         "FS: FSBindMount: target must be absolute path, specified path is {}",
-                         targetPath.getRawPointer());
+      internal::COSError(
+         COSReportModule::Unknown5,
+         fmt::format(
+            "FS: FSBindMount: target must be absolute path, specified path is {}",
+            targetPath));
       internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
       return FSStatus::FatalError;
    }
 
    if (strncmp(sourcePath.getRawPointer(), "/vol/storage_", 13)) {
-      internal::COSError(COSReportModule::Unknown5,
-                         "FS: FSBindMount: source must start with \"/vol/storage_\", specified path is {}",
-                         sourcePath.getRawPointer());
+      internal::COSError(
+         COSReportModule::Unknown5,
+         fmt::format(
+            "FS: FSBindMount: source must start with \"/vol/storage_\", specified path is {}",
+            sourcePath));
       internal::fsClientHandleFatalError(clientBody, FSAStatus::PermissionError);
       return FSStatus::FatalError;
    }
 
    if (strncmp(targetPath.getRawPointer(), "/vol/external", 13) == 0 ||
        strncmp(targetPath.getRawPointer(), "/vol/hfio", 9) == 0) {
-      internal::COSError(COSReportModule::Unknown5,
-                         "FS: FSBindMount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
-                         targetPath.getRawPointer());
+      internal::COSError(
+         COSReportModule::Unknown5,
+         fmt::format("FS: FSBindMount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
+                     targetPath));
       internal::fsClientHandleFatalError(clientBody, FSAStatus::PermissionError);
       return FSStatus::FatalError;
    }
@@ -207,18 +214,20 @@ FSBindUnmountAsync(virt_ptr<FSClient> client,
    }
 
    if (targetPath[0] == '/') {
-      internal::COSError(COSReportModule::Unknown5,
-                         "FS: FSBindUnmount: target must be absolute path, specified path is {}",
-                         targetPath.getRawPointer());
+      internal::COSError(
+         COSReportModule::Unknown5,
+         fmt::format("FS: FSBindUnmount: target must be absolute path, specified path is {}",
+                     targetPath));
       internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidPath);
       return FSStatus::FatalError;
    }
 
    if (strncmp(targetPath.getRawPointer(), "/vol/external", 13) == 0 ||
        strncmp(targetPath.getRawPointer(), "/vol/hfio", 9) == 0) {
-      internal::COSError(COSReportModule::Unknown5,
-                         "FS: FSBindUnmount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
-                         targetPath.getRawPointer());
+      internal::COSError(
+         COSReportModule::Unknown5,
+         fmt::format("FS: FSBindUnmount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
+                     targetPath));
       internal::fsClientHandleFatalError(clientBody, FSAStatus::PermissionError);
       return FSStatus::FatalError;
    }

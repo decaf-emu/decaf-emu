@@ -98,58 +98,12 @@ namespace internal
 void
 COSVReport(COSReportModule module,
            COSReportLevel level,
-           const char *fmt,
-           std::va_list va)
+           const std::string_view &msg)
 {
    StackArray<char, 128> buffer;
-   std::vsnprintf(buffer.getRawPointer(), 128, fmt, va);
+   std::strncpy(buffer.getRawPointer(), msg.data(), buffer.size());
+   buffer[127] = char { 0 };
    handleReport(module, level, buffer);
-}
-
-void
-COSError(COSReportModule module,
-         const char *fmt,
-         ...)
-{
-   std::va_list va;
-   va_start(va, fmt);
-   COSVReport(module, COSReportLevel::Error, fmt, va);
-}
-
-void
-COSWarn(COSReportModule module,
-        const char *fmt,
-        ...)
-{
-   if (OSGetAppFlags().debugLevel() >= OSAppFlagsDebugLevel::Warn) {
-      std::va_list va;
-      va_start(va, fmt);
-      COSVReport(module, COSReportLevel::Warn, fmt, va);
-   }
-}
-
-void
-COSInfo(COSReportModule module,
-        const char *fmt,
-        ...)
-{
-   if (OSGetAppFlags().debugLevel() >= OSAppFlagsDebugLevel::Info) {
-      std::va_list va;
-      va_start(va, fmt);
-      COSVReport(module, COSReportLevel::Info, fmt, va);
-   }
-}
-
-void
-COSVerbose(COSReportModule module,
-           const char *fmt,
-           ...)
-{
-   if (OSGetAppFlags().debugLevel() >= OSAppFlagsDebugLevel::Verbose) {
-      std::va_list va;
-      va_start(va, fmt);
-      COSVReport(module, COSReportLevel::Verbose, fmt, va);
-   }
 }
 
 } // namespace internal
