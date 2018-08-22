@@ -73,6 +73,34 @@ OSPanic(virt_ptr<const char> file,
 }
 
 void
+OSSendFatalError(virt_ptr<OSFatalError> error,
+                 virt_ptr<const char> functionName,
+                 uint32_t line)
+{
+   if (error) {
+      if (functionName) {
+         std::strncpy(virt_addrof(error->functionName).getRawPointer(),
+                      functionName.getRawPointer(),
+                      error->functionName.size());
+         error->functionName[error->functionName.size() - 1] = char { 0 };
+      } else {
+         error->functionName[0] = char { 0 };
+      }
+
+      error->line = line;
+   }
+
+   // TODO: Kernel call 0x6C00 systemFatal
+   gLog->error("SystemFatal: messageType:       {}", error->messageType);
+   gLog->error("SystemFatal: errorCode:         {}", error->errorCode);
+   gLog->error("SystemFatal: internalErrorCode: {}", error->internalErrorCode);
+   gLog->error("SystemFatal: processId:         {}", error->processId);
+   gLog->error("SystemFatal: functionName:      {}", virt_addrof(error->functionName));
+   gLog->error("SystemFatal: line:              {}", error->line);
+   ghs_exit(-1);
+}
+
+void
 OSConsoleWrite(virt_ptr<const char> msg,
                uint32_t size)
 {
@@ -103,6 +131,7 @@ Library::registerOsReportSymbols()
    RegisterFunctionExport(OSReportVerbose);
    RegisterFunctionExport(OSVReport);
    RegisterFunctionExport(OSPanic);
+   RegisterFunctionExport(OSSendFatalError);
    RegisterFunctionExport(OSConsoleWrite);
    RegisterFunctionExportName("__OSConsoleWrite", OSConsoleWrite);
 }
