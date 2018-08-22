@@ -26,6 +26,8 @@ using OSDynLoad_NotifyCallbackFn = virt_func_ptr<
         OSDynLoad_NotifyEvent event,
         virt_ptr<OSDynLoad_NotifyData>)>;
 
+struct OSDynLoad_LoaderHeapStatistics;
+
 struct OSDynLoad_NotifyData
 {
    be2_virt_ptr<char> name;
@@ -112,15 +114,32 @@ OSDynLoad_FindExport(OSDynLoad_ModuleHandle moduleHandle,
                      virt_ptr<virt_addr> outAddr);
 
 OSDynLoad_Error
+OSDynLoad_FindTag(OSDynLoad_ModuleHandle moduleHandle,
+                  virt_ptr<const char> tag,
+                  virt_ptr<char> buffer,
+                  virt_ptr<uint32_t> inoutBufferSize);
+
+OSDynLoad_Error
+OSDynLoad_GetLoaderHeapStatistics(virt_ptr<OSDynLoad_LoaderHeapStatistics> stats);
+
+OSDynLoad_Error
 OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
                         virt_ptr<char> buffer,
-                        uint32_t bufferSize);
+                        virt_ptr<uint32_t> inoutBufferSize);
+
+uint32_t
+OSDynLoad_GetNumberOfRPLs();
+
+uint32_t
+OSDynLoad_GetRPLInfo(uint32_t first,
+                     uint32_t count,
+                     virt_ptr<OSDynLoad_NotifyData> outRplInfos);
 
 OSDynLoad_Error
 OSDynLoad_IsModuleLoaded(virt_ptr<const char> name,
                          virt_ptr<OSDynLoad_ModuleHandle> outHandle);
 
-OSDynLoad_Error
+void
 OSDynLoad_Release(OSDynLoad_ModuleHandle moduleHandle);
 
 virt_addr

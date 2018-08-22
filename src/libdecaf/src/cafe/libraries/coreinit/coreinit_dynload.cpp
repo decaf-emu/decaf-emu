@@ -14,10 +14,22 @@
 #include "cafe/libraries/cafe_hle.h"
 #include "cafe/loader/cafe_loader_rpl.h"
 #include "cafe/kernel/cafe_kernel_loader.h"
+#include "cafe/kernel/cafe_kernel_mmu.h"
 #include "debugger/debugger.h"
 
 namespace cafe::coreinit
 {
+
+using OSDynLoad_RplEntryFn = virt_func_ptr<
+   int32_t (OSDynLoad_ModuleHandle moduleHandle,
+            OSDynLoad_EntryReason reason)>;
+
+using OSDynLoad_InitDefaultHeapFn = virt_func_ptr<
+   void(virt_ptr<MEMHeapHandle> mem1,
+        virt_ptr<MEMHeapHandle> foreground,
+        virt_ptr<MEMHeapHandle> mem2)>;
+
+constexpr auto MaxTlsModuleIndex = uint32_t { 0x7fff };
 
 struct RPL_DATA
 {
@@ -48,7 +60,7 @@ struct RPL_DATA
 
 struct StaticDynLoadData
 {
-   be2_struct<OSMutex> mutex;
+   be2_array<char, 32> loaderLockName;
 
    be2_val<OSDynLoad_AllocFn> allocFn;
    be2_val<OSDynLoad_FreeFn> freeFn;
@@ -67,10 +79,10 @@ struct StaticDynLoadData
    be2_virt_ptr<RPL_DATA> rplDataList;
 
    be2_virt_ptr<RPL_DATA> rpxData;
-   be2_virt_ptr<char> rpxName;
+   be2_virt_ptr<const char> rpxName;
    be2_val<uint32_t> rpxNameLength;
 
-   be2_virt_ptr<RPL_DATA> acquiringRpl;
+   be2_val<BOOL> inModuleEntryPoint;
    be2_virt_ptr<RPL_DATA> linkingRplList;
 
    be2_val<MEMHeapHandle> preInitMem1Heap;
@@ -82,10 +94,1911 @@ struct StaticDynLoadData
 
    be2_val<uint32_t> numModules;
    be2_virt_ptr<virt_ptr<RPL_DATA>> modules;
+
+   struct FatalErrorInfo
+   {
+      be2_val<uint32_t> msgType;
+      be2_val<uint32_t> error;
+      be2_val<uint32_t> loaderError;
+      be2_val<uint32_t> line;
+      be2_array<char, 64> funcName;
+   };
+
+   be2_struct<FatalErrorInfo> fatalError;
 };
 
 static virt_ptr<StaticDynLoadData>
 sDynLoadData = nullptr;
+
+static virt_ptr<OSMutex>
+sDynLoad_LoaderLock = nullptr;
+
+namespace internal
+{
+
+static OSDynLoad_Error
+doImports(virt_ptr<RPL_DATA> rplData);
+
+static void
+release(OSDynLoad_ModuleHandle moduleHandle,
+        virt_ptr<virt_ptr<RPL_DATA>> unloadedModuleList);
+
+/**
+ * Perform an allocation for the OSDYNLOAD_HEAP heap.
+ */
+static OSDynLoad_Error
+dynLoadHeapAlloc(const char *name,
+                 OSDynLoad_AllocFn allocFn,
+                 uint32_t size,
+                 int32_t align,
+                 virt_ptr<virt_ptr<void>> outPtr)
+{
+   auto error = cafe::invoke(cpu::this_core::state(), allocFn, size, align,
+                             outPtr);
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "OSDYNLOAD_HEAP:{},ALLOC,=\"0x:{08x}\",-{}",
+         name, *outPtr, size));
+   }
+
+   return error;
+}
+
+
+/**
+ * Perform a free for the OSDYNLOAD_HEAP heap.
+ */
+static void
+dynLoadHeapFree(const char *name,
+                OSDynLoad_FreeFn freeFn,
+                virt_ptr<void> ptr,
+                uint32_t size)
+{
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "OSDYNLOAD_HEAP:{},FREE,=\"0x:{08x}\",-{}",
+         name, ptr, size));
+   }
+
+   cafe::invoke(cpu::this_core::state(), freeFn, ptr);
+}
+
+
+/**
+ * Perform an allocation for the RPL_SYSHEAP heap.
+ */
+static virt_ptr<void>
+rplSysHeapAlloc(const char *name,
+                uint32_t size,
+                int32_t align)
+{
+   auto ptr = OSAllocFromSystem(size, align);
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "RPL_SYSHEAP:{},ALLOC,=\"0x:{08x}\",-{}",
+         name, ptr, size));
+   }
+
+   return ptr;
+}
+
+
+/**
+ * Perform a free for the RPL_SYSHEAP heap.
+ */
+static void
+rplSysHeapFree(const char *name,
+               virt_ptr<void> ptr,
+               uint32_t size)
+{
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "RPL_SYSHEAP:{},FREE,=\"0x:{08x}\",-{}",
+         name, ptr, size));
+   }
+
+   OSFreeToSystem(ptr);
+}
+
+
+/**
+ * Set dynload fatal error info.
+ */
+static void
+setFatalErrorInfo(uint32_t fatalMsgType,
+                  uint32_t fatalErr,
+                  uint32_t loaderError,
+                  uint32_t fatalLine,
+                  virt_ptr<const char> fatalFunction)
+{
+   if (sDynLoadData->fatalError.error) {
+      return;
+   }
+
+   sDynLoadData->fatalError.msgType = fatalMsgType;
+   sDynLoadData->fatalError.error = fatalErr;
+   sDynLoadData->fatalError.loaderError = loaderError;
+   sDynLoadData->fatalError.line = fatalLine;
+   sDynLoadData->fatalError.funcName = fatalFunction.getRawPointer();
+}
+
+
+/**
+ * Set dynload fatal error info with some sort of deviceLocation magic.
+ */
+static void
+setFatalErrorInfo2(uint32_t deviceLocation,
+                   uint32_t loaderError,
+                   bool a3,
+                   uint32_t fatalLine,
+                   std::string_view fatalFunction)
+{
+   if (sDynLoadData->fatalError.error) {
+      return;
+   }
+
+   switch (deviceLocation) {
+   case 0:
+   {
+      if (a3) {
+         sDynLoadData->fatalError.msgType = 2u;
+         sDynLoadData->fatalError.error = 1603203u;
+      } else {
+         sDynLoadData->fatalError.msgType = 1u;
+         sDynLoadData->fatalError.error = 1603200u;
+      }
+
+      sDynLoadData->fatalError.loaderError = loaderError;
+      sDynLoadData->fatalError.line = fatalLine;
+      sDynLoadData->fatalError.funcName = fatalFunction;
+      break;
+   }
+   case 1:
+   {
+      if (a3) {
+         sDynLoadData->fatalError.msgType = 8u;
+         sDynLoadData->fatalError.error = 1603204u;
+      } else {
+         sDynLoadData->fatalError.msgType = 1u;
+         sDynLoadData->fatalError.error = 1603201u;
+      }
+
+      sDynLoadData->fatalError.loaderError = loaderError;
+      sDynLoadData->fatalError.line = fatalLine;
+      sDynLoadData->fatalError.funcName = fatalFunction;
+      break;
+   }
+   case 2:
+   {
+      if (a3) {
+         sDynLoadData->fatalError.msgType = 5u;
+         sDynLoadData->fatalError.error = 1604205u;
+      } else {
+         sDynLoadData->fatalError.msgType = 1u;
+         sDynLoadData->fatalError.error = 1602202u;
+      }
+
+      sDynLoadData->fatalError.loaderError = loaderError;
+      sDynLoadData->fatalError.line = fatalLine;
+      sDynLoadData->fatalError.funcName = fatalFunction;
+      break;
+   }
+   default:
+      OSPanic("OSDynLoad_DynInit.c", 104, "***Unknown device location error.");
+   }
+}
+
+
+/**
+ * Clear the dynload fatal error info.
+ */
+static void
+resetFatalErrorInfo()
+{
+   std::memset(virt_addrof(sDynLoadData->fatalError).getRawPointer(),
+               0,
+               sizeof(sDynLoadData->fatalError));
+}
+
+
+/**
+ * Report a fatal dynload error to the kernel.
+ */
+static void
+reportFatalError()
+{
+   StackObject<OSFatalError> error;
+
+   if (!sDynLoadData->fatalError.error) {
+      OSPanic("OSDynLoad_DynInit.c", 122,
+              "__OSDynLoad_InitFromCoreInit() - gFatalInfo unexpectantly empty!!!.");
+   }
+
+   error->errorCode = sDynLoadData->fatalError.error;
+   error->internalErrorCode = sDynLoadData->fatalError.loaderError;
+   error->messageType = sDynLoadData->fatalError.msgType;
+   error->processId = static_cast<uint32_t>(OSGetUPID());
+   OSSendFatalError(error,
+                    virt_addrof(sDynLoadData->fatalError.funcName),
+                    sDynLoadData->fatalError.line);
+}
+
+static OSDynLoad_Error
+internalAcquire(virt_ptr<const char> name,
+                virt_ptr<virt_ptr<RPL_DATA>> outRplData,
+                virt_ptr<uint32_t> outNumEntryModules,
+                virt_ptr<virt_ptr<virt_ptr<RPL_DATA>>> outEntryModules,
+                bool doLoad);
+
+/**
+ * Run all the entry points in the given entry points array.
+ */
+static int32_t
+runEntryPoints(uint32_t numEntryModules,
+               virt_ptr<virt_ptr<RPL_DATA>> entryModules)
+{
+   auto error = 0;
+
+   for (auto i = 0u; i < numEntryModules; ++i) {
+      auto entry = virt_func_cast<OSDynLoad_RplEntryFn>(entryModules[i]->entryPoint);
+      error = cafe::invoke(cpu::this_core::state(),
+                           entry,
+                           entryModules[i]->handle,
+                           OSDynLoad_EntryReason::Loaded);
+      if (error) {
+         COSError(COSReportModule::Unknown2, fmt::format(
+            "*** ERROR: Module \"{}\" returned error code {} (0x{:08X} from its entrypoint on load.",
+            entryModules[i]->moduleName, error, error));
+         setFatalErrorInfo2(entryModules[i]->userFileInfo->titleLocation,
+                            error, false,
+                            44, "__OSDynLoad_RunEntryPoints");
+      }
+
+      entryModules[i]->entryPoint = virt_addr { 0 };
+   }
+
+   if (entryModules) {
+      rplSysHeapFree("RPL_ENTRYPOINTS_ARRAY", entryModules, 4 * numEntryModules);
+   }
+
+   return error;
+}
+
+
+/**
+ * Load modulePath.
+ */
+static OSDynLoad_Error
+internalAcquire2(virt_ptr<const char> modulePath,
+                 virt_ptr<OSDynLoad_ModuleHandle> outModuleHandle,
+                 BOOL isCheckLoaded)
+{
+   StackObject<virt_ptr<RPL_DATA>> rplData;
+   StackObject<uint32_t> numEntryModules;
+   StackObject<virt_ptr<virt_ptr<RPL_DATA>>> entryModules;
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "RPL_SYSHEAP:{} START,{}",
+         isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
+         modulePath));
+   }
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "SYSTEM_HEAP:{} START,{}",
+         isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
+         modulePath));
+   }
+
+   if (!outModuleHandle) {
+      return OSDynLoad_Error::InvalidAcquirePtr;
+   }
+
+   if (!modulePath) {
+      return OSDynLoad_Error::InvalidModuleNamePtr;
+   }
+
+   if (!modulePath[0]) {
+      return OSDynLoad_Error::InvalidModuleName;
+   }
+
+   resetFatalErrorInfo();
+
+   if (auto error = internalAcquire(modulePath, rplData, numEntryModules,
+                                    entryModules, isCheckLoaded)) {
+      if (entryModules) {
+         rplSysHeapFree("ENTRYPOINTS_ARRAY", entryModules, isCheckLoaded);
+      }
+
+      if (!isCheckLoaded) {
+         COSError(COSReportModule::Unknown2, fmt::format(
+            "Error: Could not load acquired RPL \"{}\".", modulePath));
+      }
+
+      *outModuleHandle = 0u;
+      return error;
+   }
+
+   *outModuleHandle = (*rplData)->handle;
+
+   if (!isCheckLoaded) {
+      if (runEntryPoints(*numEntryModules, *entryModules) != OSDynLoad_Error::OK) {
+         if (*outModuleHandle) {
+            OSDynLoad_Release(*outModuleHandle);
+         }
+
+         *outModuleHandle = 0u;
+         return OSDynLoad_Error::RunEntryPointError;
+      }
+   }
+
+   resetFatalErrorInfo();
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "RPL_SYSHEAP:{} END,{}",
+         isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
+         modulePath));
+   }
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "SYSTEM_HEAP:{} END,{}",
+         isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
+         modulePath));
+   }
+
+   return OSDynLoad_Error::OK;
+}
+
+
+/**
+ * Count the number of notify callbacks registered.
+ */
+static uint32_t
+getNotifyCallbackCount()
+{
+   auto count = 0u;
+   for (auto itr = sDynLoadData->notifyCallbacks; itr; itr = itr->next) {
+      ++count;
+   }
+
+   return count;
+}
+
+
+/**
+ * Unload the given module.
+ */
+static void
+unloadModule(virt_ptr<RPL_DATA> rplData,
+             virt_ptr<virt_ptr<RPL_DATA>> unloadedModuleList)
+{
+   // Run the RPL entry point with Unloaded
+   if (rplData->entryPoint) {
+      auto entry = virt_func_cast<OSDynLoad_RplEntryFn>(rplData->entryPoint);
+      cafe::invoke(cpu::this_core::state(),
+                   entry,
+                   rplData->handle,
+                   OSDynLoad_EntryReason::Unloaded);
+   }
+
+   if (rplData->notifyData) {
+      // TODO: Check for alarms, threads, interrupt callbacks, ipc callbacks
+      // which reference this module
+   }
+
+   // Release all imported modules
+   for (auto i = 0u; i < rplData->importModuleCount; ++i) {
+      if (rplData->importModules[i] &&
+          rplData->importModules[i] != virt_cast<RPL_DATA *>(virt_addr { 0xFFFFFFFFu })) {
+         release(rplData->importModules[i]->handle, unloadedModuleList);
+         rplData->importModules[i] = nullptr;
+      }
+   }
+
+   // Remove from the loaded module list
+   auto prev = virt_ptr<RPL_DATA> { nullptr };
+   for (auto itr = sDynLoadData->rplDataList; itr; itr = itr->next) {
+      if (itr == rplData) {
+         break;
+      }
+
+      prev = itr;
+   }
+
+   if (prev) {
+      prev->next = rplData->next;
+   } else {
+      sDynLoadData->rplDataList = rplData->next;
+   }
+
+   // Insert into unloaded module list
+   rplData->next = *unloadedModuleList;
+   *unloadedModuleList = rplData;
+}
+
+
+/**
+ * Free allocated memory for a loaded module.
+ */
+static void
+internalPurge(virt_ptr<RPL_DATA> rpl)
+{
+   if (!rpl->handle) {
+      internal::OSPanic("OSDynLoad_Purge.c", 23,
+                        "OSDynLoad_InternalPurge - nonzero handle on purge.");
+   }
+
+   if (rpl->loaderHandle) {
+      kernel::loaderPurge(rpl->loaderHandle);
+      rpl->loaderHandle = nullptr;
+   }
+
+   rpl->entryPoint = virt_addr { 0 };
+   rpl->codeExports = virt_addr { 0 };
+   rpl->dataExports = virt_addr { 0 };
+   rpl->numDataExports = virt_addr { 0 };
+   rpl->numCodeExports = virt_addr { 0 };
+
+   // Free dataSection
+   if (rpl->dataSection && rpl->dynLoadFreeFn) {
+      dynLoadHeapFree("RPL_DATA_AREA", rpl->dynLoadFreeFn,
+                      rpl->dataSection, rpl->dataSectionSize);
+      sDynLoadData->totalAllocatedBytes -= rpl->dataSectionSize;
+      sDynLoadData->numAllocations--;
+   }
+
+   rpl->dataSectionSize = 0u;
+
+   // Free loadSection
+   if (rpl->loadSection && rpl->dynLoadFreeFn) {
+      dynLoadHeapFree("RPL_DATA_AREA", rpl->dynLoadFreeFn,
+                      rpl->loadSection, rpl->loadSectionSize);
+      sDynLoadData->totalAllocatedBytes -= rpl->loadSectionSize;
+      sDynLoadData->numAllocations--;
+   }
+
+   rpl->loadSectionSize = 0u;
+
+   // Free notifyData
+   if (rpl->notifyData) {
+      if (rpl->notifyData->name) {
+         auto pathStringLength = 0u;
+         if (rpl->userFileInfo) {
+            pathStringLength = rpl->userFileInfo->pathStringLength;
+         }
+
+         rplSysHeapFree("RPL_NOTIFY_NAME",
+                        rpl->notifyData->name, pathStringLength);
+      }
+
+      rplSysHeapFree("RPL_NOTIFY",
+                     rpl->notifyData, sizeof(OSDynLoad_NotifyData));
+   }
+
+   rpl->notifyData = nullptr;
+
+   // Free file info
+   if (rpl->userFileInfo && rpl->dynLoadFreeFn) {
+      dynLoadHeapFree("RPL_FILE_INFO", rpl->dynLoadFreeFn,
+                      rpl->userFileInfo, rpl->userFileInfoSize);
+      sDynLoadData->totalAllocatedBytes -= rpl->userFileInfoSize;
+      sDynLoadData->numAllocations--;
+   }
+
+   rpl->userFileInfo = nullptr;
+   rpl->userFileInfoSize = 0u;
+
+   // Free section info
+   if (rpl->sectionInfo) {
+      rplSysHeapFree("RPL_SEC_INFO",
+                     rpl->sectionInfo,
+                     sizeof(loader::LOADER_SectionInfo) * rpl->sectionInfoCount);
+   }
+
+   rpl->sectionInfo = nullptr;
+   rpl->sectionInfoCount = 0u;
+
+   // Free imported modules array
+   if (rpl->importModules) {
+      rplSysHeapFree("RPL_SEC_INFO",
+                     rpl->importModules, 4 * rpl->importModuleCount);
+   }
+
+   rpl->importModules = nullptr;
+   rpl->importModuleCount = 0u;
+   rpl->dynLoadFreeFn = nullptr;
+
+   // Free module name
+   if (rpl->moduleName) {
+      rplSysHeapFree("RPL_NAME",
+                     rpl->moduleName,
+                     align_up(rpl->moduleNameLen, 4));
+   }
+
+   rpl->moduleName = nullptr;
+   rpl->moduleNameLen = 0u;
+
+   // And finally.. free the RPL data itself.
+   std::memset(rpl.getRawPointer(), 0, sizeof(RPL_DATA));
+   rplSysHeapFree("RPL_DATA", rpl, sizeof(RPL_DATA));
+}
+
+
+/**
+ * Release a loaded module.
+ */
+static void
+release(OSDynLoad_ModuleHandle moduleHandle,
+        virt_ptr<virt_ptr<RPL_DATA>> unloadedModuleList)
+{
+   StackObject<virt_ptr<void>> userData1;
+   StackObject<uint32_t> refCount;
+   StackObject<virt_ptr<RPL_DATA>> rootUnloadedModuleList;
+
+   if (moduleHandle == OSDynLoad_CurrentModuleHandle ||
+       !sDynLoadData->rplDataList) {
+      return;
+   }
+
+   // First we translate and add ref to get the userData1
+   if (auto error = OSHandle_TranslateAndAddRef(virt_addrof(sDynLoadData->handleTable),
+                                                moduleHandle,
+                                                userData1,
+                                                nullptr)) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "*** OSDynLoad_Release: RPL Module handle 0x{:08X} was not valid@0. (err=0x{:08X})",
+         moduleHandle, error));
+      return;
+   }
+
+   auto rplData = virt_cast<RPL_DATA *>(userData1);
+
+   // Release our just acquired reference
+   if (auto error = OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
+                                     moduleHandle,
+                                     refCount)) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "*** OSDynLoad_Release: RPL Module handle 0x{:08X} was not valid@1. (err=0x{:08X})",
+         moduleHandle, error));
+      return;
+   }
+
+   if (refCount == 0) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "*** OSDynLoad_Release: reference count error on OSDynLoad_ModuleHandle. ({})",
+         *refCount));
+      return;
+   }
+
+   // Now do the actual release
+   if (auto error = OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
+                                     moduleHandle,
+                                     refCount)) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "*** OSDynLoad_Release: RPL Module handle 0x{:08X} was not valid@2. (err=0x{:08X})",
+         moduleHandle, error));
+      return;
+   }
+
+   if (refCount) {
+      // Nothing to do, ref count still >0
+      return;
+   }
+
+   OSLockMutex(sDynLoad_LoaderLock);
+
+   auto isFirstUnloadModule = false;
+   if (!unloadedModuleList) {
+      unloadedModuleList = rootUnloadedModuleList;
+      *rootUnloadedModuleList = nullptr;
+      isFirstUnloadModule = true;
+   }
+
+   auto notifyCallbackCount = 0u;
+   auto notifyCallbackArray = virt_ptr<OSDynLoad_NotifyCallback> { nullptr };
+
+   if (isFirstUnloadModule) {
+      if (notifyCallbackCount = getNotifyCallbackCount()) {
+         auto allocSize = static_cast<uint32_t>(
+            notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback));
+
+         notifyCallbackArray = virt_cast<OSDynLoad_NotifyCallback *>(
+            rplSysHeapAlloc("RPL_NOTIFY_ARRAY", allocSize, 4));
+         if (notifyCallbackArray) {
+            auto notifyCallback = sDynLoadData->notifyCallbacks;
+            for (auto i = 0u; notifyCallback; ++i) {
+               std::memcpy(virt_addrof(notifyCallbackArray[i]).getRawPointer(),
+                           notifyCallback.getRawPointer(),
+                           sizeof(OSDynLoad_NotifyCallback));
+
+               notifyCallback = notifyCallback->next;
+            }
+         }
+      }
+   }
+
+   unloadModule(rplData, unloadedModuleList);
+
+   if (isFirstUnloadModule) {
+      // Call notify callbacks for all the unloaded modules and free their
+      // notify data
+      for (auto rpl = *unloadedModuleList; rpl; rpl = rpl->next) {
+         if (notifyCallbackArray) {
+            for (auto i = 0u; i < notifyCallbackCount; ++i) {
+               cafe::invoke(cpu::this_core::state(),
+                            notifyCallbackArray[i].notifyFn,
+                            rpl->handle,
+                            notifyCallbackArray->userArg1,
+                            OSDynLoad_NotifyEvent::Unloaded,
+                            rpl->notifyData);
+            }
+         }
+
+         if (rpl->notifyData->name) {
+            auto pathStringLength = 0u;
+            if (rpl->userFileInfo) {
+               pathStringLength = rpl->userFileInfo->pathStringLength;
+            }
+
+            rplSysHeapFree("RPL_NOTIFY",
+                           rpl->notifyData->name, pathStringLength);
+         }
+
+         rplSysHeapFree("RPL_NOTIFY",
+                        rpl->notifyData, sizeof(OSDynLoad_NotifyData));
+
+         rpl->notifyData = nullptr;
+      }
+
+      if (notifyCallbackArray) {
+         rplSysHeapFree("RPL_NOTIFY_ARRAY",
+                        notifyCallbackArray,
+                        notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback));
+      }
+
+      for (auto rpl = *unloadedModuleList; rpl; rpl = rpl->next) {
+         internalPurge(rpl);
+      }
+   }
+
+   OSUnlockMutex(sDynLoad_LoaderLock);
+}
+
+
+/**
+ * Binary search for an export.
+ */
+static virt_ptr<loader::rpl::Export>
+binarySearchExport(virt_ptr<loader::rpl::Export> exports,
+                   uint32_t numExports,
+                   virt_ptr<const char> name)
+{
+   auto exportNames = virt_cast<const char *>(exports) - 8;
+   auto left = 0u;
+   auto right = numExports;
+
+   while (true) {
+      auto index = left + (right - left) / 2;
+      auto exportName = exportNames.getRawPointer() + (exports[index].name & 0x7FFFFFFF);
+      auto cmpValue = strcmp(name.getRawPointer(), exportName);
+      if (cmpValue == 0) {
+         return exports + index;
+      } else if (cmpValue < 0) {
+         right = index;
+      } else {
+         left = index + 1;
+      }
+
+      if (left >= right) {
+         return nullptr;
+      }
+   }
+}
+
+
+/**
+ * Find export sections in an RPL.
+ */
+static void
+findExports(virt_ptr<RPL_DATA> rplData)
+{
+   for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
+      auto &sectionInfo = rplData->sectionInfo[i];
+      if (sectionInfo.type == loader::rpl::SHT_RPL_EXPORTS) {
+         if (sectionInfo.flags & loader::rpl::SHF_EXECINSTR) {
+            rplData->codeExports = sectionInfo.address + 8;
+            rplData->numCodeExports = *virt_cast<uint32_t *>(sectionInfo.address);
+         } else {
+            rplData->dataExports = sectionInfo.address + 8;
+            rplData->numDataExports = *virt_cast<uint32_t *>(sectionInfo.address);
+         }
+      }
+   }
+}
+
+
+/**
+ * Find TLS sections in an RPL.
+ */
+static bool
+findTlsSection(virt_ptr<RPL_DATA> rplData)
+{
+   // Find TLS section
+   if (rplData->userFileInfo->fileInfoFlags & loader::rpl::RPL_HAS_TLS) {
+      auto tlsAddressStart = virt_addr { 0xFFFFFFFFu };
+      auto tlsAddressEnd = virt_addr { 0 };
+
+      for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
+         auto &sectionInfo = rplData->sectionInfo[i];
+         if (sectionInfo.flags & loader::rpl::SHF_TLS) {
+            if (sectionInfo.address < tlsAddressStart) {
+               tlsAddressStart = sectionInfo.address;
+            }
+
+            if (sectionInfo.address + sectionInfo.size > tlsAddressEnd) {
+               tlsAddressEnd = sectionInfo.address + sectionInfo.size;
+            }
+         }
+      }
+
+      if (tlsAddressStart == virt_addr { 0xFFFFFFFFu } ||
+          tlsAddressEnd != virt_addr { 0 }) {
+         return false;
+      }
+
+      rplData->userFileInfo->tlsAddressStart = tlsAddressStart;
+      rplData->userFileInfo->tlsSectionSize =
+         static_cast<uint32_t>(tlsAddressEnd - tlsAddressStart);
+   }
+
+   return true;
+}
+
+
+/**
+ * sSetupPerm
+ */
+static int32_t
+setupPerm(virt_ptr<RPL_DATA> rplData,
+          bool updateTlsModuleIndex)
+{
+   StackObject<loader::LOADER_MinFileInfo> minFileInfo;
+   std::memset(minFileInfo.getRawPointer(), 0, sizeof(loader::LOADER_MinFileInfo));
+   minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
+   minFileInfo->version = 4u;
+   minFileInfo->outPathStringSize = virt_addrof(minFileInfo->pathStringSize);
+   minFileInfo->outNumberOfSections = virt_addrof(rplData->sectionInfoCount);
+   minFileInfo->outSizeOfFileInfo = virt_addrof(rplData->userFileInfoSize);
+
+   if (updateTlsModuleIndex) {
+      minFileInfo->inoutNextTlsModuleNumber = virt_addrof(sDynLoadData->tlsModuleIndex);
+   }
+
+   // Query to get the required buffer sizes
+   auto error = kernel::loaderQuery(rplData->loaderHandle, minFileInfo);
+   if (error) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - could not query loader about module (err=0x{:08X}).",
+         error));
+
+      if (minFileInfo->fatalErr) {
+         setFatalErrorInfo(
+            minFileInfo->fatalMsgType,
+            minFileInfo->fatalErr,
+            minFileInfo->error,
+            minFileInfo->fatalLine,
+            virt_addrof(minFileInfo->fatalFunction));
+         reportFatalError();
+      } else {
+         setFatalErrorInfo2(minFileInfo->fileLocation, error, 1, 162, "sSetupPerm");
+         reportFatalError();
+      }
+   }
+
+   // Allocate section info
+   rplData->sectionInfo = virt_cast<loader::LOADER_SectionInfo *>(
+      rplSysHeapAlloc("RPL_SEC_INFO",
+                      sizeof(loader::LOADER_SectionInfo) * rplData->sectionInfoCount,
+                      -4));
+   if (!rplData->sectionInfo) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - could not allocate memory to hold section info (err=0x{:08X}).",
+         OSDynLoad_Error::OutOfSysMemory));
+      setFatalErrorInfo2(minFileInfo->fileLocation,
+                         OSDynLoad_Error::OutOfSysMemory,
+                         0, 179, "sSetupPerm");
+      reportFatalError();
+   }
+
+   minFileInfo->outSectionInfo = rplData->sectionInfo;
+
+   // Allocate file info
+   rplData->userFileInfo = virt_cast<loader::LOADER_UserFileInfo *>(
+      rplSysHeapAlloc("RPL_FILE_INFO",
+                      rplData->userFileInfoSize, 4));
+
+   if (!rplData->userFileInfo) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - could not allocate memory to hold file info (err=0x{:08X}).",
+         OSDynLoad_Error::OutOfSysMemory));
+      setFatalErrorInfo2(minFileInfo->fileLocation,
+                         OSDynLoad_Error::OutOfSysMemory,
+                         0, 196, "sSetupPerm");
+      reportFatalError();
+   }
+
+   minFileInfo->outFileInfo = rplData->userFileInfo;
+   std::memset(rplData->userFileInfo.getRawPointer(), 0,
+               sizeof(loader::LOADER_UserFileInfo));
+
+   // Allocate path string
+   if (minFileInfo->pathStringSize) {
+      minFileInfo->pathStringBuffer = virt_cast<char *>(
+         rplSysHeapAlloc("RPL_NOTIFY_NAME",
+                         minFileInfo->pathStringSize, 4));
+      if (!minFileInfo->pathStringBuffer) {
+         if (isAppDebugLevelUnknown3()) {
+            dumpSystemHeap();
+         }
+
+         COSError(COSReportModule::Unknown2, fmt::format(
+            "__OSDynLoad_InitFromCoreInit() - could not allocate memory to hold path string (err=0x{:08X}).",
+            OSDynLoad_Error::OutOfSysMemory));
+         setFatalErrorInfo2(minFileInfo->fileLocation,
+                            OSDynLoad_Error::OutOfSysMemory,
+                            0, 218, "sSetupPerm");
+         reportFatalError();
+      }
+
+      std::memset(minFileInfo->pathStringBuffer.getRawPointer(), 0,
+                  minFileInfo->pathStringSize);
+   }
+
+   // Query to get the data
+   error = kernel::loaderQuery(rplData->loaderHandle, minFileInfo);
+   if (error) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - could not get file information (err=0x{:08X}).",
+         error));
+      setFatalErrorInfo(
+         minFileInfo->fatalMsgType,
+         minFileInfo->fatalErr,
+         minFileInfo->error,
+         minFileInfo->fatalLine,
+         virt_addrof(minFileInfo->fatalFunction));
+      reportFatalError();
+   }
+
+   findExports(rplData);
+
+   if (!findTlsSection(rplData)) {
+      COSError(COSReportModule::Unknown2,
+         "*** Can not find section for TLS data.");
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation,
+                         OSDynLoad_Error::TLSSectionNotFound, 1,
+                         277, "sSetupPerm");
+      reportFatalError();
+   }
+
+   return 0;
+}
+
+
+/**
+ * Call the initialise default heap function for an RPL.
+ *
+ * For .rpx this is __preinit_user, for coreinit it is CoreInitDefaultHeap.
+ */
+static OSDynLoad_Error
+initialiseDefaultHeap(virt_ptr<RPL_DATA> rplData,
+                      virt_ptr<const char> functionName)
+{
+   StackObject<virt_addr> funcAddr;
+   auto error = OSDynLoad_FindExport(rplData->handle, FALSE, functionName,
+                                     funcAddr);
+   if (error != OSDynLoad_Error::OK) {
+      return error;
+   }
+
+   cafe::invoke(cpu::this_core::state(),
+                virt_func_cast<OSDynLoad_InitDefaultHeapFn>(*funcAddr),
+                virt_addrof(sDynLoadData->preInitMem1Heap),
+                virt_addrof(sDynLoadData->preInitForegroundHeap),
+                virt_addrof(sDynLoadData->preInitMem2Heap));
+
+   StackObject<OSDynLoad_AllocFn> allocFn;
+   StackObject<OSDynLoad_FreeFn> freeFn;
+   error = OSDynLoad_GetAllocator(allocFn, freeFn);
+   if (error != OSDynLoad_Error::OK || !(*allocFn) || !(*freeFn)) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InternalInitDefaultHeap() - {} did not set OSDynLoad "
+         "allocator (err=0x{:08X}).",
+         functionName, error));
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation, error, 0, 363,
+                         "__OSDynLoad_InternalInitDefaultHeap");
+      reportFatalError();
+   }
+
+   error = OSDynLoad_GetTLSAllocator(allocFn, freeFn);
+   if (error != OSDynLoad_Error::OK || !(*allocFn) || !(*freeFn)) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InternalInitDefaultHeap() - {} did not set OSDynLoad "
+         "TLS allocator (err=0x{:08X}).",
+         functionName, error));
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation, error, 0, 363,
+                         "__OSDynLoad_InternalInitDefaultHeap");
+      reportFatalError();
+   }
+
+   return OSDynLoad_Error::OK;
+}
+
+
+/**
+ * Resolve a module name.
+ *
+ * Removes any directories or file extension.
+ */
+static std::pair<virt_ptr<const char>, uint32_t>
+resolveModuleName(virt_ptr<const char> name)
+{
+   auto str = std::string_view { name.getRawPointer() };
+   auto pos = str.find_last_of("\\/");
+   if (pos != std::string_view::npos) {
+      str = str.substr(pos);
+      name += pos;
+   }
+
+   pos = str.find_first_of('.');
+   if (pos != std::string_view::npos) {
+      str = str.substr(0, pos);
+   }
+
+   return { name, static_cast<uint32_t>(str.size()) };
+}
+
+
+/**
+ * __OSDynLoad_InitCommon
+ */
+static OSDynLoad_Error
+initialiseCommon()
+{
+   sDynLoadData->loaderLockName = "{ LoaderLock }";
+   OSInitMutexEx(sDynLoad_LoaderLock,
+                 virt_addrof(sDynLoadData->loaderLockName));
+   OSHandle_InitTable(virt_addrof(sDynLoadData->handleTable));
+
+   // Parse argstr into rpx name
+   std::tie(sDynLoadData->rpxName, sDynLoadData->rpxNameLength) = resolveModuleName(getArgStr());
+   if (sDynLoadData->rpxNameLength > 63u) {
+      sDynLoadData->rpxNameLength = 63u;
+   }
+
+   // TODO: OSDynLoad_AddNotifyCallback(MasterAgent_LoadNotify, 0)
+   return OSDynLoad_Error::OK;
+}
+
+
+/**
+ * __BuildKernelNotify
+ */
+static OSDynLoad_Error
+buildKernelNotify(virt_ptr<RPL_DATA> linkList,
+                  virt_ptr<loader::LOADER_LinkInfo> *outLinkInfo,
+                  virt_ptr<RPL_DATA> rpl)
+{
+   auto numModules = 0u;
+   *outLinkInfo = nullptr;
+
+   for (auto module = linkList; module; module = module->next) {
+      numModules++;
+   }
+
+   auto linkInfoSize =
+      static_cast<uint32_t>(sizeof(loader::LOADER_LinkModule) * numModules + 8);
+   auto linkInfo = virt_cast<loader::LOADER_LinkInfo *>(
+      rplSysHeapAlloc("RPL_MODULES_LINK_ARRAY", linkInfoSize, -4));
+   if (!linkInfo) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      setFatalErrorInfo2(rpl->userFileInfo->titleLocation,
+                         OSDynLoad_Error::OutOfSysMemory, 0, 101,
+                         "__BuildKernelNotify");
+      return OSDynLoad_Error::OutOfSysMemory;
+   }
+
+   std::memset(linkInfo.getRawPointer(), 0, linkInfoSize);
+   linkInfo->numModules = numModules;
+   linkInfo->size = linkInfoSize;
+
+   auto moduleIndex = 0u;
+   for (auto module = linkList; module; module = module->next) {
+      linkInfo->modules[moduleIndex].loaderHandle = module->loaderHandle;
+      linkInfo->modules[moduleIndex].entryPoint = virt_addr { 0 };
+      moduleIndex++;
+   }
+
+   *outLinkInfo = linkInfo;
+   return OSDynLoad_Error::OK;
+}
+
+
+/**
+ * __OSDynLoad_ExecuteDynamicLink
+ */
+static OSDynLoad_Error
+executeDynamicLink(virt_ptr<RPL_DATA> rpx,
+                   virt_ptr<uint32_t> outNumEntryModules,
+                   virt_ptr<virt_ptr<virt_ptr<RPL_DATA>>> outEntryModules,
+                   virt_ptr<RPL_DATA> rpl)
+{
+   StackObject<loader::LOADER_MinFileInfo> minFileInfo;
+   auto linkInfo = virt_ptr<loader::LOADER_LinkInfo> { nullptr };
+   auto error = OSDynLoad_Error::OK;
+
+   *outNumEntryModules = 0u;
+   *outEntryModules = nullptr;
+
+   std::memset(minFileInfo.getRawPointer(), 0,
+               sizeof(loader::LOADER_MinFileInfo));
+   minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
+   minFileInfo->version = 4u;
+   if (error = buildKernelNotify(sDynLoadData->linkingRplList, &linkInfo, rpl)) {
+      return error;
+   }
+
+   // Call the loader to link the rpx
+   error = static_cast<OSDynLoad_Error>(kernel::loaderLink(nullptr,
+                                                           minFileInfo,
+                                                           linkInfo,
+                                                           linkInfo->size));
+   if (error) {
+      COSError(COSReportModule::Unknown2,
+               "*** Kernel refused to link RPLs.");
+
+      if (minFileInfo->fatalErr) {
+         setFatalErrorInfo(
+            minFileInfo->fatalMsgType,
+            minFileInfo->fatalErr,
+            minFileInfo->error,
+            minFileInfo->fatalLine,
+            virt_addrof(minFileInfo->fatalFunction));
+      }
+
+      error = OSDynLoad_Error::LoaderError;
+   } else {
+      for (auto i = 0u; i < linkInfo->numModules; ++i) {
+         auto &linkModule = linkInfo->modules[i];
+         auto rplData = virt_ptr<RPL_DATA> { nullptr };
+
+         for (rplData = sDynLoadData->linkingRplList; rplData; rplData = rplData->next) {
+            if (rplData->loaderHandle == linkModule.loaderHandle) {
+               break;
+            }
+         }
+
+         if (!rplData) {
+            OSPanic("OSDynLoad_Acquire.c", 110,
+                    "*** Error in dynamic linking.  linked module not found.");
+            error = OSDynLoad_Error::ModuleNotFound;
+         } else {
+            // Allocate and fill out the notify data structure
+            rplData->entryPoint = linkModule.entryPoint;
+            rplData->notifyData = virt_cast<OSDynLoad_NotifyData *>(
+               rplSysHeapAlloc("RPL_NOTIFY",
+                               sizeof(OSDynLoad_NotifyData), 4));
+            if (!rplData->notifyData) {
+               if (isAppDebugLevelUnknown3()) {
+                  dumpSystemHeap();
+               }
+
+               setFatalErrorInfo2(rpl->userFileInfo->titleLocation,
+                                  OSDynLoad_Error::OutOfSysMemory,
+                                  0, 174, "__OSDynLoad_ExecuteDynamicLink");
+               error = OSDynLoad_Error::OutOfSysMemory;
+               continue;
+            }
+
+            auto notifyData = rplData->notifyData;
+            std::memset(notifyData.getRawPointer(), 0,
+                        sizeof(OSDynLoad_NotifyData));
+
+            notifyData->name = rplData->userFileInfo->pathString;
+            rplData->userFileInfo->pathString = nullptr;
+
+            notifyData->textAddr = linkModule.textAddr;
+            notifyData->textSize = linkModule.textSize;
+            notifyData->textOffset = linkModule.textOffset;
+
+            notifyData->dataAddr = linkModule.dataAddr;
+            notifyData->dataSize = linkModule.dataSize;
+            notifyData->dataOffset = linkModule.dataOffset;
+
+            notifyData->readAddr = linkModule.dataAddr;
+            notifyData->readSize = linkModule.dataSize;
+            notifyData->readOffset = linkModule.dataOffset;
+
+            if (!isAppDebugLevelUnknown3()) {
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "{}: TEXT 0x{:08x}:0x{:08x} DATA 0x{:08x}:0x{:08x} LOAD 0x{:08x}:0x{:08x}",
+                  rplData->moduleName,
+                  linkModule.textAddr,
+                  linkModule.textAddr + linkModule.textSize,
+                  linkModule.dataAddr,
+                  linkModule.dataAddr + linkModule.dataSize,
+                  linkModule.loadAddr,
+                  linkModule.loadAddr + linkModule.loadSize));
+            } else {
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "RPL_LAYOUT:{},TEXT,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},TEXT,end,=\"0x{:08x}\"",
+                  rplData->moduleName,
+                  linkModule.textAddr,
+                  linkModule.textAddr + linkModule.textSize));
+
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "RPL_LAYOUT:{},DATA,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},DATA,end,=\"0x{:08x}\"",
+                  rplData->moduleName,
+                  linkModule.dataAddr,
+                  linkModule.dataAddr + linkModule.dataSize));
+
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "RPL_LAYOUT:{},LOAD,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},LOAD,end,=\"0x{:08x}\"",
+                  rplData->moduleName,
+                  linkModule.loadAddr,
+                  linkModule.loadAddr + linkModule.loadSize));
+            }
+         }
+      }
+   }
+
+   if (!error) {
+      // Allocate and fill up the entry modules array
+      auto entryModules = virt_ptr<virt_ptr<RPL_DATA>> { nullptr };
+      sDynLoadData->modules =
+         virt_cast<virt_ptr<RPL_DATA> *>(
+            rplSysHeapAlloc("RPL_MODULES_ARRAY",
+                            4 * linkInfo->numModules, -4));
+
+      if (!sDynLoadData->modules) {
+         if (isAppDebugLevelUnknown3()) {
+            dumpSystemHeap();
+         }
+
+         sDynLoadData->modules = nullptr;
+         sDynLoadData->numModules = 0u;
+      } else {
+         entryModules = virt_cast<virt_ptr<RPL_DATA> *>(
+            rplSysHeapAlloc("RPL_ENTRYPOINTS_ARRAY",
+                            4 * linkInfo->numModules, -4));
+
+         if (!entryModules) {
+            if (isAppDebugLevelUnknown3()) {
+               dumpSystemHeap();
+            }
+
+            rplSysHeapFree("RPL_MODULES_ARRAY",
+                           sDynLoadData->modules,
+                           4 * linkInfo->numModules);
+            sDynLoadData->modules = nullptr;
+            sDynLoadData->numModules = 0u;
+         }
+      }
+
+      *outEntryModules = entryModules;
+
+      auto itr = sDynLoadData->linkingRplList;
+      auto prev = sDynLoadData->linkingRplList;
+      sDynLoadData->numModules = 0u;
+      while (true) {
+         if (sDynLoadData->modules) {
+            OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), itr->handle);
+            sDynLoadData->modules[sDynLoadData->numModules] = itr;
+
+            if (itr != rpx) {
+               entryModules[(*outNumEntryModules)++] = itr;
+            }
+         }
+
+         itr = itr->next;
+         sDynLoadData->numModules++;
+         if (!itr) {
+            break;
+         }
+
+         prev = itr;
+      }
+
+      if (sDynLoadData->rplDataList &&
+         (sDynLoadData->rplDataList->userFileInfo->fileInfoFlags & loader::rpl::RPL_IS_RPX)) {
+         prev->next = sDynLoadData->rplDataList->next;
+         sDynLoadData->rplDataList->next = sDynLoadData->linkingRplList;
+      } else {
+         prev->next = sDynLoadData->rplDataList;
+         sDynLoadData->rplDataList = sDynLoadData->linkingRplList;
+      }
+
+      sDynLoadData->linkingRplList = nullptr;
+   }
+
+   rplSysHeapFree("RPL_MODULES_LINK_ARRAY", linkInfo, 0);
+   return error;
+}
+
+
+/**
+ * Prepare an RPL for loading.
+ */
+static OSDynLoad_Error
+prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
+            OSDynLoad_AllocFn dynLoadAlloc,
+            virt_ptr<loader::LOADER_MinFileInfo> *ptrMinFileInfo)
+{
+   StackObject<virt_ptr<void>> allocPtr;
+   auto rplData = *ptrRplData;
+   auto minFileInfo = *ptrMinFileInfo;
+
+   // Allocate section info
+   rplData->sectionInfo = virt_cast<loader::LOADER_SectionInfo *>(
+      rplSysHeapAlloc("RPL_SEC_INFO",
+                      rplData->sectionInfoCount * sizeof(loader::LOADER_SectionInfo),
+                      -4));
+   if (!rplData->sectionInfo) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      setFatalErrorInfo2(minFileInfo->fileLocation,
+                         OSDynLoad_Error::OutOfSysMemory, 0,
+                         620, "sPrepareLoad");
+      return OSDynLoad_Error::OutOfSysMemory;
+   }
+
+   minFileInfo->outSectionInfo = rplData->sectionInfo;
+
+   // Allocate file info
+   if (auto error = dynLoadHeapAlloc("RPL_FILE_INFO", dynLoadAlloc,
+                                     rplData->userFileInfoSize, 4, allocPtr)) {
+      setFatalErrorInfo2(minFileInfo->fileLocation, error, 0,
+                         637, "sPrepareLoad");
+      return error;
+   }
+
+   rplData->userFileInfo = virt_cast<loader::LOADER_UserFileInfo *>(*allocPtr);
+
+   if (isAppDebugLevelUnknown3()) {
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "RPL_LAYOUT:{},FILE,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},FILE,end,=\"0x{:08x}\"",
+         rplData->moduleName,
+         rplData->userFileInfo,
+         rplData->moduleName,
+         virt_cast<virt_addr>(rplData->userFileInfo) + rplData->userFileInfoSize));
+   }
+
+   minFileInfo->outFileInfo = rplData->userFileInfo;
+   sDynLoadData->numAllocations++;
+   sDynLoadData->totalAllocatedBytes += rplData->userFileInfoSize;
+   std::memset(rplData->userFileInfo.getRawPointer(), 0, rplData->userFileInfoSize);
+
+   // Allocate path string buffer
+   if (minFileInfo->pathStringSize) {
+      minFileInfo->pathStringBuffer = virt_cast<char *>(
+         rplSysHeapAlloc("RPL_NOTIFY_NAME", minFileInfo->pathStringSize, 4));
+      if (!minFileInfo->pathStringBuffer) {
+         if (isAppDebugLevelUnknown3()) {
+            dumpSystemHeap();
+         }
+
+         setFatalErrorInfo2(minFileInfo->fileLocation,
+                            OSDynLoad_Error::OutOfSysMemory, 0,
+                            666, "sPrepareLoad");
+         return OSDynLoad_Error::OutOfSysMemory;
+      }
+
+      std::memset(minFileInfo->pathStringBuffer.getRawPointer(), 0,
+                  minFileInfo->pathStringSize);
+   }
+
+   if (minFileInfo->fileInfoFlags & loader::rpl::RPL_FLAG_4) {
+      // Query the loader for file info
+      if (auto error = kernel::loaderQuery(rplData->loaderHandle, minFileInfo)) {
+         if (minFileInfo->fatalErr) {
+            setFatalErrorInfo(
+               minFileInfo->fatalMsgType,
+               error,
+               minFileInfo->error,
+               minFileInfo->fatalLine,
+               virt_addrof(minFileInfo->fatalFunction));
+         }
+
+         return OSDynLoad_Error::InvalidRPL;
+      }
+   } else {
+      // Allocate data section
+      if (minFileInfo->dataSize) {
+         if (auto error = dynLoadHeapAlloc("RPL_DATA_AREA",
+                                           dynLoadAlloc,
+                                           minFileInfo->dataSize,
+                                           minFileInfo->dataAlign,
+                                           virt_addrof(rplData->dataSection))) {
+            setFatalErrorInfo2(minFileInfo->fileLocation, error, false,
+                               705, "sPrepareLoad");
+            return error;
+         }
+
+         if (!kernel::validateAddressRange(virt_cast<virt_addr>(rplData->dataSection),
+                                           minFileInfo->dataSize) ||
+             !align_check(virt_cast<virt_addr>(rplData->dataSection),
+                          minFileInfo->dataAlign)) {
+            setFatalErrorInfo2(minFileInfo->fileLocation,
+                               OSDynLoad_Error::InvalidAllocatedPtr, true,
+                               701, "sPrepareLoad");
+            return OSDynLoad_Error::InvalidAllocatedPtr;
+         }
+
+         rplData->dataSectionSize = minFileInfo->dataSize;
+         minFileInfo->dataBuffer = rplData->dataSection;
+         sDynLoadData->numAllocations++;
+         sDynLoadData->totalAllocatedBytes += minFileInfo->dataSize;
+      }
+
+      // Allocate load section
+      if (minFileInfo->loadSize) {
+         if (auto error = dynLoadHeapAlloc("RPL_LOAD_INFO_AREA",
+                                           dynLoadAlloc,
+                                           minFileInfo->loadSize,
+                                           minFileInfo->loadAlign,
+                                           virt_addrof(rplData->loadSection))) {
+            setFatalErrorInfo2(minFileInfo->fileLocation, error, false,
+                               748, "sPrepareLoad");
+            return error;
+         }
+
+         if (!kernel::validateAddressRange(virt_cast<virt_addr>(rplData->loadSection),
+                                           minFileInfo->loadSize) ||
+             !align_check(virt_cast<virt_addr>(rplData->loadSection),
+                          minFileInfo->loadAlign)) {
+            setFatalErrorInfo2(minFileInfo->fileLocation,
+                               OSDynLoad_Error::InvalidAllocatedPtr, true,
+                               752, "sPrepareLoad");
+            return OSDynLoad_Error::InvalidAllocatedPtr;
+         }
+
+         rplData->loadSectionSize = minFileInfo->loadSize;
+         minFileInfo->loadBuffer = rplData->loadSection;
+         sDynLoadData->numAllocations++;
+         sDynLoadData->totalAllocatedBytes += minFileInfo->loadSize;
+      }
+
+      // Run the loader setup
+      if (auto error = kernel::loaderSetup(rplData->loaderHandle, minFileInfo)) {
+         if (minFileInfo->fatalErr) {
+            setFatalErrorInfo(
+               minFileInfo->fatalMsgType,
+               error,
+               minFileInfo->error,
+               minFileInfo->fatalLine,
+               virt_addrof(minFileInfo->fatalFunction));
+         }
+
+         return OSDynLoad_Error::LoaderError;
+      }
+   }
+
+   rplSysHeapFree("RPL_TEMP_DATA", minFileInfo,
+                  sizeof(loader::LOADER_MinFileInfo));
+   *ptrMinFileInfo = nullptr;
+
+   findExports(rplData);
+
+   if (!findTlsSection(rplData)) {
+      COSError(COSReportModule::Unknown2,
+               "*** Can not find section for TLS data.");
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation,
+                         OSDynLoad_Error::TLSSectionNotFound, 0,
+                         831, "sPrepareLoad");
+      return OSDynLoad_Error::TLSSectionNotFound;
+   }
+
+   rplData->next = sDynLoadData->linkingRplList;
+   sDynLoadData->linkingRplList = rplData;
+   *ptrRplData = nullptr;
+   return doImports(rplData);
+}
+
+
+/**
+ * Release all importing modules.
+ */
+static void
+releaseImports()
+{
+   auto inLinkingList =
+      [](virt_ptr<RPL_DATA> rpl)
+      {
+         for (auto itr = sDynLoadData->linkingRplList; itr; itr = itr->next) {
+            if (rpl == itr) {
+               return true;
+            }
+         }
+
+         return false;
+      };
+
+   for (auto module = sDynLoadData->linkingRplList; module; module = module->next) {
+      for (auto i = 0u; i < module->importModuleCount; ++i) {
+         auto importModule = module->importModules[i];
+         if (!importModule) {
+            continue;
+         }
+
+         if (inLinkingList(importModule)) {
+            OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
+                             importModule->handle,
+                             nullptr);
+         } else {
+            OSDynLoad_Release(importModule->handle);
+         }
+      }
+   }
+}
+
+
+/**
+ * Acquire a module.
+ */
+static OSDynLoad_Error
+internalAcquire(virt_ptr<const char> name,
+                virt_ptr<virt_ptr<RPL_DATA>> outRplData,
+                virt_ptr<uint32_t> outNumEntryModules,
+                virt_ptr<virt_ptr<virt_ptr<RPL_DATA>>> outEntryModules,
+                bool doLoad)
+{
+   auto error = OSDynLoad_Error::OK;
+
+   // Resolve module name
+   auto[moduleName, moduleNameLength] = resolveModuleName(name);
+   if (!moduleNameLength) {
+      setFatalErrorInfo2(
+         sDynLoadData->rpxData->userFileInfo->titleLocation,
+         OSDynLoad_Error::EmptyModuleName, 0,
+         949, "__OSDynLoad_InternalAcquire");
+      return OSDynLoad_Error::EmptyModuleName;
+   }
+
+   // Allocate rpl name
+   auto rplNameLength = align_up(moduleNameLength + 1, 4);
+   auto rplName = virt_cast<char *>(
+      rplSysHeapAlloc("RPL_NAME", rplNameLength, 4));
+   if (!rplName) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      setFatalErrorInfo2(
+         sDynLoadData->rpxData->userFileInfo->titleLocation,
+         OSDynLoad_Error::OutOfSysMemory, 0,
+         964, "__OSDynLoad_InternalAcquire");
+      return OSDynLoad_Error::OutOfSysMemory;
+   }
+
+   for (auto i = 0u; i < moduleNameLength; ++i) {
+      rplName[i] = static_cast<char>(tolower(moduleName[i]));
+   }
+   rplName[moduleNameLength] = char { 0 };
+
+   auto rplNameCleanup = gsl::finally([&]()
+                                      {
+                                         if (rplName) {
+                                            rplSysHeapFree("RPL_NAME", rplName, rplNameLength);
+                                         }
+                                      });
+
+   OSLockMutex(sDynLoad_LoaderLock);
+   auto unlock = gsl::finally([&]() { OSUnlockMutex(sDynLoad_LoaderLock); });
+
+   // We cannot call acquire whilst inside a module entry point
+   if (sDynLoadData->inModuleEntryPoint) {
+      error = OSDynLoad_Error::InModuleEntryPoint;
+      setFatalErrorInfo2(
+         sDynLoadData->rpxData->userFileInfo->titleLocation,
+         error, true, 995, "__OSDynLoad_InternalAcquire");
+      return error;
+   }
+
+   // Check if we already loaded this module
+   for (auto rpl = sDynLoadData->rplDataList; rpl; rpl = rpl->next) {
+      if (strcmp(rpl->moduleName.getRawPointer(), rplName.getRawPointer()) == 0) {
+         OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), rpl->handle);
+         *outRplData = rpl;
+         return OSDynLoad_Error::OK;
+      }
+   }
+
+   // Check if we are already loading this module
+   for (auto rpl = sDynLoadData->linkingRplList; rpl; rpl = rpl->next) {
+      if (strcmp(rpl->moduleName.getRawPointer(), rplName.getRawPointer()) == 0) {
+         OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), rpl->handle);
+         *outRplData = rpl;
+         return OSDynLoad_Error::OK;
+      }
+   }
+
+   // Verify we're not loading coreinit, that'd be a massive fuckup
+   if (strcmp(rplName.getRawPointer(), "coreinit") == 0) {
+      COSError(COSReportModule::Unknown2, "*********");
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "Error: Trying to load \"{}\".", rplName));
+      COSError(COSReportModule::Unknown2, "*********");
+      OSPanic("OSDynLoad_Acquire.c", 1035, "core library conflict.");
+   }
+
+   // Get the currently set allocator functions
+   StackObject<OSDynLoad_AllocFn> dynLoadAlloc;
+   StackObject<OSDynLoad_FreeFn> dynLoadFree;
+   error = OSDynLoad_GetAllocator(dynLoadAlloc, dynLoadFree);
+   if (error || !*dynLoadAlloc || !*dynLoadFree) {
+      if (!error) {
+         error = OSDynLoad_Error::InvalidAllocatorPtr;
+      }
+
+      setFatalErrorInfo2(
+         sDynLoadData->rpxData->userFileInfo->titleLocation,
+         error, false, 1047, "__OSDynLoad_InternalAcquire");
+      return error;
+   }
+
+   // Allocate the notify callback array if needed
+   auto firstLinkingRpl = !sDynLoadData->linkingRplList;
+   auto notifyCallbackCount = 0u;
+   auto notifyCallbackArray = virt_ptr<OSDynLoad_NotifyCallback> { nullptr };
+   auto notifyCallbackArrayCleanup =
+      gsl::finally([&]()
+                   {
+                      if (notifyCallbackArray) {
+                         rplSysHeapFree("RPL_NOTIFY_ARRAY",
+                                        notifyCallbackArray,
+                                        notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback));
+                      }
+                   });
+
+   if (firstLinkingRpl) {
+      notifyCallbackCount = getNotifyCallbackCount();
+      auto allocSize = static_cast<uint32_t>(notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback));
+
+      notifyCallbackArray = virt_cast<OSDynLoad_NotifyCallback *>(
+         rplSysHeapAlloc("RPL_NOTIFY_ARRAY",
+                         static_cast<uint32_t>(notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback)),
+                         4));
+      if (!notifyCallbackArray) {
+         setFatalErrorInfo2(
+            sDynLoadData->rpxData->userFileInfo->titleLocation,
+            OSDynLoad_Error::OutOfSysMemory, false,
+            1077, "__OSDynLoad_InternalAcquire");
+         return OSDynLoad_Error::OutOfSysMemory;
+      }
+
+      auto notifyCallback = sDynLoadData->notifyCallbacks;
+      for (auto i = 0u; notifyCallback; ++i) {
+         std::memcpy(virt_addrof(notifyCallbackArray[i]).getRawPointer(),
+                     notifyCallback.getRawPointer(),
+                     sizeof(OSDynLoad_NotifyCallback));
+
+         notifyCallback = notifyCallback->next;
+      }
+   }
+
+   // Allocate rpl data
+   auto rplData = virt_cast<RPL_DATA *>(
+      rplSysHeapAlloc("RPL_DATA", sizeof(RPL_DATA), 4));
+   if (!rplData) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      setFatalErrorInfo2(
+         sDynLoadData->rpxData->userFileInfo->titleLocation,
+         OSDynLoad_Error::OutOfSysMemory, false,
+         1105, "__OSDynLoad_InternalAcquire");
+      return OSDynLoad_Error::OutOfSysMemory;
+   }
+
+   auto rplDataCleanup =
+      gsl::finally([&]() {
+         if (rplData) {
+            if (rplData->handle) {
+               StackObject<uint32_t> handleRefCount;
+               while (!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
+                                        rplData->handle,
+                                        handleRefCount) && *handleRefCount);
+            }
+
+            internalPurge(rplData);
+         }
+      });
+
+   std::memset(rplData.getRawPointer(), 0, sizeof(RPL_DATA));
+
+   // Allocate min file info
+   auto minFileInfo = virt_cast<loader::LOADER_MinFileInfo *>(
+      rplSysHeapAlloc("RPL_TEMP_DATA",
+                      sizeof(loader::LOADER_MinFileInfo), 4));
+   if (!minFileInfo) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      rplSysHeapFree("RPL_DATA", rplData, sizeof(RPL_DATA));
+
+      setFatalErrorInfo2(
+         sDynLoadData->rpxData->userFileInfo->titleLocation,
+         OSDynLoad_Error::OutOfSysMemory, false,
+         1131, "__OSDynLoad_InternalAcquire");
+      return OSDynLoad_Error::OutOfSysMemory;
+   }
+
+   auto minFileInfoCleanup =
+      gsl::finally([&]()
+                   {
+                      if (minFileInfo) {
+                         rplSysHeapFree("RPL_TEMP_DATA", minFileInfo,
+                                        sizeof(loader::LOADER_MinFileInfo));
+                      }
+                   });
+
+   // Do loader prep
+   StackObject<loader::LOADER_Handle> kernelHandle;
+   std::memset(minFileInfo.getRawPointer(), 0, sizeof(loader::LOADER_MinFileInfo));
+   minFileInfo->version = 4u;
+   minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
+   minFileInfo->outKernelHandle = kernelHandle;
+   minFileInfo->moduleNameBufferLen = moduleNameLength;
+   minFileInfo->moduleNameBuffer = rplName;
+   minFileInfo->inoutNextTlsModuleNumber = virt_addrof(sDynLoadData->tlsModuleIndex);
+   minFileInfo->outPathStringSize = virt_addrof(minFileInfo->pathStringSize);
+   minFileInfo->outNumberOfSections = virt_addrof(rplData->sectionInfoCount);
+   minFileInfo->outSizeOfFileInfo = virt_addrof(rplData->userFileInfoSize);
+
+   if (auto error = kernel::loaderPrep(minFileInfo)) {
+      if (minFileInfo->fatalErr) {
+         setFatalErrorInfo(
+            minFileInfo->fatalMsgType,
+            minFileInfo->fatalErr,
+            minFileInfo->error,
+            minFileInfo->fatalLine,
+            virt_addrof(minFileInfo->fatalFunction));
+      }
+
+      return static_cast<OSDynLoad_Error>(error);
+   }
+
+   auto kernelHandleCleanup =
+      gsl::finally([&]() {
+         if (*kernelHandle) {
+            kernel::loaderPurge(*kernelHandle);
+         }
+      });
+
+   // Assign tls header
+   if (sDynLoadData->tlsModuleIndex > sDynLoadData->tlsHeader) {
+      if (sDynLoadData->tlsModuleIndex > MaxTlsModuleIndex) {
+         COSError(COSReportModule::Unknown2, fmt::format(
+            "*** Too many RPLs have tls data; maximum 32k, needed {}",
+            sDynLoadData->tlsModuleIndex));
+         setFatalErrorInfo2(
+            minFileInfo->fileLocation,
+            OSDynLoad_Error::TLSTooManyModules, false,
+            1178, "__OSDynLoad_InternalAcquire");
+
+         return OSDynLoad_Error::TLSTooManyModules;
+      }
+
+      sDynLoadData->tlsHeader =
+         std::min<uint32_t>(sDynLoadData->tlsModuleIndex + 8,
+                              MaxTlsModuleIndex);
+   }
+
+   // Allocate a DynLoad handle for the new RPL
+   if (auto error = OSHandle_Alloc(virt_addrof(sDynLoadData->handleTable),
+                                   rplData, nullptr,
+                                   virt_addrof(rplData->handle))) {
+      setFatalErrorInfo2(minFileInfo->fileLocation, error, false,
+                         1195, "__OSDynLoad_InternalAcquire");
+      return static_cast<OSDynLoad_Error>(error);
+   }
+
+   // Prepare load
+   *outRplData = rplData;
+   rplData->dynLoadFreeFn = *dynLoadFree;
+   rplData->loaderHandle = *kernelHandle;
+   rplData->moduleName = rplName;
+   rplData->moduleNameLen = moduleNameLength;
+   *kernelHandle = nullptr;
+   rplName = nullptr;
+
+   error = prepareLoad(&rplData, *dynLoadAlloc, &minFileInfo);
+   if (firstLinkingRpl) {
+      if (error) {
+         // If prepareLoad returned an error then we need to clean up rplData
+         // in the case that prepareLoad did not clean it up itself
+         if (!rplData && *outRplData) {
+            StackObject<uint32_t> handleRefCount;
+            while (!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
+                                     (*outRplData)->handle,
+                                     handleRefCount) && *handleRefCount);
+         }
+      } else {
+         error = executeDynamicLink(nullptr,
+                                    outNumEntryModules,
+                                    outEntryModules,
+                                    *outRplData);
+      }
+
+      releaseImports();
+
+      // Release any remaining RPLs still in the linking list
+      while (sDynLoadData->linkingRplList) {
+         auto rpl = sDynLoadData->linkingRplList;
+         sDynLoadData->linkingRplList = rpl->next;
+         rpl->next = nullptr;
+
+         if (rpl->handle) {
+            StackObject<uint32_t> handleRefCount;
+            while(!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
+                                    rpl->handle,
+                                    handleRefCount));
+         }
+      }
+   }
+
+   return error;
+}
+
+
+/**
+ * __OSDynLoad_DoImports
+ */
+static OSDynLoad_Error
+doImports(virt_ptr<RPL_DATA> rplData)
+{
+   // Get the section header string table
+   auto shstrndx = rplData->userFileInfo->shstrndx;
+   if (!rplData->userFileInfo->shstrndx) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "Error: Could not get section string table index for \"{}\".",
+         rplData->moduleName));
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation,
+                         OSDynLoad_Error::InvalidShStrNdx, true,
+                         391, "__OSDynLoad_DoImports");
+      return OSDynLoad_Error::InvalidShStrNdx;
+   }
+
+   auto shStrSection = virt_cast<char *>(rplData->sectionInfo[shstrndx].address);
+   if (!shStrSection) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "Error: Could not get section string table for \"{}\".",
+         rplData->moduleName));
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation,
+                         OSDynLoad_Error::InvalidShStrSection, true,
+                         383, "__OSDynLoad_DoImports");
+      return OSDynLoad_Error::InvalidShStrSection;
+   }
+
+   // Count the number of imported modules
+   auto numImportModules = 0u;
+   for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
+      if (rplData->sectionInfo[i].address &&
+          rplData->sectionInfo[i].name &&
+          (rplData->sectionInfo[i].flags & loader::rpl::SHF_ALLOC) &&
+          rplData->sectionInfo[i].type == loader::rpl::SHT_RPL_IMPORTS) {
+         numImportModules++;
+      }
+   }
+
+   if (!numImportModules) {
+      return OSDynLoad_Error::OK;
+   }
+
+   // Allocate imported modules array
+   rplData->importModuleCount = numImportModules;
+   rplData->importModules = virt_cast<virt_ptr<RPL_DATA> *>(
+      rplSysHeapAlloc("RPL_SEC_INFO",
+                      sizeof(virt_ptr<RPL_DATA>) * numImportModules, 4));
+   if (!rplData->importModules) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      setFatalErrorInfo2(rplData->userFileInfo->titleLocation,
+                         OSDynLoad_Error::OutOfSysMemory, false,
+                         423, "__OSDynLoad_DoImports");
+      return OSDynLoad_Error::OutOfSysMemory;
+   }
+
+   // Acquire all imported modules
+   auto importModuleIdx = 0u;
+   for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
+      if (rplData->sectionInfo[i].address &&
+          rplData->sectionInfo[i].name &&
+          (rplData->sectionInfo[i].flags & loader::rpl::SHF_ALLOC) &&
+          rplData->sectionInfo[i].type == loader::rpl::SHT_RPL_IMPORTS) {
+         auto name = shStrSection + rplData->sectionInfo[i].name;
+
+         if (isAppDebugLevelUnknown3()) {
+            COSInfo(COSReportModule::Unknown2, fmt::format(
+               "RPL_SYSHEAP:IMPORT START,{}", name));
+            COSInfo(COSReportModule::Unknown2, fmt::format(
+               "SYSTEM_HEAP:IMPORT START,{}", name));
+         }
+
+         auto error =
+            internalAcquire(name + 9,
+                            virt_addrof(rplData->importModules[importModuleIdx]),
+                            0, 0, 0);
+
+         if (isAppDebugLevelUnknown3()) {
+            COSInfo(COSReportModule::Unknown2, fmt::format(
+               "RPL_SYSHEAP:IMPORT END,{}", name));
+            COSInfo(COSReportModule::Unknown2, fmt::format(
+               "SYSTEM_HEAP:IMPORT END,{}", name));
+         }
+
+         if (error) {
+            COSError(COSReportModule::Unknown2, fmt::format(
+               "Error: Could not load imported RPL \"{}\".", name));
+            return error;
+         }
+
+         auto importModule = rplData->importModules[importModuleIdx];
+         if (!importModule->entryPoint) {
+            // Ensure rplData comes after importModule in the linking list
+            auto itr = virt_ptr<RPL_DATA> { nullptr };
+            auto prev = virt_ptr<RPL_DATA> { nullptr };
+            for (itr = sDynLoadData->linkingRplList; itr != rplData; itr = itr->next) {
+               prev = itr;
+            }
+
+            while (itr->next) {
+               if (itr == importModule) {
+                  if (prev) {
+                     prev->next = rplData->next;
+                  } else {
+                     sDynLoadData->linkingRplList = rplData->next;
+                  }
+
+                  rplData->next = importModule->next;
+                  importModule->next = rplData;
+                  break;
+               }
+            }
+         }
+
+         ++importModuleIdx;
+      }
+   }
+
+   rplSysHeapFree("RPL_SEC_INFO", rplData->sectionInfo,
+                  rplData->sectionInfoCount * sizeof(loader::LOADER_SectionInfo));
+   rplData->sectionInfo = nullptr;
+   return OSDynLoad_Error::OK;
+}
+
+} // namespace internal
 
 
 /**
@@ -105,13 +2018,13 @@ OSDynLoad_AddNotifyCallback(OSDynLoad_NotifyCallbackFn notifyFn,
       return OSDynLoad_Error::OutOfSysMemory;
    }
 
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
    notifyCallback->notifyFn = notifyFn;
    notifyCallback->userArg1 = userArg1;
    notifyCallback->next = sDynLoadData->notifyCallbacks;
 
    sDynLoadData->notifyCallbacks = notifyCallback;
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
    return OSDynLoad_Error::OK;
 }
 
@@ -127,7 +2040,7 @@ OSDynLoad_DelNotifyCallback(OSDynLoad_NotifyCallbackFn notifyFn,
       return;
    }
 
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
 
    // Find the callback
    auto prevCallback = virt_ptr<OSDynLoad_NotifyCallback> { nullptr };
@@ -150,7 +2063,7 @@ OSDynLoad_DelNotifyCallback(OSDynLoad_NotifyCallbackFn notifyFn,
       }
    }
 
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
 
    // Free the callback
    if (callback) {
@@ -166,7 +2079,7 @@ OSDynLoad_Error
 OSDynLoad_GetAllocator(virt_ptr<OSDynLoad_AllocFn> outAllocFn,
                        virt_ptr<OSDynLoad_FreeFn> outFreeFn)
 {
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
 
    if (outAllocFn) {
       *outAllocFn = sDynLoadData->allocFn;
@@ -176,7 +2089,7 @@ OSDynLoad_GetAllocator(virt_ptr<OSDynLoad_AllocFn> outAllocFn,
       *outFreeFn = sDynLoadData->freeFn;
    }
 
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
    return OSDynLoad_Error::OK;
 }
 
@@ -192,10 +2105,10 @@ OSDynLoad_SetAllocator(OSDynLoad_AllocFn allocFn,
       return OSDynLoad_Error::InvalidAllocatorPtr;
    }
 
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
    sDynLoadData->allocFn = allocFn;
    sDynLoadData->freeFn = freeFn;
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
    return OSDynLoad_Error::OK;
 }
 
@@ -207,7 +2120,7 @@ OSDynLoad_Error
 OSDynLoad_GetTLSAllocator(virt_ptr<OSDynLoad_AllocFn> outAllocFn,
                           virt_ptr<OSDynLoad_FreeFn> outFreeFn)
 {
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
 
    if (outAllocFn) {
       *outAllocFn = sDynLoadData->tlsAllocFn;
@@ -217,7 +2130,7 @@ OSDynLoad_GetTLSAllocator(virt_ptr<OSDynLoad_AllocFn> outAllocFn,
       *outFreeFn = sDynLoadData->tlsFreeFn;
    }
 
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
    return OSDynLoad_Error::OK;
 }
 
@@ -237,63 +2150,49 @@ OSDynLoad_SetTLSAllocator(OSDynLoad_AllocFn allocFn,
       return OSDynLoad_Error::TLSAllocatorLocked;
    }
 
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
    sDynLoadData->tlsAllocFn = allocFn;
    sDynLoadData->tlsFreeFn = freeFn;
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
    return OSDynLoad_Error::OK;
 }
 
 
+/**
+ * Acquire a module.
+ *
+ * If a module is already loaded this will increase it's ref count.
+ * If a module is not yet loaded it will be loaded.
+ */
 OSDynLoad_Error
 OSDynLoad_Acquire(virt_ptr<const char> modulePath,
                   virt_ptr<OSDynLoad_ModuleHandle> outModuleHandle)
 {
-   return OSDynLoad_Error::OutOfMemory;
+   return internal::internalAcquire2(modulePath, outModuleHandle, FALSE);
 }
 
 
-OSDynLoad_Error
+/**
+ * Release a module.
+ *
+ * Decreases ref count of module and deallocates it if ref count hits 0.
+ */
+void
 OSDynLoad_Release(OSDynLoad_ModuleHandle moduleHandle)
 {
-   return OSDynLoad_Error::OutOfMemory;
+   internal::release(moduleHandle, nullptr);
 }
 
 
+/**
+ * Acquire the module which contains ptr.
+ */
 OSDynLoad_Error
 OSDynLoad_AcquireContainingModule(virt_ptr<void> ptr,
                                   OSDynLoad_SectionType sectionType,
                                   virt_ptr<OSDynLoad_ModuleHandle> outHandle)
 {
    return OSDynLoad_Error::OK;
-}
-
-
-static virt_ptr<loader::rpl::Export>
-searchExport(virt_ptr<loader::rpl::Export> exports,
-             uint32_t numExports,
-             virt_ptr<const char> name)
-{
-   auto exportNames = virt_cast<const char *>(exports) - 8;
-   auto left = 0u;
-   auto right = numExports;
-
-   while (true) {
-      auto index = left + (right - left) / 2;
-      auto exportName = exportNames.getRawPointer() + (exports[index].name & 0x7FFFFFFF);
-      auto cmpValue = strcmp(name.getRawPointer(), exportName);
-      if (cmpValue == 0) {
-         return exports + index;
-      } else if (cmpValue < 0) {
-         right = index;
-      } else {
-         left = index + 1;
-      }
-
-      if (left >= right) {
-         return nullptr;
-      }
-   }
 }
 
 
@@ -325,23 +2224,27 @@ OSDynLoad_FindExport(OSDynLoad_ModuleHandle moduleHandle,
       rplData = virt_cast<RPL_DATA *>(*handleData);
    }
 
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
+   OSLockMutex(sDynLoad_LoaderLock);
 
    if (isData) {
       if (!rplData->dataExports) {
          error = OSDynLoad_Error::ModuleHasNoDataExports;
       } else {
-         exportData = searchExport(virt_cast<loader::rpl::Export *>(rplData->dataExports),
-                                   rplData->numDataExports,
-                                   name);
+         exportData =
+            internal::binarySearchExport(
+               virt_cast<loader::rpl::Export *>(rplData->dataExports),
+               rplData->numDataExports,
+               name);
       }
    } else {
       if (!rplData->codeExports) {
          error = OSDynLoad_Error::ModuleHasNoCodeExports;
       } else {
-         exportData = searchExport(virt_cast<loader::rpl::Export *>(rplData->codeExports),
-                                   rplData->numCodeExports,
-                                   name);
+         exportData =
+            internal::binarySearchExport(
+               virt_cast<loader::rpl::Export *>(rplData->codeExports),
+               rplData->numCodeExports,
+               name);
       }
    }
 
@@ -355,7 +2258,7 @@ OSDynLoad_FindExport(OSDynLoad_ModuleHandle moduleHandle,
       }
    }
 
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
+   OSUnlockMutex(sDynLoad_LoaderLock);
 
    if (moduleHandle != OSDynLoad_CurrentModuleHandle) {
       OSHandle_Release(virt_addrof(sDynLoadData->handleTable), moduleHandle,
@@ -366,12 +2269,119 @@ OSDynLoad_FindExport(OSDynLoad_ModuleHandle moduleHandle,
 }
 
 
+/**
+ * Find an tag from a library handle.
+ */
+OSDynLoad_Error
+OSDynLoad_FindTag(OSDynLoad_ModuleHandle moduleHandle,
+                  virt_ptr<const char> tag,
+                  virt_ptr<char> buffer,
+                  virt_ptr<uint32_t> inoutBufferSize)
+{
+   return OSDynLoad_Error::InvalidParam;
+}
+
+
+/**
+ * Get statistics about the loader memory heap.
+ */
+OSDynLoad_Error
+OSDynLoad_GetLoaderHeapStatistics(virt_ptr<OSDynLoad_LoaderHeapStatistics> stats)
+{
+   return OSDynLoad_Error::InvalidParam;
+}
+
+
+/**
+ * Get the module name for a module handle.
+ */
 OSDynLoad_Error
 OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
                         virt_ptr<char> buffer,
-                        uint32_t bufferSize)
+                        virt_ptr<uint32_t> inoutBufferSize)
 {
-   return OSDynLoad_Error::OutOfMemory;
+   auto error = OSDynLoad_Error::OK;
+
+   if (!moduleHandle) {
+      return OSDynLoad_Error::InvalidHandle;
+   }
+
+   if (!inoutBufferSize ||
+       !kernel::validateAddressRange(virt_cast<virt_addr>(inoutBufferSize), 4)) {
+      return OSDynLoad_Error::InvalidParam;
+   }
+
+   if (moduleHandle == OSDynLoad_CurrentModuleHandle) {
+      auto bufferLength = static_cast<uint32_t>(
+         strlen(sDynLoadData->rpxName.getRawPointer()) + 1);
+
+      if (bufferLength > *inoutBufferSize) {
+         *inoutBufferSize = bufferLength;
+         error = OSDynLoad_Error::BufferTooSmall;
+      } else {
+         std::memcpy(buffer.getRawPointer(),
+                     sDynLoadData->rpxName.getRawPointer(),
+                     bufferLength - 1);
+         buffer[bufferLength - 1] = char { 0 };
+      }
+   } else {
+      StackObject<virt_ptr<void>> handleUserData1;
+
+      if (OSHandle_TranslateAndAddRef(virt_addrof(sDynLoadData->handleTable),
+                                      moduleHandle,
+                                      handleUserData1,
+                                      nullptr) != OSHandleError::OK) {
+         return OSDynLoad_Error::InvalidHandle;
+      }
+
+      OSLockMutex(sDynLoad_LoaderLock);
+      auto rplData = virt_cast<RPL_DATA *>(*handleUserData1);
+      auto bufferLength = rplData->moduleNameLen + 1;
+
+      if (bufferLength > *inoutBufferSize) {
+         *inoutBufferSize = bufferLength;
+         error = OSDynLoad_Error::BufferTooSmall;
+      } else {
+         std::memcpy(buffer.getRawPointer(),
+                     rplData->moduleName.getRawPointer(),
+                     bufferLength - 1);
+         buffer[bufferLength - 1] = char { 0 };
+      }
+
+      OSUnlockMutex(sDynLoad_LoaderLock);
+      OSHandle_Release(virt_addrof(sDynLoadData->handleTable), moduleHandle,
+                       nullptr);
+   }
+
+   return error;
+}
+
+
+/**
+ * Return the number of loaded RPLs.
+ *
+ * Will always return 0 on non-debug builds of CafeOS.
+ */
+uint32_t
+OSDynLoad_GetNumberOfRPLs()
+{
+   return 0;
+}
+
+
+/**
+ * Get the info for count RPLs beginning at first.
+ */
+uint32_t
+OSDynLoad_GetRPLInfo(uint32_t first,
+                     uint32_t count,
+                     virt_ptr<OSDynLoad_NotifyData> outRplInfos)
+{
+   if (!count) {
+      return 1;
+   }
+
+   return 0;
 }
 
 
@@ -382,7 +2392,7 @@ OSDynLoad_Error
 OSDynLoad_IsModuleLoaded(virt_ptr<const char> name,
                          virt_ptr<OSDynLoad_ModuleHandle> outHandle)
 {
-   return OSDynLoad_Error::OutOfMemory;
+   return internal::internalAcquire2(name, outHandle, TRUE);
 }
 
 
@@ -576,721 +2586,6 @@ dynLoadTlsFree(virt_ptr<OSThread> thread)
    }
 }
 
-static void
-findExports(virt_ptr<RPL_DATA> rplData)
-{
-   for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
-      auto &sectionInfo = rplData->sectionInfo[i];
-      if (sectionInfo.type == loader::rpl::SHT_RPL_EXPORTS) {
-         if (sectionInfo.flags & loader::rpl::SHF_EXECINSTR) {
-            rplData->codeExports = sectionInfo.address + 8;
-            rplData->numCodeExports = *virt_cast<uint32_t *>(sectionInfo.address);
-         } else {
-            rplData->dataExports = sectionInfo.address + 8;
-            rplData->numDataExports = *virt_cast<uint32_t *>(sectionInfo.address);
-         }
-      }
-   }
-}
-
-static void
-findTlsSection(virt_ptr<RPL_DATA> rplData)
-{
-   // Find TLS section
-   if (rplData->userFileInfo->fileInfoFlags & loader::rpl::RPL_HAS_TLS) {
-      auto tlsAddressStart = virt_addr { 0xFFFFFFFFu };
-      auto tlsAddressEnd = virt_addr { 0 };
-
-      for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
-         auto &sectionInfo = rplData->sectionInfo[i];
-         if (sectionInfo.flags & loader::rpl::SHF_TLS) {
-            if (sectionInfo.address < tlsAddressStart) {
-               tlsAddressStart = sectionInfo.address;
-            }
-
-            if (sectionInfo.address + sectionInfo.size > tlsAddressEnd) {
-               tlsAddressEnd = sectionInfo.address + sectionInfo.size;
-            }
-         }
-      }
-
-      decaf_check(tlsAddressStart != virt_addr { 0xFFFFFFFFu });
-      decaf_check(tlsAddressEnd != virt_addr { 0 });
-
-      rplData->userFileInfo->tlsAddressStart = tlsAddressStart;
-      rplData->userFileInfo->tlsSectionSize =
-         static_cast<uint32_t>(tlsAddressEnd - tlsAddressStart);
-   }
-}
-
-static int32_t
-sSetupPerm(virt_ptr<RPL_DATA> rplData,
-           bool updateTlsModuleIndex)
-{
-   StackObject<loader::LOADER_MinFileInfo> minFileInfo;
-   std::memset(minFileInfo.getRawPointer(), 0, sizeof(loader::LOADER_MinFileInfo));
-   minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
-   minFileInfo->version = 4u;
-   minFileInfo->outPathStringSize = virt_addrof(minFileInfo->pathStringSize);
-   minFileInfo->outNumberOfSections = virt_addrof(rplData->sectionInfoCount);
-   minFileInfo->outSizeOfFileInfo = virt_addrof(rplData->userFileInfoSize);
-
-   if (updateTlsModuleIndex) {
-      minFileInfo->inoutNextTlsModuleNumber = virt_addrof(sDynLoadData->tlsModuleIndex);
-   }
-
-   // Query to get the required buffer sizes
-   auto error = kernel::loaderQuery(rplData->loaderHandle, minFileInfo);
-   decaf_check(!error);
-
-   rplData->sectionInfo = virt_cast<loader::LOADER_SectionInfo *>(
-      OSAllocFromSystem(
-         sizeof(loader::LOADER_SectionInfo) * rplData->sectionInfoCount,
-         -4));
-   decaf_check(rplData->sectionInfo);
-   minFileInfo->outSectionInfo = rplData->sectionInfo;
-
-   rplData->userFileInfo = virt_cast<loader::LOADER_UserFileInfo *>(
-      OSAllocFromSystem(rplData->userFileInfoSize, 4));
-   decaf_check(rplData->userFileInfo);
-   minFileInfo->outFileInfo = rplData->userFileInfo;
-   std::memset(rplData->userFileInfo.getRawPointer(), 0,
-               sizeof(loader::LOADER_UserFileInfo));
-
-   if (minFileInfo->pathStringSize) {
-      minFileInfo->pathStringBuffer = virt_cast<char *>(
-         OSAllocFromSystem(minFileInfo->pathStringSize, 4));
-      decaf_check(minFileInfo->pathStringBuffer);
-      std::memset(minFileInfo->pathStringBuffer.getRawPointer(), 0,
-                  minFileInfo->pathStringSize);
-   }
-
-   // Query to get the data
-   error = kernel::loaderQuery(rplData->loaderHandle, minFileInfo);
-   decaf_check(!error);
-
-   findExports(rplData);
-   findTlsSection(rplData);
-   return 0;
-}
-
-using InitDefaultHeapFn = virt_func_ptr<
-   void(virt_ptr<MEMHeapHandle> mem1,
-        virt_ptr<MEMHeapHandle> foreground,
-        virt_ptr<MEMHeapHandle> mem2)>;
-
-static OSDynLoad_Error
-initialiseDefaultHeap(virt_ptr<RPL_DATA> rplData,
-                      virt_ptr<const char> functionName)
-{
-   StackObject<virt_addr> funcAddr;
-   auto error = OSDynLoad_FindExport(rplData->handle, FALSE, functionName, funcAddr);
-   if (error != OSDynLoad_Error::OK) {
-      return error;
-   }
-
-   cafe::invoke(cpu::this_core::state(),
-                virt_func_cast<InitDefaultHeapFn>(*funcAddr),
-                virt_addrof(sDynLoadData->preInitMem1Heap),
-                virt_addrof(sDynLoadData->preInitForegroundHeap),
-                virt_addrof(sDynLoadData->preInitMem2Heap));
-
-   StackObject<OSDynLoad_AllocFn> allocFn;
-   StackObject<OSDynLoad_FreeFn> freeFn;
-   error = OSDynLoad_GetAllocator(allocFn, freeFn);
-   if (error != OSDynLoad_Error::OK || !(*allocFn) || !(*freeFn)) {
-      decaf_abort(fmt::format("{} did not set OSDynLoad allocator",
-                              functionName.getRawPointer()));
-   }
-
-   error = OSDynLoad_GetTLSAllocator(allocFn, freeFn);
-   if (error != OSDynLoad_Error::OK || !(*allocFn) || !(*freeFn)) {
-      decaf_abort(fmt::format("{} did not set OSDynLoad TLS allocator",
-                              functionName.getRawPointer()));
-   }
-
-   return OSDynLoad_Error::OK;
-}
-
-static std::pair<virt_ptr<char>, uint32_t>
-resolveModuleName(virt_ptr<char> name)
-{
-   auto str = std::string_view { name.getRawPointer() };
-   auto pos = str.find_last_of("\\/");
-   if (pos != std::string_view::npos) {
-      str = str.substr(pos);
-      name += pos;
-   }
-
-   pos = str.find_first_of('.');
-   if (pos != std::string_view::npos) {
-      str = str.substr(0, pos);
-   }
-
-   return { name, static_cast<uint32_t>(str.size()) };
-}
-
-
-/**
- * __OSDynLoad_InitCommon
- */
-static void
-initialiseCommon()
-{
-   OSInitMutex(virt_addrof(sDynLoadData->mutex));
-   OSHandle_InitTable(virt_addrof(sDynLoadData->handleTable));
-
-   // Parse argstr into rpx name
-   std::tie(sDynLoadData->rpxName, sDynLoadData->rpxNameLength) = resolveModuleName(getArgStr());
-   if (sDynLoadData->rpxNameLength > 63u) {
-      sDynLoadData->rpxNameLength = 63u;
-   }
-}
-
-static OSDynLoad_Error
-buildLinkInfo(virt_ptr<RPL_DATA> linkList,
-              virt_ptr<loader::LOADER_LinkInfo> *outLinkInfo,
-              virt_ptr<RPL_DATA> rpl)
-{
-   auto numModules = 0u;
-   *outLinkInfo = nullptr;
-
-   for (auto module = linkList; module; module = module->next) {
-      numModules++;
-   }
-
-   auto linkInfoSize =
-      static_cast<uint32_t>(sizeof(loader::LOADER_LinkModule) * numModules + 8);
-   auto linkInfo = virt_cast<loader::LOADER_LinkInfo *>(
-      OSAllocFromSystem(linkInfoSize, -4));
-   if (!linkInfo) {
-      decaf_abort("error");
-      // SetFatalErrorInfo2(rpl->fileInfo->titleLocation, 0xBAD1002F, 0, 101, "__BuildKernelNotify");
-      return OSDynLoad_Error::OutOfSysMemory;
-   }
-
-   std::memset(linkInfo.getRawPointer(), 0, linkInfoSize);
-   linkInfo->numModules = numModules;
-   linkInfo->size = linkInfoSize;
-
-   auto moduleIndex = 0u;
-   for (auto module = linkList; module; module = module->next) {
-      linkInfo->modules[moduleIndex].loaderHandle = module->loaderHandle;
-      linkInfo->modules[moduleIndex].entryPoint = virt_addr { 0 };
-      moduleIndex++;
-   }
-
-   *outLinkInfo = linkInfo;
-   return OSDynLoad_Error::OK;
-}
-
-// _OSDynLoad_ExecuteDynamicLink
-static int32_t
-executeDynamicLink(virt_ptr<RPL_DATA> rpx,
-                   virt_ptr<uint32_t> outNumEntryModules,
-                   virt_ptr<virt_ptr<virt_ptr<RPL_DATA>>> outEntryModules,
-                   virt_ptr<RPL_DATA> rpl)
-{
-   StackObject<loader::LOADER_MinFileInfo> minFileInfo;
-   auto linkInfo = virt_ptr<loader::LOADER_LinkInfo> { nullptr };
-   auto error = 0;
-
-   *outNumEntryModules = 0u;
-   *outEntryModules = nullptr;
-
-   std::memset(minFileInfo.getRawPointer(), 0,
-               sizeof(loader::LOADER_MinFileInfo));
-   minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
-   minFileInfo->version = 4u;
-   if (error = buildLinkInfo(sDynLoadData->linkingRplList, &linkInfo, rpl)) {
-      decaf_abort("error");
-      return error;
-   }
-
-   error = kernel::loaderLink(nullptr, minFileInfo, linkInfo, linkInfo->size);
-   if (error) {
-      // error
-      decaf_abort("error");
-   } else {
-      for (auto i = 0u; i < linkInfo->numModules; ++i) {
-         auto &linkModule = linkInfo->modules[i];
-         auto rplData = virt_ptr<RPL_DATA> { nullptr };
-
-         for (rplData = sDynLoadData->linkingRplList; rplData; rplData = rplData->next) {
-            if (rplData->loaderHandle == linkModule.loaderHandle) {
-               break;
-            }
-         }
-
-         if (!rplData) {
-            // ERROR
-            decaf_abort("error");
-         }
-
-         rplData->entryPoint = linkModule.entryPoint;
-         rplData->notifyData = virt_cast<OSDynLoad_NotifyData *>(
-            OSAllocFromSystem(sizeof(OSDynLoad_NotifyData), 4));
-         if (rplData->notifyData) {
-            auto notifyData = rplData->notifyData;
-            std::memset(notifyData.getRawPointer(), 0,
-                        sizeof(OSDynLoad_NotifyData));
-
-            notifyData->name = rplData->userFileInfo->pathString;
-            rplData->userFileInfo->pathString = nullptr;
-
-            notifyData->textAddr = linkModule.textAddr;
-            notifyData->textSize = linkModule.textSize;
-            notifyData->textOffset = linkModule.textOffset;
-
-            notifyData->dataAddr = linkModule.dataAddr;
-            notifyData->dataSize = linkModule.dataSize;
-            notifyData->dataOffset = linkModule.dataOffset;
-
-            notifyData->readAddr = linkModule.dataAddr;
-            notifyData->readSize = linkModule.dataSize;
-            notifyData->readOffset = linkModule.dataOffset;
-         }
-      }
-   }
-
-   if (!error) {
-      sDynLoadData->modules =
-         virt_cast<virt_ptr<RPL_DATA> *>(
-            OSAllocFromSystem(4 * linkInfo->numModules, -4));
-      if (!sDynLoadData->modules) {
-         decaf_abort("error");
-      }
-
-      auto entryModules =
-         virt_cast<virt_ptr<RPL_DATA> *>(
-            OSAllocFromSystem(4 * linkInfo->numModules, -4));
-      if (!entryModules) {
-         decaf_abort("error");
-      }
-
-      *outEntryModules = entryModules;
-
-      auto itr = sDynLoadData->linkingRplList;
-      auto prev = virt_ptr<RPL_DATA> { nullptr };
-      sDynLoadData->numModules = 0u;
-      while (true) {
-         if (sDynLoadData->modules) {
-            OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), itr->handle);
-            sDynLoadData->modules[sDynLoadData->numModules] = itr;
-
-            if (itr != rpx) {
-               entryModules[(*outNumEntryModules)++] = itr;
-            }
-         }
-
-         itr = itr->next;
-         sDynLoadData->numModules++;
-         if (!itr) {
-            break;
-         }
-
-         prev = itr;
-      }
-
-      if (sDynLoadData->rplDataList &&
-         (sDynLoadData->rplDataList->userFileInfo->fileInfoFlags & loader::rpl::RPL_IS_RPX)) {
-         prev->next = sDynLoadData->rplDataList->next;
-         sDynLoadData->rplDataList->next = sDynLoadData->linkingRplList;
-      } else {
-         prev->next = sDynLoadData->rplDataList;
-         sDynLoadData->rplDataList = sDynLoadData->linkingRplList;
-      }
-
-      sDynLoadData->linkingRplList = nullptr;
-   }
-
-   OSFreeToSystem(linkInfo);
-   return error;
-}
-
-static OSDynLoad_Error
-doImports(virt_ptr<RPL_DATA> rplData);
-
-static int32_t
-sPrepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
-             OSDynLoad_AllocFn dynLoadAlloc,
-             virt_ptr<loader::LOADER_MinFileInfo> minFileInfo)
-{
-   auto rplData = *ptrRplData;
-   rplData->sectionInfo = virt_cast<loader::LOADER_SectionInfo *>(
-      OSAllocFromSystem(
-         sizeof(loader::LOADER_SectionInfo) * rplData->sectionInfoCount, -4));
-   if (!rplData->sectionInfo) {
-      // error
-      decaf_abort("error");
-   }
-
-   minFileInfo->outSectionInfo = rplData->sectionInfo;
-
-   if (auto error =
-         cafe::invoke(
-            cpu::this_core::state(),
-            dynLoadAlloc,
-            rplData->userFileInfoSize,
-            4,
-            virt_cast<virt_ptr<void> *>(virt_addrof(rplData->userFileInfo)))) {
-   }
-
-   minFileInfo->outFileInfo = rplData->userFileInfo;
-   sDynLoadData->numAllocations++;
-   sDynLoadData->totalAllocatedBytes += rplData->userFileInfoSize;
-   std::memset(rplData->userFileInfo.getRawPointer(), 0, rplData->userFileInfoSize);
-
-   if (minFileInfo->pathStringSize) {
-      minFileInfo->pathStringBuffer =
-         virt_cast<char *>(OSAllocFromSystem(minFileInfo->pathStringSize, 4));
-      if (!minFileInfo->pathStringBuffer) {
-         // error
-         decaf_abort("error");
-      }
-
-      std::memset(minFileInfo->pathStringBuffer.getRawPointer(), 0,
-                  minFileInfo->pathStringSize);
-   }
-
-   if (minFileInfo->fileInfoFlags & loader::rpl::RPL_FLAG_4) {
-      if (auto error = kernel::loaderQuery(rplData->loaderHandle, minFileInfo)) {
-         // error
-         decaf_abort("error");
-      }
-   } else {
-      if (minFileInfo->dataSize) {
-         if (auto error =
-               cafe::invoke(
-                  cpu::this_core::state(),
-                  dynLoadAlloc,
-                  minFileInfo->dataSize,
-                  minFileInfo->dataAlign,
-                  virt_addrof(rplData->dataSection))) {
-            // error
-            decaf_abort("error");
-         }
-
-         // validate address space range
-         // check_align
-
-         rplData->dataSectionSize = minFileInfo->dataSize;
-         minFileInfo->dataBuffer = rplData->dataSection;
-         sDynLoadData->numAllocations++;
-         sDynLoadData->totalAllocatedBytes += minFileInfo->dataSize;
-
-      }
-
-      if (minFileInfo->loadSize) {
-         if (auto error =
-               cafe::invoke(
-                  cpu::this_core::state(),
-                  dynLoadAlloc,
-                  minFileInfo->loadSize,
-                  minFileInfo->loadAlign,
-                  virt_addrof(rplData->loadSection))) {
-            // error
-            decaf_abort("error");
-         }
-
-         // validate address space range
-         // check_align
-
-         rplData->loadSectionSize = minFileInfo->loadSize;
-         minFileInfo->loadBuffer = rplData->loadSection;
-         sDynLoadData->numAllocations++;
-         sDynLoadData->totalAllocatedBytes += minFileInfo->loadSize;
-      }
-
-      if (auto error = kernel::loaderSetup(rplData->loaderHandle, minFileInfo)) {
-         // error
-         decaf_abort("error");
-      }
-   }
-
-   OSFreeToSystem(minFileInfo);
-
-   findExports(rplData);
-   findTlsSection(rplData);
-
-   rplData->next = sDynLoadData->linkingRplList;
-   sDynLoadData->linkingRplList = rplData;
-   *ptrRplData = nullptr;
-   return doImports(rplData);
-}
-
-static int32_t
-sReleaseImports()
-{
-   for (auto module = sDynLoadData->linkingRplList; module; module = module->next) {
-      for (auto i = 0u; i < module->importModuleCount; ++i) {
-         module->importModules[i]->handle;
-      }
-   }
-
-   return 0;
-}
-
-static OSDynLoad_Error
-internalAcquire(virt_ptr<char> name,
-                virt_ptr<virt_ptr<RPL_DATA>> outRplData,
-                virt_ptr<uint32_t> outNumEntryModules,
-                virt_ptr<virt_ptr<virt_ptr<RPL_DATA>>> outEntryModules,
-                bool doLoad)
-{
-   auto [moduleName, moduleNameLength] = resolveModuleName(name);
-   auto rplName =
-      virt_cast<char *>(
-         OSAllocFromSystem(align_up(moduleNameLength + 1, 4), 4));
-   if (!rplName) {
-      return OSDynLoad_Error::OutOfSysMemory;
-   }
-
-   for (auto i = 0u; i < moduleNameLength; ++i) {
-      rplName[i] = static_cast<char>(tolower(moduleName[i]));
-   }
-   rplName[moduleNameLength] = char { 0 };
-
-   OSLockMutex(virt_addrof(sDynLoadData->mutex));
-
-   if (sDynLoadData->acquiringRpl) {
-      // error
-      decaf_abort("error");
-   }
-
-   for (auto rpl = sDynLoadData->rplDataList; rpl; rpl = rpl->next) {
-      if (strcmp(rpl->moduleName.getRawPointer(), rplName.getRawPointer()) == 0) {
-         OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), rpl->handle);
-         *outRplData = rpl;
-         return OSDynLoad_Error::OK;
-      }
-   }
-
-   for (auto rpl = sDynLoadData->linkingRplList; rpl; rpl = rpl->next) {
-      if (strcmp(rpl->moduleName.getRawPointer(), rplName.getRawPointer()) == 0) {
-         OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), rpl->handle);
-         *outRplData = rpl;
-         return OSDynLoad_Error::OK;
-      }
-   }
-
-   if (strcmp(rplName.getRawPointer(), "coreinit") == 0) {
-      // error
-      decaf_abort("error");
-   }
-
-   StackObject<OSDynLoad_AllocFn> dynLoadAlloc;
-   StackObject<OSDynLoad_FreeFn> dynLoadFree;
-   OSDynLoad_GetAllocator(dynLoadAlloc, dynLoadFree);
-
-   auto firstLinkingRpl = !sDynLoadData->linkingRplList;
-   if (firstLinkingRpl) {
-      // TODO:
-      decaf_abort("TODO");
-   }
-
-   auto rplData = virt_cast<RPL_DATA *>(OSAllocFromSystem(sizeof(RPL_DATA), 4));
-   if (rplData) {
-      std::memset(rplData.getRawPointer(), 0, sizeof(RPL_DATA));
-
-      auto minFileInfo =
-         virt_cast<loader::LOADER_MinFileInfo *>(
-            OSAllocFromSystem(sizeof(loader::LOADER_MinFileInfo), 4));
-      if (!minFileInfo) {
-         // error
-         decaf_abort("error");
-      }
-
-      // aka RPL_TEMP_DATA
-      std::memset(minFileInfo.getRawPointer(), 0, sizeof(loader::LOADER_MinFileInfo));
-      StackObject<loader::LOADER_Handle> kernelHandle;
-      minFileInfo->version = 4u;
-      minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
-      minFileInfo->outKernelHandle = kernelHandle;
-      minFileInfo->moduleNameBufferLen = moduleNameLength;
-      minFileInfo->moduleNameBuffer = rplName;
-      minFileInfo->inoutNextTlsModuleNumber = virt_addrof(sDynLoadData->tlsModuleIndex);
-      minFileInfo->outPathStringSize = virt_addrof(minFileInfo->pathStringSize);
-      minFileInfo->outNumberOfSections = virt_addrof(rplData->sectionInfoCount);
-      minFileInfo->outSizeOfFileInfo = virt_addrof(rplData->userFileInfoSize);
-      if (auto error = kernel::loaderPrep(minFileInfo)) {
-         decaf_abort("error");
-      }
-
-      static constexpr auto MaxTlsModuleIndex = uint32_t { 0x7fff };
-      if (sDynLoadData->tlsModuleIndex > sDynLoadData->tlsHeader) {
-         if (sDynLoadData->tlsModuleIndex > MaxTlsModuleIndex) {
-            // error
-            decaf_abort("error");
-         }
-
-         sDynLoadData->tlsHeader =
-            std::min<uint32_t>(sDynLoadData->tlsModuleIndex + 8,
-                               MaxTlsModuleIndex);
-      }
-
-      if (auto error = OSHandle_Alloc(virt_addrof(sDynLoadData->handleTable),
-                                      rplData, nullptr,
-                                      virt_addrof(rplData->handle))) {
-         // error
-         decaf_abort("error");
-      }
-
-      *outRplData = rplData;
-      rplData->moduleName = rplName;
-      rplData->moduleNameLen = moduleNameLength;
-      rplData->loaderHandle = *kernelHandle;
-      rplData->dynLoadFreeFn = *dynLoadFree;
-      auto error = sPrepareLoad(&rplData, *dynLoadAlloc, minFileInfo);
-
-      if (firstLinkingRpl) {
-         if (error) {
-            decaf_abort("error");
-         } else {
-            error = executeDynamicLink(nullptr,
-                                       outNumEntryModules,
-                                       outEntryModules,
-                                       *outRplData);
-         }
-
-         sReleaseImports();
-
-         while (sDynLoadData->linkingRplList) {
-            auto rpl = sDynLoadData->linkingRplList;
-            sDynLoadData->linkingRplList = rpl->next;
-            rpl->next = nullptr;
-
-            if (rpl->handle) {
-               StackObject<uint32_t> handleRefCount;
-               OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
-                                rpl->handle,
-                                handleRefCount);
-            }
-         }
-      }
-
-      if (rplData) {
-         // TODO
-         decaf_abort("TODO");
-      }
-   }
-
-   OSUnlockMutex(virt_addrof(sDynLoadData->mutex));
-   return OSDynLoad_Error::OK;
-}
-
-static OSDynLoad_Error
-doImports(virt_ptr<RPL_DATA> rplData)
-{
-   auto shstrndx = rplData->userFileInfo->shstrndx;
-   if (!rplData->userFileInfo->shstrndx) {
-      decaf_abort("error");
-   }
-
-   auto shStrSection = virt_cast<char *>(rplData->sectionInfo[shstrndx].address);
-   if (!shStrSection) {
-      decaf_abort("error");
-   }
-
-   auto numImportModules = 0u;
-   for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
-      if (rplData->sectionInfo[i].address &&
-          rplData->sectionInfo[i].name &&
-          (rplData->sectionInfo[i].flags & loader::rpl::SHF_ALLOC) &&
-          rplData->sectionInfo[i].type == loader::rpl::SHT_RPL_IMPORTS) {
-         numImportModules++;
-      }
-   }
-
-   if (!numImportModules) {
-      return OSDynLoad_Error::OK;
-   }
-
-   rplData->importModuleCount = numImportModules;
-   rplData->importModules = virt_cast<virt_ptr<RPL_DATA> *>(
-      OSAllocFromSystem(sizeof(virt_ptr<RPL_DATA>) * numImportModules, 4));
-   if (!rplData->importModules) {
-      decaf_abort("error");
-      return OSDynLoad_Error::OutOfSysMemory;
-   }
-
-   auto importModuleIdx = 0u;
-   for (auto i = 0u; i < rplData->sectionInfoCount; ++i) {
-      if (rplData->sectionInfo[i].address &&
-          rplData->sectionInfo[i].name &&
-          (rplData->sectionInfo[i].flags & loader::rpl::SHF_ALLOC) &&
-          rplData->sectionInfo[i].type == loader::rpl::SHT_RPL_IMPORTS) {
-         auto name = shStrSection + rplData->sectionInfo[i].name;
-         auto error =
-            internalAcquire(name + 9,
-                            virt_addrof(rplData->importModules[importModuleIdx]),
-                            0, 0, 0);
-         if (error) {
-            return error;
-         }
-
-         auto importModule = rplData->importModules[importModuleIdx];
-         if (!importModule->entryPoint) {
-            // Ensure rplData comes after importModule in the linking list
-            auto itr = virt_ptr<RPL_DATA> { nullptr };
-            auto prev = virt_ptr<RPL_DATA> { nullptr };
-            for (itr = sDynLoadData->linkingRplList; itr != rplData; itr = itr->next) {
-               prev = itr;
-            }
-
-            while (itr->next) {
-               if (itr == importModule) {
-                  if (prev) {
-                     prev->next = rplData->next;
-                  } else {
-                     sDynLoadData->linkingRplList = rplData->next;
-                  }
-
-                  rplData->next = importModule->next;
-                  importModule->next = rplData;
-                  break;
-               }
-            }
-         }
-
-         ++importModuleIdx;
-      }
-   }
-
-   OSFreeToSystem(rplData->sectionInfo);
-   rplData->sectionInfo = nullptr;
-   return OSDynLoad_Error::OK;
-}
-
-using OSDynLoad_RplEntryFn = virt_func_ptr<
-   int32_t (OSDynLoad_ModuleHandle moduleHandle,
-            OSDynLoad_EntryReason reason)>;
-
-int32_t
-runEntryPoints(uint32_t numEntryModules,
-               virt_ptr<virt_ptr<RPL_DATA>> entryModules)
-{
-   auto error = 0;
-
-   for (auto i = 0u; i < numEntryModules; ++i) {
-      auto entry = virt_func_cast<OSDynLoad_RplEntryFn>(entryModules[i]->entryPoint);
-      error = cafe::invoke(cpu::this_core::state(),
-                           entry,
-                           entryModules[i]->handle,
-                           OSDynLoad_EntryReason::Loaded);
-      if (error) {
-         break;
-      }
-
-      entryModules[i]->entryPoint = virt_addr { 0 };
-   }
-
-   if (entryModules) {
-      OSFreeToSystem(entryModules);
-   }
-
-   return error;
-}
 
 /**
  * __OSDynLoad_InitFromCoreInit
@@ -1298,51 +2593,106 @@ runEntryPoints(uint32_t numEntryModules,
 virt_addr
 initialiseDynLoad()
 {
-   initialiseCommon();
+   resetFatalErrorInfo();
+   if (auto error = initialiseCommon()) {
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "OSDynLoad_InitCommon() failed with err 0x{:08X}\n", error));
+      reportFatalError();
+   }
 
-   // Load the coreinit rpl data
-   auto coreinitRplData = virt_cast<RPL_DATA *>(OSAllocFromSystem(sizeof(RPL_DATA), 4));
-   decaf_check(coreinitRplData);
+   // Allocate rpl data for coreinit
+   auto coreinitRplData = virt_cast<RPL_DATA *>(
+      rplSysHeapAlloc("RPL_DATA", sizeof(RPL_DATA), 4));
+   if (!coreinitRplData) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - mem alloc failed (err=0x{:08X}).",
+         OSDynLoad_Error::OutOfSysMemory));
+      setFatalErrorInfo2(0, OSDynLoad_Error::OutOfSysMemory, false,
+                         440, "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
+   }
+
    std::memset(coreinitRplData.getRawPointer(), 0, sizeof(RPL_DATA));
 
+   // Allocate handle for coreinit
    if (auto handleError = OSHandle_Alloc(virt_addrof(sDynLoadData->handleTable),
                                          coreinitRplData,
                                          nullptr,
                                          virt_addrof(coreinitRplData->handle))) {
       decaf_abort(fmt::format("Unexpected OSHandle_Alloc error = {}",
                               handleError));
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - handle alloc failed (err=0x{:08X}.", handleError));
+      setFatalErrorInfo2(0, handleError, 0, 452,
+                         "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
    }
 
+   // Call setupPerm for coreinit
    sDynLoadData->coreinitModuleName = "coreinit";
    coreinitRplData->moduleName = virt_addrof(sDynLoadData->coreinitModuleName);
    coreinitRplData->moduleNameLen = 8u;
    coreinitRplData->loaderHandle = getCoreinitLoaderHandle();
    coreinitRplData->next = sDynLoadData->rplDataList;
    sDynLoadData->rplDataList = coreinitRplData;
+   setupPerm(coreinitRplData, false);
 
-   sSetupPerm(coreinitRplData, false);
-   OSFreeToSystem(coreinitRplData->sectionInfo);
+   rplSysHeapFree("RPL_SEC_INFO", coreinitRplData->sectionInfo,
+                  coreinitRplData->sectionInfoCount * sizeof(loader::LOADER_SectionInfo));
    coreinitRplData->sectionInfo = nullptr;
 
    sDynLoadData->tlsAllocLocked = FALSE;
    initialiseDefaultHeap(coreinitRplData,
                          make_stack_string("CoreInitDefaultHeap"));
 
-   // Setup the rpx data
-   auto rpxData = virt_cast<RPL_DATA *>(OSAllocFromSystem(sizeof(RPL_DATA), 4));
-   decaf_check(rpxData);
+   // Allocate rpx data
+   auto rpxData = virt_cast<RPL_DATA *>(
+      rplSysHeapAlloc("RPL_DATA", sizeof(RPL_DATA), 4));
+   if (!rpxData) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - mem alloc failed (err=0x{:08X}).",
+         OSDynLoad_Error::OutOfSysMemory));
+      setFatalErrorInfo2(0, OSDynLoad_Error::OutOfSysMemory, false,
+                         493, "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
+   }
+
    std::memset(rpxData.getRawPointer(), 0, sizeof(RPL_DATA));
    sDynLoadData->rpxData = rpxData;
 
+   // Allocate module name
    rpxData->handle = 0xFFFFFFFFu;
-   rpxData->moduleName = virt_cast<char *>(OSAllocFromSystem(sDynLoadData->rpxNameLength + 1, 4));
+   rpxData->moduleName = virt_cast<char *>(
+      rplSysHeapAlloc("RPL_NAME", sDynLoadData->rpxNameLength + 1, 4));
    rpxData->moduleNameLen = sDynLoadData->rpxNameLength;
-   decaf_check(rpxData->moduleName);
+   if (!rpxData->moduleName) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - mem alloc failed (err=0x{:08X}).",
+         OSDynLoad_Error::OutOfSysMemory));
+      setFatalErrorInfo2(0, OSDynLoad_Error::OutOfSysMemory, false,
+                         514, "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
+   }
+
    std::memcpy(rpxData->moduleName.getRawPointer(),
                sDynLoadData->rpxName.getRawPointer(),
                rpxData->moduleNameLen);
    rpxData->moduleName[rpxData->moduleNameLen] = char { 0 };
-   sSetupPerm(rpxData, true);
+
+   // Call setupPerm for rpx
+   setupPerm(rpxData, true);
 
    if (sDynLoadData->tlsModuleIndex) {
       sDynLoadData->tlsHeader = sDynLoadData->tlsModuleIndex + 8;
@@ -1351,7 +2701,12 @@ initialiseDynLoad()
    sDynLoadData->linkingRplList = rpxData;
    rpxData->entryPoint = virt_addr { 0u };
    if (auto error = doImports(rpxData)) {
-      decaf_abort("error");
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - main program load failed (err=0x{:08X}).",
+         error));
+      setFatalErrorInfo2(rpxData->userFileInfo->titleLocation, error, true,
+                         540, "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
    }
 
    StackObject<uint32_t> numEntryModules;
@@ -1359,11 +2714,16 @@ initialiseDynLoad()
    if (auto error = executeDynamicLink(rpxData,
                                        numEntryModules, entryModules,
                                        rpxData)) {
-      decaf_abort("error");
+      COSError(COSReportModule::Unknown2, fmt::format(
+         "__OSDynLoad_InitFromCoreInit() - dynamic link of main program failed (err=0x{:08X}).",
+         error));
+      setFatalErrorInfo2(rpxData->userFileInfo->titleLocation, error, true,
+                         549, "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
    }
 
    if (coreinitRplData->userFileInfo->pathString) {
-      // sInitNotifyHdr for coreinit
+      // TODO: Init notify data for coreinit
    }
 
    kernel::loaderUserGainControl();
@@ -1404,23 +2764,36 @@ initialiseDynLoad()
 
    initialiseGhs();
    if (auto error = runEntryPoints(*numEntryModules, *entryModules)) {
-      decaf_abort("error");
+      COSError(COSReportModule::Unknown2, fmt::format(
+               "__OSDynLoad_InitFromCoreInit() - initialization functions of main program failed (err=0x{:08X}).",
+               error));
+      reportFatalError();
    }
 
    if (sDynLoadData->modules) {
-      OSFreeToSystem(sDynLoadData->modules);
+      rplSysHeapFree("RPL_MODULES_ARRAY", sDynLoadData->modules,
+                     sDynLoadData->numModules);
    }
 
    sDynLoadData->modules = nullptr;
    sDynLoadData->numModules = 0u;
 
    if (!rpxData->entryPoint) {
-      decaf_abort("error");
+      COSError(COSReportModule::Unknown2,
+               "__OSDynLoad_InitFromCoreInit() - main program is NULL.");
+      setFatalErrorInfo2(rpxData->userFileInfo->titleLocation,
+                         OSDynLoad_Error::InvalidRpxEntryPoint, true,
+                         643, "__OSDynLoad_InitFromCoreInit");
+      reportFatalError();
    }
 
    return rpxData->entryPoint;
 }
 
+
+/**
+ * Relocate HLE variables to the loaded addresses for a given module.
+ */
 OSDynLoad_Error
 relocateHleLibrary(OSDynLoad_ModuleHandle moduleHandle)
 {
@@ -1434,10 +2807,12 @@ relocateHleLibrary(OSDynLoad_ModuleHandle moduleHandle)
 
    auto rplData = virt_cast<RPL_DATA *>(*handleData);
    cafe::hle::relocateLibrary(
-      std::string_view { rplData->moduleName.getRawPointer(), rplData->moduleNameLen },
+      std::string_view { rplData->moduleName.getRawPointer(),
+                         rplData->moduleNameLen },
       rplData->notifyData->textAddr,
       rplData->notifyData->dataAddr
    );
+
    return OSDynLoad_Error::OK;
 }
 
@@ -1459,9 +2834,15 @@ Library::registerDynLoadSymbols()
    RegisterFunctionExport(OSDynLoad_Acquire);
    RegisterFunctionExport(OSDynLoad_AcquireContainingModule);
    RegisterFunctionExport(OSDynLoad_FindExport);
+   RegisterFunctionExport(OSDynLoad_FindTag);
+   RegisterFunctionExport(OSDynLoad_GetLoaderHeapStatistics);
    RegisterFunctionExport(OSDynLoad_GetModuleName);
+   RegisterFunctionExport(OSDynLoad_GetNumberOfRPLs);
+   RegisterFunctionExport(OSDynLoad_GetRPLInfo);
    RegisterFunctionExport(OSDynLoad_IsModuleLoaded);
    RegisterFunctionExport(OSDynLoad_Release);
+
+   RegisterDataExportName("OSDynLoad_gLoaderLock", sDynLoad_LoaderLock);
 
    RegisterFunctionExport(OSGetSymbolName);
    RegisterFunctionExportName("__tls_get_addr", tls_get_addr);
