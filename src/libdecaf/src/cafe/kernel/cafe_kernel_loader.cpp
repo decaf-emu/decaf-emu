@@ -43,6 +43,15 @@ loaderPrep(virt_ptr<loader::LOADER_MinFileInfo> minFileInfo)
 }
 
 int32_t
+loaderPurge(loader::LOADER_Handle handle)
+{
+   auto loaderIpc = loader::getKernelIpcStorage();
+   loaderIpc->entryParams.dispatch.code = loader::LOADER_Code::Purge;
+   loaderIpc->entryParams.dispatch.handle = handle;
+   return internal::loaderEntry();
+}
+
+int32_t
 loaderSetup(loader::LOADER_Handle handle,
             virt_ptr<loader::LOADER_MinFileInfo> minFileInfo)
 {

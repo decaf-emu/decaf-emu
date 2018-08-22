@@ -16,6 +16,9 @@ int32_t
 loaderPrep(virt_ptr<loader::LOADER_MinFileInfo> minFileInfo);
 
 int32_t
+loaderPurge(loader::LOADER_Handle handle);
+
+int32_t
 loaderSetup(loader::LOADER_Handle handle,
             virt_ptr<loader::LOADER_MinFileInfo> minFileInfo);
 
