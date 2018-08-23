@@ -1,6 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_appio.h"
+#include "coreinit_bsp.h"
 #include "coreinit_device.h"
 #include "coreinit_dynload.h"
 #include "coreinit_exception.h"
@@ -42,6 +43,7 @@ rpl_entry(/* no args for coreinit entry point */)
    IPCDriverOpen();
    internal::initialiseAppIoThreads();
    internal::initialiseDeviceTable();
+   bspInitializeShimInterface();
    internal::initialiseMcp();
 
    auto entryPoint = internal::initialiseDynLoad();
