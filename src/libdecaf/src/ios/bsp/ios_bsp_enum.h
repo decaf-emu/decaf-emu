@@ -7,6 +7,10 @@ ENUM_NAMESPACE_BEG(ios)
 
 ENUM_NAMESPACE_BEG(bsp)
 
+ENUM_BEG(BSPCommand, uint32_t)
+   ENUM_VALUE(GetHardwareVersion,            2)
+ENUM_END(BSPCommand)
+
 ENUM_BEG(HardwareVersion, uint32_t)
    ENUM_VALUE(Unknown,                       0x00000000)
 

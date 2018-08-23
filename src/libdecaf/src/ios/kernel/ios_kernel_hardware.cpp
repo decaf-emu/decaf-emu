@@ -25,10 +25,11 @@ CHECK_SIZE(EventHandler, 0x10);
 struct StaticHardwareData
 {
    be2_array<EventHandler, 0x30> eventHandlers;
+   be2_val<BOOL> bspReady;
 };
 
 static phys_ptr<StaticHardwareData>
-sData;
+sHardwareData;
 
 //! Interrupt mask for ARM AHB IRQs
 static std::atomic<uint32_t>
@@ -95,13 +96,13 @@ IOS_HandleEvent(DeviceId id,
       return error;
    }
 
-   if (id >= sData->eventHandlers.size()) {
+   if (id >= sHardwareData->eventHandlers.size()) {
       return Error::Invalid;
    }
 
    queue->flags |= MessageQueueFlags::RegisteredEventHandler;
 
-   auto &handler = sData->eventHandlers[id];
+   auto &handler = sHardwareData->eventHandlers[id];
    handler.message = message;
    handler.queue = queue;
    handler.pid = internal::getCurrentProcessId();
@@ -112,11 +113,11 @@ IOS_HandleEvent(DeviceId id,
 Error
 IOS_UnregisterEventHandler(DeviceId id)
 {
-   if (id >= sData->eventHandlers.size()) {
+   if (id >= sHardwareData->eventHandlers.size()) {
       return Error::Invalid;
    }
 
-   auto &handler = sData->eventHandlers[id];
+   auto &handler = sHardwareData->eventHandlers[id];
 
    if (handler.queue) {
       handler.queue->flags &= ~MessageQueueFlags::RegisteredEventHandler;
@@ -251,8 +252,29 @@ IOS_ClearAndEnable(DeviceId id)
    return Error::OK;
 }
 
+
+/**
+ * Set BSP ready flag used for boot.
+ */
+Error
+IOS_SetBspReady()
+{
+   sHardwareData->bspReady = TRUE;
+   return Error::OK;
+}
+
 namespace internal
 {
+
+/**
+ * Get BSP ready flag.
+ */
+bool
+bspReady()
+{
+   return !!sHardwareData->bspReady;
+}
+
 
 /**
  * Sends a message to the device event handler message queue.
@@ -262,7 +284,7 @@ namespace internal
 static void
 sendEventHandlerMessageNoLock(DeviceId id)
 {
-   auto &handler = sData->eventHandlers[id];
+   auto &handler = sHardwareData->eventHandlers[id];
    auto queue = handler.queue;
    if (queue && queue->used < queue->size) {
       auto index = (queue->first + queue->used) % queue->size;
@@ -273,6 +295,7 @@ sendEventHandlerMessageNoLock(DeviceId id)
                                       Error::OK);
    }
 }
+
 
 /**
  * Checks any pending interrupts for LT_INTSR_AHBALL_ARM and LT_INTSR_AHBLT_ARM.
@@ -473,7 +496,7 @@ setInterruptAhbLt(AHBLT mask)
 void
 unregisterEventHandlerQueue(MessageQueueId queue)
 {
-   for (auto &handler : sData->eventHandlers) {
+   for (auto &handler : sHardwareData->eventHandlers) {
       if (handler.queue->uid == queue) {
          std::memset(phys_addrof(handler).getRawPointer(), 0, sizeof(handler));
          break;
@@ -488,7 +511,7 @@ initialiseStaticHardwareData()
    LT_INTSR_AHBALL_ARM.store(0);
    LT_INTMR_AHBLT_ARM.store(0);
    LT_INTSR_AHBLT_ARM.store(0);
-   sData = phys_cast<StaticHardwareData *>(allocProcessStatic(sizeof(StaticHardwareData)));
+   sHardwareData = phys_cast<StaticHardwareData *>(allocProcessStatic(sizeof(StaticHardwareData)));
 }
 
 } // namespace internal

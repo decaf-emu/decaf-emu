@@ -220,11 +220,14 @@ kernelEntryPoint(phys_ptr<void> context)
       return error;
    }
 
-   /* TODO: Once we have the BSP process, enable this!
+   // Wait for BSP to start
    IOS_SetThreadPriority(CurrentThread, 124);
-   // TODO: Wait for BSP startup complete
+
+   while (!internal::bspReady()) {
+      IOS_YieldCurrentThread();
+   }
+
    IOS_SetThreadPriority(CurrentThread, 126);
-   */
 
    // Initialise root kernel thread
    error = initialiseRootThread();

@@ -8,6 +8,7 @@
 namespace cafe::coreinit
 {
 
+using ios::bsp::BSPCommand;
 using ios::bsp::BSPRequest;
 using ios::bsp::BSPResponse;
 using ios::bsp::BSPResponseGetHardwareVersion;
@@ -60,7 +61,7 @@ bspGetHardwareVersion(virt_ptr<BSPHardwareVersion> version)
    }
 
    auto result = IOS_Ioctl(sBspData->bspHandle,
-                           2,
+                           BSPCommand::GetHardwareVersion,
                            virt_addrof(buffer->request),
                            sizeof(BSPRequest),
                            virt_addrof(buffer->response.getHardwareVersion),

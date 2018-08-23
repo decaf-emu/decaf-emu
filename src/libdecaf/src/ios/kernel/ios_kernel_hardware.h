@@ -70,8 +70,14 @@ IOS_UnregisterEventHandler(DeviceId id);
 Error
 IOS_ClearAndEnable(DeviceId id);
 
+Error
+IOS_SetBspReady();
+
 namespace internal
 {
+
+bool
+bspReady();
 
 void
 handleAhbInterrupts();
