@@ -451,8 +451,28 @@ format_arg(fmt::BasicFormatter<char> &f,
            const char *&format_str,
            const Pointer<char, AddressType> &val)
 {
-   format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
+   if (val) {
+      format_str = f.format(format_str,
+                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
+   } else {
+      format_str = f.format(format_str,
+                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>("<NULL>"));
+   }
+}
+
+template<typename AddressType>
+static inline void
+format_arg(fmt::BasicFormatter<char> &f,
+           const char *&format_str,
+           const Pointer<const char, AddressType> &val)
+{
+   if (val) {
+      format_str = f.format(format_str,
+                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
+   } else {
+      format_str = f.format(format_str,
+                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>("<NULL>"));
+   }
 }
 
 template<typename ValueType, typename AddressType>
