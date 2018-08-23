@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_hle.h"
 #include "cafe_hle_library.h"
 

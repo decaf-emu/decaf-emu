@@ -525,7 +525,8 @@ void
 brTrapHandler(BinrecCore *core)
 {
    if (!cpu::hasBreakpoint(core->nia)) {
-      decaf_abort(fmt::format("Game raised a trap exception at 0x{:08X}.", core->nia));
+      decaf_abort(fmt::format("Game raised a trap exception at 0x{:08X}.",
+                              core->nia));
    }
 
    // If we have a breakpoint, we will fall back to interpreter to handle it.
