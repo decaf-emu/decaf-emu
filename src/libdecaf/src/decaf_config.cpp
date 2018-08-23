@@ -38,7 +38,7 @@ bool branch_trace = false;
 
 std::vector<std::string> kernel_trace_filters =
 {
-   "+*",
+   "+.*",
    "-coreinit::__ghsLock",
    "-coreinit::__ghsUnlock",
    "-coreinit::__gh_errno_ptr",
