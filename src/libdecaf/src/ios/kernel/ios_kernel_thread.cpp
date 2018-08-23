@@ -42,9 +42,15 @@ IOS_CreateThread(ThreadEntryFn entry,
    phys_ptr<Thread> thread = nullptr;
    internal::lockScheduler();
 
-   // We cannot create thread with priority higher than current thread's priority
+   if (priority > MaxThreadPriority) {
+      internal::unlockScheduler();
+      return Error::Invalid;
+   }
+
+   // We cannot create thread with priority higher than current thread's max
+   // priority
    auto currentThread = internal::getCurrentThread();
-   if (currentThread && priority > currentThread->minPriority) {
+   if (currentThread && priority > currentThread->maxPriority) {
       internal::unlockScheduler();
       return Error::Invalid;
    }
@@ -83,7 +89,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    }
 
    thread->state = ThreadState::Stopped;
-   thread->minPriority = priority;
+   thread->maxPriority = priority;
    thread->priority = priority;
    thread->userStackAddr = stackTop;
    thread->userStackSize = stackSize;
@@ -371,7 +377,7 @@ IOS_SetThreadPriority(ThreadId id,
       return Error::Invalid;
    }
 
-   if (priority > 127 || priority < thread->minPriority) {
+   if (priority > MaxThreadPriority || priority > thread->maxPriority) {
       internal::unlockScheduler();
       return Error::Invalid;
    }
