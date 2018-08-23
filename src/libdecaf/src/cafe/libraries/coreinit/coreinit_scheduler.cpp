@@ -300,19 +300,33 @@ checkRunningThreadNoLock(bool yielding)
    }
 
    // Trace log the thread switch
-   if (currThread && nextThread) {
-      gLog->trace("Core {} leaving thread {}[{}] to thread {}[{}]",
-                  coreId,
-                  currThread->id, currThread->name.getRawPointer(),
-                  nextThread->id, nextThread->name.getRawPointer());
-   } else if (currThread && !nextThread) {
-      gLog->trace("Core {} leaving thread {}[{}] to idle",
-                  coreId,
-                  currThread->id, currThread->name.getRawPointer());
-   } else if (!currThread && nextThread) {
-      gLog->trace("Core {} leaving idle to thread {}[{}]",
-                  coreId,
-                  nextThread->id, nextThread->name.getRawPointer());
+   if (gLog->should_log(spdlog::level::trace)) {
+      fmt::MemoryWriter out;
+      out.write("Core {} leaving", coreId);
+
+      if (currThread) {
+         out.write(" thread {}", currThread->id);
+
+         if (currThread->name) {
+            out.write(" [{}]", currThread->name);
+         }
+      } else {
+         out.write(" idle");
+      }
+
+      out.write(" to");
+
+      if (nextThread) {
+         out.write(" thread {}", nextThread->id);
+
+         if (nextThread->name) {
+            out.write(" [{}]", nextThread->name);
+         }
+      } else {
+         out.write(" idle");
+      }
+
+      gLog->trace(out.c_str());
    }
 
    if (nextThread) {
