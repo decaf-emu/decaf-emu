@@ -103,7 +103,6 @@ ipcThreadEntry(phys_ptr<void> context)
             error = Error::Invalid;
          } else {
             auto pid = static_cast<ProcessId>(request->clientPid + ProcessId::COSKERNEL);
-            auto error = Error::OK;
 
             switch (request->command) {
             case Command::Open:
