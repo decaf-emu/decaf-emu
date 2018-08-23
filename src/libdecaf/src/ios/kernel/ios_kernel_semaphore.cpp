@@ -160,7 +160,7 @@ IOS_SignalSempahore(SemaphoreId id)
    }
 
    internal::wakeupOneThreadNoLock(phys_addrof(semaphore->waitThreadQueue),
-                                    Error::OK);
+                                   Error::OK);
    internal::rescheduleAllNoLock();
    internal::unlockScheduler();
    return Error::OK;

@@ -1,3 +1,4 @@
+#pragma optimize("", off)
 #include "ios_kernel_thread.h"
 #include "ios_kernel_threadqueue.h"
 #include "ios_kernel_process.h"

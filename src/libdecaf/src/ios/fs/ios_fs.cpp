@@ -1,4 +1,5 @@
 #include "ios_fs.h"
+#include "ios_fs_fsa_async_task.h"
 #include "ios_fs_fsa_thread.h"
 #include "ios_fs_service_thread.h"
 
@@ -33,6 +34,7 @@ processEntryPoint(phys_ptr<void> context)
 {
    // Initialise static memory
    internal::initialiseStaticData();
+   internal::initialiseStaticFsaAsyncTaskData();
    internal::initialiseStaticFsaThreadData();
    internal::initialiseStaticServiceThreadData();
 
@@ -59,6 +61,13 @@ processEntryPoint(phys_ptr<void> context)
    error = internal::startFsaThread();
    if (error < Error::OK) {
       gLog->error("Failed to start FSA thread");
+      return error;
+   }
+
+   // Start FSA async task thread.
+   error = internal::startFsaAsyncTaskThread();
+   if (error < Error::OK) {
+      gLog->error("Failed to start FSA async task thread");
       return error;
    }
 

@@ -1,6 +1,8 @@
+#include "ios_fs_fsa_async_task.h"
 #include "ios_fs_fsa_device.h"
 #include "ios_fs_mutex.h"
 
+#include "ios/kernel/ios_kernel_hardware.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
@@ -10,8 +12,10 @@
 #include "ios/ios_handlemanager.h"
 #include "ios/ios_ipc.h"
 #include "ios/ios_stackobject.h"
+#include "ios/ios_worker_thread.h"
 
 using namespace ios::kernel;
+using ios::internal::submitWorkerTask;
 
 namespace ios::fs::internal
 {
@@ -83,7 +87,7 @@ fsaDeviceClose(FSADeviceHandle handle,
    return FSAStatus::OK;
 }
 
-static FSAStatus
+static void
 fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
                FSACommand command,
                be2_phys_ptr<const void> inputBuffer,
@@ -92,135 +96,251 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
    FSADevice *device = nullptr;
    auto status = getDevice(resourceRequest->requestData.handle, &device);
    if (status < FSAStatus::OK) {
-      return status;
+      IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
+      return;
    }
 
    auto request = phys_cast<const FSARequest *>(inputBuffer);
    auto response = phys_cast<FSAResponse *>(outputBuffer);
 
    if (!device) {
-     status = FSAStatus::InvalidClientHandle;
-   } else if (!inputBuffer && !outputBuffer) {
-     status = FSAStatus::InvalidParam;
-   } else if (request->emulatedError < 0) {
-      return request->emulatedError;
-   } else {
-      switch (command) {
-      case FSACommand::ChangeDir:
-         status = device->changeDir(phys_addrof(request->changeDir));
-         break;
-      case FSACommand::CloseDir:
-         status = device->closeDir(phys_addrof(request->closeDir));
-         break;
-      case FSACommand::CloseFile:
-         status = device->closeFile(phys_addrof(request->closeFile));
-         break;
-      case FSACommand::FlushFile:
-         status = device->flushFile(phys_addrof(request->flushFile));
-         break;
-      case FSACommand::FlushQuota:
-         status = device->flushQuota(phys_addrof(request->flushQuota));
-         break;
-      case FSACommand::GetCwd:
-         status = device->getCwd(phys_addrof(response->getCwd));
-         break;
-      case FSACommand::GetInfoByQuery:
-         status = device->getInfoByQuery(phys_addrof(request->getInfoByQuery), phys_addrof(response->getInfoByQuery));
-         break;
-      case FSACommand::GetPosFile:
-         status = device->getPosFile(phys_addrof(request->getPosFile), phys_addrof(response->getPosFile));
-         break;
-      case FSACommand::IsEof:
-         status = device->isEof(phys_addrof(request->isEof));
-         break;
-      case FSACommand::MakeDir:
-         status = device->makeDir(phys_addrof(request->makeDir));
-         break;
-      case FSACommand::MakeQuota:
-         status = device->makeQuota(phys_addrof(request->makeQuota));
-         break;
-      case FSACommand::OpenDir:
-         status = device->openDir(phys_addrof(request->openDir), phys_addrof(response->openDir));
-         break;
-      case FSACommand::OpenFile:
-         status = device->openFile(phys_addrof(request->openFile), phys_addrof(response->openFile));
-         break;
-      case FSACommand::ReadDir:
-         status = device->readDir(phys_addrof(request->readDir), phys_addrof(response->readDir));
-         break;
-      case FSACommand::Remove:
-         status = device->remove(phys_addrof(request->remove));
-         break;
-      case FSACommand::Rename:
-         status = device->rename(phys_addrof(request->rename));
-         break;
-      case FSACommand::RewindDir:
-         status = device->rewindDir(phys_addrof(request->rewindDir));
-         break;
-      case FSACommand::SetPosFile:
-         status = device->setPosFile(phys_addrof(request->setPosFile));
-         break;
-      case FSACommand::StatFile:
-         status = device->statFile(phys_addrof(request->statFile), phys_addrof(response->statFile));
-         break;
-      case FSACommand::TruncateFile:
-         status = device->truncateFile(phys_addrof(request->truncateFile));
-         break;
-      default:
-         status = FSAStatus::UnsupportedCmd;
-      }
+     IOS_ResourceReply(resourceRequest,
+                       static_cast<Error>(FSAStatus::InvalidClientHandle));
+     return;
    }
 
-   // TODO: Move this reply once we do asynchronous filesystem commands
-   IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
-   return status;
+   if (!inputBuffer && !outputBuffer) {
+     IOS_ResourceReply(resourceRequest,
+                       static_cast<Error>(FSAStatus::InvalidParam));
+     return;
+   }
+
+   if (request->emulatedError < 0) {
+      IOS_ResourceReply(resourceRequest,
+                        static_cast<Error>(request->emulatedError));
+      return;
+   }
+
+   switch (command) {
+   case FSACommand::ChangeDir:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->changeDir(phys_addrof(request->changeDir)));
+         });
+      break;
+   case FSACommand::CloseDir:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->closeDir(phys_addrof(request->closeDir)));
+         });
+      break;
+   case FSACommand::CloseFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->closeFile(phys_addrof(request->closeFile)));
+         });
+      break;
+   case FSACommand::FlushFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->flushFile(phys_addrof(request->flushFile)));
+         });
+      break;
+   case FSACommand::FlushQuota:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->flushQuota(phys_addrof(request->flushQuota)));
+         });
+      break;
+   case FSACommand::GetCwd:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->getCwd(phys_addrof(response->getCwd)));
+         });
+      break;
+   case FSACommand::GetInfoByQuery:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->getInfoByQuery(phys_addrof(request->getInfoByQuery),
+                                      phys_addrof(response->getInfoByQuery)));
+         });
+      break;
+   case FSACommand::GetPosFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->getPosFile(phys_addrof(request->getPosFile),
+                                  phys_addrof(response->getPosFile)));
+         });
+      break;
+   case FSACommand::IsEof:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->isEof(phys_addrof(request->isEof)));
+         });
+      break;
+   case FSACommand::MakeDir:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->makeDir(phys_addrof(request->makeDir)));
+         });
+      break;
+   case FSACommand::MakeQuota:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->makeQuota(phys_addrof(request->makeQuota)));
+         });
+      break;
+   case FSACommand::OpenDir:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->openDir(phys_addrof(request->openDir),
+                               phys_addrof(response->openDir)));
+         });
+      break;
+   case FSACommand::OpenFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->openFile(phys_addrof(request->openFile),
+                                phys_addrof(response->openFile)));
+         });
+      break;
+   case FSACommand::ReadDir:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->readDir(phys_addrof(request->readDir),
+                               phys_addrof(response->readDir)));
+         });
+      break;
+   case FSACommand::Remove:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->remove(phys_addrof(request->remove)));
+         });
+      break;
+   case FSACommand::Rename:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->rename(phys_addrof(request->rename)));
+         });
+      break;
+   case FSACommand::RewindDir:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->rewindDir(phys_addrof(request->rewindDir)));
+         });
+      break;
+   case FSACommand::SetPosFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->setPosFile(phys_addrof(request->setPosFile)));
+         });
+      break;
+   case FSACommand::StatFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->statFile(phys_addrof(request->statFile),
+                                phys_addrof(response->statFile)));
+         });
+      break;
+   case FSACommand::TruncateFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->truncateFile(phys_addrof(request->truncateFile)));
+         });
+      break;
+   default:
+      IOS_ResourceReply(resourceRequest,
+                        static_cast<Error>(FSAStatus::UnsupportedCmd));
+   }
 }
 
-static FSAStatus
+static void
 fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
                 FSACommand command,
                 be2_phys_ptr<IoctlVec> vecs)
 {
    auto request = phys_cast<FSARequest *>(vecs[0].paddr);
-   auto status = FSAStatus::OK;
 
    if (request->emulatedError < FSAStatus::OK) {
-      status = request->emulatedError;
-   } else {
-      FSADevice *device = nullptr;
-      status = getDevice(resourceRequest->requestData.handle, &device);
-
-      if (status >= FSAStatus::OK) {
-         switch (command) {
-         case FSACommand::ReadFile:
-         {
-            auto buffer = phys_cast<uint8_t *>(vecs[1].paddr);
-            auto length = vecs[1].len;
-            status = device->readFile(phys_addrof(request->readFile), buffer, length);
-            break;
-         }
-         case FSACommand::WriteFile:
-         {
-            auto buffer = phys_cast<uint8_t *>(vecs[1].paddr);
-            auto length = vecs[1].len;
-            status = device->writeFile(phys_addrof(request->writeFile), buffer, length);
-            break;
-         }
-         case FSACommand::Mount:
-         {
-            status = device->mount(phys_addrof(request->mount));
-            break;
-         }
-         default:
-            status = FSAStatus::UnsupportedCmd;
-         }
-      }
+      IOS_ResourceReply(resourceRequest,
+                        static_cast<Error>(request->emulatedError));
+      return;
    }
 
-   // TODO: Move this reply once we do asynchronous filesystem commands
-   IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
-   return status;
+   FSADevice *device = nullptr;
+   auto status = getDevice(resourceRequest->requestData.handle, &device);
+   if (status < FSAStatus::OK) {
+      IOS_ResourceReply(resourceRequest, static_cast<Error>(status));
+      return;
+   }
+
+   switch (command) {
+   case FSACommand::ReadFile:
+   {
+      submitWorkerTask(
+         [=]() {
+            auto buffer = phys_cast<uint8_t *>(vecs[1].paddr);
+            auto length = vecs[1].len;
+
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->readFile(phys_addrof(request->readFile),
+                                buffer, length));
+         });
+      break;
+   }
+   case FSACommand::WriteFile:
+   {
+      submitWorkerTask(
+         [=]()
+         {
+            auto buffer = phys_cast<uint8_t *>(vecs[1].paddr);
+            auto length = vecs[1].len;
+
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->writeFile(phys_addrof(request->writeFile),
+                                 buffer, length));
+         });
+      break;
+   }
+   case FSACommand::Mount:
+   {
+      submitWorkerTask(
+         [=]()
+         {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->mount(phys_addrof(request->mount)));
+         });
+      break;
+   }
+   default:
+      IOS_ResourceReply(resourceRequest,
+                        static_cast<Error>(FSAStatus::UnsupportedCmd));
+   }
 }
+
 
 static Error
 fsaThreadMain(phys_ptr<void> /*context*/)

@@ -1,6 +1,7 @@
 #include "ios.h"
 #include "ios_alarm_thread.h"
 #include "ios_core.h"
+#include "ios_worker_thread.h"
 #include "kernel/ios_kernel.h"
 #include "kernel/ios_kernel_hardware.h"
 #include "kernel/ios_kernel_scheduler.h"
@@ -134,6 +135,7 @@ start()
 {
    sRunning.store(true);
    internal::startAlarmThread();
+   internal::startWorkerThread();
 
    for (auto i = 0u; i < sCores.size(); ++i) {
       sCores[i].id = i;
@@ -150,6 +152,7 @@ join()
 {
    sRunning.store(false);
    internal::joinAlarmThread();
+   internal::joinWorkerThread();
    internal::interruptAllCores(CoreInterruptFlags::Shutdown);
 
    for (auto i = 0u; i < sCores.size(); ++i) {
