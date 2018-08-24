@@ -66,22 +66,23 @@ struct ProcessInfo
    int32_t priority;
    uint32_t stackSize;
    uint32_t memPermMask;
+   const char *threadName;
 };
 
 static ProcessInfo sProcessBootInfo[] = {
-   { ProcessId::MCP,    mcp::processEntryPoint,       124, 0x2000,   0xC0030 },
-   { ProcessId::BSP,    bsp::processEntryPoint,       125, 0x1000,  0x100000 },
-   { ProcessId::CRYPTO, crypto::processEntryPoint,    123, 0x1000,   0xC0030 },
-   { ProcessId::USB,    usb::processEntryPoint,       107, 0x4000,   0x38600 },
-   { ProcessId::FS,     fs::processEntryPoint,         85, 0x4000,  0x1C5870 },
-   { ProcessId::PAD,    pad::processEntryPoint,       117, 0x2000,    0x8180 },
-   { ProcessId::NET,    net::processEntryPoint,        80, 0x4000,    0x2000 },
-   { ProcessId::NIM,    nim::processEntryPoint,        50, 0x4000,         0 },
-   { ProcessId::NSEC,   nsec::processEntryPoint,       50, 0x1000,         0 },
-   { ProcessId::FPD,    fpd::processEntryPoint,        50, 0x4000,         0 },
-   { ProcessId::ACP,    acp::processEntryPoint,        50, 0x4000,         0 },
-   { ProcessId::AUXIL,  auxil::processEntryPoint,      70, 0x4000,         0 },
-   { ProcessId::TEST,   test::processEntryPoint,       75, 0x2000,         0 },
+   { ProcessId::MCP,    mcp::processEntryPoint,       124, 0x2000,   0xC0030, "McpProcess" },
+   { ProcessId::BSP,    bsp::processEntryPoint,       125, 0x1000,  0x100000, "BspProcess" },
+   { ProcessId::CRYPTO, crypto::processEntryPoint,    123, 0x1000,   0xC0030, "CryptoProcess" },
+   { ProcessId::USB,    usb::processEntryPoint,       107, 0x4000,   0x38600, "UsbProcess" },
+   { ProcessId::FS,     fs::processEntryPoint,         85, 0x4000,  0x1C5870, "FsProcess" },
+   { ProcessId::PAD,    pad::processEntryPoint,       117, 0x2000,    0x8180, "PadProcess" },
+   { ProcessId::NET,    net::processEntryPoint,        80, 0x4000,    0x2000, "NetProcess" },
+   { ProcessId::NIM,    nim::processEntryPoint,        50, 0x4000,         0, "NimProcess" },
+   { ProcessId::NSEC,   nsec::processEntryPoint,       50, 0x1000,         0, "NsecProcess" },
+   { ProcessId::FPD,    fpd::processEntryPoint,        50, 0x4000,         0, "FpdProcess" },
+   { ProcessId::ACP,    acp::processEntryPoint,        50, 0x4000,         0, "AcpProcess" },
+   { ProcessId::AUXIL,  auxil::processEntryPoint,      70, 0x4000,         0, "AuxilProcess" },
+   { ProcessId::TEST,   test::processEntryPoint,       75, 0x2000,         0, "TestProcess" },
 };
 
 static Error
@@ -111,6 +112,7 @@ startProcesses(bool bootOnlyBSP)
       auto threadId = static_cast<ThreadId>(error);
       auto thread = internal::getThread(threadId);
       thread->pid = info.pid;
+      internal::setThreadName(threadId, info.threadName);
 
       error = IOS_StartThread(threadId);
       if (error < Error::OK) {
@@ -302,6 +304,7 @@ start()
    auto threadId = static_cast<ThreadId>(error);
    auto thread = internal::getThread(threadId);
    thread->state = ThreadState::Ready;
+   internal::setThreadName(threadId, "KernelProcess");
    internal::queueThreadNoLock(thread);
    internal::unlockScheduler();
    return Error::OK;

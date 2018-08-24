@@ -123,6 +123,7 @@ startFsaAsyncTaskThread()
    }
 
    sFsaAsyncData->thread = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sFsaAsyncData->thread, "FsaAsyncTaskThread");
 
    error = IOS_StartThread(sFsaAsyncData->thread);
    if (error < Error::OK) {

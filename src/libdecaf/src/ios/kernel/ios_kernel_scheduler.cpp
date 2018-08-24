@@ -4,6 +4,8 @@
 #include "ios_kernel_threadqueue.h"
 #include "ios_kernel_process.h"
 #include "ios/ios_core.h"
+
+#include <common/log.h>
 #include <mutex>
 
 namespace ios::kernel::internal
@@ -130,6 +132,36 @@ rescheduleSelfNoLock(bool yielding)
 
       currentThread->state = ThreadState::Ready;
       queueThreadNoLock(currentThread);
+   }
+
+   // Trace log the thread switch
+   if (gLog->should_log(spdlog::level::trace)) {
+      fmt::memory_buffer out;
+      fmt::format_to(out, "IOS leaving");
+
+      if (currentThread) {
+         fmt::format_to(out, " thread {}", currentThread->id);
+
+         if (currentThread->context.threadName) {
+            fmt::format_to(out, " [{}]", currentThread->context.threadName);
+         }
+      } else {
+         fmt::format_to(out, " idle");
+      }
+
+      fmt::format_to(out, " to");
+
+      if (nextThread) {
+         fmt::format_to(out, " thread {}", nextThread->id);
+
+         if (nextThread->context.threadName) {
+            fmt::format_to(out, " [{}]", nextThread->context.threadName);
+         }
+      } else {
+         fmt::format_to(out, " idle");
+      }
+
+      gLog->trace("{}", std::string_view { out.data(), out.size() });
    }
 
    decaf_check(ThreadQueue_PopThread(phys_addrof(sData->runQueue)) == nextThread);

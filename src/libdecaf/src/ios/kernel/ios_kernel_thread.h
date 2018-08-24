@@ -42,7 +42,8 @@ struct ContextHLE
    phys_ptr<void> entryPointArg;
    platform::Fiber *fiber;
    Error queueWaitResult;
-   PADDING(0x2C);
+   const char *threadName;
+   PADDING(0x24);
 };
 CHECK_SIZE(ContextHLE, 0x44);
 #endif
@@ -146,6 +147,10 @@ getCurrentThreadId();
 
 phys_ptr<Thread>
 getThread(ThreadId id);
+
+void
+setThreadName(ThreadId id,
+              const char *name);
 
 void
 initialiseStaticThreadData();

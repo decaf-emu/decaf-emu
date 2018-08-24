@@ -445,6 +445,15 @@ getThread(ThreadId id)
 }
 
 void
+setThreadName(ThreadId id,
+              const char *name)
+{
+   if (auto thread = getThread(id)) {
+      thread->context.threadName = name;
+   }
+}
+
+void
 initialiseStaticThreadData()
 {
    sData = phys_cast<StaticThreadData *>(allocProcessStatic(sizeof(StaticThreadData)));

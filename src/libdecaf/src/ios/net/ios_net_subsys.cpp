@@ -80,7 +80,9 @@ startSubsys()
       return error;
    }
 
-   return IOS_StartThread(static_cast<ThreadId>(error));
+   auto threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(threadId, "NetSubsysThread");
+   return IOS_StartThread(threadId);
 }
 
 Error

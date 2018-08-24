@@ -438,8 +438,8 @@ startFsaThread()
       return error;
    }
 
-   auto threadId = static_cast<ThreadId>(error);
-   sData->fsaThread = threadId;
+   sData->fsaThread = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sData->fsaThread, "FsaThread");
 
    error = IOS_StartThread(sData->fsaThread);
    if (error < Error::OK) {

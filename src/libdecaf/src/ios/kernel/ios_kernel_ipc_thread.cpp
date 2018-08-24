@@ -214,6 +214,8 @@ startIpcThread()
    }
 
    sData->threadId = static_cast<kernel::ThreadId>(error);
+   internal::setThreadName(sData->threadId, "IpcThread");
+
    return kernel::IOS_StartThread(sData->threadId);
 }
 

@@ -167,6 +167,7 @@ startServiceThread()
       return error;
    }
    sData->threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sData->threadId, "FsServiceThread");
 
    error = IOS_StartThread(sData->threadId);
    if (error < Error::OK) {
