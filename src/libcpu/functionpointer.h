@@ -111,15 +111,27 @@ struct func_pointer_cast_impl<AddressType, FunctionPointer<AddressType, Function
    }
 };
 
-template<typename AddressType, typename FunctionType>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const FunctionPointer<AddressType, FunctionType> &val)
-{
-   auto addr = func_pointer_cast_impl<AddressType, FunctionType>::cast(val);
-   format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(addr));
-}
-
 } // namespace cpu
+
+// Custom formatters for fmtlib
+namespace fmt
+{
+
+template<typename AddressType, typename FunctionType>
+struct formatter<cpu::FunctionPointer<AddressType, FunctionType>>
+{
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
+   }
+
+   template<typename FormatContext>
+   auto format(const cpu::FunctionPointer<AddressType, FunctionType> &ptr, FormatContext &ctx)
+   {
+      auto addr = cpu::func_pointer_cast_impl<AddressType, FunctionType>::cast(ptr);
+      return format_to(ctx.begin(), "{:08X}", static_cast<uint32_t>(addr));
+   }
+};
+
+} // namespace fmt

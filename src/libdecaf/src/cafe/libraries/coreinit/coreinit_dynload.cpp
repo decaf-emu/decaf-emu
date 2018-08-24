@@ -1236,7 +1236,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
 
             if (!isAppDebugLevelUnknown3()) {
                COSInfo(COSReportModule::Unknown2, fmt::format(
-                  "{}: TEXT 0x{:08x}:0x{:08x} DATA 0x{:08x}:0x{:08x} LOAD 0x{:08x}:0x{:08x}",
+                  "{}: TEXT {}:{} DATA {}:{} LOAD {}:{}",
                   rplData->moduleName,
                   linkModule.textAddr,
                   linkModule.textAddr + linkModule.textSize,

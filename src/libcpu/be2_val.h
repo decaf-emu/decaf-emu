@@ -465,39 +465,24 @@ private:
    value_type mStorage;
 };
 
-// Hijack fmtlib to forward be2_val<Type> formatter to Type formatter.
+// Custom formatters for fmtlib
 namespace fmt
 {
 
-namespace internal
+template<typename ValueType>
+struct formatter<be2_val<ValueType>> : formatter<ValueType>
 {
-
-// Ensure that fmt::internal::MakeValue sees be2_val as a custom type.
-template <typename T>
-struct ConvertToInt<be2_val<T>>
-{
-   enum
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
    {
-      enable_conversion = false,
-   };
+      return formatter<ValueType>::parse(ctx);
+   }
 
-   enum
+   template<typename FormatContext>
+   auto format(const be2_val<ValueType> &val, FormatContext &ctx)
    {
-      value = false,
-   };
+      return formatter<ValueType>::format(val, ctx);
+   }
 };
-
-} // namespace internal
-
-template <typename ArgFormatter, typename Char, typename Type>
-inline void
-format_arg(BasicFormatter<Char, ArgFormatter> &f,
-           const Char *&format_str,
-           const be2_val<Type> &val)
-{
-   // Forward be2_val<Type> format to Type formatter.
-   format_str = f.format(format_str,
-                         internal::MakeArg<fmt::BasicFormatter<Char, ArgFormatter>>(val.value()));
-}
 
 } // namespace fmt

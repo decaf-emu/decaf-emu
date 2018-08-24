@@ -138,22 +138,23 @@ DecafSDLOpenGL::initialiseContext()
          auto error = glbinding::Binding::GetError.directCall();
 
          if (error != gl::GL_NO_ERROR) {
-            fmt::MemoryWriter writer;
-            writer << call.function->name() << "(";
+            fmt::memory_buffer out;
+            fmt::format_to(out, "{}(", call.function->name());
 
             for (unsigned i = 0; i < call.parameters.size(); ++i) {
-               writer << call.parameters[i]->asString();
-               if (i < call.parameters.size() - 1)
-                  writer << ", ";
+               fmt::format_to(out, "{}", call.parameters[i]->asString());
+               if (i < call.parameters.size() - 1) {
+                  fmt::format_to(out, ", ");
+               }
             }
 
-            writer << ")";
+            fmt::format_to(out, ")");
 
             if (call.returnValue) {
-               writer << " -> " << call.returnValue->asString();
+               fmt::format_to(out, " -> {}", call.returnValue->asString());
             }
 
-            gCliLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), writer.str());
+            gCliLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), out.data());
          }
       });
 

@@ -133,7 +133,7 @@ start(excmd::parser &parser,
 
    // Initialise libdecaf logger
    auto logFile = getPathBasename(gamePath);
-   decaf::initialiseLogging(logFile + ".txt");
+   decaf::initialiseLogging(logFile);
 
    // Initialise frontend logger
    auto sinks = gLog->sinks();

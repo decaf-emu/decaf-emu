@@ -12,7 +12,7 @@ insertPush(State &state,
 {
    for (auto i = 0u; i < count; ++i) {
       insertLineStart(state);
-      state.out << "PUSH(stack, stackIndex, activeMask);";
+      fmt::format_to(state.out, "PUSH(stack, stackIndex, activeMask);");
       insertLineEnd(state);
    }
 }
@@ -23,7 +23,7 @@ insertPop(State &state,
 {
    for (auto i = 0u; i < count; ++i) {
       insertLineStart(state);
-      state.out << "POP(stack, stackIndex, activeMask);";
+      fmt::format_to(state.out, "POP(stack, stackIndex, activeMask);");
       insertLineEnd(state);
    }
 }
@@ -32,17 +32,17 @@ void
 insertElse(State &state)
 {
    insertLineStart(state);
-   state.out << "if (stack[stackIndex - 1] == Active) {";
+   fmt::format_to(state.out, "if (stack[stackIndex - 1] == Active) {{");
    insertLineEnd(state);
 
    increaseIndent(state);
    insertLineStart(state);
-   state.out << "activeMask = (activeMask == Active) ? InactiveBranch : Active;";
+   fmt::format_to(state.out, "activeMask = (activeMask == Active) ? InactiveBranch : Active;");
    insertLineEnd(state);
    decreaseIndent(state);
 
    insertLineStart(state);
-   state.out << "}";
+   fmt::format_to(state.out, "}}");
    insertLineEnd(state);
 }
 
@@ -53,10 +53,10 @@ insertCond(State &state,
 {
    switch (cond) {
    case SQ_CF_COND::ACTIVE:
-      state.out << "activeMask == Active";
+      fmt::format_to(state.out, "activeMask == Active");
       break;
    case SQ_CF_COND::ALWAYS_FALSE:
-      state.out << "false";
+      fmt::format_to(state.out, "false");
       break;
    case SQ_CF_COND::CF_BOOL:
       throw translate_exception("Unimplemented SQ_CF_COND_BOOL");
@@ -73,9 +73,9 @@ condStart(State &state,
 {
    insertLineStart(state);
 
-   state.out << "if (";
+   fmt::format_to(state.out, "if (");
    insertCond(state, cond);
-   state.out << ") {";
+   fmt::format_to(state.out, ") {{");
 
    insertLineEnd(state);
    increaseIndent(state);
@@ -86,7 +86,7 @@ condElse(State &state)
 {
    decreaseIndent(state);
    insertLineStart(state);
-   state.out << "} else {";
+   fmt::format_to(state.out, "}} else {{");
    insertLineEnd(state);
    increaseIndent(state);
 }
@@ -96,7 +96,7 @@ condEnd(State &state)
 {
    decreaseIndent(state);
    insertLineStart(state);
-   state.out << '}';
+   fmt::format_to(state.out, "}}");
    insertLineEnd(state);
 }
 

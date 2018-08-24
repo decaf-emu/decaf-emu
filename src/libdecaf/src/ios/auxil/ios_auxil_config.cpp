@@ -246,13 +246,13 @@ static std::string
 to_string(uint8_t *data,
           size_t size)
 {
-   fmt::MemoryWriter out;
+   fmt::memory_buffer out;
 
    for (auto i = 0u; i < size; ++i) {
-      out.write("{:02X}", data[i]);
+      fmt::format_to(out, "{:02X}", data[i]);
    }
 
-   return out.str();
+   return to_string(out);
 }
 
 UCFileSys

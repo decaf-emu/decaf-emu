@@ -163,19 +163,18 @@ faultFiberEntryPoint(void *param)
    decaf_assert(core, "Uh oh? CPU fault Handler with invalid core");
 
    // Log the core state
-   fmt::MemoryWriter out;
-   out.write("nia: 0x{:08x}\n", core->nia);
-   out.write("lr: 0x{:08x}\n", core->lr);
-   out.write("cr: 0x{:08x}\n", core->cr.value);
-   out.write("ctr: 0x{:08x}\n", core->ctr);
-   out.write("xer: 0x{:08x}\n", core->xer.value);
+   fmt::memory_buffer out;
+   fmt::format_to(out, "nia: 0x{:08x}\n", core->nia);
+   fmt::format_to(out, "lr: 0x{:08x}\n", core->lr);
+   fmt::format_to(out, "cr: 0x{:08x}\n", core->cr.value);
+   fmt::format_to(out, "ctr: 0x{:08x}\n", core->ctr);
+   fmt::format_to(out, "xer: 0x{:08x}\n", core->xer.value);
 
    for (auto i = 0u; i < 32; ++i) {
-      out.write("gpr[{}]: 0x{:08x}\n", i, core->gpr[i]);
+      fmt::format_to(out, "gpr[{}]: 0x{:08x}\n", i, core->gpr[i]);
    }
 
-   auto coreState = out.str();
-   gLog->critical("{}", coreState);
+   gLog->critical(std::string_view { out.data(), out.size() });
 
    // Handle the host fault
    if (faultData->reason == FaultData::Reason::Segfault) {

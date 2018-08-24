@@ -50,14 +50,17 @@ formatStackTrace(StackTrace *trace)
    symbol->MaxNameLen = MAX_SYM_NAME;
    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
-   fmt::MemoryWriter out;
+   fmt::memory_buffer out;
 
    for (auto i = 0u; i < trace->frames; ++i) {
       SymFromAddr(process, (DWORD64)trace->data[i], 0, symbol.get());
-      out.write("{}: {} - 0x{:X}x\n", trace->frames - i - 1, (const char*)symbol->Name, symbol->Address);
+      fmt::format_to(out, "{}: {} - 0x{:X}x\n",
+                     trace->frames - i - 1,
+                     (const char*)symbol->Name,
+                     symbol->Address);
    }
 
-   return out.str();
+   return out.data();
 }
 
 void

@@ -23,29 +23,29 @@ assertFailed(const char *file,
    auto trace = platform::formatStackTrace(stackTrace);
    platform::freeStackTrace(stackTrace);
 
-   fmt::MemoryWriter out;
-   out << "Assertion failed:\n";
-   out << "Expression: " << expression << "\n";
-   out << "File: " << file << "\n";
-   out << "Line: " << line << "\n";
+   fmt::memory_buffer out;
+   fmt::format_to(out, "Assertion failed:\n");
+   fmt::format_to(out, "Expression: {}\n", expression);
+   fmt::format_to(out, "File: {}\n", file);
+   fmt::format_to(out, "Line: {}\n", line);
 
    if (!message.empty()) {
-      out << "Message: " << message << "\n";
+      fmt::format_to(out, "Message: {}\n", message);
    }
 
    if (trace.size()) {
-      out << "Stacktrace:\n" << trace << "\n";
+      fmt::format_to(out, "Stacktrace:\n{}\n", trace);
    }
 
    if (gLog) {
-      gLog->critical("{}", out.str());
+      gLog->critical("{}", out.data());
    }
 
-   std::cerr << out.str() << std::endl;
+   std::cerr << out.data() << std::endl;
 
 #ifdef PLATFORM_WINDOWS
    if (IsDebuggerPresent()) {
-      OutputDebugStringW(platform::toWinApiString(out.c_str()).c_str());
+      OutputDebugStringW(platform::toWinApiString(out.data()).c_str());
    } else {
       auto wmsg = platform::toWinApiString(message);
       auto expr = platform::toWinApiString(expression);
@@ -66,23 +66,23 @@ hostFaultWithStackTrace(const std::string &fault,
 {
    auto trace = platform::formatStackTrace(stackTrace);
 
-   fmt::MemoryWriter out;
-   out << "Encountered host cpu fault:\n";
-   out << "Fault: " << fault << "\n";
+   fmt::memory_buffer out;
+   fmt::format_to(out, "Encountered host cpu fault:\n");
+   fmt::format_to(out, "Fault: {}\n", fault);
 
    if (trace.size()) {
-      out << "Stacktrace:\n" << trace << "\n";
+      fmt::format_to(out, "Stacktrace:\n{}\n", trace);
    }
 
    if (gLog) {
-      gLog->critical("{}", out.str());
+      gLog->critical("{}", out.data());
    }
 
-   std::cerr << out.str() << std::endl;
+   std::cerr << out.data() << std::endl;
 
 #ifdef PLATFORM_WINDOWS
    if (IsDebuggerPresent()) {
-      OutputDebugStringW(platform::toWinApiString(out.c_str()).c_str());
+      OutputDebugStringW(platform::toWinApiString(out.data()).c_str());
    } else {
       MessageBoxW(NULL,
                   platform::toWinApiString(fault).c_str(),

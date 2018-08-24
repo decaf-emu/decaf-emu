@@ -96,31 +96,31 @@ getStateFieldName(TraceFieldType type)
 }
 
 static void
-printFieldValue(fmt::MemoryWriter &out, Instruction instr, TraceFieldType type, const TraceFieldValue& value)
+printFieldValue(fmt::memory_buffer &out, Instruction instr, TraceFieldType type, const TraceFieldValue& value)
 {
    if (type == StateField::Invalid) {
       return;
    }
 
    if (type >= StateField::GPR0 && type <= StateField::GPR31) {
-      out.write("    r{:02} = {:08x}\n", type - StateField::GPR, value.u32v0);
+      fmt::format_to(out, "    r{:02} = {:08x}\n", type - StateField::GPR, value.u32v0);
    } else if (type == StateField::CR) {
       auto valX = [&](int i) { return (value.u32v0 >> ((i) * 4)) & 0xF; };
-      out.write("    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}\n",
+      fmt::format_to(out, "    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}\n",
          valX(7), valX(6), valX(5), valX(4), valX(3), valX(2), valX(1), valX(0));
    } else if (type == StateField::XER) {
-      out.write("    XER = {:08x}\n", value.u32v0);
+      fmt::format_to(out, "    XER = {:08x}\n", value.u32v0);
    } else if (type == StateField::LR) {
-      out.write("    LR = {:08x}\n", value.u32v0);
+      fmt::format_to(out, "    LR = {:08x}\n", value.u32v0);
    } else if (type == StateField::CTR) {
-      out.write("    CTR = {:08x}\n", value.u32v0);
+      fmt::format_to(out, "    CTR = {:08x}\n", value.u32v0);
    } else {
       decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
 }
 
 static void
-printInstruction(fmt::MemoryWriter &out, const Trace& trace, int index)
+printInstruction(fmt::memory_buffer &out, const Trace& trace, int index)
 {
    espresso::Disassembly dis;
    espresso::disassemble(trace.instr, dis, trace.cia);
@@ -138,7 +138,7 @@ printInstruction(fmt::MemoryWriter &out, const Trace& trace, int index)
       printFieldValue(out, trace.instr, write.type, write.value);
    }
 
-   out.write("  [{}] {:08x} {}{}\n", index, trace.cia, dis.text.c_str(), addend.c_str());
+   fmt::format_to(out, "  [{}] {:08x} {}{}\n", index, trace.cia, dis.text.c_str(), addend.c_str());
 
    for (auto &read : trace.reads) {
       printFieldValue(out, trace.instr, read.type, read.value);
@@ -497,15 +497,15 @@ tracePrint(cpu::Core *state, int start, int count)
    decaf_check(start >= 0);
    decaf_check(end <= tracerSize);
 
-   fmt::MemoryWriter out;
-   out.write("Trace - Print {} to {}\n", start, end);
+   fmt::memory_buffer out;
+   fmt::format_to(out, "Trace - Print {} to {}\n", start, end);
 
    for (auto i = start; i < end; ++i) {
       auto &trace = getTrace(tracer, i);
       printInstruction(out, trace, i);
    }
 
-   debugPrint(out.str());
+   debugPrint(to_string(out));
 }
 
 int
@@ -515,8 +515,8 @@ traceReg(cpu::Core *state, int start, int regIdx)
    auto tracerSize = static_cast<int>(getTracerNumTraces(tracer));
    bool found = false;
 
-   fmt::MemoryWriter out;
-   out.write("Trace - Search {} to {} for write r{}\n", start, tracerSize, regIdx);
+   fmt::memory_buffer out;
+   fmt::format_to(out, "Trace - Search {} to {} for write r{}\n", start, tracerSize, regIdx);
 
    decaf_check(start >= 0);
    decaf_check(start < tracerSize);
@@ -540,10 +540,10 @@ traceReg(cpu::Core *state, int start, int regIdx)
    }
 
    if (!found) {
-      out.write("  Nothing Found");
+      fmt::format_to(out, "  Nothing Found");
    }
 
-   debugPrint(out.str());
+   debugPrint(to_string(out));
    return -1;
 }
 
@@ -640,15 +640,15 @@ tracePrintSyscall(int count)
       count = (int)gSyscallTrace.size();
    }
 
-   fmt::MemoryWriter out;
-   out.write("Trace - Last {} syscalls\n", count);
+   fmt::memory_buffer out;
+   fmt::format_to(out, "Trace - Last {} syscalls\n", count);
 
    int j = 0;
    for (auto i = gSyscallTrace.begin(); i != gSyscallTrace.end() && j < count; ++i, ++j) {
-      out.write("  {}\n", *i);
+      fmt::format_to(out, "  {}\n", *i);
    }
 
-   debugPrint(out.str());
+   debugPrint(to_string(out));
 }
 
 void

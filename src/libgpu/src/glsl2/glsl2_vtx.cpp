@@ -46,15 +46,15 @@ VTX_FETCH(State &state, const ControlFlowInst &cf, const VertexFetchInst &inst)
          state.shader->usedUniformBlocks[blockID] = true;
       }
 
-      fmt::MemoryWriter tmp;
-      tmp << "UB_" << blockID << ".values[floatBitsToInt(";
+      fmt::memory_buffer tmp;
+      fmt::format_to(tmp, "UB_{}.values[floatBitsToInt(", blockID);
       insertSelectValue(tmp, src, inst.word0.SRC_SEL_X());
-      tmp << ")]";
+      fmt::format_to(tmp, ")]");
 
       insertLineStart(state);
-      state.out << dst << "." << dstSelMask << " = ";
-      insertSelectVector(state.out, tmp.str(), dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
-      state.out << ";";
+      fmt::format_to(state.out, "{}.{} = ", dst, dstSelMask);
+      insertSelectVector(state.out, to_string(tmp), dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
    }
 }

@@ -22,7 +22,7 @@ gLog;
 
 struct OutputState
 {
-   fmt::MemoryWriter writer;
+   fmt::memory_buffer writer;
    std::string indent;
 };
 
@@ -43,7 +43,7 @@ decreaseIndent(OutputState &out)
 static void
 startGroup(OutputState &out, const std::string &group)
 {
-   out.writer.write("{}{}\n", out.indent, group);
+   fmt::format_to(out.writer, "{}{}\n", out.indent, group);
    increaseIndent(out);
 }
 
@@ -57,7 +57,7 @@ template<typename Type>
 static void
 writeField(OutputState &out, const std::string &field, const Type &value)
 {
-   out.writer.write("{}{:<30} = {}\n", out.indent, field, value);
+   fmt::format_to(out.writer, "{}{:<30} = {}\n", out.indent, field, value);
 }
 
 static bool
@@ -297,7 +297,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.data));
-         out.writer << '\n' << disassembly;
+         fmt::format_to(out.writer, "\n{}", disassembly);
       }
       endGroup(out);
    }
@@ -510,7 +510,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.data));
-         out.writer << '\n' << disassembly;
+         fmt::format_to(out.writer, "\n{}", disassembly);
       }
       endGroup(out);
    }
@@ -732,7 +732,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.data));
-         out.writer << '\n' << disassembly;
+         fmt::format_to(out.writer, "\n{}", disassembly);
       }
       endGroup(out);
 
@@ -742,7 +742,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.vertexShaderData));
-         out.writer << '\n' << disassembly;
+         fmt::format_to(out.writer, "\n{}", disassembly);
       }
       endGroup(out);
    }
@@ -854,7 +854,7 @@ printInfo(const std::string &filename)
       }
    }
 
-   std::cout << out.writer.c_str();
+   std::cout << out.writer.data();
    return true;
 }
 

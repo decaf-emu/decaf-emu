@@ -200,7 +200,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
    if (error) {
       Loader_ReportError(
          "***LiBounceOneChunk failed loading \"{}\" of type {} at offset 0x{:08X} err={}.",
-         filename, 1, 0, error);
+         filename.getRawPointer(), 1, 0, error);
       LiCloseBufferIfError();
       return error;
    }
@@ -224,7 +224,8 @@ LOADER_Prep(kernel::UniqueProcessId upid,
                          &loadArgs,
                          0);
    if (error) {
-      Loader_ReportError("***LiLoadForPrep failure {}. loading \"{}\".", error, filename);
+      Loader_ReportError("***LiLoadForPrep failure {}. loading \"{}\".",
+                         error, filename.getRawPointer());
       LiCloseBufferIfError();
       return error;
    }

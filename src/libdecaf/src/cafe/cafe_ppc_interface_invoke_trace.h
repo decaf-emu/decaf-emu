@@ -12,20 +12,20 @@ namespace detail
 
 template<typename ArgType, RegisterType regType, auto regIndex>
 inline void
-logParam(fmt::MemoryWriter &message,
+logParam(fmt::memory_buffer &message,
          cpu::Core *core,
          param_info_t<ArgType, regType, regIndex> paramInfo)
 {
    if constexpr (regType == RegisterType::VarArgs) {
-      message.write("...");
+      fmt::format_to(message, "...");
    } else {
       auto value = readParam(core, paramInfo);
       if constexpr ((regType == RegisterType::Gpr32 && regIndex == 3) ||
                     (regType == RegisterType::Gpr64 && regIndex == 3) ||
                     (regType == RegisterType::Fpr && regIndex == 0)) {
-         message.write("{}", value);
+         fmt::format_to(message, "{}", value);
       } else {
-         message.write(", {}", value);
+         fmt::format_to(message, ", {}", value);
       }
    }
 }
@@ -38,20 +38,20 @@ invoke_trace_host_impl(cpu::Core *core,
                        FunctionTraitsType &&,
                        std::index_sequence<I...>)
 {
-   fmt::MemoryWriter message;
+   fmt::memory_buffer message;
    auto param_info = typename FunctionTraitsType::param_info { };
-   message.write("{}(", name);
+   fmt::format_to(message, "{}(", name);
 
    if constexpr (FunctionTraitsType::is_member_function) {
-      message.write("this = {}, ", readParam(core, typename FunctionTraitsType::object_info { }));
+      fmt::format_to(message, "this = {}, ", readParam(core, typename FunctionTraitsType::object_info { }));
    }
 
    if constexpr (FunctionTraitsType::num_args > 0) {
       (logParam(message, core, std::get<I>(param_info)), ...);
    }
 
-   message.write(") from 0x{:08X}", core->lr);
-   gLog->debug(message.str());
+   fmt::format_to(message, ") from 0x{:08X}", core->lr);
+   gLog->debug(std::string_view { message.data(), message.size() });
 }
 
 } // namespace detail

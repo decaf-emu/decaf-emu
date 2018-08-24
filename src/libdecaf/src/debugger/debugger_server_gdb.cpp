@@ -51,28 +51,6 @@ enum BreakpointType
    Execute = 1,
 };
 
-class LogFormatter : public spdlog::formatter
-{
-public:
-   void format(spdlog::details::log_msg& msg) override
-   {
-      auto tm_time = spdlog::details::os::localtime(spdlog::log_clock::to_time_t(msg.time));
-      auto duration = msg.time.time_since_epoch();
-      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
-
-      msg.formatted << '[' << fmt::pad(static_cast<unsigned int>(tm_time.tm_min), 2, '0') << ':'
-         << fmt::pad(static_cast<unsigned int>(tm_time.tm_sec), 2, '0') << '.'
-         << fmt::pad(static_cast<unsigned int>(micros), 6, '0');
-
-      msg.formatted << ' ';
-      msg.formatted << spdlog::level::to_str(msg.level);
-      msg.formatted << ":gdb] ";
-
-      msg.formatted << fmt::StringRef(msg.raw.data(), msg.raw.size());
-      msg.formatted.write(spdlog::details::os::eol, spdlog::details::os::eol_size);
-   }
-};
-
 GdbServer::GdbServer(DebuggerInterface *debugger,
                      ui::StateTracker *uiState) :
    mDebugger(debugger),
@@ -84,9 +62,10 @@ bool GdbServer::start(int port)
 {
    if (!mLog) {
       auto sinks = gLog->sinks();
-      mLog = std::make_shared<spdlog::logger>("gdbstub", std::begin(sinks), std::end(sinks));
+      mLog = std::make_shared<spdlog::logger>("gdb",
+                                              std::begin(sinks),
+                                              std::end(sinks));
       mLog->set_level(gLog->level());
-      mLog->set_formatter(std::make_shared<LogFormatter>());
 
       if (!decaf::config::log::async) {
          mLog->flush_on(spdlog::level::trace);
@@ -191,26 +170,26 @@ void GdbServer::handleQuery(const std::string &command)
       // TODO: features += "QThreadEvents+;";
       sendCommand(features);
    } else if (begins_with(command, "qfThreadInfo")) {
-      fmt::MemoryWriter reply;
+      fmt::memory_buffer reply;
       cafe::coreinit::internal::lockScheduler();
       auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
       if (firstThread) {
-         reply.write("m");
+         fmt::format_to(reply, "m");
       } else {
-         reply.write("l");
+         fmt::format_to(reply, "l");
       }
 
       for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
          if (thread != firstThread) {
-            reply.write(",");
+            fmt::format_to(reply, ",");
          }
 
-         reply.write("{:04X}", thread->id.value());
+         fmt::format_to(reply, "{:04X}", thread->id.value());
       }
 
       cafe::coreinit::internal::unlockScheduler();
-      sendCommand(reply.str());
+      sendCommand(to_string(reply));
    } else if (begins_with(command, "qAttached")) {
       sendCommand("1");
    } else if (begins_with(command, "qsThreadInfo")) {
@@ -334,7 +313,7 @@ void GdbServer::handleReadRegister(const std::string &command)
 
 void GdbServer::handleReadGeneralRegisters(const std::string &command)
 {
-   fmt::MemoryWriter reply;
+   fmt::memory_buffer reply;
    auto activeThread = mUiState->getActiveThread();
    auto coreRegs = getThreadCoreContext(mDebugger, activeThread);
 
@@ -347,15 +326,15 @@ void GdbServer::handleReadGeneralRegisters(const std::string &command)
          value = activeThread->context.gpr[i];
       }
 
-      reply.write("{:08X}", value);
+      fmt::format_to(reply, "{:08X}", value);
    }
 
-   sendCommand(reply.str());
+   sendCommand(to_string(reply));
 }
 
 void GdbServer::handleReadMemory(const std::string &command)
 {
-   fmt::MemoryWriter reply;
+   fmt::memory_buffer reply;
    std::vector<std::string> split;
    split_string(command.data() + 1, ',', split);
 
@@ -369,10 +348,10 @@ void GdbServer::handleReadMemory(const std::string &command)
          value = mem::read<uint8_t>(address + i);
       }
 
-      reply.write("{:02X}", value);
+      fmt::format_to(reply, "{:02X}", value);
    }
 
-   sendCommand(reply.str());
+   sendCommand(to_string(reply));
 }
 
 void GdbServer::handleAddBreakpoint(const std::string &command)

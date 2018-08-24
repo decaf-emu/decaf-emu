@@ -445,45 +445,67 @@ struct pointer_cast_impl<AddressType, SrcTypePtr, AddressType,
    }
 };
 
-template<typename AddressType>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const Pointer<char, AddressType> &val)
+} // namespace cpu
+
+// Custom formatters for fmtlib
+namespace fmt
 {
-   if (val) {
-      format_str = f.format(format_str,
-                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
-   } else {
-      format_str = f.format(format_str,
-                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>("<NULL>"));
-   }
-}
 
 template<typename AddressType>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const Pointer<const char, AddressType> &val)
+struct formatter<cpu::Pointer<char, AddressType>>
 {
-   if (val) {
-      format_str = f.format(format_str,
-                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getRawPointer()));
-   } else {
-      format_str = f.format(format_str,
-                            fmt::internal::MakeArg<fmt::BasicFormatter<char>>("<NULL>"));
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
    }
-}
+
+   template<typename FormatContext>
+   auto format(const cpu::Pointer<char, AddressType> &ptr, FormatContext &ctx)
+   {
+      if (!ptr) {
+         return format_to(ctx.begin(), "<NULL>");
+      } else {
+         return format_to(ctx.begin(), "\"{}\"", ptr.getRawPointer());
+      }
+   }
+};
+
+template<typename AddressType>
+struct formatter<cpu::Pointer<const char, AddressType>>
+{
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
+   }
+
+   template<typename FormatContext>
+   auto format(const cpu::Pointer<const char, AddressType> &ptr, FormatContext &ctx)
+   {
+      if (!ptr) {
+         return format_to(ctx.begin(), "<NULL>");
+      } else {
+         return format_to(ctx.begin(), "\"{}\"", ptr.getRawPointer());
+      }
+   }
+};
 
 template<typename ValueType, typename AddressType>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const Pointer<ValueType, AddressType> &val)
+struct formatter<cpu::Pointer<ValueType, AddressType>>
 {
-   auto addr = pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(val);
-   format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(addr));
-}
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
+   }
 
-} // namespace cpu
+   template<typename FormatContext>
+   auto format(const cpu::Pointer<ValueType, AddressType> &ptr, FormatContext &ctx)
+   {
+      auto addr = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(ptr);
+      return format_to(ctx.begin(), "0x{:08X}", static_cast<uint32_t>(addr));
+   }
+};
+
+} // namespace fmt

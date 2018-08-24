@@ -16,25 +16,25 @@ union LiteralValue
 };
 
 void
-insertIndexMode(fmt::MemoryWriter &out,
+insertIndexMode(fmt::memory_buffer &out,
                 SQ_INDEX_MODE index)
 {
    switch (index) {
    case SQ_INDEX_MODE::AR_X:
-      out << "AR.x";
+      fmt::format_to(out, "AR.x");
       break;
    case SQ_INDEX_MODE::AR_Y:
-      out << "AR.y";
+      fmt::format_to(out, "AR.y");
       break;
    case SQ_INDEX_MODE::AR_Z:
-      out << "AR.z";
+      fmt::format_to(out, "AR.z");
       break;
    case SQ_INDEX_MODE::AR_W:
-      out << "AR.w";
+      fmt::format_to(out, "AR.w");
       break;
    /* TODO: We need to implement AL yet, let's throw an error for now.
    case SQ_INDEX_MODE::LOOP:
-      out << "AL";
+      fmt::format_to(out, "AL");
       break;*/
    default:
       throw translate_exception(fmt::format("Invalid SQ_INDEX_MODE {}", index));
@@ -42,21 +42,21 @@ insertIndexMode(fmt::MemoryWriter &out,
 }
 
 void
-insertChannel(fmt::MemoryWriter &out,
+insertChannel(fmt::memory_buffer &out,
               SQ_CHAN channel)
 {
    switch (channel) {
    case SQ_CHAN::X:
-      out << 'x';
+      fmt::format_to(out, "x");
       break;
    case SQ_CHAN::Y:
-      out << 'y';
+      fmt::format_to(out, "y");
       break;
    case SQ_CHAN::Z:
-      out << 'z';
+      fmt::format_to(out, "z");
       break;
    case SQ_CHAN::W:
-      out << 'w';
+      fmt::format_to(out, "w");
       break;
    default:
       throw translate_exception(fmt::format("Unexpected SQ_CHAN {}", channel));
@@ -65,7 +65,7 @@ insertChannel(fmt::MemoryWriter &out,
 
 void
 insertSource0(State &state,
-              fmt::MemoryWriter &out,
+              fmt::memory_buffer &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
@@ -86,7 +86,7 @@ insertSource0(State &state,
 
 void
 insertSource1(State &state,
-              fmt::MemoryWriter &out,
+              fmt::memory_buffer &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
@@ -107,7 +107,7 @@ insertSource1(State &state,
 
 void
 insertSource2(State &state,
-              fmt::MemoryWriter &out,
+              fmt::memory_buffer &out,
               const ControlFlowInst &cf,
               const AluInst &inst)
 {
@@ -122,67 +122,67 @@ insertSource2(State &state,
 
 void
 insertSource0Vector(State &state,
-                    fmt::MemoryWriter &out,
+                    fmt::memory_buffer &out,
                     const ControlFlowInst &cf,
                     const AluInst &x,
                     const AluInst &y,
                     const AluInst &z,
                     const AluInst &w)
 {
-   out << "vec4(";
+   fmt::format_to(out, "vec4(");
    insertSource0(state, out, cf, x);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource0(state, out, cf, y);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource0(state, out, cf, z);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource0(state, out, cf, w);
-   out << ")";
+   fmt::format_to(out, ")");
 }
 
 void
 insertSource1Vector(State &state,
-                    fmt::MemoryWriter &out,
+                    fmt::memory_buffer &out,
                     const ControlFlowInst &cf,
                     const AluInst &x,
                     const AluInst &y,
                     const AluInst &z,
                     const AluInst &w)
 {
-   out << "vec4(";
+   fmt::format_to(out, "vec4(");
    insertSource1(state, out, cf, x);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource1(state, out, cf, y);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource1(state, out, cf, z);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource1(state, out, cf, w);
-   out << ")";
+   fmt::format_to(out, ")");
 }
 
 void
 insertSource2Vector(State &state,
-                    fmt::MemoryWriter &out,
+                    fmt::memory_buffer &out,
                     const ControlFlowInst &cf,
                     const AluInst &x,
                     const AluInst &y,
                     const AluInst &z,
                     const AluInst &w)
 {
-   out << "vec4(";
+   fmt::format_to(out, "vec4(");
    insertSource2(state, out, cf, x);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource2(state, out, cf, y);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource2(state, out, cf, z);
-   out << ", ";
+   fmt::format_to(out, ", ");
    insertSource2(state, out, cf, w);
-   out << ")";
+   fmt::format_to(out, ")");
 }
 
 void
 insertSource(State &state,
-             fmt::MemoryWriter &out,
+             fmt::memory_buffer &out,
              const ControlFlowInst &cf,
              const AluInst &inst,
              const SQ_ALU_SRC sel,
@@ -203,11 +203,11 @@ insertSource(State &state,
    }
 
    if (abs) {
-      out << "abs(";
+      fmt::format_to(out, "abs(");
    }
 
    if (neg) {
-      out << "-(";
+      fmt::format_to(out, "-(");
    }
 
    if ((sel >= SQ_ALU_SRC::REGISTER_FIRST && sel <= SQ_ALU_SRC::REGISTER_LAST)
@@ -216,10 +216,10 @@ insertSource(State &state,
     || (sel >= SQ_ALU_SRC::CONST_FILE_FIRST && sel <= SQ_ALU_SRC::CONST_FILE_LAST)) {
       // Register, Uniform Register, Uniform Block
       if (flags & SQ_ALU_FLAG_INT_IN) {
-         out << "floatBitsToInt(";
+         fmt::format_to(out, "floatBitsToInt(");
          didTypeConversion = true;
       } else if (flags & SQ_ALU_FLAG_UINT_IN) {
-         out << "floatBitsToUint(";
+         fmt::format_to(out, "floatBitsToUint(");
          didTypeConversion = true;
       }
    } else {
@@ -228,10 +228,10 @@ insertSource(State &state,
       case SQ_ALU_SRC::PS:
          // PreviousVector, PreviousScalar
          if (flags & SQ_ALU_FLAG_INT_IN) {
-            out << "floatBitsToInt(";
+            fmt::format_to(out, "floatBitsToInt(");
             didTypeConversion = true;
          } else if (flags & SQ_ALU_FLAG_UINT_IN) {
-            out << "floatBitsToUint(";
+            fmt::format_to(out, "floatBitsToUint(");
             didTypeConversion = true;
          }
          break;
@@ -244,10 +244,10 @@ insertSource(State &state,
       case SQ_ALU_SRC::IMM_0_5:
          // Constant values
          if (flags & SQ_ALU_FLAG_INT_IN) {
-            out << "int(";
+            fmt::format_to(out, "int(");
             didTypeConversion = true;
          } else if (flags & SQ_ALU_FLAG_UINT_IN) {
-            out << "uint(";
+            fmt::format_to(out, "uint(");
             didTypeConversion = true;
          }
          break;
@@ -264,14 +264,14 @@ insertSource(State &state,
    // Now for actual value!
    if (sel >= SQ_ALU_SRC::REGISTER_FIRST && sel <= SQ_ALU_SRC::REGISTER_LAST) {
       // Registers
-      out << "R[" << (sel - SQ_ALU_SRC::REGISTER_FIRST);
+      fmt::format_to(out, "R[{}", sel - SQ_ALU_SRC::REGISTER_FIRST);
 
       if (rel) {
-         out << " + ";
+         fmt::format_to(out, " + ");
          insertIndexMode(out, inst.word0.INDEX_MODE());
       }
 
-      out << ']';
+      fmt::format_to(out, "]");
       needsChannelSelect = true;
    } else if ((sel >= SQ_ALU_SRC::KCACHE_BANK0_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK0_LAST)
               || (sel >= SQ_ALU_SRC::KCACHE_BANK1_FIRST && sel <= SQ_ALU_SRC::KCACHE_BANK1_LAST)) {
@@ -304,72 +304,72 @@ insertSource(State &state,
          throw translate_exception("Invalid kcache lock mode SQ_CF_KCACHE_NOP");
       }
 
-      out << "UB_" << bank << ".values[" << id;
+      fmt::format_to(out, "UB_{}.values[{}", bank, id);
 
       if (state.shader) {
          state.shader->usedUniformBlocks[bank] = true;
       }
 
       if (rel) {
-         out << " + ";
+         fmt::format_to(out, " + ");
          insertIndexMode(out, inst.word0.INDEX_MODE());
       }
 
-      out << ']';
+      fmt::format_to(out, "]");
       needsChannelSelect = true;
    } else if (sel >= SQ_ALU_SRC::CONST_FILE_FIRST && sel <= SQ_ALU_SRC::CONST_FILE_LAST) {
       if (!state.shader) {
-         out << "UR[";
+         fmt::format_to(out, "UR[");
       } else if (state.shader->type == Shader::PixelShader) {
-         out << "PR[";
+         fmt::format_to(out, "PR[");
       } else if (state.shader->type == Shader::VertexShader) {
-         out << "VR[";
+         fmt::format_to(out, "VR[");
       } else if (state.shader->type == Shader::GeometryShader) {
-         out << "GR[";
+         fmt::format_to(out, "GR[");
       }
 
-      out << (sel - SQ_ALU_SRC::CONST_FILE_FIRST);
+      fmt::format_to(out, "{}", sel - SQ_ALU_SRC::CONST_FILE_FIRST);
 
       if (rel) {
-         out << " + ";
+         fmt::format_to(out, " + ");
          insertIndexMode(out, inst.word0.INDEX_MODE());
       }
 
-      out << ']';
+      fmt::format_to(out, "]");
       needsChannelSelect = true;
    } else {
       switch (sel) {
       case SQ_ALU_SRC::PV:
-         out << "PV";
+         fmt::format_to(out, "PV");
          needsChannelSelect = true;
          break;
       case SQ_ALU_SRC::PS:
-         out << "PS";
+         fmt::format_to(out, "PS");
          break;
       case SQ_ALU_SRC::IMM_0:
-         out << "0.0f";
+         fmt::format_to(out, "0.0f");
          break;
       case SQ_ALU_SRC::IMM_1:
-         out << "1.0f";
+         fmt::format_to(out, "1.0f");
          break;
       case SQ_ALU_SRC::IMM_0_5:
-         out << "0.5f";
+         fmt::format_to(out, "0.5f");
          break;
       case SQ_ALU_SRC::IMM_1_INT:
-         out << "1";
+         fmt::format_to(out, "1");
          break;
       case SQ_ALU_SRC::IMM_M_1_INT:
-         out << "-1";
+         fmt::format_to(out, "-1");
          break;
       case SQ_ALU_SRC::LITERAL:
          value.asUint = state.literals[chan];
 
          if (flags & SQ_ALU_FLAG_INT_IN) {
-            out << value.asInt;
+            fmt::format_to(out, "{}", value.asInt);
          } else if (flags & SQ_ALU_FLAG_UINT_IN) {
-            out << value.asUint;
+            fmt::format_to(out, "{}", value.asUint);
          } else {
-            out.write("{:.6f}f", value.asFloat);
+            fmt::format_to(out, "{:.6f}f", value.asFloat);
          }
          break;
       case SQ_ALU_SRC::IMM_1_DBL_L:
@@ -414,42 +414,42 @@ insertSource(State &state,
    }
 
    if (needsChannelSelect) {
-      out << '.';
+      fmt::format_to(out, ".");
       insertChannel(out, chan);
    }
 
    if (didTypeConversion) {
-      out << ")";
+      fmt::format_to(out, ")");
    }
 
    if (abs) {
-      out << ")";
+      fmt::format_to(out, ")");
    }
 
    if (neg) {
-      out << ")";
+      fmt::format_to(out, ")");
    }
 }
 
 void
-insertPreviousValueUpdate(fmt::MemoryWriter &out,
+insertPreviousValueUpdate(fmt::memory_buffer &out,
                           SQ_CHAN unit)
 {
    switch (unit) {
    case SQ_CHAN::X:
-      out << "PVo.x = ";
+      fmt::format_to(out, "PVo.x = ");
       break;
    case SQ_CHAN::Y:
-      out << "PVo.y = ";
+      fmt::format_to(out, "PVo.y = ");
       break;
    case SQ_CHAN::Z:
-      out << "PVo.z = ";
+      fmt::format_to(out, "PVo.z = ");
       break;
    case SQ_CHAN::W:
-      out << "PVo.w = ";
+      fmt::format_to(out, "PVo.w = ");
       break;
    case SQ_CHAN::T:
-      out << "PSo   = ";
+      fmt::format_to(out, "PSo   = ");
       break;
    }
 }
@@ -475,49 +475,49 @@ insertDestBegin(State &state,
    }
 
    if (writeMask) {
-      fmt::MemoryWriter postWrite;
+      fmt::memory_buffer postWrite;
 
       auto gpr = inst.word1.DST_GPR();
-      postWrite << "R[" << gpr << "].";
+      fmt::format_to(postWrite, "R[{}].", gpr);
       insertChannel(postWrite, inst.word1.DST_CHAN());
 
-      postWrite << " = ";
+      fmt::format_to(postWrite, " = ");
 
       switch (unit) {
       case SQ_CHAN::X:
-         postWrite << "PVo.x";
+         fmt::format_to(postWrite, "PVo.x");
          break;
       case SQ_CHAN::Y:
-         postWrite << "PVo.y";
+         fmt::format_to(postWrite, "PVo.y");
          break;
       case SQ_CHAN::Z:
-         postWrite << "PVo.z";
+         fmt::format_to(postWrite, "PVo.z");
          break;
       case SQ_CHAN::W:
-         postWrite << "PVo.w";
+         fmt::format_to(postWrite, "PVo.w");
          break;
       case SQ_CHAN::T:
-         postWrite << "PSo";
+         fmt::format_to(postWrite, "PSo");
          break;
       }
 
-      postWrite << ";";
+      fmt::format_to(postWrite, ";");
 
-      state.postGroupWrites.push_back(postWrite.str());
+      state.postGroupWrites.push_back(to_string(postWrite));
    }
 
    if (flags & SQ_ALU_FLAG_INT_OUT) {
-      state.out << "intBitsToFloat(";
+      fmt::format_to(state.out, "intBitsToFloat(");
    } else if (flags & SQ_ALU_FLAG_UINT_OUT) {
-      state.out << "uintBitsToFloat(";
+      fmt::format_to(state.out, "uintBitsToFloat(");
    }
 
    if (inst.word1.CLAMP()) {
-      state.out << "clamp(";
+      fmt::format_to(state.out, "clamp(");
    }
 
    if (omod != SQ_ALU_OMOD::OFF) {
-      state.out << '(';
+      fmt::format_to(state.out, "(");
    }
 }
 
@@ -540,24 +540,24 @@ insertDestEnd(State &state,
    case SQ_ALU_OMOD::OFF:
       break;
    case SQ_ALU_OMOD::M2:
-      state.out << ") * 2";
+      fmt::format_to(state.out, ") * 2");
       break;
    case SQ_ALU_OMOD::M4:
-      state.out << ") * 4";
+      fmt::format_to(state.out, ") * 4");
       break;
    case SQ_ALU_OMOD::D2:
-      state.out << ") / 2";
+      fmt::format_to(state.out, ") / 2");
       break;
    default:
       throw translate_exception(fmt::format("Unexpected output modifier {}", omod));
    }
 
    if (inst.word1.CLAMP()) {
-      state.out << ", 0, 1)";
+      fmt::format_to(state.out, ", 0, 1)");
    }
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
-      state.out << ")";
+      fmt::format_to(state.out, ")");
    }
 }
 
@@ -570,21 +570,21 @@ updatePredicate(State &state, const ControlFlowInst &cf, const AluInst &inst, co
 
    if (updatePredicate) {
       insertLineStart(state);
-      state.out << "predicateRegister = (" << condition << ");";
+      fmt::format_to(state.out, "predicateRegister = ({});", condition);
       insertLineEnd(state);
    }
 
    if (updateExecuteMask) {
       insertLineStart(state);
-      state.out << "activeMask = ";
+      fmt::format_to(state.out, "activeMask = ");
 
       if (updatePredicate) {
-         state.out << "predicateRegister";
+         fmt::format_to(state.out, "predicateRegister");
       } else {
-         state.out << "(" << condition << ")";
+         fmt::format_to(state.out, "({})", condition);
       }
 
-      state.out << " ? Active : InactiveBranch;";
+      fmt::format_to(state.out, " ? Active : InactiveBranch;");
       insertLineEnd(state);
    }
 
@@ -592,21 +592,21 @@ updatePredicate(State &state, const ControlFlowInst &cf, const AluInst &inst, co
    insertDestBegin(state, cf, inst, state.unit);
 
    if (updatePredicate) {
-      state.out << "predicateRegister";
+      fmt::format_to(state.out, "predicateRegister");
    } else if (updateExecuteMask) {
-      state.out << "(activeMask == Active)";
+      fmt::format_to(state.out, "(activeMask == Active)");
    } else {
-      state.out << "(" << condition << ")";
+      fmt::format_to(state.out, "({})");
    }
 
    if ((flags & latte::SQ_ALU_FLAG_INT_OUT) || (flags & latte::SQ_ALU_FLAG_UINT_OUT)) {
-      state.out << " ? 1 : 0";
+      fmt::format_to(state.out, " ? 1 : 0");
    } else {
-      state.out << " ? 1.0f : 0.0f";
+      fmt::format_to(state.out, " ? 1.0f : 0.0f");
    }
 
    insertDestEnd(state, cf, inst);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 

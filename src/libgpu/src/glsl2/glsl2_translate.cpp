@@ -51,7 +51,7 @@ translateTEX(State &state, const ControlFlowInst &cf)
    auto clauseVtx = reinterpret_cast<const VertexFetchInst *>(state.binary.data() + 8 * addr);
 
    insertLineStart(state);
-   state.out.write("// {:02} ", state.cfPC);
+   fmt::format_to(state.out, "// {:02} ", state.cfPC);
    latte::disassembler::disassembleCF(state.out, cf);
    insertLineEnd(state);
 
@@ -65,7 +65,7 @@ translateTEX(State &state, const ControlFlowInst &cf)
 
       // Print disassembly
       insertLineStart(state);
-      state.out.write("// {:02} ", state.groupPC);
+      fmt::format_to(state.out, "// {:02} ", state.groupPC);
       latte::disassembler::disassembleTexInstruction(state.out, cf, tex);
       insertLineEnd(state);
 
@@ -90,7 +90,7 @@ translateTEX(State &state, const ControlFlowInst &cf)
    }
 
    condEnd(state);
-   state.out << '\n';
+   fmt::format_to(state.out, "\n");
 }
 
 static void
@@ -122,7 +122,7 @@ translateNormal(State &state, const ControlFlowInst &cf)
       auto itr = sInstructionMapCF.find(id);
 
       insertLineStart(state);
-      state.out.write("// {:02} ", state.cfPC);
+      fmt::format_to(state.out, "// {:02} ", state.cfPC);
       latte::disassembler::disassembleCF(state.out, cf);
       insertLineEnd(state);
 
@@ -132,7 +132,7 @@ translateNormal(State &state, const ControlFlowInst &cf)
          throw translate_exception(fmt::format("Unimplemented CF instruction {} {}", id, name));
       }
 
-      state.out << '\n';
+      fmt::format_to(state.out, "\n");
    }
 }
 
@@ -209,12 +209,12 @@ translateALUReduction(State &state, const ControlFlowInst &cf, AluGroup &group)
 
    // Print disassembly
    insertLineStart(state);
-   state.out.write("// {:02} Reduction", state.groupPC);
+   fmt::format_to(state.out, "// {:02} Reduction", state.groupPC);
    insertLineEnd(state);
 
    for (auto i = 0u; i < reduction.size(); ++i) {
       insertLineStart(state);
-      state.out.write("// ");
+      fmt::format_to(state.out, "// ");
       latte::disassembler::disassembleAluInstruction(state.out, cf, reduction[i], state.groupPC, static_cast<SQ_CHAN>(i), state.literals);
       insertLineEnd(state);
    }
@@ -253,14 +253,14 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
    auto didPushBefore = false;
 
    insertLineStart(state);
-   state.out.write("// {:02} ", state.cfPC);
+   fmt::format_to(state.out, "// {:02} ", state.cfPC);
    latte::disassembler::disassembleCfALUInstruction(state.out, cf);
    insertLineEnd(state);
 
    switch (id) {
    case SQ_CF_INST_ALU_PUSH_BEFORE:
       insertPush(state);
-      state.out << '\n';
+      fmt::format_to(state.out, "\n");
       break;
    }
 
@@ -321,7 +321,7 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
          }
 
          insertLineStart(state);
-         state.out.write("// {:02} ", state.groupPC);
+         fmt::format_to(state.out, "// {:02} ", state.groupPC);
          latte::disassembler::disassembleAluInstruction(state.out, cf, inst, state.groupPC, state.unit, state.literals);
          insertLineEnd(state);
 
@@ -331,32 +331,32 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       }
 
       insertLineStart(state);
-      state.out.write("// {:02} --", state.groupPC);
+      fmt::format_to(state.out, "// {:02} --", state.groupPC);
       insertLineEnd(state);
 
       for (auto &write : state.postGroupWrites) {
          insertLineStart(state);
-         state.out << write;
+         fmt::format_to(state.out, "{}", write);
          insertLineEnd(state);
       }
       state.postGroupWrites.clear();
 
       if (updatePreviousVector) {
          insertLineStart(state);
-         state.out << "PV = PVo;";
+         fmt::format_to(state.out, "PV = PVo;");
          insertLineEnd(state);
       }
 
       if (updatePreviousScalar) {
          insertLineStart(state);
-         state.out << "PS = PSo;";
+         fmt::format_to(state.out, "PS = PSo;");
          insertLineEnd(state);
       }
 
       slot = group.getNextSlot(slot);
       state.groupPC++;
 
-      state.out << '\n';
+      fmt::format_to(state.out, "\n");
    }
 
    condEnd(state);
@@ -373,32 +373,32 @@ translateControlFlowALU(State &state, const ControlFlowInst &cf)
       break;
    case SQ_CF_INST_ALU_BREAK:
       insertLineStart(state);
-      state.out << "if (!predicateRegister) {";
+      fmt::format_to(state.out, "if (!predicateRegister) {{");
       insertLineEnd(state);
 
       increaseIndent(state);
       insertLineStart(state);
-      state.out << "activeMask = InactiveBreak;";
+      fmt::format_to(state.out, "activeMask = InactiveBreak;");
       insertLineEnd(state);
       decreaseIndent(state);
 
       insertLineStart(state);
-      state.out << "}";
+      fmt::format_to(state.out, "}}");
       insertLineEnd(state);
       break;
    case SQ_CF_INST_ALU_CONTINUE:
       insertLineStart(state);
-      state.out << "if (!predicateRegister) {";
+      fmt::format_to(state.out, "if (!predicateRegister) {{");
       insertLineEnd(state);
 
       increaseIndent(state);
       insertLineStart(state);
-      state.out << "activeMask = InactiveContinue;";
+      fmt::format_to(state.out, "activeMask = InactiveContinue;");
       insertLineEnd(state);
       decreaseIndent(state);
 
       insertLineStart(state);
-      state.out << "}";
+      fmt::format_to(state.out, "}}");
       insertLineEnd(state);
       break;
    }
@@ -477,13 +477,13 @@ registerInstruction(latte::SQ_OP3_INST id,
 void
 insertLineStart(State &state)
 {
-   state.out << state.indent;
+   fmt::format_to(state.out, "{}", state.indent);
 }
 
 void
 insertLineEnd(State &state)
 {
-   state.out << '\n';
+   fmt::format_to(state.out, "\n");
 }
 
 void
@@ -507,7 +507,7 @@ translateExport(State &state, const ControlFlowInst &cf)
    auto itr = sInstructionMapEXP.find(id);
 
    insertLineStart(state);
-   state.out.write("// {:02} ", state.cfPC);
+   fmt::format_to(state.out, "// {:02} ", state.cfPC);
    latte::disassembler::disassembleExpInstruction(state.out, cf);
    insertLineEnd(state);
 
@@ -517,7 +517,7 @@ translateExport(State &state, const ControlFlowInst &cf)
       throw translate_exception(fmt::format("Unimplemented EXP instruction {} {}", id, getInstructionName(id)));
    }
 
-   state.out << '\n';
+   fmt::format_to(state.out, "\n");
 }
 
 static void
@@ -525,21 +525,21 @@ insertFileHeader(State &state)
 {
    auto &out = state.outFileHeader;
 
-   out
-      << "#version 450 core\n"
-      << "#extension GL_ARB_texture_gather : enable\n"
-      << "#define PUSH(stack, stackIndex, activeMask) stack[stackIndex++] = activeMask\n"
-      << "#define POP(stack, stackIndex, activeMask) activeMask = stack[--stackIndex]\n"
-      << "#define Active 0\n"
-      << "#define InactiveBranch 1\n"
-      << "#define InactiveBreak 2\n"
-      << "#define InactiveContinue 3\n"
-      << "\n"
-      << "int activeMask;\n"
-      << "bool predicateRegister;\n"
-      << "int stackIndex;\n"
-      << "int stack[16];\n"
-      << "\n";
+   fmt::format_to(out,
+      "#version 450 core\n"
+      "#extension GL_ARB_texture_gather : enable\n"
+      "#define PUSH(stack, stackIndex, activeMask) stack[stackIndex++] = activeMask\n"
+      "#define POP(stack, stackIndex, activeMask) activeMask = stack[--stackIndex]\n"
+      "#define Active 0\n"
+      "#define InactiveBranch 1\n"
+      "#define InactiveBreak 2\n"
+      "#define InactiveContinue 3\n"
+      "\n"
+      "int activeMask;\n"
+      "bool predicateRegister;\n"
+      "int stackIndex;\n"
+      "int stack[16];\n"
+      "\n");
 
    if (!state.shader) {
       return;
@@ -547,11 +547,11 @@ insertFileHeader(State &state)
 
    if (state.shader->uniformRegistersEnabled) {
       if (state.shader->type == Shader::PixelShader) {
-         out << "uniform vec4 PR[256];\n";
+         fmt::format_to(out, "uniform vec4 PR[256];\n");
       } else if (state.shader->type == Shader::VertexShader) {
-         out << "uniform vec4 VR[256];\n";
+         fmt::format_to(out, "uniform vec4 VR[256];\n");
       } else if (state.shader->type == Shader::GeometryShader) {
-         out << "uniform vec4 GR[256];\n";
+         fmt::format_to(out, "uniform vec4 GR[256];\n");
       }
    }
 
@@ -568,22 +568,17 @@ insertFileHeader(State &state)
             continue;
          }
 
-         out << "layout (binding = ";
+         fmt::format_to(out, "layout (binding = ");
 
          if (state.shader->type == Shader::VertexShader) {
-            out << i;
+            fmt::format_to(out, "{}", i);
          } else {
-            out << (16 + i);
+            fmt::format_to(out, "{}", (16 + i));
          }
 
-         out
-            << ") uniform "
-            << "UniformBlock_"
-            << i
-            << " {\n"
-            << "   vec4 values[" << elements << "];\n"
-            << "} UB_"
-            << i << ";\n";
+         fmt::format_to(out, ") uniform UniformBlock_{} {{\n", i);
+         fmt::format_to(out, "   vec4 values[{}];\n", elements);
+         fmt::format_to(out, "}} UB_{};\n", i);
       }
    }
 
@@ -597,33 +592,33 @@ insertFileHeader(State &state)
          continue;
       }
 
-      out << "layout (binding = " << id << ") uniform ";
+      fmt::format_to(out, "layout (binding = {}) uniform ", id);
 
       if (usage == SamplerUsage::Texture) {
          switch (dim) {
          case latte::SQ_TEX_DIM::DIM_1D:
-            out << "sampler1D";
+            fmt::format_to(out, "sampler1D");
             break;
          case latte::SQ_TEX_DIM::DIM_2D:
-            out << "sampler2D";
+            fmt::format_to(out, "sampler2D");
             break;
          case latte::SQ_TEX_DIM::DIM_3D:
-            out << "sampler3D";
+            fmt::format_to(out, "sampler3D");
             break;
          case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-            out << "samplerCube";
+            fmt::format_to(out, "samplerCube");
             break;
          case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-            out << "sampler1DArray";
+            fmt::format_to(out, "sampler1DArray");
             break;
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-            out << "sampler2DArray";
+            fmt::format_to(out, "sampler2DArray");
             break;
          case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-            out << "sampler2DMS";
+            fmt::format_to(out, "sampler2DMS");
             break;
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-            out << "sampler2DMSArray";
+            fmt::format_to(out, "sampler2DMSArray");
             break;
          default:
             throw translate_exception(fmt::format("Unsupported texture sampler dim: {}", static_cast<unsigned>(dim)));
@@ -631,28 +626,28 @@ insertFileHeader(State &state)
       } else if (usage == SamplerUsage::Shadow) {
          switch (dim) {
          case latte::SQ_TEX_DIM::DIM_1D:
-            out << "sampler1DShadow";
+            fmt::format_to(out, "sampler1DShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_2D:
-            out << "sampler2DShadow";
+            fmt::format_to(out, "sampler2DShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_3D:
-            out << "sampler3DShadow";
+            fmt::format_to(out, "sampler3DShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-            out << "samplerCubeShadow";
+            fmt::format_to(out, "samplerCubeShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-            out << "sampler1DArrayShadow";
+            fmt::format_to(out, "sampler1DArrayShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-            out << "sampler2DArrayShadow";
+            fmt::format_to(out, "sampler2DArrayShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-            out << "sampler2DMSShadow";
+            fmt::format_to(out, "sampler2DMSShadow");
             break;
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-            out << "sampler2DMSArrayShadow";
+            fmt::format_to(out, "sampler2DMSArrayShadow");
             break;
          default:
             throw translate_exception(fmt::format("Unsupported shadow sampler dim: {}", static_cast<unsigned>(dim)));
@@ -661,14 +656,14 @@ insertFileHeader(State &state)
          throw translate_exception(fmt::format("Unsupported sampler usage: {}", static_cast<unsigned>(usage)));
       }
 
-      out << " sampler_" << id << ";\n";
+      fmt::format_to(out, " sampler_{};\n", id);
    }
 
    if (state.shader->type == Shader::VertexShader) {
-      out
-         << "out gl_PerVertex {\n"
-         << "   vec4 gl_Position;\n"
-         << "};\n";
+      fmt::format_to(out,
+         "out gl_PerVertex {{\n"
+         "   vec4 gl_Position;\n"
+         "}};\n");
    }
 }
 
@@ -677,39 +672,39 @@ insertCodeHeader(State &state)
 {
    auto &out = state.outCodeHeader;
 
-   out
-      << "vec4 R[128];\n"
-      << "vec4 PV;\n"
-      << "vec4 PVo;\n"
-      << "float PS;\n"
-      << "float PSo;\n"
-      << "vec4 texTmp;\n"
-      << "ivec4 AR;\n"
-      << "int AL;\n";
+   fmt::format_to(out,
+      "vec4 R[128];\n"
+      "vec4 PV;\n"
+      "vec4 PVo;\n"
+      "float PS;\n"
+      "float PSo;\n"
+      "vec4 texTmp;\n"
+      "ivec4 AR;\n"
+      "int AL;\n");
 
    if (state.shader) {
       for (auto &exp : state.shader->exports) {
          switch (exp.type) {
          case SQ_EXPORT_TYPE::POS:
-            out << "vec4 exp_position_" << exp.id << ";\n";
+            fmt::format_to(out, "vec4 exp_position_{};\n", exp.id);
             break;
          case SQ_EXPORT_TYPE::PARAM:
-            out << "vec4 exp_param_" << exp.id << ";\n";
+            fmt::format_to(out, "vec4 exp_param_{};\n", exp.id);
             break;
          case SQ_EXPORT_TYPE::PIXEL:
-            out << "vec4 exp_pixel_" << exp.id << ";\n";
+            fmt::format_to(out, "vec4 exp_pixel_{};\n", exp.id);
             break;
          }
       }
    }
 
-   out
-      << "\n"
-      << "activeMask = Active;\n"
-      << "stackIndex = 0;\n";
+   fmt::format_to(out,
+      "\n"
+      "activeMask = Active;\n"
+      "stackIndex = 0;\n");
 
    if (state.shader && state.shader->type == Shader::VertexShader) {
-      out << "R[0] = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n";
+      fmt::format_to(out, "R[0] = vec4(intBitsToFloat(gl_VertexID), intBitsToFloat(gl_InstanceID), 0.0, 0.0);\n");
    }
 }
 
@@ -762,9 +757,9 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
    insertFileHeader(state);
    insertCodeHeader(state);
 
-   shader.codeBody = state.out.str();
-   shader.fileHeader = state.outFileHeader.str();
-   shader.codeHeader = state.outCodeHeader.str();
+   shader.codeBody = to_string(state.out);
+   shader.fileHeader = to_string(state.outFileHeader);
+   shader.codeHeader = to_string(state.outCodeHeader);
 
    if (state.printMyCode) {
       gLog->debug("File Header:\n{}\nCode Header:\n{}\nCode Body:\n{}", shader.fileHeader, shader.codeHeader, shader.codeBody);

@@ -301,32 +301,32 @@ checkRunningThreadNoLock(bool yielding)
 
    // Trace log the thread switch
    if (gLog->should_log(spdlog::level::trace)) {
-      fmt::MemoryWriter out;
-      out.write("Core {} leaving", coreId);
+      fmt::memory_buffer out;
+      fmt::format_to(out, "Core {} leaving", coreId);
 
       if (currThread) {
-         out.write(" thread {}", currThread->id);
+         fmt::format_to(out, " thread {}", currThread->id);
 
          if (currThread->name) {
-            out.write(" [{}]", currThread->name);
+            fmt::format_to(out, " [{}]", currThread->name);
          }
       } else {
-         out.write(" idle");
+         fmt::format_to(out, " idle");
       }
 
-      out.write(" to");
+      fmt::format_to(out, " to");
 
       if (nextThread) {
-         out.write(" thread {}", nextThread->id);
+         fmt::format_to(out, " thread {}", nextThread->id);
 
          if (nextThread->name) {
-            out.write(" [{}]", nextThread->name);
+            fmt::format_to(out, " [{}]", nextThread->name);
          }
       } else {
-         out.write(" idle");
+         fmt::format_to(out, " idle");
       }
 
-      gLog->trace(out.c_str());
+      gLog->trace("{}", std::string_view { out.data(), out.size() });
    }
 
    if (nextThread) {

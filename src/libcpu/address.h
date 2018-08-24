@@ -141,16 +141,6 @@ private:
 };
 
 template<typename Type>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const Address<Type> &val)
-{
-   format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getAddress()));
-}
-
-template<typename Type>
 struct AddressRange
 {
    using address_type = Address<Type>;
@@ -203,3 +193,25 @@ align_down(cpu::Address<Type> value, size_t alignment)
 {
    return cpu::Address<Type> { align_down(value.getAddress(), alignment) };
 }
+
+// Custom formatters for fmtlib
+namespace fmt
+{
+
+template<typename AddressType>
+struct formatter<cpu::Address<AddressType>>
+{
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
+   }
+
+   template<typename FormatContext>
+   auto format(const cpu::Address<AddressType> &addr, FormatContext &ctx)
+   {
+      return format_to(ctx.begin(), "0x{:08X}", addr.getAddress());
+   }
+};
+
+} // namespace fmt

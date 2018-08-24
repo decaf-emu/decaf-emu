@@ -86,9 +86,9 @@ struct State
    gsl::span<const uint8_t> binary;
    uint32_t cfPC = 0;
    uint32_t groupPC = 0;
-   fmt::MemoryWriter out;
-   fmt::MemoryWriter outFileHeader;
-   fmt::MemoryWriter outCodeHeader;
+   fmt::memory_buffer out;
+   fmt::memory_buffer outFileHeader;
+   fmt::memory_buffer outCodeHeader;
    std::string indent;
    latte::SQ_CHAN unit;
    gsl::span<const uint32_t> literals;
@@ -176,18 +176,33 @@ void
 registerVtxFunctions();
 
 void
-insertExportRegister(fmt::MemoryWriter &out, uint32_t gpr, latte::SQ_REL rel);
+insertExportRegister(fmt::memory_buffer &out,
+                     uint32_t gpr,
+                     latte::SQ_REL rel);
 
 std::string
-getExportRegister(uint32_t gpr, latte::SQ_REL rel);
+getExportRegister(uint32_t gpr,
+                  latte::SQ_REL rel);
 
 bool
-insertSelectValue(fmt::MemoryWriter &out, const std::string &src, latte::SQ_SEL sel);
+insertSelectValue(fmt::memory_buffer &out,
+                  const std::string &src,
+                  latte::SQ_SEL sel);
 
 bool
-insertSelectVector(fmt::MemoryWriter &out, const std::string &src, latte::SQ_SEL selX, latte::SQ_SEL selY, latte::SQ_SEL selZ, latte::SQ_SEL selW, unsigned numSels);
+insertSelectVector(fmt::memory_buffer &out,
+                   const std::string &src,
+                   latte::SQ_SEL selX,
+                   latte::SQ_SEL selY,
+                   latte::SQ_SEL selZ,
+                   latte::SQ_SEL selW,
+                   unsigned numSels);
 
 std::string
-condenseSelections(latte::SQ_SEL &selX, latte::SQ_SEL &selY, latte::SQ_SEL &selZ, latte::SQ_SEL &selW, unsigned &numSels);
+condenseSelections(latte::SQ_SEL &selX,
+                   latte::SQ_SEL &selY,
+                   latte::SQ_SEL &selZ,
+                   latte::SQ_SEL &selW,
+                   unsigned &numSels);
 
 } // namespace glsl2

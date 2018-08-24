@@ -31,29 +31,29 @@ decreaseIndent(State &state)
 }
 
 void
-disassembleCondition(fmt::MemoryWriter &out, const ControlFlowInst &inst)
+disassembleCondition(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    if (inst.word1.COND()) {
-      out << " CND(";
+      fmt::format_to(out, " CND(");
 
       switch (inst.word1.COND()) {
       case SQ_CF_COND::ALWAYS_FALSE:
-         out << "FALSE";
+         fmt::format_to(out, "FALSE");
          break;
       case SQ_CF_COND::CF_BOOL:
-         out << "BOOL";
+         fmt::format_to(out, "BOOL");
          break;
       case SQ_CF_COND::CF_NOT_BOOL:
-         out << "NOT_BOOL";
+         fmt::format_to(out, "NOT_BOOL");
          break;
       }
 
-      out << ") CF_CONST(" << inst.word1.CF_CONST() << ")";
+      fmt::format_to(out, ") CF_CONST({})", inst.word1.CF_CONST());
    }
 }
 
 static void
-disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
+disassembleLoop(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    disassembleCondition(out, inst);
 
@@ -62,7 +62,7 @@ disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_LOOP_END:
       if (!inst.word1.COND()) {
          // If .COND is set - disassembleCondition will print CF_CONST
-         out << " CF_CONST(" << inst.word1.CF_CONST() << ")";
+         fmt::format_to(out, " CF_CONST({})", inst.word1.CF_CONST());
       }
    }
 
@@ -70,66 +70,66 @@ disassembleLoop(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_LOOP_START:
    case SQ_CF_INST_LOOP_START_DX10:
    case SQ_CF_INST_LOOP_START_NO_AL:
-      out << " FAIL_JUMP_ADDR(" << inst.word0.ADDR() << ")";
+      fmt::format_to(out, " FAIL_JUMP_ADDR({})", inst.word0.ADDR());
       break;
    case SQ_CF_INST_LOOP_CONTINUE:
    case SQ_CF_INST_LOOP_BREAK:
-      out << " ADDR(" << inst.word0.ADDR() << ")";
+      fmt::format_to(out, " ADDR({})", inst.word0.ADDR());
       break;
    case SQ_CF_INST_LOOP_END:
-      out << " PASS_JUMP_ADDR(" << inst.word0.ADDR() << ")";
+      fmt::format_to(out, " PASS_JUMP_ADDR({})", inst.word0.ADDR());
       break;
    default:
-      out << " UNKNOWN_LOOP_CF_INST";
+      fmt::format_to(out, " UNKNOWN_LOOP_CF_INST");
    }
 
    if (inst.word1.POP_COUNT()) {
-      out << " POP_CNT(" << inst.word1.POP_COUNT() << ")";
+      fmt::format_to(out, " POP_CNT({})", inst.word1.POP_COUNT());
    }
 
    if (inst.word1.VALID_PIXEL_MODE()) {
-      out << " VALID_PIX";
+      fmt::format_to(out, " VALID_PIX");
    }
 
    if (!inst.word1.BARRIER()) {
-      out << " NO_BARRIER";
+      fmt::format_to(out, " NO_BARRIER");
    }
 }
 
 static void
-disassembleJump(fmt::MemoryWriter &out, const ControlFlowInst &inst)
+disassembleJump(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    auto id = inst.word1.CF_INST();
 
    if (id == SQ_CF_INST_CALL && inst.word1.CALL_COUNT()) {
-      out << " CALL_COUNT(" << inst.word1.CALL_COUNT() << ")";
+      fmt::format_to(out, " CALL_COUNT({})", inst.word1.CALL_COUNT());
    }
 
    disassembleCondition(out, inst);
 
    if (inst.word1.POP_COUNT()) {
-      out << " POP_CNT(" << inst.word1.POP_COUNT() << ")";
+      fmt::format_to(out, " POP_CNT({})", inst.word1.POP_COUNT());
    }
 
    if (id == SQ_CF_INST_CALL || id == SQ_CF_INST_ELSE || id == SQ_CF_INST_JUMP) {
-      out << " ADDR(" << inst.word0.ADDR() << ")";
+      fmt::format_to(out, " ADDR({})", inst.word0.ADDR());
    }
 
    if (inst.word1.VALID_PIXEL_MODE()) {
-      out << " VALID_PIX";
+      fmt::format_to(out, " VALID_PIX");
    }
 
    if (!inst.word1.BARRIER()) {
-      out << " NO_BARRIER";
+      fmt::format_to(out, " NO_BARRIER");
    }
 }
 
 void
-disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst)
+disassembleCF(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    auto id = inst.word1.CF_INST();
    auto name = getInstructionName(id);
-   out << name;
+   fmt::format_to(out, "{}", name);
 
    switch (id) {
    case SQ_CF_INST_TEX:
@@ -159,7 +159,7 @@ disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_EMIT_CUT_VERTEX:
    case SQ_CF_INST_CUT_VERTEX:
       if (!inst.word1.BARRIER()) {
-         out << " NO_BARRIER";
+         fmt::format_to(out, " NO_BARRIER");
       }
       break;
    case SQ_CF_INST_PUSH:
@@ -171,11 +171,11 @@ disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_POP_PUSH:
    case SQ_CF_INST_POP_PUSH_ELSE:
       if (inst.word1.POP_COUNT()) {
-         out << " POP_CNT(" << inst.word1.POP_COUNT() << ")";
+         fmt::format_to(out, " POP_CNT({})", inst.word1.POP_COUNT());
       }
 
       if (inst.word1.VALID_PIXEL_MODE()) {
-         out << " VALID_PIX";
+         fmt::format_to(out, " VALID_PIX");
       }
       break;
    case SQ_CF_INST_END_PROGRAM:
@@ -186,7 +186,7 @@ disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst)
    case SQ_CF_INST_VTX_ACK:
    case SQ_CF_INST_VTX_TC_ACK:
    default:
-      out << " UNK_FORMAT";
+      fmt::format_to(out, " UNK_FORMAT");
       break;
    }
 }
@@ -206,9 +206,9 @@ disassembleNormal(State &state, const ControlFlowInst &inst)
    }
 
    // Decode instruction clause
-   state.out.write("{}{:02} ", state.indent, state.cfPC);
+   fmt::format_to(state.out, "{}{:02} ", state.indent, state.cfPC);
    disassembleCF(state.out, inst);
-   state.out << "\n";
+   fmt::format_to(state.out, "\n");
 
    switch (id) {
    case SQ_CF_INST_LOOP_START:
@@ -267,16 +267,16 @@ disassemble(const gsl::span<const uint8_t> &binary,
       if (cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_NORMAL
        || cf.word1.CF_INST_TYPE() == SQ_CF_INST_TYPE_EXPORT) {
          if (cf.word1.END_OF_PROGRAM()) {
-            state.out << "\nEND_OF_PROGRAM\n";
+            fmt::format_to(state.out, "\nEND_OF_PROGRAM\n");
             break;
          }
       }
 
       state.cfPC++;
-      state.out << "\n";
+      fmt::format_to(state.out, "\n");
    }
 
-   return state.out.str();
+   return to_string(state.out);
 }
 
 } // namespace latte

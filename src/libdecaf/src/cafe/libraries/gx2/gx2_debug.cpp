@@ -106,32 +106,31 @@ debugDumpTexture(virt_ptr<const GX2Texture> texture)
    }
 
    auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
-   auto format = fmt::MemoryWriter {};
+   auto out = fmt::memory_buffer {};
 
-   format
-      << "surface.dim = " << gx2::to_string(texture->surface.dim) << '\n'
-      << "surface.width = " << texture->surface.width << '\n'
-      << "surface.height = " << texture->surface.height << '\n'
-      << "surface.depth = " << texture->surface.depth << '\n'
-      << "surface.mipLevels = " << texture->surface.mipLevels << '\n'
-      << "surface.format = " << gx2::to_string(texture->surface.format) << '\n'
-      << "surface.aa = " << gx2::to_string(texture->surface.aa) << '\n'
-      << "surface.use = " << gx2::to_string(texture->surface.use) << '\n'
-      << "surface.resourceFlags = " << texture->surface.resourceFlags << '\n'
-      << "surface.imageSize = " << texture->surface.imageSize << '\n'
-      << "surface.image = " << pointerAsString(texture->surface.image) << '\n'
-      << "surface.mipmapSize = " << texture->surface.mipmapSize << '\n'
-      << "surface.mipmaps = " << pointerAsString(texture->surface.mipmaps) << '\n'
-      << "surface.tileMode = " << gx2::to_string(texture->surface.tileMode) << '\n'
-      << "surface.swizzle = " << texture->surface.swizzle << '\n'
-      << "surface.alignment = " << texture->surface.alignment << '\n'
-      << "surface.pitch = " << texture->surface.pitch << '\n'
-      << "viewFirstMip = " << texture->viewFirstMip << '\n'
-      << "viewNumMips = " << texture->viewNumMips << '\n'
-      << "viewFirstSlice = " << texture->viewFirstSlice << '\n'
-      << "viewNumSlices = " << texture->viewNumSlices << '\n';
+   fmt::format_to(out, "surface.dim = {}\n", gx2::to_string(texture->surface.dim));
+   fmt::format_to(out, "surface.width = {}\n", texture->surface.width);
+   fmt::format_to(out, "surface.height = {}\n", texture->surface.height);
+   fmt::format_to(out, "surface.depth = {}\n", texture->surface.depth);
+   fmt::format_to(out, "surface.mipLevels = {}\n", texture->surface.mipLevels);
+   fmt::format_to(out, "surface.format = {}\n", gx2::to_string(texture->surface.format));
+   fmt::format_to(out, "surface.aa = {}\n", gx2::to_string(texture->surface.aa));
+   fmt::format_to(out, "surface.use = {}\n", gx2::to_string(texture->surface.use));
+   fmt::format_to(out, "surface.resourceFlags = {}\n", texture->surface.resourceFlags);
+   fmt::format_to(out, "surface.imageSize = {}\n", texture->surface.imageSize);
+   fmt::format_to(out, "surface.image = {}\n", pointerAsString(texture->surface.image));
+   fmt::format_to(out, "surface.mipmapSize = {}\n", texture->surface.mipmapSize);
+   fmt::format_to(out, "surface.mipmaps = {}\n", pointerAsString(texture->surface.mipmaps));
+   fmt::format_to(out, "surface.tileMode = {}\n", gx2::to_string(texture->surface.tileMode));
+   fmt::format_to(out, "surface.swizzle = {}\n", texture->surface.swizzle);
+   fmt::format_to(out, "surface.alignment = {}\n", texture->surface.alignment);
+   fmt::format_to(out, "surface.pitch = {}\n", texture->surface.pitch);
+   fmt::format_to(out, "viewFirstMip = {}\n", texture->viewFirstMip);
+   fmt::format_to(out, "viewNumMips = {}\n", texture->viewNumMips);
+   fmt::format_to(out, "viewFirstSlice = {}\n", texture->viewFirstSlice);
+   fmt::format_to(out, "viewNumSlices = {}\n", texture->viewNumSlices);
 
-   file << format.str();
+   file << std::string_view { out.data(), out.size() };
 
    if (!texture->surface.image || !texture->surface.imageSize) {
       return;
@@ -181,8 +180,8 @@ addShader(gfd::GFDFile &file,
 
 template<typename ShaderType>
 static void
-debugDumpShader(const std::string &filename,
-                const std::string &info,
+debugDumpShader(const std::string_view &filename,
+                const std::string_view &info,
                 virt_ptr<ShaderType> shader,
                 bool isSubroutine = false)
 {
@@ -191,20 +190,21 @@ debugDumpShader(const std::string &filename,
    // Write binary of shader data to shader_pixel_X.bin
    createDumpDirectory();
 
-   if (platform::fileExists("dump/" + filename + ".bin")) {
+   auto outputBin = fmt::format("dump/{}.bin", filename);
+   if (platform::fileExists(outputBin)) {
       return;
    }
 
    gLog->debug("Dumping shader {}", filename);
-   debugDumpData("dump/" + filename + ".bin", shader->data, shader->size);
+   debugDumpData(outputBin, shader->data, shader->size);
 
    // Write GSH file
    gfd::GFDFile gsh;
    addShader(gsh, shader);
-   gfd::writeFile(gsh, "dump/" + filename + ".gsh");
+   gfd::writeFile(gsh, fmt::format("dump/{}.gsh", filename));
 
    // Write text of shader to shader_pixel_X.txt
-   auto file = std::ofstream { "dump/" + filename + ".txt", std::ofstream::out };
+   auto file = std::ofstream { fmt::format("dump/{}.txt", filename), std::ofstream::out };
 
    // Disassemble
    output = latte::disassemble(gsl::make_span(shader->data.getRawPointer(), shader->size), isSubroutine);
@@ -216,98 +216,95 @@ debugDumpShader(const std::string &filename,
 }
 
 static void
-formatUniformBlocks(fmt::MemoryWriter &out,
+formatUniformBlocks(fmt::memory_buffer &out,
                     uint32_t count,
                     virt_ptr<GX2UniformBlock> blocks)
 {
-   out << "  uniformBlockCount: " << count << "\n";
+   fmt::format_to(out, "  uniformBlockCount: {}\n", count);
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Block " << i << "\n"
-         << "      name: " << blocks[i].name.getRawPointer() << "\n"
-         << "      offset: " << blocks[i].offset << "\n"
-         << "      size: " << blocks[i].size << "\n";
+      fmt::format_to(out, "    Block {}\n", i);
+      fmt::format_to(out, "      name: {}\n", blocks[i].name);
+      fmt::format_to(out, "      offset: {}\n", blocks[i].offset);
+      fmt::format_to(out, "      size: {}\n", blocks[i].size);
    }
 }
 
 static void
-formatAttribVars(fmt::MemoryWriter &out,
+formatAttribVars(fmt::memory_buffer &out,
                  uint32_t count,
                  virt_ptr<GX2AttribVar> vars)
 {
-   out << "  attribVarCount: " << count << "\n";
+   fmt::format_to(out, "  attribVarCount: {}\n", count);
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Var " << i << "\n"
-         << "      name: " << vars[i].name.getRawPointer() << "\n"
-         << "      type: " << gx2::to_string(vars[i].type) << "\n"
-         << "      count: " << vars[i].count << "\n"
-         << "      location: " << vars[i].location << "\n";
+      fmt::format_to(out, "    Var {}\n", i);
+      fmt::format_to(out, "      name: {}\n", vars[i].name);
+      fmt::format_to(out, "      type: {}\n", gx2::to_string(vars[i].type));
+      fmt::format_to(out, "      count: {}\n", vars[i].count);
+      fmt::format_to(out, "      location: {}\n", vars[i].location);
    }
 }
 
 static void
-formatInitialValues(fmt::MemoryWriter &out,
+formatInitialValues(fmt::memory_buffer &out,
                     uint32_t count,
                     virt_ptr<GX2UniformInitialValue> vars)
 {
-   out << "  intialValueCount: " << count << "\n";
+   fmt::format_to(out, "  intialValueCount: {}\n", count);
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Var " << i << "\n"
-         << "      offset: " << vars[i].offset << "\n"
-         << "      value: ("
-            << vars[i].value[0] << ", "
-            << vars[i].value[1] << ", "
-            << vars[i].value[2] << ", "
-            << vars[i].value[3] << ")"
-            << "\n";
+      fmt::format_to(out, "    Var {}\n", i);
+      fmt::format_to(out, "      offset: {}\n", vars[i].offset);
+      fmt::format_to(out, "      value: ({}, {}, {}, {})\n",
+                     vars[i].value[0], vars[i].value[1],
+                     vars[i].value[2], vars[i].value[3]);
    }
 }
 
 static void
-formatLoopVars(fmt::MemoryWriter &out,
+formatLoopVars(fmt::memory_buffer &out,
                uint32_t count,
                virt_ptr<GX2LoopVar> vars)
 {
-   out << "  loopVarCount: " << count << "\n";
+   fmt::format_to(out, "  loopVarCount: {}\n", count);
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Var " << i << "\n"
-         << "      value: " << vars[i].value << "\n"
-         << "      offset: " << vars[i].offset << "\n";
+      fmt::format_to(out, "    Var {}\n", i);
+      fmt::format_to(out, "      value: {}\n", vars[i].value);
+      fmt::format_to(out, "      offset: {}\n", vars[i].offset);
    }
 }
 
 static void
-formatUniformVars(fmt::MemoryWriter &out,
+formatUniformVars(fmt::memory_buffer &out,
                   uint32_t count,
                   virt_ptr<GX2UniformVar> vars)
 {
-   out << "  uniformVarCount: " << count << "\n";
+   fmt::format_to(out, "  uniformVarCount: {}\n", count);
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Var " << i << "\n"
-         << "      name: " << vars[i].name.getRawPointer() << "\n"
-         << "      type: " << gx2::to_string(vars[i].type) << "\n"
-         << "      count: " << vars[i].count << "\n"
-         << "      offset: " << vars[i].offset << "\n"
-         << "      block: " << vars[i].block << "\n";
+      fmt::format_to(out, "    Var {}\n", i);
+      fmt::format_to(out, "      name: {}\n", vars[i].name);
+      fmt::format_to(out, "      type: {}\n", gx2::to_string(vars[i].type));
+      fmt::format_to(out, "      count: {}\n", vars[i].count);
+      fmt::format_to(out, "      offset: {}\n", vars[i].offset);
+      fmt::format_to(out, "      block: {}\n", vars[i].block);
    }
 }
 
 static void
-formatSamplerVars(fmt::MemoryWriter &out,
+formatSamplerVars(fmt::memory_buffer &out,
                   uint32_t count,
                   virt_ptr<GX2SamplerVar> vars)
 {
-   out << "  samplerVarCount: " << count << "\n";
+   fmt::format_to(out, "  samplerVarCount: {}\n", count);
 
    for (auto i = 0u; i < count; ++i) {
-      out << "    Var " << i << "\n"
-         << "      name: " << vars[i].name.getRawPointer() << "\n"
-         << "      type: " << gx2::to_string(vars[i].type) << "\n"
-         << "      location: " << vars[i].location << "\n";
+      fmt::format_to(out, "    Var {}\n", i);
+      fmt::format_to(out, "      name: {}\n", vars[i].name);
+      fmt::format_to(out, "      type: {}\n", gx2::to_string(vars[i].type));
+      fmt::format_to(out, "      location: {}\n", vars[i].location);
    }
 }
 
@@ -318,13 +315,13 @@ debugDumpShader(virt_ptr<const GX2FetchShader> shader)
       return;
    }
 
-   fmt::MemoryWriter out;
-   out << "GX2FetchShader:\n"
-      << "  address: " << pointerAsString(shader->data) << "\n"
-      << "  size: " << shader->size << "\n";
+   fmt::memory_buffer out;
+   fmt::format_to(out, "GX2FetchShader:\n");
+   fmt::format_to(out, "  address: {}\n", pointerAsString(shader->data));
+   fmt::format_to(out, "  size: {}\n", shader->size);
 
    debugDumpShader("shader_fetch_" + pointerAsString(shader),
-                   out.str(),
+                   std::string_view { out.data(), out.size() },
                    shader,
                    true);
 }
@@ -336,11 +333,11 @@ debugDumpShader(virt_ptr<const GX2PixelShader> shader)
       return;
    }
 
-   fmt::MemoryWriter out;
-   out << "GX2PixelShader:\n"
-      << "  address: " << pointerAsString(shader->data) << "\n"
-      << "  size: " << shader->size << "\n"
-      << "  mode: " << gx2::to_string(shader->mode) << "\n";
+   fmt::memory_buffer out;
+   fmt::format_to(out, "GX2PixelShader:\n");
+   fmt::format_to(out, "  address: {}\n", pointerAsString(shader->data));
+   fmt::format_to(out, "  size: {}\n", shader->size);
+   fmt::format_to(out, "  mode: {}\n", gx2::to_string(shader->mode));
 
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
@@ -349,7 +346,7 @@ debugDumpShader(virt_ptr<const GX2PixelShader> shader)
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
    debugDumpShader("shader_pixel_" + pointerAsString(shader),
-                   out.str(),
+                   std::string_view { out.data(), out.size() },
                    shader);
 }
 
@@ -360,11 +357,11 @@ debugDumpShader(virt_ptr<const GX2VertexShader> shader)
       return;
    }
 
-   fmt::MemoryWriter out;
-   out << "GX2VertexShader:\n"
-      << "  address: " << pointerAsString(shader->data) << "\n"
-      << "  size: " << shader->size << "\n"
-      << "  mode: " << gx2::to_string(shader->mode) << "\n";
+   fmt::memory_buffer out;
+   fmt::format_to(out, "GX2VertexShader:\n");
+   fmt::format_to(out, "  address: {}\n", pointerAsString(shader->data));
+   fmt::format_to(out, "  size: {}\n", shader->size);
+   fmt::format_to(out, "  mode: {}\n", gx2::to_string(shader->mode));
 
    formatUniformBlocks(out, shader->uniformBlockCount, shader->uniformBlocks);
    formatUniformVars(out, shader->uniformVarCount, shader->uniformVars);
@@ -374,7 +371,7 @@ debugDumpShader(virt_ptr<const GX2VertexShader> shader)
    formatAttribVars(out, shader->attribVarCount, shader->attribVars);
 
    debugDumpShader("shader_vertex_" + pointerAsString(shader),
-                   out.str(),
+                   std::string_view { out.data(), out.size() },
                    shader);
 }
 

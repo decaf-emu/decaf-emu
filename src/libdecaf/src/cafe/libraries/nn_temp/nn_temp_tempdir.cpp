@@ -10,6 +10,8 @@
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
 #include "cafe/libraries/coreinit/coreinit_osreport.h"
 
+#include <cinttypes>
+
 using namespace cafe::coreinit;
 
 template<typename... Args>
@@ -112,7 +114,7 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
                       freeMlcSize,
                       FSErrorFlag::None);
    tempLogInfo("UpdatePreferentialDeviceInfo", 544,
-               "MLC freeSpaceSize={}", freeMlcSize);
+               "MLC freeSpaceSize={}", *freeMlcSize);
 
    // TODO: Use nn::spm to find device index for USB
    if (FSGetFreeSpaceSize(virt_addrof(sTempDirData->fsClient),
@@ -123,7 +125,7 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
       *freeUsbSize = 0ull;
    }
    tempLogInfo("UpdatePreferentialDeviceInfo", 562,
-               "USB freeSpaceSize={}", freeUsbSize);
+               "USB freeSpaceSize={}", *freeUsbSize);
 
    if ((devicePreference == TEMPDevicePreference::USB
         || *freeUsbSize >= *freeMlcSize)
@@ -637,8 +639,8 @@ TEMPGetDirPath(TEMPDirId dirId,
 
    if (pathBufferSize < DirPathMaxLength) {
       tempLogError("TEMPGetDirPath", 870,
-                 "pathLen(={}) was too short. Must be equal or bigger than TEMP_DIR_PATH_LENGTH_MAX(={})",
-                 pathBufferSize, DirPathMaxLength);
+                   "pathLen(={}) was too short. Must be equal or bigger than TEMP_DIR_PATH_LENGTH_MAX(={})",
+                   pathBufferSize, DirPathMaxLength);
       return TEMPStatus::InvalidParam;
    }
 
@@ -646,8 +648,7 @@ TEMPGetDirPath(TEMPDirId dirId,
                      pathBufferSize,
                      "/vol/temp/%016" PRIu64 "x",
                      dirId) >= DirPathMaxLength) {
-      tempLogError("TEMPGetDirPath", 881,
-                 "Failed to generate path");
+      tempLogError("TEMPGetDirPath", 881, "Failed to generate path");
       return TEMPStatus::FatalError;
    }
 
@@ -673,8 +674,8 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
 
    if (pathBufferSize < GlobalPathMaxLength) {
       tempLogError("TEMPGetDirGlobalPath", 903,
-                 "pathLen(={}) was too short. Must be equal or bigger than TEMP_DIR_PATH_LENGTH_MAX(={})",
-                 pathBufferSize, DirPathMaxLength);
+                   "pathLen(={}) was too short. Must be equal or bigger than TEMP_DIR_PATH_LENGTH_MAX(={})",
+                   pathBufferSize, DirPathMaxLength);
       return TEMPStatus::InvalidParam;
    }
 
@@ -687,8 +688,7 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
                      "%s/%08x",
                      virt_addrof(deviceInfo->targetPath).getRawPointer(),
                      static_cast<uint32_t>(deviceInfo->dirId & 0xFFFFFFFF)) >= GlobalPathMaxLength) {
-      tempLogError("TEMPGetDirGlobalPath", 922,
-                 "Failed to generate path");
+      tempLogError("TEMPGetDirGlobalPath", 922, "Failed to generate path");
       return TEMPStatus::FatalError;
    }
 
@@ -698,8 +698,7 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
 TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id)
 {
-   tempLogInfo("TEMPShutdownTempDir", 834,
-               "(ENTR): dirID={}", id);
+   tempLogInfo("TEMPShutdownTempDir", 834, "(ENTR): dirID={}", id);
 
    OSLockMutex(virt_addrof(sTempDirData->mutex));
    if (!internal::checkIsInitialised()) {
@@ -710,12 +709,11 @@ TEMPShutdownTempDir(TEMPDirId id)
    auto error = internal::teardownTempDir(id);
    if (error && error != TEMPStatus::NotFound) {
       tempLogError("TEMPShutdownTempDir", 848,
-                 "Failed to delete temp dir ({}).", id);
+                   "Failed to delete temp dir ({}).", id);
    }
 
    OSUnlockMutex(virt_addrof(sTempDirData->mutex));
-   tempLogInfo("TEMPShutdownTempDir", 853,
-               "(EXIT): return {}", error);
+   tempLogInfo("TEMPShutdownTempDir", 853, "(EXIT): return {}", error);
    return error;
 }
 

@@ -72,7 +72,7 @@ insertArDestBegin(State &state,
       throw translate_exception("Unsupport omod encountered for AR operation");
    }
 
-   std::string arDest;
+   const char *arDest = nullptr;
    switch (unit) {
    case SQ_CHAN::X:
       arDest = "AR.x";
@@ -86,21 +86,20 @@ insertArDestBegin(State &state,
    case SQ_CHAN::W:
       arDest = "AR.w";
       break;
+   default:
+      decaf_abort(fmt::format("Unexpected unit {}", unit));
    }
 
-   decaf_check(!arDest.empty());
-
-   state.out << arDest << " = ";
+   fmt::format_to(state.out, "{} = ", arDest);
 
    if (inst.op2.WRITE_MASK()) {
-      fmt::MemoryWriter postWrite;
+      fmt::memory_buffer postWrite;
 
-      auto gpr = inst.word1.DST_GPR();
-      postWrite << "R[" << gpr << "].";
+      fmt::format_to(postWrite, "R[{}].", inst.word1.DST_GPR());
       insertChannel(postWrite, inst.word1.DST_CHAN());
-      postWrite << " = " << arDest << ";";
+      fmt::format_to(postWrite, " = {};", arDest);
 
-      state.postGroupWrites.push_back(postWrite.str());
+      state.postGroupWrites.push_back(to_string(postWrite));
    }
 }
 
@@ -125,22 +124,22 @@ unaryFunction(State &state,
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
-   state.out << func << "(";
+   fmt::format_to(state.out, "{}(", func);
 
    if (!extraFunc.empty()) {
-      state.out << extraFunc << "(";
+      fmt::format_to(state.out, "{}(", extraFunc);
    }
 
    insertSource0(state, state.out, cf, alu);
 
    if (!extraFunc.empty()) {
-      state.out << ")";
+      fmt::format_to(state.out, ")");
    }
 
-   state.out << ")";
+   fmt::format_to(state.out, ")");
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -154,14 +153,14 @@ binaryFunction(State &state,
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
-   state.out << func << "(";
+   fmt::format_to(state.out, "{}(", func);
    insertSource0(state, state.out, cf, alu);
-   state.out << ", ";
+   fmt::format_to(state.out, ", ");
    insertSource1(state, state.out, cf, alu);
-   state.out << ")";
+   fmt::format_to(state.out, ")");
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -176,11 +175,11 @@ binaryOperator(State &state,
    insertDestBegin(state, cf, alu, state.unit);
 
    insertSource0(state, state.out, cf, alu);
-   state.out << op;
+   fmt::format_to(state.out, op);
    insertSource1(state, state.out, cf, alu);
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -191,11 +190,11 @@ binaryPredicate(State &state,
                 const char *op)
 {
    // predicate (src0 op src1)
-   fmt::MemoryWriter condition;
+   fmt::memory_buffer condition;
    insertSource0(state, condition, cf, alu);
-   condition << op;
+   fmt::format_to(condition, op);
    insertSource1(state, condition, cf, alu);
-   updatePredicate(state, cf, alu, condition.str());
+   updatePredicate(state, cf, alu, to_string(condition));
 }
 
 static void
@@ -210,20 +209,20 @@ binaryCompareSet(State &state,
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
-   state.out << "(";
+   fmt::format_to(state.out, "(");
    insertSource0(state, state.out, cf, alu);
-   state.out << op;
+   fmt::format_to(state.out, op);
    insertSource1(state, state.out, cf, alu);
-   state.out << ") ? ";
+   fmt::format_to(state.out, ") ? ");
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
-      state.out << "0xFFFFFFFF : 0";
+      fmt::format_to(state.out, "0xFFFFFFFF : 0");
    } else {
-      state.out << "1.0f : 0.0f";
+      fmt::format_to(state.out, "1.0f : 0.0f");
    }
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -237,21 +236,21 @@ binaryCompareKill(State &state,
    auto flags = getInstructionFlags(alu.op2.ALU_INST());
 
    insertLineStart(state);
-   state.out << "if (";
+   fmt::format_to(state.out, "if (");
    insertSource0(state, state.out, cf, alu);
-   state.out << op;
+   fmt::format_to(state.out, op);
    insertSource1(state, state.out, cf, alu);
-   state.out << ") {";
+   fmt::format_to(state.out, ") {{");
    insertLineEnd(state);
 
    increaseIndent(state);
    insertLineStart(state);
-   state.out << "discard;";
+   fmt::format_to(state.out, "discard;");
    insertLineEnd(state);
    decreaseIndent(state);
 
    insertLineStart(state);
-   state.out << "} else {";
+   fmt::format_to(state.out, "}} else {{");
    insertLineEnd(state);
 
    increaseIndent(state);
@@ -259,18 +258,18 @@ binaryCompareKill(State &state,
    insertDestBegin(state, cf, alu, state.unit);
 
    if ((flags & SQ_ALU_FLAG_INT_OUT) || (flags & SQ_ALU_FLAG_UINT_OUT)) {
-      state.out << "0";
+      fmt::format_to(state.out, "0");
    } else {
-      state.out << "0.0f";
+      fmt::format_to(state.out, "0.0f");
    }
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
    decreaseIndent(state);
 
    insertLineStart(state);
-   state.out << '}';
+   fmt::format_to(state.out, "}}");
    insertLineEnd(state);
 
    state.shader->usesDiscard = true;
@@ -301,12 +300,12 @@ COS(State &state, const ControlFlowInst &cf, const AluInst &alu)
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
-   state.out << "cos(";
+   fmt::format_to(state.out, "cos(");
    insertSource0(state, state.out, cf, alu);
-   state.out << " / 0.1591549367)";
+   fmt::format_to(state.out, " / 0.1591549367)");
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -410,7 +409,7 @@ MOV(State &state, const ControlFlowInst &cf, const AluInst &alu)
    insertSource0(state, state.out, cf, alu);
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -421,12 +420,12 @@ MOVA_INT(State &state, const ControlFlowInst &cf, const AluInst &alu)
    insertLineStart(state);
    insertArDestBegin(state, cf, alu, state.unit);
 
-   state.out << "int(clamp(";
+   fmt::format_to(state.out, "int(clamp(");
    insertSource0(state, state.out, cf, alu);
-   state.out << ", -256, 256))";
+   fmt::format_to(state.out, ", -256, 256))");
 
    insertArDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -437,12 +436,12 @@ MOVA_FLOOR(State &state, const ControlFlowInst &cf, const AluInst &alu)
    insertLineStart(state);
    insertArDestBegin(state, cf, alu, state.unit);
 
-   state.out << "int(clamp(floor(";
+   fmt::format_to(state.out, "int(clamp(floor(");
    insertSource0(state, state.out, cf, alu);
-   state.out << "), -256, 256))";
+   fmt::format_to(state.out, "), -256, 256))");
 
    insertArDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -542,12 +541,12 @@ SIN(State &state, const ControlFlowInst &cf, const AluInst &alu)
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
-   state.out << "sin(";
+   fmt::format_to(state.out, "sin(");
    insertSource0(state, state.out, cf, alu);
-   state.out << " / 0.1591549367)";
+   fmt::format_to(state.out, " / 0.1591549367)");
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
