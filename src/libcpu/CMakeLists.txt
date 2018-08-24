@@ -6,7 +6,12 @@ include_directories("src")
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
-add_library(libcpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
+if(MSVC)
+    add_library(libcpu STATIC ${SOURCE_FILES} ${HEADER_FILES} "cpu.natvis")
+else()
+    add_library(libcpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
+endif()
+
 GroupSources(espresso)
 GroupSources(src)
 
