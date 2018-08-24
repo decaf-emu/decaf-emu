@@ -4,7 +4,6 @@
 #include "latte_registers.h"
 
 #include <common/bitfield.h>
-#include <common/be_val.h>
 #include <libcpu/be2_struct.h>
 #include <cstdint>
 #include <gsl.h>

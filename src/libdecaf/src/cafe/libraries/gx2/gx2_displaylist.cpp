@@ -162,7 +162,7 @@ GX2PatchDisplayList(virt_ptr<void> displayList,
    }
 
    // Apply the actual patch
-   auto words = virt_cast<be_val<uint32_t> *>(displayList);
+   auto words = virt_cast<uint32_t *>(displayList);
    auto idx = byteOffset / 4;
    words[idx + 2] = addr >> 8;
 }

@@ -103,7 +103,7 @@ public:
                mRegisterStorage[i] = byte_swap(mRegisterStorage[i]);
             }
 
-            handleRegisterSnapshot(reinterpret_cast<be_val<uint32_t> *>(mRegisterStorage), numRegisters);
+            handleRegisterSnapshot(reinterpret_cast<be2_val<uint32_t> *>(mRegisterStorage), numRegisters);
             gx2::internal::flushCommandBuffer(0x100);
             break;
          }
@@ -162,7 +162,7 @@ private:
       });
    }
 
-   void handleRegisterSnapshot(be_val<uint32_t> *registers, uint32_t count)
+   void handleRegisterSnapshot(be2_val<uint32_t> *registers, uint32_t count)
    {
       // Enable loading of registers
       auto LOAD_CONTROL = latte::CONTEXT_CONTROL_ENABLE::get(0)
@@ -188,7 +188,7 @@ private:
       LoadConfigRange[] = { { 0, (latte::Register::ConfigRegisterEnd - latte::Register::ConfigRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadConfigReg {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
          gsl::make_span(LoadConfigRange)
       });
 
@@ -196,7 +196,7 @@ private:
       LoadContextRange[] = { { 0, (latte::Register::ContextRegisterEnd - latte::Register::ContextRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadContextReg {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
          gsl::make_span(LoadContextRange)
       });
 
@@ -204,7 +204,7 @@ private:
       LoadAluConstRange[] = { { 0, (latte::Register::AluConstRegisterEnd - latte::Register::AluConstRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadAluConst {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
          gsl::make_span(LoadAluConstRange)
       });
 
@@ -212,7 +212,7 @@ private:
       LoadResourceRange[] = { { 0, (latte::Register::ResourceRegisterEnd - latte::Register::ResourceRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(latte::pm4::LoadResource {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
          gsl::make_span(LoadResourceRange)
       });
 
@@ -220,7 +220,7 @@ private:
       LoadSamplerRange[] = { { 0, (latte::Register::SamplerRegisterEnd - latte::Register::SamplerRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadSampler {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
          gsl::make_span(LoadSamplerRange)
       });
 
@@ -228,7 +228,7 @@ private:
       LoadControlRange[] = { { 0, (latte::Register::ControlRegisterEnd - latte::Register::ControlRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadControlConst {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
          gsl::make_span(LoadControlRange)
       });
 
@@ -236,7 +236,7 @@ private:
       LoadLoopRange[] = { { 0, (latte::Register::LoopConstRegisterEnd - latte::Register::LoopConstRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadLoopConst {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
          gsl::make_span(LoadLoopRange)
       });
 
@@ -244,7 +244,7 @@ private:
       LoadBoolRange[] = { { 0, (latte::Register::BoolConstRegisterEnd - latte::Register::BoolConstRegisterBase) / 4 }, };
 
       gx2::internal::writePM4(LoadLoopConst {
-         reinterpret_cast<be_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
+         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
          gsl::make_span(LoadBoolRange)
       });
    }
@@ -257,14 +257,14 @@ private:
 
    bool
    scanType0(HeaderType0 header,
-             const gsl::span<be_val<uint32_t>> &data)
+             const gsl::span<be2_val<uint32_t>> &data)
    {
       return false;
    }
 
    bool
    scanType3(HeaderType3 header,
-             const gsl::span<be_val<uint32_t>> &data)
+             const gsl::span<be2_val<uint32_t>> &data)
    {
       if (header.opcode() == IT_OPCODE::DECAF_SWAP_BUFFERS) {
          return true;
@@ -280,7 +280,7 @@ private:
    bool
    scanCommandBuffer(void *words, uint32_t numWords)
    {
-      auto buffer = reinterpret_cast<be_val<uint32_t> *>(words);
+      auto buffer = reinterpret_cast<be2_val<uint32_t> *>(words);
       auto foundSwap = false;
 
       for (auto pos = size_t { 0u }; pos < numWords; ) {
