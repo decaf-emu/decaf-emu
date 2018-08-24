@@ -252,7 +252,7 @@ sampleVoice(virt_ptr<AXVoice> voice,
          samples[i] = sample * thisSampleMul + lastSample * lastSampleMul;
       }
 
-      offsetFrac += extras->src.ratio;
+      offsetFrac += extras->src.ratio.value();
 
       while (offsetFrac >= FpOne) {
          // Advance the voice by one sample
