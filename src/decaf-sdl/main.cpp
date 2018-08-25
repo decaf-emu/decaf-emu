@@ -238,7 +238,7 @@ start(excmd::parser &parser,
 
    if (!decaf::config::log::to_stdout) {
       // Always do client log to stdout
-      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
    }
 
    gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
