@@ -2,12 +2,12 @@
 #include "log.h"
 #include "platform.h"
 #include "platform_stacktrace.h"
-#include "platform_winapi_string.h"
 
 #include <iostream>
 #include <fmt/format.h>
 
 #ifdef PLATFORM_WINDOWS
+#include "platform_winapi_string.h"
 #include <Windows.h>
 #undef NDEBUG
 #include <cassert>

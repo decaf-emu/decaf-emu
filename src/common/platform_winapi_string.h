@@ -1,7 +1,6 @@
 #pragma once
-#include <codecvt>
-#include <locale>
 #include <string>
+#include <Windows.h>
 
 namespace platform
 {
@@ -12,8 +11,15 @@ namespace platform
 static inline std::wstring
 toWinApiString(const std::string &utf8)
 {
-   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-   return converter.from_bytes(utf8);
+   auto result = std::wstring { };
+   auto size = MultiByteToWideChar(CP_UTF8, 0,
+                                   utf8.data(), utf8.size(),
+                                   NULL, 0);
+   result.resize(size);
+   MultiByteToWideChar(CP_UTF8, 0,
+                       utf8.data(), utf8.size(),
+                       result.data(), result.size());
+   return result;
 }
 
 /**
@@ -22,8 +28,17 @@ toWinApiString(const std::string &utf8)
 static inline std::string
 fromWinApiString(const std::wstring &utf16)
 {
-   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-   return converter.to_bytes(utf16);
+   auto result = std::string { };
+   auto size = WideCharToMultiByte(CP_UTF8, 0,
+                                   utf16.data(), utf16.size(),
+                                   NULL, 0,
+                                   NULL, NULL);
+   result.resize(size);
+   WideCharToMultiByte(CP_UTF8, 0,
+                       utf16.data(), utf16.size(),
+                       result.data(), result.size(),
+                       NULL, NULL);
+   return result;
 }
 
 } // namespace platform
