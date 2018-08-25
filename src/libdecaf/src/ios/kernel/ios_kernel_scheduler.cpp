@@ -1,12 +1,11 @@
-#pragma optimize("", off)
+#include "ios_kernel_hardware.h"
 #include "ios_kernel_scheduler.h"
 #include "ios_kernel_thread.h"
 #include "ios_kernel_threadqueue.h"
 #include "ios_kernel_process.h"
-#include "ios/ios_core.h"
 
 #include <common/log.h>
-#include <mutex>
+#include <common/platform_fiber.h>
 
 namespace ios::kernel::internal
 {
@@ -19,11 +18,11 @@ struct StaticSchedulerData
 static phys_ptr<StaticSchedulerData>
 sData = nullptr;
 
-static std::mutex
-sSchedulerLock;
-
 static thread_local phys_ptr<Thread>
 sCurrentThreadContext = nullptr;
+
+static platform::Fiber *
+sIdleFiber = nullptr;
 
 phys_ptr<Thread>
 getCurrentThread()
@@ -38,19 +37,7 @@ getCurrentThreadId()
 }
 
 void
-lockScheduler()
-{
-   sSchedulerLock.lock();
-}
-
-void
-unlockScheduler()
-{
-   sSchedulerLock.unlock();
-}
-
-void
-sleepThreadNoLock(phys_ptr<ThreadQueue> queue)
+sleepThread(phys_ptr<ThreadQueue> queue)
 {
    auto thread = sCurrentThreadContext;
    thread->state = ThreadState::Waiting;
@@ -58,26 +45,26 @@ sleepThreadNoLock(phys_ptr<ThreadQueue> queue)
 }
 
 void
-wakeupOneThreadNoLock(phys_ptr<ThreadQueue> queue,
-                      Error waitResult)
+wakeupOneThread(phys_ptr<ThreadQueue> queue,
+                Error waitResult)
 {
    auto thread = ThreadQueue_PopThread(queue);
    thread->state = ThreadState::Ready;
    thread->context.queueWaitResult = waitResult;
-   queueThreadNoLock(thread);
+   queueThread(thread);
 }
 
 void
-wakeupAllThreadsNoLock(phys_ptr<ThreadQueue> queue,
-                       Error waitResult)
+wakeupAllThreads(phys_ptr<ThreadQueue> queue,
+                 Error waitResult)
 {
    while (queue->first) {
-      wakeupOneThreadNoLock(queue, waitResult);
+      wakeupOneThread(queue, waitResult);
    }
 }
 
 void
-queueThreadNoLock(phys_ptr<Thread> thread)
+queueThread(phys_ptr<Thread> thread)
 {
    ThreadQueue_PushThread(phys_addrof(sData->runQueue), thread);
 }
@@ -89,27 +76,7 @@ isThreadInRunQueue(phys_ptr<Thread> thread)
 }
 
 void
-rescheduleOtherNoLock()
-{
-   auto curCore = ios::internal::getCurrentCoreId();
-   for (auto i = 0u; i < ios::internal::getCoreCount(); ++i) {
-      if (i == curCore) {
-         continue;
-      }
-
-      ios::internal::interruptCore(i, CoreInterruptFlags::Scheduler);
-   }
-}
-
-void
-rescheduleAllNoLock()
-{
-   rescheduleOtherNoLock();
-   rescheduleSelfNoLock(false);
-}
-
-void
-rescheduleSelfNoLock(bool yielding)
+reschedule(bool yielding)
 {
    auto currentThread = sCurrentThreadContext;
    auto nextThread = ThreadQueue_PeekThread(phys_addrof(sData->runQueue));
@@ -131,7 +98,7 @@ rescheduleSelfNoLock(bool yielding)
       }
 
       currentThread->state = ThreadState::Ready;
-      queueThreadNoLock(currentThread);
+      queueThread(currentThread);
    }
 
    // Trace log the thread switch
@@ -166,25 +133,23 @@ rescheduleSelfNoLock(bool yielding)
 
    decaf_check(ThreadQueue_PopThread(phys_addrof(sData->runQueue)) == nextThread);
    sCurrentThreadContext = nextThread;
-   nextThread->state = ThreadState::Running;
-   unlockScheduler();
 
-   auto fiberSrc = currentThread ? currentThread->context.fiber : ios::internal::getCurrentCore()->fiber;
-   auto fiberDst = nextThread ? nextThread->context.fiber : ios::internal::getCurrentCore()->fiber;
+   if (nextThread) {
+      nextThread->state = ThreadState::Running;
+   }
+
+   auto fiberSrc = currentThread ? currentThread->context.fiber : sIdleFiber;
+   auto fiberDst = nextThread ? nextThread->context.fiber : sIdleFiber;
 
    if (fiberSrc != fiberDst) {
       platform::swapToFiber(fiberSrc, fiberDst);
    }
-
-   lockScheduler();
 }
 
 void
-handleSchedulerInterrupt()
+setIdleFiber()
 {
-   internal::lockScheduler();
-   rescheduleSelfNoLock(false);
-   internal::unlockScheduler();
+   sIdleFiber = platform::getThreadFiber();
 }
 
 void

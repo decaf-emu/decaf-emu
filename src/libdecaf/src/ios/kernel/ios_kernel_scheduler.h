@@ -12,36 +12,27 @@ namespace internal
 {
 
 void
-lockScheduler();
+sleepThread(phys_ptr<ThreadQueue> queue);
 
 void
-unlockScheduler();
+wakeupOneThread(phys_ptr<ThreadQueue> queue,
+                Error waitResult);
 
 void
-sleepThreadNoLock(phys_ptr<ThreadQueue> queue);
+wakeupAllThreads(phys_ptr<ThreadQueue> queue,
+                 Error waitResult);
 
 void
-wakeupOneThreadNoLock(phys_ptr<ThreadQueue> queue,
-                      Error waitResult);
-
-void
-wakeupAllThreadsNoLock(phys_ptr<ThreadQueue> queue,
-                       Error waitResult);
-
-void
-queueThreadNoLock(phys_ptr<Thread> thread);
+queueThread(phys_ptr<Thread> thread);
 
 bool
 isThreadInRunQueue(phys_ptr<Thread> thread);
 
 void
-rescheduleAllNoLock();
+reschedule(bool yielding = false);
 
 void
-rescheduleSelfNoLock(bool yielding = false);
-
-void
-handleSchedulerInterrupt();
+setIdleFiber();
 
 void
 initialiseStaticSchedulerData();

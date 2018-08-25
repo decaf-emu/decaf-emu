@@ -80,7 +80,7 @@ bool
 bspReady();
 
 void
-handleAhbInterrupts();
+checkAndHandleInterrupts();
 
 void
 setInterruptAhbAll(AHBALL mask);
@@ -90,6 +90,12 @@ setInterruptAhbLt(AHBLT mask);
 
 void
 unregisterEventHandlerQueue(MessageQueueId queue);
+
+void
+startHardwareThread();
+
+void
+joinHardwareThread();
 
 void
 initialiseStaticHardwareData();

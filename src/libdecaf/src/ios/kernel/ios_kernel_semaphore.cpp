@@ -41,10 +41,7 @@ Error
 IOS_CreateSemaphore(int32_t maxCount,
                     int32_t initialCount)
 {
-   internal::lockScheduler();
-
    if (sData->firstFreeSemaphoreIndex < 0) {
-      internal::unlockScheduler();
       return Error::Max;
    }
 
@@ -71,17 +68,14 @@ IOS_CreateSemaphore(int32_t maxCount,
    semaphore->unknown0x04 = nullptr;
    ThreadQueue_Initialise(phys_addrof(semaphore->waitThreadQueue));
 
-   internal::unlockScheduler();
    return static_cast<Error>(semaphore->id);
 }
 
 Error
 IOS_DestroySempahore(SemaphoreId id)
 {
-   internal::lockScheduler();
    auto semaphore = getSemaphore(id);
    if (!semaphore) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -106,10 +100,9 @@ IOS_DestroySempahore(SemaphoreId id)
       sData->firstFreeSemaphoreIndex = index;
    }
 
-   internal::wakeupAllThreadsNoLock(phys_addrof(semaphore->waitThreadQueue),
-                                    Error::Intr);
-   internal::rescheduleAllNoLock();
-   internal::unlockScheduler();
+   internal::wakeupAllThreads(phys_addrof(semaphore->waitThreadQueue),
+                              Error::Intr);
+   internal::reschedule();
    return Error::Invalid;
 }
 
@@ -117,41 +110,34 @@ Error
 IOS_WaitSemaphore(SemaphoreId id,
                   BOOL tryWait)
 {
-   internal::lockScheduler();
    auto semaphore = getSemaphore(id);
    if (!semaphore) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    if (semaphore->count <= 0 && tryWait) {
-      internal::unlockScheduler();
       return Error::SemUnavailable;
    }
 
    while (semaphore->count <= 0) {
-      internal::sleepThreadNoLock(phys_addrof(semaphore->waitThreadQueue));
-      internal::rescheduleSelfNoLock();
+      internal::sleepThread(phys_addrof(semaphore->waitThreadQueue));
+      internal::reschedule();
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
-         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
 
    semaphore->count -= 1;
-   internal::unlockScheduler();
    return Error::OK;
 }
 
 Error
 IOS_SignalSempahore(SemaphoreId id)
 {
-   internal::lockScheduler();
    auto semaphore = getSemaphore(id);
    if (!semaphore) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -159,10 +145,8 @@ IOS_SignalSempahore(SemaphoreId id)
       semaphore->count += 1;
    }
 
-   internal::wakeupOneThreadNoLock(phys_addrof(semaphore->waitThreadQueue),
-                                   Error::OK);
-   internal::rescheduleAllNoLock();
-   internal::unlockScheduler();
+   internal::wakeupOneThread(phys_addrof(semaphore->waitThreadQueue), Error::OK);
+   internal::reschedule();
    return Error::OK;
 }
 

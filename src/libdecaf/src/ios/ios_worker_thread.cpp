@@ -55,6 +55,7 @@ joinWorkerThread()
    sWorkerThreadRunning = false;
    sWorkerThreadConditionVariable.notify_all();
    sWorkerThread.join();
+   sWorkerThreadTasks = {};
 }
 
 void

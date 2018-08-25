@@ -287,6 +287,9 @@ start()
    sData->rootTimerMessage.command = RootThreadCommand::Timer;
    sData->sysprotEventMessage.command = RootThreadCommand::SysprotEvent;
 
+   // Start the host hardware thread
+   internal::startHardwareThread();
+
    // Create root kernel thread
    auto error = IOS_CreateThread(kernelEntryPoint,
                                  nullptr,
@@ -300,14 +303,21 @@ start()
 
    // Force start the root kernel thread. We cannot use IOS_StartThread
    // because it reschedules and we are not running on an IOS thread.
-   internal::lockScheduler();
    auto threadId = static_cast<ThreadId>(error);
    auto thread = internal::getThread(threadId);
    thread->state = ThreadState::Ready;
    internal::setThreadName(threadId, "KernelProcess");
-   internal::queueThreadNoLock(thread);
-   internal::unlockScheduler();
+   internal::queueThread(thread);
+
+   // Send the power on interrupt
+   internal::setInterruptAhbAll(AHBALL {}.PowerButton(true));
    return Error::OK;
+}
+
+void
+stop()
+{
+   internal::joinHardwareThread();
 }
 
 } // namespace ios::kernel
