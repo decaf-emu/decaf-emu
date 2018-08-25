@@ -1,8 +1,11 @@
 #include "ios_worker_thread.h"
+
 #include <atomic>
+#include <condition_variable>
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <thread>
 
 namespace ios::internal
 {
