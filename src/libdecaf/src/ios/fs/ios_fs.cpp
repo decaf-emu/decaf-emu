@@ -57,17 +57,17 @@ processEntryPoint(phys_ptr<void> context)
 
    // TODO: Start odm thread
 
-   // Start FSA thread.
-   error = internal::startFsaThread();
-   if (error < Error::OK) {
-      gLog->error("Failed to start FSA thread");
-      return error;
-   }
-
    // Start FSA async task thread.
    error = internal::startFsaAsyncTaskThread();
    if (error < Error::OK) {
       gLog->error("Failed to start FSA async task thread");
+      return error;
+   }
+
+   // Start FSA thread.
+   error = internal::startFsaThread();
+   if (error < Error::OK) {
+      gLog->error("Failed to start FSA thread");
       return error;
    }
 

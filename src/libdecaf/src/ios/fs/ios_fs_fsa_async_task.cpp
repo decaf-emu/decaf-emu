@@ -47,13 +47,14 @@ fsaTaskCompleteHandler()
 
    sCompletedTasksMutex.lock();
    completedTasks.swap(sCompletedTasks);
-   IOS_ClearAndEnable(DeviceId::Sata);
    sCompletedTasksMutex.unlock();
 
    for (auto &task : completedTasks) {
       IOS_ResourceReply(task.resourceRequest,
                         static_cast<Error>(task.status));
    }
+
+   IOS_ClearAndEnable(DeviceId::Sata);
 }
 
 void
@@ -111,12 +112,11 @@ startFsaAsyncTaskThread()
 
    sFsaAsyncData->messageQueue = static_cast<MessageQueueId>(error);
 
-
    error = IOS_CreateThread(fsaAsyncTaskThread,
                             nullptr,
                             phys_addrof(sFsaAsyncData->threadStack) + sFsaAsyncData->threadStack.size(),
                             static_cast<uint32_t>(sFsaAsyncData->threadStack.size()),
-                            79,
+                            85,
                             ThreadFlags::Detached);
    if (error < Error::OK) {
       return error;
@@ -130,6 +130,7 @@ startFsaAsyncTaskThread()
       return error;
    }
 
+   IOS_YieldCurrentThread();
    return Error::OK;
 }
 
