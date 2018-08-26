@@ -847,7 +847,7 @@ findTlsSection(virt_ptr<RPL_DATA> rplData)
       }
 
       if (tlsAddressStart == virt_addr { 0xFFFFFFFFu } ||
-          tlsAddressEnd != virt_addr { 0 }) {
+          tlsAddressEnd == virt_addr { 0 }) {
          return false;
       }
 
