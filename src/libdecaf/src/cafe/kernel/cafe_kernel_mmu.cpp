@@ -186,7 +186,7 @@ allocateVirtualAddress(virt_addr addr,
                        uint32_t align)
 {
    auto processData = getCurrentProcessData();
-   if (!checkInVirtualMapRange(&processData->addressSpace, addr, size)) {
+   if (addr && !checkInVirtualMapRange(&processData->addressSpace, addr, size)) {
       return virt_addr { 0 };
    }
 
@@ -202,7 +202,7 @@ allocateVirtualAddress(virt_addr addr,
       return virt_addr { 0 };
    }
 
-   if (addr) {
+   if (!addr) {
       auto range = cpu::findFreeVirtualAddressInRange(
          { processData->addressSpace.virtualMapStart, processData->addressSpace.virtualMapSize },
          size, align);
