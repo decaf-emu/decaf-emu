@@ -241,13 +241,13 @@ ZLIB_UncompressFromStream(virt_ptr<LOADED_RPL> rpl,
    constexpr auto InflateChunkSize = 0x3000u;
    rpl->lastSectionCrc = 0u;
 
+   stream.next_out = reinterpret_cast<Bytef *>(inflatedBuffer.getRawPointer());
+
    while (true) {
       // TODO: Loader_UpdateHeartBeat();
       LiCheckAndHandleInterrupts();
-
       stream.avail_in = bounceBufferSize;
       stream.next_in = reinterpret_cast<Bytef *>(bounceBuffer.getRawPointer());
-      stream.next_out = reinterpret_cast<Bytef *>(inflatedBuffer.getRawPointer());
 
       while (stream.avail_in) {
          LiCheckAndHandleInterrupts();
