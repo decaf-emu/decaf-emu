@@ -117,7 +117,7 @@ OSPanic(std::string_view file,
         std::string_view msg)
 {
    gLog->error("OSPanic in \"{}\" at line {}: {}.", file, line, msg);
-   ghs_exit(-1);
+   ghs_PPCExit(-1);
 }
 
 } // namespace internal

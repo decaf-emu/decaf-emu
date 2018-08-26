@@ -9,6 +9,12 @@ struct OSThread;
 void
 ghs_exit(int32_t code);
 
+void
+ghs_Exit(int32_t code);
+
+void
+ghs_PPCExit(int32_t code);
+
 int32_t
 gh_get_errno();
 
