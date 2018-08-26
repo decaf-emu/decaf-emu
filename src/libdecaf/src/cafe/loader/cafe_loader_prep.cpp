@@ -119,7 +119,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
 
    for (auto itr = globals->firstLoadedRpl; itr; itr = itr->nextLoadedRpl) {
       if (itr->moduleNameLen == minFileInfo->moduleNameBufferLen &&
-			strncmp(itr->moduleNameBuffer.getRawPointer(),
+          strncmp(itr->moduleNameBuffer.getRawPointer(),
                   minFileInfo->moduleNameBuffer.getRawPointer(),
                   minFileInfo->moduleNameBufferLen) == 0) {
          Loader_ReportError("*** module \"{}\" already loaded.\n",
