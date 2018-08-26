@@ -14,6 +14,7 @@
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_systeminfo.h"
+#include "coreinit_systemmessagequeue.h"
 #include "coreinit_thread.h"
 #include "coreinit_time.h"
 #include <common/log.h>
@@ -32,6 +33,7 @@ rpl_entry(/* no args for coreinit entry point */)
    // Always initialise time then system info first, other things depend on it.
    internal::initialiseTime();
    internal::initialiseSystemInfo();
+   internal::initialiseSystemMessageQueue();
    internal::initialiseExceptionHandlers();
    internal::initialiseScheduler();
    internal::initialiseThreads();
@@ -128,6 +130,7 @@ Library::registerSymbols()
    registerSpinLockSymbols();
    registerSystemHeapSymbols();
    registerSystemInfoSymbols();
+   registerSystemMessageQueueSymbols();
    registerTaskQueueSymbols();
    registerThreadSymbols();
    registerTimeSymbols();

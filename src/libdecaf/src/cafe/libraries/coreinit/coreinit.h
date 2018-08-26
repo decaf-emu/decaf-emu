@@ -72,6 +72,7 @@ private:
    void registerSpinLockSymbols();
    void registerSystemHeapSymbols();
    void registerSystemInfoSymbols();
+   void registerSystemMessageQueueSymbols();
    void registerTaskQueueSymbols();
    void registerThreadSymbols();
    void registerTimeSymbols();
