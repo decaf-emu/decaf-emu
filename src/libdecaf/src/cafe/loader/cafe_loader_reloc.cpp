@@ -283,7 +283,7 @@ LiCpu_RelocAdd(bool isRpx,
             }
 
             tramp = virt_cast<uint32_t *>(*preTrampBuffer);
-            *preTrampBuffer += 16;
+            *preTrampBuffer -= 16;
             *preTrampAvailableEntries -= 1;
          } else {
             Loader_ReportError("**Cannot link 24-bit jump (too far to tramp buffer).");
