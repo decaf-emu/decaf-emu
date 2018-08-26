@@ -110,7 +110,7 @@ initialiseLogging(const std::string &filename)
       auto logFilename =
          fmt::format("{}_{}-{:02}-{:02}_{:02}-{:02}-{:02}.txt",
                      filename,
-                     time->tm_year, time->tm_mon, time->tm_mday,
+                     time->tm_year + 1900, time->tm_mon, time->tm_mday,
                      time->tm_hour, time->tm_min, time->tm_sec);
 
       auto path = fs::HostPath { decaf::config::log::directory }.join(logFilename);
