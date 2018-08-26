@@ -265,8 +265,10 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
          }
 
          if (loadAttempt == 0) {
-            if (loadArgs->fileType == ios::mcp::MCPFileType::ProcessCode) {
+            if (loadArgs->fileType != ios::mcp::MCPFileType::CafeOS) {
                loadArgs->fileType = ios::mcp::MCPFileType::CafeOS;
+            } else {
+               loadArgs->fileType = ios::mcp::MCPFileType::ProcessCode;
             }
          } else {
             loadArgs->fileType = ios::mcp::MCPFileType::SystemDataCode;
