@@ -50,8 +50,8 @@ public:
       auto duration = msg.time.time_since_epoch();
       auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
 
-      fmt::format_to(dest, "[{:02}:{:02}.{:06} {}:",
-                     tm_time.tm_min, tm_time.tm_sec, micros,
+      fmt::format_to(dest, "[{:02}:{:02}:{:02}.{:06} {}:",
+                     tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, micros,
                      spdlog::level::to_c_str(msg.level));
 
       auto core = cpu::this_core::state();
