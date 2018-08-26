@@ -302,8 +302,11 @@ loadGameProcess(std::string_view rpx,
          }
 
          if (!(sectionHeader->flags & loader::rpl::SHF_WRITE)) {
-            cpu::addJitReadOnlyRange(sectionAddress,
-                                     sectionHeader->size);
+            // TODO: Fix me
+            // When we have a small section, e.g. .syscall section with
+            // sectionHeader->size == 8, we seem to break binrec
+            //cpu::addJitReadOnlyRange(sectionAddress,
+            //                         sectionHeader->size);
          }
       }
    }
