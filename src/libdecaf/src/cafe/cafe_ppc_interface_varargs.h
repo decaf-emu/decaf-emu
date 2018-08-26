@@ -9,6 +9,7 @@ namespace cafe
 
 struct va_list
 {
+   static const unsigned FirstSavedReg = 3;
    static const unsigned NumSavedRegs = 8;
 
    class iterator
@@ -69,11 +70,12 @@ struct va_list
       uint32_t nextGpr32()
       {
          auto value = uint32_t { 0 };
+         auto index = mGpr - FirstSavedReg;
 
-         if (mGpr < NumSavedRegs) {
-            value = mList->reg_save_area[mGpr];
+         if (index < NumSavedRegs) {
+            value = mList->reg_save_area[index];
          } else {
-            value = mList->overflow_arg_area[mGpr - NumSavedRegs];
+            value = mList->overflow_arg_area[index - NumSavedRegs];
          }
 
          mGpr++;
@@ -95,7 +97,7 @@ struct va_list
       double nextFpr()
       {
          auto value = double { 0.0 };
-         auto fpr_save_area = virt_cast<double *>(virt_addrof(mList->reg_save_area[8]));
+         auto fpr_save_area = virt_cast<double *>(virt_addrof(mList->reg_save_area[NumSavedRegs]));
 
          if (mFpr < NumSavedRegs) {
             value = fpr_save_area[mFpr];
