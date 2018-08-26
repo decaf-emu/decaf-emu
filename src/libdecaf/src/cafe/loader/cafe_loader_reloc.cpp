@@ -293,7 +293,7 @@ LiCpu_RelocAdd(bool isRpx,
 
          /* Write the trampoline:
           * lis r11, 0
-          * addi r11, r11, 0
+          * ori r11, r11, 0
           * mtctr r11
           * bctr
           */
@@ -302,10 +302,10 @@ LiCpu_RelocAdd(bool isRpx,
          lis.rA = 0;
          lis.simm = (value >> 16) & 0xFFFF;
 
-         auto addi = espresso::encodeInstruction(espresso::InstructionID::addi);
-         addi.rD = 11;
-         addi.rA = 11;
-         addi.simm = value & 0xFFFF;
+         auto ori = espresso::encodeInstruction(espresso::InstructionID::ori);
+         ori.rA = 11;
+         ori.rS = 11;
+         ori.uimm = value & 0xFFFF;
 
          auto mtctr = espresso::encodeInstruction(espresso::InstructionID::mtspr);
          mtctr.rS = 11;
@@ -315,7 +315,7 @@ LiCpu_RelocAdd(bool isRpx,
          bctr.bo = 0b10100;
 
          tramp[0] = lis.value;
-         tramp[1] = addi.value;
+         tramp[1] = ori.value;
          tramp[2] = mtctr.value;
          tramp[3] = bctr.value;
 
