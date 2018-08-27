@@ -79,13 +79,13 @@ bool
 gfdAddPixelShader(gfd::GFDFile &file,
                   Shader &shader);
 
-gx2::GX2ShaderVarType
+cafe::gx2::GX2ShaderVarType
 parseShaderVarType(const std::string &v);
 
-gx2::GX2SamplerVarType
+cafe::gx2::GX2SamplerVarType
 parseSamplerVarType(const std::string &v);
 
-gx2::GX2ShaderMode
+cafe::gx2::GX2ShaderMode
 parseShaderMode(const std::string &v);
 
 void
