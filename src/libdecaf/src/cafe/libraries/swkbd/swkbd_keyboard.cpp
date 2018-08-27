@@ -322,6 +322,8 @@ Library::registerKeyboardSymbols()
    RegisterFunctionExportName("SwkbdSetUserControllerEventObj__3RplFPQ3_2nn5swkbd19IControllerEventObj", SetUserControllerEventObj);
    RegisterFunctionExportName("SwkbdSetUserSoundObj__3RplFPQ3_2nn5swkbd9ISoundObj", SetUserSoundObj);
    RegisterFunctionExportName("SwkbdSetVersion__3RplFi", SetVersion);
+
+   RegisterDataInternal(sKeyboardData);
 }
 
 namespace internal
