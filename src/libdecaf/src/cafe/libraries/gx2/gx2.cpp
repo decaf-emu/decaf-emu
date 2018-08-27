@@ -1,5 +1,6 @@
 #include "gx2.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
+#include "gx2r_resource.h"
 
 namespace cafe::gx2
 {
@@ -9,6 +10,7 @@ rpl_entry(coreinit::OSDynLoad_ModuleHandle moduleHandle,
           coreinit::OSDynLoad_EntryReason reason)
 {
    coreinit::internal::relocateHleLibrary(moduleHandle);
+   internal::initialiseGx2rAllocator();
    return 0;
 }
 
