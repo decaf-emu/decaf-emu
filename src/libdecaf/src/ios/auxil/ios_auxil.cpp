@@ -58,6 +58,7 @@ processEntryPoint(phys_ptr<void> context)
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticImDeviceData();
+   internal::initialiseStaticImThreadData();
    internal::initialiseStaticUsrCfgThreadData();
    internal::initialiseStaticUsrCfgServiceThreadData();
 
