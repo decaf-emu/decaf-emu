@@ -138,7 +138,7 @@ LiBounceOneChunk(std::string_view name,
    auto bounceBufferMapping =
       kernel::getVirtualMemoryMap(kernel::VirtualMemoryRegion::LoaderBounceBuffer);
    auto bounceBufferAddr = bounceBufferMapping.vaddr;
-   if (bufferNumber == 1) {
+   if (bufferNumber != 1) {
       bounceBufferAddr += ChunkSize;
    }
 
