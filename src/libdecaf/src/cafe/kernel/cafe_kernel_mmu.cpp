@@ -306,6 +306,33 @@ validateAddressRange(virt_addr address,
    return false;
 }
 
+phys_addr
+effectiveToPhysical(virt_addr address)
+{
+   auto addressSpace = internal::getActiveAddressSpace();
+   auto view = addressSpace->perCoreView[cpu::this_core::id()];
+
+   // Check our kernel mappings
+   for (auto i = 0u; i < view->numMappings; ++i) {
+      if (address >= view->mappings[i].vaddr &&
+          address <= (view->mappings[i].vaddr + view->mappings[i].size)) {
+
+         return view->mappings[i].paddr +
+            static_cast<uint32_t>(address - view->mappings[i].vaddr);
+      }
+   }
+
+   // Check user mappings
+   if (checkInVirtualMapRange(addressSpace, address, 0)) {
+      auto result = phys_addr { 0 };
+      if (cpu::virtualToPhysicalAddress(address, result)) {
+         return result;
+      }
+   }
+
+   return phys_addr { 0 };
+}
+
 namespace internal
 {
 

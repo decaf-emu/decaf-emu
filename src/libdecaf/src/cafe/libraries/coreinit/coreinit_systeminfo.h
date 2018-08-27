@@ -110,6 +110,9 @@ getMem2BaseAddress();
 virt_addr
 getMem2EndAddress();
 
+phys_addr
+getMem2PhysAddress();
+
 virt_addr
 getSdaBase();
 

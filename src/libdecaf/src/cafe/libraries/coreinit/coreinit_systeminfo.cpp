@@ -209,6 +209,12 @@ getMem2EndAddress()
    return sSystemInfoData->kernelInfo0.dataAreaEnd;
 }
 
+phys_addr
+getMem2PhysAddress()
+{
+   return sSystemInfoData->kernelInfo0.physDataAreaStart;
+}
+
 virt_addr
 getSdaBase()
 {

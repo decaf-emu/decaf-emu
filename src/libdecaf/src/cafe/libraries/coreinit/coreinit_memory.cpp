@@ -16,7 +16,10 @@ namespace cafe::coreinit
 struct StaticMemoryData
 {
    internal::IdLock boundsLock;
+   be2_val<phys_addr> foregroundPhysicalAddress;
    be2_val<virt_addr> foregroundBaseAddress;
+   be2_val<uint32_t> foregroundSize;
+
    be2_val<virt_addr> mem1BaseAddress;
    be2_val<uint32_t> mem1Size;
 
@@ -280,8 +283,25 @@ OSUnmapMemory(virt_addr virtAddress,
 phys_addr
 OSEffectiveToPhysical(virt_addr address)
 {
-   // TODO: OSEffectiveToPhysical
-   return phys_addr { 0 };
+   if (address >= virt_addr { 0x10000000 } &&
+       address < internal::getMem2EndAddress()) {
+      return internal::getMem2PhysAddress() +
+         static_cast<uint32_t>(address - 0x10000000);
+   }
+
+   if (address >= virt_addr { 0xF4000000 } &&
+       address <  virt_addr { 0xF6000000 }) {
+      return phys_addr { static_cast<uint32_t>(address - 0xF4000000) };
+   }
+
+   if (sMemoryData->foregroundBaseAddress &&
+       address >= sMemoryData->foregroundBaseAddress &&
+       address <  sMemoryData->foregroundBaseAddress + sMemoryData->foregroundSize) {
+      return sMemoryData->foregroundPhysicalAddress +
+         static_cast<uint32_t>(address - sMemoryData->foregroundBaseAddress);
+   }
+
+   return kernel::effectiveToPhysical(address);
 }
 
 
@@ -366,7 +386,10 @@ initialiseMemory()
    sMemoryData->mem2Size = static_cast<uint32_t>(mem2EndAddress - sMemoryData->mem2BaseAddress);
 
    OSGetForegroundBucket(virt_addrof(sMemoryData->foregroundBaseAddress),
-                         nullptr);
+                         virt_addrof(sMemoryData->foregroundSize));
+
+   sMemoryData->foregroundPhysicalAddress =
+      kernel::effectiveToPhysical(sMemoryData->foregroundBaseAddress);
 }
 
 } // namespace internal

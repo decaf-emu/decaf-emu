@@ -124,6 +124,9 @@ bool
 validateAddressRange(virt_addr address,
                      uint32_t size);
 
+phys_addr
+effectiveToPhysical(virt_addr address);
+
 namespace internal
 {
 
