@@ -9,8 +9,8 @@ namespace cafe
 
 struct va_list
 {
-   static const unsigned FirstSavedReg = 3;
-   static const unsigned NumSavedRegs = 8;
+   static constexpr auto FirstSavedReg = 3u;
+   static constexpr auto NumSavedRegs = 8u;
 
    class iterator
    {
