@@ -103,7 +103,7 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::X);
       insertSource0(state, state.out, cf, yInsn);
-      fmt::format_to(state.out, ")");
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
 
       insertLineStart(state);
@@ -112,7 +112,7 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertSource0(state, state.out, cf, xInsn);
       fmt::format_to(state.out, ") * ");
       insertSource0(state, state.out, cf, zInsn);
-      fmt::format_to(state.out, ")");
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
 
       insertLineStart(state);
