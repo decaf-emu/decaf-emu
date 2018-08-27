@@ -4,6 +4,7 @@
 
 #include <array>
 #include <fstream>
+#include <common/log.h>
 #include <common/teenyheap.h>
 #include <common/platform_dir.h>
 #include <libcpu/mmu.h>
@@ -11,20 +12,100 @@
 #include <libdecaf/decaf.h>
 #include <libdecaf/decaf_nullinputdriver.h>
 #include <libdecaf/decaf_pm4replay.h>
-#include <libdecaf/src/kernel/kernel_memory.h>
-#include <libdecaf/src/modules/gx2/gx2_internal_cbpool.h>
-#include <libdecaf/src/modules/gx2/gx2_state.h>
+#include <libdecaf/src/cafe/cafe_tinyheap.h>
+#include <libgpu/gpu.h>
 #include <libgpu/gpu_config.h>
 #include <libgpu/latte/latte_registers.h>
 #include <libgpu/latte/latte_pm4.h>
 #include <libgpu/latte/latte_pm4_commands.h>
 #include <libgpu/latte/latte_pm4_reader.h>
 #include <libgpu/latte/latte_pm4_writer.h>
+#include <libgpu/latte/latte_pm4_sizer.h>
 
 static TeenyHeap *
 gSystemHeap = nullptr;
 
+virt_ptr<cafe::TinyHeap>
+sHeap = nullptr;
+
+virt_ptr<void>
+sCommandBufferPool = nullptr;
+
+constexpr uint32_t
+sCommandBufferSize = 0x2000;
+
+constexpr uint32_t
+CommandBufferSize = 0x100;
+
+struct ActiveCommandBuffer
+{
+   virt_ptr<uint32_t> buffer;
+   uint32_t numWords;
+};
+
+ActiveCommandBuffer *sActiveCommandBuffer = nullptr;
+
 using namespace latte::pm4;
+
+static void
+flushCommandBuffer();
+
+static ActiveCommandBuffer *
+getCommandBuffer(uint32_t size)
+{
+   if (sActiveCommandBuffer &&
+       sActiveCommandBuffer->numWords + size >= CommandBufferSize) {
+      flushCommandBuffer();
+   }
+
+   if (!sActiveCommandBuffer) {
+      sActiveCommandBuffer = new ActiveCommandBuffer();
+      sActiveCommandBuffer->numWords = 0;
+
+      auto allocPtr = virt_ptr<void> { nullptr };
+      cafe::TinyHeap_Alloc(sHeap, CommandBufferSize * sizeof(uint32_t), 0x100, &allocPtr);
+      sActiveCommandBuffer->buffer = virt_cast<uint32_t *>(allocPtr);
+   }
+
+   return sActiveCommandBuffer;
+}
+
+static void
+flushCommandBuffer()
+{
+   gpu::ringbuffer::submit(sActiveCommandBuffer,
+                           sActiveCommandBuffer->buffer.getRawPointer(),
+                           sActiveCommandBuffer->numWords);
+   sActiveCommandBuffer = nullptr;
+}
+
+template<typename Type>
+static void
+writePM4(const Type &value)
+{
+   auto &ncValue = const_cast<Type &>(value);
+
+   // Calculate the total size this object will be
+   latte::pm4::PacketSizer sizer;
+   ncValue.serialise(sizer);
+   auto totalSize = sizer.getSize() + 1;
+
+   // Serialize the packet to the active command buffer
+   auto buffer = getCommandBuffer(totalSize);
+   auto writer = latte::pm4::PacketWriter { buffer->buffer.getRawPointer(),
+                                            buffer->numWords,
+                                            Type::Opcode,
+                                            totalSize };
+   ncValue.serialise(writer);
+}
+
+static void
+onRetireCallback(void *context)
+{
+   auto cb = reinterpret_cast<ActiveCommandBuffer *>(context);
+   cafe::TinyHeap_Free(sHeap, cb->buffer);
+   delete cb;
+}
 
 class PM4Parser
 {
@@ -32,7 +113,12 @@ public:
    PM4Parser(gpu::GraphicsDriver *driver) :
       mGraphicsDriver(driver)
    {
-      mRegisterStorage = reinterpret_cast<uint32_t *>(gSystemHeap->alloc(0x10000 * 4, 0x100));
+      auto allocPtr = virt_ptr<void> { nullptr };
+      TinyHeap_Alloc(sHeap,
+                     0x10000 * 4,
+                     0x100,
+                     &allocPtr);
+      mRegisterStorage = virt_cast<uint32_t *>(allocPtr);
    }
 
    bool open(const std::string &path)
@@ -96,15 +182,15 @@ public:
          {
             decaf_check((packet.size % 4) == 0);
             auto numRegisters = packet.size / 4;
-            mFile.read(reinterpret_cast<char *>(mRegisterStorage), packet.size);
+            mFile.read(reinterpret_cast<char *>(mRegisterStorage.getRawPointer()), packet.size);
 
             // Swap it into big endian, so we can write LOAD_ commands
             for (auto i = 0u; i < numRegisters; ++i) {
                mRegisterStorage[i] = byte_swap(mRegisterStorage[i]);
             }
 
-            handleRegisterSnapshot(reinterpret_cast<be2_val<uint32_t> *>(mRegisterStorage), numRegisters);
-            gx2::internal::flushCommandBuffer(0x100);
+            handleRegisterSnapshot(mRegisterStorage, numRegisters);
+            flushCommandBuffer();
             break;
          }
          case decaf::pm4::CapturePacket::SetBuffer:
@@ -113,7 +199,7 @@ public:
             mFile.read(reinterpret_cast<char *>(&setBuffer), sizeof(decaf::pm4::CaptureSetBuffer));
 
             handleSetBuffer(setBuffer);
-            gx2::internal::flushCommandBuffer(0x100);
+            flushCommandBuffer();
             break;
          }
          case decaf::pm4::CapturePacket::MemoryLoad:
@@ -144,17 +230,27 @@ public:
    }
 
 private:
-   bool handleCommandBuffer(void *buffer, uint32_t size)
+   bool handleCommandBuffer(void *buffer, uint32_t sizeBytes)
    {
-      decaf::pm4::injectCommandBuffer(buffer, size);
-      return scanCommandBuffer(buffer, size / 4);
+      auto allocPtr = virt_ptr<void> { nullptr };
+      cafe::TinyHeap_Alloc(sHeap, sizeBytes, 0x100, &allocPtr);
+
+      auto ab = new ActiveCommandBuffer();
+      ab->numWords = sizeBytes / 4u;
+      ab->buffer = virt_cast<uint32_t *>(allocPtr);
+      std::memcpy(ab->buffer.getRawPointer(),
+                  buffer,
+                  sizeBytes);
+      gpu::ringbuffer::submit(ab, ab->buffer.getRawPointer(), ab->numWords);
+
+      return scanCommandBuffer(buffer, ab->numWords);
    }
 
    void handleSetBuffer(decaf::pm4::CaptureSetBuffer &setBuffer)
    {
       auto isTv = (setBuffer.type == decaf::pm4::CaptureSetBuffer::TvBuffer) ? 1u : 0u;
 
-      gx2::internal::writePM4(DecafSetBuffer {
+      writePM4(DecafSetBuffer {
          isTv,
          setBuffer.bufferingMode,
          setBuffer.width,
@@ -162,7 +258,7 @@ private:
       });
    }
 
-   void handleRegisterSnapshot(be2_val<uint32_t> *registers, uint32_t count)
+   void handleRegisterSnapshot(virt_ptr<uint32_t> registers, uint32_t count)
    {
       // Enable loading of registers
       auto LOAD_CONTROL = latte::CONTEXT_CONTROL_ENABLE::get(0)
@@ -178,7 +274,7 @@ private:
 
       auto SHADOW_ENABLE = latte::CONTEXT_CONTROL_ENABLE::get(0);
 
-      gx2::internal::writePM4(ContextControl {
+      writePM4(ContextControl {
          LOAD_CONTROL,
          SHADOW_ENABLE
       });
@@ -187,64 +283,64 @@ private:
       static std::pair<uint32_t, uint32_t>
       LoadConfigRange[] = { { 0, (latte::Register::ConfigRegisterEnd - latte::Register::ConfigRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadConfigReg {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ConfigRegisterBase / 4]),
+      writePM4(LoadConfigReg {
+         registers + (latte::Register::ConfigRegisterBase / 4),
          gsl::make_span(LoadConfigRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadContextRange[] = { { 0, (latte::Register::ContextRegisterEnd - latte::Register::ContextRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadContextReg {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ContextRegisterBase / 4]),
+      writePM4(LoadContextReg {
+         registers + (latte::Register::ContextRegisterBase / 4),
          gsl::make_span(LoadContextRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadAluConstRange[] = { { 0, (latte::Register::AluConstRegisterEnd - latte::Register::AluConstRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadAluConst {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::AluConstRegisterBase / 4]),
+      writePM4(LoadAluConst {
+         registers + (latte::Register::AluConstRegisterBase / 4),
          gsl::make_span(LoadAluConstRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadResourceRange[] = { { 0, (latte::Register::ResourceRegisterEnd - latte::Register::ResourceRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(latte::pm4::LoadResource {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ResourceRegisterBase / 4]),
+      writePM4(latte::pm4::LoadResource {
+         registers + (latte::Register::ResourceRegisterBase / 4),
          gsl::make_span(LoadResourceRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadSamplerRange[] = { { 0, (latte::Register::SamplerRegisterEnd - latte::Register::SamplerRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadSampler {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::SamplerRegisterBase / 4]),
+      writePM4(LoadSampler {
+         registers + (latte::Register::SamplerRegisterBase / 4),
          gsl::make_span(LoadSamplerRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadControlRange[] = { { 0, (latte::Register::ControlRegisterEnd - latte::Register::ControlRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadControlConst {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::ControlRegisterBase / 4]),
+      writePM4(LoadControlConst {
+         registers + (latte::Register::ControlRegisterBase / 4),
          gsl::make_span(LoadControlRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadLoopRange[] = { { 0, (latte::Register::LoopConstRegisterEnd - latte::Register::LoopConstRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadLoopConst {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::LoopConstRegisterBase / 4]),
+      writePM4(LoadLoopConst {
+         registers + (latte::Register::LoopConstRegisterBase / 4),
          gsl::make_span(LoadLoopRange)
       });
 
       static std::pair<uint32_t, uint32_t>
       LoadBoolRange[] = { { 0, (latte::Register::BoolConstRegisterEnd - latte::Register::BoolConstRegisterBase) / 4 }, };
 
-      gx2::internal::writePM4(LoadLoopConst {
-         reinterpret_cast<be2_val<uint32_t> *>(&registers[latte::Register::BoolConstRegisterBase / 4]),
+      writePM4(LoadLoopConst {
+         registers + (latte::Register::BoolConstRegisterBase / 4),
          gsl::make_span(LoadBoolRange)
       });
    }
@@ -294,7 +390,7 @@ private:
             size = header0.count() + 1;
 
             decaf_check(pos + size < numWords);
-            foundSwap |= scanType0(header0, gsl::make_span(&buffer[pos + 1], size));
+            foundSwap |= scanType0(header0, gsl::make_span(buffer + pos + 1, size));
             break;
          }
          case PacketType::Type3:
@@ -303,7 +399,7 @@ private:
             size = header3.size() + 1;
 
             decaf_check(pos + size < numWords);
-            foundSwap |= scanType3(header3, gsl::make_span(&buffer[pos + 1], size));
+            foundSwap |= scanType3(header3, gsl::make_span(buffer + pos + 1, size));
             break;
          }
          case PacketType::Type2:
@@ -327,7 +423,7 @@ private:
    gpu::GraphicsDriver *mGraphicsDriver = nullptr;
    std::ifstream mFile;
    std::vector<uint8_t *> mBuffers;
-   uint32_t *mRegisterStorage = nullptr;
+   virt_ptr<uint32_t> mRegisterStorage = nullptr;
 };
 
 SDLWindow::~SDLWindow()
@@ -409,6 +505,24 @@ SDLWindow::createWindow()
    return true;
 }
 
+static bool
+mapVirtualAddress(virt_addr vaddr, phys_addr paddr, uint32_t size)
+{
+   if (!cpu::allocateVirtualAddress(vaddr, size)) {
+      gLog->error("Unexpected failure allocating virtual address 0x{:08X} - 0x{:08X}",
+                  vaddr, vaddr + size);
+      return false;
+   }
+
+   if (!cpu::mapMemory(vaddr, paddr, size, cpu::MapPermission::ReadWrite)) {
+      gLog->error("Unexpected failure allocating mapping virtual address 0x{:08X} to physical address 0x{:08X}",
+                  vaddr, paddr);
+      return false;
+   }
+
+   return true;
+}
+
 bool
 SDLWindow::run(const std::string &tracePath)
 {
@@ -435,18 +549,39 @@ SDLWindow::run(const std::string &tracePath)
    SDL_GL_MakeCurrent(mWindow, mGpuContext);
    initialiseContext();
 
-   // Setup decaf shit
-   kernel::initialiseVirtualMemory();
-   kernel::initialiseAppMemory(0x10000, 0, 0);
-   auto systemHeapBounds = kernel::getVirtualRange(kernel::VirtualRegion::CafeOS);
-   gSystemHeap = new TeenyHeap { virt_cast<void *>(static_cast<virt_addr>(systemHeapBounds.start)).getRawPointer(), systemHeapBounds.size };
+   // Setup memory
+   if (!mapVirtualAddress(virt_addr { 0x01000000 }, phys_addr { 0x32000000 }, 0x800000)) {
+      return false;
+   }
+
+   if (!mapVirtualAddress(virt_addr { 0x10000000 }, phys_addr { 0x50000000 }, 0x40000000)) {
+      return false;
+   }
+
+   if (!mapVirtualAddress(virt_addr { 0xE0000000 }, phys_addr { 0x10000000 }, 0x10000000)) {
+      return false;
+   }
+
+   if (!mapVirtualAddress(virt_addr { 0xF4000000 }, phys_addr { 0x00000000 }, 0x2000000)) {
+      return false;
+   }
+
+   sHeap = virt_cast<cafe::TinyHeap *>(virt_addr { 0xE0000000 });
+   cafe::TinyHeap_Setup(sHeap,
+                        0x430,
+                        virt_cast<void *>(virt_addr { 0xE0000000 + 0x430 }),
+                        0x10000000 - 0x430);
 
    // Setup pm4 command buffer pool
-   auto cbPoolSize = 0x2000;
-   auto cbPoolBase = gSystemHeap->alloc(cbPoolSize, 0x100);
+   auto allocPtr = virt_ptr<void> { nullptr };
+   TinyHeap_Alloc(sHeap,
+                  sCommandBufferSize * 4,
+                  0x100,
+                  &allocPtr);
+   sCommandBufferPool = allocPtr;
 
-   gx2::internal::setMainCore();
-   gx2::internal::initCommandBufferPool(reinterpret_cast<uint32_t *>(cbPoolBase), cbPoolSize / 4);
+   // Setup GPU retire callback
+   gpu::setRetireCallback(onRetireCallback);
 
    // Run the loop!
    PM4Parser parser { mGraphicsDriver };
