@@ -33,7 +33,7 @@ struct StaticImThreadData
 };
 
 static phys_ptr<StaticImThreadData>
-sData;
+sImThreadData;
 
 static HandleManager<IMDevice, IMDeviceHandle, MaxNumIMDevices>
 sDevices;
@@ -95,7 +95,7 @@ imThreadEntry(phys_ptr<void> /*context*/)
    initialiseImParameters();
 
    while (true) {
-      error = IOS_ReceiveMessage(sData->messageQueueId,
+      error = IOS_ReceiveMessage(sImThreadData->messageQueueId,
                                  message,
                                  MessageFlags::None);
       if (error < Error::OK) {
@@ -156,53 +156,53 @@ Error
 startImThread()
 {
    // Create message queue
-   auto error = IOS_CreateMessageQueue(phys_addrof(sData->messageBuffer),
-                                       static_cast<uint32_t>(sData->messageBuffer.size()));
+   auto error = IOS_CreateMessageQueue(phys_addrof(sImThreadData->messageBuffer),
+                                       static_cast<uint32_t>(sImThreadData->messageBuffer.size()));
    if (error < Error::OK) {
       return error;
    }
-   sData->messageQueueId = static_cast<MessageQueueId>(error);
+   sImThreadData->messageQueueId = static_cast<MessageQueueId>(error);
 
    // Register /dev/im
-   error = IOS_RegisterResourceManager("/dev/im", sData->messageQueueId);
+   error = IOS_RegisterResourceManager("/dev/im", sImThreadData->messageQueueId);
    if (error < Error::OK) {
       return error;
    }
 
    // Create thread
    error = IOS_CreateThread(&imThreadEntry, nullptr,
-                            phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                            static_cast<uint32_t>(sData->threadStack.size()),
+                            phys_addrof(sImThreadData->threadStack) + sImThreadData->threadStack.size(),
+                            static_cast<uint32_t>(sImThreadData->threadStack.size()),
                             ImThreadPriority,
                             ThreadFlags::Detached);
    if (error < Error::OK) {
-      IOS_DestroyMessageQueue(sData->messageQueueId);
+      IOS_DestroyMessageQueue(sImThreadData->messageQueueId);
       return error;
    }
 
-   sData->threadId = static_cast<ThreadId>(error);
-   kernel::internal::setThreadName(sData->threadId, "ImThread");
+   sImThreadData->threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sImThreadData->threadId, "ImThread");
 
-   return IOS_StartThread(sData->threadId);
+   return IOS_StartThread(sImThreadData->threadId);
 }
 
 Error
 stopImThread()
 {
-   sData->stopMessageBuffer = Command::IpcMsg2;
+   sImThreadData->stopMessageBuffer = Command::IpcMsg2;
 
-   auto message = makeMessage(phys_addrof(sData->stopMessageBuffer));
-   auto error = IOS_SendMessage(sData->messageQueueId, message, MessageFlags::None);
+   auto message = makeMessage(phys_addrof(sImThreadData->stopMessageBuffer));
+   auto error = IOS_SendMessage(sImThreadData->messageQueueId, message, MessageFlags::None);
    if (error < Error::OK) {
       return error;
    }
 
-   error = IOS_JoinThread(sData->threadId, nullptr);
+   error = IOS_JoinThread(sImThreadData->threadId, nullptr);
    if (error < Error::OK) {
       return error;
    }
 
-   error = IOS_DestroyMessageQueue(sData->messageQueueId);
+   error = IOS_DestroyMessageQueue(sImThreadData->messageQueueId);
    if (error < Error::OK) {
       return error;
    }
@@ -213,7 +213,7 @@ stopImThread()
 void
 initialiseStaticImThreadData()
 {
-   sData = phys_cast<StaticImThreadData *>(allocProcessStatic(sizeof(StaticImThreadData)));
+   sImThreadData = phys_cast<StaticImThreadData *>(allocProcessStatic(sizeof(StaticImThreadData)));
    sDevices.closeAll();
 }
 
