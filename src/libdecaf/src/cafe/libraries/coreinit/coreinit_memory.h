@@ -41,6 +41,12 @@ void
 OSGetMapVirtAddrRange(virt_ptr<virt_addr> start,
                       virt_ptr<uint32_t> size);
 
+BOOL
+OSGetSharedData(OSSharedDataType type,
+                uint32_t unk_r4,
+                virt_ptr<virt_ptr<void>> outPtr,
+                virt_ptr<uint32_t> outSize);
+
 virt_addr
 OSAllocVirtAddr(virt_addr address,
                 uint32_t size,

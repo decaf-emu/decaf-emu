@@ -229,7 +229,6 @@ protected:
    void
    generateRpl();
 
-   // TODO: Check types match
    template<typename FunctionType>
    void
    registerFunctionInternal(const char *name,

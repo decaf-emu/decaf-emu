@@ -6,6 +6,7 @@
 
 #include "cafe/cafe_stackobject.h"
 #include "cafe/kernel/cafe_kernel_mmu.h"
+#include "cafe/kernel/cafe_kernel_shareddata.h"
 
 #include <atomic>
 #include <cstring>
@@ -236,6 +237,40 @@ OSGetMapVirtAddrRange(virt_ptr<virt_addr> start,
    }
 }
 
+BOOL
+OSGetSharedData(OSSharedDataType type,
+                uint32_t unk_r4,
+                virt_ptr<virt_ptr<void>> outPtr,
+                virt_ptr<uint32_t> outSize)
+{
+   auto area = kernel::SharedArea { };
+
+   if (!outPtr || !outSize) {
+      return FALSE;
+   }
+
+   switch (type) {
+   case OSSharedDataType::FontChinese:
+      area = kernel::getSharedArea(kernel::SharedAreaId::FontChinese);
+      break;
+   case OSSharedDataType::FontKorean:
+      area = kernel::getSharedArea(kernel::SharedAreaId::FontKorean);
+      break;
+   case OSSharedDataType::FontStandard:
+      area = kernel::getSharedArea(kernel::SharedAreaId::FontStandard);
+      break;
+   case OSSharedDataType::FontTaiwanese:
+      area = kernel::getSharedArea(kernel::SharedAreaId::FontTaiwanese);
+      break;
+   default:
+      return FALSE;
+   }
+
+   *outPtr = virt_cast<void *>(area.address);
+   *outSize = area.size;
+   return TRUE;
+}
+
 virt_addr
 OSAllocVirtAddr(virt_addr address,
                 uint32_t size,
@@ -405,6 +440,7 @@ Library::registerMemorySymbols()
    RegisterFunctionExport(OSGetAvailPhysAddrRange);
    RegisterFunctionExport(OSGetDataPhysAddrRange);
    RegisterFunctionExport(OSGetMapVirtAddrRange);
+   RegisterFunctionExport(OSGetSharedData);
    RegisterFunctionExport(OSAllocVirtAddr);
    RegisterFunctionExport(OSFreeVirtAddr);
    RegisterFunctionExport(OSQueryVirtAddr);

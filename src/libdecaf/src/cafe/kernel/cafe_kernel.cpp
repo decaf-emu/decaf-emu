@@ -5,6 +5,7 @@
 #include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
+#include "cafe_kernel_shareddata.h"
 
 #include "cafe/libraries/cafe_hle.h"
 #include "decaf_events.h"
@@ -49,6 +50,9 @@ sExecutableName;
 static void
 core1EntryPoint(cpu::Core *core)
 {
+   // TODO: This is normally called by root.rpx
+   loadShared();
+
    // TODO: Game information should come from ios MCPPPrepareTitleInfo!
    if (!::kernel::loadGameInfo(sGameInfo)) {
       gLog->warn("Could not load game info.");
