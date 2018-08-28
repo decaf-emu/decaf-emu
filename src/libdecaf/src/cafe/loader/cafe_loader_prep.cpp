@@ -211,7 +211,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
    loadArgs.upid = upid;
    loadArgs.loadedRpl = nullptr;
    loadArgs.readHeapTracking = globals->processCodeHeap;
-   loadArgs.pathNameLen = filenameLen;
+   loadArgs.pathNameLen = filenameLen + 5;
    loadArgs.pathName = filename;
    loadArgs.fileType = ios::mcp::MCPFileType::CafeOS;
    loadArgs.chunkBuffer = chunkBuffer;
