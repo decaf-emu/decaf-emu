@@ -258,7 +258,6 @@ initialiseThreadState(virt_ptr<OSThread> thread,
    thread->exitValue = -1;
    thread->type = type;
    thread->state = entry ? OSThreadState::Ready : OSThreadState::None;
-   thread->id = uint16_t { 0x8000 };
    thread->mutex = nullptr;
    thread->deallocator = nullptr;
    thread->coreTimeConsumedNs = 0ull;
