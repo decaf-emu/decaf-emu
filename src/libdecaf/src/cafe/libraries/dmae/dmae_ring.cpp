@@ -123,6 +123,8 @@ Library::registerRingSymbols()
    RegisterFunctionExport(DMAECopyMem);
    RegisterFunctionExport(DMAEFillMem);
    RegisterFunctionExport(DMAEWaitDone);
+
+   RegisterDataInternal(sRingData);
 }
 
 } // namespace cafe::dmae
