@@ -63,6 +63,9 @@ tCurrentCore = nullptr;
 static thread_local uint32_t
 sSegfaultAddr = 0;
 
+static thread_local platform::StackTrace *
+sSegfaultStackTrace = nullptr;
+
 void
 initialise()
 {
@@ -118,14 +121,14 @@ addJitReadOnlyRange(virt_addr address,
 static void
 coreSegfaultEntry()
 {
-   gSegfaultHandler(tCurrentCore, sSegfaultAddr);
+   gSegfaultHandler(tCurrentCore, sSegfaultAddr, sSegfaultStackTrace);
    decaf_abort("The CPU segfault handler must never return.");
 }
 
 static void
 coreIllInstEntry()
 {
-   gIllInstHandler(tCurrentCore);
+   gIllInstHandler(tCurrentCore, sSegfaultStackTrace);
    decaf_abort("The CPU illegal instruction handler must never return.");
 }
 
@@ -134,6 +137,7 @@ exceptionHandler(platform::Exception *exception)
 {
    // Handle illegal instructions!
    if (exception->type == platform::Exception::InvalidInstruction) {
+      sSegfaultStackTrace = platform::captureStackTrace();
       return coreIllInstEntry;
    }
 
@@ -158,6 +162,7 @@ exceptionHandler(platform::Exception *exception)
    }
 
    sSegfaultAddr = static_cast<uint32_t>(address - memBase);
+   sSegfaultStackTrace = platform::captureStackTrace();
    return coreSegfaultEntry;
 }
 

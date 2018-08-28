@@ -138,6 +138,8 @@ static void
 faultFiberEntryPoint(void *param)
 {
    auto faultData = reinterpret_cast<FaultData *>(param);
+   auto core = cpu::this_core::state();
+   decaf_assert(core, "Uh oh? CPU fault Handler with invalid core");
 
    // We may have been in the middle of a kernel function...
    if (coreinit::internal::isSchedulerLocked()) {
@@ -146,24 +148,20 @@ faultFiberEntryPoint(void *param)
 
    // Move back an instruction so we can re-exucute the failed instruction
    //  and so that the debugger shows the right stop point.
-   cpu::this_core::state()->nia -= 4;
-
-   // If the decaf debugger is enabled, we will catch this exception there
-   if (decaf::config::debugger::enabled) {
-      coreinit::internal::pauseCoreTime(true);
-      debugger::handleDebugBreakInterrupt();
-      coreinit::internal::pauseCoreTime(false);
-
-      // This will shut down the thread and reschedule.  This is required
-      //  since returning from the segfault handler is an error.
-      coreinit::OSExitThread(0);
-   }
-
-   auto core = cpu::this_core::state();
-   decaf_assert(core, "Uh oh? CPU fault Handler with invalid core");
+   core->nia -= 4;
 
    // Log the core state
    fmt::memory_buffer out;
+   if (faultData->reason == FaultData::Reason::Segfault) {
+      fmt::format_to(out, "Segfault:\n");
+   } else if (faultData->reason == FaultData::Reason::IllegalInstruction) {
+      fmt::format_to(out, "Illegal Instruction:\n");
+   } else {
+      fmt::format_to(out, "Unknown fault:\n");
+   }
+
+   fmt::format_to(out, "These values may not be reliable when using JIT.\n");
+   fmt::format_to(out, "nia: 0x{:08x}\n", core->nia);
    fmt::format_to(out, "nia: 0x{:08x}\n", core->nia);
    fmt::format_to(out, "lr: 0x{:08x}\n", core->lr);
    fmt::format_to(out, "cr: 0x{:08x}\n", core->cr.value);
@@ -176,41 +174,52 @@ faultFiberEntryPoint(void *param)
 
    gLog->critical(std::string_view { out.data(), out.size() });
 
-   // Handle the host fault
-   if (faultData->reason == FaultData::Reason::Segfault) {
-      decaf_host_fault(fmt::format("Invalid memory access for address 0x{:08X} at 0x{:08X}\n",
-                                   faultData->address, core->nia),
-                       faultData->stackTrace);
-   } else if (faultData->reason == FaultData::Reason::IllegalInstruction) {
-      decaf_host_fault(fmt::format("Invalid instruction at address 0x{:08X}\n", faultData->address),
-                       faultData->stackTrace);
+   // If the decaf debugger is enabled, we will catch this exception there
+   if (decaf::config::debugger::enabled) {
+      coreinit::internal::pauseCoreTime(true);
+      debugger::handleDebugBreakInterrupt();
+      coreinit::internal::pauseCoreTime(false);
+
+      // This will shut down the thread and reschedule.  This is required
+      //  since returning from the segfault handler is an error.
+      coreinit::OSExitThread(0);
    } else {
-      decaf_host_fault(fmt::format("Unexpected fault occured, fault reason was {} at 0x{:08X}\n",
-                                   static_cast<int32_t>(faultData->reason), core->nia),
-                       faultData->stackTrace);
+      // If there is no debugger then let's crash!
+      if (faultData->reason == FaultData::Reason::Segfault) {
+         decaf_host_fault(fmt::format("Invalid memory access for address 0x{:08X} at 0x{:08X}\n",
+                                      faultData->address, core->nia),
+                          faultData->stackTrace);
+      } else if (faultData->reason == FaultData::Reason::IllegalInstruction) {
+         decaf_host_fault(fmt::format("Invalid instruction at address 0x{:08X}\n", faultData->address),
+                          faultData->stackTrace);
+      } else {
+         decaf_host_fault(fmt::format("Unexpected fault occured, fault reason was {} at 0x{:08X}\n",
+                                      static_cast<int32_t>(faultData->reason), core->nia),
+                          faultData->stackTrace);
+      }
    }
 }
 
 static void
 handleCpuSegfault(cpu::Core *core,
-                  uint32_t address)
+                  uint32_t address,
+                  platform::StackTrace *stackTrace)
 {
-   auto hostStackTrace = platform::captureStackTrace();
    auto faultData = new FaultData { };
    faultData->reason = FaultData::Reason::Segfault;
    faultData->address = address;
-   faultData->stackTrace = hostStackTrace;
+   faultData->stackTrace = stackTrace;
    resetFaultedContextFiber(getCurrentContext(), faultFiberEntryPoint, faultData);
 }
 
 static void
-handleCpuIllegalInstruction(cpu::Core *core)
+handleCpuIllegalInstruction(cpu::Core *core,
+                            platform::StackTrace *stackTrace)
 {
-   auto hostStackTrace = platform::captureStackTrace();
    auto faultData = new FaultData { };
    faultData->reason = FaultData::Reason::IllegalInstruction;
    faultData->address = core->nia;
-   faultData->stackTrace = hostStackTrace;
+   faultData->stackTrace = stackTrace;
    resetFaultedContextFiber(getCurrentContext(), faultFiberEntryPoint, faultData);
 }
 

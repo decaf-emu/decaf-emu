@@ -4,6 +4,7 @@
 #include "be2_struct.h"
 
 #include <atomic>
+#include <common/platform_stacktrace.h>
 #include <cstdint>
 #include <functional>
 #include <utility>
@@ -36,8 +37,8 @@ static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 
 using EntrypointHandler = std::function<void(Core *core)>;
 using InterruptHandler = void (*)(Core *core, uint32_t interrupt_flags);
-using SegfaultHandler = void(*)(Core *core, uint32_t address);
-using IllInstHandler = void(*)(Core *core);
+using SegfaultHandler = void(*)(Core *core, uint32_t address, platform::StackTrace *hostStackTrace);
+using IllInstHandler = void(*)(Core *core, platform::StackTrace *hostStackTrace);
 using BranchTraceHandler = void(*)(Core *core, uint32_t target);
 using KernelCallHandler = void(*)(Core *core, uint32_t id);
 
