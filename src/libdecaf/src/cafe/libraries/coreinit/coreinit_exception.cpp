@@ -242,6 +242,7 @@ Library::registerExceptionSymbols()
 {
    RegisterFunctionExport(OSSetExceptionCallback);
    RegisterFunctionExport(OSSetExceptionCallbackEx);
+   RegisterDataInternal(sGlobalExceptions);
 }
 
 } // namespace cafe::coreinit
