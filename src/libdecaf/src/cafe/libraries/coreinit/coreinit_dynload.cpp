@@ -2586,6 +2586,50 @@ dynLoadTlsFree(virt_ptr<OSThread> thread)
    }
 }
 
+static void
+initCoreinitNotifyData(virt_ptr<RPL_DATA> rpl)
+{
+   StackObject<kernel::Info0> info0;
+   kernel::getInfo(kernel::InfoType::Type0, info0, sizeof(kernel::Info0));
+
+   rpl->notifyData = virt_cast<OSDynLoad_NotifyData *>(
+      rplSysHeapAlloc("RPL_NOTIFY",
+                      sizeof(OSDynLoad_NotifyData), 4));
+   if (!rpl) {
+      if (isAppDebugLevelUnknown3()) {
+         dumpSystemHeap();
+      }
+
+      COSError(COSReportModule::Unknown2,
+               fmt::format("sInitNotifyHdr() - mem alloc failed (err=0x{:08X}).",
+                           OSDynLoad_Error::OutOfSysMemory));
+      setFatalErrorInfo2(rpl->userFileInfo->titleLocation,
+                         OSDynLoad_Error::OutOfSysMemory, 0,
+                         326, "sInitNotifyHdr");
+      reportFatalError();
+   }
+
+   std::memset(rpl->notifyData.getRawPointer(), 0, sizeof(OSDynLoad_NotifyData));
+
+   // Steal the path string!
+   rpl->notifyData->name = rpl->userFileInfo->pathString;
+   rpl->userFileInfo->pathString = nullptr;
+
+   // Update section info
+   rpl->notifyData->textAddr = info0->coreinit.textAddr;
+   rpl->notifyData->textOffset = info0->coreinit.textOffset;
+   rpl->notifyData->textSize = info0->coreinit.textSize;
+
+   rpl->notifyData->dataAddr = info0->coreinit.dataAddr;
+   rpl->notifyData->dataOffset = info0->coreinit.dataOffset;
+   rpl->notifyData->dataSize = info0->coreinit.dataSize;
+
+   rpl->notifyData->readAddr = info0->coreinit.dataAddr;
+   rpl->notifyData->readOffset = info0->coreinit.dataOffset;
+   rpl->notifyData->readSize = info0->coreinit.dataSize;
+   // TODO: MasterAgent_LoadNotify
+}
+
 
 /**
  * __OSDynLoad_InitFromCoreInit
@@ -2723,7 +2767,7 @@ initialiseDynLoad()
    }
 
    if (coreinitRplData->userFileInfo->pathString) {
-      // TODO: Init notify data for coreinit
+      initCoreinitNotifyData(coreinitRplData);
    }
 
    kernel::loaderUserGainControl();
