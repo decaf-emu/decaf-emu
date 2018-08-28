@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
+#include "cafe/libraries/gx2/gx2_internal_flush.h"
 
 #include <common/align.h>
 
@@ -14,7 +15,7 @@ DCInvalidateRange(virt_ptr<void> ptr,
                   uint32_t size)
 {
    // Also signal the GPU to update the memory range.
-   // TODO: gx2::internal::notifyGpuFlush(addr, size);
+   gx2::internal::notifyGpuFlush(ptr.getRawPointer(), size);
 }
 
 
@@ -26,7 +27,7 @@ DCFlushRange(virt_ptr<void> ptr,
              uint32_t size)
 {
    // Also signal the memory store to the GPU.
-   // TODO: gx2::internal::notifyCpuFlush(addr, size);
+   gx2::internal::notifyCpuFlush(ptr.getRawPointer(), size);
 }
 
 
@@ -38,7 +39,7 @@ DCStoreRange(virt_ptr<void> ptr,
              uint32_t size)
 {
    // Also signal the memory store to the GPU.
-   // TODO: gx2::internal::notifyCpuFlush(addr, size);
+   gx2::internal::notifyCpuFlush(ptr.getRawPointer(), size);
 }
 
 
