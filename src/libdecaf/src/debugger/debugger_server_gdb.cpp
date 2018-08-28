@@ -161,13 +161,13 @@ void GdbServer::handleQuery(const std::string &command)
 {
    if (begins_with(command, "qSupported")) {
       auto features = std::string { };
-      features += "PacketSize=1024;";
-      features += "qXfer:features:read+;";
-      // TODO: features += "qXfer:libraries:read+;";
-      // TODO: features += "qXfer:memory-map:read+;";
-      // TODO: features += "qXfer:threads:read+;";
-      // TODO: features += "QStartNoAckMode+;";
-      // TODO: features += "QThreadEvents+;";
+      features += "PacketSize=4096";
+      features += ";qXfer:features:read+";
+      features += ";qXfer:threads:read+";
+      // TODO: features += ";qXfer:libraries:read+";
+      // TODO: features += ";qXfer:memory-map:read+";
+      // TODO: features += ";QStartNoAckMode+";
+      // TODO: features += ";QThreadEvents+";
       sendCommand(features);
    } else if (begins_with(command, "qfThreadInfo")) {
       fmt::memory_buffer reply;
@@ -233,6 +233,28 @@ void GdbServer::handleQuery(const std::string &command)
       }
 
       sendCommand(reply);
+   } else if (begins_with(command, "qXfer:threads:read:")) {
+      fmt::memory_buffer reply;
+      fmt::format_to(reply, "l<?xml version=\"1.0\"?>");
+      fmt::format_to(reply, "<threads>");
+
+      cafe::coreinit::internal::lockScheduler();
+      auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
+
+      for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
+         fmt::format_to(reply, "<thread id=\"{}\" core=\"0\"", thread->id);
+
+         if (thread->name) {
+            fmt::format_to(reply, " name=\"{}\"", encodeXml(thread->name.getRawPointer()));
+         }
+
+         fmt::format_to(reply, "></thread>");
+      }
+
+      fmt::format_to(reply, "</threads>");
+      cafe::coreinit::internal::unlockScheduler();
+
+      sendCommand(std::string_view { reply.data(), reply.size() });
    } else if (begins_with(command, "qTStatus")) {
       // Trace not supported
       sendCommand("");
@@ -516,7 +538,7 @@ void GdbServer::sendNack()
    }
 }
 
-void GdbServer::sendCommand(const std::string &command)
+void GdbServer::sendCommand(std::string_view command)
 {
    auto packet = std::string { };
    packet.push_back(GdbCommand::Start);
