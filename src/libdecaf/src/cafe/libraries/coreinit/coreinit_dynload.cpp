@@ -1973,7 +1973,7 @@ doImports(virt_ptr<RPL_DATA> rplData)
                prev = itr;
             }
 
-            while (itr->next) {
+            while (itr = itr->next) {
                if (itr == importModule) {
                   if (prev) {
                      prev->next = rplData->next;
