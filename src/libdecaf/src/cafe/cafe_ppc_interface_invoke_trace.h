@@ -31,7 +31,7 @@ logParam(fmt::memory_buffer &message,
 }
 
 template<typename HostFunctionType, typename FunctionTraitsType, std::size_t... I>
-constexpr void
+void
 invoke_trace_host_impl(cpu::Core *core,
                        HostFunctionType &&,
                        const char *name,
