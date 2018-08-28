@@ -13,6 +13,7 @@
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/cafe_hle.h"
 #include "cafe/loader/cafe_loader_rpl.h"
+#include "cafe/kernel/cafe_kernel_info.h"
 #include "cafe/kernel/cafe_kernel_loader.h"
 #include "cafe/kernel/cafe_kernel_mmu.h"
 #include "debugger/debugger.h"
@@ -2192,7 +2193,55 @@ OSDynLoad_AcquireContainingModule(virt_ptr<void> ptr,
                                   OSDynLoad_SectionType sectionType,
                                   virt_ptr<OSDynLoad_ModuleHandle> outHandle)
 {
-   return OSDynLoad_Error::OK;
+   if (!outHandle) {
+      return OSDynLoad_Error::InvalidAcquirePtr;
+   }
+
+   if (!ptr) {
+      return OSDynLoad_Error::InvalidContainPtr;
+   }
+
+   OSLockMutex(sDynLoad_LoaderLock);
+   auto addr = virt_cast<virt_addr>(ptr);
+
+   for (auto itr = sDynLoadData->rplDataList; itr; itr = itr->next) {
+      if (!itr->notifyData) {
+         continue;
+      }
+
+      if (sectionType == OSDynLoad_SectionType::Any ||
+          sectionType == OSDynLoad_SectionType::DataOnly) {
+         if (addr >= itr->notifyData->dataAddr &&
+             addr <  itr->notifyData->dataAddr + itr->notifyData->dataSize) {
+            if (itr == sDynLoadData->rpxData) {
+               *outHandle = OSDynLoad_CurrentModuleHandle;
+            } else {
+               *outHandle = itr->handle;
+            }
+
+            OSUnlockMutex(sDynLoad_LoaderLock);
+            return OSDynLoad_Error::OK;
+         }
+      }
+
+      if (sectionType == OSDynLoad_SectionType::Any ||
+          sectionType == OSDynLoad_SectionType::CodeOnly) {
+         if (addr >= itr->notifyData->textAddr &&
+             addr <  itr->notifyData->textAddr + itr->notifyData->textSize) {
+            if (itr == sDynLoadData->rpxData) {
+               *outHandle = OSDynLoad_CurrentModuleHandle;
+            } else {
+               *outHandle = itr->handle;
+            }
+
+            OSUnlockMutex(sDynLoad_LoaderLock);
+            return OSDynLoad_Error::OK;
+         }
+      }
+   }
+
+   OSUnlockMutex(sDynLoad_LoaderLock);
+   return OSDynLoad_Error::ContainModuleNotFound;
 }
 
 
