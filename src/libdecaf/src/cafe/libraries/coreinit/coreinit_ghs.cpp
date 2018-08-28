@@ -19,7 +19,7 @@ namespace cafe::coreinit
 using AtExitFn = virt_func_ptr<void(void)>;
 using AtExitCleanupFn = virt_func_ptr<void(int32_t)>;
 using StdioCleanupFn = virt_func_ptr<void(void)>;
-using CppExceptionInitPtrFn = virt_func_ptr<void(virt_ptr<void>)>;
+using CppExceptionInitPtrFn = virt_func_ptr<void(virt_ptr<virt_ptr<void>>)>;
 using CppExceptionCleanupPtrFn = virt_func_ptr<void(virt_ptr<void>)>;
 
 constexpr auto GHS_FLOCK_MAX = 100u;
@@ -480,7 +480,7 @@ ghsExceptionInit(virt_ptr<OSThread> thread)
    if (*cpp_exception_init_ptr) {
       cafe::invoke(cpu::this_core::state(),
                    *cpp_exception_init_ptr,
-                   thread->eh_globals.value());
+                   virt_addrof(thread->eh_globals));
    }
 }
 
