@@ -98,7 +98,11 @@ reschedule(bool yielding)
       }
 
       currentThread->state = ThreadState::Ready;
+
+      decaf_check(ThreadQueue_PopThread(phys_addrof(sData->runQueue)) == nextThread);
       queueThread(currentThread);
+   } else {
+      decaf_check(ThreadQueue_PopThread(phys_addrof(sData->runQueue)) == nextThread);
    }
 
    // Trace log the thread switch
@@ -131,7 +135,6 @@ reschedule(bool yielding)
       gLog->trace("{}", std::string_view { out.data(), out.size() });
    }
 
-   decaf_check(ThreadQueue_PopThread(phys_addrof(sData->runQueue)) == nextThread);
    sCurrentThreadContext = nextThread;
 
    if (nextThread) {
