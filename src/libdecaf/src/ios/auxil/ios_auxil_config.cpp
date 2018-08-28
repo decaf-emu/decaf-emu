@@ -84,6 +84,10 @@ readFile(std::string_view filename,
    StackObject<FSAStat> stat;
    FSAFileHandle fileHandle;
    auto fsaHandle = getFsaHandle();
+   if (!fsaHandle) {
+      openFsaHandle();
+      fsaHandle = getFsaHandle();
+   }
 
    auto status = FSAOpenFile(fsaHandle, filename, "r", &fileHandle);
    if (status < FSAStatus::OK) {
