@@ -708,6 +708,7 @@ Library::generateRpl()
    fileInfoSection->header.entsize = 0u;
    fileInfoSection->data.resize(fileInfoSection->header.size);
 
+   auto infoFileName = addSectionString(fileInfoSection->data, mName);
    auto info = reinterpret_cast<rpl::RPLFileInfo_v4_2 *>(fileInfoSection->data.data());
    info->version = 0xCAFE0402u;
    info->textSize = 0u;
@@ -722,8 +723,8 @@ Library::generateRpl()
    info->sdaBase = 0u;
    info->sda2Base = 0u;
    info->stackSize = 0x10000u;
+   info->filename = infoFileName;
    info->heapSize = 0x8000u;
-   info->filename = 0u;
    info->flags = 0u;
    info->minVersion = 0x5078u;
    info->compressionLevel = -1;
