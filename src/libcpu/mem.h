@@ -30,7 +30,7 @@ untranslate(const void *ptr)
 
    auto sptr = reinterpret_cast<size_t>(ptr);
    auto sbase = cpu::getBaseVirtualAddress();
-   decaf_check(sptr > sbase);
+   decaf_check(sptr >= sbase);
    decaf_check(sptr <= sbase + 0xFFFFFFFF);
    return static_cast<ppcaddr_t>(sptr - sbase);
 }
