@@ -165,7 +165,6 @@ RegistersWindow::draw()
       drawCrfCol(j, jVal, jVal != jPrevVal);
    }
 
-
    ImGui::Columns(1);
    ImGui::End();
 }

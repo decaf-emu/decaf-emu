@@ -31,7 +31,7 @@ MemoryWindow::draw()
    char addressInput[32] = { 0 };
    char dataInput[32] = { 0 };
 
-   if (!ImGui::Begin(mName.c_str(), &mVisible)) {
+   if (!ImGui::Begin(mName.c_str(), &mVisible, ImGuiWindowFlags_NoScrollbar)) {
       ImGui::End();
       return;
    }
