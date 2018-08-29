@@ -36,6 +36,9 @@ public:
    virtual SDL_Window *
    getWindow();
 
+   virtual void
+   getWindowSize(int *w, int *h);
+
 protected:
    SDL_Window *mWindow = nullptr;
 };

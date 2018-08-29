@@ -450,4 +450,10 @@ DecafSDLOpenGL::getDecafDebugUiRenderer()
    return mDebugUiRenderer;
 }
 
+void
+DecafSDLOpenGL::getWindowSize(int *w, int *h)
+{
+   SDL_GL_GetDrawableSize(mWindow, w, h);
+}
+
 #endif // ifdef DECAF_GL

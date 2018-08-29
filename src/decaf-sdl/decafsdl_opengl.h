@@ -30,6 +30,9 @@ public:
    decaf::DebugUiRenderer *
    getDecafDebugUiRenderer() override;
 
+   void
+   getWindowSize(int *w, int *h) override;
+
 protected:
    void
    drawScanBuffer(gl::GLuint object);

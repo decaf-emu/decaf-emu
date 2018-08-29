@@ -204,7 +204,7 @@ DecafSDL::calculateScreenViewports(Viewport &tv, Viewport &drc)
    auto tvVisible = true;
    auto drcVisible = true;
 
-   SDL_GetWindowSize(mGraphicsDriver->getWindow(), &windowWidth, &windowHeight);
+   mGraphicsDriver->getWindowSize(&windowWidth, &windowHeight);
 
    if (config::display::layout == config::display::Toggle) {
       // For toggle mode only one screen is visible at a time, so we calculate the

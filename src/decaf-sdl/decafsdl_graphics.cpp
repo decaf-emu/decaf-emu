@@ -13,3 +13,9 @@ DecafSDLGraphics::getWindow()
 {
    return mWindow;
 }
+
+void
+DecafSDLGraphics::getWindowSize(int *w, int *h)
+{
+   return SDL_GetWindowSize(mWindow, w, h);
+}
