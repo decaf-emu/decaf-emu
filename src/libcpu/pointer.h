@@ -451,6 +451,42 @@ struct pointer_cast_impl<AddressType, SrcTypePtr, AddressType,
 namespace fmt
 {
 
+template<typename OutputIt>
+auto format_escaped_string(OutputIt iter, const char *data)
+{
+   iter = format_to(iter, "\"");
+
+   auto hasMoreBytes = true;
+   for (auto i = 0; i < 128; ++i) {
+      auto c = data[i];
+      if (c == 0) {
+         hasMoreBytes = false;
+         break;
+      }
+
+      if (c >= ' ' && c <= '~' && c != '\\' && c != '"') {
+         iter = format_to(iter, "{}", c);
+      } else {
+         switch (c) {
+         case '"': iter = format_to(iter, "\\\""); break;
+         case '\\': iter = format_to(iter, "\\\\"); break;
+         case '\t': iter = format_to(iter, "\\t"); break;
+         case '\r': iter = format_to(iter, "\\r"); break;
+         case '\n': iter = format_to(iter, "\\n"); break;
+         default: iter = format_to(iter, "\\x{:02x}", c); break;
+         }
+      }
+   }
+
+   if (!hasMoreBytes) {
+      iter = format_to(iter, "\"");
+   } else {
+      iter = format_to(iter, "\"...");
+   }
+
+   return iter;
+}
+
 template<typename AddressType>
 struct formatter<cpu::Pointer<char, AddressType>>
 {
@@ -466,7 +502,8 @@ struct formatter<cpu::Pointer<char, AddressType>>
       if (!ptr) {
          return format_to(ctx.begin(), "<NULL>");
       } else {
-         return format_to(ctx.begin(), "\"{}\"", ptr.getRawPointer());
+         auto bytes = ptr.getRawPointer();
+         return format_escaped_string(ctx.begin(), bytes);
       }
    }
 };
@@ -486,7 +523,8 @@ struct formatter<cpu::Pointer<const char, AddressType>>
       if (!ptr) {
          return format_to(ctx.begin(), "<NULL>");
       } else {
-         return format_to(ctx.begin(), "\"{}\"", ptr.getRawPointer());
+         const char *bytes = ptr.getRawPointer();
+         return format_escaped_string(ctx.begin(), bytes);
       }
    }
 };
