@@ -97,7 +97,7 @@ sValidateLinkData(virt_ptr<GlobalStorage> globals,
       } else {
          rpl = getModule(linkInfo->modules[i].loaderHandle);
          if (!rpl) {
-            Loader_ReportError("*** Module with base 0x{:08X} not found in attempt to link.",
+            Loader_ReportError("*** Module with base {} not found in attempt to link.",
                                linkInfo->modules[i].loaderHandle);
             LiSetFatalError(0x18729Bu, 0, 1, "sValidateLinkData", 239);
             LiCacheLineCorrectFreeEx(globals->processCodeHeap, allocPtr, allocSize);
@@ -112,7 +112,7 @@ sValidateLinkData(virt_ptr<GlobalStorage> globals,
       }
 
       if (!(rpl->loadStateFlags & LoaderSetup)) {
-         Loader_ReportError("*** Module with base 0x{:08X} has not been set up.",
+         Loader_ReportError("*** Module with base {} has not been set up.",
                             linkInfo->modules[i].loaderHandle);
          LiSetFatalError(0x18729Bu, rpl->fileType, 1, "sValidateLinkData", 251);
          LiCacheLineCorrectFreeEx(globals->processCodeHeap, allocPtr, allocSize);

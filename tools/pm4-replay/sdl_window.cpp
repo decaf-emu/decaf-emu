@@ -509,13 +509,13 @@ static bool
 mapVirtualAddress(virt_addr vaddr, phys_addr paddr, uint32_t size)
 {
    if (!cpu::allocateVirtualAddress(vaddr, size)) {
-      gLog->error("Unexpected failure allocating virtual address 0x{:08X} - 0x{:08X}",
+      gLog->error("Unexpected failure allocating virtual address {} - {}",
                   vaddr, vaddr + size);
       return false;
    }
 
    if (!cpu::mapMemory(vaddr, paddr, size, cpu::MapPermission::ReadWrite)) {
-      gLog->error("Unexpected failure allocating mapping virtual address 0x{:08X} to physical address 0x{:08X}",
+      gLog->error("Unexpected failure allocating mapping virtual address {} to physical address {}",
                   vaddr, paddr);
       return false;
    }

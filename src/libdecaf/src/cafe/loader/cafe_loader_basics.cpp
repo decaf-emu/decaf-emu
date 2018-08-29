@@ -374,7 +374,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    // Check RPL file info
    if (shRplFileInfo->type != rpl::SHT_RPL_FILEINFO ||
        shRplFileInfo->flags & rpl::SHF_DEFLATED) {
-      Loader_ReportError("***shnum-1 section type = 0x{:08X}, flags=0x{:08X}", shRplFileInfo->type, shRplFileInfo->flags);
+      Loader_ReportError("***shnum-1 section type = 0x{:08X}, flags=0x{:08X}",
+                         shRplFileInfo->type, shRplFileInfo->flags);
       LiSetFatalError(0x18729B, loadArgs->fileType, 1, "LiLoadRPLBasics", 0x35A);
       return -470082;
    }
@@ -597,9 +598,10 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    rpl->fileInfoBuffer = virt_cast<rpl::RPLFileInfo_v4_2 *>(allocPtr);
    rpl->fileInfoBufferSize = allocSize;
 
-   Loader_ReportNotice("RPL_LAYOUT:%s,FILE,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},FILE,end,=\"0x{:08x}\"",
+   Loader_ReportNotice("RPL_LAYOUT:{},FILE,start,=\"{}\"",
                        rpl->moduleNameBuffer,
-                       rpl->fileInfoBuffer,
+                       rpl->fileInfoBuffer);
+   Loader_ReportNotice("RPL_LAYOUT:{},FILE,end,=\"{}\"",
                        rpl->moduleNameBuffer,
                        virt_cast<virt_addr>(rpl->fileInfoBuffer) + rpl->fileInfoBufferSize);
 

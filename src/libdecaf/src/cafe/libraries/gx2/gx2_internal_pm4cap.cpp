@@ -295,7 +295,8 @@ private:
          }
          case PacketType::Type1:
          default:
-            gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type(), header.value);
+            gLog->error("Invalid packet header type {}, header = 0x{:08X}",
+                        header.type(), header.value);
             size = bufferSize;
             break;
          }

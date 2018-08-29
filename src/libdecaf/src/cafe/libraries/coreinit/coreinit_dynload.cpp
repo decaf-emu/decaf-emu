@@ -350,7 +350,7 @@ runEntryPoints(uint32_t numEntryModules,
                            OSDynLoad_EntryReason::Loaded);
       if (error) {
          COSError(COSReportModule::Unknown2, fmt::format(
-            "*** ERROR: Module \"{}\" returned error code {} (0x{:08X} from its entrypoint on load.",
+            "*** ERROR: Module \"{}\" returned error code {} ({} from its entrypoint on load.",
             entryModules[i]->moduleName, error, error));
          setFatalErrorInfo2(entryModules[i]->userFileInfo->titleLocation,
                             error, false,
@@ -652,7 +652,7 @@ release(OSDynLoad_ModuleHandle moduleHandle,
                                                 userData1,
                                                 nullptr)) {
       COSError(COSReportModule::Unknown2, fmt::format(
-         "*** OSDynLoad_Release: RPL Module handle 0x{:08X} was not valid@0. (err=0x{:08X})",
+         "*** OSDynLoad_Release: RPL Module handle {} was not valid@0. (err=0x{:08X})",
          moduleHandle, error));
       return;
    }
@@ -664,7 +664,7 @@ release(OSDynLoad_ModuleHandle moduleHandle,
                                      moduleHandle,
                                      refCount)) {
       COSError(COSReportModule::Unknown2, fmt::format(
-         "*** OSDynLoad_Release: RPL Module handle 0x{:08X} was not valid@1. (err=0x{:08X})",
+         "*** OSDynLoad_Release: RPL Module handle {} was not valid@1. (err=0x{:08X})",
          moduleHandle, error));
       return;
    }
@@ -681,7 +681,7 @@ release(OSDynLoad_ModuleHandle moduleHandle,
                                      moduleHandle,
                                      refCount)) {
       COSError(COSReportModule::Unknown2, fmt::format(
-         "*** OSDynLoad_Release: RPL Module handle 0x{:08X} was not valid@2. (err=0x{:08X})",
+         "*** OSDynLoad_Release: RPL Module handle {} was not valid@2. (err=0x{:08X})",
          moduleHandle, error));
       return;
    }
@@ -1247,21 +1247,33 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
                   linkModule.loadAddr + linkModule.loadSize));
             } else {
                COSInfo(COSReportModule::Unknown2, fmt::format(
-                  "RPL_LAYOUT:{},TEXT,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},TEXT,end,=\"0x{:08x}\"",
+                  "RPL_LAYOUT:{},TEXT,start,=\"{}\"",
                   rplData->moduleName,
-                  linkModule.textAddr,
+                  linkModule.textAddr));
+
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "RPL_LAYOUT:{},TEXT,end,=\"{}\"",
+                  rplData->moduleName,
                   linkModule.textAddr + linkModule.textSize));
 
                COSInfo(COSReportModule::Unknown2, fmt::format(
-                  "RPL_LAYOUT:{},DATA,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},DATA,end,=\"0x{:08x}\"",
+                  "RPL_LAYOUT:{},DATA,start,=\"{}\"",
                   rplData->moduleName,
-                  linkModule.dataAddr,
+                  linkModule.dataAddr));
+
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "RPL_LAYOUT:{},DATA,end,=\"{}\"",
+                  rplData->moduleName,
                   linkModule.dataAddr + linkModule.dataSize));
 
                COSInfo(COSReportModule::Unknown2, fmt::format(
-                  "RPL_LAYOUT:{},LOAD,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},LOAD,end,=\"0x{:08x}\"",
+                  "RPL_LAYOUT:{},LOAD,start,=\"{}\"",
                   rplData->moduleName,
-                  linkModule.loadAddr,
+                  linkModule.loadAddr));
+
+               COSInfo(COSReportModule::Unknown2, fmt::format(
+                  "RPL_LAYOUT:{},LOAD,end,=\"{}\"",
+                  rplData->moduleName,
                   linkModule.loadAddr + linkModule.loadSize));
             }
          }
@@ -1384,9 +1396,12 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
 
    if (isAppDebugLevelUnknown3()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "RPL_LAYOUT:{},FILE,start,=\"0x{:08x}\"\nRPL_LAYOUT:{},FILE,end,=\"0x{:08x}\"",
+         "RPL_LAYOUT:{},FILE,start,=\"{}\"",
          rplData->moduleName,
-         rplData->userFileInfo,
+         rplData->userFileInfo));
+
+      COSInfo(COSReportModule::Unknown2, fmt::format(
+         "RPL_LAYOUT:{},FILE,end,=\"{}\"",
          rplData->moduleName,
          virt_cast<virt_addr>(rplData->userFileInfo) + rplData->userFileInfoSize));
    }

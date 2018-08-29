@@ -65,7 +65,7 @@ registerUnimplementedSymbol(std::string_view module,
    // Add to the list
    library->addUnimplementedFunctionExport(unimpl);
    sUnimplementedKernelCalls.push_back(unimpl);
-   gLog->debug("Unimplemented function import {}::{} added at 0x{:08X}",
+   gLog->debug("Unimplemented function import {}::{} added at {}",
                module, name, unimpl->value);
    return unimpl->value;
 }

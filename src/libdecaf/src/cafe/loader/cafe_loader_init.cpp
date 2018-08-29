@@ -220,7 +220,7 @@ LOADER_Init(kernel::UniqueProcessId upid,
    sDataAreaSize += static_cast<uint32_t>(dataArea - startInfo->dataAreaStart);
    if (dataArea < virt_addr { 0x10000000 } || dataArea >= startInfo->dataAreaEnd) {
       Loader_ReportError(
-         "*** Insufficient data area space in process. end @ 0x{:08X}, areaend @ 0x{:08X}",
+         "*** Insufficient data area space in process. end @ {}, areaend @ {}",
          dataArea, startInfo->dataAreaEnd);
       LiSetFatalError(0x18729Bu, rpx->fileType, 1, "LOADER_Init", 338);
       error = -470019;
@@ -323,7 +323,10 @@ LOADER_Init(kernel::UniqueProcessId upid,
          if (module->sectionHeaderBuffer) {
             size = getSectionHeader(module, i)->size;
          }
-         gLog->debug("  Section {}, 0x{:08X} - 0x{:08x}", i, module->sectionAddressBuffer[i], module->sectionAddressBuffer[i] + size);
+         gLog->debug("  Section {}, {} - {}",
+                     i,
+                     module->sectionAddressBuffer[i],
+                     module->sectionAddressBuffer[i] + size);
       }
    }
    return 0;

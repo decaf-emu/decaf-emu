@@ -28,13 +28,13 @@ enum MemoryMapFlags
 // This must be kept in order with enum class VirtualMemoryRegion
 MemoryMap sMemoryMap[] = {
    // CafeOS
-   { virt_addr {  0x1000000 },   0x800000, phys_addr { 0x32000000 }, 0x2CE08002 },
+   { virt_addr { 0x01000000 },   0x800000, phys_addr { 0x32000000 }, 0x2CE08002 },
 
    // CodeGen area
-   { virt_addr {  0x1800000 },    0x20000, phys_addr {          0 }, 0x28101200 },
+   { virt_addr { 0x01800000 },    0x20000, phys_addr {          0 }, 0x28101200 },
 
    // App Code
-   { virt_addr {  0x2000000 },          0, phys_addr {          0 }, 0x2CF09400 },
+   { virt_addr { 0x02000000 },          0, phys_addr {          0 }, 0x2CF09400 },
 
    // App Data
    { virt_addr { 0x10000000 },          0, phys_addr {          0 }, 0x28305800 },
@@ -452,13 +452,13 @@ static bool
 loadMapping(MemoryMap &mapping)
 {
    if (!cpu::allocateVirtualAddress(mapping.vaddr, mapping.size)) {
-      gLog->error("Unexpected failure allocating virtual address 0x{:08X} - 0x{:08X}",
+      gLog->error("Unexpected failure allocating virtual address {} - {}",
                   mapping.vaddr, mapping.vaddr + mapping.size);
       return false;
    }
 
    if (!cpu::mapMemory(mapping.vaddr, mapping.paddr, mapping.size, cpu::MapPermission::ReadWrite)) {
-      gLog->error("Unexpected failure allocating mapping virtual address 0x{:08X} to physical address 0x{:08X}",
+      gLog->error("Unexpected failure allocating mapping virtual address {} to physical address {}",
                   mapping.vaddr, mapping.paddr);
       return false;
    }

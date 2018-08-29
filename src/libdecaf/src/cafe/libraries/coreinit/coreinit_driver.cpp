@@ -140,7 +140,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSInfo(
          COSReportModule::Unknown2,
          fmt::format(
-            "RPL_SYSHEAP:DRIVER_REG,ALLOC,=\"0x{:08x}\",-{}",
+            "RPL_SYSHEAP:DRIVER_REG,ALLOC,=\"{}\",-{}",
             driver, sizeof(OSDriver)));
    }
 
@@ -165,7 +165,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSWarn(
          COSReportModule::Unknown1,
          fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" Name() @ 0x{:08X}",
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" Name() @ {}",
             name, driverInterface->getName));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
@@ -181,7 +181,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSWarn(
          COSReportModule::Unknown1,
          fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoInit() @ 0x{:08X}",
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoInit() @ {}",
             name, driverInterface->onInit));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
@@ -197,7 +197,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSWarn(
          COSReportModule::Unknown1,
          fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnAcquiredForeground() @ 0x{:08X}",
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnAcquiredForeground() @ {}",
             name, driverInterface->onAcquiredForeground));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
@@ -213,7 +213,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSWarn(
          COSReportModule::Unknown1,
          fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnReleasedForeground() @ 0x{:08X}",
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnReleasedForeground() @ {}",
             name, driverInterface->onReleasedForeground));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
@@ -229,7 +229,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSWarn(
          COSReportModule::Unknown1,
          fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoDone() @ 0x{:08X}",
+            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoDone() @ {}",
             name, driverInterface->onDone));
       error = static_cast<OSDriver_Error>(dynloadError);
       goto error;
@@ -317,7 +317,7 @@ error:
       internal::COSInfo(
          COSReportModule::Unknown2,
          fmt::format(
-            "RPL_SYSHEAP:DRIVER_REG, FREE, =\"0x{:08x}\",{}",
+            "RPL_SYSHEAP:DRIVER_REG, FREE, =\"{}\",{}",
             driver, sizeof(OSDriver)));
    }
    OSFreeToSystem(driver);
@@ -404,7 +404,7 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
       internal::COSInfo(
          COSReportModule::Unknown2,
          fmt::format(
-            "RPL_SYSHEAP:DRIVER_REG, FREE, =\"0x{:08x}\",{}\n",
+            "RPL_SYSHEAP:DRIVER_REG, FREE, =\"{}\",{}\n",
             driver, sizeof(OSDriver)));
    }
 

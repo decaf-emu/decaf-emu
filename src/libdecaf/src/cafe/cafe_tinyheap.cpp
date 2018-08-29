@@ -39,14 +39,18 @@ dumpHeap(virt_ptr<TinyHeap> heap)
    auto idx = heap->firstBlockIdx;
    auto blocks = getTrackingBlocks(heap);
 
-   gLog->debug("Heap at 0x{:08X} - 0x{:08X}", heap->dataHeapStart, heap->dataHeapEnd);
+   gLog->debug("Heap at {} - {}", heap->dataHeapStart, heap->dataHeapEnd);
    while (idx != -1) {
       auto addr = virt_cast<virt_addr>(blocks[idx].data);
       auto size = blocks[idx].size;
       if (size < 0) {
          size = -size;
       }
-      gLog->debug("block 0x{:08X} - 0x{:08X} {}", addr, addr + size, blocks[idx].size < 0 ? "free" : "alloc");
+
+      gLog->debug("block {} - {} {}",
+                  addr,
+                  addr + size,
+                  blocks[idx].size < 0 ? "free" : "alloc");
       idx = blocks[idx].nextBlockIdx;
    }
 }

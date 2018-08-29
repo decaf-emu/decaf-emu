@@ -40,7 +40,7 @@ OSAllocFromSystem(uint32_t size,
    if (internal::isAppDebugLevelVerbose()) {
       internal::COSInfo(
          COSReportModule::Unknown2,
-         fmt::format("SYSTEM_HEAP:{},ALLOC,=\"0x{:08x}\",-{}",
+         fmt::format("SYSTEM_HEAP:{},ALLOC,=\"{}\",-{}",
                      sSystemHeapData->numAllocs, ptr, size));
       ++sSystemHeapData->numAllocs;
    }
@@ -62,7 +62,7 @@ OSFreeToSystem(virt_ptr<void> ptr)
    if (internal::isAppDebugLevelVerbose()) {
       internal::COSInfo(
          COSReportModule::Unknown2,
-         fmt::format("SYSTEM_HEAP:{},FREE,=\"0x{:08x}\",{}",
+         fmt::format("SYSTEM_HEAP:{},FREE,=\"{}\",{}",
                      sSystemHeapData->numAllocs, ptr, 0));
       ++sSystemHeapData->numAllocs;
    }

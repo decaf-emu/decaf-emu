@@ -318,8 +318,8 @@ LiSetupOneAllocSection(kernel::UniqueProcessId upid,
 
    if (!align_check(sectionAddress, sectionHeader->addralign)) {
       Loader_ReportError("***{} section {} alignment failure.", bounds->name, sectionIndex);
-      Loader_ReportError("Ptr              = 0x{:08X}", sectionAddress);
-      Loader_ReportError("{} base        = 0x{:08X}", bounds->name, base);
+      Loader_ReportError("Ptr              = {}", sectionAddress);
+      Loader_ReportError("{} base        = {}", bounds->name, base);
       Loader_ReportError("{} base align  = {}", bounds->name, baseAlign);
       Loader_ReportError("SecHdr->addr     = 0x{:08X}", sectionHeader->addr);
       Loader_ReportError("bound[{}].base = 0x{:08X}", bounds->name, bounds->min);
@@ -784,21 +784,21 @@ sValidateSetupParams(virt_addr address,
 {
    if (!sCheckDataRange(address, maxSize)) {
       Loader_ReportError(
-         "*** invalid {} area address. apArea=0x{:08X}, lo addr=0x{:08X}, hi addr=0x{:08X}",
+         "*** invalid {} area address. apArea={}, lo addr={}, hi addr={}",
          areaName,
          address,
-         0x10000000,
-         maxSize + 0x10000000);
+         virt_addr { 0x10000000 },
+         virt_addr { maxSize + 0x10000000 });
       return error;
    }
 
    if (!sCheckDataRange(address + size, maxSize)) {
       Loader_ReportError(
-         "*** invalid {} area buffer. apArea+aAreaBytes=0x{:08X}, lo addr=0x{:08X}, hi addr=0x{:08X}\n",
+         "*** invalid {} area buffer. apArea+aAreaBytes={}, lo addr={}, hi addr={}",
          areaName,
          address + size,
-         0x10000000,
-         maxSize + 0x10000000);
+         virt_addr { 0x10000000 },
+         virt_addr { maxSize + 0x10000000 });
       return error;
    }
 
@@ -808,7 +808,7 @@ sValidateSetupParams(virt_addr address,
    }
 
    if (size && !Loader_ValidateAddrRange(address, size)) {
-      Loader_ReportError("*** invalid {} area buffer range 0x{:08x}..0x{:08x}.",
+      Loader_ReportError("*** invalid {} area buffer range {}..{}.",
                          areaName, address, address + size);
       return error;
    }

@@ -263,7 +263,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
                                             requestHandleManager,
                                             &resourceHandle);
    if (error < Error::OK) {
-      gLog->warn("IOS_ResourceReply(0x{:08X}, {}) passed invalid resource request.",
+      gLog->warn("IOS_ResourceReply({}, {}) passed invalid resource request.",
                  phys_cast<phys_addr>(resourceRequest),
                  reply);
       resourceHandleManager->failedResourceReplies++;

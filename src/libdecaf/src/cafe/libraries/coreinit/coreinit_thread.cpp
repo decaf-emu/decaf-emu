@@ -373,7 +373,7 @@ OSCreateThread(virt_ptr<OSThread> thread,
 
    internal::unlockScheduler();
 
-   gLog->info("Thread Created: ptr 0x{:08X}, id 0x{:X}, basePriority {}, attr 0x{:02X}, entry 0x{:08X}, stackStart 0x{:08X}, stackEnd 0x{:08X}",
+   gLog->info("Thread Created: ptr {}, id 0x{:X}, basePriority {}, attr 0x{:02X}, entry {}, stackStart {}, stackEnd {}",
       thread, thread->id, thread->basePriority, thread->attr,
       virt_func_cast<virt_addr>(entry), thread->stackStart, thread->stackEnd);
 
