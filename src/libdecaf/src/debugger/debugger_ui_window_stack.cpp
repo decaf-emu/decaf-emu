@@ -160,7 +160,7 @@ StackWindow::draw()
       auto lineMax = ImVec2 { rootPos.x + wndWidth, rootPos.y + lineHeight };
 
       // Handle a new address being selected
-      if (ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
+      if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
          if (ImGui::IsMouseClicked(0) || ImGui::IsMouseDown(0)) {
             mSelectedAddr = addr;
          }
