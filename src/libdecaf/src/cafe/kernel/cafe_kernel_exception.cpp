@@ -162,7 +162,6 @@ faultFiberEntryPoint(void *param)
 
    fmt::format_to(out, "These values may not be reliable when using JIT.\n");
    fmt::format_to(out, "nia: 0x{:08x}\n", core->nia);
-   fmt::format_to(out, "nia: 0x{:08x}\n", core->nia);
    fmt::format_to(out, "lr: 0x{:08x}\n", core->lr);
    fmt::format_to(out, "cr: 0x{:08x}\n", core->cr.value);
    fmt::format_to(out, "ctr: 0x{:08x}\n", core->ctr);
