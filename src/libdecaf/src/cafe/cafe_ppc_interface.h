@@ -150,10 +150,10 @@ struct tuple_prepend<T, void>
 };
 
 // Calculate the index for a given RegisterType
-template<RegisterType type, std::size_t GprIndex, std::size_t FprIndex>
+template<RegisterType type, int GprIndex, int FprIndex>
 struct register_index;
 
-template<std::size_t GprIndex, std::size_t FprIndex>
+template<int GprIndex, int FprIndex>
 struct register_index<RegisterType::Gpr32, GprIndex, FprIndex>
 {
    static constexpr auto value = GprIndex;
@@ -161,7 +161,7 @@ struct register_index<RegisterType::Gpr32, GprIndex, FprIndex>
    static constexpr auto fpr_next = FprIndex;
 };
 
-template<std::size_t GprIndex, std::size_t FprIndex>
+template<int GprIndex, int FprIndex>
 struct register_index<RegisterType::Gpr64, GprIndex, FprIndex>
 {
    static constexpr auto value = ((GprIndex % 2) == 0) ? (GprIndex + 1) : GprIndex;
@@ -169,7 +169,7 @@ struct register_index<RegisterType::Gpr64, GprIndex, FprIndex>
    static constexpr auto fpr_next = FprIndex;
 };
 
-template<std::size_t GprIndex, std::size_t FprIndex>
+template<int GprIndex, int FprIndex>
 struct register_index<RegisterType::Fpr, GprIndex, FprIndex>
 {
    static constexpr auto value = FprIndex;
@@ -177,7 +177,7 @@ struct register_index<RegisterType::Fpr, GprIndex, FprIndex>
    static constexpr auto fpr_next = value + 1;
 };
 
-template<std::size_t GprIndex, std::size_t FprIndex>
+template<int GprIndex, int FprIndex>
 struct register_index<RegisterType::VarArgs, GprIndex, FprIndex>
 {
    static constexpr auto value = GprIndex | (FprIndex << 8);
@@ -195,10 +195,10 @@ struct param_info_t
 };
 
 // Calculates a std::tuple<param_info_t...> type for a list of types
-template<std::size_t GprIndex, std::size_t FprIndex, typename... Ts>
+template<int GprIndex, int FprIndex, typename... Ts>
 struct get_param_infos_impl;
 
-template<std::size_t GprIndex, std::size_t FprIndex, typename Head, typename... Tail>
+template<int GprIndex, int FprIndex, typename Head, typename... Tail>
 struct get_param_infos_impl<GprIndex, FprIndex, Head, Tail...>
 {
    using head_register_type = register_type<std::remove_cv_t<Head>>;
@@ -209,7 +209,7 @@ struct get_param_infos_impl<GprIndex, FprIndex, Head, Tail...>
    >::type;
 };
 
-template<std::size_t GprIndex, std::size_t FprIndex>
+template<int GprIndex, int FprIndex>
 struct get_param_infos_impl<GprIndex, FprIndex>
 {
    using type = std::tuple<>;
