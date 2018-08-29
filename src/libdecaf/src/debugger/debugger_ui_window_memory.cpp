@@ -90,7 +90,7 @@ MemoryWindow::draw()
    }
 
    auto editAddress = mEditAddress;
-   mAddressScroller.begin(numColumns, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+   mAddressScroller.begin(numColumns, ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
 
    for (auto addr = mAddressScroller.reset(); mAddressScroller.hasMore(); addr = mAddressScroller.advance()) {
       auto linePos = ImGui::GetCursorPos();
@@ -202,7 +202,7 @@ MemoryWindow::draw()
    ImGui::Separator();
 
    // Render the bottom bar for the window
-   ImGui::AlignFirstTextHeightToWidgets();
+   ImGui::AlignTextToFramePadding();
    ImGui::Text("Go To Address: ");
    ImGui::SameLine();
    ImGui::PushItemWidth(70);

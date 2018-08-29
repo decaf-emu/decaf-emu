@@ -142,7 +142,7 @@ DisassemblyWindow::draw()
 
    // Lets precalculate some stuff we need for the currently visible instructions
    std::map<uint32_t, VisInstrInfo> visInstrInfo;
-   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetItemsLineHeightWithSpacing() });
+   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetFrameHeightWithSpacing() });
 
    // Find the upper and lower bounds of the visible area
    auto visFirstAddr = mAddressScroller.reset();
@@ -468,7 +468,7 @@ DisassemblyWindow::draw()
    ImGui::Separator();
 
    // Render the bottom bar for the window
-   ImGui::AlignFirstTextHeightToWidgets();
+   ImGui::AlignTextToFramePadding();
    ImGui::Text("Go To Address: ");
    ImGui::SameLine();
    ImGui::PushItemWidth(70);

@@ -151,7 +151,7 @@ StackWindow::draw()
 
    auto activeThread = mStateTracker->getActiveThread();
    auto activeThreadStack = getThreadStack(mDebugger, activeThread);
-   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetItemsLineHeightWithSpacing() });
+   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetFrameHeightWithSpacing() });
 
    for (auto addr = mAddressScroller.reset(); mAddressScroller.hasMore(); addr = mAddressScroller.advance()) {
       auto rootPos = ImGui::GetCursorScreenPos();
@@ -267,7 +267,7 @@ StackWindow::draw()
    ImGui::Separator();
 
    // Render the bottom bar for the window
-   ImGui::AlignFirstTextHeightToWidgets();
+   ImGui::AlignTextToFramePadding();
 
    if (activeThread) {
       auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
