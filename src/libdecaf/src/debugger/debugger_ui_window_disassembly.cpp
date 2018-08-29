@@ -16,10 +16,7 @@
 #include <map>
 #include <sstream>
 
-namespace debugger
-{
-
-namespace ui
+namespace debugger::ui
 {
 
 static const ImVec4 DataColor = HEXTOIMV4(0xB0C4CE, 1.0f);
@@ -473,10 +470,13 @@ DisassemblyWindow::draw()
    ImGui::SameLine();
    ImGui::PushItemWidth(70);
 
-   char addressInput[32];
-   if (ImGui::InputText("##addr", addressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
-      std::istringstream is { addressInput };
-      uint32_t goto_addr;
+   if (ImGui::InputText("##addr", mAddressInput.data(), mAddressInput.size(),
+                        ImGuiInputTextFlags_CharsHexadecimal |
+                        ImGuiInputTextFlags_CharsUppercase |
+                        ImGuiInputTextFlags_AutoSelectAll |
+                        ImGuiInputTextFlags_EnterReturnsTrue)) {
+      std::istringstream is { mAddressInput.data() };
+      auto goto_addr = uint32_t { 0 };
 
       if ((is >> std::hex >> goto_addr)) {
          gotoAddress(goto_addr);
@@ -487,6 +487,4 @@ DisassemblyWindow::draw()
    ImGui::End();
 }
 
-} // namespace ui
-
-} // namespace debugger
+} // namespace debugger::ui
