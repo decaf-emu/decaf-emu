@@ -191,6 +191,8 @@ LiCpu_RelocAdd(bool isRpx,
    }
 
    switch (relaType) {
+   case rpl::R_PPC_NONE:
+      break;
    case rpl::R_PPC_ADDR32:
       *virt_cast<uint32_t *>(target) = value;
       break;
