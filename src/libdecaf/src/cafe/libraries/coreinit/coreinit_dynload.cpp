@@ -1618,15 +1618,18 @@ internalAcquire(virt_ptr<const char> name,
    }
    rplName[moduleNameLength] = char { 0 };
 
-   auto rplNameCleanup = gsl::finally([&]()
-                                      {
-                                         if (rplName) {
-                                            rplSysHeapFree("RPL_NAME", rplName, rplNameLength);
-                                         }
-                                      });
+   auto rplNameCleanup =
+      gsl::finally([&]() {
+         if (rplName) {
+            rplSysHeapFree("RPL_NAME", rplName, rplNameLength);
+         }
+      });
 
    OSLockMutex(sDynLoad_LoaderLock);
-   auto unlock = gsl::finally([&]() { OSUnlockMutex(sDynLoad_LoaderLock); });
+   auto unlock =
+      gsl::finally([&]() {
+         OSUnlockMutex(sDynLoad_LoaderLock);
+      });
 
    // We cannot call acquire whilst inside a module entry point
    if (sDynLoadData->inModuleEntryPoint) {
@@ -1684,14 +1687,13 @@ internalAcquire(virt_ptr<const char> name,
    auto notifyCallbackCount = 0u;
    auto notifyCallbackArray = virt_ptr<OSDynLoad_NotifyCallback> { nullptr };
    auto notifyCallbackArrayCleanup =
-      gsl::finally([&]()
-                   {
-                      if (notifyCallbackArray) {
-                         rplSysHeapFree("RPL_NOTIFY_ARRAY",
-                                        notifyCallbackArray,
-                                        notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback));
-                      }
-                   });
+      gsl::finally([&]() {
+         if (notifyCallbackArray) {
+            rplSysHeapFree("RPL_NOTIFY_ARRAY",
+                           notifyCallbackArray,
+                           notifyCallbackCount * sizeof(OSDynLoad_NotifyCallback));
+         }
+      });
 
    if (firstLinkingRpl) {
       notifyCallbackCount = getNotifyCallbackCount();
@@ -1769,13 +1771,12 @@ internalAcquire(virt_ptr<const char> name,
    }
 
    auto minFileInfoCleanup =
-      gsl::finally([&]()
-                   {
-                      if (minFileInfo) {
-                         rplSysHeapFree("RPL_TEMP_DATA", minFileInfo,
-                                        sizeof(loader::LOADER_MinFileInfo));
-                      }
-                   });
+      gsl::finally([&]() {
+         if (minFileInfo) {
+            rplSysHeapFree("RPL_TEMP_DATA", minFileInfo,
+                           sizeof(loader::LOADER_MinFileInfo));
+         }
+      });
 
    // Do loader prep
    StackObject<loader::LOADER_Handle> kernelHandle;
