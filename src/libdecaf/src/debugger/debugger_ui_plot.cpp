@@ -96,7 +96,7 @@ PlotExDecaf(const char* label,
 
       // Tooltip on hover
       int vHovered = -1;
-      if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly)) {
+      if (ImGui::IsItemHovered()) {
          const float t = ImClamp((g.IO.MousePos.x - innerBounds.Min.x) /
                          (innerBounds.Max.x - innerBounds.Min.x), 0.0f, 0.9999f);
          const int vIdx = (int)(t * itemCount);
