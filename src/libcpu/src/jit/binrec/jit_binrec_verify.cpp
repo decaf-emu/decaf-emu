@@ -26,10 +26,7 @@
 //  block, which may mask JIT bugs!
 #define FIXUP_OPTIMIZED_QNAN
 
-namespace cpu
-{
-
-namespace jit
+namespace cpu::jit
 {
 
 struct VerifyBuffer
@@ -57,6 +54,9 @@ void
 BinrecBackend::resumeVerifyExecution()
 {
    auto core = reinterpret_cast<BinrecCore *>(this_core::state());
+   if (!core->verifyBuffer) {
+      core->verifyBuffer = new VerifyBuffer();
+   }
 
    do {
       if (core->interrupt.load()) {
@@ -68,11 +68,8 @@ BinrecBackend::resumeVerifyExecution()
       auto codeBlock = core->backend->getCodeBlock(core, core->nia);
 
       if (codeBlock) {
-         VerifyBuffer verifyBuf;
-         core->verifyBuffer = &verifyBuf;
-
          if (!gJitVerifyAddress || address == gJitVerifyAddress) {
-            verifyInit(core, &verifyBuf);
+            verifyInit(core, core->verifyBuffer);
          }
 
          auto entry = reinterpret_cast<BinrecEntry>(codeBlock->code);
@@ -676,6 +673,4 @@ BinrecBackend::verifyPost(Core *core,
    }
 }
 
-} // namespace jit
-
-} // namespace cpu
+} // namespace cpu::jit
