@@ -169,7 +169,7 @@ ghs_Exit(int32_t code)
 void
 ghs_exit(int32_t code)
 {
-   internal::COSVerbose(COSReportModule::Unknown1, "ATEXIT: RPX (calls RPX DTORs)\n");
+   internal::COSVerbose(COSReportModule::Unknown1, "ATEXIT: RPX (calls RPX DTORs)");
 
    if (*atexit_cleanup) {
       cafe::invoke(cpu::this_core::state(),

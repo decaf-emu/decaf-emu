@@ -342,7 +342,6 @@ finishInitAndPreload()
    auto entryPoint = processData->perCoreStartInfo[cpu::this_core::id()].entryPoint;
    cafe::invoke(cpu::this_core::state(),
                 virt_func_cast<EntryPointFn>(entryPoint));
-
 }
 
 void

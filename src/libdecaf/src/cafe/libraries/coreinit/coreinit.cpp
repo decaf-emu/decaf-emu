@@ -66,7 +66,7 @@ rpl_entry(/* no args for coreinit entry point */)
    auto result = cafe::invoke(cpu::this_core::state(),
                               entryFunc,
                               uint32_t { 0u }, virt_ptr<void> { nullptr });
-   exit(result);
+   ghs_exit(result);
 }
 
 void
