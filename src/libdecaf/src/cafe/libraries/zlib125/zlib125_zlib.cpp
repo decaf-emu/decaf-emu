@@ -342,10 +342,10 @@ zlib125_compress(virt_ptr<uint8_t> dest,
                  virt_ptr<const uint8_t> source,
                  uint32_t sourceLen)
 {
-   unsigned long realDestLen = *destLen;
+   auto realDestLen = static_cast<uLong>(*destLen);
    auto result = compress(dest.getRawPointer(), &realDestLen,
                           source.getRawPointer(), sourceLen);
-   *destLen = realDestLen;
+   *destLen = static_cast<uint32_t>(realDestLen);
    return result;
 }
 
@@ -361,10 +361,10 @@ zlib125_uncompress(virt_ptr<uint8_t> dest,
                    virt_ptr<const uint8_t> source,
                    uint32_t sourceLen)
 {
-   unsigned long realDestLen = *destLen;
+   auto realDestLen = static_cast<uLong>(*destLen);
    auto result = uncompress(dest.getRawPointer(), &realDestLen,
                             source.getRawPointer(), sourceLen);
-   *destLen = realDestLen;
+   *destLen = static_cast<uint32_t>(realDestLen);
    return result;
 }
 
