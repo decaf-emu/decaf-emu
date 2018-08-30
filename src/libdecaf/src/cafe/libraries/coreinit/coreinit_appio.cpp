@@ -108,14 +108,15 @@ initialiseAppIoThreads()
       auto stack = virt_addrof(coreData.stack);
       coreData.threadName = fmt::format("I/O Thread {}", i);
 
-      OSCreateThread(thread,
-                     sAppIoThreadEntry,
-                     i,
-                     nullptr,
-                     virt_cast<uint32_t *>(stack + coreData.stack.size()),
-                     coreData.stack.size(),
-                     -1,
-                     static_cast<OSThreadAttributes>(1 << i));
+      coreinit__OSCreateThreadType(thread,
+                                   sAppIoThreadEntry,
+                                   i,
+                                   nullptr,
+                                   virt_cast<uint32_t *>(stack + coreData.stack.size()),
+                                   coreData.stack.size(),
+                                   16,
+                                   static_cast<OSThreadAttributes>(1 << i),
+                                   OSThreadType::AppIo);
       OSSetThreadName(thread, virt_addrof(coreData.threadName));
       OSResumeThread(thread);
    }

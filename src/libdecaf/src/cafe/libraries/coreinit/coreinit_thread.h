@@ -360,6 +360,28 @@ OSCreateThread(virt_ptr<OSThread> thread,
                int32_t priority,
                OSThreadAttributes attributes);
 
+BOOL
+OSCreateThreadType(virt_ptr<OSThread> thread,
+                   OSThreadEntryPointFn entry,
+                   uint32_t argc,
+                   virt_ptr<void> argv,
+                   virt_ptr<uint32_t> stackTop,
+                   uint32_t stackSize,
+                   int32_t priority,
+                   OSThreadAttributes attributes,
+                   OSThreadType type);
+
+BOOL
+coreinit__OSCreateThreadType(virt_ptr<OSThread> thread,
+                             OSThreadEntryPointFn entry,
+                             uint32_t argc,
+                             virt_ptr<void> argv,
+                             virt_ptr<uint32_t> stackTop,
+                             uint32_t stackSize,
+                             int32_t priority,
+                             OSThreadAttributes attributes,
+                             OSThreadType type);
+
 void
 OSDetachThread(virt_ptr<OSThread> thread);
 

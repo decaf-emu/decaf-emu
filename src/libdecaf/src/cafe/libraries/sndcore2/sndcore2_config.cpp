@@ -298,12 +298,13 @@ startFrameAlarmThread()
    auto stackSize = sConfigData->frameCallbackThreadStack.size();
    sConfigData->frameCallbackThreadName = "AX Callback Thread";
 
-   OSCreateThread(thread,
-                  FrameCallbackThreadEntryPoint,
-                  0, nullptr,
-                  virt_cast<uint32_t *>(stack + stackSize),
-                  stackSize, -1,
-                  static_cast<OSThreadAttributes>(1 << cpu::this_core::id()));
+   OSCreateThreadType(thread,
+                      FrameCallbackThreadEntryPoint,
+                      0, nullptr,
+                      virt_cast<uint32_t *>(stack + stackSize),
+                      stackSize, -1,
+                      static_cast<OSThreadAttributes>(1 << cpu::this_core::id()),
+                      OSThreadType::AppIo);
    OSSetThreadName(thread, virt_addrof(sConfigData->frameCallbackThreadName));
    OSResumeThread(thread);
 }

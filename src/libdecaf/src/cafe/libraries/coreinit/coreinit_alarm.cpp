@@ -542,14 +542,15 @@ initialiseAlarmThread()
    // Start alarm thread
    auto thread = virt_addrof(coreData.thread);
    auto stack = virt_addrof(coreData.threadStack);
-   OSCreateThread(thread,
-                  sAlarmCallbackThreadEntry,
-                  coreId,
-                  nullptr,
-                  virt_cast<uint32_t *>(virt_addrof(coreData.threadStack) + coreData.threadStack.size()),
-                  coreData.threadStack.size(),
-                  -1,
-                  static_cast<OSThreadAttributes>(1 << coreId));
+   coreinit__OSCreateThreadType(thread,
+                                sAlarmCallbackThreadEntry,
+                                coreId,
+                                nullptr,
+                                virt_cast<uint32_t *>(virt_addrof(coreData.threadStack) + coreData.threadStack.size()),
+                                coreData.threadStack.size(),
+                                1,
+                                static_cast<OSThreadAttributes>(1 << coreId),
+                                OSThreadType::AppIo);
    OSSetThreadName(thread, virt_addrof(coreData.threadName));
    OSResumeThread(thread);
 }

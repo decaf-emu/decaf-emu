@@ -50,14 +50,15 @@ IPCDriverInit()
    auto thread = virt_addrof(perCoreData.thread);
    auto stack = virt_addrof(perCoreData.threadStack);
    auto stackSize = perCoreData.threadStack.size();
-   OSCreateThread(thread,
-                  sIpcDriverThreadEntry,
-                  driver->coreId,
-                  nullptr,
-                  virt_cast<uint32_t *>(stack + stackSize),
-                  static_cast<uint32_t>(stackSize),
-                  -1,
-                  static_cast<OSThreadAttributes>(1 << driver->coreId));
+   coreinit__OSCreateThreadType(thread,
+                                sIpcDriverThreadEntry,
+                                driver->coreId,
+                                nullptr,
+                                virt_cast<uint32_t *>(stack + stackSize),
+                                static_cast<uint32_t>(stackSize),
+                                15,
+                                static_cast<OSThreadAttributes>(1 << driver->coreId),
+                                OSThreadType::Driver);
 
    perCoreData.threadName = fmt::format("IPC Core {}", coreId);
    OSSetThreadName(thread, virt_addrof(perCoreData.threadName));

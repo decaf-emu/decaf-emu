@@ -318,28 +318,16 @@ initialiseThreadState(virt_ptr<OSThread> thread,
    thread->context.coretime.fill(0);
 }
 
-
-/**
- * Create a new thread.
- *
- * \param thread Thread to initialise.
- * \param entry Thread entry point.
- * \param argc argc argument passed to entry point.
- * \param argv argv argument passed to entry point.
- * \param stack Top of stack (highest address).
- * \param stackSize Size of stack.
- * \param priority Thread priority, 0 is highest priorty, 31 is lowest.
- * \param attributes Thread attributes, see OSThreadAttributes.
- */
-BOOL
-OSCreateThread(virt_ptr<OSThread> thread,
-               OSThreadEntryPointFn entry,
-               uint32_t argc,
-               virt_ptr<void> argv,
-               virt_ptr<uint32_t> stack,
-               uint32_t stackSize,
-               int32_t priority,
-               OSThreadAttributes attributes)
+static BOOL
+createThread(virt_ptr<OSThread> thread,
+             OSThreadEntryPointFn entry,
+             uint32_t argc,
+             virt_ptr<void> argv,
+             virt_ptr<uint32_t> stack,
+             uint32_t stackSize,
+             int32_t priority,
+             OSThreadAttributes attributes,
+             OSThreadType type)
 {
    auto currentThread = internal::getCurrentThread();
 
@@ -349,11 +337,34 @@ OSCreateThread(virt_ptr<OSThread> thread,
       attributes = attributes | (curAttr & OSThreadAttributes::AffinityAny);
    }
 
+   auto realPriority = priority;
+   if (type == OSThreadType::Driver) {
+      if (priority < 0 || priority >= 32) {
+         decaf_abort("Thread priority was out of range");
+      }
+
+      realPriority = priority;
+   } else if (type == OSThreadType::AppIo) {
+      if (priority < 0 || priority >= 32) {
+         decaf_abort("Thread priority was out of range");
+      }
+
+      realPriority = priority + 32;
+   } else if (type == OSThreadType::App) {
+      if (priority < 0 || priority >= 32) {
+         decaf_abort("Thread priority was out of range");
+      }
+
+      realPriority = priority + 64;
+   } else {
+      return FALSE;
+   }
+
    // Setup thread state
    internal::lockScheduler();
    std::memset(thread.getRawPointer(), 0, sizeof(OSThread));
-   initialiseThreadState(thread, entry, argc, argv, stack, stackSize, priority,
-                         OSGetCoreId(), OSThreadType::App);
+   initialiseThreadState(thread, entry, argc, argv, stack, stackSize, realPriority,
+                         OSGetCoreId(), type);
    thread->name = nullptr;
    thread->context.attr = attributes & OSThreadAttributes::AffinityAny;
    thread->attr = attributes;
@@ -380,6 +391,50 @@ OSCreateThread(virt_ptr<OSThread> thread,
    return TRUE;
 }
 
+BOOL
+OSCreateThread(virt_ptr<OSThread> thread,
+               OSThreadEntryPointFn entry,
+               uint32_t argc,
+               virt_ptr<void> argv,
+               virt_ptr<uint32_t> stack,
+               uint32_t stackSize,
+               int32_t priority,
+               OSThreadAttributes attributes)
+{
+   return createThread(thread, entry, argc, argv, stack, stackSize, priority, attributes, OSThreadType::App);
+}
+
+BOOL
+OSCreateThreadType(virt_ptr<OSThread> thread,
+                     OSThreadEntryPointFn entry,
+                     uint32_t argc,
+                     virt_ptr<void> argv,
+                     virt_ptr<uint32_t> stack,
+                     uint32_t stackSize,
+                     int32_t priority,
+                     OSThreadAttributes attributes,
+                     OSThreadType type)
+{
+   if (type != OSThreadType::AppIo && type != OSThreadType::App) {
+      return FALSE;
+   }
+
+   return createThread(thread, entry, argc, argv, stack, stackSize, priority, attributes, type);
+}
+
+BOOL
+coreinit__OSCreateThreadType(virt_ptr<OSThread> thread,
+                             OSThreadEntryPointFn entry,
+                             uint32_t argc,
+                             virt_ptr<void> argv,
+                             virt_ptr<uint32_t> stack,
+                             uint32_t stackSize,
+                             int32_t priority,
+                             OSThreadAttributes attributes,
+                             OSThreadType type)
+{
+   return createThread(thread, entry, argc, argv, stack, stackSize, priority, attributes, type);
+}
 
 /**
  * Detach thread.
@@ -547,7 +602,15 @@ OSGetThreadName(virt_ptr<OSThread> thread)
 int32_t
 OSGetThreadPriority(virt_ptr<OSThread> thread)
 {
-   return thread->basePriority;
+   if (thread->type == OSThreadType::Driver) {
+      return thread->basePriority;
+   } else if(thread->type == OSThreadType::AppIo) {
+      return thread->basePriority - 32;
+   } else if (thread->type == OSThreadType::App) {
+      return thread->basePriority - 64;
+   }
+   
+   decaf_abort("Unexpected thread type in OSGetThreadPriority");
 }
 
 
@@ -856,12 +919,19 @@ BOOL
 OSSetThreadPriority(virt_ptr<OSThread> thread,
                     int32_t priority)
 {
-   if (priority > 31) {
+   auto realPriority = priority;
+   if (thread->type == OSThreadType::Driver) {
+      realPriority = priority;
+   } else if (thread->type == OSThreadType::AppIo) {
+      realPriority = priority + 32;
+   } else if (thread->type == OSThreadType::App) {
+      realPriority = priority + 64;
+   } else {
       return FALSE;
    }
 
    internal::lockScheduler();
-   thread->basePriority = priority;
+   thread->basePriority = realPriority;
    internal::updateThreadPriorityNoLock(thread);
    internal::rescheduleAllCoreNoLock();
    internal::unlockScheduler();
@@ -1263,11 +1333,12 @@ initialiseDeallocatorThread()
    auto stackSize = perCoreData.deallocatorThreadStack.size();
    perCoreData.deallocatorThreadName = fmt::format("{{SYS Thread Terminator Core {}}}", coreId);
 
-   OSCreateThread(thread, sDeallocatorThreadEntryPoint, coreId, nullptr,
-                  virt_cast<uint32_t *>(stack + stackSize),
-                  stackSize,
-                  -1,
-                  static_cast<OSThreadAttributes>(1 << coreId));
+   coreinit__OSCreateThreadType(thread, sDeallocatorThreadEntryPoint, coreId, nullptr,
+                                virt_cast<uint32_t *>(stack + stackSize),
+                                stackSize,
+                                1,
+                                static_cast<OSThreadAttributes>(1 << coreId),
+                                OSThreadType::AppIo);
    OSSetThreadName(thread, virt_addrof(perCoreData.deallocatorThreadName));
    OSResumeThread(thread);
 }
@@ -1419,6 +1490,8 @@ Library::registerThreadSymbols()
    RegisterFunctionExport(OSClearThreadStackUsage);
    RegisterFunctionExport(OSContinueThread);
    RegisterFunctionExport(OSCreateThread);
+   RegisterFunctionExport(OSCreateThreadType);
+   RegisterFunctionExportName("__OSCreateThreadType", coreinit__OSCreateThreadType);
    RegisterFunctionExport(OSDetachThread);
    RegisterFunctionExport(OSExitThread);
    RegisterFunctionExport(OSGetActiveThreadLink);
