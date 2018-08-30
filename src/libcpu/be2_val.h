@@ -469,19 +469,28 @@ private:
 namespace fmt
 {
 
-template<typename ValueType>
-struct formatter<be2_val<ValueType>> : formatter<ValueType>
+// Disable automatic conversion to int in fmtlib
+template <typename T>
+struct convert_to_int<be2_val<T>, char> : std::false_type
 {
+};
+
+// Provide a custom formatter for be2_val<T>
+template<typename ValueType>
+struct formatter<be2_val<ValueType>> : formatter<typename safe_underlying_type<ValueType>::type>
+{
+   using value_type = typename safe_underlying_type<ValueType>::type;
+
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)
    {
-      return formatter<ValueType>::parse(ctx);
+      return formatter<value_type>::parse(ctx);
    }
 
    template<typename FormatContext>
    auto format(const be2_val<ValueType> &val, FormatContext &ctx)
    {
-      return formatter<ValueType>::format(val, ctx);
+      return formatter<value_type>::format(val, ctx);
    }
 };
 
