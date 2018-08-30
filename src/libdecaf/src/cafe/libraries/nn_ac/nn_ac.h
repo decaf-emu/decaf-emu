@@ -16,6 +16,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerCApiFunctions();
    void registerLibFunctions();
 };
 
