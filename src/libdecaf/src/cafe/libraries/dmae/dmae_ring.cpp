@@ -8,8 +8,6 @@
 namespace cafe::dmae
 {
 
-using namespace cafe::tcl;
-
 struct StaticRingData
 {
    be2_struct<coreinit::OSMutex> mutex;
