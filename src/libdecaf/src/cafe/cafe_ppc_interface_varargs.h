@@ -85,7 +85,7 @@ struct va_list
       uint64_t nextGpr64()
       {
          // Align gpr to 64 bit
-         if (mGpr % 2) {
+         if ((mGpr - 3) % 2) {
             mGpr++;
          }
 
