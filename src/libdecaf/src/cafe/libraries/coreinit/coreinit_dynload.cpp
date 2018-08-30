@@ -379,6 +379,9 @@ internalAcquire2(virt_ptr<const char> modulePath,
    StackObject<virt_ptr<RPL_DATA>> rplData;
    StackObject<uint32_t> numEntryModules;
    StackObject<virt_ptr<virt_ptr<RPL_DATA>>> entryModules;
+   *rplData = nullptr;
+   *numEntryModules = 0u;
+   *entryModules = nullptr;
 
    if (isAppDebugLevelUnknown3()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
