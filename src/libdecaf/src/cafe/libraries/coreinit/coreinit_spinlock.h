@@ -1,7 +1,7 @@
 #pragma once
 #include "coreinit_time.h"
 
-#include <atomic>
+#include <libcpu/be2_atomic.h>
 #include <libcpu/be2_struct.h>
 
 namespace cafe::coreinit
@@ -20,7 +20,7 @@ struct OSThread;
 struct OSSpinLock
 {
    //! Address of OSThread* for owner of this lock.
-   std::atomic<be2_virt_ptr<OSThread>> owner;
+   be2_atomic<virt_ptr<OSThread>> owner;
 
    UNKNOWN(0x4);
 

@@ -37,8 +37,8 @@ spinAcquireLock(virt_ptr<OSSpinLock> spinlock)
       return false;
    }
 
-   auto expected = be2_virt_ptr<OSThread> { nullptr };
-   auto owner = be2_virt_ptr<OSThread> { thread };
+   auto expected = virt_ptr<OSThread> { nullptr };
+   auto owner = virt_ptr<OSThread> { thread };
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       expected = nullptr;
@@ -57,8 +57,8 @@ spinTryLock(virt_ptr<OSSpinLock> spinlock)
       return true;
    }
 
-   auto expected = be2_virt_ptr<OSThread> { nullptr };
-   auto owner = be2_virt_ptr<OSThread> { thread };
+   auto expected = virt_ptr<OSThread> { nullptr };
+   auto owner = virt_ptr<OSThread> { thread };
 
    if (spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
       increaseSpinLockCount(thread);
@@ -78,8 +78,8 @@ spinTryLockWithTimeout(virt_ptr<OSSpinLock> spinlock,
       return true;
    }
 
-   auto expected = be2_virt_ptr<OSThread> { nullptr };
-   auto owner = be2_virt_ptr<OSThread> { thread };
+   auto expected = virt_ptr<OSThread> { nullptr };
+   auto owner = virt_ptr<OSThread> { thread };
    auto timeout = OSGetSystemTime() + durationTicks;
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
@@ -103,9 +103,9 @@ spinReleaseLock(virt_ptr<OSSpinLock> spinlock)
       return false;
    }
 
-   auto owner = be2_virt_ptr<OSThread> { thread };
+   auto owner = virt_ptr<OSThread> { thread };
    if (spinlock->owner.load(std::memory_order_acquire) == owner) {
-      spinlock->owner.store(be2_virt_ptr<OSThread> { nullptr });
+      spinlock->owner.store(virt_ptr<OSThread> { nullptr });
       decreaseSpinLockCount(thread);
       return true;
    }
@@ -117,7 +117,7 @@ spinReleaseLock(virt_ptr<OSSpinLock> spinlock)
 void
 OSInitSpinLock(virt_ptr<OSSpinLock> spinlock)
 {
-   spinlock->owner.store(be2_virt_ptr<OSThread> { nullptr });
+   spinlock->owner.store(virt_ptr<OSThread> { nullptr });
    spinlock->recursion = 0u;
 }
 
