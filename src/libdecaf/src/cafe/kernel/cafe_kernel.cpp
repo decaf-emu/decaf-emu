@@ -63,11 +63,11 @@ core1EntryPoint(cpu::Core *core)
                  sGameInfo.meta.title_version);
    }
 
-   auto rpx = sGameInfo.cos.argstr;
-   if (rpx.empty()) {
-      rpx = sExecutableName;
+   if (sGameInfo.cos.argstr.empty()) {
+      sGameInfo.cos.argstr = sExecutableName;
    }
 
+   const auto &rpx = sGameInfo.cos.argstr;
    if (rpx.empty()) {
       gLog->error("Could not find game executable to load.");
       return;
