@@ -12,6 +12,10 @@ struct LibraryData : LibrarySymbol
    {
    }
 
+   virtual ~LibraryData()
+   {
+   }
+
    //! Pointer to the host pointer to guest memory which we should update
    virt_ptr<void> *hostPointer = nullptr;
 

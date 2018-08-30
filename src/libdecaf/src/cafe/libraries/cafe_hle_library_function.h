@@ -26,6 +26,10 @@ struct LibraryFunction : public LibrarySymbol
    {
    }
 
+   virtual ~LibraryFunction()
+   {
+   }
+
    virtual void call(cpu::Core *state) = 0;
 
    //! ID number of syscall.
@@ -47,6 +51,10 @@ namespace internal
 template<typename FunctionType>
 struct LibraryFunctionCall : LibraryFunction
 {
+   virtual ~LibraryFunctionCall()
+   {
+   }
+
    FunctionType func;
 
    virtual void call(cpu::Core *state) override
@@ -65,6 +73,10 @@ struct LibraryFunctionCall : LibraryFunction
 template<typename ObjectType, typename... ArgTypes>
 struct LibraryConstructorFunction : LibraryFunction
 {
+   virtual ~LibraryConstructorFunction()
+   {
+   }
+
    static void wrapper(virt_ptr<ObjectType> obj, ArgTypes... args)
    {
       ::new(static_cast<void *>(obj.getRawPointer())) ObjectType(args...);
@@ -86,6 +98,10 @@ struct LibraryConstructorFunction : LibraryFunction
 template<typename ObjectType>
 struct LibraryDestructorFunction : LibraryFunction
 {
+   virtual ~LibraryDestructorFunction()
+   {
+   }
+
    static void wrapper(virt_ptr<ObjectType> obj)
    {
       (obj.getRawPointer())->~ObjectType();

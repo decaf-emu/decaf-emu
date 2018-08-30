@@ -21,6 +21,10 @@ struct LibrarySymbol
    {
    }
 
+   virtual ~LibrarySymbol()
+   {
+   }
+
    //! Symbol type
    Type type = Undefined;
 
