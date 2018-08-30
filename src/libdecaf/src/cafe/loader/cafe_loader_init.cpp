@@ -95,6 +95,7 @@ LOADER_Init(kernel::UniqueProcessId upid,
    auto loadRpxName = std::string_view { };
    auto loadFileType = ios::mcp::MCPFileType::CafeOS;
    auto fileName = StackArray<char, 64> { };
+   auto moduleName = StackArray<char, 64> { };
    auto fileNameLen = uint32_t { 0 };
    auto loadArgs = LiBasicsLoadArgs { };
    auto rpx = virt_ptr<LOADED_RPL> { nullptr };
@@ -173,7 +174,11 @@ LOADER_Init(kernel::UniqueProcessId upid,
 
    fileNameLen = std::min<uint32_t>(static_cast<uint32_t>(loadRpxName.size()), 59);
    std::memcpy(fileName.getRawPointer(), loadRpxName.data(), fileNameLen);
+
+   // Resolve module name and copy to guest stack buffer
    loadRpxName = LiResolveModuleName(loadRpxName);
+   std::memcpy(moduleName.getRawPointer(), loadRpxName.data(), loadRpxName.size());
+   moduleName[loadRpxName.size()] = char { 0 };
 
    loadArgs.upid = upid;
    loadArgs.loadedRpl = nullptr;
@@ -185,8 +190,8 @@ LOADER_Init(kernel::UniqueProcessId upid,
    loadArgs.chunkBufferSize = chunkBufferSize;
    loadArgs.fileOffset = 0u;
 
-   error = LiLoadForPrep(fileName,
-                         fileNameLen,
+   error = LiLoadForPrep(moduleName,
+                         loadRpxName.size(),
                          chunkBuffer,
                          &rpx,
                          &loadArgs,
