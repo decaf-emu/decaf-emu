@@ -48,10 +48,11 @@ void
 wakeupOneThread(phys_ptr<ThreadQueue> queue,
                 Error waitResult)
 {
-   auto thread = ThreadQueue_PopThread(queue);
-   thread->state = ThreadState::Ready;
-   thread->context.queueWaitResult = waitResult;
-   queueThread(thread);
+   if (auto thread = ThreadQueue_PopThread(queue)) {
+      thread->state = ThreadState::Ready;
+      thread->context.queueWaitResult = waitResult;
+      queueThread(thread);
+   }
 }
 
 void
