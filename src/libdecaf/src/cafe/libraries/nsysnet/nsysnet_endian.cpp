@@ -7,26 +7,26 @@ namespace cafe::nsysnet
  * These are all no-op because the Wii U's host byte order is net order.
  */
 
-uint16_t
-htons(uint16_t value)
+static uint16_t
+nsysnet_htons(uint16_t value)
 {
    return value;
 }
 
-uint32_t
-htonl(uint32_t value)
+static uint32_t
+nsysnet_htonl(uint32_t value)
 {
    return value;
 }
 
-uint16_t
-ntohs(uint16_t value)
+static uint16_t
+nsysnet_ntohs(uint16_t value)
 {
    return value;
 }
 
-uint32_t
-ntohl(uint32_t value)
+static uint32_t
+nsysnet_ntohl(uint32_t value)
 {
    return value;
 }
@@ -34,10 +34,10 @@ ntohl(uint32_t value)
 void
 Library::registerEndianSymbols()
 {
-   RegisterFunctionExport(htons);
-   RegisterFunctionExport(htonl);
-   RegisterFunctionExport(ntohs);
-   RegisterFunctionExport(ntohl);
+   RegisterFunctionExportName("htons", nsysnet_htons);
+   RegisterFunctionExportName("htonl", nsysnet_htonl);
+   RegisterFunctionExportName("ntohs", nsysnet_ntohs);
+   RegisterFunctionExportName("ntohl", nsysnet_ntohl);
 }
 
 } // namespace cafe::nsysnet
