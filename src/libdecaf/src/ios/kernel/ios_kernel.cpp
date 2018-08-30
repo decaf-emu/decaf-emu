@@ -287,9 +287,6 @@ start()
    sData->rootTimerMessage.command = RootThreadCommand::Timer;
    sData->sysprotEventMessage.command = RootThreadCommand::SysprotEvent;
 
-   // Start the host hardware thread
-   internal::startHardwareThread();
-
    // Create root kernel thread
    auto error = IOS_CreateThread(kernelEntryPoint,
                                  nullptr,
@@ -311,6 +308,9 @@ start()
 
    // Send the power on interrupt
    internal::setInterruptAhbAll(AHBALL {}.PowerButton(true));
+
+   // Start the host hardware thread
+   internal::startHardwareThread();
    return Error::OK;
 }
 
