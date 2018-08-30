@@ -109,13 +109,13 @@ invoke_host_impl(cpu::Core *core,
 
       if constexpr (FunctionTraitsType::is_member_function) {
          auto obj = readParam(core, typename FunctionTraitsType::object_info { });
-         writeParam(core,
-                    return_info,
-                    (obj.getRawPointer()->*func)(readParam(core, std::get<I>(param_info))...));
+         auto result = (obj.getRawPointer()->*func)(readParam(core, std::get<I>(param_info))...);
+         core = cpu::this_core::state();
+         writeParam(core, return_info, result);
       } else {
-         writeParam(core,
-                    return_info,
-                    func(readParam(core, std::get<I>(param_info))...));
+         auto result = func(readParam(core, std::get<I>(param_info))...);
+         core = cpu::this_core::state();
+         writeParam(core, return_info, result);
       }
    } else {
       if constexpr (FunctionTraitsType::is_member_function) {
