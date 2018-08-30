@@ -2235,6 +2235,7 @@ OSDynLoad_AcquireContainingModule(virt_ptr<void> ptr,
             if (itr == sDynLoadData->rpxData) {
                *outHandle = OSDynLoad_CurrentModuleHandle;
             } else {
+               OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), itr->handle);
                *outHandle = itr->handle;
             }
 
@@ -2250,6 +2251,7 @@ OSDynLoad_AcquireContainingModule(virt_ptr<void> ptr,
             if (itr == sDynLoadData->rpxData) {
                *outHandle = OSDynLoad_CurrentModuleHandle;
             } else {
+               OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), itr->handle);
                *outHandle = itr->handle;
             }
 
