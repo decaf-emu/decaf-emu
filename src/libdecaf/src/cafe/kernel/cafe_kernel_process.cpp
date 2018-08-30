@@ -276,7 +276,6 @@ loadGameProcess(std::string_view rpx,
    if (cpu::config::jit::rodata_read_only) {
       auto rpx = cafe::loader::getGlobalStorage()->loadedRpx;
       auto shStrSection = virt_ptr<char> { nullptr };
-      rpx->sectionHeaderBuffer;
       if (auto shstrndx = rpx->elfHeader.shstrndx) {
          shStrSection = virt_cast<char *>(rpx->sectionAddressBuffer[shstrndx]);
       }
