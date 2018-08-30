@@ -101,19 +101,18 @@ LCAlloc(uint32_t size)
    if (lcState->freeSize >= size) {
       auto numBlocks = align_up(size, LCBlockSize) / LCBlockSize;
       auto bitMask = make_bitmask(numBlocks);
-      auto index = 32u;
+      auto index = 0u;
 
       // Find a free spot in the allocBitMask which can fit bitMask
-      for (auto i = 0u; i < 31 - numBlocks; ++i) {
-         if (lcState->allocBitMask & (bitMask << i)) {
+      do {
+         if (lcState->allocBitMask & (bitMask << index)) {
             continue;
          }
 
-         index = i;
-         break;
-      }
+         index++;
+      } while (index < 32 - numBlocks);
 
-      if (index < 32) {
+      if (index < 32 - numBlocks) {
          // Do the allocation!
          auto mask = bitMask << index;
          auto size = numBlocks * LCBlockSize;
