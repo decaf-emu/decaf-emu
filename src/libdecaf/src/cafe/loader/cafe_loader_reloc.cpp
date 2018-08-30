@@ -87,8 +87,7 @@ sFixupOneSymbolTable(virt_ptr<LOADED_RPL> rpl,
 
       auto targetSectionHeader = getSectionHeader(rpl, symbol->shndx);
       auto targetSectionOffset = symbol->value - targetSectionHeader->addr;
-      auto &import = imports[symbol->shndx];
-      if (!imports || import.numExports == 0 || targetSectionOffset < 8) {
+      if (!imports || imports[symbol->shndx].numExports == 0 || targetSectionOffset < 8) {
          auto binding = symbol->info >> 4;
          auto type = symbol->info & 0xf;
 
@@ -114,6 +113,7 @@ sFixupOneSymbolTable(virt_ptr<LOADED_RPL> rpl,
          continue;
       }
 
+      auto &import = imports[symbol->shndx];
       auto symbolExport = LiBinSearchExport(import.exports,
                                             import.numExports,
                                             symbolName);
