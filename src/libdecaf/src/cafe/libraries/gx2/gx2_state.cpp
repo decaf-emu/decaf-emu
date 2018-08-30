@@ -41,7 +41,7 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
    // Parse attributes
    while (attributes && *attributes != GX2InitAttrib::End) {
       auto id = *(attributes++);
-      auto value = *(attributes++);
+      auto value = static_cast<uint32_t>(*(attributes++));
 
       switch (id) {
       case GX2InitAttrib::CommandBufferPoolBase:
