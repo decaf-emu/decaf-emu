@@ -262,6 +262,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
             attemptErrors.fatalLine = LiGetFatalLine();
             attemptErrors.fatalMsgType = LiGetFatalMsgType();
             LiResetFatalError();
+         } else {
+            loadAttemptErrors[loadAttempt].error = error;
          }
 
          if (loadAttempt == 0) {
