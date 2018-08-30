@@ -52,7 +52,7 @@ readParam(cpu::Core *core,
    } else if constexpr (regType == RegisterType::Fpr) {
       return static_cast<ArgType>(core->fpr[regIndex].paired0);
    } else if constexpr (regType == RegisterType::VarArgs) {
-      return var_args { (regIndex & 0xFF), (regIndex >> 8) };
+      return var_args { ((regIndex - 3) & 0xFF), (regIndex >> 8) };
    }
 }
 

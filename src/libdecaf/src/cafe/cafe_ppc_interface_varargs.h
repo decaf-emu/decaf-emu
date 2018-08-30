@@ -9,7 +9,6 @@ namespace cafe
 
 struct va_list
 {
-   static constexpr auto FirstSavedReg = 3u;
    static constexpr auto NumSavedRegs = 8u;
 
    class iterator
@@ -70,7 +69,7 @@ struct va_list
       uint32_t nextGpr32()
       {
          auto value = uint32_t { 0 };
-         auto index = mGpr - FirstSavedReg;
+         auto index = mGpr;
 
          if (index < NumSavedRegs) {
             value = mList->reg_save_area[index];
@@ -85,7 +84,7 @@ struct va_list
       uint64_t nextGpr64()
       {
          // Align gpr to 64 bit
-         if ((mGpr - 3) % 2) {
+         if (mGpr % 2) {
             mGpr++;
          }
 
