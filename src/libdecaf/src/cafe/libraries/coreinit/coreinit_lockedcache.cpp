@@ -90,7 +90,7 @@ LCHardwareIsAvailable()
 virt_ptr<void>
 LCAlloc(uint32_t size)
 {
-   if (size >= LCMaxSize) {
+   if (size > LCMaxSize) {
       return  nullptr;
    }
 
@@ -104,7 +104,7 @@ LCAlloc(uint32_t size)
       auto index = 32u;
 
       // Find a free spot in the allocBitMask which can fit bitMask
-      for (auto i = 0u; i < 32 - numBlocks; ++i) {
+      for (auto i = 0u; i < 31 - numBlocks; ++i) {
          if (lcState->allocBitMask & (bitMask << i)) {
             continue;
          }
