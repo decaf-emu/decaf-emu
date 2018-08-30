@@ -302,7 +302,8 @@ startFrameAlarmThread()
                       FrameCallbackThreadEntryPoint,
                       0, nullptr,
                       virt_cast<uint32_t *>(stack + stackSize),
-                      stackSize, -1,
+                      stackSize,
+                      15,
                       static_cast<OSThreadAttributes>(1 << cpu::this_core::id()),
                       OSThreadType::AppIo);
    OSSetThreadName(thread, virt_addrof(sConfigData->frameCallbackThreadName));
