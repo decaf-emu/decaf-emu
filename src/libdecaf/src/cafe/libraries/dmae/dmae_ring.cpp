@@ -2,7 +2,6 @@
 #include "dmae_ring.h"
 #include "cafe/libraries/coreinit/coreinit_mutex.h"
 #include "cafe/libraries/coreinit/coreinit_time.h"
-#include "cafe/libraries/tcl/tcl_ring.h"
 #include "cafe/cafe_stackobject.h"
 #include <cstring>
 
@@ -30,15 +29,16 @@ DMAEInit()
 DMAETimestamp
 DMAEGetLastSubmittedTimeStamp()
 {
-   return sRingData->lastSubmittedTimestamp;
+   coreinit::OSLockMutex(virt_addrof(sRingData->mutex));
+   auto timestamp = sRingData->lastSubmittedTimestamp;
+   coreinit::OSUnlockMutex(virt_addrof(sRingData->mutex));
+   return timestamp;
 }
 
 DMAETimestamp
 DMAEGetRetiredTimeStamp()
 {
-   StackObject<TCLTimestamp> timestamp;
-   TCLReadTimestamp(TCLTimestampID::DMAERetired, timestamp);
-   return *timestamp;
+   return DMAEGetLastSubmittedTimeStamp();
 }
 
 uint32_t
