@@ -323,7 +323,11 @@ unregisterEventHandlerQueue(MessageQueueId queue)
 void
 initialiseStaticHardwareData()
 {
-   LT_INTMR_AHBALL_ARM.store(0x20801);
+   LT_INTMR_AHBALL_ARM.store(AHBALL::get(0)
+                             .Timer(true)
+                             .LatteGpioStarbuck(true)
+                             .PowerButton(true)
+                             .value);
    LT_INTSR_AHBALL_ARM.store(0);
    LT_INTMR_AHBLT_ARM.store(0);
    LT_INTSR_AHBLT_ARM.store(0);
