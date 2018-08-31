@@ -186,32 +186,31 @@ struct register_index<RegisterType::VarArgs, GprIndex, FprIndex>
 };
 
 // An empty type to store function parameter info
-template<auto argIndex, typename ValueType, RegisterType Type, auto Index>
+template<typename ValueType, RegisterType Type, auto Index>
 struct param_info_t
 {
    using type = ValueType;
-   static constexpr auto arg_index = argIndex;
    static constexpr auto reg_index = Index;
    static constexpr auto reg_type = Type;
 };
 
 // Calculates a std::tuple<param_info_t...> type for a list of types
-template<int argIndex, int GprIndex, int FprIndex, typename... Ts>
+template<int GprIndex, int FprIndex, typename... Ts>
 struct get_param_infos_impl;
 
-template<int argIndex, int GprIndex, int FprIndex, typename Head, typename... Tail>
-struct get_param_infos_impl<argIndex, GprIndex, FprIndex, Head, Tail...>
+template<int GprIndex, int FprIndex, typename Head, typename... Tail>
+struct get_param_infos_impl<GprIndex, FprIndex, Head, Tail...>
 {
    using head_register_type = register_type<std::remove_cv_t<Head>>;
    using head_arg_index = register_index<head_register_type::value, GprIndex, FprIndex>;
    using type = typename tuple_prepend<
-      param_info_t<argIndex, Head, head_register_type::value, head_arg_index::value>,
-      typename get_param_infos_impl<argIndex + 1, head_arg_index::gpr_next, head_arg_index::fpr_next, Tail...>::type
+      param_info_t<Head, head_register_type::value, head_arg_index::value>,
+      typename get_param_infos_impl<head_arg_index::gpr_next, head_arg_index::fpr_next, Tail...>::type
    >::type;
 };
 
-template<int argIndex, int GprIndex, int FprIndex>
-struct get_param_infos_impl<argIndex, GprIndex, FprIndex>
+template<int GprIndex, int FprIndex>
+struct get_param_infos_impl<GprIndex, FprIndex>
 {
    using type = std::tuple<>;
 };
@@ -228,8 +227,8 @@ struct function_traits<ReturnType(ArgTypes...)>
    static constexpr auto has_return_value = !std::is_void<ReturnType>::value;
 
    using return_type = register_type<std::remove_cv_t<ReturnType>>;
-   using return_info = param_info_t<-1, ReturnType, return_type::value, return_type::return_index>;
-   using param_info = typename get_param_infos_impl<0, 3, 1, ArgTypes...>::type;
+   using return_info = param_info_t<ReturnType, return_type::value, return_type::return_index>;
+   using param_info = typename get_param_infos_impl<3, 1, ArgTypes...>::type;
 };
 
 template<typename ObjectType, typename ReturnType, typename... ArgTypes>
@@ -240,9 +239,9 @@ struct function_traits<ReturnType(ObjectType::*)(ArgTypes...)>
    static constexpr auto has_return_value = !std::is_void<ReturnType>::value;
 
    using return_type = register_type<std::remove_cv_t<ReturnType>>;
-   using return_info = param_info_t<-1, ReturnType, return_type::value, return_type::return_index>;
-   using param_info = typename get_param_infos_impl<0, 4, 1, ArgTypes...>::type;
-   using object_info = param_info_t<-2, virt_ptr<ObjectType>, RegisterType::Gpr32, 3>;
+   using return_info = param_info_t<ReturnType, return_type::value, return_type::return_index>;
+   using param_info = typename get_param_infos_impl<4, 1, ArgTypes...>::type;
+   using object_info = param_info_t<virt_ptr<ObjectType>, RegisterType::Gpr32, 3>;
 };
 
 template<typename ReturnType, typename... ArgTypes>

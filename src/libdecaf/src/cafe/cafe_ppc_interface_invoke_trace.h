@@ -10,21 +10,19 @@ namespace cafe
 namespace detail
 {
 
-template<auto argIndex, typename ArgType, RegisterType regType, auto regIndex>
+template<typename ArgType, RegisterType regType, auto regIndex>
 inline void
 logParam(fmt::memory_buffer &message,
          cpu::Core *core,
-         param_info_t<argIndex, ArgType, regType, regIndex> paramInfo)
+         param_info_t<ArgType, regType, regIndex> paramInfo)
 {
    if constexpr (regType == RegisterType::VarArgs) {
-      if constexpr (argIndex == 0) {
-         fmt::format_to(message, "...");
-      } else {
-         fmt::format_to(message, ", ...");
-      }
+      fmt::format_to(message, "...");
    } else {
       auto value = readParam(core, paramInfo);
-      if constexpr (argIndex == 0) {
+      if constexpr ((regType == RegisterType::Gpr32 && regIndex == 3) ||
+                    (regType == RegisterType::Gpr64 && regIndex == 3) ||
+                    (regType == RegisterType::Fpr && regIndex == 0)) {
          fmt::format_to(message, "{}", value);
       } else {
          fmt::format_to(message, ", {}", value);

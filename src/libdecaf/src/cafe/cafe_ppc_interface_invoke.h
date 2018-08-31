@@ -25,10 +25,10 @@ readGpr(cpu::Core *core)
    }
 }
 
-template<auto argIndex, typename ArgType, RegisterType regType, auto regIndex>
+template<typename ArgType, RegisterType regType, auto regIndex>
 inline ArgType
 readParam(cpu::Core *core,
-          param_info_t<argIndex, ArgType, regType, regIndex>)
+          param_info_t<ArgType, regType, regIndex>)
 {
    using ValueType = std::remove_cv_t<ArgType>;
    if constexpr (regType == RegisterType::Gpr32) {
@@ -56,10 +56,10 @@ readParam(cpu::Core *core,
    }
 }
 
-template<auto argIndex, typename ArgType, RegisterType regType, auto regIndex>
+template<typename ArgType, RegisterType regType, auto regIndex>
 inline void
 writeParam(cpu::Core *core,
-           param_info_t<argIndex, ArgType, regType, regIndex>,
+           param_info_t<ArgType, regType, regIndex>,
            const std::remove_cv_t<ArgType> &value)
 {
    using ValueType = std::remove_cv_t<ArgType>;
@@ -86,13 +86,13 @@ writeParam(cpu::Core *core,
    }
 }
 
-template<auto argIndex, typename ArgType, RegisterType regType, auto regIndex>
+template<typename ArgType, RegisterType regType, auto regIndex>
 inline void
 writeParam(cpu::Core *core,
-           param_info_t<argIndex, ArgType, regType, regIndex> p,
+           param_info_t<ArgType, regType, regIndex> p,
            const be2_val<ArgType> &value)
 {
-   writeParam<argIndex, ArgType, regType, regIndex>(core, p, value.value());
+   writeParam<ArgType, regType, regIndex>(core, p, value.value());
 }
 
 template<typename HostFunctionType, typename FunctionTraitsType, std::size_t... I>
