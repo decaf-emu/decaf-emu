@@ -13,12 +13,12 @@ toWinApiString(const std::string &utf8)
 {
    auto result = std::wstring { };
    auto size = MultiByteToWideChar(CP_UTF8, 0,
-                                   utf8.data(), utf8.size(),
+                                   utf8.data(), static_cast<int>(utf8.size()),
                                    NULL, 0);
    result.resize(size);
    MultiByteToWideChar(CP_UTF8, 0,
-                       utf8.data(), utf8.size(),
-                       result.data(), result.size());
+                       utf8.data(), static_cast<int>(utf8.size()),
+                       result.data(), static_cast<int>(result.size()));
    return result;
 }
 
@@ -35,8 +35,8 @@ fromWinApiString(const std::wstring &utf16)
                                    NULL, NULL);
    result.resize(size);
    WideCharToMultiByte(CP_UTF8, 0,
-                       utf16.data(), utf16.size(),
-                       result.data(), result.size(),
+                       utf16.data(), static_cast<int>(utf16.size()),
+                       result.data(), static_cast<int>(result.size()),
                        NULL, NULL);
    return result;
 }
