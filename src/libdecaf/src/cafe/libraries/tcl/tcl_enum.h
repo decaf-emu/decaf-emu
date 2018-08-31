@@ -14,6 +14,7 @@ ENUM_BEG(TCLStatus, int32_t)
    ENUM_VALUE(OK,                0)
    ENUM_VALUE(InvalidArg,        3)
    ENUM_VALUE(NotInitialised,    5)
+   ENUM_VALUE(OutOfMemory,       6)
 ENUM_END(TCLStatus)
 
 ENUM_BEG(TCLTimestampID, int32_t)

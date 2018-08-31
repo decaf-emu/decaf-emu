@@ -16,6 +16,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerApertureSymbols();
    void registerDriverSymbols();
    void registerRegisterSymbols();
    void registerRingSymbols();
