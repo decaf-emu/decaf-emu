@@ -7,14 +7,9 @@ template<typename Type>
 class be2_atomic
 {
 public:
-   static_assert(!std::is_integral<Type>::value,
-                 "be2_atomic type must be integral");
-
-   static_assert(sizeof(Type) == 1 || sizeof(Type) == 2 || sizeof(Type) == 4 || sizeof(Type) == 8,
-                 "be2_atomic invalid type size");
-
-   static_assert(std::atomic<Type>::is_always_lock_free,
-                 "be2_atomic should be lock free");
+   static_assert(std::atomic<Type>::is_always_lock_free);
+   static_assert(sizeof(std::atomic<Type>) == sizeof(Type));
+   static_assert(sizeof(Type) == 1 || sizeof(Type) == 2 || sizeof(Type) == 4 || sizeof(Type) == 8);
 
    using value_type = Type;
 
@@ -94,6 +89,81 @@ public:
                                                      failure);
       expected = byte_swap(expectedValue);
       return result;
+   }
+
+   value_type
+   fetch_add(value_type addValue)
+   {
+      auto oldValue = load(std::memory_order_relaxed);
+      auto newValue = oldValue + addValue;
+
+      while (!compare_exchange_weak(oldValue, newValue,
+                                    std::memory_order_release,
+                                    std::memory_order_relaxed)) {
+         newValue = oldValue + addValue;
+      }
+
+      return oldValue;
+   }
+
+   value_type
+   fetch_sub(value_type subValue)
+   {
+      auto oldValue = load(std::memory_order_relaxed);
+      auto newValue = oldValue - subValue;
+
+      while (!compare_exchange_weak(oldValue, newValue,
+                                    std::memory_order_release,
+                                    std::memory_order_relaxed)) {
+         newValue = oldValue - subValue;
+      }
+
+      return oldValue;
+   }
+
+   value_type
+   fetch_and(value_type subValue)
+   {
+      auto oldValue = load(std::memory_order_relaxed);
+      auto newValue = oldValue & subValue;
+
+      while (!compare_exchange_weak(oldValue, newValue,
+                                    std::memory_order_release,
+                                    std::memory_order_relaxed)) {
+         newValue = oldValue & subValue;
+      }
+
+      return oldValue;
+   }
+
+   value_type
+   fetch_or(value_type subValue)
+   {
+      auto oldValue = load(std::memory_order_relaxed);
+      auto newValue = oldValue | subValue;
+
+      while (!compare_exchange_weak(oldValue, newValue,
+                                    std::memory_order_release,
+                                    std::memory_order_relaxed)) {
+         newValue = oldValue | subValue;
+      }
+
+      return oldValue;
+   }
+
+   value_type
+   fetch_xor(value_type subValue)
+   {
+      auto oldValue = load(std::memory_order_relaxed);
+      auto newValue = oldValue ^ subValue;
+
+      while (!compare_exchange_weak(oldValue, newValue,
+                                    std::memory_order_release,
+                                    std::memory_order_relaxed)) {
+         newValue = oldValue ^ subValue;
+      }
+
+      return oldValue;
    }
 
 private:
