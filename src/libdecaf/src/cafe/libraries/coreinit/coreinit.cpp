@@ -10,6 +10,7 @@
 #include "coreinit_ipcdriver.h"
 #include "coreinit_lockedcache.h"
 #include "coreinit_mcp.h"
+#include "coreinit_memallocator.h"
 #include "coreinit_memory.h"
 #include "coreinit_memheap.h"
 #include "coreinit_scheduler.h"
@@ -41,6 +42,7 @@ rpl_entry(/* no args for coreinit entry point */)
    internal::initialiseLockedCache(coreId);
    internal::initialiseMemory();
    internal::initialiseMemHeap();
+   internal::initialiseAllocatorStaticData();
    IPCDriverInit();
    IPCDriverOpen();
    internal::initialiseAppIoThreads();

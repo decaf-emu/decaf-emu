@@ -71,6 +71,14 @@ void
 MEMFreeToAllocator(virt_ptr<MEMAllocator> allocator,
                    virt_ptr<void> block);
 
+namespace internal
+{
+
+void
+initialiseAllocatorStaticData();
+
+}
+
 /** @} */
 
 } // namespace cafe::coreinit
