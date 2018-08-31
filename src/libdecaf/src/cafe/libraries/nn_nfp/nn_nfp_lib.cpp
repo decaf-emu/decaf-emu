@@ -94,6 +94,8 @@ Library::registerLibSymbols()
                               StartDetection);
    RegisterFunctionExportName("StopDetection__Q2_2nn3nfpFv",
                               StopDetection);
+
+   RegisterDataInternal(sLibData);
 }
 
 }  // namespace cafe::nn::nfp
