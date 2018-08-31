@@ -600,11 +600,11 @@ setVoiceAddresses(virt_ptr<AXVoice> voice,
       decaf_check((offsets.endOffsetAbs & 0xF) >= virt_addr { 2 });
       decaf_check((offsets.currentOffsetAbs & 0xF) >= virt_addr { 2 });
    } else if (offsets.format == AXVoiceFormat::LPCM8) {
-      std::memset(virt_addrof(extras->adpcm).getRawPointer(), 0, sizeof(AXVoiceAdpcm));
+      std::memset(&extras->adpcm, 0, sizeof(AXVoiceAdpcm));
       extras->adpcm.gain = uint16_t { 0x100 };
       voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
    } else if (offsets.format == AXVoiceFormat::LPCM16) {
-      std::memset(virt_addrof(extras->adpcm).getRawPointer(), 0, sizeof(AXVoiceAdpcm));
+      std::memset(&extras->adpcm, 0, sizeof(AXVoiceAdpcm));
       extras->adpcm.gain = uint16_t { 0x800 };
       voice->syncBits |= internal::AXVoiceSyncBits::Adpcm;
    } else {

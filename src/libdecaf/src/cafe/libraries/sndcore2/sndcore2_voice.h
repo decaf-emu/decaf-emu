@@ -348,38 +348,38 @@ struct AXCafeVoiceExtras
 {
    UNKNOWN(0x8);
 
-   be2_val<uint16_t> srcMode;
-   be2_val<uint16_t> srcModeUnk;
+   uint16_t srcMode;
+   uint16_t srcModeUnk;
 
    UNKNOWN(0x2);
 
-   be2_val<AXVoiceType> type;
+   AXVoiceType type;
 
    UNKNOWN(0x15a);
 
-   be2_val<uint16_t> state;
+   uint16_t state;
 
-   be2_val<uint16_t> itdOn;
+   uint16_t itdOn;
 
    UNKNOWN(0x2);
 
-   be2_val<uint16_t> itdDelay;
+   uint16_t itdDelay;
 
    UNKNOWN(0x8);
 
-   be2_struct<AXVoiceVeData> ve;
+   AXVoiceVeData ve;
 
-   be2_struct<AXCafeVoiceData> data;
+   AXCafeVoiceData data;
 
-   be2_struct<AXVoiceAdpcm> adpcm;
+   AXVoiceAdpcm adpcm;
 
-   be2_struct<AXVoiceSrc> src;
+   AXVoiceSrc src;
 
-   be2_struct<AXVoiceAdpcmLoopData> adpcmLoop;
+   AXVoiceAdpcmLoopData adpcmLoop;
 
    UNKNOWN(0xe4);
 
-   be2_val<uint32_t> syncBits;
+   uint32_t syncBits;
 
    UNKNOWN(0xc);
 };

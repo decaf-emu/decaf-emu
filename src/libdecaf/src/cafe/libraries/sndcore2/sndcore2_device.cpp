@@ -17,24 +17,24 @@ constexpr auto DefaultVolume = ufixed_1_15_t::from_data(0x8000);
 
 struct AuxData
 {
-   AXAuxCallback callback = nullptr;
-   virt_ptr<void> userData = nullptr;
-   ufixed_1_15_t returnVolume = DefaultVolume;
+   AXAuxCallback callback;
+   virt_ptr<void> userData;
+   ufixed_1_15_t returnVolume;
 };
 
 struct DeviceData
 {
    std::array<AuxData, AXAuxId::Max> aux;
-   bool linearUpsample = false;
-   ufixed_1_15_t volume = DefaultVolume;
+   bool linearUpsample;
+   ufixed_1_15_t volume;
 };
 
 struct DeviceTypeData
 {
    std::array<DeviceData, 4> devices;
-   bool compressor = false;
-   AXDeviceFinalMixCallback finalMixCallback = nullptr;
-   bool upsampleAfterFinalMix = false;
+   bool compressor;
+   AXDeviceFinalMixCallback finalMixCallback;
+   bool upsampleAfterFinalMix;
    AXDeviceMode mode;
 };
 
@@ -599,7 +599,7 @@ mixDevice(AXDeviceType type, uint32_t numSamples)
 }
 
 void
-mixOutput(virt_ptr<int32_t> buffer,
+mixOutput(int32_t* buffer,
           int numSamples,
           int numChannels)
 {
@@ -913,6 +913,34 @@ AXSetAuxReturnVolume(AXDeviceType type,
    device->aux[auxId].returnVolume = ufixed_1_15_t::from_data(volume);
    return AXResult::Success;
 }
+
+namespace internal
+{
+
+void
+initDevices()
+{
+   for (auto &device : sDeviceData->tvDevices.devices) {
+      device.volume = DefaultVolume;
+      for (auto &aux : device.aux) {
+         aux.returnVolume = DefaultVolume;
+      }
+   }
+   for (auto &device : sDeviceData->drcDevices.devices) {
+      device.volume = DefaultVolume;
+      for (auto &aux : device.aux) {
+         aux.returnVolume = DefaultVolume;
+      }
+   }
+   for (auto &device : sDeviceData->rmtDevices.devices) {
+      device.volume = DefaultVolume;
+      for (auto &aux : device.aux) {
+         aux.returnVolume = DefaultVolume;
+      }
+   }
+}
+
+} // namespace internal
 
 void
 Library::registerDeviceSymbols()

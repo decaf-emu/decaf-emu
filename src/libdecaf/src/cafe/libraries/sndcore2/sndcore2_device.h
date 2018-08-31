@@ -114,9 +114,12 @@ namespace internal
 {
 
 void
-mixOutput(virt_ptr<int32_t> buffer,
+mixOutput(int32_t* buffer,
           int numSamples,
           int numChannels);
+
+void
+initDevices();
 
 } // namespace internal
 

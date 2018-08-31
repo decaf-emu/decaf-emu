@@ -34,13 +34,15 @@ struct StaticConfigData
    be2_val<uint32_t> defaultMixerSelect;
    be2_struct<OSAlarm> frameAlarm;
    be2_array<AXFrameCallback, MaxFrameCallbacks> appFrameCallbacks;
-   be2_array<int32_t, AXNumBufferSamples> mixBuffer;
-   be2_array<int16_t, AXNumBufferSamples> outputBuffer;
    be2_val<AXFrameCallback> frameCallback;
    be2_struct<OSThread> frameCallbackThread;
    be2_struct<OSThreadQueue> frameCallbackThreadQueue;
    be2_array<char, 32> frameCallbackThreadName;
    be2_array<uint8_t, 16 * 1024> frameCallbackThreadStack;
+
+   // Sound is mixed by the DSP in little-endian
+   std::array<int32_t, AXNumBufferSamples> mixBuffer;
+   std::array<int16_t, AXNumBufferSamples> outputBuffer;
 };
 
 static OSThreadEntryPointFn FrameCallbackThreadEntryPoint = nullptr;
@@ -78,6 +80,7 @@ AXInitWithParams(virt_ptr<AXInitParams> params)
    }
 
    sConfigData->outputChannels = 2;  // TODO: surround support
+   internal::initDevices();
    internal::initVoices();
    internal::initEvents();
 
@@ -272,7 +275,7 @@ frameCallbackThreadEntry(uint32_t core_id,
       }
 
       decaf_check(static_cast<size_t>(NumOutputSamples * sConfigData->outputChannels) <= sConfigData->mixBuffer.size());
-      internal::mixOutput(virt_addrof(sConfigData->mixBuffer), numInputSamples, sConfigData->outputChannels);
+      internal::mixOutput(&sConfigData->mixBuffer[0], numInputSamples, sConfigData->outputChannels);
 
       auto driver = decaf::getSoundDriver();
 
@@ -281,8 +284,7 @@ frameCallbackThreadEntry(uint32_t core_id,
             sConfigData->outputBuffer[i] = static_cast<int16_t>(std::min<int32_t>(std::max<int32_t>(sConfigData->mixBuffer[i], -32768), 32767));
          }
 
-         driver->output(virt_addrof(sConfigData->outputBuffer).getRawPointer(),
-                        NumOutputSamples);
+         driver->output(&sConfigData->outputBuffer[0], NumOutputSamples);
       }
    }
 
