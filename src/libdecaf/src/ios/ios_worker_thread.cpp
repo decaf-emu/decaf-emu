@@ -32,9 +32,12 @@ iosWorkerThread()
 {
    while (sWorkerThreadRunning) {
       auto lock = std::unique_lock { sWorkerThreadMutex };
-      sWorkerThreadConditionVariable.wait(lock);
-      if (!sWorkerThreadRunning) {
-         break;
+
+      if (sWorkerThreadTasks.empty()) {
+         sWorkerThreadConditionVariable.wait(lock);
+         if (!sWorkerThreadRunning) {
+            break;
+         }
       }
 
       auto task = std::move(sWorkerThreadTasks.front());
