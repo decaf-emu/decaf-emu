@@ -6,6 +6,8 @@
 #include "gx2_shaders.h"
 #include "gx2_state.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <array>
 #include <common/align.h>
 #include <common/decaf_assert.h>
@@ -13,6 +15,8 @@
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 void
 GX2BeginDisplayList(virt_ptr<void> displayList,
@@ -26,14 +30,13 @@ GX2BeginDisplayListEx(virt_ptr<void> displayList,
                       uint32_t bytes,
                       BOOL unk1)
 {
-   internal::beginUserCommandBuffer(virt_cast<uint32_t *>(displayList).getRawPointer(),
-                                    bytes / 4);
+   internal::beginUserCommandBuffer(virt_cast<uint32_t *>(displayList), bytes / 4);
 }
 
 uint32_t
 GX2EndDisplayList(virt_ptr<void> displayList)
 {
-   return internal::endUserCommandBuffer(virt_cast<uint32_t *>(displayList).getRawPointer()) * 4;
+   return internal::endUserCommandBuffer(virt_cast<uint32_t *>(displayList)) * 4;
 }
 
 BOOL
@@ -46,15 +49,15 @@ BOOL
 GX2GetCurrentDisplayList(virt_ptr<virt_ptr<void>> outDisplayList,
                          virt_ptr<uint32_t> outSize)
 {
-   uint32_t *displayList = nullptr;
-   uint32_t size = 0;
+   auto displayList = virt_ptr<uint32_t> { nullptr };
+   auto size = uint32_t { 0 };
 
    if (!internal::getUserCommandBuffer(&displayList, &size)) {
       return FALSE;
    }
 
    if (outDisplayList) {
-      *outDisplayList = virt_cast<void *>(cpu::translate(displayList));
+      *outDisplayList = displayList;
    }
 
    if (outSize) {
@@ -69,8 +72,7 @@ GX2DirectCallDisplayList(virt_ptr<void> displayList,
                          uint32_t bytes)
 {
    GX2Flush();
-   internal::queueDisplayList(virt_cast<uint32_t *>(displayList).getRawPointer(),
-                              bytes / 4);
+   internal::queueDisplayList(virt_cast<uint32_t *>(displayList), bytes / 4);
 }
 
 void
@@ -78,7 +80,7 @@ GX2CallDisplayList(virt_ptr<void> displayList,
                    uint32_t bytes)
 {
    internal::writePM4(latte::pm4::IndirectBufferCall {
-      displayList.getRawPointer(),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(displayList)),
       bytes / 4
    });
 }
@@ -90,7 +92,9 @@ GX2CopyDisplayList(virt_ptr<void> displayList,
    // Copy the display list to the current command buffer
    auto words = bytes / 4;
    auto dst = gx2::internal::getCommandBuffer(words);
-   memcpy(&dst->buffer[dst->curSize], displayList.getRawPointer(), bytes);
+   std::memcpy(dst->buffer.getRawPointer() + dst->curSize,
+               displayList.getRawPointer(),
+               bytes);
    dst->curSize += words;
 }
 
@@ -164,7 +168,7 @@ GX2PatchDisplayList(virt_ptr<void> displayList,
    // Apply the actual patch
    auto words = virt_cast<uint32_t *>(displayList);
    auto idx = byteOffset / 4;
-   words[idx + 2] = addr >> 8;
+   words[idx + 2] = OSEffectiveToPhysical(addr) >> 8;
 }
 
 void

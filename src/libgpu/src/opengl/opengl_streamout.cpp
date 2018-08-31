@@ -1,5 +1,6 @@
 #ifdef DECAF_GL
 #include "gpu_config.h"
+#include "gpu_memory.h"
 #include "latte/latte_registers.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
@@ -171,13 +172,13 @@ GLDriver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
       auto addr = data.dstLo;
       decaf_assert(data.dstHi == 0, fmt::format("Store target out of 32-bit range for feedback buffer {}", bufferIndex));
 
-      if (addr != 0) {
+      if (addr) {
          // End any in-progress transform feedback so we can get the buffer
          //  offset to store
          endTransformFeedback();
          updateTransformFeedbackOffsets();
 
-         auto offsetPtr = mem::translate<uint32_t>(addr);
+         auto offsetPtr = gpu::internal::translateAddress<uint32_t>(addr);
          *offsetPtr = byte_swap(mFeedbackBufferState[bufferIndex].currentOffset >> 2);
       }
    }
@@ -185,9 +186,9 @@ GLDriver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
    auto vgt_strmout_buffer_base = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_BASE_0 + 16 * bufferIndex);
    auto vgt_strmout_buffer_size = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_BUFFER_SIZE_0 + 16 * bufferIndex);
 
-   auto addr = vgt_strmout_buffer_base << 8;
+   auto addr = phys_addr { vgt_strmout_buffer_base << 8 };
    auto size = vgt_strmout_buffer_size << 2;
-   decaf_assert(addr != 0 && size != 0, fmt::format("Attempt to bind undefined feedback buffer {}", bufferIndex));
+   decaf_assert(addr && size, fmt::format("Attempt to bind undefined feedback buffer {}", bufferIndex));
 
    // Create the data buffer (we don't need to manipulate it here, but
    //  make sure it's configured as an output buffer)
@@ -208,7 +209,7 @@ GLDriver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
    case latte::pm4::STRMOUT_OFFSET_FROM_MEM:
    {
       decaf_assert(data.srcHi == 0, fmt::format("Load target out of 32-bit range for feedback buffer {}", bufferIndex));
-      auto offsetPtr = mem::translate<uint32_t>(data.srcLo);
+      auto offsetPtr = gpu::internal::translateAddress<uint32_t>(data.srcLo);
       decaf_assert(offsetPtr, fmt::format("Invalid load address for feedback buffer {}", bufferIndex));
       mFeedbackBufferState[bufferIndex].baseOffset = byte_swap(*offsetPtr) << 2;
       mFeedbackBufferState[bufferIndex].bound = false;

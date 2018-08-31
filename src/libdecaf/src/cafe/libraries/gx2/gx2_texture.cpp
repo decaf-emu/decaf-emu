@@ -4,11 +4,15 @@
 #include "gx2_internal_cbpool.h"
 #include "gx2_texture.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <common/decaf_assert.h>
 #include <libgpu/latte/latte_registers.h>
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 void
 GX2InitTextureRegs(virt_ptr<GX2Texture> texture)
@@ -171,8 +175,10 @@ setTexture(virt_ptr<GX2Texture> texture,
            latte::SQ_RES_OFFSET offset,
            uint32_t unit)
 {
-   auto imageAddress = static_cast<uint32_t>(virt_cast<virt_addr>(texture->surface.image));
-   auto mipAddress = static_cast<uint32_t>(virt_cast<virt_addr>(texture->surface.mipmaps));
+   auto imageAddress = static_cast<uint32_t>(
+      OSEffectiveToPhysical(virt_cast<virt_addr>(texture->surface.image)));
+   auto mipAddress = static_cast<uint32_t>(
+      OSEffectiveToPhysical(virt_cast<virt_addr>(texture->surface.mipmaps)));
 
    decaf_check(!(mipAddress & 0xff));
    decaf_check(!(imageAddress & 0xff));

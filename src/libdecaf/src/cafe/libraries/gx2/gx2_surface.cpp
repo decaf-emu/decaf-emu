@@ -5,6 +5,8 @@
 #include "gx2_internal_cbpool.h"
 #include "gx2_surface.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <common/align.h>
 #include <common/log.h>
 #include <common/pow.h>
@@ -14,6 +16,8 @@
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 static uint32_t
 calcNumLevelsForSize(uint32_t size)
@@ -188,12 +192,14 @@ GX2SetColorBuffer(virt_ptr<GX2ColorBuffer> colorBuffer,
    auto cb_color_size = colorBuffer->regs.cb_color_size.value();
    auto cb_color_view = colorBuffer->regs.cb_color_view.value();
 
-   auto addr = static_cast<uint32_t>(virt_cast<virt_addr>(colorBuffer->surface.image));
+   auto addr = static_cast<uint32_t>(
+      OSEffectiveToPhysical(virt_cast<virt_addr>(colorBuffer->surface.image)));
    auto addrTile = 0u;
    auto addrFrag = 0u;
 
    if (colorBuffer->viewMip) {
-      addr = static_cast<uint32_t>(virt_cast<virt_addr>(colorBuffer->surface.mipmaps));
+      addr = static_cast<uint32_t>(
+         OSEffectiveToPhysical(virt_cast<virt_addr>(colorBuffer->surface.mipmaps)));
 
       if (colorBuffer->viewMip > 1) {
          addr += colorBuffer->surface.mipLevelOffset[colorBuffer->viewMip - 1];
@@ -208,7 +214,8 @@ GX2SetColorBuffer(virt_ptr<GX2ColorBuffer> colorBuffer,
    }
 
    if (colorBuffer->surface.aa) {
-      addrFrag = static_cast<uint32_t>(virt_cast<virt_addr>(colorBuffer->aaBuffer));
+      addrFrag = static_cast<uint32_t>(
+         OSEffectiveToPhysical(virt_cast<virt_addr>(colorBuffer->aaBuffer)));
       addrTile = addrFrag + colorBuffer->regs.cmask_offset;
    }
 
@@ -265,11 +272,11 @@ GX2SetDepthBuffer(virt_ptr<GX2DepthBuffer> depthBuffer)
    };
    internal::writePM4(latte::pm4::SetContextRegs { latte::Register::DB_DEPTH_SIZE, gsl::make_span(values1) });
 
-   auto addr = virt_cast<virt_addr>(depthBuffer->surface.image);
-   auto addrHiZ = virt_cast<virt_addr>(depthBuffer->hiZPtr);
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(depthBuffer->surface.image));
+   auto addrHiZ = OSEffectiveToPhysical(virt_cast<virt_addr>(depthBuffer->hiZPtr));
 
    if (depthBuffer->viewMip) {
-      addr = virt_cast<virt_addr>(depthBuffer->surface.mipmaps);
+      addr = OSEffectiveToPhysical(virt_cast<virt_addr>(depthBuffer->surface.mipmaps));
 
       if (depthBuffer->viewMip > 1) {
          addr += depthBuffer->surface.mipLevelOffset[depthBuffer->viewMip - 1];
@@ -534,8 +541,8 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
    }
 
    internal::writePM4(latte::pm4::DecafCopySurface {
-      static_cast<uint32_t>(virt_cast<virt_addr>(dst->image)),
-      static_cast<uint32_t>(virt_cast<virt_addr>(dst->mipmaps)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(dst->image)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(dst->mipmaps)),
       dstLevel,
       dstSlice,
       dstPitch,
@@ -549,8 +556,8 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
       dstFormatComp,
       dstForceDegamma ? 1u : 0u,
       dstTileMode,
-      static_cast<uint32_t>(virt_cast<virt_addr>(src->image)),
-      static_cast<uint32_t>(virt_cast<virt_addr>(src->mipmaps)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(src->image)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(src->mipmaps)),
       srcLevel,
       srcSlice,
       srcPitch,

@@ -89,7 +89,7 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
                          latte::DB_DEPTH_INFO db_depth_info,
                          bool discardData)
 {
-   auto baseAddress = (db_depth_base.BASE_256B() << 8) & 0xFFFFF800;
+   auto baseAddress = phys_addr { (db_depth_base.BASE_256B() << 8) & 0xFFFFF800 };
    auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();
    auto slice_tile_max = db_depth_size.SLICE_TILE_MAX();
    auto dbFormat = db_depth_info.FORMAT();
@@ -141,7 +141,10 @@ GLDriver::getDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
    }
 
    auto tileMode = latte::getArrayModeTileMode(db_depth_info.ARRAY_MODE());
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0, latte::SQ_TEX_DIM::DIM_2D, format, numFormat, formatComp, degamma, true, tileMode, true, discardData);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0,
+                                  latte::SQ_TEX_DIM::DIM_2D, format, numFormat,
+                                  formatComp, degamma, true, tileMode, true,
+                                  discardData);
 
    buffer->dirtyMemory = false;
    buffer->needUpload = false;

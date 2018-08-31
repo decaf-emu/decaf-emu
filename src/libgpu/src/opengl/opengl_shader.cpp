@@ -1,6 +1,7 @@
 #ifdef DECAF_GL
 #include "glsl2/glsl2_translate.h"
 #include "gpu_config.h"
+#include "gpu_memory.h"
 #include "latte/latte_formats.h"
 #include "latte/latte_registers.h"
 #include "latte/latte_disassembler.h"
@@ -36,45 +37,46 @@ static const auto NVIDIA_GLSL_WORKAROUND = true;
 
 
 static void
-dumpRawShader(const std::string &type, ppcaddr_t data, uint32_t size, bool isSubroutine = false)
+dumpRawShader(const std::string &type,
+              phys_addr address,
+              uint32_t size,
+              bool isSubroutine = false)
 {
    if (!gpu::config::dump_shaders) {
       return;
    }
 
-   std::string filePath = fmt::format("dump/gpu_{}_{:08x}.txt", type, data);
-
+   auto filePath = fmt::format("dump/gpu_{}_{}.txt", type, address);
    if (platform::fileExists(filePath)) {
       return;
    }
 
    platform::createDirectory("dump");
 
-   auto file = std::ofstream{ filePath, std::ofstream::out };
-
    // Disassemble
-   auto output = latte::disassemble(gsl::make_span(mem::translate<uint8_t>(data), size), isSubroutine);
-
+   auto file = std::ofstream { filePath, std::ofstream::out };
+   auto binary = gsl::make_span(gpu::internal::translateAddress<uint8_t>(address), size);
+   auto output = latte::disassemble(binary, isSubroutine);
    file << output << std::endl;
 }
 
 static void
-dumpTranslatedShader(const std::string &type, ppcaddr_t data, const std::string &shaderSource)
+dumpTranslatedShader(const std::string &type,
+                     phys_addr address,
+                     const std::string &shaderSource)
 {
    if (!gpu::config::dump_shaders) {
       return;
    }
 
-   std::string filePath = fmt::format("dump/gpu_{}_{:08x}.glsl", type, data);
-
+   auto filePath = fmt::format("dump/gpu_{}_{}.glsl", type, address);
    if (platform::fileExists(filePath)) {
       return;
    }
 
    platform::createDirectory("dump");
 
-   auto file = std::ofstream{ filePath, std::ofstream::out };
-
+   auto file = std::ofstream { filePath, std::ofstream::out };
    file << shaderSource << std::endl;
 }
 
@@ -136,7 +138,9 @@ invalidateShaderIfChanged(ShaderPtrType &shader,
    //  twice if we end up recreating the shader, but that cost is tiny
    //  compared to the time it takes to actually create the shader.
    uint64_t newHash[2] = { 0, 0 };
-   MurmurHash3_x64_128(mem::translate(shader->cpuMemStart), shader->cpuMemEnd - shader->cpuMemStart, 0, newHash);
+   MurmurHash3_x64_128(gpu::internal::translateAddress(shader->cpuMemStart),
+                       static_cast<int>(shader->cpuMemEnd - shader->cpuMemStart),
+                       0, newHash);
    if (newHash[0] == shader->cpuMemHash[0] && newHash[1] == shader->cpuMemHash[1]) {
       shader->needRebuild = false;
       return false;
@@ -193,9 +197,9 @@ bool GLDriver::checkActiveShader()
       return false;
    }
 
-   auto fsPgmAddress = pgm_start_fs.PGM_START() << 8;
-   auto vsPgmAddress = pgm_start_vs.PGM_START() << 8;
-   auto psPgmAddress = pgm_start_ps.PGM_START() << 8;
+   auto fsPgmAddress = phys_addr { pgm_start_fs.PGM_START() << 8 };
+   auto vsPgmAddress = phys_addr { pgm_start_vs.PGM_START() << 8 };
+   auto psPgmAddress = phys_addr { pgm_start_ps.PGM_START() << 8 };
    auto fsPgmSize = pgm_size_fs.PGM_SIZE() << 3;
    auto vsPgmSize = pgm_size_vs.PGM_SIZE() << 3;
    auto psPgmSize = pgm_size_ps.PGM_SIZE() << 3;
@@ -288,16 +292,16 @@ bool GLDriver::checkActiveShader()
          fetchShader = new FetchShader {};
          fetchShader->cpuMemStart = fsPgmAddress;
          fetchShader->cpuMemEnd = fsPgmAddress + fsPgmSize;
-         MurmurHash3_x64_128(mem::translate(fetchShader->cpuMemStart),
-                             fetchShader->cpuMemEnd - fetchShader->cpuMemStart,
+         MurmurHash3_x64_128(gpu::internal::translateAddress(fetchShader->cpuMemStart),
+                             static_cast<int>(fetchShader->cpuMemEnd - fetchShader->cpuMemStart),
                              0, fetchShader->cpuMemHash);
          fetchShader->dirtyMemory = false;
          mResourceMap.addResource(fetchShader);
 
          dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
-         fetchShader->disassembly = latte::disassemble(gsl::make_span(mem::translate<uint8_t>(fsPgmAddress), fsPgmSize), true);
+         fetchShader->disassembly = latte::disassemble(gsl::make_span(gpu::internal::translateAddress<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
-         if (!parseFetchShader(*fetchShader, mem::translate(fsPgmAddress), fsPgmSize)) {
+         if (!parseFetchShader(*fetchShader, gpu::internal::translateAddress(fsPgmAddress), fsPgmSize)) {
             gLog->error("Failed to parse fetch shader");
             return false;
          }
@@ -305,7 +309,7 @@ bool GLDriver::checkActiveShader()
          // Setup attrib format
          gl::glCreateVertexArrays(1, &fetchShader->object);
          if (gpu::config::debug) {
-            std::string label = fmt::format("fetch shader @ 0x{:08X}", fsPgmAddress);
+            auto label = fmt::format("fetch shader @ {}", fsPgmAddress);
             gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader->object, -1, label.c_str());
          }
 
@@ -367,15 +371,15 @@ bool GLDriver::checkActiveShader()
 
          vertexShader->cpuMemStart = vsPgmAddress;
          vertexShader->cpuMemEnd = vsPgmAddress + vsPgmSize;
-         MurmurHash3_x64_128(mem::translate(vertexShader->cpuMemStart),
-                             vertexShader->cpuMemEnd - vertexShader->cpuMemStart,
+         MurmurHash3_x64_128(gpu::internal::translateAddress(vertexShader->cpuMemStart),
+                             static_cast<int>(vertexShader->cpuMemEnd - vertexShader->cpuMemStart),
                              0, vertexShader->cpuMemHash);
          vertexShader->dirtyMemory = false;
          mResourceMap.addResource(vertexShader);
 
          dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
 
-         if (!compileVertexShader(*vertexShader, *fetchShader, mem::translate(vsPgmAddress), vsPgmSize, isScreenSpace)) {
+         if (!compileVertexShader(*vertexShader, *fetchShader, gpu::internal::translateAddress<uint8_t>(vsPgmAddress), vsPgmSize, isScreenSpace)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
@@ -386,7 +390,7 @@ bool GLDriver::checkActiveShader()
          const gl::GLchar *code[] = { vertexShader->code.c_str() };
          vertexShader->object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
          if (gpu::config::debug) {
-            std::string label = fmt::format("vertex shader @ 0x{:08X}", vsPgmAddress);
+            std::string label = fmt::format("vertex shader @ {}", vsPgmAddress);
             gl::glObjectLabel(gl::GL_PROGRAM, vertexShader->object, -1, label.c_str());
          }
 
@@ -436,15 +440,15 @@ bool GLDriver::checkActiveShader()
 
             pixelShader->cpuMemStart = psPgmAddress;
             pixelShader->cpuMemEnd = psPgmAddress + psPgmSize;
-            MurmurHash3_x64_128(mem::translate(pixelShader->cpuMemStart),
-                                pixelShader->cpuMemEnd - pixelShader->cpuMemStart,
+            MurmurHash3_x64_128(gpu::internal::translateAddress(pixelShader->cpuMemStart),
+                                static_cast<int>(pixelShader->cpuMemEnd - pixelShader->cpuMemStart),
                                 0, pixelShader->cpuMemHash);
             pixelShader->dirtyMemory = false;
             mResourceMap.addResource(pixelShader);
 
             dumpRawShader("pixel", psPgmAddress, psPgmSize);
 
-            if (!compilePixelShader(*pixelShader, *vertexShader, mem::translate(psPgmAddress), psPgmSize)) {
+            if (!compilePixelShader(*pixelShader, *vertexShader, gpu::internal::translateAddress<uint8_t>(psPgmAddress), psPgmSize)) {
                gLog->error("Failed to recompile pixel shader");
                return false;
             }
@@ -456,7 +460,7 @@ bool GLDriver::checkActiveShader()
             pixelShader->object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
 
             if (gpu::config::debug) {
-               std::string label = fmt::format("pixel shader @ 0x{:08X}", psPgmAddress);
+               std::string label = fmt::format("pixel shader @ {}", psPgmAddress);
                gl::glObjectLabel(gl::GL_PROGRAM, pixelShader->object, -1, label.c_str());
             }
 
@@ -490,9 +494,9 @@ bool GLDriver::checkActiveShader()
          std::string label;
 
          if (pipeline.pixel) {
-            label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = 0x{:08X}", fsPgmAddress, vsPgmAddress, psPgmAddress);
+            label = fmt::format("shader set: fs = {}, vs = {}, ps = {}", fsPgmAddress, vsPgmAddress, psPgmAddress);
          } else {
-            label = fmt::format("shader set: fs = 0x{:08X}, vs = 0x{:08X}, ps = none", fsPgmAddress, vsPgmAddress);
+            label = fmt::format("shader set: fs = {}, vs = {}, ps = none", fsPgmAddress, vsPgmAddress);
          }
 
          gl::glObjectLabel(gl::GL_PROGRAM_PIPELINE, pipeline.object, -1, label.c_str());
@@ -587,7 +591,7 @@ bool GLDriver::checkActiveUniforms()
             if (!used || !sq_alu_const_buffer_size_vs) {
                bufferObject = 0;
             } else {
-               auto addr = sq_alu_const_cache_vs << 8;
+               auto addr = phys_addr { sq_alu_const_cache_vs << 8 };
                auto size = sq_alu_const_buffer_size_vs << 8;
 
                // Check that we can fit the uniform block into OpenGL buffers
@@ -595,7 +599,6 @@ bool GLDriver::checkActiveUniforms()
                   fmt::format("Active uniform block with data size {} greater than what OpenGL supports {}", size, opengl::MaxUniformBlockSize));
 
                auto buffer = getDataBuffer(addr, size, true, false);
-
                bufferObject = buffer->object;
             }
 
@@ -617,11 +620,10 @@ bool GLDriver::checkActiveUniforms()
             if (!used || !sq_alu_const_buffer_size_ps) {
                bufferObject = 0;
             } else {
-               auto addr = sq_alu_const_cache_ps << 8;
+               auto addr = phys_addr { sq_alu_const_cache_ps << 8 };
                auto size = sq_alu_const_buffer_size_ps << 8;
 
                auto buffer = getDataBuffer(addr, size, true, false);
-
                bufferObject = buffer->object;
             }
 
@@ -638,15 +640,15 @@ bool GLDriver::checkActiveUniforms()
 }
 
 DataBuffer *
-GLDriver::getDataBuffer(uint32_t address,
-                        uint32_t size,
+GLDriver::getDataBuffer(phys_addr address,
+                        size_t size,
                         bool isInput,
                         bool isOutput)
 {
    decaf_check(size);
    decaf_check(isInput || isOutput);
 
-   DataBuffer *buffer = &mDataBuffers[address];
+   DataBuffer *buffer = &mDataBuffers[static_cast<uint32_t>(address)];
 
    if (buffer->object
     && buffer->allocatedSize >= size
@@ -688,7 +690,7 @@ GLDriver::getDataBuffer(uint32_t address,
          type = buffer->isOutput ? "input/output" : "input-only";
       }
 
-      auto label = fmt::format("{} buffer @ 0x{:08X}", type, address);
+      auto label = fmt::format("{} buffer @ {}", type, address);
       gl::glObjectLabel(gl::GL_BUFFER, buffer->object, -1, label.c_str());
    }
 
@@ -758,31 +760,33 @@ GLDriver::getDataBuffer(uint32_t address,
 
 void
 GLDriver::downloadDataBuffer(DataBuffer *buffer,
-                             uint32_t offset,
-                             uint32_t size)
+                             size_t offset,
+                             size_t size)
 {
    if (buffer->mappedBuffer) {
       // We only map input-only buffers (see getDataBuffer()), so there's
       //  no need for a memory barrier here.
       decaf_check(!buffer->isOutput);
 
-      memcpy(mem::translate<char>(buffer->cpuMemStart) + offset,
+      memcpy(gpu::internal::translateAddress<char>(buffer->cpuMemStart) + offset,
              static_cast<char *>(buffer->mappedBuffer) + offset,
              size);
    } else {
       gl::glGetNamedBufferSubData(buffer->object, offset, size,
-                                  mem::translate<char>(buffer->cpuMemStart) + offset);
+                                  gpu::internal::translateAddress<char>(buffer->cpuMemStart) + offset);
    }
 }
 
 void
 GLDriver::uploadDataBuffer(DataBuffer *buffer,
-                           uint32_t offset,
-                           uint32_t size)
+                           size_t offset,
+                           size_t size)
 {
    // Avoid uploading the data if it hasn't changed.
    uint64_t newHash[2] = { 0, 0 };
-   MurmurHash3_x64_128(mem::translate(buffer->cpuMemStart), buffer->allocatedSize, 0, newHash);
+   MurmurHash3_x64_128(gpu::internal::translateAddress(buffer->cpuMemStart),
+                       static_cast<int>(buffer->allocatedSize),
+                       0, newHash);
 
    if (newHash[0] != buffer->cpuMemHash[0] || newHash[1] != buffer->cpuMemHash[1]) {
       buffer->cpuMemHash[0] = newHash[0];
@@ -804,13 +808,13 @@ GLDriver::uploadDataBuffer(DataBuffer *buffer,
 
       if (buffer->mappedBuffer) {
          memcpy(static_cast<char *>(buffer->mappedBuffer) + offset,
-                mem::translate<char>(buffer->cpuMemStart) + offset,
+                gpu::internal::translateAddress<char>(buffer->cpuMemStart) + offset,
                 size);
          gl::glFlushMappedNamedBufferRange(buffer->object, offset, size);
          buffer->dirtyMap = true;
       } else {
          gl::glNamedBufferSubData(buffer->object, offset, size,
-                                  mem::translate<char>(buffer->cpuMemStart) + offset);
+                                  gpu::internal::translateAddress<char>(buffer->cpuMemStart) + offset);
       }
    }
 }
@@ -833,12 +837,12 @@ GLDriver::checkActiveAttribBuffers()
       auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_RESOURCE_WORD2_0 + 4 * resourceOffset);
       auto sq_vtx_constant_word6 = getRegister<latte::SQ_VTX_CONSTANT_WORD6_N>(latte::Register::SQ_RESOURCE_WORD6_0 + 4 * resourceOffset);
 
-      auto addr = sq_vtx_constant_word0.BASE_ADDRESS();
+      auto addr = phys_addr { sq_vtx_constant_word0.BASE_ADDRESS() };
       auto size = sq_vtx_constant_word1.SIZE() + 1;
       auto stride = sq_vtx_constant_word2.STRIDE();
       auto bufferObject = gl::GLuint { 0 };
 
-      if (addr == 0 || size == 0) {
+      if (!addr || !size) {
          bufferObject = 0;
          stride = 0;
       } else {

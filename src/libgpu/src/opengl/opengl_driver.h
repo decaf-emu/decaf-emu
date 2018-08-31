@@ -158,7 +158,7 @@ struct ScanBufferChain
 struct DataBuffer : public Resource
 {
    gl::GLuint object = 0;
-   uint32_t allocatedSize = 0;
+   size_t allocatedSize = 0;
    void *mappedBuffer = nullptr;
    bool isInput = false;  // Uniform or attribute buffers
    bool isOutput = false;  // Transform feedback buffers
@@ -315,11 +315,11 @@ public:
    getGraphicsDebuggerInfo() override;
 
    virtual void
-   notifyCpuFlush(void *ptr,
+   notifyCpuFlush(phys_addr address,
                   uint32_t size) override;
 
    virtual void
-   notifyGpuFlush(void *ptr,
+   notifyGpuFlush(phys_addr address,
                   uint32_t size) override;
 
    virtual void
@@ -367,7 +367,7 @@ private:
 
    void
    uploadSurface(SurfaceBuffer *surface,
-                 ppcaddr_t baseAddress,
+                 phys_addr baseAddress,
                  uint32_t swizzle,
                  uint32_t pitch,
                  uint32_t width,
@@ -383,7 +383,7 @@ private:
                  latte::SQ_TILE_MODE tileMode);
 
    SurfaceBuffer *
-   getSurfaceBuffer(ppcaddr_t baseAddress,
+   getSurfaceBuffer(phys_addr baseAddress,
                     uint32_t pitch,
                     uint32_t width,
                     uint32_t height,
@@ -431,18 +431,18 @@ private:
    bool checkViewport();
 
    DataBuffer *
-   getDataBuffer(uint32_t address,
-                 uint32_t size,
+   getDataBuffer(phys_addr address,
+                 size_t size,
                  bool isInput,
                  bool isOutput);
    void
    uploadDataBuffer(DataBuffer *buffer,
-                    uint32_t offset,
-                    uint32_t size);
+                    size_t offset,
+                    size_t size);
    void
    downloadDataBuffer(DataBuffer *buffer,
-                      uint32_t offset,
-                      uint32_t size);
+                      size_t offset,
+                      size_t size);
 
    void
    beginTransformFeedback(gl::GLenum primitive);
@@ -555,7 +555,7 @@ private:
    std::array<FeedbackBufferState, latte::MaxStreamOutBuffers> mFeedbackBufferState;
 
    gl::GLuint mOccQuery = 0;
-   uint32_t mLastOccQueryAddress = 0;
+   phys_addr mLastOccQueryAddress = phys_addr { 0 };
 
    GLStateCache mGLStateCache;
    bool mFramebufferChanged = false;

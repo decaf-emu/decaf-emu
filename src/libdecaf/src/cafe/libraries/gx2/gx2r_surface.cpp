@@ -74,7 +74,8 @@ GX2RCreateSurface(virt_ptr<GX2Surface> surface,
 
    if ((surface->resourceFlags & GX2RResourceFlags::UsageGpuWrite) ||
       (surface->resourceFlags & GX2RResourceFlags::UsageDmaWrite)) {
-      DCInvalidateRange(surface->image, surface->imageSize);
+      DCInvalidateRange(virt_cast<virt_addr>(surface->image),
+                        surface->imageSize);
    }
 
    return TRUE;
@@ -95,10 +96,12 @@ GX2RCreateSurfaceUserMemory(virt_ptr<GX2Surface> surface,
 
    if ((surface->resourceFlags & GX2RResourceFlags::UsageGpuWrite) ||
       (surface->resourceFlags & GX2RResourceFlags::UsageDmaWrite)) {
-      DCInvalidateRange(surface->image, surface->imageSize);
+      DCInvalidateRange(virt_cast<virt_addr>(surface->image),
+                        surface->imageSize);
 
       if (surface->mipmaps) {
-         DCInvalidateRange(surface->mipmaps, surface->mipmapSize);
+         DCInvalidateRange(virt_cast<virt_addr>(surface->mipmaps),
+                           surface->mipmapSize);
       }
    }
 
@@ -142,7 +145,7 @@ GX2RLockSurfaceEx(virt_ptr<GX2Surface> surface,
          auto ptr = virt_ptr<void> { nullptr };
          auto size = uint32_t { 0 };
          internal::getSurfaceData(surface, level, &ptr, &size);
-         DCInvalidateRange(ptr, size);
+         DCInvalidateRange(virt_cast<virt_addr>(ptr), size);
       }
    }
 

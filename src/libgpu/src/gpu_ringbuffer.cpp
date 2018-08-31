@@ -29,7 +29,7 @@ appendItem(Item item)
 
 void
 submit(void *context,
-       uint32_t *buffer,
+       phys_ptr<uint32_t> buffer,
        uint32_t numWords)
 {
    auto item = Item {};

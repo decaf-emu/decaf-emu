@@ -13,7 +13,7 @@ struct CommandBuffer
 {
    bool displayList = false;
    cafe::coreinit::OSTime submitTime = 0;
-   uint32_t *buffer = nullptr;
+   virt_ptr<uint32_t> buffer = nullptr;
    uint32_t curSize = 0;
    uint32_t maxSize = 0;
    std::atomic<CommandBuffer *> next;
@@ -36,19 +36,19 @@ void
 padCommandBuffer(CommandBuffer *buffer);
 
 void
-queueDisplayList(uint32_t *buffer,
+queueDisplayList(virt_ptr<uint32_t> buffer,
                  uint32_t size);
 
 bool
-getUserCommandBuffer(uint32_t **buffer,
+getUserCommandBuffer(virt_ptr<uint32_t> *buffer,
                      uint32_t *maxSize);
 
 void
-beginUserCommandBuffer(uint32_t *buffer,
+beginUserCommandBuffer(virt_ptr<uint32_t> buffer,
                        uint32_t size);
 
 uint32_t
-endUserCommandBuffer(uint32_t *buffer);
+endUserCommandBuffer(virt_ptr<uint32_t> buffer);
 
 void
 onRetireCommandBuffer(void *context);

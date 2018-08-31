@@ -1,11 +1,9 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <libcpu/be2_struct.h>
 
-namespace decaf
-{
-
-namespace pm4
+namespace decaf::pm4
 {
 
 static const std::array<char, 4> CaptureMagic =
@@ -48,7 +46,7 @@ struct CaptureMemoryLoad
    };
 
    MemoryType type;
-   uint32_t address;
+   phys_addr address;
 };
 
 struct CaptureSetBuffer
@@ -61,7 +59,7 @@ struct CaptureSetBuffer
    };
 
    Type type;
-   uint32_t address;
+   phys_addr address;
    uint32_t size;
    uint32_t renderMode;
    uint32_t surfaceFormat;
@@ -70,10 +68,4 @@ struct CaptureSetBuffer
    uint32_t height;
 };
 
-void
-injectCommandBuffer(void *buffer,
-                    uint32_t bytes);
-
-} // namespace pm4
-
-} // namespace decaf
+} // namespace decaf::pm4

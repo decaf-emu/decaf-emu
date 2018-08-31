@@ -6,10 +6,14 @@
 #include "gx2_surface.h"
 #include "gx2_swap.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <common/log.h>
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 struct StaticSwapData
 {
@@ -23,12 +27,14 @@ void
 GX2CopyColorBufferToScanBuffer(virt_ptr<GX2ColorBuffer> buffer,
                                GX2ScanTarget scanTarget)
 {
+   auto addrImage = OSEffectiveToPhysical(virt_cast<virt_addr>(buffer->surface.image));
    auto cb_color_frag = latte::CB_COLORN_FRAG::get(0);
    auto cb_color_base = latte::CB_COLORN_BASE::get(0)
-      .BASE_256B(static_cast<uint32_t>(virt_cast<virt_addr>(buffer->surface.image)) >> 8);
+      .BASE_256B(addrImage >> 8);
 
    if (buffer->surface.aa != 0) {
-      cb_color_frag = cb_color_frag.BASE_256B(static_cast<uint32_t>(virt_cast<virt_addr>(buffer->aaBuffer)) >> 8);
+      auto addrAA = OSEffectiveToPhysical(virt_cast<virt_addr>(buffer->aaBuffer));
+      cb_color_frag = cb_color_frag.BASE_256B(addrAA >> 8);
    }
 
    GX2InitColorBufferRegs(buffer);

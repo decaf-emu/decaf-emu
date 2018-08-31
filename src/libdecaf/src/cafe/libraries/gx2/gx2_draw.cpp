@@ -3,12 +3,16 @@
 #include "gx2_enum_string.h"
 #include "gx2_internal_cbpool.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <common/decaf_assert.h>
 #include <cstring>
 #include <fmt/format.h>
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 void
 GX2SetAttribBuffer(uint32_t index,
@@ -20,7 +24,7 @@ GX2SetAttribBuffer(uint32_t index,
    std::memset(&res, 0, sizeof(latte::pm4::SetVtxResource));
 
    res.id = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + index) * 7;
-   res.baseAddress = buffer.getRawPointer();
+   res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(buffer));
 
    res.word1 = res.word1
       .SIZE(size - 1);
@@ -149,7 +153,7 @@ GX2DrawIndexedEx(GX2PrimitiveMode mode,
 
    internal::writePM4(latte::pm4::DrawIndex2 {
       static_cast<uint32_t>(-1),
-      indices.getRawPointer(),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(indices)),
       count,
       vgt_draw_initiator
    });

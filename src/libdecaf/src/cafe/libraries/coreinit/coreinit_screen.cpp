@@ -1,6 +1,8 @@
 #include "coreinit.h"
+#include "coreinit_memory.h"
 #include "coreinit_screen.h"
 #include "coreinit_screenfont.h"
+
 #include "cafe/libraries/gx2/gx2_display.h"
 #include "cafe/libraries/gx2/gx2_event.h"
 #include "cafe/libraries/gx2/gx2_internal_cbpool.h"
@@ -82,7 +84,7 @@ OSScreenClearBufferEx(OSScreenID id,
    auto buffer = sScreenData->buffers[id];
 
    // Force alpha to 255
-   colour = byte_swap(colour) | 0xff000000;
+   colour |= 0xff000000;
 
    for (auto i = 0u; i < size; ++i) {
       buffer[i] = colour;
@@ -108,7 +110,7 @@ OSScreenPutPixelEx(OSScreenID id,
    auto size = sScreenSizes[id];
 
    // Force alpha to 255
-   colour = byte_swap(colour) | 0xff000000;
+   colour |= 0xff000000;
 
    if (buffer && x < size.width && y < size.height) {
       auto offset = x + y * size.pitch;
@@ -174,7 +176,7 @@ OSScreenFlipBuffersEx(OSScreenID id)
    // Send the custom flip command
    gx2::internal::writePM4(latte::pm4::DecafOSScreenFlip {
       static_cast<uint32_t>(id),
-      buffer.getRawPointer()
+      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer))
    });
 
    // Wait until flip

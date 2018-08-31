@@ -1,5 +1,6 @@
 #pragma once
 #ifdef DECAF_GL
+#include <libcpu/be2_struct.h>
 #include <map>
 #include <mutex>
 #include <unordered_map>
@@ -10,10 +11,10 @@ namespace opengl
 struct Resource
 {
    //! The start of the CPU memory region this occupies
-   uint32_t cpuMemStart;
+   phys_addr cpuMemStart;
 
    //! The end of the CPU memory region this occupies (plus 1)
-   uint32_t cpuMemEnd;
+   phys_addr cpuMemEnd;
 
    //! Hash of the memory contents, for detecting changes
    uint64_t cpuMemHash[2] = { 0, 0 };
@@ -40,7 +41,7 @@ public:
    class Iterator
    {
    public:
-      Iterator(const ResourceMemoryMap &map, uint32_t start, uint32_t size)
+      Iterator(const ResourceMemoryMap &map, phys_addr start, size_t size)
          : mMap(map),
            mKeyStart(static_cast<uint64_t>(start) << 32),
            mKeyEnd(static_cast<uint64_t>(start + size) << 32),
@@ -79,7 +80,7 @@ public:
    }
 
    Iterator
-   getIterator(uint32_t start, uint32_t size)
+   getIterator(phys_addr start, size_t size)
    {
       return Iterator(*this, start, size);
    }

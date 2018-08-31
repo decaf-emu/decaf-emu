@@ -1,15 +1,15 @@
 #pragma once
-#include <cstdint>
+#include <libcpu/be2_struct.h>
 
 namespace cafe::gx2::internal
 {
 
 void
-notifyCpuFlush(void *ptr,
+notifyCpuFlush(phys_addr address,
                uint32_t size);
 
 void
-notifyGpuFlush(void *ptr,
+notifyGpuFlush(phys_addr address,
                uint32_t size);
 
 } // namespace cafe::gx2::internal

@@ -56,7 +56,7 @@ protected:
    void loadSamplers(const LoadSampler &data);
    void loadResources(const latte::pm4::LoadResource &data); // Thanks Windows!
    void loadRegisters(latte::Register base,
-                      virt_ptr<uint32_t> src,
+                      phys_addr address,
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
    void setRegister(latte::Register reg, uint32_t value);

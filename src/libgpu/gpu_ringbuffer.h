@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <libcpu/be2_struct.h>
 
 namespace gpu
 {
@@ -10,13 +11,13 @@ namespace ringbuffer
 struct Item
 {
    void *context;
-   uint32_t *buffer;
+   phys_ptr<uint32_t> buffer;
    uint32_t numWords;
 };
 
 void
 submit(void *context,
-       uint32_t *buffer,
+       phys_ptr<uint32_t> buffer,
        uint32_t numWords);
 
 Item

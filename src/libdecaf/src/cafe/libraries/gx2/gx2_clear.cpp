@@ -3,10 +3,14 @@
 #include "gx2_internal_cbpool.h"
 #include "gx2_surface.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <common/bit_cast.h>
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 void
 GX2ClearColor(virt_ptr<GX2ColorBuffer> colorBuffer,
@@ -15,13 +19,15 @@ GX2ClearColor(virt_ptr<GX2ColorBuffer> colorBuffer,
               float blue,
               float alpha)
 {
+   auto address = OSEffectiveToPhysical(virt_cast<virt_addr>(colorBuffer->surface.image));
    auto cb_color_frag = latte::CB_COLORN_FRAG::get(0);
    auto cb_color_base = latte::CB_COLORN_BASE::get(0)
-      .BASE_256B(virt_cast<virt_addr>(colorBuffer->surface.image) >> 8);
+      .BASE_256B(address >> 8);
 
    if (colorBuffer->surface.aa != 0) {
+      auto aaAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(colorBuffer->aaBuffer));
       cb_color_frag = cb_color_frag
-         .BASE_256B(virt_cast<virt_addr>(colorBuffer->aaBuffer) >> 8);
+         .BASE_256B(aaAddress >> 8);
    }
 
    GX2InitColorBufferRegs(colorBuffer);
@@ -41,11 +47,14 @@ void
 DecafClearDepthStencil(virt_ptr<GX2DepthBuffer> depthBuffer,
                        GX2ClearFlags clearFlags)
 {
+   auto addrImage = OSEffectiveToPhysical(virt_cast<virt_addr>(depthBuffer->surface.image));
+   auto addrHiZ = OSEffectiveToPhysical(virt_cast<virt_addr>(depthBuffer->hiZPtr));
+
    auto db_depth_base = latte::DB_DEPTH_BASE::get(0)
-      .BASE_256B(virt_cast<virt_addr>(depthBuffer->surface.image) >> 8);
+      .BASE_256B(addrImage >> 8);
 
    auto db_depth_htile_data_base = latte::DB_DEPTH_HTILE_DATA_BASE::get(0)
-      .BASE_256B(virt_cast<virt_addr>(depthBuffer->hiZPtr) >> 8);
+      .BASE_256B(addrHiZ >> 8);
 
    GX2InitDepthBufferRegs(depthBuffer);
 

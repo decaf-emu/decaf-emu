@@ -2,6 +2,7 @@
 #include "gpu_config.h"
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
+#include "gpu_memory.h"
 #include "latte/latte_registers.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
@@ -266,7 +267,8 @@ GLDriver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
       height = mDrcScanBuffers.height;
    }
 
-   gl::glTextureSubImage2D(texture, 0, 0, 0, width, height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, data.buffer);
+   gl::glTextureSubImage2D(texture, 0, 0, 0, width, height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE,
+                           gpu::internal::translateAddress(data.buffer));
    decafSwapBuffers(latte::pm4::DecafSwapBuffers {});
 }
 
@@ -366,7 +368,7 @@ GLDriver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 void
 GLDriver::surfaceSync(const latte::pm4::SurfaceSync &data)
 {
-   auto memStart = data.addr << 8;
+   auto memStart = phys_addr { data.addr << 8 };
    auto memEnd = memStart + (data.size << 8);
 
    auto all = data.cp_coher_cntl.FULL_CACHE_ENA();
@@ -395,7 +397,6 @@ GLDriver::surfaceSync(const latte::pm4::SurfaceSync &data)
    }
 
    std::unique_lock<std::mutex> lock(mResourceMap.getMutex());
-
    auto iter = mResourceMap.getIterator(memStart, memEnd - memStart);
 
    Resource *resource;
@@ -506,7 +507,6 @@ void
 GLDriver::memWrite(const latte::pm4::MemWrite &data)
 {
    auto value = uint64_t { 0 };
-   auto addr = mem::translate(data.addrLo.ADDR_LO() << 2);
 
    if (data.addrHi.CNTR_SEL() == latte::pm4::MW_WRITE_CLOCK) {
       value = getGpuClock();
@@ -514,12 +514,13 @@ GLDriver::memWrite(const latte::pm4::MemWrite &data)
       value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
    }
 
+   auto ptr = gpu::internal::translateAddress(phys_addr { data.addrLo.ADDR_LO() << 2 });
    value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
 
    if (data.addrHi.DATA32()) {
-      *reinterpret_cast<uint32_t *>(addr) = static_cast<uint32_t>(value);
+      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
    } else {
-      *reinterpret_cast<uint64_t *>(addr) = value;
+      *reinterpret_cast<uint64_t *>(ptr) = value;
    }
 }
 
@@ -527,8 +528,8 @@ void
 GLDriver::eventWrite(const latte::pm4::EventWrite &data)
 {
    auto type = data.eventInitiator.EVENT_TYPE();
-   auto addr = data.addrLo.ADDR_LO() << 2;
-   auto ptr = mem::translate(addr);
+   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+   auto ptr = gpu::internal::translateAddress(addr);
    auto value = uint64_t { 0 };
 
    decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
@@ -539,7 +540,7 @@ GLDriver::eventWrite(const latte::pm4::EventWrite &data)
       //  expose the raw counter, so we detect GX2QueryBegin/End by the
       //  write address and translate this to a SAMPLES_PASSED query.
       if (addr == mLastOccQueryAddress + 8) {
-         mLastOccQueryAddress = 0;
+         mLastOccQueryAddress = phys_addr { 0 };
 
          decaf_check(mOccQuery);
          gl::glEndQuery(gl::GL_SAMPLES_PASSED);
@@ -581,7 +582,6 @@ GLDriver::eventWrite(const latte::pm4::EventWrite &data)
    }
 
    value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
-
    *reinterpret_cast<uint64_t *>(ptr) = value;
 }
 
@@ -593,8 +593,8 @@ GLDriver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
    }
 
    auto value = uint64_t { 0 };
-   auto addr = data.addrLo.ADDR_LO() << 2;
-   auto ptr = mem::translate(addr);
+   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+   auto ptr = gpu::internal::translateAddress(addr);
 
    decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
 
@@ -634,7 +634,7 @@ GLDriver::executeBuffer(const gpu::ringbuffer::Item &item)
    runRemoteThreadTasks();
 
    // Execute command buffer
-   runCommandBuffer(item.buffer, item.numWords);
+   runCommandBuffer(item.buffer.getRawPointer(), item.numWords);
 
    // Release command buffer when it finishes executing
    addFenceSync([=](){
@@ -747,12 +747,11 @@ GLDriver::runRemoteThreadTasks()
 }
 
 void
-GLDriver::notifyCpuFlush(void *ptr,
+GLDriver::notifyCpuFlush(phys_addr address,
                          uint32_t size)
 {
    std::unique_lock<std::mutex> lock(mResourceMap.getMutex());
-
-   auto iter = mResourceMap.getIterator(mem::untranslate(ptr), size);
+   auto iter = mResourceMap.getIterator(phys_addr { address }, size);
 
    Resource *resource;
    while ((resource = iter.next()) != nullptr) {
@@ -761,12 +760,12 @@ GLDriver::notifyCpuFlush(void *ptr,
 }
 
 void
-GLDriver::notifyGpuFlush(void *ptr,
+GLDriver::notifyGpuFlush(phys_addr address,
                          uint32_t size)
 {
    std::unique_lock<std::mutex> lock(mOutputBufferMap.getMutex());
 
-   auto memStart = mem::untranslate(ptr);
+   auto memStart = phys_addr { address };
    auto memEnd = memStart + size;
    auto iter = mOutputBufferMap.getIterator(memStart, size);
 

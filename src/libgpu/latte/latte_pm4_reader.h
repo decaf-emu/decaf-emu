@@ -52,15 +52,6 @@ public:
       return *this;
    }
 
-   // Read one word as a pointer
-   template<typename Type>
-   PacketReader &operator()(Type *&value)
-   {
-      checkSize(1);
-      value = mem::translate<Type>(mBuffer[mPosition++]);
-      return *this;
-   }
-
    // Read the rest of the entire packet
    template<typename Type>
    PacketReader &operator()(gsl::span<Type> &values)

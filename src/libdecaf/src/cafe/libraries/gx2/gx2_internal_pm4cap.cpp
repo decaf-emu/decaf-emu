@@ -3,6 +3,8 @@
 #include "gx2_event.h"
 #include "gx2_internal_pm4cap.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <array>
 #include <addrlib/addrinterface.h>
 #include <common/byte_swap.h>
@@ -24,7 +26,9 @@ using decaf::pm4::CaptureMagic;
 using decaf::pm4::CapturePacket;
 using decaf::pm4::CaptureMemoryLoad;
 using decaf::pm4::CaptureSetBuffer;
+using namespace latte;
 using namespace latte::pm4;
+using namespace cafe::coreinit;
 
 static const auto
 HashAllMemory = true;
@@ -39,8 +43,8 @@ class Recorder
 {
    struct RecordedMemory
    {
-      virt_addr start;
-      virt_addr end;
+      phys_addr start;
+      phys_addr end;
       uint64_t hash[2];
    };
 
@@ -114,33 +118,37 @@ public:
    void
    commandBuffer(CommandBuffer *buffer)
    {
-      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
+      decaf_check(mState == CaptureState::Enabled ||
+                  mState == CaptureState::WaitEndNextFrame);
       std::unique_lock<std::mutex> lock { mMutex };
       auto size = buffer->curSize * 4;
-      scanCommandBuffer(buffer->buffer, buffer->curSize);
+      scanCommandBuffer(
+         phys_cast<uint32_t *>(OSEffectiveToPhysical(virt_cast<virt_addr>(buffer->buffer))),
+         buffer->curSize);
 
       CapturePacket packet;
       packet.type = CapturePacket::CommandBuffer;
       packet.size = size;
       writePacket(packet);
-      writeData(buffer->buffer, packet.size);
+      writeData(buffer->buffer.getRawPointer(), packet.size);
    }
 
    void
-   cpuFlush(void *buffer,
+   cpuFlush(phys_addr address,
             uint32_t size)
    {
-      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
+      decaf_check(mState == CaptureState::Enabled ||
+                  mState == CaptureState::WaitEndNextFrame);
       std::unique_lock<std::mutex> lock { mMutex };
-      auto addr = cpu::translate(buffer);
-      trackMemory(CaptureMemoryLoad::CpuFlush, addr, size);
+      trackMemory(CaptureMemoryLoad::CpuFlush, address, size);
    }
 
    void
-   gpuFlush(void *buffer,
+   gpuFlush(phys_addr address,
             uint32_t size)
    {
-      decaf_check(mState == CaptureState::Enabled || mState == CaptureState::WaitEndNextFrame);
+      decaf_check(mState == CaptureState::Enabled ||
+                  mState == CaptureState::WaitEndNextFrame);
       // Not sure if we need to do something here...
    }
 
@@ -193,7 +201,7 @@ private:
 
          CaptureSetBuffer setBuffer;
          setBuffer.type = CaptureSetBuffer::TvBuffer;
-         setBuffer.address = static_cast<uint32_t>(virt_cast<virt_addr>(tvInfo->buffer));
+         setBuffer.address = OSEffectiveToPhysical(virt_cast<virt_addr>(tvInfo->buffer));
          setBuffer.size = tvInfo->size;
          setBuffer.renderMode = tvInfo->tvRenderMode;
          setBuffer.surfaceFormat = tvInfo->surfaceFormat;
@@ -212,7 +220,7 @@ private:
 
          CaptureSetBuffer setBuffer;
          setBuffer.type = CaptureSetBuffer::DrcBuffer;
-         setBuffer.address = static_cast<uint32_t>(virt_cast<virt_addr>(drcInfo->buffer));
+         setBuffer.address = OSEffectiveToPhysical(virt_cast<virt_addr>(drcInfo->buffer));
          setBuffer.size = drcInfo->size;
          setBuffer.renderMode = drcInfo->drcRenderMode;
          setBuffer.surfaceFormat = drcInfo->surfaceFormat;
@@ -237,29 +245,29 @@ private:
 
    void
    writeMemoryLoad(CaptureMemoryLoad::MemoryType type,
-                   void *buffer,
+                   phys_addr address,
                    uint32_t size)
    {
       CaptureMemoryLoad load;
       load.type = type;
-      load.address = mem::untranslate(buffer);
+      load.address = address;
 
       CapturePacket packet;
       packet.type = CapturePacket::MemoryLoad;
       packet.size = size + sizeof(CaptureMemoryLoad);
       writePacket(packet);
       writeData(&load, sizeof(CaptureMemoryLoad));
-      writeData(buffer, size);
+      writeData(phys_cast<void *>(address).getRawPointer(), size);
    }
 
    void
-   scanCommandBuffer(uint32_t *words, uint32_t numWords)
+   scanCommandBuffer(phys_ptr<uint32_t> words, uint32_t numWords)
    {
       std::vector<uint32_t> swapped;
       swapped.resize(numWords);
 
       for (auto i = 0u; i < swapped.size(); ++i) {
-         swapped[i] = byte_swap(words[i]);
+         swapped[i] = words[i];
       }
 
       auto buffer = swapped.data();
@@ -319,9 +327,9 @@ private:
                   uint32_t level,
                   bool isScanBuffer,
                   bool isDepthBuffer,
-                  latte::SQ_TEX_DIM dim,
-                  latte::SQ_DATA_FORMAT format,
-                  latte::SQ_TILE_MODE tileMode)
+                  SQ_TEX_DIM dim,
+                  SQ_DATA_FORMAT format,
+                  SQ_TILE_MODE tileMode)
    {
       ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
       auto hwFormat = format;
@@ -329,35 +337,35 @@ private:
       auto numSlices = 1u;
 
       switch (dim) {
-      case latte::SQ_TEX_DIM::DIM_1D:
+      case SQ_TEX_DIM::DIM_1D:
          height = 1;
          numSlices = 1;
          break;
-      case latte::SQ_TEX_DIM::DIM_2D:
+      case SQ_TEX_DIM::DIM_2D:
          height = std::max<uint32_t>(1u, height >> level);
          numSlices = 1;
          break;
-      case latte::SQ_TEX_DIM::DIM_3D:
+      case SQ_TEX_DIM::DIM_3D:
          height = std::max<uint32_t>(1u, height >> level);
          numSlices = std::max<uint32_t>(1u, depth >> level);
          break;
-      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+      case SQ_TEX_DIM::DIM_CUBEMAP:
          height = std::max<uint32_t>(1u, height >> level);
          numSlices = std::max<uint32_t>(6u, depth);
          break;
-      case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      case SQ_TEX_DIM::DIM_1D_ARRAY:
          height = 1;
          numSlices = depth;
          break;
-      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      case SQ_TEX_DIM::DIM_2D_ARRAY:
          height = std::max<uint32_t>(1u, height >> level);
          numSlices = depth;
          break;
-      case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+      case SQ_TEX_DIM::DIM_2D_MSAA:
          height = std::max<uint32_t>(1u, height >> level);
          numSlices = 1;
          break;
-      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      case SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
          height = std::max<uint32_t>(1u, height >> level);
          numSlices = depth;
          break;
@@ -371,7 +379,7 @@ private:
       input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
       input.tileMode = static_cast<AddrTileMode>(tileMode & 0xF);
       input.format = static_cast<AddrFormat>(hwFormat);
-      input.bpp = latte::getDataFormatBitsPerElement(format);
+      input.bpp = getDataFormatBitsPerElement(format);
       input.width = width;
       input.height = height;
       input.numSlices = numSlices;
@@ -382,11 +390,11 @@ private:
       input.slice = 0;
       input.mipLevel = level;
 
-      if (dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+      if (dim == SQ_TEX_DIM::DIM_CUBEMAP) {
          input.flags.cube = 1;
       }
 
-      if (dim == latte::SQ_TEX_DIM::DIM_3D) {
+      if (dim == SQ_TEX_DIM::DIM_3D) {
          input.flags.volume = 1;
       }
 
@@ -404,7 +412,7 @@ private:
    }
 
    void
-   trackSurface(virt_addr baseAddress,
+   trackSurface(phys_addr baseAddress,
                 uint32_t pitch,
                 uint32_t height,
                 uint32_t depth,
@@ -412,23 +420,25 @@ private:
                 uint32_t level,
                 bool isDepthBuffer,
                 bool isScanBuffer,
-                latte::SQ_TEX_DIM dim,
-                latte::SQ_DATA_FORMAT format,
-                latte::SQ_TILE_MODE tileMode)
+                SQ_TEX_DIM dim,
+                SQ_DATA_FORMAT format,
+                SQ_TILE_MODE tileMode)
    {
       if (!baseAddress || !pitch || !height) {
          return;
       }
 
       // Adjust address for swizzling
-      if (tileMode >= latte::SQ_TILE_MODE::TILED_2D_THIN1) {
+      if (tileMode >= SQ_TILE_MODE::TILED_2D_THIN1) {
          baseAddress &= ~(0x800 - 1);
       } else {
          baseAddress &= ~(0x100 - 1);
       }
 
       // Calculate size
-      auto info = getSurfaceInfo(pitch, height, depth, aa, level, isDepthBuffer, isScanBuffer, dim, format, tileMode);
+      auto info = getSurfaceInfo(pitch, height, depth, aa, level,
+                                 isDepthBuffer, isScanBuffer, dim, format,
+                                 tileMode);
 
       // TODO: Use align? info.baseAlign;
 
@@ -437,87 +447,89 @@ private:
    }
 
    void
-   trackColorBuffer(latte::CB_COLORN_BASE cb_color_base,
-                    latte::CB_COLORN_SIZE cb_color_size,
-                    latte::CB_COLORN_INFO cb_color_info)
+   trackColorBuffer(CB_COLORN_BASE cb_color_base,
+                    CB_COLORN_SIZE cb_color_size,
+                    CB_COLORN_INFO cb_color_info)
    {
       auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
       auto slice_tile_max = cb_color_size.SLICE_TILE_MAX();
-      auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
-      auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
+      auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * MicroTileWidth);
+      auto height = static_cast<uint32_t>(
+         ((slice_tile_max + 1) * (MicroTileWidth * MicroTileHeight)) / pitch);
       auto addr = (cb_color_base.BASE_256B() << 8);
 
       if (!addr || !pitch || !height) {
          return;
       }
 
-      auto format = static_cast<latte::SQ_DATA_FORMAT>(cb_color_info.FORMAT());
-      auto tileMode = latte::getArrayModeTileMode(cb_color_info.ARRAY_MODE());
+      auto format = static_cast<SQ_DATA_FORMAT>(cb_color_info.FORMAT());
+      auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
-      // trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM::DIM_2D, format, tileMode);
+      // trackSurface(addr, pitch, height, 1, SQ_TEX_DIM::DIM_2D, format, tileMode);
    }
 
    void
-   trackDepthBuffer(latte::DB_DEPTH_BASE db_depth_base,
-                    latte::DB_DEPTH_SIZE db_depth_size,
-                    latte::DB_DEPTH_INFO db_depth_info)
+   trackDepthBuffer(DB_DEPTH_BASE db_depth_base,
+                    DB_DEPTH_SIZE db_depth_size,
+                    DB_DEPTH_INFO db_depth_info)
    {
       auto pitch_tile_max = db_depth_size.PITCH_TILE_MAX();
       auto slice_tile_max = db_depth_size.SLICE_TILE_MAX();
-      auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
-      auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
+      auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * MicroTileWidth);
+      auto height = static_cast<uint32_t>(
+         ((slice_tile_max + 1) * (MicroTileWidth * MicroTileHeight)) / pitch);
       auto addr = (db_depth_base.BASE_256B() << 8);
 
       if (!addr || !pitch || !height) {
          return;
       }
 
-      auto format = static_cast<latte::SQ_DATA_FORMAT>(db_depth_info.FORMAT());
-      auto tileMode = latte::getArrayModeTileMode(db_depth_info.ARRAY_MODE());
+      auto format = static_cast<SQ_DATA_FORMAT>(db_depth_info.FORMAT());
+      auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
 
       // Disabled for now, because it's a pointless upload
-      //trackSurface(addr, pitch, height, 1, latte::SQ_TEX_DIM::DIM_2D, format, tileMode);
+      //trackSurface(addr, pitch, height, 1, SQ_TEX_DIM::DIM_2D, format, tileMode);
    }
 
    void
       trackActiveShaders()
    {
-      auto pgm_start_fs = getRegister<latte::SQ_PGM_START_FS>(latte::Register::SQ_PGM_START_FS);
-      auto pgm_size_fs = getRegister<latte::SQ_PGM_SIZE_FS>(latte::Register::SQ_PGM_SIZE_FS);
+      auto pgm_start_fs = getRegister<SQ_PGM_START_FS>(Register::SQ_PGM_START_FS);
+      auto pgm_size_fs = getRegister<SQ_PGM_SIZE_FS>(Register::SQ_PGM_SIZE_FS);
       trackMemory(CaptureMemoryLoad::FetchShader,
-                  virt_addr { pgm_start_fs.PGM_START() << 8 },
+                  phys_addr { pgm_start_fs.PGM_START() << 8 },
                   pgm_size_fs.PGM_SIZE() << 3);
 
-      auto pgm_start_vs = getRegister<latte::SQ_PGM_START_VS>(latte::Register::SQ_PGM_START_VS);
-      auto pgm_size_vs = getRegister<latte::SQ_PGM_SIZE_VS>(latte::Register::SQ_PGM_SIZE_VS);
+      auto pgm_start_vs = getRegister<SQ_PGM_START_VS>(Register::SQ_PGM_START_VS);
+      auto pgm_size_vs = getRegister<SQ_PGM_SIZE_VS>(Register::SQ_PGM_SIZE_VS);
       trackMemory(CaptureMemoryLoad::VertexShader,
-                  virt_addr { pgm_start_vs.PGM_START() << 8 },
+                  phys_addr { pgm_start_vs.PGM_START() << 8 },
                   pgm_size_vs.PGM_SIZE() << 3);
 
-      auto pgm_start_ps = getRegister<latte::SQ_PGM_START_PS>(latte::Register::SQ_PGM_START_PS);
-      auto pgm_size_ps = getRegister<latte::SQ_PGM_SIZE_PS>(latte::Register::SQ_PGM_SIZE_PS);
+      auto pgm_start_ps = getRegister<SQ_PGM_START_PS>(Register::SQ_PGM_START_PS);
+      auto pgm_size_ps = getRegister<SQ_PGM_SIZE_PS>(Register::SQ_PGM_SIZE_PS);
       trackMemory(CaptureMemoryLoad::PixelShader,
-                  virt_addr { pgm_start_ps.PGM_START() << 8 },
+                  phys_addr { pgm_start_ps.PGM_START() << 8 },
                   pgm_size_ps.PGM_SIZE() << 3);
 
-      auto pgm_start_gs = getRegister<latte::SQ_PGM_START_GS>(latte::Register::SQ_PGM_START_GS);
-      auto pgm_size_gs = getRegister<latte::SQ_PGM_SIZE_GS>(latte::Register::SQ_PGM_SIZE_GS);
+      auto pgm_start_gs = getRegister<SQ_PGM_START_GS>(Register::SQ_PGM_START_GS);
+      auto pgm_size_gs = getRegister<SQ_PGM_SIZE_GS>(Register::SQ_PGM_SIZE_GS);
       trackMemory(CaptureMemoryLoad::GeometryShader,
-                  virt_addr { pgm_start_gs.PGM_START() << 8 },
+                  phys_addr { pgm_start_gs.PGM_START() << 8 },
                   pgm_size_gs.PGM_SIZE() << 3);
    }
 
    void
    trackActiveAttribBuffers()
    {
-      for (auto i = 0u; i < latte::MaxAttributes; ++i) {
-         auto resourceOffset = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
-         auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
-         auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);
+      for (auto i = 0u; i < MaxAttributes; ++i) {
+         auto resourceOffset = (SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
+         auto sq_vtx_constant_word0 = getRegister<SQ_VTX_CONSTANT_WORD0_N>(Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
+         auto sq_vtx_constant_word1 = getRegister<SQ_VTX_CONSTANT_WORD1_N>(Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);
 
          trackMemory(CaptureMemoryLoad::AttributeBuffer,
-                     virt_addr { sq_vtx_constant_word0.BASE_ADDRESS() },
+                     phys_addr { sq_vtx_constant_word0.BASE_ADDRESS() },
                      sq_vtx_constant_word1.SIZE() + 1);
       }
    }
@@ -525,12 +537,12 @@ private:
    void
    trackActiveUniforms()
    {
-      for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-         auto sq_alu_const_cache_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
-         auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(latte::Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
+      for (auto i = 0u; i < MaxUniformBlocks; ++i) {
+         auto sq_alu_const_cache_vs = getRegister<uint32_t>(Register::SQ_ALU_CONST_CACHE_VS_0 + 4 * i);
+         auto sq_alu_const_buffer_size_vs = getRegister<uint32_t>(Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + 4 * i);
 
          trackMemory(CaptureMemoryLoad::UniformBuffer,
-                     virt_addr { sq_alu_const_cache_vs << 8 },
+                     phys_addr { sq_alu_const_cache_vs << 8 },
                      sq_alu_const_buffer_size_vs << 8);
       }
    }
@@ -538,17 +550,17 @@ private:
    void
    trackActiveTextures()
    {
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
-         auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
-         auto sq_tex_resource_word1 = getRegister<latte::SQ_TEX_RESOURCE_WORD1_N>(latte::Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);
-         auto sq_tex_resource_word2 = getRegister<latte::SQ_TEX_RESOURCE_WORD2_N>(latte::Register::SQ_RESOURCE_WORD2_0 + 4 * resourceOffset);
-         auto sq_tex_resource_word3 = getRegister<latte::SQ_TEX_RESOURCE_WORD3_N>(latte::Register::SQ_RESOURCE_WORD3_0 + 4 * resourceOffset);
-         auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
-         auto sq_tex_resource_word5 = getRegister<latte::SQ_TEX_RESOURCE_WORD5_N>(latte::Register::SQ_RESOURCE_WORD5_0 + 4 * resourceOffset);
-         auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_RESOURCE_WORD6_0 + 4 * resourceOffset);
+      for (auto i = 0u; i < MaxTextures; ++i) {
+         auto resourceOffset = (SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
+         auto sq_tex_resource_word0 = getRegister<SQ_TEX_RESOURCE_WORD0_N>(Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
+         auto sq_tex_resource_word1 = getRegister<SQ_TEX_RESOURCE_WORD1_N>(Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);
+         auto sq_tex_resource_word2 = getRegister<SQ_TEX_RESOURCE_WORD2_N>(Register::SQ_RESOURCE_WORD2_0 + 4 * resourceOffset);
+         auto sq_tex_resource_word3 = getRegister<SQ_TEX_RESOURCE_WORD3_N>(Register::SQ_RESOURCE_WORD3_0 + 4 * resourceOffset);
+         auto sq_tex_resource_word4 = getRegister<SQ_TEX_RESOURCE_WORD4_N>(Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
+         auto sq_tex_resource_word5 = getRegister<SQ_TEX_RESOURCE_WORD5_N>(Register::SQ_RESOURCE_WORD5_0 + 4 * resourceOffset);
+         auto sq_tex_resource_word6 = getRegister<SQ_TEX_RESOURCE_WORD6_N>(Register::SQ_RESOURCE_WORD6_0 + 4 * resourceOffset);
 
-         trackSurface(virt_addr { sq_tex_resource_word2.BASE_ADDRESS() << 8 },
+         trackSurface(phys_addr { sq_tex_resource_word2.BASE_ADDRESS() << 8 },
                       (sq_tex_resource_word0.PITCH() + 1) * 8,
                       sq_tex_resource_word1.TEX_HEIGHT() + 1,
                       sq_tex_resource_word1.TEX_DEPTH() + 1,
@@ -565,10 +577,10 @@ private:
    void
    trackActiveColorBuffer()
    {
-      for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
-         auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
-         auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
-         auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
+      for (auto i = 0u; i < MaxRenderTargets; ++i) {
+         auto cb_color_base = getRegister<CB_COLORN_BASE>(Register::CB_COLOR0_BASE + i * 4);
+         auto cb_color_size = getRegister<CB_COLORN_SIZE>(Register::CB_COLOR0_SIZE + i * 4);
+         auto cb_color_info = getRegister<CB_COLORN_INFO>(Register::CB_COLOR0_INFO + i * 4);
 
          trackColorBuffer(cb_color_base, cb_color_size, cb_color_info);
       }
@@ -577,9 +589,9 @@ private:
    void
    trackActiveDepthBuffer()
    {
-      auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
-      auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
-      auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
+      auto db_depth_base = getRegister<DB_DEPTH_BASE>(Register::DB_DEPTH_BASE);
+      auto db_depth_size = getRegister<DB_DEPTH_SIZE>(Register::DB_DEPTH_SIZE);
+      auto db_depth_info = getRegister<DB_DEPTH_INFO>(Register::DB_DEPTH_INFO);
 
       trackDepthBuffer(db_depth_base, db_depth_size, db_depth_info);
    }
@@ -596,15 +608,15 @@ private:
    }
 
    void
-   scanSetRegister(latte::Register reg,
+   scanSetRegister(Register reg,
                    uint32_t value)
    {
       mRegisters[reg / 4] = value;
    }
 
    void
-   scanLoadRegisters(latte::Register base,
-                     virt_ptr<uint32_t> src,
+   scanLoadRegisters(Register base,
+                     phys_ptr<uint32_t> src,
                      const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
    {
       for (auto &range : registers) {
@@ -612,7 +624,7 @@ private:
          auto count = range.second;
 
          for (auto j = start; j < start + count; ++j) {
-            scanSetRegister(static_cast<latte::Register>(base + j * 4), src[j]);
+            scanSetRegister(static_cast<Register>(base + j * 4), src[j]);
          }
       }
    }
@@ -634,7 +646,9 @@ private:
       case IT_OPCODE::DECAF_COPY_COLOR_TO_SCAN:
       {
          auto data = read<DecafCopyColorToScan>(reader);
-         trackColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info);
+         trackColorBuffer(data.cb_color_base,
+                          data.cb_color_size,
+                          data.cb_color_info);
          break;
       }
       case IT_OPCODE::DECAF_SWAP_BUFFERS:
@@ -643,13 +657,17 @@ private:
       case IT_OPCODE::DECAF_CLEAR_COLOR:
       {
          auto data = read<DecafClearColor>(reader);
-         trackColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info);
+         trackColorBuffer(data.cb_color_base,
+                          data.cb_color_size,
+                          data.cb_color_info);
          break;
       }
       case IT_OPCODE::DECAF_CLEAR_DEPTH_STENCIL:
       {
          auto data = read<DecafClearDepthStencil>(reader);
-         trackDepthBuffer(data.db_depth_base, data.db_depth_size, data.db_depth_info);
+         trackDepthBuffer(data.db_depth_base,
+                          data.db_depth_size,
+                          data.db_depth_info);
          break;
       }
       case IT_OPCODE::DECAF_SET_BUFFER:
@@ -664,7 +682,9 @@ private:
       case IT_OPCODE::DECAF_COPY_SURFACE:
       {
          auto data = read<DecafCopySurface>(reader);
-         trackSurface(virt_addr { data.srcImage }, data.srcPitch, data.srcHeight, data.srcDepth, 0, data.srcLevel, false, false, data.srcDim, data.srcFormat, data.srcTileMode);
+         trackSurface(phys_addr { data.srcImage }, data.srcPitch,
+                      data.srcHeight, data.srcDepth, 0, data.srcLevel, false,
+                      false, data.srcDim, data.srcFormat, data.srcTileMode);
          break;
       }
       case IT_OPCODE::DECAF_SET_SWAP_INTERVAL:
@@ -676,14 +696,18 @@ private:
       case IT_OPCODE::DRAW_INDEX_2:
       {
          auto data = read<DrawIndex2>(reader);
-         auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
+         auto vgt_dma_index_type =
+            getRegister<VGT_DMA_INDEX_TYPE>(
+               Register::VGT_DMA_INDEX_TYPE);
          auto indexByteSize = 4u;
 
-         if (vgt_dma_index_type.INDEX_TYPE() == latte::VGT_INDEX_TYPE::INDEX_16) {
+         if (vgt_dma_index_type.INDEX_TYPE() == VGT_INDEX_TYPE::INDEX_16) {
             indexByteSize = 2u;
          }
 
-         trackMemory(CaptureMemoryLoad::IndexBuffer, cpu::translate(data.addr), data.count * indexByteSize);
+         trackMemory(CaptureMemoryLoad::IndexBuffer,
+                     phys_addr { data.addr },
+                     data.count * indexByteSize);
          trackReadyDraw();
          break;
       }
@@ -693,13 +717,13 @@ private:
       case IT_OPCODE::INDEX_TYPE:
       {
          auto data = read<IndexType>(reader);
-         mRegisters[latte::Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
+         mRegisters[Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
          break;
       }
       case IT_OPCODE::NUM_INSTANCES:
       {
          auto data = read<NumInstances>(reader);
-         mRegisters[latte::Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
+         mRegisters[Register::VGT_DMA_NUM_INSTANCES / 4] = data.count;
          break;
       }
       case IT_OPCODE::SET_ALU_CONST:
@@ -707,7 +731,8 @@ private:
          auto data = read<SetAluConsts>(reader);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(data.id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -717,7 +742,8 @@ private:
          auto data = read<SetConfigRegs>(reader);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(data.id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -727,7 +753,8 @@ private:
          auto data = read<SetContextRegs>(reader);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(data.id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -737,7 +764,8 @@ private:
          auto data = read<SetControlConstants>(reader);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(data.id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -747,7 +775,8 @@ private:
          auto data = read<SetLoopConsts>(reader);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(data.id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -757,7 +786,8 @@ private:
          auto data = read<SetSamplers>(reader);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(data.id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -765,10 +795,11 @@ private:
       case IT_OPCODE::SET_RESOURCE:
       {
          auto data = read<SetResources>(reader);
-         auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
+         auto id = Register::ResourceRegisterBase + (4 * data.id);
 
          for (auto i = 0u; i < data.values.size(); ++i) {
-            scanSetRegister(static_cast<latte::Register>(id + i * 4), data.values[i]);
+            scanSetRegister(static_cast<Register>(id + i * 4),
+                            data.values[i]);
          }
 
          break;
@@ -776,64 +807,72 @@ private:
       case IT_OPCODE::LOAD_CONFIG_REG:
       {
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, virt_cast<virt_addr>(data.addr), 0xB00 * 4);
+         scanLoadRegisters(Register::ConfigRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0xB00 * 4);
          break;
       }
       case IT_OPCODE::LOAD_CONTEXT_REG:
       {
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, virt_cast<virt_addr>(data.addr), 0x400 * 4);
+         scanLoadRegisters(Register::ContextRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0x400 * 4);
          break;
       }
       case IT_OPCODE::LOAD_ALU_CONST:
       {
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, virt_cast<virt_addr>(data.addr), 0x800 * 4);
+         scanLoadRegisters(Register::AluConstRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0x800 * 4);
          break;
       }
       case IT_OPCODE::LOAD_BOOL_CONST:
       {
          decaf_abort("Unsupported LOAD_BOOL_CONST");
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
+         scanLoadRegisters(Register::BoolConstRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
          break;
       }
       case IT_OPCODE::LOAD_LOOP_CONST:
       {
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, virt_cast<virt_addr>(data.addr), 0x60 * 4);
+         scanLoadRegisters(Register::LoopConstRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0x60 * 4);
          break;
       }
       case IT_OPCODE::LOAD_RESOURCE:
       {
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, virt_cast<virt_addr>(data.addr), 0xD9E * 4);
+         scanLoadRegisters(Register::ResourceRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0xD9E * 4);
          break;
       }
       case IT_OPCODE::LOAD_SAMPLER:
       {
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
-         trackMemory(CaptureMemoryLoad::ShadowState, virt_cast<virt_addr>(data.addr), 0xA2 * 4);
+         scanLoadRegisters(Register::SamplerRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
+         trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0xA2 * 4);
          break;
       }
       case IT_OPCODE::LOAD_CTL_CONST:
       {
          decaf_abort("Unsupported LOAD_CTL_CONST");
          auto data = read<LoadControlConst>(reader);
-         scanLoadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
+         scanLoadRegisters(Register::ControlRegisterBase,
+                           phys_cast<uint32_t *>(data.addr), data.values);
          break;
       }
       case IT_OPCODE::INDIRECT_BUFFER_PRIV:
       {
          auto data = read<IndirectBufferCall>(reader);
-         trackMemory(CaptureMemoryLoad::CommandBuffer, cpu::translate(data.addr), data.size * 4u);
-         scanCommandBuffer(reinterpret_cast<uint32_t *>(data.addr), data.size);
+         trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr, data.size * 4u);
+         scanCommandBuffer(phys_cast<uint32_t *>(data.addr), data.size);
          break;
       }
       case IT_OPCODE::MEM_WRITE:
@@ -854,7 +893,7 @@ private:
       {
          auto data = read<SurfaceSync>(reader);
          trackMemory(CaptureMemoryLoad::SurfaceSync,
-                     virt_addr { data.addr << 8 },
+                     phys_addr { data.addr << 8 },
                      data.size << 8);
          break;
       }
@@ -868,7 +907,7 @@ private:
    // Returns true if the memory was written into pm4 stream
    bool
    trackMemory(CaptureMemoryLoad::MemoryType type,
-               virt_addr addr,
+               phys_addr addr,
                uint32_t size)
    {
       auto trackStart = addr;
@@ -882,7 +921,7 @@ private:
       }
 
       if (useHash) {
-         MurmurHash3_x64_128(virt_cast<void *>(addr).getRawPointer(), size, 0, hash);
+         MurmurHash3_x64_128(phys_cast<void *>(addr).getRawPointer(), size, 0, hash);
       }
 
       for (auto &mem : mRecordedMemory) {
@@ -915,7 +954,7 @@ private:
          mRecordedMemory.emplace_back(RecordedMemory { trackStart, trackEnd, hash[0], hash[1] });
       }
 
-      writeMemoryLoad(type, virt_cast<void *>(addr).getRawPointer(), size);
+      writeMemoryLoad(type, addr, size);
       return true;
    }
 
@@ -999,22 +1038,22 @@ captureCommandBuffer(CommandBuffer *buffer)
 }
 
 void
-captureCpuFlush(void *buffer,
+captureCpuFlush(phys_addr address,
                 uint32_t size)
 {
    if (captureState() == CaptureState::Enabled ||
        captureState() == CaptureState::WaitEndNextFrame) {
-      gRecorder.cpuFlush(buffer, size);
+      gRecorder.cpuFlush(address, size);
    }
 }
 
 void
-captureGpuFlush(void *buffer,
+captureGpuFlush(phys_addr address,
                 uint32_t size)
 {
    if (captureState() == CaptureState::Enabled ||
        captureState() == CaptureState::WaitEndNextFrame) {
-      gRecorder.gpuFlush(buffer, size);
+      gRecorder.gpuFlush(address, size);
    }
 }
 

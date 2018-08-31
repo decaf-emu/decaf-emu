@@ -69,12 +69,6 @@ createDumpDirectory()
    platform::createDirectory("dump");
 }
 
-static std::string
-pointerAsString(virt_ptr<const void> pointer)
-{
-   return fmt::format("{:08X}", virt_cast<virt_addr>(pointer));
-}
-
 static void
 debugDumpData(const std::string &filename, virt_ptr<const void> data, size_t size)
 {
@@ -99,7 +93,7 @@ debugDumpTexture(virt_ptr<const GX2Texture> texture)
    createDumpDirectory();
 
    // Write text dump of GX2Texture structure to texture_X.txt
-   auto filename = "texture_" + pointerAsString(texture);
+   auto filename = fmt::format("texture_{}", texture);
 
    if (platform::fileExists("dump/" + filename + ".txt")) {
       return;
@@ -118,9 +112,9 @@ debugDumpTexture(virt_ptr<const GX2Texture> texture)
    fmt::format_to(out, "surface.use = {}\n", gx2::to_string(texture->surface.use));
    fmt::format_to(out, "surface.resourceFlags = {}\n", texture->surface.resourceFlags);
    fmt::format_to(out, "surface.imageSize = {}\n", texture->surface.imageSize);
-   fmt::format_to(out, "surface.image = {}\n", pointerAsString(texture->surface.image));
+   fmt::format_to(out, "surface.image = {}\n", texture->surface.image);
    fmt::format_to(out, "surface.mipmapSize = {}\n", texture->surface.mipmapSize);
-   fmt::format_to(out, "surface.mipmaps = {}\n", pointerAsString(texture->surface.mipmaps));
+   fmt::format_to(out, "surface.mipmaps = {}\n", texture->surface.mipmaps);
    fmt::format_to(out, "surface.tileMode = {}\n", gx2::to_string(texture->surface.tileMode));
    fmt::format_to(out, "surface.swizzle = {}\n", texture->surface.swizzle);
    fmt::format_to(out, "surface.alignment = {}\n", texture->surface.alignment);
@@ -317,10 +311,10 @@ debugDumpShader(virt_ptr<const GX2FetchShader> shader)
 
    fmt::memory_buffer out;
    fmt::format_to(out, "GX2FetchShader:\n");
-   fmt::format_to(out, "  address: {}\n", pointerAsString(shader->data));
+   fmt::format_to(out, "  address: {}\n", shader->data);
    fmt::format_to(out, "  size: {}\n", shader->size);
 
-   debugDumpShader("shader_fetch_" + pointerAsString(shader),
+   debugDumpShader(fmt::format("shader_fetch_{}", shader),
                    std::string_view { out.data(), out.size() },
                    shader,
                    true);
@@ -335,7 +329,7 @@ debugDumpShader(virt_ptr<const GX2PixelShader> shader)
 
    fmt::memory_buffer out;
    fmt::format_to(out, "GX2PixelShader:\n");
-   fmt::format_to(out, "  address: {}\n", pointerAsString(shader->data));
+   fmt::format_to(out, "  address: {}\n", shader->data);
    fmt::format_to(out, "  size: {}\n", shader->size);
    fmt::format_to(out, "  mode: {}\n", gx2::to_string(shader->mode));
 
@@ -345,7 +339,7 @@ debugDumpShader(virt_ptr<const GX2PixelShader> shader)
    formatLoopVars(out, shader->loopVarCount, shader->loopVars);
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
 
-   debugDumpShader("shader_pixel_" + pointerAsString(shader),
+   debugDumpShader(fmt::format("shader_pixel_{}", shader),
                    std::string_view { out.data(), out.size() },
                    shader);
 }
@@ -359,7 +353,7 @@ debugDumpShader(virt_ptr<const GX2VertexShader> shader)
 
    fmt::memory_buffer out;
    fmt::format_to(out, "GX2VertexShader:\n");
-   fmt::format_to(out, "  address: {}\n", pointerAsString(shader->data));
+   fmt::format_to(out, "  address: {}\n", shader->data);
    fmt::format_to(out, "  size: {}\n", shader->size);
    fmt::format_to(out, "  mode: {}\n", gx2::to_string(shader->mode));
 
@@ -370,7 +364,7 @@ debugDumpShader(virt_ptr<const GX2VertexShader> shader)
    formatSamplerVars(out, shader->samplerVarCount, shader->samplerVars);
    formatAttribVars(out, shader->attribVarCount, shader->attribVars);
 
-   debugDumpShader("shader_vertex_" + pointerAsString(shader),
+   debugDumpShader(fmt::format("shader_vertex_{}", shader),
                    std::string_view { out.data(), out.size() },
                    shader);
 }

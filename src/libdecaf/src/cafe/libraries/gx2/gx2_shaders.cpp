@@ -4,6 +4,8 @@
 #include "gx2_fetchshader.h"
 #include "gx2_shaders.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <common/decaf_assert.h>
 
 using namespace latte::pm4;
@@ -11,6 +13,8 @@ using latte::Register;
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 uint32_t
 GX2CalcGeometryShaderInputRingBufferSize(uint32_t ringItemSize)
@@ -30,7 +34,7 @@ GX2SetFetchShader(virt_ptr<GX2FetchShader> shader)
    auto sq_pgm_resources_fs = shader->regs.sq_pgm_resources_fs.value();
 
    uint32_t shaderRegData[] = {
-      virt_cast<virt_addr>(shader->data) >> 8,
+      OSEffectiveToPhysical(virt_cast<virt_addr>(shader->data)) >> 8,
       shader->size >> 3,
       0x100000,
       0x100000,
@@ -67,10 +71,10 @@ GX2SetVertexShader(virt_ptr<GX2VertexShader> shader)
    auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
    auto vgt_vertex_reuse_block_cntl = shader->regs.vgt_vertex_reuse_block_cntl.value();
 
-   auto shaderProgAddr = virt_cast<virt_addr>(shader->data);
+   auto shaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->data));
    auto shaderProgSize = shader->size;
    if (!shaderProgAddr) {
-      shaderProgAddr = virt_cast<virt_addr>(shader->gx2rData.buffer);
+      shaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->gx2rData.buffer));
       shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
    }
 
@@ -149,10 +153,10 @@ GX2SetPixelShader(virt_ptr<GX2PixelShader> shader)
    auto sq_pgm_resources_ps = shader->regs.sq_pgm_resources_ps.value();
    auto sq_pgm_exports_ps = shader->regs.sq_pgm_exports_ps.value();
 
-   auto shaderProgAddr = virt_cast<virt_addr>(shader->data);
+   auto shaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->data));
    auto shaderProgSize = shader->size;
    if (!shaderProgAddr) {
-      shaderProgAddr = virt_cast<virt_addr>(shader->gx2rData.buffer);
+      shaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->gx2rData.buffer));
       shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
    }
 
@@ -208,10 +212,10 @@ GX2SetGeometryShader(virt_ptr<GX2GeometryShader> shader)
    auto vgt_gs_mode = shader->regs.vgt_gs_mode.value();
    auto vgt_strmout_buffer_en = shader->regs.vgt_strmout_buffer_en.value();
 
-   auto shaderProgAddr = virt_cast<virt_addr>(shader->data);
+   auto shaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->data));
    auto shaderProgSize = shader->size;
    if (!shaderProgAddr) {
-      shaderProgAddr = virt_cast<virt_addr>(shader->gx2rData.buffer);
+      shaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->gx2rData.buffer));
       shaderProgSize = shader->gx2rData.elemCount * shader->gx2rData.elemSize;
    }
 
@@ -246,10 +250,10 @@ GX2SetGeometryShader(virt_ptr<GX2GeometryShader> shader)
    auto spi_vs_out_config = shader->regs.spi_vs_out_config.value();
    auto pa_cl_vs_out_cntl = shader->regs.pa_cl_vs_out_cntl.value();
 
-   auto vertexShaderProgAddr = virt_cast<virt_addr>(shader->vertexShaderData);
+   auto vertexShaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->vertexShaderData));
    auto vertexShaderProgSize = shader->vertexShaderSize;
    if (!vertexShaderProgAddr) {
-      vertexShaderProgAddr = virt_cast<virt_addr>(shader->gx2rVertexShaderData.buffer);
+      vertexShaderProgAddr = OSEffectiveToPhysical(virt_cast<virt_addr>(shader->gx2rVertexShaderData.buffer));
       vertexShaderProgSize = shader->gx2rVertexShaderData.elemCount * shader->gx2rVertexShaderData.elemSize;
    }
 
@@ -391,9 +395,9 @@ GX2SetVertexUniformBlock(uint32_t location,
    decaf_check(!(virt_cast<virt_addr>(data) & 0xFF));
 
    SetVtxResource res;
-   memset(&res, 0, sizeof(SetVtxResource));
+   std::memset(&res, 0, sizeof(SetVtxResource));
    res.id = (latte::SQ_RES_OFFSET::VS_BUF_RESOURCE_0 + location) * 7;
-   res.baseAddress = data.getRawPointer();
+   res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
 
    res.word1 = res.word1
       .SIZE(size - 1);
@@ -412,7 +416,7 @@ GX2SetVertexUniformBlock(uint32_t location,
    internal::writePM4(res);
 
    auto addrId = static_cast<Register>(Register::SQ_ALU_CONST_CACHE_VS_0 + location * 4);
-   auto addr256 = virt_cast<virt_addr>(data) >> 8;
+   auto addr256 = OSEffectiveToPhysical(virt_cast<virt_addr>(data)) >> 8;
    internal::writePM4(SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<Register>(Register::SQ_ALU_CONST_BUFFER_SIZE_VS_0 + location * 4);
@@ -428,9 +432,9 @@ GX2SetPixelUniformBlock(uint32_t location,
    decaf_check(!(virt_cast<virt_addr>(data) & 0xFF));
 
    SetVtxResource res;
-   memset(&res, 0, sizeof(SetVtxResource));
+   std::memset(&res, 0, sizeof(SetVtxResource));
    res.id = (latte::SQ_RES_OFFSET::PS_BUF_RESOURCE_0 + location) * 7;
-   res.baseAddress = data.getRawPointer();
+   res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
 
    res.word1 = res.word1
       .SIZE(size - 1);
@@ -449,7 +453,7 @@ GX2SetPixelUniformBlock(uint32_t location,
    internal::writePM4(res);
 
    auto addrId = static_cast<Register>(Register::SQ_ALU_CONST_CACHE_PS_0 + location * 4);
-   auto addr256 = virt_cast<virt_addr>(data) >> 8;
+   auto addr256 = OSEffectiveToPhysical(virt_cast<virt_addr>(data)) >> 8;
    internal::writePM4(SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<Register>(Register::SQ_ALU_CONST_BUFFER_SIZE_PS_0 + location * 4);
@@ -466,8 +470,8 @@ GX2SetGeometryUniformBlock(uint32_t location,
 
    SetVtxResource res;
    res.id = (latte::SQ_RES_OFFSET::GS_BUF_RESOURCE_0 + location) * 7;
-   memset(&res, 0, sizeof(SetVtxResource));
-   res.baseAddress = data.getRawPointer();
+   std::memset(&res, 0, sizeof(SetVtxResource));
+   res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
 
    res.word1 = res.word1
       .SIZE(size - 1);
@@ -486,7 +490,7 @@ GX2SetGeometryUniformBlock(uint32_t location,
    internal::writePM4(res);
 
    auto addrId = static_cast<Register>(Register::SQ_ALU_CONST_CACHE_GS_0 + location * 4);
-   auto addr256 = virt_cast<virt_addr>(data) >> 8;
+   auto addr256 = OSEffectiveToPhysical(virt_cast<virt_addr>(data)) >> 8;
    internal::writePM4(SetContextReg { addrId, addr256 });
 
    auto sizeId = static_cast<Register>(Register::SQ_ALU_CONST_BUFFER_SIZE_GS_0 + location * 4);
@@ -630,11 +634,11 @@ GX2SetStreamOutBuffer(uint32_t index,
    decaf_check(stream->stride % 4 == 0);
    decaf_check(stream->size % 4 == 0);
 
-   auto addr = virt_cast<virt_addr>(stream->buffer);
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(stream->buffer));
    auto size = stream->size;
 
    if (!addr) {
-      addr = virt_cast<virt_addr>(stream->gx2rData.buffer);
+      addr = OSEffectiveToPhysical(virt_cast<virt_addr>(stream->gx2rData.buffer));
       size = stream->gx2rData.elemCount * stream->gx2rData.elemSize;
    }
 
@@ -660,7 +664,7 @@ GX2SetStreamOutContext(uint32_t index,
                        GX2StreamOutContextMode mode)
 {
    decaf_check(index <= 3);
-   auto srcLo = 0u;
+   auto srcLo = phys_addr { 0 };
 
    auto control = SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(false)
@@ -670,21 +674,21 @@ GX2SetStreamOutContext(uint32_t index,
    case GX2StreamOutContextMode::Append:
       control = control
          .OFFSET_SOURCE(STRMOUT_OFFSET_FROM_MEM);
-      srcLo = static_cast<uint32_t>(virt_cast<virt_addr>(stream->context));
+      srcLo = OSEffectiveToPhysical(virt_cast<virt_addr>(stream->context));
       break;
    case GX2StreamOutContextMode::FromStart:
       control = control
          .OFFSET_SOURCE(STRMOUT_OFFSET_FROM_PACKET);
-      srcLo = 0u;
+      srcLo = phys_addr { 0 };
       break;
    case GX2StreamOutContextMode::FromOffset:
       control = control
          .OFFSET_SOURCE(STRMOUT_OFFSET_FROM_PACKET);
-      srcLo = static_cast<uint32_t>(virt_cast<virt_addr>(stream));
+      srcLo = OSEffectiveToPhysical(virt_cast<virt_addr>(stream));
       break;
    }
 
-   internal::writePM4(StreamOutBufferUpdate { control, 0, 0, srcLo, 0 });
+   internal::writePM4(StreamOutBufferUpdate { control, phys_addr { 0 }, 0, srcLo, 0 });
 }
 
 void
@@ -692,27 +696,30 @@ GX2SaveStreamOutContext(uint32_t index,
                         virt_ptr<GX2OutputStream> stream)
 {
    decaf_check(index <= 3);
-   auto dstLo = static_cast<uint32_t>(virt_cast<virt_addr>(stream->context));
+   auto dstLo = OSEffectiveToPhysical(virt_cast<virt_addr>(stream->context));
 
    auto control = SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(true)
       .OFFSET_SOURCE(STRMOUT_OFFSET_NONE)
       .SELECT_BUFFER(index);
 
-   internal::writePM4(StreamOutBufferUpdate { control, dstLo, 0, 0, 0 });
+   internal::writePM4(StreamOutBufferUpdate { control, dstLo, 0, phys_addr { 0 }, 0 });
 }
 
 void
 GX2SetGeometryShaderInputRingBuffer(virt_ptr<void> buffer,
                                     uint32_t size)
 {
-   internal::writePM4(SetConfigReg { Register::SQ_ESGS_RING_BASE, virt_cast<virt_addr>(buffer) >> 8 });
+   internal::writePM4(SetConfigReg {
+      Register::SQ_ESGS_RING_BASE,
+      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)) >> 8
+   });
    internal::writePM4(SetConfigReg { Register::SQ_ESGS_RING_SIZE, size >> 8 });
 
    SetVtxResource res;
-   memset(&res, 0, sizeof(SetVtxResource));
+   std::memset(&res, 0, sizeof(SetVtxResource));
    res.id = latte::SQ_RES_OFFSET::GS_GSIN_RESOURCE * 7;
-   res.baseAddress = buffer.getRawPointer();
+   res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(buffer));
 
    res.word1 = res.word1
       .SIZE(size - 1);
@@ -735,13 +742,16 @@ void
 GX2SetGeometryShaderOutputRingBuffer(virt_ptr<void> buffer,
                                      uint32_t size)
 {
-   internal::writePM4(SetConfigReg { Register::SQ_GSVS_RING_BASE, virt_cast<virt_addr>(buffer) >> 8 });
+   internal::writePM4(SetConfigReg {
+      Register::SQ_GSVS_RING_BASE,
+      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)) >> 8
+   });
    internal::writePM4(SetConfigReg { Register::SQ_GSVS_RING_SIZE, size >> 8 });
 
    SetVtxResource res;
-   memset(&res, 0, sizeof(SetVtxResource));
+   std::memset(&res, 0, sizeof(SetVtxResource));
    res.id = latte::SQ_RES_OFFSET::VS_GSOUT_RESOURCE * 7;
-   res.baseAddress = buffer.getRawPointer();
+   res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(buffer));
 
    res.word1 = res.word1
       .SIZE(size - 1);

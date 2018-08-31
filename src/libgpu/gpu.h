@@ -1,5 +1,5 @@
 #pragma once
-#include <libcpu/pointer.h>
+#include <cstdint>
 
 namespace gpu
 {

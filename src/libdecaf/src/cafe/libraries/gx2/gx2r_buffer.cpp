@@ -62,7 +62,7 @@ GX2RCreateBuffer(virt_ptr<GX2RBuffer> buffer)
    // Check if we need to invalidate the buffer
    if ((buffer->flags & GX2RResourceFlags::UsageGpuWrite) ||
        (buffer->flags & GX2RResourceFlags::UsageDmaWrite)) {
-      DCInvalidateRange(buffer->buffer, size);
+      DCInvalidateRange(virt_cast<virt_addr>(buffer->buffer), size);
    }
 
    return TRUE;
@@ -82,7 +82,8 @@ GX2RCreateBufferUserMemory(virt_ptr<GX2RBuffer> buffer,
    // Check if we need to invalidate the buffer
    if ((buffer->flags & GX2RResourceFlags::UsageGpuWrite) ||
        (buffer->flags & GX2RResourceFlags::UsageDmaWrite)) {
-      DCInvalidateRange(buffer->buffer, buffer->elemCount * buffer->elemSize);
+      DCInvalidateRange(virt_cast<virt_addr>(buffer->buffer),
+                        buffer->elemCount * buffer->elemSize);
    }
 
    // TODO: GX2NotifyMemAlloc(buffer->buffer, size, GX2RGetBufferAlignment(buffer->flags));
@@ -134,7 +135,7 @@ GX2RLockBufferEx(virt_ptr<GX2RBuffer> buffer,
        (flags & GX2RResourceFlags::UsageDmaWrite)) {
       if (!(flags & GX2RResourceFlags::DisableCpuInvalidate) &&
           !(flags & GX2RResourceFlags::LockedReadOnly)) {
-         DCInvalidateRange(buffer->buffer,
+         DCInvalidateRange(virt_cast<virt_addr>(buffer->buffer),
                            buffer->elemCount * buffer->elemSize);
       }
    }

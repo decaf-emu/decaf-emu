@@ -7,13 +7,16 @@
 #include "gx2_state.h"
 #include "gx2_tessellation.h"
 
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+
 #include <libgpu/latte/latte_pm4_commands.h>
 #include <utility>
 
-using namespace latte::pm4;
-
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
+using namespace latte::pm4;
 
 static std::pair<uint32_t, uint32_t>
 ConfigRegisterRange[] =
@@ -135,32 +138,32 @@ loadState(virt_ptr<GX2ContextState> state,
    internal::enableStateShadowing();
 
    internal::writePM4(LoadConfigReg {
-      virt_addrof(state->shadowState.config),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.config))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(ConfigRegisterRange)
    });
 
    internal::writePM4(LoadContextReg {
-      virt_addrof(state->shadowState.context),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.context))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(ContextRegisterRange)
    });
 
    internal::writePM4(LoadAluConst {
-      virt_addrof(state->shadowState.alu),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.alu))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(AluConstRange)
    });
 
    internal::writePM4(LoadLoopConst {
-      virt_addrof(state->shadowState.loop),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.loop))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(LoopConstRange)
    });
 
    internal::writePM4(latte::pm4::LoadResource {
-      virt_addrof(state->shadowState.resource),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.resource))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(ResourceRange)
    });
 
    internal::writePM4(LoadSampler {
-      virt_addrof(state->shadowState.sampler),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.sampler))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(SamplerRange)
    });
 }

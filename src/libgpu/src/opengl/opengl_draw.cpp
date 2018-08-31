@@ -1,4 +1,5 @@
 #ifdef DECAF_GL
+#include "gpu_memory.h"
 #include "opengl_driver.h"
 
 #include <common/decaf_assert.h>
@@ -327,7 +328,8 @@ GLDriver::drawIndexAuto(const latte::pm4::DrawIndexAuto &data)
 void
 GLDriver::drawIndex2(const latte::pm4::DrawIndex2 &data)
 {
-   drawPrimitivesIndexed(data.addr, data.count);
+   drawPrimitivesIndexed(phys_cast<void *>(data.addr).getRawPointer(),
+                         data.count);
 }
 
 void

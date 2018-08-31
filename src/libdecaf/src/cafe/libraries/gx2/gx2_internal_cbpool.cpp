@@ -3,7 +3,9 @@
 #include "gx2_internal_cbpool.h"
 #include "gx2_internal_pm4cap.h"
 #include "gx2_state.h"
+
 #include "cafe/libraries/coreinit/coreinit_core.h"
+#include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <algorithm>
 #include <atomic>
@@ -17,10 +19,10 @@
 #include <tuple>
 #include <vector>
 
-using namespace cafe::coreinit;
-
 namespace cafe::gx2::internal
 {
+
+using namespace cafe::coreinit;
 
 static std::atomic<CommandBuffer *>
 sBufferItemPool;
@@ -28,16 +30,16 @@ sBufferItemPool;
 static bool
 sBufferPoolLeased = false;
 
-static uint32_t *
+static virt_ptr<uint32_t>
 sBufferPoolBase = nullptr;
 
-static uint32_t *
+static virt_ptr<uint32_t>
 sBufferPoolEnd = nullptr;
 
-static uint32_t *
+static virt_ptr<uint32_t>
 sBufferPoolHeadPtr = nullptr;
 
-static uint32_t *
+static virt_ptr<uint32_t>
 sBufferPoolTailPtr = nullptr;
 
 static uint32_t
@@ -62,7 +64,7 @@ initCommandBufferPool(virt_ptr<uint32_t> base,
    auto core = coreinit::OSGetCoreId();
    decaf_check(gx2::internal::getMainCoreId() == core);
 
-   sBufferPoolBase = base.getRawPointer();
+   sBufferPoolBase = base;
    sBufferPoolEnd = sBufferPoolBase + size;
    sBufferPoolHeadPtr = sBufferPoolBase;
    sBufferPoolTailPtr = nullptr;
@@ -70,7 +72,7 @@ initCommandBufferPool(virt_ptr<uint32_t> base,
    sActiveBuffer[core] = allocateCommandBuffer(0x100);
 }
 
-static uint32_t *
+static virt_ptr<uint32_t>
 allocateFromPool(uint32_t wantedSize,
                  uint32_t &allocatedSize)
 {
@@ -84,7 +86,7 @@ allocateFromPool(uint32_t wantedSize,
       decaf_abort("Command buffer allocation greater than entire pool size");
    }
 
-   uint32_t availableSize = 0;
+   auto availableSize = uint32_t { 0 };
 
    if (sBufferPoolTailPtr == nullptr) {
       decaf_check(sBufferPoolHeadPtr == sBufferPoolBase);
@@ -126,7 +128,7 @@ allocateFromPool(uint32_t wantedSize,
 }
 
 static void
-returnToPool(uint32_t *buffer,
+returnToPool(virt_ptr<uint32_t> buffer,
              uint32_t usedSize,
              uint32_t originalSize)
 {
@@ -143,7 +145,7 @@ returnToPool(uint32_t *buffer,
 }
 
 static void
-freeToPool(uint32_t *buffer,
+freeToPool(virt_ptr<uint32_t> buffer,
            uint32_t size)
 {
    std::unique_lock<std::mutex> lock(sBufferPoolMutex);
@@ -211,8 +213,8 @@ allocateCommandBuffer(uint32_t size)
    }
 
    // Lets try to get ourselves a buffer from the pool
-   uint32_t *allocatedBuffer = nullptr;
-   uint32_t allocatedSize = 0;
+   auto allocatedBuffer = virt_ptr<uint32_t> { nullptr };
+   auto allocatedSize = uint32_t { 0 };
 
    while (!allocatedBuffer) {
       allocatedBuffer = allocateFromPool(size, allocatedSize);
@@ -242,7 +244,9 @@ submitCommandBuffer(CommandBuffer *cb)
    captureCommandBuffer(cb);
    cb->submitTime = coreinit::OSGetTime();
    gx2::internal::setLastSubmittedTimestamp(cb->submitTime);
-   gpu::ringbuffer::submit(cb, cb->buffer, cb->curSize);
+   gpu::ringbuffer::submit(cb,
+                           phys_cast<uint32_t *>(OSEffectiveToPhysical(virt_cast<virt_addr>(cb->buffer))),
+                           cb->curSize);
 }
 
 void
@@ -315,16 +319,15 @@ flushCommandBuffer(uint32_t neededSize)
       padCommandBuffer(cb);
 
       // Ask user to allocate new display list
-      std::tie(newList, newSize) = displayListOverrun(
-         virt_cast<void *>(cpu::translate(cb->buffer)),
-         cb->curSize * 4, neededSize * 4);
+      std::tie(newList, newSize) =
+         displayListOverrun(cb->buffer, cb->curSize * 4, neededSize * 4);
 
       if (!newList || !newSize) {
          decaf_abort("Unable to handle display list overrun");
       }
 
       // Record the new information returned from the application
-      cb->buffer = reinterpret_cast<uint32_t *>(newList.getRawPointer());
+      cb->buffer = virt_cast<uint32_t *>(newList);
       cb->curSize = 0;
       cb->maxSize = newSize / 4;
 
@@ -363,12 +366,12 @@ padCommandBuffer(CommandBuffer *buffer)
    decaf_check(alignedSize <= buffer->maxSize);
 
    while (buffer->curSize < alignedSize) {
-      buffer->buffer[buffer->curSize++] = byte_swap(0xBEEF2929);
+      buffer->buffer[buffer->curSize++] = 0xBEEF2929;
    }
 }
 
 void
-queueDisplayList(uint32_t *buffer,
+queueDisplayList(virt_ptr<uint32_t> buffer,
                  uint32_t size)
 {
    // Set up our buffer object
@@ -383,7 +386,7 @@ queueDisplayList(uint32_t *buffer,
 }
 
 bool
-getUserCommandBuffer(uint32_t **buffer,
+getUserCommandBuffer(virt_ptr<uint32_t> *buffer,
                      uint32_t *maxSize)
 {
    auto core = coreinit::OSGetCoreId();
@@ -405,7 +408,7 @@ getUserCommandBuffer(uint32_t **buffer,
 }
 
 void
-beginUserCommandBuffer(uint32_t *buffer,
+beginUserCommandBuffer(virt_ptr<uint32_t> buffer,
                        uint32_t size)
 {
    auto core = coreinit::OSGetCoreId();
@@ -428,21 +431,14 @@ beginUserCommandBuffer(uint32_t *buffer,
 }
 
 uint32_t
-endUserCommandBuffer(uint32_t *buffer)
+endUserCommandBuffer(virt_ptr<uint32_t> buffer)
 {
    auto core = coreinit::OSGetCoreId();
    auto &cb = sActiveBuffer[core];
 
    decaf_check(cb);
-
    decaf_check(cb->displayList);
-
-   if (buffer != cb->buffer) {
-      // HACK: FAST Racing Neo shows this behaviour, gx2.rpl seems to not really care about what pointer
-      // you pass into GX2EndDisplayList, so it's possible this is perfectly valid behaviour and the error
-      // an application one, and not one caused by us.
-      gLog->warn("Display list passed to GX2EndDisplayList did not match one passed to GX2BeginDisplayList");
-   }
+   decaf_check(buffer == cb->buffer);
 
    // Pad and get its size
    padCommandBuffer(cb);

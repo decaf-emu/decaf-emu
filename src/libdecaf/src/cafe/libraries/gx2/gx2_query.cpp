@@ -3,6 +3,7 @@
 #include "gx2_query.h"
 #include "gx2_memory.h"
 #include "cafe/libraries/coreinit/coreinit_cache.h"
+#include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <libcpu/mem.h>
 
@@ -18,10 +19,11 @@ gGpuTimeout = 10000;
 void
 GX2SampleTopGPUCycle(virt_ptr<int64_t> writeSamplePtr)
 {
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(writeSamplePtr));
    *writeSamplePtr = -1;
 
    auto addrLo = MW_ADDR_LO::get(0)
-      .ADDR_LO(virt_cast<virt_addr>(writeSamplePtr) >> 2)
+      .ADDR_LO(addr >> 2)
       .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
 
    auto addrHi = MW_ADDR_HI::get(0)
@@ -33,13 +35,14 @@ GX2SampleTopGPUCycle(virt_ptr<int64_t> writeSamplePtr)
 void
 GX2SampleBottomGPUCycle(virt_ptr<int64_t> writeSamplePtr)
 {
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(writeSamplePtr));
    *writeSamplePtr = -1;
 
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
 
    auto addrLo = EW_ADDR_LO::get(0)
-      .ADDR_LO(virt_cast<virt_addr>(writeSamplePtr) >> 2)
+      .ADDR_LO(addr >> 2)
       .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
 
    auto addrHi = EWP_ADDR_HI::get(0)
@@ -75,16 +78,15 @@ beginOcclusionQuery(virt_ptr<GX2QueryData> data,
    // There is some magic number read from their global gx2 state + 0xB0C, no
    // fucking clue what it is, so let's just set it to 0?
    auto magicNumber = 0u;
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
 
    if (gpuMemoryWrite) {
-      DCInvalidateRange(data, sizeof(GX2QueryData));
+      DCInvalidateRange(virt_cast<virt_addr>(data), sizeof(GX2QueryData));
 
       // Zero GX2QueryData from GPU
       for (auto i = 0u; i < 8; ++i) {
-         auto addr = virt_cast<virt_addr>(data) + 8 * i;
-
          auto addrLo = MW_ADDR_LO::get(0)
-            .ADDR_LO(addr >> 2);
+            .ADDR_LO((addr + 8 * i) >> 2);
 
          auto addrHi = MW_ADDR_HI::get(0)
             .WR_CONFIRM(true);
@@ -122,7 +124,7 @@ beginOcclusionQuery(virt_ptr<GX2QueryData> data,
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::ZPASS_DONE);
 
    auto addrLo = EW_ADDR_LO::get(0)
-      .ADDR_LO(virt_cast<virt_addr>(data) >> 2);
+      .ADDR_LO(addr >> 2);
 
    auto addrHi = EW_ADDR_HI::get(0);
 
@@ -138,8 +140,9 @@ endOcclusionQuery(virt_ptr<GX2QueryData> data,
       .EVENT_TYPE(latte::VGT_EVENT_TYPE::ZPASS_DONE)
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::ZPASS_DONE);
 
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
    auto addrLo = EW_ADDR_LO::get(0)
-      .ADDR_LO((virt_cast<virt_addr>(data) + 8) >> 2);
+      .ADDR_LO((addr + 8) >> 2);
 
    auto addrHi = EW_ADDR_HI::get(0);
 
@@ -156,7 +159,8 @@ static void
 beginStreamOutStatsQuery(virt_ptr<GX2QueryData> data,
                          bool gpuMemoryWrite)
 {
-   decaf_check(virt_cast<virt_addr>(data) % 4 == 0);
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
+   decaf_check(addr % 4 == 0);
 
    // There is some magic number read from their global gx2 state + 0xB0C, no
    // fucking clue what it is, so let's just set it to 0?
@@ -164,14 +168,12 @@ beginStreamOutStatsQuery(virt_ptr<GX2QueryData> data,
    auto endianSwap = latte::CB_ENDIAN::NONE;
 
    if (gpuMemoryWrite) {
-      DCInvalidateRange(data, sizeof(GX2QueryData));
+      DCInvalidateRange(virt_cast<virt_addr>(data), sizeof(GX2QueryData));
 
       // Zero data first
       for (auto i = 0u; i < 4; ++i) {
-         auto addr = virt_cast<virt_addr>(data) + 8 * i;
-
          auto addrLo = MW_ADDR_LO::get(0)
-            .ADDR_LO(addr >> 2);
+            .ADDR_LO((addr + 8 * i) >> 2);
 
          auto addrHi = MW_ADDR_HI::get(0)
             .WR_CONFIRM(true);
@@ -199,7 +201,7 @@ beginStreamOutStatsQuery(virt_ptr<GX2QueryData> data,
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT);
 
    auto addrLo = EW_ADDR_LO::get(0)
-      .ADDR_LO(virt_cast<virt_addr>(data) >> 2)
+      .ADDR_LO(addr >> 2)
       .ENDIAN_SWAP(endianSwap);
 
    auto addrHi = EW_ADDR_HI::get(0);
@@ -211,6 +213,7 @@ static void
 endStreamOutStatsQuery(virt_ptr<GX2QueryData> data,
                        bool gpuMemoryWrite)
 {
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
    auto endianSwap = latte::CB_ENDIAN::NONE;
 
    if (gpuMemoryWrite) {
@@ -225,7 +228,7 @@ endStreamOutStatsQuery(virt_ptr<GX2QueryData> data,
       .EVENT_INDEX(latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT);
 
    auto addrLo = EW_ADDR_LO::get(0)
-      .ADDR_LO(virt_cast<virt_addr>(data) >> 2)
+      .ADDR_LO(addr >> 2)
       .ENDIAN_SWAP(endianSwap);
 
    auto addrHi = EW_ADDR_HI::get(0);
@@ -286,7 +289,7 @@ GX2QueryBeginConditionalRender(GX2QueryType type,
                                BOOL hint,
                                BOOL predicate)
 {
-   auto addr = virt_cast<virt_addr>(data);
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
    auto op = SP_PRED_OP_PRIMCOUNT;
 
    if (type == 2) {

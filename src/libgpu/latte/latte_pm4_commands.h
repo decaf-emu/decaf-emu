@@ -177,7 +177,7 @@ struct DecafOSScreenFlip
    static const auto Opcode = IT_OPCODE::DECAF_OSSCREEN_FLIP;
 
    uint32_t screen;
-   void *buffer;
+   phys_addr buffer;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -191,8 +191,8 @@ struct DecafCopySurface
 {
    static const auto Opcode = IT_OPCODE::DECAF_COPY_SURFACE;
 
-   uint32_t dstImage;
-   uint32_t dstMipmaps;
+   phys_addr dstImage;
+   phys_addr dstMipmaps;
    uint32_t dstLevel;
    uint32_t dstSlice;
    uint32_t dstPitch;
@@ -207,8 +207,8 @@ struct DecafCopySurface
    uint32_t dstDegamma;
    latte::SQ_TILE_MODE dstTileMode;
 
-   uint32_t srcImage;
-   uint32_t srcMipmaps;
+   phys_addr srcImage;
+   phys_addr srcMipmaps;
    uint32_t srcLevel;
    uint32_t srcSlice;
    uint32_t srcPitch;
@@ -280,7 +280,7 @@ struct DrawIndex2
    static const auto Opcode = IT_OPCODE::DRAW_INDEX_2;
 
    uint32_t maxIndices;                      // VGT_DMA_MAX_SIZE
-   void *addr;                               // VGT_DMA_BASE
+   phys_addr addr;                           // VGT_DMA_BASE
    uint32_t count;                           // VGT_DMA_SIZE
    latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
 
@@ -559,7 +559,7 @@ struct SetVtxResource
    static const auto Opcode = IT_OPCODE::SET_RESOURCE;
 
    uint32_t id;
-   const void *baseAddress;
+   phys_addr baseAddress;
    latte::SQ_VTX_CONSTANT_WORD1_N word1;
    latte::SQ_VTX_CONSTANT_WORD2_N word2;
    latte::SQ_VTX_CONSTANT_WORD3_N word3;
@@ -627,7 +627,7 @@ struct SetResources
 struct IndirectBufferCall
 {
    static const auto Opcode = IT_OPCODE::INDIRECT_BUFFER_PRIV;
-   void *addr;
+   phys_addr addr;
    uint32_t size;
 
    template<typename Serialiser>
@@ -644,7 +644,7 @@ struct IndirectBufferCall
 struct LoadConfigReg
 {
    static const auto Opcode = IT_OPCODE::LOAD_CONFIG_REG;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -661,7 +661,7 @@ struct LoadConfigReg
 struct LoadContextReg
 {
    static const auto Opcode = IT_OPCODE::LOAD_CONTEXT_REG;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -678,7 +678,7 @@ struct LoadContextReg
 struct LoadAluConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_ALU_CONST;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -695,7 +695,7 @@ struct LoadAluConst
 struct LoadBoolConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_BOOL_CONST;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -712,7 +712,7 @@ struct LoadBoolConst
 struct LoadLoopConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_LOOP_CONST;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -729,7 +729,7 @@ struct LoadLoopConst
 struct LoadResource
 {
    static const auto Opcode = IT_OPCODE::LOAD_RESOURCE;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -746,7 +746,7 @@ struct LoadResource
 struct LoadSampler
 {
    static const auto Opcode = IT_OPCODE::LOAD_SAMPLER;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -763,7 +763,7 @@ struct LoadSampler
 struct LoadControlConst
 {
    static const auto Opcode = IT_OPCODE::LOAD_CTL_CONST;
-   virt_ptr<uint32_t> addr;
+   phys_addr addr;
    gsl::span<std::pair<uint32_t, uint32_t>> values;
 
    template<typename Serialiser>
@@ -923,9 +923,9 @@ struct StreamOutBufferUpdate
 {
    static const auto Opcode = IT_OPCODE::STRMOUT_BUFFER_UPDATE;
    SBU_CONTROL control;
-   uint32_t dstLo;  // Store target for STORE_BUFFER_FILLED_SIZE
+   phys_addr dstLo;  // Store target for STORE_BUFFER_FILLED_SIZE
    uint32_t dstHi;
-   uint32_t srcLo;  // Offset for STRMOUT_OFFSET_FROM_PACKET;
+   phys_addr srcLo;  // Offset for STRMOUT_OFFSET_FROM_PACKET;
    uint32_t srcHi;  //   address of offset for STRMOUT_OFFSET_FROM_MEM
 
    template<typename Serialiser>

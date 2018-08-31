@@ -2,6 +2,7 @@
 #include "gx2_internal_cbpool.h"
 
 #include <cstdint>
+#include <libcpu/be2_struct.h>
 
 namespace cafe::gx2::internal
 {
@@ -33,11 +34,11 @@ void
 captureCommandBuffer(CommandBuffer *buffer);
 
 void
-captureCpuFlush(void *buffer,
+captureCpuFlush(phys_addr buffer,
                 uint32_t size);
 
 void
-captureGpuFlush(void *buffer,
+captureGpuFlush(phys_addr buffer,
                 uint32_t size);
 
 void

@@ -59,7 +59,7 @@ bool GLDriver::checkActiveTextures()
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       auto sq_tex_resource_word5 = getRegister<latte::SQ_TEX_RESOURCE_WORD5_N>(latte::Register::SQ_RESOURCE_WORD5_0 + 4 * resourceOffset);
       auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_RESOURCE_WORD6_0 + 4 * resourceOffset);
-      auto baseAddress = sq_tex_resource_word2.BASE_ADDRESS() << 8;
+      auto baseAddress = phys_addr { sq_tex_resource_word2.BASE_ADDRESS() << 8 };
 
       if (!baseAddress) {
          if (mPixelTextureCache[i].surfaceObject != 0) {
@@ -94,10 +94,13 @@ bool GLDriver::checkActiveTextures()
       //  and sending it through swizzle register is how they do that.  I can't find any
       //  case where the swizzle in the registers doesn't match the swizzle in the
       //  baseAddress, but it's confusing why the GPU needs the same information twice.
-      decaf_check((baseAddress & 0x7FF) == swizzle);
+      decaf_check(static_cast<uint32_t>(baseAddress & 0x7FF) == swizzle);
 
       // Get the surface
-      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth, samples, dim, format, numFormat, formatComp, degamma, isDepthBuffer, tileMode, false, false);
+      auto buffer = getSurfaceBuffer(baseAddress, pitch, width, height, depth,
+                                     samples, dim, format, numFormat,
+                                     formatComp, degamma, isDepthBuffer,
+                                     tileMode, false, false);
 
       if (buffer->active->object != mPixelTextureCache[i].surfaceObject
        || sq_tex_resource_word4.value != mPixelTextureCache[i].word4) {

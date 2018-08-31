@@ -34,13 +34,13 @@ Driver::getAverageFrametimeMS()
 }
 
 void
-Driver::notifyCpuFlush(void *ptr,
+Driver::notifyCpuFlush(phys_addr address,
                        uint32_t size)
 {
 }
 
 void
-Driver::notifyGpuFlush(void *ptr,
+Driver::notifyGpuFlush(phys_addr address,
                        uint32_t size)
 {
 }

@@ -6,19 +6,19 @@ namespace cafe::gx2::internal
 {
 
 void
-notifyCpuFlush(void *ptr,
+notifyCpuFlush(phys_addr address,
                uint32_t size)
 {
-   captureCpuFlush(ptr, size);
-   decaf::getGraphicsDriver()->notifyCpuFlush(ptr, size);
+   captureCpuFlush(address, size);
+   decaf::getGraphicsDriver()->notifyCpuFlush(address, size);
 }
 
 void
-notifyGpuFlush(void *ptr,
+notifyGpuFlush(phys_addr address,
                uint32_t size)
 {
-   captureGpuFlush(ptr, size);
-   decaf::getGraphicsDriver()->notifyGpuFlush(ptr, size);
+   captureGpuFlush(address, size);
+   decaf::getGraphicsDriver()->notifyGpuFlush(address, size);
 }
 
 } // namespace cafe::gx2::internal

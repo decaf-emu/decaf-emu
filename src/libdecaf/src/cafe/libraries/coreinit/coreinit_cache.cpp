@@ -1,5 +1,6 @@
 #include "coreinit.h"
 #include "coreinit_cache.h"
+#include "coreinit_memory.h"
 #include "cafe/libraries/gx2/gx2_internal_flush.h"
 
 #include <common/align.h>
@@ -11,11 +12,11 @@ namespace cafe::coreinit
  * Equivalent to dcbi instruction.
  */
 void
-DCInvalidateRange(virt_ptr<void> ptr,
+DCInvalidateRange(virt_addr address,
                   uint32_t size)
 {
    // Also signal the GPU to update the memory range.
-   gx2::internal::notifyGpuFlush(ptr.getRawPointer(), size);
+   gx2::internal::notifyGpuFlush(OSEffectiveToPhysical(address), size);
 }
 
 
@@ -23,11 +24,11 @@ DCInvalidateRange(virt_ptr<void> ptr,
  * Equivalent to dcbf, sync, eieio.
  */
 void
-DCFlushRange(virt_ptr<void> ptr,
+DCFlushRange(virt_addr address,
              uint32_t size)
 {
    // Also signal the memory store to the GPU.
-   gx2::internal::notifyCpuFlush(ptr.getRawPointer(), size);
+   gx2::internal::notifyCpuFlush(OSEffectiveToPhysical(address), size);
 }
 
 
@@ -35,11 +36,11 @@ DCFlushRange(virt_ptr<void> ptr,
  * Equivalent to dcbst, sync, eieio.
  */
 void
-DCStoreRange(virt_ptr<void> ptr,
+DCStoreRange(virt_addr address,
              uint32_t size)
 {
    // Also signal the memory store to the GPU.
-   gx2::internal::notifyCpuFlush(ptr.getRawPointer(), size);
+   gx2::internal::notifyCpuFlush(OSEffectiveToPhysical(address), size);
 }
 
 
@@ -47,7 +48,7 @@ DCStoreRange(virt_ptr<void> ptr,
  * Equivalent to dcbf.
  */
 void
-DCFlushRangeNoSync(virt_ptr<void> ptr,
+DCFlushRangeNoSync(virt_addr address,
                    uint32_t size)
 {
    // TODO: DCFlushRangeNoSync
@@ -58,7 +59,7 @@ DCFlushRangeNoSync(virt_ptr<void> ptr,
  * Equivalent to dcbst.
  */
 void
-DCStoreRangeNoSync(virt_ptr<void> ptr,
+DCStoreRangeNoSync(virt_addr address,
                    uint32_t size)
 {
    // TODO: DCStoreRangeNoSync
@@ -69,11 +70,10 @@ DCStoreRangeNoSync(virt_ptr<void> ptr,
  * Equivalent to dcbz instruction.
  */
 void
-DCZeroRange(virt_ptr<void> ptr,
+DCZeroRange(virt_addr address,
             uint32_t size)
 {
-   auto addr = virt_cast<virt_addr>(ptr);
-   auto alignedAddr = align_down(addr, 32);
+   auto alignedAddr = align_down(address, 32);
    auto alignedSize = align_up(size, 32);
    std::memset(virt_cast<void *>(alignedAddr).getRawPointer(), 0, alignedSize);
 }
@@ -83,7 +83,7 @@ DCZeroRange(virt_ptr<void> ptr,
  * Equivalent to dcbt instruction.
  */
 void
-DCTouchRange(virt_ptr<void> ptr,
+DCTouchRange(virt_addr address,
              uint32_t size)
 {
    // TODO: DCTouchRange
@@ -113,10 +113,10 @@ OSEnforceInorderIO()
  * Fails when the range is between 0xE8000000 or 0xEC000000
  */
 BOOL
-OSIsAddressRangeDCValid(virt_ptr<void> ptr,
+OSIsAddressRangeDCValid(virt_addr address,
                         uint32_t size)
 {
-   auto beg = virt_cast<virt_addr>(ptr);
+   auto beg = address;
    auto end = beg + size - 1;
 
    if (beg > virt_addr { 0xEC000000 } && end > virt_addr { 0xEC000000 }) {

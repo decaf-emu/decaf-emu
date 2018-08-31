@@ -3,7 +3,9 @@
 #include "gx2_memory.h"
 #include "gx2_state.h"
 #include "gx2_internal_cbpool.h"
+
 #include "cafe/libraries/coreinit/coreinit_cache.h"
+#include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/align.h>
 #include <common/log.h>
@@ -29,14 +31,13 @@ GX2Invalidate(GX2InvalidateMode mode,
       size = align_up(size, 0x100);
    }
 
-
    if (addr >= virt_addr { 0xE8000000 } &&
        addr < virt_addr { 0xEA000000 }) {
       internal::translateAperture(addr, size);
    }
 
    if (mode & GX2InvalidateMode::CPU) {
-      DCFlushRange(virt_cast<void *>(addr), size);
+      DCFlushRange(addr, size);
    }
 
    if (mode != GX2InvalidateMode::CPU) {
@@ -104,7 +105,7 @@ GX2Invalidate(GX2InvalidateMode mode,
       internal::writePM4(latte::pm4::SurfaceSync {
          cp_coher_cntl,
          size >> 8,
-         addr >> 8,
+         OSEffectiveToPhysical(addr) >> 8,
          4
       });
    }

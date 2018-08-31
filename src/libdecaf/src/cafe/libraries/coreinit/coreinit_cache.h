@@ -11,31 +11,31 @@ namespace cafe::coreinit
  */
 
 void
-DCInvalidateRange(virt_ptr<void> ptr,
+DCInvalidateRange(virt_addr address,
                   uint32_t size);
 
 void
-DCFlushRange(virt_ptr<void> ptr,
+DCFlushRange(virt_addr address,
              uint32_t size);
 
 void
-DCStoreRange(virt_ptr<void> ptr,
+DCStoreRange(virt_addr address,
              uint32_t size);
 
 void
-DCFlushRangeNoSync(virt_ptr<void> ptr,
+DCFlushRangeNoSync(virt_addr address,
                    uint32_t size);
 
 void
-DCStoreRangeNoSync(virt_ptr<void> ptr,
+DCStoreRangeNoSync(virt_addr address,
                    uint32_t size);
 
 void
-DCZeroRange(virt_ptr<void> ptr,
+DCZeroRange(virt_addr address,
             uint32_t size);
 
 void
-DCTouchRange(virt_ptr<void> ptr,
+DCTouchRange(virt_addr address,
              uint32_t size);
 
 void
@@ -45,7 +45,7 @@ void
 OSEnforceInorderIO();
 
 BOOL
-OSIsAddressRangeDCValid(virt_ptr<void> ptr,
+OSIsAddressRangeDCValid(virt_addr address,
                         uint32_t size);
 
 void

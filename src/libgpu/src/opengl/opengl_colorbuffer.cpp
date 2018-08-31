@@ -86,7 +86,7 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
                          latte::CB_COLORN_INFO cb_color_info,
                          bool discardData)
 {
-   auto baseAddress = (cb_color_base.BASE_256B() << 8) & 0xFFFFF800;
+   auto baseAddress = phys_addr { (cb_color_base.BASE_256B() << 8) & 0xFFFFF800 };
    auto pitch_tile_max = cb_color_size.PITCH_TILE_MAX();
    auto slice_tile_max = cb_color_size.SLICE_TILE_MAX();
 
@@ -137,7 +137,10 @@ GLDriver::getColorBuffer(latte::CB_COLORN_BASE cb_color_base,
    }
 
    auto tileMode = latte::getArrayModeTileMode(cb_color_info.ARRAY_MODE());
-   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0, latte::SQ_TEX_DIM::DIM_2D, format, numFormat, formatComp, degamma, false, tileMode, true, discardData);
+   auto buffer = getSurfaceBuffer(baseAddress, pitch, pitch, height, 1, 0,
+                                  latte::SQ_TEX_DIM::DIM_2D, format, numFormat,
+                                  formatComp, degamma, false, tileMode, true,
+                                  discardData);
    buffer->dirtyMemory = false;
    buffer->needUpload = false;
    buffer->state = SurfaceUseState::GpuWritten;

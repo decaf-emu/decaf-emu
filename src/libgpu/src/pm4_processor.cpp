@@ -1,4 +1,5 @@
 #include "latte/latte_pm4_reader.h"
+#include "gpu_memory.h"
 #include "pm4_processor.h"
 
 #include <common/log.h>
@@ -7,7 +8,7 @@
 void
 Pm4Processor::indirectBufferCall(const IndirectBufferCall &data)
 {
-   auto buffer = reinterpret_cast<uint32_t *>(data.addr);
+   auto buffer = gpu::internal::translateAddress<uint32_t>(data.addr);
    runCommandBuffer(buffer, data.size);
 }
 
@@ -377,9 +378,10 @@ void Pm4Processor::setResources(const SetResources &data)
 }
 
 void Pm4Processor::loadRegisters(latte::Register base,
-   virt_ptr<uint32_t> src,
+   phys_addr address,
    const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
 {
+   auto src = phys_cast<uint32_t *>(address);
    for (auto &range : registers) {
       auto start = range.first;
       auto count = range.second;
@@ -393,7 +395,7 @@ void Pm4Processor::loadRegisters(latte::Register base,
 void Pm4Processor::loadAluConsts(const LoadAluConst &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_ALU_CONST()) {
-      mShadowState.ALU_CONST_BASE = data.addr;
+      mShadowState.ALU_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::AluConstRegisterBase, data.addr, data.values);
    }
 }
@@ -401,7 +403,7 @@ void Pm4Processor::loadAluConsts(const LoadAluConst &data)
 void Pm4Processor::loadBoolConsts(const LoadBoolConst &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_BOOL_CONST()) {
-      mShadowState.BOOL_CONST_BASE = data.addr;
+      mShadowState.BOOL_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::BoolConstRegisterBase, data.addr, data.values);
    }
 }
@@ -409,7 +411,7 @@ void Pm4Processor::loadBoolConsts(const LoadBoolConst &data)
 void Pm4Processor::loadConfigRegs(const LoadConfigReg &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_CONFIG_REG()) {
-      mShadowState.CONFIG_REG_BASE = data.addr;
+      mShadowState.CONFIG_REG_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::ConfigRegisterBase, data.addr, data.values);
    }
 }
@@ -417,7 +419,7 @@ void Pm4Processor::loadConfigRegs(const LoadConfigReg &data)
 void Pm4Processor::loadContextRegs(const LoadContextReg &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_CONTEXT_REG()) {
-      mShadowState.CONTEXT_REG_BASE = data.addr;
+      mShadowState.CONTEXT_REG_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::ContextRegisterBase, data.addr, data.values);
    }
 }
@@ -425,7 +427,7 @@ void Pm4Processor::loadContextRegs(const LoadContextReg &data)
 void Pm4Processor::loadControlConstants(const LoadControlConst &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_CTL_CONST()) {
-      mShadowState.CTL_CONST_BASE = data.addr;
+      mShadowState.CTL_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::ControlRegisterBase, data.addr, data.values);
    }
 }
@@ -433,7 +435,7 @@ void Pm4Processor::loadControlConstants(const LoadControlConst &data)
 void Pm4Processor::loadLoopConsts(const LoadLoopConst &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_LOOP_CONST()) {
-      mShadowState.LOOP_CONST_BASE = data.addr;
+      mShadowState.LOOP_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::LoopConstRegisterBase, data.addr, data.values);
    }
 }
@@ -441,7 +443,7 @@ void Pm4Processor::loadLoopConsts(const LoadLoopConst &data)
 void Pm4Processor::loadSamplers(const LoadSampler &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_SAMPLER()) {
-      mShadowState.SAMPLER_CONST_BASE = data.addr;
+      mShadowState.SAMPLER_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::SamplerRegisterBase, data.addr, data.values);
    }
 }
@@ -449,7 +451,7 @@ void Pm4Processor::loadSamplers(const LoadSampler &data)
 void Pm4Processor::loadResources(const latte::pm4::LoadResource &data)
 {
    if (mShadowState.LOAD_CONTROL.ENABLE_RESOURCE()) {
-      mShadowState.RESOURCE_CONST_BASE = data.addr;
+      mShadowState.RESOURCE_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
    }
 }
