@@ -46,7 +46,7 @@ MemoryMap sMemoryMap[] = {
    // Foreground bucket
    { virt_addr { 0xE0000000 },  0x4000000, phys_addr { 0x14000000 }, 0x28204004 },
 
-   // Registers
+   // Tiling Apertures
    { virt_addr { 0xE8000000 },  0x2000000, phys_addr { 0xD0000000 }, 0x78200004 },
 
    // Loader globals which are also read/write by kernel

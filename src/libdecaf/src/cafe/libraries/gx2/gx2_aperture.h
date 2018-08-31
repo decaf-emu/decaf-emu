@@ -22,7 +22,7 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
                             uint32_t depth,
                             GX2EndianSwapMode endian,
                             virt_ptr<GX2ApertureHandle> outHandle,
-                            virt_ptr<virt_ptr<void>> outAddress);
+                            virt_ptr<virt_addr> outAddress);
 
 void
 GX2FreeTilingAperture(GX2ApertureHandle handle);
@@ -31,13 +31,8 @@ namespace internal
 {
 
 bool
-isApertureAddress(virt_addr address);
-
-bool
-lookupAperture(virt_addr address,
-               virt_addr *outApertureBase,
-               uint32_t *outApertureSize,
-               virt_addr *outPhysBase);
+translateAperture(virt_addr &address,
+                  uint32_t &size);
 
 } // namespace internal
 

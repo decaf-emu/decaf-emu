@@ -29,27 +29,10 @@ GX2Invalidate(GX2InvalidateMode mode,
       size = align_up(size, 0x100);
    }
 
-   // If the address is in the aperture range, translate it to the
-   //  corresponding physical address.  We have to do this synchronously
-   //  because by the time the graphics driver receives the packet, the
-   //  aperture mapping may no longer be valid.
-   if (internal::isApertureAddress(addr)) {
-      // Convert from aperture address to physical address
-      //  (we assume a single invalidate won't cover multiple apertures)
-      virt_addr apertureBase, physBase;
-      uint32_t apertureSize;
 
-      if (!internal::lookupAperture(addr, &apertureBase, &apertureSize, &physBase)) {
-         gLog->warn("GX2Invalidate on unmapped aperture address 0x{:X}", addr);
-         return;
-      }
-
-      decaf_assert(addr + size <= apertureBase + apertureSize,
-                   fmt::format("GX2Invalidate over multiple apertures (0x{:X} + 0x{:X})", addr, size));
-
-      // Invalidate the entire aperture (since the data layout is different)
-      addr = physBase;
-      size = apertureSize;
+   if (addr >= virt_addr { 0xE8000000 } &&
+       addr < virt_addr { 0xEA000000 }) {
+      internal::translateAperture(addr, size);
    }
 
    if (mode & GX2InvalidateMode::CPU) {

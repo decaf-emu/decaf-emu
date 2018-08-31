@@ -29,7 +29,7 @@ enum class VirtualMemoryRegion
    AppData,
    Overlay,
    ForegroundBucket,
-   Unknown_0xE8000000,
+   TilingApertures,
    LoaderGlobals,
    MEM1,
    LoaderBounceBuffer,

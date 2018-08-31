@@ -4,192 +4,31 @@
 #include "gx2_surface.h"
 
 #include "cafe/cafe_stackobject.h"
-#include "cafe/kernel/cafe_kernel_mmu.h"
-
-#include <common/decaf_assert.h>
-#include <common/teenyheap.h>
-#include <libcpu/be2_struct.h>
-#include <mutex>
+#include "cafe/libraries/coreinit/coreinit_memory.h"
+#include "cafe/libraries/tcl/tcl_aperture.h"
 
 namespace cafe::gx2
 {
 
-class ApertureManager
+using namespace cafe::coreinit;
+using namespace cafe::tcl;
+
+struct ApertureInfo
 {
-   static const auto MaxApertures = 32u;
-
-   struct ActiveAperture
-   {
-      virt_ptr<GX2Surface> surface;
-      uint32_t level;
-      uint32_t slice;
-      virt_ptr<uint8_t> address;
-      uint32_t size;
-   };
-
-public:
-   ~ApertureManager()
-   {
-      if (mHeap) {
-         delete mHeap;
-         // kernel::freeTilingApertures();
-      }
-   }
-
-   uint32_t
-   allocate(virt_ptr<GX2Surface> surface,
-            uint32_t level,
-            uint32_t slice,
-            GX2EndianSwapMode endian)
-   {
-      std::unique_lock<std::mutex> lock(mMutex);
-
-      // Find a free slot
-      auto id = static_cast<uint32_t>(mActiveApertures.size());
-
-      for (auto i = 0u; i < mActiveApertures.size(); ++i) {
-         if (mActiveApertures[i].address == nullptr) {
-            id = i;
-            break;
-         }
-      }
-
-      if (id == mActiveApertures.size()) {
-         return 0;
-      }
-
-      if (!mHeap) {
-         initialise();
-      }
-
-      // Allocate data
-      ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
-      gx2::internal::getSurfaceInfo(surface.getRawPointer(), level, &output);
-
-      auto &aperture = mActiveApertures[id];
-      aperture.address = virt_cast<uint8_t *>(cpu::translate(mHeap->alloc(output.sliceSize)));
-      aperture.size = output.sliceSize;
-      aperture.surface = surface;
-      aperture.level = level;
-      aperture.slice = slice;
-
-      // Untile existing to memory
-      StackObject<GX2Surface> apertureSurface;
-      *apertureSurface = *surface;
-      apertureSurface->mipmaps = nullptr;
-      apertureSurface->image = nullptr;
-      apertureSurface->tileMode = GX2TileMode::LinearSpecial;
-      apertureSurface->swizzle &= 0xFFFF00FF;
-      GX2CalcSurfaceSizeAndAlignment(apertureSurface);
-
-      gx2::internal::copySurface(surface.getRawPointer(), level, slice,
-                                 apertureSurface.getRawPointer(), level, slice,
-                                 aperture.address.getRawPointer(),
-                                 aperture.address.getRawPointer());
-      return id + 1;
-   }
-
-   virt_ptr<void>
-   getAddress(uint32_t id)
-   {
-      std::unique_lock<std::mutex> lock(mMutex);
-
-      decaf_check(id >= 1 && id <= mActiveApertures.size());
-      return mActiveApertures[id - 1].address;
-   }
-
-   void
-   free(uint32_t id)
-   {
-      std::unique_lock<std::mutex> lock(mMutex);
-
-      decaf_check(id >= 1 && id <= mActiveApertures.size());
-      auto &aperture = mActiveApertures[id - 1];
-
-      // Retile to original memory
-      StackObject<GX2Surface> apertureSurface;
-      *apertureSurface = *aperture.surface;
-      apertureSurface->mipmaps = aperture.address;
-      apertureSurface->image = aperture.address;
-      apertureSurface->tileMode = GX2TileMode::LinearSpecial;
-      apertureSurface->swizzle &= 0xFFFF00FF;
-      GX2CalcSurfaceSizeAndAlignment(apertureSurface);
-
-      auto level = aperture.level;
-      auto slice = aperture.slice;
-      gx2::internal::copySurface(apertureSurface.getRawPointer(),
-                                 level, slice,
-                                 aperture.surface.getRawPointer(),
-                                 level, slice,
-                                 aperture.surface->image.getRawPointer(),
-                                 aperture.surface->mipmaps.getRawPointer());
-
-      mHeap->free(aperture.address.getRawPointer());
-      aperture.address = nullptr;
-      aperture.size = 0;
-   }
-
-   bool
-   lookupAperture(virt_addr address,
-                  virt_addr *apertureBase,
-                  uint32_t *apertureSize,
-                  virt_addr *physBase)
-   {
-      std::unique_lock<std::mutex> lock(mMutex);
-
-      for (auto &aperture : mActiveApertures) {
-         if (!aperture.address) {
-            continue;
-         }
-
-         auto start = virt_cast<virt_addr>(aperture.address);
-         auto end = start + aperture.size;
-
-         if (address >= start && address < end) {
-            if (apertureBase) {
-               *apertureBase = start;
-            }
-
-            if (apertureSize) {
-               *apertureSize = aperture.size;
-            }
-
-            if (physBase) {
-               *physBase = virt_cast<virt_addr>(aperture.surface->image);
-            }
-
-            return true;
-         }
-      }
-
-      return false;
-   }
-
-   bool
-   isApertureAddress(virt_addr address)
-   {
-      return (address >= mMemoryBase && address < mMemoryBase + mMemorySize);
-   }
-
-private:
-   void initialise()
-   {
-      //auto range = kernel::initialiseTilingApertures();
-      mMemoryBase = virt_addr { 0 }; // range.start;
-      mMemorySize = 0; // range.size;
-      mHeap = new TeenyHeap { virt_cast<void *>(mMemoryBase).getRawPointer(), mMemorySize };
-   }
-
-private:
-   virt_addr mMemoryBase;
-   uint32_t mMemorySize;
-   std::mutex mMutex;
-   TeenyHeap *mHeap = nullptr;
-   std::array<ActiveAperture, MaxApertures> mActiveApertures;
+   be2_struct<GX2Surface> surface;
+   be2_val<virt_addr> address;
+   be2_val<uint32_t> level;
+   be2_val<uint32_t> depth;
+   be2_val<uint32_t> size;
 };
 
-static ApertureManager
-sApertureManager;
+struct StaticApertureData
+{
+   be2_array<ApertureInfo, 32> apertureInfo;
+};
+
+static virt_ptr<StaticApertureData>
+sApertureData = nullptr;
 
 void
 GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
@@ -197,49 +36,133 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
                             uint32_t depth,
                             GX2EndianSwapMode endian,
                             virt_ptr<GX2ApertureHandle> outHandle,
-                            virt_ptr<virt_ptr<void>> outAddress)
+                            virt_ptr<virt_addr> outAddress)
 {
-   auto id = sApertureManager.allocate(surface, level, depth, endian);
-   auto addr = virt_ptr<void> { nullptr };
+   StackObject<ADDR_COMPUTE_SURFACE_INFO_OUTPUT> surfaceInfo;
 
-   if (id != 0) {
-      addr = sApertureManager.getAddress(id);
+   if (endian == GX2EndianSwapMode::Default) {
+      endian = GX2EndianSwapMode::None;
    }
 
-   if (outHandle) {
-      *outHandle = id;
+   internal::getSurfaceInfo(surface.getRawPointer(),
+                            level,
+                            surfaceInfo.getRawPointer());
+
+   auto addr = virt_addr { 0 };
+   if (level == 0) {
+      addr = virt_cast<virt_addr>(surface->image);
+   } else if (level == 1) {
+      addr = virt_cast<virt_addr>(surface->mipmaps);
+   } else if (level > 1) {
+      addr = virt_cast<virt_addr>(surface->mipmaps)
+             + surface->mipLevelOffset[level - 1];
    }
 
-   if (outAddress) {
-      *outAddress = addr;
+   if (surface->tileMode >= GX2TileMode::Tiled2DThin1 &&
+       surface->tileMode != GX2TileMode::LinearSpecial) {
+      if (level < ((surface->swizzle >> 16) & 0xFF)) {
+         addr ^= internal::getSurfaceSliceSwizzle(surface->tileMode,
+                                                  surface->swizzle >> 8,
+                                                  depth) << 8;
+      } else {
+         addr ^= surface->swizzle;
+      }
+   }
+
+   auto sliceSize = internal::calcSliceSize(surface.getRawPointer(),
+                                            surfaceInfo.getRawPointer());
+
+   if (TCLAllocTilingAperture(OSEffectiveToPhysical(addr + sliceSize * depth),
+                              surfaceInfo->pitch,
+                              surfaceInfo->height,
+                              surfaceInfo->bpp / 8,
+                              surfaceInfo->tileMode,
+                              endian,
+                              outHandle,
+                              outAddress) == TCLStatus::OK) {
+      auto &info = sApertureData->apertureInfo[*outHandle];
+
+      if (outAddress) {
+         // Untile from surface memory to aperture memory
+         StackObject<GX2Surface> apertureSurface;
+         *apertureSurface = *surface;
+         apertureSurface->mipmaps = nullptr;
+         apertureSurface->image = nullptr;
+         apertureSurface->tileMode = GX2TileMode::LinearSpecial;
+         apertureSurface->swizzle &= 0xFFFF00FF;
+         GX2CalcSurfaceSizeAndAlignment(apertureSurface);
+
+         gx2::internal::copySurface(surface.getRawPointer(),
+                                    level, depth,
+                                    apertureSurface.getRawPointer(),
+                                    level, depth,
+                                    virt_cast<uint8_t *>(*outAddress).getRawPointer(),
+                                    virt_cast<uint8_t *>(*outAddress).getRawPointer());
+
+         info.address = *outAddress;
+      } else {
+         info.address = virt_addr { 0 };
+      }
+
+      info.surface = *surface;
+      info.level = level;
+      info.depth = depth;
+      info.size = surfaceInfo->pitch * surfaceInfo->height * (surfaceInfo->bpp / 8);
    }
 }
 
 void
 GX2FreeTilingAperture(GX2ApertureHandle handle)
 {
-   sApertureManager.free(handle);
+   auto &info = sApertureData->apertureInfo[handle];
+   if (info.address) {
+      // Retile from aperture memory to surface memory
+      StackObject<GX2Surface> apertureSurface;
+      *apertureSurface = info.surface;
+      apertureSurface->mipmaps = virt_cast<uint8_t *>(info.address);
+      apertureSurface->image = virt_cast<uint8_t *>(info.address);
+      apertureSurface->tileMode = GX2TileMode::LinearSpecial;
+      apertureSurface->swizzle &= 0xFFFF00FF;
+      GX2CalcSurfaceSizeAndAlignment(apertureSurface);
+
+      gx2::internal::copySurface(apertureSurface.getRawPointer(),
+                                 info.level, info.depth,
+                                 virt_addrof(info.surface).getRawPointer(),
+                                 info.level, info.depth,
+                                 info.surface.image.getRawPointer(),
+                                 info.surface.mipmaps.getRawPointer());
+   }
+
+   TCLFreeTilingAperture(handle);
+   info.address = 0u;
+   info.size = 0u;
 }
 
 namespace internal
 {
 
+// TODO: Remove this once we move to using physical addresses in GPU
 bool
-isApertureAddress(virt_addr address)
+translateAperture(virt_addr &address,
+                  uint32_t &size)
 {
-   return sApertureManager.isApertureAddress(address);
-}
+   for (auto i = 0u; i < sApertureData->apertureInfo.size(); ++i) {
+      auto &info = sApertureData->apertureInfo[i];
+      if (address >= info.address &&
+          address < info.address + info.size) {
+         if (info.level == 0) {
+            size = info.surface.imageSize;
+            address = virt_cast<virt_addr>(info.surface.image);
+            return true;
+         } else if (info.level >= 1) {
+            size = info.surface.mipmapSize;
+            address = virt_cast<virt_addr>(info.surface.mipmaps);
+            return true;
+         }
+      }
+   }
 
-bool
-lookupAperture(virt_addr address,
-               virt_addr *outApertureBase,
-               uint32_t *outApertureSize,
-               virt_addr *outPhysBase)
-{
-   return sApertureManager.lookupAperture(address,
-                                          outApertureBase,
-                                          outApertureSize,
-                                          outPhysBase);
+   return false;
 }
 
 } // namespace internal
@@ -249,6 +172,8 @@ Library::registerApertureSymbols()
 {
    RegisterFunctionExport(GX2AllocateTilingApertureEx);
    RegisterFunctionExport(GX2FreeTilingAperture);
+
+   RegisterDataInternal(sApertureData);
 }
 
 } // namespace cafe::gx2
