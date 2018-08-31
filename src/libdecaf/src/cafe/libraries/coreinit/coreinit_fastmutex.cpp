@@ -51,7 +51,7 @@ fastMutexHardLock(virt_ptr<OSFastMutex> mutex)
          auto ownerThread = virt_cast<OSThread *>(virt_addr { lockValue & ~1 });
 
          if (!mutex->isContended) {
-            ContendedQueue::append(virt_addrof(thread->contendedFastMutexes), mutex);
+            ContendedQueue::append(virt_addrof(ownerThread->contendedFastMutexes), mutex);
             mutex->isContended = TRUE;
          }
 
