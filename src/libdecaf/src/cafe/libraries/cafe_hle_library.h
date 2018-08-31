@@ -294,6 +294,12 @@ protected:
    }
 
    void
+   registerLibraryDependency(const char *name)
+   {
+      mLibraryDependencies.push_back(name);
+   }
+
+   void
    registerSymbol(const char *name,
                   std::unique_ptr<LibrarySymbol> symbol)
    {
@@ -320,6 +326,7 @@ protected:
 private:
    LibraryId mID;
    std::string mName;
+   std::vector<std::string> mLibraryDependencies;
    std::map<std::string, std::unique_ptr<LibrarySymbol>, std::less<>> mSymbolMap;
    std::vector<LibraryTypeInfo> mTypeInfo;
    std::vector<uint8_t> mGeneratedRpl;

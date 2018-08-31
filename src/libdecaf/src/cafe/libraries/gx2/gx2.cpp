@@ -19,6 +19,9 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
+   registerLibraryDependency("coreinit");
+   registerLibraryDependency("tcl");
+
    registerApertureSymbols();
    registerClearSymbols();
    registerContextStateSymbols();

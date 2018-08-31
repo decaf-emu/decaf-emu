@@ -339,6 +339,7 @@ Library::generateRpl()
    auto dataRelaSectionIndex = 0u;
    auto dexportSectionIndex = 0u;
    auto dexportRelaSectionIndex = 0u;
+   auto firstImportSectionIndex = 0u;
 
    if (textSymbolSize) {
       textSectionIndex = numSections++;
@@ -362,6 +363,11 @@ Library::generateRpl()
       dexportRelaSectionIndex = numSections++;
    }
 
+   if (mLibraryDependencies.size()) {
+      firstImportSectionIndex = numSections;
+      numSections += mLibraryDependencies.size();
+   }
+
    auto symTabSectionIndex = numSections++;
    auto strTabSectionIndex = numSections++;
    auto shStrTabSectionIndex = numSections++;
@@ -379,6 +385,7 @@ Library::generateRpl()
    auto dataRelaSection = sections.begin() + dataRelaSectionIndex;
    auto dexportSection = sections.begin() + dexportSectionIndex;
    auto dexportRelaSection = sections.begin() + dexportRelaSectionIndex;
+   auto firstImportSection = sections.begin() + firstImportSectionIndex;
    auto symTabSection = sections.begin() + symTabSectionIndex;
    auto strTabSection = sections.begin() + strTabSectionIndex;
    auto shStrTabSection = sections.begin() + shStrTabSectionIndex;
@@ -586,6 +593,34 @@ Library::generateRpl()
       if (dexportSectionIndex) {
          // Update loadAddr
          loadAddr = dexportSection->header.addr + static_cast<uint32_t>(dexportSection->data.size());
+      }
+   }
+
+   // Generate .fimport_{}
+   if (firstImportSectionIndex) {
+      for (auto i = 0u; i < mLibraryDependencies.size(); ++i) {
+         auto importSection = firstImportSection + i;
+         importSection->header.name =
+            addSectionString(shStrTabSection->data,
+                             fmt::format(".fimport_{}", mLibraryDependencies[i]));
+         importSection->header.type = rpl::SHT_RPL_IMPORTS;
+         importSection->header.flags = rpl::SHF_ALLOC | rpl::SHF_EXECINSTR;
+         importSection->header.addralign = 4u;
+         importSection->header.offset = 0u;
+         importSection->header.addr = align_up(loadAddr, importSection->header.addralign);
+         importSection->header.size = 8u;
+         importSection->header.link = 0u;
+         importSection->header.info = 0u;
+         importSection->header.entsize = 0u;
+         importSection->data.resize(importSection->header.size);
+
+         auto imports = rpl::Imports { };
+         imports.count = 0u;
+         imports.signature = 0u;
+         std::memcpy(importSection->data.data(),
+                     &imports, sizeof(rpl::Imports));
+
+         loadAddr = importSection->header.addr + static_cast<uint32_t>(importSection->data.size());
       }
    }
 
@@ -853,9 +888,17 @@ Library::generateRpl()
       }
    }
 
-   // Export section
+   // Export sections
    for (auto &section : sections) {
       if (section.header.type == rpl::SHT_RPL_EXPORTS) {
+         section.header.offset = offset;
+         offset += section.header.size;
+      }
+   }
+
+   // Import sections
+   for (auto &section : sections) {
+      if (section.header.type == rpl::SHT_RPL_IMPORTS) {
          section.header.offset = offset;
          offset += section.header.size;
       }
