@@ -222,10 +222,6 @@ initialise(const std::string &gamePath)
    auto slcPath = fs::HostPath { decaf::config::system::slc_path };
    filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
 
-   // Mount sdcard
-   auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
-   filesystem->mountHostFolder("/dev/sdcard01", sdcardPath, fs::Permissions::ReadWrite);
-
    // Setup ios
    kernel::setFileSystem(filesystem.get());
    ios::setFileSystem(std::move(filesystem));

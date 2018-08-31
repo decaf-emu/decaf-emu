@@ -10,11 +10,13 @@
 #include "cafe/libraries/cafe_hle.h"
 #include "decaf_events.h"
 #include "decaf_game.h"
+#include "kernel/kernel_filesystem.h"
 #include "kernel/kernel_gameinfo.h"
 #include "ios/mcp/ios_mcp_mcp_types.h"
 
 #include <atomic>
 #include <common/log.h>
+#include <common/platform_dir.h>
 
 namespace cafe::kernel
 {
@@ -65,6 +67,25 @@ core1EntryPoint(cpu::Core *core)
 
    if (sGameInfo.cos.argstr.empty()) {
       sGameInfo.cos.argstr = sExecutableName;
+   }
+
+   // TODO: This should be inside IOS
+   // Mount sdcard if the game has the appropriate permissions
+   if ((sGameInfo.cos.permission_fs & decaf::CosXML::FSPermission::SdCardRead) ||
+       (sGameInfo.cos.permission_fs & decaf::CosXML::FSPermission::SdCardWrite)) {
+      auto filesystem = ::kernel::getFileSystem();
+
+      // Ensure sdcard_path exists
+      platform::createDirectory(decaf::config::system::sdcard_path);
+
+      auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
+      auto permissions = fs::Permissions::Read;
+
+      if (sGameInfo.cos.permission_fs & decaf::CosXML::FSPermission::SdCardWrite) {
+         permissions = fs::Permissions::ReadWrite;
+      }
+
+      filesystem->mountHostFolder("/dev/sdcard01", sdcardPath, permissions);
    }
 
    const auto &rpx = sGameInfo.cos.argstr;
