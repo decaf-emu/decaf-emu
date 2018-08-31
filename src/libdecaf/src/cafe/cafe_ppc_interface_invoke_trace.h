@@ -10,23 +10,20 @@ namespace cafe
 namespace detail
 {
 
-template<typename ArgType, RegisterType regType, auto regIndex>
+template<int argIndex, typename ArgType, RegisterType regType, int regIndex>
 inline void
 logParam(fmt::memory_buffer &message,
          cpu::Core *core,
          param_info_t<ArgType, regType, regIndex> paramInfo)
 {
+   if (argIndex > 0) {
+      fmt::format_to(message, ", ");
+   }
+
    if constexpr (regType == RegisterType::VarArgs) {
       fmt::format_to(message, "...");
    } else {
-      auto value = readParam(core, paramInfo);
-      if constexpr ((regType == RegisterType::Gpr32 && regIndex == 3) ||
-                    (regType == RegisterType::Gpr64 && regIndex == 3) ||
-                    (regType == RegisterType::Fpr && regIndex == 0)) {
-         fmt::format_to(message, "{}", value);
-      } else {
-         fmt::format_to(message, ", {}", value);
-      }
+      fmt::format_to(message, "{}", readParam(core, paramInfo));
    }
 }
 
@@ -47,7 +44,7 @@ invoke_trace_host_impl(cpu::Core *core,
    }
 
    if constexpr (FunctionTraitsType::num_args > 0) {
-      (logParam(message, core, std::get<I>(param_info)), ...);
+      (logParam<I>(message, core, std::get<I>(param_info)), ...);
    }
 
    fmt::format_to(message, ") from 0x{:08X}", core->lr);
