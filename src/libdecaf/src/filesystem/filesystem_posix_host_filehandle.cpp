@@ -128,7 +128,7 @@ HostFileHandle::truncate()
 
 
 size_t
-HostFileHandle::read(uint8_t *data,
+HostFileHandle::read(void *data,
                      size_t size,
                      size_t count)
 {
@@ -139,7 +139,7 @@ HostFileHandle::read(uint8_t *data,
 
 
 size_t
-HostFileHandle::write(const uint8_t *data,
+HostFileHandle::write(const void *data,
                       size_t size,
                       size_t count)
 {

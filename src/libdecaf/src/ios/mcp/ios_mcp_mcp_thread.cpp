@@ -598,7 +598,9 @@ startMcpThread()
       return error;
    }
 
-   return IOS_StartThread(error);
+   auto threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(threadId, "McpThread");
+   return IOS_StartThread(threadId);
 }
 
 void

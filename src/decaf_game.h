@@ -88,6 +88,12 @@ struct CosXML
       SciErrorLog = 0x200,
    };
 
+   struct Permission
+   {
+      uint32_t group;
+      uint64_t mask;
+   };
+
    unsigned version;
    unsigned cmdFlags;
    std::string argstr;
@@ -96,14 +102,21 @@ struct CosXML
    unsigned codegen_core;
    unsigned max_size;
    unsigned max_codesize;
+   unsigned overlay_arena;
    unsigned default_stack0_size;
    unsigned default_stack1_size;
    unsigned default_stack2_size;
+   unsigned default_redzone0_size;
+   unsigned default_redzone1_size;
+   unsigned default_redzone2_size;
    unsigned exception_stack0_size;
    unsigned exception_stack1_size;
    unsigned exception_stack2_size;
    uint64_t permission_fs;
    uint64_t permission_mcp;
+   std::array<Permission, 19> permissions;
+   unsigned num_codearea_heap_blocks;
+   unsigned num_workarea_heap_blocks;
 };
 
 struct GameInfo
@@ -112,8 +125,5 @@ struct GameInfo
    CosXML cos;
    MetaXML meta;
 };
-
-const GameInfo &
-getGameInfo();
 
 } // namespace decaf

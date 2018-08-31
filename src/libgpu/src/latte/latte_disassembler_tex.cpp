@@ -12,7 +12,7 @@ namespace disassembler
 {
 
 void
-disassembleTexInstruction(fmt::MemoryWriter &out,
+disassembleTexInstruction(fmt::memory_buffer &out,
                           const latte::ControlFlowInst &parent,
                           const TextureFetchInst &tex,
                           int namePad)
@@ -29,7 +29,7 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
       return;
    }
 
-   out << fmt::pad(name, namePad, ' ') << ' ';
+   fmt::format_to(out, "{: <{}} ", name, namePad);
 
    // dst
    auto dstSelX = tex.word1.DST_SEL_X();
@@ -38,55 +38,53 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    auto dstSelW = tex.word1.DST_SEL_W();
 
    if (dstSelX != latte::SQ_SEL::SEL_MASK || dstSelY != latte::SQ_SEL::SEL_MASK || dstSelZ != latte::SQ_SEL::SEL_MASK || dstSelW != latte::SQ_SEL::SEL_MASK) {
-      out << "R" << tex.word1.DST_GPR();
+      fmt::format_to(out, "R{}", tex.word1.DST_GPR());
 
       if (tex.word1.DST_REL() == SQ_REL::REL) {
-         out << "[AL]";
+         fmt::format_to(out, "[AL]");
       }
 
-      out
-         << '.'
-         << disassembleDestMask(dstSelX)
-         << disassembleDestMask(dstSelY)
-         << disassembleDestMask(dstSelZ)
-         << disassembleDestMask(dstSelW);
+      fmt::format_to(out, ".{}{}{}{}",
+         disassembleDestMask(dstSelX),
+         disassembleDestMask(dstSelY),
+         disassembleDestMask(dstSelZ),
+         disassembleDestMask(dstSelW));
    } else {
-      out << "____";
+      fmt::format_to(out, "____");
    }
 
 
    // src
-   out << ", R" << tex.word0.SRC_GPR();
+   fmt::format_to(out, ", R{}", tex.word0.SRC_GPR());
 
    if (tex.word0.SRC_REL() == SQ_REL::REL) {
-      out << "[AL]";
+      fmt::format_to(out, "[AL]");
    }
 
-   out
-      << '.'
-      << disassembleDestMask(tex.word2.SRC_SEL_X())
-      << disassembleDestMask(tex.word2.SRC_SEL_Y())
-      << disassembleDestMask(tex.word2.SRC_SEL_Z())
-      << disassembleDestMask(tex.word2.SRC_SEL_W());
+   fmt::format_to(out, ".{}{}{}{}",
+      disassembleDestMask(tex.word2.SRC_SEL_X()),
+      disassembleDestMask(tex.word2.SRC_SEL_Y()),
+      disassembleDestMask(tex.word2.SRC_SEL_Z()),
+      disassembleDestMask(tex.word2.SRC_SEL_W()));
 
-   out
-      << ", t" << tex.word0.RESOURCE_ID()
-      << ", s" << tex.word2.SAMPLER_ID();
+   fmt::format_to(out, ", t{}, s{}",
+                  tex.word0.RESOURCE_ID(),
+                  tex.word2.SAMPLER_ID());
 
    if (tex.word1.LOD_BIAS()) {
-      out << " LOD(" << static_cast<float>(tex.word1.LOD_BIAS()) << ")";
+      fmt::format_to(out, " LOD({})", static_cast<float>(tex.word1.LOD_BIAS()));
    }
 
    if (tex.word0.FETCH_WHOLE_QUAD()) {
-      out << " WHOLE_QUAD";
+      fmt::format_to(out, " WHOLE_QUAD");
    }
 
    if (tex.word0.BC_FRAC_MODE()) {
-      out << " BC_FRAC_MODE";
+      fmt::format_to(out, " BC_FRAC_MODE");
    }
 
    if (tex.word0.ALT_CONST()) {
-      out << " ALT_CONST";
+      fmt::format_to(out, " ALT_CONST");
    }
 
    auto normX = tex.word1.COORD_TYPE_X();
@@ -95,37 +93,37 @@ disassembleTexInstruction(fmt::MemoryWriter &out,
    auto normW = tex.word1.COORD_TYPE_W();
 
    if (!normX || !normY || !normZ || !normW) {
-      out << " DENORM(";
+      fmt::format_to(out, " DENORM(");
 
       if (!normX) {
-         out << "X";
+         fmt::format_to(out, "X");
       }
 
       if (!normY) {
-         out << "Y";
+         fmt::format_to(out, "Y");
       }
 
       if (!normZ) {
-         out << "Z";
+         fmt::format_to(out, "Z");
       }
 
       if (!normW) {
-         out << "W";
+         fmt::format_to(out, "W");
       }
 
-      out << ")";
+      fmt::format_to(out, ")");
    }
 
    if (tex.word2.OFFSET_X()) {
-      out << " XOFFSET(" << static_cast<float>(tex.word2.OFFSET_X()) << ")";
+      fmt::format_to(out, " XOFFSET({})", static_cast<float>(tex.word2.OFFSET_X()));
    }
 
    if (tex.word2.OFFSET_Y()) {
-      out << " YOFFSET(" << static_cast<float>(tex.word2.OFFSET_Y()) << ")";
+      fmt::format_to(out, " YOFFSET({})", static_cast<float>(tex.word2.OFFSET_Y()));
    }
 
    if (tex.word2.OFFSET_Z()) {
-      out << " ZOFFSET(" << static_cast<float>(tex.word2.OFFSET_Z()) << ")";
+      fmt::format_to(out, " ZOFFSET({})", static_cast<float>(tex.word2.OFFSET_Z()));
    }
 }
 
@@ -142,11 +140,7 @@ disassembleTEXClause(State &state, const ControlFlowInst &inst)
       const auto &tex = clause[i];
       auto id = tex.word0.TEX_INST();
 
-      state.out
-         << '\n'
-         << state.indent
-         << fmt::pad(state.groupPC, 3, ' ')
-         << "    ";
+      fmt::format_to(state.out, "\n{}{: <3}    ", state.indent, state.groupPC);
 
       if (id == SQ_TEX_INST_VTX_FETCH || id == SQ_TEX_INST_VTX_SEMANTIC) {
          // Someone at AMD must have been having a laugh when they designed this...
@@ -156,7 +150,7 @@ disassembleTEXClause(State &state, const ControlFlowInst &inst)
          disassembleTexInstruction(state.out, inst, tex, 15);
       }
 
-      state.out << "\n";
+      fmt::format_to(state.out, "\n");
       state.groupPC++;
    }
 
@@ -164,27 +158,25 @@ disassembleTEXClause(State &state, const ControlFlowInst &inst)
 }
 
 void
-disassembleCfTEX(fmt::MemoryWriter &out, const ControlFlowInst &inst)
+disassembleCfTEX(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    auto addr = inst.word0.ADDR();
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
-   out
-      << ": ADDR(" << addr << ")"
-      << " CNT(" << count << ")";
+   fmt::format_to(out, ": ADDR({}) CNT({})", addr, count);
 
    if (!inst.word1.BARRIER()) {
-      out << " NO_BARRIER";
+      fmt::format_to(out, " NO_BARRIER");
    }
 
    disassembleCondition(out, inst);
 
    if (inst.word1.WHOLE_QUAD_MODE()) {
-      out << " WHOLE_QUAD";
+      fmt::format_to(out, " WHOLE_QUAD");
    }
 
    if (inst.word1.VALID_PIXEL_MODE()) {
-      out << " VALID_PIX";
+      fmt::format_to(out, " VALID_PIX");
    }
 }
 

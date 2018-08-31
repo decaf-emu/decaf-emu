@@ -32,15 +32,15 @@ conditionalMove(State &state,
    insertLineStart(state);
    insertDestBegin(state, cf, alu, state.unit);
 
-   state.out << "(";
+   fmt::format_to(state.out, "(");
    insertSource0(state, state.out, cf, alu);
-   state.out << op << "0) ? ";
+   fmt::format_to(state.out, "{}0) ? ", op);
    insertSource1(state, state.out, cf, alu);
-   state.out << " : ";
+   fmt::format_to(state.out, " : ");
    insertSource2(state, state.out, cf, alu);
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 
@@ -55,21 +55,21 @@ multiplyAdd(State &state,
    insertDestBegin(state, cf, alu, state.unit);
 
    if (modifier) {
-      state.out << "(";
+      fmt::format_to(state.out, "(");
    }
 
    insertSource0(state, state.out, cf, alu);
-   state.out << " * ";
+   fmt::format_to(state.out, " * ");
    insertSource1(state, state.out, cf, alu);
-   state.out << " + ";
+   fmt::format_to(state.out, " + ");
    insertSource2(state, state.out, cf, alu);
 
    if (modifier) {
-      state.out << ")" << modifier;
+      fmt::format_to(state.out, "){}", modifier);
    }
 
    insertDestEnd(state, cf, alu);
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 

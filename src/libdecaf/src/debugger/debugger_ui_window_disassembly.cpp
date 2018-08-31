@@ -3,7 +3,7 @@
 #include "debugger_branchcalc.h"
 #include "debugger_threadutils.h"
 #include "debugger_ui_window_disassembly.h"
-#include "modules/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
 
 #include <algorithm>
 #include <libcpu/cpu_breakpoints.h>
@@ -16,10 +16,7 @@
 #include <map>
 #include <sstream>
 
-namespace debugger
-{
-
-namespace ui
+namespace debugger::ui
 {
 
 static const ImVec4 DataColor = HEXTOIMV4(0xB0C4CE, 1.0f);
@@ -142,7 +139,7 @@ DisassemblyWindow::draw()
 
    // Lets precalculate some stuff we need for the currently visible instructions
    std::map<uint32_t, VisInstrInfo> visInstrInfo;
-   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetItemsLineHeightWithSpacing() });
+   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetFrameHeightWithSpacing() });
 
    // Find the upper and lower bounds of the visible area
    auto visFirstAddr = mAddressScroller.reset();
@@ -272,7 +269,7 @@ DisassemblyWindow::draw()
       auto lineMax = ImVec2 { rootPos.x + wndWidth, rootPos.y + lineHeight };
 
       // Handle a new address being selected
-      if (ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
+      if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
          if (ImGui::IsMouseClicked(0) || ImGui::IsMouseDown(0)) {
             mSelectedAddr = addr;
          }
@@ -468,15 +465,18 @@ DisassemblyWindow::draw()
    ImGui::Separator();
 
    // Render the bottom bar for the window
-   ImGui::AlignFirstTextHeightToWidgets();
+   ImGui::AlignTextToFramePadding();
    ImGui::Text("Go To Address: ");
    ImGui::SameLine();
    ImGui::PushItemWidth(70);
 
-   char addressInput[32];
-   if (ImGui::InputText("##addr", addressInput, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue)) {
-      std::istringstream is { addressInput };
-      uint32_t goto_addr;
+   if (ImGui::InputText("##addr", mAddressInput.data(), mAddressInput.size(),
+                        ImGuiInputTextFlags_CharsHexadecimal |
+                        ImGuiInputTextFlags_CharsUppercase |
+                        ImGuiInputTextFlags_AutoSelectAll |
+                        ImGuiInputTextFlags_EnterReturnsTrue)) {
+      std::istringstream is { mAddressInput.data() };
+      auto goto_addr = uint32_t { 0 };
 
       if ((is >> std::hex >> goto_addr)) {
          gotoAddress(goto_addr);
@@ -487,6 +487,4 @@ DisassemblyWindow::draw()
    ImGui::End();
 }
 
-} // namespace ui
-
-} // namespace debugger
+} // namespace debugger::ui

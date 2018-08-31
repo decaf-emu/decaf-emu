@@ -29,6 +29,10 @@ static constexpr PhysicalAddress MEM2BaseAddress = PhysicalAddress { 0x10000000 
 static constexpr PhysicalAddress MEM2EndAddress  = PhysicalAddress { 0x8FFFFFFF };
 static constexpr size_t MEM2Size = (MEM2EndAddress - MEM2BaseAddress) + 1;
 
+static constexpr PhysicalAddress UNKRAMBaseAddress = PhysicalAddress { 0xFFC00000 };
+static constexpr PhysicalAddress UNKRAMEndAddress = PhysicalAddress { 0xFFE7FFFF };
+static constexpr size_t UNKRAMSize = (UNKRAMEndAddress - UNKRAMBaseAddress) + 1;
+
 static constexpr PhysicalAddress SRAM1BaseAddress = PhysicalAddress { 0xFFF00000 };
 static constexpr PhysicalAddress SRAM1EndAddress = PhysicalAddress { 0xFFF07FFF };
 static constexpr size_t SRAM1Size = (SRAM1EndAddress - SRAM1BaseAddress) + 1;
@@ -110,6 +114,14 @@ MemoryMap::reserve()
       return false;
    }
 
+   // Commit unknown kernel RAM
+   mUnkRam = platform::createMemoryMappedFile(UNKRAMSize);
+   if (mUnkRam == platform::InvalidMapFileHandle) {
+      gLog->error("Unable to create UNKRAM mapping");
+      free();
+      return false;
+   }
+
    // Commit SRAM0
    mSram0 = platform::createMemoryMappedFile(SRAM0Size);
    if (mSram0 == platform::InvalidMapFileHandle) {
@@ -170,6 +182,14 @@ MemoryMap::reserve()
    auto viewMem2 = platform::mapViewOfFile(mMem2, platform::ProtectFlags::ReadWrite, 0, MEM2Size, ptrMem2);
    if (viewMem2 != ptrMem2) {
       gLog->error("Unable to map MEM2 to physical address space");
+      free();
+      return false;
+   }
+
+   auto ptrUnkRam = getPhysicalPointer(UNKRAMBaseAddress);
+   auto viewUnkRam = platform::mapViewOfFile(mUnkRam, platform::ProtectFlags::ReadWrite, 0, UNKRAMSize, ptrUnkRam);
+   if (viewUnkRam != ptrUnkRam) {
+      gLog->error("Unable to map UNKRAM to physical address space");
       free();
       return false;
    }
@@ -238,6 +258,12 @@ MemoryMap::free()
       platform::unmapViewOfFile(getPhysicalPointer(MEM2BaseAddress), MEM2Size);
       platform::closeMemoryMappedFile(mMem2);
       mMem2 = platform::InvalidMapFileHandle;
+   }
+
+   if (mUnkRam != platform::InvalidMapFileHandle) {
+      platform::unmapViewOfFile(getPhysicalPointer(UNKRAMBaseAddress), UNKRAMSize);
+      platform::closeMemoryMappedFile(mUnkRam);
+      mUnkRam = platform::InvalidMapFileHandle;
    }
 
    if (mSram0 != platform::InvalidMapFileHandle) {
@@ -327,6 +353,8 @@ MemoryMap::queryPhysicalAddress(PhysicalAddress physicalAddress)
       return PhysicalMemoryType::MEM1;
    } else if (physicalAddress >= MEM2BaseAddress && physicalAddress <= MEM2EndAddress) {
       return PhysicalMemoryType::MEM2;
+   } else if (physicalAddress >= UNKRAMBaseAddress && physicalAddress <= UNKRAMEndAddress) {
+      return PhysicalMemoryType::UNKRAM;
    } else if (physicalAddress >= SRAM0BaseAddress && physicalAddress <= SRAM0EndAddress) {
       return PhysicalMemoryType::SRAM0;
    } else if (physicalAddress >= SRAM1BaseAddress && physicalAddress <= SRAM1EndAddress) {
@@ -579,6 +607,8 @@ MemoryMap::mapMemory(VirtualAddress virtualAddress,
       view = platform::mapViewOfFile(mMem1, protectFlags, physicalAddress - MEM1BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::MEM2) {
       view = platform::mapViewOfFile(mMem2, protectFlags, physicalAddress - MEM2BaseAddress, size, virtualPtr);
+   } else if (physicalMemoryType == PhysicalMemoryType::UNKRAM) {
+      view = platform::mapViewOfFile(mUnkRam, protectFlags, physicalAddress - UNKRAMBaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::SRAM0) {
       view = platform::mapViewOfFile(mSram0, protectFlags, physicalAddress - SRAM0BaseAddress, size, virtualPtr);
    } else if (physicalMemoryType == PhysicalMemoryType::SRAM1) {
@@ -671,6 +701,44 @@ MemoryMap::unmapMemory(VirtualAddress virtualAddress,
       }
    }
 
+   return true;
+}
+
+
+bool
+MemoryMap::resetVirtualMemory()
+{
+   // First unmap all memory
+   for (auto &mapping : mMappedMemory) {
+      if (!platform::unmapViewOfFile(getVirtualPointer(mapping.virtualAddress),
+                                     mapping.size)) {
+         gLog->error("Unexpected error whilst unmapping virtual address 0x{:08X}",
+                     mapping.virtualAddress.getAddress());
+      }
+   }
+
+   mMappedMemory.clear();
+
+   if (mReservedMemory.size() == 1) {
+      // If there is only 1 reservation then we should be good to go.
+      decaf_check(mReservedMemory[0].start == VirtualAddress { 0 });
+      decaf_check(mReservedMemory[0].end == VirtualAddress { 0xFFFFFFFF });
+      return true;
+   }
+
+   // Cleanup reservations
+   for (auto &reservation : mReservedMemory) {
+      if (!releaseReservation(reservation)) {
+         gLog->error("Unexpected error whilst releasing virtual address 0x{:08X}",
+                     reservation.start.getAddress());
+      }
+   }
+
+   mReservedMemory.clear();
+
+   // Reserve whole range
+   acquireReservation({ VirtualAddress { 0 }, VirtualAddress { 0xFFFFFFFF } });
+   mReservedMemory.push_back({ VirtualAddress { 0 }, VirtualAddress { 0xFFFFFFFF } });
    return true;
 }
 

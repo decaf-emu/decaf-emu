@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <common/align.h>
 #include <fmt/format.h>
+#include <type_traits>
 
 namespace cpu
 {
@@ -24,9 +25,11 @@ public:
       return !!mAddress;
    }
 
-   explicit operator uint32_t() const
+   template<typename OtherType,
+            typename = typename std::enable_if<std::is_integral<OtherType>::value>::type>
+   explicit operator OtherType() const
    {
-      return mAddress;
+      return static_cast<OtherType>(mAddress);
    }
 
    constexpr bool operator == (const Address &other) const
@@ -71,6 +74,18 @@ public:
       return *this;
    }
 
+   constexpr Address &operator &= (StorageType value)
+   {
+      mAddress = mAddress & value;
+      return *this;
+   }
+
+   constexpr Address &operator ^= (StorageType value)
+   {
+      mAddress = mAddress ^ value;
+      return *this;
+   }
+
    constexpr Address operator + (ptrdiff_t value) const
    {
       return Address { static_cast<StorageType>(mAddress + value) };
@@ -86,9 +101,34 @@ public:
       return mAddress - other.mAddress;
    }
 
-   constexpr Address operator & (uint32_t value) const
+   constexpr Address operator & (StorageType value) const
    {
       return Address { static_cast<StorageType>(mAddress & value) };
+   }
+
+   constexpr Address operator ^ (StorageType value) const
+   {
+      return Address { static_cast<StorageType>(mAddress ^ value) };
+   }
+
+   constexpr StorageType operator % (StorageType value) const
+   {
+      return mAddress % value;
+   }
+
+   constexpr StorageType operator / (StorageType value) const
+   {
+      return mAddress / value;
+   }
+
+   constexpr StorageType operator << (StorageType value) const
+   {
+      return mAddress << value;
+   }
+
+   constexpr StorageType operator >> (StorageType value) const
+   {
+      return mAddress >> value;
    }
 
    constexpr StorageType getAddress() const
@@ -99,16 +139,6 @@ public:
 private:
    StorageType mAddress = 0;
 };
-
-template<typename Type>
-static inline void
-format_arg(fmt::BasicFormatter<char> &f,
-           const char *&format_str,
-           const Address<Type> &val)
-{
-   format_str = f.format(format_str,
-                         fmt::internal::MakeArg<fmt::BasicFormatter<char>>(val.getAddress()));
-}
 
 template<typename Type>
 struct AddressRange
@@ -163,3 +193,25 @@ align_down(cpu::Address<Type> value, size_t alignment)
 {
    return cpu::Address<Type> { align_down(value.getAddress(), alignment) };
 }
+
+// Custom formatters for fmtlib
+namespace fmt
+{
+
+template<typename AddressType>
+struct formatter<cpu::Address<AddressType>>
+{
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
+   }
+
+   template<typename FormatContext>
+   auto format(const cpu::Address<AddressType> &addr, FormatContext &ctx)
+   {
+      return format_to(ctx.begin(), "0x{:08X}", addr.getAddress());
+   }
+};
+
+} // namespace fmt

@@ -166,24 +166,24 @@ sampleFunc(State &state,
       auto samplerElements = getSamplerArgCount(samplerDim, isShadowOp);
 
       if (!isShadowOp) {
-         state.out << "texTmp";
+         fmt::format_to(state.out, "texTmp");
       } else {
-         state.out << "texTmp.x";
+         fmt::format_to(state.out, "texTmp.x");
       }
 
-      state.out << " = ";
+      fmt::format_to(state.out, " = ");
 
       bool writeOffsets = false;
       if (offsetX != 0 || offsetY != 0 || offsetZ != 0) {
          decaf_check(offsetFunc.size());
-         state.out << offsetFunc;
+         fmt::format_to(state.out, "{}", offsetFunc);
          writeOffsets = true;
       } else {
          decaf_check(func.size());
-         state.out << func;
+         fmt::format_to(state.out, "{}", func);
       }
 
-      state.out << "(sampler_" << samplerID << ", ";
+      fmt::format_to(state.out, "(sampler_{}, ", samplerID);
 
       if (isShadowOp) {
          /* In r600 the .w channel holds the compare value whereas OpenGL
@@ -202,37 +202,37 @@ sampleFunc(State &state,
       }
 
       if (asInts) {
-         state.out << "floatBitsToInt(";
+         fmt::format_to(state.out, "floatBitsToInt(");
       }
 
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, samplerElements);
 
       if (asInts) {
-         state.out << ")";
+         fmt::format_to(state.out, ")");
       }
 
       switch (extraArg) {
       case latte::SQ_SEL::SEL_X:
-         state.out << ", ";
+         fmt::format_to(state.out, ", ");
          insertSelectValue(state.out, src, srcSelX);
          break;
       case latte::SQ_SEL::SEL_Y:
-         state.out << ", ";
+         fmt::format_to(state.out, ", ");
          insertSelectValue(state.out, src, srcSelY);
          break;
       case latte::SQ_SEL::SEL_Z:
-         state.out << ", ";
+         fmt::format_to(state.out, ", ");
          insertSelectValue(state.out, src, srcSelZ);
          break;
       case latte::SQ_SEL::SEL_W:
-         state.out << ", ";
+         fmt::format_to(state.out, ", ");
          insertSelectValue(state.out, src, srcSelW);
          break;
       case latte::SQ_SEL::SEL_0:
-         state.out << ", 0";
+         fmt::format_to(state.out, ", 0");
          break;
       case latte::SQ_SEL::SEL_1:
-         state.out << ", 1";
+         fmt::format_to(state.out, ", 1");
          break;
       }
 
@@ -240,16 +240,16 @@ sampleFunc(State &state,
          switch (samplerDim) {
          case latte::SQ_TEX_DIM::DIM_1D:
          case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-            state.out << ", " << offsetX;
+            fmt::format_to(state.out, ", {}", offsetX);
             break;
          case latte::SQ_TEX_DIM::DIM_2D:
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
          case latte::SQ_TEX_DIM::DIM_2D_MSAA:
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-            state.out << ", ivec2(" << offsetX << ", " << offsetY << ")";
+            fmt::format_to(state.out, ", ivec2({}, {})", offsetX, offsetY);
             break;
          case latte::SQ_TEX_DIM::DIM_3D:
-            state.out << ", ivec3(" << offsetX << ", " << offsetY << ", " << offsetZ << ")";
+            fmt::format_to(state.out, ", ivec3({}, {}, {})", offsetX, offsetY, offsetZ);
             break;
          case latte::SQ_TEX_DIM::DIM_CUBEMAP:
          default:
@@ -259,17 +259,16 @@ sampleFunc(State &state,
 
       if (getSamplerIsMsaa(samplerDim)) {
          // Write the sample number if this is an MSAA sampler
-         state.out << ", 0";
+         fmt::format_to(state.out, ", 0");
       }
 
-      state.out << ");";
+      fmt::format_to(state.out, ");");
       insertLineEnd(state);
 
       insertLineStart(state);
-      state.out << dst << "." << dstSelMask;
-      state.out << " = ";
+      fmt::format_to(state.out, "{}.{} = ", dst, dstSelMask);
       insertSelectVector(state.out, "texTmp", dstSelX, dstSelY, dstSelZ, dstSelW, numDstSels);
-      state.out << ";";
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
    }
 }
@@ -306,10 +305,9 @@ GET_GRADIENTS_H(State &state, const latte::ControlFlowInst &cf, const latte::Tex
 
    if (numDstSels > 0) {
       insertLineStart(state);
-      state.out << dst << "." << dstSelMask;
-      state.out << " = dFdx(";
+      fmt::format_to(state.out, "{}.{} = dFdx(", dst, dstSelMask);
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, numDstSels);
-      state.out << ");";
+      fmt::format_to(state.out, ");");
       insertLineEnd(state);
    }
 }
@@ -340,10 +338,9 @@ GET_GRADIENTS_V(State &state, const latte::ControlFlowInst &cf, const latte::Tex
 
    if (numDstSels > 0) {
       insertLineStart(state);
-      state.out << dst << "." << dstSelMask;
-      state.out << " = dFdy(";
+      fmt::format_to(state.out, "{}.{} = dFdy(", dst, dstSelMask);
       insertSelectVector(state.out, src, srcSelX, srcSelY, srcSelZ, srcSelW, numDstSels);
-      state.out << ");";
+      fmt::format_to(state.out, ");");
       insertLineEnd(state);
    }
 }
@@ -388,33 +385,32 @@ GET_TEXTURE_INFO(State &state, const latte::ControlFlowInst &cf, const latte::Te
       auto samplerElements = getSamplerArgCount(samplerDim, false);
 
       insertLineStart(state);
-      state.out << "texTmp.xyz = intBitsToFloat(ivec3(textureSize(sampler_" << samplerID;
+      fmt::format_to(state.out, "texTmp.xyz = intBitsToFloat(ivec3(textureSize(sampler_{}", samplerID);
 
       if (!getSamplerIsMsaa(samplerDim)) {
-         state.out << ", floatBitsToInt(";
+         fmt::format_to(state.out, ", floatBitsToInt(");
          insertSelectValue(state.out, src, srcSelLod);
-         state.out << ")";
+         fmt::format_to(state.out, ")");
       }
 
-      state.out << ")";
+      fmt::format_to(state.out, ")");
       for (auto i = samplerElements; i < 3; ++i) {
-         state.out << ", 1";
+         fmt::format_to(state.out, ", 1");
       }
-      state.out << "));";
+      fmt::format_to(state.out, "));");
       insertLineEnd(state);
 
       insertLineStart(state);
-      state.out << dst << "." << dstSelMask;
-      state.out << " = ";
+      fmt::format_to(state.out, "{}.{} = ", dst, dstSelMask);
       insertSelectVector(state.out, "texTmp", dstSelX, dstSelY, dstSelZ, SQ_SEL::SEL_MASK, numDstSels);
-      state.out << ";";
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
    }
 
    if (dstSelW != SQ_SEL::SEL_MASK) {
       insertLineStart(state);
       insertSelectValue(state.out, dst, dstSelW);
-      state.out << " = intBitsToFloat(textureQueryLevels(sampler_" << samplerID << "));";
+      fmt::format_to(state.out, " = intBitsToFloat(textureQueryLevels(sampler_{}));", samplerID);
       insertLineEnd(state);
    }
 }

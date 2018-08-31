@@ -28,9 +28,11 @@ replace_all(std::string &source, char find, char replace)
 
 // Split a string by a character
 inline void
-split_string(const std::string &source, char delimiter, std::vector<std::string> &result)
+split_string(const std::string_view &source,
+             char delimiter,
+             std::vector<std::string> &result)
 {
-   std::string::size_type offset = 0, last = 0;
+   std::string_view::size_type offset = 0, last = 0;
 
    if (source.at(0) == delimiter) {
       offset = last = 1;
@@ -38,13 +40,13 @@ split_string(const std::string &source, char delimiter, std::vector<std::string>
 
    while ((offset = source.find(delimiter, offset)) != std::string::npos) {
       if (offset - last > 0) {
-         result.push_back(source.substr(last, offset - last));
+         result.push_back(std::string { source.substr(last, offset - last) });
       }
 
       last = ++offset;
    }
 
-   result.push_back(source.substr(last, offset - last));
+   result.push_back(std::string { source.substr(last, offset - last) });
 }
 
 // Joins a vector of strings into one string using a delimeter
@@ -88,7 +90,7 @@ ends_with(const std::string_view &source, const std::string_view &suffix)
 
 // Creates a string according to a format string and varargs
 static inline std::string
-format_string(const char* fmt, ...)
+format_string(const char *fmt, ...)
 {
    va_list args, args2;
    std::string ret;
@@ -120,4 +122,15 @@ format_string(const char* fmt, ...)
 
    ret.resize(formatted_len);
    return ret;
+}
+
+// Case insensitive string compare
+inline bool
+iequals(const std::string_view &a, const std::string_view &b)
+{
+   return std::equal(a.begin(), a.end(),
+                     b.begin(), b.end(),
+                     [](char a, char b) {
+                        return tolower(a) == tolower(b);
+                     });
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "debugger_ui_addrscroller.h"
 #include "debugger_ui_window.h"
+
+#include <array>
 #include <libcpu/state.h>
 
 namespace debugger
@@ -24,6 +26,7 @@ public:
 private:
    AddressScroller mAddressScroller;
    int64_t mSelectedAddr = -1;
+   std::array<char, 9> mAddressInput = { 0 };
 };
 
 } // namespace ui

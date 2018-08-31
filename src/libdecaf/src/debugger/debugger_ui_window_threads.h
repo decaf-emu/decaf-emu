@@ -1,6 +1,6 @@
 #pragma once
 #include "debugger_ui_window.h"
-#include "modules/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <chrono>
 
@@ -12,10 +12,10 @@ namespace ui
 
 struct ThreadInfo
 {
-   coreinit::OSThread *thread;
+   virt_ptr<cafe::coreinit::OSThread> thread;
    uint32_t id;
    std::string name;
-   coreinit::OSThreadState state;
+   cafe::coreinit::OSThreadState state;
    int32_t coreId;
    uint64_t coreTimeNs;
    int32_t priority;

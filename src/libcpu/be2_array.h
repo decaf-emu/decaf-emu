@@ -8,12 +8,15 @@
 template<typename Type>
 struct be2_struct;
 
-// Equivalent to std:true_type if type T is a virt_ptr or phys_ptr.
+// Equivalent to std:true_type if type T is a virt_ptr or phys_ptr or virt_func_ptr.
 template<typename>
 struct is_cpu_ptr : std::false_type { };
 
 template<typename T, typename A>
 struct is_cpu_ptr<cpu::Pointer<T, A>> : std::true_type { };
+
+template<typename T, typename A>
+struct is_cpu_ptr<cpu::FunctionPointer<T, A>> : std::true_type { };
 
 // Detects the actual type to be used for be2_array members.
 template <typename T, typename = void>
@@ -22,17 +25,23 @@ struct be2_array_item_type;
 template <typename T>
 struct be2_array_item_type<T, typename std::enable_if<std::is_arithmetic<T>::value
                                                    || std::is_enum<T>::value
-                                                   || is_cpu_ptr<T>::value>::type>
+                                                   || is_cpu_ptr<std::remove_cv_t<T>>::value>::type>
 {
    using type = be2_val<T>;
 };
 
 template <typename T>
-struct be2_array_item_type<T, typename std::enable_if<!is_cpu_ptr<T>::value
-                                                   && (std::is_class<T>::value
-                                                    || std::is_union<T>::value)>::type>
+struct be2_array_item_type<T, typename std::enable_if<!is_cpu_ptr<std::remove_cv_t<T>>::value
+                                                   && std::is_class<T>::value
+                                                   && !std::is_union<T>::value>::type>
 {
    using type = be2_struct<T>;
+};
+
+template <typename T>
+struct be2_array_item_type<T, typename std::enable_if<std::is_union<T>::value>::type>
+{
+   using type = be2_val<T>;
 };
 
 
@@ -185,6 +194,22 @@ public:
    constexpr auto cend()
    {
       return const_iterator { *this, Size };
+   }
+
+   std::array<Type, Size> value() const
+   {
+      std::array<Type, Size> result;
+
+      for (auto i = 0u; i < Size; ++i) {
+         result[i] = mValues[i];
+      }
+
+      return result;
+   }
+
+   operator std::array<Type, Size>() const
+   {
+      return value();
    }
 
    // Please use virt_addrof or phys_addrof instead

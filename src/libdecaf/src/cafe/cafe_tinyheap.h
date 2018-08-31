@@ -70,4 +70,16 @@ TinyHeap_Free(virt_ptr<TinyHeap> heap,
 int32_t
 TinyHeap_GetLargestFree(virt_ptr<TinyHeap> heap);
 
+virt_ptr<void>
+TinyHeap_Enum(virt_ptr<TinyHeap> heap,
+              virt_ptr<void> prevBlockPtr,
+              virt_ptr<void> *outPtr,
+              uint32_t *outSize);
+
+virt_ptr<void>
+TinyHeap_EnumFree(virt_ptr<TinyHeap> heap,
+                  virt_ptr<void> prevBlockPtr,
+                  virt_ptr<void> *outPtr,
+                  uint32_t *outSize);
+
 } // namespace cafe

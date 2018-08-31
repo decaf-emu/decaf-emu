@@ -40,24 +40,25 @@ IOS_CreateThread(ThreadEntryFn entry,
                  ThreadFlags flags)
 {
    phys_ptr<Thread> thread = nullptr;
-   internal::lockScheduler();
 
-   // We cannot create thread with priority higher than current thread's priority
+   if (priority > MaxThreadPriority) {
+      return Error::Invalid;
+   }
+
+   // We cannot create thread with priority higher than current thread's max
+   // priority
    auto currentThread = internal::getCurrentThread();
-   if (currentThread && priority > currentThread->minPriority) {
-      internal::unlockScheduler();
+   if (currentThread && priority > currentThread->maxPriority) {
       return Error::Invalid;
    }
 
    // Check stack pointer and alignment
    if (!stackTop || (phys_cast<phys_addr>(stackTop) & 3)) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    // Check stack size and alignment
    if (stackSize < 0x68 || (stackSize & 3)) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -72,7 +73,6 @@ IOS_CreateThread(ThreadEntryFn entry,
 
    if (!thread) {
       // Maximum number of threads running
-      internal::unlockScheduler();
       return Error::Max;
    }
 
@@ -83,7 +83,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    }
 
    thread->state = ThreadState::Stopped;
-   thread->minPriority = priority;
+   thread->maxPriority = priority;
    thread->priority = priority;
    thread->userStackAddr = stackTop;
    thread->userStackSize = stackSize;
@@ -128,7 +128,6 @@ IOS_CreateThread(ThreadEntryFn entry,
                                                  thread.getRawPointer());
 #endif
 
-   internal::unlockScheduler();
    return static_cast<Error>(thread->id);
 }
 
@@ -136,45 +135,39 @@ Error
 IOS_JoinThread(ThreadId id,
                phys_ptr<Error> returnedValue)
 {
-   internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
 
    if (!id) {
       id = currentThread->id;
    } else if (id >= sData->threads.size()) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    auto thread = phys_addrof(sData->threads[id]);
    if (thread->pid != currentThread->pid) {
       // Can only join threads belonging to the same process.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    if (thread == currentThread) {
       // Can't join self.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    if (thread->flags & ThreadFlags::Detached) {
       // Can't join a detached thread.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    /*
    if (thread->unknown0x64 != dword_81430D4) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
    */
 
    if (thread->state != ThreadState::Dead) {
-      internal::sleepThreadNoLock(phys_addrof(thread->joinQueue));
-      internal::rescheduleSelfNoLock();
+      internal::sleepThread(phys_addrof(thread->joinQueue));
+      internal::reschedule();
    }
 
    if (returnedValue) {
@@ -182,7 +175,6 @@ IOS_JoinThread(ThreadId id,
    }
 
    thread->state = ThreadState::Available;
-   internal::unlockScheduler();
    return Error::OK;
 }
 
@@ -190,20 +182,17 @@ Error
 IOS_CancelThread(ThreadId id,
                  Error exitValue)
 {
-   internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
 
    if (!id) {
       id = currentThread->id;
    } else if (id >= sData->threads.size()) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    auto thread = phys_addrof(sData->threads[id]);
    if (thread->pid != currentThread->pid) {
       // Can only cancel threads belonging to the same process.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -218,28 +207,24 @@ IOS_CancelThread(ThreadId id,
       thread->state = ThreadState::Available;
    } else {
       thread->state = ThreadState::Dead;
-      internal::wakeupAllThreadsNoLock(phys_addrof(thread->joinQueue),
-                                       Error::OK);
+      internal::wakeupAllThreads(phys_addrof(thread->joinQueue), Error::OK);
    }
 
    if (thread == currentThread) {
-      internal::rescheduleSelfNoLock();
+      internal::reschedule();
    }
 
-   internal::unlockScheduler();
    return Error::Invalid;
 }
 
 Error
 IOS_StartThread(ThreadId id)
 {
-   internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
 
    if (!id) {
       id = currentThread->id;
    } else if (id >= sData->threads.size()) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -247,13 +232,11 @@ IOS_StartThread(ThreadId id)
    if (currentThread->pid != ProcessId::KERNEL && thread->pid != currentThread->pid) {
       // Can only start threads belonging to the same process.
       // Unless we're the kernel of course.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    if (thread->state != ThreadState::Stopped) {
       // Can only start a stopped thread.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -262,31 +245,27 @@ IOS_StartThread(ThreadId id)
       ThreadQueue_PushThread(thread->threadQueue, thread);
    } else {
       thread->state = ThreadState::Ready;
-      internal::queueThreadNoLock(thread);
+      internal::queueThread(thread);
    }
 
-   internal::rescheduleAllNoLock();
-   internal::unlockScheduler();
+   internal::reschedule();
    return Error::OK;
 }
 
 Error
 IOS_SuspendThread(ThreadId id)
 {
-   internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
 
    if (!id) {
       id = currentThread->id;
    } else if (id >= sData->threads.size()) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    auto thread = phys_addrof(sData->threads[id]);
    if (thread->pid != currentThread->pid) {
       // Can only suspend threads belonging to the same process.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
@@ -295,7 +274,6 @@ IOS_SuspendThread(ThreadId id)
    } else if (thread->state != ThreadState::Waiting &&
               thread->state != ThreadState::Ready) {
       // Cannot suspend a thread which is not Running, Ready or Waiting.
-      internal::unlockScheduler();
       return Error::Invalid;
    } else {
       thread->state = ThreadState::Stopped;
@@ -303,19 +281,16 @@ IOS_SuspendThread(ThreadId id)
    }
 
    if (thread == currentThread) {
-      internal::rescheduleSelfNoLock();
+      internal::reschedule();
    }
 
-   internal::unlockScheduler();
    return Error::OK;
 }
 
 Error
 IOS_YieldCurrentThread()
 {
-   internal::lockScheduler();
-   internal::rescheduleSelfNoLock(true);
-   internal::unlockScheduler();
+   internal::reschedule(true);
    return Error::Invalid;
 }
 
@@ -354,30 +329,25 @@ Error
 IOS_SetThreadPriority(ThreadId id,
                       ThreadPriority priority)
 {
-   internal::lockScheduler();
    auto currentThread = internal::getCurrentThread();
 
    if (!id) {
       id = currentThread->id;
    } else if (id >= sData->threads.size()) {
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
    auto thread = phys_addrof(sData->threads[id]);
    if (thread->pid != currentThread->pid) {
       // Can only access threads in same process.
-      internal::unlockScheduler();
       return Error::Invalid;
    }
 
-   if (priority > 127 || priority < thread->minPriority) {
-      internal::unlockScheduler();
+   if (priority > MaxThreadPriority || priority > thread->maxPriority) {
       return Error::Invalid;
    }
 
    if (thread->priority == priority) {
-      internal::unlockScheduler();
       return Error::OK;
    }
 
@@ -388,8 +358,7 @@ IOS_SetThreadPriority(ThreadId id,
       ThreadQueue_PushThread(thread->threadQueue, thread);
    }
 
-   internal::rescheduleSelfNoLock();
-   internal::unlockScheduler();
+   internal::reschedule();
    return Error::OK;
 }
 
@@ -435,6 +404,15 @@ getThread(ThreadId id)
    }
 
    return nullptr;
+}
+
+void
+setThreadName(ThreadId id,
+              const char *name)
+{
+   if (auto thread = getThread(id)) {
+      thread->context.threadName = name;
+   }
 }
 
 void

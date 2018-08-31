@@ -1,8 +1,6 @@
 #include "ios_kernel_process.h"
 #include "ios_kernel_thread.h"
 
-#include "kernel/kernel_memory.h"
-
 #include <array>
 #include <cstring>
 #include <common/frameallocator.h>
@@ -152,31 +150,36 @@ namespace internal
 void
 initialiseProcessStaticAllocators()
 {
-   using ::kernel::getPhysicalRange;
-   using ::kernel::PhysicalRegion;
-   static constexpr std::pair<ProcessId, PhysicalRegion>
-   processRegionMap[] = {
-      { ProcessId::KERNEL,    PhysicalRegion::MEM0IosKernel },
-      { ProcessId::MCP,       PhysicalRegion::MEM0IosMcp },
-      { ProcessId::BSP,       PhysicalRegion::MEM2IosBsp },
-      { ProcessId::CRYPTO,    PhysicalRegion::MEM0IosCrypto },
-      { ProcessId::USB,       PhysicalRegion::MEM2IosUsb },
-      { ProcessId::FS,        PhysicalRegion::MEM2IosFs },
-      { ProcessId::PAD,       PhysicalRegion::MEM2IosPad },
-      { ProcessId::NET,       PhysicalRegion::MEM2IosNet },
-      { ProcessId::ACP,       PhysicalRegion::MEM2IosAcp },
-      { ProcessId::NSEC,      PhysicalRegion::MEM2IosNsec },
-      { ProcessId::AUXIL,     PhysicalRegion::MEM2IosAuxil },
-      { ProcessId::NIM,       PhysicalRegion::MEM2IosNim },
-      { ProcessId::FPD,       PhysicalRegion::MEM2IosFpd },
-      { ProcessId::TEST,      PhysicalRegion::MEM2IosTest },
+   struct PhysicalMemoryLayout
+   {
+      ProcessId id;
+      phys_addr addr;
+      uint32_t size;
    };
 
-   for (auto &processMap : processRegionMap) {
-      auto range = getPhysicalRange(processMap.second);
-      sProcessStaticAllocators[processMap.first] = FrameAllocator {
-            phys_cast<uint8_t *>(range.start).getRawPointer(),
-            range.size
+   static constexpr PhysicalMemoryLayout
+   ProcessMemoryLayout[] = {
+      { ProcessId::KERNEL,    phys_addr { 0x08120000 },   0xA0000 },
+      { ProcessId::MCP,       phys_addr { 0x081C0000 },   0xC0000 },
+      { ProcessId::BSP,       phys_addr { 0x13CC0000 },   0xC0000 },
+      { ProcessId::CRYPTO,    phys_addr { 0x08280000 },   0x40000 },
+      { ProcessId::USB,       phys_addr { 0x10100000 },  0x600000 },
+      { ProcessId::FS,        phys_addr { 0x10700000 }, 0x1800000 },
+      { ProcessId::PAD,       phys_addr { 0x11F00000 },  0x400000 },
+      { ProcessId::NET,       phys_addr { 0x12300000 },  0x600000 },
+      { ProcessId::ACP,       phys_addr { 0x12900000 },  0x2C0000 },
+      { ProcessId::NSEC,      phys_addr { 0x12BC0000 },  0x300000 },
+      { ProcessId::AUXIL,     phys_addr { 0x13C00000 },   0xC0000 },
+      { ProcessId::NIM,       phys_addr { 0x12EC0000 },  0x780000 },
+      { ProcessId::FPD,       phys_addr { 0x13640000 },  0x400000 },
+      { ProcessId::TEST,      phys_addr { 0x13A40000 },  0x1C0000 },
+   };
+
+   for (auto &layout : ProcessMemoryLayout) {
+      sProcessStaticAllocators[layout.id] =
+         FrameAllocator {
+            phys_cast<uint8_t *>(layout.addr).getRawPointer(),
+            layout.size
          };
    }
 }

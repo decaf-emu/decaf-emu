@@ -5,6 +5,8 @@
 #include "debugger_ui_manager.h"
 #include "decaf.h"
 
+#include <imgui.h>
+
 namespace debugger
 {
 
@@ -22,6 +24,7 @@ initialise(const std::string &config,
            ClipboardTextGetCallback getClipboardFn,
            ClipboardTextSetCallback setClipboardFn)
 {
+   ImGui::CreateContext();
    sUiManager.load(config, getClipboardFn, setClipboardFn);
 
    if (decaf::config::debugger::enabled
@@ -33,6 +36,7 @@ initialise(const std::string &config,
 void
 shutdown()
 {
+   ImGui::DestroyContext();
    // Force resume any paused cores.
    sController.resume();
 }

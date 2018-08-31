@@ -96,50 +96,54 @@ struct BitfieldHelper<BitfieldType, sg14::fixed_point<Rep, Exponent>, Position, 
 
 #ifndef DECAF_USE_STDLAYOUT_BITFIELD
 
-#define BITFIELD(Name, Type) \
-   union Name \
-   { \
-      using BitfieldType = Name; \
-      using StorageType = Type; \
-      Type value; \
-      static inline Name get(Type v) { \
-         Name bitfield; \
-         bitfield.value = v; \
-         return bitfield; \
+#define BITFIELD(Name, Type)                                                  \
+   union Name                                                                 \
+   {                                                                          \
+      using BitfieldType = Name;                                              \
+      using StorageType = Type;                                               \
+      Type value;                                                             \
+      explicit operator StorageType() { return value; }                       \
+      static inline Name get(Type v) {                                        \
+         Name bitfield;                                                       \
+         bitfield.value = v;                                                  \
+         return bitfield;                                                     \
       }
 
-#define BITFIELD_ENTRY(Pos, Size, ValueType, Name) \
-   private: struct { StorageType : Pos; StorageType _##Name : Size; }; \
-   public: inline ValueType Name() const { \
-      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>::get(*this); \
-   } \
-   inline BitfieldType Name(ValueType fieldValue) const { \
-      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>::set(*this, fieldValue); \
+#define BITFIELD_ENTRY(Pos, Size, ValueType, Name)                            \
+   private: struct { StorageType : Pos; StorageType _##Name : Size; };        \
+   public: inline ValueType Name() const {                                    \
+      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>::get(*this);  \
+   }                                                                          \
+   inline BitfieldType Name(ValueType fieldValue) const {                     \
+      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>               \
+            ::set(*this, fieldValue);                                         \
    }
 
 #else
 
-#define BITFIELD(Name, Type) \
-   struct Name \
-   { \
-      using BitfieldType = Name; \
-      using StorageType = Type; \
-      Type value; \
-      static inline Name get(Type v) { \
-         Name bitfield; \
-         bitfield.value = v; \
-         return bitfield; \
+#define BITFIELD(Name, Type)                                                  \
+   struct Name                                                                \
+   {                                                                          \
+      using BitfieldType = Name;                                              \
+      using StorageType = Type;                                               \
+      Type value;                                                             \
+      explicit operator StorageType() { return value; }                       \
+      static inline Name get(Type v) {                                        \
+         Name bitfield;                                                       \
+         bitfield.value = v;                                                  \
+         return bitfield;                                                     \
       }
 
-#define BITFIELD_ENTRY(Pos, Size, ValueType, Name) \
-   inline ValueType Name() const { \
-      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>::get(*this); \
-   } \
-   inline BitfieldType Name(ValueType fieldValue) const { \
-      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>::set(*this, fieldValue); \
+#define BITFIELD_ENTRY(Pos, Size, ValueType, Name)                            \
+   inline ValueType Name() const {                                            \
+      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>::get(*this);  \
+   }                                                                          \
+   inline BitfieldType Name(ValueType fieldValue) const {                     \
+      return BitfieldHelper<BitfieldType, ValueType, Pos, Size>               \
+         ::set(*this, fieldValue);                                            \
    }
 
 #endif
 
-#define BITFIELD_END \
+#define BITFIELD_END                                                          \
    };

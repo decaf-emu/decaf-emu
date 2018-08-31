@@ -38,7 +38,9 @@ void PerformanceWindowGL::draw()
       [](const char *text, uint64_t val)
       {
          ImGui::PushStyleColor(ImGuiCol_Text, TitleTextColor);
-         ImGui::Text(text);
+         ImGui::Text("%s", text);
+         ImGui::PopStyleColor();
+
          ImGui::PushStyleColor(ImGuiCol_Text, ValueTextColor);
          ImGui::SameLine();
          ImGui::Text("%" PRIu64, val);

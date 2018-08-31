@@ -12,6 +12,7 @@ namespace ios::kernel
 {
 
 static constexpr auto MaxNumThreads = 180u;
+static constexpr auto MaxThreadPriority = 127;
 
 #pragma pack(push, 1)
 
@@ -41,7 +42,8 @@ struct ContextHLE
    phys_ptr<void> entryPointArg;
    platform::Fiber *fiber;
    Error queueWaitResult;
-   PADDING(0x2C);
+   const char *threadName;
+   PADDING(0x24);
 };
 CHECK_SIZE(ContextHLE, 0x44);
 #endif
@@ -53,7 +55,7 @@ struct Thread
    //! Link to next item in the thread queue.
    be2_phys_ptr<Thread> threadQueueNext;
 
-   be2_val<ThreadPriority> minPriority;
+   be2_val<ThreadPriority> maxPriority;
    be2_val<ThreadPriority> priority;
    be2_val<ThreadState> state;
    be2_val<ProcessId> pid;
@@ -79,7 +81,7 @@ struct Thread
 };
 CHECK_OFFSET(Thread, 0, context);
 CHECK_OFFSET(Thread, 0x44, threadQueueNext);
-CHECK_OFFSET(Thread, 0x48, minPriority);
+CHECK_OFFSET(Thread, 0x48, maxPriority);
 CHECK_OFFSET(Thread, 0x4C, priority);
 CHECK_OFFSET(Thread, 0x50, state);
 CHECK_OFFSET(Thread, 0x54, pid);
@@ -145,6 +147,10 @@ getCurrentThreadId();
 
 phys_ptr<Thread>
 getThread(ThreadId id);
+
+void
+setThreadName(ThreadId id,
+              const char *name);
 
 void
 initialiseStaticThreadData();

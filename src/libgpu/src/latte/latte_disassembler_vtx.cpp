@@ -10,7 +10,7 @@ namespace disassembler
 {
 
 void
-disassembleVtxInstruction(fmt::MemoryWriter &out,
+disassembleVtxInstruction(fmt::memory_buffer &out,
                           const latte::ControlFlowInst &parent,
                           const VertexFetchInst &vtx,
                           int namePad)
@@ -18,7 +18,7 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
    auto id = vtx.word0.VTX_INST();
    auto name = getInstructionName(id);
 
-   out << fmt::pad(name, namePad, ' ') << ' ';
+   fmt::format_to(out, "{: <{}} ", name, namePad);
 
    // dst
    auto dstSelX = vtx.word1.DST_SEL_X();
@@ -28,108 +28,104 @@ disassembleVtxInstruction(fmt::MemoryWriter &out,
 
    if (dstSelX != latte::SQ_SEL::SEL_MASK || dstSelY != latte::SQ_SEL::SEL_MASK || dstSelZ != latte::SQ_SEL::SEL_MASK || dstSelW != latte::SQ_SEL::SEL_MASK) {
       if (id == SQ_VTX_INST_SEMANTIC) {
-         out << "SEM[" << vtx.sem.SEMANTIC_ID() << "]";
+         fmt::format_to(out, "SEM[{}]", vtx.sem.SEMANTIC_ID());
       } else {
-         out << "R" << vtx.gpr.DST_GPR();
+         fmt::format_to(out, "R{}", vtx.gpr.DST_GPR());
 
          if (vtx.gpr.DST_REL() == SQ_REL::REL) {
-            out << "[AL]";
+            fmt::format_to(out, "[AL]");
          }
       }
 
-      out
-         << '.'
-         << disassembleDestMask(dstSelX)
-         << disassembleDestMask(dstSelY)
-         << disassembleDestMask(dstSelZ)
-         << disassembleDestMask(dstSelW);
+      fmt::format_to(out, ".{}{}{}{}",
+                     disassembleDestMask(dstSelX),
+                     disassembleDestMask(dstSelY),
+                     disassembleDestMask(dstSelZ),
+                     disassembleDestMask(dstSelW));
    } else {
-      out << "____";
+      fmt::format_to(out, "____");
    }
 
 
    // src
-   out << ", R" << vtx.word0.SRC_GPR();
+   fmt::format_to(out, ", R{}", vtx.word0.SRC_GPR());
 
    if (vtx.word0.SRC_REL() == SQ_REL::REL) {
-      out << "[AL]";
+      fmt::format_to(out, "[AL]");
    }
 
-   out
-      << '.'
-      << disassembleDestMask(vtx.word0.SRC_SEL_X());
-
-   out
-      << ", b" << vtx.word0.BUFFER_ID();
+   fmt::format_to(out, ".{}, b{}",
+                  disassembleDestMask(vtx.word0.SRC_SEL_X()),
+                  vtx.word0.BUFFER_ID());
 
 
    // fetch_type
-   out << " FETCH_TYPE(";
+   fmt::format_to(out, " FETCH_TYPE(");
    if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::VERTEX_DATA) {
-      out << "VERTEX_DATA";
+      fmt::format_to(out, "VERTEX_DATA");
    } else if (vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::INSTANCE_DATA) {
-      out << "INSTANCE_DATA";
+      fmt::format_to(out, "INSTANCE_DATA");
    } else if(vtx.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::NO_INDEX_OFFSET) {
-      out << "NO_INDEX_OFFSET";
+      fmt::format_to(out, "NO_INDEX_OFFSET");
    } else {
-      out << vtx.word0.FETCH_TYPE();
+      fmt::format_to(out, "{}", vtx.word0.FETCH_TYPE());
    }
-   out << ")";
+   fmt::format_to(out, ")");
 
 
    // format
    if (!vtx.word1.USE_CONST_FIELDS()) {
-      out << " FORMAT(";
+      fmt::format_to(out, " FORMAT(");
 
-      out << " " << vtx.word1.DATA_FORMAT();
+      fmt::format_to(out, " {}", vtx.word1.DATA_FORMAT());
 
       if (vtx.word1.NUM_FORMAT_ALL() == 0) {
-         out << " NORM";
+         fmt::format_to(out, " NORM");
       } else if (vtx.word1.NUM_FORMAT_ALL() == 1) {
-         out << " INT";
+         fmt::format_to(out, " INT");
       } else if (vtx.word1.NUM_FORMAT_ALL() == 2) {
-         out << " SCALED";
+         fmt::format_to(out, " SCALED");
       } else {
-         out << vtx.word1.NUM_FORMAT_ALL();
+         fmt::format_to(out, "{}", vtx.word1.NUM_FORMAT_ALL());
       }
 
       if (vtx.word1.FORMAT_COMP_ALL()) {
-         out << " SIGNED";
+         fmt::format_to(out, " SIGNED");
       } else {
-         out << " UNSIGNED";
+         fmt::format_to(out, " UNSIGNED");
       }
 
-      out << " " << vtx.word1.SRF_MODE_ALL();
+      fmt::format_to(out, " {}", vtx.word1.SRF_MODE_ALL());
 
-      out << ")";
+      fmt::format_to(out, ")");
    }
 
    if (vtx.word2.MEGA_FETCH()) {
-      out << " MEGA(" << (vtx.word0.MEGA_FETCH_COUNT() + 1) << ")";
+      fmt::format_to(out, " MEGA({})", vtx.word0.MEGA_FETCH_COUNT() + 1);
    } else {
-      out << " MINI(" << (vtx.word0.MEGA_FETCH_COUNT() + 1) << ")";
+      fmt::format_to(out, " MINI({})", vtx.word0.MEGA_FETCH_COUNT() + 1);
    }
 
-   out << " OFFSET(" << vtx.word2.OFFSET() << ")";
+   fmt::format_to(out, " OFFSET({})", vtx.word2.OFFSET());
 
    if (vtx.word0.FETCH_WHOLE_QUAD()) {
-      out << " WHOLE_QUAD";
+      fmt::format_to(out, " WHOLE_QUAD");
    }
 
    if (vtx.word2.ENDIAN_SWAP() == SQ_ENDIAN::SWAP_8IN16) {
-      out << " ENDIAN_SWAP(8IN16)";
+      fmt::format_to(out, " ENDIAN_SWAP(8IN16)");
    } else if (vtx.word2.ENDIAN_SWAP() == SQ_ENDIAN::SWAP_8IN32) {
-      out << " ENDIAN_SWAP(8IN32)";
+      fmt::format_to(out, " ENDIAN_SWAP(8IN32)");
    } else if (vtx.word2.ENDIAN_SWAP() != SQ_ENDIAN::NONE) {
-      out << " ENDIAN_SWAP(" << vtx.word2.ENDIAN_SWAP() << ")";
+      fmt::format_to(out, " ENDIAN_SWAP({})", vtx.word2.ENDIAN_SWAP());
    }
 
    if (vtx.word2.CONST_BUF_NO_STRIDE()) {
-      out << " CONST_BUF_NO_STRIDE";
+      fmt::format_to(out, " CONST_BUF_NO_STRIDE");
    }
 
    if (vtx.word2.ALT_CONST()) {
-      out << " ALT_CONST";
+      fmt::format_to(out, " ALT_CONST");
    }
 }
 
@@ -145,14 +141,9 @@ disassembleVtxClause(State &state, const latte::ControlFlowInst &inst)
    for (auto i = 0u; i < count; ++i) {
       const auto &vtx = clause[i];
 
-      state.out
-         << '\n'
-         << state.indent
-         << fmt::pad(state.groupPC, 3, ' ')
-         << "    ";
-
+      fmt::format_to(state.out, "\n{}{: <3}    ", state.indent, state.groupPC);
       disassembleVtxInstruction(state.out, inst, vtx, 15);
-      state.out << "\n";
+      fmt::format_to(state.out, "\n");
       state.groupPC++;
    }
 
@@ -160,17 +151,15 @@ disassembleVtxClause(State &state, const latte::ControlFlowInst &inst)
 }
 
 void
-disassembleCfVTX(fmt::MemoryWriter &out, const ControlFlowInst &inst)
+disassembleCfVTX(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    auto addr = inst.word0.ADDR();
    auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
 
-   out
-      << ": ADDR(" << addr << ")"
-      << " CNT(" << count << ")";
+   fmt::format_to(out, ": ADDR({}) CNT({})", addr, count);
 
    if (!inst.word1.BARRIER()) {
-      out << " NO_BARRIER";
+      fmt::format_to(out, " NO_BARRIER");
    }
 
    disassembleCondition(out, inst);

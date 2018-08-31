@@ -424,6 +424,8 @@ startTimerThread()
    }
 
    sData->threadId = static_cast<kernel::ThreadId>(error);
+   internal::setThreadName(sData->threadId, "TimerThread");
+
    return kernel::IOS_StartThread(sData->threadId);
 }
 

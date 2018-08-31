@@ -1,5 +1,5 @@
 #pragma once
-#include <sg14/fixed_point.h>
+#include <sg14/fixed_point>
 
 typedef sg14::make_fixed<3, 4, int8_t> fixed44_t;
 typedef sg14::make_ufixed<4, 4, uint8_t> ufixed44_t;

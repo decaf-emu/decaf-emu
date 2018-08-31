@@ -58,6 +58,12 @@ unmapMemory(VirtualAddress virtualAddress,
    return sMemoryMap.unmapMemory(virtualAddress, size);
 }
 
+bool
+resetVirtualMemory()
+{
+   return sMemoryMap.resetVirtualMemory();
+}
+
 VirtualMemoryType
 queryVirtualAddress(VirtualAddress virtualAddress)
 {

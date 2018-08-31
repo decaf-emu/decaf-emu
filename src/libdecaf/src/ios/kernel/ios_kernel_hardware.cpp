@@ -3,9 +3,11 @@
 #include "ios_kernel_scheduler.h"
 #include "ios_kernel_process.h"
 #include "ios_kernel_thread.h"
-#include "ios/ios_core.h"
 
 #include <atomic>
+#include <condition_variable>
+#include <thread>
+#include <mutex>
 
 namespace ios::kernel
 {
@@ -25,10 +27,11 @@ CHECK_SIZE(EventHandler, 0x10);
 struct StaticHardwareData
 {
    be2_array<EventHandler, 0x30> eventHandlers;
+   be2_val<BOOL> bspReady;
 };
 
 static phys_ptr<StaticHardwareData>
-sData;
+sHardwareData;
 
 //! Interrupt mask for ARM AHB IRQs
 static std::atomic<uint32_t>
@@ -46,44 +49,17 @@ LT_INTMR_AHBLT_ARM { 0 };
 static std::atomic<uint32_t>
 LT_INTSR_AHBLT_ARM { 0 };
 
-static void
-clearAhbAll(AHBALL mask)
-{
-   LT_INTSR_AHBALL_ARM &= ~mask.value;
-}
+static std::thread sHardwareThread;
+static std::condition_variable sHardwareConditionVariable;
+static std::mutex sHardwareMutex;
+static std::atomic<bool> sRunning;
 
-static void
-clearAndDisableAhbAll(AHBALL mask)
-{
-   LT_INTSR_AHBALL_ARM &= ~mask.value;
-   LT_INTMR_AHBALL_ARM &= ~mask.value;
-}
-
-static void
-clearAndDisableAhbLt(AHBLT mask)
-{
-   LT_INTSR_AHBLT_ARM &= ~mask.value;
-   LT_INTSR_AHBLT_ARM &= ~mask.value;
-}
-
-static void
-clearAndEnableAhbAll(AHBALL mask)
-{
-   // Let's not clear on Clear&Enable to avoid race conditions.
-   // This can lead to spurious wakeups but it's better than not waking up.
-   // LT_INTSR_AHBALL_ARM &= ~mask.value;
-   LT_INTMR_AHBALL_ARM |= mask.value;
-}
-
-static void
-clearAndEnableAhbLt(AHBLT mask)
-{
-   // Let's not clear on Clear&Enable to avoid race conditions.
-   // This can lead to spurious wakeups but it's better than not waking up.
-   // LT_INTSR_AHBALL_ARM &= ~mask.value;
-   LT_INTMR_AHBLT_ARM |= mask.value;
-}
-
+/**
+ * Registers a message queue as the event handler for a device.
+ *
+ * Sends the given message to the message queue when an interrupt is received
+ * for the given device.
+ */
 Error
 IOS_HandleEvent(DeviceId id,
                 MessageQueueId qid,
@@ -95,13 +71,13 @@ IOS_HandleEvent(DeviceId id,
       return error;
    }
 
-   if (id >= sData->eventHandlers.size()) {
+   if (id >= sHardwareData->eventHandlers.size()) {
       return Error::Invalid;
    }
 
    queue->flags |= MessageQueueFlags::RegisteredEventHandler;
 
-   auto &handler = sData->eventHandlers[id];
+   auto &handler = sHardwareData->eventHandlers[id];
    handler.message = message;
    handler.queue = queue;
    handler.pid = internal::getCurrentProcessId();
@@ -109,14 +85,18 @@ IOS_HandleEvent(DeviceId id,
    return Error::OK;
 }
 
+
+/**
+ * Unregister an event handler previously registered by IOS_HandleEvent.
+ */
 Error
 IOS_UnregisterEventHandler(DeviceId id)
 {
-   if (id >= sData->eventHandlers.size()) {
+   if (id >= sHardwareData->eventHandlers.size()) {
       return Error::Invalid;
    }
 
-   auto &handler = sData->eventHandlers[id];
+   auto &handler = sHardwareData->eventHandlers[id];
 
    if (handler.queue) {
       handler.queue->flags &= ~MessageQueueFlags::RegisteredEventHandler;
@@ -126,40 +106,58 @@ IOS_UnregisterEventHandler(DeviceId id)
    return Error::OK;
 }
 
+
+/**
+ * Clear and enable interrupts for given DeviceId.
+ */
 Error
 IOS_ClearAndEnable(DeviceId id)
 {
    auto thread = internal::getCurrentThread();
 
+   // We don't actually clear the signalling register so we can avoid race
+   // conditions with signals coming from external threads. Instead we just
+   // enable the mask, which could lead to spurious wakeups but they are much
+   // better than not waking up at all.
+   auto enableAhbAll =
+      [](AHBALL mask) {
+         LT_INTMR_AHBALL_ARM |= mask.value;
+      };
+
+   auto enableAhbLatte =
+      [](AHBLT mask) {
+         LT_INTMR_AHBLT_ARM |= mask.value;
+      };
+
    switch (id) {
    case DeviceId::Timer:
-      clearAndEnableAhbAll(AHBALL::get(0).Timer(true));
+      enableAhbAll(AHBALL::get(0).Timer(true));
       break;
    case DeviceId::NandInterfaceAHBALL:
-      clearAndEnableAhbAll(AHBALL::get(0).NandInterface(true));
+      enableAhbAll(AHBALL::get(0).NandInterface(true));
       break;
    case DeviceId::AesEngineAHBALL:
       decaf_check(thread->pid == 3);
-      clearAndEnableAhbAll(AHBALL::get(0).AesEngine(true));
+      enableAhbAll(AHBALL::get(0).AesEngine(true));
       break;
    case DeviceId::Sha1EngineAHBALL:
       decaf_check(thread->pid == 3);
-      clearAndEnableAhbAll(AHBALL::get(0).Sha1Engine(true));
+      enableAhbAll(AHBALL::get(0).Sha1Engine(true));
       break;
    case DeviceId::UsbEhci:
-      clearAndEnableAhbAll(AHBALL::get(0).UsbEhci(true));
+      enableAhbAll(AHBALL::get(0).UsbEhci(true));
       break;
    case DeviceId::UsbOhci0:
-      clearAndEnableAhbAll(AHBALL::get(0).UsbOhci0(true));
+      enableAhbAll(AHBALL::get(0).UsbOhci0(true));
       break;
    case DeviceId::UsbOhci1:
-      clearAndEnableAhbAll(AHBALL::get(0).UsbOhci1(true));
+      enableAhbAll(AHBALL::get(0).UsbOhci1(true));
       break;
    case DeviceId::SdHostController:
-      clearAndEnableAhbAll(AHBALL::get(0).SdHostController(true));
+      enableAhbAll(AHBALL::get(0).SdHostController(true));
       break;
    case DeviceId::Wireless80211:
-      clearAndEnableAhbAll(AHBALL::get(0).Wireless80211(true));
+      enableAhbAll(AHBALL::get(0).Wireless80211(true));
       break;
    case 9:
       // TODO: latte gpio int flag = 1
@@ -167,82 +165,82 @@ IOS_ClearAndEnable(DeviceId id)
       break;
    case DeviceId::SysProt:
       decaf_check(thread->pid == 0);
-      clearAndEnableAhbAll(AHBALL::get(0).SysProt(true));
+      enableAhbAll(AHBALL::get(0).SysProt(true));
       break;
    case DeviceId::PowerButton:
-      clearAndEnableAhbAll(AHBALL::get(0).PowerButton(true));
+      enableAhbAll(AHBALL::get(0).PowerButton(true));
       break;
    case DeviceId::DriveInterface:
-      clearAndEnableAhbAll(AHBALL::get(0).DriveInterface(true));
+      enableAhbAll(AHBALL::get(0).DriveInterface(true));
       break;
    case DeviceId::ExiRtc:
-      clearAndEnableAhbAll(AHBALL::get(0).ExiRtc(true));
+      enableAhbAll(AHBALL::get(0).ExiRtc(true));
       break;
    case DeviceId::Sata:
-      clearAndEnableAhbAll(AHBALL::get(0).Sata(true));
+      enableAhbAll(AHBALL::get(0).Sata(true));
       break;
    case DeviceId::IpcStarbuckCompat:
       decaf_check(thread->pid == 0);
-      clearAndEnableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
+      enableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
       break;
    case DeviceId::Unknown30:
-      clearAndEnableAhbLt(AHBLT::get(0).SdHostController(true));
+      enableAhbLatte(AHBLT::get(0).SdHostController(true));
       break;
    case DeviceId::Unknown31:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown1(true));
+      enableAhbLatte(AHBLT::get(0).Unknown1(true));
       break;
    case DeviceId::Unknown32:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown2(true));
+      enableAhbLatte(AHBLT::get(0).Unknown2(true));
       break;
    case DeviceId::Unknown33:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown3(true));
+      enableAhbLatte(AHBLT::get(0).Unknown3(true));
       break;
    case DeviceId::Drh:
-      clearAndEnableAhbLt(AHBLT::get(0).Drh(true));
+      enableAhbLatte(AHBLT::get(0).Drh(true));
       break;
    case DeviceId::Unknown35:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown5(true));
+      enableAhbLatte(AHBLT::get(0).Unknown5(true));
       break;
    case DeviceId::Unknown36:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown6(true));
+      enableAhbLatte(AHBLT::get(0).Unknown6(true));
       break;
    case DeviceId::Unknown37:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown7(true));
+      enableAhbLatte(AHBLT::get(0).Unknown7(true));
       break;
    case DeviceId::AesEngineAHBLT:
       decaf_check(thread->pid == 3);
-      clearAndEnableAhbLt(AHBLT::get(0).AesEngine(true));
+      enableAhbLatte(AHBLT::get(0).AesEngine(true));
       break;
    case DeviceId::Sha1EngineAHBLT:
       decaf_check(thread->pid == 3);
-      clearAndEnableAhbLt(AHBLT::get(0).Sha1Engine(true));
+      enableAhbLatte(AHBLT::get(0).Sha1Engine(true));
       break;
    case DeviceId::Unknown40:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown10(true));
+      enableAhbLatte(AHBLT::get(0).Unknown10(true));
       break;
    case DeviceId::Unknown41:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown11(true));
+      enableAhbLatte(AHBLT::get(0).Unknown11(true));
       break;
    case DeviceId::Unknown42:
-      clearAndEnableAhbLt(AHBLT::get(0).Unknown12(true));
+      enableAhbLatte(AHBLT::get(0).Unknown12(true));
       break;
    case DeviceId::I2CEspresso:
-      clearAndEnableAhbLt(AHBLT::get(0).I2CEspresso(true));
+      enableAhbLatte(AHBLT::get(0).I2CEspresso(true));
       break;
    case DeviceId::I2CStarbuck:
-      clearAndEnableAhbLt(AHBLT::get(0).I2CStarbuck(true));
+      enableAhbLatte(AHBLT::get(0).I2CStarbuck(true));
       break;
    case DeviceId::IpcStarbuckCore2:
       decaf_check(thread->pid == 0);
-      clearAndEnableAhbLt(AHBLT::get(0).IpcStarbuckCore2(true));
+      enableAhbLatte(AHBLT::get(0).IpcStarbuckCore2(true));
       break;
    case DeviceId::IpcStarbuckCore1:
       decaf_check(thread->pid == 0);
-      clearAndEnableAhbLt(AHBLT::get(0).IpcStarbuckCore1(true));
+      enableAhbLatte(AHBLT::get(0).IpcStarbuckCore1(true));
       break;
    case DeviceId::IpcStarbuckCore0:
       decaf_check(thread->pid == 0);
-      clearAndEnableAhbLt(AHBLT::get(0).IpcStarbuckCore0(true));
+      enableAhbLatte(AHBLT::get(0).IpcStarbuckCore0(true));
       break;
    default:
       return Error::Invalid;
@@ -251,8 +249,30 @@ IOS_ClearAndEnable(DeviceId id)
    return Error::OK;
 }
 
+
+/**
+ * Set BSP ready flag used for boot.
+ */
+Error
+IOS_SetBspReady()
+{
+   sHardwareData->bspReady = TRUE;
+   return Error::OK;
+}
+
+
 namespace internal
 {
+
+/**
+ * Get BSP ready flag.
+ */
+bool
+bspReady()
+{
+   return !!sHardwareData->bspReady;
+}
+
 
 /**
  * Sends a message to the device event handler message queue.
@@ -262,218 +282,37 @@ namespace internal
 static void
 sendEventHandlerMessageNoLock(DeviceId id)
 {
-   auto &handler = sData->eventHandlers[id];
+   auto &handler = sHardwareData->eventHandlers[id];
    auto queue = handler.queue;
    if (queue && queue->used < queue->size) {
       auto index = (queue->first + queue->used) % queue->size;
       queue->messages[index] = handler.message;
       queue->used++;
 
-      internal::wakeupOneThreadNoLock(phys_addrof(queue->receiveQueue),
-                                      Error::OK);
+      internal::wakeupOneThread(phys_addrof(queue->receiveQueue), Error::OK);
    }
-}
-
-/**
- * Checks any pending interrupts for LT_INTSR_AHBALL_ARM and LT_INTSR_AHBLT_ARM.
- */
-void
-handleAhbInterrupts()
-{
-   internal::lockScheduler();
-   auto ahbAll = AHBALL::get(LT_INTSR_AHBALL_ARM.load() &
-                             LT_INTMR_AHBALL_ARM.load());
-
-   if (ahbAll.Timer()) {
-      clearAhbAll(AHBALL::get(0).Timer(true));
-      sendEventHandlerMessageNoLock(DeviceId::Timer);
-   }
-
-   if (ahbAll.NandInterface()) {
-      clearAndDisableAhbAll(AHBALL::get(0).NandInterface(true));
-      sendEventHandlerMessageNoLock(DeviceId::NandInterfaceAHBALL);
-   }
-
-   if (ahbAll.AesEngine()) {
-      clearAndDisableAhbAll(AHBALL::get(0).AesEngine(true));
-      sendEventHandlerMessageNoLock(DeviceId::AesEngineAHBALL);
-   }
-
-   if (ahbAll.Sha1Engine()) {
-      clearAndDisableAhbAll(AHBALL::get(0).Sha1Engine(true));
-      sendEventHandlerMessageNoLock(DeviceId::Sha1EngineAHBALL);
-   }
-
-   if (ahbAll.UsbEhci()) {
-      clearAndDisableAhbAll(AHBALL::get(0).UsbEhci(true));
-      sendEventHandlerMessageNoLock(DeviceId::UsbEhci);
-   }
-
-   if (ahbAll.UsbOhci0()) {
-      clearAndDisableAhbAll(AHBALL::get(0).UsbOhci0(true));
-      sendEventHandlerMessageNoLock(DeviceId::UsbOhci0);
-   }
-
-   if (ahbAll.UsbOhci1()) {
-      clearAndDisableAhbAll(AHBALL::get(0).UsbOhci1(true));
-      sendEventHandlerMessageNoLock(DeviceId::UsbOhci1);
-   }
-
-   if (ahbAll.SdHostController()) {
-      clearAndDisableAhbAll(AHBALL::get(0).SdHostController(true));
-      sendEventHandlerMessageNoLock(DeviceId::SdHostController);
-   }
-
-   if (ahbAll.Wireless80211()) {
-      clearAndDisableAhbAll(AHBALL::get(0).Wireless80211(true));
-      sendEventHandlerMessageNoLock(DeviceId::Wireless80211);
-   }
-
-   if (ahbAll.SysProt()) {
-      clearAndDisableAhbAll(AHBALL::get(0).SysProt(true));
-      sendEventHandlerMessageNoLock(DeviceId::SysProt);
-   }
-
-   if (ahbAll.PowerButton()) {
-      clearAndDisableAhbAll(AHBALL::get(0).PowerButton(true));
-      sendEventHandlerMessageNoLock(DeviceId::PowerButton);
-   }
-
-   if (ahbAll.DriveInterface()) {
-      clearAndDisableAhbAll(AHBALL::get(0).DriveInterface(true));
-      sendEventHandlerMessageNoLock(DeviceId::DriveInterface);
-   }
-
-   if (ahbAll.ExiRtc()) {
-      clearAndDisableAhbAll(AHBALL::get(0).ExiRtc(true));
-      sendEventHandlerMessageNoLock(DeviceId::ExiRtc);
-   }
-
-   if (ahbAll.Sata()) {
-      clearAndDisableAhbAll(AHBALL::get(0).Sata(true));
-      sendEventHandlerMessageNoLock(DeviceId::Sata);
-   }
-
-   if (ahbAll.IpcStarbuckCompat()) {
-      clearAndDisableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
-      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCompat);
-   }
-
-   auto ahbLatte = AHBLT::get(LT_INTSR_AHBLT_ARM.load() &
-                              LT_INTMR_AHBLT_ARM.load());
-
-   if (ahbLatte.SdHostController()) {
-      clearAndDisableAhbLt(AHBLT::get(0).SdHostController(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown30);
-   }
-
-   if (ahbLatte.Unknown1()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown1(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown31);
-   }
-
-   if (ahbLatte.Unknown2()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown2(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown32);
-   }
-
-   if (ahbLatte.Unknown3()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown3(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown33);
-   }
-
-   if (ahbLatte.Drh()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Drh(true));
-      sendEventHandlerMessageNoLock(DeviceId::Drh);
-   }
-
-   if (ahbLatte.Unknown5()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown5(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown35);
-   }
-
-   if (ahbLatte.Unknown6()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown6(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown36);
-   }
-
-   if (ahbLatte.Unknown7()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown7(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown37);
-   }
-
-   if (ahbLatte.AesEngine()) {
-      clearAndDisableAhbLt(AHBLT::get(0).AesEngine(true));
-      sendEventHandlerMessageNoLock(DeviceId::AesEngineAHBLT);
-   }
-
-   if (ahbLatte.Sha1Engine()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Sha1Engine(true));
-      sendEventHandlerMessageNoLock(DeviceId::Sha1EngineAHBLT);
-   }
-
-   if (ahbLatte.Unknown10()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown10(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown40);
-   }
-
-   if (ahbLatte.Unknown11()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown11(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown41);
-   }
-
-   if (ahbLatte.Unknown12()) {
-      clearAndDisableAhbLt(AHBLT::get(0).Unknown12(true));
-      sendEventHandlerMessageNoLock(DeviceId::Unknown42);
-   }
-
-   if (ahbLatte.I2CEspresso()) {
-      clearAndDisableAhbLt(AHBLT::get(0).I2CEspresso(true));
-      sendEventHandlerMessageNoLock(DeviceId::I2CEspresso);
-   }
-
-   if (ahbLatte.I2CStarbuck()) {
-      clearAndDisableAhbLt(AHBLT::get(0).I2CStarbuck(true));
-      sendEventHandlerMessageNoLock(DeviceId::I2CStarbuck);
-   }
-
-   if (ahbLatte.IpcStarbuckCore0()) {
-      clearAndDisableAhbLt(AHBLT::get(0).IpcStarbuckCore0(true));
-      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore0);
-   }
-
-   if (ahbLatte.IpcStarbuckCore1()) {
-      clearAndDisableAhbLt(AHBLT::get(0).IpcStarbuckCore1(true));
-      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore1);
-   }
-
-   if (ahbLatte.IpcStarbuckCore2()) {
-      clearAndDisableAhbLt(AHBLT::get(0).IpcStarbuckCore2(true));
-      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore2);
-   }
-
-   internal::rescheduleSelfNoLock();
-   internal::unlockScheduler();
 }
 
 void
 setInterruptAhbAll(AHBALL mask)
 {
+   auto lock = std::unique_lock { sHardwareMutex };
    LT_INTSR_AHBALL_ARM |= mask.value;
-   ios::internal::interrupt(InterruptFlags::Ahb);
+   sHardwareConditionVariable.notify_all();
 }
 
 void
 setInterruptAhbLt(AHBLT mask)
 {
+   auto lock = std::unique_lock { sHardwareMutex };
    LT_INTSR_AHBLT_ARM |= mask.value;
-   ios::internal::interrupt(InterruptFlags::Ahb);
+   sHardwareConditionVariable.notify_all();
 }
 
 void
 unregisterEventHandlerQueue(MessageQueueId queue)
 {
-   for (auto &handler : sData->eventHandlers) {
+   for (auto &handler : sHardwareData->eventHandlers) {
       if (handler.queue->uid == queue) {
          std::memset(phys_addrof(handler).getRawPointer(), 0, sizeof(handler));
          break;
@@ -484,11 +323,234 @@ unregisterEventHandlerQueue(MessageQueueId queue)
 void
 initialiseStaticHardwareData()
 {
-   LT_INTMR_AHBALL_ARM.store(0x20801);
+   LT_INTMR_AHBALL_ARM.store(AHBALL::get(0)
+                             .Timer(true)
+                             .LatteGpioStarbuck(true)
+                             .PowerButton(true)
+                             .value);
    LT_INTSR_AHBALL_ARM.store(0);
    LT_INTMR_AHBLT_ARM.store(0);
    LT_INTSR_AHBLT_ARM.store(0);
-   sData = phys_cast<StaticHardwareData *>(allocProcessStatic(sizeof(StaticHardwareData)));
+   sHardwareData = phys_cast<StaticHardwareData *>(allocProcessStatic(sizeof(StaticHardwareData)));
+}
+
+/**
+ * Send a message to the queues registered with IOS_HandleEvent for the events
+ * indicated by the AHBALL and AHBLT register values.
+ */
+static void
+handleEvents(AHBALL ahbAll,
+             AHBLT ahbLatte)
+{
+   if (ahbAll.Timer()) {
+      sendEventHandlerMessageNoLock(DeviceId::Timer);
+   }
+
+   if (ahbAll.NandInterface()) {
+      sendEventHandlerMessageNoLock(DeviceId::NandInterfaceAHBALL);
+   }
+
+   if (ahbAll.AesEngine()) {
+      sendEventHandlerMessageNoLock(DeviceId::AesEngineAHBALL);
+   }
+
+   if (ahbAll.Sha1Engine()) {
+      sendEventHandlerMessageNoLock(DeviceId::Sha1EngineAHBALL);
+   }
+
+   if (ahbAll.UsbEhci()) {
+      sendEventHandlerMessageNoLock(DeviceId::UsbEhci);
+   }
+
+   if (ahbAll.UsbOhci0()) {
+      sendEventHandlerMessageNoLock(DeviceId::UsbOhci0);
+   }
+
+   if (ahbAll.UsbOhci1()) {
+      sendEventHandlerMessageNoLock(DeviceId::UsbOhci1);
+   }
+
+   if (ahbAll.SdHostController()) {
+      sendEventHandlerMessageNoLock(DeviceId::SdHostController);
+   }
+
+   if (ahbAll.Wireless80211()) {
+      sendEventHandlerMessageNoLock(DeviceId::Wireless80211);
+   }
+
+   if (ahbAll.SysProt()) {
+      sendEventHandlerMessageNoLock(DeviceId::SysProt);
+   }
+
+   if (ahbAll.PowerButton()) {
+      sendEventHandlerMessageNoLock(DeviceId::PowerButton);
+   }
+
+   if (ahbAll.DriveInterface()) {
+      sendEventHandlerMessageNoLock(DeviceId::DriveInterface);
+   }
+
+   if (ahbAll.ExiRtc()) {
+      sendEventHandlerMessageNoLock(DeviceId::ExiRtc);
+   }
+
+   if (ahbAll.Sata()) {
+      sendEventHandlerMessageNoLock(DeviceId::Sata);
+   }
+
+   if (ahbAll.IpcStarbuckCompat()) {
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCompat);
+   }
+
+   if (ahbLatte.SdHostController()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown30);
+   }
+
+   if (ahbLatte.Unknown1()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown31);
+   }
+
+   if (ahbLatte.Unknown2()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown32);
+   }
+
+   if (ahbLatte.Unknown3()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown33);
+   }
+
+   if (ahbLatte.Drh()) {
+      sendEventHandlerMessageNoLock(DeviceId::Drh);
+   }
+
+   if (ahbLatte.Unknown5()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown35);
+   }
+
+   if (ahbLatte.Unknown6()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown36);
+   }
+
+   if (ahbLatte.Unknown7()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown37);
+   }
+
+   if (ahbLatte.AesEngine()) {
+      sendEventHandlerMessageNoLock(DeviceId::AesEngineAHBLT);
+   }
+
+   if (ahbLatte.Sha1Engine()) {
+      sendEventHandlerMessageNoLock(DeviceId::Sha1EngineAHBLT);
+   }
+
+   if (ahbLatte.Unknown10()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown40);
+   }
+
+   if (ahbLatte.Unknown11()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown41);
+   }
+
+   if (ahbLatte.Unknown12()) {
+      sendEventHandlerMessageNoLock(DeviceId::Unknown42);
+   }
+
+   if (ahbLatte.I2CEspresso()) {
+      sendEventHandlerMessageNoLock(DeviceId::I2CEspresso);
+   }
+
+   if (ahbLatte.I2CStarbuck()) {
+      sendEventHandlerMessageNoLock(DeviceId::I2CStarbuck);
+   }
+
+   if (ahbLatte.IpcStarbuckCore0()) {
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore0);
+   }
+
+   if (ahbLatte.IpcStarbuckCore1()) {
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore1);
+   }
+
+   if (ahbLatte.IpcStarbuckCore2()) {
+      sendEventHandlerMessageNoLock(DeviceId::IpcStarbuckCore2);
+   }
+}
+
+#if 0
+/**
+ * Check and handle any pending interrupts.
+ *
+ * To be called from kernel scheduler to ensure we do not miss any interrupts
+ * in the case that we always have new kernel threads to run.
+ */
+void
+checkAndHandleInterrupts()
+{
+   // Check for pending interrupts
+   auto lock = std::unique_lock { sHardwareMutex };
+
+   // Read unmasked interrupts
+   auto ahbLatte = LT_INTSR_AHBLT_ARM & LT_INTMR_AHBLT_ARM;
+   auto ahbAll = LT_INTSR_AHBALL_ARM & LT_INTMR_AHBALL_ARM;
+
+   // Clear and disable handled interrupts
+   LT_INTMR_AHBLT_ARM &= ~ahbLatte;
+   LT_INTSR_AHBLT_ARM &= ~ahbLatte;
+
+   LT_INTMR_AHBALL_ARM &= ~ahbAll;
+   LT_INTSR_AHBALL_ARM &= ~ahbAll;
+
+   if (ahbLatte || ahbAll) {
+      lock.unlock();
+      handleEvents(AHBALL::get(ahbAll), AHBLT::get(ahbLatte));
+   }
+}
+#endif
+
+static void
+hardwareThreadEntry()
+{
+   setIdleFiber();
+
+   while (sRunning) {
+      // Check for any pending threads to run
+      reschedule();
+
+      // Check for pending interrupts
+      auto lock = std::unique_lock { sHardwareMutex };
+
+      // Read unmasked interrupts
+      auto ahbLatte = LT_INTSR_AHBLT_ARM & LT_INTMR_AHBLT_ARM;
+      auto ahbAll = LT_INTSR_AHBALL_ARM & LT_INTMR_AHBALL_ARM;
+
+      // Clear and disable handled interrupts
+      LT_INTMR_AHBLT_ARM &= ~ahbLatte;
+      LT_INTSR_AHBLT_ARM &= ~ahbLatte;
+
+      LT_INTMR_AHBALL_ARM &= ~ahbAll;
+      LT_INTSR_AHBALL_ARM &= ~ahbAll;
+
+      if (ahbLatte || ahbAll) {
+         lock.unlock();
+         handleEvents(AHBALL::get(ahbAll), AHBLT::get(ahbLatte));
+      } else if (sRunning) {
+         sHardwareConditionVariable.wait(lock);
+      }
+   }
+}
+
+void
+startHardwareThread()
+{
+   sRunning = true;
+   sHardwareThread = std::thread { hardwareThreadEntry };
+}
+
+void
+joinHardwareThread()
+{
+   sRunning = false;
+   sHardwareConditionVariable.notify_all();
+   sHardwareThread.join();
 }
 
 } // namespace internal

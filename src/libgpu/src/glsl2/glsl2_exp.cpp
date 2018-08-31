@@ -18,46 +18,46 @@ namespace glsl2
 {
 
 void
-insertExportRegister(fmt::MemoryWriter &out, uint32_t gpr, SQ_REL rel)
+insertExportRegister(fmt::memory_buffer &out, uint32_t gpr, SQ_REL rel)
 {
-   out << "R[" << gpr;
+   fmt::format_to(out, "R[{}", gpr);
 
    if (rel) {
-      out << " + AL";
+      fmt::format_to(out, " + AL");
    }
 
-   out << "]";
+   fmt::format_to(out, "]");
 }
 
 std::string
 getExportRegister(uint32_t gpr, SQ_REL rel)
 {
-   fmt::MemoryWriter out;
+   fmt::memory_buffer out;
    insertExportRegister(out, gpr, rel);
-   return out.str();
+   return to_string(out);
 }
 
 bool
-insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
+insertSelectValue(fmt::memory_buffer &out, const std::string &src, SQ_SEL sel)
 {
    switch (sel) {
    case SQ_SEL::SEL_X:
-      out << src << ".x";
+      fmt::format_to(out, "{}.x", src);
       break;
    case SQ_SEL::SEL_Y:
-      out << src << ".y";
+      fmt::format_to(out, "{}.y", src);
       break;
    case SQ_SEL::SEL_Z:
-      out << src << ".z";
+      fmt::format_to(out, "{}.z", src);
       break;
    case SQ_SEL::SEL_W:
-      out << src << ".w";
+      fmt::format_to(out, "{}.w", src);
       break;
    case SQ_SEL::SEL_0:
-      out << "0";
+      fmt::format_to(out, "0");
       break;
    case SQ_SEL::SEL_1:
-      out << "1";
+      fmt::format_to(out, "1");
       break;
    case SQ_SEL::SEL_MASK:
       // These should never show up since if it does, it means that need
@@ -71,7 +71,7 @@ insertSelectValue(fmt::MemoryWriter &out, const std::string &src, SQ_SEL sel)
 }
 
 bool
-insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, SQ_SEL selY, SQ_SEL selZ, SQ_SEL selW, unsigned numSels)
+insertSelectVector(fmt::memory_buffer &out, const std::string &src, SQ_SEL selX, SQ_SEL selY, SQ_SEL selZ, SQ_SEL selW, unsigned numSels)
 {
    SQ_SEL sels[4] = { selX, selY, selZ, selW };
 
@@ -87,45 +87,45 @@ insertSelectVector(fmt::MemoryWriter &out, const std::string &src, SQ_SEL selX, 
       }
 
       if (isTrivialSwizzle) {
-         out << src << ".";
+         fmt::format_to(out, "{}.", src);
 
          for (auto i = 0u; i < numSels; ++i) {
             switch (sels[i]) {
             case SQ_SEL::SEL_X:
-               out << "x";
+               fmt::format_to(out, "x");
                break;
             case SQ_SEL::SEL_Y:
-               out << "y";
+               fmt::format_to(out, "y");
                break;
             case SQ_SEL::SEL_Z:
-               out << "z";
+               fmt::format_to(out, "z");
                break;
             case SQ_SEL::SEL_W:
-               out << "w";
+               fmt::format_to(out, "w");
                break;
             }
          }
       } else {
-         out << "vec" << numSels << "(";
+         fmt::format_to(out, "vec{}(", numSels);
 
          insertSelectValue(out, src, sels[0]);
 
          if (numSels >= 2) {
-            out << ", ";
+            fmt::format_to(out, ", ");
             insertSelectValue(out, src, sels[1]);
          }
 
          if (numSels >= 3) {
-            out << ", ";
+            fmt::format_to(out, ", ");
             insertSelectValue(out, src, sels[2]);
          }
 
          if (numSels >= 4) {
-            out << ", ";
+            fmt::format_to(out, ", ");
             insertSelectValue(out, src, sels[3]);
          }
 
-         out << ")";
+         fmt::format_to(out, ")");
       }
    }
 
@@ -166,7 +166,7 @@ condenseSelections(SQ_SEL &selX, SQ_SEL &selY, SQ_SEL &selZ, SQ_SEL &selW, unsig
 }
 
 bool
-insertMaskVector(fmt::MemoryWriter &out, const std::string &src, unsigned mask)
+insertMaskVector(fmt::memory_buffer &out, const std::string &src, unsigned mask)
 {
    SQ_SEL selX = mask & (1 << 0) ? SQ_SEL::SEL_X : SQ_SEL::SEL_MASK;
    SQ_SEL selY = mask & (1 << 1) ? SQ_SEL::SEL_Y : SQ_SEL::SEL_MASK;
@@ -239,21 +239,21 @@ EXP(State &state, const ControlFlowInst &cf)
 
       switch (type) {
       case SQ_EXPORT_TYPE::POS:
-         state.out << "exp_position_" << (outIndex - 60);
+         fmt::format_to(state.out, "exp_position_{}", outIndex - 60);
          break;
       case SQ_EXPORT_TYPE::PARAM:
-         state.out << "exp_param_" << outIndex;
+         fmt::format_to(state.out, "exp_param_{}", outIndex);
          break;
       case SQ_EXPORT_TYPE::PIXEL:
-         state.out << "exp_pixel_" << outIndex;
+         fmt::format_to(state.out, "exp_pixel_{}", outIndex);
          break;
       default:
          throw translate_exception(fmt::format("Unsupported export type {}", type));
       }
 
-      state.out << "." << srcSelMask << " = ";
+      fmt::format_to(state.out, ".{} = ", srcSelMask);
       insertSelectVector(state.out, src, selX, selY, selZ, selW, numSrcSels);
-      state.out << ";";
+      fmt::format_to(state.out, ";");
 
       insertLineEnd(state);
    }
@@ -285,9 +285,9 @@ MEM_STREAM(State &state, const ControlFlowInst &cf)
 
    insertLineStart(state);
 
-   state.out << "feedback_" << streamIndex << "_" << offset << " = ";
+   fmt::format_to(state.out, "feedback_{}_{} = ", streamIndex, offset);
    insertMaskVector(state.out, src, cf.exp.buf.COMP_MASK());
-   state.out << ";";
+   fmt::format_to(state.out, ";");
 
    insertLineEnd(state);
 }

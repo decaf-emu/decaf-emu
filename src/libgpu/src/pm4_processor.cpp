@@ -257,7 +257,7 @@ void Pm4Processor::setAluConsts(const SetAluConsts &data)
    auto offset = (data.id - latte::Register::AluConstRegisterBase) / 4;
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_ALU_CONST() && mShadowState.ALU_CONST_BASE) {
-      auto base = &mShadowState.ALU_CONST_BASE[offset];
+      auto base = mShadowState.ALU_CONST_BASE + offset;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -275,7 +275,7 @@ void Pm4Processor::setConfigRegs(const SetConfigRegs &data)
       decaf_check(data.id >= latte::Register::ConfigRegisterBase);
       decaf_check(data.id < latte::Register::ConfigRegisterEnd);
       auto offset = (data.id - latte::Register::ConfigRegisterBase) / 4;
-      auto base = &mShadowState.CONFIG_REG_BASE[offset];
+      auto base = mShadowState.CONFIG_REG_BASE + offset;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -293,7 +293,7 @@ void Pm4Processor::setContextRegs(const SetContextRegs &data)
       decaf_check(data.id >= latte::Register::ContextRegisterBase);
       decaf_check(data.id < latte::Register::ContextRegisterEnd);
       auto offset = (data.id - latte::Register::ContextRegisterBase) / 4;
-      auto base = &mShadowState.CONTEXT_REG_BASE[offset];
+      auto base = mShadowState.CONTEXT_REG_BASE + offset;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -311,7 +311,7 @@ void Pm4Processor::setControlConstants(const SetControlConstants &data)
       decaf_check(data.id >= latte::Register::ControlRegisterBase);
       decaf_check(data.id < latte::Register::ControlRegisterEnd);
       auto offset = (data.id - latte::Register::ControlRegisterBase) / 4;
-      auto base = &mShadowState.CTL_CONST_BASE[offset];
+      auto base = mShadowState.CTL_CONST_BASE + offset;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -329,7 +329,7 @@ void Pm4Processor::setLoopConsts(const SetLoopConsts &data)
       decaf_check(data.id >= latte::Register::LoopConstRegisterBase);
       decaf_check(data.id < latte::Register::LoopConstRegisterEnd);
       auto offset = (data.id - latte::Register::LoopConstRegisterBase) / 4;
-      auto base = &mShadowState.LOOP_CONST_BASE[offset];
+      auto base = mShadowState.LOOP_CONST_BASE + offset;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -347,7 +347,7 @@ void Pm4Processor::setSamplers(const SetSamplers &data)
       decaf_check(data.id >= latte::Register::SamplerRegisterBase);
       decaf_check(data.id < latte::Register::SamplerRegisterEnd);
       auto offset = (data.id - latte::Register::SamplerRegisterBase) / 4;
-      auto base = &mShadowState.SAMPLER_CONST_BASE[offset];
+      auto base = mShadowState.SAMPLER_CONST_BASE + offset;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -364,7 +364,7 @@ void Pm4Processor::setResources(const SetResources &data)
    auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_RESOURCE() && mShadowState.RESOURCE_CONST_BASE) {
-      auto base = &mShadowState.RESOURCE_CONST_BASE[data.id];
+      auto base = mShadowState.RESOURCE_CONST_BASE + data.id;
 
       for (auto i = 0u; i < data.values.size(); ++i) {
          base[i] = data.values[i];
@@ -377,7 +377,7 @@ void Pm4Processor::setResources(const SetResources &data)
 }
 
 void Pm4Processor::loadRegisters(latte::Register base,
-   be_val<uint32_t> *src,
+   virt_ptr<uint32_t> src,
    const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
 {
    for (auto &range : registers) {

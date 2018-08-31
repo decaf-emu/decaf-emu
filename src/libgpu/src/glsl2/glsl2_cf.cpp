@@ -55,7 +55,7 @@ KILL(State &state, const ControlFlowInst &cf)
 {
    condStart(state, cf.word1.COND());
    insertLineStart(state);
-   state.out << "discard;";
+   fmt::format_to(state.out, "discard;");
    insertLineEnd(state);
    condEnd(state);
    state.shader->usesDiscard = true;
@@ -66,7 +66,7 @@ LOOP_BREAK(State &state, const ControlFlowInst &cf)
 {
    condStart(state, cf.word1.COND());
    insertLineStart(state);
-   state.out << "activeMask = InactiveBreak;";
+   fmt::format_to(state.out, "activeMask = InactiveBreak;");
    insertLineEnd(state);
    condEnd(state);
 }
@@ -76,7 +76,7 @@ LOOP_CONTINUE(State &state, const ControlFlowInst &cf)
 {
    condStart(state, cf.word1.COND());
    insertLineStart(state);
-   state.out << "activeMask = InactiveContinue;";
+   fmt::format_to(state.out, "activeMask = InactiveContinue;");
    insertLineEnd(state);
    condEnd(state);
 }
@@ -97,40 +97,40 @@ LOOP_END(State &state, const ControlFlowInst &cf)
 
    // If breakMask is set, lets break from the while
    insertLineStart(state);
-   state.out << "if (activeMask == InactiveBreak) {";
+   fmt::format_to(state.out, "if (activeMask == InactiveBreak) {{");
    insertLineEnd(state);
 
    increaseIndent(state);
    insertLineStart(state);
-   state.out << "break;";
+   fmt::format_to(state.out, "break;");
    insertLineEnd(state);
    decreaseIndent(state);
 
    insertLineStart(state);
-   state.out << "}";
+   fmt::format_to(state.out, "}}");
    insertLineEnd(state);
 
    // If ContinueMask is set, lets break from the while
    insertLineStart(state);
-   state.out << "if (activeMask == InactiveContinue) {";
+   fmt::format_to(state.out, "if (activeMask == InactiveContinue) {{");
    insertLineEnd(state);
 
    increaseIndent(state);
    insertLineStart(state);
-   state.out << "activeMask = Active;";
+   fmt::format_to(state.out, "activeMask = Active;");
    insertLineEnd(state);
    decreaseIndent(state);
 
    insertLineStart(state);
-   state.out << "}";
+   fmt::format_to(state.out, "}}");
    insertLineEnd(state);
 
    // Check the while condition but without checking loop masks
    decreaseIndent(state);
    insertLineStart(state);
-   state.out << "} while (";
+   fmt::format_to(state.out, "}} while (");
    insertCond(state, cf.word1.COND());
-   state.out << ");";
+   fmt::format_to(state.out, ");");
    insertLineEnd(state);
 
    insertPop(state);
@@ -149,7 +149,7 @@ LOOP_START_DX10(State &state, const ControlFlowInst &cf)
    insertPush(state);
 
    insertLineStart(state);
-   state.out << "do {";
+   fmt::format_to(state.out, "do {{");
    insertLineEnd(state);
    increaseIndent(state);
 }

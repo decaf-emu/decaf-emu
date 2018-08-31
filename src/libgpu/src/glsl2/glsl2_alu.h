@@ -5,33 +5,33 @@ namespace glsl2
 {
 
 void
-insertIndexMode(fmt::MemoryWriter &out,
+insertIndexMode(fmt::memory_buffer &out,
                 latte::SQ_INDEX_MODE index);
 
 void
-insertChannel(fmt::MemoryWriter &out,
+insertChannel(fmt::memory_buffer &out,
               latte::SQ_CHAN channel);
 
 void
 insertSource0(State &state,
-              fmt::MemoryWriter &out,
+              fmt::memory_buffer &out,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 
 void
 insertSource1(State &state,
-              fmt::MemoryWriter &out,
+              fmt::memory_buffer &out,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 void
 insertSource2(State &state,
-              fmt::MemoryWriter &out,
+              fmt::memory_buffer &out,
               const latte::ControlFlowInst &cf,
               const latte::AluInst &inst);
 
 void
 insertSource0Vector(State &state,
-                    fmt::MemoryWriter &out,
+                    fmt::memory_buffer &out,
                     const latte::ControlFlowInst &cf,
                     const latte::AluInst &x,
                     const latte::AluInst &y,
@@ -40,7 +40,7 @@ insertSource0Vector(State &state,
 
 void
 insertSource1Vector(State &state,
-                    fmt::MemoryWriter &out,
+                    fmt::memory_buffer &out,
                     const latte::ControlFlowInst &cf,
                     const latte::AluInst &x,
                     const latte::AluInst &y,
@@ -49,7 +49,7 @@ insertSource1Vector(State &state,
 
 void
 insertSource2Vector(State &state,
-                    fmt::MemoryWriter &out,
+                    fmt::memory_buffer &out,
                     const latte::ControlFlowInst &cf,
                     const latte::AluInst &x,
                     const latte::AluInst &y,
@@ -58,7 +58,7 @@ insertSource2Vector(State &state,
 
 void
 insertSource(State &state,
-             fmt::MemoryWriter &out,
+             fmt::memory_buffer &out,
              const latte::ControlFlowInst &cf,
              const latte::AluInst &inst,
              const latte::SQ_ALU_SRC sel,
@@ -68,7 +68,7 @@ insertSource(State &state,
              const bool neg);
 
 void
-insertPreviousValueUpdate(fmt::MemoryWriter &out,
+insertPreviousValueUpdate(fmt::memory_buffer &out,
                           latte::SQ_CHAN unit);
 
 void

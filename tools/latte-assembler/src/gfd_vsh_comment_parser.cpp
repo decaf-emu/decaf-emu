@@ -297,7 +297,7 @@ parseAttribVars(std::vector<gfd::GFDAttribVar> &attribVars,
 
    if (index >= attribVars.size()) {
       attribVars.resize(index + 1);
-      attribVars[index].type = gx2::GX2ShaderVarType::Float4;
+      attribVars[index].type = cafe::gx2::GX2ShaderVarType::Float4;
       attribVars[index].count = 0;
       attribVars[index].location = index;
    }

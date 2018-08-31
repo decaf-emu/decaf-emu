@@ -1,8 +1,9 @@
 #include "debugger_ui_window_stack.h"
 #include "debugger_threadutils.h"
-#include "kernel/kernel_loader.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_thread.h"
+
+#include "cafe/kernel/cafe_kernel_loader.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <imgui.h>
 #include <libcpu/mmu.h>
@@ -42,7 +43,7 @@ StackWindow::update()
    }
 
    auto stackAddr = getThreadStack(mDebugger, activeThread);
-   auto stackStart = activeThread->stackStart.getAddress();
+   auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
 
    if (mStackFrameCacheAddr != stackAddr) {
       StackFrame frame;
@@ -150,7 +151,7 @@ StackWindow::draw()
 
    auto activeThread = mStateTracker->getActiveThread();
    auto activeThreadStack = getThreadStack(mDebugger, activeThread);
-   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetItemsLineHeightWithSpacing() });
+   mAddressScroller.begin(4, ImVec2 { 0, -ImGui::GetFrameHeightWithSpacing() });
 
    for (auto addr = mAddressScroller.reset(); mAddressScroller.hasMore(); addr = mAddressScroller.advance()) {
       auto rootPos = ImGui::GetCursorScreenPos();
@@ -159,7 +160,7 @@ StackWindow::draw()
       auto lineMax = ImVec2 { rootPos.x + wndWidth, rootPos.y + lineHeight };
 
       // Handle a new address being selected
-      if (ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
+      if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(lineMin, lineMax)) {
          if (ImGui::IsMouseClicked(0) || ImGui::IsMouseDown(0)) {
             mSelectedAddr = addr;
          }
@@ -192,8 +193,8 @@ StackWindow::draw()
 
       // Stop drawing if this is outside the threads stack range
       if (activeThread) {
-         auto stackStart = activeThread->stackStart.getAddress();
-         auto stackEnd = activeThread->stackEnd.getAddress();
+         auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
+         auto stackEnd = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackEnd));
 
          // Make sure we are inside the stack first
          if (activeThreadStack >= stackEnd && activeThreadStack < stackStart) {
@@ -234,14 +235,31 @@ StackWindow::draw()
       }
       linePos.x += frameLineAdvance;
 
-      // Check if this is a symbol?
-      auto data = mem::read<uint32_t>(addr);
-      auto sec = kernel::loader::findSectionForAddress(data);
+      // Find symbol for value in stack
+      static std::array<char, 256> symbolNameBuffer;
+      static std::array<char, 256> moduleNameBuffer;
 
-      if (sec && sec->type == kernel::loader::LoadedSectionType::Code) {
-         auto symInfo = kernel::loader::findNearestSymbolNameForAddress(data);
+      auto data = mem::read<uint32_t>(addr);
+      if (!data || data > 0x10000000) {
+         continue;
+      }
+
+      auto symbolDistance = uint32_t { 0 };
+      auto error =
+         cafe::kernel::internal::findClosestSymbol(
+            virt_addr { data },
+            &symbolDistance,
+            symbolNameBuffer.data(),
+            static_cast<uint32_t>(symbolNameBuffer.size()),
+            moduleNameBuffer.data(),
+            static_cast<uint32_t>(moduleNameBuffer.size()));
+
+      if (!error && moduleNameBuffer[0] && symbolNameBuffer[0]) {
          ImGui::SetCursorPos(linePos);
-         ImGui::Text("<%s>", symInfo.c_str());
+         ImGui::Text("<%s|%s+0x%X>",
+                     symbolNameBuffer.data(),
+                     moduleNameBuffer.data(),
+                     symbolDistance);
       }
    }
    mAddressScroller.end();
@@ -249,11 +267,11 @@ StackWindow::draw()
    ImGui::Separator();
 
    // Render the bottom bar for the window
-   ImGui::AlignFirstTextHeightToWidgets();
+   ImGui::AlignTextToFramePadding();
 
    if (activeThread) {
-      auto stackStart = activeThread->stackStart.getAddress();
-      auto stackEnd = activeThread->stackEnd.getAddress();
+      auto stackStart = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackStart));
+      auto stackEnd = static_cast<uint32_t>(virt_cast<virt_addr>(activeThread->stackEnd));
       ImGui::Text("Showing stack from start %08x to end %08x", stackStart, stackEnd);
    } else {
       ImGui::Text("Showing stack from start ???????? to end ????????");

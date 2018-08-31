@@ -1,0 +1,24 @@
+#include "nn_acp.h"
+#include "nn_acp_device.h"
+
+#include "cafe/libraries/cafe_hle_stub.h"
+
+namespace cafe::nn::acp
+{
+
+nn::Result
+ACPCheckApplicationDeviceEmulation(virt_ptr<BOOL> outValue)
+{
+   decaf_warn_stub();
+   *outValue = FALSE;
+   return nn::Result::Success;
+}
+
+void
+Library::registerDeviceSymbols()
+{
+   RegisterFunctionExportName("ACPCheckApplicationDeviceEmulation",
+                              ACPCheckApplicationDeviceEmulation);
+}
+
+}  // namespace cafe::nn::acp

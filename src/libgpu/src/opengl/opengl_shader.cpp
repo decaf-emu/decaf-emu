@@ -997,51 +997,50 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
 
    vertex.usedUniformBlocks = shader.usedUniformBlocks;
 
-   fmt::MemoryWriter out;
-   out << shader.fileHeader;
+   fmt::memory_buffer out;
+   fmt::format_to(out, "{}", shader.fileHeader);
 
-   out << "#define bswap16(v) (packUnorm4x8(unpackUnorm4x8(v).yxwz))\n";
-   out << "#define bswap32(v) (packUnorm4x8(unpackUnorm4x8(v).wzyx))\n";
-   out << "#define signext2(v) ((v ^ 0x2) - 0x2)\n";
-   out << "#define signext8(v) ((v ^ 0x80) - 0x80)\n";
-   out << "#define signext10(v) ((v ^ 0x200) - 0x200)\n";
-   out << "#define signext16(v) ((v ^ 0x8000) - 0x8000)\n";
+   fmt::format_to(out,
+      "#define bswap16(v) (packUnorm4x8(unpackUnorm4x8(v).yxwz))\n"
+      "#define bswap32(v) (packUnorm4x8(unpackUnorm4x8(v).wzyx))\n"
+      "#define signext2(v) ((v ^ 0x2) - 0x2)\n"
+      "#define signext8(v) ((v ^ 0x80) - 0x80)\n"
+      "#define signext10(v) ((v ^ 0x200) - 0x200)\n"
+      "#define signext16(v) ((v ^ 0x8000) - 0x8000)\n");
 
    // Vertex Shader Inputs
    for (auto &attrib : fetch.attribs) {
       semanticAttribs[attrib.location] = &attrib;
 
-      out << "//";
-      out << " " << latte::getDataFormatName(attrib.format);
+      fmt::format_to(out, "// {}", latte::getDataFormatName(attrib.format));
       if (attrib.formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
-         out << " SIGNED";
+         fmt::format_to(out, " SIGNED");
       } else {
-         out << " UNSIGNED";
+         fmt::format_to(out, " UNSIGNED");
       }
       if (attrib.numFormat == latte::SQ_NUM_FORMAT::INT) {
-         out << " INT";
+         fmt::format_to(out, " INT");
       } else if (attrib.numFormat == latte::SQ_NUM_FORMAT::NORM) {
-         out << " NORM";
+         fmt::format_to(out, " NORM");
       } else if (attrib.numFormat == latte::SQ_NUM_FORMAT::SCALED) {
-         out << " SCALED";
+         fmt::format_to(out, " SCALED");
       }
       if (attrib.endianSwap == latte::SQ_ENDIAN::NONE) {
-         out << " SWAP_NONE";
+         fmt::format_to(out, " SWAP_NONE");
       } else if (attrib.endianSwap == latte::SQ_ENDIAN::SWAP_8IN32) {
-         out << " SWAP_8IN32";
+         fmt::format_to(out, " SWAP_8IN32");
       } else if (attrib.endianSwap == latte::SQ_ENDIAN::SWAP_8IN16) {
-         out << " SWAP_8IN16";
+         fmt::format_to(out, " SWAP_8IN16");
       } else if (attrib.endianSwap == latte::SQ_ENDIAN::AUTO) {
-         out << " SWAP_AUTO";
+         fmt::format_to(out, " SWAP_AUTO");
       }
-      out << "\n";
 
-      out << "layout(location = " << attrib.location << ")";
-      out << " in "
-          << getGLSLDataInFormat(attrib.format, attrib.numFormat, attrib.formatComp)
-         << " fs_out_" << attrib.location << ";\n";
+      fmt::format_to(out, "\nlayout(location = {}) in {} fs_out_{};\n",
+                     attrib.location,
+                     getGLSLDataInFormat(attrib.format, attrib.numFormat, attrib.formatComp),
+                     attrib.location);
    }
-   out << '\n';
+   fmt::format_to(out, "\n");
 
    // Vertex Shader Exports
    decaf_check(!spi_vs_out_config.VS_PER_COMPONENT());
@@ -1072,10 +1071,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       decaf_check(vertex.outputMap[semanticId] == 0xff);
       vertex.outputMap[semanticId] = i;
 
-      out << "layout(location = " << i << ")";
-      out << " out vec4 vs_out_" << semanticId << ";\n";
+      fmt::format_to(out, "layout(location = {}) out vec4 vs_out_{};\n",
+                     i, semanticId);
    }
-   out << '\n';
+   fmt::format_to(out, "\n");
 
    // Transform feedback outputs
    for (auto i = 0u; i < latte::MaxStreamOutBuffers; ++i) {
@@ -1086,43 +1085,39 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          auto stride = vgt_strmout_vtx_stride * 4;
 
          if (NVIDIA_GLSL_WORKAROUND) {
-            out
-               << "layout(xfb_buffer = " << i << ") out;\n"
-               << "layout(xfb_stride = " << stride
-               << ") out feedback_block" << i << " {\n";
+            fmt::format_to(out,
+               "layout(xfb_buffer = {}) out;\n"
+               "layout(xfb_stride = {}) out feedback_block{} {{\n",
+               i, stride, i);
          } else {
-            out
-               << "layout(xfb_buffer = " << i
-               << ", xfb_stride = " << stride
-               << ") out feedback_block" << i << " {\n";
+            fmt::format_to(out,
+               "layout(xfb_buffer = {}, xfb_stride = {}) out feedback_block{} {{\n",
+               i, stride, i);
          }
 
          for (auto &xfb : shader.feedbacks[i]) {
-            out << "   layout(xfb_offset = " << xfb.offset << ") out ";
+            fmt::format_to(out, "   layout(xfb_offset = {}) out ", xfb.offset);
 
             if (xfb.size == 1) {
-               out << "float";
+               fmt::format_to(out, "float");
             } else {
-               out << "vec" << xfb.size;
+               fmt::format_to(out, "vec{}", xfb.size);
             }
 
-            out << " feedback_" << xfb.streamIndex << "_" << xfb.offset << ";\n";
+            fmt::format_to(out, " feedback_{}_{};\n", xfb.streamIndex, xfb.offset);
          }
 
-         out << "};\n";
+         fmt::format_to(out, "}};\n");
       }
    }
-   out << '\n';
+   fmt::format_to(out, "\n");
 
    if (isScreenSpace) {
       vertex.isScreenSpace = true;
-      out << "uniform vec4 uViewport;\n";
+      fmt::format_to(out, "uniform vec4 uViewport;\n");
    }
 
-   out
-      << "void main()\n"
-      << "{\n"
-      << shader.codeHeader;
+   fmt::format_to(out, "void main()\n{{\n{}", shader.codeHeader);
 
    // Assign fetch shader output to our GPR
    for (auto i = 0u; i < 32; ++i) {
@@ -1141,9 +1136,7 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       }
 
 
-      fmt::MemoryWriter nameWriter;
-      nameWriter << "fs_out_" << attrib->location;
-      auto name = nameWriter.str();
+      auto name = fmt::format("fs_out_{}", attrib->location);
       auto channels = latte::getDataFormatComponents(attrib->format);
       auto isFloat = latte::getDataFormatIsFloat(attrib->format);
 
@@ -1154,7 +1147,6 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          decaf_check(channels == 4);
 
          auto val = name;
-
          if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN32) {
             val = "bswap32(" + val + ")";
          } else if (attrib->endianSwap == latte::SQ_ENDIAN::SWAP_8IN16) {
@@ -1166,15 +1158,15 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          }
 
          if (attrib->format == latte::SQ_DATA_FORMAT::FMT_10_10_10_2) {
-            chanVal[0] = std::string("((") + val + std::string(" >> 22) & 0x3ff)");
-            chanVal[1] = std::string("((") + val + std::string(" >> 12) & 0x3ff)");
-            chanVal[2] = std::string("((") + val + std::string(" >> 2) & 0x3ff)");
-            chanVal[3] = std::string("((") + val + std::string(" >> 0) & 0x3)");
+            chanVal[0] = "((" + val + " >> 22) & 0x3ff)";
+            chanVal[1] = "((" + val + " >> 12) & 0x3ff)";
+            chanVal[2] = "((" + val + " >> 2) & 0x3ff)";
+            chanVal[3] = "((" + val + " >> 0) & 0x3)";
          } else if (attrib->format == latte::SQ_DATA_FORMAT::FMT_2_10_10_10) {
-            chanVal[3] = std::string("((") + val + std::string(" >> 30) & 0x3)");
-            chanVal[2] = std::string("((") + val + std::string(" >> 20) & 0x3ff)");
-            chanVal[1] = std::string("((") + val + std::string(" >> 10) & 0x3ff)");
-            chanVal[0] = std::string("((") + val + std::string(" >> 0) & 0x3ff)");
+            chanVal[3] = "((" + val + " >> 30) & 0x3)";
+            chanVal[2] = "((" + val + " >> 20) & 0x3ff)";
+            chanVal[1] = "((" + val + " >> 10) & 0x3ff)";
+            chanVal[0] = "((" + val + " >> 0) & 0x3ff)";
          } else {
             decaf_abort("Unexpected format");
          }
@@ -1296,55 +1288,61 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       }
 
       if (channels == 1) {
-         out << "float _" << name << " = " << chanVal[0] << ";\n";
+         fmt::format_to(out, "float _{} = {};\n", name, chanVal[0]);
       } else if (channels == 2) {
-         out << "vec2 _" << name << " = vec2(\n";
-         out << "   " << chanVal[0] << ",\n";
-         out << "   " << chanVal[1] << ");\n";
+         fmt::format_to(out,
+                        "vec2 _{} = vec2(\n"
+                        "   {},\n"
+                        "   {});\n",
+                        name, chanVal[0], chanVal[1]);
       } else if (channels == 3) {
-         out << "vec3 _" << name << " = vec3(\n";
-         out << "   " << chanVal[0] << ",\n";
-         out << "   " << chanVal[1] << ",\n";
-         out << "   " << chanVal[2] << ");\n";
+         fmt::format_to(out,
+                        "vec3 _{} = vec3(\n"
+                        "   {},\n"
+                        "   {},\n"
+                        "   {});\n",
+                        name, chanVal[0], chanVal[1], chanVal[2]);
       } else if (channels == 4) {
-         out << "vec4 _" << name << " = vec4(\n";
-         out << "   " << chanVal[0] << ",\n";
-         out << "   " << chanVal[1] << ",\n";
-         out << "   " << chanVal[2] << ",\n";
-         out << "   " << chanVal[3] << ");\n";
+         fmt::format_to(out,
+                        "vec4 _{} = vec4(\n"
+                        "   {},\n"
+                        "   {},\n"
+                        "   {},\n"
+                        "   {});\n",
+                        name, chanVal[0], chanVal[1], chanVal[2], chanVal[3]);
       } else {
          decaf_abort("Unexpected format channel count");
       }
       name = "_" + name;
 
       // Write the register assignment
-      out << "R[" << (i + 1) << "] = ";
+      fmt::format_to(out, "R[{}] = ", i + 1);
 
       switch (channels) {
       case 1:
-         out << "vec4(" << name << ", 0.0, 0.0, 1.0);\n";
+         fmt::format_to(out, "vec4({}, 0.0, 0.0, 1.0);\n", name);
          break;
       case 2:
-         out << "vec4(" << name << ", 0.0, 1.0);\n";
+         fmt::format_to(out, "vec4({}, 0.0, 1.0);\n", name);
          break;
       case 3:
-         out << "vec4(" << name << ", 1.0);\n";
+         fmt::format_to(out, "vec4({}, 1.0);\n", name);
          break;
       case 4:
-         out << name << ";\n";
+         fmt::format_to(out, "{};\n", name);
          break;
       }
    }
 
-   out << '\n' << shader.codeBody << '\n';
+   fmt::format_to(out, "\n{}\n", shader.codeBody);
 
    for (auto &exp : shader.exports) {
       switch (exp.type) {
       case latte::SQ_EXPORT_TYPE::POS:
          if (!isScreenSpace) {
-            out << "gl_Position = exp_position_" << exp.id << ";\n";
+            fmt::format_to(out, "gl_Position = exp_position_{};\n", exp.id);
          } else {
-            out << "gl_Position = (exp_position_" << exp.id << " - vec4(uViewport.xy, 0.0, 0.0)) * vec4(uViewport.zw, 1.0, 1.0);\n";
+            fmt::format_to(out, "gl_Position = (exp_position_{} - vec4(uViewport.xy, 0.0, 0.0)) * vec4(uViewport.zw, 1.0, 1.0);\n", exp.id);
          }
          break;
       case latte::SQ_EXPORT_TYPE::PARAM: {
@@ -1367,10 +1365,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
          }
 
          if (semanticId != 0xff) {
-            out << "vs_out_" << semanticId << " = exp_param_" << exp.id << ";\n";
+            fmt::format_to(out, "vs_out_{} = exp_param_{};\n", semanticId, exp.id);
          } else {
             // This just helps when debugging to understand why it is missing...
-            out << "// vs_out_none = exp_param_" << exp.id << ";\n";
+            fmt::format_to(out, "// vs_out_none = exp_param_{};\n", exp.id);
          }
       } break;
       case latte::SQ_EXPORT_TYPE::PIXEL:
@@ -1378,10 +1376,10 @@ bool GLDriver::compileVertexShader(VertexShader &vertex, FetchShader &fetch, uin
       }
    }
 
-   out << "}\n";
-   out << "/* VERTEX SHADER DISASSEMBLY\n" << vertex.disassembly << "\n*/\n";
-   out << "/* FETCH SHADER DISASSEMBLY\n" << fetch.disassembly << "\n*/\n";
-   vertex.code = out.str();
+   fmt::format_to(out, "}}\n");
+   fmt::format_to(out, "/* VERTEX SHADER DISASSEMBLY\n{}\n*/\n", vertex.disassembly);
+   fmt::format_to(out, "/* FETCH SHADER DISASSEMBLY\n{}\n*/\n", fetch.disassembly);
+   vertex.code = to_string(out);
    return true;
 }
 
@@ -1423,9 +1421,9 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    pixel.samplerUsage = shader.samplerUsage;
    pixel.usedUniformBlocks = shader.usedUniformBlocks;
 
-   fmt::MemoryWriter out;
-   out << shader.fileHeader;
-   out << "uniform float uAlphaRef;\n";
+   fmt::memory_buffer out;
+   fmt::format_to(out, "{}", shader.fileHeader);
+   fmt::format_to(out, "uniform float uAlphaRef;\n");
 
    auto z_order = db_shader_control.Z_ORDER();
    auto early_z = (z_order == latte::DB_Z_ORDER::EARLY_Z_THEN_LATE_Z || z_order == latte::DB_Z_ORDER::EARLY_Z_THEN_RE_Z);
@@ -1447,15 +1445,15 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
          }
       }
       if (early_z) {
-         out << "layout(early_fragment_tests) in;\n";
+         fmt::format_to(out, "layout(early_fragment_tests) in;\n");
       }
    }
 
    if (spi_ps_in_control_0.POSITION_ENA()) {
       if (!spi_ps_in_control_0.POSITION_CENTROID()) {
-         out << "layout(pixel_center_integer) ";
+         fmt::format_to(out, "layout(pixel_center_integer) ");
       }
-      out << "in vec4 gl_FragCoord;\n";
+      fmt::format_to(out, "in vec4 gl_FragCoord;\n");
    }
 
    // Pixel Shader Inputs
@@ -1477,32 +1475,29 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
          semanticUsed[semanticId] = true;
       }
 
-      out << "layout(location = " << vsOutputLoc << ")";
+      fmt::format_to(out, "layout(location = {})", vsOutputLoc);
 
       if (spi_ps_input_cntl.FLAT_SHADE()) {
-         out << " flat";
+         fmt::format_to(out, " flat");
       }
 
-      out << " in vec4 vs_out_" << semanticId << ";\n";
+      fmt::format_to(out, " in vec4 vs_out_{};\n", semanticId);
    }
-   out << '\n';
+   fmt::format_to(out, "\n");
 
    // Pixel Shader Exports
    auto maskBits = cb_shader_mask.value;
 
    for (auto i = 0; i < 8; ++i) {
       if (maskBits & 0xf) {
-         out << "out vec4 ps_out_" << i << ";\n";
+         fmt::format_to(out, "out vec4 ps_out_{};\n", i);
       }
 
       maskBits >>= 4;
    }
-   out << '\n';
+   fmt::format_to(out, "\n");
 
-   out
-      << "void main()\n"
-      << "{\n"
-      << shader.codeHeader;
+   fmt::format_to(out, "void main()\n{{\n{}", shader.codeHeader);
 
    // Assign vertex shader output to our GPR
    for (auto i = 0u; i < spi_ps_in_control_0.NUM_INTERP(); ++i) {
@@ -1511,29 +1506,29 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       decaf_check(semanticId != 0xff);
 
       auto vsOutputLoc = vertex.outputMap[semanticId];
-      out << "R[" << i << "] = ";
+      fmt::format_to(out, "R[{}] = ", i);
 
       if (vsOutputLoc != 0xff) {
-          out << "vs_out_" << semanticId;
+          fmt::format_to(out, "vs_out_{}", semanticId);
       } else {
          if (spi_ps_input_cntl.DEFAULT_VAL() == 0) {
-            out << "vec4(0, 0, 0, 0)";
+            fmt::format_to(out, "vec4(0, 0, 0, 0)");
          } else if (spi_ps_input_cntl.DEFAULT_VAL() == 1) {
-            out << "vec4(0, 0, 0, 1)";
+            fmt::format_to(out, "vec4(0, 0, 0, 1)");
          } else if (spi_ps_input_cntl.DEFAULT_VAL() == 2) {
-            out << "vec4(1, 1, 1, 0)";
+            fmt::format_to(out, "vec4(1, 1, 1, 0)");
          } else if (spi_ps_input_cntl.DEFAULT_VAL() == 3) {
-            out << "vec4(1, 1, 1, 1)";
+            fmt::format_to(out, "vec4(1, 1, 1, 1)");
          } else {
             decaf_abort("Invalid PS input DEFAULT_VAL");
          }
       }
 
-      out << ";\n";
+      fmt::format_to(out, ";\n");
    }
 
    if (spi_ps_in_control_0.POSITION_ENA()) {
-      out << "R[" << spi_ps_in_control_0.POSITION_ADDR() << "] = gl_FragCoord;";
+      fmt::format_to(out, "R[{}] = gl_FragCoord;", spi_ps_in_control_0.POSITION_ADDR());
    }
 
    decaf_assert(!spi_ps_in_control_0.PARAM_GEN(),
@@ -1543,7 +1538,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
    decaf_check(!spi_ps_in_control_1.GEN_INDEX_PIX());
    decaf_check(!spi_ps_in_control_1.FIXED_PT_POSITION_ENA());
 
-   out << '\n' << shader.codeBody << '\n';
+   fmt::format_to(out, "\n{}\n", shader.codeBody);
 
    for (auto &exp : shader.exports) {
       switch (exp.type) {
@@ -1552,7 +1547,7 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
             if (!db_shader_control.Z_EXPORT_ENABLE()) {
                gLog->warn("Depth export is masked by db_shader_control");
             } else {
-               out << "gl_FragDepth = exp_pixel_" << exp.id << ".x;\n";
+               fmt::format_to(out, "gl_FragDepth = exp_pixel_{}.x;\n", exp.id);
             }
          } else {
             auto mask = (cb_shader_mask.value >> (4 * exp.id)) & 0x0F;
@@ -1579,54 +1574,58 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
                }
 
                if (sx_alpha_test_control.ALPHA_TEST_ENABLE() && !sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
-                  out << "// Alpha Test ";
+                  fmt::format_to(out, "// Alpha Test ");
 
                   switch (sx_alpha_test_control.ALPHA_FUNC()) {
                   case latte::REF_FUNC::NEVER:
-                     out << "REF_NEVER\n";
-                     out << "discard;\n";
+                     fmt::format_to(out,
+                                    "REF_NEVER\n"
+                                    "discard;\n");
                      break;
                   case latte::REF_FUNC::LESS:
-                     out << "REF_LESS\n";
-                     out << "if (!(exp_pixel_" << exp.id << ".w < uAlphaRef)) {\n";
-                     out << "   discard;\n}\n";
+                     fmt::format_to(out,
+                                    "REF_LESS\n"
+                                    "if (!(exp_pixel_{}.w < uAlphaRef)) {{\n"
+                                    "   discard;\n}}\n", exp.id);
                      break;
                   case latte::REF_FUNC::EQUAL:
-                     out << "REF_EQUAL\n";
-                     out << "if (!(exp_pixel_" << exp.id << ".w == uAlphaRef)) {\n";
-                     out << "   discard;\n}\n";
+                     fmt::format_to(out,
+                                    "REF_EQUAL\n"
+                                    "if (!(exp_pixel_{}.w == uAlphaRef)) {{\n"
+                                    "   discard;\n}}\n", exp.id);
                      break;
                   case latte::REF_FUNC::LESS_EQUAL:
-                     out << "REF_LESS_EQUAL\n";
-                     out << "if (!(exp_pixel_" << exp.id << ".w <= uAlphaRef)) {\n";
-                     out << "   discard;\n}\n";
+                     fmt::format_to(out,
+                                    "REF_LESS_EQUAL\n"
+                                    "if (!(exp_pixel_{}.w <= uAlphaRef)) {{\n"
+                                    "   discard;\n}}\n", exp.id);
                      break;
                   case latte::REF_FUNC::GREATER:
-                     out << "REF_GREATER\n";
-                     out << "if (!(exp_pixel_" << exp.id << ".w > uAlphaRef)) {\n";
-                     out << "   discard;\n}\n";
+                     fmt::format_to(out,
+                                    "REF_GREATER\n"
+                                    "if (!(exp_pixel_{}.w > uAlphaRef)) {{\n"
+                                    "   discard;\n}}\n", exp.id);
                      break;
                   case latte::REF_FUNC::NOT_EQUAL:
-                     out << "REF_NOT_EQUAL\n";
-                     out << "if (!(exp_pixel_" << exp.id << ".w != uAlphaRef)) {\n";
-                     out << "   discard;\n}\n";
+                     fmt::format_to(out,
+                                    "REF_NOT_EQUAL\n"
+                                    "if (!(exp_pixel_{}.w != uAlphaRef)) {{\n"
+                                    "   discard;\n}}\n", exp.id);
                      break;
                   case latte::REF_FUNC::GREATER_EQUAL:
-                     out << "REF_GREATER_EQUAL\n";
-                     out << "if (!(exp_pixel_" << exp.id << ".w >= uAlphaRef)) {\n";
-                     out << "   discard;\n}\n";
+                     fmt::format_to(out,
+                                    "REF_GREATER_EQUAL\n"
+                                    "if (!(exp_pixel_{}.w >= uAlphaRef)) {{\n"
+                                    "   discard;\n}}\n", exp.id);
                      break;
                   case latte::REF_FUNC::ALWAYS:
-                     out << "REF_ALWAYS\n";
+                     fmt::format_to(out, "REF_ALWAYS\n");
                      break;
                   }
                }
 
-               out
-                  << "ps_out_" << exp.id << "." << strMask
-                  << " = exp_pixel_" << exp.id << "." << strMask;
-
-               out << ";\n";
+               fmt::format_to(out, "ps_out_{}.{} = exp_pixel_{}.{};\n",
+                              exp.id, strMask, exp.id, strMask);
             }
          }
          break;
@@ -1639,11 +1638,8 @@ bool GLDriver::compilePixelShader(PixelShader &pixel, VertexShader &vertex, uint
       }
    }
 
-   out << "}\n";
-
-   out << "/* PIXEL SHADER DISASSEMBLY\n" << pixel.disassembly << "\n*/\n";
-
-   pixel.code = out.str();
+   fmt::format_to(out, "}}\n/* PIXEL SHADER DISASSEMBLY\n{}\n*/\n", pixel.disassembly);
+   pixel.code = to_string(out);
    return true;
 }
 

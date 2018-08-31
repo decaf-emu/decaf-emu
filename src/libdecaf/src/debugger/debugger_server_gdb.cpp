@@ -1,8 +1,8 @@
 #include "debugger_server_gdb.h"
 #include "debugger_threadutils.h"
 #include "decaf_config.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <algorithm>
 #include <common/platform_socket.h>
@@ -51,28 +51,6 @@ enum BreakpointType
    Execute = 1,
 };
 
-class LogFormatter : public spdlog::formatter
-{
-public:
-   void format(spdlog::details::log_msg& msg) override
-   {
-      auto tm_time = spdlog::details::os::localtime(spdlog::log_clock::to_time_t(msg.time));
-      auto duration = msg.time.time_since_epoch();
-      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
-
-      msg.formatted << '[' << fmt::pad(static_cast<unsigned int>(tm_time.tm_min), 2, '0') << ':'
-         << fmt::pad(static_cast<unsigned int>(tm_time.tm_sec), 2, '0') << '.'
-         << fmt::pad(static_cast<unsigned int>(micros), 6, '0');
-
-      msg.formatted << ' ';
-      msg.formatted << spdlog::level::to_str(msg.level);
-      msg.formatted << ":gdb] ";
-
-      msg.formatted << fmt::StringRef(msg.raw.data(), msg.raw.size());
-      msg.formatted.write(spdlog::details::os::eol, spdlog::details::os::eol_size);
-   }
-};
-
 GdbServer::GdbServer(DebuggerInterface *debugger,
                      ui::StateTracker *uiState) :
    mDebugger(debugger),
@@ -84,9 +62,10 @@ bool GdbServer::start(int port)
 {
    if (!mLog) {
       auto sinks = gLog->sinks();
-      mLog = std::make_shared<spdlog::logger>("gdbstub", std::begin(sinks), std::end(sinks));
+      mLog = std::make_shared<spdlog::logger>("gdb",
+                                              std::begin(sinks),
+                                              std::end(sinks));
       mLog->set_level(gLog->level());
-      mLog->set_formatter(std::make_shared<LogFormatter>());
 
       if (!decaf::config::log::async) {
          mLog->flush_on(spdlog::level::trace);
@@ -182,35 +161,35 @@ void GdbServer::handleQuery(const std::string &command)
 {
    if (begins_with(command, "qSupported")) {
       auto features = std::string { };
-      features += "PacketSize=1024;";
-      features += "qXfer:features:read+;";
-      // TODO: features += "qXfer:libraries:read+;";
-      // TODO: features += "qXfer:memory-map:read+;";
-      // TODO: features += "qXfer:threads:read+;";
-      // TODO: features += "QStartNoAckMode+;";
-      // TODO: features += "QThreadEvents+;";
+      features += "PacketSize=4096";
+      features += ";qXfer:features:read+";
+      features += ";qXfer:threads:read+";
+      // TODO: features += ";qXfer:libraries:read+";
+      // TODO: features += ";qXfer:memory-map:read+";
+      // TODO: features += ";QStartNoAckMode+";
+      // TODO: features += ";QThreadEvents+";
       sendCommand(features);
    } else if (begins_with(command, "qfThreadInfo")) {
-      fmt::MemoryWriter reply;
-      coreinit::internal::lockScheduler();
-      auto firstThread = coreinit::internal::getFirstActiveThread();
+      fmt::memory_buffer reply;
+      cafe::coreinit::internal::lockScheduler();
+      auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
       if (firstThread) {
-         reply.write("m");
+         fmt::format_to(reply, "m");
       } else {
-         reply.write("l");
+         fmt::format_to(reply, "l");
       }
 
       for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
          if (thread != firstThread) {
-            reply.write(",");
+            fmt::format_to(reply, ",");
          }
 
-         reply.write("{:04X}", thread->id.value());
+         fmt::format_to(reply, "{:04X}", thread->id.value());
       }
 
-      coreinit::internal::unlockScheduler();
-      sendCommand(reply.str());
+      cafe::coreinit::internal::unlockScheduler();
+      sendCommand(to_string(reply));
    } else if (begins_with(command, "qAttached")) {
       sendCommand("1");
    } else if (begins_with(command, "qsThreadInfo")) {
@@ -254,6 +233,28 @@ void GdbServer::handleQuery(const std::string &command)
       }
 
       sendCommand(reply);
+   } else if (begins_with(command, "qXfer:threads:read:")) {
+      fmt::memory_buffer reply;
+      fmt::format_to(reply, "l<?xml version=\"1.0\"?>");
+      fmt::format_to(reply, "<threads>");
+
+      cafe::coreinit::internal::lockScheduler();
+      auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
+
+      for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
+         fmt::format_to(reply, "<thread id=\"{}\" core=\"0\"", thread->id);
+
+         if (thread->name) {
+            fmt::format_to(reply, " name=\"{}\"", encodeXml(thread->name.getRawPointer()));
+         }
+
+         fmt::format_to(reply, "></thread>");
+      }
+
+      fmt::format_to(reply, "</threads>");
+      cafe::coreinit::internal::unlockScheduler();
+
+      sendCommand(std::string_view { reply.data(), reply.size() });
    } else if (begins_with(command, "qTStatus")) {
       // Trace not supported
       sendCommand("");
@@ -334,7 +335,7 @@ void GdbServer::handleReadRegister(const std::string &command)
 
 void GdbServer::handleReadGeneralRegisters(const std::string &command)
 {
-   fmt::MemoryWriter reply;
+   fmt::memory_buffer reply;
    auto activeThread = mUiState->getActiveThread();
    auto coreRegs = getThreadCoreContext(mDebugger, activeThread);
 
@@ -347,15 +348,15 @@ void GdbServer::handleReadGeneralRegisters(const std::string &command)
          value = activeThread->context.gpr[i];
       }
 
-      reply.write("{:08X}", value);
+      fmt::format_to(reply, "{:08X}", value);
    }
 
-   sendCommand(reply.str());
+   sendCommand(to_string(reply));
 }
 
 void GdbServer::handleReadMemory(const std::string &command)
 {
-   fmt::MemoryWriter reply;
+   fmt::memory_buffer reply;
    std::vector<std::string> split;
    split_string(command.data() + 1, ',', split);
 
@@ -369,10 +370,10 @@ void GdbServer::handleReadMemory(const std::string &command)
          value = mem::read<uint8_t>(address + i);
       }
 
-      reply.write("{:02X}", value);
+      fmt::format_to(reply, "{:02X}", value);
    }
 
-   sendCommand(reply.str());
+   sendCommand(to_string(reply));
 }
 
 void GdbServer::handleAddBreakpoint(const std::string &command)
@@ -537,7 +538,7 @@ void GdbServer::sendNack()
    }
 }
 
-void GdbServer::sendCommand(const std::string &command)
+void GdbServer::sendCommand(std::string_view command)
 {
    auto packet = std::string { };
    packet.push_back(GdbCommand::Start);

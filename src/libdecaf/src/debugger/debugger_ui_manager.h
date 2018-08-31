@@ -141,9 +141,9 @@ public:
 
 protected:
    virtual void
-   setActiveThread(coreinit::OSThread *thread) override;
+   setActiveThread(virt_ptr<cafe::coreinit::OSThread> thread) override;
 
-   virtual coreinit::OSThread *
+   virtual virt_ptr<cafe::coreinit::OSThread>
    getActiveThread() override;
 
    virtual unsigned
@@ -203,7 +203,7 @@ private:
    bool mJitProfilingEnabled = false;
    unsigned mJitProfilingMask = 0;
    unsigned mResumeCount = 0;
-   coreinit::OSThread *mActiveThread = nullptr;
+   virt_ptr<cafe::coreinit::OSThread> mActiveThread = nullptr;
 };
 
 } // namespace ui

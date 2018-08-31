@@ -160,6 +160,8 @@ startUsrCfgServiceThread()
    }
 
    sData->threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sData->threadId, "UsrCfgServiceThread");
+
    return IOS_StartThread(sData->threadId);
 }
 

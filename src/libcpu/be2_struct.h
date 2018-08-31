@@ -53,8 +53,9 @@ using be2_phys_func_ptr = be2_val<phys_func_ptr<Ft>>;
 template<typename Type>
 struct be2_struct : public Type
 {
-   using Type::Type;
-   using Type::operator =;
+   using value_type = std::remove_cv_t<Type>;
+   using value_type::value_type;
+   using value_type::operator =;
 
    // Please use virt_addrof or phys_addrof instead
    auto operator &() = delete;
@@ -74,7 +75,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_cast(const virt_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for be2_ptr<X> to virt_ptr<Y> or virt_addr
@@ -83,13 +84,12 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_cast(const be2_virt_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::VirtualAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for phys_addr to phys_ptr<X>
 template<typename DstType,
-         typename = typename std::enable_if<std::is_pointer<DstType>::value ||
-                                            std::is_same<DstType, virt_addr>::value>::type>
+         typename = typename std::enable_if<std::is_pointer<DstType>::value>::type>
 inline auto phys_cast(phys_addr src)
 {
    return cpu::pointer_cast_impl<cpu::PhysicalAddress, phys_addr, DstType>::cast(src);
@@ -101,7 +101,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_cast(const phys_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for be2_ptr<X> to phys_ptr<Y> or phys_addr
@@ -110,7 +110,7 @@ template<typename DstType, typename SrcType,
                                             std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_cast(const be2_phys_ptr<SrcType> &src)
 {
-   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType, DstType>::cast(src);
+   return cpu::pointer_cast_impl<cpu::PhysicalAddress, SrcType *, DstType>::cast(src);
 }
 
 // reinterpret_cast for virt_addr to virt_func_ptr<X>
@@ -121,8 +121,17 @@ inline auto virt_func_cast(virt_addr src)
 }
 
 // reinterpret_cast for virt_func_ptr<X> to virt_addr
-template<typename FunctionType>
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, virt_addr>::value>::type>
 inline auto virt_func_cast(virt_func_ptr<FunctionType> src)
+{
+   return cpu::func_pointer_cast_impl<cpu::VirtualAddress, FunctionType>::cast(src);
+}
+
+// reinterpret_cast for be2_virt_func_ptr<X> to virt_addr
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, virt_addr>::value>::type>
+inline auto virt_func_cast(be2_virt_func_ptr<FunctionType> src)
 {
    return cpu::func_pointer_cast_impl<cpu::VirtualAddress, FunctionType>::cast(src);
 }
@@ -135,8 +144,17 @@ inline auto phys_func_cast(phys_addr src)
 }
 
 // reinterpret_cast for phys_func_ptr<X> to phys_addr
-template<typename FunctionType>
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, phys_addr>::value>::type>
 inline auto phys_func_cast(phys_func_ptr<FunctionType> src)
+{
+   return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, FunctionType>::cast(src);
+}
+
+// reinterpret_cast for be2_phys_func_ptr<X> to phys_addr
+template<typename DstType, typename FunctionType,
+         typename = typename std::enable_if<std::is_same<DstType, phys_addr>::value>::type>
+inline auto phys_func_cast(be2_phys_func_ptr<FunctionType> src)
 {
    return cpu::func_pointer_cast_impl<cpu::PhysicalAddress, FunctionType>::cast(src);
 }
@@ -193,6 +211,27 @@ inline phys_ptr<Type> phys_addrof(const be2_array<Type, Size> &ref)
    return phys_cast<Type *>(cpu::translatePhysical(std::addressof(ref)));
 }
 
+
+/**
+ * Used to translate the this pointer to a virt_ptr.
+ */
+template<typename Type>
+inline virt_ptr<Type> virt_this(Type *self)
+{
+   return virt_cast<Type *>(cpu::translate(self));
+}
+
+
+/**
+ * Used to translate the this pointer to a virt_ptr.
+ */
+template<typename Type>
+inline phys_ptr<Type> phys_this(Type *self)
+{
+   return phys_ptr<Type *>(cpu::translate(self));
+}
+
+
 // Equivalent to std:true_type if type T is a virt_ptr.
 template<typename>
 struct is_virt_ptr : std::false_type { };
@@ -200,9 +239,52 @@ struct is_virt_ptr : std::false_type { };
 template<typename T>
 struct is_virt_ptr<virt_ptr<T>> : std::true_type { };
 
+// Equivalent to std:true_type if type T is a virt_func_ptr.
+template<typename>
+struct is_virt_func_ptr : std::false_type { };
+
+template<typename T>
+struct is_virt_func_ptr<virt_func_ptr<T>> : std::true_type { };
+
 // Equivalent to std:true_type if type T is a phys_ptr.
 template<typename>
 struct is_phys_ptr : std::false_type { };
 
 template<typename T>
-struct is_phys_ptr<virt_ptr<T>> : std::true_type { };
+struct is_phys_ptr<phys_ptr<T>> : std::true_type { };
+
+template<typename ValueType, typename AddressType>
+constexpr inline cpu::Pointer<ValueType, AddressType>
+align_up(cpu::Pointer<ValueType, AddressType> value,
+         size_t alignment)
+{
+   auto address = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(value);
+   address = static_cast<AddressType>(align_up(address.getAddress(), alignment));
+   return cpu::pointer_cast_impl<AddressType, AddressType, ValueType *>::cast(address);
+}
+
+template<typename ValueType, typename AddressType>
+constexpr inline cpu::Pointer<ValueType, AddressType>
+align_down(cpu::Pointer<ValueType, AddressType> value,
+           size_t alignment)
+{
+   auto address = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(value);
+   address = static_cast<AddressType>(align_down(address.getAddress(), alignment));
+   return cpu::pointer_cast_impl<AddressType, AddressType, ValueType *>::cast(address);
+}
+
+template<typename Type>
+constexpr inline Type
+align_up(be2_val<Type> value,
+         size_t alignment)
+{
+   return align_up(value.value(), alignment);
+}
+
+template<typename Type>
+constexpr inline Type
+align_down(be2_val<Type> value,
+           size_t alignment)
+{
+   return align_down(value.value(), alignment);
+}

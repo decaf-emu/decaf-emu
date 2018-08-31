@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
-#include <libdecaf/src/modules/gx2/gx2_enum.h>
+#include <libdecaf/src/cafe/libraries/gx2/gx2_enum.h>
 #include <libgpu/latte/latte_registers.h>
 #include <string>
 #include <vector>
@@ -9,25 +9,37 @@
 namespace gfd
 {
 
+using cafe::gx2::GX2AAMode;
+using cafe::gx2::GX2FetchShaderType;
+using cafe::gx2::GX2RResourceFlags;
+using cafe::gx2::GX2RResourceFlags;
+using cafe::gx2::GX2SamplerVarType;
+using cafe::gx2::GX2ShaderMode;
+using cafe::gx2::GX2ShaderVarType;
+using cafe::gx2::GX2SurfaceDim;
+using cafe::gx2::GX2SurfaceFormat;
+using cafe::gx2::GX2SurfaceUse;
+using cafe::gx2::GX2TileMode;
+
 struct GFDSurface
 {
-   gx2::GX2SurfaceDim dim;
+   GX2SurfaceDim dim;
    uint32_t width;
    uint32_t height;
    uint32_t depth;
    uint32_t mipLevels;
-   gx2::GX2SurfaceFormat format;
-   gx2::GX2AAMode aa;
+   GX2SurfaceFormat format;
+   GX2AAMode aa;
 
    union
    {
-      gx2::GX2SurfaceUse use;
-      gx2::GX2RResourceFlags resourceFlags;
+      GX2SurfaceUse use;
+      GX2RResourceFlags resourceFlags;
    };
 
    std::vector<uint8_t> image;
    std::vector<uint8_t> mipmap;
-   gx2::GX2TileMode tileMode;
+   GX2TileMode tileMode;
    uint32_t swizzle;
    uint32_t alignment;
    uint32_t pitch;
@@ -55,7 +67,7 @@ struct GFDTexture
 
 struct GFDFetchShader
 {
-   gx2::GX2FetchShaderType type;
+   GX2FetchShaderType type;
 
    struct
    {
@@ -72,7 +84,7 @@ struct GFDFetchShader
 struct GFDUniformVar
 {
    std::string name;
-   gx2::GX2ShaderVarType type;
+   GX2ShaderVarType type;
    uint32_t count;
    uint32_t offset;
    int32_t block;
@@ -94,7 +106,7 @@ struct GFDUniformBlock
 struct GFDAttribVar
 {
    std::string name;
-   gx2::GX2ShaderVarType type;
+   GX2ShaderVarType type;
    uint32_t count;
    uint32_t location;
 };
@@ -102,7 +114,7 @@ struct GFDAttribVar
 struct GFDSamplerVar
 {
    std::string name;
-   gx2::GX2SamplerVarType type;
+   GX2SamplerVarType type;
    uint32_t location;
 };
 
@@ -114,7 +126,7 @@ struct GFDLoopVar
 
 struct GFDRBuffer
 {
-   gx2::GX2RResourceFlags flags;
+   GX2RResourceFlags flags;
    uint32_t elemSize;
    uint32_t elemCount;
    std::vector<uint8_t> buffer;
@@ -139,7 +151,7 @@ struct GFDVertexShader
    } regs;
 
    std::vector<uint8_t> data;
-   gx2::GX2ShaderMode mode;
+   GX2ShaderMode mode;
    std::vector<GFDUniformBlock> uniformBlocks;
    std::vector<GFDUniformVar> uniformVars;
    std::vector<GFDUniformInitialValue> initialValues;
@@ -169,7 +181,7 @@ struct GFDPixelShader
    } regs;
 
    std::vector<uint8_t> data;
-   gx2::GX2ShaderMode mode;
+   GX2ShaderMode mode;
    std::vector<GFDUniformBlock> uniformBlocks;
    std::vector<GFDUniformVar> uniformVars;
    std::vector<GFDUniformInitialValue> initialValues;
@@ -196,7 +208,7 @@ struct GFDGeometryShader
 
    std::vector<uint8_t> data;
    std::vector<uint8_t> vertexShaderData;
-   gx2::GX2ShaderMode mode;
+   GX2ShaderMode mode;
    std::vector<GFDUniformBlock> uniformBlocks;
    std::vector<GFDUniformVar> uniformVars;
    std::vector<GFDUniformInitialValue> initialValues;

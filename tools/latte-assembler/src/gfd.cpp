@@ -7,6 +7,8 @@
 #include <regex>
 #include <vector>
 
+using namespace cafe::gx2;
+
 /*
 Matches:
 ; $Something = true
@@ -95,30 +97,30 @@ ensureValue(const CommentKeyValue &kv)
    }
 }
 
-gx2::GX2ShaderVarType
+GX2ShaderVarType
 parseShaderVarType(const std::string &v)
 {
    auto value = v;
    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
 
    if (value == "INT") {
-      return gx2::GX2ShaderVarType::Int;
+      return GX2ShaderVarType::Int;
    } else if (value == "INT2") {
-      return gx2::GX2ShaderVarType::Int2;
+      return GX2ShaderVarType::Int2;
    } else if (value == "INT3") {
-      return gx2::GX2ShaderVarType::Int3;
+      return GX2ShaderVarType::Int3;
    } else if (value == "INT4") {
-      return gx2::GX2ShaderVarType::Int4;
+      return GX2ShaderVarType::Int4;
    } else if (value == "FLOAT") {
-      return gx2::GX2ShaderVarType::Float;
+      return GX2ShaderVarType::Float;
    } else if (value == "FLOAT2") {
-      return gx2::GX2ShaderVarType::Float2;
+      return GX2ShaderVarType::Float2;
    } else if (value == "FLOAT3") {
-      return gx2::GX2ShaderVarType::Float3;
+      return GX2ShaderVarType::Float3;
    } else if (value == "FLOAT4") {
-      return gx2::GX2ShaderVarType::Float4;
+      return GX2ShaderVarType::Float4;
    } else if (value == "MATRIX4X4") {
-      return gx2::GX2ShaderVarType::Matrix4x4;
+      return GX2ShaderVarType::Matrix4x4;
    } else {
       throw gfd_header_parse_exception {
          fmt::format("Invalid GX2ShaderVarType {}", value)
@@ -126,20 +128,20 @@ parseShaderVarType(const std::string &v)
    }
 }
 
-gx2::GX2SamplerVarType
+GX2SamplerVarType
 parseSamplerVarType(const std::string &v)
 {
    auto value = v;
    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
 
    if (value == "SAMPLER1D") {
-      return gx2::GX2SamplerVarType::Sampler1D;
+      return GX2SamplerVarType::Sampler1D;
    } else if (value == "SAMPLER2D") {
-      return gx2::GX2SamplerVarType::Sampler2D;
+      return GX2SamplerVarType::Sampler2D;
    } else if (value == "SAMPLER3D") {
-      return gx2::GX2SamplerVarType::Sampler3D;
+      return GX2SamplerVarType::Sampler3D;
    } else if (value == "SAMPLERCUBE") {
-      return gx2::GX2SamplerVarType::SamplerCube;
+      return GX2SamplerVarType::SamplerCube;
    } else {
       throw gfd_header_parse_exception {
          fmt::format("Invalid GX2SamplerVarType {}", value)
@@ -147,20 +149,20 @@ parseSamplerVarType(const std::string &v)
    }
 }
 
-gx2::GX2ShaderMode
+GX2ShaderMode
 parseShaderMode(const std::string &v)
 {
    auto value = v;
    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
 
    if (value == "UNIFORMREGISTER") {
-      return gx2::GX2ShaderMode::UniformRegister;
+      return GX2ShaderMode::UniformRegister;
    } else if (value == "UNIFORMBLOCK") {
-      return gx2::GX2ShaderMode::UniformBlock;
+      return GX2ShaderMode::UniformBlock;
    } else if (value == "GEOMETRYSHADER") {
-      return gx2::GX2ShaderMode::GeometryShader;
+      return GX2ShaderMode::GeometryShader;
    } else if (value == "COMPUTERSHADER") {
-      return gx2::GX2ShaderMode::ComputeShader;
+      return GX2ShaderMode::ComputeShader;
    } else {
       throw gfd_header_parse_exception {
          fmt::format("Invalid GX2ShaderMode {}", value)
@@ -222,7 +224,7 @@ parseUniformVars(std::vector<gfd::GFDUniformVar> &uniformVars,
 
    if (index >= uniformVars.size()) {
       uniformVars.resize(index + 1);
-      uniformVars[index].type = gx2::GX2ShaderVarType::Float4;
+      uniformVars[index].type = GX2ShaderVarType::Float4;
       uniformVars[index].count = 1;
    }
 
@@ -315,7 +317,7 @@ parseSamplerVars(std::vector<gfd::GFDSamplerVar> &samplerVars,
 
    if (index >= samplerVars.size()) {
       samplerVars.resize(index + 1);
-      samplerVars[index].type = gx2::GX2SamplerVarType::Sampler2D;
+      samplerVars[index].type = GX2SamplerVarType::Sampler2D;
       samplerVars[index].location = index;
    }
 
@@ -434,12 +436,12 @@ gfdAddVertexShader(gfd::GFDFile &file,
    out.streamOutStride.fill(0);
    out.gx2rData.elemCount = 0;
    out.gx2rData.elemSize = 0;
-   out.gx2rData.flags = static_cast<gx2::GX2RResourceFlags>(0);
+   out.gx2rData.flags = static_cast<GX2RResourceFlags>(0);
 
    if (shader.uniformBlocksUsed) {
-      out.mode = gx2::GX2ShaderMode::UniformBlock;
+      out.mode = GX2ShaderMode::UniformBlock;
    } else {
-      out.mode = gx2::GX2ShaderMode::UniformRegister;
+      out.mode = GX2ShaderMode::UniformRegister;
    }
 
    std::memset(&out.regs, 0, sizeof(out.regs));
@@ -515,12 +517,12 @@ gfdAddPixelShader(gfd::GFDFile &file,
    // Initialise some default values
    out.gx2rData.elemCount = 0;
    out.gx2rData.elemSize = 0;
-   out.gx2rData.flags = static_cast<gx2::GX2RResourceFlags>(0);
+   out.gx2rData.flags = static_cast<GX2RResourceFlags>(0);
 
    if (shader.uniformBlocksUsed) {
-      out.mode = gx2::GX2ShaderMode::UniformBlock;
+      out.mode = GX2ShaderMode::UniformBlock;
    } else {
-      out.mode = gx2::GX2ShaderMode::UniformRegister;
+      out.mode = GX2ShaderMode::UniformRegister;
    }
 
    std::memset(&out.regs, 0, sizeof(out.regs));

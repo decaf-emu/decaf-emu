@@ -414,8 +414,13 @@ heapFree(HeapId heapId,
       heap->firstFreeBlock = freeBlock;
    }
 
-   tryMergeConsecutiveBlocks(freeBlock, nextBlock);
-   tryMergeConsecutiveBlocks(prevBlock, freeBlock);
+   if (nextBlock) {
+      tryMergeConsecutiveBlocks(freeBlock, nextBlock);
+   }
+
+   if (prevBlock) {
+      tryMergeConsecutiveBlocks(prevBlock, freeBlock);
+   }
 
    heap->totalFreeCount++;
    return Error::OK;

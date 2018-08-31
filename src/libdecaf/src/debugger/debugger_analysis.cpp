@@ -1,10 +1,12 @@
 #include "debugger_analysis.h"
 #include "debugger_branchcalc.h"
-#include "libcpu/espresso/espresso_instructionset.h"
-#include "libcpu/mem.h"
-#include "kernel/kernel_loader.h"
+
+#include "cafe/loader/cafe_loader_entry.h"
+#include "cafe/loader/cafe_loader_loaded_rpl.h"
 
 #include <fmt/format.h>
+#include <libcpu/espresso/espresso_instructionset.h>
+#include <libcpu/mem.h>
 #include <map>
 #include <unordered_map>
 
@@ -127,9 +129,9 @@ findFunctionEnd(uint32_t start)
    return fnEnd;
 }
 
-void
+static void
 markAsFunction(uint32_t address,
-               const std::string &name)
+               std::string_view name)
 {
    // We use get instead of searching the sFuncData directly
    //  because we can't set a function in the middle of a function
@@ -144,7 +146,7 @@ markAsFunction(uint32_t address,
    }
 }
 
-void
+static void
 markAsFunction(uint32_t address)
 {
    markAsFunction(address, fmt::format("sub_{:08x}", address));
@@ -166,37 +168,55 @@ void
 analyse(uint32_t start,
         uint32_t end)
 {
-   auto testStart = 0x025B81F4u;
-   auto testEnd = 0x25B8374u + 4;
-
    // Scan through all our symbols and mark them as functions.
    // We do this first as they will not receive names if they are
    //  detected by the analysis pass due to its naming system.
-   kernel::loader::lockLoader();
-   const auto &modules = kernel::loader::getLoadedModules();
+   cafe::loader::lockLoader();
+   for (auto rpl = cafe::loader::getLoadedRplLinkedList(); rpl; rpl = rpl->nextLoadedRpl) {
+      auto symTabHdr = virt_ptr<cafe::loader::rpl::SectionHeader> { nullptr };
+      auto symTabAddr = virt_addr { 0 };
+      auto strTabAddr = virt_addr { 0 };
+      auto textStartAddr = rpl->textAddr;
+      auto textEndAddr = rpl->textAddr + rpl->textSize;
 
-   for (auto &mod : modules) {
-      auto codeRangeStart = 0u;
-      auto codeRangeEnd = 0u;
+      // Find symbol section
+      if (rpl->sectionHeaderBuffer) {
+         for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
+            auto sectionHeader =
+               virt_cast<cafe::loader::rpl::SectionHeader *>(
+                  virt_cast<virt_addr>(rpl->sectionHeaderBuffer) +
+                  (i * rpl->elfHeader.shentsize));
 
-      for (auto &sec : mod.second->sections) {
-         if (sec.name.compare(".text") == 0) {
-            codeRangeStart = sec.start;
-            codeRangeEnd = sec.end;
-            break;
+            if (sectionHeader->type == cafe::loader::rpl::SHT_SYMTAB) {
+               symTabHdr = sectionHeader;
+               symTabAddr = rpl->sectionAddressBuffer[i];
+               strTabAddr = rpl->sectionAddressBuffer[symTabHdr->link];
+               break;
+            }
          }
       }
 
-      for (auto &sym : mod.second->symbols) {
-         if (sym.second.type == kernel::loader::SymbolType::Function) {
-            if (sym.second.address >= codeRangeStart && sym.second.address < codeRangeEnd) {
-               markAsFunction(sym.second.address, sym.first);
+      if (symTabHdr && symTabAddr && strTabAddr) {
+         auto symTabEntSize =
+            symTabHdr->entsize ?
+            static_cast<size_t>(symTabHdr->entsize) :
+            sizeof(cafe::loader::rpl::Symbol);
+         auto symTabEntries = symTabHdr->size / symTabEntSize;
+
+         for (auto i = 0u; i < symTabEntries; ++i) {
+            auto symbol =
+               virt_cast<cafe::loader::rpl::Symbol *>(
+                  symTabAddr + (i * symTabEntSize));
+            auto symbolAddress = virt_addr { static_cast<uint32_t>(symbol->value) };
+            if ((symbol->info & 0xf) == cafe::loader::rpl::STT_FUNC &&
+                symbolAddress >= textStartAddr && symbolAddress < textEndAddr) {
+               auto name = virt_cast<const char *>(strTabAddr + symbol->name);
+               markAsFunction(symbol->value, name.getRawPointer());
             }
          }
       }
    }
-
-   kernel::loader::unlockLoader();
+   cafe::loader::unlockLoader();
 
    for (auto addr = start; addr < end; addr += 4) {
       auto instr = mem::read<espresso::Instruction>(addr);

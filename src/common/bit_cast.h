@@ -1,5 +1,6 @@
 #pragma once
 #include <cstring>
+#include <memory>
 #include <type_traits>
 
 // reinterpret_cast for value types
@@ -12,6 +13,6 @@ bit_cast(const SrcType& src)
    static_assert(std::is_trivially_copyable<DstType>::value, "DstType is not trivially copyable.");
 
    DstType dst;
-   std::memcpy(&dst, &src, sizeof(SrcType));
+   std::memcpy(std::addressof(dst), std::addressof(src), sizeof(SrcType));
    return dst;
 }

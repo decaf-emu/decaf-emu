@@ -5,6 +5,7 @@
 #include <libcpu/cpu.h>
 #include <libcpu/be2_struct.h>
 #include <memory>
+#include <string_view>
 
 namespace cafe
 {
@@ -73,13 +74,67 @@ public:
    }
 };
 
-template<std::size_t N>
-inline auto
-make_stack_string(const char (&hostStr)[N])
+class StackString : public virt_ptr<char>
 {
-   StackArray<const char, N + 1> guestStr;
-   std::strcpy(guestStr.getRawPointer(), hostStr);
-   return guestStr;
+public:
+   StackString(std::string_view hostString) :
+      mSize(align_up(static_cast<uint32_t>(hostString.size()) + 1, 4))
+   {
+      auto core = cpu::this_core::state();
+      auto oldStackTop = virt_addr { core->gpr[1] };
+      auto newStackTop = oldStackTop - mSize;
+      auto ptrAddr = newStackTop + 8;
+
+      memmove(virt_cast<void *>(newStackTop).getRawPointer(),
+              virt_cast<void *>(oldStackTop).getRawPointer(),
+              8);
+
+      core->gpr[1] = newStackTop.getAddress();
+      virt_ptr<char>::mAddress = virt_addr { newStackTop + 8 };
+
+      std::memcpy(virt_ptr<char>::getRawPointer(), hostString.data(), hostString.size());
+      virt_ptr<char>::getRawPointer()[hostString.size()] = char { 0 };
+   }
+
+   StackString(StackString &&from) :
+      mSize(from.mSize)
+   {
+      from.mSize = 0u;
+      virt_ptr<char>::mAddress = from.mAddress;
+   }
+
+   ~StackString()
+   {
+      if (mSize) {
+         auto core = cpu::this_core::state();
+         auto oldStackTop = virt_addr { core->gpr[1] };
+         auto newStackTop = virt_addr { core->gpr[1] + mSize };
+         auto ptrAddr = oldStackTop + 8;
+         decaf_check(virt_ptr<char>::mAddress == ptrAddr);
+
+         core->gpr[1] = newStackTop.getAddress();
+         memmove(virt_cast<void *>(newStackTop).getRawPointer(),
+                 virt_cast<void *>(oldStackTop).getRawPointer(),
+                 8);
+      }
+   }
+
+   StackString &operator =(StackString &&from)
+   {
+      mSize = from.mSize;
+      virt_ptr<char>::mAddress = from.mAddress;
+      from.mSize = 0u;
+      return *this;
+   }
+
+private:
+   uint32_t mSize;
+};
+
+inline StackString
+make_stack_string(std::string_view str)
+{
+   return { str };
 }
 
 } // namespace cafe

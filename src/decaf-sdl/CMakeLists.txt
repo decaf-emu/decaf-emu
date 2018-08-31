@@ -6,7 +6,9 @@ file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
 if(MSVC)
-   set(RESOURCE_FILES ${CMAKE_SOURCE_DIR}/resources/decaf-sdl.rc)
+   set(RESOURCE_FILES
+      ${CMAKE_SOURCE_DIR}/resources/decaf-sdl.rc
+      hidpi.manifest)
 else()
    set(RESOURCE_FILES "")
 endif()

@@ -6,6 +6,7 @@
 #include <common/platform.h>
 #include <common/platform_socket.h>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <spdlog/spdlog.h>
 
@@ -35,7 +36,7 @@ public:
 
    void sendAck();
    void sendNack();
-   void sendCommand(const std::string &command);
+   void sendCommand(std::string_view command);
 
    void handleCommand(const std::string &command);
    void handleBreak();

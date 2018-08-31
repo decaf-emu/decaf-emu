@@ -4,7 +4,7 @@
 #include "ios_kernel_process.h"
 #include "ios/ios_enum_string.h"
 #include "ios/ios_stackobject.h"
-#include "kernel/kernel_ipc.h"
+#include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <common/log.h>
 #include <map>
@@ -263,7 +263,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
                                             requestHandleManager,
                                             &resourceHandle);
    if (error < Error::OK) {
-      gLog->warn("IOS_ResourceReply(0x{:08X}, {}) passed invalid resource request.",
+      gLog->warn("IOS_ResourceReply({}, {}) passed invalid resource request.",
                  phys_cast<phys_addr>(resourceRequest),
                  reply);
       resourceHandleManager->failedResourceReplies++;
@@ -625,7 +625,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    ipcRequest->reply = reply;
 
    if (resourceRequest->messageQueueId == getIpcMessageQueueId()) {
-      ::kernel::ipcDriverKernelSubmitReply(ipcRequest);
+      cafe::kernel::ipcDriverKernelSubmitReply(ipcRequest);
       error = Error::OK;
    } else {
       phys_ptr<MessageQueue> queue = nullptr;

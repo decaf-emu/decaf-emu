@@ -138,6 +138,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    internal::initialiseStaticConfigData();
    internal::initialiseStaticMcpThreadData();
    internal::initialiseStaticPmThreadData();
+   internal::initialiseStaticPpcThreadData();
 
    // Initialise process heaps
    auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);

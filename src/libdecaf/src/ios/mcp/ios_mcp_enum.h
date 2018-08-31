@@ -87,7 +87,7 @@ ENUM_BEG(MCPFileType, uint32_t)
    //! Load from a system data title's content directory (0005001B-x)/content/%s
    ENUM_VALUE(SystemDataContent,    0x02)
 
-   //! Load from a system data title's code directory (0005001B-x)/content/%s
+   //! Load from a system data title's code directory (0005001B-x)/code/%s
    ENUM_VALUE(SystemDataCode,       0x03)
 ENUM_END(MCPFileType)
 

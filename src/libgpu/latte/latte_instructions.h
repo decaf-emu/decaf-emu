@@ -292,31 +292,34 @@ BITFIELD(SQ_VTX_WORD2, uint32_t)
    BITFIELD_ENTRY(20, 1, bool, ALT_CONST);
 BITFIELD_END
 
-union ControlFlowInst
+struct ControlFlowInst
 {
-   struct
+   union
    {
-      SQ_CF_WORD0 word0;
-      SQ_CF_WORD1 word1;
-   };
-
-   struct
-   {
-      SQ_CF_ALU_WORD0 word0;
-      SQ_CF_ALU_WORD1 word1;
-   } alu;
-
-   struct
-   {
-      SQ_CF_ALLOC_EXPORT_WORD0 word0;
-
-      union
+      struct
       {
-         SQ_CF_ALLOC_EXPORT_WORD1 word1;
-         SQ_CF_ALLOC_EXPORT_WORD1_BUF buf;
-         SQ_CF_ALLOC_EXPORT_WORD1_SWIZ swiz;
+         SQ_CF_WORD0 word0;
+         SQ_CF_WORD1 word1;
       };
-   } exp;
+
+      struct
+      {
+         SQ_CF_ALU_WORD0 word0;
+         SQ_CF_ALU_WORD1 word1;
+      } alu;
+
+      struct
+      {
+         SQ_CF_ALLOC_EXPORT_WORD0 word0;
+
+         union
+         {
+            SQ_CF_ALLOC_EXPORT_WORD1 word1;
+            SQ_CF_ALLOC_EXPORT_WORD1_BUF buf;
+            SQ_CF_ALLOC_EXPORT_WORD1_SWIZ swiz;
+         };
+      } exp;
+   };
 };
 CHECK_SIZE(ControlFlowInst, 8);
 

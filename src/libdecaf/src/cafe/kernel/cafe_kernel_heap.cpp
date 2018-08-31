@@ -1,6 +1,6 @@
 #include "cafe_kernel_heap.h"
+#include "cafe_kernel_mmu.h"
 #include "cafe/cafe_tinyheap.h"
-#include "kernel/kernel_memory.h"
 
 #include <common/frameallocator.h>
 #include <libcpu/be2_struct.h>
@@ -20,24 +20,23 @@ WorkAreaHeapTrackingBlockCount = 0x80;
 void
 initialiseStaticDataHeap()
 {
-   auto range = ::kernel::getVirtualRange(::kernel::VirtualRegion::KernelStatic);
+   auto staticDataMapping = getVirtualMemoryMap(VirtualMemoryRegion::Kernel_0xFFE00000);
    sStaticDataHeap = FrameAllocator {
-      virt_cast<uint8_t *>(range.start).getRawPointer(),
-      range.size
+      virt_cast<void *>(staticDataMapping.vaddr).getRawPointer(),
+      staticDataMapping.size,
    };
 }
 
 bool
 initialiseWorkAreaHeap()
 {
-   auto range = ::kernel::getVirtualRange(::kernel::VirtualRegion::KernelWorkAreaHeap);
    auto trackingSize = WorkAreaHeapTrackingBlockCount * TinyHeapBlockSize + TinyHeapHeaderSize;
-
-   sWorkAreaHeap = virt_cast<TinyHeap *>(range.start);
+   auto workAreaMapping = getVirtualMemoryMap(VirtualMemoryRegion::KernelWorkAreaHeap);
+   sWorkAreaHeap = virt_cast<TinyHeap *>(workAreaMapping.vaddr);
    auto error = TinyHeap_Setup(sWorkAreaHeap,
                                trackingSize,
-                               virt_cast<void *>(range.start + trackingSize),
-                               range.size - trackingSize);
+                               virt_cast<void *>(workAreaMapping.vaddr + trackingSize),
+                               workAreaMapping.size - trackingSize);
    return error == TinyHeapError::OK;
 }
 

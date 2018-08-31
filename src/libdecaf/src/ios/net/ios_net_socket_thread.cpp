@@ -184,6 +184,8 @@ startSocketThread()
    }
 
    sData->threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sData->threadId, "SocketThread");
+
    return IOS_StartThread(sData->threadId);
 }
 

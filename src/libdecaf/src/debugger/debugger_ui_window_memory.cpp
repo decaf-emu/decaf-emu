@@ -1,5 +1,5 @@
+#include "cafe/kernel/cafe_kernel_mmu.h"
 #include "debugger_ui_window_memory.h"
-#include "kernel/kernel_memory.h"
 
 #include <algorithm>
 #include <imgui.h>
@@ -15,7 +15,7 @@ namespace ui
 MemoryWindow::MemoryWindow(const std::string &name) :
    Window(name)
 {
-   mAddressScroller.scrollTo(kernel::getVirtualRange(kernel::VirtualRegion::MainAppData).start.getAddress());
+   mAddressScroller.scrollTo(cafe::kernel::getVirtualMemoryMap(cafe::kernel::VirtualMemoryRegion::AppData).vaddr.getAddress());
 }
 
 void
@@ -31,7 +31,7 @@ MemoryWindow::draw()
    char addressInput[32] = { 0 };
    char dataInput[32] = { 0 };
 
-   if (!ImGui::Begin(mName.c_str(), &mVisible)) {
+   if (!ImGui::Begin(mName.c_str(), &mVisible, ImGuiWindowFlags_NoScrollbar)) {
       ImGui::End();
       return;
    }
@@ -90,7 +90,7 @@ MemoryWindow::draw()
    }
 
    auto editAddress = mEditAddress;
-   mAddressScroller.begin(numColumns, ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+   mAddressScroller.begin(numColumns, ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
 
    for (auto addr = mAddressScroller.reset(); mAddressScroller.hasMore(); addr = mAddressScroller.advance()) {
       auto linePos = ImGui::GetCursorPos();
@@ -202,7 +202,7 @@ MemoryWindow::draw()
    ImGui::Separator();
 
    // Render the bottom bar for the window
-   ImGui::AlignFirstTextHeightToWidgets();
+   ImGui::AlignTextToFramePadding();
    ImGui::Text("Go To Address: ");
    ImGui::SameLine();
    ImGui::PushItemWidth(70);

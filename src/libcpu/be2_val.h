@@ -159,127 +159,127 @@ public:
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator ==(const OtherType &other)
-      -> decltype(std::declval<const K>().operator ==(std::declval<const OtherType>())) const
+   auto operator ==(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator ==(std::declval<const OtherType>()))
    {
       return value() == other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator !=(const OtherType &other)
-      -> decltype(std::declval<const K>().operator !=(std::declval<const OtherType>())) const
+   auto operator !=(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator !=(std::declval<const OtherType>()))
    {
       return value() != other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator >=(const OtherType &other)
-      -> decltype(std::declval<const K>().operator >=(std::declval<const OtherType>())) const
+   auto operator >=(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator >=(std::declval<const OtherType>()))
    {
       return value() >= other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator <=(const OtherType &other)
-      -> decltype(std::declval<const K>().operator <=(std::declval<const OtherType>())) const
+   auto operator <=(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator <=(std::declval<const OtherType>()))
    {
       return value() <= other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator >(const OtherType &other)
-      -> decltype(std::declval<const K>().operator >(std::declval<const OtherType>())) const
+   auto operator >(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator >(std::declval<const OtherType>()))
    {
       return value() > other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator <(const OtherType &other)
-      -> decltype(std::declval<const K>().operator <(std::declval<const OtherType>())) const
+   auto operator <(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator <(std::declval<const OtherType>()))
    {
       return value() < other;
    }
 
    template<typename K = value_type>
-   auto operator +()
-      ->  decltype(std::declval<const K>(). operator+()) const
+   auto operator +() const
+      ->  decltype(std::declval<const K>(). operator+())
    {
       return +value();
    }
 
    template<typename K = value_type>
-   auto operator -()
-      -> decltype(std::declval<const K>(). operator-()) const
+   auto operator -() const
+      -> decltype(std::declval<const K>(). operator-())
    {
       return -value();
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator +(const OtherType &other)
-      -> decltype(std::declval<const K>().operator +(std::declval<const OtherType>())) const
+   auto operator +(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator +(std::declval<const OtherType>()))
    {
       return value() + other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator -(const OtherType &other)
-      -> decltype(std::declval<const K>().operator -(std::declval<const OtherType>())) const
+   auto operator -(const OtherType &other)const
+      -> decltype(std::declval<const K>().operator -(std::declval<const OtherType>()))
    {
       return value() - other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator *(const OtherType &other)
-      -> decltype(std::declval<const K>().operator *(std::declval<const OtherType>())) const
+   auto operator *(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator *(std::declval<const OtherType>()))
    {
       return value() * other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator /(const OtherType &other)
-      -> decltype(std::declval<const K>().operator /(std::declval<const OtherType>())) const
+   auto operator /(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator /(std::declval<const OtherType>()))
    {
       return value() / other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator %(const OtherType &other)
-      -> decltype(std::declval<const K>().operator %(std::declval<const OtherType>())) const
+   auto operator %(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator %(std::declval<const OtherType>()))
    {
       return value() % other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator |(const OtherType &other)
-      -> decltype(std::declval<const K>().operator |(std::declval<const OtherType>())) const
+   auto operator |(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator |(std::declval<const OtherType>()))
    {
       return value() | other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator &(const OtherType &other)
-      -> decltype(std::declval<const K>().operator &(std::declval<const OtherType>())) const
+   auto operator &(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator &(std::declval<const OtherType>()))
    {
       return value() & other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator ^(const OtherType &other)
-      -> decltype(std::declval<const K>().operator ^(std::declval<const OtherType>())) const
+   auto operator ^(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator ^(std::declval<const OtherType>()))
    {
       return value() ^ other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator <<(const OtherType &other)
-      -> decltype(std::declval<const K>().operator <<(std::declval<const OtherType>())) const
+   auto operator <<(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator <<(std::declval<const OtherType>()))
    {
       return value() << other;
    }
 
    template<typename OtherType, typename K = value_type>
-   auto operator >>(const OtherType &other)
-      -> decltype(std::declval<const K>().operator >>(std::declval<const OtherType>())) const
+   auto operator >>(const OtherType &other) const
+      -> decltype(std::declval<const K>().operator >>(std::declval<const OtherType>()))
    {
       return value() >> other;
    }
@@ -288,7 +288,7 @@ public:
             typename = decltype(std::declval<const value_type>() + std::declval<const OtherType>())>
    be2_val &operator +=(const OtherType &other)
    {
-      *this = value() + other;
+      *this = static_cast<value_type>(value() + other);
       return *this;
    }
 
@@ -296,7 +296,7 @@ public:
             typename = decltype(std::declval<const value_type>() - std::declval<const OtherType>())>
    be2_val &operator -=(const OtherType &other)
    {
-      *this = value() - other;
+      *this = static_cast<value_type>(value() - other);
       return *this;
    }
 
@@ -304,7 +304,7 @@ public:
             typename = decltype(std::declval<const value_type>() * std::declval<const OtherType>())>
    be2_val &operator *=(const OtherType &other)
    {
-      *this = value() * other;
+      *this = static_cast<value_type>(value() * other);
       return *this;
    }
 
@@ -312,7 +312,7 @@ public:
             typename = decltype(std::declval<const value_type>() / std::declval<const OtherType>())>
    be2_val &operator /=(const OtherType &other)
    {
-      *this = value() / other;
+      *this = static_cast<value_type>(value() / other);
       return *this;
    }
 
@@ -320,7 +320,7 @@ public:
             typename = decltype(std::declval<const value_type>() % std::declval<const OtherType>())>
    be2_val &operator %=(const OtherType &other)
    {
-      *this = value() % other;
+      *this = static_cast<value_type>(value() % other);
       return *this;
    }
 
@@ -328,7 +328,7 @@ public:
             typename = decltype(std::declval<const value_type>() | std::declval<const OtherType>())>
    be2_val &operator |=(const OtherType &other)
    {
-      *this = static_cast<Type>(value() | other);
+      *this = static_cast<value_type>(value() | other);
       return *this;
    }
 
@@ -336,7 +336,7 @@ public:
             typename = decltype(std::declval<const value_type>() & std::declval<const OtherType>())>
    be2_val &operator &=(const OtherType &other)
    {
-      *this = static_cast<Type>(value() & other);
+      *this = static_cast<value_type>(value() & other);
       return *this;
    }
 
@@ -344,7 +344,7 @@ public:
             typename = decltype(std::declval<const value_type>() ^ std::declval<const OtherType>())>
    be2_val &operator ^=(const OtherType &other)
    {
-      *this = static_cast<Type>(value() ^ other);
+      *this = static_cast<value_type>(value() ^ other);
       return *this;
    }
 
@@ -406,6 +406,14 @@ public:
       return value().operator [](index);
    }
 
+   template<typename IndexType,
+            typename K = value_type>
+   auto operator [](const IndexType &index) const
+      -> decltype(std::declval<const K>().operator [](std::declval<IndexType>()))
+   {
+      return value().operator [](index);
+   }
+
    template<typename K = value_type>
    auto operator ->()
       -> decltype(std::declval<K>().operator ->())
@@ -436,16 +444,16 @@ public:
 
    // Helper to access FunctionPointer::getAddress
    template<typename K = value_type>
-   auto getAddress()
-      -> decltype(std::declval<const K>().getAddress()) const
+   auto getAddress() const
+      -> decltype(std::declval<const K>().getAddress())
    {
       return value().getAddress();
    }
 
    // Helper to access Pointer::getRawPointer
    template<typename K = value_type>
-   auto getRawPointer()
-      -> decltype(std::declval<const K>().getRawPointer()) const
+   auto getRawPointer() const
+      -> decltype(std::declval<const K>().getRawPointer())
    {
       return value().getRawPointer();
    }
@@ -457,39 +465,33 @@ private:
    value_type mStorage;
 };
 
-// Hijack fmtlib to forward be2_val<Type> formatter to Type formatter.
+// Custom formatters for fmtlib
 namespace fmt
 {
 
-namespace internal
-{
-
-// Ensure that fmt::internal::MakeValue sees be2_val as a custom type.
+// Disable automatic conversion to int in fmtlib
 template <typename T>
-struct ConvertToInt<be2_val<T>>
+struct convert_to_int<be2_val<T>, char> : std::false_type
 {
-   enum
-   {
-      enable_conversion = false,
-   };
-
-   enum
-   {
-      value = false,
-   };
 };
 
-} // namespace internal
-
-template <typename ArgFormatter, typename Char, typename Type>
-inline void
-format_arg(BasicFormatter<Char, ArgFormatter> &f,
-           const Char *&format_str,
-           const be2_val<Type> &val)
+// Provide a custom formatter for be2_val<T>
+template<typename ValueType>
+struct formatter<be2_val<ValueType>> : formatter<typename safe_underlying_type<ValueType>::type>
 {
-   // Forward be2_val<Type> format to Type formatter.
-   format_str = f.format(format_str,
-                         internal::MakeArg<fmt::BasicFormatter<Char, ArgFormatter>>(val.value()));
-}
+   using value_type = typename safe_underlying_type<ValueType>::type;
+
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return formatter<value_type>::parse(ctx);
+   }
+
+   template<typename FormatContext>
+   auto format(const be2_val<ValueType> &val, FormatContext &ctx)
+   {
+      return formatter<value_type>::format(val, ctx);
+   }
+};
 
 } // namespace fmt

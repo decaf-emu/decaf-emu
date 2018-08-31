@@ -500,11 +500,7 @@ void
 brSyscallHandler(BinrecCore *core)
 {
    auto instr = mem::read<espresso::Instruction>(core->nia - 4);
-   auto id = instr.kcn;
-   auto kc = cpu::getKernelCall(id);
-   decaf_assert(kc, fmt::format("Encountered invalid Kernel Call ID {}", id));
-
-   kc->func(core, kc->user_data);
+   cpu::onKernelCall(core, instr.kcn);
 
    // We might have been rescheduled on a new core.
    core = reinterpret_cast<BinrecCore *>(this_core::state());
@@ -529,7 +525,8 @@ void
 brTrapHandler(BinrecCore *core)
 {
    if (!cpu::hasBreakpoint(core->nia)) {
-      decaf_abort(fmt::format("Game raised a trap exception at 0x{:08X}.", core->nia));
+      decaf_abort(fmt::format("Game raised a trap exception at 0x{:08X}.",
+                              core->nia));
    }
 
    // If we have a breakpoint, we will fall back to interpreter to handle it.

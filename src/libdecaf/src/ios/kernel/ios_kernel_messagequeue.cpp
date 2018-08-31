@@ -29,7 +29,6 @@ Error
 IOS_CreateMessageQueue(phys_ptr<Message> messages,
                        uint32_t size)
 {
-   internal::lockScheduler();
    phys_ptr<MessageQueue> queue = nullptr;
 
    for (auto i = 0u; i < sData->queues.size(); ++i) {
@@ -41,7 +40,6 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
    }
 
    if (!queue) {
-      internal::unlockScheduler();
       return Error::Max;
    }
 
@@ -56,7 +54,6 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
    ThreadQueue_Initialise(phys_addrof(queue->sendQueue));
 
    sData->numCreatedQueues++;
-   internal::unlockScheduler();
 
    return static_cast<Error>(queue->uid);
 }
@@ -70,11 +67,9 @@ IOS_CreateMessageQueue(phys_ptr<Message> messages,
 Error
 IOS_DestroyMessageQueue(MessageQueueId id)
 {
-   internal::lockScheduler();
    phys_ptr<MessageQueue> queue;
    auto error = internal::getMessageQueueSafe(id, &queue);
    if (error < Error::OK) {
-      internal::unlockScheduler();
       return error;
    }
 
@@ -83,14 +78,10 @@ IOS_DestroyMessageQueue(MessageQueueId id)
       queue->flags &= ~MessageQueueFlags::RegisteredEventHandler;
    }
 
-   internal::wakeupAllThreadsNoLock(phys_addrof(queue->sendQueue),
-                                    Error::Intr);
-
-   internal::wakeupAllThreadsNoLock(phys_addrof(queue->receiveQueue),
-                                    Error::Intr);
+   internal::wakeupAllThreads(phys_addrof(queue->sendQueue), Error::Intr);
+   internal::wakeupAllThreads(phys_addrof(queue->receiveQueue), Error::Intr);
 
    std::memset(queue.getRawPointer(), 0, sizeof(ThreadQueue));
-   internal::unlockScheduler();
    return Error::OK;
 }
 
@@ -121,11 +112,9 @@ IOS_JamMessage(MessageQueueId id,
                Message message,
                MessageFlags flags)
 {
-   internal::lockScheduler();
    phys_ptr<MessageQueue> queue;
    auto error = internal::getMessageQueueSafe(id, &queue);
    if (error < Error::OK) {
-      internal::unlockScheduler();
       return error;
    }
 
@@ -134,12 +123,11 @@ IOS_JamMessage(MessageQueueId id,
          return Error::Max;
       }
 
-      internal::sleepThreadNoLock(phys_addrof(queue->sendQueue));
-      internal::rescheduleSelfNoLock();
+      internal::sleepThread(phys_addrof(queue->sendQueue));
+      internal::reschedule();
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
-         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
@@ -153,10 +141,8 @@ IOS_JamMessage(MessageQueueId id,
    queue->messages[queue->first] = message;
    queue->used++;
 
-   internal::wakeupOneThreadNoLock(phys_addrof(queue->receiveQueue),
-                                   Error::OK);
-   internal::rescheduleAllNoLock();
-   internal::unlockScheduler();
+   internal::wakeupOneThread(phys_addrof(queue->receiveQueue), Error::OK);
+   internal::reschedule();
    return Error::OK;
 }
 
@@ -252,19 +238,16 @@ sendMessage(phys_ptr<MessageQueue> queue,
             Message message,
             MessageFlags flags)
 {
-   internal::lockScheduler();
    while (queue->used == queue->size) {
       if (flags & MessageFlags::NonBlocking) {
-         internal::unlockScheduler();
          return Error::Max;
       }
 
-      internal::sleepThreadNoLock(phys_addrof(queue->sendQueue));
-      internal::rescheduleSelfNoLock();
+      internal::sleepThread(phys_addrof(queue->sendQueue));
+      internal::reschedule();
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
-         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
@@ -273,10 +256,8 @@ sendMessage(phys_ptr<MessageQueue> queue,
    queue->messages[index] = message;
    queue->used++;
 
-   internal::wakeupOneThreadNoLock(phys_addrof(queue->receiveQueue),
-                                   Error::OK);
-   internal::rescheduleAllNoLock();
-   internal::unlockScheduler();
+   internal::wakeupOneThread(phys_addrof(queue->receiveQueue), Error::OK);
+   internal::reschedule();
    return Error::OK;
 }
 
@@ -289,19 +270,16 @@ receiveMessage(phys_ptr<MessageQueue> queue,
                phys_ptr<Message> message,
                MessageFlags flags)
 {
-   internal::lockScheduler();
    while (queue->used == 0) {
       if (flags & MessageFlags::NonBlocking) {
-         internal::unlockScheduler();
          return Error::Max;
       }
 
-      internal::sleepThreadNoLock(phys_addrof(queue->receiveQueue));
-      internal::rescheduleSelfNoLock();
+      internal::sleepThread(phys_addrof(queue->receiveQueue));
+      internal::reschedule();
 
       auto thread = internal::getCurrentThread();
       if (thread->context.queueWaitResult != Error::OK) {
-         internal::unlockScheduler();
          return thread->context.queueWaitResult;
       }
    }
@@ -310,10 +288,8 @@ receiveMessage(phys_ptr<MessageQueue> queue,
    queue->first = (queue->first + 1) % queue->size;
    queue->used--;
 
-   internal::wakeupOneThreadNoLock(phys_addrof(queue->sendQueue),
-                                   Error::OK);
-   internal::rescheduleAllNoLock();
-   internal::unlockScheduler();
+   internal::wakeupOneThread(phys_addrof(queue->sendQueue), Error::OK);
+   internal::reschedule();
    return Error::OK;
 }
 

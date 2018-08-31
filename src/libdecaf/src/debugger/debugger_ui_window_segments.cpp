@@ -1,5 +1,7 @@
 #include "debugger_ui_window_segments.h"
-#include "kernel/kernel_loader.h"
+
+#include "cafe/loader/cafe_loader_entry.h"
+#include "cafe/loader/cafe_loader_loaded_rpl.h"
 
 #include <fmt/format.h>
 #include <imgui.h>
@@ -66,20 +68,43 @@ SegmentsWindow::draw()
 
    mSegmentsCache.clear();
 
-   kernel::loader::lockLoader();
-   const auto &modules = kernel::loader::getLoadedModules();
+   cafe::loader::lockLoader();
+   for (auto rpl = cafe::loader::getLoadedRplLinkedList(); rpl; rpl = rpl->nextLoadedRpl) {
+      if (!rpl->sectionAddressBuffer ||
+          !rpl->sectionAddressBuffer ||
+          !rpl->moduleNameBuffer ||
+          !rpl->moduleNameLen ||
+          !rpl->sectionAddressBuffer[rpl->elfHeader.shstrndx]) {
+         continue;
+      }
 
-   for (auto &mod : modules) {
-      for (auto &sec : mod.second->sections) {
-         addSegmentItem(mSegmentsCache, Segment {
-            fmt::format("{}:{}", mod.second->name, sec.name),
-            sec.start,
-            sec.end
-         });
+      auto rplName = std::string_view {
+            rpl->moduleNameBuffer.getRawPointer(),
+            rpl->moduleNameLen
+         };
+
+      auto shStrTab =
+         virt_cast<const char *>(rpl->sectionAddressBuffer[rpl->elfHeader.shstrndx])
+         .getRawPointer();
+
+      for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
+         auto sectionHeader =
+            virt_cast<cafe::loader::rpl::SectionHeader *>(
+               virt_cast<virt_addr>(rpl->sectionHeaderBuffer) +
+               (i * rpl->elfHeader.shentsize));
+
+         if (rpl->sectionAddressBuffer[i] &&
+             sectionHeader->size != 0 &&
+             (sectionHeader->flags & cafe::loader::rpl::SHF_ALLOC)) {
+            addSegmentItem(mSegmentsCache, Segment {
+                  fmt::format("{}:{}", rplName, shStrTab + sectionHeader->name),
+                  static_cast<uint32_t>(rpl->sectionAddressBuffer[i]),
+                  sectionHeader->size
+               });
+         }
       }
    }
-
-   kernel::loader::unlockLoader();
+   cafe::loader::unlockLoader();
 
    ImGui::Columns(3, "memList", false);
    ImGui::SetColumnOffset(0, ImGui::GetWindowWidth() * 0.0f);

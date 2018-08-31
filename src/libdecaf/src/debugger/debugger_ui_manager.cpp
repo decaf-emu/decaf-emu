@@ -14,11 +14,12 @@
 #include "debugger_ui_window_threads.h"
 #include "debugger_ui_window_voices.h"
 #include "debugger_ui_window_performance.h"
-#include "kernel/kernel.h"
-#include "kernel/kernel_loader.h"
-#include "modules/coreinit/coreinit_thread.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/gx2/gx2_internal_pm4cap.h"
+
+#include "cafe/loader/cafe_loader_entry.h"
+#include "cafe/loader/cafe_loader_loaded_rpl.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/gx2/gx2_internal_pm4cap.h"
 
 #include <libcpu/jit_stats.h>
 #include <libgpu/gpu_config.h>
@@ -122,7 +123,6 @@ void Manager::load(const std::string &configPath,
    static const ImWchar iconsRanges[] = { 0x2500, 0x25FF, 0 };
    auto config = ImFontConfig { };
    config.MergeMode = true;
-   config.MergeGlyphCenterV = true;
    auto fontPath = decaf::config::system::resources_path + "/fonts/DejaVuSansMono.ttf";
    io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13.0f, &config, iconsRanges);
 
@@ -235,20 +235,21 @@ void Manager::draw(unsigned width, unsigned height)
 
 void Manager::onFirstActivation()
 {
-   auto userModule = kernel::getUserModule();
+   auto disassemblyStartAddress = virt_addr { 0x02000000 };
+   auto memoryStartAddress = virt_addr { 0x10000000 };
 
-   // Automatically analyse the primary user module
-   for (auto &sec : userModule->sections) {
-      if (sec.name.compare(".text") == 0) {
-         analysis::analyse(sec.start, sec.end);
-         break;
-      }
+   if (auto rpx = cafe::loader::getLoadedRpx()) {
+      disassemblyStartAddress = rpx->textAddr;
+      memoryStartAddress = rpx->dataAddr;
+
+      analysis::analyse(static_cast<uint32_t>(rpx->textAddr),
+                        static_cast<uint32_t>(rpx->textAddr) + rpx->textSize);
    }
 
    // Place the views somewhere sane to start in case pausing did not place it somewhere
    if (!mDebugger->paused()) {
-      gotoMemoryAddress(userModule->entryPoint);
-      gotoDisassemblyAddress(userModule->entryPoint);
+      gotoMemoryAddress(0x10000000);
+      gotoDisassemblyAddress(0x02000000);
    }
 }
 
@@ -256,24 +257,24 @@ void Manager::onPaused()
 {
    // Try use the thread that the debug interrupt came from.
    auto initiator = mDebugger->getPauseInitiator();
-   auto thread = coreinit::internal::getCoreRunningThread(initiator);
+   auto thread = cafe::coreinit::internal::getCoreRunningThread(initiator);
 
    // For some reason if that failed, try pick a running thread.
    if (!thread) {
-      thread = coreinit::internal::getCoreRunningThread(1);
+      thread = cafe::coreinit::internal::getCoreRunningThread(1);
    }
 
    if (!thread) {
-      thread = coreinit::internal::getCoreRunningThread(0);
+      thread = cafe::coreinit::internal::getCoreRunningThread(0);
    }
 
    if (!thread) {
-      thread = coreinit::internal::getCoreRunningThread(2);
+      thread = cafe::coreinit::internal::getCoreRunningThread(2);
    }
 
    // Still no thread??? Try the first active thread in list!
    if (!thread) {
-      thread = coreinit::internal::getFirstActiveThread();
+      thread = cafe::coreinit::internal::getFirstActiveThread();
    }
 
    setActiveThread(thread);
@@ -377,7 +378,7 @@ void Manager::drawMenu()
       ImGui::Separator();
 
       if (ImGui::MenuItem("PM4 Capture Next Frame", nullptr, false, true)) {
-         gx2::internal::captureNextFrame();
+         cafe::gx2::internal::captureNextFrame();
       }
 
       ImGui::Separator();
@@ -389,20 +390,20 @@ void Manager::drawMenu()
       auto pm4Enable = false;
       auto pm4Status = false;
 
-      switch (gx2::internal::captureState()) {
-      case gx2::internal::CaptureState::Disabled:
+      switch (cafe::gx2::internal::captureState()) {
+      case cafe::gx2::internal::CaptureState::Disabled:
          pm4Status = false;
          pm4Enable = true;
          break;
-      case gx2::internal::CaptureState::Enabled:
+      case cafe::gx2::internal::CaptureState::Enabled:
          pm4Status = true;
          pm4Enable = true;
          break;
-      case gx2::internal::CaptureState::WaitEndNextFrame:
+      case cafe::gx2::internal::CaptureState::WaitEndNextFrame:
          pm4Status = true;
          pm4Enable = false;
          break;
-      case gx2::internal::CaptureState::WaitStartNextFrame:
+      case cafe::gx2::internal::CaptureState::WaitStartNextFrame:
          pm4Status = true;
          pm4Enable = false;
          break;
@@ -410,9 +411,9 @@ void Manager::drawMenu()
 
       if (ImGui::MenuItem("PM4 Trace Enabled", nullptr, pm4Status, pm4Enable)) {
          if (!pm4Status) {
-            gx2::internal::captureStartAtNextSwap();
+            cafe::gx2::internal::captureStartAtNextSwap();
          } else {
-            gx2::internal::captureStopAtNextSwap();
+            cafe::gx2::internal::captureStopAtNextSwap();
          }
       }
 
@@ -618,14 +619,14 @@ Manager::checkHotKey(const HotKey &hk)
    return ImGui::IsKeyPressed(static_cast<int>(hk.key), hk.repeat);
 }
 
-coreinit::OSThread *
+virt_ptr<cafe::coreinit::OSThread>
 Manager::getActiveThread()
 {
    return mActiveThread;
 }
 
 void
-Manager::setActiveThread(coreinit::OSThread *thread)
+Manager::setActiveThread(virt_ptr<cafe::coreinit::OSThread> thread)
 {
    mActiveThread = thread;
    gotoStackAddress(getThreadStack(mDebugger, thread));

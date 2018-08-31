@@ -8,20 +8,25 @@
 #include "filesystem/filesystem.h"
 #include "input/input.h"
 #include "ios/ios.h"
-#include "kernel/kernel.h"
 #include "kernel/kernel_filesystem.h"
-#include "kernel/kernel_hlefunction.h"
 #include "libcpu/cpu.h"
 #include "libcpu/mem.h"
-#include "modules/coreinit/coreinit_fs.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/swkbd/swkbd_core.h"
 
+#include "cafe/kernel/cafe_kernel.h"
+#include "cafe/kernel/cafe_kernel_process.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
+#include "cafe/libraries/swkbd/swkbd_keyboard.h"
+
+#include <chrono>
 #include <common/platform.h>
 #include <common/platform_dir.h>
 #include <condition_variable>
 #include <fmt/format.h>
 #include <mutex>
+#include <spdlog/async.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_sinks.h>
 
 #ifdef PLATFORM_WINDOWS
 #include <WinSock2.h>
@@ -39,35 +44,38 @@ sClipboardTextSetCallbackFn = nullptr;
 class LogFormatter : public spdlog::formatter
 {
 public:
-   void format(spdlog::details::log_msg& msg) override
+   virtual void format(const spdlog::details::log_msg &msg, fmt::memory_buffer &dest) override
    {
       auto tm_time = spdlog::details::os::localtime(spdlog::log_clock::to_time_t(msg.time));
       auto duration = msg.time.time_since_epoch();
       auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
 
-      msg.formatted << '[' << fmt::pad(static_cast<unsigned int>(tm_time.tm_min), 2, '0') << ':'
-         << fmt::pad(static_cast<unsigned int>(tm_time.tm_sec), 2, '0') << '.'
-         << fmt::pad(static_cast<unsigned int>(micros), 6, '0');
-
-      msg.formatted << ' ';
-      msg.formatted << spdlog::level::to_str(msg.level);
-      msg.formatted << ':';
+      fmt::format_to(dest, "[{:02}:{:02}:{:02}.{:06} {}:",
+                     tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, micros,
+                     spdlog::level::to_c_str(msg.level));
 
       auto core = cpu::this_core::state();
       if (core) {
-         auto thread = coreinit::internal::getCurrentThread();
+         auto thread = cafe::coreinit::internal::getCurrentThread();
          if (thread) {
-            msg.formatted.write("w{:01X}{:02X}", core->id, static_cast<uint16_t>(thread->id));
+            fmt::format_to(dest, "p{:01X} t{:02X}", core->id, thread->id);
          } else {
-            msg.formatted.write("w{:01X}{:02X}", core->id, 0xFF);
+            fmt::format_to(dest, "p{:01X} t{:02X}", core->id, 0xFF);
          }
+      } else if (msg.logger_name) {
+         fmt::format_to(dest, "{}", *msg.logger_name);
       } else {
-         msg.formatted << msg.thread_id;
+         fmt::format_to(dest, "h{}", msg.thread_id);
       }
 
-      msg.formatted << "] ";
-      msg.formatted << fmt::StringRef(msg.raw.data(), msg.raw.size());
-      msg.formatted.write(spdlog::details::os::eol, spdlog::details::os::eol_size);
+      fmt::format_to(dest, "] {}{}",
+                     std::string_view { msg.raw.data(), msg.raw.size() },
+                     spdlog::details::os::default_eol);
+   }
+
+   virtual std::unique_ptr<formatter> clone() const override
+   {
+      return std::make_unique<LogFormatter>();
    }
 };
 
@@ -90,36 +98,40 @@ void
 initialiseLogging(const std::string &filename)
 {
    std::vector<spdlog::sink_ptr> sinks;
-   auto logLevel = spdlog::level::info;
 
    if (decaf::config::log::to_stdout) {
-      sinks.push_back(spdlog::sinks::stdout_sink_mt::instance());
+      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
    }
 
    if (decaf::config::log::to_file) {
-      auto path = fs::HostPath { decaf::config::log::directory }.join(filename);
-      sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(path.path(), 23, 59));
+      auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+      auto time = std::localtime(&now);
+
+      auto logFilename =
+         fmt::format("{}_{}-{:02}-{:02}_{:02}-{:02}-{:02}.txt",
+                     filename,
+                     time->tm_year + 1900, time->tm_mon, time->tm_mday,
+                     time->tm_hour, time->tm_min, time->tm_sec);
+
+      auto path = fs::HostPath { decaf::config::log::directory }.join(logFilename);
+      sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.path()));
    }
 
-   for (int i = spdlog::level::trace; i <= spdlog::level::off; i++) {
-      auto level = static_cast<spdlog::level::level_enum>(i);
-
-      if (spdlog::level::to_str(level) == decaf::config::log::level) {
-         logLevel = level;
-         break;
-      }
-   }
-
-   gLog = spdlog::create("decaf", begin(sinks), end(sinks));
-   gLog->set_level(logLevel);
-   gLog->set_formatter(std::make_shared<LogFormatter>());
+   auto logLevel = spdlog::level::from_str(decaf::config::log::level);
 
    if (decaf::config::log::async) {
-      spdlog::set_async_mode(1024);
+      spdlog::init_thread_pool(1024, 1);
+      gLog = std::make_shared<spdlog::async_logger>("decaf",
+                                                    begin(sinks), end(sinks),
+                                                    spdlog::thread_pool());
    } else {
-      spdlog::set_sync_mode();
+      gLog = std::make_shared<spdlog::logger>("decaf",
+                                              begin(sinks), end(sinks));
       gLog->flush_on(spdlog::level::trace);
    }
+
+   gLog->set_level(logLevel);
+   gLog->set_formatter(std::make_unique<LogFormatter>());
 }
 
 bool
@@ -189,7 +201,7 @@ initialise(const std::string &gamePath)
          filesystem->mountHostFolder("/vol/content", decaf::config::system::content_path, fs::Permissions::Read);
       }
 
-      kernel::setExecutableFilename(rpxPath.filename());
+      cafe::kernel::setExecutableFilename(rpxPath.filename());
    } else {
       gLog->error("Could not find valid application at {}", path.path());
       return false;
@@ -230,19 +242,22 @@ start()
 bool
 hasExited()
 {
-   return kernel::hasExited();
+   return cafe::kernel::hasExited();
 }
 
 int
 waitForExit()
 {
-   // Wait for CPU to finish
-   cpu::join();
+   // Wait for IOS to finish
+   ios::join();
+
+   // Wait for PPC to finish
+   cafe::kernel::join();
 
    // Make sure we clean up
    decaf::shutdown();
 
-   return kernel::getExitCode();
+   return cafe::kernel::getProcessExitCode(cafe::kernel::RamPartitionId::MainApplication);
 }
 
 void
@@ -251,14 +266,11 @@ shutdown()
    // Shut down debugger
    debugger::shutdown();
 
-   // Shut down CPU
-   cpu::halt();
+   // Wait for IOS to finish
+   ios::join();
 
-   // Wait for CPU to finish
-   cpu::join();
-
-   // Stop any kernel threads
-   kernel::shutdown();
+   // Wait for PPC to finish
+   cafe::kernel::join();
 
    // Stop graphics driver
    auto graphicsDriver = getGraphicsDriver();
@@ -305,7 +317,7 @@ injectKeyInput(input::KeyboardKey key,
                input::KeyboardAction action)
 {
    if (!debugger::ui::onKeyAction(key, action)) {
-      nn::swkbd::internal::injectKeyInput(key, action);
+      cafe::swkbd::internal::injectKeyInput(key, action);
    }
 }
 
@@ -313,7 +325,7 @@ void
 injectTextInput(const char *text)
 {
    if (!debugger::ui::onText(text)) {
-      nn::swkbd::internal::injectTextInput(text);
+      cafe::swkbd::internal::injectTextInput(text);
    }
 }
 

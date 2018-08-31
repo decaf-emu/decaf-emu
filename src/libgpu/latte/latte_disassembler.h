@@ -16,7 +16,7 @@ namespace disassembler
 struct State
 {
    gsl::span<const uint8_t> binary;
-   fmt::MemoryWriter out;
+   fmt::memory_buffer out;
    std::string indent;
    size_t cfPC;
    size_t groupPC;
@@ -44,19 +44,19 @@ char
 disassembleDestMask(SQ_SEL sel);
 
 void
-disassembleCondition(fmt::MemoryWriter &out, const ControlFlowInst &inst);
+disassembleCondition(fmt::memory_buffer &out, const ControlFlowInst &inst);
 
 void
-disassembleCfTEX(fmt::MemoryWriter &out, const ControlFlowInst &inst);
+disassembleCfTEX(fmt::memory_buffer &out, const ControlFlowInst &inst);
 
 void
-disassembleCfVTX(fmt::MemoryWriter &out, const ControlFlowInst &inst);
+disassembleCfVTX(fmt::memory_buffer &out, const ControlFlowInst &inst);
 
 void
-disassembleCF(fmt::MemoryWriter &out, const ControlFlowInst &inst);
+disassembleCF(fmt::memory_buffer &out, const ControlFlowInst &inst);
 
 void
-disassembleAluInstruction(fmt::MemoryWriter &out,
+disassembleAluInstruction(fmt::memory_buffer &out,
                           const ControlFlowInst &parent,
                           const AluInst &inst,
                           size_t groupPC,
@@ -65,21 +65,21 @@ disassembleAluInstruction(fmt::MemoryWriter &out,
                           int namePad = 0);
 
 void
-disassembleCfALUInstruction(fmt::MemoryWriter &out,
+disassembleCfALUInstruction(fmt::memory_buffer &out,
                             const ControlFlowInst &inst);
 
 void
-disassembleExpInstruction(fmt::MemoryWriter &out,
+disassembleExpInstruction(fmt::memory_buffer &out,
                           const ControlFlowInst &inst);
 
 void
-disassembleVtxInstruction(fmt::MemoryWriter &out,
+disassembleVtxInstruction(fmt::memory_buffer &out,
                           const latte::ControlFlowInst &parent,
                           const VertexFetchInst &tex,
                           int namePad = 0);
 
 void
-disassembleTexInstruction(fmt::MemoryWriter &out,
+disassembleTexInstruction(fmt::memory_buffer &out,
                           const latte::ControlFlowInst &parent,
                           const TextureFetchInst &tex,
                           int namePad = 0);

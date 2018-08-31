@@ -1,8 +1,8 @@
 #include "debugger_ui_window_threads.h"
 #include "debugger_threadutils.h"
-#include "modules/coreinit/coreinit_enum_string.h"
-#include "modules/coreinit/coreinit_scheduler.h"
-#include "modules/coreinit/coreinit_thread.h"
+#include "cafe/libraries/coreinit/coreinit_enum_string.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
+#include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <cinttypes>
 #include <fmt/format.h>
@@ -27,21 +27,21 @@ ThreadsWindow::update()
 {
    mThreadsCache.clear();
 
-   coreinit::internal::lockScheduler();
-   auto core0Thread = coreinit::internal::getCoreRunningThread(0);
-   auto core1Thread = coreinit::internal::getCoreRunningThread(1);
-   auto core2Thread = coreinit::internal::getCoreRunningThread(2);
-   auto firstThread = coreinit::internal::getFirstActiveThread();
+   cafe::coreinit::internal::lockScheduler();
+   auto core0Thread = cafe::coreinit::internal::getCoreRunningThread(0);
+   auto core1Thread = cafe::coreinit::internal::getCoreRunningThread(1);
+   auto core2Thread = cafe::coreinit::internal::getCoreRunningThread(2);
+   auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
    for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
       auto info = ThreadInfo { };
       info.thread = thread;
       info.id = thread->id;
-      info.name = thread->name ? thread->name.get() : "";
+      info.name = thread->name ? thread->name.getRawPointer() : "";
       info.state = thread->state;
       info.priority = thread->priority;
       info.basePriority = thread->basePriority;
-      info.affinity = thread->attr & coreinit::OSThreadAttributes::AffinityAny;
+      info.affinity = thread->attr & cafe::coreinit::OSThreadAttributes::AffinityAny;
 
       if (thread == core0Thread) {
          info.coreId = 0;
@@ -56,13 +56,13 @@ ThreadsWindow::update()
       info.coreTimeNs = thread->coreTimeConsumedNs;
 
       if (info.coreId != -1) {
-         info.coreTimeNs += coreinit::internal::getCoreThreadRunningTime(info.coreId);
+         info.coreTimeNs += cafe::coreinit::internal::getCoreThreadRunningTime(info.coreId);
       }
 
       mThreadsCache.push_back(info);
    }
 
-   coreinit::internal::unlockScheduler();
+   cafe::coreinit::internal::unlockScheduler();
 }
 
 void
@@ -145,7 +145,7 @@ ThreadsWindow::draw()
       ImGui::NextColumn();
 
       // Thread State
-      ImGui::Text("%s", coreinit::to_string(thread.state).c_str());
+      ImGui::Text("%s", cafe::coreinit::to_string(thread.state).c_str());
       ImGui::NextColumn();
 
       // Priority
@@ -155,11 +155,11 @@ ThreadsWindow::draw()
       // Affinity
       std::string coreAff;
 
-      if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU0) {
+      if (thread.affinity & cafe::coreinit::OSThreadAttributes::AffinityCPU0) {
          coreAff += "0";
       }
 
-      if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU1) {
+      if (thread.affinity & cafe::coreinit::OSThreadAttributes::AffinityCPU1) {
          if (coreAff.size() != 0) {
             coreAff += "|1";
          } else {
@@ -167,7 +167,7 @@ ThreadsWindow::draw()
          }
       }
 
-      if (thread.affinity & coreinit::OSThreadAttributes::AffinityCPU2) {
+      if (thread.affinity & cafe::coreinit::OSThreadAttributes::AffinityCPU2) {
          if (coreAff.size() != 0) {
             coreAff += "|2";
          } else {

@@ -1,8 +1,9 @@
 #include "platform.h"
 #include "platform_dir.h"
-#include "platform_winapi_string.h"
 
 #ifdef PLATFORM_WINDOWS
+#include "platform_winapi_string.h"
+
 #include <direct.h>
 #include <errno.h>
 #include <io.h>

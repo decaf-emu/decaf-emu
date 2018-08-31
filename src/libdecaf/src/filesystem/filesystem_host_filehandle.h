@@ -40,12 +40,12 @@ struct HostFileHandle : public IFileHandle
    truncate() override;
 
    virtual size_t
-   read(uint8_t *data,
+   read(void *data,
         size_t size,
         size_t count) override;
 
    virtual size_t
-   write(const uint8_t *data,
+   write(const void *data,
          size_t size,
          size_t count) override;
 

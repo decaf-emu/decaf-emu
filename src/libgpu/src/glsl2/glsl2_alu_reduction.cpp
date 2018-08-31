@@ -67,11 +67,12 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
     || group[3].word0.SRC1_SEL() != zSel
     || group[3].word0.SRC1_REL() != zRel
     || group[3].word0.SRC1_CHAN() != zChan) {
-      fmt::MemoryWriter xSource, ySource, zSource;
+      fmt::memory_buffer xSource, ySource, zSource;
       insertSource0(state, xSource, cf, xInsn);
       insertSource0(state, ySource, cf, yInsn);
       insertSource0(state, zSource, cf, zInsn);
-      throw translate_exception(fmt::format("Invalid CUBE syntax: inconsistent operands (detected x={}, y={}, z={})", xSource.str(), ySource.str(), zSource.str()));
+      throw translate_exception(fmt::format("Invalid CUBE syntax: inconsistent operands (detected x={}, y={}, z={})",
+                                            to_string(xSource), to_string(ySource), to_string(zSource)));
    }
 
    // Concise pseudocode:
@@ -86,15 +87,15 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
    // output: out.yx = face.st
 
    insertLineStart(state);
-   state.out << "if (abs(";
+   fmt::format_to(state.out, "if (abs(");
    insertSource0(state, state.out, cf, xInsn);
-   state.out << ") >= abs(";
+   fmt::format_to(state.out, ") >= abs(");
    insertSource0(state, state.out, cf, yInsn);
-   state.out << ") && abs(";
+   fmt::format_to(state.out, ") && abs(");
    insertSource0(state, state.out, cf, xInsn);
-   state.out << ") >= abs(";
+   fmt::format_to(state.out, ") >= abs(");
    insertSource0(state, state.out, cf, zInsn);
-   state.out << ")) {";
+   fmt::format_to(state.out, ")) {{");
    insertLineEnd(state);
    increaseIndent(state);
 
@@ -102,79 +103,79 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::X);
       insertSource0(state, state.out, cf, yInsn);
-      state.out << ";";
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::Y);
-      state.out << "sign(";
+      fmt::format_to(state.out, "sign(");
       insertSource0(state, state.out, cf, xInsn);
-      state.out << ") * ";
+      fmt::format_to(state.out, ") * ");
       insertSource0(state, state.out, cf, zInsn);
-      state.out << ";";
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::Z);
       insertSource0(state, state.out, cf, xInsn);
-      state.out << " * 2.0;";
+      fmt::format_to(state.out, " * 2.0;");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::W);
       insertSource0(state, state.out, cf, xInsn);
-      state.out << " >= 0 ? 0 : 1;";
+      fmt::format_to(state.out, " >= 0 ? 0 : 1;");
       insertLineEnd(state);
    }
 
    decreaseIndent(state);
    insertLineStart(state);
-   state.out << "} else if (abs(";
+   fmt::format_to(state.out, "}} else if (abs(");
    insertSource0(state, state.out, cf, yInsn);
-   state.out << ") >= abs(";
+   fmt::format_to(state.out, ") >= abs(");
    insertSource0(state, state.out, cf, xInsn);
-   state.out << ") && abs(";
+   fmt::format_to(state.out, ") && abs(");
    insertSource0(state, state.out, cf, yInsn);
-   state.out << ") >= abs(";
+   fmt::format_to(state.out, ") >= abs(");
    insertSource0(state, state.out, cf, zInsn);
-   state.out << ")) {";
+   fmt::format_to(state.out, ")) {{");
    insertLineEnd(state);
    increaseIndent(state);
 
    {
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::X);
-      state.out << "sign(";
+      fmt::format_to(state.out, "sign(");
       insertSource0(state, state.out, cf, yInsn);
-      state.out << ") * -(";
+      fmt::format_to(state.out, ") * -(");
       insertSource0(state, state.out, cf, xInsn);
-      state.out << ");";
+      fmt::format_to(state.out, ");");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::Y);
-      state.out << "-(";
+      fmt::format_to(state.out, "-(");
       insertSource0(state, state.out, cf, zInsn);
-      state.out << ");";
+      fmt::format_to(state.out, ");");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::Z);
       insertSource0(state, state.out, cf, yInsn);
-      state.out << " * 2.0;";
+      fmt::format_to(state.out, " * 2.0;");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::W);
-      state.out << "(";
+      fmt::format_to(state.out, "(");
       insertSource0(state, state.out, cf, yInsn);
-      state.out << " >= 0) ? 2 : 3;";
+      fmt::format_to(state.out, " >= 0) ? 2 : 3;");
       insertLineEnd(state);
    }
 
    decreaseIndent(state);
    insertLineStart(state);
-   state.out << "} else {";
+   fmt::format_to(state.out, "}} else {{");
    insertLineEnd(state);
    increaseIndent(state);
 
@@ -182,50 +183,50 @@ CUBE(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::X);
       insertSource0(state, state.out, cf, yInsn);
-      state.out << ";";
+      fmt::format_to(state.out, ";");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::Y);
-      state.out << "sign(";
+      fmt::format_to(state.out, "sign(");
       insertSource0(state, state.out, cf, zInsn);
-      state.out << ") * -(";
+      fmt::format_to(state.out, ") * -(");
       insertSource0(state, state.out, cf, xInsn);
-      state.out << ");";
+      fmt::format_to(state.out, ");");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::Z);
       insertSource0(state, state.out, cf, zInsn);
-      state.out << " * 2.0;";
+      fmt::format_to(state.out, " * 2.0;");
       insertLineEnd(state);
 
       insertLineStart(state);
       insertPreviousValueUpdate(state.out, SQ_CHAN::W);
-      state.out << "(";
+      fmt::format_to(state.out, "(");
       insertSource0(state, state.out, cf, zInsn);
-      state.out << " >= 0) ? 4 : 5;";
+      fmt::format_to(state.out, " >= 0) ? 4 : 5;");
       insertLineEnd(state);
    }
 
    decreaseIndent(state);
    insertLineStart(state);
-   state.out << "}";
+   fmt::format_to(state.out, "}}");
    insertLineEnd(state);
 
    // If any instructions write to a register, copy appropriately from PVo
    for (auto i = 0u; i < group.size(); ++i) {
       if (group[i].op2.WRITE_MASK()) {
-         fmt::MemoryWriter postWrite;
+         fmt::memory_buffer postWrite;
 
          auto gpr = group[i].word1.DST_GPR();
-         postWrite << "R[" << gpr << "].";
+         fmt::format_to(postWrite, "R[{}].", gpr);
          insertChannel(postWrite, group[i].word1.DST_CHAN());
-         postWrite << " = PVo.";
+         fmt::format_to(postWrite, " = PVo.");
          insertChannel(postWrite, static_cast<latte::SQ_CHAN>(i));
-         postWrite << ";";
+         fmt::format_to(postWrite, ";");
 
-         state.postGroupWrites.push_back(postWrite.str());
+         state.postGroupWrites.push_back(to_string(postWrite));
       }
    }
 }
@@ -252,17 +253,17 @@ DOT4(State &state, const ControlFlowInst &cf, const std::array<AluInst, 4> &grou
       insertPreviousValueUpdate(state.out, SQ_CHAN::X);
    }
 
-   state.out << "dot(";
+   fmt::format_to(state.out, "dot(");
    insertSource0Vector(state, state.out, cf, group[0], group[1], group[2], group[3]);
-   state.out << ", ";
+   fmt::format_to(state.out, ", ");
    insertSource1Vector(state, state.out, cf, group[0], group[1], group[2], group[3]);
-   state.out << ")";
+   fmt::format_to(state.out, ")");
 
    if (hasWriteMask) {
       insertDestEnd(state, cf, group[writeUnit]);
    }
 
-   state.out << ';';
+   fmt::format_to(state.out, ";");
    insertLineEnd(state);
 }
 

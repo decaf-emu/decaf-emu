@@ -38,7 +38,7 @@ bool branch_trace = false;
 
 std::vector<std::string> kernel_trace_filters =
 {
-   "+*",
+   "+.*",
    "-coreinit::__ghsLock",
    "-coreinit::__ghsUnlock",
    "-coreinit::__gh_errno_ptr",
@@ -69,6 +69,7 @@ std::string content_path = {};
 std::string resources_path = "resources";
 double time_scale = 1.0;
 std::vector<std::string> lle_modules;
+bool dump_hle_rpl = false;
 
 } // namespace system
 

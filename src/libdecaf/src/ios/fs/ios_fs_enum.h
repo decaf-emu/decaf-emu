@@ -101,6 +101,7 @@ ENUM_BEG(FSAReadFlag, uint32_t)
 ENUM_END(FSAReadFlag)
 
 ENUM_BEG(FSAStatFlags, uint32_t)
+   ENUM_VALUE(Quota,                   0x40000000)
    ENUM_VALUE(Directory,               0x80000000)
 ENUM_END(FSAStatFlags)
 

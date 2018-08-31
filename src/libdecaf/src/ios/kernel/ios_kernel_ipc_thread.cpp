@@ -4,7 +4,7 @@
 #include "ios_kernel_process.h"
 #include "ios_kernel_resourcemanager.h"
 #include "ios/ios_stackobject.h"
-#include "kernel/kernel_ipc.h"
+#include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <common/atomicqueue.h>
 #include <common/log.h>
@@ -103,7 +103,6 @@ ipcThreadEntry(phys_ptr<void> context)
             error = Error::Invalid;
          } else {
             auto pid = static_cast<ProcessId>(request->clientPid + ProcessId::COSKERNEL);
-            auto error = Error::OK;
 
             switch (request->command) {
             case Command::Open:
@@ -181,7 +180,7 @@ ipcThreadEntry(phys_ptr<void> context)
             // Reply with error!
             request->command = Command::Reply;
             request->reply = error;
-            ::kernel::ipcDriverKernelSubmitReply(request);
+            cafe::kernel::ipcDriverKernelSubmitReply(request);
             continue;
          }
       }
@@ -215,6 +214,8 @@ startIpcThread()
    }
 
    sData->threadId = static_cast<kernel::ThreadId>(error);
+   internal::setThreadName(sData->threadId, "IpcThread");
+
    return kernel::IOS_StartThread(sData->threadId);
 }
 

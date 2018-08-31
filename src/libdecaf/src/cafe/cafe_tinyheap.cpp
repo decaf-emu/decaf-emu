@@ -1,5 +1,6 @@
 #include "cafe_tinyheap.h"
 #include <common/align.h>
+#include <common/log.h>
 #include <cstring>
 #include <libcpu/be2_struct.h>
 
@@ -32,6 +33,28 @@ getTrackingBlocks(virt_ptr<TinyHeap> heap)
    return virt_cast<TrackingBlock *>(virt_cast<virt_addr>(heap) + sizeof(TinyHeap));
 }
 
+static void
+dumpHeap(virt_ptr<TinyHeap> heap)
+{
+   auto idx = heap->firstBlockIdx;
+   auto blocks = getTrackingBlocks(heap);
+
+   gLog->debug("Heap at {} - {}", heap->dataHeapStart, heap->dataHeapEnd);
+   while (idx != -1) {
+      auto addr = virt_cast<virt_addr>(blocks[idx].data);
+      auto size = blocks[idx].size;
+      if (size < 0) {
+         size = -size;
+      }
+
+      gLog->debug("block {} - {} {}",
+                  addr,
+                  addr + size,
+                  blocks[idx].size < 0 ? "free" : "alloc");
+      idx = blocks[idx].nextBlockIdx;
+   }
+}
+
 static int32_t
 findBlockIdxContaining(virt_ptr<TinyHeap> heap,
                        virt_ptr<void> ptr)
@@ -52,7 +75,7 @@ findBlockIdxContaining(virt_ptr<TinyHeap> heap,
          auto blockStart = virt_cast<uint8_t *>(block.data);
          auto blockEnd = blockStart + (block.size >= 0 ? +block.size : -block.size);
 
-         if (ptr >= blockStart && ptr <= blockEnd) {
+         if (ptr >= blockStart && ptr < blockEnd) {
             return idx;
          }
 
@@ -66,7 +89,7 @@ findBlockIdxContaining(virt_ptr<TinyHeap> heap,
          auto blockStart = virt_cast<uint8_t *>(block.data);
          auto blockEnd = blockStart + (block.size >= 0 ? +block.size : -block.size);
 
-         if (ptr >= blockStart && ptr <= blockEnd) {
+         if (ptr >= blockStart && ptr < blockEnd) {
             return idx;
          }
 
@@ -142,7 +165,7 @@ allocInBlock(virt_ptr<TinyHeap> heap,
       }
 
       block.data = virt_cast<uint8_t *>(block.data) + beforeOffset;
-      block.size -= -beforeOffset; // block.size is negative because unallocated
+      block.size += beforeOffset; // += because block.size is negative at this point
       block.prevBlockIdx = holeBeforeIdx;
    }
 
@@ -152,8 +175,8 @@ allocInBlock(virt_ptr<TinyHeap> heap,
    // Check if we need to create a hole after the allocation
    if (block.size != size) {
       auto &afterBlock = trackingBlocks[holeAfterIdx];
-      afterBlock.data = virt_cast<uint8_t *>(block.data) + block.size;
-      afterBlock.size = block.size - size;
+      afterBlock.data = virt_cast<uint8_t *>(block.data) + size;
+      afterBlock.size = -(block.size - size);
       afterBlock.prevBlockIdx = blockIdx;
       afterBlock.nextBlockIdx = block.nextBlockIdx;
 
@@ -175,30 +198,30 @@ freeBlock(virt_ptr<TinyHeap> heap,
           int32_t blockIdx)
 {
    auto trackingBlocks = getTrackingBlocks(heap);
-   auto &block = trackingBlocks[blockIdx];
+   auto block = virt_addrof(trackingBlocks[blockIdx]);
 
    // Mark the block as unallocated
-   block.size = -block.size;
+   block->size = -block->size;
 
-   if (block.prevBlockIdx >= 0) {
-      auto prevBlockIdx = block.prevBlockIdx;
-      auto &prevBlock = trackingBlocks[prevBlockIdx];
-      if (prevBlock.size < 0) {
+   if (block->prevBlockIdx >= 0) {
+      auto prevBlockIdx = block->prevBlockIdx;
+      auto prevBlock = virt_addrof(trackingBlocks[prevBlockIdx]);
+      if (prevBlock->size < 0) {
          // Merge block into prevBlock!
-         prevBlock.size += block.size;
-         prevBlock.nextBlockIdx = block.nextBlockIdx;
+         prevBlock->size += block->size;
+         prevBlock->nextBlockIdx = block->nextBlockIdx;
 
-         if (prevBlock.nextBlockIdx >= 0) {
-            trackingBlocks[prevBlock.nextBlockIdx].prevBlockIdx = prevBlockIdx;
+         if (prevBlock->nextBlockIdx >= 0) {
+            trackingBlocks[prevBlock->nextBlockIdx].prevBlockIdx = prevBlockIdx;
          } else {
             heap->lastBlockIdx = prevBlockIdx;
          }
 
          // Insert block at start of free list
-         block.data = nullptr;
-         block.size = 0;
-         block.prevBlockIdx = -1;
-         block.nextBlockIdx = heap->nextFreeBlockIdx;
+         block->data = nullptr;
+         block->size = 0;
+         block->prevBlockIdx = -1;
+         block->nextBlockIdx = heap->nextFreeBlockIdx;
 
          if (heap->nextFreeBlockIdx >= 0) {
             trackingBlocks[heap->nextFreeBlockIdx].prevBlockIdx = blockIdx;
@@ -212,25 +235,25 @@ freeBlock(virt_ptr<TinyHeap> heap,
       }
    }
 
-   if (block.nextBlockIdx >= 0) {
-      auto nextBlockIdx = block.nextBlockIdx;
-      auto &nextBlock = trackingBlocks[nextBlockIdx];
-      if (nextBlock.size < 0) {
+   if (block->nextBlockIdx >= 0) {
+      auto nextBlockIdx = block->nextBlockIdx;
+      auto nextBlock = virt_addrof(trackingBlocks[nextBlockIdx]);
+      if (nextBlock->size < 0) {
          // Merge nextBlock into block!
-         block.size += nextBlock.size;
-         block.nextBlockIdx = nextBlockIdx;
+         block->size += nextBlock->size;
+         block->nextBlockIdx = nextBlock->nextBlockIdx;
 
-         if (block.nextBlockIdx >= 0) {
-            trackingBlocks[block.nextBlockIdx].prevBlockIdx = blockIdx;
+         if (block->nextBlockIdx >= 0) {
+            trackingBlocks[block->nextBlockIdx].prevBlockIdx = blockIdx;
          } else {
             heap->lastBlockIdx = blockIdx;
          }
 
          // Insert nextBlock at start of free list
-         nextBlock.data = nullptr;
-         nextBlock.size = 0;
-         nextBlock.prevBlockIdx = -1;
-         nextBlock.nextBlockIdx = heap->nextFreeBlockIdx;
+         nextBlock->data = nullptr;
+         nextBlock->size = 0;
+         nextBlock->prevBlockIdx = -1;
+         nextBlock->nextBlockIdx = heap->nextFreeBlockIdx;
 
          if (heap->nextFreeBlockIdx >= 0) {
             trackingBlocks[heap->nextFreeBlockIdx].prevBlockIdx = nextBlockIdx;
@@ -247,6 +270,7 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
                int32_t align,
                virt_ptr<void> *outPtr)
 {
+   auto fromFront = true;
    if (!heap) {
       return TinyHeapError::InvalidHeap;
    }
@@ -259,7 +283,12 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
    auto trackingBlocks = getTrackingBlocks(heap);
    auto blockIdx = -1;
 
-   if (align >= 0) {
+   if (align < 0) {
+      align = -align;
+      fromFront = false;
+   }
+
+   if (fromFront) {
       // Search forwards from first
       auto idx = heap->firstBlockIdx;
 
@@ -281,7 +310,6 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
    } else {
       // Search backwards from last
       auto idx = heap->lastBlockIdx;
-      align = -align;
 
       while (idx >= 0) {
          auto &block = trackingBlocks[idx];
@@ -308,7 +336,10 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
    auto &block = trackingBlocks[blockIdx];
    auto blockStart = virt_cast<virt_addr>(block.data);
    auto blockEnd = blockStart - block.size;
-   auto alignedStart = align_up(blockStart, align);
+
+   auto alignedStart = fromFront ?
+      align_up(blockStart, align) :
+      align_down(blockEnd - size, align);
    auto beforeOffset = static_cast<int32_t>(alignedStart - blockStart);
    auto afterOffset = blockEnd - (alignedStart + size);
 
@@ -341,7 +372,9 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
       heap->nextFreeBlockIdx = trackingBlocks[holeAfterIdx].nextBlockIdx;
    }
 
-   return allocInBlock(heap, blockIdx, beforeOffset, holeBeforeIdx, holeAfterIdx, size);
+   auto error = allocInBlock(heap, blockIdx, beforeOffset, holeBeforeIdx, holeAfterIdx, size);
+   *outPtr = block.data;
+   return error;
 }
 
 TinyHeapError
@@ -374,8 +407,14 @@ TinyHeap_AllocAt(virt_ptr<TinyHeap> heap,
       return TinyHeapError::AllocAtFailed;
    }
 
-   auto beforeOffset = virt_cast<uint8_t *>(ptr) - virt_cast<uint8_t *>(block.data);
-   auto afterOffset = (virt_cast<uint8_t *>(ptr) + -block.size) - (virt_cast<uint8_t *>(block.data) + size);
+   auto beforeOffset =
+      static_cast<int32_t>(virt_cast<uint8_t *>(ptr) -
+                           virt_cast<uint8_t *>(block.data));
+
+   auto afterOffset =
+      (virt_cast<uint8_t *>(ptr) + -block.size) -
+      (virt_cast<uint8_t *>(block.data) + size);
+
    if (afterOffset < 0) {
       // Not enough space
       return TinyHeapError::AllocAtFailed;
@@ -410,7 +449,8 @@ TinyHeap_AllocAt(virt_ptr<TinyHeap> heap,
       heap->nextFreeBlockIdx = trackingBlocks[holeAfterIdx].nextBlockIdx;
    }
 
-   return allocInBlock(heap, blockIdx, beforeOffset, holeBeforeIdx, holeAfterIdx, size);
+   auto error = allocInBlock(heap, blockIdx, beforeOffset, holeBeforeIdx, holeAfterIdx, size);
+   return error;
 }
 
 void
@@ -463,6 +503,136 @@ TinyHeap_GetLargestFree(virt_ptr<TinyHeap> heap)
    }
 
    return largestFree;
+}
+
+virt_ptr<void>
+TinyHeap_Enum(virt_ptr<TinyHeap> heap,
+              virt_ptr<void> prevBlockPtr,
+              virt_ptr<void> *outPtr,
+              uint32_t *outSize)
+{
+   if (!heap) {
+      return nullptr;
+   }
+
+   auto blocks = getTrackingBlocks(heap);
+   auto block = blocks + heap->firstBlockIdx;
+
+   if (prevBlockPtr) {
+      // Iterate through list to make sure prevBlockPtr is actually in it.
+      auto prevBlock = virt_cast<TrackingBlock *>(prevBlockPtr);
+      while (block != prevBlock) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      // Now we're at prevBlock, let's go to the next block
+      if (block->nextBlockIdx == -1) {
+         goto error;
+      }
+
+      block = blocks + block->nextBlockIdx;
+   }
+
+   if (block) {
+      // Find the next allocated block
+      while (block->size <= 0) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      if (outPtr) {
+         *outPtr = block->data;
+      }
+
+      if (outSize) {
+         *outSize = static_cast<uint32_t>(block->size);
+      }
+
+      return block;
+   }
+
+error:
+   if (outPtr) {
+      *outPtr = nullptr;
+   }
+
+   if (outSize) {
+      *outSize = 0;
+   }
+
+   return nullptr;
+}
+
+virt_ptr<void>
+TinyHeap_EnumFree(virt_ptr<TinyHeap> heap,
+                  virt_ptr<void> prevBlockPtr,
+                  virt_ptr<void> *outPtr,
+                  uint32_t *outSize)
+{
+   if (!heap) {
+      return nullptr;
+   }
+
+   auto blocks = getTrackingBlocks(heap);
+   auto block = blocks + heap->firstBlockIdx;
+
+   if (prevBlockPtr) {
+      // Iterate through list to make sure prevBlockPtr is actually in it.
+      auto prevBlock = virt_cast<TrackingBlock *>(prevBlockPtr);
+      while (block != prevBlock) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      // Now we're at prevBlock, let's go to the next block
+      if (block->nextBlockIdx == -1) {
+         goto error;
+      }
+
+      block = blocks + block->nextBlockIdx;
+   }
+
+   if (block) {
+      // Find the next free block
+      while (block->size >= 0) {
+         if (block->nextBlockIdx == -1) {
+            goto error;
+         }
+
+         block = blocks + block->nextBlockIdx;
+      }
+
+      if (outPtr) {
+         *outPtr = block->data;
+      }
+
+      if (outSize) {
+         *outSize = static_cast<uint32_t>(-block->size);
+      }
+
+      return block;
+   }
+
+error:
+   if (outPtr) {
+      *outPtr = nullptr;
+   }
+
+   if (outSize) {
+      *outSize = 0;
+   }
+
+   return nullptr;
 }
 
 } // namespace cafe::tinyheap

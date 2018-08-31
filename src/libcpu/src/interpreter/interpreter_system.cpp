@@ -275,11 +275,7 @@ mtsrin(cpu::Core *state, Instruction instr)
 static void
 kc(cpu::Core *state, Instruction instr)
 {
-   auto id = instr.kcn;
-   auto kc = cpu::getKernelCall(id);
-   decaf_assert(kc, fmt::format("Encountered invalid Kernel Call ID {}", id));
-
-   kc->func(state, kc->user_data);
+   cpu::onKernelCall(state, instr.kcn);
 }
 
 // Trap Word

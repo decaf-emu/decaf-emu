@@ -22,7 +22,7 @@ namespace ringbuffer
 
 void
 submit(void *context,
-       cpu::VirtualPointer<uint32_t> buffer,
+       uint32_t *buffer,
        uint32_t numWords);
 
 } // namespace ringbuffer

@@ -20,7 +20,7 @@ public:
 private:
    cpu::CoreRegs mCurrentRegisters;
    cpu::CoreRegs mPreviousRegisters;
-   coreinit::OSThread *mLastActiveThread;
+   virt_ptr<cafe::coreinit::OSThread> mLastActiveThread;
    unsigned mLastResumeCount;
 };
 

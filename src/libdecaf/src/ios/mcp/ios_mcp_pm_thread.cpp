@@ -271,6 +271,8 @@ startPmThread()
    }
 
    sData->threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sData->threadId, "PmThread");
+
    return IOS_StartThread(sData->threadId);
 }
 

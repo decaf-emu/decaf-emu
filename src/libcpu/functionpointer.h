@@ -14,6 +14,8 @@ template<typename AddressType, typename FunctionType>
 class FunctionPointer
 {
 public:
+   using function_type = FunctionType;
+
    FunctionPointer() = default;
    FunctionPointer(const FunctionPointer &other) = default;
    FunctionPointer(FunctionPointer &&other) = default;
@@ -36,6 +38,13 @@ public:
    explicit operator bool() const
    {
       return static_cast<bool>(mAddress);
+   }
+
+   FunctionPointer &
+   operator =(std::nullptr_t)
+   {
+      mAddress = AddressType { 0 };
+      return *this;
    }
 
    constexpr bool operator ==(std::nullptr_t) const
@@ -103,3 +112,26 @@ struct func_pointer_cast_impl<AddressType, FunctionPointer<AddressType, Function
 };
 
 } // namespace cpu
+
+// Custom formatters for fmtlib
+namespace fmt
+{
+
+template<typename AddressType, typename FunctionType>
+struct formatter<cpu::FunctionPointer<AddressType, FunctionType>>
+{
+   template<typename ParseContext>
+   constexpr auto parse(ParseContext &ctx)
+   {
+      return ctx.begin();
+   }
+
+   template<typename FormatContext>
+   auto format(const cpu::FunctionPointer<AddressType, FunctionType> &ptr, FormatContext &ctx)
+   {
+      auto addr = cpu::func_pointer_cast_impl<AddressType, FunctionType>::cast(ptr);
+      return format_to(ctx.begin(), "{:08X}", static_cast<uint32_t>(addr));
+   }
+};
+
+} // namespace fmt
