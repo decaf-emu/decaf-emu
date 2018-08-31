@@ -104,13 +104,13 @@ LCAlloc(uint32_t size)
       auto index = 0u;
 
       // Find a free spot in the allocBitMask which can fit bitMask
-      do {
-         if (lcState->allocBitMask & (bitMask << index)) {
-            continue;
+      while (lcState->allocBitMask & (bitMask << index)) {
+         if (index >= 32 - numBlocks) {
+            break;
          }
 
          index++;
-      } while (index < 32 - numBlocks);
+      }
 
       if (index < 32 - numBlocks) {
          // Do the allocation!
