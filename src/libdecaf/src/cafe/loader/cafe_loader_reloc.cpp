@@ -176,7 +176,7 @@ LiCpu_RelocAdd(bool isRpx,
 
          ins.simm = static_cast<uint16_t>(value);
          *virt_cast<uint32_t *>(target) = ins.value;
-         break;
+         return 0;
       }
       case rpl::R_PPC_EMB_RELSDA:
       case rpl::R_PPC_DIAB_SDA21_LO:
@@ -185,8 +185,9 @@ LiCpu_RelocAdd(bool isRpx,
       case rpl::R_PPC_DIAB_RELSDA_LO:
       case rpl::R_PPC_DIAB_RELSDA_HI:
       case rpl::R_PPC_DIAB_RELSDA_HA:
+         // TODO: Implement these relocation types
          decaf_abort(fmt::format("Unimplemented relocation type {}", relaType));
-         break;
+         return -470038;
       }
    }
 
