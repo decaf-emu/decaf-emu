@@ -127,6 +127,12 @@ validateAddressRange(virt_addr address,
 phys_addr
 effectiveToPhysical(virt_addr address);
 
+virt_addr
+physicalToEffectiveCached(phys_addr address);
+
+virt_addr
+physicalToEffectiveUncached(phys_addr address);
+
 namespace internal
 {
 

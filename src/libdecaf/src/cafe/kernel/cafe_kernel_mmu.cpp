@@ -23,6 +23,7 @@ enum MemoryMapFlags
    MapUnknown10 = 1 << 10,
    MapUnknown11 = 1 << 11,
    MapMainApplication = 1 << 13,
+   MapUncached = 1 << 30,
 };
 
 // This must be kept in order with enum class VirtualMemoryRegion
@@ -312,17 +313,18 @@ effectiveToPhysical(virt_addr address)
    auto addressSpace = internal::getActiveAddressSpace();
    auto view = addressSpace->perCoreView[cpu::this_core::id()];
 
-   // Check our kernel mappings
+   // Lookup in our mappings
    for (auto i = 0u; i < view->numMappings; ++i) {
-      if (address >= view->mappings[i].vaddr &&
-          address <= (view->mappings[i].vaddr + view->mappings[i].size)) {
-
-         return view->mappings[i].paddr +
-            static_cast<uint32_t>(address - view->mappings[i].vaddr);
+      if (address < view->mappings[i].vaddr ||
+          address >= view->mappings[i].vaddr + view->mappings[i].size) {
+         continue;
       }
+
+      return view->mappings[i].paddr +
+         static_cast<uint32_t>(address - view->mappings[i].vaddr);
    }
 
-   // Check user mappings
+   // Lookup in user mappings
    if (checkInVirtualMapRange(addressSpace, address, 0)) {
       auto result = phys_addr { 0 };
       if (cpu::virtualToPhysicalAddress(address, result)) {
@@ -331,6 +333,48 @@ effectiveToPhysical(virt_addr address)
    }
 
    return phys_addr { 0 };
+}
+
+virt_addr
+physicalToEffectiveCached(phys_addr address)
+{
+   auto addressSpace = internal::getActiveAddressSpace();
+   auto view = addressSpace->perCoreView[cpu::this_core::id()];
+
+   // Lookup in our mappings only for memory regions NOT marked as uncached
+   for (auto i = 0u; i < view->numMappings; ++i) {
+      if ((view->mappings[i].flags & MapUncached) ||
+          address < view->mappings[i].paddr ||
+          address >= view->mappings[i].paddr + view->mappings[i].size) {
+         continue;
+      }
+
+      return view->mappings[i].vaddr +
+         static_cast<uint32_t>(address - view->mappings[i].paddr);
+   }
+
+   return virt_addr { 0 };
+}
+
+virt_addr
+physicalToEffectiveUncached(phys_addr address)
+{
+   auto addressSpace = internal::getActiveAddressSpace();
+   auto view = addressSpace->perCoreView[cpu::this_core::id()];
+
+   // Lookup in our mappings only for memory regions marked as uncached
+   for (auto i = 0u; i < view->numMappings; ++i) {
+      if (!(view->mappings[i].flags & MapUncached) ||
+          address < view->mappings[i].paddr ||
+          address >= view->mappings[i].paddr + view->mappings[i].size) {
+         continue;
+      }
+
+      return view->mappings[i].vaddr +
+         static_cast<uint32_t>(address - view->mappings[i].paddr);
+   }
+
+   return virt_addr { 0 };
 }
 
 namespace internal

@@ -68,6 +68,9 @@ void
 initialiseDeviceTable()
 {
    sDeviceData->deviceTable.fill(virt_addr { 0 });
+
+   // Registers are disabled for now.
+#if 0
    sDeviceData->deviceTable[OSDeviceID::VI] = OSPhysicalToEffectiveUncached(phys_addr { 0x0C1E0000 });
    sDeviceData->deviceTable[OSDeviceID::DSP] = OSPhysicalToEffectiveUncached(phys_addr { 0x0C280000 });
    sDeviceData->deviceTable[OSDeviceID::GFXSP] = OSPhysicalToEffectiveUncached(phys_addr { 0x0C200000 });
@@ -77,6 +80,7 @@ initialiseDeviceTable()
    sDeviceData->deviceTable[OSDeviceID::LEGACY_AI_I2S3] = OSPhysicalToEffectiveUncached(phys_addr { 0x0D006C00 });
    sDeviceData->deviceTable[OSDeviceID::LEGACY_AI_I2S5] = OSPhysicalToEffectiveUncached(phys_addr { 0x0D006E00 });
    sDeviceData->deviceTable[OSDeviceID::LEGACY_EXI] = OSPhysicalToEffectiveUncached(phys_addr { 0x0D006800 });
+#endif
 }
 
 } // namespace internal

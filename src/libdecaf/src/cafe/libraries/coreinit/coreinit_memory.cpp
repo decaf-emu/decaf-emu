@@ -346,8 +346,7 @@ OSEffectiveToPhysical(virt_addr address)
 virt_addr
 OSPhysicalToEffectiveCached(phys_addr address)
 {
-   // TODO: OSPhysicalToEffectiveCached
-   return virt_addr { 0 };
+   return kernel::physicalToEffectiveCached(address);
 }
 
 
@@ -357,8 +356,7 @@ OSPhysicalToEffectiveCached(phys_addr address)
 virt_addr
 OSPhysicalToEffectiveUncached(phys_addr address)
 {
-   // TODO: OSPhysicalToEffectiveUncached
-   return virt_addr { 0 };
+   return kernel::physicalToEffectiveUncached(address);
 }
 
 
