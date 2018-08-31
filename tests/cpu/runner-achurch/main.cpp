@@ -71,9 +71,9 @@ runTests()
             mem::read<uint32_t>(failResultsAddr + (i * 4 * 8) + 20)
          };
 
-         espresso::Disassembly disasembly;
-         espresso::disassemble(failedInstr, disasembly, failedAddr);
-         gLog->warn(" {:08x} = {:08x} failed - {}", failedAddr, failedInstr, disasembly.text);
+         espresso::Disassembly disassembly;
+         espresso::disassemble(failedInstr, disassembly, failedAddr);
+         gLog->warn(" {:08x} = {:08x} failed - {}", failedAddr, failedInstr, disassembly.text);
          gLog->warn("   {:08x} {:08x} {:08x} {:08x}", failedAux[0], failedAux[1], failedAux[2], failedAux[3]);
       }
 
