@@ -16,7 +16,7 @@ namespace ios::fs
 #pragma pack(push, 1)
 
 
-constexpr auto FSAPathLength = 640u;
+constexpr auto FSAPathLength = 639u;
 constexpr auto FSAModeLength = 16u;
 constexpr auto FSAFileNameLength = 256u;
 constexpr auto FSAVolumeLabelLength = 128u;

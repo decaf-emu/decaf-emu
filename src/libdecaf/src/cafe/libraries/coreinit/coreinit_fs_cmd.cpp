@@ -661,7 +661,7 @@ FSGetCwdAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (bytes < FSMaxPathLength) {
+   if (bytes < FSMaxPathLength - 1) {
       internal::fsClientHandleFatalError(clientBody, FSAStatus::InvalidParam);
       return FSStatus::FatalError;
    }

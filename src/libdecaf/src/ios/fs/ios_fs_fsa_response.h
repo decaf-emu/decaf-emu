@@ -18,7 +18,7 @@ namespace ios::fs
 
 struct FSAResponseGetCwd
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
 };
 CHECK_OFFSET(FSAResponseGetCwd, 0x0, path);
 CHECK_SIZE(FSAResponseGetCwd, 0x280);

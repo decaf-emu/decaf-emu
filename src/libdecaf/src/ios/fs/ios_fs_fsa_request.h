@@ -22,7 +22,7 @@ namespace ios::fs
  */
 struct FSARequestChangeDir
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
 };
 CHECK_OFFSET(FSARequestChangeDir, 0x0, path);
 CHECK_SIZE(FSARequestChangeDir, 0x280);
@@ -33,7 +33,7 @@ CHECK_SIZE(FSARequestChangeDir, 0x280);
  */
 struct FSARequestChangeMode
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
    be2_val<uint32_t> mode1;
    be2_val<uint32_t> mode2;
 };
@@ -81,7 +81,7 @@ CHECK_SIZE(FSARequestFlushFile, 0x4);
  */
 struct FSARequestFlushQuota
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
 };
 CHECK_OFFSET(FSARequestFlushQuota, 0x0, path);
 CHECK_SIZE(FSARequestFlushQuota, 0x280);
@@ -92,7 +92,7 @@ CHECK_SIZE(FSARequestFlushQuota, 0x280);
  */
 struct FSARequestGetInfoByQuery
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
    be2_val<FSAQueryInfoType> type;
 };
 CHECK_OFFSET(FSARequestGetInfoByQuery, 0x0, path);
@@ -127,7 +127,7 @@ CHECK_SIZE(FSARequestIsEof, 0x4);
  */
 struct FSARequestMakeDir
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
    be2_val<uint32_t> permission;
 };
 CHECK_OFFSET(FSARequestMakeDir, 0x0, path);
@@ -139,7 +139,7 @@ CHECK_SIZE(FSARequestMakeDir, 0x284);
  */
 struct FSARequestMakeQuota
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
    be2_val<uint32_t> mode;
    be2_val<uint64_t> size;
 };
@@ -154,8 +154,8 @@ CHECK_SIZE(FSARequestMakeQuota, 0x28C);
  */
 struct FSARequestMount
 {
-   be2_array<char, FSAPathLength> path;
-   be2_array<char, FSAPathLength> target;
+   be2_array<char, FSAPathLength + 1> path;
+   be2_array<char, FSAPathLength + 1> target;
    be2_val<uint32_t> unk0x500;
    be2_virt_ptr<void> unkBuf;
    be2_val<uint32_t> unkBufLen;
@@ -173,7 +173,7 @@ CHECK_SIZE(FSARequestMount, 0x50C);
  */
 struct FSARequestOpenDir
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
 };
 CHECK_OFFSET(FSARequestOpenDir, 0x0, path);
 CHECK_SIZE(FSARequestOpenDir, 0x280);
@@ -184,7 +184,7 @@ CHECK_SIZE(FSARequestOpenDir, 0x280);
  */
 struct FSARequestOpenFile
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
    be2_array<char, FSAModeLength> mode;
    be2_val<uint32_t> unk0x290;
    be2_val<uint32_t> unk0x294;
@@ -236,7 +236,7 @@ CHECK_SIZE(FSARequestReadFile, 0x18);
  */
 struct FSARequestRemove
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
 };
 CHECK_OFFSET(FSARequestRemove, 0x0, path);
 CHECK_SIZE(FSARequestRemove, 0x280);
@@ -247,8 +247,8 @@ CHECK_SIZE(FSARequestRemove, 0x280);
  */
 struct FSARequestRename
 {
-   be2_array<char, FSAPathLength> oldPath;
-   be2_array<char, FSAPathLength> newPath;
+   be2_array<char, FSAPathLength + 1> oldPath;
+   be2_array<char, FSAPathLength + 1> newPath;
 };
 CHECK_OFFSET(FSARequestRename, 0x0, oldPath);
 CHECK_OFFSET(FSARequestRename, 0x280, newPath);
@@ -306,7 +306,7 @@ CHECK_SIZE(FSARequestTruncateFile, 0x4);
  */
 struct FSARequestUnmount
 {
-   be2_array<char, FSAPathLength> path;
+   be2_array<char, FSAPathLength + 1> path;
    be2_val<uint32_t> unk0x280;
 };
 CHECK_OFFSET(FSARequestUnmount, 0x0, path);

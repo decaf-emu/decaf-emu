@@ -187,7 +187,7 @@ struct FSMountSource
    be2_val<FSMountSourceType> sourceType;
 
    //! Mount path
-   be2_array<char, FSMaxPathLength - 1> path;
+   be2_array<char, FSMaxPathLength> path;
 };
 CHECK_OFFSET(FSMountSource, 0x0, sourceType);
 CHECK_OFFSET(FSMountSource, 0x4, path);
