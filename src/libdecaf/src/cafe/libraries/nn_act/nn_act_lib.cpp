@@ -15,6 +15,18 @@ DeviceHash[] = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6 };
 static const uint8_t
 SystemId[] = { 0xBA, 0xAD, 0xF0, 0x0D, 0xDE, 0xAD, 0xBA, 0xBE };
 
+static uint8_t
+MiiAuthorId[] = { 8, 7, 6, 5, 4, 3, 2, 1 };
+
+static uint8_t
+MiiId[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+static std::u16string
+MiiCreatorsName = u"decafC";
+
+static std::u16string
+MiiName = u"decafM";
+
 struct Account
 {
    uint8_t slot;
@@ -244,7 +256,7 @@ static uint16_t
 calculateMiiCRC(virt_ptr<const uint8_t> bytes,
                 uint32_t length)
 {
-   uint32_t crc = 0x0000;
+   auto crc = uint32_t { 0 };
 
    for (auto byteIndex = 0u; byteIndex < length; byteIndex++) {
       for (auto bitIndex = 7; bitIndex >= 0; bitIndex--) {
@@ -270,31 +282,24 @@ GetMiiEx(virt_ptr<FFLStoreData> data,
 
    // Set our Mii Data!
    std::memset(data.getRawPointer(), 0, sizeof(FFLStoreData));
-   std::copy(std::begin(DeviceHash), std::end(DeviceHash), std::begin(data->deviceHash));
-   std::copy(std::begin(SystemId), std::end(SystemId), std::begin(data->systemId));
-   data->miiId = 0x10000000;
 
-   // Unknown values, but game will assert if not set
-   data->importantUnk1 = 0x6D60E291;
-   data->importantUnk2 = 0x16271329;
+   std::memcpy(data->author_id, MiiAuthorId, 8);
+   std::memcpy(data->mii_id, MiiId, 10);
+
+   // Apparently these cannot be set to 0
+   data->birth_month = 1;
+   data->eyebrow_height = 3;
 
    // Mii Name
-   data->name[0] = 'd';
-   data->name[1] = 'e';
-   data->name[2] = 'c';
-   data->name[3] = 'a';
-   data->name[4] = 'f';
-   data->name[5] = 'M';
+   std::copy(MiiName.begin(), MiiName.end(), data->mii_name);
+   data->mii_name[MiiName.size()] = char16_t { 0 };
 
    // Creator's Name
-   data->creator[0] = 'd';
-   data->creator[1] = 'e';
-   data->creator[2] = 'c';
-   data->creator[3] = 'a';
-   data->creator[4] = 'f';
-   data->creator[5] = 'C';
+   std::copy(MiiCreatorsName.begin(), MiiCreatorsName.end(), data->creator_name);
+   data->creator_name[MiiCreatorsName.size()] = char16_t { 0 };
 
-   data->crc = calculateMiiCRC(virt_cast<uint8_t *>(data), sizeof(FFLStoreData) - 2);
+   data->checksum = calculateMiiCRC(virt_cast<uint8_t *>(data),
+                                    sizeof(FFLStoreData) - 2);
    return nn::Result::Success;
 }
 
@@ -312,11 +317,9 @@ GetMiiNameEx(virt_ptr<char16_t> name,
       return AccountNotFound;
    }
 
-   auto miiName = u"decafM";
-   size_t i = 0;
-   do {
-      name[i] = miiName[i];
-   } while (miiName[i++] != 0);
+   std::copy(MiiName.begin(), MiiName.end(), name.getRawPointer());
+   name[MiiName.size()] = char16_t { 0 };
+
    return nn::Result::Success;
 }
 
