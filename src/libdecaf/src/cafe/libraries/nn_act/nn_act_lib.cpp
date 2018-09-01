@@ -19,7 +19,7 @@ static uint8_t
 MiiAuthorId[] = { 8, 7, 6, 5, 4, 3, 2, 1 };
 
 static uint8_t
-MiiId[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+MiiId[] = { 100, 90, 80, 70, 60, 50, 40, 30, 20, 10 };
 
 static std::u16string
 MiiCreatorsName = u"decafC";
@@ -283,20 +283,66 @@ GetMiiEx(virt_ptr<FFLStoreData> data,
    // Set our Mii Data!
    std::memset(data.getRawPointer(), 0, sizeof(FFLStoreData));
 
+   data->birth_platform = 3;
+   data->font_region = 0;
+   data->region_move = 0;
+   data->copyable = 0;
+   data->mii_version = 0x40;
    std::memcpy(data->author_id, MiiAuthorId, 8);
    std::memcpy(data->mii_id, MiiId, 10);
+   data->color = 4;
+   data->birth_day = 10;
+   data->birth_month = 8;
+   data->gender = 0;
+   std::memcpy(data->mii_name, MiiName.c_str(), MiiName.size() * 2 + 2);
+   data->size = 109;
+   data->fatness = 65;
+   data->blush_type = 0;
+   data->face_style = 0;
+   data->face_color = 0;
+   data->face_type = 6;
+   data->local_only = 1;
+   data->hair_mirrored = 15;
+   data->hair_color = 1;
+   data->hair_type = 1;
+   data->eye_thickness = 6;
+   data->eye_scale = 0;
+   data->eye_color = 2;
+   data->eye_type = 26;
+   data->eye_height = 68;
+   data->eye_distance = 0;
+   data->eye_rotation = 3;
+   data->eyebrow_thickness = 12;
+   data->eyebrow_scale = 2;
+   data->eyebrow_color = 4;
+   data->eyebrow_type = 6;
+   data->eyebrow_height = 69;
+   data->eyebrow_distance = 8;
+   data->eyebrow_rotation = 2;
+   data->nose_height = 1;
+   data->nose_scale = 5;
+   data->nose_type = 2;
+   data->mouth_thickness = 6;
+   data->mouth_scale = 2;
+   data->mouth_color = 0;
+   data->mouth_type = 26;
+   data->unk_0x40 = 13;
+   data->mustache_type = 0;
+   data->mouth_height = 0;
+   data->mustache_height = 8;
+   data->mustache_scale = 4;
+   data->beard_color = 2;
+   data->beard_type = 1;
+   data->glass_height = 0;
+   data->glass_scale = 0;
+   data->glass_color = 1;
+   data->glass_type = 5;
+   data->mole_ypos = 4;
+   data->mole_xpos = 1;
+   data->mole_scale = 10;
+   data->mole_enabled = 0;
 
-   // Apparently these cannot be set to 0
-   data->birth_month = 1;
-   data->eyebrow_height = 3;
-
-   // Mii Name
-   std::copy(MiiName.begin(), MiiName.end(), data->mii_name);
-   data->mii_name[MiiName.size()] = char16_t { 0 };
-
-   // Creator's Name
-   std::copy(MiiCreatorsName.begin(), MiiCreatorsName.end(), data->creator_name);
-   data->creator_name[MiiCreatorsName.size()] = char16_t { 0 };
+   std::memcpy(data->creator_name, MiiCreatorsName.c_str(), MiiCreatorsName.size() * 2 + 2);
 
    data->checksum = calculateMiiCRC(virt_cast<uint8_t *>(data),
                                     sizeof(FFLStoreData) - 2);
