@@ -229,7 +229,7 @@ public:
 
       auto directoryPath = mPath;
       directoryPath.push_back(PathSeparator);
-      return Path(directoryPath);
+      return GenericPath(directoryPath);
    }
 
    Iterator
