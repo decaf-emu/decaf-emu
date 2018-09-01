@@ -671,8 +671,8 @@ fsCmdBlockFinishReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
    // Queue a new read request
    auto &readRequest = blockBody->fsaShimBuffer.request.readFile;
    readRequest.buffer = readRequest.buffer + bytesRead;
-   readRequest.size = readState.readSize;
-   readRequest.count = 1u;
+   readRequest.size = 1u;
+   readRequest.count = readState.readSize;
 
    if (readRequest.readFlags & FSReadFlag::ReadWithPos) {
       readRequest.pos += bytesRead;
