@@ -413,7 +413,7 @@ internalAcquire2(virt_ptr<const char> modulePath,
 
    if (auto error = internalAcquire(modulePath, rplData, numEntryModules,
                                     entryModules, isCheckLoaded)) {
-      if (entryModules) {
+      if (*entryModules) {
          rplSysHeapFree("ENTRYPOINTS_ARRAY", entryModules, isCheckLoaded);
       }
 
@@ -1747,9 +1747,11 @@ internalAcquire(virt_ptr<const char> name,
                while (!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
                                         rplData->handle,
                                         handleRefCount) && *handleRefCount);
+
+               internalPurge(rplData);
             }
 
-            internalPurge(rplData);
+            rplSysHeapFree("RPL_DATA", rplData, sizeof(RPL_DATA));
          }
       });
 
@@ -1763,8 +1765,6 @@ internalAcquire(virt_ptr<const char> name,
       if (isAppDebugLevelUnknown3()) {
          dumpSystemHeap();
       }
-
-      rplSysHeapFree("RPL_DATA", rplData, sizeof(RPL_DATA));
 
       setFatalErrorInfo2(
          sDynLoadData->rpxData->userFileInfo->titleLocation,
