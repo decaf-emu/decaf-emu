@@ -211,7 +211,7 @@ FSADevice::removeHandle(int32_t index,
 FSAStatus
 FSADevice::changeDir(phys_ptr<FSARequestChangeDir> request)
 {
-   mWorkingPath = translatePath(phys_addrof(request->path));
+   mWorkingPath = translatePath(phys_addrof(request->path)).asDirectoryPath();
    return FSAStatus::OK;
 }
 

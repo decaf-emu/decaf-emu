@@ -216,6 +216,22 @@ public:
       return true;
    }
 
+   GenericPath
+   asDirectoryPath() const
+   {
+      if (mPath.length() == 0) {
+         return *this;
+      }
+
+      if (mPath[mPath.size() - 1] == PathSeparator) {
+         return *this;
+      }
+
+      auto directoryPath = mPath;
+      directoryPath.push_back(PathSeparator);
+      return Path(directoryPath);
+   }
+
    Iterator
    begin() const
    {
