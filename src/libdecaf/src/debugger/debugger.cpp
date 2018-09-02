@@ -1,8 +1,8 @@
 #include "debugger.h"
 #include "debugger_controller.h"
 #include "debugger_server_gdb.h"
-#include "debugger_ui.h"
-#include "debugger_ui_manager.h"
+#include "ui/debugger_ui.h"
+#include "ui/debugger_ui_manager.h"
 #include "decaf.h"
 
 #include <imgui.h>

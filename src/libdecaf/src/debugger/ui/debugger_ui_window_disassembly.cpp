@@ -1,7 +1,7 @@
 #include "decaf_input.h"
-#include "debugger_analysis.h"
-#include "debugger_branchcalc.h"
-#include "debugger_threadutils.h"
+#include "debugger/debugger_analysis.h"
+#include "debugger/debugger_branchcalc.h"
+#include "debugger/debugger_threadutils.h"
 #include "debugger_ui_window_disassembly.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 

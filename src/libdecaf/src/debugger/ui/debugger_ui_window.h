@@ -1,6 +1,6 @@
 #pragma once
-#include "debugger_interface.h"
-#include "debugger_ui_state.h"
+#include "debugger/debugger_interface.h"
+#include "debugger/debugger_state.h"
 
 #include <string>
 

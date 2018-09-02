@@ -1,6 +1,6 @@
 #ifdef DECAF_GL
 
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "debugger_ui_opengl.h"
 
 #include <imgui.h>

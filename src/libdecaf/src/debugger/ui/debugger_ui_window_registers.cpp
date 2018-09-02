@@ -1,5 +1,5 @@
 #include "debugger_ui_window_registers.h"
-#include "debugger_threadutils.h"
+#include "debugger/debugger_threadutils.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 
 #include <fmt/format.h>

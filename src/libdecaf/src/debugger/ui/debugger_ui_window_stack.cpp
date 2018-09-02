@@ -1,5 +1,5 @@
 #include "debugger_ui_window_stack.h"
-#include "debugger_threadutils.h"
+#include "debugger/debugger_threadutils.h"
 
 #include "cafe/kernel/cafe_kernel_loader.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"

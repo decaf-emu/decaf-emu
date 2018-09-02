@@ -9,9 +9,6 @@ struct OSThread;
 namespace debugger
 {
 
-namespace ui
-{
-
 class StateTracker
 {
 public:
@@ -34,7 +31,5 @@ public:
    virtual void
    gotoStackAddress(uint32_t address) = 0;
 };
-
-} // namespace ui
 
 } // namespace debugger

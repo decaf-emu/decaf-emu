@@ -1,9 +1,9 @@
 #pragma once
 #include "decaf_input.h"
-#include "debugger.h"
-#include "debugger_interface.h"
+#include "debugger/debugger.h"
+#include "debugger/debugger_interface.h"
+#include "debugger/debugger_state.h"
 #include "debugger_ui_window.h"
-#include "debugger_ui_state.h"
 
 #include <array>
 #include <map>

@@ -4,7 +4,7 @@
 #include "decaf_input.h"
 #include "decaf_sound.h"
 #include "debugger/debugger.h"
-#include "debugger/debugger_ui.h"
+#include "debugger/ui/debugger_ui.h"
 #include "filesystem/filesystem.h"
 #include "input/input.h"
 #include "ios/ios.h"

@@ -52,9 +52,9 @@ enum BreakpointType
 };
 
 GdbServer::GdbServer(DebuggerInterface *debugger,
-                     ui::StateTracker *uiState) :
+                     StateTracker *state) :
    mDebugger(debugger),
-   mUiState(uiState)
+   mState(state)
 {
 }
 
@@ -195,7 +195,7 @@ void GdbServer::handleQuery(const std::string &command)
    } else if (begins_with(command, "qsThreadInfo")) {
       sendCommand("l");
    } else if (begins_with(command, "qC")) {
-      auto activeThread = mUiState->getActiveThread();
+      auto activeThread = mState->getActiveThread();
 
       if (activeThread) {
          auto reply = fmt::format("QC{:04X}", activeThread->id);
@@ -277,7 +277,7 @@ void GdbServer::handleGetHaltReason(const std::string &command)
 void GdbServer::handleReadRegister(const std::string &command)
 {
    auto id = std::stoul(command.substr(1), 0, 16);
-   auto activeThread = mUiState->getActiveThread();
+   auto activeThread = mState->getActiveThread();
    auto coreRegs = getThreadCoreContext(mDebugger, activeThread);
    auto value = uint32_t { 0 };
 
@@ -336,7 +336,7 @@ void GdbServer::handleReadRegister(const std::string &command)
 void GdbServer::handleReadGeneralRegisters(const std::string &command)
 {
    fmt::memory_buffer reply;
-   auto activeThread = mUiState->getActiveThread();
+   auto activeThread = mState->getActiveThread();
    auto coreRegs = getThreadCoreContext(mDebugger, activeThread);
 
    for (auto i = 0; i < 32; ++i) {
@@ -419,7 +419,7 @@ void GdbServer::handleSetActiveThread(const std::string &command)
    if (id == -1 || id == 0) {
       sendCommand("OK");
    } else if (thread) {
-      mUiState->setActiveThread(thread);
+      mState->setActiveThread(thread);
       sendCommand("OK");
    } else {
       sendCommand("E22");
@@ -446,7 +446,7 @@ void GdbServer::handleVCont(const std::vector<std::string> &command)
          auto threadId = std::stoi(split[1], 0, 16);
          coreId = getCoreIdByThreadId(threadId);
       } else {
-         coreId = getThreadCoreId(mUiState->getActiveThread());
+         coreId = getThreadCoreId(mState->getActiveThread());
       }
 
       if (coreId != ThreadNotRunning) {
@@ -664,7 +664,7 @@ void GdbServer::process()
    }
 
    // Check if we have become paused.
-   auto activeThreadNia = getThreadNia(mDebugger, mUiState->getActiveThread());
+   auto activeThreadNia = getThreadNia(mDebugger, mState->getActiveThread());
 
    if (mWasPaused && activeThreadNia != 0 && mLastNia != activeThreadNia) {
       mWasPaused = false;

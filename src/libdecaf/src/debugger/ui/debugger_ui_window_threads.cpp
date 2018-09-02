@@ -1,5 +1,5 @@
 #include "debugger_ui_window_threads.h"
-#include "debugger_threadutils.h"
+#include "debugger/debugger_threadutils.h"
 #include "cafe/libraries/coreinit/coreinit_enum_string.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"

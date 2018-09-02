@@ -1,7 +1,7 @@
 #pragma once
 #include "debugger_interface.h"
 #include "debugger_server.h"
-#include "debugger_ui_state.h"
+#include "debugger_state.h"
 
 #include <common/platform.h>
 #include <common/platform_socket.h>
@@ -25,7 +25,7 @@ class GdbServer : public DebuggerServer
    };
 
 public:
-   GdbServer(DebuggerInterface *debugger, ui::StateTracker *uiState);
+   GdbServer(DebuggerInterface *debugger, StateTracker *uiState);
    virtual ~GdbServer() = default;
 
    virtual bool start(int port) override;
@@ -59,7 +59,7 @@ private:
    uint32_t mLastNia = 0;
 
    DebuggerInterface *mDebugger = nullptr;
-   ui::StateTracker *mUiState = nullptr;
+   StateTracker *mState = nullptr;
 
    platform::Socket mListenSocket = InvalidSocket;
    platform::Socket mClientSocket = InvalidSocket;

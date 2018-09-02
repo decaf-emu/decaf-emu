@@ -1,4 +1,4 @@
-#include "debugger/debugger_ui_opengl.h"
+#include "debugger/opengl/debugger_ui_opengl.h"
 #include "decaf_debugger.h"
 #include <common/decaf_assert.h>
 
