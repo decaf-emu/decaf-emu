@@ -1,4 +1,6 @@
+#include "decaf_config.h"
 #include "decaf_game.h"
+
 #include "kernel_filesystem.h"
 #include "kernel_gameinfo.h"
 
@@ -341,7 +343,7 @@ loadGameInfo(decaf::GameInfo &info)
       info.meta.common_boss_size = 0u;
       info.meta.account_boss_size = 0u;
       info.meta.olv_accesskey = 1337u;
-      info.meta.region = 1u;
+      info.meta.region = static_cast<unsigned int>(decaf::config::system::region);
    }
 
    return true;

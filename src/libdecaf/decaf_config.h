@@ -80,8 +80,20 @@ extern bool dump_sounds;
 namespace system
 {
 
+// Should match values in ios MCPRegion
+enum class Region
+{
+   Japan       = 0x01,
+   USA         = 0x02,
+   Europe      = 0x04,
+   Unknown8    = 0x08,
+   China       = 0x10,
+   Korea       = 0x20,
+   Taiwan      = 0x40,
+};
+
 //! Emulated system region
-extern int region;
+extern Region region;
 
 //! Path to /vol/storage_mlc01 files
 extern std::string mlc_path;

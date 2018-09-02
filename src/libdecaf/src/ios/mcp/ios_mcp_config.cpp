@@ -3,6 +3,8 @@
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/ios_stackobject.h"
 
+#include "decaf_config.h"
+
 #include <array>
 #include <libcpu/be2_struct.h>
 #include <string_view>
@@ -446,14 +448,49 @@ loadSysProdConfig()
       std::memset(config.getRawPointer(), 0, sizeof(SysProdConfig));
       config->version = 5u;
       config->eeprom_version = uint16_t { 1 };
-      config->game_region = MCPRegion::Europe;
-      config->product_area = MCPRegion::Europe;
-      config->wifi_5ghz_country_code = "EU";
-      config->wifi_5ghz_country_code_revision = uint8_t { 24 };
-      config->ntsc_pal = "PAL";
       config->code_id = "FEM";
       config->serial_id = std::to_string(100000000 | 0xDECAF);
       config->model_number = "WUP-101(03)";
+
+      // This probably varies per region but I do not know the values
+      config->wifi_5ghz_country_code_revision = uint8_t { 24 };
+      config->ntsc_pal = "NTSC";
+
+      using decaf::config::system::Region;
+      switch (decaf::config::system::region) {
+      case Region::Japan:
+         config->game_region = MCPRegion::Japan;
+         config->product_area = MCPRegion::Japan;
+         config->wifi_5ghz_country_code = "JP3";
+         break;
+      case Region::USA:
+         config->game_region = MCPRegion::USA;
+         config->product_area = MCPRegion::USA;
+         config->wifi_5ghz_country_code = "US";
+         break;
+      case Region::China:
+         config->game_region = MCPRegion::China;
+         config->product_area = MCPRegion::China;
+         config->wifi_5ghz_country_code = "CN";
+         break;
+      case Region::Korea:
+         config->game_region = MCPRegion::Korea;
+         config->product_area = MCPRegion::Korea;
+         config->wifi_5ghz_country_code = "KR";
+         break;
+      case Region::Taiwan:
+         config->game_region = MCPRegion::Taiwan;
+         config->product_area = MCPRegion::Taiwan;
+         config->wifi_5ghz_country_code = "TW";
+         break;
+      case Region::Europe:
+      default:
+         config->game_region = MCPRegion::Europe;
+         config->product_area = MCPRegion::Europe;
+         config->wifi_5ghz_country_code = "EU";
+         config->ntsc_pal = "PAL";
+         break;
+      }
 
       // Try save them to file
       deleteConfigItems(items, 1);

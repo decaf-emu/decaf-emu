@@ -61,7 +61,7 @@ bool dump_sounds = false;
 namespace system
 {
 
-int region = 1;
+Region region = Region::Europe;
 std::string mlc_path = "mlc";
 std::string slc_path = "slc";
 std::string sdcard_path = "sdcard";

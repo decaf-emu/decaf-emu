@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#include "decaf_config.h"
 #include "decaf_slc.h"
 
 #include "filesystem/filesystem_host_path.h"
@@ -25,7 +25,7 @@ struct InitialiseUCSysConfig
    uint32_t access = 777;
 };
 
-constexpr InitialiseUCSysConfig
+static InitialiseUCSysConfig
 DefaultCafe[] = {
    { "cafe",                UCDataType::Complex              },
    { "cafe/version",        UCDataType::UnsignedShort, "5"   },
@@ -196,12 +196,53 @@ writeDefaultConfig(const fs::HostPath &path,
                  pugi::encoding_utf8);
 }
 
+static void
+applyRegionSettings()
+{
+   auto language = DefaultCafe[2].defaultValue;
+   auto country = DefaultCafe[3].defaultValue;
+
+   switch (config::system::region) {
+   case  config::system::Region::Japan:
+      language = "0"; // Japanese
+      country = "3"; // Japan
+      break;
+   case  config::system::Region::USA:
+      language = "1"; // English
+      country = "49"; // United States
+      break;
+   case  config::system::Region::Europe:
+      language = "1"; // English
+      country = "110"; // United Kingdom
+      break;
+   case  config::system::Region::China:
+      language = "6"; // Chinese
+      country = "160"; // China
+      break;
+   case  config::system::Region::Korea:
+      language = "7"; // Korean
+      country = "136"; // Best Korea
+      break;
+   case  config::system::Region::Taiwan:
+      language = "11"; // Taiwanese
+      country = "128"; // Taiwan
+      break;
+   }
+
+   DefaultCafe[2].defaultValue = language;
+   DefaultCafe[3].defaultValue = country;
+}
+
 void
 initialiseSlc(std::string_view path)
 {
+
    // Ensure slc/proc/prefs exists
    auto prefsPath = fs::HostPath { path }.join("proc").join("prefs");
    platform::createDirectory(prefsPath.path());
+
+   // Apply decaf region config to XML settings before we write them
+   applyRegionSettings();
 
    // Write some default config settings if they don't already exist
    writeDefaultConfig(prefsPath.join("cafe.xml"),

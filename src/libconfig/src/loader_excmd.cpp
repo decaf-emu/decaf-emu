@@ -1,5 +1,6 @@
 #include "config_excmd.h"
 
+#include <common/strutils.h>
 #include <excmd.h>
 #include <libcpu/cpu_config.h>
 #include <libdecaf/decaf_config.h>
@@ -198,12 +199,18 @@ loadFromExcmd(excmd::option_state &options)
    if (options.has("region")) {
       auto region = options.get<std::string>("region");
 
-      if (region.compare("JAP") == 0) {
-         decaf::config::system::region = 1;
-      } else if (region.compare("USA") == 0) {
-         decaf::config::system::region = 2;
-      } else if (region.compare("EUR") == 0) {
-         decaf::config::system::region = 4;
+      if (iequals(region, "japan") == 0) {
+         decaf::config::system::region = decaf::config::system::Region::Japan;
+      } else if (iequals(region, "usa") == 0) {
+         decaf::config::system::region = decaf::config::system::Region::USA;
+      } else if (iequals(region, "europe") == 0) {
+         decaf::config::system::region = decaf::config::system::Region::Europe;
+      } else if (iequals(region, "china") == 0) {
+         decaf::config::system::region = decaf::config::system::Region::China;
+      } else if (iequals(region, "korea") == 0) {
+         decaf::config::system::region = decaf::config::system::Region::Korea;
+      } else if (iequals(region, "taiwan") == 0) {
+         decaf::config::system::region = decaf::config::system::Region::Taiwan;
       }
    }
 

@@ -156,7 +156,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config)
       system = cpptoml::make_table();
    }
 
-   system->insert("region", decaf::config::system::region);
+   system->insert("region", static_cast<int>(decaf::config::system::region));
    system->insert("mlc_path", decaf::config::system::mlc_path);
    system->insert("resources_path", decaf::config::system::resources_path);
    system->insert("sdcard_path", decaf::config::system::sdcard_path);
