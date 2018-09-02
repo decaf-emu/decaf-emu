@@ -112,7 +112,8 @@ LCAlloc(uint32_t size)
          index++;
       }
 
-      if (index < 32 - numBlocks) {
+      if ((index < 32 - numBlocks) ||
+          (index == 0 && numBlocks == 32)) {
          // Do the allocation!
          auto mask = bitMask << index;
          auto size = numBlocks * LCBlockSize;
