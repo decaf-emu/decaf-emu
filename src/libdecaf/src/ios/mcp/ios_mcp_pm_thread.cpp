@@ -515,7 +515,7 @@ initialiseStaticPmThreadData()
          dummyRM,
          //{ ss("/dev/nsec"),            1u, rm(0x180000, ProcessId::NET, 0) },
          //{ ss("/dev/usb/btrm"),        0u, rm(0x1C0000, ProcessId::PAD, 1) },
-         //{ ss("/dev/acpproc"),         1u, rm(0x188000, ProcessId::ACP, 0) },
+         { ss("/dev/acpproc"),         1u, rm(0x188000, ProcessId::ACP, 0) },
          dummyRM,
          //{ ss("/dev/ifuds"),           1u, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
          //{ ss("/dev/udscntrl"),        1u, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
