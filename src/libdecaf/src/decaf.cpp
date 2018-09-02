@@ -2,6 +2,7 @@
 #include "decaf_config.h"
 #include "decaf_graphics.h"
 #include "decaf_input.h"
+#include "decaf_slc.h"
 #include "decaf_sound.h"
 #include "debugger/debugger.h"
 #include "debugger/ui/debugger_ui.h"
@@ -221,6 +222,9 @@ initialise(const std::string &gamePath)
    // Mount slc device
    auto slcPath = fs::HostPath { decaf::config::system::slc_path };
    filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
+
+   // Initialise file system with necessary files
+   internal::initialiseSlc(decaf::config::system::slc_path);
 
    // Setup ios
    kernel::setFileSystem(filesystem.get());
