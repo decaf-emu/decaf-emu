@@ -1,3 +1,5 @@
+#ifdef DECAF_VULKAN
+
 // ImGui Renderer for: Vulkan
 // This needs to be used along with a Platform Binding (e.g. GLFW, SDL, Win32, custom..)
 
@@ -718,3 +720,5 @@ void ImGui_ImplVulkan_Shutdown()
 void ImGui_ImplVulkan_NewFrame()
 {
 }
+
+#endif // DECAF_VULKAN
