@@ -17,14 +17,4 @@ setRetireCallback(RetireCallbackFn callback);
 void
 setSyncRegisterCallback(SyncRegisterCallbackFn callback);
 
-namespace ringbuffer
-{
-
-void
-submit(void *context,
-       uint32_t *buffer,
-       uint32_t numWords);
-
-} // namespace ringbuffer
-
 } // namespace gpu

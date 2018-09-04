@@ -341,7 +341,7 @@ GX2SetVertexUniformReg(uint32_t offset,
    auto buffer = internal::getCommandBuffer(totalSize);
 
    auto writer = latte::pm4::PacketWriter {
-      buffer->buffer,
+      buffer->buffer.getRawPointer(),
       buffer->curSize,
       SetAluConsts::Opcode,
       totalSize
@@ -374,7 +374,7 @@ GX2SetPixelUniformReg(uint32_t offset,
    auto buffer = internal::getCommandBuffer(totalSize);
 
    auto writer = latte::pm4::PacketWriter {
-      buffer->buffer,
+      buffer->buffer.getRawPointer(),
       buffer->curSize,
       SetAluConsts::Opcode,
       totalSize

@@ -68,10 +68,12 @@ void writePM4(const Type &value)
 
    // Serialize the packet to the active command buffer
    auto buffer = getCommandBuffer(totalSize);
-   auto writer = latte::pm4::PacketWriter { buffer->buffer,
-                                            buffer->curSize,
-                                            Type::Opcode,
-                                            totalSize };
+   auto writer = latte::pm4::PacketWriter {
+      buffer->buffer.getRawPointer(),
+      buffer->curSize,
+      Type::Opcode,
+      totalSize
+   };
    ncValue.serialise(writer);
 }
 

@@ -11,7 +11,7 @@ namespace latte::pm4
 class PacketWriter
 {
 public:
-   PacketWriter(virt_ptr<uint32_t> buffer,
+   PacketWriter(uint32_t *buffer,
                 uint32_t &outSize,
                 IT_OPCODE op,
                 uint32_t totalSize) :
@@ -26,7 +26,7 @@ public:
          .opcode(op)
          .size(mTotalSize - 2);
 
-      mBuffer[mCurSize++] = header.value;
+      mBuffer[mCurSize++] = byte_swap(header.value);
    }
 
    ~PacketWriter()
@@ -37,14 +37,14 @@ public:
    // Write one word
    PacketWriter &operator()(uint32_t value)
    {
-      mBuffer[mCurSize++] = value;
+      mBuffer[mCurSize++] = byte_swap(value);
       return *this;
    }
 
    // Write one float
    PacketWriter &operator()(float value)
    {
-      mBuffer[mCurSize++] = bit_cast<uint32_t>(value);
+      mBuffer[mCurSize++] = byte_swap(bit_cast<uint32_t>(value));
       return *this;
    }
 
@@ -53,7 +53,7 @@ public:
    PacketWriter &operator()(Type value)
    {
       static_assert(sizeof(Type) == sizeof(uint32_t), "Invalid type size");
-      mBuffer[mCurSize++] = bit_cast<uint32_t>(value);
+      mBuffer[mCurSize++] = byte_swap(bit_cast<uint32_t>(value));
       return *this;
    }
 
@@ -62,7 +62,7 @@ public:
    PacketWriter &operator()(const gsl::span<Type> &values)
    {
       auto dataSize = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
-      std::memcpy(mBuffer.getRawPointer() + mCurSize, values.data(), dataSize * sizeof(uint32_t));
+      std::memcpy(mBuffer + mCurSize, values.data(), dataSize * sizeof(uint32_t));
 
       // We do the byte_swap here separately as Type may not be uint32_t sized
       for (auto i = 0u; i < dataSize; ++i) {
@@ -77,14 +77,14 @@ public:
    PacketWriter &REG_OFFSET(latte::Register value, latte::Register base)
    {
       auto offset = static_cast<uint32_t>(value) - static_cast<uint32_t>(base);
-      mBuffer[mCurSize++] = offset / 4;
+      mBuffer[mCurSize++] = byte_swap(offset / 4);
       return *this;
    }
 
    // Write one word as a CONST_OFFSET
    PacketWriter &CONST_OFFSET(uint32_t value)
    {
-      mBuffer[mCurSize++] = value;
+      mBuffer[mCurSize++] = byte_swap(value);
       return *this;
    }
 
@@ -92,12 +92,12 @@ public:
    template<typename Type>
    PacketWriter &size(Type value)
    {
-      mBuffer[mCurSize++] = static_cast<uint32_t>(value) - 1;
+      mBuffer[mCurSize++] = byte_swap(static_cast<uint32_t>(value) - 1);
       return *this;
    }
 
 private:
-   virt_ptr<uint32_t> mBuffer;
+   uint32_t *mBuffer;
    uint32_t &mCurSize;
 
    uint32_t mTotalSize;
