@@ -156,15 +156,18 @@ sLoadOneShared(std::string_view filename)
    }
 
    if (fileInfo->loadSize != fileInfo->fileInfoPad) {
+      auto allocPtr = virt_ptr<void> { nullptr };
       auto tinyHeapError = TinyHeap_Alloc(gpSharedReadHeapTracking,
                                           fileInfo->loadSize - fileInfo->fileInfoPad,
                                           -static_cast<int32_t>(fileInfo->loadAlign),
-                                          virt_addrof(rpl->loadBuffer));
+                                          &allocPtr);
       if (tinyHeapError != TinyHeapError::OK) {
          Loader_ReportError("Could not allocate read-only space for shared library \"{}\"",
                             rpl->moduleNameBuffer);
          return static_cast<int32_t>(tinyHeapError);
       }
+
+      rpl->loadBuffer = allocPtr;
    }
 
    Loader_LogEntry(2, 0, 0, "sLoadOneShared  LiSetupOneRPL start.");
@@ -435,13 +438,14 @@ LiInitSharedForAll()
          tinyHeapError = TinyHeap_Alloc(gpSharedReadHeapTracking,
                                         static_cast<int32_t>(compressedBlockSize),
                                         -4,
-                                        virt_addrof(block.intialisationData));
+                                        &outAllocPtr);
          if (tinyHeapError != TinyHeapError::OK) {
             Loader_Panic(0x130015, "***Could not allocate space for compressed shared initialization data.");
             error = static_cast<int32_t>(tinyHeapError);
             break;
          }
 
+         block.intialisationData = outAllocPtr;
          block.compressedSize = static_cast<uint32_t>(compressedBlockSize);
 
          std::memcpy(block.intialisationData.getRawPointer(),
@@ -454,13 +458,14 @@ LiInitSharedForAll()
          tinyHeapError = TinyHeap_Alloc(gpSharedReadHeapTracking,
                                         block.size,
                                         -4,
-                                        virt_addrof(block.intialisationData));
+                                        &outAllocPtr);
          if (tinyHeapError != TinyHeapError::OK) {
             Loader_Panic(0x130015, "***Could not allocate space for compressed shared initialization data.");
             error = static_cast<int32_t>(tinyHeapError);
             break;
          }
 
+         block.intialisationData = outAllocPtr;
          std::memcpy(block.intialisationData.getRawPointer(),
                      block.data.getRawPointer(),
                      block.size);

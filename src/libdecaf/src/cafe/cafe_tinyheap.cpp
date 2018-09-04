@@ -1,4 +1,5 @@
 #include "cafe_tinyheap.h"
+
 #include <common/align.h>
 #include <common/log.h>
 #include <cstring>
@@ -7,10 +8,14 @@
 namespace cafe
 {
 
-struct TrackingBlock
+template<typename AddressType>
+struct TrackingBlockBase
 {
+   template<typename ValueType>
+   using be2_pointer_type = be2_val<cpu::Pointer<ValueType, AddressType>>;
+
    //! Pointer to the data heap for this block
-   be2_virt_ptr<void> data;
+   be2_pointer_type<void> data;
 
    //! Size is negative when unallocated, positive when allocated.
    be2_val<int32_t> size;
@@ -21,27 +26,106 @@ struct TrackingBlock
    //! Index of previous block
    be2_val<int32_t> nextBlockIdx;
 };
-CHECK_OFFSET(TrackingBlock, 0x00, data);
-CHECK_OFFSET(TrackingBlock, 0x04, size);
-CHECK_OFFSET(TrackingBlock, 0x08, prevBlockIdx);
-CHECK_OFFSET(TrackingBlock, 0x0C, nextBlockIdx);
-CHECK_SIZE(TrackingBlock, 0x10);
+CHECK_OFFSET(TrackingBlockBase<virt_addr>, 0x00, data);
+CHECK_OFFSET(TrackingBlockBase<virt_addr>, 0x04, size);
+CHECK_OFFSET(TrackingBlockBase<virt_addr>, 0x08, prevBlockIdx);
+CHECK_OFFSET(TrackingBlockBase<virt_addr>, 0x0C, nextBlockIdx);
+CHECK_SIZE(TrackingBlockBase<virt_addr>, 0x10);
 
-static virt_ptr<TrackingBlock>
-getTrackingBlocks(virt_ptr<TinyHeap> heap)
+using TrackingBlockVirtual = TrackingBlockBase<virt_addr>;
+using TrackingBlockPhysical = TrackingBlockBase<phys_addr>;
+using TrackingBlock = TrackingBlockVirtual;
+
+static virt_ptr<TrackingBlockVirtual>
+getTrackingBlocks(virt_ptr<TinyHeapVirtual> heap)
 {
-   return virt_cast<TrackingBlock *>(virt_cast<virt_addr>(heap) + sizeof(TinyHeap));
+   return virt_cast<TrackingBlockVirtual *>(virt_cast<virt_addr>(heap) + sizeof(TinyHeapVirtual));
 }
 
+static phys_ptr<TrackingBlockPhysical>
+getTrackingBlocks(phys_ptr<TinyHeapPhysical> heap)
+{
+   return phys_cast<TrackingBlockPhysical *>(phys_cast<phys_addr>(heap) + sizeof(TinyHeapPhysical));
+}
+
+// TODO: Make this pointer_cast in cpu headers?
+template<typename Type, typename SrcType>
+static auto
+pointer_cast(virt_ptr<SrcType> src)
+{
+   return virt_cast<Type>(src);
+}
+
+template<typename Type, typename SrcType>
+static auto
+pointer_cast(be2_virt_ptr<SrcType> src)
+{
+   return virt_cast<Type>(src);
+}
+
+template<typename Type, typename SrcType>
+static auto
+pointer_cast(phys_ptr<SrcType> src)
+{
+   return phys_cast<Type>(src);
+}
+
+template<typename Type, typename SrcType>
+static auto
+pointer_cast(be2_phys_ptr<SrcType> src)
+{
+   return phys_cast<Type>(src);
+}
+
+template<typename SrcType>
+static virt_addr
+pointer_to_address(virt_ptr<SrcType> src)
+{
+   return virt_cast<virt_addr>(src);
+}
+
+template<typename SrcType>
+static virt_addr
+pointer_to_address(be2_virt_ptr<SrcType> src)
+{
+   return virt_cast<virt_addr>(src);
+}
+
+template<typename SrcType>
+static phys_addr
+pointer_to_address(phys_ptr<SrcType> src)
+{
+   return phys_cast<phys_addr>(src);
+}
+
+template<typename SrcType>
+static phys_addr
+pointer_to_address(be2_phys_ptr<SrcType> src)
+{
+   return phys_cast<phys_addr>(src);
+}
+
+template<typename AddressType, typename SrcType>
+static auto
+pointer_addrof(SrcType &src)
+{
+   if constexpr (std::is_same<AddressType, virt_addr>::value) {
+      return virt_addrof(src);
+   } else {
+      return phys_addrof(src);
+   }
+}
+
+template<typename HeapPointer>
 static void
-dumpHeap(virt_ptr<TinyHeap> heap)
+dumpHeap(HeapPointer heap)
 {
    auto idx = heap->firstBlockIdx;
    auto blocks = getTrackingBlocks(heap);
 
    gLog->debug("Heap at {} - {}", heap->dataHeapStart, heap->dataHeapEnd);
    while (idx != -1) {
-      auto addr = virt_cast<virt_addr>(blocks[idx].data);
+      auto addr = pointer_to_address(blocks[idx].data);
       auto size = blocks[idx].size;
       if (size < 0) {
          size = -size;
@@ -55,24 +139,25 @@ dumpHeap(virt_ptr<TinyHeap> heap)
    }
 }
 
+template<typename AddressType>
 static int32_t
-findBlockIdxContaining(virt_ptr<TinyHeap> heap,
-                       virt_ptr<void> ptr)
+findBlockIdxContaining(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
+                       cpu::Pointer<void, AddressType> ptr)
 {
    if (!heap || !ptr || ptr < heap->dataHeapStart || ptr >= heap->dataHeapEnd) {
       return -1;
    }
 
    auto trackingBlocks = getTrackingBlocks(heap);
-   auto distFromStart = virt_cast<virt_addr>(ptr) - virt_cast<virt_addr>(heap->dataHeapStart);
-   auto distFromEnd = virt_cast<virt_addr>(heap->dataHeapEnd) - virt_cast<virt_addr>(ptr);
+   auto distFromStart = pointer_to_address(ptr) - pointer_to_address(heap->dataHeapStart);
+   auto distFromEnd = pointer_to_address(heap->dataHeapEnd) - pointer_to_address(ptr);
 
    if (distFromStart < distFromEnd) {
       // Search forwards from start
       auto idx = heap->firstBlockIdx;
       while (idx >= 0) {
          auto &block = trackingBlocks[idx];
-         auto blockStart = virt_cast<uint8_t *>(block.data);
+         auto blockStart = pointer_cast<uint8_t *>(block.data);
          auto blockEnd = blockStart + (block.size >= 0 ? +block.size : -block.size);
 
          if (ptr >= blockStart && ptr < blockEnd) {
@@ -86,7 +171,7 @@ findBlockIdxContaining(virt_ptr<TinyHeap> heap,
       auto idx = heap->lastBlockIdx;
       while (idx >= 0) {
          auto &block = trackingBlocks[idx];
-         auto blockStart = virt_cast<uint8_t *>(block.data);
+         auto blockStart = pointer_cast<uint8_t *>(block.data);
          auto blockEnd = blockStart + (block.size >= 0 ? +block.size : -block.size);
 
          if (ptr >= blockStart && ptr < blockEnd) {
@@ -100,10 +185,11 @@ findBlockIdxContaining(virt_ptr<TinyHeap> heap,
    return -1;
 }
 
+template<typename AddressType>
 TinyHeapError
-TinyHeap_Setup(virt_ptr<TinyHeap> heap,
+TinyHeap_Setup(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
                int32_t trackingHeapSize,
-               virt_ptr<void> dataHeap,
+               cpu::Pointer<void, AddressType> dataHeap,
                int32_t dataHeapSize)
 {
    if (trackingHeapSize < 64 || dataHeapSize <= 0) {
@@ -132,15 +218,16 @@ TinyHeap_Setup(virt_ptr<TinyHeap> heap,
    trackingBlocks[0].nextBlockIdx = -1;
 
    heap->dataHeapStart = dataHeap;
-   heap->dataHeapEnd = virt_cast<uint8_t *>(dataHeap) + dataHeapSize;
+   heap->dataHeapEnd = pointer_cast<uint8_t *>(dataHeap) + dataHeapSize;
    heap->firstBlockIdx = 0;
    heap->lastBlockIdx = 0;
    heap->nextFreeBlockIdx = 1;
    return TinyHeapError::OK;
 }
 
+template<typename AddressType>
 static TinyHeapError
-allocInBlock(virt_ptr<TinyHeap> heap,
+allocInBlock(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
              int32_t blockIdx,
              int32_t beforeOffset,
              int32_t holeBeforeIdx,
@@ -164,7 +251,7 @@ allocInBlock(virt_ptr<TinyHeap> heap,
          heap->firstBlockIdx = holeBeforeIdx;
       }
 
-      block.data = virt_cast<uint8_t *>(block.data) + beforeOffset;
+      block.data = pointer_cast<uint8_t *>(block.data) + beforeOffset;
       block.size += beforeOffset; // += because block.size is negative at this point
       block.prevBlockIdx = holeBeforeIdx;
    }
@@ -175,7 +262,7 @@ allocInBlock(virt_ptr<TinyHeap> heap,
    // Check if we need to create a hole after the allocation
    if (block.size != size) {
       auto &afterBlock = trackingBlocks[holeAfterIdx];
-      afterBlock.data = virt_cast<uint8_t *>(block.data) + size;
+      afterBlock.data = pointer_cast<uint8_t *>(block.data) + size;
       afterBlock.size = -(block.size - size);
       afterBlock.prevBlockIdx = blockIdx;
       afterBlock.nextBlockIdx = block.nextBlockIdx;
@@ -193,19 +280,20 @@ allocInBlock(virt_ptr<TinyHeap> heap,
    return TinyHeapError::OK;
 }
 
+template<typename AddressType>
 static void
-freeBlock(virt_ptr<TinyHeap> heap,
+freeBlock(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
           int32_t blockIdx)
 {
    auto trackingBlocks = getTrackingBlocks(heap);
-   auto block = virt_addrof(trackingBlocks[blockIdx]);
+   auto block = pointer_addrof<AddressType>(trackingBlocks[blockIdx]);
 
    // Mark the block as unallocated
    block->size = -block->size;
 
    if (block->prevBlockIdx >= 0) {
       auto prevBlockIdx = block->prevBlockIdx;
-      auto prevBlock = virt_addrof(trackingBlocks[prevBlockIdx]);
+      auto prevBlock = pointer_addrof<AddressType>(trackingBlocks[prevBlockIdx]);
       if (prevBlock->size < 0) {
          // Merge block into prevBlock!
          prevBlock->size += block->size;
@@ -237,7 +325,7 @@ freeBlock(virt_ptr<TinyHeap> heap,
 
    if (block->nextBlockIdx >= 0) {
       auto nextBlockIdx = block->nextBlockIdx;
-      auto nextBlock = virt_addrof(trackingBlocks[nextBlockIdx]);
+      auto nextBlock = pointer_addrof<AddressType>(trackingBlocks[nextBlockIdx]);
       if (nextBlock->size < 0) {
          // Merge nextBlock into block!
          block->size += nextBlock->size;
@@ -265,10 +353,30 @@ freeBlock(virt_ptr<TinyHeap> heap,
 }
 
 TinyHeapError
-TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
+TinyHeap_Setup(virt_ptr<TinyHeapVirtual> heap,
+               int32_t trackingHeapSize,
+               virt_ptr<void> dataHeap,
+               int32_t dataHeapSize)
+{
+   return TinyHeap_Setup<virt_addr>(heap, trackingHeapSize, dataHeap, dataHeapSize);
+}
+
+TinyHeapError
+TinyHeap_Setup(phys_ptr<TinyHeapPhysical> heap,
+               int32_t trackingHeapSize,
+               phys_ptr<void> dataHeap,
+               int32_t dataHeapSize)
+{
+   return TinyHeap_Setup<phys_addr>(heap, trackingHeapSize, dataHeap, dataHeapSize);
+}
+
+
+template<typename AddressType>
+TinyHeapError
+TinyHeap_Alloc(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
                int32_t size,
                int32_t align,
-               virt_ptr<void> *outPtr)
+               cpu::Pointer<void, AddressType>  *outPtr)
 {
    auto fromFront = true;
    if (!heap) {
@@ -295,7 +403,7 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
       while (idx >= 0) {
          auto &block = trackingBlocks[idx];
          if (block.size < 0) {
-            auto blockStart = virt_cast<virt_addr>(block.data);
+            auto blockStart = pointer_to_address(block.data);
             auto blockEnd = blockStart - block.size;
             auto alignedStart = align_up(blockStart, align);
 
@@ -314,7 +422,7 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
       while (idx >= 0) {
          auto &block = trackingBlocks[idx];
          if (block.size < 0) {
-            auto blockStart = virt_cast<virt_addr>(block.data);
+            auto blockStart = pointer_to_address(block.data);
             auto blockEnd = blockStart - block.size;
             auto alignedStart = align_up(blockStart, align);
 
@@ -334,7 +442,7 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
    }
 
    auto &block = trackingBlocks[blockIdx];
-   auto blockStart = virt_cast<virt_addr>(block.data);
+   auto blockStart = pointer_to_address(block.data);
    auto blockEnd = blockStart - block.size;
 
    auto alignedStart = fromFront ?
@@ -378,20 +486,28 @@ TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
 }
 
 TinyHeapError
-TinyHeap_Alloc(virt_ptr<TinyHeap> heap,
+TinyHeap_Alloc(virt_ptr<TinyHeapVirtual> heap,
                int32_t size,
                int32_t align,
-               virt_ptr<virt_ptr<void>> outPtr)
+               virt_ptr<void> *outPtr)
 {
-   virt_ptr<void> tmpPtr;
-   auto error = TinyHeap_Alloc(heap, size, align, &tmpPtr);
-   *outPtr = tmpPtr;
-   return error;
+   return TinyHeap_Alloc<virt_addr>(heap, size, align, outPtr);
 }
 
 TinyHeapError
-TinyHeap_AllocAt(virt_ptr<TinyHeap> heap,
-                 virt_ptr<void> ptr,
+TinyHeap_Alloc(phys_ptr<TinyHeapPhysical> heap,
+               int32_t size,
+               int32_t align,
+               phys_ptr<void> *outPtr)
+{
+   return TinyHeap_Alloc<phys_addr>(heap, size, align, outPtr);
+}
+
+
+template<typename AddressType>
+TinyHeapError
+TinyHeap_AllocAt(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
+                 cpu::Pointer<void, AddressType> ptr,
                  int32_t size)
 {
    auto blockIdx = findBlockIdxContaining(heap, ptr);
@@ -408,12 +524,12 @@ TinyHeap_AllocAt(virt_ptr<TinyHeap> heap,
    }
 
    auto beforeOffset =
-      static_cast<int32_t>(virt_cast<uint8_t *>(ptr) -
-                           virt_cast<uint8_t *>(block.data));
+      static_cast<int32_t>(pointer_cast<uint8_t *>(ptr) -
+                           pointer_cast<uint8_t *>(block.data));
 
    auto afterOffset =
-      (virt_cast<uint8_t *>(ptr) + -block.size) -
-      (virt_cast<uint8_t *>(block.data) + size);
+      (pointer_cast<uint8_t *>(ptr) + -block.size) -
+      (pointer_cast<uint8_t *>(block.data) + size);
 
    if (afterOffset < 0) {
       // Not enough space
@@ -449,13 +565,32 @@ TinyHeap_AllocAt(virt_ptr<TinyHeap> heap,
       heap->nextFreeBlockIdx = trackingBlocks[holeAfterIdx].nextBlockIdx;
    }
 
-   auto error = allocInBlock(heap, blockIdx, beforeOffset, holeBeforeIdx, holeAfterIdx, size);
-   return error;
+   return allocInBlock(heap, blockIdx, beforeOffset, holeBeforeIdx,
+                       holeAfterIdx, size);
 }
 
-void
-TinyHeap_Free(virt_ptr<TinyHeap> heap,
-              virt_ptr<void> ptr)
+TinyHeapError
+TinyHeap_AllocAt(virt_ptr<TinyHeapVirtual> heap,
+                 virt_ptr<void> ptr,
+                 int32_t size)
+{
+   return TinyHeap_AllocAt<virt_addr>(heap, ptr, size);
+}
+
+
+TinyHeapError
+TinyHeap_AllocAt(phys_ptr<TinyHeapPhysical> heap,
+                 phys_ptr<void> ptr,
+                 int32_t size)
+{
+   return TinyHeap_AllocAt<phys_addr>(heap, ptr, size);
+}
+
+
+template<typename AddressType>
+static void
+TinyHeap_Free(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
+              cpu::Pointer<void, AddressType> ptr)
 {
    auto blockIdx = findBlockIdxContaining(heap, ptr);
    if (blockIdx < 0) {
@@ -478,8 +613,24 @@ TinyHeap_Free(virt_ptr<TinyHeap> heap,
    freeBlock(heap, blockIdx);
 }
 
-int32_t
-TinyHeap_GetLargestFree(virt_ptr<TinyHeap> heap)
+void
+TinyHeap_Free(virt_ptr<TinyHeapVirtual> heap,
+              virt_ptr<void> ptr)
+{
+   TinyHeap_Free<virt_addr>(heap, ptr);
+}
+
+void
+TinyHeap_Free(phys_ptr<TinyHeapPhysical> heap,
+              phys_ptr<void> ptr)
+{
+   TinyHeap_Free<phys_addr>(heap, ptr);
+}
+
+
+template<typename AddressType>
+static int32_t
+TinyHeap_GetLargestFree(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap)
 {
    if (!heap) {
       return 0;
@@ -505,10 +656,24 @@ TinyHeap_GetLargestFree(virt_ptr<TinyHeap> heap)
    return largestFree;
 }
 
-virt_ptr<void>
-TinyHeap_Enum(virt_ptr<TinyHeap> heap,
-              virt_ptr<void> prevBlockPtr,
-              virt_ptr<void> *outPtr,
+int32_t
+TinyHeap_GetLargestFree(virt_ptr<TinyHeapVirtual> heap)
+{
+   return TinyHeap_GetLargestFree<virt_addr>(heap);
+}
+
+int32_t
+TinyHeap_GetLargestFree(phys_ptr<TinyHeapPhysical> heap)
+{
+   return TinyHeap_GetLargestFree<phys_addr>(heap);
+}
+
+
+template<typename AddressType>
+static cpu::Pointer<void, AddressType>
+TinyHeap_Enum(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
+              cpu::Pointer<void, AddressType> prevBlockPtr,
+              cpu::Pointer<void, AddressType> *outPtr,
               uint32_t *outSize)
 {
    if (!heap) {
@@ -520,7 +685,7 @@ TinyHeap_Enum(virt_ptr<TinyHeap> heap,
 
    if (prevBlockPtr) {
       // Iterate through list to make sure prevBlockPtr is actually in it.
-      auto prevBlock = virt_cast<TrackingBlock *>(prevBlockPtr);
+      auto prevBlock = pointer_cast<TrackingBlock *>(prevBlockPtr);
       while (block != prevBlock) {
          if (block->nextBlockIdx == -1) {
             goto error;
@@ -571,9 +736,29 @@ error:
 }
 
 virt_ptr<void>
-TinyHeap_EnumFree(virt_ptr<TinyHeap> heap,
-                  virt_ptr<void> prevBlockPtr,
-                  virt_ptr<void> *outPtr,
+TinyHeap_Enum(virt_ptr<TinyHeap> heap,
+              virt_ptr<void> prevBlockPtr,
+              virt_ptr<void> *outPtr,
+              uint32_t *outSize)
+{
+   return TinyHeap_Enum<virt_addr>(heap, prevBlockPtr, outPtr, outSize);
+}
+
+phys_ptr<void>
+TinyHeap_Enum(phys_ptr<TinyHeapBase<phys_addr>> heap,
+              phys_ptr<void> prevBlockPtr,
+              phys_ptr<void> *outPtr,
+              uint32_t *outSize)
+{
+   return TinyHeap_Enum<phys_addr>(heap, prevBlockPtr, outPtr, outSize);
+}
+
+
+template<typename AddressType>
+static cpu::Pointer<void, AddressType>
+TinyHeap_EnumFree(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
+                  cpu::Pointer<void, AddressType> prevBlockPtr,
+                  cpu::Pointer<void, AddressType> *outPtr,
                   uint32_t *outSize)
 {
    if (!heap) {
@@ -585,7 +770,7 @@ TinyHeap_EnumFree(virt_ptr<TinyHeap> heap,
 
    if (prevBlockPtr) {
       // Iterate through list to make sure prevBlockPtr is actually in it.
-      auto prevBlock = virt_cast<TrackingBlock *>(prevBlockPtr);
+      auto prevBlock = pointer_cast<TrackingBlockBase<AddressType> *>(prevBlockPtr);
       while (block != prevBlock) {
          if (block->nextBlockIdx == -1) {
             goto error;
@@ -633,6 +818,24 @@ error:
    }
 
    return nullptr;
+}
+
+virt_ptr<void>
+TinyHeap_EnumFree(virt_ptr<TinyHeap> heap,
+                  virt_ptr<void> prevBlockPtr,
+                  virt_ptr<void> *outPtr,
+                  uint32_t *outSize)
+{
+   return TinyHeap_EnumFree<virt_addr>(heap, prevBlockPtr, outPtr, outSize);
+}
+
+phys_ptr<void>
+TinyHeap_EnumFree(phys_ptr<TinyHeapBase<phys_addr>> heap,
+                  phys_ptr<void> prevBlockPtr,
+                  phys_ptr<void> *outPtr,
+                  uint32_t *outSize)
+{
+   return TinyHeap_EnumFree<phys_addr>(heap, prevBlockPtr, outPtr, outSize);
 }
 
 } // namespace cafe::tinyheap
