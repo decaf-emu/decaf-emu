@@ -370,7 +370,7 @@ DecafSDLOpenGL::initialise(int width, int height)
 
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::OpenGLDriver*>(gpu::createGLDriver());
-   mDebugUiRenderer = decaf::createDebugGLRenderer();
+   mDebugUiRenderer = reinterpret_cast<decaf::GLUiRenderer*>(decaf::createDebugGLRenderer());
 
    if (config::test::dump_drc_frames || config::test::dump_tv_frames) {
       platform::createDirectory(config::test::dump_frames_dir);
@@ -419,6 +419,11 @@ DecafSDLOpenGL::shutdown()
       mDecafDriver->stop();
       mGraphicsThread.join();
    }
+}
+
+void
+DecafSDLOpenGL::windowResized()
+{
 }
 
 void

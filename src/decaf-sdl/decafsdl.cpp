@@ -89,7 +89,7 @@ DecafSDL::run(const std::string &gamePath)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
    }
 
-   // Setup OpenGL graphics driver
+   // Setup graphics driver
    auto graphicsDriver = mGraphicsDriver->getDecafDriver();
    decaf::setGraphicsDriver(graphicsDriver);
 
@@ -117,6 +117,8 @@ DecafSDL::run(const std::string &gamePath)
       return false;
    }
 
+   debugUiRenderer->postInitialize();
+
    // Start emulator
    decaf::start();
 
@@ -132,6 +134,8 @@ DecafSDL::run(const std::string &gamePath)
          case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
                shouldQuit = true;
+            } else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+               mGraphicsDriver->windowResized();
             }
 
             break;

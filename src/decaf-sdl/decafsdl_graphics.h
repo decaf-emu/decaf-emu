@@ -22,6 +22,9 @@ public:
 
    virtual void
    shutdown() = 0;
+   
+   virtual void
+   windowResized() = 0;
 
    virtual void
    renderFrame(Viewport &tv,

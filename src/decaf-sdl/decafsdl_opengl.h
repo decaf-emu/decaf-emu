@@ -6,6 +6,7 @@
 #include <glbinding/gl/gl.h>
 #include <libdecaf/decaf.h>
 #include <libgpu/gpu_opengldriver.h>
+#include <libdecaf/decaf_debugger.h>
 
 class DecafSDLOpenGL : public DecafSDLGraphics
 {
@@ -19,6 +20,9 @@ public:
 
    void
    shutdown() override;
+
+   void
+   windowResized() override;
 
    void
    renderFrame(Viewport &tv,
@@ -52,7 +56,7 @@ protected:
 protected:
    std::thread mGraphicsThread;
    gpu::OpenGLDriver *mDecafDriver = nullptr;
-   decaf::DebugUiRenderer *mDebugUiRenderer = nullptr;
+   decaf::GLUiRenderer *mDebugUiRenderer = nullptr;
 
    SDL_GLContext mContext = nullptr;
    SDL_GLContext mThreadContext = nullptr;

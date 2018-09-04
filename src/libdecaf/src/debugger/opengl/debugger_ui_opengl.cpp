@@ -76,7 +76,7 @@ void RendererOpenGL::initialise()
 #undef OFFSETOF
 }
 
-void RendererOpenGL::loadFonts()
+void RendererOpenGL::postInitialize()
 {
    auto &io = ImGui::GetIO();
    unsigned char *pixels;
@@ -185,12 +185,6 @@ loadState(State &state)
 
 void RendererOpenGL::draw(unsigned width, unsigned height)
 {
-   // Load font texture if needed
-   if (!mFontsLoaded) {
-      loadFonts();
-      mFontsLoaded = true;
-   }
-
    // Draw the imgui ui
    debugger::draw(width, height);
 

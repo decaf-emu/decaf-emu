@@ -11,17 +11,14 @@ namespace debugger
 namespace ui
 {
 
-class RendererOpenGL : public decaf::DebugUiRenderer
+class RendererOpenGL : public decaf::GLUiRenderer
 {
 public:
    virtual void initialise() override;
-   virtual void draw(unsigned width, unsigned height)  override;
+   virtual void postInitialize() override;
+   virtual void draw(unsigned width, unsigned height) override;
 
 private:
-   void loadFonts();
-
-private:
-   bool mFontsLoaded = false;
    gl::GLuint mFontTexture;
    gl::GLuint mShaderHandle;
    gl::GLuint mVertHandle;
