@@ -17,6 +17,7 @@ namespace ios::mcp
 #pragma pack(push, 1)
 
 using MCPSysProdSettings = internal::SysProdConfig;
+using MCPTitleId = uint64_t;
 
 struct MCPPPrepareTitleInfo
 {
@@ -28,7 +29,7 @@ struct MCPPPrepareTitleInfo
 
    be2_val<uint32_t> version;
    UNKNOWN(8);
-   be2_val<uint64_t> titleId;
+   be2_val<MCPTitleId> titleId;
    UNKNOWN(4);
    be2_val<uint32_t> cmdFlags;
    be2_array<char, 4096> argstr;
