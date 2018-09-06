@@ -14,7 +14,6 @@
 namespace cafe::kernel
 {
 
-constexpr auto NumRamPartitions = 8u;
 constexpr auto MinCodeSize = 0x20000u;
 constexpr auto MaxCodeSize = 0xE000000u;
 constexpr auto MinDataSize = 0x700000u;

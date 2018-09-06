@@ -24,6 +24,8 @@ enum class UniqueProcessId : int32_t
    Game                    = 15,
 };
 
+constexpr auto NumRamPartitions = 8;
+
 enum class RamPartitionId : int32_t
 {
    Invalid                 = -1,
