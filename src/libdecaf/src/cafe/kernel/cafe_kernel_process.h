@@ -93,6 +93,12 @@ getCurrentRampid();
 UniqueProcessId
 getCurrentUpid();
 
+KernelProcessId
+getCurrentKernelProcessId();
+
+ios::mcp::MCPTitleId
+getCurrentTitleId();
+
 RamPartitionId
 getRampidFromUpid(UniqueProcessId id);
 

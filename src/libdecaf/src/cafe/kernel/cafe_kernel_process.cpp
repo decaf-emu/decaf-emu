@@ -115,6 +115,18 @@ getCurrentUpid()
    return UniqueProcessId::Game;
 }
 
+KernelProcessId
+getCurrentKernelProcessId()
+{
+   return KernelProcessId::Kernel;
+}
+
+ios::mcp::MCPTitleId
+getCurrentTitleId()
+{
+   return getCurrentProcessData()->titleInfo.titleId;
+}
+
 RamPartitionId
 getRampidFromUpid(UniqueProcessId id)
 {
