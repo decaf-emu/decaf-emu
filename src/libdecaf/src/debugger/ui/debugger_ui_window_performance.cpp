@@ -1,10 +1,12 @@
 #include "debugger_ui_window_performance.h"
 #include "debugger_ui_window_performance_gl.h"
+#include "debugger_ui_window_performance_vulkan.h"
 #include "debugger_ui_plot.h"
 #include "decaf_graphics.h"
 
 #include <algorithm>
 #include <imgui.h>
+#include <inttypes.h>
 
 struct GraphicsDebugInfo;
 
@@ -13,6 +15,12 @@ namespace debugger
 
 namespace ui
 {
+
+static const ImVec4
+TitleTextColor = HEXTOIMV4(0xFFFFFF, 1.0f);
+
+static const ImVec4
+ValueTextColor = HEXTOIMV4(0xD3D3D3, 1.0f);
 
 PerformanceWindow::PerformanceWindow(const std::string &name) :
    Window(name)
@@ -36,20 +44,40 @@ PerformanceWindow::create(const std::string &name)
 }
 
 void
+PerformanceWindow::drawTextAndValue(const char *text, uint64_t val)
+{
+   ImGui::PushStyleColor(ImGuiCol_Text, TitleTextColor);
+   ImGui::Text("%s", text);
+   ImGui::PopStyleColor();
+
+   ImGui::PushStyleColor(ImGuiCol_Text, ValueTextColor);
+   ImGui::SameLine();
+   ImGui::Text("%" PRIu64, val);
+   ImGui::PopStyleColor();
+}
+
+void
 PerformanceWindow::draw()
 {
+   auto ImgGuiNoResize = ImGuiWindowFlags_NoResize;
+
+   ImGui::SetNextWindowSize(ImVec2 { 400.0f, 0.0f });
+   ImGui::Begin("Performance", nullptr, ImgGuiNoResize);
+
    drawGraphs();
+
+   ImGui::Separator();
+   ImGui::Text("Graphics Debugging Info:");
+   ImGui::Separator();
+
+   drawBackendInfo();
+
    ImGui::End();
 }
 
 void
 PerformanceWindow::drawGraphs()
 {
-   auto ImgGuiNoResize = ImGuiWindowFlags_NoResize;
-
-   ImGui::SetNextWindowSize(ImVec2{ 400.0f, 255.0f });
-   ImGui::Begin("Performance", nullptr, ImgGuiNoResize);
-
    auto fps = decaf::getGraphicsDriver()->getAverageFPS();
    auto frameTime = decaf::getGraphicsDriver()->getAverageFrametimeMS();
 
@@ -70,6 +98,12 @@ PerformanceWindow::drawGraphs()
    PlotLinesDecaf("", mFtValues.data(), mFtValues.size(), 0, NULL, 0.0f, 100.0f, ImVec2 { 0, GraphHeight }, sizeof(float), 10);
    ImGui::SameLine();
    ImGui::Text("Frame Time\n%.1f (ms)", frameTime);
+}
+
+void
+PerformanceWindow::drawBackendInfo()
+{
+   ImGui::Text("Unsupported graphics backend in use.");
 }
 
 } // namespace ui

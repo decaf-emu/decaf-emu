@@ -13,12 +13,6 @@ namespace debugger
 namespace ui
 {
 
-static const ImVec4
-TitleTextColor = HEXTOIMV4(0xFFFFFF, 1.0f);
-
-static const ImVec4
-ValueTextColor = HEXTOIMV4(0xD3D3D3, 1.0f);
-
 PerformanceWindowGL::PerformanceWindowGL(const std::string &name) :
    PerformanceWindow(name)
 {
@@ -29,31 +23,11 @@ PerformanceWindowGL::PerformanceWindowGL(const std::string &name) :
    mInfo = glGraphicsDriver->getDebuggerInfo();
 }
 
-void PerformanceWindowGL::draw()
+void PerformanceWindowGL::drawBackendInfo()
 {
-   // Draw framerate/frametime graphs
-   PerformanceWindow::drawGraphs();
-
-   auto drawTextAndValue =
-      [](const char *text, uint64_t val)
-      {
-         ImGui::PushStyleColor(ImGuiCol_Text, TitleTextColor);
-         ImGui::Text("%s", text);
-         ImGui::PopStyleColor();
-
-         ImGui::PushStyleColor(ImGuiCol_Text, ValueTextColor);
-         ImGui::SameLine();
-         ImGui::Text("%" PRIu64, val);
-         ImGui::PopStyleColor();
-      };
-
    if (!mInfo) {
       return;
    }
-
-   // Graphics info
-   ImGui::Separator();
-   ImGui::Text("\tGraphics Debugging Info:\n");
 
    ImGui::Columns(2);
 
@@ -66,8 +40,6 @@ void PerformanceWindowGL::draw()
    drawTextAndValue("Shader Pipelines:", mInfo->numShaderPipelines);
    drawTextAndValue("Surfaces:", mInfo->numSurfaces);
    drawTextAndValue("Data Buffers:", mInfo->numDataBuffers);
-
-   ImGui::End();
 }
 
 } // namespace ui

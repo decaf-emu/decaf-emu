@@ -19,8 +19,12 @@ public:
    virtual ~PerformanceWindow() = default;
 
    void draw() override;
-   void drawGraphs();
 
+   void drawTextAndValue(const char *text, uint64_t val);
+
+   virtual void drawGraphs();
+   virtual void drawBackendInfo();
+   
    static PerformanceWindow* create(const std::string &name);
 
 private:

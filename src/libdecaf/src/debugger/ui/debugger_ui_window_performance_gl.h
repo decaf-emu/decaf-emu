@@ -16,7 +16,7 @@ public:
    PerformanceWindowGL(const std::string &name);
    virtual ~PerformanceWindowGL() = default;
 
-   void draw() override;
+   void drawBackendInfo() override;
 
 private:
    gpu::OpenGLDriver::DebuggerInfo *mInfo;
