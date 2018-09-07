@@ -28,6 +28,13 @@ Driver::stop()
    gpu::ringbuffer::awaken();
 }
 
+void
+Driver::runUntilFlip()
+{
+   // The null driver does not support "force sync"
+   decaf_check(0);
+}
+
 gpu::GraphicsDriverType
 Driver::type()
 {

@@ -21,17 +21,18 @@ public:
 
    virtual ~OpenGLDriver() = default;
 
-   using SwapFunction = std::function<void(gl::GLuint, gl::GLuint)>;
+   virtual void
+   initialise() = 0;
+
+   virtual void
+   shutdown() = 0;
 
    virtual void
    getSwapBuffers(gl::GLuint *tv,
                   gl::GLuint *drc) = 0;
 
-   virtual void
-   syncPoll(const SwapFunction &swapFunc) = 0;
-
    virtual DebuggerInfo *
-   getGraphicsDebuggerInfo() = 0;
+   getDebuggerInfo() = 0;
 };
 
 } // namespace gpu

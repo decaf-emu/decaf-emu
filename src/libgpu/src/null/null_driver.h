@@ -11,6 +11,8 @@ public:
 
    virtual void run() override;
    virtual void stop() override;
+   virtual void runUntilFlip() override;
+
    virtual gpu::GraphicsDriverType type() override;
 
    virtual float getAverageFPS() override;

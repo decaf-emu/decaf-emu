@@ -5,6 +5,12 @@
 namespace vulkan
 {
 
+gpu::GraphicsDriverType
+Driver::type()
+{
+   return gpu::GraphicsDriverType::Vulkan;
+}
+
 void
 Driver::run()
 {
@@ -15,10 +21,9 @@ Driver::stop()
 {
 }
 
-gpu::GraphicsDriverType
-Driver::type()
+void
+Driver::runUntilFlip()
 {
-   return gpu::GraphicsDriverType::Vulkan;
 }
 
 float

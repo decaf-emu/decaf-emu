@@ -8,11 +8,12 @@ class Driver : public gpu::GraphicsDriver
 {
 public:
    virtual ~Driver() = default;
+   virtual gpu::GraphicsDriverType type() override;
 
    virtual void run() override;
    virtual void stop() override;
-   virtual gpu::GraphicsDriverType type() override;
-
+   virtual void runUntilFlip() override;
+   
    virtual float getAverageFPS() override;
    virtual float getAverageFrametimeMS() override;
 

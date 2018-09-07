@@ -31,7 +31,7 @@ GLDriver::type()
 }
 
 void
-GLDriver::initGL()
+GLDriver::initialise()
 {
    // Apply all registers
    for (auto i = 0u; i < mRegisters.size(); ++i) {
@@ -78,6 +78,11 @@ GLDriver::initGL()
    gl::GLint value;
    gl::glGetIntegerv(gl::GL_MAX_UNIFORM_BLOCK_SIZE, &value);
    MaxUniformBlockSize = value;
+}
+
+void
+GLDriver::shutdown()
+{
 }
 
 void
@@ -224,11 +229,7 @@ GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
       mFramesCaptured++;
    }
 
-   if (mSwapFunc) {
-      mSwapFunc(mTvScanBuffers.object, mDrcScanBuffers.object);
-   }
-
-   updateGraphicsDebugInfo();
+   updateDebuggerInfo();
 }
 
 void
@@ -462,12 +463,12 @@ GLDriver::getAverageFrametimeMS()
 }
 
 gpu::OpenGLDriver::DebuggerInfo *
-GLDriver::getGraphicsDebuggerInfo() {
+GLDriver::getDebuggerInfo() {
    return &mDebuggerInfo;
 }
 
 void
-GLDriver::updateGraphicsDebugInfo()
+GLDriver::updateDebuggerInfo()
 {
    mDebuggerInfo.numFetchShaders = mFetchShaders.size();
    mDebuggerInfo.numVertexShaders = mVertexShaders.size();
@@ -795,14 +796,13 @@ GLDriver::notifyGpuFlush(phys_addr address,
 }
 
 void
-GLDriver::syncPoll(const SwapFunction &swapFunc)
+GLDriver::runUntilFlip()
 {
+   auto startingSwap = mLastSwap;
+
    if (mRunState == RunState::None) {
-      initGL();
       mRunState = RunState::Running;
    }
-
-   mSwapFunc = swapFunc;
 
    checkSyncObjects(0);
    while (true) {
@@ -813,6 +813,10 @@ GLDriver::syncPoll(const SwapFunction &swapFunc)
 
       executeBuffer(item);
       checkSyncObjects(0);
+
+      if (mLastSwap > startingSwap) {
+         break;
+      }
    }
 }
 
@@ -824,7 +828,6 @@ GLDriver::run()
    }
 
    mRunState = RunState::Running;
-   initGL();
 
    while (mRunState == RunState::Running) {
       auto item = gpu::ringbuffer::Item { };

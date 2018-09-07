@@ -20,6 +20,8 @@ public:
 
    virtual void run() = 0;
    virtual void stop() = 0;
+   virtual void runUntilFlip() = 0;
+
    virtual GraphicsDriverType type() = 0;
 
    virtual float getAverageFPS() = 0;

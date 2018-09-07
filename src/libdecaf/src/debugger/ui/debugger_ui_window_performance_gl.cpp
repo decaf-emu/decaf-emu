@@ -26,7 +26,7 @@ PerformanceWindowGL::PerformanceWindowGL(const std::string &name) :
    decaf_check(graphicsDriver->type() == gpu::GraphicsDriverType::OpenGL);
 
    auto glGraphicsDriver = reinterpret_cast<gpu::OpenGLDriver *>(graphicsDriver);
-   mInfo = glGraphicsDriver->getGraphicsDebuggerInfo();
+   mInfo = glGraphicsDriver->getDebuggerInfo();
 }
 
 void PerformanceWindowGL::draw()

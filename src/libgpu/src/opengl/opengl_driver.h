@@ -296,6 +296,13 @@ public:
    GLDriver();
    virtual ~GLDriver() = default;
 
+
+   virtual void
+   initialise() override;
+
+   virtual void
+   shutdown() override;
+
    virtual void
    run() override;
 
@@ -312,7 +319,7 @@ public:
    getAverageFrametimeMS() override;
 
    virtual gpu::OpenGLDriver::DebuggerInfo *
-   getGraphicsDebuggerInfo() override;
+   getDebuggerInfo() override;
 
    virtual void
    notifyCpuFlush(phys_addr address,
@@ -327,7 +334,7 @@ public:
                   gl::GLuint *drc) override;
 
    virtual void
-   syncPoll(const SwapFunction &swapFunc) override;
+   runUntilFlip() override;
 
    virtual bool
    startFrameCapture(const std::string &outPrefix,
@@ -338,7 +345,6 @@ public:
    stopFrameCapture() override;
 
 private:
-   void initGL();
    void executeBuffer(const gpu::ringbuffer::Item &item);
    uint64_t getGpuClock();
 
@@ -504,7 +510,7 @@ private:
                   const ScanBufferChain &buf);
 
    void
-   updateGraphicsDebugInfo();
+   updateDebuggerInfo();
 
 private:
    enum class RunState
@@ -517,7 +523,6 @@ private:
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
    unsigned mSwapInterval = 1;
-   SwapFunction mSwapFunc;
 
    bool mViewportDirty = false;
    bool mDepthRangeDirty = false;

@@ -392,6 +392,7 @@ DecafSDLOpenGL::initialise(int width, int height)
          [this]() {
             SDL_GL_MakeCurrent(mWindow, mThreadContext);
             initialiseContext();
+            mDecafDriver->initialise();
             mDecafDriver->run();
          } };
    } else {
@@ -406,6 +407,9 @@ DecafSDLOpenGL::initialise(int width, int height)
 
       // Initialise the context
       initialiseContext();
+
+      // Setup the driver
+      mDecafDriver->initialise();
    }
 
    return true;
@@ -417,11 +421,14 @@ DecafSDLOpenGL::shutdown()
    // Shut down the debugger ui driver
    mDebugUiRenderer->shutdown();
 
-   // Shut down the GPU
+   // Stop the GPU
    if (!config::display::force_sync) {
       mDecafDriver->stop();
       mGraphicsThread.join();
    }
+
+   // Shut down the GPU
+   mDecafDriver->shutdown();
 }
 
 void
@@ -432,18 +439,16 @@ DecafSDLOpenGL::windowResized()
 void
 DecafSDLOpenGL::renderFrame(Viewport &tv, Viewport &drc)
 {
-   if (!config::display::force_sync) {
-      gl::GLuint tvBuffer = 0;
-      gl::GLuint drcBuffer = 0;
-      mDecafDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
-      drawScanBuffers(tv, tvBuffer, drc, drcBuffer);
-   } else {
-      mDecafDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
-         SDL_GL_MakeCurrent(mWindow, mContext);
-         drawScanBuffers(tv, tvBuffer, drc, drcBuffer);
-         SDL_GL_MakeCurrent(mWindow, mThreadContext);
-      });
+   if (config::display::force_sync) {
+      SDL_GL_MakeCurrent(mWindow, mThreadContext);
+      mDecafDriver->runUntilFlip();
+      SDL_GL_MakeCurrent(mWindow, mContext);
    }
+
+   gl::GLuint tvBuffer = 0;
+   gl::GLuint drcBuffer = 0;
+   mDecafDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
+   drawScanBuffers(tv, tvBuffer, drc, drcBuffer);
 }
 
 gpu::GraphicsDriver *
