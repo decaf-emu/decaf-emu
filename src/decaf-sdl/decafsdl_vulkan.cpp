@@ -6,17 +6,30 @@
 
 #include <SDL_vulkan.h>
 
-
 static VKAPI_ATTR VkBool32 VKAPI_CALL
 debugMessageCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
                      size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
 {
-   gCliLog->warn("Vulkan debug report: {}, {}, {}, {}, {}, {}",
-                 objectType, object, location, messageCode, pLayerPrefix, pMessage);
+   gCliLog->warn("Vulkan debug report: {}, {}, {}, {}, {}, {}, {}",
+                 vk::to_string(vk::DebugReportFlagsEXT(flags)),
+                 vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
+                 object,
+                 location,
+                 messageCode,
+                 pLayerPrefix,
+                 pMessage);
 
-   auto logMsg = fmt::format("VKDBG: {} || {}, {}, {}, {}, {}\n",
-                             pMessage, objectType, object, location, messageCode, pLayerPrefix);
+#ifdef PLATFORM_WINDOWS
+   auto logMsg = fmt::format("VKDBG: {} {}  ||=>  {}, {}, {}, {}, {}\n",
+                             vk::to_string(vk::DebugReportFlagsEXT(flags)),
+                             pMessage,
+                             vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
+                             object,
+                             location,
+                             messageCode,
+                             pLayerPrefix);
    OutputDebugStringA(logMsg.c_str());
+#endif
    
    return VK_FALSE;
 }
