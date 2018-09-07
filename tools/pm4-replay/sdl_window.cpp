@@ -253,6 +253,7 @@ private:
 
       writePM4(DecafSetBuffer {
          isTv,
+         setBuffer.address,
          setBuffer.bufferingMode,
          setBuffer.width,
          setBuffer.height
@@ -588,17 +589,15 @@ SDLWindow::run(const std::string &tracePath)
          break;
       }
 
-      // Parser has read a frame, so lets spam syncPoll until the GPU has spat out a frame for us
-      auto noDraw = true;
+      mGraphicsDriver->runUntilFlip();
 
-      while (noDraw) {
-         mGraphicsDriver->syncPoll([&](unsigned int tvBuffer, unsigned int drcBuffer) {
-            SDL_GL_MakeCurrent(mWindow, mWindowContext);
-            drawScanBuffers(tvBuffer, drcBuffer);
-            SDL_GL_MakeCurrent(mWindow, mGpuContext);
-            noDraw = false;
-         });
-      }
+      gl::GLuint tvBuffer = 0;
+      gl::GLuint drcBuffer = 0;
+      mGraphicsDriver->getSwapBuffers(&tvBuffer, &drcBuffer);
+
+      SDL_GL_MakeCurrent(mWindow, mWindowContext);
+      drawScanBuffers(tvBuffer, drcBuffer);
+      SDL_GL_MakeCurrent(mWindow, mGpuContext);
    }
 
    return true;
