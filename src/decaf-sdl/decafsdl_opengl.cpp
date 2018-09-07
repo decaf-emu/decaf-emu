@@ -414,6 +414,9 @@ DecafSDLOpenGL::initialise(int width, int height)
 void
 DecafSDLOpenGL::shutdown()
 {
+   // Shut down the debugger ui driver
+   mDebugUiRenderer->shutdown();
+
    // Shut down the GPU
    if (!config::display::force_sync) {
       mDecafDriver->stop();

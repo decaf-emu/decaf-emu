@@ -501,6 +501,8 @@ DecafSDLVulkan::initialise(int width, int height)
 void
 DecafSDLVulkan::shutdown()
 {
+   // Shut down the debugger ui driver
+   mDebugUiRenderer->shutdown();
 }
 
 void

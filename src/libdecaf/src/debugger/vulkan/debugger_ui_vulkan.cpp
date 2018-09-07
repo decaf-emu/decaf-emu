@@ -4,7 +4,6 @@
 #include "debugger_ui_vulkan.h"
 
 #include <imgui.h>
-
 #include "imgui_impl_vulkan.h"
 
 namespace debugger
@@ -30,7 +29,12 @@ void RendererVulkan::initialise(decaf::VulkanUiRendererInitInfo *info)
    ImGui_ImplVulkan_Init(&imguiInfo, info->renderPass);
 }
 
-void RendererVulkan::postInitialize()
+void RendererVulkan::shutdown()
+{
+   // TODO: Cleanup our resources
+}
+
+void RendererVulkan::onDebuggerInitialized()
 {
    // Upload Fonts
    {

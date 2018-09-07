@@ -15,7 +15,9 @@ class RendererVulkan : public decaf::VulkanUiRenderer
 {
 public:
    virtual void initialise(decaf::VulkanUiRendererInitInfo *info) override;
-   virtual void postInitialize() override;
+   virtual void shutdown() override;
+   virtual void onDebuggerInitialized() override;
+
    virtual void draw(unsigned width, unsigned height, vk::CommandBuffer cmdBuffer) override;
 
 private:

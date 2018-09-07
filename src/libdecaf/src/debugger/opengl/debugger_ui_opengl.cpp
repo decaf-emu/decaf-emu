@@ -76,7 +76,7 @@ void RendererOpenGL::initialise()
 #undef OFFSETOF
 }
 
-void RendererOpenGL::postInitialize()
+void RendererOpenGL::onDebuggerInitialized()
 {
    auto &io = ImGui::GetIO();
    unsigned char *pixels;
@@ -89,6 +89,11 @@ void RendererOpenGL::postInitialize()
    gl::glTexParameteri(gl::GL_TEXTURE_2D, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(gl::GL_LINEAR));
    gl::glTexImage2D(gl::GL_TEXTURE_2D, 0, static_cast<gl::GLint>(gl::GL_RGBA), width, height, 0, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, pixels);
    io.Fonts->TexID = reinterpret_cast<void*>(static_cast<int64_t>(mFontTexture));
+}
+
+void RendererOpenGL::shutdown()
+{
+   // TODO: Cleanup our resources
 }
 
 struct State

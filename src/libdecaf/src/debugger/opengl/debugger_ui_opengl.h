@@ -15,7 +15,9 @@ class RendererOpenGL : public decaf::GLUiRenderer
 {
 public:
    virtual void initialise() override;
-   virtual void postInitialize() override;
+   virtual void shutdown() override;
+   virtual void onDebuggerInitialized() override;
+
    virtual void draw(unsigned width, unsigned height) override;
 
 private:

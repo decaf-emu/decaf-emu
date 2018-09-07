@@ -117,8 +117,6 @@ DecafSDL::run(const std::string &gamePath)
       return false;
    }
 
-   debugUiRenderer->postInitialize();
-
    // Start emulator
    decaf::start();
 

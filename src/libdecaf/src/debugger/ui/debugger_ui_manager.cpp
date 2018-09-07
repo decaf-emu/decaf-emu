@@ -169,6 +169,12 @@ void Manager::load(const std::string &configPath,
    addWindow(WindowID::PerformanceWindow,
              PerformanceWindow::create("Performance"),
              { KeyboardKey::LeftControl, KeyboardKey::O });
+
+   // Notify the debugging renderers that we are initialized
+   auto debugRenderer = decaf::getDebugUiRenderer();
+   if (debugRenderer) {
+      debugRenderer->onDebuggerInitialized();
+   }
 }
 
 void Manager::draw(unsigned width, unsigned height)
