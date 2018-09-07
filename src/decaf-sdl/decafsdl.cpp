@@ -172,9 +172,11 @@ DecafSDL::run(const std::string &gamePath)
          }
       }
 
-      Viewport tvViewport, drcViewport;
-      calculateScreenViewports(tvViewport, drcViewport);
-      mGraphicsDriver->renderFrame(tvViewport, drcViewport);
+      if (mGameLoaded) {
+         Viewport tvViewport, drcViewport;
+         calculateScreenViewports(tvViewport, drcViewport);
+         mGraphicsDriver->renderFrame(tvViewport, drcViewport);
+      }
    }
 
    // Shut down decaf
@@ -330,4 +332,8 @@ DecafSDL::onGameLoaded(const decaf::GameInfo &info)
    // Update window title
    auto title = fmt::format("Decaf ({}) - {}", sActiveGfx, name);
    SDL_SetWindowTitle(mGraphicsDriver->getWindow(), title.c_str());
+
+   // We have to be careful not to start rendering until the game is
+   // fully loaded, or we will block window messaging.
+   mGameLoaded = true;
 }

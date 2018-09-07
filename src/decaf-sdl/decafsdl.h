@@ -101,4 +101,5 @@ protected:
    SDL_GameController *mVpad0Controller = nullptr;
 
    bool mToggleDRC = false;
+   bool mGameLoaded = false;
 };
