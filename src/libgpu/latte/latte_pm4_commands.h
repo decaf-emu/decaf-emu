@@ -143,6 +143,7 @@ struct DecafSetBuffer
    static const auto Opcode = IT_OPCODE::DECAF_SET_BUFFER;
 
    uint32_t isTv;
+   phys_addr buffer;
    uint32_t numBuffers;
    uint32_t width;
    uint32_t height;
@@ -151,6 +152,7 @@ struct DecafSetBuffer
    void serialise(Serialiser &se)
    {
       se(isTv);
+      se(buffer);
       se(numBuffers);
       se(width);
       se(height);

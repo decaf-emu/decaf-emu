@@ -4,12 +4,15 @@
 #include "gx2_format.h"
 #include "gx2_internal_cbpool.h"
 #include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
 
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 struct StaticDisplayData
 {
@@ -132,6 +135,7 @@ GX2SetTVBuffer(virt_ptr<void> buffer,
    // bufferingMode is conveniently equal to the number of buffers
    internal::writePM4(latte::pm4::DecafSetBuffer {
       1,
+      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
       bufferingMode,
       static_cast<uint32_t>(width),
       static_cast<uint32_t>(height)
@@ -158,6 +162,7 @@ GX2SetDRCBuffer(virt_ptr<void> buffer,
    // bufferingMode is conveniently equal to the number of buffers
    internal::writePM4(latte::pm4::DecafSetBuffer {
       0,
+      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
       bufferingMode,
       static_cast<uint32_t>(width),
       static_cast<uint32_t>(height)
