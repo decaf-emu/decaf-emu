@@ -38,6 +38,12 @@ Driver::getAverageFrametimeMS()
    return 0.0f;
 }
 
+gpu::VulkanDriver::DebuggerInfo *
+Driver::getDebuggerInfo()
+{
+   return &mDebuggerInfo;
+}
+
 void
 Driver::notifyCpuFlush(phys_addr address,
                        uint32_t size)

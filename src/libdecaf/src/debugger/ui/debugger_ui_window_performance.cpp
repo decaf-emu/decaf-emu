@@ -38,6 +38,10 @@ PerformanceWindow::create(const std::string &name)
    case gpu::GraphicsDriverType::OpenGL:
       return new PerformanceWindowGL(name);
 #endif
+#ifdef DECAF_VULKAN
+   case gpu::GraphicsDriverType::Vulkan:
+      return new PerformanceWindowVulkan(name);
+#endif
    }
 
    return new PerformanceWindow(name);
