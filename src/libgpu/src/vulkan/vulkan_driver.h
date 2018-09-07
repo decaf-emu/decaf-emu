@@ -1,4 +1,5 @@
 #pragma once
+#ifdef DECAF_VULKAN
 #include "gpu_graphicsdriver.h"
 #include "gpu_vulkandriver.h"
 
@@ -14,11 +15,11 @@ public:
    virtual void run() override;
    virtual void stop() override;
    virtual void runUntilFlip() override;
-   
+
    virtual float getAverageFPS() override;
    virtual float getAverageFrametimeMS() override;
 
-   virtual DebuggerInfo *
+   virtual gpu::VulkanDriver::DebuggerInfo *
    getDebuggerInfo() override;
 
    virtual void notifyCpuFlush(phys_addr address, uint32_t size) override;
@@ -26,7 +27,9 @@ public:
 
 private:
    bool mRunning = false;
-   DebuggerInfo mDebuggerInfo;
+   gpu::VulkanDriver::DebuggerInfo mDebuggerInfo;
 };
 
 } // namespace vulkan
+
+#endif // DECAF_VULKAN

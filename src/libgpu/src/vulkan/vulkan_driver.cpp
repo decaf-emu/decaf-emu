@@ -1,5 +1,7 @@
+#ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
 #include "gpu_event.h"
+#include "gpu_graphicsdriver.h"
 #include "gpu_ringbuffer.h"
 
 namespace vulkan
@@ -57,3 +59,5 @@ Driver::notifyGpuFlush(phys_addr address,
 }
 
 } // namespace vulkan
+
+#endif // DECAF_VULKAN
