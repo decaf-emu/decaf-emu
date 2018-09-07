@@ -36,8 +36,13 @@ public:
 protected:
    bool createWindow(int width, int height);
    bool createInstance();
+   bool pickPhysicalDevice();
+   bool createWindowSurface();
    bool createDevice();
    bool createSwapChain();
+   bool createRenderPipeline();
+   bool createDescriptorPools();
+   bool createBuffers();
 
    bool destroySwapChain();
 
@@ -50,15 +55,22 @@ protected:
    vk::PhysicalDevice mPhysDevice;
    vk::Device mDevice;
    vk::SurfaceKHR mSurface;
+   uint32_t mQueueFamilyIndex;
    vk::Queue mQueue;
    vk::CommandPool mCommandPool;
+   vk::Extent2D mSwapChainExtents;
    vk::SwapchainKHR mSwapchain;
    std::vector<vk::ImageView> mSwapChainImageViews;
    std::vector<vk::Framebuffer> mFramebuffers;
+   vk::Sampler mTrivialSampler;
+   vk::DescriptorSetLayout mDescriptorSetLayout;
    vk::RenderPass mRenderPass;
+   vk::PipelineLayout mPipelineLayout;
    vk::Pipeline mGraphicsPipeline;
    vk::Fence mRenderFence;
    vk::DescriptorPool mDescriptorPool;
+   std::vector<vk::DescriptorSet> mDescriptorSets;
+   vk::Buffer mVertBuffer;
    vk::Semaphore mImageAvailableSemaphore;
    vk::Semaphore mRenderFinishedSemaphore;
 

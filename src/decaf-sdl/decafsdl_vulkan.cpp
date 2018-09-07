@@ -132,6 +132,29 @@ DecafSDLVulkan::createInstance()
 }
 
 bool
+DecafSDLVulkan::pickPhysicalDevice()
+{
+   auto physDevices = mVulkan.enumeratePhysicalDevices();
+   mPhysDevice = physDevices[0];
+
+   return true;
+}
+
+bool
+DecafSDLVulkan::createWindowSurface()
+{
+   VkSurfaceKHR sdlSurface;
+   if (!SDL_Vulkan_CreateSurface(mWindow, mVulkan, &sdlSurface)) {
+      gCliLog->error("Failed to create Vulkan render surface");
+      return false;
+   }
+
+   mSurface = sdlSurface;
+
+   return true;
+}
+
+bool
 DecafSDLVulkan::createDevice()
 {
    std::vector<const char*> deviceLayers =
@@ -152,7 +175,7 @@ DecafSDLVulkan::createDevice()
          continue;
       }
 
-      if (!(qfp.queueFlags & (vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute))) {
+      if (!(qfp.queueFlags & (vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eTransfer | vk::QueueFlagBits::eCompute))) {
          continue;
       }
 
@@ -179,11 +202,12 @@ DecafSDLVulkan::createDevice()
          static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data()));
 
    mQueue = mDevice.getQueue(queueFamilyIndex, 0);
+   mQueueFamilyIndex = queueFamilyIndex;
 
    mCommandPool = mDevice.createCommandPool(
       vk::CommandPoolCreateInfo(
          vk::CommandPoolCreateFlags(),
-         deviceQueueCreateInfo.queueFamilyIndex));
+         queueFamilyIndex));
 
    return true;
 }
@@ -197,86 +221,333 @@ DecafSDLVulkan::createSwapChain()
    auto selectedSurfaceFormat = surfaceFormats[0];
 
    auto swapChainImageFormat = selectedSurfaceFormat.format;
-   auto swapChainExtents = surfaceCaps.currentExtent;
+   mSwapChainExtents = surfaceCaps.currentExtent;
 
-   mSwapchain = mDevice.createSwapchainKHR(
-      vk::SwapchainCreateInfoKHR(
-         {},
-         mSurface,
-         surfaceCaps.minImageCount,
-         swapChainImageFormat,
-         vk::ColorSpaceKHR::eSrgbNonlinear,
-         swapChainExtents,
-         1,
-         vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-         vk::SharingMode::eExclusive,
-         0,
-         nullptr,
-         vk::SurfaceTransformFlagBitsKHR::eIdentity,
-         vk::CompositeAlphaFlagBitsKHR::eOpaque,
-         vk::PresentModeKHR::eFifo,
-         true,
-         nullptr));
+   auto presentMode = vk::PresentModeKHR::eFifo;
+   if (config::display::force_sync) {
+      presentMode = vk::PresentModeKHR::eMailbox;
+   }
 
+   auto presentModes = mPhysDevice.getSurfacePresentModesKHR(mSurface);
+   bool foundPresentMode =
+      std::find(presentModes.begin(), presentModes.end(), presentMode) != presentModes.end();
+   if (!foundPresentMode) {
+      gCliLog->error("Failed to find a suitable present mode to use");
+      return false;
+   }
+
+   // Create the swap chain itself
+   vk::SwapchainCreateInfoKHR swapchainDesc;
+   swapchainDesc.surface = mSurface;
+   swapchainDesc.minImageCount = surfaceCaps.minImageCount;
+   swapchainDesc.imageFormat = swapChainImageFormat;
+   swapchainDesc.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+   swapchainDesc.imageExtent = mSwapChainExtents;
+   swapchainDesc.imageArrayLayers = 1;
+   swapchainDesc.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
+   swapchainDesc.imageSharingMode = vk::SharingMode::eExclusive;
+   swapchainDesc.queueFamilyIndexCount = 0;
+   swapchainDesc.pQueueFamilyIndices = nullptr;
+   swapchainDesc.preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
+   swapchainDesc.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+   swapchainDesc.presentMode = presentMode;
+   swapchainDesc.clipped = true;
+   swapchainDesc.oldSwapchain = nullptr;
+   mSwapchain = mDevice.createSwapchainKHR(swapchainDesc);
+
+   
+   // Create our render pass that targets this attachement
+   vk::AttachmentDescription colorAttachmentDesc;
+   colorAttachmentDesc.format = swapChainImageFormat;
+   colorAttachmentDesc.samples = vk::SampleCountFlagBits::e1;
+   colorAttachmentDesc.loadOp = vk::AttachmentLoadOp::eClear;
+   colorAttachmentDesc.storeOp = vk::AttachmentStoreOp::eStore;
+   colorAttachmentDesc.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+   colorAttachmentDesc.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+   colorAttachmentDesc.initialLayout = vk::ImageLayout::eUndefined;
+   colorAttachmentDesc.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+
+   vk::AttachmentReference colorAttachmentRef;
+   colorAttachmentRef.attachment = 0;
+   colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
+
+   vk::SubpassDescription genericSubpass;
+   genericSubpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+   genericSubpass.inputAttachmentCount = 0;
+   genericSubpass.pInputAttachments = nullptr;
+   genericSubpass.colorAttachmentCount = 1;
+   genericSubpass.pColorAttachments = &colorAttachmentRef;
+   genericSubpass.pResolveAttachments = 0;
+   genericSubpass.pDepthStencilAttachment = nullptr;
+   genericSubpass.preserveAttachmentCount = 0;
+   genericSubpass.pPreserveAttachments = nullptr;
+
+   vk::RenderPassCreateInfo renderPassDesc;
+   renderPassDesc.attachmentCount = 1;
+   renderPassDesc.pAttachments = &colorAttachmentDesc;
+   renderPassDesc.subpassCount = 1;
+   renderPassDesc.pSubpasses = &genericSubpass;
+   renderPassDesc.dependencyCount = 0;
+   renderPassDesc.pDependencies = nullptr;
+   mRenderPass = mDevice.createRenderPass(renderPassDesc);
+
+
+   // Create our framebuffers
    auto swapChainImages = mDevice.getSwapchainImagesKHR(mSwapchain);
-
-   std::array<vk::AttachmentDescription, 1> rpAttachments;
-   rpAttachments[0] = vk::AttachmentDescription(
-      {},
-      swapChainImageFormat,
-      vk::SampleCountFlagBits::e1,
-      vk::AttachmentLoadOp::eClear,
-      vk::AttachmentStoreOp::eStore,
-      vk::AttachmentLoadOp::eDontCare,
-      vk::AttachmentStoreOp::eDontCare,
-      vk::ImageLayout::eUndefined,
-      vk::ImageLayout::ePresentSrcKHR);
-
-   vk::AttachmentReference colorReference(
-      0,
-      vk::ImageLayout::eColorAttachmentOptimal);
-
-   std::array<vk::SubpassDescription, 1> subpasses;
-   subpasses[0] = vk::SubpassDescription(
-      {},
-      vk::PipelineBindPoint::eGraphics,
-      0, nullptr,
-      1, &colorReference,
-      nullptr,
-      nullptr,
-      0, nullptr);
-
-   mRenderPass = mDevice.createRenderPass(
-      vk::RenderPassCreateInfo(
-         {},
-         static_cast<uint32_t>(rpAttachments.size()), rpAttachments.data(),
-         static_cast<uint32_t>(subpasses.size()), subpasses.data()));
-
 
    mSwapChainImageViews.resize(swapChainImages.size());
    mFramebuffers.resize(swapChainImages.size());
 
    for (auto i = 0u; i < swapChainImages.size(); ++i) {
-      mSwapChainImageViews[i] = mDevice.createImageView(
-         vk::ImageViewCreateInfo(
-            {},
-            swapChainImages[i],
-            vk::ImageViewType::e2D,
-            swapChainImageFormat,
-            vk::ComponentMapping(),
-            vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1)));
+      vk::ImageViewCreateInfo imageViewDesc;
+      imageViewDesc.image = swapChainImages[i];
+      imageViewDesc.viewType = vk::ImageViewType::e2D;
+      imageViewDesc.format = swapChainImageFormat;
+      imageViewDesc.components = vk::ComponentMapping();
+      imageViewDesc.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+      imageViewDesc.subresourceRange.baseMipLevel = 0;
+      imageViewDesc.subresourceRange.levelCount = 1;
+      imageViewDesc.subresourceRange.baseArrayLayer = 0;
+      imageViewDesc.subresourceRange.layerCount = 1;
+      mSwapChainImageViews[i] = mDevice.createImageView(imageViewDesc);
 
-      auto swapChainImage = mSwapChainImageViews[i];
-      mFramebuffers[i] = mDevice.createFramebuffer(
-         vk::FramebufferCreateInfo(
-            {},
-            mRenderPass,
-            1,
-            &swapChainImage,
-            swapChainExtents.width,
-            swapChainExtents.height,
-            1));
+      vk::FramebufferCreateInfo framebufferDesc;
+      framebufferDesc.renderPass = mRenderPass;
+      framebufferDesc.attachmentCount = 1;
+      framebufferDesc.pAttachments = &mSwapChainImageViews[i];
+      framebufferDesc.width = mSwapChainExtents.width;
+      framebufferDesc.height = mSwapChainExtents.height;
+      framebufferDesc.layers = 1;
+      mFramebuffers[i] = mDevice.createFramebuffer(framebufferDesc);
    }
+
+   return true;
+}
+
+bool
+DecafSDLVulkan::createRenderPipeline()
+{
+   vk::SamplerCreateInfo baseSamplerDesc;
+   baseSamplerDesc.magFilter = vk::Filter::eLinear;
+   baseSamplerDesc.minFilter = vk::Filter::eLinear;
+   baseSamplerDesc.mipmapMode = vk::SamplerMipmapMode::eNearest;
+   baseSamplerDesc.addressModeU = vk::SamplerAddressMode::eRepeat;
+   baseSamplerDesc.addressModeV = vk::SamplerAddressMode::eRepeat;
+   baseSamplerDesc.addressModeW = vk::SamplerAddressMode::eRepeat;
+   baseSamplerDesc.mipLodBias = 0.0f;
+   baseSamplerDesc.anisotropyEnable = false;
+   baseSamplerDesc.maxAnisotropy = 0.0f;
+   baseSamplerDesc.compareEnable = false;
+   baseSamplerDesc.compareOp = vk::CompareOp::eAlways;
+   baseSamplerDesc.minLod = 0.0f;
+   baseSamplerDesc.maxLod = 0.0f;
+   baseSamplerDesc.borderColor = vk::BorderColor::eFloatTransparentBlack;
+   baseSamplerDesc.unnormalizedCoordinates = false;
+   mTrivialSampler = mDevice.createSampler(baseSamplerDesc);
+
+   std::array<vk::Sampler, 1> immutableSamplers = { mTrivialSampler };
+
+   std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {
+      vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eSampler, 1, vk::ShaderStageFlagBits::eFragment, immutableSamplers.data()),
+      vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eSampledImage, 1, vk::ShaderStageFlagBits::eFragment, nullptr)
+   };
+
+   vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutDesc;
+   descriptorSetLayoutDesc.bindingCount = static_cast<uint32_t>(bindings.size());
+   descriptorSetLayoutDesc.pBindings = bindings.data();
+   mDescriptorSetLayout = mDevice.createDescriptorSetLayout(descriptorSetLayoutDesc);
+
+   std::array<vk::DescriptorSetLayout, 1> layoutBindings = { mDescriptorSetLayout };
+   vk::PipelineLayoutCreateInfo pipelineLayoutDesc;
+   pipelineLayoutDesc.setLayoutCount = static_cast<uint32_t>(layoutBindings.size());
+   pipelineLayoutDesc.pSetLayouts = layoutBindings.data();
+   pipelineLayoutDesc.pushConstantRangeCount = 0;
+   pipelineLayoutDesc.pPushConstantRanges = nullptr;
+   mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
+
+   auto scanbufferVertBytesSize = sizeof(scanbufferVertBytes) / sizeof(scanbufferVertBytes[0]);
+   auto scanbufferVertModule = mDevice.createShaderModuleUnique(vk::ShaderModuleCreateInfo({}, scanbufferVertBytesSize, reinterpret_cast<const uint32_t*>(scanbufferVertBytes)));
+
+   auto scanbufferFragBytesSize = sizeof(scanbufferFragBytes) / sizeof(scanbufferFragBytes[0]);
+   auto scanbufferFragModule = mDevice.createShaderModuleUnique(vk::ShaderModuleCreateInfo({}, scanbufferFragBytesSize, reinterpret_cast<const uint32_t*>(scanbufferFragBytes)));
+
+   std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages = {
+      vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, scanbufferVertModule.get(), "main", nullptr),
+      vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, scanbufferFragModule.get(), "main", nullptr)
+   };
+
+   std::array<vk::VertexInputBindingDescription, 1> vtxBindings = {
+      vk::VertexInputBindingDescription(0, 16, vk::VertexInputRate::eVertex)
+   };
+
+   std::array<vk::VertexInputAttributeDescription, 2> vtxAttribs = {
+      vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32Sfloat, 0),
+      vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32Sfloat, 8),
+   };
+
+   // Vertex input stage, we store all our vertices in the actual shaders
+   vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+   vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vtxBindings.size());
+   vertexInputInfo.pVertexBindingDescriptions = vtxBindings.data();
+   vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vtxAttribs.size());
+   vertexInputInfo.pVertexAttributeDescriptions = vtxAttribs.data();
+
+   vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
+   inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
+   inputAssembly.primitiveRestartEnable = false;
+
+   vk::Viewport viewport(0.0f, 0.0f, 
+                         static_cast<float>(mSwapChainExtents.width),
+                         static_cast<float>(mSwapChainExtents.height),
+                         0.0f, 0.0f);
+   vk::Rect2D scissor({ 0,0 }, mSwapChainExtents);
+   vk::PipelineViewportStateCreateInfo viewportState;
+   viewportState.viewportCount = 1;
+   viewportState.pViewports = &viewport;
+   viewportState.scissorCount = 1;
+   viewportState.pScissors = &scissor;
+
+   vk::PipelineRasterizationStateCreateInfo rasterizer;
+   rasterizer.depthClampEnable = false;
+   rasterizer.rasterizerDiscardEnable = false;
+   rasterizer.polygonMode = vk::PolygonMode::eFill;
+   rasterizer.cullMode = vk::CullModeFlagBits::eNone;
+   rasterizer.frontFace = vk::FrontFace::eClockwise;
+   rasterizer.depthBiasEnable = false;
+   rasterizer.depthBiasConstantFactor = 0.0f;
+   rasterizer.depthBiasClamp = 0.0f;
+   rasterizer.depthBiasSlopeFactor = 0.0f;
+   rasterizer.lineWidth = 1.0f;
+
+   vk::PipelineMultisampleStateCreateInfo multisampling;
+   multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
+   multisampling.sampleShadingEnable = false;
+   multisampling.minSampleShading = 1.0f;
+   multisampling.pSampleMask = nullptr;
+   multisampling.alphaToCoverageEnable = false;
+   multisampling.alphaToOneEnable = false;
+
+   vk::PipelineColorBlendAttachmentState colorBlendAttachement0;
+   colorBlendAttachement0.blendEnable = false;
+   colorBlendAttachement0.srcColorBlendFactor = vk::BlendFactor::eOne;
+   colorBlendAttachement0.dstColorBlendFactor = vk::BlendFactor::eZero;
+   colorBlendAttachement0.colorBlendOp = vk::BlendOp::eAdd;
+   colorBlendAttachement0.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+   colorBlendAttachement0.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+   colorBlendAttachement0.alphaBlendOp = vk::BlendOp::eAdd;
+   colorBlendAttachement0.colorWriteMask = 
+      vk::ColorComponentFlagBits::eR |
+      vk::ColorComponentFlagBits::eG |
+      vk::ColorComponentFlagBits::eB |
+      vk::ColorComponentFlagBits::eA;
+
+   std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments = {
+      colorBlendAttachement0
+   };
+
+   vk::PipelineColorBlendStateCreateInfo colorBlendState;
+   colorBlendState.logicOpEnable = false;
+   colorBlendState.logicOp = vk::LogicOp::eCopy;
+   colorBlendState.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+   colorBlendState.pAttachments = colorBlendAttachments.data();
+   colorBlendState.blendConstants[0] = 0.0f;
+   colorBlendState.blendConstants[1] = 0.0f;
+   colorBlendState.blendConstants[2] = 0.0f;
+   colorBlendState.blendConstants[3] = 0.0f;
+
+   std::vector<vk::DynamicState> dynamicStates = {
+      vk::DynamicState::eViewport
+   };
+
+   vk::PipelineDynamicStateCreateInfo dynamicState;
+   dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+   dynamicState.pDynamicStates = dynamicStates.data();
+
+   vk::GraphicsPipelineCreateInfo pipelineInfo;
+   pipelineInfo.pStages = shaderStages.data();
+   pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+   pipelineInfo.pVertexInputState = &vertexInputInfo;
+   pipelineInfo.pInputAssemblyState = &inputAssembly;
+   pipelineInfo.pTessellationState = nullptr;
+   pipelineInfo.pViewportState = &viewportState;
+   pipelineInfo.pRasterizationState = &rasterizer;
+   pipelineInfo.pMultisampleState = &multisampling;
+   pipelineInfo.pDepthStencilState = nullptr;
+   pipelineInfo.pColorBlendState = &colorBlendState;
+   pipelineInfo.pDynamicState = &dynamicState;
+   pipelineInfo.layout = mPipelineLayout;
+   pipelineInfo.renderPass = mRenderPass;
+   pipelineInfo.subpass = 0;
+   pipelineInfo.basePipelineHandle = vk::Pipeline();
+   pipelineInfo.basePipelineIndex = -1;
+   mGraphicsPipeline = mDevice.createGraphicsPipeline(vk::PipelineCache(), pipelineInfo);
+
+   return true;
+}
+
+bool
+DecafSDLVulkan::createDescriptorPools()
+{
+   std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, 100)
+   };
+
+   vk::DescriptorPoolCreateInfo descriptorPoolInfo;
+   descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
+   descriptorPoolInfo.maxSets = static_cast<uint32_t>(descriptorPoolSizes.size() * 100);
+   mDescriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
+
+   return true;
+}
+
+bool
+DecafSDLVulkan::createBuffers()
+{
+   auto findMemoryType = [&](uint32_t typeFilter, vk::MemoryPropertyFlags props)
+   {
+      auto memProps = mPhysDevice.getMemoryProperties();
+
+      for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
+         if ((typeFilter & (1 << i)) && (memProps.memoryTypes[i].propertyFlags & props) == props) {
+            return i;
+         }
+      }
+
+      throw std::runtime_error("failed to find suitable memory type!");
+   };
+
+   static const std::array<float, 24> vertices = {
+      -1.0f, -1.0f,  0.0f,  1.0f,
+       1.0f, -1.0f,  1.0f,  1.0f,
+       1.0f,  1.0f,  1.0f,  0.0f,
+
+       1.0f,  1.0f,  1.0f,  0.0f,
+      -1.0f,  1.0f,  0.0f,  0.0f,
+      -1.0f, -1.0f,  0.0f,  1.0f,
+   };
+
+   vk::BufferCreateInfo bufferDesc;
+   bufferDesc.size = static_cast<uint32_t>(sizeof(float) * vertices.size());
+   bufferDesc.usage = vk::BufferUsageFlagBits::eVertexBuffer;
+   bufferDesc.sharingMode = vk::SharingMode::eExclusive;
+   bufferDesc.queueFamilyIndexCount = 1;
+   bufferDesc.pQueueFamilyIndices = &mQueueFamilyIndex;
+   mVertBuffer = mDevice.createBuffer(bufferDesc);
+
+   auto bufferMemReqs = mDevice.getBufferMemoryRequirements(mVertBuffer);
+
+   vk::MemoryAllocateInfo allocDesc;
+   allocDesc.allocationSize = bufferMemReqs.size;
+   allocDesc.memoryTypeIndex = findMemoryType(bufferMemReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+   auto bufferMem = mDevice.allocateMemory(allocDesc);
+
+   mDevice.bindBufferMemory(mVertBuffer, bufferMem, 0);
+
+   auto hostMem = mDevice.mapMemory(bufferMem, 0, VK_WHOLE_SIZE);
+   memcpy(hostMem, vertices.data(), bufferMemReqs.size);
+   mDevice.flushMappedMemoryRanges({ vk::MappedMemoryRange(bufferMem, 0, VK_WHOLE_SIZE) });
+   mDevice.unmapMemory(bufferMem);
 
    return true;
 }
@@ -314,17 +585,13 @@ DecafSDLVulkan::initialise(int width, int height)
       return false;
    }
 
-   // Set up our devices
-   auto physDevices = mVulkan.enumeratePhysicalDevices();
-   mPhysDevice = physDevices[0];
-
-   // Create a window surface
-   VkSurfaceKHR sdlSurface;
-   if (!SDL_Vulkan_CreateSurface(mWindow, mVulkan, &sdlSurface)) {
-      gCliLog->error("Failed to create Vulkan render surface");
+   if (!pickPhysicalDevice()) {
       return false;
    }
-   mSurface = sdlSurface;
+
+   if (!createWindowSurface()) {
+      return false;
+   }
 
    if (!createDevice()) {
       return false;
@@ -334,150 +601,28 @@ DecafSDLVulkan::initialise(int width, int height)
       return false;
    }
 
-   vk::UniqueSampler baseSampler = mDevice.createSamplerUnique(
-      vk::SamplerCreateInfo(
-         {},
-         vk::Filter::eLinear,
-         vk::Filter::eLinear,
-         vk::SamplerMipmapMode::eNearest,
-         vk::SamplerAddressMode::eRepeat,
-         vk::SamplerAddressMode::eRepeat,
-         vk::SamplerAddressMode::eRepeat,
-         0.0f,
-         false,
-         0.0f,
-         false,
-         vk::CompareOp::eAlways,
-         0.0f,
-         0.0f,
-         vk::BorderColor::eFloatTransparentBlack,
-         false));
+   if (!createRenderPipeline()) {
+      return false;
+   }
 
-   std::vector<vk::Sampler> immutableSamplers = { baseSampler.get() };
-   std::vector<vk::DescriptorSetLayoutBinding> bindings = {
-      vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eSampler, 1, vk::ShaderStageFlagBits::eFragment, immutableSamplers.data()),
-      vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eSampledImage, 1, vk::ShaderStageFlagBits::eFragment, nullptr)
-   };
+   if (!createDescriptorPools()) {
+      return false;
+   }
 
-   auto descriptorSetLayout = mDevice.createDescriptorSetLayout(
-      vk::DescriptorSetLayoutCreateInfo(
-         {},
-         static_cast<uint32_t>(bindings.size()), bindings.data()));
+   if (!createBuffers()) {
+      return false;
+   }
 
-   std::vector<vk::DescriptorSetLayout> layoutBindings = { descriptorSetLayout };
-   auto pipelineLayout = mDevice.createPipelineLayout(
-      vk::PipelineLayoutCreateInfo(
-         {},
-         static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data(),
-         0, nullptr));
+   mDescriptorSets.resize(mFramebuffers.size() * 2);
+   for (auto i = 0u; i < mDescriptorSets.size(); ++i) {
+      vk::DescriptorSetAllocateInfo descriptorSetAllocDesc;
+      descriptorSetAllocDesc.descriptorPool = mDescriptorPool;
+      descriptorSetAllocDesc.descriptorSetCount = 1;
+      descriptorSetAllocDesc.pSetLayouts = &mDescriptorSetLayout;
+      mDescriptorSets[i] = mDevice.allocateDescriptorSets(descriptorSetAllocDesc)[0];
+   }
 
-   auto scanbufferVertBytesSize = sizeof(scanbufferVertBytes) / sizeof(scanbufferVertBytes[0]);
-   auto scanbufferVertModule = mDevice.createShaderModuleUnique(vk::ShaderModuleCreateInfo({}, scanbufferVertBytesSize, reinterpret_cast<const uint32_t*>(scanbufferVertBytes)));
-
-   auto scanbufferFragBytesSize = sizeof(scanbufferFragBytes) / sizeof(scanbufferFragBytes[0]);
-   auto scanbufferFragModule = mDevice.createShaderModuleUnique(vk::ShaderModuleCreateInfo({}, scanbufferFragBytesSize, reinterpret_cast<const uint32_t*>(scanbufferFragBytes)));
-
-   std::vector<vk::PipelineShaderStageCreateInfo> shaderStages = {
-      vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, scanbufferVertModule.get(), "main", nullptr),
-      vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, scanbufferFragModule.get(), "main", nullptr)
-   };
-
-   std::vector<vk::VertexInputBindingDescription> vtxBindings = {
-      vk::VertexInputBindingDescription(0, 16, vk::VertexInputRate::eVertex)
-   };
-
-   std::vector<vk::VertexInputAttributeDescription> vtxAttribs = {
-      vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32Sfloat, 0),
-      vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32Sfloat, 8),
-   };
-
-   // Vertex input stage, we store all our vertices in the actual shaders
-   vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
-      {},
-      static_cast<uint32_t>(vtxBindings.size()), vtxBindings.data(),
-      static_cast<uint32_t>(vtxAttribs.size()), vtxAttribs.data());
-
-   vk::PipelineInputAssemblyStateCreateInfo inputAssembly(
-      {},
-      vk::PrimitiveTopology::eTriangleList,
-      false);
-
-   vk::PipelineRasterizationStateCreateInfo rasterizer(
-      {},
-      false,
-      true,
-      vk::PolygonMode::eFill,
-      vk::CullModeFlagBits::eNone,
-      vk::FrontFace::eClockwise,
-      false,
-      0.0f,
-      0.0f,
-      0.0f,
-      1.0f);
-
-   vk::PipelineMultisampleStateCreateInfo multisampling(
-      {},
-      vk::SampleCountFlagBits::e1,
-      false,
-      1.0f,
-      nullptr,
-      false,
-      false);
-
-   std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments = {
-      vk::PipelineColorBlendAttachmentState(
-         false,
-         vk::BlendFactor::eOne,
-         vk::BlendFactor::eZero,
-         vk::BlendOp::eAdd,
-         vk::BlendFactor::eOne,
-         vk::BlendFactor::eZero,
-         vk::BlendOp::eAdd)
-   };
-
-   vk::PipelineColorBlendStateCreateInfo colorBlendState(
-      {},
-      false,
-      vk::LogicOp::eCopy,
-      static_cast<uint32_t>(colorBlendAttachments.size()), colorBlendAttachments.data(),
-      { 0.0f, 0.0f, 0.0f, 0.0f });
-
-   std::vector<vk::DynamicState> dynamicStates = {
-      vk::DynamicState::eViewport
-   };
-
-   vk::PipelineDynamicStateCreateInfo dynamicState(
-      {},
-      static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data());
-
-   vk::GraphicsPipelineCreateInfo pipelineInfo;
-   pipelineInfo.pStages = shaderStages.data();
-   pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
-   pipelineInfo.pVertexInputState = &vertexInputInfo;
-   pipelineInfo.pInputAssemblyState = &inputAssembly;
-   pipelineInfo.pTessellationState = nullptr;
-   pipelineInfo.pViewportState = nullptr;
-   pipelineInfo.pRasterizationState = &rasterizer;
-   pipelineInfo.pMultisampleState = &multisampling;
-   pipelineInfo.pDepthStencilState = nullptr;
-   pipelineInfo.pColorBlendState = &colorBlendState;
-   pipelineInfo.pDynamicState = &dynamicState;
-   pipelineInfo.layout = pipelineLayout;
-   pipelineInfo.renderPass = mRenderPass;
-   pipelineInfo.subpass = 0;
-   pipelineInfo.basePipelineHandle = vk::Pipeline();
-   pipelineInfo.basePipelineIndex = -1;
-   mGraphicsPipeline = mDevice.createGraphicsPipeline(vk::PipelineCache(), pipelineInfo);
-
-   std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
-      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, static_cast<uint32_t>(mFramebuffers.size()))
-   };
-   vk::DescriptorPoolCreateInfo descriptorPoolInfo;
-   descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
-   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets = static_cast<uint32_t>(mFramebuffers.size());
-   mDescriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
-
+   // Set up our fences
    mImageAvailableSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo());
    mRenderFinishedSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo());
    mRenderFence = mDevice.createFence(vk::FenceCreateInfo());
@@ -524,14 +669,16 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
          mCommandPool,
          vk::CommandBufferLevel::ePrimary, 1))[0];
 
-
    uint32_t nextSwapImage;
    mDevice.acquireNextImageKHR(mSwapchain, std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphore, vk::Fence{}, &nextSwapImage);
 
    mDevice.resetCommandPool(mCommandPool, vk::CommandPoolResetFlags());
+   mDevice.resetFences({ mRenderFence });
 
    renderCmdBuf.begin(vk::CommandBufferBeginInfo({}, nullptr));
    {
+      renderCmdBuf.bindPipeline(vk::PipelineBindPoint::eGraphics, mGraphicsPipeline);
+
       vk::RenderPassBeginInfo renderPassBeginInfo;
       renderPassBeginInfo.renderPass = mRenderPass;
       renderPassBeginInfo.framebuffer = mFramebuffers[nextSwapImage];
@@ -540,8 +687,6 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       vk::ClearValue clearValue(mBackgroundColour);
       renderPassBeginInfo.pClearValues = &clearValue;
       renderCmdBuf.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-      renderCmdBuf.bindPipeline(vk::PipelineBindPoint::eGraphics, mGraphicsPipeline);
 
       // Draw the scan buffers...
       // TODO: Actually draw the scan buffers from libgpu...
@@ -587,8 +732,8 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       mQueue.presentKHR(presentInfo);
    }
 
-   mDevice.waitForFences({ mRenderFence }, true, std::numeric_limits<uint64_t>::max());
-   mDevice.resetFences({ mRenderFence });
+   // Wait for the frame to complete rendering
+   mDevice.waitForFences({ mRenderFence }, true, std::numeric_limits<uint64_t>::max());  
 }
 
 gpu::GraphicsDriver *
