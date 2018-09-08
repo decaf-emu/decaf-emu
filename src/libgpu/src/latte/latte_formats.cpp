@@ -7,6 +7,107 @@
 namespace latte
 {
 
+DataFormat
+getColorBufferDataFormat(latte::CB_FORMAT format, latte::CB_NUMBER_TYPE numberType)
+{
+   DataFormat formatOut;
+
+   // This is safe only becase CB_FORMAT perfectly overlays SQ_DATA_FORMAT
+   formatOut.format = static_cast<latte::SQ_DATA_FORMAT>(format);
+
+   switch (numberType) {
+   case latte::CB_NUMBER_TYPE::UNORM:
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::SNORM:
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::SIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::UINT:
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::INT;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::SINT:
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::INT;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::SIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::FLOAT:
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::CB_NUMBER_TYPE::SRGB:
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 1;
+      break;
+   default:
+      decaf_abort(fmt::format("Color buffer with unsupported number type {}", numberType));
+   }
+
+   return formatOut;
+}
+
+DataFormat
+getDepthBufferDataFormat(latte::DB_FORMAT format)
+{
+   DataFormat formatOut;
+
+   switch (format) {
+   case latte::DB_FORMAT::DEPTH_16:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_16;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::DB_FORMAT::DEPTH_X8_24:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::DB_FORMAT::DEPTH_8_24:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::DB_FORMAT::DEPTH_X8_24_FLOAT:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::DB_FORMAT::DEPTH_8_24_FLOAT:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::DB_FORMAT::DEPTH_32_FLOAT:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   case latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT:
+      formatOut.format = latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT;
+      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
+      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+      formatOut.degamma = 0;
+      break;
+   default:
+      decaf_abort(fmt::format("Depth buffer with unsupported format {}", format));
+   }
+
+   return formatOut;
+}
+
 uint32_t
 getDataFormatBitsPerElement(latte::SQ_DATA_FORMAT format)
 {
@@ -236,6 +337,27 @@ getDataFormatIsFloat(latte::SQ_DATA_FORMAT format)
       return false;
    default:
       decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
+   }
+}
+
+uint32_t
+getTexDimDimensions(latte::SQ_TEX_DIM dim)
+{
+   switch (dim) {
+   case latte::SQ_TEX_DIM::DIM_1D:
+      return 1;
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      return 2;
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+   case latte::SQ_TEX_DIM::DIM_3D:
+      return 3;
+      break;
+   default:
+      decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
 }
 

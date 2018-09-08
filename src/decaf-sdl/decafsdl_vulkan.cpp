@@ -629,6 +629,9 @@ DecafSDLVulkan::initialise(int width, int height)
 
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::VulkanDriver*>(gpu::createVulkanDriver());
+   mDecafDriver->initialise(mPhysDevice, mDevice, mQueue, mQueueFamilyIndex);
+
+   // Set up the debug rendering system
    mDebugUiRenderer = reinterpret_cast<decaf::VulkanUiRenderer*>(decaf::createDebugVulkanRenderer());
 
    decaf::VulkanUiRendererInitInfo uiInitInfo;
@@ -640,6 +643,14 @@ DecafSDLVulkan::initialise(int width, int height)
    uiInitInfo.commandPool = mCommandPool;
    mDebugUiRenderer->initialise(&uiInitInfo);
 
+   // Start graphics thread
+   if (!config::display::force_sync) {
+      mGraphicsThread = std::thread {
+         [this]() {
+            mDecafDriver->run();
+         } };
+   }
+
    return true;
 }
 
@@ -648,6 +659,15 @@ DecafSDLVulkan::shutdown()
 {
    // Shut down the debugger ui driver
    mDebugUiRenderer->shutdown();
+
+   // Stop the GPU
+   if (!config::display::force_sync) {
+      mDecafDriver->stop();
+      mGraphicsThread.join();
+   }
+
+   // Shut down the gpu driver
+   mDecafDriver->shutdown();
 }
 
 void
@@ -658,11 +678,89 @@ DecafSDLVulkan::windowResized()
 }
 
 void
+DecafSDLVulkan::acquireScanBuffer(vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView)
+{
+   vk::ImageMemoryBarrier imageBarrier;
+   imageBarrier.srcAccessMask = vk::AccessFlags();
+   imageBarrier.dstAccessMask = vk::AccessFlags();
+   imageBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+   imageBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+   imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   imageBarrier.image = image;
+   imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+   imageBarrier.subresourceRange.baseMipLevel = 0;
+   imageBarrier.subresourceRange.levelCount = 1;
+   imageBarrier.subresourceRange.baseArrayLayer = 0;
+   imageBarrier.subresourceRange.layerCount = 1;
+
+   cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAllGraphics,
+                             vk::PipelineStageFlagBits::eAllGraphics,
+                             vk::DependencyFlagBits::eByRegion,
+                             {},
+                             {},
+                             { imageBarrier });
+
+   vk::DescriptorImageInfo imageInfo;
+   imageInfo.imageView = imageView;
+   imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
+   vk::WriteDescriptorSet descWriteDesc;
+   descWriteDesc.dstSet = descriptorSet;
+   descWriteDesc.dstBinding = 1;
+   descWriteDesc.dstArrayElement = 0;
+   descWriteDesc.descriptorCount = 1;
+   descWriteDesc.descriptorType = vk::DescriptorType::eSampledImage;
+   descWriteDesc.pImageInfo = &imageInfo;
+   mDevice.updateDescriptorSets({ descWriteDesc }, {});
+}
+
+void
+DecafSDLVulkan::renderScanBuffer(vk::Viewport viewport, vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView)
+{
+   cmdBuffer.setViewport(0, { viewport });
+   cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, { descriptorSet }, {});
+   cmdBuffer.bindVertexBuffers(0, { mVertBuffer }, { 0 });
+   cmdBuffer.draw(6, 1, 0, 0);
+}
+
+void
+DecafSDLVulkan::releaseScanBuffer(vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView)
+{
+   vk::ImageMemoryBarrier imageBarrier;
+   imageBarrier.srcAccessMask = vk::AccessFlags();
+   imageBarrier.dstAccessMask = vk::AccessFlags();
+   imageBarrier.oldLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+   imageBarrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+   imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   imageBarrier.image = image;
+   imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+   imageBarrier.subresourceRange.baseMipLevel = 0;
+   imageBarrier.subresourceRange.levelCount = 1;
+   imageBarrier.subresourceRange.baseArrayLayer = 0;
+   imageBarrier.subresourceRange.layerCount = 1;
+
+   cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAllGraphics,
+                             vk::PipelineStageFlagBits::eAllGraphics,
+                             vk::DependencyFlagBits::eByRegion,
+                             {},
+                             {},
+                             { imageBarrier });
+}
+
+void
 DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
 {
    // Grab window information
    int width, height;
    SDL_GetWindowSize(mWindow, &width, &height);
+
+   // If we are in force-sync mode, we need to poll the GPU to move
+   // the command buffers ahead until the flip occurs.
+   if (config::display::force_sync) {
+      mDecafDriver->runUntilFlip();
+   }
 
    auto renderCmdBuf = mDevice.allocateCommandBuffers(
       vk::CommandBufferAllocateInfo(
@@ -675,9 +773,24 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
    mDevice.resetCommandPool(mCommandPool, vk::CommandPoolResetFlags());
    mDevice.resetFences({ mRenderFence });
 
+   auto descriptorSetTv = mDescriptorSets[nextSwapImage * 2 + 0];
+   auto descriptorSetDrc = mDescriptorSets[nextSwapImage * 2 + 1];
+
+   // Grab the scan buffers...
+   vk::Image tvImage, drcImage;
+   vk::ImageView tvView, drcView;
+   mDecafDriver->getSwapBuffers(tvImage, tvView, drcImage, drcView);
+
    renderCmdBuf.begin(vk::CommandBufferBeginInfo({}, nullptr));
    {
       renderCmdBuf.bindPipeline(vk::PipelineBindPoint::eGraphics, mGraphicsPipeline);
+
+      if (tvImage) {
+         acquireScanBuffer(renderCmdBuf, descriptorSetTv, tvImage, tvView);
+      }
+      if (drcImage) {
+         acquireScanBuffer(renderCmdBuf, descriptorSetDrc, drcImage, drcView);
+      }
 
       vk::RenderPassBeginInfo renderPassBeginInfo;
       renderPassBeginInfo.renderPass = mRenderPass;
@@ -688,13 +801,33 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       renderPassBeginInfo.pClearValues = &clearValue;
       renderCmdBuf.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-      // Draw the scan buffers...
-      // TODO: Actually draw the scan buffers from libgpu...
+      // TODO: Technically, we are generating these coordinates upside down, and then
+      //  'correcting' it here.  We should probably generate these accurately, and then
+      //  flip them for OpenGL, which is the API with the unintuitive origin.
+      vk::Viewport tvViewport(tv.x, tv.y, tv.width, tv.height);
+      tvViewport.y = height - (tvViewport.y + tvViewport.height);
+
+      vk::Viewport drcViewport(drc.x, drc.y, drc.width, drc.height);
+      drcViewport.y = height - (drcViewport.y + drcViewport.height);
+
+      if (tvImage) {
+         renderScanBuffer(tvViewport, renderCmdBuf, descriptorSetTv, tvImage, tvView);
+      }
+      if (drcImage) {
+         renderScanBuffer(drcViewport, renderCmdBuf, descriptorSetDrc, drcImage, drcView);
+      }
 
       // Draw the debug UI
       mDebugUiRenderer->draw(width, height, renderCmdBuf);
 
       renderCmdBuf.endRenderPass();
+
+      if (tvImage) {
+         releaseScanBuffer(renderCmdBuf, descriptorSetTv, tvImage, tvView);
+      }
+      if (drcImage) {
+         releaseScanBuffer(renderCmdBuf, descriptorSetDrc, drcImage, drcView);
+      }
    }
    renderCmdBuf.end();
 

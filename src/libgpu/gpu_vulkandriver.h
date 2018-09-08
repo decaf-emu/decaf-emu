@@ -1,6 +1,7 @@
 #pragma once
 #ifdef DECAF_VULKAN
 #include "gpu_graphicsdriver.h"
+#include <vulkan/vulkan.hpp>
 
 namespace gpu
 {
@@ -19,6 +20,21 @@ public:
    };
 
    virtual ~VulkanDriver() = default;
+
+   virtual void
+   initialise(vk::PhysicalDevice physDevice,
+              vk::Device device,
+              vk::Queue queue,
+              uint32_t queueFamilyIndex) = 0;
+
+   virtual void
+   shutdown() = 0;
+
+   virtual void
+   getSwapBuffers(vk::Image &tvImage,
+                  vk::ImageView &tvView,
+                  vk::Image &drcImage,
+                  vk::ImageView &drcView) = 0;
 
    virtual DebuggerInfo *
    getDebuggerInfo() = 0;

@@ -46,6 +46,10 @@ protected:
 
    bool destroySwapChain();
 
+   void acquireScanBuffer(vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView);
+   void renderScanBuffer(vk::Viewport viewport, vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView);
+   void releaseScanBuffer(vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView);
+
    std::thread mGraphicsThread;
    gpu::VulkanDriver *mDecafDriver = nullptr;
    decaf::VulkanUiRenderer *mDebugUiRenderer = nullptr;
