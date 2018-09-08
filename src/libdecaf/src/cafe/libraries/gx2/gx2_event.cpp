@@ -324,23 +324,12 @@ onSwap()
 
 
 /**
- * This is called by the GPU flip interrupt handler.
- * Will wakeup any threads waiting for a flip.
- */
-void
-handleGpuFlipInterrupt()
-{
-}
-
-
-/**
  * Called when a swap is performed by the driver.
  */
 void
 onFlip()
 {
    sEventData->framesReady++;
-   cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_FLIP_INTERRUPT);
 }
 
 } // namespace internal

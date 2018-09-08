@@ -55,10 +55,6 @@ exceptionContextFiberEntry(void *)
          gx2::internal::handleGpuRetireInterrupt();
       }
 
-      if (flags & cpu::GPU_FLIP_INTERRUPT) {
-         gx2::internal::handleGpuFlipInterrupt();
-      }
-
       if (flags & cpu::IPC_INTERRUPT) {
          ipcDriverKernelHandleInterrupt();
       }

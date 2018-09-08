@@ -95,9 +95,6 @@ void
 onSwap();
 
 void
-handleGpuFlipInterrupt();
-
-void
 onFlip();
 
 } // namespace internal
