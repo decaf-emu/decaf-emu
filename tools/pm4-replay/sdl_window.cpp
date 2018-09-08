@@ -252,7 +252,7 @@ private:
       auto isTv = (setBuffer.type == decaf::pm4::CaptureSetBuffer::TvBuffer) ? 1u : 0u;
 
       writePM4(DecafSetBuffer {
-         isTv,
+         latte::pm4::ScanTarget::TV,
          setBuffer.address,
          setBuffer.bufferingMode,
          setBuffer.width,

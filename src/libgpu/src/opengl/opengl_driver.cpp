@@ -88,7 +88,14 @@ GLDriver::shutdown()
 void
 GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
 {
-   auto chain = data.isTv ? &mTvScanBuffers : &mDrcScanBuffers;
+   ScanBufferChain *chain;
+   if (data.scanTarget == latte::pm4::ScanTarget::TV) {
+      chain = &mTvScanBuffers;
+   } else if (data.scanTarget == latte::pm4::ScanTarget::DRC) {
+      chain = &mDrcScanBuffers;
+   } else {
+      decaf_abort("Unexpected decafSetBuffer target");
+   }
 
    // Destroy any old chain
    if (chain->object) {
@@ -112,8 +119,11 @@ GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
    chain->height = data.height;
 
    if (gpu::config::debug) {
-      const char *label = data.isTv ? "TV framebuffer" : "DRC framebuffer";
-      gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, label);
+      if (data.scanTarget == latte::pm4::ScanTarget::TV) {
+         gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, "TV framebuffer");
+      } else if (data.scanTarget == latte::pm4::ScanTarget::DRC) {
+         gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, "DRC framebuffer");
+      }
    }
 
    // Initialize the pixels to a more useful color
@@ -131,21 +141,15 @@ GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
    delete[] tmpClearBuf;
 }
 
-enum
-{
-   SCANTARGET_TV = 1,
-   SCANTARGET_DRC = 4,
-};
-
 void
 GLDriver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
 {
    auto buffer = getColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info, false);
    ScanBufferChain *target = nullptr;
 
-   if (data.scanTarget == SCANTARGET_TV) {
+   if (data.scanTarget == latte::pm4::ScanTarget::TV) {
       target = &mTvScanBuffers;
-   } else if (data.scanTarget == SCANTARGET_DRC) {
+   } else if (data.scanTarget == latte::pm4::ScanTarget::DRC) {
       target = &mDrcScanBuffers;
    } else {
       gLog->error("decafCopyColorToScan called for unknown scanTarget.");

@@ -16,6 +16,12 @@ namespace latte
 namespace pm4
 {
 
+enum ScanTarget : uint32_t
+{
+   TV = 1,
+   DRC = 4
+};
+
 struct DecafSwapBuffers
 {
    static const auto Opcode = IT_OPCODE::DECAF_SWAP_BUFFERS;
@@ -59,7 +65,7 @@ struct DecafCopyColorToScan
 {
    static const auto Opcode = IT_OPCODE::DECAF_COPY_COLOR_TO_SCAN;
 
-   uint32_t scanTarget;
+   ScanTarget scanTarget;
    latte::CB_COLORN_BASE cb_color_base;
    latte::CB_COLORN_FRAG cb_color_frag;
    uint32_t width;
@@ -142,7 +148,7 @@ struct DecafSetBuffer
 {
    static const auto Opcode = IT_OPCODE::DECAF_SET_BUFFER;
 
-   uint32_t isTv;
+   ScanTarget scanTarget;
    phys_addr buffer;
    uint32_t numBuffers;
    uint32_t width;
@@ -151,7 +157,7 @@ struct DecafSetBuffer
    template<typename Serialiser>
    void serialise(Serialiser &se)
    {
-      se(isTv);
+      se(scanTarget);
       se(buffer);
       se(numBuffers);
       se(width);

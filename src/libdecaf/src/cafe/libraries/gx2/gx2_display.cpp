@@ -134,7 +134,7 @@ GX2SetTVBuffer(virt_ptr<void> buffer,
    */
    // bufferingMode is conveniently equal to the number of buffers
    internal::writePM4(latte::pm4::DecafSetBuffer {
-      1,
+      latte::pm4::ScanTarget::TV,
       OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
       bufferingMode,
       static_cast<uint32_t>(width),
@@ -161,7 +161,7 @@ GX2SetDRCBuffer(virt_ptr<void> buffer,
 
    // bufferingMode is conveniently equal to the number of buffers
    internal::writePM4(latte::pm4::DecafSetBuffer {
-      0,
+      latte::pm4::ScanTarget::DRC,
       OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
       bufferingMode,
       static_cast<uint32_t>(width),

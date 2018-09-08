@@ -40,7 +40,7 @@ GX2CopyColorBufferToScanBuffer(virt_ptr<GX2ColorBuffer> buffer,
    GX2InitColorBufferRegs(buffer);
 
    internal::writePM4(latte::pm4::DecafCopyColorToScan {
-      scanTarget,
+      latte::pm4::ScanTarget(scanTarget),
       cb_color_base,
       cb_color_frag,
       buffer->surface.width,
