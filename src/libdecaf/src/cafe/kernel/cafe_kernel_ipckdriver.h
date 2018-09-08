@@ -58,7 +58,12 @@ ipcDriverKernelSubmitRequest(virt_ptr<IPCKDriverRequest> request);
 void
 ipcDriverKernelSubmitReply(phys_ptr<ios::IpcRequest> reply);
 
+namespace internal
+{
+
 void
-ipcDriverKernelHandleInterrupt();
+ipckDriverOpen();
+
+} // namespace internal
 
 } // namespace cafe::kernel

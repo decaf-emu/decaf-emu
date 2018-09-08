@@ -2,6 +2,7 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_exception.h"
 #include "cafe_kernel_heap.h"
+#include "cafe_kernel_ipckdriver.h"
 #include "cafe_kernel_lock.h"
 #include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
@@ -56,6 +57,11 @@ sExecutableName;
 static void
 mainCoreEntryPoint(cpu::Core *core)
 {
+   internal::initialiseCoreContext(core);
+   internal::initialiseExceptionContext(core);
+   internal::initialiseExceptionHandlers();
+   internal::ipckDriverOpen();
+
    // TODO: This is normally called by root.rpx
    loadShared();
 
@@ -139,6 +145,10 @@ mainCoreEntryPoint(cpu::Core *core)
 static void
 subCoreEntryPoint(cpu::Core *core)
 {
+   internal::initialiseCoreContext(core);
+   internal::initialiseExceptionContext(core);
+   internal::ipckDriverOpen();
+
    while (!sStopping.load()) {
       internal::kernelLockAcquire();
       auto entryContext = sSubCoreEntryContexts[core->id];
@@ -167,9 +177,6 @@ setSubCoreEntryContext(int coreId,
 static void
 cpuEntrypoint(cpu::Core *core)
 {
-   internal::initialiseCoreContext(core);
-   internal::initialiseExceptionContext(core);
-
    if (core->id == 1) {
       mainCoreEntryPoint(core);
    } else {
@@ -252,7 +259,6 @@ start()
 
    // Setup cpu
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
-   internal::initialiseExceptionHandlers();
 
    if (decaf::config::log::branch_trace) {
       cpu::setBranchTraceHandler(&cpuBranchTraceHandler);

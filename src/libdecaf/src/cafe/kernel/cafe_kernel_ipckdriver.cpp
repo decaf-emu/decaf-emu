@@ -1,6 +1,9 @@
 #include "cafe_kernel_ipckdriver.h"
+#include "cafe_kernel_interrupts.h"
 #include "ios/kernel/ios_kernel_ipc_thread.h"
+
 #include "cafe/libraries/coreinit/coreinit_ipcdriver.h"
+#include "cafe/libraries/coreinit/coreinit_scheduler.h"
 
 #include <condition_variable>
 #include <libcpu/cpu.h>
@@ -131,11 +134,15 @@ ipcDriverKernelSubmitReply(phys_ptr<ios::IpcRequest> reply)
 }
 
 
+namespace internal
+{
+
 /**
  * Handle PPC interrupt for when we have IPC responses to dispatch.
  */
 void
-ipcDriverKernelHandleInterrupt()
+ipcDriverKernelHandleInterrupt(InterruptType type,
+                               virt_ptr<Context> interruptedContext)
 {
    auto driver = coreinit::internal::getIPCDriver();
    auto &responses = sIpcResponses[driver->coreId];
@@ -152,7 +159,19 @@ ipcDriverKernelHandleInterrupt()
    sIpcMutex.unlock();
 
    // Call userland IPCDriver callback
+   coreinit::internal::disableScheduler();
    coreinit::internal::ipcDriverProcessResponses();
+   coreinit::internal::enableScheduler();
 }
+
+void
+ipckDriverOpen()
+{
+   auto coreId = cpu::this_core::id();
+   setUserModeInterruptHandler(static_cast<InterruptType>(static_cast<uint32_t>(InterruptType::IpcPpc0) + coreId),
+                               ipcDriverKernelHandleInterrupt);
+}
+
+} // namespace internal
 
 } // namespace cafe::kernel

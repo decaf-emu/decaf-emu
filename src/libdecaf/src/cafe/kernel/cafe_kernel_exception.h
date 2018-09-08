@@ -29,6 +29,14 @@ ENUM_END(ExceptionType)
 
 #include <common/enum_end.h>
 
+using ExceptionHandlerFn =
+   void(*)(ExceptionType type,
+           virt_ptr<Context> interruptedContext);
+
+bool
+setUserModeExceptionHandler(ExceptionType type,
+                            ExceptionHandlerFn handler);
+
 namespace internal
 {
 
@@ -40,6 +48,10 @@ initialiseExceptionHandlers();
 
 void
 initialiseStaticExceptionData();
+
+void
+setKernelExceptionHandler(ExceptionType type,
+                          ExceptionHandlerFn handler);
 
 } // namespace internal
 

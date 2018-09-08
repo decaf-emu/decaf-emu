@@ -1,5 +1,8 @@
 #include "coreinit.h"
+#include "coreinit_interrupts.h"
+#include "coreinit_scheduler.h"
 
+#include "cafe/kernel/cafe_kernel_exception.h"
 #include <libcpu/cpu.h>
 
 namespace cafe::coreinit
@@ -58,6 +61,27 @@ OSIsInterruptEnabled()
 {
    return cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK;
 }
+
+namespace internal
+{
+
+static void
+userModeIciCallback(kernel::ExceptionType type,
+                    virt_ptr<kernel::Context> interruptedContext)
+{
+   lockScheduler();
+   rescheduleSelfNoLock();
+   unlockScheduler();
+}
+
+void
+initialiseIci()
+{
+   kernel::setUserModeExceptionHandler(kernel::ExceptionType::ICI,
+                                       userModeIciCallback);
+}
+
+} // namespace internal
 
 void
 Library::registerInterruptSymbols()

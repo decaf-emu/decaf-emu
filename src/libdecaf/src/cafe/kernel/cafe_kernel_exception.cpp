@@ -1,5 +1,6 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_exception.h"
+#include "cafe_kernel_interrupts.h"
 #include "cafe_kernel_heap.h"
 #include "cafe_kernel_ipckdriver.h"
 #include "cafe/cafe_ppc_interface_invoke.h"
@@ -33,13 +34,51 @@ struct StaticExceptionData
 static virt_ptr<StaticExceptionData>
 sExceptionData;
 
+static std::array<ExceptionHandlerFn, ExceptionType::Max>
+sUserExceptionHandlers;
+
+static std::array<ExceptionHandlerFn, ExceptionType::Max>
+sKernelExceptionHandlers;
+
+static std::array<platform::StackTrace *, 3>
+sExceptionStackTraces;
+
+bool
+setUserModeExceptionHandler(ExceptionType type,
+                            ExceptionHandlerFn handler)
+{
+   if (sUserExceptionHandlers[type]) {
+      return false;
+   }
+
+   sUserExceptionHandlers[type] = handler;
+   return true;
+}
+
 namespace internal
 {
 
 static void
+defaultExceptionHandler(ExceptionType type,
+                        virt_ptr<Context> interruptedContext);
+
+inline void
+dispatchException(ExceptionType type,
+                  virt_ptr<Context> interruptedContext)
+{
+   if (sKernelExceptionHandlers[type]) {
+      sKernelExceptionHandlers[type](type, interruptedContext);
+   } else if (sUserExceptionHandlers[type]) {
+      sUserExceptionHandlers[type](type, interruptedContext);
+   } else {
+      defaultExceptionHandler(type, interruptedContext);
+   }
+}
+
+static void
 exceptionContextFiberEntry(void *)
 {
-   // Load up the context
+   auto coreId = cpu::this_core::id();
    wakeCurrentContext();
 
    while (true) {
@@ -48,15 +87,16 @@ exceptionContextFiberEntry(void *)
       auto flags = context->gpr[4];
 
       if (flags & cpu::ALARM_INTERRUPT) {
-         coreinit::internal::handleAlarmInterrupt(interruptedContext);
+         dispatchException(ExceptionType::Decrementer, interruptedContext);
       }
 
       if (flags & cpu::GPU_RETIRE_INTERRUPT) {
-         gx2::internal::handleGpuRetireInterrupt();
+         dispatchExternalInterrupt(InterruptType::Gpu7, interruptedContext);
       }
 
       if (flags & cpu::IPC_INTERRUPT) {
-         ipcDriverKernelHandleInterrupt();
+         dispatchExternalInterrupt(static_cast<InterruptType>(InterruptType::IpcPpc0 + coreId),
+                                   interruptedContext);
       }
 
       // Return to interrupted context
@@ -68,52 +108,32 @@ static void
 handleCpuInterrupt(cpu::Core *core,
                    uint32_t flags)
 {
+   auto interruptedContext = getCurrentContext();
+
    if (flags & cpu::SRESET_INTERRUPT) {
-      platform::exitThread(0);
+      dispatchException(ExceptionType::SystemReset, interruptedContext);
    }
 
    if (flags & cpu::DBGBREAK_INTERRUPT) {
-      if (decaf::config::debugger::enabled) {
-         coreinit::internal::pauseCoreTime(true);
-         debugger::handleDebugBreakInterrupt();
-         coreinit::internal::pauseCoreTime(false);
-      }
+      dispatchException(ExceptionType::Breakpoint, interruptedContext);
    }
 
-   auto unsafeInterrupts = cpu::NONMASKABLE_INTERRUPTS | cpu::DBGBREAK_INTERRUPT;
-   if (!(flags & ~unsafeInterrupts)) {
-      // Due to the fact that non-maskable interrupts are not able to be disabled
-      // it is possible the application has the scheduler lock or something, so we
-      // need to stop processing here or else bad things could happen.
-      return;
-   }
-
-   // We need to disable the scheduler while we handle interrupts so we
-   // do not reschedule before we are done with our interrupts.  We disable
-   // interrupts if they were on so any PPC callbacks executed do not
-   // immediately and reentrantly interrupt.  We also make sure did not
-   // interrupt someone who disabled the scheduler, since that should never
-   // happen and will cause bugs.
-
-   decaf_check(coreinit::internal::isSchedulerEnabled());
-   auto originalInterruptState = coreinit::OSDisableInterrupts();
-   coreinit::internal::disableScheduler();
+   // Disable interrupts
+   auto originalInterruptMask =
+      cpu::this_core::setInterruptMask(cpu::SRESET_INTERRUPT |
+                                       cpu::DBGBREAK_INTERRUPT);
 
    // Switch to the exception context fiber
    auto exceptionContext = virt_addrof(sExceptionData->exceptionThreadContext[core->id]);
-   auto interruptedContext = getCurrentContext();
    exceptionContext->gpr[3] = static_cast<uint32_t>(virt_cast<virt_addr>(interruptedContext));
    exceptionContext->gpr[4] = flags;
    switchContext(exceptionContext);
 
-   coreinit::internal::enableScheduler();
-   coreinit::OSRestoreInterrupts(originalInterruptState);
+   // Restore interrupts
+   cpu::this_core::setInterruptMask(originalInterruptMask);
 
-   // We must never receive an interrupt while processing a kernel
-   // function as if the scheduler is locked, we are in for some shit.
-   coreinit::internal::lockScheduler();
-   coreinit::internal::checkRunningThreadNoLock(false);
-   coreinit::internal::unlockScheduler();
+   // Always dispatch an ICI so userland coreinit can reschedule
+   dispatchException(ExceptionType::ICI, interruptedContext);
 }
 
 struct UnhandledExceptionData
@@ -179,7 +199,6 @@ unhandledExceptionFiberEntryPoint(void *param)
       //  and so that the debugger shows the right stop point.
       cpu::this_core::state()->nia -= 4;
 
-
       coreinit::internal::pauseCoreTime(true);
       debugger::handleDebugBreakInterrupt();
       coreinit::internal::pauseCoreTime(false);
@@ -196,26 +215,31 @@ unhandledExceptionFiberEntryPoint(void *param)
 }
 
 static void
+defaultExceptionHandler(ExceptionType type,
+                        virt_ptr<Context> interruptedContext)
+{
+   auto exceptionData = new UnhandledExceptionData { };
+   exceptionData->type = type;
+   exceptionData->coreId = cpu::this_core::id();
+   exceptionData->context = interruptedContext;
+   exceptionData->stackTrace = sExceptionStackTraces[exceptionData->coreId];
+   resetFaultedContextFiber(getCurrentContext(), unhandledExceptionFiberEntryPoint, exceptionData);
+}
+
+static void
 handleCpuSegfault(cpu::Core *core,
                   uint32_t address,
                   platform::StackTrace *stackTrace)
 {
    auto interruptedContext = getCurrentContext();
    copyContextFromCpu(interruptedContext);
-
-   auto exceptionData = new UnhandledExceptionData { };
-   exceptionData->context = interruptedContext;
-   exceptionData->stackTrace = stackTrace;
+   sExceptionStackTraces[core->id] = stackTrace;
 
    if (address == core->nia) {
-      exceptionData->type = ExceptionType::ISI;
+      dispatchException(ExceptionType::ISI, interruptedContext);
    } else {
-      exceptionData->type = ExceptionType::DSI;
+      dispatchException(ExceptionType::DSI, interruptedContext);
    }
-
-   resetFaultedContextFiber(getCurrentContext(),
-                            unhandledExceptionFiberEntryPoint,
-                            exceptionData);
 }
 
 static void
@@ -224,15 +248,36 @@ handleCpuIllegalInstruction(cpu::Core *core,
 {
    auto interruptedContext = getCurrentContext();
    copyContextFromCpu(interruptedContext);
+   sExceptionStackTraces[core->id] = stackTrace;
+   dispatchException(ExceptionType::Program, interruptedContext);
+}
 
-   auto exceptionData = new UnhandledExceptionData { };
-   exceptionData->context = interruptedContext;
-   exceptionData->stackTrace = stackTrace;
-   exceptionData->type = ExceptionType::Program;
+static void
+handleDebugBreakException(ExceptionType type,
+                          virt_ptr<Context> interruptedContext)
+{
+   if (decaf::config::debugger::enabled) {
+      coreinit::internal::pauseCoreTime(true);
+      debugger::handleDebugBreakInterrupt();
+      coreinit::internal::pauseCoreTime(false);
+   }
+}
 
-   resetFaultedContextFiber(getCurrentContext(),
-                            unhandledExceptionFiberEntryPoint,
-                            exceptionData);
+static void
+handleIciException(ExceptionType type,
+                   virt_ptr<Context> interruptedContext)
+{
+   // Call user ICI handler if set, else just ignore
+   if (sUserExceptionHandlers[type]) {
+      sUserExceptionHandlers[type](type, interruptedContext);
+   }
+}
+
+static void
+handleSystemResetException(ExceptionType type,
+                           virt_ptr<Context> interruptedContext)
+{
+   platform::exitThread(0);
 }
 
 void
@@ -251,6 +296,35 @@ initialiseExceptionContext(cpu::Core *core)
 void
 initialiseExceptionHandlers()
 {
+   setKernelExceptionHandler(ExceptionType::SystemReset,
+                             handleSystemResetException);
+
+   setKernelExceptionHandler(ExceptionType::Breakpoint,
+                             handleDebugBreakException);
+
+   setKernelExceptionHandler(ExceptionType::ICI,
+                             handleIciException);
+
+   // TODO: Move this to kernel timers
+   setKernelExceptionHandler(ExceptionType::Decrementer,
+      [](ExceptionType type,
+         virt_ptr<Context> interruptedContext)
+      {
+         coreinit::internal::disableScheduler();
+         coreinit::internal::handleAlarmInterrupt(interruptedContext);
+         coreinit::internal::enableScheduler();
+      });
+
+   // TODO: Move this to a user interrupt handler in tcl.rpl
+   setKernelInterruptHandler(InterruptType::Gpu7,
+      [](InterruptType type,
+         virt_ptr<Context> interruptedContext)
+      {
+         coreinit::internal::disableScheduler();
+         gx2::internal::handleGpuRetireInterrupt();
+         coreinit::internal::enableScheduler();
+      });
+
    cpu::setInterruptHandler(&handleCpuInterrupt);
    cpu::setSegfaultHandler(&handleCpuSegfault);
    cpu::setIllInstHandler(&handleCpuIllegalInstruction);
@@ -260,6 +334,13 @@ void
 initialiseStaticExceptionData()
 {
    sExceptionData = allocStaticData<StaticExceptionData>();
+}
+
+void
+setKernelExceptionHandler(ExceptionType type,
+                          ExceptionHandlerFn handler)
+{
+   sKernelExceptionHandlers[type] = handler;
 }
 
 } // namespace internal

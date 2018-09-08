@@ -22,6 +22,14 @@ OSRestoreInterrupts(BOOL enable);
 BOOL
 OSIsInterruptEnabled();
 
+namespace internal
+{
+
+void
+initialiseIci();
+
+} // namespace internal
+
 /** @} */
 
 } // namespace cafe::coreinit

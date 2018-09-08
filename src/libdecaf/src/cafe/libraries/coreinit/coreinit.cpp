@@ -7,6 +7,7 @@
 #include "coreinit_exception.h"
 #include "coreinit_ghs.h"
 #include "coreinit_im.h"
+#include "coreinit_interrupts.h"
 #include "coreinit_ipcdriver.h"
 #include "coreinit_lockedcache.h"
 #include "coreinit_mcp.h"
@@ -34,6 +35,8 @@ rpl_entry(/* no args for coreinit entry point */)
    // Always initialise time then system info first, other things depend on it.
    internal::initialiseTime();
    internal::initialiseSystemInfo();
+
+   internal::initialiseIci();
    internal::initialiseSystemMessageQueue();
    internal::initialiseExceptionHandlers();
    internal::initialiseScheduler();

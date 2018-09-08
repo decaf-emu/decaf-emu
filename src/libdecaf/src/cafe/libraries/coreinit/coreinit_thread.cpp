@@ -1358,6 +1358,8 @@ defaultThreadEntry(uint32_t coreId,
    OSSetCurrentFPUContext(0);
    unlockScheduler();
 
+   initialiseIci();
+   initialiseExceptionHandlers();
    initialiseAlarmThread();
    initialiseLockedCache(coreId);
    IPCDriverInit();
