@@ -2,6 +2,7 @@
 #include "coreinit_alarm.h"
 #include "coreinit_core.h"
 #include "coreinit_context.h"
+#include "coreinit_cosreport.h"
 #include "coreinit_dynload.h"
 #include "coreinit_enum_string.h"
 #include "coreinit_fastmutex.h"
@@ -18,6 +19,8 @@
 #include "coreinit_thread.h"
 
 #include "cafe/cafe_stackobject.h"
+#include "cafe/kernel/cafe_kernel.h"
+#include "cafe/kernel/cafe_kernel_context.h"
 #include "cafe/libraries/cafe_hle.h"
 
 #include <array>
@@ -609,7 +612,7 @@ OSGetThreadPriority(virt_ptr<OSThread> thread)
    } else if (thread->type == OSThreadType::App) {
       return thread->basePriority - 64;
    }
-   
+
    decaf_abort("Unexpected thread type in OSGetThreadPriority");
 }
 
@@ -1344,14 +1347,26 @@ initialiseDeallocatorThread()
 }
 
 static uint32_t
-defaultThreadEntry(uint32_t,
-                   virt_ptr<void>)
+defaultThreadEntry(uint32_t coreId,
+                   virt_ptr<void> /* unused */)
 {
-   auto coreId = cpu::this_core::id();
-   IPCDriverInit();
-   IPCDriverOpen();
+   auto thread = OSGetDefaultThread(coreId);
+
+   lockScheduler();
+   setCoreRunningThread(coreId, thread);
+   OSSetCurrentContext(virt_addrof(thread->context));
+   OSSetCurrentFPUContext(0);
+   unlockScheduler();
+
    initialiseAlarmThread();
    initialiseLockedCache(coreId);
+   IPCDriverInit();
+   IPCDriverOpen();
+
+   internal::COSWarn(COSReportModule::Unknown1,
+      fmt::format("  Core {} Complete, MSR 0x{:08X}, Default Thread {}",
+                  coreId, 0, thread));
+
    OSWaitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous),
                     sThreadData->defaultThreadInitRendezvousWaitMask);
    initialiseDeallocatorThread();
@@ -1384,7 +1399,7 @@ initialiseThreadForCore(uint32_t coreId)
    thread->stackEnd = virt_cast<uint32_t *>(internal::getDefaultThreadStackEnd(coreId));
 
    if (currentCoreId == coreId) {
-      // Save and restore our hijacked kernel context because OSInitContext nulls it
+      // Save and restore our host context because OSInitContext nulls it
       auto hostContext = thread->context.hostContext;
       OSInitContext(virt_addrof(thread->context),
                     virt_addr { 0 },
@@ -1427,11 +1442,9 @@ initialiseThreadForCore(uint32_t coreId)
 void
 initialiseThreads()
 {
-   auto mainThread = OSGetDefaultThread(OSGetMainCoreId());
+   auto mainCoreId = OSGetMainCoreId();
+   auto mainThread = OSGetDefaultThread(mainCoreId);
    internal::lockScheduler();
-   cafe::kernel::hijackCurrentHostContext(virt_addrof(mainThread->context));
-   OSSetCurrentContext(virt_addrof(mainThread->context));
-   OSSetCurrentFPUContext(0);
 
    for (auto i = 0u; i < sThreadData->perCoreData.size(); ++i) {
       auto &perCoreData = sThreadData->perCoreData[i];
@@ -1439,38 +1452,43 @@ initialiseThreads()
       initialiseThreadForCore(i);
    }
 
-   // Copy to CPU again to update gpr[1] stack pointer
-   kernel::copyContextToCpu(virt_addrof(mainThread->context));
+   // Hijack the kernel context fiber into our own.
+   kernel::hijackCurrentHostContext(virt_addrof(mainThread->context));
+   OSSetCurrentContext(virt_addrof(mainThread->context));
+   OSSetCurrentFPUContext(0);
+
    internal::unlockScheduler();
 
+   internal::COSWarn(COSReportModule::Unknown1,
+      fmt::format("UserMode Core & Thread Initialization ({} Cores)",
+                  OSGetCoreCount()));
+
+   internal::COSWarn(COSReportModule::Unknown1,
+      fmt::format("  Core {} Complete, Default Thread {}",
+                  mainCoreId, mainThread));
    sThreadData->defaultThreadInitRendezvousWaitMask = 1u << 1;
 
    // Run default thread initilisation on Core 0
-   auto thread = virt_addrof(sThreadData->perCoreData[0].defaultThread);
-   OSInitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous));
+   if (auto thread = virt_addrof(sThreadData->perCoreData[0].defaultThread)) {
+      OSInitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous));
 
-   // TODO: Here we are tricking the thread into running because we don't yet
-   // have kernel context scheduling
-   internal::lockScheduler();
-   thread->state = OSThreadState::Ready;
-   resumeThreadNoLock(thread, 0);
-   rescheduleNoLock(0);
-   internal::unlockScheduler();
+      thread->context.gpr[3] = 0u;
+      kernel::setSubCoreEntryContext(0, virt_addrof(thread->context));
 
-   OSWaitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous),
-                    1 << 0);
+      OSWaitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous),
+                       1 << 0);
+   }
 
    // Run default thread initilisation on Core 2
-   thread = virt_addrof(sThreadData->perCoreData[2].defaultThread);
-   OSInitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous));
+   if (auto thread = virt_addrof(sThreadData->perCoreData[2].defaultThread)) {
+      OSInitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous));
 
-   // TODO: Here we are tricking the thread into running because we don't yet
-   // have kernel context scheduling
-   internal::lockScheduler();
-   thread->state = OSThreadState::Ready;
-   resumeThreadNoLock(thread, 0);
-   rescheduleNoLock(2);
-   internal::unlockScheduler();
+      thread->context.gpr[3] = 2u;
+      kernel::setSubCoreEntryContext(2, virt_addrof(thread->context));
+
+      OSWaitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous),
+                       1 << 2);
+   }
 
    OSWaitRendezvous(virt_addrof(sThreadData->defaultThreadInitRendezvous),
                     1 << 2);

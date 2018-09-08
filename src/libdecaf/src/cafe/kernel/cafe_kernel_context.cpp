@@ -297,8 +297,8 @@ hijackCurrentHostContext(virt_ptr<Context> context)
       current,
       [](void *core)
       {
+         wakeCurrentContext();
          internal::idleCoreLoop(reinterpret_cast<cpu::Core *>(core));
-         gLog->debug("Core1 exit");
       },
       cpu::this_core::state());
 }

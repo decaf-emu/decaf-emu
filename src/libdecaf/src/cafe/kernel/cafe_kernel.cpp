@@ -2,6 +2,7 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_exception.h"
 #include "cafe_kernel_heap.h"
+#include "cafe_kernel_lock.h"
 #include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
@@ -40,6 +41,9 @@ sKernelData = nullptr;
 static internal::AddressSpace
 sKernelAddressSpace;
 
+static std::array<virt_ptr<Context>, 3>
+sSubCoreEntryContexts = { };
+
 static std::atomic<bool>
 sStopping { false };
 
@@ -50,7 +54,7 @@ static std::string
 sExecutableName;
 
 static void
-core1EntryPoint(cpu::Core *core)
+mainCoreEntryPoint(cpu::Core *core)
 {
    // TODO: This is normally called by root.rpx
    loadShared();
@@ -133,17 +137,46 @@ core1EntryPoint(cpu::Core *core)
 }
 
 static void
+subCoreEntryPoint(cpu::Core *core)
+{
+   while (!sStopping.load()) {
+      internal::kernelLockAcquire();
+      auto entryContext = sSubCoreEntryContexts[core->id];
+      internal::kernelLockRelease();
+
+      if (entryContext) {
+         switchContext(entryContext);
+         break;
+      }
+
+      cpu::this_core::waitNextInterrupt();
+   }
+}
+
+void
+setSubCoreEntryContext(int coreId,
+                       virt_ptr<Context> context)
+{
+   internal::kernelLockAcquire();
+   sSubCoreEntryContexts[coreId] = context;
+   internal::kernelLockRelease();
+
+   cpu::interrupt(coreId, cpu::GENERIC_INTERRUPT);
+}
+
+static void
 cpuEntrypoint(cpu::Core *core)
 {
    internal::initialiseCoreContext(core);
    internal::initialiseExceptionContext(core);
 
    if (core->id == 1) {
-      core1EntryPoint(core);
+      mainCoreEntryPoint(core);
+   } else {
+      subCoreEntryPoint(core);
    }
 
    internal::idleCoreLoop(core);
-   gLog->warn("Core {} exit", core->id);
 }
 
 static void
@@ -269,6 +302,8 @@ idleCoreLoop(cpu::Core *core)
    while (!sStopping.load()) {
       cpu::this_core::waitForInterrupt();
    }
+
+   gLog->info("Core {} exit", core->id);
 }
 
 void
