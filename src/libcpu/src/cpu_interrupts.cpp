@@ -146,7 +146,11 @@ waitNextInterrupt(std::chrono::steady_clock::time_point until)
    auto flags = core->interrupt.fetch_and(~mask);
 
    if (!(flags & mask)) {
-      gInterruptCondition.wait_until(lock, until);
+      if (until == std::chrono::steady_clock::time_point { }) {
+         gInterruptCondition.wait(lock);
+      } else {
+         gInterruptCondition.wait_until(lock, until);
+      }
 
       mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
       flags = core->interrupt.fetch_and(~mask);
