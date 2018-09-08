@@ -12,9 +12,6 @@ struct OSThreadSimpleQueue;
 namespace internal
 {
 
-void
-startDefaultCoreThreads();
-
 virt_ptr<OSThread>
 getCoreRunningThread(uint32_t coreId);
 
