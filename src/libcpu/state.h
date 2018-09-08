@@ -57,6 +57,15 @@ struct CoreRegs
 
    //! Graphics Quantization Registers
    espresso::GraphicsQuantisationRegister gqr[8];
+
+   //! Data Address Register
+   uint32_t dar;
+
+   //! DSI Status Register
+   uint32_t dsisr;
+
+   //! Machine Status Save and Restore Register 0
+   uint32_t srr0;
 };
 
 struct Core : CoreRegs

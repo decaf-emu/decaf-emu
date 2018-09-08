@@ -22,15 +22,16 @@ struct Context
    be2_val<uint32_t> ctr;
    be2_val<uint32_t> xer;
 
-#ifdef DECAF_KERNEL_LLE
    be2_val<uint32_t> srr0;
    be2_val<uint32_t> srr1;
-#else
-   be2_val<uint32_t> nia;
-   be2_val<uint32_t> cia;
-#endif
 
-   UNKNOWN(0x14);
+   //These are only set during an exception
+   be2_val<uint32_t> dsisr;
+   be2_val<uint32_t> dar;
+   be2_val<uint32_t> exceptionType;
+
+   UNKNOWN(0x8);
+
    be2_val<uint32_t> fpscr;
    be2_array<double, 32> fpr;
    be2_val<uint16_t> spinLockCount;
@@ -42,14 +43,16 @@ struct Context
    be2_val<int64_t> starttime;
    be2_val<int32_t> error;
    be2_val<uint32_t> attr;
-   be2_val<uint32_t> pmc1;
-   be2_val<uint32_t> pmc2;
 
 #ifdef DECAF_KERNEL_LLE
+   be2_val<uint32_t> pmc1;
+   be2_val<uint32_t> pmc2;
    be2_val<uint32_t> pmc3;
    be2_val<uint32_t> pmc4;
 #else
    HostContext *hostContext;
+   be2_val<uint32_t> nia;
+   be2_val<uint32_t> cia;
 #endif
 
    be2_val<uint32_t> mmcr0;
@@ -61,10 +64,11 @@ CHECK_OFFSET(Context, 0x88, cr);
 CHECK_OFFSET(Context, 0x8c, lr);
 CHECK_OFFSET(Context, 0x90, ctr);
 CHECK_OFFSET(Context, 0x94, xer);
-#ifdef DECAF_KERNEL_LLE
 CHECK_OFFSET(Context, 0x98, srr0);
 CHECK_OFFSET(Context, 0x9c, srr1);
-#endif
+CHECK_OFFSET(Context, 0xA0, dsisr);
+CHECK_OFFSET(Context, 0xA4, dar);
+CHECK_OFFSET(Context, 0xA8, exceptionType);
 CHECK_OFFSET(Context, 0xb4, fpscr);
 CHECK_OFFSET(Context, 0xb8, fpr);
 CHECK_OFFSET(Context, 0x1b8, spinLockCount);
@@ -75,9 +79,9 @@ CHECK_OFFSET(Context, 0x1e0, psf);
 CHECK_OFFSET(Context, 0x2e0, coretime);
 CHECK_OFFSET(Context, 0x2f8, starttime);
 CHECK_OFFSET(Context, 0x300, error);
+#ifdef DECAF_KERNEL_LLE
 CHECK_OFFSET(Context, 0x308, pmc1);
 CHECK_OFFSET(Context, 0x30c, pmc2);
-#ifdef DECAF_KERNEL_LLE
 CHECK_OFFSET(Context, 0x310, pmc3);
 CHECK_OFFSET(Context, 0x314, pmc4);
 #endif

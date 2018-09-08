@@ -121,14 +121,25 @@ addJitReadOnlyRange(virt_addr address,
 static void
 coreSegfaultEntry()
 {
-   gSegfaultHandler(tCurrentCore, sSegfaultAddr, sSegfaultStackTrace);
+   auto core = tCurrentCore;
+   if (sSegfaultAddr == tCurrentCore->nia) {
+      core->srr0 = sSegfaultAddr;
+   } else {
+      core->srr0 = tCurrentCore->nia;
+      core->dar = sSegfaultAddr;
+      core->dsisr = 0u;
+   }
+
+   gSegfaultHandler(core, sSegfaultAddr, sSegfaultStackTrace);
    decaf_abort("The CPU segfault handler must never return.");
 }
 
 static void
 coreIllInstEntry()
 {
-   gIllInstHandler(tCurrentCore, sSegfaultStackTrace);
+   auto core = tCurrentCore;
+   core->srr0 = tCurrentCore->nia;
+   gIllInstHandler(core, sSegfaultStackTrace);
    decaf_abort("The CPU illegal instruction handler must never return.");
 }
 

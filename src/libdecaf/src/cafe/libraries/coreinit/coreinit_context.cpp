@@ -33,14 +33,17 @@ OSInitContext(virt_ptr<OSContext> context,
    context->cia = 0xFFFFFFFFu;
    context->gqr.fill(0u);
    context->spinLockCount = uint16_t { 0 };
-   context->pmc1 = 0u;
-   context->pmc2 = 0u;
    context->hostContext = nullptr;
    context->mmcr0 = 0u;
    context->mmcr1 = 0u;
    context->state = uint16_t { 0u };
    context->coretime.fill(0);
    context->starttime = 0ll;
+   context->srr0 = 0u;
+   context->srr1 = 0u;
+   context->dsisr = 0u;
+   context->dar = 0u;
+   context->exceptionType = 0u;
 }
 
 void

@@ -67,9 +67,11 @@ copyContextFromCpu(virt_ptr<Context> context)
    context->lr = state->lr;
    context->ctr = state->ctr;
    context->xer = state->xer.value;
-   //context->srr0 = state->sr[0];
-   //context->srr1 = state->sr[1];
    context->fpscr = state->fpscr.value;
+
+   context->srr0 = state->srr0;
+   context->dar = state->dar;
+   context->dsisr = state->dsisr;
 }
 
 void
@@ -94,9 +96,11 @@ copyContextToCpu(virt_ptr<Context> context)
    state->lr = context->lr;
    state->ctr = context->ctr;
    state->xer.value = context->xer;
-   //state->sr[0] = context->srr0;
-   //state->sr[1] = context->srr1;
    state->fpscr.value = context->fpscr;
+
+   state->srr0 = context->srr0;
+   state->dar = context->dar;
+   state->dsisr = context->dsisr;
 }
 
 void
@@ -241,9 +245,7 @@ setContextFiberEntry(virt_ptr<Context> context,
 virt_ptr<Context>
 getCurrentContext()
 {
-   auto coreId = cpu::this_core::id();
-   auto current = sCurrentContext[coreId];
-   return current;
+   return sCurrentContext[cpu::this_core::id()];
 }
 
 void

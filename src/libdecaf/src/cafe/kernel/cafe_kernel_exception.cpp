@@ -120,61 +120,70 @@ handleCpuInterrupt(cpu::Core *core,
    coreinit::internal::unlockScheduler();
 }
 
-struct FaultData
+struct UnhandledExceptionData
 {
-   enum class Reason
-   {
-      Unknown,
-      Segfault,
-      IllegalInstruction,
-   };
-
-   Reason reason;
-   uint32_t address;
+   ExceptionType type;
+   virt_ptr<Context> context;
+   int coreId;
    platform::StackTrace *stackTrace = nullptr;
 };
 
 static void
-faultFiberEntryPoint(void *param)
+unhandledExceptionFiberEntryPoint(void *param)
 {
-   auto faultData = reinterpret_cast<FaultData *>(param);
-   auto core = cpu::this_core::state();
-   decaf_assert(core, "Uh oh? CPU fault Handler with invalid core");
+   auto exceptionData = reinterpret_cast<UnhandledExceptionData *>(param);
+   auto context = exceptionData->context;
 
    // We may have been in the middle of a kernel function...
    if (coreinit::internal::isSchedulerLocked()) {
       coreinit::internal::unlockScheduler();
    }
 
-   // Move back an instruction so we can re-exucute the failed instruction
-   //  and so that the debugger shows the right stop point.
-   core->nia -= 4;
-
    // Log the core state
    fmt::memory_buffer out;
-   if (faultData->reason == FaultData::Reason::Segfault) {
-      fmt::format_to(out, "Segfault:\n");
-   } else if (faultData->reason == FaultData::Reason::IllegalInstruction) {
-      fmt::format_to(out, "Illegal Instruction:\n");
-   } else {
-      fmt::format_to(out, "Unknown fault:\n");
+   fmt::format_to(out, "Unhandled exception {}\n", exceptionData->type);
+   fmt::format_to(out, "Warning: Register values may not be reliable when using JIT.\n");
+
+   switch (exceptionData->type) {
+   case ExceptionType::DSI:
+      fmt::format_to(out, "Core{} Instruction at 0x{:08X} (value from SRR0) attempted to access invalid address 0x{:08X} (value from DAR)\n",
+                     exceptionData->coreId, context->srr0, context->dar);
+      break;
+   case ExceptionType::ISI:
+      fmt::format_to(out, "Core{} Attempted to fetch instruction from invalid address 0x{:08X} (value from SRR0)\n",
+                     exceptionData->coreId, context->srr0);
+      break;
+   case ExceptionType::Alignment:
+      fmt::format_to(out, "Core{} Instruction at 0x{:08X} (value from SRR0) attempted to access unaligned address 0x{:08X} (value from DAR)\n",
+                     exceptionData->coreId, context->srr0, context->dar);
+      break;
+   case ExceptionType::Program:
+      fmt::format_to(out, "Core{} Program exception: Possible illegal instruction/operation at or around 0x{:08X} (value from SRR0)\n",
+                     exceptionData->coreId, context->srr0);
+      break;
+   default:
+      break;
    }
 
-   fmt::format_to(out, "These values may not be reliable when using JIT.\n");
-   fmt::format_to(out, "nia: 0x{:08x}\n", core->nia);
-   fmt::format_to(out, "lr: 0x{:08x}\n", core->lr);
-   fmt::format_to(out, "cr: 0x{:08x}\n", core->cr.value);
-   fmt::format_to(out, "ctr: 0x{:08x}\n", core->ctr);
-   fmt::format_to(out, "xer: 0x{:08x}\n", core->xer.value);
+   fmt::format_to(out, "nia: 0x{:08x}\n", context->nia);
+   fmt::format_to(out, "lr: 0x{:08x}\n", context->lr);
+   fmt::format_to(out, "cr: 0x{:08x}\n", context->cr);
+   fmt::format_to(out, "ctr: 0x{:08x}\n", context->ctr);
+   fmt::format_to(out, "xer: 0x{:08x}\n", context->xer);
 
    for (auto i = 0u; i < 32; ++i) {
-      fmt::format_to(out, "gpr[{}]: 0x{:08x}\n", i, core->gpr[i]);
+      fmt::format_to(out, "gpr[{}]: 0x{:08x}\n", i, context->gpr[i]);
    }
 
    gLog->critical(std::string_view { out.data(), out.size() });
 
    // If the decaf debugger is enabled, we will catch this exception there
    if (decaf::config::debugger::enabled) {
+      // Move back an instruction so we can re-execute the failed instruction
+      //  and so that the debugger shows the right stop point.
+      cpu::this_core::state()->nia -= 4;
+
+
       coreinit::internal::pauseCoreTime(true);
       debugger::handleDebugBreakInterrupt();
       coreinit::internal::pauseCoreTime(false);
@@ -183,19 +192,10 @@ faultFiberEntryPoint(void *param)
       //  since returning from the segfault handler is an error.
       coreinit::OSExitThread(0);
    } else {
-      // If there is no debugger then let's crash!
-      if (faultData->reason == FaultData::Reason::Segfault) {
-         decaf_host_fault(fmt::format("Invalid memory access for address 0x{:08X} at 0x{:08X}\n",
-                                      faultData->address, core->nia),
-                          faultData->stackTrace);
-      } else if (faultData->reason == FaultData::Reason::IllegalInstruction) {
-         decaf_host_fault(fmt::format("Invalid instruction at address 0x{:08X}\n", faultData->address),
-                          faultData->stackTrace);
-      } else {
-         decaf_host_fault(fmt::format("Unexpected fault occured, fault reason was {} at 0x{:08X}\n",
-                                      static_cast<int32_t>(faultData->reason), core->nia),
-                          faultData->stackTrace);
-      }
+      // If there is no debugger then let's crash decaf lul!
+      decaf_host_fault(fmt::format("Unhandled exception {}, srr0: 0x{:08X} nia: 0x{:08X}\n",
+                                   exceptionData->type, context->srr0, context->nia),
+                       exceptionData->stackTrace);
    }
 }
 
@@ -204,22 +204,39 @@ handleCpuSegfault(cpu::Core *core,
                   uint32_t address,
                   platform::StackTrace *stackTrace)
 {
-   auto faultData = new FaultData { };
-   faultData->reason = FaultData::Reason::Segfault;
-   faultData->address = address;
-   faultData->stackTrace = stackTrace;
-   resetFaultedContextFiber(getCurrentContext(), faultFiberEntryPoint, faultData);
+   auto interruptedContext = getCurrentContext();
+   copyContextFromCpu(interruptedContext);
+
+   auto exceptionData = new UnhandledExceptionData { };
+   exceptionData->context = interruptedContext;
+   exceptionData->stackTrace = stackTrace;
+
+   if (address == core->nia) {
+      exceptionData->type = ExceptionType::ISI;
+   } else {
+      exceptionData->type = ExceptionType::DSI;
+   }
+
+   resetFaultedContextFiber(getCurrentContext(),
+                            unhandledExceptionFiberEntryPoint,
+                            exceptionData);
 }
 
 static void
 handleCpuIllegalInstruction(cpu::Core *core,
                             platform::StackTrace *stackTrace)
 {
-   auto faultData = new FaultData { };
-   faultData->reason = FaultData::Reason::IllegalInstruction;
-   faultData->address = core->nia;
-   faultData->stackTrace = stackTrace;
-   resetFaultedContextFiber(getCurrentContext(), faultFiberEntryPoint, faultData);
+   auto interruptedContext = getCurrentContext();
+   copyContextFromCpu(interruptedContext);
+
+   auto exceptionData = new UnhandledExceptionData { };
+   exceptionData->context = interruptedContext;
+   exceptionData->stackTrace = stackTrace;
+   exceptionData->type = ExceptionType::Program;
+
+   resetFaultedContextFiber(getCurrentContext(),
+                            unhandledExceptionFiberEntryPoint,
+                            exceptionData);
 }
 
 void
