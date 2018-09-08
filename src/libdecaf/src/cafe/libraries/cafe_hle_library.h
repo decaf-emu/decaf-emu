@@ -278,6 +278,7 @@ protected:
       symbol->exported = false;
       symbol->hostPointer = reinterpret_cast<virt_ptr<void> *>(&data);
       symbol->size = sizeof(DataType);
+      symbol->align = alignof(DataType);
       registerSymbol(name, std::move(symbol));
    }
 
@@ -290,6 +291,7 @@ protected:
       symbol->exported = true;
       symbol->hostPointer = reinterpret_cast<virt_ptr<void> *>(&data);
       symbol->size = sizeof(DataType);
+      symbol->align = alignof(DataType);
       registerSymbol(name, std::move(symbol));
    }
 

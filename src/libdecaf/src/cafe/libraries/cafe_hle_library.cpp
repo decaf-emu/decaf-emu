@@ -319,6 +319,7 @@ Library::generateRpl()
          funcSymbols.push_back(funcSymbol);
       } else if (symbol->type == LibrarySymbol::Data) {
          auto dataSymbol = static_cast<LibraryData *>(symbol.get());
+         dataSymbolsSize = align_up(dataSymbolsSize, dataSymbol->align);
          dataSymbolsSize += dataSymbol->size;
 
          if (symbol->exported) {
@@ -565,6 +566,8 @@ Library::generateRpl()
       dataSection->data.resize(dataSection->data.size() + dataSymbolsSize);
 
       for (auto &symbol : dataSymbols) {
+         dataOffset = align_up(dataOffset, symbol->align);
+
          if (symbol->exported) {
             auto exportOffset = 8 + (sizeof(rpl::Export) * exportIdx);
             auto relaOffset = sizeof(rpl::Rela) * exportIdx;
@@ -589,6 +592,8 @@ Library::generateRpl()
          symbol->offset = dataOffset;
          dataOffset += symbol->size;
       }
+
+      decaf_check(dataOffset == dataSymbolsSize);
 
       if (dexportSectionIndex) {
          // Update loadAddr

@@ -21,6 +21,9 @@ struct LibraryData : LibrarySymbol
 
    //! Size of this data symbol
    uint32_t size = 0;
+
+   //! Align of this data symbol
+   uint32_t align = 0;
 };
 
 } // namespace cafe
