@@ -168,7 +168,7 @@ ipckDriverAllocateRequestBlock(RamPartitionId clientProcessId,
    auto request = requestBlock->request;
    std::memset(virt_addrof(request->request.args).getRawPointer(), 0, sizeof(request->request.args));
 
-   request->request.clientPid = static_cast<int32_t>(loaderProcessId);
+   request->request.clientPid = static_cast<int32_t>(clientProcessId);
    request->request.handle = handle;
    request->request.command = command;
    request->request.flags = 0u;
