@@ -4,7 +4,13 @@
 
 #include "ios/ios_ipc.h"
 
-namespace cafe::kernel::internal
+namespace cafe::kernel
+{
+
+ios::Handle
+getMcpHandle();
+
+namespace internal
 {
 
 ios::Error
@@ -43,5 +49,7 @@ initialiseIpc();
 
 void
 initialiseStaticIpcData();
+
+} // namespace internal
 
 } // namespace cafe::kernel::internal

@@ -248,3 +248,14 @@ initialiseStaticIpcData()
 }
 
 } // namespace cafe::kernel::internal
+
+namespace cafe::kernel
+{
+
+ios::Handle
+getMcpHandle()
+{
+   return internal::sIpcData->mcpHandle;
+}
+
+} // namespace cafe::kernel
