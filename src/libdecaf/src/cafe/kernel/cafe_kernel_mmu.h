@@ -127,6 +127,20 @@ validateAddressRange(virt_addr address,
 phys_addr
 effectiveToPhysical(virt_addr address);
 
+template<typename Type>
+inline phys_ptr<Type>
+effectiveToPhysical(virt_ptr<Type> ptr)
+{
+   return phys_cast<Type *>(effectiveToPhysical(virt_cast<virt_addr>(ptr)));
+}
+
+template<typename Type>
+inline phys_ptr<Type>
+effectiveToPhysical(be2_virt_ptr<Type> ptr)
+{
+   return phys_cast<Type *>(effectiveToPhysical(virt_cast<virt_addr>(ptr)));
+}
+
 virt_addr
 physicalToEffectiveCached(phys_addr address);
 
