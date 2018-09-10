@@ -70,6 +70,18 @@ ipckDriverUserClose();
 ios::Error
 ipckDriverUserSubmitRequest(virt_ptr<IPCKDriverRequest> request);
 
+ios::Error
+ipckDriverLoaderOpen();
+
+ios::Error
+ipckDriverLoaderClose();
+
+ios::Error
+ipckDriverLoaderSubmitRequest(virt_ptr<IPCKDriverRequest> request);
+
+virt_ptr<IPCKDriverRequest>
+ipckDriverLoaderPollCompletion();
+
 void
 ipckDriverIosSubmitReply(phys_ptr<ios::IpcRequest> reply);
 

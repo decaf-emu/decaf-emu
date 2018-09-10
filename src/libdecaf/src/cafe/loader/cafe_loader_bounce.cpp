@@ -5,12 +5,12 @@
 #include "cafe_loader_log.h"
 
 #include "cafe/cafe_stackobject.h"
-#include "cafe/libraries/cafe_hle.h"
 #include "cafe/kernel/cafe_kernel_mmu.h"
 #include "cafe/kernel/cafe_kernel_processid.h"
 #include "ios/ios_enum.h"
 #include "ios/fs/ios_fs_enum.h"
 #include "ios/mcp/ios_mcp_enum.h"
+#include "ios/mcp/ios_mcp_mcp_request.h"
 #include "kernel/kernel_filesystem.h"
 
 #include <libcpu/be2_struct.h>
@@ -50,81 +50,6 @@ LiInitBuffer(bool unk)
 }
 
 ios::Error
-LiLoadAsync(std::string_view name,
-            virt_ptr<void> outBuffer,
-            uint32_t outBufferSize,
-            uint32_t pos,
-            MCPFileType fileType,
-            RamPartitionId rampid)
-{
-   auto path = std::string { };
-
-   if (fileType == MCPFileType::CafeOS) {
-      auto library = cafe::hle::getLibrary(name);
-      if (library) {
-         auto &rpl = library->getGeneratedRpl();
-         auto bytesRead = std::min<uint32_t>(rpl.size() - pos, outBufferSize);
-         std::memcpy(outBuffer.getRawPointer(), rpl.data() + pos, bytesRead);
-         sgBounceError = ios::Error::OK;
-         sgGotBytes = bytesRead;
-         sgTotalBytes += bytesRead;
-         return ios::Error::OK;
-      }
-   }
-
-   switch (fileType) {
-   case MCPFileType::ProcessCode:
-      path = fmt::format("/vol/code/{}", name);
-      break;
-   case MCPFileType::CafeOS:
-      path = fmt::format("/vol/storage_mlc01/sys/title/00050010/1000400A/code/{}", name);
-      break;
-   default:
-      sgBounceError = ios::Error::NoExists;
-      return ios::Error::NoExists;
-   }
-
-   auto result = ::kernel::getFileSystem()->openFile(path, fs::File::Read);
-   if (!result) {
-      sgBounceError = ios::Error::NoExists;
-      return ios::Error::NoExists;
-   }
-
-   auto file = result.value();
-   file->seek(pos);
-   auto bytesRead = static_cast<uint32_t>(file->read(outBuffer.getRawPointer(), 1, outBufferSize));
-   sgBounceError = ios::Error::OK;
-   sgGotBytes = bytesRead;
-   sgTotalBytes += bytesRead;
-   return ios::Error::OK;
-
-   /* TODO: When we move to IPC...
-   auto request = virt_cast<MCPRequestLoadFile *>(iop_percore_malloc(sizeof(MCPRequestLoadFile)));
-   request->pos = pos;
-   request->fileType = fileType;
-   request->cafeProcessId = static_cast<uint32_t>(rampid);
-   request->name = name;
-
-   sIopData->loadReply.done = FALSE;
-   sIopData->loadReply.pending = TRUE;
-   sIopData->loadReply.requestBuffer = request;
-   sIopData->loadReply.error = ios::Error::InvalidArg;
-
-   auto error = IPCLDriver_IoctlAsync(sIopData->mcpHandle,
-                                      MCPCommand::LoadFile,
-                                      request, sizeof(MCPRequestLoadFile),
-                                      outBuffer, outBufferSize,
-                                      &Loader_AsyncCallback,
-                                      virt_addrof(sIopData->loadReply));
-   if (error < ios::Error::OK) {
-      iop_percore_free(request);
-   }
-
-   return error;
-   */
-}
-
-ios::Error
 LiBounceOneChunk(std::string_view name,
                  ios::mcp::MCPFileType fileType,
                  kernel::UniqueProcessId upid,
@@ -154,6 +79,12 @@ LiBounceOneChunk(std::string_view name,
                             fileType,
                             getRamPartitionIdFromUniqueProcessId(upid));
    sgBounceError = error;
+   if (error < ios::Error::OK) {
+      LiSetFatalError(0x1872A7, fileType, 0, "LiBounceOneChunk", 131);
+      Loader_ReportError("***LiLoadAsync failed. err={}.", error);
+      LiCheckAndHandleInterrupts();
+      return error;
+   }
 
    if (outChunkBytes) {
       *outChunkBytes = ChunkSize;
@@ -164,6 +95,7 @@ LiBounceOneChunk(std::string_view name,
    }
 
    sgFinishedLoadingBuffer = (sgFinishedLoadingBuffer == 0) ? TRUE : FALSE;
+   LiCheckAndHandleInterrupts();
    return ios::Error::OK;
 }
 
@@ -172,13 +104,22 @@ LiWaitOneChunk(uint32_t *outBytesRead,
                std::string_view name,
                MCPFileType fileType)
 {
-   sgFinishedLoadingBuffer = (sgFinishedLoadingBuffer == 0) ? TRUE : FALSE;
-
-   if (outBytesRead) {
-      *outBytesRead = sgGotBytes;
+   auto bytesRead = uint32_t { 0 };
+   auto error = LiWaitIopCompleteWithInterrupts(&bytesRead);
+   sgBounceError = error;
+   if (error < ios::Error::OK) {
+      return error;
    }
 
-   return sgBounceError;
+   sgGotBytes = bytesRead;
+   sgTotalBytes += bytesRead;
+
+   if (outBytesRead) {
+      *outBytesRead = bytesRead;
+   }
+
+   sgFinishedLoadingBuffer = (sgFinishedLoadingBuffer == 0) ? TRUE : FALSE;
+   return ios::Error::OK;
 }
 
 int32_t

@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_interrupts.h"
 #include "cafe_kernel_process.h"

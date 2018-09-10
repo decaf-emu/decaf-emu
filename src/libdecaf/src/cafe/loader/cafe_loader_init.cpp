@@ -1,10 +1,11 @@
+#include "cafe_loader_basics.h"
 #include "cafe_loader_bounce.h"
 #include "cafe_loader_entry.h"
 #include "cafe_loader_error.h"
 #include "cafe_loader_globals.h"
 #include "cafe_loader_heap.h"
 #include "cafe_loader_iop.h"
-#include "cafe_loader_basics.h"
+#include "cafe_loader_ipcldriver.h"
 #include "cafe_loader_prep.h"
 #include "cafe_loader_setup.h"
 #include "cafe_loader_shared.h"
@@ -135,9 +136,9 @@ LOADER_Init(kernel::UniqueProcessId upid,
    }
 
    if (!sIPCLInitialised[cpu::this_core::id()]) {
-      // IPCLDriver_Init
-      // IPCLDriver_Open
-      // LiInitIopInterface
+      IPCLDriver_Init();
+      IPCLDriver_Open();
+      LiInitIopInterface();
    }
 
    error = LiInitSharedForProcess(startInfo);

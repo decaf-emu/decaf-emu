@@ -87,8 +87,7 @@ ipckDriverUserClose()
       return ios::Error::OK;
    }
 
-   // TODO: Cleanup any pending requests
-
+   // TODO: Cleanup any pending requests for the current process
    return ios::Error::OK;
 }
 
@@ -105,6 +104,90 @@ ipckDriverUserSubmitRequest(virt_ptr<IPCKDriverRequest> request)
    }
 
    return internal::submitUserRequest(driver, request);
+}
+
+
+/**
+ * Open the current core's IPCKDriver for the loader process.
+ */
+ios::Error
+ipckDriverLoaderOpen()
+{
+   auto driver = internal::ipckDriverGetInstance();
+   if (!driver) {
+      return ios::Error::FailInternal;
+   }
+
+   /* TODO: Enable this check when we have proper multi process
+   auto kernelProcessId = getKernelProcessId();
+   if (kernelProcessId != KernelProcessId::Loader) {
+      return ios::Error::Invalid;
+   }
+   */
+
+   auto pidx = static_cast<uint32_t>(getCurrentRampid());
+   driver->perProcessNumLoaderRequests[pidx] = 0u;
+   IPCKDriver_FIFOInit(virt_addrof(driver->perProcessLoaderReply[pidx]));
+   return ios::Error::OK;
+}
+
+
+/**
+ * Close the current core's IPCKDriver for the loader process.
+ */
+ios::Error
+ipckDriverLoaderClose()
+{
+   auto driver = internal::ipckDriverGetInstance();
+   if (!driver) {
+      return ios::Error::OK;
+   }
+
+   // TODO: Cleanup any pending loader requests
+   return ios::Error::OK;
+}
+
+
+/**
+ * Submit a loader IPC request.
+ */
+ios::Error
+ipckDriverLoaderSubmitRequest(virt_ptr<IPCKDriverRequest> request)
+{
+   auto driver = internal::ipckDriverGetInstance();
+   if (!driver) {
+      return ios::Error::FailInternal;
+   }
+
+   return internal::submitLoaderRequest(driver, request);
+}
+
+
+/**
+ * Poll for completion of any loader IPC request.
+ */
+virt_ptr<IPCKDriverRequest>
+ipckDriverLoaderPollCompletion()
+{
+   auto driver = internal::ipckDriverGetInstance();
+   auto block = virt_ptr<internal::IPCKDriverRequestBlock> { nullptr };
+   auto pidx = static_cast<uint32_t>(getCurrentRampid());
+   auto error = IPCKDriver_FIFOPop(virt_addrof(driver->perProcessLoaderReply[pidx]),
+                                   &block);
+   if (error < ios::Error::OK) {
+      return nullptr;
+   }
+
+   // Copy reply to our user request structure
+   std::memcpy(block->userRequest.getRawPointer(),
+               block->request.getRawPointer(),
+               0x48u);
+
+   driver->perProcessNumLoaderRequests[pidx]--;
+
+   auto request = block->userRequest;
+   ipckDriverFreeRequestBlock(driver, block);
+   return request;
 }
 
 
