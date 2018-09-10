@@ -23,4 +23,18 @@ LiCacheLineCorrectFreeEx(virt_ptr<TinyHeap> heap,
                          virt_ptr<void> ptr,
                          uint32_t size);
 
+void
+initialiseStaticDataHeap();
+
+virt_ptr<void>
+allocStaticData(size_t size,
+                size_t align = 4u);
+
+template<typename Type>
+virt_ptr<Type>
+allocStaticData()
+{
+   return virt_cast<Type *>(allocStaticData(sizeof(Type), alignof(Type)));
+}
+
 } // namespace cafe::loader::internal

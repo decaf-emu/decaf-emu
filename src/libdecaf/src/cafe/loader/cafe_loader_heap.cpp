@@ -1,10 +1,15 @@
 #include "cafe_loader_error.h"
 #include "cafe_loader_flush.h"
 #include "cafe_loader_heap.h"
+
+#include <common/frameallocator.h>
 #include <common/log.h>
 
 namespace cafe::loader::internal
 {
+
+static FrameAllocator
+sStaticDataHeap;
 
 int32_t
 LiCacheLineCorrectAllocEx(virt_ptr<TinyHeap> heap,
@@ -51,6 +56,22 @@ LiCacheLineCorrectFreeEx(virt_ptr<TinyHeap> heap,
 {
    TinyHeap_Free(heap, ptr);
    LiSafeFlushCode(virt_cast<virt_addr>(ptr), size);
+}
+
+void
+initialiseStaticDataHeap()
+{
+   sStaticDataHeap = FrameAllocator {
+      virt_cast<void *>(virt_addr { 0xEFE0B000 }).getRawPointer(),
+      0xEFE80000 - 0xEFE0B000,
+   };
+}
+
+virt_ptr<void>
+allocStaticData(size_t size,
+                size_t align)
+{
+   return virt_cast<void *>(cpu::translate(sStaticDataHeap.allocate(size, align)));
 }
 
 } // namespace cafe::loader::internal

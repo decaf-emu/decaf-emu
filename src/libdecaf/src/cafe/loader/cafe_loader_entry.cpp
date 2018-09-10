@@ -1,6 +1,7 @@
 #include "cafe_loader_entry.h"
 #include "cafe_loader_error.h"
 #include "cafe_loader_globals.h"
+#include "cafe_loader_heap.h"
 #include "cafe_loader_link.h"
 #include "cafe_loader_prep.h"
 #include "cafe_loader_setup.h"
@@ -90,6 +91,8 @@ LoaderStart(BOOL isDispatch,
       return LOADER_Entry(entryParams);
    }
 
+   // Initialise static data
+   internal::initialiseStaticDataHeap();
    // Initialise globals
    auto kernelIpcStorage = getKernelIpcStorage();
    gpLoaderEntry_ProcContext = entryParams->procContext;
