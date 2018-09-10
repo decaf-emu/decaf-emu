@@ -170,13 +170,16 @@ struct AddressSpace
 
    std::array<AddressSpaceView *, 3> perCoreView;
    AddressSpaceView codeGenView;
-   AddressSpaceView view0;
-   AddressSpaceView view1;
-   AddressSpaceView view2;
+   AddressSpaceView viewKernel;
+   AddressSpaceView viewUnknownKernelProcess1;
+   AddressSpaceView viewLoader;
 };
 
 AddressSpace *
 getActiveAddressSpace();
+
+void
+setActiveAddressSpace(AddressSpace *addressSpace);
 
 bool
 initialiseAddressSpace(AddressSpace *map,

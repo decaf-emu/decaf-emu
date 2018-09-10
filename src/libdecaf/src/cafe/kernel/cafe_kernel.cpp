@@ -58,9 +58,20 @@ sExecutableName;
 static void
 mainCoreEntryPoint(cpu::Core *core)
 {
+   internal::setActiveAddressSpace(&sKernelAddressSpace);
    internal::initialiseCoreContext(core);
    internal::initialiseExceptionContext(core);
    internal::initialiseExceptionHandlers();
+
+   // Set all cores to kernel process
+   for (auto i = 0; i < 3; ++i) {
+      internal::initialiseCoreProcess(i,
+                                      RamPartitionId::Kernel,
+                                      UniqueProcessId::Kernel,
+                                      KernelProcessId::Invalid);
+   }
+
+   internal::initialiseProcessData();
    internal::ipckDriverInit();
    internal::ipckDriverOpen();
    internal::initialiseIpc();
@@ -141,13 +152,14 @@ mainCoreEntryPoint(cpu::Core *core)
    titleInfo.sdkVersion = static_cast<uint32_t>(sGameInfo.app.sdk_version);
    titleInfo.titleVersion = static_cast<uint32_t>(sGameInfo.app.title_version);
 
-   loadGameProcess(rpx, titleInfo);
-   finishInitAndPreload();
+   internal::loadGameProcess(rpx, titleInfo);
+   internal::finishInitAndPreload();
 }
 
 static void
 subCoreEntryPoint(cpu::Core *core)
 {
+   internal::setActiveAddressSpace(&sKernelAddressSpace);
    internal::initialiseCoreContext(core);
    internal::initialiseExceptionContext(core);
    internal::ipckDriverInit();
@@ -159,6 +171,14 @@ subCoreEntryPoint(cpu::Core *core)
       internal::kernelLockRelease();
 
       if (entryContext) {
+         // Set the core's current process to the main application
+         internal::setCoreToProcessId(RamPartitionId::MainApplication,
+                                      KernelProcessId::Kernel);
+         internal::initialiseCoreProcess(core->id,
+                                         RamPartitionId::MainApplication,
+                                         UniqueProcessId::Game,
+                                         KernelProcessId::Kernel);
+
          switchContext(entryContext);
          break;
       }

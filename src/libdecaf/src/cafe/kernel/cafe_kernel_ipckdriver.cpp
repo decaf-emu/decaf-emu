@@ -58,7 +58,7 @@ ipckDriverUserOpen(uint32_t numReplies,
       return ios::Error::FailInternal;
    }
 
-   auto pidx = static_cast<uint32_t>(getCurrentRampid());
+   auto pidx = static_cast<uint32_t>(internal::getCurrentRamPartitionId());
    if (driver->perProcessReplyQueue[pidx]) {
       // Already open!
       return ios::Error::Busy;
@@ -265,7 +265,7 @@ processLoaderOrUserRequest(virt_ptr<IPCKDriver> driver,
    request->request.cpuId = static_cast<ios::CpuId>(cpu::this_core::id() + 1);
 
    if (!isLoader) {
-      request->request.clientPid = static_cast<int32_t>(getCurrentRampid());
+      request->request.clientPid = static_cast<int32_t>(getCurrentRamPartitionId());
       request->request.titleId = getCurrentTitleId();
    }
 
@@ -329,7 +329,7 @@ submitUserOrLoaderRequest(virt_ptr<IPCKDriver> driver,
                           bool isLoader)
 {
    auto error = ios::Error::OK;
-   auto rampid = getCurrentRampid();
+   auto rampid = getCurrentRamPartitionId();
    auto pidx = static_cast<uint32_t>(rampid);
 
    if (!driver) {
@@ -513,7 +513,7 @@ ipckDriverHandleInterrupt(InterruptType type,
    }
 
    // Dispatch any pending user replies for the current process
-   auto pidx = static_cast<uint32_t>(getCurrentRampid());
+   auto pidx = static_cast<uint32_t>(getCurrentRamPartitionId());
    if (driver->perProcessUserReply[pidx].count) {
       dispatchUserRepliesCallback(driver, interruptedContext, pidx);
    }

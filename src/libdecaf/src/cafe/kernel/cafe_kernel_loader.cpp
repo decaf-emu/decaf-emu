@@ -166,7 +166,7 @@ loaderEntry()
    loaderIpc->entryParams.procConfig = 0;
    loaderIpc->entryParams.procContext = getCurrentContext();
    loaderIpc->entryParams.interruptsAllowed = TRUE;
-   loaderIpc->entryParams.procId = getCurrentUpid();
+   loaderIpc->entryParams.procId = getCurrentUniqueProcessId();
 
    // In a real kernel we'd switch to the PPC context
    // But our loader is HLE only atm so we just call the loader directly
@@ -254,7 +254,8 @@ findClosestSymbol(virt_addr addr,
                   char *moduleNameBuffer,
                   uint32_t moduleNameBufferLength)
 {
-   if (!getCurrentProcessData()) {
+   auto partitionData = getCurrentRamPartitionData();
+   if (!partitionData) {
       return 0xBAD20002;
    }
 
@@ -274,7 +275,7 @@ findClosestSymbol(virt_addr addr,
    auto containingModule = virt_ptr<loader::LOADED_RPL> { nullptr };
    auto containingSectionIndex = 0u;
 
-   for (auto rpl = getCurrentProcessData()->loadedModuleList; rpl; rpl = rpl->nextLoadedRpl) {
+   for (auto rpl = partitionData->loadedModuleList; rpl; rpl = rpl->nextLoadedRpl) {
       for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
          auto sectionAddress = rpl->sectionAddressBuffer[i];
          if (!sectionAddress) {

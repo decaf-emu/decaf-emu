@@ -8,7 +8,6 @@
 #include "cafe/libraries/cafe_hle.h"
 #include "cafe/kernel/cafe_kernel_mmu.h"
 #include "cafe/kernel/cafe_kernel_processid.h"
-#include "cafe/kernel/cafe_kernel_process.h"
 #include "ios/ios_enum.h"
 #include "ios/fs/ios_fs_enum.h"
 #include "ios/mcp/ios_mcp_enum.h"
@@ -153,7 +152,7 @@ LiBounceOneChunk(std::string_view name,
                             ChunkSize,
                             offset,
                             fileType,
-                            getRampidFromUpid(upid));
+                            getRamPartitionIdFromUniqueProcessId(upid));
    sgBounceError = error;
 
    if (outChunkBytes) {

@@ -65,4 +65,7 @@ BITFIELD_END
 
 using TitleId = uint64_t;
 
+RamPartitionId
+getRamPartitionIdFromUniqueProcessId(UniqueProcessId id);
+
 } // namespace cafe::kernel

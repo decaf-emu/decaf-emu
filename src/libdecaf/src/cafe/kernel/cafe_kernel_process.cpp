@@ -11,7 +11,7 @@
 #include <array>
 #include <libcpu/cpu_config.h>
 
-namespace cafe::kernel
+namespace cafe::kernel::internal
 {
 
 constexpr auto MinCodeSize = 0x20000u;
@@ -19,8 +19,18 @@ constexpr auto MaxCodeSize = 0xE000000u;
 constexpr auto MinDataSize = 0x700000u;
 constexpr auto UnkReserveSize = 0x60000u;
 
-static std::array<ProcessData, NumRamPartitions>
-sProcessData;
+struct CoreProcessData
+{
+   RamPartitionId rampid;
+   UniqueProcessId upid;
+   KernelProcessId pid;
+};
+
+static std::array<CoreProcessData, 3>
+sCoreProcessData;
+
+static std::array<RamPartitionData, NumRamPartitions>
+sRamPartitionData;
 
 struct RamPartitionConfig
 {
@@ -49,13 +59,6 @@ static constexpr RamPartitionConfig RetailRamPartitionConfig[] = {
 
 static const RamPartitionConfig *
 sRamPartitionConfig = RetailRamPartitionConfig;
-
-void
-initialiseRamPartitionConfig()
-{
-   // TODO: Check system flags to see if we should use DevRamPartitionConfig
-   sRamPartitionConfig = RetailRamPartitionConfig;
-}
 
 static void
 allocateRamPartition(RamPartitionId rampid,
@@ -96,77 +99,61 @@ allocateRamPartition(RamPartitionId rampid,
    decaf_check(info->availStart - info->dataStart >= MinDataSize);
 }
 
-ProcessData *
-getCurrentProcessData()
+RamPartitionData *
+getCurrentRamPartitionData()
 {
-   return &sProcessData[static_cast<size_t>(getCurrentRampid())];
+   return getRamPartitionData(getCurrentRamPartitionId());
 }
 
 RamPartitionId
-getCurrentRampid()
+getCurrentRamPartitionId()
 {
-   return RamPartitionId::MainApplication;
-}
-
-UniqueProcessId
-getCurrentUpid()
-{
-   return UniqueProcessId::Game;
+   return sCoreProcessData[cpu::this_core::id()].rampid;
 }
 
 KernelProcessId
 getCurrentKernelProcessId()
 {
-   return KernelProcessId::Kernel;
+   return getCurrentRamPartitionData()->coreKernelProcessId[cpu::this_core::id()];
+}
+
+UniqueProcessId
+getCurrentUniqueProcessId()
+{
+   return getCurrentRamPartitionData()->uniqueProcessId;
 }
 
 ios::mcp::MCPTitleId
 getCurrentTitleId()
 {
-   return getCurrentProcessData()->titleInfo.titleId;
+   return getCurrentRamPartitionData()->titleInfo.titleId;
 }
 
-RamPartitionId
-getRampidFromUpid(UniqueProcessId id)
+RamPartitionData *
+getRamPartitionData(RamPartitionId id)
 {
-   switch (id) {
-   case UniqueProcessId::Kernel:
-      return RamPartitionId::Kernel;
-   case UniqueProcessId::Root:
-      return RamPartitionId::Root;
-   case UniqueProcessId::HomeMenu:
-      return RamPartitionId::MainApplication;
-   case UniqueProcessId::TV:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::EManual:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::OverlayMenu:
-      return RamPartitionId::OverlayMenu;
-   case UniqueProcessId::ErrorDisplay:
-      return RamPartitionId::ErrorDisplay;
-   case UniqueProcessId::MiniMiiverse:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::InternetBrowser:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::Miiverse:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::EShop:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::FLV:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::DownloadManager:
-      return RamPartitionId::OverlayApp;
-   case UniqueProcessId::Game:
-      return RamPartitionId::MainApplication;
-   default:
-      decaf_abort(fmt::format("Unknown UniqueProcessId {}", static_cast<uint32_t>(id)));
+   return &sRamPartitionData[static_cast<size_t>(id)];
+}
+
+void
+setCoreToProcessId(RamPartitionId ramPartitionId,
+                   KernelProcessId kernelProcessId)
+{
+   auto coreId = cpu::this_core::id();
+   auto partitionData = getRamPartitionData(ramPartitionId);
+
+   // Check if we need to set a new ram ramPartitionId
+   if (sCoreProcessData[coreId].rampid != ramPartitionId) {
+      if (coreId == 1) {
+         // TODO: When we have per-core address space then do not check coreId
+         loadAddressSpace(&partitionData->addressSpace);
+      }
+
+      setActiveAddressSpace(&partitionData->addressSpace);
+      sCoreProcessData[coreId].rampid = ramPartitionId;
    }
-}
 
-ProcessPerCoreStartInfo *
-getProcessPerCoreStartInfo(uint32_t id)
-{
-   return &getCurrentProcessData()->perCoreStartInfo[id];
+   partitionData->coreKernelProcessId[coreId] = kernelProcessId;
 }
 
 static void
@@ -174,28 +161,28 @@ initialisePerCoreStartInfo(ProcessPerCoreStartInfo *core0,
                            ProcessPerCoreStartInfo *core1,
                            ProcessPerCoreStartInfo *core2)
 {
-   auto processData = getCurrentProcessData();
-   auto stackSize0 = std::max<uint32_t>(0x4000u, processData->startInfo.stackSize);
-   auto stackSize1 = std::max<uint32_t>(0x4000u, processData->startInfo.stackSize);
-   auto stackSize2 = std::max<uint32_t>(0x4000u, processData->startInfo.stackSize);
+   auto partitionData = getCurrentRamPartitionData();
+   auto stackSize0 = std::max<uint32_t>(0x4000u, partitionData->startInfo.stackSize);
+   auto stackSize1 = std::max<uint32_t>(0x4000u, partitionData->startInfo.stackSize);
+   auto stackSize2 = std::max<uint32_t>(0x4000u, partitionData->startInfo.stackSize);
    auto exceptionStackSize0 = 0x1000u;
    auto exceptionStackSize1 = 0x1000u;
    auto exceptionStackSize2 = 0x1000u;
 
-   core0->entryPoint = processData->startInfo.entryPoint;
-   core1->entryPoint = processData->startInfo.entryPoint;
-   core2->entryPoint = processData->startInfo.entryPoint;
-   core0->sdaBase = processData->startInfo.sdaBase;
-   core1->sdaBase = processData->startInfo.sdaBase;
-   core2->sdaBase = processData->startInfo.sdaBase;
-   core0->sda2Base = processData->startInfo.sda2Base;
-   core1->sda2Base = processData->startInfo.sda2Base;
-   core2->sda2Base = processData->startInfo.sda2Base;
-   core0->unk0x1C = processData->startInfo.unk0x10;
-   core1->unk0x1C = processData->startInfo.unk0x10;
-   core2->unk0x1C = processData->startInfo.unk0x10;
+   core0->entryPoint = partitionData->startInfo.entryPoint;
+   core1->entryPoint = partitionData->startInfo.entryPoint;
+   core2->entryPoint = partitionData->startInfo.entryPoint;
+   core0->sdaBase = partitionData->startInfo.sdaBase;
+   core1->sdaBase = partitionData->startInfo.sdaBase;
+   core2->sdaBase = partitionData->startInfo.sdaBase;
+   core0->sda2Base = partitionData->startInfo.sda2Base;
+   core1->sda2Base = partitionData->startInfo.sda2Base;
+   core2->sda2Base = partitionData->startInfo.sda2Base;
+   core0->unk0x1C = partitionData->startInfo.unk0x10;
+   core1->unk0x1C = partitionData->startInfo.unk0x10;
+   core2->unk0x1C = partitionData->startInfo.unk0x10;
 
-   core0->stackEnd = align_up(processData->startInfo.dataAreaStart, 8);
+   core0->stackEnd = align_up(partitionData->startInfo.dataAreaStart, 8);
    core1->stackEnd = align_up(core0->stackEnd + stackSize0, 8);
    core2->stackEnd = align_up(core1->stackEnd + stackSize1, 8);
 
@@ -212,25 +199,27 @@ initialisePerCoreStartInfo(ProcessPerCoreStartInfo *core0,
    core2->exceptionStackBase = align_down(core2->exceptionStackEnd + exceptionStackSize2, 8) - 8;
 
    auto stacksEnd = align_up(core2->exceptionStackEnd + exceptionStackSize2, 8);
-   decaf_check(stacksEnd > processData->startInfo.dataAreaStart &&
-               stacksEnd <= processData->startInfo.dataAreaEnd);
+   decaf_check(stacksEnd > partitionData->startInfo.dataAreaStart &&
+               stacksEnd <= partitionData->startInfo.dataAreaEnd);
 
-   processData->startInfo.dataAreaStart = stacksEnd;
+   partitionData->startInfo.dataAreaStart = stacksEnd;
 }
 
 loader::RPL_STARTINFO *
-getProcessStartInfo()
+getCurrentRamPartitionStartInfo()
 {
-   return &getCurrentProcessData()->startInfo;
+   return &getCurrentRamPartitionData()->startInfo;
 }
 
 void
 loadGameProcess(std::string_view rpx,
                 ios::mcp::MCPPPrepareTitleInfo &titleInfo)
 {
-   auto processData = getCurrentProcessData();
    auto rampid = RamPartitionId::MainApplication;
-   processData->argstr = reinterpret_cast<char *>(std::addressof(titleInfo.argstr.at(0)));
+   auto partitionData = getRamPartitionData(rampid);
+   partitionData->argstr = reinterpret_cast<char *>(std::addressof(titleInfo.argstr.at(0)));
+   partitionData->uniqueProcessId = UniqueProcessId::Game;
+   partitionData->titleId = titleInfo.titleId;
 
    // Initialise memory
    allocateRamPartition(rampid,
@@ -239,28 +228,35 @@ loadGameProcess(std::string_view rpx,
                         titleInfo.codegen_size,
                         titleInfo.max_codesize,
                         titleInfo.codegen_core,
-                        &processData->ramPartitionAllocation);
+                        &partitionData->ramPartitionAllocation);
 
-   processData->overlayArenaEnabled = false;
+   partitionData->overlayArenaEnabled = false;
    if (rampid == RamPartitionId::MainApplication) {
-      processData->overlayArenaEnabled = !!titleInfo.overlay_arena;
+      partitionData->overlayArenaEnabled = !!titleInfo.overlay_arena;
    }
 
-   internal::initialiseAddressSpace(&processData->addressSpace,
-                                    rampid,
-                                    processData->ramPartitionAllocation.codeStart,
-                                    static_cast<uint32_t>(processData->ramPartitionAllocation.codeEnd - processData->ramPartitionAllocation.codeStart),
-                                    processData->ramPartitionAllocation.dataStart,
-                                    static_cast<uint32_t>(processData->ramPartitionAllocation.availStart - processData->ramPartitionAllocation.dataStart),
-                                    0, 0,
-                                    processData->ramPartitionAllocation.availStart,
-                                    static_cast<uint32_t>(processData->ramPartitionAllocation.codeGenStart - processData->ramPartitionAllocation.availStart),
-                                    processData->ramPartitionAllocation.codeGenStart,
-                                    static_cast<uint32_t>(processData->ramPartitionAllocation.codeStart - processData->ramPartitionAllocation.codeGenStart),
-                                    processData->ramPartitionAllocation.codegen_core,
-                                    processData->overlayArenaEnabled);
+   initialiseAddressSpace(
+      &partitionData->addressSpace,
+      rampid,
+      partitionData->ramPartitionAllocation.codeStart,
+      static_cast<uint32_t>(partitionData->ramPartitionAllocation.codeEnd - partitionData->ramPartitionAllocation.codeStart),
+      partitionData->ramPartitionAllocation.dataStart,
+      static_cast<uint32_t>(partitionData->ramPartitionAllocation.availStart - partitionData->ramPartitionAllocation.dataStart),
+      0, 0,
+      partitionData->ramPartitionAllocation.availStart,
+      static_cast<uint32_t>(partitionData->ramPartitionAllocation.codeGenStart - partitionData->ramPartitionAllocation.availStart),
+      partitionData->ramPartitionAllocation.codeGenStart,
+      static_cast<uint32_t>(partitionData->ramPartitionAllocation.codeStart - partitionData->ramPartitionAllocation.codeGenStart),
+      partitionData->ramPartitionAllocation.codegen_core,
+      partitionData->overlayArenaEnabled);
 
-   internal::loadAddressSpace(&processData->addressSpace);
+   setCoreToProcessId(rampid,
+                      KernelProcessId::Loader);
+
+   initialiseCoreProcess(cpu::this_core::id(),
+                         rampid,
+                         UniqueProcessId::Game,
+                         KernelProcessId::Loader);
 
    auto num_codearea_heap_blocks = titleInfo.num_codearea_heap_blocks;
    if (!num_codearea_heap_blocks) {
@@ -274,13 +270,13 @@ loadGameProcess(std::string_view rpx,
 
    // Run the loader
    cafe::loader::setLoadRpxName(rpx);
-   internal::KiRPLStartup(
+   KiRPLStartup(
       cafe::kernel::UniqueProcessId::Kernel,
       cafe::kernel::UniqueProcessId::Game,
       cafe::kernel::ProcessFlags::get(0).debugLevel(cafe::kernel::DebugLevel::Verbose),
       num_codearea_heap_blocks + num_workarea_heap_blocks,
-      static_cast<uint32_t>(processData->ramPartitionAllocation.codeEnd - processData->ramPartitionAllocation.codeStart),
-      static_cast<uint32_t>(processData->ramPartitionAllocation.availStart - processData->ramPartitionAllocation.dataStart),
+      static_cast<uint32_t>(partitionData->ramPartitionAllocation.codeEnd - partitionData->ramPartitionAllocation.codeStart),
+      static_cast<uint32_t>(partitionData->ramPartitionAllocation.availStart - partitionData->ramPartitionAllocation.dataStart),
       0);
 
    // Notify jit of read only sections in the RPX
@@ -297,7 +293,7 @@ loadGameProcess(std::string_view rpx,
                virt_cast<virt_addr>(rpx->sectionHeaderBuffer) +
                (i * rpx->elfHeader.shentsize));
          auto sectionAddress = rpx->sectionAddressBuffer[i];
-         if (!sectionAddress  ||
+         if (!sectionAddress ||
              sectionHeader->type != loader::rpl::SHT_PROGBITS) {
             continue;
          }
@@ -338,35 +334,67 @@ loadGameProcess(std::string_view rpx,
 void
 finishInitAndPreload()
 {
-   auto processData = getCurrentProcessData();
+   auto partitionData = getCurrentRamPartitionData();
    auto loaderIpcStorage = cafe::loader::getKernelIpcStorage();
-   processData->startInfo = loaderIpcStorage->startInfo;
-   processData->loadedRpx = loaderIpcStorage->rpxModule;
-   processData->loadedModuleList = loaderIpcStorage->loadedModuleList;
+   partitionData->startInfo = loaderIpcStorage->startInfo;
+   partitionData->loadedRpx = loaderIpcStorage->rpxModule;
+   partitionData->loadedModuleList = loaderIpcStorage->loadedModuleList;
 
-   initialisePerCoreStartInfo(&processData->perCoreStartInfo[0],
-                              &processData->perCoreStartInfo[1],
-                              &processData->perCoreStartInfo[2]);
+   initialisePerCoreStartInfo(&partitionData->perCoreStartInfo[0],
+                              &partitionData->perCoreStartInfo[1],
+                              &partitionData->perCoreStartInfo[2]);
 
    // KiProcess_Launch
    using EntryPointFn = virt_func_ptr<void()>;
-   auto entryPoint = processData->perCoreStartInfo[cpu::this_core::id()].entryPoint;
+   auto entryPoint = partitionData->perCoreStartInfo[cpu::this_core::id()].entryPoint;
    cafe::invoke(cpu::this_core::state(),
                 virt_func_cast<EntryPointFn>(entryPoint));
 }
 
 void
+initialiseCoreProcess(int coreId,
+                      RamPartitionId rampid,
+                      UniqueProcessId upid,
+                      KernelProcessId pid)
+{
+   auto &data = sCoreProcessData[coreId];
+   data.rampid = rampid;
+   data.upid = upid;
+   data.pid = pid;
+}
+
+void
+initialiseProcessData()
+{
+   for (auto i = 0u; i < sRamPartitionData.size(); ++i) {
+      auto &data = sRamPartitionData[i];
+      // data.state = 0
+      // data.field_0 = -1
+      data.ramPartitionId = static_cast<RamPartitionId>(i);
+      data.coreKernelProcessId[0] = KernelProcessId::Invalid;
+      data.coreKernelProcessId[1] = KernelProcessId::Invalid;
+      data.coreKernelProcessId[2] = KernelProcessId::Invalid;
+   }
+}
+
+} // namespace cafe::kernel::internal
+
+
+namespace cafe::kernel
+{
+
+void
 exitProcess(int code)
 {
-   auto processData = getCurrentProcessData();
-   processData->exitCode = code;
+   auto partitionData = internal::getCurrentRamPartitionData();
+   partitionData->exitCode = code;
    internal::exit();
 }
 
 int
 getProcessExitCode(RamPartitionId rampid)
 {
-   return sProcessData[static_cast<size_t>(rampid)].exitCode;
+   return internal::getRamPartitionData(rampid)->exitCode;
 }
 
 } // namespace cafe::kernel

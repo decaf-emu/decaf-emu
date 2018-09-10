@@ -16,6 +16,15 @@ struct RPL_STARTINFO;
 namespace cafe::kernel
 {
 
+void
+exitProcess(int code);
+
+int
+getProcessExitCode(RamPartitionId rampid);
+
+namespace internal
+{
+
 struct ProcessPerCoreStartInfo
 {
    UNKNOWN(0x8);
@@ -51,62 +60,75 @@ struct RamPartitionAllocation
    uint32_t unk0x1C;
 };
 
-struct ProcessData
+struct RamPartitionData
 {
+   UniqueProcessId uniqueProcessId;
+   RamPartitionId ramPartitionId;
+   ios::mcp::MCPTitleId titleId;
+   std::array<KernelProcessId, 3> coreKernelProcessId;
    loader::RPL_STARTINFO startInfo;
+   internal::AddressSpace addressSpace;
+   RamPartitionAllocation ramPartitionAllocation;
+   std::string argstr;
    virt_ptr<loader::LOADED_RPL> loadedRpx;
    virt_ptr<loader::LOADED_RPL> loadedModuleList;
-   std::array<ProcessPerCoreStartInfo, 3> perCoreStartInfo;
-   RamPartitionAllocation ramPartitionAllocation;
-   internal::AddressSpace addressSpace;
    ios::mcp::MCPPPrepareTitleInfo titleInfo;
    bool overlayArenaEnabled;
-   std::string argstr;
+   std::array<ProcessPerCoreStartInfo, 3> perCoreStartInfo;
    int exitCode;
 };
-// CHECK_OFFSET(ProcessData, 0x04, rampId);
-// CHECK_OFFSET(ProcessData, 0x08, titleId);
-// CHECK_OFFSET(ProcessData, 0x10, sdkVersion);
-// CHECK_OFFSET(ProcessData, 0x14, titleVersion);
-// CHECK_OFFSET(ProcessData, 0x50, addressSpace);
-// CHECK_OFFSET(ProcessData, 0xE58, cmdFlags);
-// CHECK_OFFSET(ProcessData, 0xE80, ramPartitionAllocation);
-// CHECK_OFFSET(ProcessData, 0xEA0, numCodeAreaHeapBlocks);
-// CHECK_OFFSET(ProcessData, 0xEA4, argstr);
-// CHECK_OFFSET(ProcessData, 0xEA8, loadedRpx);
-// CHECK_OFFSET(ProcessData, 0xEAC, loadedModuleList);
-// CHECK_OFFSET(ProcessData, 0xECC, titleInfo);
-// CHECK_OFFSET(ProcessData, 0x1344, titleLoc);
-// CHECK_OFFSET(ProcessData, 0x1348, overlay_arena);
-// CHECK_OFFSET(ProcessData, 0x1698, perCoreStartInfo);
-// CHECK_SIZE(ProcessData, 0x17a0);
+// CHECK_OFFSET(RamPartitionData, 0x04, rampId);
+// CHECK_OFFSET(RamPartitionData, 0x08, titleId);
+// CHECK_OFFSET(RamPartitionData, 0x10, sdkVersion);
+// CHECK_OFFSET(RamPartitionData, 0x14, titleVersion);
+// CHECK_OFFSET(RamPartitionData, 0x18, state);
+// CHECK_OFFSET(RamPartitionData, 0x1C, perCoreUniqueProcessId);
+// CHECK_OFFSET(RamPartitionData, 0x28, startInfo);
+// CHECK_OFFSET(RamPartitionData, 0x50, addressSpace);
+// CHECK_OFFSET(RamPartitionData, 0xE58, cmdFlags);
+//
+// CHECK_OFFSET(RamPartitionData, 0xE80, ramPartitionAllocation);
+// CHECK_OFFSET(RamPartitionData, 0xEA0, numCodeAreaHeapBlocks);
+// CHECK_OFFSET(RamPartitionData, 0xEA4, argstr);
+// CHECK_OFFSET(RamPartitionData, 0xEA8, loadedRpx);
+// CHECK_OFFSET(RamPartitionData, 0xEAC, loadedModuleList);
+//
+// CHECK_OFFSET(RamPartitionData, 0xECC, titleInfo);
+//
+// CHECK_OFFSET(RamPartitionData, 0x1118, userExceptionHandlersCore0);
+// CHECK_OFFSET(RamPartitionData, 0x11CC, userExceptionHandlersCore1);
+// CHECK_OFFSET(RamPartitionData, 0x1180, userExceptionHandlersCore2);
+//
+// CHECK_OFFSET(RamPartitionData, 0x1344, titleLoc);
+// CHECK_OFFSET(RamPartitionData, 0x1348, overlay_arena);
+//
+// CHECK_OFFSET(RamPartitionData, 0x1698, perCoreStartInfo);
+// CHECK_SIZE(RamPartitionData, 0x17a0);
 
-void
-initialiseRamPartitionConfig();
-
-ProcessData *
-getCurrentProcessData();
+RamPartitionData *
+getCurrentRamPartitionData();
 
 RamPartitionId
-getCurrentRampid();
-
-UniqueProcessId
-getCurrentUpid();
+getCurrentRamPartitionId();
 
 KernelProcessId
 getCurrentKernelProcessId();
 
+UniqueProcessId
+getCurrentUniqueProcessId();
+
 ios::mcp::MCPTitleId
 getCurrentTitleId();
 
-RamPartitionId
-getRampidFromUpid(UniqueProcessId id);
-
-ProcessPerCoreStartInfo *
-getProcessPerCoreStartInfo(uint32_t id);
-
 loader::RPL_STARTINFO *
-getProcessStartInfo();
+getCurrentRamPartitionStartInfo();
+
+RamPartitionData *
+getRamPartitionData(RamPartitionId id);
+
+void
+setCoreToProcessId(RamPartitionId ramPartitionId,
+                   KernelProcessId kernelProcessId);
 
 void
 loadGameProcess(std::string_view rpx,
@@ -116,9 +138,14 @@ void
 finishInitAndPreload();
 
 void
-exitProcess(int code);
+initialiseCoreProcess(int coreId,
+                      RamPartitionId rampid,
+                      UniqueProcessId upid,
+                      KernelProcessId pid);
 
-int
-getProcessExitCode(RamPartitionId rampid);
+void
+initialiseProcessData();
+
+} // namespace internal
 
 } // namespace cafe::kernel
