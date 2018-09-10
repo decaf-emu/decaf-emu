@@ -10,4 +10,7 @@ startMcpThread();
 void
 initialiseStaticMcpThreadData();
 
+ios::Handle
+getFsaHandle();
+
 } // namespace ios::mcp::internal
