@@ -141,13 +141,14 @@ FSACloseFile(FSAHandle handle,
    return static_cast<FSAStatus>(error);
 }
 
-FSAStatus
-FSAReadFile(FSAHandle handle,
-            phys_ptr<void> buffer,
-            uint32_t size,
-            uint32_t count,
-            FSAFileHandle fileHandle,
-            FSAReadFlag readFlags)
+static FSAStatus
+readFile(FSAHandle handle,
+         phys_ptr<void> buffer,
+         uint32_t size,
+         uint32_t count,
+         uint32_t pos,
+         FSAFileHandle fileHandle,
+         FSAReadFlag readFlags)
 {
    phys_ptr<FSAIpcData> ipcData;
 
@@ -163,6 +164,7 @@ FSAReadFile(FSAHandle handle,
    request->readFile.handle = fileHandle;
    request->readFile.size = size;
    request->readFile.count = count;
+   request->readFile.pos = pos;
    request->readFile.readFlags = readFlags;
 
    auto &vecs = ipcData->vecs;
@@ -183,6 +185,30 @@ FSAReadFile(FSAHandle handle,
 
    freeFsaIpcData(ipcData);
    return static_cast<FSAStatus>(error);
+}
+
+FSAStatus
+FSAReadFile(FSAHandle handle,
+            phys_ptr<void> buffer,
+            uint32_t size,
+            uint32_t count,
+            FSAFileHandle fileHandle,
+            FSAReadFlag readFlags)
+{
+   return readFile(handle, buffer, size, count, 0, fileHandle, readFlags);
+}
+
+FSAStatus
+FSAReadFileWithPos(FSAHandle handle,
+                   phys_ptr<void> buffer,
+                   uint32_t size,
+                   uint32_t count,
+                   uint32_t pos,
+                   FSAFileHandle fileHandle,
+                   FSAReadFlag readFlags)
+{
+   return readFile(handle, buffer, size, count, pos, fileHandle,
+                   readFlags | FSAReadFlag::ReadWithPos);
 }
 
 FSAStatus

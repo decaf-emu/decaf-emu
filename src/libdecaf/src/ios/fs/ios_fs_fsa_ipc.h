@@ -32,6 +32,15 @@ FSAReadFile(FSAHandle handle,
             FSAReadFlag readFlags);
 
 FSAStatus
+FSAReadFileWithPos(FSAHandle handle,
+                   phys_ptr<void> buffer,
+                   uint32_t size,
+                   uint32_t count,
+                   uint32_t pos,
+                   FSAFileHandle fileHandle,
+                   FSAReadFlag readFlags);
+
+FSAStatus
 FSAWriteFile(FSAHandle handle,
              phys_ptr<const void> buffer,
              uint32_t size,
