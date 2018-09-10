@@ -3,6 +3,7 @@
 #include "cafe_kernel_exception.h"
 #include "cafe_kernel_heap.h"
 #include "cafe_kernel_ipckdriver.h"
+#include "cafe_kernel_ipc.h"
 #include "cafe_kernel_lock.h"
 #include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
@@ -62,6 +63,7 @@ mainCoreEntryPoint(cpu::Core *core)
    internal::initialiseExceptionHandlers();
    internal::ipckDriverInit();
    internal::ipckDriverOpen();
+   internal::initialiseIpc();
 
    // TODO: This is normally called by root.rpx
    loadShared();
@@ -259,6 +261,7 @@ start()
    internal::initialiseStaticContextData();
    internal::initialiseStaticExceptionData();
    internal::initialiseStaticIpckDriverData();
+   internal::initialiseStaticIpcData();
 
    // Setup cpu
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
