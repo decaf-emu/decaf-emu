@@ -60,6 +60,7 @@ mainCoreEntryPoint(cpu::Core *core)
    internal::initialiseCoreContext(core);
    internal::initialiseExceptionContext(core);
    internal::initialiseExceptionHandlers();
+   internal::ipckDriverInit();
    internal::ipckDriverOpen();
 
    // TODO: This is normally called by root.rpx
@@ -147,6 +148,7 @@ subCoreEntryPoint(cpu::Core *core)
 {
    internal::initialiseCoreContext(core);
    internal::initialiseExceptionContext(core);
+   internal::ipckDriverInit();
    internal::ipckDriverOpen();
 
    while (!sStopping.load()) {
@@ -256,6 +258,7 @@ start()
    sKernelData = internal::allocStaticData<StaticKernelData>();
    internal::initialiseStaticContextData();
    internal::initialiseStaticExceptionData();
+   internal::initialiseStaticIpckDriverData();
 
    // Setup cpu
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);

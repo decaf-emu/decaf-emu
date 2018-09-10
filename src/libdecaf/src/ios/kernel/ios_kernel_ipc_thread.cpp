@@ -180,7 +180,7 @@ ipcThreadEntry(phys_ptr<void> context)
             // Reply with error!
             request->command = Command::Reply;
             request->reply = error;
-            cafe::kernel::ipcDriverKernelSubmitReply(request);
+            cafe::kernel::ipckDriverIosSubmitReply(request);
             continue;
          }
       }

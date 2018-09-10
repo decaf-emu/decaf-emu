@@ -625,7 +625,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    ipcRequest->reply = reply;
 
    if (resourceRequest->messageQueueId == getIpcMessageQueueId()) {
-      cafe::kernel::ipcDriverKernelSubmitReply(ipcRequest);
+      cafe::kernel::ipckDriverIosSubmitReply(ipcRequest);
       error = Error::OK;
    } else {
       phys_ptr<MessageQueue> queue = nullptr;
