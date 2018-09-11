@@ -210,13 +210,13 @@ Error
 IOS_AssociateResourceManager(std::string_view device,
                              ResourcePermissionGroup group)
 {
-   phys_ptr<ResourceManager> resourceManager;
-   auto pid = internal::getCurrentProcessId();
+   auto resourceManager = phys_ptr<ResourceManager> { nullptr };
    auto error = internal::findResourceManager(device, &resourceManager);
    if (error < Error::OK) {
       return error;
    }
 
+   auto pid = internal::getCurrentProcessId();
    if (pid != resourceManager->resourceHandleManager->processId) {
       return Error::Access;
    }
@@ -233,8 +233,6 @@ Error
 IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
                   Error reply)
 {
-   phys_ptr<ResourceHandle> resourceHandle;
-
    // Get the resource handle manager for the current process
    auto pid = internal::getCurrentProcessId();
    auto resourceHandleManager = internal::getResourceHandleManager(pid);
@@ -258,6 +256,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       return Error::Invalid;
    }
 
+   auto resourceHandle = phys_ptr<ResourceHandle> { nullptr };
    auto requestHandleManager = resourceRequest->resourceHandleManager;
    auto error = internal::getResourceHandle(resourceRequest->resourceHandleId,
                                             requestHandleManager,
@@ -1283,7 +1282,8 @@ getClientCapability(phys_ptr<ResourceHandleManager> resourceHandleManager,
 {
    for (auto i = 0u; i < resourceHandleManager->clientCapabilities.size(); ++i) {
       auto caps = phys_addrof(resourceHandleManager->clientCapabilities[i]);
-      if (caps->featureId == 0x7FFFFFFF || caps->featureId == featureId) {
+      if (caps->featureId == ResourcePermissionGroup::All ||
+          caps->featureId == featureId) {
          if (outClientCapability) {
             *outClientCapability = caps;
          }
@@ -1304,8 +1304,7 @@ setClientCapability(ProcessId pid,
                     FeatureId featureId,
                     uint64_t mask)
 {
-   phys_ptr<ClientCapability> clientCapability;
-
+   auto clientCapability = phys_ptr<ClientCapability> { nullptr };
    auto resourceHandleManager = getResourceHandleManager(pid);
    if (!resourceHandleManager) {
       return Error::InvalidArg;
