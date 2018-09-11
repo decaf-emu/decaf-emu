@@ -49,6 +49,12 @@ std::string_view
 getRootKey(std::string_view name);
 
 UCError
+readItemsFromFile(std::string_view path,
+                  phys_ptr<UCItem> items,
+                  uint32_t count,
+                  phys_ptr<IoctlVec> vecs);
+
+UCError
 readItems(std::string_view fileSysPath,
           phys_ptr<UCItem> items,
           uint32_t count,

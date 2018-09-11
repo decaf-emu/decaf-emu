@@ -4,6 +4,7 @@
 #include "ios_mcp_mcp_thread.h"
 #include "ios_mcp_pm_thread.h"
 #include "ios_mcp_ppc_thread.h"
+#include "ios_mcp_title.h"
 
 #include "ios/kernel/ios_kernel_debug.h"
 #include "ios/kernel/ios_kernel_hardware.h"
@@ -139,6 +140,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    internal::initialiseStaticMcpThreadData();
    internal::initialiseStaticPmThreadData();
    internal::initialiseStaticPpcThreadData();
+   internal::initialiseTitleStaticData();
 
    // Initialise process heaps
    auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);

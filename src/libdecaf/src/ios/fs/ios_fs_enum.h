@@ -152,6 +152,11 @@ ENUM_BEG(FSAWriteFlag, uint32_t)
    ENUM_VALUE(WriteWithPos,            0x1)
 ENUM_END(FSAWriteFlag)
 
+ENUM_BEG(FSResourcePermissions, uint32_t)
+   ENUM_VALUE(SdCardRead,              0x90000)
+   ENUM_VALUE(SdCardWrite,             0xA0000)
+ENUM_END(FSResourcePermissions)
+
 ENUM_NAMESPACE_END(fs)
 
 ENUM_NAMESPACE_END(ios)

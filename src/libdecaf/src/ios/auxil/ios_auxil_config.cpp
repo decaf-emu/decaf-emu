@@ -380,35 +380,25 @@ checkItems(phys_ptr<UCItem> items,
    return UCError::OK;
 }
 
+
 /**
- * Read the given items from file.
+ * Read config items from specified file.
  */
 UCError
-readItems(std::string_view fileSysPath,
-          phys_ptr<UCItem> items,
-          uint32_t count,
-          phys_ptr<IoctlVec> vecs)
+readItemsFromFile(std::string_view path,
+                  phys_ptr<UCItem> items,
+                  uint32_t count,
+                  phys_ptr<IoctlVec> vecs)
 {
-   auto error = checkItems(items, count);
-   if (error < UCError::OK) {
-      return error;
-   }
-
-   auto path = std::string { };
-   error = getConfigPath(items, fileSysPath, path);
-   if (error < UCError::OK) {
-      return error;
-   }
-
-   uint32_t fileSize;
-   phys_ptr<uint8_t> fileBuffer;
-   error = readFile(path, &fileSize, &fileBuffer);
+   auto fileSize = uint32_t { 0 };
+   auto fileBuffer = phys_ptr<uint8_t> { nullptr };
+   auto error = readFile(path, &fileSize, &fileBuffer);
    if (error < UCError::OK) {
       return error;
    }
 
    // Parse XML
-   pugi::xml_document doc;
+   auto doc = pugi::xml_document { };
    auto parseResult = doc.load_buffer(fileBuffer.getRawPointer(), fileSize);
    freeFileData(fileBuffer, fileSize);
 
@@ -530,14 +520,27 @@ readItems(std::string_view fileSysPath,
       {
          auto src = node.text().get();
          auto size = strlen(src) / 2;
+         static auto hexCharToValue =
+            [](char c)
+            {
+               if (c >= 'a' && c <= 'f') {
+                  return (c - 'a') + 10;
+               } else if (c >= 'A' && c <= 'F') {
+                  return (c - 'A') + 10;
+               } else if (c >= '0' && c <= '9') {
+                  return c - '0';
+               } else {
+                  return 0;
+               }
+            };
 
          if (size <= item->dataSize) {
             auto dst = phys_cast<uint8_t *>(itemData);
 
             for (auto i = 0u; i < size; ++i) {
                auto value = uint8_t { 0 };
-               value |= src[i * 2 + 0] << 4;
-               value |= src[i * 2 + 1];
+               value |= hexCharToValue(src[i * 2 + 0]) << 4;
+               value |= hexCharToValue(src[i * 2 + 1]);
                dst[i] = value;
             }
 
@@ -560,6 +563,31 @@ readItems(std::string_view fileSysPath,
 
    return UCError::OK;
 }
+
+
+/**
+ * Read the given config items.
+ */
+UCError
+readItems(std::string_view fileSysPath,
+          phys_ptr<UCItem> items,
+          uint32_t count,
+          phys_ptr<IoctlVec> vecs)
+{
+   auto error = checkItems(items, count);
+   if (error < UCError::OK) {
+      return error;
+   }
+
+   auto path = std::string { };
+   error = getConfigPath(items, fileSysPath, path);
+   if (error < UCError::OK) {
+      return error;
+   }
+
+   return  readItemsFromFile(path, items, count, vecs);
+}
+
 
 /**
  * Write the given items to file.
@@ -767,6 +795,7 @@ writeItems(std::string_view fileSysPath,
    return error;
 }
 
+
 /**
  * List up to count items from xml
  *
@@ -779,6 +808,7 @@ listItems(phys_ptr<UCItem> items,
    return UCError::Unsupported;
 }
 
+
 /**
  * Get access, error, dataSize, dataType for specified items
  */
@@ -788,6 +818,7 @@ queryItems(phys_ptr<UCItem> items,
 {
    return UCError::Unsupported;
 }
+
 
 /**
  * Delete specific items from the config xml
@@ -885,6 +916,7 @@ deleteItems(std::string_view fileSysPath,
    freeFileData(fileBuffer, fileSize);
    return error;
 }
+
 
 /**
  * Delete the whole config!

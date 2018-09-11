@@ -19,6 +19,8 @@ namespace ios::mcp
 using MCPSysProdSettings = internal::SysProdConfig;
 using MCPTitleId = uint64_t;
 
+constexpr MCPTitleId DefaultTitleId = -3;
+
 struct MCPPPrepareTitleInfo
 {
    struct Permission
@@ -33,7 +35,7 @@ struct MCPPPrepareTitleInfo
    UNKNOWN(4);
    be2_val<uint32_t> cmdFlags;
    be2_array<char, 4096> argstr;
-   UNKNOWN(256);
+   be2_array<virt_ptr<char>, 64> argv;
    be2_val<uint32_t> max_size;
    be2_val<uint32_t> avail_size;
    be2_val<uint32_t> codegen_size;
@@ -60,6 +62,7 @@ CHECK_OFFSET(MCPPPrepareTitleInfo, 0x00, version);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x0C, titleId);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x18, cmdFlags);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x1C, argstr);
+CHECK_OFFSET(MCPPPrepareTitleInfo, 0x101C, argv);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x111C, max_size);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x1120, avail_size);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x1124, codegen_size);

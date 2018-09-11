@@ -19,4 +19,11 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
             phys_ptr<void> outputBuffer,
             uint32_t outputBufferLength);
 
+MCPError
+mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
+                  phys_ptr<MCPResponsePrepareTitle> response);
+
+MCPError
+mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request);
+
 } // namespace ios::mcp::internal

@@ -7,17 +7,14 @@
 #include "ios_mcp_mcp_response.h"
 #include "ios_mcp_pm_thread.h"
 
+#include "ios/ios_stackobject.h"
 #include "ios/auxil/ios_auxil_config.h"
-
 #include "ios/fs/ios_fs_fsa_ipc.h"
-
 #include "ios/kernel/ios_kernel_debug.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
-
-#include "ios/ios_stackobject.h"
 
 #include <common/log.h>
 
@@ -75,6 +72,26 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
          error = mcpLoadFile(phys_cast<MCPRequestLoadFile *>(ioctl.inputBuffer),
                              ioctl.outputBuffer,
                              ioctl.outputLength);
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
+   case MCPCommand::PrepareTitle0x52:
+      if (ioctl.inputBuffer &&
+          ioctl.inputLength == sizeof(MCPRequestPrepareTitle) &&
+          ioctl.outputBuffer &&
+          ioctl.outputLength == sizeof(MCPResponsePrepareTitle)) {
+         error = mcpPrepareTitle52(phys_cast<MCPRequestPrepareTitle *>(ioctl.inputBuffer),
+                                   phys_cast<MCPResponsePrepareTitle *>(ioctl.outputBuffer));
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
+   case MCPCommand::SwitchTitle:
+      if (ioctl.inputBuffer &&
+          ioctl.inputLength == sizeof(MCPRequestSwitchTitle) &&
+          !ioctl.outputBuffer && !ioctl.outputLength) {
+         error = mcpSwitchTitle(phys_cast<MCPRequestSwitchTitle *>(ioctl.inputBuffer));
       } else {
          error = MCPError::InvalidParam;
       }

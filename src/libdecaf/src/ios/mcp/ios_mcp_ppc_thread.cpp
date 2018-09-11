@@ -92,39 +92,12 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       {
          if (request->requestData.handle == PpcKernelHandle) {
             // TODO: Until we have proper permission initialisation in IOS for
-            // CafeOS let's just force all permission
+            // CafeOS kernel let's just force all permission
             StackObject<uint64_t> mask;
             *mask = 0xFFFFFFFFFFFFFFFFull;
-
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::BSP, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::DK, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::FS, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::UHS, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::MCP, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::NIM, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::ACT, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::FPD, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::BOSS, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::ACP, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::PDM, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::AC, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::NDM, mask);
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, ResourcePermissionGroup::NSEC, mask);
-
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::BSP, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::DK, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::FS, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::UHS, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::MCP, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::NIM, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::ACT, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::FPD, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::BOSS, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::ACP, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::PDM, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::AC, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::NDM, mask);
-            IOS_SetClientCapabilities(ProcessId::COSMASTER, ResourcePermissionGroup::NSEC, mask);
+            IOS_SetClientCapabilities(ProcessId::COSKERNEL,
+                                      ResourcePermissionGroup::All,
+                                      mask);
 
             // Boot the PPC kernel!
             cafe::kernel::start();

@@ -5,16 +5,20 @@
 #include "ios_mcp_mcp_request.h"
 #include "ios_mcp_mcp_response.h"
 #include "ios_mcp_mcp_thread.h"
+#include "ios_mcp_title.h"
 
 #include "cafe/libraries/cafe_hle.h"
+#include "ios/ios.h"
 #include "ios/ios_stackobject.h"
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/kernel/ios_kernel_process.h"
+#include "ios/kernel/ios_kernel_resourcemanager.h"
 
 namespace ios::mcp::internal
 {
 
 using namespace ios::fs;
+using namespace ios::kernel;
 
 static std::string
 sCurrentLoadFilePath = { };
@@ -112,6 +116,73 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
    }
 
    return static_cast<MCPError>(error);
+}
+
+MCPError
+mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
+                  phys_ptr<MCPResponsePrepareTitle> response)
+{
+   auto titleId = request->titleId;
+
+   // TODO: When we have title switching we will need to read the title id and
+   // load the correct title, until then our title is already mounted on /vol
+   auto titleInfoBuffer = getPrepareTitleInfoBuffer();
+   auto error = readTitleCosXml(titleInfoBuffer);
+   if (error < MCPError::OK) {
+      return error;
+   }
+
+   std::memcpy(phys_addrof(response->titleInfo).getRawPointer(),
+               titleInfoBuffer.getRawPointer(),
+               sizeof(MCPPPrepareTitleInfo));
+
+   response->titleInfo.titleId = titleId;
+
+   std::memset(phys_addrof(response->titleInfo.permissions).getRawPointer(),
+               0, sizeof(response->titleInfo.permissions));
+   return MCPError::OK;
+}
+
+MCPError
+mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
+{
+   auto titleInfoBuffer = getPrepareTitleInfoBuffer();
+   auto processId = static_cast<ProcessId>(ProcessId::COSKERNEL + request->cafeProcessId);
+   auto sdCardPermissions = 0u;
+
+   // Apply title permissions
+   for (auto &permission : titleInfoBuffer->permissions) {
+      if (!permission.group) {
+         break;
+      }
+
+      IOS_SetClientCapabilities(processId,
+                                permission.group,
+                                phys_addrof(permission.mask));
+
+      if (permission.group == ResourcePermissionGroup::FS) {
+         if (permission.mask & FSResourcePermissions::SdCardRead) {
+            sdCardPermissions |= ::fs::Permissions::Read;
+         }
+
+         if (permission.mask & FSResourcePermissions::SdCardWrite) {
+            sdCardPermissions |= ::fs::Permissions::Write;
+         }
+      }
+   }
+
+   // Mount sdcard if title has permissions
+   if (sdCardPermissions) {
+      auto filesystem = ios::getFileSystem();
+      auto sdcardPath = ::fs::HostPath { decaf::config::system::sdcard_path };
+      filesystem->mountHostFolder("/dev/sdcard01", sdcardPath,
+                                  static_cast<::fs::Permissions>(sdCardPermissions));
+   }
+
+   std::memset(titleInfoBuffer.getRawPointer(),
+               0xFF,
+               sizeof(MCPPPrepareTitleInfo));
+   return MCPError::OK;
 }
 
 } // namespace ios::mcp::internal
