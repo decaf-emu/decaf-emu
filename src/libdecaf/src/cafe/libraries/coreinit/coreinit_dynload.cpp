@@ -139,7 +139,7 @@ dynLoadHeapAlloc(const char *name,
 
    if (isAppDebugLevelUnknown3()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "OSDYNLOAD_HEAP:{},ALLOC,=\"0x:{08x}\",-{}",
+         "OSDYNLOAD_HEAP:{},ALLOC,=\"{}\",-{}",
          name, *outPtr, size));
    }
 
@@ -158,7 +158,7 @@ dynLoadHeapFree(const char *name,
 {
    if (isAppDebugLevelUnknown3()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "OSDYNLOAD_HEAP:{},FREE,=\"0x:{08x}\",-{}",
+         "OSDYNLOAD_HEAP:{},FREE,=\"{}\",-{}",
          name, ptr, size));
    }
 
@@ -178,7 +178,7 @@ rplSysHeapAlloc(const char *name,
 
    if (isAppDebugLevelUnknown3()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "RPL_SYSHEAP:{},ALLOC,=\"0x:{08x}\",-{}",
+         "RPL_SYSHEAP:{},ALLOC,=\"{}\",-{}",
          name, ptr, size));
    }
 
@@ -196,7 +196,7 @@ rplSysHeapFree(const char *name,
 {
    if (isAppDebugLevelUnknown3()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "RPL_SYSHEAP:{},FREE,=\"0x:{08x}\",-{}",
+         "RPL_SYSHEAP:{},FREE,=\"{}\",-{}",
          name, ptr, size));
    }
 
