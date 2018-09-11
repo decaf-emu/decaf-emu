@@ -21,6 +21,13 @@ IOS_GetProcessName(ProcessId process,
 phys_ptr<void>
 allocProcessStatic(size_t size);
 
+template<typename Type>
+inline phys_ptr<Type>
+allocProcessStatic()
+{
+   return phys_cast<Type *>(allocProcessStatic(sizeof(Type)));
+}
+
 phys_ptr<void>
 allocProcessLocalHeap(size_t size);
 
