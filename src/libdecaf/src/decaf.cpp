@@ -209,8 +209,17 @@ initialise(const std::string &gamePath)
    }
 
    // Ensure mlc_path and slc_path exists on host file system
-   platform::createDirectory(decaf::config::system::mlc_path);
-   platform::createDirectory(decaf::config::system::slc_path);
+   if (!decaf::config::system::mlc_path.empty()) {
+      platform::createDirectory(decaf::config::system::mlc_path);
+   }
+
+   if (!decaf::config::system::slc_path.empty()) {
+      platform::createDirectory(decaf::config::system::slc_path);
+   }
+
+   if (!decaf::config::system::sdcard_path.empty()) {
+      platform::createDirectory(decaf::config::system::sdcard_path);
+   }
 
    // Add device folder
    filesystem->makeFolder("/dev");
