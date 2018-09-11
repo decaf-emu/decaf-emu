@@ -117,7 +117,7 @@ IOS_OpenAsync(RamPartitionId clientProcessId,
               virt_ptr<const char> device,
               ios::OpenMode mode,
               IPCKDriverHostAsyncCallbackFn asyncCallback,
-              virt_ptr<void> asyncContext)
+              virt_ptr<void> asyncCallbackData)
 {
    virt_ptr<IPCKDriverRequestBlock> requestBlock;
    auto driver = ipckDriverGetInstance();
@@ -128,7 +128,7 @@ IOS_OpenAsync(RamPartitionId clientProcessId,
                                                0,
                                                ios::Command::Open,
                                                asyncCallback,
-                                               asyncContext);
+                                               asyncCallbackData);
    if (error < ios::Error::OK) {
       return error;
    }
@@ -172,7 +172,7 @@ ios::Error
 IOS_CloseAsync(RamPartitionId clientProcessId,
                ios::Handle handle,
                IPCKDriverHostAsyncCallbackFn asyncCallback,
-               virt_ptr<void> asyncContext,
+               virt_ptr<void> asyncCallbackData,
                uint32_t unkArg0)
 {
    virt_ptr<IPCKDriverRequestBlock> requestBlock;
@@ -184,7 +184,7 @@ IOS_CloseAsync(RamPartitionId clientProcessId,
                                                handle,
                                                ios::Command::Open,
                                                asyncCallback,
-                                               asyncContext);
+                                               asyncCallbackData);
    if (error < ios::Error::OK) {
       return error;
    }
@@ -215,6 +215,84 @@ IOS_Close(RamPartitionId clientProcessId,
    }
 
    return waitSynchronousReply(synchronousReply, std::chrono::milliseconds { 35 }, 6);
+}
+
+ios::Error
+IOS_IoctlAsync(RamPartitionId clientProcessId,
+               RamPartitionId loaderProcessId,
+               ios::Handle handle,
+               uint32_t request,
+               virt_ptr<void> inBuf,
+               uint32_t inLen,
+               virt_ptr<void> outBuf,
+               uint32_t outLen,
+               IPCKDriverHostAsyncCallbackFn asyncCallback,
+               virt_ptr<void> asyncCallbackData)
+{
+   virt_ptr<IPCKDriverRequestBlock> requestBlock;
+   auto driver = ipckDriverGetInstance();
+   auto error = ipckDriverAllocateRequestBlock(clientProcessId,
+                                               loaderProcessId,
+                                               driver,
+                                               &requestBlock,
+                                               handle,
+                                               ios::Command::Ioctl,
+                                               asyncCallback,
+                                               asyncCallbackData);
+   if (error < ios::Error::OK) {
+      return error;
+   }
+
+
+   auto &ioctl = requestBlock->request->request.args.ioctl;
+   ioctl.request = request;
+   ioctl.inputLength = inLen;
+   ioctl.outputLength = outLen;
+
+   if (inBuf) {
+      ioctl.inputBuffer = effectiveToPhysical(inBuf);
+   } else {
+      ioctl.inputBuffer = nullptr;
+   }
+
+   if (outBuf) {
+      ioctl.outputBuffer = effectiveToPhysical(outBuf);
+   } else {
+      ioctl.outputBuffer = nullptr;
+   }
+
+   error = ipckDriverSubmitRequest(driver, requestBlock);
+   if (error < ios::Error::OK) {
+      ipckDriverFreeRequestBlock(driver, requestBlock);
+   }
+
+   return error;
+}
+
+ios::Error
+IOS_Ioctl(RamPartitionId clientProcessId,
+          RamPartitionId loaderProcessId,
+          ios::Handle handle,
+          uint32_t request,
+          virt_ptr<void> inBuf,
+          uint32_t inLen,
+          virt_ptr<void> outBuf,
+          uint32_t outLen)
+{
+   StackObject<SynchronousCallback> synchronousReply;
+   auto error = IOS_IoctlAsync(clientProcessId,
+                               loaderProcessId,
+                               handle,
+                               request,
+                               inBuf, inLen,
+                               outBuf, outLen,
+                               &synchronousCallback,
+                               synchronousReply);
+   if (error < ios::Error::OK) {
+      return error;
+   }
+
+   return waitSynchronousReply(synchronousReply, std::chrono::seconds { 35 }, 6);
 }
 
 void
