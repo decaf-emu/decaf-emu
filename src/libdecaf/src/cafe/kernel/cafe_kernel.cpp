@@ -6,6 +6,7 @@
 #include "cafe_kernel_ipc.h"
 #include "cafe_kernel_lock.h"
 #include "cafe_kernel_loader.h"
+#include "cafe_kernel_mcp.h"
 #include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
 #include "cafe_kernel_shareddata.h"
@@ -14,7 +15,6 @@
 #include "decaf_events.h"
 #include "decaf_game.h"
 #include "kernel/kernel_filesystem.h"
-#include "kernel/kernel_gameinfo.h"
 #include "ios/mcp/ios_mcp_mcp_types.h"
 
 #include <atomic>
@@ -35,6 +35,7 @@ struct StaticKernelData
    };
 
    be2_array<CoreData, 3> coreData;
+   be2_struct<ios::mcp::MCPPPrepareTitleInfo> prepareTitleInfo;
 };
 
 static virt_ptr<StaticKernelData>
@@ -48,9 +49,6 @@ sSubCoreEntryContexts = { };
 
 static std::atomic<bool>
 sStopping { false };
-
-static decaf::GameInfo
-sGameInfo;
 
 static std::string
 sExecutableName;
@@ -77,82 +75,57 @@ mainCoreEntryPoint(cpu::Core *core)
    internal::initialiseIpc();
 
    // TODO: This is normally called by root.rpx
+   // TODO: Change this to use IPC file read commands.
    loadShared();
 
-   // TODO: Game information should come from ios MCPPPrepareTitleInfo!
-   if (!::kernel::loadGameInfo(sGameInfo)) {
-      gLog->warn("Could not load game info.");
+   // Prepare title
+   auto titleInfo = virt_addrof(sKernelData->prepareTitleInfo);
+   if (auto error = internal::mcpPrepareTitle(ios::mcp::DefaultTitleId,
+                                              titleInfo)) {
+      // Not a full title - fill out some default values!
+      titleInfo->version = 1u;
+      titleInfo->cmdFlags = 0u;
+      titleInfo->avail_size = 0u;
+      titleInfo->codegen_size = 0u;
+      titleInfo->codegen_core = 1u;
+      titleInfo->max_size = 0x40000000u;
+      titleInfo->max_codesize = 0x0E000000u;
+      titleInfo->default_stack0_size = 0u;
+      titleInfo->default_stack1_size = 0u;
+      titleInfo->default_stack2_size = 0u;
+      titleInfo->exception_stack0_size = 0x1000u;
+      titleInfo->exception_stack1_size = 0x1000u;
+      titleInfo->exception_stack2_size = 0x1000u;
+
+      std::strncpy(virt_addrof(titleInfo->argstr).getRawPointer(),
+                   sExecutableName.data(),
+                   sExecutableName.size());
    } else {
-      gLog->info("Loaded game info: '{}' - {} v{}",
-                 sGameInfo.meta.shortnames[decaf::Language::English],
-                 sGameInfo.meta.product_code,
-                 sGameInfo.meta.title_version);
+      gLog->info("Loaded title {:016X}, argstr \"{}\"",
+                 titleInfo->titleId,
+                 virt_addrof(titleInfo->argstr).getRawPointer());
    }
 
-   if (sGameInfo.cos.argstr.empty()) {
-      sGameInfo.cos.argstr = sExecutableName;
-   }
-
-   // TODO: This should be inside IOS
-   // Mount sdcard if the game has the appropriate permissions
-   if ((sGameInfo.cos.permission_fs & decaf::CosXML::FSPermission::SdCardRead) ||
-       (sGameInfo.cos.permission_fs & decaf::CosXML::FSPermission::SdCardWrite)) {
-      auto filesystem = ::kernel::getFileSystem();
-
-      // Ensure sdcard_path exists
-      platform::createDirectory(decaf::config::system::sdcard_path);
-
-      auto sdcardPath = fs::HostPath { decaf::config::system::sdcard_path };
-      auto permissions = fs::Permissions::Read;
-
-      if (sGameInfo.cos.permission_fs & decaf::CosXML::FSPermission::SdCardWrite) {
-         permissions = fs::Permissions::ReadWrite;
-      }
-
-      filesystem->mountHostFolder("/dev/sdcard01", sdcardPath, permissions);
-   }
-
-   const auto &rpx = sGameInfo.cos.argstr;
+   auto rpx = std::string_view { virt_addrof(titleInfo->argstr).getRawPointer() };
    if (rpx.empty()) {
       gLog->error("Could not find game executable to load.");
       return;
    }
 
-   decaf::event::onGameLoaded(sGameInfo);
-
-   // Load and run the game
-   ios::mcp::MCPPPrepareTitleInfo titleInfo;
-   titleInfo.version = static_cast<uint32_t>(sGameInfo.cos.version);
-   titleInfo.titleId = static_cast<uint64_t>(sGameInfo.app.title_id);
-   titleInfo.cmdFlags = static_cast<uint32_t>(sGameInfo.cos.cmdFlags);
-   titleInfo.argstr = sGameInfo.cos.argstr;
-   titleInfo.max_size = static_cast<uint32_t>(sGameInfo.cos.max_size);
-   titleInfo.avail_size = static_cast<uint32_t>(sGameInfo.cos.avail_size);
-   titleInfo.codegen_size = static_cast<uint32_t>(sGameInfo.cos.codegen_size);
-   titleInfo.codegen_core = static_cast<uint32_t>(sGameInfo.cos.codegen_core);
-   titleInfo.max_codesize = static_cast<uint32_t>(sGameInfo.cos.max_codesize);
-   titleInfo.overlay_arena = static_cast<uint32_t>(sGameInfo.cos.overlay_arena);
-   titleInfo.num_workarea_heap_blocks = static_cast<uint32_t>(sGameInfo.cos.num_workarea_heap_blocks);
-   titleInfo.num_codearea_heap_blocks = static_cast<uint32_t>(sGameInfo.cos.num_codearea_heap_blocks);
-   titleInfo.default_stack0_size = static_cast<uint32_t>(sGameInfo.cos.default_stack0_size);
-   titleInfo.default_stack1_size = static_cast<uint32_t>(sGameInfo.cos.default_stack1_size);
-   titleInfo.default_stack2_size = static_cast<uint32_t>(sGameInfo.cos.default_stack2_size);
-   titleInfo.default_redzone0_size = static_cast<uint32_t>(sGameInfo.cos.default_redzone0_size);
-   titleInfo.default_redzone1_size = static_cast<uint32_t>(sGameInfo.cos.default_redzone1_size);
-   titleInfo.default_redzone2_size = static_cast<uint32_t>(sGameInfo.cos.default_redzone2_size);
-   titleInfo.exception_stack0_size = static_cast<uint32_t>(sGameInfo.cos.exception_stack0_size);
-   titleInfo.exception_stack1_size = static_cast<uint32_t>(sGameInfo.cos.exception_stack1_size);
-   titleInfo.exception_stack2_size = static_cast<uint32_t>(sGameInfo.cos.exception_stack2_size);
-
-   for (auto i = 0u; i < titleInfo.permissions.size(); ++i) {
-      titleInfo.permissions[i].group = static_cast<uint32_t>(sGameInfo.cos.permissions[i].group);
-      titleInfo.permissions[i].mask = static_cast<uint64_t>(sGameInfo.cos.permissions[i].mask);
-   }
-
-   titleInfo.sdkVersion = static_cast<uint32_t>(sGameInfo.app.sdk_version);
-   titleInfo.titleVersion = static_cast<uint32_t>(sGameInfo.app.title_version);
-
+   // Perform the initial load
    internal::loadGameProcess(rpx, titleInfo);
+
+   // Notify front end that game is loaded
+   auto gameInfo = decaf::GameInfo { };
+   gameInfo.titleId = titleInfo->titleId;
+   if (auto pos = rpx.find_first_of(' '); pos != std::string_view::npos) {
+      gameInfo.executable = rpx.substr(0, pos);
+   } else {
+      gameInfo.executable = rpx;
+   }
+   decaf::event::onGameLoaded(gameInfo);
+
+   // Start the game
    internal::finishInitAndPreload();
 }
 

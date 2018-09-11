@@ -1,6 +1,7 @@
 #include "cafe_kernel.h"
 #include "cafe_kernel_loader.h"
 #include "cafe_kernel_mmu.h"
+#include "cafe_kernel_mcp.h"
 #include "cafe_kernel_process.h"
 
 #include "ios/mcp/ios_mcp_mcp_types.h"
@@ -213,26 +214,26 @@ getCurrentRamPartitionStartInfo()
 
 void
 loadGameProcess(std::string_view rpx,
-                ios::mcp::MCPPPrepareTitleInfo &titleInfo)
+                virt_ptr<ios::mcp::MCPPPrepareTitleInfo> titleInfo)
 {
    auto rampid = RamPartitionId::MainApplication;
    auto partitionData = getRamPartitionData(rampid);
-   partitionData->argstr = reinterpret_cast<char *>(std::addressof(titleInfo.argstr.at(0)));
+   partitionData->argstr = virt_addrof(titleInfo->argstr).getRawPointer();
    partitionData->uniqueProcessId = UniqueProcessId::Game;
-   partitionData->titleId = titleInfo.titleId;
+   partitionData->titleId = titleInfo->titleId;
 
-   // Initialise memory
+   // Initialise RAM partition
    allocateRamPartition(rampid,
-                        titleInfo.max_size,
-                        titleInfo.avail_size,
-                        titleInfo.codegen_size,
-                        titleInfo.max_codesize,
-                        titleInfo.codegen_core,
+                        titleInfo->max_size,
+                        titleInfo->avail_size,
+                        titleInfo->codegen_size,
+                        titleInfo->max_codesize,
+                        titleInfo->codegen_core,
                         &partitionData->ramPartitionAllocation);
 
    partitionData->overlayArenaEnabled = false;
    if (rampid == RamPartitionId::MainApplication) {
-      partitionData->overlayArenaEnabled = !!titleInfo.overlay_arena;
+      partitionData->overlayArenaEnabled = !!titleInfo->overlay_arena;
    }
 
    initialiseAddressSpace(
@@ -250,6 +251,7 @@ loadGameProcess(std::string_view rpx,
       partitionData->ramPartitionAllocation.codegen_core,
       partitionData->overlayArenaEnabled);
 
+   // Switch to the kernel process
    setCoreToProcessId(rampid,
                       KernelProcessId::Loader);
 
@@ -258,17 +260,23 @@ loadGameProcess(std::string_view rpx,
                          UniqueProcessId::Game,
                          KernelProcessId::Loader);
 
-   auto num_codearea_heap_blocks = titleInfo.num_codearea_heap_blocks;
+   // Switch to the IOS MCP title
+   mcpSwitchTitle(rampid,
+                  partitionData->ramPartitionAllocation.dataStart,
+                  partitionData->ramPartitionAllocation.codeGenStart,
+                  partitionData->ramPartitionAllocation.codeEnd);
+
+   // Run the loader
+   auto num_codearea_heap_blocks = titleInfo->num_codearea_heap_blocks;
    if (!num_codearea_heap_blocks) {
       num_codearea_heap_blocks = 256u;
    }
 
-   auto num_workarea_heap_blocks = titleInfo.num_workarea_heap_blocks;
+   auto num_workarea_heap_blocks = titleInfo->num_workarea_heap_blocks;
    if (!num_workarea_heap_blocks) {
       num_workarea_heap_blocks = 512u;
    }
 
-   // Run the loader
    cafe::loader::setLoadRpxName(rpx);
    KiRPLStartup(
       cafe::kernel::UniqueProcessId::Kernel,

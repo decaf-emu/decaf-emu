@@ -132,7 +132,7 @@ setCoreToProcessId(RamPartitionId ramPartitionId,
 
 void
 loadGameProcess(std::string_view rpx,
-                ios::mcp::MCPPPrepareTitleInfo &titleInfo);
+                virt_ptr<ios::mcp::MCPPPrepareTitleInfo> titleInfo);
 
 void
 finishInitAndPreload();

@@ -307,31 +307,19 @@ DecafSDL::calculateScreenViewports(Viewport &tv, Viewport &drc)
 void
 DecafSDL::onGameLoaded(const decaf::GameInfo &info)
 {
-   auto name = info.meta.shortnames[decaf::Language::English];
+   fmt::memory_buffer title;
+   fmt::format_to(title, "decaf-sdl ({})", sActiveGfx);
 
-   // If we do not have English short name, pick first non-empty short name
-   if (name.empty()) {
-      for (auto itr : info.meta.shortnames) {
-         if (itr.empty()) {
-            name = itr;
-            break;
-         }
-      }
+   if (info.titleId) {
+      fmt::format_to(title, " {:016X}", info.titleId);
    }
 
-   // Try product code
-   if (name.empty()) {
-      name = info.meta.product_code;
+   if (!info.executable.empty()) {
+      fmt::format_to(title, " {}", info.executable);
    }
 
-   // Finally use RPX name
-   if (name.empty()) {
-      name = info.cos.argstr;
-   }
-
-   // Update window title
-   auto title = fmt::format("Decaf ({}) - {}", sActiveGfx, name);
-   SDL_SetWindowTitle(mGraphicsDriver->getWindow(), title.c_str());
+   auto titleStr = std::string { title.data(), title.size() };
+   SDL_SetWindowTitle(mGraphicsDriver->getWindow(), titleStr.c_str());
 
    // We have to be careful not to start rendering until the game is
    // fully loaded, or we will block window messaging.
