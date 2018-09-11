@@ -15,11 +15,8 @@ struct StaticSystemInfoData
    be2_struct<OSSystemInfo> systemInfo;
    be2_val<BOOL> screenCapturePermission;
    be2_val<BOOL> enableHomeButtonMenu;
-   be2_val<kernel::UniqueProcessId> uniqueProcessId;
-   be2_val<OSAppFlags> appFlags;
-   be2_val<uint64_t> titleID;
-   be2_val<uint64_t> osID;
    be2_struct<kernel::Info0> kernelInfo0;
+   be2_struct<kernel::Info6> kernelInfo6;
    be2_array<char, 4096> argstr;
 };
 
@@ -81,25 +78,25 @@ OSBlockThreadsOnExit()
 uint64_t
 OSGetTitleID()
 {
-   return sSystemInfoData->titleID;
+   return sSystemInfoData->kernelInfo0.titleId;
 }
 
 uint64_t
 OSGetOSID()
 {
-   return sSystemInfoData->osID;
+   return sSystemInfoData->kernelInfo6.osTitleId;
 }
 
 kernel::UniqueProcessId
 OSGetUPID()
 {
-   return sSystemInfoData->uniqueProcessId;
+   return sSystemInfoData->kernelInfo0.upid;
 }
 
 OSAppFlags
 OSGetAppFlags()
 {
-   return sSystemInfoData->appFlags;
+   return sSystemInfoData->kernelInfo0.appFlags;
 }
 
 OSShutdownReason
@@ -236,7 +233,7 @@ getSystemHeapSize()
 bool
 isAppDebugLevelVerbose()
 {
-   return sSystemInfoData->appFlags.value()
+   return sSystemInfoData->kernelInfo0.appFlags.value()
       .debugLevel() >= OSAppFlagsDebugLevel::Verbose;
 }
 
@@ -264,6 +261,10 @@ initialiseSystemInfo()
    kernel::getInfo(kernel::InfoType::Type0,
                    virt_addrof(sSystemInfoData->kernelInfo0),
                    sizeof(kernel::Info0));
+
+   kernel::getInfo(kernel::InfoType::Type6,
+                   virt_addrof(sSystemInfoData->kernelInfo6),
+                   sizeof(kernel::Info6));
 
    kernel::getInfo(kernel::InfoType::ArgStr,
                    virt_addrof(sSystemInfoData->argstr),
