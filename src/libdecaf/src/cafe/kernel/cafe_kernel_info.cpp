@@ -76,6 +76,17 @@ getType0Info(virt_ptr<Info0> info,
 }
 
 void
+getType6Info(virt_ptr<Info6> info,
+             uint32_t size)
+{
+   std::memset(info.getRawPointer(), 0, sizeof(Info6));
+
+   // TODO: This comes from ios/mcp GetLaunchParameters
+   info->osTitleId = 0x000500101000400Aull;
+   info->unk0x08 = 0u;
+}
+
+void
 getArgStr(virt_ptr<char> buffer,
           uint32_t size)
 {
@@ -99,6 +110,9 @@ getInfo(InfoType type,
    switch (type) {
    case InfoType::Type0:
       getType0Info(virt_cast<Info0 *>(buffer), size);
+      break;
+   case InfoType::Type6:
+      getType6Info(virt_cast<Info6 *>(buffer), size);
       break;
    case InfoType::ArgStr:
       getArgStr(virt_cast<char *>(buffer), size);
