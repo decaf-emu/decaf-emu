@@ -88,7 +88,7 @@ initialiseSystemHeap(virt_ptr<void> base,
               "RPL_SYSHEAP:Event,Change,Hex Addr,Bytes,Available");
       COSInfo(
          COSReportModule::Unknown2,
-         fmt::format("RPL_SYSHEAP:SYSHEAP START,CREATE,=\"0x{08x}\",{}",
+         fmt::format("RPL_SYSHEAP:SYSHEAP START,CREATE,=\"{}\",{}",
                      base, size));
    }
 

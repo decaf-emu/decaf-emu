@@ -238,10 +238,10 @@ isAppDebugLevelVerbose()
 }
 
 bool
-isAppDebugLevelUnknown3()
+isAppDebugLevelNotice()
 {
-   return sSystemInfoData->appFlags.value()
-      .debugLevel() >= OSAppFlagsDebugLevel::Unknown3;
+   return sSystemInfoData->kernelInfo0.appFlags.value()
+      .debugLevel() >= OSAppFlagsDebugLevel::Notice;
 }
 
 void
