@@ -233,7 +233,7 @@ IOS_HeapAllocAligned(HeapId heapId,
       auto base = phys_cast<uint8_t *>(block) + sizeof(HeapBlock);
       auto baseAddr = phys_cast<phys_addr>(base);
       auto alignedBaseAddr = align_up(phys_cast<phys_addr>(base), alignment);
-      auto alignOffset = alignedBaseAddr - baseAddr;
+      auto alignOffset = static_cast<uint32_t>(alignedBaseAddr - baseAddr);
 
       decaf_check(block->state == HeapBlockState::Free);
 

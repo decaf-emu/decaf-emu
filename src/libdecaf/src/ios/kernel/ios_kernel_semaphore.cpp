@@ -22,13 +22,12 @@ sData;
 static phys_ptr<Semaphore>
 getSemaphore(SemaphoreId id)
 {
-   id &= 0xFFF;
-
-   if (id >= sData->semaphores.size()) {
+   auto idx = static_cast<size_t>(id & 0xFFF);
+   if (idx >= sData->semaphores.size()) {
       return nullptr;
    }
 
-   auto semaphore = phys_addrof(sData->semaphores[id]);
+   auto semaphore = phys_addrof(sData->semaphores[idx]);
    if (semaphore->pid != internal::getCurrentProcessId()) {
       // Can only access semaphores belonging to same process.
       return nullptr;

@@ -58,7 +58,7 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
       auto library = cafe::hle::getLibrary(name);
       if (library) {
          auto &rpl = library->getGeneratedRpl();
-         auto bytesRead = std::min<uint32_t>(rpl.size() - request->pos,
+         auto bytesRead = std::min<uint32_t>(static_cast<uint32_t>(rpl.size() - request->pos),
                                              outputBufferLength);
          std::memcpy(outputBuffer.getRawPointer(),
                      rpl.data() + request->pos,

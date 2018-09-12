@@ -175,13 +175,12 @@ Error
 getMessageQueue(MessageQueueId id,
                 phys_ptr<MessageQueue> *outQueue)
 {
-   id &= 0xFFF;
-
-   if (id >= sData->queues.size()) {
+   auto idx = static_cast<size_t>(id & 0xFFF);
+   if (idx >= sData->queues.size()) {
       return Error::Invalid;
    }
 
-   auto queue = phys_addrof(sData->queues[id]);
+   auto queue = phys_addrof(sData->queues[idx]);
    if (outQueue) {
       *outQueue = queue;
    }
@@ -198,13 +197,12 @@ Error
 getMessageQueueSafe(MessageQueueId id,
                     phys_ptr<MessageQueue> *outQueue)
 {
-   id &= 0xFFF;
-
-   if (id >= sData->queues.size()) {
+   auto idx = static_cast<size_t>(id & 0xFFF);
+   if (idx >= sData->queues.size()) {
       return Error::Invalid;
    }
 
-   auto queue = phys_addrof(sData->queues[id]);
+   auto queue = phys_addrof(sData->queues[idx]);
    if (queue->pid != internal::getCurrentProcessId()) {
       // Can only access queues belonging to same process.
       return Error::Access;
