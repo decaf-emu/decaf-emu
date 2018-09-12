@@ -89,42 +89,6 @@ ends_with(const std::string_view &source, const std::string_view &suffix)
    }
 }
 
-// Creates a string according to a format string and varargs
-static inline std::string
-format_string(const char *fmt, ...)
-{
-   va_list args, args2;
-   std::string ret;
-
-   va_start(args, fmt);
-   va_copy(args2, args);
-
-   // Calculate the size for our char buffer
-#ifdef PLATFORM_WINDOWS
-   int formatted_len = _vscprintf(fmt, args2);
-#else
-   int formatted_len = vsnprintf(nullptr, 0, fmt, args2);
-#endif
-   va_end(args2);
-
-   if (formatted_len > 0) {
-      // Reserve space for the trailing null as well (C++11 doesn't require
-      // that implementations include a trailing null element)
-      ret.resize(formatted_len + 1);
-
-      // C++11 guarantees that strings are contiguous in memory
-#ifdef PLATFORM_WINDOWS
-      vsprintf_s(&ret[0], formatted_len + 1, fmt, args);
-#else
-      vsnprintf(&ret[0], formatted_len + 1, fmt, args);
-#endif
-   }
-   va_end(args);
-
-   ret.resize(formatted_len);
-   return ret;
-}
-
 // Case insensitive string compare
 inline bool
 iequals(const std::string_view &a, const std::string_view &b)

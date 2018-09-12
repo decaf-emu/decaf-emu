@@ -1,9 +1,9 @@
 #include "platform.h"
 #include "platform_dir.h"
-#include "strutils.h"
 
 #ifdef PLATFORM_POSIX
 #include <errno.h>
+#include <fmt/format.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -72,7 +72,7 @@ getConfigDirectory()
    // TODO: will be different for Mac
    const char *home = getenv("HOME");
    if (home && *home) {
-      return format_string("%s/.config", home);
+      return fmt::format("{}/.config", home);
    } else {
       return ".";
    }
