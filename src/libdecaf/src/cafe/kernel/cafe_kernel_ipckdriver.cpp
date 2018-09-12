@@ -125,7 +125,7 @@ ipckDriverLoaderOpen()
    }
    */
 
-   auto pidx = static_cast<uint32_t>(getCurrentRampid());
+   auto pidx = static_cast<uint32_t>(internal::getCurrentRamPartitionId());
    driver->perProcessNumLoaderRequests[pidx] = 0u;
    IPCKDriver_FIFOInit(virt_addrof(driver->perProcessLoaderReply[pidx]));
    return ios::Error::OK;
@@ -171,7 +171,7 @@ ipckDriverLoaderPollCompletion()
 {
    auto driver = internal::ipckDriverGetInstance();
    auto block = virt_ptr<internal::IPCKDriverRequestBlock> { nullptr };
-   auto pidx = static_cast<uint32_t>(getCurrentRampid());
+   auto pidx = static_cast<uint32_t>(internal::getCurrentRamPartitionId());
    auto error = IPCKDriver_FIFOPop(virt_addrof(driver->perProcessLoaderReply[pidx]),
                                    &block);
    if (error < ios::Error::OK) {
