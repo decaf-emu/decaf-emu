@@ -192,7 +192,7 @@ LOADER_Init(kernel::UniqueProcessId upid,
    loadArgs.fileOffset = 0u;
 
    error = LiLoadForPrep(moduleName,
-                         loadRpxName.size(),
+                         static_cast<uint32_t>(loadRpxName.size()),
                          chunkBuffer,
                          &rpx,
                          &loadArgs,

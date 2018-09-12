@@ -412,7 +412,7 @@ fmaSingle(cpu::Core *state, Instruction instr, float *result)
 
          volatile double addendTemp = addend;
          volatile float dummy;
-         dummy = std::fma(a, c, addendTemp);
+         dummy = (float)std::fma(a, c, addendTemp);
 
          fesetround(oldRound);
       }

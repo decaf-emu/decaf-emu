@@ -680,7 +680,7 @@ LiFixupRelocOneRPL(virt_ptr<LOADED_RPL> rpl,
    LiCheckAndHandleInterrupts();
 
    // Apply imports to symbol table
-   for (auto i = 1u; i < rpl->elfHeader.shnum - 2; ++i) {
+   for (auto i = 1u; i < static_cast<unsigned int>(rpl->elfHeader.shnum - 2); ++i) {
       auto sectionHeader = getSectionHeader(rpl, i);
       if (sectionHeader->type == rpl::SHT_SYMTAB) {
          if (auto error = sFixupOneSymbolTable(rpl, i, sectionHeader, imports, unk)) {
@@ -705,7 +705,7 @@ LiFixupRelocOneRPL(virt_ptr<LOADED_RPL> rpl,
    auto textMax = rpl->postTrampBuffer + (postTrampAvailable * TrampSize);
 
    // Apply relocations
-   for (auto i = 1u; i < rpl->elfHeader.shnum - 2; ++i) {
+   for (auto i = 1u; i < static_cast<unsigned int>(rpl->elfHeader.shnum - 2); ++i) {
       auto sectionHeader = getSectionHeader(rpl, i);
       if (sectionHeader->type == rpl::SHT_RELA) {
          if (auto error = sExecReloc(rpl,
@@ -736,7 +736,7 @@ LiFixupRelocOneRPL(virt_ptr<LOADED_RPL> rpl,
    // Relocate entry point
    rpl->entryPoint = virt_addr { 0 };
 
-   for (auto i = 1u; i < rpl->elfHeader.shnum - 2; ++i) {
+   for (auto i = 1u; i < static_cast<unsigned int>(rpl->elfHeader.shnum - 2); ++i) {
       auto sectionHeader = getSectionHeader(rpl, i);
       auto sectionAddress = rpl->sectionAddressBuffer[i];
       LiCheckAndHandleInterrupts();

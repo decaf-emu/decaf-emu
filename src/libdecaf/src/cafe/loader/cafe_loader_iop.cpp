@@ -56,7 +56,7 @@ iop_percore_initheap()
    auto alignedData = align_up(data, HeapAllocAlign);
    auto alignedOffset = virt_cast<virt_addr>(alignedData) - virt_cast<virt_addr>(data);
    TinyHeap_Setup(heap, 0x430, alignedData,
-                  HeapSizePerCore - 0x430 - alignedOffset);
+                  static_cast<uint32_t>(HeapSizePerCore - 0x430 - alignedOffset));
 }
 
 static virt_ptr<void>

@@ -30,7 +30,7 @@ fromWinApiString(const std::wstring &utf16)
 {
    auto result = std::string { };
    auto size = WideCharToMultiByte(CP_UTF8, 0,
-                                   utf16.data(), utf16.size(),
+                                   utf16.data(), static_cast<int>(utf16.size()),
                                    NULL, 0,
                                    NULL, NULL);
    result.resize(size);

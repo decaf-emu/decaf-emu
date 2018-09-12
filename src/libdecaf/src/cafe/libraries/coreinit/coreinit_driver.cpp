@@ -390,7 +390,8 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
 
    // Deregister driver with the kernel
    if (driver->unk0x40 == driver->unk0x44) {
-      unkDeregisterSyscall0x3300(name, strlen(name.getRawPointer()));
+      unkDeregisterSyscall0x3300(name,
+                                 static_cast<uint32_t>(strlen(name.getRawPointer())));
    }
 
    // Free the dynload handles

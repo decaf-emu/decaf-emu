@@ -89,7 +89,15 @@ PerformanceWindow::drawGraphs()
    std::copy(mFpsValues.begin() + 1, mFpsValues.end(), mFpsValues.begin());
    mFpsValues.back() = fps;
 
-   PlotLinesDecaf("", mFpsValues.data(), mFpsValues.size(), 0, NULL, 0.0f, 60.0f, ImVec2 { 0, GraphHeight }, sizeof(float), 10);
+   PlotLinesDecaf("",
+                  mFpsValues.data(),
+                  static_cast<int>(mFpsValues.size()),
+                  0,
+                  NULL,
+                  0.0f, 60.0f,
+                  ImVec2 { 0, GraphHeight },
+                  sizeof(float),
+                  10);
    ImGui::SameLine();
    ImGui::Text("Frame Rate\n%.1f (fps)", fps);
 
@@ -99,7 +107,15 @@ PerformanceWindow::drawGraphs()
    std::copy(mFtValues.begin() + 1, mFtValues.end(), mFtValues.begin());
    mFtValues.back() = frameTime;
 
-   PlotLinesDecaf("", mFtValues.data(), mFtValues.size(), 0, NULL, 0.0f, 100.0f, ImVec2 { 0, GraphHeight }, sizeof(float), 10);
+   PlotLinesDecaf("",
+                  mFtValues.data(),
+                  static_cast<int>(mFtValues.size()),
+                  0,
+                  NULL,
+                  0.0f, 100.0f,
+                  ImVec2 { 0, GraphHeight },
+                  sizeof(float),
+                  10);
    ImGui::SameLine();
    ImGui::Text("Frame Time\n%.1f (ms)", frameTime);
 }

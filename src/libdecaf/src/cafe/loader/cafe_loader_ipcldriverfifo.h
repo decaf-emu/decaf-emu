@@ -87,7 +87,7 @@ IPCLDriver_FIFOPush(virt_ptr<IPCLDriverFIFO<MaxSize>> fifo,
    }
 
    fifo->count += 1;
-   fifo->pushIndex = static_cast<int32_t>((fifo->pushIndex + 1) % IPCLBufferCount);
+   fifo->pushIndex = static_cast<int32_t>((fifo->pushIndex + 1) % MaxSize);
 
    if (fifo->count > fifo->maxCount) {
       fifo->maxCount = fifo->count;
@@ -121,7 +121,7 @@ IPCLDriver_FIFOPop(virt_ptr<IPCLDriverFIFO<MaxSize>> fifo,
    if (fifo->count == 0) {
       fifo->popIndex = -1;
    } else {
-      fifo->popIndex = static_cast<int32_t>((fifo->popIndex + 1) % IPCLBufferCount);
+      fifo->popIndex = static_cast<int32_t>((fifo->popIndex + 1) % MaxSize);
    }
 
    *outRequest = request;
