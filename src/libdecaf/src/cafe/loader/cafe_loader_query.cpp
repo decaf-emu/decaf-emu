@@ -337,7 +337,7 @@ LOADER_GetPathString(kernel::UniqueProcessId upid,
    // Copy the path string
    string_copy(pathStringBuffer.getRawPointer(),
                path.getRawPointer(),
-               pathLength - 1);
+               pathLength);
    pathStringBuffer[pathLength - 1] = char { 0 };
 
    if (outFileInfo) {
