@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -133,4 +134,21 @@ iequals(const std::string_view &a, const std::string_view &b)
                      [](char a, char b) {
                         return tolower(a) == tolower(b);
                      });
+}
+
+// A strncpy which does not warn on Windows
+inline void
+string_copy(char *dst, size_t dstSize, const char *src, size_t maxCount)
+{
+#ifdef PLATFORM_WINDOWS
+   strncpy_s(dst, dstSize, src, maxCount);
+#else
+   std::strncpy(dst, src, maxCount);
+#endif
+}
+
+inline void
+string_copy(char *dst, const char *src, size_t maxCount)
+{
+   string_copy(dst, maxCount, src, maxCount);
 }

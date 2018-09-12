@@ -9,6 +9,7 @@
 #include "cafe/cafe_tinyheap.h"
 #include "ios/ios_ipc.h"
 
+#include <common/strutils.h>
 #include <libcpu/cpu.h>
 #include <mutex>
 
@@ -301,17 +302,17 @@ initialiseIpc()
    ipcInitialiseHeap();
    auto nameBuffer = virt_cast<char *>(ipcAllocBuffer(0x20));
 
-   std::strncpy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
+   string_copy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
    sIpcData->mcpHandle = IOS_Open(RamPartitionId::Kernel,
                                   nameBuffer,
                                   ios::OpenMode::None);
 
-   std::strncpy(nameBuffer.getRawPointer(), "/dev/ppc_app", 0x20);
+   string_copy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
    sIpcData->ppcAppHandle = IOS_Open(RamPartitionId::Kernel,
                                      nameBuffer,
                                      ios::OpenMode::None);
 
-   std::strncpy(nameBuffer.getRawPointer(), "/dev/cbl", 0x20);
+   string_copy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
    sIpcData->cblHandle = IOS_Open(RamPartitionId::Kernel,
                                   nameBuffer,
                                   ios::OpenMode::None);

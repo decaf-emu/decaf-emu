@@ -1,6 +1,8 @@
 #include "ios_fs_fsa_device.h"
 #include "ios/ios.h"
 
+#include <common/strutils.h>
+
 namespace ios::fs::internal
 {
 
@@ -271,9 +273,10 @@ FSADevice::flushQuota(phys_ptr<FSARequestFlushQuota> request)
 FSAStatus
 FSADevice::getCwd(phys_ptr<FSAResponseGetCwd> response)
 {
-   std::strncpy(phys_addrof(response->path).getRawPointer(),
-                mWorkingPath.path().c_str(),
-                response->path.size() - 1);
+   string_copy(phys_addrof(response->path).getRawPointer(),
+               mWorkingPath.path().c_str(),
+               response->path.size() - 1);
+   response->path[response->path.size() - 1] = char { 0 };
    return FSAStatus::OK;
 }
 
@@ -434,7 +437,10 @@ FSADevice::readDir(phys_ptr<FSARequestReadDir> request,
    }
 
    translateStat(entry, phys_addrof(response->entry.stat));
-   std::strcpy(phys_addrof(response->entry.name).getRawPointer(), entry.name.c_str());
+   string_copy(phys_addrof(response->entry.name).getRawPointer(),
+               response->entry.name.size(),
+               entry.name.c_str(),
+               entry.name.size());
    return FSAStatus::OK;
 }
 

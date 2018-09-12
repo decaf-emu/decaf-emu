@@ -6,6 +6,7 @@
 #include "cafe/loader/cafe_loader_globals.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
 
+#include <common/strutils.h>
 #include <cstdint>
 #include <libcpu/cpu.h>
 
@@ -353,9 +354,9 @@ findClosestSymbol(virt_addr addr,
    // Set the output
    if (moduleNameBuffer) {
       if (containingModule) {
-         std::strncpy(moduleNameBuffer,
-                      containingModule->moduleNameBuffer.getRawPointer(),
-                      moduleNameBufferLength);
+         string_copy(moduleNameBuffer,
+                     containingModule->moduleNameBuffer.getRawPointer(),
+                     moduleNameBufferLength);
       } else {
          moduleNameBuffer[0] = char { 0 };
       }
@@ -363,13 +364,11 @@ findClosestSymbol(virt_addr addr,
 
    if (symbolNameBuffer) {
       if (nearestSymbolName && nearestSymbolName[0]) {
-         std::strncpy(symbolNameBuffer,
-                      nearestSymbolName.getRawPointer(),
-                      symbolNameBufferLength);
+         string_copy(symbolNameBuffer,
+                     nearestSymbolName.getRawPointer(),
+                     symbolNameBufferLength);
       } else {
-         std::strncpy(symbolNameBuffer,
-                      "<unknown>",
-                      symbolNameBufferLength);
+         string_copy(symbolNameBuffer, "<unknown>", symbolNameBufferLength);
       }
    }
 

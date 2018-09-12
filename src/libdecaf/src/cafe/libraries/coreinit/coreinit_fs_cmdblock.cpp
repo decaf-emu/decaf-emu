@@ -7,9 +7,10 @@
 #include "coreinit_fsa_shim.h"
 #include "cafe/cafe_ppc_interface_invoke.h"
 
-#include <cstring>
 #include <common/align.h>
 #include <common/log.h>
+#include <common/strutils.h>
+#include <cstring>
 #include <fmt/format.h>
 #include <libcpu/cpu.h>
 
@@ -565,7 +566,7 @@ fsCmdBlockFinishCmd(virt_ptr<FSCmdBlockBody> blockBody,
          auto path = virt_addrof(shim.response.getCwd.path);
          auto len = static_cast<uint32_t>(std::strlen(path.getRawPointer()));
          decaf_check(len < bytes);
-         std::strncpy(returnedPath.getRawPointer(), path.getRawPointer(), bytes);
+         string_copy(returnedPath.getRawPointer(), path.getRawPointer(), bytes);
          std::memset(returnedPath.getRawPointer() + len, 0, bytes - len);
       }
 
@@ -820,18 +821,21 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
 
       if (mountSourceType == FSMountSourceType::SdCard) {
          // Map sdcardXX -> externalXX
-         std::strncpy(virt_addrof(mountSource->path).getRawPointer(),
-                      "external",
-                      8);
+         string_copy(virt_addrof(mountSource->path).getRawPointer(),
+                     mountSource->path.size(),
+                     "external",
+                     8);
 
-         std::strncpy(virt_addrof(mountSource->path).getRawPointer() + 8,
-                      deviceName.getRawPointer() + 6,
-                      2);
+         string_copy(virt_addrof(mountSource->path).getRawPointer() + 8,
+                     mountSource->path.size() - 8,
+                     deviceName.getRawPointer() + 6,
+                     2);
 
          mountSource->path[10] = char { 0 };
       } else if (mountSourceType == FSMountSourceType::HostFileIO) {
-         std::strcpy(virt_addrof(mountSource->path).getRawPointer(),
-                     deviceName.getRawPointer());
+         string_copy(virt_addrof(mountSource->path).getRawPointer(),
+                     deviceName.getRawPointer(),
+                     mountSource->path.size());
       }
    }
 

@@ -1,6 +1,8 @@
 #include "nn_boss.h"
 #include "nn_boss_taskid.h"
 
+#include <common/strutils.h>
+
 namespace cafe::nn::boss
 {
 
@@ -11,9 +13,10 @@ TaskID::TaskID()
 
 TaskID::TaskID(virt_ptr<const char> id)
 {
-   std::strncpy(virt_addrof(mTaskID).getRawPointer(),
-                id.getRawPointer(),
-                7);
+   string_copy(virt_addrof(mTaskID).getRawPointer(),
+               mTaskID.size(),
+               id.getRawPointer(),
+               7);
    mTaskID[7] = char { 0 };
 }
 
@@ -27,9 +30,10 @@ TaskID::TaskID(virt_ptr<TaskID> other)
 virt_ptr<TaskID>
 TaskID::operator =(virt_ptr<const char> id)
 {
-   std::strncpy(virt_addrof(mTaskID).getRawPointer(),
-                id.getRawPointer(),
-                7);
+   string_copy(virt_addrof(mTaskID).getRawPointer(),
+               mTaskID.size(),
+               id.getRawPointer(),
+               7);
    mTaskID[7] = char { 0 };
    return virt_this(this);
 }

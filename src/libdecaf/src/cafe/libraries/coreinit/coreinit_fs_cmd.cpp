@@ -4,7 +4,10 @@
 #include "coreinit_fs_cmd.h"
 #include "coreinit_fs_cmdblock.h"
 #include "coreinit_fsa_shim.h"
+
 #include "cafe/cafe_stackobject.h"
+
+#include <common/strutils.h>
 
 namespace cafe::coreinit
 {
@@ -1264,9 +1267,9 @@ FSMountAsync(virt_ptr<FSClient> client,
 
    // Set target path as /vol/<source path>
    std::memcpy(target.getRawPointer(), "/vol/", 5);
-   std::strncpy(target.getRawPointer() + 5,
-                virt_addrof(source->path).getRawPointer(),
-                bytes - 4);
+   string_copy(target.getRawPointer() + 5,
+               virt_addrof(source->path).getRawPointer(),
+               bytes - 6);
 
    blockBody->cmdData.mount.sourceType = source->sourceType;
    auto error = internal::fsaShimPrepareRequestMount(virt_addrof(blockBody->fsaShimBuffer),
@@ -1283,15 +1286,15 @@ FSMountAsync(virt_ptr<FSClient> client,
    if (strncmp(sourcePath.getRawPointer(), "external", 8) == 0) {
       // external01 to /dev/sdcard01
       std::memcpy(devicePath.getRawPointer(), "/dev/sdcard", 11);
-      std::strncpy(devicePath.getRawPointer() + 11,
-                   sourcePath.getRawPointer() + 8,
-                   2);
+      string_copy(devicePath.getRawPointer() + 11,
+                  sourcePath.getRawPointer() + 8,
+                  2);
    } else {
       // <source path> to /dev/<source path>
       std::memcpy(devicePath.getRawPointer(), "/dev/", 5);
-      std::strncpy(devicePath.getRawPointer() + 5,
-                   sourcePath.getRawPointer(),
-                   FSMaxPathLength - 4);
+      string_copy(devicePath.getRawPointer() + 5,
+                  sourcePath.getRawPointer(),
+                  FSMaxPathLength - 6);
    }
 
    if (error) {

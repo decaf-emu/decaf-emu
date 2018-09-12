@@ -4,7 +4,9 @@
 #include "coreinit_osreport.h"
 #include "coreinit_snprintf.h"
 #include "coreinit_systeminfo.h"
+
 #include <common/log.h>
+#include <common/strutils.h>
 
 namespace cafe::coreinit
 {
@@ -80,9 +82,10 @@ OSSendFatalError(virt_ptr<OSFatalError> error,
 {
    if (error) {
       if (functionName) {
-         std::strncpy(virt_addrof(error->functionName).getRawPointer(),
-                      functionName.getRawPointer(),
-                      error->functionName.size());
+         string_copy(virt_addrof(error->functionName).getRawPointer(),
+                     error->functionName.size(),
+                     functionName.getRawPointer(),
+                     error->functionName.size());
          error->functionName[error->functionName.size() - 1] = char { 0 };
       } else {
          error->functionName[0] = char { 0 };

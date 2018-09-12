@@ -4,6 +4,7 @@
 #include "ios/ios_error.h"
 
 #include <common/decaf_assert.h>
+#include <common/strutils.h>
 #include <fmt/format.h>
 
 namespace cafe::coreinit
@@ -182,9 +183,10 @@ fsaShimPrepareRequestChangeDir(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::ChangeDir;
 
    auto request = virt_addrof(shim->request.changeDir);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -213,9 +215,10 @@ fsaShimPrepareRequestChangeMode(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::ChangeMode;
 
    auto request = virt_addrof(shim->request.changeMode);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
    request->mode1 = mode1;
    request->mode2 = mode2;
 
@@ -313,10 +316,10 @@ fsaShimPrepareRequestFlushQuota(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::FlushQuota;
 
    auto request = virt_addrof(shim->request.flushQuota);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
-
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
    return FSAStatus::OK;
 }
 
@@ -366,9 +369,10 @@ fsaShimPrepareRequestGetInfoByQuery(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::GetInfoByQuery;
 
    auto request = virt_addrof(shim->request.getInfoByQuery);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
    request->type = type;
 
    return FSAStatus::OK;
@@ -443,9 +447,10 @@ fsaShimPrepareRequestMakeDir(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::MakeDir;
 
    auto request = virt_addrof(shim->request.makeDir);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
    request->permission = permissions;
 
    return FSAStatus::OK;
@@ -477,12 +482,14 @@ fsaShimPrepareRequestMount(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::Mount;
 
    auto request = virt_addrof(shim->request.mount);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
-   std::strncpy(virt_addrof(request->target).getRawPointer(),
-                target.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
+   string_copy(virt_addrof(request->target).getRawPointer(),
+               request->target.size(),
+               target.getRawPointer(),
+               FSMaxPathLength);
    request->unk0x500 = unk0;
    request->unkBufLen = unkBufLen;
 
@@ -523,9 +530,10 @@ fsaShimPrepareRequestOpenDir(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::OpenDir;
 
    auto request = virt_addrof(shim->request.openDir);
-   std::strncpy(virt_addrof(request->path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request->path).getRawPointer(),
+               request->path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
 
    auto response = virt_addrof(shim->response.openDir);
    response->handle = -1;
@@ -563,12 +571,14 @@ fsaShimPrepareRequestOpenFile(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::OpenFile;
 
    auto &request = shim->request.openFile;
-   std::strncpy(virt_addrof(request.path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
-   std::strncpy(virt_addrof(request.mode).getRawPointer(),
-                mode.getRawPointer(),
-                16);
+   string_copy(virt_addrof(request.path).getRawPointer(),
+               request.path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
+   string_copy(virt_addrof(request.mode).getRawPointer(),
+               request.mode.size(),
+               mode.getRawPointer(),
+               16);
    request.unk0x290 = unk0x290;
    request.unk0x294 = unk0x294;
    request.unk0x298 = unk0x298;
@@ -669,9 +679,10 @@ fsaShimPrepareRequestRemove(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::Remove;
 
    auto &request = shim->request.remove;
-   std::strncpy(virt_addrof(request.path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request.path).getRawPointer(),
+               request.path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -703,12 +714,14 @@ fsaShimPrepareRequestRename(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::Rename;
 
    auto &request =shim->request.rename;
-   std::strncpy(virt_addrof(request.oldPath).getRawPointer(),
-                oldPath.getRawPointer(),
-                FSMaxPathLength);
-   std::strncpy(virt_addrof(request.newPath).getRawPointer(),
-                newPath.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request.oldPath).getRawPointer(),
+               request.oldPath.size(),
+               oldPath.getRawPointer(),
+               FSMaxPathLength);
+   string_copy(virt_addrof(request.newPath).getRawPointer(),
+               request.newPath.size(),
+               newPath.getRawPointer(),
+               FSMaxPathLength);
 
    return FSAStatus::OK;
 }
@@ -830,9 +843,10 @@ fsaShimPrepareRequestUnmount(virt_ptr<FSAShimBuffer> shim,
    shim->command = FSACommand::Unmount;
 
    auto &request = shim->request.unmount;
-   std::strncpy(virt_addrof(request.path).getRawPointer(),
-                path.getRawPointer(),
-                FSMaxPathLength);
+   string_copy(virt_addrof(request.path).getRawPointer(),
+               request.path.size(),
+               path.getRawPointer(),
+               FSMaxPathLength);
    request.unk0x280 = unk0x280;
 
    return FSAStatus::OK;

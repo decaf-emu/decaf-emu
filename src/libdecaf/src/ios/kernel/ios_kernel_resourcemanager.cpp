@@ -7,6 +7,7 @@
 #include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <common/log.h>
+#include <common/strutils.h>
 #include <map>
 #include <string>
 #include <string_view>
@@ -137,7 +138,9 @@ IOS_RegisterResourceManager(std::string_view device,
 
    resourceManager.queueId = queue;
 
-   std::strncpy(phys_addrof(resourceManager.device).getRawPointer(), device.data(), resourceManager.device.size());
+   string_copy(phys_addrof(resourceManager.device).getRawPointer(),
+               device.data(),
+               resourceManager.device.size());
    resourceManager.deviceLen = static_cast<uint16_t>(device.size());
 
    resourceManager.numRequests = uint16_t { 0u };
@@ -720,9 +723,9 @@ dispatchIosOpen(std::string_view device,
    resourceRequest->requestData.args.open.mode = mode;
    resourceRequest->requestData.args.open.caps = clientCapability->mask;
 
-   std::strncpy(phys_addrof(resourceRequest->openNameBuffer).getRawPointer(),
-                device.data(),
-                resourceRequest->openNameBuffer.size());
+   string_copy(phys_addrof(resourceRequest->openNameBuffer).getRawPointer(),
+               device.data(),
+               resourceRequest->openNameBuffer.size());
 
    // Try allocate a resource handle.
    error = allocResourceHandle(resourceHandleManager,

@@ -20,6 +20,7 @@
 #include <atomic>
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <common/strutils.h>
 
 namespace cafe::kernel
 {
@@ -97,9 +98,10 @@ mainCoreEntryPoint(cpu::Core *core)
       titleInfo->exception_stack1_size = 0x1000u;
       titleInfo->exception_stack2_size = 0x1000u;
 
-      std::strncpy(virt_addrof(titleInfo->argstr).getRawPointer(),
-                   sExecutableName.data(),
-                   sExecutableName.size());
+      string_copy(virt_addrof(titleInfo->argstr).getRawPointer(),
+                  titleInfo->argstr.size(),
+                  sExecutableName.data(),
+                  sExecutableName.size());
    } else {
       gLog->info("Loaded title {:016X}, argstr \"{}\"",
                  titleInfo->titleId,

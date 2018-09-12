@@ -6,6 +6,8 @@
 #include "cafe_loader_minfileinfo.h"
 #include "cafe_loader_utils.h"
 #include "cafe_loader_query.h"
+
+#include <common/strutils.h>
 #include <cstring>
 
 namespace cafe::loader::internal
@@ -333,9 +335,9 @@ LOADER_GetPathString(kernel::UniqueProcessId upid,
    }
 
    // Copy the path string
-   std::strncpy(pathStringBuffer.getRawPointer(),
-                path.getRawPointer(),
-                pathLength - 1);
+   string_copy(pathStringBuffer.getRawPointer(),
+               path.getRawPointer(),
+               pathLength - 1);
    pathStringBuffer[pathLength - 1] = char { 0 };
 
    if (outFileInfo) {

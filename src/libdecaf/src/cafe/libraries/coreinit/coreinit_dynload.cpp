@@ -18,6 +18,8 @@
 #include "cafe/kernel/cafe_kernel_mmu.h"
 #include "debugger/debugger.h"
 
+#include <common/strutils.h>
+
 namespace cafe::coreinit
 {
 
@@ -2497,7 +2499,7 @@ OSGetSymbolName(virt_addr address,
                                           moduleNameBuffer.size());
 
    if (error || (!symbolNameBuffer[0] && !moduleNameBuffer[0])) {
-      std::strncpy(buffer.getRawPointer(), "unknown", bufferSize);
+      string_copy(buffer.getRawPointer(), "unknown", bufferSize);
       buffer[bufferSize - 1] = char { 0 };
       return address;
    }
@@ -2507,9 +2509,9 @@ OSGetSymbolName(virt_addr address,
    auto symbolNameLength = strlen(symbolNameBuffer.getRawPointer());
 
    if (moduleNameLength) {
-      std::strncpy(buffer.getRawPointer(),
-                   moduleNameBuffer.getRawPointer(),
-                   bufferSize);
+      string_copy(buffer.getRawPointer(),
+                  moduleNameBuffer.getRawPointer(),
+                  bufferSize);
 
       if (moduleNameLength + 1 >= bufferSize) {
          buffer[bufferSize - 1] = char { 0 };
@@ -2523,9 +2525,9 @@ OSGetSymbolName(virt_addr address,
    }
 
    if (symbolNameLength) {
-      std::strncpy(buffer.getRawPointer() + moduleNameLength,
-                   symbolNameBuffer.getRawPointer(),
-                   bufferSize - moduleNameLength);
+      string_copy(buffer.getRawPointer() + moduleNameLength,
+                  symbolNameBuffer.getRawPointer(),
+                  bufferSize - moduleNameLength);
    }
 
    return symbolAddress;

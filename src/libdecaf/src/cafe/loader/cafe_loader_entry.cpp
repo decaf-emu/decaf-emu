@@ -11,6 +11,7 @@
 #include "cafe_loader_log.h"
 #include "cafe_loader_query.h"
 
+#include <common/strutils.h>
 #include <mutex>
 
 namespace cafe::loader
@@ -139,9 +140,10 @@ LoaderStart(BOOL isDispatch,
       kernelIpcStorage->fatalLine = internal::LiGetFatalLine();
       kernelIpcStorage->fatalErr = internal::LiGetFatalError();
       kernelIpcStorage->fatalMsgType = internal::LiGetFatalMsgType();
-      std::strncpy(virt_addrof(kernelIpcStorage->fatalFunction).getRawPointer(),
-                   internal::LiGetFatalFunction().data(),
-                   kernelIpcStorage->fatalFunction.size() - 1);
+      string_copy(virt_addrof(kernelIpcStorage->fatalFunction).getRawPointer(),
+                  kernelIpcStorage->fatalFunction.size(),
+                  internal::LiGetFatalFunction().data(),
+                  kernelIpcStorage->fatalFunction.size() - 1);
       kernelIpcStorage->fatalFunction[kernelIpcStorage->fatalFunction.size() - 1] = char { 0 };
    }
 
