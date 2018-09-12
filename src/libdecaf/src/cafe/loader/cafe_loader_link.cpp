@@ -419,7 +419,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
          auto module = virt_ptr<LOADED_RPL> { nullptr };
          auto prev = virt_ptr<LOADED_RPL> { nullptr };
 
-         for (module = globals->firstLoadedRpl; module; module != globals->lastLoadedRpl) {
+         for (module = globals->firstLoadedRpl; module; module = module->nextLoadedRpl) {
             if (module == unlinkedModules[i]) {
                break;
             }
