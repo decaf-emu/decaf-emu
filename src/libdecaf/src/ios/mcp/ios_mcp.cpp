@@ -104,10 +104,12 @@ mainThreadLoop()
       }
 
       auto request = parseMessage<ResourceRequest>(message);
+      /* TODO: Handle commands
       switch (request->requestData.command) {
       default:
-         IOS_ResourceReply(request, Error::InvalidArg);
       }
+      */
+      IOS_ResourceReply(request, Error::InvalidArg);
    }
 }
 
