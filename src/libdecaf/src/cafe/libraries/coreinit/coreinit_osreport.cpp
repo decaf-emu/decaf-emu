@@ -65,11 +65,12 @@ OSPanic(virt_ptr<const char> file,
         var_args args)
 {
    auto vaList = make_va_list(args);
-   auto msg = std::string { };
+   auto msg = fmt::memory_buffer { };
    internal::formatStringV(fmt, vaList, msg);
    free_va_list(vaList);
 
-   internal::OSPanic(file.getRawPointer(), line, msg);
+   internal::OSPanic(file.getRawPointer(), line,
+                     std::string_view { msg.data(), msg.size() });
 }
 
 void
