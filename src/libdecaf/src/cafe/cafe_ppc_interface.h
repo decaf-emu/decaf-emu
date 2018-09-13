@@ -61,16 +61,15 @@ struct is_bitfield_type<T, typename void_t<typename T::BitfieldType>::type> : st
  * - sizeof(T) <= 4
  * - Not a floating point
  * - Not a var_args type
- * - If it is a cpu func pointer
+ * - If it is a cpu function pointer
  * - If it is a cpu pointer
  * - If a uint32_t can be constructed from T.
- *
- * TODO: Remove std::is_pointer when CafeOS no longer uses raw pointers.
  */
 template<typename T>
 using is_gpr32_type = is_true<
    sizeof(T) <= 4 &&
    !std::is_floating_point<T>::value &&
+   !std::is_pointer<T>::value &&
    !std::is_same<var_args, T>::value &&
    (std::is_constructible<typename safe_underlying_type<T>::type, uint32_t>::value ||
     cpu::is_cpu_pointer<T>::value ||
