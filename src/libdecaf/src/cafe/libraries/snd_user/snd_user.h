@@ -11,6 +11,12 @@ public:
       snduser2::Library(hle::LibraryId::snd_user, "snd_user.rpl")
    {
    }
+
+protected:
+   virtual void registerSymbols() override;
+
+private:
+   void registerFxSymbols();
 };
 
 } // namespace cafe::snd_user
