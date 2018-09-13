@@ -10,24 +10,24 @@ void
 getType0Info(virt_ptr<Info0> info,
              uint32_t size)
 {
-   info->upid = getCurrentUpid();
-   info->rampid = getCurrentRampid();
+   info->upid = internal::getCurrentUniqueProcessId();
+   info->rampid = internal::getCurrentRamPartitionId();
    info->appFlags = ProcessFlags::get(0)
       .debugLevel(DebugLevel::Verbose)
       .disableSharedLibraries(false)
       .isFirstProcess(true);
 
-   auto startInfo = getProcessStartInfo();
+   auto startInfo = internal::getCurrentRamPartitionStartInfo();
    info->dataAreaStart = startInfo->dataAreaStart;
    info->dataAreaEnd = startInfo->dataAreaEnd;
    info->sdaBase = startInfo->sdaBase;
    info->sda2Base = startInfo->sda2Base;
    info->systemHeapSize = startInfo->systemHeapSize;
 
-   auto processData = getCurrentProcessData();
-   auto &core0 = processData->perCoreStartInfo[0];
-   auto &core1 = processData->perCoreStartInfo[1];
-   auto &core2 = processData->perCoreStartInfo[2];
+   auto partitionData = internal::getCurrentRamPartitionData();
+   auto &core0 = partitionData->perCoreStartInfo[0];
+   auto &core1 = partitionData->perCoreStartInfo[1];
+   auto &core2 = partitionData->perCoreStartInfo[2];
 
    info->stackBase0 = core0.stackBase;
    info->stackBase1 = core1.stackBase;
@@ -49,16 +49,16 @@ getType0Info(virt_ptr<Info0> info,
    info->lockedCacheBase1 = virt_addr { 0xFFC40000 };
    info->lockedCacheBase2 = virt_addr { 0xFFC80000 };
 
-   info->physDataAreaStart = processData->ramPartitionAllocation.dataStart;
-   info->physDataAreaEnd = processData->ramPartitionAllocation.availStart;
+   info->physDataAreaStart = partitionData->ramPartitionAllocation.dataStart;
+   info->physDataAreaEnd = partitionData->ramPartitionAllocation.availStart;
 
-   info->physAvailStart = processData->ramPartitionAllocation.availStart;
-   info->physAvailEnd = processData->ramPartitionAllocation.codeGenStart;
+   info->physAvailStart = partitionData->ramPartitionAllocation.availStart;
+   info->physAvailEnd = partitionData->ramPartitionAllocation.codeGenStart;
 
-   info->physCodeGenStart = processData->ramPartitionAllocation.codeGenStart;
-   info->physCodeGenEnd = processData->ramPartitionAllocation.codeStart;
+   info->physCodeGenStart = partitionData->ramPartitionAllocation.codeGenStart;
+   info->physCodeGenEnd = partitionData->ramPartitionAllocation.codeStart;
 
-   info->titleId = processData->titleInfo.titleId;
+   info->titleId = partitionData->titleInfo.titleId;
 
    if (startInfo->coreinit) {
       auto coreinit = startInfo->coreinit;
@@ -76,17 +76,28 @@ getType0Info(virt_ptr<Info0> info,
 }
 
 void
+getType6Info(virt_ptr<Info6> info,
+             uint32_t size)
+{
+   std::memset(info.getRawPointer(), 0, sizeof(Info6));
+
+   // TODO: This comes from ios/mcp GetLaunchParameters
+   info->osTitleId = 0x000500101000400Aull;
+   info->unk0x08 = 0u;
+}
+
+void
 getArgStr(virt_ptr<char> buffer,
           uint32_t size)
 {
-   auto processData = getCurrentProcessData();
-   auto length = processData->argstr.size();
+   auto partitionData = internal::getCurrentRamPartitionData();
+   auto length = partitionData->argstr.size();
    if (length >= size) {
       length = size - 1;
    }
 
    std::memcpy(buffer.getRawPointer(),
-               processData->argstr.data(),
+               partitionData->argstr.data(),
                length);
    buffer[length] = char { 0 };
 }
@@ -99,6 +110,9 @@ getInfo(InfoType type,
    switch (type) {
    case InfoType::Type0:
       getType0Info(virt_cast<Info0 *>(buffer), size);
+      break;
+   case InfoType::Type6:
+      getType6Info(virt_cast<Info6 *>(buffer), size);
       break;
    case InfoType::ArgStr:
       getArgStr(virt_cast<char *>(buffer), size);

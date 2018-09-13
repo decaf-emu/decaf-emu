@@ -4,32 +4,35 @@
 #include "decaf_assert.h"
 #include "fixed.h"
 
+#include <common/type_traits.h>
 #include <fmt/format.h>
 #include <type_traits>
 
 template<typename BitfieldType, typename ValueType, unsigned Position, unsigned Bits>
 struct BitfieldHelper
 {
-   using UnsignedValueType = typename std::make_unsigned<ValueType>::type;
-   static const auto RelativeMask = static_cast<UnsignedValueType>((1ull << (Bits)) - 1);
+   using underlying_type = typename safe_underlying_type<ValueType>::type;
+   using unsigned_underlying_type = typename std::make_unsigned<underlying_type>::type;
+   static const auto RelativeMask = static_cast<unsigned_underlying_type>((1ull << (Bits)) - 1);
    static const auto AbsoluteMask = static_cast<typename BitfieldType::StorageType>(RelativeMask) << (Position);
 
    static inline ValueType get(BitfieldType bitfield)
    {
-      auto value = static_cast<UnsignedValueType>((bitfield.value & AbsoluteMask) >> (Position));
+      auto value = static_cast<unsigned_underlying_type>((bitfield.value & AbsoluteMask) >> (Position));
 
-      if (std::is_signed<ValueType>::value) {
+      if (std::is_signed<underlying_type>::value) {
          value = sign_extend<Bits>(value);
       }
 
       return bit_cast<ValueType>(value);
    }
 
-   static inline BitfieldType set(BitfieldType bitfield, ValueType value)
+   static inline BitfieldType set(BitfieldType bitfield,
+                                  ValueType value)
    {
-      auto uValue = bit_cast<UnsignedValueType>(value);
+      auto uValue = bit_cast<unsigned_underlying_type>(value);
 
-      if (std::is_signed<ValueType>::value) {
+      if (std::is_signed<underlying_type>::value) {
          uValue &= RelativeMask;
       }
 

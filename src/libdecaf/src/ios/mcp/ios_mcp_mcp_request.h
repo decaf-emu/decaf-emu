@@ -39,6 +39,17 @@ CHECK_OFFSET(MCPRequestLoadFile, 0x18, cafeProcessId);
 CHECK_OFFSET(MCPRequestLoadFile, 0x28, name);
 CHECK_SIZE(MCPRequestLoadFile, 0x12D8);
 
+struct MCPRequestPrepareTitle
+{
+   be2_val<MCPTitleId> titleId;
+   UNKNOWN(0x60);
+   be2_array<char, 4096> argvStr;
+   PADDING(0x12D8 - 0x1068);
+};
+CHECK_OFFSET(MCPRequestPrepareTitle, 0x00, titleId);
+CHECK_OFFSET(MCPRequestPrepareTitle, 0x68, argvStr);
+CHECK_SIZE(MCPRequestPrepareTitle, 0x12D8);
+
 struct MCPRequestSearchTitleList
 {
    be2_struct<MCPTitleListType> searchTitle;
@@ -47,6 +58,21 @@ struct MCPRequestSearchTitleList
 CHECK_OFFSET(MCPRequestSearchTitleList, 0x00, searchTitle);
 CHECK_OFFSET(MCPRequestSearchTitleList, 0x61, searchFlags);
 CHECK_SIZE(MCPRequestSearchTitleList, 0x65);
+
+struct MCPRequestSwitchTitle
+{
+   UNKNOWN(0x18);
+   be2_val<uint32_t> cafeProcessId;
+   be2_val<phys_addr> dataStart;
+   be2_val<phys_addr> codeEnd;
+   be2_val<phys_addr> codeGenStart;
+   PADDING(0x12D8 - 0x28);
+};
+CHECK_OFFSET(MCPRequestSwitchTitle, 0x18, cafeProcessId);
+CHECK_OFFSET(MCPRequestSwitchTitle, 0x1C, dataStart);
+CHECK_OFFSET(MCPRequestSwitchTitle, 0x20, codeEnd);
+CHECK_OFFSET(MCPRequestSwitchTitle, 0x24, codeGenStart);
+CHECK_SIZE(MCPRequestSwitchTitle, 0x12D8);
 
 #pragma pack(pop)
 

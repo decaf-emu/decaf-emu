@@ -6,6 +6,7 @@
 #include "cafe/loader/cafe_loader_globals.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
 
+#include <common/strutils.h>
 #include <cstdint>
 #include <libcpu/cpu.h>
 
@@ -166,7 +167,7 @@ loaderEntry()
    loaderIpc->entryParams.procConfig = 0;
    loaderIpc->entryParams.procContext = getCurrentContext();
    loaderIpc->entryParams.interruptsAllowed = TRUE;
-   loaderIpc->entryParams.procId = getCurrentUpid();
+   loaderIpc->entryParams.procId = getCurrentUniqueProcessId();
 
    // In a real kernel we'd switch to the PPC context
    // But our loader is HLE only atm so we just call the loader directly
@@ -254,7 +255,8 @@ findClosestSymbol(virt_addr addr,
                   char *moduleNameBuffer,
                   uint32_t moduleNameBufferLength)
 {
-   if (!getCurrentProcessData()) {
+   auto partitionData = getCurrentRamPartitionData();
+   if (!partitionData) {
       return 0xBAD20002;
    }
 
@@ -274,7 +276,7 @@ findClosestSymbol(virt_addr addr,
    auto containingModule = virt_ptr<loader::LOADED_RPL> { nullptr };
    auto containingSectionIndex = 0u;
 
-   for (auto rpl = getCurrentProcessData()->loadedModuleList; rpl; rpl = rpl->nextLoadedRpl) {
+   for (auto rpl = partitionData->loadedModuleList; rpl; rpl = rpl->nextLoadedRpl) {
       for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
          auto sectionAddress = rpl->sectionAddressBuffer[i];
          if (!sectionAddress) {
@@ -352,9 +354,9 @@ findClosestSymbol(virt_addr addr,
    // Set the output
    if (moduleNameBuffer) {
       if (containingModule) {
-         std::strncpy(moduleNameBuffer,
-                      containingModule->moduleNameBuffer.getRawPointer(),
-                      moduleNameBufferLength);
+         string_copy(moduleNameBuffer,
+                     containingModule->moduleNameBuffer.getRawPointer(),
+                     moduleNameBufferLength);
       } else {
          moduleNameBuffer[0] = char { 0 };
       }
@@ -362,13 +364,11 @@ findClosestSymbol(virt_addr addr,
 
    if (symbolNameBuffer) {
       if (nearestSymbolName && nearestSymbolName[0]) {
-         std::strncpy(symbolNameBuffer,
-                      nearestSymbolName.getRawPointer(),
-                      symbolNameBufferLength);
+         string_copy(symbolNameBuffer,
+                     nearestSymbolName.getRawPointer(),
+                     symbolNameBufferLength);
       } else {
-         std::strncpy(symbolNameBuffer,
-                      "<unknown>",
-                      symbolNameBufferLength);
+         string_copy(symbolNameBuffer, "<unknown>", symbolNameBufferLength);
       }
    }
 

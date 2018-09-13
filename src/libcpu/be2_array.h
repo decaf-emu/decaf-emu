@@ -59,6 +59,7 @@ public:
    using raw_value_type = Type;
    using be2_value_type = typename be2_array_item_type<Type>::type;
    using size_type = uint32_t;
+   using index_type = size_t;
    using difference_type = std::ptrdiff_t;
    using iterator = be2_array_iterator<Type, Size>;
    using const_iterator = be2_array_const_iterator<Type, Size>;
@@ -106,7 +107,7 @@ public:
       return *this;
    }
 
-   constexpr auto &at(size_type pos)
+   constexpr auto &at(index_type pos)
    {
       if (pos >= Size) {
          throw std::out_of_range("invalid be2_array<T, N> subscript");
@@ -115,7 +116,7 @@ public:
       return mValues[pos];
    }
 
-   constexpr const auto &at(size_type pos) const
+   constexpr const auto &at(index_type pos) const
    {
       if (pos >= Size) {
          throw std::out_of_range("invalid be2_array<T, N> subscript");
@@ -124,12 +125,12 @@ public:
       return mValues[pos];
    }
 
-   constexpr auto &operator[](size_type pos)
+   constexpr auto &operator[](index_type pos)
    {
       return mValues[pos];
    }
 
-   constexpr const auto &operator[](size_type pos) const
+   constexpr const auto &operator[](index_type pos) const
    {
       return mValues[pos];
    }

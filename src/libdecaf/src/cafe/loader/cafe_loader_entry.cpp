@@ -1,6 +1,9 @@
 #include "cafe_loader_entry.h"
 #include "cafe_loader_error.h"
 #include "cafe_loader_globals.h"
+#include "cafe_loader_heap.h"
+#include "cafe_loader_iop.h"
+#include "cafe_loader_ipcldriver.h"
 #include "cafe_loader_link.h"
 #include "cafe_loader_prep.h"
 #include "cafe_loader_setup.h"
@@ -8,6 +11,7 @@
 #include "cafe_loader_log.h"
 #include "cafe_loader_query.h"
 
+#include <common/strutils.h>
 #include <mutex>
 
 namespace cafe::loader
@@ -90,6 +94,11 @@ LoaderStart(BOOL isDispatch,
       return LOADER_Entry(entryParams);
    }
 
+   // Initialise static data
+   internal::initialiseStaticDataHeap();
+   internal::initialiseIopStaticData();
+   internal::initialiseIpclDriverStaticData();
+
    // Initialise globals
    auto kernelIpcStorage = getKernelIpcStorage();
    gpLoaderEntry_ProcContext = entryParams->procContext;
@@ -131,9 +140,10 @@ LoaderStart(BOOL isDispatch,
       kernelIpcStorage->fatalLine = internal::LiGetFatalLine();
       kernelIpcStorage->fatalErr = internal::LiGetFatalError();
       kernelIpcStorage->fatalMsgType = internal::LiGetFatalMsgType();
-      std::strncpy(virt_addrof(kernelIpcStorage->fatalFunction).getRawPointer(),
-                   internal::LiGetFatalFunction().data(),
-                   kernelIpcStorage->fatalFunction.size() - 1);
+      string_copy(virt_addrof(kernelIpcStorage->fatalFunction).getRawPointer(),
+                  kernelIpcStorage->fatalFunction.size(),
+                  internal::LiGetFatalFunction().data(),
+                  kernelIpcStorage->fatalFunction.size() - 1);
       kernelIpcStorage->fatalFunction[kernelIpcStorage->fatalFunction.size() - 1] = char { 0 };
    }
 

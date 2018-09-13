@@ -95,10 +95,10 @@ ENUM_BEG(FSAQueryInfoType, uint32_t)
    ENUM_VALUE(FragmentBlockInfo,       8)
 ENUM_END(FSAQueryInfoType)
 
-ENUM_BEG(FSAReadFlag, uint32_t)
-   ENUM_VALUE(None,                    0x0)
-   ENUM_VALUE(ReadWithPos,             0x1)
-ENUM_END(FSAReadFlag)
+FLAGS_BEG(FSAReadFlag, uint32_t)
+   FLAGS_VALUE(None,                   0x0)
+   FLAGS_VALUE(ReadWithPos,            1 << 0)
+FLAGS_END(FSAReadFlag)
 
 ENUM_BEG(FSAStatFlags, uint32_t)
    ENUM_VALUE(Quota,                   0x40000000)
@@ -151,6 +151,11 @@ ENUM_BEG(FSAWriteFlag, uint32_t)
    ENUM_VALUE(None,                    0x0)
    ENUM_VALUE(WriteWithPos,            0x1)
 ENUM_END(FSAWriteFlag)
+
+ENUM_BEG(FSResourcePermissions, uint32_t)
+   ENUM_VALUE(SdCardRead,              0x90000)
+   ENUM_VALUE(SdCardWrite,             0xA0000)
+ENUM_END(FSResourcePermissions)
 
 ENUM_NAMESPACE_END(fs)
 

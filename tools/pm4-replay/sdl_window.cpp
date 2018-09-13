@@ -1,4 +1,3 @@
-#pragma optimize("",off)
 #include "sdl_window.h"
 #include "clilog.h"
 #include "config.h"

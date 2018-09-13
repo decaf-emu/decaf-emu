@@ -4,7 +4,9 @@
 #include "coreinit_osreport.h"
 #include "coreinit_snprintf.h"
 #include "coreinit_systeminfo.h"
+
 #include <common/log.h>
+#include <common/strutils.h>
 
 namespace cafe::coreinit
 {
@@ -65,11 +67,12 @@ OSPanic(virt_ptr<const char> file,
         var_args args)
 {
    auto vaList = make_va_list(args);
-   auto msg = std::string { };
+   auto msg = fmt::memory_buffer { };
    internal::formatStringV(fmt, vaList, msg);
    free_va_list(vaList);
 
-   internal::OSPanic(file.getRawPointer(), line, msg);
+   internal::OSPanic(file.getRawPointer(), line,
+                     std::string_view { msg.data(), msg.size() });
 }
 
 void
@@ -79,9 +82,10 @@ OSSendFatalError(virt_ptr<OSFatalError> error,
 {
    if (error) {
       if (functionName) {
-         std::strncpy(virt_addrof(error->functionName).getRawPointer(),
-                      functionName.getRawPointer(),
-                      error->functionName.size());
+         string_copy(virt_addrof(error->functionName).getRawPointer(),
+                     error->functionName.size(),
+                     functionName.getRawPointer(),
+                     error->functionName.size());
          error->functionName[error->functionName.size() - 1] = char { 0 };
       } else {
          error->functionName[0] = char { 0 };

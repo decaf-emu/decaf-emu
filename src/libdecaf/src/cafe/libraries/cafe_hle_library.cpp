@@ -366,7 +366,7 @@ Library::generateRpl()
 
    if (mLibraryDependencies.size()) {
       firstImportSectionIndex = numSections;
-      numSections += mLibraryDependencies.size();
+      numSections += static_cast<unsigned int>(mLibraryDependencies.size());
    }
 
    auto symTabSectionIndex = numSections++;

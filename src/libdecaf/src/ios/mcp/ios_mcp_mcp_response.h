@@ -37,6 +37,14 @@ struct MCPResponseGetSysProdSettings
 CHECK_OFFSET(MCPResponseGetSysProdSettings, 0x00, settings);
 CHECK_SIZE(MCPResponseGetSysProdSettings, 0x46);
 
+struct MCPResponsePrepareTitle
+{
+   UNKNOWN(0x68);
+   be2_struct<MCPPPrepareTitleInfo> titleInfo;
+};
+CHECK_OFFSET(MCPResponsePrepareTitle, 0x68, titleInfo);
+CHECK_SIZE(MCPResponsePrepareTitle, 0x12D8);
+
 #pragma pack(pop)
 
 /** @} */

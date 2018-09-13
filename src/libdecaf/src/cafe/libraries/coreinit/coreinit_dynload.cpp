@@ -18,6 +18,8 @@
 #include "cafe/kernel/cafe_kernel_mmu.h"
 #include "debugger/debugger.h"
 
+#include <common/strutils.h>
+
 namespace cafe::coreinit
 {
 
@@ -137,9 +139,9 @@ dynLoadHeapAlloc(const char *name,
    auto error = cafe::invoke(cpu::this_core::state(), allocFn, size, align,
                              outPtr);
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "OSDYNLOAD_HEAP:{},ALLOC,=\"0x:{08x}\",-{}",
+         "OSDYNLOAD_HEAP:{},ALLOC,=\"{}\",-{}",
          name, *outPtr, size));
    }
 
@@ -156,9 +158,9 @@ dynLoadHeapFree(const char *name,
                 virt_ptr<void> ptr,
                 uint32_t size)
 {
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "OSDYNLOAD_HEAP:{},FREE,=\"0x:{08x}\",-{}",
+         "OSDYNLOAD_HEAP:{},FREE,=\"{}\",-{}",
          name, ptr, size));
    }
 
@@ -176,9 +178,9 @@ rplSysHeapAlloc(const char *name,
 {
    auto ptr = OSAllocFromSystem(size, align);
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "RPL_SYSHEAP:{},ALLOC,=\"0x:{08x}\",-{}",
+         "RPL_SYSHEAP:{},ALLOC,=\"{}\",-{}",
          name, ptr, size));
    }
 
@@ -194,9 +196,9 @@ rplSysHeapFree(const char *name,
                virt_ptr<void> ptr,
                uint32_t size)
 {
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
-         "RPL_SYSHEAP:{},FREE,=\"0x:{08x}\",-{}",
+         "RPL_SYSHEAP:{},FREE,=\"{}\",-{}",
          name, ptr, size));
    }
 
@@ -383,14 +385,14 @@ internalAcquire2(virt_ptr<const char> modulePath,
    *numEntryModules = 0u;
    *entryModules = nullptr;
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
          "RPL_SYSHEAP:{} START,{}",
          isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
          modulePath));
    }
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
          "SYSTEM_HEAP:{} START,{}",
          isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
@@ -441,14 +443,14 @@ internalAcquire2(virt_ptr<const char> modulePath,
 
    resetFatalErrorInfo();
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
          "RPL_SYSHEAP:{} END,{}",
          isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
          modulePath));
    }
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
          "SYSTEM_HEAP:{} END,{}",
          isCheckLoaded ? "CHECK_LOADED" : "ACQUIRE",
@@ -910,7 +912,7 @@ setupPerm(virt_ptr<RPL_DATA> rplData,
                       sizeof(loader::LOADER_SectionInfo) * rplData->sectionInfoCount,
                       -4));
    if (!rplData->sectionInfo) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -931,7 +933,7 @@ setupPerm(virt_ptr<RPL_DATA> rplData,
                       rplData->userFileInfoSize, 4));
 
    if (!rplData->userFileInfo) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -954,7 +956,7 @@ setupPerm(virt_ptr<RPL_DATA> rplData,
          rplSysHeapAlloc("RPL_NOTIFY_NAME",
                          minFileInfo->pathStringSize, 4));
       if (!minFileInfo->pathStringBuffer) {
-         if (isAppDebugLevelUnknown3()) {
+         if (isAppDebugLevelNotice()) {
             dumpSystemHeap();
          }
 
@@ -1117,7 +1119,7 @@ buildKernelNotify(virt_ptr<RPL_DATA> linkList,
    auto linkInfo = virt_cast<loader::LOADER_LinkInfo *>(
       rplSysHeapAlloc("RPL_MODULES_LINK_ARRAY", linkInfoSize, -4));
    if (!linkInfo) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -1208,7 +1210,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
                rplSysHeapAlloc("RPL_NOTIFY",
                                sizeof(OSDynLoad_NotifyData), 4));
             if (!rplData->notifyData) {
-               if (isAppDebugLevelUnknown3()) {
+               if (isAppDebugLevelNotice()) {
                   dumpSystemHeap();
                }
 
@@ -1238,7 +1240,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
             notifyData->readSize = linkModule.dataSize;
             notifyData->readOffset = linkModule.dataOffset;
 
-            if (!isAppDebugLevelUnknown3()) {
+            if (!isAppDebugLevelNotice()) {
                COSInfo(COSReportModule::Unknown2, fmt::format(
                   "{}: TEXT {}:{} DATA {}:{} LOAD {}:{}",
                   rplData->moduleName,
@@ -1292,7 +1294,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
                             4 * linkInfo->numModules, -4));
 
       if (!sDynLoadData->modules) {
-         if (isAppDebugLevelUnknown3()) {
+         if (isAppDebugLevelNotice()) {
             dumpSystemHeap();
          }
 
@@ -1304,7 +1306,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
                             4 * linkInfo->numModules, -4));
 
          if (!entryModules) {
-            if (isAppDebugLevelUnknown3()) {
+            if (isAppDebugLevelNotice()) {
                dumpSystemHeap();
             }
 
@@ -1375,7 +1377,7 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
                       rplData->sectionInfoCount * sizeof(loader::LOADER_SectionInfo),
                       -4));
    if (!rplData->sectionInfo) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -1397,7 +1399,7 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
 
    rplData->userFileInfo = virt_cast<loader::LOADER_UserFileInfo *>(*allocPtr);
 
-   if (isAppDebugLevelUnknown3()) {
+   if (isAppDebugLevelNotice()) {
       COSInfo(COSReportModule::Unknown2, fmt::format(
          "RPL_LAYOUT:{},FILE,start,=\"{}\"",
          rplData->moduleName,
@@ -1419,7 +1421,7 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
       minFileInfo->pathStringBuffer = virt_cast<char *>(
          rplSysHeapAlloc("RPL_NOTIFY_NAME", minFileInfo->pathStringSize, 4));
       if (!minFileInfo->pathStringBuffer) {
-         if (isAppDebugLevelUnknown3()) {
+         if (isAppDebugLevelNotice()) {
             dumpSystemHeap();
          }
 
@@ -1605,7 +1607,7 @@ internalAcquire(virt_ptr<const char> name,
    auto rplName = virt_cast<char *>(
       rplSysHeapAlloc("RPL_NAME", rplNameLength, 4));
    if (!rplName) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -1728,7 +1730,7 @@ internalAcquire(virt_ptr<const char> name,
    auto rplData = virt_cast<RPL_DATA *>(
       rplSysHeapAlloc("RPL_DATA", sizeof(RPL_DATA), 4));
    if (!rplData) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -1762,7 +1764,7 @@ internalAcquire(virt_ptr<const char> name,
       rplSysHeapAlloc("RPL_TEMP_DATA",
                       sizeof(loader::LOADER_MinFileInfo), 4));
    if (!minFileInfo) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -1940,7 +1942,7 @@ doImports(virt_ptr<RPL_DATA> rplData)
       rplSysHeapAlloc("RPL_SEC_INFO",
                       sizeof(virt_ptr<RPL_DATA>) * numImportModules, 4));
    if (!rplData->importModules) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -1959,7 +1961,7 @@ doImports(virt_ptr<RPL_DATA> rplData)
           rplData->sectionInfo[i].type == loader::rpl::SHT_RPL_IMPORTS) {
          auto name = shStrSection + rplData->sectionInfo[i].name;
 
-         if (isAppDebugLevelUnknown3()) {
+         if (isAppDebugLevelNotice()) {
             COSInfo(COSReportModule::Unknown2, fmt::format(
                "RPL_SYSHEAP:IMPORT START,{}", name));
             COSInfo(COSReportModule::Unknown2, fmt::format(
@@ -1971,7 +1973,7 @@ doImports(virt_ptr<RPL_DATA> rplData)
                             virt_addrof(rplData->importModules[importModuleIdx]),
                             0, 0, 0);
 
-         if (isAppDebugLevelUnknown3()) {
+         if (isAppDebugLevelNotice()) {
             COSInfo(COSReportModule::Unknown2, fmt::format(
                "RPL_SYSHEAP:IMPORT END,{}", name));
             COSInfo(COSReportModule::Unknown2, fmt::format(
@@ -2497,7 +2499,7 @@ OSGetSymbolName(virt_addr address,
                                           moduleNameBuffer.size());
 
    if (error || (!symbolNameBuffer[0] && !moduleNameBuffer[0])) {
-      std::strncpy(buffer.getRawPointer(), "unknown", bufferSize);
+      string_copy(buffer.getRawPointer(), "unknown", bufferSize);
       buffer[bufferSize - 1] = char { 0 };
       return address;
    }
@@ -2507,9 +2509,9 @@ OSGetSymbolName(virt_addr address,
    auto symbolNameLength = strlen(symbolNameBuffer.getRawPointer());
 
    if (moduleNameLength) {
-      std::strncpy(buffer.getRawPointer(),
-                   moduleNameBuffer.getRawPointer(),
-                   bufferSize);
+      string_copy(buffer.getRawPointer(),
+                  moduleNameBuffer.getRawPointer(),
+                  bufferSize);
 
       if (moduleNameLength + 1 >= bufferSize) {
          buffer[bufferSize - 1] = char { 0 };
@@ -2523,9 +2525,9 @@ OSGetSymbolName(virt_addr address,
    }
 
    if (symbolNameLength) {
-      std::strncpy(buffer.getRawPointer() + moduleNameLength,
-                   symbolNameBuffer.getRawPointer(),
-                   bufferSize - moduleNameLength);
+      string_copy(buffer.getRawPointer() + moduleNameLength,
+                  symbolNameBuffer.getRawPointer(),
+                  bufferSize - moduleNameLength);
    }
 
    return symbolAddress;
@@ -2666,7 +2668,7 @@ initCoreinitNotifyData(virt_ptr<RPL_DATA> rpl)
       rplSysHeapAlloc("RPL_NOTIFY",
                       sizeof(OSDynLoad_NotifyData), 4));
    if (!rpl) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -2718,7 +2720,7 @@ initialiseDynLoad()
    auto coreinitRplData = virt_cast<RPL_DATA *>(
       rplSysHeapAlloc("RPL_DATA", sizeof(RPL_DATA), 4));
    if (!coreinitRplData) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -2767,7 +2769,7 @@ initialiseDynLoad()
    auto rpxData = virt_cast<RPL_DATA *>(
       rplSysHeapAlloc("RPL_DATA", sizeof(RPL_DATA), 4));
    if (!rpxData) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 
@@ -2788,7 +2790,7 @@ initialiseDynLoad()
       rplSysHeapAlloc("RPL_NAME", sDynLoadData->rpxNameLength + 1, 4));
    rpxData->moduleNameLen = sDynLoadData->rpxNameLength;
    if (!rpxData->moduleName) {
-      if (isAppDebugLevelUnknown3()) {
+      if (isAppDebugLevelNotice()) {
          dumpSystemHeap();
       }
 

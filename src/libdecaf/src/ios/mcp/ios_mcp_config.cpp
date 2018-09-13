@@ -68,10 +68,12 @@ getFileSysPath(UCFileSys fileSys)
    }
 }
 
-static MCPError
-translateError(UCError error)
+MCPError
+translateUCError(UCError error)
 {
    switch (error) {
+   case UCError::OK:
+      return MCPError::OK;
    case UCError::Other:
       return MCPError::Invalid;
    case UCError::System:
@@ -164,11 +166,11 @@ readConfigItems(phys_ptr<UCItem> items,
       return MCPError::FileSysName;
    }
 
-   return translateError(readItems(getFileSysPath(fileSys), items, count, nullptr));
+   return translateUCError(readItems(getFileSysPath(fileSys), items, count, nullptr));
 }
 
 MCPError
-writeConfigItems(phys_ptr<auxil::UCItem> items,
+writeConfigItems(phys_ptr<UCItem> items,
                  uint32_t count)
 {
    if (count == 0) {
@@ -186,11 +188,11 @@ writeConfigItems(phys_ptr<auxil::UCItem> items,
       return MCPError::FileSysName;
    }
 
-   return translateError(writeItems(getFileSysPath(fileSys), items, count, nullptr));
+   return translateUCError(writeItems(getFileSysPath(fileSys), items, count, nullptr));
 }
 
 MCPError
-deleteConfigItems(phys_ptr<auxil::UCItem> items,
+deleteConfigItems(phys_ptr<UCItem> items,
                   uint32_t count)
 {
    if (count == 0) {
@@ -208,7 +210,7 @@ deleteConfigItems(phys_ptr<auxil::UCItem> items,
       return MCPError::FileSysName;
    }
 
-   return translateError(deleteItems(getFileSysPath(fileSys), items, count));
+   return translateUCError(deleteItems(getFileSysPath(fileSys), items, count));
 }
 
 MCPError

@@ -2,6 +2,7 @@
 #include "coreinit_enum.h"
 #include "coreinit_event.h"
 #include "coreinit_ios.h"
+
 #include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <libcpu/be2_struct.h>
@@ -16,7 +17,9 @@ namespace cafe::coreinit
  */
 
 constexpr auto IPCBufferCount = 0x30;
-using IPCKDriverRequest = cafe::kernel::IPCKDriverRequest;
+
+using IPCKDriverRequest = kernel::IPCKDriverRequest;
+using IPCKDriverReplyQueue = kernel::IPCKDriverReplyQueue;
 
 /**
  * Contains all data required for IPCDriver about an IPC request.
@@ -206,11 +209,8 @@ struct IPCDriver
    //! Set to TRUE once this->requests has been initialised.
    be2_val<BOOL> initialisedRequests;
 
-   //! Number of pending responses from IPC to process.
-   be2_val<uint32_t> numResponses;
-
-   //! List of pending responses from IPC to process.
-   be2_array<virt_ptr<IPCKDriverRequest>, IPCBufferCount> responses;
+   //! Pending replies from IOS to process.
+   be2_struct<IPCKDriverReplyQueue> replyQueue;
 
    //! IPCDriverRequests memory to be used in freeFifo / outboundFifo.
    be2_array<IPCDriverRequest, IPCBufferCount> requests;
@@ -310,8 +310,7 @@ CHECK_OFFSET(IPCDriver, 0x23C, outboundFifo);
 CHECK_OFFSET(IPCDriver, 0x30C, waitFreeFifoEvent);
 CHECK_OFFSET(IPCDriver, 0x330, waitingFreeFifo);
 CHECK_OFFSET(IPCDriver, 0x334, initialisedRequests);
-CHECK_OFFSET(IPCDriver, 0x338, numResponses);
-CHECK_OFFSET(IPCDriver, 0x33C, responses);
+CHECK_OFFSET(IPCDriver, 0x338, replyQueue);
 CHECK_OFFSET(IPCDriver, 0x3FC, requests);
 CHECK_SIZE(IPCDriver, 0x1740);
 
@@ -361,9 +360,6 @@ ipcDriverSubmitRequest(virt_ptr<IPCDriver> driver,
 IOSError
 ipcDriverWaitResponse(virt_ptr<IPCDriver> driver,
                       virt_ptr<IPCDriverRequest> request);
-
-void
-ipcDriverProcessResponses();
 
 } // namespace internal
 

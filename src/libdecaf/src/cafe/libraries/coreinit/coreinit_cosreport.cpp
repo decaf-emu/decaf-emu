@@ -6,6 +6,7 @@
 #include "cafe/cafe_stackobject.h"
 #include "cafe/cafe_ppc_interface_varargs.h"
 
+#include <common/strutils.h>
 #include <cstdarg>
 #include <cstdio>
 #include <common/log.h>
@@ -101,7 +102,7 @@ COSVReport(COSReportModule module,
            const std::string_view &msg)
 {
    StackArray<char, 128> buffer;
-   std::strncpy(buffer.getRawPointer(), msg.data(), buffer.size());
+   string_copy(buffer.getRawPointer(), msg.data(), buffer.size());
    buffer[127] = char { 0 };
    handleReport(module, level, buffer);
 }

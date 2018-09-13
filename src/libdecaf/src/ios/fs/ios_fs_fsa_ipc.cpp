@@ -2,9 +2,12 @@
 #include "ios_fs_fsa_request.h"
 #include "ios_fs_fsa_response.h"
 #include "ios_fs_fsa_types.h"
+
 #include "ios/ios_stackobject.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_ipc.h"
+
+#include <common/strutils.h>
 
 namespace ios::fs
 {
@@ -89,13 +92,13 @@ FSAOpenFile(FSAHandle handle,
    ipcData->resourceHandle = handle;
 
    auto request = phys_addrof(ipcData->request);
-   std::strncpy(phys_addrof(request->openFile.path).getRawPointer(),
-                name.data(),
-                request->openFile.path.size());
+   string_copy(phys_addrof(request->openFile.path).getRawPointer(),
+               name.data(),
+               request->openFile.path.size());
 
-   std::strncpy(phys_addrof(request->openFile.mode).getRawPointer(),
-                mode.data(),
-                request->openFile.mode.size());
+   string_copy(phys_addrof(request->openFile.mode).getRawPointer(),
+               mode.data(),
+               request->openFile.mode.size());
 
    request->openFile.unk0x290 = 0x60000u;
 
@@ -141,13 +144,14 @@ FSACloseFile(FSAHandle handle,
    return static_cast<FSAStatus>(error);
 }
 
-FSAStatus
-FSAReadFile(FSAHandle handle,
-            phys_ptr<void> buffer,
-            uint32_t size,
-            uint32_t count,
-            FSAFileHandle fileHandle,
-            FSAReadFlag readFlags)
+static FSAStatus
+readFile(FSAHandle handle,
+         phys_ptr<void> buffer,
+         uint32_t size,
+         uint32_t count,
+         uint32_t pos,
+         FSAFileHandle fileHandle,
+         FSAReadFlag readFlags)
 {
    phys_ptr<FSAIpcData> ipcData;
 
@@ -163,6 +167,7 @@ FSAReadFile(FSAHandle handle,
    request->readFile.handle = fileHandle;
    request->readFile.size = size;
    request->readFile.count = count;
+   request->readFile.pos = pos;
    request->readFile.readFlags = readFlags;
 
    auto &vecs = ipcData->vecs;
@@ -183,6 +188,30 @@ FSAReadFile(FSAHandle handle,
 
    freeFsaIpcData(ipcData);
    return static_cast<FSAStatus>(error);
+}
+
+FSAStatus
+FSAReadFile(FSAHandle handle,
+            phys_ptr<void> buffer,
+            uint32_t size,
+            uint32_t count,
+            FSAFileHandle fileHandle,
+            FSAReadFlag readFlags)
+{
+   return readFile(handle, buffer, size, count, 0, fileHandle, readFlags);
+}
+
+FSAStatus
+FSAReadFileWithPos(FSAHandle handle,
+                   phys_ptr<void> buffer,
+                   uint32_t size,
+                   uint32_t count,
+                   uint32_t pos,
+                   FSAFileHandle fileHandle,
+                   FSAReadFlag readFlags)
+{
+   return readFile(handle, buffer, size, count, pos, fileHandle,
+                   readFlags | FSAReadFlag::ReadWithPos);
 }
 
 FSAStatus
@@ -282,9 +311,9 @@ FSARemove(FSAHandle handle,
 
    // Setup request
    auto request = phys_addrof(ipcData->request);
-   std::strncpy(phys_addrof(request->remove.path).getRawPointer(),
-                name.data(),
-                request->remove.path.size());
+   string_copy(phys_addrof(request->remove.path).getRawPointer(),
+               name.data(),
+               request->remove.path.size());
 
    // Perform ioctl
    auto error = IOS_Ioctl(ipcData->resourceHandle,
@@ -317,9 +346,9 @@ FSAMakeDir(FSAHandle handle,
    auto request = phys_addrof(ipcData->request);
    request->makeDir.permission = mode;
 
-   std::strncpy(phys_addrof(request->makeDir.path).getRawPointer(),
-                name.data(),
-                request->makeDir.path.size());
+   string_copy(phys_addrof(request->makeDir.path).getRawPointer(),
+               name.data(),
+               request->makeDir.path.size());
 
    // Perform ioctl
    auto error = IOS_Ioctl(ipcData->resourceHandle,
@@ -354,9 +383,9 @@ FSAMakeQuota(FSAHandle handle,
    request->makeQuota.mode = mode;
    request->makeQuota.size = quota;
 
-   std::strncpy(phys_addrof(request->makeQuota.path).getRawPointer(),
-                name.data(),
-                request->makeQuota.path.size());
+   string_copy(phys_addrof(request->makeQuota.path).getRawPointer(),
+               name.data(),
+               request->makeQuota.path.size());
 
    // Perform ioctl
    auto error = IOS_Ioctl(ipcData->resourceHandle,
@@ -390,13 +419,13 @@ FSAMount(FSAHandle handle,
 
    // Setup request
    auto request = phys_addrof(ipcData->request);
-   std::strncpy(phys_addrof(request->mount.path).getRawPointer(),
-                src.data(),
-                request->mount.path.size());
+   string_copy(phys_addrof(request->mount.path).getRawPointer(),
+               src.data(),
+               request->mount.path.size());
 
-   std::strncpy(phys_addrof(request->mount.target).getRawPointer(),
-                dst.data(),
-                request->mount.target.size());
+   string_copy(phys_addrof(request->mount.target).getRawPointer(),
+               dst.data(),
+               request->mount.target.size());
 
    request->mount.unk0x500 = unk0x500;
    request->mount.unkBuf = nullptr;
@@ -455,9 +484,9 @@ FSAGetInfoByQuery(FSAHandle handle,
    auto request = phys_addrof(ipcData->request);
    request->getInfoByQuery.type = query;
 
-   std::strncpy(phys_addrof(request->getInfoByQuery.path).getRawPointer(),
-                name.data(),
-                request->getInfoByQuery.path.size());
+   string_copy(phys_addrof(request->getInfoByQuery.path).getRawPointer(),
+               name.data(),
+               request->getInfoByQuery.path.size());
 
    // Perform ioctl
    auto error = IOS_Ioctl(ipcData->resourceHandle,

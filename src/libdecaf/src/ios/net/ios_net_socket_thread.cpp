@@ -106,19 +106,19 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
 static Error
 socketIoctlv(phys_ptr<ResourceRequest> request)
 {
-   auto error = Error::OK;
    auto device = getDevice(request->requestData.handle);
 
    if (!device) {
       return Error::InvalidHandle;
    }
 
+   /* TODO: Handle commands
    switch (static_cast<SocketCommand>(request->requestData.command)) {
    default:
-      error = Error::InvalidArg;
    }
+   */
 
-   return error;
+   return Error::InvalidArg;
 }
 
 static Error

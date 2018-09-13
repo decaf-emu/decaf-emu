@@ -136,7 +136,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
 
    // Allocate memory for the driver structure
    auto driver = virt_cast<OSDriver *>(OSAllocFromSystem(sizeof(OSDriver), 4));
-   if (internal::isAppDebugLevelUnknown3()) {
+   if (internal::isAppDebugLevelNotice()) {
       internal::COSInfo(
          COSReportModule::Unknown2,
          fmt::format(
@@ -145,7 +145,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    }
 
    if (!driver) {
-      if (internal::isAppDebugLevelUnknown3()) {
+      if (internal::isAppDebugLevelNotice()) {
          internal::dumpSystemHeap();
       }
 
@@ -313,7 +313,7 @@ error:
 
    OSDynLoad_Release(*callerModule);
 
-   if (internal::isAppDebugLevelUnknown3()) {
+   if (internal::isAppDebugLevelNotice()) {
       internal::COSInfo(
          COSReportModule::Unknown2,
          fmt::format(
@@ -390,7 +390,8 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
 
    // Deregister driver with the kernel
    if (driver->unk0x40 == driver->unk0x44) {
-      unkDeregisterSyscall0x3300(name, strlen(name.getRawPointer()));
+      unkDeregisterSyscall0x3300(name,
+                                 static_cast<uint32_t>(strlen(name.getRawPointer())));
    }
 
    // Free the dynload handles
@@ -400,7 +401,7 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
       }
    }
 
-   if (internal::isAppDebugLevelUnknown3()) {
+   if (internal::isAppDebugLevelNotice()) {
       internal::COSInfo(
          COSReportModule::Unknown2,
          fmt::format(

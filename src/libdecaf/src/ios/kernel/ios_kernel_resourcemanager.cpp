@@ -7,6 +7,7 @@
 #include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
 #include <common/log.h>
+#include <common/strutils.h>
 #include <map>
 #include <string>
 #include <string_view>
@@ -137,7 +138,9 @@ IOS_RegisterResourceManager(std::string_view device,
 
    resourceManager.queueId = queue;
 
-   std::strncpy(phys_addrof(resourceManager.device).getRawPointer(), device.data(), resourceManager.device.size());
+   string_copy(phys_addrof(resourceManager.device).getRawPointer(),
+               device.data(),
+               resourceManager.device.size());
    resourceManager.deviceLen = static_cast<uint16_t>(device.size());
 
    resourceManager.numRequests = uint16_t { 0u };
@@ -210,13 +213,13 @@ Error
 IOS_AssociateResourceManager(std::string_view device,
                              ResourcePermissionGroup group)
 {
-   phys_ptr<ResourceManager> resourceManager;
-   auto pid = internal::getCurrentProcessId();
+   auto resourceManager = phys_ptr<ResourceManager> { nullptr };
    auto error = internal::findResourceManager(device, &resourceManager);
    if (error < Error::OK) {
       return error;
    }
 
+   auto pid = internal::getCurrentProcessId();
    if (pid != resourceManager->resourceHandleManager->processId) {
       return Error::Access;
    }
@@ -233,8 +236,6 @@ Error
 IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
                   Error reply)
 {
-   phys_ptr<ResourceHandle> resourceHandle;
-
    // Get the resource handle manager for the current process
    auto pid = internal::getCurrentProcessId();
    auto resourceHandleManager = internal::getResourceHandleManager(pid);
@@ -258,6 +259,7 @@ IOS_ResourceReply(phys_ptr<ResourceRequest> resourceRequest,
       return Error::Invalid;
    }
 
+   auto resourceHandle = phys_ptr<ResourceHandle> { nullptr };
    auto requestHandleManager = resourceRequest->resourceHandleManager;
    auto error = internal::getResourceHandle(resourceRequest->resourceHandleId,
                                             requestHandleManager,
@@ -625,7 +627,7 @@ dispatchResourceReply(phys_ptr<ResourceRequest> resourceRequest,
    ipcRequest->reply = reply;
 
    if (resourceRequest->messageQueueId == getIpcMessageQueueId()) {
-      cafe::kernel::ipcDriverKernelSubmitReply(ipcRequest);
+      cafe::kernel::ipckDriverIosSubmitReply(ipcRequest);
       error = Error::OK;
    } else {
       phys_ptr<MessageQueue> queue = nullptr;
@@ -721,9 +723,9 @@ dispatchIosOpen(std::string_view device,
    resourceRequest->requestData.args.open.mode = mode;
    resourceRequest->requestData.args.open.caps = clientCapability->mask;
 
-   std::strncpy(phys_addrof(resourceRequest->openNameBuffer).getRawPointer(),
-                device.data(),
-                resourceRequest->openNameBuffer.size());
+   string_copy(phys_addrof(resourceRequest->openNameBuffer).getRawPointer(),
+               device.data(),
+               resourceRequest->openNameBuffer.size());
 
    // Try allocate a resource handle.
    error = allocResourceHandle(resourceHandleManager,
@@ -1283,7 +1285,8 @@ getClientCapability(phys_ptr<ResourceHandleManager> resourceHandleManager,
 {
    for (auto i = 0u; i < resourceHandleManager->clientCapabilities.size(); ++i) {
       auto caps = phys_addrof(resourceHandleManager->clientCapabilities[i]);
-      if (caps->featureId == 0x7FFFFFFF || caps->featureId == featureId) {
+      if (caps->featureId == ResourcePermissionGroup::All ||
+          caps->featureId == featureId) {
          if (outClientCapability) {
             *outClientCapability = caps;
          }
@@ -1304,8 +1307,7 @@ setClientCapability(ProcessId pid,
                     FeatureId featureId,
                     uint64_t mask)
 {
-   phys_ptr<ClientCapability> clientCapability;
-
+   auto clientCapability = phys_ptr<ClientCapability> { nullptr };
    auto resourceHandleManager = getResourceHandleManager(pid);
    if (!resourceHandleManager) {
       return Error::InvalidArg;

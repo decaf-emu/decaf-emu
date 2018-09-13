@@ -11,6 +11,8 @@
 
 #include "cafe/cafe_tinyheap.h"
 #include "cafe/cafe_stackobject.h"
+
+#include <common/strutils.h>
 #include <libcpu/be2_struct.h>
 
 namespace cafe::loader::internal
@@ -59,9 +61,10 @@ LiInitBufferTracking(LiBasicsLoadArgs *loadArgs)
    auto rpl = loadArgs->loadedRpl;
    rpl->pathBuffer = allocPtr;
    rpl->pathBufferSize = allocSize;
-   std::strncpy(virt_cast<char *>(rpl->pathBuffer).getRawPointer(),
-                loadArgs->pathName.getRawPointer(),
-                loadArgs->pathNameLen + 1);
+   string_copy(virt_cast<char *>(rpl->pathBuffer).getRawPointer(),
+               rpl->pathBufferSize,
+               loadArgs->pathName.getRawPointer(),
+               loadArgs->pathNameLen + 1);
 
    rpl->upcomingBufferNumber = 1u;
    rpl->lastChunkBuffer = loadArgs->chunkBuffer;
@@ -524,9 +527,9 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
       rpl->moduleNameBuffer = virt_cast<char *>(allocPtr);
       rpl->moduleNameBufferSize = allocSize;
 
-      std::strncpy(virt_cast<char *>(rpl->moduleNameBuffer).getRawPointer(),
-                   moduleName.getRawPointer(),
-                   rpl->moduleNameBufferSize);
+      string_copy(virt_cast<char *>(rpl->moduleNameBuffer).getRawPointer(),
+                  moduleName.getRawPointer(),
+                  rpl->moduleNameBufferSize);
    } else {
       rpl->moduleNameBuffer = moduleName;
       rpl->moduleNameBufferSize = moduleNameLen;

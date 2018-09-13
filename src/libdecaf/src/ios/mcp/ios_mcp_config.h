@@ -111,6 +111,9 @@ CHECK_SIZE(SysProdConfig, 0x46);
 #pragma pack(pop)
 
 MCPError
+translateUCError(auxil::UCError error);
+
+MCPError
 readConfigItems(phys_ptr<auxil::UCItem> items,
                 uint32_t count);
 

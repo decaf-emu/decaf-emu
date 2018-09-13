@@ -159,6 +159,16 @@ VPADGetTPCalibratedPointEx(VPADChan chan,
    VPADGetTPCalibratedPoint(chan, calibratedData, uncalibratedData);
 }
 
+void
+VPADGetTPCalibratedPointEx(VPADChan chan,
+                           VPADTouchPadResolution tpReso,
+                           virt_ptr<VPADTouchData> calibratedData,
+                           virt_ptr<VPADTouchData> uncalibratedData)
+{
+   // TODO: Actually use per resolution calibrated data
+   VPADGetTPCalibratedPoint(chan, calibratedData, uncalibratedData);
+}
+
 bool
 VPADBASEGetHeadphoneStatus(VPADChan chan)
 {

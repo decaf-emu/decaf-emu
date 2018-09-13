@@ -91,12 +91,13 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       case Command::Resume:
       {
          if (request->requestData.handle == PpcKernelHandle) {
-            // TODO: For now all IPC requests come in as COSKERNEL, and we do
-            // not have proper title launching setup yet, so let's give kernel
-            // filesystem permissions for now.
+            // TODO: Until we have proper permission initialisation in IOS for
+            // CafeOS kernel let's just force all permission
             StackObject<uint64_t> mask;
             *mask = 0xFFFFFFFFFFFFFFFFull;
-            IOS_SetClientCapabilities(ProcessId::COSKERNEL, 11, mask);
+            IOS_SetClientCapabilities(ProcessId::COSKERNEL,
+                                      ResourcePermissionGroup::All,
+                                      mask);
 
             // Boot the PPC kernel!
             cafe::kernel::start();

@@ -9,6 +9,7 @@ namespace cafe::kernel
 enum class InfoType
 {
    Type0 = 0,
+   Type6 = 6,
    ArgStr = 3,
 };
 
@@ -95,8 +96,22 @@ CHECK_OFFSET(Info0, 0x9C, unk0x9C);
 CHECK_OFFSET(Info0, 0xA0, titleId);
 CHECK_SIZE(Info0, 0xA8);
 
+struct Info6
+{
+   be2_val<uint64_t> osTitleId;
+   be2_val<uint32_t> unk0x08;
+   PADDING(0x108 - 0xC);
+};
+CHECK_OFFSET(Info6, 0x00, osTitleId);
+CHECK_OFFSET(Info6, 0x08, unk0x08);
+CHECK_SIZE(Info6, 0x108);
+
 void
 getType0Info(virt_ptr<Info0> info,
+             uint32_t size);
+
+void
+getType6Info(virt_ptr<Info6> info,
              uint32_t size);
 
 void

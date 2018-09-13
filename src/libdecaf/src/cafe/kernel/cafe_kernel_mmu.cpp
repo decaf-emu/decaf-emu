@@ -13,6 +13,9 @@ namespace cafe::kernel
 constexpr auto MaxCodeGenSize = 0x2000000u;
 constexpr auto MaxTotalCodeSize = 0xE800000u;
 
+static std::array<internal::AddressSpace *, 3>
+sCoreActiveAddressSpace = { nullptr, nullptr, nullptr };
+
 enum MemoryMapFlags
 {
    MapUnknown1 = 1 << 1,
@@ -128,13 +131,13 @@ getForegroundBucket()
 std::pair<virt_addr, uint32_t>
 enableOverlayArena()
 {
-   auto processData = getCurrentProcessData();
+   auto partitionData = internal::getCurrentRamPartitionData();
 
    // TODO: In a multi process environment we will have to exit the overlay
    // process.
 
-   if (!processData->addressSpace.overlayArenaEnabled) {
-      processData->addressSpace.overlayArenaEnabled = true;
+   if (!partitionData->addressSpace.overlayArenaEnabled) {
+      partitionData->addressSpace.overlayArenaEnabled = true;
    }
 
    return { virt_addr { 0xA0000000 }, 0x1C000000 };
@@ -143,32 +146,32 @@ enableOverlayArena()
 void
 disableOverlayArena()
 {
-   auto processData = getCurrentProcessData();
-   processData->addressSpace.overlayArenaEnabled = false;
+   auto partitionData = internal::getCurrentRamPartitionData();
+   partitionData->addressSpace.overlayArenaEnabled = false;
 }
 
 std::pair<phys_addr, uint32_t>
 getAvailablePhysicalAddressRange()
 {
-   auto processData = getCurrentProcessData();
-   return { processData->addressSpace.availStart,
-            processData->addressSpace.availSize };
+   auto partitionData = internal::getCurrentRamPartitionData();
+   return { partitionData->addressSpace.availStart,
+            partitionData->addressSpace.availSize };
 }
 
 std::pair<phys_addr, uint32_t>
 getDataPhysicalAddressRange()
 {
-   auto processData = getCurrentProcessData();
-   return { processData->addressSpace.dataStart,
-            processData->addressSpace.dataSize };
+   auto partitionData = internal::getCurrentRamPartitionData();
+   return { partitionData->addressSpace.dataStart,
+            partitionData->addressSpace.dataSize };
 }
 
 std::pair<virt_addr, uint32_t>
 getVirtualMapAddressRange()
 {
-   auto processData = getCurrentProcessData();
-   return { processData->addressSpace.virtualMapStart,
-            processData->addressSpace.virtualMapSize };
+   auto partitionData = internal::getCurrentRamPartitionData();
+   return { partitionData->addressSpace.virtualMapStart,
+            partitionData->addressSpace.virtualMapSize };
 }
 
 static bool
@@ -186,8 +189,8 @@ allocateVirtualAddress(virt_addr addr,
                        uint32_t size,
                        uint32_t align)
 {
-   auto processData = getCurrentProcessData();
-   if (addr && !checkInVirtualMapRange(&processData->addressSpace, addr, size)) {
+   auto partitionData = internal::getCurrentRamPartitionData();
+   if (addr && !checkInVirtualMapRange(&partitionData->addressSpace, addr, size)) {
       return virt_addr { 0 };
    }
 
@@ -205,7 +208,7 @@ allocateVirtualAddress(virt_addr addr,
 
    if (!addr) {
       auto range = cpu::findFreeVirtualAddressInRange(
-         { processData->addressSpace.virtualMapStart, processData->addressSpace.virtualMapSize },
+         { partitionData->addressSpace.virtualMapStart, partitionData->addressSpace.virtualMapSize },
          size, align);
       addr = range.start;
       size = range.size;
@@ -222,8 +225,8 @@ bool
 freeVirtualAddress(virt_addr addr,
                    uint32_t size)
 {
-   auto processData = getCurrentProcessData();
-   if (!checkInVirtualMapRange(&processData->addressSpace, addr, size)) {
+   auto partitionData = internal::getCurrentRamPartitionData();
+   if (!checkInVirtualMapRange(&partitionData->addressSpace, addr, size)) {
       return false;
    }
 
@@ -233,8 +236,8 @@ freeVirtualAddress(virt_addr addr,
 QueryMemoryResult
 queryVirtualAddress(cpu::VirtualAddress addr)
 {
-   auto processData = getCurrentProcessData();
-   if (!checkInVirtualMapRange(&processData->addressSpace, addr, 0)) {
+   auto partitionData = internal::getCurrentRamPartitionData();
+   if (!checkInVirtualMapRange(&partitionData->addressSpace, addr, 0)) {
       return QueryMemoryResult::Invalid;
    }
 
@@ -258,8 +261,8 @@ mapMemory(virt_addr virtAddr,
           uint32_t size,
           MapMemoryPermission permission)
 {
-   auto processData = getCurrentProcessData();
-   if (!checkInVirtualMapRange(&processData->addressSpace, virtAddr, size)) {
+   auto partitionData = internal::getCurrentRamPartitionData();
+   if (!checkInVirtualMapRange(&partitionData->addressSpace, virtAddr, size)) {
       return false;
    }
 
@@ -282,8 +285,8 @@ bool
 unmapMemory(cpu::VirtualAddress addr,
             uint32_t size)
 {
-   auto processData = getCurrentProcessData();
-   if (!checkInVirtualMapRange(&processData->addressSpace, addr, size)) {
+   auto partitionData = internal::getCurrentRamPartitionData();
+   if (!checkInVirtualMapRange(&partitionData->addressSpace, addr, size)) {
       return false;
    }
 
@@ -403,7 +406,13 @@ setAddressSpaceView(AddressSpaceView *view,
 AddressSpace *
 getActiveAddressSpace()
 {
-   return &getCurrentProcessData()->addressSpace;
+   return sCoreActiveAddressSpace[cpu::this_core::id()];
+}
+
+void
+setActiveAddressSpace(AddressSpace *addressSpace)
+{
+   sCoreActiveAddressSpace[cpu::this_core::id()] = addressSpace;
 }
 
 bool
@@ -467,28 +476,29 @@ initialiseAddressSpace(AddressSpace *addressSpace,
                           MapCodeGen | MapUnknown10);
    }
 
-   setAddressSpaceView(&addressSpace->view0,
+   setAddressSpaceView(&addressSpace->viewKernel,
                        sMemoryMap,
                        sMemoryMapSize,
                        baseFlags | MapUnknown1 |
                        MapUnknown6 | MapUnknown10 |
                        MapUnknown11 | MapUnknown2);
 
-   setAddressSpaceView(&addressSpace->view1,
+   setAddressSpaceView(&addressSpace->viewUnknownKernelProcess1,
                        sMemoryMap,
                        sMemoryMapSize,
                        baseFlags | MapUnknown1 |
                        MapUnknown6 | MapUnknown10 |
                        MapUnknown11);
 
-   setAddressSpaceView(&addressSpace->view2,
+   setAddressSpaceView(&addressSpace->viewLoader,
                        sMemoryMap,
                        sMemoryMapSize,
                        baseFlags | MapUnknown1 |
                        MapUnknown6 | MapUnknown10 |
                        MapUnknown11 | MapUnknown4);
 
-   addressSpace->perCoreView.fill(&addressSpace->view0);
+   // TODO: For now we hardcode to viewLoader because we do not change views
+   addressSpace->perCoreView.fill(&addressSpace->viewLoader);
    return true;
 }
 
@@ -517,11 +527,16 @@ loadAddressSpace(AddressSpace *addressSpace)
       decaf_abort("Unexpected failure resetting virtual memory");
    }
 
-   // TODO: For now we load view2 as that seems to have the most permissions,
-   // until we figure out how virtual address for kernel 0xFFE00000 is mapped
-   // in IOS
-   for (auto i = 0u; i < addressSpace->view2.numMappings; ++i) {
-      auto &mapping = addressSpace->view2.mappings[i];
+   auto coreId = cpu::this_core::id();
+   if (coreId == cpu::InvalidCoreId) {
+      // We have to load the kernel address space before we are running on a cpu
+      // core, so in that case load the address space for core 1
+      coreId = 1;
+   }
+
+   auto view = addressSpace->perCoreView[coreId];
+   for (auto i = 0u; i < view->numMappings; ++i) {
+      auto &mapping = view->mappings[i];
       if (!mapping.vaddr || !mapping.size) {
          continue;
       }

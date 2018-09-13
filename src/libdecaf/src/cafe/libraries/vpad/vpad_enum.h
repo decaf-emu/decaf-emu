@@ -38,7 +38,6 @@ ENUM_BEG(VPADTouchPadResolution, int32_t)
    ENUM_VALUE(Tp_854x480,              2)
 ENUM_END(VPADTouchPadResolution)
 
-
 FLAGS_BEG(VPADTouchPadValidity, uint16_t)
    //! Both X and Y touchpad positions are accurate
    FLAGS_VALUE(Valid,       0)

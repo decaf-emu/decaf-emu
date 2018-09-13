@@ -26,9 +26,8 @@ CHECK_OFFSET(OSSystemInfo, 0x10, l2CacheSize);
 CHECK_OFFSET(OSSystemInfo, 0x1C, cpuRatio);
 CHECK_SIZE(OSSystemInfo, 0x20);
 
-BITFIELD(OSAppFlags, uint32_t)
-   BITFIELD_ENTRY(9, 3, OSAppFlagsDebugLevel, debugLevel);
-BITFIELD_END
+using OSAppFlags = kernel::ProcessFlags;
+using OSAppFlagsDebugLevel = kernel::DebugLevel;
 
 #pragma pack(pop)
 
@@ -126,7 +125,7 @@ bool
 isAppDebugLevelVerbose();
 
 bool
-isAppDebugLevelUnknown3();
+isAppDebugLevelNotice();
 
 void
 initialiseSystemInfo();

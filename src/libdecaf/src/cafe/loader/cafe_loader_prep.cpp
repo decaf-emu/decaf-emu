@@ -12,8 +12,11 @@
 #include "cafe_loader_log.h"
 #include "cafe_loader_minfileinfo.h"
 #include "cafe_loader_utils.h"
+
 #include "cafe/cafe_stackobject.h"
 #include "cafe/kernel/cafe_kernel_processid.h"
+
+#include <common/strutils.h>
 
 namespace cafe::loader::internal
 {
@@ -183,8 +186,12 @@ LOADER_Prep(kernel::UniqueProcessId upid,
 
    StackArray<char, 64> filename;
    auto filenameLen = std::min<uint32_t>(minFileInfo->moduleNameBufferLen, 59);
-   std::memcpy(filename.getRawPointer(), minFileInfo->moduleNameBuffer.getRawPointer(), filenameLen);
-   std::strncpy(filename.getRawPointer() + filenameLen, ".rpl", filename.size() - filenameLen);
+   std::memcpy(filename.getRawPointer(),
+               minFileInfo->moduleNameBuffer.getRawPointer(),
+               filenameLen);
+   string_copy(filename.getRawPointer() + filenameLen,
+               ".rpl",
+               filename.size() - filenameLen);
 
    LiCheckAndHandleInterrupts();
    LiInitBuffer(false);

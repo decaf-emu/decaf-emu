@@ -2,7 +2,9 @@
 #include "coreinit_core.h"
 #include "coreinit_ipcdriver.h"
 #include "coreinit_messagequeue.h"
+#include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
+
 #include "cafe/cafe_stackobject.h"
 #include "cafe/kernel/cafe_kernel_ipckdriver.h"
 
@@ -23,10 +25,21 @@ struct StaticIpcDriverData
    };
 
    be2_array<PerCoreData, CoreCount> perCoreData;
+   be2_array<char, 32> submitEventName;
 };
 
 static virt_ptr<StaticIpcDriverData> sIpcDriverData = nullptr;
 static OSThreadEntryPointFn sIpcDriverThreadEntry = nullptr;
+
+namespace internal
+{
+
+void
+ipcDriverProcessReplies(kernel::InterruptType type,
+                        virt_ptr<kernel::Context> interruptedContext);
+
+} // namespace internal
+
 
 /**
  * Initialise the IPC driver.
@@ -106,7 +119,16 @@ IPCDriverOpen()
                                   virt_addrof(driver->requests[i]));
    }
 
-   return IOSError::OK;
+   // Open the ipck driver
+   auto error =
+      kernel::ipckDriverUserOpen(driver->replyQueue.replies.size(),
+                                 virt_addrof(driver->replyQueue),
+                                 internal::ipcDriverProcessReplies);
+   if (error == ios::Error::OK) {
+      driver->status = IPCDriverStatus::Open;
+   }
+
+   return error;
 }
 
 
@@ -312,9 +334,14 @@ IOSError
 ipcDriverSubmitRequest(virt_ptr<IPCDriver> driver,
                        virt_ptr<IPCDriverRequest> request)
 {
-   OSInitEvent(virt_addrof(request->finishEvent), FALSE, OSEventMode::AutoReset);
+   // TODO: sIpcDriverData->submitEventName = "{ IPC Synchronous }";
+   OSInitEventEx(virt_addrof(request->finishEvent),
+                 FALSE,
+                 OSEventMode::AutoReset,
+                 virt_addrof(sIpcDriverData->submitEventName));
    driver->requestsSubmitted++;
-   kernel::ipcDriverKernelSubmitRequest(request->ipcBuffer);
+
+   kernel::ipckDriverUserSubmitRequest(request->ipcBuffer);
    return IOSError::OK;
 }
 
@@ -330,9 +357,7 @@ ipcDriverWaitResponse(virt_ptr<IPCDriver> driver,
                       virt_ptr<IPCDriverRequest> request)
 {
    OSWaitEvent(virt_addrof(request->finishEvent));
-
    auto response = request->ipcBuffer->request.reply;
-
    ipcDriverFreeRequest(driver, request);
    OSSignalEventAll(virt_addrof(driver->waitFreeFifoEvent));
    return response;
@@ -340,16 +365,18 @@ ipcDriverWaitResponse(virt_ptr<IPCDriver> driver,
 
 
 /**
- * Called by kernel IPC driver to indicate there are pending responses to process.
+ * Callback by kernel IPC driver to indicate there are pending replies to process.
  */
 void
-ipcDriverProcessResponses()
+ipcDriverProcessReplies(kernel::InterruptType type,
+                        virt_ptr<kernel::Context> interruptedContext)
 {
+   disableScheduler();
    auto driver = getIPCDriver();
    auto &coreData = sIpcDriverData->perCoreData[driver->coreId];
 
-   for (auto i = 0u; i < driver->numResponses; ++i) {
-      auto buffer = driver->responses[i];
+   for (auto i = 0u; i < driver->replyQueue.numReplies; ++i) {
+      auto buffer = driver->replyQueue.replies[i];
       auto index = static_cast<uint32_t>(buffer - driver->ipcBuffers);
       decaf_check(index >= 0);
       decaf_check(index <= IPCBufferCount);
@@ -370,10 +397,11 @@ ipcDriverProcessResponses()
       }
 
       driver->requestsProcessed++;
-      driver->responses[i] = nullptr;
+      driver->replyQueue.replies[i] = nullptr;
    }
 
-   driver->numResponses = 0u;
+   driver->replyQueue.numReplies = 0u;
+   enableScheduler();
 }
 
 

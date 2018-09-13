@@ -149,21 +149,25 @@ sSetLinkOutput(virt_ptr<LOADER_LinkInfo> linkInfo,
                virt_ptr<virt_ptr<LOADED_RPL>> linkModules)
 {
    for (auto i = 0u; i < linkInfo->numModules; ++i) {
-      linkInfo->modules[i].entryPoint = linkModules[i]->entryPoint;
-      if (!linkInfo->modules[i].entryPoint) {
+      auto &linkOutput = linkInfo->modules[i];
+      auto &linkModule = linkModules[i];
+
+      if (!linkModule->entryPoint) {
          Loader_Panic(0x130008,
-                      "*** Linker trying to return successful output when a module is not linked!");
+                      "*** Linker trying to return successful output when a module ({}) is not linked!",
+                      linkModule->moduleNameBuffer);
       }
 
-      linkInfo->modules[i].textAddr = linkModules[i]->textAddr;
-      linkInfo->modules[i].textOffset = linkModules[i]->textOffset;
-      linkInfo->modules[i].textSize = linkModules[i]->textSize;
-      linkInfo->modules[i].dataAddr = linkModules[i]->dataAddr;
-      linkInfo->modules[i].dataOffset = linkModules[i]->dataOffset;
-      linkInfo->modules[i].dataSize = linkModules[i]->dataSize;
-      linkInfo->modules[i].loadAddr = linkModules[i]->loadAddr;
-      linkInfo->modules[i].loadOffset = linkModules[i]->loadOffset;
-      linkInfo->modules[i].loadSize = linkModules[i]->loadSize;
+      linkOutput.entryPoint = linkModule->entryPoint;
+      linkOutput.textAddr = linkModule->textAddr;
+      linkOutput.textOffset = linkModule->textOffset;
+      linkOutput.textSize = linkModule->textSize;
+      linkOutput.dataAddr = linkModule->dataAddr;
+      linkOutput.dataOffset = linkModule->dataOffset;
+      linkOutput.dataSize = linkModule->dataSize;
+      linkOutput.loadAddr = linkModule->loadAddr;
+      linkOutput.loadOffset = linkModule->loadOffset;
+      linkOutput.loadSize = linkModule->loadSize;
    }
 }
 
@@ -273,6 +277,11 @@ LOADER_Link(kernel::UniqueProcessId upid,
 
    auto maxShnum = 0u;
    auto numLoadStateFlag8 = 0u;
+   auto importTracking = virt_ptr<LiImportTracking> { nullptr };
+   auto importTrackingSize = uint32_t { 0 };
+   auto remainingUnlinkedModules = 0u;
+   auto unlinkedModuleIndex = 0u;
+
    for (auto i = 0u; i < numUnlinkedModules; ++i) {
       if (unlinkedModules[i]->elfHeader.shnum > maxShnum) {
          maxShnum = unlinkedModules[i]->elfHeader.shnum;
@@ -283,6 +292,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
       }
    }
 
+   // Allocate import tracking
    if (error = LiCacheLineCorrectAllocEx(globals->processCodeHeap,
                                          sizeof(LiImportTracking) * maxShnum,
                                          4,
@@ -294,11 +304,11 @@ LOADER_Link(kernel::UniqueProcessId upid,
       Loader_ReportError(
          "*** Could not allocate space for largest # of sections ({});  (needed {}, available {}).",
          maxShnum, allocSize, largestFree);
-      decaf_abort("error");
+      goto out;
    }
 
-   auto importTracking = virt_cast<LiImportTracking *>(allocPtr);
-   auto importTrackingSize = allocSize;
+   importTracking = virt_cast<LiImportTracking *>(allocPtr);
+   importTrackingSize = allocSize;
 
    if (numLoadStateFlag8 != 0) {
       for (auto i = 0u; i < numUnlinkedModules; ++i) {
@@ -306,12 +316,22 @@ LOADER_Link(kernel::UniqueProcessId upid,
          auto module = unlinkedModules[i];
          if (module->loadStateFlags & LoaderStateFlag8) {
             if (!module->elfHeader.shstrndx) {
-               decaf_abort("error");
+               Loader_ReportError(
+                  "*** Error: Could not get section string table index for \"{}\".",
+                  module->moduleNameBuffer);
+               LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 839);
+               error = -470071;
+               goto out;
             }
 
             auto shStrAddr = module->sectionAddressBuffer[module->elfHeader.shstrndx];
             if (!shStrAddr) {
-               decaf_abort("error");
+               Loader_ReportError(
+                  "*** Error: Could not get section string table for \"{}\".",
+                  module->moduleNameBuffer);
+               LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 831);
+               error = -470072;
+               goto out;
             }
 
             for (auto j = 1u; j < module->elfHeader.shnum; ++j) {
@@ -320,13 +340,21 @@ LOADER_Link(kernel::UniqueProcessId upid,
                   auto name = virt_cast<char *>(shStrAddr + sectionHeader->name);
                   auto rpl = LiFindRPLByName(name);
                   if (!rpl) {
-                     decaf_abort("error");
+                     Loader_ReportError("*** Error: Could not get imported RPL name.");
+                     LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 854);
+                     error = -470073;
+                     goto out;
                   }
 
                   if ((rpl->loadStateFlags & LoaderStateFlag2) &&
                       (rpl->loadStateFlags & LoaderStateFlag8)) {
                      if (error = LiFixupRelocOneRPL(rpl, nullptr, 1)) {
-                        decaf_abort("error");
+                        Loader_ReportError(
+                           "*** Error. Could not find module \"{}\" during linking!",
+                           name);
+                        LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 863);
+                        error = -470010;
+                        goto out;
                      }
                   }
                }
@@ -341,8 +369,9 @@ LOADER_Link(kernel::UniqueProcessId upid,
    }
 
    // Loop through trying to link everything
-   auto remainingUnlinkedModules = numUnlinkedModules;
-   auto unlinkedModuleIndex = 0u;
+   remainingUnlinkedModules = numUnlinkedModules;
+   unlinkedModuleIndex = 0u;
+
    while (remainingUnlinkedModules > 0) {
       LiCheckAndHandleInterrupts();
       auto module = unlinkedModules[unlinkedModuleIndex];
@@ -352,12 +381,22 @@ LOADER_Link(kernel::UniqueProcessId upid,
                      sizeof(LiImportTracking) * module->elfHeader.shnum);
 
          if (!module->elfHeader.shstrndx) {
-            decaf_abort("error");
+            Loader_ReportError(
+               "*** Error: Could not get section string table index for \"{}\".",
+               module->moduleNameBuffer);
+            LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 927);
+            error = -470071;
+            goto out;
          }
 
          auto shStrAddr = module->sectionAddressBuffer[module->elfHeader.shstrndx];
          if (!shStrAddr) {
-            decaf_abort("error");
+            Loader_ReportError(
+               "*** Error: Could not get section string table for \"{}\".",
+               module->moduleNameBuffer);
+            LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 919);
+            error = -470072;
+            goto out;
          }
 
          auto j = 1u;
@@ -367,7 +406,12 @@ LOADER_Link(kernel::UniqueProcessId upid,
                auto name = virt_cast<char *>(shStrAddr + sectionHeader->name) + 9;
                auto rpl = LiFindRPLByName(name);
                if (!rpl) {
-                  decaf_abort("error");
+                  Loader_ReportError(
+                     "*** Error. Could not find module \"{}\" during linking!",
+                     name);
+                  LiSetFatalError(0x18729Bu, module->fileType, 1, "LOADER_Link", 950);
+                  error = -470010;
+                  goto out;
                }
 
                if ((rpl->loadStateFlags & LoaderStateFlag2) &&
@@ -391,7 +435,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
          if (j == module->elfHeader.shnum) {
             auto unk = (module->loadStateFlags & LoaderStateFlag8) ? 2 : 0;
             if (error = LiFixupRelocOneRPL(module, importTracking, unk)) {
-               decaf_abort("error");
+               break;
             }
          }
 
@@ -408,6 +452,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
    LiCacheLineCorrectFreeEx(globals->processCodeHeap, importTracking,
                             importTrackingSize);
 
+out:
    // PLEASE SOMEONE TELL ME WHAT THIS LOAD STATE FLAGS MEANS!!
    for (auto i = 0u; i < numUnlinkedModules; ++i) {
       unlinkedModules[i]->loadStateFlags &= ~LoaderStateFlag8;
@@ -419,7 +464,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
          auto module = virt_ptr<LOADED_RPL> { nullptr };
          auto prev = virt_ptr<LOADED_RPL> { nullptr };
 
-         for (module = globals->firstLoadedRpl; module; module != globals->lastLoadedRpl) {
+         for (module = globals->firstLoadedRpl; module; module = module->nextLoadedRpl) {
             if (module == unlinkedModules[i]) {
                break;
             }
