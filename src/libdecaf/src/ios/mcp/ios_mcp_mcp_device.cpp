@@ -55,15 +55,19 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
    auto name = std::string_view { phys_addrof(request->name).getRawPointer() };
 
    if (request->fileType == MCPFileType::CafeOS) {
-      auto library = cafe::hle::getLibrary(name);
-      if (library) {
-         auto &rpl = library->getGeneratedRpl();
-         auto bytesRead = std::min<uint32_t>(static_cast<uint32_t>(rpl.size() - request->pos),
-                                             outputBufferLength);
-         std::memcpy(outputBuffer.getRawPointer(),
-                     rpl.data() + request->pos,
-                     bytesRead);
-         return static_cast<MCPError>(bytesRead);
+      if (std::find(decaf::config::system::lle_modules.begin(),
+                    decaf::config::system::lle_modules.end(),
+                    name) == decaf::config::system::lle_modules.end()) {
+         auto library = cafe::hle::getLibrary(name);
+         if (library) {
+            auto &rpl = library->getGeneratedRpl();
+            auto bytesRead = std::min<uint32_t>(static_cast<uint32_t>(rpl.size() - request->pos),
+                                                outputBufferLength);
+            std::memcpy(outputBuffer.getRawPointer(),
+                        rpl.data() + request->pos,
+                        bytesRead);
+            return static_cast<MCPError>(bytesRead);
+         }
       }
    }
 
