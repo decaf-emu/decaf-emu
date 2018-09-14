@@ -129,6 +129,11 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto error = readTitleCosXml(titleInfoBuffer);
    if (error < MCPError::OK) {
+      std::memset(titleInfoBuffer.getRawPointer(), 0x0, sizeof(MCPPPrepareTitleInfo));
+
+      // If there is no cos.xml then let's grant full permissions
+      titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
+      titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
       return error;
    }
 
