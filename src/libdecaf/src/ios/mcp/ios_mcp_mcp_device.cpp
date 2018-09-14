@@ -123,6 +123,11 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
                   phys_ptr<MCPResponsePrepareTitle> response)
 {
    auto titleId = request->titleId;
+   if (titleId == DefaultTitleId) {
+      // TODO: When DefaultTitleId is passed in, we should replace this with
+      // the actual titleId.
+      titleId = 0u;
+   }
 
    // TODO: When we have title switching we will need to read the title id and
    // load the correct title, until then our title is already mounted on /vol
@@ -140,7 +145,6 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
    std::memcpy(phys_addrof(response->titleInfo).getRawPointer(),
                titleInfoBuffer.getRawPointer(),
                sizeof(MCPPPrepareTitleInfo));
-
    response->titleInfo.titleId = titleId;
 
    std::memset(phys_addrof(response->titleInfo.permissions).getRawPointer(),
