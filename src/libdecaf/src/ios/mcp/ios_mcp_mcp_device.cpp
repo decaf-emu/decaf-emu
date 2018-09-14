@@ -55,15 +55,19 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
    auto name = std::string_view { phys_addrof(request->name).getRawPointer() };
 
    if (request->fileType == MCPFileType::CafeOS) {
-      auto library = cafe::hle::getLibrary(name);
-      if (library) {
-         auto &rpl = library->getGeneratedRpl();
-         auto bytesRead = std::min<uint32_t>(static_cast<uint32_t>(rpl.size() - request->pos),
-                                             outputBufferLength);
-         std::memcpy(outputBuffer.getRawPointer(),
-                     rpl.data() + request->pos,
-                     bytesRead);
-         return static_cast<MCPError>(bytesRead);
+      if (std::find(decaf::config::system::lle_modules.begin(),
+                    decaf::config::system::lle_modules.end(),
+                    name) == decaf::config::system::lle_modules.end()) {
+         auto library = cafe::hle::getLibrary(name);
+         if (library) {
+            auto &rpl = library->getGeneratedRpl();
+            auto bytesRead = std::min<uint32_t>(static_cast<uint32_t>(rpl.size() - request->pos),
+                                                outputBufferLength);
+            std::memcpy(outputBuffer.getRawPointer(),
+                        rpl.data() + request->pos,
+                        bytesRead);
+            return static_cast<MCPError>(bytesRead);
+         }
       }
    }
 
@@ -123,19 +127,28 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
                   phys_ptr<MCPResponsePrepareTitle> response)
 {
    auto titleId = request->titleId;
+   if (titleId == DefaultTitleId) {
+      // TODO: When DefaultTitleId is passed in, we should replace this with
+      // the actual titleId.
+      titleId = 0u;
+   }
 
    // TODO: When we have title switching we will need to read the title id and
    // load the correct title, until then our title is already mounted on /vol
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto error = readTitleCosXml(titleInfoBuffer);
    if (error < MCPError::OK) {
+      std::memset(titleInfoBuffer.getRawPointer(), 0x0, sizeof(MCPPPrepareTitleInfo));
+
+      // If there is no cos.xml then let's grant full permissions
+      titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
+      titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
       return error;
    }
 
    std::memcpy(phys_addrof(response->titleInfo).getRawPointer(),
                titleInfoBuffer.getRawPointer(),
                sizeof(MCPPPrepareTitleInfo));
-
    response->titleInfo.titleId = titleId;
 
    std::memset(phys_addrof(response->titleInfo.permissions).getRawPointer(),

@@ -19,18 +19,18 @@ using TitleId = uint64_t;
  */
 struct IoctlVec
 {
-   //! Physical address of buffer.
-   be2_val<phys_addr> paddr;
+   //! Virtual address of buffer.
+   be2_val<virt_addr> vaddr;
 
    //! Length of buffer.
    be2_val<uint32_t> len;
 
-   //! Virtual address of buffer.
-   be2_val<virt_addr> vaddr;
+   //! Physical address of buffer.
+   be2_val<phys_addr> paddr;
 };
-CHECK_OFFSET(IoctlVec, 0x00, paddr);
+CHECK_OFFSET(IoctlVec, 0x00, vaddr);
 CHECK_OFFSET(IoctlVec, 0x04, len);
-CHECK_OFFSET(IoctlVec, 0x08, vaddr);
+CHECK_OFFSET(IoctlVec, 0x08, paddr);
 CHECK_SIZE(IoctlVec, 0x0C);
 
 struct IpcRequestArgsOpen

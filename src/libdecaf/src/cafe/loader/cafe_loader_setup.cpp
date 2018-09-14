@@ -439,7 +439,7 @@ LiSetupOneAllocSection(kernel::UniqueProcessId upid,
                                          sectionHeader->addr + sectionHeader->size);
    if (bounds->allocMax > bounds->max) {
       Loader_ReportError(
-         "*** %s section %d segment %s makerpl's segment size was wrong: real time calculated size =0x%08X makerpl's size=0x%08X.",
+         "*** {} section {} segment {} makerpl's segment size was wrong: real time calculated size =0x{:08X} makerpl's size=0x{:08X}.",
          rpl->moduleNameBuffer,
          sectionIndex,
          bounds->name,

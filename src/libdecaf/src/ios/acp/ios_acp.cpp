@@ -1,5 +1,7 @@
 #include "ios_acp.h"
+#include "ios_acp_acp_main_thread.h"
 #include "ios_acp_client_save.h"
+
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
@@ -116,6 +118,7 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    // Initialise static memory
    internal::initialiseStaticData();
+   internal::initialiseStaticAcpMainThreadData();
 
    auto error = IOS_SetThreadPriority(CurrentThread, 50);
    if (error < Error::OK) {
@@ -141,6 +144,12 @@ processEntryPoint(phys_ptr<void> /* context */)
    messageQueueId = static_cast<MessageQueueId>(error);
 
    error = MCP_RegisterResourceManager("/dev/acpproc", messageQueueId);
+   if (error < Error::OK) {
+      return error;
+   }
+
+   // Start thread for /dev/acp_main
+   error = internal::startAcpMainThread();
    if (error < Error::OK) {
       return error;
    }
