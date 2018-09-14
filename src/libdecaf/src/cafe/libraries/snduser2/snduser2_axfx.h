@@ -29,49 +29,49 @@ CHECK_SIZE(AXFXBuffers, 0x0C);
 #pragma pack(push, 1)
 struct AXFXReverbHi
 {
-   be2_array<virt_ptr<float>, 3>                         earlyLine;
-   be2_array<uint32_t, 3>                                earlyPos;
-   be2_val<uint32_t>                                     earlyLength;
-   be2_val<uint32_t>                                     earlyMaxLength;
-   be2_array<float, 3>                                   earlyCoef;
-   be2_array<virt_ptr<float>, 3>                         preDelayLine;
-   be2_val<uint32_t>                                     preDelayPos;
-   be2_val<uint32_t>                                     preDelayLength;
-   be2_val<uint32_t>                                     preDelayMaxLength;
-   be2_array<virt_ptr<be2_array<virt_ptr<float>, 3>>, 3> combLine;
-   be2_array<uint32_t, 3>                                combPos;
-   be2_array<uint32_t, 3>                                combLength;
-   be2_array<uint32_t, 3>                                combMaxLength;
-   be2_array<float, 3>                                   combCoef;
-   be2_array<virt_ptr<be2_array<virt_ptr<float>, 2>>, 3> allpassLine;
-   be2_array<uint32_t, 2>                                allpassPos;
-   be2_array<uint32_t, 2>                                allpassLength;
-   be2_array<uint32_t, 2>                                allpassMaxLength;
-   be2_array<virt_ptr<float>, 3>                          lastAllpassLine;
-   be2_array<uint32_t, 3>                                lastAllpassPos;
-   be2_array<uint32_t, 3>                                lastAllpassLength;
-   be2_array<uint32_t, 3>                                lastAllpassMaxLength;
-   be2_val<float>                                        allpassCoef;
-   be2_array<float, 3>                                   lastLpfOut;
-   be2_val<float>                                        lpfCoef;
-   be2_val<uint32_t>                                     active;
+   be2_array<virt_ptr<float>, 3>               earlyLine;
+   be2_array<uint32_t, 3>                      earlyPos;
+   be2_val<uint32_t>                           earlyLength;
+   be2_val<uint32_t>                           earlyMaxLength;
+   be2_array<float, 3>                         earlyCoef;
+   be2_array<virt_ptr<float>, 3>               preDelayLine;
+   be2_val<uint32_t>                           preDelayPos;
+   be2_val<uint32_t>                           preDelayLength;
+   be2_val<uint32_t>                           preDelayMaxLength;
+   be2_array<be2_array<virt_ptr<float>, 3>, 3> combLine;
+   be2_array<uint32_t, 3>                      combPos;
+   be2_array<uint32_t, 3>                      combLength;
+   be2_array<uint32_t, 3>                      combMaxLength;
+   be2_array<float, 3>                         combCoef;
+   be2_array<be2_array<virt_ptr<float>, 3>, 2> allpassLine;
+   be2_array<uint32_t, 2>                      allpassPos;
+   be2_array<uint32_t, 2>                      allpassLength;
+   be2_array<uint32_t, 2>                      allpassMaxLength;
+   be2_array<virt_ptr<float>, 3>               lastAllpassLine;
+   be2_array<uint32_t, 3>                      lastAllpassPos;
+   be2_array<uint32_t, 3>                      lastAllpassLength;
+   be2_array<uint32_t, 3>                      lastAllpassMaxLength;
+   be2_val<float>                              allpassCoef;
+   be2_array<float, 3>                         lastLpfOut;
+   be2_val<float>                              lpfCoef;
+   be2_val<uint32_t>                           active;
 
    // user params
-   be2_val<uint32_t>                                     earlyMode;        // early reflection mode
-   be2_val<float>                                        preDelayTimeMax;  // max of pre delay time of fused reverb (sec)
-   be2_val<float>                                        preDelayTime;     // pre delay time of fused reverb (sec)
-   be2_val<uint32_t>                                     fusedMode;        // fused reverb mode
-   be2_val<float>                                        fusedTime;        // fused reverb time (sec)
-   be2_val<float>                                        coloration;       // coloration of all-pass filter (0.f - 1.f)
-   be2_val<float>                                        damping;          // damping of timbre  (0.f - 1.f)
-   be2_val<float>                                        crosstalk;        // crosstalk of each channels
-   be2_val<float>                                        earlyGain;        // output gain of early reflection (0.f - 1.f)
-   be2_val<float>                                        fusedGain;        // output gain of fused reverb (0.f - 1.f)
+   be2_val<uint32_t>                           earlyMode;        // early reflection mode
+   be2_val<float>                              preDelayTimeMax;  // max of pre delay time of fused reverb (sec)
+   be2_val<float>                              preDelayTime;     // pre delay time of fused reverb (sec)
+   be2_val<uint32_t>                           fusedMode;        // fused reverb mode
+   be2_val<float>                              fusedTime;        // fused reverb time (sec)
+   be2_val<float>                              coloration;       // coloration of all-pass filter (0.f - 1.f)
+   be2_val<float>                              damping;          // damping of timbre  (0.f - 1.f)
+   be2_val<float>                              crosstalk;        // crosstalk of each channels
+   be2_val<float>                              earlyGain;        // output gain of early reflection (0.f - 1.f)
+   be2_val<float>                              fusedGain;        // output gain of fused reverb (0.f - 1.f)
 
-   virt_ptr<AXFXBuffers>                                 busIn;
-   virt_ptr<AXFXBuffers>                                 busOut;
-   be2_val<float>                                        outGain;
-   be2_val<float>                                        sendGain;
+   virt_ptr<AXFXBuffers>                       busIn;
+   virt_ptr<AXFXBuffers>                       busOut;
+   be2_val<float>                              outGain;
+   be2_val<float>                              sendGain;
 };
 CHECK_OFFSET(AXFXReverbHi, 0x00, earlyLine);
 CHECK_OFFSET(AXFXReverbHi, 0x0C, earlyPos);
@@ -83,37 +83,37 @@ CHECK_OFFSET(AXFXReverbHi, 0x38, preDelayPos);
 CHECK_OFFSET(AXFXReverbHi, 0x3C, preDelayLength);
 CHECK_OFFSET(AXFXReverbHi, 0x40, preDelayMaxLength);
 CHECK_OFFSET(AXFXReverbHi, 0x44, combLine);
-CHECK_OFFSET(AXFXReverbHi, 0x50, combPos);
-CHECK_OFFSET(AXFXReverbHi, 0x5C, combLength);
-CHECK_OFFSET(AXFXReverbHi, 0x68, combMaxLength);
-CHECK_OFFSET(AXFXReverbHi, 0x74, combCoef);
-CHECK_OFFSET(AXFXReverbHi, 0x80, allpassLine);
-CHECK_OFFSET(AXFXReverbHi, 0x8C, allpassPos);
-CHECK_OFFSET(AXFXReverbHi, 0x94, allpassLength);
-CHECK_OFFSET(AXFXReverbHi, 0x9C, allpassMaxLength);
-CHECK_OFFSET(AXFXReverbHi, 0xA4, lastAllpassLine);
-CHECK_OFFSET(AXFXReverbHi, 0xB0, lastAllpassPos);
-CHECK_OFFSET(AXFXReverbHi, 0xBC, lastAllpassLength);
-CHECK_OFFSET(AXFXReverbHi, 0xC8, lastAllpassMaxLength);
-CHECK_OFFSET(AXFXReverbHi, 0xD4, allpassCoef);
-CHECK_OFFSET(AXFXReverbHi, 0xD8, lastLpfOut);
-CHECK_OFFSET(AXFXReverbHi, 0xE4, lpfCoef);
-CHECK_OFFSET(AXFXReverbHi, 0xE8, active);
-CHECK_OFFSET(AXFXReverbHi, 0xEC, earlyMode);
-CHECK_OFFSET(AXFXReverbHi, 0xF0, preDelayTimeMax);
-CHECK_OFFSET(AXFXReverbHi, 0xF4, preDelayTime);
-CHECK_OFFSET(AXFXReverbHi, 0xF8, fusedMode);
-CHECK_OFFSET(AXFXReverbHi, 0xFC, fusedTime);
-CHECK_OFFSET(AXFXReverbHi, 0x100, coloration);
-CHECK_OFFSET(AXFXReverbHi, 0x104, damping);
-CHECK_OFFSET(AXFXReverbHi, 0x108, crosstalk);
-CHECK_OFFSET(AXFXReverbHi, 0x10C, earlyGain);
-CHECK_OFFSET(AXFXReverbHi, 0x110, fusedGain);
-CHECK_OFFSET(AXFXReverbHi, 0x114, busIn);
-CHECK_OFFSET(AXFXReverbHi, 0x118, busOut);
-CHECK_OFFSET(AXFXReverbHi, 0x11C, outGain);
-CHECK_OFFSET(AXFXReverbHi, 0x120, sendGain);
-CHECK_SIZE(AXFXReverbHi, 0x124);
+CHECK_OFFSET(AXFXReverbHi, 0x68, combPos);
+CHECK_OFFSET(AXFXReverbHi, 0x74, combLength);
+CHECK_OFFSET(AXFXReverbHi, 0x80, combMaxLength);
+CHECK_OFFSET(AXFXReverbHi, 0x8C, combCoef);
+CHECK_OFFSET(AXFXReverbHi, 0x98, allpassLine);
+CHECK_OFFSET(AXFXReverbHi, 0xB0, allpassPos);
+CHECK_OFFSET(AXFXReverbHi, 0xB8, allpassLength);
+CHECK_OFFSET(AXFXReverbHi, 0xC0, allpassMaxLength);
+CHECK_OFFSET(AXFXReverbHi, 0xC8, lastAllpassLine);
+CHECK_OFFSET(AXFXReverbHi, 0xD4, lastAllpassPos);
+CHECK_OFFSET(AXFXReverbHi, 0xE0, lastAllpassLength);
+CHECK_OFFSET(AXFXReverbHi, 0xEC, lastAllpassMaxLength);
+CHECK_OFFSET(AXFXReverbHi, 0xF8, allpassCoef);
+CHECK_OFFSET(AXFXReverbHi, 0xFC, lastLpfOut);
+CHECK_OFFSET(AXFXReverbHi, 0x108, lpfCoef);
+CHECK_OFFSET(AXFXReverbHi, 0x10C, active);
+CHECK_OFFSET(AXFXReverbHi, 0x110, earlyMode);
+CHECK_OFFSET(AXFXReverbHi, 0x114, preDelayTimeMax);
+CHECK_OFFSET(AXFXReverbHi, 0x118, preDelayTime);
+CHECK_OFFSET(AXFXReverbHi, 0x11C, fusedMode);
+CHECK_OFFSET(AXFXReverbHi, 0x120, fusedTime);
+CHECK_OFFSET(AXFXReverbHi, 0x124, coloration);
+CHECK_OFFSET(AXFXReverbHi, 0x128, damping);
+CHECK_OFFSET(AXFXReverbHi, 0x12C, crosstalk);
+CHECK_OFFSET(AXFXReverbHi, 0x130, earlyGain);
+CHECK_OFFSET(AXFXReverbHi, 0x134, fusedGain);
+CHECK_OFFSET(AXFXReverbHi, 0x138, busIn);
+CHECK_OFFSET(AXFXReverbHi, 0x13C, busOut);
+CHECK_OFFSET(AXFXReverbHi, 0x140, outGain);
+CHECK_OFFSET(AXFXReverbHi, 0x144, sendGain);
+CHECK_SIZE(AXFXReverbHi, 0x148);
 
 struct AXFXDelay
 {
@@ -144,6 +144,7 @@ CHECK_SIZE(AXFXDelay, 0x68);
 
 struct AXFXChorus;
 struct AXFXReverbStd;
+struct AXFXReverbMulti;
 
 struct StaticFxData
 {
@@ -208,6 +209,11 @@ AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
 void
 AXFXReverbHiExpCallback(virt_ptr<AXFXBuffers> buffers,
                         virt_ptr<AXFXReverbHi> data);
+
+void
+AXFXMultiChReverbCallback(virt_ptr<AXFXBuffers> buffers,
+                          virt_ptr<AXFXReverbMulti> data,
+                          virt_ptr<AXAuxCallbackData> auxData);
 
 void
 AXFXReverbStdCallback(virt_ptr<AXFXBuffers> buffers,
