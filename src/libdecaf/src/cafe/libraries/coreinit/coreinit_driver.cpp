@@ -39,7 +39,7 @@ unkRegisterSyscall0x3200(virt_ptr<const char> name,
                          virt_ptr<uint32_t> outUnk2)
 {
    // TODO: Syscall 0x3200
-   return 1;
+   return 0;
 }
 
 static int32_t
@@ -47,7 +47,7 @@ unkDeregisterSyscall0x3300(virt_ptr<const char> name,
                            uint32_t nameLen)
 {
    // TODO: Syscall 0x3300
-   return 1;
+   return 0;
 }
 
 
@@ -172,67 +172,75 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    }
 
    // Get module handle for driverInterface.onInit
-   dynloadError =
-      OSDynLoad_AcquireContainingModule(
-         virt_cast<void *>(driverInterface->onInit.getAddress()),
-         OSDynLoad_SectionType::CodeOnly,
-         virt_addrof(driver->interfaceModuleHandles[1]));
-   if (dynloadError != OSDynLoad_Error::OK) {
-      internal::COSWarn(
-         COSReportModule::Unknown1,
-         fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoInit() @ {}",
-            name, driverInterface->onInit));
-      error = static_cast<OSDriver_Error>(dynloadError);
-      goto error;
+   if (driverInterface->onInit) {
+      dynloadError =
+         OSDynLoad_AcquireContainingModule(
+            virt_cast<void *>(driverInterface->onInit.getAddress()),
+            OSDynLoad_SectionType::CodeOnly,
+            virt_addrof(driver->interfaceModuleHandles[1]));
+      if (dynloadError != OSDynLoad_Error::OK) {
+         internal::COSWarn(
+            COSReportModule::Unknown1,
+            fmt::format(
+               "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoInit() @ {}",
+               name, driverInterface->onInit));
+         error = static_cast<OSDriver_Error>(dynloadError);
+         goto error;
+      }
    }
 
    // Get module handle for driverInterface.onAcquiredForeground
-   dynloadError =
-      OSDynLoad_AcquireContainingModule(
-         virt_cast<void *>(driverInterface->onAcquiredForeground.getAddress()),
-         OSDynLoad_SectionType::CodeOnly,
-         virt_addrof(driver->interfaceModuleHandles[2]));
-   if (dynloadError != OSDynLoad_Error::OK) {
-      internal::COSWarn(
-         COSReportModule::Unknown1,
-         fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnAcquiredForeground() @ {}",
-            name, driverInterface->onAcquiredForeground));
-      error = static_cast<OSDriver_Error>(dynloadError);
-      goto error;
+   if (driverInterface->onAcquiredForeground) {
+      dynloadError =
+         OSDynLoad_AcquireContainingModule(
+            virt_cast<void *>(driverInterface->onAcquiredForeground.getAddress()),
+            OSDynLoad_SectionType::CodeOnly,
+            virt_addrof(driver->interfaceModuleHandles[2]));
+      if (dynloadError != OSDynLoad_Error::OK) {
+         internal::COSWarn(
+            COSReportModule::Unknown1,
+            fmt::format(
+               "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnAcquiredForeground() @ {}",
+               name, driverInterface->onAcquiredForeground));
+         error = static_cast<OSDriver_Error>(dynloadError);
+         goto error;
+      }
    }
 
    // Get module handle for driverInterface.onReleasedForeground
-   dynloadError =
-      OSDynLoad_AcquireContainingModule(
-         virt_cast<void *>(driverInterface->onReleasedForeground.getAddress()),
-         OSDynLoad_SectionType::CodeOnly,
-         virt_addrof(driver->interfaceModuleHandles[3]));
-   if (dynloadError != OSDynLoad_Error::OK) {
-      internal::COSWarn(
-         COSReportModule::Unknown1,
-         fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnReleasedForeground() @ {}",
-            name, driverInterface->onReleasedForeground));
-      error = static_cast<OSDriver_Error>(dynloadError);
-      goto error;
+   if (driverInterface->onReleasedForeground) {
+      dynloadError =
+         OSDynLoad_AcquireContainingModule(
+            virt_cast<void *>(driverInterface->onReleasedForeground.getAddress()),
+            OSDynLoad_SectionType::CodeOnly,
+            virt_addrof(driver->interfaceModuleHandles[3]));
+      if (dynloadError != OSDynLoad_Error::OK) {
+         internal::COSWarn(
+            COSReportModule::Unknown1,
+            fmt::format(
+               "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" OnReleasedForeground() @ {}",
+               name, driverInterface->onReleasedForeground));
+         error = static_cast<OSDriver_Error>(dynloadError);
+         goto error;
+      }
    }
 
    // Get module handle for driverInterface.onDone
-   dynloadError =
-      OSDynLoad_AcquireContainingModule(
-         virt_cast<void *>(driverInterface->onDone.getAddress()),
-         OSDynLoad_SectionType::CodeOnly,
-         virt_addrof(driver->interfaceModuleHandles[4]));
-   if (dynloadError != OSDynLoad_Error::OK) {
-      internal::COSWarn(
-         COSReportModule::Unknown1,
-         fmt::format(
-            "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoDone() @ {}",
-            name, driverInterface->onDone));
-      error = static_cast<OSDriver_Error>(dynloadError);
-      goto error;
+   if (driverInterface->onDone) {
+      dynloadError =
+         OSDynLoad_AcquireContainingModule(
+            virt_cast<void *>(driverInterface->onDone.getAddress()),
+            OSDynLoad_SectionType::CodeOnly,
+            virt_addrof(driver->interfaceModuleHandles[4]));
+      if (dynloadError != OSDynLoad_Error::OK) {
+         internal::COSWarn(
+            COSReportModule::Unknown1,
+            fmt::format(
+               "*** OSDriver_Register - failed to acquire containing module for driver \"{}\" AutoDone() @ {}",
+               name, driverInterface->onDone));
+         error = static_cast<OSDriver_Error>(dynloadError);
+         goto error;
+      }
    }
 
    OSUninterruptibleSpinLock_Acquire(virt_addrof(sDriverData->lock));
@@ -254,9 +262,8 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
                                nameLen,
                                virt_addrof(driver->unk0x40),
                                virt_addrof(driver->unk0x44)));
+   OSLogPrintf(0, 1, 0, "%s: Reg=%s, ms=%d", "OSDriver_Register", name, 0);
    if (dynloadError == OSDynLoad_Error::OK) {
-      OSLogPrintf(0, 1, 0, "%s: Reg=%s, ms=%d", "OSDriver_Register", name, 0);
-
       // Initialise driver data
       if (sDriverData->didInit) {
          driver->unk0x08 = 1u;
