@@ -532,7 +532,7 @@ initialiseStaticPmThreadData()
          dummyRM,
          //{ ss("/dev/fpd"),             1u, rm(0x180000, ProcessId::FPD, 1) },
          dummyRM,
-         //{ ss("/dev/acp_main"),        1u, rm(0x180000, ProcessId::ACP, 1) },
+         { ss("/dev/acp_main"),        1u, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,
          //{ ss("/dev/pdm"),             1u, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,
