@@ -243,6 +243,12 @@ struct function_traits<ReturnType(ObjectType::*)(ArgTypes...)>
    using object_info = param_info_t<virt_ptr<ObjectType>, RegisterType::Gpr32, 3>;
 };
 
+template<typename ObjectType, typename ReturnType, typename... ArgTypes>
+struct function_traits<ReturnType(ObjectType::*)(ArgTypes...) const> : function_traits<ReturnType(ObjectType::*)(ArgTypes...)>
+{
+   static constexpr auto is_const_member_function = true;
+};
+
 template<typename ReturnType, typename... ArgTypes>
 struct function_traits<ReturnType(*)(ArgTypes...)> : function_traits<ReturnType(ArgTypes...)>
 {
