@@ -19,6 +19,7 @@ private:
    void registerDownloadedCommunityDataSymbols();
    void registerDownloadedTopicDataSymbols();
    void registerInitSymbols();
+   void registerInitializeParamSymbols();
    void registerUploadedDataBaseSymbols();
    void registerUploadedPostDataSymbols();
 };

@@ -30,6 +30,7 @@ Library::registerSymbols()
    registerDownloadedCommunityDataSymbols();
    registerDownloadedTopicDataSymbols();
    registerInitSymbols();
+   registerInitializeParamSymbols();
    registerUploadedDataBaseSymbols();
    registerUploadedPostDataSymbols();
 }

@@ -1,14 +1,11 @@
 #pragma once
+#include "nn_olv_initializeparam.h"
+
 #include "cafe/libraries/nn_result.h"
 #include <libcpu/be2_struct.h>
 
 namespace cafe::nn::olv
 {
-
-struct InitializeParam
-{
-};
-UNKNOWN_SIZE(InitializeParam);
 
 struct MainAppParam
 {
