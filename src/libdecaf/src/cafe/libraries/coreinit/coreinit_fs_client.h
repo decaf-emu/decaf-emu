@@ -61,19 +61,6 @@ CHECK_SIZE(FSClientBodyLink, 0x8);
 
 
 /**
- * A queue structure to contain FSClientBody.
- */
-struct FSClientBodyQueue
-{
-   be2_virt_ptr<FSClientBody> head;
-   be2_virt_ptr<FSClientBody> tail;
-};
-CHECK_OFFSET(FSClientBodyQueue, 0x00, head);
-CHECK_OFFSET(FSClientBodyQueue, 0x04, tail);
-CHECK_SIZE(FSClientBodyQueue, 0x08);
-
-
-/**
  * The actual data of an FSClient.
  */
 struct FSClientBody
