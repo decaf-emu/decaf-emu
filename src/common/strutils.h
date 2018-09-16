@@ -102,7 +102,10 @@ iequals(const std::string_view &a, const std::string_view &b)
 
 // A strncpy which does not warn on Windows
 inline void
-string_copy(char *dst, size_t dstSize, const char *src, size_t maxCount)
+string_copy(char *dst,
+            size_t dstSize,
+            const char *src,
+            size_t maxCount)
 {
 #ifdef PLATFORM_WINDOWS
    strncpy_s(dst, dstSize, src, maxCount);
@@ -112,7 +115,29 @@ string_copy(char *dst, size_t dstSize, const char *src, size_t maxCount)
 }
 
 inline void
-string_copy(char *dst, const char *src, size_t maxCount)
+string_copy(char *dst,
+            const char *src,
+            size_t maxCount)
 {
    string_copy(dst, maxCount, src, maxCount);
+}
+
+// strcpy_s for char16_t
+inline void
+char16_copy(char16_t *dst,
+            size_t dstSize,
+            const char16_t *src,
+            size_t maxCount)
+{
+   if (dstSize <= maxCount) {
+      maxCount = dstSize - 1;
+   }
+
+   auto i = size_t { 0 };
+   while (src[i] && i < maxCount) {
+      dst[i] = src[i];
+      i++;
+   }
+
+   dst[i] = char16_t { 0 };
 }
