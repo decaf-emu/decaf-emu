@@ -6,6 +6,7 @@
 #include <common/make_array.h>
 #include <common/strutils.h>
 #include <fmt/format.h>
+#include <fmt/printf.h>
 
 namespace cafe::coreinit
 {
@@ -114,9 +115,9 @@ formatStringV(virt_ptr<const char> fmt,
       case 'c':
          formatter = "%" + flags + width + precision + length + specifier;
          if (length.compare("ll") == 0 && specifier != 'c') {
-            fmt::format_to(output, formatter.c_str(), args.next<uint64_t>());
+            fmt::format_to(output, "{}", fmt::sprintf(formatter, args.next<uint64_t>()));
          } else {
-            fmt::format_to(output, formatter.c_str(), args.next<uint32_t>());
+            fmt::format_to(output, "{}", fmt::sprintf(formatter, args.next<uint32_t>()));
          }
          break;
       case 'g':
@@ -129,9 +130,9 @@ formatStringV(virt_ptr<const char> fmt,
       case 'A':
          formatter = "%" + flags + width + precision + length + specifier;
          if (length.compare("L") == 0) {
-            fmt::format_to(output, formatter.c_str(), static_cast<long double>(args.next<double>()));
+            fmt::format_to(output, "{}", fmt::sprintf(formatter, static_cast<long double>(args.next<double>())));
          } else {
-            fmt::format_to(output, formatter.c_str(), args.next<double>());
+            fmt::format_to(output, "{}", fmt::sprintf(formatter, args.next<double>()));
          }
          break;
       case 'p':
