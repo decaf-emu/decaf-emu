@@ -18,6 +18,7 @@ protected:
 private:
    void registerDownloadedCommunityDataSymbols();
    void registerDownloadedDataBaseSymbols();
+   void registerDownloadedPostDataSymbols();
    void registerDownloadedTopicDataSymbols();
    void registerInitSymbols();
    void registerInitializeParamSymbols();
