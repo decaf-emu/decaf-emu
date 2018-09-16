@@ -24,6 +24,7 @@ protected:
 
 private:
    void registerAxfxSymbols();
+   void registerMixSymbols();
 };
 
 } // namespace cafe::snduser2

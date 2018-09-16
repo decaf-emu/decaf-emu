@@ -18,6 +18,7 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerAxfxSymbols();
+   registerMixSymbols();
 }
 
 } // namespace cafe::snduser2
