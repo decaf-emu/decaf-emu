@@ -39,25 +39,29 @@ AXFXChorusExpGetMemSize(virt_ptr<AXFXChorus> chorus)
 int32_t
 AXFXDelayGetMemSize(virt_ptr<AXFXDelay> delay)
 {
-   return sizeof(*delay);
+   decaf_warn_stub();
+   return 32;
 }
 
 int32_t
 AXFXDelayExpGetMemSize(virt_ptr<AXFXDelay> delay)
 {
-   return sizeof(*delay);
+   decaf_warn_stub();
+   return 32;
 }
 
 int32_t
 AXFXReverbHiGetMemSize(virt_ptr<AXFXReverbHi> reverb)
 {
-   return sizeof(*reverb);
+   decaf_warn_stub();
+   return 32;
 }
 
 int32_t
 AXFXReverbHiExpGetMemSize(virt_ptr<AXFXReverbHi> reverb)
 {
-   return sizeof(*reverb);
+   decaf_warn_stub();
+   return 32;
 }
 
 int32_t
