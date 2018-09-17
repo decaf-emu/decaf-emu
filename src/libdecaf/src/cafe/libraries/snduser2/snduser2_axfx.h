@@ -42,9 +42,6 @@ int32_t
 AXFXChorusExpGetMemSize(virt_ptr<AXFXChorus> chorus);
 
 int32_t
-AXFXDelayExpGetMemSize(virt_ptr<AXFXDelay> delay);
-
-int32_t
 AXFXReverbHiGetMemSize(virt_ptr<AXFXReverbHi> reverb);
 
 int32_t
@@ -64,10 +61,6 @@ AXFXChorusCallback(virt_ptr<AXFXBuffers> buffers,
 void
 AXFXChorusExpCallback(virt_ptr<AXFXBuffers> buffers,
                       virt_ptr<AXFXChorus> data);
-
-void
-AXFXDelayExpCallback(virt_ptr<AXFXBuffers> buffers,
-                     virt_ptr<AXFXDelay> data);
 
 void
 AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
@@ -99,9 +92,6 @@ BOOL
 AXFXChorusExpInit(virt_ptr<AXFXChorus> chorus);
 
 BOOL
-AXFXDelayExpInit(virt_ptr<AXFXDelay> delay);
-
-BOOL
 AXFXReverbHiExpInit(virt_ptr<AXFXReverbHi> reverb);
 
 BOOL
@@ -115,9 +105,6 @@ AXFXChorusShutdown(virt_ptr<AXFXChorus> chorus);
 
 void
 AXFXChorusExpShutdown(virt_ptr<AXFXChorus> chorus);
-
-void
-AXFXDelayExpShutdown(virt_ptr<AXFXDelay> delay);
 
 void
 AXFXReverbHiExpShutdown(virt_ptr<AXFXReverbHi> reverb);
