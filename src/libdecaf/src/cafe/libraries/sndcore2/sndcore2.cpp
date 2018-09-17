@@ -20,8 +20,6 @@ Library::registerSymbols()
    registerAiSymbols();
    registerConfigSymbols();
    registerDeviceSymbols();
-   registerFxSymbols();
-   registerMixSymbols();
    registerRmtSymbols();
    registerVoiceSymbols();
    registerVsSymbols();

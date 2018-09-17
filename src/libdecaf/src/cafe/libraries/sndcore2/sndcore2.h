@@ -26,8 +26,6 @@ private:
    void registerAiSymbols();
    void registerConfigSymbols();
    void registerDeviceSymbols();
-   void registerFxSymbols();
-   void registerMixSymbols();
    void registerRmtSymbols();
    void registerVoiceSymbols();
    void registerVsSymbols();
