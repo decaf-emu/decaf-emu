@@ -24,6 +24,7 @@ protected:
 
 private:
    void registerAxfxSymbols();
+   void registerAxfxChorusExpSymbols();
    void registerAxfxDelaySymbols();
    void registerAxfxDelayExpSymbols();
    void registerAxfxHooksSymbols();
