@@ -25,6 +25,7 @@ Library::registerSymbols()
    registerAxfxDelaySymbols();
    registerAxfxDelayExpSymbols();
    registerAxfxHooksSymbols();
+   registerAxfxReverbStdSymbols();
    registerAxfxReverbStdExpSymbols();
    registerMixSymbols();
 }

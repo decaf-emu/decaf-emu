@@ -19,13 +19,6 @@ AXFXReverbHiExpGetMemSize(virt_ptr<AXFXReverbHi> reverb)
    return 32;
 }
 
-int32_t
-AXFXReverbStdGetMemSize(virt_ptr<AXFXReverbStd> reverb)
-{
-   decaf_warn_stub();
-   return 32;
-}
-
 void
 AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
                      virt_ptr<AXFXReverbHi> data,
@@ -49,14 +42,6 @@ AXFXMultiChReverbCallback(virt_ptr<AXFXBuffers> buffers,
    decaf_warn_stub();
 }
 
-void
-AXFXReverbStdCallback(virt_ptr<AXFXBuffers> buffers,
-                      virt_ptr<AXFXReverbStd> data,
-                      virt_ptr<AXAuxCallbackData> auxData)
-{
-   decaf_warn_stub();
-}
-
 BOOL
 AXFXReverbHiInit(virt_ptr<AXFXReverbHi> reverb)
 {
@@ -72,13 +57,6 @@ AXFXReverbHiExpInit(virt_ptr<AXFXReverbHi> reverb)
 }
 
 BOOL
-AXFXReverbStdInit(virt_ptr<AXFXReverbHi> reverb)
-{
-   decaf_warn_stub();
-   return TRUE;
-}
-
-BOOL
 AXFXReverbHiShutdown(virt_ptr<AXFXReverbHi> reverb)
 {
    decaf_warn_stub();
@@ -87,12 +65,6 @@ AXFXReverbHiShutdown(virt_ptr<AXFXReverbHi> reverb)
 
 void
 AXFXReverbHiExpShutdown(virt_ptr<AXFXReverbHi> reverb)
-{
-   decaf_warn_stub();
-}
-
-void
-AXFXReverbStdShutdown(virt_ptr<AXFXReverbHi> reverb)
 {
    decaf_warn_stub();
 }
@@ -130,17 +102,13 @@ Library::registerAxfxSymbols()
 {
    RegisterFunctionExport(AXFXReverbHiGetMemSize);
    RegisterFunctionExport(AXFXReverbHiExpGetMemSize);
-   RegisterFunctionExport(AXFXReverbStdGetMemSize);
    RegisterFunctionExport(AXFXReverbHiCallback);
    RegisterFunctionExport(AXFXReverbHiExpCallback);
    RegisterFunctionExport(AXFXMultiChReverbCallback);
-   RegisterFunctionExport(AXFXReverbStdCallback);
    RegisterFunctionExport(AXFXReverbHiInit);
    RegisterFunctionExport(AXFXReverbHiExpInit);
-   RegisterFunctionExport(AXFXReverbStdInit);
    RegisterFunctionExport(AXFXReverbHiShutdown);
    RegisterFunctionExport(AXFXReverbHiExpShutdown);
-   RegisterFunctionExport(AXFXReverbStdShutdown);
    RegisterFunctionExport(AXFXReverbHiSettings);
    RegisterFunctionExport(AXFXMultiChReverbInit);
    RegisterFunctionExport(AXARTServiceSounds);
