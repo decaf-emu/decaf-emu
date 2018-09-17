@@ -26,13 +26,6 @@ AXFXReverbStdGetMemSize(virt_ptr<AXFXReverbStd> reverb)
    return 32;
 }
 
-int32_t
-AXFXReverbStdExpGetMemSize(virt_ptr<AXFXReverbStd> reverb)
-{
-   decaf_warn_stub();
-   return 32;
-}
-
 void
 AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
                      virt_ptr<AXFXReverbHi> data,
@@ -64,13 +57,6 @@ AXFXReverbStdCallback(virt_ptr<AXFXBuffers> buffers,
    decaf_warn_stub();
 }
 
-void
-AXFXReverbStdExpCallback(virt_ptr<AXFXBuffers> buffers,
-                         virt_ptr<AXFXReverbStd> data)
-{
-   decaf_warn_stub();
-}
-
 BOOL
 AXFXReverbHiInit(virt_ptr<AXFXReverbHi> reverb)
 {
@@ -93,13 +79,6 @@ AXFXReverbStdInit(virt_ptr<AXFXReverbHi> reverb)
 }
 
 BOOL
-AXFXReverbStdExpInit(virt_ptr<AXFXReverbHi> reverb)
-{
-   decaf_warn_stub();
-   return TRUE;
-}
-
-BOOL
 AXFXReverbHiShutdown(virt_ptr<AXFXReverbHi> reverb)
 {
    decaf_warn_stub();
@@ -114,12 +93,6 @@ AXFXReverbHiExpShutdown(virt_ptr<AXFXReverbHi> reverb)
 
 void
 AXFXReverbStdShutdown(virt_ptr<AXFXReverbHi> reverb)
-{
-   decaf_warn_stub();
-}
-
-void
-AXFXReverbStdExpShutdown(virt_ptr<AXFXReverbHi> reverb)
 {
    decaf_warn_stub();
 }
@@ -158,20 +131,16 @@ Library::registerAxfxSymbols()
    RegisterFunctionExport(AXFXReverbHiGetMemSize);
    RegisterFunctionExport(AXFXReverbHiExpGetMemSize);
    RegisterFunctionExport(AXFXReverbStdGetMemSize);
-   RegisterFunctionExport(AXFXReverbStdExpGetMemSize);
    RegisterFunctionExport(AXFXReverbHiCallback);
    RegisterFunctionExport(AXFXReverbHiExpCallback);
    RegisterFunctionExport(AXFXMultiChReverbCallback);
    RegisterFunctionExport(AXFXReverbStdCallback);
-   RegisterFunctionExport(AXFXReverbStdExpCallback);
    RegisterFunctionExport(AXFXReverbHiInit);
    RegisterFunctionExport(AXFXReverbHiExpInit);
    RegisterFunctionExport(AXFXReverbStdInit);
-   RegisterFunctionExport(AXFXReverbStdExpInit);
    RegisterFunctionExport(AXFXReverbHiShutdown);
    RegisterFunctionExport(AXFXReverbHiExpShutdown);
    RegisterFunctionExport(AXFXReverbStdShutdown);
-   RegisterFunctionExport(AXFXReverbStdExpShutdown);
    RegisterFunctionExport(AXFXReverbHiSettings);
    RegisterFunctionExport(AXFXMultiChReverbInit);
    RegisterFunctionExport(AXARTServiceSounds);

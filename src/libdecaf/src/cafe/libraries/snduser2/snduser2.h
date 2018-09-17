@@ -29,6 +29,7 @@ private:
    void registerAxfxDelaySymbols();
    void registerAxfxDelayExpSymbols();
    void registerAxfxHooksSymbols();
+   void registerAxfxReverbStdExpSymbols();
    void registerMixSymbols();
 };
 
