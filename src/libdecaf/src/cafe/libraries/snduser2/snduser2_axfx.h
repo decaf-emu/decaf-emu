@@ -16,9 +16,6 @@ enum AXFXSampleRate
    Rate48khz = 2,
 };
 
-using AXFXAllocFuncPtr = virt_func_ptr<virt_ptr<void>(uint32_t size)>;
-using AXFXFreeFuncPtr = virt_func_ptr<void(virt_ptr<void> ptr)>;
-
 struct AXAuxCallbackData
 {
    be2_val<uint32_t> channels;
@@ -38,13 +35,6 @@ CHECK_OFFSET(AXFXBuffers, 0x00, left);
 CHECK_OFFSET(AXFXBuffers, 0x04, right);
 CHECK_OFFSET(AXFXBuffers, 0x08, surround);
 CHECK_SIZE(AXFXBuffers, 0x0C);
-
-void
-AXFXSetHooks(AXFXAllocFuncPtr allocFn,
-             AXFXFreeFuncPtr freeFn);
-void
-AXFXGetHooks(virt_ptr<AXFXAllocFuncPtr> allocFn,
-             virt_ptr<AXFXFreeFuncPtr> freeFn);
 
 int32_t
 AXFXChorusGetMemSize(virt_ptr<AXFXChorus> chorus);

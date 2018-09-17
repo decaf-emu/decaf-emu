@@ -24,6 +24,7 @@ protected:
 
 private:
    void registerAxfxSymbols();
+   void registerAxfxHooksSymbols();
    void registerMixSymbols();
 };
 

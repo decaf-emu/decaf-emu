@@ -5,31 +5,6 @@
 namespace cafe::snduser2
 {
 
-struct StaticFxData
-{
-   be2_val<AXFXAllocFuncPtr> allocFuncPtr;
-   be2_val<AXFXFreeFuncPtr> freeFuncPtr;
-};
-
-static virt_ptr<StaticFxData>
-sFxData = nullptr;
-
-void
-AXFXSetHooks(AXFXAllocFuncPtr allocFn,
-             AXFXFreeFuncPtr freeFn)
-{
-   sFxData->allocFuncPtr = allocFn;
-   sFxData->freeFuncPtr = freeFn;
-}
-
-void
-AXFXGetHooks(virt_ptr<AXFXAllocFuncPtr> allocFn,
-             virt_ptr<AXFXFreeFuncPtr> freeFn)
-{
-   *allocFn = sFxData->allocFuncPtr;
-   *freeFn = sFxData->freeFuncPtr;
-}
-
 int32_t
 AXFXChorusGetMemSize(virt_ptr<AXFXChorus> chorus)
 {
@@ -290,8 +265,6 @@ SPGetSoundEntry(virt_ptr<void> table, uint32_t index)
 void
 Library::registerAxfxSymbols()
 {
-   RegisterFunctionExport(AXFXSetHooks);
-   RegisterFunctionExport(AXFXGetHooks);
    RegisterFunctionExport(AXFXChorusGetMemSize);
    RegisterFunctionExport(AXFXChorusExpGetMemSize);
    RegisterFunctionExport(AXFXDelayGetMemSize);
@@ -329,8 +302,6 @@ Library::registerAxfxSymbols()
    RegisterFunctionExport(AXFXMultiChReverbInit);
    RegisterFunctionExport(AXARTServiceSounds);
    RegisterFunctionExport(SPGetSoundEntry);
-
-   RegisterDataInternal(sFxData);
 }
 
 } // namespace cafe::snduser2
