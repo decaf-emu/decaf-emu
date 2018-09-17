@@ -24,12 +24,12 @@ protected:
 
 private:
    void registerAxArtSymbols();
-   void registerAxfxSymbols();
    void registerAxfxChorusSymbols();
    void registerAxfxChorusExpSymbols();
    void registerAxfxDelaySymbols();
    void registerAxfxDelayExpSymbols();
    void registerAxfxHooksSymbols();
+   void registerAxfxMultiChReverbSymbols();
    void registerAxfxReverbHiSymbols();
    void registerAxfxReverbHiExpSymbols();
    void registerAxfxReverbStdSymbols();

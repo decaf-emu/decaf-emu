@@ -20,12 +20,12 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerAxArtSymbols();
-   registerAxfxSymbols();
    registerAxfxChorusSymbols();
    registerAxfxChorusExpSymbols();
    registerAxfxDelaySymbols();
    registerAxfxDelayExpSymbols();
    registerAxfxHooksSymbols();
+   registerAxfxMultiChReverbSymbols();
    registerAxfxReverbHiSymbols();
    registerAxfxReverbHiExpSymbols();
    registerAxfxReverbStdSymbols();

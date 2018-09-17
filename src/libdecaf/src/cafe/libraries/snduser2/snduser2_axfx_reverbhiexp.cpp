@@ -88,7 +88,7 @@ AXFXReverbHiExpGetMemSize(virt_ptr<AXFXReverbHiExp> reverb)
       perChanSamples * 3 +
       ReverbHiMemSizeSamplesTable[53] + ReverbHiMemSizeSamplesTable[54] + ReverbHiMemSizeSamplesTable[55];
 
-   return sizeof(int32_t) * numSamples;
+   return static_cast<int32_t>(sizeof(int32_t) * numSamples);
 }
 
 BOOL

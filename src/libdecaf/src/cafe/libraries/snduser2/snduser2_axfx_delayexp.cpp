@@ -13,7 +13,9 @@ int32_t
 AXFXDelayExpGetMemSize(virt_ptr<AXFXDelayExp> delay)
 {
    auto samplersPerMS = AXGetInputSamplesPerSec() / 1000.0f;
-   return 3 * sizeof(int32_t) * delay->userDelayMS * samplersPerMS;
+   auto perChannelSamples = delay->userDelayMS * samplersPerMS;
+   auto numSamples = 3 * perChannelSamples;
+   return static_cast<int32_t>(sizeof(int32_t) * numSamples);
 }
 
 BOOL

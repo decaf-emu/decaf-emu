@@ -66,7 +66,7 @@ AXFXReverbStdExpGetMemSize(virt_ptr<AXFXReverbStdExp> reverb)
    auto numSamples =
       3 * perChanSamples;
 
-   return sizeof(int32_t) * numSamples;
+   return static_cast<int32_t>(sizeof(int32_t) * numSamples);
 }
 
 BOOL
