@@ -4,7 +4,6 @@
 namespace cafe::snduser2
 {
 
-struct AXFXDelay;
 struct AXFXChorus;
 struct AXFXReverbHi;
 struct AXFXReverbMulti;
@@ -43,9 +42,6 @@ int32_t
 AXFXChorusExpGetMemSize(virt_ptr<AXFXChorus> chorus);
 
 int32_t
-AXFXDelayGetMemSize(virt_ptr<AXFXDelay> delay);
-
-int32_t
 AXFXDelayExpGetMemSize(virt_ptr<AXFXDelay> delay);
 
 int32_t
@@ -68,11 +64,6 @@ AXFXChorusCallback(virt_ptr<AXFXBuffers> buffers,
 void
 AXFXChorusExpCallback(virt_ptr<AXFXBuffers> buffers,
                       virt_ptr<AXFXChorus> data);
-
-void
-AXFXDelayCallback(virt_ptr<AXFXBuffers> buffers,
-                  virt_ptr<AXFXDelay> data,
-                  virt_ptr<AXAuxCallbackData> auxData);
 
 void
 AXFXDelayExpCallback(virt_ptr<AXFXBuffers> buffers,
@@ -108,9 +99,6 @@ BOOL
 AXFXChorusExpInit(virt_ptr<AXFXChorus> chorus);
 
 BOOL
-AXFXDelayInit(virt_ptr<AXFXDelay> delay);
-
-BOOL
 AXFXDelayExpInit(virt_ptr<AXFXDelay> delay);
 
 BOOL
@@ -127,9 +115,6 @@ AXFXChorusShutdown(virt_ptr<AXFXChorus> chorus);
 
 void
 AXFXChorusExpShutdown(virt_ptr<AXFXChorus> chorus);
-
-void
-AXFXDelayShutdown(virt_ptr<AXFXDelay> delay);
 
 void
 AXFXDelayExpShutdown(virt_ptr<AXFXDelay> delay);

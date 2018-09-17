@@ -20,13 +20,6 @@ AXFXChorusExpGetMemSize(virt_ptr<AXFXChorus> chorus)
 }
 
 int32_t
-AXFXDelayGetMemSize(virt_ptr<AXFXDelay> delay)
-{
-   decaf_warn_stub();
-   return 32;
-}
-
-int32_t
 AXFXDelayExpGetMemSize(virt_ptr<AXFXDelay> delay)
 {
    decaf_warn_stub();
@@ -72,14 +65,6 @@ AXFXChorusCallback(virt_ptr<AXFXBuffers> buffers,
 void
 AXFXChorusExpCallback(virt_ptr<AXFXBuffers> buffers,
                       virt_ptr<AXFXChorus> data)
-{
-   decaf_warn_stub();
-}
-
-void
-AXFXDelayCallback(virt_ptr<AXFXBuffers> buffers,
-                  virt_ptr<AXFXDelay> data,
-                  virt_ptr<AXAuxCallbackData> auxData)
 {
    decaf_warn_stub();
 }
@@ -144,13 +129,6 @@ AXFXChorusExpInit(virt_ptr<AXFXChorus> chorus)
 }
 
 BOOL
-AXFXDelayInit(virt_ptr<AXFXDelay> delay)
-{
-   decaf_warn_stub();
-   return TRUE;
-}
-
-BOOL
 AXFXDelayExpInit(virt_ptr<AXFXDelay> delay)
 {
    decaf_warn_stub();
@@ -193,12 +171,6 @@ AXFXChorusShutdown(virt_ptr<AXFXChorus> chorus)
 
 void
 AXFXChorusExpShutdown(virt_ptr<AXFXChorus> chorus)
-{
-   decaf_warn_stub();
-}
-
-void
-AXFXDelayShutdown(virt_ptr<AXFXDelay> delay)
 {
    decaf_warn_stub();
 }
@@ -267,7 +239,6 @@ Library::registerAxfxSymbols()
 {
    RegisterFunctionExport(AXFXChorusGetMemSize);
    RegisterFunctionExport(AXFXChorusExpGetMemSize);
-   RegisterFunctionExport(AXFXDelayGetMemSize);
    RegisterFunctionExport(AXFXDelayExpGetMemSize);
    RegisterFunctionExport(AXFXReverbHiGetMemSize);
    RegisterFunctionExport(AXFXReverbHiExpGetMemSize);
@@ -275,7 +246,6 @@ Library::registerAxfxSymbols()
    RegisterFunctionExport(AXFXReverbStdExpGetMemSize);
    RegisterFunctionExport(AXFXChorusCallback);
    RegisterFunctionExport(AXFXChorusExpCallback);
-   RegisterFunctionExport(AXFXDelayCallback);
    RegisterFunctionExport(AXFXDelayExpCallback);
    RegisterFunctionExport(AXFXReverbHiCallback);
    RegisterFunctionExport(AXFXReverbHiExpCallback);
@@ -284,7 +254,6 @@ Library::registerAxfxSymbols()
    RegisterFunctionExport(AXFXReverbStdExpCallback);
    RegisterFunctionExport(AXFXChorusInit);
    RegisterFunctionExport(AXFXChorusExpInit);
-   RegisterFunctionExport(AXFXDelayInit);
    RegisterFunctionExport(AXFXDelayExpInit);
    RegisterFunctionExport(AXFXReverbHiInit);
    RegisterFunctionExport(AXFXReverbHiExpInit);
@@ -292,7 +261,6 @@ Library::registerAxfxSymbols()
    RegisterFunctionExport(AXFXReverbStdExpInit);
    RegisterFunctionExport(AXFXChorusShutdown);
    RegisterFunctionExport(AXFXChorusExpShutdown);
-   RegisterFunctionExport(AXFXDelayShutdown);
    RegisterFunctionExport(AXFXDelayExpShutdown);
    RegisterFunctionExport(AXFXReverbHiShutdown);
    RegisterFunctionExport(AXFXReverbHiExpShutdown);
