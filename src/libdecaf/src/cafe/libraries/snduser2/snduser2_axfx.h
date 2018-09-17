@@ -46,8 +46,4 @@ AXFXMultiChReverbInit(virt_ptr<AXFXReverbMulti> reverb,
 void
 AXARTServiceSounds();
 
-virt_ptr<void>
-SPGetSoundEntry(virt_ptr<void> table,
-                uint32_t index);
-
 } // namespace cafe::snduser2

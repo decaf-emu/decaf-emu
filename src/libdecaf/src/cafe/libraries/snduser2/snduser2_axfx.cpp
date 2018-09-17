@@ -27,20 +27,12 @@ AXARTServiceSounds()
 {
 }
 
-virt_ptr<void>
-SPGetSoundEntry(virt_ptr<void> table, uint32_t index)
-{
-   decaf_warn_stub();
-   return NULL;
-}
-
 void
 Library::registerAxfxSymbols()
 {
    RegisterFunctionExport(AXFXMultiChReverbCallback);
    RegisterFunctionExport(AXFXMultiChReverbInit);
    RegisterFunctionExport(AXARTServiceSounds);
-   RegisterFunctionExport(SPGetSoundEntry);
 }
 
 } // namespace cafe::snduser2

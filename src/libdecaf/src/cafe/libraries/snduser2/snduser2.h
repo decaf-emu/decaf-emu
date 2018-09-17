@@ -34,6 +34,7 @@ private:
    void registerAxfxReverbStdSymbols();
    void registerAxfxReverbStdExpSymbols();
    void registerMixSymbols();
+   void registerSpSymbols();
 };
 
 } // namespace cafe::snduser2

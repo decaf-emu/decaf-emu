@@ -30,6 +30,7 @@ Library::registerSymbols()
    registerAxfxReverbStdSymbols();
    registerAxfxReverbStdExpSymbols();
    registerMixSymbols();
+   registerSpSymbols();
 }
 
 } // namespace cafe::snduser2
