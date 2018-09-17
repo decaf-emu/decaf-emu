@@ -23,6 +23,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerAxArtSymbols();
    void registerAxfxSymbols();
    void registerAxfxChorusSymbols();
    void registerAxfxChorusExpSymbols();

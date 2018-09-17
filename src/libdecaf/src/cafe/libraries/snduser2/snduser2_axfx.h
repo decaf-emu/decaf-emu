@@ -43,7 +43,4 @@ AXFXMultiChReverbInit(virt_ptr<AXFXReverbMulti> reverb,
                       uint32_t unk,
                       AXFXSampleRate sampleRate);
 
-void
-AXARTServiceSounds();
-
 } // namespace cafe::snduser2

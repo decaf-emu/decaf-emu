@@ -19,6 +19,7 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
+   registerAxArtSymbols();
    registerAxfxSymbols();
    registerAxfxChorusSymbols();
    registerAxfxChorusExpSymbols();

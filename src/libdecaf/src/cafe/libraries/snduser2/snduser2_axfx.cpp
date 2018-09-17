@@ -23,16 +23,10 @@ AXFXMultiChReverbInit(virt_ptr<AXFXReverbMulti> reverb,
 }
 
 void
-AXARTServiceSounds()
-{
-}
-
-void
 Library::registerAxfxSymbols()
 {
    RegisterFunctionExport(AXFXMultiChReverbCallback);
    RegisterFunctionExport(AXFXMultiChReverbInit);
-   RegisterFunctionExport(AXARTServiceSounds);
 }
 
 } // namespace cafe::snduser2
