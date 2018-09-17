@@ -92,69 +92,69 @@ static int32_t
 LiCheckFileBounds(virt_ptr<LOADED_RPL> rpl)
 {
    auto shBase = virt_cast<virt_addr>(rpl->sectionHeaderBuffer);
-   auto dataMin = -1;
-   auto dataMax = 0;
+   auto dataMin = 0xFFFFFFFFu;
+   auto dataMax = 0u;
 
-   auto readMin = -1;
-   auto readMax = 0;
+   auto readMin = 0xFFFFFFFFu;
+   auto readMax = 0u;
 
-   auto textMin = -1;
-   auto textMax = 0;
+   auto textMin = 0xFFFFFFFFu;
+   auto textMax = 0u;
 
-   auto tempMin = -1;
-   auto tempMax = 0;
+   auto tempMin = 0xFFFFFFFFu;
+   auto tempMax = 0u;
 
    for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
       auto sectionHeader = virt_cast<rpl::SectionHeader *>(shBase + i * rpl->elfHeader.shentsize);
       if (sectionHeader->size == 0 ||
           sectionHeader->type == rpl::SHT_RPL_FILEINFO ||
+          sectionHeader->type == rpl::SHT_RPL_IMPORTS ||
           sectionHeader->type == rpl::SHT_RPL_CRCS ||
-          sectionHeader->type == rpl::SHT_NOBITS ||
-          sectionHeader->type == rpl::SHT_RPL_IMPORTS) {
+          sectionHeader->type == rpl::SHT_NOBITS) {
          continue;
       }
 
       if ((sectionHeader->flags & rpl::SHF_EXECINSTR) &&
           sectionHeader->type != rpl::SHT_RPL_EXPORTS) {
-         textMin = std::min(textMin, static_cast<int32_t>(sectionHeader->offset));
-         textMax = std::min(textMax, static_cast<int32_t>(sectionHeader->offset + sectionHeader->size));
+         textMin = std::min<uint32_t>(textMin, sectionHeader->offset);
+         textMax = std::max<uint32_t>(textMax, sectionHeader->offset + sectionHeader->size);
       } else {
          if (sectionHeader->flags & rpl::SHF_ALLOC) {
             if (sectionHeader->flags & rpl::SHF_WRITE) {
-               dataMin = std::min(dataMin, static_cast<int32_t>(sectionHeader->offset));
-               dataMax = std::min(dataMax, static_cast<int32_t>(sectionHeader->offset + sectionHeader->size));
+               dataMin = std::min<uint32_t>(dataMin, sectionHeader->offset);
+               dataMax = std::max<uint32_t>(dataMax, sectionHeader->offset + sectionHeader->size);
             } else {
-               readMin = std::min(readMin, static_cast<int32_t>(sectionHeader->offset));
-               readMax = std::min(readMax, static_cast<int32_t>(sectionHeader->offset + sectionHeader->size));
+               readMin = std::min<uint32_t>(readMin, sectionHeader->offset);
+               readMax = std::max<uint32_t>(readMax, sectionHeader->offset + sectionHeader->size);
             }
          } else {
-            tempMin = std::min(tempMin, static_cast<int32_t>(sectionHeader->offset));
-            tempMax = std::min(tempMax, static_cast<int32_t>(sectionHeader->offset + sectionHeader->size));
+            tempMin = std::min<uint32_t>(tempMin, sectionHeader->offset);
+            tempMax = std::max<uint32_t>(tempMax, sectionHeader->offset + sectionHeader->size);
          }
       }
    }
 
-   if (dataMin == -1) {
+   if (dataMin == 0xFFFFFFFFu) {
       dataMin = (rpl->elfHeader.shnum * rpl->elfHeader.shentsize) + rpl->elfHeader.shoff;
       dataMax = dataMin;
    }
 
-   if (readMin == -1) {
+   if (readMin == 0xFFFFFFFFu) {
       readMin = dataMax;
       readMax = dataMax;
    }
 
-   if (textMin == -1) {
+   if (textMin == 0xFFFFFFFFu) {
       textMin = readMax;
       textMax = readMax;
    }
 
-   if (tempMin == -1) {
+   if (tempMin == 0xFFFFFFFFu) {
       tempMin = textMax;
       tempMax = textMax;
    }
 
-   if (static_cast<uint32_t>(dataMin) < rpl->elfHeader.shoff) {
+   if (dataMin < rpl->elfHeader.shoff) {
       Loader_ReportError("*** SecHrs, FileInfo, or CRCs in bad spot in file. Return %d.",
                          Error::CheckFileBoundsFailed);
       goto error;
