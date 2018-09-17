@@ -18,19 +18,19 @@ struct AXFXReverbStd
 CHECK_SIZE(AXFXReverbStd, 0xFC);
 
 int32_t
-AXFXReverbStdGetMemSize(virt_ptr<AXFXReverbStd> chorus);
+AXFXReverbStdGetMemSize(virt_ptr<AXFXReverbStd> reverb);
 
 BOOL
-AXFXReverbStdInit(virt_ptr<AXFXReverbStd> chorus);
+AXFXReverbStdInit(virt_ptr<AXFXReverbStd> reverb);
 
 BOOL
-AXFXReverbStdShutdown(virt_ptr<AXFXReverbStd> chorus);
+AXFXReverbStdShutdown(virt_ptr<AXFXReverbStd> reverb);
 
 void
 AXFXReverbStdCallback(virt_ptr<AXFXBuffers> buffers,
-                      virt_ptr<AXFXReverbStd> chorus);
+                      virt_ptr<AXFXReverbStd> reverb);
 
 BOOL
-AXFXReverbStdSettings(virt_ptr<AXFXReverbStd> chorus);
+AXFXReverbStdSettings(virt_ptr<AXFXReverbStd> reverb);
 
 } // namespace cafe::snduser2

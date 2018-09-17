@@ -14,7 +14,7 @@ using namespace cafe::sndcore2;
  * Converts the params from the AXFXReverbStd struct to the AXFXReverbStdExp params.
  */
 static void
-translateReverbUserParamsToExp(virt_ptr<AXFXReverbStd> reverb)
+translateReverbStdUserParamsToExp(virt_ptr<AXFXReverbStd> reverb)
 {
    // TODO: Implement translateReverbUserParamsToExp
    decaf_warn_stub();
@@ -30,7 +30,7 @@ AXFXReverbStdGetMemSize(virt_ptr<AXFXReverbStd> reverb)
 BOOL
 AXFXReverbStdInit(virt_ptr<AXFXReverbStd> reverb)
 {
-   translateReverbUserParamsToExp(reverb);
+   translateReverbStdUserParamsToExp(reverb);
    return AXFXReverbStdExpInit(virt_addrof(reverb->reverbExp));
 }
 
@@ -51,7 +51,7 @@ AXFXReverbStdCallback(virt_ptr<AXFXBuffers> buffers,
 BOOL
 AXFXReverbStdSettings(virt_ptr<AXFXReverbStd> reverb)
 {
-   translateReverbUserParamsToExp(reverb);
+   translateReverbStdUserParamsToExp(reverb);
    return AXFXReverbStdExpSettings(virt_addrof(reverb->reverbExp));
 }
 
