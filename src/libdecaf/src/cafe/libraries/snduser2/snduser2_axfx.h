@@ -36,28 +36,15 @@ CHECK_SIZE(AXFXBuffers, 0x0C);
 int32_t
 AXFXReverbHiGetMemSize(virt_ptr<AXFXReverbHi> reverb);
 
-int32_t
-AXFXReverbHiExpGetMemSize(virt_ptr<AXFXReverbHi> reverb);
-
 void
 AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
                      virt_ptr<AXFXReverbHi> data,
                      virt_ptr<AXAuxCallbackData> auxData);
 
 void
-AXFXReverbHiExpCallback(virt_ptr<AXFXBuffers> buffers,
-                        virt_ptr<AXFXReverbHi> data);
-
-void
 AXFXMultiChReverbCallback(virt_ptr<AXFXBuffers> buffers,
                           virt_ptr<AXFXReverbMulti> data,
                           virt_ptr<AXAuxCallbackData> auxData);
-
-BOOL
-AXFXReverbHiExpInit(virt_ptr<AXFXReverbHi> reverb);
-
-void
-AXFXReverbHiExpShutdown(virt_ptr<AXFXReverbHi> reverb);
 
 BOOL
 AXFXReverbHiInit(virt_ptr<AXFXReverbHi> reverb);
