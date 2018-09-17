@@ -4,7 +4,6 @@
 namespace cafe::snduser2
 {
 
-struct AXFXReverbHi;
 struct AXFXReverbMulti;
 
 enum AXFXSampleRate
@@ -33,27 +32,11 @@ CHECK_OFFSET(AXFXBuffers, 0x04, right);
 CHECK_OFFSET(AXFXBuffers, 0x08, surround);
 CHECK_SIZE(AXFXBuffers, 0x0C);
 
-int32_t
-AXFXReverbHiGetMemSize(virt_ptr<AXFXReverbHi> reverb);
-
-void
-AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
-                     virt_ptr<AXFXReverbHi> data,
-                     virt_ptr<AXAuxCallbackData> auxData);
 
 void
 AXFXMultiChReverbCallback(virt_ptr<AXFXBuffers> buffers,
                           virt_ptr<AXFXReverbMulti> data,
                           virt_ptr<AXAuxCallbackData> auxData);
-
-BOOL
-AXFXReverbHiInit(virt_ptr<AXFXReverbHi> reverb);
-
-BOOL
-AXFXReverbHiShutdown(virt_ptr<AXFXReverbHi> reverb);
-
-BOOL
-AXFXReverbHiSettings(virt_ptr<AXFXReverbHi> reverb);
 
 BOOL
 AXFXMultiChReverbInit(virt_ptr<AXFXReverbMulti> reverb,
