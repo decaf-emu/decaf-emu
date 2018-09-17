@@ -10,10 +10,10 @@ namespace cafe::snduser2
 using namespace cafe::sndcore2;
 
 static constexpr int32_t
-ReverbBaseMemSizeSamples = 0x503;
+ReverbStdMemSizeSamplesBase = 0x503;
 
 static constexpr int32_t
-MemSizeSamplesTable[] = {
+ReverbStdMemSizeSamplesTable[] = {
    0x6FD,
    0x7CF,
    0x1B1,
@@ -54,14 +54,19 @@ MemSizeSamplesTable[] = {
 int32_t
 AXFXReverbStdExpGetMemSize(virt_ptr<AXFXReverbStdExp> reverb)
 {
-   auto delayMemSamples = reverb->preDelaySeconds * static_cast<float>(AXGetInputSamplesPerSec());
-   auto numSamples =
-      delayMemSamples +
-      ReverbBaseMemSizeSamples +
-      MemSizeSamplesTable[24] + MemSizeSamplesTable[25] +
-      MemSizeSamplesTable[26] + MemSizeSamplesTable[27];
+   auto delaySamples =
+      reverb->preDelaySeconds * static_cast<float>(AXGetInputSamplesPerSec());
 
-   return 3 * sizeof(int32_t) * numSamples;
+   auto perChanSamples =
+      delaySamples +
+      ReverbStdMemSizeSamplesBase +
+      ReverbStdMemSizeSamplesTable[24] + ReverbStdMemSizeSamplesTable[25] +
+      ReverbStdMemSizeSamplesTable[26] + ReverbStdMemSizeSamplesTable[27];
+
+   auto numSamples =
+      3 * perChanSamples;
+
+   return sizeof(int32_t) * numSamples;
 }
 
 BOOL
