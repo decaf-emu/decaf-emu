@@ -20,6 +20,7 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerAxfxSymbols();
+   registerAxfxChorusSymbols();
    registerAxfxChorusExpSymbols();
    registerAxfxDelaySymbols();
    registerAxfxDelayExpSymbols();

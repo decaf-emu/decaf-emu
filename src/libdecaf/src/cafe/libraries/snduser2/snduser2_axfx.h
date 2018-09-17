@@ -4,7 +4,6 @@
 namespace cafe::snduser2
 {
 
-struct AXFXChorus;
 struct AXFXReverbHi;
 struct AXFXReverbMulti;
 struct AXFXReverbStd;
@@ -36,9 +35,6 @@ CHECK_OFFSET(AXFXBuffers, 0x08, surround);
 CHECK_SIZE(AXFXBuffers, 0x0C);
 
 int32_t
-AXFXChorusGetMemSize(virt_ptr<AXFXChorus> chorus);
-
-int32_t
 AXFXReverbHiGetMemSize(virt_ptr<AXFXReverbHi> reverb);
 
 int32_t
@@ -49,11 +45,6 @@ AXFXReverbStdGetMemSize(virt_ptr<AXFXReverbStd> reverb);
 
 int32_t
 AXFXReverbStdExpGetMemSize(virt_ptr<AXFXReverbStd> reverb);
-
-void
-AXFXChorusCallback(virt_ptr<AXFXBuffers> buffers,
-                   virt_ptr<AXFXChorus> data,
-                   virt_ptr<AXAuxCallbackData> auxData);
 
 void
 AXFXReverbHiCallback(virt_ptr<AXFXBuffers> buffers,
@@ -79,9 +70,6 @@ AXFXReverbStdExpCallback(virt_ptr<AXFXBuffers> buffers,
                          virt_ptr<AXFXReverbStd> data);
 
 BOOL
-AXFXChorusInit(virt_ptr<AXFXChorus> chorus);
-
-BOOL
 AXFXReverbHiExpInit(virt_ptr<AXFXReverbHi> reverb);
 
 BOOL
@@ -89,9 +77,6 @@ AXFXReverbStdInit(virt_ptr<AXFXReverbHi> reverb);
 
 BOOL
 AXFXReverbStdExpInit(virt_ptr<AXFXReverbHi> reverb);
-
-void
-AXFXChorusShutdown(virt_ptr<AXFXChorus> chorus);
 
 void
 AXFXReverbHiExpShutdown(virt_ptr<AXFXReverbHi> reverb);
