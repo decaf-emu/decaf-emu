@@ -78,6 +78,12 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
    case MCPFileType::CafeOS:
       path = fmt::format("/vol/storage_mlc01/sys/title/00050010/1000400A/code/{}", name);
       break;
+   case MCPFileType::SharedDataCode:
+      path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/code/{}", name);
+      break;
+   case MCPFileType::SharedDataContent:
+      path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/content/{}", name);
+      break;
    default:
       return static_cast<MCPError>(Error::InvalidArg);
    }

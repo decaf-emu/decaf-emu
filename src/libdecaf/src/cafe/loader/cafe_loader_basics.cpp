@@ -276,7 +276,7 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
                loadArgs->fileType = ios::mcp::MCPFileType::ProcessCode;
             }
          } else {
-            loadArgs->fileType = ios::mcp::MCPFileType::SystemDataCode;
+            loadArgs->fileType = ios::mcp::MCPFileType::SharedDataCode;
          }
 
          LiInitBuffer(false);
