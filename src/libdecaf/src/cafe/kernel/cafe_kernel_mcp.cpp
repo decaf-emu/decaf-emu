@@ -13,6 +13,64 @@ namespace cafe::kernel::internal
 using namespace ios::mcp;
 
 ios::Error
+mcpGetFileLength(std::string_view path,
+                 uint32_t *outSize,
+                 MCPFileType fileType,
+                 uint32_t a4)
+{
+   auto buffer = ipcAllocBuffer(sizeof(MCPRequestGetFileLength));
+
+   // Prepare request
+   auto request = virt_cast<MCPRequestGetFileLength *>(buffer);
+   request->fileType = fileType;
+   request->unk0x18 = a4;
+   request->name = path;
+
+   // Send ioctl
+   auto error = IOS_Ioctl(RamPartitionId::Kernel,
+                          RamPartitionId::Invalid,
+                          getMcpHandle(),
+                          MCPCommand::GetFileLength,
+                          buffer, sizeof(MCPRequestGetFileLength),
+                          nullptr, 0u);
+   if (error >= ios::Error::OK) {
+      *outSize = static_cast<uint32_t>(error);
+   }
+
+   ipcFreeBuffer(buffer);
+   return error;
+}
+
+ios::Error
+mcpLoadFile(std::string_view path,
+            virt_ptr<void> dataBuffer,
+            uint32_t size,
+            uint32_t pos,
+            MCPFileType fileType,
+            UniqueProcessId cafeProcessId)
+{
+   auto buffer = ipcAllocBuffer(sizeof(MCPRequestLoadFile));
+
+   // Prepare request
+   auto request = virt_cast<MCPRequestLoadFile *>(buffer);
+   request->fileType = fileType;
+   request->name = path;
+   request->pos = pos;
+   request->cafeProcessId = static_cast<uint32_t>(cafeProcessId);
+
+   // Send ioctl
+   auto error = IOS_Ioctl(RamPartitionId::Kernel,
+                          RamPartitionId::Invalid,
+                          getMcpHandle(),
+                          MCPCommand::LoadFile,
+                          buffer, sizeof(MCPRequestLoadFile),
+                          dataBuffer, size);
+
+   ipcFreeBuffer(buffer);
+   return error;
+}
+
+ios::Error
 mcpPrepareTitle(MCPTitleId titleId,
                 virt_ptr<MCPPPrepareTitleInfo> outTitleInfo)
 {
