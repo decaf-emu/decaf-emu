@@ -373,7 +373,8 @@ private:
          return true;
       }
 
-      if (header.opcode() == IT_OPCODE::INDIRECT_BUFFER_PRIV) {
+      if (header.opcode() == IT_OPCODE::INDIRECT_BUFFER ||
+          header.opcode() == IT_OPCODE::INDIRECT_BUFFER_PRIV) {
          return scanCommandBuffer(phys_cast<void *>(phys_addr { data[0].value() }).getRawPointer(),
                                   data[2]);
       }

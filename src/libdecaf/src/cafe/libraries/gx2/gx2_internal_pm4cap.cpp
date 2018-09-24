@@ -868,9 +868,16 @@ private:
                            phys_cast<uint32_t *>(data.addr), data.values);
          break;
       }
-      case IT_OPCODE::INDIRECT_BUFFER_PRIV:
+      case IT_OPCODE::INDIRECT_BUFFER:
       {
          auto data = read<IndirectBufferCall>(reader);
+         trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr, data.size * 4u);
+         scanCommandBuffer(phys_cast<uint32_t *>(data.addr), data.size);
+         break;
+      }
+      case IT_OPCODE::INDIRECT_BUFFER_PRIV:
+      {
+         auto data = read<IndirectBufferCallPriv>(reader);
          trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr, data.size * 4u);
          scanCommandBuffer(phys_cast<uint32_t *>(data.addr), data.size);
          break;

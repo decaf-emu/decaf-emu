@@ -634,6 +634,23 @@ struct SetResources
 
 struct IndirectBufferCall
 {
+   static const auto Opcode = IT_OPCODE::INDIRECT_BUFFER;
+   phys_addr addr;
+   uint32_t size;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      uint32_t unusedAddrHi = 0;
+
+      se(addr);
+      se(unusedAddrHi);
+      se(size);
+   }
+};
+
+struct IndirectBufferCallPriv
+{
    static const auto Opcode = IT_OPCODE::INDIRECT_BUFFER_PRIV;
    phys_addr addr;
    uint32_t size;

@@ -32,6 +32,7 @@ protected:
    void handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &data);
    void nopPacket(const Nop &data);
    void indirectBufferCall(const IndirectBufferCall &data);
+   void indirectBufferCallPriv(const IndirectBufferCallPriv &data);
    void indexType(const IndexType &data);
    void numInstances(const NumInstances &data);
    void contextControl(const ContextControl &data);
