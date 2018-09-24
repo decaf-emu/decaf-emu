@@ -19,16 +19,9 @@ namespace cafe::gx2
 using namespace cafe::coreinit;
 
 void
-GX2BeginDisplayList(virt_ptr<void> displayList,
-                    uint32_t bytes)
-{
-   GX2BeginDisplayListEx(displayList, bytes, TRUE);
-}
-
-void
 GX2BeginDisplayListEx(virt_ptr<void> displayList,
                       uint32_t bytes,
-                      BOOL unk1)
+                      BOOL profilingEnabled)
 {
    internal::beginUserCommandBuffer(virt_cast<uint32_t *>(displayList), bytes / 4);
 }
@@ -175,7 +168,6 @@ void
 Library::registerDisplayListSymbols()
 {
    RegisterFunctionExport(GX2BeginDisplayListEx);
-   RegisterFunctionExport(GX2BeginDisplayList);
    RegisterFunctionExport(GX2EndDisplayList);
    RegisterFunctionExport(GX2DirectCallDisplayList);
    RegisterFunctionExport(GX2CallDisplayList);
