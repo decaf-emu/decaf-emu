@@ -109,14 +109,13 @@ DecafSDLVulkan::createInstance()
       return false;
    }
 
-   mVulkan = vk::createInstance(
-      vk::InstanceCreateInfo(
-         vk::InstanceCreateFlags(),
-         &appInfo,
-         static_cast<uint32_t>(layers.size()), layers.data(),
-         static_cast<uint32_t>(extensions.size()), extensions.data()
-      )
-   );
+   vk::InstanceCreateInfo instanceDesc;
+   instanceDesc.pApplicationInfo = &appInfo;
+   instanceDesc.enabledLayerCount = static_cast<uint32_t>(layers.size());
+   instanceDesc.ppEnabledLayerNames = layers.data();
+   instanceDesc.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+   instanceDesc.ppEnabledExtensionNames = extensions.data();
+   mVulkan = vk::createInstance(instanceDesc);
 
    // Set up our debugging callbacks
    auto vkCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)mVulkan.getProcAddr("vkCreateDebugReportCallbackEXT");
@@ -194,12 +193,19 @@ DecafSDLVulkan::createDevice()
       1,
       &queuePriority);
 
-   mDevice = mPhysDevice.createDevice(
-      vk::DeviceCreateInfo(
-         vk::DeviceCreateFlags(),
-         1, &deviceQueueCreateInfo,
-         static_cast<uint32_t>(deviceLayers.size()), deviceLayers.data(),
-         static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data()));
+   vk::PhysicalDeviceFeatures deviceFeatures;
+   deviceFeatures.geometryShader = true;
+   deviceFeatures.textureCompressionBC = true;
+
+   vk::DeviceCreateInfo deviceDesc;
+   deviceDesc.queueCreateInfoCount = 1;
+   deviceDesc.pQueueCreateInfos = &deviceQueueCreateInfo;
+   deviceDesc.enabledLayerCount = static_cast<uint32_t>(deviceLayers.size());
+   deviceDesc.ppEnabledLayerNames = deviceLayers.data();
+   deviceDesc.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+   deviceDesc.ppEnabledExtensionNames = deviceExtensions.data();
+   deviceDesc.pEnabledFeatures = &deviceFeatures;
+   mDevice = mPhysDevice.createDevice(deviceDesc);
 
    mQueue = mDevice.getQueue(queueFamilyIndex, 0);
    mQueueFamilyIndex = queueFamilyIndex;
