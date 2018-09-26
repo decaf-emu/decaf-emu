@@ -180,6 +180,11 @@ public:
       return *this;
    }
 
+   dereference_type *get() const
+   {
+      return internal::translate<dereference_type>(mAddress);
+   }
+
    value_type *getRawPointer() const
    {
       return internal::translate<value_type>(mAddress);
