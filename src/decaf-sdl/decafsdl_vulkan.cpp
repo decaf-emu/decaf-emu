@@ -29,6 +29,10 @@ debugMessageCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT obj
                              messageCode,
                              pLayerPrefix);
    OutputDebugStringA(logMsg.c_str());
+
+   if (flags == VK_DEBUG_REPORT_WARNING_BIT_EXT || flags == VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+      DebugBreak();
+   }
 #endif
    
    return VK_FALSE;
