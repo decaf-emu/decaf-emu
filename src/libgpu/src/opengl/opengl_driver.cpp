@@ -1,4 +1,5 @@
 #ifdef DECAF_GL
+#include "gpu_clock.h"
 #include "gpu_config.h"
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
@@ -482,12 +483,6 @@ GLDriver::updateDebuggerInfo()
    mDebuggerInfo.numDataBuffers = mDataBuffers.size();
 }
 
-uint64_t
-GLDriver::getGpuClock()
-{
-   return std::chrono::steady_clock::now().time_since_epoch().count();
-}
-
 static uint64_t
 swapValueForWrite(uint64_t value, latte::CB_ENDIAN swap)
 {
@@ -499,7 +494,9 @@ swapValueForWrite(uint64_t value, latte::CB_ENDIAN swap)
       value = byte_swap(value);
       break;
    case latte::CB_ENDIAN::SWAP_8IN32:
-      value = byte_swap(static_cast<uint32_t>(value));
+      value =
+         static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value))) |
+         (static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value >> 32))) << 32);
       break;
    case latte::CB_ENDIAN::SWAP_8IN16:
       decaf_abort(fmt::format("Unexpected MEM_WRITE/EVENT_WRITE endian swap {}", swap));
@@ -514,7 +511,7 @@ GLDriver::memWrite(const latte::pm4::MemWrite &data)
    auto value = uint64_t { 0 };
 
    if (data.addrHi.CNTR_SEL() == latte::pm4::MW_WRITE_CLOCK) {
-      value = getGpuClock();
+      value = gpu::clock::now();
    } else {
       value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
    }
@@ -593,36 +590,56 @@ GLDriver::eventWrite(const latte::pm4::EventWrite &data)
 void
 GLDriver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
 {
-   if (!data.eventInitiator.EVENT_TYPE()) {
-      return;
+   // Write event data to memory if required
+   if (data.addrHi.DATA_SEL() != latte::pm4::EWP_DATA_DISCARD) {
+      auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+      auto ptr = gpu::internal::translateAddress(addr);
+      decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
+
+      // Read value
+      auto value = uint64_t { 0u };
+      switch (data.addrHi.DATA_SEL()) {
+      case latte::pm4::EWP_DATA_32:
+         value = data.dataLo;
+         break;
+      case latte::pm4::EWP_DATA_64:
+         value = static_cast<uint64_t>(data.dataLo) | (static_cast<uint64_t>(data.dataHi) << 32);
+         break;
+      case latte::pm4::EWP_DATA_CLOCK:
+         value = gpu::clock::now();
+         break;
+      }
+
+      // Swap value
+      switch (data.addrLo.ENDIAN_SWAP()) {
+      case latte::CB_ENDIAN::NONE:
+         break;
+      case latte::CB_ENDIAN::SWAP_8IN32:
+         value = static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value))) |
+                 static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value >> 32))) << 32;
+         break;
+      case latte::CB_ENDIAN::SWAP_8IN64:
+         value = byte_swap(value);
+         break;
+      default:
+         decaf_abort(fmt::format("Unexpected EVENT_WRITE_EOP endian swap {}",
+                                 data.addrLo.ENDIAN_SWAP()));
+      }
+
+      // Write value
+      switch (data.addrHi.DATA_SEL()) {
+      case latte::pm4::EWP_DATA_32:
+         *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
+         break;
+      case latte::pm4::EWP_DATA_64:
+      case latte::pm4::EWP_DATA_CLOCK:
+         *reinterpret_cast<uint64_t *>(ptr) = value;
+         break;
+      }
    }
 
-   auto value = uint64_t { 0 };
-   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
-   auto ptr = gpu::internal::translateAddress(addr);
-
-   decaf_assert(data.addrHi.ADDR_HI() == 0, "Invalid event write address (high word not zero)");
-
-   switch (data.eventInitiator.EVENT_TYPE()) {
-   case latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS:
-      value = getGpuClock();
-      break;
-   default:
-      decaf_abort(fmt::format("Unexpected EOP event type {}", data.eventInitiator.EVENT_TYPE()));
-   }
-
-   value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
-
-   switch (data.addrHi.DATA_SEL()) {
-   case latte::pm4::EWP_DATA_DISCARD:
-      break;
-   case latte::pm4::EWP_DATA_32:
-      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
-      break;
-   case latte::pm4::EWP_DATA_64:
-   case latte::pm4::EWP_DATA_CLOCK:
-      *reinterpret_cast<uint64_t *>(ptr) = value;
-      break;
+   // TODO: Generate interrupt if required
+   if (data.addrHi.INT_SEL() != latte::pm4::EWP_INT_NONE) {
    }
 }
 
