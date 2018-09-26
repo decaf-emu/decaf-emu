@@ -49,3 +49,6 @@
 [submodule "libraries/fmt"]
 	path = libraries/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "libraries/glslang"]
+	path = libraries/glslang
+	url = https://github.com/KhronosGroup/glslang.git
