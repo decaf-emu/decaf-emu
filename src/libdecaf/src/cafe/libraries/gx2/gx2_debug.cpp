@@ -189,19 +189,25 @@ debugDumpShader(const std::string_view &filename,
       return;
    }
 
-   gLog->debug("Dumping shader {}", filename);
-   debugDumpData(outputBin, shader->data, shader->size);
+   if (shader->data) {
+      gLog->debug("Dumping shader {}", filename);
+      debugDumpData(outputBin, shader->data, shader->size);
+   }
 
    // Write GSH file
-   gfd::GFDFile gsh;
-   addShader(gsh, shader);
-   gfd::writeFile(gsh, fmt::format("dump/{}.gsh", filename));
+   if (shader->data) {
+      gfd::GFDFile gsh;
+      addShader(gsh, shader);
+      gfd::writeFile(gsh, fmt::format("dump/{}.gsh", filename));
+   }
 
    // Write text of shader to shader_pixel_X.txt
    auto file = std::ofstream { fmt::format("dump/{}.txt", filename), std::ofstream::out };
 
    // Disassemble
-   output = latte::disassemble(gsl::make_span(shader->data.getRawPointer(), shader->size), isSubroutine);
+   if (shader->data) {
+      output = latte::disassemble(gsl::make_span(shader->data.getRawPointer(), shader->size), isSubroutine);
+   }
 
    file
       << info << std::endl
