@@ -40,14 +40,14 @@ struct GX2ContextState
 {
    static const auto MaxDisplayListSize = 192u;
    be2_struct<GX2ShadowRegisters> shadowState;
-   be2_val<BOOL> profileMode;
+   be2_val<BOOL> profilingEnabled;
    be2_val<uint32_t> shadowDisplayListSize;
    // stw 0x9808, value 0 in GX2SetupContextStateEx
    UNKNOWN(0x9e00 - 0x9808);
    be2_array<uint32_t, MaxDisplayListSize> shadowDisplayList;
 };
 CHECK_OFFSET(GX2ContextState, 0x0000, shadowState);
-CHECK_OFFSET(GX2ContextState, 0x9800, profileMode);
+CHECK_OFFSET(GX2ContextState, 0x9800, profilingEnabled);
 CHECK_OFFSET(GX2ContextState, 0x9804, shadowDisplayListSize);
 CHECK_OFFSET(GX2ContextState, 0x9E00, shadowDisplayList);
 CHECK_SIZE(GX2ContextState, 0xA100);

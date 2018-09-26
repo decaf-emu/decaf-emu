@@ -43,8 +43,11 @@ getProfileMode();
 GX2TossStage
 getTossStage();
 
-bool
-profilingEnabled();
+BOOL
+getProfilingEnabled();
+
+void
+setProfilingEnabled(BOOL enabled);
 
 } // namespace internal
 

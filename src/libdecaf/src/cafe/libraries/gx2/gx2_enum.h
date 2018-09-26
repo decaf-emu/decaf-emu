@@ -159,7 +159,7 @@ ENUM_BEG(GX2Component, uint32_t)
 ENUM_END(GX2Component)
 
 FLAGS_BEG(GX2ContextStateFlags, uint32_t)
-   FLAGS_VALUE(ProfileMode,            1 << 0)
+   FLAGS_VALUE(ProfilingEnabled,       1 << 0)
    FLAGS_VALUE(NoShadowDisplayList,    1 << 1)
 FLAGS_END(GX2ContextStateFlags)
 

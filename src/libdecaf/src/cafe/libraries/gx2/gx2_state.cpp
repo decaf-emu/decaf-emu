@@ -225,10 +225,16 @@ getTossStage()
    return sStateData->tossStage;
 }
 
-bool
-profilingEnabled()
+BOOL
+getProfilingEnabled()
 {
-   return sStateData->profilingEnabled[cpu::this_core::id()] != FALSE;
+   return sStateData->profilingEnabled[cpu::this_core::id()];
+}
+
+void
+setProfilingEnabled(BOOL enabled)
+{
+   sStateData->profilingEnabled[cpu::this_core::id()] = enabled;
 }
 
 } // namespace internal
