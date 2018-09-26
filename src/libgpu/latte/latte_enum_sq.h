@@ -6,8 +6,10 @@
 ENUM_NAMESPACE_BEG(latte)
 
 ENUM_BEG(SQ_ALU_ENCODING, uint32_t)
-   ENUM_VALUE(OP2,                        0)
-   ENUM_VALUE(OP3,                        1)
+ENUM_VALUE(OP2, 0)
+// OP3 is not a specific value, only that it the encoding != OP2.  This
+//  is because ALU_ENCODING is actually multiple bits, where 0 means OP2.
+//ENUM_VALUE(OP3,                      NOT_ZERO)
 ENUM_END(SQ_ALU_ENCODING)
 
 ENUM_BEG(SQ_ALU_EXECUTE_MASK_OP, uint32_t)
