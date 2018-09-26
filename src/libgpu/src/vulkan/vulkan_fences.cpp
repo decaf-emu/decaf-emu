@@ -1,4 +1,7 @@
+#pragma optimize("", off)
+
 #ifdef DECAF_VULKAN
+
 #include "vulkan_driver.h"
 
 namespace vulkan
@@ -35,6 +38,8 @@ Driver::releaseSyncWaiter(SyncWaiter *syncWaiter)
    // Reset our local state for this buffer resource thing
    syncWaiter->isCompleted = false;
    syncWaiter->callbacks.clear();
+   syncWaiter->stagingBuffers.clear();
+   syncWaiter->descriptorPools.clear();
 
    // Put this fence back in the pool
    mWaiterPool.push_back(syncWaiter);
@@ -58,6 +63,10 @@ Driver::executeSyncWaiter(SyncWaiter *syncWaiter)
 
    for (auto &buffer : syncWaiter->stagingBuffers) {
       retireStagingBuffer(buffer);
+   }
+
+   for (auto &pool : syncWaiter->descriptorPools) {
+      mDevice.destroyDescriptorPool(pool);
    }
 }
 

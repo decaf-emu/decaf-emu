@@ -1,32 +1,112 @@
+#pragma optimize("", off)
+
 #ifdef DECAF_VULKAN
+
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
+
+#include "gpu_tiling.h"
 #include "latte/latte_formats.h"
 
 namespace vulkan
 {
 
 SurfaceObject *
-Driver::allocateSurface(const SurfaceInfo& info)
+Driver::allocateSurface(const SurfaceDesc& info)
 {
-   auto surfaceInfo = getSurfaceTypeInfo(info.dim, info.height, info.depth);
    auto formatFlags = getDataFormatUsageFlags(info.format);
+   auto hostFormat = getSurfaceFormat(info.format, info.numFormat, info.formatComp, info.degamma, info.isDepthBuffer);
 
-   auto hostFormat = getSurfaceFormat(info.format, info.numFormat, info.formatComp, info.degamma);
+   vk::ImageUsageFlags usageFlags;
+   usageFlags |= vk::ImageUsageFlagBits::eTransferDst;
+   usageFlags |= vk::ImageUsageFlagBits::eTransferSrc;
+   usageFlags |= vk::ImageUsageFlagBits::eSampled;
+
+   if (formatFlags & DataFormatUsage::FORMAT_ALLOW_RENDER_TARGET) {
+      if (!info.isDepthBuffer) {
+         if (formatFlags & DataFormatUsage::FORMAT_MAYBE_COLOR) {
+            usageFlags |= vk::ImageUsageFlagBits::eColorAttachment;
+         }
+      }
+      if (info.isDepthBuffer) {
+         if (formatFlags & (DataFormatUsage::FORMAT_MAYBE_DEPTH | DataFormatUsage::FORMAT_MAYBE_STENCIL)) {
+            usageFlags |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+         }
+      }
+   }
+
+   vk::ImageType imageType;
+   vk::ImageViewType imageViewType;
+   auto realWidth = 1;
+   auto realHeight = 1;
+   auto realDepth = 1;
+   auto realArrayLayers = 1;
+   
+   switch (info.dim) {
+   case latte::SQ_TEX_DIM::DIM_1D:
+      imageType = vk::ImageType::e1D;
+      realWidth = info.width;
+      realHeight = 1;
+      realDepth = 1;
+      realArrayLayers = 1;
+      imageViewType = vk::ImageViewType::e1D;
+      break;
+   case latte::SQ_TEX_DIM::DIM_2D:
+      imageType = vk::ImageType::e2D;
+      realWidth = info.width;
+      realHeight = info.height;
+      realDepth = 1;
+      realArrayLayers = 1;
+      imageViewType = vk::ImageViewType::e2D;
+      break;
+   case latte::SQ_TEX_DIM::DIM_3D:
+      imageType = vk::ImageType::e3D;
+      realWidth = info.width;
+      realHeight = info.height;
+      realDepth = info.depth;
+      realArrayLayers = 1;
+      imageViewType = vk::ImageViewType::e3D;
+      break;
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+      imageType = vk::ImageType::e2D;
+      realWidth = info.width;
+      realHeight = info.height;
+      realDepth = 1;
+      realArrayLayers = info.depth;
+      imageViewType = vk::ImageViewType::eCube;
+      break;
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      imageType = vk::ImageType::e1D;
+      realWidth = info.width;
+      realHeight = 1;
+      realDepth = 1;
+      realArrayLayers = info.height;
+      imageViewType = vk::ImageViewType::e1DArray;
+      break;
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      imageType = vk::ImageType::e2D;
+      realWidth = info.width;
+      realHeight = info.height;
+      realDepth = 1;
+      realArrayLayers = info.depth;
+      imageViewType = vk::ImageViewType::e2DArray;
+      break;
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      decaf_abort("We do not currently support multi-sampling");
+   default:
+      decaf_abort(fmt::format("Failed to pick vulkan dim for latte dim {}", info.dim));
+   }
 
    vk::ImageCreateInfo createImageDesc;
-   createImageDesc.imageType = surfaceInfo.first;
+   createImageDesc.imageType = imageType;
    createImageDesc.format = hostFormat;
-   createImageDesc.extent = vk::Extent3D(info.width, info.height, info.depth);
+   createImageDesc.extent = vk::Extent3D(realWidth, realHeight, realDepth);
    createImageDesc.mipLevels = 1;
-   createImageDesc.arrayLayers = surfaceInfo.second;
-   createImageDesc.samples = vk::SampleCountFlagBits::e1; // TODO: use `samples`
+   createImageDesc.arrayLayers = realArrayLayers;
+   createImageDesc.samples = vk::SampleCountFlagBits::e1;
    createImageDesc.tiling = vk::ImageTiling::eOptimal;
-   createImageDesc.usage =
-      vk::ImageUsageFlagBits::eSampled |
-      vk::ImageUsageFlagBits::eColorAttachment |
-      vk::ImageUsageFlagBits::eTransferDst |
-      vk::ImageUsageFlagBits::eTransferSrc;
+   createImageDesc.usage = usageFlags;
    createImageDesc.sharingMode = vk::SharingMode::eExclusive;
    createImageDesc.initialLayout = vk::ImageLayout::eUndefined;
    auto image = mDevice.createImage(createImageDesc);
@@ -41,53 +121,43 @@ Driver::allocateSurface(const SurfaceInfo& info)
    mDevice.bindImageMemory(image, imageMem, 0);
 
    vk::ImageSubresourceRange subresRange;
-   if (formatFlags & DataFormatUsage::FORMAT_HAS_COLOR) {
-      subresRange.aspectMask |= vk::ImageAspectFlagBits::eColor;
+   // TODO: We should probably improve how we build the list of
+   // aspect mask values that a particular format has.
+   if (!info.isDepthBuffer) {
+      if (formatFlags & DataFormatUsage::FORMAT_MAYBE_COLOR) {
+         subresRange.aspectMask |= vk::ImageAspectFlagBits::eColor;
+      }
    }
-   if (formatFlags & DataFormatUsage::FORMAT_HAS_DEPTH) {
-      subresRange.aspectMask |= vk::ImageAspectFlagBits::eDepth;
-   }
-   if (formatFlags & DataFormatUsage::FORMAT_HAS_STENCIL) {
-      subresRange.aspectMask |= vk::ImageAspectFlagBits::eStencil;
+   if (info.isDepthBuffer) {
+      if (formatFlags & DataFormatUsage::FORMAT_MAYBE_DEPTH) {
+         subresRange.aspectMask |= vk::ImageAspectFlagBits::eDepth;
+      }
+      if (formatFlags & DataFormatUsage::FORMAT_MAYBE_STENCIL) {
+         subresRange.aspectMask |= vk::ImageAspectFlagBits::eStencil;
+      }
    }
    subresRange.baseMipLevel = 0;
    subresRange.levelCount = 1;
    subresRange.baseArrayLayer = 0;
-   subresRange.layerCount = 1;
+   subresRange.layerCount = realArrayLayers;
 
-   // TODO: This is clearly the wrong way to handle this...
-   vk::ImageViewType viewType;
-   switch (surfaceInfo.first) {
-   case vk::ImageType::e1D:
-      decaf_check(surfaceInfo.second <= 1);
-      viewType = vk::ImageViewType::e1D;
-      break;
-   case vk::ImageType::e2D:
-      decaf_check(surfaceInfo.second <= 1);
-      viewType = vk::ImageViewType::e2D;
-      break;
-   case vk::ImageType::e3D:
-      decaf_check(surfaceInfo.second <= 1);
-      viewType = vk::ImageViewType::e3D;
-      break;
-   default:
-      decaf_abort("Unsupported texture view type.");
-   }
-
-   // TODO: I think we can use component mapping to fixup the out
-   // of order formats that exist in the formats table.
+   // TODO: I think we can use component mapping to fixup the out of order
+   // formats that exist in the formats table.  This requires cooperation
+   // between the format picker and this component mapping though.
+   // TODO: We should support reading the component mapping from the registers
+   // as well, as some games remap registers to different places.
    auto hostComponentMap = vk::ComponentMapping();
 
    vk::ImageViewCreateInfo imageViewDesc;
    imageViewDesc.image = image;
-   imageViewDesc.viewType = viewType;
+   imageViewDesc.viewType = imageViewType;
    imageViewDesc.format = hostFormat;
    imageViewDesc.components = hostComponentMap;
    imageViewDesc.subresourceRange = subresRange;
    auto imageView = mDevice.createImageView(imageViewDesc);
 
    auto surface = new SurfaceObject();
-   surface->info = info;
+   surface->desc = info;
    surface->image = image;
    surface->imageView = imageView;
    surface->subresRange = subresRange;
@@ -98,18 +168,100 @@ Driver::allocateSurface(const SurfaceInfo& info)
 void
 Driver::releaseSurface(SurfaceObject *surface)
 {
-   // TODO: Add support for releasing a surface
+   // TODO: Add support for releasing a surface...
 }
 
 void
 Driver::uploadSurface(SurfaceObject *surface)
 {
-   // TODO: Implement surface uploads...
+   if (surface->desc.isDepthBuffer) {
+      // TODO: Implement uploading of depth buffer data (you know... just in case?)
+      return;
+   }
+
+   auto imagePtr = phys_cast<uint8_t*>(surface->desc.baseAddress).getRawPointer();
+   auto dim = surface->desc.dim;
+   auto format = surface->desc.format;
+   auto bpp = latte::getDataFormatBitsPerElement(surface->desc.format);
+   auto srcWidth = surface->desc.width;
+   auto srcHeight = surface->desc.height;
+   auto srcPitch = surface->desc.pitch;
+   auto srcDepth = surface->desc.depth;
+   auto tileMode = surface->desc.tileMode;
+   auto swizzle = surface->desc.swizzle;
+   auto isDepthBuffer = surface->desc.isDepthBuffer;
+
+   auto texelWidth = srcWidth;
+   auto texelHeight = srcHeight;
+   auto texelPitch = srcPitch;
+   auto texelDepth = srcDepth;
+   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      texelWidth = (texelWidth + 3) / 4;
+      texelHeight = (texelHeight + 3) / 4;
+      texelPitch = texelPitch / 4;
+   }
+
+   if (dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+      //uploadDepth *= 6;
+   }
+
+   auto srcImageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
+   auto dstImageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
+
+   auto newHash = DataHash {}.write(imagePtr, srcImageSize);
+   if (surface->dataHash != newHash) {
+      surface->dataHash = newHash;
+
+      std::vector<uint8_t> untiledImage;
+      untiledImage.resize(dstImageSize);
+
+      // Untile
+      gpu::convertFromTiled(
+         untiledImage.data(),
+         texelPitch,
+         imagePtr,
+         tileMode,
+         swizzle,
+         texelPitch,
+         texelWidth,
+         texelHeight,
+         texelDepth,
+         0,
+         isDepthBuffer,
+         bpp);
+
+      auto uploadBuffer = getStagingBuffer(dstImageSize);
+      auto uploadPtr = mapStagingBuffer(uploadBuffer, false);
+      memcpy(uploadPtr, untiledImage.data(), dstImageSize);
+      unmapStagingBuffer(uploadBuffer, true);
+
+      vk::BufferImageCopy region = {};
+      region.bufferOffset = 0;
+      region.bufferRowLength = srcPitch;
+      region.bufferImageHeight = srcHeight;
+
+      region.imageSubresource.aspectMask = surface->subresRange.aspectMask;
+      region.imageSubresource.mipLevel = surface->subresRange.baseMipLevel;
+      region.imageSubresource.baseArrayLayer = surface->subresRange.baseArrayLayer;
+      region.imageSubresource.layerCount = surface->subresRange.layerCount;
+
+      region.imageOffset = { 0, 0, 0 };
+      region.imageExtent = { srcWidth, srcHeight, srcDepth };
+
+      transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
+
+      mActiveCommandBuffer.copyBufferToImage(
+         uploadBuffer->buffer,
+         surface->image,
+         vk::ImageLayout::eTransferDstOptimal,
+         { region });
+   }
 }
 
 void
 Driver::downloadSurface(SurfaceObject *surface)
 {
+   decaf_abort("We do not support surface downloads currently");
    // TODO: Implement surface downloads...
 }
 
@@ -143,10 +295,11 @@ Driver::transitionSurface(SurfaceObject *surface, vk::ImageLayout newLayout)
 }
 
 SurfaceObject *
-Driver::getSurface(const SurfaceInfo& infoIn, bool discardData)
+Driver::getSurface(const SurfaceDesc& infoIn, bool discardData)
 {
-   // A hack for now...
-   SurfaceInfo info = infoIn;
+   // We have to copy the surface info as we adjust the baseAddress
+   // based on the alignment requirements of the tile mode.
+   SurfaceDesc info = infoIn;
 
    decaf_check(info.baseAddress);
    decaf_check(info.width);
@@ -191,7 +344,6 @@ Driver::getSurface(const SurfaceInfo& infoIn, bool discardData)
       return surface;
    }
 
-   // TODO: Add a hashing check here...
    if (!discardData) {
       uploadSurface(surface);
    }

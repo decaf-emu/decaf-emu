@@ -7,10 +7,10 @@
 namespace latte
 {
 
-DataFormat
+SurfaceFormat
 getColorBufferDataFormat(latte::CB_FORMAT format, latte::CB_NUMBER_TYPE numberType)
 {
-   DataFormat formatOut;
+   SurfaceFormat formatOut;
 
    // This is safe only becase CB_FORMAT perfectly overlays SQ_DATA_FORMAT
    formatOut.format = static_cast<latte::SQ_DATA_FORMAT>(format);
@@ -53,10 +53,10 @@ getColorBufferDataFormat(latte::CB_FORMAT format, latte::CB_NUMBER_TYPE numberTy
    return formatOut;
 }
 
-DataFormat
+SurfaceFormat
 getDepthBufferDataFormat(latte::DB_FORMAT format)
 {
-   DataFormat formatOut;
+   SurfaceFormat formatOut;
 
    switch (format) {
    case latte::DB_FORMAT::DEPTH_16:
@@ -234,6 +234,116 @@ getDataFormatName(latte::SQ_DATA_FORMAT format)
       return "FMT_2_10_10_10";
    case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
       return "FMT_10_10_10_2";
+   default:
+      decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
+   }
+}
+
+DataFormatMeta
+getDataFormatMeta(latte::SQ_DATA_FORMAT format)
+{
+   static const auto DFT_NONE = DataFormatMetaType::None;
+   static const auto DFT_UINT = DataFormatMetaType::UINT;
+   static const auto DFT_FLOAT = DataFormatMetaType::FLOAT;
+   static const auto BADELEM = DataFormatMetaElem { 0, 0, 0 };
+
+   switch (format) {
+   case latte::SQ_DATA_FORMAT::FMT_8:
+      return{ 8, 1, DFT_UINT, {{ 0, 0, 8 }, BADELEM, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_4_4:
+      return{ 8, 1, DFT_UINT, {{0, 0, 4}, {0, 4, 4}, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_3_3_2:
+      return{ 8, 1, DFT_UINT, {{0, 0, 3}, {0, 3, 3}, {0, 6, 2}, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16:
+      return{ 16, 1,DFT_UINT, {{ 0, 0, 16 }, BADELEM, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
+      return{ 16, 1,DFT_FLOAT, {{ 0, 0, 16 }, BADELEM, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_8_8:
+      return{ 8, 2,DFT_UINT, {{ 0, 0, 8 },{ 1, 0, 8 }, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_5_6_5:
+      return{ 16, 1, DFT_UINT, {{0, 0, 5}, {0, 5, 6}, {0, 11, 5}, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_6_5_5:
+      return{ 16, 1, DFT_UINT, {{ 0, 0, 6 },{ 0, 6, 5 },{ 0, 11, 5 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
+      return{ 16, 1, DFT_UINT, {{0, 11, 5}, {0, 6, 5}, {0, 1, 5}, {0, 0, 1}  } };
+   case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
+      return{ 16, 1, DFT_UINT, {{0, 0, 4}, {0, 4, 4}, {0, 8, 4}, {0, 12, 4} } };
+   case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
+      return{ 16, 1, DFT_UINT, {{0, 0, 5}, {0, 5, 5}, {0, 10, 5}, {0, 15, 1} } };
+   case latte::SQ_DATA_FORMAT::FMT_32:
+      return{ 32, 1,DFT_UINT, {{ 0, 0, 32 }, BADELEM, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
+      return{ 32, 1,DFT_FLOAT, {{ 0, 0, 32 }, BADELEM, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16_16:
+      return{ 16, 2,DFT_UINT, {{ 0, 0, 16 },{ 1, 0, 16 }, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
+      return{ 16, 2,DFT_FLOAT, {{ 0, 0, 16 },{ 1, 0, 16 }, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_8_24:
+      return{ 32, 1, DFT_UINT, {{0, 0, 8}, {0, 8, 24}, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
+      return{ 32, 1, DFT_FLOAT, {{ 0, 0, 8 }, { 0, 8, 24 }, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_24_8:
+      return{ 32, 1, DFT_UINT, {{0, 0, 24}, {0, 24, 8}, BADELEM, BADELEM  } };
+   case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
+      return{ 32, 1, DFT_FLOAT, {{0, 0, 24}, {0, 24, 8}, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+      return{ 32, 1, DFT_UINT, {{0, 0, 10}, {0, 10, 11}, {0, 21, 11}, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
+      return{ 32, 1, DFT_FLOAT,{{ 0, 0, 10 },{ 0, 10, 11 },{ 0, 21, 11 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10:
+      return{ 32, 1, DFT_UINT, {{0, 22, 10}, {0, 11, 11}, {0, 0, 11}, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
+      return{ 32, 1, DFT_FLOAT,{{ 0, 22, 10 },{ 0, 11, 11 },{ 0, 0, 11 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
+      return{ 32, 1, DFT_UINT, {{0, 22, 10}, {0, 12, 10}, {0, 2, 10}, {0, 0, 2} } };
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
+      return{ 8, 4,DFT_UINT,{{ 0, 0, 8 },{ 1, 0, 8 },{ 2, 0, 8 },{ 3, 0, 8 } } };
+   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
+      return{ 32, 1, DFT_UINT, {{0, 0, 10}, {0, 10, 10}, {0, 20, 10}, {0, 30, 2} } };
+   case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
+      return{ 32, 2, DFT_FLOAT, {{0, 24, 8}, {1, 0, 32}, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_32_32:
+      return{ 32, 2,DFT_UINT,{{ 0, 0, 32 },{ 1, 0, 32 }, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
+      return{ 32, 2,DFT_FLOAT,{{ 0, 0, 32 },{ 1, 0, 32 }, BADELEM, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
+      return{ 16, 4,DFT_UINT,{{ 0, 0, 16 },{ 1, 0, 16 },{ 2, 0, 16 },{ 3, 0, 16 }  } };
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
+      return{ 16, 4,DFT_FLOAT,{{ 0, 0, 16 },{ 1, 0, 16 },{ 2, 0, 16 },{ 3, 0, 16 }  } };
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
+      return{ 32, 4,DFT_UINT,{{ 0, 0, 32 },{ 1, 0, 32 },{ 2, 0, 32 },{ 3, 0, 32 } } };
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
+      return{ 32, 4,DFT_FLOAT,{{ 0, 0, 32 },{ 1, 0, 32 },{ 2, 0, 32 },{ 3, 0, 32 }  } };
+      //case latte::SQ_DATA_FORMAT::FMT_1:
+      //case latte::SQ_DATA_FORMAT::FMT_GB_GR:
+      //case latte::SQ_DATA_FORMAT::FMT_BG_RG:
+      //case latte::SQ_DATA_FORMAT::FMT_32_AS_8:
+      //case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
+      //case latte::SQ_DATA_FORMAT::FMT_5_9_9_9_SHAREDEXP:
+   case latte::SQ_DATA_FORMAT::FMT_8_8_8:
+      return{ 8, 3,DFT_UINT,{{ 0, 0, 8 },{ 1, 0, 8 },{ 2, 0, 8 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16:
+      return{ 16, 3,DFT_UINT,{{ 0, 0, 16 },{ 1, 0, 16 },{ 2, 0, 16 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
+      return{ 16, 3,DFT_FLOAT,{{ 0, 0, 16 },{ 1, 0, 16 },{ 2, 0, 16 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32:
+      return{ 32, 3,DFT_UINT,{{ 0, 0, 32 },{ 1, 0, 32 },{ 2, 0, 32 }, BADELEM } };
+   case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
+      return{ 32, 3,DFT_FLOAT,{{ 0, 0, 32 },{ 1, 0, 32 },{ 2, 0, 32 }, BADELEM } };
+      //case latte::SQ_DATA_FORMAT::FMT_BC1:
+      //case latte::SQ_DATA_FORMAT::FMT_BC2:
+      //case latte::SQ_DATA_FORMAT::FMT_BC3:
+      //case latte::SQ_DATA_FORMAT::FMT_BC4:
+      //case latte::SQ_DATA_FORMAT::FMT_BC5:
+      //case latte::SQ_DATA_FORMAT::FMT_APC0:
+      //case latte::SQ_DATA_FORMAT::FMT_APC1:
+      //case latte::SQ_DATA_FORMAT::FMT_APC2:
+      //case latte::SQ_DATA_FORMAT::FMT_APC3:
+      //case latte::SQ_DATA_FORMAT::FMT_APC4:
+      //case latte::SQ_DATA_FORMAT::FMT_APC5:
+      //case latte::SQ_DATA_FORMAT::FMT_APC6:
+      //case latte::SQ_DATA_FORMAT::FMT_APC7:
+      //case latte::SQ_DATA_FORMAT::FMT_CTX1:
    default:
       decaf_abort(fmt::format("Unimplemented attribute format: {}", format));
    }

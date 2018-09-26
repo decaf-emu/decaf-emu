@@ -12,13 +12,6 @@ ENUM_VALUE(OP2, 0)
 //ENUM_VALUE(OP3,                      NOT_ZERO)
 ENUM_END(SQ_ALU_ENCODING)
 
-ENUM_BEG(SQ_ALU_EXECUTE_MASK_OP, uint32_t)
-   ENUM_VALUE(DEACTIVATE,                 0)
-   ENUM_VALUE(BREAK,                      1)
-   ENUM_VALUE(CONTINUE,                   2)
-   ENUM_VALUE(KILL,                       3)
-ENUM_END(SQ_ALU_EXECUTE_MASK_OP)
-
 ENUM_BEG(SQ_ALU_OMOD, uint32_t)
    ENUM_VALUE(OFF,                        0)
    ENUM_VALUE(M2,                         1)

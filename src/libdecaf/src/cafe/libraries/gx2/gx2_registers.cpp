@@ -779,8 +779,8 @@ GX2InitPolygonControlReg(virt_ptr<GX2PolygonControlReg> reg,
       .CULL_FRONT(!!cullFront)
       .CULL_BACK(!!cullBack)
       .POLY_MODE(!!polyMode)
-      .POLYMODE_FRONT_PTYPE(polyModeFront)
-      .POLYMODE_BACK_PTYPE(polyModeBack)
+      .POLYMODE_FRONT_PTYPE(static_cast<latte::PA_PTYPE>(polyModeFront))
+      .POLYMODE_BACK_PTYPE(static_cast<latte::PA_PTYPE>(polyModeBack))
       .POLY_OFFSET_FRONT_ENABLE(!!polyOffsetFrontEnable)
       .POLY_OFFSET_BACK_ENABLE(!!polyOffsetBackEnable)
       .POLY_OFFSET_PARA_ENABLE(!!polyOffsetParaEnable);

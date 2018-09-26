@@ -1,8 +1,17 @@
+#pragma optimize("", off)
+
 #ifdef DECAF_VULKAN
+
 #include "vulkan_driver.h"
 
 namespace vulkan
 {
+
+BufferSegmentObject *
+Driver::getBufferSegment(uint32_t baseAddress, uint32_t size, bool discardData)
+{
+   return nullptr;
+}
 
 /*
 Staging buffers are used for performing uploads/downloads from the host GPU.
@@ -12,11 +21,11 @@ within a retire task of that particular command buffer.
 */
 
 StagingBuffer *
-Driver::getStagingBuffer(uint32_t size)
+Driver::getStagingBuffer(uint32_t size, vk::BufferUsageFlags usage)
 {
    vk::BufferCreateInfo bufferDesc;
    bufferDesc.size = size;
-   bufferDesc.usage = vk::BufferUsageFlagBits::eTransferSrc;
+   bufferDesc.usage = usage;
    bufferDesc.sharingMode = vk::SharingMode::eExclusive;
    bufferDesc.queueFamilyIndexCount = 0;
    bufferDesc.pQueueFamilyIndices = nullptr;

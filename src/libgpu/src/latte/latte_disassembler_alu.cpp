@@ -424,23 +424,6 @@ disassembleAluInstruction(fmt::memory_buffer &out,
    if (inst.word1.ENCODING() == SQ_ALU_ENCODING::OP2) {
       if (inst.op2.UPDATE_EXECUTE_MASK()) {
          fmt::format_to(out, " UPDATE_EXEC_MASK");
-
-         switch (inst.op2.EXECUTE_MASK_OP()) {
-         case SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE:
-            fmt::format_to(out, "(DEACTIVATE)");
-            break;
-         case SQ_ALU_EXECUTE_MASK_OP::BREAK:
-            fmt::format_to(out, "(BREAK)");
-            break;
-         case SQ_ALU_EXECUTE_MASK_OP::CONTINUE:
-            fmt::format_to(out, "(CONTINUE)");
-            break;
-         case SQ_ALU_EXECUTE_MASK_OP::KILL:
-            fmt::format_to(out, "(KILL)");
-            break;
-         default:
-            decaf_abort(fmt::format("Unexpected EXECUTE_MASK_OP {}", inst.op2.EXECUTE_MASK_OP()));
-         }
       }
 
       if (inst.op2.UPDATE_PRED()) {

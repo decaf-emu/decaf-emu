@@ -1,4 +1,7 @@
+#pragma optimize("", off)
+
 #ifdef DECAF_VULKAN
+
 #include "vulkan_driver.h"
 #include "gpu_event.h"
 
@@ -24,12 +27,12 @@ Driver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
    }
 
    // Allocate a new swap chain
-   auto swapChainInfo = SwapChainInfo {
+   auto swapChainDesc = SwapChainDesc {
       data.buffer,
       data.width,
       data.height
    };
-   auto newSwapChain = allocateSwapChain(swapChainInfo);
+   auto newSwapChain = allocateSwapChain(swapChainDesc);
 
    // Assign the new swap chain
    *swapChain = newSwapChain;
@@ -38,7 +41,14 @@ Driver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
 void
 Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
 {
-   auto surface = getColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info, false);
+   ColorBufferDesc colorBuffer;
+   colorBuffer.base256b = data.cb_color_base.BASE_256B();
+   colorBuffer.pitchTileMax = data.cb_color_size.PITCH_TILE_MAX();
+   colorBuffer.sliceTileMax = data.cb_color_size.SLICE_TILE_MAX();
+   colorBuffer.format = data.cb_color_info.FORMAT();
+   colorBuffer.numberType = data.cb_color_info.NUMBER_TYPE();
+   colorBuffer.arrayMode = data.cb_color_info.ARRAY_MODE();
+   auto surface = getColorBuffer(colorBuffer, false);
 
    SwapChainObject *target = nullptr;
    if (data.scanTarget == latte::pm4::ScanTarget::TV) {
@@ -53,9 +63,9 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
 
    vk::ImageBlit blitRegion(
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->info.width, surface->info.height, 1) },
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->desc.width, surface->desc.height, 1) },
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(target->info.width, target->info.height, 1) });
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(target->desc.width, target->desc.height, 1) });
 
    mActiveCommandBuffer.blitImage(
       surface->image,
@@ -98,17 +108,43 @@ void
 Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
 {
    // Find our colorbuffer to clear
-   auto surface = getColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info, true);
+   ColorBufferDesc colorBuffer;
+   colorBuffer.base256b = data.cb_color_base.BASE_256B();
+   colorBuffer.pitchTileMax = data.cb_color_size.PITCH_TILE_MAX();
+   colorBuffer.sliceTileMax = data.cb_color_size.SLICE_TILE_MAX();
+   colorBuffer.format = data.cb_color_info.FORMAT();
+   colorBuffer.numberType = data.cb_color_info.NUMBER_TYPE();
+   colorBuffer.arrayMode = data.cb_color_info.ARRAY_MODE();
+   auto surface = getColorBuffer(colorBuffer, true);
 
-   transitionSurface(surface, vk::ImageLayout::eGeneral);
+   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { data.red, data.green, data.blue, data.alpha };
-   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eGeneral, clearColor, { surface->subresRange });
+   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });
 }
 
 void
 Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
 {
+   // Find our depthbuffer to clear
+   DepthStencilBufferDesc depthBuffer;
+   depthBuffer.base256b = data.db_depth_base.BASE_256B();
+   depthBuffer.pitchTileMax = data.db_depth_size.PITCH_TILE_MAX();
+   depthBuffer.sliceTileMax = data.db_depth_size.SLICE_TILE_MAX();
+   depthBuffer.format = data.db_depth_info.FORMAT();
+   depthBuffer.arrayMode = data.db_depth_info.ARRAY_MODE();
+   auto surface = getDepthStencilBuffer(depthBuffer, true);
+
+   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
+
+   auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
+   auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
+
+   vk::ClearDepthStencilValue clearDepthStencil;
+   clearDepthStencil.depth = db_depth_clear.DEPTH_CLEAR();
+   clearDepthStencil.stencil = db_stencil_clear.CLEAR();
+   mActiveCommandBuffer.clearDepthStencilImage(
+      surface->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surface->subresRange });
 }
 
 void
@@ -134,16 +170,19 @@ Driver::decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data)
 void
 Driver::drawIndexAuto(const latte::pm4::DrawIndexAuto &data)
 {
+   drawGenericIndexed(data.count, nullptr);
 }
 
 void
 Driver::drawIndex2(const latte::pm4::DrawIndex2 &data)
 {
+   drawGenericIndexed(data.count, phys_cast<void*>(data.addr).getRawPointer());
 }
 
 void
 Driver::drawIndexImmd(const latte::pm4::DrawIndexImmd &data)
 {
+   drawGenericIndexed(data.count, data.indices.data());
 }
 
 void
@@ -193,11 +232,11 @@ Driver::executeBuffer(const gpu::ringbuffer::Item &item)
 {
    decaf_check(!mActiveSyncWaiter);
 
-   mActiveSyncWaiter = allocateSyncWaiter();
-   mActiveCommandBuffer = mActiveSyncWaiter->cmdBuffer;
+   // Begin our command group (sync waiter)
+   beginCommandGroup();
 
-   // Begin recording our host command buffer
-   mActiveCommandBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+   // Begin preparing our command buffer
+   beginCommandBuffer();
 
    // Execute guest PM4 command buffer
    runCommandBuffer(item.buffer.getRawPointer(), item.numWords);
@@ -205,8 +244,8 @@ Driver::executeBuffer(const gpu::ringbuffer::Item &item)
    // Add a callback to retire the PM4 buffer once the host command buffer is retired
    addRetireTask(std::bind(gpu::onRetire, item.context));
 
-   // Stop recording this host command buffer
-   mActiveCommandBuffer.end();
+   // End preparing our command buffer
+   endCommandBuffer();
 
    // Submit the generated command buffer to the host GPU queue
    vk::SubmitInfo submitInfo;
@@ -214,12 +253,8 @@ Driver::executeBuffer(const gpu::ringbuffer::Item &item)
    submitInfo.pCommandBuffers = &mActiveCommandBuffer;
    mQueue.submit({ submitInfo }, mActiveSyncWaiter->fence);
 
-   // Submit the active waiter to the queue
-   submitSyncWaiter(mActiveSyncWaiter);
-
-   // Clear our state in between command buffers for safety
-   mActiveCommandBuffer = nullptr;
-   mActiveSyncWaiter = nullptr;
+   // End our command group
+   endCommandGroup();
 }
 
 } // namespace vulkan
