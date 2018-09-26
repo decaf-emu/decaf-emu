@@ -313,8 +313,8 @@ bool GLDriver::checkActiveShader()
             gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader->object, -1, label.c_str());
          }
 
-         auto bufferUsed = std::array<bool, latte::MaxAttributes> { false };
-         auto bufferDivisor = std::array<uint32_t, latte::MaxAttributes> { 0 };
+         auto bufferUsed = std::array<bool, latte::MaxAttribBuffers> { false };
+         auto bufferDivisor = std::array<uint32_t, latte::MaxAttribBuffers> { 0 };
 
          for (auto &attrib : fetchShader->attribs) {
             auto resourceId = attrib.buffer + latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0;
@@ -351,7 +351,7 @@ bool GLDriver::checkActiveShader()
             }
          }
 
-         for (auto bufferId = 0; bufferId < latte::MaxAttributes; ++bufferId) {
+         for (auto bufferId = 0; bufferId < latte::MaxAttribBuffers; ++bufferId) {
             if (bufferUsed[bufferId]) {
                gl::glVertexArrayBindingDivisor(fetchShader->object, bufferId, bufferDivisor[bufferId]);
             }
@@ -830,7 +830,7 @@ GLDriver::checkActiveAttribBuffers()
 
    auto needMemoryBarrier = false;
 
-   for (auto i = 0u; i < latte::MaxAttributes; ++i) {
+   for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
       auto sq_vtx_constant_word0 = getRegister<latte::SQ_VTX_CONSTANT_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_vtx_constant_word1 = getRegister<latte::SQ_VTX_CONSTANT_WORD1_N>(latte::Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);

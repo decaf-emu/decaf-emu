@@ -71,7 +71,7 @@ struct FetchShader : public Shader
 
    gl::GLuint object = 0;
    std::vector<Attrib> attribs;
-   std::array<AttribBufferCache, latte::MaxAttributes> mAttribBufferCache;
+   std::array<AttribBufferCache, latte::MaxAttribBuffers> mAttribBufferCache;
    std::string disassembly;
 };
 
@@ -81,7 +81,7 @@ struct VertexShader : public Shader
    gl::GLuint uniformRegisters = 0;
    gl::GLuint uniformViewport = 0;
    bool isScreenSpace = false;
-   std::array<gl::GLuint, latte::MaxAttributes> attribLocations;
+   std::array<gl::GLuint, latte::MaxAttribBuffers> attribLocations;
    std::array<uint8_t, 256> outputMap;
    std::array<bool, 16> usedUniformBlocks;
    std::array<bool, 4> usedFeedbackBuffers;
