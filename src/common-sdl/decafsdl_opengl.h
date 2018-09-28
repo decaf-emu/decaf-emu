@@ -2,11 +2,12 @@
 #ifdef DECAF_GL
 #include "decafsdl_graphics.h"
 
-#include <SDL.h>
 #include <glbinding/gl/gl.h>
 #include <libdecaf/decaf.h>
 #include <libgpu/gpu_opengldriver.h>
 #include <libdecaf/decaf_debugger.h>
+#include <SDL.h>
+#include <spdlog/spdlog.h>
 
 class DecafSDLOpenGL : public DecafSDLGraphics
 {
@@ -16,7 +17,8 @@ public:
 
    bool
    initialise(int width,
-              int height) override;
+              int height,
+              bool renderDebugger = true) override;
 
    void
    shutdown() override;
@@ -53,7 +55,18 @@ protected:
    void
    initialiseDraw();
 
+private:
+   static void GL_APIENTRY
+   debugMessageCallback(gl::GLenum source,
+                        gl::GLenum type,
+                        gl::GLuint id,
+                        gl::GLenum severity,
+                        gl::GLsizei length,
+                        const gl::GLchar* message,
+                        const void *userParam);
+
 protected:
+   std::shared_ptr<spdlog::logger> mLog;
    std::thread mGraphicsThread;
    gpu::OpenGLDriver *mDecafDriver = nullptr;
    decaf::GLUiRenderer *mDebugUiRenderer = nullptr;

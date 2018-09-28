@@ -13,7 +13,10 @@ set_target_properties(pm4-replay PROPERTIES FOLDER tools)
 
 target_link_libraries(pm4-replay
     common
+    common-sdl
+    libconfig
     libdecaf
+    ${CPPTOML_LIBRARIES}
     ${EXCMD_LIBRARIES}
     ${SDL2_LINK})
 

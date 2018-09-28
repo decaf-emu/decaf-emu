@@ -133,6 +133,7 @@ initialiseLogging(const std::string &filename)
 
    gLog->set_level(logLevel);
    gLog->set_formatter(std::make_unique<LogFormatter>());
+   spdlog::register_logger(gLog);
 }
 
 bool

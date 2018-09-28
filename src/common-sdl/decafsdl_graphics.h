@@ -18,11 +18,12 @@ public:
 
    virtual bool
    initialise(int width,
-              int height) = 0;
+              int height,
+              bool renderDebugger = true) = 0;
 
    virtual void
    shutdown() = 0;
-   
+
    virtual void
    windowResized() = 0;
 

@@ -20,6 +20,7 @@ add_executable(decaf-sdl
 
 target_link_libraries(decaf-sdl
     common
+    common-sdl
     libconfig
     libdecaf
     ${CPPTOML_LIBRARIES}

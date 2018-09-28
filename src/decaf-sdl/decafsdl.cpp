@@ -1,8 +1,8 @@
 #include "clilog.h"
 #include "config.h"
 #include "decafsdl.h"
-#include "decafsdl_opengl.h"
-#include "decafsdl_vulkan.h"
+#include <common-sdl/decafsdl_opengl.h>
+#include <common-sdl/decafsdl_vulkan.h>
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
@@ -82,7 +82,6 @@ DecafSDL::run(const std::string &gamePath)
 
    // Setup some basic window stuff
    auto window = mGraphicsDriver->getWindow();
-
    setWindowIcon(window);
 
    if (config::display::mode == config::display::Fullscreen) {

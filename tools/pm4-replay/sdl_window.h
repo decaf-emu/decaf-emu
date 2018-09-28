@@ -1,8 +1,5 @@
 #pragma once
-#include <glbinding/gl/gl.h>
-#include <libdecaf/decaf.h>
-#include <libgpu/gpu_opengldriver.h>
-#include <SDL.h>
+#include <common-sdl/decafsdl_graphics.h>
 #include <string>
 
 class SDLWindow
@@ -13,28 +10,23 @@ class SDLWindow
 public:
    ~SDLWindow();
 
-   bool createWindow();
-   bool run(const std::string &tracePath);
+   bool
+   run(const std::string &tracePath);
 
-protected:
-   void initialiseContext();
-   void initialiseDraw();
-   void drawScanBuffer(gl::GLuint object);
-   void calculateScreenViewports(float(&tv)[4],
-                                 float(&drc)[4]);
-   void drawScanBuffers(gl::GLuint tvBuffer, gl::GLuint drcBuffer);
+   bool
+   initCore();
+
+   bool
+   initGlGraphics();
+
+   bool
+   initVulkanGraphics();
+
+   void
+   calculateScreenViewports(Viewport &tv, Viewport &drc);
 
 private:
-   SDL_Window *mWindow = nullptr;
-   SDL_GLContext mWindowContext = nullptr;
-   SDL_GLContext mGpuContext = nullptr;
-
-   gpu::OpenGLDriver *mGraphicsDriver = nullptr;
-
-   gl::GLuint mVertexProgram;
-   gl::GLuint mPixelProgram;
-   gl::GLuint mPipeline;
-   gl::GLuint mVertArray;
-   gl::GLuint mVertBuffer;
-   gl::GLuint mSampler;
+   DecafSDLGraphics *mRenderer = nullptr;
+   std::string mRendererName;
+   bool mToggleDRC = false;
 };
