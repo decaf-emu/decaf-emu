@@ -92,16 +92,10 @@ void Transpiler::translateAluOp2_KILLE(const ControlFlowInst &cf, const AluInstr
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLE_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -109,16 +103,10 @@ void Transpiler::translateAluOp2_KILLE_INT(const ControlFlowInst &cf, const AluI
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::INT);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpIEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLNE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -126,16 +114,10 @@ void Transpiler::translateAluOp2_KILLNE(const ControlFlowInst &cf, const AluInst
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdNotEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLNE_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -143,16 +125,10 @@ void Transpiler::translateAluOp2_KILLNE_INT(const ControlFlowInst &cf, const Alu
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::INT);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpINotEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLGT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -160,16 +136,10 @@ void Transpiler::translateAluOp2_KILLGT(const ControlFlowInst &cf, const AluInst
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdGreaterThan, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLGT_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -177,16 +147,10 @@ void Transpiler::translateAluOp2_KILLGT_INT(const ControlFlowInst &cf, const Alu
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::INT);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpSGreaterThan, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLGT_UINT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -194,16 +158,10 @@ void Transpiler::translateAluOp2_KILLGT_UINT(const ControlFlowInst &cf, const Al
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::UINT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::UINT);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpUGreaterThan, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLGE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -211,16 +169,10 @@ void Transpiler::translateAluOp2_KILLGE(const ControlFlowInst &cf, const AluInst
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdGreaterThanEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLGE_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -228,16 +180,10 @@ void Transpiler::translateAluOp2_KILLGE_INT(const ControlFlowInst &cf, const Alu
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::INT);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpSGreaterThanEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_KILLGE_UINT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -245,16 +191,10 @@ void Transpiler::translateAluOp2_KILLGE_UINT(const ControlFlowInst &cf, const Al
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::UINT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::UINT);
 
-   auto thenBlock = &mSpv->makeNewBlock();
-   auto elseBlock = &mSpv->makeNewBlock();
    auto pred = mSpv->createBinOp(spv::Op::OpUGreaterThanEqual, mSpv->boolType(), src0, src1);
-
-   mSpv->createConditionalBranch(pred, thenBlock, elseBlock);
-
-   mSpv->setBuildPoint(thenBlock);
+   auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
    mSpv->makeDiscard();
-
-   mSpv->setBuildPoint(elseBlock);
+   cond.makeEndIf();
 }
 
 void Transpiler::translateAluOp2_LOG_CLAMPED(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
