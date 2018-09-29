@@ -282,7 +282,7 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
 
       default:
          decaf_abort("Unexpected depth buffer format for vulkan");
-      }      
+      }
    } else {
       switch (format) {
       case latte::SQ_DATA_FORMAT::FMT_8:
@@ -354,7 +354,7 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
       //case latte::SQ_DATA_FORMAT::FMT_32_32_32:
       //case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
       case latte::SQ_DATA_FORMAT::FMT_BC1:
-    
+
          return pick(vk::Format::eBc1RgbaUnormBlock, BADFMT, BADFMT, BADFMT, vk::Format::eBc1RgbaSrgbBlock, BADFMT);
       case latte::SQ_DATA_FORMAT::FMT_BC2:
          return pick(vk::Format::eBc2UnormBlock, BADFMT, BADFMT, BADFMT, vk::Format::eBc2SrgbBlock, BADFMT);

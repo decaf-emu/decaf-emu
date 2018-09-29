@@ -71,7 +71,7 @@ Driver::getPipelineDesc()
    decaf_check(!pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE());
    decaf_check(!pa_cl_clip_cntl.ZCLIP_FAR_DISABLE());
 
-   // pa_cl_clip_cntl.DX_CLIP_SPACE_DEF() is handled by the shaders, 
+   // pa_cl_clip_cntl.DX_CLIP_SPACE_DEF() is handled by the shaders,
    // so it is uploaded in the push constants buffer in the shader
    // resources binding
 
@@ -338,11 +338,11 @@ Driver::checkCurrentPipeline()
    const auto& inputAttribs = mCurrentVertexShader->shader.inputAttribs;
    for (auto i = 0u; i < inputAttribs.size(); ++i) {
       const auto &inputAttrib = inputAttribs[i];
-      
+
       vk::VertexInputAttributeDescription attribDesc;
       attribDesc.location = i;
       attribDesc.binding = inputAttrib.bufferIndex;
-      
+
       if (inputAttrib.elemWidth == 8) {
          if (inputAttrib.elemCount == 1) {
             attribDesc.format = vk::Format::eR8Uint;
@@ -495,7 +495,7 @@ Driver::checkCurrentPipeline()
    } else {
       rasterizer.cullMode = vk::CullModeFlagBits::eNone;
    }
-   
+
    if (currentDesc->paFace == latte::PA_FACE::CW) {
       rasterizer.frontFace = vk::FrontFace::eClockwise;
    } else if (currentDesc->paFace == latte::PA_FACE::CCW) {
@@ -503,7 +503,7 @@ Driver::checkCurrentPipeline()
    } else {
       decaf_abort("Unexpected pipeline cull mode");
    }
-   
+
    rasterizer.depthBiasEnable = currentDesc->polyBiasEnabled;
    if (rasterizer.depthBiasEnable) {
       rasterizer.depthBiasConstantFactor = currentDesc->polyBiasOffset;
@@ -606,7 +606,7 @@ Driver::checkCurrentPipeline()
    // ------------------------------------------------------------
    // Dynamic states
    // ------------------------------------------------------------
-   
+
    auto dynamicStates = {
       vk::DynamicState::eViewport,
       vk::DynamicState::eScissor,
