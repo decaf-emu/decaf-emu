@@ -61,7 +61,7 @@ PlotExDecaf(const char* label,
       };
 
    ImGui::ItemSize(totalBounds, style.FramePadding.y);
-   if (!ImGui::ItemAdd(totalBounds, NULL)) {
+   if (!ImGui::ItemAdd(totalBounds, 0)) {
       return;
    }
 
