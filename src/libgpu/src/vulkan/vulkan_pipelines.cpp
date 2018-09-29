@@ -305,6 +305,7 @@ Driver::checkCurrentPipeline()
    // ------------------------------------------------------------
 
    std::vector<vk::VertexInputBindingDescription> bindingDescs;
+   std::vector<vk::VertexInputBindingDivisorDescriptionEXT> divisorDescs;
 
    const auto& inputBuffers = mCurrentVertexShader->shader.inputBuffers;
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
@@ -321,12 +322,16 @@ Driver::checkCurrentPipeline()
          decaf_check(inputBuffer.divisor == 0);
          bindingDesc.inputRate = vk::VertexInputRate::eVertex;
       } else if (inputBuffer.indexMode == spirv::InputBuffer::IndexMode::PerInstance) {
-         // TODO: Implement support for instancing divisors.  In order to implement
-         // this, we will likely need to use VK_EXT_vertex_attribute_divisor or migrate
-         // to using SSBO's for vertex data reads.
-         //decaf_check(inputBuffer.divisor == 1);
-
+         // TODO: We should move divisor handling into purely this side, and have the shader
+         // generators simply return which instance_step_index register to use instead...
          bindingDesc.inputRate = vk::VertexInputRate::eInstance;
+
+         if (inputBuffer.divisor != 1) {
+            vk::VertexInputBindingDivisorDescriptionEXT divisorDesc;
+            divisorDesc.binding = bindingDesc.binding;
+            divisorDesc.divisor = inputBuffer.divisor;
+            divisorDescs.push_back(divisorDesc);
+         }
       } else {
          decaf_abort("Unexpected indexing mode for buffer");
       }
@@ -393,6 +398,13 @@ Driver::checkCurrentPipeline()
    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribDescs.size());
    vertexInputInfo.pVertexAttributeDescriptions = attribDescs.data();
 
+   if (divisorDescs.size() > 0) {
+      vk::PipelineVertexInputDivisorStateCreateInfoEXT divisorBindingDesc;
+      divisorBindingDesc.vertexBindingDivisorCount = static_cast<uint32_t>(divisorDescs.size());
+      divisorBindingDesc.pVertexBindingDivisors = divisorDescs.data();
+
+      vertexInputInfo.pNext = &divisorBindingDesc;
+   }
 
    // ------------------------------------------------------------
    // Input assembly

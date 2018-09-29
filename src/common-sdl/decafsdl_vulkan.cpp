@@ -113,7 +113,8 @@ DecafSDLVulkan::createInstance()
 
    std::vector<const char*> extensions =
    {
-       VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+       VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+       VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
    };
 
    // Add the neccessary SDL Vulkan extensions
@@ -182,7 +183,8 @@ DecafSDLVulkan::createDevice()
    };
 
    std::vector<const char*> deviceExtensions = {
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME
    };
 
    auto queueFamilyProps = mPhysDevice.getQueueFamilyProperties();
