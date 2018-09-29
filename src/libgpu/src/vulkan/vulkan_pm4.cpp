@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 #include "gpu_event.h"
 
@@ -259,4 +256,4 @@ Driver::executeBuffer(const gpu::ringbuffer::Item &item)
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

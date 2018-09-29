@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef DECAF_VULKAN
 #include "latte/latte_shaderparser.h"
 #include "spirv_spvbuilder.h"
 
@@ -1240,3 +1240,5 @@ protected:
 };
 
 } //namespace spirv
+
+#endif // ifdef DECAF_VULKAN

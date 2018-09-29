@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 #include "latte/latte_formats.h"
 
@@ -39,7 +36,7 @@ Driver::getFramebufferDesc()
       db_depth_info.FORMAT(),
       db_depth_info.ARRAY_MODE()
    };
-   
+
    return desc;
 }
 
@@ -161,7 +158,7 @@ Driver::checkCurrentFramebuffer()
 }
 
 SurfaceObject *
-Driver::getColorBuffer(const ColorBufferDesc& info, 
+Driver::getColorBuffer(const ColorBufferDesc& info,
                        bool discardData)
 {
    auto baseAddress = phys_addr((info.base256b << 8) & 0xFFFFF800);
@@ -224,4 +221,4 @@ Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info,
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

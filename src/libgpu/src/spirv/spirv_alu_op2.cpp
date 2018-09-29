@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 
 namespace spirv
@@ -700,3 +700,5 @@ void Transpiler::translateAluOp2_XOR_INT(const ControlFlowInst &cf, const AluIns
 }
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

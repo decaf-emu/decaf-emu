@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 
 namespace spirv
@@ -13,7 +13,7 @@ void Transpiler::translateAluOp3_CNDE(const ControlFlowInst &cf, const AluInstru
    auto src2 = mSpv->readAluInstSrc(cf, group, inst, 2);
 
    auto output = genAluCondOp(spv::Op::OpFOrdEqual, src0, src1, src2);
-   
+
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
@@ -124,3 +124,5 @@ void Transpiler::translateAluOp3_MULADD_D2(const ControlFlowInst &cf, const AluI
 }
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

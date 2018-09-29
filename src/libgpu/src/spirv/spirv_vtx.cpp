@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 #include "latte/latte_formats.h"
 
@@ -317,3 +317,5 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
 }
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

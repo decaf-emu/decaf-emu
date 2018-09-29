@@ -1,6 +1,5 @@
-#pragma optimize("", off)
 #pragma once
-
+#ifdef DECAF_VULKAN
 #include "latte/latte_shaderparser.h"
 #include "spirv_translate.h"
 #include "spirv_shaderspvbuilder.h"
@@ -184,3 +183,5 @@ protected:
 };
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

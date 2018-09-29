@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 #include "gpu_event.h"
 #include "gpu_graphicsdriver.h"
@@ -139,7 +136,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    alphaRefConstants.offset = 32;
    alphaRefConstants.size = 8;
    pushConstants.push_back(alphaRefConstants);
-  
+
    vk::PipelineLayoutCreateInfo pipelineLayoutDesc;
    pipelineLayoutDesc.setLayoutCount = static_cast<uint32_t>(descriptorLayouts.size());
    pipelineLayoutDesc.pSetLayouts = descriptorLayouts.data();
@@ -223,7 +220,7 @@ Driver::getSwapBuffers(vk::Image &tvImage, vk::ImageView &tvView, vk::Image &drc
       tvImage = vk::Image();
       tvView = vk::ImageView();
    }
-   
+
    if (mDrcSwapChain) {
       drcImage = mDrcSwapChain->image;
       drcView = mDrcSwapChain->imageView;
@@ -337,4 +334,4 @@ Driver::findMemoryType(uint32_t memTypeBits, vk::MemoryPropertyFlags requestProp
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

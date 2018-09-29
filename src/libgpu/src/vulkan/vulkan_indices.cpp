@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 
 namespace vulkan
@@ -198,4 +195,4 @@ Driver::bindIndexBuffer()
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 
 namespace vulkan
@@ -15,7 +12,7 @@ Driver::allocateSyncWaiter()
       mWaiterPool.pop_back();
       return syncWaiter;
    }
-   
+
    auto syncWaiter = new SyncWaiter();
 
    // Allocate a fence
@@ -133,4 +130,4 @@ Driver::addRetireTask(std::function<void()> fn)
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

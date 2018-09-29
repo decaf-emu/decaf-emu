@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 #include "gpu_config.h"
 #include "latte/latte_disassembler.h"
@@ -301,7 +298,7 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
 void Driver::checkCurrentVertexShader()
 {
    HashedDesc<spirv::VertexShaderDesc> currentDesc = getVertexShaderDesc();
-   
+
    if (mCurrentVertexShader && mCurrentVertexShader->desc == currentDesc) {
       // Already active, nothing to do.
       return;
@@ -421,4 +418,4 @@ void Driver::checkCurrentShaders()
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

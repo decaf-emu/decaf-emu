@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 
 namespace vulkan
@@ -191,7 +188,7 @@ Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
    foundSamp = new SamplerObject();
    foundSamp->desc = currentDesc;
 
-   
+
    /*
    currentDesc->texSamplerWord0;
       BITFIELD_ENTRY(15, 2, SQ_TEX_Z_FILTER, Z_FILTER)
@@ -250,4 +247,4 @@ Driver::checkCurrentSamplers()
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

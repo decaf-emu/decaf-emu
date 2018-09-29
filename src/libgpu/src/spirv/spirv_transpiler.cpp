@@ -1,5 +1,4 @@
-#pragma optimize("", off)
-
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 
 #include <disassemble.h>
@@ -458,3 +457,5 @@ shaderToString(const Shader *shader)
 }
 
 } // namespace hlsl2
+
+#endif // ifdef DECAF_VULKAN

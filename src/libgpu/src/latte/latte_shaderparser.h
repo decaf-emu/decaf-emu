@@ -1,13 +1,11 @@
-#pragma optimize("", off)
 #pragma once
-
-#include "common/decaf_assert.h"
 #include "latte/latte_constants.h"
 #include "latte/latte_instructions.h"
 #include "latte/latte_registers_spi.h"
 #include "latte/latte_registers_sq.h"
 #include "latte_decoders.h"
 
+#include <common/decaf_assert.h>
 #include <cstdint>
 #include <gsl/gsl>
 

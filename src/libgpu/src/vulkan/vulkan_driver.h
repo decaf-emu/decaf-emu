@@ -1,6 +1,5 @@
 #pragma once
 #ifdef DECAF_VULKAN
-
 #include "gpu_graphicsdriver.h"
 #include "gpu_ringbuffer.h"
 #include "gpu_vulkandriver.h"
@@ -567,4 +566,4 @@ private:
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

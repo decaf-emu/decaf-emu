@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
 
@@ -41,7 +38,7 @@ Driver::allocateSurface(const SurfaceDesc& info)
    auto realHeight = 1;
    auto realDepth = 1;
    auto realArrayLayers = 1;
-   
+
    switch (info.dim) {
    case latte::SQ_TEX_DIM::DIM_1D:
       imageType = vk::ImageType::e1D;
@@ -340,7 +337,7 @@ Driver::getSurface(const SurfaceDesc& infoIn, bool discardData)
       if (!discardData) {
          uploadSurface(surface);
       }
-      
+
       return surface;
    }
 
@@ -353,4 +350,4 @@ Driver::getSurface(const SurfaceDesc& infoIn, bool discardData)
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

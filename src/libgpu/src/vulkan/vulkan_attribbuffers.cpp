@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 
 namespace vulkan
@@ -50,7 +47,7 @@ Driver::bindAttribBuffers()
       }
 
       auto desc = getAttribBufferDesc(i);
-      
+
       if (!desc.baseAddress) {
          continue;
       }
@@ -69,4 +66,4 @@ Driver::bindAttribBuffers()
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

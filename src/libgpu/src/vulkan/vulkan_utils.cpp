@@ -1,11 +1,8 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_utils.h"
 
-#include "common/decaf_assert.h"
-#include "common/log.h"
+#include <common/decaf_assert.h>
+#include <common/log.h>
 
 namespace vulkan
 {
@@ -383,4 +380,4 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

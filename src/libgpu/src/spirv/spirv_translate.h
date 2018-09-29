@@ -1,5 +1,5 @@
-#pragma optimize("", off)
 #pragma once
+#ifdef DECAF_VULKAN
 
 #include "latte/latte_constants.h"
 #include "latte/latte_registers_sq.h"
@@ -146,3 +146,5 @@ std::string
 shaderToString(const Shader *shader);
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

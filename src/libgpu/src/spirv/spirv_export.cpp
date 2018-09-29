@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 
 namespace spirv
@@ -50,3 +50,5 @@ void Transpiler::translateCf_EXP_DONE(const ControlFlowInst &cf)
 }
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

@@ -1,6 +1,5 @@
 #pragma once
 #ifdef DECAF_VULKAN
-
 #include "latte/latte_formats.h"
 
 #include <vulkan/vulkan.hpp>
@@ -41,4 +40,4 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

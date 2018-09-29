@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef DECAF_VULKAN
 #include <SpvBuilder.h>
 
 namespace spirv
@@ -370,3 +370,5 @@ protected:
 };
 
 } // namespace gpu
+
+#endif // ifdef DECAF_VULKAN

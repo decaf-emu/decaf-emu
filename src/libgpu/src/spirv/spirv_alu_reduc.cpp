@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 
 namespace spirv
@@ -27,3 +27,5 @@ void Transpiler::translateAluOp2_DOT4_IEEE(const ControlFlowInst &cf, const AluI
 }
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN

@@ -1,7 +1,4 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
-
 #include "vulkan_driver.h"
 
 namespace vulkan
@@ -152,7 +149,7 @@ Driver::bindShaderResources()
 
       vsConstData.posMul.w = 1.0f;
       vsConstData.posAdd.w = 0.0f;
-      
+
       mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { vsConstData });
    }
 
@@ -266,4 +263,4 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

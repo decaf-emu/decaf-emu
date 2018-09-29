@@ -1,4 +1,4 @@
-#pragma optimize("", off)
+#ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
 
 namespace spirv
@@ -159,3 +159,5 @@ void Transpiler::translateTex_SET_CUBEMAP_INDEX(const ControlFlowInst &cf, const
 }
 
 } // namespace spirv
+
+#endif // ifdef DECAF_VULKAN
