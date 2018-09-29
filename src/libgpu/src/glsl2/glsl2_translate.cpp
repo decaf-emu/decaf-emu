@@ -46,7 +46,7 @@ static void
 translateTEX(State &state, const ControlFlowInst &cf)
 {
    auto addr = cf.word0.ADDR();
-   auto count = (cf.word1.COUNT() + 1) | (cf.word1.COUNT_3() << 3);
+   auto count = (cf.word1.COUNT() | (cf.word1.COUNT_3() << 3)) + 1;
    auto clauseTex = reinterpret_cast<const TextureFetchInst *>(state.binary.data() + 8 * addr);
    auto clauseVtx = reinterpret_cast<const VertexFetchInst *>(state.binary.data() + 8 * addr);
 

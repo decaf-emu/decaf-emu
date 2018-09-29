@@ -145,7 +145,7 @@ public:
    virtual void translateTexClause(const ControlFlowInst &cf)
    {
       auto addr = cf.word0.ADDR();
-      auto count = (cf.word1.COUNT() + 1) | (cf.word1.COUNT_3() << 3);
+      auto count = (cf.word1.COUNT() | (cf.word1.COUNT_3() << 3)) + 1;
 
       auto texInstData = reinterpret_cast<const TextureFetchInst *>(mBinary.data() + 8 * addr);
       auto texInsts = gsl::make_span(texInstData, count);
@@ -160,7 +160,7 @@ public:
    virtual void translateVtxClause(const ControlFlowInst &cf)
    {
       auto addr = cf.word0.ADDR();
-      auto count = (cf.word1.COUNT() + 1) | (cf.word1.COUNT_3() << 3);
+      auto count = (cf.word1.COUNT() | (cf.word1.COUNT_3() << 3)) + 1;
 
       auto vtxInstData = reinterpret_cast<const VertexFetchInst *>(mBinary.data() + 8 * addr);
       auto vtxInsts = gsl::make_span(vtxInstData, count);
