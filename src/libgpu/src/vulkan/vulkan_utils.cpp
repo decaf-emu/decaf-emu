@@ -279,6 +279,8 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
       switch (format) {
       case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
          return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eD32Sfloat);
+      case latte::SQ_DATA_FORMAT::FMT_8_24:
+         return pick(vk::Format::eD24UnormS8Uint, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
 
       default:
          decaf_abort("Unexpected depth buffer format for vulkan");
