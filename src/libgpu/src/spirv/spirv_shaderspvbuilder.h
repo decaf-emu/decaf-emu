@@ -761,73 +761,57 @@ public:
             auto alphaRefPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { oneConst });
             auto alphaRefVal = createLoad(alphaRefPtr);
 
-            auto neverBlock = &makeNewBlock();
-            auto equalBlock = &makeNewBlock();
-            auto notEqualBlock = &makeNewBlock();
-            auto lessBlock = &makeNewBlock();
-            auto lessEqualBlock = &makeNewBlock();
-            auto greaterBlock = &makeNewBlock();
-            auto greaterEqualBlock = &makeNewBlock();
-            auto afterBlock = &makeNewBlock();
-
             auto makeCompareBlock = [&](spv::Op op)
             {
-               auto discardBlock = &makeNewBlock();
-               auto ifAfterBlock = &makeNewBlock();
-
-               auto compareRes = createBinOp(op, boolType(), exportAlpha, alphaRefVal);
-               createSelectionMerge(ifAfterBlock, spv::SelectionControlMaskNone);
-               createConditionalBranch(compareRes, discardBlock, ifAfterBlock);
-
-               setBuildPoint(discardBlock);
+               auto pred = createBinOp(op, boolType(), exportAlpha, alphaRefVal);
+               auto notPred = createUnaryOp(spv::Op::OpLogicalNot, boolType(), pred);
+               auto block = spv::Builder::If { notPred, spv::SelectionControlMaskNone, *this };
                makeDiscard();
-
-               setBuildPoint(ifAfterBlock);
-               createBranch(afterBlock);
+               block.makeEndIf();
             };
 
-            createSelectionMerge(afterBlock, spv::SelectionControlMaskNone);
-            createNoResultOp(spv::OpSwitch, { alphaFuncVal, afterBlock->getId(),
-                             latte::REF_FUNC::ALWAYS, afterBlock->getId(),
-                             latte::REF_FUNC::NEVER, neverBlock->getId(),
-                             latte::REF_FUNC::EQUAL, equalBlock->getId(),
-                             latte::REF_FUNC::NOT_EQUAL, notEqualBlock->getId(),
-                             latte::REF_FUNC::LESS, lessBlock->getId(),
-                             latte::REF_FUNC::LESS_EQUAL, lessEqualBlock->getId(),
-                             latte::REF_FUNC::GREATER, greaterBlock->getId(),
-                             latte::REF_FUNC::GREATER_EQUAL, greaterEqualBlock->getId() });
+            auto switchSegments = std::vector<spv::Block *> { };
+            makeSwitch(alphaFuncVal, spv::SelectionControlMaskNone, 7,
+                       {
+                           latte::REF_FUNC::NEVER,
+                           latte::REF_FUNC::LESS,
+                           latte::REF_FUNC::EQUAL,
+                           latte::REF_FUNC::LESS_EQUAL,
+                           latte::REF_FUNC::GREATER,
+                           latte::REF_FUNC::NOT_EQUAL,
+                           latte::REF_FUNC::GREATER_EQUAL,
+                       },
+                       { 0, 1, 2, 3, 4, 5, 6 }, -1, switchSegments);
 
-            neverBlock->addPredecessor(buildPoint);
-            equalBlock->addPredecessor(buildPoint);
-            notEqualBlock->addPredecessor(buildPoint);
-            lessBlock->addPredecessor(buildPoint);
-            lessEqualBlock->addPredecessor(buildPoint);
-            greaterBlock->addPredecessor(buildPoint);
-            greaterEqualBlock->addPredecessor(buildPoint);
-            afterBlock->addPredecessor(buildPoint);
-
-            setBuildPoint(neverBlock);
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::NEVER);
             makeDiscard();
+            addSwitchBreak();
 
-            setBuildPoint(equalBlock);
-            makeCompareBlock(spv::OpFUnordEqual);
-
-            setBuildPoint(notEqualBlock);
-            makeCompareBlock(spv::OpFUnordNotEqual);
-
-            setBuildPoint(lessBlock);
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::LESS);
             makeCompareBlock(spv::OpFOrdLessThan);
+            addSwitchBreak();
 
-            setBuildPoint(lessEqualBlock);
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::EQUAL);
+            makeCompareBlock(spv::OpFOrdEqual);
+            addSwitchBreak();
+
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::LESS_EQUAL);
             makeCompareBlock(spv::OpFOrdLessThanEqual);
+            addSwitchBreak();
 
-            setBuildPoint(greaterBlock);
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::GREATER);
             makeCompareBlock(spv::OpFOrdGreaterThan);
+            addSwitchBreak();
 
-            setBuildPoint(greaterEqualBlock);
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::NOT_EQUAL);
+            makeCompareBlock(spv::OpFOrdNotEqual);
+            addSwitchBreak();
+
+            nextSwitchSegment(switchSegments, latte::REF_FUNC::GREATER_EQUAL);
             makeCompareBlock(spv::OpFOrdGreaterThanEqual);
+            addSwitchBreak();
 
-            setBuildPoint(afterBlock);
+            endSwitch(switchSegments);
          }
       }
 
