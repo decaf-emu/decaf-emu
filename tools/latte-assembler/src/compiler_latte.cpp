@@ -87,28 +87,6 @@ parseChan(peg::Ast &node)
    }
 }
 
-latte::SQ_ALU_EXECUTE_MASK_OP
-parseExecuteMaskOp(peg::Ast &node)
-{
-   if (!node.nodes.size()) {
-      return latte::SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE;
-   }
-
-   auto &op = node.nodes[0];
-
-   if (op->token == "DEACTIVATE") {
-      return latte::SQ_ALU_EXECUTE_MASK_OP::DEACTIVATE;
-   } else if (op->token == "BREAK") {
-      return latte::SQ_ALU_EXECUTE_MASK_OP::BREAK;
-   } else if (op->token == "CONTINUE") {
-      return latte::SQ_ALU_EXECUTE_MASK_OP::CONTINUE;
-   } else if (op->token == "KILL") {
-      return latte::SQ_ALU_EXECUTE_MASK_OP::KILL;
-   } else {
-      throw node_parse_exception { *op, fmt::format("Invalid SQ_ALU_EXECUTE_MASK_OP {}", op->token) };
-   }
-}
-
 size_t
 parseFourCompSwizzle(peg::Ast &node,
                      latte::SQ_SEL &selX,
