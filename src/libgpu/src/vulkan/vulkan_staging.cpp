@@ -4,12 +4,6 @@
 namespace vulkan
 {
 
-BufferSegmentObject *
-Driver::getBufferSegment(uint32_t baseAddress, uint32_t size, bool discardData)
-{
-   return nullptr;
-}
-
 /*
 Staging buffers are used for performing uploads/downloads from the host GPU.
 These buffers will only last as long as a single host command buffer does, and

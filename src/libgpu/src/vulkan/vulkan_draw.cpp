@@ -211,6 +211,7 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
    checkCurrentPipeline();
    checkCurrentSamplers();
    checkCurrentTextures();
+   checkCurrentAttribBuffers();
    checkCurrentShaderBuffers();
    checkCurrentIndices();
    checkCurrentViewportAndScissor();

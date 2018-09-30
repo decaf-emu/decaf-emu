@@ -18,49 +18,50 @@ Driver::getAttribBufferDesc(uint32_t bufferIndex)
    decaf_check(sq_vtx_constant_word2.BASE_ADDRESS_HI() == 0);
 
    if (sq_vtx_constant_word6.TYPE() != latte::SQ_TEX_VTX_TYPE::VALID_BUFFER) {
-      desc.baseAddress = 0;
+      desc.baseAddress = phys_addr(0);
       desc.size = 0;
       desc.stride = 0;
       return desc;
    }
 
-   desc.baseAddress = sq_vtx_constant_word0.BASE_ADDRESS();
-   desc.size = sq_vtx_constant_word1.SIZE();
+   desc.baseAddress = phys_addr(sq_vtx_constant_word0.BASE_ADDRESS());
+   desc.size = sq_vtx_constant_word1.SIZE() + 1;
    desc.stride = sq_vtx_constant_word2.STRIDE();
-
-   if (!desc.size) {
-      desc.baseAddress = 0;
-   }
 
    return desc;
 }
 
 void
-Driver::bindAttribBuffers()
+Driver::checkCurrentAttribBuffers()
 {
    // Must have a vertex shader to describe what to upload...
    decaf_check(mCurrentVertexShader);
 
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       if (!mCurrentVertexShader->shader.inputBuffers[i].isUsed) {
+         mCurrentAttribBuffers[i] = nullptr;
          continue;
       }
 
       auto desc = getAttribBufferDesc(i);
 
       if (!desc.baseAddress) {
+         mCurrentAttribBuffers[i] = nullptr;
          continue;
       }
 
-      auto bufferData = phys_cast<void*>(phys_addr(desc.baseAddress)).getRawPointer();
-      auto bufferSize = desc.size + 1;
+      mCurrentAttribBuffers[i] = getDataBuffer(desc.baseAddress, desc.size, false);
+   }
+}
 
-      auto buffer = getStagingBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
-      auto mappedData = mapStagingBuffer(buffer, false);
-      memcpy(mappedData, bufferData, bufferSize);
-      unmapStagingBuffer(buffer, true);
-
-      mActiveCommandBuffer.bindVertexBuffers(i, { buffer->buffer }, { 0 });
+void
+Driver::bindAttribBuffers()
+{
+   for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
+      auto buffer = mCurrentAttribBuffers[i];
+      if (buffer) {
+         mActiveCommandBuffer.bindVertexBuffers(i, { buffer->buffer }, { 0 });
+      }
    }
 }
 

@@ -115,28 +115,21 @@ struct DepthStencilBufferDesc
 
 struct VertexBufferDesc
 {
-   uint32_t baseAddress;
+   phys_addr baseAddress;
    uint32_t size;
    uint32_t stride;
 };
 
-struct BufferObject;
-
-struct BufferSegmentObject
+struct DataBufferObject
 {
-   BufferObject* buffer;
-   uint32_t offset;
+   phys_addr baseAddress;
    uint32_t size;
-};
 
-struct BufferObject
-{
-   uint32_t baseAddress;
-   uint32_t size;
+   DataHash hash;
+   uint64_t lastHashedIndex;
+
    vk::Buffer buffer;
-   vk::DeviceMemory memory;
-
-   std::list<BufferSegmentObject*> segments;
+   VmaAllocation memory;
 };
 
 struct StagingBuffer
@@ -417,12 +410,16 @@ protected:
    void checkCurrentGprBuffer(ShaderStage shaderStage);
    void checkCurrentShaderBuffers();
 
-   // Memory
-   BufferSegmentObject * getBufferSegment(uint32_t baseAddress, uint32_t size, bool discardData = false);
+   // Staging
    StagingBuffer * getStagingBuffer(uint32_t size, vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eTransferSrc);
    void retireStagingBuffer(StagingBuffer *sbuffer);
    void * mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu);
    void unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu);
+
+   // Data Buffers
+   DataBufferObject * allocateDataBuffer(phys_addr baseAddress, uint32_t size);
+   void checkDataBuffer(DataBufferObject * dataBuffer);
+   DataBufferObject * getDataBuffer(phys_addr baseAddress, uint32_t size, bool discardData = false);
 
    // Surfaces
    SurfaceObject * getSurface(const SurfaceDesc& info, bool discardData);
@@ -434,6 +431,7 @@ protected:
 
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);
+   void checkCurrentAttribBuffers();
    void bindAttribBuffers();
 
    // Indices
@@ -537,6 +535,7 @@ private:
    FramebufferObject *mCurrentFramebuffer = nullptr;
    RenderPassObject *mCurrentRenderPass = nullptr;
    PipelineObject *mCurrentPipeline = nullptr;
+   std::array<DataBufferObject*, latte::MaxAttribBuffers> mCurrentAttribBuffers = { nullptr };
    std::array<std::array<SamplerObject*, latte::MaxSamplers>, 3> mCurrentSamplers = { { nullptr } };
    std::array<std::array<SurfaceObject*, latte::MaxTextures>, 3> mCurrentTextures = { { nullptr } };
    std::array<std::array<StagingBuffer*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
@@ -564,7 +563,7 @@ private:
    std::unordered_map<DataHash, RenderPassObject*> mRenderPasses;
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;
-   std::map<uint32_t, BufferObject*> mBuffers;
+   std::map<std::pair<phys_addr, uint32_t>, DataBufferObject*> mDataBuffers;
 };
 
 } // namespace vulkan
