@@ -378,7 +378,8 @@ protected:
    void endCommandBuffer();
 
    // Descriptor Sets
-   vk::DescriptorPool allocateDescriptorPool();
+   vk::DescriptorPool allocateDescriptorPool(uint32_t numDraws);
+   vk::DescriptorSet allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout);
    vk::DescriptorSet allocateVertexDescriptorSet();
    vk::DescriptorSet allocateGeometryDescriptorSet();
    vk::DescriptorSet allocatePixelDescriptorSet();
@@ -516,6 +517,7 @@ private:
    SyncWaiter *mActiveSyncWaiter;
    vk::CommandBuffer mActiveCommandBuffer;
    vk::DescriptorPool mActiveDescriptorPool;
+   uint32_t mActiveDescriptorPoolDrawsLeft;
    RenderPassObject *mActiveRenderPass = nullptr;
    PipelineObject *mActivePipeline = nullptr;
 

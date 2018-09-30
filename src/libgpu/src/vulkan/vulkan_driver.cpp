@@ -145,62 +145,59 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
 }
 
-vk::DescriptorPool Driver::allocateDescriptorPool()
+vk::DescriptorPool
+Driver::allocateDescriptorPool(uint32_t numDraws)
 {
-   static const uint32_t maxDrawsPerBuffer = 32;
-
    std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
-      vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * maxDrawsPerBuffer),
-      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * maxDrawsPerBuffer),
-      vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * maxDrawsPerBuffer),
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * numDraws),
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * numDraws),
+      vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * numDraws),
    };
 
    vk::DescriptorPoolCreateInfo descriptorPoolInfo;
    descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
    descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets = static_cast<uint32_t>(descriptorPoolSizes.size() * 100);
+   descriptorPoolInfo.maxSets = static_cast<uint32_t>(numDraws);
    auto descriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
    mActiveSyncWaiter->descriptorPools.push_back(descriptorPool);
    return descriptorPool;
 }
 
-vk::DescriptorSet Driver::allocateVertexDescriptorSet()
+vk::DescriptorSet
+Driver::allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout)
 {
-   if (!mActiveDescriptorPool) {
-      mActiveDescriptorPool = allocateDescriptorPool();
+   static const uint32_t maxDrawsPerBuffer = 32;
+
+   if (!mActiveDescriptorPool || mActiveDescriptorPoolDrawsLeft == 0) {
+      mActiveDescriptorPool = allocateDescriptorPool(maxDrawsPerBuffer);
+      mActiveDescriptorPoolDrawsLeft = maxDrawsPerBuffer;
    }
 
    vk::DescriptorSetAllocateInfo allocInfo;
-   allocInfo.descriptorPool = mActiveDescriptorPool;
    allocInfo.descriptorSetCount = 1;
-   allocInfo.pSetLayouts = &mVertexDescriptorSetLayout;
+   allocInfo.pSetLayouts = &setLayout;
+   allocInfo.descriptorPool = mActiveDescriptorPool;
+   mActiveDescriptorPoolDrawsLeft--;
+
    return mDevice.allocateDescriptorSets(allocInfo)[0];
 }
 
-vk::DescriptorSet Driver::allocateGeometryDescriptorSet()
+vk::DescriptorSet
+Driver::allocateVertexDescriptorSet()
 {
-   if (!mActiveDescriptorPool) {
-      mActiveDescriptorPool = allocateDescriptorPool();
-   }
-
-   vk::DescriptorSetAllocateInfo allocInfo;
-   allocInfo.descriptorPool = mActiveDescriptorPool;
-   allocInfo.descriptorSetCount = 1;
-   allocInfo.pSetLayouts = &mGeometryDescriptorSetLayout;
-   return mDevice.allocateDescriptorSets(allocInfo)[0];
+   return allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
 }
 
-vk::DescriptorSet Driver::allocatePixelDescriptorSet()
+vk::DescriptorSet
+Driver::allocateGeometryDescriptorSet()
 {
-   if (!mActiveDescriptorPool) {
-      mActiveDescriptorPool = allocateDescriptorPool();
-   }
+   return allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
+}
 
-   vk::DescriptorSetAllocateInfo allocInfo;
-   allocInfo.descriptorPool = mActiveDescriptorPool;
-   allocInfo.descriptorSetCount = 1;
-   allocInfo.pSetLayouts = &mPixelDescriptorSetLayout;
-   return mDevice.allocateDescriptorSets(allocInfo)[0];
+vk::DescriptorSet
+Driver::allocatePixelDescriptorSet()
+{
+   return allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
 }
 
 void
