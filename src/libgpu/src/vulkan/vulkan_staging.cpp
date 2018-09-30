@@ -36,11 +36,15 @@ Driver::allocTempBuffer(uint32_t size)
                    &allocation,
                    nullptr);
 
+   void *mappedPtr;
+   vmaMapMemory(mAllocator, allocation, &mappedPtr);
+
    auto sbuffer = new StagingBuffer();
    sbuffer->maximumSize = size;
    sbuffer->size = 0;
    sbuffer->buffer = buffer;
    sbuffer->memory = allocation;
+   sbuffer->mappedPtr = mappedPtr;
 
    return sbuffer;
 }
@@ -88,14 +92,11 @@ Driver::retireStagingBuffer(StagingBuffer *sbuffer)
 void *
 Driver::mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu)
 {
-   void * data;
-   vmaMapMemory(mAllocator, sbuffer->memory, &data);
-
    if (flushGpu) {
       vmaInvalidateAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
    }
 
-   return data;
+   return sbuffer->mappedPtr;
 }
 
 void
@@ -104,8 +105,6 @@ Driver::unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu)
    if (flushCpu) {
       vmaFlushAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
    }
-
-   vmaUnmapMemory(mAllocator, sbuffer->memory);
 }
 
 } // namespace vulkan

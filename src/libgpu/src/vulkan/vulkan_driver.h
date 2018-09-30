@@ -138,6 +138,7 @@ struct StagingBuffer
    uint32_t size;
    vk::Buffer buffer;
    VmaAllocation memory;
+   void *mappedPtr;
 };
 
 struct SyncWaiter
