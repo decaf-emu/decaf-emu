@@ -55,7 +55,7 @@ Driver::checkDataBuffer(DataBufferObject *dataBuffer)
       return;
    }
 
-   auto stagingBuffer = getStagingBuffer(dataSize, vk::BufferUsageFlagBits::eTransferSrc);
+   auto stagingBuffer = getStagingBuffer(dataSize);
    auto mappedData = mapStagingBuffer(stagingBuffer, false);
    memcpy(mappedData, dataPtr, dataSize);
    unmapStagingBuffer(stagingBuffer, true);

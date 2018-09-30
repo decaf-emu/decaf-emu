@@ -134,6 +134,7 @@ struct DataBufferObject
 
 struct StagingBuffer
 {
+   uint32_t maximumSize;
    uint32_t size;
    vk::Buffer buffer;
    VmaAllocation memory;
@@ -411,7 +412,8 @@ protected:
    void checkCurrentShaderBuffers();
 
    // Staging
-   StagingBuffer * getStagingBuffer(uint32_t size, vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eTransferSrc);
+   StagingBuffer * allocTempBuffer(uint32_t size);
+   StagingBuffer * getStagingBuffer(uint32_t size);
    void retireStagingBuffer(StagingBuffer *sbuffer);
    void * mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu);
    void unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu);
@@ -555,6 +557,7 @@ private:
    SwapChainObject *mTvSwapChain;
    SwapChainObject *mDrcSwapChain;
    RenderPassObject *mRenderPass;
+   std::list<StagingBuffer *> mStagingBuffers;
    std::unordered_map<uint64_t, SurfaceObject*> mSurfaces;
    std::unordered_map<DataHash, VertexShaderObject*> mVertexShaders;
    std::unordered_map<DataHash, GeometryShaderObject*> mGeometryShaders;

@@ -163,7 +163,7 @@ Driver::checkCurrentIndices()
    auto& drawDesc = mCurrentDrawDesc;
    if (drawDesc.indices) {
       auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
-      auto indicesBuf = getStagingBuffer(indexBytes, vk::BufferUsageFlagBits::eIndexBuffer);
+      auto indicesBuf = getStagingBuffer(indexBytes);
       auto indicesPtr = mapStagingBuffer(indicesBuf, false);
       memcpy(indicesPtr, drawDesc.indices, indexBytes);
       unmapStagingBuffer(indicesBuf, true);

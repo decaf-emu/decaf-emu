@@ -20,7 +20,7 @@ Driver::checkCurrentGprBuffer(ShaderStage shaderStage)
       decaf_abort("Unknown shader stage");
    }
 
-   auto gprsBuffer = getStagingBuffer(256 * 4 * 4, vk::BufferUsageFlagBits::eUniformBuffer);
+   auto gprsBuffer = getStagingBuffer(256 * 4 * 4);
    auto mappedData = mapStagingBuffer(gprsBuffer, false);
    memcpy(mappedData, registerVals, 256 * 4 * 4);
    unmapStagingBuffer(gprsBuffer, true);
