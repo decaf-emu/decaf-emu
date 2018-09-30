@@ -222,8 +222,9 @@ void Transpiler::translateAluOp2_LSHL_INT(const ControlFlowInst &cf, const AluIn
 void Transpiler::translateAluOp2_MAX(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMax, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMax, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -234,8 +235,9 @@ void Transpiler::translateAluOp2_MAX_DX10(const ControlFlowInst &cf, const AluIn
    // I believe for dx10 max returns non-NaN value: max(n, NaN) = n max(NaN, n) = n
    // Whereas glsl returns second parameter: max(n, NaN) = NaN, max(NaN, n) = n
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMax, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMax, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -243,8 +245,9 @@ void Transpiler::translateAluOp2_MAX_DX10(const ControlFlowInst &cf, const AluIn
 void Transpiler::translateAluOp2_MAX_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::INT);
 
-   auto output = mSpv->createBuiltinCall(mSpv->intType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450SMax, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->intType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450SMax, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -252,8 +255,9 @@ void Transpiler::translateAluOp2_MAX_INT(const ControlFlowInst &cf, const AluIns
 void Transpiler::translateAluOp2_MAX_UINT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::UINT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::UINT);
 
-   auto output = mSpv->createBuiltinCall(mSpv->uintType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450UMax, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->uintType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450UMax, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -261,8 +265,9 @@ void Transpiler::translateAluOp2_MAX_UINT(const ControlFlowInst &cf, const AluIn
 void Transpiler::translateAluOp2_MIN(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMin, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMin, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -273,8 +278,9 @@ void Transpiler::translateAluOp2_MIN_DX10(const ControlFlowInst &cf, const AluIn
    // I believe for dx10 min returns non-NaN value: min(n, NaN) = n min(NaN, n) = n
    // Whereas glsl returns second parameter: min(n, NaN) = NaN, min(NaN, n) = n
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
 
-   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMin, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FMin, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -282,8 +288,9 @@ void Transpiler::translateAluOp2_MIN_DX10(const ControlFlowInst &cf, const AluIn
 void Transpiler::translateAluOp2_MIN_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::INT);
 
-   auto output = mSpv->createBuiltinCall(mSpv->intType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450SMin, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->intType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450SMin, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -291,8 +298,9 @@ void Transpiler::translateAluOp2_MIN_INT(const ControlFlowInst &cf, const AluIns
 void Transpiler::translateAluOp2_MIN_UINT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::UINT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, VarRefType::UINT);
 
-   auto output = mSpv->createBuiltinCall(mSpv->uintType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450UMin, { src0 });
+   auto output = mSpv->createBuiltinCall(mSpv->uintType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450UMin, { src0, src1 });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
