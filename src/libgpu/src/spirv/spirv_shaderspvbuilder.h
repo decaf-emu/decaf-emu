@@ -51,13 +51,13 @@ public:
       addName(stateVal, "state");
 
       // stack[stackIndexVal] = stateVal
-      auto stackPtr = createAccessChain(spv::StorageClass::StorageClassOutput, stackVar(), { stackIdxVal });
+      auto stackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { stackIdxVal });
       addName(stackPtr, "stackPtr");
       createStore(stateVal, stackPtr);
 
       // stackIndexVal += 1
       auto constPushCount = makeUintConstant(1);
-      auto newStackIdxVal = createBinOp(spv::Op::OpIAdd, uintType(), stackIdxVal, constPushCount);
+      auto newStackIdxVal = createBinOp(spv::Op::OpIAdd, intType(), stackIdxVal, constPushCount);
       this->addName(newStackIdxVal, "newStackIdx");
 
       // *stackIndexVar = stackIndexVal
@@ -73,7 +73,7 @@ public:
       if (popCount > 0) {
          // stateIdxVal -= {popCount}
          auto constPopCount = makeUintConstant(popCount);
-         auto newStackIdxVal = createBinOp(spv::Op::OpISub, uintType(), stateIdxVal, constPopCount);
+         auto newStackIdxVal = createBinOp(spv::Op::OpISub, intType(), stateIdxVal, constPopCount);
          addName(newStackIdxVal, "newStackIdx");
 
          // *stackIndexVar = stateIdxVal
@@ -81,7 +81,7 @@ public:
       }
 
       // newStateVal = stack[stackIndexVal]
-      auto stackPtr = createAccessChain(spv::StorageClass::StorageClassInput, stackVar(), { stateIdxVal });
+      auto stackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { stateIdxVal });
       addName(stackPtr, "stackPtr");
       auto newStateVal = createLoad(stackPtr);
       addName(newStateVal, "newState");
