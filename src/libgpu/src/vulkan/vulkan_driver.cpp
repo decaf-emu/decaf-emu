@@ -165,18 +165,20 @@ Driver::allocateDescriptorPool(uint32_t numDraws)
    descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
    descriptorPoolInfo.maxSets = static_cast<uint32_t>(numDraws);
    auto descriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
-   mActiveSyncWaiter->descriptorPools.push_back(descriptorPool);
+
+   mDescriptorPools.push_back(descriptorPool);
+
    return descriptorPool;
 }
 
 vk::DescriptorSet
 Driver::allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout)
 {
-   static const uint32_t maxDrawsPerBuffer = 32;
+   static const uint32_t maxPoolDraws = 32;
 
    if (!mActiveDescriptorPool || mActiveDescriptorPoolDrawsLeft == 0) {
-      mActiveDescriptorPool = allocateDescriptorPool(maxDrawsPerBuffer);
-      mActiveDescriptorPoolDrawsLeft = maxDrawsPerBuffer;
+      mActiveDescriptorPool = allocateDescriptorPool(maxPoolDraws);
+      mActiveDescriptorPoolDrawsLeft = maxPoolDraws;
    }
 
    vk::DescriptorSetAllocateInfo allocInfo;
@@ -191,19 +193,73 @@ Driver::allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout)
 vk::DescriptorSet
 Driver::allocateVertexDescriptorSet()
 {
-   return allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
+   vk::DescriptorSet descriptorSet;
+
+   if (!mVertexDescriptorSets.empty()) {
+      descriptorSet = mVertexDescriptorSets.back();
+      mVertexDescriptorSets.pop_back();
+   }
+
+   if (!descriptorSet) {
+      descriptorSet = allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
+   }
+
+   mActiveSyncWaiter->vertexDescriptorSets.push_back(descriptorSet);
+   return descriptorSet;
 }
 
 vk::DescriptorSet
 Driver::allocateGeometryDescriptorSet()
 {
-   return allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
+   vk::DescriptorSet descriptorSet;
+
+   if (!mGeometryDescriptorSets.empty()) {
+      descriptorSet = mGeometryDescriptorSets.back();
+      mGeometryDescriptorSets.pop_back();
+   }
+
+   if (!descriptorSet) {
+      descriptorSet = allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
+   }
+
+   mActiveSyncWaiter->geometryDescriptorSets.push_back(descriptorSet);
+   return descriptorSet;
 }
 
 vk::DescriptorSet
 Driver::allocatePixelDescriptorSet()
 {
-   return allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
+   vk::DescriptorSet descriptorSet;
+
+   if (!mPixelDescriptorSets.empty()) {
+      descriptorSet = mPixelDescriptorSets.back();
+      mPixelDescriptorSets.pop_back();
+   }
+
+   if (!descriptorSet) {
+      descriptorSet = allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
+   }
+
+   mActiveSyncWaiter->pixelDescriptorSets.push_back(descriptorSet);
+   return descriptorSet;
+}
+
+void
+Driver::retireVertexDescriptorSet(vk::DescriptorSet descriptorSet)
+{
+   mVertexDescriptorSets.push_back(descriptorSet);
+}
+
+void
+Driver::retireGeometryDescriptorSet(vk::DescriptorSet descriptorSet)
+{
+   mGeometryDescriptorSets.push_back(descriptorSet);
+}
+
+void
+Driver::retirePixelDescriptorSet(vk::DescriptorSet descriptorSet)
+{
+   mPixelDescriptorSets.push_back(descriptorSet);
 }
 
 void
