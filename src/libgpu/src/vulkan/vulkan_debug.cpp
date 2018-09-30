@@ -33,7 +33,14 @@ Driver::getDebuggerInfo()
 void
 Driver::updateDebuggerInfo()
 {
-   // TODO: Actually update this with useful information
+   mDebuggerInfo.numVertexShaders = mVertexShaders.size();
+   mDebuggerInfo.numGeometryShaders = mVertexShaders.size();
+   mDebuggerInfo.numPixelShaders = mPixelShaders.size();
+   mDebuggerInfo.numRenderPasses = mRenderPasses.size();
+   mDebuggerInfo.numPipelines = mPipelines.size();
+   mDebuggerInfo.numSamplers = mSamplers.size();
+   mDebuggerInfo.numSurfaces = mSurfaces.size();
+   mDebuggerInfo.numDataBuffers = mDataBuffers.size();
 }
 
 } // namespace vulkan

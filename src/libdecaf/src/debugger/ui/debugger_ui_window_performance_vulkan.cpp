@@ -32,14 +32,16 @@ void PerformanceWindowVulkan::drawBackendInfo()
    ImGui::Columns(2);
 
    drawTextAndValue("Vertex Shaders:", mInfo->numVertexShaders);
+   drawTextAndValue("Geom   Shaders:", mInfo->numGeometryShaders);
    drawTextAndValue("Pixel  Shaders:", mInfo->numPixelShaders);
-   drawTextAndValue("Fetch  Shaders:", mInfo->numFetchShaders);
+   drawTextAndValue("Data Buffers:", mInfo->numDataBuffers);
 
    ImGui::NextColumn();
 
-   drawTextAndValue("Shader Pipelines:", mInfo->numShaderPipelines);
+   drawTextAndValue("Render Passes:", mInfo->numRenderPasses);
+   drawTextAndValue("Pipelines:", mInfo->numPipelines);
+   drawTextAndValue("Samplers:", mInfo->numSamplers);
    drawTextAndValue("Surfaces:", mInfo->numSurfaces);
-   drawTextAndValue("Data Buffers:", mInfo->numDataBuffers);
 }
 
 } // namespace ui

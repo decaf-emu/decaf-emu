@@ -11,10 +11,12 @@ class VulkanDriver : public GraphicsDriver
 public:
    struct DebuggerInfo
    {
-      uint64_t numFetchShaders = 0;
       uint64_t numVertexShaders = 0;
+      uint64_t numGeometryShaders = 0;
       uint64_t numPixelShaders = 0;
-      uint64_t numShaderPipelines = 0;
+      uint64_t numRenderPasses = 0;
+      uint64_t numPipelines = 0;
+      uint64_t numSamplers = 0;
       uint64_t numSurfaces = 0;
       uint64_t numDataBuffers = 0;
    };
