@@ -54,15 +54,15 @@ Driver::bindShaderResources()
       }
 
       for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-         auto& attribBuffer = mCurrentUniformBlocks[shaderStage][i];
-         if (!attribBuffer) {
+         auto& uniformBuffer = mCurrentUniformBlocks[shaderStage][i];
+         if (!uniformBuffer) {
             continue;
          }
 
          vk::DescriptorBufferInfo bufferDesc;
-         bufferDesc.buffer = attribBuffer->buffer;
+         bufferDesc.buffer = uniformBuffer->buffer;
          bufferDesc.offset = 0;
-         bufferDesc.range = attribBuffer->size;
+         bufferDesc.range = uniformBuffer->size;
 
          vk::WriteDescriptorSet writeDesc;
          writeDesc.dstSet = dSet;
