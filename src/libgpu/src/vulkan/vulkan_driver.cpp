@@ -54,6 +54,12 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    // Start our fence thread
    mFenceThread = std::thread(std::bind(&Driver::fenceWaiterThread, this));
 
+   // Set up the VMA
+   VmaAllocatorCreateInfo allocatorDesc = {};
+   allocatorDesc.physicalDevice = mPhysDevice;
+   allocatorDesc.device = mDevice;
+   vmaCreateAllocator(&allocatorDesc, &mAllocator);
+
    // Set up our drawing pipeline layout
    auto makeStageSet = [&](int stageIndex)
    {

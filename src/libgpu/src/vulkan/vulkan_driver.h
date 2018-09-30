@@ -7,6 +7,7 @@
 #include "latte/latte_constants.h"
 #include "spirv/spirv_translate.h"
 #include "pm4_processor.h"
+#include "vk_mem_alloc.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -142,7 +143,7 @@ struct StagingBuffer
 {
    uint32_t size;
    vk::Buffer buffer;
-   vk::DeviceMemory memory;
+   VmaAllocation memory;
 };
 
 struct SyncWaiter
@@ -513,6 +514,7 @@ private:
    std::list<SyncWaiter*> mFencesPending;
    std::condition_variable mFenceSignal;
    std::vector<SyncWaiter*> mWaiterPool;
+   VmaAllocator mAllocator;
 
    SyncWaiter *mActiveSyncWaiter;
    vk::CommandBuffer mActiveCommandBuffer;
