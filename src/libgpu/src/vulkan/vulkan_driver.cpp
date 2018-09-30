@@ -285,6 +285,8 @@ Driver::runUntilFlip()
 void
 Driver::beginCommandGroup()
 {
+   mActivePm4BufferIndex++;
+
    mActiveSyncWaiter = allocateSyncWaiter();
    mActiveCommandBuffer = mActiveSyncWaiter->cmdBuffer;
 }

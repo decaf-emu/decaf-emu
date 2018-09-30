@@ -515,6 +515,7 @@ private:
    VmaAllocator mAllocator;
 
    SyncWaiter *mActiveSyncWaiter;
+   uint64_t mActivePm4BufferIndex = 0;
    vk::CommandBuffer mActiveCommandBuffer;
    vk::DescriptorPool mActiveDescriptorPool;
    uint32_t mActiveDescriptorPoolDrawsLeft;
