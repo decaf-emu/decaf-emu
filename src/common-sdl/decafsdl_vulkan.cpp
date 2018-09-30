@@ -48,6 +48,17 @@ DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
                                      const char* pMessage,
                                      void* pUserData)
 {
+   bool noBreak = false;
+
+   // TODO: Remove this once vulkan headers correctly support VkPipelineColorBlendAdvancedStateCreateInfoEXT
+   if (strstr(pMessage, "VkPipelineColorBlendStateCreateInfo-pNext") != nullptr) {
+      static uint64_t seenAdvancedBlendWarning = 0;
+      if (seenAdvancedBlendWarning++) {
+         return VK_FALSE;
+      }
+      noBreak = true;
+   }
+
    auto self = reinterpret_cast<DecafSDLVulkan *>(pUserData);
    self->mLog->warn("Vulkan debug report: {}, {}, {}, {}, {}, {}, {}",
                     vk::to_string(vk::DebugReportFlagsEXT(flags)),
@@ -70,7 +81,9 @@ DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
    OutputDebugStringA(logMsg.c_str());
 
    if (flags == VK_DEBUG_REPORT_WARNING_BIT_EXT || flags == VK_DEBUG_REPORT_ERROR_BIT_EXT) {
-      DebugBreak();
+      if (!noBreak) {
+         DebugBreak();
+      }
    }
 #endif
 
