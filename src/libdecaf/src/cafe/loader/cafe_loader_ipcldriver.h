@@ -186,6 +186,9 @@ CHECK_SIZE(IPCLDriver, 0x188);
 
 #pragma pack(pop)
 
+bool
+IPCLDriver_IsInitialised();
+
 ios::Error
 IPCLDriver_Init();
 

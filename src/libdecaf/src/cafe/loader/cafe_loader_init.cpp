@@ -19,7 +19,6 @@ namespace cafe::loader::internal
 
 static uint32_t sDataAreaSize = 0;
 static uint32_t sNumDataAreaAllocations = 0;
-static bool sIPCLInitialised[3] = { false, false, false };
 
 static int32_t
 LiLoadCoreIntoProcess(virt_ptr<RPL_STARTINFO> startInfo)
@@ -135,7 +134,7 @@ LOADER_Init(kernel::UniqueProcessId upid,
       goto error;
    }
 
-   if (!sIPCLInitialised[cpu::this_core::id()]) {
+   if (!IPCLDriver_IsInitialised()) {
       IPCLDriver_Init();
       IPCLDriver_Open();
       LiInitIopInterface();

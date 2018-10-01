@@ -31,6 +31,12 @@ LOADER_Entry(virt_ptr<LOADER_EntryParams> entryParams)
 {
    auto error = 0;
 
+   if (!internal::IPCLDriver_IsInitialised()) {
+      internal::IPCLDriver_Init();
+      internal::IPCLDriver_Open();
+      internal::LiInitIopInterface();
+   }
+
    switch (entryParams->dispatch.code) {
    case LOADER_Code::Prep:
       error = internal::LOADER_Prep(entryParams->procId,

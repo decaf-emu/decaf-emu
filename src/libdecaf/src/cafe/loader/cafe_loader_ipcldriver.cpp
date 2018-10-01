@@ -20,6 +20,12 @@ struct StaticIpclData
 static virt_ptr<StaticIpclData>
 sIpclData;
 
+bool
+IPCLDriver_IsInitialised()
+{
+   return sIpclData->drivers[cpu::this_core::id()].status != IPCLDriverStatus::Invalid;
+}
+
 ios::Error
 IPCLDriver_Init()
 {
