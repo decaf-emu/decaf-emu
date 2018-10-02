@@ -94,7 +94,20 @@ Driver::getPipelineDesc()
    desc.cullBack = pa_su_sc_mode_cntl.CULL_BACK();
    desc.paFace = pa_su_sc_mode_cntl.FACE();
 
-   desc.polyBiasEnabled = pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE();
+   desc.polyBiasEnabled = false;
+
+   if (desc.polyPType == latte::PA_PTYPE::LINES) {
+      if (pa_su_sc_mode_cntl.POLY_OFFSET_PARA_ENABLE()) {
+         desc.polyBiasEnabled = true;
+      }
+   }
+
+   if (desc.polyPType == latte::PA_PTYPE::TRIANGLES) {
+      if (pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE()) {
+         desc.polyBiasEnabled = true;
+      }
+   }
+
    if (desc.polyBiasEnabled) {
       desc.polyBiasClamp = pa_su_poly_offset_clamp.CLAMP();
       desc.polyBiasOffset = pa_su_poly_offset_back_offset.OFFSET();
