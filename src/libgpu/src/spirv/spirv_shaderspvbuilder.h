@@ -957,13 +957,30 @@ public:
       return mRegistersBuffer;
    }
 
+   spv::Id cbufferStructType()
+   {
+      if (!mCbufferStructType) {
+         auto valuesType = arrayType(float4Type(), 0);
+         addDecoration(valuesType, spv::DecorationArrayStride, 16);
+
+         auto structType = this->makeStructType({ valuesType }, "CBUFFER_DATA");
+         addMemberDecoration(structType, 0, spv::DecorationOffset, 0);
+         addDecoration(structType, spv::DecorationBlock);
+         addMemberName(structType, 0, "values");
+
+         mCbufferStructType = structType;
+      }
+
+      return mCbufferStructType;
+   }
+
    spv::Id cbufferVar(uint32_t cbufferIdx)
    {
       decaf_check(cbufferIdx < latte::MaxUniformBlocks);
 
       auto cbuffer = mUniformBuffers[cbufferIdx];
       if (!cbuffer) {
-         auto bufferType = arrayType(float4Type(), 0);
+         auto bufferType = cbufferStructType();
          cbuffer = createVariable(spv::StorageClassUniform, bufferType, fmt::format("CBUFFER_{}", cbufferIdx).c_str());
          addDecoration(cbuffer, spv::DecorationDescriptorSet, mDescriptorSetIndex);
          addDecoration(cbuffer, spv::DecorationBinding, latte::MaxSamplers + latte::MaxTextures + cbufferIdx);
@@ -1251,6 +1268,7 @@ protected:
 
    spv::Id mRegistersBuffer = spv::NoResult;
    std::array<spv::Id, latte::MaxUniformBlocks> mUniformBuffers = { spv::NoResult };
+   spv::Id mCbufferStructType = spv::NoResult;
 
    spv::Id mVsPushConsts = spv::NoResult;
    spv::Id mGsPushConsts = spv::NoResult;
