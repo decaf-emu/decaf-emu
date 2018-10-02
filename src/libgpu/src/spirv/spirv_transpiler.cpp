@@ -216,7 +216,7 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
             break;
          case 1:
             defaultVal = spvGen.makeCompositeConstant(spvGen.float4Type(),
-                                                      { zeroConst, zeroConst, zeroConst, });
+                                                      { zeroConst, zeroConst, zeroConst, oneConst });
             break;
          case 2:
             defaultVal = spvGen.makeCompositeConstant(spvGen.float4Type(),
