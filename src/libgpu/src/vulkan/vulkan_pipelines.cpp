@@ -79,13 +79,17 @@ Driver::getPipelineDesc()
    desc.lineWidth = pa_su_line_cntl.WIDTH();
 
    // We do not support split front/back mode
-   decaf_check(pa_su_sc_mode_cntl.POLY_MODE() == 0);
    decaf_check(pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE() == pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE());
    decaf_check(pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE() == pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE());
    decaf_check(pa_su_poly_offset_front_offset.value == pa_su_poly_offset_back_offset.value);
    decaf_check(pa_su_poly_offset_front_scale.value == pa_su_poly_offset_back_scale.value);
 
-   desc.polyPType = pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE();
+   auto polyMode = pa_su_sc_mode_cntl.POLY_MODE();
+   if (!!polyMode) {
+      desc.polyPType = pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE();
+   } else {
+      desc.polyPType = latte::PA_PTYPE::TRIANGLES;
+   }
    desc.cullFront = pa_su_sc_mode_cntl.CULL_FRONT();
    desc.cullBack = pa_su_sc_mode_cntl.CULL_BACK();
    desc.paFace = pa_su_sc_mode_cntl.FACE();
