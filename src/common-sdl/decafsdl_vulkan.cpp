@@ -153,13 +153,15 @@ DecafSDLVulkan::createInstance()
 
    // Set up our debugging callbacks
    auto vkCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)mVulkan.getProcAddr("vkCreateDebugReportCallbackEXT");
-   auto debugReportCallbackInfo = (VkDebugReportCallbackCreateInfoEXT)vk::DebugReportCallbackCreateInfoEXT(
-      vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::ePerformanceWarning,
-      debugMessageCallback,
-      this);
-   static VkDebugReportCallbackEXT debugCallback = VK_NULL_HANDLE;
-   auto err = (vk::Result)vkCreateDebugReportCallback(mVulkan, &debugReportCallbackInfo, nullptr, &debugCallback);
-   checkVkResult(err);
+   if (vkCreateDebugReportCallback) {
+      auto debugReportCallbackInfo = (VkDebugReportCallbackCreateInfoEXT)vk::DebugReportCallbackCreateInfoEXT(
+         vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::ePerformanceWarning,
+         debugMessageCallback,
+         this);
+      static VkDebugReportCallbackEXT debugCallback = VK_NULL_HANDLE;
+      auto err = (vk::Result)vkCreateDebugReportCallback(mVulkan, &debugReportCallbackInfo, nullptr, &debugCallback);
+      checkVkResult(err);
+   }
 
    return true;
 }
