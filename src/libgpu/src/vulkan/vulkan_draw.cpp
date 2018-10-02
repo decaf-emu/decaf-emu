@@ -119,36 +119,33 @@ Driver::bindShaderResources()
             float w;
          };
 
-         Vec4 posMul;
-         Vec4 posAdd;
+         Vec4 posMulAdd;
+         Vec4 zSpaceMul;
       } vsConstData;
 
       if (!mCurrentDrawDesc.isScreenSpace) {
-         vsConstData.posMul.x = 1.0f;
-         vsConstData.posMul.y = 1.0f;
-         vsConstData.posAdd.x = 0.0f;
-         vsConstData.posAdd.y = 0.0f;
+         vsConstData.posMulAdd.x = 1.0f;
+         vsConstData.posMulAdd.y = 1.0f;
+         vsConstData.posMulAdd.z = 0.0f;
+         vsConstData.posMulAdd.w = 0.0f;
       } else {
          auto screenSizeX = mCurrentViewport.width - mCurrentViewport.x;
          auto screenSizeY = mCurrentViewport.height - mCurrentViewport.y;
-         vsConstData.posMul.x = 2.0f / screenSizeX;
-         vsConstData.posMul.y = 2.0f / screenSizeY;
-         vsConstData.posAdd.x = -1.0f;
-         vsConstData.posAdd.y = -1.0f;
+         vsConstData.posMulAdd.x = 2.0f / screenSizeX;
+         vsConstData.posMulAdd.y = 2.0f / screenSizeY;
+         vsConstData.posMulAdd.z = -1.0f;
+         vsConstData.posMulAdd.w = -1.0f;
       }
 
       if (!pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
          // map gl(-1 to 1) onto vk(0 to 1)
-         vsConstData.posMul.z = 0.5f;
-         vsConstData.posAdd.z = 0.5f;
+         vsConstData.zSpaceMul.x = 1.0f; // Add W
+         vsConstData.zSpaceMul.y = 0.5f; // * 0.5
       } else {
          // maintain 0 to 1
-         vsConstData.posMul.z = 1.0f;
-         vsConstData.posAdd.z = 0.0f;
+         vsConstData.zSpaceMul.x = 0.0f; // Add 0
+         vsConstData.zSpaceMul.y = 1.0f; // * 1.0
       }
-
-      vsConstData.posMul.w = 1.0f;
-      vsConstData.posAdd.w = 0.0f;
 
       mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { vsConstData });
    }

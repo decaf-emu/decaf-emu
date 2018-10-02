@@ -729,20 +729,45 @@ public:
 
          auto zeroConst = makeUintConstant(0);
          auto oneConst = makeUintConstant(1);
+         auto zeroFConst = makeFloatConstant(0.0f);
          auto oneFConst = makeFloatConstant(1.0f);
 
-         auto posMulPtr = createAccessChain(spv::StorageClass::StorageClassPushConstant, vsPushConstVar(), { zeroConst });
-         auto posMulVal = createLoad(posMulPtr);
+         auto posMulAddPtr = createAccessChain(spv::StorageClass::StorageClassPushConstant, vsPushConstVar(), { zeroConst });
+         auto posMulAddVal = createLoad(posMulAddPtr);
 
-         auto posAddPtr = createAccessChain(spv::StorageClass::StorageClassPushConstant, vsPushConstVar(), { oneConst });
-         auto posAddVal = createLoad(posAddPtr);
+         auto zSpaceMulPtr = createAccessChain(spv::StorageClass::StorageClassPushConstant, vsPushConstVar(), { oneConst });
+         auto zSpaceMulVal = createLoad(zSpaceMulPtr);
 
-         auto exportW = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
-         auto finalNorm = createOp(spv::OpCompositeConstruct, float4Type(), { exportW, exportW, exportW, oneFConst });
+         // pos.xy = (pos.xy * posMulAdd.xy) + posMulAdd.zw;
+
+         auto posMulPart = createOp(spv::OpVectorShuffle, float2Type(), { posMulAddVal, posMulAddVal, 0, 1 });
+         auto posMulVal = createOp(spv::OpCompositeConstruct, float4Type(), { posMulPart, oneFConst, oneFConst });
+
+         auto posAddPart = createOp(spv::OpVectorShuffle, float2Type(), { posMulAddVal, posMulAddVal, 2, 3 });
+         auto posAddVal = createOp(spv::OpCompositeConstruct, float4Type(), { posAddPart, zeroFConst, zeroFConst });
 
          exportVal = createBinOp(spv::OpFMul, float4Type(), exportVal, posMulVal);
          exportVal = createBinOp(spv::OpFAdd, float4Type(), exportVal, posAddVal);
-         exportVal = createBinOp(spv::OpFMul, float4Type(), exportVal, finalNorm);
+
+         // pos.y = -pos.y
+
+         auto exportY = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 1 });
+         exportY = createUnaryOp(spv::OpFNegate, floatType(), exportY);
+         exportVal = createOp(spv::OpCompositeInsert, float4Type(), { exportY, exportVal, 1 });
+
+         // pos.z = (pos.z + (pos.w * zSpaceMul.x)) * zSpaceMul.y;
+
+         auto zsYWMul = createOp(spv::OpCompositeExtract, floatType(), { zSpaceMulVal, 0 });
+         auto zsYMul = createOp(spv::OpCompositeExtract, floatType(), { zSpaceMulVal, 1 });
+
+         auto exportZ = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 2 });
+         auto exportW = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
+
+         auto yWAdd = createBinOp(spv::OpFMul, floatType(), exportW, zsYWMul);
+         auto zAdj = createBinOp(spv::OpFAdd, floatType(), exportZ, yWAdd);
+         auto zFinal = createBinOp(spv::OpFMul, floatType(), zAdj, zsYMul);
+
+         exportVal = createOp(spv::OpCompositeInsert, float4Type(), { zFinal, exportVal, 2 });
       }
 
       if (ref.type == ExportRef::Type::Pixel) {
@@ -871,9 +896,9 @@ public:
       if (!mVsPushConsts) {
          auto vsPushStruct = makeStructType({ float4Type(), float4Type() }, "VS_PUSH_CONSTANTS");
          addMemberDecoration(vsPushStruct, 0, spv::DecorationOffset, 0);
-         addMemberName(vsPushStruct, 0, "posMul");
+         addMemberName(vsPushStruct, 0, "posMulAdd");
          addMemberDecoration(vsPushStruct, 1, spv::DecorationOffset, 16);
-         addMemberName(vsPushStruct, 1, "posAdd");
+         addMemberName(vsPushStruct, 1, "zSpaceMul");
          addDecoration(vsPushStruct, spv::DecorationBlock);
          mVsPushConsts = createVariable(spv::StorageClassPushConstant, vsPushStruct, "VS_PUSH");
       }

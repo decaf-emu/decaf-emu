@@ -565,13 +565,13 @@ DecafSDLVulkan::createBuffers()
    };
 
    static const std::array<float, 24> vertices = {
-      -1.0f, -1.0f,  0.0f,  1.0f,
-       1.0f, -1.0f,  1.0f,  1.0f,
-       1.0f,  1.0f,  1.0f,  0.0f,
+      -1.0f,  1.0f,  0.0f,  1.0f,
+       1.0f,  1.0f,  1.0f,  1.0f,
+       1.0f, -1.0f,  1.0f,  0.0f,
 
-       1.0f,  1.0f,  1.0f,  0.0f,
-      -1.0f,  1.0f,  0.0f,  0.0f,
-      -1.0f, -1.0f,  0.0f,  1.0f,
+       1.0f, -1.0f,  1.0f,  0.0f,
+      -1.0f, -1.0f,  0.0f,  0.0f,
+      -1.0f,  1.0f,  0.0f,  1.0f,
    };
 
    vk::BufferCreateInfo bufferDesc;
