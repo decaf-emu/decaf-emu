@@ -794,6 +794,21 @@ public:
                makeDiscard();
                block.makeEndIf();
             };
+            auto makeEqCompareBlock = [&](bool wantEquality)
+            {
+               auto epsilonConst = makeFloatConstant(0.0001f);
+               auto alphaDiff = createBinOp(spv::OpFSub, floatType(), exportAlpha, alphaRefVal);
+               auto alphaDiffAbs = createBuiltinCall(floatType(), glslStd450(), GLSLstd450::GLSLstd450FAbs, { alphaDiff });
+               spv::Id pred;
+               if (wantEquality) {
+                  pred = createBinOp(spv::OpFOrdGreaterThan, boolType(), alphaDiffAbs, epsilonConst);
+               } else {
+                  pred = createBinOp(spv::OpFOrdLessThanEqual, boolType(), alphaDiffAbs, epsilonConst);
+               }
+               auto block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
+               makeDiscard();
+               block.makeEndIf();
+            };
 
             auto switchSegments = std::vector<spv::Block *> { };
             makeSwitch(alphaFuncVal, spv::SelectionControlMaskNone, 7,
@@ -817,7 +832,7 @@ public:
             addSwitchBreak();
 
             nextSwitchSegment(switchSegments, latte::REF_FUNC::EQUAL);
-            makeCompareBlock(spv::OpFOrdEqual);
+            makeEqCompareBlock(true);
             addSwitchBreak();
 
             nextSwitchSegment(switchSegments, latte::REF_FUNC::LESS_EQUAL);
@@ -829,7 +844,7 @@ public:
             addSwitchBreak();
 
             nextSwitchSegment(switchSegments, latte::REF_FUNC::NOT_EQUAL);
-            makeCompareBlock(spv::OpFOrdNotEqual);
+            makeEqCompareBlock(false);
             addSwitchBreak();
 
             nextSwitchSegment(switchSegments, latte::REF_FUNC::GREATER_EQUAL);
