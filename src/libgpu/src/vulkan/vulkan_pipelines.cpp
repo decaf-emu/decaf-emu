@@ -158,11 +158,13 @@ Driver::getPipelineDesc()
    };
 
    auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
+
    // TODO: Implement cb_color_control.FOG_ENABLE()
    // TODO: Implement cb_color_control.MULTIWRITE_ENABLE()
    // TODO: Implement cb_color_control.DITHER_ENABLE()
    // TODO: Implement cb_color_control.DEGAMMA_ENABLE()
-   decaf_check(cb_color_control.ROP3() == 0xCC);
+
+   desc.rop3 = cb_color_control.ROP3();
 
    bool shouldUseBlendEnable = false;
    bool shouldUseBlendControls = false;
@@ -586,8 +588,66 @@ Driver::checkCurrentPipeline()
    }
 
    vk::PipelineColorBlendStateCreateInfo colorBlendState;
-   colorBlendState.logicOpEnable = false;
-   colorBlendState.logicOp = vk::LogicOp::eCopy;
+
+   if (currentDesc->rop3 == 0xCC) {
+      // COPY
+      colorBlendState.logicOpEnable = false;
+      colorBlendState.logicOp = vk::LogicOp::eCopy;
+   } else {
+      colorBlendState.logicOpEnable = true;
+      switch (currentDesc->rop3) {
+      case 0x00: // BLACKNESS
+         colorBlendState.logicOp = vk::LogicOp::eClear;
+         break;
+      case 0x11: // NOTSRCERASE
+         colorBlendState.logicOp = vk::LogicOp::eNor;
+         break;
+      case 0x22:
+         colorBlendState.logicOp = vk::LogicOp::eAndInverted;
+         break;
+      case 0x33: // NOTSRCCOPY
+         colorBlendState.logicOp = vk::LogicOp::eCopyInverted;
+         break;
+      case 0x44: // SRCERASE
+         colorBlendState.logicOp = vk::LogicOp::eAndReverse;
+         break;
+      case 0x55: // DSTINVERT
+         colorBlendState.logicOp = vk::LogicOp::eInvert;
+         break;
+      case 0x66: // SRCINVERT
+         colorBlendState.logicOp = vk::LogicOp::eXor;
+         break;
+      case 0x77:
+         colorBlendState.logicOp = vk::LogicOp::eNand;
+         break;
+      case 0x88: // SRCAND
+         colorBlendState.logicOp = vk::LogicOp::eAnd;
+         break;
+      case 0x99:
+         colorBlendState.logicOp = vk::LogicOp::eEquivalent;
+         break;
+      case 0xAA:
+         colorBlendState.logicOp = vk::LogicOp::eNoOp;
+         break;
+      case 0xBB: // MERGEPAINT
+         colorBlendState.logicOp = vk::LogicOp::eOrInverted;
+         break;
+      case 0xDD:
+         colorBlendState.logicOp = vk::LogicOp::eOrReverse;
+         break;
+      case 0xEE: // SRCPAINT
+         colorBlendState.logicOp = vk::LogicOp::eOr;
+         break;
+      case 0xFF: // WHITENESS
+         colorBlendState.logicOp = vk::LogicOp::eSet;
+         break;
+      case 0x5A: // PATINVERT
+      case 0xF0: // PATCOPY
+      default:
+         decaf_abort("Unexpected ROP3 operation");
+      }
+   }
+
    colorBlendState.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
    colorBlendState.pAttachments = colorBlendAttachments.data();
    colorBlendState.blendConstants[0] = currentDesc->cbBlendConstants[0];

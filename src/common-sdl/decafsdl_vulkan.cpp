@@ -236,6 +236,7 @@ DecafSDLVulkan::createDevice()
    deviceFeatures.independentBlend = true;
    deviceFeatures.fillModeNonSolid = true;
    deviceFeatures.wideLines = true;
+   deviceFeatures.logicOp = true;
 
    vk::DeviceCreateInfo deviceDesc;
    deviceDesc.queueCreateInfoCount = 1;

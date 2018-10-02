@@ -303,6 +303,8 @@ struct PipelineDesc
    float polyBiasOffset;
    float polyBiasScale;
 
+   uint32_t rop3;
+
    struct BlendControl
    {
       uint8_t targetMask;
