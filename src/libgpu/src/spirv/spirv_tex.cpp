@@ -158,6 +158,18 @@ void Transpiler::translateTex_SET_CUBEMAP_INDEX(const ControlFlowInst &cf, const
    //  a specific face to be used in spite of the coordinates.
 }
 
+void Transpiler::translateTex_VTX_FETCH(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   // The TextureFetchInst perfectly matches the VertexFetchInst
+   translateVtx_FETCH(cf, *reinterpret_cast<const VertexFetchInst*>(&inst));
+}
+
+void Transpiler::translateTex_VTX_SEMANTIC(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   // The TextureFetchInst perfectly matches the VertexFetchInst
+   translateVtx_SEMANTIC(cf, *reinterpret_cast<const VertexFetchInst*>(&inst));
+}
+
 } // namespace spirv
 
 #endif // ifdef DECAF_VULKAN

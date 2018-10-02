@@ -549,7 +549,8 @@ private:
    std::array<DataBufferObject*, latte::MaxAttribBuffers> mCurrentAttribBuffers = { nullptr };
    std::array<std::array<SamplerObject*, latte::MaxSamplers>, 3> mCurrentSamplers = { { nullptr } };
    std::array<std::array<SurfaceObject*, latte::MaxTextures>, 3> mCurrentTextures = { { nullptr } };
-   std::array<std::array<StagingBuffer*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
+   std::array<StagingBuffer*, 3> mCurrentGprBuffers = { nullptr };
+   std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
 
    std::vector<uint8_t> mScratchIdxSwap;
    std::vector<uint8_t> mScratchIdxDequad;

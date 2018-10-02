@@ -191,6 +191,26 @@ public:
       return createLoad(gprChanPtr);
    }
 
+   spv::Id readGprSelRef(const latte::GprSelRef &ref)
+   {
+      switch (ref.sel) {
+      case latte::SQ_SEL::SEL_X:
+         return readGprChanRef(GprChanRef { ref.gpr, latte::SQ_CHAN::X });
+      case latte::SQ_SEL::SEL_Y:
+         return readGprChanRef(GprChanRef { ref.gpr, latte::SQ_CHAN::Y });
+      case latte::SQ_SEL::SEL_Z:
+         return readGprChanRef(GprChanRef { ref.gpr, latte::SQ_CHAN::Z });
+      case latte::SQ_SEL::SEL_W:
+         return readGprChanRef(GprChanRef { ref.gpr, latte::SQ_CHAN::W });
+      case latte::SQ_SEL::SEL_0:
+         return makeFloatConstant(0.0f);
+      case latte::SQ_SEL::SEL_1:
+         return makeFloatConstant(1.0f);
+      default:
+         decaf_abort("Unexpected SQ_SEL in gpr sel ref");
+      }
+   }
+
    spv::Id readGprMaskRef(const latte::GprMaskRef &ref)
    {
       // Read the source GPR
@@ -218,6 +238,16 @@ public:
       }
 
       return indexVal;
+   }
+
+   spv::Id getCbufferRef(const latte::CbufferRef &ref)
+   {
+      auto thisCbufVar = cbufferVar(ref.bufferId);
+      auto cbufIdxVal = getCbufferRefIndex(ref);
+
+      // $ = &CBUFFER{bufferindex}[index]
+      auto zeroConst = makeUintConstant(0);
+      return createAccessChain(spv::StorageClass::StorageClassUniform, thisCbufVar, { zeroConst, cbufIdxVal });
    }
 
    spv::Id readCbufferChanRef(const latte::CbufferChanRef &ref)
@@ -413,6 +443,27 @@ public:
       {
          auto srcCfilePtr = getCfileRef(srcX.cfileChan.cfile);
          return createLoad(srcCfilePtr);
+      }
+
+      if (srcX.type == SrcVarRef::Type::CBUFFER &&
+          srcY.type == SrcVarRef::Type::CBUFFER &&
+          srcZ.type == SrcVarRef::Type::CBUFFER &&
+          srcW.type == SrcVarRef::Type::CBUFFER &&
+          srcX.cbufferChan.chan == latte::SQ_CHAN::X &&
+          srcY.cbufferChan.chan == latte::SQ_CHAN::Y &&
+          srcZ.cbufferChan.chan == latte::SQ_CHAN::Z &&
+          srcW.cbufferChan.chan == latte::SQ_CHAN::W &&
+          srcX.cbufferChan.cbuffer.bufferId == srcY.cbufferChan.cbuffer.bufferId &&
+          srcY.cbufferChan.cbuffer.bufferId == srcZ.cbufferChan.cbuffer.bufferId &&
+          srcZ.cbufferChan.cbuffer.bufferId == srcW.cbufferChan.cbuffer.bufferId &&
+          srcX.cbufferChan.cbuffer.index == srcY.cbufferChan.cbuffer.index &&
+          srcY.cbufferChan.cbuffer.index == srcZ.cbufferChan.cbuffer.index &&
+          srcZ.cbufferChan.cbuffer.index == srcW.cbufferChan.cbuffer.index &&
+          srcX.cbufferChan.cbuffer.indexMode == srcY.cbufferChan.cbuffer.indexMode &&
+          srcY.cbufferChan.cbuffer.indexMode == srcZ.cbufferChan.cbuffer.indexMode &&
+          srcZ.cbufferChan.cbuffer.indexMode == srcW.cbufferChan.cbuffer.indexMode) {
+         auto srcCbufferPtr = getCbufferRef(srcX.cbufferChan.cbuffer);
+         return createLoad(srcCbufferPtr);
       }
 
       return createCompositeConstruct(resultType, {

@@ -9,6 +9,7 @@ Driver::bindShaderResources()
 {
    auto buildDescriptorSet = [&](vk::DescriptorSet dSet, int shaderStage)
    {
+      bool dSetHasValues = false;
 
       for (auto i = 0u; i < latte::MaxSamplers; ++i) {
          auto &sampler = mCurrentSamplers[shaderStage][i];
@@ -29,6 +30,7 @@ Driver::bindShaderResources()
          writeDesc.pBufferInfo = nullptr;
          writeDesc.pTexelBufferView = nullptr;
          mDevice.updateDescriptorSets({ writeDesc }, {});
+         dSetHasValues = true;
       }
 
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
@@ -51,22 +53,20 @@ Driver::bindShaderResources()
          writeDesc.pBufferInfo = nullptr;
          writeDesc.pTexelBufferView = nullptr;
          mDevice.updateDescriptorSets({ writeDesc }, {});
+         dSetHasValues = true;
       }
 
-      for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-         auto& uniformBuffer = mCurrentUniformBlocks[shaderStage][i];
-         if (!uniformBuffer) {
-            continue;
-         }
+      if (mCurrentGprBuffers[shaderStage]) {
+         auto gprBuffer = mCurrentGprBuffers[shaderStage];
 
          vk::DescriptorBufferInfo bufferDesc;
-         bufferDesc.buffer = uniformBuffer->buffer;
+         bufferDesc.buffer = gprBuffer->buffer;
          bufferDesc.offset = 0;
-         bufferDesc.range = uniformBuffer->size;
+         bufferDesc.range = gprBuffer->size;
 
          vk::WriteDescriptorSet writeDesc;
          writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = latte::MaxSamplers + latte::MaxTextures + i;
+         writeDesc.dstBinding = latte::MaxSamplers + latte::MaxTextures + 0;
          writeDesc.dstArrayElement = 0;
          writeDesc.descriptorCount = 1;
          writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -74,27 +74,59 @@ Driver::bindShaderResources()
          writeDesc.pBufferInfo = &bufferDesc;
          writeDesc.pTexelBufferView = nullptr;
          mDevice.updateDescriptorSets({ writeDesc }, {});
+         dSetHasValues = true;
+      } else {
+         for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
+            auto& uniformBuffer = mCurrentUniformBlocks[shaderStage][i];
+            if (!uniformBuffer) {
+               continue;
+            }
+
+            vk::DescriptorBufferInfo bufferDesc;
+            bufferDesc.buffer = uniformBuffer->buffer;
+            bufferDesc.offset = 0;
+            bufferDesc.range = uniformBuffer->size;
+
+            vk::WriteDescriptorSet writeDesc;
+            writeDesc.dstSet = dSet;
+            writeDesc.dstBinding = latte::MaxSamplers + latte::MaxTextures + i;
+            writeDesc.dstArrayElement = 0;
+            writeDesc.descriptorCount = 1;
+            writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+            writeDesc.pImageInfo = nullptr;
+            writeDesc.pBufferInfo = &bufferDesc;
+            writeDesc.pTexelBufferView = nullptr;
+            mDevice.updateDescriptorSets({ writeDesc }, {});
+            dSetHasValues = true;
+         }
       }
+
+      return dSetHasValues;
    };
 
    std::array<vk::DescriptorSet, 3> descBinds;
 
+   // TODO: We should avoid allocating when there is nothing to upload
+
    if (mCurrentVertexShader) {
       auto vsDSet = allocateVertexDescriptorSet();
-      buildDescriptorSet(vsDSet, 0);
-      descBinds[0] = vsDSet;
+      if (buildDescriptorSet(vsDSet, 0)) {
+         descBinds[0] = vsDSet;
+      }
    }
 
    if (mCurrentGeometryShader) {
       auto gsDSet = allocateGeometryDescriptorSet();
-      buildDescriptorSet(gsDSet, 1);
-      descBinds[1] = gsDSet;
+      if (buildDescriptorSet(gsDSet, 1)) {
+         descBinds[1] = gsDSet;
+      }
    }
 
    if (mCurrentPixelShader) {
       auto psDSet = allocatePixelDescriptorSet();
-      buildDescriptorSet(psDSet, 2);
-      descBinds[2] = psDSet;
+      if (buildDescriptorSet(psDSet, 2)) {
+         descBinds[2] = psDSet;
+      }
    }
 
    for (auto i = 0; i < 3; ++i) {

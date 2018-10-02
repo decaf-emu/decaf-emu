@@ -5,6 +5,81 @@
 namespace spirv
 {
 
+void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetchInst &inst)
+{
+   // Let's only support a very expected set of values
+   decaf_check(inst.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::NO_INDEX_OFFSET);
+   decaf_check(inst.word1.USE_CONST_FIELDS() == 1);
+   decaf_check(inst.word2.OFFSET() == 0);
+   decaf_check(inst.word2.MEGA_FETCH() && (inst.word0.MEGA_FETCH_COUNT() + 1) == 16);
+
+   // Grab the source register information
+   GprSelRef srcGpr;
+   srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
+   srcGpr.sel = inst.word0.SRC_SEL_X();
+
+   // Grab the destination register information
+   GprMaskRef destGpr;
+   destGpr.gpr = makeGprRef(inst.gpr.DST_GPR(), inst.gpr.DST_REL(), SQ_INDEX_MODE::LOOP);
+   destGpr.mask[SQ_CHAN::X] = inst.word1.DST_SEL_X();
+   destGpr.mask[SQ_CHAN::Y] = inst.word1.DST_SEL_Y();
+   destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
+   destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
+
+   uint32_t cbufferIdx;
+   if (mType == ShaderParser::Type::Vertex) {
+      auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::VS_TEX_RESOURCE_0;
+
+      if (id >= SQ_RES_OFFSET::VS_BUF_RESOURCE_0 && id <= SQ_RES_OFFSET::VS_BUF_RESOURCE_0 + 16) {
+         cbufferIdx = id - SQ_RES_OFFSET::VS_BUF_RESOURCE_0;
+
+      } else {
+         decaf_abort("Unsupported vertex shader VTX_FETCH vertex resource");
+      }
+   } else if (mType == ShaderParser::Type::Geometry) {
+      auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::GS_TEX_RESOURCE_0;
+
+      if (id >= SQ_RES_OFFSET::GS_BUF_RESOURCE_0 && id <= SQ_RES_OFFSET::GS_BUF_RESOURCE_0 + 16) {
+         cbufferIdx = id - SQ_RES_OFFSET::GS_BUF_RESOURCE_0;
+      } else {
+         decaf_abort("Unsupported vertex shader VTX_FETCH geometry resource");
+      }
+   } else if (mType == ShaderParser::Type::Pixel) {
+      auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::PS_TEX_RESOURCE_0;
+
+      if (id >= SQ_RES_OFFSET::PS_BUF_RESOURCE_0 && id <= SQ_RES_OFFSET::PS_BUF_RESOURCE_0 + 16) {
+         cbufferIdx = id - SQ_RES_OFFSET::PS_BUF_RESOURCE_0;
+      } else {
+         decaf_abort("Unsupported vertex shader VTX_FETCH pixel resource");
+      }
+   } else {
+      decaf_abort("Unsupported shader type for VTX_FETCH");
+   }
+
+   auto indexValFloat = mSpv->readGprSelRef(srcGpr);
+   auto indexVal = mSpv->createUnaryOp(spv::OpBitcast, mSpv->uintType(), indexValFloat);
+
+   auto cbufferVar = mSpv->cbufferVar(cbufferIdx);
+
+   // TODO: Should probably move this into SPV
+   auto zeroConst = mSpv->makeUintConstant(0);
+   auto cbufferPtr = mSpv->createAccessChain(spv::StorageClassUniform, cbufferVar, { zeroConst, indexVal });
+   auto outputVal = mSpv->createLoad(cbufferPtr);
+
+   auto gprRef = mSpv->getGprRef(destGpr.gpr);
+
+   // TODO: This logic is duplicated a bunch of places, we should converge
+   // this into a centralized function in mSpv...
+   auto destVal = spv::NoResult;
+   if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
+      destVal = mSpv->createLoad(gprRef);
+   }
+
+   auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
+
+   mSpv->createStore(maskedVal, gprRef);
+}
+
 int findVtxSemanticGpr(const std::array<latte::SQ_VTX_SEMANTIC_N, 32>& vtxSemantics, uint8_t semanticId)
 {
    for (auto i = 0; i < 32; ++i) {
