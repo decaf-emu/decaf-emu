@@ -156,6 +156,85 @@ void Transpiler::translateCf_VTX_TC(const ControlFlowInst &cf)
    mSpv->endCfCondBlock(afterBlock);
 }
 
+void Transpiler::translateCf_LOOP_START(const ControlFlowInst &cf)
+{
+   latte::ShaderParser::translateCf_LOOP_START(cf);
+}
+
+void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
+{
+   decaf_check(cf.word1.COND() == latte::SQ_CF_COND::ACTIVE);
+
+   auto headerBlock = &mSpv->makeNewBlock();
+   auto bodyBlock = &mSpv->makeNewBlock();
+   auto continueBlock = &mSpv->makeNewBlock();
+   auto afterBlock = &mSpv->makeNewBlock();
+
+   mSpv->createBranch(headerBlock);
+   mSpv->setBuildPoint(headerBlock);
+
+   mSpv->createLoopMerge(afterBlock, continueBlock, 0, 0);
+   mSpv->createBranch(bodyBlock);
+   mSpv->setBuildPoint(bodyBlock);
+
+   LoopState loop;
+   loop.startPC = mCfPC;
+   loop.endPC = cf.word0.ADDR() - 1;
+   loop.headerBlock = headerBlock;
+   loop.bodyBlock = bodyBlock;
+   loop.continueBlock = continueBlock;
+   loop.afterBlock = afterBlock;
+   loopStack.push_back(loop);
+}
+
+void Transpiler::translateCf_LOOP_START_NO_AL(const ControlFlowInst &cf)
+{
+   latte::ShaderParser::translateCf_LOOP_START_NO_AL(cf);
+}
+
+void Transpiler::translateCf_LOOP_END(const ControlFlowInst &cf)
+{
+   // TODO: LOOP_END has different behaviour depending on which LOOP_START
+   // instruction started the loop, currently we only handle LOOP_START_DX10
+   auto &loopState = loopStack.back();
+   auto loopIndex = loopStack.size() - 1;
+   loopStack.pop_back();
+
+   // Sanity check to ensure we are at the cfPC
+   decaf_check(mCfPC == loopState.endPC);
+   decaf_check((cf.word0.ADDR() - 1) == loopState.startPC);
+
+   auto stateVal = mSpv->createLoad(mSpv->stateVar());
+
+   auto predBreak = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactiveBreak());
+   auto noBreakBlock = &mSpv->makeNewBlock();
+   mSpv->createConditionalBranch(predBreak, loopState.afterBlock, noBreakBlock);
+   mSpv->setBuildPoint(noBreakBlock);
+
+   auto predContinue = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactiveContinue());
+   auto continueBlock = spv::Builder::If { predContinue, spv::SelectionControlMaskNone, *mSpv };
+   mSpv->createStore(mSpv->stateActive(), mSpv->stateVar());
+   continueBlock.makeEndIf();
+
+   mSpv->createBranch(loopState.continueBlock);
+   mSpv->setBuildPoint(loopState.continueBlock);
+
+   // We don't do anything
+
+   mSpv->createBranch(loopState.headerBlock);
+   mSpv->setBuildPoint(loopState.afterBlock);
+}
+
+void Transpiler::translateCf_LOOP_CONTINUE(const ControlFlowInst &cf)
+{
+   latte::ShaderParser::translateCf_LOOP_CONTINUE(cf);
+}
+
+void Transpiler::translateCf_LOOP_BREAK(const ControlFlowInst &cf)
+{
+   latte::ShaderParser::translateCf_LOOP_BREAK(cf);
+}
+
 } // namespace spirv
 
 #endif // ifdef DECAF_VULKAN

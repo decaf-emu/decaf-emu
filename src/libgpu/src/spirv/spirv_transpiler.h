@@ -148,6 +148,12 @@ public:
    void translateCf_PUSH(const ControlFlowInst &cf) override;
    void translateCf_POP(const ControlFlowInst &cf) override;
    void translateCf_RETURN(const ControlFlowInst &cf) override;
+   void translateCf_LOOP_START(const ControlFlowInst &cf) override;
+   void translateCf_LOOP_START_DX10(const ControlFlowInst &cf) override;
+   void translateCf_LOOP_START_NO_AL(const ControlFlowInst &cf) override;
+   void translateCf_LOOP_END(const ControlFlowInst &cf) override;
+   void translateCf_LOOP_CONTINUE(const ControlFlowInst &cf) override;
+   void translateCf_LOOP_BREAK(const ControlFlowInst &cf) override;
    void translateCf_TEX(const ControlFlowInst &cf) override;
    void translateCf_VTX(const ControlFlowInst &cf) override;
    void translateCf_VTX_TC(const ControlFlowInst &cf) override;
@@ -182,6 +188,16 @@ protected:
    std::vector<InputAttrib> mVsInputAttribs;
    std::vector<uint32_t> mVsOutputParams;
 
+   struct LoopState
+   {
+      uint32_t startPC;
+      uint32_t endPC;
+      spv::Block *headerBlock;
+      spv::Block *bodyBlock;
+      spv::Block *continueBlock;
+      spv::Block *afterBlock;
+   };
+   std::vector<LoopState> loopStack;
 
 };
 
