@@ -293,6 +293,7 @@ struct PipelineDesc
    bool zWriteEnable;
    latte::REF_FUNC zFunc;
    bool rasteriserDisable;
+   uint32_t lineWidth;
    latte::PA_FACE paFace;
    bool cullFront;
    bool cullBack;

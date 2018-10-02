@@ -43,6 +43,7 @@ Driver::getPipelineDesc()
 
    // -- Rasterization stuff
    auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
+   auto pa_su_line_cntl = getRegister<latte::PA_SU_LINE_CNTL>(latte::Register::PA_SU_LINE_CNTL);
    auto pa_su_sc_mode_cntl = getRegister<latte::PA_SU_SC_MODE_CNTL>(latte::Register::PA_SU_SC_MODE_CNTL);
    auto pa_su_poly_offset_front_offset = getRegister<latte::PA_SU_POLY_OFFSET_FRONT_OFFSET>(latte::Register::PA_SU_POLY_OFFSET_FRONT_OFFSET);
    auto pa_su_poly_offset_front_scale = getRegister<latte::PA_SU_POLY_OFFSET_FRONT_SCALE>(latte::Register::PA_SU_POLY_OFFSET_FRONT_SCALE);
@@ -73,6 +74,9 @@ Driver::getPipelineDesc()
    // resources binding
 
    desc.rasteriserDisable = pa_cl_clip_cntl.RASTERISER_DISABLE();
+
+   // Line widths
+   desc.lineWidth = pa_su_line_cntl.WIDTH();
 
    // We do not support split front/back mode
    decaf_check(pa_su_sc_mode_cntl.POLY_MODE() == 0);
@@ -520,7 +524,7 @@ Driver::checkCurrentPipeline()
       rasterizer.depthBiasSlopeFactor = currentDesc->polyBiasScale;
    }
 
-   rasterizer.lineWidth = 1.0f;
+   rasterizer.lineWidth = static_cast<float>(currentDesc->lineWidth) / 8.0f;
 
    vk::PipelineMultisampleStateCreateInfo multisampling;
    multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;

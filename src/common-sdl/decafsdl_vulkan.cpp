@@ -235,6 +235,7 @@ DecafSDLVulkan::createDevice()
    deviceFeatures.textureCompressionBC = true;
    deviceFeatures.independentBlend = true;
    deviceFeatures.fillModeNonSolid = true;
+   deviceFeatures.wideLines = true;
 
    vk::DeviceCreateInfo deviceDesc;
    deviceDesc.queueCreateInfoCount = 1;
