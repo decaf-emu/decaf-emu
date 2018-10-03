@@ -1288,13 +1288,13 @@ FSMountAsync(virt_ptr<FSClient> client,
       std::memcpy(devicePath.getRawPointer(), "/dev/sdcard", 11);
       string_copy(devicePath.getRawPointer() + 11,
                   sourcePath.getRawPointer() + 8,
-                  2);
+                  FSMaxPathLength - 11);
    } else {
       // <source path> to /dev/<source path>
       std::memcpy(devicePath.getRawPointer(), "/dev/", 5);
       string_copy(devicePath.getRawPointer() + 5,
                   sourcePath.getRawPointer(),
-                  FSMaxPathLength - 6);
+                  FSMaxPathLength - 5);
    }
 
    if (error) {
