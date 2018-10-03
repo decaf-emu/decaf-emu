@@ -42,32 +42,26 @@ void Transpiler::translateCf_ALU_CONTINUE(const ControlFlowInst &cf)
 {
    translateCf_ALU(cf);
 
-   // state = (state == Active) ? Active : InactiveContinue
-   auto stateVar = mSpv->stateVar();
-   auto state = mSpv->createLoad(stateVar);
-   auto pred = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), state, mSpv->stateActive());
-   auto newState = mSpv->createTriOp(spv::OpSelect, mSpv->intType(),
-                                     pred,
-                                     mSpv->stateActive(),
-                                     mSpv->stateInactiveContinue());
-
-   mSpv->createStore(newState, stateVar);
+   // If state is set to Inactive, set it to InactiveContinue
+   auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
+                                       mSpv->createLoad(mSpv->stateVar()),
+                                       mSpv->stateInactive());
+   auto ifBuilder = spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
+   mSpv->createStore(mSpv->stateInactiveContinue(), mSpv->stateVar());
+   ifBuilder.makeEndIf();
 }
 
 void Transpiler::translateCf_ALU_BREAK(const ControlFlowInst &cf)
 {
    translateCf_ALU(cf);
 
-   // state = (state == Active) ? Active : InactiveContinue
-   auto stateVar = mSpv->stateVar();
-   auto state = mSpv->createLoad(stateVar);
-   auto pred = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), state, mSpv->stateActive());
-   auto newState = mSpv->createTriOp(spv::OpSelect, mSpv->intType(),
-                                     pred,
-                                     mSpv->stateActive(),
-                                     mSpv->stateInactiveBreak());
-
-   mSpv->createStore(newState, stateVar);
+   // If state is set to Inactive, set it to InactiveBreak
+   auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
+                                       mSpv->createLoad(mSpv->stateVar()),
+                                       mSpv->stateInactive());
+   auto ifBuilder = spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
+   mSpv->createStore(mSpv->stateInactiveBreak(), mSpv->stateVar());
+   ifBuilder.makeEndIf();
 }
 
 void Transpiler::translateCf_ALU_ELSE_AFTER(const ControlFlowInst &cf)
@@ -165,26 +159,36 @@ void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
 {
    decaf_check(cf.word1.COND() == latte::SQ_CF_COND::ACTIVE);
 
-   auto headerBlock = &mSpv->makeNewBlock();
-   auto bodyBlock = &mSpv->makeNewBlock();
-   auto continueBlock = &mSpv->makeNewBlock();
-   auto afterBlock = &mSpv->makeNewBlock();
-
-   mSpv->createBranch(headerBlock);
-   mSpv->setBuildPoint(headerBlock);
-
-   mSpv->createLoopMerge(afterBlock, continueBlock, 0, 0);
-   mSpv->createBranch(bodyBlock);
-   mSpv->setBuildPoint(bodyBlock);
-
-   LoopState loop;
+   auto loop = LoopState { };
    loop.startPC = mCfPC;
    loop.endPC = cf.word0.ADDR() - 1;
-   loop.headerBlock = headerBlock;
-   loop.bodyBlock = bodyBlock;
-   loop.continueBlock = continueBlock;
-   loop.afterBlock = afterBlock;
-   loopStack.push_back(loop);
+   loop.head = &mSpv->makeNewBlock();
+   loop.body = &mSpv->makeNewBlock();
+   loop.merge = &mSpv->makeNewBlock();
+   loop.continue_target = &mSpv->makeNewBlock();
+   loopStack.emplace_back(loop);
+
+   mSpv->createBranch(loop.head);
+   mSpv->setBuildPoint(loop.head);
+   mSpv->createLoopMerge(loop.merge, loop.continue_target, spv::LoopControlMaskNone, 0);
+   mSpv->createBranch(loop.body);
+   mSpv->setBuildPoint(loop.body);
+
+   auto stateVal = mSpv->createLoad(mSpv->stateVar());
+
+   // If state is set to InactiveContinue, set it to Active
+   auto isInactiveContinue = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
+                                               stateVal,
+                                               mSpv->stateInactiveContinue());
+   auto ifBuilder = &spv::Builder::If { isInactiveContinue, spv::SelectionControlMaskNone, *mSpv };
+   mSpv->createStore(mSpv->stateActive(), mSpv->stateVar());
+   ifBuilder->makeEndIf();
+
+   // If state is set to Inactive, set it to InactiveBreak
+   auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactive());
+   ifBuilder = &spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
+   mSpv->createStore(mSpv->stateInactiveBreak(), mSpv->stateVar());
+   ifBuilder->makeEndIf();
 }
 
 void Transpiler::translateCf_LOOP_START_NO_AL(const ControlFlowInst &cf)
@@ -194,35 +198,31 @@ void Transpiler::translateCf_LOOP_START_NO_AL(const ControlFlowInst &cf)
 
 void Transpiler::translateCf_LOOP_END(const ControlFlowInst &cf)
 {
-   // TODO: LOOP_END has different behaviour depending on which LOOP_START
-   // instruction started the loop, currently we only handle LOOP_START_DX10
-   auto &loopState = loopStack.back();
-   auto loopIndex = loopStack.size() - 1;
+   auto loop = loopStack.back();
+
+   // Sanity check to ensure we are at the correct cfPC
+   decaf_check(mCfPC == loop.endPC);
+   decaf_check((cf.word0.ADDR() - 1) == loop.startPC);
+
+   mSpv->createBranch(loop.continue_target);
+   mSpv->setBuildPoint(loop.continue_target);
+
+   // Continue while state != InactiveBreak
+   auto predContinue = mSpv->createBinOp(spv::OpINotEqual, mSpv->boolType(),
+                                         mSpv->createLoad(mSpv->stateVar()),
+                                         mSpv->stateInactiveBreak());
+   mSpv->createConditionalBranch(predContinue, loop.head, loop.merge);
+
+   mSpv->setBuildPoint(loop.merge);
    loopStack.pop_back();
 
-   // Sanity check to ensure we are at the cfPC
-   decaf_check(mCfPC == loopState.endPC);
-   decaf_check((cf.word0.ADDR() - 1) == loopState.startPC);
-
-   auto stateVal = mSpv->createLoad(mSpv->stateVar());
-
-   auto predBreak = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactiveBreak());
-   auto noBreakBlock = &mSpv->makeNewBlock();
-   mSpv->createConditionalBranch(predBreak, loopState.afterBlock, noBreakBlock);
-   mSpv->setBuildPoint(noBreakBlock);
-
-   auto predContinue = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactiveContinue());
-   auto continueBlock = spv::Builder::If { predContinue, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->createStore(mSpv->stateActive(), mSpv->stateVar());
-   continueBlock.makeEndIf();
-
-   mSpv->createBranch(loopState.continueBlock);
-   mSpv->setBuildPoint(loopState.continueBlock);
-
-   // We don't do anything
-
-   mSpv->createBranch(loopState.headerBlock);
-   mSpv->setBuildPoint(loopState.afterBlock);
+   // If state is set to InactiveBreak, set it to Inactive
+   auto predBreak = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
+                                      mSpv->createLoad(mSpv->stateVar()),
+                                      mSpv->stateInactiveBreak());
+   auto ifBuilder = spv::Builder::If { predBreak, spv::SelectionControlMaskNone, *mSpv };
+   mSpv->createStore(mSpv->stateInactive(), mSpv->stateVar());
+   ifBuilder.makeEndIf();
 }
 
 void Transpiler::translateCf_LOOP_CONTINUE(const ControlFlowInst &cf)

@@ -192,10 +192,10 @@ protected:
    {
       uint32_t startPC;
       uint32_t endPC;
-      spv::Block *headerBlock;
-      spv::Block *bodyBlock;
-      spv::Block *continueBlock;
-      spv::Block *afterBlock;
+      spv::Block *head;
+      spv::Block *body;
+      spv::Block *continue_target;
+      spv::Block *merge;
    };
    std::vector<LoopState> loopStack;
 
