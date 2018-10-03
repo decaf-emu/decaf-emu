@@ -54,15 +54,25 @@ Driver::checkCurrentAttribBuffers()
    }
 }
 
-void
+bool
 Driver::bindAttribBuffers()
 {
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       auto buffer = mCurrentAttribBuffers[i];
+
+      if (mCurrentVertexShader->shader.inputBuffers[i].isUsed) {
+         if (!buffer) {
+            // If the buffer is used, but we don't have one, we should cancel the draw.
+            return false;
+         }
+      }
+
       if (buffer) {
          mActiveCommandBuffer.bindVertexBuffers(i, { buffer->buffer }, { 0 });
       }
    }
+
+   return true;
 }
 
 } // namespace vulkan

@@ -57,11 +57,13 @@ Driver::checkCurrentViewportAndScissor()
    mCurrentScissor = scissor;
 }
 
-void
+bool
 Driver::bindViewportAndScissor()
 {
    mActiveCommandBuffer.setViewport(0, { mCurrentViewport });
    mActiveCommandBuffer.setScissor(0, { mCurrentScissor });
+
+   return true;
 }
 
 } // namespace vulkan

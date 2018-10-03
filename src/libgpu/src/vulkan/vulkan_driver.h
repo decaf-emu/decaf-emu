@@ -403,7 +403,7 @@ protected:
 
    // Viewports
    void checkCurrentViewportAndScissor();
-   void bindViewportAndScissor();
+   bool bindViewportAndScissor();
 
    // Samplers
    SamplerDesc getSamplerDesc(ShaderStage shaderStage, uint32_t samplerIdx);
@@ -443,16 +443,16 @@ protected:
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);
    void checkCurrentAttribBuffers();
-   void bindAttribBuffers();
+   bool bindAttribBuffers();
 
    // Indices
    void maybeSwapIndices();
    void maybeUnpackQuads();
    void checkCurrentIndices();
-   void bindIndexBuffer();
+   bool bindIndexBuffer();
 
    // Draws
-   void bindShaderResources();
+   bool bindShaderResources();
    void drawGenericIndexed(uint32_t numIndices, void *indices);
 
    // Framebuffers

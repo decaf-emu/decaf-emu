@@ -174,7 +174,7 @@ Driver::checkCurrentIndices()
    }
 }
 
-void
+bool
 Driver::bindIndexBuffer()
 {
    decaf_check(mCurrentIndexBuffer);
@@ -191,6 +191,8 @@ Driver::bindIndexBuffer()
    }
 
    mActiveCommandBuffer.bindIndexBuffer(mCurrentIndexBuffer->buffer, 0, bindIndexType);
+
+   return true;
 }
 
 } // namespace vulkan

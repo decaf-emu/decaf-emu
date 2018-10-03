@@ -1,10 +1,12 @@
 #ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
 
+#include <common/log.h>
+
 namespace vulkan
 {
 
-void
+bool
 Driver::bindShaderResources()
 {
    auto buildDescriptorSet = [&](vk::DescriptorSet dSet, int shaderStage)
@@ -206,6 +208,8 @@ Driver::bindShaderResources()
       psConstData.alphaRef = alphaRef;
       mActiveCommandBuffer.pushConstants<PsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 32, { psConstData });
    }
+
+   return true;
 }
 
 void
@@ -277,15 +281,21 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
 
    mActiveCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mCurrentPipeline->pipeline);
 
-   bindAttribBuffers();
-   bindShaderResources();
-   bindViewportAndScissor();
+   bool drawIsLegal = true;
 
-   if (mCurrentIndexBuffer) {
-      bindIndexBuffer();
-      mActiveCommandBuffer.drawIndexed(drawDesc.numIndices, drawDesc.numInstances, 0, drawDesc.baseVertex, drawDesc.baseInstance);
+   drawIsLegal &= bindAttribBuffers();
+   drawIsLegal &= bindShaderResources();
+   drawIsLegal &= bindViewportAndScissor();
+
+   if (drawIsLegal) {
+      if (mCurrentIndexBuffer) {
+         bindIndexBuffer();
+         mActiveCommandBuffer.drawIndexed(drawDesc.numIndices, drawDesc.numInstances, 0, drawDesc.baseVertex, drawDesc.baseInstance);
+      } else {
+         mActiveCommandBuffer.draw(drawDesc.numIndices, drawDesc.numInstances, drawDesc.baseVertex, drawDesc.baseInstance);
+      }
    } else {
-      mActiveCommandBuffer.draw(drawDesc.numIndices, drawDesc.numInstances, drawDesc.baseVertex, drawDesc.baseInstance);
+      gLog->debug("Skipped draw due to invalid parameters");
    }
 
    mActiveCommandBuffer.endRenderPass();
