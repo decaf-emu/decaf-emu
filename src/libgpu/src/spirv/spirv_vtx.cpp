@@ -237,8 +237,14 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
 
    // Store each element for operating on independantly...
    std::array<spv::Id, 4> inputElems = { spv::NoResult, spv::NoResult, spv::NoResult, spv::NoResult };
-   for (auto i = 0u; i < fmtMeta.inputCount; ++i) {
-      inputElems[i] = mSpv->createOp(spv::OpCompositeExtract, sourceElemType, { source, i });
+   if (fmtMeta.inputCount > 1) {
+      for (auto i = 0u; i < fmtMeta.inputCount; ++i) {
+         inputElems[i] = mSpv->createOp(spv::OpCompositeExtract, sourceElemType, { source, i });
+      }
+   } else {
+      for (auto i = 0u; i < fmtMeta.inputCount; ++i) {
+         inputElems[i] = source;
+      }
    }
 
    // Upcast each element to a uint for bitshift extraction
@@ -292,7 +298,8 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
                // If its less than 32 bits, we use bitfield extraction to sign extend
                auto offsetConst = mSpv->makeUintConstant(0);
                auto lengthConst = mSpv->makeUintConstant(elem.length);
-               elems[i] = mSpv->createTriOp(spv::Op::OpBitFieldSExtract, mSpv->intType(), elems[i], offsetConst, lengthConst);
+               auto signedElem = mSpv->createUnaryOp(spv::OpBitcast, mSpv->intType(), elems[i]);
+               elems[i] = mSpv->createTriOp(spv::Op::OpBitFieldSExtract, mSpv->intType(), signedElem, offsetConst, lengthConst);
             }
          } else {
             // We are already in UINT format as we needed

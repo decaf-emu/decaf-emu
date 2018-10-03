@@ -247,6 +247,9 @@ getDataFormatMeta(latte::SQ_DATA_FORMAT format)
    static const auto DFT_FLOAT = DataFormatMetaType::FLOAT;
    static const auto BADELEM = DataFormatMetaElem { 0, 0, 0 };
 
+   // Note: In order to reduce the likelyhood of encountering an unsupported
+   // 8-bit type in the SPIRV, we intentionally collapse some types...
+
    switch (format) {
    case latte::SQ_DATA_FORMAT::FMT_8:
       return{ 8, 1, DFT_UINT, {{ 0, 0, 8 }, BADELEM, BADELEM, BADELEM } };
@@ -259,7 +262,7 @@ getDataFormatMeta(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
       return{ 16, 1,DFT_FLOAT, {{ 0, 0, 16 }, BADELEM, BADELEM, BADELEM } };
    case latte::SQ_DATA_FORMAT::FMT_8_8:
-      return{ 8, 2,DFT_UINT, {{ 0, 0, 8 },{ 1, 0, 8 }, BADELEM, BADELEM } };
+      return{ 16, 1, DFT_UINT, {{ 0, 0, 8 },{ 0, 8, 8 }, BADELEM, BADELEM } };
    case latte::SQ_DATA_FORMAT::FMT_5_6_5:
       return{ 16, 1, DFT_UINT, {{0, 0, 5}, {0, 5, 6}, {0, 11, 5}, BADELEM } };
    case latte::SQ_DATA_FORMAT::FMT_6_5_5:
@@ -297,7 +300,7 @@ getDataFormatMeta(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
       return{ 32, 1, DFT_UINT, {{0, 22, 10}, {0, 12, 10}, {0, 2, 10}, {0, 0, 2} } };
    case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
-      return{ 8, 4,DFT_UINT,{{ 0, 0, 8 },{ 1, 0, 8 },{ 2, 0, 8 },{ 3, 0, 8 } } };
+      return{ 32, 1, DFT_UINT,{{ 0, 0, 8 },{ 0, 8, 8 },{ 0, 16, 8 },{0, 24, 8 } } };
    case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
       return{ 32, 1, DFT_UINT, {{0, 0, 10}, {0, 10, 10}, {0, 20, 10}, {0, 30, 2} } };
    case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:

@@ -180,6 +180,10 @@ public:
 
    spv::Id vecType(spv::Id elemType, int elemCount)
    {
+      if (elemCount == 1) {
+         return elemType;
+      }
+
       auto vecPair = std::make_pair(elemType, elemCount);
       auto vecType = mVecType[vecPair];
       if (!vecType) {

@@ -583,6 +583,11 @@ public:
             }
          }
 
+         if (dest == spv::NoResult) {
+            decaf_check(isSwizzleFullyUnmasked(mask));
+            dest = source;
+         }
+
          return createOp(spv::Op::OpVectorShuffle, float4Type(), { dest, source, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2], shuffleIdx[3] });
       }
 
@@ -680,11 +685,11 @@ public:
          }
 
          auto srcTypeId = getTypeId(srcId);
-         if (srcTypeId == floatType()) {
+         if (srcTypeId == mFloatType) {
             // Nothing to do, we are already a float!
-         } else if (srcTypeId == intType()) {
+         } else if (srcTypeId == mIntType) {
             srcId = createUnaryOp(spv::OpBitcast, floatType(), srcId);
-         } else if (srcTypeId == uintType()) {
+         } else if (srcTypeId == mUintType) {
             srcId = createUnaryOp(spv::OpBitcast, floatType(), srcId);
          } else {
             decaf_abort("Unexpected type at ALU instruction write");
