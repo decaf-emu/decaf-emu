@@ -74,6 +74,11 @@ void Transpiler::translateAluOp3_CNDGE_INT(const ControlFlowInst &cf, const AluI
 
 void Transpiler::translateAluOp3_MULADD(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
+   translateAluOp3_MULADD_IEEE(cf, group, unit, inst);
+}
+
+void Transpiler::translateAluOp3_MULADD_IEEE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
    auto src2 = mSpv->readAluInstSrc(cf, group, inst, 2);

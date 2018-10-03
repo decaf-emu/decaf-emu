@@ -75,7 +75,11 @@ void Transpiler::translateAluOp2_FLT_TO_INT(const ControlFlowInst &cf, const Alu
 
 void Transpiler::translateAluOp2_FRACT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   latte::ShaderParser::translateAluOp2_FRACT(cf, group, unit, inst);
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
+
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Fract, { src0 });
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
 void Transpiler::translateAluOp2_INT_TO_FLT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -199,14 +203,17 @@ void Transpiler::translateAluOp2_KILLGE_UINT(const ControlFlowInst &cf, const Al
 
 void Transpiler::translateAluOp2_LOG_CLAMPED(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   // TODO: LOG_CLAMPED
-   latte::ShaderParser::translateAluOp2_LOG_CLAMPED(cf, group, unit, inst);
+   // TODO: Implement log clamp-to-maxval
+   translateAluOp2_LOG_IEEE(cf, group, unit, inst);
 }
 
 void Transpiler::translateAluOp2_LOG_IEEE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   // TODO: LOG_IEEE
-   latte::ShaderParser::translateAluOp2_LOG_IEEE(cf, group, unit, inst);
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::FLOAT);
+
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Log, { src0 });
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
 void Transpiler::translateAluOp2_LSHL_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
