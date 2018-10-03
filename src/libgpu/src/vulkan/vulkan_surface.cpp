@@ -69,8 +69,8 @@ Driver::allocateSurface(const SurfaceDesc& info)
       realWidth = info.width;
       realHeight = info.height;
       realDepth = 1;
-      realArrayLayers = info.depth;
-      imageViewType = vk::ImageViewType::eCube;
+      realArrayLayers = info.depth * 6;
+      imageViewType = vk::ImageViewType::e2DArray;
       break;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       imageType = vk::ImageType::e1D;
@@ -199,7 +199,7 @@ Driver::uploadSurface(SurfaceObject *surface)
    }
 
    if (dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
-      //uploadDepth *= 6;
+     texelDepth *= 6;
    }
 
    auto srcImageSize = texelPitch * texelHeight * texelDepth * bpp / 8;

@@ -63,9 +63,9 @@ void Transpiler::translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFet
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
 
-   auto texVarType = mSpv->textureVarType(textureId);
+   auto texVarType = mSpv->textureVarType(textureId, texDim);
    auto sampVar = mSpv->samplerVar(samplerId);
-   auto texVar = mSpv->textureVar(textureId);
+   auto texVar = mSpv->textureVar(textureId, texDim);
 
    auto sampVal = mSpv->createLoad(sampVar);
    auto texVal = mSpv->createLoad(texVar);
