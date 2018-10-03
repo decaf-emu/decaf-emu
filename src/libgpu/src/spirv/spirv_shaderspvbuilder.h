@@ -929,6 +929,16 @@ public:
       return mInstanceId;
    }
 
+   spv::Id fragCoordVar()
+   {
+      if (!mFragCoord) {
+         mFragCoord = createVariable(spv::StorageClassInput, float4Type(), "FragCoord");
+         addDecoration(mFragCoord, spv::DecorationBuiltIn, spv::BuiltInFragCoord);
+         mEntryPoint->addIdOperand(mFragCoord);
+      }
+      return mFragCoord;
+   }
+
    spv::Id inputAttribVar(int semLocation, spv::Id attribType)
    {
       auto attribIdx = mAttribInputs.size();
@@ -1316,6 +1326,7 @@ protected:
 
    spv::Id mVertexId = spv::NoResult;
    spv::Id mInstanceId = spv::NoResult;
+   spv::Id mFragCoord = spv::NoResult;
 
    spv::Id mRegistersBuffer = spv::NoResult;
    std::array<spv::Id, latte::MaxUniformBlocks> mUniformBuffers = { spv::NoResult };

@@ -167,12 +167,6 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
    // psDesc.regs.spi_ps_in_control_0.LINEAR_GRADIENT_ENA()
    // psDesc.regs.spi_ps_in_control_0.PERSP_GRADIENT_ENA()
 
-   // We do not currently support importing the position...
-   decaf_check(!desc.regs.spi_ps_in_control_0.POSITION_ENA());
-   //psDesc.regs.spi_ps_in_control_0.POSITION_ADDR();
-   //psDesc.regs.spi_ps_in_control_0.POSITION_CENTROID();
-   //psDesc.regs.spi_ps_in_control_0.POSITION_SAMPLE();
-
    // We do not currently support fixed point positions
    decaf_check(!desc.regs.spi_ps_in_control_1.FIXED_PT_POSITION_ENA());
    //psDesc.regs.spi_ps_in_control_1.FIXED_PT_POSITION_ADDR();
@@ -198,13 +192,20 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
    auto numInputs = desc.regs.spi_ps_in_control_0.NUM_INTERP();
    for (auto i = 0u; i < numInputs; ++i) {
       auto &spi_ps_input_cntl = desc.regs.spi_ps_input_cntls[i];
-
       auto gprRef = spvGen.getGprRef({ i, latte::GprIndexMode::None });
-
       auto semLocation = findVsOutputLocation(desc.vsOutputSemantics, spi_ps_input_cntl.SEMANTIC());
+
+      if (desc.regs.spi_ps_in_control_0.POSITION_ENA() &&
+          desc.regs.spi_ps_in_control_0.POSITION_ADDR() == i) {
+         // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_CENTROID();
+         // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_SAMPLE();
+         decaf_check(semLocation < 0);
+         spvGen.createStore(spvGen.createLoad(spvGen.fragCoordVar()), gprRef);
+         continue;
+      }
+
       if (semLocation < 0) {
          // There was no matching semantic output from the VS...
-
          auto zeroConst = spvGen.makeFloatConstant(0.0f);
          auto oneConst = spvGen.makeFloatConstant(1.0f);
 
