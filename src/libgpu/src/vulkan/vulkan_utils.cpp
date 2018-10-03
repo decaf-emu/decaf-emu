@@ -265,18 +265,18 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
    bool isSigned = formatComp == latte::SQ_FORMAT_COMP::SIGNED;
 
    if (forDepthBuffer) {
-      /*
-      vk::Format::eD32Sfloat;
-      vk::Format::eD32SfloatS8Uint
-      vk::Format::eD16Unorm;
-      vk::Format::eD16UnormS8Uint;
-      vk::Format::eD24UnormS8Uint;
-      */
-
       switch (format) {
       case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
          return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eD32Sfloat);
+      case latte::SQ_DATA_FORMAT::FMT_16:
+         return pick(vk::Format::eD16Unorm, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
+         return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eD32SfloatS8Uint);
+      case latte::SQ_DATA_FORMAT::FMT_24_8:
+         // TODO: One of these formats is reversed and should be uploaded/downloaded as such
+         return pick(vk::Format::eD24UnormS8Uint, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
       case latte::SQ_DATA_FORMAT::FMT_8_24:
+         // TODO: One of these formats is reversed and should be uploaded/downloaded as such
          return pick(vk::Format::eD24UnormS8Uint, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
 
       default:
