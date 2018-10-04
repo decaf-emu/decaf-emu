@@ -111,15 +111,12 @@ getDataFormatUsageFlags(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_8:
    case latte::SQ_DATA_FORMAT::FMT_4_4:
    case latte::SQ_DATA_FORMAT::FMT_3_3_2:
-   case latte::SQ_DATA_FORMAT::FMT_16:
-   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_8_8:
    case latte::SQ_DATA_FORMAT::FMT_5_6_5:
    case latte::SQ_DATA_FORMAT::FMT_6_5_5:
    case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
    case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
    case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
-   case latte::SQ_DATA_FORMAT::FMT_32:
    case latte::SQ_DATA_FORMAT::FMT_16_16:
    case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_10_11_11:
@@ -149,6 +146,9 @@ getDataFormatUsageFlags(latte::SQ_DATA_FORMAT format)
       flags |= DataFormatUsage::FORMAT_MAYBE_COLOR;
       flags |= DataFormatUsage::FORMAT_ALLOW_RENDER_TARGET;
       break;
+   case latte::SQ_DATA_FORMAT::FMT_16:
+   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
+   case latte::SQ_DATA_FORMAT::FMT_32:
    case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
       flags |= DataFormatUsage::FORMAT_MAYBE_COLOR;
       flags |= DataFormatUsage::FORMAT_MAYBE_DEPTH;
