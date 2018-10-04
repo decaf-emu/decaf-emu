@@ -523,7 +523,7 @@ private:
    std::vector<SyncWaiter*> mWaiterPool;
    VmaAllocator mAllocator;
 
-   SyncWaiter *mActiveSyncWaiter;
+   SyncWaiter *mActiveSyncWaiter = nullptr;
    uint64_t mActivePm4BufferIndex = 0;
    vk::CommandBuffer mActiveCommandBuffer;
    vk::DescriptorPool mActiveDescriptorPool;
