@@ -711,8 +711,16 @@ public:
          GprChanRef destGpr;
          destGpr.gpr = makeGprRef(inst.word1.DST_GPR(), inst.word1.DST_REL(), inst.word0.INDEX_MODE());
          destGpr.chan = inst.word1.DST_CHAN();
-         writeGprChanRef(destGpr, srcId);
+         mAluGroupWrites.push_back({ destGpr, srcId });
       }
+   }
+
+   void flushAluGroupWrites()
+   {
+      for (auto& write : mAluGroupWrites) {
+         writeGprChanRef(write.first, write.second);
+      }
+      mAluGroupWrites.clear();
    }
 
    void writeAluReducDest(const ControlFlowInst &cf, const AluInstructionGroup &group, spv::Id srcId, bool forAr = false)
@@ -1349,6 +1357,8 @@ public:
    }
 
 protected:
+   std::vector<std::pair<GprChanRef, spv::Id>> mAluGroupWrites;
+
    int mDescriptorSetIndex = 0;
    spv::Instruction *mEntryPoint = nullptr;
    std::unordered_map<std::string, spv::Function*> mFunctions;

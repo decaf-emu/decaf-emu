@@ -70,8 +70,10 @@ void Transpiler::translateAluGroup(const ControlFlowInst &cf, const AluInstructi
 {
    writeCfAluUnitLine(mType, mCfPC, mGroupPC, -1);
 
-   mSpv->swapPrevRes();
    ShaderParser::translateAluGroup(cf, group);
+
+   mSpv->flushAluGroupWrites();
+   mSpv->swapPrevRes();
 }
 
 void Transpiler::translateCfNormalInst(const ControlFlowInst& cf)
