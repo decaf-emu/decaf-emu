@@ -241,7 +241,7 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
    // Write to dump file
    auto shaderType = static_cast<uint32_t>(desc->type);
    auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(desc->binary.data()));
-   auto filePath = fmt::format("dump/gpu_{}_{}_raw.txt", shaderType, shaderAddr);
+   auto filePath = fmt::format("dump/gpu_{}_{:x}_raw.txt", shaderType, shaderAddr);
    if (!platform::fileExists(filePath)) {
       platform::createDirectory("dump");
 
@@ -279,7 +279,7 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
    // Write to dump file
    auto shaderType = static_cast<uint32_t>(desc->type);
    auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(desc->binary.data()));
-   auto filePath = fmt::format("dump/gpu_{}_{}_spv.txt", shaderType, shaderAddr);
+   auto filePath = fmt::format("dump/gpu_{}_{:x}_spv.txt", shaderType, shaderAddr);
    if (!platform::fileExists(filePath)) {
       platform::createDirectory("dump");
 
@@ -288,7 +288,7 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
       file << outputStr << std::endl;
 
       // SPIRV Binary Output
-      auto binFilePath = fmt::format("dump/gpu_{}_{}_bin.spv", shaderType, shaderAddr);
+      auto binFilePath = fmt::format("dump/gpu_{}_{:x}_bin.spv", shaderType, shaderAddr);
       auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
       binFile.write(reinterpret_cast<const char*>(shader->binary.data()),
                     shader->binary.size() * sizeof(shader->binary[0]));
