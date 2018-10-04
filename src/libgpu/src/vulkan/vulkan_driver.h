@@ -279,6 +279,7 @@ struct RenderPassObject
 
 struct PipelineDesc
 {
+   RenderPassObject *renderPass;
    VertexShaderObject *vertexShader;
    GeometryShaderObject *geometryShader;
    PixelShaderObject *pixelShader;

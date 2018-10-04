@@ -10,6 +10,7 @@ Driver::getPipelineDesc()
 {
    PipelineDesc desc;
 
+   desc.renderPass = mCurrentRenderPass;
    desc.vertexShader = mCurrentVertexShader;
    desc.geometryShader = mCurrentGeometryShader;
    desc.pixelShader = mCurrentPixelShader;
