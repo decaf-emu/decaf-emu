@@ -4,12 +4,7 @@
 namespace spirv
 {
 
-void Transpiler::translateTex_FETCH4(const ControlFlowInst &cf, const TextureFetchInst &inst)
-{
-   latte::ShaderParser::translateTex_FETCH4(cf, inst);
-}
-
-void Transpiler::translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFetchInst &inst)
+void Transpiler::translateGenericSample(const ControlFlowInst &cf, const TextureFetchInst &inst, uint32_t sampleMode)
 {
    // inst.word0.FETCH_WHOLE_QUAD(); - Optimization which can be ignored
    // inst.word1.LOD_BIAS(); - Only used by certain SAMPLE instructions
@@ -61,6 +56,11 @@ void Transpiler::translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFet
    destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
    destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
 
+   auto lodBias = inst.word1.LOD_BIAS();
+   auto offsetX = inst.word2.OFFSET_X();
+   auto offsetY = inst.word2.OFFSET_Y();
+   auto offsetZ = inst.word2.OFFSET_Z();
+
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
 
    auto texVarType = mSpv->textureVarType(textureId, texDim);
@@ -72,84 +72,226 @@ void Transpiler::translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFet
 
    auto sampledType = mSpv->makeSampledImageType(texVarType);
    auto sampledVal = mSpv->createOp(spv::OpSampledImage, sampledType, { texVal, sampVal });
-   auto output = mSpv->createOp(spv::OpImageSampleImplicitLod, mSpv->float4Type(), { sampledVal, srcGprVal });
+
+   spv::Id srcCoords = spv::NoResult;
+   switch (texDim) {
+   case latte::SQ_TEX_DIM::DIM_1D:
+      srcCoords = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });
+      break;
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+      srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->float2Type(), { srcGprVal, srcGprVal, 0, 1 });
+      break;
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_3D:
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+      srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->float3Type(), { srcGprVal, srcGprVal, 0, 1, 2 });
+      break;
+   default:
+      decaf_abort("Unexpected texture sample dim");
+   }
+
+   uint32_t imageOperands = 0;
+   std::vector<unsigned int> operandParams;
+
+   if (sampleMode & SampleMode::LodBias) {
+      imageOperands |= spv::ImageOperandsBiasMask;
+
+      auto lodSource = mSpv->makeFloatConstant(lodBias);
+      operandParams.push_back(lodSource);
+   }
+
+   if (sampleMode & SampleMode::Lod) {
+      imageOperands |= spv::ImageOperandsLodMask;
+
+      auto lodSource = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 3 });
+      operandParams.push_back(lodSource);
+   } else if (sampleMode & SampleMode::LodZero) {
+      imageOperands |= spv::ImageOperandsLodMask;
+
+      auto lodSource = mSpv->makeFloatConstant(0.0f);
+      operandParams.push_back(lodSource);
+   }
+
+   if (sampleMode & SampleMode::Gradient) {
+      decaf_abort("We do not currently support gradient instructions");
+   }
+
+   if (offsetX > 0 || offsetY > 0 || offsetZ > 0) {
+      imageOperands |= spv::ImageOperandsConstOffsetMask;
+
+      spv::Id offsetVal = spv::NoResult;
+      switch (texDim) {
+      case latte::SQ_TEX_DIM::DIM_1D:
+         offsetVal = mSpv->makeUintConstant(offsetX);
+         break;
+      case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D:
+      case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+         offsetVal = mSpv->makeCompositeConstant(mSpv->uint2Type(), {
+                                                 mSpv->makeUintConstant(offsetX),
+                                                 mSpv->makeUintConstant(offsetY) });
+         break;
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      case latte::SQ_TEX_DIM::DIM_3D:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+         offsetVal = mSpv->makeCompositeConstant(mSpv->uint3Type(), {
+                                                 mSpv->makeUintConstant(offsetX),
+                                                 mSpv->makeUintConstant(offsetY),
+                                                 mSpv->makeUintConstant(offsetZ) });
+         break;
+      default:
+         decaf_abort("Unexpected texture sample dim");
+      }
+
+      operandParams.push_back(offsetVal);
+   }
+
+   if (sampleMode & SampleMode::Gather) {
+      decaf_abort("We do not currently support gather instructions");
+   }
+
+   // Lets build our actual operation
+   spv::Op sampleOp = spv::OpNop;
+   std::vector<unsigned int> sampleParams;
+
+   // The default parameters every sample operation has
+   sampleParams.push_back(sampledVal);
+   sampleParams.push_back(srcCoords);
+
+   // Pick the operation, and potentially add the comparison.
+   if (sampleMode & SampleMode::Compare) {
+      auto drefVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 3 });
+
+      if (imageOperands & spv::ImageOperandsLodMask) {
+         sampleOp = spv::OpImageSampleDrefExplicitLod;
+      } else {
+         sampleOp = spv::OpImageSampleDrefImplicitLod;
+      }
+
+      sampleParams.push_back(drefVal);
+   } else {
+      if (imageOperands & spv::ImageOperandsLodMask) {
+         sampleOp = spv::OpImageSampleExplicitLod;
+      } else {
+         sampleOp = spv::OpImageSampleImplicitLod;
+      }
+   }
+   decaf_check(sampleOp != spv::OpNop);
+
+   // Merge all the image operands in now.
+   if (imageOperands != 0) {
+      sampleParams.push_back(imageOperands);
+
+      decaf_check(!operandParams.empty());
+      for (auto& param : operandParams) {
+         sampleParams.push_back(param);
+      }
+   } else {
+      decaf_check(operandParams.empty());
+   }
+
+   spv::Id output = spv::NoResult;
+   if (sampleMode & SampleMode::Compare) {
+      auto compareVal = mSpv->createOp(sampleOp, mSpv->floatType(), sampleParams);
+      auto zeroFVal = mSpv->makeFloatConstant(0.0f);
+
+      // TODO: This is really cheating, we should just check the write mask
+      // and do a single component write instead...
+      output = mSpv->createCompositeConstruct(mSpv->float4Type(), { compareVal, zeroFVal, zeroFVal, zeroFVal });
+   } else {
+      output = mSpv->createOp(sampleOp, mSpv->float4Type(), sampleParams);
+   }
 
    mSpv->writeGprMaskRef(destGpr, output);
 }
 
+void Transpiler::translateTex_FETCH4(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   translateGenericSample(cf, inst, SampleMode::Gather);
+}
+
+void Transpiler::translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   translateGenericSample(cf, inst, SampleMode::None);
+}
+
 void Transpiler::translateTex_SAMPLE_L(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_L(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Lod);
 }
 
 void Transpiler::translateTex_SAMPLE_LB(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_LB(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::LodBias);
 }
 
 void Transpiler::translateTex_SAMPLE_LZ(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_LZ(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::LodZero);
 }
 
 void Transpiler::translateTex_SAMPLE_G(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_G(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Gradient);
 }
 
 void Transpiler::translateTex_SAMPLE_G_L(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_G_L(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Gradient | SampleMode::Lod);
 }
 
 void Transpiler::translateTex_SAMPLE_G_LB(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_G_LB(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Gradient | SampleMode::LodBias);
 }
 
 void Transpiler::translateTex_SAMPLE_G_LZ(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_G_LZ(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Gradient | SampleMode::LodZero);
 }
 
 void Transpiler::translateTex_SAMPLE_C(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare);
 }
 
 void Transpiler::translateTex_SAMPLE_C_L(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_L(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::Lod);
 }
 
 void Transpiler::translateTex_SAMPLE_C_LB(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_LB(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::LodBias);
 }
 
 void Transpiler::translateTex_SAMPLE_C_LZ(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_LZ(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::LodZero);
 }
 
 void Transpiler::translateTex_SAMPLE_C_G(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_G(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::Gradient);
 }
 
 void Transpiler::translateTex_SAMPLE_C_G_L(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_G_L(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::Gradient | SampleMode::Lod);
 }
 
 void Transpiler::translateTex_SAMPLE_C_G_LB(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_G_LB(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::Gradient | SampleMode::LodBias);
 }
 
 void Transpiler::translateTex_SAMPLE_C_G_LZ(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
-   latte::ShaderParser::translateTex_SAMPLE_C_G_LZ(cf, inst);
+   translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::Gradient | SampleMode::LodZero);
 }
 
 void Transpiler::translateTex_SET_CUBEMAP_INDEX(const ControlFlowInst &cf, const TextureFetchInst &inst)

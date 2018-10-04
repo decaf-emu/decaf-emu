@@ -11,6 +11,17 @@ using namespace latte;
 
 class Transpiler : public latte::ShaderParser
 {
+   enum SampleMode : uint32_t
+   {
+      None = 0,
+      Lod = 1 << 0,
+      LodBias = 1 << 1,
+      LodZero = 1 << 2,
+      Gradient = 1 << 3,
+      Compare = 1 << 4,
+      Gather = 1 << 5
+   };
+
 public:
    void translateTex_FETCH4(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
@@ -170,6 +181,7 @@ public:
    spv::Id genAluCondOp(spv::Op predOp, spv::Id lhsVal, spv::Id trueVal, spv::Id falseVal);
    spv::Id genPredSetOp(const AluInst &inst, spv::Op predOp, spv::Id typeId, spv::Id lhsVal, spv::Id rhsVal, bool updatesPredicate = false);
    void translateGenericExport(const ControlFlowInst &cf);
+   void translateGenericSample(const ControlFlowInst &cf, const TextureFetchInst &inst, uint32_t sampleMode);
 
    static void writeVertexProlog(ShaderSpvBuilder &spv, const VertexShaderDesc& desc);
    static void writeGeometryProlog(ShaderSpvBuilder &spv, const GeometryShaderDesc& desc);
