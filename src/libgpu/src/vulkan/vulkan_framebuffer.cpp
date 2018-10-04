@@ -98,8 +98,8 @@ Driver::checkCurrentFramebuffer()
          overallSize.width = surface->desc.width;
          overallSize.height = surface->desc.height;
       } else {
-         decaf_check(overallSize.width == surface->desc.width);
-         decaf_check(overallSize.height == surface->desc.height);
+         overallSize.width = std::min(overallSize.width, surface->desc.width);
+         overallSize.height = std::min(overallSize.height, surface->desc.height);
       }
    }
 
@@ -135,8 +135,8 @@ Driver::checkCurrentFramebuffer()
          overallSize.width = surface->desc.width;
          overallSize.height = surface->desc.height;
       } else {
-         decaf_check(overallSize.width == surface->desc.width);
-         decaf_check(overallSize.height == surface->desc.height);
+         overallSize.width = std::min(overallSize.width, surface->desc.width);
+         overallSize.height = std::min(overallSize.height, surface->desc.height);
       }
    } while (false);
 
@@ -153,6 +153,8 @@ Driver::checkCurrentFramebuffer()
    framebufferDesc.layers = 1;
    auto framebuffer = mDevice.createFramebuffer(framebufferDesc);
    foundFb->framebuffer = framebuffer;
+
+   foundFb->renderArea = overallSize;
 
    mCurrentFramebuffer = foundFb;
 }

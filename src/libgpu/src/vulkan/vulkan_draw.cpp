@@ -270,11 +270,14 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
       }
    }
 
+   auto& fbRa = mCurrentFramebuffer->renderArea;
+   auto renderArea = vk::Rect2D { { 0, 0 }, fbRa };
+
    // Bind and set up everything, and then do our draw
    auto passBeginDesc = vk::RenderPassBeginInfo {};
    passBeginDesc.renderPass = mCurrentRenderPass->renderPass;
    passBeginDesc.framebuffer = mCurrentFramebuffer->framebuffer;
-   passBeginDesc.renderArea = mCurrentScissor;
+   passBeginDesc.renderArea = renderArea;
    passBeginDesc.clearValueCount = 0;
    passBeginDesc.pClearValues = nullptr;
    mActiveCommandBuffer.beginRenderPass(passBeginDesc, vk::SubpassContents::eInline);

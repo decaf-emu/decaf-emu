@@ -203,6 +203,7 @@ struct FramebufferObject
    vk::Framebuffer framebuffer;
    std::vector<SurfaceObject*> colorSurfaces;
    SurfaceObject *depthSurface;
+   vk::Extent2D renderArea;
 };
 
 struct SamplerDesc
