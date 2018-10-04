@@ -278,8 +278,8 @@ public:
 
       auto xoxoConst = makeUintConstant(0xFF00FF00);
       auto oxoxConst = makeUintConstant(0x00FF00FF);
-      auto xoConst = makeUintConstant(0xFF00);
-      auto oxConst = makeUintConstant(0x00FF);
+      auto xoConst = makeUint16Constant(0xFF00);
+      auto oxConst = makeUint16Constant(0x00FF);
       auto shiftConst = makeUintConstant(8);
 
       auto inputTypeId = sourceTypeId;
