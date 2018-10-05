@@ -150,10 +150,6 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       operandParams.push_back(offsetVal);
    }
 
-   if (sampleMode & SampleMode::Gather) {
-      decaf_abort("We do not currently support gather instructions");
-   }
-
    // Lets build our actual operation
    spv::Op sampleOp = spv::OpNop;
    std::vector<unsigned int> sampleParams;
@@ -163,7 +159,15 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    sampleParams.push_back(srcCoords);
 
    // Pick the operation, and potentially add the comparison.
-   if (sampleMode & SampleMode::Compare) {
+   if (sampleMode & SampleMode::Gather) {
+      // It is not legal to combine this with any other kind of operation
+      decaf_check(sampleMode == SampleMode::Gather);
+
+      sampleOp = spv::OpImageGather;
+
+      auto compToFetch = mSpv->makeUintConstant(0);
+      sampleParams.push_back(compToFetch);
+   } else if (sampleMode & SampleMode::Compare) {
       auto drefVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 3 });
 
       if (imageOperands & spv::ImageOperandsLodMask) {
