@@ -346,7 +346,6 @@ public:
 
 private:
    void executeBuffer(const gpu::ringbuffer::Item &item);
-   uint64_t getGpuClock();
 
    void decafSetBuffer(const latte::pm4::DecafSetBuffer &data) override;
    void decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data) override;
