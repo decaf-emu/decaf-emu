@@ -685,11 +685,11 @@ public:
          }
 
          auto srcTypeId = getTypeId(srcId);
-         if (srcTypeId == mFloatType) {
+         if (srcTypeId == floatType()) {
             // Nothing to do, we are already a float!
-         } else if (srcTypeId == mIntType) {
+         } else if (srcTypeId == intType()) {
             srcId = createUnaryOp(spv::OpBitcast, floatType(), srcId);
-         } else if (srcTypeId == mUintType) {
+         } else if (srcTypeId == uintType()) {
             srcId = createUnaryOp(spv::OpBitcast, floatType(), srcId);
          } else {
             decaf_abort("Unexpected type at ALU instruction write");
