@@ -372,6 +372,7 @@ struct ExportRef
 
    Type type;
    uint32_t index;
+   VarRefType valueType;
 };
 
 struct SrcVarRef
@@ -772,9 +773,10 @@ isSwizzleFullyUnmasked(const std::array<SQ_SEL, 4> &dest)
 }
 
 inline ExportRef
-makeExportRef(SQ_EXPORT_TYPE type, uint32_t arrayBase)
+makeExportRef(SQ_EXPORT_TYPE type, uint32_t arrayBase, VarRefType valueType = VarRefType::FLOAT)
 {
    ExportRef out;
+   out.valueType = valueType;
 
    if (type == SQ_EXPORT_TYPE::POS) {
       if (60 <= arrayBase && arrayBase <= 63) {

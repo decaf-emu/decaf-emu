@@ -153,6 +153,25 @@ Driver::getPixelShaderDesc()
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
    shaderDesc.aluInstPreferVector = sq_config.ALU_INST_PREFER_VECTOR();
 
+   for (auto i = 0; i < latte::MaxRenderTargets; ++i) {
+      auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
+
+      spirv::ColorOutputType pixelOutType;
+      switch (cb_color_info.NUMBER_TYPE()) {
+      case latte::CB_NUMBER_TYPE::SINT:
+         pixelOutType = spirv::ColorOutputType::SINT;
+         break;
+      case latte::CB_NUMBER_TYPE::UINT:
+         pixelOutType = spirv::ColorOutputType::UINT;
+         break;
+      default:
+         pixelOutType = spirv::ColorOutputType::FLOAT;
+         break;
+      }
+
+      shaderDesc.pixelOutType[i] = pixelOutType;
+   }
+
    for (auto i = 0; i < latte::MaxTextures; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);

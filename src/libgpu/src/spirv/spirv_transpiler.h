@@ -196,6 +196,7 @@ protected:
    const ShaderDesc *mDesc;
    ShaderSpvBuilder *mSpv;
 
+   std::array<ColorOutputType, latte::MaxRenderTargets> mPixelOutType;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> mTexInput;
    std::array<InputBuffer, latte::MaxAttribBuffers> mVsInputBuffers;
    std::vector<InputAttrib> mVsInputAttribs;

@@ -91,9 +91,17 @@ struct GeometryShaderDesc : public ShaderDesc
    }
 };
 
+enum ColorOutputType : uint32_t
+{
+   FLOAT,
+   SINT,
+   UINT
+};
+
 struct PixelShaderDesc : public ShaderDesc
 {
    std::vector<uint32_t> vsOutputSemantics;
+   std::array<ColorOutputType, latte::MaxRenderTargets> pixelOutType;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
    latte::REF_FUNC alphaRefFunc;
 
@@ -109,6 +117,7 @@ struct PixelShaderDesc : public ShaderDesc
    {
       return ShaderDesc::hash()
          .write(vsOutputSemantics)
+         .write(pixelOutType)
          .write(texDims)
          .write(alphaRefFunc)
          .write(regs);

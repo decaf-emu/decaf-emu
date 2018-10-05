@@ -330,6 +330,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    } else if (shaderDesc.type == ShaderType::Pixel) {
       auto &psDesc = *reinterpret_cast<const PixelShaderDesc*>(&shaderDesc);
 
+      state.mPixelOutType = psDesc.pixelOutType;
       state.mTexInput = psDesc.texDims;
 
       spvGen.setDescriptorSetIdx(2);

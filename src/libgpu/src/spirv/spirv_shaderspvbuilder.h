@@ -758,11 +758,13 @@ public:
    spv::Id getExportRefVar(const ExportRef& ref)
    {
       if (ref.type == ExportRef::Type::Position) {
+         decaf_check(ref.valueType == VarRefType::FLOAT);
          return posExportVar(ref.index);
       } else if (ref.type == ExportRef::Type::Param) {
+         decaf_check(ref.valueType == VarRefType::FLOAT);
          return paramExportVar(ref.index);
       } else if (ref.type == ExportRef::Type::Pixel) {
-         return pixelExportVar(ref.index);
+         return pixelExportVar(ref.index, ref.valueType);
       } else {
          decaf_abort("Encountered unexpected export type");
       }
@@ -786,9 +788,31 @@ public:
          exportVal = createLoad(exportRef);
       }
 
+      // If the source value is non-float, we need to perform a bitcast conversion
+      // to that type before we perform any swizzling.
+      auto sourceValType = getTypeId(srcId);
+      if (ref.valueType == VarRefType::FLOAT) {
+         if (sourceValType != float4Type()) {
+            srcId = createUnaryOp(spv::OpBitcast, float4Type(), srcId);
+         }
+      } else if (ref.valueType == VarRefType::INT) {
+         if (sourceValType != int4Type()) {
+            srcId = createUnaryOp(spv::OpBitcast, int4Type(), srcId);
+         }
+      } else if (ref.valueType == VarRefType::UINT) {
+         if (sourceValType != uint4Type()) {
+            srcId = createUnaryOp(spv::OpBitcast, uint4Type(), srcId);
+         }
+      } else {
+         decaf_abort("Unexpected export value type");
+      }
+
+      // Apply any export masking operation thats needed
       exportVal = applySelMask(exportVal, srcId, mask);
 
+      // Lets perform any specialized behaviour depending on the export type
       if (ref.type == ExportRef::Type::Position) {
+         decaf_check(sourceValType == float4Type());
          // Need to reposition the depth values from (-1.0 to 1.0) to (0.0 to 1.0)
 
          auto zeroConst = makeUintConstant(0);
@@ -835,10 +859,12 @@ public:
       }
 
       if (ref.type == ExportRef::Type::Pixel) {
+         decaf_check(sourceValType == float4Type() || sourceValType == int4Type() || sourceValType == uint4Type());
+
          // We use the first exported pixel to perform alpha reference testing.  This
          // may not actually be the correct behaviour.
          // TODO: Check which exported pixel does alpha testing.
-         if (ref.index == 0) {
+         if (ref.index == 0 && sourceValType == float4Type()) {
             auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
 
             auto zeroConst = makeUintConstant(0);
@@ -1137,17 +1163,35 @@ public:
       return textureId;
    }
 
-   spv::Id pixelExportVar(uint32_t pixelIdx)
+   spv::Id pixelExportVar(uint32_t pixelIdx, VarRefType valueType)
    {
       decaf_check(pixelIdx < latte::MaxRenderTargets);
+
+      spv::Id exportType;
+      switch (valueType) {
+      case VarRefType::FLOAT:
+         exportType = float4Type();
+         break;
+      case VarRefType::INT:
+         exportType = int4Type();
+         break;
+      case VarRefType::UINT:
+         exportType = uint4Type();
+         break;
+      default:
+         decaf_abort("Unexpected pixel export format");
+      }
 
       while (mPixelExports.size() <= pixelIdx) {
          mPixelExports.push_back(spv::NoResult);
       }
 
       auto exportId = mPixelExports[pixelIdx];
-      if (!exportId) {
-         exportId = createVariable(spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("PIXEL_{}", pixelIdx).c_str());
+      if (exportId) {
+         // If this export already existed, we need to confirm its the right type.
+         decaf_check(getTypeId(exportId) == exportType);
+      } else {
+         exportId = createVariable(spv::StorageClass::StorageClassOutput, exportType, fmt::format("PIXEL_{}", pixelIdx).c_str());
          addDecoration(exportId, spv::Decoration::DecorationLocation, pixelIdx);
          mPixelExports[pixelIdx] = exportId;
 
