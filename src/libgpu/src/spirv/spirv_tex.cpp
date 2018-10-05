@@ -198,14 +198,16 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       decaf_check(operandParams.empty());
    }
 
+   auto zeroFVal = mSpv->makeFloatConstant(0.0f);
+   auto oneFVal = mSpv->makeFloatConstant(1.0f);
+
    spv::Id output = spv::NoResult;
    if (sampleMode & SampleMode::Compare) {
       auto compareVal = mSpv->createOp(sampleOp, mSpv->floatType(), sampleParams);
-      auto zeroFVal = mSpv->makeFloatConstant(0.0f);
 
       // TODO: This is really cheating, we should just check the write mask
       // and do a single component write instead...
-      output = mSpv->createCompositeConstruct(mSpv->float4Type(), { compareVal, zeroFVal, zeroFVal, zeroFVal });
+      output = mSpv->createCompositeConstruct(mSpv->float4Type(), { compareVal, zeroFVal, zeroFVal, oneFVal });
    } else {
       output = mSpv->createOp(sampleOp, mSpv->float4Type(), sampleParams);
    }
