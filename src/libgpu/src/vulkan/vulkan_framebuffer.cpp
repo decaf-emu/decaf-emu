@@ -8,12 +8,30 @@ namespace vulkan
 FramebufferDesc
 Driver::getFramebufferDesc()
 {
+   decaf_check(mCurrentRenderPass);
+
    auto desc = FramebufferDesc {};
 
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
+
+      if (mCurrentRenderPass->colorAttachmentIndexes[i] == -1) {
+         // If the RenderPass doesn't want this attachment, skip it...
+         desc.colorTargets[i] = ColorBufferDesc {
+            0,
+            0,
+            0,
+            latte::CB_FORMAT::COLOR_INVALID,
+            latte::CB_NUMBER_TYPE::UNORM,
+            latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL
+         };
+
+         continue;
+      }
+
+      decaf_check(cb_color_base.BASE_256B());
 
       desc.colorTargets[i] = ColorBufferDesc {
          cb_color_base.BASE_256B(),
@@ -25,17 +43,34 @@ Driver::getFramebufferDesc()
       };
    }
 
-   auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
-   auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
-   auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
+   do {
+      auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
+      auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
+      auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
 
-   desc.depthTarget = DepthStencilBufferDesc {
-      db_depth_base.BASE_256B(),
-      db_depth_size.PITCH_TILE_MAX(),
-      db_depth_size.SLICE_TILE_MAX(),
-      db_depth_info.FORMAT(),
-      db_depth_info.ARRAY_MODE()
-   };
+      if (mCurrentRenderPass->depthAttachmentIndex == -1) {
+         // If the RenderPass doesn't want depth, skip it...
+         desc.depthTarget = DepthStencilBufferDesc {
+            0,
+            0,
+            0,
+            latte::DB_FORMAT::DEPTH_INVALID,
+            latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL
+         };
+
+         break;
+      }
+
+      decaf_check(db_depth_base.BASE_256B());
+
+      desc.depthTarget = DepthStencilBufferDesc {
+         db_depth_base.BASE_256B(),
+         db_depth_size.PITCH_TILE_MAX(),
+         db_depth_size.SLICE_TILE_MAX(),
+         db_depth_info.FORMAT(),
+         db_depth_info.ARRAY_MODE()
+      };
+   } while (false);
 
    return desc;
 }
@@ -68,18 +103,13 @@ Driver::checkCurrentFramebuffer()
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       auto colorTarget = currentDesc->colorTargets[i];
 
-      if (mCurrentRenderPass->colorAttachmentIndexes[i] == -1) {
+      if (!colorTarget.base256b) {
          // If the RenderPass doesn't want this attachment, skip it...
          continue;
       }
 
       auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->colorAttachmentIndexes[i]);
       numAttachments = std::max(numAttachments, attachmentIndex + 1);
-
-      if (!colorTarget.base256b) {
-         attachments[attachmentIndex] = nullptr;
-         break;
-      }
 
       auto colorBufferDesc = ColorBufferDesc {
          colorTarget.base256b,
@@ -106,18 +136,13 @@ Driver::checkCurrentFramebuffer()
    do {
       auto depthTarget = currentDesc->depthTarget;
 
-      if (mCurrentRenderPass->depthAttachmentIndex == -1) {
+      if (!depthTarget.base256b) {
          // If the RenderPass doesn't want this attachment, skip it...
          continue;
       }
 
       auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->depthAttachmentIndex);
       numAttachments = std::max(numAttachments, attachmentIndex + 1);
-
-      if (!depthTarget.base256b) {
-         attachments[attachmentIndex] = nullptr;
-         break;
-      }
 
       auto depthStencilBufferDesc = DepthStencilBufferDesc {
          depthTarget.base256b,
