@@ -1,4 +1,5 @@
 #include "gx2.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_event.h"
 #include "gx2_state.h"
 #include "cafe/libraries/coreinit/coreinit_alarm.h"
@@ -8,6 +9,7 @@
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/coreinit/coreinit_time.h"
+#include "cafe/libraries/coreinit/coreinit_memory.h"
 #include "cafe/cafe_ppc_interface_invoke.h"
 
 #include <atomic>
@@ -15,6 +17,7 @@
 #include <common/log.h>
 
 using namespace cafe::coreinit;
+using namespace latte::pm4;
 
 namespace cafe::gx2
 {
@@ -43,7 +46,6 @@ struct StaticEventData
 
 static virt_ptr<StaticEventData> sEventData = nullptr;
 static AlarmCallbackFn VsyncAlarmHandler = nullptr;
-
 
 /**
  * Sleep the current thread until the last submitted command buffer
@@ -170,6 +172,63 @@ GX2WaitTimeStamp(GX2Timestamp time)
    return TRUE;
 }
 
+void
+GX2SubmitUserTimeStamp(virt_ptr<GX2Timestamp> tsBuffer,
+                       GX2Timestamp timeStampValue,
+                       GX2PipeEvent when,
+                       BOOL triggerIntCB)
+{
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(tsBuffer));
+
+   auto dataLo = (uint32_t)(timeStampValue & 0xFFFFFFFFu);
+   auto dataHi = (uint32_t)((timeStampValue >> 32) & 0xFFFFFFFFu);
+
+   *tsBuffer = -1;
+
+   switch (when)
+   {
+   case GX2PipeEvent::Top:
+      {
+         auto addrLo = MW_ADDR_LO::get(0)
+            .ADDR_LO(addr >> 2)
+            .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
+
+         auto addrHi = MW_ADDR_HI::get(0)
+            .CNTR_SEL(MW_WRITE_CLOCK);
+
+         internal::writePM4(MemWrite{ addrLo, addrHi, dataLo, dataHi });
+      }
+      break;
+   case GX2PipeEvent::Bottom:
+      {
+         auto addrLo = EW_ADDR_LO::get(0)
+            .ADDR_LO(addr >> 2)
+            .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
+
+         auto addrHi = EWP_ADDR_HI::get(0)
+            .DATA_SEL(EWP_DATA_CLOCK);
+
+         auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
+            .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
+         internal::writePM4(EventWriteEOP{ eventInitiator, addrLo, addrHi, dataLo, dataHi });
+      }
+      break;
+   case GX2PipeEvent::BottomAfterFlush:
+      {
+         auto addrLo = EW_ADDR_LO::get(0)
+            .ADDR_LO(addr >> 2)
+            .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64);
+
+         auto addrHi = EWP_ADDR_HI::get(0)
+            .DATA_SEL(EWP_DATA_CLOCK);
+
+         auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
+            .EVENT_TYPE(latte::VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_TS_EVENT);
+         internal::writePM4(EventWriteEOP{ eventInitiator, addrLo, addrHi, dataLo, dataHi });
+      }
+      break;
+   }
+}
 
 /**
  * Sleep the current thread until the vsync alarm has triggered.
@@ -312,7 +371,6 @@ setLastSubmittedTimestamp(GX2Timestamp timestamp)
    sEventData->lastSubmittedTimestamp.store(timestamp, std::memory_order_release);
 }
 
-
 /**
  * Called when a swap is requested with GX2SwapBuffers.
  */
@@ -345,6 +403,7 @@ Library::registerEventSymbols()
    RegisterFunctionExport(GX2GetRetiredTimeStamp);
    RegisterFunctionExport(GX2GetLastSubmittedTimeStamp);
    RegisterFunctionExport(GX2WaitTimeStamp);
+   RegisterFunctionExport(GX2SubmitUserTimeStamp);
    RegisterFunctionExport(GX2GetSwapStatus);
 
    RegisterDataInternal(sEventData);
