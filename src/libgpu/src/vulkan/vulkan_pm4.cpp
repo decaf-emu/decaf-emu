@@ -160,6 +160,74 @@ Driver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 void
 Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 {
+   decaf_check(data.dstPitch <= data.srcPitch);
+   decaf_check(data.dstWidth == data.srcWidth);
+   decaf_check(data.dstHeight == data.srcHeight);
+   decaf_check(data.dstDepth == data.srcDepth);
+   decaf_check(data.dstDim == data.srcDim);
+
+   // Fetch the source surface
+   SurfaceDesc sourceDesc;
+   sourceDesc.baseAddress = data.srcImage;
+   sourceDesc.pitch = data.srcPitch;
+   sourceDesc.width = data.srcWidth;
+   sourceDesc.height = data.srcHeight;
+   sourceDesc.depth = data.srcDepth;
+   sourceDesc.samples = data.srcSamples;
+   sourceDesc.dim = data.srcDim;
+   sourceDesc.format = data.srcFormat;
+   sourceDesc.numFormat = data.srcNumFormat;
+   sourceDesc.formatComp = data.srcFormatComp;
+   sourceDesc.degamma = data.srcDegamma;
+   sourceDesc.isDepthBuffer = false;
+   sourceDesc.tileMode = data.srcTileMode;
+   sourceDesc.swizzle = data.srcImage.getAddress() & 0xFFF;
+   auto sourceSurface = getSurface(sourceDesc, false);
+
+   // Fetch the destination surface
+   SurfaceDesc destDesc;
+   destDesc.baseAddress = data.dstImage;
+   destDesc.pitch = data.dstPitch;
+   destDesc.width = data.dstWidth;
+   destDesc.height = data.dstHeight;
+   destDesc.depth = data.dstDepth;
+   destDesc.samples = data.dstSamples;
+   destDesc.dim = data.dstDim;
+   destDesc.format = data.dstFormat;
+   destDesc.numFormat = data.dstNumFormat;
+   destDesc.formatComp = data.dstFormatComp;
+   destDesc.degamma = data.dstDegamma;
+   destDesc.isDepthBuffer = false;
+   destDesc.tileMode = data.dstTileMode;
+   destDesc.swizzle = data.dstImage.getAddress() & 0xFFF;
+   auto destSurface = getSurface(destDesc, true);
+
+   // Transition the surfaces to the appropriate layouts
+   transitionSurface(sourceSurface, vk::ImageLayout::eTransferSrcOptimal);
+   transitionSurface(destSurface, vk::ImageLayout::eTransferDstOptimal);
+
+   // Calculate the bounds of the copy
+   auto copyWidth = data.srcWidth;
+   auto copyHeight = data.srcHeight;
+   auto copyDepth = data.srcDepth;
+   if (data.srcDim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+      copyDepth *= 6;
+   }
+
+   // Perform the copy, note that CopySurface only supports 1:1 copies
+   vk::ImageBlit blitRegion(
+      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) },
+      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
+
+   mActiveCommandBuffer.blitImage(
+      sourceSurface->image,
+      vk::ImageLayout::eTransferSrcOptimal,
+      destSurface->image,
+      vk::ImageLayout::eTransferDstOptimal,
+      { blitRegion },
+      vk::Filter::eNearest);
 }
 
 void
