@@ -244,7 +244,6 @@ submitCommandBuffer(CommandBuffer *cb)
    captureCommandBuffer(cb);
    cb->submitTime = coreinit::OSGetTime();
    gx2::internal::setLastSubmittedTimestamp(cb->submitTime);
-   gx2::internal::setUserSubmittedTimestamp(cb->submitTime);
    gpu::ringbuffer::submit(cb,
                            phys_cast<uint32_t *>(OSEffectiveToPhysical(virt_cast<virt_addr>(cb->buffer))),
                            cb->curSize);
