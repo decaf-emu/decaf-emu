@@ -16,6 +16,8 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerDecSymbols();
 }
 
 } // namespace cafe::h264
