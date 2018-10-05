@@ -16,6 +16,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerDecSymbols();
 };
 
 } // namespace cafe::h264
