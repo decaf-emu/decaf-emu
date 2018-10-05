@@ -4,6 +4,7 @@
 #include "decafsdl_vulkan_shaders.h"
 
 #include <common/log.h>
+#include <common/platform_debug.h>
 #include <SDL_vulkan.h>
 
 DecafSDLVulkan::DecafSDLVulkan()
@@ -34,7 +35,7 @@ DecafSDLVulkan::checkVkResult(vk::Result err)
       return;
    }
 
-   mLog->error("[vulkan] Unexpected error result: {}", vk::to_string(err));
+   mLog->error("Unexpected Vulkan Error: {}", vk::to_string(err));
    abort();
 }
 
@@ -48,44 +49,66 @@ DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
                                      const char* pMessage,
                                      void* pUserData)
 {
-   bool noBreak = false;
+   // Consider doing additional debugger behaviours based on various attributes.
+   // This is to improve the chances that we don't accidentally miss incorrect
+   // Vulkan-specific behaviours.
 
-   // TODO: Remove this once vulkan headers correctly support VkPipelineColorBlendAdvancedStateCreateInfoEXT
+   // We keep track of known issues so we can log slightly differently, and also
+   // avoid breaking to the debugger here.
+   bool isKnownIssue = false;
+
+   // There is currently a bug where the validation layers report issues with using
+   // VkPipelineColorBlendStateCreateInfo in spite of our legal usage of it.
+   // TODO: Remove this once validation correctly supports VkPipelineColorBlendAdvancedStateCreateInfoEXT
    if (strstr(pMessage, "VkPipelineColorBlendStateCreateInfo-pNext") != nullptr) {
       static uint64_t seenAdvancedBlendWarning = 0;
       if (seenAdvancedBlendWarning++) {
          return VK_FALSE;
       }
-      noBreak = true;
+      isKnownIssue = true;
    }
 
+   // We intentionally mirror the behaviour of GPU7 where a shader writes to an attachement which is not bound.
+   // The validation layer gives us a warning, but we should ignore it for this known case.
+   if (strstr(pMessage, "Shader-OutputNotConsumed") != nullptr) {
+      static uint64_t seenOutputNotConsumed = 0;
+      if (seenOutputNotConsumed++) {
+         return VK_FALSE;
+      }
+      isKnownIssue = true;
+   }
+
+   // Write this message to our normal logging
    auto self = reinterpret_cast<DecafSDLVulkan *>(pUserData);
-   self->mLog->warn("Vulkan debug report: {}, {}, {}, {}, {}, {}, {}",
-                    vk::to_string(vk::DebugReportFlagsEXT(flags)),
-                    vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
-                    object,
-                    location,
-                    messageCode,
-                    pLayerPrefix,
-                    pMessage);
+   if (!isKnownIssue) {
+      self->mLog->warn("Vulkan Debug Report: {}, {}, {}, {}, {}, {}, {}",
+                       vk::to_string(vk::DebugReportFlagsEXT(flags)),
+                       vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
+                       object,
+                       location,
+                       messageCode,
+                       pLayerPrefix,
+                       pMessage);
+   } else {
+      self->mLog->warn("Vulkan Debug Report (Known Case): {}", pMessage);
+   }
 
-#ifdef PLATFORM_WINDOWS
-   auto logMsg = fmt::format("VKDBG: {} {}  ||=>  {}, {}, {}, {}, {}\n",
-                             vk::to_string(vk::DebugReportFlagsEXT(flags)),
-                             pMessage,
-                             vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
-                             object,
-                             location,
-                             messageCode,
-                             pLayerPrefix);
-   OutputDebugStringA(logMsg.c_str());
+   if (!isKnownIssue) {
+      platform::debugLog(fmt::format(
+         "vk-dbg: {}\n",
+         pMessage));
+   } else {
+      platform::debugLog(fmt::format(
+         "vk-dbg-ignored: {}\n",
+         pMessage));
+   }
 
+   // We should break to the debugger on unexpected situations.
    if (flags == VK_DEBUG_REPORT_WARNING_BIT_EXT || flags == VK_DEBUG_REPORT_ERROR_BIT_EXT) {
-      if (!noBreak) {
-         DebugBreak();
+      if (!isKnownIssue) {
+         platform::debugBreak();
       }
    }
-#endif
 
    return VK_FALSE;
 }
