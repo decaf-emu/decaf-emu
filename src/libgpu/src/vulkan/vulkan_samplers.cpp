@@ -104,7 +104,7 @@ getVkMaxAnisotropy(latte::SQ_TEX_ANISO aniso)
 static bool
 getVkComparisonEnabled(latte::REF_FUNC refFunc)
 {
-   return refFunc != latte::REF_FUNC::ALWAYS;
+   return refFunc != latte::REF_FUNC::NEVER;
 }
 
 static vk::CompareOp
