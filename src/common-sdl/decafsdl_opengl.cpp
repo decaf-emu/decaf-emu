@@ -1,6 +1,5 @@
 #ifdef DECAF_GL
-#include "clilog.h"
-#include "config.h"
+#include "decafsdl_config.h"
 #include "decafsdl_opengl.h"
 
 #include <common/decaf_assert.h>
@@ -77,37 +76,17 @@ getGlDebugSeverity(gl::GLenum severity)
    }
 }
 
-static void GL_APIENTRY
-debugMessageCallback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity,
-   gl::GLsizei length, const gl::GLchar* message, const void *userParam)
-{
-   for (auto filterID : gpu::config::debug_filters) {
-      if (filterID == id) {
-         return;
-      }
-   }
-
-   auto outputStr = fmt::format("GL Message ({}, {}, {}, {}) {}", id,
-      getGlDebugSource(source),
-      getGlDebugType(type),
-      getGlDebugSeverity(severity),
-      message);
-
-   if (severity == gl::GL_DEBUG_SEVERITY_HIGH) {
-      gCliLog->warn(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_MEDIUM) {
-      gCliLog->debug(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_LOW) {
-      gCliLog->trace(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_NOTIFICATION) {
-      gCliLog->info(outputStr);
-   } else {
-      gCliLog->info(outputStr);
-   }
-}
-
 DecafSDLOpenGL::DecafSDLOpenGL()
 {
+   // Initialise logger
+   auto decafLog = spdlog::get("decaf");
+   auto sinks = decafLog->sinks();
+   mLog = std::make_shared<spdlog::logger>("sdl-gl",
+                                           std::begin(sinks),
+                                           std::end(sinks));
+   mLog->set_level(decafLog->level());
+
+   // Setup background colour
     using config::display::background_colour;
     mBackgroundColour[0] = background_colour.r / 255.0f;
     mBackgroundColour[1] = background_colour.g / 255.0f;
@@ -127,6 +106,44 @@ DecafSDLOpenGL::~DecafSDLOpenGL()
    }
 }
 
+void GL_APIENTRY
+DecafSDLOpenGL::debugMessageCallback(gl::GLenum source,
+                                     gl::GLenum type,
+                                     gl::GLuint id,
+                                     gl::GLenum severity,
+                                     gl::GLsizei length,
+                                     const gl::GLchar* message,
+                                     const void *userParam)
+{
+   auto self = reinterpret_cast<DecafSDLOpenGL *>(const_cast<void *>(userParam));
+   for (auto filterID : gpu::config::debug_filters) {
+      if (filterID == id) {
+         return;
+      }
+   }
+
+   auto outputStr =
+      fmt::format(
+         "GL Message ({}, {}, {}, {}) {}",
+         id,
+         getGlDebugSource(source),
+         getGlDebugType(type),
+         getGlDebugSeverity(severity),
+         message);
+
+   if (severity == gl::GL_DEBUG_SEVERITY_HIGH) {
+      self->mLog->warn(outputStr);
+   } else if (severity == gl::GL_DEBUG_SEVERITY_MEDIUM) {
+      self->mLog->debug(outputStr);
+   } else if (severity == gl::GL_DEBUG_SEVERITY_LOW) {
+      self->mLog->trace(outputStr);
+   } else if (severity == gl::GL_DEBUG_SEVERITY_NOTIFICATION) {
+      self->mLog->info(outputStr);
+   } else {
+      self->mLog->info(outputStr);
+   }
+}
+
 void
 DecafSDLOpenGL::initialiseContext()
 {
@@ -134,7 +151,7 @@ DecafSDLOpenGL::initialiseContext()
 
    if (gpu::config::debug) {
       glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
-      glbinding::setAfterCallback([](const glbinding::FunctionCall &call) {
+      glbinding::setAfterCallback([&](const glbinding::FunctionCall &call) {
          auto error = glbinding::Binding::GetError.directCall();
 
          if (error != gl::GL_NO_ERROR) {
@@ -154,11 +171,11 @@ DecafSDLOpenGL::initialiseContext()
                fmt::format_to(out, " -> {}", call.returnValue->asString());
             }
 
-            gCliLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), out.data());
+            mLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), out.data());
          }
       });
 
-      gl::glDebugMessageCallback(&debugMessageCallback, nullptr);
+      gl::glDebugMessageCallback(&debugMessageCallback, this);
       gl::glEnable(gl::GL_DEBUG_OUTPUT);
       gl::glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
    }
@@ -301,9 +318,11 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
    }
 
    // Draw UI
-   int width, height;
-   SDL_GetWindowSize(mWindow, &width, &height);
-   mDebugUiRenderer->draw(width, height);
+   if (mDebugUiRenderer) {
+      int width, height;
+      SDL_GetWindowSize(mWindow, &width, &height);
+      mDebugUiRenderer->draw(width, height);
+   }
 
    // Swap
    SDL_GL_SwapWindow(mWindow);
@@ -315,10 +334,12 @@ DecafSDLOpenGL::drawScanBuffers(Viewport &tvViewport,
 }
 
 bool
-DecafSDLOpenGL::initialise(int width, int height)
+DecafSDLOpenGL::initialise(int width,
+                           int height,
+                           bool renderDebugger)
 {
    if (SDL_GL_LoadLibrary(NULL) != 0) {
-      gCliLog->error("Failed to load OpenGL library: {}", SDL_GetError());
+      mLog->error("Failed to load OpenGL library: {}", SDL_GetError());
       return false;
    }
 
@@ -345,7 +366,7 @@ DecafSDLOpenGL::initialise(int width, int height)
       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
 
    if (!mWindow) {
-      gCliLog->error("Failed to create GL SDL window");
+      mLog->error("Failed to create GL SDL window");
       return false;
    }
 
@@ -353,24 +374,25 @@ DecafSDLOpenGL::initialise(int width, int height)
 
    // Create OpenGL context
    mContext = SDL_GL_CreateContext(mWindow);
-
    if (!mContext) {
-      gCliLog->error("Failed to create Main OpenGL context: {}", SDL_GetError());
+      mLog->error("Failed to create Main OpenGL context: {}", SDL_GetError());
       return false;
    }
 
    mThreadContext = SDL_GL_CreateContext(mWindow);
-
    if (!mThreadContext) {
-      gCliLog->error("Failed to create GPU OpenGL context: {}", SDL_GetError());
+      mLog->error("Failed to create GPU OpenGL context: {}", SDL_GetError());
       return false;
    }
 
    SDL_GL_MakeCurrent(mWindow, mContext);
 
+   // Setup rendering
+   initialiseContext();
+   initialiseDraw();
+
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::OpenGLDriver*>(gpu::createGLDriver());
-   mDebugUiRenderer = reinterpret_cast<decaf::GLUiRenderer*>(decaf::createDebugGLRenderer());
 
    if (config::test::dump_drc_frames || config::test::dump_tv_frames) {
       platform::createDirectory(config::test::dump_frames_dir);
@@ -379,10 +401,11 @@ DecafSDLOpenGL::initialise(int width, int height)
                                       config::test::dump_drc_frames);
    }
 
-   // Setup rendering
-   initialiseContext();
-   initialiseDraw();
-   mDebugUiRenderer->initialise();
+   // Initialise debugger renderer if needed
+   if (renderDebugger) {
+      mDebugUiRenderer = reinterpret_cast<decaf::GLUiRenderer*>(decaf::createDebugGLRenderer());
+      mDebugUiRenderer->initialise();
+   }
 
    // Start graphics thread
    if (!config::display::force_sync) {
@@ -401,8 +424,7 @@ DecafSDLOpenGL::initialise(int width, int height)
       //  throttle our swapping automatically anyways.
       SDL_GL_SetSwapInterval(0);
 
-      // Switch to the thread context, we automatically switch
-      //  back when presenting a frame.
+      // Switch to the thread context for initialisation
       SDL_GL_MakeCurrent(mWindow, mThreadContext);
 
       // Initialise the context
@@ -410,6 +432,9 @@ DecafSDLOpenGL::initialise(int width, int height)
 
       // Setup the driver
       mDecafDriver->initialise();
+
+      // Switch back to the window context
+      SDL_GL_MakeCurrent(mWindow, mContext);
    }
 
    return true;
@@ -419,7 +444,9 @@ void
 DecafSDLOpenGL::shutdown()
 {
    // Shut down the debugger ui driver
-   mDebugUiRenderer->shutdown();
+   if (mDebugUiRenderer) {
+      mDebugUiRenderer->shutdown();
+   }
 
    // Stop the GPU
    if (!config::display::force_sync) {

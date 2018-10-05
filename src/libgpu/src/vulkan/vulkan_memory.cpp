@@ -4,6 +4,12 @@
 namespace vulkan
 {
 
+BufferSegmentObject *
+Driver::getBufferSegment(uint32_t baseAddress, uint32_t size, bool discardData)
+{
+   return nullptr;
+}
+
 /*
 Staging buffers are used for performing uploads/downloads from the host GPU.
 These buffers will only last as long as a single host command buffer does, and
@@ -12,29 +18,31 @@ within a retire task of that particular command buffer.
 */
 
 StagingBuffer *
-Driver::getStagingBuffer(uint32_t size)
+Driver::getStagingBuffer(uint32_t size, vk::BufferUsageFlags usage)
 {
    vk::BufferCreateInfo bufferDesc;
    bufferDesc.size = size;
-   bufferDesc.usage = vk::BufferUsageFlagBits::eTransferSrc;
+   bufferDesc.usage = usage;
    bufferDesc.sharingMode = vk::SharingMode::eExclusive;
    bufferDesc.queueFamilyIndexCount = 0;
    bufferDesc.pQueueFamilyIndices = nullptr;
-   auto buffer = mDevice.createBuffer(bufferDesc);
 
-   auto bufferMemReqs = mDevice.getBufferMemoryRequirements(buffer);
+   VmaAllocationCreateInfo allocInfo = {};
+   allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
-   vk::MemoryAllocateInfo allocDesc;
-   allocDesc.allocationSize = bufferMemReqs.size;
-   allocDesc.memoryTypeIndex = findMemoryType(bufferMemReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-   auto bufferMem = mDevice.allocateMemory(allocDesc);
-
-   mDevice.bindBufferMemory(buffer, bufferMem, 0);
+   VkBuffer buffer;
+   VmaAllocation allocation;
+   vmaCreateBuffer(mAllocator,
+                   &static_cast<VkBufferCreateInfo>(bufferDesc),
+                   &allocInfo,
+                   &buffer,
+                   &allocation,
+                   nullptr);
 
    auto sbuffer = new StagingBuffer();
    sbuffer->size = size;
    sbuffer->buffer = buffer;
-   sbuffer->memory = bufferMem;
+   sbuffer->memory = allocation;
 
    mActiveSyncWaiter->stagingBuffers.push_back(sbuffer);
 
@@ -44,17 +52,18 @@ Driver::getStagingBuffer(uint32_t size)
 void
 Driver::retireStagingBuffer(StagingBuffer *sbuffer)
 {
-   mDevice.freeMemory(sbuffer->memory);
+   vmaFreeMemory(mAllocator, sbuffer->memory);
    mDevice.destroyBuffer(sbuffer->buffer);
 }
 
 void *
 Driver::mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu)
 {
-   auto data = mDevice.mapMemory(sbuffer->memory, 0, VK_WHOLE_SIZE, vk::MemoryMapFlags());
+   void * data;
+   vmaMapMemory(mAllocator, sbuffer->memory, &data);
 
    if (flushGpu) {
-      mDevice.invalidateMappedMemoryRanges({ vk::MappedMemoryRange(sbuffer->memory, 0, VK_WHOLE_SIZE) });
+      vmaInvalidateAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
    }
 
    return data;
@@ -64,12 +73,12 @@ void
 Driver::unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu)
 {
    if (flushCpu) {
-      mDevice.flushMappedMemoryRanges({ vk::MappedMemoryRange(sbuffer->memory, 0, VK_WHOLE_SIZE) });
+      vmaFlushAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
    }
 
-   mDevice.unmapMemory(sbuffer->memory);
+   vmaUnmapMemory(mAllocator, sbuffer->memory);
 }
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

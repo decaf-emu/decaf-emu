@@ -2,12 +2,14 @@
 #include "sdl_window.h"
 
 #include <common/log.h>
+#include <common-sdl/decafsdl_config.h>
 #include <excmd.h>
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <libdecaf/decaf.h>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
+#include <libgpu/gpu_config.h>
 
 namespace config
 {
@@ -15,6 +17,7 @@ namespace config
 bool dump_drc_frames = false;
 bool dump_tv_frames = false;
 std::string dump_frames_dir = "frames";
+std::string renderer = "opengl";
 
 } // namespace config
 
@@ -46,7 +49,10 @@ getCommandLineParser()
                   description { "Dump rendered TV frames to file." })
       .add_option("dump-frames-dir",
                   description { "Folder to place dumped frames in" },
-                  make_default_value(config::dump_frames_dir));
+                  make_default_value(config::dump_frames_dir))
+      .add_option("renderer",
+                  description { "Which graphics renderer to use." },
+                  make_default_value(config::renderer));
 
    parser.add_command("help")
       .add_argument("help-command",
@@ -59,6 +65,34 @@ getCommandLineParser()
       .add_option_group(replayOptions);
 
    return parser;
+}
+
+static int
+replay(const std::string &path)
+{
+   SDLWindow sdl;
+
+   if (!sdl.initCore()) {
+      gCliLog->error("Failed to initialise SDL");
+      return -1;
+   }
+
+   if (config::renderer == "vulkan") {
+      if (!sdl.initVulkanGraphics()) {
+         gCliLog->error("Failed to initialise Vulkan backend.");
+         return -1;
+      }
+   } else if (config::renderer == "opengl") {
+      if (!sdl.initGlGraphics()) {
+         gCliLog->error("Failed to initialise OpenGL backend.");
+         return -1;
+      }
+   } else {
+      gCliLog->error("Unknown display backend {}", config::renderer);
+      return -1;
+   }
+
+   return sdl.run(path);
 }
 
 int
@@ -99,6 +133,13 @@ start(excmd::parser &parser,
       config::dump_frames_dir = options.get<std::string>("dump-frames-dir");
    }
 
+   if (options.has("renderer")) {
+      config::renderer = options.get<std::string>("renderer");
+   }
+
+   // Always use force_sync for pm4-replay
+   config::display::force_sync = true;
+
    auto traceFile = options.get<std::string>("trace file");
 
    // Initialise libdecaf logger
@@ -116,18 +157,12 @@ start(excmd::parser &parser,
    // Let's go boyssssss
    int result = -1;
 
-   // We need to run the trace on a core.
+   // We need to run the replay on a cpu core.
    cpu::initialise();
    cpu::setCoreEntrypointHandler(
       [&](cpu::Core *core) {
          if (core->id == 1) {
-            SDLWindow window;
-
-            if (!window.createWindow()) {
-               result = -1;
-            } else {
-               result = window.run(traceFile);
-            }
+            result = replay(traceFile);
          }
       });
 

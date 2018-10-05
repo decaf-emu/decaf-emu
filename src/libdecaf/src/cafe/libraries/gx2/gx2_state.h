@@ -33,6 +33,22 @@ getMainCoreId();
 void
 setMainCore();
 
+void
+initialiseProfiling(GX2ProfileMode profileMode,
+                    GX2TossStage tossStage);
+
+GX2ProfileMode
+getProfileMode();
+
+GX2TossStage
+getTossStage();
+
+BOOL
+getProfilingEnabled();
+
+void
+setProfilingEnabled(BOOL enabled);
+
 } // namespace internal
 
 } // namespace cafe::gx2

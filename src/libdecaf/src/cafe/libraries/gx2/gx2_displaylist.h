@@ -15,13 +15,9 @@ namespace cafe::gx2
 constexpr auto GX2DisplayListAlign = 0x20u;
 
 void
-GX2BeginDisplayList(virt_ptr<void> displayList,
-                    uint32_t bytes);
-
-void
 GX2BeginDisplayListEx(virt_ptr<void> displayList,
                       uint32_t bytes,
-                      BOOL unk1);
+                      BOOL profilingEnabled);
 
 uint32_t
 GX2EndDisplayList(virt_ptr<void> displayList);

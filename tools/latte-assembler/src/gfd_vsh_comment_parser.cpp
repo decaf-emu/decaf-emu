@@ -288,10 +288,10 @@ parseAttribVars(std::vector<gfd::GFDAttribVar> &attribVars,
                 const std::string &member,
                 const std::string &value)
 {
-   if (index >= latte::MaxAttributes) {
+   if (index >= latte::MaxAttribBuffers) {
       throw gfd_header_parse_exception {
          fmt::format("ATTRIB_VARS[{}] invalid index, max: {}",
-                     index, latte::MaxAttributes)
+                     index, latte::MaxAttribBuffers)
       };
    }
 

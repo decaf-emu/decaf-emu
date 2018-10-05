@@ -131,7 +131,7 @@ void
 disassembleTEXClause(State &state, const ControlFlowInst &inst)
 {
    auto addr = inst.word0.ADDR();
-   auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
+   auto count = (inst.word1.COUNT() | (inst.word1.COUNT_3() << 3)) + 1;
    auto clause = reinterpret_cast<const TextureFetchInst *>(state.binary.data() + 8 * addr);
 
    increaseIndent(state);
@@ -161,7 +161,7 @@ void
 disassembleCfTEX(fmt::memory_buffer &out, const ControlFlowInst &inst)
 {
    auto addr = inst.word0.ADDR();
-   auto count = (inst.word1.COUNT() + 1) | (inst.word1.COUNT_3() << 3);
+   auto count = (inst.word1.COUNT() | (inst.word1.COUNT_3() << 3)) + 1;
 
    fmt::format_to(out, ": ADDR({}) CNT({})", addr, count);
 

@@ -1,6 +1,7 @@
+#include "cafe_kernel_mcp.h"
 #include "cafe_kernel_shareddata.h"
+
 #include "decaf_config.h"
-#include "kernel/kernel_filesystem.h"
 
 #include <common/align.h>
 #include <fstream>
@@ -19,22 +20,28 @@ loadSharedData(const char *filename,
                SharedArea &area,
                virt_addr addr)
 {
-   auto fs = ::kernel::getFileSystem();
-   auto path = fs::Path { "/vol/storage_mlc01/sys/title/0005001B/10042400/content" }.join(filename);
-   auto result = fs->openFile(path, fs::File::Read);
-
-   if (!result) {
-      area.size = 0u;
-      area.address = virt_addr { 0 };
+   auto fileSize = uint32_t { 0 };
+   auto error = internal::mcpGetFileLength(filename,
+                                           &fileSize,
+                                           ios::mcp::MCPFileType::SharedDataContent,
+                                           0);
+   if (error < ios::Error::OK) {
       return 0;
    }
 
-   auto fh = result.value();
-   area.size = static_cast<uint32_t>(fh->size());
+   error = internal::mcpLoadFile(filename,
+                                 virt_cast<void *>(addr),
+                                 fileSize,
+                                 0,
+                                 ios::mcp::MCPFileType::SharedDataContent,
+                                 UniqueProcessId::Kernel);
+   if (error < ios::Error::OK) {
+      return 0;
+   }
+
    area.address = addr;
-   fh->read(virt_cast<void *>(area.address).getRawPointer(), 1, area.size);
-   fh->close();
-   return area.size;
+   area.size = fileSize;
+   return fileSize;
 }
 
 static uint32_t
@@ -65,7 +72,6 @@ loadResourcesFile(const char *filename,
 void
 loadShared()
 {
-   auto fs = ::kernel::getFileSystem();
    auto addr = virt_addr { 0xF8000000 };
 
    // FontChinese

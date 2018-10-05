@@ -22,6 +22,9 @@ using namespace coreinit;
 struct StaticStateData
 {
    be2_val<uint32_t> mainCoreId;
+   be2_array<BOOL, 3> profilingEnabled;
+   be2_val<GX2ProfileMode> profileMode;
+   be2_val<GX2TossStage> tossStage;
 };
 
 static virt_ptr<StaticStateData>
@@ -34,6 +37,8 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
    auto argv = virt_ptr<char> { nullptr };
    auto cbPoolSize = 0x400000u;
    auto argc = 0u;
+   auto profileMode = GX2ProfileMode::None;
+   auto tossStage = GX2TossStage::None;
 
    // Set main gx2 core
    sStateData->mainCoreId = OSGetCoreId();
@@ -55,6 +60,12 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
          break;
       case GX2InitAttrib::ArgV:
          argv = virt_cast<char *>(virt_addr { value });
+         break;
+      case GX2InitAttrib::ProfileMode:
+         profileMode = static_cast<GX2ProfileMode>(value);
+         break;
+      case GX2InitAttrib::TossStage:
+         tossStage = static_cast<GX2TossStage>(value);
          break;
       default:
          gLog->warn("Unknown GX2InitAttrib {} = {}", id, value);
@@ -81,6 +92,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
 
    // Initialise command buffer pools
    internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
+
+   // Initialise profiling settings
+   internal::initialiseProfiling(profileMode, tossStage);
 
    // Setup default gx2 state
    internal::disableStateShadowing();
@@ -169,6 +183,58 @@ void
 setMainCore()
 {
    sStateData->mainCoreId = OSGetCoreId();
+}
+
+void
+initialiseProfiling(GX2ProfileMode profileMode,
+                    GX2TossStage tossStage)
+{
+   sStateData->profileMode = profileMode;
+   sStateData->tossStage = tossStage;
+
+   // TODO: Update these GX2ProfileMode values with enum named values
+   switch (tossStage) {
+   case 1:
+      sStateData->profileMode |= 0x60;
+      break;
+   case 2:
+      sStateData->profileMode |= 0x40;
+      break;
+   case 7:
+      sStateData->profileMode |= 0x90;
+      break;
+   case 8:
+      sStateData->profileMode |= 0x10;
+      break;
+   }
+
+   sStateData->profilingEnabled[0] = true;
+   sStateData->profilingEnabled[1] = true;
+   sStateData->profilingEnabled[2] = true;
+}
+
+GX2ProfileMode
+getProfileMode()
+{
+   return sStateData->profileMode;
+}
+
+GX2TossStage
+getTossStage()
+{
+   return sStateData->tossStage;
+}
+
+BOOL
+getProfilingEnabled()
+{
+   return sStateData->profilingEnabled[cpu::this_core::id()];
+}
+
+void
+setProfilingEnabled(BOOL enabled)
+{
+   sStateData->profilingEnabled[cpu::this_core::id()] = enabled;
 }
 
 } // namespace internal

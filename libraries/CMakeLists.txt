@@ -127,6 +127,55 @@ else()
     set(GLBINDING_LIBRARIES glbinding PARENT_SCOPE)
 endif()
 
+# glslang
+if(DECAF_VULKAN)
+    set(GLSLANG_DIR "glslang")
+    externalproject_add(glslang
+        SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLSLANG_DIR}"
+        CMAKE_CACHE_ARGS
+            -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
+            -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
+            -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
+            -DCMAKE_CXX_FLAGS:string=${CMAKE_CXX_FLAGS}
+            -DBUILD_SHARED_LIBS:string=off
+            -DENABLE_HLSL:string=off
+            -DENABLE_GLSLANG_BINARIES:string=off
+            -DENABLE_OPT:string=on
+            -DENABLE_SPVREMAPPER:string=off
+            -DSKIP_GLSLANG_INSTALL:string=on
+        INSTALL_COMMAND ""
+        )
+    externalproject_get_property(glslang BINARY_DIR)
+    externalproject_add_step(glslang
+        copy_to_binary
+        DEPENDEES build
+        DEPENDERS install
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/SPIRV/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
+    set_target_properties(glslang PROPERTIES FOLDER libraries)
+
+    if (MSVC)
+        set(SPIRV_IMPORTED_LOCATION
+            IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/SPIRV/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/SPIRV/Release/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/SPIRV/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/SPIRV/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    else ()
+        set(SPIRV_IMPORTED_LOCATION
+            IMPORTED_LOCATION "${BINARY_DIR}/SPIRV/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV.a")
+    endif ()
+
+    add_library(spirv_import STATIC IMPORTED GLOBAL)
+    add_dependencies(spirv_import glslang)
+    set_target_properties(spirv_import PROPERTIES ${SPIRV_IMPORTED_LOCATION})
+
+    add_library(spirv_final INTERFACE)
+    add_dependencies(spirv_final spirv_import)
+    target_include_directories(spirv_final INTERFACE
+        "${CMAKE_CURRENT_SOURCE_DIR}/${GLSLANG_DIR}/SPIRV")
+    target_link_libraries(spirv_final INTERFACE spirv_import)
+    set(SPIRV_LIBRARIES spirv_final PARENT_SCOPE)
+endif()
+
 # gsl
 set(GSL_DIR "gsl-lite")
 add_library(gsl INTERFACE)

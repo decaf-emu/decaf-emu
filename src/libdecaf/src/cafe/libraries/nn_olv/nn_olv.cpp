@@ -28,8 +28,11 @@ Library::registerSymbols()
 
    RegisterFunctionExportName("__pure_virtual_called", pure_virtual_called);
    registerDownloadedCommunityDataSymbols();
+   registerDownloadedDataBaseSymbols();
+   registerDownloadedPostDataSymbols();
    registerDownloadedTopicDataSymbols();
    registerInitSymbols();
+   registerInitializeParamSymbols();
    registerUploadedDataBaseSymbols();
    registerUploadedPostDataSymbols();
 }

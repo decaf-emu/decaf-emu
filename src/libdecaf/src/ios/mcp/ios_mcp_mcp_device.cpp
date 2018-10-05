@@ -30,6 +30,54 @@ static size_t
 sCurrentLoadFileSize = 0u;
 
 MCPError
+mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request)
+{
+   auto path = std::string { };
+   auto name = std::string_view { phys_addrof(request->name).getRawPointer() };
+
+   if (request->fileType == MCPFileType::CafeOS) {
+      if (std::find(decaf::config::system::lle_modules.begin(),
+                    decaf::config::system::lle_modules.end(),
+                    name) == decaf::config::system::lle_modules.end()) {
+         auto library = cafe::hle::getLibrary(name);
+         if (library) {
+            auto &rpl = library->getGeneratedRpl();
+            return static_cast<MCPError>(rpl.size());
+         }
+      }
+   }
+
+   switch (request->fileType) {
+   case MCPFileType::ProcessCode:
+      path = fmt::format("/vol/code/{}", name);
+      break;
+   case MCPFileType::CafeOS:
+      path = fmt::format("/vol/storage_mlc01/sys/title/00050010/1000400A/code/{}", name);
+      break;
+   case MCPFileType::SharedDataCode:
+      path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/code/{}", name);
+      break;
+   case MCPFileType::SharedDataContent:
+      path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/content/{}", name);
+      break;
+   default:
+      return static_cast<MCPError>(Error::InvalidArg);
+   }
+
+   StackObject<FSAStat> stat;
+   auto fsaHandle = getFsaHandle();
+   auto error = FSAGetInfoByQuery(getFsaHandle(),
+                                  path,
+                                  FSAQueryInfoType::Stat,
+                                  stat);
+   if (error < FSAStatus::OK) {
+      return static_cast<MCPError>(error);
+   }
+
+   return static_cast<MCPError>(stat->size);
+}
+
+MCPError
 mcpGetSysProdSettings(phys_ptr<MCPResponseGetSysProdSettings> response)
 {
    std::memcpy(phys_addrof(response->settings).getRawPointer(),
@@ -77,6 +125,12 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
       break;
    case MCPFileType::CafeOS:
       path = fmt::format("/vol/storage_mlc01/sys/title/00050010/1000400A/code/{}", name);
+      break;
+   case MCPFileType::SharedDataCode:
+      path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/code/{}", name);
+      break;
+   case MCPFileType::SharedDataContent:
+      path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/content/{}", name);
       break;
    default:
       return static_cast<MCPError>(Error::InvalidArg);

@@ -29,5 +29,6 @@ endif()
 
 if(DECAF_VULKAN)
     target_link_libraries(libgpu
-        ${VULKAN_LIBRARIES})
+        ${VULKAN_LIBRARIES}
+        ${SPIRV_LIBRARIES})
 endif()

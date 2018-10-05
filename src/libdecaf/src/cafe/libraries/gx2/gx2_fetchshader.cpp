@@ -271,14 +271,13 @@ GX2InitFetchShaderEx(virt_ptr<GX2FetchShader> fetchShader,
             auto fetchType = latte::SQ_VTX_FETCH_TYPE::VERTEX_DATA;
 
             if (attrib.type == GX2AttribIndexType::PerInstance) {
+               fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
+
                if (attrib.aluDivisor == 1) {
-                  fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
                   selX = latte::SQ_SEL::SEL_W;
                } else if (attrib.aluDivisor == fetchShader->divisors[0]) {
-                  fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
                   selX = latte::SQ_SEL::SEL_Y;
                } else if (attrib.aluDivisor == fetchShader->divisors[1]) {
-                  fetchType = latte::SQ_VTX_FETCH_TYPE::INSTANCE_DATA;
                   selX = latte::SQ_SEL::SEL_Z;
                } else {
                   fetchShader->divisors[fetchShader->numDivisors] = attrib.aluDivisor;

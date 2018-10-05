@@ -523,7 +523,7 @@ private:
    void
    trackActiveAttribBuffers()
    {
-      for (auto i = 0u; i < MaxAttributes; ++i) {
+      for (auto i = 0u; i < MaxAttribBuffers; ++i) {
          auto resourceOffset = (SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
          auto sq_vtx_constant_word0 = getRegister<SQ_VTX_CONSTANT_WORD0_N>(Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
          auto sq_vtx_constant_word1 = getRegister<SQ_VTX_CONSTANT_WORD1_N>(Register::SQ_RESOURCE_WORD1_0 + 4 * resourceOffset);
@@ -868,9 +868,16 @@ private:
                            phys_cast<uint32_t *>(data.addr), data.values);
          break;
       }
-      case IT_OPCODE::INDIRECT_BUFFER_PRIV:
+      case IT_OPCODE::INDIRECT_BUFFER:
       {
          auto data = read<IndirectBufferCall>(reader);
+         trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr, data.size * 4u);
+         scanCommandBuffer(phys_cast<uint32_t *>(data.addr), data.size);
+         break;
+      }
+      case IT_OPCODE::INDIRECT_BUFFER_PRIV:
+      {
+         auto data = read<IndirectBufferCallPriv>(reader);
          trackMemory(CaptureMemoryLoad::CommandBuffer, data.addr, data.size * 4u);
          scanCommandBuffer(phys_cast<uint32_t *>(data.addr), data.size);
          break;

@@ -49,13 +49,28 @@ EnableResumeDaemons()
    return nn::Result::Success;
 }
 
+nn::Result
+GetDaemonStatus(virt_ptr<uint32_t> status, // nn::ndm::IDaemon::Status *
+                uint32_t unknown) // nn::ndm::Cafe::DaemonName
+{
+   decaf_warn_stub();
+   *status = 3u;
+   return nn::Result::Success;
+}
+
 void
 Library::registerNdmSymbols()
 {
-   RegisterFunctionExportName("Initialize__Q2_2nn3ndmFv", Initialize);
-   RegisterFunctionExportName("Finalize__Q2_2nn3ndmFv", Finalize);
-   RegisterFunctionExportName("IsInitialized__Q2_2nn3ndmFv", IsInitialized);
-   RegisterFunctionExportName("EnableResumeDaemons__Q2_2nn3ndmFv", EnableResumeDaemons);
+   RegisterFunctionExportName("Initialize__Q2_2nn3ndmFv",
+                              Initialize);
+   RegisterFunctionExportName("Finalize__Q2_2nn3ndmFv",
+                              Finalize);
+   RegisterFunctionExportName("IsInitialized__Q2_2nn3ndmFv",
+                              IsInitialized);
+   RegisterFunctionExportName("EnableResumeDaemons__Q2_2nn3ndmFv",
+                              EnableResumeDaemons);
+   RegisterFunctionExportName("GetDaemonStatus__Q2_2nn3ndmFPQ4_2nn3ndm7IDaemon6StatusQ4_2nn3ndm4Cafe10DaemonName",
+                              GetDaemonStatus);
 
    RegisterFunctionExportName("NDMInitialize", Initialize);
    RegisterFunctionExportName("NDMFinalize", Finalize);

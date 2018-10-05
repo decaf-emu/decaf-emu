@@ -9,7 +9,7 @@
 namespace latte
 {
 
-struct DataFormat
+struct SurfaceFormat
 {
    latte::SQ_DATA_FORMAT format;
    latte::SQ_NUM_FORMAT numFormat;
@@ -17,10 +17,32 @@ struct DataFormat
    uint32_t degamma;
 };
 
-DataFormat
+enum class DataFormatMetaType : uint32_t
+{
+   None,
+   UINT,
+   FLOAT
+};
+
+struct DataFormatMetaElem
+{
+   uint32_t index;
+   uint32_t start;
+   uint32_t length;
+};
+
+struct DataFormatMeta
+{
+   uint32_t inputWidth;
+   uint32_t inputCount;
+   DataFormatMetaType type;
+   DataFormatMetaElem elems[4];
+};
+
+SurfaceFormat
 getColorBufferDataFormat(latte::CB_FORMAT format, latte::CB_NUMBER_TYPE numberType);
 
-DataFormat
+SurfaceFormat
 getDepthBufferDataFormat(latte::DB_FORMAT format);
 
 uint32_t
@@ -31,6 +53,9 @@ getDataFormatIsCompressed(latte::SQ_DATA_FORMAT format);
 
 std::string
 getDataFormatName(latte::SQ_DATA_FORMAT format);
+
+DataFormatMeta
+getDataFormatMeta(latte::SQ_DATA_FORMAT format);
 
 uint32_t
 getDataFormatComponents(latte::SQ_DATA_FORMAT format);

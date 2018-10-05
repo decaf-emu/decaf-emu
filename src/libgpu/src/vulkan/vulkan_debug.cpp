@@ -7,13 +7,21 @@ namespace vulkan
 float
 Driver::getAverageFPS()
 {
-   return 0.0f;
+   // TODO: This is not thread safe...
+   static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds { 1 }).count();
+   auto avgFrameTime = mAverageFrameTime.count();
+
+   if (avgFrameTime == 0.0) {
+      return 0.0f;
+   } else {
+      return static_cast<float>(second / avgFrameTime);
+   }
 }
 
 float
 Driver::getAverageFrametimeMS()
 {
-   return 0.0f;
+   return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
 }
 
 gpu::VulkanDriver::DebuggerInfo *
@@ -30,4 +38,4 @@ Driver::updateDebuggerInfo()
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

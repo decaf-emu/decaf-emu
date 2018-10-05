@@ -23,7 +23,19 @@ protected:
    virtual void registerSymbols() override;
 
 private:
-   void registerAxfxSymbols();
+   void registerAxArtSymbols();
+   void registerAxfxChorusSymbols();
+   void registerAxfxChorusExpSymbols();
+   void registerAxfxDelaySymbols();
+   void registerAxfxDelayExpSymbols();
+   void registerAxfxHooksSymbols();
+   void registerAxfxMultiChReverbSymbols();
+   void registerAxfxReverbHiSymbols();
+   void registerAxfxReverbHiExpSymbols();
+   void registerAxfxReverbStdSymbols();
+   void registerAxfxReverbStdExpSymbols();
+   void registerMixSymbols();
+   void registerSpSymbols();
 };
 
 } // namespace cafe::snduser2

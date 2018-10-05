@@ -6,16 +6,11 @@
 ENUM_NAMESPACE_BEG(latte)
 
 ENUM_BEG(SQ_ALU_ENCODING, uint32_t)
-   ENUM_VALUE(OP2,                        0)
-   ENUM_VALUE(OP3,                        1)
+ENUM_VALUE(OP2, 0)
+// OP3 is not a specific value, only that it the encoding != OP2.  This
+//  is because ALU_ENCODING is actually multiple bits, where 0 means OP2.
+//ENUM_VALUE(OP3,                      NOT_ZERO)
 ENUM_END(SQ_ALU_ENCODING)
-
-ENUM_BEG(SQ_ALU_EXECUTE_MASK_OP, uint32_t)
-   ENUM_VALUE(DEACTIVATE,                 0)
-   ENUM_VALUE(BREAK,                      1)
-   ENUM_VALUE(CONTINUE,                   2)
-   ENUM_VALUE(KILL,                       3)
-ENUM_END(SQ_ALU_EXECUTE_MASK_OP)
 
 ENUM_BEG(SQ_ALU_OMOD, uint32_t)
    ENUM_VALUE(OFF,                        0)
@@ -228,7 +223,7 @@ ENUM_END(SQ_REL)
 
 ENUM_BEG(SQ_RES_OFFSET, uint32_t)
    ENUM_VALUE(PS_TEX_RESOURCE_0,          0x0)
-   ENUM_VALUE(PS_BUF_RESOURCE_0,          0xA0)
+   ENUM_VALUE(PS_BUF_RESOURCE_0,          0x80)
 
    ENUM_VALUE(VS_TEX_RESOURCE_0,          0xA0)
    ENUM_VALUE(VS_BUF_RESOURCE_0,          0x120)

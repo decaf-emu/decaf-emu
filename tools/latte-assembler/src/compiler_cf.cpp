@@ -159,7 +159,7 @@ compileClauses(Shader &shader)
       }
 
       if (clause.countNode) {
-         auto parsedCount = (cfInst.word1.COUNT() + 1) | (cfInst.word1.COUNT_3() << 3);
+         auto parsedCount = (cfInst.word1.COUNT() | (cfInst.word1.COUNT_3() << 3)) + 1;
 
          if (parsedCount != count) {
             throw incorrect_clause_count_exception { *clause.countNode, parsedCount, count };

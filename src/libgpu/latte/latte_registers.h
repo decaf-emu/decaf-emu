@@ -24,8 +24,22 @@ namespace Register_
 
 enum Value : uint32_t
 {
+   IH_RB_BASE                       = 0x03E04,
+   IH_RB_RPTR                       = 0x03E08,
+   IH_RB_WPTR                       = 0x03E0C,
+   IH_STATUS                        = 0x03E20,
+
    // Config Registers
    ConfigRegisterBase               = 0x08000,
+   CP_BUSY_STAT                     = 0x0867C,
+   CP_STAT                          = 0x08680,
+   CP_RB_RPTR                       = 0x08700,
+   CP_IB1_BASE_LO                   = 0x08730,
+   CP_IB1_BASE_HI                   = 0x08734,
+   CP_IB1_BASE_SIZE                 = 0x08738,
+   CP_IB2_BASE_LO                   = 0x0873C,
+   CP_IB2_BASE_HI                   = 0x08740,
+   CP_IB2_BASE_SIZE                 = 0x08744,
    VGT_GS_PER_ES                    = 0x088C8,
    VGT_ES_PER_GS                    = 0x088CC,
    VGT_GS_VERTEX_REUSE              = 0x088D4,
@@ -84,6 +98,8 @@ enum Value : uint32_t
    TD_GS_SAMPLER_BORDER17_BLUE      = 0x0AA18,
    TD_GS_SAMPLER_BORDER17_ALPHA     = 0x0AA1C,
    ConfigRegisterEnd                = 0x0AC00,
+
+   CP_RB_BASE                       = 0x0C100,
 
    // Context Registers
    ContextRegisterBase              = 0x28000,

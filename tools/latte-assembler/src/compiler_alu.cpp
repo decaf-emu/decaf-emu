@@ -66,8 +66,6 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
             throw invalid_alu_op3_inst_exception { *child };
          }
 
-         inst.word1 = inst.word1
-            .ENCODING(latte::SQ_ALU_ENCODING::OP3);
          inst.op3 = inst.op3
             .ALU_INST(opcode);
       } else if (child->name == "AluOutputModifier") {
@@ -202,8 +200,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
                   .BANK_SWIZZLE(parseAluBankSwizzle(*prop));
             } else if (prop->name == "UPDATE_EXEC_MASK") {
                inst.op2 = inst.op2
-                  .UPDATE_EXECUTE_MASK(true)
-                  .EXECUTE_MASK_OP(parseExecuteMaskOp(*prop));
+                  .UPDATE_EXECUTE_MASK(true);
             } else if (prop->name == "UPDATE_PRED") {
                inst.op2 = inst.op2
                   .UPDATE_PRED(true);

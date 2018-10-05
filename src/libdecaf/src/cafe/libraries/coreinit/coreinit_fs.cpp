@@ -8,15 +8,13 @@
 namespace cafe::coreinit
 {
 
-using ClientBodyQueue = internal::Queue<FSClientBodyQueue, FSClientBodyLink,
-                                        FSClientBody, &FSClientBody::link>;
-
 struct StaticFsData
 {
    be2_val<bool> initialised;
-   be2_struct<OSFastMutex> mutex;
+   be2_array<char, 32> clientListMutexName;
+   be2_struct<OSFastMutex> clientListMutex;
    be2_val<uint32_t> numClients;
-   be2_struct<FSClientBodyQueue> clients;
+   be2_virt_ptr<FSClientBody> clientList;
 };
 
 static virt_ptr<StaticFsData>
@@ -34,8 +32,11 @@ FSInit()
    }
 
    sFsData->initialised = true;
-   ClientBodyQueue::init(virt_addrof(sFsData->clients));
-   OSFastMutex_Init(virt_addrof(sFsData->mutex), nullptr);
+   sFsData->clientList = nullptr;
+   sFsData->numClients = 0u;
+   sFsData->clientListMutexName = "{ FSClient }";
+   OSFastMutex_Init(virt_addrof(sFsData->clientListMutex),
+                    virt_addrof(sFsData->clientListMutexName));
    internal::initialiseFsDriver();
 }
 
@@ -98,10 +99,22 @@ fsClientRegistered(virt_ptr<FSClient> client)
 bool
 fsClientRegistered(virt_ptr<FSClientBody> clientBody)
 {
-   OSFastMutex_Lock(virt_addrof(sFsData->mutex));
-   auto registered = ClientBodyQueue::contains(virt_addrof(sFsData->clients),
-                                               clientBody);
-   OSFastMutex_Unlock(virt_addrof(sFsData->mutex));
+   auto registered = false;
+   OSFastMutex_Lock(virt_addrof(sFsData->clientListMutex));
+
+   if (sFsData->clientList) {
+      auto itr = sFsData->clientList;
+      do {
+         if (itr == clientBody) {
+            registered = true;
+            break;
+         }
+
+         itr = itr->link.next;
+      } while (itr != sFsData->clientList);
+   }
+
+   OSFastMutex_Unlock(virt_addrof(sFsData->clientListMutex));
    return registered;
 }
 
@@ -112,10 +125,23 @@ fsClientRegistered(virt_ptr<FSClientBody> clientBody)
 bool
 fsRegisterClient(virt_ptr<FSClientBody> clientBody)
 {
-   OSFastMutex_Lock(virt_addrof(sFsData->mutex));
-   ClientBodyQueue::append(virt_addrof(sFsData->clients), clientBody);
+   OSFastMutex_Lock(virt_addrof(sFsData->clientListMutex));
+
+   if (sFsData->clientList) {
+      auto first = sFsData->clientList;
+      auto next = first->link.next;
+      first->link.next = clientBody;
+      next->link.prev = clientBody;
+      clientBody->link.next = next;
+      clientBody->link.prev = first;
+   } else {
+      sFsData->clientList = clientBody;
+      clientBody->link.next = clientBody;
+      clientBody->link.prev = clientBody;
+   }
+
    sFsData->numClients++;
-   OSFastMutex_Unlock(virt_addrof(sFsData->mutex));
+   OSFastMutex_Unlock(virt_addrof(sFsData->clientListMutex));
    return true;
 }
 
@@ -126,10 +152,29 @@ fsRegisterClient(virt_ptr<FSClientBody> clientBody)
 bool
 fsDeregisterClient(virt_ptr<FSClientBody> clientBody)
 {
-   OSFastMutex_Lock(virt_addrof(sFsData->mutex));
-   ClientBodyQueue::erase(virt_addrof(sFsData->clients), clientBody);
+   OSFastMutex_Lock(virt_addrof(sFsData->clientListMutex));
+
+   // If was first item in the list, update list pointer
+   if (sFsData->clientList == clientBody) {
+      if (clientBody->link.prev != clientBody) {
+         sFsData->clientList = clientBody->link.prev;
+      } else {
+         sFsData->clientList = nullptr;
+      }
+   }
+
+   // Remove from list
+   auto next = clientBody->link.next;
+   auto prev = clientBody->link.prev;
+
+   prev->link.next = next;
+   next->link.prev = prev;
+
+   clientBody->link.next = nullptr;
+   clientBody->link.prev = nullptr;
+
    sFsData->numClients--;
-   OSFastMutex_Unlock(virt_addrof(sFsData->mutex));
+   OSFastMutex_Unlock(virt_addrof(sFsData->clientListMutex));
    return true;
 }
 

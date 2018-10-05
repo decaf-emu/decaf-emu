@@ -174,7 +174,8 @@ GX2SetupContextStateEx(virt_ptr<GX2ContextState> state,
 {
    // Create our internal shadow display list
    std::memset(state.getRawPointer(), 0, sizeof(GX2ContextState));
-   state->profileMode = (flags & GX2ContextStateFlags::ProfileMode) ? TRUE : FALSE;
+   state->profilingEnabled = (flags & GX2ContextStateFlags::ProfilingEnabled) ? TRUE : FALSE;
+   internal::setProfilingEnabled(state->profilingEnabled);
 
    // Clear load state
    loadState(state, true);
@@ -185,8 +186,9 @@ GX2SetupContextStateEx(virt_ptr<GX2ContextState> state,
 
    // Setup shadow display list
    if (!(flags & GX2ContextStateFlags::NoShadowDisplayList)) {
-      GX2BeginDisplayList(virt_addrof(state->shadowDisplayList),
-                          GX2ContextState::MaxDisplayListSize * 4);
+      GX2BeginDisplayListEx(virt_addrof(state->shadowDisplayList),
+                            GX2ContextState::MaxDisplayListSize * 4,
+                            state->profilingEnabled);
       loadState(state, false);
       state->shadowDisplayListSize = GX2EndDisplayList(virt_addrof(state->shadowDisplayList));
    }

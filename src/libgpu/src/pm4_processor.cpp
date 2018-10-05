@@ -13,6 +13,13 @@ Pm4Processor::indirectBufferCall(const IndirectBufferCall &data)
 }
 
 void
+Pm4Processor::indirectBufferCallPriv(const IndirectBufferCallPriv &data)
+{
+   auto buffer = gpu::internal::translateAddress<uint32_t>(data.addr);
+   runCommandBuffer(buffer, data.size);
+}
+
+void
 Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
 {
    std::vector<uint32_t> swapped;
@@ -173,8 +180,11 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::LOAD_CTL_CONST:
       loadControlConstants(read<LoadControlConst>(reader));
       break;
-   case IT_OPCODE::INDIRECT_BUFFER_PRIV:
+   case IT_OPCODE::INDIRECT_BUFFER:
       indirectBufferCall(read<IndirectBufferCall>(reader));
+      break;
+   case IT_OPCODE::INDIRECT_BUFFER_PRIV:
+      indirectBufferCallPriv(read<IndirectBufferCallPriv>(reader));
       break;
    case IT_OPCODE::MEM_WRITE:
       memWrite(read<MemWrite>(reader));

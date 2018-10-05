@@ -1,8 +1,9 @@
-#include "sndcore2.h"
-#include "sndcore2_mix.h"
+#include "snduser2.h"
+#include "snduser2_mix.h"
+
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::sndcore2
+namespace cafe::snduser2
 {
 
 void
@@ -17,4 +18,4 @@ Library::registerMixSymbols()
    RegisterFunctionExport(MIXUpdateSettings);
 }
 
-} // namespace cafe::sndcore2
+} // namespace cafe::snduser2

@@ -87,11 +87,11 @@ ENUM_BEG(MCPFileType, uint32_t)
    //! Load from the CafeOS directory (00050010-1000400A)/code/%s
    ENUM_VALUE(CafeOS,               0x01)
 
-   //! Load from a system data title's content directory (0005001B-x)/content/%s
-   ENUM_VALUE(SystemDataContent,    0x02)
+   //! Load from the shared data content directory (0005001B-10042400)/content/%s
+   ENUM_VALUE(SharedDataContent,    0x02)
 
-   //! Load from a system data title's code directory (0005001B-x)/code/%s
-   ENUM_VALUE(SystemDataCode,       0x03)
+   //! Load from the shared data code directory (0005001B-10042400)/code/%s
+   ENUM_VALUE(SharedDataCode,       0x03)
 ENUM_END(MCPFileType)
 
 ENUM_BEG(MCPResourcePermissions, uint32_t)

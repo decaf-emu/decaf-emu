@@ -12,7 +12,7 @@ Driver::allocateSyncWaiter()
       mWaiterPool.pop_back();
       return syncWaiter;
    }
-   
+
    auto syncWaiter = new SyncWaiter();
 
    // Allocate a fence
@@ -35,6 +35,8 @@ Driver::releaseSyncWaiter(SyncWaiter *syncWaiter)
    // Reset our local state for this buffer resource thing
    syncWaiter->isCompleted = false;
    syncWaiter->callbacks.clear();
+   syncWaiter->stagingBuffers.clear();
+   syncWaiter->descriptorPools.clear();
 
    // Put this fence back in the pool
    mWaiterPool.push_back(syncWaiter);
@@ -58,6 +60,10 @@ Driver::executeSyncWaiter(SyncWaiter *syncWaiter)
 
    for (auto &buffer : syncWaiter->stagingBuffers) {
       retireStagingBuffer(buffer);
+   }
+
+   for (auto &pool : syncWaiter->descriptorPools) {
+      mDevice.destroyDescriptorPool(pool);
    }
 }
 
@@ -124,4 +130,4 @@ Driver::addRetireTask(std::function<void()> fn)
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

@@ -53,6 +53,157 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
 
    // Start our fence thread
    mFenceThread = std::thread(std::bind(&Driver::fenceWaiterThread, this));
+
+   // Set up the VMA
+   VmaAllocatorCreateInfo allocatorDesc = {};
+   allocatorDesc.physicalDevice = mPhysDevice;
+   allocatorDesc.device = mDevice;
+   vmaCreateAllocator(&allocatorDesc, &mAllocator);
+
+   // Set up our drawing pipeline layout
+   auto makeStageSet = [&](int stageIndex)
+   {
+      vk::ShaderStageFlags stageFlags;
+      if (stageIndex == 0) {
+         stageFlags = vk::ShaderStageFlagBits::eVertex;
+      } else if (stageIndex == 1) {
+         stageFlags = vk::ShaderStageFlagBits::eGeometry;
+      } else if (stageIndex == 2) {
+         stageFlags = vk::ShaderStageFlagBits::eFragment;
+      } else {
+         decaf_abort("Unexpected shader stage index");
+      }
+
+      std::vector<vk::DescriptorSetLayoutBinding> bindings;
+
+      for (auto i = 0u; i < latte::MaxSamplers; ++i) {
+         vk::DescriptorSetLayoutBinding sampBindingDesc;
+         sampBindingDesc.binding = i;
+         sampBindingDesc.descriptorType = vk::DescriptorType::eSampler;
+         sampBindingDesc.descriptorCount = 1;
+         sampBindingDesc.stageFlags = stageFlags;
+         sampBindingDesc.pImmutableSamplers = nullptr;
+         bindings.push_back(sampBindingDesc);
+      }
+
+      for (auto i = 0u; i < latte::MaxTextures; ++i) {
+         vk::DescriptorSetLayoutBinding texBindingDesc;
+         texBindingDesc.binding = latte::MaxSamplers + i;
+         texBindingDesc.descriptorType = vk::DescriptorType::eSampledImage;
+         texBindingDesc.descriptorCount = 1;
+         texBindingDesc.stageFlags = stageFlags;
+         texBindingDesc.pImmutableSamplers = nullptr;
+         bindings.push_back(texBindingDesc);
+      }
+
+      for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
+         if (i >= 15) {
+            // Vulkan does not support more than 15 uniform blocks unfortunately,
+            // if we ever encounter a game needing all 15, we will need to do block
+            // splitting or utilize SSBO's.
+            break;
+         }
+
+         vk::DescriptorSetLayoutBinding cbufferBindingDesc;
+         cbufferBindingDesc.binding = latte::MaxSamplers + latte::MaxTextures + i;
+         cbufferBindingDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+         cbufferBindingDesc.descriptorCount = 1;
+         cbufferBindingDesc.stageFlags = stageFlags;
+         cbufferBindingDesc.pImmutableSamplers = nullptr;
+         bindings.push_back(cbufferBindingDesc);
+      }
+
+      vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutDesc;
+      descriptorSetLayoutDesc.bindingCount = static_cast<uint32_t>(bindings.size());
+      descriptorSetLayoutDesc.pBindings = bindings.data();
+      return mDevice.createDescriptorSetLayout(descriptorSetLayoutDesc);
+   };
+
+   mVertexDescriptorSetLayout = makeStageSet(0);
+   mGeometryDescriptorSetLayout = makeStageSet(1);
+   mPixelDescriptorSetLayout = makeStageSet(2);
+
+   std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = {
+      mVertexDescriptorSetLayout,
+      mGeometryDescriptorSetLayout,
+      mPixelDescriptorSetLayout };
+
+
+   std::vector<vk::PushConstantRange> pushConstants;
+
+   vk::PushConstantRange screenSpaceConstants;
+   screenSpaceConstants.stageFlags = vk::ShaderStageFlagBits::eVertex;
+   screenSpaceConstants.offset = 0;
+   screenSpaceConstants.size = 32;
+   pushConstants.push_back(screenSpaceConstants);
+
+   vk::PushConstantRange alphaRefConstants;
+   alphaRefConstants.stageFlags = vk::ShaderStageFlagBits::eFragment;
+   alphaRefConstants.offset = 32;
+   alphaRefConstants.size = 8;
+   pushConstants.push_back(alphaRefConstants);
+
+   vk::PipelineLayoutCreateInfo pipelineLayoutDesc;
+   pipelineLayoutDesc.setLayoutCount = static_cast<uint32_t>(descriptorLayouts.size());
+   pipelineLayoutDesc.pSetLayouts = descriptorLayouts.data();
+   pipelineLayoutDesc.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
+   pipelineLayoutDesc.pPushConstantRanges = pushConstants.data();
+   mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
+}
+
+vk::DescriptorPool
+Driver::allocateDescriptorPool(uint32_t numDraws)
+{
+   std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * numDraws),
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * numDraws),
+      vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * numDraws),
+   };
+
+   vk::DescriptorPoolCreateInfo descriptorPoolInfo;
+   descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
+   descriptorPoolInfo.maxSets = static_cast<uint32_t>(numDraws);
+   auto descriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
+   mActiveSyncWaiter->descriptorPools.push_back(descriptorPool);
+   return descriptorPool;
+}
+
+vk::DescriptorSet
+Driver::allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout)
+{
+   static const uint32_t maxDrawsPerBuffer = 32;
+
+   if (!mActiveDescriptorPool || mActiveDescriptorPoolDrawsLeft == 0) {
+      mActiveDescriptorPool = allocateDescriptorPool(maxDrawsPerBuffer);
+      mActiveDescriptorPoolDrawsLeft = maxDrawsPerBuffer;
+   }
+
+   vk::DescriptorSetAllocateInfo allocInfo;
+   allocInfo.descriptorSetCount = 1;
+   allocInfo.pSetLayouts = &setLayout;
+   allocInfo.descriptorPool = mActiveDescriptorPool;
+   mActiveDescriptorPoolDrawsLeft--;
+
+   return mDevice.allocateDescriptorSets(allocInfo)[0];
+}
+
+vk::DescriptorSet
+Driver::allocateVertexDescriptorSet()
+{
+   return allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
+}
+
+vk::DescriptorSet
+Driver::allocateGeometryDescriptorSet()
+{
+   return allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
+}
+
+vk::DescriptorSet
+Driver::allocatePixelDescriptorSet()
+{
+   return allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
 }
 
 void
@@ -72,7 +223,7 @@ Driver::getSwapBuffers(vk::Image &tvImage, vk::ImageView &tvView, vk::Image &drc
       tvImage = vk::Image();
       tvView = vk::ImageView();
    }
-   
+
    if (mDrcSwapChain) {
       drcImage = mDrcSwapChain->image;
       drcView = mDrcSwapChain->imageView;
@@ -129,6 +280,41 @@ Driver::runUntilFlip()
    }
 }
 
+void
+Driver::beginCommandGroup()
+{
+   mActiveSyncWaiter = allocateSyncWaiter();
+   mActiveCommandBuffer = mActiveSyncWaiter->cmdBuffer;
+}
+
+void
+Driver::endCommandGroup()
+{
+   // Submit the active waiter to the queue
+   submitSyncWaiter(mActiveSyncWaiter);
+
+   // Clear our state in between command buffers for safety
+   mActiveCommandBuffer = nullptr;
+   mActiveSyncWaiter = nullptr;
+   mActiveDescriptorPool = vk::DescriptorPool();
+   mActivePipeline = nullptr;
+   mActiveRenderPass = nullptr;
+}
+
+void
+Driver::beginCommandBuffer()
+{
+   // Begin recording our host command buffer
+   mActiveCommandBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+}
+
+void
+Driver::endCommandBuffer()
+{
+   // Stop recording this host command buffer
+   mActiveCommandBuffer.end();
+}
+
 int32_t
 Driver::findMemoryType(uint32_t memTypeBits, vk::MemoryPropertyFlags requestProps)
 {
@@ -151,4 +337,4 @@ Driver::findMemoryType(uint32_t memTypeBits, vk::MemoryPropertyFlags requestProp
 
 } // namespace vulkan
 
-#endif // DECAF_VULKAN
+#endif // ifdef DECAF_VULKAN

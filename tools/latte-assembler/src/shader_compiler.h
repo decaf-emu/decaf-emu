@@ -243,9 +243,6 @@ parseCfCond(peg::Ast &node);
 latte::SQ_CHAN
 parseChan(peg::Ast &node);
 
-latte::SQ_ALU_EXECUTE_MASK_OP
-parseExecuteMaskOp(peg::Ast &node);
-
 size_t
 parseFourCompSwizzle(peg::Ast &node,
                      latte::SQ_SEL &selX,

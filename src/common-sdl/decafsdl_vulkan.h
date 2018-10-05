@@ -2,10 +2,11 @@
 #ifdef DECAF_VULKAN
 #include "decafsdl_graphics.h"
 
-#include <vulkan/vulkan.hpp>
 #include <libdecaf/decaf.h>
 #include <libgpu/gpu_vulkandriver.h>
 #include <libdecaf/decaf_debugger.h>
+#include <spdlog/spdlog.h>
+#include <vulkan/vulkan.hpp>
 
 class DecafSDLVulkan : public DecafSDLGraphics
 {
@@ -15,7 +16,8 @@ public:
 
    bool
    initialise(int width,
-              int height) override;
+              int height,
+              bool renderDebugger = true) override;
 
    void
    shutdown() override;
@@ -46,10 +48,22 @@ protected:
 
    bool destroySwapChain();
 
+   void checkVkResult(vk::Result err);
    void acquireScanBuffer(vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView);
    void renderScanBuffer(vk::Viewport viewport, vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView);
    void releaseScanBuffer(vk::CommandBuffer cmdBuffer, vk::DescriptorSet descriptorSet, vk::Image image, vk::ImageView imageView);
 
+   static VKAPI_ATTR VkBool32 VKAPI_CALL
+   debugMessageCallback(VkDebugReportFlagsEXT flags,
+                        VkDebugReportObjectTypeEXT objectType,
+                        uint64_t object,
+                        size_t location,
+                        int32_t messageCode,
+                        const char* pLayerPrefix,
+                        const char* pMessage,
+                        void* pUserData);
+
+   std::shared_ptr<spdlog::logger> mLog;
    std::thread mGraphicsThread;
    gpu::VulkanDriver *mDecafDriver = nullptr;
    decaf::VulkanUiRenderer *mDebugUiRenderer = nullptr;

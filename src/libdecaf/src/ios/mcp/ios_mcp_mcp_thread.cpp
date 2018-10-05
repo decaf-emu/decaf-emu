@@ -58,6 +58,16 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
    auto &ioctl = request->requestData.args.ioctl;
 
    switch (static_cast<MCPCommand>(request->requestData.args.ioctl.request)) {
+   case MCPCommand::GetFileLength:
+      if (ioctl.inputBuffer &&
+          ioctl.inputLength == sizeof(MCPRequestGetFileLength) &&
+          !ioctl.outputBuffer &&
+          !ioctl.outputLength) {
+         error = mcpGetFileLength(phys_cast<MCPRequestGetFileLength *>(ioctl.inputBuffer));
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
    case MCPCommand::GetTitleId:
       if (ioctl.outputLength == sizeof(MCPResponseGetTitleId)) {
          error = mcpGetTitleId(request,

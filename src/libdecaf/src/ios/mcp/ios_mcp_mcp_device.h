@@ -8,6 +8,9 @@ namespace ios::mcp::internal
 {
 
 MCPError
+mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request);
+
+MCPError
 mcpGetSysProdSettings(phys_ptr<MCPResponseGetSysProdSettings> response);
 
 MCPError

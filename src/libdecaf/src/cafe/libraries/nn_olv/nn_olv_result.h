@@ -13,6 +13,9 @@ static const auto InvalidSize =
 static const auto InvalidPointer =
    nn::Result { nn::Result::MODULE_NN_OLV, nn::Result::LEVEL_USAGE, 0x6600 };
 
+static const auto NotOnline =
+   nn::Result { nn::Result::MODULE_NN_OLV, nn::Result::LEVEL_USAGE, 0x6780 };
+
 static const auto NoData =
    nn::Result { nn::Result::MODULE_NN_OLV, nn::Result::LEVEL_USAGE, 0x6800 };
 

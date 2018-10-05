@@ -1,23 +1,73 @@
 #ifdef DECAF_VULKAN
-#include "clilog.h"
-#include "config.h"
+#include "decafsdl_config.h"
 #include "decafsdl_vulkan.h"
 #include "decafsdl_vulkan_shaders.h"
 
+#include <common/log.h>
 #include <SDL_vulkan.h>
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL
-debugMessageCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
-                     size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
+DecafSDLVulkan::DecafSDLVulkan()
 {
-   gCliLog->warn("Vulkan debug report: {}, {}, {}, {}, {}, {}, {}",
-                 vk::to_string(vk::DebugReportFlagsEXT(flags)),
-                 vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
-                 object,
-                 location,
-                 messageCode,
-                 pLayerPrefix,
-                 pMessage);
+   // Initialise logger
+   auto decafLog = spdlog::get("decaf");
+   auto sinks = decafLog->sinks();
+   mLog = std::make_shared<spdlog::logger>("sdl-vk",
+                                           std::begin(sinks),
+                                           std::end(sinks));
+   mLog->set_level(decafLog->level());
+
+   // Setup background colour
+   using config::display::background_colour;
+   mBackgroundColour.float32[0] = background_colour.r / 255.0f;
+   mBackgroundColour.float32[1] = background_colour.g / 255.0f;
+   mBackgroundColour.float32[2] = background_colour.b / 255.0f;
+}
+
+DecafSDLVulkan::~DecafSDLVulkan()
+{
+}
+
+void
+DecafSDLVulkan::checkVkResult(vk::Result err)
+{
+   if (err == vk::Result::eSuccess) {
+      return;
+   }
+
+   mLog->error("[vulkan] Unexpected error result: {}", vk::to_string(err));
+   abort();
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL
+DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
+                                     VkDebugReportObjectTypeEXT objectType,
+                                     uint64_t object,
+                                     size_t location,
+                                     int32_t messageCode,
+                                     const char* pLayerPrefix,
+                                     const char* pMessage,
+                                     void* pUserData)
+{
+   bool noBreak = false;
+
+   // TODO: Remove this once vulkan headers correctly support VkPipelineColorBlendAdvancedStateCreateInfoEXT
+   if (strstr(pMessage, "VkPipelineColorBlendStateCreateInfo-pNext") != nullptr) {
+      static uint64_t seenAdvancedBlendWarning = 0;
+      if (seenAdvancedBlendWarning++) {
+         return VK_FALSE;
+      }
+      noBreak = true;
+   }
+
+   auto self = reinterpret_cast<DecafSDLVulkan *>(pUserData);
+   self->mLog->warn("Vulkan debug report: {}, {}, {}, {}, {}, {}, {}",
+                    vk::to_string(vk::DebugReportFlagsEXT(flags)),
+                    vk::to_string(vk::DebugReportObjectTypeEXT(objectType)),
+                    object,
+                    location,
+                    messageCode,
+                    pLayerPrefix,
+                    pMessage);
 
 #ifdef PLATFORM_WINDOWS
    auto logMsg = fmt::format("VKDBG: {} {}  ||=>  {}, {}, {}, {}, {}\n",
@@ -29,32 +79,15 @@ debugMessageCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT obj
                              messageCode,
                              pLayerPrefix);
    OutputDebugStringA(logMsg.c_str());
-#endif
-   
-   return VK_FALSE;
-}
 
-static void
-checkVkResult(vk::Result err)
-{
-   if (err == vk::Result::eSuccess) {
-      return;
+   if (flags == VK_DEBUG_REPORT_WARNING_BIT_EXT || flags == VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+      if (!noBreak) {
+         DebugBreak();
+      }
    }
+#endif
 
-   gCliLog->error("[vulkan] Unexpected error result: {}", vk::to_string(err));
-   abort();
-}
-
-DecafSDLVulkan::DecafSDLVulkan()
-{
-   using config::display::background_colour;
-   mBackgroundColour.float32[0] = background_colour.r / 255.0f;
-   mBackgroundColour.float32[1] = background_colour.g / 255.0f;
-   mBackgroundColour.float32[2] = background_colour.b / 255.0f;
-}
-
-DecafSDLVulkan::~DecafSDLVulkan()
-{
+   return VK_FALSE;
 }
 
 bool
@@ -68,7 +101,7 @@ DecafSDLVulkan::createWindow(int width, int height)
                               SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
 
    if (!mWindow) {
-      gCliLog->error("Failed to create Vulkan SDL window");
+      mLog->error("Failed to create Vulkan SDL window");
       return false;
    }
 
@@ -93,37 +126,37 @@ DecafSDLVulkan::createInstance()
 
    std::vector<const char*> extensions =
    {
-       VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+       VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+       VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
    };
 
    // Add the neccessary SDL Vulkan extensions
    uint32_t extensions_count = 0;
    if (!SDL_Vulkan_GetInstanceExtensions(mWindow, &extensions_count, NULL)) {
-      gCliLog->error("Failed to get SDL Vulkan extension count");
+      mLog->error("Failed to get SDL Vulkan extension count");
       return false;
    }
    extensions.resize(extensions.size() + extensions_count);
    const char** sdlExtensions = extensions.data() + extensions.size() - extensions_count;
    if (!SDL_Vulkan_GetInstanceExtensions(mWindow, &extensions_count, sdlExtensions)) {
-      gCliLog->error("Failed to get SDL Vulkan extensions");
+      mLog->error("Failed to get SDL Vulkan extensions");
       return false;
    }
 
-   mVulkan = vk::createInstance(
-      vk::InstanceCreateInfo(
-         vk::InstanceCreateFlags(),
-         &appInfo,
-         static_cast<uint32_t>(layers.size()), layers.data(),
-         static_cast<uint32_t>(extensions.size()), extensions.data()
-      )
-   );
+   vk::InstanceCreateInfo instanceDesc;
+   instanceDesc.pApplicationInfo = &appInfo;
+   instanceDesc.enabledLayerCount = static_cast<uint32_t>(layers.size());
+   instanceDesc.ppEnabledLayerNames = layers.data();
+   instanceDesc.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+   instanceDesc.ppEnabledExtensionNames = extensions.data();
+   mVulkan = vk::createInstance(instanceDesc);
 
    // Set up our debugging callbacks
    auto vkCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)mVulkan.getProcAddr("vkCreateDebugReportCallbackEXT");
    auto debugReportCallbackInfo = (VkDebugReportCallbackCreateInfoEXT)vk::DebugReportCallbackCreateInfoEXT(
       vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::ePerformanceWarning,
       debugMessageCallback,
-      nullptr);
+      this);
    static VkDebugReportCallbackEXT debugCallback = VK_NULL_HANDLE;
    auto err = (vk::Result)vkCreateDebugReportCallback(mVulkan, &debugReportCallbackInfo, nullptr, &debugCallback);
    checkVkResult(err);
@@ -145,7 +178,7 @@ DecafSDLVulkan::createWindowSurface()
 {
    VkSurfaceKHR sdlSurface;
    if (!SDL_Vulkan_CreateSurface(mWindow, mVulkan, &sdlSurface)) {
-      gCliLog->error("Failed to create Vulkan render surface");
+      mLog->error("Failed to create Vulkan render surface");
       return false;
    }
 
@@ -163,7 +196,8 @@ DecafSDLVulkan::createDevice()
    };
 
    std::vector<const char*> deviceExtensions = {
-      "VK_KHR_swapchain"
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME
    };
 
    auto queueFamilyProps = mPhysDevice.getQueueFamilyProperties();
@@ -183,7 +217,7 @@ DecafSDLVulkan::createDevice()
    }
 
    if (queueFamilyIndex >= queueFamilyProps.size()) {
-      gCliLog->error("Failed to find a suitable queue to use");
+      mLog->error("Failed to find a suitable queue to use");
       return false;
    }
 
@@ -194,12 +228,21 @@ DecafSDLVulkan::createDevice()
       1,
       &queuePriority);
 
-   mDevice = mPhysDevice.createDevice(
-      vk::DeviceCreateInfo(
-         vk::DeviceCreateFlags(),
-         1, &deviceQueueCreateInfo,
-         static_cast<uint32_t>(deviceLayers.size()), deviceLayers.data(),
-         static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data()));
+   vk::PhysicalDeviceFeatures deviceFeatures;
+   deviceFeatures.geometryShader = true;
+   deviceFeatures.textureCompressionBC = true;
+   deviceFeatures.independentBlend = true;
+   deviceFeatures.fillModeNonSolid = true;
+
+   vk::DeviceCreateInfo deviceDesc;
+   deviceDesc.queueCreateInfoCount = 1;
+   deviceDesc.pQueueCreateInfos = &deviceQueueCreateInfo;
+   deviceDesc.enabledLayerCount = static_cast<uint32_t>(deviceLayers.size());
+   deviceDesc.ppEnabledLayerNames = deviceLayers.data();
+   deviceDesc.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+   deviceDesc.ppEnabledExtensionNames = deviceExtensions.data();
+   deviceDesc.pEnabledFeatures = &deviceFeatures;
+   mDevice = mPhysDevice.createDevice(deviceDesc);
 
    mQueue = mDevice.getQueue(queueFamilyIndex, 0);
    mQueueFamilyIndex = queueFamilyIndex;
@@ -232,7 +275,7 @@ DecafSDLVulkan::createSwapChain()
    bool foundPresentMode =
       std::find(presentModes.begin(), presentModes.end(), presentMode) != presentModes.end();
    if (!foundPresentMode) {
-      gCliLog->error("Failed to find a suitable present mode to use");
+      mLog->error("Failed to find a suitable present mode to use");
       return false;
    }
 
@@ -255,7 +298,7 @@ DecafSDLVulkan::createSwapChain()
    swapchainDesc.oldSwapchain = nullptr;
    mSwapchain = mDevice.createSwapchainKHR(swapchainDesc);
 
-   
+
    // Create our render pass that targets this attachement
    vk::AttachmentDescription colorAttachmentDesc;
    colorAttachmentDesc.format = swapChainImageFormat;
@@ -396,7 +439,7 @@ DecafSDLVulkan::createRenderPipeline()
    inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
    inputAssembly.primitiveRestartEnable = false;
 
-   vk::Viewport viewport(0.0f, 0.0f, 
+   vk::Viewport viewport(0.0f, 0.0f,
                          static_cast<float>(mSwapChainExtents.width),
                          static_cast<float>(mSwapChainExtents.height),
                          0.0f, 0.0f);
@@ -435,7 +478,7 @@ DecafSDLVulkan::createRenderPipeline()
    colorBlendAttachement0.srcAlphaBlendFactor = vk::BlendFactor::eOne;
    colorBlendAttachement0.dstAlphaBlendFactor = vk::BlendFactor::eZero;
    colorBlendAttachement0.alphaBlendOp = vk::BlendOp::eAdd;
-   colorBlendAttachement0.colorWriteMask = 
+   colorBlendAttachement0.colorWriteMask =
       vk::ColorComponentFlagBits::eR |
       vk::ColorComponentFlagBits::eG |
       vk::ColorComponentFlagBits::eB |
@@ -575,7 +618,7 @@ DecafSDLVulkan::destroySwapChain()
 }
 
 bool
-DecafSDLVulkan::initialise(int width, int height)
+DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
 {
    if (!createWindow(width, height)) {
       return false;
@@ -596,7 +639,7 @@ DecafSDLVulkan::initialise(int width, int height)
    if (!createDevice()) {
       return false;
    }
-   
+
    if (!createSwapChain()) {
       return false;
    }
@@ -632,16 +675,18 @@ DecafSDLVulkan::initialise(int width, int height)
    mDecafDriver->initialise(mPhysDevice, mDevice, mQueue, mQueueFamilyIndex);
 
    // Set up the debug rendering system
-   mDebugUiRenderer = reinterpret_cast<decaf::VulkanUiRenderer*>(decaf::createDebugVulkanRenderer());
+   if (renderDebugger) {
+      mDebugUiRenderer = reinterpret_cast<decaf::VulkanUiRenderer*>(decaf::createDebugVulkanRenderer());
 
-   decaf::VulkanUiRendererInitInfo uiInitInfo;
-   uiInitInfo.physDevice = mPhysDevice;
-   uiInitInfo.device = mDevice;
-   uiInitInfo.queue = mQueue;
-   uiInitInfo.descriptorPool = mDescriptorPool;
-   uiInitInfo.renderPass = mRenderPass;
-   uiInitInfo.commandPool = mCommandPool;
-   mDebugUiRenderer->initialise(&uiInitInfo);
+      decaf::VulkanUiRendererInitInfo uiInitInfo;
+      uiInitInfo.physDevice = mPhysDevice;
+      uiInitInfo.device = mDevice;
+      uiInitInfo.queue = mQueue;
+      uiInitInfo.descriptorPool = mDescriptorPool;
+      uiInitInfo.renderPass = mRenderPass;
+      uiInitInfo.commandPool = mCommandPool;
+      mDebugUiRenderer->initialise(&uiInitInfo);
+   }
 
    // Start graphics thread
    if (!config::display::force_sync) {
@@ -658,7 +703,9 @@ void
 DecafSDLVulkan::shutdown()
 {
    // Shut down the debugger ui driver
-   mDebugUiRenderer->shutdown();
+   if (mDebugUiRenderer) {
+      mDebugUiRenderer->shutdown();
+   }
 
    // Stop the GPU
    if (!config::display::force_sync) {
@@ -818,7 +865,9 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       }
 
       // Draw the debug UI
-      mDebugUiRenderer->draw(width, height, renderCmdBuf);
+      if (mDebugUiRenderer) {
+         mDebugUiRenderer->draw(width, height, renderCmdBuf);
+      }
 
       renderCmdBuf.endRenderPass();
 
@@ -866,7 +915,7 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
    }
 
    // Wait for the frame to complete rendering
-   mDevice.waitForFences({ mRenderFence }, true, std::numeric_limits<uint64_t>::max());  
+   mDevice.waitForFences({ mRenderFence }, true, std::numeric_limits<uint64_t>::max());
 }
 
 gpu::GraphicsDriver *

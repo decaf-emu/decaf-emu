@@ -16,6 +16,20 @@ namespace ios::mcp
 
 #pragma pack(push, 1)
 
+struct MCPRequestGetFileLength
+{
+   UNKNOWN(0x14);
+   be2_val<MCPFileType> fileType;
+   be2_val<uint32_t> unk0x18;
+   UNKNOWN(0x28 - 0x1C);
+   be2_array<char, 64> name;
+   PADDING(0x12D8 - 0x68);
+};
+CHECK_OFFSET(MCPRequestGetFileLength, 0x14, fileType);
+CHECK_OFFSET(MCPRequestGetFileLength, 0x18, unk0x18);
+CHECK_OFFSET(MCPRequestGetFileLength, 0x28, name);
+CHECK_SIZE(MCPRequestGetFileLength, 0x12D8);
+
 struct MCPRequestGetOwnTitleInfo
 {
    be2_val<uint32_t> unk0x00;

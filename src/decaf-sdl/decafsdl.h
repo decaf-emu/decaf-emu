@@ -1,22 +1,18 @@
 #pragma once
 #include "decafsdl_sound.h"
-#include "decafsdl_graphics.h"
-#include "libdecaf/decaf.h"
+
+#include <common-sdl/decafsdl_graphics.h>
+#include <libdecaf/decaf.h>
 #include <SDL.h>
 
 using namespace decaf::input;
 
-namespace config
-{
-
-namespace input
+namespace config::input
 {
 
 struct InputDevice;
 
-} // namespace input
-
-} // namespace config
+} // namespace config::input
 
 class DecafSDL : public decaf::InputDriver, public decaf::EventListener
 {

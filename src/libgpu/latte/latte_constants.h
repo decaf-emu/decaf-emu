@@ -4,7 +4,7 @@ namespace latte
 {
 
 static const unsigned
-MaxAttributes = 16u;
+MaxAttribBuffers = 16u;
 
 static const unsigned
 MaxRenderTargets = 8u;
