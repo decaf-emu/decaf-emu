@@ -66,6 +66,12 @@ BOOL
 GX2WaitTimeStamp(GX2Timestamp time);
 
 void
+GX2SubmitUserTimeStamp(virt_ptr<GX2Timestamp> dst,
+                       GX2Timestamp timestamp,
+                       GX2PipeEvent type,
+                       BOOL triggerInterrupt);
+
+void
 GX2GetSwapStatus(virt_ptr<uint32_t> outSwapCount,
                  virt_ptr<uint32_t> outFlipCount,
                  virt_ptr<GX2Timestamp> outLastFlip,

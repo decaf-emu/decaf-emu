@@ -338,6 +338,12 @@ ENUM_BEG(GX2StreamOutContextMode, uint32_t)
    ENUM_VALUE(FromOffset,              2)
 ENUM_END(GX2StreamOutContextMode)
 
+ENUM_BEG(GX2PipeEvent, uint32_t)
+   ENUM_VALUE(Top,                     0)
+   ENUM_VALUE(Bottom,                  1)
+   ENUM_VALUE(BottomAfterFlush,        2)
+ENUM_END(GX2PipeEvent)
+
 ENUM_BEG(GX2SurfaceDim, uint32_t)
    ENUM_VALUE(Texture1D,               0)
    ENUM_VALUE(Texture2D,               1)

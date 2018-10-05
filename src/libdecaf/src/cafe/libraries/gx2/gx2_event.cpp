@@ -1,4 +1,5 @@
 #include "gx2.h"
+#include "gx2_internal_cbpool.h"
 #include "gx2_event.h"
 #include "gx2_state.h"
 #include "cafe/libraries/coreinit/coreinit_alarm.h"
@@ -8,6 +9,7 @@
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/coreinit/coreinit_time.h"
+#include "cafe/libraries/coreinit/coreinit_memory.h"
 #include "cafe/cafe_ppc_interface_invoke.h"
 
 #include <atomic>
@@ -15,6 +17,8 @@
 #include <common/log.h>
 
 using namespace cafe::coreinit;
+using namespace latte;
+using namespace latte::pm4;
 
 namespace cafe::gx2
 {
@@ -43,7 +47,6 @@ struct StaticEventData
 
 static virt_ptr<StaticEventData> sEventData = nullptr;
 static AlarmCallbackFn VsyncAlarmHandler = nullptr;
-
 
 /**
  * Sleep the current thread until the last submitted command buffer
@@ -154,7 +157,8 @@ GX2GetSwapStatus(virt_ptr<uint32_t> outSwapCount,
 
 
 /**
- * Wait until a command buffer submitted with a timestamp has been processed by the driver.
+ * Wait until a command buffer submitted with a timestamp has been processed
+ * by the driver.
  */
 BOOL
 GX2WaitTimeStamp(GX2Timestamp time)
@@ -168,6 +172,67 @@ GX2WaitTimeStamp(GX2Timestamp time)
 
    coreinit::internal::unlockScheduler();
    return TRUE;
+}
+
+
+/**
+ * Submit a user timestamp to the GPU.
+ */
+void
+GX2SubmitUserTimeStamp(virt_ptr<GX2Timestamp> dst,
+                       GX2Timestamp timestamp,
+                       GX2PipeEvent type,
+                       BOOL triggerInterrupt)
+{
+   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(dst));
+   auto dataLo = static_cast<uint32_t>(timestamp & 0xFFFFFFFFu);
+   auto dataHi = static_cast<uint32_t>(timestamp >> 32);
+
+   switch (type) {
+   case GX2PipeEvent::Top:
+   {
+      internal::writePM4(MemWrite {
+         MW_ADDR_LO::get(0)
+            .ADDR_LO(addr >> 2)
+            .ENDIAN_SWAP(CB_ENDIAN::SWAP_8IN32),
+         MW_ADDR_HI::get(0)
+            .CNTR_SEL(MW_WRITE_DATA),
+         dataLo, dataHi
+      });
+
+      if (triggerInterrupt) {
+         internal::writeType0(Register::CP_INT_STATUS,
+                              CP_INT_STATUS::get(0)
+                                 .IB1_INT_STAT(true)
+                                 .value);
+      }
+      break;
+   }
+   case GX2PipeEvent::Bottom:
+   case GX2PipeEvent::BottomAfterFlush:
+   {
+      internal::writePM4(EventWriteEOP {
+         VGT_EVENT_INITIATOR::get(0)
+            .EVENT_TYPE(type == GX2PipeEvent::BottomAfterFlush ?
+                           VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_TS_EVENT :
+                           VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS)
+            .EVENT_INDEX(VGT_EVENT_INDEX::TIMESTAMP),
+         EW_ADDR_LO::get(0)
+            .ADDR_LO(addr >> 2)
+            .ENDIAN_SWAP(CB_ENDIAN::SWAP_8IN32),
+         EWP_ADDR_HI::get(0)
+            .DATA_SEL(EWP_DATA_64)
+            .INT_SEL(triggerInterrupt ?
+                        EWP_INT_SEL::EWP_INT_WRITE_CONFIRM :
+                        EWP_INT_SEL::EWP_INT_NONE),
+         dataLo, dataHi
+      });
+      break;
+   }
+   default:
+      decaf_abort(fmt::format("Unexpected GX2SubmitUserTimestamp type {}",
+                              type));
+   }
 }
 
 
@@ -312,7 +377,6 @@ setLastSubmittedTimestamp(GX2Timestamp timestamp)
    sEventData->lastSubmittedTimestamp.store(timestamp, std::memory_order_release);
 }
 
-
 /**
  * Called when a swap is requested with GX2SwapBuffers.
  */
@@ -345,6 +409,7 @@ Library::registerEventSymbols()
    RegisterFunctionExport(GX2GetRetiredTimeStamp);
    RegisterFunctionExport(GX2GetLastSubmittedTimeStamp);
    RegisterFunctionExport(GX2WaitTimeStamp);
+   RegisterFunctionExport(GX2SubmitUserTimeStamp);
    RegisterFunctionExport(GX2GetSwapStatus);
 
    RegisterDataInternal(sEventData);
