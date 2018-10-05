@@ -86,6 +86,9 @@ void
 setLastSubmittedTimestamp(GX2Timestamp timestamp);
 
 void
+setUserSubmittedTimestamp(GX2Timestamp timestamp);
+
+void
 handleGpuRetireInterrupt();
 
 void

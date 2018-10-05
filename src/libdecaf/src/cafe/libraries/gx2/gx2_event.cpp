@@ -30,6 +30,7 @@ struct StaticEventData
    std::atomic<int64_t> lastVsync;
    std::atomic<int64_t> lastFlip;
    std::atomic<int64_t> lastSubmittedTimestamp;
+   be2_virt_ptr<GX2Timestamp> userSubmittedTimestamp;
    std::atomic<int64_t> retiredTimestamp;
    std::atomic<uint32_t> swapCount;
    std::atomic<uint32_t> flipCount;
@@ -43,7 +44,7 @@ struct StaticEventData
 
 static virt_ptr<StaticEventData> sEventData = nullptr;
 static AlarmCallbackFn VsyncAlarmHandler = nullptr;
-
+static GX2Timestamp userTimeStampValue = -1;
 
 /**
  * Sleep the current thread until the last submitted command buffer
@@ -170,6 +171,15 @@ GX2WaitTimeStamp(GX2Timestamp time)
    return TRUE;
 }
 
+void
+GX2SubmitUserTimeStamp(virt_ptr<GX2Timestamp> tsBuffer,
+                       GX2Timestamp timeStampValue,
+                       GX2PipeEvent when,
+                       BOOL triggerIntCB)
+{
+   userTimeStampValue = timeStampValue;
+   sEventData->userSubmittedTimestamp = tsBuffer;
+}
 
 /**
  * Sleep the current thread until the vsync alarm has triggered.
@@ -312,6 +322,24 @@ setLastSubmittedTimestamp(GX2Timestamp timestamp)
    sEventData->lastSubmittedTimestamp.store(timestamp, std::memory_order_release);
 }
 
+/**
+ * Update the last submitted timestamp.
+ */
+void
+setUserSubmittedTimestamp(GX2Timestamp timestamp)
+{
+   if (userTimeStampValue != -1)
+   {
+      if (timestamp >= userTimeStampValue)
+      {
+         if (sEventData->userSubmittedTimestamp)
+         {
+            *sEventData->userSubmittedTimestamp = timestamp;
+         }
+         userTimeStampValue = -1;
+      }
+   }
+}
 
 /**
  * Called when a swap is requested with GX2SwapBuffers.
@@ -345,6 +373,7 @@ Library::registerEventSymbols()
    RegisterFunctionExport(GX2GetRetiredTimeStamp);
    RegisterFunctionExport(GX2GetLastSubmittedTimeStamp);
    RegisterFunctionExport(GX2WaitTimeStamp);
+   RegisterFunctionExport(GX2SubmitUserTimeStamp);
    RegisterFunctionExport(GX2GetSwapStatus);
 
    RegisterDataInternal(sEventData);
