@@ -227,7 +227,8 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
                                 permission.group,
                                 phys_addrof(permission.mask));
 
-      if (permission.group == ResourcePermissionGroup::FS) {
+      if (permission.group == ResourcePermissionGroup::FS ||
+          permission.group == ResourcePermissionGroup::All) {
          if (permission.mask & FSResourcePermissions::SdCardRead) {
             sdCardPermissions |= ::fs::Permissions::Read;
          }
