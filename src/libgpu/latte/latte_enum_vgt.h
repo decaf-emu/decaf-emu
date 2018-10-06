@@ -117,6 +117,7 @@ ENUM_BEG(VGT_EVENT_INDEX, uint32_t)
    ENUM_VALUE(SAMPLE_PIPELINESTAT,              2)
    ENUM_VALUE(SAMPLE_STREAMOUTSTAT,             3)
    ENUM_VALUE(PARTIAL_FLUSH,                    4)
+   ENUM_VALUE(TIMESTAMP,                        5)
    ENUM_VALUE(CACHE_FLUSH,                      7)
 ENUM_END(VGT_EVENT_INDEX)
 
