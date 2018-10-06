@@ -100,6 +100,8 @@ enum Value : uint32_t
    ConfigRegisterEnd                = 0x0AC00,
 
    CP_RB_BASE                       = 0x0C100,
+   CP_INT_CNTL                      = 0x0C124,
+   CP_INT_STATUS                    = 0x0C128,
 
    // Context Registers
    ContextRegisterBase              = 0x28000,
