@@ -57,7 +57,8 @@ onRetireCommandBuffer(void *context);
  * Write a PM4 command to the active command buffer.
  */
 template<typename Type>
-void writePM4(const Type &value)
+inline void
+writePM4(const Type &value)
 {
    auto &ncValue = const_cast<Type &>(value);
 
@@ -75,6 +76,30 @@ void writePM4(const Type &value)
       totalSize
    };
    ncValue.serialise(writer);
+}
+
+inline void
+writeType0(latte::Register baseIndex,
+           gsl::span<uint32_t> values)
+{
+   auto numValues = static_cast<uint32_t>(values.size());
+   auto buffer = getCommandBuffer(numValues + 1);
+   auto header = latte::pm4::HeaderType0::get(0)
+      .type(latte::pm4::PacketType::Type0)
+      .baseIndex(baseIndex)
+      .count(numValues - 1);
+   buffer->buffer[buffer->curSize++] = header.value;
+
+   for (auto value : values) {
+      buffer->buffer[buffer->curSize++] = value;
+   }
+}
+
+inline void
+writeType0(latte::Register id,
+           uint32_t value)
+{
+   writeType0(id, { &value, 1 });
 }
 
 } // namespace cafe::gx2::internal
