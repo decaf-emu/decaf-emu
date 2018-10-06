@@ -180,6 +180,111 @@ getJoystickButtonState(const config::input::InputDevice *device,
    return false;
 }
 
+static bool
+getJoystickButtonState(const config::input::InputDevice *device,
+   SDL_GameController *controller,
+   wpad::Channel channel,
+   wpad::Pro button)
+{
+   decaf_check(device);
+   decaf_check(controller);
+
+   auto joystick = SDL_GameControllerGetJoystick(controller);
+   decaf_check(joystick);
+
+   auto index = -1;
+   auto name = SDL_CONTROLLER_BUTTON_INVALID;
+   // SDL has no concept of ZR/ZL "buttons" (only axes) so we have to
+   //  kludge around...
+   auto axisName = SDL_CONTROLLER_AXIS_INVALID;
+
+   switch (button) {
+   case wpad::Pro::Up:
+      index = device->button_up;
+      name = SDL_CONTROLLER_BUTTON_DPAD_UP;
+      break;
+   case wpad::Pro::Down:
+      index = device->button_down;
+      name = SDL_CONTROLLER_BUTTON_DPAD_DOWN;
+      break;
+   case wpad::Pro::Left:
+      index = device->button_left;
+      name = SDL_CONTROLLER_BUTTON_DPAD_LEFT;
+      break;
+   case wpad::Pro::Right:
+      index = device->button_right;
+      name = SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
+      break;
+   case wpad::Pro::A:
+      index = device->button_a;
+      name = SDL_CONTROLLER_BUTTON_B;  // SDL uses stupid Microsoft mapping :P
+      break;
+   case wpad::Pro::B:
+      index = device->button_b;
+      name = SDL_CONTROLLER_BUTTON_A;
+      break;
+   case wpad::Pro::X:
+      index = device->button_x;
+      name = SDL_CONTROLLER_BUTTON_Y;
+      break;
+   case wpad::Pro::Y:
+      index = device->button_y;
+      name = SDL_CONTROLLER_BUTTON_X;
+      break;
+   case wpad::Pro::TriggerR:
+      index = device->button_trigger_r;
+      name = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
+      break;
+   case wpad::Pro::TriggerL:
+      index = device->button_trigger_l;
+      name = SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
+      break;
+   case wpad::Pro::TriggerZR:
+      index = device->button_trigger_zr;
+      axisName = SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
+      break;
+   case wpad::Pro::TriggerZL:
+      index = device->button_trigger_zl;
+      axisName = SDL_CONTROLLER_AXIS_TRIGGERLEFT;
+      break;
+   case wpad::Pro::LeftStick:
+      index = device->button_stick_l;
+      name = SDL_CONTROLLER_BUTTON_LEFTSTICK;
+      break;
+   case wpad::Pro::RightStick:
+      index = device->button_stick_r;
+      name = SDL_CONTROLLER_BUTTON_RIGHTSTICK;
+      break;
+   case wpad::Pro::Plus:
+      index = device->button_plus;
+      name = SDL_CONTROLLER_BUTTON_START;
+      break;
+   case wpad::Pro::Minus:
+      index = device->button_minus;
+      name = SDL_CONTROLLER_BUTTON_BACK;
+      break;
+   case wpad::Pro::Home:
+      index = device->button_home;
+      name = SDL_CONTROLLER_BUTTON_GUIDE;
+      break;
+   }
+
+   if (index >= 0) {
+      return !!SDL_JoystickGetButton(joystick, index);
+   }
+   else if (index == -2) {
+      if (name != SDL_CONTROLLER_BUTTON_INVALID) {
+         return !!SDL_GameControllerGetButton(controller, name);
+      }
+      else if (axisName != SDL_CONTROLLER_AXIS_INVALID) {  // ZL/ZR kludge
+         int value = SDL_GameControllerGetAxis(controller, axisName);
+         return value >= 16384;
+      }
+   }
+
+   return false;
+}
+
 static int
 getJoystickAxisState(const config::input::InputDevice *device,
                      SDL_GameController *controller,
@@ -236,14 +341,13 @@ getJoystickAxisState(const config::input::InputDevice *device,
    return value;
 }
 
-void
-DecafSDL::openInputDevices()
+void 
+openInputDevice(SDL_GameController** gameController, 
+                const config::input::InputDevice** inputDevice, 
+                std::string pad)
 {
-   mVpad0Config = nullptr;
-   mVpad0Controller = nullptr;
-
    for (const auto &device : config::input::devices) {
-      if (config::input::vpad0.compare(device.id) != 0) {
+      if (pad.compare(device.id) != 0) {
          continue;
       }
 
@@ -269,21 +373,39 @@ DecafSDL::openInputDevices()
                continue;
             }
 
-            mVpad0Controller = controller;
+            *gameController = controller;
             break;
          }
 
-         if (!mVpad0Controller) {
+         if (!gameController) {
             continue;
          }
       }
 
-      mVpad0Config = &device;
+      *inputDevice = &device;
       break;
    }
+}
+
+void
+DecafSDL::openInputDevices()
+{
+   mVpad0Controller = nullptr;
+   mVpad0Config = nullptr;
+   openInputDevice(&mVpad0Controller, &mVpad0Config, config::input::vpad0);
 
    if (!mVpad0Config) {
       gCliLog->warn("No input device found for gamepad (VPAD0)");
+   }
+
+   for (int i = 0; i < 4; ++i) {
+      mWpadConfig[i] = nullptr;
+      mWpadController[i] = nullptr;
+
+      openInputDevice(&mWpadController[i], &mWpadConfig[i], config::input::wpad[i]);
+      if (mWpadConfig[i]) {
+         gCliLog->warn("No input device found for gamepad (WPAD{})", i);
+      }
    }
 }
 
@@ -511,6 +633,36 @@ DecafSDL::getButtonStatus(wpad::Channel channel, wpad::Nunchuck button)
 ButtonStatus
 DecafSDL::getButtonStatus(wpad::Channel channel, wpad::Pro button)
 {
+   if (!mWpadConfig[(int)channel]) {
+      return ButtonStatus::ButtonReleased;
+   }
+
+   switch (mWpadConfig[(int)channel]->type) {
+   case config::input::None:
+      break;
+
+   case config::input::Keyboard:
+   {
+      int numKeys = 0;
+      auto scancode = getKeyboardButtonMapping(mWpadConfig[(int)channel], (vpad::Channel)channel, (vpad::Core)button);
+      auto state = SDL_GetKeyboardState(&numKeys);
+
+      if (scancode >= 0 && scancode < numKeys && state[scancode]) {
+         return ButtonStatus::ButtonPressed;
+      }
+
+      break;
+   }
+
+   case config::input::Joystick:
+      if (mWpadController[(int)channel] && SDL_GameControllerGetAttached(mWpadController[(int)channel])) {
+         if (getJoystickButtonState(mWpadConfig[(int)channel], mWpadController[(int)channel], channel, button)) {
+            return ButtonStatus::ButtonPressed;
+         }
+      }
+      break;
+   }
+
    return ButtonStatus::ButtonReleased;
 }
 
@@ -523,5 +675,47 @@ DecafSDL::getAxisValue(wpad::Channel channel, wpad::NunchuckAxis axis)
 float
 DecafSDL::getAxisValue(wpad::Channel channel, wpad::ProAxis axis)
 {
+   if (!mWpadConfig[(int)channel]) {
+      return 0.0f;
+   }
+
+   switch (mWpadConfig[(int)channel]->type) {
+   case config::input::None:
+      break;
+
+   case config::input::Keyboard:
+   {
+      auto numKeys = 0;
+      auto scancodeMinus = getKeyboardAxisMapping(mWpadConfig[(int)channel], (vpad::Channel)channel, (vpad::CoreAxis)axis, true);
+      auto scancodePlus = getKeyboardAxisMapping(mWpadConfig[(int)channel], (vpad::Channel)channel, (vpad::CoreAxis)axis, false);
+      auto state = SDL_GetKeyboardState(&numKeys);
+      auto result = 0.0f;
+
+      if (scancodeMinus >= 0 && scancodeMinus < numKeys && state[scancodeMinus]) {
+         result -= 1.0f;
+      }
+
+      if (scancodePlus >= 0 && scancodePlus < numKeys && state[scancodePlus]) {
+         result += 1.0f;
+      }
+
+      return result;
+   }
+
+   case config::input::Joystick:
+      if (mWpadController[(int)channel] && SDL_GameControllerGetAttached(mWpadController[(int)channel])) {
+         auto value = getJoystickAxisState(mWpadConfig[(int)channel], mWpadController[(int)channel], (vpad::Channel)channel, (vpad::CoreAxis)axis);
+
+         if (value < 0) {
+            return value / 32768.0f;
+         }
+         else {
+            return value / 32767.0f;
+         }
+      }
+
+      break;
+   }
+
    return 0.0f;
 }

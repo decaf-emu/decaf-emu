@@ -94,7 +94,9 @@ protected:
    DecafSDLGraphics *mGraphicsDriver = nullptr;
 
    const config::input::InputDevice *mVpad0Config = nullptr;
+   const config::input::InputDevice *mWpadConfig[4] = { nullptr, nullptr, nullptr, nullptr };
    SDL_GameController *mVpad0Controller = nullptr;
+   SDL_GameController *mWpadController[4] = { nullptr, nullptr, nullptr, nullptr };
 
    bool mToggleDRC = false;
    bool mGameLoaded = false;

@@ -1,5 +1,6 @@
 #include "padscore.h"
 #include "padscore_wpad.h"
+#include "padscore_kpad.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
@@ -39,6 +40,13 @@ void
 WPADShutdown()
 {
    sWpadData->status = WPADLibraryStatus::Uninitialised;
+}
+
+BOOL 
+WPADIsDpdEnabled(WPADChan chan)
+{
+   decaf_warn_stub();
+   return FALSE;
 }
 
 void
@@ -166,12 +174,22 @@ WPADSetSamplingCallback(WPADChan chan,
    return prev;
 }
 
+WPADError 
+WPADControlDpd(int32_t chan,
+               uint32_t command,
+               WPADCallback callback)
+{
+   decaf_warn_stub();
+   return WPADError::OK;
+}
+
 void
 Library::registerWpadSymbols()
 {
    RegisterFunctionExport(WPADInit);
    RegisterFunctionExport(WPADGetStatus);
    RegisterFunctionExport(WPADShutdown);
+   RegisterFunctionExport(WPADIsDpdEnabled);
    RegisterFunctionExport(WPADControlMotor);
    RegisterFunctionExport(WPADDisconnect);
    RegisterFunctionExport(WPADEnableURCC);

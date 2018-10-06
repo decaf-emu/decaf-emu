@@ -107,6 +107,7 @@ struct InputDevice
 
 extern std::vector<InputDevice> devices;
 extern std::string vpad0;
+extern std::string wpad[4];
 
 } // namespace input
 

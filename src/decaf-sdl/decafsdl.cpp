@@ -120,7 +120,7 @@ DecafSDL::run(const std::string &gamePath)
    decaf::start();
 
    while (!shouldQuit && !decaf::hasExited()) {
-      if (mVpad0Controller) {
+      if (mVpad0Controller || mWpadController[0] || mWpadController[1] || mWpadController[2] || mWpadController[3]) {
          SDL_GameControllerUpdate();
       }
 

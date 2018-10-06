@@ -22,6 +22,7 @@ namespace input
 
 std::vector<InputDevice> devices;
 std::string vpad0 = "default_keyboard";
+std::string wpad[4] = { "","","","" };
 
 } // namespace input
 
@@ -266,6 +267,10 @@ loadFrontendToml(std::shared_ptr<cpptoml::table> config)
    }
 
    config::input::vpad0 = config->get_qualified_as<std::string>("input.vpad0").value_or(config::input::vpad0);
+   config::input::wpad[0] = config->get_qualified_as<std::string>("input.wpad0").value_or(config::input::wpad[0]);
+   config::input::wpad[1] = config->get_qualified_as<std::string>("input.wpad1").value_or(config::input::wpad[1]);
+   config::input::wpad[2] = config->get_qualified_as<std::string>("input.wpad2").value_or(config::input::wpad[2]);
+   config::input::wpad[3] = config->get_qualified_as<std::string>("input.wpad3").value_or(config::input::wpad[3]);
    setupDefaultInputDevices();
 
    // sound
@@ -311,6 +316,10 @@ saveFrontendToml(std::shared_ptr<cpptoml::table> config)
    }
 
    input->insert("vpad0", config::input::vpad0);
+   input->insert("wpad0", config::input::wpad[0]);
+   input->insert("wpad1", config::input::wpad[1]);
+   input->insert("wpad2", config::input::wpad[2]);
+   input->insert("wpad3", config::input::wpad[3]);
 
    auto devices = config->get_table_array("devices");
    if (!devices) {

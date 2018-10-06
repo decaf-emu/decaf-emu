@@ -21,6 +21,20 @@ CHECK_OFFSET(KPADVec2D, 0x00, x);
 CHECK_OFFSET(KPADVec2D, 0x04, y);
 CHECK_SIZE(KPADVec2D, 0x08);
 
+struct KPADRect
+{
+   be2_val<float> left;
+   be2_val<float> right;
+   be2_val<float> top;
+   be2_val<float> bottom;
+};
+CHECK_OFFSET(KPADRect, 0x00, left);
+CHECK_OFFSET(KPADRect, 0x04, right);
+CHECK_OFFSET(KPADRect, 0x08, top);
+CHECK_OFFSET(KPADRect, 0x0C, bottom);
+CHECK_SIZE(KPADRect, 0x10);
+
+
 struct KPADExtClassicStatus
 {
    be2_val<uint32_t> hold;

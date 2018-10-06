@@ -16,6 +16,15 @@ using  WPADExtensionCallback = virt_func_ptr<
 using  WPADSamplingCallback = virt_func_ptr<
    void (WPADChan chan)>;
 
+using  WPADCallback = virt_func_ptr<
+   void(WPADChan chan)>;
+
+using  KPADControlDpdCallback = virt_func_ptr<
+   void(WPADChan chan, KPADReason error)>;
+
+using  KPADControlMplsCallback = virt_func_ptr<
+   void(WPADChan chan, KPADReason error)>;
+
 struct WPADVec2D
 {
    be2_val<int16_t> x;
@@ -74,6 +83,10 @@ WPADEnableURCC(BOOL enable);
 
 void
 WPADEnableWiiRemote(BOOL enable);
+
+WPADError
+WPADControlDpd(int32_t chan, 
+            uint32_t command, WPADCallback callback);
 
 WPADBatteryLevel
 WPADGetBatteryLevel(WPADChan chan);
