@@ -4,6 +4,7 @@
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
 #include "gpu_memory.h"
+#include "latte/latte_endian.h"
 #include "latte/latte_registers.h"
 #include "opengl_constants.h"
 #include "opengl_driver.h"
@@ -483,42 +484,27 @@ GLDriver::updateDebuggerInfo()
    mDebuggerInfo.numDataBuffers = mDataBuffers.size();
 }
 
-static uint64_t
-swapValueForWrite(uint64_t value, latte::CB_ENDIAN swap)
-{
-   switch (swap)
-   {
-   case latte::CB_ENDIAN::NONE:
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN64:
-      value = byte_swap(value);
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN32:
-      value =
-         static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value))) |
-         (static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value >> 32))) << 32);
-      break;
-   case latte::CB_ENDIAN::SWAP_8IN16:
-      decaf_abort(fmt::format("Unexpected MEM_WRITE/EVENT_WRITE endian swap {}", swap));
-   }
-
-   return value;
-}
-
 void
 GLDriver::memWrite(const latte::pm4::MemWrite &data)
 {
+   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+   auto ptr = gpu::internal::translateAddress(addr);
    auto value = uint64_t { 0 };
 
+   // Read value
    if (data.addrHi.CNTR_SEL() == latte::pm4::MW_WRITE_CLOCK) {
       value = gpu::clock::now();
+   } else if (data.addrHi.DATA32()) {
+      value = static_cast<uint64_t>(data.dataLo);
    } else {
-      value = static_cast<uint64_t>(data.dataLo) | static_cast<uint64_t>(data.dataHi) << 32;
+      value = static_cast<uint64_t>(data.dataLo) |
+         (static_cast<uint64_t>(data.dataHi) << 32);
    }
 
-   auto ptr = gpu::internal::translateAddress(phys_addr { data.addrLo.ADDR_LO() << 2 });
-   value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
+   // Swap value
+   value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
 
+   // Write value
    if (data.addrHi.DATA32()) {
       *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
    } else {
@@ -551,7 +537,7 @@ GLDriver::eventWrite(const latte::pm4::EventWrite &data)
          addQuerySync(mOccQuery, [=](){
             uint64_t result;
             gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &result);
-            result = swapValueForWrite(result, data.addrLo.ENDIAN_SWAP());
+            result = latte::applyEndianSwap(result, data.addrLo.ENDIAN_SWAP());
             *reinterpret_cast<uint64_t *>(ptr) = result;
          });
       } else {
@@ -583,7 +569,7 @@ GLDriver::eventWrite(const latte::pm4::EventWrite &data)
       decaf_abort(fmt::format("Unexpected event type {}", type));
    }
 
-   value = swapValueForWrite(value, data.addrLo.ENDIAN_SWAP());
+   value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
    *reinterpret_cast<uint64_t *>(ptr) = value;
 }
 
@@ -611,20 +597,7 @@ GLDriver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
       }
 
       // Swap value
-      switch (data.addrLo.ENDIAN_SWAP()) {
-      case latte::CB_ENDIAN::NONE:
-         break;
-      case latte::CB_ENDIAN::SWAP_8IN32:
-         value = static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value))) |
-                 static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value >> 32))) << 32;
-         break;
-      case latte::CB_ENDIAN::SWAP_8IN64:
-         value = byte_swap(value);
-         break;
-      default:
-         decaf_abort(fmt::format("Unexpected EVENT_WRITE_EOP endian swap {}",
-                                 data.addrLo.ENDIAN_SWAP()));
-      }
+      value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
 
       // Write value
       switch (data.addrHi.DATA_SEL()) {

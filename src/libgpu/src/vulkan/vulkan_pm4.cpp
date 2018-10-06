@@ -4,6 +4,8 @@
 #include "gpu_event.h"
 #include "gpu_memory.h"
 
+#include "latte/latte_endian.h"
+
 #include <common/decaf_assert.h>
 #include <common/log.h>
 
@@ -190,6 +192,29 @@ Driver::drawIndexImmd(const latte::pm4::DrawIndexImmd &data)
 void
 Driver::memWrite(const latte::pm4::MemWrite &data)
 {
+   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+   auto ptr = gpu::internal::translateAddress(addr);
+   auto value = uint64_t { 0 };
+
+   // Read value
+   if (data.addrHi.CNTR_SEL() == latte::pm4::MW_WRITE_CLOCK) {
+      value = gpu::clock::now();
+   } else if (data.addrHi.DATA32()) {
+      value = static_cast<uint64_t>(data.dataLo);
+   } else {
+      value = static_cast<uint64_t>(data.dataLo) |
+              (static_cast<uint64_t>(data.dataHi) << 32);
+   }
+
+   // Swap value
+   value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
+
+   // Write value
+   if (data.addrHi.DATA32()) {
+      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
+   } else {
+      *reinterpret_cast<uint64_t *>(ptr) = value;
+   }
 }
 
 void
@@ -213,7 +238,8 @@ Driver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
          value = data.dataLo;
          break;
       case latte::pm4::EWP_DATA_64:
-         value = static_cast<uint64_t>(data.dataLo) | (static_cast<uint64_t>(data.dataHi) << 32);
+         value = static_cast<uint64_t>(data.dataLo) |
+                 (static_cast<uint64_t>(data.dataHi) << 32);
          break;
       case latte::pm4::EWP_DATA_CLOCK:
          value = gpu::clock::now();
@@ -221,20 +247,7 @@ Driver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
       }
 
       // Swap value
-      switch (data.addrLo.ENDIAN_SWAP()) {
-      case latte::CB_ENDIAN::NONE:
-         break;
-      case latte::CB_ENDIAN::SWAP_8IN32:
-         value = static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value))) |
-                 static_cast<uint64_t>(byte_swap(static_cast<uint32_t>(value >> 32))) << 32;
-         break;
-      case latte::CB_ENDIAN::SWAP_8IN64:
-         value = byte_swap(value);
-         break;
-      default:
-         decaf_abort(fmt::format("Unexpected EVENT_WRITE_EOP endian swap {}",
-                                 data.addrLo.ENDIAN_SWAP()));
-      }
+      value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
 
       // Write value
       switch (data.addrHi.DATA_SEL()) {
