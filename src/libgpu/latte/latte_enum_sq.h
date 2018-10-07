@@ -268,6 +268,11 @@ ENUM_BEG(SQ_TEX_VTX_TYPE, uint32_t)
    ENUM_VALUE(VALID_BUFFER,               3)
 ENUM_END(SQ_TEX_VTX_TYPE)
 
+ENUM_BEG(SQ_TILE_TYPE, uint32_t)
+   ENUM_VALUE(DEFAULT,                    0)
+   ENUM_VALUE(DEPTH,                      1)
+ENUM_END(SQ_TILE_TYPE)
+
 ENUM_BEG(SQ_TILE_MODE, uint32_t)
    ENUM_VALUE(DEFAULT,                    0)
    ENUM_VALUE(LINEAR_ALIGNED,             1)
