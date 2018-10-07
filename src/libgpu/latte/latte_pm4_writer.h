@@ -73,6 +73,16 @@ public:
       return *this;
    }
 
+   // Write a list of already swapped words
+   template<typename Type>
+   PacketWriter &operator()(const gsl::span<be2_val<Type>> &values)
+   {
+      auto dataSize = gsl::narrow_cast<uint32_t>(((values.size() * sizeof(Type)) + 3) / 4);
+      std::memcpy(mBuffer + mCurSize, values.data(), dataSize * sizeof(uint32_t));
+      mCurSize += dataSize;
+      return *this;
+   }
+
    // Write one word as a REG_OFFSET
    PacketWriter &REG_OFFSET(latte::Register value, latte::Register base)
    {
