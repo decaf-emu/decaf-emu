@@ -74,6 +74,27 @@ getKeyboardAxisMapping(const config::input::InputDevice *device,
    return -1;
 }
 
+static int
+getKeyboardAxisMapping(const config::input::InputDevice *device,
+   wpad::Channel channel,
+   wpad::ProAxis axis,
+   bool leftOrDown)
+{
+   decaf_check(device);
+
+   switch (axis) {
+   case wpad::ProAxis::LeftStickX:
+      return leftOrDown ? device->keyboard.left_stick_left : device->keyboard.left_stick_right;
+   case wpad::ProAxis::LeftStickY:
+      return leftOrDown ? device->keyboard.left_stick_down : device->keyboard.left_stick_up;
+   case wpad::ProAxis::RightStickX:
+      return leftOrDown ? device->keyboard.right_stick_left : device->keyboard.right_stick_right;
+   case wpad::ProAxis::RightStickY:
+      return leftOrDown ? device->keyboard.right_stick_down : device->keyboard.right_stick_up;
+   }
+
+   return -1;
+}
 static bool
 getJoystickButtonState(const config::input::InputDevice *device,
                        SDL_GameController *controller,
@@ -329,6 +350,63 @@ getJoystickAxisState(const config::input::InputDevice *device,
    if (index >= 0) {
       value = SDL_JoystickGetAxis(joystick, index);
    } else if (index == -2) {
+      if (name != SDL_CONTROLLER_AXIS_INVALID) {
+         value = SDL_GameControllerGetAxis(controller, name);
+      }
+   }
+
+   if (invert) {
+      value = -value;
+   }
+
+   return value;
+}
+
+static int
+getJoystickAxisState(const config::input::InputDevice *device,
+   SDL_GameController *controller,
+   wpad::Channel channel,
+   wpad::ProAxis axis)
+{
+   decaf_check(device);
+   decaf_check(controller);
+
+   auto joystick = SDL_GameControllerGetJoystick(controller);
+   decaf_check(joystick);
+
+   auto index = -1;
+   auto name = SDL_CONTROLLER_AXIS_INVALID;
+   auto invert = false;
+
+   switch (axis) {
+   case wpad::ProAxis::LeftStickX:
+      index = device->joystick.left_stick_x;
+      name = SDL_CONTROLLER_AXIS_LEFTX;
+      invert = device->joystick.left_stick_x_invert;
+      break;
+   case wpad::ProAxis::LeftStickY:
+      index = device->joystick.left_stick_y;
+      name = SDL_CONTROLLER_AXIS_LEFTY;
+      invert = device->joystick.left_stick_y_invert;
+      break;
+   case wpad::ProAxis::RightStickX:
+      index = device->joystick.right_stick_x;
+      name = SDL_CONTROLLER_AXIS_RIGHTX;
+      invert = device->joystick.right_stick_x_invert;
+      break;
+   case wpad::ProAxis::RightStickY:
+      index = device->joystick.right_stick_y;
+      name = SDL_CONTROLLER_AXIS_RIGHTY;
+      invert = device->joystick.right_stick_y_invert;
+      break;
+   }
+
+   auto value = 0;
+
+   if (index >= 0) {
+      value = SDL_JoystickGetAxis(joystick, index);
+   }
+   else if (index == -2) {
       if (name != SDL_CONTROLLER_AXIS_INVALID) {
          value = SDL_GameControllerGetAxis(controller, name);
       }
@@ -609,7 +687,12 @@ DecafSDL::getTouchPosition(vpad::Channel channel, vpad::TouchPosition &position)
 wpad::Type
 DecafSDL::getControllerType(wpad::Channel channel)
 {
-   return wpad::Type::Disconnected;
+   if (!mWpadConfig[(int)channel] || mWpadConfig[(int)channel]->type == config::input::ControllerType::None) {
+      return wpad::Type::Disconnected;
+   }
+
+   // TODO - Make this configurable
+   return wpad::Type::Pro;
 }
 
 ButtonStatus
@@ -686,8 +769,8 @@ DecafSDL::getAxisValue(wpad::Channel channel, wpad::ProAxis axis)
    case config::input::Keyboard:
    {
       auto numKeys = 0;
-      auto scancodeMinus = getKeyboardAxisMapping(mWpadConfig[(int)channel], (vpad::Channel)channel, (vpad::CoreAxis)axis, true);
-      auto scancodePlus = getKeyboardAxisMapping(mWpadConfig[(int)channel], (vpad::Channel)channel, (vpad::CoreAxis)axis, false);
+      auto scancodeMinus = getKeyboardAxisMapping(mWpadConfig[(int)channel], channel, axis, true);
+      auto scancodePlus = getKeyboardAxisMapping(mWpadConfig[(int)channel], channel, axis, false);
       auto state = SDL_GetKeyboardState(&numKeys);
       auto result = 0.0f;
 
@@ -704,7 +787,7 @@ DecafSDL::getAxisValue(wpad::Channel channel, wpad::ProAxis axis)
 
    case config::input::Joystick:
       if (mWpadController[(int)channel] && SDL_GameControllerGetAttached(mWpadController[(int)channel])) {
-         auto value = getJoystickAxisState(mWpadConfig[(int)channel], mWpadController[(int)channel], (vpad::Channel)channel, (vpad::CoreAxis)axis);
+         auto value = getJoystickAxisState(mWpadConfig[(int)channel], mWpadController[(int)channel], channel, axis);
 
          if (value < 0) {
             return value / 32768.0f;

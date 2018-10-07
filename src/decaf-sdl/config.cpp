@@ -22,7 +22,7 @@ namespace input
 
 std::vector<InputDevice> devices;
 std::string vpad0 = "default_keyboard";
-std::string wpad[4] = { "","","","" };
+std::string wpad[4] = { "default_joystick","","","" };
 
 } // namespace input
 

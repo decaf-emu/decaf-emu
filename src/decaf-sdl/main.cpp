@@ -191,10 +191,10 @@ start(excmd::parser &parser,
       config::input::wpad[1] = options.get<std::string>("wpad1");
    }
    if (options.has("wpad2")) {
-      config::input::wpad[2] = options.get<std::string>("wpad1");
+      config::input::wpad[2] = options.get<std::string>("wpad2");
    }
    if (options.has("wpad3")) {
-      config::input::wpad[3] = options.get<std::string>("wpad2");
+      config::input::wpad[3] = options.get<std::string>("wpad3");
    }
 
    if (options.has("display-mode")) {

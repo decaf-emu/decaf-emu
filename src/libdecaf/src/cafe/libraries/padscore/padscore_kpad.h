@@ -158,12 +158,12 @@ KPADSetMplsWorkarea(virt_ptr<void> buffer);
 
 int32_t
 KPADRead(KPADChan chan,
-         virt_ptr<KPADStatus> data,
+         virt_ptr<void> data,
          uint32_t size);
 
 int32_t
 KPADReadEx(KPADChan chan,
-           virt_ptr<KPADStatus> data,
+           virt_ptr<void> data,
            uint32_t size,
            virt_ptr<KPADReadError> outError);
 

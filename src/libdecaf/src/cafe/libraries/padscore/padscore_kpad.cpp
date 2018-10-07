@@ -37,10 +37,6 @@ struct KpadData
 {
    struct ChanData
    {
-      be2_val<WPADDataFormat> dataFormat;
-      be2_val<WPADConnectCallback> connectCallback;
-      be2_val<WPADExtensionCallback> extensionCallback;
-      be2_val<WPADSamplingCallback> samplingCallback;
       be2_val<KPADControlDpdCallback> controlDpdCallback;
       be2_val<KPADControlMplsCallback > controlMplsCallback;
       be2_val<uint8_t> procMode;
@@ -77,7 +73,6 @@ struct KpadData
       be2_val<BOOL> calibrating;
    };
 
-   be2_val<WPADLibraryStatus> status;
    be2_array<ChanData, WPADChan::NumChans> chanData;
 };
 
@@ -90,7 +85,6 @@ gLastButtonState = 0;
 void
 KPADInit()
 {
-   decaf_warn_stub();
    KPADInitEx(NULL, 0);
 }
 
@@ -98,7 +92,6 @@ void
 KPADInitEx(virt_ptr<void> a1,
            uint32_t a2)
 {
-   decaf_warn_stub();
    WPADInit();
 }
 
@@ -115,23 +108,16 @@ KPADReset()
 }
 
 
-WPADConnectCallback 
-KPADSetConnectCallback(KPADChan chan, 
+WPADConnectCallback
+KPADSetConnectCallback(KPADChan chan,
                        WPADConnectCallback callback)
 {
-   decaf_warn_stub();
-   if (chan >= KPADChan::NumChans) {
-      return nullptr;
-   }
-
-   auto prev = sKpadData->chanData[chan].connectCallback;
-   sKpadData->chanData[chan].connectCallback = callback;
-   return prev;
+   return WPADSetConnectCallback(chan, callback);
 }
 
 
 //! Enable "Direct Pointing Device"
-void 
+void
 KPADEnableDPD(KPADChan chan)
 {
    decaf_warn_stub();
@@ -162,7 +148,7 @@ KPADSetMplsWorkarea(virt_ptr<void> buffer)
 
 int32_t
 KPADRead(KPADChan chan,
-         virt_ptr<KPADStatus> data,
+         virt_ptr<void> data,
          uint32_t size)
 {
    decaf_warn_stub();
@@ -178,7 +164,7 @@ KPADRead(KPADChan chan,
 
 int32_t
 KPADReadEx(KPADChan chan,
-           virt_ptr<KPADStatus> buffers,
+           virt_ptr<void> buffers,
            uint32_t bufferCount,
            virt_ptr<KPADReadError> outError)
 {
@@ -198,10 +184,18 @@ KPADReadEx(KPADChan chan,
       return 0;
    }
 
-   memset(virt_addrof(buffers[0]).getRawPointer(), 0, sizeof(KPADStatus));
+   memset(virt_addrof(virt_cast<KPADExtProControllerStatus*>(buffers)[0]).getRawPointer(), 0, sizeof(KPADExtProControllerStatus));
 
    auto channel = static_cast<input::wpad::Channel>(chan);
-   auto &buffer = buffers[0];
+   auto &buffer = virt_cast<KPADExtProControllerStatus*>(buffers)[0];
+
+   if (input::getControllerType(channel) == input::wpad::Type::Disconnected) {
+      if (outError) {
+         *outError = KPADReadError::InvalidController;
+      }
+
+      return 0;
+   }
 
    // Update button state
    for (auto &pair : gButtonMap) {
@@ -225,10 +219,10 @@ KPADReadEx(KPADChan chan,
    gLastButtonState = buffer.hold;
 
    // Update axis state
-   buffer.pos.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
-   buffer.pos.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
-   buffer.angle.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
-   buffer.angle.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
+   buffer.leftStick.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
+   buffer.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
+   buffer.rightStick.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
+   buffer.rightStick.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
 
    if (outError) {
       *outError = KPADReadError::Success;
@@ -241,19 +235,12 @@ WPADSamplingCallback
 KPADSetSamplingCallback(KPADChan chan,
                         WPADSamplingCallback callback)
 {
-   decaf_warn_stub();
-   if (chan >= KPADChan::NumChans) {
-      return nullptr;
-   }
-
-   auto prev = sKpadData->chanData[chan].samplingCallback;
-   sKpadData->chanData[chan].samplingCallback = callback;
-   return prev;
+   return WPADSetSamplingCallback(chan, callback);
 }
 
-void 
-KPADSetBtnRepeat(KPADChan chan, 
-                 float delay_sec, 
+void
+KPADSetBtnRepeat(KPADChan chan,
+                 float delay_sec,
                  float pulse_sec)
 {
    decaf_warn_stub();
@@ -265,7 +252,7 @@ KPADSetBtnRepeat(KPADChan chan,
 }
 
 void
-KPADSetButtonProcMode(KPADChan chan, 
+KPADSetButtonProcMode(KPADChan chan,
                       uint8_t mode)
 {
    decaf_warn_stub();
@@ -285,9 +272,9 @@ KPADGetButtonProcMode(KPADChan chan)
    return sKpadData->chanData[chan].procMode;
 }
 
-void 
-KPADSetAccParam(KPADChan chan, 
-                float play_radius, 
+void
+KPADSetAccParam(KPADChan chan,
+                float play_radius,
                 float sensitivity)
 {
    decaf_warn_stub();
@@ -299,8 +286,8 @@ KPADSetAccParam(KPADChan chan,
 }
 
 void 
-KPADGetAccParam(KPADChan chan, 
-                virt_ptr<float> play_radius, 
+KPADGetAccParam(KPADChan chan,
+                virt_ptr<float> play_radius,
                 virt_ptr<float> sensitivity)
 {
    decaf_warn_stub();
@@ -313,7 +300,7 @@ KPADGetAccParam(KPADChan chan,
 
 
 void 
-KPADSetAccPlayMode(KPADChan chan, 
+KPADSetAccPlayMode(KPADChan chan,
                    KPADPlayMode mode)
 {
    decaf_warn_stub();
@@ -333,13 +320,13 @@ KPADGetAccPlayMode(KPADChan chan)
    return sKpadData->chanData[chan].playMode;
 }
 
-float 
+float
 KPADReviseAcc(virt_ptr<ios::IoctlVec> acc)
 {
    return 0.0;
 }
 
-void 
+void
 KPADSetControlDpdCallback(KPADChan chan, 
                           KPADControlDpdCallback callback)
 {
@@ -364,7 +351,7 @@ KPADGetProjectionPos(virt_ptr<KPADVec2D> dst,
    decaf_warn_stub();
 }
 
-void 
+void
 KPADEnableAimingMode(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -373,7 +360,7 @@ KPADEnableAimingMode(KPADChan chan)
    sKpadData->chanData[chan].aimingMode = TRUE;
 }
 
-void 
+void
 KPADDisableAimingMode(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -382,7 +369,7 @@ KPADDisableAimingMode(KPADChan chan)
    sKpadData->chanData[chan].aimingMode = FALSE;
 }
 
-BOOL 
+BOOL
 KPADIsEnableAimingMode(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -391,7 +378,7 @@ KPADIsEnableAimingMode(KPADChan chan)
    return sKpadData->chanData[chan].aimingMode;
 }
 
-void 
+void
 KPADSetPosPlayMode(KPADChan chan,
                    KPADPlayMode mode)
 {
@@ -437,7 +424,7 @@ KPADGetPosParam(KPADChan chan,
 }
 
 void
-KPADSetHoriPlayMode(KPADChan chan, 
+KPADSetHoriPlayMode(KPADChan chan,
                     KPADPlayMode mode)
 {
    if (chan >= KPADChan::NumChans) {
@@ -482,7 +469,7 @@ KPADGetHoriParam(KPADChan chan,
 }
 
 void
-KPADSetDistPlayMode(KPADChan chan, 
+KPADSetDistPlayMode(KPADChan chan,
                     KPADPlayMode mode)
 {
    if (chan >= KPADChan::NumChans) {
@@ -501,7 +488,7 @@ KPADGetDistPlayMode(KPADChan chan)
 }
 
 void
-KPADSetDistParam(KPADChan chan, 
+KPADSetDistParam(KPADChan chan,
                  float play_radius, 
                  float sensitivity)
 {
@@ -526,8 +513,8 @@ KPADGetDistParam(KPADChan chan,
    *sensitivity = sKpadData->chanData[chan].distSensitivity;
 }
 
-void 
-KPADSetSensorHeight(KPADChan chan, 
+void
+KPADSetSensorHeight(KPADChan chan,
                     float level)
 {
    decaf_warn_stub();
@@ -537,7 +524,7 @@ KPADSetSensorHeight(KPADChan chan,
    sKpadData->chanData[chan].sensorHeight = level;
 }
 
-float 
+float
 KPADGetSensorHeight(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -547,7 +534,7 @@ KPADGetSensorHeight(KPADChan chan)
 }
 
 void 
-KPADEnableMpls(KPADChan chan, 
+KPADEnableMpls(KPADChan chan,
                KPADMplsMode mode)
 {
    if (chan >= KPADChan::NumChans) {
@@ -556,15 +543,17 @@ KPADEnableMpls(KPADChan chan,
    sKpadData->chanData[chan].mplsMode = mode;
 }
 
-void KPADDisableMpls(KPADChan chan)
+void
+KPADDisableMpls(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
       return;
    }
 }
 
-void KPADSetControlMplsCallback(KPADChan chan, 
-                                KPADControlMplsCallback callback)
+void
+KPADSetControlMplsCallback(KPADChan chan,
+                           KPADControlMplsCallback callback)
 {
    if (chan >= KPADChan::NumChans) {
       return;
@@ -572,13 +561,13 @@ void KPADSetControlMplsCallback(KPADChan chan,
    sKpadData->chanData[chan].controlDpdCallback = callback;
 }
 
-uint8_t 
+uint8_t
 KPADGetMplsStatus(KPADChan chan)
 {
    return 0;
 }
 
-void 
+void
 KPADStartMplsCalibration(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -587,7 +576,8 @@ KPADStartMplsCalibration(KPADChan chan)
    sKpadData->chanData[chan].calibrating = TRUE;
 }
 
-float KPADWorkMplsCalibration(KPADChan chan)
+float
+KPADWorkMplsCalibration(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
       return 0;
@@ -608,7 +598,7 @@ KPADStopMplsCalibration(KPADChan chan)
    sKpadData->chanData[chan].calibrating = FALSE;
 }
 
-void 
+void
 KPADResetMpls(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -616,10 +606,10 @@ KPADResetMpls(KPADChan chan)
    }
 }
 
-void 
-KPADSetMplsAngle(KPADChan chan, 
-                 float ax, 
-                 float ay, 
+void
+KPADSetMplsAngle(KPADChan chan,
+                 float ax,
+                 float ay,
                  float az)
 {
    if (chan >= KPADChan::NumChans) {
@@ -630,8 +620,8 @@ KPADSetMplsAngle(KPADChan chan,
    sKpadData->chanData[chan].az = az;
 }
 
-void 
-KPADSetMplsDirection(KPADChan chan, 
+void
+KPADSetMplsDirection(KPADChan chan,
                      virt_ptr<void> dir)
 {
    if (chan >= KPADChan::NumChans) {
@@ -639,8 +629,8 @@ KPADSetMplsDirection(KPADChan chan,
    }
 }
 
-void 
-KPADSetMplsDirectionMag(KPADChan chan, 
+void
+KPADSetMplsDirectionMag(KPADChan chan,
                         float mag)
 {
    if (chan >= KPADChan::NumChans) {
@@ -648,7 +638,7 @@ KPADSetMplsDirectionMag(KPADChan chan,
    }
 }
 
-void 
+void
 KPADEnableMplsAccRevise(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -678,7 +668,7 @@ KPADIsEnableMplsAccRevise(KPADChan chan)
    return -1.0;
 }
 
-void 
+void
 KPADInitMplsAccReviseParam(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -688,9 +678,9 @@ KPADInitMplsAccReviseParam(KPADChan chan)
    sKpadData->chanData[chan].revise_range = 0.400f;
 }
 
-void 
-KPADSetMplsAccReviseParam(KPADChan chan, 
-                          float revise_pw, 
+void
+KPADSetMplsAccReviseParam(KPADChan chan,
+                          float revise_pw,
                           float revise_range)
 {
    if(chan >= KPADChan::NumChans) {
@@ -700,9 +690,9 @@ KPADSetMplsAccReviseParam(KPADChan chan,
    sKpadData->chanData[chan].revise_range = revise_range;
 }
 
-void 
-KPADGetMplsAccReviseParam(KPADChan chan, 
-                          virt_ptr<float> revise_pw, 
+void
+KPADGetMplsAccReviseParam(KPADChan chan,
+                          virt_ptr<float> revise_pw,
                           virt_ptr<float>  revise_range)
 {
    if (chan >= KPADChan::NumChans) {
@@ -755,7 +745,7 @@ KPADInitMplsDirReviseParam(KPADChan chan)
 }
 
 void
-KPADSetMplsDirReviseParam(KPADChan chan, 
+KPADSetMplsDirReviseParam(KPADChan chan,
                           float revise_pw)
 {
    if (chan >= KPADChan::NumChans) {
@@ -765,7 +755,7 @@ KPADSetMplsDirReviseParam(KPADChan chan,
 }
 
 void
-KPADGetMplsDirReviseParam(KPADChan chan, 
+KPADGetMplsDirReviseParam(KPADChan chan,
                           virt_ptr<float> revise_pw)
 {
    if (chan >= KPADChan::NumChans) {
@@ -776,7 +766,7 @@ KPADGetMplsDirReviseParam(KPADChan chan,
 }
 
 void
-KPADSetMplsDirReviseBase(KPADChan chan, 
+KPADSetMplsDirReviseBase(KPADChan chan,
                          virt_ptr<float> revise_pw)
 {
    if (chan >= KPADChan::NumChans) {
@@ -827,7 +817,7 @@ KPADInitMplsDpdReviseParam(KPADChan chan)
 }
 
 void
-KPADSetMplsDpdReviseParam(KPADChan chan, 
+KPADSetMplsDpdReviseParam(KPADChan chan,
                           float revise_pw)
 {
    if (chan >= KPADChan::NumChans) {
@@ -837,7 +827,7 @@ KPADSetMplsDpdReviseParam(KPADChan chan,
 }
 
 void
-KPADGetMplsDpdReviseParam(KPADChan chan, 
+KPADGetMplsDpdReviseParam(KPADChan chan,
                           virt_ptr<float> revise_pw)
 {
    if (chan >= KPADChan::NumChans) {
@@ -914,7 +904,7 @@ KPADIsEnableMplsZeroDrift(KPADChan chan)
    return -1.0;
 }
 
-void 
+void
 KPADInitMplsZeroDriftMode(KPADChan chan)
 {
    if (chan >= KPADChan::NumChans) {
@@ -923,7 +913,7 @@ KPADInitMplsZeroDriftMode(KPADChan chan)
    sKpadData->chanData[chan].zeroPointDriftMode = KPADMplsZeroDriftMode::KPAD_MPLS_ZERODRIFT_LOOSE;
 }
 
-void 
+void
 KPADSetMplsZeroDriftMode(KPADChan chan,
                          KPADMplsZeroDriftMode mode)
 {
@@ -933,7 +923,7 @@ KPADSetMplsZeroDriftMode(KPADChan chan,
    sKpadData->chanData[chan].zeroPointDriftMode = mode;
 }
 
-void 
+void
 KPADGetMplsZeroDriftMode(KPADChan chan,
                          virt_ptr<KPADMplsZeroDriftMode> mode)
 {
@@ -943,7 +933,7 @@ KPADGetMplsZeroDriftMode(KPADChan chan,
    *mode = sKpadData->chanData[chan].zeroPointDriftMode;
 }
 
-void 
+void
 KPADSetMplsMagnification(KPADChan chan, 
                          float pitch, 
                          float yaw, 
@@ -952,29 +942,32 @@ KPADSetMplsMagnification(KPADChan chan,
    decaf_warn_stub();
 }
 
-void 
+void
 KPADEnableStickCrossClamp(void)
 {
    decaf_warn_stub();
 }
 
-void KPADDisableStickCrossClamp(void)
+void
+KPADDisableStickCrossClamp(void)
 {
    decaf_warn_stub();
 }
 
-void 
+void
 KPADSetReviseMode(KPADChan chan, BOOL sw)
 {
    decaf_warn_stub();
 }
 
-void KPADSetFSStickClamp(int8_t min, int8_t max)
+void
+KPADSetFSStickClamp(int8_t min, int8_t max)
 {
    decaf_warn_stub();
 }
 
-float KPADGetReviseAngle(void)
+float
+KPADGetReviseAngle(void)
 {
    return 0.0;
 }
