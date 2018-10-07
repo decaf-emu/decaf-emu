@@ -1,4 +1,5 @@
 #include "vpadbase.h"
+
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
 namespace cafe::vpadbase
@@ -16,6 +17,8 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerControllerSymbols();
 }
 
 } // namespace cafe::vpadbase
