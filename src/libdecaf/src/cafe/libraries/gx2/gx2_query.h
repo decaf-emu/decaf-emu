@@ -21,12 +21,6 @@ GX2SampleBottomGPUCycle(virt_ptr<int64_t> writeSamplePtr);
 uint64_t
 GX2GPUTimeToCPUTime(uint64_t time);
 
-uint32_t
-GX2GetGPUTimeout();
-
-void
-GX2SetGPUTimeout(uint32_t timeout);
-
 void
 GX2QueryBegin(GX2QueryType type,
               virt_ptr<GX2QueryData> data);
