@@ -9,16 +9,18 @@ namespace cafe::kernel
 
 struct InterruptData
 {
-   std::array<InterruptHandlerFn, InterruptType::Max> kernelHandlers;
-   std::array<InterruptHandlerFn, InterruptType::Max> userHandlers;
+   std::array<internal::KernelInterruptHandlerFn, InterruptType::Max> kernelHandlers;
+   std::array<UserInterruptHandlerFn, InterruptType::Max> userHandlers;
+   std::array<virt_ptr<void>, InterruptType::Max> userHandlerData;
 };
 
 static std::array<InterruptData, 3>
 sPerCoreInterruptData;
 
-InterruptHandlerFn
+UserInterruptHandlerFn
 setUserModeInterruptHandler(InterruptType type,
-                            InterruptHandlerFn handler)
+                            UserInterruptHandlerFn handler,
+                            virt_ptr<void> userData)
 {
    auto &data = sPerCoreInterruptData[cpu::this_core::id()];
    if (type >= InterruptType::Max) {
@@ -28,7 +30,18 @@ setUserModeInterruptHandler(InterruptType type,
 
    auto previous = data.userHandlers[type];
    data.userHandlers[type] = handler;
+   data.userHandlerData[type] = userData;
    return previous;
+}
+
+void
+clearAndEnableInterrupt(InterruptType type)
+{
+}
+
+void
+disableInterrupt(InterruptType type)
+{
 }
 
 namespace internal
@@ -43,13 +56,13 @@ dispatchExternalInterrupt(InterruptType type,
    if (auto handler = data.kernelHandlers[type]) {
       handler(type, interruptedContext);
    } else if (auto handler = data.userHandlers[type]) {
-      handler(type, interruptedContext);
+      handler(type, interruptedContext, data.userHandlerData[type]);
    }
 }
 
 void
 setKernelInterruptHandler(InterruptType type,
-                          InterruptHandlerFn handler)
+                          KernelInterruptHandlerFn handler)
 {
    sPerCoreInterruptData[cpu::this_core::id()].kernelHandlers[type] = handler;
 }
