@@ -1,5 +1,9 @@
 #pragma once
-#include <common/cbool.h>
+#include "coreinit_context.h"
+
+#include "cafe/kernel/cafe_kernel_interrupts.h"
+
+#include <libcpu/be2_struct.h>
 
 namespace cafe::coreinit
 {
@@ -9,6 +13,11 @@ namespace cafe::coreinit
 * \ingroup coreinit
 * @{
 */
+
+using OSInterruptType = kernel::InterruptType;
+using OSUserInterruptHandler = virt_func_ptr<
+   void (OSInterruptType type, virt_ptr<OSContext> interruptedContext)
+>;
 
 BOOL
 OSEnableInterrupts();
@@ -21,6 +30,16 @@ OSRestoreInterrupts(BOOL enable);
 
 BOOL
 OSIsInterruptEnabled();
+
+OSUserInterruptHandler
+OSSetInterruptHandler(OSInterruptType type,
+                      OSUserInterruptHandler handler);
+
+void
+OSClearAndEnableInterrupt(OSInterruptType type);
+
+void
+OSDisableInterrupt(OSInterruptType type);
 
 namespace internal
 {
