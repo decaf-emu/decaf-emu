@@ -791,8 +791,7 @@ DecafSDL::getAxisValue(wpad::Channel channel, wpad::ProAxis axis)
 
          if (value < 0) {
             return value / 32768.0f;
-         }
-         else {
+         } else {
             return value / 32767.0f;
          }
       }

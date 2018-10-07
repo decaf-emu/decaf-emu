@@ -38,7 +38,7 @@ struct KpadData
    struct ChanData
    {
       be2_val<KPADControlDpdCallback> controlDpdCallback;
-      be2_val<KPADControlMplsCallback > controlMplsCallback;
+      be2_val<KPADControlMplsCallback> controlMplsCallback;
       be2_val<uint8_t> procMode;
       be2_val<KPADPlayMode> playMode;
       be2_val<KPADPlayMode> posPlayMode;
