@@ -7,9 +7,6 @@ namespace gpu
 static FlipCallbackFn
 sFlipCallbackFn = nullptr;
 
-static RetireCallbackFn
-sRetireCallbackFn = nullptr;
-
 static SyncRegisterCallbackFn
 sSyncRegisterCallbackFn = nullptr;
 
@@ -17,12 +14,6 @@ void
 setFlipCallback(FlipCallbackFn callback)
 {
    sFlipCallbackFn = callback;
-}
-
-void
-setRetireCallback(RetireCallbackFn callback)
-{
-   sRetireCallbackFn = callback;
 }
 
 void
@@ -36,14 +27,6 @@ onFlip()
 {
    if (sFlipCallbackFn) {
       sFlipCallbackFn();
-   }
-}
-
-void
-onRetire(void *context)
-{
-   if (sRetireCallbackFn) {
-      sRetireCallbackFn(context);
    }
 }
 

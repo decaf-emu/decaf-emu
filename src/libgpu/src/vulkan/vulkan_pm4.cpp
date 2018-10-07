@@ -2,6 +2,7 @@
 #include "vulkan_driver.h"
 #include "gpu_clock.h"
 #include "gpu_event.h"
+#include "gpu_ih.h"
 #include "gpu_memory.h"
 
 #include "latte/latte_endian.h"
@@ -261,8 +262,11 @@ Driver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
       }
    }
 
-   // TODO: Generate interrupt if required
+   // Generate interrupt if required
    if (data.addrHi.INT_SEL() != latte::pm4::EWP_INT_NONE) {
+      auto interrupt = gpu::ih::Entry { };
+      interrupt.word0 = latte::CP_INT_SRC_ID::CP_EOP_EVENT;
+      gpu::ih::write(interrupt);
    }
 }
 
@@ -294,7 +298,7 @@ Driver::applyRegister(latte::Register reg)
 
 
 void
-Driver::executeBuffer(const gpu::ringbuffer::Item &item)
+Driver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
    decaf_check(!mActiveSyncWaiter);
 
@@ -305,10 +309,7 @@ Driver::executeBuffer(const gpu::ringbuffer::Item &item)
    beginCommandBuffer();
 
    // Execute guest PM4 command buffer
-   runCommandBuffer(item.buffer.getRawPointer(), item.numWords);
-
-   // Add a callback to retire the PM4 buffer once the host command buffer is retired
-   addRetireTask(std::bind(gpu::onRetire, item.context));
+   runCommandBuffer(buffer);
 
    // End preparing our command buffer
    endCommandBuffer();

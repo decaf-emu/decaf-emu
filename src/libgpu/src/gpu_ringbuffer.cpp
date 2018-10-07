@@ -2,77 +2,55 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <queue>
+#include <vector>
 
-namespace gpu
+namespace gpu::ringbuffer
 {
 
-namespace ringbuffer
-{
+static std::vector<uint32_t>
+mWriteVector;
+
+static std::vector<uint32_t>
+mReadVector;
 
 static std::mutex
-sQueueMutex;
+sMutex;
 
 static std::condition_variable
-sQueueCV;
+sConditionVariable;
 
-static std::queue<Item>
-sQueue;
-
-static void
-appendItem(Item item)
+void
+write(const Buffer &items)
 {
-   std::unique_lock<std::mutex> lock { sQueueMutex };
-   sQueue.push(item);
-   sQueueCV.notify_all();
+   std::unique_lock<std::mutex> lock { sMutex };
+   mWriteVector.insert(mWriteVector.end(), items.begin(), items.end());
+   sConditionVariable.notify_all();
+}
+
+Buffer
+read()
+{
+   std::unique_lock<std::mutex> lock { sMutex };
+   mReadVector.clear();
+   mReadVector.swap(mWriteVector);
+   return mReadVector;
+}
+
+bool
+wait()
+{
+   std::unique_lock<std::mutex> lock { sMutex };
+   if (mWriteVector.empty()) {
+      sConditionVariable.wait(lock);
+   }
+
+   return !mWriteVector.empty();
 }
 
 void
-submit(void *context,
-       phys_ptr<uint32_t> buffer,
-       uint32_t numWords)
+wake()
 {
-   auto item = Item {};
-   item.context = context;
-   item.buffer = buffer;
-   item.numWords = numWords;
-   appendItem(item);
+   sConditionVariable.notify_all();
 }
 
-Item
-dequeueItem()
-{
-   std::unique_lock<std::mutex> lock { sQueueMutex };
-
-   if (!sQueue.size()) {
-      return { 0 };
-   }
-
-   auto next = sQueue.front();
-   sQueue.pop();
-   return next;
-}
-
-Item
-waitForItem()
-{
-   std::unique_lock<std::mutex> lock { sQueueMutex };
-
-   while (!sQueue.size()) {
-      sQueueCV.wait(lock);
-   }
-
-   auto next = sQueue.front();
-   sQueue.pop();
-   return next;
-}
-
-void
-awaken()
-{
-   appendItem(Item { 0 });
-}
-
-} // namespace ringbuffer
-
-} // namespace gpu
+} // namespace gpu::ringbuffer

@@ -1,5 +1,5 @@
 #include "gx2.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_registers.h"
 #include "cafe/cafe_stackobject.h"
 

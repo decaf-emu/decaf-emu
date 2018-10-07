@@ -17,8 +17,6 @@ namespace cafe::gx2
 
 #pragma pack(push, 1)
 
-using GX2Timestamp = coreinit::OSTime;
-
 struct GX2DisplayListOverrunData
 {
    be2_virt_ptr<void> oldList;
@@ -56,26 +54,11 @@ GX2GetEventCallback(GX2EventType type,
                     virt_ptr<GX2EventCallbackFunction> outFunc,
                     virt_ptr<virt_ptr<void>> outUserData);
 
-GX2Timestamp
-GX2GetRetiredTimeStamp();
-
-GX2Timestamp
-GX2GetLastSubmittedTimeStamp();
-
-BOOL
-GX2WaitTimeStamp(GX2Timestamp time);
-
-void
-GX2SubmitUserTimeStamp(virt_ptr<GX2Timestamp> dst,
-                       GX2Timestamp timestamp,
-                       GX2PipeEvent type,
-                       BOOL triggerInterrupt);
-
 void
 GX2GetSwapStatus(virt_ptr<uint32_t> outSwapCount,
                  virt_ptr<uint32_t> outFlipCount,
-                 virt_ptr<GX2Timestamp> outLastFlip,
-                 virt_ptr<GX2Timestamp> outLastVsync);
+                 virt_ptr<coreinit::OSTime> outLastFlip,
+                 virt_ptr<coreinit::OSTime> outLastVsync);
 
 namespace internal
 {
@@ -87,15 +70,6 @@ std::pair<virt_ptr<void>, uint32_t>
 displayListOverrun(virt_ptr<void> list,
                    uint32_t size,
                    uint32_t neededSize);
-
-void
-setLastSubmittedTimestamp(GX2Timestamp timestamp);
-
-void
-handleGpuRetireInterrupt();
-
-void
-setRetiredTimestamp(GX2Timestamp timestamp);
 
 void
 onSwap();

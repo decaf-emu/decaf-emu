@@ -2,7 +2,7 @@
 #include "gx2_debug.h"
 #include "gx2_enum_string.h"
 #include "gx2_fetchshader.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_internal_gfd.h"
 #include "gx2_shaders.h"
 #include "gx2_texture.h"

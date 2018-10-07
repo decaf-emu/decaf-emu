@@ -3,7 +3,7 @@
 #include "gx2_contextstate.h"
 #include "gx2_displaylist.h"
 #include "gx2_event.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_internal_pm4cap.h"
 #include "gx2_state.h"
 #include "cafe/libraries/coreinit/coreinit_core.h"
@@ -92,10 +92,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
    // Initialise GPU callbacks
    gpu::setFlipCallback(&internal::onFlip);
    gpu::setSyncRegisterCallback(&internal::captureSyncGpuRegisters);
-   gpu::setRetireCallback(&internal::onRetireCommandBuffer);
 
    // Initialise command buffer pools
-   internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
+   internal::initialiseCommandBufferPool(cbPoolBase, cbPoolSize);
 
    // Initialise profiling settings
    internal::initialiseProfiling(profileMode, tossStage);
@@ -119,7 +118,7 @@ GX2Flush()
       gLog->error("GX2Flush called from within a display list");
    }
 
-   internal::flushCommandBuffer(0x100);
+   internal::flushCommandBuffer(0x100, TRUE);
 }
 
 uint32_t

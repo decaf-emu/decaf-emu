@@ -2,7 +2,7 @@
 #include "gx2_addrlib.h"
 #include "gx2_enum_string.h"
 #include "gx2_format.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_surface.h"
 
 #include "cafe/libraries/coreinit/coreinit_memory.h"

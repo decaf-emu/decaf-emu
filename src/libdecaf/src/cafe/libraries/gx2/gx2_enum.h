@@ -181,6 +181,7 @@ ENUM_BEG(GX2EndianSwapMode, uint32_t)
 ENUM_END(GX2EndianSwapMode)
 
 ENUM_BEG(GX2EventType, uint32_t)
+   ENUM_VALUE(StartOfPipeInterrupt,    0)
    ENUM_VALUE(EndOfPipeInterrupt,      1)
    ENUM_VALUE(Vsync,                   2)
    ENUM_VALUE(Flip,                    3)

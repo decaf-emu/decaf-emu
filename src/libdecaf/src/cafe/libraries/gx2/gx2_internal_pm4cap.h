@@ -1,6 +1,4 @@
 #pragma once
-#include "gx2_internal_cbpool.h"
-
 #include <cstdint>
 #include <libcpu/be2_struct.h>
 
@@ -31,7 +29,8 @@ void
 captureSwap();
 
 void
-captureCommandBuffer(CommandBuffer *buffer);
+captureCommandBuffer(virt_ptr<uint32_t> buffer,
+                     uint32_t numWords);
 
 void
 captureCpuFlush(phys_addr buffer,

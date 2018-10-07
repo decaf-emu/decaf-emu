@@ -1,34 +1,22 @@
 #pragma once
 #include <cstdint>
-#include <libcpu/be2_struct.h>
+#include <gsl.h>
 
-namespace gpu
+namespace gpu::ringbuffer
 {
 
-namespace ringbuffer
-{
-
-struct Item
-{
-   void *context;
-   phys_ptr<uint32_t> buffer;
-   uint32_t numWords;
-};
+using Buffer = gsl::span<uint32_t>;
 
 void
-submit(void *context,
-       phys_ptr<uint32_t> buffer,
-       uint32_t numWords);
+write(const Buffer &buffer);
 
-Item
-dequeueItem();
+Buffer
+read();
 
-Item
-waitForItem();
+bool
+wait();
 
 void
-awaken();
+wake();
 
-} // namespace ringbuffer
-
-} // namespace gpu
+} // namespace gpu::ringbuffer

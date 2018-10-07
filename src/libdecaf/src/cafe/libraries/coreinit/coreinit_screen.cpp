@@ -5,7 +5,7 @@
 
 #include "cafe/libraries/gx2/gx2_display.h"
 #include "cafe/libraries/gx2/gx2_event.h"
-#include "cafe/libraries/gx2/gx2_internal_cbpool.h"
+#include "cafe/libraries/gx2/gx2_cbpool.h"
 #include "cafe/libraries/gx2/gx2_state.h"
 
 #include <array>

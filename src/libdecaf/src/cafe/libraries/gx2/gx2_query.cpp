@@ -1,5 +1,5 @@
 #include "gx2.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_query.h"
 #include "gx2_memory.h"
 #include "cafe/libraries/coreinit/coreinit_cache.h"
@@ -36,7 +36,8 @@ GX2SampleBottomGPUCycle(virt_ptr<int64_t> writeSamplePtr)
    *writeSamplePtr = -1;
 
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS)
+      .EVENT_INDEX(latte::VGT_EVENT_INDEX::TS);
 
    auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO(addr >> 2)

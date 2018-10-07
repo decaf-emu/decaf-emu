@@ -40,6 +40,7 @@ enum Value : uint32_t
    CP_IB2_BASE_LO                   = 0x0873C,
    CP_IB2_BASE_HI                   = 0x08740,
    CP_IB2_BASE_SIZE                 = 0x08744,
+   CP_PERFMON_CNTL                  = 0x087FC,
    VGT_GS_PER_ES                    = 0x088C8,
    VGT_ES_PER_GS                    = 0x088CC,
    VGT_GS_VERTEX_REUSE              = 0x088D4,
@@ -100,6 +101,7 @@ enum Value : uint32_t
    ConfigRegisterEnd                = 0x0AC00,
 
    CP_RB_BASE                       = 0x0C100,
+   CP_RB_CNTL                       = 0x0C104,
    CP_INT_CNTL                      = 0x0C124,
    CP_INT_STATUS                    = 0x0C128,
 

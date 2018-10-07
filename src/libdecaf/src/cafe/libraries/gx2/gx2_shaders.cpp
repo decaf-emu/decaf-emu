@@ -1,6 +1,6 @@
 #include "gx2.h"
 #include "gx2_debug.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_fetchshader.h"
 #include "gx2_shaders.h"
 
@@ -331,27 +331,11 @@ GX2SetVertexUniformReg(uint32_t offset,
    if (loop) {
       auto id = static_cast<Register>(Register::SQ_LOOP_CONST_VS_0 + 4 * loop);
       internal::writePM4(SetLoopConst { id, data[0] });
+      offset &= 0x7fff;
    }
 
-   auto alu = offset & 0x7fff;
-   auto id = static_cast<Register>(Register::SQ_ALU_CONSTANT0_256 + 4 * alu);
-
-   // Custom write packet so we can endian swap data
-   auto totalSize = 2 + count;
-   auto buffer = internal::getCommandBuffer(totalSize);
-
-   auto writer = latte::pm4::PacketWriter {
-      buffer->buffer.getRawPointer(),
-      buffer->curSize,
-      SetAluConsts::Opcode,
-      totalSize
-   };
-
-   writer.REG_OFFSET(id, Register::AluConstRegisterBase);
-
-   for (auto i = 0u; i < count; ++i) {
-      writer(data[i].value());
-   }
+   auto id = static_cast<Register>(Register::SQ_ALU_CONSTANT0_256 + 4 * offset);
+   internal::writePM4(SetAluConstsBE { id, { data.get(), count } });
 }
 
 void
@@ -360,31 +344,14 @@ GX2SetPixelUniformReg(uint32_t offset,
                       virt_ptr<uint32_t> data)
 {
    auto loop = offset >> 16;
-
    if (loop) {
       auto id = static_cast<Register>(Register::SQ_LOOP_CONST_PS_0 + 4 * loop);
       internal::writePM4(SetLoopConst { id, data[0] });
+      offset &= 0x7fff;
    }
 
-   auto alu = offset & 0x7fff;
-   auto id = static_cast<Register>(Register::SQ_ALU_CONSTANT0_0 + 4 * alu);
-
-   // Custom write packet so we can endian swap data
-   auto totalSize = 2 + count;
-   auto buffer = internal::getCommandBuffer(totalSize);
-
-   auto writer = latte::pm4::PacketWriter {
-      buffer->buffer.getRawPointer(),
-      buffer->curSize,
-      SetAluConsts::Opcode,
-      totalSize
-   };
-
-   writer.REG_OFFSET(id, Register::AluConstRegisterBase);
-
-   for (auto i = 0u; i < count; ++i) {
-      writer(data[i].value());
-   }
+   auto id = static_cast<Register>(Register::SQ_ALU_CONSTANT0_0 + 4 * offset);
+   internal::writePM4(SetAluConstsBE { id, { data.get(), count } });
 }
 
 void

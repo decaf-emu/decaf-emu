@@ -1,6 +1,10 @@
 #pragma once
 #include "latte/latte_pm4_commands.h"
+#include "gpu_ringbuffer.h"
+
+#include <array>
 #include <libcpu/pointer.h>
+#include <vector>
 
 using namespace latte::pm4;
 
@@ -61,7 +65,7 @@ protected:
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
    void setRegister(latte::Register reg, uint32_t value);
-   void runCommandBuffer(uint32_t *buffer, uint32_t size);
+   void runCommandBuffer(const gpu::ringbuffer::Buffer &buffer);
 
    template<typename Type>
    Type getRegister(uint32_t id)

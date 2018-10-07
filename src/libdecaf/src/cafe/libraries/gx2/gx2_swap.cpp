@@ -1,7 +1,7 @@
 #include "gx2.h"
 #include "gx2_debug.h"
 #include "gx2_event.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_internal_pm4cap.h"
 #include "gx2_surface.h"
 #include "gx2_swap.h"

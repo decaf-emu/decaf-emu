@@ -89,7 +89,7 @@ Driver::fenceWaiterThread()
 
          waiter->isCompleted = true;
          mFencesWaiting.pop_front();
-         gpu::ringbuffer::awaken();
+         gpu::ringbuffer::wake();
       } else {
          lock.lock();
       }

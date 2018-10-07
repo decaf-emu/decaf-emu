@@ -1,6 +1,6 @@
 #include "gx2.h"
 #include "gx2_clear.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_surface.h"
 
 #include "cafe/libraries/coreinit/coreinit_memory.h"
