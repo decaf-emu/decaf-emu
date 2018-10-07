@@ -21,13 +21,27 @@ Driver::getRenderPassDesc()
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
 
-      if (i < numPsExports) {
-         desc.colorTargets[i] = RenderPassDesc::ColorTarget {
-            true,
-            cb_color_info.FORMAT(),
-            cb_color_info.NUMBER_TYPE(),
-            1
-         };
+      auto isValidBuffer = true;
+      isValidBuffer &= !!cb_color_base.BASE_256B();
+      isValidBuffer &= (cb_color_info.FORMAT() != latte::CB_FORMAT::COLOR_INVALID);
+
+      if (i < numPsExports && isValidBuffer) {
+         if (isValidBuffer) {
+            desc.colorTargets[i] = RenderPassDesc::ColorTarget {
+               true,
+               cb_color_info.FORMAT(),
+               cb_color_info.NUMBER_TYPE(),
+               1
+            };
+         } else {
+            // This export is valid, but the color write is ignored
+            desc.colorTargets[i] = RenderPassDesc::ColorTarget {
+               true,
+               latte::CB_FORMAT::COLOR_INVALID,
+               latte::CB_NUMBER_TYPE::UNORM,
+               0
+            };
+         }
       } else {
          desc.colorTargets[i] = RenderPassDesc::ColorTarget {
             false,
@@ -38,24 +52,37 @@ Driver::getRenderPassDesc()
       }
    }
 
-   auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
-   auto zEnable = db_depth_control.Z_ENABLE();
-   auto stencilEnable = db_depth_control.STENCIL_ENABLE();
-   auto depthEnabled = zEnable || stencilEnable;
+   {
+      auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
+      auto zEnable = db_depth_control.Z_ENABLE();
+      auto stencilEnable = db_depth_control.STENCIL_ENABLE();
+      auto depthEnabled = zEnable || stencilEnable;
 
-   auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
-   auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
+      auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
+      auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
 
-   if (depthEnabled && db_depth_base.BASE_256B() != 0) {
-      desc.depthTarget = RenderPassDesc::DepthStencilTarget {
-         true,
-         db_depth_info.FORMAT()
-      };
-   } else {
-      desc.depthTarget = {
-         false,
-         latte::DB_FORMAT::DEPTH_INVALID
-      };
+      auto isValidBuffer = true;
+      isValidBuffer &= !!db_depth_base.BASE_256B();
+      isValidBuffer &= (db_depth_info.FORMAT() != latte::DB_FORMAT::DEPTH_INVALID);
+
+      if (depthEnabled) {
+         if (isValidBuffer) {
+            desc.depthTarget = RenderPassDesc::DepthStencilTarget {
+               true,
+               db_depth_info.FORMAT()
+            };
+         } else {
+            desc.depthTarget = {
+               true,
+               latte::DB_FORMAT::DEPTH_INVALID
+            };
+         }
+      } else {
+         desc.depthTarget = {
+            false,
+            latte::DB_FORMAT::DEPTH_INVALID
+         };
+      }
    }
 
    return desc;
@@ -87,7 +114,7 @@ Driver::checkCurrentRenderPass()
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       auto &colorTarget = currentDesc->colorTargets[i];
 
-      if (!colorTarget.isEnabled) {
+      if (!colorTarget.isEnabled || colorTarget.format == latte::CB_FORMAT::COLOR_INVALID) {
          colorAttachmentRefs[i].attachment = VK_ATTACHMENT_UNUSED;
          colorAttachmentRefs[i].layout = vk::ImageLayout::eColorAttachmentOptimal;
 
@@ -116,13 +143,15 @@ Driver::checkCurrentRenderPass()
       foundRp->colorAttachmentIndexes[i] = attachmentIndex;
    }
 
-   if (!currentDesc->depthTarget.isEnabled) {
-      depthAttachmentRef.attachment = VK_ATTACHMENT_UNUSED;
-      depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-      foundRp->depthAttachmentIndex = -1;
-   } else {
+   do {
       auto depthTarget = currentDesc->depthTarget;
+      if (!depthTarget.isEnabled || depthTarget.format == latte::DB_FORMAT::DEPTH_INVALID) {
+         depthAttachmentRef.attachment = VK_ATTACHMENT_UNUSED;
+         depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+         foundRp->depthAttachmentIndex = -1;
+         continue;
+      }
 
       auto dataFormat = latte::getDepthBufferDataFormat(depthTarget.format);
       auto vulkanFormat = getSurfaceFormat(dataFormat.format, dataFormat.numFormat, dataFormat.formatComp, dataFormat.degamma, true);
@@ -143,7 +172,7 @@ Driver::checkCurrentRenderPass()
       depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
       foundRp->depthAttachmentIndex = attachmentIndex;
-   }
+   } while (false);
 
    vk::SubpassDescription genericSubpass;
    genericSubpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
