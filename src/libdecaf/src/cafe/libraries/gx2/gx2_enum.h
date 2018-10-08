@@ -533,6 +533,7 @@ ENUM_BEG(GX2TossStage, uint32_t)
 ENUM_END(GX2TossStage)
 
 ENUM_BEG(GX2TVRenderMode, uint32_t)
+   ENUM_VALUE(Disabled,          0)
    ENUM_VALUE(Standard480p,      1)
    ENUM_VALUE(Wide480p,          2)
    ENUM_VALUE(Wide720p,          3)

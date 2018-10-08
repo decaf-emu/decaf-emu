@@ -41,7 +41,6 @@ Library::registerSymbols()
    registerShadersSymbols();
    registerStateSymbols();
    registerSurfaceSymbols();
-   registerSwapSymbols();
    registerTempSymbols();
    registerTessellationSymbols();
    registerTextureSymbols();

@@ -193,8 +193,8 @@ private:
    void
    writeDisplayInfo()
    {
-      auto tvInfo = getTvBufferInfo();
-      if (tvInfo->buffer) {
+      auto tvScanBuffer = getTvScanBuffer();
+      if (tvScanBuffer->image) {
          CapturePacket packet;
          packet.type = CapturePacket::SetBuffer;
          packet.size = sizeof(CaptureSetBuffer);
@@ -202,18 +202,18 @@ private:
 
          CaptureSetBuffer setBuffer;
          setBuffer.type = CaptureSetBuffer::TvBuffer;
-         setBuffer.address = OSEffectiveToPhysical(virt_cast<virt_addr>(tvInfo->buffer));
-         setBuffer.size = tvInfo->size;
-         setBuffer.renderMode = tvInfo->tvRenderMode;
-         setBuffer.surfaceFormat = tvInfo->surfaceFormat;
-         setBuffer.bufferingMode = tvInfo->bufferingMode;
-         setBuffer.width = tvInfo->width;
-         setBuffer.height = tvInfo->height;
+         setBuffer.address = OSEffectiveToPhysical(virt_cast<virt_addr>(tvScanBuffer->image));
+         setBuffer.size = tvScanBuffer->imageSize;
+         setBuffer.renderMode = GX2TVRenderMode::Wide1080p;
+         setBuffer.surfaceFormat = tvScanBuffer->format;
+         setBuffer.bufferingMode = GX2BufferingMode::Double;
+         setBuffer.width = tvScanBuffer->width;
+         setBuffer.height = tvScanBuffer->height;
          writeData(&setBuffer, packet.size);
       }
 
-      auto drcInfo = getDrcBufferInfo();
-      if (drcInfo->buffer) {
+      auto drcScanBuffer = getDrcScanBuffer();
+      if (drcScanBuffer->image) {
          CapturePacket packet;
          packet.type = CapturePacket::SetBuffer;
          packet.size = sizeof(CaptureSetBuffer);
@@ -221,13 +221,13 @@ private:
 
          CaptureSetBuffer setBuffer;
          setBuffer.type = CaptureSetBuffer::DrcBuffer;
-         setBuffer.address = OSEffectiveToPhysical(virt_cast<virt_addr>(drcInfo->buffer));
-         setBuffer.size = drcInfo->size;
-         setBuffer.renderMode = drcInfo->drcRenderMode;
-         setBuffer.surfaceFormat = drcInfo->surfaceFormat;
-         setBuffer.bufferingMode = drcInfo->bufferingMode;
-         setBuffer.width = drcInfo->width;
-         setBuffer.height = drcInfo->height;
+         setBuffer.address = OSEffectiveToPhysical(virt_cast<virt_addr>(drcScanBuffer->image));
+         setBuffer.size = drcScanBuffer->imageSize;
+         setBuffer.renderMode = GX2DrcRenderMode::Single;
+         setBuffer.surfaceFormat = drcScanBuffer->format;
+         setBuffer.bufferingMode = GX2BufferingMode::Double;
+         setBuffer.width = drcScanBuffer->width;
+         setBuffer.height = drcScanBuffer->height;
          writeData(&setBuffer, packet.size);
       }
    }

@@ -35,7 +35,6 @@ private:
    void registerShadersSymbols();
    void registerStateSymbols();
    void registerSurfaceSymbols();
-   void registerSwapSymbols();
    void registerTempSymbols();
    void registerTessellationSymbols();
    void registerTextureSymbols();
