@@ -1,9 +1,11 @@
 #include "gx2.h"
+#include "gx2_debugcapture.h"
 #include "gx2_memory.h"
 #include "gx2_shaders.h"
 #include "gx2r_buffer.h"
 #include "gx2r_memory.h"
 #include "gx2r_resource.h"
+
 #include "cafe/libraries/coreinit/coreinit_cache.h"
 #include "cafe/libraries/cafe_hle_stub.h"
 
@@ -57,7 +59,7 @@ GX2RCreateBuffer(virt_ptr<GX2RBuffer> buffer)
       return FALSE;
    }
 
-   // TODO: GX2NotifyMemAlloc(buffer->buffer, size, align);
+   GX2NotifyMemAlloc(buffer->buffer, size, align);
 
    // Check if we need to invalidate the buffer
    if ((buffer->flags & GX2RResourceFlags::UsageGpuWrite) ||
@@ -86,7 +88,8 @@ GX2RCreateBufferUserMemory(virt_ptr<GX2RBuffer> buffer,
                         buffer->elemCount * buffer->elemSize);
    }
 
-   // TODO: GX2NotifyMemAlloc(buffer->buffer, size, GX2RGetBufferAlignment(buffer->flags));
+   GX2NotifyMemAlloc(buffer->buffer, size,
+                     GX2RGetBufferAlignment(buffer->flags));
    return TRUE;
 }
 
@@ -105,7 +108,7 @@ GX2RDestroyBufferEx(virt_ptr<GX2RBuffer> buffer,
       buffer->buffer = nullptr;
    }
 
-   // TODO: GX2NotifyMemFree(buffer->buffer)
+   GX2NotifyMemFree(buffer->buffer);
 }
 
 void

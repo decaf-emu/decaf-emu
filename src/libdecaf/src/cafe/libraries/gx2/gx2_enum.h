@@ -168,6 +168,10 @@ ENUM_BEG(GX2ClearFlags, uint32_t)
    ENUM_VALUE(Stencil,                 2)
 ENUM_END(GX2ClearFlags)
 
+ENUM_BEG(GX2DebugCaptureInterfaceVersion, uint32_t)
+   ENUM_VALUE(Version1,                1)
+ENUM_END(GX2DebugCaptureInterfaceVersion)
+
 ENUM_BEG(GX2DrcRenderMode, uint32_t)
    ENUM_VALUE(Disabled,                0)
    ENUM_VALUE(Single,                  1)

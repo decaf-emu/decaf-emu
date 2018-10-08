@@ -1,4 +1,5 @@
 #include "gx2.h"
+#include "gx2_debugcapture.h"
 #include "gx2_displaylist.h"
 #include "gx2_event.h"
 #include "gx2_cbpool.h"
@@ -29,8 +30,8 @@ struct StaticCbPoolData
 {
    be2_struct<internal::ActiveCommandBuffer> mainCoreCommandBuffer;
    be2_array<internal::ActiveCommandBuffer, 3> activeCommandBuffer;
-   be2_val<virt_addr> gpuLastReadCommandBuffer;
    be2_val<BOOL> profilingWasEnabledBeforeUserDisplayList;
+   be2_val<virt_addr> gpuLastReadCommandBuffer;
    be2_val<GX2Timestamp> lastSubmittedTimestamp;
 };
 
@@ -414,10 +415,18 @@ queueCommandBuffer(virt_ptr<uint32_t> cbBase,
 
    captureCommandBuffer(submitCommand,
                         submitCommandNumWords);
-   TCLSubmitToRing(submitCommand,
-                   submitCommandNumWords,
-                   submitFlags,
-                   virt_addrof(sCbPoolData->lastSubmittedTimestamp));
+
+   if (!debugCaptureEnabled()) {
+      TCLSubmitToRing(submitCommand,
+                      submitCommandNumWords,
+                      submitFlags,
+                      virt_addrof(sCbPoolData->lastSubmittedTimestamp));
+   } else {
+      debugCaptureSubmit(submitCommand,
+                         submitCommandNumWords,
+                         submitFlags,
+                         virt_addrof(sCbPoolData->lastSubmittedTimestamp));
+   }
 }
 
 
@@ -453,6 +462,34 @@ flushCommandBuffer(uint32_t requiredNumWords,
       allocateCommandBuffer(requiredNumWords);
       decaf_check(requiredNumWords <= cb->bufferSizeWords - cb->bufferPosWords);
    }
+}
+
+
+/**
+ * Inform debug capture about the pointers that we send over PM4 for commands
+ * such as EVENT_WRITE_EOP.
+ */
+void
+debugCaptureCbPoolPointers()
+{
+   debugCaptureAlloc(virt_addrof(sCbPoolData->gpuLastReadCommandBuffer),
+                     sizeof(sCbPoolData->gpuLastReadCommandBuffer), 8);
+
+   debugCaptureAlloc(virt_addrof(sCbPoolData->lastSubmittedTimestamp),
+                     sizeof(sCbPoolData->lastSubmittedTimestamp), 8);
+
+   debugCaptureInvalidate(virt_addrof(sCbPoolData->gpuLastReadCommandBuffer),
+                          sizeof(sCbPoolData->gpuLastReadCommandBuffer));
+
+   debugCaptureInvalidate(virt_addrof(sCbPoolData->lastSubmittedTimestamp),
+                          sizeof(sCbPoolData->lastSubmittedTimestamp));
+}
+
+void
+debugCaptureCbPoolPointersFree()
+{
+   debugCaptureFree(virt_addrof(sCbPoolData->gpuLastReadCommandBuffer));
+   debugCaptureFree(virt_addrof(sCbPoolData->lastSubmittedTimestamp));
 }
 
 } // namespace internal

@@ -1,4 +1,5 @@
 #include "gx2.h"
+#include "gx2_debugcapture.h"
 #include "gx2_displaylist.h"
 #include "gx2_enum_string.h"
 #include "gx2_fetchshader.h"
@@ -31,7 +32,13 @@ GX2BeginDisplayListEx(virt_ptr<void> displayList,
 uint32_t
 GX2EndDisplayList(virt_ptr<void> displayList)
 {
-   return internal::endUserCommandBuffer(virt_cast<uint32_t *>(displayList));
+   auto size = internal::endUserCommandBuffer(virt_cast<uint32_t *>(displayList));
+
+   if (internal::debugCaptureEnabled()) {
+      internal::debugCaptureInvalidate(displayList, size);
+   }
+
+   return size;
 }
 
 BOOL

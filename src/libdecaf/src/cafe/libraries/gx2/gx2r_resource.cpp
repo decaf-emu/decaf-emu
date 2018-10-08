@@ -82,6 +82,18 @@ gx2rFree(GX2RResourceFlags flags,
                 buffer);
 }
 
+GX2RAllocFuncPtr
+getDefaultGx2rAlloc()
+{
+   return GX2RDefaultAlloc;
+}
+
+GX2RFreeFuncPtr
+getDefaultGx2rFree()
+{
+   return GX2RDefaultFree;
+}
+
 void
 initialiseGx2rAllocator()
 {

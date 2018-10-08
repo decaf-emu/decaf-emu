@@ -1,13 +1,15 @@
-#include "decaf_config.h"
 #include "gx2.h"
 #include "gx2_contextstate.h"
+#include "gx2_debugcapture.h"
 #include "gx2_displaylist.h"
 #include "gx2_event.h"
 #include "gx2_cbpool.h"
 #include "gx2_internal_pm4cap.h"
 #include "gx2_state.h"
+
 #include "cafe/libraries/coreinit/coreinit_core.h"
 #include "cafe/libraries/coreinit/coreinit_memdefaultheap.h"
+#include "decaf_config.h"
 
 #include <common/log.h>
 #include <common/platform_dir.h>
@@ -109,6 +111,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
 void
 GX2Shutdown()
 {
+   if (internal::debugCaptureEnabled()) {
+      internal::debugCaptureShutdown();
+   }
 }
 
 void

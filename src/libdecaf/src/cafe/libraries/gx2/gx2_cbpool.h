@@ -85,6 +85,11 @@ queueCommandBuffer(virt_ptr<uint32_t> cbBase,
                    virt_ptr<virt_addr> gpuLastReadPointer,
                    BOOL writeConfirmTimestamp);
 
+void
+debugCaptureCbPoolPointers();
+
+void
+debugCaptureCbPoolPointersFree();
 
 /**
  * Write the pm4 serialiser to the given buffer

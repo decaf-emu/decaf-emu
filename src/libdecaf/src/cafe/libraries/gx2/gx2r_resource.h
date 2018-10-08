@@ -45,6 +45,12 @@ void
 gx2rFree(GX2RResourceFlags flags,
          virt_ptr<void> buffer);
 
+GX2RAllocFuncPtr
+getDefaultGx2rAlloc();
+
+GX2RFreeFuncPtr
+getDefaultGx2rFree();
+
 } // namespace internal
 
 /** @} */

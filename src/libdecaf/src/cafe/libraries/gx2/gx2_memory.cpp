@@ -1,8 +1,9 @@
 #include "gx2.h"
 #include "gx2_aperture.h"
+#include "gx2_cbpool.h"
+#include "gx2_debugcapture.h"
 #include "gx2_memory.h"
 #include "gx2_state.h"
-#include "gx2_cbpool.h"
 
 #include "cafe/libraries/coreinit/coreinit_cache.h"
 #include "cafe/libraries/coreinit/coreinit_memory.h"
@@ -38,6 +39,10 @@ GX2Invalidate(GX2InvalidateMode mode,
 
    if (mode & GX2InvalidateMode::CPU) {
       DCFlushRange(addr, size);
+
+      if (internal::debugCaptureEnabled()) {
+         internal::debugCaptureInvalidate(buffer, size);
+      }
    }
 
    if (mode != GX2InvalidateMode::CPU) {
