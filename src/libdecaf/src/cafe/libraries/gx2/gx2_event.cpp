@@ -1,7 +1,10 @@
 #include "gx2.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_event.h"
 #include "gx2_state.h"
+
+#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_alarm.h"
 #include "cafe/libraries/coreinit/coreinit_memheap.h"
 #include "cafe/libraries/coreinit/coreinit_mutex.h"
@@ -9,19 +12,15 @@
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/coreinit/coreinit_time.h"
-#include "cafe/libraries/coreinit/coreinit_memory.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
 
 #include <atomic>
 #include <chrono>
 #include <common/log.h>
 
-using namespace cafe::coreinit;
-using namespace latte;
-using namespace latte::pm4;
-
 namespace cafe::gx2
 {
+
+using namespace cafe::coreinit;
 
 struct StaticEventData
 {
@@ -31,16 +30,13 @@ struct StaticEventData
       virt_ptr<void> data;
    };
 
-   std::atomic<int64_t> lastVsync;
-   std::atomic<int64_t> lastFlip;
-   std::atomic<int64_t> lastSubmittedTimestamp;
-   std::atomic<int64_t> retiredTimestamp;
+   std::atomic<OSTime> lastVsync;
+   std::atomic<OSTime> lastFlip;
    std::atomic<uint32_t> swapCount;
    std::atomic<uint32_t> flipCount;
    std::atomic<uint32_t> framesReady;
    be2_struct<OSThreadQueue> vsyncThreadQueue;
    be2_struct<OSThreadQueue> flipThreadQueue;
-   be2_struct<OSThreadQueue> waitTimeStampQueue;
    be2_struct<OSAlarm> vsyncAlarm;
    be2_array<EventCallbackData, GX2EventType::Max> eventCallbacks;
 };
@@ -98,26 +94,6 @@ GX2GetEventCallback(GX2EventType type,
 
 
 /**
- * Get the timestamp of the last command buffer processed by the driver.
- */
-GX2Timestamp
-GX2GetRetiredTimeStamp()
-{
-   return sEventData->retiredTimestamp.load(std::memory_order_acquire);
-}
-
-
-/**
- * Get the timestamp of the last submitted command buffer.
- */
-GX2Timestamp
-GX2GetLastSubmittedTimeStamp()
-{
-   return sEventData->lastSubmittedTimestamp.load(std::memory_order_acquire);
-}
-
-
-/**
  * Return the current swap status.
  *
  * \param outSwapCount
@@ -127,16 +103,16 @@ GX2GetLastSubmittedTimeStamp()
  * Outputs the number of swaps performed.
  *
  * \param outLastFlip
- * Outputs the timestamp of the last flip.
+ * Outputs the time of the last flip.
  *
  * \param outLastVsync
- * Outputs the timestamp of the last vsync.
+ * Outputs the time of the last vsync.
  */
 void
 GX2GetSwapStatus(virt_ptr<uint32_t> outSwapCount,
                  virt_ptr<uint32_t> outFlipCount,
-                 virt_ptr<GX2Timestamp> outLastFlip,
-                 virt_ptr<GX2Timestamp> outLastVsync)
+                 virt_ptr<OSTime> outLastFlip,
+                 virt_ptr<OSTime> outLastVsync)
 {
    if (outSwapCount) {
       *outSwapCount = sEventData->swapCount.load(std::memory_order_acquire);
@@ -152,86 +128,6 @@ GX2GetSwapStatus(virt_ptr<uint32_t> outSwapCount,
 
    if (outLastVsync) {
       *outLastVsync = sEventData->lastVsync.load(std::memory_order_acquire);
-   }
-}
-
-
-/**
- * Wait until a command buffer submitted with a timestamp has been processed
- * by the driver.
- */
-BOOL
-GX2WaitTimeStamp(GX2Timestamp time)
-{
-   coreinit::internal::lockScheduler();
-
-   while (sEventData->retiredTimestamp.load(std::memory_order_acquire) < time) {
-      coreinit::internal::sleepThreadNoLock(virt_addrof(sEventData->waitTimeStampQueue));
-      coreinit::internal::rescheduleSelfNoLock();
-   }
-
-   coreinit::internal::unlockScheduler();
-   return TRUE;
-}
-
-
-/**
- * Submit a user timestamp to the GPU.
- */
-void
-GX2SubmitUserTimeStamp(virt_ptr<GX2Timestamp> dst,
-                       GX2Timestamp timestamp,
-                       GX2PipeEvent type,
-                       BOOL triggerInterrupt)
-{
-   auto addr = OSEffectiveToPhysical(virt_cast<virt_addr>(dst));
-   auto dataLo = static_cast<uint32_t>(timestamp & 0xFFFFFFFFu);
-   auto dataHi = static_cast<uint32_t>(timestamp >> 32);
-
-   switch (type) {
-   case GX2PipeEvent::Top:
-   {
-      internal::writePM4(MemWrite {
-         MW_ADDR_LO::get(0)
-            .ADDR_LO(addr >> 2)
-            .ENDIAN_SWAP(CB_ENDIAN::SWAP_8IN32),
-         MW_ADDR_HI::get(0)
-            .CNTR_SEL(MW_WRITE_DATA),
-         dataLo, dataHi
-      });
-
-      if (triggerInterrupt) {
-         internal::writeType0(Register::CP_INT_STATUS,
-                              CP_INT_STATUS::get(0)
-                                 .IB1_INT_STAT(true)
-                                 .value);
-      }
-      break;
-   }
-   case GX2PipeEvent::Bottom:
-   case GX2PipeEvent::BottomAfterFlush:
-   {
-      internal::writePM4(EventWriteEOP {
-         VGT_EVENT_INITIATOR::get(0)
-            .EVENT_TYPE(type == GX2PipeEvent::BottomAfterFlush ?
-                           VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_TS_EVENT :
-                           VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS)
-            .EVENT_INDEX(VGT_EVENT_INDEX::TIMESTAMP),
-         EW_ADDR_LO::get(0)
-            .ADDR_LO(addr >> 2)
-            .ENDIAN_SWAP(CB_ENDIAN::SWAP_8IN32),
-         EWP_ADDR_HI::get(0)
-            .DATA_SEL(EWP_DATA_64)
-            .INT_SEL(triggerInterrupt ?
-                        EWP_INT_SEL::EWP_INT_WRITE_CONFIRM :
-                        EWP_INT_SEL::EWP_INT_NONE),
-         dataLo, dataHi
-      });
-      break;
-   }
-   default:
-      decaf_abort(fmt::format("Unexpected GX2SubmitUserTimestamp type {}",
-                              type));
    }
 }
 
@@ -273,7 +169,6 @@ initEvents()
 {
    OSInitThreadQueue(virt_addrof(sEventData->flipThreadQueue));
    OSInitThreadQueue(virt_addrof(sEventData->vsyncThreadQueue));
-   OSInitThreadQueue(virt_addrof(sEventData->waitTimeStampQueue));
 
    auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) / 60;
    OSCreateAlarm(virt_addrof(sEventData->vsyncAlarm));
@@ -347,37 +242,6 @@ displayListOverrun(virt_ptr<void> list,
 
 
 /**
- * This is called by the GPU retire interrupt handler.
- * Will wakeup any threads waiting for a timestamp.
- */
-void
-handleGpuRetireInterrupt()
-{
-   OSWakeupThread(virt_addrof(sEventData->waitTimeStampQueue));
-}
-
-
-/**
- * Update the retired timestamp.
- */
-void
-setRetiredTimestamp(GX2Timestamp timestamp)
-{
-   sEventData->retiredTimestamp.store(timestamp, std::memory_order_release);
-   cpu::interrupt(gx2::internal::getMainCoreId(), cpu::GPU_RETIRE_INTERRUPT);
-}
-
-
-/**
- * Update the last submitted timestamp.
- */
-void
-setLastSubmittedTimestamp(GX2Timestamp timestamp)
-{
-   sEventData->lastSubmittedTimestamp.store(timestamp, std::memory_order_release);
-}
-
-/**
  * Called when a swap is requested with GX2SwapBuffers.
  */
 void
@@ -406,10 +270,6 @@ Library::registerEventSymbols()
    RegisterFunctionExport(GX2WaitForFlip);
    RegisterFunctionExport(GX2SetEventCallback);
    RegisterFunctionExport(GX2GetEventCallback);
-   RegisterFunctionExport(GX2GetRetiredTimeStamp);
-   RegisterFunctionExport(GX2GetLastSubmittedTimeStamp);
-   RegisterFunctionExport(GX2WaitTimeStamp);
-   RegisterFunctionExport(GX2SubmitUserTimeStamp);
    RegisterFunctionExport(GX2GetSwapStatus);
 
    RegisterDataInternal(sEventData);

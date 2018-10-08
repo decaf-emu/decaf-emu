@@ -393,6 +393,21 @@ struct SetAluConsts
    }
 };
 
+struct SetAluConstsBE
+{
+   static const auto Opcode = IT_OPCODE::SET_ALU_CONST;
+
+   latte::Register id;
+   gsl::span<be2_val<uint32_t>> values;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se.REG_OFFSET(id, latte::Register::AluConstRegisterBase);
+      se(values);
+   }
+};
+
 struct SetConfigReg
 {
    static const auto Opcode = IT_OPCODE::SET_CONFIG_REG;

@@ -74,10 +74,13 @@ getCommandBuffer(uint32_t size)
 static void
 flushCommandBuffer()
 {
+   // TODO: Move to gpu::ringbuffer::write()
+#if 0
    gpu::ringbuffer::submit(sActiveCommandBuffer,
                            sActiveCommandBuffer->buffer,
                            sActiveCommandBuffer->numWords);
    sActiveCommandBuffer = nullptr;
+#endif
 }
 
 template<typename Type>
@@ -100,14 +103,6 @@ writePM4(const Type &value)
       totalSize
    };
    ncValue.serialise(writer);
-}
-
-static void
-onRetireCallback(void *context)
-{
-   auto cb = reinterpret_cast<ActiveCommandBuffer *>(context);
-   cafe::TinyHeap_Free(sReplayHeap, cb->buffer);
-   delete cb;
 }
 
 class PM4Parser
@@ -245,7 +240,10 @@ private:
                   buffer,
                   sizeBytes);
 
+      // TODO: Move to gpu::ringbuffer::write
+#if 0
       gpu::ringbuffer::submit(ab, ab->buffer, ab->numWords);
+#endif
       return scanCommandBuffer(buffer, ab->numWords);
    }
 
@@ -619,9 +617,6 @@ SDLWindow::run(const std::string &tracePath)
                         0x100,
                         &allocPtr);
    sCommandBufferPool = allocPtr;
-
-   // Setup GPU retire callback
-   gpu::setRetireCallback(onRetireCallback);
 
    // Setup graphics driver
    auto graphicsDriver = mRenderer->getDecafDriver();

@@ -345,7 +345,7 @@ public:
    stopFrameCapture() override;
 
 private:
-   void executeBuffer(const gpu::ringbuffer::Item &item);
+   void executeBuffer(const gpu::ringbuffer::Buffer &buffer);
 
    void decafSetBuffer(const latte::pm4::DecafSetBuffer &data) override;
    void decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data) override;

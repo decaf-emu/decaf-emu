@@ -2,7 +2,7 @@
 #include "gx2_displaylist.h"
 #include "gx2_enum_string.h"
 #include "gx2_fetchshader.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_shaders.h"
 #include "gx2_state.h"
 
@@ -23,38 +23,39 @@ GX2BeginDisplayListEx(virt_ptr<void> displayList,
                       uint32_t bytes,
                       BOOL profilingEnabled)
 {
-   internal::beginUserCommandBuffer(virt_cast<uint32_t *>(displayList), bytes / 4);
+   internal::beginUserCommandBuffer(virt_cast<uint32_t *>(displayList),
+                                    bytes,
+                                    profilingEnabled);
 }
 
 uint32_t
 GX2EndDisplayList(virt_ptr<void> displayList)
 {
-   return internal::endUserCommandBuffer(virt_cast<uint32_t *>(displayList)) * 4;
+   return internal::endUserCommandBuffer(virt_cast<uint32_t *>(displayList));
 }
 
 BOOL
 GX2GetDisplayListWriteStatus()
 {
-   return internal::getUserCommandBuffer(nullptr, nullptr) ? TRUE : FALSE;
+   return internal::getActiveCommandBuffer()->isUserBuffer;
 }
 
 BOOL
 GX2GetCurrentDisplayList(virt_ptr<virt_ptr<void>> outDisplayList,
                          virt_ptr<uint32_t> outSize)
 {
-   auto displayList = virt_ptr<uint32_t> { nullptr };
-   auto size = uint32_t { 0 };
+   auto cb = internal::getActiveCommandBuffer();
 
-   if (!internal::getUserCommandBuffer(&displayList, &size)) {
+   if (!cb->isUserBuffer) {
       return FALSE;
    }
 
    if (outDisplayList) {
-      *outDisplayList = displayList;
+      *outDisplayList = cb->buffer;
    }
 
    if (outSize) {
-      *outSize = size;
+      *outSize = 4 * cb->bufferSizeWords;
    }
 
    return TRUE;
@@ -64,8 +65,15 @@ void
 GX2DirectCallDisplayList(virt_ptr<void> displayList,
                          uint32_t bytes)
 {
-   GX2Flush();
-   internal::queueDisplayList(virt_cast<uint32_t *>(displayList), bytes / 4);
+   auto cb = internal::getActiveCommandBuffer();
+   if (!cb->isUserBuffer) {
+      internal::flushCommandBuffer(256, FALSE);
+   }
+
+   internal::queueCommandBuffer(virt_cast<uint32_t *>(displayList),
+                                bytes / sizeof(uint32_t),
+                                nullptr,
+                                TRUE);
 }
 
 void
@@ -82,13 +90,11 @@ void
 GX2CopyDisplayList(virt_ptr<void> displayList,
                    uint32_t bytes)
 {
-   // Copy the display list to the current command buffer
-   auto words = bytes / 4;
-   auto dst = gx2::internal::getCommandBuffer(words);
-   std::memcpy(dst->buffer.getRawPointer() + dst->curSize,
-               displayList.getRawPointer(),
-               bytes);
-   dst->curSize += words;
+   auto numWords = bytes / 4;
+   auto cb = internal::getWriteCommandBuffer(numWords);
+   cb->writeGatherPtr.write(virt_cast<uint32_t *>(displayList), numWords);
+   cb->cmdSize = numWords;
+   decaf_check(cb->cmdSize == cb->cmdSizeTarget);
 }
 
 void

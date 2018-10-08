@@ -51,7 +51,7 @@ submitLoaderRequest(virt_ptr<IPCKDriver> driver,
 ios::Error
 ipckDriverUserOpen(uint32_t numReplies,
                    virt_ptr<IPCKDriverReplyQueue> replyQueue,
-                   InterruptHandlerFn handler)
+                   IPCKUserInterruptHandlerFn handler)
 {
    auto driver = internal::ipckDriverGetInstance();
    if (!driver) {
@@ -721,8 +721,8 @@ ipckDriverOpen()
    }
 
    driver->unk0x04++;
-   setUserModeInterruptHandler(driver->interruptType,
-                               ipckDriverHandleInterrupt);
+   setKernelInterruptHandler(driver->interruptType,
+                             ipckDriverHandleInterrupt);
 
    driver->state = IPCKDriverState::Open;
    return ios::Error::OK;

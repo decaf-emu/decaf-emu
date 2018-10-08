@@ -1,12 +1,25 @@
 #include "coreinit.h"
+#include "coreinit_context.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_scheduler.h"
 
+#include "cafe/cafe_ppc_interface_invoke.h"
 #include "cafe/kernel/cafe_kernel_exception.h"
+#include "cafe/kernel/cafe_kernel_interrupts.h"
+
 #include <libcpu/cpu.h>
 
 namespace cafe::coreinit
 {
+
+struct StaticInterruptsData
+{
+   be2_array<OSUserInterruptHandler, OSInterruptType::Max> registeredHandlers;
+};
+
+static virt_ptr<StaticInterruptsData>
+sInterruptsData = nullptr;
+
 
 /**
  * Enable interrupts on current core.
@@ -62,6 +75,54 @@ OSIsInterruptEnabled()
    return cpu::this_core::interruptMask() == cpu::INTERRUPT_MASK;
 }
 
+
+static void
+userInterruptHandler(OSInterruptType type,
+                     virt_ptr<OSContext> interruptedContext,
+                     virt_ptr<void> userData)
+{
+   auto userHandler = virt_func_cast<OSUserInterruptHandler>(virt_cast<virt_addr>(userData));
+   if (userHandler) {
+      internal::disableScheduler();
+      cafe::invoke(cpu::this_core::state(),
+                   userHandler,
+                   type,
+                   interruptedContext);
+      internal::enableScheduler();
+   }
+}
+
+OSUserInterruptHandler
+OSSetInterruptHandler(OSInterruptType type,
+                      OSUserInterruptHandler handler)
+{
+   auto previous = OSUserInterruptHandler { nullptr };
+   if (type < OSInterruptType::Max) {
+      previous = sInterruptsData->registeredHandlers[type];
+      sInterruptsData->registeredHandlers[type] = handler;
+   }
+
+   kernel::setUserModeInterruptHandler(type,
+                                       &userInterruptHandler,
+                                       virt_cast<void *>(virt_func_cast<virt_addr>(handler)));
+   return previous;
+}
+
+
+void
+OSClearAndEnableInterrupt(OSInterruptType type)
+{
+   kernel::clearAndEnableInterrupt(type);
+}
+
+
+void
+OSDisableInterrupt(OSInterruptType type)
+{
+   kernel::disableInterrupt(type);
+}
+
+
 namespace internal
 {
 
@@ -90,6 +151,15 @@ Library::registerInterruptSymbols()
    RegisterFunctionExport(OSDisableInterrupts);
    RegisterFunctionExport(OSRestoreInterrupts);
    RegisterFunctionExport(OSIsInterruptEnabled);
+
+   RegisterFunctionExportName("__OSSetInterruptHandler",
+                              OSSetInterruptHandler);
+   RegisterFunctionExportName("__OSClearAndEnableInterrupt",
+                              OSClearAndEnableInterrupt);
+   RegisterFunctionExportName("__OSDisableInterrupt",
+                              OSDisableInterrupt);
+
+   RegisterDataInternal(sInterruptsData);
 }
 
 } // namespace cafe::coreinit

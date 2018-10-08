@@ -15,6 +15,12 @@ GX2Shutdown();
 void
 GX2Flush();
 
+uint32_t
+GX2GetGPUTimeout();
+
+void
+GX2SetGPUTimeout(uint32_t timeout);
+
 namespace internal
 {
 

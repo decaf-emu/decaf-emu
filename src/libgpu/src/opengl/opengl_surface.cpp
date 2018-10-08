@@ -662,7 +662,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
          }
          break;
       case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-         decaf_check(uploadDepth == 6);
+         //decaf_check(uploadDepth == 6);
       case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
          if (compressed) {
             gl::glCompressedTextureSubImage3D(buffer->active->object,

@@ -57,12 +57,16 @@ CHECK_OFFSET(IPCKDriverReplyQueue, 0x00, numReplies);
 CHECK_OFFSET(IPCKDriverReplyQueue, 0x04, replies);
 CHECK_SIZE(IPCKDriverReplyQueue, 0xC4);
 
+using IPCKUserInterruptHandlerFn =
+   void(*)(InterruptType type,
+           virt_ptr<Context> interruptedContext);
+
 #pragma pack(pop)
 
 ios::Error
 ipckDriverUserOpen(uint32_t numReplies,
                    virt_ptr<IPCKDriverReplyQueue> replyQueue,
-                   InterruptHandlerFn handler);
+                   IPCKUserInterruptHandlerFn handler);
 
 ios::Error
 ipckDriverUserClose();
@@ -179,8 +183,8 @@ struct IPCKDriver
    be2_array<virt_ptr<void>, NumRamPartitions> perProcessCallbackStacks;
    be2_array<virt_ptr<Context>, NumRamPartitions> perProcessCallbackContexts;
 #else
-   std::array<InterruptHandlerFn, NumRamPartitions> perProcessCallbacks;
-   PADDING(0x98 - (0x38 + sizeof(InterruptHandlerFn) * NumRamPartitions));
+   std::array<IPCKUserInterruptHandlerFn, NumRamPartitions> perProcessCallbacks;
+   PADDING(0x98 - (0x38 + sizeof(IPCKUserInterruptHandlerFn) * NumRamPartitions));
 #endif
    be2_array<ios::Error, NumRamPartitions> perProcessLastError;
    UNKNOWN(0x4);

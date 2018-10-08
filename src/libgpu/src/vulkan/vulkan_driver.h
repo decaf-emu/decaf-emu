@@ -395,7 +395,7 @@ protected:
    void addRetireTask(std::function<void()> fn);
 
    // Driver
-   void executeBuffer(const gpu::ringbuffer::Item &item);
+   void executeBuffer(const gpu::ringbuffer::Buffer &buffer);
    int32_t findMemoryType(uint32_t memoryTypeBits, vk::MemoryPropertyFlags props);
 
    // Viewports

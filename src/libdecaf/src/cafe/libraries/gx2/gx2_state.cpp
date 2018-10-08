@@ -3,7 +3,7 @@
 #include "gx2_contextstate.h"
 #include "gx2_displaylist.h"
 #include "gx2_event.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_internal_pm4cap.h"
 #include "gx2_state.h"
 #include "cafe/libraries/coreinit/coreinit_core.h"
@@ -25,6 +25,7 @@ struct StaticStateData
    be2_array<BOOL, 3> profilingEnabled;
    be2_val<GX2ProfileMode> profileMode;
    be2_val<GX2TossStage> tossStage;
+   be2_val<uint32_t> timeoutMS;
 };
 
 static virt_ptr<StaticStateData>
@@ -42,6 +43,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
 
    // Set main gx2 core
    sStateData->mainCoreId = OSGetCoreId();
+
+   // Set default GPU timeout to 10 seconds
+   sStateData->timeoutMS = 10u * 1000;
 
    // Parse attributes
    while (attributes && *attributes != GX2InitAttrib::End) {
@@ -88,10 +92,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
    // Initialise GPU callbacks
    gpu::setFlipCallback(&internal::onFlip);
    gpu::setSyncRegisterCallback(&internal::captureSyncGpuRegisters);
-   gpu::setRetireCallback(&internal::onRetireCommandBuffer);
 
    // Initialise command buffer pools
-   internal::initCommandBufferPool(cbPoolBase, cbPoolSize / 4);
+   internal::initialiseCommandBufferPool(cbPoolBase, cbPoolSize);
 
    // Initialise profiling settings
    internal::initialiseProfiling(profileMode, tossStage);
@@ -115,7 +118,19 @@ GX2Flush()
       gLog->error("GX2Flush called from within a display list");
    }
 
-   internal::flushCommandBuffer(0x100);
+   internal::flushCommandBuffer(0x100, TRUE);
+}
+
+uint32_t
+GX2GetGPUTimeout()
+{
+   return sStateData->timeoutMS;
+}
+
+void
+GX2SetGPUTimeout(uint32_t timeout)
+{
+   sStateData->timeoutMS = timeout;
 }
 
 namespace internal
@@ -245,6 +260,8 @@ Library::registerStateSymbols()
    RegisterFunctionExport(GX2Init);
    RegisterFunctionExport(GX2Shutdown);
    RegisterFunctionExport(GX2Flush);
+   RegisterFunctionExport(GX2GetGPUTimeout);
+   RegisterFunctionExport(GX2SetGPUTimeout);
 
    RegisterDataInternal(sStateData);
 }

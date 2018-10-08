@@ -1,5 +1,5 @@
 #include "gx2.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 #include "gx2_query.h"
 #include "gx2_memory.h"
 #include "cafe/libraries/coreinit/coreinit_cache.h"
@@ -12,9 +12,6 @@ using namespace latte::pm4;
 
 namespace cafe::gx2
 {
-
-static uint32_t
-gGpuTimeout = 10000;
 
 void
 GX2SampleTopGPUCycle(virt_ptr<int64_t> writeSamplePtr)
@@ -39,7 +36,8 @@ GX2SampleBottomGPUCycle(virt_ptr<int64_t> writeSamplePtr)
    *writeSamplePtr = -1;
 
    auto eventInitiator = latte::VGT_EVENT_INITIATOR::get(0)
-      .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS);
+      .EVENT_TYPE(latte::VGT_EVENT_TYPE::BOTTOM_OF_PIPE_TS)
+      .EVENT_INDEX(latte::VGT_EVENT_INDEX::TS);
 
    auto addrLo = EW_ADDR_LO::get(0)
       .ADDR_LO(addr >> 2)
@@ -55,18 +53,6 @@ uint64_t
 GX2GPUTimeToCPUTime(uint64_t time)
 {
    return time;
-}
-
-uint32_t
-GX2GetGPUTimeout()
-{
-   return gGpuTimeout;
-}
-
-void
-GX2SetGPUTimeout(uint32_t timeout)
-{
-   gGpuTimeout = timeout;
 }
 
 static void
@@ -321,8 +307,6 @@ Library::registerQuerySymbols()
    RegisterFunctionExport(GX2SampleTopGPUCycle);
    RegisterFunctionExport(GX2SampleBottomGPUCycle);
    RegisterFunctionExport(GX2GPUTimeToCPUTime);
-   RegisterFunctionExport(GX2GetGPUTimeout);
-   RegisterFunctionExport(GX2SetGPUTimeout);
 }
 
 } // namespace cafe::gx2

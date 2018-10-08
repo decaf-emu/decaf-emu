@@ -11,13 +11,10 @@ Driver::run()
    mRunning = true;
 
    while (mRunning) {
-      auto buffer = gpu::ringbuffer::waitForItem();
-
-      if (buffer.numWords) {
-         continue;
+      if (gpu::ringbuffer::wait()) {
+         auto items = gpu::ringbuffer::read();
+         // TODO: We need to actually process pm4 to do EVENT_WRITE_EOP for retired timestamps
       }
-
-      gpu::onRetire(buffer.context);
    }
 }
 
@@ -25,7 +22,7 @@ void
 Driver::stop()
 {
    mRunning = false;
-   gpu::ringbuffer::awaken();
+   gpu::ringbuffer::wake();
 }
 
 void

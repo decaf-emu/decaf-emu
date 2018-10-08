@@ -17,6 +17,7 @@ protected:
 
 private:
    void registerApertureSymbols();
+   void registerCbPoolSymbols();
    void registerClearSymbols();
    void registerContextStateSymbols();
    void registerCounterSymbols();

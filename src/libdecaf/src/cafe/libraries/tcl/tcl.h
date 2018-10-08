@@ -18,6 +18,7 @@ protected:
 private:
    void registerApertureSymbols();
    void registerDriverSymbols();
+   void registerInterruptHandlerSymbols();
    void registerRegisterSymbols();
    void registerRingSymbols();
 };

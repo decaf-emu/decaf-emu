@@ -90,7 +90,7 @@ exceptionContextFiberEntry(void *)
          dispatchException(ExceptionType::Decrementer, interruptedContext);
       }
 
-      if (flags & cpu::GPU_RETIRE_INTERRUPT) {
+      if (flags & cpu::GPU7_INTERRUPT) {
          dispatchExternalInterrupt(InterruptType::Gpu7, interruptedContext);
       }
 
@@ -312,16 +312,6 @@ initialiseExceptionHandlers()
       {
          coreinit::internal::disableScheduler();
          coreinit::internal::handleAlarmInterrupt(interruptedContext);
-         coreinit::internal::enableScheduler();
-      });
-
-   // TODO: Move this to a user interrupt handler in tcl.rpl
-   setKernelInterruptHandler(InterruptType::Gpu7,
-      [](InterruptType type,
-         virt_ptr<Context> interruptedContext)
-      {
-         coreinit::internal::disableScheduler();
-         gx2::internal::handleGpuRetireInterrupt();
          coreinit::internal::enableScheduler();
       });
 

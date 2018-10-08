@@ -26,16 +26,28 @@ ENUM_END(InterruptType)
 
 #include <common/enum_end.h>
 
-using InterruptHandlerFn =
+using UserInterruptHandlerFn =
    void(*)(InterruptType type,
-           virt_ptr<Context> interruptedContext);
+           virt_ptr<Context> interruptedContext,
+           virt_ptr<void> userData);
 
-InterruptHandlerFn
+UserInterruptHandlerFn
 setUserModeInterruptHandler(InterruptType type,
-                            InterruptHandlerFn callback);
+                            UserInterruptHandlerFn callback,
+                            virt_ptr<void> userData);
+
+void
+clearAndEnableInterrupt(InterruptType type);
+
+void
+disableInterrupt(InterruptType type);
 
 namespace internal
 {
+
+using KernelInterruptHandlerFn =
+   void(*)(InterruptType type,
+           virt_ptr<Context> interruptedContext);
 
 void
 dispatchExternalInterrupt(InterruptType type,
@@ -43,7 +55,7 @@ dispatchExternalInterrupt(InterruptType type,
 
 void
 setKernelInterruptHandler(InterruptType type,
-                          InterruptHandlerFn handler);
+                          KernelInterruptHandlerFn handler);
 
 } // namespace internal
 

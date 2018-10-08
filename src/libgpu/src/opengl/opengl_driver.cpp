@@ -2,6 +2,7 @@
 #include "gpu_clock.h"
 #include "gpu_config.h"
 #include "gpu_event.h"
+#include "gpu_ih.h"
 #include "gpu_ringbuffer.h"
 #include "gpu_memory.h"
 #include "latte/latte_endian.h"
@@ -611,8 +612,11 @@ GLDriver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
       }
    }
 
-   // TODO: Generate interrupt if required
+   // Generate interrupt if required
    if (data.addrHi.INT_SEL() != latte::pm4::EWP_INT_NONE) {
+      auto interrupt = gpu::ih::Entry { };
+      interrupt.word0 = latte::CP_INT_SRC_ID::CP_EOP_EVENT;
+      gpu::ih::write(interrupt);
    }
 }
 
@@ -623,18 +627,13 @@ GLDriver::pfpSyncMe(const latte::pm4::PfpSyncMe &data)
 }
 
 void
-GLDriver::executeBuffer(const gpu::ringbuffer::Item &item)
+GLDriver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
    // Run any remote tasks first
    runRemoteThreadTasks();
 
    // Execute command buffer
-   runCommandBuffer(item.buffer.getRawPointer(), item.numWords);
-
-   // Release command buffer when it finishes executing
-   addFenceSync([=](){
-      gpu::onRetire(item.context);
-   });
+   runCommandBuffer(buffer);
 }
 
 void
@@ -724,7 +723,7 @@ GLDriver::runOnGLThread(std::function<void()> func)
    auto taskIterator = mTaskList.end();
    --taskIterator;
 
-   gpu::ringbuffer::awaken();
+   gpu::ringbuffer::wake();
    taskIterator->completionCV.wait(lock);
 
    mTaskList.erase(taskIterator);
@@ -800,12 +799,12 @@ GLDriver::runUntilFlip()
 
    checkSyncObjects(0);
    while (true) {
-      auto item = gpu::ringbuffer::dequeueItem();
-      if (!item.numWords) {
+      auto buffer = gpu::ringbuffer::read();
+      if (buffer.empty()) {
          break;
       }
 
-      executeBuffer(item);
+      executeBuffer(buffer);
       checkSyncObjects(0);
 
       if (mLastSwap > startingSwap) {
@@ -824,16 +823,13 @@ GLDriver::run()
    mRunState = RunState::Running;
 
    while (mRunState == RunState::Running) {
-      auto item = gpu::ringbuffer::Item { };
-
       if (mSyncList.empty()) {
-         item = gpu::ringbuffer::waitForItem();
-      } else {
-         item = gpu::ringbuffer::dequeueItem();
+         gpu::ringbuffer::wait();
       }
 
-      if (item.numWords) {
-         executeBuffer(item);
+      auto buffer = gpu::ringbuffer::read();
+      if (!buffer.empty()) {
+         executeBuffer(buffer);
          checkSyncObjects(0);
       } else {
          checkSyncObjects(10000);  // 10 usec
@@ -845,7 +841,7 @@ void
 GLDriver::stop()
 {
    mRunState = RunState::Stopped;
-   gpu::ringbuffer::awaken();
+   gpu::ringbuffer::wake();
 }
 
 } // namespace opengl

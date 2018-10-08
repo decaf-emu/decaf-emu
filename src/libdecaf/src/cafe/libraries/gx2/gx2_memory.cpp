@@ -2,7 +2,7 @@
 #include "gx2_aperture.h"
 #include "gx2_memory.h"
 #include "gx2_state.h"
-#include "gx2_internal_cbpool.h"
+#include "gx2_cbpool.h"
 
 #include "cafe/libraries/coreinit/coreinit_cache.h"
 #include "cafe/libraries/coreinit/coreinit_memory.h"

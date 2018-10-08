@@ -23,6 +23,7 @@ Library::registerSymbols()
    registerLibraryDependency("tcl");
 
    registerApertureSymbols();
+   registerCbPoolSymbols();
    registerClearSymbols();
    registerContextStateSymbols();
    registerCounterSymbols();

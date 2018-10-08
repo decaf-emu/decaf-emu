@@ -9,27 +9,27 @@ void
 Pm4Processor::indirectBufferCall(const IndirectBufferCall &data)
 {
    auto buffer = gpu::internal::translateAddress<uint32_t>(data.addr);
-   runCommandBuffer(buffer, data.size);
+   runCommandBuffer({ buffer, data.size });
 }
 
 void
 Pm4Processor::indirectBufferCallPriv(const IndirectBufferCallPriv &data)
 {
    auto buffer = gpu::internal::translateAddress<uint32_t>(data.addr);
-   runCommandBuffer(buffer, data.size);
+   runCommandBuffer({ buffer, data.size });
 }
 
 void
-Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
+Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
    std::vector<uint32_t> swapped;
-   swapped.resize(buffer_size);
+   swapped.resize(buffer.size());
 
-   for (auto i = 0u; i < buffer_size; ++i) {
+   for (auto i = 0u; i < buffer.size(); ++i) {
       swapped[i] = byte_swap(buffer[i]);
    }
 
-   for (auto pos = 0u; pos < buffer_size; ) {
+   for (auto pos = 0u; pos < swapped.size(); ) {
       auto header = *reinterpret_cast<Header *>(&swapped[pos]);
       auto size = 0u;
 
@@ -43,7 +43,7 @@ Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          auto header3 = HeaderType3::get(header.value);
          size = header3.size() + 1;
 
-         decaf_check(pos + size <= buffer_size);
+         decaf_check(pos + size <= swapped.size());
          handlePacketType3(header3, gsl::make_span(&swapped[pos + 1], size));
          break;
       }
@@ -52,7 +52,7 @@ Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
          auto header0 = HeaderType0::get(header.value);
          size = header0.count() + 1;
 
-         decaf_check(pos + size <= buffer_size);
+         decaf_check(pos + size <= swapped.size());
          handlePacketType0(header0, gsl::make_span(&swapped[pos + 1], size));
          break;
       }
@@ -63,8 +63,9 @@ Pm4Processor::runCommandBuffer(uint32_t *buffer, uint32_t buffer_size)
       }
       case PacketType::Type1:
       default:
-         gLog->error("Invalid packet header type {}, header = 0x{:08X}", header.type(), header.value);
-         pos = buffer_size;
+         gLog->error("Invalid packet header type {}, header = 0x{:08X}",
+                     header.type(), header.value);
+         pos = swapped.size();
          break;
       }
 

@@ -2,6 +2,7 @@
 #include "gx2_display.h"
 #include "gx2_event.h"
 #include "gx2_internal_pm4cap.h"
+#include "gx2_cbpool.h"
 
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
@@ -116,21 +117,21 @@ public:
    }
 
    void
-   commandBuffer(CommandBuffer *buffer)
+   commandBuffer(virt_ptr<uint32_t> buffer,
+                 uint32_t numWords)
    {
       decaf_check(mState == CaptureState::Enabled ||
                   mState == CaptureState::WaitEndNextFrame);
       std::unique_lock<std::mutex> lock { mMutex };
-      auto size = buffer->curSize * 4;
       scanCommandBuffer(
-         phys_cast<uint32_t *>(OSEffectiveToPhysical(virt_cast<virt_addr>(buffer->buffer))),
-         buffer->curSize);
+         phys_cast<uint32_t *>(OSEffectiveToPhysical(virt_cast<virt_addr>(buffer))),
+         numWords);
 
       CapturePacket packet;
       packet.type = CapturePacket::CommandBuffer;
-      packet.size = size;
+      packet.size = numWords * 4;
       writePacket(packet);
-      writeData(buffer->buffer.getRawPointer(), packet.size);
+      writeData(buffer.getRawPointer(), packet.size);
    }
 
    void
@@ -1036,11 +1037,12 @@ captureSwap()
 }
 
 void
-captureCommandBuffer(CommandBuffer *buffer)
+captureCommandBuffer(virt_ptr<uint32_t> buffer,
+                     uint32_t numWords)
 {
    if (captureState() == CaptureState::Enabled ||
        captureState() == CaptureState::WaitEndNextFrame) {
-      gRecorder.commandBuffer(buffer);
+      gRecorder.commandBuffer(buffer, numWords);
    }
 }
 

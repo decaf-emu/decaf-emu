@@ -237,15 +237,16 @@ void
 Driver::run()
 {
    while (mRunState == RunState::Running) {
-      // Grab the next item
-      auto item = gpu::ringbuffer::waitForItem();
+      // Grab the next buffer
+      gpu::ringbuffer::wait();
+      auto buffer = gpu::ringbuffer::read();
 
       // Check for any fences completing
       checkSyncFences();
 
       // Process the buffer if there is anything new
-      if (item.numWords) {
-         executeBuffer(item);
+      if (!buffer.empty()) {
+         executeBuffer(buffer);
       }
    }
 }
@@ -254,7 +255,7 @@ void
 Driver::stop()
 {
    mRunState = RunState::Stopped;
-   gpu::ringbuffer::awaken();
+   gpu::ringbuffer::wake();
 }
 
 void
@@ -264,14 +265,15 @@ Driver::runUntilFlip()
 
    while (mRunState == RunState::Running) {
       // Grab the next item
-      auto item = gpu::ringbuffer::waitForItem();
+      gpu::ringbuffer::wait();
 
       // Check for any fences completing
       checkSyncFences();
 
       // Process the buffer if there is anything new
-      if (item.numWords) {
-         executeBuffer(item);
+      auto buffer = gpu::ringbuffer::read();
+      if (!buffer.empty()) {
+         executeBuffer(buffer);
       }
 
       if (mLastSwap > startingSwap) {
