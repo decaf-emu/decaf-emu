@@ -121,6 +121,9 @@ WPADSamplingCallback
 WPADSetSamplingCallback(WPADChan chan,
                         WPADSamplingCallback callback);
 
+bool 
+IsProControllerAllowed();
+
 #pragma pack(pop)
 
 } // namespace cafe::padscore

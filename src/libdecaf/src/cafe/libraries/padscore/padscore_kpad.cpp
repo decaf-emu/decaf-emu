@@ -10,9 +10,44 @@
 
 namespace cafe::padscore
 {
+   static const std::vector<std::pair<WPADButton, input::wpad::Core>>
+      gCoreButtonMap =
+   {
+      { WPADButton::Left,        input::wpad::Core::Down },
+      { WPADButton::Right,       input::wpad::Core::Up },
+      { WPADButton::Down,        input::wpad::Core::Right  },
+      { WPADButton::Up,          input::wpad::Core::Left},
+      { WPADButton::Plus,        input::wpad::Core::Plus },
+      { WPADButton::Btn2,        input::wpad::Core::B },
+      { WPADButton::Btn1,        input::wpad::Core::A }, 
+      { WPADButton::B,           input::wpad::Core::Button2 },
+      { WPADButton::A,           input::wpad::Core::Button1 },
+      { WPADButton::Minus,       input::wpad::Core::Minus },
+      { WPADButton::Home,        input::wpad::Core::Home },
+   };
+
+   static const std::vector<std::pair<WPADClassicButton, input::wpad::Classic>>
+      gClassicButtonMap =
+   {
+      { WPADClassicButton::Up,       input::wpad::Classic::Up },
+      { WPADClassicButton::Left,     input::wpad::Classic::Left },
+      { WPADClassicButton::ZR,       input::wpad::Classic::TriggerZR  },
+      { WPADClassicButton::X,        input::wpad::Classic::X},
+      { WPADClassicButton::A,        input::wpad::Classic::A },
+      { WPADClassicButton::Y,        input::wpad::Classic::Y },
+      { WPADClassicButton::B,        input::wpad::Classic::B },
+      { WPADClassicButton::ZL,       input::wpad::Classic::TriggerZL },
+      { WPADClassicButton::R,        input::wpad::Classic::TriggerR },
+      { WPADClassicButton::Plus,     input::wpad::Classic::Plus },
+      { WPADClassicButton::Home,     input::wpad::Classic::Home },
+      { WPADClassicButton::Minus,    input::wpad::Classic::Minus },
+      { WPADClassicButton::L,        input::wpad::Classic::TriggerL },
+      { WPADClassicButton::Down,     input::wpad::Classic::Down },
+      { WPADClassicButton::Right,    input::wpad::Classic::Right },
+   };
 
 static const std::vector<std::pair<WPADProButton, input::wpad::Pro>>
-   gButtonMap =
+   gProButtonMap =
 {
    { WPADProButton::Up,       input::wpad::Pro::Up },
    { WPADProButton::Left,     input::wpad::Pro::Left },
@@ -129,7 +164,6 @@ KPADEnableDPD(KPADChan chan)
 void
 KPADDisableDPD(KPADChan chan)
 {
-   decaf_warn_stub();
    WPADControlDpd(chan, 0, 0);
    WPADSetDataFormat(chan, WPADDataFormat::ProController);
 }
@@ -148,7 +182,7 @@ KPADSetMplsWorkarea(virt_ptr<void> buffer)
 
 int32_t
 KPADRead(KPADChan chan,
-         virt_ptr<void> data,
+         virt_ptr<KPADStatus> data,
          uint32_t size)
 {
    decaf_warn_stub();
@@ -164,7 +198,7 @@ KPADRead(KPADChan chan,
 
 int32_t
 KPADReadEx(KPADChan chan,
-           virt_ptr<void> buffers,
+           virt_ptr<KPADStatus> buffers,
            uint32_t bufferCount,
            virt_ptr<KPADReadError> outError)
 {
@@ -184,10 +218,10 @@ KPADReadEx(KPADChan chan,
       return 0;
    }
 
-   memset(virt_addrof(virt_cast<KPADExtProControllerStatus*>(buffers)[0]).getRawPointer(), 0, sizeof(KPADExtProControllerStatus));
+   memset(virt_addrof(buffers[0]).getRawPointer(), 0, sizeof(KPADStatus));
 
    auto channel = static_cast<input::wpad::Channel>(chan);
-   auto &buffer = virt_cast<KPADExtProControllerStatus*>(buffers)[0];
+   auto &buffer = buffers[0];
 
    if (input::getControllerType(channel) == input::wpad::Type::Disconnected) {
       if (outError) {
@@ -197,32 +231,60 @@ KPADReadEx(KPADChan chan,
       return 0;
    }
 
-   // Update button state
-   for (auto &pair : gButtonMap) {
-      auto bit = pair.first;
-      auto button = pair.second;
-      auto status = input::getButtonStatus(channel, button);
-      auto previous = gLastButtonState & bit;
+   if (IsProControllerAllowed())
+   {
+      buffer.format = KPADDataFormat::ProController;
+      buffer.extensionType = KPADExtensionType::ProController;
 
-      if (status == input::ButtonStatus::ButtonPressed) {
-         if (!previous) {
-            buffer.trigger |= bit;
+      // Update button state
+      for (auto &pair : gProButtonMap) {
+         auto bit = pair.first;
+         auto button = pair.second;
+         auto status = input::getButtonStatus(channel, button);
+         auto previous = gLastButtonState & bit;
+
+         if (status == input::ButtonStatus::ButtonPressed) {
+            if (!previous) {
+               buffer.extStatus.proController.trigger |= bit;
+            }
+
+            buffer.extStatus.proController.hold |= bit;
          }
-
-         buffer.hold |= bit;
+         else if (previous) {
+            buffer.extStatus.proController.release |= bit;
+         }
       }
-      else if (previous) {
-         buffer.release |= bit;
-      }
+      buffer.extStatus.proController.leftStick.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
+      buffer.extStatus.proController.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
+      buffer.extStatus.proController.rightStick.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
+      buffer.extStatus.proController.rightStick.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
    }
+   else
+   {
+      // Update button state
+      buffer.extensionType = KPADExtensionType::Classic;
+      for (auto &pair : gClassicButtonMap) {
+         auto bit = pair.first;
+         auto button = pair.second;
+         auto status = input::getButtonStatus(channel, button);
+         auto previous = gLastButtonState & bit;
 
-   gLastButtonState = buffer.hold;
+         if (status == input::ButtonStatus::ButtonPressed) {
+            if (!previous) {
+               buffer.extStatus.classic.trigger |= bit;
+            }
 
-   // Update axis state
-   buffer.leftStick.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
-   buffer.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
-   buffer.rightStick.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
-   buffer.rightStick.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
+            buffer.extStatus.classic.hold |= bit;
+         }
+         else if (previous) {
+            buffer.extStatus.classic.release |= bit;
+         }
+      }
+      buffer.extStatus.classic.leftStick.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
+      buffer.extStatus.classic.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
+      buffer.extStatus.classic.rightStick.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
+      buffer.extStatus.classic.rightStick.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
+   }
 
    if (outError) {
       *outError = KPADReadError::Success;
@@ -243,7 +305,6 @@ KPADSetBtnRepeat(KPADChan chan,
                  float delay_sec,
                  float pulse_sec)
 {
-   decaf_warn_stub();
    if (chan >= KPADChan::NumChans) {
       return;
    }

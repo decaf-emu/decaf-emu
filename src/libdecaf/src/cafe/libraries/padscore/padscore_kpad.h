@@ -21,6 +21,17 @@ CHECK_OFFSET(KPADVec2D, 0x00, x);
 CHECK_OFFSET(KPADVec2D, 0x04, y);
 CHECK_SIZE(KPADVec2D, 0x08);
 
+struct KPADVec
+{
+   be2_val<float> x;
+   be2_val<float> y;
+   be2_val<float> z;
+};
+CHECK_OFFSET(KPADVec, 0x00, x);
+CHECK_OFFSET(KPADVec, 0x04, y);
+CHECK_OFFSET(KPADVec, 0x08, z);
+CHECK_SIZE(KPADVec, 0x0c);
+
 struct KPADRect
 {
    be2_val<float> left;
@@ -89,6 +100,26 @@ struct KPADExtStatus
 };
 CHECK_SIZE(KPADExtStatus, 0x50);
 
+ struct KPADMPDir {
+    be2_struct<KPADVec>  X;
+    be2_struct<KPADVec>  Y;
+    be2_struct<KPADVec>  Z;
+};
+CHECK_OFFSET(KPADMPDir, 0x00, X);
+CHECK_OFFSET(KPADMPDir, 0x0c, Y);
+CHECK_OFFSET(KPADMPDir, 0x18, Z);
+CHECK_SIZE(KPADMPDir, 0x24);
+
+struct KPADMPStatus {
+   be2_struct< KPADVec>    mpls;
+   be2_struct< KPADVec>    angle;
+   be2_struct<KPADMPDir>   dir;
+};
+CHECK_OFFSET(KPADMPStatus, 0x00, mpls);
+CHECK_OFFSET(KPADMPStatus, 0x0c, angle);
+CHECK_OFFSET(KPADMPStatus, 0x18, dir);
+CHECK_SIZE(KPADMPStatus, 0x3c);
+
 struct KPADStatus
 {
    //! Indicates what KPADButtons are held down
@@ -100,36 +131,53 @@ struct KPADStatus
    //! Indicates what KPADButtons have been released since last sample
    be2_val<uint32_t> release;
 
-   UNKNOWN(5 * 4);
+   be2_struct<KPADVec> acc;
+   be2_val<float> acc_value;
+   be2_val<float> acc_speed;
    be2_struct<KPADVec2D> pos;
-   UNKNOWN(3 * 4);
-   be2_struct<KPADVec2D> angle;
-   UNKNOWN(8 * 4);
-
+   be2_struct<KPADVec2D> vec;
+   be2_val<float> speed;
+   be2_struct<KPADVec2D> horizon;
+   be2_struct<KPADVec2D> hori_vec;
+   be2_val<float> hori_speed;
+   be2_val<float>  dist;
+   be2_val<float>  dist_vec;
+   be2_val<float>  dist_speed;
+   be2_struct<KPADVec2D> acc_vertical;
    //! Type of data stored in extStatus
    be2_val<KPADExtensionType> extensionType;
-
    //! Value from KPADError
    be2_val<int8_t> error;
-
    be2_val<uint8_t> posValid;
    be2_val<KPADDataFormat> format;
-
    // Extension data, check with extensionType to see what is valid to read
    be2_struct<KPADExtStatus> extStatus;
+   be2_struct<KPADMPStatus> mpls;
 
-   UNKNOWN(16 * 4);
+   UNKNOWN(1 * 4);
 };
 CHECK_OFFSET(KPADStatus, 0x00, hold);
 CHECK_OFFSET(KPADStatus, 0x04, trigger);
 CHECK_OFFSET(KPADStatus, 0x08, release);
+CHECK_OFFSET(KPADStatus, 0x0c, acc);
+CHECK_OFFSET(KPADStatus, 0x18, acc_value);
+CHECK_OFFSET(KPADStatus, 0x1c, acc_speed);
 CHECK_OFFSET(KPADStatus, 0x20, pos);
-CHECK_OFFSET(KPADStatus, 0x34, angle);
+CHECK_OFFSET(KPADStatus, 0x28, vec);
+CHECK_OFFSET(KPADStatus, 0x30, speed);
+CHECK_OFFSET(KPADStatus, 0x34, horizon);
+CHECK_OFFSET(KPADStatus, 0x3c, hori_vec);
+CHECK_OFFSET(KPADStatus, 0x44, hori_speed);
+CHECK_OFFSET(KPADStatus, 0x48, dist);
+CHECK_OFFSET(KPADStatus, 0x4c, dist_vec);
+CHECK_OFFSET(KPADStatus, 0x50, dist_speed);
+CHECK_OFFSET(KPADStatus, 0x54, acc_vertical);
 CHECK_OFFSET(KPADStatus, 0x5C, extensionType);
 CHECK_OFFSET(KPADStatus, 0x5D, error);
 CHECK_OFFSET(KPADStatus, 0x5E, posValid);
 CHECK_OFFSET(KPADStatus, 0x5F, format);
 CHECK_OFFSET(KPADStatus, 0x60, extStatus);
+CHECK_OFFSET(KPADStatus, 0xB0, mpls);
 CHECK_SIZE(KPADStatus, 0xF0);
 
 #pragma pack(pop)
@@ -158,12 +206,12 @@ KPADSetMplsWorkarea(virt_ptr<void> buffer);
 
 int32_t
 KPADRead(KPADChan chan,
-         virt_ptr<void> data,
+         virt_ptr<KPADStatus> data,
          uint32_t size);
 
 int32_t
 KPADReadEx(KPADChan chan,
-           virt_ptr<void> data,
+           virt_ptr<KPADStatus> data,
            uint32_t size,
            virt_ptr<KPADReadError> outError);
 
