@@ -21,6 +21,13 @@ GX2GetGPUTimeout();
 void
 GX2SetGPUTimeout(uint32_t timeout);
 
+uint32_t
+GX2GetMiscParam(GX2MiscParam param);
+
+BOOL
+GX2SetMiscParam(GX2MiscParam param,
+                uint32_t value);
+
 namespace internal
 {
 

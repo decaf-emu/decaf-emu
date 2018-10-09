@@ -9,6 +9,7 @@
 
 #include "cafe/libraries/coreinit/coreinit_core.h"
 #include "cafe/libraries/coreinit/coreinit_memdefaultheap.h"
+#include "cafe/libraries/tcl/tcl_driver.h"
 #include "decaf_config.h"
 
 #include <common/log.h>
@@ -28,6 +29,10 @@ struct StaticStateData
    be2_val<GX2ProfileMode> profileMode;
    be2_val<GX2TossStage> tossStage;
    be2_val<uint32_t> timeoutMS;
+   be2_val<uint32_t> hangState;
+   be2_val<uint32_t> hangResponse;
+   be2_val<uint32_t> hangResetSwapTimeout;
+   be2_val<uint32_t> hangResetSwapsOutstanding;
 };
 
 static virt_ptr<StaticStateData>
@@ -48,6 +53,11 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
 
    // Set default GPU timeout to 10 seconds
    sStateData->timeoutMS = 10u * 1000;
+
+   // Setup hang params
+   GX2SetMiscParam(GX2MiscParam::HangResponse, 1);
+   GX2SetMiscParam(GX2MiscParam::HangResetSwapTimeout, 1000);
+   GX2SetMiscParam(GX2MiscParam::HangResetSwapsOutstanding, 3);
 
    // Parse attributes
    while (attributes && *attributes != GX2InitAttrib::End) {
@@ -136,6 +146,55 @@ void
 GX2SetGPUTimeout(uint32_t timeout)
 {
    sStateData->timeoutMS = timeout;
+}
+
+uint32_t
+GX2GetMiscParam(GX2MiscParam param)
+{
+   switch (param) {
+   case GX2MiscParam::HangState:
+      return sStateData->hangState;
+   case GX2MiscParam::HangResponse:
+      return sStateData->hangResponse;
+      break;
+   case GX2MiscParam::HangResetSwapTimeout:
+      return sStateData->hangResetSwapTimeout;
+      break;
+   case GX2MiscParam::HangResetSwapsOutstanding:
+      return sStateData->hangResetSwapsOutstanding;
+      break;
+   default:
+      return -1;
+   }
+}
+
+BOOL
+GX2SetMiscParam(GX2MiscParam param,
+                uint32_t value)
+{
+   switch (param) {
+   case GX2MiscParam::HangState:
+      sStateData->hangState = value;
+      break;
+   case GX2MiscParam::HangResponse:
+      if (value > 2) {
+         return FALSE;
+      }
+
+      tcl::TCLSetHangWait(value == 1 ? TRUE : FALSE);
+      sStateData->hangResponse = value;
+      break;
+   case GX2MiscParam::HangResetSwapTimeout:
+      sStateData->hangResetSwapTimeout = value;
+      break;
+   case GX2MiscParam::HangResetSwapsOutstanding:
+      sStateData->hangResetSwapsOutstanding = value;
+      break;
+   default:
+      return FALSE;
+   }
+
+   return TRUE;
 }
 
 namespace internal
@@ -267,6 +326,8 @@ Library::registerStateSymbols()
    RegisterFunctionExport(GX2Flush);
    RegisterFunctionExport(GX2GetGPUTimeout);
    RegisterFunctionExport(GX2SetGPUTimeout);
+   RegisterFunctionExport(GX2GetMiscParam);
+   RegisterFunctionExport(GX2SetMiscParam);
 
    RegisterDataInternal(sStateData);
 }

@@ -253,6 +253,13 @@ ENUM_BEG(GX2LogicOp, uint32_t)
    ENUM_VALUE(Set,                     0xFF)
 ENUM_END(GX2LogicOp)
 
+ENUM_BEG(GX2MiscParam, uint32_t)
+   ENUM_VALUE(HangState,                  0)
+   ENUM_VALUE(HangResponse,               1)
+   ENUM_VALUE(HangResetSwapTimeout,       2)
+   ENUM_VALUE(HangResetSwapsOutstanding,  3)
+ENUM_END(GX2MiscParam)
+
 ENUM_BEG(GX2PatchShaderType, uint32_t)
    ENUM_VALUE(FetchShader,             0x1)
    ENUM_VALUE(VertexShader,            0x2)
