@@ -6,6 +6,18 @@
 ENUM_NAMESPACE_BEG(cafe)
 ENUM_NAMESPACE_BEG(tcl)
 
+ENUM_BEG(TCLAsicType, uint32_t)
+   ENUM_VALUE(Unknown5,                         5)
+ENUM_END(TCLAsicType)
+
+ENUM_BEG(TCLChipRevision, uint32_t)
+   ENUM_VALUE(Unknown78,                        78)
+ENUM_END(TCLChipRevision)
+
+ENUM_BEG(TCLCpMicrocodeVersion, uint32_t)
+   ENUM_VALUE(Unknown16,                        16)
+ENUM_END(TCLCpMicrocodeVersion)
+
 ENUM_BEG(TCLRegisterID, uint32_t)
    ENUM_VALUE(Max,                              0x10000)
 ENUM_END(TCLRegisterID)
