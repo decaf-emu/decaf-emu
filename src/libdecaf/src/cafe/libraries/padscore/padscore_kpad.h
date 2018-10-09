@@ -100,7 +100,7 @@ struct KPADExtStatus
 };
 CHECK_SIZE(KPADExtStatus, 0x50);
 
- struct KPADMPDir {
+struct KPADMPDir {
     be2_struct<KPADVec>  X;
     be2_struct<KPADVec>  Y;
     be2_struct<KPADVec>  Z;

@@ -199,7 +199,8 @@ WPADControlDpd(int32_t chan,
    return WPADError::OK;
 }
 
-bool IsProControllerAllowed()
+bool
+IsProControllerAllowed()
 {
    return sWpadData->proControllerAllowed;
 }
