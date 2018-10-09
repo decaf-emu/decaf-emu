@@ -41,6 +41,7 @@ private:
    void registerFsDriverSymbols();
    void registerFsStateMachineSymbols();
    void registerFsaSymbols();
+   void registerFsaCmdSymbols();
    void registerFsaShimSymbols();
    void registerGhsSymbols();
    void registerHandleSymbols();

@@ -21,12 +21,16 @@ namespace cafe::coreinit
 
 using FSAClientHandle = IOSHandle;
 using FSAAttachInfo = ios::fs::FSAAttachInfo;
+using FSABlockInfo = ios::fs::FSABlockInfo;
 using FSACommand = ios::fs::FSACommand;
+using FSADeviceInfo = ios::fs::FSADeviceInfo;
+using FSAFileHandle = ios::fs::FSAFileHandle;
 using FSAFileSystemInfo = ios::fs::FSAFileSystemInfo;
 using FSAQueryInfoType = ios::fs::FSAQueryInfoType;
 using FSAReadFlag = ios::fs::FSAReadFlag;
 using FSARequest = ios::fs::FSARequest;
 using FSAResponse = ios::fs::FSAResponse;
+using FSAStat = ios::fs::FSAStat;
 using FSAStatus = ios::fs::FSAStatus;
 using FSAVolumeInfo = ios::fs::FSAVolumeInfo;
 using FSAWriteFlag = ios::fs::FSAWriteFlag;

@@ -104,6 +104,7 @@ Library::registerSymbols()
    registerFsDriverSymbols();
    registerFsStateMachineSymbols();
    registerFsaSymbols();
+   registerFsaCmdSymbols();
    registerFsaShimSymbols();
    registerGhsSymbols();
    registerHandleSymbols();
