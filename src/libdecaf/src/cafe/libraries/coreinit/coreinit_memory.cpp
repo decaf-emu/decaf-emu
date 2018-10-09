@@ -445,8 +445,10 @@ Library::registerMemorySymbols()
    RegisterFunctionExport(OSMapMemory);
    RegisterFunctionExport(OSUnmapMemory);
    RegisterFunctionExport(OSEffectiveToPhysical);
-   RegisterFunctionExport(OSPhysicalToEffectiveCached);
-   RegisterFunctionExport(OSPhysicalToEffectiveUncached);
+   RegisterFunctionExportName("__OSPhysicalToEffectiveCached",
+                              OSPhysicalToEffectiveCached);
+   RegisterFunctionExportName("__OSPhysicalToEffectiveUncached",
+                              OSPhysicalToEffectiveUncached);
    RegisterFunctionExport(memcpy);
    RegisterFunctionExport(memmove);
    RegisterFunctionExport(memset);
