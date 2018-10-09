@@ -73,17 +73,23 @@ getExcmdGroups(excmd::parser &parser)
                   allowed<std::string> { {
                      "EUR", "JAP", "US"
                   } })
-      .add_option("content-path",
-                  description { "Sets which path to mount to /vol/content, only set for standalone rpx files." },
-                  value<std::string> {})
       .add_option("resources-path",
                   description { "Path to Decaf resource files." },
                   value<std::string> {})
-      .add_option("sdcard-path",
-                  description { "Sets which path to mount to /vol/sdcard01." },
+      .add_option("content-path",
+                  description { "Sets which path to mount to /vol/content, only used for standalone rpx files." },
+                  value<std::string> {})
+      .add_option("hfio-path",
+                  description { "Sets which path to mount to /dev/hfio01." },
                   value<std::string> {})
       .add_option("mlc-path",
-                  description { "Sets which path to mount to /vol/storage_mlc01." },
+                  description { "Sets which path to mount to /dev/mlc01." },
+                  value<std::string> {})
+      .add_option("sdcard-path",
+                  description { "Sets which path to mount to /dev/sdcard01." },
+                  value<std::string> {})
+      .add_option("slc-path",
+                  description { "Sets which path to mount to /dev/slc01." },
                   value<std::string> {})
       .add_option("time-scale",
                   description { "Time scale factor for emulated clock." },
@@ -214,12 +220,20 @@ loadFromExcmd(excmd::option_state &options)
       }
    }
 
-   if (options.has("mlc-path")) {
-      decaf::config::system::mlc_path = options.get<std::string>("mlc-path");
-   }
-
    if (options.has("resources-path")) {
       decaf::config::system::resources_path = options.get<std::string>("resources-path");
+   }
+
+   if (options.has("content-path")) {
+      decaf::config::system::content_path = options.get<std::string>("content-path");
+   }
+
+   if (options.has("hfio-path")) {
+      decaf::config::system::mlc_path = options.get<std::string>("hfio-path");
+   }
+
+   if (options.has("mlc-path")) {
+      decaf::config::system::mlc_path = options.get<std::string>("mlc-path");
    }
 
    if (options.has("sdcard-path")) {
@@ -228,10 +242,6 @@ loadFromExcmd(excmd::option_state &options)
 
    if (options.has("slc-path")) {
       decaf::config::system::slc_path = options.get<std::string>("slc-path");
-   }
-
-   if (options.has("content-path")) {
-      decaf::config::system::content_path = options.get<std::string>("content-path");
    }
 
    if (options.has("time-scale")) {

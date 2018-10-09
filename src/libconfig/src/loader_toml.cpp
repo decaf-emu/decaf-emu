@@ -44,6 +44,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config)
    readValue(config, "sound.dump_sounds", decaf::config::sound::dump_sounds);
 
    readValue(config, "system.region", decaf::config::system::region);
+   readValue(config, "system.hfio_path", decaf::config::system::hfio_path);
    readValue(config, "system.mlc_path", decaf::config::system::mlc_path);
    readValue(config, "system.resources_path", decaf::config::system::resources_path);
    readValue(config, "system.sdcard_path", decaf::config::system::sdcard_path);
@@ -157,6 +158,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config)
    }
 
    system->insert("region", static_cast<int>(decaf::config::system::region));
+   system->insert("hfio_path", decaf::config::system::hfio_path);
    system->insert("mlc_path", decaf::config::system::mlc_path);
    system->insert("resources_path", decaf::config::system::resources_path);
    system->insert("sdcard_path", decaf::config::system::sdcard_path);

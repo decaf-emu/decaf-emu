@@ -95,13 +95,16 @@ enum class Region
 //! Emulated system region
 extern Region region;
 
-//! Path to /vol/storage_mlc01 files
+//! Path to /dev/hfio01
+extern std::string hfio_path;
+
+//! Path to /dev/mlc01
 extern std::string mlc_path;
 
-//! Path to /vol/storage_slc files
+//! Path to /dev/slc01
 extern std::string slc_path;
 
-//! Path to /vol/sdcard01 files
+//! Path to /dev/sdcard01
 extern std::string sdcard_path;
 
 //! Path to /vol/content for standalone .rpx applications

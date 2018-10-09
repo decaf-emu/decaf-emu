@@ -65,6 +65,7 @@ Region region = Region::Europe;
 std::string mlc_path = "mlc";
 std::string slc_path = "slc";
 std::string sdcard_path = "sdcard";
+std::string hfio_path = "";
 std::string content_path = {};
 std::string resources_path = "resources";
 double time_scale = 1.0;

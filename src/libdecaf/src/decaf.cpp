@@ -209,7 +209,11 @@ initialise(const std::string &gamePath)
       return false;
    }
 
-   // Ensure mlc_path and slc_path exists on host file system
+   // Ensure paths exist
+   if (!decaf::config::system::hfio_path.empty()) {
+      platform::createDirectory(decaf::config::system::hfio_path);
+   }
+
    if (!decaf::config::system::mlc_path.empty()) {
       platform::createDirectory(decaf::config::system::mlc_path);
    }
@@ -232,6 +236,12 @@ initialise(const std::string &gamePath)
    // Mount slc device
    auto slcPath = fs::HostPath { decaf::config::system::slc_path };
    filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
+
+   if (!decaf::config::system::hfio_path.empty()) {
+      // Optionally mount hfio device if path is set
+      auto hfioPath = fs::HostPath { decaf::config::system::hfio_path };
+      filesystem->mountHostFolder("/dev/hfio01", hfioPath, fs::Permissions::ReadWrite);
+   }
 
    // Initialise file system with necessary files
    internal::initialiseSlc(decaf::config::system::slc_path);
