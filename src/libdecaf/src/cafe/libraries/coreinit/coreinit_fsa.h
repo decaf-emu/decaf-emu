@@ -1,6 +1,9 @@
 #pragma once
 #include "coreinit_enum.h"
+#include "coreinit_event.h"
 #include "coreinit_fs.h"
+#include "coreinit_ios.h"
+
 #include "ios/fs/ios_fs_fsa.h"
 
 #include <libcpu/be2_struct.h>
@@ -16,6 +19,8 @@ namespace cafe::coreinit
 
 #pragma pack(push, 1)
 
+using FSAClientHandle = IOSHandle;
+using FSAAttachInfo = ios::fs::FSAAttachInfo;
 using FSACommand = ios::fs::FSACommand;
 using FSAFileSystemInfo = ios::fs::FSAFileSystemInfo;
 using FSAQueryInfoType = ios::fs::FSAQueryInfoType;
@@ -26,14 +31,22 @@ using FSAStatus = ios::fs::FSAStatus;
 using FSAVolumeInfo = ios::fs::FSAVolumeInfo;
 using FSAWriteFlag = ios::fs::FSAWriteFlag;
 
+struct FSAShimBuffer;
 struct OSMessage;
 struct OSMessageQueue;
 
-using FSAAsyncCallbackFn = virt_func_ptr<void(FSAStatus,
-                                              FSACommand,
-                                              virt_ptr<FSARequest>,
-                                              virt_ptr<FSAResponse>,
-                                              virt_ptr<void>)>;
+using FSAAsyncCallbackFn =
+   virt_func_ptr<void (FSAStatus result,
+                       FSACommand command,
+                       virt_ptr<FSARequest> request,
+                       virt_ptr<FSAResponse> response,
+                       virt_ptr<void> userContext)>;
+
+using FSAClientAttachAsyncCallbackFn =
+   virt_func_ptr<void (FSAStatus result,
+                       uint32_t responseWord0,
+                       virt_ptr<FSAAttachInfo> attachInfo,
+                       virt_ptr<void> userContext)>;
 
 /**
  * Async data passed to an FSA*Async function.
@@ -90,10 +103,70 @@ CHECK_OFFSET(FSAAsyncResult, 0x24, response);
 CHECK_OFFSET(FSAAsyncResult, 0x28, userContext);
 CHECK_SIZE(FSAAsyncResult, 0x2C);
 
+struct FSAClientAttachAsyncData
+{
+   //! Callback to call when an attach has happened.
+   be2_val<FSAClientAttachAsyncCallbackFn> userCallback;
+
+   //! Callback context
+   be2_virt_ptr<void> userContext;
+
+   //! Queue to put a message on when command is complete.
+   be2_virt_ptr<OSMessageQueue> ioMsgQueue;
+};
+CHECK_OFFSET(FSAClientAttachAsyncData, 0x00, userCallback);
+CHECK_OFFSET(FSAClientAttachAsyncData, 0x04, userContext);
+CHECK_OFFSET(FSAClientAttachAsyncData, 0x08, ioMsgQueue);
+CHECK_SIZE(FSAClientAttachAsyncData, 0xC);
+
+struct FSAClient
+{
+   be2_val<FSAClientState> state;
+   be2_val<IOSHandle> fsaHandle;
+   be2_struct<FSAClientAttachAsyncData> asyncAttachData;
+   be2_struct<FSMessage> attachMessage;
+   be2_val<FSAStatus> lastGetAttachStatus;
+   be2_val<uint32_t> attachResponseWord0;
+   be2_struct<FSAAttachInfo> attachInfo;
+   be2_virt_ptr<FSAShimBuffer> attachShimBuffer;
+   be2_struct<OSEvent> attachEvent;
+};
+CHECK_OFFSET(FSAClient, 0x00, state);
+CHECK_OFFSET(FSAClient, 0x04, fsaHandle);
+CHECK_OFFSET(FSAClient, 0x08, asyncAttachData);
+CHECK_OFFSET(FSAClient, 0x14, attachMessage);
+CHECK_OFFSET(FSAClient, 0x24, lastGetAttachStatus);
+CHECK_OFFSET(FSAClient, 0x28, attachResponseWord0);
+CHECK_OFFSET(FSAClient, 0x2C, attachInfo);
+CHECK_OFFSET(FSAClient, 0x1E8, attachShimBuffer);
+CHECK_OFFSET(FSAClient, 0x1EC, attachEvent);
+CHECK_SIZE(FSAClient, 0x210);
+
 #pragma pack(pop)
+
+FSAStatus
+FSAInit();
+
+FSAStatus
+FSAShutdown();
+
+FSAStatus
+FSAAddClient(virt_ptr<FSAClientAttachAsyncData> attachAsyncData);
+
+FSAStatus
+FSADelClient(FSAClientHandle handle);
 
 virt_ptr<FSAAsyncResult>
 FSAGetAsyncResult(virt_ptr<OSMessage> message);
+
+virt_ptr<FSAClient>
+FSAShimCheckClientHandle(FSAClientHandle handle);
+
+FSAStatus
+FSAShimAllocateBuffer(virt_ptr<virt_ptr<FSAShimBuffer>> outBuffer);
+
+void
+FSAShimFreeBuffer(virt_ptr<FSAShimBuffer> buffer);
 
 namespace internal
 {

@@ -33,6 +33,16 @@ using FSAFilePosition = uint32_t;
 
 
 /**
+ * Attach information.
+ */
+struct FSAAttachInfo
+{
+   UNKNOWN(0x1BC);
+};
+CHECK_SIZE(FSAAttachInfo, 0x1BC);
+
+
+/**
  * Block information.
  */
 struct FSABlockInfo

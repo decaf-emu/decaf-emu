@@ -10,13 +10,6 @@
 namespace cafe::coreinit
 {
 
-/*
-Unimplemented FSA Shim functions:
-__FSAShimAllocateBuffer
-__FSAShimFreeBuffer
-__FSAShimCheckClientHandle
-*/
-
 /**
  * Using the power of magic, turns an IOSError into an FSAStatus.
  */
@@ -902,7 +895,8 @@ fsaShimPrepareRequestWriteFile(virt_ptr<FSAShimBuffer> shim,
 void
 Library::registerFsaShimSymbols()
 {
-   RegisterFunctionExportName("__FSAShimDecodeIosErrorToFsaStatus", FSAShimDecodeIosErrorToFsaStatus);
+   RegisterFunctionExportName("__FSAShimDecodeIosErrorToFsaStatus",
+                              FSAShimDecodeIosErrorToFsaStatus);
 }
 
 } // namespace cafe::coreinit

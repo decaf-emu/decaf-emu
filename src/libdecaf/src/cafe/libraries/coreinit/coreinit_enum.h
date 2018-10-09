@@ -267,6 +267,12 @@ ENUM_BEG(OSThreadType, uint32_t)
    ENUM_VALUE(App,                  2)
 ENUM_END(OSThreadType)
 
+ENUM_BEG(FSAClientState, uint32_t)
+   ENUM_VALUE(Free,                 0)
+   ENUM_VALUE(Allocated,            1)
+   ENUM_VALUE(Closing,              2)
+ENUM_END(FSAClientState)
+
 ENUM_BEG(FSAIpcRequestType, uint16_t)
    ENUM_VALUE(Ioctl,                   0)
    ENUM_VALUE(Ioctlv,                  1)
