@@ -148,7 +148,9 @@ HostFileHandle::write(const void *data,
                       size_t count)
 {
    decaf_check(mHandle);
-   decaf_check((mMode & File::Write) || (mMode & File::Update));
+   decaf_check((mMode & File::Write) ||
+               (mMode & File::Update) ||
+               (mMode & File::Append));
    return fwrite(data, size, count, mHandle);
 }
 
