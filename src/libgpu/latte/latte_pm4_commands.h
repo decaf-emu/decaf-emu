@@ -165,21 +165,6 @@ struct DecafSetBuffer
    }
 };
 
-struct DecafDebugMarker
-{
-   static const auto Opcode = IT_OPCODE::DECAF_DEBUGMARKER;
-
-   uint32_t id;
-   gsl::span<char> key;
-
-   template<typename Serialiser>
-   void serialise(Serialiser &se)
-   {
-      se(id);
-      se(key);
-   }
-};
-
 struct DecafOSScreenFlip
 {
    static const auto Opcode = IT_OPCODE::DECAF_OSSCREEN_FLIP;

@@ -109,9 +109,6 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::DECAF_SET_BUFFER:
       decafSetBuffer(read<DecafSetBuffer>(reader));
       break;
-   case IT_OPCODE::DECAF_DEBUGMARKER:
-      decafDebugMarker(read<DecafDebugMarker>(reader));
-      break;
    case IT_OPCODE::DECAF_OSSCREEN_FLIP:
       decafOSScreenFlip(read<DecafOSScreenFlip>(reader));
       break;

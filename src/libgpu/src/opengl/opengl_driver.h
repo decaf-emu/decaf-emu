@@ -353,7 +353,6 @@ private:
    void decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data) override;
    void decafClearColor(const latte::pm4::DecafClearColor &data) override;
    void decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data) override;
-   void decafDebugMarker(const latte::pm4::DecafDebugMarker &data) override;
    void decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data) override;
    void decafCopySurface(const latte::pm4::DecafCopySurface &data) override;
    void decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data) override;

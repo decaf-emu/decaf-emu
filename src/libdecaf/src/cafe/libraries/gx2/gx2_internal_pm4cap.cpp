@@ -674,9 +674,6 @@ private:
       case IT_OPCODE::DECAF_SET_BUFFER:
          // Nothing to track!
          break;
-      case IT_OPCODE::DECAF_DEBUGMARKER:
-         // Nothing to track!
-         break;
       case IT_OPCODE::DECAF_OSSCREEN_FLIP:
          decaf_abort("pm4 capture not enabled for OSScreen api");
          break;

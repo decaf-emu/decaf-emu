@@ -253,12 +253,6 @@ GLDriver::decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data)
 }
 
 void
-GLDriver::decafDebugMarker(const latte::pm4::DecafDebugMarker &data)
-{
-   gLog->trace("GPU Debug Marker: {} {}", data.key.data(), data.id);
-}
-
-void
 GLDriver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 {
    auto texture = 0u;

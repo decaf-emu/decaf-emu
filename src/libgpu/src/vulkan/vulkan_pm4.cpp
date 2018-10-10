@@ -153,11 +153,6 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
 }
 
 void
-Driver::decafDebugMarker(const latte::pm4::DecafDebugMarker &data)
-{
-}
-
-void
 Driver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 {
 }
