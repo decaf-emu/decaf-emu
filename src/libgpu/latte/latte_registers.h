@@ -31,6 +31,7 @@ enum Value : uint32_t
 
    // Config Registers
    ConfigRegisterBase               = 0x08000,
+   CP_COHER_STATUS                  = 0x085FC,
    CP_BUSY_STAT                     = 0x0867C,
    CP_STAT                          = 0x08680,
    CP_RB_RPTR                       = 0x08700,
