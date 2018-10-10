@@ -86,6 +86,13 @@ sSurfaceFormatData[] =
    { 0, GX2SurfaceUse::None, 0, 0 },
 };
 
+BOOL
+GX2CheckSurfaceUseVsFormat(GX2SurfaceUse use,
+                           GX2SurfaceFormat format)
+{
+   return internal::getSurfaceUse(format) & use ? TRUE : FALSE;
+}
+
 uint32_t
 GX2GetAttribFormatBits(GX2AttribFormat format)
 {
@@ -415,6 +422,7 @@ getSwapModeEndian(GX2EndianSwapMode mode)
 void
 Library::registerFormatSymbols()
 {
+   RegisterFunctionExport(GX2CheckSurfaceUseVsFormat);
    RegisterFunctionExport(GX2GetAttribFormatBits);
    RegisterFunctionExport(GX2GetSurfaceFormatBits);
    RegisterFunctionExport(GX2GetSurfaceFormatBitsPerElement);

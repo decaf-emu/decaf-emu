@@ -11,6 +11,10 @@
 namespace cafe::gx2
 {
 
+BOOL
+GX2CheckSurfaceUseVsFormat(GX2SurfaceUse use,
+                           GX2SurfaceFormat format);
+
 uint32_t
 GX2GetAttribFormatBits(GX2AttribFormat format);
 
