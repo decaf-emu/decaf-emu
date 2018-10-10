@@ -56,8 +56,12 @@ public:
    template<typename Type>
    PacketReader &operator()(gsl::span<Type> &values)
    {
-      values = gsl::make_span(reinterpret_cast<Type*>(&mBuffer[mPosition]),
-                            ((mBuffer.size() - mPosition) * sizeof(uint32_t)) / sizeof(Type));
+      if (mBuffer.size() - mPosition == 0) {
+         values = {};
+      } else {
+         values = gsl::make_span(reinterpret_cast<Type*>(&mBuffer[mPosition]),
+                                 ((mBuffer.size() - mPosition) * sizeof(uint32_t)) / sizeof(Type));
+      }
 
       mPosition = mBuffer.size();
       return *this;
