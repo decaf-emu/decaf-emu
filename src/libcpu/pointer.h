@@ -59,6 +59,18 @@ struct pointer_dereference_type<T,
 };
 
 /*
+ * 1 byte values do not need to have be2_val<> wrapped around them.
+ */
+template <typename T>
+struct pointer_dereference_type<T,
+   typename std::enable_if<(std::is_arithmetic<T>::value
+                         || std::is_enum<T>::value)
+                         && sizeof(T) == 1>::type>
+{
+   using type = T;
+};
+
+/*
  * If Type is an arithmetic type, enum type, or cpu::Pointer<> type, then we
  * must dereference to a be2_val.
  */
@@ -69,7 +81,8 @@ struct pointer_dereference_type<T,
                          || is_cpu_address<T>::value
                          || is_cpu_pointer<T>::value
                          || is_cpu_func_pointer<T>::value)
-                         && !std::is_const<T>::value>::type>
+                         && !std::is_const<T>::value
+                         && sizeof(T) != 1>::type>
 {
    using type = be2_val<T>;
 };
@@ -84,7 +97,8 @@ struct pointer_dereference_type<T,
                          || is_cpu_address<typename std::remove_const<T>::type>::value
                          || is_cpu_pointer<typename std::remove_const<T>::type>::value
                          || is_cpu_func_pointer<typename std::remove_const<T>::type>::value)
-                         && std::is_const<T>::value>::type>
+                         && std::is_const<T>::value
+                         && sizeof(T) != 1>::type>
 {
    using type = const be2_val<T>;
 };
