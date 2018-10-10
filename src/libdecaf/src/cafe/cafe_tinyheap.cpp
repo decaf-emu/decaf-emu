@@ -202,7 +202,7 @@ TinyHeap_Setup(cpu::Pointer<TinyHeapBase<AddressType>, AddressType> heap,
    }
 
    auto trackingBlocks = getTrackingBlocks(heap);
-   std::memset(trackingBlocks.getRawPointer(), 0, numTrackingBlocks * sizeof(TrackingBlock));
+   std::memset(trackingBlocks.get(), 0, numTrackingBlocks * sizeof(TrackingBlock));
 
    for (auto i = 1; i < numTrackingBlocks; ++i) {
       trackingBlocks[i].prevBlockIdx = i - 1;

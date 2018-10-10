@@ -95,7 +95,7 @@ LOADER_GetSecInfo(kernel::UniqueProcessId upid,
    }
 
    // Fill out the section info data
-   std::memset(outSectionInfo.getRawPointer(),
+   std::memset(outSectionInfo.get(),
                0,
                sizeof(LOADER_SectionInfo) * rpl->elfHeader.shnum);
 
@@ -304,7 +304,7 @@ LOADER_GetPathString(kernel::UniqueProcessId upid,
 
    auto path = virt_cast<char *>(rpl->fileInfoBuffer) + rpl->fileInfoBuffer->filename;
    auto pathLength = static_cast<uint32_t>(
-      strnlen(path.getRawPointer(),
+      strnlen(path.get(),
               rpl->fileInfoBufferSize - rpl->fileInfoBuffer->filename) + 1);
 
    if (!pathStringBuffer ||
@@ -335,8 +335,8 @@ LOADER_GetPathString(kernel::UniqueProcessId upid,
    }
 
    // Copy the path string
-   string_copy(pathStringBuffer.getRawPointer(),
-               path.getRawPointer(),
+   string_copy(pathStringBuffer.get(),
+               path.get(),
                pathLength);
    pathStringBuffer[pathLength - 1] = char { 0 };
 

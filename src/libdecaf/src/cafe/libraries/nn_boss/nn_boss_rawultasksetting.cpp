@@ -16,9 +16,7 @@ RawUlTaskSetting::RawUlTaskSetting() :
    mRawUlUnk3(0u)
 {
    mVirtualTable = RawUlTaskSetting::VirtualTable;
-   std::memset(virt_addrof(mRawUlData).getRawPointer(),
-               0,
-               mRawUlData.size());
+   std::memset(virt_addrof(mRawUlData).get(), 0, mRawUlData.size());
 }
 
 RawUlTaskSetting::~RawUlTaskSetting()

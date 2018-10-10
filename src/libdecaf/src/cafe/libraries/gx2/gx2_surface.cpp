@@ -81,7 +81,7 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
    auto offset0 = 0u;
 
    for (auto level = 0u; level < surface->mipLevels; ++level) {
-      internal::getSurfaceInfo(surface.getRawPointer(), level, &output);
+      internal::getSurfaceInfo(surface.get(), level, &output);
 
       if (level) {
          auto pad = 0u;
@@ -112,7 +112,7 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
                surface->tileMode = GX2TileMode::Tiled1DThin1;
             }
 
-            internal::getSurfaceInfo(surface.getRawPointer(), level, &output);
+            internal::getSurfaceInfo(surface.get(), level, &output);
             surface->swizzle &= 0xFF00FFFF;
             lastTileMode = surface->tileMode;
          }
@@ -325,7 +325,7 @@ GX2InitColorBufferRegs(virt_ptr<GX2ColorBuffer> colorBuffer)
 
    // Update cb_color_size
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
-   internal::getSurfaceInfo(virt_addrof(colorBuffer->surface).getRawPointer(),
+   internal::getSurfaceInfo(virt_addrof(colorBuffer->surface).get(),
                             0, &output);
 
    auto pitchTileMax = (output.pitch / latte::MicroTileWidth) - 1;
@@ -357,7 +357,7 @@ GX2InitDepthBufferRegs(virt_ptr<GX2DepthBuffer> depthBuffer)
 
    // Update db_depth_size
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
-   internal::getSurfaceInfo(virt_addrof(depthBuffer->surface).getRawPointer(),
+   internal::getSurfaceInfo(virt_addrof(depthBuffer->surface).get(),
                             0, &output);
 
    auto pitchTileMax = (output.pitch / latte::MicroTileWidth) - 1;
@@ -421,7 +421,7 @@ GX2GetSurfaceMipPitch(virt_ptr<GX2Surface> surface,
                       uint32_t level)
 {
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT info;
-   internal::getSurfaceInfo(surface.getRawPointer(), level, &info);
+   internal::getSurfaceInfo(surface.get(), level, &info);
    return info.pitch;
 }
 
@@ -430,8 +430,8 @@ GX2GetSurfaceMipSliceSize(virt_ptr<GX2Surface> surface,
                           uint32_t level)
 {
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT info;
-   internal::getSurfaceInfo(surface.getRawPointer(), level, &info);
-   return internal::calcSliceSize(surface.getRawPointer(), &info);
+   internal::getSurfaceInfo(surface.get(), level, &info);
+   return internal::calcSliceSize(surface.get(), &info);
 }
 
 void
@@ -456,8 +456,8 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
       // LinearSpecial surfaces cause the copy to occur on the CPU.  This code
       //  assumes that if the texture was previously written by the GPU, that it
       //  has since been invalidated into CPU memory.
-      gx2::internal::copySurface(src.getRawPointer(), srcLevel, srcSlice,
-                                 dst.getRawPointer(), dstLevel, dstSlice);
+      gx2::internal::copySurface(src.get(), srcLevel, srcSlice,
+                                 dst.get(), dstLevel, dstSlice);
       return;
    }
 

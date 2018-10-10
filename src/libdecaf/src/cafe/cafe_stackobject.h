@@ -25,19 +25,19 @@ public:
       auto newStackTop = oldStackTop - AlignedSize;
       auto ptrAddr = newStackTop + 8;
 
-      memmove(virt_cast<void *>(newStackTop).getRawPointer(),
-              virt_cast<void *>(oldStackTop).getRawPointer(),
+      memmove(virt_cast<void *>(newStackTop).get(),
+              virt_cast<void *>(oldStackTop).get(),
               8);
 
       core->gpr[1] = newStackTop.getAddress();
       virt_ptr<Type>::mAddress = virt_addr { newStackTop + 8 };
-      std::uninitialized_default_construct_n(virt_ptr<Type>::getRawPointer(),
+      std::uninitialized_default_construct_n(virt_ptr<Type>::get(),
                                              NumElements);
    }
 
    ~StackObject()
    {
-      std::destroy_n(virt_ptr<Type>::getRawPointer(), NumElements);
+      std::destroy_n(virt_ptr<Type>::get(), NumElements);
 
       auto core = cpu::this_core::state();
       auto oldStackTop = virt_addr { core->gpr[1] };
@@ -46,8 +46,8 @@ public:
       decaf_check(virt_ptr<Type>::mAddress == ptrAddr);
 
       core->gpr[1] = newStackTop.getAddress();
-      memmove(virt_cast<void *>(newStackTop).getRawPointer(),
-              virt_cast<void *>(oldStackTop).getRawPointer(),
+      memmove(virt_cast<void *>(newStackTop).get(),
+              virt_cast<void *>(oldStackTop).get(),
               8);
    }
 };
@@ -65,12 +65,12 @@ public:
 
    constexpr auto &operator[](std::size_t index)
    {
-      return virt_ptr<Type>::getRawPointer()[index];
+      return virt_ptr<Type>::get()[index];
    }
 
    constexpr const auto &operator[](std::size_t index) const
    {
-      return virt_ptr<Type>::getRawPointer()[index];
+      return virt_ptr<Type>::get()[index];
    }
 };
 
@@ -85,15 +85,15 @@ public:
       auto newStackTop = oldStackTop - mSize;
       auto ptrAddr = newStackTop + 8;
 
-      memmove(virt_cast<void *>(newStackTop).getRawPointer(),
-              virt_cast<void *>(oldStackTop).getRawPointer(),
+      memmove(virt_cast<void *>(newStackTop).get(),
+              virt_cast<void *>(oldStackTop).get(),
               8);
 
       core->gpr[1] = newStackTop.getAddress();
       virt_ptr<char>::mAddress = virt_addr { newStackTop + 8 };
 
-      std::memcpy(virt_ptr<char>::getRawPointer(), hostString.data(), hostString.size());
-      virt_ptr<char>::getRawPointer()[hostString.size()] = char { 0 };
+      std::memcpy(virt_ptr<char>::get(), hostString.data(), hostString.size());
+      virt_ptr<char>::get()[hostString.size()] = char { 0 };
    }
 
    StackString(StackString &&from) :
@@ -113,8 +113,8 @@ public:
          decaf_check(virt_ptr<char>::mAddress == ptrAddr);
 
          core->gpr[1] = newStackTop.getAddress();
-         memmove(virt_cast<void *>(newStackTop).getRawPointer(),
-                 virt_cast<void *>(oldStackTop).getRawPointer(),
+         memmove(virt_cast<void *>(newStackTop).get(),
+                 virt_cast<void *>(oldStackTop).get(),
                  8);
       }
    }

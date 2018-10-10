@@ -245,7 +245,7 @@ void GdbServer::handleQuery(const std::string &command)
          fmt::format_to(reply, "<thread id=\"{}\" core=\"0\"", thread->id);
 
          if (thread->name) {
-            fmt::format_to(reply, " name=\"{}\"", encodeXml(thread->name.getRawPointer()));
+            fmt::format_to(reply, " name=\"{}\"", encodeXml(thread->name.get()));
          }
 
          fmt::format_to(reply, "></thread>");

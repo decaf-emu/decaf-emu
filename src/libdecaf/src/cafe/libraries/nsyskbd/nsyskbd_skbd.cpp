@@ -40,7 +40,7 @@ SKBDGetKey(SKBDChannel channel,
            virt_ptr<SKBDKeyData> keyData)
 {
    decaf_warn_stub();
-   std::memset(keyData.getRawPointer(), 0, sizeof(SKBDKeyData));
+   std::memset(keyData.get(), 0, sizeof(SKBDKeyData));
    keyData->channel = channel;
    return SKBDError::OK;
 }

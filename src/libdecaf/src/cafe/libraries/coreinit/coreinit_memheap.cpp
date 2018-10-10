@@ -210,7 +210,7 @@ registerHeap(virt_ptr<MEMHeapHeader> heap,
 
    if (heap->flags & MEMHeapFlags::DebugMode) {
       auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Unused);
-      std::memset(dataStart.getRawPointer(), fillVal, dataEnd - dataStart);
+      std::memset(dataStart.get(), fillVal, dataEnd - dataStart);
    }
 
    MEMInitList(virt_addrof(heap->list), offsetof(MEMHeapHeader, link));

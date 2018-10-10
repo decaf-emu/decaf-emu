@@ -95,7 +95,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    if (flags & ThreadFlags::AllocateIpcBufferPool) {
       stackTop -= 0x24;
       thread->ipcBufferPool = stackTop;
-      std::memset(thread->ipcBufferPool.getRawPointer(), 0, 0x24);
+      std::memset(thread->ipcBufferPool.get(), 0, 0x24);
    } else {
       thread->ipcBufferPool = nullptr;
    }
@@ -125,7 +125,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    thread->context.entryPoint = entry;
    thread->context.entryPointArg = context;
    thread->context.fiber = platform::createFiber(internal::iosFiberEntryPoint,
-                                                 thread.getRawPointer());
+                                                 thread.get());
 #endif
 
    return static_cast<Error>(thread->id);

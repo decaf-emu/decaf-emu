@@ -66,7 +66,7 @@ LiPurgeOneUnlinkedModule(virt_ptr<LOADED_RPL> rpl)
       }
    }
 
-   std::memset(rpl.getRawPointer(), 0, sizeof(LOADED_RPL));
+   std::memset(rpl.get(), 0, sizeof(LOADED_RPL));
    LiCacheLineCorrectFreeEx(globals->processCodeHeap,
                             rpl,
                             rpl->selfBufferSize);

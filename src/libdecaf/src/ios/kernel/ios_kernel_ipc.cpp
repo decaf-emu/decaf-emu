@@ -21,7 +21,7 @@ IOS_Open(std::string_view device,
          OpenMode mode)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosOpen(device,
@@ -62,7 +62,7 @@ Error
 IOS_Close(ResourceHandleId handle)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosClose(handle,
@@ -167,7 +167,7 @@ IOS_Ioctl(ResourceHandleId handle,
           uint32_t outputBufferLength)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosIoctl(handle,
@@ -224,7 +224,7 @@ IOS_Ioctlv(ResourceHandleId handle,
            phys_ptr<IoctlVec> vecs)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosIoctlv(handle,
@@ -276,7 +276,7 @@ IOS_Resume(ResourceHandleId handle,
            uint32_t unkArg1)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosResume(handle,
@@ -322,7 +322,7 @@ IOS_Suspend(ResourceHandleId handle,
             uint32_t unkArg1)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosSuspend(handle,
@@ -370,7 +370,7 @@ IOS_SvcMsg(ResourceHandleId handle,
            uint32_t unkArg3)
 {
    StackObject<IpcRequest> request;
-   std::memset(request.getRawPointer(), 0, sizeof(IpcRequest));
+   std::memset(request.get(), 0, sizeof(IpcRequest));
 
    auto queue = internal::getCurrentThreadMessageQueue();
    auto error = internal::dispatchIosSvcMsg(handle,

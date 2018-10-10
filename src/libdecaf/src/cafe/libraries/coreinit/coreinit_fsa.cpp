@@ -280,7 +280,7 @@ fsaAsyncResultInit(virt_ptr<FSAAsyncResult> asyncResult,
                    virt_ptr<const FSAAsyncData> asyncData,
                    OSFunctionType func)
 {
-   std::memset(asyncResult.getRawPointer(), 0, sizeof(FSAAsyncResult));
+   std::memset(asyncResult.get(), 0, sizeof(FSAAsyncResult));
    asyncResult->userCallback = asyncData->userCallback;
    asyncResult->ioMsgQueue = asyncData->ioMsgQueue;
    asyncResult->userContext = asyncData->userContext;

@@ -115,7 +115,7 @@ phys_ptr<char>
 allocProcessStatic(std::string_view str)
 {
    auto buffer = phys_cast<char *>(allocProcessStatic(str.size() + 1));
-   std::copy(str.begin(), str.end(), buffer.getRawPointer());
+   std::copy(str.begin(), str.end(), buffer.get());
    buffer[str.size()] = char { 0 };
    return buffer;
 }
@@ -178,7 +178,7 @@ initialiseProcessStaticAllocators()
    for (auto &layout : ProcessMemoryLayout) {
       sProcessStaticAllocators[layout.id] =
          FrameAllocator {
-            phys_cast<uint8_t *>(layout.addr).getRawPointer(),
+            phys_cast<uint8_t *>(layout.addr).get(),
             layout.size
          };
    }

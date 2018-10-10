@@ -71,7 +71,7 @@ ipckDriverUserOpen(uint32_t numReplies,
    driver->perProcessNumUserRequests[pidx] = 0u;
    driver->perProcessReplyQueue[pidx] = replyQueue;
    driver->perProcessCallbacks[pidx] = handler;
-   std::memset(replyQueue.getRawPointer(), 0, sizeof(IPCKDriverReplyQueue));
+   std::memset(replyQueue.get(), 0, sizeof(IPCKDriverReplyQueue));
    return ios::Error::OK;
 }
 
@@ -179,8 +179,8 @@ ipckDriverLoaderPollCompletion()
    }
 
    // Copy reply to our user request structure
-   std::memcpy(block->userRequest.getRawPointer(),
-               block->request.getRawPointer(),
+   std::memcpy(block->userRequest.get(),
+               block->request.get(),
                0x48u);
 
    driver->perProcessNumLoaderRequests[pidx]--;
@@ -249,7 +249,9 @@ ipckDriverAllocateRequestBlock(RamPartitionId clientProcessId,
    requestBlock->userRequest = nullptr;
 
    auto request = requestBlock->request;
-   std::memset(virt_addrof(request->request.args).getRawPointer(), 0, sizeof(request->request.args));
+   std::memset(virt_addrof(request->request.args).get(),
+               0,
+               sizeof(request->request.args));
 
    request->request.clientPid = static_cast<int32_t>(clientProcessId);
    request->request.handle = handle;
@@ -429,8 +431,8 @@ submitUserOrLoaderRequest(virt_ptr<IPCKDriver> driver,
                                           &requestBlock,
                                           userRequest);
          if (error >= ios::Error::OK) {
-            std::memcpy(requestBlock->request.getRawPointer(),
-                        userRequest.getRawPointer(),
+            std::memcpy(requestBlock->request.get(),
+                        userRequest.get(),
                         0x48u);
 
             error = processLoaderOrUserRequest(driver, requestBlock, isLoader);
@@ -556,8 +558,8 @@ dispatchUserRepliesCallback(virt_ptr<IPCKDriver> driver,
          break;
       }
 
-      std::memcpy(requestBlock->userRequest.getRawPointer(),
-                  requestBlock->request.getRawPointer(),
+      std::memcpy(requestBlock->userRequest.get(),
+                  requestBlock->request.get(),
                   0x48u);
 
       replyQueue->replies[replyQueue->numReplies] = requestBlock->userRequest;
@@ -638,7 +640,7 @@ ios::Error
 ipckDriverInit()
 {
    auto driver = ipckDriverGetInstance();
-   std::memset(driver.getRawPointer(), 0, sizeof(IPCKDriver));
+   std::memset(driver.get(), 0, sizeof(IPCKDriver));
 
    driver->coreId = cpu::this_core::id();
 
@@ -664,7 +666,8 @@ ipckDriverInit()
       return error;
    }
 
-   std::memset(driver->requestsBuffer.getRawPointer(), 0,
+   std::memset(driver->requestsBuffer.get(),
+               0,
                sizeof(IPCKDriverRequest) * IPCKRequestsPerCore);
    driver->state = IPCKDriverState::Initialised;
 

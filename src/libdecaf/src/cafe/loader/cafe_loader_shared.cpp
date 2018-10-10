@@ -108,7 +108,7 @@ sLoadOneShared(std::string_view filename)
 
    Loader_LogEntry(2, 0, 0, "sLoadOneShared  LiSyncBnce end {}", filename);
 
-   std::memcpy(fileNameBuffer.getRawPointer(),
+   std::memcpy(fileNameBuffer.get(),
                filename.data(),
                filename.size());
    fileNameBuffer[filename.size()] = 0;
@@ -231,13 +231,13 @@ sLoadOneShared(std::string_view filename)
 
       // Load imported rpl
       auto name = shStr + sectionHeader->name + strlen(".fimport_");
-      auto nameLen = strlen(name.getRawPointer());
+      auto nameLen = strlen(name.get());
       auto importModule = virt_ptr<LOADED_RPL> { nullptr };
 
       for (auto module = gpLoaderShared->loadedModules; module; module = module->nextLoadedRpl) {
          if (module->moduleNameLen == nameLen &&
-             strncmp(name.getRawPointer(),
-                     module->moduleNameBuffer.getRawPointer(),
+             strncmp(name.get(),
+                     module->moduleNameBuffer.get(),
                      nameLen) == 0) {
             importModule = module;
             break;
@@ -416,9 +416,9 @@ LiInitSharedForAll()
       auto &block = gpLoaderShared->freeTrackCompBlocks[i];
       auto compressedBlockSize = uLongf { block.size };
       if (block.size > 0x200) {
-         error = compress(reinterpret_cast<Bytef *>(compressedInitialisationData.getRawPointer()),
+         error = compress(reinterpret_cast<Bytef *>(compressedInitialisationData.get()),
                           &compressedBlockSize,
-                          reinterpret_cast<Bytef *>(block.data.getRawPointer()),
+                          reinterpret_cast<Bytef *>(block.data.get()),
                           block.size);
          if (error != Z_OK) {
             if (error == Z_MEM_ERROR) {
@@ -448,8 +448,8 @@ LiInitSharedForAll()
          block.intialisationData = outAllocPtr;
          block.compressedSize = static_cast<uint32_t>(compressedBlockSize);
 
-         std::memcpy(block.intialisationData.getRawPointer(),
-                     compressedInitialisationData.getRawPointer(),
+         std::memcpy(block.intialisationData.get(),
+                     compressedInitialisationData.get(),
                      compressedBlockSize);
          Loader_FlushDataRangeNoSync(virt_cast<virt_addr>(block.intialisationData),
                                      block.compressedSize);
@@ -466,8 +466,8 @@ LiInitSharedForAll()
          }
 
          block.intialisationData = outAllocPtr;
-         std::memcpy(block.intialisationData.getRawPointer(),
-                     block.data.getRawPointer(),
+         std::memcpy(block.intialisationData.get(),
+                     block.data.get(),
                      block.size);
          Loader_FlushDataRangeNoSync(virt_cast<virt_addr>(block.intialisationData),
                                      block.size);
@@ -544,7 +544,7 @@ initialiseSharedHeaps()
       }
 
       // Clear gpLoaderShared
-      std::memset(gpLoaderShared.getRawPointer(), 0, sizeof(LoaderShared));
+      std::memset(gpLoaderShared.get(), 0, sizeof(LoaderShared));
       gpLoaderShared->dataBufferHead = virt_cast<void *>(virt_addr { 0x10000000 });
       Loader_ReportWarn("Title Loc is {}", getProcTitleLoc());
    }
@@ -558,7 +558,7 @@ findLoadedSharedModule(std::string_view name)
    for (auto module = gpLoaderShared->loadedModules; module; module = module->nextLoadedRpl) {
       auto moduleName =
          std::string_view {
-            module->moduleNameBuffer.getRawPointer(),
+            module->moduleNameBuffer.get(),
             module->moduleNameLen
          };
       if (moduleName == name) {

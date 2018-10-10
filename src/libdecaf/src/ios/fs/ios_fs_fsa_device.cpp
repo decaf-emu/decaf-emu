@@ -47,9 +47,9 @@ Path
 FSADevice::translatePath(phys_ptr<const char> path) const
 {
    if (path[0] == '/') {
-      return { path.getRawPointer() };
+      return { path.get() };
    } else {
-      return mWorkingPath.join(path.getRawPointer());
+      return mWorkingPath.join(path.get());
    }
 }
 
@@ -59,19 +59,19 @@ FSADevice::translateMode(phys_ptr<const char> mode) const
 {
    auto result = 0u;
 
-   if (std::strchr(mode.getRawPointer(), 'r')) {
+   if (std::strchr(mode.get(), 'r')) {
       result |= File::Read;
    }
 
-   if (std::strchr(mode.getRawPointer(), 'w')) {
+   if (std::strchr(mode.get(), 'w')) {
       result |= File::Write;
    }
 
-   if (std::strchr(mode.getRawPointer(), 'a')) {
+   if (std::strchr(mode.get(), 'a')) {
       result |= File::Append;
    }
 
-   if (std::strchr(mode.getRawPointer(), '+')) {
+   if (std::strchr(mode.get(), '+')) {
       result |= File::Update;
    }
 
@@ -83,7 +83,7 @@ void
 FSADevice::translateStat(const FolderEntry &entry,
                          phys_ptr<FSAStat> stat) const
 {
-   std::memset(stat.getRawPointer(), 0, sizeof(FSAStat));
+   std::memset(stat.get(), 0, sizeof(FSAStat));
 
    if (entry.type == FolderEntry::Folder) {
       stat->flags = FSAStatFlags::Directory;
@@ -273,7 +273,7 @@ FSADevice::flushQuota(phys_ptr<FSARequestFlushQuota> request)
 FSAStatus
 FSADevice::getCwd(phys_ptr<FSAResponseGetCwd> response)
 {
-   string_copy(phys_addrof(response->path).getRawPointer(),
+   string_copy(phys_addrof(response->path).get(),
                mWorkingPath.path().c_str(),
                response->path.size() - 1);
    response->path[response->path.size() - 1] = char { 0 };
@@ -437,7 +437,7 @@ FSADevice::readDir(phys_ptr<FSARequestReadDir> request,
    }
 
    translateStat(entry, phys_addrof(response->entry.stat));
-   string_copy(phys_addrof(response->entry.name).getRawPointer(),
+   string_copy(phys_addrof(response->entry.name).get(),
                response->entry.name.size(),
                entry.name.c_str(),
                entry.name.size());
@@ -461,7 +461,7 @@ FSADevice::readFile(phys_ptr<FSARequestReadFile> request,
       file->seek(request->pos);
    }
 
-   auto elemsRead = file->read(buffer.getRawPointer(), request->size, request->count);
+   auto elemsRead = file->read(buffer.get(), request->size, request->count);
    auto bytesRead = elemsRead * request->size;
    return static_cast<FSAStatus>(bytesRead);
 }
@@ -531,7 +531,7 @@ FSADevice::statFile(phys_ptr<FSARequestStatFile> request,
       return error;
    }
 
-   std::memset(phys_addrof(response->stat).getRawPointer(), 0, sizeof(response->stat));
+   std::memset(phys_addrof(response->stat).get(), 0, sizeof(response->stat));
    response->stat.flags = static_cast<FSAStatFlags>(0);
    response->stat.permission = 0x660u;
    response->stat.owner = 0u;
@@ -584,7 +584,7 @@ FSADevice::writeFile(phys_ptr<FSARequestWriteFile> request,
       file->seek(request->pos);
    }
 
-   auto elemsWritten = file->write(buffer.getRawPointer(), request->size, request->count);
+   auto elemsWritten = file->write(buffer.get(), request->size, request->count);
    auto bytesWritten = elemsWritten * request->size;
    return static_cast<FSAStatus>(bytesWritten);
 }

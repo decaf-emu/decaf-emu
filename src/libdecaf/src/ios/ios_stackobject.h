@@ -24,13 +24,13 @@ public:
       phys_ptr<Type>::mAddress = phys_cast<phys_addr>(ptr);
       thread->stackPointer = ptr;
 
-      std::uninitialized_default_construct_n(phys_ptr<Type>::getRawPointer(),
+      std::uninitialized_default_construct_n(phys_ptr<Type>::get(),
                                              NumElements);
    }
 
    ~StackObject()
    {
-      std::destroy_n(phys_ptr<Type>::getRawPointer(), NumElements);
+      std::destroy_n(phys_ptr<Type>::get(), NumElements);
 
       auto thread = kernel::internal::getCurrentThread();
       auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
@@ -52,12 +52,12 @@ public:
 
    constexpr auto &operator[](std::size_t index)
    {
-      return phys_ptr<Type>::getRawPointer()[index];
+      return phys_ptr<Type>::get()[index];
    }
 
    constexpr const auto &operator[](std::size_t index) const
    {
-      return phys_ptr<Type>::getRawPointer()[index];
+      return phys_ptr<Type>::get()[index];
    }
 };
 

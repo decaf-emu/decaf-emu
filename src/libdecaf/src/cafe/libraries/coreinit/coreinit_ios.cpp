@@ -559,15 +559,15 @@ ipcPrepareOpenRequest(virt_ptr<IPCDriver> ipcDriver,
                       int mode)
 {
    auto ipcBuffer = ipcRequest->ipcBuffer;
-   auto deviceLen = strlen(device.getRawPointer());
+   auto deviceLen = strlen(device.get());
 
    if (deviceLen >= 0x20) {
       return IOSError::Max;
    }
 
    ipcBuffer->nameBuffer.fill(0);
-   std::memcpy(virt_addrof(ipcBuffer->nameBuffer).getRawPointer(),
-               device.getRawPointer(), deviceLen);
+   std::memcpy(virt_addrof(ipcBuffer->nameBuffer).get(),
+               device.get(), deviceLen);
 
    ipcBuffer->request.args.open.name = nullptr;
    ipcBuffer->request.args.open.nameLen = static_cast<uint32_t>(deviceLen + 1);

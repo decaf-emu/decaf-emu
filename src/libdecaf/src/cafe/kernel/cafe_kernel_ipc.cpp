@@ -136,7 +136,7 @@ IOS_OpenAsync(RamPartitionId clientProcessId,
 
    requestBlock->request->request.args.open.name = effectiveToPhysical(device);
    requestBlock->request->request.args.open.nameLen =
-      static_cast<uint32_t>(strlen(device.getRawPointer()));
+      static_cast<uint32_t>(strlen(device.get()));
 
    requestBlock->request->request.args.open.mode = mode;
    requestBlock->request->request.args.open.caps = 0ull;
@@ -302,17 +302,17 @@ initialiseIpc()
    ipcInitialiseHeap();
    auto nameBuffer = virt_cast<char *>(ipcAllocBuffer(0x20));
 
-   string_copy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
+   string_copy(nameBuffer.get(), "/dev/mcp", 0x20);
    sIpcData->mcpHandle = IOS_Open(RamPartitionId::Kernel,
                                   nameBuffer,
                                   ios::OpenMode::None);
 
-   string_copy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
+   string_copy(nameBuffer.get(), "/dev/mcp", 0x20);
    sIpcData->ppcAppHandle = IOS_Open(RamPartitionId::Kernel,
                                      nameBuffer,
                                      ios::OpenMode::None);
 
-   string_copy(nameBuffer.getRawPointer(), "/dev/mcp", 0x20);
+   string_copy(nameBuffer.get(), "/dev/mcp", 0x20);
    sIpcData->cblHandle = IOS_Open(RamPartitionId::Kernel,
                                   nameBuffer,
                                   ios::OpenMode::None);

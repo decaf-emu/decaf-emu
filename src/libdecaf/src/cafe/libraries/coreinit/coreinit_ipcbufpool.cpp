@@ -47,7 +47,7 @@ IPCBufPoolCreate(virt_ptr<void> buffer,
       return nullptr;
    }
 
-   std::memset(buffer.getRawPointer(), 0, size);
+   std::memset(buffer.get(), 0, size);
 
    // IPC messages should be 64 byte aligned
    messageSize = align_up(messageSize, 64);

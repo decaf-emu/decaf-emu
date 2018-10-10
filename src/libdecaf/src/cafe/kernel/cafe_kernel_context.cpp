@@ -311,7 +311,7 @@ initialiseCoreContext(cpu::Core *core)
 {
    // Allocate the root context
    auto context = virt_addrof(sContextData->coreThreadContext[core->id]);
-   memset(context.getRawPointer(), 0, sizeof(Context));
+   std::memset(context.get(), 0, sizeof(Context));
 
    auto stack = virt_addrof(sContextData->coreThreadStackBuffer[core->id * CoreThreadStackSize]);
    context->gpr[1] = virt_cast<virt_addr>(stack).getAddress() + CoreThreadStackSize - 8;

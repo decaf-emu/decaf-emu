@@ -69,7 +69,7 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       switch (request->requestData.command) {
       case Command::Open:
       {
-         auto name = std::string_view { request->requestData.args.open.name.getRawPointer() };
+         auto name = std::string_view { request->requestData.args.open.name.get() };
          auto error = Error::InvalidArg;
 
          if (name.compare("/dev/ppc_kernel") == 0) {

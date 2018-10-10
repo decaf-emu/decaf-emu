@@ -75,7 +75,7 @@ DCZeroRange(virt_addr address,
 {
    auto alignedAddr = align_down(address, 32);
    auto alignedSize = align_up(size, 32);
-   std::memset(virt_cast<void *>(alignedAddr).getRawPointer(), 0, alignedSize);
+   std::memset(virt_cast<void *>(alignedAddr).get(), 0, alignedSize);
 }
 
 

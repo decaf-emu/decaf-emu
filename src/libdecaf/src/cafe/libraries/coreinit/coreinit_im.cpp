@@ -38,8 +38,8 @@ static void
 imCopyData(virt_ptr<IMRequest> request)
 {
    if (request->copyDst && request->copySrc && request->copySize) {
-      std::memcpy(virt_addrof(request->copyDst).getRawPointer(),
-                  virt_addrof(request->copySrc).getRawPointer(),
+      std::memcpy(virt_addrof(request->copyDst).get(),
+                  virt_addrof(request->copySrc).get(),
                   request->copySize);
    }
 }
@@ -114,7 +114,7 @@ IM_GetHomeButtonParams(IOSHandle handle,
                        IOSAsyncCallbackFn asyncCallback,
                        virt_ptr<void> asyncCallbackContext)
 {
-   std::memset(request.getRawPointer(), 0, sizeof(IMRequest));
+   std::memset(request.get(), 0, sizeof(IMRequest));
 
    request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getHomeButtomParamResponse));
    request->ioctlVecs[0].len = 8u;
@@ -139,7 +139,7 @@ IM_GetParameter(IOSHandle handle,
                 IOSAsyncCallbackFn asyncCallback,
                 virt_ptr<void> asyncCallbackContext)
 {
-   std::memset(request.getRawPointer(), 0, sizeof(IMRequest));
+   std::memset(request.get(), 0, sizeof(IMRequest));
 
    request->getParameterRequest.parameter = parameter;
    request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getParameterRequest));
@@ -236,7 +236,7 @@ IM_GetNvParameter(IOSHandle handle,
                   IOSAsyncCallbackFn asyncCallback,
                   virt_ptr<void> asyncCallbackContext)
 {
-   std::memset(request.getRawPointer(), 0, sizeof(IMRequest));
+   std::memset(request.get(), 0, sizeof(IMRequest));
 
    request->getNvParameterRequest.parameter = parameter;
    request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getNvParameterRequest));
@@ -315,7 +315,7 @@ IM_GetTimerRemaining(IOSHandle handle,
                      IOSAsyncCallbackFn asyncCallback,
                      virt_ptr<void> asyncCallbackContext)
 {
-   std::memset(request.getRawPointer(), 0, sizeof(IMRequest));
+   std::memset(request.get(), 0, sizeof(IMRequest));
 
    request->getTimerRemainingRequest.timer = timer;
    request->ioctlVecs[0].vaddr = virt_cast<virt_addr>(virt_addrof(request->getTimerRemainingRequest));
@@ -369,7 +369,7 @@ IM_SetParameter(IOSHandle handle,
                 IOSAsyncCallbackFn asyncCallback,
                 virt_ptr<void> asyncCallbackContext)
 {
-   std::memset(request.getRawPointer(), 0, sizeof(IMRequest));
+   std::memset(request.get(), 0, sizeof(IMRequest));
 
    request->setParameterRequest.parameter = parameter;
    request->setParameterRequest.value = value;
@@ -393,7 +393,7 @@ IM_SetNvParameter(IOSHandle handle,
                   IOSAsyncCallbackFn asyncCallback,
                   virt_ptr<void> asyncCallbackContext)
 {
-   std::memset(request.getRawPointer(), 0, sizeof(IMRequest));
+   std::memset(request.get(), 0, sizeof(IMRequest));
 
    request->setNvParameterRequest.parameter = parameter;
    request->setNvParameterRequest.value = value;

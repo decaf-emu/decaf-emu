@@ -102,10 +102,10 @@ zlibAllocWrapper(void *opaque,
                               wstrm->opaque,
                               static_cast<uint32_t>(items),
                               static_cast<uint32_t>(size));
-      return ptr.getRawPointer();
+      return ptr.get();
    } else {
       auto ptr = coreinit::MEMAllocFromDefaultHeap(items * size);
-      return ptr.getRawPointer();
+      return ptr.get();
    }
 }
 
@@ -130,7 +130,7 @@ z_stream *
 getZStream(virt_ptr<zlib125_stream> in)
 {
    auto zstream = &gStreamMap[virt_cast<virt_addr>(in).getAddress()];
-   zstream->opaque = in.getRawPointer();
+   zstream->opaque = in.get();
    zstream->zalloc = &zlibAllocWrapper;
    zstream->zfree = &zlibFreeWrapper;
    return zstream;
@@ -147,11 +147,11 @@ zlib125_deflate(virt_ptr<zlib125_stream> wstrm,
                 int32_t flush)
 {
    auto zstrm = getZStream(wstrm);
-   zstrm->next_in = wstrm->next_in.getRawPointer();
+   zstrm->next_in = wstrm->next_in.get();
    zstrm->avail_in = wstrm->avail_in;
    zstrm->total_in = wstrm->total_in;
 
-   zstrm->next_out = wstrm->next_out.getRawPointer();
+   zstrm->next_out = wstrm->next_out.get();
    zstrm->avail_out = wstrm->avail_out;
    zstrm->total_out = wstrm->total_out;
 
@@ -184,7 +184,7 @@ zlib125_deflateInit_(virt_ptr<zlib125_stream> wstrm,
 
    auto zstrm = getZStream(wstrm);
    auto result = deflateInit_(zstrm, level,
-                              version.getRawPointer(), sizeof(z_stream));
+                              version.get(), sizeof(z_stream));
 
    wstrm->msg = nullptr;
    return result;
@@ -204,7 +204,7 @@ zlib125_deflateInit2_(virt_ptr<zlib125_stream> wstrm,
 
    auto zstrm = getZStream(wstrm);
    auto result = deflateInit2_(zstrm, level, method, windowBits, memLevel,
-                               strategy, version.getRawPointer(),
+                               strategy, version.get(),
                                sizeof(z_stream));
 
    wstrm->msg = nullptr;
@@ -238,11 +238,11 @@ zlib125_inflate(virt_ptr<zlib125_stream> wstrm,
                 int32_t flush)
 {
    auto zstrm = getZStream(wstrm);
-   zstrm->next_in = wstrm->next_in.getRawPointer();
+   zstrm->next_in = wstrm->next_in.get();
    zstrm->avail_in = wstrm->avail_in;
    zstrm->total_in = wstrm->total_in;
 
-   zstrm->next_out = wstrm->next_out.getRawPointer();
+   zstrm->next_out = wstrm->next_out.get();
    zstrm->avail_out = wstrm->avail_out;
    zstrm->total_out = wstrm->total_out;
 
@@ -273,7 +273,7 @@ zlib125_inflateInit_(virt_ptr<zlib125_stream> wstrm,
    decaf_check(sizeof(zlib125_stream) == stream_size);
 
    auto zstrm = getZStream(wstrm);
-   auto result = inflateInit_(zstrm, version.getRawPointer(),
+   auto result = inflateInit_(zstrm, version.get(),
                               sizeof(z_stream));
 
    wstrm->msg = nullptr;
@@ -289,7 +289,7 @@ zlib125_inflateInit2_(virt_ptr<zlib125_stream> wstrm,
    decaf_check(sizeof(zlib125_stream) == stream_size);
 
    auto zstrm = getZStream(wstrm);
-   auto result = inflateInit2_(zstrm, windowBits, version.getRawPointer(),
+   auto result = inflateInit2_(zstrm, windowBits, version.get(),
                                sizeof(z_stream));
 
    wstrm->msg = nullptr;
@@ -325,7 +325,7 @@ zlib125_adler32(uint32_t adler,
                 virt_ptr<const uint8_t> buf,
                 uint32_t len)
 {
-   return static_cast<uint32_t>(adler32(adler, buf.getRawPointer(), len));
+   return static_cast<uint32_t>(adler32(adler, buf.get(), len));
 }
 
 static uint32_t
@@ -333,7 +333,7 @@ zlib125_crc32(uint32_t crc,
               virt_ptr<const uint8_t> buf,
               uint32_t len)
 {
-   return static_cast<uint32_t>(crc32(crc, buf.getRawPointer(), len));
+   return static_cast<uint32_t>(crc32(crc, buf.get(), len));
 }
 
 static int
@@ -343,8 +343,8 @@ zlib125_compress(virt_ptr<uint8_t> dest,
                  uint32_t sourceLen)
 {
    auto realDestLen = static_cast<uLong>(*destLen);
-   auto result = compress(dest.getRawPointer(), &realDestLen,
-                          source.getRawPointer(), sourceLen);
+   auto result = compress(dest.get(), &realDestLen,
+                          source.get(), sourceLen);
    *destLen = static_cast<uint32_t>(realDestLen);
    return result;
 }
@@ -362,8 +362,8 @@ zlib125_uncompress(virt_ptr<uint8_t> dest,
                    uint32_t sourceLen)
 {
    auto realDestLen = static_cast<uLong>(*destLen);
-   auto result = uncompress(dest.getRawPointer(), &realDestLen,
-                            source.getRawPointer(), sourceLen);
+   auto result = uncompress(dest.get(), &realDestLen,
+                            source.get(), sourceLen);
    *destLen = static_cast<uint32_t>(realDestLen);
    return result;
 }

@@ -91,8 +91,8 @@ mcpPrepareTitle(MCPTitleId titleId,
    // Handle response
    if (error >= ios::Error::OK) {
       auto response = virt_cast<MCPResponsePrepareTitle *>(buffer);
-      std::memcpy(outTitleInfo.getRawPointer(),
-                  virt_addrof(response->titleInfo).getRawPointer(),
+      std::memcpy(outTitleInfo.get(),
+                  virt_addrof(response->titleInfo).get(),
                   sizeof(MCPPPrepareTitleInfo));
    }
 

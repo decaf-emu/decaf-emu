@@ -98,7 +98,7 @@ serviceThreadEntry(phys_ptr<void> /*context*/)
 
          for (auto i = 0u; i < sServiceDevices.size(); ++i) {
             auto &device = sServiceDevices[i];
-            if (device.name.compare(request->requestData.args.open.name.getRawPointer()) == 0) {
+            if (device.name.compare(request->requestData.args.open.name.get()) == 0) {
                device.open = true;
                error = static_cast<Error>(i);
                break;

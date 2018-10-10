@@ -145,8 +145,8 @@ GX2DebugCaptureFrames(virt_ptr<const char> filename,
       return;
    }
 
-   string_copy(virt_addrof(sDebugCaptureData->pendingCaptureFilename).getRawPointer(),
-               filename.getRawPointer(),
+   string_copy(virt_addrof(sDebugCaptureData->pendingCaptureFilename).get(),
+               filename.get(),
                sDebugCaptureData->pendingCaptureFilename.size() - 1);
    sDebugCaptureData->numCaptureFramesRemaining = numFrames;
 }
@@ -182,14 +182,14 @@ GX2DebugTagUserStringVA(GX2DebugUserTag tag,
 {
    if (internal::debugCaptureEnabled()) {
       StackArray<char, 0x404> buffer;
-      std::memset(buffer.getRawPointer(), 0, 0x404);
+      std::memset(buffer.get(), 0, 0x404);
 
       if (fmt) {
          coreinit::internal::formatStringV(buffer, 0x3FF, fmt, vaList);
       }
 
       // Convert string to words!
-      auto length = static_cast<uint32_t>(strlen(buffer.getRawPointer()));
+      auto length = static_cast<uint32_t>(strlen(buffer.get()));
       auto numWords = align_up(length + 1, 4) / 4;
       auto bufferWords = virt_cast<uint32_t *>(buffer);
 

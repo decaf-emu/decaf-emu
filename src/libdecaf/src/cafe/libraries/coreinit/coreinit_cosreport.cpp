@@ -22,16 +22,16 @@ handleReport(COSReportModule module,
    // TODO: This actually goes down to a kernel syscall
    switch (level) {
    case COSReportLevel::Error:
-      gLog->error("COSVReport {}: {}", module, msg.getRawPointer());
+      gLog->error("COSVReport {}: {}", module, msg.get());
       break;
    case COSReportLevel::Warn:
-      gLog->warn("COSVReport {}: {}", module, msg.getRawPointer());
+      gLog->warn("COSVReport {}: {}", module, msg.get());
       break;
    case COSReportLevel::Info:
-      gLog->info("COSVReport {}: {}", module, msg.getRawPointer());
+      gLog->info("COSVReport {}: {}", module, msg.get());
       break;
    case COSReportLevel::Verbose:
-      gLog->debug("COSVReport {}: {}", module, msg.getRawPointer());
+      gLog->debug("COSVReport {}: {}", module, msg.get());
       break;
    }
 }
@@ -102,7 +102,7 @@ COSVReport(COSReportModule module,
            const std::string_view &msg)
 {
    StackArray<char, 128> buffer;
-   string_copy(buffer.getRawPointer(), msg.data(), buffer.size());
+   string_copy(buffer.get(), msg.data(), buffer.size());
    buffer[127] = char { 0 };
    handleReport(module, level, buffer);
 }

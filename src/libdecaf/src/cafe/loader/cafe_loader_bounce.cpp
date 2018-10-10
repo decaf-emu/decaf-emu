@@ -167,7 +167,7 @@ LiRefillUpcomingBounceBuffer(virt_ptr<LOADED_RPL> rpl,
    auto chunkReadSize = uint32_t { 0 };
    auto chunkBuffer = virt_ptr<void> { nullptr };
    auto error =
-      LiBounceOneChunk(virt_cast<char *>(rpl->pathBuffer).getRawPointer(),
+      LiBounceOneChunk(virt_cast<char *>(rpl->pathBuffer).get(),
                        rpl->fileType,
                        rpl->upid,
                        &chunkReadSize,

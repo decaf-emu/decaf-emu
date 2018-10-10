@@ -114,7 +114,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       return OSDriver_Error::InvalidArgument;
    }
 
-   auto nameLen = static_cast<uint32_t>(strlen(name.getRawPointer()));
+   auto nameLen = static_cast<uint32_t>(strlen(name.get()));
    if (nameLen == 0 || nameLen >= 64) {
       return OSDriver_Error::InvalidArgument;
    }
@@ -250,7 +250,7 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       auto otherName = cafe::invoke(cpu::this_core::state(),
                                     other->interfaceFunctions.getName,
                                     other->userDriverId);
-      if (iequals(otherName.getRawPointer(), name.getRawPointer())) {
+      if (iequals(otherName.get(), name.get())) {
          error = OSDriver_Error::AlreadyRegistered;
          OSUninterruptibleSpinLock_Release(virt_addrof(sDriverData->lock));
          goto error;
@@ -398,7 +398,7 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
    // Deregister driver with the kernel
    if (driver->unk0x40 == driver->unk0x44) {
       unkDeregisterSyscall0x3300(name,
-                                 static_cast<uint32_t>(strlen(name.getRawPointer())));
+                                 static_cast<uint32_t>(strlen(name.get())));
    }
 
    // Free the dynload handles

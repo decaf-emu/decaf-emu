@@ -146,7 +146,7 @@ LoaderStart(BOOL isDispatch,
       kernelIpcStorage->fatalLine = internal::LiGetFatalLine();
       kernelIpcStorage->fatalErr = internal::LiGetFatalError();
       kernelIpcStorage->fatalMsgType = internal::LiGetFatalMsgType();
-      string_copy(virt_addrof(kernelIpcStorage->fatalFunction).getRawPointer(),
+      string_copy(virt_addrof(kernelIpcStorage->fatalFunction).get(),
                   kernelIpcStorage->fatalFunction.size(),
                   internal::LiGetFatalFunction().data(),
                   kernelIpcStorage->fatalFunction.size() - 1);

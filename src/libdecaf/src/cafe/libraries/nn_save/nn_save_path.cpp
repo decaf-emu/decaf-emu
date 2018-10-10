@@ -85,9 +85,9 @@ SAVEGetSharedDataTitlePath(uint64_t titleID,
 {
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto result = snprintf(buffer.getRawPointer(), bufferSize,
+   auto result = snprintf(buffer.get(), bufferSize,
                           "/vol/storage_mlc01/sys/title/%08x/%08x/content/%s",
-                          titleHi, titleLo, dir.getRawPointer());
+                          titleHi, titleLo, dir.get());
 
    if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;
@@ -105,9 +105,9 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
 {
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
-   auto result = snprintf(buffer.getRawPointer(), bufferSize,
+   auto result = snprintf(buffer.get(), bufferSize,
                           "/vol/storage_mlc01/usr/save/%08x/%08x/user/common/%s",
-                          titleHi, titleLo, dir.getRawPointer());
+                          titleHi, titleLo, dir.get());
 
    if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;

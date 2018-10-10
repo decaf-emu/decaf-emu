@@ -368,7 +368,7 @@ memcpy(virt_ptr<void> dst,
        virt_ptr<const void> src,
        uint32_t size)
 {
-   std::memcpy(dst.getRawPointer(), src.getRawPointer(), size);
+   std::memcpy(dst.get(), src.get(), size);
    return dst;
 }
 
@@ -381,7 +381,7 @@ memmove(virt_ptr<void> dst,
         virt_ptr<const void> src,
         uint32_t size)
 {
-   std::memmove(dst.getRawPointer(), src.getRawPointer(), size);
+   std::memmove(dst.get(), src.get(), size);
    return dst;
 }
 
@@ -394,7 +394,7 @@ memset(virt_ptr<void> dst,
        int value,
        uint32_t size)
 {
-   std::memset(dst.getRawPointer(), value, size);
+   std::memset(dst.get(), value, size);
    return dst;
 }
 

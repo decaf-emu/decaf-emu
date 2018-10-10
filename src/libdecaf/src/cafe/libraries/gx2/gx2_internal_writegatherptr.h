@@ -28,9 +28,7 @@ public:
    write(virt_ptr<Type> buffer,
          uint32_t count)
    {
-      std::memcpy(mPointer.getRawPointer(),
-                  buffer.getRawPointer(),
-                  count);
+      std::memcpy(mPointer.get(), buffer.get(), count);
       mPointer += count;
    }
 

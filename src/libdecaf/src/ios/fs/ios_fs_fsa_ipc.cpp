@@ -39,7 +39,7 @@ allocFsaIpcData(phys_ptr<FSAIpcData> *outIpcData)
       return FSAStatus::OutOfResources;
    }
 
-   std::memset(buffer.getRawPointer(), 0, sizeof(FSAIpcData));
+   std::memset(buffer.get(), 0, sizeof(FSAIpcData));
    *outIpcData = phys_cast<FSAIpcData *>(buffer);
    return FSAStatus::OK;
 }
@@ -92,11 +92,11 @@ FSAOpenFile(FSAHandle handle,
    ipcData->resourceHandle = handle;
 
    auto request = phys_addrof(ipcData->request);
-   string_copy(phys_addrof(request->openFile.path).getRawPointer(),
+   string_copy(phys_addrof(request->openFile.path).get(),
                name.data(),
                request->openFile.path.size());
 
-   string_copy(phys_addrof(request->openFile.mode).getRawPointer(),
+   string_copy(phys_addrof(request->openFile.mode).get(),
                mode.data(),
                request->openFile.mode.size());
 
@@ -287,8 +287,8 @@ FSAStatFile(FSAHandle handle,
 
    // Copy FSAStat
    auto response = phys_addrof(ipcData->response);
-   std::memcpy(stat.getRawPointer(),
-               phys_addrof(response->statFile.stat).getRawPointer(),
+   std::memcpy(stat.get(),
+               phys_addrof(response->statFile.stat).get(),
                sizeof(FSAStat));
 
    freeFsaIpcData(ipcData);
@@ -311,7 +311,7 @@ FSARemove(FSAHandle handle,
 
    // Setup request
    auto request = phys_addrof(ipcData->request);
-   string_copy(phys_addrof(request->remove.path).getRawPointer(),
+   string_copy(phys_addrof(request->remove.path).get(),
                name.data(),
                request->remove.path.size());
 
@@ -346,7 +346,7 @@ FSAMakeDir(FSAHandle handle,
    auto request = phys_addrof(ipcData->request);
    request->makeDir.permission = mode;
 
-   string_copy(phys_addrof(request->makeDir.path).getRawPointer(),
+   string_copy(phys_addrof(request->makeDir.path).get(),
                name.data(),
                request->makeDir.path.size());
 
@@ -383,7 +383,7 @@ FSAMakeQuota(FSAHandle handle,
    request->makeQuota.mode = mode;
    request->makeQuota.size = quota;
 
-   string_copy(phys_addrof(request->makeQuota.path).getRawPointer(),
+   string_copy(phys_addrof(request->makeQuota.path).get(),
                name.data(),
                request->makeQuota.path.size());
 
@@ -419,11 +419,11 @@ FSAMount(FSAHandle handle,
 
    // Setup request
    auto request = phys_addrof(ipcData->request);
-   string_copy(phys_addrof(request->mount.path).getRawPointer(),
+   string_copy(phys_addrof(request->mount.path).get(),
                src.data(),
                request->mount.path.size());
 
-   string_copy(phys_addrof(request->mount.target).getRawPointer(),
+   string_copy(phys_addrof(request->mount.target).get(),
                dst.data(),
                request->mount.target.size());
 
@@ -484,7 +484,7 @@ FSAGetInfoByQuery(FSAHandle handle,
    auto request = phys_addrof(ipcData->request);
    request->getInfoByQuery.type = query;
 
-   string_copy(phys_addrof(request->getInfoByQuery.path).getRawPointer(),
+   string_copy(phys_addrof(request->getInfoByQuery.path).get(),
                name.data(),
                request->getInfoByQuery.path.size());
 
@@ -501,48 +501,48 @@ FSAGetInfoByQuery(FSAHandle handle,
 
       switch (query) {
       case FSAQueryInfoType::FreeSpaceSize:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.freeSpaceSize).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.freeSpaceSize).get(),
                      sizeof(response.freeSpaceSize));
          break;
       case FSAQueryInfoType::DirSize:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.dirSize).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.dirSize).get(),
                      sizeof(response.dirSize));
          break;
       case FSAQueryInfoType::EntryNum:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.entryNum).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.entryNum).get(),
                      sizeof(response.entryNum));
          break;
       case FSAQueryInfoType::FileSystemInfo:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.fileSystemInfo).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.fileSystemInfo).get(),
                      sizeof(response.fileSystemInfo));
          break;
       case FSAQueryInfoType::DeviceInfo:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.deviceInfo).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.deviceInfo).get(),
                      sizeof(response.deviceInfo));
          break;
       case FSAQueryInfoType::Stat:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.stat).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.stat).get(),
                      sizeof(response.stat));
          break;
       case FSAQueryInfoType::BadBlockInfo:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.badBlockInfo).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.badBlockInfo).get(),
                      sizeof(response.badBlockInfo));
          break;
       case FSAQueryInfoType::JournalFreeSpaceSize:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.journalFreeSpaceSize).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.journalFreeSpaceSize).get(),
                      sizeof(response.journalFreeSpaceSize));
          break;
       case FSAQueryInfoType::FragmentBlockInfo:
-         std::memcpy(output.getRawPointer(),
-                     phys_addrof(response.fragmentBlockInfo).getRawPointer(),
+         std::memcpy(output.get(),
+                     phys_addrof(response.fragmentBlockInfo).get(),
                      sizeof(response.fragmentBlockInfo));
          break;
       }

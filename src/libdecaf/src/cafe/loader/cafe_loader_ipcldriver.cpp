@@ -32,12 +32,14 @@ IPCLDriver_Init()
    virt_ptr<IPCLDriver> driver;
    IPCLDriver_GetInstance(&driver);
 
-   std::memset(driver.getRawPointer(), 0, sizeof(IPCLDriver));
+   std::memset(driver.get(), 0, sizeof(IPCLDriver));
    driver->coreId = cpu::this_core::id();
    driver->ipckRequestBuffer = virt_addrof(sIpclData->ipclResourceRequestBuffer[driver->coreId]);
    driver->status = IPCLDriverStatus::Initialised;
 
-   std::memset(driver->ipckRequestBuffer.getRawPointer(), 0, sizeof(IPCKDriverRequest) * IPCLBufferCount);
+   std::memset(driver->ipckRequestBuffer.get(),
+               0,
+               sizeof(IPCKDriverRequest) * IPCLBufferCount);
 
    return ios::Error::OK;
 }
@@ -120,7 +122,7 @@ IPCLDriver_AllocateRequestBlock(virt_ptr<IPCLDriver> driver,
 
    // Initialise IPCKDriverRequest
    auto ipckRequest = request->ipckRequestBuffer;
-   std::memset(virt_addrof(ipckRequest->request.args).getRawPointer(), 0, sizeof(ipckRequest->request.args));
+   std::memset(virt_addrof(ipckRequest->request.args).get(), 0, sizeof(ipckRequest->request.args));
    ipckRequest->request.command = command;
    ipckRequest->request.handle = handle;
    ipckRequest->request.flags = 0u;

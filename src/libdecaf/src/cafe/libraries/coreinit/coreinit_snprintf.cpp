@@ -54,7 +54,7 @@ formatStringV(virt_ptr<const char> fmt,
 {
    std::string flags, width, length, precision, formatter;
    auto args = list->begin();
-   auto fmtLen = strlen(fmt.getRawPointer());
+   auto fmtLen = strlen(fmt.get());
 
    for (auto i = 0; fmt[i]; ) {
       if (fmt[i] != '%') {
@@ -143,7 +143,7 @@ formatStringV(virt_ptr<const char> fmt,
       case 's': {
          auto s = args.next<virt_ptr<const char>>();
          if (s) {
-            fmt::format_to(output, "{}", s.getRawPointer());
+            fmt::format_to(output, "{}", s.get());
          } else {
             fmt::format_to(output, "<NULL>");
          }
@@ -181,12 +181,12 @@ formatStringV(virt_ptr<char> buffer,
 
    if (str.size() >= len - 1) {
       // Copy as much as possible
-      std::memcpy(buffer.getRawPointer(), str.data(), len - 2);
+      std::memcpy(buffer.get(), str.data(), len - 2);
       buffer[len - 1] = char { 0 };
       len -= 1;
    } else {
       // Copy whole string into buffer
-      std::memcpy(buffer.getRawPointer(), str.data(), str.size());
+      std::memcpy(buffer.get(), str.data(), str.size());
       buffer[str.size()] = char { 0 };
       len = static_cast<uint32_t>(str.size());
    }

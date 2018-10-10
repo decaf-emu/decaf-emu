@@ -218,7 +218,7 @@ loadGameProcess(std::string_view rpx,
 {
    auto rampid = RamPartitionId::MainApplication;
    auto partitionData = getRamPartitionData(rampid);
-   partitionData->argstr = virt_addrof(titleInfo->argstr).getRawPointer();
+   partitionData->argstr = virt_addrof(titleInfo->argstr).get();
    partitionData->uniqueProcessId = UniqueProcessId::Game;
    partitionData->titleId = titleInfo->titleId;
 
@@ -308,7 +308,7 @@ loadGameProcess(std::string_view rpx,
 
          if (shStrSection && sectionHeader->name) {
             auto name = shStrSection + sectionHeader->name;
-            if (strcmp(name.getRawPointer(), ".rodata") == 0) {
+            if (strcmp(name.get(), ".rodata") == 0) {
                cpu::addJitReadOnlyRange(sectionAddress,
                                         sectionHeader->size);
                continue;
@@ -329,7 +329,7 @@ loadGameProcess(std::string_view rpx,
    auto &startInfo = cafe::loader::getKernelIpcStorage()->startInfo;
    auto coreinitRpl = startInfo.coreinit;
    cafe::hle::relocateLibrary(
-      std::string_view { coreinitRpl->moduleNameBuffer.getRawPointer(), coreinitRpl->moduleNameLen },
+      std::string_view { coreinitRpl->moduleNameBuffer.get(), coreinitRpl->moduleNameLen },
       virt_cast<virt_addr>(coreinitRpl->textBuffer),
       virt_cast<virt_addr>(coreinitRpl->dataBuffer)
    );

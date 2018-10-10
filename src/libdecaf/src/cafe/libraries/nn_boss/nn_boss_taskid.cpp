@@ -13,27 +13,21 @@ TaskID::TaskID()
 
 TaskID::TaskID(virt_ptr<const char> id)
 {
-   string_copy(virt_addrof(mTaskID).getRawPointer(),
-               mTaskID.size(),
-               id.getRawPointer(),
-               7);
+   string_copy(virt_addrof(mTaskID).get(), mTaskID.size(), id.get(), 7);
    mTaskID[7] = char { 0 };
 }
 
 TaskID::TaskID(virt_ptr<TaskID> other)
 {
-   std::memcpy(virt_addrof(mTaskID).getRawPointer(),
-               virt_addrof(other->mTaskID).getRawPointer(),
+   std::memcpy(virt_addrof(mTaskID).get(),
+               virt_addrof(other->mTaskID).get(),
                8);
 }
 
 virt_ptr<TaskID>
 TaskID::operator =(virt_ptr<const char> id)
 {
-   string_copy(virt_addrof(mTaskID).getRawPointer(),
-               mTaskID.size(),
-               id.getRawPointer(),
-               7);
+   string_copy(virt_addrof(mTaskID).get(), mTaskID.size(), id.get(), 7);
    mTaskID[7] = char { 0 };
    return virt_this(this);
 }
@@ -41,16 +35,14 @@ TaskID::operator =(virt_ptr<const char> id)
 bool
 TaskID::operator ==(virt_ptr<const char> id)
 {
-   return std::strncmp(virt_addrof(mTaskID).getRawPointer(),
-                       id.getRawPointer(),
-                       8) == 0;
+   return std::strncmp(virt_addrof(mTaskID).get(), id.get(), 8) == 0;
 }
 
 bool
 TaskID::operator ==(virt_ptr<TaskID> other)
 {
-   return std::strncmp(virt_addrof(mTaskID).getRawPointer(),
-                       virt_addrof(other->mTaskID).getRawPointer(),
+   return std::strncmp(virt_addrof(mTaskID).get(),
+                       virt_addrof(other->mTaskID).get(),
                        8) == 0;
 }
 

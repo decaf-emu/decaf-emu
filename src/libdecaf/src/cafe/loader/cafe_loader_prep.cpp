@@ -108,12 +108,12 @@ LOADER_Prep(kernel::UniqueProcessId upid,
                        virt_addrof(minFileInfo->moduleNameBufferLen));
    auto moduleName =
       std::string_view {
-         minFileInfo->moduleNameBuffer.getRawPointer(),
+         minFileInfo->moduleNameBuffer.get(),
          minFileInfo->moduleNameBufferLen
       };
 
    if (minFileInfo->moduleNameBufferLen == 8 &&
-       strncmp(minFileInfo->moduleNameBuffer.getRawPointer(), "coreinit", 8) == 0) {
+       strncmp(minFileInfo->moduleNameBuffer.get(), "coreinit", 8) == 0) {
       Loader_ReportError("*** Loader Failure (system module re-load).");
       LiSetFatalError(0x18729Bu, 0, 1, "LOADER_Prep", 1305);
       LiCloseBufferIfError();
@@ -122,11 +122,11 @@ LOADER_Prep(kernel::UniqueProcessId upid,
 
    for (auto itr = globals->firstLoadedRpl; itr; itr = itr->nextLoadedRpl) {
       if (itr->moduleNameLen == minFileInfo->moduleNameBufferLen &&
-          strncmp(itr->moduleNameBuffer.getRawPointer(),
-                  minFileInfo->moduleNameBuffer.getRawPointer(),
+          strncmp(itr->moduleNameBuffer.get(),
+                  minFileInfo->moduleNameBuffer.get(),
                   minFileInfo->moduleNameBufferLen) == 0) {
          Loader_ReportError("*** module \"{}\" already loaded.\n",
-            std::string_view { minFileInfo->moduleNameBuffer.getRawPointer(),
+            std::string_view { minFileInfo->moduleNameBuffer.get(),
                                minFileInfo->moduleNameBufferLen });
          LiSetFatalError(0x18729Bu, itr->fileType, 1, "LOADER_Prep", 1292);
          LiCloseBufferIfError();
@@ -186,10 +186,10 @@ LOADER_Prep(kernel::UniqueProcessId upid,
 
    StackArray<char, 64> filename;
    auto filenameLen = std::min<uint32_t>(minFileInfo->moduleNameBufferLen, 59);
-   std::memcpy(filename.getRawPointer(),
-               minFileInfo->moduleNameBuffer.getRawPointer(),
+   std::memcpy(filename.get(),
+               minFileInfo->moduleNameBuffer.get(),
                filenameLen);
-   string_copy(filename.getRawPointer() + filenameLen,
+   string_copy(filename.get() + filenameLen,
                ".rpl",
                filename.size() - filenameLen);
 
@@ -198,7 +198,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
 
    auto chunkBuffer = virt_ptr<void> { nullptr };
    auto chunkBufferSize = uint32_t { 0 };
-   error = LiBounceOneChunk(filename.getRawPointer(),
+   error = LiBounceOneChunk(filename.get(),
                             ios::mcp::MCPFileType::CafeOS,
                             globals->currentUpid,
                             &chunkBufferSize,
@@ -208,7 +208,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
    if (error) {
       Loader_ReportError(
          "***LiBounceOneChunk failed loading \"{}\" of type {} at offset 0x{:08X} err={}.",
-         filename.getRawPointer(), 1, 0, error);
+         filename.get(), 1, 0, error);
       LiCloseBufferIfError();
       return error;
    }
@@ -233,7 +233,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
                          0);
    if (error) {
       Loader_ReportError("***LiLoadForPrep failure {}. loading \"{}\".",
-                         error, filename.getRawPointer());
+                         error, filename.get());
       LiCloseBufferIfError();
       return error;
    }

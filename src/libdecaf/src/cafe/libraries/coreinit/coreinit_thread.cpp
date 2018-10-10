@@ -365,7 +365,7 @@ createThread(virt_ptr<OSThread> thread,
 
    // Setup thread state
    internal::lockScheduler();
-   std::memset(thread.getRawPointer(), 0, sizeof(OSThread));
+   std::memset(thread.get(), 0, sizeof(OSThread));
    initialiseThreadState(thread, entry, argc, argv, stack, stackSize, realPriority,
                          OSGetCoreId(), type);
    thread->name = nullptr;

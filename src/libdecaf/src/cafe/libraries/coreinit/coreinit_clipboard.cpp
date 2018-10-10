@@ -45,8 +45,8 @@ OSCopyFromClipboard(virt_ptr<void> buffer,
    }
 
    if (buffer && sClipboardSaveData->size) {
-      std::memcpy(buffer.getRawPointer(),
-                  virt_addrof(sClipboardSaveData->buffer).getRawPointer(),
+      std::memcpy(buffer.get(),
+                  virt_addrof(sClipboardSaveData->buffer).get(),
                   std::min<size_t>(sClipboardSaveData->size, *size));
    }
 
@@ -70,8 +70,8 @@ OSCopyToClipboard(virt_ptr<const void> buffer,
    if (buffer) {
       sClipboardSaveData->size = size;
 
-      std::memcpy(virt_addrof(sClipboardSaveData->buffer).getRawPointer(),
-                  buffer.getRawPointer(),
+      std::memcpy(virt_addrof(sClipboardSaveData->buffer).get(),
+                  buffer.get(),
                   size);
    } else {
       if (size != 0) {

@@ -37,7 +37,7 @@ ThreadsWindow::update()
       auto info = ThreadInfo { };
       info.thread = thread;
       info.id = thread->id;
-      info.name = thread->name ? thread->name.getRawPointer() : "";
+      info.name = thread->name ? thread->name.get() : "";
       info.state = thread->state;
       info.priority = thread->priority;
       info.basePriority = thread->basePriority;

@@ -32,7 +32,7 @@ UCAllocFileData(uint32_t size)
 {
    auto ptr = IOS_HeapAllocAligned(CrossProcessHeapId, size, 0x40u);
    if (ptr) {
-      std::memset(ptr.getRawPointer(), 0, size);
+      std::memset(ptr.get(), 0, size);
    }
 
    return phys_cast<uint8_t *>(ptr);

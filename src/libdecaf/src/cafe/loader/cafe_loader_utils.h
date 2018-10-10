@@ -27,7 +27,7 @@ inline void
 LiResolveModuleName(virt_ptr<virt_ptr<char>> moduleName,
                     virt_ptr<uint32_t> moduleNameLen)
 {
-   auto name = std::string_view { moduleName->getRawPointer(), *moduleNameLen };
+   auto name = std::string_view { moduleName->get(), *moduleNameLen };
    auto pos = name.find_last_of("\\/");
    if (pos != std::string_view::npos) {
       auto diff = static_cast<uint32_t>(pos + 1);

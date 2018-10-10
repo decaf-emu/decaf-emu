@@ -25,7 +25,7 @@ Handle_InitTable(virt_ptr<HandleTable> table,
       return OSHandleError::InvalidArgument;
    }
 
-   std::memset(table.getRawPointer(), 0, sizeof(HandleTable));
+   std::memset(table.get(), 0, sizeof(HandleTable));
    table->allocSubTableFn = allocSubTableFn;
    table->freeSubTableFn = freeSubTableFn;
    table->handleEntropy = 0xCAFEu;
@@ -70,7 +70,7 @@ Handle_Alloc(virt_ptr<HandleTable> table,
       auto subTable = cafe::invoke(cpu::this_core::state(),
                                    table->allocSubTableFn);
 
-      std::memset(subTable.getRawPointer(), 0, sizeof(HandleSubTable));
+      std::memset(subTable.get(), 0, sizeof(HandleSubTable));
       table->subTables[subTableIdx] = subTable;
       table->subTableFreeEntries[subTableIdx] = HandleSubTable::NumEntries;
    }
@@ -204,7 +204,7 @@ Handle_Release(virt_ptr<HandleTable> table,
    }
 
    if (!entry.refCount) {
-      std::memset(virt_addrof(entry).getRawPointer(), 0, sizeof(HandleEntry));
+      std::memset(virt_addrof(entry).get(), 0, sizeof(HandleEntry));
       table->subTableFreeEntries[subTableIndex]++;
 
       // Free the sub table if it is completely empty and was a dynamically
@@ -257,7 +257,7 @@ OSHandle_InitTable(virt_ptr<OSHandleTable> table)
       return OSHandleError::InvalidArgument;
    }
 
-   std::memset(table.getRawPointer(), 0, sizeof(OSHandleTable));
+   std::memset(table.get(), 0, sizeof(OSHandleTable));
 
    auto error = internal::Handle_InitTable(virt_addrof(table->handleTable),
                                            sAllocSubTable,

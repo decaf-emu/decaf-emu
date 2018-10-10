@@ -100,14 +100,14 @@ readTitleCosXml(phys_ptr<MCPPPrepareTitleInfo> titleInfo)
 
    for (auto i = 0u; i <= 18; ++i) {
       auto &mask = items[13 + (i * 2)];
-      *fmt::format_to(phys_addrof(mask.name).getRawPointer(),
+      *fmt::format_to(phys_addrof(mask.name).get(),
                       "app.permissions.p{}.mask", i) = char { 0 };
       mask.dataType = UCDataType::HexBinary;
       mask.dataSize = 8u;
       mask.data = phys_addrof(titleInfo->permissions[i].mask);
 
       auto &group = items[14 + (i * 2)];
-      *fmt::format_to(phys_addrof(group.name).getRawPointer(),
+      *fmt::format_to(phys_addrof(group.name).get(),
                       "app.permissions.p{}.group", i) = char { 0 };
       group.dataType = UCDataType::UnsignedInt;
       group.dataSize = 4u;

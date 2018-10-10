@@ -19,7 +19,7 @@ void
 GX2ResetCounterInfo(virt_ptr<GX2CounterInfo> info)
 {
    decaf_warn_stub();
-   std::memset(info.getRawPointer(), 0, sizeof(GX2CounterInfo));
+   std::memset(info.get(), 0, sizeof(GX2CounterInfo));
 }
 
 uint64_t

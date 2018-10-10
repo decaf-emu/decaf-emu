@@ -175,7 +175,7 @@ static virt_ptr<LOADED_RPL>
 LiFindRPLByName(virt_ptr<char> name)
 {
    char buffer[64];
-   auto resolvedName = LiResolveModuleName(name.getRawPointer());
+   auto resolvedName = LiResolveModuleName(name.get());
    if (resolvedName.size() >= 64) {
       resolvedName = resolvedName.substr(0, 63);
    }
@@ -190,7 +190,7 @@ LiFindRPLByName(virt_ptr<char> name)
          continue;
       }
 
-      if (resolvedName.compare(module->moduleNameBuffer.getRawPointer()) == 0) {
+      if (resolvedName.compare(module->moduleNameBuffer.get()) == 0) {
          return module;
       }
    }
@@ -377,7 +377,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
       auto module = unlinkedModules[unlinkedModuleIndex];
 
       if (module->loadStateFlags & LoaderStateFlag2) {
-         std::memset(importTracking.getRawPointer(), 0,
+         std::memset(importTracking.get(), 0,
                      sizeof(LiImportTracking) * module->elfHeader.shnum);
 
          if (!module->elfHeader.shstrndx) {

@@ -71,7 +71,7 @@ OSPanic(virt_ptr<const char> file,
    internal::formatStringV(fmt, vaList, msg);
    free_va_list(vaList);
 
-   internal::OSPanic(file.getRawPointer(), line,
+   internal::OSPanic(file.get(), line,
                      std::string_view { msg.data(), msg.size() });
 }
 
@@ -82,9 +82,9 @@ OSSendFatalError(virt_ptr<OSFatalError> error,
 {
    if (error) {
       if (functionName) {
-         string_copy(virt_addrof(error->functionName).getRawPointer(),
+         string_copy(virt_addrof(error->functionName).get(),
                      error->functionName.size(),
-                     functionName.getRawPointer(),
+                     functionName.get(),
                      error->functionName.size());
          error->functionName[error->functionName.size() - 1] = char { 0 };
       } else {
@@ -109,7 +109,7 @@ OSConsoleWrite(virt_ptr<const char> msg,
                uint32_t size)
 {
    gLog->info("[OSConsoleWrite] {}",
-              std::string_view { msg.getRawPointer(), size });
+              std::string_view { msg.get(), size });
 }
 
 namespace internal

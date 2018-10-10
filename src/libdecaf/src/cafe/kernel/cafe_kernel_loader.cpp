@@ -241,8 +241,9 @@ KiRPLStartup(UniqueProcessId callerProcessId,
    loaderIpc->entryParams.procConfig = -1;
    loaderIpc->entryParams.context = nullptr;
    loaderIpc->entryParams.interruptsAllowed = FALSE;
-   std::memset(virt_addrof(loaderIpc->entryParams.dispatch).getRawPointer(),
-               0, sizeof(loader::LOADER_EntryDispatch));
+   std::memset(virt_addrof(loaderIpc->entryParams.dispatch).get(),
+               0,
+               sizeof(loader::LOADER_EntryDispatch));
 
    KiRPLLoaderSetup(processFlags, callerProcessId, targetProcessId);
 }
@@ -355,7 +356,7 @@ findClosestSymbol(virt_addr addr,
    if (moduleNameBuffer) {
       if (containingModule) {
          string_copy(moduleNameBuffer,
-                     containingModule->moduleNameBuffer.getRawPointer(),
+                     containingModule->moduleNameBuffer.get(),
                      moduleNameBufferLength);
       } else {
          moduleNameBuffer[0] = char { 0 };
@@ -365,7 +366,7 @@ findClosestSymbol(virt_addr addr,
    if (symbolNameBuffer) {
       if (nearestSymbolName && nearestSymbolName[0]) {
          string_copy(symbolNameBuffer,
-                     nearestSymbolName.getRawPointer(),
+                     nearestSymbolName.get(),
                      symbolNameBufferLength);
       } else {
          string_copy(symbolNameBuffer, "<unknown>", symbolNameBufferLength);
@@ -390,9 +391,9 @@ findClosestSymbol(virt_addr addr,
    auto symbolDistance = uint32_t { 0 };
    auto result = findClosestSymbol(addr,
                                    &symbolDistance,
-                                   symbolNameBuffer.getRawPointer(),
+                                   symbolNameBuffer.get(),
                                    symbolNameBufferLength,
-                                   moduleNameBuffer.getRawPointer(),
+                                   moduleNameBuffer.get(),
                                    moduleNameBufferLength);
    *outSymbolDistance = symbolDistance;
    return result;

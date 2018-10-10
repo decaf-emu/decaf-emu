@@ -30,17 +30,21 @@ createDumpDirectory()
 }
 
 static void
-debugDumpData(const std::string &filename, virt_ptr<const void> data, size_t size)
+debugDumpData(const std::string &filename,
+              virt_ptr<const void> data,
+              size_t size)
 {
    auto file = std::ofstream { filename, std::ofstream::out | std::ofstream::binary };
-   file.write(static_cast<const char *>(data.getRawPointer()), size);
+   file.write(static_cast<const char *>(data.get()), size);
    file.close();
 }
 
 static void
-debugDumpData(std::ofstream &file, virt_ptr<const void> data, size_t size)
+debugDumpData(std::ofstream &file,
+              virt_ptr<const void> data,
+              size_t size)
 {
-   file.write(reinterpret_cast<const char *>(data.getRawPointer()), size);
+   file.write(reinterpret_cast<const char *>(data.get()), size);
 }
 
 void
@@ -93,7 +97,7 @@ debugDumpTexture(virt_ptr<const GX2Texture> texture)
    // Write GTX file
    gfd::GFDFile gtx;
    gfd::GFDTexture gfdTexture;
-   gx2ToGFDTexture(texture.getRawPointer(), gfdTexture);
+   gx2ToGFDTexture(texture.get(), gfdTexture);
    gtx.textures.push_back(gfdTexture);
    gfd::writeFile(gtx, "dump/" + filename + ".gtx");
 }
@@ -103,7 +107,7 @@ addShader(gfd::GFDFile &file,
           virt_ptr<const GX2VertexShader> shader)
 {
    gfd::GFDVertexShader gfdShader;
-   gx2ToGFDVertexShader(shader.getRawPointer(), gfdShader);
+   gx2ToGFDVertexShader(shader.get(), gfdShader);
    file.vertexShaders.emplace_back(std::move(gfdShader));
 }
 
@@ -112,7 +116,7 @@ addShader(gfd::GFDFile &file,
           virt_ptr<const GX2PixelShader> shader)
 {
    gfd::GFDPixelShader gfdShader;
-   gx2ToGFDPixelShader(shader.getRawPointer(), gfdShader);
+   gx2ToGFDPixelShader(shader.get(), gfdShader);
    file.pixelShaders.emplace_back(std::move(gfdShader));
 }
 
@@ -121,7 +125,7 @@ addShader(gfd::GFDFile &file,
           virt_ptr<const GX2GeometryShader> shader)
 {
    gfd::GFDGeometryShader gfdShader;
-   gx2ToGFDGeometryShader(shader.getRawPointer(), gfdShader);
+   gx2ToGFDGeometryShader(shader.get(), gfdShader);
    file.geometryShaders.emplace_back(std::move(gfdShader));
 }
 
@@ -166,7 +170,7 @@ debugDumpShader(const std::string_view &filename,
 
    // Disassemble
    if (shader->data) {
-      output = latte::disassemble(gsl::make_span(shader->data.getRawPointer(), shader->size), isSubroutine);
+      output = latte::disassemble(gsl::make_span(shader->data.get(), shader->size), isSubroutine);
    }
 
    file

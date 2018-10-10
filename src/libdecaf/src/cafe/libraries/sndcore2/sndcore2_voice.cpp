@@ -72,7 +72,7 @@ AXAcquireVoiceEx(uint32_t priority,
 
    // Reset the voice
    auto voiceIndex = foundVoice->index;
-   std::memset(foundVoice.getRawPointer(), 0, sizeof(AXVoice));
+   std::memset(foundVoice.get(), 0, sizeof(AXVoice));
    foundVoice->index = voiceIndex;
 
    // Configure the voice with stuff we know about
@@ -81,7 +81,7 @@ AXAcquireVoiceEx(uint32_t priority,
    foundVoice->userContext = userContext;
 
    auto extras = internal::getVoiceExtras(foundVoice->index);
-   std::memset(extras.getRawPointer(), 0, sizeof(internal::AXVoiceExtras));
+   std::memset(extras.get(), 0, sizeof(internal::AXVoiceExtras));
    extras->src.ratio = ufixed1616_t { 1.0 };
 
    // Save this to the acquired voice list so that it can be

@@ -40,9 +40,9 @@ gx2ToGFDSurface(const GX2Surface *src,
    dst.aa = src->aa;
    dst.use = src->use;
    dst.image.resize(src->imageSize);
-   std::memcpy(dst.image.data(), src->image.getRawPointer(), src->imageSize);
+   std::memcpy(dst.image.data(), src->image.get(), src->imageSize);
    dst.mipmap.resize(src->mipmapSize);
-   std::memcpy(dst.mipmap.data(), src->mipmaps.getRawPointer(), src->mipmapSize);
+   std::memcpy(dst.mipmap.data(), src->mipmaps.get(), src->mipmapSize);
    dst.tileMode = src->tileMode;
    dst.swizzle = src->swizzle;
    dst.alignment = src->alignment;
@@ -58,7 +58,7 @@ gfdToGX2Texture(const gfd::GFDTexture &src,
                 GX2Texture *dst)
 {
    gfdToGX2Surface(src.surface,
-                   virt_addrof(dst->surface).getRawPointer());
+                   virt_addrof(dst->surface).get());
 
    dst->viewFirstMip = src.viewFirstMip;
    dst->viewNumMips = src.viewNumMips;
@@ -120,14 +120,14 @@ gx2ToGFDVertexShader(const GX2VertexShader *src,
 
    dst.uniformBlocks.resize(src->uniformBlockCount);
    for (auto i = 0u; i < src->uniformBlockCount; ++i) {
-      dst.uniformBlocks[i].name = src->uniformBlocks[i].name.getRawPointer();
+      dst.uniformBlocks[i].name = src->uniformBlocks[i].name.get();
       dst.uniformBlocks[i].offset = src->uniformBlocks[i].offset;
       dst.uniformBlocks[i].size = src->uniformBlocks[i].size;
    }
 
    dst.uniformVars.resize(src->uniformVarCount);
    for (auto i = 0u; i < src->uniformBlockCount; ++i) {
-      dst.uniformVars[i].name = src->uniformVars[i].name.getRawPointer();
+      dst.uniformVars[i].name = src->uniformVars[i].name.get();
       dst.uniformVars[i].type = src->uniformVars[i].type;
       dst.uniformVars[i].count = src->uniformVars[i].count;
       dst.uniformVars[i].offset = src->uniformVars[i].offset;
@@ -151,14 +151,14 @@ gx2ToGFDVertexShader(const GX2VertexShader *src,
 
    dst.samplerVars.resize(src->samplerVarCount);
    for (auto i = 0u; i < src->samplerVarCount; ++i) {
-      dst.samplerVars[i].name = src->samplerVars[i].name.getRawPointer();
+      dst.samplerVars[i].name = src->samplerVars[i].name.get();
       dst.samplerVars[i].type = src->samplerVars[i].type;
       dst.samplerVars[i].location = src->samplerVars[i].location;
    }
 
    dst.attribVars.resize(src->attribVarCount);
    for (auto i = 0u; i < src->attribVarCount; ++i) {
-      dst.attribVars[i].name = src->attribVars[i].name.getRawPointer();
+      dst.attribVars[i].name = src->attribVars[i].name.get();
       dst.attribVars[i].type = src->attribVars[i].type;
       dst.attribVars[i].count = src->attribVars[i].count;
       dst.attribVars[i].location = src->attribVars[i].location;
@@ -179,7 +179,7 @@ gx2ToGFDVertexShader(const GX2VertexShader *src,
       auto size = src->gx2rData.elemCount * src->gx2rData.elemSize;
       dst.gx2rData.buffer.resize(size);
       std::memcpy(dst.gx2rData.buffer.data(),
-                  src->gx2rData.buffer.getRawPointer(),
+                  src->gx2rData.buffer.get(),
                   size);
    }
 }
@@ -204,21 +204,19 @@ gx2ToGFDPixelShader(const GX2PixelShader *src,
    dst.regs.spi_input_z = src->regs.spi_input_z;
 
    dst.data.resize(src->size);
-   std::memcpy(dst.data.data(),
-               src->data.getRawPointer(),
-               src->size);
+   std::memcpy(dst.data.data(), src->data.get(), src->size);
    dst.mode = src->mode;
 
    dst.uniformBlocks.resize(src->uniformBlockCount);
    for (auto i = 0u; i < src->uniformBlockCount; ++i) {
-      dst.uniformBlocks[i].name = src->uniformBlocks[i].name.getRawPointer();
+      dst.uniformBlocks[i].name = src->uniformBlocks[i].name.get();
       dst.uniformBlocks[i].offset = src->uniformBlocks[i].offset;
       dst.uniformBlocks[i].size = src->uniformBlocks[i].size;
    }
 
    dst.uniformVars.resize(src->uniformVarCount);
    for (auto i = 0u; i < src->uniformBlockCount; ++i) {
-      dst.uniformVars[i].name = src->uniformVars[i].name.getRawPointer();
+      dst.uniformVars[i].name = src->uniformVars[i].name.get();
       dst.uniformVars[i].type = src->uniformVars[i].type;
       dst.uniformVars[i].count = src->uniformVars[i].count;
       dst.uniformVars[i].offset = src->uniformVars[i].offset;
@@ -242,7 +240,7 @@ gx2ToGFDPixelShader(const GX2PixelShader *src,
 
    dst.samplerVars.resize(src->samplerVarCount);
    for (auto i = 0u; i < src->samplerVarCount; ++i) {
-      dst.samplerVars[i].name = src->samplerVars[i].name.getRawPointer();
+      dst.samplerVars[i].name = src->samplerVars[i].name.get();
       dst.samplerVars[i].type = src->samplerVars[i].type;
       dst.samplerVars[i].location = src->samplerVars[i].location;
    }
@@ -255,7 +253,7 @@ gx2ToGFDPixelShader(const GX2PixelShader *src,
       auto size = src->gx2rData.elemCount * src->gx2rData.elemSize;
       dst.gx2rData.buffer.resize(size);
       std::memcpy(dst.gx2rData.buffer.data(),
-                  src->gx2rData.buffer.getRawPointer(),
+                  src->gx2rData.buffer.get(),
                   size);
    }
 }
@@ -280,25 +278,25 @@ gx2ToGFDGeometryShader(const GX2GeometryShader *src,
    dst.regs.vgt_strmout_buffer_en = src->regs.vgt_strmout_buffer_en;
 
    dst.data.resize(src->size);
-   std::memcpy(dst.data.data(), src->data.getRawPointer(), src->size);
+   std::memcpy(dst.data.data(), src->data.get(), src->size);
 
    dst.vertexShaderData.resize(src->vertexShaderSize);
    std::memcpy(dst.vertexShaderData.data(),
-               src->vertexShaderData.getRawPointer(),
+               src->vertexShaderData.get(),
                src->vertexShaderSize);
 
    dst.mode = src->mode;
 
    dst.uniformBlocks.resize(src->uniformBlockCount);
    for (auto i = 0u; i < src->uniformBlockCount; ++i) {
-      dst.uniformBlocks[i].name = src->uniformBlocks[i].name.getRawPointer();
+      dst.uniformBlocks[i].name = src->uniformBlocks[i].name.get();
       dst.uniformBlocks[i].offset = src->uniformBlocks[i].offset;
       dst.uniformBlocks[i].size = src->uniformBlocks[i].size;
    }
 
    dst.uniformVars.resize(src->uniformVarCount);
    for (auto i = 0u; i < src->uniformBlockCount; ++i) {
-      dst.uniformVars[i].name = src->uniformVars[i].name.getRawPointer();
+      dst.uniformVars[i].name = src->uniformVars[i].name.get();
       dst.uniformVars[i].type = src->uniformVars[i].type;
       dst.uniformVars[i].count = src->uniformVars[i].count;
       dst.uniformVars[i].offset = src->uniformVars[i].offset;
@@ -322,7 +320,7 @@ gx2ToGFDGeometryShader(const GX2GeometryShader *src,
 
    dst.samplerVars.resize(src->samplerVarCount);
    for (auto i = 0u; i < src->samplerVarCount; ++i) {
-      dst.samplerVars[i].name = src->samplerVars[i].name.getRawPointer();
+      dst.samplerVars[i].name = src->samplerVars[i].name.get();
       dst.samplerVars[i].type = src->samplerVars[i].type;
       dst.samplerVars[i].location = src->samplerVars[i].location;
    }
@@ -342,7 +340,7 @@ gx2ToGFDGeometryShader(const GX2GeometryShader *src,
       auto size = src->gx2rData.elemCount * src->gx2rData.elemSize;
       dst.gx2rData.buffer.resize(size);
       std::memcpy(dst.gx2rData.buffer.data(),
-                  src->gx2rData.buffer.getRawPointer(),
+                  src->gx2rData.buffer.get(),
                   size);
    }
 
@@ -354,7 +352,7 @@ gx2ToGFDGeometryShader(const GX2GeometryShader *src,
       auto size = src->gx2rVertexShaderData.elemCount * src->gx2rVertexShaderData.elemSize;
       dst.gx2rVertexShaderData.buffer.resize(size);
       std::memcpy(dst.gx2rVertexShaderData.buffer.data(),
-                  src->gx2rVertexShaderData.buffer.getRawPointer(),
+                  src->gx2rVertexShaderData.buffer.get(),
                   size);
    }
 }

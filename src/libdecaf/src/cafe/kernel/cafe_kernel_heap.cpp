@@ -22,7 +22,7 @@ initialiseStaticDataHeap()
 {
    auto staticDataMapping = getVirtualMemoryMap(VirtualMemoryRegion::Kernel_0xFFE00000);
    sStaticDataHeap = FrameAllocator {
-      virt_cast<void *>(staticDataMapping.vaddr).getRawPointer(),
+      virt_cast<void *>(staticDataMapping.vaddr).get(),
       staticDataMapping.size,
    };
 }

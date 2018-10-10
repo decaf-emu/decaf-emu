@@ -88,7 +88,7 @@ beginOcclusionQuery(virt_ptr<GX2QueryData> data,
 
       internal::writePM4(PfpSyncMe {});
    } else {
-      std::memset(data.getRawPointer(), 0, sizeof(GX2QueryData));
+      std::memset(data.get(), 0, sizeof(GX2QueryData));
 
       auto dataWords = virt_cast<uint32_t *>(data);
       dataWords[magicNumber + 0] = 0x4F435055u; // "OCPU"
@@ -171,7 +171,7 @@ beginStreamOutStatsQuery(virt_ptr<GX2QueryData> data,
 
       endianSwap = latte::CB_ENDIAN::SWAP_8IN32;
    } else {
-      std::memset(data.getRawPointer(), 0, sizeof(GX2QueryData));
+      std::memset(data.get(), 0, sizeof(GX2QueryData));
 
       auto dataWords = virt_cast<uint32_t *>(data);
       dataWords[magicNumber + 0] = 0x53435055u; // "SCPU"

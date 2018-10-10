@@ -20,7 +20,7 @@ allocIpcData(uint32_t size,
       return UCError::Alloc;
    }
 
-   std::memset(buffer.getRawPointer(), 0, size);
+   std::memset(buffer.get(), 0, size);
    *outData = buffer;
    return UCError::OK;
 }
@@ -68,7 +68,7 @@ UCReadSysConfig(UCHandle handle,
    request = phys_cast<UCReadSysConfigRequest *>(reqBuffer);
    request->unk0x00 = 0u;
    request->count = count;
-   std::memcpy(request->settings, settings.getRawPointer(), sizeof(UCSysConfig) * count);
+   std::memcpy(request->settings, settings.get(), sizeof(UCSysConfig) * count);
 
    vecs = phys_cast<IoctlVec *>(vecBuffer);
    vecs[0].len = reqBufSize;
@@ -103,7 +103,7 @@ UCReadSysConfig(UCHandle handle,
       if (auto len = vecs[i + 1].len) {
          auto dst = phys_cast<void *>(phys_addr { virt_cast<virt_addr>(settings[i].data).getAddress() });
          auto src = phys_cast<const void *>(vecs[i + 1].paddr);
-         std::memcpy(dst.getRawPointer(), src.getRawPointer(), len);
+         std::memcpy(dst.get(), src.get(), len);
       }
    }
 
@@ -150,7 +150,7 @@ UCWriteSysConfig(UCHandle handle,
    request = phys_cast<UCWriteSysConfigRequest *>(reqBuffer);
    request->unk0x00 = 0u;
    request->count = count;
-   std::memcpy(request->settings, settings.getRawPointer(), sizeof(UCSysConfig) * count);
+   std::memcpy(request->settings, settings.get(), sizeof(UCSysConfig) * count);
 
    vecs = phys_cast<IoctlVec *>(vecBuffer);
    vecs[0].len = reqBufSize;
@@ -171,7 +171,7 @@ UCWriteSysConfig(UCHandle handle,
 
          auto src = phys_cast<const void *>(phys_addr { virt_cast<virt_addr>(settings[i].data).getAddress() });
          auto dst = phys_cast<void *>(vecs[i + 1].paddr);
-         std::memcpy(dst.getRawPointer(), src.getRawPointer(), size);
+         std::memcpy(dst.get(), src.get(), size);
       } else {
          vecs[1 + i].paddr = phys_addr { 0u };
       }

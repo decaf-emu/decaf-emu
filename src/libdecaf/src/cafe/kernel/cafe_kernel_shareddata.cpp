@@ -63,7 +63,7 @@ loadResourcesFile(const char *filename,
    area.address = addr;
 
    file.seekg(0, std::ifstream::beg);
-   file.read(virt_cast<char *>(area.address).getRawPointer(), area.size);
+   file.read(virt_cast<char *>(area.address).get(), area.size);
    file.close();
 
    return area.size;

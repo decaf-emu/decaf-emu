@@ -33,7 +33,7 @@ MCPError
 mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request)
 {
    auto path = std::string { };
-   auto name = std::string_view { phys_addrof(request->name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(request->name).get() };
 
    if (request->fileType == MCPFileType::CafeOS) {
       if (std::find(decaf::config::system::lle_modules.begin(),
@@ -80,8 +80,8 @@ mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request)
 MCPError
 mcpGetSysProdSettings(phys_ptr<MCPResponseGetSysProdSettings> response)
 {
-   std::memcpy(phys_addrof(response->settings).getRawPointer(),
-               getSysProdConfig().getRawPointer(),
+   std::memcpy(phys_addrof(response->settings).get(),
+               getSysProdConfig().get(),
                sizeof(MCPSysProdSettings));
    return MCPError::OK;
 }
@@ -100,7 +100,7 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
             uint32_t outputBufferLength)
 {
    auto path = std::string { };
-   auto name = std::string_view { phys_addrof(request->name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(request->name).get() };
 
    if (request->fileType == MCPFileType::CafeOS) {
       if (std::find(decaf::config::system::lle_modules.begin(),
@@ -111,7 +111,7 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
             auto &rpl = library->getGeneratedRpl();
             auto bytesRead = std::min<uint32_t>(static_cast<uint32_t>(rpl.size() - request->pos),
                                                 outputBufferLength);
-            std::memcpy(outputBuffer.getRawPointer(),
+            std::memcpy(outputBuffer.get(),
                         rpl.data() + request->pos,
                         bytesRead);
             return static_cast<MCPError>(bytesRead);
@@ -192,7 +192,7 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto error = readTitleCosXml(titleInfoBuffer);
    if (error < MCPError::OK) {
-      std::memset(titleInfoBuffer.getRawPointer(), 0x0, sizeof(MCPPPrepareTitleInfo));
+      std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
 
       // If there is no cos.xml then let's grant full permissions
       titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
@@ -200,12 +200,12 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
       return error;
    }
 
-   std::memcpy(phys_addrof(response->titleInfo).getRawPointer(),
-               titleInfoBuffer.getRawPointer(),
+   std::memcpy(phys_addrof(response->titleInfo).get(),
+               titleInfoBuffer.get(),
                sizeof(MCPPPrepareTitleInfo));
    response->titleInfo.titleId = titleId;
 
-   std::memset(phys_addrof(response->titleInfo.permissions).getRawPointer(),
+   std::memset(phys_addrof(response->titleInfo.permissions).get(),
                0, sizeof(response->titleInfo.permissions));
    return MCPError::OK;
 }
@@ -247,7 +247,7 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
                                   static_cast<::fs::Permissions>(sdCardPermissions));
    }
 
-   std::memset(titleInfoBuffer.getRawPointer(),
+   std::memset(titleInfoBuffer.get(),
                0xFF,
                sizeof(MCPPPrepareTitleInfo));
    return MCPError::OK;

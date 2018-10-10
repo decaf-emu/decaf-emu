@@ -149,7 +149,7 @@ UCDevice::readSysConfig(uint32_t numVecIn,
       return UCError::OK;
    }
 
-   auto name = std::string_view { phys_addrof(request->settings[0].name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(request->settings[0].name).get() };
    auto fileSys = getFileSys(name);
    if (fileSys == UCFileSys::Invalid) {
       return UCError::InvalidLocation;
@@ -174,7 +174,7 @@ UCDevice::writeSysConfig(uint32_t numVecIn,
       return UCError::OK;
    }
 
-   auto name = std::string_view { phys_addrof(request->settings[0].name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(request->settings[0].name).get() };
    auto fileSys = getFileSys(name);
    if (fileSys == UCFileSys::Invalid) {
       return UCError::InvalidLocation;

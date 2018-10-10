@@ -22,9 +22,7 @@ sKernelIpcStorage = virt_cast<KernelIpcStorage *>(virt_addr { 0xEFE0A400 });
 void
 setLoadRpxName(std::string_view name)
 {
-   std::memcpy(sLoadRpxName.getRawPointer(),
-               name.data(),
-               name.size());
+   std::memcpy(sLoadRpxName.get(), name.data(), name.size());
    sLoadRpxName[name.size()] = char { 0 };
 }
 

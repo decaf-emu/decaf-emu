@@ -43,9 +43,7 @@ DownloadedCommunityData::GetAppData(virt_ptr<uint8_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mAppDataLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mAppData).getRawPointer(),
-               length);
+   std::memcpy(buffer.get(), virt_addrof(mAppData).get(), length);
 
    if (outDataSize) {
       *outDataSize = length;
@@ -77,8 +75,8 @@ DownloadedCommunityData::GetDescriptionText(virt_ptr<char16_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mDescriptionTextLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mDescriptionText).getRawPointer(),
+   std::memcpy(buffer.get(),
+               virt_addrof(mDescriptionText).get(),
                length * sizeof(char16_t));
 
    if (length < bufferSize) {
@@ -106,9 +104,7 @@ DownloadedCommunityData::GetIconData(virt_ptr<uint8_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mIconDataLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mIconData).getRawPointer(),
-               length);
+   std::memcpy(buffer.get(), virt_addrof(mIconData).get(), length);
 
    if (outIconSize) {
       *outIconSize = length;
@@ -128,8 +124,8 @@ DownloadedCommunityData::GetOwnerMiiData(virt_ptr<FFLStoreData> data)
       return InvalidPointer;
    }
 
-   std::memcpy(data.getRawPointer(),
-               virt_addrof(mOwnerMiiData).getRawPointer(),
+   std::memcpy(data.get(),
+               virt_addrof(mOwnerMiiData).get(),
                sizeof(FFLStoreData));
    return Success;
 }
@@ -167,8 +163,8 @@ DownloadedCommunityData::GetTitleText(virt_ptr<char16_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mTitleTextLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mTitleText).getRawPointer(),
+   std::memcpy(buffer.get(),
+               virt_addrof(mTitleText).get(),
                length * sizeof(char16_t));
 
    if (length < bufferSize) {

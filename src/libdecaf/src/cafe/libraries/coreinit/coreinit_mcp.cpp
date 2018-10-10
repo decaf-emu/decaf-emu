@@ -88,8 +88,8 @@ MCP_GetOwnTitleInfo(IOSHandle handle,
    result = internal::mcpDecodeIosErrorToMcpError(iosError);
 
    if (result >= 0) {
-      std::memcpy(titleInfo.getRawPointer(),
-                  virt_addrof(response->titleInfo).getRawPointer(),
+      std::memcpy(titleInfo.get(),
+                  virt_addrof(response->titleInfo).get(),
                   sizeof(MCPTitleListType));
    }
 
@@ -161,7 +161,7 @@ MCP_GetTitleInfo(IOSHandle handle,
                  virt_ptr<MCPTitleListType> titleInfo)
 {
    StackObject<MCPTitleListType> searchTitle;
-   std::memset(searchTitle.getRawPointer(), 0, sizeof(MCPTitleListType));
+   std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->titleId = titleId;
 
    auto iosError = internal::mcpSearchTitleList(handle,
@@ -206,7 +206,7 @@ MCP_TitleList(IOSHandle handle,
       result = static_cast<IOSError>(MCP_TitleCount(handle));
    } else {
       StackObject<MCPTitleListType> searchTitle;
-      std::memset(searchTitle.getRawPointer(), 0, sizeof(MCPTitleListType));
+      std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
 
       result = internal::mcpSearchTitleList(handle,
                                             searchTitle,
@@ -232,7 +232,7 @@ MCP_TitleListByAppType(IOSHandle handle,
                        uint32_t titleListSizeBytes)
 {
    StackObject<MCPTitleListType> searchTitle;
-   std::memset(searchTitle.getRawPointer(), 0, sizeof(MCPTitleListType));
+   std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->appType = appType;
 
    auto result = internal::mcpSearchTitleList(handle,
@@ -258,7 +258,7 @@ MCP_TitleListByUniqueId(IOSHandle handle,
                         uint32_t titleListSizeBytes)
 {
    StackObject<MCPTitleListType> searchTitle;
-   std::memset(searchTitle.getRawPointer(), 0, sizeof(MCPTitleListType));
+   std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->titleId = uniqueId << 8;
    searchTitle->appType = MCPAppType::Unk0x0800000E;
 
@@ -291,12 +291,12 @@ MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
                                                   uint32_t titleListSizeBytes)
 {
    StackObject<MCPTitleListType> searchTitle;
-   std::memset(searchTitle.getRawPointer(), 0, sizeof(MCPTitleListType));
+   std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->titleId = uniqueId << 8;
    searchTitle->appType = appType;
    searchTitle->unk0x60 = unk0x60;
-   std::memcpy(virt_addrof(searchTitle->indexedDevice).getRawPointer(),
-               indexedDevice.getRawPointer(),
+   std::memcpy(virt_addrof(searchTitle->indexedDevice).get(),
+               indexedDevice.get(),
                4);
 
    auto searchFlags = MCPTitleListSearchFlags::UniqueId
@@ -336,7 +336,7 @@ mcpAllocateMessage(uint32_t size)
       message = IPCBufPoolAllocate(sMcpData->largeMessagePool, size);
    }
 
-   std::memset(message.getRawPointer(), 0, size);
+   std::memset(message.get(), 0, size);
    return message;
 }
 

@@ -63,7 +63,7 @@ allocFileData(uint32_t size)
 {
    auto ptr = IOS_HeapAllocAligned(CrossProcessHeapId, size, 0x40u);
    if (ptr) {
-      std::memset(ptr.getRawPointer(), 0, size);
+      std::memset(ptr.get(), 0, size);
    }
 
    return phys_cast<uint8_t *>(ptr);
@@ -282,7 +282,7 @@ getFileSys(std::string_view name)
 static UCFileSys
 getFileSys(phys_ptr<UCItem> item)
 {
-   return getFileSys(std::string_view { phys_addrof(item->name).getRawPointer() });
+   return getFileSys(std::string_view { phys_addrof(item->name).get() });
 }
 
 std::string_view
@@ -306,7 +306,7 @@ getRootKey(std::string_view name)
 static std::string_view
 getRootKey(phys_ptr<UCItem> item)
 {
-   return getRootKey(std::string_view { phys_addrof(item->name).getRawPointer() });
+   return getRootKey(std::string_view { phys_addrof(item->name).get() });
 }
 
 static UCError
@@ -335,7 +335,7 @@ getItemPathName(phys_ptr<UCItem> item,
                 std::string &outPath,
                 std::string &outName)
 {
-   auto key = std::string_view { phys_addrof(item->name).getRawPointer() };
+   auto key = std::string_view { phys_addrof(item->name).get() };
    auto colonPos = key.find_first_of(':');
    if (colonPos != std::string_view::npos) {
       key.remove_prefix(colonPos + 1);
@@ -399,7 +399,7 @@ readItemsFromFile(std::string_view path,
 
    // Parse XML
    auto doc = pugi::xml_document { };
-   auto parseResult = doc.load_buffer(fileBuffer.getRawPointer(), fileSize);
+   auto parseResult = doc.load_buffer(fileBuffer.get(), fileSize);
    freeFileData(fileBuffer, fileSize);
 
    if (!parseResult) {
@@ -508,7 +508,7 @@ readItemsFromFile(std::string_view path,
          auto size = strlen(str);
 
          if (size < item->dataSize) {
-            std::memcpy(item->data.getRawPointer(), str, size + 1);
+            std::memcpy(item->data.get(), str, size + 1);
             item->dataSize = static_cast<uint32_t>(size + 1);
          } else {
             item->error = UCError::StringTooLong;
@@ -616,7 +616,7 @@ writeItems(std::string_view fileSysPath,
    // Try read existing file first
    error = readFile(path, &fileSize, &fileBuffer);
    if (error >= UCError::OK) {
-      auto parseResult = doc.load_buffer(fileBuffer.getRawPointer(), fileSize);
+      auto parseResult = doc.load_buffer(fileBuffer.get(), fileSize);
       freeFileData(fileBuffer, fileSize);
 
       if (!parseResult) {
@@ -753,14 +753,14 @@ writeItems(std::string_view fileSysPath,
          case UCDataType::String:
             if (item->data) {
                // TODO: Check text format, maybe utf8/utf16 etc?
-               node.text().set(phys_cast<char *>(itemData).getRawPointer());
+               node.text().set(phys_cast<char *>(itemData).get());
             } else {
                node.text().set("");
             }
             break;
          case UCDataType::HexBinary:
             if (item->data) {
-               node.text().set(to_string(phys_cast<uint8_t *>(itemData).getRawPointer(), item->dataSize).c_str());
+               node.text().set(to_string(phys_cast<uint8_t *>(itemData).get(), item->dataSize).c_str());
             } else {
                std::string value(static_cast<size_t>(item->dataSize * 2), '0');
                node.text().set(value.c_str());
@@ -788,7 +788,7 @@ writeItems(std::string_view fileSysPath,
       return UCError::Alloc;
    }
 
-   std::memcpy(fileBuffer.getRawPointer(), xmlStr.data(), xmlStr.size());
+   std::memcpy(fileBuffer.get(), xmlStr.data(), xmlStr.size());
 
    error = writeFile(path, fileBuffer, fileSize);
    freeFileData(fileBuffer, fileSize);
@@ -848,7 +848,7 @@ deleteItems(std::string_view fileSysPath,
 
    // Parse XML
    pugi::xml_document doc;
-   auto parseResult = doc.load_buffer(fileBuffer.getRawPointer(), fileSize);
+   auto parseResult = doc.load_buffer(fileBuffer.get(), fileSize);
    freeFileData(fileBuffer, fileSize);
 
    if (!parseResult) {

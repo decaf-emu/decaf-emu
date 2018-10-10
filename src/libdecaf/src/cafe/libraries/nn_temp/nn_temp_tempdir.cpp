@@ -94,10 +94,10 @@ setDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
    deviceInfo->dirId = makeDirId(deviceIndex, deviceType,
                                  static_cast<uint32_t>(OSGetUPID()));
 
-   std::snprintf(virt_addrof(deviceInfo->targetPath).getRawPointer(),
+   std::snprintf(virt_addrof(deviceInfo->targetPath).get(),
                  deviceInfo->targetPath.size(),
                  "%s/usr/tmp/app",
-                 devicePath.getRawPointer());
+                 devicePath.get());
 }
 
 static TEMPStatus
@@ -248,12 +248,12 @@ getDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
    deviceInfo->dirId = dirId;
 
    if (deviceType == TEMPDeviceType::MLC) {
-      std::snprintf(virt_addrof(deviceInfo->targetPath).getRawPointer(),
+      std::snprintf(virt_addrof(deviceInfo->targetPath).get(),
                     deviceInfo->targetPath.size(),
                     "/vol/storage_mlc%02d/usr/tmp/app",
                     deviceIndex);
    } else if (deviceType == TEMPDeviceType::USB) {
-      std::snprintf(virt_addrof(deviceInfo->targetPath).getRawPointer(),
+      std::snprintf(virt_addrof(deviceInfo->targetPath).get(),
                     deviceInfo->targetPath.size(),
                     "/vol/storage_usb%02d/usr/tmp/app",
                     deviceIndex);
@@ -289,13 +289,13 @@ removeDirectoryEntry(virt_ptr<FSClient> client,
 
    while (FSReadDir(client, block, *handle, entry, FSErrorFlag::All) == 0) {
       // Append directory entry name to path
-      auto pathLen = strnlen(path.getRawPointer(), pathBufferSize);
-      std::strncat(path.getRawPointer(),
+      auto pathLen = strnlen(path.get(), pathBufferSize);
+      std::strncat(path.get(),
                    "/",
                    pathBufferSize - pathLen - 1);
 
-      std::strncat(path.getRawPointer(),
-                   virt_addrof(entry->name).getRawPointer(),
+      std::strncat(path.get(),
+                   virt_addrof(entry->name).get(),
                    pathBufferSize - pathLen - 2);
 
       error = removeRecursiveBody(client, block, path, pathBufferSize,
@@ -409,26 +409,26 @@ static TEMPStatus
 parseDirId(virt_ptr<const char> path,
            TEMPDirId *outDirId)
 {
-   if (!strstr(path.getRawPointer(), "/vol/storage_")) {
+   if (!strstr(path.get(), "/vol/storage_")) {
       return TEMPStatus::InvalidParam;
    }
 
-   if (strstr(path.getRawPointer() + 13, "mlc")) {
-      auto deviceIndex = strtoul(path.getRawPointer() + 16, nullptr, 10);
+   if (strstr(path.get() + 13, "mlc")) {
+      auto deviceIndex = strtoul(path.get() + 16, nullptr, 10);
       auto deviceType = TEMPDeviceType::MLC;
       auto upid = 0u;
 
-      if (auto pos = strstr(path.getRawPointer() + 16, "/usr/tmp/app")) {
+      if (auto pos = strstr(path.get() + 16, "/usr/tmp/app")) {
          upid = strtoul(pos + 14, nullptr, 16);
       }
 
       *outDirId = makeDirId(deviceIndex, deviceType, upid);
-   } else if (strstr(path.getRawPointer() + 13, "usb")) {
-      auto deviceIndex = strtoul(path.getRawPointer() + 16, nullptr, 10);
+   } else if (strstr(path.get() + 13, "usb")) {
+      auto deviceIndex = strtoul(path.get() + 16, nullptr, 10);
       auto deviceType = TEMPDeviceType::USB;
       auto upid = 0u;
 
-      if (auto pos = strstr(path.getRawPointer() + 16, "/usr/tmp/app")) {
+      if (auto pos = strstr(path.get() + 16, "/usr/tmp/app")) {
          upid = strtoul(pos + 14, nullptr, 16);
       }
 
@@ -443,15 +443,15 @@ parseDirId(virt_ptr<const char> path,
 static TEMPStatus
 forceRemoveTempDir(virt_ptr<const char> rootPath)
 {
-   if (std::snprintf(virt_addrof(sTempDirData->globalDirPath).getRawPointer(),
+   if (std::snprintf(virt_addrof(sTempDirData->globalDirPath).get(),
                      GlobalPathMaxLength,
                      "%s/%08x",
-                     rootPath.getRawPointer(),
+                     rootPath.get(),
                      static_cast<uint32_t>(OSGetUPID())) >= GlobalPathMaxLength) {
       coreinit::internal::OSPanic(
          "temp.cpp", 442,
          fmt::format("The specified path is too long: {}",
-                     virt_addrof(sTempDirData->globalDirPath).getRawPointer()));
+                     virt_addrof(sTempDirData->globalDirPath).get()));
       return TEMPStatus::FatalError;
    }
 
@@ -644,7 +644,7 @@ TEMPGetDirPath(TEMPDirId dirId,
       return TEMPStatus::InvalidParam;
    }
 
-   if (std::snprintf(pathBuffer.getRawPointer(),
+   if (std::snprintf(pathBuffer.get(),
                      pathBufferSize,
                      "/vol/temp/%016" PRIu64 "x",
                      dirId) >= DirPathMaxLength) {
@@ -683,10 +683,10 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
       return error;
    }
 
-   if (std::snprintf(pathBuffer.getRawPointer(),
+   if (std::snprintf(pathBuffer.get(),
                      pathBufferSize,
                      "%s/%08x",
-                     virt_addrof(deviceInfo->targetPath).getRawPointer(),
+                     virt_addrof(deviceInfo->targetPath).get(),
                      static_cast<uint32_t>(deviceInfo->dirId & 0xFFFFFFFF)) >= GlobalPathMaxLength) {
       tempLogError("TEMPGetDirGlobalPath", 922, "Failed to generate path");
       return TEMPStatus::FatalError;

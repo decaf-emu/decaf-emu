@@ -286,7 +286,7 @@ ipcDriverAllocateRequest(virt_ptr<IPCDriver> driver,
    request->asyncContext = asyncContext;
 
    auto ipcBuffer = request->ipcBuffer;
-   std::memset(virt_addrof(ipcBuffer->request).getRawPointer(),
+   std::memset(virt_addrof(ipcBuffer->request).get(),
                0,
                sizeof(kernel::IpcRequest));
    ipcBuffer->request.command = command;

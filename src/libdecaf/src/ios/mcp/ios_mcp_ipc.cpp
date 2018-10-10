@@ -18,7 +18,7 @@ allocIpcData(uint32_t size)
    auto buffer = IOS_HeapAlloc(CrossProcessHeapId, size);
 
    if (buffer) {
-      std::memset(buffer.getRawPointer(), 0, size);
+      std::memset(buffer.get(), 0, size);
    }
 
    return buffer;
@@ -66,7 +66,7 @@ MCP_RegisterResourceManager(std::string_view device,
    }
 
    // Copy device to ipc buffer
-   std::copy(device.begin(), device.end(), nameBuffer.getRawPointer());
+   std::copy(device.begin(), device.end(), nameBuffer.get());
    nameBuffer[device.size()] = char { 0 };
 
    // Send ioctl to get the manager id

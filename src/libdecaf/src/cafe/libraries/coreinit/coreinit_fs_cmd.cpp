@@ -125,7 +125,7 @@ FSBindMountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (strncmp(sourcePath.getRawPointer(), "/vol/storage_", 13)) {
+   if (strncmp(sourcePath.get(), "/vol/storage_", 13)) {
       internal::COSError(
          COSReportModule::Unknown5,
          fmt::format(
@@ -135,8 +135,8 @@ FSBindMountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (strncmp(targetPath.getRawPointer(), "/vol/external", 13) == 0 ||
-       strncmp(targetPath.getRawPointer(), "/vol/hfio", 9) == 0) {
+   if (strncmp(targetPath.get(), "/vol/external", 13) == 0 ||
+       strncmp(targetPath.get(), "/vol/hfio", 9) == 0) {
       internal::COSError(
          COSReportModule::Unknown5,
          fmt::format("FS: FSBindMount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
@@ -225,8 +225,8 @@ FSBindUnmountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (strncmp(targetPath.getRawPointer(), "/vol/external", 13) == 0 ||
-       strncmp(targetPath.getRawPointer(), "/vol/hfio", 9) == 0) {
+   if (strncmp(targetPath.get(), "/vol/external", 13) == 0 ||
+       strncmp(targetPath.get(), "/vol/hfio", 9) == 0) {
       internal::COSError(
          COSReportModule::Unknown5,
          fmt::format("FS: FSBindUnmount: target must not start with \"/vol/external\" or \"/vol/hfio\", specified path is {}",
@@ -1266,9 +1266,9 @@ FSMountAsync(virt_ptr<FSClient> client,
    }
 
    // Set target path as /vol/<source path>
-   std::memcpy(target.getRawPointer(), "/vol/", 5);
-   string_copy(target.getRawPointer() + 5,
-               virt_addrof(source->path).getRawPointer(),
+   std::memcpy(target.get(), "/vol/", 5);
+   string_copy(target.get() + 5,
+               virt_addrof(source->path).get(),
                bytes - 6);
 
    blockBody->cmdData.mount.sourceType = source->sourceType;
@@ -1283,17 +1283,17 @@ FSMountAsync(virt_ptr<FSClient> client,
    auto devicePath = virt_addrof(blockBody->fsaShimBuffer.request.mount.path);
    auto sourcePath = virt_addrof(source->path);
 
-   if (strncmp(sourcePath.getRawPointer(), "external", 8) == 0) {
+   if (strncmp(sourcePath.get(), "external", 8) == 0) {
       // external01 to /dev/sdcard01
-      std::memcpy(devicePath.getRawPointer(), "/dev/sdcard", 11);
-      string_copy(devicePath.getRawPointer() + 11,
-                  sourcePath.getRawPointer() + 8,
+      std::memcpy(devicePath.get(), "/dev/sdcard", 11);
+      string_copy(devicePath.get() + 11,
+                  sourcePath.get() + 8,
                   FSMaxPathLength - 11);
    } else {
       // <source path> to /dev/<source path>
-      std::memcpy(devicePath.getRawPointer(), "/dev/", 5);
-      string_copy(devicePath.getRawPointer() + 5,
-                  sourcePath.getRawPointer(),
+      std::memcpy(devicePath.get(), "/dev/", 5);
+      string_copy(devicePath.get() + 5,
+                  sourcePath.get(),
                   FSMaxPathLength - 5);
    }
 
@@ -2072,9 +2072,9 @@ FSUnmountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (strncmp(target.getRawPointer(), "/vol/external01", 15) == 0) {
+   if (strncmp(target.get(), "/vol/external01", 15) == 0) {
       blockBody->cmdData.unmount.sourceType = FSMountSourceType::SdCard;
-   } else if (strncmp(target.getRawPointer(), "/vol/hfio01", 11) == 0) {
+   } else if (strncmp(target.get(), "/vol/hfio01", 11) == 0) {
       blockBody->cmdData.unmount.sourceType = FSMountSourceType::HostFileIO;
    } else {
       internal::COSError(COSReportModule::Unknown5,

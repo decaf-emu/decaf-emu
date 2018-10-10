@@ -119,7 +119,9 @@ MEMFreeToFrmHeap(MEMHeapHandle handle,
    if (mode & MEMFrameHeapFreeMode::Head) {
       if (heap->header.flags & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(heap->header.dataStart.getRawPointer(), value, heap->head - heap->header.dataStart);
+         std::memset(heap->header.dataStart.get(),
+                     value,
+                     heap->head - heap->header.dataStart);
       }
 
       heap->head = heap->header.dataStart;
@@ -129,7 +131,9 @@ MEMFreeToFrmHeap(MEMHeapHandle handle,
    if (mode & MEMFrameHeapFreeMode::Tail) {
       if (heap->header.flags & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(heap->tail.getRawPointer(), value, heap->header.dataEnd - heap->tail);
+         std::memset(heap->tail.get(),
+                     value,
+                     heap->header.dataEnd - heap->tail);
       }
 
       heap->tail = heap->header.dataEnd;
@@ -191,8 +195,8 @@ MEMFreeByStateToFrmHeap(MEMHeapHandle handle,
    if (state) {
       if (heap->header.flags & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(state->head.getRawPointer(), value, heap->head - state->head);
-         std::memset(heap->tail.getRawPointer(), value, state->tail - heap->tail);
+         std::memset(state->head.get(), value, heap->head - state->head);
+         std::memset(heap->tail.get(), value, state->tail - heap->tail);
       }
 
       heap->head = state->head;
@@ -259,7 +263,7 @@ MEMResizeForMBlockFrmHeap(MEMHeapHandle handle,
       // Decrease size
       if (heap->header.flags & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-         std::memset(end.getRawPointer(), value, heap->head - addrMem);
+         std::memset(end.get(), value, heap->head - addrMem);
       }
 
       heap->head = end;
@@ -267,10 +271,10 @@ MEMResizeForMBlockFrmHeap(MEMHeapHandle handle,
    } else if (end > heap->head) {
       // Increase size
       if (heap->header.flags & MEMHeapFlags::ZeroAllocated) {
-         std::memset(heap->head.getRawPointer(), 0, addrMem - heap->head);
+         std::memset(heap->head.get(), 0, addrMem - heap->head);
       } else if (heap->header.flags & MEMHeapFlags::DebugMode) {
          auto value = MEMGetFillValForHeap(MEMHeapFillType::Allocated);
-         std::memset(heap->head.getRawPointer(), value, addrMem - heap->head);
+         std::memset(heap->head.get(), value, addrMem - heap->head);
       }
 
       heap->head = end;

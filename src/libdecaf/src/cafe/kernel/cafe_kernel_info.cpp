@@ -79,7 +79,7 @@ void
 getType6Info(virt_ptr<Info6> info,
              uint32_t size)
 {
-   std::memset(info.getRawPointer(), 0, sizeof(Info6));
+   std::memset(info.get(), 0, sizeof(Info6));
 
    // TODO: This comes from ios/mcp GetLaunchParameters
    info->osTitleId = 0x000500101000400Aull;
@@ -96,7 +96,7 @@ getArgStr(virt_ptr<char> buffer,
       length = size - 1;
    }
 
-   std::memcpy(buffer.getRawPointer(),
+   std::memcpy(buffer.get(),
                partitionData->argstr.data(),
                length);
    buffer[length] = char { 0 };

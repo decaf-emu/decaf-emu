@@ -193,7 +193,7 @@ IOS_DestroyHeap(HeapId heapId)
       return Error::Invalid;
    }
 
-   std::memset(heap.getRawPointer(), 0, sizeof(Heap));
+   std::memset(heap.get(), 0, sizeof(Heap));
    heap->pid = ProcessId::Invalid;
 
    if (heapId == LocalProcessHeapId) {
@@ -383,7 +383,7 @@ heapFree(HeapId heapId,
    if (clearMemory) {
       auto base = phys_cast<uint8_t *>(freeBlock) + sizeof(HeapBlock);
       auto size = freeBlock->size;
-      std::memset(base.getRawPointer(), 0, size);
+      std::memset(base.get(), 0, size);
    }
 
    heap->currentAllocatedSize -= freeBlock->size;
@@ -459,8 +459,8 @@ IOS_HeapRealloc(HeapId heapId,
    // Just allocate a new block and copy the data across.
    auto newPtr = IOS_HeapAllocAligned(heapId, size, HeapAllocAlignAlign);
    if (newPtr) {
-      std::memcpy(newPtr.getRawPointer(),
-                  ptr.getRawPointer(),
+      std::memcpy(newPtr.get(),
+                  ptr.get(),
                   std::min<uint32_t>(size, block->size));
       heapFree(heapId, ptr, false);
    }

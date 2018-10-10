@@ -102,7 +102,10 @@ LiGetMinFileInfo(virt_ptr<LOADED_RPL> rpl,
 
    if (fileInfo->filename) {
       auto path = virt_cast<char *>(rpl->fileInfoBuffer) + fileInfo->filename;
-      *info->outPathStringSize = static_cast<uint32_t>(strnlen(path.getRawPointer(), rpl->fileInfoSize - fileInfo->filename) + 1);
+      *info->outPathStringSize =
+         static_cast<uint32_t>(strnlen(path.get(),
+                                       rpl->fileInfoSize - fileInfo->filename)
+                               + 1);
    } else {
       *info->outPathStringSize = 0u;
    }

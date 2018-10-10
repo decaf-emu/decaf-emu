@@ -56,7 +56,7 @@ ucAllocateMessage(uint32_t size)
       message = IPCBufPoolAllocate(sUserConfigData->largeMessagePool, size);
    }
 
-   std::memset(message.getRawPointer(), 0, size);
+   std::memset(message.get(), 0, size);
    return message;
 }
 
@@ -146,8 +146,8 @@ ucHandleIosResult(UCError result,
                      *virt_cast<uint32_t *>(settings[i].data) = *virt_cast<uint32_t *>(src);
                      break;
                   default:
-                     std::memset(settings[i].data.getRawPointer(), 0, 4); // why???
-                     std::memcpy(settings[i].data.getRawPointer(), src.getRawPointer(), settings[i].dataSize);
+                     std::memset(settings[i].data.get(), 0, 4); // why???
+                     std::memcpy(settings[i].data.get(), src.get(), settings[i].dataSize);
                   }
                }
             }
@@ -300,7 +300,7 @@ UCReadSysConfigAsync(IOSHandle handle,
    request->unk0x00 = 0u;
    request->count = count;
    std::memcpy(request->settings,
-               settings.getRawPointer(),
+               settings.get(),
                sizeof(UCSysConfig) * count);
 
    vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
@@ -422,7 +422,7 @@ UCWriteSysConfigAsync(IOSHandle handle,
    request->unk0x00 = 0u;
    request->count = count;
    std::memcpy(request->settings,
-               settings.getRawPointer(),
+               settings.get(),
                count * sizeof(UCSysConfig));
 
    vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));

@@ -15,7 +15,7 @@ LiCalcCRC32(uint32_t crc,
       return crc;
    }
 
-   crc = crc32(crc, reinterpret_cast<Bytef *>(data.getRawPointer()), size);
+   crc = crc32(crc, reinterpret_cast<Bytef *>(data.get()), size);
    LiCheckAndHandleInterrupts();
    return crc;
 }

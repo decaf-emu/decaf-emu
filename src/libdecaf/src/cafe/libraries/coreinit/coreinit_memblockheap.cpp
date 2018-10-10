@@ -387,7 +387,7 @@ MEMFreeToBlockHeap(MEMHeapHandle handle,
    if (heap->header.flags & MEMHeapFlags::DebugMode) {
       auto fill = MEMGetFillValForHeap(MEMHeapFillType::Freed);
       auto size = block->end - block->start;
-      std::memset(block->start.getRawPointer(), fill, size);
+      std::memset(block->start.get(), fill, size);
    }
 
    // Merge with previous free block if possible

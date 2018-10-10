@@ -281,7 +281,7 @@ GetMiiEx(virt_ptr<FFLStoreData> data,
    }
 
    // Set our Mii Data!
-   std::memset(data.getRawPointer(), 0, sizeof(FFLStoreData));
+   std::memset(data.get(), 0, sizeof(FFLStoreData));
 
    data->birth_platform = 3;
    data->font_region = 0;
@@ -363,7 +363,7 @@ GetMiiNameEx(virt_ptr<char16_t> name,
       return AccountNotFound;
    }
 
-   std::copy(MiiName.begin(), MiiName.end(), name.getRawPointer());
+   std::copy(MiiName.begin(), MiiName.end(), name.get());
    name[MiiName.size()] = char16_t { 0 };
 
    return nn::Result::Success;
@@ -390,7 +390,7 @@ IsNetworkAccountEx(uint8_t slot)
 nn::Result
 GetDeviceHash(virt_ptr<uint8_t> data)
 {
-   std::memcpy(data.getRawPointer(), DeviceHash, 6);
+   std::memcpy(data.get(), DeviceHash, 6);
    return nn::Result::Success;
 }
 

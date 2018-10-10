@@ -62,7 +62,7 @@ LiClearUserBss(bool userHasControl,
       }
    }
 
-   std::memset(base.getRawPointer(), 0, size);
+   std::memset(base.get(), 0, size);
 }
 
 static int32_t
@@ -70,7 +70,7 @@ GetNextBounce(virt_ptr<LOADED_RPL> rpl)
 {
    uint32_t chunkBytesRead = 0;
    auto error = LiWaitOneChunk(&chunkBytesRead,
-                               virt_cast<char *>(rpl->pathBuffer).getRawPointer(),
+                               virt_cast<char *>(rpl->pathBuffer).get(),
                                rpl->fileType);
    if (error != 0) {
       return error;
@@ -241,13 +241,13 @@ ZLIB_UncompressFromStream(virt_ptr<LOADED_RPL> rpl,
    constexpr auto InflateChunkSize = 0x3000u;
    rpl->lastSectionCrc = 0u;
 
-   stream.next_out = reinterpret_cast<Bytef *>(inflatedBuffer.getRawPointer());
+   stream.next_out = reinterpret_cast<Bytef *>(inflatedBuffer.get());
 
    while (true) {
       // TODO: Loader_UpdateHeartBeat();
       LiCheckAndHandleInterrupts();
       stream.avail_in = bounceBufferSize;
-      stream.next_in = reinterpret_cast<Bytef *>(bounceBuffer.getRawPointer());
+      stream.next_in = reinterpret_cast<Bytef *>(bounceBuffer.get());
 
       while (stream.avail_in) {
          LiCheckAndHandleInterrupts();
@@ -352,7 +352,7 @@ LiSetupOneAllocSection(kernel::UniqueProcessId upid,
          while (readBytes < inflatedExpectedSizeBuffer.size()) {
             std::memcpy(
                inflatedExpectedSizeBuffer.data() + readBytes,
-               sectionData.getRawPointer(),
+               sectionData.get(),
                std::min<size_t>(bytesAvailable, inflatedExpectedSizeBuffer.size() - readBytes));
 
             readBytes += bytesAvailable;
@@ -415,8 +415,8 @@ LiSetupOneAllocSection(kernel::UniqueProcessId upid,
          while (true) {
             // TODO: Loader_UpdateHeartBeat();
             LiCheckAndHandleInterrupts();
-            std::memcpy(virt_cast<void *>(sectionAddress + bytesRead).getRawPointer(),
-                        sectionData.getRawPointer(),
+            std::memcpy(virt_cast<void *>(sectionAddress + bytesRead).get(),
+                        sectionData.get(),
                         bytesAvailable);
             bytesRead += bytesAvailable;
 
@@ -676,8 +676,8 @@ LiSetupOneRPL(kernel::UniqueProcessId upid,
       while (tempSize > 0) {
          // TODO: Loader_UpdateHeartBeat
          LiCheckAndHandleInterrupts();
-         std::memcpy(virt_cast<void *>(virt_cast<virt_addr>(compressedRelocationsBuffer) + readBytes).getRawPointer(),
-                     data.getRawPointer(),
+         std::memcpy(virt_cast<void *>(virt_cast<virt_addr>(compressedRelocationsBuffer) + readBytes).get(),
+                     data.get(),
                      dataSize);
          readBytes += dataSize;
          tempSize -= dataSize;

@@ -54,7 +54,7 @@ nn::Result
 Task::Initialize(virt_ptr<const char> taskId,
                  uint32_t accountId)
 {
-   if (!taskId || strnlen(taskId.getRawPointer(), 8) == 8) {
+   if (!taskId || strnlen(taskId.get(), 8) == 8) {
       return InvalidParameter;
    }
 

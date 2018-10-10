@@ -60,18 +60,18 @@ DMAECopyMem(virt_ptr<void> dst,
    coreinit::OSLockMutex(virt_addrof(sRingData->mutex));
 
    if (endian == DMAEEndianSwapMode::None) {
-      std::memcpy(dst.getRawPointer(),
-                  src.getRawPointer(),
+      std::memcpy(dst.get(),
+                  src.get(),
                   numWords * 4);
    } else if (endian == DMAEEndianSwapMode::Swap8In16) {
-      auto dstWords = reinterpret_cast<uint16_t *>(dst.getRawPointer());
-      auto srcWords = reinterpret_cast<uint16_t *>(src.getRawPointer());
+      auto dstWords = reinterpret_cast<uint16_t *>(dst.get());
+      auto srcWords = reinterpret_cast<uint16_t *>(src.get());
       for (auto i = 0u; i < numWords * 2; ++i) {
          *dstWords++ = byte_swap(*srcWords++);
       }
    } else if (endian == DMAEEndianSwapMode::Swap8In32) {
-      auto dstDwords = reinterpret_cast<uint32_t *>(dst.getRawPointer());
-      auto srcDwords = reinterpret_cast<uint32_t *>(src.getRawPointer());
+      auto dstDwords = reinterpret_cast<uint32_t *>(dst.get());
+      auto srcDwords = reinterpret_cast<uint32_t *>(src.get());
       for (auto i = 0u; i < numWords; ++i) {
          *dstDwords++ = byte_swap(*srcDwords++);
       }
@@ -92,7 +92,7 @@ DMAEFillMem(virt_ptr<void> dst,
    coreinit::OSLockMutex(virt_addrof(sRingData->mutex));
 
    auto dstValue = byte_swap(value);
-   auto dstDwords = reinterpret_cast<uint32_t *>(dst.getRawPointer());
+   auto dstDwords = reinterpret_cast<uint32_t *>(dst.get());
    for (auto i = 0u; i < numDwords; ++i) {
       dstDwords[i] = dstValue;
    }

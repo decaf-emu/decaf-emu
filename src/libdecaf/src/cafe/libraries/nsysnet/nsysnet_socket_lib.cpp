@@ -292,7 +292,7 @@ allocateIpcBuffer(uint32_t size)
 {
    auto buf = IPCBufPoolAllocate(sSocketLibData->messagePool, size);
    if (buf) {
-      std::memset(buf.getRawPointer(), 0, size);
+      std::memset(buf.get(), 0, size);
    }
 
    return buf;

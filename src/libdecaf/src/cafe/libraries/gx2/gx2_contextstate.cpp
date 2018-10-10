@@ -174,7 +174,7 @@ GX2SetupContextStateEx(virt_ptr<GX2ContextState> state,
                        GX2ContextStateFlags flags)
 {
    // Create our internal shadow display list
-   std::memset(state.getRawPointer(), 0, sizeof(GX2ContextState));
+   std::memset(state.get(), 0, sizeof(GX2ContextState));
    state->profilingEnabled = (flags & GX2ContextStateFlags::ProfilingEnabled) ? TRUE : FALSE;
    internal::setProfilingEnabled(state->profilingEnabled);
 

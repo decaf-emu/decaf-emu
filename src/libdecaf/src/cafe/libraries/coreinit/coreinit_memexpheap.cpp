@@ -234,7 +234,7 @@ releaseMemory(virt_ptr<MEMExpHeap> heap,
    // Fill the released memory with debug data if needed
    if (heap->header.flags & MEMHeapFlags::DebugMode) {
       auto fillVal = MEMGetFillValForHeap(MEMHeapFillType::Freed);
-      std::memset(memStart.getRawPointer(), fillVal, memEnd - memStart);
+      std::memset(memStart.get(), fillVal, memEnd - memStart);
    }
 
    // Find the preceeding block to the memory we are releasing

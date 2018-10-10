@@ -44,9 +44,9 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
       endian = GX2EndianSwapMode::None;
    }
 
-   internal::getSurfaceInfo(surface.getRawPointer(),
+   internal::getSurfaceInfo(surface.get(),
                             level,
-                            surfaceInfo.getRawPointer());
+                            surfaceInfo.get());
 
    auto addr = virt_addr { 0 };
    if (level == 0) {
@@ -69,8 +69,8 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
       }
    }
 
-   auto sliceSize = internal::calcSliceSize(surface.getRawPointer(),
-                                            surfaceInfo.getRawPointer());
+   auto sliceSize = internal::calcSliceSize(surface.get(),
+                                            surfaceInfo.get());
 
    if (TCLAllocTilingAperture(OSEffectiveToPhysical(addr + sliceSize * depth),
                               surfaceInfo->pitch,
@@ -92,12 +92,12 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
          apertureSurface->swizzle &= 0xFFFF00FF;
          GX2CalcSurfaceSizeAndAlignment(apertureSurface);
 
-         gx2::internal::copySurface(surface.getRawPointer(),
+         gx2::internal::copySurface(surface.get(),
                                     level, depth,
-                                    apertureSurface.getRawPointer(),
+                                    apertureSurface.get(),
                                     level, depth,
-                                    virt_cast<uint8_t *>(*outAddress).getRawPointer(),
-                                    virt_cast<uint8_t *>(*outAddress).getRawPointer());
+                                    virt_cast<uint8_t *>(*outAddress).get(),
+                                    virt_cast<uint8_t *>(*outAddress).get());
 
          info.address = *outAddress;
       } else {
@@ -125,12 +125,12 @@ GX2FreeTilingAperture(GX2ApertureHandle handle)
       apertureSurface->swizzle &= 0xFFFF00FF;
       GX2CalcSurfaceSizeAndAlignment(apertureSurface);
 
-      gx2::internal::copySurface(apertureSurface.getRawPointer(),
+      gx2::internal::copySurface(apertureSurface.get(),
                                  info.level, info.depth,
-                                 virt_addrof(info.surface).getRawPointer(),
+                                 virt_addrof(info.surface).get(),
                                  info.level, info.depth,
-                                 info.surface.image.getRawPointer(),
-                                 info.surface.mipmaps.getRawPointer());
+                                 info.surface.image.get(),
+                                 info.surface.mipmaps.get());
    }
 
    TCLFreeTilingAperture(handle);

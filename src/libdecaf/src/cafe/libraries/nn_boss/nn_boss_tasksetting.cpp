@@ -23,9 +23,7 @@ void
 TaskSetting::InitializeSetting()
 {
    decaf_warn_stub();
-   std::memset(virt_addrof(mTaskSettingData).getRawPointer(),
-               0,
-               sizeof(TaskSettingData));
+   std::memset(virt_addrof(mTaskSettingData).get(), 0, sizeof(TaskSettingData));
 
    mTaskSettingData.unk0x00 = 0u;
    mTaskSettingData.unk0x08 = 0u;

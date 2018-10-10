@@ -37,7 +37,7 @@ LiBinSearchExport(virt_ptr<rpl::Export> exports,
    while (left < right) {
       auto index = left + (right - left) / 2;
       auto exportName = strTable + (exports[index].name & 0x7FFFFFFF);
-      auto cmpValue = strcmp(name.getRawPointer(), exportName.getRawPointer());
+      auto cmpValue = strcmp(name.get(), exportName.get());
       if (cmpValue == 0) {
          return exports + index;
       } else if (cmpValue < 0) {
@@ -123,10 +123,10 @@ sFixupOneSymbolTable(virt_ptr<LOADED_RPL> rpl,
          symbol->value =
             cafe::hle::registerUnimplementedSymbol(
                std::string_view {
-                  import.rpl->moduleNameBuffer.getRawPointer(),
+                  import.rpl->moduleNameBuffer.get(),
                   import.rpl->moduleNameLen
                },
-               symbolName.getRawPointer());
+               symbolName.get());
          if (!symbol->value) {
             // Must not be from a HLE library, so let's error out like normal
             Loader_ReportError("*** could not find imported symbol \"{}\".", symbolName);
@@ -470,7 +470,7 @@ sExecReloc(virt_ptr<LOADED_RPL> rpl,
       }
 
       stream.avail_in = sectionHeader->size;
-      stream.next_in = virt_cast<Bytef *>(relaSectionAddress + 4).getRawPointer();
+      stream.next_in = virt_cast<Bytef *>(relaSectionAddress + 4).get();
    }
 
    auto remainingBytes = relaSectionSize;
@@ -480,7 +480,7 @@ sExecReloc(virt_ptr<LOADED_RPL> rpl,
    while (remainingBytes > 0) {
       // Read whole shit
       auto availableBytes = remainingBytes;
-      auto relas = virt_cast<rpl::Rela *>(relaSectionAddress).getRawPointer();
+      auto relas = virt_cast<rpl::Rela *>(relaSectionAddress).get();
       auto error = 0;
 
       if (sectionHeader->flags & rpl::SHF_DEFLATED) {

@@ -138,7 +138,7 @@ IOS_RegisterResourceManager(std::string_view device,
 
    resourceManager.queueId = queue;
 
-   string_copy(phys_addrof(resourceManager.device).getRawPointer(),
+   string_copy(phys_addrof(resourceManager.device).get(),
                device.data(),
                resourceManager.device.size());
    resourceManager.deviceLen = static_cast<uint16_t>(device.size());
@@ -168,7 +168,7 @@ IOS_RegisterResourceManager(std::string_view device,
       auto insertBeforeIndex = resourceManagerList.firstRegisteredIdx;
       while (insertBeforeIndex >= 0) {
          auto &other = resourceManagerList.resourceManagers[insertBeforeIndex];
-         if (device.compare(phys_addrof(other.device).getRawPointer()) < 0) {
+         if (device.compare(phys_addrof(other.device).get()) < 0) {
             break;
          }
 
@@ -323,7 +323,7 @@ findResourceManager(std::string_view device,
    while (index >= 0) {
       auto &resourceManager = sData->resourceManagerList.resourceManagers[index];
       auto resourceManagerDevice = std::string_view {
-            phys_addrof(resourceManager.device).getRawPointer(),
+            phys_addrof(resourceManager.device).get(),
             resourceManager.deviceLen
          };
 
@@ -477,7 +477,7 @@ freeResourceRequest(phys_ptr<ResourceRequest> resourceRequest)
    resourceManager->numRequests--;
 
    // Reset the resource request
-   std::memset(resourceRequest.getRawPointer(), 0, sizeof(ResourceRequest));
+   std::memset(resourceRequest.get(), 0, sizeof(ResourceRequest));
    resourceRequest->prevIdx = lastFreeIdx;
    resourceRequest->nextIdx = int16_t { -1 };
 
@@ -723,7 +723,7 @@ dispatchIosOpen(std::string_view device,
    resourceRequest->requestData.args.open.mode = mode;
    resourceRequest->requestData.args.open.caps = clientCapability->mask;
 
-   string_copy(phys_addrof(resourceRequest->openNameBuffer).getRawPointer(),
+   string_copy(phys_addrof(resourceRequest->openNameBuffer).get(),
                device.data(),
                resourceRequest->openNameBuffer.size());
 
@@ -788,7 +788,7 @@ dispatchIosClose(ResourceHandleId resourceHandleId,
    auto resourceManager = resourceHandle->resourceManager;
    if (!resourceManager) {
       ios::StackObject<ResourceRequest> resourceRequest;
-      std::memset(resourceRequest.getRawPointer(), 0, sizeof(ResourceRequest));
+      std::memset(resourceRequest.get(), 0, sizeof(ResourceRequest));
       resourceRequest->requestData.command = Command::Close;
       resourceRequest->requestData.cpuId = cpuId;
       resourceRequest->requestData.processId = pid;

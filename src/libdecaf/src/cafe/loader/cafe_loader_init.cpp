@@ -117,7 +117,7 @@ LOADER_Init(kernel::UniqueProcessId upid,
    globals->lastLoadedRpl = nullptr;
    globals->loadedRpx = nullptr;
 
-   std::memset(startInfo.getRawPointer(), 0, sizeof(RPL_STARTINFO));
+   std::memset(startInfo.get(), 0, sizeof(RPL_STARTINFO));
    startInfo->dataAreaEnd = virt_addr { 0x10000000u } + maxDataSize;
 
    // Setup code heap
@@ -153,7 +153,7 @@ LOADER_Init(kernel::UniqueProcessId upid,
       loadRpxName = std::string_view { "root.rpx" };
       loadFileType = ios::mcp::MCPFileType::CafeOS;
    } else {
-      loadRpxName = getLoadRpxName().getRawPointer();
+      loadRpxName = getLoadRpxName().get();
       loadFileType = ios::mcp::MCPFileType::ProcessCode;
    }
 
@@ -173,11 +173,11 @@ LOADER_Init(kernel::UniqueProcessId upid,
    }
 
    fileNameLen = std::min<uint32_t>(static_cast<uint32_t>(loadRpxName.size()), 59);
-   std::memcpy(fileName.getRawPointer(), loadRpxName.data(), fileNameLen);
+   std::memcpy(fileName.get(), loadRpxName.data(), fileNameLen);
 
    // Resolve module name and copy to guest stack buffer
    loadRpxName = LiResolveModuleName(loadRpxName);
-   std::memcpy(moduleName.getRawPointer(), loadRpxName.data(), loadRpxName.size());
+   std::memcpy(moduleName.get(), loadRpxName.data(), loadRpxName.size());
    moduleName[loadRpxName.size()] = char { 0 };
 
    loadArgs.upid = upid;

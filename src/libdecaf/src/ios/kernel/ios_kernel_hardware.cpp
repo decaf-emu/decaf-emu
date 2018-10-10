@@ -102,7 +102,7 @@ IOS_UnregisterEventHandler(DeviceId id)
       handler.queue->flags &= ~MessageQueueFlags::RegisteredEventHandler;
    }
 
-   std::memset(phys_addrof(handler).getRawPointer(), 0, sizeof(handler));
+   std::memset(phys_addrof(handler).get(), 0, sizeof(handler));
    return Error::OK;
 }
 
@@ -314,7 +314,7 @@ unregisterEventHandlerQueue(MessageQueueId queue)
 {
    for (auto &handler : sHardwareData->eventHandlers) {
       if (handler.queue->uid == queue) {
-         std::memset(phys_addrof(handler).getRawPointer(), 0, sizeof(handler));
+         std::memset(phys_addrof(handler).get(), 0, sizeof(handler));
          break;
       }
    }

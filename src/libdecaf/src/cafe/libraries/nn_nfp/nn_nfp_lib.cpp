@@ -36,7 +36,7 @@ nn::Result
 GetAmiiboSettingsArgs(virt_ptr<AmiiboSettingsArgs> args)
 {
    decaf_warn_stub();
-   std::memset(args.getRawPointer(), 0, sizeof(AmiiboSettingsArgs));
+   std::memset(args.get(), 0, sizeof(AmiiboSettingsArgs));
    return nn::Result::Success;
 }
 

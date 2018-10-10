@@ -97,7 +97,7 @@ SAVEGetStat(virt_ptr<FSClient> client,
             virt_ptr<FSStat> stat,
             FSErrorFlag errorMask)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSGetStat(client,
                     block,
@@ -116,7 +116,7 @@ SAVEGetStatAsync(virt_ptr<FSClient> client,
                  FSErrorFlag errorMask,
                  virt_ptr<FSAsyncData> asyncData)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSGetStatAsync(client,
                          block,
@@ -135,7 +135,7 @@ SAVEGetStatOtherApplication(virt_ptr<FSClient> client,
                             virt_ptr<FSStat> stat,
                             FSErrorFlag errorMask)
 {
-   auto fsPath = internal::getTitleSavePath(titleId, account, path.getRawPointer());
+   auto fsPath = internal::getTitleSavePath(titleId, account, path.get());
 
    return FSGetStat(client,
                     block,
@@ -154,7 +154,7 @@ SAVEGetStatOtherApplicationAsync(virt_ptr<FSClient> client,
                                  FSErrorFlag errorMask,
                                  virt_ptr<FSAsyncData> asyncData)
 {
-   auto fsPath = internal::getTitleSavePath(titleId, account, path.getRawPointer());
+   auto fsPath = internal::getTitleSavePath(titleId, account, path.get());
 
    return FSGetStatAsync(client,
                          block,
@@ -172,7 +172,7 @@ SAVEMakeDir(virt_ptr<FSClient> client,
             virt_ptr<const char> path,
             FSErrorFlag errorMask)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSMakeDir(client,
                     block,
@@ -189,7 +189,7 @@ SAVEMakeDirAsync(virt_ptr<FSClient> client,
                  FSErrorFlag errorMask,
                  virt_ptr<FSAsyncData> asyncData)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSMakeDirAsync(client,
                          block,
@@ -207,7 +207,7 @@ SAVEOpenDir(virt_ptr<FSClient> client,
             virt_ptr<FSDirHandle> handle,
             FSErrorFlag errorMask)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSOpenDir(client,
                     block,
@@ -226,7 +226,7 @@ SAVEOpenDirAsync(virt_ptr<FSClient> client,
                  FSErrorFlag errorMask,
                  virt_ptr<FSAsyncData> asyncData)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSOpenDirAsync(client,
                          block,
@@ -246,7 +246,7 @@ SAVEOpenFile(virt_ptr<FSClient> client,
              virt_ptr<FSFileHandle> handle,
              FSErrorFlag errorMask)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSOpenFile(client,
                      block,
@@ -267,7 +267,7 @@ SAVEOpenFileAsync(virt_ptr<FSClient> client,
                   FSErrorFlag errorMask,
                   virt_ptr<FSAsyncData> asyncData)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSOpenFileAsync(client,
                           block,
@@ -286,7 +286,7 @@ SAVERemove(virt_ptr<FSClient> client,
            virt_ptr<const char> path,
            FSErrorFlag errorMask)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSRemove(client,
                    block,
@@ -303,7 +303,7 @@ SAVERemoveAsync(virt_ptr<FSClient> client,
                 FSErrorFlag errorMask,
                 virt_ptr<FSAsyncData> asyncData)
 {
-   auto fsPath = internal::getSavePath(account, path.getRawPointer());
+   auto fsPath = internal::getSavePath(account, path.get());
 
    return FSRemoveAsync(client,
                         block,
@@ -321,8 +321,8 @@ SAVERename(virt_ptr<FSClient> client,
            virt_ptr<const char> dst,
            FSErrorFlag errorMask)
 {
-   auto srcPath = internal::getSavePath(account, src.getRawPointer());
-   auto dstPath = internal::getSavePath(account, dst.getRawPointer());
+   auto srcPath = internal::getSavePath(account, src.get());
+   auto dstPath = internal::getSavePath(account, dst.get());
 
    return FSRename(client,
                    block,
@@ -341,8 +341,8 @@ SAVERenameAsync(virt_ptr<FSClient> client,
                 FSErrorFlag errorMask,
                 virt_ptr<FSAsyncData> asyncData)
 {
-   auto srcPath = internal::getSavePath(account, src.getRawPointer());
-   auto dstPath = internal::getSavePath(account, dst.getRawPointer());
+   auto srcPath = internal::getSavePath(account, src.get());
+   auto dstPath = internal::getSavePath(account, dst.get());
 
    return FSRenameAsync(client,
                         block,

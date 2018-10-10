@@ -98,17 +98,17 @@ mainCoreEntryPoint(cpu::Core *core)
       titleInfo->exception_stack1_size = 0x1000u;
       titleInfo->exception_stack2_size = 0x1000u;
 
-      string_copy(virt_addrof(titleInfo->argstr).getRawPointer(),
+      string_copy(virt_addrof(titleInfo->argstr).get(),
                   titleInfo->argstr.size(),
                   sExecutableName.data(),
                   sExecutableName.size());
    } else {
       gLog->info("Loaded title {:016X}, argstr \"{}\"",
                  titleInfo->titleId,
-                 virt_addrof(titleInfo->argstr).getRawPointer());
+                 virt_addrof(titleInfo->argstr).get());
    }
 
-   auto rpx = std::string_view { virt_addrof(titleInfo->argstr).getRawPointer() };
+   auto rpx = std::string_view { virt_addrof(titleInfo->argstr).get() };
    if (rpx.empty()) {
       gLog->error("Could not find game executable to load.");
       return;
@@ -202,8 +202,8 @@ cpuBranchTraceHandler(cpu::Core *core,
       if (!error && data.moduleNameBuffer[0] && data.symbolNameBuffer[0]) {
          gLog->trace("CPU branched to: 0x{:08X} {}|{}+0x{:X}",
                      target,
-                     virt_addrof(data.moduleNameBuffer).getRawPointer(),
-                     virt_addrof(data.symbolNameBuffer).getRawPointer(),
+                     virt_addrof(data.moduleNameBuffer).get(),
+                     virt_addrof(data.symbolNameBuffer).get(),
                      data.symbolDistance);
       } else {
          gLog->trace("CPU branched to: 0x{:08X}", target);

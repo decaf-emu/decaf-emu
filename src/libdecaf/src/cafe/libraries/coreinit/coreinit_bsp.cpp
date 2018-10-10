@@ -86,7 +86,8 @@ prepareIpcBuffer(std::size_t responseSize,
       return BSPError::ResponseTooLarge;
    }
 
-   std::memset(virt_addrof(buffer->request).getRawPointer(), 0,
+   std::memset(virt_addrof(buffer->request).get(),
+               0,
                sizeof(BSPRequest));
    return BSPError::OK;
 }

@@ -45,7 +45,7 @@ LiCacheLineCorrectAllocEx(virt_ptr<TinyHeap> heap,
       return static_cast<int32_t>(tinyHeapError);
    }
 
-   std::memset(outPtr->getRawPointer(), 0, textSize);
+   std::memset(outPtr->get(), 0, textSize);
    return 0;
 }
 
@@ -62,7 +62,7 @@ void
 initialiseStaticDataHeap()
 {
    sStaticDataHeap = FrameAllocator {
-      virt_cast<void *>(virt_addr { 0xEFE0B000 }).getRawPointer(),
+      virt_cast<void *>(virt_addr { 0xEFE0B000 }).get(),
       0xEFE80000 - 0xEFE0B000,
    };
 }

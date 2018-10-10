@@ -106,7 +106,7 @@ ipcThreadEntry(phys_ptr<void> context)
 
             switch (request->command) {
             case Command::Open:
-               error = internal::dispatchIosOpen(request->args.open.name.getRawPointer(),
+               error = internal::dispatchIosOpen(request->args.open.name.get(),
                                                  request->args.open.mode,
                                                  queue,
                                                  request,

@@ -224,7 +224,7 @@ setFatalErrorInfo(uint32_t fatalMsgType,
    sDynLoadData->fatalError.error = fatalErr;
    sDynLoadData->fatalError.loaderError = loaderError;
    sDynLoadData->fatalError.line = fatalLine;
-   sDynLoadData->fatalError.funcName = fatalFunction.getRawPointer();
+   sDynLoadData->fatalError.funcName = fatalFunction.get();
 }
 
 
@@ -300,7 +300,7 @@ setFatalErrorInfo2(uint32_t deviceLocation,
 static void
 resetFatalErrorInfo()
 {
-   std::memset(virt_addrof(sDynLoadData->fatalError).getRawPointer(),
+   std::memset(virt_addrof(sDynLoadData->fatalError).get(),
                0,
                sizeof(sDynLoadData->fatalError));
 }
@@ -630,7 +630,7 @@ internalPurge(virt_ptr<RPL_DATA> rpl)
    rpl->moduleNameLen = 0u;
 
    // And finally.. free the RPL data itself.
-   std::memset(rpl.getRawPointer(), 0, sizeof(RPL_DATA));
+   std::memset(rpl.get(), 0, sizeof(RPL_DATA));
    rplSysHeapFree("RPL_DATA", rpl, sizeof(RPL_DATA));
 }
 
@@ -718,8 +718,8 @@ release(OSDynLoad_ModuleHandle moduleHandle,
          if (notifyCallbackArray) {
             auto notifyCallback = sDynLoadData->notifyCallbacks;
             for (auto i = 0u; notifyCallback; ++i) {
-               std::memcpy(virt_addrof(notifyCallbackArray[i]).getRawPointer(),
-                           notifyCallback.getRawPointer(),
+               std::memcpy(virt_addrof(notifyCallbackArray[i]).get(),
+                           notifyCallback.get(),
                            sizeof(OSDynLoad_NotifyCallback));
 
                notifyCallback = notifyCallback->next;
@@ -790,8 +790,8 @@ binarySearchExport(virt_ptr<loader::rpl::Export> exports,
 
    while (true) {
       auto index = left + (right - left) / 2;
-      auto exportName = exportNames.getRawPointer() + (exports[index].name & 0x7FFFFFFF);
-      auto cmpValue = strcmp(name.getRawPointer(), exportName);
+      auto exportName = exportNames.get() + (exports[index].name & 0x7FFFFFFF);
+      auto cmpValue = strcmp(name.get(), exportName);
       if (cmpValue == 0) {
          return exports + index;
       } else if (cmpValue < 0) {
@@ -874,7 +874,7 @@ setupPerm(virt_ptr<RPL_DATA> rplData,
           bool updateTlsModuleIndex)
 {
    StackObject<loader::LOADER_MinFileInfo> minFileInfo;
-   std::memset(minFileInfo.getRawPointer(), 0, sizeof(loader::LOADER_MinFileInfo));
+   std::memset(minFileInfo.get(), 0, sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->version = 4u;
    minFileInfo->outPathStringSize = virt_addrof(minFileInfo->pathStringSize);
@@ -947,7 +947,7 @@ setupPerm(virt_ptr<RPL_DATA> rplData,
    }
 
    minFileInfo->outFileInfo = rplData->userFileInfo;
-   std::memset(rplData->userFileInfo.getRawPointer(), 0,
+   std::memset(rplData->userFileInfo.get(), 0,
                sizeof(loader::LOADER_UserFileInfo));
 
    // Allocate path string
@@ -969,7 +969,7 @@ setupPerm(virt_ptr<RPL_DATA> rplData,
          reportFatalError();
       }
 
-      std::memset(minFileInfo->pathStringBuffer.getRawPointer(), 0,
+      std::memset(minFileInfo->pathStringBuffer.get(), 0,
                   minFileInfo->pathStringSize);
    }
 
@@ -1061,7 +1061,7 @@ initialiseDefaultHeap(virt_ptr<RPL_DATA> rplData,
 static std::pair<virt_ptr<const char>, uint32_t>
 resolveModuleName(virt_ptr<const char> name)
 {
-   auto str = std::string_view { name.getRawPointer() };
+   auto str = std::string_view { name.get() };
    auto pos = str.find_last_of("\\/");
    if (pos != std::string_view::npos) {
       str = str.substr(pos);
@@ -1129,7 +1129,7 @@ buildKernelNotify(virt_ptr<RPL_DATA> linkList,
       return OSDynLoad_Error::OutOfSysMemory;
    }
 
-   std::memset(linkInfo.getRawPointer(), 0, linkInfoSize);
+   std::memset(linkInfo.get(), 0, linkInfoSize);
    linkInfo->numModules = numModules;
    linkInfo->size = linkInfoSize;
 
@@ -1161,7 +1161,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
    *outNumEntryModules = 0u;
    *outEntryModules = nullptr;
 
-   std::memset(minFileInfo.getRawPointer(), 0,
+   std::memset(minFileInfo.get(), 0,
                sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->version = 4u;
@@ -1222,7 +1222,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
             }
 
             auto notifyData = rplData->notifyData;
-            std::memset(notifyData.getRawPointer(), 0,
+            std::memset(notifyData.get(), 0,
                         sizeof(OSDynLoad_NotifyData));
 
             notifyData->name = rplData->userFileInfo->pathString;
@@ -1414,7 +1414,7 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
    minFileInfo->outFileInfo = rplData->userFileInfo;
    sDynLoadData->numAllocations++;
    sDynLoadData->totalAllocatedBytes += rplData->userFileInfoSize;
-   std::memset(rplData->userFileInfo.getRawPointer(), 0, rplData->userFileInfoSize);
+   std::memset(rplData->userFileInfo.get(), 0, rplData->userFileInfoSize);
 
    // Allocate path string buffer
    if (minFileInfo->pathStringSize) {
@@ -1431,7 +1431,7 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
          return OSDynLoad_Error::OutOfSysMemory;
       }
 
-      std::memset(minFileInfo->pathStringBuffer.getRawPointer(), 0,
+      std::memset(minFileInfo->pathStringBuffer.get(), 0,
                   minFileInfo->pathStringSize);
    }
 
@@ -1647,7 +1647,7 @@ internalAcquire(virt_ptr<const char> name,
 
    // Check if we already loaded this module
    for (auto rpl = sDynLoadData->rplDataList; rpl; rpl = rpl->next) {
-      if (strcmp(rpl->moduleName.getRawPointer(), rplName.getRawPointer()) == 0) {
+      if (strcmp(rpl->moduleName.get(), rplName.get()) == 0) {
          OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), rpl->handle);
          *outRplData = rpl;
          return OSDynLoad_Error::OK;
@@ -1656,7 +1656,7 @@ internalAcquire(virt_ptr<const char> name,
 
    // Check if we are already loading this module
    for (auto rpl = sDynLoadData->linkingRplList; rpl; rpl = rpl->next) {
-      if (strcmp(rpl->moduleName.getRawPointer(), rplName.getRawPointer()) == 0) {
+      if (strcmp(rpl->moduleName.get(), rplName.get()) == 0) {
          OSHandle_AddRef(virt_addrof(sDynLoadData->handleTable), rpl->handle);
          *outRplData = rpl;
          return OSDynLoad_Error::OK;
@@ -1664,7 +1664,7 @@ internalAcquire(virt_ptr<const char> name,
    }
 
    // Verify we're not loading coreinit, that'd be a massive fuckup
-   if (strcmp(rplName.getRawPointer(), "coreinit") == 0) {
+   if (strcmp(rplName.get(), "coreinit") == 0) {
       COSError(COSReportModule::Unknown2, "*********");
       COSError(COSReportModule::Unknown2, fmt::format(
          "Error: Trying to load \"{}\".", rplName));
@@ -1718,8 +1718,8 @@ internalAcquire(virt_ptr<const char> name,
 
       auto notifyCallback = sDynLoadData->notifyCallbacks;
       for (auto i = 0u; notifyCallback; ++i) {
-         std::memcpy(virt_addrof(notifyCallbackArray[i]).getRawPointer(),
-                     notifyCallback.getRawPointer(),
+         std::memcpy(virt_addrof(notifyCallbackArray[i]).get(),
+                     notifyCallback.get(),
                      sizeof(OSDynLoad_NotifyCallback));
 
          notifyCallback = notifyCallback->next;
@@ -1757,7 +1757,7 @@ internalAcquire(virt_ptr<const char> name,
          }
       });
 
-   std::memset(rplData.getRawPointer(), 0, sizeof(RPL_DATA));
+   std::memset(rplData.get(), 0, sizeof(RPL_DATA));
 
    // Allocate min file info
    auto minFileInfo = virt_cast<loader::LOADER_MinFileInfo *>(
@@ -1785,7 +1785,7 @@ internalAcquire(virt_ptr<const char> name,
 
    // Do loader prep
    StackObject<loader::LOADER_Handle> kernelHandle;
-   std::memset(minFileInfo.getRawPointer(), 0, sizeof(loader::LOADER_MinFileInfo));
+   std::memset(minFileInfo.get(), 0, sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->version = 4u;
    minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->outKernelHandle = kernelHandle;
@@ -2385,14 +2385,14 @@ OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
 
    if (moduleHandle == OSDynLoad_CurrentModuleHandle) {
       auto bufferLength = static_cast<uint32_t>(
-         strlen(sDynLoadData->rpxName.getRawPointer()) + 1);
+         strlen(sDynLoadData->rpxName.get()) + 1);
 
       if (bufferLength > *inoutBufferSize) {
          *inoutBufferSize = bufferLength;
          error = OSDynLoad_Error::BufferTooSmall;
       } else {
-         std::memcpy(buffer.getRawPointer(),
-                     sDynLoadData->rpxName.getRawPointer(),
+         std::memcpy(buffer.get(),
+                     sDynLoadData->rpxName.get(),
                      bufferLength - 1);
          buffer[bufferLength - 1] = char { 0 };
       }
@@ -2414,8 +2414,8 @@ OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
          *inoutBufferSize = bufferLength;
          error = OSDynLoad_Error::BufferTooSmall;
       } else {
-         std::memcpy(buffer.getRawPointer(),
-                     rplData->moduleName.getRawPointer(),
+         std::memcpy(buffer.get(),
+                     rplData->moduleName.get(),
                      bufferLength - 1);
          buffer[bufferLength - 1] = char { 0 };
       }
@@ -2499,18 +2499,18 @@ OSGetSymbolName(virt_addr address,
                                           moduleNameBuffer.size());
 
    if (error || (!symbolNameBuffer[0] && !moduleNameBuffer[0])) {
-      string_copy(buffer.getRawPointer(), "unknown", bufferSize);
+      string_copy(buffer.get(), "unknown", bufferSize);
       buffer[bufferSize - 1] = char { 0 };
       return address;
    }
 
    auto symbolAddress = address - *symbolDistance;
-   auto moduleNameLength = strlen(moduleNameBuffer.getRawPointer());
-   auto symbolNameLength = strlen(symbolNameBuffer.getRawPointer());
+   auto moduleNameLength = strlen(moduleNameBuffer.get());
+   auto symbolNameLength = strlen(symbolNameBuffer.get());
 
    if (moduleNameLength) {
-      string_copy(buffer.getRawPointer(),
-                  moduleNameBuffer.getRawPointer(),
+      string_copy(buffer.get(),
+                  moduleNameBuffer.get(),
                   bufferSize);
 
       if (moduleNameLength + 1 >= bufferSize) {
@@ -2525,8 +2525,8 @@ OSGetSymbolName(virt_addr address,
    }
 
    if (symbolNameLength) {
-      string_copy(buffer.getRawPointer() + moduleNameLength,
-                  symbolNameBuffer.getRawPointer(),
+      string_copy(buffer.get() + moduleNameLength,
+                  symbolNameBuffer.get(),
                   bufferSize - moduleNameLength);
    }
 
@@ -2577,14 +2577,14 @@ tls_get_addr(virt_ptr<tls_index> index)
          internal::OSPanic("OSDynLoad_Acquire.c", 317, "out of memory.");
       }
 
-      std::memset(allocPtr->getRawPointer(),
+      std::memset(allocPtr->get(),
                   0,
                   sizeof(OSTLSSection) * sDynLoadData->tlsHeader);
 
       // Copy and free old TLS section data
       if (thread->tlsSectionCount) {
-         std::memcpy(allocPtr->getRawPointer(),
-                     thread->tlsSections.getRawPointer(),
+         std::memcpy(allocPtr->get(),
+                     thread->tlsSections.get(),
                      sizeof(OSTLSSection) * sDynLoadData->tlsHeader);
 
          cafe::invoke(cpu::this_core::state(),
@@ -2627,8 +2627,8 @@ tls_get_addr(virt_ptr<tls_index> index)
          internal::OSPanic("OSDynLoad_Acquire.c", 352, "out of memory.");
       }
 
-      std::memcpy(allocPtr->getRawPointer(),
-                  virt_cast<void *>(module->userFileInfo->tlsAddressStart).getRawPointer(),
+      std::memcpy(allocPtr->get(),
+                  virt_cast<void *>(module->userFileInfo->tlsAddressStart).get(),
                   module->userFileInfo->tlsSectionSize);
       thread->tlsSections[index->moduleIndex].data = *allocPtr;
    }
@@ -2681,7 +2681,7 @@ initCoreinitNotifyData(virt_ptr<RPL_DATA> rpl)
       reportFatalError();
    }
 
-   std::memset(rpl->notifyData.getRawPointer(), 0, sizeof(OSDynLoad_NotifyData));
+   std::memset(rpl->notifyData.get(), 0, sizeof(OSDynLoad_NotifyData));
 
    // Steal the path string!
    rpl->notifyData->name = rpl->userFileInfo->pathString;
@@ -2732,7 +2732,7 @@ initialiseDynLoad()
       reportFatalError();
    }
 
-   std::memset(coreinitRplData.getRawPointer(), 0, sizeof(RPL_DATA));
+   std::memset(coreinitRplData.get(), 0, sizeof(RPL_DATA));
 
    // Allocate handle for coreinit
    if (auto handleError = OSHandle_Alloc(virt_addrof(sDynLoadData->handleTable),
@@ -2781,7 +2781,7 @@ initialiseDynLoad()
       reportFatalError();
    }
 
-   std::memset(rpxData.getRawPointer(), 0, sizeof(RPL_DATA));
+   std::memset(rpxData.get(), 0, sizeof(RPL_DATA));
    sDynLoadData->rpxData = rpxData;
 
    // Allocate module name
@@ -2802,8 +2802,8 @@ initialiseDynLoad()
       reportFatalError();
    }
 
-   std::memcpy(rpxData->moduleName.getRawPointer(),
-               sDynLoadData->rpxName.getRawPointer(),
+   std::memcpy(rpxData->moduleName.get(),
+               sDynLoadData->rpxName.get(),
                rpxData->moduleNameLen);
    rpxData->moduleName[rpxData->moduleNameLen] = char { 0 };
 
@@ -2923,7 +2923,7 @@ relocateHleLibrary(OSDynLoad_ModuleHandle moduleHandle)
 
    auto rplData = virt_cast<RPL_DATA *>(*handleData);
    cafe::hle::relocateLibrary(
-      std::string_view { rplData->moduleName.getRawPointer(),
+      std::string_view { rplData->moduleName.get(),
                          rplData->moduleNameLen },
       rplData->notifyData->textAddr,
       rplData->notifyData->dataAddr

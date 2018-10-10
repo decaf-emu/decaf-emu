@@ -82,7 +82,7 @@ VPADRead(VPADChan chan,
       return 0;
    }
 
-   memset(virt_addrof(buffers[0]).getRawPointer(), 0, sizeof(VPADStatus));
+   memset(virt_addrof(buffers[0]).get(), 0, sizeof(VPADStatus));
 
    auto channel = static_cast<input::vpad::Channel>(chan);
    auto &buffer = buffers[0];
@@ -145,8 +145,8 @@ VPADGetTPCalibratedPoint(VPADChan chan,
 {
    // TODO: Actually I think we are meant to adjust uncalibratedData based
    // off of what is set by VPADSetTPCalibrationParam
-   std::memcpy(calibratedData.getRawPointer(),
-               uncalibratedData.getRawPointer(),
+   std::memcpy(calibratedData.get(),
+               uncalibratedData.get(),
                sizeof(VPADTouchData));
 }
 

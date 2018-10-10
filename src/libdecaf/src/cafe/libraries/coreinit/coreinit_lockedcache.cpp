@@ -298,9 +298,7 @@ LCLoadDMABlocks(virt_ptr<void> dst,
       size = 128;
    }
 
-   std::memcpy(dst.getRawPointer(),
-               src.getRawPointer(),
-               size * 32);
+   std::memcpy(dst.get(), src.get(), size * 32);
 }
 
 
@@ -318,9 +316,7 @@ LCStoreDMABlocks(virt_ptr<void> dst,
       size = 128;
    }
 
-   std::memcpy(dst.getRawPointer(),
-               src.getRawPointer(),
-               size * 32);
+   std::memcpy(dst.get(), src.get(), size * 32);
 
    // TODO: Notify GPU
    // Also signal the memory store to the GPU, as with DCFlushRange().

@@ -56,8 +56,8 @@ UploadedDataBase::GetAppData(virt_ptr<uint8_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mAppDataLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mAppData).getRawPointer(),
+   std::memcpy(buffer.get(),
+               virt_addrof(mAppData).get(),
                length);
 
    if (outDatasize) {
@@ -84,8 +84,8 @@ UploadedDataBase::GetBodyText(virt_ptr<char16_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mBodyTextLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mBodyText).getRawPointer(),
+   std::memcpy(buffer.get(),
+               virt_addrof(mBodyText).get(),
                length * sizeof(char16_t));
 
    if (length < bufferSize) {
@@ -113,8 +113,8 @@ UploadedDataBase::GetBodyMemo(virt_ptr<uint8_t> buffer,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mBodyMemoLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mBodyMemo).getRawPointer(),
+   std::memcpy(buffer.get(),
+               virt_addrof(mBodyMemo).get(),
                length);
 
    if (outMemoSize) {
@@ -143,8 +143,8 @@ UploadedDataBase::GetCommonData(virt_ptr<uint32_t> unk,
    }
 
    auto length = std::min<uint32_t>(bufferSize, mCommonDataLength);
-   std::memcpy(buffer.getRawPointer(),
-               virt_addrof(mCommonData).getRawPointer(),
+   std::memcpy(buffer.get(),
+               virt_addrof(mCommonData).get(),
                length);
 
    if (unk) {

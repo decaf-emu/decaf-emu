@@ -55,7 +55,7 @@ FSAddClientEx(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   std::memset(client.getRawPointer(), 0, sizeof(FSClient));
+   std::memset(client.get(), 0, sizeof(FSClient));
    auto clientBody = internal::fsClientGetBody(client);
    auto clientHandle = internal::fsaShimOpen();
 

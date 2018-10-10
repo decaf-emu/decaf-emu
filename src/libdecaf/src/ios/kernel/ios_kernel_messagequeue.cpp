@@ -81,7 +81,7 @@ IOS_DestroyMessageQueue(MessageQueueId id)
    internal::wakeupAllThreads(phys_addrof(queue->sendQueue), Error::Intr);
    internal::wakeupAllThreads(phys_addrof(queue->receiveQueue), Error::Intr);
 
-   std::memset(queue.getRawPointer(), 0, sizeof(ThreadQueue));
+   std::memset(queue.get(), 0, sizeof(ThreadQueue));
    return Error::OK;
 }
 

@@ -131,7 +131,7 @@ public:
       packet.type = CapturePacket::CommandBuffer;
       packet.size = numWords * 4;
       writePacket(packet);
-      writeData(buffer.getRawPointer(), packet.size);
+      writeData(buffer.get(), packet.size);
    }
 
    void
@@ -258,7 +258,7 @@ private:
       packet.size = size + sizeof(CaptureMemoryLoad);
       writePacket(packet);
       writeData(&load, sizeof(CaptureMemoryLoad));
-      writeData(phys_cast<void *>(address).getRawPointer(), size);
+      writeData(phys_cast<void *>(address).get(), size);
    }
 
    void
@@ -923,7 +923,7 @@ private:
       }
 
       if (useHash) {
-         MurmurHash3_x64_128(phys_cast<void *>(addr).getRawPointer(), size, 0, hash);
+         MurmurHash3_x64_128(phys_cast<void *>(addr).get(), size, 0, hash);
       }
 
       for (auto &mem : mRecordedMemory) {

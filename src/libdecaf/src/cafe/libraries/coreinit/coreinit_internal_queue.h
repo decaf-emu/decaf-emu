@@ -12,7 +12,7 @@ protected:
    static constexpr LinkType &
    link(virt_ptr<ItemType> item)
    {
-      return (item.getRawPointer()->*LinkField);
+      return (item.get()->*LinkField);
    }
 
 public:

@@ -211,7 +211,7 @@ analyse(uint32_t start,
             if ((symbol->info & 0xf) == cafe::loader::rpl::STT_FUNC &&
                 symbolAddress >= textStartAddr && symbolAddress < textEndAddr) {
                auto name = virt_cast<const char *>(strTabAddr + symbol->name);
-               markAsFunction(symbol->value, name.getRawPointer());
+               markAsFunction(symbol->value, name.get());
             }
          }
       }

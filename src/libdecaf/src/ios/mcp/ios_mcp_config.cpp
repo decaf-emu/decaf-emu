@@ -155,7 +155,7 @@ readConfigItems(phys_ptr<UCItem> items,
       return MCPError::OK;
    }
 
-   auto name = std::string_view { phys_addrof(items[0].name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(items[0].name).get() };
    auto fileSys = getFileSys(name);
    if (fileSys == UCFileSys::Invalid) {
       return MCPError::InvalidLocation;
@@ -177,7 +177,7 @@ writeConfigItems(phys_ptr<UCItem> items,
       return MCPError::OK;
    }
 
-   auto name = std::string_view { phys_addrof(items[0].name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(items[0].name).get() };
    auto fileSys = getFileSys(name);
    if (fileSys == UCFileSys::Invalid) {
       return MCPError::InvalidLocation;
@@ -199,7 +199,7 @@ deleteConfigItems(phys_ptr<UCItem> items,
       return MCPError::OK;
    }
 
-   auto name = std::string_view { phys_addrof(items[0].name).getRawPointer() };
+   auto name = std::string_view { phys_addrof(items[0].name).get() };
    auto fileSys = getFileSys(name);
    if (fileSys == UCFileSys::Invalid) {
       return MCPError::InvalidLocation;
@@ -236,7 +236,7 @@ loadRtcConfig()
    auto error = readConfigItems(items, items.size());
    if (error < MCPError::OK || config->version < 21) {
       // Factory reset items
-      std::memset(config.getRawPointer(), 0, sizeof(RtcConfig));
+      std::memset(config.get(), 0, sizeof(RtcConfig));
       config->version = 1u;
       config->rtc_offset = 0x4EFFA200u;
 
@@ -357,7 +357,7 @@ loadSystemConfig()
    auto error = readConfigItems(items, items.size());
    if (error < MCPError::OK || config->version < 21) {
       // Factory reset items
-      std::memset(config.getRawPointer(), 0, sizeof(SystemConfig));
+      std::memset(config.get(), 0, sizeof(SystemConfig));
       config->version = 21u;
       config->dev_mode = 0u;
       config->default_eco_title_id = 0x0005001010066000ull;
@@ -447,7 +447,7 @@ loadSysProdConfig()
    auto error = readConfigItems(items, items.size());
    if (error < MCPError::OK || config->version <= 4) {
       // Factory reset items
-      std::memset(config.getRawPointer(), 0, sizeof(SysProdConfig));
+      std::memset(config.get(), 0, sizeof(SysProdConfig));
       config->version = 5u;
       config->eeprom_version = uint16_t { 1 };
       config->code_id = "FEM";

@@ -96,7 +96,7 @@ getResourceManagerId(std::string_view name)
          continue;
       }
 
-      if (name.compare(resourceManager.name.getRawPointer()) == 0) {
+      if (name.compare(resourceManager.name.get()) == 0) {
          return static_cast<Error>(i);
       }
    }
@@ -139,7 +139,7 @@ pmIoctl(PMCommand command,
 
    switch (command) {
    case PMCommand::GetResourceManagerId:
-      error = getResourceManagerId(phys_cast<const char *>(inputBuffer).getRawPointer());
+      error = getResourceManagerId(phys_cast<const char *>(inputBuffer).get());
       break;
    case PMCommand::RegisterResourceManager:
       error = sendRegisterResourceManagerMessage(*phys_cast<const RegisteredResourceManagerId *>(inputBuffer));
@@ -359,7 +359,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
                                     rm.data.messageBuffer);
             if (error < Error::OK) {
                gLog->error("Unexpected error for IOS_ResumeAsync on resource manager {}, error = {}",
-                           rm.name.getRawPointer(), error);
+                           rm.name.get(), error);
                return error;
             }
 
@@ -390,12 +390,12 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
 
          // Open a resource handle
          IOS_GetUpTime64(phys_addrof(rm.data.timeOpenStart));
-         error = IOS_Open(rm.name.getRawPointer(), static_cast<OpenMode>(0x80000000));
+         error = IOS_Open(rm.name.get(), static_cast<OpenMode>(0x80000000));
          IOS_GetUpTime64(phys_addrof(rm.data.timeOpenFinished));
 
          if (error < Error::OK) {
             gLog->error("Unexpected error for IOS_Open on resource manager {}, error = {}",
-                        rm.name.getRawPointer(), error);
+                        rm.name.get(), error);
             return error;
          }
 
@@ -416,7 +416,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
          if (request->reply < Error::OK) {
             resumeRm.data.state = ResourceManagerRegistrationState::Failed;
             gLog->error("Unexpected reply from IOS_ResumeAsync for resource manager {}, error = {}",
-                        resumeRm.name.getRawPointer(), request->reply);
+                        resumeRm.name.get(), request->reply);
             return request->reply;
          }
 

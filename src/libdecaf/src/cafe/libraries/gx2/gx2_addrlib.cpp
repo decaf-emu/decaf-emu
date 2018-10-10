@@ -244,19 +244,19 @@ copySurface(GX2Surface *surfaceSrc,
    uint8_t *dstBasePtr = nullptr;
 
    if (srcLevel == 0) {
-      srcBasePtr = surfaceSrc->image.getRawPointer();
+      srcBasePtr = surfaceSrc->image.get();
    } else if (srcLevel == 1) {
-      srcBasePtr = surfaceSrc->mipmaps.getRawPointer();
+      srcBasePtr = surfaceSrc->mipmaps.get();
    } else {
-      srcBasePtr = surfaceSrc->mipmaps.getRawPointer() + surfaceSrc->mipLevelOffset[srcLevel - 1];
+      srcBasePtr = surfaceSrc->mipmaps.get() + surfaceSrc->mipLevelOffset[srcLevel - 1];
    }
 
    if (dstLevel == 0) {
-      dstBasePtr = dstImage ? dstImage : surfaceDst->image.getRawPointer();
+      dstBasePtr = dstImage ? dstImage : surfaceDst->image.get();
    } else if (dstLevel == 1) {
-      dstBasePtr = dstMipmap ? dstMipmap : surfaceDst->mipmaps.getRawPointer();
+      dstBasePtr = dstMipmap ? dstMipmap : surfaceDst->mipmaps.get();
    } else {
-      dstBasePtr = dstMipmap ? dstMipmap : surfaceDst->mipmaps.getRawPointer();
+      dstBasePtr = dstMipmap ? dstMipmap : surfaceDst->mipmaps.get();
       dstBasePtr += surfaceDst->mipLevelOffset[dstLevel - 1];
    }
 

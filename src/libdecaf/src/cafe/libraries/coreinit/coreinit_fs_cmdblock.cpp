@@ -40,7 +40,7 @@ FSInitCmdBlock(virt_ptr<FSCmdBlock> block)
       return;
    }
 
-   std::memset(block.getRawPointer(), 0, sizeof(FSCmdBlock));
+   std::memset(block.get(), 0, sizeof(FSCmdBlock));
 
    auto blockBody = internal::fsCmdBlockGetBody(block);
    blockBody->status = FSCmdBlockStatus::Initialised;
@@ -564,10 +564,10 @@ fsCmdBlockFinishCmd(virt_ptr<FSCmdBlockBody> blockBody,
 
       if (bytes) {
          auto path = virt_addrof(shim.response.getCwd.path);
-         auto len = static_cast<uint32_t>(std::strlen(path.getRawPointer()));
+         auto len = static_cast<uint32_t>(std::strlen(path.get()));
          decaf_check(len < bytes);
-         string_copy(returnedPath.getRawPointer(), path.getRawPointer(), bytes);
-         std::memset(returnedPath.getRawPointer() + len, 0, bytes - len);
+         string_copy(returnedPath.get(), path.get(), bytes);
+         std::memset(returnedPath.get() + len, 0, bytes - len);
       }
 
       fsCmdBlockSetResult(blockBody, result);
@@ -790,9 +790,9 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
       auto deviceName = virt_addrof(blockBody->fsaShimBuffer.response.readDir.entry.name);
 
       // Check the mount source type
-      if (std::strncmp(deviceName.getRawPointer(), "sdcard", 6) == 0) {
+      if (std::strncmp(deviceName.get(), "sdcard", 6) == 0) {
          mountSourceType = FSMountSourceType::SdCard;
-      } else if (std::strncmp(deviceName.getRawPointer(), "hfio", 4) == 0) {
+      } else if (std::strncmp(deviceName.get(), "hfio", 4) == 0) {
          mountSourceType = FSMountSourceType::HostFileIO;
       }
 
@@ -807,8 +807,8 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
        * FIXME: Unfortunately that is indeed not the case with our filesystem,
        * but fuck it because we will ?never? have more than 1 sdcard and 1 hfio.
        */
-      if (std::strncmp(deviceName.getRawPointer(),
-                       virt_addrof(clientBody->lastMountSourceDevice).getRawPointer(),
+      if (std::strncmp(deviceName.get(),
+                       virt_addrof(clientBody->lastMountSourceDevice).get(),
                        0x10) <= 0) {
          // Already returned this device, get the next one!
          return fsCmdBlockFinishGetMountSourceNextOpenCmd(blockBody,
@@ -821,20 +821,20 @@ fsCmdBlockFinishGetMountSourceNextReadCmd(virt_ptr<FSCmdBlockBody> blockBody,
 
       if (mountSourceType == FSMountSourceType::SdCard) {
          // Map sdcardXX -> externalXX
-         string_copy(virt_addrof(mountSource->path).getRawPointer(),
+         string_copy(virt_addrof(mountSource->path).get(),
                      mountSource->path.size(),
                      "external",
                      8);
 
-         string_copy(virt_addrof(mountSource->path).getRawPointer() + 8,
+         string_copy(virt_addrof(mountSource->path).get() + 8,
                      mountSource->path.size() - 8,
-                     deviceName.getRawPointer() + 6,
+                     deviceName.get() + 6,
                      2);
 
          mountSource->path[10] = char { 0 };
       } else if (mountSourceType == FSMountSourceType::HostFileIO) {
-         string_copy(virt_addrof(mountSource->path).getRawPointer(),
-                     deviceName.getRawPointer(),
+         string_copy(virt_addrof(mountSource->path).get(),
+                     deviceName.get(),
                      mountSource->path.size());
       }
    }

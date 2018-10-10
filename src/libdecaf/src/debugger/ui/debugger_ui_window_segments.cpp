@@ -79,13 +79,13 @@ SegmentsWindow::draw()
       }
 
       auto rplName = std::string_view {
-            rpl->moduleNameBuffer.getRawPointer(),
+            rpl->moduleNameBuffer.get(),
             rpl->moduleNameLen
          };
 
       auto shStrTab =
          virt_cast<const char *>(rpl->sectionAddressBuffer[rpl->elfHeader.shstrndx])
-         .getRawPointer();
+         .get();
 
       for (auto i = 0u; i < rpl->elfHeader.shnum; ++i) {
          auto sectionHeader =

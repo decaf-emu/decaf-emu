@@ -61,9 +61,9 @@ LiInitBufferTracking(LiBasicsLoadArgs *loadArgs)
    auto rpl = loadArgs->loadedRpl;
    rpl->pathBuffer = allocPtr;
    rpl->pathBufferSize = allocSize;
-   string_copy(virt_cast<char *>(rpl->pathBuffer).getRawPointer(),
+   string_copy(virt_cast<char *>(rpl->pathBuffer).get(),
                rpl->pathBufferSize,
-               loadArgs->pathName.getRawPointer(),
+               loadArgs->pathName.get(),
                loadArgs->pathNameLen + 1);
 
    rpl->upcomingBufferNumber = 1u;
@@ -250,7 +250,7 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    auto error = int32_t { 0 };
 
    while (true) {
-      error = LiWaitOneChunk(&chunkReadSize, loadArgs->pathName.getRawPointer(), loadArgs->fileType);
+      error = LiWaitOneChunk(&chunkReadSize, loadArgs->pathName.get(), loadArgs->fileType);
       if (error == 0) {
          break;
       }
@@ -285,7 +285,7 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
 
          auto outChunkBufferSize = uint32_t { 0 };
          auto outChunkBuffer = virt_ptr<void> { nullptr };
-         error = LiBounceOneChunk(loadArgs->pathName.getRawPointer(),
+         error = LiBounceOneChunk(loadArgs->pathName.get(),
                                   loadArgs->fileType,
                                   loadArgs->upid,
                                   &outChunkBufferSize,
@@ -302,7 +302,7 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
                             loadAttemptErrors[0].error,
                             loadAttemptErrors[1].error,
                             error,
-                            loadArgs->pathName.getRawPointer());
+                            loadArgs->pathName.get());
          return error;
       }
    }
@@ -343,13 +343,13 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    virt_ptr<LOADED_RPL> rpl;
    rpl = tmpLoadedRpl;
 
-   std::memset(rpl.getRawPointer(), 0, sizeof(LOADED_RPL));
+   std::memset(rpl.get(), 0, sizeof(LOADED_RPL));
    if (r9 == 0) {
       rpl->globals = getGlobalStorage();
    }
 
-   std::memcpy(virt_addrof(rpl->elfHeader).getRawPointer(),
-               fileElfHeader.getRawPointer(),
+   std::memcpy(virt_addrof(rpl->elfHeader).get(),
+               fileElfHeader.get(),
                sizeof(rpl::Header));
 
    // Check some offsets are valid
@@ -453,8 +453,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    }
 
    rpl = virt_cast<LOADED_RPL *>(allocPtr);
-   std::memcpy(rpl.getRawPointer(),
-               tmpLoadedRpl.getRawPointer(),
+   std::memcpy(rpl.get(),
+               tmpLoadedRpl.get(),
                sizeof(LOADED_RPL));
 
    rpl->selfBufferSize = allocSize;
@@ -504,8 +504,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    rpl->sectionHeaderBuffer = allocPtr;
    rpl->sectionHeaderBufferSize = allocSize;
 
-   std::memcpy(rpl->sectionHeaderBuffer.getRawPointer(),
-               virt_cast<void *>(virt_cast<virt_addr>(fileElfHeader) + rpl->elfHeader.shoff).getRawPointer(),
+   std::memcpy(rpl->sectionHeaderBuffer.get(),
+               virt_cast<void *>(virt_cast<virt_addr>(fileElfHeader) + rpl->elfHeader.shoff).get(),
                rpl->elfHeader.shnum * rpl->elfHeader.shentsize);
 
    if (allocModuleName) {
@@ -527,8 +527,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
       rpl->moduleNameBuffer = virt_cast<char *>(allocPtr);
       rpl->moduleNameBufferSize = allocSize;
 
-      string_copy(virt_cast<char *>(rpl->moduleNameBuffer).getRawPointer(),
-                  moduleName.getRawPointer(),
+      string_copy(virt_cast<char *>(rpl->moduleNameBuffer).get(),
+                  moduleName.get(),
                   rpl->moduleNameBufferSize);
    } else {
       rpl->moduleNameBuffer = moduleName;
@@ -567,8 +567,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    rpl->crcBufferSize = allocSize;
 
    sectionCrcs = virt_cast<uint32_t *>(rpl->crcBuffer);
-   std::memcpy(rpl->crcBuffer.getRawPointer(),
-               virt_cast<void *>(virt_cast<virt_addr>(fileElfHeader) + shRplCrcs->offset).getRawPointer(),
+   std::memcpy(rpl->crcBuffer.get(),
+               virt_cast<void *>(virt_cast<virt_addr>(fileElfHeader) + shRplCrcs->offset).get(),
                shRplCrcs->size);
 
    rpl->sectionAddressBuffer[rpl->elfHeader.shnum - 2] =
@@ -610,8 +610,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
                        rpl->moduleNameBuffer,
                        virt_cast<virt_addr>(rpl->fileInfoBuffer) + rpl->fileInfoBufferSize);
 
-   std::memcpy(rpl->fileInfoBuffer.getRawPointer(),
-               virt_cast<void *>(virt_cast<virt_addr>(fileElfHeader) + shRplFileInfo->offset).getRawPointer(),
+   std::memcpy(rpl->fileInfoBuffer.get(),
+               virt_cast<void *>(virt_cast<virt_addr>(fileElfHeader) + shRplFileInfo->offset).get(),
                shRplFileInfo->size);
 
    rpl->sectionAddressBuffer[rpl->elfHeader.shnum - 1] =

@@ -59,9 +59,7 @@ DownloadedDataBase::GetAppData(virt_ptr<uint32_t> dataBuffer,
    }
 
    auto copySize = std::min<uint32_t>(mAppDataSize, dataBufferSize);
-   std::memcpy(dataBuffer.getRawPointer(),
-               virt_addrof(mAppData).getRawPointer(),
-               copySize);
+   std::memcpy(dataBuffer.get(), virt_addrof(mAppData).get(), copySize);
 
    if (outSize) {
       *outSize = copySize;
@@ -183,8 +181,8 @@ DownloadedDataBase::GetMiiData(virt_ptr<FFLStoreData> outData) const
       return InvalidPointer;
    }
 
-   std::memcpy(outData.getRawPointer(),
-               virt_addrof(mMiiData).getRawPointer(),
+   std::memcpy(outData.get(),
+               virt_addrof(mMiiData).get(),
                sizeof(FFLStoreData));
    return Success;
 }
