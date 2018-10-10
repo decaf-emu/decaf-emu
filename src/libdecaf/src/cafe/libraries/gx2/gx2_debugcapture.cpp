@@ -7,6 +7,9 @@
 #include "gx2r_resource.h"
 
 #include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_varargs.h"
+#include "cafe/cafe_stackobject.h"
+#include "cafe/libraries/coreinit/coreinit_snprintf.h"
 
 #include <common/strutils.h>
 
@@ -150,6 +153,56 @@ GX2DebugCaptureFrames(virt_ptr<const char> filename,
 
 
 /**
+ * Insert a debug tag into the pm4 stream.
+ *
+ * Only written when debug capture is enabled.
+ */
+void
+GX2DebugTagUserString(GX2DebugUserTag tag,
+                      virt_ptr<const char> fmt,
+                      var_args va)
+{
+   if (internal::debugCaptureEnabled()) {
+      auto list = make_va_list(va);
+      GX2DebugTagUserStringVA(tag, fmt, list);
+      free_va_list(list);
+   }
+}
+
+
+/**
+ * Insert a debug tag into the pm4 stream.
+ *
+ * Only written when debug capture is enabled.
+ */
+void
+GX2DebugTagUserStringVA(GX2DebugUserTag tag,
+                        virt_ptr<const char> fmt,
+                        virt_ptr<va_list> vaList)
+{
+   if (internal::debugCaptureEnabled()) {
+      StackArray<char, 0x404> buffer;
+      std::memset(buffer.getRawPointer(), 0, 0x404);
+
+      if (fmt) {
+         coreinit::internal::formatStringV(buffer, 0x3FF, fmt, vaList);
+      }
+
+      // Convert string to words!
+      auto length = static_cast<uint32_t>(strlen(buffer.getRawPointer()));
+      auto numWords = align_up(length + 1, 4) / 4;
+      auto bufferWords = virt_cast<uint32_t *>(buffer);
+
+      // Write NOP packet
+      internal::writePM4(latte::pm4::NopBE {
+         GX2DebugTag::User | tag,
+         gsl::make_span(virt_cast<uint32_t *>(buffer).get(), numWords)
+      });
+   }
+}
+
+
+/**
  * Notify gx2 of a graphics memory allocation.
  */
 void
@@ -272,6 +325,22 @@ debugCaptureSwap(virt_ptr<GX2Surface> tvScanBuffer,
    sDebugCaptureData->numCaptureFramesRemaining--;
 }
 
+void
+debugCaptureTagGroup(GX2DebugTag tagId,
+                     std::string_view str)
+{
+   auto id = tagId | GX2DebugTag::Group;
+
+   if (str.empty()) {
+      internal::writePM4(latte::pm4::Nop { id, { } });
+   } else {
+      std::vector<uint32_t> buffer;
+      buffer.resize(align_up(str.size() + 1, 4) / 4, 0u);
+      std::memcpy(buffer.data(), str.data(), str.size());
+      internal::writePM4(latte::pm4::Nop { id, { buffer.data(), buffer.size() } });
+   }
+}
+
 } // namespace internal
 
 void
@@ -283,6 +352,8 @@ Library::registerDebugCaptureSymbols()
    RegisterFunctionExport(GX2DebugCaptureEnd);
    RegisterFunctionExport(GX2DebugCaptureFrame);
    RegisterFunctionExport(GX2DebugCaptureFrames);
+   RegisterFunctionExport(GX2DebugTagUserString);
+   RegisterFunctionExport(GX2DebugTagUserStringVA);
    RegisterFunctionExport(GX2NotifyMemAlloc);
    RegisterFunctionExport(GX2NotifyMemFree);
 

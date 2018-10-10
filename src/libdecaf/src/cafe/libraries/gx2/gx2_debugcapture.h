@@ -2,9 +2,11 @@
 #include "gx2_enum.h"
 #include "gx2r_resource.h"
 
+#include "cafe/cafe_ppc_interface_varargs.h"
 #include "cafe/libraries/tcl/tcl_ring.h"
 
 #include <libcpu/be2_struct.h>
+#include <string_view>
 
 namespace cafe::gx2
 {
@@ -111,6 +113,13 @@ BOOL
 GX2DebugSetCaptureInterface(virt_ptr<GX2DebugCaptureInterface> interface);
 
 void
+GX2DebugCaptureStart(virt_ptr<const char> filename,
+                     BOOL noCallDrawDone);
+
+void
+GX2DebugCaptureEnd(BOOL noCallDrawDone);
+
+void
 GX2DebugCaptureFrame(virt_ptr<const char> filename);
 
 void
@@ -118,12 +127,14 @@ GX2DebugCaptureFrames(virt_ptr<const char> filename,
                       uint32_t numFrames);
 
 void
-GX2DebugCaptureStart(virt_ptr<const char> filename,
-                     BOOL noCallDrawDone);
+GX2DebugTagUserString(GX2DebugUserTag tag,
+                      virt_ptr<const char> fmt,
+                      var_args va);
 
 void
-GX2DebugCaptureEnd(BOOL noCallDrawDone);
-
+GX2DebugTagUserStringVA(GX2DebugUserTag tag,
+                        virt_ptr<const char> fmt,
+                        virt_ptr<va_list> vaList);
 
 void
 GX2NotifyMemAlloc(virt_ptr<void> ptr,
@@ -163,6 +174,22 @@ debugCaptureSubmit(virt_ptr<uint32_t> buffer,
 void
 debugCaptureSwap(virt_ptr<GX2Surface> tvScanbuffer,
                  virt_ptr<GX2Surface> drcScanbuffer);
+
+void
+debugCaptureTagGroup(GX2DebugTag tagId,
+                     std::string_view str = {});
+
+template<typename... Args>
+inline void
+debugCaptureTagGroup(GX2DebugTag tagId,
+                     const char *fmt,
+                     Args &&... args)
+{
+   if (debugCaptureEnabled()) {
+      debugCaptureTagGroup(tagId,
+                           std::string_view { fmt::format(fmt, args...) });
+   }
+}
 
 } // namespace internal
 

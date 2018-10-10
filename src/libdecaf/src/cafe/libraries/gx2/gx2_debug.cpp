@@ -20,47 +20,7 @@
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgfd/gfd.h>
 
-namespace cafe::gx2
-{
-
-void
-GX2DebugTagUserString(uint32_t unk,
-                      virt_ptr<const char> fmt,
-                      var_args va)
-{
-   auto list = make_va_list(va);
-   GX2DebugTagUserStringVA(unk, fmt, list);
-   free_va_list(list);
-}
-
-void
-GX2DebugTagUserStringVA(uint32_t unk,
-                        virt_ptr<const char> fmt,
-                        virt_ptr<va_list> vaList)
-{
-   StackArray<char, 0x404> buffer;;
-   std::memset(buffer.getRawPointer(), 0, 0x404);
-
-   if (fmt) {
-      coreinit::internal::formatStringV(buffer, 0x3FF, fmt, vaList);
-   }
-
-   // Convert string to words!
-   auto length = static_cast<uint32_t>(strlen(buffer.getRawPointer()));
-   auto words = align_up(length + 1, 4) / 4;
-
-   std::vector<uint32_t> strWords;
-   strWords.resize(words, 0);
-   std::memcpy(strWords.data(), buffer.getRawPointer(), length);
-
-   // Write NOP packet
-   internal::writePM4(latte::pm4::Nop {
-      unk,
-      gsl::make_span(strWords)
-   });
-}
-
-namespace internal
+namespace cafe::gx2::internal
 {
 
 static void
@@ -375,34 +335,4 @@ debugDumpShader(virt_ptr<const GX2VertexShader> shader)
                    shader);
 }
 
-void
-writeDebugMarker(std::string_view key,
-                 uint32_t id)
-{
-   gLog->trace("CPU Debug Marker: {} {}", key, id);
-
-   // PM4 commands must be 32 bit aligned, we need to copy it
-   //  to a temporary local buffer so the gsl span doesn't
-   //  overrun the variable which was passed by the user.
-   static char tmpBuf[128];
-   auto strLen = key.size() + 1;
-   auto alignedStrLen = align_up(strLen, 4);
-   memset(tmpBuf, 0, 128);
-   memcpy(tmpBuf, key.data(), strLen);
-
-   internal::writePM4(latte::pm4::DecafDebugMarker {
-      id,
-      gsl::make_span(tmpBuf, alignedStrLen),
-   });
-}
-
-} // namespace internal
-
-void
-Library::registerDebugSymbols()
-{
-   RegisterFunctionExport(GX2DebugTagUserString);
-   RegisterFunctionExport(GX2DebugTagUserStringVA);
-}
-
-} // namespace cafe::gx2
+} // namespace cafe::gx2::internal

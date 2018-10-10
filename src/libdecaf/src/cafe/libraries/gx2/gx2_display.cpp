@@ -139,6 +139,9 @@ void
 GX2CopyColorBufferToScanBuffer(virt_ptr<GX2ColorBuffer> buffer,
                                GX2ScanTarget scanTarget)
 {
+   internal::debugCaptureTagGroup(GX2DebugTag::CopyColorBufferToScanBuffer,
+                                  "{}, {}", buffer, scanTarget);
+
    auto addrImage = OSEffectiveToPhysical(virt_cast<virt_addr>(buffer->surface.image));
    auto cb_color_frag = latte::CB_COLORN_FRAG::get(0);
    auto cb_color_base = latte::CB_COLORN_BASE::get(0)
@@ -162,6 +165,9 @@ GX2CopyColorBufferToScanBuffer(virt_ptr<GX2ColorBuffer> buffer,
       buffer->regs.cb_color_view,
       buffer->regs.cb_color_mask
    });
+
+   internal::debugCaptureTagGroup(GX2DebugTag::CopyColorBufferToScanBuffer,
+                                  "{}, {}", buffer, scanTarget);
 }
 
 BOOL
@@ -333,12 +339,13 @@ GX2SwapScanBuffers()
 {
    // For Debugging
    static uint32_t debugSwapCount = 0;
-   internal::writeDebugMarker("SwapScanBuffers", debugSwapCount++);
+   internal::debugCaptureTagGroup(GX2DebugTag::SwapScanBuffers);
 
    internal::onSwap();
    internal::writePM4(latte::pm4::DecafSwapBuffers { });
-   internal::captureSwap();
 
+   internal::debugCaptureTagGroup(GX2DebugTag::SwapScanBuffers);
+   internal::captureSwap();
    internal::debugCaptureSwap(virt_addrof(sDisplayData->tvScanBuffer.surface),
                               virt_addrof(sDisplayData->drcScanBuffer.surface));
 }

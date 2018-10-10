@@ -994,6 +994,21 @@ struct Nop
    }
 };
 
+struct NopBE
+{
+   static const auto Opcode = IT_OPCODE::NOP;
+
+   uint32_t unk;
+   gsl::span<be2_val<uint32_t>> strWords;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(unk);
+      se(strWords);
+   }
+};
+
 struct SurfaceSync
 {
    static const auto Opcode = IT_OPCODE::SURFACE_SYNC;

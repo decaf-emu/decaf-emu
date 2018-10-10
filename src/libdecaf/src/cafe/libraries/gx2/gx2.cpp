@@ -27,7 +27,6 @@ Library::registerSymbols()
    registerClearSymbols();
    registerContextStateSymbols();
    registerCounterSymbols();
-   registerDebugSymbols();
    registerDebugCaptureSymbols();
    registerDisplaySymbols();
    registerDisplayListSymbols();

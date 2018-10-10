@@ -1,6 +1,7 @@
 #include "gx2.h"
 #include "gx2_clear.h"
 #include "gx2_cbpool.h"
+#include "gx2_debugcapture.h"
 #include "gx2_surface.h"
 
 #include "cafe/libraries/coreinit/coreinit_memory.h"
@@ -19,6 +20,10 @@ GX2ClearColor(virt_ptr<GX2ColorBuffer> colorBuffer,
               float blue,
               float alpha)
 {
+   internal::debugCaptureTagGroup(GX2DebugTag::ClearColor,
+                                  "{}, {:.2f}, {:.2f}, {:.2f}, {:.2f}",
+                                  colorBuffer, red, green, blue, alpha);
+
    auto address = OSEffectiveToPhysical(virt_cast<virt_addr>(colorBuffer->surface.image));
    auto cb_color_frag = latte::CB_COLORN_FRAG::get(0);
    auto cb_color_base = latte::CB_COLORN_BASE::get(0)
@@ -41,6 +46,10 @@ GX2ClearColor(virt_ptr<GX2ColorBuffer> colorBuffer,
       colorBuffer->regs.cb_color_view,
       colorBuffer->regs.cb_color_mask
    });
+
+   internal::debugCaptureTagGroup(GX2DebugTag::ClearColor,
+                                  "{}, {:.2f}, {:.2f}, {:.2f}, {:.2f}",
+                                  colorBuffer, red, green, blue, alpha);
 }
 
 void
@@ -69,26 +78,14 @@ DecafClearDepthStencil(virt_ptr<GX2DepthBuffer> depthBuffer,
 }
 
 void
-GX2ClearDepthStencil(virt_ptr<GX2DepthBuffer> depthBuffer,
-                     GX2ClearFlags clearFlags)
-{
-   uint32_t values[] = {
-      depthBuffer->stencilClear,
-      bit_cast<uint32_t>(depthBuffer->depthClear)
-   };
-
-   internal::writePM4(latte::pm4::SetContextRegs {
-      latte::Register::DB_STENCIL_CLEAR,
-      gsl::make_span(values)
-   });
-   DecafClearDepthStencil(depthBuffer, clearFlags);
-}
-
-void
 GX2ClearDepthStencilEx(virt_ptr<GX2DepthBuffer> depthBuffer,
                        float depth, uint8_t stencil,
                        GX2ClearFlags clearFlags)
 {
+   internal::debugCaptureTagGroup(GX2DebugTag::ClearDepthStencil,
+                                  "{}, {:.2f}, {}, {}",
+                                  depthBuffer, depth, stencil, clearFlags);
+
    uint32_t values[] = {
       stencil,
       bit_cast<uint32_t>(depth)
@@ -99,16 +96,10 @@ GX2ClearDepthStencilEx(virt_ptr<GX2DepthBuffer> depthBuffer,
       gsl::make_span(values)
    });
    DecafClearDepthStencil(depthBuffer, clearFlags);
-}
 
-void
-GX2ClearBuffers(virt_ptr<GX2ColorBuffer> colorBuffer,
-                virt_ptr<GX2DepthBuffer> depthBuffer,
-                float red, float green, float blue, float alpha,
-                GX2ClearFlags clearFlags)
-{
-   GX2ClearColor(colorBuffer, red, green, blue, alpha);
-   GX2ClearDepthStencil(depthBuffer, clearFlags);
+   internal::debugCaptureTagGroup(GX2DebugTag::ClearDepthStencil,
+                                  "{}, {:.2f}, {}, {}",
+                                  depthBuffer, depth, stencil, clearFlags);
 }
 
 void
@@ -119,8 +110,22 @@ GX2ClearBuffersEx(virt_ptr<GX2ColorBuffer> colorBuffer,
                   uint8_t stencil,
                   GX2ClearFlags clearFlags)
 {
+   internal::debugCaptureTagGroup(
+      GX2DebugTag::ClearBuffers,
+      "{}, {}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {}, {}",
+      colorBuffer, depthBuffer,
+      red, green, blue, alpha,
+      depth, stencil, clearFlags);
+
    GX2ClearColor(colorBuffer, red, green, blue, alpha);
    GX2ClearDepthStencilEx(depthBuffer, depth, stencil, clearFlags);
+
+   internal::debugCaptureTagGroup(
+      GX2DebugTag::ClearBuffers,
+      "{}, {}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {}, {}",
+      colorBuffer, depthBuffer,
+      red, green, blue, alpha,
+      depth, stencil, clearFlags);
 }
 
 void
@@ -169,9 +174,7 @@ void
 Library::registerClearSymbols()
 {
    RegisterFunctionExport(GX2ClearColor);
-   RegisterFunctionExport(GX2ClearDepthStencil);
    RegisterFunctionExport(GX2ClearDepthStencilEx);
-   RegisterFunctionExport(GX2ClearBuffers);
    RegisterFunctionExport(GX2ClearBuffersEx);
    RegisterFunctionExport(GX2SetClearDepth);
    RegisterFunctionExport(GX2SetClearStencil);

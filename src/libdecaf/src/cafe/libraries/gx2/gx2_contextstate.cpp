@@ -1,5 +1,6 @@
 #include "gx2.h"
 #include "gx2_contextstate.h"
+#include "gx2_debugcapture.h"
 #include "gx2_draw.h"
 #include "gx2_cbpool.h"
 #include "gx2_registers.h"
@@ -226,6 +227,8 @@ GX2SetContextState(virt_ptr<GX2ContextState> state)
 void
 GX2SetDefaultState()
 {
+   internal::debugCaptureTagGroup(GX2DebugTag::SetDefaultState);
+
    GX2SetShaderModeEx(GX2ShaderMode::UniformRegister, // mode
                       48,     // numVsGpr
                       64,     // numVsStackEntries
@@ -321,12 +324,16 @@ GX2SetDefaultState()
                                TRUE);  // zclipEnable
 
    // TODO: Figure out what GX2PrimitiveMode 0x84 is
-   GX2SetTessellation(GX2TessellationMode::Discrete, static_cast<GX2PrimitiveMode>(0x84), GX2IndexType::U32);
+   GX2SetTessellation(GX2TessellationMode::Discrete,
+                      static_cast<GX2PrimitiveMode>(0x84),
+                      GX2IndexType::U32);
 
    GX2SetMaxTessellationLevel(1.0f);
    GX2SetMinTessellationLevel(1.0f);
 
    internal::writePM4(SetContextReg { latte::Register::DB_RENDER_CONTROL, 0 });
+
+   internal::debugCaptureTagGroup(GX2DebugTag::SetDefaultState);
 }
 
 namespace internal

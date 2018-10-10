@@ -5,6 +5,7 @@
 #include "gx2_cbpool.h"
 #include "gx2_surface.h"
 
+#include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/align.h>
@@ -577,7 +578,8 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
 void
 GX2ExpandDepthBuffer(virt_ptr<GX2DepthBuffer> buffer)
 {
-   // We do not implement HiZ, so no need to do anything here
+   // TODO: GX2ExpandDepthBuffer
+   decaf_warn_stub();
 }
 
 void

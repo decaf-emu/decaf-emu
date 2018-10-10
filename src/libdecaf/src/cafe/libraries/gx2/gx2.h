@@ -21,7 +21,6 @@ private:
    void registerClearSymbols();
    void registerContextStateSymbols();
    void registerCounterSymbols();
-   void registerDebugSymbols();
    void registerDebugCaptureSymbols();
    void registerDisplaySymbols();
    void registerDisplayListSymbols();

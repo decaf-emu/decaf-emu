@@ -22,23 +22,10 @@ GX2ClearColor(virt_ptr<GX2ColorBuffer> colorBuffer,
               float alpha);
 
 void
-GX2ClearDepthStencil(virt_ptr<GX2DepthBuffer> depthBuffer,
-                     GX2ClearFlags clearMode);
-
-void
 GX2ClearDepthStencilEx(virt_ptr<GX2DepthBuffer> depthBuffer,
                        float depth,
                        uint8_t stencil,
                        GX2ClearFlags clearMode);
-
-void
-GX2ClearBuffers(virt_ptr<GX2ColorBuffer> colorBuffer,
-                virt_ptr<GX2DepthBuffer> depthBuffer,
-                float red,
-                float green,
-                float blue,
-                float alpha,
-                GX2ClearFlags clearMode);
 
 void
 GX2ClearBuffersEx(virt_ptr<GX2ColorBuffer> colorBuffer,
