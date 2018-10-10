@@ -128,6 +128,38 @@ struct pointer_dereference_type<T,
    using type = be2_struct<T>;
 };
 
+
+/*
+ * Basically the same as pointer_dereference_type but does not wrap structs in
+ * be2_struct.
+ *
+ * Used for pointer_get_type::type * Pointer::get()
+ */
+template <typename T, typename = void>
+struct pointer_get_type;
+
+template <typename T>
+struct pointer_get_type<T,
+   typename std::enable_if<!(std::is_class<T>::value || std::is_union<T>::value)
+                         || is_cpu_pointer<T>::value
+                         || is_cpu_address<T>::value
+                         || is_cpu_func_pointer<T>::value
+                         || std::is_array<T>::value>::type>
+{
+   using type = typename pointer_dereference_type<T>::type;
+};
+
+template <typename T>
+struct pointer_get_type<T,
+   typename std::enable_if<(std::is_class<T>::value || std::is_union<T>::value)
+                         && !is_cpu_pointer<T>::value
+                         && !is_cpu_address<T>::value
+                         && !is_cpu_func_pointer<T>::value
+                         && !std::is_array<T>::value>::type>
+{
+   using type = T;
+};
+
 template<typename ValueType, typename AddressType>
 class Pointer
 {
@@ -135,6 +167,7 @@ public:
    using value_type = ValueType;
    using address_type = AddressType;
    using dereference_type = typename pointer_dereference_type<value_type>::type;
+   using get_type = typename pointer_get_type<value_type>::type;
 
    static_assert(!std::is_pointer<value_type>::value,
                  "cpu::Pointer should point to another cpu::Pointer, not a raw T* pointer.");
@@ -195,7 +228,7 @@ public:
       return *this;
    }
 
-   dereference_type *get() const
+   get_type *get() const
    {
       return internal::translate<dereference_type>(mAddress);
    }
