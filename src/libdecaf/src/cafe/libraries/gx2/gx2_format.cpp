@@ -264,6 +264,11 @@ getSurfaceFormatBytesPerElement(GX2SurfaceFormat format)
 GX2SurfaceUse
 getSurfaceUse(GX2SurfaceFormat format)
 {
+   auto idx = format & 0x3F;
+   if (idx == 17 || idx == 28) {
+      return GX2SurfaceUse::DepthBuffer | GX2SurfaceUse::Texture;
+   }
+
    return static_cast<GX2SurfaceUse>(sSurfaceFormatData[format & 0x3F].use);
 }
 
