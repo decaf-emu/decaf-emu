@@ -1045,6 +1045,86 @@ struct ContextControl
    }
 };
 
+enum WRM_ENGINE : uint32_t
+{
+   ENGINE_ME = 0,
+   ENGINE_PFP = 1,
+};
+
+enum WRM_FUNCTION : uint32_t
+{
+   FUNCTION_ALWAYS = 0,
+   FUNCTION_LESS_THAN = 1,
+   FUNCTION_LESS_THAN_EQUAL = 2,
+   FUNCTION_EQUAL = 3,
+   FUNCTION_NOT_EQUAL = 4,
+   FUNCTION_GREATER_THAN_EQUAL = 5,
+   FUNCTION_GREATER_THAN = 6,
+};
+
+enum WRM_MEM_SPACE : uint32_t
+{
+   MEM_SPACE_REGISTER = 0,
+   MEM_SPACE_MEMORY = 1,
+};
+
+BITFIELD(MEM_SPACE_FUNCTION, uint32_t)
+   BITFIELD_ENTRY(0, 3, WRM_FUNCTION, FUNCTION);
+   BITFIELD_ENTRY(4, 1, WRM_MEM_SPACE, MEM_SPACE);
+   BITFIELD_ENTRY(8, 1, WRM_ENGINE, ENGINE);
+BITFIELD_END
+
+BITFIELD(WRM_ADDR_HI, uint32_t)
+   BITFIELD_ENTRY(0, 8, uint8_t, ADDR_HI);
+   BITFIELD_ENTRY(29, 3, latte::CB_ENDIAN, SWAP);
+BITFIELD_END
+
+struct WaitReg
+{
+   static constexpr auto Opcode = IT_OPCODE::WAIT_REG_MEM;
+
+   MEM_SPACE_FUNCTION memSpaceFunction;
+   latte::Register addrLo;
+   WRM_ADDR_HI addrHi;
+   uint32_t reference;
+   uint32_t mask;
+   uint32_t pollInterval;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(memSpaceFunction.value);
+      se.REG_OFFSET(addrLo, static_cast<latte::Register>(0));
+      se(addrHi.value);
+      se(reference);
+      se(mask);
+      se(pollInterval);
+   }
+};
+
+struct WaitMem
+{
+   static constexpr auto Opcode = IT_OPCODE::WAIT_REG_MEM;
+
+   MEM_SPACE_FUNCTION memSpaceFunction;
+   phys_addr addrLo;
+   WRM_ADDR_HI addrHi;
+   uint32_t reference;
+   uint32_t mask;
+   uint32_t pollInterval;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(memSpaceFunction.value);
+      se(addrLo);
+      se(addrHi.value);
+      se(reference);
+      se(mask);
+      se(pollInterval);
+   }
+};
+
 } // namespace pm4
 
 } // namespace latte
