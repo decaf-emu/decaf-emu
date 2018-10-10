@@ -355,7 +355,6 @@ private:
    void decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data) override;
    void decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data) override;
    void decafCopySurface(const latte::pm4::DecafCopySurface &data) override;
-   void decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data) override;
    void drawIndexAuto(const latte::pm4::DrawIndexAuto &data) override;
    void drawIndex2(const latte::pm4::DrawIndex2 &data) override;
    void drawIndexImmd(const latte::pm4::DrawIndexImmd &data) override;
@@ -520,7 +519,6 @@ private:
 
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
-   unsigned mSwapInterval = 1;
 
    bool mViewportDirty = false;
    bool mDepthRangeDirty = false;

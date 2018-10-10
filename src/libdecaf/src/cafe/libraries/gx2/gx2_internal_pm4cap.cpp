@@ -685,9 +685,6 @@ private:
                       false, data.srcDim, data.srcFormat, data.srcTileMode);
          break;
       }
-      case IT_OPCODE::DECAF_SET_SWAP_INTERVAL:
-         // Nothing to track!
-         break;
       case IT_OPCODE::DRAW_INDEX_AUTO:
          trackReadyDraw();
          break;

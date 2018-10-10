@@ -35,19 +35,6 @@ struct DecafSwapBuffers
    }
 };
 
-struct DecafSetSwapInterval
-{
-   static const auto Opcode = IT_OPCODE::DECAF_SET_SWAP_INTERVAL;
-
-   uint32_t interval;
-
-   template<typename Serialiser>
-   void serialise(Serialiser &se)
-   {
-      se(interval);
-   }
-};
-
 struct DecafCapSyncRegisters
 {
    static const auto Opcode = IT_OPCODE::DECAF_CAP_SYNC_REGISTERS;

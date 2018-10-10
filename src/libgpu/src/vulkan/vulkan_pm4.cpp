@@ -163,11 +163,6 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 }
 
 void
-Driver::decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data)
-{
-}
-
-void
 Driver::drawIndexAuto(const latte::pm4::DrawIndexAuto &data)
 {
    drawGenericIndexed(data.count, nullptr);

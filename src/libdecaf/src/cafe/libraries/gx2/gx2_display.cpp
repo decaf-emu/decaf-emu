@@ -288,7 +288,6 @@ GX2SetSwapInterval(uint32_t interval)
    }
 
    sDisplayData->swapInterval = interval;
-   internal::writePM4(latte::pm4::DecafSetSwapInterval { interval });
 }
 
 void

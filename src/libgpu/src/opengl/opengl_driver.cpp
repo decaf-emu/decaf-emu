@@ -246,13 +246,6 @@ GLDriver::decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data)
 }
 
 void
-GLDriver::decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data)
-{
-   decaf_assert(data.interval <= 10, fmt::format("Bizarre swap interval {}", data.interval));
-   mSwapInterval = data.interval;
-}
-
-void
 GLDriver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 {
    auto texture = 0u;

@@ -482,7 +482,6 @@ private:
    virtual void decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data) override;
    virtual void decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data) override;
    virtual void decafCopySurface(const latte::pm4::DecafCopySurface &data) override;
-   virtual void decafSetSwapInterval(const latte::pm4::DecafSetSwapInterval &data) override;
    virtual void drawIndexAuto(const latte::pm4::DrawIndexAuto &data) override;
    virtual void drawIndex2(const latte::pm4::DrawIndex2 &data) override;
    virtual void drawIndexImmd(const latte::pm4::DrawIndexImmd &data) override;
