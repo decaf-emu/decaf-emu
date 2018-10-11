@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(sysapp)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(sysapp)
 
 ENUM_BEG(SystemAppId, int32_t)
    ENUM_VALUE(Updater,                 0)
@@ -22,8 +22,8 @@ ENUM_BEG(SystemAppId, int32_t)
    ENUM_VALUE(Max,                     12)
 ENUM_END(SystemAppId)
 
-ENUM_NAMESPACE_END(sysapp)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(sysapp)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

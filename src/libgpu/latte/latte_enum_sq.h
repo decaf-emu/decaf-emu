@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(SQ_ALU_ENCODING, uint32_t)
 ENUM_VALUE(OP2, 0)
@@ -353,7 +353,7 @@ ENUM_BEG(SQ_TEX_Z_FILTER, uint32_t)
    ENUM_VALUE(LINEAR,                     2)
 ENUM_END(SQ_TEX_Z_FILTER)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

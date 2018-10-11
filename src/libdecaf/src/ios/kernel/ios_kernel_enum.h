@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
-ENUM_NAMESPACE_BEG(kernel)
+ENUM_NAMESPACE_ENTER(kernel)
 
 ENUM_BEG(DeviceId, uint32_t)
    ENUM_VALUE(Timer,                0)
@@ -126,9 +126,9 @@ ENUM_BEG(TimerState, uint32_t)
    ENUM_VALUE(Stopped,                 0x04)
 ENUM_END(TimerState)
 
-ENUM_NAMESPACE_END(kernel)
+ENUM_NAMESPACE_EXIT(kernel)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

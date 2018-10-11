@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
-ENUM_NAMESPACE_BEG(auxil)
+ENUM_NAMESPACE_ENTER(auxil)
 
 ENUM_BEG(IMCommand, uint32_t)
    ENUM_VALUE(CopyParameterFromNv,  0)
@@ -114,9 +114,9 @@ ENUM_BEG(UCFileSys, uint32_t)
    ENUM_VALUE(Ram,                  0x03)
 ENUM_END(UCFileSys)
 
-ENUM_NAMESPACE_END(auxil)
+ENUM_NAMESPACE_EXIT(auxil)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

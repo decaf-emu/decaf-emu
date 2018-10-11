@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(VGT_DI_MAJOR_MODE, uint32_t)
    ENUM_VALUE(MODE0,                            0)
@@ -139,7 +139,7 @@ ENUM_BEG(VGT_OUTPUT_PATH_SELECT, uint32_t)
    ENUM_VALUE(GS_BLOCK,                         3)
 ENUM_END(VGT_OUTPUT_PATH_SELECT)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

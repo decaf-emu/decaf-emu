@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(nn)
-ENUM_NAMESPACE_BEG(temp)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(nn)
+ENUM_NAMESPACE_ENTER(temp)
 
 ENUM_BEG(TEMPDevicePreference, uint32_t)
    //! Largest free space between USB and MLC
@@ -44,9 +44,9 @@ ENUM_BEG(TEMPStatus, int32_t)
    ENUM_VALUE(InvalidParam,         -0x401)
 ENUM_END(TEMPStatus)
 
-ENUM_NAMESPACE_END(temp)
-ENUM_NAMESPACE_END(nn)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(temp)
+ENUM_NAMESPACE_EXIT(nn)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

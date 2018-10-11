@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
 FLAGS_BEG(CoreInterruptFlags, uint32_t)
    FLAGS_VALUE(Shutdown,            1 << 0)
@@ -203,7 +203,7 @@ ENUM_BEG(SyscallId, uint32_t)
    ENUM_VALUE(InvalidateDCache,        0x51)
 ENUM_END(SyscallId)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

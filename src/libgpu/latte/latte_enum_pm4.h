@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
-ENUM_NAMESPACE_BEG(pm4)
+ENUM_NAMESPACE_ENTER(latte)
+ENUM_NAMESPACE_ENTER(pm4)
 
 ENUM_BEG(PacketType, uint32_t)
    ENUM_VALUE(Type0,                         0x00)
@@ -110,8 +110,8 @@ ENUM_BEG(IT_OPCODE, uint32_t)
    ENUM_VALUE(DRAW_2D_DIRTY_AREA,            0xFF)
 ENUM_END(IT_OPCODE)
 
-ENUM_NAMESPACE_END(pm4)
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(pm4)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

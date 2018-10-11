@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(padscore)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(padscore)
 
 ENUM_BEG(KPADReadError, int32_t)
    ENUM_VALUE(OK,                      0)
@@ -119,8 +119,8 @@ ENUM_BEG(WPADProButton, uint32_t)
    ENUM_VALUE(StickRRight,             0x00800000)
 ENUM_END(WPADProButton)
 
-ENUM_NAMESPACE_END(padscore)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(padscore)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

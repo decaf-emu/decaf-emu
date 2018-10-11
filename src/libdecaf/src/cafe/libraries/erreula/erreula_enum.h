@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(nn)
-ENUM_NAMESPACE_BEG(erreula)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(nn)
+ENUM_NAMESPACE_ENTER(erreula)
 
 ENUM_BEG(ControllerType, uint32_t)
 ENUM_END(ControllerType)
@@ -23,9 +23,9 @@ ENUM_END(RegionType)
 ENUM_BEG(ResultType, uint32_t)
 ENUM_END(ResultType)
 
-ENUM_NAMESPACE_END(erreula)
-ENUM_NAMESPACE_END(nn)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(erreula)
+ENUM_NAMESPACE_EXIT(nn)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

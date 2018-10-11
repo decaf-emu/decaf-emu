@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
-ENUM_NAMESPACE_BEG(net)
+ENUM_NAMESPACE_ENTER(net)
 
 ENUM_BEG(SocketCommand, uint32_t)
    ENUM_VALUE(Bind,              0x2)
@@ -61,9 +61,9 @@ ENUM_BEG(SocketFamily, uint32_t)
    ENUM_VALUE(Inet,              0x2)
 ENUM_END(SocketFamily)
 
-ENUM_NAMESPACE_END(net)
+ENUM_NAMESPACE_EXIT(net)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

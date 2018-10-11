@@ -30,10 +30,10 @@
 #define FLAGS_VALUE(key, value) key = value,
 #endif
 
-#ifndef ENUM_NAMESPACE_BEG
-#define ENUM_NAMESPACE_BEG(name) namespace name {
+#ifndef ENUM_NAMESPACE_ENTER
+#define ENUM_NAMESPACE_ENTER(name) namespace name {
 #endif
 
-#ifndef ENUM_NAMESPACE_END
-#define ENUM_NAMESPACE_END(name) }
+#ifndef ENUM_NAMESPACE_EXIT
+#define ENUM_NAMESPACE_EXIT(name) }
 #endif

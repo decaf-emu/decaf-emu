@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(proc_ui)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(proc_ui)
 
 ENUM_BEG(ProcUICallbackType, uint32_t)
    ENUM_VALUE(Acquire,           0)
@@ -23,8 +23,8 @@ ENUM_BEG(ProcUIStatus, uint32_t)
    ENUM_VALUE(Exiting,           3)
 ENUM_END(ProcUIStatus)
 
-ENUM_NAMESPACE_END(proc_ui)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(proc_ui)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

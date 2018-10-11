@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(BUFFER_ARRAY_MODE, uint32_t)
    ENUM_VALUE(LINEAR_GENERAL,             0)
@@ -27,7 +27,7 @@ ENUM_BEG(REF_FUNC, uint32_t)
    ENUM_VALUE(ALWAYS,                     7)
 ENUM_END(REF_FUNC)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

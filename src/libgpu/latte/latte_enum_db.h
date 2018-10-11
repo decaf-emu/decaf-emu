@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(DB_FORMAT, uint32_t)
    ENUM_VALUE(DEPTH_INVALID,              0)
@@ -46,7 +46,7 @@ ENUM_BEG(DB_Z_ORDER, uint32_t)
    ENUM_VALUE(EARLY_Z_THEN_RE_Z,          3)
 ENUM_END(DB_Z_ORDER)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

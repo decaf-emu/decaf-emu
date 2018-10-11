@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(gx2)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(gx2)
 
 ENUM_BEG(GX2AAMode, uint32_t)
    ENUM_VALUE(Mode1X,                  0)
@@ -609,8 +609,8 @@ ENUM_BEG(GX2ShaderVarType, uint32_t)
    ENUM_VALUE(Matrix4x4,         29)
 ENUM_END(GX2ShaderVarType)
 
-ENUM_NAMESPACE_END(gx2)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(gx2)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

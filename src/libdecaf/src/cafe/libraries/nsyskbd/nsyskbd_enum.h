@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(nsyskbd)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(nsyskbd)
 
 ENUM_BEG(KPRMode, uint32_t)
    ENUM_VALUE(AltCode,           1 << 0)
@@ -28,8 +28,8 @@ ENUM_BEG(SKBDModState, uint32_t)
    ENUM_VALUE(NoModifiers,       0)
 ENUM_END(SKBDModState)
 
-ENUM_NAMESPACE_END(nsyskbd)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(nsyskbd)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

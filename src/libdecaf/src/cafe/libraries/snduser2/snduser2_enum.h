@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(snduser2)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(snduser2)
 
 ENUM_BEG(AXFXSampleRate, uint32_t)
    ENUM_VALUE(Rate32khz,         1)
@@ -26,8 +26,8 @@ ENUM_BEG(AXFXReverbType, uint32_t)
    ENUM_VALUE(Unknown4,          4)
 ENUM_END(AXFXReverbType)
 
-ENUM_NAMESPACE_END(snduser2)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(snduser2)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

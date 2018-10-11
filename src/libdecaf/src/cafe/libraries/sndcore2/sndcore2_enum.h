@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(sndcore2)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(sndcore2)
 
 ENUM_BEG(AXAuxId, uint32_t)
    ENUM_VALUE(A,                 0)
@@ -124,7 +124,7 @@ ENUM_BEG(AXVoiceSrcRatioResult, int32_t)
    ENUM_VALUE(RatioGreaterThanSomething,  -2)
 ENUM_END(AXVoiceSrcRatioResult)
 
-ENUM_NAMESPACE_BEG(internal)
+ENUM_NAMESPACE_ENTER(internal)
 
 ENUM_BEG(AXVoiceSyncBits, uint32_t)
    ENUM_VALUE(SrcType,       1 << 0)
@@ -158,10 +158,10 @@ ENUM_BEG(AXVoiceSyncBits, uint32_t)
    ENUM_VALUE(RmtIIRCoefs1,  1 << 30)
 ENUM_END(AXVoiceSyncBits)
 
-ENUM_NAMESPACE_END(internal)
+ENUM_NAMESPACE_EXIT(internal)
 
-ENUM_NAMESPACE_END(sndcore2)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(sndcore2)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

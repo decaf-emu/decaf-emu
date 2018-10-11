@@ -3,15 +3,15 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(nsysnet)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(nsysnet)
 
 FLAGS_BEG(Error, int32_t)
    FLAGS_VALUE(OK,            0)
 FLAGS_END(Error)
 
-ENUM_NAMESPACE_END(nsysnet)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(nsysnet)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 // Interrupt types taken from linux/drivers/gpu/drm/radeon and
 // avm.rpl dc.rpl tcl.rpl uvd.rpl
@@ -39,7 +39,7 @@ ENUM_BEG(CP_INT_SRC_ID, uint32_t)
    ENUM_VALUE(DMA_CTX_EMPTY,                    243)
 ENUM_END(CP_INT_SRC_ID)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

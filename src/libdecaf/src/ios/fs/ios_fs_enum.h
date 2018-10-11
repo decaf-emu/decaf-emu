@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
-ENUM_NAMESPACE_BEG(fs)
+ENUM_NAMESPACE_ENTER(fs)
 
 ENUM_BEG(FSACommand, uint32_t)
    ENUM_VALUE(Invalid,                 0x0)
@@ -157,9 +157,9 @@ ENUM_BEG(FSResourcePermissions, uint32_t)
    ENUM_VALUE(SdCardWrite,             0xA0000)
 ENUM_END(FSResourcePermissions)
 
-ENUM_NAMESPACE_END(fs)
+ENUM_NAMESPACE_EXIT(fs)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

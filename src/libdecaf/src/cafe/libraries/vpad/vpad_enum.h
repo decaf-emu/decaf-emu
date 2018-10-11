@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(vpad)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(vpad)
 
 FLAGS_BEG(VPADButtons, uint32_t)
    FLAGS_VALUE(Sync,        1 << 0)
@@ -55,8 +55,8 @@ ENUM_BEG(VPADReadError, int32_t)
    ENUM_VALUE(InvalidController, -2)
 ENUM_END(VPADReadError)
 
-ENUM_NAMESPACE_END(vpad)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(vpad)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

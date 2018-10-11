@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(CB_BLEND_FUNC, uint32_t)
    ENUM_VALUE(ZERO,                       0)
@@ -139,7 +139,7 @@ ENUM_BEG(CB_TILE_MODE, uint32_t)
    ENUM_VALUE(FRAG_ENABLE,                2)
 ENUM_END(CB_TILE_MODE)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

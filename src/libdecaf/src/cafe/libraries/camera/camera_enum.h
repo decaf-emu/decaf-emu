@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(camera)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(camera)
 
 ENUM_BEG(CAMError, int32_t)
    ENUM_VALUE(OK,                      0)
@@ -12,8 +12,8 @@ ENUM_BEG(CAMError, int32_t)
    ENUM_VALUE(AlreadyInitialised,      -12)
 ENUM_END(CAMError)
 
-ENUM_NAMESPACE_END(camera)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(camera)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(SPI_BARYC_CNTL, uint32_t)
    ENUM_VALUE(CENTROIDS_ONLY,             0)
@@ -31,7 +31,7 @@ ENUM_BEG(SPI_PNT_SPRITE_SEL, uint32_t)
    ENUM_VALUE(SEL_NONE,                   4)
 ENUM_END(SPI_PNT_SPRITE_SEL)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 

@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(coreinit)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(coreinit)
 
 ENUM_BEG(BSPError, uint32_t)
    ENUM_VALUE(OK,                0)
@@ -450,8 +450,8 @@ ENUM_BEG(SIRegisters, uint32_t)
    ENUM_VALUE(ControllerError,      14)
 ENUM_END(SIRegisters)
 
-ENUM_NAMESPACE_END(coreinit)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(coreinit)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

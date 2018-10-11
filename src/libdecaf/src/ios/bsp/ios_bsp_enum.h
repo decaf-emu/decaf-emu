@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
-ENUM_NAMESPACE_BEG(bsp)
+ENUM_NAMESPACE_ENTER(bsp)
 
 ENUM_BEG(BSPCommand, uint32_t)
    ENUM_VALUE(GetHardwareVersion,            2)
@@ -46,9 +46,9 @@ ENUM_BEG(HardwareVersion, uint32_t)
    ENUM_VALUE(LATTE_B1X_CAFE,                0x26100028)
 ENUM_END(HardwareVersion)
 
-ENUM_NAMESPACE_END(bsp)
+ENUM_NAMESPACE_EXIT(bsp)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

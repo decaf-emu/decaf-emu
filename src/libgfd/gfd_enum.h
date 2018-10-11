@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(gfd)
+ENUM_NAMESPACE_ENTER(gfd)
 
 ENUM_BEG(GFDBlockType, uint32_t)
    ENUM_VALUE(EndOfFile,                  1)
@@ -22,7 +22,7 @@ ENUM_BEG(GFDBlockType, uint32_t)
    ENUM_VALUE(ComputeShaderProgram,       15)
 ENUM_END(GFDBlockType)
 
-ENUM_NAMESPACE_END(gfd)
+ENUM_NAMESPACE_EXIT(gfd)
 
 #include <common/enum_end.h>
 

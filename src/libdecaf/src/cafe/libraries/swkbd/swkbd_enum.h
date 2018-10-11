@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(swkbd)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(swkbd)
 
 ENUM_BEG(ControllerType, int32_t)
    ENUM_VALUE(Unknown0,                0)
@@ -29,8 +29,8 @@ ENUM_BEG(State, int32_t)
    ENUM_VALUE(Max,                     4)
 ENUM_END(State)
 
-ENUM_NAMESPACE_END(swkbd)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(swkbd)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

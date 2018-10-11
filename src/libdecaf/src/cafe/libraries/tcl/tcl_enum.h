@@ -3,8 +3,8 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(tcl)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(tcl)
 
 ENUM_BEG(TCLAsicType, uint32_t)
    ENUM_VALUE(Unknown5,                         5)
@@ -44,8 +44,8 @@ ENUM_BEG(TCLTimestampID, int32_t)
    ENUM_VALUE(DMAERetired,                      2)
 ENUM_END(TCLTimestampID)
 
-ENUM_NAMESPACE_END(tcl)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(tcl)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

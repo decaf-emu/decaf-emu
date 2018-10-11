@@ -3,9 +3,9 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(ios)
+ENUM_NAMESPACE_ENTER(ios)
 
-ENUM_NAMESPACE_BEG(mcp)
+ENUM_NAMESPACE_ENTER(mcp)
 
 ENUM_BEG(MainThreadCommand, uint32_t)
    ENUM_VALUE(SysEvent,                   0x101)
@@ -146,9 +146,9 @@ ENUM_BEG(SystemFileSys, uint32_t)
    ENUM_VALUE(SdCard,                     3)
 ENUM_END(SystemFileSys)
 
-ENUM_NAMESPACE_END(mcp)
+ENUM_NAMESPACE_EXIT(mcp)
 
-ENUM_NAMESPACE_END(ios)
+ENUM_NAMESPACE_EXIT(ios)
 
 #include <common/enum_end.h>
 

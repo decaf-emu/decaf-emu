@@ -3,18 +3,18 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(cafe)
-ENUM_NAMESPACE_BEG(nn)
-ENUM_NAMESPACE_BEG(ac)
+ENUM_NAMESPACE_ENTER(cafe)
+ENUM_NAMESPACE_ENTER(nn)
+ENUM_NAMESPACE_ENTER(ac)
 
 ENUM_BEG(Status, int32_t)
    ENUM_VALUE(OK,             0)
    ENUM_VALUE(Error,          -1)
 ENUM_END(Status)
 
-ENUM_NAMESPACE_END(ac)
-ENUM_NAMESPACE_END(nn)
-ENUM_NAMESPACE_END(cafe)
+ENUM_NAMESPACE_EXIT(ac)
+ENUM_NAMESPACE_EXIT(nn)
+ENUM_NAMESPACE_EXIT(cafe)
 
 #include <common/enum_end.h>
 

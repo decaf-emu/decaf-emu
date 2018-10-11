@@ -3,7 +3,7 @@
 
 #include <common/enum_start.h>
 
-ENUM_NAMESPACE_BEG(latte)
+ENUM_NAMESPACE_ENTER(latte)
 
 ENUM_BEG(PA_FACE, uint32_t)
    ENUM_VALUE(CCW,                        0)
@@ -44,7 +44,7 @@ ENUM_BEG(PA_SU_VTX_CNTL_QUANT_MODE, uint32_t)
    ENUM_VALUE(QUANT_1_256TH,              5)
 ENUM_END(PA_SU_VTX_CNTL_QUANT_MODE)
 
-ENUM_NAMESPACE_END(latte)
+ENUM_NAMESPACE_EXIT(latte)
 
 #include <common/enum_end.h>
 
