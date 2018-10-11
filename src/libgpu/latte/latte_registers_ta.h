@@ -6,7 +6,7 @@ namespace latte
 {
 
 // Texture Addresser Common Control
-BITFIELD(TA_CNTL_AUX, uint32_t)
+BITFIELD_BEG(TA_CNTL_AUX, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, DISABLE_CUBE_WRAP)
    BITFIELD_ENTRY(1, 1, bool, UNK0)
    BITFIELD_ENTRY(24, 1, bool, SYNC_GRADIENT)

@@ -34,7 +34,7 @@ CHECK_OFFSET(ghs_atexit, 0x0, callback);
 CHECK_OFFSET(ghs_atexit, 0x4, next);
 CHECK_SIZE(ghs_atexit, 8);
 
-BITFIELD(ghs_iobuf_bits, uint32_t)
+BITFIELD_BEG(ghs_iobuf_bits, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, readwrite);
    BITFIELD_ENTRY(1, 1, bool, writable);
    BITFIELD_ENTRY(2, 1, bool, readable);

@@ -140,7 +140,7 @@ struct IPCKDriverRequestBlock
       ReceivedReply = 1,
    };
 
-   BITFIELD(Flags, uint32_t)
+   BITFIELD_BEG(Flags, uint32_t)
       BITFIELD_ENTRY(10, 2, uint8_t, unk_0x0C00)
       BITFIELD_ENTRY(12, 2, ReplyState, replyState)
       BITFIELD_ENTRY(14, 2, RequestState, requestState)

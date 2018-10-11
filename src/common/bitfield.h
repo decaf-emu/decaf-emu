@@ -99,7 +99,7 @@ struct BitfieldHelper<BitfieldType, sg14::fixed_point<Rep, Exponent>, Position, 
 
 #ifndef DECAF_USE_STDLAYOUT_BITFIELD
 
-#define BITFIELD(Name, Type)                                                  \
+#define BITFIELD_BEG(Name, Type)                                                  \
    union Name                                                                 \
    {                                                                          \
       using BitfieldType = Name;                                              \
@@ -124,7 +124,7 @@ struct BitfieldHelper<BitfieldType, sg14::fixed_point<Rep, Exponent>, Position, 
 
 #else
 
-#define BITFIELD(Name, Type)                                                  \
+#define BITFIELD_BEG(Name, Type)                                                  \
    struct Name                                                                \
    {                                                                          \
       using BitfieldType = Name;                                              \

@@ -54,7 +54,7 @@ enum class DebugLevel : uint32_t
    Verbose                 = 7,
 };
 
-BITFIELD(ProcessFlags, uint32_t)
+BITFIELD_BEG(ProcessFlags, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, isFirstProcess);
    BITFIELD_ENTRY(1, 1, bool, disableSharedLibraries);
    BITFIELD_ENTRY(9, 3, DebugLevel, debugLevel);

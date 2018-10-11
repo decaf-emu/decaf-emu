@@ -8,7 +8,7 @@
 namespace ios::kernel
 {
 
-BITFIELD(AHBALL, uint32_t)
+BITFIELD_BEG(AHBALL, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, Timer)
    BITFIELD_ENTRY(1, 1, bool, NandInterface)
    BITFIELD_ENTRY(2, 1, bool, AesEngine)
@@ -34,7 +34,7 @@ BITFIELD(AHBALL, uint32_t)
    BITFIELD_ENTRY(31, 1, bool, IpcStarbuckCompat)
 BITFIELD_END
 
-BITFIELD(AHBLT, uint32_t)
+BITFIELD_BEG(AHBLT, uint32_t)
    BITFIELD_ENTRY(0, 1, bool, SdHostController)
    BITFIELD_ENTRY(1, 1, bool, Unknown1)
    BITFIELD_ENTRY(2, 1, bool, Unknown2)
