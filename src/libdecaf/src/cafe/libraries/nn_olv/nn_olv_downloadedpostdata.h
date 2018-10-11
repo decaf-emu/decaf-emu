@@ -39,7 +39,7 @@ protected:
    UNKNOWN(0x1F4);
 
 private:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(DownloadedPostData, 0xC008, mCommunityId);
    CHECK_OFFSET(DownloadedPostData, 0xC00C, mEmpathyCount);
    CHECK_OFFSET(DownloadedPostData, 0xC010, mCommentCount);

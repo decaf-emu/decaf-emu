@@ -98,7 +98,7 @@ protected:
    UNKNOWN(4);
 
 protected:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
       CHECK_OFFSET(Task, 0x00, mAccountId);
       CHECK_OFFSET(Task, 0x08, mTaskId);
       CHECK_OFFSET(Task, 0x10, mTitleId);

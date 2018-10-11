@@ -50,7 +50,7 @@ protected:
    be2_array<char, 0x200> mRawUlData;
 
 protected:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(RawUlTaskSetting, 0x1004, mRawUlUnk1);
    CHECK_OFFSET(RawUlTaskSetting, 0x1008, mRawUlUnk2);
    CHECK_OFFSET(RawUlTaskSetting, 0x100C, mRawUlUnk3);

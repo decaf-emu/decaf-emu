@@ -137,7 +137,7 @@ protected:
    UNKNOWN(4);
 
 private:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(DownloadedDataBase, 0x00, mFlags);
    CHECK_OFFSET(DownloadedDataBase, 0x04, mUserPid);
    CHECK_OFFSET(DownloadedDataBase, 0x08, mPostId);

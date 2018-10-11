@@ -34,7 +34,7 @@ protected:
    UNKNOWN(0x28);
 
 private:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(InitializeParam, 0x00, mFlags);
    CHECK_OFFSET(InitializeParam, 0x04, mReportTypes);
    CHECK_OFFSET(InitializeParam, 0x08, mWorkBuffer);

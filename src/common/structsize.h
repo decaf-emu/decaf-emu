@@ -16,20 +16,20 @@
    static_assert(offsetof(Type, Field) == Offset, \
                  #Type "::" #Field " must be at offset " #Offset)
 
-#define _CHECK_MEMBER_OFFSET_START \
+#define _CHECK_MEMBER_OFFSET_BEG \
    void PP_CAT(__verifyMemberOffsets, __COUNTER__) () {
 
 #define _CHECK_MEMBER_OFFSET_END \
    }
 
 #ifdef PLATFORM_WINDOWS
-#define CHECK_MEMBER_OFFSET_START _CHECK_MEMBER_OFFSET_START
+#define CHECK_MEMBER_OFFSET_BEG _CHECK_MEMBER_OFFSET_BEG
 #define CHECK_MEMBER_OFFSET_END _CHECK_MEMBER_OFFSET_END
 #else
-#define CHECK_MEMBER_OFFSET_START \
+#define CHECK_MEMBER_OFFSET_BEG \
    _Pragma("GCC diagnostic push") \
    _Pragma("GCC diagnostic ignored \"-Winvalid-offsetof\"") \
-   _CHECK_MEMBER_OFFSET_START
+   _CHECK_MEMBER_OFFSET_BEG
 #define CHECK_MEMBER_OFFSET_END \
    _CHECK_MEMBER_OFFSET_END \
    _Pragma("GCC diagnostic pop")

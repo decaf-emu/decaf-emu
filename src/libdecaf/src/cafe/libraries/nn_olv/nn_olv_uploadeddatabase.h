@@ -75,7 +75,7 @@ protected:
    be2_virt_ptr<hle::VirtualTable> mVirtualTable;
 
 private:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(UploadedDataBase, 0x00, mFlags);
    CHECK_OFFSET(UploadedDataBase, 0x04, mPostID);
    CHECK_OFFSET(UploadedDataBase, 0x24, mBodyText);

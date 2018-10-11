@@ -25,7 +25,7 @@ private:
    be2_array<char, 8> mTaskID;
 
 protected:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
       CHECK_OFFSET(TaskID, 0x00, mTaskID);
    CHECK_MEMBER_OFFSET_END
 };

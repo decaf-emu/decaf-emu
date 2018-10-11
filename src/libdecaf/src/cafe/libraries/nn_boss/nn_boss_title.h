@@ -32,7 +32,7 @@ private:
    UNKNOWN(4);
 
 protected:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
       CHECK_OFFSET(Title, 0x00, mAccountID);
       CHECK_OFFSET(Title, 0x08, mTitleID);
       CHECK_OFFSET(Title, 0x10, mVirtualTable);

@@ -81,7 +81,7 @@ protected:
    UNKNOWN(0x1818);
 
 private:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(DownloadedCommunityData, 0x00, mFlags);
    CHECK_OFFSET(DownloadedCommunityData, 0x04, mCommunityId);
    CHECK_OFFSET(DownloadedCommunityData, 0x08, mOwnerPid);

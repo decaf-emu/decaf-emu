@@ -21,7 +21,7 @@ protected:
    UNKNOWN(0xFF8);
 
 private:
-   CHECK_MEMBER_OFFSET_START
+   CHECK_MEMBER_OFFSET_BEG
    CHECK_OFFSET(DownloadedTopicData, 0x00, mUnk1);
    CHECK_OFFSET(DownloadedTopicData, 0x04, mCommunityId);
    CHECK_MEMBER_OFFSET_END
