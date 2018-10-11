@@ -450,6 +450,14 @@ public:
       return value().getAddress();
    }
 
+   // Helper to access Pointer::get
+   template<typename K = value_type>
+   auto get() const
+      -> decltype(std::declval<const K>().get())
+   {
+      return value().get();
+   }
+
    // Helper to access Pointer::getRawPointer
    template<typename K = value_type>
    auto getRawPointer() const
