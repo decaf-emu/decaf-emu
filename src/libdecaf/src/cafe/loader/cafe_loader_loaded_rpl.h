@@ -14,7 +14,7 @@ enum LoadStateFlags : uint32_t
    LoaderStateFlag2 = 1 << 1,
    LoaderStateFlag4 = 1 << 2,
 
-   //! Need relocating??
+   //! Likely means this is a circular dependency
    LoaderStateFlag8 = 1 << 3,
 
    //! Likely means linked

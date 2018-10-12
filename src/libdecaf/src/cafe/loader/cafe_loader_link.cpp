@@ -16,6 +16,33 @@
 namespace cafe::loader::internal
 {
 
+static virt_ptr<LOADED_RPL>
+LiFindRPLByName(virt_ptr<char> name)
+{
+   char buffer[64];
+   auto resolvedName = LiResolveModuleName(name.get());
+   if (resolvedName.size() >= 64) {
+      resolvedName = resolvedName.substr(0, 63);
+   }
+
+   std::transform(resolvedName.begin(), resolvedName.end(), buffer, ::tolower);
+   buffer[resolvedName.size()] = 0;
+   resolvedName = buffer;
+
+   auto globals = getGlobalStorage();
+   for (auto module = globals->firstLoadedRpl; module; module = module->nextLoadedRpl) {
+      if (module->moduleNameLen != resolvedName.size()) {
+         continue;
+      }
+
+      if (resolvedName.compare(module->moduleNameBuffer.get()) == 0) {
+         return module;
+      }
+   }
+
+   return nullptr;
+}
+
 static void
 sReportCodeHeap(virt_ptr<GlobalStorage> globals,
                 const char *msg)
@@ -23,12 +50,80 @@ sReportCodeHeap(virt_ptr<GlobalStorage> globals,
 }
 
 static int32_t
+sCheckOne(virt_ptr<LOADED_RPL> module)
+{
+   module->loadStateFlags |= LoaderStateFlag2;
+
+   // Get the section header string table
+   if (!module->elfHeader.shstrndx) {
+      Loader_ReportError(
+         "*** Error: Could not get section string table index for \"{}\".",
+         module->moduleNameBuffer);
+      LiSetFatalError(0x18729Bu, module->fileType, 1, "sCheckOne", 73);
+      return -470071;
+   }
+
+   auto shStrAddr = module->sectionAddressBuffer[module->elfHeader.shstrndx];
+   if (!shStrAddr) {
+      Loader_ReportError(
+         "*** Error: Could not get section string table for \"{}\".",
+         module->moduleNameBuffer);
+      LiSetFatalError(0x18729Bu, module->fileType, 1, "sCheckOne", 65);
+      return -470072;
+   }
+
+   for (auto i = 0u; i < module->elfHeader.shnum; ++i) {
+      auto sectionHeader = getSectionHeader(module, i);
+      if (sectionHeader->type != rpl::SHT_RPL_IMPORTS) {
+         continue;
+      }
+
+      auto name = virt_cast<char *>(shStrAddr + sectionHeader->name) + 9;
+      auto rpl = LiFindRPLByName(name);
+      if (!rpl) {
+         Loader_ReportError("*** Imp Sec num {} @ 0x{}", i, sectionHeader);
+         Loader_ReportError("*** Imp Name 0x{:02X} 0x{:02X} 0x{:02X} 0x{:02X}",
+                            name[0], name[1], name[2], name[3]);
+         Loader_ReportError(
+            "*** Error. Could not find module \"{}\" during linking of \"{}\"!",
+            name, module->moduleNameBuffer);
+         LiSetFatalError(0x18729Bu, module->fileType, 1, "sCheckOne", 99);
+         return -470021;
+      }
+
+      if (rpl->loadStateFlags & LoaderStateFlag2) {
+         rpl->loadStateFlags |= LoaderStateFlag8;
+         module->loadStateFlags |= LoaderStateFlag8;
+      }
+
+      if (!rpl->entryPoint && !(rpl->loadStateFlags & LoaderStateFlag8)) {
+         auto error = sCheckOne(rpl);
+         if (error) {
+            return error;
+         }
+      }
+   }
+
+   module->loadStateFlags &= ~LoaderStateFlag2;
+   return 0;
+}
+
+static int32_t
 sCheckCircular(uint32_t numModules,
                virt_ptr<virt_ptr<LOADED_RPL>> modules,
                uint32_t checkIndex)
 {
-   // TODO: LOADER_Link sCheckCircular
-   return 0;
+   for (auto i = 0u; i < numModules; ++i) {
+      modules[i]->loadStateFlags &= ~LoaderStateFlag2;
+   }
+
+   auto result = sCheckOne(modules[checkIndex]);
+
+   for (auto i = 0u; i < numModules; ++i) {
+      modules[i]->loadStateFlags &= ~LoaderStateFlag2;
+   }
+
+   return result;
 }
 
 static int32_t
@@ -171,33 +266,6 @@ sSetLinkOutput(virt_ptr<LOADER_LinkInfo> linkInfo,
    }
 }
 
-static virt_ptr<LOADED_RPL>
-LiFindRPLByName(virt_ptr<char> name)
-{
-   char buffer[64];
-   auto resolvedName = LiResolveModuleName(name.get());
-   if (resolvedName.size() >= 64) {
-      resolvedName = resolvedName.substr(0, 63);
-   }
-
-   std::transform(resolvedName.begin(), resolvedName.end(), buffer, ::tolower);
-   buffer[resolvedName.size()] = 0;
-   resolvedName = buffer;
-
-   auto globals = getGlobalStorage();
-   for (auto module = globals->firstLoadedRpl; module; module = module->nextLoadedRpl) {
-      if (module->moduleNameLen != resolvedName.size()) {
-         continue;
-      }
-
-      if (resolvedName.compare(module->moduleNameBuffer.get()) == 0) {
-         return module;
-      }
-   }
-
-   return nullptr;
-}
-
 int32_t
 LOADER_Link(kernel::UniqueProcessId upid,
             virt_ptr<LOADER_LinkInfo> linkInfo,
@@ -337,7 +405,7 @@ LOADER_Link(kernel::UniqueProcessId upid,
             for (auto j = 1u; j < module->elfHeader.shnum; ++j) {
                auto sectionHeader = getSectionHeader(module, j);
                if (sectionHeader->type == rpl::SHT_RPL_IMPORTS) {
-                  auto name = virt_cast<char *>(shStrAddr + sectionHeader->name);
+                  auto name = virt_cast<char *>(shStrAddr + sectionHeader->name) + 9;
                   auto rpl = LiFindRPLByName(name);
                   if (!rpl) {
                      Loader_ReportError("*** Error: Could not get imported RPL name.");
