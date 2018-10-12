@@ -67,6 +67,7 @@ getCommandLineParser()
    input_options.add_option("vpad0",
                   description { "Select the input device for VPAD0." },
                   make_default_value(config::input::vpad0));
+
    input_options.add_option("wpad0",
                   description{ "Select the input device for WPAD0." },
                   make_default_value(config::input::wpad[0]));
@@ -79,6 +80,19 @@ getCommandLineParser()
    input_options.add_option("wpad3",
                   description{ "Select the input device for WPAD3." },
                   make_default_value(config::input::wpad[3]));
+
+   input_options.add_option("wpadType0",
+                  description{ "Select the type of input device for WPAD0." },
+                  make_default_value(config::input::wpadType[0]));
+   input_options.add_option("wpadType1",
+                  description{ "Select the type of input device for WPAD1." },
+                  make_default_value(config::input::wpadType[1]));
+   input_options.add_option("wpadType2",
+                  description{ "Select the type of input device for WPAD2." },
+                  make_default_value(config::input::wpadType[2]));
+   input_options.add_option("wpadType3",
+                  description{ "Select the type of input device for WPAD3." },
+                  make_default_value(config::input::wpadType[3]));
 
    auto test_options = parser.add_option_group("Test Options")
       .add_option("timeout-ms",
@@ -184,6 +198,7 @@ start(excmd::parser &parser,
    if (options.has("vpad0")) {
        config::input::vpad0 = options.get<std::string>("vpad0");
    }
+
    if (options.has("wpad0")) {
       config::input::wpad[0] = options.get<std::string>("wpad0");
    }
@@ -195,6 +210,19 @@ start(excmd::parser &parser,
    }
    if (options.has("wpad3")) {
       config::input::wpad[3] = options.get<std::string>("wpad3");
+   }
+
+   if (options.has("wpadType0")) {
+      config::input::wpadType[0] = options.get<std::string>("wpadType0");
+   }
+   if (options.has("wpadType1")) {
+      config::input::wpadType[1] = options.get<std::string>("wpadType1");
+   }
+   if (options.has("wpadType2")) {
+      config::input::wpadType[2] = options.get<std::string>("wpadType2");
+   }
+   if (options.has("wpadType3")) {
+      config::input::wpadType[3] = options.get<std::string>("wpadType3");
    }
 
    if (options.has("display-mode")) {

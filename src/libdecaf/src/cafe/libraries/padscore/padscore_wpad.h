@@ -122,7 +122,7 @@ WPADSetSamplingCallback(WPADChan chan,
                         WPADSamplingCallback callback);
 
 bool 
-IsProControllerAllowed();
+ProControllerIsAllowed();
 
 #pragma pack(pop)
 

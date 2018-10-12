@@ -231,7 +231,7 @@ KPADReadEx(KPADChan chan,
       return 0;
    }
 
-   if (IsProControllerAllowed())
+   if (input::getControllerType(channel)  == input::wpad::Type::Pro && ProControllerIsAllowed())
    {
       buffer.format = KPADDataFormat::ProController;
       buffer.extensionType = KPADExtensionType::ProController;
@@ -249,8 +249,7 @@ KPADReadEx(KPADChan chan,
             }
 
             buffer.extStatus.proController.hold |= bit;
-         }
-         else if (previous) {
+         } else if (previous) {
             buffer.extStatus.proController.release |= bit;
          }
       }
@@ -258,9 +257,9 @@ KPADReadEx(KPADChan chan,
       buffer.extStatus.proController.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
       buffer.extStatus.proController.rightStick.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
       buffer.extStatus.proController.rightStick.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
-   }
-   else
-   {
+
+   } else if (input::getControllerType(channel) == input::wpad::Type::Pro ||
+              input::getControllerType(channel) == input::wpad::Type::Classic) {
       // Update button state
       buffer.extensionType = KPADExtensionType::Classic;
       for (auto &pair : gClassicButtonMap) {
@@ -275,8 +274,7 @@ KPADReadEx(KPADChan chan,
             }
 
             buffer.extStatus.classic.hold |= bit;
-         }
-         else if (previous) {
+         } else if (previous) {
             buffer.extStatus.classic.release |= bit;
          }
       }
@@ -284,6 +282,25 @@ KPADReadEx(KPADChan chan,
       buffer.extStatus.classic.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
       buffer.extStatus.classic.rightStick.x = input::getAxisValue(channel, input::wpad::ProAxis::RightStickX);
       buffer.extStatus.classic.rightStick.y = input::getAxisValue(channel, input::wpad::ProAxis::RightStickY);
+   } else {
+      // Update button state
+      buffer.extensionType = KPADExtensionType::Core;
+      for (auto &pair : gCoreButtonMap) {
+         auto bit = pair.first;
+         auto button = pair.second;
+         auto status = input::getButtonStatus(channel, button);
+         auto previous = gLastButtonState & bit;
+
+         if (status == input::ButtonStatus::ButtonPressed) {
+            if (!previous) {
+               buffer.trigger |= bit;
+            }
+
+            buffer.hold |= bit;
+         } else if (previous) {
+            buffer.release |= bit;
+         }
+      }
    }
 
    if (outError) {

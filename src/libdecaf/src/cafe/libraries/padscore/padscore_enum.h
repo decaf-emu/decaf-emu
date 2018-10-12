@@ -109,8 +109,7 @@ ENUM_END(WPADError)
 
 ENUM_BEG(WPADLibraryStatus, uint32_t)
    ENUM_VALUE(Uninitialised,                0)
-   ENUM_VALUE(Uninitialising,               1)
-   ENUM_VALUE(Initialised,                  2)
+   ENUM_VALUE(Initialised,                  1)
 ENUM_END(WPADLibraryStatus)
 
 ENUM_BEG(WPADMotorCommand, uint32_t)

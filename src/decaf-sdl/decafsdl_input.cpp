@@ -674,10 +674,11 @@ getJoystickAxisState(const config::input::InputDevice *device,
 
 void 
 openInputDevice(SDL_GameController** gameController, 
-                const config::input::InputDevice** inputDevice, 
-                std::string pad)
+                config::input::InputDevice** inputDevice, 
+                std::string pad,
+                config::input::EmulatedControllerType emulatedType)
 {
-   for (const auto &device : config::input::devices) {
+   for (auto &device : config::input::devices) {
       if (pad.compare(device.id) != 0) {
          continue;
       }
@@ -714,8 +715,21 @@ openInputDevice(SDL_GameController** gameController,
       }
 
       *inputDevice = &device;
+      (*(inputDevice))->emulatedType = emulatedType;
+
       break;
    }
+}
+
+config::input::EmulatedControllerType
+getEmulatedControllerType(std::string emulatedControllerType)
+{
+   if (emulatedControllerType.compare("classic_controller") == 0) {
+      return config::input::EmulatedControllerType::ProController;
+   } else if (emulatedControllerType.compare("wii_remote") == 0) {
+      return config::input::EmulatedControllerType::WiiRemote;
+   }
+   return config::input::EmulatedControllerType::ProController;
 }
 
 void
@@ -723,7 +737,7 @@ DecafSDL::openInputDevices()
 {
    mVpad0Controller = nullptr;
    mVpad0Config = nullptr;
-   openInputDevice(&mVpad0Controller, &mVpad0Config, config::input::vpad0);
+   openInputDevice(&mVpad0Controller, &mVpad0Config, config::input::vpad0, config::input::EmulatedControllerType::GamePad);
 
    if (!mVpad0Config) {
       gCliLog->warn("No input device found for gamepad (VPAD0)");
@@ -733,7 +747,7 @@ DecafSDL::openInputDevices()
       mWpadConfig[i] = nullptr;
       mWpadController[i] = nullptr;
 
-      openInputDevice(&mWpadController[i], &mWpadConfig[i], config::input::wpad[i]);
+      openInputDevice(&mWpadController[i], &mWpadConfig[i], config::input::wpad[i], getEmulatedControllerType(config::input::wpadType[i]));
       if (mWpadConfig[i]) {
          gCliLog->warn("No input device found for gamepad (WPAD{})", i);
       }
@@ -944,7 +958,14 @@ DecafSDL::getControllerType(wpad::Channel channel)
       return wpad::Type::Disconnected;
    }
 
-   // TODO - Make this configurable
+   switch (mWpadConfig[(int)channel]->emulatedType)
+   {
+   case config::input::EmulatedControllerType::WiiRemote:
+      return wpad::Type::WiiRemote;
+   case config::input::EmulatedControllerType::ClassicController:
+      return wpad::Type::Classic;
+   }
+   
    return wpad::Type::Pro;
 }
 
