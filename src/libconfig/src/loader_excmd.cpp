@@ -229,7 +229,7 @@ loadFromExcmd(excmd::option_state &options)
    }
 
    if (options.has("hfio-path")) {
-      decaf::config::system::mlc_path = options.get<std::string>("hfio-path");
+      decaf::config::system::hfio_path = options.get<std::string>("hfio-path");
    }
 
    if (options.has("mlc-path")) {
