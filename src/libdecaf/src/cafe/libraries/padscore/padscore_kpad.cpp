@@ -106,6 +106,8 @@ struct KpadData
       be2_val<float> dpd_revise_pw;
       be2_val<float> zero_play_radius;
       be2_val<BOOL> calibrating;
+      be2_val<uint32_t> lastButtonState;
+
    };
 
    be2_array<ChanData, WPADChan::NumChans> chanData;
@@ -114,8 +116,6 @@ struct KpadData
 static virt_ptr<KpadData>
 sKpadData;
 
-static uint32_t
-gLastButtonState = 0;
 
 void
 KPADInit()
@@ -241,7 +241,7 @@ KPADReadEx(KPADChan chan,
          auto bit = pair.first;
          auto button = pair.second;
          auto status = input::getButtonStatus(channel, button);
-         auto previous = gLastButtonState & bit;
+         auto previous = sKpadData->chanData[chan].lastButtonState & bit;
 
          if (status == input::ButtonStatus::ButtonPressed) {
             if (!previous) {
@@ -252,6 +252,8 @@ KPADReadEx(KPADChan chan,
          } else if (previous) {
             buffer.extStatus.proController.release |= bit;
          }
+
+         sKpadData->chanData[chan].lastButtonState = buffer.extStatus.proController.hold;
       }
       buffer.extStatus.proController.leftStick.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
       buffer.extStatus.proController.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
@@ -266,7 +268,7 @@ KPADReadEx(KPADChan chan,
          auto bit = pair.first;
          auto button = pair.second;
          auto status = input::getButtonStatus(channel, button);
-         auto previous = gLastButtonState & bit;
+         auto previous = sKpadData->chanData[chan].lastButtonState & bit;
 
          if (status == input::ButtonStatus::ButtonPressed) {
             if (!previous) {
@@ -277,6 +279,7 @@ KPADReadEx(KPADChan chan,
          } else if (previous) {
             buffer.extStatus.classic.release |= bit;
          }
+         sKpadData->chanData[chan].lastButtonState = buffer.extStatus.classic.hold;
       }
       buffer.extStatus.classic.leftStick.x = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickX);
       buffer.extStatus.classic.leftStick.y = input::getAxisValue(channel, input::wpad::ProAxis::LeftStickY);
@@ -289,7 +292,7 @@ KPADReadEx(KPADChan chan,
          auto bit = pair.first;
          auto button = pair.second;
          auto status = input::getButtonStatus(channel, button);
-         auto previous = gLastButtonState & bit;
+         auto previous = sKpadData->chanData[chan].lastButtonState & bit;
 
          if (status == input::ButtonStatus::ButtonPressed) {
             if (!previous) {
@@ -300,6 +303,7 @@ KPADReadEx(KPADChan chan,
          } else if (previous) {
             buffer.release |= bit;
          }
+         sKpadData->chanData[chan].lastButtonState = buffer.hold;
       }
    }
 
