@@ -31,7 +31,7 @@ static phys_ptr<cafe::TinyHeapPhysical> sReplayHeap = nullptr;
 
 class RingBuffer
 {
-   static constexpr auto BufferSize = 0x20000u;
+   static constexpr auto BufferSize = 0x1000000u;
 
 public:
    RingBuffer()
