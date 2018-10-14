@@ -50,6 +50,30 @@ union Result
 
    enum Description : int32_t // nn::dbg::result::GetDescriptionString
    {
+      DESCRIPTION_SUCCESS                 = 0,
+      DESCRIPTION_TIMEOUT                 = -2,
+      DESCRIPTION_OUT_OF_RANGE            = -3,
+      DESCRIPTION_ALREADY_EXISTS          = -4,
+      DESCRIPTION_CANCEL_REQUESTED        = -5,
+      DESCRIPTION_NOT_FOUND               = -6,
+      DESCRIPTION_ALREADY_INITIALIZED     = -7,
+      DESCRIPTION_NOT_INITIALIZED         = -8,
+      DESCRIPTION_INVALID_HANDLE          = -9,
+      DESCRIPTION_INVALID_POINTER         = -10,
+      DESCRIPTION_INVALID_ADDRESS         = -11,
+      DESCRIPTION_NOT_IMPLEMENTED         = -12,
+      DESCRIPTION_OUT_OF_MEMORY           = -13,
+      DESCRIPTION_MISALIGNED_SIZE         = -14,
+      DESCRIPTION_MISALIGNED_ADDRESS      = -15,
+      DESCRIPTION_BUSY                    = -16,
+      DESCRIPTION_NO_DATA                 = -17,
+      DESCRIPTION_INVALID_COMBINATION     = -18,
+      DESCRIPTION_INVALID_ENUM_VALUE      = -19,
+      DESCRIPTION_INVALID_SIZE            = -20,
+      DESCRIPTION_ALREADY_DONE            = -21,
+      DESCRIPTION_NOT_AUTHORIZED          = -22,
+      DESCRIPTION_TOO_LARGE               = -23,
+      DESCRIPTION_INVALID_SELECTION       = -24,
    };
 
    static const Result Success;
