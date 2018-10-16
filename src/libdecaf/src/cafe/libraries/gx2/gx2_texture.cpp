@@ -66,7 +66,7 @@ GX2InitTextureRegs(virt_ptr<GX2Texture> texture)
    word0 = word0
       .DIM(static_cast<latte::SQ_TEX_DIM>(texture->surface.dim & 0x7))
       .TILE_MODE(static_cast<latte::SQ_TILE_MODE>(texture->surface.tileMode.value()))
-      .TILE_TYPE(tileType)
+      .TILE_TYPE(static_cast<latte::SQ_TILE_TYPE>(tileType))
       .PITCH((pitch / 8) - 1)
       .TEX_WIDTH(texture->surface.width - 1);
 

@@ -45,6 +45,8 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    mQueue = queue;
    mRunState = RunState::Running;
 
+   validateDevice();
+
    // Allocate a command pool to use
    vk::CommandPoolCreateInfo commandPoolDesc;
    commandPoolDesc.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

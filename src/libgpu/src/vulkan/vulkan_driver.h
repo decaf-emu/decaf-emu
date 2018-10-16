@@ -154,32 +154,96 @@ struct SyncWaiter
    vk::CommandBuffer cmdBuffer;
 };
 
-struct SurfaceDesc
+struct SurfaceDataDesc
 {
-   phys_addr baseAddress;
+   // BaseAddress is a uint32 rather than a phys_addr as it actually
+   // encodes information other than just the base address (swizzle).
+
+   uint32_t baseAddress;
    uint32_t pitch;
    uint32_t width;
    uint32_t height;
    uint32_t depth;
    uint32_t samples;
    latte::SQ_TEX_DIM dim;
-   latte::SQ_DATA_FORMAT format;
-   latte::SQ_NUM_FORMAT numFormat;
-   latte::SQ_FORMAT_COMP formatComp;
-   uint32_t degamma;
-   bool isDepthBuffer;
+   latte::SQ_TILE_TYPE tileType;
    latte::SQ_TILE_MODE tileMode;
-   uint32_t swizzle;
+   latte::SurfaceFormat format;
+
+   inline uint32_t calcAlignedBaseAddress() const
+   {
+      if (tileMode >= latte::SQ_TILE_MODE::TILED_2D_THIN1) {
+         return baseAddress & ~(0x800 - 1);
+      } else {
+         return baseAddress & ~(0x100 - 1);
+      }
+   }
+
+   inline uint32_t calcSwizzle() const
+   {
+      return baseAddress & 0x00000F00;
+   }
+
+   inline DataHash hash() const
+   {
+      // tileMode and swizzle are intentionally omited as they
+      // do not affect data placement or size, but only upload/downloads.
+      // It is possible that a tile-type switch may invalidate
+      // old data though...
+
+      // TODO: Handle tiling changes, major memory reuse issues...
+
+      auto hash = DataHash {}
+         .write(calcAlignedBaseAddress())
+         .write(dim)
+         .write(format)
+         .write(tileType);
+
+      auto dimDimensions = latte::getTexDimDimensions(dim);
+      if (dimDimensions < 1 || dimDimensions >= 4) {
+         decaf_abort("Unexpected dim dimensions.");
+      }
+      if (dimDimensions >= 1) {
+         hash = hash.write(pitch);
+      }
+      if (dimDimensions >= 2) {
+         hash = hash.write(height);
+      }
+      if (dimDimensions >= 3) {
+         hash = hash.write(depth);
+      }
+
+      return hash;
+   }
+};
+
+struct SurfaceDataObject
+{
+   SurfaceDataDesc desc;
+   DataHash dataHash;
+   vk::Image image;
+   vk::ImageSubresourceRange subresRange;
+   vk::ImageLayout activeLayout;
+};
+
+struct SurfaceDesc
+{
+   SurfaceDataDesc dataDesc;
+   std::array<latte::SQ_SEL, 4> channels;
+
+   inline DataHash hash() const
+   {
+      return DataHash {}
+         .write(dataDesc)
+         .write(channels);
+   }
 };
 
 struct SurfaceObject
 {
    SurfaceDesc desc;
-   DataHash dataHash;
-   vk::Image image;
+   SurfaceDataObject *data;
    vk::ImageView imageView;
-   vk::ImageSubresourceRange subresRange;
-   vk::ImageLayout activeLayout;
 };
 
 struct TextureDesc
@@ -373,6 +437,7 @@ public:
 
 protected:
    void updateDebuggerInfo();
+   void validateDevice();
 
    // Command Buffer Stuff
    void beginCommandGroup();
@@ -435,12 +500,17 @@ protected:
    DataBufferObject * getDataBuffer(phys_addr baseAddress, uint32_t size, bool discardData = false);
 
    // Surfaces
-   SurfaceObject * getSurface(const SurfaceDesc& info, bool discardData);
-   void transitionSurface(SurfaceObject *surface, vk::ImageLayout newLayout);
+   SurfaceDataObject * allocateSurfaceData(const SurfaceDataDesc &info);
+   void releaseSurfaceData(SurfaceDataObject *surfaceData);
+   SurfaceDataObject * getSurfaceData(const SurfaceDataDesc &info);
+   void transitionSurfaceData(SurfaceDataObject *surfaceData, vk::ImageLayout newLayout);
+   void uploadSurfaceData(SurfaceDataObject *surfaceData);
+   void downloadSurfaceData(SurfaceDataObject *surfaceData);
+
    SurfaceObject * allocateSurface(const SurfaceDesc& info);
    void releaseSurface(SurfaceObject *surface);
-   void uploadSurface(SurfaceObject *surface);
-   void downloadSurface(SurfaceObject *surface);
+   SurfaceObject * getSurface(const SurfaceDesc& info, bool discardData);
+   void transitionSurface(SurfaceObject *surface, vk::ImageLayout newLayout);
 
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);
@@ -574,7 +644,8 @@ private:
    std::vector<vk::DescriptorSet> mVertexDescriptorSets;
    std::vector<vk::DescriptorSet> mGeometryDescriptorSets;
    std::vector<vk::DescriptorSet> mPixelDescriptorSets;
-   std::unordered_map<uint64_t, SurfaceObject*> mSurfaces;
+   std::unordered_map<DataHash, SurfaceDataObject*> mSurfaceDatas;
+   std::unordered_map<DataHash, SurfaceObject*> mSurfaces;
    std::unordered_map<DataHash, VertexShaderObject*> mVertexShaders;
    std::unordered_map<DataHash, GeometryShaderObject*> mGeometryShaders;
    std::unordered_map<DataHash, FramebufferObject*> mFramebuffers;

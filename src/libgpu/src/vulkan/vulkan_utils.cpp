@@ -7,6 +7,328 @@
 namespace vulkan
 {
 
+vk::Format
+getVkSurfaceFormat(latte::SurfaceFormat format, latte::SQ_TILE_TYPE tileType)
+{
+   if (tileType == latte::SQ_TILE_TYPE::DEPTH) {
+      switch (format) {
+      case latte::SurfaceFormat::R16Unorm:
+         return vk::Format::eD16Unorm;
+      case latte::SurfaceFormat::R32Float:
+         return vk::Format::eD32Sfloat;
+      case latte::SurfaceFormat::D24UnormS8Uint:
+         return vk::Format::eD24UnormS8Uint;
+      case latte::SurfaceFormat::X24G8Uint:
+         return vk::Format::eD24UnormS8Uint; // Remapped?
+      case latte::SurfaceFormat::D32FloatS8UintX24:
+         return vk::Format::eD32SfloatS8Uint; // Wrong Size?
+      case latte::SurfaceFormat::D32G8UintX24:
+         return vk::Format::eD32SfloatS8Uint; // Remapped?
+      }
+
+      decaf_abort(fmt::format("Unexpected depth surface format {}", format));
+   }
+
+   switch (format) {
+   case latte::SurfaceFormat::R8Unorm:
+      return vk::Format::eR8Unorm;
+   case latte::SurfaceFormat::R8Uint:
+      return vk::Format::eR8Uint;
+   case latte::SurfaceFormat::R8Snorm:
+      return vk::Format::eR8Snorm;
+   case latte::SurfaceFormat::R8Sint:
+      return vk::Format::eR8Sint;
+   case latte::SurfaceFormat::R4G4Unorm:
+      return vk::Format::eR4G4UnormPack8;
+   case latte::SurfaceFormat::R16Unorm:
+      return vk::Format::eR16Unorm;
+   case latte::SurfaceFormat::R16Uint:
+      return vk::Format::eR16Uint;
+   case latte::SurfaceFormat::R16Snorm:
+      return vk::Format::eR16Snorm;
+   case latte::SurfaceFormat::R16Sint:
+      return vk::Format::eR16Sint;
+   case latte::SurfaceFormat::R16Float:
+      return vk::Format::eR16Sfloat;
+   case latte::SurfaceFormat::R8G8Unorm:
+      return vk::Format::eR8G8Unorm;
+   case latte::SurfaceFormat::R8G8Uint:
+      return vk::Format::eR8G8Uint;
+   case latte::SurfaceFormat::R8G8Snorm:
+      return vk::Format::eR8G8Snorm;
+   case latte::SurfaceFormat::R8G8Sint:
+      return vk::Format::eR8G8Sint;
+   case latte::SurfaceFormat::R5G6B5Unorm:
+      return vk::Format::eR5G6B5UnormPack16;
+   case latte::SurfaceFormat::R5G5B5A1Unorm:
+      return vk::Format::eR5G5B5A1UnormPack16;
+   case latte::SurfaceFormat::R4G4B4A4Unorm:
+      return vk::Format::eR4G4B4A4UnormPack16;
+   case latte::SurfaceFormat::A1B5G5R5Unorm:
+      return vk::Format::eR5G5B5A1UnormPack16; // Reversed?
+   case latte::SurfaceFormat::R32Uint:
+      return vk::Format::eR32Uint;
+   case latte::SurfaceFormat::R32Sint:
+      return vk::Format::eR32Sint;
+   case latte::SurfaceFormat::R32Float:
+      return vk::Format::eR32Sfloat;
+   case latte::SurfaceFormat::R16G16Unorm:
+      return vk::Format::eR16G16Unorm;
+   case latte::SurfaceFormat::R16G16Uint:
+      return vk::Format::eR16G16Uint;
+   case latte::SurfaceFormat::R16G16Snorm:
+      return vk::Format::eR16G16Snorm;
+   case latte::SurfaceFormat::R16G16Sint:
+      return vk::Format::eR16G16Sint;
+   case latte::SurfaceFormat::R16G16Float:
+      return vk::Format::eR16G16Sfloat;
+   case latte::SurfaceFormat::D24UnormS8Uint:
+      return vk::Format::eD24UnormS8Uint;
+   case latte::SurfaceFormat::X24G8Uint:
+      return vk::Format::eD24UnormS8Uint; // Not sure if this is actually right...
+   case latte::SurfaceFormat::R11G11B10Float:
+      return vk::Format::eR32G32B32A32Sfloat; // This is the incorrect format...
+      //return vk::Format::eB10G11R11UfloatPack32; // Remapped?
+   case latte::SurfaceFormat::R10G10B10A2Unorm:
+      return vk::Format::eA2B10G10R10UnormPack32; // Remapped?
+   case latte::SurfaceFormat::R10G10B10A2Uint:
+      return vk::Format::eA2B10G10R10UnormPack32; // This is the incorrect format...
+      //return vk::Format::eA2B10G10R10UintPack32; // Remapped?
+   case latte::SurfaceFormat::R10G10B10A2Snorm:
+      return vk::Format::eA2B10G10R10UnormPack32; // This is the incorrect format...
+      //return vk::Format::eA2B10G10R10SnormPack32; // Remapped?
+   case latte::SurfaceFormat::R10G10B10A2Sint:
+      return vk::Format::eA2B10G10R10UnormPack32; // This is the incorrect format...
+      //return vk::Format::eA2B10G10R10SintPack32; // Remapped?
+   case latte::SurfaceFormat::R8G8B8A8Unorm:
+      return vk::Format::eR8G8B8A8Unorm;
+   case latte::SurfaceFormat::R8G8B8A8Uint:
+      return vk::Format::eR8G8B8A8Uint;
+   case latte::SurfaceFormat::R8G8B8A8Snorm:
+      return vk::Format::eR8G8B8A8Snorm;
+   case latte::SurfaceFormat::R8G8B8A8Sint:
+      return vk::Format::eR8G8B8A8Sint;
+   case latte::SurfaceFormat::R8G8B8A8Srgb:
+      return vk::Format::eR8G8B8A8Srgb;
+   case latte::SurfaceFormat::A2B10G10R10Unorm:
+      return vk::Format::eA2B10G10R10UnormPack32; // This is the incorrect format...
+      //return vk::Format::eA2B10G10R10UnormPack32;
+   case latte::SurfaceFormat::A2B10G10R10Uint:
+      return vk::Format::eA2B10G10R10UnormPack32; // This is the incorrect format...
+      //return vk::Format::eA2B10G10R10UintPack32;
+   case latte::SurfaceFormat::D32FloatS8UintX24:
+      return vk::Format::eD32SfloatS8Uint;
+   case latte::SurfaceFormat::D32G8UintX24:
+      return vk::Format::eD32SfloatS8Uint;
+   case latte::SurfaceFormat::R32G32Uint:
+      return vk::Format::eR32G32Uint;
+   case latte::SurfaceFormat::R32G32Sint:
+      return vk::Format::eR32G32Sint;
+   case latte::SurfaceFormat::R32G32Float:
+      return vk::Format::eR32G32Sfloat;
+   case latte::SurfaceFormat::R16G16B16A16Unorm:
+      return vk::Format::eR16G16B16A16Unorm;
+   case latte::SurfaceFormat::R16G16B16A16Uint:
+      return vk::Format::eR16G16B16A16Uint;
+   case latte::SurfaceFormat::R16G16B16A16Snorm:
+      return vk::Format::eR16G16B16A16Snorm;
+   case latte::SurfaceFormat::R16G16B16A16Sint:
+      return vk::Format::eR16G16B16A16Uint;
+   case latte::SurfaceFormat::R16G16B16A16Float:
+      return vk::Format::eR16G16B16A16Sfloat;
+   case latte::SurfaceFormat::R32G32B32A32Uint:
+      return vk::Format::eR32G32B32A32Uint;
+   case latte::SurfaceFormat::R32G32B32A32Sint:
+      return vk::Format::eR32G32B32A32Sint;
+   case latte::SurfaceFormat::R32G32B32A32Float:
+      return vk::Format::eR32G32B32A32Sfloat;
+   case latte::SurfaceFormat::BC1Unorm:
+      return vk::Format::eBc1RgbaUnormBlock;
+   case latte::SurfaceFormat::BC1Srgb:
+      return vk::Format::eBc1RgbaSrgbBlock;
+   case latte::SurfaceFormat::BC2Unorm:
+      return vk::Format::eBc2UnormBlock;
+   case latte::SurfaceFormat::BC2Srgb:
+      return vk::Format::eBc2SrgbBlock;
+   case latte::SurfaceFormat::BC3Unorm:
+      return vk::Format::eBc3UnormBlock;
+   case latte::SurfaceFormat::BC3Srgb:
+      return vk::Format::eBc3SrgbBlock;
+   case latte::SurfaceFormat::BC4Unorm:
+      return vk::Format::eBc4UnormBlock;
+   case latte::SurfaceFormat::BC4Snorm:
+      return vk::Format::eBc4SnormBlock;
+   case latte::SurfaceFormat::BC5Unorm:
+      return vk::Format::eBc5UnormBlock;
+   case latte::SurfaceFormat::BC5Snorm:
+      return vk::Format::eBc5SnormBlock;
+   //case latte::SurfaceFormat::NV12:
+      // Honestly have no clue how to support this format...
+   }
+
+   decaf_abort(fmt::format("Unexpected surface format {}", format));
+}
+
+SurfaceFormatUsage
+getVkSurfaceFormatUsage(latte::SurfaceFormat format)
+{
+   switch (format) {
+   case latte::SurfaceFormat::R8Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R4G4Unorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::R16Unorm:
+      return SurfaceFormatUsage::TD; // TODO: Should support TCD
+   case latte::SurfaceFormat::R16Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16Float:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R5G6B5Unorm:
+      return SurfaceFormatUsage::T; // TODO: Should support TC
+   case latte::SurfaceFormat::R5G5B5A1Unorm:
+      return SurfaceFormatUsage::T; // TODO: Should support TC
+   case latte::SurfaceFormat::R4G4B4A4Unorm:
+      return SurfaceFormatUsage::T; // TODO: Should support TC
+   case latte::SurfaceFormat::A1B5G5R5Unorm:
+      return SurfaceFormatUsage::T; // TODO: Should support TC
+   case latte::SurfaceFormat::R32Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32Float:
+      return SurfaceFormatUsage::TCD;
+   case latte::SurfaceFormat::R16G16Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16Float:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::D24UnormS8Uint:
+      return SurfaceFormatUsage::DS;
+   case latte::SurfaceFormat::X24G8Uint:
+      return SurfaceFormatUsage::T; // TODO: Should support TC
+   case latte::SurfaceFormat::R11G11B10Float:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R10G10B10A2Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R10G10B10A2Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R10G10B10A2Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R10G10B10A2Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8B8A8Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8B8A8Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8B8A8Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8B8A8Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R8G8B8A8Srgb:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::A2B10G10R10Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::A2B10G10R10Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::D32FloatS8UintX24:
+      return SurfaceFormatUsage::TDS;
+   case latte::SurfaceFormat::D32G8UintX24:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::R32G32Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32G32Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32G32Float:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16B16A16Unorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16B16A16Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16B16A16Snorm:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16B16A16Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R16G16B16A16Float:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32G32B32A32Uint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32G32B32A32Sint:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::R32G32B32A32Float:
+      return SurfaceFormatUsage::TC;
+   case latte::SurfaceFormat::BC1Unorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC1Srgb:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC2Unorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC2Srgb:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC3Unorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC3Srgb:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC4Unorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC4Snorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC5Unorm:
+      return SurfaceFormatUsage::T;
+   case latte::SurfaceFormat::BC5Snorm:
+      return SurfaceFormatUsage::T;
+      //case latte::SurfaceFormat::NV12:
+         // Honestly have no clue how to support this format...
+   }
+
+   decaf_abort(fmt::format("Unexpected surface format {}", format));
+}
+
+vk::ComponentSwizzle
+getVkComponentSwizzle(latte::SQ_SEL sel)
+{
+   switch (sel) {
+   case latte::SQ_SEL::SEL_X:
+      return vk::ComponentSwizzle::eR;
+   case latte::SQ_SEL::SEL_Y:
+      return vk::ComponentSwizzle::eG;
+   case latte::SQ_SEL::SEL_Z:
+      return vk::ComponentSwizzle::eB;
+   case latte::SQ_SEL::SEL_W:
+      return vk::ComponentSwizzle::eA;
+   case latte::SQ_SEL::SEL_0:
+      return vk::ComponentSwizzle::eZero;
+   case latte::SQ_SEL::SEL_1:
+      return vk::ComponentSwizzle::eOne;
+   case latte::SQ_SEL::SEL_MASK:
+      return vk::ComponentSwizzle::eIdentity;
+   }
+
+   decaf_abort(fmt::format("Unexpected component swizzle {}", sel));
+}
+
 vk::CompareOp
 getVkCompareOp(latte::REF_FUNC func)
 {
@@ -27,9 +349,9 @@ getVkCompareOp(latte::REF_FUNC func)
       return vk::CompareOp::eGreaterOrEqual;
    case latte::REF_FUNC::ALWAYS:
       return vk::CompareOp::eAlways;
-   default:
-      decaf_abort("Unexpected compare op");
    }
+
+   decaf_abort(fmt::format("Unexpected compare op {}", func));
 }
 
 vk::BlendFactor
@@ -78,9 +400,9 @@ getVkBlendFactor(latte::CB_BLEND_FUNC func)
       return vk::BlendFactor::eConstantAlpha;
    case latte::CB_BLEND_FUNC::ONE_MINUS_CONSTANT_ALPHA:
       return vk::BlendFactor::eOneMinusConstantAlpha;
-   default:
-      decaf_abort("Unexpected blend function");
    }
+
+   decaf_abort(fmt::format("Unexpected blend factor {}", func));
 }
 
 vk::BlendOp
@@ -97,84 +419,9 @@ getVkBlendOp(latte::CB_COMB_FUNC func)
       return vk::BlendOp::eMax;
    case latte::CB_COMB_FUNC::DST_MINUS_SRC:
       return vk::BlendOp::eReverseSubtract;
-   default:
-      decaf_abort("Unexpected blend op");
-   }
-}
-
-DataFormatUsage
-getDataFormatUsageFlags(latte::SQ_DATA_FORMAT format)
-{
-   int flags = 0;
-
-   switch (format) {
-   case latte::SQ_DATA_FORMAT::FMT_8:
-   case latte::SQ_DATA_FORMAT::FMT_4_4:
-   case latte::SQ_DATA_FORMAT::FMT_3_3_2:
-   case latte::SQ_DATA_FORMAT::FMT_8_8:
-   case latte::SQ_DATA_FORMAT::FMT_5_6_5:
-   case latte::SQ_DATA_FORMAT::FMT_6_5_5:
-   case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
-   case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
-   case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
-   case latte::SQ_DATA_FORMAT::FMT_16_16:
-   case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_10_11_11:
-   case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_11_11_10:
-   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
-   case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
-   case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
-   case latte::SQ_DATA_FORMAT::FMT_32_32:
-   case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
-   case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
-   case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
-   //case latte::SQ_DATA_FORMAT::FMT_1:
-   //case latte::SQ_DATA_FORMAT::FMT_GB_GR:
-   //case latte::SQ_DATA_FORMAT::FMT_BG_RG:
-   //case latte::SQ_DATA_FORMAT::FMT_32_AS_8:
-   //case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
-   //case latte::SQ_DATA_FORMAT::FMT_5_9_9_9_SHAREDEXP:
-   case latte::SQ_DATA_FORMAT::FMT_8_8_8:
-   case latte::SQ_DATA_FORMAT::FMT_16_16_16:
-   case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_32_32_32:
-   case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
-      flags |= DataFormatUsage::FORMAT_MAYBE_COLOR;
-      flags |= DataFormatUsage::FORMAT_ALLOW_RENDER_TARGET;
-      break;
-   case latte::SQ_DATA_FORMAT::FMT_16:
-   case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_32:
-   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
-      flags |= DataFormatUsage::FORMAT_MAYBE_COLOR;
-      flags |= DataFormatUsage::FORMAT_MAYBE_DEPTH;
-      flags |= DataFormatUsage::FORMAT_ALLOW_RENDER_TARGET;
-      break;
-   case latte::SQ_DATA_FORMAT::FMT_BC1:
-   case latte::SQ_DATA_FORMAT::FMT_BC2:
-   case latte::SQ_DATA_FORMAT::FMT_BC3:
-   case latte::SQ_DATA_FORMAT::FMT_BC4:
-   case latte::SQ_DATA_FORMAT::FMT_BC5:
-      flags |= DataFormatUsage::FORMAT_MAYBE_COLOR;
-      break;
-   case latte::SQ_DATA_FORMAT::FMT_8_24:
-   case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_24_8:
-   case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
-   case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
-      flags |= DataFormatUsage::FORMAT_ALLOW_RENDER_TARGET;
-      flags |= DataFormatUsage::FORMAT_MAYBE_DEPTH;
-      flags |= DataFormatUsage::FORMAT_MAYBE_STENCIL;
-      break;
-   default:
-      decaf_abort("Unexpected texture format");
    }
 
-   return DataFormatUsage(flags);
+   decaf_abort(fmt::format("Unexpected blend op {}", func));
 }
 
 vk::SampleCountFlags
@@ -245,6 +492,15 @@ getSurfaceFormat(latte::SQ_NUM_FORMAT numFormat,
    }
 }
 
+/*
+   ENUM_VALUE(INTEGER,                 0x100)
+   ENUM_VALUE(SIGNED,                  0x200)
+   ENUM_VALUE(DEGAMMA,                 0x400)
+   ENUM_VALUE(SCALED,                  0x800)
+
+
+*/
+
 vk::Format
 getSurfaceFormat(latte::SQ_DATA_FORMAT format,
                 latte::SQ_NUM_FORMAT numFormat,
@@ -295,10 +551,12 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
       case latte::SQ_DATA_FORMAT::FMT_8_8:
          return pick(vk::Format::eR8G8Unorm, vk::Format::eR8G8Snorm, vk::Format::eR8G8Uint, vk::Format::eR8G8Sint, vk::Format::eR8G8Srgb, vk::Format::eR8G8Sscaled);
       case latte::SQ_DATA_FORMAT::FMT_5_6_5:
-         return pick(vk::Format::eB5G6R5UnormPack16, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
+         return pick(vk::Format::eR5G6B5UnormPack16, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
       //case latte::SQ_DATA_FORMAT::FMT_6_5_5:
-      //case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
-      //case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
+      case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
+         return pick(vk::Format::eA1R5G5B5UnormPack16, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
+      case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
+         return pick(vk::Format::eR8G8B8A8Unorm, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT);
       //case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
       case latte::SQ_DATA_FORMAT::FMT_32:
          return pick(BADFMT, BADFMT, vk::Format::eR32Uint, vk::Format::eR32Sint, BADFMT, BADFMT);
@@ -315,19 +573,25 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
       //case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
       //case latte::SQ_DATA_FORMAT::FMT_10_11_11:
       case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
-         decaf_abort("Encountered bit-reversed surface format");
-         //return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eB10G11R11UfloatPack32);
+         //decaf_abort("Encountered bit-reversed surface format");
+         return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eB10G11R11UfloatPack32);
       //case latte::SQ_DATA_FORMAT::FMT_11_11_10:
       case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
-         decaf_abort("Encountered bit-reversed surface format");
-         //return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eB10G11R11UfloatPack32);
+         //decaf_abort("Encountered bit-reversed surface format");
+         return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eB10G11R11UfloatPack32);
       case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
-         decaf_abort("Encountered bit-reversed surface format");
-         //return pick(vk::Format::eA2B10G10R10UnormPack32, vk::Format::eA2B10G10R10SnormPack32, vk::Format::eA2B10G10R10UintPack32, vk::Format::eA2B10G10R10UnormPack32, BADFMT, BADFMT);
+         //decaf_abort("Encountered bit-reversed surface format");
+         return pick(vk::Format::eA2B10G10R10UnormPack32, vk::Format::eA2B10G10R10UnormPack32,
+                     vk::Format::eA2B10G10R10UintPack32, vk::Format::eA2B10G10R10UintPack32,
+                     BADFMT, BADFMT);
       case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
-         return pick(vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Snorm, vk::Format::eR8G8B8A8Uint, vk::Format::eR8G8B8A8Sint, vk::Format::eR8G8B8A8Srgb, vk::Format::eR8G8B8A8Sscaled);
+         return pick(vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Snorm,
+                     vk::Format::eR8G8B8A8Uint, vk::Format::eR8G8B8A8Sint,
+                     vk::Format::eR8G8B8A8Srgb, vk::Format::eR8G8B8A8Sscaled);
       case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
-         return pick(vk::Format::eA2B10G10R10UnormPack32, vk::Format::eA2B10G10R10SnormPack32, vk::Format::eA2B10G10R10UintPack32, vk::Format::eA2B10G10R10SintPack32, BADFMT, vk::Format::eA2B10G10R10SscaledPack32);
+         return pick(vk::Format::eR16G16B16A16Unorm, vk::Format::eR16G16B16A16Snorm,
+                     vk::Format::eR16G16B16A16Uint, vk::Format::eR16G16B16A16Sint,
+                     BADFMT, vk::Format::eR16G16B16A16Sscaled);
       //case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
       case latte::SQ_DATA_FORMAT::FMT_32_32:
          return pick(BADFMT, BADFMT, vk::Format::eR32G32Uint, vk::Format::eR32G32Sint, BADFMT, BADFMT);
@@ -338,9 +602,9 @@ getSurfaceFormat(latte::SQ_DATA_FORMAT format,
       case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
          return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eR16G16B16A16Sfloat);
       case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
-         return pick(BADFMT, BADFMT, vk::Format::eR32G32B32Uint, vk::Format::eR32G32B32Sint, BADFMT, BADFMT);
+         return pick(BADFMT, BADFMT, vk::Format::eR32G32B32A32Uint, vk::Format::eR32G32B32A32Sint, BADFMT, BADFMT);
       case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
-         return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eR32G32B32Sfloat);
+         return pick(BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, vk::Format::eR32G32B32A32Sfloat);
       //case latte::SQ_DATA_FORMAT::FMT_1:
       //case latte::SQ_DATA_FORMAT::FMT_GB_GR:
       //case latte::SQ_DATA_FORMAT::FMT_BG_RG:

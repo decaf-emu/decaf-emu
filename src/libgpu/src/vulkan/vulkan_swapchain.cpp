@@ -7,35 +7,41 @@ namespace vulkan
 SwapChainObject *
 Driver::allocateSwapChain(const SwapChainDesc &desc)
 {
+   SurfaceDataDesc surfaceDataDesc;
+   surfaceDataDesc.baseAddress = desc.baseAddress.getAddress();
+   surfaceDataDesc.pitch = desc.width;
+   surfaceDataDesc.width = desc.width;
+   surfaceDataDesc.height = desc.height;
+   surfaceDataDesc.depth = 1;
+   surfaceDataDesc.samples = 0u;
+   surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
+   surfaceDataDesc.format = latte::SurfaceFormat::R8G8B8A8Unorm;
+   surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
+   surfaceDataDesc.tileMode = latte::SQ_TILE_MODE::LINEAR_ALIGNED;
+
    SurfaceDesc surfaceDesc;
-   surfaceDesc.baseAddress = desc.baseAddress;
-   surfaceDesc.pitch = desc.width;
-   surfaceDesc.width = desc.width;
-   surfaceDesc.height = desc.height;
-   surfaceDesc.depth = 1;
-   surfaceDesc.samples = 0u;
-   surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDesc.format = latte::SQ_DATA_FORMAT::FMT_8_8_8_8;
-   surfaceDesc.numFormat = latte::SQ_NUM_FORMAT::NORM;
-   surfaceDesc.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-   surfaceDesc.degamma = 0;
-   surfaceDesc.isDepthBuffer = false;
-   surfaceDesc.tileMode = latte::SQ_TILE_MODE::LINEAR_ALIGNED;
+   surfaceDesc.dataDesc = surfaceDataDesc;
+   surfaceDesc.channels = {
+      latte::SQ_SEL::SEL_X,
+      latte::SQ_SEL::SEL_Y,
+      latte::SQ_SEL::SEL_Z,
+      latte::SQ_SEL::SEL_W };
+
    auto surface = getSurface(surfaceDesc, true);
 
    transitionSurface(surface, vk::ImageLayout::eGeneral);
 
    std::array<float, 4> clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eGeneral, clearColor, { surface->subresRange });
+   mActiveCommandBuffer.clearColorImage(surface->data->image, vk::ImageLayout::eGeneral, clearColor, { surface->data->subresRange });
 
    transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
 
    auto swapChain = new SwapChainObject();
    swapChain->_surface = surface;
    swapChain->desc = desc;
-   swapChain->image = surface->image;
+   swapChain->image = surface->data->image;
    swapChain->imageView = surface->imageView;
-   swapChain->subresRange = surface->subresRange;
+   swapChain->subresRange = surface->data->subresRange;
    return swapChain;
 }
 

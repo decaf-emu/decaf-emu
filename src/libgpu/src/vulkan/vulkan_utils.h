@@ -7,6 +7,28 @@
 namespace vulkan
 {
 
+enum SurfaceFormatUsage : uint32_t
+{
+   TEXTURE = (1 << 0),
+   COLOR = (1 << 1),
+   DEPTH = (1 << 2),
+   STENCIL = (1 << 3),
+
+   T = TEXTURE,
+   TC = TEXTURE | COLOR,
+   TD = TEXTURE | DEPTH,
+   TCD = TEXTURE | COLOR | DEPTH,
+   TDS = TEXTURE | DEPTH | STENCIL,
+   D = DEPTH,
+   DS = DEPTH | STENCIL
+};
+
+vk::Format
+getVkSurfaceFormat(latte::SurfaceFormat format, latte::SQ_TILE_TYPE tileType);
+
+vk::ComponentSwizzle
+getVkComponentSwizzle(latte::SQ_SEL sel);
+
 vk::CompareOp
 getVkCompareOp(latte::REF_FUNC func);
 
@@ -16,17 +38,8 @@ getVkBlendFactor(latte::CB_BLEND_FUNC func);
 vk::BlendOp
 getVkBlendOp(latte::CB_COMB_FUNC func);
 
-
-enum DataFormatUsage : uint32_t
-{
-   FORMAT_MAYBE_COLOR = (1 << 0),
-   FORMAT_MAYBE_DEPTH = (1 << 1),
-   FORMAT_MAYBE_STENCIL = (1 << 2),
-   FORMAT_ALLOW_RENDER_TARGET = (1 << 3),
-};
-
-DataFormatUsage
-getDataFormatUsageFlags(latte::SQ_DATA_FORMAT format);
+SurfaceFormatUsage
+getVkSurfaceFormatUsage(latte::SurfaceFormat format);
 
 vk::SampleCountFlags
 getVkSampleCount(uint32_t samples);

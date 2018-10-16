@@ -7,105 +7,211 @@
 namespace latte
 {
 
-SurfaceFormat
-getColorBufferDataFormat(latte::CB_FORMAT format, latte::CB_NUMBER_TYPE numberType)
+enum SurfaceFormatType : uint32_t
 {
-   SurfaceFormat formatOut;
+   Unorm = 0x0,
+   Uint = 0x1,
+   Snorm = 0x2,
+   Sint = 0x3,
+   Srgb = 0x4,
+   Float = 0x8,
+};
 
-   // This is safe only becase CB_FORMAT perfectly overlays SQ_DATA_FORMAT
-   formatOut.format = static_cast<latte::SQ_DATA_FORMAT>(format);
-
-   switch (numberType) {
-   case latte::CB_NUMBER_TYPE::UNORM:
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::CB_NUMBER_TYPE::SNORM:
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::SIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::CB_NUMBER_TYPE::UINT:
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::INT;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::CB_NUMBER_TYPE::SINT:
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::INT;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::SIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::CB_NUMBER_TYPE::FLOAT:
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::CB_NUMBER_TYPE::SRGB:
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 1;
-      break;
+static void
+validateSurfaceFormat(SurfaceFormat format)
+{
+   switch (format) {
+   case SurfaceFormat::R8Unorm:
+   case SurfaceFormat::R8Uint:
+   case SurfaceFormat::R8Snorm:
+   case SurfaceFormat::R8Sint:
+   case SurfaceFormat::R4G4Unorm:
+   case SurfaceFormat::R16Unorm:
+   case SurfaceFormat::R16Uint:
+   case SurfaceFormat::R16Snorm:
+   case SurfaceFormat::R16Sint:
+   case SurfaceFormat::R16Float:
+   case SurfaceFormat::R8G8Unorm:
+   case SurfaceFormat::R8G8Uint:
+   case SurfaceFormat::R8G8Snorm:
+   case SurfaceFormat::R8G8Sint:
+   case SurfaceFormat::R5G6B5Unorm:
+   case SurfaceFormat::R5G5B5A1Unorm:
+   case SurfaceFormat::R4G4B4A4Unorm:
+   case SurfaceFormat::A1B5G5R5Unorm:
+   case SurfaceFormat::R32Uint:
+   case SurfaceFormat::R32Sint:
+   case SurfaceFormat::R32Float:
+   case SurfaceFormat::R16G16Unorm:
+   case SurfaceFormat::R16G16Uint:
+   case SurfaceFormat::R16G16Snorm:
+   case SurfaceFormat::R16G16Sint:
+   case SurfaceFormat::R16G16Float:
+   case SurfaceFormat::D24UnormS8Uint:
+   case SurfaceFormat::X24G8Uint:
+   case SurfaceFormat::R11G11B10Float:
+   case SurfaceFormat::R10G10B10A2Unorm:
+   case SurfaceFormat::R10G10B10A2Uint:
+   case SurfaceFormat::R10G10B10A2Snorm:
+   case SurfaceFormat::R10G10B10A2Sint:
+   case SurfaceFormat::R8G8B8A8Unorm:
+   case SurfaceFormat::R8G8B8A8Uint:
+   case SurfaceFormat::R8G8B8A8Snorm:
+   case SurfaceFormat::R8G8B8A8Sint:
+   case SurfaceFormat::R8G8B8A8Srgb:
+   case SurfaceFormat::A2B10G10R10Unorm:
+   case SurfaceFormat::A2B10G10R10Uint:
+   case SurfaceFormat::D32FloatS8UintX24:
+   case SurfaceFormat::D32G8UintX24:
+   case SurfaceFormat::R32G32Uint:
+   case SurfaceFormat::R32G32Sint:
+   case SurfaceFormat::R32G32Float:
+   case SurfaceFormat::R16G16B16A16Unorm:
+   case SurfaceFormat::R16G16B16A16Uint:
+   case SurfaceFormat::R16G16B16A16Snorm:
+   case SurfaceFormat::R16G16B16A16Sint:
+   case SurfaceFormat::R16G16B16A16Float:
+   case SurfaceFormat::R32G32B32A32Uint:
+   case SurfaceFormat::R32G32B32A32Sint:
+   case SurfaceFormat::R32G32B32A32Float:
+   case SurfaceFormat::BC1Unorm:
+   case SurfaceFormat::BC1Srgb:
+   case SurfaceFormat::BC2Unorm:
+   case SurfaceFormat::BC2Srgb:
+   case SurfaceFormat::BC3Unorm:
+   case SurfaceFormat::BC3Srgb:
+   case SurfaceFormat::BC4Unorm:
+   case SurfaceFormat::BC4Snorm:
+   case SurfaceFormat::BC5Unorm:
+   case SurfaceFormat::BC5Snorm:
+   case SurfaceFormat::NV12:
+      return;
    default:
-      decaf_abort(fmt::format("Color buffer with unsupported number type {}", numberType));
+      decaf_abort("Unexpected generated surface format");
    }
+}
 
-   return formatOut;
+static SurfaceFormatType
+getSurfaceFormatType(latte::SQ_NUM_FORMAT numFormat,
+                     latte::SQ_FORMAT_COMP formatComp,
+                     bool forceDegamma)
+{
+   if (forceDegamma) {
+      decaf_check(numFormat == latte::SQ_NUM_FORMAT::NORM);
+      decaf_check(formatComp == latte::SQ_FORMAT_COMP::UNSIGNED);
+
+      return SurfaceFormatType::Srgb;
+   } else {
+      if (numFormat == latte::SQ_NUM_FORMAT::NORM) {
+         if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
+            return SurfaceFormatType::Unorm;
+         } else if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
+            return SurfaceFormatType::Snorm;
+         } else {
+            decaf_abort(fmt::format("Unexpected surface format comp {}", formatComp));
+         }
+      } else if (numFormat == latte::SQ_NUM_FORMAT::INT) {
+         if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
+            return SurfaceFormatType::Uint;
+         } else if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
+            return SurfaceFormatType::Sint;
+         } else {
+            decaf_abort(fmt::format("Unexpected surface format comp {}", formatComp));
+         }
+      } else if (numFormat == latte::SQ_NUM_FORMAT::SCALED) {
+         decaf_check(formatComp == latte::SQ_FORMAT_COMP::UNSIGNED);
+
+         return SurfaceFormatType::Float;
+      } else {
+         decaf_abort(fmt::format("Unexpected surface number format {}", numFormat));
+      }
+   }
 }
 
 SurfaceFormat
-getDepthBufferDataFormat(latte::DB_FORMAT format)
+getSurfaceFormat(latte::SQ_DATA_FORMAT dataFormat,
+                 latte::SQ_NUM_FORMAT numFormat,
+                 latte::SQ_FORMAT_COMP formatComp,
+                 bool forceDegamma)
 {
-   SurfaceFormat formatOut;
-
-   switch (format) {
-   case latte::DB_FORMAT::DEPTH_16:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_16;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::DB_FORMAT::DEPTH_X8_24:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::DB_FORMAT::DEPTH_8_24:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::NORM;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::DB_FORMAT::DEPTH_X8_24_FLOAT:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::DB_FORMAT::DEPTH_8_24_FLOAT:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::DB_FORMAT::DEPTH_32_FLOAT:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_32_FLOAT;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   case latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT:
-      formatOut.format = latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT;
-      formatOut.numFormat = latte::SQ_NUM_FORMAT::SCALED;
-      formatOut.formatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
-      formatOut.degamma = 0;
-      break;
-   default:
-      decaf_abort(fmt::format("Depth buffer with unsupported format {}", format));
+   if (dataFormat == latte::SQ_DATA_FORMAT::FMT_INVALID) {
+      return latte::SurfaceFormat::Invalid;
    }
 
-   return formatOut;
+   auto formatType = getSurfaceFormatType(numFormat, formatComp, forceDegamma);
+
+   auto formatTypeBits = static_cast<uint32_t>(formatType) << 8;
+   auto dataFormatBits = static_cast<uint32_t>(dataFormat);
+
+   auto surfaceFormat = static_cast<SurfaceFormat>(formatTypeBits | dataFormatBits);
+   validateSurfaceFormat(surfaceFormat);
+
+   return surfaceFormat;
+}
+
+latte::SQ_DATA_FORMAT
+getSurfaceFormatDataFormat(latte::SurfaceFormat format)
+{
+   return static_cast<latte::SQ_DATA_FORMAT>(format & 0x00FF);
+}
+
+static SurfaceFormatType
+getColorBufferSurfaceFormatType(latte::CB_NUMBER_TYPE numberType)
+{
+   switch (numberType) {
+   case latte::CB_NUMBER_TYPE::UNORM:
+      return SurfaceFormatType::Unorm;
+   case latte::CB_NUMBER_TYPE::SNORM:
+      return SurfaceFormatType::Snorm;
+   case latte::CB_NUMBER_TYPE::UINT:
+      return SurfaceFormatType::Uint;
+   case latte::CB_NUMBER_TYPE::SINT:
+      return SurfaceFormatType::Sint;
+   case latte::CB_NUMBER_TYPE::FLOAT:
+      return SurfaceFormatType::Float;
+   case latte::CB_NUMBER_TYPE::SRGB:
+      return SurfaceFormatType::Srgb;
+   default:
+      decaf_abort(fmt::format("Unexpected color buffer number type {}", numberType));
+   }
+}
+
+SurfaceFormat
+getColorBufferSurfaceFormat(latte::CB_FORMAT format, latte::CB_NUMBER_TYPE numberType)
+{
+   // Pick the correct surface format type for this number type
+   auto formatType = getColorBufferSurfaceFormatType(numberType);
+
+   // The format types belong in the upper portion of the bits
+   auto formatTypeBits = static_cast<uint32_t>(formatType) << 8;
+
+   // This is safe only becase CB_FORMAT perfectly overlays SQ_DATA_FORMAT
+   auto dataFormatBits = static_cast<uint32_t>(format);
+
+   // Generate our surface format
+   auto surfaceFormat = static_cast<SurfaceFormat>(formatTypeBits | dataFormatBits);
+   validateSurfaceFormat(surfaceFormat);
+
+   return surfaceFormat;
+}
+
+SurfaceFormat
+getDepthBufferSurfaceFormat(latte::DB_FORMAT format)
+{
+   switch (format) {
+   case latte::DB_FORMAT::DEPTH_16:
+      return SurfaceFormat::R16Unorm;
+   case latte::DB_FORMAT::DEPTH_8_24:
+      return SurfaceFormat::D24UnormS8Uint;
+   //case latte::DB_FORMAT::DEPTH_8_24_FLOAT:
+      // I don't believe this format is supported by the WiiU
+   case latte::DB_FORMAT::DEPTH_32_FLOAT:
+      return SurfaceFormat::R32Float;
+   case latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT:
+      return SurfaceFormat::D32G8UintX24;
+   }
+
+   decaf_abort(fmt::format("Depth buffer with unsupported format {}", format));
 }
 
 uint32_t

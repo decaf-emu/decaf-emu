@@ -125,11 +125,11 @@ Driver::checkCurrentFramebuffer()
       attachments[attachmentIndex] = surface->imageView;
 
       if (overallSize.width == 0 && overallSize.height == 0) {
-         overallSize.width = surface->desc.width;
-         overallSize.height = surface->desc.height;
+         overallSize.width = surface->desc.dataDesc.width;
+         overallSize.height = surface->desc.dataDesc.height;
       } else {
-         overallSize.width = std::min(overallSize.width, surface->desc.width);
-         overallSize.height = std::min(overallSize.height, surface->desc.height);
+         overallSize.width = std::min(overallSize.width, surface->desc.dataDesc.width);
+         overallSize.height = std::min(overallSize.height, surface->desc.dataDesc.height);
       }
    }
 
@@ -157,11 +157,11 @@ Driver::checkCurrentFramebuffer()
       attachments[attachmentIndex] = surface->imageView;
 
       if (overallSize.width == 0 && overallSize.height == 0) {
-         overallSize.width = surface->desc.width;
-         overallSize.height = surface->desc.height;
+         overallSize.width = surface->desc.dataDesc.width;
+         overallSize.height = surface->desc.dataDesc.height;
       } else {
-         overallSize.width = std::min(overallSize.width, surface->desc.width);
-         overallSize.height = std::min(overallSize.height, surface->desc.height);
+         overallSize.width = std::min(overallSize.width, surface->desc.dataDesc.width);
+         overallSize.height = std::min(overallSize.height, surface->desc.dataDesc.height);
       }
    } while (false);
 
@@ -195,23 +195,29 @@ Driver::getColorBuffer(const ColorBufferDesc& info,
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   auto format = latte::getColorBufferDataFormat(info.format, info.numberType);
+   auto surfaceFormat = latte::getColorBufferSurfaceFormat(info.format, info.numberType);
    auto tileMode = latte::getArrayModeTileMode(info.arrayMode);
 
+   SurfaceDataDesc surfaceDataDesc;
+   surfaceDataDesc.baseAddress = static_cast<uint32_t>(baseAddress);
+   surfaceDataDesc.pitch = pitch;
+   surfaceDataDesc.width = pitch;
+   surfaceDataDesc.height = height;
+   surfaceDataDesc.depth = 1;
+   surfaceDataDesc.samples = 0u;
+   surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
+   surfaceDataDesc.format = surfaceFormat;
+   surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
+   surfaceDataDesc.tileMode = tileMode;
+
    SurfaceDesc surfaceDesc;
-   surfaceDesc.baseAddress = baseAddress;
-   surfaceDesc.pitch = pitch;
-   surfaceDesc.width = pitch;
-   surfaceDesc.height = height;
-   surfaceDesc.depth = 1;
-   surfaceDesc.samples = 0u;
-   surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDesc.format = format.format;
-   surfaceDesc.numFormat = format.numFormat;
-   surfaceDesc.formatComp = format.formatComp;
-   surfaceDesc.degamma = format.degamma;
-   surfaceDesc.isDepthBuffer = false;
-   surfaceDesc.tileMode = tileMode;
+   surfaceDesc.dataDesc = surfaceDataDesc;
+   surfaceDesc.channels = {
+      latte::SQ_SEL::SEL_X,
+      latte::SQ_SEL::SEL_Y,
+      latte::SQ_SEL::SEL_Z,
+      latte::SQ_SEL::SEL_W };
+
    return getSurface(surfaceDesc, discardData);
 }
 
@@ -226,23 +232,29 @@ Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info,
    auto pitch = static_cast<uint32_t>((pitch_tile_max + 1) * latte::MicroTileWidth);
    auto height = static_cast<uint32_t>(((slice_tile_max + 1) * (latte::MicroTileWidth * latte::MicroTileHeight)) / pitch);
 
-   auto format = latte::getDepthBufferDataFormat(info.format);
+   auto surfaceFormat = latte::getDepthBufferSurfaceFormat(info.format);
    auto tileMode = latte::getArrayModeTileMode(info.arrayMode);
 
+   SurfaceDataDesc surfaceDataDesc;
+   surfaceDataDesc.baseAddress = static_cast<uint32_t>(baseAddress);
+   surfaceDataDesc.pitch = pitch;
+   surfaceDataDesc.width = pitch;
+   surfaceDataDesc.height = height;
+   surfaceDataDesc.depth = 1;
+   surfaceDataDesc.samples = 0u;
+   surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
+   surfaceDataDesc.format = surfaceFormat;
+   surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEPTH;
+   surfaceDataDesc.tileMode = tileMode;
+
    SurfaceDesc surfaceDesc;
-   surfaceDesc.baseAddress = baseAddress;
-   surfaceDesc.pitch = pitch;
-   surfaceDesc.width = pitch;
-   surfaceDesc.height = height;
-   surfaceDesc.depth = 1;
-   surfaceDesc.samples = 0u;
-   surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDesc.format = format.format;
-   surfaceDesc.numFormat = format.numFormat;
-   surfaceDesc.formatComp = format.formatComp;
-   surfaceDesc.degamma = format.degamma;
-   surfaceDesc.isDepthBuffer = true;
-   surfaceDesc.tileMode = tileMode;
+   surfaceDesc.dataDesc = surfaceDataDesc;
+   surfaceDesc.channels = {
+      latte::SQ_SEL::SEL_X,
+      latte::SQ_SEL::SEL_Y,
+      latte::SQ_SEL::SEL_Z,
+      latte::SQ_SEL::SEL_W };
+
    return getSurface(surfaceDesc, discardData);
 }
 

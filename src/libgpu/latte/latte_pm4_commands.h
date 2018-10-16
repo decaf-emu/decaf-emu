@@ -184,7 +184,8 @@ struct DecafCopySurface
    latte::SQ_DATA_FORMAT dstFormat;
    latte::SQ_NUM_FORMAT dstNumFormat;
    latte::SQ_FORMAT_COMP dstFormatComp;
-   uint32_t dstDegamma;
+   uint32_t dstForceDegamma;
+   latte::SQ_TILE_TYPE dstTileType;
    latte::SQ_TILE_MODE dstTileMode;
 
    phys_addr srcImage;
@@ -200,7 +201,8 @@ struct DecafCopySurface
    latte::SQ_DATA_FORMAT srcFormat;
    latte::SQ_NUM_FORMAT srcNumFormat;
    latte::SQ_FORMAT_COMP srcFormatComp;
-   uint32_t srcDegamma;
+   uint32_t srcForceDegamma;
+   latte::SQ_TILE_TYPE srcTileType;
    latte::SQ_TILE_MODE srcTileMode;
 
    template<typename Serialiser>
@@ -219,7 +221,8 @@ struct DecafCopySurface
       se(dstFormat);
       se(dstNumFormat);
       se(dstFormatComp);
-      se(dstDegamma);
+      se(dstForceDegamma);
+      se(dstTileType);
       se(dstTileMode);
 
       se(srcImage);
@@ -235,7 +238,8 @@ struct DecafCopySurface
       se(srcFormat);
       se(srcNumFormat);
       se(srcFormatComp);
-      se(srcDegamma);
+      se(srcForceDegamma);
+      se(srcTileType);
       se(srcTileMode);
    }
 };

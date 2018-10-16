@@ -68,12 +68,12 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
 
    vk::ImageBlit blitRegion(
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->desc.width, surface->desc.height, 1) },
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->desc.dataDesc.width, surface->desc.dataDesc.height, 1) },
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(target->desc.width, target->desc.height, 1) });
 
    mActiveCommandBuffer.blitImage(
-      surface->image,
+      surface->data->image,
       vk::ImageLayout::eTransferSrcOptimal,
       target->image,
       vk::ImageLayout::eTransferDstOptimal,
@@ -125,7 +125,7 @@ Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
    transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { data.red, data.green, data.blue, data.alpha };
-   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });
+   mActiveCommandBuffer.clearColorImage(surface->data->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->data->subresRange });
 }
 
 void
@@ -149,7 +149,7 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
    clearDepthStencil.depth = db_depth_clear.DEPTH_CLEAR();
    clearDepthStencil.stencil = db_stencil_clear.CLEAR();
    mActiveCommandBuffer.clearDepthStencilImage(
-      surface->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surface->subresRange });
+      surface->data->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surface->data->subresRange });
 }
 
 void
@@ -167,44 +167,44 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    decaf_check(data.dstDim == data.srcDim);
 
    // Fetch the source surface
-   SurfaceDesc sourceDesc;
-   sourceDesc.baseAddress = data.srcImage;
-   sourceDesc.pitch = data.srcPitch;
-   sourceDesc.width = data.srcWidth;
-   sourceDesc.height = data.srcHeight;
-   sourceDesc.depth = data.srcDepth;
-   sourceDesc.samples = data.srcSamples;
-   sourceDesc.dim = data.srcDim;
-   sourceDesc.format = data.srcFormat;
-   sourceDesc.numFormat = data.srcNumFormat;
-   sourceDesc.formatComp = data.srcFormatComp;
-   sourceDesc.degamma = data.srcDegamma;
-   sourceDesc.isDepthBuffer = false;
-   sourceDesc.tileMode = data.srcTileMode;
-   sourceDesc.swizzle = data.srcImage.getAddress() & 0xFFF;
-   auto sourceSurface = getSurface(sourceDesc, false);
+   SurfaceDataDesc sourceDataDesc;
+   sourceDataDesc.baseAddress = static_cast<uint32_t>(data.srcImage);
+   sourceDataDesc.pitch = data.srcPitch;
+   sourceDataDesc.width = data.srcWidth;
+   sourceDataDesc.height = data.srcHeight;
+   sourceDataDesc.depth = data.srcDepth;
+   sourceDataDesc.samples = data.srcSamples;
+   sourceDataDesc.dim = data.srcDim;
+   sourceDataDesc.format = latte::getSurfaceFormat(
+      data.srcFormat,
+      data.srcNumFormat,
+      data.srcFormatComp,
+      data.srcForceDegamma);
+   sourceDataDesc.tileType = data.srcTileType;
+   sourceDataDesc.tileMode = data.srcTileMode;
+   auto sourceSurfaceData = getSurfaceData(sourceDataDesc);
 
    // Fetch the destination surface
-   SurfaceDesc destDesc;
-   destDesc.baseAddress = data.dstImage;
-   destDesc.pitch = data.dstPitch;
-   destDesc.width = data.dstWidth;
-   destDesc.height = data.dstHeight;
-   destDesc.depth = data.dstDepth;
-   destDesc.samples = data.dstSamples;
-   destDesc.dim = data.dstDim;
-   destDesc.format = data.dstFormat;
-   destDesc.numFormat = data.dstNumFormat;
-   destDesc.formatComp = data.dstFormatComp;
-   destDesc.degamma = data.dstDegamma;
-   destDesc.isDepthBuffer = false;
-   destDesc.tileMode = data.dstTileMode;
-   destDesc.swizzle = data.dstImage.getAddress() & 0xFFF;
-   auto destSurface = getSurface(destDesc, true);
+   SurfaceDataDesc destDataDesc;
+   destDataDesc.baseAddress = static_cast<uint32_t>(data.dstImage);
+   destDataDesc.pitch = data.dstPitch;
+   destDataDesc.width = data.dstWidth;
+   destDataDesc.height = data.dstHeight;
+   destDataDesc.depth = data.dstDepth;
+   destDataDesc.samples = data.dstSamples;
+   destDataDesc.dim = data.dstDim;
+   destDataDesc.format = latte::getSurfaceFormat(
+      data.dstFormat,
+      data.dstNumFormat,
+      data.dstFormatComp,
+      data.dstForceDegamma);
+   destDataDesc.tileType = data.dstTileType;
+   destDataDesc.tileMode = data.dstTileMode;
+   auto destSurfaceData = getSurfaceData(destDataDesc);
 
    // Transition the surfaces to the appropriate layouts
-   transitionSurface(sourceSurface, vk::ImageLayout::eTransferSrcOptimal);
-   transitionSurface(destSurface, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurfaceData(sourceSurfaceData, vk::ImageLayout::eTransferSrcOptimal);
+   transitionSurfaceData(destSurfaceData, vk::ImageLayout::eTransferDstOptimal);
 
    // Calculate the bounds of the copy
    auto copyWidth = data.srcWidth;
@@ -222,9 +222,9 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
 
    mActiveCommandBuffer.blitImage(
-      sourceSurface->image,
+      sourceSurfaceData->image,
       vk::ImageLayout::eTransferSrcOptimal,
-      destSurface->image,
+      destSurfaceData->image,
       vk::ImageLayout::eTransferDstOptimal,
       { blitRegion },
       vk::Filter::eNearest);

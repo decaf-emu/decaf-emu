@@ -122,11 +122,12 @@ Driver::checkCurrentRenderPass()
          continue;
       }
 
-      auto dataFormat = latte::getColorBufferDataFormat(colorTarget.format, colorTarget.numberType);
-      auto vulkanFormat = getSurfaceFormat(dataFormat.format, dataFormat.numFormat, dataFormat.formatComp, dataFormat.degamma, false);
+      auto surfaceFormat = latte::getColorBufferSurfaceFormat(colorTarget.format, colorTarget.numberType);
+      auto hostFormat = getVkSurfaceFormat(surfaceFormat, latte::SQ_TILE_TYPE::DEFAULT);
 
       vk::AttachmentDescription colorAttachmentDesc;
-      colorAttachmentDesc.format = vulkanFormat;
+      colorAttachmentDesc.flags = vk::AttachmentDescriptionFlagBits::eMayAlias;
+      colorAttachmentDesc.format = hostFormat;
       colorAttachmentDesc.samples = vk::SampleCountFlagBits::e1;
       colorAttachmentDesc.loadOp = vk::AttachmentLoadOp::eLoad;
       colorAttachmentDesc.storeOp = vk::AttachmentStoreOp::eStore;
@@ -153,11 +154,11 @@ Driver::checkCurrentRenderPass()
          continue;
       }
 
-      auto dataFormat = latte::getDepthBufferDataFormat(depthTarget.format);
-      auto vulkanFormat = getSurfaceFormat(dataFormat.format, dataFormat.numFormat, dataFormat.formatComp, dataFormat.degamma, true);
+      auto surfaceFormat = latte::getDepthBufferSurfaceFormat(depthTarget.format);
+      auto hostFormat = getVkSurfaceFormat(surfaceFormat, latte::SQ_TILE_TYPE::DEPTH);
 
       vk::AttachmentDescription depthAttachmentDesc;
-      depthAttachmentDesc.format = vulkanFormat;
+      depthAttachmentDesc.format = hostFormat;
       depthAttachmentDesc.samples = vk::SampleCountFlagBits::e1;
       depthAttachmentDesc.loadOp = vk::AttachmentLoadOp::eLoad;
       depthAttachmentDesc.storeOp = vk::AttachmentStoreOp::eStore;

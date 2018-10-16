@@ -461,6 +461,11 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
       return;
    }
 
+   auto dstTileType = latte::SQ_TILE_TYPE::DEFAULT;
+   if (dst->use & GX2SurfaceUse::DepthBuffer) {
+      dstTileType = latte::SQ_TILE_TYPE::DEPTH;
+   }
+
    auto dstDim = static_cast<latte::SQ_TEX_DIM>(dst->dim.value());
    auto dstFormat = static_cast<latte::SQ_DATA_FORMAT>(dst->format & 0x3f);
    auto dstTileMode = static_cast<latte::SQ_TILE_MODE>(dst->tileMode.value());
@@ -499,6 +504,11 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
       dstSamples = 4;
    } else if (dst->aa == GX2AAMode::Mode8X) {
       dstSamples = 8;
+   }
+
+   auto srcTileType = latte::SQ_TILE_TYPE::DEFAULT;
+   if (src->use & GX2SurfaceUse::DepthBuffer) {
+      srcTileType = latte::SQ_TILE_TYPE::DEPTH;
    }
 
    auto srcDim = static_cast<latte::SQ_TEX_DIM>(src->dim.value());
@@ -556,6 +566,7 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
       dstNumFormat,
       dstFormatComp,
       dstForceDegamma ? 1u : 0u,
+      dstTileType,
       dstTileMode,
       OSEffectiveToPhysical(virt_cast<virt_addr>(src->image)),
       OSEffectiveToPhysical(virt_cast<virt_addr>(src->mipmaps)),
@@ -571,6 +582,7 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
       srcNumFormat,
       srcFormatComp,
       srcForceDegamma ? 1u : 0u,
+      srcTileType,
       srcTileMode
    });
 }
