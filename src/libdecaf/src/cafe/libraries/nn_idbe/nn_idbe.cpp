@@ -1,7 +1,7 @@
 #include "nn_idbe.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::idbe
+namespace cafe::nn_idbe
 {
 
 static int32_t
@@ -18,4 +18,4 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 }
 
-} // namespace cafe::nn::idbe
+} // namespace cafe::nn_idbe

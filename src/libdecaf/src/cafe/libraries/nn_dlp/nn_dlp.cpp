@@ -1,7 +1,7 @@
 #include "nn_dlp.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::dlp
+namespace cafe::nn_dlp
 {
 
 static int32_t
@@ -18,4 +18,4 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 }
 
-} // namespace cafe::nn::dlp
+} // namespace cafe::nn_dlp

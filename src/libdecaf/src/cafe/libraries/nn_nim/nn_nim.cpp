@@ -1,7 +1,7 @@
 #include "nn_nim.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::nim
+namespace cafe::nn_nim
 {
 
 static int32_t
@@ -18,4 +18,4 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 }
 
-} // namespace cafe::nn::nim
+} // namespace cafe::nn_nim

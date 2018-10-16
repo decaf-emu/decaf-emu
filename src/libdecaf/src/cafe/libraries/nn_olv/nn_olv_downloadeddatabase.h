@@ -1,12 +1,11 @@
 #pragma once
-#include "nn_olv_result.h"
-
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
-#include "cafe/libraries/nn_ffl.h"
+#include "nn/nn_result.h"
+#include "nn/ffl/nn_ffl_miidata.h"
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class DownloadedDataBase
@@ -32,16 +31,16 @@ public:
    DownloadedDataBase();
    ~DownloadedDataBase();
 
-   Result
+   nn::Result
    DownloadExternalBinaryData(virt_ptr<void> dataBuffer,
                               virt_ptr<uint32_t> outDataSize,
                               uint32_t dataBufferSize) const;
-   Result
+   nn::Result
    DownloadExternalImageData(virt_ptr<void> dataBuffer,
                              virt_ptr<uint32_t> outDataSize,
                              uint32_t dataBufferSize) const;
 
-   Result
+   nn::Result
    GetAppData(virt_ptr<uint32_t> dataBuffer,
               virt_ptr<uint32_t> outSize,
               uint32_t dataBufferSize) const;
@@ -49,12 +48,12 @@ public:
    uint32_t
    GetAppDataSize() const;
 
-   Result
+   nn::Result
    GetBodyMemo(virt_ptr<uint8_t> memoBuffer,
                virt_ptr<uint32_t> outSize,
                uint32_t memoBufferSize) const;
 
-   Result
+   nn::Result
    GetBodyText(virt_ptr<char16_t> textBuffer,
                uint32_t textBufferSize) const;
 
@@ -76,10 +75,10 @@ public:
    uint8_t
    GetLanguageId() const;
 
-   Result
-   GetMiiData(virt_ptr<FFLStoreData> outData) const;
+   nn::Result
+   GetMiiData(virt_ptr<nn::ffl::FFLStoreData> outData) const;
 
-   virt_ptr<FFLStoreData>
+   virt_ptr<nn::ffl::FFLStoreData>
    GetMiiData() const;
 
    virt_ptr<const char16_t>
@@ -130,7 +129,7 @@ protected:
    be2_array<char, 256> mExternalImageUrl;
    be2_val<uint32_t> mExternalImageDataSize;
    be2_array<char, 256> mExternalUrl;
-   be2_struct<FFLStoreData> mMiiData;
+   be2_struct<nn::ffl::FFLStoreData> mMiiData;
    be2_array<char16_t, 128> mMiiNickname; // Actual size unknown
    UNKNOWN(0xC000 - 0xABE0);
    be2_virt_ptr<hle::VirtualTable> mVirtualTable;
@@ -166,4 +165,4 @@ private:
 };
 CHECK_SIZE(DownloadedDataBase, 0xC008);
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

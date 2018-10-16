@@ -5,7 +5,7 @@
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/cafe_stackobject.h"
 
-namespace cafe::nn::save
+namespace cafe::nn_save
 {
 
 SaveStatus
@@ -376,4 +376,4 @@ Library::registerCmdSymbols()
    RegisterFunctionExport(SAVERename);
 }
 
-} // namespace cafe::nn::save
+} // namespace cafe::nn_save

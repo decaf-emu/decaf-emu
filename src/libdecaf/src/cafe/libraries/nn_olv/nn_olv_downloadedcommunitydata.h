@@ -1,6 +1,7 @@
 #pragma once
-#include "nn_olv_result.h"
-#include "cafe/libraries/nn_ffl.h"
+#include "nn/nn_result.h"
+#include "nn/ffl/nn_ffl_miidata.h"
+
 #include <libcpu/be2_struct.h>
 
 /*
@@ -9,7 +10,7 @@ Unimplemented functions:
    GetCommunityCode__Q3_2nn3olv23DownloadedCommunityDataCFPcUi
 */
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class DownloadedCommunityData
@@ -49,7 +50,7 @@ public:
                uint32_t bufferSize);
 
    nn::Result
-   GetOwnerMiiData(virt_ptr<FFLStoreData> data);
+   GetOwnerMiiData(virt_ptr<nn::ffl::FFLStoreData> data);
 
    virt_ptr<char16_t>
    GetOwnerMiiNickname();
@@ -99,4 +100,4 @@ private:
 };
 CHECK_SIZE(DownloadedCommunityData, 0x12000);
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

@@ -1,7 +1,7 @@
 #include "nn_aoc.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::aoc
+namespace cafe::nn_aoc
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerLibSymbols();
 }
 
-} // namespace cafe::nn::aoc
+} // namespace cafe::nn_aoc

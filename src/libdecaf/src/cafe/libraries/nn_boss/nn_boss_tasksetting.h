@@ -1,12 +1,12 @@
 #pragma once
 #include "nn_boss_titleid.h"
 
-#include "cafe/libraries/nn_result.h"
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 class TaskSetting
@@ -68,4 +68,4 @@ protected:
 };
 CHECK_SIZE(TaskSetting, 0x1004);
 
-}  // namespace namespace cafe::nn::boss
+}  // namespace namespace cafe::nn_boss

@@ -3,25 +3,25 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::erreula
+namespace cafe::nn_erreula
 {
 
 void
-ErrEulaAppearError(virt_ptr<nn::erreula::AppearArg> args)
+ErrEulaAppearError(virt_ptr<AppearArg> args)
 {
    decaf_warn_stub();
 }
 
 void
-ErrEulaCalc(virt_ptr<nn::erreula::ControllerInfo> info)
+ErrEulaCalc(virt_ptr<ControllerInfo> info)
 {
    decaf_warn_stub();
 }
 
 BOOL
 ErrEulaCreate(virt_ptr<uint8_t> workMemory,
-              nn::erreula::RegionType region,
-              nn::erreula::LangType language,
+              RegionType region,
+              LangType language,
               virt_ptr<coreinit::FSClient> fsClient)
 {
    decaf_warn_stub();
@@ -81,13 +81,13 @@ ErrEulaIsDecideSelectRightButtonError()
 }
 
 void
-ErrEulaSetControllerRemo(nn::erreula::ControllerType type)
+ErrEulaSetControllerRemo(ControllerType type)
 {
    decaf_warn_stub();
 }
 
 void
-ErrEulaAppearHomeNixSign(virt_ptr<nn::erreula::HomeNixSignArg> arg)
+ErrEulaAppearHomeNixSign(virt_ptr<HomeNixSignArg> arg)
 {
    decaf_warn_stub();
 }
@@ -106,7 +106,7 @@ ErrEulaDisappearHomeNixSign()
 }
 
 void
-ErrEulaChangeLang(nn::erreula::LangType language)
+ErrEulaChangeLang(LangType language)
 {
    decaf_warn_stub();
 }
@@ -118,11 +118,11 @@ ErrEulaIsSelectCursorActive()
    return FALSE;
 }
 
-nn::erreula::ResultType
+ResultType
 ErrEulaGetResultType()
 {
    decaf_warn_stub();
-   return static_cast<nn::erreula::ResultType>(1);
+   return static_cast<ResultType>(1);
 }
 
 uint32_t
@@ -209,4 +209,4 @@ void Library::registerErrorViewerSymbols()
                               ErrEulaJump);
 }
 
-} // namespace cafe::nn::erreula
+} // namespace cafe::nn_erreula

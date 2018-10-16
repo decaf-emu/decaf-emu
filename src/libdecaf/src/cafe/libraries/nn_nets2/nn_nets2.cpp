@@ -1,7 +1,7 @@
 #include "nn_nets2.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::nets2
+namespace cafe::nn_nets2
 {
 
 static int32_t
@@ -18,4 +18,4 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 }
 
-} // namespace cafe::nn::nets2
+} // namespace cafe::nn_nets2

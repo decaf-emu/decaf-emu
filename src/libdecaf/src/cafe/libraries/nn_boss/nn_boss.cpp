@@ -1,7 +1,7 @@
 #include "nn_boss.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 static int32_t
@@ -28,4 +28,4 @@ Library::registerSymbols()
    registerTitleIdSymbols();
 }
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

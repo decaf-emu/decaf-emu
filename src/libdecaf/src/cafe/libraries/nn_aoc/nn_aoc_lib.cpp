@@ -3,7 +3,7 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::aoc
+namespace cafe::nn_aoc
 {
 
 AOCError
@@ -55,4 +55,4 @@ Library::registerLibSymbols()
                               AOC_ListTitle);
 }
 
-} // namespace cafe::nn::aoc
+} // namespace cafe::nn_aoc

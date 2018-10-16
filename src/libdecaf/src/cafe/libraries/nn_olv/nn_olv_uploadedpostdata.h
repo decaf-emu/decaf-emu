@@ -1,9 +1,12 @@
 #pragma once
 #include "nn_olv_uploadeddatabase.h"
+
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "nn/nn_result.h"
+
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class UploadedPostData : public UploadedDataBase
@@ -47,4 +50,4 @@ private:
 };
 CHECK_SIZE(UploadedPostData, 0xC208);
 
-} // namespace cafe::nn::olv
+} // namespace cafe::nn_olv

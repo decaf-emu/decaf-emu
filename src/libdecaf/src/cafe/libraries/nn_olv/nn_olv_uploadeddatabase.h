@@ -1,10 +1,10 @@
 #pragma once
-#include "nn_olv_result.h"
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class UploadedDataBase
@@ -93,4 +93,4 @@ private:
 };
 CHECK_SIZE(UploadedDataBase, 0xC008);
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

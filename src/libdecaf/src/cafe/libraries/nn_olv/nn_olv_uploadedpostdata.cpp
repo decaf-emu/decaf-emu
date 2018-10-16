@@ -1,8 +1,9 @@
 #include "nn_olv.h"
 #include "nn_olv_uploadedpostdata.h"
+
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 virt_ptr<hle::VirtualTable>
@@ -99,4 +100,4 @@ Library::registerUploadedPostDataSymbols()
       });
 }
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

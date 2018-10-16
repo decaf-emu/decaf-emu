@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::ndm
+namespace cafe::nn_ndm
 {
 
 class Library : public hle::Library
@@ -19,4 +19,4 @@ private:
    void registerNdmSymbols();
 };
 
-} // namespace cafe::nn::ndm
+} // namespace cafe::nn_ndm

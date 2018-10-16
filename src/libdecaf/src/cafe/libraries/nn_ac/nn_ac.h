@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::ac
+namespace cafe::nn_ac
 {
 
 class Library : public hle::Library
@@ -20,4 +20,4 @@ private:
    void registerLibFunctions();
 };
 
-} // namespace cafe::nn::ac
+} // namespace cafe::nn_ac

@@ -2,7 +2,7 @@
 #include "cafe/libraries/coreinit/coreinit_fs.h"
 #include "nn_save_path.h"
 
-namespace cafe::nn::save
+namespace cafe::nn_save
 {
 
 using coreinit::FSAsyncData;
@@ -168,4 +168,4 @@ SAVERenameAsync(virt_ptr<FSClient> client,
                 FSErrorFlag errorMask,
                 virt_ptr<FSAsyncData> asyncData);
 
-} // namespace cafe::nn::save
+} // namespace cafe::nn_save

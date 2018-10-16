@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::dlp
+namespace cafe::nn_dlp
 {
 
 class Library : public hle::Library
@@ -18,4 +18,4 @@ protected:
 private:
 };
 
-} // namespace cafe::nn::dlp
+} // namespace cafe::nn_dlp

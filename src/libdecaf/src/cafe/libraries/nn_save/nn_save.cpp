@@ -1,7 +1,7 @@
 #include "nn_save.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::save
+namespace cafe::nn_save
 {
 
 static int32_t
@@ -21,4 +21,4 @@ Library::registerSymbols()
    registerPathSymbols();
 }
 
-} // namespace cafe::nn::save
+} // namespace cafe::nn_save

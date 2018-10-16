@@ -3,7 +3,7 @@
 #include "cafe/libraries/coreinit/coreinit_osreport.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 static int32_t
@@ -37,4 +37,4 @@ Library::registerSymbols()
    registerUploadedPostDataSymbols();
 }
 
-} // namespace cafe::nn::olv
+} // namespace cafe::nn_olv

@@ -1,7 +1,7 @@
 #pragma once
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class DownloadedTopicData
@@ -28,4 +28,4 @@ private:
 };
 CHECK_SIZE(DownloadedTopicData, 0x1000);
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

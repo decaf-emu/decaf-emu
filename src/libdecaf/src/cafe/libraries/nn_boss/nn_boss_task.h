@@ -2,8 +2,8 @@
 #include "nn_boss_taskid.h"
 #include "nn_boss_titleid.h"
 
-#include "cafe/libraries/nn_result.h"
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
@@ -45,7 +45,7 @@ nn::boss::Task::Wait(nn::boss::TaskWaitState)
 nn::boss::Task::Wait(unsigned int, nn::boss::TaskWaitState)
 */
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 class Task
@@ -107,4 +107,4 @@ protected:
 };
 CHECK_SIZE(Task, 0x20);
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

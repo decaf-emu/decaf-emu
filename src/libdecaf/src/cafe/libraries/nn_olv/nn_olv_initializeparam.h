@@ -1,8 +1,9 @@
 #pragma once
-#include "nn_olv_result.h"
+#include "nn/nn_result.h"
+
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class InitializeParam
@@ -10,17 +11,17 @@ class InitializeParam
 public:
    InitializeParam();
 
-   Result
+   nn::Result
    SetFlags(uint32_t flags);
 
-   Result
+   nn::Result
    SetWork(virt_ptr<uint8_t> workBuffer,
            uint32_t workBufferSize);
 
-   Result
+   nn::Result
    SetReportTypes(uint32_t types);
 
-   Result
+   nn::Result
    SetSysArgs(virt_ptr<uint8_t> sysArgs,
               uint32_t sysArgsSize);
 
@@ -45,4 +46,4 @@ private:
 };
 CHECK_SIZE(InitializeParam, 0x40);
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

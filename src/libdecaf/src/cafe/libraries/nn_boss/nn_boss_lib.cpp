@@ -1,10 +1,12 @@
 #include "nn_boss.h"
 #include "nn_boss_lib.h"
-#include "nn_boss_result.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "nn/boss/nn_boss_result.h"
 
-namespace cafe::nn::boss
+using namespace nn::boss;
+
+namespace cafe::nn_boss
 {
 
 struct StaticLibData
@@ -20,7 +22,7 @@ Initialize()
 {
    decaf_warn_stub();
    sLibData->initialiseCount++;
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -31,7 +33,7 @@ Finalize()
       sLibData->initialiseCount--;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 bool
@@ -63,4 +65,4 @@ Library::registerLibSymbols()
    RegisterDataInternal(sLibData);
 }
 
-}  // namespace namespace cafe::nn::boss
+}  // namespace namespace cafe::nn_boss

@@ -1,7 +1,7 @@
 #include "nn_cmpt.h"
 #include "nn_cmpt_lib.h"
 
-namespace cafe::nn::cmpt
+namespace cafe::nn_cmpt
 {
 
 CMPTError
@@ -17,4 +17,4 @@ Library::registerLibSymbols()
    RegisterFunctionExport(CMPTGetDataSize);
 }
 
-} // namespace cafe::nn::cmpt
+} // namespace cafe::nn_cmpt

@@ -1,7 +1,7 @@
 #pragma once
-#include "cafe/libraries/nn_result.h"
+#include "nn/nn_result.h"
 
-namespace cafe::nn::ndm
+namespace cafe::nn_ndm
 {
 
 nn::Result
@@ -16,4 +16,4 @@ IsInitialized();
 nn::Result
 EnableResumeDaemons();
 
-} // namespace cafe::nn::ndm
+} // namespace cafe::nn_ndm

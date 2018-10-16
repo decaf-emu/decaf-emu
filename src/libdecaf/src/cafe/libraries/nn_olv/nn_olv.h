@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 class Library : public hle::Library
@@ -26,4 +26,4 @@ private:
    void registerUploadedPostDataSymbols();
 };
 
-} // namespace cafe::nn::olv
+} // namespace cafe::nn_olv

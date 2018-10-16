@@ -1,11 +1,13 @@
 #include "nn_boss.h"
-#include "nn_boss_result.h"
 #include "nn_boss_task.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/libraries/nn_act/nn_act_lib.h"
+#include "nn/boss/nn_boss_result.h"
 
-namespace cafe::nn::boss
+using namespace nn::boss;
+
+namespace cafe::nn_boss
 {
 
 virt_ptr<hle::VirtualTable> Task::VirtualTable = nullptr;
@@ -55,12 +57,12 @@ Task::Initialize(virt_ptr<const char> taskId,
                  uint32_t accountId)
 {
    if (!taskId || strnlen(taskId.get(), 8) == 8) {
-      return InvalidParameter;
+      return ResultInvalidParameter;
    }
 
    mAccountId = accountId;
    mTaskId = taskId;
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -69,10 +71,10 @@ Task::Initialize(uint8_t slot,
 {
    if (!slot) {
       return Initialize(taskId, 0u);
-   } else if (auto accountId = nn::act::GetPersistentIdEx(slot)) {
+   } else if (auto accountId = nn_act::GetPersistentIdEx(slot)) {
       return Initialize(taskId, accountId);
    } else {
-      return InvalidParameter;
+      return ResultInvalidParameter;
    }
 }
 
@@ -147,4 +149,4 @@ Library::registerTaskSymbols()
       });
 }
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

@@ -1,12 +1,15 @@
 #include "nn_act.h"
-#include "nn_act_result.h"
 #include "nn_act_lib.h"
 
 #include "cafe/cafe_stackobject.h"
+#include "nn/act/nn_act_result.h"
 
 #include <algorithm>
 
-namespace cafe::nn::act
+using namespace nn::act;
+using nn::ffl::FFLStoreData;
+
+namespace cafe::nn_act
 {
 
 static const uint8_t
@@ -48,13 +51,13 @@ nn::Result
 Initialize()
 {
    // TODO: This whole library is supposed to just be IOS calls to /dev/act
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
 Finalize()
 {
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 uint8_t
@@ -76,7 +79,7 @@ IsSlotOccupied(uint8_t slot)
 nn::Result
 Cancel()
 {
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 uint8_t
@@ -101,7 +104,7 @@ GetUuidEx(virt_ptr<UUID> uuid,
       uuid->at(0) = 's';
       uuid->at(1) = 'y';
       uuid->at(2) = 's';
-      return nn::Result::Success;
+      return nn::ResultSuccess;
    }
 
    // User account
@@ -110,10 +113,10 @@ GetUuidEx(virt_ptr<UUID> uuid,
       uuid->at(0) = 'u';
       uuid->at(1) = 's';
       uuid->at(2) = 'r';
-      return nn::Result::Success;
+      return nn::ResultSuccess;
    }
 
-   return AccountNotFound;
+   return ResultAccountNotFound;
 }
 
 nn::Result
@@ -127,11 +130,11 @@ GetAccountIdEx(virt_ptr<char> accountId,
                uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
    *accountId = '\0';
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 uint8_t
@@ -151,10 +154,10 @@ GetParentalControlSlotNoEx(virt_ptr<uint8_t> parentSlot,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *parentSlot = sUserAccount.slot;
    } else {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 uint32_t
@@ -192,10 +195,10 @@ GetPrincipalIdEx(virt_ptr<uint32_t> principalId,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *principalId = sUserAccount.principalId;
    } else {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 uint32_t
@@ -215,10 +218,10 @@ GetSimpleAddressIdEx(virt_ptr<uint32_t> simpleAddressId,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *simpleAddressId = sUserAccount.simpleAddressId;
    } else {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 uint64_t
@@ -239,10 +242,10 @@ GetTransferableIdEx(virt_ptr<uint64_t> transferableId,
    } else if (slot == CurrentUserSlot || slot == sUserAccount.slot) {
       *transferableId = sUserAccount.transferableId;
    } else {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
@@ -277,7 +280,7 @@ GetMiiEx(virt_ptr<FFLStoreData> data,
          uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
    // Set our Mii Data!
@@ -346,7 +349,7 @@ GetMiiEx(virt_ptr<FFLStoreData> data,
 
    data->checksum = calculateMiiCRC(virt_cast<uint8_t *>(data),
                                     sizeof(FFLStoreData) - 2);
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
@@ -360,13 +363,13 @@ GetMiiNameEx(virt_ptr<char16_t> name,
              uint8_t slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
-      return AccountNotFound;
+      return ResultAccountNotFound;
    }
 
    std::copy(MiiName.begin(), MiiName.end(), name.get());
    name[MiiName.size()] = char16_t { 0 };
 
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 bool
@@ -391,13 +394,13 @@ nn::Result
 GetDeviceHash(virt_ptr<uint8_t> data)
 {
    std::memcpy(data.get(), DeviceHash, 6);
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
 IsCommittedEx(uint8_t slot)
 {
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 void
@@ -463,4 +466,4 @@ Library::registerLibSymbols()
                               IsCommittedEx);
 }
 
-} // namespace cafe::nn::act
+} // namespace cafe::nn_act

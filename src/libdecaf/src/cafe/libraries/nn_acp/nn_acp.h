@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::acp
+namespace cafe::nn_acp
 {
 
 class Library : public hle::Library
@@ -20,4 +20,4 @@ private:
    void registerTitleSymbols();
 };
 
-} // namespace cafe::nn::acp
+} // namespace cafe::nn_acp

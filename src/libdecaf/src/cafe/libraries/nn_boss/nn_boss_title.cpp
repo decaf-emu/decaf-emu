@@ -1,11 +1,13 @@
 #include "nn_boss.h"
-#include "nn_boss_result.h"
 #include "nn_boss_title.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/libraries/nn_act/nn_act_lib.h"
+#include "nn/boss/nn_boss_result.h"
 
-namespace cafe::nn::boss
+using namespace nn::boss;
+
+namespace cafe::nn_boss
 {
 
 virt_ptr<hle::VirtualTable> Title::VirtualTable = nullptr;
@@ -35,13 +37,13 @@ Title::ChangeAccount(uint8_t slot)
 {
    if (!slot) {
       mAccountID = slot;
-   } else if (auto accountId = nn::act::GetPersistentIdEx(slot)) {
+   } else if (auto accountId = nn_act::GetPersistentIdEx(slot)) {
       mAccountID = accountId;
    } else {
-      return InvalidParameter;
+      return ResultInvalidParameter;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 void
@@ -64,4 +66,4 @@ Library::registerTitleSymbols()
       });
 }
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

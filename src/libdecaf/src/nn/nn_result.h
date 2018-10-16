@@ -1,12 +1,12 @@
 #pragma once
 #include <cstdint>
 
-namespace cafe::nn
+namespace nn
 {
 
 union Result
 {
-   enum Level : int32_t // nn::dbg::result::GetLevelString
+   enum Level : int32_t
    {
       LEVEL_SUCCESS  = 0,
       LEVEL_FATAL    = -1,
@@ -15,7 +15,7 @@ union Result
       LEVEL_END      = -7,
    };
 
-   enum Module : int32_t // nn::dbg::result::GetModuleString
+   enum Module : int32_t
    {
       MODULE_COMMON        = 0,
       MODULE_NN_IPC        = 1,
@@ -48,7 +48,7 @@ union Result
       MODULE_NN_TEST       = 125,
    };
 
-   enum Description : int32_t // nn::dbg::result::GetDescriptionString
+   enum Description : int32_t
    {
       DESCRIPTION_SUCCESS                 = 0,
       DESCRIPTION_TIMEOUT                 = -2,
@@ -75,8 +75,6 @@ union Result
       DESCRIPTION_TOO_LARGE               = -23,
       DESCRIPTION_INVALID_SELECTION       = -24,
    };
-
-   static const Result Success;
 
    constexpr Result() :
       code(0)
@@ -110,4 +108,6 @@ union Result
    uint32_t code;
 };
 
-} // namespace cafe::nn
+static constexpr Result ResultSuccess { 0 };
+
+} // namespace nn

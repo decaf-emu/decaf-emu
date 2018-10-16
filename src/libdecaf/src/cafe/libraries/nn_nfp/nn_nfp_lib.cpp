@@ -2,8 +2,11 @@
 #include "nn_nfp_lib.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "nn/nfp/nn_nfp_result.h"
 
-namespace cafe::nn::nfp
+using namespace nn::nfp;
+
+namespace cafe::nn_nfp
 {
 
 struct StaticLibData
@@ -19,7 +22,7 @@ Initialize()
 {
    decaf_warn_stub();
    sLibData->initialiseCount++;
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -29,7 +32,7 @@ Finalize()
    if (sLibData->initialiseCount > 0) {
       sLibData->initialiseCount--;
    }
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -37,7 +40,7 @@ GetAmiiboSettingsArgs(virt_ptr<AmiiboSettingsArgs> args)
 {
    decaf_warn_stub();
    std::memset(args.get(), 0, sizeof(AmiiboSettingsArgs));
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 State
@@ -51,28 +54,28 @@ nn::Result
 SetActivateEvent(uint32_t a1)
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
 SetDeactivateEvent(uint32_t a1)
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
 StartDetection()
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
 StopDetection()
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 void
@@ -98,4 +101,4 @@ Library::registerLibSymbols()
    RegisterDataInternal(sLibData);
 }
 
-}  // namespace cafe::nn::nfp
+}  // namespace cafe::nn_nfp

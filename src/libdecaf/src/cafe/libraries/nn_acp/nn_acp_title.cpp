@@ -2,8 +2,11 @@
 #include "nn_acp_title.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "nn/acp/nn_acp_result.h"
 
-namespace cafe::nn::acp
+using namespace nn::acp;
+
+namespace cafe::nn_acp
 {
 
 nn::Result
@@ -11,7 +14,7 @@ GetTitleMetaXml(uint64_t titleId,
                 virt_ptr<ACPMetaXml> data)
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 void
@@ -22,4 +25,4 @@ Library::registerTitleSymbols()
                               GetTitleMetaXml);
 }
 
-}  // namespace cafe::nn::acp
+}  // namespace cafe::nn_acp

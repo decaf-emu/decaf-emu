@@ -1,7 +1,7 @@
 #pragma once
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 class TitleID
@@ -44,4 +44,4 @@ protected:
 };
 CHECK_SIZE(TitleID, 8);
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

@@ -1,8 +1,8 @@
 #pragma once
 #include "nn_boss_tasksetting.h"
 
-#include "cafe/libraries/nn_result.h"
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
@@ -25,7 +25,7 @@ nn::boss::NetTaskSetting::SetInternalClientCert(signed char)
 nn::boss::NetTaskSetting::SetServiceToken(unsigned char const *)
 */
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 class NetTaskSetting : public TaskSetting
@@ -42,4 +42,4 @@ protected:
 };
 CHECK_SIZE(NetTaskSetting, 0x1004);
 
-}  // namespace cafe::nn::boss
+}  // namespace cafe::nn_boss

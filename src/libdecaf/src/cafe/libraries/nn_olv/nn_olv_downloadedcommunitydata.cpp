@@ -1,7 +1,12 @@
 #include "nn_olv.h"
 #include "nn_olv_downloadedcommunitydata.h"
 
-namespace cafe::nn::olv
+#include "nn/olv/nn_olv_result.h"
+
+using namespace nn::olv;
+using nn::ffl::FFLStoreData;
+
+namespace cafe::nn_olv
 {
 
 DownloadedCommunityData::DownloadedCommunityData() :
@@ -31,15 +36,15 @@ DownloadedCommunityData::GetAppData(virt_ptr<uint8_t> buffer,
                                     uint32_t bufferSize)
 {
    if (!TestFlags(HasAppData)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mAppDataLength);
@@ -49,7 +54,7 @@ DownloadedCommunityData::GetAppData(virt_ptr<uint8_t> buffer,
       *outDataSize = length;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 uint32_t
@@ -63,15 +68,15 @@ DownloadedCommunityData::GetDescriptionText(virt_ptr<char16_t> buffer,
                                             uint32_t bufferSize)
 {
    if (!TestFlags(HasDescriptionText)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mDescriptionTextLength);
@@ -83,7 +88,7 @@ DownloadedCommunityData::GetDescriptionText(virt_ptr<char16_t> buffer,
       buffer[length] = char16_t { 0 };
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -92,15 +97,15 @@ DownloadedCommunityData::GetIconData(virt_ptr<uint8_t> buffer,
                                      uint32_t bufferSize)
 {
    if (!TestFlags(HasIconData)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mIconDataLength);
@@ -110,24 +115,24 @@ DownloadedCommunityData::GetIconData(virt_ptr<uint8_t> buffer,
       *outIconSize = length;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
 DownloadedCommunityData::GetOwnerMiiData(virt_ptr<FFLStoreData> data)
 {
    if (!TestFlags(HasOwnerMiiData)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!data) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    std::memcpy(data.get(),
                virt_addrof(mOwnerMiiData).get(),
                sizeof(FFLStoreData));
-   return Success;
+   return ResultSuccess;
 }
 
 virt_ptr<char16_t>
@@ -151,15 +156,15 @@ DownloadedCommunityData::GetTitleText(virt_ptr<char16_t> buffer,
                                       uint32_t bufferSize)
 {
    if (!TestFlags(HasTitleText)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mTitleTextLength);
@@ -171,7 +176,7 @@ DownloadedCommunityData::GetTitleText(virt_ptr<char16_t> buffer,
       buffer[length] = char16_t { 0 };
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 bool
@@ -207,4 +212,4 @@ Library::registerDownloadedCommunityDataSymbols()
                               &DownloadedCommunityData::TestFlags);
 }
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

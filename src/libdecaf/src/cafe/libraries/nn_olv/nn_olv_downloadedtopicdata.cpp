@@ -2,7 +2,7 @@
 #include "nn_olv_downloadedtopicdata.h"
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 DownloadedTopicData::DownloadedTopicData()
@@ -38,4 +38,4 @@ Library::registerDownloadedTopicDataSymbols()
                               &DownloadedTopicData::GetUserCount);
 }
 
-}  // namespace namespace cafe::nn::olv
+}  // namespace namespace cafe::nn_olv

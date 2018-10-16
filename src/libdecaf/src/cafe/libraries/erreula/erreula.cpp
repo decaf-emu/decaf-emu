@@ -1,7 +1,7 @@
 #include "erreula.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::erreula
+namespace cafe::nn_erreula
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerErrorViewerSymbols();
 }
 
-} // namespace cafe::nn::erreula
+} // namespace cafe::nn_erreula

@@ -1,7 +1,7 @@
 #include "nn_ndm.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::ndm
+namespace cafe::nn_ndm
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerNdmSymbols();
 }
 
-} // namespace cafe::nn::ndm
+} // namespace cafe::nn_ndm

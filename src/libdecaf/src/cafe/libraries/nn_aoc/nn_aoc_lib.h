@@ -3,7 +3,7 @@
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::aoc
+namespace cafe::nn_aoc
 {
 
 #pragma pack(push, 1)
@@ -32,4 +32,4 @@ AOC_ListTitle(virt_ptr<uint32_t> outTitleCount,
               virt_ptr<void> workBuffer,
               uint32_t workBufferSize);
 
-} // namespace cafe::nn::aoc
+} // namespace cafe::nn_aoc

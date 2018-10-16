@@ -1,7 +1,7 @@
 #include "nn_act.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::act
+namespace cafe::nn_act
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerLibSymbols();
 }
 
-} // namespace cafe::nn::act
+} // namespace cafe::nn_act

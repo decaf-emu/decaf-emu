@@ -1,10 +1,11 @@
 #pragma once
 #include "nn_nfp_enum.h"
-#include "cafe/libraries/nn_result.h"
+
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::nfp
+namespace cafe::nn_nfp
 {
 
 struct AmiiboSettingsArgs
@@ -37,4 +38,4 @@ StartDetection();
 nn::Result
 StopDetection();
 
-}  // namespace cafe::nn::nfp
+}  // namespace cafe::nn_nfp

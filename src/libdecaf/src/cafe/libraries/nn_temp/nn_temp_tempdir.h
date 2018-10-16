@@ -5,7 +5,7 @@
 #include <libcpu/be2_struct.h>
 #include <string>
 
-namespace cafe::nn::temp
+namespace cafe::nn_temp
 {
 
 #pragma pack(push, 1)
@@ -49,4 +49,4 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
 TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id);
 
-} // namespace cafe::nn::temp
+} // namespace cafe::nn_temp

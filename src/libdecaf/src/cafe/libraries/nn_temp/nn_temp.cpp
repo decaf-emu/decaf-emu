@@ -1,7 +1,7 @@
 #include "nn_temp.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::temp
+namespace cafe::nn_temp
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerTempDirSymbols();
 }
 
-} // namespace cafe::nn::temp
+} // namespace cafe::nn_temp

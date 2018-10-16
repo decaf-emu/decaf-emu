@@ -2,15 +2,18 @@
 #include "nn_ac_lib.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "nn/ac/nn_ac_result.h"
 
-namespace cafe::nn::ac
+using namespace nn::ac;
+
+namespace cafe::nn_ac
 {
 
 nn::Result
 Initialize()
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 void
@@ -23,14 +26,14 @@ nn::Result
 Connect()
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
 ConnectAsync()
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -38,7 +41,7 @@ IsApplicationConnected(virt_ptr<bool> connected)
 {
    decaf_warn_stub();
    *connected = false;
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -46,7 +49,7 @@ GetConnectStatus(virt_ptr<Status> outStatus)
 {
    decaf_warn_stub();
    *outStatus = Status::Error;
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -54,7 +57,7 @@ GetLastErrorCode(virt_ptr<int32_t> outError)
 {
    decaf_warn_stub();
    *outError = -1;
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -62,7 +65,7 @@ GetStatus(virt_ptr<Status> outStatus)
 {
    decaf_warn_stub();
    *outStatus = Status::Error;
-   return nn::Result::Success;
+   return ResultSuccess;
 }
 
 void
@@ -87,4 +90,4 @@ Library::registerLibFunctions()
 }
 
 
-}  // namespace cafe::nn::ac
+}  // namespace cafe::nn_ac

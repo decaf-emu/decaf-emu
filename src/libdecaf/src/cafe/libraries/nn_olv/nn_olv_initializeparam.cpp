@@ -1,8 +1,11 @@
 #include "nn_olv.h"
 #include "nn_olv_initializeparam.h"
-#include "nn_olv_result.h"
 
-namespace cafe::nn::olv
+#include "nn/olv/nn_olv_result.h"
+
+using namespace nn::olv;
+
+namespace cafe::nn_olv
 {
 
 constexpr auto MinWorkBufferSize = 0x10000u;
@@ -17,52 +20,52 @@ InitializeParam::InitializeParam()
    mSysArgsSize = 0u;
 }
 
-Result
+nn::Result
 InitializeParam::SetFlags(uint32_t flags)
 {
    mFlags = flags;
-   return Success;
+   return ResultSuccess;
 }
 
-Result
+nn::Result
 InitializeParam::SetWork(virt_ptr<uint8_t> workBuffer,
                          uint32_t workBufferSize)
 {
    if (!workBuffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (workBufferSize < MinWorkBufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    mWorkBuffer = workBuffer;
    mWorkBufferSize = workBufferSize;
-   return Success;
+   return ResultSuccess;
 }
 
-Result
+nn::Result
 InitializeParam::SetReportTypes(uint32_t types)
 {
    mReportTypes = types;
-   return Success;
+   return ResultSuccess;
 }
 
-Result
+nn::Result
 InitializeParam::SetSysArgs(virt_ptr<uint8_t> sysArgs,
                             uint32_t sysArgsSize)
 {
    if (!sysArgs) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!sysArgsSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    mSysArgs = sysArgs;
    mSysArgsSize = sysArgsSize;
-   return Success;
+   return ResultSuccess;
 }
 
 void
@@ -80,4 +83,4 @@ Library::registerInitializeParamSymbols()
                               &InitializeParam::SetSysArgs);
 }
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

@@ -1,10 +1,14 @@
 #include "nn_olv.h"
 #include "nn_olv_downloadeddatabase.h"
-#include "nn_olv_result.h"
+
+#include "nn/olv/nn_olv_result.h"
 
 #include <common/strutils.h>
 
-namespace cafe::nn::olv
+using namespace nn::olv;
+using nn::ffl::FFLStoreData;
+
+namespace cafe::nn_olv
 {
 
 constexpr auto MinMemoBufferSize = 0x2582Cu;
@@ -25,37 +29,37 @@ DownloadedDataBase::~DownloadedDataBase()
 {
 }
 
-Result
+nn::Result
 DownloadedDataBase::DownloadExternalBinaryData(virt_ptr<void> dataBuffer,
                                                virt_ptr<uint32_t> outDataSize,
                                                uint32_t dataBufferSize) const
 {
-   return NotOnline;
+   return ResultNotOnline;
 }
 
-Result
+nn::Result
 DownloadedDataBase::DownloadExternalImageData(virt_ptr<void> dataBuffer,
                                               virt_ptr<uint32_t> outDataSize,
                                               uint32_t dataBufferSize) const
 {
-   return NotOnline;
+   return ResultNotOnline;
 }
 
-Result
+nn::Result
 DownloadedDataBase::GetAppData(virt_ptr<uint32_t> dataBuffer,
                                virt_ptr<uint32_t> outSize,
                                uint32_t dataBufferSize) const
 {
    if (!dataBuffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!dataBufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    if (!TestFlags(HasAppData)) {
-      return NoData;
+      return ResultNoData;
    }
 
    auto copySize = std::min<uint32_t>(mAppDataSize, dataBufferSize);
@@ -65,7 +69,7 @@ DownloadedDataBase::GetAppData(virt_ptr<uint32_t> dataBuffer,
       *outSize = copySize;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 uint32_t
@@ -78,48 +82,48 @@ DownloadedDataBase::GetAppDataSize() const
    return 0;
 }
 
-Result
+nn::Result
 DownloadedDataBase::GetBodyMemo(virt_ptr<uint8_t> memoBuffer,
                                 virt_ptr<uint32_t> outSize,
                                 uint32_t memoBufferSize) const
 {
    if (!memoBuffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (memoBufferSize < MinMemoBufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    if (!TestFlags(HasBodyMemo)) {
-      return NoData;
+      return ResultNoData;
    }
 
    // TODO: TGA uncompress mBodyMemo
-   return NoData;
+   return ResultNoData;
 }
 
-Result
+nn::Result
 DownloadedDataBase::GetBodyText(virt_ptr<char16_t> textBuffer,
                                 uint32_t textBufferSize) const
 {
    if (!textBuffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!textBufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    if (!TestFlags(HasBodyText)) {
-      return NoData;
+      return ResultNoData;
    }
 
    char16_copy(textBuffer.getRawPointer(),
                textBufferSize,
                virt_addrof(mBodyText).getRawPointer(),
                mBodyTextLength);
-   return Success;
+   return ResultSuccess;
 }
 
 uint8_t
@@ -170,21 +174,21 @@ DownloadedDataBase::GetLanguageId() const
    return mLanguageId;
 }
 
-Result
+nn::Result
 DownloadedDataBase::GetMiiData(virt_ptr<FFLStoreData> outData) const
 {
    if (!TestFlags(HasMiiData)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!outData) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    std::memcpy(outData.get(),
                virt_addrof(mMiiData).get(),
                sizeof(FFLStoreData));
-   return Success;
+   return ResultSuccess;
 }
 
 virt_ptr<FFLStoreData>
@@ -281,7 +285,7 @@ Library::registerDownloadedDataBaseSymbols()
    RegisterFunctionExportName("GetLanguageId__Q3_2nn3olv18DownloadedDataBaseCFv",
                               &DownloadedDataBase::GetLanguageId);
    RegisterFunctionExportName("GetMiiData__Q3_2nn3olv18DownloadedDataBaseCFP12FFLStoreData",
-                              static_cast<Result (DownloadedDataBase::*)(virt_ptr<FFLStoreData>) const>(&DownloadedDataBase::GetMiiData));
+                              static_cast<nn::Result (DownloadedDataBase::*)(virt_ptr<FFLStoreData>) const>(&DownloadedDataBase::GetMiiData));
    RegisterFunctionExportName("GetMiiData__Q3_2nn3olv18DownloadedDataBaseCFv",
                               static_cast<virt_ptr<FFLStoreData> (DownloadedDataBase::*)() const>(&DownloadedDataBase::GetMiiData));
    RegisterFunctionExportName("GetMiiNickname__Q3_2nn3olv18DownloadedDataBaseCFv",
@@ -308,4 +312,4 @@ Library::registerDownloadedDataBaseSymbols()
       });
 }
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

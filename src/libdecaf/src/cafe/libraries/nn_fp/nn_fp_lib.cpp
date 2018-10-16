@@ -3,7 +3,7 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::fp
+namespace cafe::nn_fp
 {
 
 struct StaticLibData
@@ -19,7 +19,7 @@ Initialize()
 {
    decaf_warn_stub();
    sLibData->initialiseCount++;
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
@@ -29,7 +29,7 @@ Finalize()
    if (sLibData->initialiseCount > 0) {
       sLibData->initialiseCount--;
    }
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 bool
@@ -58,7 +58,7 @@ GetFriendList(virt_ptr<void> list,
       *outLength = 0u;
    }
 
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 void
@@ -78,4 +78,4 @@ Library::registerLibSymbols()
    RegisterDataInternal(sLibData);
 }
 
-} // namespace cafe::nn::fp
+} // namespace cafe::nn_fp

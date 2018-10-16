@@ -44,7 +44,7 @@ void tempLogError(const char *file, unsigned line, const char *msg,
       fmt::format("TEMP: [ERROR]:{}({}):{}", file, line, str.c_str()));
 }
 
-namespace cafe::nn::temp
+namespace cafe::nn_temp
 {
 
 struct TempDirData
@@ -728,4 +728,4 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPShutdownTempDir);
 }
 
-} // namespace cafe::nn::temp
+} // namespace cafe::nn_temp

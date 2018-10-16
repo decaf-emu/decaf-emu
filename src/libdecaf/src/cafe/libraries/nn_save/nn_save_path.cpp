@@ -9,7 +9,7 @@
 
 #include <fmt/format.h>
 
-namespace cafe::nn::save
+namespace cafe::nn_save
 {
 
 struct StaticPathData
@@ -43,7 +43,7 @@ SAVEInit()
    }
 
    // Create /vol/save/common
-   auto savePath = internal::getSaveDirectory(nn::act::SystemSlot);
+   auto savePath = internal::getSaveDirectory(nn_act::SystemSlot);
 
    if (!fs->makeFolder(savePath)) {
       return SaveStatus::FatalError;
@@ -123,13 +123,13 @@ namespace internal
 fs::Path
 getSaveDirectory(uint32_t slot)
 {
-   if (slot == nn::act::SystemSlot) {
+   if (slot == nn_act::SystemSlot) {
       return fmt::format("/vol/save/common");
-   } else if (slot == nn::act::CurrentUserSlot) {
-      slot = nn::act::GetSlotNo();
+   } else if (slot == nn_act::CurrentUserSlot) {
+      slot = nn_act::GetSlotNo();
    }
 
-   return fmt::format("/vol/save/{:08X}", nn::act::GetPersistentIdEx(slot));
+   return fmt::format("/vol/save/{:08X}", nn_act::GetPersistentIdEx(slot));
 }
 
 fs::Path
@@ -153,13 +153,13 @@ getTitleSaveDirectory(uint64_t title,
 {
    auto root = getTitleSaveRoot(title);
 
-   if (slot == nn::act::SystemSlot) {
+   if (slot == nn_act::SystemSlot) {
       return root.join("common");
-   } else if (slot == nn::act::CurrentUserSlot) {
-      slot = nn::act::GetSlotNo();
+   } else if (slot == nn_act::CurrentUserSlot) {
+      slot = nn_act::GetSlotNo();
    }
 
-   return root.join(fmt::format("{:08X}", nn::act::GetPersistentIdEx(slot)));
+   return root.join(fmt::format("{:08X}", nn_act::GetPersistentIdEx(slot)));
 }
 
 fs::Path
@@ -184,4 +184,4 @@ Library::registerPathSymbols()
    RegisterDataInternal(sPathData);
 }
 
-} // namespace cafe::nn::save
+} // namespace cafe::nn_save

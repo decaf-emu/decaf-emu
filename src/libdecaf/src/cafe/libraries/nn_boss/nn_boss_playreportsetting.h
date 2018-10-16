@@ -1,8 +1,8 @@
 #pragma once
 #include "nn_boss_rawultasksetting.h"
 
-#include "cafe/libraries/nn_result.h"
 #include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
@@ -14,7 +14,7 @@ nn::boss::PlayReportSetting::GetValue(unsigned int, unsigned int *) const
 nn::boss::PlayReportSetting::RegisterPreprocess(unsigned int, nn::boss::TitleID, char const *)
 */
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 class PlayReportSetting : public RawUlTaskSetting
@@ -60,4 +60,4 @@ protected:
 };
 CHECK_SIZE(PlayReportSetting, 0x1220);
 
-}  // namespace cafe::nn::boss
+}  // namespace cafe::nn_boss

@@ -1,10 +1,10 @@
 #pragma once
-#include "cafe/libraries/nn_ffl.h"
-#include "cafe/libraries/nn_result.h"
+#include "nn/nn_result.h"
+#include "nn/ffl/nn_ffl_miidata.h"
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::act
+namespace cafe::nn_act
 {
 
 using UUID = be2_array<char, 16>;
@@ -37,10 +37,10 @@ uint8_t
 GetSlotNo();
 
 nn::Result
-GetMii(virt_ptr<FFLStoreData> data);
+GetMii(virt_ptr<nn::ffl::FFLStoreData> data);
 
 nn::Result
-GetMiiEx(virt_ptr<FFLStoreData> data,
+GetMiiEx(virt_ptr<nn::ffl::FFLStoreData> data,
          uint8_t slot);
 
 nn::Result
@@ -107,4 +107,4 @@ GetTransferableIdEx(virt_ptr<uint64_t> transferableId,
 bool
 IsParentalControlCheckEnabled();
 
-}  // namespace cafe::nn::act
+}  // namespace cafe::nn_act

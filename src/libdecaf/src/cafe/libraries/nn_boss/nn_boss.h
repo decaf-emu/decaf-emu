@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 class Library : public hle::Library
@@ -27,4 +27,4 @@ private:
    void registerTitleIdSymbols();
 };
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

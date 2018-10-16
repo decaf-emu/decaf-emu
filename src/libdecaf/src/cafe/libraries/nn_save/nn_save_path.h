@@ -2,7 +2,7 @@
 #include "filesystem/filesystem_path.h"
 #include "cafe/libraries/coreinit/coreinit_fs.h"
 
-namespace cafe::nn::save
+namespace cafe::nn_save
 {
 
 using SaveStatus = coreinit::FSStatus;
@@ -52,4 +52,4 @@ getTitleSavePath(uint64_t title,
 
 } // namespace internal
 
-} // namespace cafe::nn::save
+} // namespace cafe::nn_save

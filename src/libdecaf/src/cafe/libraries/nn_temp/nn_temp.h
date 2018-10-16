@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::temp
+namespace cafe::nn_temp
 {
 
 class Library : public hle::Library
@@ -19,4 +19,4 @@ private:
    void registerTempDirSymbols();
 };
 
-} // namespace cafe::nn::temp
+} // namespace cafe::nn_temp

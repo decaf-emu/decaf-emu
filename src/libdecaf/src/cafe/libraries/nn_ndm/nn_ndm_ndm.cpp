@@ -3,7 +3,7 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::ndm
+namespace cafe::nn_ndm
 {
 
 struct StaticNdmData
@@ -19,7 +19,7 @@ Initialize()
 {
    decaf_warn_stub();
    sNdmData->initialiseCount++;
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
@@ -28,11 +28,11 @@ Finalize()
    decaf_warn_stub();
    if (sNdmData->initialiseCount <= 0) {
       // Panic
-      return nn::Result::Success;
+      return nn::ResultSuccess;
    }
 
    sNdmData->initialiseCount--;
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 bool
@@ -46,7 +46,7 @@ nn::Result
 EnableResumeDaemons()
 {
    decaf_warn_stub();
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 nn::Result
@@ -55,7 +55,7 @@ GetDaemonStatus(virt_ptr<uint32_t> status, // nn::ndm::IDaemon::Status *
 {
    decaf_warn_stub();
    *status = 3u;
-   return nn::Result::Success;
+   return nn::ResultSuccess;
 }
 
 void
@@ -78,4 +78,4 @@ Library::registerNdmSymbols()
    RegisterDataInternal(sNdmData);
 }
 
-} // namespace cafe::nn::ndm
+} // namespace cafe::nn_ndm

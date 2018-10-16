@@ -1,9 +1,8 @@
 #pragma once
 #include <array>
-#include <cstdint>
-#include <common/structsize.h>
+#include <libcpu/be2_struct.h>
 
-namespace cafe::nn
+namespace nn::ffl
 {
 
 // This structure is intentionally little-endian as the data
@@ -130,7 +129,6 @@ CHECK_SIZE(FFLiMiiDataCore, 0x48);
 
 struct FFLiMiiDataOfficial : FFLiMiiDataCore
 {
-   // 0x48
    char16_t creator_name[10];
 };
 CHECK_OFFSET(FFLiMiiDataOfficial, 0x48, creator_name);
@@ -138,14 +136,11 @@ CHECK_SIZE(FFLiMiiDataOfficial, 0x5C);
 
 struct FFLStoreData : FFLiMiiDataOfficial
 {
-   // 0x5C
    uint16_t unk_0x5C;
-
-   // 0x5E
    be2_val<uint16_t> checksum;
 };
 CHECK_OFFSET(FFLStoreData, 0x5C, unk_0x5C);
 CHECK_OFFSET(FFLStoreData, 0x5E, checksum);
 CHECK_SIZE(FFLStoreData, 0x60);
 
-} // namespace cafe::nn
+} // namespace nn::ffl

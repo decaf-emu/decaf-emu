@@ -1,9 +1,8 @@
 #include "nn_olv.h"
 #include "nn_olv_downloadeddatabase.h"
 #include "nn_olv_downloadedpostdata.h"
-#include "nn_olv_result.h"
 
-namespace cafe::nn::olv
+namespace cafe::nn_olv
 {
 
 virt_ptr<hle::VirtualTable>
@@ -71,4 +70,4 @@ Library::registerDownloadedPostDataSymbols()
       });
 }
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

@@ -3,7 +3,7 @@
 
 #include <common/strutils.h>
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 TaskID::TaskID()
@@ -83,4 +83,4 @@ Library::registerTaskIdSymbols()
                               &TaskID::operator virt_ptr<const char>);
 }
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

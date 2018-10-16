@@ -1,10 +1,12 @@
 #include "nn_boss.h"
 #include "nn_boss_rawultasksetting.h"
-#include "nn_boss_result.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "nn/boss/nn_boss_result.h"
 
-namespace cafe::nn::boss
+using namespace nn::boss;
+
+namespace cafe::nn_boss
 {
 
 virt_ptr<hle::VirtualTable> RawUlTaskSetting::VirtualTable = nullptr;
@@ -29,7 +31,7 @@ RawUlTaskSetting::RegisterPreprocess(uint32_t a1,
                                      virt_ptr<const char> a3)
 {
    decaf_warn_stub();
-   return InvalidParameter;
+   return ResultInvalidParameter;
 }
 
 void
@@ -66,4 +68,4 @@ Library::registerRawUlTaskSettingSymbols()
       });
 }
 
-}  // namespace cafe::nn::boss
+}  // namespace cafe::nn_boss

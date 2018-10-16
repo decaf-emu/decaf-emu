@@ -1,8 +1,12 @@
 #include "nn_olv.h"
 #include "nn_olv_uploadeddatabase.h"
-#include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::olv
+#include "cafe/libraries/cafe_hle_stub.h"
+#include "nn/olv/nn_olv_result.h"
+
+using namespace nn::olv;
+
+namespace cafe::nn_olv
 {
 
 virt_ptr<hle::VirtualTable>
@@ -44,15 +48,15 @@ UploadedDataBase::GetAppData(virt_ptr<uint8_t> buffer,
                              uint32_t bufferSize)
 {
    if (!TestFlags(HasAppData)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mAppDataLength);
@@ -64,7 +68,7 @@ UploadedDataBase::GetAppData(virt_ptr<uint8_t> buffer,
       *outDatasize = length;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -72,15 +76,15 @@ UploadedDataBase::GetBodyText(virt_ptr<char16_t> buffer,
                               uint32_t bufferSize)
 {
    if (!TestFlags(HasBodyText)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mBodyTextLength);
@@ -92,7 +96,7 @@ UploadedDataBase::GetBodyText(virt_ptr<char16_t> buffer,
       buffer[length] = char16_t { 0 };
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -101,15 +105,15 @@ UploadedDataBase::GetBodyMemo(virt_ptr<uint8_t> buffer,
                               uint32_t bufferSize)
 {
    if (!TestFlags(HasBodyMemo)) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mBodyMemoLength);
@@ -121,7 +125,7 @@ UploadedDataBase::GetBodyMemo(virt_ptr<uint8_t> buffer,
       *outMemoSize = length;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 nn::Result
@@ -131,15 +135,15 @@ UploadedDataBase::GetCommonData(virt_ptr<uint32_t> unk,
                                 uint32_t bufferSize)
 {
    if (!mCommonDataLength) {
-      return NoData;
+      return ResultNoData;
    }
 
    if (!buffer) {
-      return InvalidPointer;
+      return ResultInvalidPointer;
    }
 
    if (!bufferSize) {
-      return InvalidSize;
+      return ResultInvalidSize;
    }
 
    auto length = std::min<uint32_t>(bufferSize, mCommonDataLength);
@@ -155,7 +159,7 @@ UploadedDataBase::GetCommonData(virt_ptr<uint32_t> unk,
       *outDataSize = length;
    }
 
-   return Success;
+   return ResultSuccess;
 }
 
 int32_t
@@ -191,4 +195,4 @@ Library::registerUploadedDataBaseSymbols()
       });
 }
 
-}  // namespace cafe::nn::olv
+}  // namespace cafe::nn_olv

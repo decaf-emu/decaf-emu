@@ -1,7 +1,7 @@
 #include "nn_boss.h"
 #include "nn_boss_titleid.h"
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 TitleID::TitleID() :
@@ -94,4 +94,4 @@ Library::registerTitleIdSymbols()
                               &TitleID::operator !=);
 }
 
-} // namespace cafe::nn::boss
+} // namespace cafe::nn_boss

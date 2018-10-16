@@ -3,7 +3,7 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
-namespace cafe::nn::boss
+namespace cafe::nn_boss
 {
 
 virt_ptr<hle::VirtualTable> TaskSetting::VirtualTable = nullptr;
@@ -85,4 +85,4 @@ Library::registerTaskSettingSymbols()
       });
 }
 
-}  // namespace namespace cafe::nn::boss
+}  // namespace namespace cafe::nn_boss

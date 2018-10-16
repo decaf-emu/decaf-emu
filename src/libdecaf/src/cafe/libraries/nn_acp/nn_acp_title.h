@@ -1,9 +1,9 @@
 #pragma once
-#include "cafe/libraries/nn_result.h"
+#include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
 
-namespace cafe::nn::acp
+namespace cafe::nn_acp
 {
 
 struct ACPMetaXml
@@ -16,4 +16,4 @@ nn::Result
 GetTitleMetaXml(uint64_t titleId,
                 virt_ptr<ACPMetaXml> data);
 
-}  // namespace cafe::nn::acp
+}  // namespace cafe::nn_acp

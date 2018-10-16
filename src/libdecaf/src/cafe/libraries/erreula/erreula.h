@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe/libraries/cafe_hle_library.h"
 
-namespace cafe::nn::erreula
+namespace cafe::nn_erreula
 {
 
 class Library : public hle::Library
@@ -19,4 +19,4 @@ private:
    void registerErrorViewerSymbols();
 };
 
-} // namespace cafe::nn::erreula
+} // namespace cafe::nn_erreula

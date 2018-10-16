@@ -1,7 +1,7 @@
 #include "nn_nfp.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::nfp
+namespace cafe::nn_nfp
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerLibSymbols();
 }
 
-} // namespace cafe::nn::nfp
+} // namespace cafe::nn_nfp

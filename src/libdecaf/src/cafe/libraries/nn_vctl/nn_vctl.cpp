@@ -1,7 +1,7 @@
 #include "nn_vctl.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::vctl
+namespace cafe::nn_vctl
 {
 
 static int32_t
@@ -18,4 +18,4 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 }
 
-} // namespace cafe::nn::vctl
+} // namespace cafe::nn_vctl

@@ -5,31 +5,31 @@
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/cafe_stackobject.h"
 
-namespace cafe::nn::ac
+namespace cafe::nn_ac
 {
 
 nn::Result
 ACInitialize()
 {
-   return nn::ac::Initialize();
+   return Initialize();
 }
 
 void
 ACFinalize()
 {
-   return nn::ac::Finalize();
+   return Finalize();
 }
 
 nn::Result
 ACConnect()
 {
-   return nn::ac::Connect();
+   return Connect();
 }
 
 nn::Result
 ACConnectAsync()
 {
-   return nn::ac::ConnectAsync();
+   return ConnectAsync();
 }
 
 nn::Result
@@ -37,7 +37,7 @@ ACIsApplicationConnected(virt_ptr<BOOL> connected)
 {
    StackObject<bool> isConnected;
    *isConnected = *connected ? true : false;
-   auto result = nn::ac::IsApplicationConnected(isConnected);
+   auto result = IsApplicationConnected(isConnected);
    *connected = *isConnected ? TRUE : FALSE;
    return result;
 }
@@ -45,19 +45,19 @@ ACIsApplicationConnected(virt_ptr<BOOL> connected)
 nn::Result
 ACGetConnectStatus(virt_ptr<Status> outStatus)
 {
-   return nn::ac::GetConnectStatus(outStatus);
+   return GetConnectStatus(outStatus);
 }
 
 nn::Result
 ACGetLastErrorCode(virt_ptr<int32_t> outError)
 {
-   return nn::ac::GetLastErrorCode(outError);
+   return GetLastErrorCode(outError);
 }
 
 nn::Result
 ACGetStatus(virt_ptr<Status> outStatus)
 {
-   return nn::ac::GetStatus(outStatus);
+   return GetStatus(outStatus);
 }
 
 void
@@ -73,4 +73,4 @@ Library::registerCApiFunctions()
    RegisterFunctionExport(ACGetStatus);
 }
 
-}  // namespace cafe::nn::ac
+}  // namespace cafe::nn_ac

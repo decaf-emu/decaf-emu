@@ -1,7 +1,7 @@
 #include "nn_cmpt.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-namespace cafe::nn::cmpt
+namespace cafe::nn_cmpt
 {
 
 static int32_t
@@ -20,4 +20,4 @@ Library::registerSymbols()
    registerLibSymbols();
 }
 
-} // namespace cafe::nn::cmpt
+} // namespace cafe::nn_cmpt
