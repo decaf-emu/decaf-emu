@@ -794,14 +794,17 @@ public:
       if (ref.valueType == VarRefType::FLOAT) {
          if (sourceValType != float4Type()) {
             srcId = createUnaryOp(spv::OpBitcast, float4Type(), srcId);
+            sourceValType = float4Type();
          }
       } else if (ref.valueType == VarRefType::INT) {
          if (sourceValType != int4Type()) {
             srcId = createUnaryOp(spv::OpBitcast, int4Type(), srcId);
+            sourceValType = int4Type();
          }
       } else if (ref.valueType == VarRefType::UINT) {
          if (sourceValType != uint4Type()) {
             srcId = createUnaryOp(spv::OpBitcast, uint4Type(), srcId);
+            sourceValType = uint4Type();
          }
       } else {
          decaf_abort("Unexpected export value type");
