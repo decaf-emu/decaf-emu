@@ -329,6 +329,109 @@ getVkComponentSwizzle(latte::SQ_SEL sel)
    decaf_abort(fmt::format("Unexpected component swizzle {}", sel));
 }
 
+vk::BorderColor
+getVkBorderColor(latte::SQ_TEX_BORDER_COLOR color)
+{
+   switch (color) {
+   case latte::SQ_TEX_BORDER_COLOR::TRANS_BLACK:
+      return vk::BorderColor::eFloatTransparentBlack;
+   case latte::SQ_TEX_BORDER_COLOR::OPAQUE_BLACK:
+      return vk::BorderColor::eFloatOpaqueBlack;
+   case latte::SQ_TEX_BORDER_COLOR::OPAQUE_WHITE:
+      return vk::BorderColor::eFloatOpaqueWhite;
+   case latte::SQ_TEX_BORDER_COLOR::REGISTER:
+      decaf_abort("Unsupported register-based texture border color");
+   default:
+      decaf_abort("Unexpected texture border color type");
+   }
+}
+
+vk::Filter
+getVkXyTextureFilter(latte::SQ_TEX_XY_FILTER filter)
+{
+   switch (filter) {
+   case latte::SQ_TEX_XY_FILTER::POINT:
+      return vk::Filter::eNearest;
+   case latte::SQ_TEX_XY_FILTER::BILINEAR:
+      return vk::Filter::eLinear;
+   case latte::SQ_TEX_XY_FILTER::BICUBIC:
+      return vk::Filter::eCubicIMG;
+   default:
+      decaf_abort("Unexpected texture xy filter mode");
+   }
+}
+
+vk::SamplerMipmapMode
+getVkZTextureFilter(latte::SQ_TEX_Z_FILTER filter)
+{
+   switch (filter) {
+   case latte::SQ_TEX_Z_FILTER::NONE:
+      return vk::SamplerMipmapMode::eNearest;
+   case latte::SQ_TEX_Z_FILTER::POINT:
+      return vk::SamplerMipmapMode::eNearest;
+   case latte::SQ_TEX_Z_FILTER::LINEAR:
+      return vk::SamplerMipmapMode::eLinear;
+   default:
+      decaf_abort("Unexpected texture xy filter mode");
+   }
+}
+
+vk::SamplerAddressMode
+getVkTextureAddressMode(latte::SQ_TEX_CLAMP clamp)
+{
+   switch (clamp) {
+   case latte::SQ_TEX_CLAMP::WRAP:
+      return vk::SamplerAddressMode::eRepeat;
+   case latte::SQ_TEX_CLAMP::MIRROR:
+      return vk::SamplerAddressMode::eMirroredRepeat;
+   case latte::SQ_TEX_CLAMP::CLAMP_LAST_TEXEL:
+      return vk::SamplerAddressMode::eClampToEdge;
+   case latte::SQ_TEX_CLAMP::MIRROR_ONCE_LAST_TEXEL:
+      return vk::SamplerAddressMode::eMirrorClampToEdge;
+   case latte::SQ_TEX_CLAMP::CLAMP_HALF_BORDER:
+      return vk::SamplerAddressMode::eClampToBorder;
+   case latte::SQ_TEX_CLAMP::MIRROR_ONCE_HALF_BORDER:
+      return vk::SamplerAddressMode::eMirrorClampToEdge;
+   case latte::SQ_TEX_CLAMP::CLAMP_BORDER:
+      return vk::SamplerAddressMode::eClampToBorder;
+   case latte::SQ_TEX_CLAMP::MIRROR_ONCE_BORDER:
+      return vk::SamplerAddressMode::eMirrorClampToEdge;
+   default:
+      decaf_abort("Unexpected texture clamp mode");
+   }
+}
+
+bool
+getVkAnisotropyEnabled(latte::SQ_TEX_ANISO aniso)
+{
+   return aniso != latte::SQ_TEX_ANISO::ANISO_1_TO_1;
+}
+
+float
+getVkMaxAnisotropy(latte::SQ_TEX_ANISO aniso)
+{
+   switch (aniso) {
+   case latte::SQ_TEX_ANISO::ANISO_1_TO_1:
+      return 1.0f;
+   case latte::SQ_TEX_ANISO::ANISO_2_TO_1:
+      return 2.0f;
+   case latte::SQ_TEX_ANISO::ANISO_4_TO_1:
+      return 4.0f;
+   case latte::SQ_TEX_ANISO::ANISO_8_TO_1:
+      return 8.0f;
+   case latte::SQ_TEX_ANISO::ANISO_16_TO_1:
+      return 16.0f;
+   default:
+      decaf_abort("Unexpected texture anisotropy mode");
+   }
+}
+
+bool
+getVkCompareOpEnabled(latte::REF_FUNC refFunc)
+{
+   return refFunc != latte::REF_FUNC::NEVER;
+}
+
 vk::CompareOp
 getVkCompareOp(latte::REF_FUNC func)
 {

@@ -29,6 +29,27 @@ getVkSurfaceFormat(latte::SurfaceFormat format, latte::SQ_TILE_TYPE tileType);
 vk::ComponentSwizzle
 getVkComponentSwizzle(latte::SQ_SEL sel);
 
+vk::BorderColor
+getVkBorderColor(latte::SQ_TEX_BORDER_COLOR color);
+
+vk::Filter
+getVkXyTextureFilter(latte::SQ_TEX_XY_FILTER filter);
+
+vk::SamplerMipmapMode
+getVkZTextureFilter(latte::SQ_TEX_Z_FILTER filter);
+
+vk::SamplerAddressMode
+getVkTextureAddressMode(latte::SQ_TEX_CLAMP clamp);
+
+bool
+getVkAnisotropyEnabled(latte::SQ_TEX_ANISO aniso);
+
+float
+getVkMaxAnisotropy(latte::SQ_TEX_ANISO aniso);
+
+bool
+getVkCompareOpEnabled(latte::REF_FUNC func);
+
 vk::CompareOp
 getVkCompareOp(latte::REF_FUNC func);
 
