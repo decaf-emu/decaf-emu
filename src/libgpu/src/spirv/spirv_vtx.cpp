@@ -265,8 +265,8 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
          continue;
       }
 
-      auto startConst = mSpv->makeUintConstant(elem.start);
-      auto lengthConst = mSpv->makeUintConstant(elem.length);
+      auto startConst = mSpv->makeIntConstant(elem.start);
+      auto lengthConst = mSpv->makeIntConstant(elem.length);
       elems[i] = mSpv->createTriOp(spv::OpBitFieldUExtract, mSpv->uintType(), inputElems[elem.index], startConst, lengthConst);
    }
 
