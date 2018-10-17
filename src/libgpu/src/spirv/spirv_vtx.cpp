@@ -378,9 +378,15 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
       }
    }
 
-   // Fill remaining values with 0.0f
+   // Fill remaining values with defaults
    for (auto i = fmtMeta.inputCount; i < 4; ++i) {
-      elems[i] = mSpv->makeFloatConstant(0.0f);
+      // TODO: I think there is probably something we should be doing to
+      // handle cases where the types are not meant to be floats...
+      if (i != 3) {
+         elems[i] = mSpv->makeFloatConstant(0.0f);
+      } else {
+         elems[i] = mSpv->makeFloatConstant(1.0f);
+      }
    }
 
    auto outputVal = mSpv->createOp(spv::Op::OpCompositeConstruct, mSpv->float4Type(),
