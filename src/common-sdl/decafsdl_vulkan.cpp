@@ -5,6 +5,7 @@
 
 #include <common/log.h>
 #include <common/platform_debug.h>
+#include <libgpu/gpu_config.h>
 #include <SDL_vulkan.h>
 
 DecafSDLVulkan::DecafSDLVulkan()
@@ -144,14 +145,17 @@ DecafSDLVulkan::createInstance()
 
    std::vector<const char*> layers =
    {
-      "VK_LAYER_LUNARG_standard_validation"
    };
 
    std::vector<const char*> extensions =
    {
-       VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
    };
+
+   if (gpu::config::debug) {
+      layers.push_back("VK_LAYER_LUNARG_standard_validation");
+      extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+   }
 
    // Add the neccessary SDL Vulkan extensions
    uint32_t extensions_count = 0;
@@ -217,13 +221,17 @@ DecafSDLVulkan::createDevice()
 {
    std::vector<const char*> deviceLayers =
    {
-      "VK_LAYER_LUNARG_standard_validation"
    };
 
    std::vector<const char*> deviceExtensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME
    };
+
+   if (gpu::config::debug) {
+      deviceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+      deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+   }
 
    auto queueFamilyProps = mPhysDevice.getQueueFamilyProperties();
    uint32_t queueFamilyIndex = 0;
