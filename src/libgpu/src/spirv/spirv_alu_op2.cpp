@@ -64,6 +64,16 @@ void Transpiler::translateAluOp2_EXP_IEEE(const ControlFlowInst &cf, const AluIn
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
+void
+Transpiler::translateAluOp2_FLOOR(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::FLOAT);
+
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Floor, { src0 });
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
 void Transpiler::translateAluOp2_FLT_TO_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::FLOAT);
