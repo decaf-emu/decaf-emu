@@ -107,6 +107,7 @@ Driver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
 void
 Driver::decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data)
 {
+   decaf_abort("Unsupported pm4 decafCapSyncRegisters");
 }
 
 void
@@ -155,6 +156,7 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
 void
 Driver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 {
+   decaf_abort("Unsupported pm4 decafOSScreenFlip");
 }
 
 void
@@ -279,6 +281,7 @@ Driver::memWrite(const latte::pm4::MemWrite &data)
 void
 Driver::eventWrite(const latte::pm4::EventWrite &data)
 {
+   decaf_abort("Unsupported pm4 eventWrite");
 }
 
 void
@@ -331,21 +334,25 @@ Driver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
 void
 Driver::pfpSyncMe(const latte::pm4::PfpSyncMe &data)
 {
+   decaf_abort("Unsupported pm4 pfpSyncMe");
 }
 
 void
 Driver::streamOutBaseUpdate(const latte::pm4::StreamOutBaseUpdate &data)
 {
+   decaf_abort("Unsupported pm4 streamOutBaseUpdate");
 }
 
 void
 Driver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
 {
+   decaf_abort("Unsupported pm4 streamOutBufferUpdate");
 }
 
 void
 Driver::surfaceSync(const latte::pm4::SurfaceSync &data)
 {
+   // TODO: Handle surface syncs when using non-coherent surface optimizations.
 }
 
 void
