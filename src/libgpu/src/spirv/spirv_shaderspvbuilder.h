@@ -947,6 +947,38 @@ public:
 
             endSwitch(switchSegments);
          }
+
+         // We need to premultiply the alpha in cases where premultiplied alpha is enabled
+         // globally but this specific target is not performing the premultiplication.
+         if (sourceValType == float4Type()) {
+            auto zeroConst = makeUintConstant(0);
+            auto oneConst = makeUintConstant(1);
+            auto twoConst = makeUintConstant(2);
+            auto oneFConst = makeFloatConstant(1.0f);
+
+            auto needsPremulPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { twoConst });
+            auto needsPremulVal = createLoad(needsPremulPtr);
+
+            auto targetBitConst = makeUintConstant(1 << ref.index);
+            auto targetBitVal = createBinOp(spv::OpBitwiseAnd, uintType(), needsPremulVal, targetBitConst);
+            auto pred = createBinOp(spv::OpINotEqual, boolType(), targetBitVal, zeroConst);
+            auto block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
+
+            auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
+            auto premulMul = createOp(spv::OpCompositeConstruct, float4Type(), { exportAlpha, exportAlpha, exportAlpha, oneFConst });
+            auto premulExportVal = createBinOp(spv::OpFMul, float4Type(), exportVal, premulMul);
+
+            createStore(premulExportVal, exportRef);
+
+            block.makeEndIf();
+
+            // We need to cheat and do the store here outside the normal logic as
+            // otherwise we would need to OpPhi the new exportVal which is unneccessarily
+            // complicated as the if builder does not support it.  Instead we do the store
+            // here and then return without doing additional processing.
+            createStore(exportVal, exportRef);
+            return;
+         }
       }
 
       createStore(exportVal, exportRef);
@@ -1032,11 +1064,13 @@ public:
    spv::Id psPushConstVar()
    {
       if (!mPsPushConsts) {
-         auto psPushStruct = makeStructType({ uintType(), floatType() }, "PS_PUSH_DATA");
+         auto psPushStruct = makeStructType({ uintType(), floatType(), uintType() }, "PS_PUSH_DATA");
          addMemberDecoration(psPushStruct, 0, spv::DecorationOffset, 32 + 0);
          addMemberName(psPushStruct, 0, "alphaFunc");
          addMemberDecoration(psPushStruct, 1, spv::DecorationOffset, 32 + 4);
          addMemberName(psPushStruct, 1, "alphaRef");
+         addMemberDecoration(psPushStruct, 2, spv::DecorationOffset, 32 + 8);
+         addMemberName(psPushStruct, 2, "needsPremultiply");
          addDecoration(psPushStruct, spv::DecorationBlock);
          mPsPushConsts = createVariable(spv::StorageClassPushConstant, psPushStruct, "PS_PUSH");
       }

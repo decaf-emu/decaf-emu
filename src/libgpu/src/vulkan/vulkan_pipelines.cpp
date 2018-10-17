@@ -583,8 +583,9 @@ Driver::checkCurrentPipeline()
    // Color Blending
    // ------------------------------------------------------------
 
-   std::array<vk::PipelineColorBlendAttachmentState, 8> colorBlendAttachments;
-   auto srcPremultiplied = true;
+   std::array<vk::PipelineColorBlendAttachmentState, latte::MaxRenderTargets> colorBlendAttachments;
+   std::array<bool, latte::MaxRenderTargets> targetIsPremultiplied = { false };
+   auto needsPremultipliedTargets = false;
 
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       const auto& blendData = currentDesc->cbBlendControls[i];
@@ -600,12 +601,8 @@ Driver::checkCurrentPipeline()
          colorBlendAttachment.alphaBlendOp = getVkBlendOp(blendData.alphaCombFcn);
 
          if (blendData.opacityWeight) {
-            // We only support premultiplied accross all targets
-            decaf_check(i == 0);
-
-            srcPremultiplied = false;
-         } else {
-            decaf_check(srcPremultiplied);
+            needsPremultipliedTargets = true;
+            targetIsPremultiplied[i] = true;
          }
       }
 
@@ -693,7 +690,7 @@ Driver::checkCurrentPipeline()
    colorBlendState.blendConstants[2] = currentDesc->cbBlendConstants[2];
    colorBlendState.blendConstants[3] = currentDesc->cbBlendConstants[3];
 
-   if (!srcPremultiplied) {
+   if (needsPremultipliedTargets) {
       vk::PipelineColorBlendAdvancedStateCreateInfoEXT advancedColorBlendState;
       advancedColorBlendState.dstPremultiplied = true;
       advancedColorBlendState.srcPremultiplied = false;
@@ -766,6 +763,8 @@ Driver::checkCurrentPipeline()
    pipelineInfo.basePipelineIndex = -1;
    auto pipeline = mDevice.createGraphicsPipeline(vk::PipelineCache(), pipelineInfo);
    foundPipeline->pipeline = pipeline;
+   foundPipeline->needsPremultipliedTargets = needsPremultipliedTargets;
+   foundPipeline->targetIsPremultiplied = targetIsPremultiplied;
 
    mCurrentPipeline = foundPipeline;
    return true;

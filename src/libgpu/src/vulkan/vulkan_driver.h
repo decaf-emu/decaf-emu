@@ -410,6 +410,8 @@ struct PipelineObject
 {
    HashedDesc<PipelineDesc> desc;
    vk::Pipeline pipeline;
+   bool needsPremultipliedTargets;
+   std::array<bool, latte::MaxRenderTargets> targetIsPremultiplied;
 };
 
 struct DrawDesc

@@ -142,7 +142,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    vk::PushConstantRange alphaRefConstants;
    alphaRefConstants.stageFlags = vk::ShaderStageFlagBits::eFragment;
    alphaRefConstants.offset = 32;
-   alphaRefConstants.size = 8;
+   alphaRefConstants.size = 12;
    pushConstants.push_back(alphaRefConstants);
 
    vk::PipelineLayoutCreateInfo pipelineLayoutDesc;

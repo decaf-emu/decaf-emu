@@ -203,9 +203,18 @@ Driver::bindShaderResources()
       {
          uint32_t alphaOp;
          float alphaRef;
+         uint32_t needPremultiply;
       } psConstData;
       psConstData.alphaOp = alphaFunc;
       psConstData.alphaRef = alphaRef;
+
+      psConstData.needPremultiply = 0;
+      for (auto i = 0; i < latte::MaxRenderTargets; ++i) {
+         if (mCurrentPipeline->needsPremultipliedTargets && !mCurrentPipeline->targetIsPremultiplied[i]) {
+            psConstData.needPremultiply |= (1 << i);
+         }
+      }
+
       mActiveCommandBuffer.pushConstants<PsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 32, { psConstData });
    }
 }
