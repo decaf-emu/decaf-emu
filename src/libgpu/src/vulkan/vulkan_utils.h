@@ -32,6 +32,9 @@ getVkComponentSwizzle(latte::SQ_SEL sel);
 vk::CompareOp
 getVkCompareOp(latte::REF_FUNC func);
 
+vk::StencilOp
+getVkStencilOp(latte::DB_STENCIL_FUNC func);
+
 vk::BlendFactor
 getVkBlendFactor(latte::CB_BLEND_FUNC func);
 

@@ -119,18 +119,42 @@ Driver::getPipelineDesc()
       desc.polyBiasScale = 0.0f;
    }
 
-   // -- Depth control stuff
+   // -- Depth/Stencil control stuff
    auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
-   //db_depth_control.STENCIL_ENABLE()
-   //db_depth_control.STENCILFUNC();
-   //db_depth_control.STENCILFAIL();
-   //db_depth_control.STENCILZPASS();
-   //db_depth_control.STENCILZFAIL();
-   //db_depth_control.STENCILFUNC_BF();
-   //db_depth_control.STENCILFAIL_BF();
-   //db_depth_control.STENCILZPASS_BF();
-   //db_depth_control.STENCILZFAIL_BF();
-   //db_depth_control.BACKFACE_ENABLE();
+   auto db_stencilrefmask = getRegister<latte::DB_STENCILREFMASK>(latte::Register::DB_STENCILREFMASK);
+   auto db_stencilrefmask_bf = getRegister<latte::DB_STENCILREFMASK_BF>(latte::Register::DB_STENCILREFMASK_BF);
+
+   desc.stencilEnable = db_depth_control.STENCIL_ENABLE();
+   if (desc.stencilEnable) {
+      desc.stencilFront.compareFunc = db_depth_control.STENCILFUNC();
+      desc.stencilFront.failOp = db_depth_control.STENCILFAIL();
+      desc.stencilFront.zPassOp = db_depth_control.STENCILZPASS();
+      desc.stencilFront.zFailOp = db_depth_control.STENCILZFAIL();
+      desc.stencilFront.ref = db_stencilrefmask.STENCILREF();
+      desc.stencilFront.mask = db_stencilrefmask.STENCILMASK();
+      desc.stencilFront.writeMask = db_stencilrefmask.STENCILWRITEMASK();
+
+      if (db_depth_control.BACKFACE_ENABLE()) {
+         desc.stencilBack.compareFunc = db_depth_control.STENCILFUNC_BF();
+         desc.stencilBack.failOp = db_depth_control.STENCILFAIL_BF();
+         desc.stencilBack.zPassOp = db_depth_control.STENCILZPASS_BF();
+         desc.stencilBack.zFailOp = db_depth_control.STENCILZFAIL_BF();
+         desc.stencilBack.ref = db_stencilrefmask_bf.STENCILREF_BF();
+         desc.stencilBack.mask = db_stencilrefmask_bf.STENCILMASK_BF();
+         desc.stencilBack.writeMask = db_stencilrefmask_bf.STENCILWRITEMASK_BF();
+      } else {
+         desc.stencilBack = desc.stencilFront;
+      }
+   } else {
+      desc.stencilFront.compareFunc = latte::REF_FUNC::NEVER;
+      desc.stencilFront.failOp = latte::DB_STENCIL_FUNC::KEEP;
+      desc.stencilFront.zPassOp = latte::DB_STENCIL_FUNC::KEEP;
+      desc.stencilFront.zFailOp = latte::DB_STENCIL_FUNC::KEEP;
+      desc.stencilFront.ref = 0;
+      desc.stencilFront.mask = 0;
+      desc.stencilFront.writeMask = 0;
+      desc.stencilBack = desc.stencilFront;
+   }
 
    desc.zEnable = db_depth_control.Z_ENABLE();
    desc.zWriteEnable = db_depth_control.Z_WRITE_ENABLE();
@@ -688,10 +712,21 @@ Driver::checkCurrentPipeline()
    depthStencil.depthWriteEnable = currentDesc->zWriteEnable;
    depthStencil.depthCompareOp = getVkCompareOp(currentDesc->zFunc);
 
-   // TODO: Add support for handling stencil testing
-   depthStencil.stencilTestEnable = false;
-   //depthStencil.front;
-   //depthStencil.back;
+   depthStencil.stencilTestEnable = currentDesc->stencilEnable;
+   depthStencil.front.compareOp = getVkCompareOp(currentDesc->stencilFront.compareFunc);
+   depthStencil.front.failOp = getVkStencilOp(currentDesc->stencilFront.failOp);
+   depthStencil.front.passOp = getVkStencilOp(currentDesc->stencilFront.zPassOp);
+   depthStencil.front.depthFailOp = getVkStencilOp(currentDesc->stencilFront.zFailOp);
+   depthStencil.front.reference = static_cast<uint32_t>(currentDesc->stencilFront.ref);
+   depthStencil.front.compareMask = static_cast<uint32_t>(currentDesc->stencilFront.mask);
+   depthStencil.front.writeMask = static_cast<uint32_t>(currentDesc->stencilFront.writeMask);
+   depthStencil.back.compareOp = getVkCompareOp(currentDesc->stencilBack.compareFunc);
+   depthStencil.back.failOp = getVkStencilOp(currentDesc->stencilBack.failOp);
+   depthStencil.back.passOp = getVkStencilOp(currentDesc->stencilBack.zPassOp);
+   depthStencil.back.depthFailOp = getVkStencilOp(currentDesc->stencilBack.zFailOp);
+   depthStencil.back.reference = static_cast<uint32_t>(currentDesc->stencilBack.ref);
+   depthStencil.back.compareMask = static_cast<uint32_t>(currentDesc->stencilBack.mask);
+   depthStencil.back.writeMask = static_cast<uint32_t>(currentDesc->stencilBack.writeMask);
 
 
    // ------------------------------------------------------------

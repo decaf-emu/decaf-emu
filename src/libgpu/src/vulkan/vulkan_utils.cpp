@@ -354,6 +354,31 @@ getVkCompareOp(latte::REF_FUNC func)
    decaf_abort(fmt::format("Unexpected compare op {}", func));
 }
 
+vk::StencilOp
+getVkStencilOp(latte::DB_STENCIL_FUNC func)
+{
+   switch (func) {
+   case latte::DB_STENCIL_FUNC::KEEP:
+      return vk::StencilOp::eKeep;
+   case latte::DB_STENCIL_FUNC::ZERO:
+      return vk::StencilOp::eZero;
+   case latte::DB_STENCIL_FUNC::REPLACE:
+      return vk::StencilOp::eReplace;
+   case latte::DB_STENCIL_FUNC::INCR_CLAMP:
+      return vk::StencilOp::eIncrementAndClamp;
+   case latte::DB_STENCIL_FUNC::DECR_CLAMP:
+      return vk::StencilOp::eDecrementAndClamp;
+   case latte::DB_STENCIL_FUNC::INVERT:
+      return vk::StencilOp::eInvert;
+   case latte::DB_STENCIL_FUNC::INCR_WRAP:
+      return vk::StencilOp::eIncrementAndWrap;
+   case latte::DB_STENCIL_FUNC::DECR_WRAP:
+      return vk::StencilOp::eDecrementAndWrap;
+   }
+
+   decaf_abort(fmt::format("Unexpected stencil op {}", func));
+}
+
 vk::BlendFactor
 getVkBlendFactor(latte::CB_BLEND_FUNC func)
 {

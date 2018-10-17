@@ -355,6 +355,20 @@ struct PipelineDesc
    uint32_t primitiveResetIndex;
    bool dx9Consts;
 
+   struct StencilOpState
+   {
+      latte::REF_FUNC compareFunc;
+      latte::DB_STENCIL_FUNC failOp;
+      latte::DB_STENCIL_FUNC zPassOp;
+      latte::DB_STENCIL_FUNC zFailOp;
+      uint8_t ref;
+      uint8_t mask;
+      uint8_t writeMask;
+   };
+   bool stencilEnable;
+   StencilOpState stencilFront;
+   StencilOpState stencilBack;
+
    bool zEnable;
    bool zWriteEnable;
    latte::REF_FUNC zFunc;
