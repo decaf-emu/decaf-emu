@@ -291,7 +291,7 @@ Driver::getPipelineDesc()
    return desc;
 }
 
-void
+bool
 Driver::checkCurrentPipeline()
 {
    decaf_check(mCurrentVertexShader);
@@ -302,13 +302,13 @@ Driver::checkCurrentPipeline()
 
    if (mCurrentPipeline && mCurrentPipeline->desc == currentDesc) {
       // Already active, nothing to do.
-      return;
+      return true;
    }
 
    auto& foundPipeline = mPipelines[currentDesc.hash()];
    if (foundPipeline) {
       mCurrentPipeline = foundPipeline;
-      return;
+      return true;
    }
 
    foundPipeline = new PipelineObject();
@@ -768,6 +768,7 @@ Driver::checkCurrentPipeline()
    foundPipeline->pipeline = pipeline;
 
    mCurrentPipeline = foundPipeline;
+   return true;
 }
 
 } // namespace vulkan

@@ -75,7 +75,7 @@ Driver::getFramebufferDesc()
    return desc;
 }
 
-void
+bool
 Driver::checkCurrentFramebuffer()
 {
    decaf_check(mCurrentRenderPass);
@@ -84,13 +84,13 @@ Driver::checkCurrentFramebuffer()
 
    if (mCurrentFramebuffer && mCurrentFramebuffer->desc == currentDesc) {
       // Already active, nothing to do.
-      return;
+      return true;
    }
 
    auto& foundFb = mFramebuffers[currentDesc.hash()];
    if (foundFb) {
       mCurrentFramebuffer = foundFb;
-      return;
+      return true;
    }
 
    foundFb = new FramebufferObject();
@@ -182,6 +182,7 @@ Driver::checkCurrentFramebuffer()
    foundFb->renderArea = overallSize;
 
    mCurrentFramebuffer = foundFb;
+   return true;
 }
 
 SurfaceObject *

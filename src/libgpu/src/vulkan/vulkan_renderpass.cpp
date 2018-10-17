@@ -88,20 +88,20 @@ Driver::getRenderPassDesc()
    return desc;
 }
 
-void
+bool
 Driver::checkCurrentRenderPass()
 {
    HashedDesc<RenderPassDesc> currentDesc = getRenderPassDesc();
 
    if (mCurrentRenderPass && mCurrentRenderPass->desc == currentDesc) {
       // Already active, nothing to do.
-      return;
+      return true;
    }
 
    auto& foundRp = mRenderPasses[currentDesc.hash()];
    if (foundRp) {
       mCurrentRenderPass = foundRp;
-      return;
+      return true;
    }
 
    foundRp = new RenderPassObject();
@@ -197,6 +197,7 @@ Driver::checkCurrentRenderPass()
    foundRp->renderPass = renderPass;
 
    mCurrentRenderPass = foundRp;
+   return true;
 }
 
 } // namespace vulkan

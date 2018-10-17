@@ -314,19 +314,20 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
    }
 }
 
-void Driver::checkCurrentVertexShader()
+bool
+Driver::checkCurrentVertexShader()
 {
    HashedDesc<spirv::VertexShaderDesc> currentDesc = getVertexShaderDesc();
 
    if (mCurrentVertexShader && mCurrentVertexShader->desc == currentDesc) {
       // Already active, nothing to do.
-      return;
+      return true;
    }
 
    auto& foundShader = mVertexShaders[currentDesc.hash()];
    if (foundShader) {
       mCurrentVertexShader = foundShader;
-      return;
+      return true;
    }
 
    foundShader = new VertexShaderObject();
@@ -345,9 +346,11 @@ void Driver::checkCurrentVertexShader()
    foundShader->module = module;
 
    mCurrentVertexShader = foundShader;
+   return true;
 }
 
-void Driver::checkCurrentGeometryShader()
+bool
+Driver::checkCurrentGeometryShader()
 {
    decaf_check(mCurrentVertexShader);
 
@@ -355,7 +358,7 @@ void Driver::checkCurrentGeometryShader()
    auto vgt_gs_mode = getRegister<latte::VGT_GS_MODE>(latte::Register::VGT_GS_MODE);
    if (vgt_gs_mode.MODE() == latte::VGT_GS_ENABLE_MODE::OFF) {
       mCurrentGeometryShader = nullptr;
-      return;
+      return true;
    }
 
    decaf_abort("We do not currently support generation of geometry shaders.");
@@ -364,13 +367,13 @@ void Driver::checkCurrentGeometryShader()
 
    if (mCurrentGeometryShader && mCurrentGeometryShader->desc == currentDesc) {
       // Already active, nothing to do.
-      return;
+      return true;
    }
 
    auto& foundShader = mGeometryShaders[currentDesc.hash()];
    if (foundShader) {
       mCurrentGeometryShader = foundShader;
-      return;
+      return true;
    }
 
    foundShader = new GeometryShaderObject();
@@ -389,9 +392,10 @@ void Driver::checkCurrentGeometryShader()
    foundShader->module = module;
 
    mCurrentGeometryShader = foundShader;
+   return true;
 }
 
-void Driver::checkCurrentPixelShader()
+bool Driver::checkCurrentPixelShader()
 {
    decaf_check(mCurrentVertexShader);
    // technically we depend on this, but can't check since its possible that its just disabled
@@ -401,13 +405,13 @@ void Driver::checkCurrentPixelShader()
 
    if (mCurrentPixelShader && mCurrentPixelShader->desc == currentDesc) {
       // Already active, nothing to do.
-      return;
+      return true;
    }
 
    auto& foundShader = mPixelShaders[currentDesc.hash()];
    if (foundShader) {
       mCurrentPixelShader = foundShader;
-      return;
+      return true;
    }
 
    foundShader = new PixelShaderObject();
@@ -426,13 +430,7 @@ void Driver::checkCurrentPixelShader()
    foundShader->module = module;
 
    mCurrentPixelShader = foundShader;
-}
-
-void Driver::checkCurrentShaders()
-{
-   checkCurrentVertexShader();
-   checkCurrentGeometryShader();
-   checkCurrentPixelShader();
+   return true;
 }
 
 } // namespace vulkan

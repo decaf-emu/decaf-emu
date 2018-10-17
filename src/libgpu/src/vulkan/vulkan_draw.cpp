@@ -6,7 +6,7 @@
 namespace vulkan
 {
 
-bool
+void
 Driver::bindShaderResources()
 {
    auto buildDescriptorSet = [&](vk::DescriptorSet dSet, int shaderStage)
@@ -208,8 +208,6 @@ Driver::bindShaderResources()
       psConstData.alphaRef = alphaRef;
       mActiveCommandBuffer.pushConstants<PsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 32, { psConstData });
    }
-
-   return true;
 }
 
 void
@@ -238,16 +236,54 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
    }
 
    // Set up all the required state, ordering here is very important
-   checkCurrentShaders();
-   checkCurrentRenderPass();
-   checkCurrentFramebuffer();
-   checkCurrentPipeline();
-   checkCurrentSamplers();
-   checkCurrentTextures();
-   checkCurrentAttribBuffers();
-   checkCurrentShaderBuffers();
-   checkCurrentIndices();
-   checkCurrentViewportAndScissor();
+   if (!checkCurrentVertexShader()) {
+      gLog->debug("Skipped draw due to a vertex shader error");
+      return;
+   }
+   if (!checkCurrentGeometryShader()) {
+      gLog->debug("Skipped draw due to a geometry shader error");
+      return;
+   }
+   if (!checkCurrentPixelShader()) {
+      gLog->debug("Skipped draw due to a pixel shader error");
+      return;
+   }
+   if (!checkCurrentRenderPass()) {
+      gLog->debug("Skipped draw due to a render pass error");
+      return;
+   }
+   if (!checkCurrentFramebuffer()) {
+      gLog->debug("Skipped draw due to a framebuffer error");
+      return;
+   }
+   if (!checkCurrentPipeline()) {
+      gLog->debug("Skipped draw due to a pipeline error");
+      return;
+   }
+   if (!checkCurrentSamplers()) {
+      gLog->debug("Skipped draw due to a samplers error");
+      return;
+   }
+   if (!checkCurrentTextures()) {
+      gLog->debug("Skipped draw due to a textures error");
+      return;
+   }
+   if (!checkCurrentAttribBuffers()) {
+      gLog->debug("Skipped draw due to an attribute buffers error");
+      return;
+   }
+   if (!checkCurrentShaderBuffers()) {
+      gLog->debug("Skipped draw due to a shader buffers error");
+      return;
+   }
+   if (!checkCurrentIndices()) {
+      gLog->debug("Skipped draw due to an index buffer error");
+      return;
+   }
+   if (!checkCurrentViewportAndScissor()) {
+      gLog->debug("Skipped draw due to a viewport or scissor area error");
+      return;
+   }
 
    // TODO: We should probably move our code that does surface transitions to
    // some common location.  We cannot do it in the checkCurrent's, since its
@@ -284,21 +320,15 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
 
    mActiveCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mCurrentPipeline->pipeline);
 
-   bool drawIsLegal = true;
+   bindAttribBuffers();
+   bindShaderResources();
+   bindViewportAndScissor();
+   bindIndexBuffer();
 
-   drawIsLegal &= bindAttribBuffers();
-   drawIsLegal &= bindShaderResources();
-   drawIsLegal &= bindViewportAndScissor();
-
-   if (drawIsLegal) {
-      if (mCurrentIndexBuffer) {
-         bindIndexBuffer();
-         mActiveCommandBuffer.drawIndexed(drawDesc.numIndices, drawDesc.numInstances, 0, drawDesc.baseVertex, drawDesc.baseInstance);
-      } else {
-         mActiveCommandBuffer.draw(drawDesc.numIndices, drawDesc.numInstances, drawDesc.baseVertex, drawDesc.baseInstance);
-      }
+   if (mCurrentIndexBuffer) {
+      mActiveCommandBuffer.drawIndexed(drawDesc.numIndices, drawDesc.numInstances, 0, drawDesc.baseVertex, drawDesc.baseInstance);
    } else {
-      gLog->debug("Skipped draw due to invalid parameters");
+      mActiveCommandBuffer.draw(drawDesc.numIndices, drawDesc.numInstances, drawDesc.baseVertex, drawDesc.baseInstance);
    }
 
    mActiveCommandBuffer.endRenderPass();

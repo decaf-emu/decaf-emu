@@ -31,7 +31,7 @@ Driver::getAttribBufferDesc(uint32_t bufferIndex)
    return desc;
 }
 
-void
+bool
 Driver::checkCurrentAttribBuffers()
 {
    // Must have a vertex shader to describe what to upload...
@@ -46,33 +46,26 @@ Driver::checkCurrentAttribBuffers()
       auto desc = getAttribBufferDesc(i);
 
       if (!desc.baseAddress) {
-         mCurrentAttribBuffers[i] = nullptr;
-         continue;
+         // If the vertex shader takes this as an input, but there is no
+         // actual buffer specified, we should fail our draw entirely.
+         return false;
       }
 
       mCurrentAttribBuffers[i] = getDataBuffer(desc.baseAddress, desc.size, false);
    }
+
+   return true;
 }
 
-bool
+void
 Driver::bindAttribBuffers()
 {
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       auto buffer = mCurrentAttribBuffers[i];
-
-      if (mCurrentVertexShader->shader.inputBuffers[i].isUsed) {
-         if (!buffer) {
-            // If the buffer is used, but we don't have one, we should cancel the draw.
-            return false;
-         }
-      }
-
       if (buffer) {
          mActiveCommandBuffer.bindVertexBuffers(i, { buffer->buffer }, { 0 });
       }
    }
-
-   return true;
 }
 
 } // namespace vulkan

@@ -4,7 +4,7 @@
 namespace vulkan
 {
 
-void
+bool
 Driver::checkCurrentViewportAndScissor()
 {
    // GPU7 actually supports many viewports and many scissors, but it
@@ -55,15 +55,14 @@ Driver::checkCurrentViewportAndScissor()
    scissor.extent.height = pa_sc_generic_scissor_br.BR_Y() - scissor.offset.y;
 
    mCurrentScissor = scissor;
+   return true;
 }
 
-bool
+void
 Driver::bindViewportAndScissor()
 {
    mActiveCommandBuffer.setViewport(0, { mCurrentViewport });
    mActiveCommandBuffer.setScissor(0, { mCurrentScissor });
-
-   return true;
 }
 
 } // namespace vulkan

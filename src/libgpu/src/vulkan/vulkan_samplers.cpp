@@ -235,7 +235,7 @@ Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
    mCurrentSamplers[int(shaderStage)][samplerIdx] = foundSamp;
 }
 
-void
+bool
 Driver::checkCurrentSamplers()
 {
    for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
@@ -243,6 +243,8 @@ Driver::checkCurrentSamplers()
          checkCurrentSampler(ShaderStage(shaderStage), i);
       }
    }
+
+   return true;
 }
 
 } // namespace vulkan

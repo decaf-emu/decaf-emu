@@ -154,7 +154,7 @@ Driver::maybeUnpackQuads()
    }
 }
 
-void
+bool
 Driver::checkCurrentIndices()
 {
    maybeSwapIndices();
@@ -172,12 +172,16 @@ Driver::checkCurrentIndices()
    } else {
       mCurrentIndexBuffer = nullptr;
    }
+
+   return true;
 }
 
-bool
+void
 Driver::bindIndexBuffer()
 {
-   decaf_check(mCurrentIndexBuffer);
+   if (!mCurrentIndexBuffer) {
+      return;
+   }
 
    auto& drawDesc = mCurrentDrawDesc;
 
@@ -191,8 +195,6 @@ Driver::bindIndexBuffer()
    }
 
    mActiveCommandBuffer.bindIndexBuffer(mCurrentIndexBuffer->buffer, 0, bindIndexType);
-
-   return true;
 }
 
 } // namespace vulkan

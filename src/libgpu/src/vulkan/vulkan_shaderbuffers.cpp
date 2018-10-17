@@ -61,7 +61,7 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
    mCurrentUniformBlocks[int(shaderStage)][cbufferIdx] = buffer;
 }
 
-void
+bool
 Driver::checkCurrentShaderBuffers()
 {
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
@@ -84,6 +84,8 @@ Driver::checkCurrentShaderBuffers()
          checkCurrentGprBuffer(ShaderStage(shaderStage));
       }
    }
+
+   return true;
 }
 
 } // namespace vulkan

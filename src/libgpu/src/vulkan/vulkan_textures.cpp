@@ -57,41 +57,51 @@ Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
    return desc;
 }
 
-void
+bool
 Driver::checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx)
 {
    if (shaderStage == ShaderStage::Vertex) {
       if (!mCurrentVertexShader || !mCurrentVertexShader->shader.textureUsed[textureIdx]) {
-         return;
+         return true;
       }
    } else if (shaderStage == ShaderStage::Geometry) {
       if (!mCurrentGeometryShader || !mCurrentGeometryShader->shader.textureUsed[textureIdx]) {
-         return;
+         return true;
       }
    } else if (shaderStage == ShaderStage::Pixel) {
       if (!mCurrentPixelShader || !mCurrentPixelShader->shader.textureUsed[textureIdx]) {
-         return;
+         return true;
       }
    } else {
       decaf_abort("Unknown shader stage");
    }
 
    auto textureDesc = getTextureDesc(shaderStage, textureIdx);
-   auto surface = getSurface(textureDesc.surfaceDesc, false);
+   if (!textureDesc.surfaceDesc.dataDesc.baseAddress) {
+      // TODO: I'm not sure if ignoring this is the right answer, but lets try...
+      mCurrentTextures[int(shaderStage)][textureIdx] = nullptr;
+      return false;
+   }
 
+   auto surface = getSurface(textureDesc.surfaceDesc, false);
    mCurrentTextures[int(shaderStage)][textureIdx] = surface;
+   return true;
 }
 
-void
+bool
 Driver::checkCurrentTextures()
 {
    mCurrentTextures = { { nullptr } };
 
    for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         checkCurrentTexture(ShaderStage(shaderStage), i);
+         if (!checkCurrentTexture(ShaderStage(shaderStage), i)) {
+            return false;
+         }
       }
    }
+
+   return true;
 }
 
 } // namespace vulkan

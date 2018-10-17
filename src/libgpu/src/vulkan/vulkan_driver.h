@@ -483,23 +483,23 @@ protected:
    int32_t findMemoryType(uint32_t memoryTypeBits, vk::MemoryPropertyFlags props);
 
    // Viewports
-   void checkCurrentViewportAndScissor();
-   bool bindViewportAndScissor();
+   bool checkCurrentViewportAndScissor();
+   void bindViewportAndScissor();
 
    // Samplers
    SamplerDesc getSamplerDesc(ShaderStage shaderStage, uint32_t samplerIdx);
    void checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx);
-   void checkCurrentSamplers();
+   bool checkCurrentSamplers();
 
    // Textures
    TextureDesc getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx);
-   void checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx);
-   void checkCurrentTextures();
+   bool checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx);
+   bool checkCurrentTextures();
 
    // CBuffers
    void checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx);
    void checkCurrentGprBuffer(ShaderStage shaderStage);
-   void checkCurrentShaderBuffers();
+   bool checkCurrentShaderBuffers();
 
    // Staging
    StagingBuffer * allocTempBuffer(uint32_t size);
@@ -528,22 +528,22 @@ protected:
 
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);
-   void checkCurrentAttribBuffers();
-   bool bindAttribBuffers();
+   bool checkCurrentAttribBuffers();
+   void bindAttribBuffers();
 
    // Indices
    void maybeSwapIndices();
    void maybeUnpackQuads();
-   void checkCurrentIndices();
-   bool bindIndexBuffer();
+   bool checkCurrentIndices();
+   void bindIndexBuffer();
 
    // Draws
-   bool bindShaderResources();
+   void bindShaderResources();
    void drawGenericIndexed(uint32_t numIndices, void *indices);
 
    // Framebuffers
    FramebufferDesc getFramebufferDesc();
-   void checkCurrentFramebuffer();
+   bool checkCurrentFramebuffer();
    SurfaceObject * getColorBuffer(const ColorBufferDesc& info, bool discardData);
    SurfaceObject * getDepthStencilBuffer(const DepthStencilBufferDesc& info, bool discardData);
 
@@ -555,18 +555,17 @@ protected:
    spirv::VertexShaderDesc getVertexShaderDesc();
    spirv::GeometryShaderDesc getGeometryShaderDesc();
    spirv::PixelShaderDesc getPixelShaderDesc();
-   void checkCurrentVertexShader();
-   void checkCurrentGeometryShader();
-   void checkCurrentPixelShader();
-   void checkCurrentShaders();
+   bool checkCurrentVertexShader();
+   bool checkCurrentGeometryShader();
+   bool checkCurrentPixelShader();
 
    // Render Passes
    RenderPassDesc getRenderPassDesc();
-   void checkCurrentRenderPass();
+   bool checkCurrentRenderPass();
 
    // Pipelines
    PipelineDesc getPipelineDesc();
-   void checkCurrentPipeline();
+   bool checkCurrentPipeline();
 
 private:
    virtual void decafSetBuffer(const latte::pm4::DecafSetBuffer &data) override;
