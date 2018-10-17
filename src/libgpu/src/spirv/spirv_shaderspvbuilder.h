@@ -67,21 +67,22 @@ public:
    void popStack(int popCount)
    {
       // stateIdxVal = *stackIndexVar
-      auto stateIdxVal = createLoad(stackIndexVar());
-      addName(stateIdxVal, "stackIdx");
+      auto stackIdxVal = createLoad(stackIndexVar());
+      addName(stackIdxVal, "stackIdx");
 
       if (popCount > 0) {
          // stateIdxVal -= {popCount}
          auto constPopCount = makeUintConstant(popCount);
-         auto newStackIdxVal = createBinOp(spv::Op::OpISub, intType(), stateIdxVal, constPopCount);
+         auto newStackIdxVal = createBinOp(spv::Op::OpISub, intType(), stackIdxVal, constPopCount);
          addName(newStackIdxVal, "newStackIdx");
 
          // *stackIndexVar = stateIdxVal
          createStore(newStackIdxVal, stackIndexVar());
+         stackIdxVal = newStackIdxVal;
       }
 
       // newStateVal = stack[stackIndexVal]
-      auto stackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { stateIdxVal });
+      auto stackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { stackIdxVal });
       addName(stackPtr, "stackPtr");
       auto newStateVal = createLoad(stackPtr);
       addName(newStateVal, "newState");

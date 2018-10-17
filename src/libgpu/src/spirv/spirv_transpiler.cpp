@@ -129,6 +129,7 @@ int findVsOutputLocation(const std::vector<uint32_t>& semantics, uint32_t semant
 
 void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderDesc& desc)
 {
+   spvGen.createStore(spvGen.makeIntConstant(0), spvGen.stackIndexVar());
    spvGen.createStore(spvGen.stateActive(), spvGen.stateVar());
 
    auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar());
@@ -153,11 +154,13 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
 
 void Transpiler::writeGeometryProlog(ShaderSpvBuilder &spvGen, const GeometryShaderDesc& desc)
 {
+   spvGen.createStore(spvGen.makeIntConstant(0), spvGen.stackIndexVar());
    spvGen.createStore(spvGen.stateActive(), spvGen.stateVar());
 }
 
 void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDesc& desc)
 {
+   spvGen.createStore(spvGen.makeIntConstant(0), spvGen.stackIndexVar());
    spvGen.createStore(spvGen.stateActive(), spvGen.stateVar());
 
    // We don't currently support baryocentric sampling
