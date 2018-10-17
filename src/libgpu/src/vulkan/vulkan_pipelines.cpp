@@ -274,7 +274,7 @@ Driver::getPipelineDesc()
       desc.cbBlendControls[7].targetMask = cb_target_mask.TARGET7_ENABLE();
    } else {
       for (auto id = 0u; id < latte::MaxRenderTargets; ++id) {
-         desc.cbBlendControls[id].targetMask = 1 & 2 & 4 & 8;
+         desc.cbBlendControls[id].targetMask = 1 | 2 | 4 | 8;
       }
    }
 
