@@ -336,7 +336,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
             decaf_check(mSpv->getTypeId(elems[i]) == mSpv->uintType());
 
             // elem = float(elem) / float(FIELD_MASK)
-            auto normMaxConst = mSpv->makeFloatConstant(float(fieldMask / 2));
+            auto normMaxConst = mSpv->makeFloatConstant(float(fieldMask));
             auto floatElem = mSpv->createUnaryOp(spv::OpConvertSToF, mSpv->floatType(), elems[i]);
             elems[i] = mSpv->createBinOp(spv::OpFDiv, mSpv->floatType(), floatElem, normMaxConst);
          }
