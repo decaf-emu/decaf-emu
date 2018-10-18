@@ -52,8 +52,12 @@ Driver::checkDataBuffer(DataBufferObject *dataBuffer)
    auto dataHash = DataHash {}.write(dataPtr, dataBuffer->size);
    if (dataBuffer->hash == dataHash) {
       // The buffer is still up to date, no need to upload
+      dataBuffer->lastHashedIndex = mActivePm4BufferIndex;
       return;
    }
+
+   dataBuffer->hash = dataHash;
+   dataBuffer->lastHashedIndex = mActivePm4BufferIndex;
 
    auto stagingBuffer = getStagingBuffer(dataSize);
    auto mappedData = mapStagingBuffer(stagingBuffer, false);
@@ -65,9 +69,6 @@ Driver::checkDataBuffer(DataBufferObject *dataBuffer)
    region.dstOffset = 0;
    region.size = dataSize;
    mActiveCommandBuffer.copyBuffer(stagingBuffer->buffer, dataBuffer->buffer, { region });
-
-   dataBuffer->hash = dataHash;
-   dataBuffer->lastHashedIndex = mActivePm4BufferIndex;
 }
 
 DataBufferObject *
