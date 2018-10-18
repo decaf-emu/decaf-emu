@@ -264,7 +264,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
 
    // Extract the appropriate bits if needed...
    std::array<spv::Id, 4> elems = { spv::NoResult, spv::NoResult, spv::NoResult, spv::NoResult };
-   for (auto i = 0u; i < outputElemCount; ++i) {
+   for (auto i = 0; i < outputElemCount; ++i) {
       auto &elem = fmtMeta.elems[i];
 
       // If the element width matches perfectly, we can just use it directly
@@ -278,7 +278,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
       elems[i] = mSpv->createTriOp(spv::OpBitFieldUExtract, mSpv->uintType(), inputElems[elem.index], startConst, lengthConst);
    }
 
-   for (auto i = 0u; i < outputElemCount; ++i) {
+   for (auto i = 0; i < outputElemCount; ++i) {
       auto &elem = fmtMeta.elems[i];
       auto fieldMax = static_cast<uint64_t>(1u) << elem.length;
 
