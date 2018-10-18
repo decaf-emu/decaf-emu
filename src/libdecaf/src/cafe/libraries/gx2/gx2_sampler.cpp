@@ -21,16 +21,18 @@ GX2InitSampler(virt_ptr<GX2Sampler> sampler,
                GX2TexClampMode clampMode,
                GX2TexXYFilterMode minMagFilterMode)
 {
-   auto word0 = sampler->regs.word0.value();
-
-   word0 = word0
+   sampler->regs.word0 = latte::SQ_TEX_SAMPLER_WORD0_N::get(0)
       .CLAMP_X(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
       .CLAMP_Y(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
       .CLAMP_Z(static_cast<latte::SQ_TEX_CLAMP>(clampMode))
       .XY_MAG_FILTER(static_cast<latte::SQ_TEX_XY_FILTER>(minMagFilterMode))
       .XY_MIN_FILTER(static_cast<latte::SQ_TEX_XY_FILTER>(minMagFilterMode));
 
-   sampler->regs.word0 = word0;
+   sampler->regs.word1 = latte::SQ_TEX_SAMPLER_WORD1_N::get(0)
+      .MAX_LOD(ufixed_4_6_t::from_data(1023));
+
+   sampler->regs.word2 = latte::SQ_TEX_SAMPLER_WORD2_N::get(0)
+      .TYPE(true);
 }
 
 void
