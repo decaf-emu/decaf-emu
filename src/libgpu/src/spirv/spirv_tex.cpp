@@ -300,6 +300,71 @@ void Transpiler::translateTex_SAMPLE_C_G_LZ(const ControlFlowInst &cf, const Tex
    translateGenericSample(cf, inst, SampleMode::Compare | SampleMode::Gradient | SampleMode::LodZero);
 }
 
+void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   auto textureId = inst.word0.RESOURCE_ID();
+   auto samplerId = inst.word2.SAMPLER_ID();
+   auto texDim = mTexInput[textureId];
+
+   GprMaskRef srcGpr;
+   srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
+   srcGpr.mask[SQ_CHAN::X] = inst.word2.SRC_SEL_X();
+   srcGpr.mask[SQ_CHAN::Y] = inst.word2.SRC_SEL_Y();
+   srcGpr.mask[SQ_CHAN::Z] = inst.word2.SRC_SEL_Z();
+   srcGpr.mask[SQ_CHAN::W] = inst.word2.SRC_SEL_W();
+
+   GprMaskRef destGpr;
+   destGpr.gpr = makeGprRef(inst.word1.DST_GPR(), inst.word1.DST_REL(), SQ_INDEX_MODE::LOOP);
+   destGpr.mask[SQ_CHAN::X] = inst.word1.DST_SEL_X();
+   destGpr.mask[SQ_CHAN::Y] = inst.word1.DST_SEL_Y();
+   destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
+   destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
+
+   auto texVar = mSpv->textureVar(textureId, texDim);
+
+   auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
+   auto srcLodVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });
+
+   auto oneIConst = mSpv->makeIntConstant(1);
+   auto sizeIConst = mSpv->makeIntConstant(6);
+
+   spv::Id sizeInfo;
+   switch (texDim) {
+   case latte::SQ_TEX_DIM::DIM_1D: {
+      auto sizeInfo1d = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->intType(), texVar);
+      sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->uint3Type(), { sizeInfo1d, oneIConst, oneIConst });
+      break;
+   }
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA: {
+      auto sizeInfo2d = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->int2Type(), texVar);
+      sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->uint3Type(), { sizeInfo2d, oneIConst });
+      break;
+   }
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+   case latte::SQ_TEX_DIM::DIM_3D: {
+      sizeInfo = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->int3Type(), texVar);
+      break;
+   }
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP: {
+      auto sizeInfoCube = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->int3Type(), texVar);
+      auto cubemapArrSideSize = mSpv->createOp(spv::OpCompositeExtract, mSpv->intType(), { sizeInfoCube, 3 });
+      auto cubemapArrSize = mSpv->createBinOp(spv::OpSDiv, mSpv->intType(), cubemapArrSideSize, sizeIConst);
+      sizeInfo = mSpv->createOp(spv::OpCompositeInsert, mSpv->int3Type(), { cubemapArrSize, sizeInfoCube, 3 });
+      break;
+   }
+   default:
+      decaf_abort("Unexpected texture sample dim");
+   }
+
+   auto levelInfo = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->intType(), texVar);
+   auto output = mSpv->createOp(spv::OpCompositeConstruct, mSpv->int4Type(), { sizeInfo, levelInfo });
+
+   mSpv->writeGprMaskRef(destGpr, output);
+}
+
 void Transpiler::translateTex_SET_CUBEMAP_INDEX(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
    // TODO: It is possible that we are supposed to somehow force
