@@ -80,8 +80,7 @@ Pm4Processor::handlePacketType0(HeaderType0 header, const gsl::span<uint32_t> &d
 
    for (auto i = 0; i < data.size(); ++i) {
       auto index = base + i;
-      // Set mRegisters[base + i];
-      gLog->info("Type0 set register 0x{:08X} = 0x{:08X}", index, data[i]);
+      setRegister(static_cast<latte::Register>(index * 4), data[i]);
    }
 }
 

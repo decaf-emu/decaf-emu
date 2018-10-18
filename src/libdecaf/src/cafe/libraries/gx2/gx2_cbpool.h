@@ -161,7 +161,7 @@ writeType0(latte::Register baseIndex,
    auto cb = getWriteCommandBuffer(numValues + 1);
    auto header = latte::pm4::HeaderType0::get(0)
       .type(latte::pm4::PacketType::Type0)
-      .baseIndex(baseIndex)
+      .baseIndex(baseIndex / 4)
       .count(numValues - 1);
 
    // Write data to command buffer
