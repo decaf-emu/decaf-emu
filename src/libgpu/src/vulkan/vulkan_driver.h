@@ -220,7 +220,10 @@ struct SurfaceDataDesc
 struct SurfaceDataObject
 {
    SurfaceDataDesc desc;
-   DataHash dataHash;
+
+   DataHash hash;
+   uint64_t lastHashedIndex;
+
    vk::Image image;
    vk::ImageSubresourceRange subresRange;
    vk::ImageLayout activeLayout;
