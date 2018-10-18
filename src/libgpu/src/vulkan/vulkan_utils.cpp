@@ -576,14 +576,14 @@ getVkSampleCount(uint32_t samples)
 
 static vk::Format
 getSurfaceFormat(latte::SQ_NUM_FORMAT numFormat,
-                latte::SQ_FORMAT_COMP formatComp,
-                uint32_t degamma,
-                vk::Format unorm,
-                vk::Format snorm,
-                vk::Format uint,
-                vk::Format sint,
-                vk::Format srgb,
-                vk::Format scaled)
+                 latte::SQ_FORMAT_COMP formatComp,
+                 uint32_t degamma,
+                 vk::Format unorm,
+                 vk::Format snorm,
+                 vk::Format uint,
+                 vk::Format sint,
+                 vk::Format srgb,
+                 vk::Format scaled)
 {
    if (!degamma) {
       if (numFormat == latte::SQ_NUM_FORMAT::NORM) {
@@ -620,21 +620,12 @@ getSurfaceFormat(latte::SQ_NUM_FORMAT numFormat,
    }
 }
 
-/*
-   ENUM_VALUE(INTEGER,                 0x100)
-   ENUM_VALUE(SIGNED,                  0x200)
-   ENUM_VALUE(DEGAMMA,                 0x400)
-   ENUM_VALUE(SCALED,                  0x800)
-
-
-*/
-
 vk::Format
 getSurfaceFormat(latte::SQ_DATA_FORMAT format,
-                latte::SQ_NUM_FORMAT numFormat,
-                latte::SQ_FORMAT_COMP formatComp,
-                uint32_t degamma,
-                bool forDepthBuffer)
+                 latte::SQ_NUM_FORMAT numFormat,
+                 latte::SQ_FORMAT_COMP formatComp,
+                 uint32_t degamma,
+                 bool forDepthBuffer)
 {
    static const vk::Format BADFMT = vk::Format::eUndefined;
    auto pick = [=](vk::Format unorm, vk::Format snorm, vk::Format uint, vk::Format sint, vk::Format srgb, vk::Format scaled)
