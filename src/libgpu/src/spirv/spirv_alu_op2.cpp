@@ -351,7 +351,31 @@ void Transpiler::translateAluOp2_MUL_IEEE(const ControlFlowInst &cf, const AluIn
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1);
+
    auto output = mSpv->createBinOp(spv::Op::OpFMul, mSpv->floatType(), src0, src1);
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
+void
+Transpiler::translateAluOp2_MULLO_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::INT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, latte::VarRefType::INT);
+
+   auto output = mSpv->createBinOp(spv::Op::OpIMul, mSpv->intType(), src0, src1);
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
+void
+Transpiler::translateAluOp2_MULLO_UINT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::UINT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, latte::VarRefType::UINT);
+
+   auto output = mSpv->createBinOp(spv::Op::OpIMul, mSpv->uintType(), src0, src1);
+
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
