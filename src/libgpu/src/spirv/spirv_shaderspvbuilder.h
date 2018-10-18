@@ -701,8 +701,11 @@ public:
       // respective instructions, and other accesses are illegal...
       if (forAr) {
          decaf_check(unit != latte::SQ_CHAN::T);
+
+         mARId[unit] = srcId;
+      } else {
+         mNextPrevResId[unit] = srcId;
       }
-      mNextPrevResId[unit] = srcId;
 
       if (inst.word1.ENCODING() != SQ_ALU_ENCODING::OP2 || inst.op2.WRITE_MASK()) {
          // According to the docs, GPR writes are undefined for AR instructions
@@ -1357,6 +1360,17 @@ public:
       return mAL;
    }
 
+   void resetAr()
+   {
+      // It is not legal to modify the AR register in the same instruction group
+      // that reads it, so we don't need to worry about swapping things around
+      // like we do for PV/PS.
+
+      for (auto i = 0; i < 4; ++i) {
+         mARId[i] = spv::NoResult;
+      }
+   }
+
    void swapPrevRes()
    {
       // Make the next prevRes active
@@ -1379,7 +1393,7 @@ public:
    {
       decaf_check(unit != latte::SQ_CHAN::T);
 
-      auto arVal = mPrevResId[unit];
+      auto arVal = mARId[unit];
       decaf_check(getTypeId(arVal) == intType());
       return arVal;
    }
@@ -1475,6 +1489,7 @@ protected:
    spv::Id mGpr = spv::NoResult;
    spv::Id mAL = spv::NoResult;
 
+   std::array<spv::Id, 4> mARId = { spv::NoResult };
    std::array<spv::Id, 5> mPrevResId = { spv::NoResult };
    std::array<spv::Id, 5> mNextPrevResId = { spv::NoResult };
 

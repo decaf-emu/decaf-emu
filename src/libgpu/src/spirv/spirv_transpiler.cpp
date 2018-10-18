@@ -104,6 +104,8 @@ void Transpiler::translateCfAluInst(const ControlFlowInst& cf)
    writeCfAluUnitLine(mType, mCfPC, -1, -1);
 
    ShaderParser::translateCfAluInst(cf);
+
+   mSpv->resetAr();
 }
 
 void Transpiler::translate()
