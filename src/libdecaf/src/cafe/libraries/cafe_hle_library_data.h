@@ -19,6 +19,9 @@ struct LibraryData : LibrarySymbol
    //! Pointer to the host pointer to guest memory which we should update
    virt_ptr<void> *hostPointer = nullptr;
 
+   //! Host constructor to call on allocated memory
+   void (*constructor)(void *) = nullptr;
+
    //! Size of this data symbol
    uint32_t size = 0;
 

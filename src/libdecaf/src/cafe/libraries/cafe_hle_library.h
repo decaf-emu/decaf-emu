@@ -277,6 +277,7 @@ protected:
       auto symbol = std::make_unique<LibraryData>();
       symbol->exported = false;
       symbol->hostPointer = reinterpret_cast<virt_ptr<void> *>(&data);
+      symbol->constructor = [](void *ptr) { new (ptr) DataType(); };
       symbol->size = sizeof(DataType);
       symbol->align = alignof(DataType);
       registerSymbol(name, std::move(symbol));
@@ -290,6 +291,7 @@ protected:
       auto symbol = std::make_unique<LibraryData>();
       symbol->exported = true;
       symbol->hostPointer = reinterpret_cast<virt_ptr<void> *>(&data);
+      symbol->constructor = [](void *ptr) { new (ptr) DataType(); };
       symbol->size = sizeof(DataType);
       symbol->align = alignof(DataType);
       registerSymbol(name, std::move(symbol));

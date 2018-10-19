@@ -133,6 +133,13 @@ Library::relocate(virt_addr textBaseAddress,
          if (dataSymbol->hostPointer) {
             *(dataSymbol->hostPointer) = virt_cast<void *>(dataSymbol->address);
          }
+
+         // TODO: When we relocate for a process switch we should not call this
+         // constructor - must differentiate between relocate for load and
+         // relocate for process switch.
+         if (dataSymbol->constructor) {
+            (*dataSymbol->constructor)(virt_cast<void *>(dataSymbol->address).get());
+         }
       }
    }
 }
