@@ -1,7 +1,8 @@
 #include "gx2.h"
+#include "gx2_cbpool.h"
 #include "gx2_draw.h"
 #include "gx2_enum_string.h"
-#include "gx2_cbpool.h"
+#include "gx2_shaders.h"
 
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
@@ -269,6 +270,68 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
 }
 
 void
+GX2DrawStreamOut(GX2PrimitiveMode mode,
+                 virt_ptr<GX2OutputStream> buffer)
+{
+   internal::writePM4(latte::pm4::SetControlConstant {
+      latte::Register::SQ_VTX_BASE_VTX_LOC,
+      0u
+   });
+
+   internal::writePM4(latte::pm4::SetConfigReg {
+      latte::Register::VGT_PRIMITIVE_TYPE,
+      mode & GX2PrimitiveModeFlags::ModeMask
+   });
+
+   internal::writePM4(latte::pm4::NumInstances {
+      0
+   });
+
+   auto stride = 0u;
+   if (buffer->buffer) {
+      stride = buffer->stride;
+   } else {
+      stride = buffer->gx2rData.elemSize;
+   }
+
+   internal::writePM4(latte::pm4::SetContextReg {
+      latte::Register::VGT_STRMOUT_DRAW_OPAQUE_VERTEX_STRIDE,
+      stride >> 2
+   });
+
+   internal::writePM4(latte::pm4::CopyDw {
+      latte::pm4::COPY_DW_SELECT::get(0)
+         .SRC(latte::pm4::COPY_DW_SEL_MEMORY)
+         .DST(latte::pm4::COPY_DW_SEL_REGISTER),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer->context)),
+      0u,
+      latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE,
+      0u
+   });
+
+   auto vgt_draw_initiator = latte::VGT_DRAW_INITIATOR::get(0)
+      .SOURCE_SELECT(latte::VGT_DI_SRC_SEL::AUTO_INDEX)
+      .USE_OPAQUE(true);
+
+   if (mode & GX2PrimitiveModeFlags::Tessellate) {
+      internal::writePM4(latte::pm4::IndexType {
+         latte::VGT_DMA_INDEX_TYPE::get(0)
+            .INDEX_TYPE(latte::VGT_INDEX_TYPE::INDEX_32)
+            .SWAP_MODE(latte::VGT_DMA_SWAP::SWAP_32_BIT)
+      });
+
+      vgt_draw_initiator = vgt_draw_initiator
+         .MAJOR_MODE(latte::VGT_DI_MAJOR_MODE::MODE1);
+   }
+
+   // TODO: This type3 packet should have the predicate bool set to true
+   internal::writePM4(latte::pm4::DrawIndexAuto {
+      0u,
+      vgt_draw_initiator
+   });
+}
+
+void
 GX2SetPrimitiveRestartIndex(uint32_t index)
 {
    internal::writePM4(latte::pm4::SetContextReg {
@@ -286,6 +349,7 @@ Library::registerDrawSymbols()
    RegisterFunctionExport(GX2DrawIndexedEx);
    RegisterFunctionExport(GX2DrawIndexedEx2);
    RegisterFunctionExport(GX2DrawIndexedImmediateEx);
+   RegisterFunctionExport(GX2DrawStreamOut);
    RegisterFunctionExport(GX2SetPrimitiveRestartIndex);
 }
 

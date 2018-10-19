@@ -302,6 +302,11 @@ ENUM_BEG(GX2PrimitiveMode, uint32_t)
    ENUM_VALUE(QuadStrip,               0x14)
 ENUM_END(GX2PrimitiveMode)
 
+FLAGS_BEG(GX2PrimitiveModeFlags, uint32_t)
+   FLAGS_VALUE(ModeMask,               0x1F)
+   FLAGS_VALUE(Tessellate,             0x80)
+FLAGS_END(GX2PrimitiveModeFlags)
+
 ENUM_BEG(GX2PolygonMode, uint32_t)
    ENUM_VALUE(Point,                   0)
    ENUM_VALUE(Line,                    1)

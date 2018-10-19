@@ -5,6 +5,8 @@
 namespace cafe::gx2
 {
 
+struct GX2OutputStream;
+
 /**
  * \defgroup gx2_draw Draw
  * \ingroup gx2
@@ -54,6 +56,10 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
                           virt_ptr<void> indices,
                           uint32_t offset,
                           uint32_t numInstances);
+
+void
+GX2DrawStreamOut(GX2PrimitiveMode mode,
+                 virt_ptr<GX2OutputStream> buffer);
 
 void
 GX2SetPrimitiveRestartIndex(uint32_t index);
