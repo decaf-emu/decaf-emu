@@ -244,6 +244,42 @@ struct DecafCopySurface
    }
 };
 
+enum COPY_DW_SEL : uint32_t
+{
+   COPY_DW_SEL_REGISTER = 0,
+   COPY_DW_SEL_MEMORY = 1,
+};
+
+BITFIELD_BEG(COPY_DW_SELECT, uint32_t)
+   BITFIELD_ENTRY(0, 1, COPY_DW_SEL, SRC);
+   BITFIELD_ENTRY(1, 1, COPY_DW_SEL, DST);
+BITFIELD_END
+
+struct CopyDw
+{
+   static const auto Opcode = IT_OPCODE::COPY_DW;
+
+   COPY_DW_SELECT select;
+
+   // Memory address or RegisterIndex/4 based  on select.src
+   phys_addr srcLo;
+   uint32_t srcHi;
+
+   // Memory address or RegisterIndex/4 based on select.dst
+   latte::Register dstLo;
+   uint32_t dstHi;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(select.value);
+      se(srcLo);
+      se(srcHi);
+      se.REG_OFFSET(dstLo, static_cast<latte::Register>(0));
+      se(dstHi);
+   }
+};
+
 struct DrawIndexAuto
 {
    static const auto Opcode = IT_OPCODE::DRAW_INDEX_AUTO;
