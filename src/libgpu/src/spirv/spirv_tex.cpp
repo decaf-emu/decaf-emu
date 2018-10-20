@@ -21,7 +21,6 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       break;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       decaf_check(inst.word1.COORD_TYPE_X() == SQ_TEX_COORD_TYPE::NORMALIZED);
-      decaf_check(inst.word1.COORD_TYPE_Y() == SQ_TEX_COORD_TYPE::UNNORMALIZED);
       break;
    case latte::SQ_TEX_DIM::DIM_2D:
    case latte::SQ_TEX_DIM::DIM_2D_MSAA:
@@ -36,7 +35,6 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       decaf_check(inst.word1.COORD_TYPE_X() == SQ_TEX_COORD_TYPE::NORMALIZED);
       decaf_check(inst.word1.COORD_TYPE_Y() == SQ_TEX_COORD_TYPE::NORMALIZED);
-      decaf_check(inst.word1.COORD_TYPE_Z() == SQ_TEX_COORD_TYPE::UNNORMALIZED);
       break;
    default:
       decaf_abort("Unexpected texture sample dim");
