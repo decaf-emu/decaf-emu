@@ -633,6 +633,10 @@ GX2SetStreamOutContext(uint32_t index,
    decaf_check(index <= 3);
    auto srcLo = phys_addr { 0 };
 
+   // In the case of an explicit offset, the stream pointer is actually
+   // a uint32_t specifying the offset into the buffer to be using.
+   uint32_t explicitOffset = virt_cast<virt_addr>(stream).getAddress();
+
    auto control = SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(false)
       .SELECT_BUFFER(index);
@@ -651,7 +655,7 @@ GX2SetStreamOutContext(uint32_t index,
    case GX2StreamOutContextMode::FromOffset:
       control = control
          .OFFSET_SOURCE(STRMOUT_OFFSET_FROM_PACKET);
-      srcLo = OSEffectiveToPhysical(virt_cast<virt_addr>(stream));
+      srcLo = phys_addr { explicitOffset };
       break;
    }
 
