@@ -51,7 +51,7 @@ Driver::checkCurrentAttribBuffers()
          return false;
       }
 
-      mCurrentAttribBuffers[i] = getDataBuffer(desc.baseAddress, desc.size, false);
+      mCurrentAttribBuffers[i] = getDataMemCache(desc.baseAddress, desc.size, false);
    }
 
    return true;

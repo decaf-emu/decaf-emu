@@ -210,4 +210,70 @@ convertFromTiled(
    return true;
 }
 
+bool
+convertToTiled(
+   uint8_t *output,
+   uint8_t *input,
+   uint32_t inputPitch,
+   latte::SQ_TILE_MODE tileMode,
+   uint32_t swizzle,
+   uint32_t pitch,
+   uint32_t width,
+   uint32_t height,
+   uint32_t depth,
+   uint32_t aa,
+   bool isDepth,
+   uint32_t bpp)
+{
+   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT srcAddrInput;
+   std::memset(&srcAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
+   srcAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
+   srcAddrInput.bpp = bpp;
+   srcAddrInput.pitch = inputPitch;
+   srcAddrInput.height = height;
+   srcAddrInput.numSlices = depth;
+   srcAddrInput.numSamples = 1;
+   srcAddrInput.tileMode = AddrTileMode::ADDR_TM_LINEAR_GENERAL;
+   srcAddrInput.isDepth = isDepth;
+   srcAddrInput.tileBase = 0;
+   srcAddrInput.compBits = 0;
+   srcAddrInput.numFrags = 0;
+   srcAddrInput.bankSwizzle = 0;
+   srcAddrInput.pipeSwizzle = 0;
+
+   // Setup dst
+   ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT dstAddrInput;
+   std::memset(&dstAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
+   dstAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
+   dstAddrInput.bpp = bpp;
+   dstAddrInput.pitch = pitch;
+   dstAddrInput.height = height;
+   dstAddrInput.numSlices = depth;
+   dstAddrInput.numSamples = 1 << aa;
+   dstAddrInput.tileMode = static_cast<AddrTileMode>(tileMode);
+   dstAddrInput.isDepth = isDepth;
+   dstAddrInput.tileBase = 0;
+   dstAddrInput.compBits = 0;
+   dstAddrInput.numFrags = 0;
+   calcSurfaceBankPipeSwizzle(swizzle,
+                              &srcAddrInput.bankSwizzle,
+                              &srcAddrInput.pipeSwizzle);
+
+   // Untiling always takes sample 0
+   srcAddrInput.sample = 0;
+   dstAddrInput.sample = 0;
+
+   // Untile all of the slices of this surface
+   for (uint32_t slice = 0; slice < depth; ++slice) {
+      srcAddrInput.slice = slice;
+      dstAddrInput.slice = slice;
+
+      copySurfacePixels(
+         output, width, height, dstAddrInput,
+         input, width, height, srcAddrInput);
+   }
+
+   return true;
+}
+
 } // namespace gpu

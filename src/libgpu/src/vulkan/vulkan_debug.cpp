@@ -40,7 +40,7 @@ Driver::updateDebuggerInfo()
    mDebuggerInfo.numPipelines = mPipelines.size();
    mDebuggerInfo.numSamplers = mSamplers.size();
    mDebuggerInfo.numSurfaces = mSurfaces.size();
-   mDebuggerInfo.numDataBuffers = mDataBuffers.size();
+   mDebuggerInfo.numDataBuffers = 0;
 }
 
 } // namespace vulkan

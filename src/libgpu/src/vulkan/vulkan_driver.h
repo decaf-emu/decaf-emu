@@ -66,6 +66,63 @@ private:
 
 };
 
+struct MemCacheMutator
+{
+   enum class Mode
+   {
+      None,
+      Retile
+   };
+
+   Mode mode = Mode::None;
+   struct
+   {
+      latte::SQ_TILE_MODE tileMode;
+      uint32_t swizzle;
+      uint32_t pitch;
+      uint32_t height;
+      uint32_t depth;
+      uint32_t aa;
+      bool isDepth;
+      uint32_t bpp;
+   } retile;
+
+   inline bool operator==(const MemCacheMutator& other) const
+   {
+      if (mode == Mode::None && other.mode == Mode::None) {
+         return true;
+      }
+
+      // We currently cheat and use the DataHash system to compare.
+      auto hash = DataHash {}.write(retile);
+      auto ohash = DataHash {}.write(other.retile);
+      return hash == ohash;
+   }
+};
+
+struct MemCacheObject
+{
+   // Meta-data about what this cache object represents.
+   phys_addr address;
+   uint32_t size;
+   MemCacheMutator mutator;
+
+   // The buffer data.
+   VmaAllocation allocation;
+   vk::Buffer buffer;
+
+   // Stores the last computed hash for this data (from the CPU).
+   DataHash dataHash;
+
+   // Records the last PM4 context which refers to this data.
+   uint64_t lastUsageIndex;
+
+   // Records the number of external objects relying on this...
+   uint64_t extnRefCount;
+};
+
+struct DataBufferObject : MemCacheObject { };
+
 enum class ShaderStage
 {
    Vertex = 0,
@@ -118,18 +175,6 @@ struct VertexBufferDesc
    phys_addr baseAddress;
    uint32_t size;
    uint32_t stride;
-};
-
-struct DataBufferObject
-{
-   phys_addr baseAddress;
-   uint32_t size;
-
-   DataHash hash;
-   uint64_t lastHashedIndex;
-
-   vk::Buffer buffer;
-   VmaAllocation memory;
 };
 
 struct StagingBuffer
@@ -221,10 +266,18 @@ struct SurfaceDataObject
 {
    SurfaceDataDesc desc;
 
+   MemCacheObject *cacheMem;
    DataHash hash;
-   uint64_t lastHashedIndex;
+   uint64_t lastUsageIndex;
+
+   uint32_t pitch;
+   uint32_t width;
+   uint32_t height;
+   uint32_t depth;
+   uint32_t arrayLayers;
 
    vk::Image image;
+   vk::DeviceMemory imageMem;
    vk::ImageSubresourceRange subresRange;
    vk::ImageLayout activeLayout;
 };
@@ -506,17 +559,21 @@ protected:
    void checkCurrentGprBuffer(ShaderStage shaderStage);
    bool checkCurrentShaderBuffers();
 
+   // Memory Cache
+   MemCacheObject * _allocMemCache(phys_addr address, uint32_t size, const MemCacheMutator& mutator);
+   void _uploadMemCache(MemCacheObject *cache);
+   void _downloadMemCache(MemCacheObject *cache);
+   MemCacheObject * getMemCache(phys_addr address, uint32_t size, const MemCacheMutator& mutator = MemCacheMutator {});
+   void refreshMemCache(MemCacheObject *cache);
+   void invalidateMemCache(MemCacheObject *cache);
+   DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size, bool discardData = false);
+
    // Staging
    StagingBuffer * allocTempBuffer(uint32_t size);
    StagingBuffer * getStagingBuffer(uint32_t size);
    void retireStagingBuffer(StagingBuffer *sbuffer);
    void * mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu);
    void unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu);
-
-   // Data Buffers
-   DataBufferObject * allocateDataBuffer(phys_addr baseAddress, uint32_t size);
-   void checkDataBuffer(DataBufferObject * dataBuffer);
-   DataBufferObject * getDataBuffer(phys_addr baseAddress, uint32_t size, bool discardData = false);
 
    // Surfaces
    SurfaceDataObject * allocateSurfaceData(const SurfaceDataDesc &info);
@@ -642,6 +699,9 @@ private:
    std::array<StagingBuffer*, 3> mCurrentGprBuffers = { nullptr };
    std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
 
+   std::list<MemCacheObject *> mPendingInvalidations;
+
+   std::vector<uint8_t> mScratchRetiling;
    std::vector<uint8_t> mScratchIdxSwap;
    std::vector<uint8_t> mScratchIdxDequad;
 
@@ -671,7 +731,7 @@ private:
    std::unordered_map<DataHash, RenderPassObject*> mRenderPasses;
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;
-   std::map<std::pair<phys_addr, uint32_t>, DataBufferObject*> mDataBuffers;
+   std::unordered_map<uint64_t, MemCacheObject *> mMemCaches;
 };
 
 } // namespace vulkan

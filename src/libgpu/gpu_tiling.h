@@ -32,4 +32,18 @@ convertFromTiled(uint8_t *output,
                  bool isDepth,
                  uint32_t bpp);
 
+bool
+convertToTiled(uint8_t *output,
+               uint8_t *input,
+               uint32_t inputPitch,
+               latte::SQ_TILE_MODE tileMode,
+               uint32_t swizzle,
+               uint32_t pitch,
+               uint32_t width,
+               uint32_t height,
+               uint32_t depth,
+               uint32_t aa,
+               bool isDepth,
+               uint32_t bpp);
+
 } // namespace gpu

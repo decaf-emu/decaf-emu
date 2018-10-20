@@ -18,6 +18,7 @@ Driver::allocTempBuffer(uint32_t size)
    bufferDesc.size = size;
    bufferDesc.usage =
       vk::BufferUsageFlagBits::eTransferSrc |
+      vk::BufferUsageFlagBits::eTransferDst |
       vk::BufferUsageFlagBits::eIndexBuffer |
       vk::BufferUsageFlagBits::eUniformBuffer;
    bufferDesc.sharingMode = vk::SharingMode::eExclusive;

@@ -52,6 +52,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
    }
 
    vk::ImageType imageType;
+   auto realPitch = 1;
    auto realWidth = 1;
    auto realHeight = 1;
    auto realDepth = 1;
@@ -60,6 +61,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
    switch (info.dim) {
    case latte::SQ_TEX_DIM::DIM_1D:
       imageType = vk::ImageType::e1D;
+      realPitch = info.pitch;
       realWidth = info.width;
       realHeight = 1;
       realDepth = 1;
@@ -67,6 +69,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
       break;
    case latte::SQ_TEX_DIM::DIM_2D:
       imageType = vk::ImageType::e2D;
+      realPitch = info.pitch;
       realWidth = info.width;
       realHeight = info.height;
       realDepth = 1;
@@ -74,6 +77,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
       break;
    case latte::SQ_TEX_DIM::DIM_3D:
       imageType = vk::ImageType::e3D;
+      realPitch = info.pitch;
       realWidth = info.width;
       realHeight = info.height;
       realDepth = info.depth;
@@ -81,6 +85,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
       break;
    case latte::SQ_TEX_DIM::DIM_CUBEMAP:
       imageType = vk::ImageType::e2D;
+      realPitch = info.pitch;
       realWidth = info.width;
       realHeight = info.height;
       realDepth = 1;
@@ -88,6 +93,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
       break;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       imageType = vk::ImageType::e1D;
+      realPitch = info.pitch;
       realWidth = info.width;
       realHeight = 1;
       realDepth = 1;
@@ -95,6 +101,7 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
       break;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
       imageType = vk::ImageType::e2D;
+      realPitch = info.pitch;
       realWidth = info.width;
       realHeight = info.height;
       realDepth = 1;
@@ -106,6 +113,30 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
    default:
       decaf_abort(fmt::format("Failed to pick vulkan dim for latte dim {}", info.dim));
    }
+
+   auto realAddr = info.calcAlignedBaseAddress();
+   auto swizzle = info.calcSwizzle();
+   auto dataFormat = getSurfaceFormatDataFormat(info.format);
+   auto bpp = latte::getDataFormatBitsPerElement(dataFormat);
+   auto isDepthBuffer = (info.tileType == latte::SQ_TILE_TYPE::DEPTH);
+
+   auto texelPitch = info.pitch;
+   auto texelWidth = info.width;
+   auto texelHeight = info.height;
+   auto texelDepth = info.depth;
+
+   if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      // Block compressed textures are tiled/untiled in terms of blocks
+      texelPitch = texelPitch / 4;
+      texelWidth = (texelWidth + 3) / 4;
+      texelHeight = (texelHeight + 3) / 4;
+
+      // We need to make sure to round the sizes up appropriately
+      realWidth = align_up(realWidth, 4);
+      realHeight = align_up(realHeight, 4);
+   }
+
+   auto imageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
 
    vk::ImageCreateInfo createImageDesc;
    createImageDesc.imageType = imageType;
@@ -136,10 +167,34 @@ Driver::allocateSurfaceData(const SurfaceDataDesc& info)
    subresRange.baseArrayLayer = 0;
    subresRange.layerCount = realArrayLayers;
 
+   // Generate a mutator and grab the memory
+   MemCacheMutator mutator;
+   mutator.mode = MemCacheMutator::Mode::Retile;
+   mutator.retile.tileMode = info.tileMode;
+   mutator.retile.swizzle = swizzle;
+   mutator.retile.pitch = texelPitch;
+   mutator.retile.height = texelHeight;
+   mutator.retile.depth = texelDepth;
+   mutator.retile.aa = 0;
+   mutator.retile.isDepth = isDepthBuffer;
+   mutator.retile.bpp = bpp;
+   auto cacheMem = getMemCache(phys_addr(realAddr), imageSize, mutator);
+
+   // Record the external usage of this cache so its not evicted.
+   cacheMem->extnRefCount++;
+
+   // Return our freshly minted surface data object
    auto surfaceData = new SurfaceDataObject();
    surfaceData->desc = info;
    surfaceData->image = image;
+   surfaceData->imageMem = imageMem;
+   surfaceData->cacheMem = cacheMem;
    surfaceData->subresRange = subresRange;
+   surfaceData->pitch = realPitch;
+   surfaceData->width = realWidth;
+   surfaceData->height = realHeight;
+   surfaceData->depth = realDepth;
+   surfaceData->arrayLayers = realArrayLayers;
    surfaceData->activeLayout = vk::ImageLayout::eUndefined;
    return surfaceData;
 }
@@ -153,11 +208,6 @@ Driver::releaseSurfaceData(SurfaceDataObject *surfaceData)
 void
 Driver::uploadSurfaceData(SurfaceDataObject *surfaceData)
 {
-   if (mActivePm4BufferIndex <= surfaceData->lastHashedIndex) {
-      // We already hashed and uploaded for this PM4 buffer
-      return;
-   }
-
    if (surfaceData->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
       // TODO: Implement uploading of depth buffer data (you know... just in case?)
       return;
@@ -168,148 +218,38 @@ Driver::uploadSurfaceData(SurfaceDataObject *surfaceData)
       return;
    }
 
-   auto dataFormat = getSurfaceFormatDataFormat(surfaceData->desc.format);
-
-   auto realAddr = surfaceData->desc.calcAlignedBaseAddress();
-   auto swizzle = surfaceData->desc.calcSwizzle();
-   auto bpp = latte::getDataFormatBitsPerElement(dataFormat);
-   auto imagePtr = phys_cast<uint8_t*>(static_cast<phys_addr>(realAddr)).getRawPointer();
-   auto dim = surfaceData->desc.dim;
-   auto format = surfaceData->desc.format;
-   auto srcWidth = surfaceData->desc.width;
-   auto srcHeight = surfaceData->desc.height;
-   auto srcPitch = surfaceData->desc.pitch;
-   auto srcDepth = surfaceData->desc.depth;
-   auto tileMode = surfaceData->desc.tileMode;
-   auto isDepthBuffer = (surfaceData->desc.tileType == latte::SQ_TILE_TYPE::DEPTH);
-
-   auto texelWidth = srcWidth;
-   auto texelHeight = srcHeight;
-   auto texelPitch = srcPitch;
-   auto texelDepth = srcDepth;
-   if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-      texelWidth = (texelWidth + 3) / 4;
-      texelHeight = (texelHeight + 3) / 4;
-      texelPitch = texelPitch / 4;
-   }
-
-   if (dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
-     texelDepth *= 6;
-   }
-
-   auto srcImageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
-   auto dstImageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
-
-   auto dataHash = DataHash {}.write(imagePtr, srcImageSize);
-   if (surfaceData->hash == dataHash) {
-      // The data is still up to date, no need to upload
-      surfaceData->lastHashedIndex = mActivePm4BufferIndex;
+   refreshMemCache(surfaceData->cacheMem);
+   if (surfaceData->hash == surfaceData->cacheMem->dataHash) {
+      // The underlying data has not changed, no need to do anything.
+      surfaceData->lastUsageIndex = mActivePm4BufferIndex;
       return;
-   }
-
-   surfaceData->hash = dataHash;
-   surfaceData->lastHashedIndex = mActivePm4BufferIndex;
-
-   std::vector<uint8_t> untiledImage;
-   untiledImage.resize(dstImageSize);
-
-   // Untile
-   gpu::convertFromTiled(
-      untiledImage.data(),
-      texelPitch,
-      imagePtr,
-      tileMode,
-      swizzle,
-      texelPitch,
-      texelWidth,
-      texelHeight,
-      texelDepth,
-      0,
-      isDepthBuffer,
-      bpp);
-
-   auto uploadBuffer = getStagingBuffer(dstImageSize);
-   auto uploadPtr = mapStagingBuffer(uploadBuffer, false);
-   memcpy(uploadPtr, untiledImage.data(), dstImageSize);
-   unmapStagingBuffer(uploadBuffer, true);
-
-   auto realWidth = 1;
-   auto realHeight = 1;
-   auto realDepth = 1;
-   auto realArrayLayers = 1;
-
-   auto& info = surfaceData->desc;
-   switch (info.dim) {
-   case latte::SQ_TEX_DIM::DIM_1D:
-      realWidth = info.width;
-      realHeight = 1;
-      realDepth = 1;
-      realArrayLayers = 1;
-      break;
-   case latte::SQ_TEX_DIM::DIM_2D:
-      realWidth = info.width;
-      realHeight = info.height;
-      realDepth = 1;
-      realArrayLayers = 1;
-      break;
-   case latte::SQ_TEX_DIM::DIM_3D:
-      realWidth = info.width;
-      realHeight = info.height;
-      realDepth = info.depth;
-      realArrayLayers = 1;
-      break;
-   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      realWidth = info.width;
-      realHeight = info.height;
-      realDepth = 1;
-      realArrayLayers = info.depth * 6;
-      break;
-   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      realWidth = info.width;
-      realHeight = 1;
-      realDepth = 1;
-      realArrayLayers = info.height;
-      break;
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-      realWidth = info.width;
-      realHeight = info.height;
-      realDepth = 1;
-      realArrayLayers = info.depth;
-      break;
-   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      decaf_abort("We do not currently support multi-sampling");
-   default:
-      decaf_abort(fmt::format("Failed to pick vulkan dim for latte dim {}", info.dim));
-   }
-
-   if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 && format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-      realWidth = ((realWidth + 3) / 4) * 4;
-      realHeight = ((realHeight + 3) / 4) * 4;
    }
 
    vk::BufferImageCopy region = {};
    region.bufferOffset = 0;
-   region.bufferRowLength = srcPitch;
+   region.bufferRowLength = surfaceData->pitch;
    region.bufferImageHeight = 0;
 
    region.imageSubresource.aspectMask = surfaceData->subresRange.aspectMask;
    region.imageSubresource.mipLevel = 0;
    region.imageSubresource.baseArrayLayer = 0;
-   region.imageSubresource.layerCount = realArrayLayers;
+   region.imageSubresource.layerCount = surfaceData->arrayLayers;
 
    region.imageOffset = { 0, 0, 0 };
-   region.imageExtent = { static_cast<uint32_t>(realWidth),
-                           static_cast<uint32_t>(realHeight),
-                           static_cast<uint32_t>(realDepth) };
+   region.imageExtent = { static_cast<uint32_t>(surfaceData->width),
+                           static_cast<uint32_t>(surfaceData->height),
+                           static_cast<uint32_t>(surfaceData->depth) };
 
    transitionSurfaceData(surfaceData, vk::ImageLayout::eTransferDstOptimal);
 
    mActiveCommandBuffer.copyBufferToImage(
-      uploadBuffer->buffer,
+      surfaceData->cacheMem->buffer,
       surfaceData->image,
       vk::ImageLayout::eTransferDstOptimal,
       { region });
+
+   surfaceData->hash = surfaceData->cacheMem->dataHash;
+   surfaceData->lastUsageIndex = mActivePm4BufferIndex;
 }
 
 void
