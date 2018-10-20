@@ -786,6 +786,8 @@ GLDriver::runUntilFlip()
 
    checkSyncObjects(0);
    while (true) {
+      gpu::ringbuffer::wait();
+
       auto buffer = gpu::ringbuffer::read();
       if (buffer.empty()) {
          break;
