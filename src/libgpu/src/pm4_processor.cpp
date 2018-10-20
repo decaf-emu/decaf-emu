@@ -65,7 +65,7 @@ Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
       default:
          gLog->error("Invalid packet header type {}, header = 0x{:08X}",
                      header.type(), header.value);
-         pos = swapped.size();
+         pos = static_cast<uint32_t>(swapped.size());
          break;
       }
 
