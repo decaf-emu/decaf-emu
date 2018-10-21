@@ -2,10 +2,12 @@
 #include "console.h"
 #include "packet.h"
 
-#include <coreinit/baseheap.h>
-#include <coreinit/expandedheap.h>
+#include <coreinit/memexpheap.h>
+#include <coreinit/memheap.h>
+#include <nn/ac/ac_c.h>
 #include <nsysnet/socket.h>
-#include <nn_ac/nn_ac.h>
+#include <stdbool.h>
+#include <stdbool.h>
 #include <string.h>
 #include <whb/log.h>
 

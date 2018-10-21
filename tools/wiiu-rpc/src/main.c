@@ -4,16 +4,16 @@
 
 #include <coreinit/core.h>
 #include <coreinit/dynload.h>
-#include <coreinit/expandedheap.h>
-#include <coreinit/baseheap.h>
 #include <coreinit/filesystem.h>
+#include <coreinit/foreground.h>
 #include <coreinit/ios.h>
+#include <coreinit/memexpheap.h>
+#include <coreinit/memheap.h>
 #include <coreinit/screen.h>
+#include <coreinit/systeminfo.h>
 #include <coreinit/thread.h>
 #include <coreinit/time.h>
-#include <coreinit/foreground.h>
-#include <coreinit/systeminfo.h>
-#include <nn_ac/nn_ac.h>
+#include <nn/ac/ac_c.h>
 #include <nsysnet/socket.h>
 #include <sysapp/launch.h>
 #include <whb/crash.h>
@@ -104,7 +104,7 @@ packetHandler(Server *server, PacketReader *packet)
    case CMD_DYNLOAD_ACQUIRE:
    {
       const char *name = pakReadString(packet);
-      OSDynLoadModule module = NULL;
+      OSDynLoad_Module module = NULL;
       int result;
 
       WHBLogPrintf("OSDynLoad_Acquire(\"%s\")", name);
@@ -119,7 +119,7 @@ packetHandler(Server *server, PacketReader *packet)
    }
    case CMD_DYNLOAD_RELEASE:
    {
-      OSDynLoadModule *module = (OSDynLoadModule *)pakReadPointer(packet);
+      OSDynLoad_Module *module = (OSDynLoad_Module *)pakReadPointer(packet);
 
       WHBLogPrintf("OSDynLoad_Release(%p)", module);
       OSDynLoad_Release(module);
@@ -131,7 +131,7 @@ packetHandler(Server *server, PacketReader *packet)
    }
    case CMD_DYNLOAD_FINDEXPORT:
    {
-      OSDynLoadModule *module = (OSDynLoadModule *)pakReadPointer(packet);
+      OSDynLoad_Module *module = (OSDynLoad_Module *)pakReadPointer(packet);
       int32_t isData = pakReadInt32(packet);
       const char *name = pakReadString(packet);
       void *addr = NULL;
@@ -325,7 +325,7 @@ main(int argc, char **argv)
       while(WHBProcIsRunning()) {
          consoleDraw();
          serverProcess(&server, &packetHandler);
-         OSSleepTicks(OSMilliseconds(30));
+         OSSleepTicks(OSMillisecondsToTicks(30));
       }
    } else {
       WHBLogPrintf("Failed to start server.");
