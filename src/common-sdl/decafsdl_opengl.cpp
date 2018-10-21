@@ -7,6 +7,7 @@
 #include <fmt/format.h>
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
+#include <libdecaf/decaf_log.h>
 #include <libgpu/gpu_config.h>
 #include <libgpu/gpu_opengldriver.h>
 #include <string>
@@ -79,18 +80,13 @@ getGlDebugSeverity(gl::GLenum severity)
 DecafSDLOpenGL::DecafSDLOpenGL()
 {
    // Initialise logger
-   auto decafLog = spdlog::get("decaf");
-   auto sinks = decafLog->sinks();
-   mLog = std::make_shared<spdlog::logger>("sdl-gl",
-                                           std::begin(sinks),
-                                           std::end(sinks));
-   mLog->set_level(decafLog->level());
+   mLog = decaf::makeLogger("sdl-gl");
 
    // Setup background colour
-    using config::display::background_colour;
-    mBackgroundColour[0] = background_colour.r / 255.0f;
-    mBackgroundColour[1] = background_colour.g / 255.0f;
-    mBackgroundColour[2] = background_colour.b / 255.0f;
+   using config::display::background_colour;
+   mBackgroundColour[0] = background_colour.r / 255.0f;
+   mBackgroundColour[1] = background_colour.g / 255.0f;
+   mBackgroundColour[2] = background_colour.b / 255.0f;
 }
 
 DecafSDLOpenGL::~DecafSDLOpenGL()

@@ -17,9 +17,6 @@ makeConfigPath(const std::string &filename);
 bool
 createConfigDirectory();
 
-void
-initialiseLogging(const std::string &filename);
-
 bool
 initialise(const std::string &gamePath);
 

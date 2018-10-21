@@ -9,6 +9,7 @@
 #include <libconfig/config_excmd.h>
 #include <libconfig/config_toml.h>
 #include <libdecaf/decaf.h>
+#include <libdecaf/decaf_log.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
 std::shared_ptr<spdlog::logger>
@@ -137,14 +138,14 @@ start(excmd::parser &parser,
    decaf::initialiseLogging(logFile);
 
    // Initialise frontend logger
-   auto sinks = gLog->sinks();
-
    if (!decaf::config::log::to_stdout) {
-      // Always do client log to stdout
-      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
+      // Always do cli log to stdout
+      gCliLog = decaf::makeLogger("decaf-cli",
+                                  { std::make_shared<spdlog::sinks::stdout_sink_mt>() });
+   } else {
+      gCliLog = decaf::makeLogger("decaf-cli");
    }
 
-   gCliLog = std::make_shared<spdlog::logger>("decaf-cli", begin(sinks), end(sinks));
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Game path {}", gamePath);
 

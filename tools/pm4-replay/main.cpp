@@ -1,15 +1,16 @@
 #include "config.h"
 #include "sdl_window.h"
 
-#include <common/log.h>
 #include <common-sdl/decafsdl_config.h>
+#include <common/log.h>
 #include <excmd.h>
 #include <iostream>
-#include <spdlog/spdlog.h>
-#include <libdecaf/decaf.h>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
+#include <libdecaf/decaf.h>
+#include <libdecaf/decaf_log.h>
 #include <libgpu/gpu_config.h>
+#include <spdlog/spdlog.h>
 
 namespace config
 {
@@ -149,8 +150,7 @@ start(excmd::parser &parser,
    decaf::initialiseLogging("pm4-replay.txt");
 
    auto sinks = gLog->sinks();
-   gCliLog = std::make_shared<spdlog::logger>("decaf-pm4-replay", begin(sinks), end(sinks));
-   gCliLog->set_level(spdlog::level::debug);
+   gCliLog = decaf::makeLogger("decaf-pm4-replay");
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Trace path {}", traceFile);
 

@@ -5,18 +5,14 @@
 
 #include <common/log.h>
 #include <common/platform_debug.h>
+#include <libdecaf/decaf_log.h>
 #include <libgpu/gpu_config.h>
 #include <SDL_vulkan.h>
 
 DecafSDLVulkan::DecafSDLVulkan()
 {
    // Initialise logger
-   auto decafLog = spdlog::get("decaf");
-   auto sinks = decafLog->sinks();
-   mLog = std::make_shared<spdlog::logger>("sdl-vk",
-                                           std::begin(sinks),
-                                           std::end(sinks));
-   mLog->set_level(decafLog->level());
+   mLog = decaf::makeLogger("sdl-vk");
 
    // Setup background colour
    using config::display::background_colour;

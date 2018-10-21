@@ -1,6 +1,8 @@
 #include "debugger_server_gdb.h"
 #include "debugger_threadutils.h"
 #include "decaf_config.h"
+#include "decaf_log.h"
+
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 
@@ -61,15 +63,7 @@ GdbServer::GdbServer(DebuggerInterface *debugger,
 bool GdbServer::start(int port)
 {
    if (!mLog) {
-      auto sinks = gLog->sinks();
-      mLog = std::make_shared<spdlog::logger>("gdb",
-                                              std::begin(sinks),
-                                              std::end(sinks));
-      mLog->set_level(gLog->level());
-
-      if (!decaf::config::log::async) {
-         mLog->flush_on(spdlog::level::trace);
-      }
+      mLog = decaf::makeLogger("gdb");
    }
 
    mListenSocket = socket(PF_INET, SOCK_STREAM, 0);

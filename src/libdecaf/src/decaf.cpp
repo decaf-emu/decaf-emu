@@ -25,9 +25,6 @@
 #include <condition_variable>
 #include <fmt/format.h>
 #include <mutex>
-#include <spdlog/async.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_sinks.h>
 
 #ifdef PLATFORM_WINDOWS
 #include <WinSock2.h>
@@ -42,44 +39,6 @@ sClipboardTextGetCallbackFn = nullptr;
 static ClipboardTextSetCallback
 sClipboardTextSetCallbackFn = nullptr;
 
-class LogFormatter : public spdlog::formatter
-{
-public:
-   virtual void format(const spdlog::details::log_msg &msg, fmt::memory_buffer &dest) override
-   {
-      auto tm_time = spdlog::details::os::localtime(spdlog::log_clock::to_time_t(msg.time));
-      auto duration = msg.time.time_since_epoch();
-      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
-
-      fmt::format_to(dest, "[{:02}:{:02}:{:02}.{:06} {}:",
-                     tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, micros,
-                     spdlog::level::to_c_str(msg.level));
-
-      auto core = cpu::this_core::state();
-      if (core) {
-         auto thread = cafe::coreinit::internal::getCurrentThread();
-         if (thread) {
-            fmt::format_to(dest, "p{:01X} t{:02X}", core->id, thread->id);
-         } else {
-            fmt::format_to(dest, "p{:01X} t{:02X}", core->id, 0xFF);
-         }
-      } else if (msg.logger_name) {
-         fmt::format_to(dest, "{}", *msg.logger_name);
-      } else {
-         fmt::format_to(dest, "h{}", msg.thread_id);
-      }
-
-      fmt::format_to(dest, "] {}{}",
-                     std::string_view { msg.raw.data(), msg.raw.size() },
-                     spdlog::details::os::default_eol);
-   }
-
-   virtual std::unique_ptr<formatter> clone() const override
-   {
-      return std::make_unique<LogFormatter>();
-   }
-};
-
 std::string
 makeConfigPath(const std::string &filename)
 {
@@ -93,47 +52,6 @@ bool
 createConfigDirectory()
 {
    return platform::createParentDirectories(makeConfigPath("."));
-}
-
-void
-initialiseLogging(const std::string &filename)
-{
-   std::vector<spdlog::sink_ptr> sinks;
-
-   if (decaf::config::log::to_stdout) {
-      sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
-   }
-
-   if (decaf::config::log::to_file) {
-      auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-      auto time = std::localtime(&now);
-
-      auto logFilename =
-         fmt::format("{}_{}-{:02}-{:02}_{:02}-{:02}-{:02}.txt",
-                     filename,
-                     time->tm_year + 1900, time->tm_mon, time->tm_mday,
-                     time->tm_hour, time->tm_min, time->tm_sec);
-
-      auto path = fs::HostPath { decaf::config::log::directory }.join(logFilename);
-      sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.path()));
-   }
-
-   auto logLevel = spdlog::level::from_str(decaf::config::log::level);
-
-   if (decaf::config::log::async) {
-      spdlog::init_thread_pool(1024, 1);
-      gLog = std::make_shared<spdlog::async_logger>("decaf",
-                                                    begin(sinks), end(sinks),
-                                                    spdlog::thread_pool());
-   } else {
-      gLog = std::make_shared<spdlog::logger>("decaf",
-                                              begin(sinks), end(sinks));
-      gLog->flush_on(spdlog::level::trace);
-   }
-
-   gLog->set_level(logLevel);
-   gLog->set_formatter(std::make_unique<LogFormatter>());
-   spdlog::register_logger(gLog);
 }
 
 bool
