@@ -76,6 +76,7 @@ protected:
    vk::SurfaceKHR mSurface;
    uint32_t mQueueFamilyIndex;
    vk::Queue mQueue;
+   vk::Queue mDriverQueue;
    vk::CommandPool mCommandPool;
    vk::Extent2D mSwapChainExtents;
    vk::SwapchainKHR mSwapchain;

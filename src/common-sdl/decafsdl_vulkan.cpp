@@ -247,12 +247,12 @@ DecafSDLVulkan::createDevice()
       return false;
    }
 
-   float queuePriority = 0.0f;
+   std::array<float, 2> queuePriorities = { 0.0f, 0.0f };
    vk::DeviceQueueCreateInfo deviceQueueCreateInfo(
       vk::DeviceQueueCreateFlags(),
       queueFamilyIndex,
-      1,
-      &queuePriority);
+      static_cast<uint32_t>(queuePriorities.size()),
+      queuePriorities.data());
 
    vk::PhysicalDeviceFeatures deviceFeatures;
    deviceFeatures.depthClamp = true;
@@ -274,6 +274,7 @@ DecafSDLVulkan::createDevice()
    mDevice = mPhysDevice.createDevice(deviceDesc);
 
    mQueue = mDevice.getQueue(queueFamilyIndex, 0);
+   mDriverQueue = mDevice.getQueue(queueFamilyIndex, 1);
    mQueueFamilyIndex = queueFamilyIndex;
 
    mCommandPool = mDevice.createCommandPool(
@@ -703,7 +704,7 @@ DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
 
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::VulkanDriver*>(gpu::createVulkanDriver());
-   mDecafDriver->initialise(mPhysDevice, mDevice, mQueue, mQueueFamilyIndex);
+   mDecafDriver->initialise(mPhysDevice, mDevice, mDriverQueue, mQueueFamilyIndex);
 
    // Set up the debug rendering system
    if (renderDebugger) {
