@@ -235,19 +235,19 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 void
 Driver::drawIndexAuto(const latte::pm4::DrawIndexAuto &data)
 {
-   drawGenericIndexed(data.count, nullptr);
+   drawGenericIndexed(data.drawInitiator, data.count, nullptr);
 }
 
 void
 Driver::drawIndex2(const latte::pm4::DrawIndex2 &data)
 {
-   drawGenericIndexed(data.count, phys_cast<void*>(data.addr).getRawPointer());
+   drawGenericIndexed(data.drawInitiator, data.count, phys_cast<void*>(data.addr).getRawPointer());
 }
 
 void
 Driver::drawIndexImmd(const latte::pm4::DrawIndexImmd &data)
 {
-   drawGenericIndexed(data.count, data.indices.data());
+   drawGenericIndexed(data.drawInitiator, data.count, data.indices.data());
 }
 
 void

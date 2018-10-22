@@ -601,7 +601,7 @@ protected:
 
    // Draws
    void bindShaderResources();
-   void drawGenericIndexed(uint32_t numIndices, void *indices);
+   void drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndices, void *indices);
 
    // Framebuffers
    FramebufferDesc getFramebufferDesc();

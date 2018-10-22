@@ -220,7 +220,7 @@ Driver::bindShaderResources()
 }
 
 void
-Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
+Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndices, void *indices)
 {
    // First lets set up our draw description for everyone
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
@@ -228,6 +228,14 @@ Driver::drawGenericIndexed(uint32_t numIndices, void *indices)
    auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto sq_vtx_start_inst_loc = getRegister<latte::SQ_VTX_START_INST_LOC>(latte::Register::SQ_VTX_START_INST_LOC);
+
+   bool useOpaque = drawInit.USE_OPAQUE();
+   if (useOpaque) {
+      decaf_check(numIndices == 0);
+      decaf_check(!indices);
+
+      decaf_abort("We do not currently support stream-out draws");
+   }
 
    auto& drawDesc = mCurrentDrawDesc;
    drawDesc.indices = indices;
