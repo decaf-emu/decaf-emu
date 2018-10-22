@@ -82,8 +82,13 @@ Driver::getVertexShaderDesc()
 spirv::GeometryShaderDesc
 Driver::getGeometryShaderDesc()
 {
-   //decaf_abort("We do not currently support generation of geometry shaders.");
-   return spirv::GeometryShaderDesc();
+   // Do not generate geometry shaders if they are disabled
+   auto vgt_gs_mode = getRegister<latte::VGT_GS_MODE>(latte::Register::VGT_GS_MODE);
+   if (vgt_gs_mode.MODE() == latte::VGT_GS_ENABLE_MODE::OFF) {
+      return spirv::GeometryShaderDesc();
+   }
+
+   decaf_check(mCurrentVertexShader);
 
    gsl::span<uint8_t> gsShaderBinary;
    gsl::span<uint8_t> dcShaderBinary;
@@ -133,6 +138,12 @@ Driver::getGeometryShaderDesc()
 spirv::PixelShaderDesc
 Driver::getPixelShaderDesc()
 {
+   // Do not generate pixel shaders if rasterization is disabled
+   auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
+   if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
+      return spirv::PixelShaderDesc();
+   }
+
    decaf_check(mCurrentVertexShader);
 
    gsl::span<uint8_t> psShaderBinary;
@@ -319,6 +330,12 @@ Driver::checkCurrentVertexShader()
 {
    HashedDesc<spirv::VertexShaderDesc> currentDesc = getVertexShaderDesc();
 
+   // Check if the shader stage is disabled
+   if (currentDesc->type == spirv::ShaderType::Unknown) {
+      mCurrentVertexShader = nullptr;
+      return true;
+   }
+
    if (mCurrentVertexShader && mCurrentVertexShader->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
@@ -352,18 +369,15 @@ Driver::checkCurrentVertexShader()
 bool
 Driver::checkCurrentGeometryShader()
 {
-   decaf_check(mCurrentVertexShader);
+   HashedDesc<spirv::GeometryShaderDesc> currentDesc = getGeometryShaderDesc();
 
-   // Do not generate geometry shaders if they are disabled
-   auto vgt_gs_mode = getRegister<latte::VGT_GS_MODE>(latte::Register::VGT_GS_MODE);
-   if (vgt_gs_mode.MODE() == latte::VGT_GS_ENABLE_MODE::OFF) {
+   // Check if the shader stage is disabled
+   if (currentDesc->type == spirv::ShaderType::Unknown) {
       mCurrentGeometryShader = nullptr;
       return true;
    }
 
    decaf_abort("We do not currently support generation of geometry shaders.");
-
-   HashedDesc<spirv::GeometryShaderDesc> currentDesc = getGeometryShaderDesc();
 
    if (mCurrentGeometryShader && mCurrentGeometryShader->desc == currentDesc) {
       // Already active, nothing to do.
@@ -397,11 +411,13 @@ Driver::checkCurrentGeometryShader()
 
 bool Driver::checkCurrentPixelShader()
 {
-   decaf_check(mCurrentVertexShader);
-   // technically we depend on this, but can't check since its possible that its just disabled
-   //decaf_check(mCurrentGeometryShader);
-
    HashedDesc<spirv::PixelShaderDesc> currentDesc = getPixelShaderDesc();
+
+   // Check if the shader stage is disabled
+   if (currentDesc->type == spirv::ShaderType::Unknown) {
+      mCurrentPixelShader = nullptr;
+      return true;
+   }
 
    if (mCurrentPixelShader && mCurrentPixelShader->desc == currentDesc) {
       // Already active, nothing to do.
