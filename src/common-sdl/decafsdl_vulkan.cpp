@@ -29,17 +29,6 @@ DecafSDLVulkan::~DecafSDLVulkan()
 {
 }
 
-void
-DecafSDLVulkan::checkVkResult(vk::Result err)
-{
-   if (err == vk::Result::eSuccess) {
-      return;
-   }
-
-   mLog->error("Unexpected Vulkan Error: {}", vk::to_string(err));
-   abort();
-}
-
 VKAPI_ATTR VkBool32 VKAPI_CALL
 DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
                                      VkDebugReportObjectTypeEXT objectType,
@@ -178,16 +167,20 @@ DecafSDLVulkan::createInstance()
    instanceDesc.ppEnabledExtensionNames = extensions.data();
    mVulkan = vk::createInstance(instanceDesc);
 
+   // Set up our dynamic loader for non-standard vulkan functions.
+   mVkDynLoader.init(mVulkan);
+
    // Set up our debugging callbacks
-   auto vkCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)mVulkan.getProcAddr("vkCreateDebugReportCallbackEXT");
-   if (vkCreateDebugReportCallback) {
-      auto debugReportCallbackInfo = (VkDebugReportCallbackCreateInfoEXT)vk::DebugReportCallbackCreateInfoEXT(
-         vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::ePerformanceWarning,
-         debugMessageCallback,
-         this);
-      static VkDebugReportCallbackEXT debugCallback = VK_NULL_HANDLE;
-      auto err = (vk::Result)vkCreateDebugReportCallback(mVulkan, &debugReportCallbackInfo, nullptr, &debugCallback);
-      checkVkResult(err);
+   if (mVkDynLoader.vkCreateDebugReportCallbackEXT) {
+      vk::DebugReportCallbackCreateInfoEXT dbgReportDesc;
+      dbgReportDesc.flags =
+         vk::DebugReportFlagBitsEXT::eDebug |
+         vk::DebugReportFlagBitsEXT::eWarning |
+         vk::DebugReportFlagBitsEXT::eError |
+         vk::DebugReportFlagBitsEXT::ePerformanceWarning;
+      dbgReportDesc.pfnCallback = debugMessageCallback;
+      dbgReportDesc.pUserData = this;
+      mVulkan.createDebugReportCallbackEXT(dbgReportDesc, nullptr, mVkDynLoader);
    }
 
    return true;

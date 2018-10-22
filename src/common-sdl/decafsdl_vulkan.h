@@ -70,6 +70,7 @@ protected:
    vk::ClearColorValue mBackgroundColour;
 
    vk::Instance mVulkan;
+   vk::DispatchLoaderDynamic mVkDynLoader;
    vk::PhysicalDevice mPhysDevice;
    vk::Device mDevice;
    vk::SurfaceKHR mSurface;
