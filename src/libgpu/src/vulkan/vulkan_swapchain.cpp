@@ -29,12 +29,10 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
 
    auto surface = getSurface(surfaceDesc, true);
 
-   transitionSurface(surface, vk::ImageLayout::eGeneral);
+   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-   mActiveCommandBuffer.clearColorImage(surface->data->image, vk::ImageLayout::eGeneral, clearColor, { surface->data->subresRange });
-
-   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
+   mActiveCommandBuffer.clearColorImage(surface->data->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->data->subresRange });
 
    auto swapChain = new SwapChainObject();
    swapChain->_surface = surface;
