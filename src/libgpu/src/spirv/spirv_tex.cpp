@@ -136,14 +136,14 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       case latte::SQ_TEX_DIM::DIM_2D:
       case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
          offsetVal = mSpv->makeCompositeConstant(mSpv->uint2Type(), {
                                                  mSpv->makeUintConstant(offsetX),
                                                  mSpv->makeUintConstant(offsetY) });
          break;
-      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       case latte::SQ_TEX_DIM::DIM_3D:
-      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
          offsetVal = mSpv->makeCompositeConstant(mSpv->uint3Type(), {
                                                  mSpv->makeUintConstant(offsetX),
                                                  mSpv->makeUintConstant(offsetY),
