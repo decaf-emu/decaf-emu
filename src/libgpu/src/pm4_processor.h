@@ -38,6 +38,7 @@ protected:
    void indexType(const IndexType &data);
    void numInstances(const NumInstances &data);
    void contextControl(const ContextControl &data);
+   void copyDw(const CopyDw &data);
 
    virtual void
    applyRegister(latte::Register reg) = 0;
@@ -68,10 +69,21 @@ protected:
    template<typename Type>
    Type getRegister(uint32_t id)
    {
+      decaf_check(id != latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE);
+
       static_assert(sizeof(Type) == 4, "Register storage must be a uint32_t");
       return *reinterpret_cast<Type *>(&mRegisters[id / 4]);
    }
 
+   phys_addr getRegisterAddr(uint32_t id)
+   {
+      if (id == latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE) {
+         return mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE;
+      }
+      decaf_abort("Unsupported register address fetch");
+   }
+
    latte::ShadowState mShadowState;
-   std::array<uint32_t, 0x10000> mRegisters;
+   std::array<uint32_t, 0x10000> mRegisters = { 0 };
+   phys_addr mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE = phys_addr { 0 };
 };

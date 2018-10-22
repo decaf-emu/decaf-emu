@@ -38,6 +38,9 @@ GLDriver::initialise()
 {
    // Apply all registers
    for (auto i = 0u; i < mRegisters.size(); ++i) {
+      if (i * 4 == latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE) {
+         continue;
+      }
       applyRegister(static_cast<latte::Register>(i * 4));
    }
 

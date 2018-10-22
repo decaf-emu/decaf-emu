@@ -207,6 +207,9 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::CONTEXT_CTL:
       contextControl(read<ContextControl>(reader));
       break;
+   case IT_OPCODE::COPY_DW:
+      copyDw(read<CopyDw>(reader));
+      break;
    default:
       gLog->debug("Unhandled pm4 packet type 3 opcode {}", header.opcode());
    }
@@ -253,6 +256,15 @@ void Pm4Processor::contextControl(const ContextControl &data)
 {
    mShadowState.LOAD_CONTROL = data.LOAD_CONTROL;
    mShadowState.SHADOW_ENABLE = data.SHADOW_ENABLE;
+}
+
+void Pm4Processor::copyDw(const CopyDw &data)
+{
+   decaf_check(data.select.SRC() == latte::pm4::COPY_DW_SEL_MEMORY);
+   decaf_check(data.select.DST() == latte::pm4::COPY_DW_SEL_REGISTER);
+   decaf_check(data.dstLo == latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE);
+
+   mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE = data.srcLo;
 }
 
 void Pm4Processor::setAluConsts(const SetAluConsts &data)
