@@ -567,7 +567,9 @@ bool
 DecafSDLVulkan::createDescriptorPools()
 {
    std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
-      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, 100)
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampler, 100),
+      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, 100),
+      vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 100)
    };
 
    vk::DescriptorPoolCreateInfo descriptorPoolInfo;
