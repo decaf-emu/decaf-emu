@@ -37,6 +37,7 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
    auto swapChain = new SwapChainObject();
    swapChain->_surface = surface;
    swapChain->desc = desc;
+   swapChain->presentable = false;
    swapChain->image = surface->data->image;
    swapChain->imageView = surface->imageView;
    swapChain->subresRange = surface->data->subresRange;

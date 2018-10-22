@@ -274,7 +274,7 @@ Driver::shutdown()
 void
 Driver::getSwapBuffers(vk::Image &tvImage, vk::ImageView &tvView, vk::Image &drcImage, vk::ImageView &drcView)
 {
-   if (mTvSwapChain) {
+   if (mTvSwapChain && mTvSwapChain->presentable) {
       tvImage = mTvSwapChain->image;
       tvView = mTvSwapChain->imageView;
    } else {
@@ -282,7 +282,7 @@ Driver::getSwapBuffers(vk::Image &tvImage, vk::ImageView &tvView, vk::Image &drc
       tvView = vk::ImageView();
    }
 
-   if (mDrcSwapChain) {
+   if (mDrcSwapChain && mDrcSwapChain->presentable) {
       drcImage = mDrcSwapChain->image;
       drcView = mDrcSwapChain->imageView;
    } else {

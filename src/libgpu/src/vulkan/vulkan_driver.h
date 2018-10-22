@@ -381,6 +381,7 @@ struct SwapChainDesc
 struct SwapChainObject
 {
    SwapChainDesc desc;
+   bool presentable;
    vk::Image image;
    vk::ImageView imageView;
    vk::ImageSubresourceRange subresRange;
@@ -746,8 +747,8 @@ private:
    vk::Device mDevice;
    vk::Queue mQueue;
    vk::CommandPool mCommandPool;
-   SwapChainObject *mTvSwapChain;
-   SwapChainObject *mDrcSwapChain;
+   SwapChainObject *mTvSwapChain = nullptr;
+   SwapChainObject *mDrcSwapChain = nullptr;
    RenderPassObject *mRenderPass;
    std::list<StagingBuffer *> mStagingBuffers;
    std::vector<vk::DescriptorPool> mDescriptorPools;

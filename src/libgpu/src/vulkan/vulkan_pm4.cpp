@@ -41,6 +41,12 @@ Driver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
 
    // Assign the new swap chain
    *swapChain = newSwapChain;
+
+   // Only make this swapchain presentable after this frame has completed
+   // (we need to run the frame at least once for setup to complete before use).
+   addRetireTask([=](){
+      newSwapChain->presentable = true;
+   });
 }
 
 void
