@@ -1,3 +1,4 @@
+#pragma once
 #include "ios_kernel_enum.h"
 #include "ios_kernel_messagequeue.h"
 #include "ios_kernel_process.h"
@@ -13,8 +14,8 @@ namespace ios::kernel
 
 #pragma pack(push, 1)
 
-constexpr auto MaxNumTimers = 256u;
-constexpr auto MaxNumTimersPerProcess = 64u;
+static constexpr auto MaxNumTimers = 256u;
+static constexpr auto MaxNumTimersPerProcess = 64u;
 
 using TimerId = int32_t;
 using TimerTicks = uint64_t;
