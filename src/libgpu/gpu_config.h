@@ -17,6 +17,9 @@ extern std::vector<int64_t> debug_filters;
 //! Dump shaders
 extern bool dump_shaders;
 
+//! Debuggable shaders
+extern bool debuggable_shaders;
+
 } // namespace config
 
 } // namespace gpu

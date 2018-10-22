@@ -2,6 +2,7 @@
 #ifdef DECAF_VULKAN
 #include "latte/latte_shaderparser.h"
 #include "spirv_spvbuilder.h"
+#include "gpu_config.h"
 
 #include <GLSL.std.450.h>
 
@@ -1045,7 +1046,11 @@ public:
    {
       if (!mVertexId) {
          mVertexId = createVariable(spv::StorageClassInput, intType(), "VertexID");
-         addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexId);
+         if (!gpu::config::debuggable_shaders) {
+            addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexId);
+         } else {
+            addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexIndex);
+         }
          mEntryPoint->addIdOperand(mVertexId);
       }
       return mVertexId;
@@ -1055,7 +1060,11 @@ public:
    {
       if (!mInstanceId) {
          mInstanceId = createVariable(spv::StorageClassInput, intType(), "InstanceID");
-         addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceId);
+         if (!gpu::config::debuggable_shaders) {
+            addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceId);
+         } else {
+            addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceIndex);
+         }
          mEntryPoint->addIdOperand(mInstanceId);
       }
       return mInstanceId;
