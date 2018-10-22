@@ -205,7 +205,7 @@ Driver::getColorBuffer(const ColorBufferDesc& info,
    surfaceDataDesc.width = pitch;
    surfaceDataDesc.height = height;
    surfaceDataDesc.depth = 1;
-   surfaceDataDesc.samples = 0u;
+   surfaceDataDesc.samples = 1u;
    surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
    surfaceDataDesc.format = surfaceFormat;
    surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;

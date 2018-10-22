@@ -185,6 +185,7 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    sourceDataDesc.tileType = data.srcTileType;
    sourceDataDesc.tileMode = data.srcTileMode;
    auto sourceSurfaceData = getSurfaceData(sourceDataDesc);
+   auto sourceImage = getSurfaceSubData(sourceSurfaceData, sourceDataDesc);
 
    // Fetch the destination surface
    SurfaceDataDesc destDataDesc;
@@ -203,10 +204,11 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    destDataDesc.tileType = data.dstTileType;
    destDataDesc.tileMode = data.dstTileMode;
    auto destSurfaceData = getSurfaceData(destDataDesc);
+   auto destImage = getSurfaceSubData(destSurfaceData, destDataDesc);
 
    // Transition the surfaces to the appropriate layouts
-   transitionSurfaceData(sourceSurfaceData, vk::ImageLayout::eTransferSrcOptimal);
-   transitionSurfaceData(destSurfaceData, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurfaceSubData(sourceImage, vk::ImageLayout::eTransferSrcOptimal);
+   transitionSurfaceSubData(destImage, vk::ImageLayout::eTransferDstOptimal);
 
    // Calculate the bounds of the copy
    auto copyWidth = data.srcWidth;
@@ -224,9 +226,9 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
 
    mActiveCommandBuffer.blitImage(
-      sourceSurfaceData->image,
+      sourceImage->image,
       vk::ImageLayout::eTransferSrcOptimal,
-      destSurfaceData->image,
+      destImage->image,
       vk::ImageLayout::eTransferDstOptimal,
       { blitRegion },
       vk::Filter::eNearest);

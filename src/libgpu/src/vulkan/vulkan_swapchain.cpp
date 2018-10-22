@@ -13,7 +13,7 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
    surfaceDataDesc.width = desc.width;
    surfaceDataDesc.height = desc.height;
    surfaceDataDesc.depth = 1;
-   surfaceDataDesc.samples = 0u;
+   surfaceDataDesc.samples = 1u;
    surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
    surfaceDataDesc.format = latte::SurfaceFormat::R8G8B8A8Unorm;
    surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;

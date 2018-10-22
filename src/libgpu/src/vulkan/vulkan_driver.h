@@ -229,7 +229,7 @@ struct SurfaceDataDesc
       return baseAddress & 0x00000F00;
    }
 
-   inline DataHash hash() const
+   inline DataHash hash(bool byCompat = false) const
    {
       // tileMode and swizzle are intentionally omited as they
       // do not affect data placement or size, but only upload/downloads.
@@ -242,12 +242,25 @@ struct SurfaceDataDesc
          .write(calcAlignedBaseAddress())
          .write(dim)
          .write(format)
+         .write(samples)
          .write(tileType);
 
       auto dimDimensions = latte::getTexDimDimensions(dim);
       if (dimDimensions < 1 || dimDimensions >= 4) {
          decaf_abort("Unexpected dim dimensions.");
       }
+
+      if (byCompat) {
+         // If we are looking at this in terms of compatibility mode, we can
+         // actually bump the dimensions down one level, as that is the cross
+         // compatibility of surface memory.
+         dimDimensions--;
+      } else {
+         // If we are looking for a precise match, we need to include the
+         // width of the surface in order to appropriately fetch it.
+         hash = hash.write(width);
+      }
+
       if (dimDimensions >= 1) {
          hash = hash.write(pitch);
       }
@@ -262,12 +275,10 @@ struct SurfaceDataDesc
    }
 };
 
-struct SurfaceDataObject
+struct SurfaceSubDataObject
 {
    SurfaceDataDesc desc;
 
-   MemCacheObject *cacheMem;
-   DataHash hash;
    uint64_t lastUsageIndex;
 
    uint32_t pitch;
@@ -282,6 +293,20 @@ struct SurfaceDataObject
    vk::ImageLayout activeLayout;
 };
 
+struct SurfaceDataObject
+{
+   SurfaceDataDesc desc;
+
+   uint64_t lastUsageIndex;
+
+   MemCacheObject *cacheMem;
+   DataHash hash;
+
+   SurfaceSubDataObject *masterImage;
+   SurfaceSubDataObject *activeImage;
+   std::unordered_map<DataHash, SurfaceSubDataObject*> images;
+};
+
 struct SurfaceDesc
 {
    SurfaceDataDesc dataDesc;
@@ -289,8 +314,7 @@ struct SurfaceDesc
 
    inline DataHash hash() const
    {
-      return DataHash {}
-         .write(dataDesc)
+      return dataDesc.hash()
          .write(channels);
    }
 };
@@ -298,7 +322,8 @@ struct SurfaceDesc
 struct SurfaceObject
 {
    SurfaceDesc desc;
-   SurfaceDataObject *data;
+   SurfaceDataObject *masterData;
+   SurfaceSubDataObject *data;
    vk::ImageView imageView;
 };
 
@@ -577,10 +602,16 @@ protected:
    void unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu);
 
    // Surfaces
+   MemCacheObject * getSurfaceMemCache(const SurfaceDataDesc &info);
+   SurfaceSubDataObject * allocateSurfaceSubData(const SurfaceDataDesc &info);
+   void releaseSurfaceSubData(SurfaceSubDataObject *surfaceSubData);
+   void copySurfaceSubData(SurfaceSubDataObject *dst, SurfaceSubDataObject *src);
+   void makeSurfaceSubDataActive(SurfaceDataObject *surface, SurfaceSubDataObject *newImage);
+   SurfaceSubDataObject * getSurfaceSubData(SurfaceDataObject *surface, const SurfaceDataDesc& info);
+   void transitionSurfaceSubData(SurfaceSubDataObject *surfaceSubData, vk::ImageLayout newLayout);
    SurfaceDataObject * allocateSurfaceData(const SurfaceDataDesc &info);
    void releaseSurfaceData(SurfaceDataObject *surfaceData);
    SurfaceDataObject * getSurfaceData(const SurfaceDataDesc &info);
-   void transitionSurfaceData(SurfaceDataObject *surfaceData, vk::ImageLayout newLayout);
    void uploadSurfaceData(SurfaceDataObject *surfaceData);
    void downloadSurfaceData(SurfaceDataObject *surfaceData);
 
