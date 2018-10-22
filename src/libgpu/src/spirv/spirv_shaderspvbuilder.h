@@ -769,6 +769,10 @@ public:
          return paramExportVar(ref.index);
       } else if (ref.type == ExportRef::Type::Pixel) {
          return pixelExportVar(ref.index, ref.valueType);
+      } else if (ref.type == ExportRef::Type::ComputedZ) {
+         decaf_check(ref.index == 0);
+         decaf_check(ref.valueType == VarRefType::FLOAT);
+         return zExportVar();
       } else {
          decaf_abort("Encountered unexpected export type");
       }
@@ -1300,6 +1304,19 @@ public:
       return exportId;
    }
 
+   spv::Id zExportVar()
+   {
+      if (!mZExport) {
+         addExecutionMode(mFunctions["main"], spv::ExecutionModeDepthReplacing);
+
+         mZExport = createVariable(spv::StorageClass::StorageClassOutput, floatType(), "Z_EXPORT");
+         addDecoration(mZExport, spv::DecorationBuiltIn, spv::BuiltInFragDepth);
+         mEntryPoint->addIdOperand(mZExport);
+      }
+
+      return mZExport;
+   }
+
    spv::Id stateVar()
    {
       if (!mState) {
@@ -1492,6 +1509,7 @@ protected:
    std::vector<spv::Id> mPixelExports;
    std::vector<spv::Id> mPosExports;
    std::vector<spv::Id> mParamExports;
+   spv::Id mZExport = spv::NoResult;
 
    spv::Id mState = spv::NoResult;
    spv::Id mPredicate = spv::NoResult;
