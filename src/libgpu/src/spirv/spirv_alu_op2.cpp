@@ -340,6 +340,12 @@ void Transpiler::translateAluOp2_MOVA_FLOOR(const ControlFlowInst &cf, const Alu
    mSpv->writeAluOpDest(cf, group, unit, inst, output, true);
 }
 
+void Transpiler::translateAluOp2_MOVA_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, VarRefType::INT);
+   mSpv->writeAluOpDest(cf, group, unit, inst, src0, true);
+}
+
 void Transpiler::translateAluOp2_MUL(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    // Everyone gets to enjoy the IEEE standards since Vulkan is IEEE
