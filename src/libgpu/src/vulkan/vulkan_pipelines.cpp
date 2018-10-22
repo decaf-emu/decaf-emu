@@ -692,8 +692,8 @@ Driver::checkCurrentPipeline()
    colorBlendState.blendConstants[2] = currentDesc->cbBlendConstants[2];
    colorBlendState.blendConstants[3] = currentDesc->cbBlendConstants[3];
 
+   vk::PipelineColorBlendAdvancedStateCreateInfoEXT advancedColorBlendState;
    if (needsPremultipliedTargets) {
-      vk::PipelineColorBlendAdvancedStateCreateInfoEXT advancedColorBlendState;
       advancedColorBlendState.dstPremultiplied = true;
       advancedColorBlendState.srcPremultiplied = false;
       advancedColorBlendState.blendOverlap = vk::BlendOverlapEXT::eUncorrelated;
