@@ -255,6 +255,7 @@ DecafSDLVulkan::createDevice()
       &queuePriority);
 
    vk::PhysicalDeviceFeatures deviceFeatures;
+   deviceFeatures.depthClamp = true;
    deviceFeatures.geometryShader = true;
    deviceFeatures.textureCompressionBC = true;
    deviceFeatures.independentBlend = true;

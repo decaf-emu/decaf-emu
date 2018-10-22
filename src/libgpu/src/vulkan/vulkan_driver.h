@@ -438,6 +438,7 @@ struct PipelineDesc
    float polyBiasClamp;
    float polyBiasOffset;
    float polyBiasScale;
+   bool zclipDisabled;
 
    uint32_t rop3;
 

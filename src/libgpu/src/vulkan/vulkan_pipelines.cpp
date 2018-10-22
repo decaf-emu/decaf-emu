@@ -67,8 +67,6 @@ Driver::getPipelineDesc()
    decaf_check(!pa_cl_clip_cntl.VTX_KILL_OR());
    decaf_check(!pa_cl_clip_cntl.DX_LINEAR_ATTR_CLIP_ENA());
    decaf_check(!pa_cl_clip_cntl.VTE_VPORT_PROVOKE_DISABLE());
-   decaf_check(!pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE());
-   decaf_check(!pa_cl_clip_cntl.ZCLIP_FAR_DISABLE());
 
    // pa_cl_clip_cntl.DX_CLIP_SPACE_DEF() is handled by the shaders,
    // so it is uploaded in the push constants buffer in the shader
@@ -118,6 +116,10 @@ Driver::getPipelineDesc()
       desc.polyBiasOffset = 0.0f;
       desc.polyBiasScale = 0.0f;
    }
+
+   // We only support zclip being on or off, not individually for near/far.
+   decaf_check(pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE() == pa_cl_clip_cntl.ZCLIP_FAR_DISABLE());
+   desc.zclipDisabled = pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE();
 
    // -- Depth/Stencil control stuff
    auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
@@ -530,7 +532,7 @@ Driver::checkCurrentPipeline()
    // TODO: Implement support for doing multi-sampled rendering.
 
    vk::PipelineRasterizationStateCreateInfo rasterizer;
-   rasterizer.depthClampEnable = false;
+   rasterizer.depthClampEnable = currentDesc->zclipDisabled;
    rasterizer.rasterizerDiscardEnable = currentDesc->rasteriserDisable;
 
    if (currentDesc->polyPType == latte::PA_PTYPE::LINES) {
