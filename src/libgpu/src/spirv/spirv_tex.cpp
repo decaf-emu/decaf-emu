@@ -11,6 +11,14 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
 
    decaf_check(!inst.word0.BC_FRAC_MODE());
 
+   if (mType != ShaderParser::Type::Pixel) {
+      // If we are not in the pixel shader, we need to automatically use
+      // LOD zero, even if implicit LOD is specified by the instruction.
+      if (!(sampleMode & SampleMode::Gather)) {
+         sampleMode |= SampleMode::LodZero;
+      }
+   }
+
    auto textureId = inst.word0.RESOURCE_ID();
    auto samplerId = inst.word2.SAMPLER_ID();
    auto texDim = mTexInput[textureId];
