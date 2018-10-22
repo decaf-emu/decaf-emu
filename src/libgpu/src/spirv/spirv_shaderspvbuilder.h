@@ -525,6 +525,19 @@ public:
 
    void writeGprMaskRef(const latte::GprMaskRef &ref, spv::Id srcId)
    {
+      // Perform any neccessary type conversions
+      auto srcTypeId = getTypeId(srcId);
+      if (srcTypeId == float4Type()) {
+         // Nothing to do, we are already a float!
+      } else if (srcTypeId == int4Type()) {
+         srcId = createUnaryOp(spv::OpBitcast, float4Type(), srcId);
+      } else if (srcTypeId == uint4Type()) {
+         srcId = createUnaryOp(spv::OpBitcast, float4Type(), srcId);
+      } else {
+         decaf_abort("Unexpected type at gpr masked instruction write");
+      }
+
+      // Grab a reference to our GPR
       auto gprRef = getGprRef(ref.gpr);
 
       // We must put the srcId here, since some swizzles will just be rearranging
