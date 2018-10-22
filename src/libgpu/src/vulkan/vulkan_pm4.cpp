@@ -107,7 +107,7 @@ Driver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
 void
 Driver::decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data)
 {
-   decaf_abort("Unsupported pm4 decafCapSyncRegisters");
+   gpu::onSyncRegisters(mRegisters.data(), static_cast<uint32_t>(mRegisters.size()));
 }
 
 void
