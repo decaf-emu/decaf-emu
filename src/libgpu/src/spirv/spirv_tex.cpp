@@ -326,7 +326,11 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
    destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
 
+   // We have to register the image-query capability in order to query texture data.
+   mSpv->addCapability(spv::CapabilityImageQuery);
+
    auto texVar = mSpv->textureVar(textureId, texDim);
+   auto image = mSpv->createLoad(texVar);
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
    auto srcLodVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });
@@ -337,25 +341,25 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    spv::Id sizeInfo;
    switch (texDim) {
    case latte::SQ_TEX_DIM::DIM_1D: {
-      auto sizeInfo1d = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->intType(), texVar);
+      auto sizeInfo1d = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->intType(), image);
       sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->uint3Type(), { sizeInfo1d, oneIConst, oneIConst });
       break;
    }
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
    case latte::SQ_TEX_DIM::DIM_2D:
    case latte::SQ_TEX_DIM::DIM_2D_MSAA: {
-      auto sizeInfo2d = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->int2Type(), texVar);
+      auto sizeInfo2d = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int2Type(), image);
       sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->uint3Type(), { sizeInfo2d, oneIConst });
       break;
    }
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
    case latte::SQ_TEX_DIM::DIM_3D: {
-      sizeInfo = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->int3Type(), texVar);
+      sizeInfo = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int3Type(), image);
       break;
    }
    case latte::SQ_TEX_DIM::DIM_CUBEMAP: {
-      auto sizeInfoCube = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->int3Type(), texVar);
+      auto sizeInfoCube = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int3Type(), image);
       auto cubemapArrSideSize = mSpv->createOp(spv::OpCompositeExtract, mSpv->intType(), { sizeInfoCube, 3 });
       auto cubemapArrSize = mSpv->createBinOp(spv::OpSDiv, mSpv->intType(), cubemapArrSideSize, sizeIConst);
       sizeInfo = mSpv->createOp(spv::OpCompositeInsert, mSpv->int3Type(), { cubemapArrSize, sizeInfoCube, 3 });
@@ -365,7 +369,7 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
       decaf_abort("Unexpected texture sample dim");
    }
 
-   auto levelInfo = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->intType(), texVar);
+   auto levelInfo = mSpv->createUnaryOp(spv::OpImageQueryLevels, mSpv->intType(), image);
    auto output = mSpv->createOp(spv::OpCompositeConstruct, mSpv->int4Type(), { sizeInfo, levelInfo });
 
    mSpv->writeGprMaskRef(destGpr, output);
