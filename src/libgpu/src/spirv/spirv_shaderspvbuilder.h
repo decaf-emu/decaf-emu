@@ -40,6 +40,43 @@ public:
       mDescriptorSetIndex = descriptorSetIdx;
    }
 
+   void elseStack()
+   {
+      // stackIndexVal = *stackIndexVar
+      auto stackIdxVal = createLoad(stackIndexVar());
+      addName(stackIdxVal, "stackIdx");
+
+      // prevStackIdxVal = stackIndexVal - 1
+      auto oneConst = makeIntConstant(1);
+      auto prevStackIdxVal = createBinOp(spv::OpISub, intType(), stackIdxVal, oneConst);
+
+      // prevStateVal = stack[stackIndexVal]
+      auto prevStackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { prevStackIdxVal });
+      addName(prevStackPtr, "prevStackPtr");
+      auto prevStateVal = createLoad(prevStackPtr);
+      addName(prevStateVal, "prevStackVal");
+
+      // if (prevStackVal == Active) {
+      auto isActive = createBinOp(spv::OpIEqual, boolType(),
+                                  prevStateVal,
+                                  stateActive());
+      auto ifBuilder = spv::Builder::If { isActive, spv::SelectionControlMaskNone, *this };
+
+      // state = *stateVar
+      auto stateVal = createLoad(stateVar());
+      addName(stateVal, "state");
+
+      // newState = (state == Active) ? InactiveBreak : Active
+      auto pred = createBinOp(spv::OpIEqual, boolType(), stateVal, stateActive());
+      auto newState = createTriOp(spv::OpSelect, intType(), pred, stateInactive(), stateActive());
+
+      // *stateVar = newState
+      createStore(newState, stateVar());
+
+      // }
+      ifBuilder.makeEndIf();
+   }
+
    void pushStack()
    {
       // stackIndexVal = *stackIndexVar
@@ -56,7 +93,7 @@ public:
       createStore(stateVal, stackPtr);
 
       // stackIndexVal += 1
-      auto constPushCount = makeUintConstant(1);
+      auto constPushCount = makeIntConstant(1);
       auto newStackIdxVal = createBinOp(spv::Op::OpIAdd, intType(), stackIdxVal, constPushCount);
       this->addName(newStackIdxVal, "newStackIdx");
 
@@ -72,7 +109,7 @@ public:
 
       if (popCount > 0) {
          // stateIdxVal -= {popCount}
-         auto constPopCount = makeUintConstant(popCount);
+         auto constPopCount = makeIntConstant(popCount);
          auto newStackIdxVal = createBinOp(spv::Op::OpISub, intType(), stackIdxVal, constPopCount);
          addName(newStackIdxVal, "newStackIdx");
 

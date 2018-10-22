@@ -77,16 +77,7 @@ void Transpiler::translateCf_CALL_FS(const ControlFlowInst &cf)
 
 void Transpiler::translateCf_ELSE(const ControlFlowInst &cf)
 {
-   auto stateVar = mSpv->stateVar();
-   auto state = mSpv->createLoad(stateVar);
-   auto pred = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), state, mSpv->stateActive());
-
-   auto newState = mSpv->createTriOp(spv::OpSelect, mSpv->intType(),
-                                     pred,
-                                     mSpv->stateInactive(),
-                                     mSpv->stateActive());
-
-   mSpv->createStore(newState, stateVar);
+   mSpv->elseStack();
 }
 
 void Transpiler::translateCf_JUMP(const ControlFlowInst &cf)
