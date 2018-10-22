@@ -181,12 +181,6 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
    // I don't even know how to handle this being off!?
    //psDesc.regs.spi_ps_in_control_1.FOG_ADDR();
 
-   // Not actually sure what this is, but lets make sure its off...
-   decaf_check(!desc.regs.spi_ps_in_control_1.FRONT_FACE_ENA());
-   //psDesc.regs.spi_ps_in_control_1.FRONT_FACE_ADDR();
-   //psDesc.regs.spi_ps_in_control_1.FRONT_FACE_ALL_BITS();
-   //psDesc.regs.spi_ps_in_control_1.FRONT_FACE_CHAN();
-
    // We do not currently support pixel indexing
    decaf_check(!desc.regs.spi_ps_in_control_1.GEN_INDEX_PIX());
    //psDesc.regs.spi_ps_in_control_1.GEN_INDEX_PIX_ADDR();
@@ -282,6 +276,37 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
 
       auto inputVal = spvGen.createLoad(inputVar);
       spvGen.createStore(inputVal, gprRef);
+   }
+
+   if (desc.regs.spi_ps_in_control_1.FRONT_FACE_ENA()) {
+      auto ffGprIdx = desc.regs.spi_ps_in_control_1.FRONT_FACE_ADDR();
+      auto ffChanIdx = desc.regs.spi_ps_in_control_1.FRONT_FACE_CHAN();
+
+      latte::GprChanRef ffRef;
+      ffRef.gpr = latte::makeGprRef(ffGprIdx);
+      ffRef.chan = static_cast<SQ_CHAN>(ffChanIdx);
+
+      auto frontFacingVar = spvGen.frontFacingVar();
+      auto frontFacingVal = spvGen.createLoad(frontFacingVar);
+
+      spv::Id output = spv::NoResult;
+
+      auto ffBitMode = desc.regs.spi_ps_in_control_1.FRONT_FACE_ALL_BITS();
+      if (ffBitMode == 0) {
+         // Sign bit represents front facing (-1.0f Back, +1.0f Front)
+         auto backConst = spvGen.makeFloatConstant(-1.0f);
+         auto frontConst = spvGen.makeFloatConstant(+1.0f);
+         output = spvGen.createTriOp(spv::OpSelect, spvGen.floatType(), frontFacingVal, frontConst, backConst);
+      } else if (ffBitMode == 1) {
+         // Full value represents front facing (0 Back, 1 Front)
+         auto backConst = spvGen.makeUintConstant(0);
+         auto frontConst = spvGen.makeUintConstant(1);
+         output = spvGen.createTriOp(spv::OpSelect, spvGen.uintType(), frontFacingVal, frontConst, backConst);
+      } else {
+         decaf_abort("Unexpected front face bit mode.");
+      }
+
+      spvGen.writeGprChanRef(ffRef, output);
    }
 }
 

@@ -1017,6 +1017,16 @@ public:
       return mFragCoord;
    }
 
+   spv::Id frontFacingVar()
+   {
+      if (!mFrontFacing) {
+         mFrontFacing = createVariable(spv::StorageClassInput, boolType(), "FrontFacing");
+         addDecoration(mFrontFacing, spv::DecorationBuiltIn, spv::BuiltInFrontFacing);
+         mEntryPoint->addIdOperand(mFrontFacing);
+      }
+      return mFrontFacing;
+   }
+
    spv::Id inputAttribVar(int semLocation, spv::Id attribType)
    {
       auto attribIdx = mAttribInputs.size();
@@ -1462,6 +1472,7 @@ protected:
    spv::Id mVertexId = spv::NoResult;
    spv::Id mInstanceId = spv::NoResult;
    spv::Id mFragCoord = spv::NoResult;
+   spv::Id mFrontFacing = spv::NoResult;
 
    spv::Id mRegistersBuffer = spv::NoResult;
    std::array<spv::Id, latte::MaxUniformBlocks> mUniformBuffers = { spv::NoResult };

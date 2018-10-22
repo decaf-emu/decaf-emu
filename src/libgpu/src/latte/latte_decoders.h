@@ -401,7 +401,7 @@ struct SrcVarRef
 };
 
 inline GprRef
-makeGprRef(uint32_t gprNum, SQ_REL rel, SQ_INDEX_MODE indexMode)
+makeGprRef(uint32_t gprNum, SQ_REL rel = SQ_REL::ABS, SQ_INDEX_MODE indexMode = SQ_INDEX_MODE::AR_X)
 {
    GprRef gpr;
 
