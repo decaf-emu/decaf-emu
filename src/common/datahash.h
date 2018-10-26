@@ -1,8 +1,9 @@
 #pragma once
 
 #include "murmur3.h"
-#include <functional>
 #include <array>
+#include <functional>
+#include <random>
 
 class DataHash
 {
@@ -54,6 +55,18 @@ public:
    inline uint64_t fastCompareValue() const
    {
       return mHash[0] ^ mHash[1];
+   }
+
+   static inline DataHash random()
+   {
+      static std::random_device r;
+      static std::mt19937 gen(r());
+      static std::uniform_int_distribution<uint64_t> unidist;
+
+      DataHash hash;
+      hash.mHash[0] = unidist(gen);
+      hash.mHash[1] = unidist(gen);
+      return hash;
    }
 
 private:
