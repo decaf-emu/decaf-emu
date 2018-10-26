@@ -57,8 +57,9 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
       return;
    }
 
-   auto buffer = getDataMemCache(bufferPtr, bufferSize);
-   mCurrentUniformBlocks[int(shaderStage)][cbufferIdx] = buffer;
+   auto memCache = getDataMemCache(bufferPtr, bufferSize);
+   transitionMemCache(memCache, ResourceUsage::UniformBuffer);
+   mCurrentUniformBlocks[int(shaderStage)][cbufferIdx] = memCache;
 }
 
 bool

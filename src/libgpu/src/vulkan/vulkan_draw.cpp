@@ -308,17 +308,17 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    // before the draw, and we cannot do it in bind as we already started our
    // render pass there...
    for (auto &surface : mCurrentFramebuffer->colorSurfaces) {
-      transitionSurface(surface, vk::ImageLayout::eColorAttachmentOptimal);
+      transitionSurfaceView(surface, ResourceUsage::ColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
    }
    if (mCurrentFramebuffer->depthSurface) {
       auto &surface = mCurrentFramebuffer->depthSurface;
-      transitionSurface(surface, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+      transitionSurfaceView(surface, ResourceUsage::DepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
    }
    for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
          auto& surface = mCurrentTextures[shaderStage][i];
          if (surface) {
-            transitionSurface(surface, vk::ImageLayout::eShaderReadOnlyOptimal);
+            transitionSurfaceView(surface, ResourceUsage::Texture, vk::ImageLayout::eShaderReadOnlyOptimal);
          }
       }
    }

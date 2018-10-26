@@ -51,7 +51,10 @@ Driver::checkCurrentAttribBuffers()
          return false;
       }
 
-      mCurrentAttribBuffers[i] = getDataMemCache(desc.baseAddress, desc.size, false);
+      auto memCache = getDataMemCache(desc.baseAddress, desc.size, false);
+      transitionMemCache(memCache, ResourceUsage::AttributeBuffer);
+
+      mCurrentAttribBuffers[i] = memCache;
    }
 
    return true;

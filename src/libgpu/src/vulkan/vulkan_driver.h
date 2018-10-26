@@ -100,6 +100,8 @@ struct MemCacheMutator
    }
 };
 
+typedef std::function<void(bool cancelled)> DelayedMemWriteFunc;
+
 struct MemCacheObject
 {
    // Meta-data about what this cache object represents.
@@ -112,13 +114,15 @@ struct MemCacheObject
    vk::Buffer buffer;
 
    // Stores the last computed hash for this data (from the CPU).
+   uint64_t gpuWrittenIndex;
+   DelayedMemWriteFunc delayedWriteFunc;
    DataHash dataHash;
 
    // Records the last PM4 context which refers to this data.
    uint64_t lastUsageIndex;
 
    // Records the number of external objects relying on this...
-   uint64_t extnRefCount;
+   uint64_t refCount;
 };
 
 struct DataBufferObject : MemCacheObject { };
@@ -199,7 +203,21 @@ struct SyncWaiter
    vk::CommandBuffer cmdBuffer;
 };
 
-struct SurfaceDataDesc
+enum class ResourceUsage : uint32_t
+{
+   ColorAttachment,
+   DepthStencilAttachment,
+   Texture,
+   UniformBuffer,
+   AttributeBuffer,
+   StreamOutBuffer,
+   StreamOutCounterRead,
+   StreamOutCounterWrite,
+   TransferSrc,
+   TransferDst
+};
+
+struct SurfaceDesc
 {
    // BaseAddress is a uint32 rather than a phys_addr as it actually
    // encodes information other than just the base address (swizzle).
@@ -240,7 +258,6 @@ struct SurfaceDataDesc
 
       auto hash = DataHash {}
          .write(calcAlignedBaseAddress())
-         .write(dim)
          .write(format)
          .write(samples)
          .write(tileType);
@@ -275,10 +292,26 @@ struct SurfaceDataDesc
    }
 };
 
-struct SurfaceSubDataObject
-{
-   SurfaceDataDesc desc;
+struct SurfaceObject;
 
+struct SurfaceGroupObject
+{
+   SurfaceDesc desc;
+
+   uint64_t lastUsageIndex;
+
+   MemCacheObject *cacheMem;
+   DataHash hash;
+
+   SurfaceObject *masterImage;
+   SurfaceObject *activeImage;
+};
+
+struct SurfaceObject
+{
+   SurfaceDesc desc;
+
+   SurfaceGroupObject *group;
    uint64_t lastUsageIndex;
 
    uint32_t pitch;
@@ -293,43 +326,29 @@ struct SurfaceSubDataObject
    vk::ImageLayout activeLayout;
 };
 
-struct SurfaceDataObject
+struct SurfaceViewDesc
 {
-   SurfaceDataDesc desc;
-
-   uint64_t lastUsageIndex;
-
-   MemCacheObject *cacheMem;
-   DataHash hash;
-
-   SurfaceSubDataObject *masterImage;
-   SurfaceSubDataObject *activeImage;
-   std::unordered_map<DataHash, SurfaceSubDataObject*> images;
-};
-
-struct SurfaceDesc
-{
-   SurfaceDataDesc dataDesc;
+   SurfaceDesc surfaceDesc;
    std::array<latte::SQ_SEL, 4> channels;
 
    inline DataHash hash() const
    {
-      return dataDesc.hash()
+      return surfaceDesc.hash()
          .write(channels);
    }
 };
 
-struct SurfaceObject
+struct SurfaceViewObject
 {
-   SurfaceDesc desc;
-   SurfaceDataObject *masterData;
-   SurfaceSubDataObject *data;
+   SurfaceViewDesc desc;
+   SurfaceObject *surface;
+
    vk::ImageView imageView;
 };
 
 struct TextureDesc
 {
-   SurfaceDesc surfaceDesc;
+   SurfaceViewDesc surfaceDesc;
 };
 
 struct FramebufferDesc
@@ -346,8 +365,8 @@ struct FramebufferObject
 {
    HashedDesc<FramebufferDesc> desc;
    vk::Framebuffer framebuffer;
-   std::vector<SurfaceObject*> colorSurfaces;
-   SurfaceObject *depthSurface;
+   std::vector<SurfaceViewObject*> colorSurfaces;
+   SurfaceViewObject *depthSurface;
    vk::Extent2D renderArea;
 };
 
@@ -590,10 +609,12 @@ protected:
    MemCacheObject * _allocMemCache(phys_addr address, uint32_t size, const MemCacheMutator& mutator);
    void _uploadMemCache(MemCacheObject *cache);
    void _downloadMemCache(MemCacheObject *cache);
+   void _refreshMemCache(MemCacheObject *cache);
    MemCacheObject * getMemCache(phys_addr address, uint32_t size, const MemCacheMutator& mutator = MemCacheMutator {});
-   void refreshMemCache(MemCacheObject *cache);
-   void invalidateMemCache(MemCacheObject *cache);
+   void transitionMemCache(MemCacheObject *cache, ResourceUsage usage);
+   void markMemCacheDirty(MemCacheObject *cache, DelayedMemWriteFunc delayedWriteHandler);
    DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size, bool discardData = false);
+   void downloadPendingMemCache();
 
    // Staging
    StagingBuffer * allocTempBuffer(uint32_t size);
@@ -603,23 +624,26 @@ protected:
    void unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu);
 
    // Surfaces
-   MemCacheObject * getSurfaceMemCache(const SurfaceDataDesc &info);
-   SurfaceSubDataObject * allocateSurfaceSubData(const SurfaceDataDesc &info);
-   void releaseSurfaceSubData(SurfaceSubDataObject *surfaceSubData);
-   void copySurfaceSubData(SurfaceSubDataObject *dst, SurfaceSubDataObject *src);
-   void makeSurfaceSubDataActive(SurfaceDataObject *surface, SurfaceSubDataObject *newImage);
-   SurfaceSubDataObject * getSurfaceSubData(SurfaceDataObject *surface, const SurfaceDataDesc& info);
-   void transitionSurfaceSubData(SurfaceSubDataObject *surfaceSubData, vk::ImageLayout newLayout);
-   SurfaceDataObject * allocateSurfaceData(const SurfaceDataDesc &info);
-   void releaseSurfaceData(SurfaceDataObject *surfaceData);
-   SurfaceDataObject * getSurfaceData(const SurfaceDataDesc &info);
-   void uploadSurfaceData(SurfaceDataObject *surfaceData);
-   void downloadSurfaceData(SurfaceDataObject *surfaceData);
+   MemCacheObject * _getSurfaceMemCache(const SurfaceDesc &info);
+   void _copySurface(SurfaceObject *dst, SurfaceObject *src);
 
-   SurfaceObject * allocateSurface(const SurfaceDesc& info);
-   void releaseSurface(SurfaceObject *surface);
-   SurfaceObject * getSurface(const SurfaceDesc& info, bool discardData);
-   void transitionSurface(SurfaceObject *surface, vk::ImageLayout newLayout);
+   SurfaceGroupObject * _allocateSurfaceGroup(const SurfaceDesc &info);
+   void _releaseSurfaceGroup(SurfaceGroupObject *surface);
+   void _readSurfaceData(SurfaceGroupObject *surface);
+   void _writeSurfaceData(SurfaceGroupObject *surface);
+   void _activateGroupSurface(SurfaceGroupObject *surface, SurfaceObject *newImage, ResourceUsage usage);
+   SurfaceGroupObject * _getSurfaceGroup(const SurfaceDesc &info);
+
+   SurfaceObject * _allocateSurface(const SurfaceDesc &info);
+   void _releaseSurface(SurfaceObject *surfaceData);
+   SurfaceObject * getSurface(const SurfaceDesc& info);
+   void _barrierSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::ImageLayout layout);
+   void transitionSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::ImageLayout layout);
+
+   SurfaceViewObject * _allocateSurfaceView(const SurfaceViewDesc& info);
+   void _releaseSurfaceView(SurfaceViewObject *surfaceView);
+   SurfaceViewObject * getSurfaceView(const SurfaceViewDesc& info);
+   void transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout);
 
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);
@@ -639,8 +663,8 @@ protected:
    // Framebuffers
    FramebufferDesc getFramebufferDesc();
    bool checkCurrentFramebuffer();
-   SurfaceObject * getColorBuffer(const ColorBufferDesc& info, bool discardData);
-   SurfaceObject * getDepthStencilBuffer(const DepthStencilBufferDesc& info, bool discardData);
+   SurfaceViewObject * getColorBuffer(const ColorBufferDesc& info);
+   SurfaceViewObject * getDepthStencilBuffer(const DepthStencilBufferDesc& info);
 
    // Swap Chains
    SwapChainObject * allocateSwapChain(const SwapChainDesc &desc);
@@ -728,11 +752,12 @@ private:
    PipelineObject *mCurrentPipeline = nullptr;
    std::array<DataBufferObject*, latte::MaxAttribBuffers> mCurrentAttribBuffers = { nullptr };
    std::array<std::array<SamplerObject*, latte::MaxSamplers>, 3> mCurrentSamplers = { { nullptr } };
-   std::array<std::array<SurfaceObject*, latte::MaxTextures>, 3> mCurrentTextures = { { nullptr } };
+   std::array<std::array<SurfaceViewObject*, latte::MaxTextures>, 3> mCurrentTextures = { { nullptr } };
    std::array<StagingBuffer*, 3> mCurrentGprBuffers = { nullptr };
    std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
 
-   std::list<MemCacheObject *> mPendingInvalidations;
+   std::vector<MemCacheObject *> mDirtyMemCaches;
+   std::list<MemCacheObject *> mPendingMemCacheDownloads;
 
    std::vector<uint8_t> mScratchRetiling;
    std::vector<uint8_t> mScratchIdxSwap;
@@ -755,8 +780,9 @@ private:
    std::vector<vk::DescriptorSet> mVertexDescriptorSets;
    std::vector<vk::DescriptorSet> mGeometryDescriptorSets;
    std::vector<vk::DescriptorSet> mPixelDescriptorSets;
-   std::unordered_map<DataHash, SurfaceDataObject*> mSurfaceDatas;
+   std::unordered_map<DataHash, SurfaceGroupObject*> mSurfaceGroups;
    std::unordered_map<DataHash, SurfaceObject*> mSurfaces;
+   std::unordered_map<DataHash, SurfaceViewObject*> mSurfaceViews;
    std::unordered_map<DataHash, VertexShaderObject*> mVertexShaders;
    std::unordered_map<DataHash, GeometryShaderObject*> mGeometryShaders;
    std::unordered_map<DataHash, FramebufferObject*> mFramebuffers;

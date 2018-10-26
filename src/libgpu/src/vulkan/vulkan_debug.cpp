@@ -39,7 +39,7 @@ Driver::updateDebuggerInfo()
    mDebuggerInfo.numRenderPasses = mRenderPasses.size();
    mDebuggerInfo.numPipelines = mPipelines.size();
    mDebuggerInfo.numSamplers = mSamplers.size();
-   mDebuggerInfo.numSurfaces = mSurfaces.size();
+   mDebuggerInfo.numSurfaces = mSurfaceGroups.size();
    mDebuggerInfo.numDataBuffers = 0;
 }
 

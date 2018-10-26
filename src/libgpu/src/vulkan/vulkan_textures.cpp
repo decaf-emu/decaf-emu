@@ -29,7 +29,7 @@ Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
    auto sq_tex_resource_word5 = getRegister<latte::SQ_TEX_RESOURCE_WORD5_N>(latte::Register::SQ_RESOURCE_WORD5_0 + 4 * resourceOffset);
    auto sq_tex_resource_word6 = getRegister<latte::SQ_TEX_RESOURCE_WORD6_N>(latte::Register::SQ_RESOURCE_WORD6_0 + 4 * resourceOffset);
 
-   SurfaceDataDesc surfaceDataDesc;
+   SurfaceDesc surfaceDataDesc;
    surfaceDataDesc.baseAddress = sq_tex_resource_word2.BASE_ADDRESS() << 8;
    surfaceDataDesc.pitch = (sq_tex_resource_word0.PITCH() + 1) * 8;
    surfaceDataDesc.width = sq_tex_resource_word0.TEX_WIDTH() + 1;
@@ -45,8 +45,8 @@ Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
    surfaceDataDesc.tileType = sq_tex_resource_word0.TILE_TYPE();
    surfaceDataDesc.tileMode = sq_tex_resource_word0.TILE_MODE();
 
-   SurfaceDesc surfaceDesc;
-   surfaceDesc.dataDesc = surfaceDataDesc;
+   SurfaceViewDesc surfaceDesc;
+   surfaceDesc.surfaceDesc = surfaceDataDesc;
    surfaceDesc.channels[0] = sq_tex_resource_word4.DST_SEL_X();
    surfaceDesc.channels[1] = sq_tex_resource_word4.DST_SEL_Y();
    surfaceDesc.channels[2] = sq_tex_resource_word4.DST_SEL_Z();
@@ -77,13 +77,13 @@ Driver::checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx)
    }
 
    auto textureDesc = getTextureDesc(shaderStage, textureIdx);
-   if (!textureDesc.surfaceDesc.dataDesc.baseAddress) {
+   if (!textureDesc.surfaceDesc.surfaceDesc.baseAddress) {
       // TODO: I'm not sure if ignoring this is the right answer, but lets try...
       mCurrentTextures[int(shaderStage)][textureIdx] = nullptr;
       return false;
    }
 
-   auto surface = getSurface(textureDesc.surfaceDesc, false);
+   auto surface = getSurfaceView(textureDesc.surfaceDesc);
    mCurrentTextures[int(shaderStage)][textureIdx] = surface;
    return true;
 }

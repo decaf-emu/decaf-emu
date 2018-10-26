@@ -7,40 +7,43 @@ namespace vulkan
 SwapChainObject *
 Driver::allocateSwapChain(const SwapChainDesc &desc)
 {
-   SurfaceDataDesc surfaceDataDesc;
-   surfaceDataDesc.baseAddress = desc.baseAddress.getAddress();
-   surfaceDataDesc.pitch = desc.width;
-   surfaceDataDesc.width = desc.width;
-   surfaceDataDesc.height = desc.height;
-   surfaceDataDesc.depth = 1;
-   surfaceDataDesc.samples = 1u;
-   surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDataDesc.format = latte::SurfaceFormat::R8G8B8A8Unorm;
-   surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
-   surfaceDataDesc.tileMode = latte::SQ_TILE_MODE::LINEAR_ALIGNED;
-
    SurfaceDesc surfaceDesc;
-   surfaceDesc.dataDesc = surfaceDataDesc;
-   surfaceDesc.channels = {
+   surfaceDesc.baseAddress = desc.baseAddress.getAddress();
+   surfaceDesc.pitch = desc.width;
+   surfaceDesc.width = desc.width;
+   surfaceDesc.height = desc.height;
+   surfaceDesc.depth = 1;
+   surfaceDesc.samples = 1u;
+   surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
+   surfaceDesc.format = latte::SurfaceFormat::R8G8B8A8Unorm;
+   surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
+   surfaceDesc.tileMode = latte::SQ_TILE_MODE::LINEAR_ALIGNED;
+
+   SurfaceViewDesc surfaceViewDesc;
+   surfaceViewDesc.surfaceDesc = surfaceDesc;
+   surfaceViewDesc.channels = {
       latte::SQ_SEL::SEL_X,
       latte::SQ_SEL::SEL_Y,
       latte::SQ_SEL::SEL_Z,
       latte::SQ_SEL::SEL_W };
 
-   auto surface = getSurface(surfaceDesc, true);
+   // TODO: The swap buffer manager inside libgpu should not be managing the ImageView
+   // that is being used by the host application...
+   auto surfaceView = getSurfaceView(surfaceViewDesc);
+   auto surface = surfaceView->surface;
 
-   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
-   mActiveCommandBuffer.clearColorImage(surface->data->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->data->subresRange });
+   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });
 
    auto swapChain = new SwapChainObject();
    swapChain->_surface = surface;
    swapChain->desc = desc;
    swapChain->presentable = false;
-   swapChain->image = surface->data->image;
-   swapChain->imageView = surface->imageView;
-   swapChain->subresRange = surface->data->subresRange;
+   swapChain->imageView = surfaceView->imageView;
+   swapChain->image = surface->image;
+   swapChain->subresRange = surface->subresRange;
    return swapChain;
 }
 

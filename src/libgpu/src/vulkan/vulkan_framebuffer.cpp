@@ -119,17 +119,18 @@ Driver::checkCurrentFramebuffer()
          colorTarget.numberType,
          colorTarget.arrayMode
       };
-      auto surface = getColorBuffer(colorBufferDesc, false);
-      foundFb->colorSurfaces.push_back(surface);
+      auto surfaceView = getColorBuffer(colorBufferDesc);
+      foundFb->colorSurfaces.push_back(surfaceView);
 
-      attachments[attachmentIndex] = surface->imageView;
+      attachments[attachmentIndex] = surfaceView->imageView;
 
+      auto surface = surfaceView->surface;
       if (overallSize.width == 0 && overallSize.height == 0) {
-         overallSize.width = surface->desc.dataDesc.width;
-         overallSize.height = surface->desc.dataDesc.height;
+         overallSize.width = surface->desc.width;
+         overallSize.height = surface->desc.height;
       } else {
-         overallSize.width = std::min(overallSize.width, surface->desc.dataDesc.width);
-         overallSize.height = std::min(overallSize.height, surface->desc.dataDesc.height);
+         overallSize.width = std::min(overallSize.width, surface->desc.width);
+         overallSize.height = std::min(overallSize.height, surface->desc.height);
       }
    }
 
@@ -151,17 +152,18 @@ Driver::checkCurrentFramebuffer()
          depthTarget.format,
          depthTarget.arrayMode
       };
-      auto surface = getDepthStencilBuffer(depthStencilBufferDesc, false);
-      foundFb->depthSurface = surface;
+      auto surfaceView = getDepthStencilBuffer(depthStencilBufferDesc);
+      foundFb->depthSurface = surfaceView;
 
-      attachments[attachmentIndex] = surface->imageView;
+      attachments[attachmentIndex] = surfaceView->imageView;
 
+      auto surface = surfaceView->surface;
       if (overallSize.width == 0 && overallSize.height == 0) {
-         overallSize.width = surface->desc.dataDesc.width;
-         overallSize.height = surface->desc.dataDesc.height;
+         overallSize.width = surface->desc.width;
+         overallSize.height = surface->desc.height;
       } else {
-         overallSize.width = std::min(overallSize.width, surface->desc.dataDesc.width);
-         overallSize.height = std::min(overallSize.height, surface->desc.dataDesc.height);
+         overallSize.width = std::min(overallSize.width, surface->desc.width);
+         overallSize.height = std::min(overallSize.height, surface->desc.height);
       }
    } while (false);
 
@@ -185,9 +187,8 @@ Driver::checkCurrentFramebuffer()
    return true;
 }
 
-SurfaceObject *
-Driver::getColorBuffer(const ColorBufferDesc& info,
-                       bool discardData)
+SurfaceViewObject *
+Driver::getColorBuffer(const ColorBufferDesc& info)
 {
    auto baseAddress = phys_addr((info.base256b << 8) & 0xFFFFF800);
    auto pitch_tile_max = info.pitchTileMax;
@@ -199,32 +200,31 @@ Driver::getColorBuffer(const ColorBufferDesc& info,
    auto surfaceFormat = latte::getColorBufferSurfaceFormat(info.format, info.numberType);
    auto tileMode = latte::getArrayModeTileMode(info.arrayMode);
 
-   SurfaceDataDesc surfaceDataDesc;
-   surfaceDataDesc.baseAddress = static_cast<uint32_t>(baseAddress);
-   surfaceDataDesc.pitch = pitch;
-   surfaceDataDesc.width = pitch;
-   surfaceDataDesc.height = height;
-   surfaceDataDesc.depth = 1;
-   surfaceDataDesc.samples = 1u;
-   surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDataDesc.format = surfaceFormat;
-   surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
-   surfaceDataDesc.tileMode = tileMode;
-
    SurfaceDesc surfaceDesc;
-   surfaceDesc.dataDesc = surfaceDataDesc;
-   surfaceDesc.channels = {
+   surfaceDesc.baseAddress = static_cast<uint32_t>(baseAddress);
+   surfaceDesc.pitch = pitch;
+   surfaceDesc.width = pitch;
+   surfaceDesc.height = height;
+   surfaceDesc.depth = 1;
+   surfaceDesc.samples = 1u;
+   surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
+   surfaceDesc.format = surfaceFormat;
+   surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
+   surfaceDesc.tileMode = tileMode;
+
+   SurfaceViewDesc surfaceViewDesc;
+   surfaceViewDesc.surfaceDesc = surfaceDesc;
+   surfaceViewDesc.channels = {
       latte::SQ_SEL::SEL_X,
       latte::SQ_SEL::SEL_Y,
       latte::SQ_SEL::SEL_Z,
       latte::SQ_SEL::SEL_W };
 
-   return getSurface(surfaceDesc, discardData);
+   return getSurfaceView(surfaceViewDesc);
 }
 
-SurfaceObject *
-Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info,
-                              bool discardData)
+SurfaceViewObject *
+Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info)
 {
    auto baseAddress = phys_addr((info.base256b << 8) & 0xFFFFF800);
    auto pitch_tile_max = info.pitchTileMax;
@@ -236,27 +236,27 @@ Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info,
    auto surfaceFormat = latte::getDepthBufferSurfaceFormat(info.format);
    auto tileMode = latte::getArrayModeTileMode(info.arrayMode);
 
-   SurfaceDataDesc surfaceDataDesc;
-   surfaceDataDesc.baseAddress = static_cast<uint32_t>(baseAddress);
-   surfaceDataDesc.pitch = pitch;
-   surfaceDataDesc.width = pitch;
-   surfaceDataDesc.height = height;
-   surfaceDataDesc.depth = 1;
-   surfaceDataDesc.samples = 0u;
-   surfaceDataDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDataDesc.format = surfaceFormat;
-   surfaceDataDesc.tileType = latte::SQ_TILE_TYPE::DEPTH;
-   surfaceDataDesc.tileMode = tileMode;
-
    SurfaceDesc surfaceDesc;
-   surfaceDesc.dataDesc = surfaceDataDesc;
-   surfaceDesc.channels = {
+   surfaceDesc.baseAddress = static_cast<uint32_t>(baseAddress);
+   surfaceDesc.pitch = pitch;
+   surfaceDesc.width = pitch;
+   surfaceDesc.height = height;
+   surfaceDesc.depth = 1;
+   surfaceDesc.samples = 0u;
+   surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
+   surfaceDesc.format = surfaceFormat;
+   surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEPTH;
+   surfaceDesc.tileMode = tileMode;
+
+   SurfaceViewDesc surfaceViewDesc;
+   surfaceViewDesc.surfaceDesc = surfaceDesc;
+   surfaceViewDesc.channels = {
       latte::SQ_SEL::SEL_X,
       latte::SQ_SEL::SEL_Y,
       latte::SQ_SEL::SEL_Z,
       latte::SQ_SEL::SEL_W };
 
-   return getSurface(surfaceDesc, discardData);
+   return getSurfaceView(surfaceViewDesc);
 }
 
 } // namespace vulkan

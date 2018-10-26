@@ -59,7 +59,8 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
    colorBuffer.format = data.cb_color_info.FORMAT();
    colorBuffer.numberType = data.cb_color_info.NUMBER_TYPE();
    colorBuffer.arrayMode = data.cb_color_info.ARRAY_MODE();
-   auto surface = getColorBuffer(colorBuffer, false);
+   auto surfaceView = getColorBuffer(colorBuffer);
+   auto surface = surfaceView->surface;
 
    SwapChainObject *target = nullptr;
    if (data.scanTarget == latte::pm4::ScanTarget::TV) {
@@ -70,16 +71,16 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
       decaf_abort("decafCopyColorToScan called for unknown scanTarget");
    }
 
-   transitionSurface(surface, vk::ImageLayout::eTransferSrcOptimal);
+   transitionSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal);
 
    vk::ImageBlit blitRegion(
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->desc.dataDesc.width, surface->desc.dataDesc.height, 1) },
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->desc.width, surface->desc.height, 1) },
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(target->desc.width, target->desc.height, 1) });
 
    mActiveCommandBuffer.blitImage(
-      surface->data->image,
+      surface->image,
       vk::ImageLayout::eTransferSrcOptimal,
       target->image,
       vk::ImageLayout::eTransferDstOptimal,
@@ -127,12 +128,13 @@ Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
    colorBuffer.format = data.cb_color_info.FORMAT();
    colorBuffer.numberType = data.cb_color_info.NUMBER_TYPE();
    colorBuffer.arrayMode = data.cb_color_info.ARRAY_MODE();
-   auto surface = getColorBuffer(colorBuffer, true);
+   auto surfaceView = getColorBuffer(colorBuffer);
+   auto surface = surfaceView->surface;
 
-   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { data.red, data.green, data.blue, data.alpha };
-   mActiveCommandBuffer.clearColorImage(surface->data->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->data->subresRange });
+   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });
 }
 
 void
@@ -145,9 +147,10 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
    depthBuffer.sliceTileMax = data.db_depth_size.SLICE_TILE_MAX();
    depthBuffer.format = data.db_depth_info.FORMAT();
    depthBuffer.arrayMode = data.db_depth_info.ARRAY_MODE();
-   auto surface = getDepthStencilBuffer(depthBuffer, true);
+   auto surfaceView = getDepthStencilBuffer(depthBuffer);
+   auto surface = surfaceView->surface;
 
-   transitionSurface(surface, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
@@ -156,7 +159,7 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
    clearDepthStencil.depth = db_depth_clear.DEPTH_CLEAR();
    clearDepthStencil.stencil = db_stencil_clear.CLEAR();
    mActiveCommandBuffer.clearDepthStencilImage(
-      surface->data->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surface->data->subresRange });
+      surface->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surface->subresRange });
 }
 
 void
@@ -175,7 +178,7 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    decaf_check(data.dstDim == data.srcDim);
 
    // Fetch the source surface
-   SurfaceDataDesc sourceDataDesc;
+   SurfaceDesc sourceDataDesc;
    sourceDataDesc.baseAddress = static_cast<uint32_t>(data.srcImage);
    sourceDataDesc.pitch = data.srcPitch;
    sourceDataDesc.width = data.srcWidth;
@@ -190,11 +193,10 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
       data.srcForceDegamma);
    sourceDataDesc.tileType = data.srcTileType;
    sourceDataDesc.tileMode = data.srcTileMode;
-   auto sourceSurfaceData = getSurfaceData(sourceDataDesc);
-   auto sourceImage = getSurfaceSubData(sourceSurfaceData, sourceDataDesc);
+   auto sourceImage = getSurface(sourceDataDesc);
 
    // Fetch the destination surface
-   SurfaceDataDesc destDataDesc;
+   SurfaceDesc destDataDesc;
    destDataDesc.baseAddress = static_cast<uint32_t>(data.dstImage);
    destDataDesc.pitch = data.dstPitch;
    destDataDesc.width = data.dstWidth;
@@ -209,12 +211,11 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
       data.dstForceDegamma);
    destDataDesc.tileType = data.dstTileType;
    destDataDesc.tileMode = data.dstTileMode;
-   auto destSurfaceData = getSurfaceData(destDataDesc);
-   auto destImage = getSurfaceSubData(destSurfaceData, destDataDesc);
+   auto destImage = getSurface(destDataDesc);
 
    // Transition the surfaces to the appropriate layouts
-   transitionSurfaceSubData(sourceImage, vk::ImageLayout::eTransferSrcOptimal);
-   transitionSurfaceSubData(destImage, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurface(sourceImage, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal);
+   transitionSurface(destImage, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    // Calculate the bounds of the copy
    auto copyWidth = data.srcWidth;
@@ -226,9 +227,9 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 
    // Perform the copy, note that CopySurface only supports 1:1 copies
    vk::ImageBlit blitRegion(
-      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
+      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, data.srcSlice, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) },
-      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
+      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, data.dstSlice, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
 
    mActiveCommandBuffer.blitImage(

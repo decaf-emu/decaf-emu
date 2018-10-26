@@ -373,6 +373,10 @@ Driver::beginCommandBuffer()
 void
 Driver::endCommandBuffer()
 {
+   // We have to force our memcache objects to be downloaded at the
+   // end of every PM4 buffer.
+   downloadPendingMemCache();
+
    // Stop recording this host command buffer
    mActiveCommandBuffer.end();
 }
