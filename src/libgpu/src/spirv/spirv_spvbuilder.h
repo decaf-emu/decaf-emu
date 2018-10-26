@@ -190,7 +190,7 @@ public:
          vecType = makeVectorType(elemType, elemCount);
 
          auto baseTypeName = getTypeName(elemType);
-         if (!baseTypeName.size()) {
+         if (baseTypeName.empty()) {
             decaf_abort("Unexpected element type for vector type");
          }
          addName(vecType, fmt::format("{}{}", baseTypeName, elemCount).c_str());
