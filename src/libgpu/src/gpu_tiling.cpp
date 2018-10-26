@@ -89,6 +89,38 @@ calcSurfaceBankPipeSwizzle(uint32_t swizzle, uint32_t *bankSwizzle, uint32_t *pi
    *pipeSwizzle = output.pipeSwizzle;
 }
 
+static inline void
+alignAddrFromCoordInput(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &data)
+{
+   auto handle = getAddrLibHandle();
+
+   // We only partially complete this, knowing that we only need
+   // some information which does not depend on it...
+   ADDR_COMPUTE_SURFACE_INFO_INPUT input;
+   memset(&input, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT));
+   input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
+   input.tileMode = data.tileMode;
+   input.format = AddrFormat::ADDR_FMT_INVALID;
+   input.bpp = data.bpp;
+   input.width = data.pitch;
+   input.height = data.height;
+   input.numSlices = data.numSlices;
+   input.numSamples = data.numSamples;
+   input.numFrags = input.numFrags;
+   input.slice = input.slice;
+   input.mipLevel = input.mipLevel;
+
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+   std::memset(&output, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT));
+   output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
+
+   auto result = AddrComputeSurfaceInfo(gpu::getAddrLibHandle(), &input, &output);
+   decaf_check(result == ADDR_OK);
+
+   data.pitch = output.pitch;
+   data.height = output.height;
+}
+
 bool
 copySurfacePixels(uint8_t *dstBasePtr,
    uint32_t dstWidth,
@@ -100,6 +132,9 @@ copySurfacePixels(uint8_t *dstBasePtr,
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &srcAddrInput)
 {
    auto handle = getAddrLibHandle();
+
+   alignAddrFromCoordInput(dstAddrInput);
+   alignAddrFromCoordInput(srcAddrInput);
 
    decaf_check(srcAddrInput.bpp == dstAddrInput.bpp);
    auto bpp = dstAddrInput.bpp;
