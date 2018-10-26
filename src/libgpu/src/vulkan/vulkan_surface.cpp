@@ -495,6 +495,8 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    createImageDesc.initialLayout = vk::ImageLayout::eUndefined;
    auto image = mDevice.createImage(createImageDesc);
 
+   setVkObjectName(image, fmt::format("surfimg_{:08x}", info.baseAddress).c_str());
+
    auto imageMemReqs = mDevice.getImageMemoryRequirements(image);
 
    vk::MemoryAllocateInfo allocDesc;
@@ -652,6 +654,19 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
    imageViewDesc.components = hostComponentMap;
    imageViewDesc.subresourceRange = surface->subresRange;
    auto imageView = mDevice.createImageView(imageViewDesc);
+
+   auto compName = [](latte::SQ_SEL comp) {
+      static const char *names[] = { "x", "y", "z", "w", "0", "1", "_" };
+      return names[comp];
+   };
+   setVkObjectName(imageView,
+                   fmt::format(
+                      "surfview_{:08x}:{}{}{}{}",
+                      info.surfaceDesc.baseAddress,
+                      compName(info.channels[0]),
+                      compName(info.channels[1]),
+                      compName(info.channels[2]),
+                      compName(info.channels[3])).c_str());
 
    auto surfaceView = new SurfaceViewObject();
    surfaceView->desc = info;

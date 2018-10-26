@@ -33,6 +33,8 @@ Driver::_allocMemCache(phys_addr address, uint32_t size, const MemCacheMutator& 
                    &allocation,
                    nullptr);
 
+   setVkObjectName(buffer, fmt::format("memcache_{:08x}_{}", address.getAddress(), size).c_str());
+
    auto cache = new MemCacheObject();
    cache->address = address;
    cache->size = size;

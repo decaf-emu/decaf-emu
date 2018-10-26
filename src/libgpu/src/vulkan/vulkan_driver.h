@@ -686,6 +686,12 @@ protected:
    PipelineDesc getPipelineDesc();
    bool checkCurrentPipeline();
 
+   // Debug
+   void setVkObjectName(VkBuffer object, const char *name);
+   void setVkObjectName(VkImage object, const char *name);
+   void setVkObjectName(VkImageView object, const char *name);
+   void setVkObjectName(VkShaderModule object, const char *name);
+
 private:
    virtual void decafSetBuffer(const latte::pm4::DecafSetBuffer &data) override;
    virtual void decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data) override;
@@ -771,6 +777,7 @@ private:
    vk::PhysicalDevice mPhysDevice;
    vk::Device mDevice;
    vk::Queue mQueue;
+   vk::DispatchLoaderDynamic mVkDynLoader;
    vk::CommandPool mCommandPool;
    SwapChainObject *mTvSwapChain = nullptr;
    SwapChainObject *mDrcSwapChain = nullptr;

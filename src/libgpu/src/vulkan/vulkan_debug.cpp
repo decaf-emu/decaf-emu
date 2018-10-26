@@ -43,6 +43,43 @@ Driver::updateDebuggerInfo()
    mDebuggerInfo.numDataBuffers = 0;
 }
 
+template <typename ObjType>
+static void
+_setVkObjectName(vk::Device device, ObjType object, vk::DebugReportObjectTypeEXT type, const char *name, const vk::DispatchLoaderDynamic& dispatch)
+{
+   if (dispatch.vkDebugMarkerSetObjectNameEXT) {
+      vk::DebugMarkerObjectNameInfoEXT nameInfo;
+      nameInfo.object = *reinterpret_cast<uint64_t*>(&object);
+      nameInfo.objectType = type;
+      nameInfo.pObjectName = name;
+      device.debugMarkerSetObjectNameEXT(nameInfo, dispatch);
+   }
+}
+
+void
+Driver::setVkObjectName(VkBuffer object, const char *name)
+{
+   _setVkObjectName(mDevice, object, vk::DebugReportObjectTypeEXT::eBuffer, name, mVkDynLoader);
+}
+
+void
+Driver::setVkObjectName(VkImage object, const char *name)
+{
+   _setVkObjectName(mDevice, object, vk::DebugReportObjectTypeEXT::eImage, name, mVkDynLoader);
+}
+
+void
+Driver::setVkObjectName(VkImageView object, const char *name)
+{
+   _setVkObjectName(mDevice, object, vk::DebugReportObjectTypeEXT::eImageView, name, mVkDynLoader);
+}
+
+void
+Driver::setVkObjectName(VkShaderModule object, const char *name)
+{
+   _setVkObjectName(mDevice, object, vk::DebugReportObjectTypeEXT::eShaderModule, name, mVkDynLoader);
+}
+
 } // namespace vulkan
 
 #endif // ifdef DECAF_VULKAN

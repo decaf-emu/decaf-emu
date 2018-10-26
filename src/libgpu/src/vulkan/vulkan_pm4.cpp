@@ -39,6 +39,15 @@ Driver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
    };
    auto newSwapChain = allocateSwapChain(swapChainDesc);
 
+   // Give the swapchain a name so its easy to see.
+   if (data.scanTarget == latte::pm4::ScanTarget::TV) {
+      setVkObjectName(newSwapChain->image, fmt::format("swapchain_tv").c_str());
+   } else if (data.scanTarget == latte::pm4::ScanTarget::DRC) {
+      setVkObjectName(newSwapChain->image, fmt::format("swapchain_drc").c_str());
+   } else {
+         decaf_abort("Unexpected decafSetBuffer target");
+   }
+
    // Assign the new swap chain
    *swapChain = newSwapChain;
 

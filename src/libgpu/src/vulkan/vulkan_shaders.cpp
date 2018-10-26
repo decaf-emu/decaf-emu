@@ -362,6 +362,9 @@ Driver::checkCurrentVertexShader()
       vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));
    foundShader->module = module;
 
+   auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
+   setVkObjectName(module, fmt::format("vs_{:08x}", shaderAddr).c_str());
+
    mCurrentVertexShader = foundShader;
    return true;
 }
@@ -405,6 +408,9 @@ Driver::checkCurrentGeometryShader()
       vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));
    foundShader->module = module;
 
+   auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
+   setVkObjectName(module, fmt::format("gs_{:08x}", shaderAddr).c_str());
+
    mCurrentGeometryShader = foundShader;
    return true;
 }
@@ -444,6 +450,9 @@ bool Driver::checkCurrentPixelShader()
    auto module = mDevice.createShaderModule(
       vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));
    foundShader->module = module;
+
+   auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
+   setVkObjectName(module, fmt::format("ps_{:08x}", shaderAddr).c_str());
 
    mCurrentPixelShader = foundShader;
    return true;
