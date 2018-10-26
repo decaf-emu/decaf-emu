@@ -280,11 +280,13 @@ Driver::memWrite(const latte::pm4::MemWrite &data)
    value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
 
    // Write value
-   if (data.addrHi.DATA32()) {
-      *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
-   } else {
-      *reinterpret_cast<uint64_t *>(ptr) = value;
-   }
+   addRetireTask([=](){
+      if (data.addrHi.DATA32()) {
+         *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
+      } else {
+         *reinterpret_cast<uint64_t *>(ptr) = value;
+      }
+   });
 }
 
 void
@@ -320,23 +322,27 @@ Driver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
       // Swap value
       value = latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP());
 
-      // Write value
-      switch (data.addrHi.DATA_SEL()) {
-      case latte::pm4::EWP_DATA_32:
-         *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
-         break;
-      case latte::pm4::EWP_DATA_64:
-      case latte::pm4::EWP_DATA_CLOCK:
-         *reinterpret_cast<uint64_t *>(ptr) = value;
-         break;
-      }
+      addRetireTask([=](){
+         // Write value
+         switch (data.addrHi.DATA_SEL()) {
+         case latte::pm4::EWP_DATA_32:
+            *reinterpret_cast<uint32_t *>(ptr) = static_cast<uint32_t>(value);
+            break;
+         case latte::pm4::EWP_DATA_64:
+         case latte::pm4::EWP_DATA_CLOCK:
+            *reinterpret_cast<uint64_t *>(ptr) = value;
+            break;
+         }
+      });
    }
 
    // Generate interrupt if required
    if (data.addrHi.INT_SEL() != latte::pm4::EWP_INT_NONE) {
-      auto interrupt = gpu::ih::Entry { };
-      interrupt.word0 = latte::CP_INT_SRC_ID::CP_EOP_EVENT;
-      gpu::ih::write(interrupt);
+      addRetireTask([=](){
+         auto interrupt = gpu::ih::Entry { };
+         interrupt.word0 = latte::CP_INT_SRC_ID::CP_EOP_EVENT;
+         gpu::ih::write(interrupt);
+      });
    }
 }
 
