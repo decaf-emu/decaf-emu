@@ -6,6 +6,12 @@
 namespace cafe::gx2
 {
 
+struct GX2PerfData
+{
+   UNKNOWN(0x8a0);
+};
+CHECK_SIZE(GX2PerfData, 0x8a0);
+
 struct GX2QueryData
 {
    // Note that these are intentionally host-endian as they
@@ -42,5 +48,10 @@ GX2QueryBeginConditionalRender(GX2QueryType type,
                                BOOL predicate);
 void
 GX2QueryEndConditionalRender();
+
+bool
+GX2PerfMetricEnable(virt_ptr<GX2PerfData> data,
+                    GX2PerfType type,
+                    uint32_t 	id);
 
 } // namespace cafe::gx2

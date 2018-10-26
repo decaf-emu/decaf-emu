@@ -290,6 +290,12 @@ ENUM_BEG(GX2PatchShaderType, uint32_t)
    ENUM_VALUE(PixelShader,             0x5)
 ENUM_END(GX2PatchShaderType)
 
+ENUM_BEG(GX2PerfType, uint32_t)
+   ENUM_VALUE(GpuMetric,               0x1)
+   ENUM_VALUE(GpuStat,                 0x2)
+   ENUM_VALUE(MemStat,                 0x3)
+ENUM_END(GX2PerfType)
+
 FLAGS_BEG(GX2ProfileMode, uint32_t)
    FLAGS_VALUE(None,                      0)
    FLAGS_VALUE(SkipExecuteCommandBuffers, 1 << 0)

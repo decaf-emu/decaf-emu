@@ -296,6 +296,14 @@ GX2QueryEndConditionalRender()
    internal::writePM4(SetPredication { 0, SET_PRED::get(0) });
 }
 
+bool
+GX2PerfMetricEnable(virt_ptr<GX2PerfData> data,
+                    GX2PerfType type,
+                    uint32_t 	id)
+{
+   return true;
+}
+
 void
 Library::registerQuerySymbols()
 {
@@ -307,6 +315,7 @@ Library::registerQuerySymbols()
    RegisterFunctionExport(GX2SampleTopGPUCycle);
    RegisterFunctionExport(GX2SampleBottomGPUCycle);
    RegisterFunctionExport(GX2GPUTimeToCPUTime);
+   RegisterFunctionExport(GX2PerfMetricEnable);
 }
 
 } // namespace cafe::gx2
