@@ -19,6 +19,9 @@ sMutex;
 static std::condition_variable
 sConditionVariable;
 
+static bool
+sPendingWake = false;
+
 void
 write(const Buffer &items)
 {
@@ -40,9 +43,11 @@ bool
 wait()
 {
    std::unique_lock<std::mutex> lock { sMutex };
-   if (mWriteVector.empty()) {
+   if (mWriteVector.empty() && !sPendingWake) {
       sConditionVariable.wait(lock);
    }
+
+   sPendingWake = false;
 
    return !mWriteVector.empty();
 }
@@ -50,6 +55,8 @@ wait()
 void
 wake()
 {
+   std::unique_lock<std::mutex> lock { sMutex };
+   sPendingWake = true;
    sConditionVariable.notify_all();
 }
 
