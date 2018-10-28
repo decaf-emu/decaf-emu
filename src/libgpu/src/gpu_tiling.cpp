@@ -67,7 +67,6 @@ getAddrLibHandle()
    return gAddrLibHandle;
 }
 
-
 static inline void
 calcSurfaceBankPipeSwizzle(uint32_t swizzle, uint32_t *bankSwizzle, uint32_t *pipeSwizzle)
 {
@@ -89,8 +88,16 @@ calcSurfaceBankPipeSwizzle(uint32_t swizzle, uint32_t *bankSwizzle, uint32_t *pi
    *pipeSwizzle = output.pipeSwizzle;
 }
 
-static inline void
-alignAddrFromCoordInput(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &data)
+void
+alignTiling(latte::SQ_TILE_MODE& tileMode,
+            uint32_t& swizzle,
+            uint32_t& pitch,
+            uint32_t& width,
+            uint32_t& height,
+            uint32_t& depth,
+            uint32_t& aa,
+            bool& isDepth,
+            uint32_t& bpp)
 {
    auto handle = getAddrLibHandle();
 
@@ -99,16 +106,16 @@ alignAddrFromCoordInput(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &data)
    ADDR_COMPUTE_SURFACE_INFO_INPUT input;
    memset(&input, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT));
    input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
-   input.tileMode = data.tileMode;
+   input.tileMode = static_cast<AddrTileMode>(tileMode);
    input.format = AddrFormat::ADDR_FMT_INVALID;
-   input.bpp = data.bpp;
-   input.width = data.pitch;
-   input.height = data.height;
-   input.numSlices = data.numSlices;
-   input.numSamples = data.numSamples;
-   input.numFrags = input.numFrags;
-   input.slice = input.slice;
-   input.mipLevel = input.mipLevel;
+   input.bpp = bpp;
+   input.width = pitch;
+   input.height = height;
+   input.numSlices = depth;
+   input.numSamples = 1;
+   input.numFrags = 0;
+   input.slice = 0;
+   input.mipLevel = 0;
 
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
    std::memset(&output, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT));
@@ -117,8 +124,8 @@ alignAddrFromCoordInput(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &data)
    auto result = AddrComputeSurfaceInfo(gpu::getAddrLibHandle(), &input, &output);
    decaf_check(result == ADDR_OK);
 
-   data.pitch = output.pitch;
-   data.height = output.height;
+   pitch = output.pitch;
+   height = output.height;
 }
 
 bool
@@ -132,9 +139,6 @@ copySurfacePixels(uint8_t *dstBasePtr,
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &srcAddrInput)
 {
    auto handle = getAddrLibHandle();
-
-   alignAddrFromCoordInput(dstAddrInput);
-   alignAddrFromCoordInput(srcAddrInput);
 
    decaf_check(srcAddrInput.bpp == dstAddrInput.bpp);
    auto bpp = dstAddrInput.bpp;

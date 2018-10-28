@@ -13,9 +13,11 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info)
 {
    auto realAddr = info.calcAlignedBaseAddress();
    auto swizzle = info.calcSwizzle();
+   auto tileMode = info.tileMode;
    auto dataFormat = getSurfaceFormatDataFormat(info.format);
    auto bpp = latte::getDataFormatBitsPerElement(dataFormat);
    auto isDepthBuffer = (info.tileType == latte::SQ_TILE_TYPE::DEPTH);
+   auto aa = uint32_t(0);
 
    auto texelPitch = info.pitch;
    auto texelWidth = info.width;
@@ -33,17 +35,21 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info)
       texelDepth *= 6;
    }
 
+   gpu::alignTiling(tileMode, swizzle,
+                    texelPitch, texelWidth, texelHeight, texelDepth,
+                    aa, isDepthBuffer, bpp);
+
    auto imageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
 
    // Generate a mutator and grab the memory
    MemCacheMutator mutator;
    mutator.mode = MemCacheMutator::Mode::Retile;
-   mutator.retile.tileMode = info.tileMode;
+   mutator.retile.tileMode = tileMode;
    mutator.retile.swizzle = swizzle;
    mutator.retile.pitch = texelPitch;
    mutator.retile.height = texelHeight;
    mutator.retile.depth = texelDepth;
-   mutator.retile.aa = 0;
+   mutator.retile.aa = aa;
    mutator.retile.isDepth = isDepthBuffer;
    mutator.retile.bpp = bpp;
    return getMemCache(phys_addr(realAddr), imageSize, mutator);
@@ -138,10 +144,25 @@ Driver::_readSurfaceData(SurfaceGroupObject *surface)
 
    auto& masterImage = surface->masterImage;
 
+   // Grab the aligned sizes from the retiler
+   auto& cacheMem = surface->cacheMem;
+   auto alignedPitch = masterImage->pitch;
+   auto alignedHeight = masterImage->height;
+   if (cacheMem->mutator.mode == MemCacheMutator::Mode::Retile) {
+      alignedPitch = cacheMem->mutator.retile.pitch;
+      alignedHeight = cacheMem->mutator.retile.height;
+
+      auto dataFormat = getSurfaceFormatDataFormat(surface->desc.format);
+      if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+         alignedPitch *= 4;
+         alignedHeight *= 4;
+      }
+   }
+
    vk::BufferImageCopy region = {};
    region.bufferOffset = 0;
-   region.bufferRowLength = masterImage->pitch;
-   region.bufferImageHeight = masterImage->height;
+   region.bufferRowLength = alignedPitch;
+   region.bufferImageHeight = alignedHeight;
 
    region.imageSubresource.aspectMask = masterImage->subresRange.aspectMask;
    region.imageSubresource.mipLevel = 0;
@@ -184,6 +205,21 @@ Driver::_writeSurfaceData(SurfaceGroupObject *surface)
 
    auto& masterImage = surface->masterImage;
 
+   // Grab the aligned sizes from the retiler
+   auto& cacheMem = surface->cacheMem;
+   auto alignedPitch = masterImage->pitch;
+   auto alignedHeight = masterImage->height;
+   if (cacheMem->mutator.mode == MemCacheMutator::Mode::Retile) {
+      alignedPitch = cacheMem->mutator.retile.pitch;
+      alignedHeight = cacheMem->mutator.retile.height;
+
+      auto dataFormat = getSurfaceFormatDataFormat(surface->desc.format);
+      if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+         alignedPitch *= 4;
+         alignedHeight *= 4;
+      }
+   }
+
    // We need to switch back to the master image before we can perform the write...
    auto& activeImage = surface->activeImage;
    if (activeImage != masterImage) {
@@ -194,8 +230,8 @@ Driver::_writeSurfaceData(SurfaceGroupObject *surface)
    // Perform the actual copy
    vk::BufferImageCopy region = {};
    region.bufferOffset = 0;
-   region.bufferRowLength = masterImage->pitch;
-   region.bufferImageHeight = masterImage->height;
+   region.bufferRowLength = alignedPitch;
+   region.bufferImageHeight = alignedHeight;
 
    region.imageSubresource.aspectMask = masterImage->subresRange.aspectMask;
    region.imageSubresource.mipLevel = 0;

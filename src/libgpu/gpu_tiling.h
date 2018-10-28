@@ -8,6 +8,17 @@ namespace gpu
 ADDR_HANDLE
 getAddrLibHandle();
 
+void
+alignTiling(latte::SQ_TILE_MODE& tileMode,
+            uint32_t& swizzle,
+            uint32_t& pitch,
+            uint32_t& width,
+            uint32_t& height,
+            uint32_t& depth,
+            uint32_t& aa,
+            bool& isDepth,
+            uint32_t& bpp);
+
 bool
 copySurfacePixels(uint8_t *dstBasePtr,
                   uint32_t dstWidth,
