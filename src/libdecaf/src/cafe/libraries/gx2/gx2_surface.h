@@ -140,7 +140,7 @@ GX2CalcDepthBufferHiZInfo(virt_ptr<GX2DepthBuffer> depthBuffer,
                           virt_ptr<uint32_t> outAlignment);
 
 void
-GX2CalcColorBufferAuxInfo(virt_ptr<GX2Surface> surface,
+GX2CalcColorBufferAuxInfo(virt_ptr<GX2ColorBuffer> colorBuffer,
                           virt_ptr<uint32_t> outSize,
                           virt_ptr<uint32_t> outAlignment);
 

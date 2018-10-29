@@ -14,7 +14,7 @@ struct GX2SurfaceFormatData
    uint8_t bpp;
    GX2SurfaceUse use;
    uint8_t endian;
-   uint8_t unk;
+   uint8_t sourceFormat; // CB_SOURCE_FORMAT
 };
 
 static GX2SurfaceFormatData
@@ -290,23 +290,10 @@ getSurfaceFormatType(GX2SurfaceFormat format)
    return static_cast<GX2SurfaceFormatType>(format >> 8);
 }
 
-latte::DB_FORMAT
-getSurfaceFormatDepthFormat(GX2SurfaceFormat format)
+latte::CB_ENDIAN
+getSurfaceFormatColorEndian(GX2SurfaceFormat format)
 {
-   switch (format & 0x3F) {
-   case latte::SQ_DATA_FORMAT::FMT_16:
-      return latte::DB_FORMAT::DEPTH_16;
-   case latte::SQ_DATA_FORMAT::FMT_8_24:
-      return latte::DB_FORMAT::DEPTH_8_24;
-   case latte::SQ_DATA_FORMAT::FMT_8_24_FLOAT:
-      return latte::DB_FORMAT::DEPTH_8_24_FLOAT;
-   case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
-      return latte::DB_FORMAT::DEPTH_32_FLOAT;
-   case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
-      return latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT;
-   default:
-      return latte::DB_FORMAT::DEPTH_INVALID;
-   }
+   return static_cast<latte::CB_ENDIAN>(sSurfaceFormatData[format & 0x3F].endian);
 }
 
 latte::CB_FORMAT
@@ -403,6 +390,12 @@ getSurfaceFormatColorNumberType(GX2SurfaceFormat format)
    default:
       decaf_abort(fmt::format("Invalid GX2SurfaceFormat {}", to_string(format)));
    }
+}
+
+latte::CB_SOURCE_FORMAT
+getSurfaceFormatColorSourceFormat(GX2SurfaceFormat format)
+{
+   return static_cast<latte::CB_SOURCE_FORMAT>(sSurfaceFormatData[format & 0x3F].sourceFormat);
 }
 
 latte::SQ_ENDIAN

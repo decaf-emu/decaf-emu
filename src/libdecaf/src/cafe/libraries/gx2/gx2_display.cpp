@@ -152,6 +152,12 @@ GX2CopyColorBufferToScanBuffer(virt_ptr<GX2ColorBuffer> buffer,
       cb_color_frag = cb_color_frag.BASE_256B(addrAA >> 8);
    }
 
+   // TODO: We should check this function, this was added
+   // as a temporary solution to new crashes.
+   if (buffer->viewNumSlices == 0) {
+      buffer->viewNumSlices = 1u;
+   }
+
    GX2InitColorBufferRegs(buffer);
 
    internal::writePM4(latte::pm4::DecafCopyColorToScan {

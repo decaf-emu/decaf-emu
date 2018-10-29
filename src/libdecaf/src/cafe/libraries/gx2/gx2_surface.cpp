@@ -44,6 +44,21 @@ calcNumLevels(virt_ptr<GX2Surface> surface)
    return levels;
 }
 
+static void
+computeAuxInfo(virt_ptr<GX2ColorBuffer> colorBuffer,
+               virt_ptr<uint32_t> outSize,
+               virt_ptr<uint32_t> outAlignment,
+               bool updateRegisters)
+{
+   // TODO: Implement once we have AddrComputeCmaskInfo, AddrComputeFmaskInfo
+   if (outSize) {
+      *outSize = 2048u;
+   }
+   if (outAlignment) {
+      *outAlignment = 2048u;
+   }
+}
+
 void
 GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
 {
@@ -173,13 +188,13 @@ GX2CalcDepthBufferHiZInfo(virt_ptr<GX2DepthBuffer> depthBuffer,
 }
 
 void
-GX2CalcColorBufferAuxInfo(virt_ptr<GX2Surface> surface,
+GX2CalcColorBufferAuxInfo(virt_ptr<GX2ColorBuffer> colorBuffer,
                           virt_ptr<uint32_t> outSize,
                           virt_ptr<uint32_t> outAlignment)
 {
-   gLog->warn("Application called GX2CalcColorBufferAuxInfo");
-   *outSize = 2048u;
-   *outAlignment = 2048u;
+   decaf_warn_stub();
+   computeAuxInfo(colorBuffer, outSize, outAlignment, false);
+   colorBuffer->aaSize = *outSize;
 }
 
 void
@@ -312,67 +327,160 @@ GX2SetDepthBuffer(virt_ptr<GX2DepthBuffer> depthBuffer)
 void
 GX2InitColorBufferRegs(virt_ptr<GX2ColorBuffer> colorBuffer)
 {
-   auto cb_color_info = latte::CB_COLORN_INFO::get(0);
-   auto cb_color_size = latte::CB_COLORN_SIZE::get(0);
+   auto surfaceFormat = colorBuffer->surface.format;
+   auto surfaceFormatType = internal::getSurfaceFormatType(surfaceFormat);
 
-   // Update cb_color_info
-   auto format = internal::getSurfaceFormatColorFormat(colorBuffer->surface.format);
-   auto numberType = internal::getSurfaceFormatColorNumberType(colorBuffer->surface.format);
-
-   cb_color_info = cb_color_info
-      .FORMAT(format)
-      .NUMBER_TYPE(numberType);
-
-   // Update cb_color_size
-   ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+   auto output = ADDR_COMPUTE_SURFACE_INFO_OUTPUT { };
    internal::getSurfaceInfo(virt_addrof(colorBuffer->surface).get(),
-                            0, &output);
+                            colorBuffer->viewMip,
+                            &output);
 
+   // cb_color_size
    auto pitchTileMax = (output.pitch / latte::MicroTileWidth) - 1;
    auto sliceTileMax = ((output.pitch * output.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
-   cb_color_size = cb_color_size
+   colorBuffer->regs.cb_color_size = latte::CB_COLORN_SIZE::get(0)
       .PITCH_TILE_MAX(pitchTileMax)
       .SLICE_TILE_MAX(sliceTileMax);
 
-   // TODO: Set more regs!
+   // cb_color_info
+   auto cbFormat = internal::getSurfaceFormatColorFormat(colorBuffer->surface.format);
+   auto cbCompSwap = latte::CB_COMP_SWAP::STD;
+   if (cbFormat == latte::CB_FORMAT::COLOR_5_5_5_1 ||
+       cbFormat == latte::CB_FORMAT::COLOR_10_10_10_2) {
+      cbCompSwap = latte::CB_COMP_SWAP::STD_REV;
+   }
 
-   // Save big endian registers
-   std::memset(&colorBuffer->regs, 0, sizeof(colorBuffer->regs));
-   colorBuffer->regs.cb_color_info = cb_color_info;
-   colorBuffer->regs.cb_color_size = cb_color_size;
+   auto cbNumberType = internal::getSurfaceFormatColorNumberType(surfaceFormat);
+   auto cbTileMode = latte::CB_TILE_MODE::DISABLE;
+   if (colorBuffer->surface.aa) {
+      cbTileMode = latte::CB_TILE_MODE::FRAG_ENABLE;
+   }
+
+   auto blendBypass = false;
+   if (surfaceFormatType == GX2SurfaceFormatType::UINT ||
+       surfaceFormat == GX2SurfaceFormat::UNORM_R24_X8 ||
+       surfaceFormat == GX2SurfaceFormat::FLOAT_D24_S8 ||
+       surfaceFormat == GX2SurfaceFormat::FLOAT_X8_X24) {
+      blendBypass = true;
+   }
+
+   auto cbRoundMode = latte::CB_ROUND_MODE::BY_HALF;
+   if (surfaceFormatType == GX2SurfaceFormatType::FLOAT) {
+      cbRoundMode = latte::CB_ROUND_MODE::TRUNCATE;
+   }
+
+   auto cbSourceFormat = internal::getSurfaceFormatColorSourceFormat(surfaceFormat);
+   if (surfaceFormatType == GX2SurfaceFormatType::UINT) {
+      cbSourceFormat = latte::CB_SOURCE_FORMAT::EXPORT_NORM;
+   }
+
+   colorBuffer->regs.cb_color_info = latte::CB_COLORN_INFO::get(0)
+      .ENDIAN(internal::getSurfaceFormatColorEndian(surfaceFormat))
+      .FORMAT(cbFormat)
+      .NUMBER_TYPE(cbNumberType)
+      .ARRAY_MODE(static_cast<latte::BUFFER_ARRAY_MODE>(colorBuffer->surface.tileMode))
+      .COMP_SWAP(cbCompSwap)
+      .TILE_MODE(cbTileMode)
+      .BLEND_BYPASS(blendBypass)
+      .ROUND_MODE(cbRoundMode)
+      .SOURCE_FORMAT(cbSourceFormat);
+
+   colorBuffer->regs.cb_color_mask = latte::CB_COLORN_MASK::get(0);
+
+   if (colorBuffer->surface.tileMode == GX2TileMode::LinearSpecial) {
+      colorBuffer->regs.cb_color_view = latte::CB_COLORN_VIEW::get(0);
+   } else {
+      colorBuffer->regs.cb_color_view = latte::CB_COLORN_VIEW::get(0)
+         .SLICE_START(colorBuffer->viewFirstSlice)
+         .SLICE_MAX(colorBuffer->viewFirstSlice + colorBuffer->viewNumSlices - 1);
+   }
+
+   if (colorBuffer->surface.aa) {
+      computeAuxInfo(colorBuffer, nullptr, nullptr, true);
+   }
 }
 
 void
 GX2InitDepthBufferRegs(virt_ptr<GX2DepthBuffer> depthBuffer)
 {
-   auto db_depth_info = latte::DB_DEPTH_INFO::get(0);
-   auto db_depth_size = latte::DB_DEPTH_SIZE::get(0);
-
-   // Update db_depth_info
-   auto format = internal::getSurfaceFormatDepthFormat(depthBuffer->surface.format);
-
-   db_depth_info = db_depth_info
-      .FORMAT(format);
-
-   // Update db_depth_size
-   ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
+   ADDR_COMPUTE_SURFACE_INFO_OUTPUT surfaceInfo;
    internal::getSurfaceInfo(virt_addrof(depthBuffer->surface).get(),
-                            0, &output);
+                            depthBuffer->viewMip,
+                            &surfaceInfo);
 
-   auto pitchTileMax = (output.pitch / latte::MicroTileWidth) - 1;
-   auto sliceTileMax = ((output.pitch * output.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
+   // db_depth_size
+   auto pitchTileMax = (surfaceInfo.pitch / latte::MicroTileWidth) - 1;
+   auto sliceTileMax = ((surfaceInfo.pitch * surfaceInfo.height) / (latte::MicroTileWidth * latte::MicroTileHeight)) - 1;
 
-   db_depth_size = db_depth_size
+   depthBuffer->regs.db_depth_size = latte::DB_DEPTH_SIZE::get(0)
       .PITCH_TILE_MAX(pitchTileMax)
       .SLICE_TILE_MAX(sliceTileMax);
 
-   // TODO: Set more regs!
+   // db_depth_view
+   depthBuffer->regs.db_depth_view = latte::DB_DEPTH_VIEW::get(0)
+      .SLICE_START(depthBuffer->viewFirstSlice)
+      .SLICE_MAX(depthBuffer->viewFirstSlice + depthBuffer->viewNumSlices - 1);
 
-   // Save big endian registers
-   std::memset(&depthBuffer->regs, 0, sizeof(depthBuffer->regs));
+   depthBuffer->regs.db_htile_surface = latte::DB_HTILE_SURFACE::get(0)
+      .HTILE_WIDTH(true)
+      .HTILE_HEIGHT(true)
+      .FULL_CACHE(true);
+
+   depthBuffer->regs.db_prefetch_limit = latte::DB_PREFETCH_LIMIT::get(0)
+      .DEPTH_HEIGHT_TILE_MAX(((depthBuffer->surface.height / 8) - 1) & 0x3FF);
+
+   depthBuffer->regs.db_preload_control = latte::DB_PRELOAD_CONTROL::get(0)
+      .MAX_X(depthBuffer->surface.width / 32)
+      .MAX_Y(depthBuffer->surface.height / 32);
+
+   auto db_depth_info = latte::DB_DEPTH_INFO::get(0)
+      .READ_SIZE(latte::BUFFER_READ_SIZE::READ_512_BITS)
+      .ARRAY_MODE(static_cast<latte::BUFFER_ARRAY_MODE>(depthBuffer->surface.tileMode))
+      .TILE_SURFACE_ENABLE(depthBuffer->hiZPtr != nullptr);
+
+   auto pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0);
+
+   switch (depthBuffer->surface.format) {
+   case GX2SurfaceFormat::UNORM_R16:
+      db_depth_info = db_depth_info
+         .FORMAT(latte::DB_FORMAT::DEPTH_16);
+      pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0)
+         .POLY_OFFSET_NEG_NUM_DB_BITS(240);
+      break;
+   case GX2SurfaceFormat::UNORM_R24_X8:
+      db_depth_info = db_depth_info
+         .FORMAT(latte::DB_FORMAT::DEPTH_8_24);
+      pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0)
+         .POLY_OFFSET_NEG_NUM_DB_BITS(232);
+   case GX2SurfaceFormat::FLOAT_R32:
+      db_depth_info = db_depth_info
+         .FORMAT(latte::DB_FORMAT::DEPTH_32_FLOAT);
+      pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0)
+         .POLY_OFFSET_NEG_NUM_DB_BITS(233)
+         .POLY_OFFSET_DB_IS_FLOAT_FMT(true);
+      break;
+   case GX2SurfaceFormat::FLOAT_D24_S8:
+      db_depth_info = db_depth_info
+         .FORMAT(latte::DB_FORMAT::DEPTH_8_24_FLOAT);
+      pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0)
+         .POLY_OFFSET_NEG_NUM_DB_BITS(236)
+         .POLY_OFFSET_DB_IS_FLOAT_FMT(true);
+      break;
+   case GX2SurfaceFormat::FLOAT_X8_X24:
+      db_depth_info = db_depth_info
+         .FORMAT(latte::DB_FORMAT::DEPTH_X24_8_32_FLOAT);
+      pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0)
+         .POLY_OFFSET_NEG_NUM_DB_BITS(233)
+         .POLY_OFFSET_DB_IS_FLOAT_FMT(true);
+      break;
+   default:
+      db_depth_info = db_depth_info
+         .FORMAT(latte::DB_FORMAT::DEPTH_INVALID);
+   }
+
    depthBuffer->regs.db_depth_info = db_depth_info;
-   depthBuffer->regs.db_depth_size = db_depth_size;
+   depthBuffer->regs.pa_poly_offset_cntl = pa_poly_offset_cntl;
 }
 
 void

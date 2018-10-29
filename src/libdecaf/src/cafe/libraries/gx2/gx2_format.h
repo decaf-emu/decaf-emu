@@ -48,14 +48,17 @@ getSurfaceFormatBytesPerElement(GX2SurfaceFormat format);
 GX2SurfaceUse
 getSurfaceUse(GX2SurfaceFormat format);
 
+latte::CB_ENDIAN
+getSurfaceFormatColorEndian(GX2SurfaceFormat format);
+
 latte::CB_FORMAT
 getSurfaceFormatColorFormat(GX2SurfaceFormat format);
 
 latte::CB_NUMBER_TYPE
 getSurfaceFormatColorNumberType(GX2SurfaceFormat format);
 
-latte::DB_FORMAT
-getSurfaceFormatDepthFormat(GX2SurfaceFormat format);
+latte::CB_SOURCE_FORMAT
+getSurfaceFormatColorSourceFormat(GX2SurfaceFormat format);
 
 latte::SQ_ENDIAN
 getSurfaceFormatEndian(GX2SurfaceFormat format);
