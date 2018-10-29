@@ -19,10 +19,12 @@ class Transpiler : public latte::ShaderParser
       LodZero = 1 << 2,
       Gradient = 1 << 3,
       Compare = 1 << 4,
-      Gather = 1 << 5
+      Gather = 1 << 5,
+      Load = 1 << 6
    };
 
 public:
+   void translateTex_LD(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_FETCH4(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_SAMPLE(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_SAMPLE_L(const ControlFlowInst &cf, const TextureFetchInst &inst) override;

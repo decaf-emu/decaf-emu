@@ -23,26 +23,31 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    auto samplerId = inst.word2.SAMPLER_ID();
    auto texDim = mTexInput[textureId];
 
+   auto expectedCoordType = SQ_TEX_COORD_TYPE::NORMALIZED;
+   if (sampleMode & SampleMode::Load) {
+      expectedCoordType = SQ_TEX_COORD_TYPE::UNNORMALIZED;
+   }
+
    switch (texDim) {
    case latte::SQ_TEX_DIM::DIM_1D:
-      decaf_check(inst.word1.COORD_TYPE_X() == SQ_TEX_COORD_TYPE::NORMALIZED);
+      decaf_check(inst.word1.COORD_TYPE_X() == expectedCoordType);
       break;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      decaf_check(inst.word1.COORD_TYPE_X() == SQ_TEX_COORD_TYPE::NORMALIZED);
+      decaf_check(inst.word1.COORD_TYPE_X() == expectedCoordType);
       break;
    case latte::SQ_TEX_DIM::DIM_2D:
    case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       break;
    case latte::SQ_TEX_DIM::DIM_3D:
    case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      decaf_check(inst.word1.COORD_TYPE_X() == SQ_TEX_COORD_TYPE::NORMALIZED);
-      decaf_check(inst.word1.COORD_TYPE_Y() == SQ_TEX_COORD_TYPE::NORMALIZED);
-      decaf_check(inst.word1.COORD_TYPE_Z() == SQ_TEX_COORD_TYPE::NORMALIZED);
+      decaf_check(inst.word1.COORD_TYPE_X() == expectedCoordType);
+      decaf_check(inst.word1.COORD_TYPE_Y() == expectedCoordType);
+      decaf_check(inst.word1.COORD_TYPE_Z() == expectedCoordType);
       break;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      decaf_check(inst.word1.COORD_TYPE_X() == SQ_TEX_COORD_TYPE::NORMALIZED);
-      decaf_check(inst.word1.COORD_TYPE_Y() == SQ_TEX_COORD_TYPE::NORMALIZED);
+      decaf_check(inst.word1.COORD_TYPE_X() == expectedCoordType);
+      decaf_check(inst.word1.COORD_TYPE_Y() == expectedCoordType);
       break;
    default:
       decaf_abort("Unexpected texture sample dim");
@@ -68,36 +73,6 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    auto offsetZ = inst.word2.OFFSET_Z();
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
-
-   auto texVarType = mSpv->textureVarType(textureId, texDim);
-   auto sampVar = mSpv->samplerVar(samplerId);
-   auto texVar = mSpv->textureVar(textureId, texDim);
-
-   auto sampVal = mSpv->createLoad(sampVar);
-   auto texVal = mSpv->createLoad(texVar);
-
-   auto sampledType = mSpv->makeSampledImageType(texVarType);
-   auto sampledVal = mSpv->createOp(spv::OpSampledImage, sampledType, { texVal, sampVal });
-
-   spv::Id srcCoords = spv::NoResult;
-   switch (texDim) {
-   case latte::SQ_TEX_DIM::DIM_1D:
-      srcCoords = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });
-      break;
-   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-   case latte::SQ_TEX_DIM::DIM_2D:
-   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-      srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->float2Type(), { srcGprVal, srcGprVal, 0, 1 });
-      break;
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-   case latte::SQ_TEX_DIM::DIM_3D:
-   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->float3Type(), { srcGprVal, srcGprVal, 0, 1, 2 });
-      break;
-   default:
-      decaf_abort("Unexpected texture sample dim");
-   }
 
    uint32_t imageOperands = 0;
    std::vector<unsigned int> operandParams;
@@ -156,40 +131,100 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       operandParams.push_back(offsetVal);
    }
 
+   auto texVarType = mSpv->textureVarType(textureId, texDim);
+   auto texVar = mSpv->textureVar(textureId, texDim);
+   auto texVal = mSpv->createLoad(texVar);
+
    // Lets build our actual operation
    spv::Op sampleOp = spv::OpNop;
    std::vector<unsigned int> sampleParams;
 
-   // The default parameters every sample operation has
-   sampleParams.push_back(sampledVal);
-   sampleParams.push_back(srcCoords);
+   if (!(sampleMode & SampleMode::Load)) {
+      auto sampVar = mSpv->samplerVar(samplerId);
+      auto sampVal = mSpv->createLoad(sampVar);
+      auto sampledType = mSpv->makeSampledImageType(texVarType);
+      auto sampledVal = mSpv->createOp(spv::OpSampledImage, sampledType, { texVal, sampVal });
+      sampleParams.push_back(sampledVal);
 
-   // Pick the operation, and potentially add the comparison.
-   if (sampleMode & SampleMode::Gather) {
-      // It is not legal to combine this with any other kind of operation
-      decaf_check(sampleMode == SampleMode::Gather);
-
-      sampleOp = spv::OpImageGather;
-
-      auto compToFetch = mSpv->makeUintConstant(0);
-      sampleParams.push_back(compToFetch);
-   } else if (sampleMode & SampleMode::Compare) {
-      auto drefVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 3 });
-
-      if (imageOperands & spv::ImageOperandsLodMask) {
-         sampleOp = spv::OpImageSampleDrefExplicitLod;
-      } else {
-         sampleOp = spv::OpImageSampleDrefImplicitLod;
+      spv::Id srcCoords = srcGprVal;
+      switch (texDim) {
+      case latte::SQ_TEX_DIM::DIM_1D:
+         srcCoords = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcCoords, 0 });
+         break;
+      case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D:
+      case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+         srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->float2Type(), { srcCoords, srcCoords, 0, 1 });
+         break;
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      case latte::SQ_TEX_DIM::DIM_3D:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+         srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->float3Type(), { srcCoords, srcCoords, 0, 1, 2 });
+         break;
+      default:
+         decaf_abort("Unexpected texture sample dim");
       }
+      sampleParams.push_back(srcCoords);
 
-      sampleParams.push_back(drefVal);
+      // Pick the operation, and potentially add the comparison.
+      if (sampleMode & SampleMode::Gather) {
+         // It is not legal to combine this with any other kind of operation
+         decaf_check(sampleMode == SampleMode::Gather);
+
+         sampleOp = spv::OpImageGather;
+
+         auto compToFetch = mSpv->makeUintConstant(0);
+         sampleParams.push_back(compToFetch);
+      } else if (sampleMode & SampleMode::Compare) {
+         auto drefVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 3 });
+
+         if (imageOperands & spv::ImageOperandsLodMask) {
+            sampleOp = spv::OpImageSampleDrefExplicitLod;
+         } else {
+            sampleOp = spv::OpImageSampleDrefImplicitLod;
+         }
+
+         sampleParams.push_back(drefVal);
+      } else {
+         if (imageOperands & spv::ImageOperandsLodMask) {
+            sampleOp = spv::OpImageSampleExplicitLod;
+         } else {
+            sampleOp = spv::OpImageSampleImplicitLod;
+         }
+      }
    } else {
-      if (imageOperands & spv::ImageOperandsLodMask) {
-         sampleOp = spv::OpImageSampleExplicitLod;
-      } else {
-         sampleOp = spv::OpImageSampleImplicitLod;
+      // It is not legal to combine this with any other kind of operation
+      decaf_check(sampleMode == SampleMode::Load);
+
+      spv::Id srcCoords = srcGprVal;
+      srcCoords = mSpv->createUnaryOp(spv::OpBitcast, mSpv->uint4Type(), srcCoords);
+
+      switch (texDim) {
+      case latte::SQ_TEX_DIM::DIM_1D:
+         srcCoords = mSpv->createOp(spv::OpCompositeExtract, mSpv->uintType(), { srcCoords, 0 });
+         break;
+      case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D:
+      case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+         srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->uint2Type(), { srcCoords, srcCoords, 0, 1 });
+         break;
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      case latte::SQ_TEX_DIM::DIM_3D:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+         srcCoords = mSpv->createOp(spv::OpVectorShuffle, mSpv->uint3Type(), { srcCoords, srcCoords, 0, 1, 2 });
+         break;
+      default:
+         decaf_abort("Unexpected texture sample dim");
       }
+
+      sampleParams.push_back(texVal);
+      sampleParams.push_back(srcCoords);
+
+      sampleOp = spv::OpImageFetch;
    }
+
    decaf_check(sampleOp != spv::OpNop);
 
    // Merge all the image operands in now.
@@ -219,6 +254,11 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    }
 
    mSpv->writeGprMaskRef(destGpr, output);
+}
+
+void Transpiler::translateTex_LD(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   translateGenericSample(cf, inst, SampleMode::Load);
 }
 
 void Transpiler::translateTex_FETCH4(const ControlFlowInst &cf, const TextureFetchInst &inst)
