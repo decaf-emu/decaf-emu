@@ -1222,33 +1222,40 @@ public:
       return samplerId;
    }
 
-   spv::Id textureVarType(uint32_t textureIdx, latte::SQ_TEX_DIM texDim)
+   spv::Id textureVarType(uint32_t textureIdx, latte::SQ_TEX_DIM texDim, bool texIsUint)
    {
       decaf_check(textureIdx < latte::MaxTextures);
+
+      spv::Id resultType;
+      if (!texIsUint) {
+         resultType = floatType();
+      } else {
+         resultType = uintType();
+      }
 
       auto textureType = mTextureTypes[textureIdx];
       if (!textureType) {
          // TODO: This shouldn't exist here...
          switch (texDim) {
          case latte::SQ_TEX_DIM::DIM_1D:
-            textureType = makeImageType(floatType(), spv::Dim1D, false, false, false, 1, spv::ImageFormatUnknown);
+            textureType = makeImageType(resultType, spv::Dim1D, false, false, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_2D:
          case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-            textureType = makeImageType(floatType(), spv::Dim2D, false, false, false, 1, spv::ImageFormatUnknown);
+            textureType = makeImageType(resultType, spv::Dim2D, false, false, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_3D:
-            textureType = makeImageType(floatType(), spv::Dim3D, false, false, false, 1, spv::ImageFormatUnknown);
+            textureType = makeImageType(resultType, spv::Dim3D, false, false, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-            textureType = makeImageType(floatType(), spv::Dim2D, false, true, false, 1, spv::ImageFormatUnknown);
+            textureType = makeImageType(resultType, spv::Dim2D, false, true, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-            textureType = makeImageType(floatType(), spv::Dim1D, false, true, false, 1, spv::ImageFormatUnknown);
+            textureType = makeImageType(resultType, spv::Dim1D, false, true, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-            textureType = makeImageType(floatType(), spv::Dim2D, false, true, false, 1, spv::ImageFormatUnknown);
+            textureType = makeImageType(resultType, spv::Dim2D, false, true, false, 1, spv::ImageFormatUnknown);
             break;
          default:
             decaf_abort("Unexpected texture dim type");
@@ -1260,13 +1267,13 @@ public:
       return textureType;
    }
 
-   spv::Id textureVar(uint32_t textureIdx, latte::SQ_TEX_DIM texDim)
+   spv::Id textureVar(uint32_t textureIdx, latte::SQ_TEX_DIM texDim, bool texIsUint)
    {
       decaf_check(textureIdx < latte::MaxTextures);
 
       auto textureId = mTextures[textureIdx];
       if (!textureId) {
-         textureId = createVariable(spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim));
+         textureId = createVariable(spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim, texIsUint));
          addName(textureId, fmt::format("TEXTURE_{}", textureIdx).c_str());
          addDecoration(textureId, spv::DecorationDescriptorSet, mDescriptorSetIndex);
          addDecoration(textureId, spv::DecorationBinding, latte::MaxSamplers + textureIdx);

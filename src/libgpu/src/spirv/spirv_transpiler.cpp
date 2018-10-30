@@ -140,9 +140,9 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
    auto instanceIdVal = spvGen.createLoad(spvGen.instanceIdVar());
    instanceIdVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), instanceIdVal);
 
-   auto zeroConst = spvGen.makeFloatConstant(0.0f);
+   auto zeroFConst = spvGen.makeFloatConstant(0.0f);
    auto initialR0 = spvGen.createOp(spv::OpCompositeConstruct, spvGen.float4Type(),
-                                   { vertexIdVal, instanceIdVal, zeroConst, zeroConst });
+                                   { vertexIdVal, instanceIdVal, zeroFConst, zeroFConst });
 
    GprMaskRef gpr0;
    gpr0.gpr.number = 0;
@@ -347,6 +347,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       auto &vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
 
       state.mTexInput = vsDesc.texDims;
+      state.mTexIsUint = vsDesc.texIsUint;
 
       spvGen.setDescriptorSetIdx(0);
       Transpiler::writeVertexProlog(spvGen, vsDesc);
@@ -354,6 +355,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       auto &gsDesc = *reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
 
       state.mTexInput = gsDesc.texDims;
+      state.mTexIsUint = gsDesc.texIsUint;
 
       spvGen.setDescriptorSetIdx(1);
       Transpiler::writeGeometryProlog(spvGen, gsDesc);
@@ -362,6 +364,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
 
       state.mPixelOutType = psDesc.pixelOutType;
       state.mTexInput = psDesc.texDims;
+      state.mTexIsUint = psDesc.texIsUint;
 
       spvGen.setDescriptorSetIdx(2);
       Transpiler::writePixelProlog(spvGen, psDesc);

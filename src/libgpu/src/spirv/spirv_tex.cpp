@@ -22,6 +22,7 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    auto textureId = inst.word0.RESOURCE_ID();
    auto samplerId = inst.word2.SAMPLER_ID();
    auto texDim = mTexInput[textureId];
+   auto texIsUint = mTexIsUint[textureId];
 
    auto expectedCoordType = SQ_TEX_COORD_TYPE::NORMALIZED;
    if (sampleMode & SampleMode::Load) {
@@ -131,8 +132,8 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       operandParams.push_back(offsetVal);
    }
 
-   auto texVarType = mSpv->textureVarType(textureId, texDim);
-   auto texVar = mSpv->textureVar(textureId, texDim);
+   auto texVarType = mSpv->textureVarType(textureId, texDim, texIsUint);
+   auto texVar = mSpv->textureVar(textureId, texDim, texIsUint);
    auto texVal = mSpv->createLoad(texVar);
 
    // Lets build our actual operation
@@ -244,13 +245,20 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
 
    spv::Id output = spv::NoResult;
    if (sampleMode & SampleMode::Compare) {
+      // We do not support doing depth comparison on a UINT depth buffer
+      decaf_check(!texIsUint);
+
       auto compareVal = mSpv->createOp(sampleOp, mSpv->floatType(), sampleParams);
 
       // TODO: This is really cheating, we should just check the write mask
       // and do a single component write instead...
       output = mSpv->createCompositeConstruct(mSpv->float4Type(), { compareVal, zeroFVal, zeroFVal, oneFVal });
    } else {
-      output = mSpv->createOp(sampleOp, mSpv->float4Type(), sampleParams);
+      if (!texIsUint) {
+         output = mSpv->createOp(sampleOp, mSpv->float4Type(), sampleParams);
+      } else {
+         output = mSpv->createOp(sampleOp, mSpv->uint4Type(), sampleParams);
+      }
    }
 
    mSpv->writeGprMaskRef(destGpr, output);
@@ -351,6 +359,7 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    auto textureId = inst.word0.RESOURCE_ID();
    auto samplerId = inst.word2.SAMPLER_ID();
    auto texDim = mTexInput[textureId];
+   auto texIsUint = mTexIsUint[textureId];
 
    GprMaskRef srcGpr;
    srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
@@ -369,7 +378,7 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    // We have to register the image-query capability in order to query texture data.
    mSpv->addCapability(spv::CapabilityImageQuery);
 
-   auto texVar = mSpv->textureVar(textureId, texDim);
+   auto texVar = mSpv->textureVar(textureId, texDim, texIsUint);
    auto image = mSpv->createLoad(texVar);
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
@@ -382,14 +391,14 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    switch (texDim) {
    case latte::SQ_TEX_DIM::DIM_1D: {
       auto sizeInfo1d = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->intType(), image);
-      sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->uint3Type(), { sizeInfo1d, oneIConst, oneIConst });
+      sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->int3Type(), { sizeInfo1d, oneIConst, oneIConst });
       break;
    }
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
    case latte::SQ_TEX_DIM::DIM_2D:
    case latte::SQ_TEX_DIM::DIM_2D_MSAA: {
       auto sizeInfo2d = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int2Type(), image);
-      sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->uint3Type(), { sizeInfo2d, oneIConst });
+      sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->int3Type(), { sizeInfo2d, oneIConst });
       break;
    }
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:

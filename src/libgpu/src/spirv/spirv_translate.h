@@ -59,6 +59,7 @@ struct VertexShaderDesc : public ShaderDesc
 {
    gsl::span<const uint8_t> fsBinary;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
+   std::array<bool, latte::MaxTextures> texIsUint;
    std::array<uint32_t, 2> instanceStepRates;
 
    struct {
@@ -73,7 +74,9 @@ struct VertexShaderDesc : public ShaderDesc
       return ShaderDesc::hash()
          .write(fsBinary.data(), fsBinary.size())
          .write(texDims)
+         .write(texIsUint)
          .write(instanceStepRates)
+         .write(generateRectStub)
          .write(regs);
    }
 };
@@ -82,12 +85,14 @@ struct GeometryShaderDesc : public ShaderDesc
 {
    gsl::span<const uint8_t> dcBinary;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
+   std::array<bool, latte::MaxTextures> texIsUint;
 
    DataHash hash() const
    {
       return ShaderDesc::hash()
          .write(dcBinary.data(), dcBinary.size())
-         .write(texDims);
+         .write(texDims)
+         .write(texIsUint);
    }
 };
 
@@ -103,6 +108,7 @@ struct PixelShaderDesc : public ShaderDesc
    std::vector<uint32_t> vsOutputSemantics;
    std::array<ColorOutputType, latte::MaxRenderTargets> pixelOutType;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
+   std::array<bool, latte::MaxTextures> texIsUint;
    latte::REF_FUNC alphaRefFunc;
 
    struct {
@@ -119,6 +125,7 @@ struct PixelShaderDesc : public ShaderDesc
          .write(vsOutputSemantics)
          .write(pixelOutType)
          .write(texDims)
+         .write(texIsUint)
          .write(alphaRefFunc)
          .write(regs);
    }

@@ -58,7 +58,9 @@ Driver::getVertexShaderDesc()
    for (auto i = 0; i < latte::MaxTextures; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       shaderDesc.texDims[i] = sq_tex_resource_word0.DIM();
+      shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
    }
 
    shaderDesc.regs.sq_pgm_resources_vs = getRegister<latte::SQ_PGM_RESOURCES_VS>(latte::Register::SQ_PGM_RESOURCES_VS);
@@ -129,7 +131,9 @@ Driver::getGeometryShaderDesc()
    for (auto i = 0; i < latte::MaxTextures; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::GS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       shaderDesc.texDims[i] = sq_tex_resource_word0.DIM();
+      shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
    }
 
    return shaderDesc;
@@ -186,7 +190,9 @@ Driver::getPixelShaderDesc()
    for (auto i = 0; i < latte::MaxTextures; ++i) {
       auto resourceOffset = (latte::SQ_RES_OFFSET::PS_TEX_RESOURCE_0 + i) * 7;
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
+      auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       shaderDesc.texDims[i] = sq_tex_resource_word0.DIM();
+      shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
    }
 
    auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);

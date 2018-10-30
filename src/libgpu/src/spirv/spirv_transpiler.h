@@ -205,6 +205,7 @@ protected:
 
    std::array<ColorOutputType, latte::MaxRenderTargets> mPixelOutType;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> mTexInput;
+   std::array<bool, latte::MaxTextures> mTexIsUint;
    std::array<InputBuffer, latte::MaxAttribBuffers> mVsInputBuffers;
    std::vector<InputAttrib> mVsInputAttribs;
    std::vector<uint32_t> mVsOutputParams;
