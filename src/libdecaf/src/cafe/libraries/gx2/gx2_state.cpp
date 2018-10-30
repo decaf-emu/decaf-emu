@@ -5,6 +5,7 @@
 #include "gx2_event.h"
 #include "gx2_cbpool.h"
 #include "gx2_internal_pm4cap.h"
+#include "gx2_registers.h"
 #include "gx2_state.h"
 
 #include "cafe/libraries/coreinit/coreinit_core.h"
@@ -197,6 +198,48 @@ GX2SetMiscParam(GX2MiscParam param,
    return TRUE;
 }
 
+void
+GX2SetSpecialState(GXSpecialState state,
+                   BOOL enabled)
+{
+   if (state == GXSpecialState::Clear) {
+      if (enabled) {
+         internal::writePM4(latte::pm4::SetContextReg {
+            latte::Register::PA_CL_VTE_CNTL,
+            latte::PA_CL_VTE_CNTL::get(0)
+               .VTX_XY_FMT(true)
+               .VTX_Z_FMT(true)
+               .value
+         });
+         internal::writePM4(latte::pm4::SetContextReg {
+            latte::Register::PA_CL_CLIP_CNTL,
+            latte::PA_CL_CLIP_CNTL::get(0)
+               .CLIP_DISABLE(true)
+               .DX_CLIP_SPACE_DEF(true)
+               .value
+         });
+      } else {
+         internal::writePM4(latte::pm4::SetContextReg {
+            latte::Register::PA_CL_VTE_CNTL,
+            latte::PA_CL_VTE_CNTL::get(0)
+               .VPORT_X_SCALE_ENA(true)
+               .VPORT_X_OFFSET_ENA(true)
+               .VPORT_Y_SCALE_ENA(true)
+               .VPORT_Y_OFFSET_ENA(true)
+               .VPORT_Z_SCALE_ENA(true)
+               .VPORT_Z_OFFSET_ENA(true)
+               .VTX_W0_FMT(true)
+               .value
+         });
+         GX2SetRasterizerClipControl(true, true);
+      }
+   } else if (state == GXSpecialState::Copy) {
+      // There are no registers set for this special state.
+   } else {
+      gLog->warn("Unexpected GX2SetSpecialState state {}", state);
+   }
+}
+
 namespace internal
 {
 
@@ -328,6 +371,7 @@ Library::registerStateSymbols()
    RegisterFunctionExport(GX2SetGPUTimeout);
    RegisterFunctionExport(GX2GetMiscParam);
    RegisterFunctionExport(GX2SetMiscParam);
+   RegisterFunctionExport(GX2SetSpecialState);
 
    RegisterDataInternal(sStateData);
 }

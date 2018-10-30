@@ -28,6 +28,10 @@ BOOL
 GX2SetMiscParam(GX2MiscParam param,
                 uint32_t value);
 
+void
+GX2SetSpecialState(GXSpecialState state,
+                   BOOL enabled);
+
 namespace internal
 {
 
