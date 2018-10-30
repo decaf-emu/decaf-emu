@@ -583,16 +583,8 @@ getTexDimDimensions(latte::SQ_TEX_DIM dim)
 latte::SQ_TILE_MODE
 getArrayModeTileMode(latte::BUFFER_ARRAY_MODE mode)
 {
-   switch (mode) {
-   case latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL:
-      return latte::SQ_TILE_MODE::DEFAULT;
-   case latte::BUFFER_ARRAY_MODE::LINEAR_ALIGNED:
-      return latte::SQ_TILE_MODE::LINEAR_ALIGNED;
-   case latte::BUFFER_ARRAY_MODE::TILED_2D_THIN1:
-      return latte::SQ_TILE_MODE::TILED_2D_THIN1;
-   default:
-      decaf_abort(fmt::format("Unimplemented surface array mode: {}", mode));
-   }
+   // The buffer array modes match up with our SQ_TILE_MODE's perfectly.
+   return static_cast<latte::SQ_TILE_MODE>(mode);
 }
 
 } // namespace latte
