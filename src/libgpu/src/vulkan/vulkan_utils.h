@@ -68,13 +68,6 @@ getVkSurfaceFormatUsage(latte::SurfaceFormat format);
 vk::SampleCountFlags
 getVkSampleCount(uint32_t samples);
 
-vk::Format
-getSurfaceFormat(latte::SQ_DATA_FORMAT format,
-                 latte::SQ_NUM_FORMAT numFormat,
-                 latte::SQ_FORMAT_COMP formatComp,
-                 uint32_t degamma,
-                 bool forDepthBuffer);
-
 } // namespace vulkan
 
 #endif // ifdef DECAF_VULKAN
