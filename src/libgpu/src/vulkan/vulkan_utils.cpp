@@ -202,7 +202,7 @@ getVkSurfaceFormatUsage(latte::SurfaceFormat format)
    case latte::SurfaceFormat::R8G8Sint:
       return SurfaceFormatUsage::TC;
    case latte::SurfaceFormat::R5G6B5Unorm:
-      return SurfaceFormatUsage::T; // TODO: Should support TC
+      return SurfaceFormatUsage::TC;
    case latte::SurfaceFormat::R5G5B5A1Unorm:
       return SurfaceFormatUsage::T; // TODO: Should support TC
    case latte::SurfaceFormat::R4G4B4A4Unorm:
