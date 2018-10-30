@@ -19,6 +19,7 @@ protected:
    virtual void decafClearDepthStencil(const DecafClearDepthStencil &data) = 0;
    virtual void decafOSScreenFlip(const DecafOSScreenFlip &data) = 0;
    virtual void decafCopySurface(const DecafCopySurface &data) = 0;
+   virtual void decafExpandColorBuffer(const DecafExpandColorBuffer &data) = 0;
    virtual void drawIndexAuto(const DrawIndexAuto &data) = 0;
    virtual void drawIndex2(const DrawIndex2 &data) = 0;
    virtual void drawIndexImmd(const DrawIndexImmd &data) = 0;

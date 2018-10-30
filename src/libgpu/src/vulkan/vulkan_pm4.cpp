@@ -251,6 +251,50 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 }
 
 void
+Driver::decafExpandColorBuffer(const latte::pm4::DecafExpandColorBuffer &data)
+{
+   // We do not actually support MSAA in our Vulkan backend, so we simply
+   // need to translate this to a series of surface copies.
+
+   for (auto i = 0u; i < data.numSlices; ++i) {
+      decafCopySurface({
+         data.dstImage,
+         data.dstMipmaps,
+         data.dstLevel,
+         data.dstSlice + i,
+         data.dstPitch,
+         data.dstWidth,
+         data.dstHeight,
+         data.dstDepth,
+         data.dstSamples,
+         data.dstDim,
+         data.dstFormat,
+         data.dstNumFormat,
+         data.dstFormatComp,
+         data.dstForceDegamma,
+         data.dstTileType,
+         data.dstTileMode,
+         data.srcImage,
+         data.srcMipmaps,
+         data.srcLevel,
+         data.srcSlice + i,
+         data.srcPitch,
+         data.srcWidth,
+         data.srcHeight,
+         data.srcDepth,
+         data.srcSamples,
+         data.srcDim,
+         data.srcFormat,
+         data.srcNumFormat,
+         data.srcFormatComp,
+         data.srcForceDegamma,
+         data.srcTileType,
+         data.srcTileMode
+      });
+   }
+}
+
+void
 Driver::drawIndexAuto(const latte::pm4::DrawIndexAuto &data)
 {
    drawGenericIndexed(data.drawInitiator, data.count, nullptr);

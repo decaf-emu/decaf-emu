@@ -450,6 +450,7 @@ Driver::_allocateSurface(const SurfaceDesc& info)
       realArrayLayers = 1;
       break;
    case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       imageType = vk::ImageType::e2D;
       realPitch = info.pitch;
       realWidth = info.width;
@@ -482,6 +483,7 @@ Driver::_allocateSurface(const SurfaceDesc& info)
       realArrayLayers = info.height;
       break;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       imageType = vk::ImageType::e2D;
       realPitch = info.pitch;
       realWidth = info.width;
@@ -489,9 +491,6 @@ Driver::_allocateSurface(const SurfaceDesc& info)
       realDepth = 1;
       realArrayLayers = info.depth;
       break;
-   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      decaf_abort("We do not currently support multi-sampling");
    default:
       decaf_abort(fmt::format("Failed to pick vulkan dim for latte dim {}", info.dim));
    }
@@ -656,6 +655,7 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
       imageViewType = vk::ImageViewType::e1D;
       break;
    case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       imageViewType = vk::ImageViewType::e2D;
       break;
    case latte::SQ_TEX_DIM::DIM_3D:
@@ -668,11 +668,9 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
       imageViewType = vk::ImageViewType::e1DArray;
       break;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       imageViewType = vk::ImageViewType::e2DArray;
       break;
-   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      decaf_abort("We do not currently support multi-sampling");
    default:
       decaf_abort(fmt::format("Failed to pick vulkan image view type for dim {}", info.surfaceDesc.dim));
    }

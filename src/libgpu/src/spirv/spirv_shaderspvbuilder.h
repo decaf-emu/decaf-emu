@@ -1234,6 +1234,7 @@ public:
             textureType = makeImageType(floatType(), spv::Dim1D, false, false, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_2D:
+         case latte::SQ_TEX_DIM::DIM_2D_MSAA:
             textureType = makeImageType(floatType(), spv::Dim2D, false, false, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_3D:
@@ -1246,10 +1247,9 @@ public:
             textureType = makeImageType(floatType(), spv::Dim1D, false, true, false, 1, spv::ImageFormatUnknown);
             break;
          case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
             textureType = makeImageType(floatType(), spv::Dim2D, false, true, false, 1, spv::ImageFormatUnknown);
             break;
-         case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-         case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
          default:
             decaf_abort("Unexpected texture dim type");
          }

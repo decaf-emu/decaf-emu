@@ -696,10 +696,151 @@ GX2CopySurface(virt_ptr<GX2Surface> src,
 }
 
 void
+GX2ExpandColorBuffer(virt_ptr<GX2ColorBuffer> buffer)
+{
+   // TODO: GX2ExpandColorBuffer
+   decaf_warn_stub();
+}
+
+void
 GX2ExpandDepthBuffer(virt_ptr<GX2DepthBuffer> buffer)
 {
    // TODO: GX2ExpandDepthBuffer
    decaf_warn_stub();
+}
+
+void
+GX2ResolveAAColorBuffer(virt_ptr<GX2ColorBuffer> src,
+                        virt_ptr<GX2Surface> dst,
+                        uint32_t dstLevel,
+                        uint32_t dstSlice)
+{
+   if (src->surface.format == GX2SurfaceFormat::INVALID || src->surface.width == 0 || src->surface.height == 0) {
+      return;
+   }
+
+   if (dst->format == GX2SurfaceFormat::INVALID) {
+      return;
+   }
+
+   auto dstTileType = latte::SQ_TILE_TYPE::DEFAULT;
+   auto dstDim = static_cast<latte::SQ_TEX_DIM>(dst->dim.value());
+   auto dstFormat = static_cast<latte::SQ_DATA_FORMAT>(dst->format & 0x3f);
+   auto dstTileMode = static_cast<latte::SQ_TILE_MODE>(dst->tileMode.value());
+   auto dstFormatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+   auto dstNumFormat = latte::SQ_NUM_FORMAT::NORM;
+   auto dstForceDegamma = false;
+   auto dstPitch = dst->pitch;
+   auto dstDepth = dst->depth;
+   auto dstSamples = 0u;
+
+   if (dst->format & GX2AttribFormatFlags::SIGNED) {
+      dstFormatComp = latte::SQ_FORMAT_COMP::SIGNED;
+   }
+
+   if (dst->format & GX2AttribFormatFlags::SCALED) {
+      dstNumFormat = latte::SQ_NUM_FORMAT::SCALED;
+   } else if (dst->format & GX2AttribFormatFlags::INTEGER) {
+      dstNumFormat = latte::SQ_NUM_FORMAT::INT;
+   }
+
+   if (dst->format & GX2AttribFormatFlags::DEGAMMA) {
+      dstForceDegamma = true;
+   }
+
+   if (dstFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dstFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      dstPitch *= 4;
+   }
+
+   if (dstDim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+      dstDepth /= 6;
+   }
+
+   if (dst->aa == GX2AAMode::Mode2X) {
+      dstSamples = 2;
+   } else if (dst->aa == GX2AAMode::Mode4X) {
+      dstSamples = 4;
+   } else if (dst->aa == GX2AAMode::Mode8X) {
+      dstSamples = 8;
+   }
+
+   auto srcTileType = latte::SQ_TILE_TYPE::DEFAULT;
+   auto srcDim = static_cast<latte::SQ_TEX_DIM>(src->surface.dim.value());
+   auto srcFormat = static_cast<latte::SQ_DATA_FORMAT>(src->surface.format & 0x3f);
+   auto srcTileMode = static_cast<latte::SQ_TILE_MODE>(src->surface.tileMode.value());
+   auto srcFormatComp = latte::SQ_FORMAT_COMP::UNSIGNED;
+   auto srcNumFormat = latte::SQ_NUM_FORMAT::NORM;
+   auto srcForceDegamma = false;
+   auto srcPitch = src->surface.pitch;
+   auto srcDepth = src->surface.depth;
+   auto srcSamples = 0u;
+
+   if (src->surface.format & GX2AttribFormatFlags::SIGNED) {
+      srcFormatComp = latte::SQ_FORMAT_COMP::SIGNED;
+   }
+
+   if (src->surface.format & GX2AttribFormatFlags::SCALED) {
+      srcNumFormat = latte::SQ_NUM_FORMAT::SCALED;
+   } else if (src->surface.format & GX2AttribFormatFlags::INTEGER) {
+      srcNumFormat = latte::SQ_NUM_FORMAT::INT;
+   }
+
+   if (src->surface.format & GX2AttribFormatFlags::DEGAMMA) {
+      srcForceDegamma = true;
+   }
+
+   if (srcFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && srcFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      srcPitch *= 4;
+   }
+
+   if (srcDim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+      srcDepth /= 6;
+   }
+
+   if (src->surface.aa == GX2AAMode::Mode2X) {
+      srcSamples = 2;
+   } else if (src->surface.aa == GX2AAMode::Mode4X) {
+      srcSamples = 4;
+   } else if (src->surface.aa == GX2AAMode::Mode8X) {
+      srcSamples = 8;
+   }
+
+   internal::writePM4(latte::pm4::DecafExpandColorBuffer {
+      OSEffectiveToPhysical(virt_cast<virt_addr>(dst->image)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(dst->mipmaps)),
+      dstLevel,
+      dstSlice,
+      dstPitch,
+      dst->width,
+      dst->height,
+      dstDepth,
+      dstSamples,
+      dstDim,
+      dstFormat,
+      dstNumFormat,
+      dstFormatComp,
+      dstForceDegamma ? 1u : 0u,
+      dstTileType,
+      dstTileMode,
+      OSEffectiveToPhysical(virt_cast<virt_addr>(src->surface.image)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(src->aaBuffer)),
+      OSEffectiveToPhysical(virt_cast<virt_addr>(src->surface.mipmaps)),
+      src->viewMip,
+      src->viewFirstSlice,
+      srcPitch,
+      src->surface.width,
+      src->surface.height,
+      srcDepth,
+      srcSamples,
+      srcDim,
+      srcFormat,
+      srcNumFormat,
+      srcFormatComp,
+      srcForceDegamma ? 1u : 0u,
+      srcTileType,
+      srcTileMode,
+      src->viewNumSlices
+   });
 }
 
 void
@@ -719,7 +860,9 @@ Library::registerSurfaceSymbols()
    RegisterFunctionExport(GX2GetSurfaceMipPitch);
    RegisterFunctionExport(GX2GetSurfaceMipSliceSize);
    RegisterFunctionExport(GX2CopySurface);
+   RegisterFunctionExport(GX2ExpandColorBuffer);
    RegisterFunctionExport(GX2ExpandDepthBuffer);
+   RegisterFunctionExport(GX2ResolveAAColorBuffer);
 }
 
 } // namespace cafe::gx2

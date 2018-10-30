@@ -364,6 +364,12 @@ GLDriver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 }
 
 void
+GLDriver::decafExpandColorBuffer(const latte::pm4::DecafExpandColorBuffer &data)
+{
+   // TODO: Implement MSAA color buffers.
+}
+
+void
 GLDriver::surfaceSync(const latte::pm4::SurfaceSync &data)
 {
    auto memStart = phys_addr { data.addr << 8 };

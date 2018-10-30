@@ -244,6 +244,89 @@ struct DecafCopySurface
    }
 };
 
+struct DecafExpandColorBuffer
+{
+   static const auto Opcode = IT_OPCODE::DECAF_EXPAND_COLORBUFFER;
+
+   phys_addr dstImage;
+   phys_addr dstMipmaps;
+   uint32_t dstLevel;
+   uint32_t dstSlice;
+   uint32_t dstPitch;
+   uint32_t dstWidth;
+   uint32_t dstHeight;
+   uint32_t dstDepth;
+   uint32_t dstSamples;
+   latte::SQ_TEX_DIM dstDim;
+   latte::SQ_DATA_FORMAT dstFormat;
+   latte::SQ_NUM_FORMAT dstNumFormat;
+   latte::SQ_FORMAT_COMP dstFormatComp;
+   uint32_t dstForceDegamma;
+   latte::SQ_TILE_TYPE dstTileType;
+   latte::SQ_TILE_MODE dstTileMode;
+
+   phys_addr srcImage;
+   phys_addr srcFmask;
+   phys_addr srcMipmaps;
+   uint32_t srcLevel;
+   uint32_t srcSlice;
+   uint32_t srcPitch;
+   uint32_t srcWidth;
+   uint32_t srcHeight;
+   uint32_t srcDepth;
+   uint32_t srcSamples;
+   latte::SQ_TEX_DIM srcDim;
+   latte::SQ_DATA_FORMAT srcFormat;
+   latte::SQ_NUM_FORMAT srcNumFormat;
+   latte::SQ_FORMAT_COMP srcFormatComp;
+   uint32_t srcForceDegamma;
+   latte::SQ_TILE_TYPE srcTileType;
+   latte::SQ_TILE_MODE srcTileMode;
+
+   uint32_t numSlices;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(dstImage);
+      se(dstMipmaps);
+      se(dstLevel);
+      se(dstSlice);
+      se(dstPitch);
+      se(dstWidth);
+      se(dstHeight);
+      se(dstDepth);
+      se(dstSamples);
+      se(dstDim);
+      se(dstFormat);
+      se(dstNumFormat);
+      se(dstFormatComp);
+      se(dstForceDegamma);
+      se(dstTileType);
+      se(dstTileMode);
+
+      se(srcImage);
+      se(srcFmask);
+      se(srcMipmaps);
+      se(srcLevel);
+      se(srcSlice);
+      se(srcPitch);
+      se(srcWidth);
+      se(srcHeight);
+      se(srcDepth);
+      se(srcSamples);
+      se(srcDim);
+      se(srcFormat);
+      se(srcNumFormat);
+      se(srcFormatComp);
+      se(srcForceDegamma);
+      se(srcTileType);
+      se(srcTileMode);
+
+      se(numSlices);
+   }
+};
+
 enum COPY_DW_SEL : uint32_t
 {
    COPY_DW_SEL_REGISTER = 0,

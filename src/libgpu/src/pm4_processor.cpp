@@ -114,6 +114,9 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::DECAF_COPY_SURFACE:
       decafCopySurface(read<DecafCopySurface>(reader));
       break;
+   case IT_OPCODE::DECAF_EXPAND_COLORBUFFER:
+      decafExpandColorBuffer(read<DecafExpandColorBuffer>(reader));
+      break;
    case IT_OPCODE::DRAW_INDEX_AUTO:
       drawIndexAuto(read<DrawIndexAuto>(reader));
       break;
