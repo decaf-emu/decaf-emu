@@ -142,6 +142,16 @@ Driver::bindShaderResources()
    // This should probably be split to its own function
    if (mCurrentVertexShader) {
       auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
+      auto pa_cl_vte_cntl = getRegister<latte::PA_CL_VTE_CNTL>(latte::Register::PA_CL_VTE_CNTL);
+
+      // These are not handled as I don't believe we actually scale/offset by the viewport...
+      //pa_cl_vte_cntl.VPORT_Z_OFFSET_ENA();
+      //pa_cl_vte_cntl.VPORT_Z_SCALE_ENA();
+
+      // TODO: Implement these
+      //pa_cl_vte_cntl.VTX_XY_FMT();
+      //pa_cl_vte_cntl.VTX_Z_FMT();
+      //pa_cl_vte_cntl.VTX_W0_FMT();
 
       struct VsPushConstants
       {
@@ -157,17 +167,28 @@ Driver::bindShaderResources()
          Vec4 zSpaceMul;
       } vsConstData;
 
-      if (!mCurrentDrawDesc.isScreenSpace) {
+      auto screenSizeX = mCurrentViewport.width - mCurrentViewport.x;
+      auto screenSizeY = mCurrentViewport.height - mCurrentViewport.y;
+
+      if (pa_cl_vte_cntl.VPORT_X_SCALE_ENA()) {
          vsConstData.posMulAdd.x = 1.0f;
-         vsConstData.posMulAdd.y = 1.0f;
+      } else {
+         vsConstData.posMulAdd.x = 2.0f / screenSizeX;
+      }
+      if (pa_cl_vte_cntl.VPORT_X_OFFSET_ENA()) {
          vsConstData.posMulAdd.z = 0.0f;
+      } else {
+         vsConstData.posMulAdd.z = -1.0f;
+      }
+
+      if (pa_cl_vte_cntl.VPORT_Y_SCALE_ENA()) {
+         vsConstData.posMulAdd.y = 1.0f;
+      } else {
+         vsConstData.posMulAdd.y = 2.0f / screenSizeY;
+      }
+      if (pa_cl_vte_cntl.VPORT_Y_OFFSET_ENA()) {
          vsConstData.posMulAdd.w = 0.0f;
       } else {
-         auto screenSizeX = mCurrentViewport.width - mCurrentViewport.x;
-         auto screenSizeY = mCurrentViewport.height - mCurrentViewport.y;
-         vsConstData.posMulAdd.x = 2.0f / screenSizeX;
-         vsConstData.posMulAdd.y = 2.0f / screenSizeY;
-         vsConstData.posMulAdd.z = -1.0f;
          vsConstData.posMulAdd.w = -1.0f;
       }
 

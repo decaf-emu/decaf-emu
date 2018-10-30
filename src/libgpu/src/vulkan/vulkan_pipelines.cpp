@@ -60,13 +60,16 @@ Driver::getPipelineDesc()
    decaf_check(!pa_cl_clip_cntl.UCP_ENA_5());
    decaf_check(!pa_cl_clip_cntl.PS_UCP_Y_SCALE_NEG());
    decaf_check(pa_cl_clip_cntl.PS_UCP_MODE() == latte::PA_PS_UCP_MODE::CULL_DISTANCE);
-   decaf_check(!pa_cl_clip_cntl.CLIP_DISABLE());
    decaf_check(!pa_cl_clip_cntl.UCP_CULL_ONLY_ENA());
    decaf_check(!pa_cl_clip_cntl.BOUNDARY_EDGE_FLAG_ENA());
    decaf_check(!pa_cl_clip_cntl.DIS_CLIP_ERR_DETECT());
    decaf_check(!pa_cl_clip_cntl.VTX_KILL_OR());
    decaf_check(!pa_cl_clip_cntl.DX_LINEAR_ATTR_CLIP_ENA());
    decaf_check(!pa_cl_clip_cntl.VTE_VPORT_PROVOKE_DISABLE());
+
+   // pa_cl_clip_cntl.CLIP_DISABLE() is really an optimization which
+   // indicates that there will be no draws outside the boundary of
+   // the framebuffer.  We don't need to handle this.
 
    // pa_cl_clip_cntl.DX_CLIP_SPACE_DEF() is handled by the shaders,
    // so it is uploaded in the push constants buffer in the shader
