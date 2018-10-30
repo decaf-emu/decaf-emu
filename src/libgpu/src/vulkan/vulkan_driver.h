@@ -139,6 +139,7 @@ struct VertexShaderObject
    HashedDesc<spirv::VertexShaderDesc> desc;
    spirv::VertexShader shader;
    vk::ShaderModule module;
+   vk::ShaderModule rectStubModule;
 };
 
 struct GeometryShaderObject
@@ -522,7 +523,7 @@ struct DrawDesc
    latte::VGT_INDEX_TYPE indexType;
    latte::VGT_DMA_SWAP indexSwapMode;
    latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
-   bool isScreenSpace;
+   bool isRectDraw;
    uint32_t numIndices;
    uint32_t baseVertex;
    uint32_t numInstances;

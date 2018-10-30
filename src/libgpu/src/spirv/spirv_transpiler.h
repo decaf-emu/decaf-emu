@@ -197,6 +197,8 @@ public:
    void translate() override;
    static bool translate(const ShaderDesc& shaderDesc, Shader *shader);
 
+   std::vector<unsigned int> generateRectStub(int numExports);
+
 protected:
    void writeCfAluUnitLine(ShaderParser::Type shaderType, int cfId, int groupId, int unitId);
 

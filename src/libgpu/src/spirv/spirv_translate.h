@@ -61,6 +61,7 @@ struct VertexShaderDesc : public ShaderDesc
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
    std::array<bool, latte::MaxTextures> texIsUint;
    std::array<uint32_t, 2> instanceStepRates;
+   bool generateRectStub;
 
    struct {
       latte::SQ_PGM_RESOURCES_VS sq_pgm_resources_vs;
@@ -145,6 +146,8 @@ struct VertexShader : public Shader
    std::array<InputBuffer, latte::MaxAttribBuffers> inputBuffers;
    std::vector<InputAttrib> inputAttribs;
    std::vector<uint32_t> outputSemantics;
+
+   std::vector<unsigned int> rectStubBinary;
 };
 
 struct GeometryShader : public Shader

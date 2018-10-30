@@ -331,6 +331,17 @@ Driver::checkCurrentPipeline()
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
+
+      if (mCurrentVertexShader->rectStubModule) {
+         decaf_check(!mCurrentGeometryShader);
+
+         vk::PipelineShaderStageCreateInfo rectStageDesc;
+         rectStageDesc.stage = vk::ShaderStageFlagBits::eGeometry;
+         rectStageDesc.module = mCurrentVertexShader->rectStubModule;
+         rectStageDesc.pName = "main";
+         rectStageDesc.pSpecializationInfo = nullptr;
+         shaderStages.push_back(rectStageDesc);
+      }
    }
    if (mCurrentGeometryShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
@@ -493,6 +504,9 @@ Driver::checkCurrentPipeline()
       inputAssembly.topology = vk::PrimitiveTopology::eTriangleStripWithAdjacency;
       break;
    case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:
+      // We use a custom geometry shader to translate these
+      inputAssembly.topology = vk::PrimitiveTopology::eLineListWithAdjacency;
+      break;
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP:
       // We handle translation of these types during draw

@@ -4,11 +4,11 @@
 namespace vulkan
 {
 
-template<bool IsRects, typename IndexType>
+template<typename IndexType>
 static void
-unpackQuadRectList(uint32_t count,
-                   const IndexType *src,
-                   IndexType *dst)
+unpackQuadList(uint32_t count,
+               const IndexType *src,
+               IndexType *dst)
 {
    // Unpack quad indices into triangle indices
    if (src) {
@@ -22,16 +22,9 @@ unpackQuadRectList(uint32_t count,
          *(dst++) = index_1;
          *(dst++) = index_2;
 
-         if (!IsRects) {
-            *(dst++) = index_0;
-            *(dst++) = index_2;
-            *(dst++) = index_3;
-         } else {
-            // Rectangles use a different winding order apparently...
-            *(dst++) = index_2;
-            *(dst++) = index_1;
-            *(dst++) = index_3;
-         }
+         *(dst++) = index_0;
+         *(dst++) = index_2;
+         *(dst++) = index_3;
       }
    } else {
       auto index_0 = 0u;
@@ -45,16 +38,9 @@ unpackQuadRectList(uint32_t count,
          *(dst++) = index_1 + index;
          *(dst++) = index_2 + index;
 
-         if (!IsRects) {
-            *(dst++) = index_0 + index;
-            *(dst++) = index_2 + index;
-            *(dst++) = index_3 + index;
-         } else {
-            // Rectangles use a different winding order apparently...
-            *(dst++) = index_2 + index;
-            *(dst++) = index_1 + index;
-            *(dst++) = index_3 + index;
-         }
+         *(dst++) = index_0 + index;
+         *(dst++) = index_2 + index;
+         *(dst++) = index_3 + index;
       }
    }
 }
@@ -113,37 +99,18 @@ Driver::maybeUnpackQuads()
 {
    auto &drawDesc = mCurrentDrawDesc;
 
-   if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST) {
+   if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST) {
       uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
       mScratchIdxDequad.resize(indexBytes / 4 * 6);
 
       if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_16) {
-         unpackQuadRectList<true>(drawDesc.numIndices,
-                                  reinterpret_cast<uint16_t*>(drawDesc.indices),
-                                  reinterpret_cast<uint16_t*>(mScratchIdxDequad.data()));
+         unpackQuadList(drawDesc.numIndices,
+                        reinterpret_cast<uint16_t*>(drawDesc.indices),
+                        reinterpret_cast<uint16_t*>(mScratchIdxDequad.data()));
       } else if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_32) {
-         unpackQuadRectList<true>(drawDesc.numIndices,
-                                  reinterpret_cast<uint32_t*>(drawDesc.indices),
-                                  reinterpret_cast<uint32_t*>(mScratchIdxDequad.data()));
-      } else {
-         decaf_abort("Unexpected index type");
-      }
-
-      drawDesc.primitiveType = latte::VGT_DI_PRIMITIVE_TYPE::TRILIST;
-      drawDesc.indices = mScratchIdxDequad.data();
-      drawDesc.numIndices = drawDesc.numIndices / 4 * 6;
-   } else if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST) {
-      uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
-      mScratchIdxDequad.resize(indexBytes / 4 * 6);
-
-      if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_16) {
-         unpackQuadRectList<false>(drawDesc.numIndices,
-                                   reinterpret_cast<uint16_t*>(drawDesc.indices),
-                                   reinterpret_cast<uint16_t*>(mScratchIdxDequad.data()));
-      } else if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_32) {
-         unpackQuadRectList<false>(drawDesc.numIndices,
-                                   reinterpret_cast<uint32_t*>(drawDesc.indices),
-                                   reinterpret_cast<uint32_t*>(mScratchIdxDequad.data()));
+         unpackQuadList(drawDesc.numIndices,
+                        reinterpret_cast<uint32_t*>(drawDesc.indices),
+                        reinterpret_cast<uint32_t*>(mScratchIdxDequad.data()));
       } else {
          decaf_abort("Unexpected index type");
       }

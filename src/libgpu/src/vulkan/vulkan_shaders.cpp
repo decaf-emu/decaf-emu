@@ -63,6 +63,8 @@ Driver::getVertexShaderDesc()
       shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
    }
 
+   shaderDesc.generateRectStub = mCurrentDrawDesc.isRectDraw;
+
    shaderDesc.regs.sq_pgm_resources_vs = getRegister<latte::SQ_PGM_RESOURCES_VS>(latte::Register::SQ_PGM_RESOURCES_VS);
 
    for (auto i = 0u; i < 32; ++i) {
@@ -328,6 +330,17 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
       auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
       binFile.write(reinterpret_cast<const char*>(shader->binary.data()),
                     shader->binary.size() * sizeof(shader->binary[0]));
+
+      // SPIRV Binary Output for Rect Stub
+      if (desc->type == spirv::ShaderType::Vertex) {
+         auto vsShader = reinterpret_cast<spirv::VertexShader*>(shader);
+         if (!vsShader->rectStubBinary.empty()) {
+            auto binFilePath = fmt::format("dump/gpu_{}_{:x}_bin_rects.spv", shaderType, shaderAddr);
+            auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
+            binFile.write(reinterpret_cast<const char*>(vsShader->rectStubBinary.data()),
+                          vsShader->rectStubBinary.size() * sizeof(vsShader->rectStubBinary[0]));
+         }
+      }
    }
 }
 
@@ -370,6 +383,12 @@ Driver::checkCurrentVertexShader()
 
    auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
    setVkObjectName(module, fmt::format("vs_{:08x}", shaderAddr).c_str());
+
+   if (!foundShader->shader.rectStubBinary.empty()) {
+      auto rectStubModule = mDevice.createShaderModule(
+         vk::ShaderModuleCreateInfo({}, foundShader->shader.rectStubBinary.size() * 4, foundShader->shader.rectStubBinary.data()));
+      foundShader->rectStubModule = rectStubModule;
+   }
 
    mCurrentVertexShader = foundShader;
    return true;

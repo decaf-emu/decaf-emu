@@ -451,12 +451,184 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    shader->binary.clear();
    spvGen.dump(shader->binary);
 
+   if (shaderDesc.type == ShaderType::Vertex) {
+      auto& vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
+      if (vsDesc.generateRectStub) {
+         int numExports = spvGen.getNumParamExports();
+         auto vsShader = reinterpret_cast<VertexShader*>(shader);
+         vsShader->rectStubBinary = state.generateRectStub(numExports);
+      }
+   }
+
    return true;
 }
 
 bool translate(const ShaderDesc& shaderDesc, Shader *shader)
 {
    return Transpiler::translate(shaderDesc, shader);
+}
+
+std::vector<unsigned int>
+Transpiler::generateRectStub(int numExports)
+{
+   SpvBuilder spvGen;
+
+   spvGen.setMemoryModel(spv::AddressingModel::AddressingModelLogical, spv::MemoryModel::MemoryModelGLSL450);
+   spvGen.addCapability(spv::CapabilityShader);
+   spvGen.addCapability(spv::CapabilityGeometry);
+
+   auto mainFn = spvGen.makeEntryPoint("main");
+   auto entry = spvGen.addEntryPoint(spv::ExecutionModelGeometry, mainFn, "main");
+
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeInputLinesAdjacency);
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeInvocations, 1);
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeOutputTriangleStrip);
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeOutputVertices, 6);
+
+   auto zeroConst = spvGen.makeIntConstant(0);
+   auto oneConst = spvGen.makeIntConstant(1);
+   auto twoConst = spvGen.makeIntConstant(2);
+   auto threeConst = spvGen.makeIntConstant(3);
+   auto fourConst = spvGen.makeIntConstant(4);
+
+   auto glInType = spvGen.makeStructType({ spvGen.float4Type() }, "gl_in");
+   spvGen.addDecoration(glInType, spv::DecorationBlock);
+   spvGen.addMemberDecoration(glInType, 0, spv::DecorationBuiltIn, spv::BuiltInPosition);
+   spvGen.addMemberName(glInType, 0, "gl_Position");
+   auto glInArrType = spvGen.makeArrayType(glInType, fourConst, 0);
+   auto glInArrVar = spvGen.createVariable(spv::StorageClassInput, glInArrType, "gl_in");
+   entry->addIdOperand(glInArrVar);
+
+   auto perVertexType = spvGen.makeStructType({ spvGen.float4Type() }, "gl_PerVertex");
+   spvGen.addDecoration(perVertexType, spv::DecorationBlock);
+   spvGen.addMemberDecoration(perVertexType, 0, spv::DecorationBuiltIn, spv::BuiltInPosition);
+   spvGen.addMemberName(perVertexType, 0, "gl_Position");
+   auto perVertexVar = spvGen.createVariable(spv::StorageClassOutput, perVertexType, "gl_PerVertex");
+   entry->addIdOperand(perVertexVar);
+
+   std::vector<spv::Id> inputParams;
+   std::vector<spv::Id> outputParams;
+
+   for (auto i = 0; i < numExports; ++i) {
+      auto paramType = spvGen.float4Type();
+      auto paramInVarType = spvGen.makeArrayType(paramType, fourConst, 0);
+      auto paramInVar = spvGen.createVariable(spv::StorageClassInput, paramInVarType, fmt::format("PARAM_{}_IN", i).c_str());
+      spvGen.addDecoration(paramInVar, spv::DecorationLocation, i);
+      entry->addIdOperand(paramInVar);
+      inputParams.push_back(paramInVar);
+
+      auto paramOutVar = spvGen.createVariable(spv::StorageClassOutput, paramType, fmt::format("PARAM_{}_OUT", i).c_str());
+      spvGen.addDecoration(paramOutVar, spv::DecorationLocation, i);
+      entry->addIdOperand(paramOutVar);
+      outputParams.push_back(paramOutVar);
+   }
+
+   auto emitVertex = [&](int vertexId){
+      auto vtxIdConst = spvGen.makeIntConstant(vertexId);
+
+      auto posIn0Ptr = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { vtxIdConst, zeroConst });
+      auto posOutPtr = spvGen.createAccessChain(spv::StorageClassOutput, perVertexVar, { zeroConst });
+      auto posInVal = spvGen.createLoad(posIn0Ptr);
+      spvGen.createStore(posInVal, posOutPtr);
+
+      for (auto i = 0; i < numExports; ++i) {
+         auto paramInPtr = spvGen.createAccessChain(spv::StorageClassInput, inputParams[i], { vtxIdConst });
+         auto paramOutPtr = outputParams[i];
+         auto paramInVal = spvGen.createLoad(paramInPtr);
+         spvGen.createStore(paramInVal, paramOutPtr);
+      }
+
+      spvGen.createNoResultOp(spv::OpEmitVertex);
+   };
+
+   auto posIn0Ptr = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { zeroConst, zeroConst });
+   auto posIn0Val = spvGen.createLoad(posIn0Ptr);
+   auto posIn1Ptr = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { oneConst, zeroConst });
+   auto posIn1Val = spvGen.createLoad(posIn1Ptr);
+   auto posIn2Ptr = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { twoConst, zeroConst });
+   auto posIn2Val = spvGen.createLoad(posIn2Ptr);
+   auto posIn3Ptr = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { threeConst, zeroConst });
+   auto posIn3Val = spvGen.createLoad(posIn3Ptr);
+
+   auto posDiff0to3 = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), posIn0Val, posIn3Val);
+   auto posDiff1to3 = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), posIn1Val, posIn3Val);
+   auto posDiff2to3 = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), posIn2Val, posIn3Val);
+
+   auto posLen0to3 = spvGen.createBuiltinCall(spvGen.floatType(), spvGen.glslStd450(), GLSLstd450::GLSLstd450Length, { posDiff0to3 });
+   auto posLen1to3 = spvGen.createBuiltinCall(spvGen.floatType(), spvGen.glslStd450(), GLSLstd450::GLSLstd450Length, { posDiff1to3 });
+   auto posLen2to3 = spvGen.createBuiltinCall(spvGen.floatType(), spvGen.glslStd450(), GLSLstd450::GLSLstd450Length, { posDiff2to3 });
+
+   auto len0gt1 = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen0to3, posLen1to3);
+   auto len0gt2 = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen0to3, posLen2to3);
+   auto len1gt2 = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen1to3, posLen2to3);
+
+   emitVertex(0);
+   emitVertex(1);
+   emitVertex(2);
+
+   spvGen.createNoResultOp(spv::OpEndPrimitive);
+
+   /*
+   if (len0 > len1) {
+      if (len0 > len2) {
+         // len 0 biggest
+      } else {
+         // len 2 biggest
+      }
+   } else {
+      if (len1 > len2) {
+         // len 1 biggest
+      } else {
+         // len 2 biggest
+      }
+   }
+   */
+
+   auto block = spv::Builder::If { len0gt1, spv::SelectionControlMaskNone, spvGen };
+   {
+      auto block = spv::Builder::If { len0gt2, spv::SelectionControlMaskNone, spvGen };
+      {
+         // pos 0 is the hypotenuse
+         emitVertex(1);
+         emitVertex(2);
+         emitVertex(3);
+      }
+      block.makeBeginElse();
+      {
+         // pos 2 is the hypotenuse
+         emitVertex(0);
+         emitVertex(1);
+         emitVertex(3);
+      }
+      block.makeEndIf();
+   }
+   block.makeBeginElse();
+   {
+      auto block = spv::Builder::If { len1gt2, spv::SelectionControlMaskNone, spvGen };
+      {
+         // len 1 is the hypotenuse
+         emitVertex(0);
+         emitVertex(2);
+         emitVertex(3);
+      }
+      block.makeBeginElse();
+      {
+         // len 2 is the hypotenuse
+         emitVertex(0);
+         emitVertex(1);
+         emitVertex(3);
+      }
+      block.makeEndIf();
+   }
+   block.makeEndIf();
+
+   spvGen.createNoResultOp(spv::OpEndPrimitive);
+
+   spvGen.makeReturn(true);
+
+   std::vector<unsigned int> output;
+   spvGen.dump(output);
+   return output;
 }
 
 std::string
