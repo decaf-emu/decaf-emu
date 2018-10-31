@@ -589,6 +589,13 @@ Driver::getSurface(const SurfaceDesc& info)
 void
 Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
+   if (surface->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      decaf_check(range.firstSlice % surface->desc.depth == 0);
+      decaf_check(range.numSlices % surface->desc.depth == 0);
+      range.firstSlice /= surface->desc.depth;
+      range.numSlices /= surface->desc.depth;
+   }
+
    bool forWrite;
    switch (usage) {
    case ResourceUsage::ColorAttachment:
@@ -655,9 +662,22 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
    hostComponentMap.b = getVkComponentSwizzle(info.channels[2]);
    hostComponentMap.a = getVkComponentSwizzle(info.channels[3]);
 
+   auto realSliceStart = info.sliceStart;
+   auto realSliceCount = info.sliceEnd - info.sliceStart;
+
+   // 3D textures behave identically to 2D_ARRAY except that they reduce
+   // the number of array elements for each mip level.  Latte selects them
+   // the same as a 3D texture, but we need to translate that.
+   if (info.surfaceDesc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      decaf_check(realSliceStart % info.surfaceDesc.depth == 0);
+      decaf_check(realSliceCount % info.surfaceDesc.depth == 0);
+      realSliceStart /= info.surfaceDesc.depth;
+      realSliceCount /= info.surfaceDesc.depth;
+   }
+
    auto subresRange = surface->subresRange;
-   subresRange.baseArrayLayer = info.sliceStart;
-   subresRange.layerCount = info.sliceEnd - info.sliceStart;
+   subresRange.baseArrayLayer = realSliceStart;
+   subresRange.layerCount = realSliceCount;
 
    vk::ImageViewCreateInfo imageViewDesc;
    imageViewDesc.image = surface->image;
