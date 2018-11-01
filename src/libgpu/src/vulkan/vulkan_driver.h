@@ -195,9 +195,7 @@ struct SyncWaiter
 {
    bool isCompleted = false;
    vk::Fence fence;
-   std::vector<vk::DescriptorSet> vertexDescriptorSets;
-   std::vector<vk::DescriptorSet> geometryDescriptorSets;
-   std::vector<vk::DescriptorSet> pixelDescriptorSets;
+   std::vector<vk::DescriptorPool> descriptorPools;
    std::vector<StagingBuffer *> stagingBuffers;
    std::vector<std::function<void()>> callbacks;
 
@@ -570,9 +568,7 @@ protected:
    vk::DescriptorSet allocateVertexDescriptorSet();
    vk::DescriptorSet allocateGeometryDescriptorSet();
    vk::DescriptorSet allocatePixelDescriptorSet();
-   void retireVertexDescriptorSet(vk::DescriptorSet descriptorSet);
-   void retireGeometryDescriptorSet(vk::DescriptorSet descriptorSet);
-   void retirePixelDescriptorSet(vk::DescriptorSet descriptorSet);
+   void retireDescriptorPool(vk::DescriptorPool descriptorPool);
 
    // Fences
    SyncWaiter * allocateSyncWaiter();
@@ -786,9 +782,6 @@ private:
    RenderPassObject *mRenderPass;
    std::list<StagingBuffer *> mStagingBuffers;
    std::vector<vk::DescriptorPool> mDescriptorPools;
-   std::vector<vk::DescriptorSet> mVertexDescriptorSets;
-   std::vector<vk::DescriptorSet> mGeometryDescriptorSets;
-   std::vector<vk::DescriptorSet> mPixelDescriptorSets;
    std::unordered_map<DataHash, SurfaceGroupObject*> mSurfaceGroups;
    std::unordered_map<DataHash, SurfaceObject*> mSurfaces;
    std::unordered_map<DataHash, SurfaceViewObject*> mSurfaceViews;

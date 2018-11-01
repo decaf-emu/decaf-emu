@@ -159,19 +159,30 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
 vk::DescriptorPool
 Driver::allocateDescriptorPool(uint32_t numDraws)
 {
-   std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
-      vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * numDraws),
-      vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * numDraws),
-      vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * numDraws),
-   };
+   vk::DescriptorPool descriptorPool;
 
-   vk::DescriptorPoolCreateInfo descriptorPoolInfo;
-   descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
-   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets = static_cast<uint32_t>(numDraws);
-   auto descriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
+   if (!descriptorPool) {
+      if (!mDescriptorPools.empty()) {
+         descriptorPool = mDescriptorPools.back();
+         mDescriptorPools.pop_back();
+      }
+   }
 
-   mDescriptorPools.push_back(descriptorPool);
+   if (!descriptorPool) {
+      std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
+         vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * numDraws),
+         vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * numDraws),
+         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * numDraws),
+      };
+
+      vk::DescriptorPoolCreateInfo descriptorPoolInfo;
+      descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+      descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
+      descriptorPoolInfo.maxSets = static_cast<uint32_t>(numDraws);
+      descriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
+   }
+
+   mActiveSyncWaiter->descriptorPools.push_back(descriptorPool);
 
    return descriptorPool;
 }
@@ -198,73 +209,26 @@ Driver::allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout)
 vk::DescriptorSet
 Driver::allocateVertexDescriptorSet()
 {
-   vk::DescriptorSet descriptorSet;
-
-   if (!mVertexDescriptorSets.empty()) {
-      descriptorSet = mVertexDescriptorSets.back();
-      mVertexDescriptorSets.pop_back();
-   }
-
-   if (!descriptorSet) {
-      descriptorSet = allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
-   }
-
-   mActiveSyncWaiter->vertexDescriptorSets.push_back(descriptorSet);
-   return descriptorSet;
+   return allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
 }
 
 vk::DescriptorSet
 Driver::allocateGeometryDescriptorSet()
 {
-   vk::DescriptorSet descriptorSet;
-
-   if (!mGeometryDescriptorSets.empty()) {
-      descriptorSet = mGeometryDescriptorSets.back();
-      mGeometryDescriptorSets.pop_back();
-   }
-
-   if (!descriptorSet) {
-      descriptorSet = allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
-   }
-
-   mActiveSyncWaiter->geometryDescriptorSets.push_back(descriptorSet);
-   return descriptorSet;
+   return allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
 }
 
 vk::DescriptorSet
 Driver::allocatePixelDescriptorSet()
 {
-   vk::DescriptorSet descriptorSet;
-
-   if (!mPixelDescriptorSets.empty()) {
-      descriptorSet = mPixelDescriptorSets.back();
-      mPixelDescriptorSets.pop_back();
-   }
-
-   if (!descriptorSet) {
-      descriptorSet = allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
-   }
-
-   mActiveSyncWaiter->pixelDescriptorSets.push_back(descriptorSet);
-   return descriptorSet;
+   return allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
 }
 
 void
-Driver::retireVertexDescriptorSet(vk::DescriptorSet descriptorSet)
+Driver::retireDescriptorPool(vk::DescriptorPool descriptorPool)
 {
-   mVertexDescriptorSets.push_back(descriptorSet);
-}
-
-void
-Driver::retireGeometryDescriptorSet(vk::DescriptorSet descriptorSet)
-{
-   mGeometryDescriptorSets.push_back(descriptorSet);
-}
-
-void
-Driver::retirePixelDescriptorSet(vk::DescriptorSet descriptorSet)
-{
-   mPixelDescriptorSets.push_back(descriptorSet);
+   mDevice.resetDescriptorPool(descriptorPool, vk::DescriptorPoolResetFlags());
+   mDescriptorPools.push_back(descriptorPool);
 }
 
 void
@@ -364,6 +328,7 @@ Driver::endCommandGroup()
    mActiveDescriptorPool = vk::DescriptorPool();
    mActivePipeline = nullptr;
    mActiveRenderPass = nullptr;
+   mActiveDescriptorPool = nullptr;
 }
 
 void

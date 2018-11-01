@@ -36,9 +36,7 @@ Driver::releaseSyncWaiter(SyncWaiter *syncWaiter)
    syncWaiter->isCompleted = false;
    syncWaiter->callbacks.clear();
    syncWaiter->stagingBuffers.clear();
-   syncWaiter->vertexDescriptorSets.clear();
-   syncWaiter->geometryDescriptorSets.clear();
-   syncWaiter->pixelDescriptorSets.clear();
+   syncWaiter->descriptorPools.clear();
 
    // Put this fence back in the pool
    mWaiterPool.push_back(syncWaiter);
@@ -64,14 +62,8 @@ Driver::executeSyncWaiter(SyncWaiter *syncWaiter)
       retireStagingBuffer(buffer);
    }
 
-   for (auto &set : syncWaiter->vertexDescriptorSets) {
-      retireVertexDescriptorSet(set);
-   }
-   for (auto &set : syncWaiter->geometryDescriptorSets) {
-      retireGeometryDescriptorSet(set);
-   }
-   for (auto &set : syncWaiter->pixelDescriptorSets) {
-      retirePixelDescriptorSet(set);
+   for (auto &pool : syncWaiter->descriptorPools) {
+      retireDescriptorPool(pool);
    }
 }
 
