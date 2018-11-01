@@ -50,7 +50,11 @@ void Transpiler::translateAluOp2_COS(const ControlFlowInst &cf, const AluInstruc
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
 
-   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Cos, { src0 });
+   // dst = cos(src0 / 0.1591549367)
+   auto halfPiFConst = mSpv->makeFloatConstant(0.1591549367f);
+   auto srcDived = mSpv->createBinOp(spv::OpFDiv, mSpv->floatType(), src0, halfPiFConst);
+
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Cos, { srcDived });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
@@ -711,7 +715,11 @@ void Transpiler::translateAluOp2_SIN(const ControlFlowInst &cf, const AluInstruc
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
 
-   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Sin, { src0 });
+   // dst = sin(src0 / 0.1591549367)
+   auto halfPiFConst = mSpv->makeFloatConstant(0.1591549367f);
+   auto srcDived = mSpv->createBinOp(spv::OpFDiv, mSpv->floatType(), src0, halfPiFConst);
+
+   auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Sin, { srcDived });
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
