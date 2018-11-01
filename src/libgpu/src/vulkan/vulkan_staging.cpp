@@ -59,8 +59,8 @@ Driver::getStagingBuffer(uint32_t size)
    StagingBuffer *sbuffer = nullptr;
 
    if (!sbuffer) {
-      for (auto& i = mStagingBuffers.begin(); i != mStagingBuffers.end(); ++i) {
-         auto& searchBuffer = *i;
+      for (auto i = mStagingBuffers.begin(); i != mStagingBuffers.end(); ++i) {
+         auto searchBuffer = *i;
          if (searchBuffer->maximumSize >= size) {
             mStagingBuffers.erase(i);
             sbuffer = searchBuffer;
