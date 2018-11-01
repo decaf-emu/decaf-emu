@@ -379,9 +379,45 @@ void
 Driver::_releaseSurface(SurfaceObject *surface)
 {
    // TODO: Add support for releasing surface data...
+
+   delete surface;
 }
 
+void
+Driver::_upgradeSurface(SurfaceObject *surface, const SurfaceDesc &info)
+{
+   // Allocate the new surface
+   auto newSurface = _allocateSurface(info);
 
+   // Verify that we are not making any errors
+   // TODO: Reenable this check with support for array upgrades.
+   //decaf_check(newSurface->desc.dim == surface->desc.dim);
+   decaf_check(newSurface->desc.tileType == surface->desc.tileType);
+   decaf_check(newSurface->desc.tileMode == surface->desc.tileMode);
+   decaf_check(newSurface->desc.format == surface->desc.format);
+   decaf_check(newSurface->width == surface->width);
+   decaf_check(newSurface->height == surface->height);
+   decaf_check(newSurface->depth == surface->depth);
+   decaf_check(newSurface->arrayLayers > surface->arrayLayers);
+
+   _copySurface(newSurface, surface, { 0, surface->arrayLayers });
+
+   newSurface->lastUsageIndex = surface->lastUsageIndex;
+   for (auto i = 0u; i < surface->slices.size(); ++i) {
+      newSurface->slices[i] = surface->slices[i];
+   }
+
+   // Switch out the surfaces from the map
+   auto switchIter = mSurfaces.find(info.hash());
+   decaf_check(switchIter->second == surface);
+   std::swap(*switchIter->second, *newSurface);
+
+   // Release the surface on the next frame (an earlier reference to this surface
+   // might have bound it to Vulkan, so we need to wait).
+   addRetireTask([=](){
+      _releaseSurface(newSurface);
+   });
+}
 
 void
 Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
@@ -573,13 +609,23 @@ Driver::getSurface(const SurfaceDesc& info)
       surface = _allocateSurface(info);
    }
 
+   if (info.pitch > surface->desc.pitch ||
+       info.width > surface->desc.width ||
+       info.height > surface->desc.height ||
+       info.depth > surface->desc.depth) {
+      _upgradeSurface(surface, info);
+   }
+
+   // Check we got the surface we wanted, not that we check height,depth
+   // as a greater-equal to easily handle the array cases.  We also skip
+   // DIM check, since it can go from 2D to 2D_ARRAY.
    decaf_check(surface->desc.baseAddress == info.baseAddress);
    decaf_check(surface->desc.pitch == info.pitch);
    decaf_check(surface->desc.width == info.width);
-   decaf_check(surface->desc.height == info.height);
-   decaf_check(surface->desc.depth == info.depth);
+   decaf_check(surface->desc.height >= info.height);
+   decaf_check(surface->desc.depth >= info.depth);
    decaf_check(surface->desc.samples == info.samples);
-   decaf_check(surface->desc.dim == info.dim);
+   //decaf_check(surface->desc.dim == info.dim);
    decaf_check(surface->desc.tileType == info.tileType);
    decaf_check(surface->desc.tileMode == info.tileMode);
    decaf_check(surface->desc.format == info.format);

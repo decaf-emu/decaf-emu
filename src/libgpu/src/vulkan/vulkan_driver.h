@@ -359,30 +359,27 @@ struct SurfaceDesc
       _dataHash.samples = samples;
       _dataHash.tileType = tileType;
 
-      auto dimDimensions = latte::getTexDimDimensions(dim);
-      if (dimDimensions < 1 || dimDimensions >= 4) {
-         decaf_abort("Unexpected dim dimensions.");
-      }
-
-      if (byCompat) {
-         // If we are looking at this in terms of compatibility mode, we can
-         // actually bump the dimensions down one level, as that is the cross
-         // compatibility of surface memory.
-         dimDimensions--;
-      } else {
-         // If we are looking for a precise match, we need to include the
-         // width of the surface in order to appropriately fetch it.
+      if (!byCompat) {
          _dataHash.width = width;
       }
 
-      if (dimDimensions >= 1) {
-         _dataHash.pitch = pitch;
-      }
-      if (dimDimensions >= 2) {
-         _dataHash.height = height;
-      }
-      if (dimDimensions >= 3) {
+      switch (dim) {
+      case latte::SQ_TEX_DIM::DIM_3D:
          _dataHash.depth = depth;
+         // fallthrough
+      case latte::SQ_TEX_DIM::DIM_2D:
+      case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+      case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+         _dataHash.height = height;
+         // fallthrough
+      case latte::SQ_TEX_DIM::DIM_1D:
+      case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+         _dataHash.pitch = pitch;
+         break;
+      default:
+         decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
       }
 
       return DataHash {}.write(_dataHash);
@@ -769,6 +766,7 @@ protected:
 
    SurfaceObject * _allocateSurface(const SurfaceDesc &info);
    void _releaseSurface(SurfaceObject *surface);
+   void _upgradeSurface(SurfaceObject *surface, const SurfaceDesc &info);
    void _readSurfaceData(SurfaceObject *surface, SurfaceSubRange range);
    void _writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range);
    void _refreshSurface(SurfaceObject *surface, SurfaceSubRange range);
