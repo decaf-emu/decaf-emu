@@ -1,6 +1,7 @@
 #ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
+#include "vulkan_rangecombiner.h"
 
 #include "gpu_tiling.h"
 #include "latte/latte_formats.h"
@@ -497,30 +498,27 @@ Driver::_refreshSurface(SurfaceObject *surface, SurfaceSubRange range)
 
    // We manually call refresh here, as in most cases a barrier on the memory
    // and a full data load will be unneccessary.
-   _refreshMemCache(memCache, sectionRange);
    surface->memCache->lastUsageIndex = surface->lastUsageIndex;
+   _refreshMemCache(memCache, sectionRange);
 
-   // Check if we already have the most recent data available.  If we do, we
-   // have no further work to do!
-   bool needsRefresh = false;
+   RangeCombiner<SurfaceObject*, uint32_t, uint32_t> readCombiner(
+   [&](SurfaceObject* object, uint32_t start, uint32_t count){
+      _readSurfaceData(surface, { start, count });
+   });
+
    for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
-      if (surface->slices[i].lastChangeIndex < memCache->sections[i].lastChangeIndex) {
-         needsRefresh = true;
-         break;
+      auto latestChangeIndex = memCache->sections[i].wantedChangeIndex;
+
+      if (surface->slices[i].lastChangeIndex >= latestChangeIndex) {
+         continue;
       }
+
+      readCombiner.push(nullptr, i, 1);
+
+      surface->slices[i].lastChangeIndex = latestChangeIndex;
    }
 
-   if (!needsRefresh) {
-      return;
-   }
-
-   // If new data is available, we need to read it in.
-   _readSurfaceData(surface, range);
-
-   // Update our last change index to match the data we just fetched
-   for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
-      surface->slices[i].lastChangeIndex = memCache->sections[i].lastChangeIndex;
-   }
+   readCombiner.flush();
 }
 
 void
