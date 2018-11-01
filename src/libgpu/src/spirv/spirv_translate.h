@@ -48,10 +48,18 @@ struct ShaderDesc
 
    DataHash hash() const
    {
+      struct {
+         ShaderType type;
+         uint32_t preferVector;
+      } _dataHash;
+      memset(&_dataHash, 0xFF, sizeof(_dataHash));
+
+      _dataHash.type = type;
+      _dataHash.preferVector = aluInstPreferVector ? 1 : 0;
+
       return DataHash {}
-         .write(type)
          .write(binary.data(), binary.size())
-         .write(aluInstPreferVector);
+         .write(_dataHash);
    }
 };
 
@@ -72,12 +80,23 @@ struct VertexShaderDesc : public ShaderDesc
 
    DataHash hash() const
    {
+      struct
+      {
+         std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
+         std::array<bool, latte::MaxTextures> texIsUint;
+         std::array<uint32_t, 2> instanceStepRates;
+         bool generateRectStub;
+      } _dataHash;
+      memset(&_dataHash, 0xFF, sizeof(_dataHash));
+
+      _dataHash.texDims = texDims;
+      _dataHash.texIsUint = texIsUint;
+      _dataHash.instanceStepRates = instanceStepRates;
+      _dataHash.generateRectStub = generateRectStub;
+
       return ShaderDesc::hash()
          .write(fsBinary.data(), fsBinary.size())
-         .write(texDims)
-         .write(texIsUint)
-         .write(instanceStepRates)
-         .write(generateRectStub)
+         .write(_dataHash)
          .write(regs);
    }
 };
@@ -90,10 +109,19 @@ struct GeometryShaderDesc : public ShaderDesc
 
    DataHash hash() const
    {
+      struct
+      {
+         std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
+         std::array<bool, latte::MaxTextures> texIsUint;
+      } _dataHash;
+      memset(&_dataHash, 0xFF, sizeof(_dataHash));
+
+      _dataHash.texDims = texDims;
+      _dataHash.texIsUint = texIsUint;
+
       return ShaderDesc::hash()
          .write(dcBinary.data(), dcBinary.size())
-         .write(texDims)
-         .write(texIsUint);
+         .write(_dataHash);
    }
 };
 
