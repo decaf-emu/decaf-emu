@@ -119,6 +119,9 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange ran
       vk::ImageSubresourceLayers(copyAspect, 0, 0, copyLayers),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
 
+   auto originalSrcUsage = src->activeUsage;
+   auto originalSrcLayout = src->activeLayout;
+
    _barrierSurface(dst, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, { 0, copyLayers });
    _barrierSurface(src, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, { 0, copyLayers });
 
@@ -129,6 +132,12 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange ran
       vk::ImageLayout::eTransferDstOptimal,
       { blitRegion },
       vk::Filter::eNearest);
+
+   // We don't know what the source was doing before, so we need to return
+   // it back to it's original usage/layout in case its in use.
+   if (originalSrcUsage != ResourceUsage::Undefined) {
+      _barrierSurface(src, originalSrcUsage, originalSrcLayout, { 0, src->arrayLayers });
+   }
 }
 
 SurfaceGroupObject *
@@ -142,7 +151,54 @@ Driver::_allocateSurfaceGroup(const SurfaceDesc& info)
 void
 Driver::_releaseSurfaceGroup(SurfaceGroupObject *surfaceGroup)
 {
-   // TODO: Add support for releasing surface data...
+   decaf_check(surfaceGroup->surfaces.empty());
+   delete surfaceGroup;
+}
+
+void
+Driver::_addSurfaceGroupSurface(SurfaceGroupObject *surfaceGroup, SurfaceObject *surface)
+{
+   surfaceGroup->surfaces.push_back(surface);
+
+   auto sliceCount = surface->slices.size();
+   while (surfaceGroup->sliceOwners.size() < sliceCount) {
+      surfaceGroup->sliceOwners.push_back(nullptr);
+   }
+}
+
+void
+Driver::_removeSurfaceGroupSurface(SurfaceGroupObject *surfaceGroup, SurfaceObject *surface)
+{
+   for (auto& sliceOwner : surfaceGroup->sliceOwners) {
+      if (sliceOwner == surface) {
+         sliceOwner = nullptr;
+      }
+   }
+
+   surfaceGroup->surfaces.remove(surface);
+}
+
+void
+Driver::_updateSurfaceGroupSlice(SurfaceGroupObject *surfaceGroup, uint32_t sliceId, SurfaceObject *surface)
+{
+   decaf_check(sliceId < surfaceGroup->sliceOwners.size());
+   surfaceGroup->sliceOwners[sliceId] = surface;
+}
+
+SurfaceObject *
+Driver::_getSurfaceGroupOwner(SurfaceGroupObject *surfaceGroup, uint32_t sliceId, uint64_t minChangeIndex)
+{
+   decaf_check(sliceId < surfaceGroup->sliceOwners.size());
+   auto& sliceOwner = surfaceGroup->sliceOwners[sliceId];
+   if (!sliceOwner) {
+      return nullptr;
+   }
+
+   if (sliceOwner->slices[sliceId].lastChangeIndex < minChangeIndex) {
+      return nullptr;
+   }
+
+   return sliceOwner;
 }
 
 SurfaceGroupObject *
@@ -354,6 +410,8 @@ Driver::_allocateSurface(const SurfaceDesc& info)
       slices.push_back(slice);
    }
 
+   auto surfaceGroup = _getSurfaceGroup(info);
+
    // Return our freshly minted surface data object
    auto surface = new SurfaceObject();
    surface->desc = info;
@@ -371,7 +429,9 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    surface->activeLayout = vk::ImageLayout::eUndefined;
    surface->activeUsage = ResourceUsage::Undefined;
    surface->lastUsageIndex = mActiveBatchIndex;
-   surface->group = _getSurfaceGroup(info);
+   surface->group = surfaceGroup;
+
+   _addSurfaceGroupSurface(surfaceGroup, surface);
 
    return surface;
 }
@@ -412,6 +472,9 @@ Driver::_upgradeSurface(SurfaceObject *surface, const SurfaceDesc &info)
    auto switchIter = mSurfaces.find(info.hash());
    decaf_check(switchIter->second == surface);
    std::swap(*switchIter->second, *newSurface);
+
+   // Remove the surface from the group (it was automatically added)
+   _removeSurfaceGroupSurface(surface->group, newSurface);
 
    // Release the surface on the next frame (an earlier reference to this surface
    // might have bound it to Vulkan, so we need to wait).
@@ -499,11 +562,17 @@ Driver::_refreshSurface(SurfaceObject *surface, SurfaceSubRange range)
    // We manually call refresh here, as in most cases a barrier on the memory
    // and a full data load will be unneccessary.
    surface->memCache->lastUsageIndex = surface->lastUsageIndex;
-   _refreshMemCache(memCache, sectionRange);
+   _refreshMemCache_Check(memCache, sectionRange);
 
    RangeCombiner<SurfaceObject*, uint32_t, uint32_t> readCombiner(
    [&](SurfaceObject* object, uint32_t start, uint32_t count){
+      _refreshMemCache_Update(memCache, { start, count });
       _readSurfaceData(surface, { start, count });
+   });
+
+   RangeCombiner<SurfaceObject*, uint32_t, uint32_t> blitCombiner(
+   [&](SurfaceObject* object, uint32_t start, uint32_t count){
+      _copySurface(surface, object, { start, count });
    });
 
    for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
@@ -513,12 +582,19 @@ Driver::_refreshSurface(SurfaceObject *surface, SurfaceSubRange range)
          continue;
       }
 
-      readCombiner.push(nullptr, i, 1);
+      auto localOwner = _getSurfaceGroupOwner(surface->group, i, latestChangeIndex);
+      if (localOwner) {
+         decaf_check(!memCache->sections[i].needsUpload);
+         blitCombiner.push(localOwner, i, 1);
+      } else {
+         readCombiner.push(nullptr, i, 1);
+      }
 
       surface->slices[i].lastChangeIndex = latestChangeIndex;
    }
 
    readCombiner.flush();
+   blitCombiner.flush();
 }
 
 void
@@ -545,6 +621,9 @@ Driver::_invalidateSurface(SurfaceObject *surface, SurfaceSubRange range)
    auto sectionRange = _sliceRangeToSectionRange(range);
    for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
       surface->slices[i].lastChangeIndex = memCache->sections[i].lastChangeIndex;
+
+      // Mark the surface as the owner in this surface group
+      _updateSurfaceGroupSlice(surface->group, i, surface);
    }
 }
 

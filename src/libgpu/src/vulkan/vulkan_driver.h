@@ -398,7 +398,8 @@ struct SurfaceGroupObject
 {
    SurfaceDesc desc;
 
-   std::vector<SurfaceObject *> surfaces;
+   std::list<SurfaceObject *> surfaces;
+   std::vector<SurfaceObject *> sliceOwners;
 };
 
 struct SurfaceSlice
@@ -762,6 +763,10 @@ protected:
 
    SurfaceGroupObject * _allocateSurfaceGroup(const SurfaceDesc &info);
    void _releaseSurfaceGroup(SurfaceGroupObject *surfaceGroup);
+   void _addSurfaceGroupSurface(SurfaceGroupObject *surfaceGroup, SurfaceObject *surface);
+   void _removeSurfaceGroupSurface(SurfaceGroupObject *surfaceGroup, SurfaceObject *surface);
+   void _updateSurfaceGroupSlice(SurfaceGroupObject *surfaceGroup, uint32_t sliceId, SurfaceObject *surface);
+   SurfaceObject * _getSurfaceGroupOwner(SurfaceGroupObject *surfaceGroup, uint32_t sliceId, uint64_t minChangeIndex);
    SurfaceGroupObject * _getSurfaceGroup(const SurfaceDesc &info);
 
    SurfaceObject * _allocateSurface(const SurfaceDesc &info);
