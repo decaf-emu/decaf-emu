@@ -112,8 +112,8 @@ Driver::getPipelineDesc()
 
    if (desc.polyBiasEnabled) {
       desc.polyBiasClamp = pa_su_poly_offset_clamp.CLAMP();
-      desc.polyBiasOffset = pa_su_poly_offset_back_offset.OFFSET();
-      desc.polyBiasScale = pa_su_poly_offset_back_scale.SCALE();
+      desc.polyBiasOffset = pa_su_poly_offset_front_offset.OFFSET();
+      desc.polyBiasScale = pa_su_poly_offset_front_scale.SCALE();
    } else {
       desc.polyBiasClamp = 0.0f;
       desc.polyBiasOffset = 0.0f;
