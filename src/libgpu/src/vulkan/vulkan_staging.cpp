@@ -84,7 +84,7 @@ void
 Driver::retireStagingBuffer(StagingBuffer *sbuffer)
 {
    if (sbuffer->maximumSize >= 1 * 1024 * 1024) {
-      // We don't keep around buffers over 1kb in size
+      // We don't keep around buffers over 1mb in size
       vmaDestroyBuffer(mAllocator, sbuffer->buffer, sbuffer->memory);
       delete sbuffer;
       return;
