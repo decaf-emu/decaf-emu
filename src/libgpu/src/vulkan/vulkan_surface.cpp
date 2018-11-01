@@ -8,6 +8,29 @@
 namespace vulkan
 {
 
+static inline SectionRange
+_sliceRangeToSectionRange(const SurfaceSubRange& range)
+{
+   // Because of the way our memory cache retiler works, we can guarentee
+   // that our slices are mapped 1:1 into sections.
+   return { range.firstSlice, range.numSlices };
+}
+
+static inline std::pair<uint32_t, uint32_t>
+_sliceRangeToMemRange(SurfaceObject *surface, const SurfaceSubRange& range)
+{
+   auto& memCache = surface->memCache;
+   decaf_check(memCache->mutator.mode == MemCacheMutator::Mode::Retile);
+   auto& retile = memCache->mutator.retile;
+
+   auto sliceSize = retile.pitch * retile.height * retile.bpp / 8;
+
+   auto slicesOffset = range.firstSlice * sliceSize;
+   auto slicesSize = range.numSlices * sliceSize;
+
+   return { slicesOffset, slicesSize };
+}
+
 MemCacheObject *
 Driver::_getSurfaceMemCache(const SurfaceDesc &info)
 {
@@ -39,7 +62,13 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info)
                     texelPitch, texelWidth, texelHeight, texelDepth,
                     aa, isDepthBuffer, bpp);
 
-   auto imageSize = texelPitch * texelHeight * texelDepth * bpp / 8;
+   auto sliceSize = texelPitch * texelHeight * bpp / 8;
+   auto imageSize = sliceSize * texelDepth;
+
+   std::vector<uint32_t> sliceSizes;
+   for (auto i = 0u; i < texelDepth; ++i) {
+      sliceSizes.push_back(sliceSize);
+   }
 
    // Generate a mutator and grab the memory
    MemCacheMutator mutator;
@@ -47,16 +76,17 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info)
    mutator.retile.tileMode = tileMode;
    mutator.retile.swizzle = swizzle;
    mutator.retile.pitch = texelPitch;
+   mutator.retile.width = texelWidth;
    mutator.retile.height = texelHeight;
    mutator.retile.depth = texelDepth;
    mutator.retile.aa = aa;
    mutator.retile.isDepth = isDepthBuffer;
    mutator.retile.bpp = bpp;
-   return getMemCache(phys_addr(realAddr), imageSize, mutator);
+   return getMemCache(phys_addr(realAddr), imageSize, sliceSizes, mutator);
 }
 
 void
-Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src)
+Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange range)
 {
    // TODO: Add support for copying depth buffers here...
    decaf_check(dst->desc.tileType == src->desc.tileType);
@@ -88,8 +118,8 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src)
       vk::ImageSubresourceLayers(copyAspect, 0, 0, copyLayers),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
 
-   _barrierSurface(dst, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
-   _barrierSurface(src, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal);
+   _barrierSurface(dst, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, { 0, copyLayers });
+   _barrierSurface(src, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, { 0, copyLayers });
 
    mActiveCommandBuffer.blitImage(
       src->image,
@@ -103,280 +133,15 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src)
 SurfaceGroupObject *
 Driver::_allocateSurfaceGroup(const SurfaceDesc& info)
 {
-   // We don't actually allocate any memory stuff here.  This allows us
-   // to centralize our memcache handling and what not in the one place.
-
-   auto surface = new SurfaceGroupObject();
-   surface->desc = info;
-
-   surface->cacheMem = nullptr;
-   surface->masterImage = nullptr;
-   surface->activeImage = nullptr;
-
-   surface->lastUsageIndex = 0;
-   surface->hash = DataHash {};
-
-   return surface;
+   auto surfaceGroup = new SurfaceGroupObject();
+   surfaceGroup->desc = info;
+   return surfaceGroup;
 }
 
 void
-Driver::_releaseSurfaceGroup(SurfaceGroupObject *surface)
+Driver::_releaseSurfaceGroup(SurfaceGroupObject *surfaceGroup)
 {
    // TODO: Add support for releasing surface data...
-}
-
-void
-Driver::_readSurfaceData(SurfaceGroupObject *surface)
-{
-   if (surface->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
-      // TODO: Implement uploading of depth buffer data (you know... just in case?)
-      return;
-   }
-
-   if (surface->desc.format == latte::SurfaceFormat::R11G11B10Float) {
-      // TODO: Handle format conversion of R11G11B10 formats...
-      return;
-   }
-
-   // Attempting to read the surface data when the active isn't the master
-   // would cause the data to be immediately overwritten when the active changes.
-   decaf_check(surface->activeImage == surface->masterImage);
-
-   auto& masterImage = surface->masterImage;
-
-   // Grab the aligned sizes from the retiler
-   auto& cacheMem = surface->cacheMem;
-   auto alignedPitch = masterImage->pitch;
-   auto alignedHeight = masterImage->height;
-   if (cacheMem->mutator.mode == MemCacheMutator::Mode::Retile) {
-      alignedPitch = cacheMem->mutator.retile.pitch;
-      alignedHeight = cacheMem->mutator.retile.height;
-
-      auto dataFormat = getSurfaceFormatDataFormat(surface->desc.format);
-      if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-         alignedPitch *= 4;
-         alignedHeight *= 4;
-      }
-   }
-
-   vk::BufferImageCopy region = {};
-   region.bufferOffset = 0;
-   region.bufferRowLength = alignedPitch;
-   region.bufferImageHeight = alignedHeight;
-
-   region.imageSubresource.aspectMask = masterImage->subresRange.aspectMask;
-   region.imageSubresource.mipLevel = 0;
-   region.imageSubresource.baseArrayLayer = 0;
-   region.imageSubresource.layerCount = masterImage->arrayLayers;
-
-   region.imageOffset = { 0, 0, 0 };
-   region.imageExtent = { static_cast<uint32_t>(masterImage->width),
-                           static_cast<uint32_t>(masterImage->height),
-                           static_cast<uint32_t>(masterImage->depth) };
-
-   transitionMemCache(surface->cacheMem, ResourceUsage::TransferSrc);
-   _barrierSurface(masterImage, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
-
-   mActiveCommandBuffer.copyBufferToImage(
-      surface->cacheMem->buffer,
-      masterImage->image,
-      vk::ImageLayout::eTransferDstOptimal,
-      { region });
-}
-
-void
-Driver::_writeSurfaceData(SurfaceGroupObject *surface)
-{
-   if (surface->desc.tileType == latte::SQ_TILE_MODE::LINEAR_ALIGNED) {
-      // If this is a linear aligned texture, we will assume that it is a swap
-      // buffer for now and don't invalidate it to the CPU.
-      return;
-   }
-
-   if (surface->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
-      // TODO: Implement uploading of depth buffer data (you know... just in case?)
-      return;
-   }
-
-   if (surface->desc.format == latte::SurfaceFormat::R11G11B10Float) {
-      // TODO: Handle format conversion of R11G11B10 formats...
-      return;
-   }
-
-   auto& masterImage = surface->masterImage;
-
-   // Grab the aligned sizes from the retiler
-   auto& cacheMem = surface->cacheMem;
-   auto alignedPitch = masterImage->pitch;
-   auto alignedHeight = masterImage->height;
-   if (cacheMem->mutator.mode == MemCacheMutator::Mode::Retile) {
-      alignedPitch = cacheMem->mutator.retile.pitch;
-      alignedHeight = cacheMem->mutator.retile.height;
-
-      auto dataFormat = getSurfaceFormatDataFormat(surface->desc.format);
-      if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-         alignedPitch *= 4;
-         alignedHeight *= 4;
-      }
-   }
-
-   // We need to switch back to the master image before we can perform the write...
-   auto& activeImage = surface->activeImage;
-   if (activeImage != masterImage) {
-      _copySurface(masterImage, activeImage);
-      activeImage = masterImage;
-   }
-
-   // Perform the actual copy
-   vk::BufferImageCopy region = {};
-   region.bufferOffset = 0;
-   region.bufferRowLength = alignedPitch;
-   region.bufferImageHeight = alignedHeight;
-
-   region.imageSubresource.aspectMask = masterImage->subresRange.aspectMask;
-   region.imageSubresource.mipLevel = 0;
-   region.imageSubresource.baseArrayLayer = 0;
-   region.imageSubresource.layerCount = masterImage->arrayLayers;
-
-   region.imageOffset = { 0, 0, 0 };
-   region.imageExtent = { static_cast<uint32_t>(masterImage->width),
-                           static_cast<uint32_t>(masterImage->height),
-                           static_cast<uint32_t>(masterImage->depth) };
-
-   _barrierSurface(masterImage, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal);
-
-   mActiveCommandBuffer.copyImageToBuffer(
-      masterImage->image,
-      vk::ImageLayout::eTransferSrcOptimal,
-      surface->cacheMem->buffer,
-      { region });
-}
-
-void
-Driver::_activateGroupSurface(SurfaceGroupObject *surfaceGroup, SurfaceObject *newSurface, ResourceUsage usage)
-{
-   bool forWrite;
-   switch (usage) {
-   case ResourceUsage::ColorAttachment:
-   case ResourceUsage::DepthStencilAttachment:
-   case ResourceUsage::StreamOutBuffer:
-   case ResourceUsage::TransferDst:
-      forWrite = true;
-      break;
-   case ResourceUsage::Texture:
-   case ResourceUsage::TransferSrc:
-      forWrite = false;
-      break;
-   default:
-      decaf_abort("Unexpected surface resource usage");
-   }
-
-   if (newSurface != surfaceGroup->activeImage) {
-      auto& masterImage = surfaceGroup->masterImage;
-      auto& activeImage = surfaceGroup->activeImage;
-
-      // If the active surface is not the master surface, we first need to copy
-      // back to the master as the master is the source of truth.
-      if (masterImage && activeImage != masterImage) {
-         // Perform the actual copy first
-         _copySurface(masterImage, activeImage);
-
-         // Mark the new active image for safety
-         activeImage = masterImage;
-      }
-
-      // If there is not yet a master image, or the new image is bigger
-      // than the current master we need to promote a new master.
-      if (!masterImage ||
-          newSurface->width > masterImage->width ||
-          newSurface->height > masterImage->height ||
-          newSurface->depth > masterImage->depth ||
-          newSurface->arrayLayers > masterImage->arrayLayers) {
-         auto newMasterDesc = newSurface->desc;
-         if (masterImage) {
-            newMasterDesc.pitch = std::max(newMasterDesc.pitch, masterImage->desc.pitch);
-            newMasterDesc.width = std::max(newMasterDesc.width, masterImage->desc.width);
-            newMasterDesc.height = std::max(newMasterDesc.height, masterImage->desc.height);
-            newMasterDesc.depth = std::max(newMasterDesc.depth, masterImage->desc.depth);
-         }
-
-         auto newMasterImage = newSurface;
-         if (newMasterDesc.hash() != newSurface->desc.hash()) {
-            // If the new master needs to be even bigger than the new image, lets
-            // set up our new master image first.
-            newMasterImage = _allocateSurface(newMasterDesc);
-         }
-
-         auto oldMasterImage = surfaceGroup->masterImage;
-         auto oldCacheMem = surfaceGroup->cacheMem;
-
-         // Allocate new cached memory encompasing the new master
-         auto cacheMem = _getSurfaceMemCache(newMasterDesc);
-         cacheMem->refCount++;
-         surfaceGroup->cacheMem = cacheMem;
-
-         // Upload the CPU data to the new surface
-         surfaceGroup->masterImage = newMasterImage;
-         surfaceGroup->activeImage = newMasterImage;
-         _readSurfaceData(surfaceGroup);
-
-         // Copy the surface data from the old master into the new image
-         if (oldMasterImage) {
-            _copySurface(masterImage, oldMasterImage);
-         }
-
-         // Remove the reference to the old cached memory
-         if (oldCacheMem) {
-            oldCacheMem->refCount--;
-         }
-      }
-
-      // If we are not the active surface yet, we can do the last copy
-      // to get us to that point.
-      if (activeImage != newSurface) {
-         _copySurface(newSurface, activeImage);
-         activeImage = newSurface;
-      }
-
-      // Make sure everything went according to plan
-      decaf_check(activeImage == newSurface);
-   }
-
-   // If this usage is a write usage, we need to do some work to mark the
-   // underlying memory as having been modified by this surface.  If this
-   // is for a read, we need to verify that the memory has not changed.
-   if (!forWrite) {
-      auto& memCache = surfaceGroup->cacheMem;
-
-      // TODO: This can cause a previous write to this surface to be invalidated
-      // back to the cache and then immediately read in, as the memory cache does
-      // not know that the last writer was us!
-
-      // Transition to being a reader of the memory cache
-      transitionMemCache(memCache, ResourceUsage::TransferSrc);
-
-      // Mark us as having been used this frame.  Note that we cannot predicate
-      // checking the hashes on this as there could have been writes by other
-      // stuff inside this particular pm4 context.
-      surfaceGroup->lastUsageIndex = mActivePm4BufferIndex;
-
-      // If the underlying hash has changed, we need to refresh ourselves.
-      if (surfaceGroup->hash != memCache->dataHash) {
-         _readSurfaceData(surfaceGroup);
-      }
-
-      // Mark ourselves as having the latest data
-      surfaceGroup->hash = memCache->dataHash;
-   } else {
-      // Mark this surface as needing to be read-back at the next transition
-      // or at the end of the active Pm4Context.
-      markMemCacheDirty(surfaceGroup->cacheMem, [=](bool cancelled){
-         if (!cancelled) {
-            _writeSurfaceData(surfaceGroup);
-         }
-      });
-      surfaceGroup->hash = surfaceGroup->cacheMem->dataHash;
-   }
 }
 
 SurfaceGroupObject *
@@ -548,42 +313,208 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    subresRange.baseArrayLayer = 0;
    subresRange.layerCount = realArrayLayers;
 
-   // Return our freshly minted surface data object
-   auto surfaceData = new SurfaceObject();
-   surfaceData->desc = info;
-   surfaceData->image = image;
-   surfaceData->imageMem = imageMem;
-   surfaceData->pitch = realPitch;
-   surfaceData->width = realWidth;
-   surfaceData->height = realHeight;
-   surfaceData->depth = realDepth;
-   surfaceData->arrayLayers = realArrayLayers;
-   surfaceData->subresRange = subresRange;
-   surfaceData->activeLayout = vk::ImageLayout::eUndefined;
-   surfaceData->group = _getSurfaceGroup(info);
+   // Grab a reference to the memory cache that backs this surface
+   auto memCache = _getSurfaceMemCache(info);
 
-   return surfaceData;
+   // TODO: Maybe join together the getSurfaceMemCache code and this?
+   // Generate some meta-data about how we copy in/out
+   auto alignedPitch = realPitch;
+   auto alignedHeight = realHeight;
+   if (memCache->mutator.mode == MemCacheMutator::Mode::Retile) {
+      alignedPitch = memCache->mutator.retile.pitch;
+      alignedHeight = memCache->mutator.retile.height;
+
+      if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+         alignedPitch *= 4;
+         alignedHeight *= 4;
+      }
+   }
+
+   vk::BufferImageCopy bufferRegion = {};
+   bufferRegion.bufferOffset = 0;
+   bufferRegion.bufferRowLength = alignedPitch;
+   bufferRegion.bufferImageHeight = alignedHeight;
+
+   bufferRegion.imageSubresource.aspectMask = subresRange.aspectMask;
+   bufferRegion.imageSubresource.mipLevel = 0;
+   bufferRegion.imageSubresource.baseArrayLayer = 0;
+   bufferRegion.imageSubresource.layerCount = realArrayLayers;
+
+   bufferRegion.imageOffset = { 0, 0, 0 };
+   bufferRegion.imageExtent = { static_cast<uint32_t>(realWidth),
+                           static_cast<uint32_t>(realHeight),
+                           static_cast<uint32_t>(realDepth) };
+
+   std::vector<SurfaceSlice> slices;
+   for (auto i = 0; i < realArrayLayers; ++i) {
+      SurfaceSlice slice;
+      slice.lastChangeIndex = 0;
+      slices.push_back(slice);
+   }
+
+   // Return our freshly minted surface data object
+   auto surface = new SurfaceObject();
+   surface->desc = info;
+   surface->image = image;
+   surface->imageMem = imageMem;
+   surface->pitch = realPitch;
+   surface->width = realWidth;
+   surface->height = realHeight;
+   surface->depth = realDepth;
+   surface->arrayLayers = realArrayLayers;
+   surface->slices = std::move(slices);
+   surface->memCache = memCache;
+   surface->subresRange = subresRange;
+   surface->bufferRegion = bufferRegion;
+   surface->activeLayout = vk::ImageLayout::eUndefined;
+   surface->activeUsage = ResourceUsage::Undefined;
+   surface->lastUsageIndex = mActiveBatchIndex;
+   surface->group = _getSurfaceGroup(info);
+
+   return surface;
 }
 
 void
-Driver::_releaseSurface(SurfaceObject *surfaceData)
+Driver::_releaseSurface(SurfaceObject *surface)
 {
    // TODO: Add support for releasing surface data...
 }
 
-SurfaceObject *
-Driver::getSurface(const SurfaceDesc& info)
+
+
+void
+Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
 {
-   auto& foundImage = mSurfaces[info.hash()];
-   if (!foundImage) {
-      foundImage = _allocateSurface(info);
+   if (surface->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
+      // TODO: Implement uploading of depth buffer data (you know... just in case?)
+      return;
    }
 
-   return foundImage;
+   if (surface->desc.format == latte::SurfaceFormat::R11G11B10Float) {
+      // TODO: Handle format conversion of R11G11B10 formats...
+      return;
+   }
+
+   auto& memCache = surface->memCache;
+   auto memRange = _sliceRangeToMemRange(surface, range);
+   auto sectionRange = _sliceRangeToSectionRange(range);
+
+   auto region = surface->bufferRegion;
+   region.bufferOffset = memRange.first;
+   region.imageSubresource.baseArrayLayer = range.firstSlice;
+   region.imageSubresource.layerCount = range.numSlices;
+
+   _barrierMemCache(surface->memCache, ResourceUsage::TransferSrc, sectionRange);
+   _barrierSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, range);
+
+   mActiveCommandBuffer.copyBufferToImage(
+      memCache->buffer,
+      surface->image,
+      vk::ImageLayout::eTransferDstOptimal,
+      { region });
 }
 
 void
-Driver::_barrierSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::ImageLayout layout)
+Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
+{
+   if (surface->desc.tileType == latte::SQ_TILE_MODE::LINEAR_ALIGNED) {
+      // If this is a linear aligned texture, we will assume that it is a swap
+      // buffer for now and don't invalidate it to the CPU.
+      return;
+   }
+
+   if (surface->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
+      // TODO: Implement uploading of depth buffer data (you know... just in case?)
+      return;
+   }
+
+   if (surface->desc.format == latte::SurfaceFormat::R11G11B10Float) {
+      // TODO: Handle format conversion of R11G11B10 formats...
+      return;
+   }
+
+   auto& memCache = surface->memCache;
+   auto memRange = _sliceRangeToMemRange(surface, range);
+   auto sectionRange = _sliceRangeToSectionRange(range);
+
+   auto region = surface->bufferRegion;
+   region.bufferOffset = memRange.first;
+   region.imageSubresource.baseArrayLayer = range.firstSlice;
+   region.imageSubresource.layerCount = range.numSlices;
+
+   _barrierMemCache(surface->memCache, ResourceUsage::TransferDst, sectionRange);
+   _barrierSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, range);
+
+   mActiveCommandBuffer.copyImageToBuffer(
+      surface->image,
+      vk::ImageLayout::eTransferSrcOptimal,
+      memCache->buffer,
+      { region });
+}
+
+void
+Driver::_refreshSurface(SurfaceObject *surface, SurfaceSubRange range)
+{
+   auto sectionRange = _sliceRangeToSectionRange(range);
+   auto& memCache = surface->memCache;
+
+   // We manually call refresh here, as in most cases a barrier on the memory
+   // and a full data load will be unneccessary.
+   _refreshMemCache(memCache, sectionRange);
+   surface->memCache->lastUsageIndex = surface->lastUsageIndex;
+
+   // Check if we already have the most recent data available.  If we do, we
+   // have no further work to do!
+   bool needsRefresh = false;
+   for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
+      if (surface->slices[i].lastChangeIndex < memCache->sections[i].lastChangeIndex) {
+         needsRefresh = true;
+         break;
+      }
+   }
+
+   if (!needsRefresh) {
+      return;
+   }
+
+   // If new data is available, we need to read it in.
+   _readSurfaceData(surface, range);
+
+   // Update our last change index to match the data we just fetched
+   for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
+      surface->slices[i].lastChangeIndex = memCache->sections[i].lastChangeIndex;
+   }
+}
+
+void
+Driver::_invalidateSurface(SurfaceObject *surface, SurfaceSubRange range)
+{
+   auto& memCache = surface->memCache;
+
+   auto memRange = _sliceRangeToMemRange(surface, range);
+
+   // Mark the memory cache as delayed invalidated, and perform the write
+   // if the memory cache ends up requesting it (sometimes its cancelled).
+   invalidateMemCacheDelayed(memCache, memRange.first, memRange.second, [=](){
+      // We need to be careful to restore the surface layout after we are
+      // done, as this async download could happen mid-draw.
+      auto oldUsage = surface->activeUsage;
+      auto oldLayout = surface->activeLayout;
+
+      _writeSurfaceData(surface, range);
+
+      _barrierSurface(surface, oldUsage, oldLayout, range);
+   });
+
+   // Update our last change index to match the data we wrote
+   auto sectionRange = _sliceRangeToSectionRange(range);
+   for (auto i = sectionRange.start; i < sectionRange.start + sectionRange.count; ++i) {
+      surface->slices[i].lastChangeIndex = memCache->sections[i].lastChangeIndex;
+   }
+}
+
+void
+Driver::_barrierSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
    switch (usage) {
    case ResourceUsage::ColorAttachment:
@@ -605,7 +536,9 @@ Driver::_barrierSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::Ima
       decaf_abort("Unexpected surface resource usage");
    }
 
-   if (surfaceData->activeLayout == layout) {
+   surface->activeUsage = usage;
+
+   if (surface->activeLayout == layout) {
       // Nothing to do, we are already the correct layout
       return;
    }
@@ -613,12 +546,12 @@ Driver::_barrierSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::Ima
    vk::ImageMemoryBarrier imageBarrier;
    imageBarrier.srcAccessMask = vk::AccessFlags();
    imageBarrier.dstAccessMask = vk::AccessFlags();
-   imageBarrier.oldLayout = surfaceData->activeLayout;
+   imageBarrier.oldLayout = surface->activeLayout;
    imageBarrier.newLayout = layout;
    imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-   imageBarrier.image = surfaceData->image;
-   imageBarrier.subresourceRange = surfaceData->subresRange;
+   imageBarrier.image = surface->image;
+   imageBarrier.subresourceRange = surface->subresRange;
 
    mActiveCommandBuffer.pipelineBarrier(
       vk::PipelineStageFlagBits::eAllGraphics,
@@ -628,18 +561,59 @@ Driver::_barrierSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::Ima
       {},
       { imageBarrier });
 
-   surfaceData->activeLayout = layout;
+   surface->activeLayout = layout;
+}
+
+SurfaceObject *
+Driver::getSurface(const SurfaceDesc& info)
+{
+   auto& surface = mSurfaces[info.hash()];
+   if (!surface) {
+      surface = _allocateSurface(info);
+   }
+
+   decaf_check(surface->desc.baseAddress == info.baseAddress);
+   decaf_check(surface->desc.pitch == info.pitch);
+   decaf_check(surface->desc.width == info.width);
+   decaf_check(surface->desc.height == info.height);
+   decaf_check(surface->desc.depth == info.depth);
+   decaf_check(surface->desc.samples == info.samples);
+   decaf_check(surface->desc.dim == info.dim);
+   decaf_check(surface->desc.tileType == info.tileType);
+   decaf_check(surface->desc.tileMode == info.tileMode);
+   decaf_check(surface->desc.format == info.format);
+
+   return surface;
 }
 
 void
-Driver::transitionSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::ImageLayout layout)
+Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
-   // Activate this specific surface in the group, this will perform any
-   // neccessary downloads and/or image transfers needed.
-   _activateGroupSurface(surfaceData->group, surfaceData, usage);
+   bool forWrite;
+   switch (usage) {
+   case ResourceUsage::ColorAttachment:
+   case ResourceUsage::DepthStencilAttachment:
+   case ResourceUsage::StreamOutBuffer:
+   case ResourceUsage::TransferDst:
+      forWrite = true;
+      break;
+   case ResourceUsage::Texture:
+   case ResourceUsage::TransferSrc:
+      forWrite = false;
+      break;
+   default:
+      decaf_abort("Unexpected surface resource usage");
+   }
 
-   // Barrier the surface so that we know what its going to be used for.
-   _barrierSurface(surfaceData, usage, layout);
+   surface->lastUsageIndex = mActiveBatchIndex;
+
+   if (!forWrite) {
+      _refreshSurface(surface, range);
+   } else {
+      _invalidateSurface(surface, range);
+   }
+
+   _barrierSurface(surface, usage, layout, range);
 }
 
 SurfaceViewObject *
@@ -681,12 +655,16 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
    hostComponentMap.b = getVkComponentSwizzle(info.channels[2]);
    hostComponentMap.a = getVkComponentSwizzle(info.channels[3]);
 
+   auto subresRange = surface->subresRange;
+   subresRange.baseArrayLayer = info.sliceStart;
+   subresRange.layerCount = info.sliceEnd - info.sliceStart;
+
    vk::ImageViewCreateInfo imageViewDesc;
    imageViewDesc.image = surface->image;
    imageViewDesc.viewType = imageViewType;
    imageViewDesc.format = hostFormat;
    imageViewDesc.components = hostComponentMap;
-   imageViewDesc.subresourceRange = surface->subresRange;
+   imageViewDesc.subresourceRange = subresRange;
    auto imageView = mDevice.createImageView(imageViewDesc);
 
    auto compName = [](latte::SQ_SEL comp) {
@@ -702,10 +680,16 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
                       compName(info.channels[2]),
                       compName(info.channels[3])).c_str());
 
+   SurfaceSubRange range;
+   range.firstSlice = info.sliceStart;
+   range.numSlices = info.sliceEnd - info.sliceStart;
+
    auto surfaceView = new SurfaceViewObject();
    surfaceView->desc = info;
+   surfaceView->surfaceRange = range;
    surfaceView->surface = surface;
    surfaceView->imageView = imageView;
+   surfaceView->subresRange = subresRange;
    return surfaceView;
 }
 
@@ -723,13 +707,16 @@ Driver::getSurfaceView(const SurfaceViewDesc& info)
       surfaceView = _allocateSurfaceView(info);
    }
 
+   decaf_check(surfaceView->desc.sliceStart == info.sliceStart);
+   decaf_check(surfaceView->desc.sliceEnd == info.sliceEnd);
+
    return surfaceView;
 }
 
 void
 Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout)
 {
-   transitionSurface(surfaceView->surface, usage, layout);
+   transitionSurface(surfaceView->surface, usage, layout, surfaceView->surfaceRange);
 }
 
 

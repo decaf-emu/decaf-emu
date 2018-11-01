@@ -16,6 +16,7 @@ Driver::getFramebufferDesc()
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto cb_color_size = getRegister<latte::CB_COLORN_SIZE>(latte::Register::CB_COLOR0_SIZE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
+      auto cb_color_view = getRegister<latte::CB_COLORN_VIEW>(latte::Register::CB_COLOR0_VIEW + i * 4);
 
       if (mCurrentRenderPass->colorAttachmentIndexes[i] == -1) {
          // If the RenderPass doesn't want this attachment, skip it...
@@ -25,7 +26,9 @@ Driver::getFramebufferDesc()
             0,
             latte::CB_FORMAT::COLOR_INVALID,
             latte::CB_NUMBER_TYPE::UNORM,
-            latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL
+            latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL,
+            0,
+            0
          };
 
          continue;
@@ -39,7 +42,9 @@ Driver::getFramebufferDesc()
          cb_color_size.SLICE_TILE_MAX(),
          cb_color_info.FORMAT(),
          cb_color_info.NUMBER_TYPE(),
-         cb_color_info.ARRAY_MODE()
+         cb_color_info.ARRAY_MODE(),
+         cb_color_view.SLICE_START(),
+         cb_color_view.SLICE_MAX() + 1
       };
    }
 
@@ -47,6 +52,7 @@ Driver::getFramebufferDesc()
       auto db_depth_base = getRegister<latte::DB_DEPTH_BASE>(latte::Register::DB_DEPTH_BASE);
       auto db_depth_size = getRegister<latte::DB_DEPTH_SIZE>(latte::Register::DB_DEPTH_SIZE);
       auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
+      auto db_depth_view = getRegister<latte::DB_DEPTH_VIEW>(latte::Register::DB_DEPTH_VIEW);
 
       if (mCurrentRenderPass->depthAttachmentIndex == -1) {
          // If the RenderPass doesn't want depth, skip it...
@@ -55,7 +61,9 @@ Driver::getFramebufferDesc()
             0,
             0,
             latte::DB_FORMAT::DEPTH_INVALID,
-            latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL
+            latte::BUFFER_ARRAY_MODE::LINEAR_GENERAL,
+            0,
+            0
          };
 
          break;
@@ -68,7 +76,9 @@ Driver::getFramebufferDesc()
          db_depth_size.PITCH_TILE_MAX(),
          db_depth_size.SLICE_TILE_MAX(),
          db_depth_info.FORMAT(),
-         db_depth_info.ARRAY_MODE()
+         db_depth_info.ARRAY_MODE(),
+         db_depth_view.SLICE_START(),
+         db_depth_view.SLICE_MAX() + 1
       };
    } while (false);
 
@@ -111,15 +121,7 @@ Driver::checkCurrentFramebuffer()
       auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->colorAttachmentIndexes[i]);
       numAttachments = std::max(numAttachments, attachmentIndex + 1);
 
-      auto colorBufferDesc = ColorBufferDesc {
-         colorTarget.base256b,
-         colorTarget.pitchTileMax,
-         colorTarget.sliceTileMax,
-         colorTarget.format,
-         colorTarget.numberType,
-         colorTarget.arrayMode
-      };
-      auto surfaceView = getColorBuffer(colorBufferDesc);
+      auto surfaceView = getColorBuffer(colorTarget);
       foundFb->colorSurfaces.push_back(surfaceView);
 
       attachments[attachmentIndex] = surfaceView->imageView;
@@ -145,14 +147,7 @@ Driver::checkCurrentFramebuffer()
       auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->depthAttachmentIndex);
       numAttachments = std::max(numAttachments, attachmentIndex + 1);
 
-      auto depthStencilBufferDesc = DepthStencilBufferDesc {
-         depthTarget.base256b,
-         depthTarget.pitchTileMax,
-         depthTarget.sliceTileMax,
-         depthTarget.format,
-         depthTarget.arrayMode
-      };
-      auto surfaceView = getDepthStencilBuffer(depthStencilBufferDesc);
+      auto surfaceView = getDepthStencilBuffer(depthTarget);
       foundFb->depthSurface = surfaceView;
 
       attachments[attachmentIndex] = surfaceView->imageView;
@@ -212,8 +207,15 @@ Driver::getColorBuffer(const ColorBufferDesc& info)
    surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
    surfaceDesc.tileMode = tileMode;
 
+   if (info.sliceEnd > 1) {
+      surfaceDesc.depth = info.sliceEnd;
+      surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D_ARRAY;
+   }
+
    SurfaceViewDesc surfaceViewDesc;
    surfaceViewDesc.surfaceDesc = surfaceDesc;
+   surfaceViewDesc.sliceStart = info.sliceStart;
+   surfaceViewDesc.sliceEnd = info.sliceEnd;
    surfaceViewDesc.channels = {
       latte::SQ_SEL::SEL_X,
       latte::SQ_SEL::SEL_Y,
@@ -248,7 +250,14 @@ Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info)
    surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEPTH;
    surfaceDesc.tileMode = tileMode;
 
+   if (info.sliceEnd > 1) {
+      surfaceDesc.depth = info.sliceEnd;
+      surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D_ARRAY;
+   }
+
    SurfaceViewDesc surfaceViewDesc;
+   surfaceViewDesc.sliceStart = info.sliceStart;
+   surfaceViewDesc.sliceEnd = info.sliceEnd;
    surfaceViewDesc.surfaceDesc = surfaceDesc;
    surfaceViewDesc.channels = {
       latte::SQ_SEL::SEL_X,

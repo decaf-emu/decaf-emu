@@ -20,6 +20,8 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
    surfaceDesc.tileMode = latte::SQ_TILE_MODE::LINEAR_ALIGNED;
 
    SurfaceViewDesc surfaceViewDesc;
+   surfaceViewDesc.sliceStart = 0;
+   surfaceViewDesc.sliceEnd = 1;
    surfaceViewDesc.surfaceDesc = surfaceDesc;
    surfaceViewDesc.channels = {
       latte::SQ_SEL::SEL_X,
@@ -32,7 +34,7 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
    auto surfaceView = getSurfaceView(surfaceViewDesc);
    auto surface = surfaceView->surface;
 
-   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, { 0, 1 });
 
    std::array<float, 4> clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
    mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });

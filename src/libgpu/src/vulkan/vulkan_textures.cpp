@@ -47,6 +47,8 @@ Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
 
    SurfaceViewDesc surfaceDesc;
    surfaceDesc.surfaceDesc = surfaceDataDesc;
+   surfaceDesc.sliceStart = sq_tex_resource_word5.BASE_ARRAY();
+   surfaceDesc.sliceEnd = sq_tex_resource_word5.LAST_ARRAY() + 1;
    surfaceDesc.channels[0] = sq_tex_resource_word4.DST_SEL_X();
    surfaceDesc.channels[1] = sq_tex_resource_word4.DST_SEL_Y();
    surfaceDesc.channels[2] = sq_tex_resource_word4.DST_SEL_Z();

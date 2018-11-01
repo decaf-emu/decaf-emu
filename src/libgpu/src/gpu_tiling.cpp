@@ -196,8 +196,18 @@ convertFromTiled(
    uint32_t depth,
    uint32_t aa,
    bool isDepth,
-   uint32_t bpp)
+   uint32_t bpp,
+   uint32_t beginSlice,
+   uint32_t endSlice)
 {
+   if (endSlice == 0) {
+      endSlice = depth;
+   }
+
+   decaf_check(beginSlice >= 0);
+   decaf_check(endSlice > 0);
+   decaf_check(endSlice <= depth);
+
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT srcAddrInput;
    std::memset(&srcAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
    srcAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
@@ -237,7 +247,7 @@ convertFromTiled(
    dstAddrInput.sample = 0;
 
    // Untile all of the slices of this surface
-   for (uint32_t slice = 0; slice < depth; ++slice) {
+   for (uint32_t slice = beginSlice; slice < endSlice; ++slice) {
       srcAddrInput.slice = slice;
       dstAddrInput.slice = slice;
 
@@ -262,8 +272,18 @@ convertToTiled(
    uint32_t depth,
    uint32_t aa,
    bool isDepth,
-   uint32_t bpp)
+   uint32_t bpp,
+   uint32_t beginSlice,
+   uint32_t endSlice)
 {
+   if (endSlice == 0) {
+      endSlice = depth;
+   }
+
+   decaf_check(beginSlice >= 0);
+   decaf_check(endSlice > 0);
+   decaf_check(endSlice <= depth);
+
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT srcAddrInput;
    std::memset(&srcAddrInput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT));
    srcAddrInput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
@@ -303,7 +323,7 @@ convertToTiled(
    dstAddrInput.sample = 0;
 
    // Untile all of the slices of this surface
-   for (uint32_t slice = 0; slice < depth; ++slice) {
+   for (uint32_t slice = beginSlice; slice < endSlice; ++slice) {
       srcAddrInput.slice = slice;
       dstAddrInput.slice = slice;
 

@@ -80,6 +80,7 @@ struct MemCacheMutator
       latte::SQ_TILE_MODE tileMode;
       uint32_t swizzle;
       uint32_t pitch;
+      uint32_t width;
       uint32_t height;
       uint32_t depth;
       uint32_t aa;
@@ -100,7 +101,76 @@ struct MemCacheMutator
    }
 };
 
-typedef std::function<void(bool cancelled)> DelayedMemWriteFunc;
+typedef std::function<void()> DelayedMemWriteFunc;
+
+struct MemCacheObject;
+
+struct MemCacheSegment
+{
+   // Meta-data about what this segment represents
+   phys_addr address;
+   uint32_t size;
+
+   // Stores the last computed hash for this data (from the CPU).
+   DataHash dataHash;
+
+   // Tracks the last CPU check of this segment, to avoid checking the
+   // memory multiple times in a single batch.
+   uint64_t lastCheckIndex;
+
+   // Records if there is a pending GPU write for this data.  This is to ensure
+   // that we do not overwrite a pending GPU write with random CPU data.
+   bool gpuWritten;
+
+   // The last change for this segment
+   uint64_t lastChangeIndex;
+
+   // Represents the object owning the most up to date version of the data.
+   MemCacheObject *lastChangeOwner;
+
+};
+
+typedef std::map<phys_addr, MemCacheSegment*> MemSegmentMap;
+
+struct SectionRange
+{
+   uint32_t start = 0;
+   uint32_t count = 0;
+
+   inline bool covers(const SectionRange& other) const
+   {
+      auto end = start + count;
+      auto other_end = other.start + other.count;
+      return start <= other.start && end >= other_end;
+   }
+
+   inline bool intersects(const SectionRange& other) const
+   {
+      auto end = start + count;
+      auto other_end = other.start + other.count;
+      return !(start >= other_end || end <= other.start);
+   }
+};
+
+struct MemCacheSection
+{
+   // The offset of this section, just to find it easier
+   uint32_t offset;
+
+   // The size of this particular section
+   uint32_t size;
+
+   // Pointer into the segments map for this memory range
+   MemSegmentMap::iterator firstSegment;
+
+   // Records the last change index for this data
+   uint64_t lastChangeIndex;
+
+   // Records some information used to optimize the uploading and
+   // copying of segments between different cache objects.
+   uint64_t wantedChangeIndex;
+   bool needsUpload;
+};
 
 struct MemCacheObject
 {
@@ -113,16 +183,27 @@ struct MemCacheObject
    VmaAllocation allocation;
    vk::Buffer buffer;
 
-   // Stores the last computed hash for this data (from the CPU).
-   uint64_t gpuWrittenIndex;
+   // The various sections that make up this buffer
+   std::vector<MemCacheSection> sections;
+
+   // Stores a function used to update this buffer when the cost of
+   // generating the new data is significant and we want to avoid it
+   // unless the data ends up actually being needed.
    DelayedMemWriteFunc delayedWriteFunc;
-   DataHash dataHash;
+   SectionRange delayedWriteRange;
 
    // Records the last PM4 context which refers to this data.
    uint64_t lastUsageIndex;
 
    // Records the number of external objects relying on this...
    uint64_t refCount;
+};
+
+struct MemChangeRecord
+{
+   uint64_t changeIndex;
+   MemCacheObject *cache;
+   SectionRange sections;
 };
 
 struct DataBufferObject : MemCacheObject { };
@@ -164,6 +245,8 @@ struct ColorBufferDesc
    latte::CB_FORMAT format;
    latte::CB_NUMBER_TYPE numberType;
    latte::BUFFER_ARRAY_MODE arrayMode;
+   uint32_t sliceStart;
+   uint32_t sliceEnd;
 };
 
 struct DepthStencilBufferDesc
@@ -173,6 +256,8 @@ struct DepthStencilBufferDesc
    uint32_t sliceTileMax;
    latte::DB_FORMAT format;
    latte::BUFFER_ARRAY_MODE arrayMode;
+   uint32_t sliceStart;
+   uint32_t sliceEnd;
 };
 
 struct VertexBufferDesc
@@ -204,6 +289,7 @@ struct SyncWaiter
 
 enum class ResourceUsage : uint32_t
 {
+   Undefined,
    ColorAttachment,
    DepthStencilAttachment,
    Texture,
@@ -255,11 +341,23 @@ struct SurfaceDesc
 
       // TODO: Handle tiling changes, major memory reuse issues...
 
-      auto hash = DataHash {}
-         .write(calcAlignedBaseAddress())
-         .write(format)
-         .write(samples)
-         .write(tileType);
+      struct
+      {
+         uint32_t address;
+         uint32_t format;
+         uint32_t samples;
+         uint32_t tileType;
+         uint32_t width;
+         uint32_t pitch;
+         uint32_t height;
+         uint32_t depth;
+      } _dataHash;
+      memset(&_dataHash, 0xFF, sizeof(_dataHash));
+
+      _dataHash.address = calcAlignedBaseAddress();
+      _dataHash.format = format;
+      _dataHash.samples = samples;
+      _dataHash.tileType = tileType;
 
       auto dimDimensions = latte::getTexDimDimensions(dim);
       if (dimDimensions < 1 || dimDimensions >= 4) {
@@ -274,21 +372,27 @@ struct SurfaceDesc
       } else {
          // If we are looking for a precise match, we need to include the
          // width of the surface in order to appropriately fetch it.
-         hash = hash.write(width);
+         _dataHash.width = width;
       }
 
       if (dimDimensions >= 1) {
-         hash = hash.write(pitch);
+         _dataHash.pitch = pitch;
       }
       if (dimDimensions >= 2) {
-         hash = hash.write(height);
+         _dataHash.height = height;
       }
       if (dimDimensions >= 3) {
-         hash = hash.write(depth);
+         _dataHash.depth = depth;
       }
 
-      return hash;
+      return DataHash {}.write(_dataHash);
    }
+};
+
+struct SurfaceSubRange
+{
+   uint32_t firstSlice;
+   uint32_t numSlices;
 };
 
 struct SurfaceObject;
@@ -297,13 +401,12 @@ struct SurfaceGroupObject
 {
    SurfaceDesc desc;
 
-   uint64_t lastUsageIndex;
+   std::vector<SurfaceObject *> surfaces;
+};
 
-   MemCacheObject *cacheMem;
-   DataHash hash;
-
-   SurfaceObject *masterImage;
-   SurfaceObject *activeImage;
+struct SurfaceSlice
+{
+   uint64_t lastChangeIndex;
 };
 
 struct SurfaceObject
@@ -319,8 +422,14 @@ struct SurfaceObject
    uint32_t depth;
    uint32_t arrayLayers;
 
+   std::vector<SurfaceSlice> slices;
+
+   MemCacheObject *memCache;
+   ResourceUsage activeUsage;
+
    vk::Image image;
    vk::DeviceMemory imageMem;
+   vk::BufferImageCopy bufferRegion;
    vk::ImageSubresourceRange subresRange;
    vk::ImageLayout activeLayout;
 };
@@ -328,12 +437,24 @@ struct SurfaceObject
 struct SurfaceViewDesc
 {
    SurfaceDesc surfaceDesc;
+   uint32_t sliceStart;
+   uint32_t sliceEnd;
    std::array<latte::SQ_SEL, 4> channels;
 
    inline DataHash hash() const
    {
-      return surfaceDesc.hash()
-         .write(channels);
+      struct {
+         uint32_t sliceStart;
+         uint32_t sliceEnd;
+         std::array<latte::SQ_SEL, 4> channels;
+      } _dataHash;
+      memset(&_dataHash, 0xFF, sizeof(_dataHash));
+
+      _dataHash.sliceStart = sliceStart;
+      _dataHash.sliceEnd = sliceEnd;
+      _dataHash.channels = channels;
+
+      return surfaceDesc.hash().write(_dataHash);
    }
 };
 
@@ -342,7 +463,10 @@ struct SurfaceViewObject
    SurfaceViewDesc desc;
    SurfaceObject *surface;
 
+   SurfaceSubRange surfaceRange;
+
    vk::ImageView imageView;
+   vk::ImageSubresourceRange subresRange;
 };
 
 struct TextureDesc
@@ -603,14 +727,29 @@ protected:
    bool checkCurrentShaderBuffers();
 
    // Memory Cache
-   MemCacheObject * _allocMemCache(phys_addr address, uint32_t size, const MemCacheMutator& mutator);
-   void _uploadMemCache(MemCacheObject *cache);
-   void _downloadMemCache(MemCacheObject *cache);
-   void _refreshMemCache(MemCacheObject *cache);
-   MemCacheObject * getMemCache(phys_addr address, uint32_t size, const MemCacheMutator& mutator = MemCacheMutator {});
-   void transitionMemCache(MemCacheObject *cache, ResourceUsage usage);
-   void markMemCacheDirty(MemCacheObject *cache, DelayedMemWriteFunc delayedWriteHandler);
-   DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size, bool discardData = false);
+   MemCacheSegment * _allocateMemSegment(phys_addr address, uint32_t size);
+   MemSegmentMap::iterator _splitMemSegment(MemSegmentMap::iterator iter, uint32_t newSize);
+   MemSegmentMap::iterator _getMemSegment(phys_addr address, uint32_t maxSize);
+   void _ensureMemSegments(MemSegmentMap::iterator firstSegment, uint32_t size);
+   void _refreshMemSegment(MemCacheSegment *segment);
+
+   MemCacheObject * _allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes, const MemCacheMutator& mutator);
+   void _uploadMemCacheRaw(MemCacheObject *cache, SectionRange sections);
+   void _uploadMemCacheRetile(MemCacheObject *cache, SectionRange sections);
+   void _uploadMemCache(MemCacheObject *cache, SectionRange sections);
+   void _downloadMemCacheRaw(MemCacheObject *cache, SectionRange sections);
+   void _downloadMemCacheRetile(MemCacheObject *cache, SectionRange sections);
+   void _downloadMemCache(MemCacheObject *cache, SectionRange sections);
+   void _refreshMemCache_Check(MemCacheObject *cache, SectionRange sections);
+   void _refreshMemCache_Update(MemCacheObject *cache, SectionRange sections);
+   void _refreshMemCache(MemCacheObject *cache, SectionRange sections);
+   void _invalidateMemCache(MemCacheObject *cache, SectionRange sections, DelayedMemWriteFunc delayedWriteHandler);
+   void _barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRange sections);
+   SectionRange _sectionsFromOffsets(MemCacheObject *cache, uint32_t begin, uint32_t end);
+   MemCacheObject * getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes, const MemCacheMutator& mutator = MemCacheMutator {});
+   void invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, DelayedMemWriteFunc delayedWriteHandler);
+   void transitionMemCache(MemCacheObject *cache, ResourceUsage usage, uint32_t offset = 0, uint32_t size = 0);
+   DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size);
    void downloadPendingMemCache();
 
    // Staging
@@ -622,20 +761,21 @@ protected:
 
    // Surfaces
    MemCacheObject * _getSurfaceMemCache(const SurfaceDesc &info);
-   void _copySurface(SurfaceObject *dst, SurfaceObject *src);
+   void _copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange range);
 
    SurfaceGroupObject * _allocateSurfaceGroup(const SurfaceDesc &info);
-   void _releaseSurfaceGroup(SurfaceGroupObject *surface);
-   void _readSurfaceData(SurfaceGroupObject *surface);
-   void _writeSurfaceData(SurfaceGroupObject *surface);
-   void _activateGroupSurface(SurfaceGroupObject *surface, SurfaceObject *newImage, ResourceUsage usage);
+   void _releaseSurfaceGroup(SurfaceGroupObject *surfaceGroup);
    SurfaceGroupObject * _getSurfaceGroup(const SurfaceDesc &info);
 
    SurfaceObject * _allocateSurface(const SurfaceDesc &info);
-   void _releaseSurface(SurfaceObject *surfaceData);
+   void _releaseSurface(SurfaceObject *surface);
+   void _readSurfaceData(SurfaceObject *surface, SurfaceSubRange range);
+   void _writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range);
+   void _refreshSurface(SurfaceObject *surface, SurfaceSubRange range);
+   void _invalidateSurface(SurfaceObject *surface, SurfaceSubRange range);
+   void _barrierSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range);
    SurfaceObject * getSurface(const SurfaceDesc& info);
-   void _barrierSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::ImageLayout layout);
-   void transitionSurface(SurfaceObject *surfaceData, ResourceUsage usage, vk::ImageLayout layout);
+   void transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range);
 
    SurfaceViewObject * _allocateSurfaceView(const SurfaceViewDesc& info);
    void _releaseSurfaceView(SurfaceViewObject *surfaceView);
@@ -730,14 +870,15 @@ private:
    std::condition_variable mFenceSignal;
    std::vector<SyncWaiter*> mWaiterPool;
    VmaAllocator mAllocator;
+   uint64_t mMemChangeCounter = 0;
 
    SyncWaiter *mActiveSyncWaiter = nullptr;
-   uint64_t mActivePm4BufferIndex = 0;
    vk::CommandBuffer mActiveCommandBuffer;
    vk::DescriptorPool mActiveDescriptorPool;
    uint32_t mActiveDescriptorPoolDrawsLeft;
    RenderPassObject *mActiveRenderPass = nullptr;
    PipelineObject *mActivePipeline = nullptr;
+   uint64_t mActiveBatchIndex = 0;
 
    vk::DescriptorSetLayout mVertexDescriptorSetLayout;
    vk::DescriptorSetLayout mGeometryDescriptorSetLayout;
@@ -760,8 +901,7 @@ private:
    std::array<StagingBuffer*, 3> mCurrentGprBuffers = { nullptr };
    std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
 
-   std::vector<MemCacheObject *> mDirtyMemCaches;
-   std::list<MemCacheObject *> mPendingMemCacheDownloads;
+   std::vector<MemChangeRecord> mDirtyMemCaches;
 
    std::vector<uint8_t> mScratchRetiling;
    std::vector<uint8_t> mScratchIdxSwap;
@@ -782,6 +922,7 @@ private:
    RenderPassObject *mRenderPass;
    std::list<StagingBuffer *> mStagingBuffers;
    std::vector<vk::DescriptorPool> mDescriptorPools;
+   MemSegmentMap mMemSegmentMap;
    std::unordered_map<DataHash, SurfaceGroupObject*> mSurfaceGroups;
    std::unordered_map<DataHash, SurfaceObject*> mSurfaces;
    std::unordered_map<DataHash, SurfaceViewObject*> mSurfaceViews;
@@ -792,7 +933,7 @@ private:
    std::unordered_map<DataHash, RenderPassObject*> mRenderPasses;
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;
-   std::unordered_map<uint64_t, MemCacheObject *> mMemCaches;
+   std::unordered_map<DataHash, MemCacheObject *> mMemCaches;
 };
 
 } // namespace vulkan

@@ -68,6 +68,8 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
    colorBuffer.format = data.cb_color_info.FORMAT();
    colorBuffer.numberType = data.cb_color_info.NUMBER_TYPE();
    colorBuffer.arrayMode = data.cb_color_info.ARRAY_MODE();
+   colorBuffer.sliceStart = 0;
+   colorBuffer.sliceEnd = 1;
    auto surfaceView = getColorBuffer(colorBuffer);
    auto surface = surfaceView->surface;
 
@@ -80,7 +82,7 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
       decaf_abort("decafCopyColorToScan called for unknown scanTarget");
    }
 
-   transitionSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal);
+   transitionSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, { 0, 1 });
 
    vk::ImageBlit blitRegion(
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
@@ -137,13 +139,14 @@ Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
    colorBuffer.format = data.cb_color_info.FORMAT();
    colorBuffer.numberType = data.cb_color_info.NUMBER_TYPE();
    colorBuffer.arrayMode = data.cb_color_info.ARRAY_MODE();
+   colorBuffer.sliceStart = data.cb_color_view.SLICE_START();
+   colorBuffer.sliceEnd = data.cb_color_view.SLICE_MAX() + 1;
    auto surfaceView = getColorBuffer(colorBuffer);
-   auto surface = surfaceView->surface;
 
-   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurfaceView(surfaceView, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { data.red, data.green, data.blue, data.alpha };
-   mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });
+   mActiveCommandBuffer.clearColorImage(surfaceView->surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surfaceView->subresRange });
 }
 
 void
@@ -156,10 +159,11 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
    depthBuffer.sliceTileMax = data.db_depth_size.SLICE_TILE_MAX();
    depthBuffer.format = data.db_depth_info.FORMAT();
    depthBuffer.arrayMode = data.db_depth_info.ARRAY_MODE();
+   depthBuffer.sliceStart = data.db_depth_view.SLICE_START();
+   depthBuffer.sliceEnd = data.db_depth_view.SLICE_MAX() + 1;
    auto surfaceView = getDepthStencilBuffer(depthBuffer);
-   auto surface = surfaceView->surface;
 
-   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurfaceView(surfaceView, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    auto db_depth_clear = getRegister<latte::DB_DEPTH_CLEAR>(latte::Register::DB_DEPTH_CLEAR);
    auto db_stencil_clear = getRegister<latte::DB_STENCIL_CLEAR>(latte::Register::DB_STENCIL_CLEAR);
@@ -168,7 +172,7 @@ Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
    clearDepthStencil.depth = db_depth_clear.DEPTH_CLEAR();
    clearDepthStencil.stencil = db_stencil_clear.CLEAR();
    mActiveCommandBuffer.clearDepthStencilImage(
-      surface->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surface->subresRange });
+      surfaceView->surface->image, vk::ImageLayout::eTransferDstOptimal, clearDepthStencil, { surfaceView->subresRange });
 }
 
 void
@@ -185,6 +189,11 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    decaf_check(data.dstHeight == data.srcHeight);
    decaf_check(data.dstDepth == data.srcDepth);
    decaf_check(data.dstDim == data.srcDim);
+
+   if (data.dstLevel > 0) {
+      // We do not currently support mip mapping levels.
+      return;
+   }
 
    // Fetch the source surface
    SurfaceDesc sourceDataDesc;
@@ -223,8 +232,8 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    auto destImage = getSurface(destDataDesc);
 
    // Transition the surfaces to the appropriate layouts
-   transitionSurface(sourceImage, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal);
-   transitionSurface(destImage, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
+   transitionSurface(sourceImage, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, { data.srcSlice, 1 });
+   transitionSurface(destImage, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, { data.dstSlice, 1 });
 
    // Calculate the bounds of the copy
    auto copyWidth = data.srcWidth;

@@ -41,7 +41,9 @@ convertFromTiled(uint8_t *output,
                  uint32_t depth,
                  uint32_t aa,
                  bool isDepth,
-                 uint32_t bpp);
+                 uint32_t bpp,
+                 uint32_t beginSlice = 0,
+                 uint32_t endSlice = 0);
 
 bool
 convertToTiled(uint8_t *output,
@@ -55,6 +57,8 @@ convertToTiled(uint8_t *output,
                uint32_t depth,
                uint32_t aa,
                bool isDepth,
-               uint32_t bpp);
+               uint32_t bpp,
+               uint32_t beginSlice = 0,
+               uint32_t endSlice = 0);
 
 } // namespace gpu
