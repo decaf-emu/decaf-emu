@@ -190,6 +190,7 @@ public:
    void translateGenericExport(const ControlFlowInst &cf);
    void translateGenericSample(const ControlFlowInst &cf, const TextureFetchInst &inst, uint32_t sampleMode);
 
+   static void writeGenericProlog(ShaderSpvBuilder &spv);
    static void writeVertexProlog(ShaderSpvBuilder &spv, const VertexShaderDesc& desc);
    static void writeGeometryProlog(ShaderSpvBuilder &spv, const GeometryShaderDesc& desc);
    static void writePixelProlog(ShaderSpvBuilder &spv, const PixelShaderDesc& desc);

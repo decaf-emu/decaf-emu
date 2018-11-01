@@ -129,10 +129,15 @@ int findVsOutputLocation(const std::vector<uint32_t>& semantics, uint32_t semant
    return -1;
 }
 
-void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderDesc& desc)
+void Transpiler::writeGenericProlog(ShaderSpvBuilder &spvGen)
 {
    spvGen.createStore(spvGen.makeIntConstant(0), spvGen.stackIndexVar());
    spvGen.createStore(spvGen.stateActive(), spvGen.stateVar());
+}
+
+void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderDesc& desc)
+{
+   writeGenericProlog(spvGen);
 
    auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar());
    vertexIdVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), vertexIdVal);
@@ -156,14 +161,12 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
 
 void Transpiler::writeGeometryProlog(ShaderSpvBuilder &spvGen, const GeometryShaderDesc& desc)
 {
-   spvGen.createStore(spvGen.makeIntConstant(0), spvGen.stackIndexVar());
-   spvGen.createStore(spvGen.stateActive(), spvGen.stateVar());
+   writeGenericProlog(spvGen);
 }
 
 void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDesc& desc)
 {
-   spvGen.createStore(spvGen.makeIntConstant(0), spvGen.stackIndexVar());
-   spvGen.createStore(spvGen.stateActive(), spvGen.stateVar());
+   writeGenericProlog(spvGen);
 
    // We don't currently support baryocentric sampling
    decaf_check(!desc.regs.spi_ps_in_control_0.BARYC_AT_SAMPLE_ENA());
