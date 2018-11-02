@@ -206,6 +206,17 @@ Driver::bindShaderResources()
    }
 
    if (mCurrentPixelShader) {
+      auto lopMode = 0;
+
+      // TODO: I don't understand why the vulkan drivers use the color from the
+      // shader when rendering this stuff... We have to do this for now.
+      auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
+      if (cb_color_control.ROP3() == 0xFF) {
+         lopMode = 1;
+      } else if (cb_color_control.ROP3() == 0x00) {
+         lopMode = 2;
+      }
+
       // TODO: We should probably move this into a getXXXXDesc-like function
       // so that our register reads are slightly more consistent.
       auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
@@ -222,11 +233,11 @@ Driver::bindShaderResources()
 
       struct PsPushConstants
       {
-         uint32_t alphaOp;
+         uint32_t alphaData;
          float alphaRef;
          uint32_t needPremultiply;
       } psConstData;
-      psConstData.alphaOp = alphaFunc;
+      psConstData.alphaData = (lopMode << 8) | static_cast<uint32_t>(alphaFunc);
       psConstData.alphaRef = alphaRef;
 
       psConstData.needPremultiply = 0;

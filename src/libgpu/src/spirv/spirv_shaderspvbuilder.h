@@ -923,17 +923,18 @@ public:
       if (ref.type == ExportRef::Type::Pixel) {
          decaf_check(sourceValType == float4Type() || sourceValType == int4Type() || sourceValType == uint4Type());
 
+         auto zeroConst = makeUintConstant(0);
+         auto oneConst = makeUintConstant(1);
+
          // We use the first exported pixel to perform alpha reference testing.  This
          // may not actually be the correct behaviour.
          // TODO: Check which exported pixel does alpha testing.
          if (ref.index == 0 && sourceValType == float4Type()) {
             auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
 
-            auto zeroConst = makeUintConstant(0);
-            auto oneConst = makeUintConstant(1);
-
             auto alphaFuncPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { zeroConst });
-            auto alphaFuncVal = createLoad(alphaFuncPtr);
+            auto alphaDataVal = createLoad(alphaFuncPtr);
+            auto alphaFuncVal = createBinOp(spv::OpBitwiseAnd, uintType(), alphaDataVal, makeUintConstant(0xFF));
 
             auto alphaRefPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { oneConst });
             auto alphaRefVal = createLoad(alphaRefPtr);
@@ -1006,6 +1007,57 @@ public:
             endSwitch(switchSegments);
          }
 
+         auto pixelTmpVar = createVariable(spv::StorageClass::StorageClassPrivate, sourceValType, "_pixelTmp");
+         createStore(exportVal, pixelTmpVar);
+
+         auto alphaDataPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { zeroConst });
+         auto alphaDataVal = createLoad(alphaDataPtr);
+         auto logicOpVal = createBinOp(spv::OpShiftRightLogical, uintType(), alphaDataVal, makeUintConstant(8));
+
+         auto lopSet = createBinOp(spv::Op::OpIEqual, boolType(), logicOpVal, makeUintConstant(1));
+         auto block = spv::Builder::If { lopSet, spv::SelectionControlMaskNone, *this };
+         {
+            if (sourceValType == float4Type()) {
+               auto newValElem = makeFloatConstant(1.0f);
+               auto newVal = makeCompositeConstant(float4Type(), { newValElem, newValElem, newValElem, newValElem });
+               createStore(newVal, pixelTmpVar);
+            } else if (sourceValType == int4Type()) {
+               auto newValElem = makeIntConstant(0xFFFFFFFF);
+               auto newVal = makeCompositeConstant(int4Type(), { newValElem, newValElem, newValElem, newValElem });
+               createStore(newVal, pixelTmpVar);
+            } else if (sourceValType == uint4Type()) {
+               auto newValElem = makeUintConstant(0xFFFFFFFF);
+               auto newVal = makeCompositeConstant(uint4Type(), { newValElem, newValElem, newValElem, newValElem });
+               createStore(newVal, pixelTmpVar);
+            } else {
+               decaf_abort("Unexpected source pixel variable type");
+            }
+         }
+         block.makeBeginElse();
+         {
+            auto lopClear = createBinOp(spv::Op::OpIEqual, boolType(), logicOpVal, makeUintConstant(2));
+            auto block = spv::Builder::If { lopClear, spv::SelectionControlMaskNone, *this };
+            {
+               if (sourceValType == float4Type()) {
+                  auto newValElem = makeFloatConstant(0.0f);
+                  auto newVal = makeCompositeConstant(float4Type(), { newValElem, newValElem, newValElem, newValElem });
+                  createStore(newVal, pixelTmpVar);
+               } else if (sourceValType == int4Type()) {
+                  auto newValElem = makeIntConstant(0);
+                  auto newVal = makeCompositeConstant(int4Type(), { newValElem, newValElem, newValElem, newValElem });
+                  createStore(newVal, pixelTmpVar);
+               } else if (sourceValType == uint4Type()) {
+                  auto newValElem = makeUintConstant(0);
+                  auto newVal = makeCompositeConstant(uint4Type(), { newValElem, newValElem, newValElem, newValElem });
+                  createStore(newVal, pixelTmpVar);
+               } else {
+                  decaf_abort("Unexpected source pixel variable type");
+               }
+            }
+            block.makeEndIf();
+         }
+         block.makeEndIf();
+
          // We need to premultiply the alpha in cases where premultiplied alpha is enabled
          // globally but this specific target is not performing the premultiplication.
          if (sourceValType == float4Type()) {
@@ -1021,22 +1073,19 @@ public:
             auto targetBitVal = createBinOp(spv::OpBitwiseAnd, uintType(), needsPremulVal, targetBitConst);
             auto pred = createBinOp(spv::OpINotEqual, boolType(), targetBitVal, zeroConst);
             auto block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
+            {
+               exportVal = createLoad(pixelTmpVar);
 
-            auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
-            auto premulMul = createOp(spv::OpCompositeConstruct, float4Type(), { exportAlpha, exportAlpha, exportAlpha, oneFConst });
-            auto premulExportVal = createBinOp(spv::OpFMul, float4Type(), exportVal, premulMul);
+               auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
+               auto premulMul = createOp(spv::OpCompositeConstruct, float4Type(), { exportAlpha, exportAlpha, exportAlpha, oneFConst });
+               auto premulExportVal = createBinOp(spv::OpFMul, float4Type(), exportVal, premulMul);
 
-            createStore(premulExportVal, exportRef);
-
+               createStore(premulExportVal, pixelTmpVar);
+            }
             block.makeEndIf();
-
-            // We need to cheat and do the store here outside the normal logic as
-            // otherwise we would need to OpPhi the new exportVal which is unneccessarily
-            // complicated as the if builder does not support it.  Instead we do the store
-            // here and then return without doing additional processing.
-            createStore(exportVal, exportRef);
-            return;
          }
+
+         exportVal = createLoad(pixelTmpVar);
       }
 
       createStore(exportVal, exportRef);
