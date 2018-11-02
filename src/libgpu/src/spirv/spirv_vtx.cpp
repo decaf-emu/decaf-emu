@@ -7,11 +7,14 @@ namespace spirv
 
 void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetchInst &inst)
 {
+   // MEGA fetches are an optimization on the GPU cache.  There is
+   // no need to do any particular work during translation.
+   //inst.word2.MEGA_FETCH()
+   //inst.word0.MEGA_FETCH_COUNT()
+
    // Let's only support a very expected set of values
    decaf_check(inst.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::NO_INDEX_OFFSET);
    decaf_check(inst.word1.USE_CONST_FIELDS() == 1);
-   decaf_check(inst.word2.OFFSET() == 0);
-   decaf_check(inst.word2.MEGA_FETCH() && (inst.word0.MEGA_FETCH_COUNT() + 1) == 16);
 
    // Grab the source register information
    GprSelRef srcGpr;
@@ -25,6 +28,8 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
    destGpr.mask[SQ_CHAN::Y] = inst.word1.DST_SEL_Y();
    destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
    destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
+
+   decaf_check(inst.word2.OFFSET() == 0);
 
    uint32_t cbufferIdx;
    if (mType == ShaderParser::Type::Vertex) {
@@ -197,23 +202,19 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
    }
 
    // Set up our attribute information
-   mVsInputAttribs.emplace_back(InputAttrib { attribBufferId, bufferOffset, fmtMeta.inputWidth, fmtMeta.inputCount });
+   InputAttrib inputAttrib;
+   inputAttrib.bufferIndex = attribBufferId;
+   inputAttrib.offset = bufferOffset;
+   inputAttrib.elemWidth = fmtMeta.inputWidth;
+   inputAttrib.elemCount = fmtMeta.inputCount;
+   mVsInputAttribs.push_back(inputAttrib);
    auto inputId = mVsInputAttribs.size() - 1;
 
    auto swapMode = inst.word2.ENDIAN_SWAP();
    auto formatComp = inst.word1.FORMAT_COMP_ALL();
    auto numFormat = inst.word1.NUM_FORMAT_ALL();
 
-   spv::Id sourceElemType;
-   if (fmtMeta.inputWidth == 8) {
-      sourceElemType = mSpv->ubyteType();
-   } else if (fmtMeta.inputWidth == 16) {
-      sourceElemType = mSpv->ushortType();
-   } else if (fmtMeta.inputWidth == 32) {
-      sourceElemType = mSpv->uintType();
-   } else {
-      decaf_abort("Unexpected format meta-data input width");
-   }
+   spv::Id sourceElemType = mSpv->uintType();
 
    // Get a vector of the source element type
    auto sourceType = mSpv->vecType(sourceElemType, fmtMeta.inputCount);
@@ -292,11 +293,15 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
             // Bitcast the data to a float
             // elem = *(float*)&elem
             elems[i] = mSpv->createUnaryOp(spv::Op::OpBitcast, mSpv->floatType(), elems[i]);
+         } else if (elem.length == 10) {
+            elems[i] = mSpv->unpackFloat10(elems[i]);
+         } else if (elem.length == 11) {
+            elems[i] = mSpv->unpackFloat11(elems[i]);
          } else {
             decaf_abort("Unexpected float data width");
          }
       } else {
-         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
+         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED && elem.length > 2) {
             // Perform sign-extension and conversion to a signed integer
             if (elem.length == 32) {
                // If its 32 bits, we don't need to perform sign extension, just bitcast it
@@ -304,8 +309,8 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
                elems[i] = mSpv->createUnaryOp(spv::Op::OpBitcast, mSpv->intType(), elems[i]);
             } else {
                // If its less than 32 bits, we use bitfield extraction to sign extend
-               auto offsetConst = mSpv->makeUintConstant(0);
-               auto lengthConst = mSpv->makeUintConstant(elem.length);
+               auto offsetConst = mSpv->makeIntConstant(0);
+               auto lengthConst = mSpv->makeIntConstant(elem.length);
                auto signedElem = mSpv->createUnaryOp(spv::OpBitcast, mSpv->intType(), elems[i]);
                elems[i] = mSpv->createTriOp(spv::Op::OpBitFieldSExtract, mSpv->intType(), signedElem, offsetConst, lengthConst);
             }
@@ -319,7 +324,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
 
          auto fieldMask = fieldMax - 1;
 
-         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
+         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED && elem.length > 2) {
             // Type must already be a signed type from above
             decaf_check(mSpv->getTypeId(elems[i]) == mSpv->intType());
 
@@ -350,7 +355,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
             } else if (origTypeId == mSpv->intType()) {
                // We are already an int type, no need to convert
             } else if (origTypeId == mSpv->uintType()) {
-               elems[i] = mSpv->createUnaryOp(spv::Op::OpSatConvertUToS, mSpv->intType(), elems[i]);
+               elems[i] = mSpv->createUnaryOp(spv::OpBitcast, mSpv->intType(), elems[i]);
             } else {
                decaf_abort("Unexpected format conversion type.");
             }
@@ -359,7 +364,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
             if (origTypeId == mSpv->floatType()) {
                elems[i] = mSpv->createUnaryOp(spv::Op::OpConvertFToU, mSpv->uintType(), elems[i]);
             } else if (origTypeId == mSpv->intType()) {
-               elems[i] = mSpv->createUnaryOp(spv::Op::OpSatConvertSToU, mSpv->uintType(), elems[i]);
+               elems[i] = mSpv->createUnaryOp(spv::OpBitcast, mSpv->uintType(), elems[i]);
             } else if (origTypeId == mSpv->uintType()) {
                // We are already a uint type, no need to convert
             } else {
@@ -386,30 +391,42 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
       }
    }
 
+   // Figure out what format of elements we have as output
+   auto elemsType = mSpv->getTypeId(elems[0]);
+   for (auto i = 1; i < outputElemCount; ++i) {
+      decaf_check(mSpv->getTypeId(elems[i]) == elemsType);
+   }
+
    // Fill remaining values with defaults
    for (auto i = outputElemCount; i < 4; ++i) {
-      // TODO: I think there is probably something we should be doing to
-      // handle cases where the types are not meant to be floats...
-      if (i != 3) {
-         elems[i] = mSpv->makeFloatConstant(0.0f);
+      if (elemsType == mSpv->floatType()) {
+         if (i != 3) {
+            elems[i] = mSpv->makeFloatConstant(0.0f);
+         } else {
+            elems[i] = mSpv->makeFloatConstant(1.0f);
+         }
+      } else if (elemsType == mSpv->intType()) {
+         if (i != 3) {
+            elems[i] = mSpv->makeIntConstant(0);
+         } else {
+            elems[i] = mSpv->makeIntConstant(1);
+         }
+      } else if (elemsType == mSpv->uintType()) {
+         if (i != 3) {
+            elems[i] = mSpv->makeUintConstant(0);
+         } else {
+            elems[i] = mSpv->makeUintConstant(1);
+         }
       } else {
-         elems[i] = mSpv->makeFloatConstant(1.0f);
+         decaf_abort("Unexpected element format output in fetch")
       }
    }
 
-   auto outputVal = mSpv->createOp(spv::Op::OpCompositeConstruct, mSpv->float4Type(),
+   auto outputType = mSpv->vecType(elemsType, 4);
+   auto outputVal = mSpv->createOp(spv::Op::OpCompositeConstruct, outputType,
                                    { elems[0], elems[1], elems[2], elems[3] });
 
-   auto gprRef = mSpv->getGprRef(destGpr.gpr);
-
-   auto destVal = spv::NoResult;
-   if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
-      destVal = mSpv->createLoad(gprRef);
-   }
-
-   auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
-
-   mSpv->createStore(maskedVal, gprRef);
+   mSpv->writeGprMaskRef(destGpr, outputVal);
 }
 
 } // namespace spirv

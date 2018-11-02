@@ -1,6 +1,7 @@
 #pragma once
 #ifdef DECAF_VULKAN
 #include <SpvBuilder.h>
+#include <GLSL.std.450.h>
 
 namespace spirv
 {
@@ -276,25 +277,23 @@ public:
    {
       auto sourceTypeId = getTypeId(source);
 
-      auto xoxoConst = makeUintConstant(0xFF00FF00);
-      auto oxoxConst = makeUintConstant(0x00FF00FF);
-      auto xoConst = makeUint16Constant(0xFF00);
-      auto oxConst = makeUint16Constant(0x00FF);
-      auto shiftConst = makeUintConstant(8);
-
       auto inputTypeId = sourceTypeId;
+      auto numComps = getNumTypeComponents(inputTypeId);
       if (isVectorType(inputTypeId)) {
-         auto numComps = getNumTypeComponents(inputTypeId);
          inputTypeId = getContainedTypeId(inputTypeId);
-
-         xoxoConst = vectorizeConstant(xoxoConst, numComps);
-         oxoxConst = vectorizeConstant(oxoxConst, numComps);
-         xoConst = vectorizeConstant(xoConst, numComps);
-         oxConst = vectorizeConstant(oxConst, numComps);
-         shiftConst = vectorizeConstant(shiftConst, numComps);
       }
 
       if (inputTypeId == uintType()) {
+         auto xoxoConst = makeUintConstant(0xFF00FF00);
+         auto oxoxConst = makeUintConstant(0x00FF00FF);
+         auto shiftConst = makeUintConstant(8);
+
+         if (numComps > 1) {
+            xoxoConst = vectorizeConstant(xoxoConst, numComps);
+            oxoxConst = vectorizeConstant(oxoxConst, numComps);
+            shiftConst = vectorizeConstant(shiftConst, numComps);
+         }
+
          auto xoxoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, xoxoConst);
          auto oxoxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, oxoxConst);
 
@@ -303,6 +302,16 @@ public:
 
          return createBinOp(spv::Op::OpBitwiseOr, sourceTypeId, oxoxBitsMoved, xoxoBitsMoved);
       } else if (inputTypeId == ushortType()) {
+         auto xoConst = makeUint16Constant(0xFF00);
+         auto oxConst = makeUint16Constant(0x00FF);
+         auto shiftConst = makeUintConstant(8);
+
+         if (numComps > 1) {
+            xoConst = vectorizeConstant(xoConst, numComps);
+            oxConst = vectorizeConstant(oxConst, numComps);
+            shiftConst = vectorizeConstant(shiftConst, numComps);
+         }
+
          auto xoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, xoConst);
          auto oxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, oxConst);
 
@@ -355,6 +364,174 @@ public:
       return createBinOp(spv::Op::OpBitwiseOr, sourceTypeId, xxxoBitsMerged, oooxBitsMoved);
    }
 
+   /*
+   // From OpenGL ES 3.0 spec 2.1.3
+   function from11uf(v) {
+     const e = v >> 6;
+     const m = v & 0x3F;
+     if (e === 0) {
+       if (m === 0) {
+         return 0;
+       } else {
+         return Math.pow(2, -14) * (m / 64);
+       }
+     } else {
+       if (e < 31) {
+         return Math.pow(2, e - 15) * (1 + m / 64);
+       } else {
+         if (m === 0) {
+           return 0;  // Inf
+         } else {
+           return 0;  // Nan
+         }
+       }
+     }
+   }
+   */
+   spv::Id unpackFloat11(spv::Id source)
+   {
+      decaf_check(getTypeId(source) == uintType());
+
+      auto resPtr = createVariable(spv::StorageClassPrivate, floatType(), "unpackF11Res");
+
+      auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), source, makeIntConstant(6));
+      auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), source, makeUintConstant(0x3F));
+
+      auto eIsZero = createBinOp(spv::Op::OpIEqual, boolType(), eVal, makeUintConstant(0));
+      auto eIsZeroBlock = spv::Builder::If { eIsZero, spv::SelectionControlMaskNone, *this };
+      {
+         auto mIsZero = createBinOp(spv::Op::OpIEqual, boolType(), mVal, makeUintConstant(0));
+         auto mIsZeroBlk = spv::Builder::If { mIsZero, spv::SelectionControlMaskNone, *this };
+         {
+            createStore(makeFloatConstant(0.0f), resPtr);
+         }
+         mIsZeroBlk.makeBeginElse();
+         {
+            auto mFlt = createUnaryOp(spv::OpConvertUToF, floatType(), mVal);
+            auto mDiv64 = createBinOp(spv::OpFDiv, floatType(), mFlt, makeFloatConstant(64.0f));
+            auto resVal = createBinOp(spv::OpFMul, floatType(), mDiv64, makeFloatConstant(pow(2.0f, -14)));
+            createStore(resVal, resPtr);
+         }
+         mIsZeroBlk.makeEndIf();
+      }
+      eIsZeroBlock.makeBeginElse();
+      {
+         auto eLessThan31 = createBinOp(spv::OpULessThan, boolType(), eVal, makeUintConstant(31));
+         auto eLessThan31Blk = spv::Builder::If { eLessThan31, spv::SelectionControlMaskNone, *this };
+         {
+            auto eMinus15 = createBinOp(spv::OpISub, uintType(), eVal, makeUintConstant(15));
+            auto eMinus15Flt = createUnaryOp(spv::OpConvertUToF, floatType(), eMinus15);
+            auto ePow = createBuiltinCall(floatType(), glslStd450(), GLSLstd450::GLSLstd450Pow, { makeFloatConstant(2.0f), eMinus15Flt });
+
+            auto mFlt = createUnaryOp(spv::OpConvertUToF, floatType(), mVal);
+            auto mDiv64 = createBinOp(spv::OpFDiv, floatType(), mFlt, makeFloatConstant(64.0f));
+            auto mDiv64Plus1 = createBinOp(spv::OpFAdd, floatType(), mDiv64, makeFloatConstant(1.0f));
+            auto resVal = createBinOp(spv::OpFMul, floatType(), ePow, mDiv64Plus1);
+            createStore(resVal, resPtr);
+         }
+         eLessThan31Blk.makeBeginElse();
+         {
+            auto mIsZero = createBinOp(spv::Op::OpIEqual, boolType(), mVal, makeUintConstant(0));
+            auto mIsZeroBlk = spv::Builder::If { mIsZero, spv::SelectionControlMaskNone, *this };
+            {
+               createStore(makeFloatConstant(0.0f), resPtr); // INF
+            }
+            mIsZeroBlk.makeBeginElse();
+            {
+               createStore(makeFloatConstant(0.0f), resPtr); // NAN
+            }
+            mIsZeroBlk.makeEndIf();
+         }
+         eLessThan31Blk.makeEndIf();
+      }
+      eIsZeroBlock.makeEndIf();
+
+      return createLoad(resPtr);
+   }
+   /*
+   // From OpenGL ES 3.0 spec 2.1.4
+   function from10uf(v) {
+     const e = v >> 5;
+     const m = v & 0x1F;
+     if (e === 0) {
+       if (m === 0) {
+         return 0;
+       } else {
+         return Math.pow(2, -14) * (m / 32);
+       }
+     } else {
+       if (e < 31) {
+         return Math.pow(2, e - 15) * (1 + m / 32);
+       } else {
+         if (m === 0) {
+           return 0;  // Inf
+         } else {
+           return 0;  // Nan
+         }
+       }
+     }
+   }
+   */
+   spv::Id unpackFloat10(spv::Id source)
+   {
+      decaf_check(getTypeId(source) == uintType());
+
+      auto resPtr = createVariable(spv::StorageClassPrivate, floatType(), "unpackF11Res");
+
+      auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), source, makeIntConstant(5));
+      auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), source, makeUintConstant(0x1F));
+
+      auto eIsZero = createBinOp(spv::Op::OpIEqual, boolType(), eVal, makeUintConstant(0));
+      auto eIsZeroBlock = spv::Builder::If { eIsZero, spv::SelectionControlMaskNone, *this };
+      {
+         auto mIsZero = createBinOp(spv::Op::OpIEqual, boolType(), mVal, makeUintConstant(0));
+         auto mIsZeroBlk = spv::Builder::If { mIsZero, spv::SelectionControlMaskNone, *this };
+         {
+            createStore(makeFloatConstant(0.0f), resPtr);
+         }
+         mIsZeroBlk.makeBeginElse();
+         {
+            auto mFlt = createUnaryOp(spv::OpConvertUToF, floatType(), mVal);
+            auto mDiv64 = createBinOp(spv::OpFDiv, floatType(), mFlt, makeFloatConstant(32.0f));
+            auto resVal = createBinOp(spv::OpFMul, floatType(), mDiv64, makeFloatConstant(pow(2.0f, -14)));
+            createStore(resVal, resPtr);
+         }
+         mIsZeroBlk.makeEndIf();
+      }
+      eIsZeroBlock.makeBeginElse();
+      {
+         auto eLessThan31 = createBinOp(spv::OpULessThan, boolType(), eVal, makeUintConstant(31));
+         auto eLessThan31Blk = spv::Builder::If { eLessThan31, spv::SelectionControlMaskNone, *this };
+         {
+            auto eMinus15 = createBinOp(spv::OpISub, uintType(), eVal, makeUintConstant(15));
+            auto eMinus15Flt = createUnaryOp(spv::OpConvertUToF, floatType(), eMinus15);
+            auto ePow = createBuiltinCall(floatType(), glslStd450(), GLSLstd450::GLSLstd450Pow, { makeFloatConstant(2.0f), eMinus15Flt });
+
+            auto mFlt = createUnaryOp(spv::OpConvertUToF, floatType(), mVal);
+            auto mDiv64 = createBinOp(spv::OpFDiv, floatType(), mFlt, makeFloatConstant(32.0f));
+            auto mDiv64Plus1 = createBinOp(spv::OpFAdd, floatType(), mDiv64, makeFloatConstant(1.0f));
+            auto resVal = createBinOp(spv::OpFMul, floatType(), ePow, mDiv64Plus1);
+            createStore(resVal, resPtr);
+         }
+         eLessThan31Blk.makeBeginElse();
+         {
+            auto mIsZero = createBinOp(spv::Op::OpIEqual, boolType(), mVal, makeUintConstant(0));
+            auto mIsZeroBlk = spv::Builder::If { mIsZero, spv::SelectionControlMaskNone, *this };
+            {
+               createStore(makeFloatConstant(0.0f), resPtr); // INF
+            }
+            mIsZeroBlk.makeBeginElse();
+            {
+               createStore(makeFloatConstant(0.0f), resPtr); // NAN
+            }
+            mIsZeroBlk.makeEndIf();
+         }
+         eLessThan31Blk.makeEndIf();
+      }
+      eIsZeroBlock.makeEndIf();
+
+      return createLoad(resPtr);
+   }
 protected:
    std::unordered_map<unsigned int, spv::Id> mUintConstants;
    std::unordered_map<float, spv::Id> mFloatConstants;

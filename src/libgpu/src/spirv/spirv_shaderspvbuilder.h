@@ -4,8 +4,6 @@
 #include "spirv_spvbuilder.h"
 #include "gpu_config.h"
 
-#include <GLSL.std.450.h>
-
 namespace spirv
 {
 
