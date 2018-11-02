@@ -9,6 +9,52 @@
 namespace vulkan
 {
 
+static inline std::string
+_makeSurfaceDescStr(const SurfaceDesc& info)
+{
+   static const char *DIM_NAMES[] = {
+      "1d", "2d", "3d", "cube", "1darr", "2darr", "2daa", "2daaarr" };
+
+   return fmt::format("{:08x}_{:x}_{}_{:x}_{:x}_{:x}_{}x{}x{}x{}",
+                      info.calcAlignedBaseAddress(),
+                      info.calcSwizzle(),
+                      DIM_NAMES[info.dim],
+                      info.format,
+                      info.tileType,
+                      info.tileMode,
+                      info.pitch,
+                      info.width,
+                      info.height,
+                      info.depth);
+}
+
+static inline std::string
+_makeSurfaceName(const SurfaceDesc& info)
+{
+   static uint64_t surfImgIndex = 0;
+   return fmt::format("surf_{}:{}",
+                      surfImgIndex++,
+                      _makeSurfaceDescStr(info));
+}
+
+static inline std::string
+_makeSurfaceViewName(const SurfaceViewDesc& info)
+{
+   static const char *COMP_NAMES[] = {
+      "x", "y", "z", "w", "0", "1", "_" };
+
+   static uint64_t imageViewIndex = 0;
+   return fmt::format("sview_{}:{}:{}{}{}{}:{}-{}",
+                      imageViewIndex++,
+                      _makeSurfaceDescStr(info.surfaceDesc),
+                      COMP_NAMES[info.channels[0]],
+                      COMP_NAMES[info.channels[1]],
+                      COMP_NAMES[info.channels[2]],
+                      COMP_NAMES[info.channels[3]],
+                      info.sliceStart,
+                      info.sliceEnd);
+}
+
 static inline SectionRange
 _sliceRangeToSectionRange(const SurfaceSubRange& range)
 {
@@ -48,18 +94,10 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info)
    auto texelHeight = info.height;
    auto texelDepth = info.depth;
 
-   if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-      // Block compressed textures are tiled/untiled in terms of blocks
-      texelPitch = texelPitch / 4;
-      texelWidth = (texelWidth + 3) / 4;
-      texelHeight = (texelHeight + 3) / 4;
-   }
-
-   if (info.dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
-      texelDepth *= 6;
-   }
-
-   gpu::alignTiling(tileMode, swizzle,
+   // We perform tiling alignment here, but its likely that this is not really
+   // neccessary anymore as we do pretty good calculations on the GX2 side now.
+   // We still use this to adjust BC surface width/height appropriately though.
+   gpu::alignTiling(tileMode, dataFormat, swizzle,
                     texelPitch, texelWidth, texelHeight, texelDepth,
                     aa, isDepthBuffer, bpp);
 
@@ -89,16 +127,44 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info)
 void
 Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange range)
 {
+   // TODO: Add support for copying 1D Array's here...
+   decaf_check(src->desc.dim != latte::SQ_TEX_DIM::DIM_1D_ARRAY);
+   decaf_check(dst->desc.dim != latte::SQ_TEX_DIM::DIM_1D_ARRAY);
+
    // TODO: Add support for copying depth buffers here...
    decaf_check(dst->desc.tileType == src->desc.tileType);
    //decaf_check(dst->desc.tileType == latte::SQ_TILE_TYPE::DEFAULT);
 
    auto copyWidth = std::min(dst->width, src->width);
    auto copyHeight = std::min(dst->height, src->height);
-   auto copyDepth = std::min(dst->depth, src->depth);
-   auto copyLayers = std::min(dst->arrayLayers, src->arrayLayers);
-   auto copyAspect = vk::ImageAspectFlags();
 
+   auto srcSlices = src->arrayLayers;
+   if (src->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      decaf_check(src->arrayLayers == 1);
+      srcSlices = src->depth;
+   }
+
+   auto dstSlices = dst->arrayLayers;
+   if (dst->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      decaf_check(dst->arrayLayers == 1);
+      dstSlices = dst->depth;
+   }
+
+   auto copySlices = std::min(srcSlices, dstSlices);
+
+   if (range.firstSlice >= copySlices) {
+      // We cannot perform any work, since the requested slice start
+      // is beyond the end of one of the surfaces!
+      return;
+   }
+
+   if (range.firstSlice + range.numSlices > copySlices) {
+      // If the requested end is beyond the size of one of the surfaces,
+      // lets shrink the range to only cover the available layers.
+      range.numSlices = copySlices - range.firstSlice;
+   }
+
+   auto copyAspect = vk::ImageAspectFlags();
    auto formatUsage = getVkSurfaceFormatUsage(src->desc.format);
    if (src->desc.tileType != latte::SQ_TILE_TYPE::DEPTH) {
       if (formatUsage & (SurfaceFormatUsage::TEXTURE | SurfaceFormatUsage::COLOR)) {
@@ -113,30 +179,44 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange ran
       }
    }
 
-   vk::ImageBlit blitRegion(
-      vk::ImageSubresourceLayers(copyAspect, 0, 0, copyLayers),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) },
-      vk::ImageSubresourceLayers(copyAspect, 0, 0, copyLayers),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
+   vk::ImageCopy copyRegion;
+   if (src->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      copyRegion.srcOffset = { 0, 0, static_cast<int32_t>(range.firstSlice) };
+      copyRegion.srcSubresource = { copyAspect, 0, 0, 1 };
+      // range.numSlices is expressed by the extent here...
+   } else {
+      copyRegion.srcOffset = { 0, 0, 0 };
+      copyRegion.srcSubresource = { copyAspect, 0, range.firstSlice, range.numSlices };
+   }
+   if (dst->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      copyRegion.dstOffset = { 0, 0, static_cast<int32_t>(range.firstSlice) };
+      copyRegion.dstSubresource = { copyAspect, 0, 0, 1 };
+      // range.numSlices is expressed by the extent here...
+   } else {
+      copyRegion.dstOffset = { 0, 0, 0 };
+      copyRegion.dstSubresource = { copyAspect, 0, range.firstSlice, range.numSlices };
+
+      // range.numSlices is expressed by the extent here...
+   }
+   copyRegion.extent = { copyWidth, copyHeight, copySlices };
 
    auto originalSrcUsage = src->activeUsage;
    auto originalSrcLayout = src->activeLayout;
 
-   _barrierSurface(dst, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, { 0, copyLayers });
-   _barrierSurface(src, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, { 0, copyLayers });
+   _barrierSurface(src, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, range);
+   _barrierSurface(dst, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, range);
 
-   mActiveCommandBuffer.blitImage(
+   mActiveCommandBuffer.copyImage(
       src->image,
       vk::ImageLayout::eTransferSrcOptimal,
       dst->image,
       vk::ImageLayout::eTransferDstOptimal,
-      { blitRegion },
-      vk::Filter::eNearest);
+      { copyRegion });
 
    // We don't know what the source was doing before, so we need to return
    // it back to it's original usage/layout in case its in use.
    if (originalSrcUsage != ResourceUsage::Undefined) {
-      _barrierSurface(src, originalSrcUsage, originalSrcLayout, { 0, src->arrayLayers });
+      _barrierSurface(src, originalSrcUsage, originalSrcLayout, range);
    }
 }
 
@@ -256,11 +336,11 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    }
 
    vk::ImageType imageType;
-   auto realPitch = 1;
-   auto realWidth = 1;
-   auto realHeight = 1;
-   auto realDepth = 1;
-   auto realArrayLayers = 1;
+   auto realPitch = 1u;
+   auto realWidth = 1u;
+   auto realHeight = 1u;
+   auto realDepth = 1u;
+   auto realArrayLayers = 1u;
 
    switch (info.dim) {
    case latte::SQ_TEX_DIM::DIM_1D:
@@ -294,7 +374,7 @@ Driver::_allocateSurface(const SurfaceDesc& info)
       realWidth = info.width;
       realHeight = info.height;
       realDepth = 1;
-      realArrayLayers = info.depth * 6;
+      realArrayLayers = info.depth;
       break;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       imageType = vk::ImageType::e1D;
@@ -352,8 +432,7 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    createImageDesc.initialLayout = vk::ImageLayout::eUndefined;
    auto image = mDevice.createImage(createImageDesc);
 
-   static uint64_t surfImgIndex = 0;
-   setVkObjectName(image, fmt::format("surfimg_{}_{:08x}", surfImgIndex++, info.baseAddress).c_str());
+   setVkObjectName(image, _makeSurfaceName(info).c_str());
 
    auto imageMemReqs = mDevice.getImageMemoryRequirements(image);
 
@@ -404,10 +483,22 @@ Driver::_allocateSurface(const SurfaceDesc& info)
                            static_cast<uint32_t>(realDepth) };
 
    std::vector<SurfaceSlice> slices;
-   for (auto i = 0; i < realArrayLayers; ++i) {
-      SurfaceSlice slice;
-      slice.lastChangeIndex = 0;
-      slices.push_back(slice);
+
+   if (info.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      // In the case of a 3D texture, we have to have a slice per DIM.  This
+      // is the only way to enable us to render to the surface appropriately.
+      decaf_check(realArrayLayers == 1);
+      for (auto i = 0u; i < info.depth; ++i) {
+         SurfaceSlice slice;
+         slice.lastChangeIndex = 0;
+         slices.push_back(slice);
+      }
+   } else {
+      for (auto i = 0u; i < realArrayLayers; ++i) {
+         SurfaceSlice slice;
+         slice.lastChangeIndex = 0;
+         slices.push_back(slice);
+      }
    }
 
    auto surfaceGroup = _getSurfaceGroup(info);
@@ -486,24 +577,19 @@ Driver::_upgradeSurface(SurfaceObject *surface, const SurfaceDesc &info)
 void
 Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
 {
-   if (surface->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
-      // TODO: Implement uploading of depth buffer data (you know... just in case?)
-      return;
-   }
-
-   if (surface->desc.format == latte::SurfaceFormat::R11G11B10Float) {
-      // TODO: Handle format conversion of R11G11B10 formats...
-      return;
-   }
-
    auto& memCache = surface->memCache;
    auto memRange = _sliceRangeToMemRange(surface, range);
    auto sectionRange = _sliceRangeToSectionRange(range);
 
    auto region = surface->bufferRegion;
    region.bufferOffset = memRange.first;
-   region.imageSubresource.baseArrayLayer = range.firstSlice;
-   region.imageSubresource.layerCount = range.numSlices;
+   if (surface->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      region.imageOffset.z = range.firstSlice;
+      region.imageExtent.depth = range.numSlices;
+   } else {
+      region.imageSubresource.baseArrayLayer = range.firstSlice;
+      region.imageSubresource.layerCount = range.numSlices;
+   }
 
    _barrierMemCache(surface->memCache, ResourceUsage::TransferSrc, sectionRange);
    _barrierSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, range);
@@ -518,30 +604,19 @@ Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
 void
 Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
 {
-   if (surface->desc.tileType == latte::SQ_TILE_MODE::LINEAR_ALIGNED) {
-      // If this is a linear aligned texture, we will assume that it is a swap
-      // buffer for now and don't invalidate it to the CPU.
-      return;
-   }
-
-   if (surface->desc.tileType == latte::SQ_TILE_TYPE::DEPTH) {
-      // TODO: Implement uploading of depth buffer data (you know... just in case?)
-      return;
-   }
-
-   if (surface->desc.format == latte::SurfaceFormat::R11G11B10Float) {
-      // TODO: Handle format conversion of R11G11B10 formats...
-      return;
-   }
-
    auto& memCache = surface->memCache;
    auto memRange = _sliceRangeToMemRange(surface, range);
    auto sectionRange = _sliceRangeToSectionRange(range);
 
    auto region = surface->bufferRegion;
    region.bufferOffset = memRange.first;
-   region.imageSubresource.baseArrayLayer = range.firstSlice;
-   region.imageSubresource.layerCount = range.numSlices;
+   if (surface->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      region.imageOffset.z = range.firstSlice;
+      region.imageExtent.depth = range.numSlices;
+   } else {
+      region.imageSubresource.baseArrayLayer = range.firstSlice;
+      region.imageSubresource.layerCount = range.numSlices;
+   }
 
    _barrierMemCache(surface->memCache, ResourceUsage::TransferDst, sectionRange);
    _barrierSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, range);
@@ -713,13 +788,6 @@ Driver::getSurface(const SurfaceDesc& info)
 void
 Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
-   if (surface->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
-      decaf_check(range.firstSlice % surface->desc.depth == 0);
-      decaf_check(range.numSlices % surface->desc.depth == 0);
-      range.firstSlice /= surface->desc.depth;
-      range.numSlices /= surface->desc.depth;
-   }
-
    bool forWrite;
    switch (usage) {
    case ResourceUsage::ColorAttachment:
@@ -750,82 +818,26 @@ Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::Image
 SurfaceViewObject *
 Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
 {
-   auto surface = getSurface(info.surfaceDesc);
+   auto adjInfo = info;
 
-   auto hostFormat = getVkSurfaceFormat(info.surfaceDesc.format, info.surfaceDesc.tileType);
-
-   vk::ImageViewType imageViewType;
-   switch (info.surfaceDesc.dim) {
-   case latte::SQ_TEX_DIM::DIM_1D:
-      imageViewType = vk::ImageViewType::e1D;
-      break;
-   case latte::SQ_TEX_DIM::DIM_2D:
-   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-      imageViewType = vk::ImageViewType::e2D;
-      break;
-   case latte::SQ_TEX_DIM::DIM_3D:
-      imageViewType = vk::ImageViewType::e3D;
-      break;
-   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      imageViewType = vk::ImageViewType::e2DArray;
-      break;
-   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      imageViewType = vk::ImageViewType::e1DArray;
-      break;
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      imageViewType = vk::ImageViewType::e2DArray;
-      break;
-   default:
-      decaf_abort(fmt::format("Failed to pick vulkan image view type for dim {}", info.surfaceDesc.dim));
+   if (adjInfo.surfaceDesc.dim == latte::SQ_TEX_DIM::DIM_3D) {
+      // The source GPU allows slice selection on 3D textures.  In order
+      // to support this, we will actually have to adjust the sizing of
+      // the underlying 3D textures so that the image view can correctly
+      // see it (since we cannot view particular slices with this).
+      decaf_check(adjInfo.sliceStart == 0);
+      decaf_check(adjInfo.sliceEnd == adjInfo.surfaceDesc.depth);
+      adjInfo.sliceEnd = 1;
    }
 
-   auto hostComponentMap = vk::ComponentMapping();
-   hostComponentMap.r = getVkComponentSwizzle(info.channels[0]);
-   hostComponentMap.g = getVkComponentSwizzle(info.channels[1]);
-   hostComponentMap.b = getVkComponentSwizzle(info.channels[2]);
-   hostComponentMap.a = getVkComponentSwizzle(info.channels[3]);
-
-   auto realSliceStart = info.sliceStart;
-   auto realSliceCount = info.sliceEnd - info.sliceStart;
-
-   // 3D textures behave identically to 2D_ARRAY except that they reduce
-   // the number of array elements for each mip level.  Latte selects them
-   // the same as a 3D texture, but we need to translate that.
-   if (info.surfaceDesc.dim == latte::SQ_TEX_DIM::DIM_3D) {
-      decaf_check(realSliceStart % info.surfaceDesc.depth == 0);
-      decaf_check(realSliceCount % info.surfaceDesc.depth == 0);
-      realSliceStart /= info.surfaceDesc.depth;
-      realSliceCount /= info.surfaceDesc.depth;
-   }
+   auto surface = getSurface(adjInfo.surfaceDesc);
 
    auto subresRange = surface->subresRange;
-   subresRange.baseArrayLayer = realSliceStart;
-   subresRange.layerCount = realSliceCount;
+   subresRange.baseArrayLayer = adjInfo.sliceStart;
+   subresRange.layerCount = adjInfo.sliceEnd - adjInfo.sliceStart;
 
-   vk::ImageViewCreateInfo imageViewDesc;
-   imageViewDesc.image = surface->image;
-   imageViewDesc.viewType = imageViewType;
-   imageViewDesc.format = hostFormat;
-   imageViewDesc.components = hostComponentMap;
-   imageViewDesc.subresourceRange = subresRange;
-   auto imageView = mDevice.createImageView(imageViewDesc);
-
-   auto compName = [](latte::SQ_SEL comp) {
-      static const char *names[] = { "x", "y", "z", "w", "0", "1", "_" };
-      return names[comp];
-   };
-   static uint64_t imageViewIndex = 0;
-   setVkObjectName(imageView,
-                   fmt::format(
-                      "surfview_{}_{:08x}:{}{}{}{}",
-                      imageViewIndex++,
-                      info.surfaceDesc.baseAddress,
-                      compName(info.channels[0]),
-                      compName(info.channels[1]),
-                      compName(info.channels[2]),
-                      compName(info.channels[3])).c_str());
-
+   // We still need to support invalidating specific slices in the underlying
+   // image, in case someone renders to a specific slice of the image.
    SurfaceSubRange range;
    range.firstSlice = info.sliceStart;
    range.numSlices = info.sliceEnd - info.sliceStart;
@@ -834,7 +846,8 @@ Driver::_allocateSurfaceView(const SurfaceViewDesc& info)
    surfaceView->desc = info;
    surfaceView->surfaceRange = range;
    surfaceView->surface = surface;
-   surfaceView->imageView = imageView;
+   //surfaceView->imageView = nullptr;
+   //surfaceView->boundImage = nullptr;
    surfaceView->subresRange = subresRange;
    return surfaceView;
 }
@@ -863,6 +876,68 @@ void
 Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout)
 {
    transitionSurface(surfaceView->surface, usage, layout, surfaceView->surfaceRange);
+
+   if (surfaceView->boundImage == surfaceView->surface->image) {
+      return;
+   }
+
+   auto& info = surfaceView->desc;
+   auto& surface = surfaceView->surface;
+
+   auto hostFormat = getVkSurfaceFormat(info.surfaceDesc.format, info.surfaceDesc.tileType);
+
+   vk::ImageViewType imageViewType;
+   switch (info.surfaceDesc.dim) {
+   case latte::SQ_TEX_DIM::DIM_1D:
+      imageViewType = vk::ImageViewType::e1D;
+      break;
+   case latte::SQ_TEX_DIM::DIM_2D:
+   case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+      imageViewType = vk::ImageViewType::e2D;
+      break;
+   case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+      imageViewType = vk::ImageViewType::e2DArray;
+      break;
+   case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+      imageViewType = vk::ImageViewType::e1DArray;
+      break;
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+   case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+      imageViewType = vk::ImageViewType::e2DArray;
+      break;
+   case latte::SQ_TEX_DIM::DIM_3D:
+      imageViewType = vk::ImageViewType::e3D;
+      break;
+   default:
+      decaf_abort(fmt::format("Failed to pick vulkan image view type for dim {}", info.surfaceDesc.dim));
+   }
+
+   auto hostComponentMap = vk::ComponentMapping();
+   hostComponentMap.r = getVkComponentSwizzle(info.channels[0]);
+   hostComponentMap.g = getVkComponentSwizzle(info.channels[1]);
+   hostComponentMap.b = getVkComponentSwizzle(info.channels[2]);
+   hostComponentMap.a = getVkComponentSwizzle(info.channels[3]);
+
+   vk::ImageViewCreateInfo imageViewDesc;
+   imageViewDesc.image = surface->image;
+   imageViewDesc.viewType = imageViewType;
+   imageViewDesc.format = hostFormat;
+   imageViewDesc.components = hostComponentMap;
+   imageViewDesc.subresourceRange = surfaceView->subresRange;
+   auto imageView = mDevice.createImageView(imageViewDesc);
+
+   setVkObjectName(imageView, _makeSurfaceViewName(info).c_str());
+
+   if (surfaceView->imageView) {
+      auto oldImageView = surfaceView->imageView;
+      addRetireTask([=](){
+         mDevice.destroyImageView(oldImageView);
+      });
+      surfaceView->imageView = vk::ImageView();
+   }
+
+   surfaceView->imageView = imageView;
+   surfaceView->boundImage = surface->image;
 }
 
 

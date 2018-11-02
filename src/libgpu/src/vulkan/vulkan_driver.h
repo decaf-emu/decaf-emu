@@ -346,8 +346,10 @@ struct SurfaceDesc
       {
          uint32_t address;
          uint32_t format;
+         uint32_t dim;
          uint32_t samples;
          uint32_t tileType;
+         uint32_t tileMode;
          uint32_t width;
          uint32_t pitch;
          uint32_t height;
@@ -359,14 +361,41 @@ struct SurfaceDesc
       _dataHash.format = format;
       _dataHash.samples = samples;
       _dataHash.tileType = tileType;
+      _dataHash.tileMode = tileMode;
 
       if (!byCompat) {
-         _dataHash.width = width;
+         // TODO: Figure out if we can emulate 2D_ARRAY surfaces
+         // as 3D surfaces so we can get both kinds of views from
+         // them?
+         // Figure out which surfaces are compatible
+         // at a DIM level...  Basically, anything we
+         // can generate a view of.
+         switch (dim) {
+         case latte::SQ_TEX_DIM::DIM_3D:
+            _dataHash.dim = 3;
+            break;
+         case latte::SQ_TEX_DIM::DIM_2D:
+         case latte::SQ_TEX_DIM::DIM_2D_MSAA:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
+         case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
+         case latte::SQ_TEX_DIM::DIM_CUBEMAP:
+            _dataHash.dim = 2;
+            break;
+         case latte::SQ_TEX_DIM::DIM_1D:
+         case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
+            _dataHash.dim = 1;
+            break;
+         default:
+            decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
+         }
+         //_dataHash.dim = dim;
       }
 
       switch (dim) {
       case latte::SQ_TEX_DIM::DIM_3D:
-         _dataHash.depth = depth;
+         if (!byCompat) {
+            _dataHash.depth = depth;
+         }
          // fallthrough
       case latte::SQ_TEX_DIM::DIM_2D:
       case latte::SQ_TEX_DIM::DIM_2D_MSAA:
@@ -378,6 +407,9 @@ struct SurfaceDesc
       case latte::SQ_TEX_DIM::DIM_1D:
       case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
          _dataHash.pitch = pitch;
+         if (!byCompat) {
+            _dataHash.width = width;
+         }
          break;
       default:
          decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
@@ -464,6 +496,7 @@ struct SurfaceViewObject
 
    SurfaceSubRange surfaceRange;
 
+   vk::Image boundImage;
    vk::ImageView imageView;
    vk::ImageSubresourceRange subresRange;
 };
@@ -486,10 +519,13 @@ struct FramebufferDesc
 struct FramebufferObject
 {
    HashedDesc<FramebufferDesc> desc;
-   vk::Framebuffer framebuffer;
-   std::vector<SurfaceViewObject*> colorSurfaces;
+
+   std::array<SurfaceViewObject*, latte::MaxRenderTargets> colorSurfaces;
    SurfaceViewObject *depthSurface;
+
    vk::Extent2D renderArea;
+   std::array<vk::ImageView, 9> boundViews;
+   vk::Framebuffer framebuffer;
 };
 
 struct SamplerDesc
@@ -723,6 +759,7 @@ protected:
    TextureDesc getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx);
    bool checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx);
    bool checkCurrentTextures();
+   void prepareCurrentTextures();
 
    // CBuffers
    void checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx);
@@ -810,6 +847,7 @@ protected:
    bool checkCurrentFramebuffer();
    SurfaceViewObject * getColorBuffer(const ColorBufferDesc& info);
    SurfaceViewObject * getDepthStencilBuffer(const DepthStencilBufferDesc& info);
+   void prepareCurrentFramebuffer();
 
    // Swap Chains
    SwapChainObject * allocateSwapChain(const SwapChainDesc &desc);

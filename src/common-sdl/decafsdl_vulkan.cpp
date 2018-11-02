@@ -218,7 +218,8 @@ DecafSDLVulkan::createDevice()
 
    std::vector<const char*> deviceExtensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME
+      VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME,
+      VK_KHR_MAINTENANCE1_EXTENSION_NAME
    };
 
    if (gpu::config::debug) {

@@ -45,6 +45,10 @@ Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
    surfaceDataDesc.tileType = sq_tex_resource_word0.TILE_TYPE();
    surfaceDataDesc.tileMode = sq_tex_resource_word0.TILE_MODE();
 
+   if (surfaceDataDesc.dim == latte::SQ_TEX_DIM::DIM_CUBEMAP) {
+      surfaceDataDesc.depth *= 6;
+   }
+
    SurfaceViewDesc surfaceDesc;
    surfaceDesc.surfaceDesc = surfaceDataDesc;
    surfaceDesc.sliceStart = sq_tex_resource_word5.BASE_ARRAY();
@@ -104,6 +108,19 @@ Driver::checkCurrentTextures()
    }
 
    return true;
+}
+
+void
+Driver::prepareCurrentTextures()
+{
+   for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
+      for (auto i = 0u; i < latte::MaxTextures; ++i) {
+         auto& surface = mCurrentTextures[shaderStage][i];
+         if (surface) {
+            transitionSurfaceView(surface, ResourceUsage::Texture, vk::ImageLayout::eShaderReadOnlyOptimal);
+         }
+      }
+   }
 }
 
 } // namespace vulkan

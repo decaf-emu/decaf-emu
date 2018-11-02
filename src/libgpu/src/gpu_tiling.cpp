@@ -90,6 +90,7 @@ calcSurfaceBankPipeSwizzle(uint32_t swizzle, uint32_t *bankSwizzle, uint32_t *pi
 
 void
 alignTiling(latte::SQ_TILE_MODE& tileMode,
+            latte::SQ_DATA_FORMAT& format,
             uint32_t& swizzle,
             uint32_t& pitch,
             uint32_t& width,
@@ -107,7 +108,7 @@ alignTiling(latte::SQ_TILE_MODE& tileMode,
    memset(&input, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT));
    input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
    input.tileMode = static_cast<AddrTileMode>(tileMode);
-   input.format = AddrFormat::ADDR_FMT_INVALID;
+   input.format = static_cast<AddrFormat>(format);
    input.bpp = bpp;
    input.width = pitch;
    input.height = height;

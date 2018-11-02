@@ -107,24 +107,18 @@ Driver::checkCurrentFramebuffer()
    foundFb->desc = currentDesc;
 
    vk::Extent2D overallSize;
-   uint32_t numAttachments = 0;
-   std::array<vk::ImageView, 9> attachments;
 
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       auto colorTarget = currentDesc->colorTargets[i];
 
       if (!colorTarget.base256b) {
          // If the RenderPass doesn't want this attachment, skip it...
+         foundFb->colorSurfaces[i] = nullptr;
          continue;
       }
 
-      auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->colorAttachmentIndexes[i]);
-      numAttachments = std::max(numAttachments, attachmentIndex + 1);
-
       auto surfaceView = getColorBuffer(colorTarget);
-      foundFb->colorSurfaces.push_back(surfaceView);
-
-      attachments[attachmentIndex] = surfaceView->imageView;
+      foundFb->colorSurfaces[i] = surfaceView;
 
       auto surface = surfaceView->surface;
       if (overallSize.width == 0 && overallSize.height == 0) {
@@ -141,16 +135,12 @@ Driver::checkCurrentFramebuffer()
 
       if (!depthTarget.base256b) {
          // If the RenderPass doesn't want this attachment, skip it...
+         foundFb->depthSurface = nullptr;
          continue;
       }
 
-      auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->depthAttachmentIndex);
-      numAttachments = std::max(numAttachments, attachmentIndex + 1);
-
       auto surfaceView = getDepthStencilBuffer(depthTarget);
       foundFb->depthSurface = surfaceView;
-
-      attachments[attachmentIndex] = surfaceView->imageView;
 
       auto surface = surfaceView->surface;
       if (overallSize.width == 0 && overallSize.height == 0) {
@@ -166,20 +156,94 @@ Driver::checkCurrentFramebuffer()
    // actual framebuffer surface we encounter.  In reality I think we need
    // to make sure that the framebuffer is just the min of all surfaces.
 
-   vk::FramebufferCreateInfo framebufferDesc;
-   framebufferDesc.renderPass = mCurrentRenderPass->renderPass;
-   framebufferDesc.attachmentCount = numAttachments;
-   framebufferDesc.pAttachments = attachments.data();
-   framebufferDesc.width = overallSize.width;
-   framebufferDesc.height = overallSize.height;
-   framebufferDesc.layers = 1;
-   auto framebuffer = mDevice.createFramebuffer(framebufferDesc);
-   foundFb->framebuffer = framebuffer;
-
    foundFb->renderArea = overallSize;
 
    mCurrentFramebuffer = foundFb;
    return true;
+}
+
+void
+Driver::prepareCurrentFramebuffer()
+{
+   decaf_check(mCurrentRenderPass);
+   decaf_check(mCurrentFramebuffer);
+
+   auto& fb = mCurrentFramebuffer;
+
+   // First we need to transition all the surfaces to their appropriate places.
+   for (auto &surfaceView : fb->colorSurfaces) {
+      if (surfaceView) {
+         transitionSurfaceView(surfaceView, ResourceUsage::ColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
+      }
+   }
+   if (fb->depthSurface) {
+      auto &surfaceView = fb->depthSurface;
+      transitionSurfaceView(surfaceView, ResourceUsage::DepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+   }
+
+   // Next lets grab all the appropriate attachments we are using
+   uint32_t numAttachments = 0;
+   std::array<vk::ImageView, 9> attachments;
+   bool needsRefresh = false;
+
+   for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
+      auto& surfaceView = fb->colorSurfaces[i];
+      if (!surfaceView) {
+         // nothing bound here
+         continue;
+      }
+
+      auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->colorAttachmentIndexes[i]);
+      numAttachments = std::max(numAttachments, attachmentIndex + 1);
+
+      attachments[attachmentIndex] = surfaceView->imageView;
+
+      if (fb->boundViews[attachmentIndex] != surfaceView->imageView) {
+         needsRefresh = true;
+      }
+   }
+
+   do {
+      auto& surfaceView = fb->depthSurface;
+      if (!surfaceView) {
+         // nothing bound here
+         continue;
+      }
+
+      auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->depthAttachmentIndex);
+      numAttachments = std::max(numAttachments, attachmentIndex + 1);
+
+      attachments[attachmentIndex] = surfaceView->imageView;
+
+      if (fb->boundViews[attachmentIndex] != surfaceView->imageView) {
+         needsRefresh = true;
+      }
+   } while (false);
+
+   if (!needsRefresh) {
+      return;
+   }
+
+   // If we have an existing framebuffer, we can destroy it on the
+   // next frame, once we are confident that nobody is using it
+   if (fb->framebuffer) {
+      auto oldFramebuffer = fb->framebuffer;
+      addRetireTask([=](){
+         mDevice.destroyFramebuffer(oldFramebuffer);
+      });
+      fb->framebuffer = nullptr;
+   }
+
+   vk::FramebufferCreateInfo framebufferDesc;
+   framebufferDesc.renderPass = mCurrentRenderPass->renderPass;
+   framebufferDesc.attachmentCount = numAttachments;
+   framebufferDesc.pAttachments = attachments.data();
+   framebufferDesc.width = fb->renderArea.width;
+   framebufferDesc.height = fb->renderArea.height;
+   framebufferDesc.layers = 1;
+   auto framebuffer = mDevice.createFramebuffer(framebufferDesc);
+   fb->framebuffer = framebuffer;
+   fb->boundViews = attachments;
 }
 
 SurfaceViewObject *

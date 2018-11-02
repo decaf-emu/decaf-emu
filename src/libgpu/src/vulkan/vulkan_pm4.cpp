@@ -184,11 +184,15 @@ Driver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 void
 Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 {
-   decaf_check(data.dstPitch <= data.srcPitch);
-   decaf_check(data.dstWidth == data.srcWidth);
-   decaf_check(data.dstHeight == data.srcHeight);
-   decaf_check(data.dstDepth == data.srcDepth);
-   decaf_check(data.dstDim == data.srcDim);
+   if (data.dstImage.getAddress() == 0 || data.srcImage.getAddress() == 0) {
+      return;
+   }
+   //decaf_check(data.dstPitch <= data.srcPitch);
+   //decaf_check(data.dstWidth == data.srcWidth);
+   //decaf_check(data.dstHeight == data.srcHeight);
+   //decaf_check(data.dstDepth == data.srcDepth);
+   //decaf_check(data.dstDim == data.srcDim);
+   // Commented the above because slice-wise accross different things is fine...
 
    if (data.dstLevel > 0) {
       // We do not currently support mip mapping levels.
@@ -245,9 +249,9 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 
    // Perform the copy, note that CopySurface only supports 1:1 copies
    vk::ImageBlit blitRegion(
-      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, data.srcSlice, 1),
+      vk::ImageSubresourceLayers(sourceImage->subresRange.aspectMask, 0, data.srcSlice, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) },
-      vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, data.dstSlice, 1),
+      vk::ImageSubresourceLayers(sourceImage->subresRange.aspectMask, 0, data.dstSlice, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, copyDepth) });
 
    mActiveCommandBuffer.blitImage(

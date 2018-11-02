@@ -10,6 +10,7 @@ getAddrLibHandle();
 
 void
 alignTiling(latte::SQ_TILE_MODE& tileMode,
+            latte::SQ_DATA_FORMAT& format,
             uint32_t& swizzle,
             uint32_t& pitch,
             uint32_t& width,

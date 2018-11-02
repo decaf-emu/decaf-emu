@@ -301,7 +301,6 @@ Driver::checkCurrentPipeline()
 {
    decaf_check(mCurrentVertexShader);
    decaf_check(mCurrentRenderPass);
-   decaf_check(mCurrentFramebuffer);
 
    HashedDesc<PipelineDesc> currentDesc = getPipelineDesc();
 

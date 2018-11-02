@@ -335,26 +335,8 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
       return;
    }
 
-   // TODO: We should probably move our code that does surface transitions to
-   // some common location.  We cannot do it in the checkCurrent's, since its
-   // possible someone transitions the surfaces after they are active, but
-   // before the draw, and we cannot do it in bind as we already started our
-   // render pass there...
-   for (auto &surface : mCurrentFramebuffer->colorSurfaces) {
-      transitionSurfaceView(surface, ResourceUsage::ColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
-   }
-   if (mCurrentFramebuffer->depthSurface) {
-      auto &surface = mCurrentFramebuffer->depthSurface;
-      transitionSurfaceView(surface, ResourceUsage::DepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-   }
-   for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         auto& surface = mCurrentTextures[shaderStage][i];
-         if (surface) {
-            transitionSurfaceView(surface, ResourceUsage::Texture, vk::ImageLayout::eShaderReadOnlyOptimal);
-         }
-      }
-   }
+   prepareCurrentTextures();
+   prepareCurrentFramebuffer();
 
    auto& fbRa = mCurrentFramebuffer->renderArea;
    auto renderArea = vk::Rect2D { { 0, 0 }, fbRa };

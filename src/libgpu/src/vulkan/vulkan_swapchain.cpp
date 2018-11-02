@@ -34,7 +34,8 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
    auto surfaceView = getSurfaceView(surfaceViewDesc);
    auto surface = surfaceView->surface;
 
-   transitionSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, { 0, 1 });
+   // We have to transition the view not the surface to ensure the imageView is created.
+   transitionSurfaceView(surfaceView, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal);
 
    std::array<float, 4> clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
    mActiveCommandBuffer.clearColorImage(surface->image, vk::ImageLayout::eTransferDstOptimal, clearColor, { surface->subresRange });
