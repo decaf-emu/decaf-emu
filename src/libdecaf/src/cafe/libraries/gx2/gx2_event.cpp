@@ -197,13 +197,20 @@ vsyncAlarmHandler(virt_ptr<OSAlarm> alarm,
       sEventData->flipCount++;
       sEventData->lastFlip.store(vsyncTime, std::memory_order_release);
       OSWakeupThread(virt_addrof(sEventData->flipThreadQueue));
+
+      auto callback = sEventData->eventCallbacks[GX2EventType::Flip];
+      if (callback.func) {
+         cafe::invoke(cpu::this_core::state(),
+                      callback.func,
+                      GX2EventType::Flip,
+                      callback.data);
+      }
    }
 
    sEventData->lastVsync.store(vsyncTime, std::memory_order_release);
    OSWakeupThread(virt_addrof(sEventData->vsyncThreadQueue));
 
    auto callback = sEventData->eventCallbacks[GX2EventType::Vsync];
-
    if (callback.func) {
       cafe::invoke(cpu::this_core::state(),
                    callback.func,
