@@ -219,6 +219,7 @@ DecafSDLVulkan::createDevice()
    std::vector<const char*> deviceExtensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME,
+      VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
       VK_KHR_MAINTENANCE1_EXTENSION_NAME
    };
 
@@ -261,6 +262,7 @@ DecafSDLVulkan::createDevice()
    deviceFeatures.textureCompressionBC = true;
    deviceFeatures.independentBlend = true;
    deviceFeatures.fillModeNonSolid = true;
+   deviceFeatures.samplerAnisotropy = true;
    deviceFeatures.wideLines = true;
    deviceFeatures.logicOp = true;
 
