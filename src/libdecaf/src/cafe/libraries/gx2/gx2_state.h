@@ -12,6 +12,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes);
 void
 GX2Shutdown();
 
+int32_t
+GX2GetMainCoreId();
+
 void
 GX2Flush();
 

@@ -25,6 +25,7 @@ using namespace coreinit;
 
 struct StaticStateData
 {
+   be2_val<bool> initialized;
    be2_val<uint32_t> mainCoreId;
    be2_array<BOOL, 3> profilingEnabled;
    be2_val<GX2ProfileMode> profileMode;
@@ -50,6 +51,7 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
    auto tossStage = GX2TossStage::None;
 
    // Set main gx2 core
+   sStateData->initialized = true;
    sStateData->mainCoreId = OSGetCoreId();
 
    // Set default GPU timeout to 10 seconds
@@ -124,6 +126,16 @@ GX2Shutdown()
 {
    if (internal::debugCaptureEnabled()) {
       internal::debugCaptureShutdown();
+   }
+}
+
+int32_t
+GX2GetMainCoreId()
+{
+   if (sStateData->initialized) {
+      return sStateData->mainCoreId;
+   } else {
+      return -1;
    }
 }
 
@@ -366,6 +378,7 @@ Library::registerStateSymbols()
 {
    RegisterFunctionExport(GX2Init);
    RegisterFunctionExport(GX2Shutdown);
+   RegisterFunctionExport(GX2GetMainCoreId);
    RegisterFunctionExport(GX2Flush);
    RegisterFunctionExport(GX2GetGPUTimeout);
    RegisterFunctionExport(GX2SetGPUTimeout);
