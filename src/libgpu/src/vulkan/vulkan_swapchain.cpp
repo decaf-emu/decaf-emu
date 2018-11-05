@@ -15,7 +15,7 @@ Driver::allocateSwapChain(const SwapChainDesc &desc)
    surfaceDesc.depth = 1;
    surfaceDesc.samples = 1u;
    surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
-   surfaceDesc.format = latte::SurfaceFormat::R8G8B8A8Unorm;
+   surfaceDesc.format = latte::SurfaceFormat::R8G8B8A8Srgb;
    surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEFAULT;
    surfaceDesc.tileMode = latte::SQ_TILE_MODE::LINEAR_ALIGNED;
 

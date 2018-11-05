@@ -23,6 +23,11 @@ DecafSDLVulkan::DecafSDLVulkan()
    mBackgroundColour.float32[0] = background_colour.r / 255.0f;
    mBackgroundColour.float32[1] = background_colour.g / 255.0f;
    mBackgroundColour.float32[2] = background_colour.b / 255.0f;
+
+   // Apply some gamma correction
+   mBackgroundColour.float32[0] = pow(mBackgroundColour.float32[0], 2.2f);
+   mBackgroundColour.float32[1] = pow(mBackgroundColour.float32[1], 2.2f);
+   mBackgroundColour.float32[2] = pow(mBackgroundColour.float32[2], 2.2f);
 }
 
 DecafSDLVulkan::~DecafSDLVulkan()
@@ -311,7 +316,18 @@ DecafSDLVulkan::createSwapChain()
    auto surfaceFormats = mPhysDevice.getSurfaceFormatsKHR(mSurface);
    auto surfaceCaps = mPhysDevice.getSurfaceCapabilitiesKHR(mSurface);
 
+   // By absolute default we pick the the first format...
    auto selectedSurfaceFormat = surfaceFormats[0];
+
+   // Lastly lets try to find a very specific format that we want to use.
+   for (auto& surfaceFormat : surfaceFormats) {
+      switch (surfaceFormat.format) {
+      case vk::Format::eR8G8B8A8Srgb:
+      case vk::Format::eB8G8R8A8Srgb:
+         selectedSurfaceFormat = surfaceFormat;
+         break;
+      }
+   }
 
    auto swapChainImageFormat = selectedSurfaceFormat.format;
    mSwapChainExtents = surfaceCaps.currentExtent;
