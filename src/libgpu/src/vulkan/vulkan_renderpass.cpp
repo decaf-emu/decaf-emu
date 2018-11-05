@@ -12,8 +12,14 @@ Driver::getRenderPassDesc()
 
    auto sq_pgm_exports_ps = getRegister<latte::SQ_PGM_EXPORTS_PS>(latte::Register::SQ_PGM_EXPORTS_PS);
    auto cb_target_mask = getRegister<latte::CB_TARGET_MASK>(latte::Register::CB_TARGET_MASK);
+   auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
 
    auto numPsExports = sq_pgm_exports_ps.EXPORT_MODE() >> 1;
+
+   auto colorWritesEnabled = true;
+   if (cb_color_control.SPECIAL_OP() == latte::CB_SPECIAL_OP::DISABLE) {
+      colorWritesEnabled = false;
+   }
 
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       auto targetMask = (cb_target_mask.value >> (i * 4)) & 0xF;
@@ -25,7 +31,7 @@ Driver::getRenderPassDesc()
       isValidBuffer &= !!cb_color_base.BASE_256B();
       isValidBuffer &= (cb_color_info.FORMAT() != latte::CB_FORMAT::COLOR_INVALID);
 
-      if (i < numPsExports && isValidBuffer) {
+      if (i < numPsExports && colorWritesEnabled) {
          if (isValidBuffer) {
             desc.colorTargets[i] = RenderPassDesc::ColorTarget {
                true,
