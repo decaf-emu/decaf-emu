@@ -30,7 +30,7 @@ GX2InitAAMaskReg(virt_ptr<GX2AAMaskReg> reg,
                  uint8_t lowerLeft,
                  uint8_t lowerRight)
 {
-   auto pa_sc_aa_mask = reg->pa_sc_aa_mask.value();
+   auto pa_sc_aa_mask = latte::PA_SC_AA_MASK::get(0);
 
    pa_sc_aa_mask = pa_sc_aa_mask
       .AA_MASK_ULC(upperLeft)
@@ -78,8 +78,8 @@ GX2InitAlphaTestReg(virt_ptr<GX2AlphaTestReg> reg,
                     GX2CompareFunction func,
                     float ref)
 {
-   auto sx_alpha_ref = reg->sx_alpha_ref.value();
-   auto sx_alpha_test_control = reg->sx_alpha_test_control.value();
+   auto sx_alpha_ref = latte::SX_ALPHA_REF::get(0);
+   auto sx_alpha_test_control = latte::SX_ALPHA_TEST_CONTROL::get(0);
 
    sx_alpha_test_control = sx_alpha_test_control
       .ALPHA_TEST_ENABLE(!!alphaTest)
@@ -130,7 +130,8 @@ GX2InitAlphaToMaskReg(virt_ptr<GX2AlphaToMaskReg> reg,
                       BOOL alphaToMask,
                       GX2AlphaToMaskMode mode)
 {
-   auto db_alpha_to_mask = reg->db_alpha_to_mask.value();
+   auto db_alpha_to_mask = latte::DB_ALPHA_TO_MASK::get(0);
+
    db_alpha_to_mask = db_alpha_to_mask
       .ALPHA_TO_MASK_ENABLE(!!alphaToMask);
 
@@ -300,7 +301,7 @@ GX2InitBlendControlReg(virt_ptr<GX2BlendControlReg> reg,
                        GX2BlendMode alphaDstBlend,
                        GX2BlendCombineMode alphaCombine)
 {
-   auto cb_blend_control = reg->cb_blend_control.value();
+   auto cb_blend_control = latte::CB_BLENDN_CONTROL::get(0);
    reg->target = target;
 
    cb_blend_control = cb_blend_control
@@ -367,9 +368,9 @@ GX2InitColorControlReg(virt_ptr<GX2ColorControlReg> reg,
                        BOOL multiWriteEnable,
                        BOOL colorWriteEnable)
 {
-   auto cb_color_control = reg->cb_color_control.value();
-   auto specialOp = latte::CB_SPECIAL_OP::DISABLE;
+   auto cb_color_control = latte::CB_COLOR_CONTROL::get(0);
 
+   auto specialOp = latte::CB_SPECIAL_OP::DISABLE;
    if (colorWriteEnable) {
       specialOp = latte::CB_SPECIAL_OP::NORMAL;
    }
@@ -479,7 +480,7 @@ GX2InitDepthStencilControlReg(virt_ptr<GX2DepthStencilControlReg> reg,
                               GX2StencilFunction backStencilZFail,
                               GX2StencilFunction backStencilFail)
 {
-   auto db_depth_control = reg->db_depth_control.value();
+   auto db_depth_control = latte::DB_DEPTH_CONTROL::get(0);
 
    db_depth_control = db_depth_control
       .Z_ENABLE(!!depthTest)
@@ -558,8 +559,8 @@ void GX2InitStencilMaskReg(virt_ptr<GX2StencilMaskReg> reg,
                            uint8_t backWriteMask,
                            uint8_t backRef)
 {
-   auto db_stencilrefmask = reg->db_stencilrefmask.value();
-   auto db_stencilrefmask_bf = reg->db_stencilrefmask_bf.value();
+   auto db_stencilrefmask = latte::DB_STENCILREFMASK::get(0);
+   auto db_stencilrefmask_bf = latte::DB_STENCILREFMASK_BF::get(0);
 
    db_stencilrefmask = db_stencilrefmask
       .STENCILREF(frontRef)
@@ -616,7 +617,7 @@ void
 GX2InitLineWidthReg(virt_ptr<GX2LineWidthReg> reg,
                     float width)
 {
-   auto pa_su_line_cntl = reg->pa_su_line_cntl.value();
+   auto pa_su_line_cntl = latte::PA_SU_LINE_CNTL::get(0);
 
    pa_su_line_cntl = pa_su_line_cntl
       .WIDTH(gsl::narrow_cast<uint32_t>(width * 8.0f));
@@ -653,7 +654,7 @@ GX2InitPointSizeReg(virt_ptr<GX2PointSizeReg> reg,
                     float width,
                     float height)
 {
-   auto pa_su_point_size = reg->pa_su_point_size.value();
+   auto pa_su_point_size = latte::PA_SU_POINT_SIZE::get(0);
 
    pa_su_point_size = pa_su_point_size
       .WIDTH(gsl::narrow_cast<uint32_t>(width * 8.0f))
@@ -693,7 +694,7 @@ GX2InitPointLimitsReg(virt_ptr<GX2PointLimitsReg> reg,
                       float min,
                       float max)
 {
-   auto pa_su_point_minmax = reg->pa_su_point_minmax.value();
+   auto pa_su_point_minmax = latte::PA_SU_POINT_MINMAX::get(0);
 
    pa_su_point_minmax = pa_su_point_minmax
       .MIN_SIZE(gsl::narrow_cast<uint32_t>(min * 8.0f))
@@ -772,7 +773,7 @@ GX2InitPolygonControlReg(virt_ptr<GX2PolygonControlReg> reg,
                          BOOL polyOffsetBackEnable,
                          BOOL polyOffsetParaEnable)
 {
-   auto pa_su_sc_mode_cntl = reg->pa_su_sc_mode_cntl.value();
+   auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL::get(0);
 
    pa_su_sc_mode_cntl = pa_su_sc_mode_cntl
       .FACE(static_cast<latte::PA_FACE>(frontFace))
@@ -844,11 +845,11 @@ GX2InitPolygonOffsetReg(virt_ptr<GX2PolygonOffsetReg> reg,
                         float backScale,
                         float clamp)
 {
-   auto pa_su_poly_offset_front_offset = reg->pa_su_poly_offset_front_offset.value();
-   auto pa_su_poly_offset_front_scale = reg->pa_su_poly_offset_front_scale.value();
-   auto pa_su_poly_offset_back_offset = reg->pa_su_poly_offset_back_offset.value();
-   auto pa_su_poly_offset_back_scale = reg->pa_su_poly_offset_back_scale.value();
-   auto pa_su_poly_offset_clamp = reg->pa_su_poly_offset_clamp.value();
+   auto pa_su_poly_offset_front_offset = latte::PA_SU_POLY_OFFSET_FRONT_OFFSET::get(0);
+   auto pa_su_poly_offset_front_scale = latte::PA_SU_POLY_OFFSET_FRONT_SCALE::get(0);
+   auto pa_su_poly_offset_back_offset = latte::PA_SU_POLY_OFFSET_BACK_OFFSET::get(0);
+   auto pa_su_poly_offset_back_scale = latte::PA_SU_POLY_OFFSET_BACK_SCALE::get(0);
+   auto pa_su_poly_offset_clamp = latte::PA_SU_POLY_OFFSET_CLAMP::get(0);
 
    pa_su_poly_offset_front_offset = pa_su_poly_offset_front_offset
       .OFFSET(frontOffset);
@@ -927,8 +928,8 @@ GX2InitScissorReg(virt_ptr<GX2ScissorReg> reg,
                   uint32_t width,
                   uint32_t height)
 {
-   auto pa_sc_generic_scissor_tl = reg->pa_sc_generic_scissor_tl.value();
-   auto pa_sc_generic_scissor_br = reg->pa_sc_generic_scissor_br.value();
+   auto pa_sc_generic_scissor_tl = latte::PA_SC_GENERIC_SCISSOR_TL::get(0);
+   auto pa_sc_generic_scissor_br = latte::PA_SC_GENERIC_SCISSOR_BR::get(0);
 
    pa_sc_generic_scissor_tl = pa_sc_generic_scissor_tl
       .TL_X(x)
@@ -1007,7 +1008,7 @@ GX2InitTargetChannelMasksReg(virt_ptr<GX2TargetChannelMaskReg> reg,
                              GX2ChannelMask mask6,
                              GX2ChannelMask mask7)
 {
-   auto cb_target_mask = reg->cb_target_mask.value();
+   auto cb_target_mask = latte::CB_TARGET_MASK::get(0);
 
    cb_target_mask = cb_target_mask
       .TARGET0_ENABLE(mask0)
@@ -1073,17 +1074,17 @@ GX2InitViewportReg(virt_ptr<GX2ViewportReg> reg,
                    float nearZ,
                    float farZ)
 {
-   auto pa_cl_vport_xscale = reg->pa_cl_vport_xscale.value();
-   auto pa_cl_vport_xoffset = reg->pa_cl_vport_xoffset.value();
-   auto pa_cl_vport_yscale = reg->pa_cl_vport_yscale.value();
-   auto pa_cl_vport_yoffset = reg->pa_cl_vport_yoffset.value();
-   auto pa_cl_vport_zscale = reg->pa_cl_vport_zscale.value();
-   auto pa_cl_vport_zoffset = reg->pa_cl_vport_zoffset.value();
+   auto pa_cl_vport_xscale = latte::PA_CL_VPORT_XSCALE_N::get(0);
+   auto pa_cl_vport_xoffset = latte::PA_CL_VPORT_XOFFSET_N::get(0);
+   auto pa_cl_vport_yscale = latte::PA_CL_VPORT_YSCALE_N::get(0);
+   auto pa_cl_vport_yoffset = latte::PA_CL_VPORT_YOFFSET_N::get(0);
+   auto pa_cl_vport_zscale = latte::PA_CL_VPORT_ZSCALE_N::get(0);
+   auto pa_cl_vport_zoffset = latte::PA_CL_VPORT_ZOFFSET_N::get(0);
 
-   auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
-   auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
-   auto pa_cl_gb_horz_clip_adj = reg->pa_cl_gb_horz_clip_adj.value();
-   auto pa_cl_gb_horz_disc_adj = reg->pa_cl_gb_horz_disc_adj.value();
+   auto pa_cl_gb_vert_clip_adj = latte::PA_CL_GB_VERT_CLIP_ADJ::get(0);
+   auto pa_cl_gb_vert_disc_adj = latte::PA_CL_GB_VERT_DISC_ADJ::get(0);
+   auto pa_cl_gb_horz_clip_adj = latte::PA_CL_GB_HORZ_CLIP_ADJ::get(0);
+   auto pa_cl_gb_horz_disc_adj = latte::PA_CL_GB_HORZ_DISC_ADJ::get(0);
 
    auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
    auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
