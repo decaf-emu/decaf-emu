@@ -150,6 +150,8 @@ void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
 {
    decaf_check(cf.word1.COND() == latte::SQ_CF_COND::ACTIVE);
 
+   mSpv->pushStack();
+
    auto loop = LoopState { };
    loop.startPC = mCfPC;
    loop.endPC = cf.word0.ADDR() - 1;
@@ -207,13 +209,8 @@ void Transpiler::translateCf_LOOP_END(const ControlFlowInst &cf)
    mSpv->setBuildPoint(loop.merge);
    loopStack.pop_back();
 
-   // If state is set to InactiveBreak, set it to Inactive
-   auto predBreak = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
-                                      mSpv->createLoad(mSpv->stateVar()),
-                                      mSpv->stateInactiveBreak());
-   auto ifBuilder = spv::Builder::If { predBreak, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->createStore(mSpv->stateInactive(), mSpv->stateVar());
-   ifBuilder.makeEndIf();
+   // LOOP_END ignores POP_COUNT as per R600 ISA Documentation
+   mSpv->popStack(1);
 }
 
 void Transpiler::translateCf_LOOP_CONTINUE(const ControlFlowInst &cf)
