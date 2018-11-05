@@ -68,6 +68,23 @@ DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
       isKnownIssue = true;
    }
 
+   // Some games rebind the same texture as an input and output at the same time.  This
+   // is technically illegal, even for GPU7, but it works... so...
+   if (strstr(pMessage, "VkDescriptorImageInfo-imageLayout") != nullptr) {
+      static uint64_t seenImageLayoutError = 0;
+      if (seenImageLayoutError++) {
+         return VK_FALSE;
+      }
+      isKnownIssue = true;
+   }
+   if (strstr(pMessage, "DrawState-DescriptorSetNotUpdated") != nullptr) {
+      static uint64_t seenDescriptorSetError = 0;
+      if (seenDescriptorSetError++) {
+         return VK_FALSE;
+      }
+      isKnownIssue = true;
+   }
+
    // Write this message to our normal logging
    auto self = reinterpret_cast<DecafSDLVulkan *>(pUserData);
    if (!isKnownIssue) {
