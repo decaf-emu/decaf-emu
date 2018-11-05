@@ -698,7 +698,7 @@ public:
          switch (inst.op2.OMOD()) {
          case SQ_ALU_OMOD::D2:
             decaf_check(getTypeId(srcId) == floatType());
-            srcId = createBinOp(spv::Op::OpFDiv, floatType(), srcId, makeFloatConstant(2));
+            srcId = createBinOp(spv::Op::OpFMul, floatType(), srcId, makeFloatConstant(0.5f));
             break;
          case SQ_ALU_OMOD::M2:
             decaf_check(getTypeId(srcId) == floatType());
