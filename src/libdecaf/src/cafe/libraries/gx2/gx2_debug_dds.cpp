@@ -779,7 +779,7 @@ encodeCubemap(const GX2Surface *surface,
       dst += sliceSize;
 
       int mipOffset = 0;
-      for (auto j = 0; j < surface->mipLevels - 1; ++j) {
+      for (auto j = 0u; j < surface->mipLevels - 1; ++j) {
          int mipSize = sliceSize >> ((j + 1) * 2);
          mipSize = std::max(mipSize, minMipSize);
 
