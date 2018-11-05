@@ -79,7 +79,7 @@ CHECK_SIZE(MPTaskQueueInfo, 0x14);
 struct MPTaskQueue
 {
    be2_virt_ptr<MPTaskQueue> self;
-   be2_val<MPTaskQueueState> state;
+   be2_atomic<MPTaskQueueState> state;
    be2_val<uint32_t> tasks;
    be2_val<uint32_t> tasksReady;
    be2_val<uint32_t> tasksRunning;

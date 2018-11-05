@@ -16,7 +16,7 @@ MPInitTaskQ(virt_ptr<MPTaskQueue> queue,
 {
    OSInitSpinLock(virt_addrof(queue->lock));
    queue->self = queue;
-   queue->state = MPTaskQueueState::Initialised;
+   queue->state.store(MPTaskQueueState::Initialised);
    queue->tasks = 0u;
    queue->tasksReady = 0u;
    queue->tasksRunning = 0u;
@@ -48,7 +48,7 @@ MPGetTaskQInfo(virt_ptr<MPTaskQueue> queue,
                virt_ptr<MPTaskQueueInfo> info)
 {
    OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
-   info->state = queue->state;
+   info->state = queue->state.load();
    info->tasks = queue->tasks;
    info->tasksReady = queue->tasksReady;
    info->tasksRunning = queue->tasksRunning;
@@ -70,9 +70,9 @@ MPStartTaskQ(virt_ptr<MPTaskQueue> queue)
 {
    OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
 
-   if (queue->state == MPTaskQueueState::Initialised
-    || queue->state == MPTaskQueueState::Stopped) {
-      queue->state = MPTaskQueueState::Ready;
+   if (queue->state.load() == MPTaskQueueState::Initialised
+    || queue->state.load() == MPTaskQueueState::Stopped) {
+      queue->state.store(MPTaskQueueState::Ready);
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
       return TRUE;
    }
@@ -95,15 +95,15 @@ MPStopTaskQ(virt_ptr<MPTaskQueue> queue)
 {
    OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
 
-   if (queue->state != MPTaskQueueState::Ready) {
+   if (queue->state.load() != MPTaskQueueState::Ready) {
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
       return FALSE;
    }
 
    if (queue->tasksRunning == 0) {
-      queue->state = MPTaskQueueState::Stopped;
+      queue->state.store(MPTaskQueueState::Stopped);
    } else {
-      queue->state = MPTaskQueueState::Stopping;
+      queue->state.store(MPTaskQueueState::Stopping);
    }
 
    OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
@@ -122,13 +122,13 @@ MPResetTaskQ(virt_ptr<MPTaskQueue> queue)
 {
    OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
 
-   if (queue->state != MPTaskQueueState::Finished &&
-       queue->state != MPTaskQueueState::Stopped) {
+   if (queue->state.load() != MPTaskQueueState::Finished &&
+       queue->state.load() != MPTaskQueueState::Stopped) {
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
       return FALSE;
    }
 
-   queue->state = MPTaskQueueState::Initialised;
+   queue->state.store(MPTaskQueueState::Initialised);
    queue->tasks = queue->queueSize;
    queue->tasksReady = queue->queueSize;
    queue->tasksRunning = 0u;
@@ -172,8 +172,8 @@ MPEnqueTask(virt_ptr<MPTaskQueue> queue,
       return FALSE;
    }
 
-   if (queue->state < MPTaskQueueState::Initialised
-    || queue->state > MPTaskQueueState::Finished) {
+   if (queue->state.load() < MPTaskQueueState::Initialised
+    || queue->state.load() > MPTaskQueueState::Finished) {
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
       return FALSE;
    }
@@ -186,8 +186,8 @@ MPEnqueTask(virt_ptr<MPTaskQueue> queue,
    queue->queue[queue->queueSize] = task;
    queue->queueSize++;
 
-   if (queue->state == MPTaskQueueState::Finished) {
-      queue->state = MPTaskQueueState::Ready;
+   if (queue->state.load() == MPTaskQueueState::Finished) {
+      queue->state.store(MPTaskQueueState::Ready);
    }
 
    OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
@@ -207,7 +207,7 @@ MPDequeTask(virt_ptr<MPTaskQueue> queue)
 {
    OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
 
-   if (queue->state != MPTaskQueueState::Ready
+   if (queue->state.load() != MPTaskQueueState::Ready
     || queue->queueIndex == queue->queueSize) {
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
       return nullptr;
@@ -235,7 +235,7 @@ MPDequeTasks(virt_ptr<MPTaskQueue> queue,
    OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
    uint32_t count, available;
 
-   if (queue->state != MPTaskQueueState::Ready) {
+   if (queue->state.load() != MPTaskQueueState::Ready) {
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
       return 0;
    }
@@ -262,7 +262,7 @@ BOOL
 MPWaitTaskQ(virt_ptr<MPTaskQueue> queue,
             MPTaskQueueState mask)
 {
-   while ((queue->state & mask) == 0);
+   while ((queue->state.load() & mask) == 0);
    return TRUE;
 }
 
@@ -280,13 +280,13 @@ MPWaitTaskQWithTimeout(virt_ptr<MPTaskQueue> queue,
    auto start = OSGetTime();
    auto end = start + internal::nsToTicks(timeoutNS);
 
-   while ((queue->state & mask) == 0) {
+   while ((queue->state.load() & mask) == 0) {
       if (OSGetTime() >= end) {
          break;
       }
    }
 
-   return (queue->state & mask) != 0;
+   return (queue->state.load() & mask) != 0;
 }
 
 
@@ -395,7 +395,7 @@ MPRunTasksFromTaskQ(virt_ptr<MPTaskQueue> queue,
 {
    BOOL result = FALSE;
 
-   while (queue->state == MPTaskQueueState::Ready) {
+   while (queue->state.load() == MPTaskQueueState::Ready) {
       OSUninterruptibleSpinLock_Acquire(virt_addrof(queue->lock));
       auto available = queue->queueSize - queue->queueIndex;
       auto count = std::min(available, tasks);
@@ -437,12 +437,12 @@ MPRunTasksFromTaskQ(virt_ptr<MPTaskQueue> queue,
       queue->tasksRunning -= count;
       queue->tasksFinished += count;
 
-      if (queue->state == MPTaskQueueState::Stopping && queue->tasksRunning == 0) {
-         queue->state = MPTaskQueueState::Stopped;
+      if (queue->state.load() == MPTaskQueueState::Stopping && queue->tasksRunning == 0) {
+         queue->state.store(MPTaskQueueState::Stopped);
       }
 
       if (queue->tasks == queue->tasksFinished) {
-         queue->state = MPTaskQueueState::Finished;
+         queue->state.store(MPTaskQueueState::Finished);
       }
 
       OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
@@ -470,8 +470,8 @@ MPRunTask(virt_ptr<MPTask> task)
    }
 
    if (!queue
-     || queue->state == MPTaskQueueState::Stopping
-     || queue->state == MPTaskQueueState::Stopped) {
+     || queue->state.load() == MPTaskQueueState::Stopping
+     || queue->state.load() == MPTaskQueueState::Stopped) {
       return FALSE;
    }
 
@@ -496,12 +496,12 @@ MPRunTask(virt_ptr<MPTask> task)
    queue->tasksRunning--;
    queue->tasksFinished++;
 
-   if (queue->state == MPTaskQueueState::Stopping && queue->tasksRunning == 0) {
-      queue->state = MPTaskQueueState::Stopped;
+   if (queue->state.load() == MPTaskQueueState::Stopping && queue->tasksRunning == 0) {
+      queue->state.store(MPTaskQueueState::Stopped);
    }
 
    if (queue->tasks == queue->tasksFinished) {
-      queue->state = MPTaskQueueState::Finished;
+      queue->state.store(MPTaskQueueState::Finished);
    }
 
    OSUninterruptibleSpinLock_Release(virt_addrof(queue->lock));
