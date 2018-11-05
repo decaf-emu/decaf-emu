@@ -428,6 +428,67 @@ void Transpiler::translateTex_SET_CUBEMAP_INDEX(const ControlFlowInst &cf, const
 {
    // TODO: It is possible that we are supposed to somehow force
    //  a specific face to be used in spite of the coordinates.
+   //decaf_abort("Unsupported SET_CUBEMAP_INDEX")
+}
+
+void Transpiler::translateTex_GET_GRADIENTS_H(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   auto textureId = inst.word0.RESOURCE_ID();
+   auto samplerId = inst.word2.SAMPLER_ID();
+   decaf_check(textureId == 0);
+   decaf_check(samplerId == 0);
+
+   // TODO: Make a latte decoder for reading these registers...
+   GprMaskRef srcGpr;
+   srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
+   srcGpr.mask[SQ_CHAN::X] = inst.word2.SRC_SEL_X();
+   srcGpr.mask[SQ_CHAN::Y] = inst.word2.SRC_SEL_Y();
+   srcGpr.mask[SQ_CHAN::Z] = inst.word2.SRC_SEL_Z();
+   srcGpr.mask[SQ_CHAN::W] = inst.word2.SRC_SEL_W();
+
+   GprMaskRef destGpr;
+   destGpr.gpr = makeGprRef(inst.word1.DST_GPR(), inst.word1.DST_REL(), SQ_INDEX_MODE::LOOP);
+   destGpr.mask[SQ_CHAN::X] = inst.word1.DST_SEL_X();
+   destGpr.mask[SQ_CHAN::Y] = inst.word1.DST_SEL_Y();
+   destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
+   destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
+
+   auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
+
+   mSpv->addCapability(spv::CapabilityDerivativeControl);
+   auto output = mSpv->createUnaryOp(spv::OpDPdx, mSpv->float4Type(), srcGprVal);
+
+   mSpv->writeGprMaskRef(destGpr, output);
+}
+
+void Transpiler::translateTex_GET_GRADIENTS_V(const ControlFlowInst &cf, const TextureFetchInst &inst)
+{
+   auto textureId = inst.word0.RESOURCE_ID();
+   auto samplerId = inst.word2.SAMPLER_ID();
+   decaf_check(textureId == 0);
+   decaf_check(samplerId == 0);
+
+   // TODO: Make a latte decoder for reading these registers...
+   GprMaskRef srcGpr;
+   srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
+   srcGpr.mask[SQ_CHAN::X] = inst.word2.SRC_SEL_X();
+   srcGpr.mask[SQ_CHAN::Y] = inst.word2.SRC_SEL_Y();
+   srcGpr.mask[SQ_CHAN::Z] = inst.word2.SRC_SEL_Z();
+   srcGpr.mask[SQ_CHAN::W] = inst.word2.SRC_SEL_W();
+
+   GprMaskRef destGpr;
+   destGpr.gpr = makeGprRef(inst.word1.DST_GPR(), inst.word1.DST_REL(), SQ_INDEX_MODE::LOOP);
+   destGpr.mask[SQ_CHAN::X] = inst.word1.DST_SEL_X();
+   destGpr.mask[SQ_CHAN::Y] = inst.word1.DST_SEL_Y();
+   destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
+   destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
+
+   auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
+
+   mSpv->addCapability(spv::CapabilityDerivativeControl);
+   auto output = mSpv->createUnaryOp(spv::OpDPdy, mSpv->float4Type(), srcGprVal);
+
+   mSpv->writeGprMaskRef(destGpr, output);
 }
 
 void Transpiler::translateTex_VTX_FETCH(const ControlFlowInst &cf, const TextureFetchInst &inst)

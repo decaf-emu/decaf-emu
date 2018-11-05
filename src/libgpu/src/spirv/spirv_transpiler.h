@@ -44,6 +44,8 @@ public:
    void translateTex_SAMPLE_C_G_LZ(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_SET_CUBEMAP_INDEX(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
+   void translateTex_GET_GRADIENTS_H(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
+   void translateTex_GET_GRADIENTS_V(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_VTX_FETCH(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
    void translateTex_VTX_SEMANTIC(const ControlFlowInst &cf, const TextureFetchInst &inst) override;
 
