@@ -371,7 +371,10 @@ public:
          srcId = getPvId(source.prevres.unit);
       } else if (source.type == latte::SrcVarRef::Type::VALUE) {
          if (source.valueType == latte::VarRefType::FLOAT) {
-            srcId = makeFloatConstant(source.value.floatValue);
+            // We write floats as UINT's which are bitcast to preserve precision
+            // in the case that the value will be used as a uint.
+            auto srcFloatData = makeUintConstant(source.value.uintValue);
+            srcId = createUnaryOp(spv::OpBitcast, floatType(), srcFloatData);
          } else if (source.valueType == latte::VarRefType::INT) {
             srcId = makeIntConstant(source.value.intValue);
          } else if (source.valueType == latte::VarRefType::UINT) {
