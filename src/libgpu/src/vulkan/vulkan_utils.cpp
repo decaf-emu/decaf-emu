@@ -357,7 +357,9 @@ getVkXyTextureFilter(latte::SQ_TEX_XY_FILTER filter)
    case latte::SQ_TEX_XY_FILTER::BICUBIC:
       return vk::Filter::eCubicIMG;
    default:
-      decaf_abort("Unexpected texture xy filter mode");
+      gLog->warn("Unexpected texture xy filter mode");
+      return vk::Filter::eNearest;
+      //decaf_abort("Unexpected texture xy filter mode");
    }
 }
 
