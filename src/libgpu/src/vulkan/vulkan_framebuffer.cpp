@@ -185,7 +185,7 @@ Driver::checkCurrentFramebuffer()
 SurfaceViewObject *
 Driver::getColorBuffer(const ColorBufferDesc& info)
 {
-   auto baseAddress = phys_addr((info.base256b << 8) & 0xFFFFF800);
+   auto baseAddress = phys_addr(info.base256b << 8);
    auto pitch_tile_max = info.pitchTileMax;
    auto slice_tile_max = info.sliceTileMax;
 
@@ -228,7 +228,7 @@ Driver::getColorBuffer(const ColorBufferDesc& info)
 SurfaceViewObject *
 Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info)
 {
-   auto baseAddress = phys_addr((info.base256b << 8) & 0xFFFFF800);
+   auto baseAddress = phys_addr(info.base256b << 8);
    auto pitch_tile_max = info.pitchTileMax;
    auto slice_tile_max = info.sliceTileMax;
 
