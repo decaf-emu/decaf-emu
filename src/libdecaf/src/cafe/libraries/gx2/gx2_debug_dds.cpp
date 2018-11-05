@@ -514,7 +514,7 @@ encodeFourCCWithPitch(std::ofstream &file,
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFourCC = fourCC;
    header.ddspf.dwFlags |= DDPF_FOURCC | flags;
-   header.dwPitchOrLinearSize = surface->width * internal::getSurfaceFormatBytesPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->pitch * internal::getSurfaceFormatBytesPerElement(surface->format);
    writeData(file, &header, imagePtr, surface->imageSize, mipPtr, surface->mipmapSize);
    return true;
 }
@@ -537,7 +537,7 @@ encodeMasked(std::ofstream &file,
    header.ddspf.dwBBitMask = maskB;
    header.ddspf.dwABitMask = maskA;
    header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
-   header.dwPitchOrLinearSize = surface->width * internal::getSurfaceFormatBytesPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->pitch * internal::getSurfaceFormatBytesPerElement(surface->format);
    writeData(file, &header, imagePtr, surface->imageSize, mipPtr, surface->mipmapSize);
    return true;
 }
@@ -556,7 +556,7 @@ encodeLuminance(std::ofstream &file,
    header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
    header.ddspf.dwRBitMask = maskL;
    header.ddspf.dwABitMask = maskA;
-   header.dwPitchOrLinearSize = surface->width * internal::getSurfaceFormatBytesPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->pitch * internal::getSurfaceFormatBytesPerElement(surface->format);
    writeData(file, &header, imagePtr, surface->imageSize, mipPtr, surface->mipmapSize);
    return true;
 }
@@ -616,7 +616,7 @@ encode565(std::ofstream &file,
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_RGB | flags;
    header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
-   header.dwPitchOrLinearSize = surface->width * internal::getSurfaceFormatBytesPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->pitch * internal::getSurfaceFormatBytesPerElement(surface->format);
 
    std::vector<uint8_t> image, mipmap;
    image.resize(surface->imageSize);
@@ -639,7 +639,7 @@ encode1555(std::ofstream &file,
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_RGB | DDPF_ALPHAPIXELS | flags;
    header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
-   header.dwPitchOrLinearSize = surface->width * internal::getSurfaceFormatBytesPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->pitch * internal::getSurfaceFormatBytesPerElement(surface->format);
 
    header.ddspf.dwRBitMask = 0x7c00;
    header.ddspf.dwGBitMask = 0x3e0;
@@ -667,7 +667,7 @@ encode4444(std::ofstream &file,
    DdsHeader header = encodeHeader(surface);
    header.ddspf.dwFlags |= DDPF_RGB | DDPF_ALPHAPIXELS | flags;
    header.ddspf.dwRGBBitCount = GX2GetSurfaceFormatBitsPerElement(surface->format);
-   header.dwPitchOrLinearSize = surface->width * internal::getSurfaceFormatBytesPerElement(surface->format);
+   header.dwPitchOrLinearSize = surface->pitch * internal::getSurfaceFormatBytesPerElement(surface->format);
 
    header.ddspf.dwRBitMask = 0xf00;
    header.ddspf.dwGBitMask = 0xf0;
@@ -751,6 +751,45 @@ encodeDX10(std::ofstream &file,
    return true;
 }
 
+static void
+encodeCubemap(const GX2Surface *surface,
+              const void *imagePtr,
+              const void *mipPtr,
+              void *cubeData)
+{
+   // DDS cubemap has slices interleaved with mipmaps... fuck you.
+   int minMipSize = 1;
+   if (surface->format == GX2SurfaceFormat::UNORM_BC1 ||
+       surface->format == GX2SurfaceFormat::SRGB_BC1) {
+      minMipSize = 8;
+   } else if (surface->format >= GX2SurfaceFormat::UNORM_BC2 &&
+              surface->format <= GX2SurfaceFormat::SNORM_BC5) {
+      minMipSize = 16;
+   } else {
+      minMipSize = 1;
+   }
+
+   auto dst = reinterpret_cast<uint8_t *>(cubeData);
+   auto srcImage = reinterpret_cast<const uint8_t *>(imagePtr);
+   auto srcMip = reinterpret_cast<const uint8_t *>(mipPtr);
+
+   for (auto i = 0; i < 6; ++i) {
+      int sliceSize = surface->imageSize / 6;
+      std::memcpy(dst, srcImage + (sliceSize * i), sliceSize);
+      dst += sliceSize;
+
+      int mipOffset = 0;
+      for (auto j = 0; j < surface->mipLevels - 1; ++j) {
+         int mipSize = sliceSize >> ((j + 1) * 2);
+         mipSize = std::max(mipSize, minMipSize);
+
+         memcpy(dst, srcMip + mipOffset + (mipSize * i), mipSize);
+         dst += mipSize;
+         mipOffset += mipSize * 6;
+      }
+   }
+}
+
 namespace debug
 {
 
@@ -768,9 +807,21 @@ saveDDS(const std::string &filename,
 
    fh.write(reinterpret_cast<const char *>(&DDS_MAGIC), sizeof(DDS_MAGIC));
 
+   std::vector<uint8_t> cubeAdjustedImage;
+   std::vector<uint8_t> cubeAdjustedMip;
    if (surface->dim == GX2SurfaceDim::TextureCube) {
-      // TODO: Support DDS save of cube textures
-      return false;
+      std::vector<uint8_t> cubeData;
+      cubeData.resize(surface->imageSize + surface->mipmapSize);
+
+      encodeCubemap(surface, imagePtr, mipPtr, cubeData.data());
+
+      cubeAdjustedImage.resize(surface->imageSize);
+      std::memcpy(cubeAdjustedImage.data(), cubeData.data(), surface->imageSize);
+      imagePtr = cubeAdjustedImage.data();
+
+      cubeAdjustedMip.resize(surface->mipmapSize);
+      std::memcpy(cubeAdjustedMip.data(), cubeData.data() + surface->imageSize, surface->mipmapSize);
+      mipPtr = cubeAdjustedMip.data();
    }
 
    bool result = false;
