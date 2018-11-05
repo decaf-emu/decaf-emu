@@ -558,8 +558,42 @@ public:
       createStore(writeVal, gprRef);
    }
 
-   spv::Id applySelMask(spv::Id dest, spv::Id source, std::array<SQ_SEL, 4> mask)
+   spv::Id shrinkVector(spv::Id value, uint32_t maxComponents)
    {
+      // We only support 4-component vector types here...
+      decaf_check(getNumComponents(value) == 4);
+
+      // Figure out what type we need to return
+      auto valueType = getTypeId(value);
+      auto valueBaseType = this->getContainedTypeId(valueType);
+
+      if (maxComponents == 1) {
+         return createOp(spv::OpCompositeExtract, valueBaseType, { value, 0 });
+      } else if (maxComponents == 2) {
+         return createOp(spv::OpVectorShuffle, vecType(valueBaseType, 2), { value, value, 0, 1 });
+      } else if (maxComponents == 3) {
+         return createOp(spv::OpVectorShuffle, vecType(valueBaseType, 3), { value, value, 0, 1, 2 });
+      } else if (maxComponents == 4) {
+         return value;
+      } else {
+         decaf_abort("Unexpected component count during vector shrink");
+      }
+   }
+
+   spv::Id applySelMask(spv::Id dest, spv::Id source, std::array<SQ_SEL, 4> mask, uint32_t maxComponents = 4)
+   {
+      // We only support doing masking against 4-component vectors.
+      decaf_check(getNumComponents(source) == 4);
+
+      auto sourceType = getTypeId(source);
+      auto sourceBaseType = this->getContainedTypeId(sourceType);
+
+      // For simplicity in the checking below, we set the unused mask values
+      // to the defaults that we might expect otherwise.
+      for (auto i = maxComponents; i < 4; ++i) {
+         mask[i] = static_cast<latte::SQ_SEL>(latte::SQ_SEL::SEL_X + i);
+      }
+
       // If the swizzle is just XYZW, we don't actually need to do anything...
       bool isNoop = true;
       isNoop &= (mask[0] == latte::SQ_SEL::SEL_X);
@@ -567,7 +601,7 @@ public:
       isNoop &= (mask[2] == latte::SQ_SEL::SEL_Z);
       isNoop &= (mask[3] == latte::SQ_SEL::SEL_W);
       if (isNoop) {
-         return source;
+         return shrinkVector(source, maxComponents);
       }
 
       // If the swizzle is ____, we should just skip processing entirely
@@ -577,7 +611,8 @@ public:
       isMasked &= (mask[2] == latte::SQ_SEL::SEL_MASK);
       isMasked &= (mask[3] == latte::SQ_SEL::SEL_MASK);
       if (isMasked) {
-         return dest;
+         decaf_check(dest != spv::NoResult);
+         return shrinkVector(dest, maxComponents);
       }
 
       // Lets see if this swizzle is using constants at all, since we can optimize
@@ -611,7 +646,7 @@ public:
          // between the two input vectors in a single go.
 
          std::array<unsigned int, 4> shuffleIdx = { 0, 1, 2, 3 };
-         for (auto selIdx = 0; selIdx < 4; ++selIdx) {
+         for (auto selIdx = 0u; selIdx < maxComponents; ++selIdx) {
             switch (mask[selIdx]) {
             case latte::SQ_SEL::SEL_X:
                shuffleIdx[selIdx] = 4;
@@ -643,7 +678,17 @@ public:
             dest = source;
          }
 
-         return createOp(spv::Op::OpVectorShuffle, float4Type(), { dest, source, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2], shuffleIdx[3] });
+         if (maxComponents == 1) {
+            return createOp(spv::OpCompositeExtract, sourceBaseType, { source, shuffleIdx[0] });
+         } else if (maxComponents == 2) {
+            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 2), { dest, source, shuffleIdx[0], shuffleIdx[1] });
+         } else if (maxComponents == 2) {
+            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 3), { dest, source, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2] });
+         } else if (maxComponents == 4) {
+            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 4), { dest, source, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2], shuffleIdx[3] });
+         } else {
+            decaf_abort("Unexpected component count during swizzle");
+         }
       }
 
       // If the swizzle is using constants, we need to pull out the individual pieces
@@ -663,7 +708,7 @@ public:
          return elem;
       };
 
-      for (auto selIdx = 0u; selIdx < 4u; ++selIdx) {
+      for (auto selIdx = 0u; selIdx < maxComponents; ++selIdx) {
          switch (mask[selIdx]) {
          case latte::SQ_SEL::SEL_X:
             resultElems[selIdx] = fetchSrcElem(0);
@@ -691,8 +736,17 @@ public:
          }
       }
 
-      return createOp(spv::OpCompositeConstruct, float4Type(),
-                      { resultElems[0], resultElems[1], resultElems[2], resultElems[3] });
+      if (maxComponents == 1) {
+         return resultElems[0];
+      } else if (maxComponents == 2) {
+         return createOp(spv::OpCompositeConstruct, vecType(sourceBaseType, 2), { resultElems[0], resultElems[1] });
+      } else if (maxComponents == 2) {
+         return createOp(spv::OpCompositeConstruct, vecType(sourceBaseType, 3), { resultElems[0], resultElems[1], resultElems[2] });
+      } else if (maxComponents == 4) {
+         return createOp(spv::OpCompositeConstruct, vecType(sourceBaseType, 4), { resultElems[0], resultElems[1], resultElems[2], resultElems[3] });
+      } else {
+         decaf_abort("Unexpected component count during swizzle result construct");
+      }
    }
 
    void writeAluOpDest(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst, spv::Id srcId, bool forAr = false)
