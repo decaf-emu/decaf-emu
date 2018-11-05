@@ -203,7 +203,6 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
           desc.regs.spi_ps_in_control_0.POSITION_ADDR() == i) {
          // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_CENTROID();
          // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_SAMPLE();
-         decaf_check(semLocation < 0);
          spvGen.createStore(spvGen.createLoad(spvGen.fragCoordVar()), gprRef);
          continue;
       }
