@@ -64,6 +64,10 @@ GX2SetEventCallback(GX2EventType type,
                     GX2EventCallbackFunction func,
                     virt_ptr<void> userData)
 {
+   if (type == GX2EventType::EndOfPipeInterrupt || type == GX2EventType::StartOfPipeInterrupt) {
+      decaf_abort("Unsupported interrupt callback");
+   }
+
    if (type == GX2EventType::DisplayListOverrun && !userData) {
       gLog->error("DisplayListOverrun callback set with no valid userData");
    }
