@@ -436,8 +436,8 @@ GX2SetGeometryUniformBlock(uint32_t location,
    decaf_check(!(virt_cast<virt_addr>(data) & 0xFF));
 
    SetVtxResource res;
-   res.id = (latte::SQ_RES_OFFSET::GS_BUF_RESOURCE_0 + location) * 7;
    std::memset(&res, 0, sizeof(SetVtxResource));
+   res.id = (latte::SQ_RES_OFFSET::GS_BUF_RESOURCE_0 + location) * 7;
    res.baseAddress = OSEffectiveToPhysical(virt_cast<virt_addr>(data));
 
    res.word1 = res.word1
