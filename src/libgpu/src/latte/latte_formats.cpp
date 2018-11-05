@@ -395,16 +395,13 @@ getDataFormatMeta(latte::SQ_DATA_FORMAT format)
       return{ 32, 1, DFT_UINT, {{0, 0, 24}, {0, 24, 8}, BADELEM, BADELEM  } };
    case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
       return{ 32, 1, DFT_FLOAT, {{0, 0, 24}, {0, 24, 8}, BADELEM, BADELEM } };
-   case latte::SQ_DATA_FORMAT::FMT_10_11_11:
-      return{ 32, 1, DFT_UINT, {{0, 0, 10}, {0, 10, 11}, {0, 21, 11}, BADELEM } };
+ /*case latte::SQ_DATA_FORMAT::FMT_10_11_11:
+      return{ 32, 1, DFT_UINT, {{0, 0, 11}, {0, 11, 11}, {0, 22, 10}, BADELEM } };*/
    case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
-      return{ 32, 1, DFT_FLOAT,{{ 0, 0, 10 },{ 0, 10, 11 },{ 0, 21, 11 }, BADELEM } };
-   case latte::SQ_DATA_FORMAT::FMT_11_11_10:
-      return{ 32, 1, DFT_UINT, {{0, 22, 10}, {0, 11, 11}, {0, 0, 11}, BADELEM } };
-   case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
-      return{ 32, 1, DFT_FLOAT,{{ 0, 22, 10 },{ 0, 11, 11 },{ 0, 0, 11 }, BADELEM } };
+      return{ 32, 1, DFT_FLOAT,{{0, 0, 11}, {0, 11, 11}, {0, 22, 10}, BADELEM } };
+   // This attribute format appears to oddly have the same layout as FMT_10_10_10_2?
    case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
-      return{ 32, 1, DFT_UINT, {{0, 22, 10}, {0, 12, 10}, {0, 2, 10}, {0, 0, 2} } };
+      return{ 32, 1, DFT_UINT, {{0, 0, 10}, {0, 10, 10}, { 0, 20, 10 }, {0, 30, 2} } };
    case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
       return{ 32, 1, DFT_UINT,{{ 0, 0, 8 },{ 0, 8, 8 },{ 0, 16, 8 },{0, 24, 8 } } };
    case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
