@@ -6,6 +6,16 @@ namespace spirv
 
 using namespace latte;
 
+/*
+
+Notes:
+1. KILL instructions only are used to discard a pixel in the pixel
+   shader according to the ISA.  However, based on empirical evidence
+   in some Geometry shaders, its also used to cancel the shader when
+   the ringbuffers overflow.
+
+*/
+
 void Transpiler::translateAluOp2_ADD(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
@@ -112,7 +122,13 @@ void Transpiler::translateAluOp2_KILLE(const ControlFlowInst &cf, const AluInstr
 
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -123,7 +139,13 @@ void Transpiler::translateAluOp2_KILLE_INT(const ControlFlowInst &cf, const AluI
 
    auto pred = mSpv->createBinOp(spv::Op::OpIEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -134,7 +156,13 @@ void Transpiler::translateAluOp2_KILLNE(const ControlFlowInst &cf, const AluInst
 
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdNotEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -145,7 +173,13 @@ void Transpiler::translateAluOp2_KILLNE_INT(const ControlFlowInst &cf, const Alu
 
    auto pred = mSpv->createBinOp(spv::Op::OpINotEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -156,7 +190,13 @@ void Transpiler::translateAluOp2_KILLGT(const ControlFlowInst &cf, const AluInst
 
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdGreaterThan, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -167,7 +207,13 @@ void Transpiler::translateAluOp2_KILLGT_INT(const ControlFlowInst &cf, const Alu
 
    auto pred = mSpv->createBinOp(spv::Op::OpSGreaterThan, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -178,7 +224,13 @@ void Transpiler::translateAluOp2_KILLGT_UINT(const ControlFlowInst &cf, const Al
 
    auto pred = mSpv->createBinOp(spv::Op::OpUGreaterThan, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -189,7 +241,13 @@ void Transpiler::translateAluOp2_KILLGE(const ControlFlowInst &cf, const AluInst
 
    auto pred = mSpv->createBinOp(spv::Op::OpFOrdGreaterThanEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -200,7 +258,13 @@ void Transpiler::translateAluOp2_KILLGE_INT(const ControlFlowInst &cf, const Alu
 
    auto pred = mSpv->createBinOp(spv::Op::OpSGreaterThanEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -211,7 +275,13 @@ void Transpiler::translateAluOp2_KILLGE_UINT(const ControlFlowInst &cf, const Al
 
    auto pred = mSpv->createBinOp(spv::Op::OpUGreaterThanEqual, mSpv->boolType(), src0, src1);
    auto cond = spv::Builder::If { pred, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->makeDiscard();
+
+   if (mType == ShaderParser::Type::Pixel) {
+      mSpv->makeDiscard();
+   } else {
+      mSpv->makeReturn(false);
+   }
+
    cond.makeEndIf();
 }
 
@@ -738,7 +808,7 @@ void Transpiler::translateAluOp2_SUB_INT(const ControlFlowInst &cf, const AluIns
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::INT);
    auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, latte::VarRefType::INT);
 
-   auto output = mSpv->createBinOp(spv::OpISub, mSpv->floatType(), src0, src1);
+   auto output = mSpv->createBinOp(spv::OpISub, mSpv->intType(), src0, src1);
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
