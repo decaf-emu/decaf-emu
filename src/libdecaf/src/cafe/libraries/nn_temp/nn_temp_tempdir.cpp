@@ -726,6 +726,8 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPGetDirPath);
    RegisterFunctionExport(TEMPGetDirGlobalPath);
    RegisterFunctionExport(TEMPShutdownTempDir);
+
+   RegisterDataInternal(sTempDirData);
 }
 
 } // namespace cafe::nn_temp
