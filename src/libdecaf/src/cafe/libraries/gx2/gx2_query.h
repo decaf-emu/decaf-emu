@@ -8,7 +8,9 @@ namespace cafe::gx2
 
 struct GX2QueryData
 {
-   UNKNOWN(0x40);
+   // Note that these are intentionally host-endian as they
+   // are GPU managed which is litte-endian, not big-endian (PPC).
+   uint64_t _gpudata[8];
 };
 CHECK_SIZE(GX2QueryData, 0x40);
 

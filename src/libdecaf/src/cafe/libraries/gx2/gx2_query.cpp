@@ -266,7 +266,7 @@ void
 GX2QueryGetOcclusionResult(virt_ptr<GX2QueryData> data,
                            virt_ptr<uint64_t> outResult)
 {
-   *outResult = *(virt_cast<uint64_t *>(data) + 1);
+   *outResult = data->_gpudata[1] - data->_gpudata[0];
 }
 
 void
