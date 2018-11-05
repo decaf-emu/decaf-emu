@@ -228,6 +228,25 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
       return;
    }
 
+   std::string shaderName;
+   if (desc->type == spirv::ShaderType::Vertex) {
+      auto vsDesc = reinterpret_cast<spirv::VertexShaderDesc*>(desc);
+      auto vsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->binary.data()));
+      auto fsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()));
+      shaderName = fmt::format("vs_{:08x}_{:08x}", vsAddr, fsAddr);
+   } else if (desc->type == spirv::ShaderType::Geometry) {
+      auto gsDesc = reinterpret_cast<spirv::GeometryShaderDesc*>(desc);
+      auto gsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->binary.data()));
+      auto dcAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()));
+      shaderName = fmt::format("gs_{:08x}_{:08x}", gsAddr, dcAddr);
+   } else if (desc->type == spirv::ShaderType::Pixel) {
+      auto psDesc = reinterpret_cast<spirv::PixelShaderDesc*>(desc);
+      auto psAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(psDesc->binary.data()));
+      shaderName = fmt::format("ps_{:08x}", psAddr);
+   } else {
+      decaf_abort("Unexpected shader type");
+   }
+
    std::string outputStr;
    if (desc->type == spirv::ShaderType::Vertex) {
       auto vsDesc = reinterpret_cast<spirv::VertexShaderDesc*>(desc);
@@ -273,13 +292,8 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
       decaf_abort("Unexpected shader type");
    }
 
-   // Print to log
-   gLog->debug("{}", outputStr);
-
    // Write to dump file
-   auto shaderType = static_cast<uint32_t>(desc->type);
-   auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(desc->binary.data()));
-   auto filePath = fmt::format("dump/gpu_{}_{:x}_raw.txt", shaderType, shaderAddr);
+   auto filePath = fmt::format("dump/{}.txt", shaderName);
    if (!platform::fileExists(filePath)) {
       platform::createDirectory("dump");
 
@@ -297,6 +311,25 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
 
    auto shaderText = spirv::shaderToString(shader);
 
+   std::string shaderName;
+   if (desc->type == spirv::ShaderType::Vertex) {
+      auto vsDesc = reinterpret_cast<spirv::VertexShaderDesc*>(desc);
+      auto vsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->binary.data()));
+      auto fsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()));
+      shaderName = fmt::format("vs_{:08x}_{:08x}", vsAddr, fsAddr);
+   } else if (desc->type == spirv::ShaderType::Geometry) {
+      auto gsDesc = reinterpret_cast<spirv::GeometryShaderDesc*>(desc);
+      auto gsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->binary.data()));
+      auto dcAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()));
+      shaderName = fmt::format("gs_{:08x}_{:08x}", gsAddr, dcAddr);
+   } else if (desc->type == spirv::ShaderType::Pixel) {
+      auto psDesc = reinterpret_cast<spirv::PixelShaderDesc*>(desc);
+      auto psAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(psDesc->binary.data()));
+      shaderName = fmt::format("ps_{:08x}", psAddr);
+   } else {
+      decaf_abort("Unexpected shader type");
+   }
+
    std::string outputStr;
    if (desc->type == spirv::ShaderType::Vertex) {
       outputStr += "Compiled Vertex Shader:\n";
@@ -311,13 +344,8 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
       decaf_abort("Unexpected shader type");
    }
 
-   // Print to log
-   gLog->debug("{}", outputStr);
-
    // Write to dump file
-   auto shaderType = static_cast<uint32_t>(desc->type);
-   auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(desc->binary.data()));
-   auto filePath = fmt::format("dump/gpu_{}_{:x}_spv.txt", shaderType, shaderAddr);
+   auto filePath = fmt::format("dump/{}.spv.txt", shaderName);
    if (!platform::fileExists(filePath)) {
       platform::createDirectory("dump");
 
@@ -326,7 +354,7 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
       file << outputStr << std::endl;
 
       // SPIRV Binary Output
-      auto binFilePath = fmt::format("dump/gpu_{}_{:x}_bin.spv", shaderType, shaderAddr);
+      auto binFilePath = fmt::format("dump/{}.spv", shaderName);
       auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
       binFile.write(reinterpret_cast<const char*>(shader->binary.data()),
                     shader->binary.size() * sizeof(shader->binary[0]));
@@ -335,7 +363,7 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
       if (desc->type == spirv::ShaderType::Vertex) {
          auto vsShader = reinterpret_cast<spirv::VertexShader*>(shader);
          if (!vsShader->rectStubBinary.empty()) {
-            auto binFilePath = fmt::format("dump/gpu_{}_{:x}_bin_rects.spv", shaderType, shaderAddr);
+            auto binFilePath = fmt::format("dump/{}.rects.spv", shaderName);
             auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
             binFile.write(reinterpret_cast<const char*>(vsShader->rectStubBinary.data()),
                           vsShader->rectStubBinary.size() * sizeof(vsShader->rectStubBinary[0]));
