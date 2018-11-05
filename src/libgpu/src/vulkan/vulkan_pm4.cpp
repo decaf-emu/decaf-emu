@@ -354,7 +354,43 @@ Driver::memWrite(const latte::pm4::MemWrite &data)
 void
 Driver::eventWrite(const latte::pm4::EventWrite &data)
 {
-   decaf_abort("Unsupported pm4 eventWrite");
+   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+   auto dataPtr = phys_cast<uint64_t*>(addr).getRawPointer();
+
+   if (data.eventInitiator.EVENT_TYPE() == latte::VGT_EVENT_TYPE::ZPASS_DONE) {
+      // Check if this is the first query, or a second query (as part
+      // of a single occlusion query grouping).
+      if (mLastOccQueryAddr == 0) {
+         auto dstBuffer = getDataMemCache(addr, 8);
+         transitionMemCache(dstBuffer, ResourceUsage::TransferDst);
+
+         // Write `0` into the beginning zpass count asynchronously.
+         mActiveCommandBuffer.fillBuffer(dstBuffer->buffer, 0, 8, 0);
+
+         // Start our occlusion query
+         auto queryPool = allocateOccQueryPool();
+         mActiveCommandBuffer.beginQuery(queryPool, 0, vk::QueryControlFlagBits::ePrecise);
+
+         mLastOccQuery = queryPool;
+         mLastOccQueryAddr = dataPtr;
+      } else {
+         // Make sure this is the result value of the same query
+         decaf_check(dataPtr == mLastOccQueryAddr + 1);
+
+         auto dstBuffer = getDataMemCache(addr, 8);
+         transitionMemCache(dstBuffer, ResourceUsage::TransferDst);
+
+         mActiveCommandBuffer.endQuery(mLastOccQuery, 0);
+         mActiveCommandBuffer.copyQueryPoolResults(mLastOccQuery, 0, 1,
+                                                   dstBuffer->buffer, 0, 8,
+                                                   vk::QueryResultFlagBits::e64 | vk::QueryResultFlagBits::eWait);
+
+         mLastOccQuery = vk::QueryPool();
+         mLastOccQueryAddr = nullptr;
+      }
+   } else {
+      decaf_abort("Unexpected eventWrite event type.");
+   }
 }
 
 void
@@ -411,7 +447,15 @@ Driver::eventWriteEOP(const latte::pm4::EventWriteEOP &data)
 void
 Driver::pfpSyncMe(const latte::pm4::PfpSyncMe &data)
 {
-   decaf_abort("Unsupported pm4 pfpSyncMe");
+   // Due to the specialized implementation of queries, there is
+   // no need to implement any special behaviours here.
+}
+
+void
+Driver::setPredication(const latte::pm4::SetPredication &data)
+{
+   // We do not currently implement GPU-side predication of drawing.  Instead
+   // we simply allow all draws to proceed as if they were successful.
 }
 
 void

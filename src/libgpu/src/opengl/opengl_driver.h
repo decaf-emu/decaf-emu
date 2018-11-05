@@ -363,6 +363,7 @@ private:
    void eventWrite(const latte::pm4::EventWrite &data) override;
    void eventWriteEOP(const latte::pm4::EventWriteEOP &data) override;
    void pfpSyncMe(const latte::pm4::PfpSyncMe &data) override;
+   void setPredication(const latte::pm4::SetPredication &data) override;
    void streamOutBaseUpdate(const latte::pm4::StreamOutBaseUpdate &data) override;
    void streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data) override;
    void surfaceSync(const latte::pm4::SurfaceSync &data) override;

@@ -37,6 +37,7 @@ Driver::releaseSyncWaiter(SyncWaiter *syncWaiter)
    syncWaiter->callbacks.clear();
    syncWaiter->stagingBuffers.clear();
    syncWaiter->descriptorPools.clear();
+   syncWaiter->occQueryPools.clear();
 
    // Put this fence back in the pool
    mWaiterPool.push_back(syncWaiter);
@@ -64,6 +65,10 @@ Driver::executeSyncWaiter(SyncWaiter *syncWaiter)
 
    for (auto &pool : syncWaiter->descriptorPools) {
       retireDescriptorPool(pool);
+   }
+
+   for (auto &pool : syncWaiter->occQueryPools) {
+      retireOccQueryPool(pool);
    }
 }
 

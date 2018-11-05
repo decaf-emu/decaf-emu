@@ -231,6 +231,38 @@ Driver::retireDescriptorPool(vk::DescriptorPool descriptorPool)
    mDescriptorPools.push_back(descriptorPool);
 }
 
+vk::QueryPool
+Driver::allocateOccQueryPool()
+{
+   vk::QueryPool occPool;
+
+   if (!occPool) {
+      if (!mOccQueryPools.empty()) {
+         occPool = mOccQueryPools.back();
+         mOccQueryPools.pop_back();
+      }
+   }
+
+   if (!occPool) {
+      vk::QueryPoolCreateInfo queryDesc;
+      queryDesc.queryType = vk::QueryType::eOcclusion;
+      queryDesc.queryCount = 1;
+      occPool  = mDevice.createQueryPool(queryDesc);
+   }
+
+   mActiveCommandBuffer.resetQueryPool(occPool, 0, 1);
+
+   mActiveSyncWaiter->occQueryPools.push_back(occPool);
+
+   return occPool;
+}
+
+void
+Driver::retireOccQueryPool(vk::QueryPool pool)
+{
+   mOccQueryPools.push_back(pool);
+}
+
 void
 Driver::shutdown()
 {

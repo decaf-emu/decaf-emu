@@ -623,6 +623,12 @@ GLDriver::pfpSyncMe(const latte::pm4::PfpSyncMe &data)
 }
 
 void
+GLDriver::setPredication(const latte::pm4::SetPredication &data)
+{
+   // TODO: Implement me
+}
+
+void
 GLDriver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
    // Run any remote tasks first

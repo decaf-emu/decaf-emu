@@ -281,6 +281,7 @@ struct SyncWaiter
    bool isCompleted = false;
    vk::Fence fence;
    std::vector<vk::DescriptorPool> descriptorPools;
+   std::vector<vk::QueryPool> occQueryPools;
    std::vector<StagingBuffer *> stagingBuffers;
    std::vector<std::function<void()>> callbacks;
 
@@ -701,6 +702,10 @@ protected:
    void checkSyncFences();
    void addRetireTask(std::function<void()> fn);
 
+   // Query Pools
+   vk::QueryPool allocateOccQueryPool();
+   void retireOccQueryPool(vk::QueryPool pool);
+
    // Driver
    void executeBuffer(const gpu::ringbuffer::Buffer &buffer);
    int32_t findMemoryType(uint32_t memoryTypeBits, vk::MemoryPropertyFlags props);
@@ -849,6 +854,7 @@ private:
    virtual void eventWrite(const latte::pm4::EventWrite &data) override;
    virtual void eventWriteEOP(const latte::pm4::EventWriteEOP &data) override;
    virtual void pfpSyncMe(const latte::pm4::PfpSyncMe &data) override;
+   virtual void setPredication(const latte::pm4::SetPredication &data) override;
    virtual void streamOutBaseUpdate(const latte::pm4::StreamOutBaseUpdate &data) override;
    virtual void streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data) override;
    virtual void surfaceSync(const latte::pm4::SurfaceSync &data) override;
@@ -874,6 +880,8 @@ private:
    std::vector<SyncWaiter*> mWaiterPool;
    VmaAllocator mAllocator;
    uint64_t mMemChangeCounter = 0;
+   uint64_t *mLastOccQueryAddr = nullptr;
+   vk::QueryPool mLastOccQuery;
 
    SyncWaiter *mActiveSyncWaiter = nullptr;
    vk::CommandBuffer mActiveCommandBuffer;
@@ -925,6 +933,7 @@ private:
    RenderPassObject *mRenderPass;
    std::list<StagingBuffer *> mStagingBuffers;
    std::vector<vk::DescriptorPool> mDescriptorPools;
+   std::vector<vk::QueryPool> mOccQueryPools;
    MemSegmentMap mMemSegmentMap;
    std::unordered_map<DataHash, SurfaceGroupObject*> mSurfaceGroups;
    std::unordered_map<DataHash, SurfaceObject*> mSurfaces;

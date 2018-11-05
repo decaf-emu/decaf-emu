@@ -195,6 +195,9 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::PFP_SYNC_ME:
       pfpSyncMe(read<PfpSyncMe>(reader));
       break;
+   case IT_OPCODE::SET_PREDICATION:
+      setPredication(read<SetPredication>(reader));
+      break;
    case IT_OPCODE::STRMOUT_BASE_UPDATE:
       streamOutBaseUpdate(read<StreamOutBaseUpdate>(reader));
       break;

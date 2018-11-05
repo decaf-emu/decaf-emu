@@ -27,6 +27,7 @@ protected:
    virtual void eventWrite(const EventWrite &data) = 0;
    virtual void eventWriteEOP(const EventWriteEOP &data) = 0;
    virtual void pfpSyncMe(const PfpSyncMe &data) = 0;
+   virtual void setPredication(const SetPredication &data) = 0;
    virtual void streamOutBaseUpdate(const StreamOutBaseUpdate &data) = 0;
    virtual void streamOutBufferUpdate(const StreamOutBufferUpdate &data) = 0;
    virtual void surfaceSync(const SurfaceSync &data) = 0;
