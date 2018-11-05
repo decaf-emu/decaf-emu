@@ -217,10 +217,10 @@ EXP(State &state, const ControlFlowInst &cf)
    auto type = cf.exp.word0.TYPE();
    auto arrayBase = cf.exp.word0.ARRAY_BASE();
 
-   auto selX = cf.exp.swiz.SRC_SEL_X();
-   auto selY = cf.exp.swiz.SRC_SEL_Y();
-   auto selZ = cf.exp.swiz.SRC_SEL_Z();
-   auto selW = cf.exp.swiz.SRC_SEL_W();
+   auto selX = cf.exp.swiz.SEL_X();
+   auto selY = cf.exp.swiz.SEL_Y();
+   auto selZ = cf.exp.swiz.SEL_Z();
+   auto selW = cf.exp.swiz.SEL_W();
 
    if (selX == SQ_SEL::SEL_MASK && selY == SQ_SEL::SEL_MASK && selZ == SQ_SEL::SEL_MASK && selW == SQ_SEL::SEL_MASK) {
       gLog->warn("Unusual shader with a fully masked export");

@@ -658,12 +658,6 @@ public:
             case latte::SQ_SEL::SEL_W:
                shuffleIdx[selIdx] = 7;
                break;
-            case latte::SQ_SEL::SEL_0:
-               usesConstants = true;
-               break;
-            case latte::SQ_SEL::SEL_1:
-               usesConstants = true;
-               break;
             case latte::SQ_SEL::SEL_MASK:
                break;
             default:
@@ -865,70 +859,125 @@ public:
       }
    }
 
-   spv::Id getExportRefVar(const ExportRef& ref)
+   spv::Id getExportRefVar(const ExportRef& ref, spv::Id dataType)
    {
       if (ref.type == ExportRef::Type::Position) {
-         decaf_check(ref.valueType == VarRefType::FLOAT);
-         return posExportVar(ref.index);
+         decaf_check(dataType == floatType());
+         decaf_check(ref.dataStride == 0);
+         decaf_check(ref.arraySize == 1);
+         decaf_check(ref.elemCount == 1);
+         decaf_check(ref.indexGpr == -1);
+         return posExportVar(ref.arrayBase);
       } else if (ref.type == ExportRef::Type::Param) {
-         decaf_check(ref.valueType == VarRefType::FLOAT);
-         return paramExportVar(ref.index);
+         decaf_check(dataType == floatType());
+         decaf_check(ref.dataStride == 0);
+         decaf_check(ref.arraySize == 1);
+         decaf_check(ref.elemCount == 1);
+         decaf_check(ref.indexGpr == -1);
+         return paramExportVar(ref.arrayBase);
       } else if (ref.type == ExportRef::Type::Pixel) {
-         return pixelExportVar(ref.index, ref.valueType);
+         decaf_check(ref.dataStride == 0);
+         decaf_check(ref.arraySize == 1);
+         decaf_check(ref.elemCount == 1);
+         decaf_check(ref.indexGpr == -1);
+         return pixelExportVar(ref.arrayBase, dataType);
       } else if (ref.type == ExportRef::Type::ComputedZ) {
-         decaf_check(ref.index == 0);
-         decaf_check(ref.valueType == VarRefType::FLOAT);
+         decaf_check(dataType == floatType());
+         decaf_check(ref.dataStride == 0);
+         decaf_check(ref.arrayBase == 0);
+         decaf_check(ref.arraySize == 1);
+         decaf_check(ref.elemCount == 1);
+         decaf_check(ref.indexGpr == -1);
          return zExportVar();
       } else {
          decaf_abort("Encountered unexpected export type");
       }
    }
 
-   spv::Id readExportRef(const ExportRef& ref)
+   // Takes a value as input and expands it out to being a 4-component
+   // vector of the same underlying type.
+   spv::Id expandVector(spv::Id value)
    {
-      return createLoad(getExportRefVar(ref));
-   }
+      auto numComps = getNumComponents(value);
 
-   void writeExportRef(const ExportRef& ref, std::array<SQ_SEL, 4> mask, spv::Id srcId)
-   {
-      auto exportRef = getExportRefVar(ref);
-
-      // We must put the srcId here, since some swizzles will just be rearranging
-      auto exportVal = srcId;
-
-      // If the swizzle masks anything, we need to load the original value
-      // of the export so that we can preserve that data not being written.
-      if (!isSwizzleFullyUnmasked(mask)) {
-         exportVal = createLoad(exportRef);
+      auto baseType = getTypeId(value);
+      if (numComps > 1) {
+         baseType = getContainedTypeId(baseType);
       }
 
-      // If the source value is non-float, we need to perform a bitcast conversion
-      // to that type before we perform any swizzling.
-      auto sourceValType = getTypeId(srcId);
-      if (ref.valueType == VarRefType::FLOAT) {
-         if (sourceValType != float4Type()) {
-            srcId = createUnaryOp(spv::OpBitcast, float4Type(), srcId);
-            sourceValType = float4Type();
+      if (baseType == floatType()) {
+         auto zeroFConst = makeFloatConstant(0.0f);
+         if (numComps == 1) {
+            value = createOp(spv::OpCompositeConstruct, float4Type(), { value, zeroFConst, zeroFConst, zeroFConst });
+         } else if (numComps == 2) {
+            value = createOp(spv::OpCompositeConstruct, float4Type(), { value, zeroFConst, zeroFConst });
+         } else if (numComps == 3) {
+            value = createOp(spv::OpCompositeConstruct, float4Type(), { value, zeroFConst });
+         } else if (numComps == 4) {
+            // Already the right size
+         } else {
+            decaf_abort("Unexpected number of export components.");
          }
-      } else if (ref.valueType == VarRefType::INT) {
-         if (sourceValType != int4Type()) {
-            srcId = createUnaryOp(spv::OpBitcast, int4Type(), srcId);
-            sourceValType = int4Type();
+      } else if (baseType == intType()) {
+         auto zeroConst = makeIntConstant(0);
+         if (numComps == 1) {
+            value = createOp(spv::OpCompositeConstruct, int4Type(), { value, zeroConst, zeroConst, zeroConst });
+         } else if (numComps == 2) {
+            value = createOp(spv::OpCompositeConstruct, int4Type(), { value, zeroConst, zeroConst });
+         } else if (numComps == 3) {
+            value = createOp(spv::OpCompositeConstruct, int4Type(), { value, zeroConst });
+         } else if (numComps == 4) {
+            // Already the right size
+         } else {
+            decaf_abort("Unexpected number of export components.");
          }
-      } else if (ref.valueType == VarRefType::UINT) {
-         if (sourceValType != uint4Type()) {
-            srcId = createUnaryOp(spv::OpBitcast, uint4Type(), srcId);
-            sourceValType = uint4Type();
+      } else if (baseType == uintType()) {
+         auto zeroUConst = makeUintConstant(0);
+         if (numComps == 1) {
+            value = createOp(spv::OpCompositeConstruct, uint4Type(), { value, zeroUConst, zeroUConst, zeroUConst });
+         } else if (numComps == 2) {
+            value = createOp(spv::OpCompositeConstruct, uint4Type(), { value, zeroUConst, zeroUConst });
+         } else if (numComps == 3) {
+            value = createOp(spv::OpCompositeConstruct, uint4Type(), { value, zeroUConst });
+         } else if (numComps == 4) {
+            // Already the right size
+         } else {
+            decaf_abort("Unexpected number of export components.");
          }
       } else {
-         decaf_abort("Unexpected export value type");
+         decaf_abort("Unexpected export source data type");
       }
 
-      // Apply any export masking operation thats needed
-      exportVal = applySelMask(exportVal, srcId, mask);
+      return value;
+   }
+
+   void writeExportRef(const ExportMaskRef& ref, spv::Id srcId)
+   {
+      // Fetch the underlying type of the export.  Note that we require that
+      // this method be invoked with 4-component vectors only!
+      auto srcBaseType = getContainedTypeId(getTypeId(srcId));
+
+      // Find the export reference for this, we pass in the source type to hint
+      // at the export creation what the output type should be.  This function
+      // must return something that is of the same type!
+      auto exportPtr = getExportRefVar(ref.output, srcBaseType);
+
+      // Lets figure out the correct size of the data so that we can
+      // shrink the source down to the right size at the same time.
+      auto exportType = getDerefTypeId(exportPtr);
+      auto numExportComps = getNumTypeComponents(exportType);
+
+      // Apply any export masking operation thats needed, this will also
+      // shrink the object down to the expected size at the same time.
+      // Note: We shouldn't be reading from outputs, but sometimes they
+      // mask data into a write, which makes very little sense...
+      auto origData = createLoad(exportPtr);
+      auto exportVal = applySelMask(origData, srcId, ref.mask, numExportComps);
+
+      auto sourceValType = getTypeId(exportVal);
 
       // Lets perform any specialized behaviour depending on the export type
-      if (ref.type == ExportRef::Type::Position) {
+      if (ref.output.type == ExportRef::Type::Position) {
          decaf_check(sourceValType == float4Type());
          // Need to reposition the depth values from (-1.0 to 1.0) to (0.0 to 1.0)
 
@@ -975,7 +1024,7 @@ public:
          exportVal = createOp(spv::OpCompositeInsert, float4Type(), { zFinal, exportVal, 2 });
       }
 
-      if (ref.type == ExportRef::Type::Pixel) {
+      if (ref.output.type == ExportRef::Type::Pixel) {
          decaf_check(sourceValType == float4Type() || sourceValType == int4Type() || sourceValType == uint4Type());
 
          auto zeroConst = makeUintConstant(0);
@@ -984,7 +1033,7 @@ public:
          // We use the first exported pixel to perform alpha reference testing.  This
          // may not actually be the correct behaviour.
          // TODO: Check which exported pixel does alpha testing.
-         if (ref.index == 0 && sourceValType == float4Type()) {
+         if (ref.output.arrayBase == 0 && sourceValType == float4Type()) {
             auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
 
             auto alphaFuncPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { zeroConst });
@@ -1124,7 +1173,7 @@ public:
             auto needsPremulPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { twoConst });
             auto needsPremulVal = createLoad(needsPremulPtr);
 
-            auto targetBitConst = makeUintConstant(1 << ref.index);
+            auto targetBitConst = makeUintConstant(1 << ref.output.arrayBase);
             auto targetBitVal = createBinOp(spv::OpBitwiseAnd, uintType(), needsPremulVal, targetBitConst);
             auto pred = createBinOp(spv::OpINotEqual, boolType(), targetBitVal, zeroConst);
             auto block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
@@ -1143,7 +1192,7 @@ public:
          exportVal = createLoad(pixelTmpVar);
       }
 
-      createStore(exportVal, exportRef);
+      createStore(exportVal, exportPtr);
    }
 
    spv::Id vertexIdVar()
@@ -1192,6 +1241,16 @@ public:
          mEntryPoint->addIdOperand(mFrontFacing);
       }
       return mFrontFacing;
+   }
+
+   spv::Id layerIdVar()
+   {
+      if (!mLayerId) {
+         mLayerId = createVariable(spv::StorageClassOutput, intType(), "LayerID");
+         addDecoration(mLayerId, spv::DecorationBuiltIn, spv::BuiltInLayer);
+         mEntryPoint->addIdOperand(mLayerId);
+      }
+      return mLayerId;
    }
 
    spv::Id inputAttribVar(int semLocation, spv::Id attribType)
@@ -1378,40 +1437,24 @@ public:
       return textureId;
    }
 
-   spv::Id pixelExportVar(uint32_t pixelIdx, VarRefType valueType)
+   spv::Id pixelExportVar(uint32_t pixelIdx, spv::Id outputType)
    {
       decaf_check(pixelIdx < latte::MaxRenderTargets);
 
-      spv::Id exportType;
-      switch (valueType) {
-      case VarRefType::FLOAT:
-         exportType = float4Type();
-         break;
-      case VarRefType::INT:
-         exportType = int4Type();
-         break;
-      case VarRefType::UINT:
-         exportType = uint4Type();
-         break;
-      default:
-         decaf_abort("Unexpected pixel export format");
-      }
+      auto exportType = vecType(outputType, 4);
 
-      while (mPixelExports.size() <= pixelIdx) {
-         mPixelExports.push_back(spv::NoResult);
-      }
-
-      auto exportId = mPixelExports[pixelIdx];
-      if (exportId) {
-         // If this export already existed, we need to confirm its the right type.
-         decaf_check(getTypeId(exportId) == exportType);
-      } else {
+      auto& exportId = mPixelExports[pixelIdx];
+      if (!exportId) {
          exportId = createVariable(spv::StorageClass::StorageClassOutput, exportType, fmt::format("PIXEL_{}", pixelIdx).c_str());
          addDecoration(exportId, spv::Decoration::DecorationLocation, pixelIdx);
          mPixelExports[pixelIdx] = exportId;
 
          mEntryPoint->addIdOperand(exportId);
       }
+
+      // Lets confirm that the type is correct!  If we fetched this from the
+      // map, its possible that the type has changed, which we do not handle.
+      decaf_check(getDerefTypeId(exportId) == exportType);
 
       return exportId;
    }
@@ -1420,11 +1463,7 @@ public:
    {
       decaf_check(posIdx < 4);
 
-      while (mPosExports.size() <= posIdx) {
-         mPosExports.push_back(spv::NoResult);
-      }
-
-      auto exportId = mPosExports[posIdx];
+      auto& exportId = mPosExports[posIdx];
       if (!exportId) {
          exportId = createVariable(spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("POS_{}", posIdx).c_str());
 
@@ -1436,8 +1475,6 @@ public:
             addDecoration(exportId, spv::Decoration::DecorationLocation, 60 + posIdx);
          }
 
-         mPosExports[posIdx] = exportId;
-
          mEntryPoint->addIdOperand(exportId);
       }
 
@@ -1448,15 +1485,10 @@ public:
    {
       decaf_check(paramIdx < 32);
 
-      while (mParamExports.size() <= paramIdx) {
-         mParamExports.push_back(spv::NoResult);
-      }
-
-      auto exportId = mParamExports[paramIdx];
+      auto& exportId = mParamExports[paramIdx];
       if (!exportId) {
          exportId = createVariable(spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("PARAM_{}", paramIdx).c_str());
          addDecoration(exportId, spv::Decoration::DecorationLocation, paramIdx);
-         mParamExports[paramIdx] = exportId;
 
          mEntryPoint->addIdOperand(exportId);
       }
@@ -1650,6 +1682,7 @@ protected:
    spv::Id mInstanceId = spv::NoResult;
    spv::Id mFragCoord = spv::NoResult;
    spv::Id mFrontFacing = spv::NoResult;
+   spv::Id mLayerId = spv::NoResult;
 
    spv::Id mRegistersBuffer = spv::NoResult;
    std::array<spv::Id, latte::MaxUniformBlocks> mUniformBuffers = { spv::NoResult };
@@ -1665,9 +1698,9 @@ protected:
    std::array<spv::Id, latte::MaxTextures> mTextureTypes = { spv::NoResult };
    std::array<spv::Id, latte::MaxTextures> mTextures = { spv::NoResult };
 
-   std::vector<spv::Id> mPixelExports;
-   std::vector<spv::Id> mPosExports;
-   std::vector<spv::Id> mParamExports;
+   std::map<uint32_t, spv::Id> mPixelExports;
+   std::map<uint32_t, spv::Id> mPosExports;
+   std::map<uint32_t, spv::Id> mParamExports;
    spv::Id mZExport = spv::NoResult;
 
    spv::Id mState = spv::NoResult;

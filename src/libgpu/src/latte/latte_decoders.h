@@ -299,6 +299,11 @@ struct GprRef
 {
    uint32_t number;
    GprIndexMode indexMode;
+
+   inline void next()
+   {
+      number++;
+   }
 };
 
 struct CfileRef
@@ -371,8 +376,22 @@ struct ExportRef
    };
 
    Type type;
-   uint32_t index;
-   VarRefType valueType;
+   uint32_t dataStride;
+   uint32_t elemCount;
+   uint32_t arrayBase;
+   uint32_t arraySize;
+   uint32_t indexGpr;
+
+   inline void next()
+   {
+      arrayBase += elemCount;
+   }
+};
+
+struct ExportMaskRef
+{
+   ExportRef output;
+   std::array<SQ_SEL, 4> mask;
 };
 
 struct SrcVarRef
@@ -773,35 +792,38 @@ isSwizzleFullyUnmasked(const std::array<SQ_SEL, 4> &dest)
 }
 
 inline ExportRef
-makeExportRef(SQ_EXPORT_TYPE type, uint32_t arrayBase, VarRefType valueType = VarRefType::FLOAT)
+makeExportRef(SQ_EXPORT_TYPE type, uint32_t arrayBase)
 {
    ExportRef out;
-   out.valueType = valueType;
+   out.dataStride = 0;
+   out.arraySize = 1;
+   out.elemCount = 1;
+   out.indexGpr = -1;
 
    if (type == SQ_EXPORT_TYPE::POS) {
       if (60 <= arrayBase && arrayBase <= 63) {
          out.type = ExportRef::Type::Position;
-         out.index = arrayBase - 60;
+         out.arrayBase = arrayBase - 60;
       } else {
          decaf_abort("Unexpected POS EXPORT index");
       }
    } else if (type == SQ_EXPORT_TYPE::PARAM) {
       if (0 <= arrayBase && arrayBase <= 31) {
          out.type = ExportRef::Type::Param;
-         out.index = arrayBase;
+         out.arrayBase = arrayBase;
       } else {
          decaf_abort("Unexpected PARAM EXPORT index");
       }
    } else if (type == SQ_EXPORT_TYPE::PIXEL) {
       if (0 <= arrayBase && arrayBase <= 7) {
          out.type = ExportRef::Type::Pixel;
-         out.index = arrayBase;
+         out.arrayBase = arrayBase;
       } else if (16 <= arrayBase && arrayBase <= 23) {
          out.type = ExportRef::Type::PixelWithFog;
-         out.index = arrayBase - 16;
+         out.arrayBase = arrayBase - 16;
       } else if (arrayBase == 61) {
          out.type = ExportRef::Type::ComputedZ;
-         out.index = 0;
+         out.arrayBase = 0;
       } else {
          decaf_abort("Unexpected PIXEL EXPORT index");
       }

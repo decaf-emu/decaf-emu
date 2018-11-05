@@ -90,10 +90,10 @@ disassembleExpInstruction(fmt::memory_buffer &out, const ControlFlowInst &inst)
 
    if (id == SQ_CF_INST_EXP || id == SQ_CF_INST_EXP_DONE) {
       fmt::format_to(out, ".{}{}{}{}",
-         disassembleDestMask(inst.exp.swiz.SRC_SEL_X()),
-         disassembleDestMask(inst.exp.swiz.SRC_SEL_Y()),
-         disassembleDestMask(inst.exp.swiz.SRC_SEL_Z()),
-         disassembleDestMask(inst.exp.swiz.SRC_SEL_W()));
+         disassembleDestMask(inst.exp.swiz.SEL_X()),
+         disassembleDestMask(inst.exp.swiz.SEL_Y()),
+         disassembleDestMask(inst.exp.swiz.SEL_Z()),
+         disassembleDestMask(inst.exp.swiz.SEL_W()));
    } else {
       fmt::format_to(out, ".{}{}{}{}",
          (inst.exp.buf.COMP_MASK() & (1 << 0) ? 'x' : '_'),

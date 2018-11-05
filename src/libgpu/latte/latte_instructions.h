@@ -204,10 +204,10 @@ BITFIELD_END
 // Word 1 of the control flow instruction. This subencoding is used by
 // alloc/exports for PIXEL, POS, and PARAM.
 BITFIELD_BEG(SQ_CF_ALLOC_EXPORT_WORD1_SWIZ, uint32_t)
-   BITFIELD_ENTRY(0, 3, SQ_SEL, SRC_SEL_X);
-   BITFIELD_ENTRY(3, 3, SQ_SEL, SRC_SEL_Y);
-   BITFIELD_ENTRY(6, 3, SQ_SEL, SRC_SEL_Z);
-   BITFIELD_ENTRY(9, 3, SQ_SEL, SRC_SEL_W);
+   BITFIELD_ENTRY(0, 3, SQ_SEL, SEL_X);
+   BITFIELD_ENTRY(3, 3, SQ_SEL, SEL_Y);
+   BITFIELD_ENTRY(6, 3, SQ_SEL, SEL_Z);
+   BITFIELD_ENTRY(9, 3, SQ_SEL, SEL_W);
 BITFIELD_END
 
 // Texture fetch clause instruction word 0

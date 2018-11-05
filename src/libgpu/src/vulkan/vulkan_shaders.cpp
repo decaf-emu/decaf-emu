@@ -66,12 +66,12 @@ Driver::getVertexShaderDesc()
    shaderDesc.generateRectStub = mCurrentDrawDesc.isRectDraw;
 
    shaderDesc.regs.sq_pgm_resources_vs = getRegister<latte::SQ_PGM_RESOURCES_VS>(latte::Register::SQ_PGM_RESOURCES_VS);
+   shaderDesc.regs.pa_cl_vs_out_cntl = getRegister<latte::PA_CL_VS_OUT_CNTL>(latte::Register::PA_CL_VS_OUT_CNTL);
+   shaderDesc.regs.spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
 
    for (auto i = 0u; i < 32; ++i) {
       shaderDesc.regs.sq_vtx_semantics[i] = getRegister<latte::SQ_VTX_SEMANTIC_N>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4);
    }
-
-   shaderDesc.regs.spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
 
    for (auto i = 0; i < 10; ++i) {
       shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);

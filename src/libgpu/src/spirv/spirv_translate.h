@@ -4,6 +4,7 @@
 #include "latte/latte_constants.h"
 #include "latte/latte_registers_sq.h"
 #include "latte/latte_registers_spi.h"
+#include "latte/latte_registers_pa.h"
 
 #include <common/datahash.h>
 #include <gsl/gsl>
@@ -76,6 +77,7 @@ struct VertexShaderDesc : public ShaderDesc
       std::array<latte::SQ_VTX_SEMANTIC_N, 32> sq_vtx_semantics;
       latte::SPI_VS_OUT_CONFIG spi_vs_out_config;
       std::array<latte::SPI_VS_OUT_ID_N, 10> spi_vs_out_ids;
+      latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl;
    } regs;
 
    DataHash hash() const

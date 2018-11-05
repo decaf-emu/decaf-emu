@@ -137,6 +137,16 @@ void Transpiler::writeGenericProlog(ShaderSpvBuilder &spvGen)
 
 void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderDesc& desc)
 {
+   // This is implied as being enabled if we see a write to POS_1
+   //desc.regs.pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA();
+
+   // I don't quite understand the semantics of this.
+   //desc.regs.pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA();
+
+   // We do not currently support these cases:
+   decaf_check(!desc.regs.pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA());
+   decaf_check(!desc.regs.pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA());
+
    writeGenericProlog(spvGen);
 
    auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar());
