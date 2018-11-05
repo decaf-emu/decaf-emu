@@ -137,7 +137,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    std::vector<vk::PushConstantRange> pushConstants;
 
    vk::PushConstantRange screenSpaceConstants;
-   screenSpaceConstants.stageFlags = vk::ShaderStageFlagBits::eVertex;
+   screenSpaceConstants.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry;
    screenSpaceConstants.offset = 0;
    screenSpaceConstants.size = 32;
    pushConstants.push_back(screenSpaceConstants);

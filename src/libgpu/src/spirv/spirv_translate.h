@@ -5,6 +5,7 @@
 #include "latte/latte_registers_sq.h"
 #include "latte/latte_registers_spi.h"
 #include "latte/latte_registers_pa.h"
+#include "latte/latte_registers_vgt.h"
 
 #include <common/datahash.h>
 #include <gsl/gsl>
@@ -108,6 +109,18 @@ struct GeometryShaderDesc : public ShaderDesc
    gsl::span<const uint8_t> dcBinary;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
    std::array<bool, latte::MaxTextures> texIsUint;
+   std::array<uint32_t, latte::MaxStreamOutBuffers> streamOutStride;
+
+   struct
+   {
+      latte::SQ_GS_VERT_ITEMSIZE sq_gs_vert_itemsize;
+      latte::VGT_GS_OUT_PRIMITIVE_TYPE vgt_gs_out_prim_type;
+      latte::VGT_GS_MODE vgt_gs_mode;
+      uint32_t sq_gsvs_ring_itemsize;
+      latte::SPI_VS_OUT_CONFIG spi_vs_out_config;
+      std::array<latte::SPI_VS_OUT_ID_N, 10> spi_vs_out_ids;
+      latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl;
+   } regs;
 
    DataHash hash() const
    {
@@ -123,7 +136,8 @@ struct GeometryShaderDesc : public ShaderDesc
 
       return ShaderDesc::hash()
          .write(dcBinary.data(), dcBinary.size())
-         .write(_dataHash);
+         .write(_dataHash)
+         .write(regs);
    }
 };
 
@@ -182,6 +196,7 @@ struct VertexShader : public Shader
 
 struct GeometryShader : public Shader
 {
+   std::vector<uint32_t> outputSemantics;
 };
 
 struct PixelShader : public Shader

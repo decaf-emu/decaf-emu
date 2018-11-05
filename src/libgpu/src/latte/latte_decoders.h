@@ -372,7 +372,9 @@ struct ExportRef
       Param,
       Pixel,
       PixelWithFog,
-      ComputedZ
+      ComputedZ,
+      VsGsRingWrite,
+      GsDcRingWrite
    };
 
    Type type;
@@ -384,6 +386,12 @@ struct ExportRef
 
    inline void next()
    {
+      // Normal exports have a specific behaviour that they increment
+      // by one and have a elemCount of 1, even though they write vec4's
+      if (type < Type::VsGsRingWrite) {
+         decaf_check(elemCount == 1);
+      }
+
       arrayBase += elemCount;
    }
 };
@@ -832,6 +840,43 @@ makeExportRef(SQ_EXPORT_TYPE type, uint32_t arrayBase)
    }
 
    return out;
+}
+
+inline ExportRef
+_makeGenericMemExportRef(ExportRef::Type refType, SQ_EXPORT_TYPE type,
+                         uint32_t indexGpr, uint32_t dataStride,
+                         uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+{
+   ExportRef out;
+   out.type = refType;
+   out.dataStride = dataStride;
+   out.elemCount = elemCount;
+   out.arrayBase = arrayBase;
+   out.arraySize = arraySize;
+   out.indexGpr = -1;
+
+   auto memType = static_cast<SQ_MEM_EXPORT_TYPE>(type);
+   if (memType == SQ_MEM_EXPORT_TYPE::WRITE) {
+      // This is handled implicitly
+   } else if (type == SQ_MEM_EXPORT_TYPE::WRITE_IND) {
+      out.indexGpr = indexGpr;
+   } else {
+      decaf_abort("Unexpected shader MEM EXPORT type");
+   }
+
+   return out;
+}
+
+inline ExportRef
+makeVsGsRingExportRef(SQ_EXPORT_TYPE type, uint32_t indexGpr, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+{
+   return _makeGenericMemExportRef(ExportRef::Type::VsGsRingWrite, type, indexGpr, 0, arrayBase, arraySize, elemCount);
+}
+
+inline ExportRef
+makeGsDcRingExportRef(SQ_EXPORT_TYPE type, uint32_t indexGpr, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+{
+   return _makeGenericMemExportRef(ExportRef::Type::GsDcRingWrite, type, indexGpr, 0, arrayBase, arraySize, elemCount);
 }
 
 } // namespace latte

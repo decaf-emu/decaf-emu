@@ -171,7 +171,58 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
 
 void Transpiler::writeGeometryProlog(ShaderSpvBuilder &spvGen, const GeometryShaderDesc& desc)
 {
+   // This is implied as being enabled if we see a write to POS_1
+   //desc.regs.pa_cl_vs_out_cntl.VS_OUT_MISC_VEC_ENA();
+
+   // I don't quite understand the semantics of this.
+   //desc.regs.pa_cl_vs_out_cntl.VS_OUT_MISC_SIDE_BUS_ENA();
+
+   // We do not currently support these cases:
+   decaf_check(!desc.regs.pa_cl_vs_out_cntl.VS_OUT_CCDIST0_VEC_ENA());
+   decaf_check(!desc.regs.pa_cl_vs_out_cntl.VS_OUT_CCDIST1_VEC_ENA());
+
+   spvGen.addCapability(spv::CapabilityGeometry);
+
+   auto mainFn = spvGen.getFunction("main");
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeInvocations, 1);
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeOutputVertices, 64);
+
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeTriangles);
+
+   switch (desc.regs.vgt_gs_out_prim_type) {
+   case latte::VGT_GS_OUT_PRIMITIVE_TYPE::POINTLIST:
+      spvGen.addExecutionMode(mainFn, spv::ExecutionModeOutputPoints);
+      break;
+   case latte::VGT_GS_OUT_PRIMITIVE_TYPE::LINESTRIP:
+      spvGen.addExecutionMode(mainFn, spv::ExecutionModeOutputLineStrip);
+      break;
+   case latte::VGT_GS_OUT_PRIMITIVE_TYPE::TRISTRIP:
+      spvGen.addExecutionMode(mainFn, spv::ExecutionModeOutputTriangleStrip);
+      break;
+   default:
+      decaf_abort("Unexpected geometry shader primitive type");
+   }
+
    writeGenericProlog(spvGen);
+
+   // Initialize the ring index to 0
+   spvGen.createStore(spvGen.makeUintConstant(0), spvGen.ringOffsetVar());
+
+   auto zeroFConst = spvGen.makeFloatConstant(0.0f);
+   auto zeroConstAsF = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), spvGen.makeUintConstant(0));
+   auto oneConstAsF = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), spvGen.makeUintConstant(1));
+   auto twoConstAsF = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), spvGen.makeUintConstant(2));
+   auto initialR0 = spvGen.createOp(spv::OpCompositeConstruct, spvGen.float4Type(),
+                                    { zeroConstAsF, oneConstAsF, zeroFConst, twoConstAsF });
+
+   GprMaskRef gpr0;
+   gpr0.gpr.number = 0;
+   gpr0.gpr.indexMode = GprIndexMode::None;
+   gpr0.mask[0] = latte::SQ_SEL::SEL_X;
+   gpr0.mask[1] = latte::SQ_SEL::SEL_Y;
+   gpr0.mask[2] = latte::SQ_SEL::SEL_Z;
+   gpr0.mask[3] = latte::SQ_SEL::SEL_W;
+   spvGen.writeGprMaskRef(gpr0, initialR0);
 }
 
 void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDesc& desc)
@@ -391,6 +442,12 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       }
    }
 
+   if (shaderDesc.type != ShaderType::Geometry) {
+      if (spvGen.hasFunction("dc_main")) {
+         decaf_abort("Non-vertex-shader called into a DC function, wat?");
+      }
+   }
+
    if (shaderDesc.type == ShaderType::Vertex) {
       auto& vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
       auto vsShader = reinterpret_cast<VertexShader*>(shader);
@@ -439,6 +496,67 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
 
       vsShader->inputBuffers = state.mVsInputBuffers;
       vsShader->inputAttribs = state.mVsInputAttribs;
+   } else if (shaderDesc.type == ShaderType::Geometry) {
+      auto& gsDesc = *reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
+      auto gsShader = reinterpret_cast<GeometryShader*>(shader);
+
+      if (spvGen.hasFunction("dc_main")) {
+         auto dcFunc = spvGen.getFunction("dc_main");
+         spvGen.setBuildPoint(dcFunc->getEntryBlock());
+
+         // Need to save our GPRs first
+         auto gprType = spvGen.makeArrayType(spvGen.float4Type(), spvGen.makeUintConstant(128), 0);
+         auto gprSaveVar = spvGen.createVariable(spv::StorageClass::StorageClassPrivate, gprType, "RVarSave");
+         spvGen.createNoResultOp(spv::OpCopyMemory, { gprSaveVar, spvGen.gprVar() });
+
+         // Translate the shader
+         auto dcState = Transpiler {};
+         dcState.mSpv = &spvGen;
+         dcState.mDesc = &shaderDesc;
+         dcState.mType = ShaderParser::Type::DataCache;
+         dcState.mBinary = gsDesc.dcBinary;
+         dcState.mAluInstPreferVector = gsDesc.aluInstPreferVector;
+         dcState.translate();
+
+         // We need to increment the ring offset at the end of each.  Note that we only
+         // support striding in vec4 intervals.
+         auto gsDesc = reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
+         auto ringItemStride = gsDesc->regs.sq_gs_vert_itemsize.ITEMSIZE();
+         decaf_check(ringItemStride % 4 == 0);
+         auto ringStride = ringItemStride / 4;
+         auto ringStrideConst = spvGen.makeIntConstant(ringStride);
+         auto ringOffsetVal = spvGen.createLoad(spvGen.ringOffsetVar());
+         auto newRingOffset = spvGen.createBinOp(spv::OpIAdd, spvGen.uintType(), ringOffsetVal, ringStrideConst);
+         spvGen.createStore(newRingOffset, spvGen.ringOffsetVar());
+
+         // Restore our GPRs
+         spvGen.createNoResultOp(spv::OpCopyMemory, { spvGen.gprVar(), gprSaveVar });
+
+         // Done!
+         spvGen.makeReturn(true);
+      }
+
+      // For each exported parameter, we need to exports the semantics for
+      // later matching up by the pixel shaders
+      int numExports = spvGen.getNumParamExports();
+      for (auto i = 0; i < numExports; ++i) {
+         uint32_t semanticId;
+
+         // TODO: This should probably be moved into the actual export generation
+         // code instead of being calculated later and assuming the order of the
+         // exports matches up with the code...
+         if ((i & 3) == 0) {
+            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_0();
+         } else if ((i & 3) == 1) {
+            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_1();
+         } else if ((i & 3) == 2) {
+            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_2();
+         } else if ((i & 3) == 3) {
+            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_3();
+         }
+
+         gsShader->outputSemantics.push_back(semanticId);
+      }
    }
 
    for (auto i = 0u; i < latte::MaxSamplers; ++i) {

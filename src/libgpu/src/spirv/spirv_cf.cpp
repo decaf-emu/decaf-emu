@@ -223,6 +223,36 @@ void Transpiler::translateCf_LOOP_BREAK(const ControlFlowInst &cf)
    latte::ShaderParser::translateCf_LOOP_BREAK(cf);
 }
 
+void Transpiler::translateCf_EMIT_VERTEX(const ControlFlowInst &cf)
+{
+   auto afterBlock = mSpv->startCfCondBlock(cf.word1.COND(), cf.word1.CF_CONST());
+
+   mSpv->createFunctionCall(mSpv->getFunction("dc_main"), {});
+   mSpv->createNoResultOp(spv::OpEmitVertex);
+
+   mSpv->endCfCondBlock(afterBlock);
+}
+
+void Transpiler::translateCf_EMIT_CUT_VERTEX(const ControlFlowInst &cf)
+{
+   auto afterBlock = mSpv->startCfCondBlock(cf.word1.COND(), cf.word1.CF_CONST());
+
+   mSpv->createFunctionCall(mSpv->getFunction("dc_main"), {});
+   mSpv->createNoResultOp(spv::OpEmitVertex);
+   mSpv->createNoResultOp(spv::OpEndPrimitive);
+
+   mSpv->endCfCondBlock(afterBlock);
+}
+
+void Transpiler::translateCf_CUT_VERTEX(const ControlFlowInst &cf)
+{
+   auto afterBlock = mSpv->startCfCondBlock(cf.word1.COND(), cf.word1.CF_CONST());
+
+   mSpv->createNoResultOp(spv::OpEndPrimitive);
+
+   mSpv->endCfCondBlock(afterBlock);
+}
+
 } // namespace spirv
 
 #endif // ifdef DECAF_VULKAN

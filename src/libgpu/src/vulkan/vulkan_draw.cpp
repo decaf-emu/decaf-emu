@@ -202,7 +202,9 @@ Driver::bindShaderResources()
          vsConstData.zSpaceMul.y = 1.0f; // * 1.0
       }
 
-      mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, { vsConstData });
+      mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout,
+                                                          vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,
+                                                          0, { vsConstData });
    }
 
    if (mCurrentPixelShader) {
@@ -247,7 +249,9 @@ Driver::bindShaderResources()
          }
       }
 
-      mActiveCommandBuffer.pushConstants<PsPushConstants>(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 32, { psConstData });
+      mActiveCommandBuffer.pushConstants<PsPushConstants>(mPipelineLayout,
+                                                          vk::ShaderStageFlagBits::eFragment,
+                                                          32, { psConstData });
    }
 }
 

@@ -178,9 +178,13 @@ public:
    void translateCf_TEX(const ControlFlowInst &cf) override;
    void translateCf_VTX(const ControlFlowInst &cf) override;
    void translateCf_VTX_TC(const ControlFlowInst &cf) override;
+   void translateCf_EMIT_VERTEX(const ControlFlowInst &cf) override;
+   void translateCf_EMIT_CUT_VERTEX(const ControlFlowInst &cf) override;
+   void translateCf_CUT_VERTEX(const ControlFlowInst &cf) override;
 
    void translateCf_EXP(const ControlFlowInst &cf) override;
    void translateCf_EXP_DONE(const ControlFlowInst &cf) override;
+   void translateCf_MEM_RING(const ControlFlowInst &cf) override;
 
    void translateCfNormalInst(const ControlFlowInst& cf) override;
    void translateCfExportInst(const ControlFlowInst& cf) override;
@@ -213,7 +217,7 @@ protected:
    std::array<bool, latte::MaxTextures> mTexIsUint;
    std::array<InputBuffer, latte::MaxAttribBuffers> mVsInputBuffers;
    std::vector<InputAttrib> mVsInputAttribs;
-   std::vector<uint32_t> mVsOutputParams;
+   std::vector<uint32_t> mVsGsOutputParams;
 
    struct LoopState
    {

@@ -27,6 +27,9 @@ getPaClVsOutCntl(const ShaderDesc *desc)
    if (desc->type == ShaderType::Vertex) {
       auto vsDesc = reinterpret_cast<const VertexShaderDesc*>(desc);
       return vsDesc->regs.pa_cl_vs_out_cntl;
+   } else if (desc->type == ShaderType::Geometry) {
+      auto gsDesc = reinterpret_cast<const GeometryShaderDesc*>(desc);
+      return gsDesc->regs.pa_cl_vs_out_cntl;
    } else {
       decaf_abort("Unexpected shader type for PA_CL_VS_OUT_CNTL fetch")
    }
@@ -128,7 +131,7 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
          }
       }
 
-      if (mType == ShaderParser::Type::Vertex) {
+      if (mType == ShaderParser::Type::Vertex || mType == ShaderParser::Type::DataCache) {
          // Check if this is a position output special case.
          if (exportRef.output.type == ExportRef::Type::Position) {
             if (exportRef.output.arrayBase == 0) {
@@ -206,6 +209,52 @@ void Transpiler::translateCf_EXP(const ControlFlowInst &cf)
 void Transpiler::translateCf_EXP_DONE(const ControlFlowInst &cf)
 {
    translateGenericExport(cf);
+}
+
+void Transpiler::translateCf_MEM_RING(const ControlFlowInst &cf)
+{
+   GprRef srcGpr;
+   srcGpr = makeGprRef(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL(), SQ_INDEX_MODE::LOOP);
+
+   ExportMaskRef exportRef;
+   if (mType == ShaderParser::Type::Vertex) {
+      exportRef.output = makeVsGsRingExportRef(cf.exp.word0.TYPE(),
+                                               cf.exp.word0.INDEX_GPR(),
+                                               cf.exp.word0.ARRAY_BASE(),
+                                               cf.exp.buf.ARRAY_SIZE() + 1,
+                                               cf.exp.word0.ELEM_SIZE() + 1);
+   } else if (mType == ShaderParser::Type::Geometry) {
+      exportRef.output = makeGsDcRingExportRef(cf.exp.word0.TYPE(),
+                                               cf.exp.word0.INDEX_GPR(),
+                                               cf.exp.word0.ARRAY_BASE(),
+                                               cf.exp.buf.ARRAY_SIZE() + 1,
+                                               cf.exp.word0.ELEM_SIZE() + 1);
+   } else {
+      decaf_abort("Unexpected shader type for MEM_RING")
+   }
+   exportRef.mask[SQ_CHAN::X] = (cf.exp.buf.COMP_MASK() & (1 << 0)) ? latte::SQ_SEL::SEL_X : latte::SQ_SEL::SEL_MASK;
+   exportRef.mask[SQ_CHAN::Y] = (cf.exp.buf.COMP_MASK() & (1 << 1)) ? latte::SQ_SEL::SEL_Y : latte::SQ_SEL::SEL_MASK;
+   exportRef.mask[SQ_CHAN::Z] = (cf.exp.buf.COMP_MASK() & (1 << 2)) ? latte::SQ_SEL::SEL_Z : latte::SQ_SEL::SEL_MASK;
+   exportRef.mask[SQ_CHAN::W] = (cf.exp.buf.COMP_MASK() & (1 << 3)) ? latte::SQ_SEL::SEL_W : latte::SQ_SEL::SEL_MASK;
+
+   if (isSwizzleFullyMasked(exportRef.mask)) {
+      // We should just skip fully masked swizzles.
+      return;
+   }
+
+   auto exportCount = cf.exp.word1.BURST_COUNT() + 1;
+   for (auto i = 0u; i < exportCount; ++i) {
+      // Read the source GPR
+      auto sourcePtr = mSpv->getGprRef(srcGpr);
+      auto sourceVal = mSpv->createLoad(sourcePtr);
+
+      // Write the exported data
+      mSpv->writeExportRef(exportRef, sourceVal);
+
+      // Increase the indexing for each export
+      srcGpr.next();
+      exportRef.output.next();
+   }
 }
 
 } // namespace spirv

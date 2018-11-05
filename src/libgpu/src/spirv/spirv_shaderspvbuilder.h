@@ -889,6 +889,14 @@ public:
          decaf_check(ref.elemCount == 1);
          decaf_check(ref.indexGpr == -1);
          return zExportVar();
+      } else if (ref.type == ExportRef::Type::VsGsRingWrite) {
+         decaf_check(dataType == floatType());
+         decaf_check(ref.dataStride == 0);
+         return vsGsRingExportWriteVar(ref.indexGpr, ref.arrayBase, ref.arraySize, ref.elemCount);
+      } else if (ref.type == ExportRef::Type::GsDcRingWrite) {
+         decaf_check(dataType == floatType());
+         decaf_check(ref.dataStride == 0);
+         return gsDcRingExportWriteVar(ref.indexGpr, ref.arrayBase, ref.arraySize, ref.elemCount);
       } else {
          decaf_abort("Encountered unexpected export type");
       }
@@ -1281,6 +1289,25 @@ public:
       return inputVar;
    }
 
+   spv::Id inputRingVar(int index)
+   {
+      while (mRingInputs.size() <= index) {
+         mRingInputs.push_back(spv::NoResult);
+      }
+
+      auto inputVar = mRingInputs[index];
+      if (!inputVar) {
+         inputVar = createVariable(spv::StorageClassInput, arrayType(float4Type(), 3),
+                                        fmt::format("RINGIN_{}", index).c_str());
+         addDecoration(inputVar, spv::DecorationLocation, static_cast<int>(index));
+
+         mEntryPoint->addIdOperand(inputVar);
+         mRingInputs[index] = inputVar;
+      }
+
+      return inputVar;
+   }
+
    spv::Id vsPushConstVar()
    {
       if (!mVsPushConsts) {
@@ -1509,6 +1536,77 @@ public:
       return mZExport;
    }
 
+   spv::Id vsGsRingExportWriteVar(uint32_t indexGpr, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+   {
+      // TODO: Support write prevention based on the array size.
+
+      // We do not currently support dynamic indexing into streamout
+      decaf_check(indexGpr == -1);
+
+      auto bufferOffset = arrayBase * elemCount;
+      decaf_check(bufferOffset % 16 == 0);
+      auto bufferVec4Offset = bufferOffset / 16;
+
+      // Determine the size for this ringbuffer write
+      spv::Id resultType = spv::NoResult;
+      if (elemCount == 1) {
+         resultType = floatType();
+      } else if (elemCount == 2) {
+         resultType = float2Type();
+      } else if (elemCount == 3) {
+         resultType = float3Type();
+      } else if (elemCount == 4) {
+         resultType = float4Type();
+      } else {
+         decaf_abort("Unexpected element count for ringbuffer write");
+      }
+
+      auto& exportId = mRingWriteExports[bufferVec4Offset];
+      if (!exportId) {
+         exportId = createVariable(spv::StorageClassOutput, resultType, fmt::format("VSRING_{}", bufferVec4Offset).c_str());
+         addDecoration(exportId, spv::DecorationLocation, bufferVec4Offset);
+
+         mEntryPoint->addIdOperand(exportId);
+      }
+
+      decaf_check(getDerefTypeId(exportId) == resultType);
+
+      return exportId;
+   }
+
+   spv::Id gsDcRingExportWriteVar(uint32_t indexGpr, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+   {
+      // TODO: Support write prevention based on the array size.
+
+      // Calculate the overall offset into the buffer
+      auto bufferOffset = arrayBase * elemCount;
+
+      // Grab the vec4 offset, writes must only occur on the boundaries
+      // of a single vec4 write...
+      decaf_check(bufferOffset % 16 == 0);
+      auto ringVec4Offset = bufferOffset / 16;
+
+      // Create a pointer to our memory object
+      auto ringOffset = makeIntConstant(ringVec4Offset);
+
+      if (indexGpr != -1) {
+         // Fetch the index GPR value
+         GprSelRef gprRef;
+         gprRef.gpr.number = indexGpr;
+         gprRef.gpr.indexMode = GprIndexMode::None;
+         gprRef.sel = latte::SQ_SEL::SEL_X;
+         auto indexGprVal = readGprSelRef(gprRef);
+
+         // Bitcast it to an integer
+         indexGprVal = createUnaryOp(spv::OpBitcast, intType(), indexGprVal);
+
+         // Add the indexed value to the ring offset
+         ringOffset = createBinOp(spv::OpIAdd, intType(), indexGprVal, ringOffset);
+      }
+
+      return createAccessChain(spv::StorageClassPrivate, ringVar(), { ringOffset });
+   }
+
    spv::Id stateVar()
    {
       if (!mState) {
@@ -1569,6 +1667,23 @@ public:
          mGpr = createVariable(spv::StorageClass::StorageClassPrivate, gprType, "RVar");
       }
       return mGpr;
+   }
+
+   spv::Id ringVar()
+   {
+      if (!mRing) {
+         auto ringType = makeArrayType(float4Type(), makeUintConstant(128), 0);
+         mRing = createVariable(spv::StorageClass::StorageClassPrivate, ringType, "LocalRing");
+      }
+      return mRing;
+   }
+
+   spv::Id ringOffsetVar()
+   {
+      if (!mRingOffset) {
+         mRingOffset = createVariable(spv::StorageClass::StorageClassPrivate, uintType(), "RingIndex");
+      }
+      return mRingOffset;
    }
 
    spv::Id ALVar()
@@ -1693,6 +1808,7 @@ protected:
 
    std::vector<spv::Id> mAttribInputs;
    std::vector<spv::Id> mParamInputs;
+   std::vector<spv::Id> mRingInputs;
 
    std::array<spv::Id, latte::MaxSamplers> mSamplers = { spv::NoResult };
    std::array<spv::Id, latte::MaxTextures> mTextureTypes = { spv::NoResult };
@@ -1702,6 +1818,7 @@ protected:
    std::map<uint32_t, spv::Id> mPosExports;
    std::map<uint32_t, spv::Id> mParamExports;
    spv::Id mZExport = spv::NoResult;
+   std::map<uint32_t, spv::Id> mRingWriteExports;
 
    spv::Id mState = spv::NoResult;
    spv::Id mPredicate = spv::NoResult;
@@ -1709,6 +1826,8 @@ protected:
    spv::Id mStack = spv::NoResult;
    spv::Id mGpr = spv::NoResult;
    spv::Id mAL = spv::NoResult;
+   spv::Id mRing = spv::NoResult;
+   spv::Id mRingOffset = spv::NoResult;
 
    std::array<spv::Id, 4> mARId = { spv::NoResult };
    std::array<spv::Id, 5> mPrevResId = { spv::NoResult };

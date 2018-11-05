@@ -138,6 +138,17 @@ Driver::getGeometryShaderDesc()
       shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
    }
 
+   shaderDesc.regs.sq_gs_vert_itemsize = getRegister<latte::SQ_GS_VERT_ITEMSIZE>(latte::Register::SQ_GS_VERT_ITEMSIZE);
+   shaderDesc.regs.vgt_gs_out_prim_type = getRegister<latte::VGT_GS_OUT_PRIMITIVE_TYPE>(latte::Register::VGT_GS_OUT_PRIM_TYPE);
+   shaderDesc.regs.vgt_gs_mode = getRegister<latte::VGT_GS_MODE>(latte::Register::VGT_GS_MODE);
+   shaderDesc.regs.sq_gsvs_ring_itemsize = getRegister<uint32_t>(latte::Register::SQ_GSVS_RING_ITEMSIZE);
+   shaderDesc.regs.spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
+   shaderDesc.regs.pa_cl_vs_out_cntl = getRegister<latte::PA_CL_VS_OUT_CNTL>(latte::Register::PA_CL_VS_OUT_CNTL);
+
+   for (auto i = 0; i < 10; ++i) {
+      shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
+   }
+
    return shaderDesc;
 }
 
@@ -213,11 +224,13 @@ Driver::getPixelShaderDesc()
       shaderDesc.regs.spi_ps_input_cntls[i] = getRegister<latte::SPI_PS_INPUT_CNTL_N>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
    }
 
-   // TODO: In order to implement geometry shaders, we will have to use
-   // those outputs instead, for now lets just check that there isn't one.
-   decaf_check(!mCurrentGeometryShader);
-   auto vsShader = reinterpret_cast<const spirv::VertexShader*>(&mCurrentVertexShader->shader);
-   shaderDesc.vsOutputSemantics = vsShader->outputSemantics;
+   if (!mCurrentGeometryShader) {
+      auto vsShader = reinterpret_cast<const spirv::VertexShader*>(&mCurrentVertexShader->shader);
+      shaderDesc.vsOutputSemantics = vsShader->outputSemantics;
+   } else {
+      auto gsShader = reinterpret_cast<const spirv::GeometryShader*>(&mCurrentGeometryShader->shader);
+      shaderDesc.vsOutputSemantics = gsShader->outputSemantics;
+   }
 
    return shaderDesc;
 }
@@ -432,8 +445,6 @@ Driver::checkCurrentGeometryShader()
       mCurrentGeometryShader = nullptr;
       return true;
    }
-
-   decaf_abort("We do not currently support generation of geometry shaders.");
 
    if (mCurrentGeometryShader && mCurrentGeometryShader->desc == currentDesc) {
       // Already active, nothing to do.

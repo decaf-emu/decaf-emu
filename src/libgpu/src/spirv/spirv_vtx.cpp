@@ -29,6 +29,89 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
    destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
    destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
 
+   // Intercept a GSIN resource fetch, and process it specially.
+   if (mType == ShaderParser::Type::Geometry) {
+      auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::GS_TEX_RESOURCE_0;
+      if (id == SQ_RES_OFFSET::GS_GSIN_RESOURCE) {
+
+         // We only support vec4 ring buffer items
+         decaf_check(inst.word2.OFFSET() % 16 == 0);
+         auto ringOffset = inst.word2.OFFSET() / 16;
+
+         auto inputVar = mSpv->inputRingVar(ringOffset);
+
+         // We check to make sure everything makes sense...
+         decaf_check(srcGpr.gpr.indexMode == GprIndexMode::None);
+
+         spv::Id vertIdxVal;
+         if (srcGpr.gpr.number == 0 && srcGpr.sel == latte::SQ_SEL::SEL_X) {
+            vertIdxVal = mSpv->makeIntConstant(0);
+         } else if (srcGpr.gpr.number == 0 && srcGpr.sel == latte::SQ_SEL::SEL_Y) {
+            vertIdxVal = mSpv->makeIntConstant(1);
+         } else if (srcGpr.gpr.number == 0 && srcGpr.sel == latte::SQ_SEL::SEL_W) {
+            vertIdxVal = mSpv->makeIntConstant(2);
+         } else if (srcGpr.gpr.number == 1 && srcGpr.sel == latte::SQ_SEL::SEL_X) {
+            vertIdxVal = mSpv->makeIntConstant(3);
+         } else if (srcGpr.gpr.number == 1 && srcGpr.sel == latte::SQ_SEL::SEL_Y) {
+            vertIdxVal = mSpv->makeIntConstant(4);
+         } else if (srcGpr.gpr.number == 1 && srcGpr.sel == latte::SQ_SEL::SEL_W) {
+            vertIdxVal = mSpv->makeIntConstant(5);
+         } else {
+            decaf_abort("Unexpected vertex index selection")
+         }
+
+         auto outputPtr = mSpv->createAccessChain(spv::StorageClassInput, inputVar, { vertIdxVal });
+         auto outputVal = mSpv->createLoad(outputPtr);
+
+         auto gprRef = mSpv->getGprRef(destGpr.gpr);
+
+         auto destVal = spv::NoResult;
+         if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
+            destVal = mSpv->createLoad(gprRef);
+         }
+
+         auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
+
+         mSpv->createStore(maskedVal, gprRef);
+
+         return;
+      }
+   } else if (mType == ShaderParser::Type::DataCache) {
+      auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::GS_TEX_RESOURCE_0;
+      if (id == SQ_RES_OFFSET::GS_GSIN_RESOURCE) {
+         auto ringOffsetVal = mSpv->createLoad(mSpv->ringOffsetVar());
+
+         // We check to make sure everything makes sense...
+         decaf_check(srcGpr.gpr.number == 0);
+         decaf_check(srcGpr.gpr.indexMode == GprIndexMode::None);
+         decaf_check(srcGpr.sel == latte::SQ_SEL::SEL_X);
+
+         // Note that this is blocked out above, so this code may not be correct...
+         decaf_check(inst.word2.OFFSET() % 16 == 0);
+         auto itemOffsetVal = mSpv->makeUintConstant(inst.word2.OFFSET() / 16);
+
+         auto realOffset = mSpv->createBinOp(spv::OpIAdd, mSpv->uintType(), ringOffsetVal, itemOffsetVal);
+
+         auto outputPtr = mSpv->createAccessChain(spv::StorageClassPrivate, mSpv->ringVar(), { realOffset });
+         auto outputVal = mSpv->createLoad(outputPtr);
+
+         auto gprRef = mSpv->getGprRef(destGpr.gpr);
+
+         // TODO: This logic is duplicated a bunch of places, we should converge
+         // this into a centralized function in mSpv...
+         auto destVal = spv::NoResult;
+         if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
+            destVal = mSpv->createLoad(gprRef);
+         }
+
+         auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
+
+         mSpv->createStore(maskedVal, gprRef);
+
+         return;
+      }
+   }
+
    decaf_check(inst.word2.OFFSET() == 0);
 
    uint32_t cbufferIdx;
