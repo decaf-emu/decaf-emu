@@ -137,8 +137,7 @@ startFsaAsyncTaskThread()
 void
 initialiseStaticFsaAsyncTaskData()
 {
-   sFsaAsyncData = phys_cast<StaticFsaAsyncData *>(
-      allocProcessStatic(sizeof(StaticFsaAsyncData)));
+   sFsaAsyncData = allocProcessStatic<StaticFsaAsyncData>();
 }
 
 } // namespace ios::fs

@@ -19,21 +19,25 @@ IOS_GetProcessName(ProcessId process,
                    char *buffer);
 
 phys_ptr<void>
-allocProcessStatic(size_t size);
+allocProcessStatic(ProcessId pid,
+                   size_t size,
+                   size_t align);
+
+phys_ptr<void>
+allocProcessStatic(size_t size,
+                   size_t align);
 
 template<typename Type>
 inline phys_ptr<Type>
 allocProcessStatic()
 {
-   return phys_cast<Type *>(allocProcessStatic(sizeof(Type)));
+   auto data = allocProcessStatic(sizeof(Type), alignof(Type));
+   new (data.get()) Type { };
+   return phys_cast<Type *>(data);
 }
 
 phys_ptr<void>
 allocProcessLocalHeap(size_t size);
-
-phys_ptr<void>
-allocProcessStatic(ProcessId pid,
-                   size_t size);
 
 phys_ptr<char>
 allocProcessStatic(std::string_view str);

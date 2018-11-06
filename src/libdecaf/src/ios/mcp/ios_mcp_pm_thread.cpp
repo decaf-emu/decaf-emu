@@ -431,7 +431,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
 void
 initialiseStaticPmThreadData()
 {
-   sData = phys_cast<StaticPmThreadData *>(allocProcessStatic(sizeof(StaticPmThreadData)));
+   sData = allocProcessStatic<StaticPmThreadData>();
    sData->resourceManagerTimeoutMessage.command = static_cast<Command>(Error::Timeout);
 
    auto dummyRM = ResourceManagerRegistration {

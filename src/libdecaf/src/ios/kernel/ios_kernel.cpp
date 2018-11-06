@@ -283,7 +283,7 @@ start()
    internal::initialiseStaticThreadData();
    internal::initialiseStaticTimerData();
 
-   sData = phys_cast<StaticKernelData *>(allocProcessStatic(sizeof(StaticKernelData)));
+   sData = allocProcessStatic<StaticKernelData>();
    sData->rootTimerMessage.command = RootThreadCommand::Timer;
    sData->sysprotEventMessage.command = RootThreadCommand::SysprotEvent;
 

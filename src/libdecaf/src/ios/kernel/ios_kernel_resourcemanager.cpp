@@ -17,11 +17,11 @@ namespace ios::kernel
 
 struct StaticResourceManagerData
 {
-   be2_val<BOOL> registrationEnabled;
+   be2_val<BOOL> registrationEnabled = TRUE;
    be2_struct<ResourceManagerList> resourceManagerList;
    be2_struct<ResourceRequestList> resourceRequestList;
    be2_array<ResourceHandleManager, ProcessId::Max> resourceHandleManagers;
-   be2_val<uint32_t> totalOpenedHandles;
+   be2_val<uint32_t> totalOpenedHandles = 0u;
 };
 
 static phys_ptr<StaticResourceManagerData>
@@ -1357,8 +1357,7 @@ setClientCapability(ProcessId pid,
 void
 initialiseStaticResourceManagerData()
 {
-   sData = phys_cast<StaticResourceManagerData *>(allocProcessStatic(sizeof(StaticResourceManagerData)));
-   sData->registrationEnabled = TRUE;
+   sData = allocProcessStatic<StaticResourceManagerData>();
 
    // Initialise resourceManagerList
    auto &resourceManagerList = sData->resourceManagerList;

@@ -213,7 +213,7 @@ stopImThread()
 void
 initialiseStaticImThreadData()
 {
-   sImThreadData = phys_cast<StaticImThreadData *>(allocProcessStatic(sizeof(StaticImThreadData)));
+   sImThreadData = allocProcessStatic<StaticImThreadData>();
    sDevices.closeAll();
 }
 

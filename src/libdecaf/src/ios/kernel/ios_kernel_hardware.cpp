@@ -331,7 +331,7 @@ initialiseStaticHardwareData()
    LT_INTSR_AHBALL_ARM.store(0);
    LT_INTMR_AHBLT_ARM.store(0);
    LT_INTSR_AHBLT_ARM.store(0);
-   sHardwareData = phys_cast<StaticHardwareData *>(allocProcessStatic(sizeof(StaticHardwareData)));
+   sHardwareData = allocProcessStatic<StaticHardwareData>();
 }
 
 /**

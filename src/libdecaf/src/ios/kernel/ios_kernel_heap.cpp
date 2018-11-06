@@ -488,7 +488,7 @@ namespace internal
 void
 initialiseStaticHeapData()
 {
-   sHeapData = phys_cast<StaticHeapData *>(allocProcessStatic(sizeof(StaticHeapData)));
+   sHeapData = allocProcessStatic<StaticHeapData>();
    for (auto i = 0u; i < sHeapData->heaps.size(); ++i) {
       sHeapData->heaps[i].pid = ProcessId { -4 };
    }

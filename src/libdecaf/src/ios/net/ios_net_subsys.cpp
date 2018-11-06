@@ -95,7 +95,7 @@ stopSubsys()
 void
 initialiseStaticSubsysData()
 {
-   sData = phys_cast<StaticSubsysData *>(allocProcessStatic(sizeof(StaticSubsysData)));
+   sData = allocProcessStatic<StaticSubsysData>();
    sSubsysHeapBuffer = allocProcessLocalHeap(SubsysHeapSize);
 }
 

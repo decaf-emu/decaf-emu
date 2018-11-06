@@ -50,7 +50,7 @@ bspIoctl(phys_ptr<ResourceRequest> resourceRequest,
 static void
 initialiseStaticBspData()
 {
-   sBspData = phys_cast<StaticBspData *>(allocProcessStatic(sizeof(StaticBspData)));
+   sBspData = allocProcessStatic<StaticBspData>();
 }
 
 Error

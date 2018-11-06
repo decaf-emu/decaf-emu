@@ -650,7 +650,7 @@ startMcpThread()
 void
 initialiseStaticMcpThreadData()
 {
-   sData = phys_cast<StaticMcpThreadData *>(allocProcessStatic(sizeof(StaticMcpThreadData)));
+   sData = allocProcessStatic<StaticMcpThreadData>();
 }
 
 } // namespace ios::mcp::internal

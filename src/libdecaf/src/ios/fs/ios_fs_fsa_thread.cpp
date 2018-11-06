@@ -452,7 +452,7 @@ startFsaThread()
 void
 initialiseStaticFsaThreadData()
 {
-   sData = phys_cast<StaticFsaThreadData *>(allocProcessStatic(sizeof(StaticFsaThreadData)));
+   sData = allocProcessStatic<StaticFsaThreadData>();
    sDevices.closeAll();
 }
 

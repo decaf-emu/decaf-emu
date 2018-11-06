@@ -108,7 +108,7 @@ getUsrCfgMessageQueueId()
 void
 initialiseStaticUsrCfgThreadData()
 {
-   sData = phys_cast<StaticUsrCfgThreadData *>(allocProcessStatic(sizeof(StaticUsrCfgThreadData)));
+   sData = allocProcessStatic<StaticUsrCfgThreadData>();
 }
 
 } // namespace ios::auxil::internal

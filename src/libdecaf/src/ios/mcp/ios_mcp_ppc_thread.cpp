@@ -137,7 +137,7 @@ startPpcThread()
 void
 initialiseStaticPpcThreadData()
 {
-   sPpcThreadData = phys_cast<StaticPpcThreadData *>(allocProcessStatic(sizeof(StaticPpcThreadData)));
+   sPpcThreadData = allocProcessStatic<StaticPpcThreadData>();
 }
 
 } // namespace ios::mcp::internal

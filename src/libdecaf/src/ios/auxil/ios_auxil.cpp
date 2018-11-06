@@ -46,7 +46,7 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = phys_cast<StaticAuxilData *>(allocProcessStatic(sizeof(StaticAuxilData)));
+   sData = allocProcessStatic<StaticAuxilData>();
    sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);
 }
 

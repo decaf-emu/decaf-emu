@@ -294,7 +294,7 @@ receiveMessage(phys_ptr<MessageQueue> queue,
 void
 initialiseStaticMessageQueueData()
 {
-   sData = phys_cast<StaticMessageQueueData *>(allocProcessStatic(sizeof(StaticMessageQueueData)));
+   sData = allocProcessStatic<StaticMessageQueueData>();
 
    for (auto i = 0u; i < sData->perThreadQueues.size(); ++i) {
       auto &queue = sData->perThreadQueues[i];

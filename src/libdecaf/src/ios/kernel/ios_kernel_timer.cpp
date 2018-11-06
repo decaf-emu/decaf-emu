@@ -433,7 +433,7 @@ void
 initialiseStaticTimerData()
 {
    sStartupTime = std::chrono::steady_clock::now();
-   sData = phys_cast<StaticTimerData *>(allocProcessStatic(sizeof(StaticTimerData)));
+   sData = allocProcessStatic<StaticTimerData>();
 
    for (auto i = 0u; i < sData->timerManager.timers.size(); ++i) {
       auto &timer = sData->timerManager.timers[i];

@@ -6,6 +6,8 @@
 
 #include <map>
 
+using namespace ios::kernel;
+
 namespace ios::auxil::internal
 {
 
@@ -117,7 +119,7 @@ IMDevice::setNvParameter(IMParameter parameter,
 void
 initialiseStaticImDeviceData()
 {
-   sData = phys_cast<StaticImDeviceData *>(kernel::allocProcessStatic(sizeof(StaticImDeviceData)));
+   sData = allocProcessStatic<StaticImDeviceData>();
    sData->defaultValues[IMParameter::InactiveSeconds] = 0xAu;
    sData->defaultValues[IMParameter::DimEnabled]      = 1u;
    sData->defaultValues[IMParameter::DimPeriod]       = 300u;

@@ -159,7 +159,7 @@ setIdleFiber()
 void
 initialiseStaticSchedulerData()
 {
-   sData = phys_cast<StaticSchedulerData *>(allocProcessStatic(sizeof(StaticSchedulerData)));
+   sData = allocProcessStatic<StaticSchedulerData>();
 }
 
 } // namespace ios::kernel::internal

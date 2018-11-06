@@ -174,7 +174,7 @@ getUsrCfgServiceMessageQueueId()
 void
 initialiseStaticUsrCfgServiceThreadData()
 {
-   sData = phys_cast<StaticUsrCfgServiceData *>(allocProcessStatic(sizeof(StaticUsrCfgServiceData)));
+   sData = allocProcessStatic<StaticUsrCfgServiceData>();
    sDevices.closeAll();
 }
 

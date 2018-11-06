@@ -200,7 +200,7 @@ stopSocketThread()
 void
 initialiseStaticSocketData()
 {
-   sData = phys_cast<StaticSocketThreadData *>(allocProcessStatic(sizeof(StaticSocketThreadData)));
+   sData = allocProcessStatic<StaticSocketThreadData>();
    sData->stopMessage.command = Command::Suspend;
 }
 

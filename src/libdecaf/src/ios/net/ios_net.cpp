@@ -39,7 +39,7 @@ namespace internal
 static void
 initialiseStaticData()
 {
-   sData = phys_cast<StaticNetData *>(allocProcessStatic(sizeof(StaticNetData)));
+   sData = allocProcessStatic<StaticNetData>();
    sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);
 }
 

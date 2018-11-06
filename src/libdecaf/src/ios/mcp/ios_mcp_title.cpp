@@ -6,6 +6,7 @@
 #include "ios/kernel/ios_kernel_process.h"
 
 using namespace ios::auxil;
+using namespace ios::kernel;
 
 namespace ios::mcp::internal
 {
@@ -171,7 +172,7 @@ readTitleCosXml(phys_ptr<MCPPPrepareTitleInfo> titleInfo)
 void
 initialiseTitleStaticData()
 {
-   sTitleData = kernel::allocProcessStatic<StaticTitleData>();
+   sTitleData = allocProcessStatic<StaticTitleData>();
 }
 
 } // namespace ios::mcp::internal

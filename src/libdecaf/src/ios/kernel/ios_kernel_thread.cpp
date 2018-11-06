@@ -418,7 +418,7 @@ setThreadName(ThreadId id,
 void
 initialiseStaticThreadData()
 {
-   sData = phys_cast<StaticThreadData *>(allocProcessStatic(sizeof(StaticThreadData)));
+   sData = allocProcessStatic<StaticThreadData>();
 }
 
 } // namespace internal

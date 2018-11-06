@@ -4,6 +4,7 @@
 #include <array>
 #include <cstring>
 #include <common/frameallocator.h>
+#include <common/strutils.h>
 
 namespace ios::kernel
 {
@@ -104,17 +105,10 @@ IOS_GetProcessName(ProcessId process,
 }
 
 
-phys_ptr<void>
-allocProcessStatic(size_t size)
-{
-   return allocProcessStatic(internal::getCurrentProcessId(), size);
-}
-
-
 phys_ptr<char>
 allocProcessStatic(std::string_view str)
 {
-   auto buffer = phys_cast<char *>(allocProcessStatic(str.size() + 1));
+   auto buffer = phys_cast<char *>(allocProcessStatic(str.size() + 1, 4));
    std::copy(str.begin(), str.end(), buffer.get());
    buffer[str.size()] = char { 0 };
    return buffer;
@@ -123,13 +117,22 @@ allocProcessStatic(std::string_view str)
 
 phys_ptr<void>
 allocProcessStatic(ProcessId pid,
-                   size_t size)
+                   size_t size,
+                   size_t align)
 {
    decaf_check(pid < sProcessStaticAllocators.size());
    auto &allocator = sProcessStaticAllocators[pid];
-   auto buffer = allocator.allocate(size, 16);
+   auto buffer = allocator.allocate(size, align);
    std::memset(buffer, 0, size);
    return phys_cast<void *>(cpu::translatePhysical(buffer));
+}
+
+
+phys_ptr<void>
+allocProcessStatic(size_t size,
+                   size_t align)
+{
+   return allocProcessStatic(internal::getCurrentProcessId(), size, align);
 }
 
 
