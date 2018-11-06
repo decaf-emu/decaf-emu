@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "log.h"
 #include "platform.h"
 #include "platform_compiler.h"
 #include "platform_stacktrace.h"
@@ -11,6 +12,11 @@
       assertFailed(__FILE__, __LINE__, e, m); \
       __debugbreak(); \
       abort(); \
+   }
+
+#define decaf_handle_warn_assert(x, e, m) \
+   if (!(x)) { \
+      gLog->warn("Asserted `{}` ({}) at {}:{}", e, m, __FILE__, __LINE__); \
    }
 
 #define decaf_host_fault(f, t) \
@@ -26,6 +32,11 @@
       __builtin_trap(); \
    }
 
+#define decaf_handle_warn_assert(x, e, m) \
+   if (UNLIKELY(!(x))) { \
+      gLog->warn("Asserted `{}` ({}) at {}:{}", e, m, __FILE__, __LINE__); \
+   }
+
 #define decaf_host_fault(f, t) \
    hostFaultWithStackTrace(f, t); \
    __builtin_trap();
@@ -37,6 +48,9 @@
 
 #define decaf_check(x) \
    decaf_handle_assert(x, #x, "")
+
+#define decaf_check_warn(x) \
+   decaf_handle_warn_assert(x, #x, "")
 
 #define decaf_abort(m) \
    decaf_handle_assert(false, "0", m)
