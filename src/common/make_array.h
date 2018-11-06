@@ -7,3 +7,11 @@ constexpr auto make_array(ValueTypes&&... values)
 {
    return { { std::forward<ValueTypes>(values)... } };
 }
+
+template<size_t Size, typename Type>
+static auto make_filled_array(const Type &value)
+{
+   std::array<Type, Size> a;
+   a.fill(value);
+   return a;
+}
