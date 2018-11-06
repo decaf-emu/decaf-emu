@@ -98,6 +98,16 @@ union Result
       return code;
    }
 
+   bool ok() const
+   {
+      return static_cast<int32_t>(code) >= 0;
+   }
+
+   bool failed() const
+   {
+      return static_cast<int32_t>(code) < 0;
+   }
+
    struct
    {
       int32_t description : 20;
