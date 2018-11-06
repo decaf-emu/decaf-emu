@@ -228,7 +228,7 @@ inline virt_ptr<Type> virt_this(Type *self)
 template<typename Type>
 inline phys_ptr<Type> phys_this(Type *self)
 {
-   return phys_ptr<Type *>(cpu::translate(self));
+   return phys_cast<Type *>(cpu::translatePhysical(self));
 }
 
 
