@@ -111,6 +111,9 @@ namespace internal
 {
 
 void
+driverOnInit();
+
+void
 driverOnDone();
 
 } // namespace internal

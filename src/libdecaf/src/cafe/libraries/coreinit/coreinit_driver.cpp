@@ -26,7 +26,7 @@ struct StaticDriverData
    be2_val<BOOL> didInit;
    be2_val<uint32_t> numRegistered;
    be2_virt_ptr<OSDriver> registeredDrivers;
-   be2_virt_ptr<OSDriver> ationCallbackDriver;
+   be2_virt_ptr<OSDriver> actionCallbackDriver;
 };
 
 static virt_ptr<StaticDriverData>
@@ -373,10 +373,10 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
    }
 
    // Check if we are trying to deregister from "inside action callback"
-   if (sDriverData->ationCallbackDriver == driver) {
+   if (sDriverData->actionCallbackDriver == driver) {
       internal::COSWarn(COSReportModule::Unknown1,
                         "***OSDriver_Deregister() of self from inside action callback!\n");
-      sDriverData->ationCallbackDriver = nullptr;
+      sDriverData->actionCallbackDriver = nullptr;
    }
 
    // Remove the driver from the linked list
@@ -443,6 +443,23 @@ OSDriver_CopyToSaveArea(OSDriver_UserDriverId driverId,
 
 namespace internal
 {
+
+void
+driverOnInit()
+{
+   sDriverData->didInit = TRUE;
+
+   if (!sDriverData->numRegistered) {
+      return;
+   }
+
+   // TODO: Driver init should be called from driver action thread
+   for (auto driver = sDriverData->registeredDrivers; driver; driver = driver->next) {
+      cafe::invoke(cpu::this_core::state(),
+                   driver->interfaceFunctions.onInit,
+                   driver->userDriverId);
+   }
+}
 
 void
 driverOnDone()

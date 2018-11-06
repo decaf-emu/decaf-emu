@@ -3,6 +3,7 @@
 #include "coreinit_appio.h"
 #include "coreinit_bsp.h"
 #include "coreinit_device.h"
+#include "coreinit_driver.h"
 #include "coreinit_dynload.h"
 #include "coreinit_exception.h"
 #include "coreinit_ghs.h"
@@ -65,6 +66,7 @@ rpl_entry(/* no args for coreinit entry point */)
    // registerButtonDriver
    // registerClipboardDriver
    // driver on init
+   internal::driverOnInit();
 
    auto entryFunc =
       virt_func_cast<int32_t(uint32_t argc, virt_ptr<void> argv)>(entryPoint);
