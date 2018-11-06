@@ -48,6 +48,13 @@ struct ContextHLE
 CHECK_SIZE(ContextHLE, 0x44);
 #endif
 
+struct ThreadLocalStorage
+{
+   be2_array<uint32_t, 9> storage;
+};
+CHECK_OFFSET(ThreadLocalStorage, 0, storage);
+CHECK_SIZE(ThreadLocalStorage, 0x24);
+
 struct Thread
 {
    be2_struct<ContextHLE> context;
@@ -75,7 +82,7 @@ struct Thread
    be2_phys_ptr<void> sysStackAddr;
    be2_phys_ptr<void> userStackAddr;
    be2_val<uint32_t> userStackSize;
-   be2_phys_ptr<void> ipcBufferPool;
+   be2_phys_ptr<ThreadLocalStorage> threadLocalStorage;
    be2_val<uint32_t> profileCount;
    be2_val<uint32_t> profileTime;
 };
@@ -94,7 +101,7 @@ CHECK_OFFSET(Thread, 0xA4, stackPointer);
 CHECK_OFFSET(Thread, 0xB0, sysStackAddr);
 CHECK_OFFSET(Thread, 0xB4, userStackAddr);
 CHECK_OFFSET(Thread, 0xB8, userStackSize);
-CHECK_OFFSET(Thread, 0xBC, ipcBufferPool);
+CHECK_OFFSET(Thread, 0xBC, threadLocalStorage);
 CHECK_OFFSET(Thread, 0xC0, profileCount);
 CHECK_OFFSET(Thread, 0xC4, profileTime);
 CHECK_SIZE(Thread, 0xC8);
@@ -128,6 +135,9 @@ IOS_YieldCurrentThread();
 
 Error
 IOS_GetCurrentThreadId();
+
+phys_ptr<ThreadLocalStorage>
+IOS_GetCurrentThreadLocalStorage();
 
 Error
 IOS_GetThreadPriority(ThreadId id);

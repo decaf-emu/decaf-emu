@@ -92,12 +92,12 @@ IOS_CreateThread(ThreadEntryFn entry,
 
    internal::memset32(stackTop - stackSize, 0xF5A5A5A5, stackSize);
 
-   if (flags & ThreadFlags::AllocateIpcBufferPool) {
-      stackTop -= 0x24;
-      thread->ipcBufferPool = stackTop;
-      std::memset(thread->ipcBufferPool.get(), 0, 0x24);
+   if (flags & ThreadFlags::AllocateTLS) {
+      stackTop -= sizeof(ThreadLocalStorage);
+      thread->threadLocalStorage = phys_cast<ThreadLocalStorage *>(stackTop);
+      std::memset(thread->threadLocalStorage.get(), 0, 0x24);
    } else {
-      thread->ipcBufferPool = nullptr;
+      thread->threadLocalStorage = nullptr;
    }
 
    sData->numActiveThreads++;
@@ -303,6 +303,17 @@ IOS_GetCurrentThreadId()
    }
 
    return static_cast<Error>(thread->id);
+}
+
+phys_ptr<ThreadLocalStorage>
+IOS_GetCurrentThreadLocalStorage()
+{
+   auto thread = internal::getCurrentThread();
+   if (!thread) {
+      return nullptr;
+   }
+
+   return thread->threadLocalStorage;
 }
 
 Error

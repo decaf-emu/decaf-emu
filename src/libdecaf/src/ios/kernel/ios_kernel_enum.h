@@ -104,7 +104,7 @@ ENUM_END(SecurityLevel)
 
 FLAGS_BEG(ThreadFlags, uint32_t)
    FLAGS_VALUE(Detached,               1 << 0)
-   FLAGS_VALUE(AllocateIpcBufferPool,  1 << 1)
+   FLAGS_VALUE(AllocateTLS,            1 << 1)
 FLAGS_END(ThreadFlags)
 
 ENUM_BEG(ThreadState, uint32_t)
