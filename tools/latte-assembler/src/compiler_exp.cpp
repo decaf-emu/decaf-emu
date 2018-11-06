@@ -60,10 +60,10 @@ compileExpInst(Shader &shader, peg::Ast &node)
 
                // Set default GPR swizzle
                inst.exp.swiz = inst.exp.swiz
-                  .SRC_SEL_X(latte::SQ_SEL::SEL_X)
-                  .SRC_SEL_Y(latte::SQ_SEL::SEL_Y)
-                  .SRC_SEL_Z(latte::SQ_SEL::SEL_Z)
-                  .SRC_SEL_W(latte::SQ_SEL::SEL_W);
+                  .SEL_X(latte::SQ_SEL::SEL_X)
+                  .SEL_Y(latte::SQ_SEL::SEL_Y)
+                  .SEL_Z(latte::SQ_SEL::SEL_Z)
+                  .SEL_W(latte::SQ_SEL::SEL_W);
 
                markGprRead(shader, inst.exp.word0.RW_GPR());
             } else if (src->name == "GprRel") {
@@ -73,10 +73,10 @@ compileExpInst(Shader &shader, peg::Ast &node)
 
                // Set default GPR swizzle
                inst.exp.swiz = inst.exp.swiz
-                  .SRC_SEL_X(latte::SQ_SEL::SEL_X)
-                  .SRC_SEL_Y(latte::SQ_SEL::SEL_Y)
-                  .SRC_SEL_Z(latte::SQ_SEL::SEL_Z)
-                  .SRC_SEL_W(latte::SQ_SEL::SEL_W);
+                  .SEL_X(latte::SQ_SEL::SEL_X)
+                  .SEL_Y(latte::SQ_SEL::SEL_Y)
+                  .SEL_Z(latte::SQ_SEL::SEL_Z)
+                  .SEL_W(latte::SQ_SEL::SEL_W);
 
                markGprRead(shader, inst.exp.word0.RW_GPR());
             } else if (src->name == "FourCompSwizzle") {
@@ -87,10 +87,10 @@ compileExpInst(Shader &shader, peg::Ast &node)
 
                parseFourCompSwizzle(*src, selX, selY, selZ, selW);
                inst.exp.swiz = inst.exp.swiz
-                  .SRC_SEL_X(selX)
-                  .SRC_SEL_Y(selY)
-                  .SRC_SEL_Z(selZ)
-                  .SRC_SEL_W(selW);
+                  .SEL_X(selX)
+                  .SEL_Y(selY)
+                  .SEL_Z(selZ)
+                  .SEL_W(selW);
             }
          }
       } else if (child->name == "CfInstProperties") {
