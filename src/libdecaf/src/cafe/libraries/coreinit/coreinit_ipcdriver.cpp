@@ -25,7 +25,7 @@ struct StaticIpcDriverData
    };
 
    be2_array<PerCoreData, CoreCount> perCoreData;
-   be2_array<char, 32> submitEventName;
+   be2_array<char, 32> submitEventName = "{ IPC Synchronous }";
 };
 
 static virt_ptr<StaticIpcDriverData> sIpcDriverData = nullptr;
@@ -334,7 +334,6 @@ IOSError
 ipcDriverSubmitRequest(virt_ptr<IPCDriver> driver,
                        virt_ptr<IPCDriverRequest> request)
 {
-   // TODO: sIpcDriverData->submitEventName = "{ IPC Synchronous }";
    OSInitEventEx(virt_addrof(request->finishEvent),
                  FALSE,
                  OSEventMode::AutoReset,
