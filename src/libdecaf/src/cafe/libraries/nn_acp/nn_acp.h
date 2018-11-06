@@ -16,7 +16,9 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerClientSymbols();
    void registerDeviceSymbols();
+   void registerDriverSymbols();
    void registerTitleSymbols();
 };
 

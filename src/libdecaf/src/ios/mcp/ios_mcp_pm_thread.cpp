@@ -520,7 +520,7 @@ initialiseStaticPmThreadData()
          //{ ss("/dev/ifuds"),           1u, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
          //{ ss("/dev/udscntrl"),        1u, rm(0x100000, ProcessId::PAD, 0) }, // WTF?? Should be NET surely?
          dummyRM,
-         //{ ss("/dev/nnsm"),            1u, rm(0x180000, ProcessId::ACP, 0) },
+         { ss("/dev/nnsm"),            1u, rm(0x180000, ProcessId::ACP, 0) },
          dummyRM,
          //{ ss("/dev/dlp"),             1u, rm(0x100000, ProcessId::NET, 0) },
          dummyRM,

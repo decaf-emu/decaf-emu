@@ -1,16 +1,21 @@
 #include "ios_acp.h"
-#include "ios_acp_acp_main_thread.h"
 #include "ios_acp_client_save.h"
+#include "ios_acp_log.h"
+#include "ios_acp_main_server.h"
+#include "ios_acp_nnsm.h"
 
+#include "decaf_config.h"
+#include "decaf_log.h"
+#include "ios/ios_stackobject.h"
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_thread.h"
 #include "ios/mcp/ios_mcp_ipc.h"
-#include "ios/ios_stackobject.h"
+#include "ios/nn/ios_nn.h"
 
-#include "decaf_config.h"
+#include <common/log.h>
 
 namespace ios::acp
 {
@@ -31,14 +36,13 @@ struct StaticAcpData
    be2_val<Handle> fsaHandle;
 };
 
-static phys_ptr<StaticAcpData>
-sAcpData = nullptr;
-
-static phys_ptr<void>
-sLocalHeapBuffer = nullptr;
+static phys_ptr<StaticAcpData> sAcpData = nullptr;
+static phys_ptr<void> sLocalHeapBuffer = nullptr;
 
 namespace internal
 {
+
+std::shared_ptr<spdlog::logger> acpLog = nullptr;
 
 void
 initialiseStaticData()
@@ -71,6 +75,7 @@ acpSaveStart()
 {
    auto error = client::save::start();
    if (error < Error::OK) {
+      internal::acpLog->error("acpSaveStart: client::save::start failed with error = {}", error);
       return error;
    }
 
@@ -92,6 +97,7 @@ acpSystemStart()
 {
    auto error = FSAOpen();
    if (error < Error::OK) {
+      internal::acpLog->error("acpSystemStart: FSAOpen failed with error = {}", error);
       return error;
    }
 
@@ -116,50 +122,80 @@ processEntryPoint(phys_ptr<void> /* context */)
    StackObject<Message> message;
    MessageQueueId messageQueueId;
 
+   // Initialise logger
+   if (!internal::acpLog) {
+      internal::acpLog = decaf::makeLogger("IOS_ACP");
+   }
+
    // Initialise static memory
    internal::initialiseStaticData();
-   internal::initialiseStaticAcpMainThreadData();
+   internal::initialiseStaticMainServerData();
+   internal::initialiseStaticNnsmData();
+
+   // Initialise nn for current process
+   nn::initialiseProcess();
 
    auto error = IOS_SetThreadPriority(CurrentThread, 50);
    if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: IOS_SetThreadPriority failed with error = {}", error);
       return error;
    }
 
    // Initialise process heaps
    error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: IOS_CreateLocalProcessHeap failed with error = {}", error);
       return error;
    }
 
    error = IOS_CreateCrossProcessHeap(CrossHeapSize);
    if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: IOS_CreateCrossProcessHeap failed with error = {}", error);
       return error;
    }
 
    // Setup /dev/acpproc
    error = IOS_CreateMessageQueue(messages, messages.size());
    if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: IOS_CreateMessageQueue failed with error = {}", error);
       return error;
    }
    messageQueueId = static_cast<MessageQueueId>(error);
 
    error = MCP_RegisterResourceManager("/dev/acpproc", messageQueueId);
    if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: MCP_RegisterResourceManager failed for /dev/acpproc with error = {}", error);
       return error;
    }
 
-   // Start thread for /dev/acp_main
-   error = internal::startAcpMainThread();
+   // Start nnsm
+   error = internal::startNnsm();
    if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: startNnsm failed with error = {}", error);
+      return error;
+   }
+
+   // Start nn::ipc::Server for /dev/acp_main
+   error = internal::startMainServer();
+   if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: startMainServer failed with error = {}", error);
       return error;
    }
 
    // Run acpproc
    while (true) {
-      auto error = IOS_ReceiveMessage(messageQueueId, message,
-                                      MessageFlags::None);
+      error = IOS_ReceiveMessage(messageQueueId, message, MessageFlags::None);
       if (error < Error::OK) {
-         return error;
+         internal::acpLog->error(
+            "processEntryPoint: IOS_ReceiveMessage failed with error = {}", error);
+         break;
       }
 
       auto request = parseMessage<ResourceRequest>(message);
@@ -186,6 +222,10 @@ processEntryPoint(phys_ptr<void> /* context */)
 
       IOS_ResourceReply(request, error);
    }
+
+   // Uninitialise nn for current process
+   nn::uninitialiseProcess();
+   return error;
 }
 
 namespace internal

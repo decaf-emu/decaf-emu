@@ -1,5 +1,7 @@
 #include "ios_acp.h"
 #include "ios_acp_client_save.h"
+#include "ios_acp_log.h"
+
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/ios_stackobject.h"
 
@@ -137,16 +139,22 @@ start()
 {
    auto error = createSystemSaveDir("/vol/storage_mlc01/");
    if (error) {
+      internal::acpLog->error(
+         "client::save::start: createSystemSaveDir failed with error = {}", error);
       return error;
    }
 
    error = createNoDeleteDirs("/vol/storage_mlc01/");
    if (error) {
+      internal::acpLog->error(
+         "client::save::start: createNoDeleteDirs failed with error = {}", error);
       return error;
    }
 
    error = createAppBoxCache();
    if (error) {
+      internal::acpLog->error(
+         "client::save::start: createAppBoxCache failed with error = {}", error);
       return error;
    }
 
