@@ -458,11 +458,6 @@ Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, DelayedMe
       cache->sections[i].lastChangeIndex = changeIndex;
    }
 
-   auto& startSection = cache->sections[range.start];
-   auto& lastSection = cache->sections[range.start + range.count - 1];
-   auto firstSegment = startSection.firstSegment;
-   auto totalSegSize = lastSection.offset + lastSection.size - startSection.offset;
-
    forEachMemSegment(cache, range, [&](MemCacheSegment* segment){
       segment->lastChangeIndex = changeIndex;
       segment->lastChangeOwner = cache;
