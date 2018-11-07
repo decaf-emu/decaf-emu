@@ -436,7 +436,7 @@ GX2InitDepthBufferRegs(virt_ptr<GX2DepthBuffer> depthBuffer)
 
    auto db_depth_info = latte::DB_DEPTH_INFO::get(0)
       .READ_SIZE(latte::BUFFER_READ_SIZE::READ_512_BITS)
-      .ARRAY_MODE(static_cast<latte::BUFFER_ARRAY_MODE>(depthBuffer->surface.tileMode))
+      .ARRAY_MODE(static_cast<latte::BUFFER_ARRAY_MODE>(surfaceInfo.tileMode))
       .TILE_SURFACE_ENABLE(depthBuffer->hiZPtr != nullptr);
 
    auto pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0);
