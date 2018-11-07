@@ -455,9 +455,11 @@ driverOnInit()
 
    // TODO: Driver init should be called from driver action thread
    for (auto driver = sDriverData->registeredDrivers; driver; driver = driver->next) {
-      cafe::invoke(cpu::this_core::state(),
-                   driver->interfaceFunctions.onInit,
-                   driver->userDriverId);
+      if (driver->interfaceFunctions.onInit) {
+         cafe::invoke(cpu::this_core::state(),
+                      driver->interfaceFunctions.onInit,
+                      driver->userDriverId);
+      }
    }
 }
 
