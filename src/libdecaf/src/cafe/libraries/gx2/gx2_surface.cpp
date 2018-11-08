@@ -453,6 +453,7 @@ GX2InitDepthBufferRegs(virt_ptr<GX2DepthBuffer> depthBuffer)
          .FORMAT(latte::DB_FORMAT::DEPTH_8_24);
       pa_poly_offset_cntl = latte::PA_SU_POLY_OFFSET_DB_FMT_CNTL::get(0)
          .POLY_OFFSET_NEG_NUM_DB_BITS(232);
+      break;
    case GX2SurfaceFormat::FLOAT_R32:
       db_depth_info = db_depth_info
          .FORMAT(latte::DB_FORMAT::DEPTH_32_FLOAT);
