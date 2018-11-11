@@ -39,7 +39,10 @@ Driver::allocTempBuffer(uint32_t size)
                       nullptr));
 
    static uint64_t stagingBufferIdx = 0;
-   setVkObjectName(buffer, fmt::format("stagingbuffer_{}", stagingBufferIdx++).c_str());
+   setVkObjectName(buffer, fmt::format("stg_{}_{}_{}",
+                                       stagingBufferIdx++,
+                                       static_cast<uint32_t>(type),
+                                       size).c_str());
 
    void *mappedPtr;
    CHECK_VK_RESULT(vmaMapMemory(mAllocator, allocation, &mappedPtr));

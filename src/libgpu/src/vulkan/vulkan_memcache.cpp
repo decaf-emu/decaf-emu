@@ -111,7 +111,7 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
                       nullptr));
 
    static uint64_t memCacheIndex = 0;
-   setVkObjectName(buffer, fmt::format("memcache_{}_{:08x}_{}", memCacheIndex++, address.getAddress(), totalSize).c_str());
+   setVkObjectName(buffer, fmt::format("mcch_{}_{:08x}_{}", memCacheIndex++, address.getAddress(), totalSize).c_str());
 
    auto cache = new MemCacheObject();
    cache->address = address;
