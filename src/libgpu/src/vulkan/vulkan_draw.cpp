@@ -208,26 +208,25 @@ Driver::bindShaderResources()
       auto screenSizeX = mCurrentViewport.width - mCurrentViewport.x;
       auto screenSizeY = mCurrentViewport.height - mCurrentViewport.y;
 
-      if (pa_cl_vte_cntl.VPORT_X_SCALE_ENA()) {
-         vsConstData.posMulAdd.x = 1.0f;
-      } else {
-         vsConstData.posMulAdd.x = 2.0f / screenSizeX;
-      }
       if (pa_cl_vte_cntl.VPORT_X_OFFSET_ENA()) {
          vsConstData.posMulAdd.z = 0.0f;
       } else {
          vsConstData.posMulAdd.z = -1.0f;
       }
-
-      if (pa_cl_vte_cntl.VPORT_Y_SCALE_ENA()) {
-         vsConstData.posMulAdd.y = 1.0f;
+      if (pa_cl_vte_cntl.VPORT_X_SCALE_ENA()) {
+         vsConstData.posMulAdd.x = 1.0f;
       } else {
-         vsConstData.posMulAdd.y = 2.0f / screenSizeY;
+         vsConstData.posMulAdd.x = 2.0f / screenSizeX;
       }
       if (pa_cl_vte_cntl.VPORT_Y_OFFSET_ENA()) {
          vsConstData.posMulAdd.w = 0.0f;
       } else {
          vsConstData.posMulAdd.w = -1.0f;
+      }
+      if (pa_cl_vte_cntl.VPORT_Y_SCALE_ENA()) {
+         vsConstData.posMulAdd.y = 1.0f;
+      } else {
+         vsConstData.posMulAdd.y = 2.0f / screenSizeY;
       }
 
       if (!pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {

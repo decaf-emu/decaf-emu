@@ -22,21 +22,51 @@ Driver::checkCurrentViewportAndScissor()
    auto pa_cl_vport_zoffset = getRegister<latte::PA_CL_VPORT_ZOFFSET_N>(latte::Register::PA_CL_VPORT_ZOFFSET_0);
    auto pa_sc_vport_zmin = getRegister<latte::PA_SC_VPORT_ZMIN_N>(latte::Register::PA_SC_VPORT_ZMIN_0);
    auto pa_sc_vport_zmax = getRegister<latte::PA_SC_VPORT_ZMAX_N>(latte::Register::PA_SC_VPORT_ZMAX_0);
+   auto pa_cl_vte_cntl = getRegister<latte::PA_CL_VTE_CNTL>(latte::Register::PA_CL_VTE_CNTL);
+
+   auto raWidth = static_cast<float>(mCurrentFramebuffer->renderArea.width);
+   auto raHeight = static_cast<float>(mCurrentFramebuffer->renderArea.height);
+
+   // NOTE: Our shaders which output positions understand that if the
+   // xoffset/yoffset/xscale/yscale are disabled, that we need to
+   // pre-transform the render-area down to -1to1 on X and Y.  This
+   // means rather than using a disabled viewport here, we need to
+   // expand this back out.  The reason to do this is that there is
+   // NDC-space clipping occuring in Vulkan which would prevent this
+   // from working as it does on GPU7.
+
+   float vportOX, vportOY, vportSX, vportSY;
+   if (pa_cl_vte_cntl.VPORT_X_OFFSET_ENA()) {
+      vportOX = pa_cl_vport_xoffset.VPORT_XOFFSET();
+   } else {
+      vportOX = raWidth / 2;
+   }
+   if (pa_cl_vte_cntl.VPORT_Y_OFFSET_ENA()) {
+      vportOY  = pa_cl_vport_yoffset.VPORT_YOFFSET();
+   } else {
+      vportOY = raHeight / 2;
+   }
+   if (pa_cl_vte_cntl.VPORT_X_SCALE_ENA()) {
+      vportSX = pa_cl_vport_xscale.VPORT_XSCALE();
+   } else {
+      vportSX = raWidth / 2;
+   }
+   if (pa_cl_vte_cntl.VPORT_Y_SCALE_ENA()) {
+      vportSY = pa_cl_vport_yscale.VPORT_YSCALE();
+   } else {
+      vportSY = raHeight / 2;
+   }
 
    vk::Viewport viewport;
-   viewport.width = pa_cl_vport_xscale.VPORT_XSCALE() * 2.0f;
-   viewport.height = pa_cl_vport_yscale.VPORT_YSCALE() * 2.0f;
-   viewport.x = pa_cl_vport_xoffset.VPORT_XOFFSET() - pa_cl_vport_xscale.VPORT_XSCALE();
-   viewport.y = pa_cl_vport_yoffset.VPORT_YOFFSET() - pa_cl_vport_yscale.VPORT_YSCALE();
+
+   viewport.x = vportOX - vportSX;
+   viewport.y = vportOY - vportSY;
+   viewport.width = vportSX * 2;
+   viewport.height = vportSY * 2;
 
    // TODO: Investigate whether we should be using ZOFFSET/ZSCALE to calculate these?
-   if (pa_cl_vport_zscale.VPORT_ZSCALE() > 0.0f) {
-      viewport.minDepth = pa_sc_vport_zmin.VPORT_ZMIN();
-      viewport.maxDepth = pa_sc_vport_zmax.VPORT_ZMAX();
-   } else {
-      viewport.maxDepth = pa_sc_vport_zmin.VPORT_ZMIN();
-      viewport.minDepth = pa_sc_vport_zmax.VPORT_ZMAX();
-   }
+   viewport.minDepth = pa_sc_vport_zmin.VPORT_ZMIN();
+   viewport.maxDepth = pa_sc_vport_zmax.VPORT_ZMAX();
 
    mCurrentViewport = viewport;
 

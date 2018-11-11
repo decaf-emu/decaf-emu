@@ -1020,14 +1020,14 @@ public:
          // pos.z = (pos.z + (pos.w * zSpaceMul.x)) * zSpaceMul.y;
 
          auto zsYWMul = createOp(spv::OpCompositeExtract, floatType(), { zSpaceMulVal, 0 });
-         auto zsYMul = createOp(spv::OpCompositeExtract, floatType(), { zSpaceMulVal, 1 });
+         auto zsYYMul = createOp(spv::OpCompositeExtract, floatType(), { zSpaceMulVal, 1 });
 
          auto exportZ = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 2 });
          auto exportW = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
 
          auto yWAdd = createBinOp(spv::OpFMul, floatType(), exportW, zsYWMul);
          auto zAdj = createBinOp(spv::OpFAdd, floatType(), exportZ, yWAdd);
-         auto zFinal = createBinOp(spv::OpFMul, floatType(), zAdj, zsYMul);
+         auto zFinal = createBinOp(spv::OpFMul, floatType(), zAdj, zsYYMul);
 
          exportVal = createOp(spv::OpCompositeInsert, float4Type(), { zFinal, exportVal, 2 });
       }
