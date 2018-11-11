@@ -217,7 +217,7 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    sourceDataDesc.width = data.srcWidth;
    sourceDataDesc.height = data.srcHeight;
    sourceDataDesc.depth = data.srcDepth;
-   sourceDataDesc.samples = data.srcSamples;
+   sourceDataDesc.samples = 1;
    sourceDataDesc.dim = data.srcDim;
    sourceDataDesc.format = latte::getSurfaceFormat(
       data.srcFormat,
@@ -235,7 +235,7 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
    destDataDesc.width = data.dstWidth;
    destDataDesc.height = data.dstHeight;
    destDataDesc.depth = data.dstDepth;
-   destDataDesc.samples = data.dstSamples;
+   destDataDesc.samples = 1;
    destDataDesc.dim = data.dstDim;
    destDataDesc.format = latte::getSurfaceFormat(
       data.dstFormat,

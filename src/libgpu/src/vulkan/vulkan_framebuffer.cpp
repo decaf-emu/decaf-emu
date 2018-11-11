@@ -308,7 +308,7 @@ Driver::getDepthStencilBuffer(const DepthStencilBufferDesc& info)
    surfaceDesc.width = pitch;
    surfaceDesc.height = height;
    surfaceDesc.depth = 1;
-   surfaceDesc.samples = 0u;
+   surfaceDesc.samples = 1u;
    surfaceDesc.dim = latte::SQ_TEX_DIM::DIM_2D;
    surfaceDesc.format = surfaceFormat;
    surfaceDesc.tileType = latte::SQ_TILE_TYPE::DEPTH;
