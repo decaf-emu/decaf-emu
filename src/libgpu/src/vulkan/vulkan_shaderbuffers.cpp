@@ -20,10 +20,10 @@ Driver::checkCurrentGprBuffer(ShaderStage shaderStage)
       decaf_abort("Unknown shader stage");
    }
 
-   auto gprsBuffer = getStagingBuffer(256 * 4 * 4);
-   auto mappedData = mapStagingBuffer(gprsBuffer, false);
+   auto gprsBuffer = getStagingBuffer(256 * 4 * 4, StagingBufferType::CpuToGpu);
+   auto mappedData = mapStagingBuffer(gprsBuffer);
    memcpy(mappedData, registerVals, 256 * 4 * 4);
-   unmapStagingBuffer(gprsBuffer, true);
+   unmapStagingBuffer(gprsBuffer);
 
    mCurrentGprBuffers[int(shaderStage)] = gprsBuffer;
 }

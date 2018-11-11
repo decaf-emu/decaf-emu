@@ -272,8 +272,16 @@ struct VertexBufferDesc
    uint32_t stride;
 };
 
+enum class StagingBufferType : uint32_t
+{
+   CpuToGpu = 0,
+   GpuToCpu = 1,
+   GpuToGpu = 2
+};
+
 struct StagingBuffer
 {
+   StagingBufferType type;
    uint32_t maximumSize;
    uint32_t size;
    vk::Buffer buffer;
@@ -802,11 +810,11 @@ protected:
    void downloadPendingMemCache();
 
    // Staging
-   StagingBuffer * allocTempBuffer(uint32_t size);
-   StagingBuffer * getStagingBuffer(uint32_t size);
+   StagingBuffer * _allocStagingBuffer(uint32_t size, StagingBufferType type);
+   StagingBuffer * getStagingBuffer(uint32_t size, StagingBufferType type);
    void retireStagingBuffer(StagingBuffer *sbuffer);
-   void * mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu);
-   void unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu);
+   void * mapStagingBuffer(StagingBuffer *sbuffer);
+   void unmapStagingBuffer(StagingBuffer *sbuffer);
 
    // Surfaces
    MemCacheObject * _getSurfaceMemCache(const SurfaceDesc &info);

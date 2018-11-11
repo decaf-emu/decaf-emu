@@ -138,10 +138,10 @@ Driver::_uploadMemCacheRaw(MemCacheObject *cache, SectionRange range)
    auto uploadSize = lastSection.offset + lastSection.size - firstSection.offset;
    uint8_t *uploadData = cacheBasePtr + uploadOffset;
 
-   auto stagingBuffer = getStagingBuffer(uploadSize);
-   void *mappedPtr = mapStagingBuffer(stagingBuffer, false);
+   auto stagingBuffer = getStagingBuffer(uploadSize, StagingBufferType::CpuToGpu);
+   void *mappedPtr = mapStagingBuffer(stagingBuffer);
    memcpy(mappedPtr, uploadData, uploadSize);
-   unmapStagingBuffer(stagingBuffer, true);
+   unmapStagingBuffer(stagingBuffer);
 
    // Copy the data out of the staging buffer into the memory cache.
    vk::BufferCopy copyDesc;
@@ -195,10 +195,10 @@ Driver::_uploadMemCacheRetile(MemCacheObject *cache, SectionRange range)
    auto uploadData = untiledImage.data() + uploadOffset;
    auto uploadSize = endOffset - startOffset;
 
-   auto stagingBuffer = getStagingBuffer(uploadSize);
-   void *mappedPtr = mapStagingBuffer(stagingBuffer, false);
+   auto stagingBuffer = getStagingBuffer(uploadSize, StagingBufferType::CpuToGpu);
+   void *mappedPtr = mapStagingBuffer(stagingBuffer);
    memcpy(mappedPtr, uploadData, uploadSize);
-   unmapStagingBuffer(stagingBuffer, true);
+   unmapStagingBuffer(stagingBuffer);
 
    // Copy the data out of the staging buffer into the memory cache.
    vk::BufferCopy copyDesc;
@@ -230,7 +230,7 @@ Driver::_downloadMemCacheRaw(MemCacheObject *cache, SectionRange range)
    auto rangeSize = offsetEnd - offsetStart;
 
    // Create a staging buffer to use for the readback
-   auto stagingBuffer = getStagingBuffer(rangeSize);
+   auto stagingBuffer = getStagingBuffer(rangeSize, StagingBufferType::GpuToCpu);
 
    // Copy the data into our staging buffer from the cache object
    vk::BufferCopy copyDesc;
@@ -250,10 +250,10 @@ Driver::_downloadMemCacheRaw(MemCacheObject *cache, SectionRange range)
          auto stagingOffset = section.offset - offsetStart;
 
          // Map our staging buffer so we can copy out of it.
-         void *mappedPtr = mapStagingBuffer(stagingBuffer, true);
+         void *mappedPtr = mapStagingBuffer(stagingBuffer);
          auto stagedData = reinterpret_cast<uint8_t*>(mappedPtr) + stagingOffset;
          memcpy(data, stagedData, section.size);
-         unmapStagingBuffer(stagingBuffer, false);
+         unmapStagingBuffer(stagingBuffer);
 
          // We need to calculate new data hashes for the relevant segments that
          // are affected by this image and are not still being GPU written.

@@ -12,21 +12,43 @@ within a retire task of that particular command buffer.
 */
 
 StagingBuffer *
-Driver::allocTempBuffer(uint32_t size)
+Driver::_allocStagingBuffer(uint32_t size, StagingBufferType type)
 {
+   // Lets at least align our staging buffers to 1kb...
+   size = align_up(size, 1024);
+
+   vk::BufferUsageFlags bufferUsage;
+   VmaMemoryUsage allocUsage;
+
+   if (type == StagingBufferType::CpuToGpu) {
+      allocUsage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+      bufferUsage =
+         vk::BufferUsageFlagBits::eTransferSrc |
+         vk::BufferUsageFlagBits::eTransferDst |
+         vk::BufferUsageFlagBits::eIndexBuffer |
+         vk::BufferUsageFlagBits::eUniformBuffer;
+   } else if (type == StagingBufferType::GpuToCpu) {
+      allocUsage = VMA_MEMORY_USAGE_GPU_TO_CPU;
+      bufferUsage =
+         vk::BufferUsageFlagBits::eTransferSrc |
+         vk::BufferUsageFlagBits::eTransferDst;
+   } else if (type == StagingBufferType::GpuToGpu) {
+      allocUsage = VMA_MEMORY_USAGE_GPU_ONLY;
+      bufferUsage =
+         vk::BufferUsageFlagBits::eTransferSrc |
+         vk::BufferUsageFlagBits::eTransferDst |
+         vk::BufferUsageFlagBits::eStorageBuffer;
+   }
+
    vk::BufferCreateInfo bufferDesc;
    bufferDesc.size = size;
-   bufferDesc.usage =
-      vk::BufferUsageFlagBits::eTransferSrc |
-      vk::BufferUsageFlagBits::eTransferDst |
-      vk::BufferUsageFlagBits::eIndexBuffer |
-      vk::BufferUsageFlagBits::eUniformBuffer;
+   bufferDesc.usage = bufferUsage;
    bufferDesc.sharingMode = vk::SharingMode::eExclusive;
    bufferDesc.queueFamilyIndexCount = 0;
    bufferDesc.pQueueFamilyIndices = nullptr;
 
    VmaAllocationCreateInfo allocDesc = {};
-   allocDesc.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+   allocDesc.usage = allocUsage;
 
    VkBuffer buffer;
    VmaAllocation allocation;
@@ -44,28 +66,30 @@ Driver::allocTempBuffer(uint32_t size)
                                        static_cast<uint32_t>(type),
                                        size).c_str());
 
-   void *mappedPtr;
-   CHECK_VK_RESULT(vmaMapMemory(mAllocator, allocation, &mappedPtr));
-
    auto sbuffer = new StagingBuffer();
+   sbuffer->type = type;
    sbuffer->maximumSize = size;
    sbuffer->size = 0;
    sbuffer->buffer = buffer;
    sbuffer->memory = allocation;
-   sbuffer->mappedPtr = mappedPtr;
+   sbuffer->mappedPtr = nullptr;
+
+   if (type == StagingBufferType::GpuToCpu || type == StagingBufferType::CpuToGpu) {
+      CHECK_VK_RESULT(vmaMapMemory(mAllocator, sbuffer->memory, &sbuffer->mappedPtr));
+   }
 
    return sbuffer;
 }
 
 StagingBuffer *
-Driver::getStagingBuffer(uint32_t size)
+Driver::getStagingBuffer(uint32_t size, StagingBufferType type)
 {
    StagingBuffer *sbuffer = nullptr;
 
    if (!sbuffer) {
       for (auto i = mStagingBuffers.begin(); i != mStagingBuffers.end(); ++i) {
          auto searchBuffer = *i;
-         if (searchBuffer->maximumSize >= size) {
+         if (searchBuffer->type == type && searchBuffer->maximumSize >= size) {
             mStagingBuffers.erase(i);
             sbuffer = searchBuffer;
             break;
@@ -74,7 +98,7 @@ Driver::getStagingBuffer(uint32_t size)
    }
 
    if (!sbuffer) {
-      sbuffer = allocTempBuffer(size);
+      sbuffer = _allocStagingBuffer(size, type);
    }
 
    sbuffer->size = size;
@@ -87,20 +111,13 @@ Driver::getStagingBuffer(uint32_t size)
 void
 Driver::retireStagingBuffer(StagingBuffer *sbuffer)
 {
-   if (sbuffer->maximumSize >= 1 * 1024 * 1024) {
-      // We don't keep around buffers over 1mb in size
-      vmaDestroyBuffer(mAllocator, sbuffer->buffer, sbuffer->memory);
-      delete sbuffer;
-      return;
-   }
-
    mStagingBuffers.push_back(sbuffer);
 }
 
 void *
-Driver::mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu)
+Driver::mapStagingBuffer(StagingBuffer *sbuffer)
 {
-   if (flushGpu) {
+   if (sbuffer->type == StagingBufferType::GpuToCpu) {
       vmaInvalidateAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
    }
 
@@ -108,9 +125,9 @@ Driver::mapStagingBuffer(StagingBuffer *sbuffer, bool flushGpu)
 }
 
 void
-Driver::unmapStagingBuffer(StagingBuffer *sbuffer, bool flushCpu)
+Driver::unmapStagingBuffer(StagingBuffer *sbuffer)
 {
-   if (flushCpu) {
+   if (sbuffer->type == StagingBufferType::CpuToGpu) {
       vmaFlushAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
    }
 }
