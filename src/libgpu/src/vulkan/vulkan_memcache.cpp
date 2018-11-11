@@ -138,10 +138,13 @@ Driver::_uploadMemCacheRaw(MemCacheObject *cache, SectionRange range)
    auto uploadSize = lastSection.offset + lastSection.size - firstSection.offset;
    uint8_t *uploadData = cacheBasePtr + uploadOffset;
 
+   // Upload the data to the CPU
    auto stagingBuffer = getStagingBuffer(uploadSize, StagingBufferType::CpuToGpu);
-   void *mappedPtr = mapStagingBuffer(stagingBuffer);
-   memcpy(mappedPtr, uploadData, uploadSize);
-   unmapStagingBuffer(stagingBuffer);
+   copyToStagingBuffer(stagingBuffer, 0, uploadData, uploadSize);
+
+   // Transition the buffers appropriately
+   transitionStagingBuffer(stagingBuffer, ResourceUsage::TransferSrc);
+   _barrierMemCache(cache, ResourceUsage::TransferDst, range);
 
    // Copy the data out of the staging buffer into the memory cache.
    vk::BufferCopy copyDesc;
@@ -195,10 +198,13 @@ Driver::_uploadMemCacheRetile(MemCacheObject *cache, SectionRange range)
    auto uploadData = untiledImage.data() + uploadOffset;
    auto uploadSize = endOffset - startOffset;
 
+   // Transition the buffers appropriately
    auto stagingBuffer = getStagingBuffer(uploadSize, StagingBufferType::CpuToGpu);
-   void *mappedPtr = mapStagingBuffer(stagingBuffer);
-   memcpy(mappedPtr, uploadData, uploadSize);
-   unmapStagingBuffer(stagingBuffer);
+   copyToStagingBuffer(stagingBuffer, 0, uploadData, uploadSize);
+
+   // Transition the buffers appropriately
+   transitionStagingBuffer(stagingBuffer, ResourceUsage::TransferSrc);
+   _barrierMemCache(cache, ResourceUsage::TransferDst, range);
 
    // Copy the data out of the staging buffer into the memory cache.
    vk::BufferCopy copyDesc;
@@ -232,12 +238,20 @@ Driver::_downloadMemCacheRaw(MemCacheObject *cache, SectionRange range)
    // Create a staging buffer to use for the readback
    auto stagingBuffer = getStagingBuffer(rangeSize, StagingBufferType::GpuToCpu);
 
+   // Transition the buffers appropriately
+   transitionStagingBuffer(stagingBuffer, ResourceUsage::TransferDst);
+   _barrierMemCache(cache, ResourceUsage::TransferSrc, range);
+
    // Copy the data into our staging buffer from the cache object
    vk::BufferCopy copyDesc;
    copyDesc.srcOffset = offsetStart;
    copyDesc.dstOffset = 0;
    copyDesc.size = rangeSize;
    mActiveCommandBuffer.copyBuffer(cache->buffer, stagingBuffer->buffer, { copyDesc });
+
+   // We have to pre-transition the buffer to being host-read, as it would be otherwise
+   // illegal to be doing the transition during the retire function below.
+   transitionStagingBuffer(stagingBuffer, ResourceUsage::HostRead);
 
    // Move the data onto the CPU on a per-section basis
    for (auto i = range.start; i < range.start + range.count; ++i) {
@@ -249,11 +263,8 @@ Driver::_downloadMemCacheRaw(MemCacheObject *cache, SectionRange range)
 
          auto stagingOffset = section.offset - offsetStart;
 
-         // Map our staging buffer so we can copy out of it.
-         void *mappedPtr = mapStagingBuffer(stagingBuffer);
-         auto stagedData = reinterpret_cast<uint8_t*>(mappedPtr) + stagingOffset;
-         memcpy(data, stagedData, section.size);
-         unmapStagingBuffer(stagingBuffer);
+         // Copy the data out of the staging area into memory
+         copyFromStagingBuffer(stagingBuffer, stagingOffset, data, section.size);
 
          // We need to calculate new data hashes for the relevant segments that
          // are affected by this image and are not still being GPU written.
@@ -477,9 +488,16 @@ Driver::_barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRang
    auto offsetEnd = lastSection.offset + lastSection.size;
    auto memRange = offsetEnd - offsetStart;
 
+   if (cache->activeUsage == usage) {
+      return;
+   }
+
+   auto srcMeta = getResourceUsageMeta(cache->activeUsage);
+   auto dstMeta = getResourceUsageMeta(usage);
+
    vk::BufferMemoryBarrier bufferBarrier;
-   bufferBarrier.srcAccessMask = vk::AccessFlags();
-   bufferBarrier.dstAccessMask = vk::AccessFlags();
+   bufferBarrier.srcAccessMask = srcMeta.accessFlags;
+   bufferBarrier.dstAccessMask = dstMeta.accessFlags;
    bufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    bufferBarrier.buffer = cache->buffer;
@@ -487,12 +505,14 @@ Driver::_barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRang
    bufferBarrier.size = memRange;
 
    mActiveCommandBuffer.pipelineBarrier(
-      vk::PipelineStageFlagBits::eAllGraphics,
-      vk::PipelineStageFlagBits::eAllGraphics,
+      srcMeta.stageFlags,
+      dstMeta.stageFlags,
       vk::DependencyFlags(),
       {},
       { bufferBarrier },
       {});
+
+   cache->activeUsage = usage;
 }
 
 SectionRange
@@ -581,22 +601,7 @@ Driver::transitionMemCache(MemCacheObject *cache, ResourceUsage usage, uint32_t 
    auto range = _sectionsFromOffsets(cache, offset, offset + size);
 
    // Check if this is for reading or writing
-   bool forWrite;
-   switch (usage) {
-   case ResourceUsage::UniformBuffer:
-   case ResourceUsage::AttributeBuffer:
-   case ResourceUsage::StreamOutCounterRead:
-   case ResourceUsage::TransferSrc:
-      forWrite = false;
-      break;
-   case ResourceUsage::StreamOutBuffer:
-   case ResourceUsage::StreamOutCounterWrite:
-   case ResourceUsage::TransferDst:
-      forWrite = true;
-      break;
-   default:
-      decaf_abort("Unexpected surface resource usage");
-   }
+   auto forWrite = getResourceUsageMeta(usage).isWrite;
 
    // Update the last usage here
    cache->lastUsageIndex = mActiveBatchIndex;

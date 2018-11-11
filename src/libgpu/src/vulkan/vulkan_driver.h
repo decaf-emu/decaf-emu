@@ -106,6 +106,36 @@ struct MemCacheMutator
    }
 };
 
+enum class ResourceUsage : uint32_t
+{
+   Undefined,
+   ColorAttachment,
+   DepthStencilAttachment,
+   VertexTexture,
+   GeometryTexture,
+   PixelTexture,
+   VertexUniforms,
+   GeometryUniforms,
+   PixelUniforms,
+   IndexBuffer,
+   AttributeBuffer,
+   StreamOutBuffer,
+   StreamOutCounterRead,
+   StreamOutCounterWrite,
+   TransferSrc,
+   TransferDst,
+   HostWrite,
+   HostRead
+};
+
+struct ResourceUsageMeta
+{
+   bool isWrite;
+   vk::AccessFlags accessFlags;
+   vk::PipelineStageFlags stageFlags;
+   vk::ImageLayout imageLayout;
+};
+
 typedef std::function<void()> DelayedMemWriteFunc;
 
 struct MemCacheObject;
@@ -183,6 +213,7 @@ struct MemCacheObject
    phys_addr address;
    uint32_t size;
    MemCacheMutator mutator;
+   ResourceUsage activeUsage;
 
    // The buffer data.
    VmaAllocation allocation;
@@ -284,6 +315,7 @@ struct StagingBuffer
    StagingBufferType type;
    uint32_t maximumSize;
    uint32_t size;
+   ResourceUsage activeUsage;
    vk::Buffer buffer;
    VmaAllocation memory;
    void *mappedPtr;
@@ -299,21 +331,6 @@ struct SyncWaiter
    std::vector<std::function<void()>> callbacks;
 
    vk::CommandBuffer cmdBuffer;
-};
-
-enum class ResourceUsage : uint32_t
-{
-   Undefined,
-   ColorAttachment,
-   DepthStencilAttachment,
-   Texture,
-   UniformBuffer,
-   AttributeBuffer,
-   StreamOutBuffer,
-   StreamOutCounterRead,
-   StreamOutCounterWrite,
-   TransferSrc,
-   TransferDst
 };
 
 struct SurfaceDesc
@@ -475,7 +492,6 @@ struct SurfaceObject
    vk::DeviceMemory imageMem;
    vk::BufferImageCopy bufferRegion;
    vk::ImageSubresourceRange subresRange;
-   vk::ImageLayout activeLayout;
 };
 
 struct SurfaceViewDesc
@@ -732,6 +748,8 @@ protected:
    void updateDebuggerInfo();
    void validateDevice();
 
+   ResourceUsageMeta getResourceUsageMeta(ResourceUsage usage);
+
    // Command Buffer Stuff
    void beginCommandGroup();
    void endCommandGroup();
@@ -813,8 +831,9 @@ protected:
    StagingBuffer * _allocStagingBuffer(uint32_t size, StagingBufferType type);
    StagingBuffer * getStagingBuffer(uint32_t size, StagingBufferType type);
    void retireStagingBuffer(StagingBuffer *sbuffer);
-   void * mapStagingBuffer(StagingBuffer *sbuffer);
-   void unmapStagingBuffer(StagingBuffer *sbuffer);
+   void transitionStagingBuffer(StagingBuffer *sbuffer, ResourceUsage usage);
+   void copyToStagingBuffer(StagingBuffer *sbuffer, uint32_t offset, const void *data, uint32_t size);
+   void copyFromStagingBuffer(StagingBuffer *sbuffer, uint32_t offset, void *data, uint32_t size);
 
    // Surfaces
    MemCacheObject * _getSurfaceMemCache(const SurfaceDesc &info);

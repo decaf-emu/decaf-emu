@@ -202,7 +202,6 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange ran
    copyRegion.extent = vk::Extent3D { copyWidth, copyHeight, copySlices };
 
    auto originalSrcUsage = src->activeUsage;
-   auto originalSrcLayout = src->activeLayout;
 
    _barrierSurface(src, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, range);
    _barrierSurface(dst, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, range);
@@ -217,6 +216,7 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange ran
    // We don't know what the source was doing before, so we need to return
    // it back to it's original usage/layout in case its in use.
    if (originalSrcUsage != ResourceUsage::Undefined) {
+      auto originalSrcLayout = getResourceUsageMeta(originalSrcUsage).imageLayout;
       _barrierSurface(src, originalSrcUsage, originalSrcLayout, range);
    }
 }
@@ -518,7 +518,6 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    surface->memCache = memCache;
    surface->subresRange = subresRange;
    surface->bufferRegion = bufferRegion;
-   surface->activeLayout = vk::ImageLayout::eUndefined;
    surface->activeUsage = ResourceUsage::Undefined;
    surface->lastUsageIndex = mActiveBatchIndex;
    surface->group = surfaceGroup;
@@ -686,10 +685,10 @@ Driver::_invalidateSurface(SurfaceObject *surface, SurfaceSubRange range)
       // We need to be careful to restore the surface layout after we are
       // done, as this async download could happen mid-draw.
       auto oldUsage = surface->activeUsage;
-      auto oldLayout = surface->activeLayout;
 
       _writeSurfaceData(surface, range);
 
+      auto oldLayout = getResourceUsageMeta(oldUsage).imageLayout;
       _barrierSurface(surface, oldUsage, oldLayout, range);
    });
 
@@ -706,52 +705,36 @@ Driver::_invalidateSurface(SurfaceObject *surface, SurfaceSubRange range)
 void
 Driver::_barrierSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
-   switch (usage) {
-   case ResourceUsage::ColorAttachment:
-      decaf_check(layout == vk::ImageLayout::eColorAttachmentOptimal);
-      break;
-   case ResourceUsage::DepthStencilAttachment:
-      decaf_check(layout == vk::ImageLayout::eDepthStencilAttachmentOptimal);
-      break;
-   case ResourceUsage::Texture:
-      decaf_check(layout == vk::ImageLayout::eShaderReadOnlyOptimal);
-      break;
-   case ResourceUsage::TransferSrc:
-      decaf_check(layout == vk::ImageLayout::eTransferSrcOptimal);
-      break;
-   case ResourceUsage::TransferDst:
-      decaf_check(layout == vk::ImageLayout::eTransferDstOptimal);
-      break;
-   default:
-      decaf_abort("Unexpected surface resource usage");
-   }
+   auto srcMeta = getResourceUsageMeta(surface->activeUsage);
+   auto dstMeta = getResourceUsageMeta(usage);
 
-   surface->activeUsage = usage;
+   // Lets make sure everyone agrees on what the layout
+   // actually needs to be for this transition.
+   decaf_check(dstMeta.imageLayout == layout);
 
-   if (surface->activeLayout == layout) {
-      // Nothing to do, we are already the correct layout
+   if (surface->activeUsage == usage) {
       return;
    }
 
    vk::ImageMemoryBarrier imageBarrier;
-   imageBarrier.srcAccessMask = vk::AccessFlags();
-   imageBarrier.dstAccessMask = vk::AccessFlags();
-   imageBarrier.oldLayout = surface->activeLayout;
-   imageBarrier.newLayout = layout;
+   imageBarrier.srcAccessMask = srcMeta.accessFlags;
+   imageBarrier.dstAccessMask = dstMeta.accessFlags;
+   imageBarrier.oldLayout = srcMeta.imageLayout;
+   imageBarrier.newLayout = dstMeta.imageLayout;
    imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    imageBarrier.image = surface->image;
    imageBarrier.subresourceRange = surface->subresRange;
 
    mActiveCommandBuffer.pipelineBarrier(
-      vk::PipelineStageFlagBits::eAllGraphics,
-      vk::PipelineStageFlagBits::eAllGraphics,
+      srcMeta.stageFlags,
+      dstMeta.stageFlags,
       vk::DependencyFlags(),
       {},
       {},
       { imageBarrier });
 
-   surface->activeLayout = layout;
+   surface->activeUsage = usage;
 }
 
 SurfaceObject *
@@ -789,21 +772,7 @@ Driver::getSurface(const SurfaceDesc& info)
 void
 Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
-   bool forWrite;
-   switch (usage) {
-   case ResourceUsage::ColorAttachment:
-   case ResourceUsage::DepthStencilAttachment:
-   case ResourceUsage::StreamOutBuffer:
-   case ResourceUsage::TransferDst:
-      forWrite = true;
-      break;
-   case ResourceUsage::Texture:
-   case ResourceUsage::TransferSrc:
-      forWrite = false;
-      break;
-   default:
-      decaf_abort("Unexpected surface resource usage");
-   }
+   bool forWrite = getResourceUsageMeta(usage).isWrite;
 
    surface->lastUsageIndex = mActiveBatchIndex;
 

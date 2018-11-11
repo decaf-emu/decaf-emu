@@ -70,6 +70,7 @@ Driver::_allocStagingBuffer(uint32_t size, StagingBufferType type)
    sbuffer->type = type;
    sbuffer->maximumSize = size;
    sbuffer->size = 0;
+   sbuffer->activeUsage = ResourceUsage::Undefined;
    sbuffer->buffer = buffer;
    sbuffer->memory = allocation;
    sbuffer->mappedPtr = nullptr;
@@ -114,22 +115,69 @@ Driver::retireStagingBuffer(StagingBuffer *sbuffer)
    mStagingBuffers.push_back(sbuffer);
 }
 
-void *
-Driver::mapStagingBuffer(StagingBuffer *sbuffer)
+void
+Driver::transitionStagingBuffer(StagingBuffer *sbuffer, ResourceUsage usage)
 {
-   if (sbuffer->type == StagingBufferType::GpuToCpu) {
-      vmaInvalidateAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
+   // If we are already set to the correct usage, no need to do any additional
+   // work.  It is implied that a transition would need to happen for a change
+   // to have occurred to the staging buffer.
+   if (sbuffer->activeUsage == usage) {
+      return;
    }
 
-   return sbuffer->mappedPtr;
+   auto srcMeta = getResourceUsageMeta(sbuffer->activeUsage);
+   auto dstMeta = getResourceUsageMeta(usage);
+
+   vk::BufferMemoryBarrier bufferBarrier;
+   bufferBarrier.srcAccessMask = srcMeta.accessFlags;
+   bufferBarrier.dstAccessMask = dstMeta.accessFlags;
+   bufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   bufferBarrier.buffer = sbuffer->buffer;
+   bufferBarrier.offset = 0;
+   bufferBarrier.size = VK_WHOLE_SIZE;
+
+   mActiveCommandBuffer.pipelineBarrier(
+      srcMeta.stageFlags,
+      dstMeta.stageFlags,
+      vk::DependencyFlags(),
+      {},
+      { bufferBarrier },
+      {});
+
+   sbuffer->activeUsage = usage;
 }
 
 void
-Driver::unmapStagingBuffer(StagingBuffer *sbuffer)
+Driver::copyToStagingBuffer(StagingBuffer *sbuffer, uint32_t offset, const void *data, uint32_t size)
 {
-   if (sbuffer->type == StagingBufferType::CpuToGpu) {
-      vmaFlushAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
-   }
+   decaf_check(sbuffer->type == StagingBufferType::CpuToGpu);
+
+   // Transition the buffer to allow safe writing
+   transitionStagingBuffer(sbuffer, ResourceUsage::HostWrite);
+
+   // Copy the data into the staging buffer.
+   memcpy(static_cast<uint8_t*>(sbuffer->mappedPtr) + offset, data, size);
+
+   // Flush the allocation to make the CPU write visible to the GPU.
+   vmaFlushAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
+}
+
+void
+Driver::copyFromStagingBuffer(StagingBuffer *sbuffer, uint32_t offset, void *data, uint32_t size)
+{
+   decaf_check(sbuffer->type == StagingBufferType::GpuToCpu);
+
+   // In the case of copying FROM the staging buffer, we actually only check that the
+   // correct usage is configured.  This is because the read occurs later after the
+   // transition, when we don't have a command buffer or a sync path to transition.
+   decaf_check(sbuffer->activeUsage == ResourceUsage::HostRead);
+
+   // Invalidate the allocation to make the GPU writes visible to the CPU
+   vmaInvalidateAllocation(mAllocator, sbuffer->memory, 0, VK_WHOLE_SIZE);
+
+   // Copy the data from the staging buffer
+   memcpy(data, static_cast<uint8_t*>(sbuffer->mappedPtr) + offset, size);
 }
 
 } // namespace vulkan

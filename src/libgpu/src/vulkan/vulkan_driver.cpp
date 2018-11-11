@@ -544,6 +544,107 @@ Driver::findMemoryType(uint32_t memTypeBits, vk::MemoryPropertyFlags requestProp
    throw std::logic_error("failed to find suitable memory type");
 }
 
+ResourceUsageMeta
+Driver::getResourceUsageMeta(ResourceUsage usage)
+{
+   switch (usage) {
+   case ResourceUsage::Undefined:
+      return { false,
+               vk::AccessFlags(),
+               vk::PipelineStageFlagBits::eBottomOfPipe,
+               vk::ImageLayout::eUndefined };
+
+   case ResourceUsage::VertexTexture:
+      return { false,
+               vk::AccessFlagBits::eShaderRead,
+               vk::PipelineStageFlagBits::eVertexShader,
+               vk::ImageLayout::eShaderReadOnlyOptimal };
+   case ResourceUsage::GeometryTexture:
+      return { false,
+               vk::AccessFlagBits::eShaderRead,
+               vk::PipelineStageFlagBits::eGeometryShader,
+               vk::ImageLayout::eShaderReadOnlyOptimal };
+   case ResourceUsage::PixelTexture:
+      return { false,
+               vk::AccessFlagBits::eShaderRead,
+               vk::PipelineStageFlagBits::eFragmentShader,
+               vk::ImageLayout::eShaderReadOnlyOptimal };
+   case ResourceUsage::IndexBuffer:
+      return { false,
+               vk::AccessFlagBits::eIndexRead,
+               vk::PipelineStageFlagBits::eVertexInput,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::VertexUniforms:
+      return { false,
+               vk::AccessFlagBits::eUniformRead,
+               vk::PipelineStageFlagBits::eVertexShader,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::GeometryUniforms:
+      return { false,
+               vk::AccessFlagBits::eUniformRead,
+               vk::PipelineStageFlagBits::eGeometryShader,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::PixelUniforms:
+      return { false,
+               vk::AccessFlagBits::eUniformRead,
+               vk::PipelineStageFlagBits::eFragmentShader,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::AttributeBuffer:
+      return { false,
+               vk::AccessFlagBits::eVertexAttributeRead,
+               vk::PipelineStageFlagBits::eVertexInput,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::StreamOutCounterRead:
+      return { false,
+               vk::AccessFlagBits::eTransformFeedbackCounterReadEXT,
+               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::TransferSrc:
+      return { false,
+               vk::AccessFlagBits::eTransferRead,
+               vk::PipelineStageFlagBits::eTransfer,
+               vk::ImageLayout::eTransferSrcOptimal };
+   case ResourceUsage::HostRead:
+      return { false,
+               vk::AccessFlagBits::eHostRead,
+               vk::PipelineStageFlagBits::eHost,
+               vk::ImageLayout::eUndefined };
+
+   case ResourceUsage::ColorAttachment:
+      return { true,
+               vk::AccessFlagBits::eColorAttachmentWrite,
+               vk::PipelineStageFlagBits::eColorAttachmentOutput,
+               vk::ImageLayout::eColorAttachmentOptimal };
+   case ResourceUsage::DepthStencilAttachment:
+      return { true,
+               vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+               vk::PipelineStageFlagBits::eLateFragmentTests,
+               vk::ImageLayout::eDepthStencilAttachmentOptimal };
+   case ResourceUsage::StreamOutBuffer:
+      return { true,
+               vk::AccessFlagBits::eTransformFeedbackWriteEXT,
+               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::StreamOutCounterWrite:
+      return { true,
+               vk::AccessFlagBits::eTransformFeedbackCounterWriteEXT,
+               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::TransferDst:
+      return { true,
+               vk::AccessFlagBits::eTransferWrite,
+               vk::PipelineStageFlagBits::eTransfer,
+               vk::ImageLayout::eTransferDstOptimal };
+   case ResourceUsage::HostWrite:
+      return { true,
+               vk::AccessFlagBits::eHostWrite,
+               vk::PipelineStageFlagBits::eHost,
+               vk::ImageLayout::eUndefined };
+   default:
+      decaf_abort("Unexpected resource usage");
+   }
+}
+
 } // namespace vulkan
 
 #endif // ifdef DECAF_VULKAN

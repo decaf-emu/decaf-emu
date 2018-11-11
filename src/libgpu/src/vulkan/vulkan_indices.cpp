@@ -131,9 +131,8 @@ Driver::checkCurrentIndices()
    if (drawDesc.indices) {
       auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
       auto indicesBuf = getStagingBuffer(indexBytes, StagingBufferType::CpuToGpu);
-      auto indicesPtr = mapStagingBuffer(indicesBuf);
-      memcpy(indicesPtr, drawDesc.indices, indexBytes);
-      unmapStagingBuffer(indicesBuf);
+      copyToStagingBuffer(indicesBuf, 0, drawDesc.indices, indexBytes);
+      transitionStagingBuffer(indicesBuf, ResourceUsage::IndexBuffer);
 
       mCurrentIndexBuffer = indicesBuf;
    } else {

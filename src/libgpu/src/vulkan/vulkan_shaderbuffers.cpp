@@ -21,9 +21,17 @@ Driver::checkCurrentGprBuffer(ShaderStage shaderStage)
    }
 
    auto gprsBuffer = getStagingBuffer(256 * 4 * 4, StagingBufferType::CpuToGpu);
-   auto mappedData = mapStagingBuffer(gprsBuffer);
-   memcpy(mappedData, registerVals, 256 * 4 * 4);
-   unmapStagingBuffer(gprsBuffer);
+   copyToStagingBuffer(gprsBuffer, 0, registerVals, 256 * 4 * 4);
+
+   if (shaderStage == ShaderStage::Vertex) {
+      transitionStagingBuffer(gprsBuffer, ResourceUsage::VertexUniforms);
+   } else if (shaderStage == ShaderStage::Geometry) {
+      transitionStagingBuffer(gprsBuffer, ResourceUsage::GeometryUniforms);
+   } else if (shaderStage == ShaderStage::Pixel) {
+      transitionStagingBuffer(gprsBuffer, ResourceUsage::PixelUniforms);
+   } else {
+      decaf_abort("Unexpected shader stage in GPR buffer setup");
+   }
 
    mCurrentGprBuffers[int(shaderStage)] = gprsBuffer;
 }
@@ -58,7 +66,17 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
    }
 
    auto memCache = getDataMemCache(bufferPtr, bufferSize);
-   transitionMemCache(memCache, ResourceUsage::UniformBuffer);
+
+   if (shaderStage == ShaderStage::Vertex) {
+      transitionMemCache(memCache, ResourceUsage::VertexUniforms);
+   } else if (shaderStage == ShaderStage::Geometry) {
+      transitionMemCache(memCache, ResourceUsage::GeometryUniforms);
+   } else if (shaderStage == ShaderStage::Pixel) {
+      transitionMemCache(memCache, ResourceUsage::PixelUniforms);
+   } else {
+      decaf_abort("Unexpected shader stage");
+   }
+
    mCurrentUniformBlocks[int(shaderStage)][cbufferIdx] = memCache;
 }
 

@@ -111,12 +111,20 @@ Driver::checkCurrentTextures()
 void
 Driver::prepareCurrentTextures()
 {
-   for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         auto& surface = mCurrentTextures[shaderStage][i];
-         if (surface) {
-            transitionSurfaceView(surface, ResourceUsage::Texture, vk::ImageLayout::eShaderReadOnlyOptimal);
-         }
+   for (auto i = 0u; i < latte::MaxTextures; ++i) {
+      auto& vsSurface = mCurrentTextures[0][i];
+      if (vsSurface) {
+         transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+      }
+
+      auto& gsSurface = mCurrentTextures[1][i];
+      if (gsSurface) {
+         transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+      }
+
+      auto& psSurface = mCurrentTextures[2][i];
+      if (psSurface) {
+         transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
       }
    }
 }
