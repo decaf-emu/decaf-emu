@@ -84,9 +84,20 @@ Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
 
    transitionSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, { 0, 1 });
 
+   // TODO: We actually need to call AVMSetTVScale inside of the SetBuffer functions
+   // and then pass that data all the way down to here so we can scale correctly.
+   auto copyWidth = target->desc.width;
+   auto copyHeight = target->desc.height;
+   if (surface->desc.width < target->desc.width) {
+      copyWidth = surface->desc.width;
+   }
+   if (surface->desc.height < target->desc.height) {
+      copyHeight = surface->desc.height;
+   }
+
    vk::ImageBlit blitRegion(
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
-      { vk::Offset3D(0, 0, 0), vk::Offset3D(surface->desc.width, surface->desc.height, 1) },
+      { vk::Offset3D(0, 0, 0), vk::Offset3D(copyWidth, copyHeight, 1) },
       vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
       { vk::Offset3D(0, 0, 0), vk::Offset3D(target->desc.width, target->desc.height, 1) });
 
