@@ -501,10 +501,9 @@ Driver::endCommandGroup()
    // Clear our state in between command buffers for safety
    mActiveCommandBuffer = nullptr;
    mActiveSyncWaiter = nullptr;
-   mActiveDescriptorPool = vk::DescriptorPool();
    mActivePipeline = nullptr;
    mActiveRenderPass = nullptr;
-   mActiveDescriptorPool = nullptr;
+   mActiveDescriptorPool = vk::DescriptorPool();
 }
 
 void
