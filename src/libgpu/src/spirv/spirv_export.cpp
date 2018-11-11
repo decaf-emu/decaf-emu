@@ -116,6 +116,8 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
       auto sourcePtr = mSpv->getGprRef(srcGpr);
       auto sourceVal = mSpv->createLoad(sourcePtr);
 
+      bool skipWrite = false;
+
       if (mType == ShaderParser::Type::Pixel) {
          // Update the export value type based on the color output format
          if (exportRef.output.type == ExportRef::Type::Pixel ||
@@ -127,6 +129,80 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
                sourceVal = mSpv->createUnaryOp(spv::OpBitcast, mSpv->int4Type(), sourceVal);
             } else if (pixelFormat == ColorOutputType::UINT) {
                sourceVal = mSpv->createUnaryOp(spv::OpBitcast, mSpv->uint4Type(), sourceVal);
+            }
+         }
+
+         // Apply the appropriate masking.
+         auto psDesc = reinterpret_cast<const PixelShaderDesc*>(mDesc);
+         if (exportRef.output.type == ExportRef::Type::Pixel ||
+             exportRef.output.type == ExportRef::Type::PixelWithFog) {
+
+            // Calculate that the number of exports we expect matchs our number
+            // of enabled rendertargets, or the search below will fail.
+            auto numExports = psDesc->regs.sq_pgm_exports_ps.EXPORT_MODE() >> 1;
+            auto rtExports = 0;
+            rtExports += psDesc->regs.cb_shader_control.RT0_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT1_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT2_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT3_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT4_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT5_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT6_ENABLE() ? 1 : 0;
+            rtExports += psDesc->regs.cb_shader_control.RT7_ENABLE() ? 1 : 0;
+            decaf_check(rtExports == numExports);
+
+            // Skip over render targets which are not being written.
+            do {
+               auto rtEnabled = !!((psDesc->regs.cb_shader_control.value >> exportRef.output.arrayBase) & 0x1);
+               if (rtEnabled) {
+                  break;
+               }
+
+               exportRef.output.arrayBase++;
+            } while (exportRef.output.arrayBase < 8);
+            decaf_check(exportRef.output.arrayBase < 8);
+
+            auto compMask = (psDesc->regs.cb_shader_mask.value >> (exportRef.output.arrayBase * 4)) & 0xf;
+
+            spv::Id maskXVal, maskYVal, maskZVal, maskWVal;
+            auto sourceValType = mSpv->getTypeId(sourceVal);
+            if (sourceValType == mSpv->float4Type()) {
+               maskXVal = mSpv->makeFloatConstant(0.0f);
+               maskYVal = mSpv->makeFloatConstant(0.0f);
+               maskZVal = mSpv->makeFloatConstant(0.0f);
+               maskWVal = mSpv->makeFloatConstant(1.0f);
+            } else if (sourceValType == mSpv->int4Type()) {
+               maskXVal = mSpv->makeIntConstant(0);
+               maskYVal = mSpv->makeIntConstant(0);
+               maskZVal = mSpv->makeIntConstant(0);
+               maskWVal = mSpv->makeIntConstant(1);
+            } else if (sourceValType == mSpv->uint4Type()) {
+               maskXVal = mSpv->makeUintConstant(0);
+               maskYVal = mSpv->makeUintConstant(0);
+               maskZVal = mSpv->makeUintConstant(0);
+               maskWVal = mSpv->makeUintConstant(1);
+            } else {
+               decaf_abort("Unexpected texture output format in component masking.");
+            }
+
+            if (!(compMask & 1)) {
+               sourceVal = mSpv->createOp(spv::OpCompositeInsert, sourceValType, { maskXVal, sourceVal, 0 });
+            }
+            if (!(compMask & 2)) {
+               sourceVal = mSpv->createOp(spv::OpCompositeInsert, sourceValType, { maskYVal, sourceVal, 1 });
+            }
+            if (!(compMask & 4)) {
+               sourceVal = mSpv->createOp(spv::OpCompositeInsert, sourceValType, { maskZVal, sourceVal, 2 });
+            }
+            if (!(compMask & 8)) {
+               sourceVal = mSpv->createOp(spv::OpCompositeInsert, sourceValType, { maskWVal, sourceVal, 3 });
+            }
+         }
+
+         if (exportRef.output.type == ExportRef::Type::ComputedZ) {
+            if (!psDesc->regs.db_shader_control.Z_EXPORT_ENABLE()) {
+               // The shader exported a Z, but its not enabled.  Lets skip it.
+               skipWrite = true;
             }
          }
       }
@@ -184,16 +260,16 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
                   decaf_abort("Unexpected position export index");
                }
 
-               // We have to do a specialized escape here.
-               srcGpr.next();
-               exportRef.output.next();
-               continue;
+               // We have to skip the write, since its already done.
+               skipWrite = true;
             }
          }
       }
 
       // Write the exported data
-      mSpv->writeExportRef(exportRef, sourceVal);
+      if (!skipWrite) {
+         mSpv->writeExportRef(exportRef, sourceVal);
+      }
 
       // Increase the indexing for each export
       srcGpr.next();

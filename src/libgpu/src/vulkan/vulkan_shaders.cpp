@@ -224,6 +224,10 @@ Driver::getPixelShaderDesc()
       shaderDesc.regs.spi_ps_input_cntls[i] = getRegister<latte::SPI_PS_INPUT_CNTL_N>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
    }
 
+   shaderDesc.regs.cb_shader_control = getRegister<latte::CB_SHADER_CONTROL>(latte::Register::CB_SHADER_CONTROL);
+   shaderDesc.regs.cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
+   shaderDesc.regs.db_shader_control = getRegister<latte::DB_SHADER_CONTROL>(latte::Register::DB_SHADER_CONTROL);
+
    if (!mCurrentGeometryShader) {
       auto vsShader = reinterpret_cast<const spirv::VertexShader*>(&mCurrentVertexShader->shader);
       shaderDesc.vsOutputSemantics = vsShader->outputSemantics;

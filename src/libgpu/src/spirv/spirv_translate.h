@@ -2,6 +2,8 @@
 #ifdef DECAF_VULKAN
 
 #include "latte/latte_constants.h"
+#include "latte/latte_registers_cb.h"
+#include "latte/latte_registers_db.h"
 #include "latte/latte_registers_sq.h"
 #include "latte/latte_registers_spi.h"
 #include "latte/latte_registers_pa.h"
@@ -162,6 +164,9 @@ struct PixelShaderDesc : public ShaderDesc
       latte::SPI_PS_IN_CONTROL_0 spi_ps_in_control_0;
       latte::SPI_PS_IN_CONTROL_1 spi_ps_in_control_1;
       std::array<latte::SPI_PS_INPUT_CNTL_N, 32> spi_ps_input_cntls;
+      latte::CB_SHADER_CONTROL cb_shader_control;
+      latte::CB_SHADER_MASK cb_shader_mask;
+      latte::DB_SHADER_CONTROL db_shader_control;
    } regs;
 
    DataHash hash() const

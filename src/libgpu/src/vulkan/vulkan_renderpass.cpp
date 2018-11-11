@@ -10,11 +10,13 @@ Driver::getRenderPassDesc()
 {
    auto desc = RenderPassDesc {};
 
-   auto sq_pgm_exports_ps = getRegister<latte::SQ_PGM_EXPORTS_PS>(latte::Register::SQ_PGM_EXPORTS_PS);
+   // TODO: Maybe move the cb_shader_masking into the framebuffer creation to
+   // reduce the number of renderpasses that we need to create.  SM3DW is a good
+   // game to check the shader masking behaviours.
+
    auto cb_target_mask = getRegister<latte::CB_TARGET_MASK>(latte::Register::CB_TARGET_MASK);
    auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
-
-   auto numPsExports = sq_pgm_exports_ps.EXPORT_MODE() >> 1;
+   auto cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
 
    auto colorWritesEnabled = true;
    if (cb_color_control.SPECIAL_OP() == latte::CB_SPECIAL_OP::DISABLE) {
@@ -23,6 +25,7 @@ Driver::getRenderPassDesc()
 
    for (auto i = 0u; i < latte::MaxRenderTargets; ++i) {
       auto targetMask = (cb_target_mask.value >> (i * 4)) & 0xF;
+      auto shaderMask = (cb_shader_mask.value >> (i * 4)) & 0xF;
 
       auto cb_color_base = getRegister<latte::CB_COLORN_BASE>(latte::Register::CB_COLOR0_BASE + i * 4);
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
@@ -31,7 +34,7 @@ Driver::getRenderPassDesc()
       isValidBuffer &= !!cb_color_base.BASE_256B();
       isValidBuffer &= (cb_color_info.FORMAT() != latte::CB_FORMAT::COLOR_INVALID);
 
-      if (i < numPsExports && colorWritesEnabled) {
+      if (!!targetMask && !!shaderMask && colorWritesEnabled) {
          if (isValidBuffer) {
             desc.colorTargets[i] = RenderPassDesc::ColorTarget {
                true,
