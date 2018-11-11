@@ -7,136 +7,174 @@ namespace vulkan
 {
 
 void
-Driver::bindShaderResources()
+Driver::bindShaderDescriptors(ShaderStage shaderStage)
 {
-   auto buildDescriptorSet = [&](vk::DescriptorSet dSet, int shaderStage)
-   {
-      bool dSetHasValues = false;
+   auto shaderStageInt = static_cast<uint32_t>(shaderStage);
 
-      for (auto i = 0u; i < latte::MaxSamplers; ++i) {
-         auto &sampler = mCurrentSamplers[shaderStage][i];
-         if (!sampler) {
-            continue;
-         }
-
-         vk::DescriptorImageInfo imageDesc;
-         imageDesc.sampler = sampler->sampler;
-
-         vk::WriteDescriptorSet writeDesc;
-         writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = i;
-         writeDesc.dstArrayElement = 0;
-         writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eSampler;
-         writeDesc.pImageInfo = &imageDesc;
-         writeDesc.pBufferInfo = nullptr;
-         writeDesc.pTexelBufferView = nullptr;
-         mDevice.updateDescriptorSets({ writeDesc }, {});
-         dSetHasValues = true;
+   const spirv::Shader *shader;
+   if (shaderStage == ShaderStage::Vertex) {
+      if (!mCurrentVertexShader) {
+         return;
       }
 
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         auto &texture = mCurrentTextures[shaderStage][i];
-         if (!texture) {
-            continue;
-         }
-
-         vk::DescriptorImageInfo imageDesc;
-         imageDesc.imageView = texture->imageView;
-         imageDesc.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-         vk::WriteDescriptorSet writeDesc;
-         writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = latte::MaxSamplers + i;
-         writeDesc.dstArrayElement = 0;
-         writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eSampledImage;
-         writeDesc.pImageInfo = &imageDesc;
-         writeDesc.pBufferInfo = nullptr;
-         writeDesc.pTexelBufferView = nullptr;
-         mDevice.updateDescriptorSets({ writeDesc }, {});
-         dSetHasValues = true;
+      shader = &mCurrentVertexShader->shader;
+   } else if (shaderStage == ShaderStage::Geometry) {
+      if (!mCurrentGeometryShader) {
+         return;
       }
 
-      if (mCurrentGprBuffers[shaderStage]) {
-         auto gprBuffer = mCurrentGprBuffers[shaderStage];
+      shader = &mCurrentGeometryShader->shader;
+   } else if (shaderStage == ShaderStage::Pixel) {
+      if (!mCurrentPixelShader) {
+         return;
+      }
 
-         vk::DescriptorBufferInfo bufferDesc;
-         bufferDesc.buffer = gprBuffer->buffer;
-         bufferDesc.offset = 0;
-         bufferDesc.range = gprBuffer->size;
+      shader = &mCurrentPixelShader->shader;
+   } else {
+      decaf_abort("Unexpected shader stage during descriptor build");
+   }
 
-         vk::WriteDescriptorSet writeDesc;
-         writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = latte::MaxSamplers + latte::MaxTextures + 0;
-         writeDesc.dstArrayElement = 0;
-         writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
-         writeDesc.pImageInfo = nullptr;
-         writeDesc.pBufferInfo = &bufferDesc;
-         writeDesc.pTexelBufferView = nullptr;
-         mDevice.updateDescriptorSets({ writeDesc }, {});
+   bool dSetHasValues = false;
+
+   std::array<vk::DescriptorImageInfo, latte::MaxSamplers> samplerInfos = { {} };
+   for (auto i = 0u; i < latte::MaxSamplers; ++i) {
+      if (shader->samplerUsed[i]) {
+         auto &sampler = mCurrentSamplers[shaderStageInt][i];
+         if (sampler) {
+            samplerInfos[i].sampler = sampler->sampler;
+         } else {
+            samplerInfos[i].sampler = mBlankSampler;
+         }
+
          dSetHasValues = true;
-      } else {
-         for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-            auto& uniformBuffer = mCurrentUniformBlocks[shaderStage][i];
-            if (!uniformBuffer) {
-               continue;
+      }
+   }
+
+   std::array<vk::DescriptorImageInfo, latte::MaxTextures> textureInfos = { {} };
+   for (auto i = 0u; i < latte::MaxTextures; ++i) {
+      if (shader->textureUsed[i]) {
+         auto &texture = mCurrentTextures[shaderStageInt][i];
+         if (texture) {
+            textureInfos[i].imageView = texture->imageView;
+         } else {
+            textureInfos[i].imageView = mBlankImageView;
+         }
+
+         textureInfos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
+         dSetHasValues = true;
+      }
+   }
+
+   std::array<vk::DescriptorBufferInfo, latte::MaxUniformBlocks> bufferInfos = { {} };
+   if (mCurrentGprBuffers[shaderStageInt]) {
+      auto gprBuffer = mCurrentGprBuffers[shaderStageInt];
+
+      bufferInfos[0].buffer = gprBuffer->buffer;
+      bufferInfos[0].offset = 0;
+      bufferInfos[0].range = gprBuffer->size;
+
+      dSetHasValues = true;
+   } else {
+      for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
+         if (shader->cbufferUsed[i]) {
+            auto& uniformBuffer = mCurrentUniformBlocks[shaderStageInt][i];
+            if (uniformBuffer) {
+               bufferInfos[i].buffer = uniformBuffer->buffer;
+               bufferInfos[i].offset = 0;
+               bufferInfos[i].range = uniformBuffer->size;
+            } else {
+               bufferInfos[i].buffer = mBlankBuffer;
+               bufferInfos[i].offset = 0;
+               bufferInfos[i].range = 1024;
             }
 
-            vk::DescriptorBufferInfo bufferDesc;
-            bufferDesc.buffer = uniformBuffer->buffer;
-            bufferDesc.offset = 0;
-            bufferDesc.range = uniformBuffer->size;
-
-            vk::WriteDescriptorSet writeDesc;
-            writeDesc.dstSet = dSet;
-            writeDesc.dstBinding = latte::MaxSamplers + latte::MaxTextures + i;
-            writeDesc.dstArrayElement = 0;
-            writeDesc.descriptorCount = 1;
-            writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
-            writeDesc.pImageInfo = nullptr;
-            writeDesc.pBufferInfo = &bufferDesc;
-            writeDesc.pTexelBufferView = nullptr;
-            mDevice.updateDescriptorSets({ writeDesc }, {});
             dSetHasValues = true;
          }
       }
-
-      return dSetHasValues;
-   };
-
-   std::array<vk::DescriptorSet, 3> descBinds;
-
-   // TODO: We should avoid allocating when there is nothing to upload
-
-   if (mCurrentVertexShader) {
-      auto vsDSet = allocateVertexDescriptorSet();
-      if (buildDescriptorSet(vsDSet, 0)) {
-         descBinds[0] = vsDSet;
-      }
    }
 
-   if (mCurrentGeometryShader) {
-      auto gsDSet = allocateGeometryDescriptorSet();
-      if (buildDescriptorSet(gsDSet, 1)) {
-         descBinds[1] = gsDSet;
-      }
+   // If this shader stage has nothing bound, there is no need to
+   // actually generate our descriptor sets or anything.
+   if (!dSetHasValues) {
+      return;
    }
 
-   if (mCurrentPixelShader) {
-      auto psDSet = allocatePixelDescriptorSet();
-      if (buildDescriptorSet(psDSet, 2)) {
-         descBinds[2] = psDSet;
-      }
+   vk::DescriptorSet dSet;
+   if (shaderStage == ShaderStage::Vertex) {
+      dSet = allocateVertexDescriptorSet();
+   } else if (shaderStage == ShaderStage::Geometry) {
+      dSet = allocateGeometryDescriptorSet();
+   } else if (shaderStage == ShaderStage::Pixel) {
+      dSet = allocatePixelDescriptorSet();
+   } else {
+      decaf_abort("Unexpected shader stage during descriptor build");
    }
 
-   for (auto i = 0; i < 3; ++i) {
-      if (!descBinds[i]) {
+   for (auto i = 0u; i < latte::MaxSamplers; ++i) {
+      if (!samplerInfos[i].sampler) {
          continue;
       }
 
-      mActiveCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mPipelineLayout, i, { descBinds[i] }, {});
+      vk::WriteDescriptorSet writeDesc;
+      writeDesc.dstSet = dSet;
+      writeDesc.dstBinding = i;
+      writeDesc.dstArrayElement = 0;
+      writeDesc.descriptorCount = 1;
+      writeDesc.descriptorType = vk::DescriptorType::eSampler;
+      writeDesc.pImageInfo = &samplerInfos[i];
+      writeDesc.pBufferInfo = nullptr;
+      writeDesc.pTexelBufferView = nullptr;
+      mDevice.updateDescriptorSets({ writeDesc }, {});
+   }
+
+   for (auto i = 0u; i < latte::MaxTextures; ++i) {
+      auto &texture = mCurrentTextures[shaderStageInt][i];
+      if (!textureInfos[i].imageView) {
+         continue;
+      }
+
+      vk::WriteDescriptorSet writeDesc;
+      writeDesc.dstSet = dSet;
+      writeDesc.dstBinding = latte::MaxSamplers + i;
+      writeDesc.dstArrayElement = 0;
+      writeDesc.descriptorCount = 1;
+      writeDesc.descriptorType = vk::DescriptorType::eSampledImage;
+      writeDesc.pImageInfo = &textureInfos[i];
+      writeDesc.pBufferInfo = nullptr;
+      writeDesc.pTexelBufferView = nullptr;
+      mDevice.updateDescriptorSets({ writeDesc }, {});
+   }
+
+   for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
+      if (!bufferInfos[i].buffer) {
+         continue;
+      }
+
+      vk::WriteDescriptorSet writeDesc;
+      writeDesc.dstSet = dSet;
+      writeDesc.dstBinding = latte::MaxSamplers + latte::MaxTextures + i;
+      writeDesc.dstArrayElement = 0;
+      writeDesc.descriptorCount = 1;
+      writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+      writeDesc.pImageInfo = nullptr;
+      writeDesc.pBufferInfo = &bufferInfos[i];
+      writeDesc.pTexelBufferView = nullptr;
+      mDevice.updateDescriptorSets({ writeDesc }, {});
+   }
+
+   mActiveCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                           mPipelineLayout,
+                                           shaderStageInt,
+                                           { dSet }, {});
+}
+
+void
+Driver::bindShaderResources()
+{
+   // Bind the descriptors for each of the shader stages.
+   for (auto i = 0; i < 3; ++i) {
+      bindShaderDescriptors(static_cast<ShaderStage>(i));
    }
 
    // This should probably be split to its own function

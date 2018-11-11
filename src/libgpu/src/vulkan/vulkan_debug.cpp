@@ -63,6 +63,12 @@ Driver::setVkObjectName(VkBuffer object, const char *name)
 }
 
 void
+Driver::setVkObjectName(VkSampler object, const char *name)
+{
+   _setVkObjectName(mDevice, object, vk::DebugReportObjectTypeEXT::eSampler, name, mVkDynLoader);
+}
+
+void
 Driver::setVkObjectName(VkImage object, const char *name)
 {
    _setVkObjectName(mDevice, object, vk::DebugReportObjectTypeEXT::eImage, name, mVkDynLoader);

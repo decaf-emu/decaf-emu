@@ -154,6 +154,150 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    pipelineLayoutDesc.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
    pipelineLayoutDesc.pPushConstantRanges = pushConstants.data();
    mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
+
+   initialiseBlankSampler();
+   initialiseBlankImage();
+   initialiseBlankBuffer();
+
+   setupResources();
+}
+
+void
+Driver::initialiseBlankSampler()
+{
+   vk::SamplerCreateInfo samplerDesc;
+   samplerDesc.magFilter = vk::Filter::eLinear;
+   samplerDesc.minFilter = vk::Filter::eLinear;
+   samplerDesc.mipmapMode = vk::SamplerMipmapMode::eLinear;
+   samplerDesc.addressModeU = vk::SamplerAddressMode::eRepeat;
+   samplerDesc.addressModeV = vk::SamplerAddressMode::eRepeat;
+   samplerDesc.addressModeW = vk::SamplerAddressMode::eRepeat;
+   samplerDesc.mipLodBias = 0.0f;
+   samplerDesc.anisotropyEnable = false;
+   samplerDesc.maxAnisotropy = 0.0f;
+   samplerDesc.compareEnable = false;
+   samplerDesc.compareOp = vk::CompareOp::eAlways;
+   samplerDesc.minLod = 0.0f;
+   samplerDesc.maxLod = 0.0f;
+   samplerDesc.borderColor = vk::BorderColor::eFloatTransparentBlack;
+   samplerDesc.unnormalizedCoordinates = VK_FALSE;
+   auto emptySampler = mDevice.createSampler(samplerDesc);
+
+   setVkObjectName(emptySampler, "PlaceholderSampler");
+
+   mBlankSampler = emptySampler;
+}
+
+void
+Driver::initialiseBlankImage()
+{
+   // Create a random image to use for sampling
+   vk::ImageCreateInfo createImageDesc;
+   createImageDesc.imageType = vk::ImageType::e2D;
+   createImageDesc.format = vk::Format::eR8G8B8A8Snorm;
+   createImageDesc.extent = vk::Extent3D(1, 1, 1);
+   createImageDesc.mipLevels = 1;
+   createImageDesc.arrayLayers = 1;
+   createImageDesc.samples = vk::SampleCountFlagBits::e1;
+   createImageDesc.tiling = vk::ImageTiling::eOptimal;
+   createImageDesc.usage = vk::ImageUsageFlagBits::eSampled;
+   createImageDesc.sharingMode = vk::SharingMode::eExclusive;
+   createImageDesc.initialLayout = vk::ImageLayout::eUndefined;
+   auto emptyImage = mDevice.createImage(createImageDesc);
+
+   setVkObjectName(emptyImage, "PlaceholderSurface");
+
+   auto imageMemReqs = mDevice.getImageMemoryRequirements(emptyImage);
+
+   vk::MemoryAllocateInfo allocDesc;
+   allocDesc.allocationSize = imageMemReqs.size;
+   allocDesc.memoryTypeIndex = findMemoryType(imageMemReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+   auto imageMem = mDevice.allocateMemory(allocDesc);
+
+   mDevice.bindImageMemory(emptyImage, imageMem, 0);
+
+   vk::ImageViewCreateInfo imageViewDesc;
+   imageViewDesc.image = emptyImage;
+   imageViewDesc.viewType = vk::ImageViewType::e2D;
+   imageViewDesc.format = vk::Format::eR8G8B8A8Snorm;
+   imageViewDesc.components = vk::ComponentMapping();
+   imageViewDesc.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+   auto emptyImageView = mDevice.createImageView(imageViewDesc);
+
+   setVkObjectName(emptyImageView, "PlaceholderView");
+
+   mBlankImage = emptyImage;
+   mBlankImageView = emptyImageView;
+}
+
+void
+Driver::initialiseBlankBuffer()
+{
+   vk::BufferCreateInfo bufferDesc;
+   bufferDesc.size = 1024;
+   bufferDesc.usage =
+      vk::BufferUsageFlagBits::eUniformBuffer |
+      vk::BufferUsageFlagBits::eTransferDst |
+      vk::BufferUsageFlagBits::eTransferSrc;
+   bufferDesc.sharingMode = vk::SharingMode::eExclusive;
+   bufferDesc.queueFamilyIndexCount = 0;
+   bufferDesc.pQueueFamilyIndices = nullptr;
+
+   VmaAllocationCreateInfo allocInfo = {};
+   allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+   VkBuffer emptyBuffer;
+   VmaAllocation allocation;
+   vmaCreateBuffer(mAllocator,
+                   &static_cast<VkBufferCreateInfo>(bufferDesc),
+                   &allocInfo,
+                   &emptyBuffer,
+                   &allocation,
+                   nullptr);
+
+   setVkObjectName(emptyBuffer, "PlaceholderBuffer");
+
+   mBlankBuffer = emptyBuffer;
+}
+
+void
+Driver::setupResources()
+{
+   vk::CommandBufferAllocateInfo cmdBufferAllocDesc(mCommandPool, vk::CommandBufferLevel::ePrimary, 1);
+   auto cmdBuffer = mDevice.allocateCommandBuffers(cmdBufferAllocDesc)[0];
+
+   cmdBuffer.begin(vk::CommandBufferBeginInfo {});
+
+   {
+      vk::ImageMemoryBarrier imageBarrier;
+      imageBarrier.srcAccessMask = vk::AccessFlags();
+      imageBarrier.dstAccessMask = vk::AccessFlags();
+      imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
+      imageBarrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+      imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      imageBarrier.image = mBlankImage;
+      imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+      imageBarrier.subresourceRange.baseMipLevel = 0;
+      imageBarrier.subresourceRange.levelCount = 1;
+      imageBarrier.subresourceRange.baseArrayLayer = 0;
+      imageBarrier.subresourceRange.layerCount = 1;
+
+      cmdBuffer.pipelineBarrier(
+         vk::PipelineStageFlagBits::eAllCommands,
+         vk::PipelineStageFlagBits::eAllCommands,
+         vk::DependencyFlags(),
+         {},
+         {},
+         { imageBarrier });
+   }
+
+   cmdBuffer.end();
+
+   vk::SubmitInfo submitInfo;
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers = &cmdBuffer;
+   mQueue.submit({ submitInfo }, vk::Fence());
 }
 
 vk::DescriptorPool

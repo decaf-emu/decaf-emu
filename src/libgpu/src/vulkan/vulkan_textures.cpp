@@ -84,8 +84,6 @@ Driver::checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx)
 
    auto textureDesc = getTextureDesc(shaderStage, textureIdx);
    if (!textureDesc.surfaceDesc.surfaceDesc.baseAddress) {
-      // TODO: I'm not sure if ignoring this is the right answer, but lets try...
-      mCurrentTextures[int(shaderStage)][textureIdx] = nullptr;
       return false;
    }
 

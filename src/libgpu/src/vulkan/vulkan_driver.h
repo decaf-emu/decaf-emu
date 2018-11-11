@@ -717,6 +717,10 @@ public:
    virtual void notifyGpuFlush(phys_addr address, uint32_t size) override;
 
 protected:
+   void initialiseBlankSampler();
+   void initialiseBlankImage();
+   void initialiseBlankBuffer();
+   void setupResources();
    void updateDebuggerInfo();
    void validateDevice();
 
@@ -844,6 +848,7 @@ protected:
    void bindIndexBuffer();
 
    // Draws
+   void bindShaderDescriptors(ShaderStage shaderStage);
    void bindShaderResources();
    void drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndices, void *indices);
 
@@ -876,6 +881,7 @@ protected:
 
    // Debug
    void setVkObjectName(VkBuffer object, const char *name);
+   void setVkObjectName(VkSampler object, const char *name);
    void setVkObjectName(VkImage object, const char *name);
    void setVkObjectName(VkImageView object, const char *name);
    void setVkObjectName(VkShaderModule object, const char *name);
@@ -971,6 +977,10 @@ private:
    vk::Queue mQueue;
    vk::DispatchLoaderDynamic mVkDynLoader;
    vk::CommandPool mCommandPool;
+   vk::Sampler mBlankSampler;
+   vk::Image mBlankImage;
+   vk::ImageView mBlankImageView;
+   vk::Buffer mBlankBuffer;
    SwapChainObject *mTvSwapChain = nullptr;
    SwapChainObject *mDrcSwapChain = nullptr;
    RenderPassObject *mRenderPass;
