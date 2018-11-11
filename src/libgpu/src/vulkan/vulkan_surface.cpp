@@ -15,7 +15,7 @@ _makeSurfaceDescStr(const SurfaceDesc& info)
    static const char *DIM_NAMES[] = {
       "1d", "2d", "3d", "cube", "1darr", "2darr", "2daa", "2daaarr" };
 
-   return fmt::format("{:08x}_{:x}_{}_{:x}_{:x}_{:x}_{}x{}x{}x{}",
+   return fmt::format("{:08x}_{:x}_{}_{:x}_{:x}_{:x}_{}x{}x{}x{}#{}",
                       info.calcAlignedBaseAddress(),
                       info.calcSwizzle(),
                       DIM_NAMES[info.dim],
@@ -25,7 +25,8 @@ _makeSurfaceDescStr(const SurfaceDesc& info)
                       info.pitch,
                       info.width,
                       info.height,
-                      info.depth);
+                      info.depth,
+                      info.samples);
 }
 
 static inline std::string
