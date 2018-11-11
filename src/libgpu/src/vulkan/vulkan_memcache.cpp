@@ -382,6 +382,17 @@ Driver::_refreshMemCache_Update(MemCacheObject *cache, SectionRange range)
       auto& section = cache->sections[i];
 
       forEachMemSegment(section.firstSegment, section.size, [&](MemCacheSegment* segment){
+         // Note that we have to do this delayed write check before we exit
+         // early as we are not actually 'up to date' until the write occurs.
+         auto& lastChangeOwner = segment->lastChangeOwner;
+         if (lastChangeOwner && lastChangeOwner->delayedWriteFunc) {
+            if (lastChangeOwner->delayedWriteRange.intersects(range)) {
+               lastChangeOwner->delayedWriteFunc();
+               lastChangeOwner->delayedWriteFunc = nullptr;
+               lastChangeOwner->delayedWriteRange = { 0, 0 };
+            }
+         }
+
          // Check to see if we already have the latest data from this segment available
          // to us in our buffer already (to avoid needing to copy).
          if (section.lastChangeIndex >= segment->lastChangeIndex) {
@@ -394,16 +405,6 @@ Driver::_refreshMemCache_Update(MemCacheObject *cache, SectionRange range)
             decaf_check(section.needsUpload);
             segment->lastChangeOwner = cache;
             return;
-         }
-
-         // TODO: We should probably check if the delayed write actually
-         // overlaps with the data that we want to have access to.  If it
-         // does not, we have no need to force it to be flushed.
-         auto& lastChangeOwner = segment->lastChangeOwner;
-         if (lastChangeOwner->delayedWriteFunc) {
-            lastChangeOwner->delayedWriteFunc();
-            lastChangeOwner->delayedWriteFunc = nullptr;
-            lastChangeOwner->delayedWriteRange = { 0, 0 };
          }
 
          // Push this copy to our list of copies we want to do.
