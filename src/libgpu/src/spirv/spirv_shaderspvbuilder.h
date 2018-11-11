@@ -1207,11 +1207,7 @@ public:
    {
       if (!mVertexId) {
          mVertexId = createVariable(spv::StorageClassInput, intType(), "VertexID");
-         if (!gpu::config::debuggable_shaders) {
-            addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexId);
-         } else {
-            addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexIndex);
-         }
+         addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexIndex);
          mEntryPoint->addIdOperand(mVertexId);
       }
       return mVertexId;
@@ -1221,11 +1217,7 @@ public:
    {
       if (!mInstanceId) {
          mInstanceId = createVariable(spv::StorageClassInput, intType(), "InstanceID");
-         if (!gpu::config::debuggable_shaders) {
-            addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceId);
-         } else {
-            addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceIndex);
-         }
+         addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceIndex);
          mEntryPoint->addIdOperand(mInstanceId);
       }
       return mInstanceId;

@@ -239,6 +239,9 @@ Driver::bindShaderResources()
          vsConstData.zSpaceMul.y = 1.0f; // * 1.0
       }
 
+      *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.z) = mCurrentDrawDesc.baseVertex;
+      *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.w) = mCurrentDrawDesc.baseInstance;
+
       mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout,
                                                           vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,
                                                           0, { vsConstData });

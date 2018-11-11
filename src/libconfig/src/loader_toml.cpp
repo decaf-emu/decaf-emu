@@ -19,7 +19,6 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config)
    readValue(config, "gpu.debug", gpu::config::debug);
    readArray(config, "gpu.debug_filters", gpu::config::debug_filters);
    readValue(config, "gpu.dump_shaders", gpu::config::dump_shaders);
-   readValue(config, "gpu.debuggable_shaders", gpu::config::debuggable_shaders);
 
    readValue(config, "gx2.dump_textures", decaf::config::gx2::dump_textures);
    readValue(config, "gx2.dump_shaders", decaf::config::gx2::dump_shaders);

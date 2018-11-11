@@ -149,10 +149,23 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
 
    writeGenericProlog(spvGen);
 
+   auto oneConst = spvGen.makeIntConstant(1);
+
+   // Note that because we use VertexIndex, we have to subtrack the base value
+   // away from gl_VertexIndex to receive the same value we received in GL.
+   auto zSpaceMulPtr = spvGen.createAccessChain(spv::StorageClass::StorageClassPushConstant, spvGen.vsPushConstVar(), { oneConst });
+   auto zSpaceMulVal = spvGen.createLoad(zSpaceMulPtr);
+   auto vertexBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 2 });
+   auto vertexBaseVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.intType(), vertexBaseFlt);
+   auto instanceBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 2 });
+   auto instanceBaseVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.intType(), instanceBaseFlt);
+
    auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar());
+   vertexIdVal = spvGen.createBinOp(spv::OpISub, spvGen.intType(), vertexIdVal, vertexBaseVal);
    vertexIdVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), vertexIdVal);
 
    auto instanceIdVal = spvGen.createLoad(spvGen.instanceIdVar());
+   instanceIdVal = spvGen.createBinOp(spv::OpISub, spvGen.intType(), instanceIdVal, instanceBaseVal);
    instanceIdVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), instanceIdVal);
 
    auto zeroFConst = spvGen.makeFloatConstant(0.0f);

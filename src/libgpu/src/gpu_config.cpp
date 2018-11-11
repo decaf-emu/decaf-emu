@@ -9,7 +9,6 @@ namespace config
 bool debug = false;
 std::vector<int64_t> debug_filters = { };
 bool dump_shaders = false;
-bool debuggable_shaders = false;
 
 } // namespace config
 
