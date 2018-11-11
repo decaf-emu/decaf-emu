@@ -594,11 +594,26 @@ Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
    _barrierMemCache(surface->memCache, ResourceUsage::TransferSrc, sectionRange);
    _barrierSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, range);
 
-   mActiveCommandBuffer.copyBufferToImage(
-      memCache->buffer,
-      surface->image,
-      vk::ImageLayout::eTransferDstOptimal,
-      { region });
+   // TODO: Improve how we handle subresources everywhere.
+   bool hasDepth = !!(region.imageSubresource.aspectMask & vk::ImageAspectFlagBits::eDepth);
+   bool hasStencil = !!(region.imageSubresource.aspectMask & vk::ImageAspectFlagBits::eStencil);
+   if (!(hasDepth & hasStencil)) {
+      mActiveCommandBuffer.copyBufferToImage(
+         memCache->buffer,
+         surface->image,
+         vk::ImageLayout::eTransferDstOptimal,
+         { region });
+   } else {
+      auto region2 = region;
+      region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eDepth;
+      region2.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eStencil;
+
+      mActiveCommandBuffer.copyBufferToImage(
+         memCache->buffer,
+         surface->image,
+         vk::ImageLayout::eTransferDstOptimal,
+         { region, region2 });
+   }
 }
 
 void
@@ -621,11 +636,26 @@ Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
    _barrierMemCache(surface->memCache, ResourceUsage::TransferDst, sectionRange);
    _barrierSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, range);
 
-   mActiveCommandBuffer.copyImageToBuffer(
-      surface->image,
-      vk::ImageLayout::eTransferSrcOptimal,
-      memCache->buffer,
-      { region });
+   // TODO: Improve how we handle subresources everywhere.
+   bool hasDepth = !!(region.imageSubresource.aspectMask & vk::ImageAspectFlagBits::eDepth);
+   bool hasStencil = !!(region.imageSubresource.aspectMask & vk::ImageAspectFlagBits::eStencil);
+   if (!(hasDepth & hasStencil)) {
+      mActiveCommandBuffer.copyImageToBuffer(
+         surface->image,
+         vk::ImageLayout::eTransferSrcOptimal,
+         memCache->buffer,
+         { region });
+   } else {
+      auto region2 = region;
+      region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eDepth;
+      region2.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eStencil;
+
+      mActiveCommandBuffer.copyImageToBuffer(
+         surface->image,
+         vk::ImageLayout::eTransferSrcOptimal,
+         memCache->buffer,
+         { region, region2 });
+   }
 }
 
 void
