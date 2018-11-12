@@ -287,6 +287,69 @@ void Transpiler::translateCf_EXP_DONE(const ControlFlowInst &cf)
    translateGenericExport(cf);
 }
 
+void Transpiler::translateGenericStream(const ControlFlowInst &cf, int streamIdx)
+{
+   decaf_check(streamIdx < 4);
+
+   // Find the right stride for this particular streamout.
+   auto streamOutStride = mStreamOutStride[streamIdx];
+
+   GprRef srcGpr;
+   srcGpr = makeGprRef(cf.exp.word0.RW_GPR(), cf.exp.word0.RW_REL(), SQ_INDEX_MODE::LOOP);
+
+   ExportMaskRef exportRef;
+   exportRef.output = makeStreamExportRef(cf.exp.word0.TYPE(),
+                                          cf.exp.word0.INDEX_GPR(),
+                                          streamIdx,
+                                          streamOutStride,
+                                          cf.exp.word0.ARRAY_BASE(),
+                                          cf.exp.buf.ARRAY_SIZE() + 1,
+                                          cf.exp.word0.ELEM_SIZE() + 1);
+   exportRef.mask[SQ_CHAN::X] = (cf.exp.buf.COMP_MASK() & (1 << 0)) ? latte::SQ_SEL::SEL_X : latte::SQ_SEL::SEL_MASK;
+   exportRef.mask[SQ_CHAN::Y] = (cf.exp.buf.COMP_MASK() & (1 << 1)) ? latte::SQ_SEL::SEL_Y : latte::SQ_SEL::SEL_MASK;
+   exportRef.mask[SQ_CHAN::Z] = (cf.exp.buf.COMP_MASK() & (1 << 2)) ? latte::SQ_SEL::SEL_Z : latte::SQ_SEL::SEL_MASK;
+   exportRef.mask[SQ_CHAN::W] = (cf.exp.buf.COMP_MASK() & (1 << 3)) ? latte::SQ_SEL::SEL_W : latte::SQ_SEL::SEL_MASK;
+
+   if (isSwizzleFullyMasked(exportRef.mask)) {
+      // We should just skip fully masked swizzles.
+      return;
+   }
+
+   auto exportCount = cf.exp.word1.BURST_COUNT() + 1;
+   for (auto i = 0u; i < exportCount; ++i) {
+      // Read the source GPR
+      auto sourcePtr = mSpv->getGprRef(srcGpr);
+      auto sourceVal = mSpv->createLoad(sourcePtr);
+
+      // Write the exported data
+      mSpv->writeExportRef(exportRef, sourceVal);
+
+      // Increase the indexing for each export
+      srcGpr.next();
+      exportRef.output.next();
+   }
+}
+
+void Transpiler::translateCf_MEM_STREAM0(const ControlFlowInst &cf)
+{
+   translateGenericStream(cf, 0);
+}
+
+void Transpiler::translateCf_MEM_STREAM1(const ControlFlowInst &cf)
+{
+   translateGenericStream(cf, 1);
+}
+
+void Transpiler::translateCf_MEM_STREAM2(const ControlFlowInst &cf)
+{
+   translateGenericStream(cf, 2);
+}
+
+void Transpiler::translateCf_MEM_STREAM3(const ControlFlowInst &cf)
+{
+   translateGenericStream(cf, 3);
+}
+
 void Transpiler::translateCf_MEM_RING(const ControlFlowInst &cf)
 {
    GprRef srcGpr;

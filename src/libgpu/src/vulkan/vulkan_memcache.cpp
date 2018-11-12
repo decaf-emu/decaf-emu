@@ -91,6 +91,7 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
    bufferDesc.usage =
       vk::BufferUsageFlagBits::eVertexBuffer |
       vk::BufferUsageFlagBits::eUniformBuffer |
+      vk::BufferUsageFlagBits::eTransformFeedbackBufferEXT |
       vk::BufferUsageFlagBits::eTransferDst |
       vk::BufferUsageFlagBits::eTransferSrc;
    bufferDesc.sharingMode = vk::SharingMode::eExclusive;

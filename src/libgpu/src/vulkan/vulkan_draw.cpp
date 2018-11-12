@@ -304,13 +304,14 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto sq_vtx_start_inst_loc = getRegister<latte::SQ_VTX_START_INST_LOC>(latte::Register::SQ_VTX_START_INST_LOC);
+   auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
 
+   bool useStreamOut = vgt_strmout_en.STREAMOUT();
    bool useOpaque = drawInit.USE_OPAQUE();
+
    if (useOpaque) {
       decaf_check(numIndices == 0);
       decaf_check(!indices);
-
-      decaf_abort("We do not currently support stream-out draws");
    }
 
    auto& drawDesc = mCurrentDrawDesc;
@@ -378,6 +379,24 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
       gLog->debug("Skipped draw due to a viewport or scissor area error");
       return;
    }
+   if (!checkCurrentStreamOut()) {
+      gLog->debug("Skipped draw due to a stream out buffers error");
+      return;
+   }
+
+   // These things need to happen up here before we enter the render pass, otherwise
+   // the pipeline barrier triggered by the memory cache transition will fail.
+   uint32_t opaqueStride = 0;
+   MemCacheObject *opaqueCounter = nullptr;
+   if (useOpaque) {
+      auto vgt_strmout_draw_opaque_vertex_stride = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_DRAW_OPAQUE_VERTEX_STRIDE);
+      opaqueStride = vgt_strmout_draw_opaque_vertex_stride << 2;
+
+      auto soBufferSizeAddr = getRegisterAddr(latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE);
+      opaqueCounter = getDataMemCache(soBufferSizeAddr, 4);
+
+      transitionMemCache(opaqueCounter, ResourceUsage::StreamOutCounterRead);
+   }
 
    prepareCurrentTextures();
    prepareCurrentFramebuffer();
@@ -400,11 +419,22 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    bindShaderResources();
    bindViewportAndScissor();
    bindIndexBuffer();
+   bindStreamOutBuffers();
 
-   if (mCurrentIndexBuffer) {
+   if (useStreamOut) {
+      beginStreamOut();
+   }
+
+   if (useOpaque) {
+      mActiveCommandBuffer.drawIndirectByteCountEXT(1, 0, opaqueCounter->buffer, 0, 0, opaqueStride, mVkDynLoader);
+   } else if (mCurrentIndexBuffer) {
       mActiveCommandBuffer.drawIndexed(drawDesc.numIndices, drawDesc.numInstances, 0, drawDesc.baseVertex, drawDesc.baseInstance);
    } else {
       mActiveCommandBuffer.draw(drawDesc.numIndices, drawDesc.numInstances, drawDesc.baseVertex, drawDesc.baseInstance);
+   }
+
+   if (useStreamOut) {
+      endStreamOut();
    }
 
    mActiveCommandBuffer.endRenderPass();

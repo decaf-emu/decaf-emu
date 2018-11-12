@@ -77,6 +77,11 @@ Driver::getVertexShaderDesc()
       shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
    }
 
+   for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
+      // Note that these registers are not contiguous!
+      shaderDesc.streamOutStride[i] = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + i * 16) << 2;
+   }
+
    shaderDesc.instanceStepRates[0] = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
    shaderDesc.instanceStepRates[1] = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
 
@@ -147,6 +152,11 @@ Driver::getGeometryShaderDesc()
 
    for (auto i = 0; i < 10; ++i) {
       shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
+   }
+
+   for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
+      // Note that these registers are not contiguous!
+      shaderDesc.streamOutStride[i] = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + i * 16) << 2;
    }
 
    return shaderDesc;

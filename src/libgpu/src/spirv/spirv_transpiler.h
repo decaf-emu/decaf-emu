@@ -184,6 +184,10 @@ public:
 
    void translateCf_EXP(const ControlFlowInst &cf) override;
    void translateCf_EXP_DONE(const ControlFlowInst &cf) override;
+   void translateCf_MEM_STREAM0(const ControlFlowInst &cf) override;
+   void translateCf_MEM_STREAM1(const ControlFlowInst &cf) override;
+   void translateCf_MEM_STREAM2(const ControlFlowInst &cf) override;
+   void translateCf_MEM_STREAM3(const ControlFlowInst &cf) override;
    void translateCf_MEM_RING(const ControlFlowInst &cf) override;
 
    void translateCfNormalInst(const ControlFlowInst& cf) override;
@@ -193,6 +197,7 @@ public:
    // Our own helpers
    spv::Id genAluCondOp(spv::Op predOp, spv::Id lhsVal, spv::Id trueVal, spv::Id falseVal);
    spv::Id genPredSetOp(const AluInst &inst, spv::Op predOp, spv::Id typeId, spv::Id lhsVal, spv::Id rhsVal, bool updatesPredicate = false);
+   void translateGenericStream(const ControlFlowInst &cf, int streamIdx);
    void translateGenericExport(const ControlFlowInst &cf);
    void translateGenericSample(const ControlFlowInst &cf, const TextureFetchInst &inst, uint32_t sampleMode);
 
@@ -215,6 +220,7 @@ protected:
    std::array<ColorOutputType, latte::MaxRenderTargets> mPixelOutType;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> mTexInput;
    std::array<bool, latte::MaxTextures> mTexIsUint;
+   std::array<uint32_t, latte::MaxStreamOutBuffers> mStreamOutStride;
    std::array<InputBuffer, latte::MaxAttribBuffers> mVsInputBuffers;
    std::vector<InputAttrib> mVsInputAttribs;
    std::vector<uint32_t> mVsGsOutputParams;

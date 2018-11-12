@@ -238,7 +238,8 @@ DecafSDLVulkan::createDevice()
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME,
       VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
-      VK_KHR_MAINTENANCE1_EXTENSION_NAME
+      VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+      VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME
    };
 
    if (gpu::config::debug) {
@@ -284,6 +285,14 @@ DecafSDLVulkan::createDevice()
    deviceFeatures.wideLines = true;
    deviceFeatures.logicOp = true;
 
+   vk::PhysicalDeviceTransformFeedbackFeaturesEXT devicesFeaturesTF;
+   devicesFeaturesTF.transformFeedback = true;
+   devicesFeaturesTF.geometryStreams = true;
+
+   vk::PhysicalDeviceFeatures2 deviceFeatures2;
+   deviceFeatures2.features = deviceFeatures;
+   deviceFeatures2.pNext = &devicesFeaturesTF;
+
    vk::DeviceCreateInfo deviceDesc;
    deviceDesc.queueCreateInfoCount = 1;
    deviceDesc.pQueueCreateInfos = &deviceQueueCreateInfo;
@@ -291,7 +300,8 @@ DecafSDLVulkan::createDevice()
    deviceDesc.ppEnabledLayerNames = deviceLayers.data();
    deviceDesc.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
    deviceDesc.ppEnabledExtensionNames = deviceExtensions.data();
-   deviceDesc.pEnabledFeatures = &deviceFeatures;
+   deviceDesc.pEnabledFeatures = nullptr;
+   deviceDesc.pNext = &deviceFeatures2;
    mDevice = mPhysDevice.createDevice(deviceDesc);
 
    mQueue = mDevice.getQueue(queueFamilyIndex, 0);

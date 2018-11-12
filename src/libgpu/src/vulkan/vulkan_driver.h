@@ -716,6 +716,19 @@ struct DrawDesc
    uint32_t baseInstance;
 };
 
+struct StreamOutBufferDesc
+{
+   phys_addr baseAddress;
+   uint32_t size;
+   uint32_t stride;
+};
+
+struct StreamContextObject
+{
+   VmaAllocation allocation;
+   vk::Buffer buffer;
+};
+
 class Driver : public gpu::VulkanDriver, public Pm4Processor
 {
 public:
@@ -906,6 +919,15 @@ protected:
    PipelineDesc getPipelineDesc();
    bool checkCurrentPipeline();
 
+   // Stream Out
+   StreamContextObject * allocateStreamContext(uint32_t initialOffset);
+   void releaseStreamContext(StreamContextObject* stream);
+   StreamOutBufferDesc getStreamOutBufferDesc(uint32_t bufferIndex);
+   bool checkCurrentStreamOutBuffers();
+   void bindStreamOutBuffers();
+   void beginStreamOut();
+   void endStreamOut();
+
    // Debug
    void setVkObjectName(VkBuffer object, const char *name);
    void setVkObjectName(VkSampler object, const char *name);
@@ -987,6 +1009,8 @@ private:
    std::array<std::array<SurfaceViewObject*, latte::MaxTextures>, 3> mCurrentTextures = { { nullptr } };
    std::array<StagingBuffer*, 3> mCurrentGprBuffers = { nullptr };
    std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
+   std::array<StreamContextObject*, latte::MaxStreamOutBuffers> mStreamContextData = { nullptr };
+   std::array<DataBufferObject*, latte::MaxStreamOutBuffers> mCurrentStreamOutBuffers = { nullptr };
 
    std::vector<MemChangeRecord> mDirtyMemCaches;
 

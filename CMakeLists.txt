@@ -55,7 +55,7 @@ if(DECAF_SDL)
 endif()
 
 if(DECAF_VULKAN)
-    find_package(Vulkan REQUIRED)
+    find_package(Vulkan 1.1.92.1 REQUIRED)
     add_definitions(-DDECAF_VULKAN)
 endif()
 

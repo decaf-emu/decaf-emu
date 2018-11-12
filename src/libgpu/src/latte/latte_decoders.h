@@ -373,6 +373,10 @@ struct ExportRef
       Pixel,
       PixelWithFog,
       ComputedZ,
+      Stream0Write,
+      Stream1Write,
+      Stream2Write,
+      Stream3Write,
       VsGsRingWrite,
       GsDcRingWrite
    };
@@ -388,7 +392,7 @@ struct ExportRef
    {
       // Normal exports have a specific behaviour that they increment
       // by one and have a elemCount of 1, even though they write vec4's
-      if (type < Type::VsGsRingWrite) {
+      if (type < Type::Stream0Write) {
          decaf_check(elemCount == 1);
       }
 
@@ -855,16 +859,37 @@ _makeGenericMemExportRef(ExportRef::Type refType, SQ_EXPORT_TYPE type,
    out.arraySize = arraySize;
    out.indexGpr = -1;
 
-   auto memType = static_cast<SQ_MEM_EXPORT_TYPE>(type);
-   if (memType == SQ_MEM_EXPORT_TYPE::WRITE) {
+   switch(static_cast<SQ_MEM_EXPORT_TYPE>(type)) {
+   case SQ_MEM_EXPORT_TYPE::WRITE:
       // This is handled implicitly
-   } else if (type == SQ_MEM_EXPORT_TYPE::WRITE_IND) {
+      break;
+   case SQ_MEM_EXPORT_TYPE::WRITE_IND:
       out.indexGpr = indexGpr;
-   } else {
+      break;
+   default:
       decaf_abort("Unexpected shader MEM EXPORT type");
    }
 
    return out;
+}
+
+inline ExportRef
+makeStreamExportRef(SQ_EXPORT_TYPE type, uint32_t indexGpr, uint32_t streamIdx, uint32_t streamStride, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+{
+   ExportRef::Type writeType;
+   if (streamIdx == 0) {
+      writeType = ExportRef::Type::Stream0Write;
+   } else if (streamIdx == 1) {
+      writeType = ExportRef::Type::Stream1Write;
+   } else if (streamIdx == 2) {
+      writeType = ExportRef::Type::Stream2Write;
+   } else if (streamIdx == 3) {
+      writeType = ExportRef::Type::Stream3Write;
+   } else {
+      decaf_abort("Unexpected stream index for stream memory export");
+   }
+
+   return _makeGenericMemExportRef(writeType, type, indexGpr, streamStride, arrayBase, arraySize, elemCount);
 }
 
 inline ExportRef

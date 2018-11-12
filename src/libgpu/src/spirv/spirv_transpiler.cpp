@@ -424,6 +424,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
 
       state.mTexInput = vsDesc.texDims;
       state.mTexIsUint = vsDesc.texIsUint;
+      state.mStreamOutStride = vsDesc.streamOutStride;
 
       spvGen.setDescriptorSetIdx(0);
       Transpiler::writeVertexProlog(spvGen, vsDesc);
@@ -432,6 +433,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
 
       state.mTexInput = gsDesc.texDims;
       state.mTexIsUint = gsDesc.texIsUint;
+      state.mStreamOutStride = gsDesc.streamOutStride;
 
       spvGen.setDescriptorSetIdx(1);
       Transpiler::writeGeometryProlog(spvGen, gsDesc);
@@ -529,6 +531,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          dcState.mType = ShaderParser::Type::DataCache;
          dcState.mBinary = gsDesc.dcBinary;
          dcState.mAluInstPreferVector = gsDesc.aluInstPreferVector;
+         dcState.mStreamOutStride = gsDesc.streamOutStride;
          dcState.translate();
 
          // We need to increment the ring offset at the end of each.  Note that we only

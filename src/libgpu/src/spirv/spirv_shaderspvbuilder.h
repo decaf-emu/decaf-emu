@@ -889,6 +889,13 @@ public:
          decaf_check(ref.elemCount == 1);
          decaf_check(ref.indexGpr == -1);
          return zExportVar();
+      } else if (ref.type >= ExportRef::Type::Stream0Write &&
+                 ref.type <= ExportRef::Type::Stream3Write) {
+         decaf_check(dataType == floatType());
+         auto streamIdx =
+            static_cast<uint32_t>(ref.type) -
+            static_cast<uint32_t>(ExportRef::Type::Stream0Write);
+         return memExportWriteVar(streamIdx, ref.dataStride, ref.indexGpr, ref.arrayBase, ref.arraySize, ref.elemCount);
       } else if (ref.type == ExportRef::Type::VsGsRingWrite) {
          decaf_check(dataType == floatType());
          decaf_check(ref.dataStride == 0);
@@ -1528,6 +1535,68 @@ public:
       return mZExport;
    }
 
+   spv::Id memExportWriteVar(uint32_t streamIdx, uint32_t dataStride, uint32_t indexGpr, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
+   {
+      decaf_check(streamIdx < 4);
+      decaf_check(dataStride > 0);
+
+      // We do not currently support dynamic indexing into streamout
+      decaf_check(indexGpr == -1);
+
+      // TODO: Support write prevention based on the array size.
+
+      // We have to add the transform feedback capability to use Xfb
+      addCapability(spv::CapabilityTransformFeedback);
+      addExecutionMode(mFunctions["main"], spv::ExecutionModeXfb);
+
+      // Calculate the offset of vec4's since that is all we currently support
+      auto& streamExports = mMemWriteExports[streamIdx];
+
+      // We only support writing 1-4 dwords per memory write.  This might break
+      // down when someone does a burst write :S
+      decaf_check(elemCount == 1);
+      decaf_check(arraySize <= 4);
+      auto writeElemCount = arraySize * elemCount;
+
+      // We only support writing in vec4 increments
+      auto bufferOffset = arrayBase * 4;
+
+      // Determine the type of this stream out object
+      spv::Id resultType = spv::NoResult;
+      if (writeElemCount == 1) {
+         resultType = floatType();
+      } else if (writeElemCount == 2) {
+         resultType = float2Type();
+      } else if (writeElemCount == 3) {
+         resultType = float3Type();
+      } else if (writeElemCount == 4) {
+         resultType = float4Type();
+      } else {
+         decaf_abort("Unexpected stream out item size");
+      }
+
+      auto& exportId = streamExports[bufferOffset];
+      if (!exportId) {
+         // We currently place the stream-out data at the end of the params
+         // assuming that nobody will ever use all stream-out with parameter
+         // output as well.  It may break in wierd cases.
+
+         auto streamOutIndex = mNumStreamOut++;
+
+         exportId = createVariable(spv::StorageClassOutput, resultType, fmt::format("STREAMOUT_{}_{}", streamIdx, bufferOffset).c_str());
+         addDecoration(exportId, spv::DecorationLocation, 31 - streamOutIndex);
+         addDecoration(exportId, spv::DecorationXfbBuffer, streamIdx);
+         addDecoration(exportId, spv::DecorationXfbStride, dataStride);
+         addDecoration(exportId, spv::DecorationOffset, bufferOffset);
+
+         mEntryPoint->addIdOperand(exportId);
+      }
+
+      decaf_check(getDerefTypeId(exportId) == resultType);
+
+      return exportId;
+   }
+
    spv::Id vsGsRingExportWriteVar(uint32_t indexGpr, uint32_t arrayBase, uint32_t arraySize, uint32_t elemCount)
    {
       // TODO: Support write prevention based on the array size.
@@ -1810,6 +1879,8 @@ protected:
    std::map<uint32_t, spv::Id> mPosExports;
    std::map<uint32_t, spv::Id> mParamExports;
    spv::Id mZExport = spv::NoResult;
+   std::array<std::map<uint32_t, spv::Id>, latte::MaxStreamOutBuffers> mMemWriteExports;
+   uint32_t mNumStreamOut = 0;
    std::map<uint32_t, spv::Id> mRingWriteExports;
 
    spv::Id mState = spv::NoResult;
