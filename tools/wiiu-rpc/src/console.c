@@ -1,9 +1,9 @@
 #include "console.h"
 
-#include <coreinit/baseheap.h>
 #include <coreinit/cache.h>
-#include <coreinit/expandedheap.h>
-#include <coreinit/frameheap.h>
+#include <coreinit/memheap.h>
+#include <coreinit/memexpheap.h>
+#include <coreinit/memfrmheap.h>
 #include <coreinit/screen.h>
 
 #include <string.h>

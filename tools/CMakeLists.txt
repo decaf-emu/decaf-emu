@@ -24,7 +24,7 @@ if(DEVKITPPC AND WUT_ROOT)
       CMAKE_CACHE_ARGS
          -DDEVKITPPC:string=${DEVKITPPC}
          -DWUT_ROOT:string=${WUT_ROOT}
-         -DCMAKE_TOOLCHAIN_FILE:string=${WUT_ROOT}/cmake/wut-toolchain.cmake)
+         -DCMAKE_TOOLCHAIN_FILE:string=${WUT_ROOT}/share/wut.toolchain.cmake)
    set_target_properties(wiiu-rpc PROPERTIES FOLDER tools)
 
    externalproject_add_step(wiiu-rpc forcebuild
