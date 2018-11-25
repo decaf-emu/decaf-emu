@@ -18,4 +18,5 @@ target_link_libraries(wiiu-rpc
     nn_ac
     proc_ui)
 
+wut_enable_newlib(wiiu-rpc)
 wut_create_rpx(wiiu-rpc.rpx wiiu-rpc)
