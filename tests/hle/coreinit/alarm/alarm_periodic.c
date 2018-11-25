@@ -24,14 +24,14 @@ int main(int argc, char **argv)
    // Start a periodic alarm
    OSCreateAlarmEx(&sPeriodicAlarm, "PeriodicAlarm");
    OSSetPeriodicAlarm(&sPeriodicAlarm,
-                      OSGetTime() + OSMilliseconds(10),
-                      OSMilliseconds(10),
+                      OSGetTime() + OSMillisecondsToTicks(10),
+                      OSMillisecondsToTicks(10),
                       &AlarmCallback);
 
    // Wait for 100ms to allow periodic alarm to fire.
    OSAlarm alarm;
    OSCreateAlarmEx(&alarm, "TestAlarm");
-   OSSetAlarm(&alarm, OSMilliseconds(100), NULL);
+   OSSetAlarm(&alarm, OSMillisecondsToTicks(100), NULL);
    OSWaitAlarm(&alarm);
 
    test_report("Alarm fired count: %d", sAlarmFiredCount);

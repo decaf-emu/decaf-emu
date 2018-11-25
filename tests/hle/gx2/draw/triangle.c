@@ -1,5 +1,5 @@
 #include <gfd.h>
-#include <defaultheap.h>
+#include <coreinit/memdefaultheap.h>
 #include <gx2/draw.h>
 #include <gx2/shaders.h>
 #include <gx2r/draw.h>

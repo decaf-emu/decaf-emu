@@ -1,7 +1,7 @@
 #include <hle_test.h>
-#include <coreinit/baseheap.h>
-#include <coreinit/blockheap.h>
-#include <coreinit/expandedheap.h>
+#include <coreinit/memheap.h>
+#include <coreinit/memblockheap.h>
+#include <coreinit/memexpheap.h>
 
 static const uint32_t
 TrackSize = 1024;
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
    test_assert(trackAddr);
 
    test_report("Creating block heap at %p", heapStart);
-   MEMBlockHeap *blockHeap = MEMInitBlockHeap(&blockHeapStorage, heapStart, heapEnd, trackAddr, TrackSize, 0);
+   MEMHeapHandle blockHeap = MEMInitBlockHeap(&blockHeapStorage, heapStart, heapEnd, trackAddr, TrackSize, 0);
    test_assert(blockHeap);
 
    uint32_t freeSize1 = MEMGetTotalFreeSizeForBlockHeap(blockHeap);

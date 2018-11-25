@@ -44,7 +44,7 @@ int main(int argc, char **argv)
    OSResumeThread(&sThread);
 
    // Make sure other thread gets to a blocking read
-   OSSleepTicks(OSMilliseconds(10));
+   OSSleepTicks(OSMillisecondsToTicks(10));
 
    // Sending message into empty queue should succeed.
    for (i = 0; i < NumMessages; ++i) {
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
    }
 
    // Make sure other thread gets a chance to read all messages.
-   OSSleepTicks(OSMilliseconds(10));
+   OSSleepTicks(OSMillisecondsToTicks(10));
    test_eq(sMessagesRead, NumMessages);
 
    return 0;

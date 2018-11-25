@@ -16,11 +16,11 @@ int main(int argc, char **argv)
    OSCreateAlarm(&sAlarm);
 
    // Test with valid alarm callback
-   OSSetAlarm(&sAlarm, OSMilliseconds(50), &AlarmCallback);
+   OSSetAlarm(&sAlarm, OSMillisecondsToTicks(50), &AlarmCallback);
    OSWaitAlarm(&sAlarm);
 
    // Test with NULL alarm callback
-   OSSetAlarm(&sAlarm, OSMilliseconds(50), NULL);
+   OSSetAlarm(&sAlarm, OSMillisecondsToTicks(50), NULL);
    OSWaitAlarm(&sAlarm);
    return 0;
 }

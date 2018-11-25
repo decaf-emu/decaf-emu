@@ -36,7 +36,7 @@ CoreEntryPoint0(int argc, const char **argv)
 {
    OSAlarm alarm;
    OSCreateAlarmEx(&alarm, "Core0_Alarm");
-   OSSetAlarm(&alarm, OSMilliseconds(225), &Core0AlarmHandler);
+   OSSetAlarm(&alarm, OSMillisecondsToTicks(225), &Core0AlarmHandler);
    OSWaitAlarm(&alarm);
 
    test_assert(core0Fired);
@@ -49,8 +49,8 @@ CoreEntryPoint2(int argc, const char **argv)
 {
    OSAlarm alarm;
    OSCreateAlarmEx(&alarm, "Core2_Alarm");
-   OSSetAlarm(&alarm, OSMilliseconds(125), &Core2AlarmHandler);
-   OSSleepTicks(OSMilliseconds(175));
+   OSSetAlarm(&alarm, OSMillisecondsToTicks(125), &Core2AlarmHandler);
+   OSSleepTicks(OSMillisecondsToTicks(175));
 
    test_assert(core2Fired);
    test_report("Core2 finished");
@@ -63,8 +63,8 @@ main(int argc, char **argv)
    OSAlarm periodicAlarm;
    OSCreateAlarmEx(&periodicAlarm, "PeriodicAlarm");
    OSSetPeriodicAlarm(&periodicAlarm,
-                      OSGetTime() + OSMilliseconds(50),
-                      OSMilliseconds(50),
+                      OSGetTime() + OSMillisecondsToTicks(50),
+                      OSMillisecondsToTicks(50),
                       &PeriodicAlarmHandler);
 
    test_assert(OSGetCoreId() == 1);
