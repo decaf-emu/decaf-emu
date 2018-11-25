@@ -7,6 +7,7 @@
 #include <libcpu/mem.h>
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_sinks.h>
 
 std::shared_ptr<spdlog::logger>
 gLog;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 
    // We need to run the tests on a core.
    cpu::setCoreEntrypointHandler(
-      [&runResult]() {
+      [&runResult](cpu::Core *core) {
          if (cpu::this_core::id() == 1) {
             // Run the tests on only a single core.
             runResult = runTests();
