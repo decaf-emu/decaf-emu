@@ -1,7 +1,7 @@
 #include <hle_test.h>
-#include <coreinit/baseheap.h>
-#include <coreinit/expandedheap.h>
-#include <coreinit/frameheap.h>
+#include <coreinit/memheap.h>
+#include <coreinit/memexpheap.h>
+#include <coreinit/memfrmheap.h>
 
 static const uint32_t
 HeapSize = (1024 * 1024) + 1;
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
    // Unalign the frame heap base address
    void *frameHeapAddr = heapAddr + 1;
    test_report("Creating frame heap at %p", frameHeapAddr);
-   MEMFrameHeap *frameHeap = MEMCreateFrmHeapEx(frameHeapAddr, HeapSize, 0);
+   MEMHeapHandle frameHeap = MEMCreateFrmHeapEx(frameHeapAddr, HeapSize, 0);
    test_report("Frame heap created at %p", frameHeap);
    test_assert(frameHeap);
    test_assert((((uint32_t)frameHeap) % 4) == 0);
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
    }
 
    // Free all memory
-   MEMFreeToFrmHeap(frameHeap, MEM_FRAME_HEAP_FREE_ALL);
+   MEMFreeToFrmHeap(frameHeap, MEM_FRM_HEAP_FREE_ALL);
 
    uint32_t freeSize3 = MEMGetAllocatableSizeForFrmHeapEx(frameHeap, 4);
    test_report("Free Size after free: %d", freeSize3);

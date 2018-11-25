@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 project(coreinit)
+include(${WUT_ROOT}/share/wut.cmake REQUIRED)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -7,8 +8,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 if(NOT COMMAND add_coreinit_test)
 macro(add_coreinit_test source)
    get_filename_component(name ${source} NAME_WE)
-   add_rpx_lite(${name} ${source})
+   add_executable(${name} ${source})
    target_link_libraries(${name} coreinit)
+   wut_create_rpx(${name}.rpx ${name})
 endmacro()
 endif()
 

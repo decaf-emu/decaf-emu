@@ -13,7 +13,7 @@ int cancelThreadEntry(int argc, const char **argv)
    while (1) {
       OSTime now = OSGetTime();
 
-      if (now - lastCheck >= OSMilliseconds(1)) {
+      if (now - lastCheck >= OSMillisecondsToTicks(1)) {
          OSTestThreadCancel();
          test_report("Cancel thread still running");
          lastCheck = now;
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
    OSResumeThread(&gThread);
 
    test_report("Main thread sleeping for 5 milliseconds");
-   OSSleepTicks(OSMilliseconds(5));
+   OSSleepTicks(OSMillisecondsToTicks(5));
 
    test_report("Try to cancel thread");
    OSCancelThread(&gThread);

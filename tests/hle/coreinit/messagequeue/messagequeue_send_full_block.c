@@ -16,7 +16,7 @@ int msgThreadEntry(int argc, const char **argv)
 {
    // Give main thread a chance to block on the message queue
    OSMessage msg;
-   OSSleepTicks(OSMilliseconds(10));
+   OSSleepTicks(OSMillisecondsToTicks(10));
 
    // Receive message
    test_eq(OSReceiveMessage(&sQueue, &msg, 0), TRUE);

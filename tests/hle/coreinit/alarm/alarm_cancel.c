@@ -13,10 +13,10 @@ AlarmCallback(OSAlarm *alarm, OSContext *context)
 int main(int argc, char **argv)
 {
    OSCreateAlarmEx(&sAlarm, "Simple_Alarm");
-   OSSetAlarm(&sAlarm, OSMilliseconds(50), &AlarmCallback);
+   OSSetAlarm(&sAlarm, OSMillisecondsToTicks(50), &AlarmCallback);
    OSCancelAlarm(&sAlarm);
 
    // Sleep until after alarm was due to go off to test cancellation.
-   OSSleepTicks(OSMilliseconds(100));
+   OSSleepTicks(OSMillisecondsToTicks(100));
    return 0;
 }

@@ -21,7 +21,7 @@ int main(int argc, char **argv)
    int testData = USER_DATA_VALUE;
    OSCreateAlarm(&sAlarm);
    OSSetAlarmUserData(&sAlarm, &testData);
-   OSSetAlarm(&sAlarm, OSMilliseconds(50), &AlarmCallback);
+   OSSetAlarm(&sAlarm, OSMillisecondsToTicks(50), &AlarmCallback);
    OSWaitAlarm(&sAlarm);
    return 0;
 }
