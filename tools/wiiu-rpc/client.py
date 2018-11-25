@@ -277,14 +277,16 @@ titleCount = MCP_TitleCount(handle)
 
 print "Title count: %d" % titleCount
 if titleCount > 0:
-   titleList = TmpOutData(titleCount * 0x61)
-   actualTitleCount = TmpOutData(4)
+   titleList = OutData(titleCount * 0x61)
+   actualTitleCount = OutData(4)
 
    result = MCP_TitleList(handle, actualTitleCount, titleList, titleCount * 0x61)
 
-   print result
-   print binascii.hexlify(actualTitleCount.data)
-   print binascii.hexlify(titleList.data)
+   if result == 0:
+      totalTitleCount = int(binascii.hexlify(actualTitleCount.data), 16)
+      print "Total number of titles: %d" % totalTitleCount
+      for i in range(0, totalTitleCount):
+         print "Title " + str(i) + " ID: " + binascii.hexlify(titleList.data[i*0x61:i*0x61+8])
 
 MCP_Close(handle)
 
