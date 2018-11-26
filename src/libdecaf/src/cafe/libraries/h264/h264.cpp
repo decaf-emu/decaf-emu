@@ -16,6 +16,9 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerDecodeSymbols();
+   registerStreamSymbols();
 }
 
 } // namespace cafe::h264

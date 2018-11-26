@@ -21,6 +21,20 @@ target_link_libraries(libdecaf
     ${PUGIXML_LIBRARIES}
     ${ZLIB_LINK})
 
+if(DECAF_FFMPEG)
+    target_link_libraries(libdecaf
+        ${AVCODEC_LIBRARY}
+        ${AVFILTER_LIBRARY}
+        ${AVUTIL_LIBRARY}
+        ${SWSCALE_LIBRARY})
+
+    target_include_directories(libdecaf PRIVATE
+        ${AVCODEC_INCLUDE_DIR}
+        ${AVFILTER_INCLUDE_DIR}
+        ${AVUTIL_INCLUDE_DIR}
+        ${SWSCALE_INCLUDE_DIR})
+endif()
+
 if(APPLE)
     target_compile_definitions(libdecaf PUBLIC DECAF_NOGL)
 else()
