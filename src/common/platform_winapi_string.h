@@ -1,4 +1,7 @@
 #pragma once
+#include "platform.h"
+
+#ifdef PLATFORM_WINDOWS
 #include <string>
 #include <Windows.h>
 
@@ -42,3 +45,5 @@ fromWinApiString(const std::wstring &utf16)
 }
 
 } // namespace platform
+
+#endif // ifdef PLATFORM_WINDOWS
