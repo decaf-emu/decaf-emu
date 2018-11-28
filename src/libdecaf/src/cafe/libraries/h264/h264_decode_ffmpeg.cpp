@@ -161,7 +161,10 @@ receiveFrames(virt_ptr<H264WorkMemory> workMemory)
                    output);
    }
 
-   if (result != AVERROR_EOF && result != AVERROR(EAGAIN)) {
+   if (result == AVERROR_EOF || result == AVERROR(EAGAIN)) {
+      // Expected return values are not an error!
+      result = 0;
+   } else {
       char buffer[255];
       av_strerror(result, buffer, 255);
       gLog->error("avcodec_receive_frame error: {}", buffer);
