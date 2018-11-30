@@ -1,0 +1,20 @@
+include_directories(".")
+
+file(GLOB_RECURSE SOURCE_FILES *.cpp)
+file(GLOB_RECURSE HEADER_FILES *.h)
+
+add_executable(test-gpu-tiling ${SOURCE_FILES} ${HEADER_FILES})
+set_target_properties(test-gpu-tiling PROPERTIES FOLDER tests)
+
+target_link_libraries(test-gpu-tiling
+    addrlib
+    catch
+    common
+    libcpu
+    libgpu)
+
+install(TARGETS test-gpu-tiling RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/gpu")
+
+add_test(NAME gpu-tiling
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND test-gpu-tiling)

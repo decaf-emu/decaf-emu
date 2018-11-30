@@ -7,6 +7,7 @@ set(HLE_TEST_CONTENT_PATH_DST "${PROJECT_BINARY_DIR}/hle/content")
 
 if(DECAF_BUILD_TESTS)
     add_subdirectory("cpu")
+    add_subdirectory("gpu")
 endif()
 
 if(DECAF_BUILD_WUT_TESTS)
