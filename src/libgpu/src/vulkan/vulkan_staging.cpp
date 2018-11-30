@@ -31,7 +31,7 @@ Driver::allocTempBuffer(uint32_t size)
    VkBuffer buffer;
    VmaAllocation allocation;
    vmaCreateBuffer(mAllocator,
-                   &static_cast<VkBufferCreateInfo>(bufferDesc),
+                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
                    &allocDesc,
                    &buffer,
                    &allocation,
