@@ -102,12 +102,13 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
 
    VkBuffer buffer;
    VmaAllocation allocation;
-   vmaCreateBuffer(mAllocator,
-                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
-                   &allocInfo,
-                   &buffer,
-                   &allocation,
-                   nullptr);
+   CHECK_VK_RESULT(
+      vmaCreateBuffer(mAllocator,
+                      reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
+                      &allocInfo,
+                      &buffer,
+                      &allocation,
+                      nullptr));
 
    static uint64_t memCacheIndex = 0;
    setVkObjectName(buffer, fmt::format("memcache_{}_{:08x}_{}", memCacheIndex++, address.getAddress(), totalSize).c_str());

@@ -20,6 +20,15 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+// Evaluate f and if result is not a success throw proper vk exception.
+#define CHECK_VK_RESULT(x) do { \
+   vk::Result res = vk::Result(x); \
+   vk::createResultValue(res, __FILE__ ":" TOSTRING(__LINE__)); \
+} while (0)
+
 namespace vulkan
 {
 
