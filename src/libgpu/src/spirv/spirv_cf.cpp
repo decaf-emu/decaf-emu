@@ -170,18 +170,22 @@ void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
    auto stateVal = mSpv->createLoad(mSpv->stateVar());
 
    // If state is set to InactiveContinue, set it to Active
-   auto isInactiveContinue = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
-                                               stateVal,
-                                               mSpv->stateInactiveContinue());
-   auto ifBuilder = &spv::Builder::If { isInactiveContinue, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->createStore(mSpv->stateActive(), mSpv->stateVar());
-   ifBuilder->makeEndIf();
+   {
+      auto isInactiveContinue = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
+                                                  stateVal,
+                                                  mSpv->stateInactiveContinue());
+      auto ifBuilder = spv::Builder::If { isInactiveContinue, spv::SelectionControlMaskNone, *mSpv };
+      mSpv->createStore(mSpv->stateActive(), mSpv->stateVar());
+      ifBuilder.makeEndIf();
+   }
 
    // If state is set to Inactive, set it to InactiveBreak
-   auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactive());
-   ifBuilder = &spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
-   mSpv->createStore(mSpv->stateInactiveBreak(), mSpv->stateVar());
-   ifBuilder->makeEndIf();
+   {
+      auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(), stateVal, mSpv->stateInactive());
+      auto ifBuilder = spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
+      mSpv->createStore(mSpv->stateInactiveBreak(), mSpv->stateVar());
+      ifBuilder.makeEndIf();
+   }
 }
 
 void Transpiler::translateCf_LOOP_START_NO_AL(const ControlFlowInst &cf)

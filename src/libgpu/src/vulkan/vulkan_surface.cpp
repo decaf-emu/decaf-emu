@@ -181,24 +181,24 @@ Driver::_copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange ran
 
    vk::ImageCopy copyRegion;
    if (src->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
-      copyRegion.srcOffset = { 0, 0, static_cast<int32_t>(range.firstSlice) };
+      copyRegion.srcOffset = vk::Offset3D { 0, 0, static_cast<int32_t>(range.firstSlice) };
       copyRegion.srcSubresource = { copyAspect, 0, 0, 1 };
       // range.numSlices is expressed by the extent here...
    } else {
-      copyRegion.srcOffset = { 0, 0, 0 };
+      copyRegion.srcOffset = vk::Offset3D { 0, 0, 0 };
       copyRegion.srcSubresource = { copyAspect, 0, range.firstSlice, range.numSlices };
    }
    if (dst->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
-      copyRegion.dstOffset = { 0, 0, static_cast<int32_t>(range.firstSlice) };
+      copyRegion.dstOffset = vk::Offset3D { 0, 0, static_cast<int32_t>(range.firstSlice) };
       copyRegion.dstSubresource = { copyAspect, 0, 0, 1 };
       // range.numSlices is expressed by the extent here...
    } else {
-      copyRegion.dstOffset = { 0, 0, 0 };
+      copyRegion.dstOffset = vk::Offset3D { 0, 0, 0 };
       copyRegion.dstSubresource = { copyAspect, 0, range.firstSlice, range.numSlices };
 
       // range.numSlices is expressed by the extent here...
    }
-   copyRegion.extent = { copyWidth, copyHeight, copySlices };
+   copyRegion.extent = vk::Extent3D { copyWidth, copyHeight, copySlices };
 
    auto originalSrcUsage = src->activeUsage;
    auto originalSrcLayout = src->activeLayout;
@@ -477,10 +477,10 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    bufferRegion.imageSubresource.baseArrayLayer = 0;
    bufferRegion.imageSubresource.layerCount = realArrayLayers;
 
-   bufferRegion.imageOffset = { 0, 0, 0 };
-   bufferRegion.imageExtent = { static_cast<uint32_t>(realWidth),
-                           static_cast<uint32_t>(realHeight),
-                           static_cast<uint32_t>(realDepth) };
+   bufferRegion.imageOffset = vk::Offset3D { 0, 0, 0 };
+   bufferRegion.imageExtent = vk::Extent3D { static_cast<uint32_t>(realWidth),
+                                             static_cast<uint32_t>(realHeight),
+                                             static_cast<uint32_t>(realDepth) };
 
    std::vector<SurfaceSlice> slices;
 

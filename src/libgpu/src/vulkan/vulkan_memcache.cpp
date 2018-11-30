@@ -103,7 +103,7 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
    VkBuffer buffer;
    VmaAllocation allocation;
    vmaCreateBuffer(mAllocator,
-                   &static_cast<VkBufferCreateInfo>(bufferDesc),
+                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
                    &allocInfo,
                    &buffer,
                    &allocation,

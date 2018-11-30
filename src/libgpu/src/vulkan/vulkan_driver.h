@@ -13,6 +13,7 @@
 #include <condition_variable>
 #include <functional>
 #include <gsl/gsl>
+#include <list>
 #include <map>
 #include <mutex>
 #include <thread>
@@ -48,11 +49,6 @@ public:
    DataHash hash() const
    {
       return mHash;
-   }
-
-   operator bool() const
-   {
-      return !!mHash;
    }
 
    bool operator==(const HashedDesc<T>& other) const
