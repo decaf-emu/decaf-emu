@@ -30,18 +30,19 @@ Driver::allocTempBuffer(uint32_t size)
 
    VkBuffer buffer;
    VmaAllocation allocation;
-   vmaCreateBuffer(mAllocator,
-                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
-                   &allocDesc,
-                   &buffer,
-                   &allocation,
-                   nullptr);
+   CHECK_VK_RESULT(
+      vmaCreateBuffer(mAllocator,
+                      reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
+                      &allocDesc,
+                      &buffer,
+                      &allocation,
+                      nullptr));
 
    static uint64_t stagingBufferIdx = 0;
    setVkObjectName(buffer, fmt::format("stagingbuffer_{}", stagingBufferIdx++).c_str());
 
    void *mappedPtr;
-   vmaMapMemory(mAllocator, allocation, &mappedPtr);
+   CHECK_VK_RESULT(vmaMapMemory(mAllocator, allocation, &mappedPtr));
 
    auto sbuffer = new StagingBuffer();
    sbuffer->maximumSize = size;

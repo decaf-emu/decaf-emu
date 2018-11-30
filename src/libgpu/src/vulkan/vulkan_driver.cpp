@@ -63,7 +63,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    VmaAllocatorCreateInfo allocatorDesc = {};
    allocatorDesc.physicalDevice = mPhysDevice;
    allocatorDesc.device = mDevice;
-   vmaCreateAllocator(&allocatorDesc, &mAllocator);
+   CHECK_VK_RESULT(vmaCreateAllocator(&allocatorDesc, &mAllocator));
 
    // Set up our drawing pipeline layout
    auto makeStageSet = [&](int stageIndex)
