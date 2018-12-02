@@ -6,6 +6,13 @@
 #include <coreinit/time.h>
 #include <coreinit/systeminfo.h>
 
+#define STACK_SIZE 4096
+
+OSThread threadCore0 = { 0 };
+OSThread threadCore2 = { 0 };
+uint8_t stackCore0[STACK_SIZE] = { 0 };
+uint8_t stackCore2[STACK_SIZE] = { 0 };
+
 int periodicFireCount = 0;
 BOOL core0Fired = FALSE;
 BOOL core2Fired = FALSE;
@@ -70,17 +77,17 @@ main(int argc, char **argv)
    test_assert(OSGetCoreId() == 1);
 
    // Run thread on core 0
-   OSThread *threadCore0 = OSGetDefaultThread(0);
-   OSRunThread(threadCore0, CoreEntryPoint0, 0, NULL);
+   OSCreateThread(&threadCore0, CoreEntryPoint0, 0, NULL, stackCore0 + STACK_SIZE, STACK_SIZE, 20, OS_THREAD_ATTRIB_AFFINITY_CPU0);
+   OSResumeThread(&threadCore0);
 
    // Run thread on core 2
-   OSThread *threadCore2 = OSGetDefaultThread(2);
-   OSRunThread(threadCore2, CoreEntryPoint2, 2, NULL);
+   OSCreateThread(&threadCore2, CoreEntryPoint2, 0, NULL, stackCore2 + STACK_SIZE, STACK_SIZE, 20, OS_THREAD_ATTRIB_AFFINITY_CPU2);
+   OSResumeThread(&threadCore2);
 
    // Wait for threads to return
    int resultCore0 = -1, resultCore2 = -1;
-   OSJoinThread(threadCore0, &resultCore0);
-   OSJoinThread(threadCore2, &resultCore2);
+   OSJoinThread(&threadCore0, &resultCore0);
+   OSJoinThread(&threadCore2, &resultCore2);
 
    OSCancelAlarm(&periodicAlarm);
 
