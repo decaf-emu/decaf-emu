@@ -13,9 +13,9 @@ namespace cafe::hle
 
 struct UnimplementedLibraryFunction
 {
-   class Library *library;
+   class Library *library = nullptr;
    std::string name;
-   uint32_t syscallID;
+   uint32_t syscallID = 0;
    virt_addr value;
 };
 
@@ -33,13 +33,13 @@ struct LibraryFunction : public LibrarySymbol
    virtual void call(cpu::Core *state) = 0;
 
    //! ID number of syscall.
-   uint32_t syscallID;
+   uint32_t syscallID = 0;
 
    //! Whether trace logging is enabled for this function or not.
    bool traceEnabled = true;
 
    //! Pointer to host function pointer, only set for internal functions.
-   virt_ptr<void> *hostPtr;
+   virt_ptr<void> *hostPtr = nullptr;
 };
 
 namespace internal
@@ -51,11 +51,11 @@ namespace internal
 template<typename FunctionType>
 struct LibraryFunctionCall : LibraryFunction
 {
+   LibraryFunctionCall(FunctionType func) : func(func) {}
+
    virtual ~LibraryFunctionCall()
    {
    }
-
-   FunctionType func;
 
    virtual void call(cpu::Core *state) override
    {
@@ -65,6 +65,8 @@ struct LibraryFunctionCall : LibraryFunction
 
       invoke(state, func);
    }
+
+   FunctionType func;
 };
 
 /**
@@ -121,8 +123,7 @@ template<typename FunctionType>
 inline std::unique_ptr<LibraryFunction>
 makeLibraryFunction(FunctionType func)
 {
-   auto libraryFunction = new LibraryFunctionCall<FunctionType>();
-   libraryFunction->func = func;
+   auto libraryFunction = new LibraryFunctionCall<FunctionType>(func);
    return std::unique_ptr<LibraryFunction> { libraryFunction };
 }
 
