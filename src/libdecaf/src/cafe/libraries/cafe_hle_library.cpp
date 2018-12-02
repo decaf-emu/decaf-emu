@@ -101,9 +101,7 @@ Library::handleKernelCall(cpu::Core *state,
 void
 Library::registerKernelCalls()
 {
-   for (auto &pair : mSymbolMap) {
-      auto &symbol = pair.second;
-
+   for (auto const &[name, symbol] : mSymbolMap) {
       if (symbol->type == LibrarySymbol::Function) {
          auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
          funcSymbol->syscallID = static_cast<uint32_t>(sKernelCalls.size());
@@ -116,9 +114,7 @@ void
 Library::relocate(virt_addr textBaseAddress,
                   virt_addr dataBaseAddress)
 {
-   for (auto &pair : mSymbolMap) {
-      auto &symbol = pair.second;
-
+   for (auto const &[name, symbol] : mSymbolMap) {
       if (symbol->type == LibrarySymbol::Function) {
          auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
          funcSymbol->address = textBaseAddress + funcSymbol->offset;
@@ -312,9 +308,7 @@ Library::generateRpl()
    auto dataSymbolsSize = 0u;
    auto textSymbolSize = 0u;
 
-   for (auto &pair : mSymbolMap) {
-      auto &symbol = pair.second;
-
+   for (auto const &[name, symbol] : mSymbolMap) {
       if (symbol->type == LibrarySymbol::Function) {
          auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
          textSymbolSize += LibraryFunctionStubSize;
