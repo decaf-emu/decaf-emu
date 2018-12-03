@@ -739,22 +739,24 @@ getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
       // Once we hit a level where size is smaller than a macro tile, the
       // tile mode becomes micro tiling.
       if (thickness == 4 && !surface.is3D) {
-         mipSurface.tileMode = gpu7::tiling::TileMode::Tiled1DThick;
+         mipSurface.tileMode = TileMode::Tiled1DThick;
       } else {
-         mipSurface.tileMode = gpu7::tiling::TileMode::Tiled1DThin1;
+         mipSurface.tileMode = TileMode::Tiled1DThin1;
       }
-   } else if (mipSurface.is3D && mipSurface.depth < 4) {
-      // On a 3D texture once we hit depth <4 we siwthc to thin tiling.
-      if (mipSurface.tileMode == gpu7::tiling::TileMode::Tiled2DThick) {
-         mipSurface.tileMode = gpu7::tiling::TileMode::Tiled2DThin1;
-      } else if (mipSurface.tileMode == gpu7::tiling::TileMode::Tiled2BThick) {
-         mipSurface.tileMode = gpu7::tiling::TileMode::Tiled2BThin1;
-      } else if (mipSurface.tileMode == gpu7::tiling::TileMode::Tiled3DThick) {
-         mipSurface.tileMode = gpu7::tiling::TileMode::Tiled3DThin1;
-      } else if (mipSurface.tileMode == gpu7::tiling::TileMode::Tiled3BThick) {
-         mipSurface.tileMode = gpu7::tiling::TileMode::Tiled3BThin1;
-      } else {
-         decaf_abort("Unexpected tilemode for 3d texture");
+   }
+
+   if (mipSurface.depth < 4) {
+      // With depth < 4 we switch to thin tiling.
+      if (mipSurface.tileMode == TileMode::Tiled1DThick) {
+         mipSurface.tileMode = TileMode::Tiled1DThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled2DThick) {
+         mipSurface.tileMode = TileMode::Tiled2DThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled2BThick) {
+         mipSurface.tileMode = TileMode::Tiled2BThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled3DThick) {
+         mipSurface.tileMode = TileMode::Tiled3DThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled3BThick) {
+         mipSurface.tileMode = TileMode::Tiled3BThin1;
       }
    }
 
