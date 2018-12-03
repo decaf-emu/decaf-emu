@@ -445,6 +445,12 @@ untileMicroSurface(const SurfaceInfo &surface,
       pitch * height * microTileThickness * bytesPerElement;
    const auto sliceOffset = microTileIndexZ * sliceBytes;
 
+   // Calculate offset within thick slices for current slice
+   auto thickSliceOffset = 0;
+   if (microTileThickness > 1 && slice > 0) {
+      thickSliceOffset = (slice % microTileThickness) * (microTileBytes / microTileThickness);
+   }
+
    const auto dstStrideBytes = pitch * bytesPerElement;
 
    if (surface.isDepth) {
@@ -458,7 +464,7 @@ untileMicroSurface(const SurfaceInfo &surface,
    }
 
    const auto sampleOffset = sample * (microTileBytes / surface.numSamples);
-   const auto sampleSliceOffset = sliceOffset + sampleOffset;
+   const auto sampleSliceOffset = sliceOffset + sampleOffset + thickSliceOffset;
 
    switch (surface.bpp) {
    case 8:
