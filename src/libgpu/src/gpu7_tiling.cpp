@@ -24,7 +24,7 @@ static constexpr auto GroupMask = (1 << NumGroupBits) - 1;
 
 static constexpr auto RowSize = 2048;
 static constexpr auto SwapSize = 256;
-static constexpr auto SplitSize = 2048;
+static constexpr auto SampleSplitSize = 2048;
 static constexpr auto BankSwapBytes = 256;
 
 static constexpr int MacroTileWidth[] = {
@@ -852,6 +852,47 @@ calculatePitchAlignment(const SurfaceInfo &surface)
    }
 }
 
+static int
+calculateBankSwappedWidth(const SurfaceInfo &surface)
+{
+   const auto bytesPerElement = surface.bpp / 8;
+   const auto tileThickness = getMicroTileThickness(surface.tileMode);
+
+   switch (static_cast<TileMode>(surface.tileMode)) {
+   case TileMode::Tiled2BThin1:
+   case TileMode::Tiled2BThin2:
+   case TileMode::Tiled2BThin4:
+   case TileMode::Tiled2BThick:
+   case TileMode::Tiled3BThin1:
+   case TileMode::Tiled3BThick:
+   {
+      const auto macroTileWidth = getMacroTileWidth(surface.tileMode) * MicroTileWidth;
+      const auto macroTileHeight = getMacroTileHeight(surface.tileMode) * MicroTileHeight;
+
+      const auto bytesPerSample = MicroTileWidth * MicroTileHeight * bytesPerElement;
+      const auto samplesPerTile = SampleSplitSize / bytesPerSample;
+      const auto slicesPerTile = std::max(1, surface.numSamples / samplesPerTile);
+      const auto numSamples = (tileThickness > 1) ? tileThickness : surface.numSamples;
+      const auto bytesPerTileSlice = numSamples * bytesPerSample / slicesPerTile;
+
+      const auto swapTiles = std::max(1, (BankSwapBytes / 16) / bytesPerElement);
+      const auto swapWidth = swapTiles * MicroTileWidth * NumBanks;
+      const auto heightBytes = numSamples * macroTileHeight * bytesPerElement / slicesPerTile;
+      const auto swapMax = NumPipes * NumBanks * RowSize / heightBytes;
+      const auto swapMin = PipeInterleaveBytes * 8 * NumBanks / bytesPerTileSlice;
+      auto bankSwapWidth = std::min(swapMax, std::max(swapMin, swapWidth));
+
+      while (bankSwapWidth >= 2 * surface.width) {
+         bankSwapWidth >>= 1;
+      }
+
+      return bankSwapWidth;
+   }
+   default:
+      return 0;
+   }
+}
+
 int
 calculateBaseAddressAlignment(const SurfaceInfo &surface)
 {
@@ -941,7 +982,9 @@ calculateAlignedHeight(const SurfaceInfo &surface)
 int
 calculateAlignedPitch(const SurfaceInfo &surface)
 {
-   return align_up(surface.width, calculatePitchAlignment(surface));
+   auto pitchAlign = calculatePitchAlignment(surface);
+   auto bankSwappedWidth = calculateBankSwappedWidth(surface);
+   return align_up(surface.width, std::max(pitchAlign, bankSwappedWidth));
 }
 
 
