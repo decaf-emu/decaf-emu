@@ -818,6 +818,7 @@ static int
 calculatePitchAlignment(const SurfaceInfo &surface)
 {
    const auto bytesPerElement = surface.bpp / 8;
+   const auto tileThickness = getMicroTileThickness(surface.tileMode);
 
    switch (static_cast<TileMode>(surface.tileMode)) {
    case TileMode::LinearAligned:
@@ -826,7 +827,8 @@ calculatePitchAlignment(const SurfaceInfo &surface)
    case TileMode::Tiled1DThick:
       return std::max(MicroTileWidth,
                       PipeInterleaveBytes
-                      / (MicroTileHeight * bytesPerElement * surface.numSamples));
+                      / (MicroTileHeight * tileThickness * bytesPerElement
+                         * surface.numSamples));
    case TileMode::Tiled2DThin1:
    case TileMode::Tiled2DThin2:
    case TileMode::Tiled2DThin4:
