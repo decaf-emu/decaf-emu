@@ -711,85 +711,6 @@ NextPow2(int dim)
 }
 
 static int
-getMipLevelOffset(const SurfaceMipMapInfo &info,
-                  int level)
-{
-   if (level <= 1) {
-      return 0;
-   }
-
-   return info.offsets[level - 1];
-}
-
-static SurfaceInfo
-getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
-                           int level)
-{
-   auto mipSurface = surface;
-   mipSurface.width = std::max(1, surface.width >> level);
-   mipSurface.height = std::max(1, surface.height >> level);
-
-   if (surface.is3D) {
-      mipSurface.depth = std::max(1, surface.depth >> level);
-   } else {
-      mipSurface.depth = surface.depth;
-   }
-
-   return mipSurface;
-}
-
-static SurfaceInfo
-getMipSurfaceInfo(const SurfaceInfo &surface,
-                  int level)
-{
-   auto mipSurface = getUnpitchedMipSurfaceInfo(surface, level);
-   mipSurface.depth = NextPow2(mipSurface.depth);
-   mipSurface.height = NextPow2(mipSurface.height);
-   mipSurface.width = NextPow2(mipSurface.width);
-
-   const auto bytesPerElement = surface.bpp / 8;
-   const auto macroTileWidth = MicroTileWidth * getMacroTileWidth(surface.tileMode);
-   const auto macroTileHeight = MicroTileHeight * getMacroTileHeight(surface.tileMode);
-   const auto microTileThickness = getMicroTileThickness(surface.tileMode);
-   const auto microTileBytes =
-      MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * surface.numSamples;
-
-   auto widthAlignFactor = 1;
-   if (microTileBytes <= PipeInterleaveBytes) {
-      widthAlignFactor = PipeInterleaveBytes / microTileBytes;
-   }
-
-   if (mipSurface.width < widthAlignFactor * macroTileWidth ||
-       mipSurface.height < macroTileHeight) {
-      // Once we hit a level where size is smaller than a macro tile, the
-      // tile mode becomes micro tiling.
-      if (microTileThickness == 4 && !surface.is3D) {
-         mipSurface.tileMode = TileMode::Tiled1DThick;
-      } else {
-         mipSurface.tileMode = TileMode::Tiled1DThin1;
-      }
-   }
-
-   if (mipSurface.depth < 4) {
-      // With depth < 4 we switch to thin tiling.
-      if (mipSurface.tileMode == TileMode::Tiled1DThick) {
-         mipSurface.tileMode = TileMode::Tiled1DThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled2DThick) {
-         mipSurface.tileMode = TileMode::Tiled2DThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled2BThick) {
-         mipSurface.tileMode = TileMode::Tiled2BThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled3DThick) {
-         mipSurface.tileMode = TileMode::Tiled3DThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled3BThick) {
-         mipSurface.tileMode = TileMode::Tiled3BThin1;
-      }
-   }
-
-   return mipSurface;
-}
-
-static int
 calculateHeightAlignment(const SurfaceInfo &surface)
 {
    switch (static_cast<TileMode>(surface.tileMode)) {
@@ -890,6 +811,108 @@ calculateBankSwappedWidth(const SurfaceInfo &surface)
    default:
       return 0;
    }
+}
+
+static int
+getMipLevelOffset(const SurfaceMipMapInfo &info,
+                  int level)
+{
+   if (level <= 1) {
+      return 0;
+   }
+
+   return info.offsets[level - 1];
+}
+
+static SurfaceInfo
+getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
+                           int level)
+{
+   auto mipSurface = surface;
+   mipSurface.width = std::max(1, surface.width >> level);
+   mipSurface.height = std::max(1, surface.height >> level);
+
+   if (surface.is3D) {
+      mipSurface.depth = std::max(1, surface.depth >> level);
+   } else {
+      mipSurface.depth = surface.depth;
+   }
+
+   return mipSurface;
+}
+
+static SurfaceInfo
+getMipSurfaceInfo(const SurfaceInfo &surface,
+                  int level)
+{
+   auto mipSurface = getUnpitchedMipSurfaceInfo(surface, level);
+   mipSurface.depth = NextPow2(mipSurface.depth);
+   mipSurface.height = NextPow2(mipSurface.height);
+   mipSurface.width = NextPow2(mipSurface.width);
+
+   const auto bytesPerElement = surface.bpp / 8;
+   const auto macroTileWidth = MicroTileWidth * getMacroTileWidth(surface.tileMode);
+   const auto macroTileHeight = MicroTileHeight * getMacroTileHeight(surface.tileMode);
+   const auto microTileThickness = getMicroTileThickness(surface.tileMode);
+   const auto microTileBytes =
+      MicroTileWidth * MicroTileHeight * microTileThickness
+      * bytesPerElement * surface.numSamples;
+
+   auto widthAlignFactor = 1;
+   if (microTileBytes <= PipeInterleaveBytes) {
+      widthAlignFactor = PipeInterleaveBytes / microTileBytes;
+   }
+
+   if (mipSurface.width < widthAlignFactor * macroTileWidth ||
+       mipSurface.height < macroTileHeight) {
+      // Once we hit a level where size is smaller than a macro tile, the
+      // tile mode becomes micro tiling.
+      if (microTileThickness == 4 && !surface.is3D) {
+         mipSurface.tileMode = TileMode::Tiled1DThick;
+      } else {
+         mipSurface.tileMode = TileMode::Tiled1DThin1;
+      }
+   }
+
+   if (mipSurface.depth < 4) {
+      // With depth < 4 we switch to thin tiling.
+      if (mipSurface.tileMode == TileMode::Tiled1DThick) {
+         mipSurface.tileMode = TileMode::Tiled1DThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled2DThick) {
+         mipSurface.tileMode = TileMode::Tiled2DThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled2BThick) {
+         mipSurface.tileMode = TileMode::Tiled2BThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled3DThick) {
+         mipSurface.tileMode = TileMode::Tiled3DThin1;
+      } else if (mipSurface.tileMode == TileMode::Tiled3BThick) {
+         mipSurface.tileMode = TileMode::Tiled3BThin1;
+      }
+   }
+
+   // If we are a mipmap and the tilemode has transitioned from thick to
+   // non-thick
+   if (mipSurface.tileMode != surface.tileMode &&
+       level != 0 &&
+       getMicroTileThickness(mipSurface.tileMode) == 1 &&
+       getMicroTileThickness(surface.tileMode) > 1) {
+      // Get the pitch align and height align with the original tile mode
+      auto tileMode = mipSurface.tileMode;
+      mipSurface.tileMode = surface.tileMode;
+      const auto pitchAlign = calculatePitchAlignment(mipSurface);
+      const auto heightAlign = calculateHeightAlignment(mipSurface);
+      mipSurface.tileMode = tileMode;
+
+      // If we are less than the align then transition to microtiling
+      const auto pitchAlignFactor =
+         std::max<uint32_t>(1,
+            PipeInterleaveBytes / (MicroTileWidth * MicroTileHeight * bytesPerElement));
+      if (mipSurface.width < pitchAlignFactor * pitchAlign ||
+          mipSurface.height < heightAlign) {
+         mipSurface.tileMode = TileMode::Tiled1DThin1;
+      }
+   }
+
+   return mipSurface;
 }
 
 int
