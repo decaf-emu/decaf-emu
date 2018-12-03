@@ -532,9 +532,7 @@ applyMacroTiling(const SurfaceInfo &surface,
             + sampleOffset;
          const auto offsetHigh =
             (totalOffset & ~GroupMask) << (NumBankBits + NumPipeBits);
-
-         // Our code assumes offsetLow is 0 at this point
-         decaf_check((totalOffset & GroupMask) == 0);
+         const auto offsetLow = totalOffset & GroupMask;
 
          for (auto microTileY = 0; microTileY < macroTileHeight; ++microTileY) {
             for (auto microTileX = 0; microTileX < macroTileWidth; ++microTileX) {
@@ -561,7 +559,7 @@ applyMacroTiling(const SurfaceInfo &surface,
 
                auto microTileOffset =
                   (bank << (NumGroupBits + NumPipeBits))
-                  + (pipe << NumGroupBits) + offsetHigh;
+                  + (pipe << NumGroupBits) + offsetHigh + offsetLow;
 
                MicroTiler::apply(surface,
                                  static_cast<uint8_t *>(src),
