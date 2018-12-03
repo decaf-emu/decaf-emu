@@ -842,10 +842,9 @@ calculatePitchAlignment(const SurfaceInfo &surface)
    case TileMode::Tiled3BThin1:
    case TileMode::Tiled3BThick:
    {
-      auto macroTileWidth = getMacroTileWidth(surface.tileMode);
-      auto sampleBytes = bytesPerElement * surface.numSamples;
-      return std::max(macroTileWidth * MicroTileWidth,
-         ((PipeInterleaveBytes / MicroTileHeight) / sampleBytes) * NumBanks);
+      auto macroTileWidth = getMacroTileWidth(surface.tileMode) * MicroTileWidth;
+      return std::max(macroTileWidth,
+                      macroTileWidth * (PipeInterleaveBytes / (MicroTileHeight * MicroTileWidth) / (bytesPerElement * surface.numSamples) / tileThickness));
    }
    default:
       return 1;
