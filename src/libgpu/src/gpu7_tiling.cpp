@@ -1143,6 +1143,13 @@ calculateMipMapInfo(const SurfaceInfo &surface,
    info.size = offset;
 }
 
+SurfaceInfo
+calculateMipSurfaceInfo(const SurfaceInfo &surface,
+                        int level)
+{
+   return getMipSurfaceInfo(surface, level);
+}
+
 void
 calculateMipMapSliceInfo(const SurfaceInfo &surface,
                          int numLevels,

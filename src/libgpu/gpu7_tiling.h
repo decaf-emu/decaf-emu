@@ -94,6 +94,10 @@ calculateMipMapInfo(const SurfaceInfo &surface,
                     int numLevels,
                     SurfaceMipMapInfo &info);
 
+SurfaceInfo
+calculateMipSurfaceInfo(const SurfaceInfo &surface,
+                        int level);
+
 void
 calculateMipMapSliceInfo(const SurfaceInfo &surface,
                          int numLevels,
