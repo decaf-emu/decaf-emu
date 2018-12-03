@@ -1110,11 +1110,12 @@ untileImage(const SurfaceInfo &surface,
             void *dst)
 {
    const auto sliceSize = calculateSliceSize(surface);
+   const auto numSlices = calculateAlignedDepth(surface);
 
    // Multi-sample untile is not supported yet
    decaf_check(surface.numSamples == 1);
 
-   for (auto slice = 0; slice < surface.depth; ++slice) {
+   for (auto slice = 0; slice < numSlices; ++slice) {
       untileSlice(surface, src,
                   reinterpret_cast<uint8_t *>(dst) + sliceSize * slice,
                   slice, 0);
