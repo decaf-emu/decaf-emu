@@ -1066,7 +1066,6 @@ calculateMipMapInfo(const SurfaceInfo &surface,
                     int numLevels,
                     SurfaceMipMapInfo &info)
 {
-   const auto baseAddressAlign = calculateBaseAddressAlignment(surface);
    const auto imageSize = calculateImageSize(surface);
 
    auto offset = 0;
@@ -1074,6 +1073,7 @@ calculateMipMapInfo(const SurfaceInfo &surface,
 
    for (int level = 1; level < numLevels; ++level) {
       const auto mipSurface = getMipSurfaceInfo(surface, level);
+      const auto baseAddressAlign = calculateBaseAddressAlignment(mipSurface);
       offset = align_up(offset, baseAddressAlign);
 
       if (level == 1) {
