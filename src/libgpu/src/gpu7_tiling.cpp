@@ -510,6 +510,7 @@ applyMacroTiling(const SurfaceInfo &surface,
                  int dstStrideBytes,
                  int sampleOffset,
                  int sliceOffset,
+                 int thickSliceOffset,
                  int bankSliceRotation,
                  int sampleSliceRotation,
                  int pipeSliceRotation,
@@ -529,7 +530,7 @@ applyMacroTiling(const SurfaceInfo &surface,
       for (auto macroTileX = 0; macroTileX < macroTilesPerRow; ++macroTileX) {
          const auto totalOffset =
             ((sliceOffset + macroTileOffset) >> (NumBankBits + NumPipeBits))
-            + sampleOffset;
+            + sampleOffset + thickSliceOffset;
          const auto offsetHigh =
             (totalOffset & ~GroupMask) << (NumBankBits + NumPipeBits);
          const auto offsetLow = totalOffset & GroupMask;
@@ -606,6 +607,12 @@ untileMacroSurface(const SurfaceInfo &surface,
    const auto sliceOffset =
       (slice / microTileThickness) * macroTilesPerSlice * macroTileBytes;
 
+   // Calculate offset within thick slices for current slice
+   auto thickSliceOffset = 0;
+   if (microTileThickness > 1 && slice > 0) {
+      thickSliceOffset = (slice % microTileThickness) * (microTileBytes / microTileThickness);
+   }
+
    // Depth tiling is different for samples, not yet implemented
    decaf_check(!surface.isDepth || sample == 0);
    const auto sampleOffset = sample * (microTileBytes / surface.numSamples);
@@ -652,7 +659,7 @@ untileMacroSurface(const SurfaceInfo &surface,
    switch (surface.bpp) {
    case 8:
       applyMacroTiling<MicroTiler8>(surface, src, dst, dstStrideBytes,
-                                    sampleOffset, sliceOffset,
+                                    sampleOffset, sliceOffset, thickSliceOffset,
                                     bankSliceRotation, sampleSliceRotation,
                                     pipeSliceRotation, bankSwapInterval,
                                     macroTileWidth, macroTileHeight,
@@ -661,7 +668,7 @@ untileMacroSurface(const SurfaceInfo &surface,
       break;
    case 16:
       applyMacroTiling<MicroTiler16>(surface, src, dst, dstStrideBytes,
-                                     sampleOffset, sliceOffset,
+                                     sampleOffset, sliceOffset, thickSliceOffset,
                                      bankSliceRotation, sampleSliceRotation,
                                      pipeSliceRotation, bankSwapInterval,
                                      macroTileWidth, macroTileHeight,
@@ -670,7 +677,7 @@ untileMacroSurface(const SurfaceInfo &surface,
       break;
    case 32:
       applyMacroTiling<MicroTiler32>(surface, src, dst, dstStrideBytes,
-                                     sampleOffset, sliceOffset,
+                                     sampleOffset, sliceOffset, thickSliceOffset,
                                      bankSliceRotation, sampleSliceRotation,
                                      pipeSliceRotation, bankSwapInterval,
                                      macroTileWidth, macroTileHeight,
@@ -679,7 +686,7 @@ untileMacroSurface(const SurfaceInfo &surface,
       break;
    case 64:
       applyMacroTiling<MicroTiler64<true>>(surface, src, dst, dstStrideBytes,
-                                           sampleOffset, sliceOffset,
+                                           sampleOffset, sliceOffset, thickSliceOffset,
                                            bankSliceRotation, sampleSliceRotation,
                                            pipeSliceRotation, bankSwapInterval,
                                            macroTileWidth, macroTileHeight,
@@ -688,7 +695,7 @@ untileMacroSurface(const SurfaceInfo &surface,
       break;
    case 128:
       applyMacroTiling<MicroTiler128<true>>(surface, src, dst, dstStrideBytes,
-                                            sampleOffset, sliceOffset,
+                                            sampleOffset, sliceOffset, thickSliceOffset,
                                             bankSliceRotation, sampleSliceRotation,
                                             pipeSliceRotation, bankSwapInterval,
                                             macroTileWidth, macroTileHeight,
