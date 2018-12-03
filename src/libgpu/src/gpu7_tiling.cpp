@@ -126,7 +126,7 @@ struct MicroTiler8
          int dstOffset,
          int dstStrideBytes)
    {
-      static constexpr auto rowSize = MicroTileWidth * sizeof(uint8_t);
+      static constexpr auto rowSize = MicroTileWidth * (8 / 8);
       src += srcOffset;
       dst += dstOffset;
 
@@ -171,7 +171,7 @@ struct MicroTiler16
          int dstOffset,
          int dstStrideBytes)
    {
-      static constexpr auto rowSize = MicroTileWidth * sizeof(uint16_t);
+      static constexpr auto rowSize = MicroTileWidth * (16 / 8);
       src += srcOffset;
       dst += dstOffset;
 
@@ -209,7 +209,7 @@ struct MicroTiler32
          int dstOffset,
          int dstStrideBytes)
    {
-      static constexpr auto groupSize = 4 * sizeof(uint32_t);
+      static constexpr auto groupSize = 4 * (32 / 8);
       src += srcOffset;
       dst += dstOffset;
 
@@ -259,7 +259,7 @@ struct MicroTiler64
          int dstOffset,
          int dstStrideBytes)
    {
-      static constexpr auto groupBytes = 2 * sizeof(uint64_t);
+      static constexpr auto groupBytes = 2 * (64 / 8);
       const auto nextGroupOffset =
          srcOffset + (0x100 << (NumBankBits + NumPipeBits));
 
@@ -320,7 +320,7 @@ struct MicroTiler128
          int dstOffset,
          int dstStrideBytes)
    {
-      static constexpr auto elemBytes = 8;
+      static constexpr auto elemBytes = 128 / 8;
 
       for (int y = 0; y < MicroTileHeight; y += 2) {
          auto dstRow1 = reinterpret_cast<uint8_t *>(dst + dstOffset);
