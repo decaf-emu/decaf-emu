@@ -727,10 +727,6 @@ static SurfaceInfo
 getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
                            int level)
 {
-   const auto macroTileWidth = MicroTileWidth * getMacroTileWidth(surface.tileMode);
-   const auto macroTileHeight = MicroTileHeight * getMacroTileHeight(surface.tileMode);
-   const auto thickness = getMicroTileThickness(surface.tileMode);
-
    auto mipSurface = surface;
    mipSurface.width = std::max(1, surface.width >> level);
    mipSurface.height = std::max(1, surface.height >> level);
@@ -741,10 +737,36 @@ getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
       mipSurface.depth = surface.depth;
    }
 
-   if (mipSurface.width < macroTileWidth || mipSurface.height < macroTileHeight) {
+   return mipSurface;
+}
+
+static SurfaceInfo
+getMipSurfaceInfo(const SurfaceInfo &surface,
+                  int level)
+{
+   auto mipSurface = getUnpitchedMipSurfaceInfo(surface, level);
+   mipSurface.depth = NextPow2(mipSurface.depth);
+   mipSurface.height = NextPow2(mipSurface.height);
+   mipSurface.width = NextPow2(mipSurface.width);
+
+   const auto bytesPerElement = surface.bpp / 8;
+   const auto macroTileWidth = MicroTileWidth * getMacroTileWidth(surface.tileMode);
+   const auto macroTileHeight = MicroTileHeight * getMacroTileHeight(surface.tileMode);
+   const auto microTileThickness = getMicroTileThickness(surface.tileMode);
+   const auto microTileBytes =
+      MicroTileWidth * MicroTileHeight * microTileThickness
+      * bytesPerElement * surface.numSamples;
+
+   auto widthAlignFactor = 1;
+   if (microTileBytes <= PipeInterleaveBytes) {
+      widthAlignFactor = PipeInterleaveBytes / microTileBytes;
+   }
+
+   if (mipSurface.width < widthAlignFactor * macroTileWidth ||
+       mipSurface.height < macroTileHeight) {
       // Once we hit a level where size is smaller than a macro tile, the
       // tile mode becomes micro tiling.
-      if (thickness == 4 && !surface.is3D) {
+      if (microTileThickness == 4 && !surface.is3D) {
          mipSurface.tileMode = TileMode::Tiled1DThick;
       } else {
          mipSurface.tileMode = TileMode::Tiled1DThin1;
@@ -766,17 +788,6 @@ getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
       }
    }
 
-   return mipSurface;
-}
-
-static SurfaceInfo
-getMipSurfaceInfo(const SurfaceInfo &surface,
-                  int level)
-{
-   auto mipSurface = getUnpitchedMipSurfaceInfo(surface, level);
-   mipSurface.depth = NextPow2(mipSurface.depth);
-   mipSurface.height = NextPow2(mipSurface.height);
-   mipSurface.width = NextPow2(mipSurface.width);
    return mipSurface;
 }
 
