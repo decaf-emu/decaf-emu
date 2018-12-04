@@ -922,8 +922,9 @@ protected:
    // Stream Out
    StreamContextObject * allocateStreamContext(uint32_t initialOffset);
    void releaseStreamContext(StreamContextObject* stream);
+   void readbackStreamContext(StreamContextObject *stream, phys_addr writeAddr);
    StreamOutBufferDesc getStreamOutBufferDesc(uint32_t bufferIndex);
-   bool checkCurrentStreamOutBuffers();
+   bool checkCurrentStreamOut();
    void bindStreamOutBuffers();
    void beginStreamOut();
    void endStreamOut();
