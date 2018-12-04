@@ -27,7 +27,7 @@ set(BINREC_LIBRARIES binrec PARENT_SCOPE)
 # catch
 set(CATCH_DIR "catch")
 add_library(catch INTERFACE)
-target_include_directories(catch INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CATCH_DIR}/include")
+target_include_directories(catch INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CATCH_DIR}/single_include/catch2")
 set(CATCH_LIBRARIES catch PARENT_SCOPE)
 
 # cereal
