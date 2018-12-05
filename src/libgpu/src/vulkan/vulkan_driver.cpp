@@ -249,7 +249,7 @@ Driver::initialiseBlankBuffer()
    VkBuffer emptyBuffer;
    VmaAllocation allocation;
    vmaCreateBuffer(mAllocator,
-                   &static_cast<VkBufferCreateInfo>(bufferDesc),
+                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
                    &allocInfo,
                    &emptyBuffer,
                    &allocation,
