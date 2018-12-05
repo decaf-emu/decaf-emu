@@ -45,7 +45,7 @@ Driver::allocateStreamContext(uint32_t initialOffset)
    VkBuffer buffer;
    VmaAllocation allocation;
    vmaCreateBuffer(mAllocator,
-                   &static_cast<VkBufferCreateInfo>(bufferDesc),
+                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
                    &allocInfo,
                    &buffer,
                    &allocation,
