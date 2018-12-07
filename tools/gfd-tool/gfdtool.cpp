@@ -929,16 +929,23 @@ convertTexture(const std::string &path)
       auto bytesPerElement = bpp / 8;
 
       // Fill out tiling surface information
-      gpu7::tiling::SurfaceInfo surface;
+      auto surface = gpu7::tiling::SurfaceDescription { };
+      surface.tileMode = static_cast<AddrTileMode>(tex.surface.tileMode);
+      surface.format = static_cast<AddrFormat>(format);
       surface.bpp = bpp;
-      surface.tileMode = static_cast<gpu7::tiling::TileMode>(tex.surface.tileMode);
+      surface.numSamples = 1u << static_cast<int>(tex.surface.aa);
       surface.width = tex.surface.width;
       surface.height = tex.surface.height;
-      surface.depth = tex.surface.depth;
-      surface.numSamples = 1;
-      surface.isDepth = !!(tex.surface.use & cafe::gx2::GX2SurfaceUse::DepthBuffer);
-      surface.is3D = (tex.surface.dim == cafe::gx2::GX2SurfaceDim::Texture3D);
+      surface.numSlices = tex.surface.depth;
+      surface.flags.depth = !!(tex.surface.use & cafe::gx2::GX2SurfaceUse::DepthBuffer);
+      surface.flags.display = !!(tex.surface.use & cafe::gx2::GX2SurfaceUse::ScanBuffer);
+      surface.flags.volume = (tex.surface.dim == cafe::gx2::GX2SurfaceDim::Texture3D);
+      surface.flags.cube = (tex.surface.dim == cafe::gx2::GX2SurfaceDim::TextureCube);
+      surface.flags.inputBaseMap = 1u;
+      surface.numFrags = 0;
+      surface.numLevels = tex.surface.mipLevels;
 
+      // Not sure if needed or not.
       if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 &&
           format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
          surface.width = (surface.width + 3) / 4;
@@ -951,34 +958,23 @@ convertTexture(const std::string &path)
       std::vector<uint8_t> untiled;
       std::vector<uint8_t> imageData;
       std::vector<uint8_t> mipMapData;
-      gpu7::tiling::SurfaceMipMapInfo mipMapInfo;
-      gpu7::tiling::SurfaceMipMapInfo unpitchedMipMapInfo;
 
       // Untile image
-      untiled.resize(gpu7::tiling::calculateImageSize(surface));
+      untiled.resize(tex.surface.image.size());
       gpu7::tiling::untileImage(surface, tex.surface.image.data(),
                                 untiled.data());
 
       // Unpitch image
-      imageData.resize(gpu7::tiling::calculateUnpitchedImageSize(surface));
+      imageData.resize(gpu7::tiling::computeUnpitchedImageSize(surface));
       gpu7::tiling::unpitchImage(surface, untiled.data(), imageData.data());
 
       // Untile mipmaps
-      gpu7::tiling::calculateMipMapInfo(surface,
-                                        tex.surface.mipLevels,
-                                        mipMapInfo);
-
-      untiled.resize(mipMapInfo.size);
-      gpu7::tiling::untileMipMaps(surface, mipMapInfo,
-                                  tex.surface.mipmap.data(), untiled.data());
+      untiled.resize(tex.surface.mipmap.size());
+      gpu7::tiling::untileMipMap(surface, tex.surface.mipmap.data(), untiled.data());
 
       // Unpitch mipmaps
-      gpu7::tiling::calculateUnpitchedMipMapInfo(surface,
-                                                 tex.surface.mipLevels,
-                                                 unpitchedMipMapInfo);
-      mipMapData.resize(unpitchedMipMapInfo.size);
-      gpu7::tiling::unpitchMipMaps(surface, mipMapInfo, unpitchedMipMapInfo,
-                                   untiled.data(), mipMapData.data());
+      mipMapData.resize(gpu7::tiling::computeUnpitchedMipMapSize(surface));
+      gpu7::tiling::unpitchMipMap(surface, untiled.data(), mipMapData.data());
 
       // Save to DDS file
       std::string outname;

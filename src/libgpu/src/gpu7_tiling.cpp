@@ -85,19 +85,19 @@ static constexpr int MicroTileThickness[] = {
 };
 
 static constexpr int
-getMacroTileWidth(TileMode tileMode)
+getMacroTileWidth(AddrTileMode tileMode)
 {
    return MacroTileWidth[static_cast<size_t>(tileMode)];
 }
 
 static constexpr int
-getMacroTileHeight(TileMode tileMode)
+getMacroTileHeight(AddrTileMode tileMode)
 {
    return MacroTileHeight[static_cast<size_t>(tileMode)];
 }
 
 static constexpr int
-getMicroTileThickness(TileMode tileMode)
+getMicroTileThickness(AddrTileMode tileMode)
 {
    return MicroTileThickness[static_cast<size_t>(tileMode)];
 }
@@ -118,8 +118,7 @@ struct MicroTiler8
    */
 
    static inline void
-   apply(const SurfaceInfo &surface,
-         uint8_t *src,
+   apply(uint8_t *src,
          int srcOffset,
          int srcStrideBytes,
          uint8_t *dst,
@@ -163,8 +162,7 @@ struct MicroTiler16
    */
 
    static inline void
-   apply(const SurfaceInfo &surface,
-         uint8_t *src,
+   apply(uint8_t *src,
          int srcOffset,
          int srcStrideBytes,
          uint8_t *dst,
@@ -201,8 +199,7 @@ struct MicroTiler32
    */
 
    static inline void
-   apply(const SurfaceInfo &surface,
-         uint8_t *src,
+   apply(uint8_t *src,
          int srcOffset,
          int srcStrideBytes,
          uint8_t *dst,
@@ -251,8 +248,7 @@ struct MicroTiler64
    */
 
    static inline void
-   apply(const SurfaceInfo &surface,
-         uint8_t *src,
+   apply(uint8_t *src,
          int srcOffset,
          int srcStrideBytes,
          uint8_t *dst,
@@ -312,8 +308,7 @@ struct MicroTiler128
    */
 
    static inline void
-   apply(const SurfaceInfo &surface,
-         uint8_t *src,
+   apply(uint8_t *src,
          int srcOffset,
          int srcStrideBytes,
          uint8_t *dst,
@@ -376,8 +371,7 @@ struct MicroTilerDepth
    */
 
    static inline void
-   apply(const SurfaceInfo &surface,
-         uint8_t *src,
+   apply(uint8_t *src,
          int srcOffset,
          int srcStrideBytes,
          uint8_t *dst,
@@ -390,7 +384,8 @@ struct MicroTilerDepth
 
 template<typename MicroTiler>
 static void
-applyMicroTiler(const SurfaceInfo &surface,
+applyMicroTiler(const SurfaceDescription &desc,
+                const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
                 void *src,
                 void *dst,
                 int dstStrideBytes,
@@ -399,7 +394,7 @@ applyMicroTiler(const SurfaceInfo &surface,
                 int microTilesNumRows,
                 int microTileBytes)
 {
-   const auto bytesPerElement = surface.bpp / 8;
+   const auto bytesPerElement = info.bpp / 8;
    auto microTileOffset = sliceOffset;
 
    for (auto microTileY = 0; microTileY < microTilesNumRows; ++microTileY) {
@@ -409,8 +404,7 @@ applyMicroTiler(const SurfaceInfo &surface,
          const auto dstOffset =
             pixelX * bytesPerElement + pixelY * dstStrideBytes;
 
-         MicroTiler::apply(surface,
-                           static_cast<uint8_t *>(src),
+         MicroTiler::apply(static_cast<uint8_t *>(src),
                            microTileOffset,
                            MicroTileWidth * bytesPerElement,
                            static_cast<uint8_t *>(dst),
@@ -422,27 +416,26 @@ applyMicroTiler(const SurfaceInfo &surface,
 }
 
 static void
-untileMicroSurface(const SurfaceInfo &surface,
+untileMicroSurface(const SurfaceDescription &desc,
+                   const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
                    void *src,
                    void *dst,
                    int slice,
                    int sample)
 {
-   const auto bytesPerElement = surface.bpp / 8;
+   const auto bytesPerElement = info.bpp / 8;
 
-   const auto microTileThickness = getMicroTileThickness(surface.tileMode);
+   const auto microTileThickness = getMicroTileThickness(info.tileMode);
    const auto microTileBytes =
       MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * surface.numSamples;
+      * bytesPerElement * desc.numSamples;
 
-   const auto pitch = calculateAlignedPitch(surface);
-   const auto height = calculateAlignedHeight(surface);
-   const auto microTilesPerRow = pitch / MicroTileWidth;
-   const auto microTilesNumRows = height / MicroTileHeight;
+   const auto microTilesPerRow = info.pitch / MicroTileWidth;
+   const auto microTilesNumRows = info.height / MicroTileHeight;
 
    const auto microTileIndexZ = slice / microTileThickness;
    const  auto sliceBytes =
-      pitch * height * microTileThickness * bytesPerElement;
+      info.pitch * info.height * microTileThickness * bytesPerElement;
    const auto sliceOffset = microTileIndexZ * sliceBytes;
 
    // Calculate offset within thick slices for current slice
@@ -451,48 +444,48 @@ untileMicroSurface(const SurfaceInfo &surface,
       thickSliceOffset = (slice % microTileThickness) * (microTileBytes / microTileThickness);
    }
 
-   const auto dstStrideBytes = pitch * bytesPerElement;
+   const auto dstStrideBytes = info.pitch * bytesPerElement;
 
-   if (surface.isDepth) {
+   if (desc.flags.depth) {
       // TODO: Implement depth tiling for sample > 0
       decaf_check(sample == 0);
-      applyMicroTiler<MicroTilerDepth>(surface, src, dst, dstStrideBytes,
+      applyMicroTiler<MicroTilerDepth>(desc, info, src, dst, dstStrideBytes,
                                        sliceOffset,
                                        microTilesPerRow, microTilesNumRows,
                                        microTileBytes);
       return;
    }
 
-   const auto sampleOffset = sample * (microTileBytes / surface.numSamples);
+   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
    const auto sampleSliceOffset = sliceOffset + sampleOffset + thickSliceOffset;
 
-   switch (surface.bpp) {
+   switch (info.bpp) {
    case 8:
-      applyMicroTiler<MicroTiler8>(surface, src, dst, dstStrideBytes,
+      applyMicroTiler<MicroTiler8>(desc, info, src, dst, dstStrideBytes,
                                    sampleSliceOffset,
                                    microTilesPerRow, microTilesNumRows,
                                    microTileBytes);
       break;
    case 16:
-      applyMicroTiler<MicroTiler16>(surface, src, dst, dstStrideBytes,
+      applyMicroTiler<MicroTiler16>(desc, info, src, dst, dstStrideBytes,
                                     sampleSliceOffset,
                                     microTilesPerRow, microTilesNumRows,
                                     microTileBytes);
       break;
    case 32:
-      applyMicroTiler<MicroTiler32>(surface, src, dst, dstStrideBytes,
+      applyMicroTiler<MicroTiler32>(desc, info, src, dst, dstStrideBytes,
                                     sampleSliceOffset,
                                     microTilesPerRow, microTilesNumRows,
                                     microTileBytes);
       break;
    case 64:
-      applyMicroTiler<MicroTiler64<false>>(surface, src, dst, dstStrideBytes,
+      applyMicroTiler<MicroTiler64<false>>(desc, info, src, dst, dstStrideBytes,
                                            sampleSliceOffset,
                                            microTilesPerRow, microTilesNumRows,
                                            microTileBytes);
       break;
    case 128:
-      applyMicroTiler<MicroTiler128<false>>(surface, src, dst, dstStrideBytes,
+      applyMicroTiler<MicroTiler128<false>>(desc, info, src, dst, dstStrideBytes,
                                             sampleSliceOffset,
                                             microTilesPerRow, microTilesNumRows,
                                             microTileBytes);
@@ -504,7 +497,8 @@ untileMicroSurface(const SurfaceInfo &surface,
 
 template<typename MicroTiler>
 static void
-applyMacroTiling(const SurfaceInfo &surface,
+applyMacroTiling(const SurfaceDescription &desc,
+                 const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
                  void *src,
                  void *dst,
                  int dstStrideBytes,
@@ -514,7 +508,7 @@ applyMacroTiling(const SurfaceInfo &surface,
                  int bankSliceRotation,
                  int sampleSliceRotation,
                  int pipeSliceRotation,
-                 int bankSwapInterval,
+                 int bankSwapWidth,
                  int macroTileWidth,
                  int macroTileHeight,
                  int macroTilesPerRow,
@@ -522,7 +516,8 @@ applyMacroTiling(const SurfaceInfo &surface,
                  int macroTileBytes,
                  int microTileBytes)
 {
-   const auto bytesPerElement = surface.bpp / 8;
+   static const uint32_t bankSwapOrder[] = { 0, 1, 3, 2 };
+   const auto bytesPerElement = info.bpp / 8;
    auto macroTileOffset = 0;
    auto macroTileIndex = 0;
 
@@ -534,6 +529,12 @@ applyMacroTiling(const SurfaceInfo &surface,
          const auto offsetHigh =
             (totalOffset & ~GroupMask) << (NumBankBits + NumPipeBits);
          const auto offsetLow = totalOffset & GroupMask;
+
+         auto bankSwapRotation = 0;
+         if (bankSwapWidth) {
+            const auto swapIndex = ((macroTileX * macroTileWidth * MicroTileWidth) / bankSwapWidth);
+            bankSwapRotation = bankSwapOrder[swapIndex % NumBanks];
+         }
 
          for (auto microTileY = 0; microTileY < macroTileHeight; ++microTileY) {
             for (auto microTileX = 0; microTileX < macroTileWidth; ++microTileX) {
@@ -547,23 +548,21 @@ applyMacroTiling(const SurfaceInfo &surface,
                // Calculate bank & pipe
                auto bank = ((pixelX >> 3) & 1) ^ ((pixelY >> 5) & 1);
                bank |= (((pixelX >> 4) & 1) ^ ((pixelY >> 4) & 1)) << 1;
-               bank ^= (surface.bankSwizzle + bankSliceRotation) & (NumBanks - 1);
+               bank ^= (desc.bankSwizzle + bankSliceRotation) & (NumBanks - 1);
                bank ^= sampleSliceRotation;
 
-               if (bankSwapInterval) {
-                  auto bankSwapRotation = (macroTileIndex / bankSwapInterval) % NumBanks;
+               if (bankSwapWidth) {
                   bank ^= bankSwapRotation;
                }
 
                auto pipe = ((pixelX >> 3) & 1) ^ ((pixelY >> 3) & 1);
-               pipe ^= (surface.pipeSwizzle + pipeSliceRotation) & (NumPipes - 1);
+               pipe ^= (desc.pipeSwizzle + pipeSliceRotation) & (NumPipes - 1);
 
                auto microTileOffset =
                   (bank << (NumGroupBits + NumPipeBits))
                   + (pipe << NumGroupBits) + offsetHigh + offsetLow;
 
-               MicroTiler::apply(surface,
-                                 static_cast<uint8_t *>(src),
+               MicroTiler::apply(static_cast<uint8_t *>(src),
                                  microTileOffset,
                                  MicroTileWidth * bytesPerElement,
                                  static_cast<uint8_t *>(dst),
@@ -578,30 +577,75 @@ applyMacroTiling(const SurfaceInfo &surface,
    }
 }
 
+static int
+computeSurfaceBankSwappedWidth(AddrTileMode tileMode,
+                               uint32_t bpp,
+                               uint32_t numSamples,
+                               uint32_t pitch)
+{
+   const auto bytesPerSample = 8 * bpp;
+   const auto samplesPerTile = SampleSplitSize / bytesPerSample;
+   auto bankSwapWidth = uint32_t { 0 };
+   auto slicesPerTile = uint32_t { 1 };
+
+   if (samplesPerTile) {
+      slicesPerTile = std::max<uint32_t>(1u, numSamples / samplesPerTile);
+   }
+
+   if (getMicroTileThickness(tileMode) > 1) {
+      numSamples = 4;
+   }
+
+   if (tileMode == ADDR_TM_2B_TILED_THIN1 ||
+       tileMode == ADDR_TM_2B_TILED_THIN2 ||
+       tileMode == ADDR_TM_2B_TILED_THIN4 ||
+       tileMode == ADDR_TM_2B_TILED_THICK ||
+       tileMode == ADDR_TM_3B_TILED_THIN1 ||
+       tileMode == ADDR_TM_3B_TILED_THICK) {
+      const auto swapTiles = std::max<uint32_t>(1u, (SwapSize >> 1) / bpp);
+      const auto swapWidth = swapTiles * 8 * NumBanks;
+
+      const auto macroTileHeight = getMacroTileHeight(tileMode);
+      const auto heightBytes = numSamples * macroTileHeight * bpp / slicesPerTile;
+      const auto swapMax = NumPipes * NumBanks * RowSize / heightBytes;
+
+      const auto bytesPerTileSlice = numSamples * bytesPerSample / slicesPerTile;
+      const auto swapMin = PipeInterleaveBytes * 8 * NumBanks / bytesPerTileSlice;
+
+      bankSwapWidth = std::min(swapMax, std::max(swapMin, swapWidth));
+
+      while (bankSwapWidth >= 2 * pitch) {
+         bankSwapWidth >>= 1;
+      }
+   }
+
+   return bankSwapWidth;
+}
+
+
 static void
-untileMacroSurface(const SurfaceInfo &surface,
+untileMacroSurface(const SurfaceDescription &desc,
+                   const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
                    void *src,
                    void *dst,
                    int slice,
                    int sample)
 {
-   const auto bytesPerElement = surface.bpp / 8;
+   const auto bytesPerElement = info.bpp / 8;
 
-   const auto microTileThickness = getMicroTileThickness(surface.tileMode);
+   const auto microTileThickness = getMicroTileThickness(info.tileMode);
    const auto microTileBytes =
       MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * surface.numSamples;
+      * bytesPerElement * desc.numSamples;
 
-   const auto macroTileWidth = getMacroTileWidth(surface.tileMode);
-   const auto macroTileHeight = getMacroTileHeight(surface.tileMode);
+   const auto macroTileWidth = getMacroTileWidth(info.tileMode);
+   const auto macroTileHeight = getMacroTileHeight(info.tileMode);
    const auto macroTileBytes =
       macroTileWidth * macroTileHeight * microTileBytes;
 
-   const auto pitch = calculateAlignedPitch(surface);
-   const auto height = calculateAlignedHeight(surface);
-   const auto macroTilesPerRow = pitch / (macroTileWidth * MicroTileWidth);
-   const auto macroTilesNumRows = height / (macroTileHeight * MicroTileHeight);
-   const auto dstStrideBytes = pitch * bytesPerElement;
+   const auto macroTilesPerRow = info.pitch / (macroTileWidth * MicroTileWidth);
+   const auto macroTilesNumRows = info.height / (macroTileHeight * MicroTileHeight);
+   const auto dstStrideBytes = info.pitch * bytesPerElement;
 
    const auto macroTilesPerSlice = macroTilesPerRow * macroTilesNumRows;
    const auto sliceOffset =
@@ -614,90 +658,92 @@ untileMacroSurface(const SurfaceInfo &surface,
    }
 
    // Depth tiling is different for samples, not yet implemented
-   decaf_check(!surface.isDepth || sample == 0);
-   const auto sampleOffset = sample * (microTileBytes / surface.numSamples);
+   decaf_check(!desc.flags.depth || sample == 0);
+   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
 
    // Calculate bank / pipe rotation
    auto bankSliceRotation = 0;
    auto sampleSliceRotation = 0;
    auto pipeSliceRotation = 0;
-   auto bankSwapInterval = 0;
+   auto bankSwapWidth = 0;
 
-   switch (surface.tileMode) {
-   case TileMode::Tiled2DThin1:
-   case TileMode::Tiled2DThin2:
-   case TileMode::Tiled2DThin4:
-   case TileMode::Tiled2DThick:
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
+   switch (info.tileMode) {
+   case ADDR_TM_2D_TILED_THIN1:
+   case ADDR_TM_2D_TILED_THIN2:
+   case ADDR_TM_2D_TILED_THIN4:
+   case ADDR_TM_2D_TILED_THICK:
+   case ADDR_TM_2B_TILED_THIN1:
+   case ADDR_TM_2B_TILED_THIN2:
+   case ADDR_TM_2B_TILED_THIN4:
+   case ADDR_TM_2B_TILED_THICK:
       bankSliceRotation = ((NumBanks >> 1) - 1) * (slice / microTileThickness);
       sampleSliceRotation = ((NumBanks >> 1) + 1) * sample;
       break;
-   case TileMode::Tiled3DThin1:
-   case TileMode::Tiled3DThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
+   case ADDR_TM_3D_TILED_THIN1:
+   case ADDR_TM_3D_TILED_THICK:
+   case ADDR_TM_3B_TILED_THIN1:
+   case ADDR_TM_3B_TILED_THICK:
       bankSliceRotation = (slice / microTileThickness) / NumPipes;
       pipeSliceRotation = (slice / microTileThickness);
       break;
    }
 
-   switch (surface.tileMode) {
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-      bankSwapInterval = (bytesPerElement * 8 * 2 / BankSwapBytes);
+   switch (info.tileMode) {
+   case ADDR_TM_2B_TILED_THIN1:
+   case ADDR_TM_2B_TILED_THIN2:
+   case ADDR_TM_2B_TILED_THIN4:
+   case ADDR_TM_2B_TILED_THICK:
+   case ADDR_TM_3B_TILED_THIN1:
+   case ADDR_TM_3B_TILED_THICK:
+      bankSwapWidth = computeSurfaceBankSwappedWidth(info.tileMode, info.bpp,
+                                                     desc.numSamples,
+                                                     info.pitch);
       break;
    }
 
    // Do the tiling
-   switch (surface.bpp) {
+   switch (info.bpp) {
    case 8:
-      applyMacroTiling<MicroTiler8>(surface, src, dst, dstStrideBytes,
+      applyMacroTiling<MicroTiler8>(desc, info, src, dst, dstStrideBytes,
                                     sampleOffset, sliceOffset, thickSliceOffset,
                                     bankSliceRotation, sampleSliceRotation,
-                                    pipeSliceRotation, bankSwapInterval,
+                                    pipeSliceRotation, bankSwapWidth,
                                     macroTileWidth, macroTileHeight,
                                     macroTilesPerRow, macroTilesNumRows,
                                     macroTileBytes, microTileBytes);
       break;
    case 16:
-      applyMacroTiling<MicroTiler16>(surface, src, dst, dstStrideBytes,
+      applyMacroTiling<MicroTiler16>(desc, info, src, dst, dstStrideBytes,
                                      sampleOffset, sliceOffset, thickSliceOffset,
                                      bankSliceRotation, sampleSliceRotation,
-                                     pipeSliceRotation, bankSwapInterval,
+                                     pipeSliceRotation, bankSwapWidth,
                                      macroTileWidth, macroTileHeight,
                                      macroTilesPerRow, macroTilesNumRows,
                                      macroTileBytes, microTileBytes);
       break;
    case 32:
-      applyMacroTiling<MicroTiler32>(surface, src, dst, dstStrideBytes,
+      applyMacroTiling<MicroTiler32>(desc, info, src, dst, dstStrideBytes,
                                      sampleOffset, sliceOffset, thickSliceOffset,
                                      bankSliceRotation, sampleSliceRotation,
-                                     pipeSliceRotation, bankSwapInterval,
+                                     pipeSliceRotation, bankSwapWidth,
                                      macroTileWidth, macroTileHeight,
                                      macroTilesPerRow, macroTilesNumRows,
                                      macroTileBytes, microTileBytes);
       break;
    case 64:
-      applyMacroTiling<MicroTiler64<true>>(surface, src, dst, dstStrideBytes,
+      applyMacroTiling<MicroTiler64<true>>(desc, info, src, dst, dstStrideBytes,
                                            sampleOffset, sliceOffset, thickSliceOffset,
                                            bankSliceRotation, sampleSliceRotation,
-                                           pipeSliceRotation, bankSwapInterval,
+                                           pipeSliceRotation, bankSwapWidth,
                                            macroTileWidth, macroTileHeight,
                                            macroTilesPerRow, macroTilesNumRows,
                                            macroTileBytes, microTileBytes);
       break;
    case 128:
-      applyMacroTiling<MicroTiler128<true>>(surface, src, dst, dstStrideBytes,
+      applyMacroTiling<MicroTiler128<true>>(desc, info, src, dst, dstStrideBytes,
                                             sampleOffset, sliceOffset, thickSliceOffset,
                                             bankSliceRotation, sampleSliceRotation,
-                                            pipeSliceRotation, bankSwapInterval,
+                                            pipeSliceRotation, bankSwapWidth,
                                             macroTileWidth, macroTileHeight,
                                             macroTilesPerRow, macroTilesNumRows,
                                             macroTileBytes, microTileBytes);
@@ -707,656 +753,274 @@ untileMacroSurface(const SurfaceInfo &surface,
    }
 }
 
-inline int
-NextPow2(int dim)
+static void *
+addrLibAlloc(const ADDR_ALLOCSYSMEM_INPUT *pInput)
 {
-   int newDim = 1;
-   while (newDim < dim) {
-      newDim <<= 1;
-   }
-   return newDim;
+   return std::malloc(pInput->sizeInBytes);
 }
 
-static int
-calculateHeightAlignment(const SurfaceInfo &surface)
+static ADDR_E_RETURNCODE
+addrLibFree(const ADDR_FREESYSMEM_INPUT *pInput)
 {
-   switch (static_cast<TileMode>(surface.tileMode)) {
-   case TileMode::Tiled1DThin1:
-   case TileMode::Tiled1DThick:
-      return MicroTileHeight;
-   case TileMode::Tiled2DThin1:
-   case TileMode::Tiled2DThin2:
-   case TileMode::Tiled2DThin4:
-   case TileMode::Tiled2DThick:
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3DThin1:
-   case TileMode::Tiled3DThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-      return getMacroTileHeight(surface.tileMode) * MicroTileHeight;
-   default:
-      return 1;
-   }
+   std::free(pInput->pVirtAddr);
+   return ADDR_OK;
 }
 
-static int
-calculatePitchAlignment(const SurfaceInfo &surface)
+static ADDR_HANDLE
+getAddrLibHandle()
 {
-   const auto bytesPerElement = surface.bpp / 8;
-   const auto tileThickness = getMicroTileThickness(surface.tileMode);
+   static ADDR_HANDLE handle = nullptr;
+   if (!handle) {
+      auto input = ADDR_CREATE_INPUT { };
+      input.size = sizeof(ADDR_CREATE_INPUT);
+      input.chipEngine = CIASICIDGFXENGINE_R600;
+      input.chipFamily = 0x51;
+      input.chipRevision = 71;
+      input.createFlags.fillSizeFields = 1;
+      input.regValue.gbAddrConfig = 0x44902;
+      input.callbacks.allocSysMem = &addrLibAlloc;
+      input.callbacks.freeSysMem = &addrLibFree;
 
-   switch (static_cast<TileMode>(surface.tileMode)) {
-   case TileMode::LinearAligned:
-      return std::max(64, PipeInterleaveBytes / bytesPerElement);
-   case TileMode::Tiled1DThin1:
-   case TileMode::Tiled1DThick:
-      return std::max(MicroTileWidth,
-                      PipeInterleaveBytes
-                      / (MicroTileHeight * tileThickness * bytesPerElement
-                         * surface.numSamples));
-   case TileMode::Tiled2DThin1:
-   case TileMode::Tiled2DThin2:
-   case TileMode::Tiled2DThin4:
-   case TileMode::Tiled2DThick:
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3DThin1:
-   case TileMode::Tiled3DThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-   {
-      auto macroTileWidth = getMacroTileWidth(surface.tileMode) * MicroTileWidth;
-      return std::max(macroTileWidth,
-                      macroTileWidth * (PipeInterleaveBytes / (MicroTileHeight * MicroTileWidth) / (bytesPerElement * surface.numSamples) / tileThickness));
-   }
-   default:
-      return 1;
-   }
-}
+      auto output = ADDR_CREATE_OUTPUT { };
+      output.size = sizeof(ADDR_CREATE_OUTPUT);
 
-static int
-calculateBankSwappedWidth(const SurfaceInfo &surface)
-{
-   const auto bytesPerElement = surface.bpp / 8;
-   const auto tileThickness = getMicroTileThickness(surface.tileMode);
-
-   switch (static_cast<TileMode>(surface.tileMode)) {
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-   {
-      const auto macroTileWidth = getMacroTileWidth(surface.tileMode) * MicroTileWidth;
-      const auto macroTileHeight = getMacroTileHeight(surface.tileMode) * MicroTileHeight;
-
-      const auto bytesPerSample = MicroTileWidth * MicroTileHeight * bytesPerElement;
-      const auto samplesPerTile = SampleSplitSize / bytesPerSample;
-      const auto slicesPerTile = std::max(1, surface.numSamples / samplesPerTile);
-      const auto numSamples = (tileThickness > 1) ? tileThickness : surface.numSamples;
-      const auto bytesPerTileSlice = numSamples * bytesPerSample / slicesPerTile;
-
-      const auto swapTiles = std::max(1, (BankSwapBytes / 16) / bytesPerElement);
-      const auto swapWidth = swapTiles * MicroTileWidth * NumBanks;
-      const auto heightBytes = numSamples * macroTileHeight * bytesPerElement / slicesPerTile;
-      const auto swapMax = NumPipes * NumBanks * RowSize / heightBytes;
-      const auto swapMin = PipeInterleaveBytes * 8 * NumBanks / bytesPerTileSlice;
-      auto bankSwapWidth = std::min(swapMax, std::max(swapMin, swapWidth));
-
-      while (bankSwapWidth >= 2 * surface.width) {
-         bankSwapWidth >>= 1;
-      }
-
-      return bankSwapWidth;
-   }
-   default:
-      return 0;
-   }
-}
-
-static int
-getMipLevelOffset(const SurfaceMipMapInfo &info,
-                  int level)
-{
-   if (level <= 1) {
-      return 0;
-   }
-
-   return info.offsets[level - 1];
-}
-
-static SurfaceInfo
-getUnpitchedMipSurfaceInfo(const SurfaceInfo &surface,
-                           int level)
-{
-   auto mipSurface = surface;
-   mipSurface.width = std::max(1, surface.width >> level);
-   mipSurface.height = std::max(1, surface.height >> level);
-
-   if (surface.is3D) {
-      mipSurface.depth = std::max(1, surface.depth >> level);
-   } else {
-      mipSurface.depth = surface.depth;
-   }
-
-   return mipSurface;
-}
-
-static SurfaceInfo
-getMipSurfaceInfo(const SurfaceInfo &surface,
-                  int level)
-{
-   auto mipSurface = getUnpitchedMipSurfaceInfo(surface, level);
-   mipSurface.depth = NextPow2(mipSurface.depth);
-   mipSurface.height = NextPow2(mipSurface.height);
-   mipSurface.width = NextPow2(mipSurface.width);
-
-   const auto bytesPerElement = surface.bpp / 8;
-   const auto macroTileWidth = MicroTileWidth * getMacroTileWidth(surface.tileMode);
-   const auto macroTileHeight = MicroTileHeight * getMacroTileHeight(surface.tileMode);
-   const auto microTileThickness = getMicroTileThickness(surface.tileMode);
-   const auto microTileBytes =
-      MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * surface.numSamples;
-
-   auto widthAlignFactor = 1;
-   if (microTileBytes <= PipeInterleaveBytes) {
-      widthAlignFactor = PipeInterleaveBytes / microTileBytes;
-   }
-
-   if (mipSurface.width < widthAlignFactor * macroTileWidth ||
-       mipSurface.height < macroTileHeight) {
-      // Once we hit a level where size is smaller than a macro tile, the
-      // tile mode becomes micro tiling.
-      if (microTileThickness == 4 && !surface.is3D) {
-         mipSurface.tileMode = TileMode::Tiled1DThick;
-      } else {
-         mipSurface.tileMode = TileMode::Tiled1DThin1;
+      if (AddrCreate(&input, &output) == ADDR_OK) {
+         handle = output.hLib;
       }
    }
 
-   if (mipSurface.depth < 4) {
-      // With depth < 4 we switch to thin tiling.
-      if (mipSurface.tileMode == TileMode::Tiled1DThick) {
-         mipSurface.tileMode = TileMode::Tiled1DThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled2DThick) {
-         mipSurface.tileMode = TileMode::Tiled2DThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled2BThick) {
-         mipSurface.tileMode = TileMode::Tiled2BThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled3DThick) {
-         mipSurface.tileMode = TileMode::Tiled3DThin1;
-      } else if (mipSurface.tileMode == TileMode::Tiled3BThick) {
-         mipSurface.tileMode = TileMode::Tiled3BThin1;
-      }
-   }
-
-   // If we are a mipmap and the tilemode has transitioned from thick to
-   // non-thick
-   if (mipSurface.tileMode != surface.tileMode &&
-       level != 0 &&
-       getMicroTileThickness(mipSurface.tileMode) == 1 &&
-       getMicroTileThickness(surface.tileMode) > 1) {
-      // Get the pitch align and height align with the original tile mode
-      auto tileMode = mipSurface.tileMode;
-      mipSurface.tileMode = surface.tileMode;
-      const auto pitchAlign = calculatePitchAlignment(mipSurface);
-      const auto heightAlign = calculateHeightAlignment(mipSurface);
-      mipSurface.tileMode = tileMode;
-
-      // If we are less than the align then transition to microtiling
-      const auto pitchAlignFactor =
-         std::max<uint32_t>(1,
-            PipeInterleaveBytes / (MicroTileWidth * MicroTileHeight * bytesPerElement));
-      if (mipSurface.width < pitchAlignFactor * pitchAlign ||
-          mipSurface.height < heightAlign) {
-         mipSurface.tileMode = TileMode::Tiled1DThin1;
-      }
-   }
-
-   return mipSurface;
+   return handle;
 }
 
-int
-calculateBaseAddressAlignment(const SurfaceInfo &surface)
+ADDR_COMPUTE_SURFACE_INFO_OUTPUT
+computeSurfaceInfo(const SurfaceDescription &surface,
+                   int mipLevel,
+                   int slice)
 {
-   switch (static_cast<TileMode>(surface.tileMode)) {
-   case TileMode::Tiled2DThin1:
-   case TileMode::Tiled2DThin2:
-   case TileMode::Tiled2DThin4:
-   case TileMode::Tiled2DThick:
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3DThin1:
-   case TileMode::Tiled3DThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-   {
-      const auto bytesPerElement = surface.bpp / 8;
-      const auto microTileThickness = getMicroTileThickness(surface.tileMode);
-      const auto microTileBytes =
-         MicroTileWidth * MicroTileHeight * microTileThickness
-         * bytesPerElement * surface.numSamples;
+   auto output = ADDR_COMPUTE_SURFACE_INFO_OUTPUT { };
+   output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
 
-      const auto macroTileWidth = getMacroTileWidth(surface.tileMode);
-      const auto macroTileHeight = getMacroTileHeight(surface.tileMode);
-      const auto macroTileBytes =
-         macroTileWidth * macroTileHeight * microTileBytes;
+   auto input = ADDR_COMPUTE_SURFACE_INFO_INPUT { };
+   input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
+   input.tileMode = surface.tileMode;
+   input.format = surface.format;
+   input.bpp = surface.bpp;
+   input.numSamples = surface.numSamples;
+   input.width = surface.width;
+   input.height = surface.height;
+   input.numSlices = surface.numSlices;
+   input.flags = surface.flags;
+   input.numFrags = surface.numFrags;
+   input.mipLevel = mipLevel;
+   input.slice = slice;
 
-      return std::max(macroTileBytes,
-                      calculatePitchAlignment(surface) * bytesPerElement
-                      * macroTileHeight * MicroTileHeight
-                      * surface.numSamples);
-   }
-   default:
-      return PipeInterleaveBytes;
-   }
-}
-
-int
-calculateDepthAlignment(const SurfaceInfo &surface)
-{
-   switch (static_cast<TileMode>(surface.tileMode)) {
-   case TileMode::Tiled1DThin1:
-   case TileMode::Tiled1DThick:
-   case TileMode::Tiled2DThin1:
-   case TileMode::Tiled2DThin2:
-   case TileMode::Tiled2DThin4:
-   case TileMode::Tiled2DThick:
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3DThin1:
-   case TileMode::Tiled3DThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-      return getMicroTileThickness(surface.tileMode);
-   default:
-      return 1;
-   }
+   auto handle = getAddrLibHandle();
+   decaf_check(handle);
+   decaf_check(AddrComputeSurfaceInfo(handle, &input, &output) == ADDR_OK);
+   return output;
 }
 
 
 /**
- * Calculate the tiling aligned depth for the given surface's depth.
- */
-int
-calculateAlignedDepth(const SurfaceInfo &surface)
-{
-   return align_up(surface.depth, calculateDepthAlignment(surface));
-}
-
-
-/**
- * Calculate the tiling aligned height for the given surface's height.
- */
-int
-calculateAlignedHeight(const SurfaceInfo &surface)
-{
-   return align_up(surface.height, calculateHeightAlignment(surface));
-}
-
-
-/**
- * Calculate the tiling aligned pitch for the given surface's width.
- */
-int
-calculateAlignedPitch(const SurfaceInfo &surface)
-{
-   auto pitchAlign = calculatePitchAlignment(surface);
-   auto bankSwappedWidth = calculateBankSwappedWidth(surface);
-   return align_up(surface.width, std::max(pitchAlign, bankSwappedWidth));
-}
-
-
-/**
- * Calculates the image size of the given surface.
+ * Untile all slices of an image (aka mip level = 0);
  *
- * The image means mip level 0, this size does not the include mipmap.
- */
-int
-calculateImageSize(const SurfaceInfo &surface)
-{
-   return calculateSliceSize(surface) * calculateAlignedDepth(surface);
-}
-
-
-/**
- * Calculates the size of a single slice of the given surface.
- */
-int
-calculateSliceSize(const SurfaceInfo &surface)
-{
-   const auto width = calculateAlignedPitch(surface);
-   const auto height = calculateAlignedHeight(surface);
-   const auto bytesPerElement = surface.bpp / 8;
-
-   return bytesPerElement * width * height;
-}
-
-
-/**
- * Calculates the size of the given level of a mipmap of the given surface.
- */
-int
-calculateMipMapLevelSize(const SurfaceInfo &surface,
-                         int level)
-{
-   auto mipSurface = getMipSurfaceInfo(surface, level);
-   return calculateImageSize(mipSurface);
-}
-
-
-/**
- * Calculates the size of a single slice of the given level of a mipmap of
- * the given surface.
- */
-int
-calculateMipMapLevelSliceSize(const SurfaceInfo &surface,
-                              int level)
-{
-   auto mipSurface = getMipSurfaceInfo(surface, level);
-   return calculateSliceSize(mipSurface);
-}
-
-
-/**
- * Calculates the image size of the given surface when the extra padding bytes
- * which were required for tiling are removed.
- */
-int
-calculateUnpitchedImageSize(const SurfaceInfo &surface)
-{
-   return  calculateUnpitchedSliceSize(surface) * surface.depth;
-}
-
-
-/**
- * Calculates the size of a single slice of the given surface when the extra
- * padding bytes which were required for tiling are removed.
- */
-int
-calculateUnpitchedSliceSize(const SurfaceInfo &surface)
-{
-   return (surface.bpp / 8) * surface.width * surface.height;
-}
-
-
-/**
- * Calculates the info of the mipmaps for the given surface when the extra
- * padding bytes which were required for tiling are removed.
+ * @param src Points to image
+ * @param dst Points to image slice
  */
 void
-calculateUnpitchedMipMapInfo(const SurfaceInfo &surface,
-                             int numLevels,
-                             SurfaceMipMapInfo &info)
-{
-   const auto bytesPerElem = surface.bpp / 8;
-   auto size = 0;
-
-   for (auto level = 1; level < numLevels; ++level) {
-      const auto width = std::max(1, surface.width >> level);
-      const auto height = std::max(1, surface.height >> level);
-      auto depth = surface.depth;
-
-      if (surface.is3D) {
-         depth = std::max(1, surface.depth >> level);
-      }
-
-      info.offsets[level - 1] = size;
-      size += width * height * depth * bytesPerElem;
-   }
-
-   info.microTileLevel = -1;
-   info.numLevels = numLevels;
-   info.size = size;
-}
-
-
-/**
- * Calculates the info of the mipmaps for the given surface when the extra
- * padding bytes which were required for tiling are removed.
- */
-void
-calculateUnpitchedMipMapSliceInfo(const SurfaceInfo &surface,
-                                  int numLevels,
-                                  int slice,
-                                  SurfaceMipMapInfo &info)
-{
-   // Copy the surface but change depth to 1 should give us the info for a
-   // single slice.
-   // TODO: Maybe for future we need to consider slice number for 3D textures
-   auto mipMapSurface = surface;
-   mipMapSurface.depth = 1;
-   calculateUnpitchedMipMapInfo(mipMapSurface, numLevels, info);
-}
-
-
-/**
- * Calculate the mipmap info for the given surface up to numLevels for all
- * slices.
- */
-void
-calculateMipMapInfo(const SurfaceInfo &surface,
-                    int numLevels,
-                    SurfaceMipMapInfo &info)
-{
-   const auto imageSize = calculateImageSize(surface);
-
-   auto offset = 0;
-   auto microTileLevel = 0;
-
-   for (int level = 1; level < numLevels; ++level) {
-      const auto mipSurface = getMipSurfaceInfo(surface, level);
-      const auto baseAddressAlign = calculateBaseAddressAlignment(mipSurface);
-      offset = align_up(offset, baseAddressAlign);
-
-      if (level == 1) {
-         info.offsets[0] = align_up(imageSize, baseAddressAlign);
-      } else {
-         info.offsets[level - 1] = offset;
-      }
-
-      offset += calculateImageSize(mipSurface);
-   }
-
-   info.numLevels = numLevels;
-   info.microTileLevel = microTileLevel;
-   info.size = offset;
-}
-
-SurfaceInfo
-calculateMipSurfaceInfo(const SurfaceInfo &surface,
-                        int level)
-{
-   return getMipSurfaceInfo(surface, level);
-}
-
-void
-calculateMipMapSliceInfo(const SurfaceInfo &surface,
-                         int numLevels,
-                         int /* slice */,
-                         SurfaceMipMapInfo &info)
-{
-   // Copy the surface but change depth to 1 should give us the info for a
-   // single slice.
-   // TODO: Maybe for future we need to consider slice number for 3D textures
-   auto mipMapSurface = surface;
-   mipMapSurface.depth = 1;
-   calculateMipMapInfo(mipMapSurface, numLevels, info);
-}
-
-void
-untileImage(const SurfaceInfo &surface,
+untileImage(const SurfaceDescription &desc,
             void *src,
             void *dst)
 {
-   const auto sliceSize = calculateSliceSize(surface);
-   const auto numSlices = calculateAlignedDepth(surface);
-
-   // Multi-sample untile is not supported yet
-   decaf_check(surface.numSamples == 1);
-
-   for (auto slice = 0; slice < numSlices; ++slice) {
-      untileSlice(surface, src,
-                  reinterpret_cast<uint8_t *>(dst) + sliceSize * slice,
-                  slice, 0);
-   }
+   untileMip(desc, src, dst, 0);
 }
 
-void
-untileSlice(const SurfaceInfo &surface,
-            void *src,
-            void *dst,
-            int slice,
-            int sample)
-{
-   // Sample decoding is not supported yet.
-   decaf_check(sample == 0);
 
-   switch (static_cast<TileMode>(surface.tileMode)) {
-   case TileMode::LinearGeneral:
-   case TileMode::LinearAligned:
+/**
+ * Untile a single slice of an image (aka mip level = 0).
+ *
+ * @param src Points to image
+ * @param dst Points to image slice
+ */
+void
+untileImageSlice(const SurfaceDescription &desc,
+                 void *src,
+                 void *dst,
+                 int slice)
+{
+   untileMipSlice(desc, src, dst, 0, slice);
+}
+
+
+/**
+ * Untile a single slice of a single mip level.
+ *
+ * @param src Points to mip
+ * @param dst Points to mip slice
+ */
+void
+untileMipSlice(const SurfaceDescription &desc,
+               void *src,
+               void *dst,
+               int level,
+               int slice)
+{
+   const auto info = computeSurfaceInfo(desc, level, slice);
+
+   // Multi-sample decoding is not supported yet.
+   decaf_check(desc.numSamples == 1);
+   auto sample = 0;
+
+   switch (info.tileMode) {
+   case ADDR_TM_LINEAR_GENERAL:
+   case ADDR_TM_LINEAR_ALIGNED:
       // Already "untiled"
       return;
-   case TileMode::Tiled1DThin1:
-      return untileMicroSurface(surface, src, dst, slice, sample);
-   case TileMode::Tiled1DThick:
-      return untileMicroSurface(surface, src, dst, slice, sample);
-   case TileMode::Tiled2DThin1:
-   case TileMode::Tiled2DThin2:
-   case TileMode::Tiled2DThin4:
-   case TileMode::Tiled2DThick:
-   case TileMode::Tiled2BThin1:
-   case TileMode::Tiled2BThin2:
-   case TileMode::Tiled2BThin4:
-   case TileMode::Tiled2BThick:
-   case TileMode::Tiled3DThin1:
-   case TileMode::Tiled3DThick:
-   case TileMode::Tiled3BThin1:
-   case TileMode::Tiled3BThick:
-      return untileMacroSurface(surface, src, dst, slice, sample);
+   case ADDR_TM_1D_TILED_THIN1:
+   case ADDR_TM_1D_TILED_THICK:
+      untileMicroSurface(desc, info, src, dst, slice, sample);
+      break;
+   case ADDR_TM_2D_TILED_THIN1:
+   case ADDR_TM_2D_TILED_THIN2:
+   case ADDR_TM_2D_TILED_THIN4:
+   case ADDR_TM_2D_TILED_THICK:
+   case ADDR_TM_2B_TILED_THIN1:
+   case ADDR_TM_2B_TILED_THIN2:
+   case ADDR_TM_2B_TILED_THIN4:
+   case ADDR_TM_2B_TILED_THICK:
+   case ADDR_TM_3D_TILED_THIN1:
+   case ADDR_TM_3D_TILED_THICK:
+   case ADDR_TM_3B_TILED_THIN1:
+   case ADDR_TM_3B_TILED_THICK:
+      untileMacroSurface(desc, info, src, dst, slice, sample);
+      break;
    default:
       decaf_abort("Invalid tile mode");
    }
 }
 
+
+/**
+ * Untile all slices within a single mip.
+ *
+ * @param src Points to mip
+ * @param dst Points to mip
+ */
 void
-untileMipMaps(const SurfaceInfo &surface,
-              const SurfaceMipMapInfo &mipMapInfo,
-              void *src,
-              void *dst)
+untileMip(const SurfaceDescription &desc,
+          void *src,
+          void *dst,
+          int level)
 {
-   for (auto level = 1; level < mipMapInfo.numLevels; ++level) {
-      const auto mipSurface = getMipSurfaceInfo(surface, level);
-      const auto offset = getMipLevelOffset(mipMapInfo, level);
-      const auto sliceSize = calculateSliceSize(mipSurface);
+   const auto info = computeSurfaceInfo(desc, level, 0);
 
-      const auto mipSrc = reinterpret_cast<uint8_t *>(src) + offset;
-      const auto mipDst = reinterpret_cast<uint8_t *>(dst) + offset;
+   for (auto slice = 0u; slice < desc.numSlices; ++slice) {
+      untileMipSlice(desc,
+                     src,
+                     reinterpret_cast<uint8_t *>(dst) + info.sliceSize * slice,
+                     level, slice);
+   }
+}
 
-      for (auto slice = 0; slice < mipSurface.depth; ++slice) {
-         untileSlice(mipSurface,
-                     mipSrc,
-                     mipDst + sliceSize * slice, slice, 0);
+
+/**
+ * Untile all slices at every mip level of a mipmap.
+ *
+ * @param src Points to mipmap
+ * @param dst Points to mipmap
+ */
+void
+untileMipMap(const SurfaceDescription &desc,
+             void *src,
+             void *dst)
+{
+   auto mipOffset = size_t { 0 };
+   auto baseInfo = computeSurfaceInfo(desc, 0, 0);
+
+   for (auto level = 1u; level < desc.numLevels; ++level) {
+      auto info = computeSurfaceInfo(desc, level, 0);
+      mipOffset = align_up(mipOffset, info.baseAlign);
+      untileMip(desc,
+                reinterpret_cast<uint8_t *>(src) + mipOffset,
+                reinterpret_cast<uint8_t *>(dst) + mipOffset,
+                level);
+      mipOffset += info.surfSize;
+   }
+}
+
+
+void
+unpitchImage(const SurfaceDescription &desc,
+             void *pitched,
+             void *unpitched)
+{
+   const auto info = computeSurfaceInfo(desc, 0, 0);
+   const auto bytesPerElem = info.bpp / 8;
+   const auto unpitchedSliceSize = desc.width * desc.height * bytesPerElem;
+
+   for (auto slice = 0u; slice < desc.numSlices; ++slice) {
+      auto src = reinterpret_cast<uint8_t *>(pitched) + info.sliceSize * slice;
+      auto dst = reinterpret_cast<uint8_t *>(unpitched) + unpitchedSliceSize * slice;
+
+      for (auto y = 0; y < desc.height; ++y) {
+         std::memcpy(dst, src, desc.width * bytesPerElem);
+         src += info.pitch * bytesPerElem;
+         dst += desc.width * bytesPerElem;
       }
    }
 }
 
-void
-untileMipMapsForSlice(const SurfaceInfo &surface,
-                      const SurfaceMipMapInfo &mipMapSliceInfo,
-                      const SurfaceMipMapInfo &mipMapUnpitchedSliceInfo,
-                      void *src,
-                      void *dst,
-                      int slice,
-                      int sample)
+size_t
+computeUnpitchedImageSize(const SurfaceDescription &desc)
 {
-   for (auto level = 1; level < mipMapSliceInfo.numLevels; ++level) {
-      const auto mipSurface = getMipSurfaceInfo(surface, level);
-      const auto srcOffset = getMipLevelOffset(mipMapSliceInfo, level);
-      const auto dstOffset = getMipLevelOffset(mipMapUnpitchedSliceInfo, level);
+   return desc.width * desc.height * (desc.bpp / 8) * desc.numSlices;
+}
 
-      untileSlice(mipSurface,
-                  reinterpret_cast<uint8_t *>(src) + srcOffset,
-                  reinterpret_cast<uint8_t *>(dst) + dstOffset,
-                  slice,
-                  0);
+size_t
+computeUnpitchedMipMapSize(const SurfaceDescription &desc)
+{
+   auto size = size_t { 0 };
+
+   for (auto level = 1u; level < desc.numLevels; ++level) {
+      const auto width = desc.width >> level;
+      const auto height = desc.height >> level;
+
+      size += width * height * (desc.bpp / 8) * desc.numSlices;
    }
+
+   return size;
 }
 
 void
-unpitchSlice(const SurfaceInfo &surface,
-             void *src,
-             void *dst)
+unpitchMipMap(const SurfaceDescription &desc,
+              void *pitched,
+              void *unpitched)
 {
-   const auto bytesPerElement = surface.bpp / 8;
-   const auto srcPitch = calculateAlignedPitch(surface);
-   const auto srcStride = srcPitch * bytesPerElement;
-   const auto dstStride = surface.width * bytesPerElement;
+   auto srcMipOffset = size_t { 0 };
+   auto dstMipOffset = size_t { 0 };
 
-   for (auto y = 0; y < surface.height; ++y) {
-      std::memcpy(reinterpret_cast<uint8_t *>(dst) + y * dstStride,
-                  reinterpret_cast<uint8_t *>(src) + y * srcStride,
-                  dstStride);
-   }
-}
+   for (auto level = 1u; level < desc.numLevels; ++level) {
+      const auto info = computeSurfaceInfo(desc, level, 0);
+      const auto bytesPerElem = info.bpp / 8;
+      const auto width = desc.width >> level;
+      const auto height = desc.height >> level;
+      const auto unpitchedSliceSize = width * height * bytesPerElem;
 
-void
-unpitchImage(const SurfaceInfo &surface,
-             void *src,
-             void *dst)
-{
-   const auto srcSliceSize = calculateSliceSize(surface);
-   const auto dstSliceSize = calculateUnpitchedSliceSize(surface);
+      srcMipOffset = align_up(srcMipOffset, info.baseAlign);
 
-   for (auto slice = 0; slice < surface.depth; ++slice) {
-      auto sliceSrc = reinterpret_cast<uint8_t *>(src) + srcSliceSize * slice;
-      auto sliceDst = reinterpret_cast<uint8_t *>(dst) + dstSliceSize * slice;
-      unpitchSlice(surface, sliceSrc, sliceDst);
-   }
-}
+      for (auto slice = 0u; slice < desc.numSlices; ++slice) {
+         auto src = reinterpret_cast<uint8_t *>(pitched) + srcMipOffset + info.sliceSize * slice;
+         auto dst = reinterpret_cast<uint8_t *>(unpitched) + dstMipOffset + unpitchedSliceSize * slice;
 
-void
-unpitchMipMaps(const SurfaceInfo &surface,
-               const SurfaceMipMapInfo &untiledMipMapInfo,
-               const SurfaceMipMapInfo &unpitchedMipMapInfo,
-               void *src,
-               void *dst)
-{
-   for (auto level = 1; level < untiledMipMapInfo.numLevels; ++level) {
-      const auto srcOffset = getMipLevelOffset(untiledMipMapInfo, level);
-      const auto dstOffset = getMipLevelOffset(unpitchedMipMapInfo, level);
+         for (auto y = 0; y < height; ++y) {
+            std::memcpy(dst, src, width * bytesPerElem);
+            src += info.pitch * bytesPerElem;
+            dst += width * bytesPerElem;
+         }
+      }
 
-      unpitchImage(getUnpitchedMipSurfaceInfo(surface, level),
-                   reinterpret_cast<uint8_t *>(src) + srcOffset,
-                   reinterpret_cast<uint8_t *>(dst) + dstOffset);
-   }
-}
-
-void
-unpitchMipMapsForSlice(const SurfaceInfo &surface,
-                       const SurfaceMipMapInfo &untiledMipMapInfo,
-                       const SurfaceMipMapInfo &unpitchedMipMapInfo,
-                       void *src,
-                       void *dst,
-                       int slice)
-{
-   for (auto level = 1; level < untiledMipMapInfo.numLevels; ++level) {
-      const auto srcOffset = getMipLevelOffset(untiledMipMapInfo, level);
-      const auto dstOffset = getMipLevelOffset(unpitchedMipMapInfo, level);
-
-      unpitchSlice(getUnpitchedMipSurfaceInfo(surface, level),
-                   reinterpret_cast<uint8_t *>(src) + srcOffset,
-                   reinterpret_cast<uint8_t *>(dst) + dstOffset);
+      srcMipOffset += info.surfSize;
+      dstMipOffset += unpitchedSliceSize * desc.numSlices;
    }
 }
 
