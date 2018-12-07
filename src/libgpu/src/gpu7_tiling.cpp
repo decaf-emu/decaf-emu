@@ -9,8 +9,6 @@
 namespace gpu7::tiling
 {
 
-static bool LogMicroShit = false;
-
 static constexpr auto MicroTileWidth = 8;
 static constexpr auto MicroTileHeight = 8;
 static constexpr auto NumPipes = 2;
@@ -962,7 +960,7 @@ unpitchImage(const SurfaceDescription &desc,
       auto src = reinterpret_cast<uint8_t *>(pitched) + info.sliceSize * slice;
       auto dst = reinterpret_cast<uint8_t *>(unpitched) + unpitchedSliceSize * slice;
 
-      for (auto y = 0; y < desc.height; ++y) {
+      for (auto y = 0u; y < desc.height; ++y) {
          std::memcpy(dst, src, desc.width * bytesPerElem);
          src += info.pitch * bytesPerElem;
          dst += desc.width * bytesPerElem;
@@ -1012,7 +1010,7 @@ unpitchMipMap(const SurfaceDescription &desc,
          auto src = reinterpret_cast<uint8_t *>(pitched) + srcMipOffset + info.sliceSize * slice;
          auto dst = reinterpret_cast<uint8_t *>(unpitched) + dstMipOffset + unpitchedSliceSize * slice;
 
-         for (auto y = 0; y < height; ++y) {
+         for (auto y = 0u; y < height; ++y) {
             std::memcpy(dst, src, width * bytesPerElem);
             src += info.pitch * bytesPerElem;
             dst += width * bytesPerElem;
