@@ -9,9 +9,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
-std::shared_ptr<spdlog::logger>
-gLog;
-
 int
 runTests()
 {
@@ -88,8 +85,9 @@ runTests()
 int main(int argc, char *argv[])
 {
    int runResult;
-   gLog = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
-   gLog->set_level(spdlog::level::debug);
+   auto logger = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
+   logger->set_level(spdlog::level::debug);
+   gLog = logger;
 
    auto cpuConfig = cpu::Settings { };
    cpuConfig.jit.enabled = true;

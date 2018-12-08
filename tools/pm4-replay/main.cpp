@@ -151,7 +151,6 @@ start(excmd::parser &parser,
    decaf::setConfig(decafSettings);
    decaf::initialiseLogging("pm4-replay.txt");
 
-   auto sinks = gLog->sinks();
    gCliLog = decaf::makeLogger("decaf-pm4-replay");
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Trace path {}", traceFile);

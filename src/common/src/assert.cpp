@@ -39,9 +39,7 @@ assertFailed(const char *file,
       fmt::format_to(out, "Stacktrace:\n{}\n", trace);
    }
 
-   if (gLog) {
-      gLog->critical("{}", out.data());
-   }
+   gLog->critical("{}", out.data());
 
    std::cerr << out.data() << std::endl;
 
@@ -85,10 +83,7 @@ hostFaultWithStackTrace(const std::string &fault,
       fmt::format_to(out, "Stacktrace:\n{}\n", trace);
    }
 
-   if (gLog) {
-      gLog->critical("{}", out.data());
-   }
-
+   gLog->critical("{}", out.data());
    std::cerr << out.data() << std::endl;
 
 #ifdef PLATFORM_WINDOWS

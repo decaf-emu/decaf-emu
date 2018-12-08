@@ -98,22 +98,24 @@ static void
 initialiseGlobalLogger()
 {
    auto logLevel = spdlog::level::from_str(decaf::config()->log.level);
+   auto logger = std::shared_ptr<spdlog::logger> { };
 
    if (decaf::config()->log.async) {
-      gLog = std::make_shared<spdlog::async_logger>("decaf",
-                                                    std::begin(sLogSinks),
-                                                    std::end(sLogSinks),
-                                                    spdlog::thread_pool());
+      logger = std::make_shared<spdlog::async_logger>("decaf",
+                                                      std::begin(sLogSinks),
+                                                      std::end(sLogSinks),
+                                                      spdlog::thread_pool());
    } else {
-      gLog = std::make_shared<spdlog::logger>("decaf",
-                                              std::begin(sLogSinks),
-                                              std::end(sLogSinks));
-      gLog->flush_on(spdlog::level::trace);
+      logger = std::make_shared<spdlog::logger>("decaf",
+                                                std::begin(sLogSinks),
+                                                std::end(sLogSinks));
+      logger->flush_on(spdlog::level::trace);
    }
 
-   gLog->set_level(logLevel);
-   gLog->set_formatter(std::make_unique<GlobalLogFormatter>());
-   spdlog::register_logger(gLog);
+   logger->set_level(logLevel);
+   logger->set_formatter(std::make_unique<GlobalLogFormatter>());
+   spdlog::register_logger(logger);
+   gLog = logger;
 }
 
 void

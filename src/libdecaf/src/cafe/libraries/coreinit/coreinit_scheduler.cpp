@@ -300,7 +300,7 @@ checkRunningThreadNoLock(bool yielding)
    }
 
    // Trace log the thread switch
-   if (gLog->should_log(spdlog::level::trace)) {
+   if (gLog->should_log(Logger::Level::trace)) {
       fmt::memory_buffer out;
       fmt::format_to(out, "Core {} leaving", coreId);
 

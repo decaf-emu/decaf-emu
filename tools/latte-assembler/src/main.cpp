@@ -4,9 +4,6 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
 
-std::shared_ptr<spdlog::logger>
-gLog;
-
 static bool
 readFile(const std::string &path,
          std::vector<char> &buff)

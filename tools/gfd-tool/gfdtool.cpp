@@ -18,9 +18,6 @@
 #include <libdecaf/src/cafe/libraries/gx2/gx2_internal_gfd.h>
 #include <spdlog/spdlog.h>
 
-std::shared_ptr<spdlog::logger>
-gLog;
-
 struct OutputState
 {
    fmt::memory_buffer writer;
@@ -72,7 +69,7 @@ printInfo(const std::string &filename)
          return false;
       }
    } catch (gfd::GFDReadException ex) {
-      gLog->error("Error reading gfd: {}", ex.what());
+      std::cerr << fmt::format("Error reading gfd: {}", ex.what()) << std::endl;
       return false;
    }
 
@@ -915,7 +912,7 @@ convertTexture(const std::string &path)
          return false;
       }
    } catch (gfd::GFDReadException ex) {
-      gLog->error("Error reading gfd: {}", ex.what());
+      std::cerr << fmt::format("Error reading gfd: {}", ex.what()) << std::endl;
       return false;
    }
 
