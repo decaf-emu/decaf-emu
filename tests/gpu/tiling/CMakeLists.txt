@@ -11,7 +11,9 @@ target_link_libraries(test-gpu-tiling
     catch
     common
     libcpu
-    libgpu)
+    libgpu
+    ${VULKAN_LIBRARIES}
+    ${SPIRV_LIBRARIES})
 
 install(TARGETS test-gpu-tiling RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/gpu")
 
