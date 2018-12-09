@@ -1,5 +1,8 @@
 #include "padscore.h"
 #include "padscore_wpad.h"
+#include "padscore_kpad.h"
+
+#include "input/input.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
@@ -17,6 +20,8 @@ struct WpadData
    };
 
    be2_val<WPADLibraryStatus> status;
+   be2_val<BOOL> proControllerAllowed;
+   be2_val<BOOL> wiiMoteAllowed;
    be2_array<ChanData, WPADChan::NumChans> chanData;
 };
 
@@ -41,6 +46,13 @@ WPADShutdown()
    sWpadData->status = WPADLibraryStatus::Uninitialised;
 }
 
+BOOL 
+WPADIsDpdEnabled(WPADChan chan)
+{
+   decaf_warn_stub();
+   return FALSE;
+}
+
 void
 WPADControlMotor(WPADChan chan,
                  WPADMotorCommand command)
@@ -57,13 +69,13 @@ WPADDisconnect(WPADChan chan)
 void
 WPADEnableURCC(BOOL enable)
 {
-   decaf_warn_stub();
+   sWpadData->proControllerAllowed = enable;
 }
 
 void
 WPADEnableWiiRemote(BOOL enable)
 {
-   decaf_warn_stub();
+   sWpadData->wiiMoteAllowed = enable;
 }
 
 WPADBatteryLevel
@@ -130,19 +142,32 @@ WPADError
 WPADSetDataFormat(WPADChan chan,
                   WPADDataFormat format)
 {
-   decaf_warn_stub();
    if (chan < WPADChan::NumChans) {
       sWpadData->chanData[chan].dataFormat = format;
    }
 
-   return WPADError::NoController;
+   auto channel = static_cast<input::wpad::Channel>(chan);
+
+   if (input::getControllerType(channel) == input::wpad::Type::Disconnected) {
+      return WPADError::NoController;
+   }
+   return WPADError::OK;
+}
+
+WPADDataFormat
+WPADGetDataFormat(WPADChan chan)
+{
+   if (chan < WPADChan::NumChans) {
+      return sWpadData->chanData[chan].dataFormat;
+   }
+
+  decaf_abort("Unsupported controller channel")
 }
 
 WPADExtensionCallback
 WPADSetExtensionCallback(WPADChan chan,
                          WPADExtensionCallback callback)
 {
-   decaf_warn_stub();
    if (chan >= WPADChan::NumChans) {
       return nullptr;
    }
@@ -156,7 +181,6 @@ WPADSamplingCallback
 WPADSetSamplingCallback(WPADChan chan,
                         WPADSamplingCallback callback)
 {
-   decaf_warn_stub();
    if (chan >= WPADChan::NumChans) {
       return nullptr;
    }
@@ -166,12 +190,27 @@ WPADSetSamplingCallback(WPADChan chan,
    return prev;
 }
 
+WPADError 
+WPADControlDpd(int32_t chan,
+               uint32_t command,
+               WPADCallback callback)
+{
+   decaf_warn_stub();
+   return WPADError::OK;
+}
+
+bool
+ProControllerIsAllowed()
+{
+   return sWpadData->proControllerAllowed;
+}
 void
 Library::registerWpadSymbols()
 {
    RegisterFunctionExport(WPADInit);
    RegisterFunctionExport(WPADGetStatus);
    RegisterFunctionExport(WPADShutdown);
+   RegisterFunctionExport(WPADIsDpdEnabled);
    RegisterFunctionExport(WPADControlMotor);
    RegisterFunctionExport(WPADDisconnect);
    RegisterFunctionExport(WPADEnableURCC);
@@ -183,6 +222,7 @@ Library::registerWpadSymbols()
    RegisterFunctionExport(WPADSetAutoSleepTime);
    RegisterFunctionExport(WPADSetConnectCallback);
    RegisterFunctionExport(WPADSetDataFormat);
+   RegisterFunctionExport(WPADGetDataFormat);
    RegisterFunctionExport(WPADSetExtensionCallback);
    RegisterFunctionExport(WPADSetSamplingCallback);
 

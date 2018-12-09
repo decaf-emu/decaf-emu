@@ -47,9 +47,18 @@ enum ControllerType
    Joystick,
 };
 
+enum EmulatedControllerType
+{
+   GamePad,
+   ProController,
+   ClassicController,
+   WiiRemote,
+};
+
 struct InputDevice
 {
    ControllerType type;
+   EmulatedControllerType emulatedType;
    std::string id;
    std::string device_name;
 
@@ -107,6 +116,8 @@ struct InputDevice
 
 extern std::vector<InputDevice> devices;
 extern std::string vpad0;
+extern std::string wpad[4];
+extern std::string wpadType[4];
 
 } // namespace input
 
