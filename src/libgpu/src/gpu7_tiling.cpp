@@ -262,6 +262,7 @@ struct MicroTiler128
    }
 };
 
+template<int BytesPerElement>
 struct MicroTilerDepth
 {
    /*
@@ -285,7 +286,38 @@ struct MicroTilerDepth
          int dstOffset,
          int dstStrideBytes)
    {
-      decaf_abort("MicroTilerDepth not implemented");
+      static constexpr auto elemBytes = BytesPerElement;
+      static constexpr auto groupBytes = elemBytes * 2;
+
+      for (int y = 0; y < MicroTileHeight; y += 4) {
+         auto dstRow1 = dst + dstOffset;
+         auto dstRow2 = dst + dstOffset + dstStrideBytes;
+         auto dstRow3 = dst + dstOffset + dstStrideBytes * 2;
+         auto dstRow4 = dst + dstOffset + dstStrideBytes * 3;
+
+         for (int x = 0; x < MicroTileWidth; x += 4) {
+            auto srcRow1 = src + srcOffset;
+            auto srcRow2 = src + srcOffset + srcStrideBytes;
+
+            std::memcpy(dstRow1 + 0 * elemBytes, srcRow1 + 0 * elemBytes, groupBytes);
+            std::memcpy(dstRow1 + 2 * elemBytes, srcRow1 + 4 * elemBytes, groupBytes);
+            std::memcpy(dstRow2 + 0 * elemBytes, srcRow1 + 2 * elemBytes, groupBytes);
+            std::memcpy(dstRow2 + 2 * elemBytes, srcRow1 + 6 * elemBytes, groupBytes);
+
+            std::memcpy(dstRow3 + 0 * elemBytes, srcRow2 + 0 * elemBytes, groupBytes);
+            std::memcpy(dstRow3 + 2 * elemBytes, srcRow2 + 4 * elemBytes, groupBytes);
+            std::memcpy(dstRow4 + 0 * elemBytes, srcRow2 + 2 * elemBytes, groupBytes);
+            std::memcpy(dstRow4 + 2 * elemBytes, srcRow2 + 6 * elemBytes, groupBytes);
+
+            srcOffset += srcStrideBytes * 2;
+            dstRow1 += elemBytes * 4;
+            dstRow2 += elemBytes * 4;
+            dstRow3 += elemBytes * 4;
+            dstRow4 += elemBytes * 4;
+         }
+
+         dstOffset += dstStrideBytes * 4;
+      }
    }
 };
 
@@ -353,18 +385,38 @@ untileMicroSurface(const SurfaceDescription &desc,
 
    const auto dstStrideBytes = info.pitch * bytesPerElement;
 
+   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
+   const auto sampleSliceOffset = sliceOffset + sampleOffset + thickSliceOffset;
+
    if (desc.flags.depth) {
       // TODO: Implement depth tiling for sample > 0
       decaf_check(sample == 0);
-      applyMicroTiler<MicroTilerDepth>(desc, info, src, dst, dstStrideBytes,
-                                       sliceOffset,
-                                       microTilesPerRow, microTilesNumRows,
-                                       microTileBytes);
+
+      switch (info.bpp) {
+      case 16:
+         applyMicroTiler<MicroTilerDepth<2>>(desc, info, src, dst, dstStrideBytes,
+                                             sampleSliceOffset,
+                                             microTilesPerRow, microTilesNumRows,
+                                             microTileBytes);
+         break;
+      case 32:
+         applyMicroTiler<MicroTilerDepth<4>>(desc, info, src, dst, dstStrideBytes,
+                                             sampleSliceOffset,
+                                             microTilesPerRow, microTilesNumRows,
+                                             microTileBytes);
+         break;
+      case 64:
+         applyMicroTiler<MicroTilerDepth<8>>(desc, info, src, dst, dstStrideBytes,
+                                             sampleSliceOffset,
+                                             microTilesPerRow, microTilesNumRows,
+                                             microTileBytes);
+         break;
+      default:
+         decaf_abort("Invalid depth bpp");
+      }
+
       return;
    }
-
-   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
-   const auto sampleSliceOffset = sliceOffset + sampleOffset + thickSliceOffset;
 
    switch (info.bpp) {
    case 8:
@@ -606,6 +658,45 @@ untileMacroSurface(const SurfaceDescription &desc,
                                                      desc.numSamples,
                                                      info.pitch);
       break;
+   }
+
+   if (desc.flags.depth) {
+      // TODO: Implement depth tiling for sample > 0
+      decaf_check(sample == 0);
+
+      switch (info.bpp) {
+      case 16:
+         applyMacroTiling<MicroTilerDepth<2>>(desc, info, src, dst, dstStrideBytes,
+                                              sampleOffset, sliceOffset, thickSliceOffset,
+                                              bankSliceRotation, sampleSliceRotation,
+                                              pipeSliceRotation, bankSwapWidth,
+                                              macroTileWidth, macroTileHeight,
+                                              macroTilesPerRow, macroTilesNumRows,
+                                              macroTileBytes, microTileBytes);
+         break;
+      case 32:
+         applyMacroTiling<MicroTilerDepth<4>>(desc, info, src, dst, dstStrideBytes,
+                                              sampleOffset, sliceOffset, thickSliceOffset,
+                                              bankSliceRotation, sampleSliceRotation,
+                                              pipeSliceRotation, bankSwapWidth,
+                                              macroTileWidth, macroTileHeight,
+                                              macroTilesPerRow, macroTilesNumRows,
+                                              macroTileBytes, microTileBytes);
+         break;
+      case 64:
+         applyMacroTiling<MicroTilerDepth<8>>(desc, info, src, dst, dstStrideBytes,
+                                              sampleOffset, sliceOffset, thickSliceOffset,
+                                              bankSliceRotation, sampleSliceRotation,
+                                              pipeSliceRotation, bankSwapWidth,
+                                              macroTileWidth, macroTileHeight,
+                                              macroTilesPerRow, macroTilesNumRows,
+                                              macroTileBytes, microTileBytes);
+         break;
+      default:
+         decaf_abort("Invalid depth surface bpp");
+      }
+
+      return;
    }
 
    // Do the tiling
