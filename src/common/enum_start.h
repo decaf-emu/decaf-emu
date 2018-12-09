@@ -23,6 +23,9 @@
    inline Value operator & (Value lhs, Value rhs) { return static_cast<Value>(static_cast<std::underlying_type_t<Value>>(lhs) & static_cast<std::underlying_type_t<Value>>(rhs)); } \
    inline Value operator ^ (Value lhs, Value rhs) { return static_cast<Value>(static_cast<std::underlying_type_t<Value>>(lhs) ^ static_cast<std::underlying_type_t<Value>>(rhs)); } \
    inline Value operator ~ (Value lhs) { return static_cast<Value>(~static_cast<std::underlying_type_t<Value>>(lhs)); } \
+   inline Value &operator |= (Value &lhs, Value rhs) { return (lhs = lhs | rhs); } \
+   inline Value &operator &= (Value &lhs, Value rhs) { return (lhs = lhs & rhs); } \
+   inline Value &operator ^= (Value &lhs, Value rhs) { return (lhs = lhs ^ rhs); } \
    }; using E = E##_::Value;
 #endif
 
