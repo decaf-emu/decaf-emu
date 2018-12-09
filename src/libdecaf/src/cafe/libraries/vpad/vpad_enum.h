@@ -30,6 +30,7 @@ FLAGS_END(VPADButtons)
 ENUM_BEG(VPADChan, int32_t)
    ENUM_VALUE(Chan0,                   0)
    ENUM_VALUE(Chan1,                   1)
+   ENUM_VALUE(Max,                     2)
 ENUM_END(VPADChan)
 
 ENUM_BEG(VPADTouchPadResolution, int32_t)

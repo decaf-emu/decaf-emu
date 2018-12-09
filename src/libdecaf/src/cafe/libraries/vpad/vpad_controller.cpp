@@ -8,31 +8,7 @@
 namespace cafe::vpad
 {
 
-static const std::vector<std::pair<VPADButtons, input::vpad::Core>>
-gButtonMap =
-{
-   { VPADButtons::Sync,     input::vpad::Core::Sync },
-   { VPADButtons::Home,     input::vpad::Core::Home },
-   { VPADButtons::Minus,    input::vpad::Core::Minus },
-   { VPADButtons::Plus,     input::vpad::Core::Plus },
-   { VPADButtons::R,        input::vpad::Core::TriggerR },
-   { VPADButtons::L,        input::vpad::Core::TriggerL },
-   { VPADButtons::ZR,       input::vpad::Core::TriggerZR },
-   { VPADButtons::ZL,       input::vpad::Core::TriggerZL },
-   { VPADButtons::Down,     input::vpad::Core::Down },
-   { VPADButtons::Up,       input::vpad::Core::Up },
-   { VPADButtons::Left,     input::vpad::Core::Left },
-   { VPADButtons::Right,    input::vpad::Core::Right },
-   { VPADButtons::Y,        input::vpad::Core::Y },
-   { VPADButtons::X,        input::vpad::Core::X },
-   { VPADButtons::B,        input::vpad::Core::B },
-   { VPADButtons::A,        input::vpad::Core::A },
-   { VPADButtons::StickL,   input::vpad::Core::LeftStick },
-   { VPADButtons::StickR,   input::vpad::Core::RightStick },
-};
-
-static uint32_t
-gLastButtonState = 0;
+static VPADButtons sLastButtonState = VPADButtons { 0 };
 
 void
 VPADInit()
@@ -74,7 +50,7 @@ VPADRead(VPADChan chan,
       return 0;
    }
 
-   if (chan >= input::vpad::MaxControllers) {
+   if (chan >= VPADChan::Max) {
       if (outError) {
          *outError = VPADReadError::InvalidController;
       }
@@ -84,52 +60,67 @@ VPADRead(VPADChan chan,
 
    memset(virt_addrof(buffers[0]).get(), 0, sizeof(VPADStatus));
 
-   auto channel = static_cast<input::vpad::Channel>(chan);
-   auto &buffer = buffers[0];
+   auto status = input::vpad::Status { };
+   input::sampleVpadController(static_cast<int>(chan), status);
 
-   // Update button state
-   for (auto &pair : gButtonMap) {
-      auto bit = pair.first;
-      auto button = pair.second;
-      auto status = input::getButtonStatus(channel, button);
-      auto previous = gLastButtonState & bit;
-
-      if (status == input::ButtonStatus::ButtonPressed) {
-         if (!previous) {
-            buffer.trigger |= bit;
-         }
-
-         buffer.hold |= bit;
-      } else if (previous) {
-         buffer.release |= bit;
+   if (!status.connected) {
+      if (outError) {
+         *outError = VPADReadError::InvalidController;
       }
+
+      return 0;
    }
 
-   gLastButtonState = buffer.hold;
+   auto &buffer = buffers[0];
+   auto hold = VPADButtons { 0 };
+   if (status.buttons.sync) { hold |= VPADButtons::Sync; }
+   if (status.buttons.home) { hold |= VPADButtons::Home; }
+   if (status.buttons.minus) { hold |= VPADButtons::Minus; }
+   if (status.buttons.plus) { hold |= VPADButtons::Plus; }
+   if (status.buttons.r) { hold |= VPADButtons::R; }
+   if (status.buttons.l) { hold |= VPADButtons::L; }
+   if (status.buttons.zr) { hold |= VPADButtons::ZR; }
+   if (status.buttons.zl) { hold |= VPADButtons::ZL; }
+   if (status.buttons.down) { hold |= VPADButtons::Down; }
+   if (status.buttons.up) { hold |= VPADButtons::Up; }
+   if (status.buttons.right) { hold |= VPADButtons::Right; }
+   if (status.buttons.left) { hold |= VPADButtons::Left; }
+   if (status.buttons.x) { hold |= VPADButtons::X; }
+   if (status.buttons.y) { hold |= VPADButtons::Y; }
+   if (status.buttons.b) { hold |= VPADButtons::B; }
+   if (status.buttons.a) { hold |= VPADButtons::A; }
+   if (status.buttons.stickR) { hold |= VPADButtons::StickR; }
+   if (status.buttons.stickL) { hold |= VPADButtons::StickL; }
+
+   buffer.hold = hold;
+   buffer.trigger = (~sLastButtonState) & hold;
+   buffer.release = sLastButtonState & (~hold);
+   sLastButtonState = hold;
 
    // Update axis state
-   buffer.leftStick.x = input::getAxisValue(channel, input::vpad::CoreAxis::LeftStickX);
-   buffer.leftStick.y = input::getAxisValue(channel, input::vpad::CoreAxis::LeftStickY);
-   buffer.rightStick.x = input::getAxisValue(channel, input::vpad::CoreAxis::RightStickX);
-   buffer.rightStick.y = input::getAxisValue(channel, input::vpad::CoreAxis::RightStickY);
+   buffer.leftStick.x = status.leftStickX;
+   buffer.leftStick.y = status.leftStickY;
+   buffer.rightStick.x = status.rightStickX;
+   buffer.rightStick.y = status.rightStickY;
 
    // Update touchpad data
-   input::vpad::TouchPosition position;
-
-   if (input::getTouchPosition(channel, position)) {
+   if (status.touch.down) {
       buffer.tpNormal.touched = uint16_t { 1 };
-      buffer.tpNormal.x = static_cast<uint16_t>(position.x * 1280.0f);
-      buffer.tpNormal.y = static_cast<uint16_t>(position.y * 720.0f);
+      buffer.tpNormal.x = static_cast<uint16_t>(status.touch.x * 1280.0f);
+      buffer.tpNormal.y = static_cast<uint16_t>(status.touch.y * 720.0f);
       buffer.tpNormal.validity = VPADTouchPadValidity::Valid;
-
-      // For now, lets just copy instantaneous position tpNormal to tpFiltered.
-      // My guess is that tpFiltered1/2 "filter" results over a period of time
-      // to allow for smoother input, due to the fact that touch screens aren't
-      // super precise and people's fingers are fat. I would guess tpFiltered1
-      // is filtered over a shorter period and tpFiltered2 over a longer period.
-      buffer.tpFiltered1 = buffer.tpNormal;
-      buffer.tpFiltered2 = buffer.tpNormal;
+   } else {
+      buffer.tpNormal.touched = uint16_t { 0 };
+      buffer.tpNormal.validity = VPADTouchPadValidity::InvalidX | VPADTouchPadValidity::InvalidY;
    }
+
+   // For now, lets just copy instantaneous position tpNormal to tpFiltered.
+   // My guess is that tpFiltered1/2 "filter" results over a period of time
+   // to allow for smoother input, due to the fact that touch screens aren't
+   // super precise and people's fingers are fat. I would guess tpFiltered1
+   // is filtered over a shorter period and tpFiltered2 over a longer period.
+   buffer.tpFiltered1 = buffer.tpNormal;
+   buffer.tpFiltered2 = buffer.tpNormal;
 
    if (outError) {
       *outError = VPADReadError::Success;

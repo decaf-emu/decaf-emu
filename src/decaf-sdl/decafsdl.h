@@ -50,40 +50,8 @@ private:
    decaf::input::MouseButton
    translateMouseButton(int button);
 
-   // VPAD
-   virtual vpad::Type
-   getControllerType(vpad::Channel channel) override;
-
-   virtual ButtonStatus
-   getButtonStatus(vpad::Channel channel, vpad::Core button) override;
-
-   virtual float
-   getAxisValue(vpad::Channel channel, vpad::CoreAxis axis) override;
-
-   virtual bool
-   getTouchPosition(vpad::Channel channel, vpad::TouchPosition &position) override;
-
-   // WPAD
-   virtual wpad::Type
-   getControllerType(wpad::Channel channel) override;
-
-   virtual ButtonStatus
-   getButtonStatus(wpad::Channel channel, wpad::Core button) override;
-
-   virtual ButtonStatus
-   getButtonStatus(wpad::Channel channel, wpad::Classic button) override;
-
-   virtual ButtonStatus
-   getButtonStatus(wpad::Channel channel, wpad::Nunchuck button) override;
-
-   virtual ButtonStatus
-   getButtonStatus(wpad::Channel channel, wpad::Pro button) override;
-
-   virtual float
-   getAxisValue(wpad::Channel channel, wpad::NunchuckAxis axis) override;
-
-   virtual float
-   getAxisValue(wpad::Channel channel, wpad::ProAxis axis) override;
+   void sampleVpadController(int channel, vpad::Status &status) override;
+   void sampleWpadController(int channel, wpad::Status &status) override;
 
    // Events
    virtual void
