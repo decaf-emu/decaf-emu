@@ -11,21 +11,16 @@ namespace gpu7::tiling::vulkan
 struct MicroTilePushConstants
 {
    uint32_t dstStride;
-   uint32_t microTileBytes;
    uint32_t numTilesPerRow;
    uint32_t numTileRows;
    uint32_t tiledSliceIndex;
    uint32_t sliceIndex;
    uint32_t numSlices;
    uint32_t sliceBytes;
-   uint32_t microTileThickness;
 };
 
 struct MacroTilePushConstants : MicroTilePushConstants
 {
-   uint32_t sampleOffset;
-   uint32_t tileMode;
-   uint32_t macroTileBytes;
    uint32_t bankSwizzle;
    uint32_t pipeSwizzle;
    uint32_t bankSwapWidth;
@@ -33,34 +28,67 @@ struct MacroTilePushConstants : MicroTilePushConstants
 
 struct TileShaderSpecialisation
 {
-   uint32_t bpp;
-   uint32_t subGroupSize;
+   uint32_t isUntiling;
+   uint32_t microTileThickness;
    uint32_t macroTileWidth;
    uint32_t macroTileHeight;
+   uint32_t isMacro3D;
+   uint32_t isBankSwapped;
+   uint32_t bpp;
    uint32_t isDepth;
-   uint32_t isUntiling;
+   uint32_t subGroupSize;
 };
 
-std::array<std::pair<uint32_t, bool>, 8> ValidBppDepths = { {
+struct BppDepthInfo
+{
+   uint32_t bpp;
+   bool isDepth;
+};
+
+std::array<BppDepthInfo, 8> ValidBppDepths = { {
    { 8, false }, { 16, false }, { 32, false }, { 64, false }, { 128, false },
    { 16, true }, { 32, true }, { 64, true } } };
-std::array<std::pair<uint32_t, uint32_t>, 4> ValidTileSizes = { {
-   { 1, 1 }, { 4, 2 }, { 2, 4 }, { 1, 8 } } };
+
+struct TileModeInfo
+{
+   AddrTileMode tileMode;
+   uint32_t microTileThickness;
+   uint32_t macroTileWidth;
+   uint32_t macroTileHeight;
+   bool isMacro3D;
+   bool isBankSwapped;
+};
+
+std::array<TileModeInfo, 14> ValidTileConfigs = { {
+   { ADDR_TM_1D_TILED_THIN1, 1, 1, 1, false, false },
+   { ADDR_TM_1D_TILED_THICK, 4, 1, 1, false, false },
+   { ADDR_TM_2D_TILED_THIN1, 1, 4, 2, false, false },
+   { ADDR_TM_2D_TILED_THIN2, 1, 2, 4, false, false },
+   { ADDR_TM_2D_TILED_THIN4, 1, 1, 8, false, false },
+   { ADDR_TM_2D_TILED_THICK, 4, 4, 2, false, false },
+   { ADDR_TM_2B_TILED_THIN1, 1, 4, 2, false, true },
+   { ADDR_TM_2B_TILED_THIN2, 1, 2, 4, false, true },
+   { ADDR_TM_2B_TILED_THIN4, 1, 1, 8, false, true },
+   { ADDR_TM_2B_TILED_THICK, 4, 4, 2, false, true },
+   { ADDR_TM_3D_TILED_THIN1, 1, 4, 2, true, false },
+   { ADDR_TM_3D_TILED_THICK, 4, 4, 2, true, false },
+   { ADDR_TM_3B_TILED_THIN1, 1, 4, 2, true, true },
+   { ADDR_TM_3B_TILED_THICK, 4, 4, 2, true, true },
+} };
 
 // TODO: This should be based on the GPU in use
-static const uint32_t GpuSubGroupSize = 32;
+static const uint32_t GpuSubGroupSize = 6;
 
 static inline uint32_t
-getRetileSpecKey(uint32_t bpp, uint32_t macroTileWidth, uint32_t macroTileHeight, bool isDepth, bool isUntiling)
+getRetileSpecKey(uint32_t bpp, bool isDepth, AddrTileMode tileMode, bool isUntiling)
 {
    uint32_t isDepthUint = isDepth ? 1 : 0;
+   uint32_t tileModeUint = static_cast<uint32_t>(tileMode);
    uint32_t isUntilingUint = isUntiling ? 1 : 0;
 
    uint32_t key = 0;
-   key |= (bpp << 0) & 0x0000FFFF;
-   key |= (macroTileWidth << 16) & 0x000F0000;
-   key |= (macroTileHeight << 20) & 0x00F00000;
-   key |= (isDepthUint << 24) & 0x0F000000;
+   key |= (bpp            << 0)  & 0x0000FFFF;
+   key |= (tileModeUint   << 16) & 0x0FFF0000;
    key |= (isUntilingUint << 28) & 0xF0000000;
    return key;
 }
@@ -118,7 +146,7 @@ calculateMicroRetileInfo(const SurfaceDescription &desc,
    retileInfo.microTileThickness = microTileThickness;
    retileInfo.sliceOffset = sliceOffset;
    retileInfo.sampleOffset = 0;
-   retileInfo.tileMode = 0;
+   retileInfo.tileMode = info.tileMode;
    retileInfo.macroTileBytes = 0;
    retileInfo.bankSwizzle = 0;
    retileInfo.pipeSwizzle = 0;
@@ -183,7 +211,7 @@ calculateMacroRetileInfo(const SurfaceDescription &desc,
    retileInfo.microTileThickness = microTileThickness;
    retileInfo.sampleOffset = sampleOffset;
    retileInfo.sliceOffset = sliceOffset;
-   retileInfo.tileMode = static_cast<uint32_t>(info.tileMode);
+   retileInfo.tileMode = info.tileMode;
    retileInfo.macroTileBytes = macroTileBytes;
    retileInfo.bankSwizzle = desc.bankSwizzle;
    retileInfo.pipeSwizzle = desc.pipeSwizzle;
@@ -265,31 +293,36 @@ Retiler::initialise(vk::Device device)
    shaderDesc.codeSize = gpu7_tiling_comp_spv_size;
    mShader = mDevice.createShaderModule(shaderDesc);
 
-   static const std::array<vk::SpecializationMapEntry, 6> specEntries = { {
-      { 0, offsetof(TileShaderSpecialisation, bpp), sizeof(uint32_t) },
-      { 1, offsetof(TileShaderSpecialisation, subGroupSize), sizeof(uint32_t) },
+   static const std::array<vk::SpecializationMapEntry, 9> specEntries = { {
+      { 0, offsetof(TileShaderSpecialisation, isUntiling), sizeof(uint32_t) },
+      { 1, offsetof(TileShaderSpecialisation, microTileThickness), sizeof(uint32_t) },
       { 2, offsetof(TileShaderSpecialisation, macroTileWidth), sizeof(uint32_t) },
       { 3, offsetof(TileShaderSpecialisation, macroTileHeight), sizeof(uint32_t) },
-      { 4, offsetof(TileShaderSpecialisation, isDepth), sizeof(uint32_t) },
-      { 5, offsetof(TileShaderSpecialisation, isUntiling), sizeof(uint32_t) }
+      { 4, offsetof(TileShaderSpecialisation, isMacro3D), sizeof(uint32_t) },
+      { 5, offsetof(TileShaderSpecialisation, isBankSwapped), sizeof(uint32_t) },
+      { 6, offsetof(TileShaderSpecialisation, bpp), sizeof(uint32_t) },
+      { 7, offsetof(TileShaderSpecialisation, isDepth), sizeof(uint32_t) },
+      { 8, offsetof(TileShaderSpecialisation, subGroupSize), sizeof(uint32_t) }
    } };
 
-   for (auto tileSize : ValidTileSizes) {
+   for (auto tileConfig : ValidTileConfigs) {
       for (auto bppDepth : ValidBppDepths) {
          for (auto tileOrUntile : { true, false }) {
-            uint32_t specKey = getRetileSpecKey(bppDepth.first,
-                                                tileSize.first,
-                                                tileSize.second,
-                                                bppDepth.second,
+            uint32_t specKey = getRetileSpecKey(bppDepth.bpp,
+                                                bppDepth.isDepth,
+                                                tileConfig.tileMode,
                                                 tileOrUntile);
 
             TileShaderSpecialisation specValues;
-            specValues.bpp = bppDepth.first;
-            specValues.subGroupSize = GpuSubGroupSize;
-            specValues.macroTileWidth = tileSize.first;
-            specValues.macroTileHeight = tileSize.second;
-            specValues.isDepth = bppDepth.second ? 1 : 0;
             specValues.isUntiling = tileOrUntile ? 1 : 0;
+            specValues.microTileThickness = tileConfig.microTileThickness;
+            specValues.macroTileWidth = tileConfig.macroTileWidth;
+            specValues.macroTileHeight = tileConfig.macroTileHeight;
+            specValues.isMacro3D = tileConfig.isMacro3D ? 1 : 0;
+            specValues.isBankSwapped = tileConfig.isBankSwapped ? 1 : 0;
+            specValues.bpp = bppDepth.bpp;
+            specValues.isDepth = bppDepth.isDepth ? 1 : 0;
+            specValues.subGroupSize = GpuSubGroupSize;
 
             vk::SpecializationInfo specInfo;
             specInfo.mapEntryCount = static_cast<uint32_t>(specEntries.size());
@@ -308,7 +341,7 @@ Retiler::initialise(vk::Device device)
             pipelineDesc.layout = mPipelineLayout;
 
             auto pipeline = mDevice.createComputePipeline(vk::PipelineCache(), pipelineDesc);
-            mPipelines[specKey] = pipeline;
+            mPipelines.insert({ specKey, pipeline });
          }
       }
    }
@@ -333,9 +366,8 @@ Retiler::retile(bool wantsUntile,
 
    // Calcualate the spec key for this retiler configuration
    auto specKey = getRetileSpecKey(retileInfo.bitsPerElement,
-                                   retileInfo.macroTileWidth,
-                                   retileInfo.macroTileHeight,
                                    retileInfo.isDepth,
+                                   retileInfo.tileMode,
                                    wantsUntile);
 
    // Find the specific pipeline for this configuration
@@ -391,14 +423,12 @@ Retiler::retile(bool wantsUntile,
    if (!retileInfo.isMacroTiled) {
       MicroTilePushConstants pushConstants;
       pushConstants.dstStride = retileInfo.dstStride;
-      pushConstants.microTileBytes = retileInfo.microTileBytes;
       pushConstants.numTilesPerRow = retileInfo.numTilesPerRow;
       pushConstants.numTileRows = retileInfo.numTileRows;
       pushConstants.tiledSliceIndex = alignedFirstSlice;
       pushConstants.sliceIndex = retileInfo.firstSlice;
       pushConstants.numSlices = retileInfo.numSlices;
       pushConstants.sliceBytes = retileInfo.sliceBytes;
-      pushConstants.microTileThickness = retileInfo.microTileThickness;
 
       commandBuffer.pushConstants<MicroTilePushConstants>(
          mPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pushConstants });
@@ -406,18 +436,13 @@ Retiler::retile(bool wantsUntile,
    } else {
       MacroTilePushConstants pushConstants;
       pushConstants.dstStride = retileInfo.dstStride;
-      pushConstants.microTileBytes = retileInfo.microTileBytes;
       pushConstants.numTilesPerRow = retileInfo.numTilesPerRow;
       pushConstants.numTileRows = retileInfo.numTileRows;
       pushConstants.tiledSliceIndex = alignedFirstSlice;
       pushConstants.sliceIndex = retileInfo.firstSlice;
       pushConstants.numSlices = retileInfo.numSlices;
       pushConstants.sliceBytes = retileInfo.sliceBytes;
-      pushConstants.microTileThickness = retileInfo.microTileThickness;
 
-      pushConstants.sampleOffset = retileInfo.sampleOffset;
-      pushConstants.tileMode = retileInfo.tileMode;
-      pushConstants.macroTileBytes = retileInfo.macroTileBytes;
       pushConstants.bankSwizzle = retileInfo.bankSwizzle;
       pushConstants.pipeSwizzle = retileInfo.pipeSwizzle;
       pushConstants.bankSwapWidth = retileInfo.bankSwapWidth;
