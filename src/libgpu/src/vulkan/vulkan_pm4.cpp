@@ -61,6 +61,8 @@ Driver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
 void
 Driver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
 {
+   flushPendingDraws();
+
    ColorBufferDesc colorBuffer;
    colorBuffer.base256b = data.cb_color_base.BASE_256B();
    colorBuffer.pitchTileMax = data.cb_color_size.PITCH_TILE_MAX();
@@ -142,6 +144,8 @@ Driver::decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data)
 void
 Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
 {
+   flushPendingDraws();
+
    // Find our colorbuffer to clear
    ColorBufferDesc colorBuffer;
    colorBuffer.base256b = data.cb_color_base.BASE_256B();
@@ -163,6 +167,8 @@ Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
 void
 Driver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
 {
+   flushPendingDraws();
+
    // Find our depthbuffer to clear
    DepthStencilBufferDesc depthBuffer;
    depthBuffer.base256b = data.db_depth_base.BASE_256B();
@@ -195,6 +201,8 @@ Driver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 void
 Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 {
+   flushPendingDraws();
+
    if (data.dstImage.getAddress() == 0 || data.srcImage.getAddress() == 0) {
       return;
    }
@@ -277,6 +285,8 @@ Driver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
 void
 Driver::decafExpandColorBuffer(const latte::pm4::DecafExpandColorBuffer &data)
 {
+   flushPendingDraws();
+
    // We do not actually support MSAA in our Vulkan backend, so we simply
    // need to translate this to a series of surface copies.
 
@@ -487,7 +497,7 @@ Driver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
    auto bufferIdx = data.control.SELECT_BUFFER();
 
    if (data.control.STORE_BUFFER_FILLED_SIZE()) {
-      auto stream = mStreamContextData[bufferIdx];
+      auto stream = mStreamOutContext[bufferIdx];
 
       decaf_check(data.dstLo);
       decaf_check(stream);
@@ -510,8 +520,8 @@ Driver::streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data)
    }
 
    if (newStreamOut) {
-      auto oldStreamOut = mStreamContextData[bufferIdx];
-      mStreamContextData[bufferIdx] = newStreamOut;
+      auto oldStreamOut = mStreamOutContext[bufferIdx];
+      mStreamOutContext[bufferIdx] = newStreamOut;
 
       if (oldStreamOut) {
          // We have to defer the destruction of this buffer until the end of

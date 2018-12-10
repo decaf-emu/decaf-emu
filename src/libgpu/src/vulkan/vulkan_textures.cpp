@@ -67,15 +67,15 @@ bool
 Driver::checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx)
 {
    if (shaderStage == ShaderStage::Vertex) {
-      if (!mCurrentVertexShader || !mCurrentVertexShader->shader.textureUsed[textureIdx]) {
+      if (!mCurrentDraw->vertexShader || !mCurrentDraw->vertexShader->shader.textureUsed[textureIdx]) {
          return true;
       }
    } else if (shaderStage == ShaderStage::Geometry) {
-      if (!mCurrentGeometryShader || !mCurrentGeometryShader->shader.textureUsed[textureIdx]) {
+      if (!mCurrentDraw->geometryShader || !mCurrentDraw->geometryShader->shader.textureUsed[textureIdx]) {
          return true;
       }
    } else if (shaderStage == ShaderStage::Pixel) {
-      if (!mCurrentPixelShader || !mCurrentPixelShader->shader.textureUsed[textureIdx]) {
+      if (!mCurrentDraw->pixelShader || !mCurrentDraw->pixelShader->shader.textureUsed[textureIdx]) {
          return true;
       }
    } else {
@@ -88,14 +88,14 @@ Driver::checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx)
    }
 
    auto surface = getSurfaceView(textureDesc.surfaceDesc);
-   mCurrentTextures[int(shaderStage)][textureIdx] = surface;
+   mCurrentDraw->textures[int(shaderStage)][textureIdx] = surface;
    return true;
 }
 
 bool
 Driver::checkCurrentTextures()
 {
-   mCurrentTextures = { { nullptr } };
+   mCurrentDraw->textures = { { nullptr } };
 
    for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
@@ -112,17 +112,17 @@ void
 Driver::prepareCurrentTextures()
 {
    for (auto i = 0u; i < latte::MaxTextures; ++i) {
-      auto& vsSurface = mCurrentTextures[0][i];
+      auto& vsSurface = mCurrentDraw->textures[0][i];
       if (vsSurface) {
          transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
       }
 
-      auto& gsSurface = mCurrentTextures[1][i];
+      auto& gsSurface = mCurrentDraw->textures[1][i];
       if (gsSurface) {
          transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
       }
 
-      auto& psSurface = mCurrentTextures[2][i];
+      auto& psSurface = mCurrentDraw->textures[2][i];
       if (psSurface) {
          transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
       }

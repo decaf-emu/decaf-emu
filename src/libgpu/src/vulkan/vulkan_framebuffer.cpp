@@ -8,7 +8,7 @@ namespace vulkan
 FramebufferDesc
 Driver::getFramebufferDesc()
 {
-   decaf_check(mCurrentRenderPass);
+   decaf_check(mCurrentDraw->renderPass);
 
    auto desc = FramebufferDesc {};
 
@@ -18,7 +18,7 @@ Driver::getFramebufferDesc()
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
       auto cb_color_view = getRegister<latte::CB_COLORN_VIEW>(latte::Register::CB_COLOR0_VIEW + i * 4);
 
-      if (mCurrentRenderPass->colorAttachmentIndexes[i] == -1) {
+      if (mCurrentDraw->renderPass->colorAttachmentIndexes[i] == -1) {
          // If the RenderPass doesn't want this attachment, skip it...
          desc.colorTargets[i] = ColorBufferDesc {
             0,
@@ -54,7 +54,7 @@ Driver::getFramebufferDesc()
       auto db_depth_info = getRegister<latte::DB_DEPTH_INFO>(latte::Register::DB_DEPTH_INFO);
       auto db_depth_view = getRegister<latte::DB_DEPTH_VIEW>(latte::Register::DB_DEPTH_VIEW);
 
-      if (mCurrentRenderPass->depthAttachmentIndex == -1) {
+      if (mCurrentDraw->renderPass->depthAttachmentIndex == -1) {
          // If the RenderPass doesn't want depth, skip it...
          desc.depthTarget = DepthStencilBufferDesc {
             0,
@@ -88,18 +88,18 @@ Driver::getFramebufferDesc()
 bool
 Driver::checkCurrentFramebuffer()
 {
-   decaf_check(mCurrentRenderPass);
+   decaf_check(mCurrentDraw->renderPass);
 
    HashedDesc<FramebufferDesc> currentDesc = getFramebufferDesc();
 
-   if (mCurrentFramebuffer && mCurrentFramebuffer->desc == currentDesc) {
+   if (mCurrentDraw->framebuffer && mCurrentDraw->framebuffer->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
    }
 
    auto& foundFb = mFramebuffers[currentDesc.hash()];
    if (foundFb) {
-      mCurrentFramebuffer = foundFb;
+      mCurrentDraw->framebuffer = foundFb;
       return true;
    }
 
@@ -158,17 +158,17 @@ Driver::checkCurrentFramebuffer()
 
    foundFb->renderArea = overallSize;
 
-   mCurrentFramebuffer = foundFb;
+   mCurrentDraw->framebuffer = foundFb;
    return true;
 }
 
 void
 Driver::prepareCurrentFramebuffer()
 {
-   decaf_check(mCurrentRenderPass);
-   decaf_check(mCurrentFramebuffer);
+   decaf_check(mCurrentDraw->renderPass);
+   decaf_check(mCurrentDraw->framebuffer);
 
-   auto& fb = mCurrentFramebuffer;
+   auto& fb = mCurrentDraw->framebuffer;
 
    // First we need to transition all the surfaces to their appropriate places.
    for (auto &surfaceView : fb->colorSurfaces) {
@@ -193,7 +193,7 @@ Driver::prepareCurrentFramebuffer()
          continue;
       }
 
-      auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->colorAttachmentIndexes[i]);
+      auto attachmentIndex = static_cast<uint32_t>(mCurrentDraw->renderPass->colorAttachmentIndexes[i]);
       numAttachments = std::max(numAttachments, attachmentIndex + 1);
 
       attachments[attachmentIndex] = surfaceView->imageView;
@@ -210,7 +210,7 @@ Driver::prepareCurrentFramebuffer()
          continue;
       }
 
-      auto attachmentIndex = static_cast<uint32_t>(mCurrentRenderPass->depthAttachmentIndex);
+      auto attachmentIndex = static_cast<uint32_t>(mCurrentDraw->renderPass->depthAttachmentIndex);
       numAttachments = std::max(numAttachments, attachmentIndex + 1);
 
       attachments[attachmentIndex] = surfaceView->imageView;
@@ -235,7 +235,7 @@ Driver::prepareCurrentFramebuffer()
    }
 
    vk::FramebufferCreateInfo framebufferDesc;
-   framebufferDesc.renderPass = mCurrentRenderPass->renderPass;
+   framebufferDesc.renderPass = mCurrentDraw->renderPass->renderPass;
    framebufferDesc.attachmentCount = numAttachments;
    framebufferDesc.pAttachments = attachments.data();
    framebufferDesc.width = fb->renderArea.width;

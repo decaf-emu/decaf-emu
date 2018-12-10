@@ -23,9 +23,10 @@ Driver::checkCurrentViewportAndScissor()
    auto pa_sc_vport_zmin = getRegister<latte::PA_SC_VPORT_ZMIN_N>(latte::Register::PA_SC_VPORT_ZMIN_0);
    auto pa_sc_vport_zmax = getRegister<latte::PA_SC_VPORT_ZMAX_N>(latte::Register::PA_SC_VPORT_ZMAX_0);
    auto pa_cl_vte_cntl = getRegister<latte::PA_CL_VTE_CNTL>(latte::Register::PA_CL_VTE_CNTL);
+   auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
 
-   auto raWidth = static_cast<float>(mCurrentFramebuffer->renderArea.width);
-   auto raHeight = static_cast<float>(mCurrentFramebuffer->renderArea.height);
+   auto raWidth = static_cast<float>(mCurrentDraw->framebuffer->renderArea.width);
+   auto raHeight = static_cast<float>(mCurrentDraw->framebuffer->renderArea.height);
 
    // NOTE: Our shaders which output positions understand that if the
    // xoffset/yoffset/xscale/yscale are disabled, that we need to
@@ -68,7 +69,57 @@ Driver::checkCurrentViewportAndScissor()
    viewport.minDepth = pa_sc_vport_zmin.VPORT_ZMIN();
    viewport.maxDepth = pa_sc_vport_zmax.VPORT_ZMAX();
 
-   mCurrentViewport = viewport;
+   mCurrentDraw->viewport = viewport;
+
+
+   // Set up some stuff used by the shaders
+   ShaderViewportData shaderViewport;
+
+   // These are not handled as I don't believe we actually scale/offset by the viewport...
+   //pa_cl_vte_cntl.VPORT_Z_OFFSET_ENA();
+   //pa_cl_vte_cntl.VPORT_Z_SCALE_ENA();
+
+   // TODO: Implement these
+   //pa_cl_vte_cntl.VTX_XY_FMT();
+   //pa_cl_vte_cntl.VTX_Z_FMT();
+   //pa_cl_vte_cntl.VTX_W0_FMT();
+
+   auto screenSizeX = viewport.width - viewport.x;
+   auto screenSizeY = viewport.height - viewport.y;
+
+   if (pa_cl_vte_cntl.VPORT_X_OFFSET_ENA()) {
+      shaderViewport.xAdd = 0.0f;
+   } else {
+      shaderViewport.xAdd = -1.0f;
+   }
+   if (pa_cl_vte_cntl.VPORT_X_SCALE_ENA()) {
+      shaderViewport.xMul = 1.0f;
+   } else {
+      shaderViewport.xMul = 2.0f / screenSizeX;
+   }
+   if (pa_cl_vte_cntl.VPORT_Y_OFFSET_ENA()) {
+      shaderViewport.yAdd = 0.0f;
+   } else {
+      shaderViewport.yAdd = -1.0f;
+   }
+   if (pa_cl_vte_cntl.VPORT_Y_SCALE_ENA()) {
+      shaderViewport.yMul = 1.0f;
+   } else {
+      shaderViewport.yMul = 2.0f / screenSizeY;
+   }
+
+   if (!pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
+      // map gl(-1 to 1) onto vk(0 to 1)
+      shaderViewport.zAdd = 1.0f; // Add W
+      shaderViewport.zMul = 0.5f; // * 0.5
+   } else {
+      // maintain 0 to 1
+      shaderViewport.zAdd = 0.0f; // Add 0
+      shaderViewport.zMul = 1.0f; // * 1.0
+   }
+
+   mCurrentDraw->shaderViewportData = shaderViewport;
+
 
 
    // ------------------------------------------------------------
@@ -84,15 +135,15 @@ Driver::checkCurrentViewportAndScissor()
    scissor.extent.width = pa_sc_generic_scissor_br.BR_X() - scissor.offset.x;
    scissor.extent.height = pa_sc_generic_scissor_br.BR_Y() - scissor.offset.y;
 
-   mCurrentScissor = scissor;
+   mCurrentDraw->scissor = scissor;
    return true;
 }
 
 void
 Driver::bindViewportAndScissor()
 {
-   mActiveCommandBuffer.setViewport(0, { mCurrentViewport });
-   mActiveCommandBuffer.setScissor(0, { mCurrentScissor });
+   mActiveCommandBuffer.setViewport(0, { mCurrentDraw->viewport });
+   mActiveCommandBuffer.setScissor(0, { mCurrentDraw->scissor });
 }
 
 } // namespace vulkan

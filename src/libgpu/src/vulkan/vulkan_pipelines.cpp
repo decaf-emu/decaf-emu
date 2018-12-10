@@ -10,10 +10,10 @@ Driver::getPipelineDesc()
 {
    PipelineDesc desc;
 
-   desc.renderPass = mCurrentRenderPass;
-   desc.vertexShader = mCurrentVertexShader;
-   desc.geometryShader = mCurrentGeometryShader;
-   desc.pixelShader = mCurrentPixelShader;
+   desc.renderPass = mCurrentDraw->renderPass;
+   desc.vertexShader = mCurrentDraw->vertexShader;
+   desc.geometryShader = mCurrentDraw->geometryShader;
+   desc.pixelShader = mCurrentDraw->pixelShader;
 
    // -- Vertex Strides
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
@@ -320,25 +320,36 @@ Driver::getPipelineDesc()
       cb_blend_blue.BLEND_BLUE(),
       cb_blend_alpha.BLEND_ALPHA() };
 
+   auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
+   auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
+   desc.alphaFunc = sx_alpha_test_control.ALPHA_FUNC();
+   if (!sx_alpha_test_control.ALPHA_TEST_ENABLE()) {
+      desc.alphaFunc = latte::REF_FUNC::ALWAYS;
+   }
+   if (sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
+      desc.alphaFunc = latte::REF_FUNC::ALWAYS;
+   }
+   desc.alphaRef = sx_alpha_ref.ALPHA_REF();
+
    return desc;
 }
 
 bool
 Driver::checkCurrentPipeline()
 {
-   decaf_check(mCurrentVertexShader);
-   decaf_check(mCurrentRenderPass);
+   decaf_check(mCurrentDraw->vertexShader);
+   decaf_check(mCurrentDraw->renderPass);
 
    HashedDesc<PipelineDesc> currentDesc = getPipelineDesc();
 
-   if (mCurrentPipeline && mCurrentPipeline->desc == currentDesc) {
+   if (mCurrentDraw->pipeline && mCurrentDraw->pipeline->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
    }
 
    auto& foundPipeline = mPipelines[currentDesc.hash()];
    if (foundPipeline) {
-      mCurrentPipeline = foundPipeline;
+      mCurrentDraw->pipeline = foundPipeline;
       return true;
    }
 
@@ -350,37 +361,37 @@ Driver::checkCurrentPipeline()
    // ------------------------------------------------------------
 
    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-   if (mCurrentVertexShader) {
+   if (mCurrentDraw->vertexShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
       shaderStageDesc.stage = vk::ShaderStageFlagBits::eVertex;
-      shaderStageDesc.module = mCurrentVertexShader->module;
+      shaderStageDesc.module = mCurrentDraw->vertexShader->module;
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
 
-      if (mCurrentVertexShader->rectStubModule) {
-         decaf_check(!mCurrentGeometryShader);
+      if (mCurrentDraw->vertexShader->rectStubModule) {
+         decaf_check(!mCurrentDraw->geometryShader);
 
          vk::PipelineShaderStageCreateInfo rectStageDesc;
          rectStageDesc.stage = vk::ShaderStageFlagBits::eGeometry;
-         rectStageDesc.module = mCurrentVertexShader->rectStubModule;
+         rectStageDesc.module = mCurrentDraw->vertexShader->rectStubModule;
          rectStageDesc.pName = "main";
          rectStageDesc.pSpecializationInfo = nullptr;
          shaderStages.push_back(rectStageDesc);
       }
    }
-   if (mCurrentGeometryShader) {
+   if (mCurrentDraw->geometryShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
       shaderStageDesc.stage = vk::ShaderStageFlagBits::eGeometry;
-      shaderStageDesc.module = mCurrentGeometryShader->module;
+      shaderStageDesc.module = mCurrentDraw->geometryShader->module;
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
    }
-   if (mCurrentPixelShader) {
+   if (mCurrentDraw->pixelShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
       shaderStageDesc.stage = vk::ShaderStageFlagBits::eFragment;
-      shaderStageDesc.module = mCurrentPixelShader->module;
+      shaderStageDesc.module = mCurrentDraw->pixelShader->module;
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
@@ -394,7 +405,7 @@ Driver::checkCurrentPipeline()
    std::vector<vk::VertexInputBindingDescription> bindingDescs;
    std::vector<vk::VertexInputBindingDivisorDescriptionEXT> divisorDescs;
 
-   const auto& inputBuffers = mCurrentVertexShader->shader.inputBuffers;
+   const auto& inputBuffers = mCurrentDraw->vertexShader->shader.inputBuffers;
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       const auto &inputBuffer = inputBuffers[i];
 
@@ -427,7 +438,7 @@ Driver::checkCurrentPipeline()
 
    std::vector<vk::VertexInputAttributeDescription> attribDescs;
 
-   const auto& inputAttribs = mCurrentVertexShader->shader.inputAttribs;
+   const auto& inputAttribs = mCurrentDraw->vertexShader->shader.inputAttribs;
    for (auto i = 0u; i < inputAttribs.size(); ++i) {
       const auto &inputAttrib = inputAttribs[i];
 
@@ -786,6 +797,20 @@ Driver::checkCurrentPipeline()
 
 
    // ------------------------------------------------------------
+   // Shader stuff
+   // ------------------------------------------------------------
+
+   // TODO: I don't understand why the vulkan drivers use the color from the
+   // shader when rendering this stuff... We have to do this for now.
+   auto shaderLopMode = 0;
+   if (currentDesc->rop3 == 0xFF) {
+      shaderLopMode = 1;
+   } else if (currentDesc->rop3 == 0x00) {
+      shaderLopMode = 2;
+   }
+
+
+   // ------------------------------------------------------------
    // Pipeline
    // ------------------------------------------------------------
 
@@ -802,7 +827,7 @@ Driver::checkCurrentPipeline()
    pipelineInfo.pColorBlendState = &colorBlendState;
    pipelineInfo.pDynamicState = &dynamicDesc;
    pipelineInfo.layout = mPipelineLayout;
-   pipelineInfo.renderPass = mCurrentRenderPass->renderPass;
+   pipelineInfo.renderPass = mCurrentDraw->renderPass->renderPass;
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = vk::Pipeline();
    pipelineInfo.basePipelineIndex = -1;
@@ -810,8 +835,10 @@ Driver::checkCurrentPipeline()
    foundPipeline->pipeline = pipeline;
    foundPipeline->needsPremultipliedTargets = needsPremultipliedTargets;
    foundPipeline->targetIsPremultiplied = targetIsPremultiplied;
-
-   mCurrentPipeline = foundPipeline;
+   foundPipeline->shaderLopMode = shaderLopMode;
+   foundPipeline->shaderAlphaFunc = currentDesc->alphaFunc;
+   foundPipeline->shaderAlphaRef = currentDesc->alphaRef;
+   mCurrentDraw->pipeline = foundPipeline;
    return true;
 }
 

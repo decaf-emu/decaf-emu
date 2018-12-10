@@ -33,7 +33,7 @@ Driver::checkCurrentGprBuffer(ShaderStage shaderStage)
       decaf_abort("Unexpected shader stage in GPR buffer setup");
    }
 
-   mCurrentGprBuffers[int(shaderStage)] = gprsBuffer;
+   mCurrentDraw->gprBuffers[int(shaderStage)] = gprsBuffer;
 }
 
 void
@@ -61,7 +61,7 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
    auto bufferSize = sq_alu_const_buffer_size_vs << 8;
 
    if (!bufferPtr || bufferSize == 0) {
-      mCurrentUniformBlocks[int(shaderStage)][cbufferIdx] = nullptr;
+      mCurrentDraw->uniformBlocks[int(shaderStage)][cbufferIdx] = nullptr;
       return;
    }
 
@@ -77,7 +77,7 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
       decaf_abort("Unexpected shader stage");
    }
 
-   mCurrentUniformBlocks[int(shaderStage)][cbufferIdx] = memCache;
+   mCurrentDraw->uniformBlocks[int(shaderStage)][cbufferIdx] = memCache;
 }
 
 bool
@@ -88,7 +88,7 @@ Driver::checkCurrentShaderBuffers()
 
    if (!isDx9Consts) {
       for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
-         mCurrentGprBuffers[shaderStage] = nullptr;
+         mCurrentDraw->gprBuffers[shaderStage] = nullptr;
 
          for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
             checkCurrentUniformBuffer(ShaderStage(shaderStage), i);
@@ -97,7 +97,7 @@ Driver::checkCurrentShaderBuffers()
    } else {
       for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
          for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-            mCurrentUniformBlocks[shaderStage][i] = nullptr;
+            mCurrentDraw->uniformBlocks[shaderStage][i] = nullptr;
          }
 
          checkCurrentGprBuffer(ShaderStage(shaderStage));

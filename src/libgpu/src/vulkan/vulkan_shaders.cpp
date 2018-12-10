@@ -63,7 +63,7 @@ Driver::getVertexShaderDesc()
       shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
    }
 
-   shaderDesc.generateRectStub = mCurrentDrawDesc.isRectDraw;
+   shaderDesc.generateRectStub = mCurrentDraw->isRectDraw;
 
    shaderDesc.regs.sq_pgm_resources_vs = getRegister<latte::SQ_PGM_RESOURCES_VS>(latte::Register::SQ_PGM_RESOURCES_VS);
    shaderDesc.regs.pa_cl_vs_out_cntl = getRegister<latte::PA_CL_VS_OUT_CNTL>(latte::Register::PA_CL_VS_OUT_CNTL);
@@ -97,7 +97,7 @@ Driver::getGeometryShaderDesc()
       return spirv::GeometryShaderDesc();
    }
 
-   decaf_check(mCurrentVertexShader);
+   decaf_check(mCurrentDraw->vertexShader);
 
    gsl::span<uint8_t> gsShaderBinary;
    gsl::span<uint8_t> dcShaderBinary;
@@ -171,7 +171,7 @@ Driver::getPixelShaderDesc()
       return spirv::PixelShaderDesc();
    }
 
-   decaf_check(mCurrentVertexShader);
+   decaf_check(mCurrentDraw->vertexShader);
 
    gsl::span<uint8_t> psShaderBinary;
 
@@ -238,11 +238,11 @@ Driver::getPixelShaderDesc()
    shaderDesc.regs.cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
    shaderDesc.regs.db_shader_control = getRegister<latte::DB_SHADER_CONTROL>(latte::Register::DB_SHADER_CONTROL);
 
-   if (!mCurrentGeometryShader) {
-      auto vsShader = reinterpret_cast<const spirv::VertexShader*>(&mCurrentVertexShader->shader);
+   if (!mCurrentDraw->geometryShader) {
+      auto vsShader = reinterpret_cast<const spirv::VertexShader*>(&mCurrentDraw->vertexShader->shader);
       shaderDesc.vsOutputSemantics = vsShader->outputSemantics;
    } else {
-      auto gsShader = reinterpret_cast<const spirv::GeometryShader*>(&mCurrentGeometryShader->shader);
+      auto gsShader = reinterpret_cast<const spirv::GeometryShader*>(&mCurrentDraw->geometryShader->shader);
       shaderDesc.vsOutputSemantics = gsShader->outputSemantics;
    }
 
@@ -406,18 +406,18 @@ Driver::checkCurrentVertexShader()
 
    // Check if the shader stage is disabled
    if (currentDesc->type == spirv::ShaderType::Unknown) {
-      mCurrentVertexShader = nullptr;
+      mCurrentDraw->vertexShader = nullptr;
       return true;
    }
 
-   if (mCurrentVertexShader && mCurrentVertexShader->desc == currentDesc) {
+   if (mCurrentDraw->vertexShader && mCurrentDraw->vertexShader->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
    }
 
    auto& foundShader = mVertexShaders[currentDesc.hash()];
    if (foundShader) {
-      mCurrentVertexShader = foundShader;
+      mCurrentDraw->vertexShader = foundShader;
       return true;
    }
 
@@ -445,7 +445,7 @@ Driver::checkCurrentVertexShader()
       foundShader->rectStubModule = rectStubModule;
    }
 
-   mCurrentVertexShader = foundShader;
+   mCurrentDraw->vertexShader = foundShader;
    return true;
 }
 
@@ -456,18 +456,18 @@ Driver::checkCurrentGeometryShader()
 
    // Check if the shader stage is disabled
    if (currentDesc->type == spirv::ShaderType::Unknown) {
-      mCurrentGeometryShader = nullptr;
+      mCurrentDraw->geometryShader = nullptr;
       return true;
    }
 
-   if (mCurrentGeometryShader && mCurrentGeometryShader->desc == currentDesc) {
+   if (mCurrentDraw->geometryShader && mCurrentDraw->geometryShader->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
    }
 
    auto& foundShader = mGeometryShaders[currentDesc.hash()];
    if (foundShader) {
-      mCurrentGeometryShader = foundShader;
+      mCurrentDraw->geometryShader = foundShader;
       return true;
    }
 
@@ -489,7 +489,7 @@ Driver::checkCurrentGeometryShader()
    auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
    setVkObjectName(module, fmt::format("gs_{:08x}", shaderAddr).c_str());
 
-   mCurrentGeometryShader = foundShader;
+   mCurrentDraw->geometryShader = foundShader;
    return true;
 }
 
@@ -499,18 +499,18 @@ bool Driver::checkCurrentPixelShader()
 
    // Check if the shader stage is disabled
    if (currentDesc->type == spirv::ShaderType::Unknown) {
-      mCurrentPixelShader = nullptr;
+      mCurrentDraw->pixelShader = nullptr;
       return true;
    }
 
-   if (mCurrentPixelShader && mCurrentPixelShader->desc == currentDesc) {
+   if (mCurrentDraw->pixelShader && mCurrentDraw->pixelShader->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
    }
 
    auto& foundShader = mPixelShaders[currentDesc.hash()];
    if (foundShader) {
-      mCurrentPixelShader = foundShader;
+      mCurrentDraw->pixelShader = foundShader;
       return true;
    }
 
@@ -532,7 +532,7 @@ bool Driver::checkCurrentPixelShader()
    auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
    setVkObjectName(module, fmt::format("ps_{:08x}", shaderAddr).c_str());
 
-   mCurrentPixelShader = foundShader;
+   mCurrentDraw->pixelShader = foundShader;
    return true;
 }
 

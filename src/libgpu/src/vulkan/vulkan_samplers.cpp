@@ -32,18 +32,18 @@ Driver::getSamplerDesc(ShaderStage shaderStage, uint32_t samplerIdx)
 void
 Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
 {
-   mCurrentSamplers[int(shaderStage)][samplerIdx] = nullptr;
+   mCurrentDraw->samplers[int(shaderStage)][samplerIdx] = nullptr;
 
    if (shaderStage == ShaderStage::Vertex) {
-      if (!mCurrentVertexShader || !mCurrentVertexShader->shader.samplerUsed[samplerIdx]) {
+      if (!mCurrentDraw->vertexShader || !mCurrentDraw->vertexShader->shader.samplerUsed[samplerIdx]) {
          return;
       }
    } else if (shaderStage == ShaderStage::Geometry) {
-      if (!mCurrentGeometryShader || !mCurrentGeometryShader->shader.samplerUsed[samplerIdx]) {
+      if (!mCurrentDraw->geometryShader || !mCurrentDraw->geometryShader->shader.samplerUsed[samplerIdx]) {
          return;
       }
    } else if (shaderStage == ShaderStage::Pixel) {
-      if (!mCurrentPixelShader || !mCurrentPixelShader->shader.samplerUsed[samplerIdx]) {
+      if (!mCurrentDraw->pixelShader || !mCurrentDraw->pixelShader->shader.samplerUsed[samplerIdx]) {
          return;
       }
    } else {
@@ -54,7 +54,7 @@ Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
 
    auto &foundSamp = mSamplers[currentDesc.hash()];
    if (foundSamp) {
-      mCurrentSamplers[int(shaderStage)][samplerIdx] = foundSamp;
+      mCurrentDraw->samplers[int(shaderStage)][samplerIdx] = foundSamp;
       return;
    }
 
@@ -81,7 +81,7 @@ Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
    auto sampler = mDevice.createSampler(samplerDesc);
    foundSamp->sampler = sampler;
 
-   mCurrentSamplers[int(shaderStage)][samplerIdx] = foundSamp;
+   mCurrentDraw->samplers[int(shaderStage)][samplerIdx] = foundSamp;
 }
 
 bool

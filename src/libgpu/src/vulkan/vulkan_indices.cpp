@@ -61,7 +61,7 @@ calculateIndexBufferSize(latte::VGT_INDEX_TYPE indexType, uint32_t numIndices)
 void
 Driver::maybeSwapIndices()
 {
-   auto& drawDesc = mCurrentDrawDesc;
+   auto& drawDesc = *mCurrentDraw;
 
    if (drawDesc.indices) {
       if (drawDesc.indexSwapMode == latte::VGT_DMA_SWAP::SWAP_16_BIT) {
@@ -97,7 +97,7 @@ Driver::maybeSwapIndices()
 void
 Driver::maybeUnpackQuads()
 {
-   auto &drawDesc = mCurrentDrawDesc;
+   auto &drawDesc = *mCurrentDraw;
 
    if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST) {
       uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
@@ -127,16 +127,16 @@ Driver::checkCurrentIndices()
    maybeSwapIndices();
    maybeUnpackQuads();
 
-   auto& drawDesc = mCurrentDrawDesc;
+   auto& drawDesc = *mCurrentDraw;
    if (drawDesc.indices) {
       auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
       auto indicesBuf = getStagingBuffer(indexBytes, StagingBufferType::CpuToGpu);
       copyToStagingBuffer(indicesBuf, 0, drawDesc.indices, indexBytes);
       transitionStagingBuffer(indicesBuf, ResourceUsage::IndexBuffer);
 
-      mCurrentIndexBuffer = indicesBuf;
+      mCurrentDraw->indexBuffer = indicesBuf;
    } else {
-      mCurrentIndexBuffer = nullptr;
+      mCurrentDraw->indexBuffer = nullptr;
    }
 
    return true;
@@ -145,11 +145,11 @@ Driver::checkCurrentIndices()
 void
 Driver::bindIndexBuffer()
 {
-   if (!mCurrentIndexBuffer) {
+   if (!mCurrentDraw->indexBuffer) {
       return;
    }
 
-   auto& drawDesc = mCurrentDrawDesc;
+   auto& drawDesc = *mCurrentDraw;
 
    vk::IndexType bindIndexType;
    if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_16) {
@@ -160,7 +160,7 @@ Driver::bindIndexBuffer()
       decaf_abort("Unexpected index type");
    }
 
-   mActiveCommandBuffer.bindIndexBuffer(mCurrentIndexBuffer->buffer, 0, bindIndexType);
+   mActiveCommandBuffer.bindIndexBuffer(mCurrentDraw->indexBuffer->buffer, 0, bindIndexType);
 }
 
 } // namespace vulkan

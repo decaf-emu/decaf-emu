@@ -662,6 +662,9 @@ struct PipelineDesc
    std::array<BlendControl, latte::MaxRenderTargets> cbBlendControls;
    std::array<float, 4> cbBlendConstants;
 
+   latte::REF_FUNC alphaFunc;
+   float alphaRef;
+
    inline DataHash hash() const {
       return DataHash {}.write(*this);
    }
@@ -673,19 +676,9 @@ struct PipelineObject
    vk::Pipeline pipeline;
    bool needsPremultipliedTargets;
    std::array<bool, latte::MaxRenderTargets> targetIsPremultiplied;
-};
-
-struct DrawDesc
-{
-   void *indices;
-   latte::VGT_INDEX_TYPE indexType;
-   latte::VGT_DMA_SWAP indexSwapMode;
-   latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
-   bool isRectDraw;
-   uint32_t numIndices;
-   uint32_t baseVertex;
-   uint32_t numInstances;
-   uint32_t baseInstance;
+   uint32_t shaderLopMode;
+   uint32_t shaderAlphaFunc;
+   float shaderAlphaRef;
 };
 
 struct StreamOutBufferDesc
@@ -699,6 +692,48 @@ struct StreamContextObject
 {
    VmaAllocation allocation;
    vk::Buffer buffer;
+};
+
+struct ShaderViewportData
+{
+   float xAdd, xMul;
+   float yAdd, yMul;
+   float zAdd, zMul;
+};
+
+struct DrawDesc
+{
+   void *indices;
+   latte::VGT_INDEX_TYPE indexType;
+   latte::VGT_DMA_SWAP indexSwapMode;
+   latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
+   bool isRectDraw;
+   uint32_t numIndices;
+   uint32_t baseVertex;
+   uint32_t numInstances;
+   uint32_t baseInstance;
+
+   bool streamOutEnabled = false;
+   MemCacheObject *opaqueBuffer = nullptr;
+   uint32_t opaqueStride = 0;
+
+   vk::Viewport viewport;
+   ShaderViewportData shaderViewportData;
+   vk::Rect2D scissor;
+   StagingBuffer *indexBuffer = nullptr;
+   VertexShaderObject *vertexShader = nullptr;
+   GeometryShaderObject *geometryShader = nullptr;
+   PixelShaderObject *pixelShader = nullptr;
+   FramebufferObject *framebuffer = nullptr;
+   RenderPassObject *renderPass = nullptr;
+   PipelineObject *pipeline = nullptr;
+   std::array<DataBufferObject*, latte::MaxAttribBuffers> attribBuffers = { nullptr };
+   std::array<std::array<SamplerObject*, latte::MaxSamplers>, 3> samplers = { { nullptr } };
+   std::array<std::array<SurfaceViewObject*, latte::MaxTextures>, 3> textures = { { nullptr } };
+   std::array<StagingBuffer*, 3> gprBuffers = { nullptr };
+   std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> uniformBlocks = { { nullptr } };
+   std::array<StreamContextObject*, latte::MaxStreamOutBuffers> streamOutContext = { nullptr };
+   std::array<DataBufferObject*, latte::MaxStreamOutBuffers> streamOutBuffers = { nullptr };
 };
 
 class Driver : public gpu::VulkanDriver, public Pm4Processor
@@ -869,6 +904,8 @@ protected:
    void bindShaderDescriptors(ShaderStage shaderStage);
    void bindShaderResources();
    void drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndices, void *indices);
+   void flushPendingDraws();
+   void drawCurrentState();
 
    // Framebuffers
    FramebufferDesc getFramebufferDesc();
@@ -965,6 +1002,7 @@ private:
    vk::DescriptorPool mActiveDescriptorPool;
    uint32_t mActiveDescriptorPoolDrawsLeft;
    RenderPassObject *mActiveRenderPass = nullptr;
+   FramebufferObject *mActiveFramebuffer = nullptr;
    PipelineObject *mActivePipeline = nullptr;
    uint64_t mActiveBatchIndex = 0;
 
@@ -973,23 +1011,11 @@ private:
    vk::DescriptorSetLayout mPixelDescriptorSetLayout;
    vk::PipelineLayout mPipelineLayout;
 
-   DrawDesc mCurrentDrawDesc;
-   vk::Viewport mCurrentViewport;
-   vk::Rect2D mCurrentScissor;
-   StagingBuffer *mCurrentIndexBuffer = nullptr;
-   VertexShaderObject *mCurrentVertexShader = nullptr;
-   GeometryShaderObject *mCurrentGeometryShader = nullptr;
-   PixelShaderObject *mCurrentPixelShader = nullptr;
-   FramebufferObject *mCurrentFramebuffer = nullptr;
-   RenderPassObject *mCurrentRenderPass = nullptr;
-   PipelineObject *mCurrentPipeline = nullptr;
-   std::array<DataBufferObject*, latte::MaxAttribBuffers> mCurrentAttribBuffers = { nullptr };
-   std::array<std::array<SamplerObject*, latte::MaxSamplers>, 3> mCurrentSamplers = { { nullptr } };
-   std::array<std::array<SurfaceViewObject*, latte::MaxTextures>, 3> mCurrentTextures = { { nullptr } };
-   std::array<StagingBuffer*, 3> mCurrentGprBuffers = { nullptr };
-   std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> mCurrentUniformBlocks = { { nullptr } };
-   std::array<StreamContextObject*, latte::MaxStreamOutBuffers> mStreamContextData = { nullptr };
-   std::array<DataBufferObject*, latte::MaxStreamOutBuffers> mCurrentStreamOutBuffers = { nullptr };
+   std::array<StreamContextObject*, latte::MaxStreamOutBuffers> mStreamOutContext = { nullptr };
+   std::vector<DrawDesc> mPendingDraws;
+   DrawDesc *mCurrentDraw;
+
+   DrawDesc mDrawCache;
 
    std::vector<MemChangeRecord> mDirtyMemCaches;
 

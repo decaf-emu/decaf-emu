@@ -13,23 +13,23 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
 
    const spirv::Shader *shader;
    if (shaderStage == ShaderStage::Vertex) {
-      if (!mCurrentVertexShader) {
+      if (!mCurrentDraw->vertexShader) {
          return;
       }
 
-      shader = &mCurrentVertexShader->shader;
+      shader = &mCurrentDraw->vertexShader->shader;
    } else if (shaderStage == ShaderStage::Geometry) {
-      if (!mCurrentGeometryShader) {
+      if (!mCurrentDraw->geometryShader) {
          return;
       }
 
-      shader = &mCurrentGeometryShader->shader;
+      shader = &mCurrentDraw->geometryShader->shader;
    } else if (shaderStage == ShaderStage::Pixel) {
-      if (!mCurrentPixelShader) {
+      if (!mCurrentDraw->pixelShader) {
          return;
       }
 
-      shader = &mCurrentPixelShader->shader;
+      shader = &mCurrentDraw->pixelShader->shader;
    } else {
       decaf_abort("Unexpected shader stage during descriptor build");
    }
@@ -39,7 +39,7 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
    std::array<vk::DescriptorImageInfo, latte::MaxSamplers> samplerInfos = { {} };
    for (auto i = 0u; i < latte::MaxSamplers; ++i) {
       if (shader->samplerUsed[i]) {
-         auto &sampler = mCurrentSamplers[shaderStageInt][i];
+         auto &sampler = mCurrentDraw->samplers[shaderStageInt][i];
          if (sampler) {
             samplerInfos[i].sampler = sampler->sampler;
          } else {
@@ -53,7 +53,7 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
    std::array<vk::DescriptorImageInfo, latte::MaxTextures> textureInfos = { {} };
    for (auto i = 0u; i < latte::MaxTextures; ++i) {
       if (shader->textureUsed[i]) {
-         auto &texture = mCurrentTextures[shaderStageInt][i];
+         auto &texture = mCurrentDraw->textures[shaderStageInt][i];
          if (texture) {
             textureInfos[i].imageView = texture->imageView;
          } else {
@@ -67,8 +67,8 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
    }
 
    std::array<vk::DescriptorBufferInfo, latte::MaxUniformBlocks> bufferInfos = { {} };
-   if (mCurrentGprBuffers[shaderStageInt]) {
-      auto gprBuffer = mCurrentGprBuffers[shaderStageInt];
+   if (mCurrentDraw->gprBuffers[shaderStageInt]) {
+      auto gprBuffer = mCurrentDraw->gprBuffers[shaderStageInt];
 
       bufferInfos[0].buffer = gprBuffer->buffer;
       bufferInfos[0].offset = 0;
@@ -78,7 +78,7 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
    } else {
       for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
          if (shader->cbufferUsed[i]) {
-            auto& uniformBuffer = mCurrentUniformBlocks[shaderStageInt][i];
+            auto& uniformBuffer = mCurrentDraw->uniformBlocks[shaderStageInt][i];
             if (uniformBuffer) {
                bufferInfos[i].buffer = uniformBuffer->buffer;
                bufferInfos[i].offset = 0;
@@ -111,6 +111,34 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
       decaf_abort("Unexpected shader stage during descriptor build");
    }
 
+   /*
+   for (auto &samplerInfo : samplerInfos) {
+      if (!samplerInfo.sampler) {
+         samplerInfo.sampler = mBlankSampler;
+      }
+   }
+   for (auto &textureInfo : textureInfos) {
+      if (!textureInfo.imageView) {
+         textureInfo.imageView = mBlankImageView;
+         textureInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+      }
+   }
+   for (auto &bufferInfo : bufferInfos) {
+      if (!bufferInfo.buffer) {
+         bufferInfo.buffer = mBlankBuffer;
+         bufferInfo.offset = 0;
+         bufferInfo.range = 1;
+      }
+   }
+   //*/
+
+   std::array<vk::WriteDescriptorSet, 48> descWrites;
+   uint32_t numDescWrites = 0;
+   auto pushDescWrite = [&](vk::WriteDescriptorSet writeDesc) {
+      decaf_check(numDescWrites < descWrites.size());
+      descWrites[numDescWrites++] = writeDesc;
+   };
+
    for (auto i = 0u; i < latte::MaxSamplers; ++i) {
       if (!samplerInfos[i].sampler) {
          continue;
@@ -125,11 +153,11 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
       writeDesc.pImageInfo = &samplerInfos[i];
       writeDesc.pBufferInfo = nullptr;
       writeDesc.pTexelBufferView = nullptr;
-      mDevice.updateDescriptorSets({ writeDesc }, {});
+      pushDescWrite(writeDesc);
    }
 
    for (auto i = 0u; i < latte::MaxTextures; ++i) {
-      auto &texture = mCurrentTextures[shaderStageInt][i];
+      auto &texture = mCurrentDraw->textures[shaderStageInt][i];
       if (!textureInfos[i].imageView) {
          continue;
       }
@@ -143,7 +171,7 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
       writeDesc.pImageInfo = &textureInfos[i];
       writeDesc.pBufferInfo = nullptr;
       writeDesc.pTexelBufferView = nullptr;
-      mDevice.updateDescriptorSets({ writeDesc }, {});
+      pushDescWrite(writeDesc);
    }
 
    for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
@@ -160,8 +188,10 @@ Driver::bindShaderDescriptors(ShaderStage shaderStage)
       writeDesc.pImageInfo = nullptr;
       writeDesc.pBufferInfo = &bufferInfos[i];
       writeDesc.pTexelBufferView = nullptr;
-      mDevice.updateDescriptorSets({ writeDesc }, {});
+      pushDescWrite(writeDesc);
    }
+
+   mDevice.updateDescriptorSets(numDescWrites, descWrites.data(), 0, nullptr);
 
    mActiveCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                            mPipelineLayout,
@@ -178,19 +208,7 @@ Driver::bindShaderResources()
    }
 
    // This should probably be split to its own function
-   if (mCurrentVertexShader) {
-      auto pa_cl_clip_cntl = getRegister<latte::PA_CL_CLIP_CNTL>(latte::Register::PA_CL_CLIP_CNTL);
-      auto pa_cl_vte_cntl = getRegister<latte::PA_CL_VTE_CNTL>(latte::Register::PA_CL_VTE_CNTL);
-
-      // These are not handled as I don't believe we actually scale/offset by the viewport...
-      //pa_cl_vte_cntl.VPORT_Z_OFFSET_ENA();
-      //pa_cl_vte_cntl.VPORT_Z_SCALE_ENA();
-
-      // TODO: Implement these
-      //pa_cl_vte_cntl.VTX_XY_FMT();
-      //pa_cl_vte_cntl.VTX_Z_FMT();
-      //pa_cl_vte_cntl.VTX_W0_FMT();
-
+   if (mCurrentDraw->vertexShader) {
       struct VsPushConstants
       {
          struct Vec4
@@ -205,73 +223,25 @@ Driver::bindShaderResources()
          Vec4 zSpaceMul;
       } vsConstData;
 
-      auto screenSizeX = mCurrentViewport.width - mCurrentViewport.x;
-      auto screenSizeY = mCurrentViewport.height - mCurrentViewport.y;
+      vsConstData.posMulAdd.x = mCurrentDraw->shaderViewportData.xMul;
+      vsConstData.posMulAdd.y = mCurrentDraw->shaderViewportData.yMul;
+      vsConstData.posMulAdd.z = mCurrentDraw->shaderViewportData.xAdd;
+      vsConstData.posMulAdd.w = mCurrentDraw->shaderViewportData.yAdd;
+      vsConstData.zSpaceMul.x = mCurrentDraw->shaderViewportData.zAdd;
+      vsConstData.zSpaceMul.y = mCurrentDraw->shaderViewportData.zMul;
 
-      if (pa_cl_vte_cntl.VPORT_X_OFFSET_ENA()) {
-         vsConstData.posMulAdd.z = 0.0f;
-      } else {
-         vsConstData.posMulAdd.z = -1.0f;
-      }
-      if (pa_cl_vte_cntl.VPORT_X_SCALE_ENA()) {
-         vsConstData.posMulAdd.x = 1.0f;
-      } else {
-         vsConstData.posMulAdd.x = 2.0f / screenSizeX;
-      }
-      if (pa_cl_vte_cntl.VPORT_Y_OFFSET_ENA()) {
-         vsConstData.posMulAdd.w = 0.0f;
-      } else {
-         vsConstData.posMulAdd.w = -1.0f;
-      }
-      if (pa_cl_vte_cntl.VPORT_Y_SCALE_ENA()) {
-         vsConstData.posMulAdd.y = 1.0f;
-      } else {
-         vsConstData.posMulAdd.y = 2.0f / screenSizeY;
-      }
-
-      if (!pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
-         // map gl(-1 to 1) onto vk(0 to 1)
-         vsConstData.zSpaceMul.x = 1.0f; // Add W
-         vsConstData.zSpaceMul.y = 0.5f; // * 0.5
-      } else {
-         // maintain 0 to 1
-         vsConstData.zSpaceMul.x = 0.0f; // Add 0
-         vsConstData.zSpaceMul.y = 1.0f; // * 1.0
-      }
-
-      *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.z) = mCurrentDrawDesc.baseVertex;
-      *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.w) = mCurrentDrawDesc.baseInstance;
+      *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.z) = mCurrentDraw->baseVertex;
+      *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.w) = mCurrentDraw->baseInstance;
 
       mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout,
                                                           vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,
                                                           0, { vsConstData });
    }
 
-   if (mCurrentPixelShader) {
-      auto lopMode = 0;
-
-      // TODO: I don't understand why the vulkan drivers use the color from the
-      // shader when rendering this stuff... We have to do this for now.
-      auto cb_color_control = getRegister<latte::CB_COLOR_CONTROL>(latte::Register::CB_COLOR_CONTROL);
-      if (cb_color_control.ROP3() == 0xFF) {
-         lopMode = 1;
-      } else if (cb_color_control.ROP3() == 0x00) {
-         lopMode = 2;
-      }
-
-      // TODO: We should probably move this into a getXXXXDesc-like function
-      // so that our register reads are slightly more consistent.
-      auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
-      auto sx_alpha_ref = getRegister<latte::SX_ALPHA_REF>(latte::Register::SX_ALPHA_REF);
-
-      auto alphaFunc = sx_alpha_test_control.ALPHA_FUNC();
-      if (!sx_alpha_test_control.ALPHA_TEST_ENABLE()) {
-         alphaFunc = latte::REF_FUNC::ALWAYS;
-      }
-      if (sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
-         alphaFunc = latte::REF_FUNC::ALWAYS;
-      }
-      auto alphaRef = sx_alpha_ref.ALPHA_REF();
+   if (mCurrentDraw->pixelShader) {
+      auto lopMode = mCurrentDraw->pipeline->shaderLopMode;
+      auto alphaFunc = mCurrentDraw->pipeline->shaderAlphaFunc;
+      auto alphaRef = mCurrentDraw->pipeline->shaderAlphaRef;
 
       struct PsPushConstants
       {
@@ -284,7 +254,7 @@ Driver::bindShaderResources()
 
       psConstData.needPremultiply = 0;
       for (auto i = 0; i < latte::MaxRenderTargets; ++i) {
-         if (mCurrentPipeline->needsPremultipliedTargets && !mCurrentPipeline->targetIsPremultiplied[i]) {
+         if (mCurrentDraw->pipeline->needsPremultipliedTargets && !mCurrentDraw->pipeline->targetIsPremultiplied[i]) {
             psConstData.needPremultiply |= (1 << i);
          }
       }
@@ -314,7 +284,7 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
       decaf_check(!indices);
    }
 
-   auto& drawDesc = mCurrentDrawDesc;
+   DrawDesc& drawDesc = mDrawCache;
    drawDesc.indices = indices;
    drawDesc.indexType = vgt_dma_index_type.INDEX_TYPE();
    drawDesc.indexSwapMode = vgt_dma_index_type.SWAP_MODE();
@@ -324,6 +294,9 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    drawDesc.baseVertex = sq_vtx_base_vtx_loc.OFFSET();
    drawDesc.numInstances = vgt_dma_num_instances.NUM_INSTANCES();
    drawDesc.baseInstance = sq_vtx_start_inst_loc.OFFSET();
+   drawDesc.streamOutEnabled = useStreamOut;
+   drawDesc.streamOutContext = mStreamOutContext;
+   mCurrentDraw = &drawDesc;
 
    if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST) {
       drawDesc.isRectDraw = true;
@@ -396,24 +369,92 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
       opaqueCounter = getDataMemCache(soBufferSizeAddr, 4);
 
       transitionMemCache(opaqueCounter, ResourceUsage::StreamOutCounterRead);
+
+      drawDesc.opaqueBuffer = opaqueCounter;
+      drawDesc.opaqueStride = opaqueStride;
+   } else {
+      drawDesc.opaqueBuffer = nullptr;
    }
 
+   // Finish this draw
+   mCurrentDraw = nullptr;
+
+   // Perform our pending draws if the renderpass has changed
+   if (mActiveRenderPass != drawDesc.renderPass || mActiveFramebuffer != drawDesc.framebuffer) {
+      flushPendingDraws();
+
+      mActiveRenderPass = drawDesc.renderPass;
+      mActiveFramebuffer = drawDesc.framebuffer;
+   }
+
+   // If this is a stream-out draw, we have to flush it as a singular draw call.
+   if (useStreamOut) {
+      flushPendingDraws();
+   }
+
+   // Now that we have potentially flushed our draws, lets prepare this draw.  We need to do it in
+   // this order, since this draw might use the last renderpasses framebuffer as a texture, and we
+   // need to barrier AFTER the previous draws are flushed.
+   mCurrentDraw = &drawDesc;
    prepareCurrentTextures();
    prepareCurrentFramebuffer();
+   mCurrentDraw = nullptr;
 
-   auto& fbRa = mCurrentFramebuffer->renderArea;
+   // Record this pending draw
+   mPendingDraws.push_back(drawDesc);
+
+   // Finish with this draw call
+   mCurrentDraw = nullptr;
+
+   // If this is a stream-out draw, we have to flush it as a singular draw call.
+   if (useStreamOut) {
+      flushPendingDraws();
+   }
+}
+
+void
+Driver::flushPendingDraws()
+{
+   if (mPendingDraws.empty()) {
+      return;
+   }
+
+   auto& fbRa = mActiveFramebuffer->renderArea;
    auto renderArea = vk::Rect2D { { 0, 0 }, fbRa };
 
    // Bind and set up everything, and then do our draw
    auto passBeginDesc = vk::RenderPassBeginInfo {};
-   passBeginDesc.renderPass = mCurrentRenderPass->renderPass;
-   passBeginDesc.framebuffer = mCurrentFramebuffer->framebuffer;
+   passBeginDesc.renderPass = mActiveRenderPass->renderPass;
+   passBeginDesc.framebuffer = mActiveFramebuffer->framebuffer;
    passBeginDesc.renderArea = renderArea;
    passBeginDesc.clearValueCount = 0;
    passBeginDesc.pClearValues = nullptr;
    mActiveCommandBuffer.beginRenderPass(passBeginDesc, vk::SubpassContents::eInline);
 
-   mActiveCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mCurrentPipeline->pipeline);
+   for (auto &drawDesc : mPendingDraws) {
+      // Make sure that the draw descriptions match our expectations
+      decaf_check(mActiveRenderPass == drawDesc.renderPass);
+      decaf_check(mActiveFramebuffer == drawDesc.framebuffer);
+
+      mCurrentDraw = &drawDesc;
+      drawCurrentState();
+      mCurrentDraw = nullptr;
+   }
+   mPendingDraws.clear();
+
+   mActiveCommandBuffer.endRenderPass();
+}
+
+void
+Driver::drawCurrentState()
+{
+   auto &drawDesc = *mCurrentDraw;
+
+   if (mActivePipeline != drawDesc.pipeline) {
+      mActiveCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawDesc.pipeline->pipeline);
+
+      mActivePipeline = drawDesc.pipeline;
+   }
 
    bindAttribBuffers();
    bindShaderResources();
@@ -421,23 +462,21 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    bindIndexBuffer();
    bindStreamOutBuffers();
 
-   if (useStreamOut) {
+   if (drawDesc.streamOutEnabled) {
       beginStreamOut();
    }
 
-   if (useOpaque) {
-      mActiveCommandBuffer.drawIndirectByteCountEXT(1, 0, opaqueCounter->buffer, 0, 0, opaqueStride, mVkDynLoader);
-   } else if (mCurrentIndexBuffer) {
+   if (drawDesc.opaqueBuffer) {
+      mActiveCommandBuffer.drawIndirectByteCountEXT(1, 0, drawDesc.opaqueBuffer->buffer, 0, 0, drawDesc.opaqueStride, mVkDynLoader);
+   } else if (drawDesc.indexBuffer) {
       mActiveCommandBuffer.drawIndexed(drawDesc.numIndices, drawDesc.numInstances, 0, drawDesc.baseVertex, drawDesc.baseInstance);
    } else {
       mActiveCommandBuffer.draw(drawDesc.numIndices, drawDesc.numInstances, drawDesc.baseVertex, drawDesc.baseInstance);
    }
 
-   if (useStreamOut) {
+   if (drawDesc.streamOutEnabled) {
       endStreamOut();
    }
-
-   mActiveCommandBuffer.endRenderPass();
 }
 
 } // namespace vulkan

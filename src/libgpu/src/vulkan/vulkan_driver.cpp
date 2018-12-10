@@ -504,8 +504,6 @@ Driver::endCommandGroup()
    // Clear our state in between command buffers for safety
    mActiveCommandBuffer = nullptr;
    mActiveSyncWaiter = nullptr;
-   mActivePipeline = nullptr;
-   mActiveRenderPass = nullptr;
    mActiveDescriptorPool = vk::DescriptorPool();
 }
 
@@ -519,9 +517,18 @@ Driver::beginCommandBuffer()
 void
 Driver::endCommandBuffer()
 {
+   // Flush our pending draws
+   flushPendingDraws();
+
    // We have to force our memcache objects to be downloaded at the
    // end of every PM4 buffer.
    downloadPendingMemCache();
+
+   // Clear our per-command-buffer state
+   mActivePipeline = nullptr;
+   mActiveRenderPass = nullptr;
+   mActiveFramebuffer = nullptr;
+   mDrawCache = DrawDesc{};
 
    // Stop recording this host command buffer
    mActiveCommandBuffer.end();

@@ -35,11 +35,11 @@ bool
 Driver::checkCurrentAttribBuffers()
 {
    // Must have a vertex shader to describe what to upload...
-   decaf_check(mCurrentVertexShader);
+   decaf_check(mCurrentDraw->vertexShader);
 
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
-      if (!mCurrentVertexShader->shader.inputBuffers[i].isUsed) {
-         mCurrentAttribBuffers[i] = nullptr;
+      if (!mCurrentDraw->vertexShader->shader.inputBuffers[i].isUsed) {
+         mCurrentDraw->attribBuffers[i] = nullptr;
          continue;
       }
 
@@ -55,7 +55,7 @@ Driver::checkCurrentAttribBuffers()
 
       transitionMemCache(memCache, ResourceUsage::AttributeBuffer);
 
-      mCurrentAttribBuffers[i] = memCache;
+      mCurrentDraw->attribBuffers[i] = memCache;
    }
 
    return true;
@@ -65,7 +65,7 @@ void
 Driver::bindAttribBuffers()
 {
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
-      auto buffer = mCurrentAttribBuffers[i];
+      auto buffer = mCurrentDraw->attribBuffers[i];
       if (buffer) {
          mActiveCommandBuffer.bindVertexBuffers(i, { buffer->buffer }, { 0 });
       }

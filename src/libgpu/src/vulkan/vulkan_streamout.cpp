@@ -155,7 +155,7 @@ Driver::checkCurrentStreamOut()
       auto currentDesc = getStreamOutBufferDesc(i);
 
       if (!currentDesc.baseAddress) {
-         mCurrentStreamOutBuffers[i] = nullptr;
+         mCurrentDraw->streamOutBuffers[i] = nullptr;
          continue;
       }
 
@@ -166,7 +166,7 @@ Driver::checkCurrentStreamOut()
       // automatically invalidated later on.
       transitionMemCache(memCache, ResourceUsage::StreamOutBuffer);
 
-      mCurrentStreamOutBuffers[i] = memCache;
+      mCurrentDraw->streamOutBuffers[i] = memCache;
    }
 
    return true;
@@ -176,7 +176,7 @@ void
 Driver::bindStreamOutBuffers()
 {
    for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
-      auto& buffer = mCurrentStreamOutBuffers[i];
+      auto& buffer = mCurrentDraw->streamOutBuffers[i];
       if (!buffer) {
          continue;
       }
@@ -191,7 +191,7 @@ Driver::beginStreamOut()
    std::array<vk::Buffer, latte::MaxStreamOutBuffers> buffers = { vk::Buffer{} };
    std::array<vk::DeviceSize, latte::MaxStreamOutBuffers> offsets = { 0 };
    for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
-      auto ctxData = mStreamContextData[i];
+      auto ctxData = mCurrentDraw->streamOutContext[i];
       if (ctxData) {
          buffers[i] = ctxData->buffer;
       }
@@ -206,7 +206,7 @@ Driver::endStreamOut()
    std::array<vk::Buffer, latte::MaxStreamOutBuffers> buffers = { vk::Buffer{} };
    std::array<vk::DeviceSize, latte::MaxStreamOutBuffers> offsets = { 0 };
    for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
-      auto ctxData = mStreamContextData[i];
+      auto ctxData = mCurrentDraw->streamOutContext[i];
       if (ctxData) {
          buffers[i] = ctxData->buffer;
       }

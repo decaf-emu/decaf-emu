@@ -102,14 +102,14 @@ Driver::checkCurrentRenderPass()
 {
    HashedDesc<RenderPassDesc> currentDesc = getRenderPassDesc();
 
-   if (mCurrentRenderPass && mCurrentRenderPass->desc == currentDesc) {
+   if (mCurrentDraw->renderPass && mCurrentDraw->renderPass->desc == currentDesc) {
       // Already active, nothing to do.
       return true;
    }
 
    auto& foundRp = mRenderPasses[currentDesc.hash()];
    if (foundRp) {
-      mCurrentRenderPass = foundRp;
+      mCurrentDraw->renderPass = foundRp;
       return true;
    }
 
@@ -205,7 +205,7 @@ Driver::checkCurrentRenderPass()
    auto renderPass = mDevice.createRenderPass(renderPassDesc);
    foundRp->renderPass = renderPass;
 
-   mCurrentRenderPass = foundRp;
+   mCurrentDraw->renderPass = foundRp;
    return true;
 }
 
