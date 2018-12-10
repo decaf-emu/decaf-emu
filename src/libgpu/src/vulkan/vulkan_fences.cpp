@@ -36,6 +36,7 @@ Driver::releaseSyncWaiter(SyncWaiter *syncWaiter)
    syncWaiter->isCompleted = false;
    syncWaiter->callbacks.clear();
    syncWaiter->stagingBuffers.clear();
+   syncWaiter->retileHandles.clear();
    syncWaiter->descriptorPools.clear();
    syncWaiter->occQueryPools.clear();
 
@@ -61,6 +62,10 @@ Driver::executeSyncWaiter(SyncWaiter *syncWaiter)
 
    for (auto &buffer : syncWaiter->stagingBuffers) {
       retireStagingBuffer(buffer);
+   }
+
+   for (auto &handle : syncWaiter->retileHandles) {
+      mGpuRetiler.releaseHandle(handle);
    }
 
    for (auto &pool : syncWaiter->descriptorPools) {

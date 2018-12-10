@@ -3,6 +3,8 @@
 #include "gpu_graphicsdriver.h"
 #include "gpu_ringbuffer.h"
 #include "gpu_vulkandriver.h"
+#include "gpu7_tiling.h"
+#include "gpu7_tiling_vulkan.h"
 #include "latte/latte_formats.h"
 #include "latte/latte_constants.h"
 #include "spirv/spirv_translate.h"
@@ -71,41 +73,6 @@ private:
 
 };
 
-struct MemCacheMutator
-{
-   enum class Mode
-   {
-      None,
-      Retile
-   };
-
-   Mode mode = Mode::None;
-   struct
-   {
-      latte::SQ_TILE_MODE tileMode;
-      uint32_t swizzle;
-      uint32_t pitch;
-      uint32_t width;
-      uint32_t height;
-      uint32_t depth;
-      uint32_t aa;
-      bool isDepth;
-      uint32_t bpp;
-   } retile;
-
-   inline bool operator==(const MemCacheMutator& other) const
-   {
-      if (mode == Mode::None && other.mode == Mode::None) {
-         return true;
-      }
-
-      // We currently cheat and use the DataHash system to compare.
-      auto hash = DataHash {}.write(retile);
-      auto ohash = DataHash {}.write(other.retile);
-      return hash == ohash;
-   }
-};
-
 enum class ResourceUsage : uint32_t
 {
    Undefined,
@@ -122,6 +89,8 @@ enum class ResourceUsage : uint32_t
    StreamOutBuffer,
    StreamOutCounterRead,
    StreamOutCounterWrite,
+   ComputeSsboRead,
+   ComputeSsboWrite,
    TransferSrc,
    TransferDst,
    HostWrite,
@@ -212,7 +181,6 @@ struct MemCacheObject
    // Meta-data about what this cache object represents.
    phys_addr address;
    uint32_t size;
-   MemCacheMutator mutator;
    ResourceUsage activeUsage;
 
    // The buffer data.
@@ -327,6 +295,7 @@ struct SyncWaiter
    vk::Fence fence;
    std::vector<vk::DescriptorPool> descriptorPools;
    std::vector<vk::QueryPool> occQueryPools;
+   std::vector<gpu7::tiling::vulkan::RetileHandle> retileHandles;
    std::vector<StagingBuffer *> stagingBuffers;
    std::vector<std::function<void()>> callbacks;
 
@@ -482,6 +451,9 @@ struct SurfaceObject
    uint32_t height;
    uint32_t depth;
    uint32_t arrayLayers;
+
+   gpu7::tiling::SurfaceDescription tilingDesc;
+   gpu7::tiling::SurfaceInfo tilingInfo;
 
    std::vector<SurfaceSlice> slices;
 
@@ -786,6 +758,16 @@ protected:
    void checkSyncFences();
    void addRetireTask(std::function<void()> fn);
 
+   // Retiling
+   void dispatchGpuTile(vk::CommandBuffer &commandBuffer,
+                        vk::Buffer dstBuffer, uint32_t dstOffset,
+                        vk::Buffer srcBuffer, uint32_t srcOffset,
+                        const gpu7::tiling::vulkan::RetileInfo& retileInfo);
+   void dispatchGpuUntile(vk::CommandBuffer &commandBuffer,
+                          vk::Buffer dstBuffer, uint32_t dstOffset,
+                          vk::Buffer srcBuffer, uint32_t srcOffset,
+                          const gpu7::tiling::vulkan::RetileInfo& retileInfo);
+
    // Query Pools
    vk::QueryPool allocateOccQueryPool();
    void retireOccQueryPool(vk::QueryPool pool);
@@ -821,12 +803,8 @@ protected:
    void _ensureMemSegments(MemSegmentMap::iterator firstSegment, uint32_t size);
    void _refreshMemSegment(MemCacheSegment *segment);
 
-   MemCacheObject * _allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes, const MemCacheMutator& mutator);
-   void _uploadMemCacheRaw(MemCacheObject *cache, SectionRange sections);
-   void _uploadMemCacheRetile(MemCacheObject *cache, SectionRange sections);
+   MemCacheObject * _allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes);
    void _uploadMemCache(MemCacheObject *cache, SectionRange sections);
-   void _downloadMemCacheRaw(MemCacheObject *cache, SectionRange sections);
-   void _downloadMemCacheRetile(MemCacheObject *cache, SectionRange sections);
    void _downloadMemCache(MemCacheObject *cache, SectionRange sections);
    void _refreshMemCache_Check(MemCacheObject *cache, SectionRange sections);
    void _refreshMemCache_Update(MemCacheObject *cache, SectionRange sections);
@@ -834,7 +812,7 @@ protected:
    void _invalidateMemCache(MemCacheObject *cache, SectionRange sections, DelayedMemWriteFunc delayedWriteHandler);
    void _barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRange sections);
    SectionRange _sectionsFromOffsets(MemCacheObject *cache, uint32_t begin, uint32_t end);
-   MemCacheObject * getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes, const MemCacheMutator& mutator = MemCacheMutator {});
+   MemCacheObject * getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes);
    void invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, DelayedMemWriteFunc delayedWriteHandler);
    void transitionMemCache(MemCacheObject *cache, ResourceUsage usage, uint32_t offset = 0, uint32_t size = 0);
    DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size);
@@ -849,7 +827,7 @@ protected:
    void copyFromStagingBuffer(StagingBuffer *sbuffer, uint32_t offset, void *data, uint32_t size);
 
    // Surfaces
-   MemCacheObject * _getSurfaceMemCache(const SurfaceDesc &info);
+   MemCacheObject * _getSurfaceMemCache(const SurfaceDesc &info, const gpu7::tiling::SurfaceInfo& tilingInfo);
    void _copySurface(SurfaceObject *dst, SurfaceObject *src, SurfaceSubRange range);
 
    SurfaceGroupObject * _allocateSurfaceGroup(const SurfaceDesc &info);
@@ -1051,6 +1029,8 @@ private:
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;
    std::unordered_map<DataHash, MemCacheObject *> mMemCaches;
+
+   gpu7::tiling::vulkan::Retiler mGpuRetiler;
 };
 
 } // namespace vulkan

@@ -50,6 +50,9 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    // Initialize the dynamic loader we use for extensions
    mVkDynLoader.init(nullptr, mDevice);
 
+   // Initialize our GPU retiler
+   mGpuRetiler.initialise(mDevice);
+
    // Allocate a command pool to use
    vk::CommandPoolCreateInfo commandPoolDesc;
    commandPoolDesc.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -599,6 +602,11 @@ Driver::getResourceUsageMeta(ResourceUsage usage)
                vk::AccessFlagBits::eTransformFeedbackCounterReadEXT,
                vk::PipelineStageFlagBits::eTransformFeedbackEXT,
                vk::ImageLayout::eUndefined };
+   case ResourceUsage::ComputeSsboRead:
+      return { false,
+               vk::AccessFlagBits::eShaderRead,
+               vk::PipelineStageFlagBits::eComputeShader,
+               vk::ImageLayout::eUndefined };
    case ResourceUsage::TransferSrc:
       return { false,
                vk::AccessFlagBits::eTransferRead,
@@ -629,6 +637,11 @@ Driver::getResourceUsageMeta(ResourceUsage usage)
       return { true,
                vk::AccessFlagBits::eTransformFeedbackCounterWriteEXT,
                vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+               vk::ImageLayout::eUndefined };
+   case ResourceUsage::ComputeSsboWrite:
+      return { true,
+               vk::AccessFlagBits::eShaderWrite,
+               vk::PipelineStageFlagBits::eComputeShader,
                vk::ImageLayout::eUndefined };
    case ResourceUsage::TransferDst:
       return { true,

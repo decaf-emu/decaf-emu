@@ -64,65 +64,86 @@ _sliceRangeToSectionRange(const SurfaceSubRange& range)
    return { range.firstSlice, range.numSlices };
 }
 
+static inline uint32_t
+_unthickenedSliceSize(const gpu7::tiling::SurfaceInfo &info)
+{
+   return info.pitch * info.height * info.bpp / 8;
+}
+
 static inline std::pair<uint32_t, uint32_t>
 _sliceRangeToMemRange(SurfaceObject *surface, const SurfaceSubRange& range)
 {
-   auto& memCache = surface->memCache;
-   decaf_check(memCache->mutator.mode == MemCacheMutator::Mode::Retile);
-   auto& retile = memCache->mutator.retile;
-
-   auto sliceSize = retile.pitch * retile.height * retile.bpp / 8;
-
+   auto sliceSize = _unthickenedSliceSize(surface->tilingInfo);
    auto slicesOffset = range.firstSlice * sliceSize;
    auto slicesSize = range.numSlices * sliceSize;
 
    return { slicesOffset, slicesSize };
 }
 
-MemCacheObject *
-Driver::_getSurfaceMemCache(const SurfaceDesc &info)
+static inline gpu7::tiling::SurfaceDescription
+_getTilingSurfaceDesc(const SurfaceDesc &info)
 {
-   auto realAddr = info.calcAlignedBaseAddress();
    auto swizzle = info.calcSwizzle();
-   auto tileMode = info.tileMode;
    auto dataFormat = getSurfaceFormatDataFormat(info.format);
    auto bpp = latte::getDataFormatBitsPerElement(dataFormat);
-   auto isDepthBuffer = (info.tileType == latte::SQ_TILE_TYPE::DEPTH);
-   auto aa = uint32_t(0);
 
-   auto texelPitch = info.pitch;
-   auto texelWidth = info.width;
-   auto texelHeight = info.height;
-   auto texelDepth = info.depth;
+   /*
+   AddrTileMode tileMode;
+   AddrFormat format;
+   uint32_t bpp;
+   uint32_t numSamples;
+   uint32_t width;
+   uint32_t height;
+   uint32_t numSlices;
+   ADDR_SURFACE_FLAGS flags;
+   uint32_t numFrags;
+   uint32_t numLevels;
+   uint32_t bankSwizzle;
+   uint32_t pipeSwizzle;
 
-   // We perform tiling alignment here, but its likely that this is not really
-   // neccessary anymore as we do pretty good calculations on the GX2 side now.
-   // We still use this to adjust BC surface width/height appropriately though.
-   gpu::alignTiling(tileMode, dataFormat, swizzle,
-                    texelPitch, texelWidth, texelHeight, texelDepth,
-                    aa, isDepthBuffer, bpp);
+   */
 
-   auto sliceSize = texelPitch * texelHeight * bpp / 8;
-   auto imageSize = sliceSize * texelDepth;
+   gpu7::tiling::SurfaceDescription tilingDesc;
+   tilingDesc.tileMode = static_cast<gpu7::tiling::TileMode>(info.tileMode);
+   tilingDesc.format = static_cast<AddrFormat>(dataFormat);
+   tilingDesc.bpp = bpp;
+   tilingDesc.numSamples = 1;
+   tilingDesc.width = info.pitch;
+   tilingDesc.height = info.height;
+   tilingDesc.numSlices = info.depth;
+   tilingDesc.flags.depth = (info.tileType == latte::SQ_TILE_TYPE::DEPTH);
+   tilingDesc.flags.volume = (info.dim == latte::SQ_TEX_DIM::DIM_3D);
+   tilingDesc.numFrags = 0;
+   tilingDesc.numLevels = 1;
+   tilingDesc.pipeSwizzle = (swizzle >> 8) & 1;
+   tilingDesc.bankSwizzle = (swizzle >> 9) & 3;
+
+   /*
+   if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      tilingDesc.width = (tilingDesc.width + 3) / 4;
+      tilingDesc.height = (tilingDesc.height + 3) / 4;
+   }
+   */
+
+   return tilingDesc;
+}
+
+MemCacheObject *
+Driver::_getSurfaceMemCache(const SurfaceDesc &info, const gpu7::tiling::SurfaceInfo& tilingInfo)
+{
+   auto realAddr = info.calcAlignedBaseAddress();
+
+   auto sliceSize = _unthickenedSliceSize(tilingInfo);
+   auto imageSize = static_cast<uint32_t>(tilingInfo.surfSize);
+   auto alignedDepth = tilingInfo.depth;
 
    std::vector<uint32_t> sliceSizes;
-   for (auto i = 0u; i < texelDepth; ++i) {
+   for (auto i = 0u; i < alignedDepth; ++i) {
       sliceSizes.push_back(sliceSize);
    }
 
-   // Generate a mutator and grab the memory
-   MemCacheMutator mutator;
-   mutator.mode = MemCacheMutator::Mode::Retile;
-   mutator.retile.tileMode = tileMode;
-   mutator.retile.swizzle = swizzle;
-   mutator.retile.pitch = texelPitch;
-   mutator.retile.width = texelWidth;
-   mutator.retile.height = texelHeight;
-   mutator.retile.depth = texelDepth;
-   mutator.retile.aa = aa;
-   mutator.retile.isDepth = isDepthBuffer;
-   mutator.retile.bpp = bpp;
-   return getMemCache(phys_addr(realAddr), imageSize, sliceSizes, mutator);
+   // Grab a memory cache object for this image
+   return getMemCache(phys_addr(realAddr), imageSize, sliceSizes);
 }
 
 void
@@ -451,21 +472,19 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    subresRange.baseArrayLayer = 0;
    subresRange.layerCount = realArrayLayers;
 
+   auto tilingDesc = _getTilingSurfaceDesc(info);
+   auto tilingInfo = gpu7::tiling::computeSurfaceInfo(tilingDesc, 0, 0);
+
    // Grab a reference to the memory cache that backs this surface
-   auto memCache = _getSurfaceMemCache(info);
+   auto memCache = _getSurfaceMemCache(info, tilingInfo);
 
    // TODO: Maybe join together the getSurfaceMemCache code and this?
    // Generate some meta-data about how we copy in/out
-   auto alignedPitch = realPitch;
-   auto alignedHeight = realHeight;
-   if (memCache->mutator.mode == MemCacheMutator::Mode::Retile) {
-      alignedPitch = memCache->mutator.retile.pitch;
-      alignedHeight = memCache->mutator.retile.height;
-
-      if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
-         alignedPitch *= 4;
-         alignedHeight *= 4;
-      }
+   auto alignedPitch = tilingInfo.pitch;
+   auto alignedHeight = tilingInfo.height;
+   if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
+      alignedPitch *= 4;
+      alignedHeight *= 4;
    }
 
    vk::BufferImageCopy bufferRegion = {};
@@ -514,6 +533,8 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    surface->height = realHeight;
    surface->depth = realDepth;
    surface->arrayLayers = realArrayLayers;
+   surface->tilingDesc = tilingDesc;
+   surface->tilingInfo = tilingInfo;
    surface->slices = std::move(slices);
    surface->memCache = memCache;
    surface->subresRange = subresRange;
@@ -581,8 +602,50 @@ Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
    auto memRange = _sliceRangeToMemRange(surface, range);
    auto sectionRange = _sliceRangeToSectionRange(range);
 
+   auto untiledOffset = memRange.first;
+   auto untiledBuffer = memCache->buffer;
+
+   auto retileInfo = gpu7::tiling::vulkan::calculateRetileInfo(surface->tilingDesc, range.firstSlice, range.numSlices);
+   if (retileInfo.isTiled) {
+      // Lets just double-check everyone is in agreement...
+      // TODO: These wont match due to tile thickness needing to be aligned!
+      //decaf_check(memRange.first == retileInfo.sliceOffset);
+
+      // Calculate our retiling buffer size.
+      auto retileSize = retileInfo.sliceBytes * range.numSlices;
+
+      // Check that we are aligned based on our thickness.  This is critical to
+      // ensure that we correctly invalidate the regions touched by the retiler.
+      decaf_check(range.firstSlice % retileInfo.microTileThickness == 0);
+      decaf_check(range.numSlices % retileInfo.microTileThickness == 0);
+      retileSize /= retileInfo.microTileThickness;
+
+      // Grab a staging buffer to write into before the image read
+      auto retileStaging = getStagingBuffer(retileSize, StagingBufferType::GpuToGpu);
+
+      // Calculate the real offset into our tiled data, the GPU retiler needs a buffer
+      // offset that points directly to the slice.
+      auto tiledOffset = retileInfo.sliceOffset;
+      auto tiledBuffer = untiledBuffer;
+
+      // Remap the untiled surface to our staging buffer
+      untiledOffset = 0;
+      untiledBuffer = retileStaging->buffer;
+
+      _barrierMemCache(surface->memCache, ResourceUsage::ComputeSsboRead, sectionRange);
+
+      dispatchGpuUntile(mActiveCommandBuffer, untiledBuffer, untiledOffset, tiledBuffer, tiledOffset, retileInfo);
+
+      _barrierMemCache(surface->memCache, ResourceUsage::TransferSrc, sectionRange);
+   } else {
+      // We will directly read from the memory cache, since this is a linear surface
+      _barrierMemCache(surface->memCache, ResourceUsage::TransferSrc, sectionRange);
+   }
+
+   // Actually load the surface
+
    auto region = surface->bufferRegion;
-   region.bufferOffset = memRange.first;
+   region.bufferOffset = untiledOffset;
    if (surface->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
       region.imageOffset.z = range.firstSlice;
       region.imageExtent.depth = range.numSlices;
@@ -591,7 +654,6 @@ Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
       region.imageSubresource.layerCount = range.numSlices;
    }
 
-   _barrierMemCache(surface->memCache, ResourceUsage::TransferSrc, sectionRange);
    _barrierSurface(surface, ResourceUsage::TransferDst, vk::ImageLayout::eTransferDstOptimal, range);
 
    // TODO: Improve how we handle subresources everywhere.
@@ -599,7 +661,7 @@ Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
    bool hasStencil = !!(region.imageSubresource.aspectMask & vk::ImageAspectFlagBits::eStencil);
    if (!(hasDepth & hasStencil)) {
       mActiveCommandBuffer.copyBufferToImage(
-         memCache->buffer,
+         untiledBuffer,
          surface->image,
          vk::ImageLayout::eTransferDstOptimal,
          { region });
@@ -609,7 +671,7 @@ Driver::_readSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
       region2.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eStencil;
 
       mActiveCommandBuffer.copyBufferToImage(
-         memCache->buffer,
+         untiledBuffer,
          surface->image,
          vk::ImageLayout::eTransferDstOptimal,
          { region, region2 });
@@ -623,8 +685,32 @@ Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
    auto memRange = _sliceRangeToMemRange(surface, range);
    auto sectionRange = _sliceRangeToSectionRange(range);
 
+   auto untiledOffset = memRange.first;
+   auto untiledBuffer = memCache->buffer;
+
+   auto retileInfo = gpu7::tiling::vulkan::calculateRetileInfo(surface->tilingDesc, range.firstSlice, range.numSlices);
+   if (retileInfo.isTiled) {
+      // Calculate the retiling buffer size
+      auto retileSize = retileInfo.sliceBytes * range.numSlices;
+
+      // Check that we are aligned based on our thickness.  This is critical to
+      // ensure that we correctly invalidate the regions touched by the retiler.
+      decaf_check(range.firstSlice % retileInfo.microTileThickness == 0);
+      decaf_check(range.numSlices % retileInfo.microTileThickness == 0);
+      retileSize /= retileInfo.microTileThickness;
+
+      // Grab our buffer used for retiling
+      auto retileStaging = getStagingBuffer(retileSize, StagingBufferType::GpuToGpu);
+
+      untiledOffset = 0;
+      untiledBuffer = retileStaging->buffer;
+   } else {
+      // Write directly to the surface.
+      _barrierMemCache(surface->memCache, ResourceUsage::TransferDst, sectionRange);
+   }
+
    auto region = surface->bufferRegion;
-   region.bufferOffset = memRange.first;
+   region.bufferOffset = untiledOffset;
    if (surface->desc.dim == latte::SQ_TEX_DIM::DIM_3D) {
       region.imageOffset.z = range.firstSlice;
       region.imageExtent.depth = range.numSlices;
@@ -633,7 +719,6 @@ Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
       region.imageSubresource.layerCount = range.numSlices;
    }
 
-   _barrierMemCache(surface->memCache, ResourceUsage::TransferDst, sectionRange);
    _barrierSurface(surface, ResourceUsage::TransferSrc, vk::ImageLayout::eTransferSrcOptimal, range);
 
    // TODO: Improve how we handle subresources everywhere.
@@ -643,7 +728,7 @@ Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
       mActiveCommandBuffer.copyImageToBuffer(
          surface->image,
          vk::ImageLayout::eTransferSrcOptimal,
-         memCache->buffer,
+         untiledBuffer,
          { region });
    } else {
       auto region2 = region;
@@ -653,8 +738,17 @@ Driver::_writeSurfaceData(SurfaceObject *surface, SurfaceSubRange range)
       mActiveCommandBuffer.copyImageToBuffer(
          surface->image,
          vk::ImageLayout::eTransferSrcOptimal,
-         memCache->buffer,
+         untiledBuffer,
          { region, region2 });
+   }
+
+   if (retileInfo.isTiled) {
+      _barrierMemCache(surface->memCache, ResourceUsage::ComputeSsboWrite, sectionRange);
+
+      auto tiledBuffer = memCache->buffer;
+      auto tiledOffset = retileInfo.sliceOffset;
+
+      dispatchGpuTile(mActiveCommandBuffer, untiledBuffer, untiledOffset, tiledBuffer, tiledOffset, retileInfo);
    }
 }
 
@@ -785,13 +879,12 @@ Driver::getSurface(const SurfaceDesc& info)
    // Check we got the surface we wanted, not that we check height,depth
    // as a greater-equal to easily handle the array cases.  We also skip
    // DIM check, since it can go from 2D to 2D_ARRAY.
-   decaf_check(surface->desc.baseAddress == info.baseAddress);
+   decaf_check(surface->desc.calcAlignedBaseAddress() == info.calcAlignedBaseAddress());
    decaf_check(surface->desc.pitch == info.pitch);
    decaf_check(surface->desc.width == info.width);
    decaf_check(surface->desc.height >= info.height);
    decaf_check(surface->desc.depth >= info.depth);
    decaf_check(surface->desc.samples == info.samples);
-   //decaf_check(surface->desc.dim == info.dim);
    decaf_check(surface->desc.tileType == info.tileType);
    decaf_check(surface->desc.tileMode == info.tileMode);
    decaf_check(surface->desc.format == info.format);
@@ -802,17 +895,27 @@ Driver::getSurface(const SurfaceDesc& info)
 void
 Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
 {
+   // We need to align our invalidation groups along a tickness boundary!
+   auto alignedRange = range;
+   auto tileThickness = gpu7::tiling::getMicroTileThickness(surface->tilingInfo.tileMode);
+   if (tileThickness > 1) {
+      auto endSlice = range.firstSlice + range.numSlices;
+      alignedRange.firstSlice = align_down(range.firstSlice, tileThickness);
+      endSlice = align_up(endSlice, tileThickness);
+      alignedRange.numSlices = endSlice - alignedRange.firstSlice;
+   }
+
    bool forWrite = getResourceUsageMeta(usage).isWrite;
 
    surface->lastUsageIndex = mActiveBatchIndex;
 
-   if (!forWrite) {
-      _refreshSurface(surface, range);
-   } else {
-      _invalidateSurface(surface, range);
+   _refreshSurface(surface, alignedRange);
+
+   if (forWrite) {
+      _invalidateSurface(surface, alignedRange);
    }
 
-   _barrierSurface(surface, usage, layout, range);
+   _barrierSurface(surface, usage, layout, alignedRange);
 }
 
 SurfaceViewObject *

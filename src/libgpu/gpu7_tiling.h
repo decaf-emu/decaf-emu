@@ -112,7 +112,10 @@ struct SurfaceDescription
    uint32_t pipeSwizzle;
 };
 
-ADDR_COMPUTE_SURFACE_INFO_OUTPUT
+typedef ADDR_COMPUTE_SURFACE_INFO_OUTPUT SurfaceInfo;
+typedef AddrTileMode TileMode;
+
+SurfaceInfo
 computeSurfaceInfo(const SurfaceDescription &surface,
                    int mipLevel,
                    int slice);

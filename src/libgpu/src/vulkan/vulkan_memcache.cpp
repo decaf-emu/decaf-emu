@@ -46,25 +46,8 @@ forEachMemSegment(MemCacheObject *cache, SectionRange range, std::function<void(
 }
 
 MemCacheObject *
-Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes, const MemCacheMutator& mutator)
+Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes)
 {
-   if (mutator.mode == MemCacheMutator::Mode::None) {
-      // Raw mutators allow any section sizes
-   } else if (mutator.mode == MemCacheMutator::Mode::Retile) {
-      // In the case of a retiling mutator, we need to verify that the
-      // section sizes perfectly match with slices.
-
-      auto& retile = mutator.retile;
-      auto sliceSize = retile.pitch * retile.height * retile.bpp / 8;
-
-      for (auto i = 0; i < sectionSizes.size(); ++i) {
-         decaf_check(sectionSizes[i] == sliceSize);
-      }
-   } else {
-      decaf_abort("Unexpected mutator type");
-   }
-
-
    uint32_t totalSize = 0;
 
    std::vector<MemCacheSection> sections;
@@ -92,6 +75,7 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
       vk::BufferUsageFlagBits::eVertexBuffer |
       vk::BufferUsageFlagBits::eUniformBuffer |
       vk::BufferUsageFlagBits::eTransformFeedbackBufferEXT |
+      vk::BufferUsageFlagBits::eStorageBuffer |
       vk::BufferUsageFlagBits::eTransferDst |
       vk::BufferUsageFlagBits::eTransferSrc;
    bufferDesc.sharingMode = vk::SharingMode::eExclusive;
@@ -117,7 +101,6 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
    auto cache = new MemCacheObject();
    cache->address = address;
    cache->size = totalSize;
-   cache->mutator = mutator;
    cache->allocation = allocation;
    cache->buffer = buffer;
    cache->sections = std::move(sections);
@@ -129,7 +112,7 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
 }
 
 void
-Driver::_uploadMemCacheRaw(MemCacheObject *cache, SectionRange range)
+Driver::_uploadMemCache(MemCacheObject *cache, SectionRange range)
 {
    uint8_t *cacheBasePtr = phys_cast<uint8_t*>(cache->address).getRawPointer();
 
@@ -156,80 +139,16 @@ Driver::_uploadMemCacheRaw(MemCacheObject *cache, SectionRange range)
 }
 
 void
-Driver::_uploadMemCacheRetile(MemCacheObject *cache, SectionRange range)
+Driver::_downloadMemCache(MemCacheObject *cache, SectionRange range)
 {
-   auto& retile = cache->mutator.retile;
-   auto sliceSize = retile.pitch * retile.height * retile.bpp / 8;
-   auto imageSize = sliceSize * retile.depth;
-
-   auto& firstSection = cache->sections[range.start];
-   auto& lastSection = cache->sections[range.start + range.count - 1];
-   auto startOffset = firstSection.offset;
-   auto endOffset = lastSection.offset + lastSection.size;
-
-   decaf_check(startOffset % sliceSize == 0);
-   decaf_check(endOffset % sliceSize == 0);
-   auto startSlice = startOffset / sliceSize;
-   auto endSlice = endOffset / sliceSize;
-   auto sliceCount = endSlice - startSlice;
-
-   void *data = phys_cast<void*>(cache->address).getRawPointer();
-   auto dataBytesPtr = reinterpret_cast<uint8_t*>(data);
-
-   auto& untiledImage = mScratchRetiling;
-   untiledImage.resize(imageSize);
-
-   gpu::convertFromTiled(
-      untiledImage.data(),
-      retile.pitch,
-      dataBytesPtr,
-      retile.tileMode,
-      retile.swizzle,
-      retile.pitch,
-      retile.pitch,
-      retile.height,
-      retile.depth,
-      retile.aa,
-      retile.isDepth,
-      retile.bpp,
-      startSlice,
-      endSlice);
-
-   auto uploadOffset = startSlice * sliceSize;
-   auto uploadData = untiledImage.data() + uploadOffset;
-   auto uploadSize = endOffset - startOffset;
-
-   // Transition the buffers appropriately
-   auto stagingBuffer = getStagingBuffer(uploadSize, StagingBufferType::CpuToGpu);
-   copyToStagingBuffer(stagingBuffer, 0, uploadData, uploadSize);
-
-   // Transition the buffers appropriately
-   transitionStagingBuffer(stagingBuffer, ResourceUsage::TransferSrc);
-   _barrierMemCache(cache, ResourceUsage::TransferDst, range);
-
-   // Copy the data out of the staging buffer into the memory cache.
-   vk::BufferCopy copyDesc;
-   copyDesc.srcOffset = 0;
-   copyDesc.dstOffset = uploadOffset;
-   copyDesc.size = uploadSize;
-   mActiveCommandBuffer.copyBuffer(stagingBuffer->buffer, cache->buffer, { copyDesc });
-}
-
-void
-Driver::_uploadMemCache(MemCacheObject *cache, SectionRange range)
-{
-   if (cache->mutator.mode == MemCacheMutator::Mode::None) {
-      _uploadMemCacheRaw(cache, range);
-   } else if (cache->mutator.mode == MemCacheMutator::Mode::Retile) {
-      _uploadMemCacheRetile(cache, range);
-   } else {
-      decaf_abort("Unsupported memory cache mutator mode");
+   // If we have a pending delayed write that overlaps, we are going to need to
+   // process it here before we can actually write to the CPU.
+   if (cache->delayedWriteFunc && cache->delayedWriteRange.intersects(range)) {
+      cache->delayedWriteFunc();
+      cache->delayedWriteFunc = nullptr;
    }
-}
 
-void
-Driver::_downloadMemCacheRaw(MemCacheObject *cache, SectionRange range)
-{
+   // Lets start doing the actual download!
    auto& firstSection = cache->sections[range.start];
    auto& lastSection = cache->sections[range.start + range.count - 1];
    auto offsetStart = firstSection.offset;
@@ -287,54 +206,6 @@ Driver::_downloadMemCacheRaw(MemCacheObject *cache, SectionRange range)
 }
 
 void
-Driver::_downloadMemCacheRetile(MemCacheObject *cache, SectionRange range)
-{
-   // We do not currently implement retiled downloads
-
-   /*
-   Note that in the upload code, we set width to pitch, so that we untile the whole
-   pitch in all cases.  This ensures that if we copy memory from this block, we also
-   copy the data from the pitch.  When we write back to the CPU, we only write the
-   exact width that is being used by this particular buffer.
-
-   gpu::convertFromTiled(
-      untiledImage.data(),
-      retile.pitch,
-      dataBytesPtr,
-      retile.tileMode,
-      retile.swizzle,
-      retile.pitch,
-      retile.width,
-      retile.height,
-      retile.depth,
-      retile.aa,
-      retile.isDepth,
-      retile.bpp,
-      startSlice,
-      endSlice);
-   */
-}
-
-void
-Driver::_downloadMemCache(MemCacheObject *cache, SectionRange range)
-{
-   // If we have a pending delayed write that overlaps, we are going to need to
-   // process it here before we can actually write to the CPU.
-   if (cache->delayedWriteFunc && cache->delayedWriteRange.intersects(range)) {
-      cache->delayedWriteFunc();
-      cache->delayedWriteFunc = nullptr;
-   }
-
-   if (cache->mutator.mode == MemCacheMutator::Mode::None) {
-      _downloadMemCacheRaw(cache, range);
-   } else if (cache->mutator.mode == MemCacheMutator::Mode::Retile) {
-      _downloadMemCacheRetile(cache, range);
-   } else {
-      decaf_abort("Unsupported memory cache mutator mode");
-   }
-}
-
-void
 Driver::_refreshMemCache_Check(MemCacheObject *cache, SectionRange range)
 {
    forEachSectionSegment(cache, range, [&](MemCacheSection& section, MemCacheSegment* segment){
@@ -351,6 +222,9 @@ Driver::_refreshMemCache_Check(MemCacheObject *cache, SectionRange range)
          return;
       }
 
+      // Check if we have no last-owner first, obviously an upload is needed in that
+      // case.  Additionally, we are required to perform an upload if the last owner
+      // has rearranged the data such that it might not make sense for us anymore.
       if (!segment->lastChangeOwner) {
          section.needsUpload = true;
       }
@@ -477,6 +351,13 @@ Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, DelayedMe
       segment->gpuWritten = true;
    });
 
+   if (delayedWriteFunc) {
+      // If there is a delayed write, we assume that this must have been a surface transition
+      // that was happening, and we don't want to copy these all back, so lets not mark it
+      // for download later...
+      return;
+   }
+
    mDirtyMemCaches.push_back({ changeIndex, cache, range });
 }
 
@@ -543,14 +424,13 @@ Driver::_sectionsFromOffsets(MemCacheObject *cache, uint32_t begin, uint32_t end
 }
 
 MemCacheObject *
-Driver::getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes, const MemCacheMutator& mutator)
+Driver::getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes)
 {
    struct MemCacheDesc
    {
       uint32_t address = 0;
       uint32_t size = 0;
-      std::array<uint32_t, 64> sectionSizes = { 0 };
-      MemCacheMutator mutator;
+      std::array<uint32_t, 100> sectionSizes = { 0 };
    } _dataHash;
    memset(&_dataHash, 0xFF, sizeof(_dataHash));
 
@@ -560,14 +440,13 @@ Driver::getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t
    for (auto i = 0u; i < sectionSizes.size(); ++i) {
       _dataHash.sectionSizes[i] = sectionSizes[i];
    }
-   _dataHash.mutator = mutator;
 
    auto cacheKey = DataHash {}.write(_dataHash);
 
    auto& cache = mMemCaches[cacheKey];
    if (!cache) {
       // If there is not yet a cache object, we need to create it.
-      cache = _allocMemCache(address, sectionSizes, mutator);
+      cache = _allocMemCache(address, sectionSizes);
    }
 
    decaf_check(cache->address == address);
@@ -575,7 +454,6 @@ Driver::getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t
    for (auto i = 0u; i < sectionSizes.size(); ++i) {
       cache->sections[i].size = sectionSizes[i];
    }
-   decaf_check(cache->mutator == mutator);
 
    return cache;
 }
@@ -612,9 +490,9 @@ Driver::transitionMemCache(MemCacheObject *cache, ResourceUsage usage, uint32_t 
    // need to read the data for usage.  Note that its safe to do the
    // invalidation before the actual write occurs since no transfers
    // occur until the end of the batch (or when it changes again).
-   if (!forWrite) {
-      _refreshMemCache(cache, range);
-   } else {
+   _refreshMemCache(cache, range);
+
+   if (forWrite) {
       _invalidateMemCache(cache, range, nullptr);
    }
 

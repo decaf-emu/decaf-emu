@@ -365,8 +365,9 @@ Retiler::retile(bool wantsUntile,
    decaf_check(retileInfo.isTiled);
 
    // Calcualate the spec key for this retiler configuration
+   // Due to know known issues with depth, we instead retile it normally.
    auto specKey = getRetileSpecKey(retileInfo.bitsPerElement,
-                                   retileInfo.isDepth,
+                                   false, // retileInfo.isDepth,
                                    retileInfo.tileMode,
                                    wantsUntile);
 
