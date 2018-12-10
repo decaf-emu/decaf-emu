@@ -86,6 +86,22 @@ DecafSDLVulkan::debugMessageCallback(VkDebugReportFlagsEXT flags,
       isKnownIssue = true;
    }
 
+   // There is an issue with the validation layers and handling of transform feedback.
+   if (strstr(pMessage, "VUID-vkCmdPipelineBarrier-pMemoryBarriers-01184") != nullptr) {
+      static uint64_t seenXfbBarrier01184Error = 0;
+      if (seenXfbBarrier01184Error++) {
+         return VK_FALSE;
+      }
+      isKnownIssue = true;
+   }
+   if (strstr(pMessage, "VUID-vkCmdPipelineBarrier-pMemoryBarriers-01185") != nullptr) {
+      static uint64_t seenXfbBarrier01185Error = 0;
+      if (seenXfbBarrier01185Error++) {
+         return VK_FALSE;
+      }
+      isKnownIssue = true;
+   }
+
    // Write this message to our normal logging
    auto self = reinterpret_cast<DecafSDLVulkan *>(pUserData);
    if (!isKnownIssue) {
