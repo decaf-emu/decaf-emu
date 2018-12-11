@@ -242,6 +242,9 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
 {
    writeGenericProlog(spvGen);
 
+   auto mainFn = spvGen.getFunction("main");
+   spvGen.addExecutionMode(mainFn, spv::ExecutionModeOriginUpperLeft);
+
    // We don't currently support baryocentric sampling
    decaf_check(!desc.regs.spi_ps_in_control_0.BARYC_AT_SAMPLE_ENA());
 
