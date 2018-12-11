@@ -151,6 +151,10 @@ Driver::getStreamOutBufferDesc(uint32_t bufferIndex)
 bool
 Driver::checkCurrentStreamOut()
 {
+   if (!mCurrentDraw->streamOutEnabled) {
+      return true;
+   }
+
    for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
       auto currentDesc = getStreamOutBufferDesc(i);
 
