@@ -321,7 +321,7 @@ Driver::_refreshMemCache(MemCacheObject *cache, SectionRange range)
 }
 
 void
-Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, DelayedMemWriteFunc delayedWriteFunc)
+Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, const DelayedMemWriteFunc& delayedWriteFunc)
 {
    auto changeIndex = ++mMemChangeCounter;
 
@@ -459,7 +459,7 @@ Driver::getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t
 }
 
 void
-Driver::invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, DelayedMemWriteFunc delayedWriteHandler)
+Driver::invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, const DelayedMemWriteFunc& delayedWriteHandler)
 {
    // Calculate which sections actually apply to this...
    auto range = _sectionsFromOffsets(cache, offset, offset + size);

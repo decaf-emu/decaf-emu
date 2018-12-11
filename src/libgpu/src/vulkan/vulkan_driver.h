@@ -844,11 +844,11 @@ protected:
    void _refreshMemCache_Check(MemCacheObject *cache, SectionRange sections);
    void _refreshMemCache_Update(MemCacheObject *cache, SectionRange sections);
    void _refreshMemCache(MemCacheObject *cache, SectionRange sections);
-   void _invalidateMemCache(MemCacheObject *cache, SectionRange sections, DelayedMemWriteFunc delayedWriteHandler);
+   void _invalidateMemCache(MemCacheObject *cache, SectionRange sections, const DelayedMemWriteFunc& delayedWriteHandler);
    void _barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRange sections);
    SectionRange _sectionsFromOffsets(MemCacheObject *cache, uint32_t begin, uint32_t end);
    MemCacheObject * getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes);
-   void invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, DelayedMemWriteFunc delayedWriteHandler);
+   void invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, const DelayedMemWriteFunc& delayedWriteHandler);
    void transitionMemCache(MemCacheObject *cache, ResourceUsage usage, uint32_t offset = 0, uint32_t size = 0);
    DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size);
    void downloadPendingMemCache();
