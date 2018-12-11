@@ -756,9 +756,16 @@ DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
    }
 
    // Set up our fences
-   mImageAvailableSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo());
-   mRenderFinishedSemaphore = mDevice.createSemaphore(vk::SemaphoreCreateInfo());
-   mRenderFence = mDevice.createFence(vk::FenceCreateInfo());
+   mImageAvailableSemaphores.resize(mFramebuffers.size());
+   mRenderFinishedSemaphores.resize(mFramebuffers.size());
+   mRenderFences.resize(mFramebuffers.size());
+   for (auto i = 0u; i < mFramebuffers.size(); ++i) {
+      mImageAvailableSemaphores[i] = mDevice.createSemaphore(vk::SemaphoreCreateInfo());
+      mRenderFinishedSemaphores[i] = mDevice.createSemaphore(vk::SemaphoreCreateInfo());
+      mRenderFences[i] = mDevice.createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+   }
+
+   mFrameIndex = 0;
 
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::VulkanDriver*>(gpu::createVulkanDriver());
@@ -893,25 +900,34 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
    int width, height;
    SDL_GetWindowSize(mWindow, &width, &height);
 
-   // If we are in force-sync mode, we need to poll the GPU to move
-   // the command buffers ahead until the flip occurs.
-   if (config::display::force_sync) {
-      mDecafDriver->runUntilFlip();
-   }
+   // Bring some stuff local
+   auto &renderFence = mRenderFences[mFrameIndex];
+   auto &imageAvailableSemaphore = mImageAvailableSemaphores[mFrameIndex];
+   auto &renderFinishedSemaphore = mRenderFinishedSemaphores[mFrameIndex];
 
+   // Wait for the previous frame to finish
+   mDevice.waitForFences({ mRenderFences[mFrameIndex] }, true, std::numeric_limits<uint64_t>::max());
+   mDevice.resetFences({ mRenderFences[mFrameIndex] });
+
+   // Acquire the next frame to render into
+   uint32_t nextSwapImage;
+   mDevice.acquireNextImageKHR(mSwapchain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, vk::Fence {}, &nextSwapImage);
+
+   // Allocate a command buffer to use
    auto renderCmdBuf = mDevice.allocateCommandBuffers(
       vk::CommandBufferAllocateInfo(
          mCommandPool,
          vk::CommandBufferLevel::ePrimary, 1))[0];
 
-   uint32_t nextSwapImage;
-   mDevice.acquireNextImageKHR(mSwapchain, std::numeric_limits<uint64_t>::max(), mImageAvailableSemaphore, vk::Fence{}, &nextSwapImage);
+   // Select some descriptors to use
+   auto descriptorSetTv = mDescriptorSets[mFrameIndex * 2 + 0];
+   auto descriptorSetDrc = mDescriptorSets[mFrameIndex * 2 + 1];
 
-   mDevice.resetCommandPool(mCommandPool, vk::CommandPoolResetFlags());
-   mDevice.resetFences({ mRenderFence });
-
-   auto descriptorSetTv = mDescriptorSets[nextSwapImage * 2 + 0];
-   auto descriptorSetDrc = mDescriptorSets[nextSwapImage * 2 + 1];
+   // If we are in force-sync mode, we need to poll the GPU to move
+   // the command buffers ahead until the flip occurs.
+   if (config::display::force_sync) {
+      mDecafDriver->runUntilFlip();
+   }
 
    // Grab the scan buffers...
    vk::Image tvImage, drcImage;
@@ -973,7 +989,7 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
    {
       vk::SubmitInfo submitInfo;
 
-      std::array<vk::Semaphore, 1> waitSemaphores = { mImageAvailableSemaphore };
+      std::array<vk::Semaphore, 1> waitSemaphores = { imageAvailableSemaphore };
       submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
       submitInfo.pWaitSemaphores = waitSemaphores.data();
       vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
@@ -982,17 +998,17 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       submitInfo.commandBufferCount = 1;
       submitInfo.pCommandBuffers = &renderCmdBuf;
 
-      std::array<vk::Semaphore, 1> signalSemaphores = { mRenderFinishedSemaphore };
+      std::array<vk::Semaphore, 1> signalSemaphores = { renderFinishedSemaphore };
       submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
       submitInfo.pSignalSemaphores = signalSemaphores.data();
 
-      mQueue.submit({ submitInfo }, mRenderFence);
+      mQueue.submit({ submitInfo }, renderFence);
    }
 
    {
       vk::PresentInfoKHR presentInfo;
 
-      std::array<vk::Semaphore, 1> waitSemaphores = { mRenderFinishedSemaphore };
+      std::array<vk::Semaphore, 1> waitSemaphores = { renderFinishedSemaphore };
       presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
       presentInfo.pWaitSemaphores = waitSemaphores.data();
 
@@ -1004,8 +1020,8 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       mQueue.presentKHR(presentInfo);
    }
 
-   // Wait for the frame to complete rendering
-   mDevice.waitForFences({ mRenderFence }, true, std::numeric_limits<uint64_t>::max());
+   // Increment our frame index counter
+   mFrameIndex = (mFrameIndex + 1) % 2;
 }
 
 gpu::GraphicsDriver *

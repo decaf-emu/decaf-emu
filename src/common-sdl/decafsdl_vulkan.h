@@ -87,12 +87,13 @@ protected:
    vk::RenderPass mRenderPass;
    vk::PipelineLayout mPipelineLayout;
    vk::Pipeline mGraphicsPipeline;
-   vk::Fence mRenderFence;
+   std::vector<vk::Fence> mRenderFences;
    vk::DescriptorPool mDescriptorPool;
    std::vector<vk::DescriptorSet> mDescriptorSets;
    vk::Buffer mVertBuffer;
-   vk::Semaphore mImageAvailableSemaphore;
-   vk::Semaphore mRenderFinishedSemaphore;
+   std::vector<vk::Semaphore> mImageAvailableSemaphores;
+   std::vector<vk::Semaphore> mRenderFinishedSemaphores;
+   uint32_t mFrameIndex;
 
 };
 
