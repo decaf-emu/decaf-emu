@@ -152,7 +152,9 @@ GX2WaitForVsync()
 void
 GX2WaitForFlip()
 {
-   if (sEventData->flipCount == sEventData->swapCount) {
+   auto curFlipCount = sEventData->flipCount.load(std::memory_order_acquire);
+   auto curSwapCount = sEventData->swapCount.load(std::memory_order_acquire);
+   if (curFlipCount == curSwapCount) {
       // The user has no more pending flips, return immediately.
       return;
    }
@@ -193,8 +195,10 @@ vsyncAlarmHandler(virt_ptr<OSAlarm> alarm,
 {
    auto vsyncTime = OSGetSystemTime();
 
-   if (sEventData->framesReady > sEventData->flipCount) {
-      sEventData->flipCount++;
+   auto curFramesReady = sEventData->framesReady.load(std::memory_order_acquire);
+   auto curFlipCount = sEventData->flipCount.load(std::memory_order_acquire);
+   if (curFramesReady > curFlipCount) {
+      sEventData->flipCount.fetch_add(1, std::memory_order_release);
       sEventData->lastFlip.store(vsyncTime, std::memory_order_release);
       OSWakeupThread(virt_addrof(sEventData->flipThreadQueue));
 
@@ -258,7 +262,7 @@ displayListOverrun(virt_ptr<void> list,
 void
 onSwap()
 {
-   sEventData->swapCount++;
+   sEventData->swapCount.fetch_add(1, std::memory_order_release);
 }
 
 
@@ -268,7 +272,7 @@ onSwap()
 void
 onFlip()
 {
-   sEventData->framesReady++;
+   sEventData->framesReady.fetch_add(1, std::memory_order_release);
 }
 
 } // namespace internal
