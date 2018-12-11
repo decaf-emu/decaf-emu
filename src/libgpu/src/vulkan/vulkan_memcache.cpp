@@ -7,7 +7,7 @@ namespace vulkan
 {
 
 static inline void
-forEachMemSegment(MemSegmentMap::iterator begin, uint32_t size, std::function<void(MemCacheSegment*)> functor)
+forEachMemSegment(MemSegmentMap::iterator begin, uint32_t size, const std::function<void(MemCacheSegment*)>& functor)
 {
    auto iter = begin;
    for (auto sizeLeft = size; sizeLeft > 0;) {
@@ -22,7 +22,7 @@ forEachMemSegment(MemSegmentMap::iterator begin, uint32_t size, std::function<vo
 }
 
 static inline void
-forEachSectionSegment(MemCacheObject *cache, SectionRange range, std::function<void(MemCacheSection&, MemCacheSegment*)> functor)
+forEachSectionSegment(MemCacheObject *cache, SectionRange range, const std::function<void(MemCacheSection&, MemCacheSegment*)>& functor)
 {
    auto rangeStart = range.start;
    auto rangeEnd = range.start + range.count;
@@ -35,7 +35,7 @@ forEachSectionSegment(MemCacheObject *cache, SectionRange range, std::function<v
 }
 
 static inline void
-forEachMemSegment(MemCacheObject *cache, SectionRange range, std::function<void(MemCacheSegment*)> functor)
+forEachMemSegment(MemCacheObject *cache, SectionRange range, const std::function<void(MemCacheSegment*)>& functor)
 {
    auto& firstSection = cache->sections[range.start];
    auto& lastSection = cache->sections[range.start + range.count - 1];
