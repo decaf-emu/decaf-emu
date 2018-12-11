@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "clilog.h"
 #include <common/decaf_assert.h>
 #include "config.h"
