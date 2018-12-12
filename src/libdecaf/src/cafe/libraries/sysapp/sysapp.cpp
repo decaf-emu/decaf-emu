@@ -16,6 +16,7 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+   registerCallerArgsSymbols();
    registerTitleSymbols();
 }
 

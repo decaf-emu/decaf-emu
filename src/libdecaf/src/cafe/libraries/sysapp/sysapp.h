@@ -16,6 +16,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerCallerArgsSymbols();
    void registerTitleSymbols();
 };
 
