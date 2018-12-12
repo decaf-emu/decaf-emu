@@ -552,4 +552,56 @@ FSAGetInfoByQuery(FSAHandle handle,
    return static_cast<FSAStatus>(error);
 }
 
+FSAStatus
+FSAReadFileIntoCrossProcessHeap(FSAHandle fsaHandle,
+                                std::string_view filename,
+                                uint32_t *outBytesRead,
+                                phys_ptr<uint8_t> *outBuffer)
+{
+   StackObject<FSAStat> stat;
+   FSAFileHandle fileHandle;
+
+   *outBytesRead = 0u;
+   *outBuffer = nullptr;
+
+   auto status = FSAOpenFile(fsaHandle, filename, "r", &fileHandle);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   status = FSAStatFile(fsaHandle, fileHandle, stat);
+   if (status < FSAStatus::OK) {
+      FSACloseFile(fsaHandle, fileHandle);
+      return status;
+   }
+
+   auto fileData = IOS_HeapAllocAligned(CrossProcessHeapId, stat->size, 0x40u);
+   if (!fileData) {
+      FSACloseFile(fsaHandle, fileHandle);
+      return FSAStatus::OutOfResources;
+   }
+
+   status = FSAReadFile(fsaHandle,
+                        fileData,
+                        stat->size,
+                        1,
+                        fileHandle,
+                        FSAReadFlag::None);
+   if (status < FSAStatus::OK) {
+      IOS_HeapFree(CrossProcessHeapId, fileData);
+      FSACloseFile(fsaHandle, fileHandle);
+      return status;
+   }
+
+   status = FSACloseFile(fsaHandle, fileHandle);
+   if (status < FSAStatus::OK) {
+      IOS_HeapFree(CrossProcessHeapId, fileData);
+      return status;
+   }
+
+   *outBytesRead = stat->size;
+   *outBuffer = phys_cast<uint8_t *>(fileData);
+   return status;
+}
+
 } // namespace ios::fs

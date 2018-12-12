@@ -82,4 +82,10 @@ FSAGetInfoByQuery(FSAHandle handle,
                   FSAQueryInfoType query,
                   phys_ptr<void> output);
 
+FSAStatus
+FSAReadFileIntoCrossProcessHeap(FSAHandle handle,
+                                std::string_view name,
+                                uint32_t *outBytesRead,
+                                phys_ptr<uint8_t> *outBuffer);
+
 } // namespace ios::fs
