@@ -38,8 +38,8 @@ static void
 imCopyData(virt_ptr<IMRequest> request)
 {
    if (request->copyDst && request->copySrc && request->copySize) {
-      std::memcpy(virt_addrof(request->copyDst).get(),
-                  virt_addrof(request->copySrc).get(),
+      std::memcpy(request->copyDst.get(),
+                  request->copySrc.get(),
                   request->copySize);
    }
 }
