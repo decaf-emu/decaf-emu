@@ -35,4 +35,8 @@ ACGetStatus(virt_ptr<Status> outStatus);
 nn::Result
 ACGetStartupId(virt_ptr<ConfigId> outStartupId);
 
+nn::Result
+ACReadConfig(ConfigId id,
+             virt_ptr<Config> config);
+
 }  // namespace cafe::nn_ac

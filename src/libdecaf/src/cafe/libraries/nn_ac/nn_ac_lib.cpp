@@ -76,6 +76,15 @@ GetStartupId(virt_ptr<ConfigId> outStartupId)
    return ResultSuccess;
 }
 
+nn::Result
+ReadConfig(ConfigId id,
+           virt_ptr<Config> config)
+{
+   decaf_warn_stub();
+   std::memset(config.get(), 0, sizeof(Config));
+   return ResultSuccess;
+}
+
 void
 Library::registerLibFunctions()
 {
@@ -97,6 +106,8 @@ Library::registerLibFunctions()
                               GetStatus);
    RegisterFunctionExportName("GetStartupId__Q2_2nn2acFPQ3_2nn2ac11ConfigIdNum",
                               GetStartupId);
+   RegisterFunctionExportName("ReadConfig__Q2_2nn2acFQ3_2nn2ac11ConfigIdNumP16netconf_profile_",
+                              ReadConfig);
 }
 
 }  // namespace cafe::nn_ac

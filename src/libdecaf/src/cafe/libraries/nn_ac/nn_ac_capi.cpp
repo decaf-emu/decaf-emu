@@ -66,6 +66,13 @@ ACGetStartupId(virt_ptr<ConfigId> outStartupId)
    return GetStartupId(outStartupId);
 }
 
+nn::Result
+ACReadConfig(ConfigId id,
+             virt_ptr<Config> config)
+{
+   return ReadConfig(id, config);
+}
+
 void
 Library::registerCApiFunctions()
 {
@@ -78,6 +85,7 @@ Library::registerCApiFunctions()
    RegisterFunctionExport(ACGetLastErrorCode);
    RegisterFunctionExport(ACGetStatus);
    RegisterFunctionExport(ACGetStartupId);
+   RegisterFunctionExport(ACReadConfig);
 }
 
 }  // namespace cafe::nn_ac
