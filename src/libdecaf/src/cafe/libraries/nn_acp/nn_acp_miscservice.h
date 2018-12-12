@@ -7,12 +7,18 @@
 namespace cafe::nn_acp
 {
 
+using ACPMetaXml = nn::acp::ACPMetaXml;
+using ACPTitleId = nn::acp::ACPTitleId;
+
 nn::Result
 ACPGetNetworkTime(virt_ptr<int64_t> outTime,
                   virt_ptr<uint32_t> outUnknown);
 
 nn::Result
-ACPGetTitleMetaXml(uint64_t titleId,
-                   virt_ptr<nn::acp::ACPMetaXml> outData);
+ACPGetTitleIdOfMainApplication(virt_ptr<ACPTitleId> outTitleId);
+
+nn::Result
+ACPGetTitleMetaXml(ACPTitleId titleId,
+                   virt_ptr<ACPMetaXml> outData);
 
 }  // namespace cafe::nn_acp

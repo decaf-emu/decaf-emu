@@ -17,9 +17,14 @@ struct MiscService : ipc::Service<0>
          ::Parameters<>
          ::Response<int64_t, uint32_t>;
 
+   using GetTitleIdOfMainApplication =
+      ipc::Command<MiscService, 201>
+      ::Parameters<>
+      ::Response<ACPTitleId>;
+
    using GetTitleMetaXml =
       ipc::Command<MiscService, 205>
-         ::Parameters<ipc::OutBuffer<ACPMetaXml>, uint64_t>;
+         ::Parameters<ipc::OutBuffer<ACPMetaXml>, ACPTitleId>;
 };
 
 } // namespace nn::acp::services

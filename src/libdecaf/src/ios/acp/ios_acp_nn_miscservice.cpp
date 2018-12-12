@@ -23,11 +23,22 @@ getNetworkTime(CommandHandlerArgs &args)
 }
 
 static nn::Result
+getTitleIdOfMainApplication(CommandHandlerArgs &args)
+{
+   auto command = ServerCommand<MiscService::GetTitleIdOfMainApplication> { args };
+   auto buffer = OutBuffer<ACPMetaXml> { };
+   auto titleId = ACPTitleId { 0 };
+   // TODO: Get correct title id
+   command.WriteResponse(titleId);
+   return ResultSuccess;
+}
+
+static nn::Result
 getTitleMetaXml(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<MiscService::GetTitleMetaXml> { args };
    auto buffer = OutBuffer<ACPMetaXml> { };
-   auto titleId = uint64_t { 0 };
+   auto titleId = ACPTitleId { 0 };
    command.ReadRequest(buffer, titleId);
 
    // TODO: Update buffer with meta xml
@@ -42,6 +53,8 @@ MiscService::commandHandler(uint32_t unk1,
    switch (command) {
    case GetNetworkTime::command:
       return getNetworkTime(args);
+   case GetTitleIdOfMainApplication::command:
+      return getTitleIdOfMainApplication(args);
    case GetTitleMetaXml::command:
       return getTitleMetaXml(args);
    default:

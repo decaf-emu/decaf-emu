@@ -41,7 +41,25 @@ ACPGetNetworkTime(virt_ptr<int64_t> outTime,
 }
 
 nn::Result
-ACPGetTitleMetaXml(uint64_t titleId,
+ACPGetTitleIdOfMainApplication(virt_ptr<ACPTitleId> outTitleId)
+{
+   auto command = ClientCommand<services::MiscService::GetTitleIdOfMainApplication> { internal::getAllocator() };
+   auto result = internal::getClient()->sendSyncRequest(command);
+   if (result.failed()) {
+      return result;
+   }
+
+   auto titleId = ACPTitleId { 0 };
+   result = command.readResponse(titleId);
+   if (result.ok()) {
+      *outTitleId = titleId;
+   }
+
+   return result;
+}
+
+nn::Result
+ACPGetTitleMetaXml(ACPTitleId titleId,
                    virt_ptr<ACPMetaXml> outData)
 {
    auto command = ClientCommand<services::MiscService::GetTitleMetaXml> { internal::getAllocator() };
@@ -57,8 +75,9 @@ ACPGetTitleMetaXml(uint64_t titleId,
 void
 Library::registerTitleSymbols()
 {
-   RegisterFunctionExport(ACPGetTitleMetaXml);
    RegisterFunctionExport(ACPGetNetworkTime);
+   RegisterFunctionExport(ACPGetTitleIdOfMainApplication);
+   RegisterFunctionExport(ACPGetTitleMetaXml);
    RegisterFunctionExportName("GetTitleMetaXml__Q2_2nn3acpFULP11_ACPMetaXml",
                               ACPGetTitleMetaXml);
 }

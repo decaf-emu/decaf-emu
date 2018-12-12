@@ -4,6 +4,8 @@
 namespace nn::acp
 {
 
+using ACPTitleId = uint64_t;
+
 struct ACPMetaXml
 {
    UNKNOWN(0x3440);
