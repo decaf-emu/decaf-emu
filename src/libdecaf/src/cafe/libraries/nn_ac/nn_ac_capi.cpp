@@ -60,6 +60,12 @@ ACGetStatus(virt_ptr<Status> outStatus)
    return GetStatus(outStatus);
 }
 
+nn::Result
+ACGetStartupId(virt_ptr<ConfigId> outStartupId)
+{
+   return GetStartupId(outStartupId);
+}
+
 void
 Library::registerCApiFunctions()
 {
@@ -71,6 +77,7 @@ Library::registerCApiFunctions()
    RegisterFunctionExport(ACGetConnectStatus);
    RegisterFunctionExport(ACGetLastErrorCode);
    RegisterFunctionExport(ACGetStatus);
+   RegisterFunctionExport(ACGetStartupId);
 }
 
 }  // namespace cafe::nn_ac

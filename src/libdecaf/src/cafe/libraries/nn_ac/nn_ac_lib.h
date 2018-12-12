@@ -7,6 +7,8 @@
 namespace cafe::nn_ac
 {
 
+using ConfigId = int32_t;
+
 nn::Result
 Initialize();
 
@@ -30,5 +32,8 @@ GetLastErrorCode(virt_ptr<int32_t> outError);
 
 nn::Result
 GetStatus(virt_ptr<Status> outStatus);
+
+nn::Result
+GetStartupId(virt_ptr<ConfigId> outStartupId);
 
 }  // namespace cafe::nn_ac

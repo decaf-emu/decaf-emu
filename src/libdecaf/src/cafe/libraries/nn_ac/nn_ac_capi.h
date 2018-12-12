@@ -1,5 +1,6 @@
 #pragma once
 #include "nn_ac_enum.h"
+#include "nn_ac_lib.h"
 #include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
@@ -30,5 +31,8 @@ ACGetLastErrorCode(virt_ptr<int32_t> outError);
 
 nn::Result
 ACGetStatus(virt_ptr<Status> outStatus);
+
+nn::Result
+ACGetStartupId(virt_ptr<ConfigId> outStartupId);
 
 }  // namespace cafe::nn_ac

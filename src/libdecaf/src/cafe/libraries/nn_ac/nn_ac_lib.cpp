@@ -68,6 +68,14 @@ GetStatus(virt_ptr<Status> outStatus)
    return ResultSuccess;
 }
 
+nn::Result
+GetStartupId(virt_ptr<ConfigId> outStartupId)
+{
+   decaf_warn_stub();
+   *outStartupId = 0;
+   return ResultSuccess;
+}
+
 void
 Library::registerLibFunctions()
 {
@@ -87,7 +95,8 @@ Library::registerLibFunctions()
                               GetLastErrorCode);
    RegisterFunctionExportName("GetStatus__Q2_2nn2acFPQ3_2nn2ac6Status",
                               GetStatus);
+   RegisterFunctionExportName("GetStartupId__Q2_2nn2acFPQ3_2nn2ac11ConfigIdNum",
+                              GetStartupId);
 }
-
 
 }  // namespace cafe::nn_ac
