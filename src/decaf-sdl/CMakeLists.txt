@@ -18,6 +18,8 @@ add_executable(decaf-sdl
    ${HEADER_FILES}
    ${RESOURCE_FILES})
 
+target_include_directories(decaf-sdl PRIVATE
+    ${SDL2_INCLUDE_DIRS})
 target_link_libraries(decaf-sdl
     common
     common-sdl
@@ -25,7 +27,7 @@ target_link_libraries(decaf-sdl
     libdecaf
     ${CPPTOML_LIBRARIES}
     ${EXCMD_LIBRARIES}
-    ${SDL2_LINK})
+    ${SDL2_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(decaf-sdl X11)

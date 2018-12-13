@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 
 project(decaf-emu C CXX)
+find_package(ZLIB REQUIRED) # ZLIB::ZLIB
+
 option(DECAF_BUILD_TESTS "Build tests" OFF)
 option(DECAF_BUILD_TOOLS "Build tools" OFF)
 option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
@@ -51,6 +53,7 @@ if(DECAF_GL)
 endif()
 
 if(DECAF_SDL)
+    find_package(SDL2 REQUIRED)
     add_definitions(-DDECAF_SDL)
 endif()
 

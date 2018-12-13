@@ -11,6 +11,8 @@ file(GLOB_RECURSE HEADER_FILES *.h)
 add_executable(pm4-replay ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(pm4-replay PROPERTIES FOLDER tools)
 
+target_include_directories(pm4-replay PRIVATE
+    ${SDL2_INCLUDE_DIRS})
 target_link_libraries(pm4-replay
     common
     common-sdl
@@ -18,7 +20,7 @@ target_link_libraries(pm4-replay
     libdecaf
     ${CPPTOML_LIBRARIES}
     ${EXCMD_LIBRARIES}
-    ${SDL2_LINK})
+    ${SDL2_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(pm4-replay X11)

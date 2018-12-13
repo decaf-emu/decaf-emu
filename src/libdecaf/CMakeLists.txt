@@ -19,7 +19,7 @@ target_link_libraries(libdecaf
     ${FIXED_POINT_LIBRARIES}
     ${IMGUI_LIBRARIES}
     ${PUGIXML_LIBRARIES}
-    ${ZLIB_LINK})
+    ZLIB::ZLIB)
 
 if(DECAF_FFMPEG)
     target_link_libraries(libdecaf

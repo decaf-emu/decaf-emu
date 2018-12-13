@@ -1,6 +1,3 @@
-[submodule "libraries/zlib"]
-	path = libraries/zlib
-	url = https://github.com/madler/zlib.git
 [submodule "libraries/pugixml"]
 	path = libraries/pugixml
 	url = https://github.com/zeux/pugixml.git
@@ -25,9 +22,6 @@
 [submodule "libraries/addrlib"]
 	path = libraries/addrlib
 	url = https://github.com/decaf-emu/addrlib.git
-[submodule "libraries/SDL-mirror"]
-	path = libraries/SDL-mirror
-	url = https://github.com/spurious/SDL-mirror.git
 [submodule "libraries/excmd"]
 	path = libraries/excmd
 	url = https://github.com/exjam/excmd
