@@ -594,7 +594,7 @@ enum Value : uint32_t
    ControlRegisterBase              = 0x3CFF0,
    SQ_VTX_BASE_VTX_LOC              = 0x3CFF0,
    SQ_VTX_START_INST_LOC            = 0x3CFF4,
-   ControlRegisterEnd               = 0x3CFF4, // TODO: Find real ControlRegisterEnd
+   ControlRegisterEnd               = 0x3CFF8, // TODO: Find real ControlRegisterEnd
 
    // Loop Const Registers
    LoopConstRegisterBase            = 0x3E200,
@@ -611,7 +611,7 @@ enum Value : uint32_t
 
    // Bool Const Registers
    BoolConstRegisterBase            = 0x3E380,
-   BoolConstRegisterEnd             = 0x3E380, // TODO: Find real BoolConstRegisterEnd
+   BoolConstRegisterEnd             = 0x3E384, // TODO: Find real BoolConstRegisterEnd
 };
 }
 

@@ -294,9 +294,10 @@ void Pm4Processor::setAluConsts(const SetAluConsts &data)
 
 void Pm4Processor::setConfigRegs(const SetConfigRegs &data)
 {
+   decaf_check(data.id >= latte::Register::ConfigRegisterBase);
+   decaf_check(data.id < latte::Register::ConfigRegisterEnd);
+
    if (mShadowState.SHADOW_ENABLE.ENABLE_CONFIG_REG() && mShadowState.CONFIG_REG_BASE) {
-      decaf_check(data.id >= latte::Register::ConfigRegisterBase);
-      decaf_check(data.id < latte::Register::ConfigRegisterEnd);
       auto offset = (data.id - latte::Register::ConfigRegisterBase) / 4;
       auto base = mShadowState.CONFIG_REG_BASE + offset;
 
@@ -312,9 +313,10 @@ void Pm4Processor::setConfigRegs(const SetConfigRegs &data)
 
 void Pm4Processor::setContextRegs(const SetContextRegs &data)
 {
+   decaf_check(data.id >= latte::Register::ContextRegisterBase);
+   decaf_check(data.id < latte::Register::ContextRegisterEnd);
+
    if (mShadowState.SHADOW_ENABLE.ENABLE_CONTEXT_REG() && mShadowState.CONTEXT_REG_BASE) {
-      decaf_check(data.id >= latte::Register::ContextRegisterBase);
-      decaf_check(data.id < latte::Register::ContextRegisterEnd);
       auto offset = (data.id - latte::Register::ContextRegisterBase) / 4;
       auto base = mShadowState.CONTEXT_REG_BASE + offset;
 
@@ -330,9 +332,10 @@ void Pm4Processor::setContextRegs(const SetContextRegs &data)
 
 void Pm4Processor::setControlConstants(const SetControlConstants &data)
 {
+   decaf_check(data.id >= latte::Register::ControlRegisterBase);
+   decaf_check(data.id < latte::Register::ControlRegisterEnd);
+
    if (mShadowState.SHADOW_ENABLE.ENABLE_CTL_CONST() && mShadowState.CTL_CONST_BASE) {
-      decaf_check(data.id >= latte::Register::ControlRegisterBase);
-      decaf_check(data.id < latte::Register::ControlRegisterEnd);
       auto offset = (data.id - latte::Register::ControlRegisterBase) / 4;
       auto base = mShadowState.CTL_CONST_BASE + offset;
 
@@ -348,9 +351,10 @@ void Pm4Processor::setControlConstants(const SetControlConstants &data)
 
 void Pm4Processor::setLoopConsts(const SetLoopConsts &data)
 {
+   decaf_check(data.id >= latte::Register::LoopConstRegisterBase);
+   decaf_check(data.id < latte::Register::LoopConstRegisterEnd);
+
    if (mShadowState.SHADOW_ENABLE.ENABLE_LOOP_CONST() && mShadowState.LOOP_CONST_BASE) {
-      decaf_check(data.id >= latte::Register::LoopConstRegisterBase);
-      decaf_check(data.id < latte::Register::LoopConstRegisterEnd);
       auto offset = (data.id - latte::Register::LoopConstRegisterBase) / 4;
       auto base = mShadowState.LOOP_CONST_BASE + offset;
 
@@ -366,9 +370,10 @@ void Pm4Processor::setLoopConsts(const SetLoopConsts &data)
 
 void Pm4Processor::setSamplers(const SetSamplers &data)
 {
+   decaf_check(data.id >= latte::Register::SamplerRegisterBase);
+   decaf_check(data.id < latte::Register::SamplerRegisterEnd);
+
    if (mShadowState.SHADOW_ENABLE.ENABLE_SAMPLER() && mShadowState.SAMPLER_CONST_BASE) {
-      decaf_check(data.id >= latte::Register::SamplerRegisterBase);
-      decaf_check(data.id < latte::Register::SamplerRegisterEnd);
       auto offset = (data.id - latte::Register::SamplerRegisterBase) / 4;
       auto base = mShadowState.SAMPLER_CONST_BASE + offset;
 
