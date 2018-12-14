@@ -76,7 +76,7 @@ endif()
 target_link_libraries(libgpu
     common
     libcpu
-    ${ADDRLIB_LIBRARIES})
+    addrlib)
 
 if(DECAF_GL)
     target_link_libraries(libgpu
@@ -91,6 +91,6 @@ endif()
 
 if(DECAF_VULKAN)
     target_link_libraries(libgpu
-        ${VULKAN_LIBRARIES}
+        vulkan
         ${SPIRV_LIBRARIES})
 endif()

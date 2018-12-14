@@ -8,12 +8,16 @@ set_target_properties(test-gpu-tiling PROPERTIES FOLDER tests)
 
 target_link_libraries(test-gpu-tiling
     addrlib
-    catch
+    catch2
     common
     libcpu
-    libgpu
-    ${VULKAN_LIBRARIES}
-    ${SPIRV_LIBRARIES})
+    libgpu)
+
+if(DECAF_VULKAN)
+    target_link_libraries(test-gpu-tiling
+        vulkan
+        ${SPIRV_LIBRARIES})
+endif()
 
 install(TARGETS test-gpu-tiling RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/gpu")
 

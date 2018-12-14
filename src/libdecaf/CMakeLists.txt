@@ -14,11 +14,10 @@ target_link_libraries(libdecaf
     libcpu
     libgfd
     libgpu
-    ${ADDRLIB_LIBRARIES}
-    ${CEREAL_LIBRARIES}
-    ${FIXED_POINT_LIBRARIES}
-    ${IMGUI_LIBRARIES}
-    ${PUGIXML_LIBRARIES}
+    addrlib
+    fixed_point
+    imgui
+    pugixml
     ZLIB::ZLIB)
 
 if(DECAF_FFMPEG)
@@ -27,14 +26,6 @@ if(DECAF_FFMPEG)
         FFMPEG::AVFILTER
         FFMPEG::AVUTIL
         FFMPEG::SWSCALE)
-endif()
-
-if(APPLE)
-    target_compile_definitions(libdecaf PUBLIC DECAF_NOGL)
-else()
-    target_link_libraries(libdecaf
-        ${GLBINDING_LIBRARIES}
-        ${OPENGL_LIBRARIES})
 endif()
 
 if(MSVC)

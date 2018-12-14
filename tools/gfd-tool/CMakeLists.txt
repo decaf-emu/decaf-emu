@@ -13,6 +13,6 @@ target_link_libraries(gfd-tool
     common
     libdecaf
     libgfd
-    ${EXCMD_LIBRARIES})
+    excmd)
 
 install(TARGETS gfd-tool RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")

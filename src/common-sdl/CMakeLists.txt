@@ -12,6 +12,6 @@ target_link_libraries(common-sdl
     common
     libconfig
     libdecaf
-    ${CPPTOML_LIBRARIES}
-    ${EXCMD_LIBRARIES}
+    cpptoml
+    excmd
     ${SDL2_LIBRARIES})

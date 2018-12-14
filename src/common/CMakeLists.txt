@@ -9,11 +9,10 @@ add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})
 GroupSources(src)
 
 target_link_libraries(common
-    ${CEREAL_LIBRARIES}
-    ${FIXED_POINT_LIBRARIES}
-    ${FMT_LIBRARIES}
-    ${GSL_LIBRARIES}
-    ${SPDLOG_LIBRARIES})
+    fixed_point
+    fmt::fmt
+    gsl
+    spdlog)
 
 if(MSVC)
     target_link_libraries(common Dbghelp)

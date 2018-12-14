@@ -27,11 +27,11 @@ add_custom_command(COMMAND ${CMAKE_COMMAND} -P ${GRAMMAR_CMAKE}
 add_executable(latte-assembler ${SOURCE_FILES} ${HEADER_FILES} ${GRAMMAR_HEADER})
 
 target_link_libraries(latte-assembler
-                      common
-                      libgfd
-                      libgpu
-                      ${EXCMD_LIBRARIES}
-                      ${PEGLIB_LIBRARIES})
+    common
+    libgfd
+    libgpu
+    excmd
+    peglib)
 
 set_target_properties(latte-assembler PROPERTIES FOLDER tools)
 GroupSources(src)

@@ -9,7 +9,8 @@ set_target_properties(runner-generated PROPERTIES FOLDER tests)
 target_link_libraries(runner-generated
     common
     libcpu
-    libdecaf)
+    libdecaf
+    cereal)
 
 install(TARGETS runner-generated RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/cpu")
 

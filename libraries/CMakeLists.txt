@@ -1,64 +1,52 @@
-project(libraries)
 include(ExternalProject)
 
-find_package(PkgConfig QUIET)
-
 # addrlib
-set(ADDRLIB_DIR "addrlib")
 add_library(addrlib STATIC
-    "${ADDRLIB_DIR}/src/addrinterface.cpp"
-    "${ADDRLIB_DIR}/src/core/addrelemlib.cpp"
-    "${ADDRLIB_DIR}/src/core/addrlib.cpp"
-    "${ADDRLIB_DIR}/src/core/addrobject.cpp"
-    "${ADDRLIB_DIR}/src/r600/r600addrlib.cpp")
+    "addrlib/src/addrinterface.cpp"
+    "addrlib/src/core/addrelemlib.cpp"
+    "addrlib/src/core/addrlib.cpp"
+    "addrlib/src/core/addrobject.cpp"
+    "addrlib/src/r600/r600addrlib.cpp")
 set_target_properties(addrlib PROPERTIES FOLDER libraries)
 target_include_directories(addrlib
-   PRIVATE "${ADDRLIB_DIR}/src"
-   PUBLIC "${ADDRLIB_DIR}/include")
-set(ADDRLIB_LIBRARIES addrlib PARENT_SCOPE)
+   PRIVATE "addrlib/src"
+   PUBLIC "addrlib/include")
 
 # libbinrec
 set(BINREC_ENABLE_RTL_DEBUG_OPTIMIZE FALSE CACHE BOOL "Enable debug output from optimization passes")
 set(BINREC_ENABLE_ASSERT FALSE CACHE BOOL "Enable basic assertion checks")
 add_subdirectory(libbinrec)
 set_target_properties(binrec PROPERTIES FOLDER libraries)
-set(BINREC_LIBRARIES binrec PARENT_SCOPE)
 
 # catch
-set(CATCH_DIR "catch")
-add_library(catch INTERFACE)
-target_include_directories(catch INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CATCH_DIR}/single_include/catch2")
-set(CATCH_LIBRARIES catch PARENT_SCOPE)
+add_library(catch2 INTERFACE IMPORTED GLOBAL)
+set_target_properties(catch2 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/catch/single_include/catch2")
 
 # cereal
-set(CEREAL_DIR "cereal")
-add_library(cereal INTERFACE)
-target_include_directories(cereal INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CEREAL_DIR}/include")
-set(CEREAL_LIBRARIES cereal PARENT_SCOPE)
+add_library(cereal INTERFACE IMPORTED GLOBAL)
+set_target_properties(cereal PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
 
 # cpptoml
-set(CPPTOML_DIR "cpptoml")
-add_library(cpptoml INTERFACE)
-target_include_directories(cpptoml INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${CPPTOML_DIR}/include")
-target_compile_definitions(cpptoml INTERFACE "CPPTOML_USE_MAP")
-set(CPPTOML_LIBRARIES cpptoml PARENT_SCOPE)
+add_library(cpptoml INTERFACE IMPORTED GLOBAL)
+set_target_properties(cpptoml PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "CPPTOML_USE_MAP"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpptoml/include")
 
 # excmd
-set(EXCMD_DIR "excmd")
-add_library(excmd INTERFACE)
-target_include_directories(excmd INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${EXCMD_DIR}/src")
-set(EXCMD_LIBRARIES excmd PARENT_SCOPE)
+add_library(excmd INTERFACE IMPORTED GLOBAL)
+set_target_properties(excmd PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/excmd/src")
 
 # fixed_point
-set(FIXED_POINT_DIR "fixed_point")
-add_library(fixed_point INTERFACE)
-target_include_directories(fixed_point INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${FIXED_POINT_DIR}/include")
-set(FIXED_POINT_LIBRARIES fixed_point PARENT_SCOPE)
+add_library(fixed_point INTERFACE IMPORTED GLOBAL)
+set_target_properties(fixed_point PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/fixed_point/include")
 
 # fmt
 add_subdirectory(fmt)
 set_target_properties(fmt PROPERTIES FOLDER libraries)
-set(FMT_LIBRARIES fmt PARENT_SCOPE)
 
 # glbinding
 find_package(glbinding QUIET)
@@ -177,59 +165,39 @@ if(DECAF_VULKAN)
 endif()
 
 # gsl
-set(GSL_DIR "gsl-lite")
-add_library(gsl INTERFACE)
-target_include_directories(gsl INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${GSL_DIR}/include")
-target_compile_definitions(gsl INTERFACE "GSL_THROWS_FOR_TESTING")
-set(GSL_LIBRARIES gsl PARENT_SCOPE)
+add_library(gsl INTERFACE IMPORTED GLOBAL)
+set_target_properties(gsl PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "GSL_THROWS_FOR_TESTING"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/gsl-lite/include")
 
 # imgui
-set(IMGUI_DIR "imgui")
-include_directories("${IMGUI_DIR}")
 add_library(imgui STATIC
-    "${IMGUI_DIR}/imgui.cpp"
-    "${IMGUI_DIR}/imgui_draw.cpp")
-set_target_properties(imgui PROPERTIES FOLDER libraries)
-target_include_directories(imgui INTERFACE "${IMGUI_DIR}")
-set(IMGUI_LIBRARIES imgui PARENT_SCOPE)
+    "imgui/imgui.cpp"
+    "imgui/imgui_draw.cpp")
+set_target_properties(imgui PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/imgui"
+    FOLDER libraries)
 
 # ovsocket
-set(OVSOCKET_DIR "ovsocket")
-add_library(ovsocket INTERFACE)
-target_include_directories(ovsocket INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${OVSOCKET_DIR}/ovsocket")
-set(OVSOCKET_LIBRARIES ovsocket PARENT_SCOPE)
+add_library(ovsocket INTERFACE IMPORTED GLOBAL)
+set_target_properties(ovsocket PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/ovsocket/ovsocket")
 
 # peglib
-set(PEGLIB_DIR "cpp-peglib")
-add_library(peglib INTERFACE)
-target_include_directories(peglib INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${PEGLIB_DIR}")
-set(PEGLIB_LIBRARIES peglib PARENT_SCOPE)
+add_library(peglib INTERFACE IMPORTED GLOBAL)
+set_target_properties(peglib PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpp-peglib")
 
 # pugixml
-set(PUGIXML_DIR "pugixml")
 add_library(pugixml STATIC
-   "${PUGIXML_DIR}/src/pugixml.cpp")
-set_target_properties(pugixml PROPERTIES FOLDER libraries)
-target_include_directories(pugixml INTERFACE "${PUGIXML_DIR}/src")
-set(PUGIXML_LIBRARIES pugixml PARENT_SCOPE)
+    "pugixml/src/pugixml.cpp")
+set_target_properties(pugixml PROPERTIES
+    FOLDER libraries
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
 
 # spdlog
-set(SPDLOG_DIR "spdlog")
-add_library(spdlog INTERFACE)
-target_include_directories(spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/${SPDLOG_DIR}/include")
-target_compile_definitions(spdlog INTERFACE "SPDLOG_FMT_EXTERNAL")
-target_link_libraries(spdlog INTERFACE ${FMT_LIBRARIES})
-set(SPDLOG_LIBRARIES spdlog PARENT_SCOPE)
-
-# vulkan
-if(Vulkan_FOUND)
-    add_library(vulkan INTERFACE)
-    target_link_libraries(vulkan INTERFACE ${Vulkan_LIBRARIES})
-    target_include_directories(vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
-    if(MSVC)
-        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WIN32_KHR")
-    endif()
-    set(VULKAN_LIBRARIES vulkan PARENT_SCOPE)
-else()
-    set(VULKAN_LIBRARIES "" PARENT_SCOPE)
-endif()
+add_library(spdlog INTERFACE IMPORTED GLOBAL)
+set_target_properties(spdlog PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "SPDLOG_FMT_EXTERNAL"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/spdlog/include"
+    INTERFACE_LINK_LIBRARIES fmt)

@@ -19,7 +19,7 @@ set_target_properties(pm4-replay-qt PROPERTIES FOLDER tools)
 target_link_libraries(pm4-replay-qt
     common
     libdecaf
-    ${EXCMD_LIBRARIES})
+    excmd)
 
 target_link_libraries(pm4-replay-qt Qt5::Widgets)
 

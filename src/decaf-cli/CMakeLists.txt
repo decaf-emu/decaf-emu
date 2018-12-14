@@ -11,7 +11,7 @@ target_link_libraries(decaf-cli
     common
     libconfig
     libdecaf
-    ${CPPTOML_LIBRARIES}
-    ${EXCMD_LIBRARIES})
+    cpptoml
+    excmd)
 
 install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")

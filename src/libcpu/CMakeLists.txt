@@ -17,7 +17,7 @@ GroupSources(src)
 
 target_link_libraries(libcpu
     common
-    ${BINREC_LIBRARIES})
+    binrec)
 
 if(MSVC)
     target_link_libraries(libcpu

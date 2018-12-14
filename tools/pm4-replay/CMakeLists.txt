@@ -18,8 +18,8 @@ target_link_libraries(pm4-replay
     common-sdl
     libconfig
     libdecaf
-    ${CPPTOML_LIBRARIES}
-    ${EXCMD_LIBRARIES}
+    cpptoml
+    excmd
     ${SDL2_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")

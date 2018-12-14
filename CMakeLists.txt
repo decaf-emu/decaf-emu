@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 project(decaf-emu C CXX)
+find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED) # ZLIB::ZLIB
 
 option(DECAF_BUILD_TESTS "Build tests" OFF)
@@ -27,8 +28,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 
-find_package(Threads REQUIRED)
-
 if(DECAF_JIT_ALLOW_PROFILING)
     add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
 endif()
@@ -42,6 +41,7 @@ if(DECAF_GL)
     if(APPLE)
         message(FATAL_ERROR "The OpenGL backend is not supported on macOS. Please use -DDECAF_GL=OFF to suppress this error.")
     endif()
+
     find_package(OpenGL REQUIRED)
     add_definitions(-DDECAF_GL)
 endif()
@@ -52,7 +52,17 @@ if(DECAF_SDL)
 endif()
 
 if(DECAF_VULKAN)
-    find_package(Vulkan 1.1.92.1 REQUIRED)
+    find_package(Vulkan 1.1.92.1 REQUIRED) # Vulkan_INCLUDE_DIRS and Vulkan_LIBRARIES
+    add_library(vulkan INTERFACE IMPORTED)
+    set_target_properties(vulkan PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${Vulkan_INCLUDE_DIRS}
+        INTERFACE_LINK_LIBRARIES ${Vulkan_LIBRARIES})
+
+    if(MSVC)
+        set_target_properties(vulkan PROPERTIES
+            INTERFACE_COMPILE_DEFINITIONS "VK_USE_PLATFORM_WIN32_KHR")
+    endif()
+
     add_definitions(-DDECAF_VULKAN)
 endif()
 
@@ -61,7 +71,7 @@ if(DECAF_VALGRIND)
 endif()
 
 if(DECAF_QT)
-    find_package(Qt5Widgets)
+    find_package(Qt5Widgets REQUIRED)
     add_definitions(-DDECAF_QT)
 endif()
 
