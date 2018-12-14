@@ -238,7 +238,7 @@ Driver::_refreshMemCache_Update(MemCacheObject *cache, SectionRange range)
    // the case of a fragmented set of underlying segments which point to the
    // same thing contiguously.
 
-   RangeCombiner<void*, uint32_t, uint32_t> uploadCombiner(
+   auto uploadCombiner = makeRangeCombiner<void*, uint32_t, uint32_t>(
    [&](void*, uint32_t start, uint32_t count){
       _uploadMemCache(cache, { start, count });
    });
@@ -253,7 +253,7 @@ Driver::_refreshMemCache_Update(MemCacheObject *cache, SectionRange range)
 
    uploadCombiner.flush();
 
-   RangeCombiner<MemCacheObject*, phys_addr, uint32_t> copyCombiner(
+   auto copyCombiner = makeRangeCombiner<MemCacheObject*, phys_addr, uint32_t>(
    [&](MemCacheObject *object, phys_addr address, uint32_t size){
       vk::BufferCopy copyDesc;
       copyDesc.srcOffset = static_cast<uint32_t>(address - object->address);

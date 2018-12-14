@@ -4,13 +4,12 @@
 namespace vulkan
 {
 
-template<typename _ObjType, typename _OffsetType, typename _SizeType>
+// void(_ObjType object, _OffsetType offset, _SizeType size)
+template<typename _ObjType, typename _OffsetType, typename _SizeType, typename _FunctorType>
 class RangeCombiner
 {
-   typedef std::function<void(_ObjType object, _OffsetType offset, _SizeType size)> functor_type;
-
 public:
-   RangeCombiner(functor_type functor)
+   RangeCombiner(_FunctorType functor)
       : _functor(functor)
    {
    }
@@ -42,11 +41,18 @@ public:
    }
 
 protected:
-   functor_type _functor = nullptr;
+   _FunctorType _functor = nullptr;
    _ObjType _object = {};
    _OffsetType _offset = {};
    _SizeType _size = {};
 };
+
+template<typename _ObjType, typename _OffsetType, typename _SizeType, typename _FunctorType>
+static inline RangeCombiner<_ObjType, _OffsetType, _SizeType, _FunctorType>
+makeRangeCombiner(_FunctorType functor)
+{
+   return RangeCombiner<_ObjType, _OffsetType, _SizeType, _FunctorType>(functor);
+}
 
 } // namespace vulkan
 

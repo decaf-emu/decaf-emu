@@ -763,13 +763,13 @@ Driver::_refreshSurface(SurfaceObject *surface, SurfaceSubRange range)
    surface->memCache->lastUsageIndex = surface->lastUsageIndex;
    _refreshMemCache_Check(memCache, sectionRange);
 
-   RangeCombiner<SurfaceObject*, uint32_t, uint32_t> readCombiner(
+   auto readCombiner = makeRangeCombiner<SurfaceObject*, uint32_t, uint32_t>(
    [&](SurfaceObject* object, uint32_t start, uint32_t count){
       _refreshMemCache_Update(memCache, { start, count });
       _readSurfaceData(surface, { start, count });
    });
 
-   RangeCombiner<SurfaceObject*, uint32_t, uint32_t> blitCombiner(
+   auto blitCombiner = makeRangeCombiner<SurfaceObject*, uint32_t, uint32_t>(
    [&](SurfaceObject* object, uint32_t start, uint32_t count){
       _copySurface(surface, object, { start, count });
    });
