@@ -100,6 +100,7 @@ Driver::checkCurrentFramebuffer()
    auto& foundFb = mFramebuffers[currentDesc.hash()];
    if (foundFb) {
       mCurrentDraw->framebuffer = foundFb;
+      mCurrentDraw->framebufferDirty = true;
       return true;
    }
 
@@ -159,6 +160,7 @@ Driver::checkCurrentFramebuffer()
    foundFb->renderArea = overallSize;
 
    mCurrentDraw->framebuffer = foundFb;
+   mCurrentDraw->framebufferDirty = true;
    return true;
 }
 
@@ -169,6 +171,25 @@ Driver::prepareCurrentFramebuffer()
    decaf_check(mCurrentDraw->framebuffer);
 
    auto& fb = mCurrentDraw->framebuffer;
+
+   if (!mCurrentDraw->framebufferDirty) {
+      // If the framebuffer is the same as the last frame, it is considered
+      // clean, and we only need to perform barriers in order to make sure
+      // that the image layout is appropriate.
+      for (auto &surfaceView : fb->colorSurfaces) {
+         if (surfaceView) {
+            transitionSurfaceView(surfaceView, ResourceUsage::ColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, true);
+         }
+      }
+      if (fb->depthSurface) {
+         auto &surfaceView = fb->depthSurface;
+         transitionSurfaceView(surfaceView, ResourceUsage::DepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, true);
+      }
+      return;
+   }
+
+   mCurrentDraw->framebufferDirty = false;
+
 
    // First we need to transition all the surfaces to their appropriate places.
    for (auto &surfaceView : fb->colorSurfaces) {

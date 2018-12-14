@@ -45,17 +45,26 @@ Driver::checkCurrentAttribBuffers()
 
       auto desc = getAttribBufferDesc(i);
 
-      if (!desc.baseAddress) {
+      if (!desc.baseAddress || !desc.size) {
          // If the vertex shader takes this as an input, but there is no
          // actual buffer specified, we should fail our draw entirely.
          return false;
+      }
+
+      auto &currentAttribBuffer = mCurrentDraw->attribBuffers[i];
+      if (currentAttribBuffer &&
+          currentAttribBuffer->address == desc.baseAddress &&
+          currentAttribBuffer->size == desc.size) {
+         // If we are already set to the correct attribute buffer, we only need
+         // to check that the buffer has not changed since we last looked.
+         continue;
       }
 
       auto memCache = getDataMemCache(desc.baseAddress, desc.size);
 
       transitionMemCache(memCache, ResourceUsage::AttributeBuffer);
 
-      mCurrentDraw->attribBuffers[i] = memCache;
+      currentAttribBuffer = memCache;
    }
 
    return true;

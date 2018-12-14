@@ -5,8 +5,9 @@ namespace vulkan
 {
 
 void
-Driver::checkCurrentGprBuffer(ShaderStage shaderStage)
+Driver::updateDrawGprBuffer(ShaderStage shaderStage)
 {
+   auto shaderStageInt = static_cast<uint32_t>(shaderStage);
    const void *registerVals = nullptr;
 
    if (shaderStage == ShaderStage::Vertex) {
@@ -33,12 +34,14 @@ Driver::checkCurrentGprBuffer(ShaderStage shaderStage)
       decaf_abort("Unexpected shader stage in GPR buffer setup");
    }
 
-   mCurrentDraw->gprBuffers[int(shaderStage)] = gprsBuffer;
+   mCurrentDraw->gprBuffers[shaderStageInt] = gprsBuffer;
 }
 
 void
-Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
+Driver::updateDrawUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
 {
+   auto shaderStageInt = static_cast<uint32_t>(shaderStage);
+
    uint32_t cacheBase;
    uint32_t sizeBase;
    if (shaderStage == ShaderStage::Vertex) {
@@ -61,7 +64,15 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
    auto bufferSize = sq_alu_const_buffer_size_vs << 8;
 
    if (!bufferPtr || bufferSize == 0) {
-      mCurrentDraw->uniformBlocks[int(shaderStage)][cbufferIdx] = nullptr;
+      mCurrentDraw->uniformBlocks[shaderStageInt][cbufferIdx] = nullptr;
+      return;
+   }
+
+   auto &currentUniformBlock = mCurrentDraw->uniformBlocks[shaderStageInt][cbufferIdx];
+   if (currentUniformBlock &&
+       currentUniformBlock->address == bufferPtr &&
+       currentUniformBlock->size == bufferSize) {
+      // We already have the correct buffer, no need to look it up again.
       return;
    }
 
@@ -77,7 +88,7 @@ Driver::checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx)
       decaf_abort("Unexpected shader stage");
    }
 
-   mCurrentDraw->uniformBlocks[int(shaderStage)][cbufferIdx] = memCache;
+   currentUniformBlock = memCache;
 }
 
 bool
@@ -89,18 +100,72 @@ Driver::checkCurrentShaderBuffers()
    if (!isDx9Consts) {
       for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
          mCurrentDraw->gprBuffers[shaderStage] = nullptr;
+      }
 
-         for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-            checkCurrentUniformBuffer(ShaderStage(shaderStage), i);
+      if (mCurrentDraw->vertexShader) {
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            if (mCurrentDraw->vertexShader->shader.cbufferUsed[blockIdx]) {
+               updateDrawUniformBuffer(ShaderStage::Vertex, blockIdx);
+            } else {
+               mCurrentDraw->uniformBlocks[0][blockIdx] = nullptr;
+            }
+         }
+      } else {
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            mCurrentDraw->uniformBlocks[0][blockIdx] = nullptr;
+         }
+      }
+
+      if (mCurrentDraw->geometryShader) {
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            if (mCurrentDraw->geometryShader->shader.cbufferUsed[blockIdx]) {
+               updateDrawUniformBuffer(ShaderStage::Geometry, blockIdx);
+            } else {
+               mCurrentDraw->uniformBlocks[1][blockIdx] = nullptr;
+            }
+         }
+      } else {
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            mCurrentDraw->uniformBlocks[1][blockIdx] = nullptr;
+         }
+      }
+
+      if (mCurrentDraw->pixelShader) {
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            if (mCurrentDraw->pixelShader->shader.cbufferUsed[blockIdx]) {
+               updateDrawUniformBuffer(ShaderStage::Pixel, blockIdx);
+            } else {
+               mCurrentDraw->uniformBlocks[2][blockIdx] = nullptr;
+            }
+         }
+      } else {
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            mCurrentDraw->uniformBlocks[2][blockIdx] = nullptr;
          }
       }
    } else {
       for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
-         for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-            mCurrentDraw->uniformBlocks[shaderStage][i] = nullptr;
+         for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
+            mCurrentDraw->uniformBlocks[shaderStage][blockIdx] = nullptr;
          }
+      }
 
-         checkCurrentGprBuffer(ShaderStage(shaderStage));
+      if (mCurrentDraw->vertexShader) {
+         updateDrawGprBuffer(ShaderStage::Vertex);
+      } else {
+         mCurrentDraw->gprBuffers[0] = nullptr;
+      }
+
+      if (mCurrentDraw->geometryShader) {
+         updateDrawGprBuffer(ShaderStage::Geometry);
+      } else {
+         mCurrentDraw->gprBuffers[1] = nullptr;
+      }
+
+      if (mCurrentDraw->pixelShader) {
+         updateDrawGprBuffer(ShaderStage::Pixel);
+      } else {
+         mCurrentDraw->gprBuffers[2] = nullptr;
       }
    }
 

@@ -893,7 +893,7 @@ Driver::getSurface(const SurfaceDesc& info)
 }
 
 void
-Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range)
+Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range, bool skipChangeCheck)
 {
    // We need to align our invalidation groups along a tickness boundary!
    auto alignedRange = range;
@@ -905,14 +905,16 @@ Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::Image
       alignedRange.numSlices = endSlice - alignedRange.firstSlice;
    }
 
-   bool forWrite = getResourceUsageMeta(usage).isWrite;
-
    surface->lastUsageIndex = mActiveBatchIndex;
 
-   _refreshSurface(surface, alignedRange);
+   bool forWrite = getResourceUsageMeta(usage).isWrite;
 
-   if (forWrite) {
-      _invalidateSurface(surface, alignedRange);
+   if (!skipChangeCheck) {
+      _refreshSurface(surface, alignedRange);
+
+      if (forWrite) {
+         _invalidateSurface(surface, alignedRange);
+      }
    }
 
    _barrierSurface(surface, usage, layout, alignedRange);
@@ -969,16 +971,16 @@ Driver::getSurfaceView(const SurfaceViewDesc& info)
       surfaceView = _allocateSurfaceView(info);
    }
 
-   decaf_check(surfaceView->desc.sliceStart == info.sliceStart);
-   decaf_check(surfaceView->desc.sliceEnd == info.sliceEnd);
+   decaf_check(surfaceView->desc->sliceStart == info.sliceStart);
+   decaf_check(surfaceView->desc->sliceEnd == info.sliceEnd);
 
    return surfaceView;
 }
 
 void
-Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout)
+Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout, bool skipChangeCheck)
 {
-   transitionSurface(surfaceView->surface, usage, layout, surfaceView->surfaceRange);
+   transitionSurface(surfaceView->surface, usage, layout, surfaceView->surfaceRange, skipChangeCheck);
 
    if (surfaceView->boundImage == surfaceView->surface->image) {
       return;
@@ -987,10 +989,10 @@ Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usag
    auto& info = surfaceView->desc;
    auto& surface = surfaceView->surface;
 
-   auto hostFormat = getVkSurfaceFormat(info.surfaceDesc.format, info.surfaceDesc.tileType);
+   auto hostFormat = getVkSurfaceFormat(info->surfaceDesc.format, info->surfaceDesc.tileType);
 
    vk::ImageViewType imageViewType;
-   switch (info.surfaceDesc.dim) {
+   switch (info->surfaceDesc.dim) {
    case latte::SQ_TEX_DIM::DIM_1D:
       imageViewType = vk::ImageViewType::e1D;
       break;
@@ -1012,14 +1014,14 @@ Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usag
       imageViewType = vk::ImageViewType::e3D;
       break;
    default:
-      decaf_abort(fmt::format("Failed to pick vulkan image view type for dim {}", info.surfaceDesc.dim));
+      decaf_abort(fmt::format("Failed to pick vulkan image view type for dim {}", info->surfaceDesc.dim));
    }
 
    auto hostComponentMap = vk::ComponentMapping();
-   hostComponentMap.r = getVkComponentSwizzle(info.channels[0]);
-   hostComponentMap.g = getVkComponentSwizzle(info.channels[1]);
-   hostComponentMap.b = getVkComponentSwizzle(info.channels[2]);
-   hostComponentMap.a = getVkComponentSwizzle(info.channels[3]);
+   hostComponentMap.r = getVkComponentSwizzle(info->channels[0]);
+   hostComponentMap.g = getVkComponentSwizzle(info->channels[1]);
+   hostComponentMap.b = getVkComponentSwizzle(info->channels[2]);
+   hostComponentMap.a = getVkComponentSwizzle(info->channels[3]);
 
    vk::ImageViewCreateInfo imageViewDesc;
    imageViewDesc.image = surface->image;
@@ -1029,7 +1031,7 @@ Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usag
    imageViewDesc.subresourceRange = surfaceView->subresRange;
    auto imageView = mDevice.createImageView(imageViewDesc);
 
-   setVkObjectName(imageView, _makeSurfaceViewName(info).c_str());
+   setVkObjectName(imageView, _makeSurfaceViewName(*info).c_str());
 
    if (surfaceView->imageView) {
       auto oldImageView = surfaceView->imageView;

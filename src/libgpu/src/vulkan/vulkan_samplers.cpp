@@ -30,36 +30,23 @@ Driver::getSamplerDesc(ShaderStage shaderStage, uint32_t samplerIdx)
 }
 
 void
-Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
+Driver::updateDrawSampler(ShaderStage shaderStage, uint32_t samplerIdx)
 {
-   mCurrentDraw->samplers[int(shaderStage)][samplerIdx] = nullptr;
+   uint32_t shaderStageIdx = static_cast<uint32_t>(shaderStage);
+   auto &drawSampler = mCurrentDraw->samplers[shaderStageIdx][samplerIdx];
 
-   if (shaderStage == ShaderStage::Vertex) {
-      if (!mCurrentDraw->vertexShader || !mCurrentDraw->vertexShader->shader.samplerUsed[samplerIdx]) {
-         return;
-      }
-   } else if (shaderStage == ShaderStage::Geometry) {
-      if (!mCurrentDraw->geometryShader || !mCurrentDraw->geometryShader->shader.samplerUsed[samplerIdx]) {
-         return;
-      }
-   } else if (shaderStage == ShaderStage::Pixel) {
-      if (!mCurrentDraw->pixelShader || !mCurrentDraw->pixelShader->shader.samplerUsed[samplerIdx]) {
-         return;
-      }
-   } else {
-      decaf_abort("Unknown shader stage");
-   }
+   HashedDesc<SamplerDesc> currentDesc = getSamplerDesc(shaderStage, samplerIdx);
 
-   HashedDesc<SamplerDesc> currentDesc = getSamplerDesc(ShaderStage(shaderStage), samplerIdx);
-
-   auto &foundSamp = mSamplers[currentDesc.hash()];
-   if (foundSamp) {
-      mCurrentDraw->samplers[int(shaderStage)][samplerIdx] = foundSamp;
+   if (drawSampler && drawSampler->desc == currentDesc) {
+      // We already have the correct sampler set
       return;
    }
 
-   foundSamp = new SamplerObject();
-   foundSamp->desc = currentDesc;
+   auto &foundSamp = mSamplers[currentDesc.hash()];
+   if (foundSamp) {
+      drawSampler = foundSamp;
+      return;
+   }
 
    vk::SamplerCreateInfo samplerDesc;
    samplerDesc.magFilter = getVkXyTextureFilter(currentDesc->texSamplerWord0.XY_MAG_FILTER());
@@ -77,19 +64,57 @@ Driver::checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx)
    samplerDesc.maxLod = currentDesc->texSamplerWord1.MAX_LOD();
    samplerDesc.borderColor = getVkBorderColor(currentDesc->texSamplerWord0.BORDER_COLOR_TYPE());
    samplerDesc.unnormalizedCoordinates = VK_FALSE;
-
    auto sampler = mDevice.createSampler(samplerDesc);
+
+   foundSamp = new SamplerObject();
+   foundSamp->desc = currentDesc;
    foundSamp->sampler = sampler;
 
-   mCurrentDraw->samplers[int(shaderStage)][samplerIdx] = foundSamp;
+   drawSampler = foundSamp;
 }
 
 bool
 Driver::checkCurrentSamplers()
 {
-   for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
-      for (auto i = 0u; i < latte::MaxSamplers; ++i) {
-         checkCurrentSampler(ShaderStage(shaderStage), i);
+   if (mCurrentDraw->vertexShader) {
+      for (auto samplerIdx = 0u; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
+         if (mCurrentDraw->vertexShader->shader.samplerUsed[samplerIdx]) {
+            updateDrawSampler(ShaderStage::Vertex, samplerIdx);
+         } else {
+            mCurrentDraw->samplers[0][samplerIdx] = nullptr;
+         }
+      }
+   } else {
+      for (auto samplerIdx = 0; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
+         mCurrentDraw->samplers[0][samplerIdx] = nullptr;
+      }
+   }
+
+   if (mCurrentDraw->geometryShader) {
+      for (auto samplerIdx = 0u; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
+         if (mCurrentDraw->geometryShader->shader.samplerUsed[samplerIdx]) {
+            updateDrawSampler(ShaderStage::Geometry, samplerIdx);
+         } else {
+            mCurrentDraw->samplers[1][samplerIdx] = nullptr;
+         }
+      }
+   } else {
+      for (auto samplerIdx = 0; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
+         mCurrentDraw->samplers[1][samplerIdx] = nullptr;
+      }
+   }
+
+   if (mCurrentDraw->pixelShader) {
+      for (auto samplerIdx = 0u; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
+         if (mCurrentDraw->pixelShader->shader.samplerUsed[samplerIdx]) {
+            updateDrawSampler(ShaderStage::Pixel, samplerIdx);
+         } else {
+            mCurrentDraw->samplers[2][samplerIdx] = nullptr;
+         }
+      }
+   } else {
+      for (auto samplerIdx = 0; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
+         mCurrentDraw->samplers[2][samplerIdx] = nullptr;
       }
    }
 

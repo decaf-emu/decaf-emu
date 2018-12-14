@@ -493,7 +493,7 @@ struct SurfaceViewDesc
 
 struct SurfaceViewObject
 {
-   SurfaceViewDesc desc;
+   HashedDesc<SurfaceViewDesc> desc;
    SurfaceObject *surface;
 
    SurfaceSubRange surfaceRange;
@@ -501,11 +501,6 @@ struct SurfaceViewObject
    vk::Image boundImage;
    vk::ImageView imageView;
    vk::ImageSubresourceRange subresRange;
-};
-
-struct TextureDesc
-{
-   SurfaceViewDesc surfaceDesc;
 };
 
 struct FramebufferDesc
@@ -741,6 +736,8 @@ struct DrawDesc
    FramebufferObject *framebuffer = nullptr;
    RenderPassObject *renderPass = nullptr;
    PipelineObject *pipeline = nullptr;
+   bool framebufferDirty = true;
+   std::array<std::array<bool, latte::MaxTextures>, 3> textureDirty = { { true } };
    std::array<DataBufferObject*, latte::MaxAttribBuffers> attribBuffers = { nullptr };
    std::array<std::array<SamplerObject*, latte::MaxSamplers>, 3> samplers = { { nullptr } };
    std::array<std::array<SurfaceViewObject*, latte::MaxTextures>, 3> textures = { { nullptr } };
@@ -831,18 +828,18 @@ protected:
 
    // Samplers
    SamplerDesc getSamplerDesc(ShaderStage shaderStage, uint32_t samplerIdx);
-   void checkCurrentSampler(ShaderStage shaderStage, uint32_t samplerIdx);
+   void updateDrawSampler(ShaderStage shaderStage, uint32_t samplerIdx);
    bool checkCurrentSamplers();
 
    // Textures
-   TextureDesc getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx);
-   bool checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx);
+   SurfaceViewDesc getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx);
+   void updateDrawTexture(ShaderStage shaderStage, uint32_t textureIdx);
    bool checkCurrentTextures();
    void prepareCurrentTextures();
 
    // CBuffers
-   void checkCurrentUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx);
-   void checkCurrentGprBuffer(ShaderStage shaderStage);
+   void updateDrawUniformBuffer(ShaderStage shaderStage, uint32_t cbufferIdx);
+   void updateDrawGprBuffer(ShaderStage shaderStage);
    bool checkCurrentShaderBuffers();
 
    // Memory Cache
@@ -896,12 +893,12 @@ protected:
    void _invalidateSurface(SurfaceObject *surface, SurfaceSubRange range);
    void _barrierSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range);
    SurfaceObject * getSurface(const SurfaceDesc& info);
-   void transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range);
+   void transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range, bool skipChangeCheck = false);
 
    SurfaceViewObject * _allocateSurfaceView(const SurfaceViewDesc& info);
    void _releaseSurfaceView(SurfaceViewObject *surfaceView);
    SurfaceViewObject * getSurfaceView(const SurfaceViewDesc& info);
-   void transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout);
+   void transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout, bool skipChangeCheck = false);
 
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);

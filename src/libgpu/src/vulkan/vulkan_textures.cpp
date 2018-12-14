@@ -4,11 +4,9 @@
 namespace vulkan
 {
 
-TextureDesc
+SurfaceViewDesc
 Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
 {
-   TextureDesc desc;
-
    uint32_t samplerBaseIdx;
    if (shaderStage == ShaderStage::Vertex) {
       samplerBaseIdx = latte::SQ_RES_OFFSET::VS_TEX_RESOURCE_0;
@@ -58,50 +56,73 @@ Driver::getTextureDesc(ShaderStage shaderStage, uint32_t textureIdx)
    surfaceDesc.channels[2] = sq_tex_resource_word4.DST_SEL_Z();
    surfaceDesc.channels[3] = sq_tex_resource_word4.DST_SEL_W();
 
-   desc.surfaceDesc = surfaceDesc;
-
-   return desc;
+   return surfaceDesc;
 }
 
-bool
-Driver::checkCurrentTexture(ShaderStage shaderStage, uint32_t textureIdx)
+void
+Driver::updateDrawTexture(ShaderStage shaderStage, uint32_t textureIdx)
 {
-   if (shaderStage == ShaderStage::Vertex) {
-      if (!mCurrentDraw->vertexShader || !mCurrentDraw->vertexShader->shader.textureUsed[textureIdx]) {
-         return true;
-      }
-   } else if (shaderStage == ShaderStage::Geometry) {
-      if (!mCurrentDraw->geometryShader || !mCurrentDraw->geometryShader->shader.textureUsed[textureIdx]) {
-         return true;
-      }
-   } else if (shaderStage == ShaderStage::Pixel) {
-      if (!mCurrentDraw->pixelShader || !mCurrentDraw->pixelShader->shader.textureUsed[textureIdx]) {
-         return true;
-      }
-   } else {
-      decaf_abort("Unknown shader stage");
+   uint32_t shaderStageIdx = static_cast<uint32_t>(shaderStage);
+   auto &drawTexture = mCurrentDraw->textures[shaderStageIdx][textureIdx];
+
+   HashedDesc<SurfaceViewDesc> currentDesc = getTextureDesc(shaderStage, textureIdx);
+
+   if (!currentDesc->surfaceDesc.baseAddress) {
+      drawTexture = nullptr;
+      return;
    }
 
-   auto textureDesc = getTextureDesc(shaderStage, textureIdx);
-   if (!textureDesc.surfaceDesc.surfaceDesc.baseAddress) {
-      return false;
+   if (drawTexture && drawTexture->desc == currentDesc) {
+      // We already have the correct texture set
+      return;
    }
 
-   auto surface = getSurfaceView(textureDesc.surfaceDesc);
-   mCurrentDraw->textures[int(shaderStage)][textureIdx] = surface;
-   return true;
+   drawTexture = getSurfaceView(*currentDesc);
+   mCurrentDraw->textureDirty[shaderStageIdx][textureIdx] = true;
 }
 
 bool
 Driver::checkCurrentTextures()
 {
-   mCurrentDraw->textures = { { nullptr } };
-
-   for (auto shaderStage = 0; shaderStage < 3; ++shaderStage) {
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         if (!checkCurrentTexture(ShaderStage(shaderStage), i)) {
-            return false;
+   if (mCurrentDraw->vertexShader) {
+      for (auto textureIdx = 0u; textureIdx < latte::MaxTextures; ++textureIdx) {
+         if (mCurrentDraw->vertexShader->shader.textureUsed[textureIdx]) {
+            updateDrawTexture(ShaderStage::Vertex, textureIdx);
+         } else {
+            mCurrentDraw->textures[0][textureIdx] = nullptr;
          }
+      }
+   } else {
+      for (auto textureIdx = 0; textureIdx < latte::MaxTextures; ++textureIdx) {
+         mCurrentDraw->textures[0][textureIdx] = nullptr;
+      }
+   }
+
+   if (mCurrentDraw->geometryShader) {
+      for (auto textureIdx = 0u; textureIdx < latte::MaxTextures; ++textureIdx) {
+         if (mCurrentDraw->geometryShader->shader.textureUsed[textureIdx]) {
+            updateDrawTexture(ShaderStage::Geometry, textureIdx);
+         } else {
+            mCurrentDraw->textures[1][textureIdx] = nullptr;
+         }
+      }
+   } else {
+      for (auto textureIdx = 0; textureIdx < latte::MaxTextures; ++textureIdx) {
+         mCurrentDraw->textures[1][textureIdx] = nullptr;
+      }
+   }
+
+   if (mCurrentDraw->pixelShader) {
+      for (auto textureIdx = 0u; textureIdx < latte::MaxTextures; ++textureIdx) {
+         if (mCurrentDraw->pixelShader->shader.textureUsed[textureIdx]) {
+            updateDrawTexture(ShaderStage::Pixel, textureIdx);
+         } else {
+            mCurrentDraw->textures[2][textureIdx] = nullptr;
+         }
+      }
+   } else {
+      for (auto textureIdx = 0; textureIdx < latte::MaxTextures; ++textureIdx) {
+         mCurrentDraw->textures[2][textureIdx] = nullptr;
       }
    }
 
@@ -114,17 +135,32 @@ Driver::prepareCurrentTextures()
    for (auto i = 0u; i < latte::MaxTextures; ++i) {
       auto& vsSurface = mCurrentDraw->textures[0][i];
       if (vsSurface) {
-         transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+         if (!mCurrentDraw->textureDirty[0][i]) {
+            transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal, true);
+         } else {
+            transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+            mCurrentDraw->textureDirty[0][i] = false;
+         }
       }
 
       auto& gsSurface = mCurrentDraw->textures[1][i];
       if (gsSurface) {
-         transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+         if (!mCurrentDraw->textureDirty[1][i]) {
+            transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal, true);
+         } else {
+            transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+            mCurrentDraw->textureDirty[1][i] = false;
+         }
       }
 
       auto& psSurface = mCurrentDraw->textures[2][i];
       if (psSurface) {
-         transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+         if (!mCurrentDraw->textureDirty[2][i]) {
+            transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal, true);
+         } else {
+            transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
+            mCurrentDraw->textureDirty[2][i] = false;
+         }
       }
    }
 }
