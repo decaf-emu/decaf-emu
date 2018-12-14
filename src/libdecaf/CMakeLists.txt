@@ -9,16 +9,21 @@ file(GLOB_RECURSE HEADER_FILES *.h)
 add_library(libdecaf STATIC ${SOURCE_FILES} ${HEADER_FILES})
 GroupSources(src)
 
+target_include_directories(libdecaf PRIVATE
+    ${CURL_INCLUDE_DIRS})
+
 target_link_libraries(libdecaf
+    addrlib
     common
+    fixed_point
+    imgui
     libcpu
     libgfd
     libgpu
-    addrlib
-    fixed_point
-    imgui
+    OpenSSL::SSL
     pugixml
-    ZLIB::ZLIB)
+    ZLIB::ZLIB
+    ${CURL_LIBRARIES})
 
 if(DECAF_FFMPEG)
     target_link_libraries(libdecaf

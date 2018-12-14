@@ -23,6 +23,7 @@
 #include <common/platform.h>
 #include <common/platform_dir.h>
 #include <condition_variable>
+#include <curl/curl.h>
 #include <fmt/format.h>
 #include <mutex>
 
@@ -67,10 +68,9 @@ initialise(const std::string &gamePath)
       return false;
    }
 
-#ifdef PLATFORM_WINDOWS
-   WSADATA wsaInitData;
-   WSAStartup(MAKEWORD(2, 2), &wsaInitData);
-#endif
+   if (auto result = curl_global_init(CURL_GLOBAL_ALL); result != CURLE_OK) {
+      gLog->error("curl_global_init returned {}", result);
+   }
 
    // Initialise cpu (because this initialises memory)
    ::cpu::initialise();

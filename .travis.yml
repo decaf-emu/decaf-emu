@@ -14,15 +14,17 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:cginternals/backports-ppa'
     packages:
-      - gcc-7
       - g++-7
-      - xorg-dev
+      - gcc-7
+      - libcurl4-openssl-dev
+      - libglbinding-dbg
+      - libglbinding-dev
       - libglu1-mesa-dev
       - libsdl2-dev
+      - libssl-dev
       - libx11-dev
       - libxcursor-dev
-      - libglbinding-dev
-      - libglbinding-dbg
+      - xorg-dev
       - zlib1g-dev
 
 cache:
@@ -32,7 +34,7 @@ cache:
 install:
   -  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90; fi
   -  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90; fi
-  -  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install sdl2; fi
+  -  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install curl openssl sdl2; fi
 
 script:
   - cd "$TRAVIS_BUILD_DIR"

@@ -7,7 +7,9 @@ if(USING_CONAN)
     conan_basic_setup(NO_OUTPUT_DIRS)
 endif()
 
+find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED) # OpenSSL::SSL
 find_package(ZLIB REQUIRED) # ZLIB::ZLIB
 
 option(DECAF_BUILD_TESTS "Build tests" OFF)

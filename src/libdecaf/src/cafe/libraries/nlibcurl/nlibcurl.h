@@ -16,6 +16,8 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerCurlSymbols();
+   void registerEasySymbols();
 };
 
 } // namespace cafe::nlibcurl

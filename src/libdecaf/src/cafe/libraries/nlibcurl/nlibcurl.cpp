@@ -16,6 +16,9 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerCurlSymbols();
+   registerEasySymbols();
 }
 
 } // namespace cafe::nlibcurl
