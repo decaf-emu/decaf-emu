@@ -37,7 +37,7 @@ buildIndexCommandBuffer(std::shared_ptr<ReplayFile> replay,
                         size_t filePos,
                         size_t numWords)
 {
-   auto buffer = reinterpret_cast<be_val<uint32_t> *>(replay->view + filePos);
+   auto buffer = reinterpret_cast<be2_val<uint32_t> *>(replay->view + filePos);
 
    for (auto pos = size_t { 0u }; pos < numWords; ) {
       auto header = Header::get(buffer[pos]);
@@ -72,7 +72,7 @@ buildIndexCommandBuffer(std::shared_ptr<ReplayFile> replay,
          break;
       }
 
-      replay->index.commands.push_back({ header, &buffer[pos] });
+      replay->index.commands.push_back({ header, buffer + pos });
       pos += size + 1;
    }
 

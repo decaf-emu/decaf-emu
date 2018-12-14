@@ -12,7 +12,7 @@ if(DECAF_GL)
    endif()
 
    if(DECAF_QT)
-       add_subdirectory(pm4-replay-qt)
+       # add_subdirectory(pm4-replay-qt)
    endif()
 endif()
 
