@@ -701,6 +701,19 @@ struct ShaderViewportData
    float zAdd, zMul;
 };
 
+struct IndexBufferCache
+{
+   latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
+   latte::VGT_INDEX_TYPE indexType;
+   latte::VGT_DMA_SWAP swapMode;
+   uint32_t numIndices;
+   void *indexData;
+
+   latte::VGT_DI_PRIMITIVE_TYPE newPrimitiveType;
+   uint32_t newNumIndices;
+   StagingBuffer *indexBuffer;
+};
+
 struct DrawDesc
 {
    void *indices;
@@ -1009,6 +1022,10 @@ private:
    vk::DescriptorSetLayout mVertexDescriptorSetLayout;
    vk::DescriptorSetLayout mGeometryDescriptorSetLayout;
    vk::DescriptorSetLayout mPixelDescriptorSetLayout;
+
+   bool mLastIndexBufferSet = false;
+   IndexBufferCache mLastIndexBuffer;
+
    vk::PipelineLayout mPipelineLayout;
 
    std::array<StreamContextObject*, latte::MaxStreamOutBuffers> mStreamOutContext = { nullptr };

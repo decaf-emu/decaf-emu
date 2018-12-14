@@ -1,5 +1,6 @@
 #ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
+#include <common/byte_swap_array.h>
 
 namespace vulkan
 {
@@ -62,30 +63,15 @@ void
 Driver::maybeSwapIndices()
 {
    auto& drawDesc = *mCurrentDraw;
+   auto& indices = mCurrentDraw->indices;
 
-   if (drawDesc.indices) {
-      if (drawDesc.indexSwapMode == latte::VGT_DMA_SWAP::SWAP_16_BIT) {
-         uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
-         mScratchIdxSwap.resize(indexBytes);
-
-         auto swapSrc = reinterpret_cast<uint16_t *>(drawDesc.indices);
-         auto swapDest = reinterpret_cast<uint16_t *>(mScratchIdxSwap.data());
-         for (auto i = 0; i < indexBytes / sizeof(uint16_t); ++i) {
-            swapDest[i] = byte_swap(swapSrc[i]);
-         }
-
-         drawDesc.indices = mScratchIdxSwap.data();
+   if (indices) {
+      if (mCurrentDraw->indexSwapMode == latte::VGT_DMA_SWAP::SWAP_16_BIT) {
+         uint32_t indexBytes = calculateIndexBufferSize(mCurrentDraw->indexType, drawDesc.numIndices);
+         indices = byte_swap_to_scratch<uint16_t>(indices, indexBytes, mScratchIdxSwap);
       } else if (drawDesc.indexSwapMode == latte::VGT_DMA_SWAP::SWAP_32_BIT) {
-         uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
-         mScratchIdxSwap.resize(indexBytes);
-
-         auto swapSrc = reinterpret_cast<uint32_t *>(drawDesc.indices);
-         auto swapDest = reinterpret_cast<uint32_t *>(mScratchIdxSwap.data());
-         for (auto i = 0; i < indexBytes / sizeof(uint32_t); ++i) {
-            swapDest[i] = byte_swap(swapSrc[i]);
-         }
-
-         drawDesc.indices = mScratchIdxSwap.data();
+         uint32_t indexBytes = calculateIndexBufferSize(mCurrentDraw->indexType, drawDesc.numIndices);
+         indices = byte_swap_to_scratch<uint32_t>(indices, indexBytes, mScratchIdxSwap);
       } else if (drawDesc.indexSwapMode == latte::VGT_DMA_SWAP::NONE) {
          // Nothing to do here!
       } else {
@@ -98,6 +84,7 @@ void
 Driver::maybeUnpackQuads()
 {
    auto &drawDesc = *mCurrentDraw;
+   auto &indices = mCurrentDraw->indices;
 
    if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST) {
       uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
@@ -105,39 +92,65 @@ Driver::maybeUnpackQuads()
 
       if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_16) {
          unpackQuadList(drawDesc.numIndices,
-                        reinterpret_cast<uint16_t*>(drawDesc.indices),
+                        reinterpret_cast<uint16_t*>(indices),
                         reinterpret_cast<uint16_t*>(mScratchIdxDequad.data()));
       } else if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_32) {
          unpackQuadList(drawDesc.numIndices,
-                        reinterpret_cast<uint32_t*>(drawDesc.indices),
+                        reinterpret_cast<uint32_t*>(indices),
                         reinterpret_cast<uint32_t*>(mScratchIdxDequad.data()));
       } else {
          decaf_abort("Unexpected index type");
       }
 
       drawDesc.primitiveType = latte::VGT_DI_PRIMITIVE_TYPE::TRILIST;
-      drawDesc.indices = mScratchIdxDequad.data();
       drawDesc.numIndices = drawDesc.numIndices / 4 * 6;
+      indices = mScratchIdxDequad.data();
    }
 }
 
 bool
 Driver::checkCurrentIndices()
 {
+   auto& drawDesc = *mCurrentDraw;
+
+   if (mLastIndexBufferSet) {
+      if (drawDesc.indices == mLastIndexBuffer.indexData &&
+          drawDesc.indexType == mLastIndexBuffer.indexType &&
+          drawDesc.numIndices == mLastIndexBuffer.numIndices &&
+          drawDesc.indexSwapMode == mLastIndexBuffer.swapMode &&
+          drawDesc.primitiveType == mLastIndexBuffer.primitiveType)
+      {
+         drawDesc.primitiveType = mLastIndexBuffer.newPrimitiveType;
+         drawDesc.numIndices = mLastIndexBuffer.newNumIndices;
+         drawDesc.indexBuffer = mLastIndexBuffer.indexBuffer;
+         return true;
+      }
+   }
+
+   mLastIndexBuffer.indexData = drawDesc.indices;
+   mLastIndexBuffer.indexType = drawDesc.indexType;
+   mLastIndexBuffer.numIndices = drawDesc.numIndices;
+   mLastIndexBuffer.swapMode = drawDesc.indexSwapMode;
+   mLastIndexBuffer.primitiveType = drawDesc.primitiveType;
+
    maybeSwapIndices();
    maybeUnpackQuads();
 
-   auto& drawDesc = *mCurrentDraw;
    if (drawDesc.indices) {
       auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
       auto indicesBuf = getStagingBuffer(indexBytes, StagingBufferType::CpuToGpu);
       copyToStagingBuffer(indicesBuf, 0, drawDesc.indices, indexBytes);
       transitionStagingBuffer(indicesBuf, ResourceUsage::IndexBuffer);
 
-      mCurrentDraw->indexBuffer = indicesBuf;
+      drawDesc.indexBuffer = indicesBuf;
    } else {
-      mCurrentDraw->indexBuffer = nullptr;
+      drawDesc.indexBuffer = nullptr;
    }
+
+   mLastIndexBuffer.newPrimitiveType = drawDesc.primitiveType;
+   mLastIndexBuffer.newNumIndices = drawDesc.numIndices;
+   mLastIndexBuffer.indexBuffer = drawDesc.indexBuffer;
+   mLastIndexBufferSet = true;
 
    return true;
 }

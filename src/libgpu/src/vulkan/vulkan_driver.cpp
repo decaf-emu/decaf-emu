@@ -528,6 +528,7 @@ Driver::endCommandBuffer()
    mActivePipeline = nullptr;
    mActiveRenderPass = nullptr;
    mActiveFramebuffer = nullptr;
+   mLastIndexBufferSet = false;
    mDrawCache = DrawDesc{};
 
    // Stop recording this host command buffer
