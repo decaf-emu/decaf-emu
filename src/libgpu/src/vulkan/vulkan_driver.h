@@ -1010,6 +1010,7 @@ private:
    uint64_t mMemChangeCounter = 0;
    uint64_t *mLastOccQueryAddr = nullptr;
    vk::QueryPool mLastOccQuery;
+   vk::PipelineCache mPipelineCache;
 
    SyncWaiter *mActiveSyncWaiter = nullptr;
    vk::CommandBuffer mActiveCommandBuffer;

@@ -158,6 +158,13 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    pipelineLayoutDesc.pPushConstantRanges = pushConstants.data();
    mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
 
+   // Set up the pipeline cache
+   vk::PipelineCacheCreateInfo pipelineCacheDesc;
+   pipelineCacheDesc.flags = vk::PipelineCacheCreateFlags();
+   pipelineCacheDesc.pInitialData = nullptr;
+   pipelineCacheDesc.initialDataSize = 0;
+   mPipelineCache = mDevice.createPipelineCache(pipelineCacheDesc);
+
    initialiseBlankSampler();
    initialiseBlankImage();
    initialiseBlankBuffer();

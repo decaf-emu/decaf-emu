@@ -831,7 +831,8 @@ Driver::checkCurrentPipeline()
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = vk::Pipeline();
    pipelineInfo.basePipelineIndex = -1;
-   auto pipeline = mDevice.createGraphicsPipeline(vk::PipelineCache(), pipelineInfo);
+   auto pipeline = mDevice.createGraphicsPipeline(mPipelineCache, pipelineInfo);
+
    foundPipeline->pipeline = pipeline;
    foundPipeline->needsPremultipliedTargets = needsPremultipliedTargets;
    foundPipeline->targetIsPremultiplied = targetIsPremultiplied;
