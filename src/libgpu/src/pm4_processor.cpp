@@ -80,12 +80,8 @@ Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
 void
 Pm4Processor::handlePacketType0(HeaderType0 header, const gsl::span<uint32_t> &data)
 {
-   auto base = header.baseIndex();
-
-   for (auto i = 0; i < data.size(); ++i) {
-      auto index = base + i;
-      setRegister(static_cast<latte::Register>(index * 4), data[i]);
-   }
+   auto base = static_cast<latte::Register>(header.baseIndex() * 4);
+   setRegisters(base, data);
 }
 
 void
@@ -277,23 +273,72 @@ void Pm4Processor::copyDw(const CopyDw &data)
    mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE = data.srcLo;
 }
 
+void Pm4Processor::shadowWrite(phys_ptr<uint32_t> memory,
+                                   const gsl::span<uint32_t> &registers)
+{
+   // We intentionally did not vectorize this loop as it would incur the cost
+   // of doubling the amount of memory accesses we are doing (once to swap
+   // and then again to memcpy into CPU memory).  Instead we simply byteswap
+   // as we are copying the list over...
+
+   for (auto i = 0u; i < registers.size(); ++i) {
+      memory[i] = registers[i];
+   }
+}
+
+void
+Pm4Processor::setRegisters(latte::Register base,
+                           const gsl::span<uint32_t> &values)
+{
+   if (mNoRegisterNotify) {
+      memcpy(&mRegisters[base / 4], values.data(), values.size_bytes());
+
+      if (latte::Register::SQ_VTX_SEMANTIC_CLEAR >= base &&
+          latte::Register::SQ_VTX_SEMANTIC_CLEAR < base + values.size_bytes()) {
+         auto semanticRegs = &mRegisters[latte::Register::SQ_VTX_SEMANTIC_0 / 4];
+         memset(semanticRegs, 0xFF, 32 * sizeof(uint32_t));
+      }
+   } else {
+      for (auto i = 0u; i < values.size(); ++i) {
+         auto regIdx = (base / 4) + i;
+         auto reg = static_cast<latte::Register>(regIdx * 4);
+         auto value = values[i];
+
+         auto isChanged = (value != mRegisters[regIdx]);
+
+         // Save to local registers
+         mRegisters[regIdx] = value;
+
+         // Writing SQ_VTX_SEMANTIC_CLEAR has side effects, so process those
+         if (reg == latte::Register::SQ_VTX_SEMANTIC_CLEAR) {
+            auto clearRegBase = latte::Register::SQ_VTX_SEMANTIC_0 / 4;
+            for (auto i = 0u; i < 32; ++i) {
+               if (value & (1 << i)) {
+                  mRegisters[clearRegBase + i] = 0xffffffff;
+                  applyRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4));
+               }
+            }
+         }
+
+         // Apply changes directly to OpenGL state if appropriate
+         if (isChanged) {
+            applyRegister(reg);
+         }
+      }
+   }
+}
+
 void Pm4Processor::setAluConsts(const SetAluConsts &data)
 {
    decaf_check(data.id >= latte::Register::AluConstRegisterBase);
    decaf_check(data.id < latte::Register::AluConstRegisterEnd);
-   auto offset = (data.id - latte::Register::AluConstRegisterBase) / 4;
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_ALU_CONST() && mShadowState.ALU_CONST_BASE) {
-      auto base = mShadowState.ALU_CONST_BASE + offset;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      auto offset = (data.id - latte::Register::AluConstRegisterBase) / 4;
+      shadowWrite(mShadowState.ALU_CONST_BASE + offset, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
-   }
+   setRegisters(data.id, data.values);
 }
 
 void Pm4Processor::setConfigRegs(const SetConfigRegs &data)
@@ -303,16 +348,10 @@ void Pm4Processor::setConfigRegs(const SetConfigRegs &data)
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_CONFIG_REG() && mShadowState.CONFIG_REG_BASE) {
       auto offset = (data.id - latte::Register::ConfigRegisterBase) / 4;
-      auto base = mShadowState.CONFIG_REG_BASE + offset;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      shadowWrite(mShadowState.CONFIG_REG_BASE + offset, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
-   }
+   setRegisters(data.id, data.values);
 }
 
 void Pm4Processor::setContextRegs(const SetContextRegs &data)
@@ -322,16 +361,10 @@ void Pm4Processor::setContextRegs(const SetContextRegs &data)
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_CONTEXT_REG() && mShadowState.CONTEXT_REG_BASE) {
       auto offset = (data.id - latte::Register::ContextRegisterBase) / 4;
-      auto base = mShadowState.CONTEXT_REG_BASE + offset;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      shadowWrite(mShadowState.CONTEXT_REG_BASE + offset, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
-   }
+   setRegisters(data.id, data.values);
 }
 
 void Pm4Processor::setControlConstants(const SetControlConstants &data)
@@ -341,16 +374,10 @@ void Pm4Processor::setControlConstants(const SetControlConstants &data)
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_CTL_CONST() && mShadowState.CTL_CONST_BASE) {
       auto offset = (data.id - latte::Register::ControlRegisterBase) / 4;
-      auto base = mShadowState.CTL_CONST_BASE + offset;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      shadowWrite(mShadowState.CTL_CONST_BASE + offset, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
-   }
+   setRegisters(data.id, data.values);
 }
 
 void Pm4Processor::setLoopConsts(const SetLoopConsts &data)
@@ -360,16 +387,10 @@ void Pm4Processor::setLoopConsts(const SetLoopConsts &data)
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_LOOP_CONST() && mShadowState.LOOP_CONST_BASE) {
       auto offset = (data.id - latte::Register::LoopConstRegisterBase) / 4;
-      auto base = mShadowState.LOOP_CONST_BASE + offset;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      shadowWrite(mShadowState.LOOP_CONST_BASE + offset, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
-   }
+   setRegisters(data.id, data.values);
 }
 
 void Pm4Processor::setSamplers(const SetSamplers &data)
@@ -379,33 +400,20 @@ void Pm4Processor::setSamplers(const SetSamplers &data)
 
    if (mShadowState.SHADOW_ENABLE.ENABLE_SAMPLER() && mShadowState.SAMPLER_CONST_BASE) {
       auto offset = (data.id - latte::Register::SamplerRegisterBase) / 4;
-      auto base = mShadowState.SAMPLER_CONST_BASE + offset;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      shadowWrite(mShadowState.SAMPLER_CONST_BASE + offset, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(data.id + i * 4), data.values[i]);
-   }
+   setRegisters(data.id, data.values);
 }
 
 void Pm4Processor::setResources(const SetResources &data)
 {
-   auto id = latte::Register::ResourceRegisterBase + (4 * data.id);
-
    if (mShadowState.SHADOW_ENABLE.ENABLE_RESOURCE() && mShadowState.RESOURCE_CONST_BASE) {
-      auto base = mShadowState.RESOURCE_CONST_BASE + data.id;
-
-      for (auto i = 0u; i < data.values.size(); ++i) {
-         base[i] = data.values[i];
-      }
+      shadowWrite(mShadowState.RESOURCE_CONST_BASE + data.id, data.values);
    }
 
-   for (auto i = 0u; i < data.values.size(); ++i) {
-      setRegister(static_cast<latte::Register>(id + i * 4), data.values[i]);
-   }
+   auto id = static_cast<latte::Register>(latte::Register::ResourceRegisterBase + (4 * data.id));
+   setRegisters(id, data.values);
 }
 
 void Pm4Processor::loadRegisters(latte::Register base,
@@ -417,9 +425,15 @@ void Pm4Processor::loadRegisters(latte::Register base,
       auto start = range.first;
       auto count = range.second;
 
-      for (auto j = start; j < start + count; ++j) {
-         setRegister(static_cast<latte::Register>(base + j * 4), src[j]);
-      }
+      // In order to reuse the setRegisters call, we do the byte swap first and then
+      // pass that through.  Once the OpenGL backend is gone and we no longer need
+      // applyRegister, we can turn this into a byte_swap loop into mRegisters and
+      // have a function on this class for checking for special register types. This
+      // will probably be quicker due to only moving the data once (in spite of the
+      // byte_swap cost).
+
+      auto values = byteSwapRegValues(src.getRawPointer() + start, count);
+      setRegisters(static_cast<latte::Register>(base + start * 4), gsl::make_span(values, count));
    }
 }
 
@@ -484,30 +498,5 @@ void Pm4Processor::loadResources(const latte::pm4::LoadResource &data)
    if (mShadowState.LOAD_CONTROL.ENABLE_RESOURCE()) {
       mShadowState.RESOURCE_CONST_BASE = phys_cast<uint32_t *>(data.addr);
       loadRegisters(latte::Register::ResourceRegisterBase, data.addr, data.values);
-   }
-}
-
-void
-Pm4Processor::setRegister(latte::Register reg,
-                          uint32_t value)
-{
-   decaf_check((reg % 4) == 0);
-   auto isChanged = (value != mRegisters[reg / 4]);
-
-   // Save to local registers
-   mRegisters[reg / 4] = value;
-
-   // Writing SQ_VTX_SEMANTIC_CLEAR has side effects, so process those
-   if (reg == latte::Register::SQ_VTX_SEMANTIC_CLEAR) {
-      for (auto i = 0u; i < 32; ++i) {
-         if (value & (1 << i)) {
-            setRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4), 0xffffffff);
-         }
-      }
-   }
-
-   // Apply changes directly to OpenGL state if appropriate
-   if (isChanged) {
-      applyRegister(reg);
    }
 }

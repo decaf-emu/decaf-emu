@@ -3,6 +3,7 @@
 #include "gpu_ringbuffer.h"
 
 #include <array>
+#include <common/byte_swap_array.h>
 #include <libcpu/pointer.h>
 #include <vector>
 
@@ -10,9 +11,18 @@ using namespace latte::pm4;
 
 constexpr int MaxPm4IndirectDepth = 6;
 
+// TODO: Once the OpenGL backend is removed from our code, we can remove
+// the mNoRegisterNotify below, and the associated code from it.  Note
+// the comment in loadRegisters as well!
+
 class Pm4Processor
 {
 protected:
+   Pm4Processor(bool noRegisterNotify = false)
+      : mNoRegisterNotify(noRegisterNotify)
+   {
+   }
+
    virtual void decafSetBuffer(const DecafSetBuffer &data) = 0;
    virtual void decafCopyColorToScan(const DecafCopyColorToScan &data) = 0;
    virtual void decafSwapBuffers(const DecafSwapBuffers &data) = 0;
@@ -54,6 +64,8 @@ protected:
    void setLoopConsts(const SetLoopConsts &data);
    void setSamplers(const SetSamplers &data);
    void setResources(const SetResources &data);
+   void shadowWrite(phys_ptr<uint32_t> address, const gsl::span<uint32_t> &registers);
+   void setRegisters(latte::Register base, const gsl::span<uint32_t> &values);
 
    void loadAluConsts(const LoadAluConst &data);
    void loadBoolConsts(const LoadBoolConst &data);
@@ -67,8 +79,13 @@ protected:
                       phys_addr address,
                       const gsl::span<std::pair<uint32_t, uint32_t>> &registers);
 
-   void setRegister(latte::Register reg, uint32_t value);
    void runCommandBuffer(const gpu::ringbuffer::Buffer &buffer);
+
+   uint32_t *byteSwapRegValues(uint32_t *values, size_t numValues)
+   {
+      return reinterpret_cast<uint32_t*>(byte_swap_to_scratch<uint32_t>(
+         values, static_cast<uint32_t>(numValues) * sizeof(uint32_t), mRegisterScratch));
+   }
 
    template<typename Type>
    Type getRegister(uint32_t id)
@@ -87,10 +104,12 @@ protected:
       decaf_abort("Unsupported register address fetch");
    }
 
+   bool mNoRegisterNotify = false;
    latte::ShadowState mShadowState;
    std::array<uint32_t, 0x10000> mRegisters = { 0 };
    phys_addr mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE = phys_addr { 0 };
 
+   std::vector<uint8_t> mRegisterScratch;
    std::array<std::vector<uint8_t>, MaxPm4IndirectDepth> mSwapScratch;
    uint32_t mSwapScratchDepth = 0;
 };

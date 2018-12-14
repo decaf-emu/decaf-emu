@@ -8,6 +8,7 @@ namespace vulkan
 {
 
 Driver::Driver()
+   : Pm4Processor(true)
 {
 }
 
