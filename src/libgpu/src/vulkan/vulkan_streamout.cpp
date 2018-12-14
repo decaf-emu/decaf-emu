@@ -29,36 +29,49 @@ _barrierStreamContextBuffer(vk::CommandBuffer cmdBuffer, vk::Buffer buffer,
 StreamContextObject *
 Driver::allocateStreamContext(uint32_t initialOffset)
 {
-   vk::BufferCreateInfo bufferDesc;
-   bufferDesc.size = 4;
-   bufferDesc.usage =
-      vk::BufferUsageFlagBits::eTransformFeedbackCounterBufferEXT |
-      vk::BufferUsageFlagBits::eTransferSrc |
-      vk::BufferUsageFlagBits::eTransferDst;
-   bufferDesc.sharingMode = vk::SharingMode::eExclusive;
-   bufferDesc.queueFamilyIndexCount = 0;
-   bufferDesc.pQueueFamilyIndices = nullptr;
+   StreamContextObject *context = nullptr;
 
-   VmaAllocationCreateInfo allocInfo = {};
-   allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+   if (!mStreamOutContextPool.empty()) {
+      context = mStreamOutContextPool.back();
+      mStreamOutContextPool.pop_back();
+   }
 
-   VkBuffer buffer;
-   VmaAllocation allocation;
-   vmaCreateBuffer(mAllocator,
-                   reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
-                   &allocInfo,
-                   &buffer,
-                   &allocation,
-                   nullptr);
+   if (!context) {
+      vk::BufferCreateInfo bufferDesc;
+      bufferDesc.size = 4;
+      bufferDesc.usage =
+         vk::BufferUsageFlagBits::eTransformFeedbackCounterBufferEXT |
+         vk::BufferUsageFlagBits::eTransferSrc |
+         vk::BufferUsageFlagBits::eTransferDst;
+      bufferDesc.sharingMode = vk::SharingMode::eExclusive;
+      bufferDesc.queueFamilyIndexCount = 0;
+      bufferDesc.pQueueFamilyIndices = nullptr;
 
-   static uint64_t streamOutCounterIdx = 0;
-   setVkObjectName(buffer, fmt::format("soctr_{}", streamOutCounterIdx++).c_str());
+      VmaAllocationCreateInfo allocInfo = {};
+      allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+      VkBuffer buffer;
+      VmaAllocation allocation;
+      vmaCreateBuffer(mAllocator,
+                      reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
+                      &allocInfo,
+                      &buffer,
+                      &allocation,
+                      nullptr);
+
+      static uint64_t streamOutCounterIdx = 0;
+      setVkObjectName(buffer, fmt::format("soctr_{}", streamOutCounterIdx++).c_str());
+
+      context = new StreamContextObject();
+      context->allocation = allocation;
+      context->buffer = buffer;
+   }
 
    // Transition this buffer to being filled.
    _barrierStreamContextBuffer(mActiveCommandBuffer,
                                context->buffer,
                                vk::PipelineStageFlagBits::eTransformFeedbackEXT,
-                               vk::AccessFlagBits::eTransformFeedbackCounterWriteEXT,
+                               vk::AccessFlagBits::eTransformFeedbackCounterReadEXT,
                                vk::PipelineStageFlagBits::eTransfer,
                                vk::AccessFlagBits::eTransferWrite);
 
@@ -70,22 +83,19 @@ Driver::allocateStreamContext(uint32_t initialOffset)
    // ready to receive transform feedback, and readers will switch it in and then back
    // out of this state.
    _barrierStreamContextBuffer(mActiveCommandBuffer,
-                               buffer,
+                               context->buffer,
                                vk::PipelineStageFlagBits::eTransfer,
                                vk::AccessFlagBits::eTransferWrite,
                                vk::PipelineStageFlagBits::eTransformFeedbackEXT,
-                               vk::AccessFlagBits::eTransformFeedbackCounterWriteEXT);
+                               vk::AccessFlagBits::eTransformFeedbackCounterReadEXT);
 
-   auto stream = new StreamContextObject();
-   stream->allocation = allocation;
-   stream->buffer = buffer;
-   return stream;
+   return context;
 }
 
 void
 Driver::releaseStreamContext(StreamContextObject* stream)
 {
-   vmaDestroyBuffer(mAllocator, stream->buffer, stream->allocation);
+   mStreamOutContextPool.push_back(stream);
 }
 
 void

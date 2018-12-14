@@ -1059,6 +1059,7 @@ private:
    SwapChainObject *mDrcSwapChain = nullptr;
    RenderPassObject *mRenderPass;
    std::array<std::array<std::vector<StagingBuffer *>, 20>, 3> mStagingBuffers;
+   std::vector<StreamContextObject *> mStreamOutContextPool;
    std::vector<vk::DescriptorPool> mDescriptorPools;
    std::vector<vk::QueryPool> mOccQueryPools;
    MemSegmentMap mMemSegmentMap;
