@@ -54,19 +54,16 @@ Driver::allocateStreamContext(uint32_t initialOffset)
    static uint64_t streamOutCounterIdx = 0;
    setVkObjectName(buffer, fmt::format("soctr_{}", streamOutCounterIdx++).c_str());
 
-   // Create a staging buffer with the initial offset from the user
-   auto stagingBuffer = getStagingBuffer(4, StagingBufferType::CpuToGpu);
-   copyToStagingBuffer(stagingBuffer, 0, &initialOffset, 4);
+   // Transition this buffer to being filled.
+   _barrierStreamContextBuffer(mActiveCommandBuffer,
+                               context->buffer,
+                               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+                               vk::AccessFlagBits::eTransformFeedbackCounterWriteEXT,
+                               vk::PipelineStageFlagBits::eTransfer,
+                               vk::AccessFlagBits::eTransferWrite);
 
-   // Transition the staging buffer for the copy
-   transitionStagingBuffer(stagingBuffer, ResourceUsage::TransferSrc);
-
-   // Copy the data out of the staging buffer into the memory cache.
-   vk::BufferCopy copyDesc;
-   copyDesc.srcOffset = 0;
-   copyDesc.dstOffset = 0;
-   copyDesc.size = 4;
-   mActiveCommandBuffer.copyBuffer(stagingBuffer->buffer, buffer, { copyDesc });
+   // Fill the buffer with the initial value
+   mActiveCommandBuffer.fillBuffer(context->buffer, 0, 4, initialOffset);
 
    // Transition the stream out context buffer to the correct state for having counter
    // data written into it.  It is expected that all contexts will always be in a state
