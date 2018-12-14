@@ -281,6 +281,7 @@ enum class StagingBufferType : uint32_t
 struct StagingBuffer
 {
    StagingBufferType type;
+   uint32_t poolIndex;
    uint32_t maximumSize;
    uint32_t size;
    ResourceUsage activeUsage;
@@ -1057,7 +1058,7 @@ private:
    SwapChainObject *mTvSwapChain = nullptr;
    SwapChainObject *mDrcSwapChain = nullptr;
    RenderPassObject *mRenderPass;
-   std::list<StagingBuffer *> mStagingBuffers;
+   std::array<std::array<std::vector<StagingBuffer *>, 20>, 3> mStagingBuffers;
    std::vector<vk::DescriptorPool> mDescriptorPools;
    std::vector<vk::QueryPool> mOccQueryPools;
    MemSegmentMap mMemSegmentMap;

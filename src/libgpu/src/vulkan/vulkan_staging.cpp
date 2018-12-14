@@ -87,19 +87,27 @@ Driver::getStagingBuffer(uint32_t size, StagingBufferType type)
 {
    StagingBuffer *sbuffer = nullptr;
 
+   auto alignedSizeBit = 0u;
+   for (auto i = size >> 12; i > 0; i >>= 1, alignedSizeBit++);
+   auto alignedSize = 1 << (alignedSizeBit + 12);
+
    if (!sbuffer) {
-      for (auto i = mStagingBuffers.begin(); i != mStagingBuffers.end(); ++i) {
-         auto searchBuffer = *i;
-         if (searchBuffer->type == type && searchBuffer->maximumSize >= size) {
-            mStagingBuffers.erase(i);
-            sbuffer = searchBuffer;
-            break;
-         }
+      auto typeIndex = static_cast<uint32_t>(type);
+      auto &stagingBuffers = mStagingBuffers[typeIndex][alignedSizeBit];
+
+      if (!stagingBuffers.empty()) {
+         sbuffer = stagingBuffers.back();
+         stagingBuffers.pop_back();
+
+         // This is just to double-check that our algorithm is working
+         // as it is intended to be working...
+         decaf_check(sbuffer->maximumSize >= size);
       }
    }
 
    if (!sbuffer) {
-      sbuffer = _allocStagingBuffer(size, type);
+      sbuffer = _allocStagingBuffer(alignedSize, type);
+      sbuffer->poolIndex = alignedSizeBit;
    }
 
    sbuffer->size = size;
@@ -112,7 +120,9 @@ Driver::getStagingBuffer(uint32_t size, StagingBufferType type)
 void
 Driver::retireStagingBuffer(StagingBuffer *sbuffer)
 {
-   mStagingBuffers.push_back(sbuffer);
+   auto typeIndex = static_cast<uint32_t>(sbuffer->type);
+   auto poolIndex = sbuffer->poolIndex;
+   mStagingBuffers[typeIndex][poolIndex].push_back(sbuffer);
 }
 
 void
