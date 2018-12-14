@@ -52,18 +52,7 @@ struct ShaderDesc
 
    DataHash hash() const
    {
-      struct {
-         ShaderType type;
-         uint32_t preferVector;
-      } _dataHash;
-      memset(&_dataHash, 0xFF, sizeof(_dataHash));
-
-      _dataHash.type = type;
-      _dataHash.preferVector = aluInstPreferVector ? 1 : 0;
-
-      return DataHash {}
-         .write(binary.data(), binary.size())
-         .write(_dataHash);
+      return DataHash {}.write(*this);
    }
 };
 
@@ -84,28 +73,14 @@ struct VertexShaderDesc : public ShaderDesc
       latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl;
    } regs;
 
+   VertexShaderDesc()
+   {
+      memset(this, 0, sizeof(*this));
+   }
+
    DataHash hash() const
    {
-      struct
-      {
-         std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
-         std::array<bool, latte::MaxTextures> texIsUint;
-         std::array<uint32_t, latte::MaxStreamOutBuffers> streamOutStride;
-         std::array<uint32_t, 2> instanceStepRates;
-         bool generateRectStub;
-      } _dataHash;
-      memset(&_dataHash, 0xFF, sizeof(_dataHash));
-
-      _dataHash.texDims = texDims;
-      _dataHash.texIsUint = texIsUint;
-      _dataHash.streamOutStride = streamOutStride;
-      _dataHash.instanceStepRates = instanceStepRates;
-      _dataHash.generateRectStub = generateRectStub;
-
-      return ShaderDesc::hash()
-         .write(fsBinary.data(), fsBinary.size())
-         .write(_dataHash)
-         .write(regs);
+      return DataHash {}.write(*this);
    }
 };
 
@@ -127,24 +102,14 @@ struct GeometryShaderDesc : public ShaderDesc
       latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl;
    } regs;
 
+   GeometryShaderDesc()
+   {
+      memset(this, 0, sizeof(*this));
+   }
+
    DataHash hash() const
    {
-      struct
-      {
-         std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
-         std::array<bool, latte::MaxTextures> texIsUint;
-         std::array<uint32_t, latte::MaxStreamOutBuffers> streamOutStride;
-      } _dataHash;
-      memset(&_dataHash, 0xFF, sizeof(_dataHash));
-
-      _dataHash.texDims = texDims;
-      _dataHash.texIsUint = texIsUint;
-      _dataHash.streamOutStride = streamOutStride;
-
-      return ShaderDesc::hash()
-         .write(dcBinary.data(), dcBinary.size())
-         .write(_dataHash)
-         .write(regs);
+      return DataHash {}.write(*this);
    }
 };
 
@@ -157,7 +122,7 @@ enum ColorOutputType : uint32_t
 
 struct PixelShaderDesc : public ShaderDesc
 {
-   std::vector<uint32_t> vsOutputSemantics;
+   std::array<uint8_t, 40> vsOutputSemantics;
    std::array<ColorOutputType, latte::MaxRenderTargets> pixelOutType;
    std::array<latte::SQ_TEX_DIM, latte::MaxTextures> texDims;
    std::array<bool, latte::MaxTextures> texIsUint;
@@ -174,15 +139,14 @@ struct PixelShaderDesc : public ShaderDesc
       latte::DB_SHADER_CONTROL db_shader_control;
    } regs;
 
+   PixelShaderDesc()
+   {
+      memset(this, 0, sizeof(*this));
+   }
+
    DataHash hash() const
    {
-      return ShaderDesc::hash()
-         .write(vsOutputSemantics)
-         .write(pixelOutType)
-         .write(texDims)
-         .write(texIsUint)
-         .write(alphaRefFunc)
-         .write(regs);
+      return DataHash {}.write(*this);
    }
 };
 
@@ -199,14 +163,14 @@ struct VertexShader : public Shader
 {
    std::array<InputBuffer, latte::MaxAttribBuffers> inputBuffers;
    std::vector<InputAttrib> inputAttribs;
-   std::vector<uint32_t> outputSemantics;
+   std::array<uint8_t, 40> outputSemantics;
 
    std::vector<unsigned int> rectStubBinary;
 };
 
 struct GeometryShader : public Shader
 {
-   std::vector<uint32_t> outputSemantics;
+   std::array<uint8_t, 40> outputSemantics;
 };
 
 struct PixelShader : public Shader

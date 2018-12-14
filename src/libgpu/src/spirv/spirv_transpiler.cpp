@@ -119,7 +119,7 @@ void Transpiler::translate()
    ShaderParser::translate();
 }
 
-int findVsOutputLocation(const std::vector<uint32_t>& semantics, uint32_t semanticId)
+int findVsOutputLocation(const std::array<uint8_t, 40>& semantics, uint32_t semanticId)
 {
    for (auto i = 0u; i < semantics.size(); ++i) {
       if (semantics[i] == semanticId) {
@@ -494,7 +494,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       // later matching up by the pixel shaders
       int numExports = spvGen.getNumParamExports();
       for (auto i = 0; i < numExports; ++i) {
-         uint32_t semanticId;
+         uint8_t semanticId;
 
          // TODO: This should probably be moved into the actual export generation
          // code instead of being calculated later and assuming the order of the
@@ -509,7 +509,10 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
             semanticId = vsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_3();
          }
 
-         vsShader->outputSemantics.push_back(semanticId);
+         vsShader->outputSemantics[i] = semanticId;
+      }
+      for (auto i = numExports; i < 40; ++i) {
+         vsShader->outputSemantics[i] = 0xF0;
       }
 
       vsShader->inputBuffers = state.mVsInputBuffers;
@@ -559,7 +562,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       // later matching up by the pixel shaders
       int numExports = spvGen.getNumParamExports();
       for (auto i = 0; i < numExports; ++i) {
-         uint32_t semanticId;
+         uint8_t semanticId;
 
          // TODO: This should probably be moved into the actual export generation
          // code instead of being calculated later and assuming the order of the
@@ -574,7 +577,10 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
             semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_3();
          }
 
-         gsShader->outputSemantics.push_back(semanticId);
+         gsShader->outputSemantics[i] = semanticId;
+      }
+      for (auto i = numExports; i < 40; ++i) {
+         gsShader->outputSemantics[i] = 0xF0;
       }
    }
 
