@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.2)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 project(decaf-emu C CXX)
 find_package(ZLIB REQUIRED) # ZLIB::ZLIB
@@ -33,14 +34,7 @@ if(DECAF_JIT_ALLOW_PROFILING)
 endif()
 
 if(DECAF_FFMPEG)
-    find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
-    find_library(AVCODEC_LIBRARY avcodec)
-    find_path(AVFILTER_INCLUDE_DIR libavfilter/avfilter.h)
-    find_library(AVFILTER_LIBRARY avfilter)
-    find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
-    find_library(AVUTIL_LIBRARY avutil)
-    find_path(SWSCALE_INCLUDE_DIR libswscale/swscale.h)
-    find_library(SWSCALE_LIBRARY swscale)
+    find_package(FFMPEG REQUIRED)
     add_definitions(-DDECAF_FFMPEG)
 endif()
 
