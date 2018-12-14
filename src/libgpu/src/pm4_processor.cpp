@@ -2,6 +2,7 @@
 #include "gpu_memory.h"
 #include "pm4_processor.h"
 
+#include <common/byte_swap_array.h>
 #include <common/log.h>
 #include <libcpu/mmu.h>
 
@@ -22,14 +23,15 @@ Pm4Processor::indirectBufferCallPriv(const IndirectBufferCallPriv &data)
 void
 Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
-   std::vector<uint32_t> swapped;
-   swapped.resize(buffer.size());
+   decaf_check(mSwapScratchDepth + 1 < MaxPm4IndirectDepth);
+   auto& scratchBuffer = mSwapScratch[mSwapScratchDepth++];
 
-   for (auto i = 0u; i < buffer.size(); ++i) {
-      swapped[i] = byte_swap(buffer[i]);
-   }
+   auto numDwords = buffer.size();
+   auto swappedBytes = byte_swap_to_scratch<uint32_t>(
+      buffer.data(), static_cast<uint32_t>(buffer.size_bytes()), scratchBuffer);
+   auto swapped = reinterpret_cast<uint32_t*>(swappedBytes);
 
-   for (auto pos = 0u; pos < swapped.size(); ) {
+   for (auto pos = 0u; pos < numDwords; ) {
       auto header = *reinterpret_cast<Header *>(&swapped[pos]);
       auto size = 0u;
 
@@ -43,7 +45,7 @@ Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
          auto header3 = HeaderType3::get(header.value);
          size = header3.size() + 1;
 
-         decaf_check(pos + size <= swapped.size());
+         decaf_check(pos + size <= numDwords);
          handlePacketType3(header3, gsl::make_span(&swapped[pos + 1], size));
          break;
       }
@@ -52,7 +54,7 @@ Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
          auto header0 = HeaderType0::get(header.value);
          size = header0.count() + 1;
 
-         decaf_check(pos + size <= swapped.size());
+         decaf_check(pos + size <= numDwords);
          handlePacketType0(header0, gsl::make_span(&swapped[pos + 1], size));
          break;
       }
@@ -65,12 +67,14 @@ Pm4Processor::runCommandBuffer(const gpu::ringbuffer::Buffer &buffer)
       default:
          gLog->error("Invalid packet header type {}, header = 0x{:08X}",
                      header.type(), header.value);
-         pos = static_cast<uint32_t>(swapped.size());
+         pos = static_cast<uint32_t>(numDwords);
          break;
       }
 
       pos += size + 1;
    }
+
+   mSwapScratchDepth--;
 }
 
 void

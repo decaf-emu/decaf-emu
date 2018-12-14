@@ -8,6 +8,8 @@
 
 using namespace latte::pm4;
 
+constexpr int MaxPm4IndirectDepth = 6;
+
 class Pm4Processor
 {
 protected:
@@ -88,4 +90,7 @@ protected:
    latte::ShadowState mShadowState;
    std::array<uint32_t, 0x10000> mRegisters = { 0 };
    phys_addr mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE = phys_addr { 0 };
+
+   std::array<std::vector<uint8_t>, MaxPm4IndirectDepth> mSwapScratch;
+   uint32_t mSwapScratchDepth = 0;
 };
