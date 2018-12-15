@@ -40,7 +40,7 @@ Driver::updateDebuggerInfo()
    mDebuggerInfo.numPipelines = mPipelines.size();
    mDebuggerInfo.numSamplers = mSamplers.size();
    mDebuggerInfo.numSurfaces = mSurfaceGroups.size();
-   mDebuggerInfo.numDataBuffers = 0;
+   mDebuggerInfo.numDataBuffers = mMemCaches.size();
 }
 
 template <typename ObjType>
