@@ -7,16 +7,30 @@ image: Visual Studio 2017
 platform:
   - x64
 
+environment:
+  PYTHON: "C:\\Python36-x64"
+  PYTHON_VERSION: "3.6.6"
+  PYTHON_ARCH: "64"
+
 configuration:
   - Release
 
+cache:
+  - C:\Users\appveyor\.conan -> conanfile.py
+  - '%LOCALAPPDATA%\pip\cache'
+
 install:
+  - cmd: set PATH=%PATH%;%PYTHON%/Scripts/
+  - cmd: pip.exe install conan
+  - cmd: conan user
+  - cmd: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
   - cmd: git submodule update --init --recursive
 
 before_build:
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 15 2017 Win64" -DDECAF_BUILD_TOOLS=ON ..
+  - conan install .. -o accept_defaults=True
+  - cmake -G "Visual Studio 15 2017 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON ..
   - cd ..
 
 build:
@@ -32,9 +46,11 @@ after_build:
       gfd-tool.exe
       latte-assembler.exe
       pm4-replay.exe
-      zlib1.dll
       glbinding.dll
-      SDL2.dll
+      avcodec-58.dll
+      avutil-56.dll
+      swresample-3.dll
+      swscale-5.dll
       resources\fonts\DejaVuSansMono.ttf
       resources\fonts\DejaVuSansMono.LICENSE
       resources\fonts\CafeCn.ttf
