@@ -25,7 +25,7 @@ getU32(pugi::xml_node &node,
       return ResultXmlNodeNotFound;
    }
 
-   *outValue = strtoul(child.text().get(), nullptr, 10);
+   *outValue = static_cast<uint32_t>(strtoul(child.text().get(), nullptr, 10));
    return ResultSuccess;
 }
 
@@ -39,7 +39,7 @@ getHex32(pugi::xml_node &node,
       return ResultXmlNodeNotFound;
    }
 
-   *outValue = strtoul(child.text().get(), nullptr, 16);
+   *outValue = static_cast<uint32_t>(strtoul(child.text().get(), nullptr, 16));
    return ResultSuccess;
 }
 
@@ -53,7 +53,7 @@ getHex64(pugi::xml_node &node,
       return ResultXmlNodeNotFound;
    }
 
-   *outValue = strtoull(child.text().get(), nullptr, 16);
+   *outValue = static_cast<uint64_t>(strtoull(child.text().get(), nullptr, 16));
    return ResultSuccess;
 }
 
