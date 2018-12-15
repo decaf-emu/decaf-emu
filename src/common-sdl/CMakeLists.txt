@@ -15,3 +15,7 @@ target_link_libraries(common-sdl
     cpptoml
     excmd
     ${SDL2_LIBRARIES})
+
+if(UNIX)
+    target_link_libraries(common-sdl dl)
+endif()

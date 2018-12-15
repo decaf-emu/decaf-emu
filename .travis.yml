@@ -14,31 +14,51 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:cginternals/backports-ppa'
     packages:
+      - binutils-2.26
       - g++-7
       - gcc-7
+      - libasound2-dev
       - libcurl4-openssl-dev
       - libglbinding-dbg
       - libglbinding-dev
       - libglu1-mesa-dev
-      - libsdl2-dev
+      - libjack-dev
+      - libpulse-dev
       - libssl-dev
+      - libva-dev
+      - libvdpau-dev
       - libx11-dev
+      - libxcb-icccm4-dev
+      - libxcb-keysyms1-dev
+      - libxcb1-dev
       - libxcursor-dev
+      - libxrandr-dev
+      - libxxf86vm-dev
       - xorg-dev
-      - zlib1g-dev
+
+language: cpp
 
 cache:
+  pip: true
   directories:
     - "$HOME/.local"
+    - "$HOME/.conan"
 
 install:
-  -  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90; fi
-  -  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90; fi
-  -  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install curl openssl sdl2; fi
+  - mkdir "$TRAVIS_BUILD_DIR/cbuild"
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir $HOME/vulkan; cd $HOME/vulkan; wget https://sdk.lunarg.com/sdk/download/1.1.92.1/linux/vulkansdk-linux-x86_64-1.1.92.1.tar.gz; tar zxf vulkansdk-linux-x86_64-1.1.92.1.tar.gz; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user conan; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then conan user; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cd "$TRAVIS_BUILD_DIR/cbuild"; conan install .. --build=missing -o silent=True -o curl=False -o openssl=False; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install curl openssl sdl2; fi
 
 script:
-  - cd "$TRAVIS_BUILD_DIR"
-  - mkdir cbuild && cd cbuild
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF ..; fi
+  - cd "$TRAVIS_BUILD_DIR/cbuild"
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=/usr/lib/binutils-2.26/bin:$PATH; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source ~/vulkan/1.1.92.1/setup-env.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DDECAF_BUILD_TOOLS=ON ..; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_GL=OFF -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl ..; fi
   - make -j4
