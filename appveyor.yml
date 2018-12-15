@@ -11,6 +11,7 @@ environment:
   PYTHON: "C:\\Python36-x64"
   PYTHON_VERSION: "3.6.6"
   PYTHON_ARCH: "64"
+  VULKAN_SDK: "C:\\VulkanSDK\\1.1.92.1"
 
 configuration:
   - Release
@@ -24,13 +25,15 @@ install:
   - cmd: pip.exe install conan
   - cmd: conan user
   - cmd: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan & exit 0
+  - cmd: appveyor DownloadFile https://sdk.lunarg.com/sdk/download/1.1.92.1/windows/VulkanSDK-1.1.92.1-Installer.exe -FileName vulkan.exe
+  - cmd: vulkan.exe /S
   - cmd: git submodule update --init --recursive
 
 before_build:
   - mkdir build
   - cd build
   - conan install .. -o accept_defaults=True
-  - cmake -G "Visual Studio 15 2017 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON ..
+  - cmake -G "Visual Studio 15 2017 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON ..
   - cd ..
 
 build:
