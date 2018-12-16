@@ -573,6 +573,11 @@ Driver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 
    // End our command group
    endCommandGroup();
+
+   // Optimize the memory layout of our segments every 10 frames.
+   if (mActiveBatchIndex % 10 == 0) {
+      mMemTracker.optimize();
+   }
 }
 
 } // namespace vulkan

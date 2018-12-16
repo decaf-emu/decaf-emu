@@ -137,13 +137,8 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info, const gpu7::tiling::Surface
    auto imageSize = static_cast<uint32_t>(tilingInfo.surfSize);
    auto alignedDepth = tilingInfo.depth;
 
-   std::vector<uint32_t> sliceSizes;
-   for (auto i = 0u; i < alignedDepth; ++i) {
-      sliceSizes.push_back(sliceSize);
-   }
-
    // Grab a memory cache object for this image
-   return getMemCache(phys_addr(realAddr), imageSize, sliceSizes);
+   return getMemCache(phys_addr(realAddr), alignedDepth, sliceSize);
 }
 
 void

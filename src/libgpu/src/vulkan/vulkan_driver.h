@@ -10,6 +10,7 @@
 #include "spirv/spirv_translate.h"
 #include "pm4_processor.h"
 #include "vk_mem_alloc.h"
+#include "vulkan_memtracker.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -108,33 +109,9 @@ struct ResourceUsageMeta
 typedef std::function<void()> DelayedMemWriteFunc;
 
 struct MemCacheObject;
-
-struct MemCacheSegment
-{
-   // Meta-data about what this segment represents
-   phys_addr address;
-   uint32_t size;
-
-   // Stores the last computed hash for this data (from the CPU).
-   DataHash dataHash;
-
-   // Tracks the last CPU check of this segment, to avoid checking the
-   // memory multiple times in a single batch.
-   uint64_t lastCheckIndex;
-
-   // Records if there is a pending GPU write for this data.  This is to ensure
-   // that we do not overwrite a pending GPU write with random CPU data.
-   bool gpuWritten;
-
-   // The last change for this segment
-   uint64_t lastChangeIndex;
-
-   // Represents the object owning the most up to date version of the data.
-   MemCacheObject *lastChangeOwner;
-
-};
-
-typedef std::map<phys_addr, MemCacheSegment*> MemSegmentMap;
+typedef MemoryTracker<MemCacheObject*> DriverMemoryTracker;
+typedef DriverMemoryTracker::SegmentRef MemSegmentRef;
+typedef DriverMemoryTracker::Segment MemSegment;
 
 struct SectionRange
 {
@@ -158,14 +135,8 @@ struct SectionRange
 
 struct MemCacheSection
 {
-   // The offset of this section, just to find it easier
-   uint32_t offset;
-
-   // The size of this particular section
-   uint32_t size;
-
    // Pointer into the segments map for this memory range
-   MemSegmentMap::iterator firstSegment;
+   MemSegmentRef firstSegment;
 
    // Records the last change index for this data
    uint64_t lastChangeIndex;
@@ -181,6 +152,8 @@ struct MemCacheObject
    // Meta-data about what this cache object represents.
    phys_addr address;
    uint32_t size;
+   uint32_t numSections;
+   uint32_t sectionSize;
    ResourceUsage activeUsage;
 
    // The buffer data.
@@ -201,6 +174,10 @@ struct MemCacheObject
 
    // Records the number of external objects relying on this...
    uint64_t refCount;
+
+   // Intrusive linked list to enable us to chain together multiple
+   // objects with different section layouts for faster lookup.
+   MemCacheObject *nextObject;
 };
 
 struct MemChangeRecord
@@ -842,14 +819,7 @@ protected:
    void updateDrawGprBuffer(ShaderStage shaderStage);
    bool checkCurrentShaderBuffers();
 
-   // Memory Cache
-   MemCacheSegment * _allocateMemSegment(phys_addr address, uint32_t size);
-   MemSegmentMap::iterator _splitMemSegment(MemSegmentMap::iterator iter, uint32_t newSize);
-   MemSegmentMap::iterator _getMemSegment(phys_addr address, uint32_t maxSize);
-   void _ensureMemSegments(MemSegmentMap::iterator firstSegment, uint32_t size);
-   void _refreshMemSegment(MemCacheSegment *segment);
-
-   MemCacheObject * _allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes);
+   MemCacheObject * _allocMemCache(phys_addr address, uint32_t numSections, uint32_t sectionSize);
    void _uploadMemCache(MemCacheObject *cache, SectionRange sections);
    void _downloadMemCache(MemCacheObject *cache, SectionRange sections);
    void _refreshMemCache_Check(MemCacheObject *cache, SectionRange sections);
@@ -858,7 +828,7 @@ protected:
    void _invalidateMemCache(MemCacheObject *cache, SectionRange sections, const DelayedMemWriteFunc& delayedWriteHandler);
    void _barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRange sections);
    SectionRange _sectionsFromOffsets(MemCacheObject *cache, uint32_t begin, uint32_t end);
-   MemCacheObject * getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes);
+   MemCacheObject * getMemCache(phys_addr address, uint32_t numSections, uint32_t sectionSize);
    void invalidateMemCacheDelayed(MemCacheObject *cache, uint32_t offset, uint32_t size, const DelayedMemWriteFunc& delayedWriteHandler);
    void transitionMemCache(MemCacheObject *cache, ResourceUsage usage, uint32_t offset = 0, uint32_t size = 0);
    DataBufferObject * getDataMemCache(phys_addr baseAddress, uint32_t size);
@@ -1060,7 +1030,6 @@ private:
    std::vector<StreamContextObject *> mStreamOutContextPool;
    std::vector<vk::DescriptorPool> mDescriptorPools;
    std::vector<vk::QueryPool> mOccQueryPools;
-   MemSegmentMap mMemSegmentMap;
    std::unordered_map<DataHash, SurfaceGroupObject*> mSurfaceGroups;
    std::unordered_map<DataHash, SurfaceObject*> mSurfaces;
    std::unordered_map<DataHash, SurfaceViewObject*> mSurfaceViews;
@@ -1071,9 +1040,10 @@ private:
    std::unordered_map<DataHash, RenderPassObject*> mRenderPasses;
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;
-   std::unordered_map<DataHash, MemCacheObject *> mMemCaches;
+   std::unordered_map<uint64_t, MemCacheObject *> mMemCaches;
 
    gpu7::tiling::vulkan::Retiler mGpuRetiler;
+   DriverMemoryTracker mMemTracker;
 };
 
 } // namespace vulkan

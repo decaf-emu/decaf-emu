@@ -498,6 +498,7 @@ void
 Driver::beginCommandGroup()
 {
    mActiveBatchIndex++;
+   mMemTracker.nextBatch();
 
    mActiveSyncWaiter = allocateSyncWaiter();
    mActiveCommandBuffer = mActiveSyncWaiter->cmdBuffer;

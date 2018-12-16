@@ -6,67 +6,69 @@
 namespace vulkan
 {
 
+// void(MemSegment&)
+template<typename FunctorType>
 static inline void
-forEachMemSegment(MemSegmentMap::iterator begin, uint32_t size, const std::function<void(MemCacheSegment*)>& functor)
+forEachMemSegment(MemSegmentRef begin, uint32_t size, FunctorType functor)
 {
-   auto iter = begin;
+   auto segment = begin.get();
    for (auto sizeLeft = size; sizeLeft > 0;) {
-      auto& segment = iter->second;
-      functor(segment);
-
-      decaf_check(segment->size <= sizeLeft);
+      functor(*segment);
       sizeLeft -= segment->size;
-
-      iter++;
+      segment = segment->nextSegment;
    }
 }
 
+// void(MemCacheSection&, MemSegment&)
+template<typename FunctorType>
 static inline void
-forEachSectionSegment(MemCacheObject *cache, SectionRange range, const std::function<void(MemCacheSection&, MemCacheSegment*)>& functor)
+forEachSectionSegment(MemCacheObject *cache, SectionRange range, FunctorType functor)
 {
    auto rangeStart = range.start;
    auto rangeEnd = range.start + range.count;
+
+   auto firstSection = cache->sections[rangeStart];
+   auto segment = firstSection.firstSegment.get();
    for (auto i = rangeStart; i < rangeEnd; ++i) {
       auto& section = cache->sections[i];
-      forEachMemSegment(section.firstSegment, section.size, [&](MemCacheSegment *segment){
-         functor(section, segment);
-      });
+
+      for (auto sizeLeft = cache->sectionSize; sizeLeft > 0;) {
+         functor(section, *segment);
+
+         sizeLeft -= segment->size;
+         segment = segment->nextSegment;
+      }
    }
 }
 
+// void(MemSegment&)
+template<typename FunctorType>
 static inline void
-forEachMemSegment(MemCacheObject *cache, SectionRange range, const std::function<void(MemCacheSegment*)>& functor)
+forEachMemSegment(MemCacheObject *cache, SectionRange range, FunctorType functor)
 {
    auto& firstSection = cache->sections[range.start];
-   auto& lastSection = cache->sections[range.start + range.count - 1];
-
    auto begin = firstSection.firstSegment;
-   auto size = lastSection.offset + lastSection.size - firstSection.offset;
+   auto size = range.count * cache->sectionSize;
    forEachMemSegment(begin, size, functor);
 }
 
 MemCacheObject *
-Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSizes)
+Driver::_allocMemCache(phys_addr address, uint32_t numSections, uint32_t sectionSize)
 {
    uint32_t totalSize = 0;
 
    std::vector<MemCacheSection> sections;
-   for (auto i = 0; i < sectionSizes.size(); ++i) {
-      auto sectionSize = sectionSizes[i];
-
-      auto firstSegment = _getMemSegment(address + totalSize, sectionSize);
-      _ensureMemSegments(firstSegment, sectionSize);
+   for (auto i = 0u; i < numSections; ++i) {
+      auto firstSegment = mMemTracker.get(address + totalSize, sectionSize);
 
       MemCacheSection section;
-      section.offset = totalSize;
-      section.size = sectionSize;
       section.lastChangeIndex = 0;
       section.firstSegment = firstSegment;
       section.needsUpload = false;
       section.wantedChangeIndex = 0;
       sections.push_back(section);
 
-      totalSize += section.size;
+      totalSize += sectionSize;
    }
 
    vk::BufferCreateInfo bufferDesc;
@@ -101,6 +103,8 @@ Driver::_allocMemCache(phys_addr address, const std::vector<uint32_t>& sectionSi
    auto cache = new MemCacheObject();
    cache->address = address;
    cache->size = totalSize;
+   cache->numSections = numSections;
+   cache->sectionSize = sectionSize;
    cache->allocation = allocation;
    cache->buffer = buffer;
    cache->sections = std::move(sections);
@@ -116,15 +120,14 @@ Driver::_uploadMemCache(MemCacheObject *cache, SectionRange range)
 {
    uint8_t *cacheBasePtr = phys_cast<uint8_t*>(cache->address).getRawPointer();
 
-   auto& firstSection = cache->sections[range.start];
-   auto& lastSection = cache->sections[range.start + range.count - 1];
-   auto uploadOffset = firstSection.offset;
-   auto uploadSize = lastSection.offset + lastSection.size - firstSection.offset;
-   uint8_t *uploadData = cacheBasePtr + uploadOffset;
+   auto offsetStart = cache->sectionSize * range.start;
+   auto rangeSize = cache->sectionSize * range.count;
+
+   uint8_t *uploadData = cacheBasePtr + offsetStart;
 
    // Upload the data to the CPU
-   auto stagingBuffer = getStagingBuffer(uploadSize, StagingBufferType::CpuToGpu);
-   copyToStagingBuffer(stagingBuffer, 0, uploadData, uploadSize);
+   auto stagingBuffer = getStagingBuffer(rangeSize, StagingBufferType::CpuToGpu);
+   copyToStagingBuffer(stagingBuffer, 0, uploadData, rangeSize);
 
    // Transition the buffers appropriately
    transitionStagingBuffer(stagingBuffer, ResourceUsage::TransferSrc);
@@ -133,8 +136,8 @@ Driver::_uploadMemCache(MemCacheObject *cache, SectionRange range)
    // Copy the data out of the staging buffer into the memory cache.
    vk::BufferCopy copyDesc;
    copyDesc.srcOffset = 0;
-   copyDesc.dstOffset = uploadOffset;
-   copyDesc.size = uploadSize;
+   copyDesc.dstOffset = offsetStart;
+   copyDesc.size = rangeSize;
    mActiveCommandBuffer.copyBuffer(stagingBuffer->buffer, cache->buffer, { copyDesc });
 }
 
@@ -149,11 +152,8 @@ Driver::_downloadMemCache(MemCacheObject *cache, SectionRange range)
    }
 
    // Lets start doing the actual download!
-   auto& firstSection = cache->sections[range.start];
-   auto& lastSection = cache->sections[range.start + range.count - 1];
-   auto offsetStart = firstSection.offset;
-   auto offsetEnd = lastSection.offset + lastSection.size;
-   auto rangeSize = offsetEnd - offsetStart;
+   auto offsetStart = cache->sectionSize * range.start;
+   auto rangeSize = cache->sectionSize * range.count;
 
    // Create a staging buffer to use for the readback
    auto stagingBuffer = getStagingBuffer(rangeSize, StagingBufferType::GpuToCpu);
@@ -173,32 +173,31 @@ Driver::_downloadMemCache(MemCacheObject *cache, SectionRange range)
    // illegal to be doing the transition during the retire function below.
    transitionStagingBuffer(stagingBuffer, ResourceUsage::HostRead);
 
+   // TODO: This can be optimized... A lot...
+
    // Move the data onto the CPU on a per-section basis
    for (auto i = range.start; i < range.start + range.count; ++i) {
       auto& section = cache->sections[i];
       auto changeIndex = section.lastChangeIndex;
 
       addRetireTask([=](){
-         void *data = phys_cast<void*>(cache->address + section.offset).getRawPointer();
+         void *data = phys_cast<void*>(cache->address + i * cache->sectionSize).getRawPointer();
 
-         auto stagingOffset = section.offset - offsetStart;
+         auto stagingOffset = (i - range.start) * cache->sectionSize;
 
          // Copy the data out of the staging area into memory
-         copyFromStagingBuffer(stagingBuffer, stagingOffset, data, section.size);
+         copyFromStagingBuffer(stagingBuffer, stagingOffset, data, cache->sectionSize);
 
          // We need to calculate new data hashes for the relevant segments that
          // are affected by this image and are not still being GPU written.
-         forEachMemSegment(section.firstSegment, section.size, [&](MemCacheSegment* segment){
+         forEachMemSegment(section.firstSegment, cache->sectionSize, [&](MemSegment& segment){
             // For safety purposes, lets confirm that this write was intended.
-            decaf_check(segment->lastChangeIndex >= section.lastChangeIndex);
+            decaf_check(segment.lastChangeIndex >= section.lastChangeIndex);
 
             // Only bother recalculating the hashing if we are not already waiting
             // for more writes to this segment...
-            if (segment->lastChangeIndex == changeIndex) {
-               auto dataPtr = phys_cast<void*>(segment->address).getRawPointer();
-               auto dataSize = segment->size;
-               segment->dataHash = DataHash {}.write(dataPtr, dataSize);
-               segment->gpuWritten = false;
+            if (segment.lastChangeIndex == changeIndex) {
+               mMemTracker.markSegmentGpuDone(&segment);
             }
          });
       });
@@ -208,24 +207,24 @@ Driver::_downloadMemCache(MemCacheObject *cache, SectionRange range)
 void
 Driver::_refreshMemCache_Check(MemCacheObject *cache, SectionRange range)
 {
-   forEachSectionSegment(cache, range, [&](MemCacheSection& section, MemCacheSegment* segment){
+   forEachSectionSegment(cache, range, [&](MemCacheSection& section, MemSegment& segment){
       // Refresh the segment to make sure we have up-to-date information
-      _refreshMemSegment(segment);
+      mMemTracker.refreshSegment(&segment);
 
       // Update the wanted index
-      if (segment->lastChangeIndex > section.wantedChangeIndex) {
-         section.wantedChangeIndex = segment->lastChangeIndex;
+      if (segment.lastChangeIndex > section.wantedChangeIndex) {
+         section.wantedChangeIndex = segment.lastChangeIndex;
       }
 
       // Check if we already have this data, if we do, there is nothing to do.
-      if (section.lastChangeIndex >= segment->lastChangeIndex) {
+      if (section.lastChangeIndex >= segment.lastChangeIndex) {
          return;
       }
 
       // Check if we have no last-owner first, obviously an upload is needed in that
       // case.  Additionally, we are required to perform an upload if the last owner
       // has rearranged the data such that it might not make sense for us anymore.
-      if (!segment->lastChangeOwner) {
+      if (!segment.lastChangeOwner) {
          section.needsUpload = true;
       }
    });
@@ -267,10 +266,10 @@ Driver::_refreshMemCache_Update(MemCacheObject *cache, SectionRange range)
    for (auto i = range.start; i < range.start + range.count; ++i) {
       auto& section = cache->sections[i];
 
-      forEachMemSegment(section.firstSegment, section.size, [&](MemCacheSegment* segment){
+      forEachMemSegment(section.firstSegment, cache->sectionSize, [&](MemSegment& segment){
          // Note that we have to do this delayed write check before we exit
          // early as we are not actually 'up to date' until the write occurs.
-         auto& lastChangeOwner = segment->lastChangeOwner;
+         auto& lastChangeOwner = segment.lastChangeOwner;
          if (lastChangeOwner && lastChangeOwner->delayedWriteFunc) {
             if (lastChangeOwner->delayedWriteRange.intersects(range)) {
                lastChangeOwner->delayedWriteFunc();
@@ -281,25 +280,25 @@ Driver::_refreshMemCache_Update(MemCacheObject *cache, SectionRange range)
 
          // Check to see if we already have the latest data from this segment available
          // to us in our buffer already (to avoid needing to copy).
-         if (section.lastChangeIndex >= segment->lastChangeIndex) {
+         if (section.lastChangeIndex >= segment.lastChangeIndex) {
             return;
          }
 
          // Lets make sure if there was no owner, that we uploaded this previously,
          // and that we take ownership and update the last change index.
-         if (!segment->lastChangeOwner) {
+         if (!segment.lastChangeOwner) {
             decaf_check(section.needsUpload);
-            segment->lastChangeOwner = cache;
+            segment.lastChangeOwner = cache;
             return;
          }
 
          // Push this copy to our list of copies we want to do.
-         copyCombiner.push(segment->lastChangeOwner, segment->address, segment->size);
+         copyCombiner.push(segment.lastChangeOwner, segment.address, segment.size);
 
          // If the segment was not GPU written, lets also take ownership since it will
          // increase the chances of condensing buffer copies for future transfers.
-         if (!segment->gpuWritten) {
-            segment->lastChangeOwner = cache;
+         if (!segment.gpuWritten) {
+            segment.lastChangeOwner = cache;
          }
       });
 
@@ -323,7 +322,7 @@ Driver::_refreshMemCache(MemCacheObject *cache, SectionRange range)
 void
 Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, const DelayedMemWriteFunc& delayedWriteFunc)
 {
-   auto changeIndex = ++mMemChangeCounter;
+   auto changeIndex = mMemTracker.newChangeIndex();
 
    // If there is already a delayed write and its not covered by
    // this particular invalidation, we will have to execute it.
@@ -345,10 +344,10 @@ Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, const Del
       cache->sections[i].lastChangeIndex = changeIndex;
    }
 
-   forEachMemSegment(cache, range, [&](MemCacheSegment* segment){
-      segment->lastChangeIndex = changeIndex;
-      segment->lastChangeOwner = cache;
-      segment->gpuWritten = true;
+   forEachMemSegment(cache, range, [&](MemSegment& segment){
+      segment.lastChangeIndex = changeIndex;
+      segment.lastChangeOwner = cache;
+      segment.gpuWritten = true;
    });
 
    if (delayedWriteFunc) {
@@ -364,11 +363,8 @@ Driver::_invalidateMemCache(MemCacheObject *cache, SectionRange range, const Del
 void
 Driver::_barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRange range)
 {
-   auto& firstSection = cache->sections[range.start];
-   auto& lastSection = cache->sections[range.start + range.count - 1];
-   auto offsetStart = firstSection.offset;
-   auto offsetEnd = lastSection.offset + lastSection.size;
-   auto memRange = offsetEnd - offsetStart;
+   auto offsetStart = range.start * cache->sectionSize;;
+   auto memSize = range.count * cache->sectionSize;
 
    if (cache->activeUsage == usage) {
       return;
@@ -384,7 +380,7 @@ Driver::_barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRang
    bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    bufferBarrier.buffer = cache->buffer;
    bufferBarrier.offset = offsetStart;
-   bufferBarrier.size = memRange;
+   bufferBarrier.size = memSize;
 
    mActiveCommandBuffer.pipelineBarrier(
       srcMeta.stageFlags,
@@ -400,60 +396,53 @@ Driver::_barrierMemCache(MemCacheObject *cache, ResourceUsage usage, SectionRang
 SectionRange
 Driver::_sectionsFromOffsets(MemCacheObject *cache, uint32_t begin, uint32_t end)
 {
-   // Calculate which sections actually apply to this...
-   uint32_t beginSection = 0;
-   uint32_t endSection = 0;
-   for (auto i = 0; i < cache->sections.size(); ++i) {
-      auto& section = cache->sections[i];
-
-      if (section.offset == begin) {
-         beginSection = i;
-      }
-      if (section.offset + section.size == end) {
-         endSection = i + 1;
-      }
-   }
-   decaf_check(endSection != 0);
-   decaf_check(beginSection != endSection);
+   decaf_check(begin % cache->sectionSize == 0);
+   decaf_check(end % cache->sectionSize == 0);
 
    SectionRange range;
-   range.start = beginSection;
-   range.count = endSection - beginSection;
+   range.start = begin / cache->sectionSize;
+   range.count = (end - begin) / cache->sectionSize;
 
    return range;
 }
 
 MemCacheObject *
-Driver::getMemCache(phys_addr address, uint32_t size, const std::vector<uint32_t>& sectionSizes)
+Driver::getMemCache(phys_addr address, uint32_t numSections, uint32_t sectionSize)
 {
-   struct MemCacheDesc
-   {
-      uint32_t address = 0;
-      uint32_t size = 0;
-      std::array<uint32_t, 100> sectionSizes = { 0 };
-   } _dataHash;
-   memset(&_dataHash, 0xFF, sizeof(_dataHash));
+   // Note: We cast here first to make sure the types are in the appropriate
+   // types, otherwise the bit operations may not behave as expected.
+   uint64_t lookupAddr = address.getAddress();
+   uint64_t lookupSize = numSections * sectionSize;
+   uint64_t lookupKey = (lookupAddr << 32) | lookupSize;
 
-   _dataHash.address = address.getAddress();
-   _dataHash.size = size;
-   decaf_check(sectionSizes.size() < _dataHash.sectionSizes.size());
-   for (auto i = 0u; i < sectionSizes.size(); ++i) {
-      _dataHash.sectionSizes[i] = sectionSizes[i];
+   // TODO: We should implement the ability to 'grow' a MemCacheObject to
+   // contain more sections on top of the ones that already exist in the
+   // object.  This will improve memory usage, and help when new surfaces
+   // appear which just add slices.
+
+   auto& cacheRef = mMemCaches[lookupKey];
+
+   auto cache = cacheRef;
+   while (cache) {
+      if (cache->sectionSize == sectionSize) {
+         break;
+      }
+      cache = cache->nextObject;
    }
 
-   auto cacheKey = DataHash {}.write(_dataHash);
-
-   auto& cache = mMemCaches[cacheKey];
    if (!cache) {
       // If there is not yet a cache object, we need to create it.
-      cache = _allocMemCache(address, sectionSizes);
+      cache = _allocMemCache(address, numSections, sectionSize);
+
+      // Be warned about the fact that `cache` is a reference object,
+      // and we are putting the new object at the head of the list.
+      cache->nextObject = cacheRef;
+      cacheRef = cache;
    }
 
    decaf_check(cache->address == address);
-   decaf_check(cache->size == size);
-   for (auto i = 0u; i < sectionSizes.size(); ++i) {
-      cache->sections[i].size = sectionSizes[i];
-   }
+   decaf_check(cache->numSections == numSections);
+   decaf_check(cache->sectionSize == sectionSize);
 
    return cache;
 }
@@ -530,7 +519,7 @@ Driver::downloadPendingMemCache()
 DataBufferObject *
 Driver::getDataMemCache(phys_addr baseAddress, uint32_t size)
 {
-   auto cache = getMemCache(baseAddress, size, { size });
+   auto cache = getMemCache(baseAddress, 1, size);
    return static_cast<DataBufferObject *>(cache);
 }
 
