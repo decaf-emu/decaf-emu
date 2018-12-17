@@ -209,21 +209,27 @@ public:
    void translate() override;
    static bool translate(const ShaderDesc& shaderDesc, Shader *shader);
 
-   std::vector<unsigned int> generateRectStub(int numExports);
-
 protected:
    void writeCfAluUnitLine(ShaderParser::Type shaderType, int cfId, int groupId, int unitId);
 
-   const ShaderDesc *mDesc;
    ShaderSpvBuilder *mSpv;
 
-   std::array<ColorOutputType, latte::MaxRenderTargets> mPixelOutType;
-   std::array<latte::SQ_TEX_DIM, latte::MaxTextures> mTexInput;
-   std::array<bool, latte::MaxTextures> mTexIsUint;
+   // Inputs
+   std::array<latte::SQ_TEX_DIM, latte::MaxTextures> mTexDims;
+   std::array<TextureInputType, latte::MaxTextures> mTexFormats;
+   std::array<latte::SQ_VTX_SEMANTIC_N, 32> mSqVtxSemantics;
    std::array<uint32_t, latte::MaxStreamOutBuffers> mStreamOutStride;
-   std::array<InputBuffer, latte::MaxAttribBuffers> mVsInputBuffers;
-   std::vector<InputAttrib> mVsInputAttribs;
-   std::vector<uint32_t> mVsGsOutputParams;
+   latte::PA_CL_VS_OUT_CNTL mPaClVsOutCntl;
+   std::array<PixelOutputType, latte::MaxRenderTargets> mPixelOutType;
+   latte::SQ_PGM_EXPORTS_PS mSqPgmExportsPs;
+   latte::CB_SHADER_CONTROL mCbShaderControl;
+   latte::CB_SHADER_MASK mCbShaderMask;
+   latte::DB_SHADER_CONTROL mDbShaderControl;
+
+   // Outputs
+   std::array<AttribBuffer, latte::MaxAttribBuffers> mAttribBuffers;
+   std::vector<AttribElem> mAttribElems;
+   std::array<bool, latte::MaxRenderTargets> mPixelOutUsed;
 
    struct LoopState
    {
@@ -234,7 +240,7 @@ protected:
       spv::Block *continue_target;
       spv::Block *merge;
    };
-   std::vector<LoopState> loopStack;
+   std::vector<LoopState> mLoopStack;
 
 };
 

@@ -201,7 +201,6 @@ struct VertexShaderObject
    HashedDesc<spirv::VertexShaderDesc> desc;
    spirv::VertexShader shader;
    vk::ShaderModule module;
-   vk::ShaderModule rectStubModule;
 };
 
 struct GeometryShaderObject
@@ -215,6 +214,13 @@ struct PixelShaderObject
 {
    HashedDesc<spirv::PixelShaderDesc> desc;
    spirv::PixelShader shader;
+   vk::ShaderModule module;
+};
+
+struct RectStubShaderObject
+{
+   HashedDesc<spirv::RectStubShaderDesc> desc;
+   spirv::RectStubShader shader;
    vk::ShaderModule module;
 };
 
@@ -539,8 +545,6 @@ struct SwapChainObject
    SurfaceObject *_surface;
 };
 
-
-
 struct RenderPassDesc
 {
    struct ColorTarget
@@ -581,8 +585,10 @@ struct PipelineDesc
    VertexShaderObject *vertexShader;
    GeometryShaderObject *geometryShader;
    PixelShaderObject *pixelShader;
+   RectStubShaderObject *rectStubShader;
 
    std::array<uint32_t, latte::MaxAttribBuffers> attribBufferStride;
+   std::array<uint32_t, 2> attribBufferDivisor;
    latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
    bool primitiveResetEnabled;
    uint32_t primitiveResetIndex;
@@ -710,6 +716,7 @@ struct DrawDesc
    VertexShaderObject *vertexShader = nullptr;
    GeometryShaderObject *geometryShader = nullptr;
    PixelShaderObject *pixelShader = nullptr;
+   RectStubShaderObject *rectStubShader = nullptr;
    FramebufferObject *framebuffer = nullptr;
    RenderPassObject *renderPass = nullptr;
    PipelineObject *pipeline = nullptr;
@@ -722,6 +729,27 @@ struct DrawDesc
    std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> uniformBlocks = { { nullptr } };
    std::array<StreamContextObject*, latte::MaxStreamOutBuffers> streamOutContext = { nullptr };
    std::array<DataBufferObject*, latte::MaxStreamOutBuffers> streamOutBuffers = { nullptr };
+};
+
+struct Vec4
+{
+   float x;
+   float y;
+   float z;
+   float w;
+};
+
+struct VsPushConstants
+{
+   Vec4 posMulAdd;
+   Vec4 zSpaceMul;
+};
+
+struct PsPushConstants
+{
+   uint32_t alphaData;
+   float alphaRef;
+   uint32_t needPremultiply;
 };
 
 class Driver : public gpu::VulkanDriver, public Pm4Processor
@@ -766,10 +794,7 @@ protected:
 
    // Descriptor Sets
    vk::DescriptorPool allocateDescriptorPool(uint32_t numDraws);
-   vk::DescriptorSet allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout);
-   vk::DescriptorSet allocateVertexDescriptorSet();
-   vk::DescriptorSet allocateGeometryDescriptorSet();
-   vk::DescriptorSet allocatePixelDescriptorSet();
+   vk::DescriptorSet allocateGenericDescriptorSet();
    void retireDescriptorPool(vk::DescriptorPool descriptorPool);
 
    // Fences
@@ -882,8 +907,8 @@ protected:
    void bindIndexBuffer();
 
    // Draws
-   void bindShaderDescriptors(ShaderStage shaderStage);
-   void bindShaderResources();
+   void bindDescriptors();
+   void bindShaderParams();
    void drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndices, void *indices);
    void flushPendingDraws();
    void drawCurrentState();
@@ -906,6 +931,7 @@ protected:
    bool checkCurrentVertexShader();
    bool checkCurrentGeometryShader();
    bool checkCurrentPixelShader();
+   bool checkCurrentRectStubShader();
 
    // Render Passes
    RenderPassDesc getRenderPassDesc();
@@ -981,20 +1007,21 @@ private:
 
    SyncWaiter *mActiveSyncWaiter = nullptr;
    vk::CommandBuffer mActiveCommandBuffer;
-   vk::DescriptorPool mActiveDescriptorPool;
-   uint32_t mActiveDescriptorPoolDrawsLeft;
+   std::vector<vk::DescriptorSet> mAvailableDescriptorSets;
    RenderPassObject *mActiveRenderPass = nullptr;
    FramebufferObject *mActiveFramebuffer = nullptr;
    PipelineObject *mActivePipeline = nullptr;
    uint64_t mActiveBatchIndex = 0;
 
-   vk::DescriptorSetLayout mVertexDescriptorSetLayout;
-   vk::DescriptorSetLayout mGeometryDescriptorSetLayout;
-   vk::DescriptorSetLayout mPixelDescriptorSetLayout;
+   bool mActiveVsConstantsSet = false;
+   VsPushConstants mActiveVsConstants;
+   bool mActivePsConstantsSet = false;
+   PsPushConstants mActivePsConstants;
 
    bool mLastIndexBufferSet = false;
    IndexBufferCache mLastIndexBuffer;
 
+   vk::DescriptorSetLayout mBaseDescriptorSetLayout;
    vk::PipelineLayout mPipelineLayout;
 
    std::array<StreamContextObject*, latte::MaxStreamOutBuffers> mStreamOutContext = { nullptr };
@@ -1008,6 +1035,7 @@ private:
    std::vector<uint8_t> mScratchRetiling;
    std::vector<uint8_t> mScratchIdxSwap;
    std::vector<uint8_t> mScratchIdxDequad;
+   std::array<vk::WriteDescriptorSet, 256> mScratchDescriptorWrites;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
@@ -1037,6 +1065,7 @@ private:
    std::unordered_map<DataHash, GeometryShaderObject*> mGeometryShaders;
    std::unordered_map<DataHash, FramebufferObject*> mFramebuffers;
    std::unordered_map<DataHash, PixelShaderObject*> mPixelShaders;
+   std::unordered_map<DataHash, RectStubShaderObject*> mRectStubShaders;
    std::unordered_map<DataHash, RenderPassObject*> mRenderPasses;
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;

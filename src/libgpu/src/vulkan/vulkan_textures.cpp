@@ -86,7 +86,7 @@ Driver::checkCurrentTextures()
 {
    if (mCurrentDraw->vertexShader) {
       for (auto textureIdx = 0u; textureIdx < latte::MaxTextures; ++textureIdx) {
-         if (mCurrentDraw->vertexShader->shader.textureUsed[textureIdx]) {
+         if (mCurrentDraw->vertexShader->shader.meta.textureUsed[textureIdx]) {
             updateDrawTexture(ShaderStage::Vertex, textureIdx);
          } else {
             mCurrentDraw->textures[0][textureIdx] = nullptr;
@@ -100,7 +100,7 @@ Driver::checkCurrentTextures()
 
    if (mCurrentDraw->geometryShader) {
       for (auto textureIdx = 0u; textureIdx < latte::MaxTextures; ++textureIdx) {
-         if (mCurrentDraw->geometryShader->shader.textureUsed[textureIdx]) {
+         if (mCurrentDraw->geometryShader->shader.meta.textureUsed[textureIdx]) {
             updateDrawTexture(ShaderStage::Geometry, textureIdx);
          } else {
             mCurrentDraw->textures[1][textureIdx] = nullptr;
@@ -114,7 +114,7 @@ Driver::checkCurrentTextures()
 
    if (mCurrentDraw->pixelShader) {
       for (auto textureIdx = 0u; textureIdx < latte::MaxTextures; ++textureIdx) {
-         if (mCurrentDraw->pixelShader->shader.textureUsed[textureIdx]) {
+         if (mCurrentDraw->pixelShader->shader.meta.textureUsed[textureIdx]) {
             updateDrawTexture(ShaderStage::Pixel, textureIdx);
          } else {
             mCurrentDraw->textures[2][textureIdx] = nullptr;

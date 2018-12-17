@@ -38,7 +38,7 @@ Driver::checkCurrentAttribBuffers()
    decaf_check(mCurrentDraw->vertexShader);
 
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
-      if (!mCurrentDraw->vertexShader->shader.inputBuffers[i].isUsed) {
+      if (!mCurrentDraw->vertexShader->shader.meta.attribBuffers[i].isUsed) {
          mCurrentDraw->attribBuffers[i] = nullptr;
          continue;
       }

@@ -14,11 +14,12 @@ Driver::getPipelineDesc()
    desc.vertexShader = mCurrentDraw->vertexShader;
    desc.geometryShader = mCurrentDraw->geometryShader;
    desc.pixelShader = mCurrentDraw->pixelShader;
+   desc.rectStubShader = mCurrentDraw->rectStubShader;
 
    // -- Vertex Strides
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       // Skip unused input buffers
-      if (!desc.vertexShader->shader.inputBuffers[i].isUsed) {
+      if (!desc.vertexShader->shader.meta.attribBuffers[i].isUsed) {
          desc.attribBufferStride[i] = 0;
          continue;
       }
@@ -26,6 +27,20 @@ Driver::getPipelineDesc()
       auto resourceOffset = (latte::SQ_RES_OFFSET::VS_ATTRIB_RESOURCE_0 + i) * 7;
       auto sq_vtx_constant_word2 = getRegister<latte::SQ_VTX_CONSTANT_WORD2_N>(latte::Register::SQ_RESOURCE_WORD2_0 + 4 * resourceOffset);
       desc.attribBufferStride[i] = sq_vtx_constant_word2.STRIDE();
+   }
+
+   // -- Vertex Buffer Divisors
+   desc.attribBufferDivisor[0] = 1;
+   desc.attribBufferDivisor[1] = 1;
+
+   uint32_t instanceStepRate0 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
+   uint32_t instanceStepRate1 = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
+   for (auto &attribBuffer : desc.vertexShader->shader.meta.attribBuffers) {
+      if (attribBuffer.divisorMode == spirv::AttribBuffer::DivisorMode::REGISTER_0) {
+         desc.attribBufferDivisor[0] = instanceStepRate0;
+      } else if (attribBuffer.divisorMode == spirv::AttribBuffer::DivisorMode::REGISTER_1) {
+         desc.attribBufferDivisor[1] = instanceStepRate1;
+      }
    }
 
    // -- Primitive Type
@@ -361,40 +376,39 @@ Driver::checkCurrentPipeline()
    // ------------------------------------------------------------
 
    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-   if (mCurrentDraw->vertexShader) {
+   if (currentDesc->vertexShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
       shaderStageDesc.stage = vk::ShaderStageFlagBits::eVertex;
-      shaderStageDesc.module = mCurrentDraw->vertexShader->module;
+      shaderStageDesc.module = currentDesc->vertexShader->module;
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
-
-      if (mCurrentDraw->vertexShader->rectStubModule) {
-         decaf_check(!mCurrentDraw->geometryShader);
-
-         vk::PipelineShaderStageCreateInfo rectStageDesc;
-         rectStageDesc.stage = vk::ShaderStageFlagBits::eGeometry;
-         rectStageDesc.module = mCurrentDraw->vertexShader->rectStubModule;
-         rectStageDesc.pName = "main";
-         rectStageDesc.pSpecializationInfo = nullptr;
-         shaderStages.push_back(rectStageDesc);
-      }
    }
-   if (mCurrentDraw->geometryShader) {
+   if (currentDesc->geometryShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
       shaderStageDesc.stage = vk::ShaderStageFlagBits::eGeometry;
-      shaderStageDesc.module = mCurrentDraw->geometryShader->module;
+      shaderStageDesc.module = currentDesc->geometryShader->module;
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
    }
-   if (mCurrentDraw->pixelShader) {
+   if (currentDesc->pixelShader) {
       vk::PipelineShaderStageCreateInfo shaderStageDesc;
       shaderStageDesc.stage = vk::ShaderStageFlagBits::eFragment;
-      shaderStageDesc.module = mCurrentDraw->pixelShader->module;
+      shaderStageDesc.module = currentDesc->pixelShader->module;
       shaderStageDesc.pName = "main";
       shaderStageDesc.pSpecializationInfo = nullptr;
       shaderStages.push_back(shaderStageDesc);
+   }
+   if (currentDesc->rectStubShader) {
+      decaf_check(!currentDesc->geometryShader);
+
+      vk::PipelineShaderStageCreateInfo rectStageDesc;
+      rectStageDesc.stage = vk::ShaderStageFlagBits::eGeometry;
+      rectStageDesc.module = currentDesc->rectStubShader->module;
+      rectStageDesc.pName = "main";
+      rectStageDesc.pSpecializationInfo = nullptr;
+      shaderStages.push_back(rectStageDesc);
    }
 
 
@@ -405,7 +419,7 @@ Driver::checkCurrentPipeline()
    std::vector<vk::VertexInputBindingDescription> bindingDescs;
    std::vector<vk::VertexInputBindingDivisorDescriptionEXT> divisorDescs;
 
-   const auto& inputBuffers = mCurrentDraw->vertexShader->shader.inputBuffers;
+   const auto& inputBuffers = currentDesc->vertexShader->shader.meta.attribBuffers;
    for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
       const auto &inputBuffer = inputBuffers[i];
 
@@ -416,18 +430,27 @@ Driver::checkCurrentPipeline()
       vk::VertexInputBindingDescription bindingDesc;
       bindingDesc.binding = i;
       bindingDesc.stride = currentDesc->attribBufferStride[i];
-      if (inputBuffer.indexMode == spirv::InputBuffer::IndexMode::PerVertex) {
-         decaf_check(inputBuffer.divisor == 0);
+      if (inputBuffer.indexMode == spirv::AttribBuffer::IndexMode::PerVertex) {
+         decaf_check(inputBuffer.divisorMode == spirv::AttribBuffer::DivisorMode::CONST_1);
          bindingDesc.inputRate = vk::VertexInputRate::eVertex;
-      } else if (inputBuffer.indexMode == spirv::InputBuffer::IndexMode::PerInstance) {
-         // TODO: We should move divisor handling into purely this side, and have the shader
-         // generators simply return which instance_step_index register to use instead...
+      } else if (inputBuffer.indexMode == spirv::AttribBuffer::IndexMode::PerInstance) {
+         uint32_t divisorValue;
+         if (inputBuffer.divisorMode == spirv::AttribBuffer::DivisorMode::CONST_1) {
+            divisorValue = 1;
+         } else if (inputBuffer.divisorMode == spirv::AttribBuffer::DivisorMode::REGISTER_0) {
+            divisorValue = currentDesc->attribBufferDivisor[0];
+         } else if (inputBuffer.divisorMode == spirv::AttribBuffer::DivisorMode::REGISTER_1) {
+            divisorValue = currentDesc->attribBufferDivisor[1];
+         } else {
+            decaf_abort("Unexpected divisor mode in vertex shader attributes");
+         }
+
          bindingDesc.inputRate = vk::VertexInputRate::eInstance;
 
-         if (inputBuffer.divisor != 1) {
+         if (divisorValue != 1) {
             vk::VertexInputBindingDivisorDescriptionEXT divisorDesc;
             divisorDesc.binding = bindingDesc.binding;
-            divisorDesc.divisor = inputBuffer.divisor;
+            divisorDesc.divisor = divisorValue;
             divisorDescs.push_back(divisorDesc);
          }
       } else {
@@ -438,7 +461,7 @@ Driver::checkCurrentPipeline()
 
    std::vector<vk::VertexInputAttributeDescription> attribDescs;
 
-   const auto& inputAttribs = mCurrentDraw->vertexShader->shader.inputAttribs;
+   const auto& inputAttribs = currentDesc->vertexShader->shader.meta.attribElems;
    for (auto i = 0u; i < inputAttribs.size(); ++i) {
       const auto &inputAttrib = inputAttribs[i];
 

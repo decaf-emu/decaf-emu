@@ -34,9 +34,9 @@ public:
       mEntryPoint = entry;
    }
 
-   void setDescriptorSetIdx(int descriptorSetIdx)
+   void setBindingBase(int bindingBase)
    {
-      mDescriptorSetIndex = descriptorSetIdx;
+      mBindingBase = bindingBase;
    }
 
    void elseStack()
@@ -1352,9 +1352,11 @@ public:
          addDecoration(structType, spv::DecorationBlock);
          addMemberName(structType, 0, "values");
 
+         auto bindingIdx = mBindingBase + latte::MaxSamplers + latte::MaxTextures;
+
          mRegistersBuffer = createVariable(spv::StorageClassUniform, structType, "CFILE");
-         addDecoration(mRegistersBuffer, spv::DecorationDescriptorSet, mDescriptorSetIndex);
-         addDecoration(mRegistersBuffer, spv::DecorationBinding, latte::MaxSamplers + latte::MaxTextures + 0);
+         addDecoration(mRegistersBuffer, spv::DecorationDescriptorSet, 0);
+         addDecoration(mRegistersBuffer, spv::DecorationBinding, bindingIdx);
       }
 
       return mRegistersBuffer;
@@ -1374,9 +1376,11 @@ public:
          addDecoration(structType, spv::DecorationBlock);
          addMemberName(structType, 0, "values");
 
+         auto bindingIdx = mBindingBase + latte::MaxSamplers + latte::MaxTextures + cbufferIdx;
+
          cbuffer = createVariable(spv::StorageClassUniform, structType, fmt::format("CBUFFER_{}", cbufferIdx).c_str());
-         addDecoration(cbuffer, spv::DecorationDescriptorSet, mDescriptorSetIndex);
-         addDecoration(cbuffer, spv::DecorationBinding, latte::MaxSamplers + latte::MaxTextures + cbufferIdx);
+         addDecoration(cbuffer, spv::DecorationDescriptorSet, 0);
+         addDecoration(cbuffer, spv::DecorationBinding, bindingIdx);
 
          mUniformBuffers[cbufferIdx] = cbuffer;
       }
@@ -1392,8 +1396,11 @@ public:
       if (!samplerId) {
          samplerId = createVariable(spv::StorageClassUniformConstant, samplerType());
          addName(samplerId, fmt::format("SAMPLER_{}", samplerIdx).c_str());
-         addDecoration(samplerId, spv::DecorationDescriptorSet, mDescriptorSetIndex);
-         addDecoration(samplerId, spv::DecorationBinding, samplerIdx);
+
+         auto bindingIdx = mBindingBase + samplerIdx;
+
+         addDecoration(samplerId, spv::DecorationDescriptorSet, 0);
+         addDecoration(samplerId, spv::DecorationBinding, bindingIdx);
 
          mSamplers[samplerIdx] = samplerId;
       }
@@ -1401,15 +1408,17 @@ public:
       return samplerId;
    }
 
-   spv::Id textureVarType(uint32_t textureIdx, latte::SQ_TEX_DIM texDim, bool texIsUint)
+   spv::Id textureVarType(uint32_t textureIdx, latte::SQ_TEX_DIM texDim, TextureInputType texFormat)
    {
       decaf_check(textureIdx < latte::MaxTextures);
 
       spv::Id resultType;
-      if (!texIsUint) {
+      if (texFormat == TextureInputType::FLOAT) {
          resultType = floatType();
-      } else {
+      } else if (texFormat == TextureInputType::INT) {
          resultType = uintType();
+      } else {
+         decaf_abort("Unexpected texture input format");
       }
 
       auto textureType = mTextureTypes[textureIdx];
@@ -1446,16 +1455,19 @@ public:
       return textureType;
    }
 
-   spv::Id textureVar(uint32_t textureIdx, latte::SQ_TEX_DIM texDim, bool texIsUint)
+   spv::Id textureVar(uint32_t textureIdx, latte::SQ_TEX_DIM texDim, TextureInputType texFormat)
    {
       decaf_check(textureIdx < latte::MaxTextures);
 
       auto textureId = mTextures[textureIdx];
       if (!textureId) {
-         textureId = createVariable(spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim, texIsUint));
+         textureId = createVariable(spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim, texFormat));
          addName(textureId, fmt::format("TEXTURE_{}", textureIdx).c_str());
-         addDecoration(textureId, spv::DecorationDescriptorSet, mDescriptorSetIndex);
-         addDecoration(textureId, spv::DecorationBinding, latte::MaxSamplers + textureIdx);
+
+         auto bindingIdx = mBindingBase + latte::MaxSamplers + textureIdx;
+
+         addDecoration(textureId, spv::DecorationDescriptorSet, 0);
+         addDecoration(textureId, spv::DecorationBinding, bindingIdx);
 
          mTextures[textureIdx] = textureId;
       }
@@ -1832,6 +1844,17 @@ public:
       return mUniformBuffers[bufferIdx] != spv::NoResult;
    }
 
+   bool isStreamOutUsed(uint32_t bufferIdx) const
+   {
+      decaf_check(bufferIdx <= latte::MaxStreamOutBuffers);
+      return !mMemWriteExports[bufferIdx].empty();
+   }
+
+   bool isPixelOutUsed(uint32_t exportIdx) const
+   {
+      return mPixelExports.find(exportIdx) != mPixelExports.end();
+   }
+
    int getNumPosExports()
    {
       return (int)mPosExports.size();
@@ -1850,7 +1873,7 @@ public:
 protected:
    std::vector<std::pair<GprChanRef, spv::Id>> mAluGroupWrites;
 
-   int mDescriptorSetIndex = 0;
+   uint32_t mBindingBase;
    spv::Instruction *mEntryPoint = nullptr;
    std::unordered_map<std::string, spv::Function*> mFunctions;
 

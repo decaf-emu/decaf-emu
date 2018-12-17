@@ -159,7 +159,7 @@ void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
    loop.body = &mSpv->makeNewBlock();
    loop.merge = &mSpv->makeNewBlock();
    loop.continue_target = &mSpv->makeNewBlock();
-   loopStack.emplace_back(loop);
+   mLoopStack.emplace_back(loop);
 
    mSpv->createBranch(loop.head);
    mSpv->setBuildPoint(loop.head);
@@ -195,7 +195,7 @@ void Transpiler::translateCf_LOOP_START_NO_AL(const ControlFlowInst &cf)
 
 void Transpiler::translateCf_LOOP_END(const ControlFlowInst &cf)
 {
-   auto loop = loopStack.back();
+   auto loop = mLoopStack.back();
 
    // Sanity check to ensure we are at the correct cfPC
    decaf_check(mCfPC == loop.endPC);
@@ -211,7 +211,7 @@ void Transpiler::translateCf_LOOP_END(const ControlFlowInst &cf)
    mSpv->createConditionalBranch(predContinue, loop.head, loop.merge);
 
    mSpv->setBuildPoint(loop.merge);
-   loopStack.pop_back();
+   mLoopStack.pop_back();
 
    // LOOP_END ignores POP_COUNT as per R600 ISA Documentation
    mSpv->popStack(1);

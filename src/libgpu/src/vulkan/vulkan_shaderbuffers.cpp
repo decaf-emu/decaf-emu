@@ -104,7 +104,7 @@ Driver::checkCurrentShaderBuffers()
 
       if (mCurrentDraw->vertexShader) {
          for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
-            if (mCurrentDraw->vertexShader->shader.cbufferUsed[blockIdx]) {
+            if (mCurrentDraw->vertexShader->shader.meta.cbufferUsed[blockIdx]) {
                updateDrawUniformBuffer(ShaderStage::Vertex, blockIdx);
             } else {
                mCurrentDraw->uniformBlocks[0][blockIdx] = nullptr;
@@ -118,7 +118,7 @@ Driver::checkCurrentShaderBuffers()
 
       if (mCurrentDraw->geometryShader) {
          for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
-            if (mCurrentDraw->geometryShader->shader.cbufferUsed[blockIdx]) {
+            if (mCurrentDraw->geometryShader->shader.meta.cbufferUsed[blockIdx]) {
                updateDrawUniformBuffer(ShaderStage::Geometry, blockIdx);
             } else {
                mCurrentDraw->uniformBlocks[1][blockIdx] = nullptr;
@@ -132,7 +132,7 @@ Driver::checkCurrentShaderBuffers()
 
       if (mCurrentDraw->pixelShader) {
          for (auto blockIdx = 0; blockIdx < latte::MaxUniformBlocks; ++blockIdx) {
-            if (mCurrentDraw->pixelShader->shader.cbufferUsed[blockIdx]) {
+            if (mCurrentDraw->pixelShader->shader.meta.cbufferUsed[blockIdx]) {
                updateDrawUniformBuffer(ShaderStage::Pixel, blockIdx);
             } else {
                mCurrentDraw->uniformBlocks[2][blockIdx] = nullptr;

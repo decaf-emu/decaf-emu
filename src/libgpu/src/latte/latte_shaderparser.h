@@ -343,6 +343,15 @@ public:
       }
    }
 
+   virtual void reset()
+   {
+      mIsFunction = false;
+      mReachedEop = false;
+      mCfPC = 0;
+      mGroupPC = 0;
+      mTexVtxPC = 0;
+   }
+
 protected:
    // Input
    Type mType = Type::Unknown;

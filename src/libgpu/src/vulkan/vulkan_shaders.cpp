@@ -10,6 +10,28 @@
 namespace vulkan
 {
 
+spirv::TextureInputType
+spirvTextureTypeFromLatte(latte::SQ_NUM_FORMAT format)
+{
+   if (format == latte::SQ_NUM_FORMAT::INT) {
+      return spirv::TextureInputType::INT;
+   }
+   return spirv::TextureInputType::FLOAT;
+}
+
+spirv::PixelOutputType
+spirvPixelTypeFromLatte(latte::CB_NUMBER_TYPE format)
+{
+   switch (format) {
+   case latte::CB_NUMBER_TYPE::SINT:
+      return spirv::PixelOutputType::SINT;
+   case latte::CB_NUMBER_TYPE::UINT:
+      return spirv::PixelOutputType::UINT;
+   default:
+      return spirv::PixelOutputType::FLOAT;
+   }
+}
+
 spirv::VertexShaderDesc
 Driver::getVertexShaderDesc()
 {
@@ -60,30 +82,20 @@ Driver::getVertexShaderDesc()
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       shaderDesc.texDims[i] = sq_tex_resource_word0.DIM();
-      shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
+      shaderDesc.texFormat[i] = spirvTextureTypeFromLatte(sq_tex_resource_word4.NUM_FORMAT_ALL());
    }
-
-   shaderDesc.generateRectStub = mCurrentDraw->isRectDraw;
 
    shaderDesc.regs.sq_pgm_resources_vs = getRegister<latte::SQ_PGM_RESOURCES_VS>(latte::Register::SQ_PGM_RESOURCES_VS);
    shaderDesc.regs.pa_cl_vs_out_cntl = getRegister<latte::PA_CL_VS_OUT_CNTL>(latte::Register::PA_CL_VS_OUT_CNTL);
-   shaderDesc.regs.spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
 
    for (auto i = 0u; i < 32; ++i) {
       shaderDesc.regs.sq_vtx_semantics[i] = getRegister<latte::SQ_VTX_SEMANTIC_N>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4);
-   }
-
-   for (auto i = 0; i < 10; ++i) {
-      shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
    }
 
    for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
       // Note that these registers are not contiguous!
       shaderDesc.streamOutStride[i] = getRegister<uint32_t>(latte::Register::VGT_STRMOUT_VTX_STRIDE_0 + i * 16) << 2;
    }
-
-   shaderDesc.instanceStepRates[0] = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_0);
-   shaderDesc.instanceStepRates[1] = getRegister<uint32_t>(latte::Register::VGT_INSTANCE_STEP_RATE_1);
 
    return shaderDesc;
 }
@@ -140,19 +152,14 @@ Driver::getGeometryShaderDesc()
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       shaderDesc.texDims[i] = sq_tex_resource_word0.DIM();
-      shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
+      shaderDesc.texFormat[i] = spirvTextureTypeFromLatte(sq_tex_resource_word4.NUM_FORMAT_ALL());
    }
 
    shaderDesc.regs.sq_gs_vert_itemsize = getRegister<latte::SQ_GS_VERT_ITEMSIZE>(latte::Register::SQ_GS_VERT_ITEMSIZE);
    shaderDesc.regs.vgt_gs_out_prim_type = getRegister<latte::VGT_GS_OUT_PRIMITIVE_TYPE>(latte::Register::VGT_GS_OUT_PRIM_TYPE);
    shaderDesc.regs.vgt_gs_mode = getRegister<latte::VGT_GS_MODE>(latte::Register::VGT_GS_MODE);
    shaderDesc.regs.sq_gsvs_ring_itemsize = getRegister<uint32_t>(latte::Register::SQ_GSVS_RING_ITEMSIZE);
-   shaderDesc.regs.spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
    shaderDesc.regs.pa_cl_vs_out_cntl = getRegister<latte::PA_CL_VS_OUT_CNTL>(latte::Register::PA_CL_VS_OUT_CNTL);
-
-   for (auto i = 0; i < 10; ++i) {
-      shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
-   }
 
    for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
       // Note that these registers are not contiguous!
@@ -193,21 +200,7 @@ Driver::getPixelShaderDesc()
 
    for (auto i = 0; i < latte::MaxRenderTargets; ++i) {
       auto cb_color_info = getRegister<latte::CB_COLORN_INFO>(latte::Register::CB_COLOR0_INFO + i * 4);
-
-      spirv::ColorOutputType pixelOutType;
-      switch (cb_color_info.NUMBER_TYPE()) {
-      case latte::CB_NUMBER_TYPE::SINT:
-         pixelOutType = spirv::ColorOutputType::SINT;
-         break;
-      case latte::CB_NUMBER_TYPE::UINT:
-         pixelOutType = spirv::ColorOutputType::UINT;
-         break;
-      default:
-         pixelOutType = spirv::ColorOutputType::FLOAT;
-         break;
-      }
-
-      shaderDesc.pixelOutType[i] = pixelOutType;
+      shaderDesc.pixelOutType[i] = spirvPixelTypeFromLatte(cb_color_info.NUMBER_TYPE());
    }
 
    for (auto i = 0; i < latte::MaxTextures; ++i) {
@@ -215,13 +208,7 @@ Driver::getPixelShaderDesc()
       auto sq_tex_resource_word0 = getRegister<latte::SQ_TEX_RESOURCE_WORD0_N>(latte::Register::SQ_RESOURCE_WORD0_0 + 4 * resourceOffset);
       auto sq_tex_resource_word4 = getRegister<latte::SQ_TEX_RESOURCE_WORD4_N>(latte::Register::SQ_RESOURCE_WORD4_0 + 4 * resourceOffset);
       shaderDesc.texDims[i] = sq_tex_resource_word0.DIM();
-      shaderDesc.texIsUint[i] = (sq_tex_resource_word4.NUM_FORMAT_ALL() == latte::SQ_NUM_FORMAT::INT);
-   }
-
-   auto sx_alpha_test_control = getRegister<latte::SX_ALPHA_TEST_CONTROL>(latte::Register::SX_ALPHA_TEST_CONTROL);
-   shaderDesc.alphaRefFunc = sx_alpha_test_control.ALPHA_FUNC();
-   if (!sx_alpha_test_control.ALPHA_TEST_ENABLE() || sx_alpha_test_control.ALPHA_TEST_BYPASS()) {
-      shaderDesc.alphaRefFunc = latte::REF_FUNC::ALWAYS;
+      shaderDesc.texFormat[i] = spirvTextureTypeFromLatte(sq_tex_resource_word4.NUM_FORMAT_ALL());
    }
 
    shaderDesc.regs.sq_pgm_resources_ps = getRegister<latte::SQ_PGM_RESOURCES_PS>(latte::Register::SQ_PGM_RESOURCES_PS);
@@ -229,21 +216,18 @@ Driver::getPixelShaderDesc()
 
    shaderDesc.regs.spi_ps_in_control_0 = getRegister<latte::SPI_PS_IN_CONTROL_0>(latte::Register::SPI_PS_IN_CONTROL_0);
    shaderDesc.regs.spi_ps_in_control_1 = getRegister<latte::SPI_PS_IN_CONTROL_1>(latte::Register::SPI_PS_IN_CONTROL_1);
-
-   for (auto i = 0; i < 32; ++i) {
-      shaderDesc.regs.spi_ps_input_cntls[i] = getRegister<latte::SPI_PS_INPUT_CNTL_N>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
-   }
+   shaderDesc.regs.spi_vs_out_config = getRegister<latte::SPI_VS_OUT_CONFIG>(latte::Register::SPI_VS_OUT_CONFIG);
 
    shaderDesc.regs.cb_shader_control = getRegister<latte::CB_SHADER_CONTROL>(latte::Register::CB_SHADER_CONTROL);
    shaderDesc.regs.cb_shader_mask = getRegister<latte::CB_SHADER_MASK>(latte::Register::CB_SHADER_MASK);
    shaderDesc.regs.db_shader_control = getRegister<latte::DB_SHADER_CONTROL>(latte::Register::DB_SHADER_CONTROL);
 
-   if (!mCurrentDraw->geometryShader) {
-      auto vsShader = reinterpret_cast<const spirv::VertexShader*>(&mCurrentDraw->vertexShader->shader);
-      shaderDesc.vsOutputSemantics = vsShader->outputSemantics;
-   } else {
-      auto gsShader = reinterpret_cast<const spirv::GeometryShader*>(&mCurrentDraw->geometryShader->shader);
-      shaderDesc.vsOutputSemantics = gsShader->outputSemantics;
+   for (auto i = 0; i < 32; ++i) {
+      shaderDesc.regs.spi_ps_input_cntls[i] = getRegister<latte::SPI_PS_INPUT_CNTL_N>(latte::Register::SPI_PS_INPUT_CNTL_0 + i * 4);
+   }
+
+   for (auto i = 0; i < 10; ++i) {
+      shaderDesc.regs.spi_vs_out_ids[i] = getRegister<latte::SPI_VS_OUT_ID_N>(latte::Register::SPI_VS_OUT_ID_0 + i * 4);
    }
 
    return shaderDesc;
@@ -385,30 +369,23 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
       auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
       binFile.write(reinterpret_cast<const char*>(shader->binary.data()),
                     shader->binary.size() * sizeof(shader->binary[0]));
-
-      // SPIRV Binary Output for Rect Stub
-      if (desc->type == spirv::ShaderType::Vertex) {
-         auto vsShader = reinterpret_cast<spirv::VertexShader*>(shader);
-         if (!vsShader->rectStubBinary.empty()) {
-            auto binFilePath = fmt::format("dump/{}.rects.spv", shaderName);
-            auto binFile = std::ofstream { binFilePath, std::ofstream::out | std::ofstream::binary };
-            binFile.write(reinterpret_cast<const char*>(vsShader->rectStubBinary.data()),
-                          vsShader->rectStubBinary.size() * sizeof(vsShader->rectStubBinary[0]));
-         }
-      }
    }
 }
 
 bool
 Driver::checkCurrentVertexShader()
 {
-   HashedDesc<spirv::VertexShaderDesc> currentDesc = getVertexShaderDesc();
+   // We defer the hashing until after we check if this shader is even
+   // actually enabled or not...  Performance !
+   auto currentDescPrehash = getVertexShaderDesc();
 
    // Check if the shader stage is disabled
-   if (currentDesc->type == spirv::ShaderType::Unknown) {
+   if (currentDescPrehash.type == spirv::ShaderType::Unknown) {
       mCurrentDraw->vertexShader = nullptr;
       return true;
    }
+
+   HashedDesc<spirv::VertexShaderDesc> currentDesc = currentDescPrehash;
 
    if (mCurrentDraw->vertexShader && mCurrentDraw->vertexShader->desc == currentDesc) {
       // Already active, nothing to do.
@@ -439,12 +416,6 @@ Driver::checkCurrentVertexShader()
    auto shaderAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(currentDesc->binary.data()));
    setVkObjectName(module, fmt::format("vs_{:08x}", shaderAddr).c_str());
 
-   if (!foundShader->shader.rectStubBinary.empty()) {
-      auto rectStubModule = mDevice.createShaderModule(
-         vk::ShaderModuleCreateInfo({}, foundShader->shader.rectStubBinary.size() * 4, foundShader->shader.rectStubBinary.data()));
-      foundShader->rectStubModule = rectStubModule;
-   }
-
    mCurrentDraw->vertexShader = foundShader;
    return true;
 }
@@ -452,13 +423,17 @@ Driver::checkCurrentVertexShader()
 bool
 Driver::checkCurrentGeometryShader()
 {
-   HashedDesc<spirv::GeometryShaderDesc> currentDesc = getGeometryShaderDesc();
+   // We defer the hashing until after we check if this shader is even
+   // actually enabled or not...  Performance !
+   auto currentDescPrehash = getGeometryShaderDesc();
 
    // Check if the shader stage is disabled
-   if (currentDesc->type == spirv::ShaderType::Unknown) {
+   if (currentDescPrehash.type == spirv::ShaderType::Unknown) {
       mCurrentDraw->geometryShader = nullptr;
       return true;
    }
+
+   HashedDesc<spirv::GeometryShaderDesc> currentDesc = currentDescPrehash;
 
    if (mCurrentDraw->geometryShader && mCurrentDraw->geometryShader->desc == currentDesc) {
       // Already active, nothing to do.
@@ -493,15 +468,20 @@ Driver::checkCurrentGeometryShader()
    return true;
 }
 
-bool Driver::checkCurrentPixelShader()
+bool
+Driver::checkCurrentPixelShader()
 {
-   HashedDesc<spirv::PixelShaderDesc> currentDesc = getPixelShaderDesc();
+   // We defer the hashing until after we check if this shader is even
+   // actually enabled or not...  Performance !
+   auto currentDescPrehash = getPixelShaderDesc();
 
    // Check if the shader stage is disabled
-   if (currentDesc->type == spirv::ShaderType::Unknown) {
+   if (currentDescPrehash.type == spirv::ShaderType::Unknown) {
       mCurrentDraw->pixelShader = nullptr;
       return true;
    }
+
+   HashedDesc<spirv::PixelShaderDesc> currentDesc = currentDescPrehash;
 
    if (mCurrentDraw->pixelShader && mCurrentDraw->pixelShader->desc == currentDesc) {
       // Already active, nothing to do.
@@ -533,6 +513,47 @@ bool Driver::checkCurrentPixelShader()
    setVkObjectName(module, fmt::format("ps_{:08x}", shaderAddr).c_str());
 
    mCurrentDraw->pixelShader = foundShader;
+   return true;
+}
+
+bool
+Driver::checkCurrentRectStubShader()
+{
+   if (!mCurrentDraw->isRectDraw) {
+      mCurrentDraw->rectStubShader = nullptr;
+      return true;
+   }
+
+   decaf_check(mCurrentDraw->vertexShader);
+
+   HashedDesc<spirv::RectStubShaderDesc> currentDesc =
+      spirv::generateRectSubShaderDesc(&mCurrentDraw->vertexShader->shader);
+
+   if (mCurrentDraw->rectStubShader && mCurrentDraw->rectStubShader->desc == currentDesc) {
+      // Already active, nothing to do.
+      return true;
+   }
+
+   auto& foundShader = mRectStubShaders[currentDesc.hash()];
+   if (foundShader) {
+      mCurrentDraw->rectStubShader = foundShader;
+      return true;
+   }
+
+   foundShader = new RectStubShaderObject();
+   foundShader->desc = currentDesc;
+
+   if (!spirv::generateRectStub(*currentDesc, &foundShader->shader)) {
+      decaf_abort("Failed to generate rect stub shader");
+   }
+
+   auto module = mDevice.createShaderModule(
+      vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));
+   foundShader->module = module;
+
+   setVkObjectName(module, fmt::format("rstub_{}", currentDesc->numVsExports).c_str());
+
+   mCurrentDraw->rectStubShader = foundShader;
    return true;
 }
 

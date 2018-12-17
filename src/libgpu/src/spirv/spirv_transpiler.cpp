@@ -110,9 +110,7 @@ void Transpiler::translateCfAluInst(const ControlFlowInst& cf)
 
 void Transpiler::translate()
 {
-   for (auto i = 0u; i < latte::MaxAttribBuffers; ++i) {
-      mVsInputBuffers[i].isUsed = false;
-   }
+   ShaderParser::reset();
 
    writeCfAluUnitLine(mType, -1, -1, -1);
 
@@ -157,7 +155,7 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
    auto zSpaceMulVal = spvGen.createLoad(zSpaceMulPtr);
    auto vertexBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 2 });
    auto vertexBaseVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.intType(), vertexBaseFlt);
-   auto instanceBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 2 });
+   auto instanceBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 3 });
    auto instanceBaseVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.intType(), instanceBaseFlt);
 
    auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar());
@@ -274,7 +272,25 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
    for (auto i = 0u; i < numInputs; ++i) {
       auto &spi_ps_input_cntl = desc.regs.spi_ps_input_cntls[i];
       auto gprRef = spvGen.getGprRef({ i, latte::GprIndexMode::None });
-      auto semLocation = findVsOutputLocation(desc.vsOutputSemantics, spi_ps_input_cntl.SEMANTIC());
+      auto inputSemantic = spi_ps_input_cntl.SEMANTIC();
+
+      // Locate the vertex shader output that matches
+      int semLocation = -1;
+      for (auto i = 0; i < 10; ++i) {
+         if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_0()) {
+            semLocation = i * 4 + 0;
+            break;
+         } else if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_1()) {
+            semLocation = i * 4 + 1;
+            break;
+         } else if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_2()) {
+            semLocation = i * 4 + 2;
+            break;
+         } else if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_3()) {
+            semLocation = i * 4 + 3;
+            break;
+         }
+      }
 
       if (desc.regs.spi_ps_in_control_0.POSITION_ENA() &&
           desc.regs.spi_ps_in_control_0.POSITION_ADDR() == i) {
@@ -418,36 +434,42 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    spvGen.setSourceFile("none");
 
    state.mSpv = &spvGen;
-   state.mDesc = &shaderDesc;
    state.mBinary = shaderDesc.binary;
    state.mAluInstPreferVector = shaderDesc.aluInstPreferVector;
+
+   state.mTexDims = shaderDesc.texDims;
+   state.mTexFormats = shaderDesc.texFormat;
 
    if (shaderDesc.type == ShaderType::Vertex) {
       auto &vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
 
-      state.mTexInput = vsDesc.texDims;
-      state.mTexIsUint = vsDesc.texIsUint;
+      spvGen.setBindingBase(48 * 0);
+
+      state.mSqVtxSemantics = vsDesc.regs.sq_vtx_semantics;
+      state.mPaClVsOutCntl = vsDesc.regs.pa_cl_vs_out_cntl;
       state.mStreamOutStride = vsDesc.streamOutStride;
 
-      spvGen.setDescriptorSetIdx(0);
       Transpiler::writeVertexProlog(spvGen, vsDesc);
    } else if (shaderDesc.type == ShaderType::Geometry) {
       auto &gsDesc = *reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
 
-      state.mTexInput = gsDesc.texDims;
-      state.mTexIsUint = gsDesc.texIsUint;
+      spvGen.setBindingBase(48 * 1);
+
+      state.mPaClVsOutCntl = gsDesc.regs.pa_cl_vs_out_cntl;
       state.mStreamOutStride = gsDesc.streamOutStride;
 
-      spvGen.setDescriptorSetIdx(1);
       Transpiler::writeGeometryProlog(spvGen, gsDesc);
    } else if (shaderDesc.type == ShaderType::Pixel) {
       auto &psDesc = *reinterpret_cast<const PixelShaderDesc*>(&shaderDesc);
 
-      state.mPixelOutType = psDesc.pixelOutType;
-      state.mTexInput = psDesc.texDims;
-      state.mTexIsUint = psDesc.texIsUint;
+      spvGen.setBindingBase(48 * 2);
 
-      spvGen.setDescriptorSetIdx(2);
+      state.mPixelOutType = psDesc.pixelOutType;
+      state.mSqPgmExportsPs = psDesc.regs.sq_pgm_exports_ps;
+      state.mCbShaderControl = psDesc.regs.cb_shader_control;
+      state.mCbShaderMask = psDesc.regs.cb_shader_mask;
+      state.mDbShaderControl = psDesc.regs.db_shader_control;
+
       Transpiler::writePixelProlog(spvGen, psDesc);
    }
 
@@ -466,6 +488,25 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       }
    }
 
+   ShaderMeta genericMeta;
+
+   for (auto i = 0u; i < latte::MaxSamplers; ++i) {
+      genericMeta.samplerUsed[i] = spvGen.isSamplerUsed(i);
+   }
+   for (auto i = 0u; i < latte::MaxTextures; ++i) {
+      genericMeta.textureUsed[i] = spvGen.isTextureUsed(i);
+   }
+
+   genericMeta.cfileUsed = spvGen.isConstantFileUsed();
+
+   for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
+      auto cbufferUsed = spvGen.isUniformBufferUsed(i);
+      genericMeta.cbufferUsed[i] = cbufferUsed;
+      if (genericMeta.cfileUsed && cbufferUsed) {
+         decaf_abort("Shader used both constant buffers and the constants file");
+      }
+   }
+
    if (shaderDesc.type == ShaderType::Vertex) {
       auto& vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
       auto vsShader = reinterpret_cast<VertexShader*>(shader);
@@ -474,49 +515,22 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          auto fsFunc = spvGen.getFunction("fs_main");
          spvGen.setBuildPoint(fsFunc->getEntryBlock());
 
-         auto fsState = Transpiler {};
-         fsState.mSpv = &spvGen;
-         fsState.mDesc = &shaderDesc;
-         fsState.mType = ShaderParser::Type::Fetch;
-         fsState.mBinary = vsDesc.fsBinary;
-         fsState.mAluInstPreferVector = vsDesc.aluInstPreferVector;
-         fsState.translate();
+         state.mType = ShaderParser::Type::Fetch;
+         state.mBinary = vsDesc.fsBinary;
+         state.translate();
+
+         // Write the return statement at the end of the function
          spvGen.makeReturn(true);
-
-         // Copy the FS attribute buffer stuff over.  We check to make sure that
-         // the vertex shader didn't also try to read stuff (this would be an error).
-         decaf_check(state.mVsInputAttribs.size() == 0);
-         state.mVsInputBuffers = fsState.mVsInputBuffers;
-         state.mVsInputAttribs = fsState.mVsInputAttribs;
       }
 
-      // For each exported parameter, we need to exports the semantics for
-      // later matching up by the pixel shaders
-      int numExports = spvGen.getNumParamExports();
-      for (auto i = 0; i < numExports; ++i) {
-         uint8_t semanticId;
+      static_cast<ShaderMeta&>(vsShader->meta) = genericMeta;
+      vsShader->meta.numExports = spvGen.getNumParamExports();
+      vsShader->meta.attribBuffers = state.mAttribBuffers;
+      vsShader->meta.attribElems = state.mAttribElems;
 
-         // TODO: This should probably be moved into the actual export generation
-         // code instead of being calculated later and assuming the order of the
-         // exports matches up with the code...
-         if ((i & 3) == 0) {
-            semanticId = vsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_0();
-         } else if ((i & 3) == 1) {
-            semanticId = vsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_1();
-         } else if ((i & 3) == 2) {
-            semanticId = vsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_2();
-         } else if ((i & 3) == 3) {
-            semanticId = vsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_3();
-         }
-
-         vsShader->outputSemantics[i] = semanticId;
+      for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
+         vsShader->meta.streamOutUsed[i] = spvGen.isStreamOutUsed(i);
       }
-      for (auto i = numExports; i < 40; ++i) {
-         vsShader->outputSemantics[i] = 0xF0;
-      }
-
-      vsShader->inputBuffers = state.mVsInputBuffers;
-      vsShader->inputAttribs = state.mVsInputAttribs;
    } else if (shaderDesc.type == ShaderType::Geometry) {
       auto& gsDesc = *reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
       auto gsShader = reinterpret_cast<GeometryShader*>(shader);
@@ -531,14 +545,9 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          spvGen.createNoResultOp(spv::OpCopyMemory, { gprSaveVar, spvGen.gprVar() });
 
          // Translate the shader
-         auto dcState = Transpiler {};
-         dcState.mSpv = &spvGen;
-         dcState.mDesc = &shaderDesc;
-         dcState.mType = ShaderParser::Type::DataCache;
-         dcState.mBinary = gsDesc.dcBinary;
-         dcState.mAluInstPreferVector = gsDesc.aluInstPreferVector;
-         dcState.mStreamOutStride = gsDesc.streamOutStride;
-         dcState.translate();
+         state.mType = ShaderParser::Type::DataCache;
+         state.mBinary = gsDesc.dcBinary;
+         state.translate();
 
          // We need to increment the ring offset at the end of each.  Note that we only
          // support striding in vec4 intervals.
@@ -554,66 +563,27 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          // Restore our GPRs
          spvGen.createNoResultOp(spv::OpCopyMemory, { spvGen.gprVar(), gprSaveVar });
 
-         // Done!
+         // Write the return statement at the end of the function
          spvGen.makeReturn(true);
       }
 
-      // For each exported parameter, we need to exports the semantics for
-      // later matching up by the pixel shaders
-      int numExports = spvGen.getNumParamExports();
-      for (auto i = 0; i < numExports; ++i) {
-         uint8_t semanticId;
+      static_cast<ShaderMeta&>(gsShader->meta) = genericMeta;
 
-         // TODO: This should probably be moved into the actual export generation
-         // code instead of being calculated later and assuming the order of the
-         // exports matches up with the code...
-         if ((i & 3) == 0) {
-            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_0();
-         } else if ((i & 3) == 1) {
-            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_1();
-         } else if ((i & 3) == 2) {
-            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_2();
-         } else if ((i & 3) == 3) {
-            semanticId = gsDesc.regs.spi_vs_out_ids[i >> 2].SEMANTIC_3();
-         }
-
-         gsShader->outputSemantics[i] = semanticId;
+      for (auto i = 0; i < latte::MaxStreamOutBuffers; ++i) {
+         gsShader->meta.streamOutUsed[i] = spvGen.isStreamOutUsed(i);
       }
-      for (auto i = numExports; i < 40; ++i) {
-         gsShader->outputSemantics[i] = 0xF0;
+   } else if (shaderDesc.type == ShaderType::Pixel) {
+      auto psShader = reinterpret_cast<PixelShader*>(shader);
+
+      static_cast<ShaderMeta&>(psShader->meta) = genericMeta;
+
+      for (auto i = 0; i < latte::MaxRenderTargets; ++i) {
+         psShader->meta.pixelOutUsed[i] = spvGen.isPixelOutUsed(i);
       }
-   }
-
-   for (auto i = 0u; i < latte::MaxSamplers; ++i) {
-      shader->samplerUsed[i] = spvGen.isSamplerUsed(i);
-   }
-   for (auto i = 0u; i < latte::MaxTextures; ++i) {
-      shader->textureUsed[i] = spvGen.isTextureUsed(i);
-   }
-
-   bool cbuffersUsed = false;
-   for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-      auto cbufferUsed = spvGen.isUniformBufferUsed(i);
-      shader->cbufferUsed[i] = cbufferUsed;
-      cbuffersUsed |= cbufferUsed;
-   }
-
-   bool cfileUsed = spvGen.isConstantFileUsed();
-   if (cfileUsed && cbuffersUsed) {
-      decaf_abort("Shader used both constant buffers and the constants file");
    }
 
    shader->binary.clear();
    spvGen.dump(shader->binary);
-
-   if (shaderDesc.type == ShaderType::Vertex) {
-      auto& vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
-      if (vsDesc.generateRectStub) {
-         int numExports = spvGen.getNumParamExports();
-         auto vsShader = reinterpret_cast<VertexShader*>(shader);
-         vsShader->rectStubBinary = state.generateRectStub(numExports);
-      }
-   }
 
    return true;
 }
@@ -623,8 +593,15 @@ bool translate(const ShaderDesc& shaderDesc, Shader *shader)
    return Transpiler::translate(shaderDesc, shader);
 }
 
-std::vector<unsigned int>
-Transpiler::generateRectStub(int numExports)
+RectStubShaderDesc
+generateRectSubShaderDesc(VertexShader *vertexShader)
+{
+   RectStubShaderDesc desc;
+   desc.numVsExports = vertexShader->meta.numExports;
+   return desc;
+}
+
+bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shader)
 {
    SpvBuilder spvGen;
 
@@ -664,7 +641,7 @@ Transpiler::generateRectStub(int numExports)
    std::vector<spv::Id> inputParams;
    std::vector<spv::Id> outputParams;
 
-   for (auto i = 0; i < numExports; ++i) {
+   for (auto i = 0u; i < shaderDesc.numVsExports; ++i) {
       auto paramType = spvGen.float4Type();
       auto paramInVarType = spvGen.makeArrayType(paramType, fourConst, 0);
       auto paramInVar = spvGen.createVariable(spv::StorageClassInput, paramInVarType, fmt::format("PARAM_{}_IN", i).c_str());
@@ -686,7 +663,7 @@ Transpiler::generateRectStub(int numExports)
       auto posInVal = spvGen.createLoad(posIn0Ptr);
       spvGen.createStore(posInVal, posOutPtr);
 
-      for (auto i = 0; i < numExports; ++i) {
+      for (auto i = 0u; i < shaderDesc.numVsExports; ++i) {
          auto paramInPtr = spvGen.createAccessChain(spv::StorageClassInput, inputParams[i], { vtxIdConst });
          auto paramOutPtr = outputParams[i];
          auto paramInVal = spvGen.createLoad(paramInPtr);
@@ -781,9 +758,10 @@ Transpiler::generateRectStub(int numExports)
 
    spvGen.makeReturn(true);
 
-   std::vector<unsigned int> output;
-   spvGen.dump(output);
-   return output;
+   shader->binary.clear();
+   spvGen.dump(shader->binary);
+
+   return true;
 }
 
 std::string

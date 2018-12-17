@@ -7,32 +7,18 @@ namespace spirv
 using namespace latte;
 
 static inline VarRefType
-getPixelVarType(ColorOutputType pixelType)
+getPixelVarType(PixelOutputType pixelType)
 {
    switch (pixelType) {
-   case ColorOutputType::FLOAT:
+   case PixelOutputType::FLOAT:
       return VarRefType::FLOAT;
-   case ColorOutputType::SINT:
+   case PixelOutputType::SINT:
       return VarRefType::INT;
-   case ColorOutputType::UINT:
+   case PixelOutputType::UINT:
       return VarRefType::UINT;
    }
 
    decaf_abort("Unexpected color output type")
-}
-
-static inline latte::PA_CL_VS_OUT_CNTL
-getPaClVsOutCntl(const ShaderDesc *desc)
-{
-   if (desc->type == ShaderType::Vertex) {
-      auto vsDesc = reinterpret_cast<const VertexShaderDesc*>(desc);
-      return vsDesc->regs.pa_cl_vs_out_cntl;
-   } else if (desc->type == ShaderType::Geometry) {
-      auto gsDesc = reinterpret_cast<const GeometryShaderDesc*>(desc);
-      return gsDesc->regs.pa_cl_vs_out_cntl;
-   } else {
-      decaf_abort("Unexpected shader type for PA_CL_VS_OUT_CNTL fetch")
-   }
 }
 
 static inline void
@@ -123,37 +109,36 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
          if (exportRef.output.type == ExportRef::Type::Pixel ||
              exportRef.output.type == ExportRef::Type::PixelWithFog) {
             auto pixelFormat = mPixelOutType[exportRef.output.arrayBase];
-            if (pixelFormat == ColorOutputType::FLOAT) {
+            if (pixelFormat == PixelOutputType::FLOAT) {
                // We are already in the right format, nothing to do here...
-            } else if (pixelFormat == ColorOutputType::SINT) {
+            } else if (pixelFormat == PixelOutputType::SINT) {
                sourceVal = mSpv->createUnaryOp(spv::OpBitcast, mSpv->int4Type(), sourceVal);
-            } else if (pixelFormat == ColorOutputType::UINT) {
+            } else if (pixelFormat == PixelOutputType::UINT) {
                sourceVal = mSpv->createUnaryOp(spv::OpBitcast, mSpv->uint4Type(), sourceVal);
             }
          }
 
          // Apply the appropriate masking.
-         auto psDesc = reinterpret_cast<const PixelShaderDesc*>(mDesc);
          if (exportRef.output.type == ExportRef::Type::Pixel ||
              exportRef.output.type == ExportRef::Type::PixelWithFog) {
 
             // Calculate that the number of exports we expect matchs our number
             // of enabled rendertargets, or the search below will fail.
-            auto numExports = psDesc->regs.sq_pgm_exports_ps.EXPORT_MODE() >> 1;
+            auto numExports = mSqPgmExportsPs.EXPORT_MODE() >> 1;
             auto rtExports = 0;
-            rtExports += psDesc->regs.cb_shader_control.RT0_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT1_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT2_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT3_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT4_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT5_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT6_ENABLE() ? 1 : 0;
-            rtExports += psDesc->regs.cb_shader_control.RT7_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT0_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT1_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT2_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT3_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT4_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT5_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT6_ENABLE() ? 1 : 0;
+            rtExports += mCbShaderControl.RT7_ENABLE() ? 1 : 0;
             decaf_check(rtExports == numExports);
 
             // Skip over render targets which are not being written.
             do {
-               auto rtEnabled = !!((psDesc->regs.cb_shader_control.value >> exportRef.output.arrayBase) & 0x1);
+               auto rtEnabled = !!((mCbShaderControl.value >> exportRef.output.arrayBase) & 0x1);
                if (rtEnabled) {
                   break;
                }
@@ -162,7 +147,7 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
             } while (exportRef.output.arrayBase < 8);
             decaf_check(exportRef.output.arrayBase < 8);
 
-            auto compMask = (psDesc->regs.cb_shader_mask.value >> (exportRef.output.arrayBase * 4)) & 0xf;
+            auto compMask = (mCbShaderMask.value >> (exportRef.output.arrayBase * 4)) & 0xf;
 
             spv::Id maskXVal, maskYVal, maskZVal, maskWVal;
             auto sourceValType = mSpv->getTypeId(sourceVal);
@@ -200,7 +185,7 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
          }
 
          if (exportRef.output.type == ExportRef::Type::ComputedZ) {
-            if (!psDesc->regs.db_shader_control.Z_EXPORT_ENABLE()) {
+            if (!mDbShaderControl.Z_EXPORT_ENABLE()) {
                // The shader exported a Z, but its not enabled.  Lets skip it.
                skipWrite = true;
             }
@@ -213,7 +198,7 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
             if (exportRef.output.arrayBase == 0) {
                // POS_0 is just a standard position output.
             } else {
-               auto pa_cl_vs_out_cntl = getPaClVsOutCntl(mDesc);
+               auto pa_cl_vs_out_cntl = mPaClVsOutCntl;
 
                // Lets check for things we do not support
                decaf_check(!pa_cl_vs_out_cntl.CLIP_DIST_ENA_0());

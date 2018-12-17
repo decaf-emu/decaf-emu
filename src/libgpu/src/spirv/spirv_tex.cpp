@@ -21,8 +21,8 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
 
    auto textureId = inst.word0.RESOURCE_ID();
    auto samplerId = inst.word2.SAMPLER_ID();
-   auto texDim = mTexInput[textureId];
-   auto texIsUint = mTexIsUint[textureId];
+   auto texDim = mTexDims[textureId];
+   auto texFormat = mTexFormats[textureId];
 
    auto expectedCoordType = SQ_TEX_COORD_TYPE::NORMALIZED;
    if (sampleMode & SampleMode::Load) {
@@ -132,8 +132,8 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       operandParams.push_back(offsetVal);
    }
 
-   auto texVarType = mSpv->textureVarType(textureId, texDim, texIsUint);
-   auto texVar = mSpv->textureVar(textureId, texDim, texIsUint);
+   auto texVarType = mSpv->textureVarType(textureId, texDim, texFormat);
+   auto texVar = mSpv->textureVar(textureId, texDim, texFormat);
    auto texVal = mSpv->createLoad(texVar);
 
    // Lets build our actual operation
@@ -246,7 +246,7 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    spv::Id output = spv::NoResult;
    if (sampleMode & SampleMode::Compare) {
       // We do not support doing depth comparison on a UINT depth buffer
-      decaf_check(!texIsUint);
+      decaf_check(texFormat == TextureInputType::FLOAT);
 
       auto compareVal = mSpv->createOp(sampleOp, mSpv->floatType(), sampleParams);
 
@@ -254,10 +254,12 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       // and do a single component write instead...
       output = mSpv->createCompositeConstruct(mSpv->float4Type(), { compareVal, zeroFVal, zeroFVal, oneFVal });
    } else {
-      if (!texIsUint) {
+      if (texFormat == TextureInputType::FLOAT) {
          output = mSpv->createOp(sampleOp, mSpv->float4Type(), sampleParams);
-      } else {
+      } else if (texFormat == TextureInputType::INT) {
          output = mSpv->createOp(sampleOp, mSpv->uint4Type(), sampleParams);
+      } else {
+         decaf_abort("Unexpected texture format type");
       }
    }
 
@@ -358,8 +360,8 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
 {
    auto textureId = inst.word0.RESOURCE_ID();
    auto samplerId = inst.word2.SAMPLER_ID();
-   auto texDim = mTexInput[textureId];
-   auto texIsUint = mTexIsUint[textureId];
+   auto texDim = mTexDims[textureId];
+   auto texFormat = mTexFormats[textureId];
 
    GprMaskRef srcGpr;
    srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
@@ -378,7 +380,7 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    // We have to register the image-query capability in order to query texture data.
    mSpv->addCapability(spv::CapabilityImageQuery);
 
-   auto texVar = mSpv->textureVar(textureId, texDim, texIsUint);
+   auto texVar = mSpv->textureVar(textureId, texDim, texFormat);
    auto image = mSpv->createLoad(texVar);
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);

@@ -207,8 +207,6 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
    //inst.word2.MEGA_FETCH();
    //inst.word0.MEGA_FETCH_COUNT();
 
-   auto vtxDesc = reinterpret_cast<const VertexShaderDesc*>(mDesc);
-
    GprSelRef srcGpr;
    srcGpr.gpr = makeGprRef(inst.word0.SRC_GPR(), inst.word0.SRC_REL(), SQ_INDEX_MODE::LOOP);
    srcGpr.sel = inst.word0.SRC_SEL_X();
@@ -217,7 +215,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
    decaf_check(srcGpr.gpr.indexMode == GprIndexMode::None);
 
    // Try and locate a matching semantic from the semantic table
-   auto semanticGprIdx = findVtxSemanticGpr(vtxDesc->regs.sq_vtx_semantics, inst.sem.SEMANTIC_ID());
+   auto semanticGprIdx = findVtxSemanticGpr(mSqVtxSemantics, inst.sem.SEMANTIC_ID());
    if (semanticGprIdx < 0) {
       // We didn't find anythign in the semantic table, we can simply
       // ignore this instruction in that case.
@@ -251,21 +249,21 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
    auto attribBufferId = bufferId - attribBase;
    auto bufferOffset = inst.word2.OFFSET();
 
-   InputBuffer::IndexMode indexMode;
-   uint32_t divisor;
+   AttribBuffer::IndexMode indexMode;
+   AttribBuffer::DivisorMode divisorMode;
 
    if (inst.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::VERTEX_DATA) {
-      indexMode = InputBuffer::IndexMode::PerVertex;
-      divisor = 0;
+      indexMode = AttribBuffer::IndexMode::PerVertex;
+      divisorMode = AttribBuffer::DivisorMode::CONST_1;
    } else if (inst.word0.FETCH_TYPE() == SQ_VTX_FETCH_TYPE::INSTANCE_DATA) {
-      indexMode = InputBuffer::IndexMode::PerInstance;
+      indexMode = AttribBuffer::IndexMode::PerInstance;
 
       if (srcGpr.sel == SQ_SEL::SEL_Y) {
-         divisor = vtxDesc->instanceStepRates[0];
+         divisorMode = AttribBuffer::DivisorMode::REGISTER_0;
       } else if (srcGpr.sel == SQ_SEL::SEL_Z) {
-         divisor = vtxDesc->instanceStepRates[1];
+         divisorMode = AttribBuffer::DivisorMode::REGISTER_1;
       } else if (srcGpr.sel == SQ_SEL::SEL_W) {
-         divisor = 1;
+         divisorMode = AttribBuffer::DivisorMode::CONST_1;
       } else {
          decaf_abort("Unexpected vertex fetch divisor selector");
       }
@@ -274,24 +272,24 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
    }
 
    // Set up our buffer information
-   const auto& inputBuffer = mVsInputBuffers[attribBufferId];
+   auto& inputBuffer = mAttribBuffers[attribBufferId];
    if (inputBuffer.isUsed) {
       // If its already in use, confirm matching indexing
       decaf_check(inputBuffer.indexMode == indexMode);
-      decaf_check(inputBuffer.divisor == divisor);
+      decaf_check(inputBuffer.divisorMode == divisorMode);
    } else {
       // If its not in use, lets set this up ourselves.
-      mVsInputBuffers[attribBufferId] = InputBuffer { true, indexMode, divisor };
+      inputBuffer = AttribBuffer { true, indexMode, divisorMode };
    }
 
    // Set up our attribute information
-   InputAttrib inputAttrib;
+   AttribElem inputAttrib;
    inputAttrib.bufferIndex = attribBufferId;
    inputAttrib.offset = bufferOffset;
    inputAttrib.elemWidth = fmtMeta.inputWidth;
    inputAttrib.elemCount = fmtMeta.inputCount;
-   mVsInputAttribs.push_back(inputAttrib);
-   auto inputId = mVsInputAttribs.size() - 1;
+   mAttribElems.push_back(inputAttrib);
+   auto inputId = mAttribElems.size() - 1;
 
    auto swapMode = inst.word2.ENDIAN_SWAP();
    auto formatComp = inst.word1.FORMAT_COMP_ALL();

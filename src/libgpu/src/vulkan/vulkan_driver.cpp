@@ -70,7 +70,9 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    CHECK_VK_RESULT(vmaCreateAllocator(&allocatorDesc, &mAllocator));
 
    // Set up our drawing pipeline layout
-   auto makeStageSet = [&](int stageIndex)
+   std::vector<vk::DescriptorSetLayoutBinding> bindings;
+
+   for (auto stageIndex = 0; stageIndex < 3; ++stageIndex)
    {
       vk::ShaderStageFlags stageFlags;
       if (stageIndex == 0) {
@@ -83,11 +85,11 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
          decaf_abort("Unexpected shader stage index");
       }
 
-      std::vector<vk::DescriptorSetLayoutBinding> bindings;
+      auto bindingBase = 48 * stageIndex;
 
       for (auto i = 0u; i < latte::MaxSamplers; ++i) {
          vk::DescriptorSetLayoutBinding sampBindingDesc;
-         sampBindingDesc.binding = i;
+         sampBindingDesc.binding = bindingBase + i;
          sampBindingDesc.descriptorType = vk::DescriptorType::eSampler;
          sampBindingDesc.descriptorCount = 1;
          sampBindingDesc.stageFlags = stageFlags;
@@ -95,15 +97,19 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
          bindings.push_back(sampBindingDesc);
       }
 
+      bindingBase += latte::MaxSamplers;
+
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
          vk::DescriptorSetLayoutBinding texBindingDesc;
-         texBindingDesc.binding = latte::MaxSamplers + i;
+         texBindingDesc.binding = bindingBase + i;
          texBindingDesc.descriptorType = vk::DescriptorType::eSampledImage;
          texBindingDesc.descriptorCount = 1;
          texBindingDesc.stageFlags = stageFlags;
          texBindingDesc.pImmutableSamplers = nullptr;
          bindings.push_back(texBindingDesc);
       }
+
+      bindingBase += latte::MaxTextures;
 
       for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
          if (i >= 15) {
@@ -114,29 +120,19 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
          }
 
          vk::DescriptorSetLayoutBinding cbufferBindingDesc;
-         cbufferBindingDesc.binding = latte::MaxSamplers + latte::MaxTextures + i;
+         cbufferBindingDesc.binding = bindingBase + i;
          cbufferBindingDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
          cbufferBindingDesc.descriptorCount = 1;
          cbufferBindingDesc.stageFlags = stageFlags;
          cbufferBindingDesc.pImmutableSamplers = nullptr;
          bindings.push_back(cbufferBindingDesc);
       }
+   }
 
-      vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutDesc;
-      descriptorSetLayoutDesc.bindingCount = static_cast<uint32_t>(bindings.size());
-      descriptorSetLayoutDesc.pBindings = bindings.data();
-      return mDevice.createDescriptorSetLayout(descriptorSetLayoutDesc);
-   };
-
-   mVertexDescriptorSetLayout = makeStageSet(0);
-   mGeometryDescriptorSetLayout = makeStageSet(1);
-   mPixelDescriptorSetLayout = makeStageSet(2);
-
-   std::array<vk::DescriptorSetLayout, 3> descriptorLayouts = {
-      mVertexDescriptorSetLayout,
-      mGeometryDescriptorSetLayout,
-      mPixelDescriptorSetLayout };
-
+   vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutDesc;
+   descriptorSetLayoutDesc.bindingCount = static_cast<uint32_t>(bindings.size());
+   descriptorSetLayoutDesc.pBindings = bindings.data();
+   mBaseDescriptorSetLayout = mDevice.createDescriptorSetLayout(descriptorSetLayoutDesc);
 
    std::vector<vk::PushConstantRange> pushConstants;
 
@@ -153,8 +149,8 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    pushConstants.push_back(alphaRefConstants);
 
    vk::PipelineLayoutCreateInfo pipelineLayoutDesc;
-   pipelineLayoutDesc.setLayoutCount = static_cast<uint32_t>(descriptorLayouts.size());
-   pipelineLayoutDesc.pSetLayouts = descriptorLayouts.data();
+   pipelineLayoutDesc.setLayoutCount = 1;
+   pipelineLayoutDesc.pSetLayouts = &mBaseDescriptorSetLayout;
    pipelineLayoutDesc.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
    pipelineLayoutDesc.pPushConstantRanges = pushConstants.data();
    mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
@@ -325,9 +321,9 @@ Driver::allocateDescriptorPool(uint32_t numDraws)
 
    if (!descriptorPool) {
       std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
-         vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * numDraws),
-         vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * numDraws),
-         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * numDraws),
+         vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * 3 * numDraws),
+         vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * 3 * numDraws),
+         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * 3 * numDraws),
       };
 
       vk::DescriptorPoolCreateInfo descriptorPoolInfo;
@@ -343,40 +339,34 @@ Driver::allocateDescriptorPool(uint32_t numDraws)
 }
 
 vk::DescriptorSet
-Driver::allocateGenericDescriptorSet(vk::DescriptorSetLayout &setLayout)
+Driver::allocateGenericDescriptorSet()
 {
-   static const uint32_t maxPoolDraws = 32;
+   if (mAvailableDescriptorSets.empty()) {
+      std::array<vk::DescriptorSetLayout, 32> setLayouts = {
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout,
+         mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout, mBaseDescriptorSetLayout
+      };
+      auto numSetLayouts = static_cast<uint32_t>(setLayouts.size());
 
-   if (!mActiveDescriptorPool || mActiveDescriptorPoolDrawsLeft == 0) {
-      mActiveDescriptorPool = allocateDescriptorPool(maxPoolDraws);
-      mActiveDescriptorPoolDrawsLeft = maxPoolDraws;
+      auto newPool = allocateDescriptorPool(numSetLayouts);
+
+      vk::DescriptorSetAllocateInfo allocInfo;
+      allocInfo.descriptorSetCount = numSetLayouts;
+      allocInfo.pSetLayouts = setLayouts.data();
+      allocInfo.descriptorPool = newPool;
+      mAvailableDescriptorSets = mDevice.allocateDescriptorSets(allocInfo);
    }
 
-   vk::DescriptorSetAllocateInfo allocInfo;
-   allocInfo.descriptorSetCount = 1;
-   allocInfo.pSetLayouts = &setLayout;
-   allocInfo.descriptorPool = mActiveDescriptorPool;
-   mActiveDescriptorPoolDrawsLeft--;
+   auto descriptorSet = mAvailableDescriptorSets.back();
+   mAvailableDescriptorSets.pop_back();
 
-   return mDevice.allocateDescriptorSets(allocInfo)[0];
-}
-
-vk::DescriptorSet
-Driver::allocateVertexDescriptorSet()
-{
-   return allocateGenericDescriptorSet(mVertexDescriptorSetLayout);
-}
-
-vk::DescriptorSet
-Driver::allocateGeometryDescriptorSet()
-{
-   return allocateGenericDescriptorSet(mGeometryDescriptorSetLayout);
-}
-
-vk::DescriptorSet
-Driver::allocatePixelDescriptorSet()
-{
-   return allocateGenericDescriptorSet(mPixelDescriptorSetLayout);
+   return descriptorSet;
 }
 
 void
@@ -513,7 +503,7 @@ Driver::endCommandGroup()
    // Clear our state in between command buffers for safety
    mActiveCommandBuffer = nullptr;
    mActiveSyncWaiter = nullptr;
-   mActiveDescriptorPool = vk::DescriptorPool();
+   mAvailableDescriptorSets.clear();
 }
 
 void
@@ -537,6 +527,8 @@ Driver::endCommandBuffer()
    mActivePipeline = nullptr;
    mActiveRenderPass = nullptr;
    mActiveFramebuffer = nullptr;
+   mActiveVsConstantsSet = false;
+   mActivePsConstantsSet = false;
    mLastIndexBufferSet = false;
    mDrawCache = DrawDesc{};
 

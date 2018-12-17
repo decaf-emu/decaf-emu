@@ -78,7 +78,7 @@ Driver::checkCurrentSamplers()
 {
    if (mCurrentDraw->vertexShader) {
       for (auto samplerIdx = 0u; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
-         if (mCurrentDraw->vertexShader->shader.samplerUsed[samplerIdx]) {
+         if (mCurrentDraw->vertexShader->shader.meta.samplerUsed[samplerIdx]) {
             updateDrawSampler(ShaderStage::Vertex, samplerIdx);
          } else {
             mCurrentDraw->samplers[0][samplerIdx] = nullptr;
@@ -92,7 +92,7 @@ Driver::checkCurrentSamplers()
 
    if (mCurrentDraw->geometryShader) {
       for (auto samplerIdx = 0u; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
-         if (mCurrentDraw->geometryShader->shader.samplerUsed[samplerIdx]) {
+         if (mCurrentDraw->geometryShader->shader.meta.samplerUsed[samplerIdx]) {
             updateDrawSampler(ShaderStage::Geometry, samplerIdx);
          } else {
             mCurrentDraw->samplers[1][samplerIdx] = nullptr;
@@ -106,7 +106,7 @@ Driver::checkCurrentSamplers()
 
    if (mCurrentDraw->pixelShader) {
       for (auto samplerIdx = 0u; samplerIdx < latte::MaxSamplers; ++samplerIdx) {
-         if (mCurrentDraw->pixelShader->shader.samplerUsed[samplerIdx]) {
+         if (mCurrentDraw->pixelShader->shader.meta.samplerUsed[samplerIdx]) {
             updateDrawSampler(ShaderStage::Pixel, samplerIdx);
          } else {
             mCurrentDraw->samplers[2][samplerIdx] = nullptr;
