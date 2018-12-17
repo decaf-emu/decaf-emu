@@ -1352,7 +1352,7 @@ public:
          addDecoration(structType, spv::DecorationBlock);
          addMemberName(structType, 0, "values");
 
-         auto bindingIdx = mBindingBase + latte::MaxSamplers + latte::MaxTextures;
+         auto bindingIdx = mBindingBase + latte::MaxTextures;
 
          mRegistersBuffer = createVariable(spv::StorageClassUniform, structType, "CFILE");
          addDecoration(mRegistersBuffer, spv::DecorationDescriptorSet, 0);
@@ -1376,7 +1376,7 @@ public:
          addDecoration(structType, spv::DecorationBlock);
          addMemberName(structType, 0, "values");
 
-         auto bindingIdx = mBindingBase + latte::MaxSamplers + latte::MaxTextures + cbufferIdx;
+         auto bindingIdx = mBindingBase + latte::MaxTextures + cbufferIdx;
 
          cbuffer = createVariable(spv::StorageClassUniform, structType, fmt::format("CBUFFER_{}", cbufferIdx).c_str());
          addDecoration(cbuffer, spv::DecorationDescriptorSet, 0);
@@ -1464,7 +1464,7 @@ public:
          textureId = createVariable(spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim, texFormat));
          addName(textureId, fmt::format("TEXTURE_{}", textureIdx).c_str());
 
-         auto bindingIdx = mBindingBase + latte::MaxSamplers + textureIdx;
+         auto bindingIdx = mBindingBase + textureIdx;
 
          addDecoration(textureId, spv::DecorationDescriptorSet, 0);
          addDecoration(textureId, spv::DecorationBinding, bindingIdx);

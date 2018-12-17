@@ -69,91 +69,12 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    allocatorDesc.device = mDevice;
    CHECK_VK_RESULT(vmaCreateAllocator(&allocatorDesc, &mAllocator));
 
-   // Set up our drawing pipeline layout
-   std::vector<vk::DescriptorSetLayoutBinding> bindings;
-
-   for (auto stageIndex = 0; stageIndex < 3; ++stageIndex)
-   {
-      vk::ShaderStageFlags stageFlags;
-      if (stageIndex == 0) {
-         stageFlags = vk::ShaderStageFlagBits::eVertex;
-      } else if (stageIndex == 1) {
-         stageFlags = vk::ShaderStageFlagBits::eGeometry;
-      } else if (stageIndex == 2) {
-         stageFlags = vk::ShaderStageFlagBits::eFragment;
-      } else {
-         decaf_abort("Unexpected shader stage index");
-      }
-
-      auto bindingBase = 48 * stageIndex;
-
-      for (auto i = 0u; i < latte::MaxSamplers; ++i) {
-         vk::DescriptorSetLayoutBinding sampBindingDesc;
-         sampBindingDesc.binding = bindingBase + i;
-         sampBindingDesc.descriptorType = vk::DescriptorType::eSampler;
-         sampBindingDesc.descriptorCount = 1;
-         sampBindingDesc.stageFlags = stageFlags;
-         sampBindingDesc.pImmutableSamplers = nullptr;
-         bindings.push_back(sampBindingDesc);
-      }
-
-      bindingBase += latte::MaxSamplers;
-
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         vk::DescriptorSetLayoutBinding texBindingDesc;
-         texBindingDesc.binding = bindingBase + i;
-         texBindingDesc.descriptorType = vk::DescriptorType::eSampledImage;
-         texBindingDesc.descriptorCount = 1;
-         texBindingDesc.stageFlags = stageFlags;
-         texBindingDesc.pImmutableSamplers = nullptr;
-         bindings.push_back(texBindingDesc);
-      }
-
-      bindingBase += latte::MaxTextures;
-
-      for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-         if (i >= 15) {
-            // Vulkan does not support more than 15 uniform blocks unfortunately,
-            // if we ever encounter a game needing all 15, we will need to do block
-            // splitting or utilize SSBO's.
-            break;
-         }
-
-         vk::DescriptorSetLayoutBinding cbufferBindingDesc;
-         cbufferBindingDesc.binding = bindingBase + i;
-         cbufferBindingDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
-         cbufferBindingDesc.descriptorCount = 1;
-         cbufferBindingDesc.stageFlags = stageFlags;
-         cbufferBindingDesc.pImmutableSamplers = nullptr;
-         bindings.push_back(cbufferBindingDesc);
-      }
-   }
-
-   vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutDesc;
-   descriptorSetLayoutDesc.bindingCount = static_cast<uint32_t>(bindings.size());
-   descriptorSetLayoutDesc.pBindings = bindings.data();
-   mBaseDescriptorSetLayout = mDevice.createDescriptorSetLayout(descriptorSetLayoutDesc);
-
-   std::vector<vk::PushConstantRange> pushConstants;
-
-   vk::PushConstantRange screenSpaceConstants;
-   screenSpaceConstants.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry;
-   screenSpaceConstants.offset = 0;
-   screenSpaceConstants.size = 32;
-   pushConstants.push_back(screenSpaceConstants);
-
-   vk::PushConstantRange alphaRefConstants;
-   alphaRefConstants.stageFlags = vk::ShaderStageFlagBits::eFragment;
-   alphaRefConstants.offset = 32;
-   alphaRefConstants.size = 12;
-   pushConstants.push_back(alphaRefConstants);
-
-   vk::PipelineLayoutCreateInfo pipelineLayoutDesc;
-   pipelineLayoutDesc.setLayoutCount = 1;
-   pipelineLayoutDesc.pSetLayouts = &mBaseDescriptorSetLayout;
-   pipelineLayoutDesc.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
-   pipelineLayoutDesc.pPushConstantRanges = pushConstants.data();
-   mPipelineLayout = mDevice.createPipelineLayout(pipelineLayoutDesc);
+   // Set up the default pipeline layout and descriptor set
+   PipelineLayoutDesc basePlDesc;
+   memset(&basePlDesc, 0xFF, sizeof(basePlDesc));
+   auto basePl = getPipelineLayout(basePlDesc);
+   mBaseDescriptorSetLayout = basePl->descriptorLayout;
+   mPipelineLayout = basePl->pipelineLayout;
 
    // Set up the pipeline cache
    vk::PipelineCacheCreateInfo pipelineCacheDesc;

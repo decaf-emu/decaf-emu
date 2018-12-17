@@ -11,8 +11,7 @@ Driver::bindDescriptors()
 {
    bool dSetHasValues = false;
 
-   std::array<std::array<vk::DescriptorImageInfo, latte::MaxSamplers>, 3> samplerInfos;
-   std::array<std::array<vk::DescriptorImageInfo, latte::MaxTextures>, 3 > textureInfos;
+   std::array<std::array<vk::DescriptorImageInfo, latte::MaxTextures>, 3> texSampInfos;
    std::array<std::array<vk::DescriptorBufferInfo, latte::MaxUniformBlocks>, 3 > bufferInfos;
 
    for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
@@ -45,9 +44,9 @@ Driver::bindDescriptors()
          if (shaderMeta->samplerUsed[i]) {
             auto &sampler = mCurrentDraw->samplers[shaderStage][i];
             if (sampler) {
-               samplerInfos[shaderStage][i].sampler = sampler->sampler;
+               texSampInfos[shaderStage][i].sampler = sampler->sampler;
             } else {
-               samplerInfos[shaderStage][i].sampler = mBlankSampler;
+               texSampInfos[shaderStage][i].sampler = mBlankSampler;
             }
 
             dSetHasValues = true;
@@ -58,25 +57,27 @@ Driver::bindDescriptors()
          if (shaderMeta->textureUsed[i]) {
             auto &texture = mCurrentDraw->textures[shaderStage][i];
             if (texture) {
-               textureInfos[shaderStage][i].imageView = texture->imageView;
+               texSampInfos[shaderStage][i].imageView = texture->imageView;
             } else {
-               textureInfos[shaderStage][i].imageView = mBlankImageView;
+               texSampInfos[shaderStage][i].imageView = mBlankImageView;
             }
 
-            textureInfos[shaderStage][i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            texSampInfos[shaderStage][i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
             dSetHasValues = true;
          }
       }
 
       if (mCurrentDraw->gprBuffers[shaderStage]) {
-         auto gprBuffer = mCurrentDraw->gprBuffers[shaderStage];
+         if (shaderMeta->cfileUsed) {
+            auto gprBuffer = mCurrentDraw->gprBuffers[shaderStage];
 
-         bufferInfos[shaderStage][0].buffer = gprBuffer->buffer;
-         bufferInfos[shaderStage][0].offset = 0;
-         bufferInfos[shaderStage][0].range = gprBuffer->size;
+            bufferInfos[shaderStage][0].buffer = gprBuffer->buffer;
+            bufferInfos[shaderStage][0].offset = 0;
+            bufferInfos[shaderStage][0].range = gprBuffer->size;
 
-         dSetHasValues = true;
+            dSetHasValues = true;
+         }
       } else {
          for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
             if (shaderMeta->cbufferUsed[i]) {
@@ -103,8 +104,6 @@ Driver::bindDescriptors()
       return;
    }
 
-   auto dSet = allocateGenericDescriptorSet();
-
    /*
    for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
       for (auto &samplerInfo : samplerInfos[shaderStage]) {
@@ -128,42 +127,39 @@ Driver::bindDescriptors()
    }
    */
 
+   vk::DescriptorSet dSet;
+   if (!mCurrentDraw->pipeline->pipelineLayout) {
+      // If there is no custom pipeline layout configured, this means we have to use
+      // standard descriptor sets rather than being able to take advantage of push.
+
+      dSet = allocateGenericDescriptorSet();
+   }
+
+   mScratchDescriptorWrites.clear();
    auto &descWrites = mScratchDescriptorWrites;
-   uint32_t numDescWrites = 0;
 
    for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
-      auto bindingBase = 48 * shaderStage;
-
-      for (auto i = 0u; i < latte::MaxSamplers; ++i) {
-         if (!samplerInfos[shaderStage][i].sampler) {
-            continue;
-         }
-
-         vk::WriteDescriptorSet& writeDesc = descWrites[numDescWrites++];
-         writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = bindingBase + i;
-         writeDesc.dstArrayElement = 0;
-         writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eSampler;
-         writeDesc.pImageInfo = &samplerInfos[shaderStage][i];
-         writeDesc.pBufferInfo = nullptr;
-         writeDesc.pTexelBufferView = nullptr;
-      }
-
-      bindingBase += latte::MaxSamplers;
+      auto bindingBase = 32 * shaderStage;
 
       for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         if (!textureInfos[shaderStage][i].imageView) {
+         if (!texSampInfos[shaderStage][i].sampler && !texSampInfos[shaderStage][i].imageView) {
             continue;
          }
 
-         vk::WriteDescriptorSet& writeDesc = descWrites[numDescWrites++];
+         descWrites.push_back({});
+         vk::WriteDescriptorSet& writeDesc = descWrites.back();
          writeDesc.dstSet = dSet;
          writeDesc.dstBinding = bindingBase + i;
          writeDesc.dstArrayElement = 0;
          writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eSampledImage;
-         writeDesc.pImageInfo = &textureInfos[shaderStage][i];
+         if (texSampInfos[shaderStage][i].sampler && texSampInfos[shaderStage][i].imageView) {
+            writeDesc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+         } else if (texSampInfos[shaderStage][i].sampler) {
+            writeDesc.descriptorType = vk::DescriptorType::eSampler;
+         } else if (texSampInfos[shaderStage][i].imageView) {
+            writeDesc.descriptorType = vk::DescriptorType::eSampledImage;
+         }
+         writeDesc.pImageInfo = &texSampInfos[shaderStage][i];
          writeDesc.pBufferInfo = nullptr;
          writeDesc.pTexelBufferView = nullptr;
       }
@@ -181,7 +177,8 @@ Driver::bindDescriptors()
             continue;
          }
 
-         vk::WriteDescriptorSet& writeDesc = descWrites[numDescWrites++];
+         descWrites.push_back({});
+         vk::WriteDescriptorSet& writeDesc = descWrites.back();
          writeDesc.dstSet = dSet;
          writeDesc.dstBinding = bindingBase + i;
          writeDesc.dstArrayElement = 0;
@@ -193,12 +190,20 @@ Driver::bindDescriptors()
       }
    }
 
-   mDevice.updateDescriptorSets(numDescWrites, descWrites.data(), 0, nullptr);
+   if (!dSet) {
+      mActiveCommandBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics,
+                                                mCurrentDraw->pipeline->pipelineLayout->pipelineLayout,
+                                                0,
+                                                descWrites,
+                                                mVkDynLoader);
+   } else {
+      mDevice.updateDescriptorSets(descWrites, {});
 
-   mActiveCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                           mPipelineLayout,
-                                           0,
-                                           { dSet }, {});
+      mActiveCommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                              mPipelineLayout,
+                                              0,
+                                              { dSet }, {});
+   }
 }
 
 void

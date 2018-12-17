@@ -151,19 +151,31 @@ Driver::checkCurrentShaderBuffers()
       }
 
       if (mCurrentDraw->vertexShader) {
-         updateDrawGprBuffer(ShaderStage::Vertex);
+         if (mCurrentDraw->vertexShader->shader.meta.cfileUsed) {
+            updateDrawGprBuffer(ShaderStage::Vertex);
+         } else {
+            mCurrentDraw->gprBuffers[0] = nullptr;
+         }
       } else {
          mCurrentDraw->gprBuffers[0] = nullptr;
       }
 
       if (mCurrentDraw->geometryShader) {
-         updateDrawGprBuffer(ShaderStage::Geometry);
+         if (mCurrentDraw->geometryShader->shader.meta.cfileUsed) {
+            updateDrawGprBuffer(ShaderStage::Geometry);
+         } else {
+            mCurrentDraw->gprBuffers[1] = nullptr;
+         }
       } else {
          mCurrentDraw->gprBuffers[1] = nullptr;
       }
 
       if (mCurrentDraw->pixelShader) {
-         updateDrawGprBuffer(ShaderStage::Pixel);
+         if (mCurrentDraw->pixelShader->shader.meta.cfileUsed) {
+            updateDrawGprBuffer(ShaderStage::Pixel);
+         } else {
+            mCurrentDraw->gprBuffers[2] = nullptr;
+         }
       } else {
          mCurrentDraw->gprBuffers[2] = nullptr;
       }

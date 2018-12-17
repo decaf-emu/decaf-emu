@@ -48,12 +48,12 @@ public:
    {
    }
 
-   T& operator*()
+   const T& operator*() const
    {
       return mDesc;
    }
 
-   T * operator->()
+   const T * operator->() const
    {
       return &mDesc;
    }
@@ -579,6 +579,33 @@ struct RenderPassObject
    int depthAttachmentIndex;
 };
 
+struct PipelineLayoutDesc
+{
+   std::array<bool, latte::MaxSamplers> vsSamplerUsed;
+   std::array<bool, latte::MaxTextures> vsTextureUsed;
+   std::array<bool, latte::MaxUniformBlocks> vsBufferUsed;
+   std::array<bool, latte::MaxSamplers> gsSamplerUsed;
+   std::array<bool, latte::MaxTextures> gsTextureUsed;
+   std::array<bool, latte::MaxUniformBlocks> gsBufferUsed;
+   std::array<bool, latte::MaxSamplers> psSamplerUsed;
+   std::array<bool, latte::MaxTextures> psTextureUsed;
+   std::array<bool, latte::MaxUniformBlocks> psBufferUsed;
+
+   uint32_t numDescriptors = 0;
+
+   inline DataHash hash() const
+   {
+      return DataHash {}.write(*this);
+   }
+};
+
+struct PipelineLayoutObject
+{
+   HashedDesc<PipelineLayoutDesc> desc;
+   vk::DescriptorSetLayout descriptorLayout;
+   vk::PipelineLayout pipelineLayout;
+};
+
 struct PipelineDesc
 {
    RenderPassObject *renderPass;
@@ -652,6 +679,7 @@ struct PipelineDesc
 struct PipelineObject
 {
    HashedDesc<PipelineDesc> desc;
+   PipelineLayoutObject *pipelineLayout;
    vk::Pipeline pipeline;
    bool needsPremultipliedTargets;
    std::array<bool, latte::MaxRenderTargets> targetIsPremultiplied;
@@ -937,6 +965,10 @@ protected:
    RenderPassDesc getRenderPassDesc();
    bool checkCurrentRenderPass();
 
+   // Pipeline Layouts
+   PipelineLayoutDesc generatePipelineLayoutDesc(const PipelineDesc& pipelineDesc);
+   PipelineLayoutObject * getPipelineLayout(const HashedDesc<PipelineLayoutDesc>& desc, bool forPush = false);
+
    // Pipelines
    PipelineDesc getPipelineDesc();
    bool checkCurrentPipeline();
@@ -1035,7 +1067,7 @@ private:
    std::vector<uint8_t> mScratchRetiling;
    std::vector<uint8_t> mScratchIdxSwap;
    std::vector<uint8_t> mScratchIdxDequad;
-   std::array<vk::WriteDescriptorSet, 256> mScratchDescriptorWrites;
+   std::vector<vk::WriteDescriptorSet> mScratchDescriptorWrites;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
@@ -1067,6 +1099,7 @@ private:
    std::unordered_map<DataHash, PixelShaderObject*> mPixelShaders;
    std::unordered_map<DataHash, RectStubShaderObject*> mRectStubShaders;
    std::unordered_map<DataHash, RenderPassObject*> mRenderPasses;
+   std::unordered_map<DataHash, PipelineLayoutObject *> mPipelineLayouts;
    std::unordered_map<DataHash, PipelineObject*> mPipelines;
    std::unordered_map<DataHash, SamplerObject*> mSamplers;
    std::unordered_map<uint64_t, MemCacheObject *> mMemCaches;

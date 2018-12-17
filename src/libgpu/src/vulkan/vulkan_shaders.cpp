@@ -233,7 +233,7 @@ Driver::getPixelShaderDesc()
    return shaderDesc;
 }
 
-static void dumpRawShader(spirv::ShaderDesc *desc)
+static void dumpRawShader(const spirv::ShaderDesc *desc)
 {
    if (!gpu::config::dump_shaders) {
       return;
@@ -241,17 +241,17 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
 
    std::string shaderName;
    if (desc->type == spirv::ShaderType::Vertex) {
-      auto vsDesc = reinterpret_cast<spirv::VertexShaderDesc*>(desc);
+      auto vsDesc = reinterpret_cast<const spirv::VertexShaderDesc*>(desc);
       auto vsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->binary.data()));
       auto fsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()));
       shaderName = fmt::format("vs_{:08x}_{:08x}", vsAddr, fsAddr);
    } else if (desc->type == spirv::ShaderType::Geometry) {
-      auto gsDesc = reinterpret_cast<spirv::GeometryShaderDesc*>(desc);
+      auto gsDesc = reinterpret_cast<const spirv::GeometryShaderDesc*>(desc);
       auto gsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->binary.data()));
       auto dcAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()));
       shaderName = fmt::format("gs_{:08x}_{:08x}", gsAddr, dcAddr);
    } else if (desc->type == spirv::ShaderType::Pixel) {
-      auto psDesc = reinterpret_cast<spirv::PixelShaderDesc*>(desc);
+      auto psDesc = reinterpret_cast<const spirv::PixelShaderDesc*>(desc);
       auto psAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(psDesc->binary.data()));
       shaderName = fmt::format("ps_{:08x}", psAddr);
    } else {
@@ -260,7 +260,7 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
 
    std::string outputStr;
    if (desc->type == spirv::ShaderType::Vertex) {
-      auto vsDesc = reinterpret_cast<spirv::VertexShaderDesc*>(desc);
+      auto vsDesc = reinterpret_cast<const spirv::VertexShaderDesc*>(desc);
 
       std::string fsDisasm, vsDisasm;
       if (!vsDesc->fsBinary.empty()) {
@@ -275,7 +275,7 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
       outputStr += "Vertex Shader:\n";
       outputStr += vsDisasm + "\n\n";
    } else if (desc->type == spirv::ShaderType::Geometry) {
-      auto gsDesc = reinterpret_cast<spirv::GeometryShaderDesc*>(desc);
+      auto gsDesc = reinterpret_cast<const spirv::GeometryShaderDesc*>(desc);
 
       std::string gsDisasm, dcDisasm;
       if (!gsDesc->binary.empty()) {
@@ -290,7 +290,7 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
       outputStr += "DMA Copy Shader:\n";
       outputStr += dcDisasm + "\n\n";
    } else if (desc->type == spirv::ShaderType::Pixel) {
-      auto psDesc = reinterpret_cast<spirv::PixelShaderDesc*>(desc);
+      auto psDesc = reinterpret_cast<const spirv::PixelShaderDesc*>(desc);
 
       std::string psDisasm;
       if (!psDesc->binary.empty()) {
@@ -314,7 +314,7 @@ static void dumpRawShader(spirv::ShaderDesc *desc)
    }
 }
 
-static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
+static void dumpTranslatedShader(const spirv::ShaderDesc *desc, const spirv::Shader *shader)
 {
    if (!gpu::config::dump_shaders) {
       return;
@@ -324,17 +324,17 @@ static void dumpTranslatedShader(spirv::ShaderDesc *desc, spirv::Shader *shader)
 
    std::string shaderName;
    if (desc->type == spirv::ShaderType::Vertex) {
-      auto vsDesc = reinterpret_cast<spirv::VertexShaderDesc*>(desc);
+      auto vsDesc = reinterpret_cast<const spirv::VertexShaderDesc*>(desc);
       auto vsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->binary.data()));
       auto fsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()));
       shaderName = fmt::format("vs_{:08x}_{:08x}", vsAddr, fsAddr);
    } else if (desc->type == spirv::ShaderType::Geometry) {
-      auto gsDesc = reinterpret_cast<spirv::GeometryShaderDesc*>(desc);
+      auto gsDesc = reinterpret_cast<const spirv::GeometryShaderDesc*>(desc);
       auto gsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->binary.data()));
       auto dcAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()));
       shaderName = fmt::format("gs_{:08x}_{:08x}", gsAddr, dcAddr);
    } else if (desc->type == spirv::ShaderType::Pixel) {
-      auto psDesc = reinterpret_cast<spirv::PixelShaderDesc*>(desc);
+      auto psDesc = reinterpret_cast<const spirv::PixelShaderDesc*>(desc);
       auto psAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(psDesc->binary.data()));
       shaderName = fmt::format("ps_{:08x}", psAddr);
    } else {

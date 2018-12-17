@@ -2,6 +2,8 @@
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
 
+static constexpr bool ForceDescriptorSets = false;
+
 namespace vulkan
 {
 
@@ -370,6 +372,26 @@ Driver::checkCurrentPipeline()
 
    foundPipeline = new PipelineObject();
    foundPipeline->desc = currentDesc;
+
+   // ------------------------------------------------------------
+   // Pipeline Layout
+   // ------------------------------------------------------------
+
+   vk::PipelineLayout pipelineLayout;
+
+   HashedDesc<PipelineLayoutDesc> pipelineLayoutDesc = generatePipelineLayoutDesc(*currentDesc);
+
+   if (!ForceDescriptorSets && pipelineLayoutDesc->numDescriptors < 32) {
+      auto pipelineLayoutObj = getPipelineLayout(pipelineLayoutDesc, true);
+      foundPipeline->pipelineLayout = pipelineLayoutObj;
+      pipelineLayout = pipelineLayoutObj->pipelineLayout;
+   } else {
+      // Too many descriptors to take advantage of using push descriptors, we have to
+      // fall back to using dynamically generated descriptor sets.
+      foundPipeline->pipelineLayout = nullptr;
+      pipelineLayout = mPipelineLayout;
+   }
+
 
    // ------------------------------------------------------------
    // Shader Stages
@@ -849,7 +871,7 @@ Driver::checkCurrentPipeline()
    pipelineInfo.pDepthStencilState = &depthStencil;
    pipelineInfo.pColorBlendState = &colorBlendState;
    pipelineInfo.pDynamicState = &dynamicDesc;
-   pipelineInfo.layout = mPipelineLayout;
+   pipelineInfo.layout = pipelineLayout;
    pipelineInfo.renderPass = mCurrentDraw->renderPass->renderPass;
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = vk::Pipeline();

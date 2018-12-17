@@ -413,7 +413,7 @@ Driver::getMemCache(phys_addr address, uint32_t numSections, uint32_t sectionSiz
    // types, otherwise the bit operations may not behave as expected.
    uint64_t lookupAddr = address.getAddress();
    uint64_t lookupSize = numSections * sectionSize;
-   uint64_t lookupKey = (lookupAddr << 32) | lookupSize;
+   uint64_t lookupKey = (lookupSize << 32) | lookupAddr;
 
    // TODO: We should implement the ability to 'grow' a MemCacheObject to
    // contain more sections on top of the ones that already exist in the

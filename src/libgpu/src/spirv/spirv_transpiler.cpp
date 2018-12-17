@@ -443,7 +443,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    if (shaderDesc.type == ShaderType::Vertex) {
       auto &vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
 
-      spvGen.setBindingBase(48 * 0);
+      spvGen.setBindingBase(32 * 0);
 
       state.mSqVtxSemantics = vsDesc.regs.sq_vtx_semantics;
       state.mPaClVsOutCntl = vsDesc.regs.pa_cl_vs_out_cntl;
@@ -453,7 +453,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    } else if (shaderDesc.type == ShaderType::Geometry) {
       auto &gsDesc = *reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
 
-      spvGen.setBindingBase(48 * 1);
+      spvGen.setBindingBase(32 * 1);
 
       state.mPaClVsOutCntl = gsDesc.regs.pa_cl_vs_out_cntl;
       state.mStreamOutStride = gsDesc.streamOutStride;
@@ -462,7 +462,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    } else if (shaderDesc.type == ShaderType::Pixel) {
       auto &psDesc = *reinterpret_cast<const PixelShaderDesc*>(&shaderDesc);
 
-      spvGen.setBindingBase(48 * 2);
+      spvGen.setBindingBase(32 * 2);
 
       state.mPixelOutType = psDesc.pixelOutType;
       state.mSqPgmExportsPs = psDesc.regs.sq_pgm_exports_ps;
