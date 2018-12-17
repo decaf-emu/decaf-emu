@@ -225,8 +225,8 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
 
          if (mouseX >= drcLeft && mouseX <= drcRight && mouseY >= drcTop && mouseY <= drcBottom) {
             status.touch.down = true;
-            status.touch.x = (mouseX - drcLeft) / drcViewport.width;
-            status.touch.y = (mouseY - drcTop) / drcViewport.height;
+            status.touch.x = static_cast<int>((mouseX - drcLeft) / drcViewport.width);
+            status.touch.y = static_cast<int>((mouseY - drcTop) / drcViewport.height);
          }
       }
    } else if (mVpad0Controller && device->type == config::input::Joystick) {
