@@ -35,6 +35,8 @@ public:
    inline DataHash& write(const std::vector<T> &data)
    {
       static_assert(std::is_trivially_copyable<T>::value, "Hashed types must be trivial");
+      static_assert(std::has_unique_object_representations<T>::value,
+                    "Hashed types must have unique object representations");
       return write(data.data(), data.size() * sizeof(T));
    }
 
@@ -42,6 +44,8 @@ public:
    inline DataHash& write(const T &data)
    {
       static_assert(std::is_trivially_copyable<T>::value, "Hashed types must be trivial");
+      static_assert(std::has_unique_object_representations<T>::value,
+                    "Hashed types must have unique object representations");
       return write(&data, sizeof(T));
    }
 

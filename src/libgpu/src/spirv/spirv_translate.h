@@ -65,6 +65,8 @@ struct AttribElem
    uint32_t elemCount = 0;
 };
 
+#pragma pack(push, 1)
+
 struct ShaderDesc
 {
    ShaderType type = ShaderType::Unknown;
@@ -143,6 +145,8 @@ struct PixelShaderDesc : public ShaderDesc
       return DataHash {}.write(*this);
    }
 };
+
+#pragma pack(pop)
 
 struct RectStubShaderDesc
 {
