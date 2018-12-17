@@ -223,7 +223,7 @@ protected:
       auto oldSegPtr = phys_cast<void*>(oldSegment->address).getRawPointer();
       oldSegment->dataHash = DataHash {}.write(oldSegPtr, oldSegment->size);
 
-      auto newSegPtr = phys_cast<void*>(oldSegment->address).getRawPointer();
+      auto newSegPtr = phys_cast<void*>(newSegment->address).getRawPointer();
       newSegment->dataHash = DataHash {}.write(newSegPtr, newSegment->size);
 
       // If the segment was last checked during this batch, there is no need to do
