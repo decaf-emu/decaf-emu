@@ -1,7 +1,8 @@
 #ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
-#include "vulkan_rangecombiner.h"
+
 #include "gpu_tiling.h"
+#include <common/rangecombiner.h>
 
 namespace vulkan
 {

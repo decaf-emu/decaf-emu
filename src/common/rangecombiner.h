@@ -1,8 +1,4 @@
 #pragma once
-#ifdef DECAF_VULKAN
-
-namespace vulkan
-{
 
 // void(_ObjType object, _OffsetType offset, _SizeType size)
 template<typename _ObjType, typename _OffsetType, typename _SizeType, typename _FunctorType>
@@ -53,7 +49,3 @@ makeRangeCombiner(_FunctorType functor)
 {
    return RangeCombiner<_ObjType, _OffsetType, _SizeType, _FunctorType>(functor);
 }
-
-} // namespace vulkan
-
-#endif // ifdef DECAF_VULKAN
