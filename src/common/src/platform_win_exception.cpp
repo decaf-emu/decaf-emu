@@ -59,7 +59,7 @@ installExceptionHandler(ExceptionHandler handler)
    static bool addedHandler = false;
 
    if (!addedHandler) {
-      AddVectoredExceptionHandler(1, exceptionHandler);
+      AddVectoredExceptionHandler(0, exceptionHandler);
       addedHandler = true;
    }
 
