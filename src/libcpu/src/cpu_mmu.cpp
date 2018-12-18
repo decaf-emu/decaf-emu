@@ -1,5 +1,6 @@
 #include "mmu.h"
 #include "memorymap.h"
+#include "memtrack.h"
 
 namespace cpu
 {
@@ -10,7 +11,11 @@ sMemoryMap;
 bool
 initialiseMemory()
 {
-   return sMemoryMap.reserve();
+   if (sMemoryMap.reserve()) {
+      internal::initialiseMemtrack();
+      return true;
+   }
+   return false;
 }
 
 bool
@@ -48,19 +53,30 @@ mapMemory(VirtualAddress virtualAddress,
           uint32_t size,
           MapPermission permission)
 {
-   return sMemoryMap.mapMemory(virtualAddress, physicalAddress, size, permission);
+   if (sMemoryMap.mapMemory(virtualAddress, physicalAddress, size, permission)) {
+      if (permission == MapPermission::ReadWrite) {
+         internal::registerTrackedRange(virtualAddress, physicalAddress, size);
+      }
+      return true;
+   }
+   return false;
 }
 
 bool
 unmapMemory(VirtualAddress virtualAddress,
             uint32_t size)
 {
-   return sMemoryMap.unmapMemory(virtualAddress, size);
+   if (sMemoryMap.unmapMemory(virtualAddress, size)) {
+      internal::unregisterTrackedRange(virtualAddress, size);
+      return true;
+   }
+   return false;
 }
 
 bool
 resetVirtualMemory()
 {
+   internal::clearTrackedRanges();
    return sMemoryMap.resetVirtualMemory();
 }
 

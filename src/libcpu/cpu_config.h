@@ -35,6 +35,13 @@ extern bool rodata_read_only;
 
 } // namespace jit
 
+namespace mem
+{
+
+extern bool writetrack;
+
+} // namespace mem
+
 } // namespace config
 
 } // namespace cpu

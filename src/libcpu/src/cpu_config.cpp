@@ -32,6 +32,13 @@ std::vector<std::string> opt_flags =
 
 } // namespace jit
 
+namespace mem
+{
+
+bool writetrack = false;
+
+} // namespace mem
+
 } // namespace config
 
 } // namespace cpu

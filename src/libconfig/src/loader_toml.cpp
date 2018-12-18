@@ -23,6 +23,8 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config)
    readValue(config, "gx2.dump_textures", decaf::config::gx2::dump_textures);
    readValue(config, "gx2.dump_shaders", decaf::config::gx2::dump_shaders);
 
+   readValue(config, "mem.writetrack", cpu::config::mem::writetrack);
+
    readValue(config, "jit.enabled", cpu::config::jit::enabled);
    readValue(config, "jit.verify", cpu::config::jit::verify);
    readValue(config, "jit.verify_addr", cpu::config::jit::verify_addr);

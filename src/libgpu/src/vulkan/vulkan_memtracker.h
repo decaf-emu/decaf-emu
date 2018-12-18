@@ -2,8 +2,8 @@
 #ifdef DECAF_VULKAN
 
 #include <cstdint>
-#include <common/datahash.h>
 #include <libcpu/be2_struct.h>
+#include <libcpu/memtrack.h>
 #include <map>
 #include <forward_list>
 
@@ -38,8 +38,8 @@ public:
       phys_addr address = {};
       uint32_t size = 0;
 
-      // Stores the last computed hash for this data (from the CPU).
-      DataHash dataHash;
+      // Stores the last memory tracking state for this segment.
+      cpu::MemtrackState dataState;
 
       // Tracks the last CPU check of this segment, to avoid checking the
       // memory multiple times in a single batch.
@@ -109,9 +109,7 @@ public:
 
    void markSegmentGpuDone(Segment *segment)
    {
-      auto dataPtr = phys_cast<void*>(segment->address).getRawPointer();
-      auto dataSize = segment->size;
-      segment->dataHash = DataHash {}.write(dataPtr, dataSize);
+      segment->dataState = cpu::getMemoryState(segment->address, segment->size);
       segment->gpuWritten = false;
    }
 
@@ -195,7 +193,7 @@ protected:
 
       // Save the old info so we can do the final hash check
       auto oldSize = oldSegment->size;
-      auto oldHash = oldSegment->dataHash;
+      auto oldState = oldSegment->dataState;
 
       // Create the new segment, save it to the map and resize the
       // old segment to not overlap the new one.
@@ -212,7 +210,7 @@ protected:
       // If the old segment was written by the GPU, there is no need to
       // do any of the hashing work, it will be done during readback.
       if (oldSegment->gpuWritten) {
-         newSegment->dataHash = DataHash {};
+         newSegment->dataState = {};
          return newIter;
       }
 
@@ -220,11 +218,8 @@ protected:
       // split to ensure we don't do unneeded uploading after a split.  We check
       // that the new hashes reflect the same data that previous existed in the
       // segment following this.
-      auto oldSegPtr = phys_cast<void*>(oldSegment->address).getRawPointer();
-      oldSegment->dataHash = DataHash {}.write(oldSegPtr, oldSegment->size);
-
-      auto newSegPtr = phys_cast<void*>(newSegment->address).getRawPointer();
-      newSegment->dataHash = DataHash {}.write(newSegPtr, newSegment->size);
+      oldSegment->dataState = cpu::getMemoryState(oldSegment->address, oldSegment->size);
+      newSegment->dataState = cpu::getMemoryState(newSegment->address, newSegment->size);
 
       // If the segment was last checked during this batch, there is no need to do
       // any additional work to figure out if the data changed.
@@ -233,8 +228,8 @@ protected:
       }
 
       // Now check that the data hasn't changed since we did the last hashing.
-      auto newFullCpuHash = DataHash {}.write(oldSegPtr, oldSize);
-      if (newFullCpuHash != oldHash) {
+      auto newFullState = cpu::getMemoryState(oldSegment->address, oldSize);
+      if (newFullState != oldState) {
          auto changeIndex = newChangeIndex();
 
          oldSegment->lastCheckIndex = mCurrentBatchIndex;
@@ -342,13 +337,11 @@ protected:
       }
 
       // Rehash all our data
-      auto dataPtr = phys_cast<void*>(segment->address).getRawPointer();
-      auto dataSize = segment->size;
-      auto dataHash = DataHash {}.write(dataPtr, dataSize);
+      auto dataState = cpu::getMemoryState(segment->address, segment->size);
 
       // If we already have a hash, and the hash already matches, we can
       // simply mark it as checked without any more downloads.
-      if (segment->lastCheckIndex > 0 && segment->dataHash == dataHash) {
+      if (segment->lastCheckIndex > 0 && segment->dataState == dataState) {
          segment->lastCheckIndex = mCurrentBatchIndex;
          return;
       }
@@ -357,7 +350,7 @@ protected:
       // a new memory change event to represent this.
       auto changeIndex = newChangeIndex();
 
-      segment->dataHash = dataHash;
+      segment->dataState = dataState;
       segment->lastCheckIndex = mCurrentBatchIndex;
       segment->lastChangeIndex = changeIndex;
       segment->lastChangeOwner = nullptr;
