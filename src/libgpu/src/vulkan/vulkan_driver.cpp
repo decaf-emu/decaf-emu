@@ -54,6 +54,12 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    // Initialize our GPU retiler
    mGpuRetiler.initialise(mDevice);
 
+   // Preconfigure some of our scratch buffers
+   mDirtyMemCaches.resize(8092);
+   mScratchImageInfos.resize(3 * 16);
+   mScratchBufferInfos.resize(3 * 16);
+   mScratchDescriptorWrites.resize(3 * 32);
+
    // Allocate a command pool to use
    vk::CommandPoolCreateInfo commandPoolDesc;
    commandPoolDesc.flags = vk::CommandPoolCreateFlagBits::eTransient | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

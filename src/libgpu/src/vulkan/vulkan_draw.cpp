@@ -9,10 +9,23 @@ namespace vulkan
 void
 Driver::bindDescriptors()
 {
-   bool dSetHasValues = false;
+   // Ensure the scratch buffers are large enough to guarentee we won't need
+   // to perform any reallocations of the buffers.
+   mScratchImageInfos.clear();
+   mScratchBufferInfos.clear();
+   auto &scratchImageInfos = mScratchImageInfos;
+   auto &scratchBufferInfos = mScratchBufferInfos;
 
-   std::array<std::array<vk::DescriptorImageInfo, latte::MaxTextures>, 3> texSampInfos;
-   std::array<std::array<vk::DescriptorBufferInfo, latte::MaxUniformBlocks>, 3 > bufferInfos;
+   // Ensure the descriptor scratch buffers are large enough to never realloc.
+   mScratchDescriptorWrites.clear();
+   auto &descWrites = mScratchDescriptorWrites;
+
+   vk::DescriptorSet dSet;
+   if (!mCurrentDraw->pipeline->pipelineLayout) {
+      // If there is no custom pipeline layout configured, this means we have to use
+      // standard descriptor sets rather than being able to take advantage of push.
+      dSet = allocateGenericDescriptorSet();
+   }
 
    for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
       auto shaderStageTyped = static_cast<ShaderStage>(shaderStage);
@@ -40,153 +53,110 @@ Driver::bindDescriptors()
          decaf_abort("Unexpected shader stage during descriptor build");
       }
 
+      auto bindingBase = 32 * shaderStage;
+
+      // We have to ensure the sampler count and texture count match since we pack
+      // multiple of these things into a single descriptor.
+      static_assert(latte::MaxTextures == latte::MaxSamplers);
+
       for (auto i = 0u; i < latte::MaxSamplers; ++i) {
-         if (shaderMeta->samplerUsed[i]) {
+         if (shaderMeta->textureUsed[i]) {
+            scratchImageInfos.push_back({});
+            auto &imageInfo = scratchImageInfos.back();
+
             auto &sampler = mCurrentDraw->samplers[shaderStage][i];
+
             if (sampler) {
-               texSampInfos[shaderStage][i].sampler = sampler->sampler;
+               imageInfo.sampler = sampler->sampler;
             } else {
-               texSampInfos[shaderStage][i].sampler = mBlankSampler;
+               imageInfo.sampler = mBlankSampler;
             }
 
-            dSetHasValues = true;
-         }
-      }
-
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         if (shaderMeta->textureUsed[i]) {
             auto &texture = mCurrentDraw->textures[shaderStage][i];
             if (texture) {
-               texSampInfos[shaderStage][i].imageView = texture->imageView;
+               imageInfo.imageView = texture->imageView;
             } else {
-               texSampInfos[shaderStage][i].imageView = mBlankImageView;
+               imageInfo.imageView = mBlankImageView;
             }
 
-            texSampInfos[shaderStage][i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
-            dSetHasValues = true;
+            // Set up the descriptor
+            descWrites.push_back({});
+            vk::WriteDescriptorSet& writeDesc = descWrites.back();
+            writeDesc.dstSet = dSet;
+            writeDesc.dstBinding = bindingBase + i;
+            writeDesc.dstArrayElement = 0;
+            writeDesc.descriptorCount = 1;
+            if (texture && sampler) {
+               writeDesc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+            } else if (sampler) {
+               writeDesc.descriptorType = vk::DescriptorType::eSampler;
+            } else if (texture) {
+               writeDesc.descriptorType = vk::DescriptorType::eSampledImage;
+            }
+            writeDesc.pImageInfo = &imageInfo;
+            writeDesc.pBufferInfo = nullptr;
+            writeDesc.pTexelBufferView = nullptr;
          }
       }
 
       if (mCurrentDraw->gprBuffers[shaderStage]) {
          if (shaderMeta->cfileUsed) {
+            scratchBufferInfos.push_back({});
+            auto &bufferInfo = scratchBufferInfos.back();
+
             auto gprBuffer = mCurrentDraw->gprBuffers[shaderStage];
+            if (gprBuffer) {
+               bufferInfo.buffer = gprBuffer->buffer;
+               bufferInfo.offset = 0;
+               bufferInfo.range = gprBuffer->size;
+            } else {
+               bufferInfo.buffer = mBlankBuffer;
+               bufferInfo.offset = 0;
+               bufferInfo.range = 1024;
+            }
 
-            bufferInfos[shaderStage][0].buffer = gprBuffer->buffer;
-            bufferInfos[shaderStage][0].offset = 0;
-            bufferInfos[shaderStage][0].range = gprBuffer->size;
-
-            dSetHasValues = true;
+            descWrites.push_back({});
+            vk::WriteDescriptorSet& writeDesc = descWrites.back();
+            writeDesc.dstSet = dSet;
+            writeDesc.dstBinding = bindingBase + 16;
+            writeDesc.dstArrayElement = 0;
+            writeDesc.descriptorCount = 1;
+            writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+            writeDesc.pImageInfo = nullptr;
+            writeDesc.pBufferInfo = &bufferInfo;
+            writeDesc.pTexelBufferView = nullptr;
          }
       } else {
          for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
             if (shaderMeta->cbufferUsed[i]) {
+               scratchBufferInfos.push_back({});
+               auto &bufferInfo = scratchBufferInfos.back();
+
                auto& uniformBuffer = mCurrentDraw->uniformBlocks[shaderStage][i];
                if (uniformBuffer) {
-                  bufferInfos[shaderStage][i].buffer = uniformBuffer->buffer;
-                  bufferInfos[shaderStage][i].offset = 0;
-                  bufferInfos[shaderStage][i].range = uniformBuffer->size;
+                  bufferInfo.buffer = uniformBuffer->buffer;
+                  bufferInfo.offset = 0;
+                  bufferInfo.range = uniformBuffer->size;
                } else {
-                  bufferInfos[shaderStage][i].buffer = mBlankBuffer;
-                  bufferInfos[shaderStage][i].offset = 0;
-                  bufferInfos[shaderStage][i].range = 1024;
+                  bufferInfo.buffer = mBlankBuffer;
+                  bufferInfo.offset = 0;
+                  bufferInfo.range = 1024;
                }
 
-               dSetHasValues = true;
+               descWrites.push_back({});
+               vk::WriteDescriptorSet& writeDesc = descWrites.back();
+               writeDesc.dstSet = dSet;
+               writeDesc.dstBinding = bindingBase + 16 + i;
+               writeDesc.dstArrayElement = 0;
+               writeDesc.descriptorCount = 1;
+               writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+               writeDesc.pImageInfo = nullptr;
+               writeDesc.pBufferInfo = &bufferInfo;
+               writeDesc.pTexelBufferView = nullptr;
             }
          }
-      }
-   }
-
-   // If this shader stage has nothing bound, there is no need to
-   // actually generate our descriptor sets or anything.
-   if (!dSetHasValues) {
-      return;
-   }
-
-   /*
-   for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
-      for (auto &samplerInfo : samplerInfos[shaderStage]) {
-         if (!samplerInfo.sampler) {
-            samplerInfo.sampler = mBlankSampler;
-         }
-      }
-      for (auto &textureInfo : textureInfos[shaderStage]) {
-         if (!textureInfo.imageView) {
-            textureInfo.imageView = mBlankImageView;
-            textureInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-         }
-      }
-      for (auto &bufferInfo : bufferInfos[shaderStage]) {
-         if (!bufferInfo.buffer) {
-            bufferInfo.buffer = mBlankBuffer;
-            bufferInfo.offset = 0;
-            bufferInfo.range = 1;
-         }
-      }
-   }
-   */
-
-   vk::DescriptorSet dSet;
-   if (!mCurrentDraw->pipeline->pipelineLayout) {
-      // If there is no custom pipeline layout configured, this means we have to use
-      // standard descriptor sets rather than being able to take advantage of push.
-
-      dSet = allocateGenericDescriptorSet();
-   }
-
-   mScratchDescriptorWrites.clear();
-   auto &descWrites = mScratchDescriptorWrites;
-
-   for (auto shaderStage = 0u; shaderStage < 3u; ++shaderStage) {
-      auto bindingBase = 32 * shaderStage;
-
-      for (auto i = 0u; i < latte::MaxTextures; ++i) {
-         if (!texSampInfos[shaderStage][i].sampler && !texSampInfos[shaderStage][i].imageView) {
-            continue;
-         }
-
-         descWrites.push_back({});
-         vk::WriteDescriptorSet& writeDesc = descWrites.back();
-         writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = bindingBase + i;
-         writeDesc.dstArrayElement = 0;
-         writeDesc.descriptorCount = 1;
-         if (texSampInfos[shaderStage][i].sampler && texSampInfos[shaderStage][i].imageView) {
-            writeDesc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-         } else if (texSampInfos[shaderStage][i].sampler) {
-            writeDesc.descriptorType = vk::DescriptorType::eSampler;
-         } else if (texSampInfos[shaderStage][i].imageView) {
-            writeDesc.descriptorType = vk::DescriptorType::eSampledImage;
-         }
-         writeDesc.pImageInfo = &texSampInfos[shaderStage][i];
-         writeDesc.pBufferInfo = nullptr;
-         writeDesc.pTexelBufferView = nullptr;
-      }
-
-      bindingBase += latte::MaxTextures;
-
-      for (auto i = 0u; i < latte::MaxUniformBlocks; ++i) {
-         if (i >= 15) {
-            // Refer to the descriptor layout creation code for information
-            // on why this code is neccessary...
-            break;
-         }
-
-         if (!bufferInfos[shaderStage][i].buffer) {
-            continue;
-         }
-
-         descWrites.push_back({});
-         vk::WriteDescriptorSet& writeDesc = descWrites.back();
-         writeDesc.dstSet = dSet;
-         writeDesc.dstBinding = bindingBase + i;
-         writeDesc.dstArrayElement = 0;
-         writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
-         writeDesc.pImageInfo = nullptr;
-         writeDesc.pBufferInfo = &bufferInfos[shaderStage][i];
-         writeDesc.pTexelBufferView = nullptr;
       }
    }
 
