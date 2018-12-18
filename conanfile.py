@@ -65,17 +65,17 @@ class DecafConan(ConanFile):
          ('zlib/1.2.11@conan/stable', 'yes' if self.options.zlib else 'no')
       ]
 
-      print 'Enabled dependencies:'
+      print('Enabled dependencies:')
       for dependency, enabled in dependency_list:
          if enabled == 'yes':
-            print "%s" % (dependency)
-      print ''
+            print("%s" % (dependency))
+      print('')
 
-      print 'Disabled dependencies:'
+      print('Disabled dependencies:')
       for dependency, enabled in dependency_list:
          if enabled == 'no':
-            print "%s" % (dependency)
-      print ''
+            print("%s" % (dependency))
+      print('')
 
       silent = self.options.silent
       if not silent:
