@@ -15,7 +15,7 @@ struct UnimplementedLibraryFunction
 {
    class Library *library = nullptr;
    std::string name;
-   uint32_t syscallID = -1;
+   uint32_t syscallID = 0xFFFFFFFFu;
    virt_addr value;
 };
 
@@ -33,7 +33,7 @@ struct LibraryFunction : public LibrarySymbol
    virtual void call(cpu::Core *state) = 0;
 
    //! ID number of syscall.
-   uint32_t syscallID = -1;
+   uint32_t syscallID = 0xFFFFFFFFu;
 
    //! Whether trace logging is enabled for this function or not.
    bool traceEnabled = true;
