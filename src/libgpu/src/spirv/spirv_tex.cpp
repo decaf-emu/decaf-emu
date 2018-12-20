@@ -384,7 +384,8 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    auto image = mSpv->createLoad(texVar);
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
-   auto srcLodVal = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });
+   auto srcLodValFloat = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });
+   auto srcLodVal = mSpv->createUnaryOp(spv::OpBitcast, mSpv->intType(), srcLodValFloat);
 
    auto oneIConst = mSpv->makeIntConstant(1);
    auto sizeIConst = mSpv->makeIntConstant(6);
@@ -392,25 +393,25 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    spv::Id sizeInfo;
    switch (texDim) {
    case latte::SQ_TEX_DIM::DIM_1D: {
-      auto sizeInfo1d = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->intType(), image);
+      auto sizeInfo1d = mSpv->createBinOp(spv::OpImageQuerySizeLod, mSpv->intType(), image, srcLodVal);
       sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->int3Type(), { sizeInfo1d, oneIConst, oneIConst });
       break;
    }
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
    case latte::SQ_TEX_DIM::DIM_2D:
    case latte::SQ_TEX_DIM::DIM_2D_MSAA: {
-      auto sizeInfo2d = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int2Type(), image);
+      auto sizeInfo2d = mSpv->createBinOp(spv::OpImageQuerySizeLod, mSpv->int2Type(), image, srcLodVal);
       sizeInfo = mSpv->createOp(spv::OpCompositeConstruct, mSpv->int3Type(), { sizeInfo2d, oneIConst });
       break;
    }
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
    case latte::SQ_TEX_DIM::DIM_3D: {
-      sizeInfo = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int3Type(), image);
+      sizeInfo = mSpv->createBinOp(spv::OpImageQuerySizeLod, mSpv->int3Type(), image, srcLodVal);
       break;
    }
    case latte::SQ_TEX_DIM::DIM_CUBEMAP: {
-      auto sizeInfoCube = mSpv->createUnaryOp(spv::OpImageQuerySize, mSpv->int3Type(), image);
+      auto sizeInfoCube = mSpv->createBinOp(spv::OpImageQuerySizeLod, mSpv->int3Type(), image, srcLodVal);
       auto cubemapArrSideSize = mSpv->createOp(spv::OpCompositeExtract, mSpv->intType(), { sizeInfoCube, 3 });
       auto cubemapArrSize = mSpv->createBinOp(spv::OpSDiv, mSpv->intType(), cubemapArrSideSize, sizeIConst);
       sizeInfo = mSpv->createOp(spv::OpCompositeInsert, mSpv->int3Type(), { cubemapArrSize, sizeInfoCube, 3 });
