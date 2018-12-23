@@ -588,7 +588,8 @@ DecafSDLVulkan::createRenderPipeline()
    colorBlendState.blendConstants[3] = 0.0f;
 
    std::vector<vk::DynamicState> dynamicStates = {
-      vk::DynamicState::eViewport
+      vk::DynamicState::eViewport,
+      vk::DynamicState::eScissor
    };
 
    vk::PipelineDynamicStateCreateInfo dynamicState;
@@ -944,6 +945,7 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
    renderCmdBuf.begin(vk::CommandBufferBeginInfo({}, nullptr));
    {
       renderCmdBuf.bindPipeline(vk::PipelineBindPoint::eGraphics, mGraphicsPipeline);
+      renderCmdBuf.setScissor(0, { vk::Rect2D { { 0, 0 }, mSwapChainExtents } });
 
       if (tvImage) {
          acquireScanBuffer(renderCmdBuf, descriptorSetTv, tvImage, tvView);
