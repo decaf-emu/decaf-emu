@@ -1026,7 +1026,12 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
       presentInfo.swapchainCount = 1;
       presentInfo.pSwapchains = &mSwapchain;
 
-      mQueue.presentKHR(presentInfo);
+      try {
+         mQueue.presentKHR(presentInfo);
+      } catch (vk::OutOfDateKHRError err) {
+         destroySwapChain();
+         createSwapChain();
+      }
    }
 
    // Increment our frame index counter
