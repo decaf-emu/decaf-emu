@@ -919,7 +919,22 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
 
    // Acquire the next frame to render into
    uint32_t nextSwapImage;
-   mDevice.acquireNextImageKHR(mSwapchain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, vk::Fence {}, &nextSwapImage);
+   try {
+      mDevice.acquireNextImageKHR(mSwapchain,
+                                  std::numeric_limits<uint64_t>::max(),
+                                  imageAvailableSemaphore, vk::Fence {},
+                                  &nextSwapImage);
+   } catch (vk::OutOfDateKHRError err) {
+      // Recreate swapchain
+      destroySwapChain();
+      createSwapChain();
+
+      // Try acquire again, this one will die if it fails :D
+      mDevice.acquireNextImageKHR(mSwapchain,
+                                  std::numeric_limits<uint64_t>::max(),
+                                  imageAvailableSemaphore, vk::Fence {},
+                                  &nextSwapImage);
+   }
 
    // Allocate a command buffer to use
    auto renderCmdBuf = mDevice.allocateCommandBuffers(
