@@ -240,6 +240,19 @@ DecafSDLVulkan::createWindowSurface()
 
    mSurface = sdlSurface;
 
+   // Pick a preferred surface format
+   auto surfaceFormats = mPhysDevice.getSurfaceFormatsKHR(mSurface);
+   auto selectedSurfaceFormat = surfaceFormats[0];
+   for (auto& surfaceFormat : surfaceFormats) {
+      switch (surfaceFormat.format) {
+      case vk::Format::eR8G8B8A8Srgb:
+      case vk::Format::eB8G8R8A8Srgb:
+         selectedSurfaceFormat = surfaceFormat;
+         break;
+      }
+   }
+
+   mSurfaceFormat = selectedSurfaceFormat.format;
    return true;
 }
 
@@ -334,63 +347,11 @@ DecafSDLVulkan::createDevice()
 }
 
 bool
-DecafSDLVulkan::createSwapChain()
+DecafSDLVulkan::createRenderPass()
 {
-   auto surfaceFormats = mPhysDevice.getSurfaceFormatsKHR(mSurface);
-   auto surfaceCaps = mPhysDevice.getSurfaceCapabilitiesKHR(mSurface);
-
-   // By absolute default we pick the the first format...
-   auto selectedSurfaceFormat = surfaceFormats[0];
-
-   // Lastly lets try to find a very specific format that we want to use.
-   for (auto& surfaceFormat : surfaceFormats) {
-      switch (surfaceFormat.format) {
-      case vk::Format::eR8G8B8A8Srgb:
-      case vk::Format::eB8G8R8A8Srgb:
-         selectedSurfaceFormat = surfaceFormat;
-         break;
-      }
-   }
-
-   auto swapChainImageFormat = selectedSurfaceFormat.format;
-   mSwapChainExtents = surfaceCaps.currentExtent;
-
-   auto presentMode = vk::PresentModeKHR::eFifo;
-   if (config::display::force_sync) {
-      presentMode = vk::PresentModeKHR::eMailbox;
-   }
-
-   auto presentModes = mPhysDevice.getSurfacePresentModesKHR(mSurface);
-   bool foundPresentMode =
-      std::find(presentModes.begin(), presentModes.end(), presentMode) != presentModes.end();
-   if (!foundPresentMode) {
-      mLog->error("Failed to find a suitable present mode to use");
-      return false;
-   }
-
-   // Create the swap chain itself
-   vk::SwapchainCreateInfoKHR swapchainDesc;
-   swapchainDesc.surface = mSurface;
-   swapchainDesc.minImageCount = surfaceCaps.minImageCount;
-   swapchainDesc.imageFormat = swapChainImageFormat;
-   swapchainDesc.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
-   swapchainDesc.imageExtent = mSwapChainExtents;
-   swapchainDesc.imageArrayLayers = 1;
-   swapchainDesc.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
-   swapchainDesc.imageSharingMode = vk::SharingMode::eExclusive;
-   swapchainDesc.queueFamilyIndexCount = 0;
-   swapchainDesc.pQueueFamilyIndices = nullptr;
-   swapchainDesc.preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
-   swapchainDesc.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-   swapchainDesc.presentMode = presentMode;
-   swapchainDesc.clipped = true;
-   swapchainDesc.oldSwapchain = nullptr;
-   mSwapchain = mDevice.createSwapchainKHR(swapchainDesc);
-
-
    // Create our render pass that targets this attachement
    vk::AttachmentDescription colorAttachmentDesc;
-   colorAttachmentDesc.format = swapChainImageFormat;
+   colorAttachmentDesc.format = mSurfaceFormat;
    colorAttachmentDesc.samples = vk::SampleCountFlagBits::e1;
    colorAttachmentDesc.loadOp = vk::AttachmentLoadOp::eClear;
    colorAttachmentDesc.storeOp = vk::AttachmentStoreOp::eStore;
@@ -422,7 +383,46 @@ DecafSDLVulkan::createSwapChain()
    renderPassDesc.dependencyCount = 0;
    renderPassDesc.pDependencies = nullptr;
    mRenderPass = mDevice.createRenderPass(renderPassDesc);
+   return true;
+}
 
+bool
+DecafSDLVulkan::createSwapChain()
+{
+   auto surfaceCaps = mPhysDevice.getSurfaceCapabilitiesKHR(mSurface);
+   mSwapChainExtents = surfaceCaps.currentExtent;
+
+   auto presentMode = vk::PresentModeKHR::eFifo;
+   if (config::display::force_sync) {
+      presentMode = vk::PresentModeKHR::eMailbox;
+   }
+
+   auto presentModes = mPhysDevice.getSurfacePresentModesKHR(mSurface);
+   bool foundPresentMode =
+      std::find(presentModes.begin(), presentModes.end(), presentMode) != presentModes.end();
+   if (!foundPresentMode) {
+      mLog->error("Failed to find a suitable present mode to use");
+      return false;
+   }
+
+   // Create the swap chain itself
+   vk::SwapchainCreateInfoKHR swapchainDesc;
+   swapchainDesc.surface = mSurface;
+   swapchainDesc.minImageCount = surfaceCaps.minImageCount;
+   swapchainDesc.imageFormat = mSurfaceFormat;
+   swapchainDesc.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+   swapchainDesc.imageExtent = mSwapChainExtents;
+   swapchainDesc.imageArrayLayers = 1;
+   swapchainDesc.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
+   swapchainDesc.imageSharingMode = vk::SharingMode::eExclusive;
+   swapchainDesc.queueFamilyIndexCount = 0;
+   swapchainDesc.pQueueFamilyIndices = nullptr;
+   swapchainDesc.preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
+   swapchainDesc.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+   swapchainDesc.presentMode = presentMode;
+   swapchainDesc.clipped = true;
+   swapchainDesc.oldSwapchain = nullptr;
+   mSwapchain = mDevice.createSwapchainKHR(swapchainDesc);
 
    // Create our framebuffers
    auto swapChainImages = mDevice.getSwapchainImagesKHR(mSwapchain);
@@ -434,7 +434,7 @@ DecafSDLVulkan::createSwapChain()
       vk::ImageViewCreateInfo imageViewDesc;
       imageViewDesc.image = swapChainImages[i];
       imageViewDesc.viewType = vk::ImageViewType::e2D;
-      imageViewDesc.format = swapChainImageFormat;
+      imageViewDesc.format = mSurfaceFormat;
       imageViewDesc.components = vk::ComponentMapping();
       imageViewDesc.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
       imageViewDesc.subresourceRange.baseMipLevel = 0;
@@ -699,9 +699,6 @@ DecafSDLVulkan::destroySwapChain()
    }
    mSwapChainImageViews.clear();
 
-   mDevice.destroyRenderPass(mRenderPass);
-   mRenderPass = vk::RenderPass();
-
    mDevice.destroySwapchainKHR(mSwapchain);
    mSwapchain = vk::SwapchainKHR();
 
@@ -728,6 +725,10 @@ DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
    }
 
    if (!createDevice()) {
+      return false;
+   }
+
+   if (!createRenderPass()) {
       return false;
    }
 
@@ -800,6 +801,11 @@ DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
 void
 DecafSDLVulkan::shutdown()
 {
+   if (mRenderPass) {
+      mDevice.destroyRenderPass(mRenderPass);
+      mRenderPass = vk::RenderPass();
+   }
+
    // Shut down the debugger ui driver
    if (mDebugUiRenderer) {
       mDebugUiRenderer->shutdown();

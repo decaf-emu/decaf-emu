@@ -41,6 +41,7 @@ protected:
    bool pickPhysicalDevice();
    bool createWindowSurface();
    bool createDevice();
+   bool createRenderPass();
    bool createSwapChain();
    bool createRenderPipeline();
    bool createDescriptorPools();
@@ -74,6 +75,7 @@ protected:
    vk::PhysicalDevice mPhysDevice;
    vk::Device mDevice;
    vk::SurfaceKHR mSurface;
+   vk::Format mSurfaceFormat;
    uint32_t mQueueFamilyIndex;
    vk::Queue mQueue;
    vk::Queue mDriverQueue;
