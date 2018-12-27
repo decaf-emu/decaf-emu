@@ -1,8 +1,20 @@
-#include "clilog.h"
+#include "decafsdl_config.h"
+#include "decafsdl_sound.h"
+
 #include <common/decaf_assert.h>
-#include "config.h"
-#include "decafsdl.h"
 #include <SDL.h>
+#include <libdecaf/decaf_log.h>
+
+DecafSDLSound::DecafSDLSound()
+{
+   // Initialise logger
+   mLog = decaf::makeLogger("sdl-sound");
+}
+
+DecafSDLSound::~DecafSDLSound()
+{
+   SDL_CloseAudio();
+}
 
 bool
 DecafSDLSound::start(unsigned outputRate,
@@ -26,7 +38,7 @@ DecafSDLSound::start(unsigned outputRate,
    audiospec.userdata = this;
 
    if (SDL_OpenAudio(&audiospec, nullptr) != 0) {
-      gCliLog->error("Failed to open audio device: {}", SDL_GetError());
+      mLog->error("Failed to open audio device: {}", SDL_GetError());
       return false;
    }
 

@@ -1,6 +1,5 @@
 #pragma once
-#include "decafsdl_sound.h"
-
+#include <common-sdl/decafsdl_sound.h>
 #include <common-sdl/decafsdl_graphics.h>
 #include <libdecaf/decaf.h>
 #include <SDL.h>
