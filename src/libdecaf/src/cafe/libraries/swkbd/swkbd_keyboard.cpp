@@ -329,6 +329,7 @@ Library::registerKeyboardSymbols()
 namespace internal
 {
 
+#if 0
 void
 injectTextInput(const char *input)
 {
@@ -357,6 +358,7 @@ injectKeyInput(decaf::input::KeyboardKey key,
       }
    }
 }
+#endif
 
 } // namespace internal
 

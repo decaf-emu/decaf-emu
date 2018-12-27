@@ -1,6 +1,6 @@
 #pragma once
 #include <libdecaf/decaf_graphics.h>
-#include <libdecaf/decaf_debugger.h>
+#include <libdebugui/debugui.h>
 #include <SDL.h>
 
 struct Viewport
@@ -34,8 +34,8 @@ public:
    virtual gpu::GraphicsDriver *
    getDecafDriver() = 0;
 
-   virtual decaf::DebugUiRenderer *
-   getDecafDebugUiRenderer() = 0;
+   virtual debugui::Renderer *
+   getDebugUiRenderer() = 0;
 
    virtual SDL_Window *
    getWindow();

@@ -1,7 +1,6 @@
 #pragma once
-#include "debugger_interface.h"
 #include "debugger_server.h"
-#include "debugger_state.h"
+#include "decaf_debug_api.h"
 
 #include <common/platform.h>
 #include <common/platform_socket.h>
@@ -25,7 +24,6 @@ class GdbServer : public DebuggerServer
    };
 
 public:
-   GdbServer(DebuggerInterface *debugger, StateTracker *uiState);
    virtual ~GdbServer() = default;
 
    virtual bool start(int port) override;
@@ -55,11 +53,10 @@ public:
 private:
    std::shared_ptr<spdlog::logger> mLog;
 
+   bool mPaused = false;
    bool mWasPaused = false;
-   uint32_t mLastNia = 0;
-
-   DebuggerInterface *mDebugger = nullptr;
-   StateTracker *mState = nullptr;
+   uint32_t mPausedNia = 0;
+   decaf::debug::CafeThread mCurrentThread = { };
 
    platform::Socket mListenSocket = InvalidSocket;
    platform::Socket mClientSocket = InvalidSocket;

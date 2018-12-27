@@ -23,7 +23,7 @@ struct BranchMetaInfo
 };
 
 static BranchMetaInfo
-getBranchMetaB(uint32_t address, espresso::Instruction instr, const cpu::CoreRegs *state)
+getBranchMetaB(uint32_t address, espresso::Instruction instr)
 {
    BranchMetaInfo meta;
    meta.isVariable = false;
@@ -58,7 +58,7 @@ enum BcFlags
 
 template<unsigned flags>
 static BranchMetaInfo
-getBranchMetaBX(uint32_t address, espresso::Instruction instr, const cpu::CoreRegs *state)
+getBranchMetaBX(uint32_t address, espresso::Instruction instr, uint32_t ctr, uint32_t cr, uint32_t lr)
 {
    BranchMetaInfo meta;
    meta.isVariable = false;
@@ -72,12 +72,11 @@ getBranchMetaBX(uint32_t address, espresso::Instruction instr, const cpu::CoreRe
    if (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
          meta.isConditional = true;
-         if (state) {
-            auto ctb = static_cast<uint32_t>(state->ctr - 1 != 0);
-            auto ctv = get_bit<CtrValue>(bo);
-            if (!(ctb ^ ctv)) {
-               meta.conditionSatisfied = false;
-            }
+
+         auto ctb = static_cast<uint32_t>(ctr - 1 != 0);
+         auto ctv = get_bit<CtrValue>(bo);
+         if (!(ctb ^ ctv)) {
+            meta.conditionSatisfied = false;
          }
       }
    }
@@ -85,25 +84,24 @@ getBranchMetaBX(uint32_t address, espresso::Instruction instr, const cpu::CoreRe
    if (flags & BcCheckCond) {
       if (!get_bit<NoCheckCond>(bo)) {
          meta.isConditional = true;
-         if (state) {
-            auto crb = get_bit(state->cr.value, 31 - instr.bi);
-            auto crv = get_bit<CondValue>(bo);
-            if (crb != crv) {
-               meta.conditionSatisfied = false;
-            }
+
+         auto crb = get_bit(cr, 31 - instr.bi);
+         auto crv = get_bit<CondValue>(bo);
+         if (crb != crv) {
+            meta.conditionSatisfied = false;
          }
       }
    }
 
    if (flags & BcBranchCTR) {
       meta.isVariable = true;
-      if (state) {
-         meta.target = state->ctr & ~0x3;
+      if (ctr) {
+         meta.target = ctr & ~0x3;
       }
    } else if (flags & BcBranchLR) {
       meta.isVariable = true;
-      if (state) {
-         meta.target = state->lr & ~0x3;
+      if (lr) {
+         meta.target = lr & ~0x3;
       }
    } else {
       meta.target = sign_extend<16>(instr.bd << 2);
@@ -117,16 +115,16 @@ getBranchMetaBX(uint32_t address, espresso::Instruction instr, const cpu::CoreRe
 }
 
 static BranchMetaInfo
-getBranchMeta(uint32_t address, espresso::Instruction instr, espresso::InstructionInfo *data, const cpu::CoreRegs *state)
+getBranchMeta(uint32_t address, espresso::Instruction instr, espresso::InstructionInfo *data, uint32_t ctr, uint32_t cr, uint32_t lr)
 {
    if (data->id == espresso::InstructionID::b) {
-      return getBranchMetaB(address, instr, state);
+      return getBranchMetaB(address, instr);
    } else if (data->id == espresso::InstructionID::bc) {
-      return getBranchMetaBX<BcCheckCtr | BcCheckCond>(address, instr, state);
+      return getBranchMetaBX<BcCheckCtr | BcCheckCond>(address, instr, ctr, cr, lr);
    } else if (data->id == espresso::InstructionID::bcctr) {
-      return getBranchMetaBX<BcBranchCTR | BcCheckCond>(address, instr, state);
+      return getBranchMetaBX<BcBranchCTR | BcCheckCond>(address, instr, ctr, cr, lr);
    } else if (data->id == espresso::InstructionID::bclr) {
-      return getBranchMetaBX<BcBranchLR | BcCheckCtr | BcCheckCond>(address, instr, state);
+      return getBranchMetaBX<BcBranchLR | BcCheckCtr | BcCheckCond>(address, instr, ctr, cr, lr);
    } else {
       decaf_abort(fmt::format("Instruction {} was not a branch", static_cast<int>(data->id)));
    }
@@ -139,30 +137,6 @@ isBranchInstr(espresso::InstructionInfo *data)
       || data->id == espresso::InstructionID::bc
       || data->id == espresso::InstructionID::bcctr
       || data->id == espresso::InstructionID::bclr;
-}
-
-static uint32_t calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
-{
-   auto instr = mem::read<espresso::Instruction>(state->nia);
-   auto data = espresso::decodeInstruction(instr);
-
-   if (data && isBranchInstr(data)) {
-      auto meta = getBranchMeta(state->nia, instr, data, state);
-
-      if (meta.isCall && stepOver) {
-         // This is a call and we are stepping over...
-         return state->nia + 4;
-      }
-
-      if (meta.conditionSatisfied) {
-         return meta.target;
-      } else {
-         return state->nia + 4;
-      }
-   } else {
-      // This is not a branch instruction
-      return state->nia + 4;
-   }
 }
 
 } // namespace analysis

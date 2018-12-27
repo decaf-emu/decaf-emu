@@ -1,6 +1,6 @@
 #include "debugger_server_gdb.h"
-#include "debugger_threadutils.h"
 #include "decaf_config.h"
+#include "decaf_debug_api.h"
 #include "decaf_log.h"
 
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
@@ -52,13 +52,6 @@ enum BreakpointType
 {
    Execute = 1,
 };
-
-GdbServer::GdbServer(DebuggerInterface *debugger,
-                     StateTracker *state) :
-   mDebugger(debugger),
-   mState(state)
-{
-}
 
 bool GdbServer::start(int port)
 {
@@ -126,7 +119,7 @@ void GdbServer::closeClient()
 void GdbServer::handleBreak()
 {
    mWasPaused = false;
-   mDebugger->pause();
+   decaf::debug::pause();
 }
 
 static std::string
@@ -189,13 +182,17 @@ void GdbServer::handleQuery(const std::string &command)
    } else if (begins_with(command, "qsThreadInfo")) {
       sendCommand("l");
    } else if (begins_with(command, "qC")) {
-      auto activeThread = mState->getActiveThread();
-
-      if (activeThread) {
-         auto reply = fmt::format("QC{:04X}", activeThread->id);
+      if (mCurrentThread.id != -1) {
+         auto reply = fmt::format("QC{:04X}", mCurrentThread.id);
          sendCommand(reply);
       } else {
-         sendCommand("");
+         auto initiator = decaf::debug::getPauseInitiatorCoreId();
+         if (decaf::debug::sampleCafeRunningThread(initiator, mCurrentThread)) {
+            auto reply = fmt::format("QC{:04X}", mCurrentThread.id);
+            sendCommand(reply);
+         } else {
+            sendCommand("");
+         }
       }
    } else if (begins_with(command, "qXfer:features:read:")) {
       std::vector<std::string> split;
@@ -271,54 +268,30 @@ void GdbServer::handleGetHaltReason(const std::string &command)
 void GdbServer::handleReadRegister(const std::string &command)
 {
    auto id = std::stoul(command.substr(1), 0, 16);
-   auto activeThread = mState->getActiveThread();
-   auto coreRegs = getThreadCoreContext(mDebugger, activeThread);
    auto value = uint32_t { 0 };
 
-   if (activeThread) {
+   if (mCurrentThread.handle) {
       if (id < 32) {
-         if (coreRegs) {
-            value = coreRegs->gpr[id];
-         } else {
-            value = activeThread->context.gpr[id];
-         }
+         value = mCurrentThread.gpr[id];
       } else {
          switch (id) {
          case RegisterID::PC:
-            value = getThreadNia(mDebugger, activeThread);
+            value = mCurrentThread.nia;
             break;
          case RegisterID::MSR:
-            if (coreRegs) {
-               value = coreRegs->msr.value;
-            }
+            value = mCurrentThread.msr;
             break;
          case RegisterID::CR:
-            if (coreRegs) {
-               value = coreRegs->cr.value;
-            } else {
-               value = activeThread->context.cr;
-            }
+            value = mCurrentThread.cr;
             break;
          case RegisterID::LR:
-            if (coreRegs) {
-               value = coreRegs->lr;
-            } else {
-               value = activeThread->context.lr;
-            }
+            value = mCurrentThread.lr;
             break;
          case RegisterID::CTR:
-            if (coreRegs) {
-               value = coreRegs->ctr;
-            } else {
-               value = activeThread->context.ctr;
-            }
+            value = mCurrentThread.ctr;
             break;
          case RegisterID::XER:
-            if (coreRegs) {
-               value = coreRegs->xer.value;
-            } else {
-               value = activeThread->context.xer;
-            }
+            value = mCurrentThread.xer;
             break;
          }
       }
@@ -330,18 +303,12 @@ void GdbServer::handleReadRegister(const std::string &command)
 void GdbServer::handleReadGeneralRegisters(const std::string &command)
 {
    fmt::memory_buffer reply;
-   auto activeThread = mState->getActiveThread();
-   auto coreRegs = getThreadCoreContext(mDebugger, activeThread);
 
    for (auto i = 0; i < 32; ++i) {
       auto value = uint32_t { 0 };
-
-      if (coreRegs) {
-         value = coreRegs->gpr[i];
-      } else {
-         value = activeThread->context.gpr[i];
+      if (mCurrentThread.handle) {
+         value = mCurrentThread.gpr[i];
       }
-
       fmt::format_to(reply, "{:08X}", value);
    }
 
@@ -382,7 +349,7 @@ void GdbServer::handleAddBreakpoint(const std::string &command)
    if (type != BreakpointType::Execute) {
       sendCommand("E02");
    } else {
-      mDebugger->addBreakpoint(address);
+      decaf::debug::addBreakpoint(address);
       sendCommand("OK");
    }
 }
@@ -399,7 +366,7 @@ void GdbServer::handleRemoveBreakpoint(const std::string &command)
    if (type != BreakpointType::Execute) {
       sendCommand("E02");
    } else {
-      mDebugger->removeBreakpoint(address);
+      decaf::debug::removeBreakpoint(address);
       sendCommand("OK");
    }
 }
@@ -408,12 +375,24 @@ void GdbServer::handleSetActiveThread(const std::string &command)
 {
    auto type = command[1];
    auto id = std::stoi(command.data() + 2, 0, 16);
-   auto thread = getThreadById(id);
+
+   // Find thread by id
+   std::vector<decaf::debug::CafeThread> threads;
+   mCurrentThread.handle = 0;
+   mCurrentThread.id = -1;
+
+   if (decaf::debug::sampleCafeThreads(threads)) {
+      for (auto &thread : threads) {
+         if (thread.id == id) {
+            mCurrentThread = thread;
+            break;
+         }
+      }
+   }
 
    if (id == -1 || id == 0) {
       sendCommand("OK");
-   } else if (thread) {
-      mState->setActiveThread(thread);
+   } else if (mCurrentThread.id == id) {
       sendCommand("OK");
    } else {
       sendCommand("E22");
@@ -432,22 +411,22 @@ void GdbServer::handleVCont(const std::vector<std::string> &command)
 
    if (split[0] == "c") {
       mWasPaused = false;
-      mDebugger->resume();
+      decaf::debug::resume();
    } else if (split[0] == "s") {
-      auto coreId = uint32_t { 1 };
+      auto threadId = mCurrentThread.id;
 
-      if (split.size()) {
-         auto threadId = std::stoi(split[1], 0, 16);
-         coreId = getCoreIdByThreadId(threadId);
-      } else {
-         coreId = getThreadCoreId(mState->getActiveThread());
+      if (split.size() > 1) {
+         threadId = std::stoi(split[1], 0, 16);
       }
 
-      if (coreId != ThreadNotRunning) {
-         mDebugger->stepInto(coreId);
-      } else {
-         // Fuck it, default to core 1.
-         mDebugger->stepInto(1);
+      for (auto i = 0; i < 3; ++i) {
+         auto thread = decaf::debug::CafeThread { };
+         if (decaf::debug::sampleCafeRunningThread(i, thread)) {
+            if (thread.id == threadId) {
+               decaf::debug::stepInto(i);
+               return;
+            }
+         }
       }
    }
 }
@@ -657,20 +636,23 @@ void GdbServer::process()
       }
    }
 
-   // Check if we have become paused.
-   auto activeThreadNia = getThreadNia(mDebugger, mState->getActiveThread());
-
-   if (mWasPaused && activeThreadNia != 0 && mLastNia != activeThreadNia) {
-      mWasPaused = false;
-   }
-
-   if (!mWasPaused && mDebugger->paused()) {
-      if (mClientSocket != InvalidSocket) {
-         sendCommand("T05");
+   // Check for a transition in paused state.
+   mPaused = decaf::debug::isPaused();
+   if (mPaused) {
+      auto initiator = decaf::debug::getPauseInitiatorCoreId();
+      auto context = decaf::debug::getPausedContext(initiator);
+      if (context->nia != mPausedNia) {
+         mWasPaused = false;
       }
 
-      mWasPaused = true;
-      mLastNia = activeThreadNia;
+      if (!mWasPaused) {
+         if (mClientSocket != InvalidSocket) {
+            sendCommand("T05");
+         }
+
+         mPausedNia = context->nia;
+         mWasPaused = true;
+      }
    }
 }
 

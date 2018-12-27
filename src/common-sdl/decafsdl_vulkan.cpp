@@ -776,16 +776,16 @@ DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
 
    // Set up the debug rendering system
    if (renderDebugger) {
-      mDebugUiRenderer = reinterpret_cast<decaf::VulkanUiRenderer*>(decaf::createDebugVulkanRenderer());
-
-      decaf::VulkanUiRendererInitInfo uiInitInfo;
+      auto uiInitInfo = debugui::VulkanRendererInfo { };
       uiInitInfo.physDevice = mPhysDevice;
       uiInitInfo.device = mDevice;
       uiInitInfo.queue = mQueue;
       uiInitInfo.descriptorPool = mDescriptorPool;
       uiInitInfo.renderPass = mRenderPass;
       uiInitInfo.commandPool = mCommandPool;
-      mDebugUiRenderer->initialise(&uiInitInfo);
+
+      mDebugUiRenderer = reinterpret_cast<debugui::VulkanRenderer *>(
+         debugui::createVulkanRenderer(decaf::makeConfigPath("imgui.ini"), uiInitInfo));
    }
 
    // Start graphics thread
@@ -809,7 +809,8 @@ DecafSDLVulkan::shutdown()
 
    // Shut down the debugger ui driver
    if (mDebugUiRenderer) {
-      mDebugUiRenderer->shutdown();
+      delete mDebugUiRenderer;
+      mDebugUiRenderer = nullptr;
    }
 
    // Stop the GPU
@@ -996,7 +997,7 @@ DecafSDLVulkan::renderFrame(Viewport &tv, Viewport &drc)
 
       // Draw the debug UI
       if (mDebugUiRenderer) {
-         mDebugUiRenderer->draw(width, height, renderCmdBuf);
+         mDebugUiRenderer->draw(renderCmdBuf, width, height);
       }
 
       renderCmdBuf.endRenderPass();
@@ -1059,8 +1060,8 @@ DecafSDLVulkan::getDecafDriver()
    return mDecafDriver;
 }
 
-decaf::DebugUiRenderer *
-DecafSDLVulkan::getDecafDebugUiRenderer()
+debugui::Renderer *
+DecafSDLVulkan::getDebugUiRenderer()
 {
    return mDebugUiRenderer;
 }

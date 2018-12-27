@@ -5,7 +5,6 @@
 #include "decaf_slc.h"
 #include "decaf_sound.h"
 #include "debugger/debugger.h"
-#include "debugger/ui/debugger_ui.h"
 #include "filesystem/filesystem.h"
 #include "input/input.h"
 #include "ios/ios.h"
@@ -33,12 +32,6 @@
 
 namespace decaf
 {
-
-static ClipboardTextGetCallback
-sClipboardTextGetCallbackFn = nullptr;
-
-static ClipboardTextSetCallback
-sClipboardTextSetCallbackFn = nullptr;
 
 std::string
 makeConfigPath(const std::string &filename)
@@ -76,9 +69,7 @@ initialise(const std::string &gamePath)
    ::cpu::initialise();
 
    // Setup debugger
-   debugger::initialise(makeConfigPath("imgui.ini"),
-                        sClipboardTextGetCallbackFn,
-                        sClipboardTextSetCallbackFn);
+   debugger::initialise();
 
    // Setup filesystem
    auto filesystem = std::make_unique<fs::FileSystem>();
@@ -227,52 +218,6 @@ shutdown()
    }
 
    setSoundDriver(nullptr);
-}
-
-void
-injectMouseButtonInput(input::MouseButton button,
-                       input::MouseAction action)
-{
-   debugger::ui::onMouseAction(button, action);
-}
-
-void
-injectMousePos(float x,
-               float y)
-{
-   debugger::ui::onMouseMove(x, y);
-}
-
-void
-injectScrollInput(float xoffset,
-                  float yoffset)
-{
-   debugger::ui::onMouseScroll(xoffset, yoffset);
-}
-
-void
-injectKeyInput(input::KeyboardKey key,
-               input::KeyboardAction action)
-{
-   if (!debugger::ui::onKeyAction(key, action)) {
-      cafe::swkbd::internal::injectKeyInput(key, action);
-   }
-}
-
-void
-injectTextInput(const char *text)
-{
-   if (!debugger::ui::onText(text)) {
-      cafe::swkbd::internal::injectTextInput(text);
-   }
-}
-
-void
-setClipboardTextCallbacks(ClipboardTextGetCallback getter,
-                          ClipboardTextSetCallback setter)
-{
-   sClipboardTextGetCallbackFn = getter;
-   sClipboardTextSetCallbackFn = setter;
 }
 
 } // namespace decaf

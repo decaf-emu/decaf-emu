@@ -43,12 +43,6 @@ private:
    void
    openInputDevices();
 
-   decaf::input::KeyboardKey
-   translateKeyCode(SDL_Keysym sym);
-
-   decaf::input::MouseButton
-   translateMouseButton(int button);
-
    void sampleVpadController(int channel, vpad::Status &status) override;
    void sampleWpadController(int channel, wpad::Status &status) override;
 

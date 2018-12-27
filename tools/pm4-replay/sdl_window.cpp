@@ -593,9 +593,6 @@ SDLWindow::run(const std::string &tracePath)
    auto graphicsDriver = mRenderer->getDecafDriver();
    decaf::setGraphicsDriver(graphicsDriver);
 
-   auto debugUiRenderer = mRenderer->getDecafDebugUiRenderer();
-   decaf::setDebugUiRenderer(debugUiRenderer);
-
    // Run the loop!
    PM4Parser parser { graphicsDriver };
 

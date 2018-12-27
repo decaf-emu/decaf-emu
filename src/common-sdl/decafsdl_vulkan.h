@@ -4,7 +4,7 @@
 
 #include <libdecaf/decaf.h>
 #include <libgpu/gpu_vulkandriver.h>
-#include <libdecaf/decaf_debugger.h>
+#include <libdebugui/debugui.h>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
@@ -32,8 +32,8 @@ public:
    gpu::GraphicsDriver *
    getDecafDriver() override;
 
-   decaf::DebugUiRenderer *
-   getDecafDebugUiRenderer() override;
+   debugui::Renderer *
+   getDebugUiRenderer() override;
 
 protected:
    bool createWindow(int width, int height);
@@ -67,7 +67,7 @@ protected:
    std::shared_ptr<spdlog::logger> mLog;
    std::thread mGraphicsThread;
    gpu::VulkanDriver *mDecafDriver = nullptr;
-   decaf::VulkanUiRenderer *mDebugUiRenderer = nullptr;
+   debugui::VulkanRenderer *mDebugUiRenderer = nullptr;
    vk::ClearColorValue mBackgroundColour;
 
    vk::Instance mVulkan;

@@ -90,7 +90,7 @@ findFunctionEnd(uint32_t start)
       }
 
       if (isBranchInstr(data)) {
-         auto meta = getBranchMeta(addr, instr, data, nullptr);
+         auto meta = getBranchMeta(addr, instr, data, 0, 0, 0);
 
          // Ignore call instructions
          if (!meta.isCall) {
@@ -227,7 +227,7 @@ analyse(uint32_t start,
       }
 
       if (isBranchInstr(data)) {
-         auto meta = getBranchMeta(addr, instr, data, nullptr);
+         auto meta = getBranchMeta(addr, instr, data, 0, 0, 0);
 
          if (!meta.isCall && !meta.isVariable) {
             sInstrData[meta.target].sourceBranches.push_back(addr);

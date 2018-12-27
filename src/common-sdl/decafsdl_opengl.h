@@ -5,7 +5,7 @@
 #include <glbinding/gl/gl.h>
 #include <libdecaf/decaf.h>
 #include <libgpu/gpu_opengldriver.h>
-#include <libdecaf/decaf_debugger.h>
+#include <libdebugui/debugui.h>
 #include <SDL.h>
 #include <spdlog/spdlog.h>
 
@@ -33,8 +33,8 @@ public:
    gpu::GraphicsDriver *
    getDecafDriver() override;
 
-   decaf::DebugUiRenderer *
-   getDecafDebugUiRenderer() override;
+   debugui::Renderer *
+   getDebugUiRenderer() override;
 
    void
    getWindowSize(int *w, int *h) override;
@@ -69,7 +69,7 @@ protected:
    std::shared_ptr<spdlog::logger> mLog;
    std::thread mGraphicsThread;
    gpu::OpenGLDriver *mDecafDriver = nullptr;
-   decaf::GLUiRenderer *mDebugUiRenderer = nullptr;
+   debugui::OpenGLRenderer *mDebugUiRenderer = nullptr;
 
    SDL_GLContext mContext = nullptr;
    SDL_GLContext mThreadContext = nullptr;

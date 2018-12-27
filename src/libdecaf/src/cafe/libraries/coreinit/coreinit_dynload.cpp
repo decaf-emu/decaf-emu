@@ -16,7 +16,7 @@
 #include "cafe/kernel/cafe_kernel_info.h"
 #include "cafe/kernel/cafe_kernel_loader.h"
 #include "cafe/kernel/cafe_kernel_mmu.h"
-#include "debugger/debugger.h"
+#include "debug_api/debug_api_controller.h"
 
 #include <common/strutils.h>
 
@@ -2844,18 +2844,17 @@ initialiseDynLoad()
 
    kernel::loaderUserGainControl();
 
-   // Notify the debugger of the RPX entry points
    if (decaf::config::debugger::enabled) {
-      StackObject<virt_addr> funcAddr;
+      StackObject<virt_addr> preinitAddr;
       auto error = OSDynLoad_FindExport(rpxData->handle, FALSE,
                                         make_stack_string("__preinit_user"),
-                                        funcAddr);
+                                        preinitAddr);
       if (error != OSDynLoad_Error::OK) {
-         *funcAddr = virt_addr { 0 };
+         *preinitAddr = virt_addr { 0 };
       }
 
-      debugger::notifyEntry(static_cast<uint32_t>(*funcAddr),
-                            static_cast<uint32_t>(rpxData->entryPoint));
+      decaf::debug::notifyEntry(static_cast<uint32_t>(*preinitAddr),
+                                static_cast<uint32_t>(rpxData->entryPoint));
    }
 
    initialiseDefaultHeap(rpxData,

@@ -11,6 +11,7 @@ target_include_directories(common-sdl PUBLIC
 target_link_libraries(common-sdl
     common
     libconfig
+    libdebugui
     libdecaf
     cpptoml
     excmd

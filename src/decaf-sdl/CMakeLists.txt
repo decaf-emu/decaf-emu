@@ -24,6 +24,7 @@ target_link_libraries(decaf-sdl
     common
     common-sdl
     libconfig
+    libdebugui
     libdecaf
     cpptoml
     excmd

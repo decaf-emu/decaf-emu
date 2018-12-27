@@ -266,12 +266,15 @@ SetVersion(int32_t version);
 namespace internal
 {
 
+// TODO: Fix this
+#if 0
 void
 injectTextInput(const char *input);
 
 void
 injectKeyInput(decaf::input::KeyboardKey key,
                decaf::input::KeyboardAction action);
+#endif
 
 } // namespace internal
 

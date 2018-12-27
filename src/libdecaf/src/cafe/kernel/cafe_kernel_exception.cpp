@@ -6,7 +6,7 @@
 #include "cafe/cafe_ppc_interface_invoke.h"
 
 #include "decaf_config.h"
-#include "debugger/debugger.h"
+#include "debug_api/debug_api_controller.h"
 #include "cafe/libraries/coreinit/coreinit_alarm.h"
 #include "cafe/libraries/coreinit/coreinit_interrupts.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
@@ -200,7 +200,7 @@ unhandledExceptionFiberEntryPoint(void *param)
       cpu::this_core::state()->nia -= 4;
 
       coreinit::internal::pauseCoreTime(true);
-      debugger::handleDebugBreakInterrupt();
+      decaf::debug::handleDebugBreakInterrupt();
       coreinit::internal::pauseCoreTime(false);
 
       // This will shut down the thread and reschedule.  This is required
@@ -258,7 +258,7 @@ handleDebugBreakException(ExceptionType type,
 {
    if (decaf::config::debugger::enabled) {
       coreinit::internal::pauseCoreTime(true);
-      debugger::handleDebugBreakInterrupt();
+      decaf::debug::handleDebugBreakInterrupt();
       coreinit::internal::pauseCoreTime(false);
    }
 }

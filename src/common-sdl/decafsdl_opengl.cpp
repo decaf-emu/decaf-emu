@@ -399,8 +399,8 @@ DecafSDLOpenGL::initialise(int width,
 
    // Initialise debugger renderer if needed
    if (renderDebugger) {
-      mDebugUiRenderer = reinterpret_cast<decaf::GLUiRenderer*>(decaf::createDebugGLRenderer());
-      mDebugUiRenderer->initialise();
+      mDebugUiRenderer = reinterpret_cast<debugui::OpenGLRenderer *>(
+         debugui::createOpenGLRenderer(decaf::makeConfigPath("imgui.ini")));
    }
 
    // Start graphics thread
@@ -441,7 +441,8 @@ DecafSDLOpenGL::shutdown()
 {
    // Shut down the debugger ui driver
    if (mDebugUiRenderer) {
-      mDebugUiRenderer->shutdown();
+      delete mDebugUiRenderer;
+      mDebugUiRenderer = nullptr;
    }
 
    // Stop the GPU
@@ -480,8 +481,8 @@ DecafSDLOpenGL::getDecafDriver()
    return mDecafDriver;
 }
 
-decaf::DebugUiRenderer *
-DecafSDLOpenGL::getDecafDebugUiRenderer()
+debugui::Renderer *
+DecafSDLOpenGL::getDebugUiRenderer()
 {
    return mDebugUiRenderer;
 }

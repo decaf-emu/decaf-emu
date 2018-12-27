@@ -1,7 +1,9 @@
-#include "clilog.h"
-#include <common/decaf_assert.h>
-#include "config.h"
 #include "decafsdl.h"
+
+#include "clilog.h"
+#include "config.h"
+
+#include <common/decaf_assert.h>
 
 void
 DecafSDL::openInputDevices()
@@ -51,80 +53,6 @@ DecafSDL::openInputDevices()
 
    if (!mVpad0Config) {
       gCliLog->warn("No input device found for gamepad (VPAD0)");
-   }
-}
-
-decaf::input::MouseButton
-DecafSDL::translateMouseButton(int button)
-{
-   switch (button) {
-   case SDL_BUTTON_LEFT:
-      return decaf::input::MouseButton::Left;
-   case SDL_BUTTON_RIGHT:
-      return decaf::input::MouseButton::Right;
-   case SDL_BUTTON_MIDDLE:
-      return decaf::input::MouseButton::Middle;
-   default:
-      return decaf::input::MouseButton::Unknown;
-   }
-}
-
-decaf::input::KeyboardKey
-DecafSDL::translateKeyCode(SDL_Keysym sym)
-{
-   switch (sym.sym) {
-   case SDLK_TAB:
-      return decaf::input::KeyboardKey::Tab;
-   case SDLK_LEFT:
-      return decaf::input::KeyboardKey::LeftArrow;
-   case SDLK_RIGHT:
-      return decaf::input::KeyboardKey::RightArrow;
-   case SDLK_UP:
-      return decaf::input::KeyboardKey::UpArrow;
-   case SDLK_DOWN:
-      return decaf::input::KeyboardKey::DownArrow;
-   case SDLK_PAGEUP:
-      return decaf::input::KeyboardKey::PageUp;
-   case SDLK_PAGEDOWN:
-      return decaf::input::KeyboardKey::PageDown;
-   case SDLK_HOME:
-      return decaf::input::KeyboardKey::Home;
-   case SDLK_END:
-      return decaf::input::KeyboardKey::End;
-   case SDLK_DELETE:
-      return decaf::input::KeyboardKey::Delete;
-   case SDLK_BACKSPACE:
-      return decaf::input::KeyboardKey::Backspace;
-   case SDLK_RETURN:
-      return decaf::input::KeyboardKey::Enter;
-   case SDLK_ESCAPE:
-      return decaf::input::KeyboardKey::Escape;
-   case SDLK_LCTRL:
-      return decaf::input::KeyboardKey::LeftControl;
-   case SDLK_RCTRL:
-      return decaf::input::KeyboardKey::RightControl;
-   case SDLK_LSHIFT:
-      return decaf::input::KeyboardKey::LeftShift;
-   case SDLK_RSHIFT:
-      return decaf::input::KeyboardKey::RightShift;
-   case SDLK_LALT:
-      return decaf::input::KeyboardKey::LeftAlt;
-   case SDLK_RALT:
-      return decaf::input::KeyboardKey::RightAlt;
-   case SDLK_LGUI:
-      return decaf::input::KeyboardKey::LeftSuper;
-   case SDLK_RGUI:
-      return decaf::input::KeyboardKey::RightSuper;
-   default:
-      if (sym.sym >= SDLK_a && sym.sym <= SDLK_z) {
-         auto id = (sym.sym - SDLK_a) + static_cast<int>(decaf::input::KeyboardKey::A);
-         return static_cast<decaf::input::KeyboardKey>(id);
-      } else if (sym.sym >= SDLK_F1 && sym.sym <= SDLK_F12) {
-         auto id = (sym.sym - SDLK_F1) + static_cast<int>(decaf::input::KeyboardKey::F1);
-         return static_cast<decaf::input::KeyboardKey>(id);
-      }
-
-      return decaf::input::KeyboardKey::Unknown;
    }
 }
 
