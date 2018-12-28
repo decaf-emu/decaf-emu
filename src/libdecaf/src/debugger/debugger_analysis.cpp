@@ -1,10 +1,10 @@
 #include "debugger_analysis.h"
-#include "debugger_branchcalc.h"
 
 #include "cafe/loader/cafe_loader_entry.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
 
 #include <fmt/format.h>
+#include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libcpu/mem.h>
 #include <map>
@@ -16,11 +16,8 @@ namespace debugger
 namespace analysis
 {
 
-static std::map<uint32_t, FuncData, std::greater<uint32_t>>
-sFuncData;
-
-static std::unordered_map<uint32_t, InstrData>
-sInstrData;
+static std::map<uint32_t, FuncData, std::greater<uint32_t>> sFuncData;
+static std::unordered_map<uint32_t, InstrData> sInstrData;
 
 FuncData *
 getFunction(uint32_t address)
@@ -89,12 +86,13 @@ findFunctionEnd(uint32_t start)
          fnMax = addr;
       }
 
-      if (isBranchInstr(data)) {
-         auto meta = getBranchMeta(addr, instr, data, 0, 0, 0);
+      if (espresso::isBranchInstruction(data->id)) {
+         auto branchInfo =
+            espresso::disassembleBranchInfo(data->id, instr, addr, 0, 0, 0);
 
          // Ignore call instructions
-         if (!meta.isCall) {
-            if (meta.isVariable) {
+         if (!branchInfo.isCall) {
+            if (branchInfo.isVariable) {
                // We hit a variable non-call instruction, we can't scan
                //  any further than this.  If we don't have any instructions
                //  further down, this is the final.
@@ -106,8 +104,8 @@ findFunctionEnd(uint32_t start)
                   break;
                }
             } else {
-               if (addr == fnMax && !meta.isConditional) {
-                  if (meta.target >= fnStart && meta.target < addr) {
+               if (addr == fnMax && !branchInfo.isConditional) {
+                  if (branchInfo.target >= fnStart && branchInfo.target < addr) {
                      // If we are the last instruction, and this instruction unconditionally
                      //   branches backwards, that means that we must be at the end of the func.
                      fnEnd = fnMax + 4;
@@ -118,8 +116,8 @@ findFunctionEnd(uint32_t start)
                // We cannot follow unconditional branches outside of the function body
                //  that we have already determined, this is because we don't want to follow
                //  tail calls!
-               if (meta.target > fnMax && meta.isConditional) {
-                  fnMax = meta.target;
+               if (branchInfo.target > fnMax && branchInfo.isConditional) {
+                  fnMax = branchInfo.target;
                }
             }
          }
@@ -226,17 +224,18 @@ analyse(uint32_t start,
          continue;
       }
 
-      if (isBranchInstr(data)) {
-         auto meta = getBranchMeta(addr, instr, data, 0, 0, 0);
+      if (espresso::isBranchInstruction(data->id)) {
+         auto branchInfo =
+            espresso::disassembleBranchInfo(data->id, instr, addr, 0, 0, 0);
 
-         if (!meta.isCall && !meta.isVariable) {
-            sInstrData[meta.target].sourceBranches.push_back(addr);
+         if (!branchInfo.isCall && !branchInfo.isVariable) {
+            sInstrData[branchInfo.target].sourceBranches.push_back(addr);
          }
 
          // If this is a call, and its not variable, we should mark
          //  the target as a function, since it likely is...
-         if (meta.isCall && !meta.isVariable) {
-            markAsFunction(meta.target);
+         if (branchInfo.isCall && !branchInfo.isVariable) {
+            markAsFunction(branchInfo.target);
          }
       }
    }

@@ -96,6 +96,16 @@ isInstructionFieldMarker(InstructionField field)
    return sFieldBits[static_cast<int>(field)].first == -1;
 }
 
+// Returns true if instruction is a branch instruction
+bool
+isBranchInstruction(InstructionID id)
+{
+   return id == InstructionID::b
+      || id == InstructionID::bc
+      || id == InstructionID::bcctr
+      || id == InstructionID::bclr;
+}
+
 // Get name of InstructionField
 const char *
 getInstructionFieldName(InstructionField field)

@@ -1,16 +1,14 @@
-#include <algorithm>
-#include <sstream>
-#include <iomanip>
-#include <list>
 #include "espresso_disassembler.h"
 #include "espresso_instructionset.h"
+
+#include <algorithm>
 #include <common/bitutils.h>
+#include <iomanip>
+#include <list>
+#include <sstream>
 
 namespace espresso
 {
-
-static void
-checkBranchConditionAlias(Instruction instr, Disassembly &dis);
 
 static bool
 disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr, InstructionInfo *data, InstructionField field)
@@ -234,6 +232,62 @@ argumentToText(Disassembly::Argument &arg)
    return std::string();
 }
 
+static void
+checkBranchConditionAlias(Instruction instr, Disassembly &dis)
+{
+   auto bi = instr.bi % 4;
+   auto bo = instr.bo;
+   auto name = std::string {};
+
+   // Check for unconditional branch
+   if (bo == 20 && bi == 0) {
+      // Remove bo, bi from args
+      dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
+
+      if (dis.instruction->id == InstructionID::bcctr) {
+         dis.name = "bctr";
+      } else if (dis.instruction->id == InstructionID::bclr) {
+         dis.name = "blr";
+      } else if (dis.instruction->id == InstructionID::bc) {
+         dis.name = "b";
+      }
+
+      return;
+   }
+
+   if (bo == 12 && bi == 0) {
+      name = "blt";
+   } else if (bo == 4 && bi == 1) {
+      name = "ble";
+   } else if (bo == 12 && bi == 2) {
+      name = "beq";
+   } else if (bo == 4 && bi == 0) {
+      name = "bge";
+   } else if (bo == 12 && bi == 1) {
+      name = "bgt";
+   } else if (bo == 4 && bi == 2) {
+      name = "bne";
+   } else if (bo == 12 && bi == 3) {
+      name = "bso";
+   } else if (bo == 4 && bi == 3) {
+      name = "bns";
+   }
+
+   if (!name.empty()) {
+      // Remove bo, bi from args
+      dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
+
+      // Add crS argument
+      Disassembly::Argument cr;
+      cr.type = Disassembly::Argument::Register;
+      cr.text = "cr" + std::to_string(instr.bi / 4);
+      dis.args.push_back(cr);
+
+      // Update name
+      dis.name = name;
+   }
+}
+
 bool
 disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 {
@@ -279,7 +333,7 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    for (auto &field : args) {
-      espresso::Disassembly::Argument arg;
+      Disassembly::Argument arg;
 
       // If we have an alias, then skip the LHS field of each alias comparison
       if (alias) {
@@ -335,60 +389,114 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    return true;
 }
 
-void
-checkBranchConditionAlias(Instruction instr, Disassembly &dis)
+// TODO: Maybe these enums should be moved to a common header rather than
+// duplicated from interpreter
+enum BoBits
 {
-   auto bi = instr.bi % 4;
+   CtrValue    = 1,
+   NoCheckCtr  = 2,
+   CondValue   = 3,
+   NoCheckCond = 4
+};
+
+enum BcFlags
+{
+   BcCheckCtr  = 1 << 0,
+   BcCheckCond = 1 << 1,
+   BcBranchLR  = 1 << 2,
+   BcBranchCTR = 1 << 3
+};
+
+template<unsigned flags>
+static BranchInfo
+disassembleBranchInfoBX(Instruction instr,
+                        uint32_t address,
+                        uint32_t ctr,
+                        uint32_t cr,
+                        uint32_t lr)
+{
+   auto info = BranchInfo { };
+   info.isVariable = false;
+   info.isCall = instr.lk;
+   info.isConditional = false;
+   info.conditionSatisfied = true;
+   info.target = 0xFFFFFFFF;
+
    auto bo = instr.bo;
-   auto name = std::string {};
 
-   // Check for unconditional branch
-   if (bo == 20 && bi == 0) {
-      // Remove bo, bi from args
-      dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
+   if (flags & BcCheckCtr) {
+      if (!get_bit<NoCheckCtr>(bo)) {
+         info.isConditional = true;
 
-      if (dis.instruction->id == espresso::InstructionID::bcctr) {
-         dis.name = "bctr";
-      } else if (dis.instruction->id == espresso::InstructionID::bclr) {
-         dis.name = "blr";
-      } else if (dis.instruction->id == espresso::InstructionID::bc) {
-         dis.name = "b";
+         auto ctb = static_cast<uint32_t>(ctr - 1 != 0);
+         auto ctv = get_bit<CtrValue>(bo);
+         if (!(ctb ^ ctv)) {
+            info.conditionSatisfied = false;
+         }
       }
-
-      return;
    }
 
-   if (bo == 12 && bi == 0) {
-      name = "blt";
-   } else if (bo == 4 && bi == 1) {
-      name = "ble";
-   } else if (bo == 12 && bi == 2) {
-      name = "beq";
-   } else if (bo == 4 && bi == 0) {
-      name = "bge";
-   } else if (bo == 12 && bi == 1) {
-      name = "bgt";
-   } else if (bo == 4 && bi == 2) {
-      name = "bne";
-   } else if (bo == 12 && bi == 3) {
-      name = "bso";
-   } else if (bo == 4 && bi == 3) {
-      name = "bns";
+   if (flags & BcCheckCond) {
+      if (!get_bit<NoCheckCond>(bo)) {
+         info.isConditional = true;
+
+         auto crb = get_bit(cr, 31 - instr.bi);
+         auto crv = get_bit<CondValue>(bo);
+         if (crb != crv) {
+            info.conditionSatisfied = false;
+         }
+      }
    }
 
-   if (!name.empty()) {
-      // Remove bo, bi from args
-      dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
+   if (flags & BcBranchCTR) {
+      info.isVariable = true;
+      if (ctr) {
+         info.target = ctr & ~0x3;
+      }
+   } else if (flags & BcBranchLR) {
+      info.isVariable = true;
+      if (lr) {
+         info.target = lr & ~0x3;
+      }
+   } else {
+      info.target = sign_extend<16>(instr.bd << 2);
 
-      // Add crS argument
-      espresso::Disassembly::Argument cr;
-      cr.type = Disassembly::Argument::Register;
-      cr.text = "cr" + std::to_string(instr.bi / 4);
-      dis.args.push_back(cr);
-
-      // Update name
-      dis.name = name;
+      if (!instr.aa) {
+         info.target += address;
+      }
    }
+
+   return info;
+}
+
+BranchInfo
+disassembleBranchInfo(InstructionID id,
+                      Instruction ins,
+                      uint32_t address,
+                      uint32_t ctr,
+                      uint32_t cr,
+                      uint32_t lr)
+{
+   auto info = BranchInfo { };
+
+   if (id == InstructionID::b) {
+      info.isVariable = false;
+      info.isCall = ins.lk;
+      info.isConditional = false;
+      info.conditionSatisfied = true;
+      info.target = sign_extend<26>(ins.li << 2);
+      if (!ins.aa) {
+         info.target += address;
+      }
+   } else if (id == InstructionID::bc) {
+      info = disassembleBranchInfoBX<BcCheckCtr | BcCheckCond>(address, ins, ctr, cr, lr);
+   } else if (id == InstructionID::bcctr) {
+      info = disassembleBranchInfoBX<BcBranchCTR | BcCheckCond>(address, ins, ctr, cr, lr);
+   } else if (id == InstructionID::bclr) {
+      info = disassembleBranchInfoBX<BcBranchLR | BcCheckCtr | BcCheckCond>(address, ins, ctr, cr, lr);
+   }
+
+   return info;
 }
 
 } // namespace espresso

@@ -88,6 +88,9 @@ isA(Instruction instr)
 bool
 isInstructionFieldMarker(InstructionField field);
 
+bool
+isBranchInstruction(InstructionID id);
+
 const char *
 getInstructionFieldName(InstructionField field);
 

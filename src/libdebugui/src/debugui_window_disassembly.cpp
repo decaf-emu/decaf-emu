@@ -15,7 +15,6 @@
 
 // TODO: Make this public
 #include <libdecaf/src/debugger/debugger_analysis.h>
-#include <libdecaf/src/debugger/debugger_branchcalc.h>
 
 namespace debugui
 {
@@ -88,14 +87,15 @@ DisassemblyWindow::draw()
             auto instr = cpu::getBreakpointSavedCode(selectedAddr);
             auto data = espresso::decodeInstruction(instr);
 
-            if (data && debugger::analysis::isBranchInstr(data)) {
-               auto meta = debugger::analysis::getBranchMeta(selectedAddr, instr, data,
-                                                             thread.ctr,
-                                                             thread.cr,
-                                                             thread.lr);
+            if (data && espresso::isBranchInstruction(data->id)) {
+               auto branchInfo =
+                  espresso::disassembleBranchInfo(data->id, instr,
+                                                  selectedAddr,
+                                                  thread.ctr, thread.cr,
+                                                  thread.lr);
 
-               if (!meta.isVariable) {
-                  mSelectedAddr = meta.target;
+               if (!branchInfo.isVariable) {
+                  mSelectedAddr = branchInfo.target;
                }
             }
          }
@@ -180,22 +180,23 @@ DisassemblyWindow::draw()
       auto info = debugger::analysis::get(selectedAddr);
       auto isVisBranchSource = false;
 
-      if (data && debugger::analysis::isBranchInstr(data)) {
-         auto meta = debugger::analysis::getBranchMeta(selectedAddr, instr, data,
-                                                       thread.ctr, thread.cr,
-                                                       thread.lr);
-
-         if (!meta.isCall && !meta.isVariable) {
-            ForEachVisInstr(selectedAddr, meta.target,
+      if (data && espresso::isBranchInstruction(data->id)) {
+         auto branchInfo = espresso::disassembleBranchInfo(data->id, instr,
+                                                           selectedAddr,
+                                                           thread.ctr,
+                                                           thread.cr,
+                                                           thread.lr);
+         if (!branchInfo.isCall && !branchInfo.isVariable) {
+            ForEachVisInstr(selectedAddr, branchInfo.target,
                             [&](uint32_t addr, VisInstrInfo &vii) {
                if (addr == selectedAddr) {
-                  if (meta.target < selectedAddr) {
+                  if (branchInfo.target < selectedAddr) {
                      vii.branchGlyph = BranchGlyph::StartUp;
                   } else {
                      vii.branchGlyph = BranchGlyph::StartDown;
                   }
-               } else if (addr == meta.target) {
-                  if (meta.target < selectedAddr) {
+               } else if (addr == branchInfo.target) {
+                  if (branchInfo.target < selectedAddr) {
                      vii.branchGlyph = BranchGlyph::EndUp;
                   } else {
                      vii.branchGlyph = BranchGlyph::EndDown;
@@ -204,13 +205,11 @@ DisassemblyWindow::draw()
                   vii.branchGlyph = BranchGlyph::Middle;
                }
 
-               if (meta.conditionSatisfied) {
+               if (branchInfo.conditionSatisfied) {
                   vii.branchColor = FuncFollowColor;
                } else {
                   vii.branchColor = FuncSkipColor;
-               }/* else {
-                  vii.branchColor = FuncLinkColor;
-               }*/
+               }
             });
 
             isVisBranchSource = true;
@@ -368,13 +367,15 @@ DisassemblyWindow::draw()
       linePos.x += funcLineAdvance;
 
       // This renders an arrow representing the direction of any branch statement
-      if (data && debugger::analysis::isBranchInstr(data)) {
-         auto meta = debugger::analysis::getBranchMeta(addr, instr, data,
-                                                       thread.ctr, thread.cr,
-                                                       thread.lr);
-         if (!meta.isVariable && !meta.isCall) {
+      if (data && espresso::isBranchInstruction(data->id)) {
+         auto branchInfo =
+            espresso::disassembleBranchInfo(data->id, instr,
+                                            addr,
+                                            thread.ctr, thread.cr,
+                                            thread.lr);
+         if (!branchInfo.isVariable && !branchInfo.isCall) {
             ImGui::SetCursorPos(linePos);
-            if (meta.target > addr) {
+            if (branchInfo.target > addr) {
                ImGui::TextColored(JmpColor, u8"\u25BE");
             } else {
                ImGui::TextColored(JmpColor, u8"\u25B4");
@@ -442,12 +443,12 @@ DisassemblyWindow::draw()
          lineInfo = info.func->name;
       }
 
-      if (data && debugger::analysis::isBranchInstr(data)) {
-         auto meta = debugger::analysis::getBranchMeta(addr, instr, data,
-                                                       thread.ctr, thread.cr,
-                                                       thread.lr);
-         if (!meta.isVariable) {
-            auto func = debugger::analysis::getFunction(meta.target);
+      if (data && espresso::isBranchInstruction(data->id)) {
+         auto branchInfo =
+            espresso::disassembleBranchInfo(data->id, instr, addr, thread.ctr,
+                                            thread.cr, thread.lr);
+         if (!branchInfo.isVariable) {
+            auto func = debugger::analysis::getFunction(branchInfo.target);
             if (func) {
                if (lineInfo.size() > 0) {
                   lineInfo += " - ";

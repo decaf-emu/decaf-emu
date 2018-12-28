@@ -3,11 +3,21 @@
 #include <string>
 #include <vector>
 #include "espresso_instruction.h"
+#include "espresso_instructionid.h"
 
 namespace espresso
 {
 
 struct InstructionInfo;
+
+struct BranchInfo
+{
+   bool isVariable;
+   uint32_t target;
+   bool isConditional;
+   bool conditionSatisfied;
+   bool isCall;
+};
 
 struct Disassembly
 {
@@ -45,5 +55,8 @@ struct Disassembly
 };
 
 bool disassemble(Instruction bin, Disassembly &out, uint32_t address);
+BranchInfo disassembleBranchInfo(InstructionID id, Instruction ins,
+                                 uint32_t address, uint32_t ctr,
+                                 uint32_t cr, uint32_t lr);
 
 } // namespace espresso

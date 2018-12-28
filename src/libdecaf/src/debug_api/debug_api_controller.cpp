@@ -3,7 +3,6 @@
 #include "debug_api_controller.h"
 #include "debugger/debugger.h"
 #include "debugger/debugger_analysis.h"
-#include "debugger/debugger_branchcalc.h"
 #include "decaf_config.h"
 
 #include <array>
@@ -11,6 +10,8 @@
 #include <condition_variable>
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_breakpoints.h>
+#include <libcpu/espresso/espresso_disassembler.h>
+#include <libcpu/espresso/espresso_instructionset.h>
 #include <mutex>
 
 namespace decaf::debug
@@ -142,20 +143,19 @@ calculateNextInstr(const cpu::CoreRegs *state, bool stepOver)
    auto instr = mem::read<espresso::Instruction>(state->nia);
    auto data = espresso::decodeInstruction(instr);
 
-   if (data && debugger::analysis::isBranchInstr(data)) {
-      auto meta = debugger::analysis::getBranchMeta(state->nia,
-                                                    instr, data,
-                                                    state->ctr,
-                                                    state->cr.value,
-                                                    state->lr);
+   if (data && espresso::isBranchInstruction(data->id)) {
+      auto branchInfo =
+         espresso::disassembleBranchInfo(data->id, instr, state->nia,
+                                         state->ctr, state->cr.value,
+                                         state->lr);
 
-      if (meta.isCall && stepOver) {
+      if (branchInfo.isCall && stepOver) {
          // This is a call and we are stepping over...
          return state->nia + 4;
       }
 
-      if (meta.conditionSatisfied) {
-         return meta.target;
+      if (branchInfo.conditionSatisfied) {
+         return branchInfo.target;
       } else {
          return state->nia + 4;
       }
