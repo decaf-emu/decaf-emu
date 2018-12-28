@@ -18,7 +18,6 @@
 
 // TODO: Make this public
 #include <libdecaf/src/debugger/debugger_analysis.h>
-#include <libdecaf/src/cafe/libraries/gx2/gx2_internal_pm4cap.h>
 
 namespace debugui
 {
@@ -389,7 +388,7 @@ void Manager::drawMenu()
       ImGui::Separator();
 
       if (ImGui::MenuItem("PM4 Capture Next Frame", nullptr, false, true)) {
-         cafe::gx2::internal::captureNextFrame();
+         decaf::debug::pm4CaptureNextFrame();
       }
 
       ImGui::Separator();
@@ -401,20 +400,20 @@ void Manager::drawMenu()
       auto pm4Enable = false;
       auto pm4Status = false;
 
-      switch (cafe::gx2::internal::captureState()) {
-      case cafe::gx2::internal::CaptureState::Disabled:
+      switch (decaf::debug::pm4CaptureState()) {
+      case decaf::debug::Pm4CaptureState::Disabled:
          pm4Status = false;
          pm4Enable = true;
          break;
-      case cafe::gx2::internal::CaptureState::Enabled:
+      case decaf::debug::Pm4CaptureState::Enabled:
          pm4Status = true;
          pm4Enable = true;
          break;
-      case cafe::gx2::internal::CaptureState::WaitEndNextFrame:
+      case decaf::debug::Pm4CaptureState::WaitEndNextFrame:
          pm4Status = true;
          pm4Enable = false;
          break;
-      case cafe::gx2::internal::CaptureState::WaitStartNextFrame:
+      case decaf::debug::Pm4CaptureState::WaitStartNextFrame:
          pm4Status = true;
          pm4Enable = false;
          break;
@@ -422,9 +421,9 @@ void Manager::drawMenu()
 
       if (ImGui::MenuItem("PM4 Trace Enabled", nullptr, pm4Status, pm4Enable)) {
          if (!pm4Status) {
-            cafe::gx2::internal::captureStartAtNextSwap();
+            decaf::debug::pm4CaptureBegin();
          } else {
-            cafe::gx2::internal::captureStopAtNextSwap();
+            decaf::debug::pm4CaptureEnd();
          }
       }
 

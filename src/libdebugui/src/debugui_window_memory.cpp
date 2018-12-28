@@ -4,7 +4,6 @@
 #include <imgui.h>
 #include <libcpu/mem.h>
 #include <libcpu/mmu.h>
-#include <libdecaf/src/cafe/kernel/cafe_kernel_mmu.h>
 #include <sstream>
 
 namespace debugui
@@ -13,7 +12,6 @@ namespace debugui
 MemoryWindow::MemoryWindow(const std::string &name) :
    Window(name)
 {
-   mAddressScroller.scrollTo(cafe::kernel::getVirtualMemoryMap(cafe::kernel::VirtualMemoryRegion::AppData).vaddr.getAddress());
 }
 
 void

@@ -247,6 +247,14 @@ struct CafeVoice
    bool loopingEnabled;
 };
 
+enum class Pm4CaptureState
+{
+   Disabled,
+   WaitStartNextFrame,
+   WaitEndNextFrame,
+   Enabled,
+};
+
 //! Check if the debug API is ready to be used, this returns true once a game
 //! .rpx has been loaded
 bool ready();
@@ -260,6 +268,12 @@ bool sampleCafeMemorySegments(std::vector<CafeMemorySegment> &segments);
 bool sampleCafeRunningThread(int coreId, CafeThread &info);
 bool sampleCafeThreads(std::vector<CafeThread> &threads);
 bool sampleCafeVoices(std::vector<CafeVoice> &voiceInfos);
+
+// pm4 capture
+Pm4CaptureState pm4CaptureState();
+bool pm4CaptureNextFrame();
+bool pm4CaptureBegin();
+bool pm4CaptureEnd();
 
 // Controller
 bool pause();
