@@ -2,7 +2,6 @@
 
 #include "debug_api_controller.h"
 #include "debugger/debugger.h"
-#include "debugger/debugger_analysis.h"
 #include "decaf_config.h"
 
 #include <array>

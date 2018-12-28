@@ -209,6 +209,7 @@ private:
    unsigned mJitProfilingMask = 0;
    unsigned mResumeCount = 0;
    CafeThread mActiveThread { };
+   decaf::debug::AnalyseDatabase mAnalyseDatabase;
 };
 
 } // namespace namespace debugui

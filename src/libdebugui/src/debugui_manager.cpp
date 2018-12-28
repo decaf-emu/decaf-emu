@@ -16,9 +16,6 @@
 #include <libgpu/gpu_config.h>
 #include <imgui.h>
 
-// TODO: Make this public
-#include <libdecaf/src/debugger/debugger_analysis.h>
-
 namespace debugui
 {
 
@@ -229,7 +226,7 @@ void Manager::onFirstActivation()
              new InfoWindow { "Info" });
 
    addWindow(WindowID::DisassemblyWindow,
-             new DisassemblyWindow { "Disassembly" },
+             new DisassemblyWindow { "Disassembly", mAnalyseDatabase },
              { KeyboardKey::LeftControl, KeyboardKey::I });
 
    addWindow(WindowID::MemoryWindow,
@@ -273,8 +270,10 @@ void Manager::onFirstActivation()
       disassemblyStartAddress = moduleInfo.textAddr;
       memoryStartAddress = moduleInfo.dataAddr;
 
-      debugger::analysis::analyse(moduleInfo.textAddr,
-                                  moduleInfo.textAddr + moduleInfo.textSize);
+      decaf::debug::analyseLoadedModules(mAnalyseDatabase);
+      decaf::debug::analyseCode(mAnalyseDatabase,
+                                moduleInfo.textAddr,
+                                moduleInfo.textAddr + moduleInfo.textSize);
    }
 
    // Place the views somewhere sane to start in case pausing did not place it somewhere

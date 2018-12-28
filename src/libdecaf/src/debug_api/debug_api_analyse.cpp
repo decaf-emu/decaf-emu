@@ -1,4 +1,4 @@
-#include "debugger_analysis.h"
+#include "decaf_debug_api.h"
 
 #include "cafe/loader/cafe_loader_entry.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
@@ -7,62 +7,66 @@
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libcpu/mem.h>
-#include <map>
-#include <unordered_map>
 
-namespace debugger
+namespace decaf::debug
 {
 
-namespace analysis
+const AnalyseDatabase::Function *
+analyseLookupFunction(const AnalyseDatabase &db,
+                      VirtualAddress address)
 {
-
-static std::map<uint32_t, FuncData, std::greater<uint32_t>> sFuncData;
-static std::unordered_map<uint32_t, InstrData> sInstrData;
-
-FuncData *
-getFunction(uint32_t address)
-{
-   auto funcIter = sFuncData.find(address);
-
-   if (funcIter != sFuncData.end()) {
-      return &funcIter->second;
+   if (auto itr = db.functions.find(address); itr != db.functions.end()) {
+      return &itr->second;
    }
 
    return nullptr;
 }
 
-InstrInfo
-get(uint32_t address)
+template<typename ConstOptionalDatabase>
+static auto
+findFunctionContainingAddress(ConstOptionalDatabase &db,
+                              VirtualAddress address)
 {
-   auto info = InstrInfo { 0 };
-   auto instrIter = sInstrData.find(address);
+   using ReturnType =
+      typename std::conditional<std::is_const<ConstOptionalDatabase>::value,
+                       const AnalyseDatabase::Function *,
+                       AnalyseDatabase::Function *>::type;
 
-   if (instrIter != sInstrData.end()) {
-      info.instr = &instrIter->second;
+   if (db.functions.empty()) {
+      return static_cast<ReturnType>(nullptr);
    }
 
-   if (sFuncData.size() > 0) {
-      auto funcIter = sFuncData.lower_bound(address);
+   if (auto itr = db.functions.lower_bound(address); itr != db.functions.end()) {
+      auto &func = itr->second;
 
-      if (funcIter != sFuncData.end()) {
-         auto &func = funcIter->second;
-
-         if (address >= func.start && address < func.end) {
-            // The function needs to have an end, or be the first two instructions
-            //  since we apply some special display logic to the first two instructions
-            //  in a never-ending function...
-            if (func.end != 0xFFFFFFFF || (address == func.start || address == func.start + 4)) {
-               info.func = &func;
-            }
+      if (address >= func.start && address < func.end) {
+         // The function needs to have an end, or be the first two instructions
+         //  since we apply some special display logic to the first two instructions
+         //  in a never-ending function...
+         if (func.end != 0xFFFFFFFF || (address == func.start || address == func.start + 4)) {
+            return &func;
          }
       }
    }
 
+   return static_cast<ReturnType>(nullptr);
+}
+
+AnalyseDatabase::Lookup
+analyseLookupAddress(const AnalyseDatabase &db,
+                     VirtualAddress address)
+{
+   auto info = AnalyseDatabase::Lookup { };
+   if (auto itr = db.instructions.find(address); itr != db.instructions.end()) {
+      info.instruction = &itr->second;
+   }
+
+   info.function = findFunctionContainingAddress(db, address);
    return info;
 }
 
 uint32_t
-findFunctionEnd(uint32_t start)
+analyseScanFunctionEnd(VirtualAddress start)
 {
    static const uint32_t MaxScannedBytes = 0x400u;
    auto fnStart = start;
@@ -127,48 +131,55 @@ findFunctionEnd(uint32_t start)
    return fnEnd;
 }
 
-static void
-markAsFunction(uint32_t address,
-               std::string_view name)
+static std::string
+defaultFunctionName(VirtualAddress address)
 {
-   // We use get instead of searching the sFuncData directly
-   //  because we can't set a function in the middle of a function
-   auto info = get(address);
+   return fmt::format("sub_{:08x}", address);
+}
 
-   if (!info.func) {
-      FuncData func;
-      func.start = address;
-      func.end = findFunctionEnd(address);
-      func.name = name;
-      sFuncData.emplace(func.start, func);
+static void
+markAsFunction(AnalyseDatabase &db,
+               VirtualAddress address,
+               std::string_view name = {})
+{
+   // Check if the address is already marked as a function
+   auto function = findFunctionContainingAddress(db, address);
+   if (function) {
+      if (!name.empty()) {
+         // Update the name if a name was passed in
+         function->name = name;
+      }
+
+      return;
    }
-}
 
-static void
-markAsFunction(uint32_t address)
-{
-   markAsFunction(address, fmt::format("sub_{:08x}", address));
-}
+   auto func = AnalyseDatabase::Function { };
+   func.start = address;
+   func.end = analyseScanFunctionEnd(address);
 
-void
-toggleAsFunction(uint32_t address)
-{
-   auto fIter = sFuncData.find(address);
-
-   if (fIter != sFuncData.end()) {
-      sFuncData.erase(fIter);
+   if (name.empty()) {
+      func.name = defaultFunctionName(address);
    } else {
-      markAsFunction(address);
+      func.name = name;
+   }
+
+   db.functions.emplace(func.start, func);
+}
+
+void
+analyseToggleAsFunction(AnalyseDatabase &db,
+                        VirtualAddress address)
+{
+   if (auto itr = db.functions.find(address); itr != db.functions.end()) {
+      db.functions.erase(itr);
+   } else {
+      markAsFunction(db, address);
    }
 }
 
 void
-analyse(uint32_t start,
-        uint32_t end)
+analyseLoadedModules(AnalyseDatabase &db)
 {
-   // Scan through all our symbols and mark them as functions.
-   // We do this first as they will not receive names if they are
-   //  detected by the analysis pass due to its naming system.
    cafe::loader::lockLoader();
    for (auto rpl = cafe::loader::getLoadedRplLinkedList(); rpl; rpl = rpl->nextLoadedRpl) {
       auto symTabHdr = virt_ptr<cafe::loader::rpl::SectionHeader> { nullptr };
@@ -209,13 +220,19 @@ analyse(uint32_t start,
             if ((symbol->info & 0xf) == cafe::loader::rpl::STT_FUNC &&
                 symbolAddress >= textStartAddr && symbolAddress < textEndAddr) {
                auto name = virt_cast<const char *>(strTabAddr + symbol->name);
-               markAsFunction(symbol->value, name.get());
+               markAsFunction(db, symbol->value, name.get());
             }
          }
       }
    }
    cafe::loader::unlockLoader();
+}
 
+void
+analyseCode(AnalyseDatabase &db,
+            VirtualAddress start,
+            VirtualAddress end)
+{
    for (auto addr = start; addr < end; addr += 4) {
       auto instr = mem::read<espresso::Instruction>(addr);
       auto data = espresso::decodeInstruction(instr);
@@ -229,18 +246,16 @@ analyse(uint32_t start,
             espresso::disassembleBranchInfo(data->id, instr, addr, 0, 0, 0);
 
          if (!branchInfo.isCall && !branchInfo.isVariable) {
-            sInstrData[branchInfo.target].sourceBranches.push_back(addr);
+            db.instructions[branchInfo.target].sourceBranches.push_back(addr);
          }
 
          // If this is a call, and its not variable, we should mark
          //  the target as a function, since it likely is...
          if (branchInfo.isCall && !branchInfo.isVariable) {
-            markAsFunction(branchInfo.target);
+            markAsFunction(db, branchInfo.target);
          }
       }
    }
 }
 
-} // namespace analysis
-
-} // namespace debugger
+} // namespace decaf::debug

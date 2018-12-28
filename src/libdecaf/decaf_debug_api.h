@@ -2,6 +2,9 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <map>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace decaf::debug
@@ -11,6 +14,37 @@ using VirtualAddress = uint32_t;
 using PhysicalAddress = uint32_t;
 
 using CafeThreadHandle = VirtualAddress;
+
+struct AnalyseDatabase
+{
+   struct Function
+   {
+      VirtualAddress start;
+      VirtualAddress end;
+      std::string name;
+   };
+
+   struct Instruction
+   {
+      // Addresses of instructions which jump to this one
+      std::vector<uint32_t> sourceBranches;
+
+      // User-left comments
+      std::string comments;
+   };
+
+   struct Lookup
+   {
+      //! Information about the function at this address.
+      const Function *function = nullptr;
+
+      //! Information about the instruction at this address.
+      const Instruction *instruction = nullptr;
+   };
+
+   std::map<uint32_t, Function, std::greater<uint32_t>> functions;
+   std::unordered_map<uint32_t, Instruction> instructions;
+};
 
 struct CafeMemorySegment
 {
@@ -258,6 +292,17 @@ enum class Pm4CaptureState
 //! Check if the debug API is ready to be used, this returns true once a game
 //! .rpx has been loaded
 bool ready();
+
+// Code analysis
+void analyseLoadedModules(AnalyseDatabase &db);
+void analyseCode(AnalyseDatabase &db, VirtualAddress start, VirtualAddress end);
+
+const AnalyseDatabase::Function *analyseLookupFunction(const AnalyseDatabase &db,
+                                                       VirtualAddress address);
+AnalyseDatabase::Lookup analyseLookupAddress(const AnalyseDatabase &db,
+                                             VirtualAddress address);
+uint32_t analyseScanFunctionEnd(VirtualAddress start);
+void analyseToggleAsFunction(AnalyseDatabase &db, VirtualAddress address);
 
 // CafeOS
 bool findClosestSymbol(VirtualAddress addr, uint32_t *outSymbolDistance,

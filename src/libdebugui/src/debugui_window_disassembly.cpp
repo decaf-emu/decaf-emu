@@ -13,9 +13,6 @@
 #include <map>
 #include <sstream>
 
-// TODO: Make this public
-#include <libdecaf/src/debugger/debugger_analysis.h>
-
 namespace debugui
 {
 
@@ -48,8 +45,10 @@ struct VisInstrInfo
    ImVec4 branchColor;
 };
 
-DisassemblyWindow::DisassemblyWindow(const std::string &name) :
-   Window(name)
+DisassemblyWindow::DisassemblyWindow(const std::string &name,
+                                     decaf::debug::AnalyseDatabase &analyseDatabase) :
+   Window(name),
+   mAnalyseDatabase(analyseDatabase)
 {
 }
 
@@ -76,7 +75,7 @@ DisassemblyWindow::draw()
 
       // Check if the user tapped F, if so, mark this as a function!
       if (ImGui::IsKeyPressed(static_cast<int>(KeyboardKey::F))) {
-         debugger::analysis::toggleAsFunction(static_cast<uint32_t>(mSelectedAddr));
+         decaf::debug::analyseToggleAsFunction(mAnalyseDatabase, static_cast<uint32_t>(mSelectedAddr));
       }
 
       // Check if the user tapped Enter, if so, jump to the branch target!
@@ -177,7 +176,7 @@ DisassemblyWindow::draw()
       auto selectedAddr = static_cast<uint32_t>(mSelectedAddr);
       auto instr = cpu::getBreakpointSavedCode(selectedAddr);
       auto data = espresso::decodeInstruction(instr);
-      auto info = debugger::analysis::get(selectedAddr);
+      auto info = decaf::debug::analyseLookupAddress(mAnalyseDatabase, selectedAddr);
       auto isVisBranchSource = false;
 
       if (data && espresso::isBranchInstruction(data->id)) {
@@ -217,12 +216,12 @@ DisassemblyWindow::draw()
       }
 
       if (!isVisBranchSource) {
-         if (info.instr) {
+         if (info.instruction) {
             auto &visInfo = visInstrInfo[selectedAddr];
             auto selectedMinSource = selectedAddr;
             auto selectedMaxSource = selectedAddr;
 
-            for (auto sourceAddr : info.instr->sourceBranches) {
+            for (auto sourceAddr : info.instruction->sourceBranches) {
                if (sourceAddr > selectedMaxSource) {
                   selectedMaxSource = sourceAddr;
                }
@@ -331,7 +330,7 @@ DisassemblyWindow::draw()
 
       auto instr = cpu::getBreakpointSavedCode(addr);
       auto data = espresso::decodeInstruction(instr);
-      auto info = debugger::analysis::get(addr);
+      auto info = decaf::debug::analyseLookupAddress(mAnalyseDatabase, addr);
 
       auto visInfoIter = visInstrInfo.find(addr);
       auto *visInfo = visInfoIter != visInstrInfo.end() ? &visInfoIter->second : nullptr;
@@ -346,18 +345,18 @@ DisassemblyWindow::draw()
 
       linePos.x += dataAdvance;
 
-      if (info.func) {
+      if (info.function) {
          ImGui::SetCursorPos(linePos);
 
-         if (addr == info.func->start) {
+         if (addr == info.function->start) {
             ImGui::TextColored(FuncColor, u8"\u250f");
-         } else if (info.func->end == 0xFFFFFFFF) {
-            if (addr == info.func->start + 4) {
+         } else if (info.function->end == 0xFFFFFFFF) {
+            if (addr == info.function->start + 4) {
                ImGui::TextColored(FuncColor, u8"\u2575");
                ImGui::SetCursorPos(linePos);
                ImGui::TextColored(FuncColor, u8"\u25BE");
             }
-         } else if (addr == info.func->end - 4) {
+         } else if (addr == info.function->end - 4) {
             ImGui::TextColored(FuncColor, u8"\u2517");
          } else {
             ImGui::TextColored(FuncColor, u8"\u2503");
@@ -439,8 +438,8 @@ DisassemblyWindow::draw()
 
       std::string lineInfo;
 
-      if (info.func && addr == info.func->start && info.func->name.size() > 0) {
-         lineInfo = info.func->name;
+      if (info.function && addr == info.function->start && info.function->name.size() > 0) {
+         lineInfo = info.function->name;
       }
 
       if (data && espresso::isBranchInstruction(data->id)) {
@@ -448,7 +447,7 @@ DisassemblyWindow::draw()
             espresso::disassembleBranchInfo(data->id, instr, addr, thread.ctr,
                                             thread.cr, thread.lr);
          if (!branchInfo.isVariable) {
-            auto func = debugger::analysis::getFunction(branchInfo.target);
+            auto func = decaf::debug::analyseLookupFunction(mAnalyseDatabase, branchInfo.target);
             if (func) {
                if (lineInfo.size() > 0) {
                   lineInfo += " - ";
@@ -458,11 +457,11 @@ DisassemblyWindow::draw()
          }
       }
 
-      if (info.instr && info.instr->comments.size() > 0) {
+      if (info.instruction && info.instruction->comments.size() > 0) {
          if (lineInfo.size() > 0) {
             lineInfo += " - ";
          }
-         lineInfo += info.instr->comments;
+         lineInfo += info.instruction->comments;
       }
 
       if (lineInfo.size() > 0) {

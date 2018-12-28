@@ -11,7 +11,8 @@ namespace debugui
 class DisassemblyWindow : public Window
 {
 public:
-   DisassemblyWindow(const std::string &name);
+   DisassemblyWindow(const std::string &name,
+                     decaf::debug::AnalyseDatabase &analyseDatabase);
    virtual ~DisassemblyWindow() = default;
 
    virtual void
@@ -24,6 +25,7 @@ private:
    AddressScroller mAddressScroller;
    int64_t mSelectedAddr = -1;
    std::array<char, 9> mAddressInput = { 0 };
+   decaf::debug::AnalyseDatabase &mAnalyseDatabase;
 };
 
 } // namespace debugui
