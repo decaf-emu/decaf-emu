@@ -182,7 +182,7 @@ void Manager::draw(unsigned width, unsigned height)
    }
 
    if (mVisible) {
-      if (!mHasBeenActivated) {
+      if (decaf::debug::ready() && !mHasBeenActivated) {
          onFirstActivation();
          mHasBeenActivated = true;
       }
