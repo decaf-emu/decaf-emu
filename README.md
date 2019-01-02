@@ -3,7 +3,9 @@
 # decaf-emu
 Researching Wii U emulation. Licensed under the terms of the GNU General Public License, version 3 or later (GPLv3+).
 
-You can find us for developer discussion at #wiiu-emu on freenode.
+You can find us for developer discussion:
+- on discord using https://discord.gg/tPqFBnr
+- or at #wiiu-emu on freenode.
 
 ## Requirements
 - Windows with the latest update of Visual Studio 2017
