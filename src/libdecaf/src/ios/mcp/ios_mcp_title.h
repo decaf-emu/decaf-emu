@@ -9,6 +9,9 @@ phys_ptr<MCPPPrepareTitleInfo>
 getPrepareTitleInfoBuffer();
 
 MCPError
+readTitleAppXml(phys_ptr<MCPTitleAppXml> titleInfo);
+
+MCPError
 readTitleCosXml(phys_ptr<MCPPPrepareTitleInfo> titleInfo);
 
 void

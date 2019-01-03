@@ -21,6 +21,20 @@ using MCPTitleId = uint64_t;
 
 constexpr MCPTitleId DefaultTitleId = -3;
 
+// Offsets of MCPTitleAppXml not verified.
+struct MCPTitleAppXml
+{
+   be2_val<uint32_t> version;
+   be2_val<uint64_t> os_version;
+   be2_val<uint64_t> title_id;
+   be2_val<uint16_t> title_version;
+   be2_val<uint32_t> sdk_version;
+   be2_val<uint32_t> app_type;
+   be2_val<uint32_t> group_id;
+   be2_array<uint8_t, 32> os_mask;
+   be2_val<uint64_t> common_id;
+};
+
 struct MCPPPrepareTitleInfo
 {
    struct Permission

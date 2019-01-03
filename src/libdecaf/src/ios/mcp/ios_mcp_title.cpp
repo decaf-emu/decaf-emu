@@ -34,6 +34,68 @@ getPrepareTitleInfoBuffer()
 }
 
 MCPError
+readTitleAppXml(phys_ptr<MCPTitleAppXml> titleInfo)
+{
+   StackArray<UCItem, 10> items;
+   items[0].name = "app";
+   items[0].access = 0x777u;
+   items[0].dataType = UCDataType::Complex;
+
+   items[1].name = "app.version";
+   items[1].dataType = UCDataType::UnsignedInt;
+   items[1].dataSize = 4u;
+   items[1].data = phys_addrof(titleInfo->version);
+
+   items[2].name = "app.os_version";
+   items[2].dataType = UCDataType::HexBinary;
+   items[2].dataSize = 8u;
+   items[2].data = phys_addrof(titleInfo->os_version);
+
+   items[3].name = "app.title_id";
+   items[3].dataType = UCDataType::HexBinary;
+   items[3].dataSize = 8u;
+   items[3].data = phys_addrof(titleInfo->title_id);
+
+   items[4].name = "app.title_version";
+   items[4].dataType = UCDataType::HexBinary;
+   items[4].dataSize = 2u;
+   items[4].data = phys_addrof(titleInfo->title_version);
+
+   items[5].name = "app.sdk_version";
+   items[5].dataType = UCDataType::UnsignedInt;
+   items[5].dataSize = 4u;
+   items[5].data = phys_addrof(titleInfo->sdk_version);
+
+   items[6].name = "app.app_type";
+   items[6].dataType = UCDataType::UnsignedInt;
+   items[6].dataSize = 4u;
+   items[6].data = phys_addrof(titleInfo->app_type);
+
+   items[7].name = "app.group_id";
+   items[7].dataType = UCDataType::UnsignedInt;
+   items[7].dataSize = 4u;
+   items[7].data = phys_addrof(titleInfo->group_id);
+
+   items[8].name = "app.os_mask";
+   items[8].dataType = UCDataType::HexBinary;
+   items[8].dataSize = 32u;
+   items[8].data = phys_addrof(titleInfo->os_mask);
+
+   items[9].name = "app.common_id";
+   items[9].dataType = UCDataType::HexBinary;
+   items[9].dataSize = 8u;
+   items[9].data = phys_addrof(titleInfo->common_id);
+
+   auto error = readTitleConfigItems("/vol/code/app.xml", items, items.size());
+   if (error < MCPError::OK && error != MCPError::KeyNotFound) {
+      // KeyNotFound is allowed because not all fields are required in xml
+      return error;
+   }
+
+   return MCPError::OK;
+}
+
+MCPError
 readTitleCosXml(phys_ptr<MCPPPrepareTitleInfo> titleInfo)
 {
    StackArray<UCItem, 60> items;

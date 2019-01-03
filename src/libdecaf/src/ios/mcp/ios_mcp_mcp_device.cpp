@@ -183,9 +183,14 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
 {
    auto titleId = request->titleId;
    if (titleId == DefaultTitleId) {
-      // TODO: When DefaultTitleId is passed in, we should replace this with
-      // the actual titleId.
-      titleId = 0u;
+      StackObject<MCPTitleAppXml> appXml;
+      if (auto error = readTitleAppXml(appXml); error < MCPError::OK) {
+         auto titleInfoBuffer = getPrepareTitleInfoBuffer();
+         std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
+         return error;
+      }
+
+      titleId = appXml->title_id;
    }
 
    // TODO: When we have title switching we will need to read the title id and
