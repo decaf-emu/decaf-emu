@@ -53,8 +53,12 @@ if(DECAF_GL)
     add_definitions(-DDECAF_GL)
 endif()
 
-if(DECAF_SDL)
+if(DECAF_SDL OR DECAF_QT)
+    # decaf-qt still uses SDL for input
     find_package(SDL2 REQUIRED)
+endif()
+
+if(DECAF_SDL)
     add_definitions(-DDECAF_SDL)
 endif()
 
@@ -79,6 +83,7 @@ endif()
 
 if(DECAF_QT)
     find_package(Qt5Widgets REQUIRED)
+    find_package(Qt5Svg REQUIRED)
     add_definitions(-DDECAF_QT)
 endif()
 

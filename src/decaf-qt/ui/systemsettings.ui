@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SystemSettingsWidget</class>
+ <widget class="QWidget" name="SystemSettingsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>468</width>
+    <height>366</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Options</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Region</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboBoxRegion"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Time Scale</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEditTimeScale">
+        <property name="inputMask">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Directories</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButtonResourcesPath">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>/dev/hfio01</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="lineEditHfioPath"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="lineEditSlcPath"/>
+      </item>
+      <item row="4" column="2">
+       <widget class="QPushButton" name="pushButtonSdcardPath">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <widget class="QPushButton" name="pushButtonContentPath">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Resources</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="lineEditSdcardPath"/>
+      </item>
+      <item row="5" column="2">
+       <widget class="QPushButton" name="pushButtonHfioPath">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>/vol/content</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="lineEditContentPath"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QPushButton" name="pushButtonMlcPath">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditResourcesPath"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>/dev/sdcard01</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="lineEditMlcPath"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>/dev/mlc01</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="pushButtonSlcPath">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>/dev/slc01</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>CafeOS LLE Whitelist</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QListWidget" name="listWidgetLleWhitelist"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButtonContentPath</sender>
+   <signal>clicked()</signal>
+   <receiver>SystemSettingsWidget</receiver>
+   <slot>browseContentPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>428</x>
+     <y>202</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonHfioPath</sender>
+   <signal>clicked()</signal>
+   <receiver>SystemSettingsWidget</receiver>
+   <slot>browseHfioPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>428</x>
+     <y>181</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonMlcPath</sender>
+   <signal>clicked()</signal>
+   <receiver>SystemSettingsWidget</receiver>
+   <slot>browseMlcPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>428</x>
+     <y>118</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonResourcesPath</sender>
+   <signal>clicked()</signal>
+   <receiver>SystemSettingsWidget</receiver>
+   <slot>browseResourcesPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>428</x>
+     <y>97</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonSdcardPath</sender>
+   <signal>clicked()</signal>
+   <receiver>SystemSettingsWidget</receiver>
+   <slot>browseSdcardPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>428</x>
+     <y>160</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonSlcPath</sender>
+   <signal>clicked()</signal>
+   <receiver>SystemSettingsWidget</receiver>
+   <slot>browseSlcPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>428</x>
+     <y>139</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>browseResourcesPath()</slot>
+  <slot>browseMlcPath()</slot>
+  <slot>browseSlcPath()</slot>
+  <slot>browseSdcardPath()</slot>
+  <slot>browseHfioPath()</slot>
+  <slot>browseContentPath()</slot>
+ </slots>
+</ui>

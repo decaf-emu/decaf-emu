@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="images">
+    <file alias="logo">../../resources/logo.svg</file>
+    <file alias="icon">../../resources/decaf.ico</file>
+  </qresource>
+</RCC>

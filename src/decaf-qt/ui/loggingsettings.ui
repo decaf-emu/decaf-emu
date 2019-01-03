@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoggingSettingsWidget</class>
+ <widget class="QWidget" name="LoggingSettingsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>393</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Log Options</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="3" column="0" colspan="4">
+       <widget class="QCheckBox" name="checkBoxOutputFile">
+        <property name="text">
+         <string>Output to file</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="4">
+       <widget class="QCheckBox" name="checkBoxAsynchronous">
+        <property name="text">
+         <string>Asynchronous</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Log File Directory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="lineEditLogDirectory">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>2</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QPushButton" name="pushButtonLogDirectory">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="4">
+       <widget class="QCheckBox" name="checkBoxBranchTracing">
+        <property name="text">
+         <string>Branch tracing</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="4">
+       <widget class="QCheckBox" name="checkBoxOutputStdout">
+        <property name="text">
+         <string>Output to stdout</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Log Level</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2" colspan="2">
+       <widget class="QComboBox" name="comboBoxLogLevel"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>CafeOS HLE Function Call Tracing</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="checkBoxHleTrace">
+        <property name="text">
+         <string>Enabled</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxHleTraceReturnValue">
+        <property name="text">
+         <string>Trace return value</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QListWidget" name="listWidgetHleTraceFilters"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="pushButtonAddTraceFilter">
+          <property name="text">
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButtonRemoveTraceFilter">
+          <property name="text">
+           <string>Remove</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButtonAddTraceFilter</sender>
+   <signal>clicked()</signal>
+   <receiver>LoggingSettingsWidget</receiver>
+   <slot>addTraceFilter()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>103</x>
+     <y>370</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>195</x>
+     <y>196</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonRemoveTraceFilter</sender>
+   <signal>clicked()</signal>
+   <receiver>LoggingSettingsWidget</receiver>
+   <slot>removeTraceFilter()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>287</x>
+     <y>370</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>195</x>
+     <y>196</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonLogDirectory</sender>
+   <signal>clicked()</signal>
+   <receiver>LoggingSettingsWidget</receiver>
+   <slot>browseLogPath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>349</x>
+     <y>103</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>195</x>
+     <y>196</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>browseLogPath()</slot>
+  <slot>addTraceFilter()</slot>
+  <slot>removeTraceFilter()</slot>
+ </slots>
+</ui>
