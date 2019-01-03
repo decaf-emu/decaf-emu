@@ -532,6 +532,10 @@ Manager::updateMouseState()
 bool
 Manager::onMouseAction(MouseButton button, MouseAction action)
 {
+   if (!mVisible) {
+      return false;
+   }
+
    if (button == MouseButton::Unknown) {
       return false;
    }
@@ -551,6 +555,10 @@ Manager::onMouseAction(MouseButton button, MouseAction action)
 bool
 Manager::onMouseMove(float x, float y)
 {
+   if (!mVisible) {
+      return false;
+   }
+
    mMousePosX = x;
    mMousePosY = y;
    return true;
@@ -559,6 +567,10 @@ Manager::onMouseMove(float x, float y)
 bool
 Manager::onMouseScroll(float x, float y)
 {
+   if (!mVisible) {
+      return false;
+   }
+
    mMouseScrollX += x;
    mMouseScrollY += y;
    return true;
@@ -567,6 +579,12 @@ Manager::onMouseScroll(float x, float y)
 bool
 Manager::onKeyAction(KeyboardKey key, KeyboardAction action)
 {
+   // When not visible we should ignore all keys except the ToggleDebugger key.
+   auto isToggleKey = (key == ToggleDebugger.modifier || key == ToggleDebugger.key);
+   if (!mVisible && !isToggleKey) {
+      return false;
+   }
+
    auto &io = ImGui::GetIO();
    auto idx = static_cast<int>(key);
 
@@ -590,12 +608,17 @@ Manager::onKeyAction(KeyboardKey key, KeyboardAction action)
    io.KeySuper = io.KeysDown[static_cast<int>(KeyboardKey::LeftSuper)]
               || io.KeysDown[static_cast<int>(KeyboardKey::RightSuper)];
 
-   return true;
+   // The key event should only be "consumed" when the debugger is visible.
+   return mVisible;
 }
 
 bool
 Manager::onText(const char *text)
 {
+   if (!mVisible) {
+      return false;
+   }
+
    auto &io = ImGui::GetIO();
    io.AddInputCharactersUTF8(text);
    return true;
