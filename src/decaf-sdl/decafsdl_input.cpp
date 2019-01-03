@@ -104,11 +104,11 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
       status.rightStickY = 0.0f;
 
       if (getState(device->keyboard.left_stick_up)) {
-         status.leftStickY -= 1.0f;
+         status.leftStickY += 1.0f;
       }
 
       if (getState(device->keyboard.left_stick_down)) {
-         status.leftStickY += 1.0f;
+         status.leftStickY -= 1.0f;
       }
 
       if (getState(device->keyboard.left_stick_left)) {
@@ -120,11 +120,11 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
       }
 
       if (getState(device->keyboard.right_stick_up)) {
-         status.rightStickY -= 1.0f;
+         status.rightStickY += 1.0f;
       }
 
       if (getState(device->keyboard.right_stick_down)) {
-         status.rightStickY += 1.0f;
+         status.rightStickY -= 1.0f;
       }
 
       if (getState(device->keyboard.right_stick_left)) {
@@ -174,7 +174,7 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
          [controller, joystick](int index, SDL_GameControllerAxis name) -> float {
             auto value = 0;
             if (index >= 0) {
-               value = SDL_JoystickGetAxis(joystick, index) ? 1 : 0;
+               value = SDL_JoystickGetAxis(joystick, index);
             } else if (index == -2 && name != SDL_CONTROLLER_AXIS_INVALID) {
                value = SDL_GameControllerGetAxis(controller, name);
             }
