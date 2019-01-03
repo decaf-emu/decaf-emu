@@ -197,7 +197,7 @@ loadFrontendToml(std::shared_ptr<cpptoml::table> config)
    config::display::stretch = config->get_qualified_as<bool>("display.stretch").value_or(config::display::stretch);
    config::display::backend = config->get_qualified_as<std::string>("display.backend").value_or(config::display::backend);
 
-   if (auto bgColor = config->get_qualified_array_of<int64_t>("ui.background_colour")) {
+   if (auto bgColor = config->get_qualified_array_of<int64_t>("display.background_colour")) {
       config::display::background_colour.r = static_cast<int>(bgColor->at(0));
       config::display::background_colour.g = static_cast<int>(bgColor->at(1));
       config::display::background_colour.b = static_cast<int>(bgColor->at(2));
