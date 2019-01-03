@@ -441,6 +441,22 @@ void QVulkanWindow2::setPreferredColorFormats(const QVector<VkFormat> &formats)
     requestedColorFormats = formats;
 }
 
+/*!
+    Sets the physical device features.
+ */
+void QVulkanWindow2::setPhysicalDeviceFeatures(VkPhysicalDeviceFeatures features)
+{
+   devFeatures.features = features;
+}
+
+/*!
+    Sets the physical device transform feedback extension features.
+ */
+void QVulkanWindow2::setPhysicalDeviceTransformFeedbackFeatures(VkPhysicalDeviceTransformFeedbackFeaturesEXT features)
+{
+   devXfbFeatures = features;
+}
+
 static struct {
     VkSampleCountFlagBits mask;
     int count;
@@ -668,6 +684,14 @@ void QVulkanWindow2::init()
     devInfo.pQueueCreateInfos = queueInfo;
     devInfo.enabledExtensionCount = devExts.count();
     devInfo.ppEnabledExtensionNames = devExts.constData();
+
+    devXfbFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT;
+    devXfbFeatures.pNext = nullptr;
+
+    devFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    devFeatures.pNext = &devXfbFeatures;
+
+    devInfo.pNext = &devFeatures;
 
     // Device layers are not supported by QVulkanWindow since that's an already deprecated
     // API. However, have a workaround for systems with older API and layers (f.ex. L4T
