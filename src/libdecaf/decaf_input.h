@@ -69,11 +69,11 @@ struct TouchStatus
    //! True if screen is currently being touched
    bool down;
 
-   //! The x-coordinate of a touched point.
-   int x;
+   //! The normalised x-coordinate of a touched point, between 0.0 and 1.0.
+   float x;
 
-   //! The y-coordinate of a touched point.
-   int y;
+   //! The normalised y-coordinate of a touched point, between 0.0 and 1.0.
+   float y;
 };
 
 struct Status
