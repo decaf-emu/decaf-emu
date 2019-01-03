@@ -33,7 +33,7 @@ before_build:
   - mkdir build
   - cd build
   - conan install .. --build=missing -o silent=True
-  - cmake -G "Visual Studio Preview 1.1 16.0.0 2019 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON ..
+  - cmake -G "Visual Studio Preview 1.1 16 2019 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON ..
   - cd ..
 
 build:
