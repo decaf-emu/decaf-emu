@@ -82,7 +82,9 @@ public:
     VkPhysicalDevice physicalDevice() const;
     const VkPhysicalDeviceProperties *physicalDeviceProperties() const;
     VkDevice device() const;
+    int graphicsQueueFamilyIdx() const;
     VkQueue graphicsQueue() const;
+    VkQueue graphicsDriverQueue() const;
     VkCommandPool graphicsCommandPool() const;
     uint32_t hostVisibleMemoryIndex() const;
     uint32_t deviceLocalMemoryIndex() const;
@@ -167,6 +169,7 @@ private:
     uint32_t gfxQueueFamilyIdx;
     uint32_t presQueueFamilyIdx;
     VkQueue gfxQueue;
+    VkQueue gfxDriverQueue; // Graphics queue passed to libgpu
     VkQueue presQueue;
     VkCommandPool cmdPool = VK_NULL_HANDLE;
     VkCommandPool presCmdPool = VK_NULL_HANDLE;

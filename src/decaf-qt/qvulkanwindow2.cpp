@@ -636,11 +636,11 @@ void QVulkanWindow2::init()
     qCDebug(lcGuiVk, "Using queue families: graphics = %u present = %u", gfxQueueFamilyIdx, presQueueFamilyIdx);
 
     VkDeviceQueueCreateInfo queueInfo[2];
-    const float prio[] = { 0 };
+    const float prio[] = { 0, 0 };
     memset(queueInfo, 0, sizeof(queueInfo));
     queueInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueInfo[0].queueFamilyIndex = gfxQueueFamilyIdx;
-    queueInfo[0].queueCount = 1;
+    queueInfo[0].queueCount = 2;
     queueInfo[0].pQueuePriorities = prio;
     if (gfxQueueFamilyIdx != presQueueFamilyIdx) {
         queueInfo[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -723,6 +723,7 @@ void QVulkanWindow2::init()
     Q_ASSERT(devFuncs);
 
     devFuncs->vkGetDeviceQueue(dev, gfxQueueFamilyIdx, 0, &gfxQueue);
+    devFuncs->vkGetDeviceQueue(dev, gfxQueueFamilyIdx, 1, &gfxDriverQueue);
     if (gfxQueueFamilyIdx == presQueueFamilyIdx)
         presQueue = gfxQueue;
     else
@@ -2000,6 +2001,18 @@ VkDevice QVulkanWindow2::device() const
 }
 
 /*!
+    Returns the graphics queue family idx.
+
+    \note Calling this function is only valid from the invocation of
+    QVulkanWindowRenderer::initResources() up until
+    QVulkanWindowRenderer::releaseResources().
+ */
+int QVulkanWindow2::graphicsQueueFamilyIdx() const
+{
+   return gfxQueueFamilyIdx;
+}
+
+/*!
     Returns the active graphics queue.
 
     \note Calling this function is only valid from the invocation of
@@ -2009,6 +2022,18 @@ VkDevice QVulkanWindow2::device() const
 VkQueue QVulkanWindow2::graphicsQueue() const
 {
     return gfxQueue;
+}
+
+/*!
+    Returns the libgpu driver graphics queue.
+
+    \note Calling this function is only valid from the invocation of
+    QVulkanWindowRenderer::initResources() up until
+    QVulkanWindowRenderer::releaseResources().
+ */
+VkQueue QVulkanWindow2::graphicsDriverQueue() const
+{
+   return gfxDriverQueue;
 }
 
 /*!
