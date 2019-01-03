@@ -718,8 +718,8 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
    state.shader->samplerUsage.fill(SamplerUsage::Invalid);
    initialise();
 
-   try {
-      for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
+   for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
+	   try {
          auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
          auto id = cf.word1.CF_INST();
 
@@ -746,11 +746,10 @@ translate(Shader &shader, const gsl::span<const uint8_t> &binary)
          }
 
          state.cfPC++;
-      }
-   } catch (const translate_exception &e) {
-      auto assembly = disassemble(binary);
-      gLog->critical("GLSL translate exception: {}\nDisassembly:\n{}", e.what(), assembly);
-      decaf_abort(fmt::format("GLSL translate exception: {}", e.what()));
+	   } catch (const translate_exception &e) {
+		  auto assembly = disassemble(binary);
+		  gLog->critical("GLSL translate exception: {}\nDisassembly:\n{}", e.what(), assembly);
+	   }
    }
 
    decaf_check(state.loopStack.size() == 0);
