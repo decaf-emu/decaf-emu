@@ -2,7 +2,7 @@ clone_depth: 10
 
 version: 1.0.{build}
 
-image: Visual Studio 2019
+image: Visual Studio 2019 Preview
 
 platform:
   - x64
@@ -33,7 +33,7 @@ before_build:
   - mkdir build
   - cd build
   - conan install .. --build=missing -o silent=True
-  - cmake -G "Visual Studio 16 2019 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON ..
+  - cmake -G "Visual Studio Preview 16 2019 Win64" -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON ..
   - cd ..
 
 build:
