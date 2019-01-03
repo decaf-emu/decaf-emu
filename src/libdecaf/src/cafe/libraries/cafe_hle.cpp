@@ -226,7 +226,7 @@ applyTraceFilters(const std::vector<std::string> &filterStrings)
       } else if (filterString[0] == '-') {
          filter.enable = false;
       } else {
-         decaf_abort(fmt::format(
+         gLog->error(fmt::format(
             "Invalid trace filter {}, expected to begin with + or -",
             filterString));
       }
@@ -234,7 +234,7 @@ applyTraceFilters(const std::vector<std::string> &filterStrings)
       try {
          filter.re = filterString.c_str() + 1;
       } catch (std::regex_error e) {
-         decaf_abort(fmt::format(
+         gLog->error(fmt::format(
             "Invalid trace filter {}, regex error {}",
              filterString, e.what()));
       }
