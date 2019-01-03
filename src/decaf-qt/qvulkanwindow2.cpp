@@ -599,6 +599,8 @@ void QVulkanWindow2::init()
                 queueFamilyProps[i].queueFlags, queueFamilyProps[i].queueCount, supportsPresent);
         if (gfxQueueFamilyIdx == uint32_t(-1)
                 && (queueFamilyProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                && (queueFamilyProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
+                && (queueFamilyProps[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
                 && supportsPresent)
             gfxQueueFamilyIdx = i;
     }
@@ -607,7 +609,10 @@ void QVulkanWindow2::init()
     } else {
         qCDebug(lcGuiVk, "No queue with graphics+present; trying separate queues");
         for (int i = 0; i < queueFamilyProps.count(); ++i) {
-            if (gfxQueueFamilyIdx == uint32_t(-1) && (queueFamilyProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT))
+            if (gfxQueueFamilyIdx == uint32_t(-1)
+                    && (queueFamilyProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                    && (queueFamilyProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
+                    && (queueFamilyProps[i].queueFlags & VK_QUEUE_TRANSFER_BIT))
                 gfxQueueFamilyIdx = i;
             if (presQueueFamilyIdx == uint32_t(-1) && inst->supportsPresent(physDev, i, this))
                 presQueueFamilyIdx = i;
