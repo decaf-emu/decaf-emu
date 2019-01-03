@@ -12,6 +12,8 @@
 #include "cafe_kernel_shareddata.h"
 
 #include "cafe/libraries/cafe_hle.h"
+#include "decaf_config.h"
+#include "decaf_configstorage.h"
 #include "decaf_events.h"
 #include "decaf_game.h"
 #include "kernel/kernel_filesystem.h"
@@ -39,20 +41,13 @@ struct StaticKernelData
    be2_struct<ios::mcp::MCPPPrepareTitleInfo> prepareTitleInfo;
 };
 
-static virt_ptr<StaticKernelData>
-sKernelData = nullptr;
-
-static internal::AddressSpace
-sKernelAddressSpace;
-
-static std::array<virt_ptr<Context>, 3>
-sSubCoreEntryContexts = { };
-
-static std::atomic<bool>
-sStopping { false };
-
-static std::string
-sExecutableName;
+static virt_ptr<StaticKernelData> sKernelData = nullptr;
+static internal::AddressSpace sKernelAddressSpace;
+static std::array<virt_ptr<Context>, 3> sSubCoreEntryContexts = { };
+static std::string sExecutableName;
+static std::atomic<bool> sStopping { false };
+static std::atomic<bool> sBranchTraceEnabled { false };
+static std::atomic<bool> sBranchTraceHandlerSet { false };
 
 static void
 mainCoreEntryPoint(cpu::Core *core)
@@ -189,7 +184,7 @@ static void
 cpuBranchTraceHandler(cpu::Core *core,
                       uint32_t target)
 {
-   if (decaf::config::log::branch_trace) {
+   if (sBranchTraceEnabled) {
       auto &data = sKernelData->coreData[core->id];
       auto error =
          internal::findClosestSymbol(virt_addr { target },
@@ -237,6 +232,22 @@ cpuKernelCallHandler(cpu::Core *core,
 void
 start()
 {
+   // Register config change handler
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      []() {
+         decaf::registerConfigChangeListener(
+            [](const decaf::Settings &settings) {
+               if (settings.log.branch_trace && !sBranchTraceHandlerSet) {
+                  cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
+                  sBranchTraceHandlerSet = true;
+               }
+
+               sBranchTraceEnabled = settings.log.branch_trace;
+            });
+      });
+
+   // Initialise CafeOS HLE
    hle::initialiseLibraries();
 
    // Initialise memory
@@ -261,8 +272,10 @@ start()
    // Setup cpu
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
 
-   if (decaf::config::log::branch_trace) {
+   sBranchTraceEnabled = decaf::config()->log.branch_trace;
+   if (sBranchTraceEnabled) {
       cpu::setBranchTraceHandler(&cpuBranchTraceHandler);
+      sBranchTraceHandlerSet = true;
    }
 
    cpu::setKernelCallHandler(&cpuKernelCallHandler);

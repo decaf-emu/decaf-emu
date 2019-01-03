@@ -1,9 +1,11 @@
 #pragma once
 #include "cpu.h"
+#include "cpu_config.h"
 #include "mem.h"
 
 #include <array>
 #include <condition_variable>
+#include <memory>
 
 namespace cpu
 {

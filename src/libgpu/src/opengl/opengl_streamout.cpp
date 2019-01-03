@@ -81,7 +81,7 @@ GLDriver::beginTransformFeedback(gl::GLenum primitive)
       gl::glCreateQueries(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
       decaf_check(mFeedbackQuery);
 
-      if (gpu::config::debug) {
+      if (mDebug) {
          gl::glObjectLabel(gl::GL_QUERY, mFeedbackQuery, -1, "transform feedback query");
       }
    }

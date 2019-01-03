@@ -194,7 +194,7 @@ unhandledExceptionFiberEntryPoint(void *param)
    gLog->critical(std::string_view { out.data(), out.size() });
 
    // If the decaf debugger is enabled, we will catch this exception there
-   if (decaf::config::debugger::enabled) {
+   if (decaf::config()->debugger.enabled) {
       // Move back an instruction so we can re-execute the failed instruction
       //  and so that the debugger shows the right stop point.
       cpu::this_core::state()->nia -= 4;
@@ -256,7 +256,7 @@ static void
 handleDebugBreakException(ExceptionType type,
                           virt_ptr<Context> interruptedContext)
 {
-   if (decaf::config::debugger::enabled) {
+   if (decaf::config()->debugger.enabled) {
       coreinit::internal::pauseCoreTime(true);
       decaf::debug::handleDebugBreakInterrupt();
       coreinit::internal::pauseCoreTime(false);

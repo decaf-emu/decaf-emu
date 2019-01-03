@@ -10,7 +10,9 @@
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_snprintf.h"
 #include "decaf_config.h"
+#include "decaf_configstorage.h"
 
+#include <atomic>
 #include <fstream>
 #include <common/align.h>
 #include <common/log.h>
@@ -19,9 +21,13 @@
 #include <libcpu/mem.h>
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgfd/gfd.h>
+#include <thread>
 
 namespace cafe::gx2::internal
 {
+
+static std::atomic<bool> sDumpTextures;
+static std::atomic<bool> sDumpShaders;
 
 static void
 createDumpDirectory()
@@ -48,9 +54,25 @@ debugDumpData(std::ofstream &file,
 }
 
 void
+initialiseDebug()
+{
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      []() {
+         decaf::registerConfigChangeListener(
+            [](const decaf::Settings &settings) {
+               sDumpShaders = settings.gx2.dump_shaders;
+               sDumpTextures = settings.gx2.dump_textures;
+            });
+      });
+   sDumpShaders = decaf::config()->gx2.dump_shaders;
+   sDumpTextures = decaf::config()->gx2.dump_textures;
+}
+
+void
 debugDumpTexture(virt_ptr<const GX2Texture> texture)
 {
-   if (!decaf::config::gx2::dump_textures) {
+   if (!sDumpTextures.load(std::memory_order_relaxed)) {
       return;
    }
 
@@ -275,7 +297,7 @@ formatSamplerVars(fmt::memory_buffer &out,
 void
 debugDumpShader(virt_ptr<const GX2FetchShader> shader)
 {
-   if (!decaf::config::gx2::dump_shaders) {
+   if (!sDumpShaders.load(std::memory_order_relaxed)) {
       return;
    }
 
@@ -293,7 +315,7 @@ debugDumpShader(virt_ptr<const GX2FetchShader> shader)
 void
 debugDumpShader(virt_ptr<const GX2PixelShader> shader)
 {
-   if (!decaf::config::gx2::dump_shaders) {
+   if (!sDumpShaders.load(std::memory_order_relaxed)) {
       return;
    }
 
@@ -317,7 +339,7 @@ debugDumpShader(virt_ptr<const GX2PixelShader> shader)
 void
 debugDumpShader(virt_ptr<const GX2VertexShader> shader)
 {
-   if (!decaf::config::gx2::dump_shaders) {
+   if (!sDumpShaders.load(std::memory_order_relaxed)) {
       return;
    }
 

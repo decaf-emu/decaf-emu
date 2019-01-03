@@ -458,34 +458,33 @@ loadSysProdConfig()
       config->wifi_5ghz_country_code_revision = uint8_t { 24 };
       config->ntsc_pal = "NTSC";
 
-      using decaf::config::system::Region;
-      switch (decaf::config::system::region) {
-      case Region::Japan:
+      switch (decaf::config()->system.region) {
+      case decaf::SystemRegion::Japan:
          config->game_region = MCPRegion::Japan;
          config->product_area = MCPRegion::Japan;
          config->wifi_5ghz_country_code = "JP3";
          break;
-      case Region::USA:
+      case decaf::SystemRegion::USA:
          config->game_region = MCPRegion::USA;
          config->product_area = MCPRegion::USA;
          config->wifi_5ghz_country_code = "US";
          break;
-      case Region::China:
+      case decaf::SystemRegion::China:
          config->game_region = MCPRegion::China;
          config->product_area = MCPRegion::China;
          config->wifi_5ghz_country_code = "CN";
          break;
-      case Region::Korea:
+      case decaf::SystemRegion::Korea:
          config->game_region = MCPRegion::Korea;
          config->product_area = MCPRegion::Korea;
          config->wifi_5ghz_country_code = "KR";
          break;
-      case Region::Taiwan:
+      case decaf::SystemRegion::Taiwan:
          config->game_region = MCPRegion::Taiwan;
          config->product_area = MCPRegion::Taiwan;
          config->wifi_5ghz_country_code = "TW";
          break;
-      case Region::Europe:
+      case decaf::SystemRegion::Europe:
       default:
          config->game_region = MCPRegion::Europe;
          config->product_area = MCPRegion::Europe;

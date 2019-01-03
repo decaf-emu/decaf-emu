@@ -956,7 +956,8 @@ Library::generateRpl()
       }
    }
 
-   if (decaf::config::system::dump_hle_rpl) {
+   // TODO: Move this to a debug api command?
+   if (decaf::config()->system.dump_hle_rpl) {
       std::ofstream out { mName, std::fstream::binary };
       out.write(reinterpret_cast<const char *>(mGeneratedRpl.data()),
                 mGeneratedRpl.size());

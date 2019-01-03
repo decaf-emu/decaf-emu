@@ -7,8 +7,6 @@
 
 DecafSDLSound::DecafSDLSound()
 {
-   // Initialise logger
-   mLog = decaf::makeLogger("sdl-sound");
 }
 
 DecafSDLSound::~DecafSDLSound()
@@ -20,6 +18,10 @@ bool
 DecafSDLSound::start(unsigned outputRate,
                      unsigned numChannels)
 {
+   if (!mLog) {
+      mLog = decaf::makeLogger("sdl-sound");
+   }
+
    mNumChannelsIn = numChannels;
    mNumChannelsOut = std::min(numChannels, 2u);  // TODO: support surround output
    mOutputFrameLen = config::sound::frame_length * (outputRate / 1000);

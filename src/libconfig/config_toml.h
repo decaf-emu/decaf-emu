@@ -1,6 +1,9 @@
 #pragma once
 #include <common/type_traits.h>
 #include <cpptoml.h>
+#include <libcpu/cpu_config.h>
+#include <libdecaf/decaf_config.h>
+#include <libgpu/gpu_config.h>
 #include <string>
 #include <memory>
 
@@ -24,9 +27,27 @@ readArray(const std::shared_ptr<cpptoml::table> &config, const char *name, std::
 }
 
 bool
-loadFromTOML(std::shared_ptr<cpptoml::table> config);
+loadFromTOML(std::shared_ptr<cpptoml::table> config,
+             cpu::Settings &cpuSettings);
 
 bool
-saveToTOML(std::shared_ptr<cpptoml::table> config);
+loadFromTOML(std::shared_ptr<cpptoml::table> config,
+             decaf::Settings &decafSettings);
+
+bool
+loadFromTOML(std::shared_ptr<cpptoml::table> config,
+             gpu::Settings &gpuSettings);
+
+bool
+saveToTOML(std::shared_ptr<cpptoml::table> config,
+           const cpu::Settings &cpuSettings);
+
+bool
+saveToTOML(std::shared_ptr<cpptoml::table> config,
+           const decaf::Settings &decafSettings);
+
+bool
+saveToTOML(std::shared_ptr<cpptoml::table> config,
+           const gpu::Settings &gpuSettings);
 
 } // namespace config

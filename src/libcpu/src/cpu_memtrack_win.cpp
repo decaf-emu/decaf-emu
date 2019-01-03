@@ -1,5 +1,7 @@
+#pragma optimize("", off)
 #include "memtrack.h"
 #include "cpu_config.h"
+#include "cpu_internal.h"
 #include "mmu.h"
 
 #include <common/datahash.h>
@@ -102,7 +104,7 @@ LONG writeExceptionHandler(_EXCEPTION_POINTERS *ExceptionInfo)
 void
 initialiseMemtrack()
 {
-   if (!config::mem::writetrack) {
+   if (!config()->memory.writeTrackEnabled) {
       return;
    }
 

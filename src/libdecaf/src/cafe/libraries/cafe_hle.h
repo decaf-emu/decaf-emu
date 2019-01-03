@@ -3,6 +3,8 @@
 
 #include <libcpu/be2_struct.h>
 #include <string_view>
+#include <string>
+#include <vector>
 
 namespace cafe::hle
 {
@@ -20,5 +22,11 @@ void
 relocateLibrary(std::string_view name,
                 virt_addr textBaseAddress,
                 virt_addr dataBaseAddress);
+
+void
+applyTraceFilters(const std::vector<std::string> &filters);
+
+void
+setTraceEnabled(bool enabled);
 
 } // namespace cafe::hle

@@ -1,5 +1,7 @@
 #ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
+#include "gpu_config.h"
+#include "gpu_configstorage.h"
 #include "gpu_event.h"
 #include "gpu_graphicsdriver.h"
 #include "gpu_ringbuffer.h"
@@ -40,6 +42,22 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    if (mRunState != RunState::None) {
       return;
    }
+
+   // Register config change handler
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      [this]() {
+         gpu::registerConfigChangeListener(
+            [this](const gpu::Settings &settings) {
+               mDebug = settings.debug.debug_enabled;
+               mDumpShaders = settings.debug.dump_shaders;
+            });
+      });
+
+   // Read config
+   auto gpuConfig = gpu::config();
+   mDebug = gpuConfig->debug.debug_enabled;
+   mDumpShaders = gpuConfig->debug.dump_shaders;
 
    mPhysDevice = physDevice;
    mDevice = device;

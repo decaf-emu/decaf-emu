@@ -788,6 +788,10 @@ private:
 
    gpu7::tiling::vulkan::Retiler mGpuRetiler;
    DriverMemoryTracker mMemTracker;
+
+   bool mDebug;
+   bool mDumpShaders;
+   bool mDumpTextures;
 };
 
 } // namespace vulkan

@@ -1,10 +1,13 @@
 #include "coreinit.h"
 #include "coreinit_time.h"
 #include "coreinit_systeminfo.h"
+
 #include "decaf_config.h"
+#include "decaf_configstorage.h"
 
 #include <common/platform_time.h>
 #include <libcpu/cpu.h>
+#include <thread>
 
 namespace cafe::coreinit
 {
@@ -16,20 +19,20 @@ struct TimeData
    cpu::TimerDuration baseTicks;
 };
 
-static virt_ptr<TimeData>
-sTimeData = nullptr;
+static virt_ptr<TimeData> sTimeData = nullptr;
+static std::atomic<bool> sTimeScaleEnabled = false;
+static std::atomic<double> sTimeScale = 1.0;
 
 static uint64_t
 scaledTimebase()
 {
-   if (decaf::config::system::time_scale == 1.0) {
-      return cpu::this_core::state()->tb();
-   } else {
-      // This might introduce timeBase inaccuracies, which is why we only
-      //  do it when it is not set to 1.0.
-      auto tbDbl = static_cast<double>(cpu::this_core::state()->tb());
-      return static_cast<uint64_t>(tbDbl * decaf::config::system::time_scale);
+   auto timeBase = cpu::this_core::state()->tb();
+   if (!sTimeScaleEnabled.load(std::memory_order_relaxed)) {
+      return timeBase;
    }
+
+   auto timeScale = sTimeScale.load(std::memory_order_relaxed);
+   return static_cast<uint64_t>(static_cast<double>(timeBase) * timeScale);
 }
 
 /**
@@ -183,6 +186,18 @@ toOSTime(std::chrono::time_point<std::chrono::system_clock> chrono)
 void
 initialiseTime()
 {
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      []() {
+         decaf::registerConfigChangeListener(
+            [](const decaf::Settings &settings) {
+               sTimeScale = settings.system.time_scale;
+               sTimeScaleEnabled = settings.system.time_scale_enabled;
+            });
+      });
+   sTimeScale = decaf::config()->system.time_scale;
+   sTimeScaleEnabled = decaf::config()->system.time_scale_enabled;
+
    // Calculate the Wii U epoch (01/01/2000)
    std::tm tm = { 0 };
    tm.tm_sec = 0;

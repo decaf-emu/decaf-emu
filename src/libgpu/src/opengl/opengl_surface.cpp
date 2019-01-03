@@ -393,7 +393,8 @@ createHostSurface(phys_addr baseAddress,
                   latte::SQ_NUM_FORMAT numFormat,
                   latte::SQ_FORMAT_COMP formatComp,
                   uint32_t degamma,
-                  bool isDepthBuffer)
+                  bool isDepthBuffer,
+                  bool isDebug)
 {
    auto newSurface = new HostSurface();
 
@@ -406,7 +407,7 @@ createHostSurface(phys_addr baseAddress,
    auto target = getGlTarget(dim);
    gl::glCreateTextures(target, 1, &newSurface->object);
 
-   if (gpu::config::debug) {
+   if (isDebug) {
       auto label = fmt::format("surface @ {}", baseAddress);
       gl::glObjectLabel(gl::GL_TEXTURE, newSurface->object, -1, label.c_str());
    }
@@ -788,7 +789,7 @@ GLDriver::getSurfaceBuffer(phys_addr baseAddress,
 
       auto newSurf = createHostSurface(baseAddress, pitch, width, height,
                                        depth, samples, dim, format, numFormat,
-                                       formatComp, degamma, isDepthBuffer);
+                                       formatComp, degamma, isDepthBuffer, mDebug);
       buffer.active = newSurf;
       buffer.master = newSurf;
 
@@ -839,7 +840,7 @@ GLDriver::getSurfaceBuffer(phys_addr baseAddress,
          newMaster = createHostSurface(baseAddress, pitch, masterWidth,
                                        masterHeight, masterDepth, samples, dim,
                                        format, numFormat, formatComp, degamma,
-                                       isDepthBuffer);
+                                       isDepthBuffer, mDebug);
 
          // Check if the new master we just made matches our size perfectly.
          if (width == masterWidth && height == masterHeight && depth == masterDepth) {
@@ -852,7 +853,7 @@ GLDriver::getSurfaceBuffer(phys_addr baseAddress,
       // Lets finally just build our perfect surface...
       foundSurface = createHostSurface(baseAddress, pitch, width, height,
                                        depth, samples, dim, format, numFormat,
-                                       formatComp, degamma, isDepthBuffer);
+                                       formatComp, degamma, isDepthBuffer, mDebug);
       newSurface = foundSurface;
    }
 

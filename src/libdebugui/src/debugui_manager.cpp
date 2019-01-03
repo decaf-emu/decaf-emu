@@ -12,6 +12,7 @@
 #include "debugui_window_performance.h"
 
 #include <libcpu/jit_stats.h>
+#include <libdecaf/decaf.h>
 #include <libdecaf/decaf_config.h>
 #include <libgpu/gpu_config.h>
 #include <imgui.h>
@@ -89,7 +90,7 @@ Manager::Manager(const std::string &configPath)
    static const ImWchar iconsRanges[] = { 0x2500, 0x25FF, 0 };
    auto config = ImFontConfig { };
    config.MergeMode = true;
-   auto fontPath = decaf::config::system::resources_path + "/fonts/DejaVuSansMono.ttf";
+   auto fontPath = decaf::config()->system.resources_path + "/fonts/DejaVuSansMono.ttf";
    io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13.0f, &config, iconsRanges);
 
    // Set default syle
@@ -363,6 +364,8 @@ void Manager::drawMenu()
 
          return itr->second.str.c_str();
       };
+   auto config = decaf::config();
+   auto gpuConfig = gpu::config();
 
    ImGui::BeginMainMenuBar();
 
@@ -392,8 +395,10 @@ void Manager::drawMenu()
 
       ImGui::Separator();
 
-      if (ImGui::MenuItem("Kernel Trace Enabled", nullptr, decaf::config::log::kernel_trace, true)) {
-         decaf::config::log::kernel_trace = !decaf::config::log::kernel_trace;
+      if (ImGui::MenuItem("HLE Trace Enabled", nullptr, config->log.hle_trace, true)) {
+         auto newConfig = *config;
+         newConfig.log.hle_trace = !config->log.hle_trace;
+         decaf::setConfig(newConfig);
       }
 
       auto pm4Enable = false;
@@ -426,16 +431,22 @@ void Manager::drawMenu()
          }
       }
 
-      if (ImGui::MenuItem("GX2 Texture Dump Enabled", nullptr, decaf::config::gx2::dump_textures, true)) {
-         decaf::config::gx2::dump_textures = !decaf::config::gx2::dump_textures;
+      if (ImGui::MenuItem("GX2 Texture Dump Enabled", nullptr, config->gx2.dump_textures, true)) {
+         auto newConfig = *config;
+         newConfig.gx2.dump_textures = !config->gx2.dump_textures;
+         decaf::setConfig(newConfig);
       }
 
-      if (ImGui::MenuItem("GX2 Shader Dump Enabled", nullptr, decaf::config::gx2::dump_shaders, true)) {
-         decaf::config::gx2::dump_shaders = !decaf::config::gx2::dump_shaders;
+      if (ImGui::MenuItem("GX2 Shader Dump Enabled", nullptr, config->gx2.dump_shaders, true)) {
+         auto newConfig = *config;
+         newConfig.gx2.dump_shaders = !config->gx2.dump_shaders;
+         decaf::setConfig(newConfig);
       }
 
-      if (ImGui::MenuItem("GPU Shader Dump Enabled", nullptr, gpu::config::dump_shaders, true)) {
-         gpu::config::dump_shaders = !gpu::config::dump_shaders;
+      if (ImGui::MenuItem("GPU Shader Dump Enabled", nullptr, gpuConfig->debug.dump_shaders, true)) {
+         auto newConfig = *gpuConfig;
+         newConfig.debug.dump_shaders = !gpuConfig->debug.dump_shaders;
+         gpu::setConfig(newConfig);
       }
 
       ImGui::Separator();

@@ -235,10 +235,6 @@ Driver::getPixelShaderDesc()
 
 static void dumpRawShader(const spirv::ShaderDesc *desc)
 {
-   if (!gpu::config::dump_shaders) {
-      return;
-   }
-
    std::string shaderName;
    if (desc->type == spirv::ShaderType::Vertex) {
       auto vsDesc = reinterpret_cast<const spirv::VertexShaderDesc*>(desc);
@@ -316,10 +312,6 @@ static void dumpRawShader(const spirv::ShaderDesc *desc)
 
 static void dumpTranslatedShader(const spirv::ShaderDesc *desc, const spirv::Shader *shader)
 {
-   if (!gpu::config::dump_shaders) {
-      return;
-   }
-
    auto shaderText = spirv::shaderToString(shader);
 
    std::string shaderName;
@@ -401,13 +393,17 @@ Driver::checkCurrentVertexShader()
    foundShader = new VertexShaderObject();
    foundShader->desc = currentDesc;
 
-   dumpRawShader(&*currentDesc);
+   if (mDumpShaders) {
+      dumpRawShader(&*currentDesc);
+   }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
       decaf_abort("Failed to translate vertex shader");
    }
 
-   dumpTranslatedShader(&*currentDesc, &foundShader->shader);
+   if (mDumpShaders) {
+      dumpTranslatedShader(&*currentDesc, &foundShader->shader);
+   }
 
    auto module = mDevice.createShaderModule(
       vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));
@@ -449,13 +445,17 @@ Driver::checkCurrentGeometryShader()
    foundShader = new GeometryShaderObject();
    foundShader->desc = currentDesc;
 
-   dumpRawShader(&*currentDesc);
+   if (mDumpShaders) {
+      dumpRawShader(&*currentDesc);
+   }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
       decaf_abort("Failed to translate geometry shader");
    }
 
-   dumpTranslatedShader(&*currentDesc, &foundShader->shader);
+   if (mDumpShaders) {
+      dumpTranslatedShader(&*currentDesc, &foundShader->shader);
+   }
 
    auto module = mDevice.createShaderModule(
       vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));
@@ -497,13 +497,17 @@ Driver::checkCurrentPixelShader()
    foundShader = new PixelShaderObject();
    foundShader->desc = currentDesc;
 
-   dumpRawShader(&*currentDesc);
+   if (mDumpShaders) {
+      dumpRawShader(&*currentDesc);
+   }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
       decaf_abort("Failed to translate pixel shader");
    }
 
-   dumpTranslatedShader(&*currentDesc, &foundShader->shader);
+   if (mDumpShaders) {
+      dumpTranslatedShader(&*currentDesc, &foundShader->shader);
+   }
 
    auto module = mDevice.createShaderModule(
       vk::ShaderModuleCreateInfo({}, foundShader->shader.binary.size() * 4, foundShader->shader.binary.data()));

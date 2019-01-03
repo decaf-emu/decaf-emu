@@ -288,19 +288,19 @@ loadGameProcess(std::string_view rpx,
       0);
 
    // Notify jit of read only sections in the RPX
-   if (cpu::config::jit::rodata_read_only) {
-      auto rpx = cafe::loader::getGlobalStorage()->loadedRpx;
+   if (cpu::config()->jit.rodataReadOnly) {
+      auto loadedRpx = cafe::loader::getGlobalStorage()->loadedRpx;
       auto shStrSection = virt_ptr<char> { nullptr };
-      if (auto shstrndx = rpx->elfHeader.shstrndx) {
-         shStrSection = virt_cast<char *>(rpx->sectionAddressBuffer[shstrndx]);
+      if (auto shstrndx = loadedRpx->elfHeader.shstrndx) {
+         shStrSection = virt_cast<char *>(loadedRpx->sectionAddressBuffer[shstrndx]);
       }
 
-      for (auto i = 0u; i < rpx->elfHeader.shnum; ++i) {
+      for (auto i = 0u; i < loadedRpx->elfHeader.shnum; ++i) {
          auto sectionHeader =
             virt_cast<loader::rpl::SectionHeader *>(
-               virt_cast<virt_addr>(rpx->sectionHeaderBuffer) +
-               (i * rpx->elfHeader.shentsize));
-         auto sectionAddress = rpx->sectionAddressBuffer[i];
+               virt_cast<virt_addr>(loadedRpx->sectionHeaderBuffer) +
+               (i * loadedRpx->elfHeader.shentsize));
+         auto sectionAddress = loadedRpx->sectionAddressBuffer[i];
          if (!sectionAddress ||
              sectionHeader->type != loader::rpl::SHT_PROGBITS) {
             continue;

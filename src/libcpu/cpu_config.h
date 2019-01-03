@@ -1,47 +1,61 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include <string>
 
 namespace cpu
 {
 
-namespace config
+struct JitSettings
 {
+   //! Enable usage of jit
+   bool enabled = true;
 
-namespace jit
+   //! Use JIT in verification mode where it compares execution to interpreter
+   bool verify = false;
+
+   //! Select a single block (starting address) for verification (0 = verify everything)
+   uint32_t verifyAddress = 0u;
+
+   //! JIT code cache size in megabytes
+   unsigned int codeCacheSizeMB = 1024;
+
+   //! JIT data cache size in megabytes
+   unsigned int dataCacheSizeMB = 512;
+
+   //! List of JIT optimizations to enable
+   std::vector<std::string> optimisationFlags =
+   {
+      "BASIC",
+      "DECONDITION",
+      "DSE",
+      "FOLD_CONSTANTS",
+      "PPC_PAIRED_LWARX_STWCX",
+      "X86_BRANCH_ALIGNMENT",
+      "X86_CONDITION_CODES",
+      "X86_FIXED_REGS",
+      "X86_FORWARD_CONDITIONS",
+      "X86_STORE_IMMEDIATE",
+   };
+
+   //! Treat .rodata sections as read-only regardless of RPL/RPX flags
+   bool rodataReadOnly = true;
+};
+
+struct MemorySettings
 {
+   //! Whether page guards for write tracking is enabled or not.
+   bool writeTrackEnabled = false;
+};
 
-//! Enable usage of jit
-extern bool enabled;
-
-//! Use JIT in verification mode where it compares execution to interpreter
-extern bool verify;
-
-//! Select a single block (starting address) for verification (0 = verify everything)
-extern uint32_t verify_addr;
-
-//! JIT code cache size in megabytes
-extern unsigned int code_cache_size_mb;
-
-//! JIT data cache size in megabytes
-extern unsigned int data_cache_size_mb;
-
-//! List of JIT optimizations to enable
-extern std::vector<std::string> opt_flags;
-
-//! Treat .rodata sections as read-only regardless of RPL/RPX flags
-extern bool rodata_read_only;
-
-} // namespace jit
-
-namespace mem
+struct Settings
 {
+   JitSettings jit;
+   MemorySettings memory;
+};
 
-extern bool writetrack;
-
-} // namespace mem
-
-} // namespace config
+std::shared_ptr<const Settings> config();
+void setConfig(const Settings &settings);
 
 } // namespace cpu

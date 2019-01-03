@@ -59,7 +59,7 @@ getExcmdGroups(excmd::parser &parser)
                   description { "Enable logging to stdout." })
       .add_option("log-level",
                   description { "Only display logs with severity equal to or greater than this level." },
-                  default_value<std::string> { decaf::config::log::level },
+                  default_value<std::string> { "debug" },
                   allowed<std::string> { {
                      "trace", "debug", "info", "notice", "warning",
                      "error", "critical", "alert", "emerg", "off"
@@ -100,58 +100,133 @@ getExcmdGroups(excmd::parser &parser)
 }
 
 bool
-loadFromExcmd(excmd::option_state &options)
+loadFromExcmd(excmd::option_state &options,
+              decaf::Settings &decafSettings)
+{
+
+   if (options.has("log-stdout")) {
+      decafSettings.log.to_stdout = true;
+   }
+
+   if (options.has("log-file")) {
+      decafSettings.log.to_file = true;
+   }
+
+   if (options.has("log-dir")) {
+      decafSettings.log.directory = options.get<std::string>("log-dir");
+   }
+
+   if (options.has("log-async")) {
+      decafSettings.log.async = true;
+   }
+
+   if (options.has("log-level")) {
+      decafSettings.log.level = options.get<std::string>("log-level");
+   }
+
+   if (options.has("region")) {
+      auto region = options.get<std::string>("region");
+
+      if (iequals(region, "japan") == 0) {
+         decafSettings.system.region = decaf::SystemRegion::Japan;
+      } else if (iequals(region, "usa") == 0) {
+         decafSettings.system.region = decaf::SystemRegion::USA;
+      } else if (iequals(region, "europe") == 0) {
+         decafSettings.system.region = decaf::SystemRegion::Europe;
+      } else if (iequals(region, "china") == 0) {
+         decafSettings.system.region = decaf::SystemRegion::China;
+      } else if (iequals(region, "korea") == 0) {
+         decafSettings.system.region = decaf::SystemRegion::Korea;
+      } else if (iequals(region, "taiwan") == 0) {
+         decafSettings.system.region = decaf::SystemRegion::Taiwan;
+      }
+   }
+
+   if (options.has("resources-path")) {
+      decafSettings.system.resources_path = options.get<std::string>("resources-path");
+   }
+
+   if (options.has("content-path")) {
+      decafSettings.system.content_path = options.get<std::string>("content-path");
+   }
+
+   if (options.has("hfio-path")) {
+      decafSettings.system.hfio_path = options.get<std::string>("hfio-path");
+   }
+
+   if (options.has("mlc-path")) {
+      decafSettings.system.mlc_path = options.get<std::string>("mlc-path");
+   }
+
+   if (options.has("sdcard-path")) {
+      decafSettings.system.sdcard_path = options.get<std::string>("sdcard-path");
+   }
+
+   if (options.has("slc-path")) {
+      decafSettings.system.slc_path = options.get<std::string>("slc-path");
+   }
+
+   if (options.has("time-scale")) {
+      decafSettings.system.time_scale = options.get<double>("time-scale");
+   }
+
+   return true;
+}
+
+bool
+loadFromExcmd(excmd::option_state &options,
+              cpu::Settings &cpuSettings)
 {
    if (options.has("jit")) {
-      cpu::config::jit::enabled = true;
+      cpuSettings.jit.enabled = true;
    } else if (options.has("no-jit")) {
-      cpu::config::jit::enabled = false;
+      cpuSettings.jit.enabled = false;
    }
 
    if (options.has("jit-verify")) {
-      cpu::config::jit::verify = true;
+      cpuSettings.jit.verify = true;
    }
 
    if (options.has("jit-verify-addr")) {
-      cpu::config::jit::verify_addr = options.get<uint32_t>("jit-verify-addr");
+      cpuSettings.jit.verifyAddress = options.get<uint32_t>("jit-verify-addr");
    }
 
    if (options.has("jit-opt-level")) {
       auto level = options.get<int>("jit-opt-level");
 
-      cpu::config::jit::opt_flags.clear();
+      cpuSettings.jit.optimisationFlags.clear();
 
       if (level >= 1) {
-         cpu::config::jit::opt_flags.push_back("BASIC");
-         cpu::config::jit::opt_flags.push_back("DECONDITION");
-         cpu::config::jit::opt_flags.push_back("DSE");
-         cpu::config::jit::opt_flags.push_back("FOLD_CONSTANTS");
-         cpu::config::jit::opt_flags.push_back("PPC_FORWARD_LOADS");
-         cpu::config::jit::opt_flags.push_back("PPC_PAIRED_LWARX_STWCX");
-         cpu::config::jit::opt_flags.push_back("X86_BRANCH_ALIGNMENT");
-         cpu::config::jit::opt_flags.push_back("X86_CONDITION_CODES");
-         cpu::config::jit::opt_flags.push_back("X86_FIXED_REGS");
-         cpu::config::jit::opt_flags.push_back("X86_FORWARD_CONDITIONS");
-         cpu::config::jit::opt_flags.push_back("X86_STORE_IMMEDIATE");
+         cpuSettings.jit.optimisationFlags.push_back("BASIC");
+         cpuSettings.jit.optimisationFlags.push_back("DECONDITION");
+         cpuSettings.jit.optimisationFlags.push_back("DSE");
+         cpuSettings.jit.optimisationFlags.push_back("FOLD_CONSTANTS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_FORWARD_LOADS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_PAIRED_LWARX_STWCX");
+         cpuSettings.jit.optimisationFlags.push_back("X86_BRANCH_ALIGNMENT");
+         cpuSettings.jit.optimisationFlags.push_back("X86_CONDITION_CODES");
+         cpuSettings.jit.optimisationFlags.push_back("X86_FIXED_REGS");
+         cpuSettings.jit.optimisationFlags.push_back("X86_FORWARD_CONDITIONS");
+         cpuSettings.jit.optimisationFlags.push_back("X86_STORE_IMMEDIATE");
       }
 
       if (level >= 2) {
-         cpu::config::jit::opt_flags.push_back("CHAIN");
+         cpuSettings.jit.optimisationFlags.push_back("CHAIN");
          // Skip DEEP_DATA_FLOW if verifying because its whole purpose is
          //  to eliminate dead stores to registers.
-         if (!cpu::config::jit::verify) {
-            cpu::config::jit::opt_flags.push_back("DEEP_DATA_FLOW");
+         if (!cpuSettings.jit.verify) {
+            cpuSettings.jit.optimisationFlags.push_back("DEEP_DATA_FLOW");
          }
-         cpu::config::jit::opt_flags.push_back("PPC_TRIM_CR_STORES");
-         cpu::config::jit::opt_flags.push_back("PPC_USE_SPLIT_FIELDS");
-         cpu::config::jit::opt_flags.push_back("X86_ADDRESS_OPERANDS");
-         cpu::config::jit::opt_flags.push_back("X86_MERGE_REGS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_TRIM_CR_STORES");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_USE_SPLIT_FIELDS");
+         cpuSettings.jit.optimisationFlags.push_back("X86_ADDRESS_OPERANDS");
+         cpuSettings.jit.optimisationFlags.push_back("X86_MERGE_REGS");
       }
 
       if (level >= 3) {
-         cpu::config::jit::opt_flags.push_back("PPC_CONSTANT_GQRS");
-         cpu::config::jit::opt_flags.push_back("PPC_DETECT_FCFI_EMUL");
-         cpu::config::jit::opt_flags.push_back("PPC_FAST_FCTIW");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_CONSTANT_GQRS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_DETECT_FCFI_EMUL");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_FAST_FCTIW");
       }
    }
 
@@ -160,92 +235,33 @@ loadFromExcmd(excmd::option_state &options)
       //  use with --jit-verify as long as the game doesn't actually look
       //  at FPSCR status bits.  Other optimization flags may result in
       //  verification differences even if the generated code is correct.
-      cpu::config::jit::opt_flags.push_back("PPC_NO_FPSCR_STATE");
+      cpuSettings.jit.optimisationFlags.push_back("PPC_NO_FPSCR_STATE");
       if (options.get<std::string>("jit-fast-math").compare("full") == 0) {
-         cpu::config::jit::opt_flags.push_back("DSE_FP");
-         cpu::config::jit::opt_flags.push_back("FOLD_FP_CONSTANTS");
-         cpu::config::jit::opt_flags.push_back("NATIVE_IEEE_NAN");
-         cpu::config::jit::opt_flags.push_back("NATIVE_IEEE_UNDERFLOW");
-         cpu::config::jit::opt_flags.push_back("PPC_ASSUME_NO_SNAN");
-         cpu::config::jit::opt_flags.push_back("PPC_FAST_FMADDS");
-         cpu::config::jit::opt_flags.push_back("PPC_FAST_FMULS");
-         cpu::config::jit::opt_flags.push_back("PPC_FAST_STFS");
-         cpu::config::jit::opt_flags.push_back("PPC_FNMADD_ZERO_SIGN");
-         cpu::config::jit::opt_flags.push_back("PPC_IGNORE_FPSCR_VXFOO");
-         cpu::config::jit::opt_flags.push_back("PPC_NATIVE_RECIPROCAL");
-         cpu::config::jit::opt_flags.push_back("PPC_PS_STORE_DENORMALS");
-         cpu::config::jit::opt_flags.push_back("PPC_SINGLE_PREC_INPUTS");
+         cpuSettings.jit.optimisationFlags.push_back("DSE_FP");
+         cpuSettings.jit.optimisationFlags.push_back("FOLD_FP_CONSTANTS");
+         cpuSettings.jit.optimisationFlags.push_back("NATIVE_IEEE_NAN");
+         cpuSettings.jit.optimisationFlags.push_back("NATIVE_IEEE_UNDERFLOW");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_ASSUME_NO_SNAN");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_FAST_FMADDS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_FAST_FMULS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_FAST_STFS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_FNMADD_ZERO_SIGN");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_IGNORE_FPSCR_VXFOO");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_NATIVE_RECIPROCAL");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_PS_STORE_DENORMALS");
+         cpuSettings.jit.optimisationFlags.push_back("PPC_SINGLE_PREC_INPUTS");
       }
    }
 
+   return true;
+}
+
+bool
+loadFromExcmd(excmd::option_state &options,
+              gpu::Settings &gpuSettings)
+{
    if (options.has("gpu-debug")) {
-      gpu::config::debug = true;
-   }
-
-   if (options.has("log-stdout")) {
-      decaf::config::log::to_stdout = true;
-   }
-
-   if (options.has("log-file")) {
-      decaf::config::log::to_file = true;
-   }
-
-   if (options.has("log-dir")) {
-      decaf::config::log::directory = options.get<std::string>("log-dir");
-   }
-
-   if (options.has("log-async")) {
-      decaf::config::log::async = true;
-   }
-
-   if (options.has("log-level")) {
-      decaf::config::log::level = options.get<std::string>("log-level");
-   }
-
-   if (options.has("region")) {
-      auto region = options.get<std::string>("region");
-
-      if (iequals(region, "japan") == 0) {
-         decaf::config::system::region = decaf::config::system::Region::Japan;
-      } else if (iequals(region, "usa") == 0) {
-         decaf::config::system::region = decaf::config::system::Region::USA;
-      } else if (iequals(region, "europe") == 0) {
-         decaf::config::system::region = decaf::config::system::Region::Europe;
-      } else if (iequals(region, "china") == 0) {
-         decaf::config::system::region = decaf::config::system::Region::China;
-      } else if (iequals(region, "korea") == 0) {
-         decaf::config::system::region = decaf::config::system::Region::Korea;
-      } else if (iequals(region, "taiwan") == 0) {
-         decaf::config::system::region = decaf::config::system::Region::Taiwan;
-      }
-   }
-
-   if (options.has("resources-path")) {
-      decaf::config::system::resources_path = options.get<std::string>("resources-path");
-   }
-
-   if (options.has("content-path")) {
-      decaf::config::system::content_path = options.get<std::string>("content-path");
-   }
-
-   if (options.has("hfio-path")) {
-      decaf::config::system::hfio_path = options.get<std::string>("hfio-path");
-   }
-
-   if (options.has("mlc-path")) {
-      decaf::config::system::mlc_path = options.get<std::string>("mlc-path");
-   }
-
-   if (options.has("sdcard-path")) {
-      decaf::config::system::sdcard_path = options.get<std::string>("sdcard-path");
-   }
-
-   if (options.has("slc-path")) {
-      decaf::config::system::slc_path = options.get<std::string>("slc-path");
-   }
-
-   if (options.has("time-scale")) {
-      decaf::config::system::time_scale = options.get<double>("time-scale");
+      gpuSettings.debug.debug_enabled = true;
    }
 
    return true;

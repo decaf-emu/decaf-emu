@@ -265,7 +265,7 @@ handleDebugBreakInterrupt()
 void
 notifyEntry(uint32_t preinit, uint32_t entry)
 {
-   if (config::debugger::break_on_entry) {
+   if (config()->debugger.break_on_entry) {
       if (preinit) {
          addBreakpoint(preinit);
       }

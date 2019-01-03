@@ -49,7 +49,7 @@ loadResourcesFile(const char *filename,
                   SharedArea &area,
                   virt_addr addr)
 {
-   auto file = std::ifstream { decaf::config::system::resources_path + "/fonts/" + filename,
+   auto file = std::ifstream { decaf::config()->system.resources_path + "/fonts/" + filename,
                                std::ifstream::in | std::ifstream::binary };
 
    if (!file.is_open()) {

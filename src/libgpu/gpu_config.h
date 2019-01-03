@@ -1,22 +1,33 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace gpu
 {
 
-namespace config
+struct DebugSettings
 {
+   //! Enable debugging
+   bool debug_enabled = false;
 
-//! Enable OpenGL debugging
-extern bool debug;
+   //! Dump shaders
+   bool dump_shaders = false;
+};
 
-//! OpenGL debug message IDs to filter out
-extern std::vector<int64_t> debug_filters;
+struct OpenGLSettings
+{
+   //! OpenGL debug message IDs to filter out
+   std::vector<int64_t> debug_message_filters = { };
+};
 
-//! Dump shaders
-extern bool dump_shaders;
+struct Settings
+{
+   DebugSettings debug;
+   OpenGLSettings opengl;
+};
 
-} // namespace config
+std::shared_ptr<const Settings> config();
+void setConfig(const Settings &settings);
 
 } // namespace gpu

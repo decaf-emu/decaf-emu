@@ -108,8 +108,8 @@ initialise(const std::string &gamePath)
       auto volCodePath = rpxPath.parentPath();
       filesystem->mountHostFolder("/vol/code", volCodePath, fs::Permissions::Read);
 
-      if (!decaf::config::system::content_path.empty()) {
-         filesystem->mountHostFolder("/vol/content", decaf::config::system::content_path, fs::Permissions::Read);
+      if (!decaf::config()->system.content_path.empty()) {
+         filesystem->mountHostFolder("/vol/content", decaf::config()->system.content_path, fs::Permissions::Read);
       }
 
       cafe::kernel::setExecutableFilename(rpxPath.filename());
@@ -119,41 +119,41 @@ initialise(const std::string &gamePath)
    }
 
    // Ensure paths exist
-   if (!decaf::config::system::hfio_path.empty()) {
-      platform::createDirectory(decaf::config::system::hfio_path);
+   if (!decaf::config()->system.hfio_path.empty()) {
+      platform::createDirectory(decaf::config()->system.hfio_path);
    }
 
-   if (!decaf::config::system::mlc_path.empty()) {
-      platform::createDirectory(decaf::config::system::mlc_path);
+   if (!decaf::config()->system.mlc_path.empty()) {
+      platform::createDirectory(decaf::config()->system.mlc_path);
    }
 
-   if (!decaf::config::system::slc_path.empty()) {
-      platform::createDirectory(decaf::config::system::slc_path);
+   if (!decaf::config()->system.slc_path.empty()) {
+      platform::createDirectory(decaf::config()->system.slc_path);
    }
 
-   if (!decaf::config::system::sdcard_path.empty()) {
-      platform::createDirectory(decaf::config::system::sdcard_path);
+   if (!decaf::config()->system.sdcard_path.empty()) {
+      platform::createDirectory(decaf::config()->system.sdcard_path);
    }
 
    // Add device folder
    filesystem->makeFolder("/dev");
 
    // Mount mlc device
-   auto mlcPath = fs::HostPath { decaf::config::system::mlc_path };
+   auto mlcPath = fs::HostPath { decaf::config()->system.mlc_path };
    filesystem->mountHostFolder("/dev/mlc01", mlcPath, fs::Permissions::ReadWrite);
 
    // Mount slc device
-   auto slcPath = fs::HostPath { decaf::config::system::slc_path };
+   auto slcPath = fs::HostPath { decaf::config()->system.slc_path };
    filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
 
-   if (!decaf::config::system::hfio_path.empty()) {
+   if (!decaf::config()->system.hfio_path.empty()) {
       // Optionally mount hfio device if path is set
-      auto hfioPath = fs::HostPath { decaf::config::system::hfio_path };
+      auto hfioPath = fs::HostPath { decaf::config()->system.hfio_path };
       filesystem->mountHostFolder("/dev/hfio01", hfioPath, fs::Permissions::ReadWrite);
    }
 
    // Initialise file system with necessary files
-   internal::initialiseSlc(decaf::config::system::slc_path);
+   internal::initialiseSlc(decaf::config()->system.slc_path);
 
    // Setup ios
    kernel::setFileSystem(filesystem.get());

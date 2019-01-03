@@ -3,13 +3,13 @@
 #include "cafe/cafe_ppc_interface_invoke.h"
 #include "cafe/cafe_ppc_interface_invoke_trace.h"
 
-#include "decaf_config.h"
-
 #include <libcpu/cpu.h>
 #include <memory>
 
 namespace cafe::hle
 {
+
+extern volatile bool FunctionTraceEnabled;
 
 struct UnimplementedLibraryFunction
 {
@@ -59,7 +59,7 @@ struct LibraryFunctionCall : LibraryFunction
 
    virtual void call(cpu::Core *state) override
    {
-      if (decaf::config::log::kernel_trace && traceEnabled) {
+      if (FunctionTraceEnabled && traceEnabled) {
          invoke_trace(state, func, name.c_str());
       }
 
@@ -86,7 +86,7 @@ struct LibraryConstructorFunction : LibraryFunction
 
    virtual void call(cpu::Core *state) override
    {
-      if (decaf::config::log::kernel_trace && traceEnabled) {
+      if (FunctionTraceEnabled && traceEnabled) {
          invoke_trace(state, &LibraryConstructorFunction::wrapper, name.c_str());
       }
 
@@ -111,7 +111,7 @@ struct LibraryDestructorFunction : LibraryFunction
 
    virtual void call(cpu::Core *state) override
    {
-      if (decaf::config::log::kernel_trace && traceEnabled) {
+      if (FunctionTraceEnabled && traceEnabled) {
          invoke_trace(state, &LibraryDestructorFunction::wrapper, name.c_str());
       }
 

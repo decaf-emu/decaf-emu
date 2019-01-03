@@ -42,10 +42,6 @@ dumpRawShader(const std::string &type,
               uint32_t size,
               bool isSubroutine = false)
 {
-   if (!gpu::config::dump_shaders) {
-      return;
-   }
-
    auto filePath = fmt::format("dump/gpu_{}_{}.txt", type, address);
    if (platform::fileExists(filePath)) {
       return;
@@ -65,10 +61,6 @@ dumpTranslatedShader(const std::string &type,
                      phys_addr address,
                      const std::string &shaderSource)
 {
-   if (!gpu::config::dump_shaders) {
-      return;
-   }
-
    auto filePath = fmt::format("dump/gpu_{}_{}.glsl", type, address);
    if (platform::fileExists(filePath)) {
       return;
@@ -298,7 +290,10 @@ bool GLDriver::checkActiveShader()
          fetchShader->dirtyMemory = false;
          mResourceMap.addResource(fetchShader);
 
-         dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
+         if (mDumpShaders) {
+            dumpRawShader("fetch", fsPgmAddress, fsPgmSize, true);
+         }
+
          fetchShader->disassembly = latte::disassemble(gsl::make_span(gpu::internal::translateAddress<uint8_t>(fsPgmAddress), fsPgmSize), true);
 
          if (!parseFetchShader(*fetchShader, gpu::internal::translateAddress(fsPgmAddress), fsPgmSize)) {
@@ -308,7 +303,7 @@ bool GLDriver::checkActiveShader()
 
          // Setup attrib format
          gl::glCreateVertexArrays(1, &fetchShader->object);
-         if (gpu::config::debug) {
+         if (mDebug) {
             auto label = fmt::format("fetch shader @ {}", fsPgmAddress);
             gl::glObjectLabel(gl::GL_VERTEX_ARRAY, fetchShader->object, -1, label.c_str());
          }
@@ -377,19 +372,23 @@ bool GLDriver::checkActiveShader()
          vertexShader->dirtyMemory = false;
          mResourceMap.addResource(vertexShader);
 
-         dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
+         if (mDumpShaders) {
+            dumpRawShader("vertex", vsPgmAddress, vsPgmSize);
+         }
 
          if (!compileVertexShader(*vertexShader, *fetchShader, gpu::internal::translateAddress<uint8_t>(vsPgmAddress), vsPgmSize, isScreenSpace)) {
             gLog->error("Failed to recompile vertex shader");
             return false;
          }
 
-         dumpTranslatedShader("vertex", vsPgmAddress, vertexShader->code);
+         if (mDumpShaders) {
+            dumpTranslatedShader("vertex", vsPgmAddress, vertexShader->code);
+         }
 
          // Create OpenGL Shader
          const gl::GLchar *code[] = { vertexShader->code.c_str() };
          vertexShader->object = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, code);
-         if (gpu::config::debug) {
+         if (mDebug) {
             std::string label = fmt::format("vertex shader @ {}", vsPgmAddress);
             gl::glObjectLabel(gl::GL_PROGRAM, vertexShader->object, -1, label.c_str());
          }
@@ -446,20 +445,24 @@ bool GLDriver::checkActiveShader()
             pixelShader->dirtyMemory = false;
             mResourceMap.addResource(pixelShader);
 
-            dumpRawShader("pixel", psPgmAddress, psPgmSize);
+            if (mDumpShaders) {
+               dumpRawShader("pixel", psPgmAddress, psPgmSize);
+            }
 
             if (!compilePixelShader(*pixelShader, *vertexShader, gpu::internal::translateAddress<uint8_t>(psPgmAddress), psPgmSize)) {
                gLog->error("Failed to recompile pixel shader");
                return false;
             }
 
-            dumpTranslatedShader("pixel", psPgmAddress, pixelShader->code);
+            if (mDumpShaders) {
+               dumpTranslatedShader("pixel", psPgmAddress, pixelShader->code);
+            }
 
             // Create OpenGL Shader
             const gl::GLchar *code[] = { pixelShader->code.c_str() };
             pixelShader->object = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, code);
 
-            if (gpu::config::debug) {
+            if (mDebug) {
                std::string label = fmt::format("pixel shader @ {}", psPgmAddress);
                gl::glObjectLabel(gl::GL_PROGRAM, pixelShader->object, -1, label.c_str());
             }
@@ -490,7 +493,7 @@ bool GLDriver::checkActiveShader()
 
       // Create pipeline
       gl::glCreateProgramPipelines(1, &pipeline.object);
-      if (gpu::config::debug) {
+      if (mDebug) {
          std::string label;
 
          if (pipeline.pixel) {
@@ -683,7 +686,7 @@ GLDriver::getDataBuffer(phys_addr address,
    auto shouldMap = USE_PERSISTENT_MAP && !buffer->isOutput;
    gl::glCreateBuffers(1, &buffer->object);
 
-   if (gpu::config::debug) {
+   if (mDebug) {
       const char *type = "output-only";
 
       if (buffer->isInput) {

@@ -18,7 +18,9 @@ int main(int argc, char *argv[])
    gLog = std::make_shared<spdlog::logger>("logger", std::make_shared<spdlog::sinks::stdout_sink_st>());
    gLog->set_level(spdlog::level::debug);
 
-   cpu::config::jit::enabled = true;
+   auto cpuConfig = cpu::Settings { };
+   cpuConfig.jit.enabled = true;
+   cpu::setConfig(cpuConfig);
    cpu::initialise();
 
    // We need to run the tests on a core.

@@ -8,6 +8,7 @@
 #include "ios_mcp_title.h"
 
 #include "cafe/libraries/cafe_hle.h"
+#include "decaf_config.h"
 #include "ios/ios.h"
 #include "ios/ios_stackobject.h"
 #include "ios/fs/ios_fs_fsa_ipc.h"
@@ -36,9 +37,9 @@ mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request)
    auto name = std::string_view { phys_addrof(request->name).get() };
 
    if (request->fileType == MCPFileType::CafeOS) {
-      if (std::find(decaf::config::system::lle_modules.begin(),
-                    decaf::config::system::lle_modules.end(),
-                    name) == decaf::config::system::lle_modules.end()) {
+      if (std::find(decaf::config()->system.lle_modules.begin(),
+                    decaf::config()->system.lle_modules.end(),
+                    name) == decaf::config()->system.lle_modules.end()) {
          auto library = cafe::hle::getLibrary(name);
          if (library) {
             auto &rpl = library->getGeneratedRpl();
@@ -103,9 +104,9 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
    auto name = std::string_view { phys_addrof(request->name).get() };
 
    if (request->fileType == MCPFileType::CafeOS) {
-      if (std::find(decaf::config::system::lle_modules.begin(),
-                    decaf::config::system::lle_modules.end(),
-                    name) == decaf::config::system::lle_modules.end()) {
+      if (std::find(decaf::config()->system.lle_modules.begin(),
+                    decaf::config()->system.lle_modules.end(),
+                    name) == decaf::config()->system.lle_modules.end()) {
          auto library = cafe::hle::getLibrary(name);
          if (library) {
             auto &rpl = library->getGeneratedRpl();
@@ -242,7 +243,7 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
    // Mount sdcard if title has permissions
    if (sdCardPermissions) {
       auto filesystem = ios::getFileSystem();
-      auto sdcardPath = ::fs::HostPath { decaf::config::system::sdcard_path };
+      auto sdcardPath = ::fs::HostPath { decaf::config()->system.sdcard_path };
       filesystem->mountHostFolder("/dev/sdcard01", sdcardPath,
                                   static_cast<::fs::Permissions>(sdCardPermissions));
    }

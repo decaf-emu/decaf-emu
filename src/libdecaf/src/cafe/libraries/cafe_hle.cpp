@@ -68,6 +68,7 @@
 #include "zlib125/zlib125.h"
 
 #include "decaf_config.h"
+#include "decaf_configstorage.h"
 
 #include <array>
 #include <regex>
@@ -75,11 +76,10 @@
 namespace cafe::hle
 {
 
+volatile bool FunctionTraceEnabled = false;
+
 static std::array<Library *, static_cast<size_t>(LibraryId::Max)>
 sLibraries;
-
-static void
-applyTraceFilters();
 
 static void
 registerLibrary(Library *library)
@@ -158,7 +158,21 @@ initialiseLibraries()
    registerLibrary(new vpadbase::Library { });
    registerLibrary(new vpad::Library { });
    registerLibrary(new zlib125::Library { });
-   applyTraceFilters();
+
+   // Register config change handler
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      []() {
+         decaf::registerConfigChangeListener(
+            [](const decaf::Settings &settings) {
+               setTraceEnabled(settings.log.hle_trace);
+               applyTraceFilters(settings.log.hle_trace_filters);
+            });
+      });
+
+   // Apply trace config
+   setTraceEnabled(decaf::config()->log.hle_trace);
+   applyTraceFilters(decaf::config()->log.hle_trace_filters);
 }
 
 Library *
@@ -191,8 +205,8 @@ relocateLibrary(std::string_view name,
    }
 }
 
-static void
-applyTraceFilters()
+void
+applyTraceFilters(const std::vector<std::string> &filterStrings)
 {
    struct TraceFilter2
    {
@@ -201,9 +215,9 @@ applyTraceFilters()
    };
 
    std::vector<TraceFilter2> filters;
-   filters.reserve(decaf::config::log::kernel_trace_filters.size());
+   filters.reserve(filterStrings.size());
 
-   for (auto &filterString : decaf::config::log::kernel_trace_filters) {
+   for (auto &filterString : filterStrings) {
       auto &filter = filters.emplace_back();
 
       // First character is + enable or - disable
@@ -253,6 +267,12 @@ applyTraceFilters()
          }
       }
    }
+}
+
+void
+setTraceEnabled(bool enabled)
+{
+   FunctionTraceEnabled = enabled;
 }
 
 } // namespace cafe::hle

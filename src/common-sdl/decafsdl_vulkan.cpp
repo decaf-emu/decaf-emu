@@ -175,7 +175,7 @@ DecafSDLVulkan::createInstance()
        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
    };
 
-   if (gpu::config::debug) {
+   if (gpu::config()->debug.debug_enabled) {
       layers.push_back("VK_LAYER_LUNARG_standard_validation");
       extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
    }
@@ -272,7 +272,7 @@ DecafSDLVulkan::createDevice()
       VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME
    };
 
-   if (gpu::config::debug) {
+   if (gpu::config()->debug.debug_enabled) {
       deviceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
       deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
    }

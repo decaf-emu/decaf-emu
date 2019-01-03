@@ -522,6 +522,9 @@ private:
    volatile RunState mRunState = RunState::None;
    std::thread mThread;
 
+   bool mDebug = false;
+   bool mDumpShaders = false;
+
    bool mViewportDirty = false;
    bool mDepthRangeDirty = false;
    bool mScissorDirty = false;

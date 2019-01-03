@@ -1,4 +1,5 @@
 #include "decaf_config.h"
+#include "decaf_configstorage.h"
 #include "decaf_log.h"
 
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
@@ -61,11 +62,11 @@ public:
 static void
 initialiseLogSinks(std::string_view filename)
 {
-   if (decaf::config::log::to_stdout) {
+   if (decaf::config()->log.to_stdout) {
       sLogSinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
    }
 
-   if (decaf::config::log::to_file) {
+   if (decaf::config()->log.to_file) {
       auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       auto time = std::localtime(&now);
 
@@ -75,21 +76,30 @@ initialiseLogSinks(std::string_view filename)
                      time->tm_year + 1900, time->tm_mon, time->tm_mday,
                      time->tm_hour, time->tm_min, time->tm_sec);
 
-      auto path = fs::HostPath { decaf::config::log::directory }.join(logFilename);
+      auto path = fs::HostPath { decaf::config()->log.directory }.join(logFilename);
       sLogSinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.path()));
    }
 
-   if (decaf::config::log::async) {
+   if (decaf::config()->log.async) {
       spdlog::init_thread_pool(1024, 1);
    }
+
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      []() {
+         decaf::registerConfigChangeListener(
+            [](const decaf::Settings &settings) {
+               setLogLevel(spdlog::level::from_str(settings.log.level));
+            });
+      });
 }
 
 static void
 initialiseGlobalLogger()
 {
-   auto logLevel = spdlog::level::from_str(decaf::config::log::level);
+   auto logLevel = spdlog::level::from_str(decaf::config()->log.level);
 
-   if (decaf::config::log::async) {
+   if (decaf::config()->log.async) {
       gLog = std::make_shared<spdlog::async_logger>("decaf",
                                                     std::begin(sLogSinks),
                                                     std::end(sLogSinks),
@@ -120,7 +130,7 @@ makeLogger(std::string name,
    auto logger = std::shared_ptr<spdlog::logger> { };
    sinks.insert(sinks.end(), sLogSinks.begin(), sLogSinks.end());
 
-   if (decaf::config::log::async) {
+   if (decaf::config()->log.async) {
       logger = std::make_shared<spdlog::async_logger>(name,
                                                       std::begin(sinks),
                                                       std::end(sinks),
@@ -132,7 +142,7 @@ makeLogger(std::string name,
       logger->flush_on(spdlog::level::trace);
    }
 
-   auto logLevel = spdlog::level::from_str(decaf::config::log::level);
+   auto logLevel = spdlog::level::from_str(decaf::config()->log.level);
    logger->set_level(logLevel);
    logger->set_formatter(std::make_unique<GlobalLogFormatter>());
    spdlog::register_logger(logger);
@@ -146,8 +156,6 @@ setLogLevel(spdlog::level::level_enum level)
       [=](std::shared_ptr<spdlog::logger> logger) {
          logger->set_level(level);
       });
-
-   decaf::config::log::level = spdlog::level::to_c_str(level);
 }
 
 } // namespace decaf

@@ -202,28 +202,28 @@ applyRegionSettings()
    auto language = DefaultCafe[2].defaultValue;
    auto country = DefaultCafe[3].defaultValue;
 
-   switch (config::system::region) {
-   case  config::system::Region::Japan:
+   switch (config()->system.region) {
+   case  SystemRegion::Japan:
       language = "0"; // Japanese
       country = "3"; // Japan
       break;
-   case  config::system::Region::USA:
+   case SystemRegion::USA:
       language = "1"; // English
       country = "49"; // United States
       break;
-   case  config::system::Region::Europe:
+   case SystemRegion::Europe:
       language = "1"; // English
       country = "110"; // United Kingdom
       break;
-   case  config::system::Region::China:
+   case SystemRegion::China:
       language = "6"; // Chinese
       country = "160"; // China
       break;
-   case  config::system::Region::Korea:
+   case SystemRegion::Korea:
       language = "7"; // Korean
       country = "136"; // Best Korea
       break;
-   case  config::system::Region::Taiwan:
+   case SystemRegion::Taiwan:
       language = "11"; // Taiwanese
       country = "128"; // Taiwan
       break;
@@ -236,7 +236,6 @@ applyRegionSettings()
 void
 initialiseSlc(std::string_view path)
 {
-
    // Ensure slc/proc/prefs exists
    auto prefsPath = fs::HostPath { path }.join("proc").join("prefs");
    platform::createDirectory(prefsPath.path());

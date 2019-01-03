@@ -150,10 +150,16 @@ start(excmd::parser &parser,
       configPath = decaf::makeConfigPath("config.toml");
    }
 
+   auto cpuSettings = cpu::Settings { };
+   auto gpuSettings = gpu::Settings { };
+   auto decafSettings = decaf::Settings { };
+
    // If config file does not exist, create a default one.
    if (!platform::fileExists(configPath)) {
       auto toml = cpptoml::make_table();
-      config::saveToTOML(toml);
+      config::saveToTOML(toml, cpuSettings);
+      config::saveToTOML(toml, gpuSettings);
+      config::saveToTOML(toml, decafSettings);
       config::saveFrontendToml(toml);
       std::ofstream out { configPath };
       out << (*toml);
@@ -161,13 +167,21 @@ start(excmd::parser &parser,
 
    try {
       auto toml = cpptoml::parse_file(configPath);
-      config::loadFromTOML(toml);
+      config::loadFromTOML(toml, cpuSettings);
+      config::loadFromTOML(toml, gpuSettings);
+      config::loadFromTOML(toml, decafSettings);
       config::loadFrontendToml(toml);
    } catch (cpptoml::parse_exception ex) {
       configError = ex.what();
    }
 
-   config::loadFromExcmd(options);
+   config::loadFromExcmd(options, cpuSettings);
+   config::loadFromExcmd(options, gpuSettings);
+   config::loadFromExcmd(options, decafSettings);
+
+   cpu::setConfig(cpuSettings);
+   gpu::setConfig(gpuSettings);
+   decaf::setConfig(decafSettings);
 
    // Now handle frontend config options
    if (options.has("vpad0")) {
@@ -235,7 +249,7 @@ start(excmd::parser &parser,
    decaf::initialiseLogging(logFile);
 
    // Initialise frontend logger
-   if (!decaf::config::log::to_stdout) {
+   if (!decafSettings.log.to_stdout) {
       // Always do cli log to stdout
       gCliLog = decaf::makeLogger("decaf-cli",
                                   { std::make_shared<spdlog::sinks::stdout_sink_mt>() });

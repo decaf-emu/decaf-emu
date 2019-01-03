@@ -1,11 +1,12 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <spdlog/spdlog.h>
-#include "decaf_config.h"
 #include "decaf_eventlistener.h"
 #include "decaf_graphics.h"
 #include "decaf_input.h"
+
+#include <string>
+#include <vector>
+#include <spdlog/spdlog.h>
+#include <memory>
 
 namespace decaf
 {

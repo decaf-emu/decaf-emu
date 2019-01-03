@@ -144,9 +144,11 @@ start(excmd::parser &parser,
    auto traceFile = options.get<std::string>("trace file");
 
    // Initialise libdecaf logger
-   decaf::config::log::to_file = true;
-   decaf::config::log::to_stdout = true;
-   decaf::config::log::level = "debug";
+   auto decafSettings = decaf::Settings { };
+   decafSettings.log.to_file = true;
+   decafSettings.log.to_stdout = true;
+   decafSettings.log.level = "debug";
+   decaf::setConfig(decafSettings);
    decaf::initialiseLogging("pm4-replay.txt");
 
    auto sinks = gLog->sinks();

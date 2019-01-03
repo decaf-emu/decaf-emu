@@ -69,17 +69,19 @@ sSegfaultStackTrace = nullptr;
 void
 initialise()
 {
+   auto settings = config();
+
    // Setup config options
-   if (config::jit::enabled) {
-      if (config::jit::verify) {
+   if (settings->jit.enabled) {
+      if (settings->jit.verify) {
          gJitMode = jit_mode::verify;
-         gJitVerifyAddress = config::jit::verify_addr;
+         gJitVerifyAddress = settings->jit.verifyAddress;
       } else {
          gJitMode = jit_mode::enabled;
       }
 
-      sJitCodeCacheSize = config::jit::code_cache_size_mb * 1024 * 1024;
-      sJitDataCacheSize = config::jit::data_cache_size_mb * 1024 * 1024;
+      sJitCodeCacheSize = settings->jit.codeCacheSizeMB * 1024 * 1024;
+      sJitDataCacheSize = settings->jit.dataCacheSizeMB * 1024 * 1024;
    } else {
       gJitMode = jit_mode::disabled;
    }
@@ -91,7 +93,7 @@ initialise()
 
    if (gJitMode != cpu::jit_mode::disabled) {
       auto backend = new jit::BinrecBackend { sJitCodeCacheSize, sJitDataCacheSize };
-      backend->setOptFlags(config::jit::opt_flags);
+      backend->setOptFlags(settings->jit.optimisationFlags);
       jit::setBackend(backend);
    }
 

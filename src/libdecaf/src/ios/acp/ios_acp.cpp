@@ -4,7 +4,6 @@
 #include "ios_acp_main_server.h"
 #include "ios_acp_nnsm.h"
 
-#include "decaf_config.h"
 #include "decaf_log.h"
 #include "ios/ios_stackobject.h"
 #include "ios/fs/ios_fs_fsa_ipc.h"
@@ -58,16 +57,17 @@ updateSaveAndBossQuota()
 {
    // TODO: Update boss and save quota.
 
-   // Make quota for Mii database
-   auto path = "/vol/storage_mlc01/usr/save/00050010/1004a000/user/common/db";
-
-   if (decaf::config::system::region == decaf::config::system::Region::USA) {
-      path = "/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db";
-   } else if (decaf::config::system::region == decaf::config::system::Region::Europe) {
-      path = "/vol/storage_mlc01/usr/save/00050010/1004a200/user/common/db";
-   }
-
-   FSAMakeQuota(sAcpData->fsaHandle, path, 0x660, 24 * 1024 * 1024);
+   // Make quota for Mii database in all regions
+   // Note: Real IOS only does it for current system region
+   FSAMakeQuota(sAcpData->fsaHandle,
+                "/vol/storage_mlc01/usr/save/00050010/1004a000/user/common/db",
+                0x660, 24 * 1024 * 1024);
+   FSAMakeQuota(sAcpData->fsaHandle,
+                "/vol/storage_mlc01/usr/save/00050010/1004a100/user/common/db",
+                0x660, 24 * 1024 * 1024);
+   FSAMakeQuota(sAcpData->fsaHandle,
+                "/vol/storage_mlc01/usr/save/00050010/1004a200/user/common/db",
+                0x660, 24 * 1024 * 1024);
 }
 
 static Error

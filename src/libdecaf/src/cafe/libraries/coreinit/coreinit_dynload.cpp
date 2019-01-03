@@ -2844,19 +2844,18 @@ initialiseDynLoad()
 
    kernel::loaderUserGainControl();
 
-   if (decaf::config::debugger::enabled) {
-      StackObject<virt_addr> preinitAddr;
-      auto error = OSDynLoad_FindExport(rpxData->handle, FALSE,
-                                        make_stack_string("__preinit_user"),
-                                        preinitAddr);
-      if (error != OSDynLoad_Error::OK) {
-         *preinitAddr = virt_addr { 0 };
-      }
-
-      decaf::debug::notifyEntry(static_cast<uint32_t>(*preinitAddr),
-                                static_cast<uint32_t>(rpxData->entryPoint));
+   // Notify debugger of entry points
+   StackObject<virt_addr> preinitAddr;
+   if (auto error = OSDynLoad_FindExport(rpxData->handle, FALSE,
+                                          make_stack_string("__preinit_user"),
+                                          preinitAddr) != OSDynLoad_Error::OK) {
+      *preinitAddr = virt_addr { 0 };
    }
 
+   decaf::debug::notifyEntry(static_cast<uint32_t>(*preinitAddr),
+                              static_cast<uint32_t>(rpxData->entryPoint));
+
+   // Run the preinit entry point
    initialiseDefaultHeap(rpxData,
                          make_stack_string("__preinit_user"));
 

@@ -43,7 +43,7 @@ bool GLDriver::checkActiveTextures()
        || mActiveShader->pixel->samplerUsage[i] == glsl2::SamplerUsage::Invalid) {
          // In debug mode, explicitly unbind the unit so tools like apitrace
          //  don't show lots of unused textures
-         if (gpu::config::debug && mPixelTextureCache[i].surfaceObject != 0) {
+         if (mDebug && mPixelTextureCache[i].surfaceObject != 0) {
             gl::glBindTextureUnit(i, 0);
             mPixelTextureCache[i].surfaceObject = 0;
          }
@@ -117,7 +117,7 @@ bool GLDriver::checkActiveTextures()
 
          // In debug mode, first unbind the unit to remove any textures of
          //  different types (again, to reduce clutter in apitrace etc.)
-         if (gpu::config::debug) {
+         if (mDebug) {
             gl::glBindTextureUnit(i, 0);
          }
 
@@ -213,7 +213,7 @@ bool GLDriver::checkActiveSamplers()
       if (!sampler.object) {
          gl::glCreateSamplers(1, &sampler.object);
 
-         if (gpu::config::debug) {
+         if (mDebug) {
             auto label = fmt::format("pixel sampler {}", i);
             gl::glObjectLabel(gl::GL_SAMPLER, sampler.object, -1, label.c_str());
          }

@@ -13,6 +13,9 @@ namespace internal
 {
 
 void
+initialiseDebug();
+
+void
 debugDumpTexture(virt_ptr<const GX2Texture> texture);
 
 void

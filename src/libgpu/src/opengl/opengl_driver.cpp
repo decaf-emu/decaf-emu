@@ -1,6 +1,7 @@
 #ifdef DECAF_GL
 #include "gpu_clock.h"
 #include "gpu_config.h"
+#include "gpu_configstorage.h"
 #include "gpu_event.h"
 #include "gpu_ih.h"
 #include "gpu_ringbuffer.h"
@@ -36,6 +37,22 @@ GLDriver::type()
 void
 GLDriver::initialise()
 {
+   // Register config change handler
+   static std::once_flag sRegisteredConfigChangeListener;
+   std::call_once(sRegisteredConfigChangeListener,
+      [this]() {
+         gpu::registerConfigChangeListener(
+            [this](const gpu::Settings &settings) {
+               mDebug = settings.debug.debug_enabled;
+               mDumpShaders = settings.debug.dump_shaders;
+            });
+      });
+
+   // Read config
+   auto gpuConfig = gpu::config();
+   mDebug = gpuConfig->debug.debug_enabled;
+   mDumpShaders = gpuConfig->debug.dump_shaders;
+
    // Apply all registers
    for (auto i = 0u; i < mRegisters.size(); ++i) {
       if (i * 4 == latte::Register::VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE) {
@@ -63,7 +80,7 @@ GLDriver::initialise()
    // Create our blit framebuffer
    gl::glCreateFramebuffers(2, mBlitFrameBuffers);
 
-   if (gpu::config::debug) {
+   if (mDebug) {
       gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[0], -1, "blit target");
       gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[1], -1, "blit source");
    }
@@ -76,7 +93,7 @@ GLDriver::initialise()
    gl::glCreateFramebuffers(1, &mColorClearFrameBuffer);
    gl::glCreateFramebuffers(1, &mDepthClearFrameBuffer);
 
-   if (gpu::config::debug) {
+   if (mDebug) {
       gl::glObjectLabel(gl::GL_FRAMEBUFFER, mColorClearFrameBuffer, -1, "color clear");
       gl::glObjectLabel(gl::GL_FRAMEBUFFER, mDepthClearFrameBuffer, -1, "depth clear");
    }
@@ -124,7 +141,7 @@ GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
    chain->width = data.width;
    chain->height = data.height;
 
-   if (gpu::config::debug) {
+   if (mDebug) {
       if (data.scanTarget == latte::pm4::ScanTarget::TV) {
          gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, "TV framebuffer");
       } else if (data.scanTarget == latte::pm4::ScanTarget::DRC) {

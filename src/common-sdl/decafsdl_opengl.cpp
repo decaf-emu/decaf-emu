@@ -8,8 +8,8 @@
 #include <glbinding/Binding.h>
 #include <glbinding/Meta.h>
 #include <libdecaf/decaf_log.h>
-#include <libgpu/gpu_config.h>
 #include <libgpu/gpu_opengldriver.h>
+#include <libgpu/gpu_config.h>
 #include <string>
 
 static std::string
@@ -112,7 +112,7 @@ DecafSDLOpenGL::debugMessageCallback(gl::GLenum source,
                                      const void *userParam)
 {
    auto self = reinterpret_cast<DecafSDLOpenGL *>(const_cast<void *>(userParam));
-   for (auto filterID : gpu::config::debug_filters) {
+   for (auto filterID : gpu::config()->opengl.debug_message_filters) {
       if (filterID == id) {
          return;
       }
@@ -145,7 +145,7 @@ DecafSDLOpenGL::initialiseContext()
 {
    glbinding::Binding::initialize();
 
-   if (gpu::config::debug) {
+   if (gpu::config()->debug.debug_enabled) {
       glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
       glbinding::setAfterCallback([&](const glbinding::FunctionCall &call) {
          auto error = glbinding::Binding::GetError.directCall();
@@ -350,7 +350,7 @@ DecafSDLOpenGL::initialise(int width,
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
    // Enable debug context
-   if (gpu::config::debug) {
+   if (gpu::config()->debug.debug_enabled) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
    }
 
