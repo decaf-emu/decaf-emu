@@ -48,6 +48,9 @@ Or by using [Conan](https://conan.io), which is recommended to be installed usin
 - `conan user`
 - `conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan`
 
+It is recommended to use your system's openssl and curl even when using conan:
+- `conan install .. --build=missing -o curl=False -o openssl=False`
+
 You may choose to use a mix of system dependenices such as if your system's ffmpeg is too old, you can interactively customise which dependencies to acquire when using `conan install ..` or you can specifiy on the command line. So for example to acquire only ffmpeg you might use `conan install .. --build=missing -o silent=True -o ffmpeg=True -o curl=False -o openssl=False -o sdl2=False -o zlib=False`
 
 ### Building
@@ -55,8 +58,8 @@ You may choose to use a mix of system dependenices such as if your system's ffmp
 - `cd decaf-emu`
 - `mkdir build`
 - `cd build`
-- If using conan: `conan install .. -o silent=True`
-- `cmake ../`
+- If using conan: `conan install .. -o silent=True -o curl=False -o openssl=False`
+- `cmake -DCMAKE_BUILD_TYPE=Release -DDECAF_QT ../`
 - `make`
 
 ## MacOS

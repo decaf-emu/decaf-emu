@@ -59,6 +59,6 @@ script:
   - cd "$TRAVIS_BUILD_DIR/cbuild"
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=/usr/lib/binutils-2.26/bin:$PATH; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source ~/vulkan/1.1.92.1/setup-env.sh; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DDECAF_BUILD_TOOLS=ON ..; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DDECAF_BUILD_TOOLS=ON -DCMAKE_BUILD_TYPE=Release ..; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_GL=OFF -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl ..; fi
   - make -j4
