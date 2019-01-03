@@ -222,6 +222,9 @@ loadGameProcess(std::string_view rpx,
    partitionData->uniqueProcessId = UniqueProcessId::Game;
    partitionData->titleId = titleInfo->titleId;
 
+   std::memcpy(&partitionData->titleInfo, titleInfo.get(),
+               sizeof(ios::mcp::MCPPPrepareTitleInfo));
+
    // Initialise RAM partition
    allocateRamPartition(rampid,
                         titleInfo->max_size,
