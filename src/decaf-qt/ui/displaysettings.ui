@@ -83,7 +83,7 @@
   <customwidget>
    <class>ColourLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>colourlineedit.h</header>
+   <header>settingsdialog/colourlineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
