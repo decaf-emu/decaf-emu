@@ -1,7 +1,11 @@
 #include "swkbd.h"
 #include "swkbd_keyboard.h"
+
+#include "decaf_softwarekeyboard.h"
+
 #include <codecvt>
 #include <locale>
+#include <mutex>
 #include <string>
 
 namespace cafe::swkbd
@@ -16,20 +20,26 @@ struct StaticKeyboardData
    be2_virt_ptr<uint8_t> workMemory;
 };
 
-static virt_ptr<StaticKeyboardData>
-sKeyboardData = nullptr;
-
-static std::string
-sInputBuffer;
+static virt_ptr<StaticKeyboardData> sKeyboardData = nullptr;
+static std::mutex sMutex;
+static std::u16string sInputBuffer;
 
 bool
 AppearInputForm(virt_ptr<const AppearArg> arg)
 {
-   sKeyboardData->inputFormState = State::Visible;
-   sKeyboardData->keyboardState = State::Visible;
-   sKeyboardData->okButtonPressed = false;
-   sKeyboardData->cancelButtonPressed = false;
-   sInputBuffer.clear();
+   {
+      std::unique_lock<std::mutex> lock { sMutex };
+      sKeyboardData->inputFormState = State::Visible;
+      sKeyboardData->keyboardState = State::Visible;
+      sKeyboardData->okButtonPressed = false;
+      sKeyboardData->cancelButtonPressed = false;
+      sInputBuffer.clear();
+   }
+
+   if (auto driver = decaf::softwareKeyboardDriver()) {
+      driver->onOpen({});
+   }
+
    return true;
 }
 
@@ -37,10 +47,18 @@ AppearInputForm(virt_ptr<const AppearArg> arg)
 bool
 AppearKeyboard(virt_ptr<const KeyboardArg> arg)
 {
-   sKeyboardData->keyboardState = State::Visible;
-   sKeyboardData->okButtonPressed = false;
-   sKeyboardData->cancelButtonPressed = false;
-   sInputBuffer.clear();
+   {
+      std::unique_lock<std::mutex> lock { sMutex };
+      sKeyboardData->keyboardState = State::Visible;
+      sKeyboardData->okButtonPressed = false;
+      sKeyboardData->cancelButtonPressed = false;
+      sInputBuffer.clear();
+   }
+
+   if (auto driver = decaf::softwareKeyboardDriver()) {
+      driver->onOpen({});
+   }
+
    return true;
 }
 
@@ -88,6 +106,12 @@ Destroy()
 bool
 DisappearInputForm()
 {
+   sKeyboardData->keyboardState = State::Hidden;
+
+   if (auto driver = decaf::softwareKeyboardDriver()) {
+      driver->onClose();
+   }
+
    return true;
 }
 
@@ -95,6 +119,12 @@ DisappearInputForm()
 bool
 DisappearKeyboard()
 {
+   sKeyboardData->keyboardState = State::Hidden;
+
+   if (auto driver = decaf::softwareKeyboardDriver()) {
+      driver->onClose();
+   }
+
    return true;
 }
 
@@ -117,19 +147,17 @@ GetDrawStringInfo(virt_ptr<DrawStringInfo> info)
 }
 
 
-const virt_ptr<swkbd_char_t>
+const virt_ptr<char16_t>
 GetInputFormString()
 {
-   std::wstring_convert<std::codecvt_utf8_utf16<swkbd_char_t>, swkbd_char_t> converter;
-   auto wide = converter.from_bytes(sInputBuffer);
-   auto swapped = virt_cast<swkbd_char_t *>(sKeyboardData->workMemory);
+   auto workMemory = virt_cast<char16_t *>(sKeyboardData->workMemory);
 
-   for (auto i = 0; i < wide.size(); ++i) {
-      swapped[i] = static_cast<swkbd_char_t>(wide[i]);
+   for (auto i = 0; i < sInputBuffer.size(); ++i) {
+      workMemory[i] = sInputBuffer[i];
    }
 
-   swapped[wide.size()] = swkbd_char_t { 0 };
-   return swapped;
+   workMemory[sInputBuffer.size()] = char16_t { 0 };
+   return workMemory;
 }
 
 
@@ -240,17 +268,19 @@ SetEnableOkButton(bool enable)
 
 
 void
-SetInputFormString(virt_ptr<const swkbd_char_t> str)
+SetInputFormString(virt_ptr<const char16_t> str)
 {
-   std::wstring_convert<std::codecvt_utf8_utf16<swkbd_char_t>, swkbd_char_t> converter;
-   std::basic_string<swkbd_char_t> wide;
+   std::unique_lock<std::mutex> lock { sMutex };
+   sInputBuffer.clear();
 
    while (auto c = *str) {
-      wide.push_back(c);
+      sInputBuffer.push_back(c);
       ++str;
    }
 
-   sInputBuffer = converter.to_bytes(wide);
+   if (auto driver = decaf::softwareKeyboardDriver()) {
+      driver->onInputStringChanged(sInputBuffer);
+   }
 }
 
 
@@ -329,36 +359,40 @@ Library::registerKeyboardSymbols()
 namespace internal
 {
 
-#if 0
 void
-injectTextInput(const char *input)
+inputAccept()
 {
-   if (sKeyboardData->keyboardState == State::Visible) {
-      sInputBuffer += input;
-   }
-}
-
-void
-injectKeyInput(decaf::input::KeyboardKey key,
-               decaf::input::KeyboardAction action)
-{
+   std::unique_lock<std::mutex> lock { sMutex };
    if (sKeyboardData->keyboardState != State::Visible) {
       return;
    }
 
-   if (action == decaf::input::KeyboardAction::Release) {
-      if (key == decaf::input::KeyboardKey::Enter) {
-         sKeyboardData->okButtonPressed = true;
-         sKeyboardData->inputFormState = State::Hidden;
-         sKeyboardData->keyboardState = State::Hidden;
-      } else if (key == decaf::input::KeyboardKey::Escape) {
-         sKeyboardData->cancelButtonPressed = true;
-         sKeyboardData->inputFormState = State::Hidden;
-         sKeyboardData->keyboardState = State::Hidden;
-      }
-   }
+   sKeyboardData->okButtonPressed = true;
+   sKeyboardData->cancelButtonPressed = false;
 }
-#endif
+
+void
+inputReject()
+{
+   std::unique_lock<std::mutex> lock { sMutex };
+   if (sKeyboardData->keyboardState != State::Visible) {
+      return;
+   }
+
+   sKeyboardData->okButtonPressed = false;
+   sKeyboardData->cancelButtonPressed = true;
+}
+
+void
+setInputString(std::u16string_view text)
+{
+   std::unique_lock<std::mutex> lock { sMutex };
+   if (sKeyboardData->keyboardState != State::Visible) {
+      return;
+   }
+
+   sInputBuffer = text;
+}
 
 } // namespace internal
 

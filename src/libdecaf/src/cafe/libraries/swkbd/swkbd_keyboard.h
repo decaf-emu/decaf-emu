@@ -4,6 +4,7 @@
 
 #include <common/platform.h>
 #include <libcpu/be2_struct.h>
+#include <string_view>
 
 namespace cafe::coreinit
 {
@@ -146,12 +147,6 @@ struct IEventReceiver;
 struct IControllerEventObj;
 struct ISoundObj;
 
-#ifdef PLATFORM_WINDOWS
-using swkbd_char_t = int16_t;
-#else
-using swkbd_char_t = char16_t;
-#endif
-
 bool
 AppearInputForm(virt_ptr<const AppearArg> arg);
 
@@ -194,7 +189,7 @@ DrawTV();
 void
 GetDrawStringInfo(virt_ptr<DrawStringInfo> info);
 
-const virt_ptr<swkbd_char_t>
+const virt_ptr<char16_t>
 GetInputFormString();
 
 void
@@ -246,7 +241,7 @@ void
 SetEnableOkButton(bool enable);
 
 void
-SetInputFormString(virt_ptr<const swkbd_char_t> str);
+SetInputFormString(virt_ptr<const char16_t> str);
 
 void
 SetReceiver(virt_ptr<const ReceiverArg> arg);
@@ -266,15 +261,14 @@ SetVersion(int32_t version);
 namespace internal
 {
 
-// TODO: Fix this
-#if 0
 void
-injectTextInput(const char *input);
+inputAccept();
 
 void
-injectKeyInput(decaf::input::KeyboardKey key,
-               decaf::input::KeyboardAction action);
-#endif
+inputReject();
+
+void
+setInputString(std::u16string_view text);
 
 } // namespace internal
 
