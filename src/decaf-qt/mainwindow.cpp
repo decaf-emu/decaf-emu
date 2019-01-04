@@ -1,12 +1,14 @@
 #include "mainwindow.h"
 #include "aboutdialog.h"
 #include "vulkanwindow.h"
+#include "softwarekeyboarddriver.h"
 
 #include "settingsdialog/settingsdialog.h"
 
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QSettings>
 
 #include <libdecaf/decaf.h>
@@ -19,7 +21,9 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    QMainWindow(parent),
    mSettingsStorage(settingsStorage),
    mDecafInterface(decafInterface),
-   mInputDriver(inputDriver)
+   mInputDriver(inputDriver),
+   mSoftwareKeyboardDriver(new SoftwareKeyboardDriver(this)),
+   mSoftwareKeyboardInputDialog(new QInputDialog(this))
 {
    // Setup UI
    mUi.setupUi(this);
@@ -30,13 +34,23 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    wrapper->setFocus();
    setCentralWidget(QWidget::createWindowContainer(mVulkanWindow));
 
-   QObject::connect(decafInterface, &DecafInterface::titleLoaded,
-                    this, &MainWindow::titleLoaded);
+   connect(decafInterface, &DecafInterface::titleLoaded,
+           this, &MainWindow::titleLoaded);
 
    // Setup settings
-   QObject::connect(mSettingsStorage, &SettingsStorage::settingsChanged,
-                    this, &MainWindow::settingsChanged);
+   connect(mSettingsStorage, &SettingsStorage::settingsChanged,
+           this, &MainWindow::settingsChanged);
    settingsChanged();
+
+   connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::open,
+           this, &MainWindow::softwareKeyboardOpen);
+   connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::close,
+           this, &MainWindow::softwareKeyboardClose);
+   connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::inputStringChanged,
+           this, &MainWindow::softwareKeyboardInputStringChanged);
+   connect(mSoftwareKeyboardInputDialog, &QInputDialog::finished,
+           this, &MainWindow::softwareKeyboardInputFinished);
+   decaf::setSoftwareKeyboardDriver(mSoftwareKeyboardDriver);
 
    // Create recent file actions
    mRecentFilesSeparator = mUi.menuFile->insertSeparator(mUi.actionExit);
@@ -51,6 +65,35 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    }
 
    updateRecentFileActions();
+}
+
+void
+MainWindow::softwareKeyboardOpen(QString defaultText)
+{
+   mSoftwareKeyboardInputDialog->setLabelText("Software Keyboard Input");
+   mSoftwareKeyboardInputDialog->show();
+}
+
+void
+MainWindow::softwareKeyboardClose()
+{
+   mSoftwareKeyboardInputDialog->close();
+}
+
+void
+MainWindow::softwareKeyboardInputStringChanged(QString text)
+{
+   mSoftwareKeyboardInputDialog->setTextValue(text);
+}
+
+void
+MainWindow::softwareKeyboardInputFinished(int result)
+{
+   if (result == QDialog::Accepted) {
+      mSoftwareKeyboardDriver->acceptInput(mSoftwareKeyboardInputDialog->textValue());
+   } else {
+      mSoftwareKeyboardDriver->rejectInput();
+   }
 }
 
 void
@@ -117,7 +160,6 @@ MainWindow::openFile()
 void
 MainWindow::openRecentFile()
 {
-
    QAction *action = qobject_cast<QAction *>(sender());
    if (action) {
       loadFile(action->data().toString());

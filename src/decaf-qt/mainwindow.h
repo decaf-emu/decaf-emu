@@ -6,10 +6,13 @@
 
 class DecafInterface;
 class SettingsStorage;
+class SoftwareKeyboardDriver;
 class VulkanWindow;
-class QVulkanInstance;
 class InputDriver;
+
 class QAction;
+class QInputDialog;
+class QVulkanInstance;
 
 class MainWindow : public QMainWindow
 {
@@ -45,6 +48,11 @@ private slots:
 
    void settingsChanged();
 
+   void softwareKeyboardOpen(QString defaultText);
+   void softwareKeyboardClose();
+   void softwareKeyboardInputStringChanged(QString text);
+   void softwareKeyboardInputFinished(int result);
+
 protected:
    void closeEvent(QCloseEvent *event) override;
 
@@ -60,4 +68,7 @@ private:
 
    QAction *mRecentFilesSeparator;
    std::array<QAction *, MaxRecentFiles> mRecentFileActions;
+
+   SoftwareKeyboardDriver *mSoftwareKeyboardDriver;
+   QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
 };
