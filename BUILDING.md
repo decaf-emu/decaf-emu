@@ -59,7 +59,7 @@ You may choose to use a mix of system dependenices such as if your system's ffmp
 - `mkdir build`
 - `cd build`
 - If using conan: `conan install .. -o silent=True -o curl=False -o openssl=False`
-- `cmake -DCMAKE_BUILD_TYPE=Release -DDECAF_QT ../`
+- `cmake -DCMAKE_BUILD_TYPE=Release -DDECAF_QT=ON ../`
 - `make`
 
 ## MacOS
