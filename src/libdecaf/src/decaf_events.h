@@ -1,15 +1,9 @@
 #pragma once
 #include "decaf_game.h"
 
-namespace decaf
+namespace decaf::event
 {
 
-namespace event
-{
+void onGameLoaded(const decaf::GameInfo &info);
 
-void
-onGameLoaded(const decaf::GameInfo &info);
-
-} // namespace event
-
-} // namespace decaf
+} // namespace decaf::event

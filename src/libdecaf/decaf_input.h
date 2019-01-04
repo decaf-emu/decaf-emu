@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 
 namespace decaf
 {
@@ -268,10 +269,7 @@ public:
    virtual void sampleWpadController(int channel, input::wpad::Status &status) = 0;
 };
 
-void
-setInputDriver(InputDriver *driver);
-
-InputDriver *
-getInputDriver();
+void setInputDriver(InputDriver *driver);
+InputDriver *getInputDriver();
 
 } // namespace decaf

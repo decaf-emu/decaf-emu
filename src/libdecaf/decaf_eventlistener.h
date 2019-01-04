@@ -25,8 +25,7 @@ public:
       removeEventListener(this);
    }
 
-   virtual void
-   onGameLoaded(const GameInfo &info) = 0;
+   virtual void onGameLoaded(const GameInfo &info) { };
 };
 
 } // namespace decaf

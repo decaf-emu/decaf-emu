@@ -27,10 +27,7 @@ public:
    stop() = 0;
 };
 
-void
-setSoundDriver(SoundDriver *driver);
-
-SoundDriver *
-getSoundDriver();
+void setSoundDriver(SoundDriver *driver);
+SoundDriver *getSoundDriver();
 
 } // namespace decaf
