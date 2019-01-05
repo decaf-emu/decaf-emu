@@ -382,18 +382,20 @@ queueCommandBuffer(virt_ptr<uint32_t> cbBase,
    };
    writePM4(submitCommand, submitCommandNumWords, indirectBufferCall);
 
-   auto memWrite =
-      latte::pm4::MemWrite {
-         latte::pm4::MW_ADDR_LO::get(0)
-            .ADDR_LO(OSEffectiveToPhysical(virt_cast<virt_addr>(gpuLastReadPointer)) >> 2)
-            .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN32),
-         latte::pm4::MW_ADDR_HI::get(0)
-            .CNTR_SEL(latte::pm4::MW_WRITE_DATA)
-            .DATA32(true),
-         static_cast<uint32_t>(virt_cast<virt_addr>(cbBase + cbSize)),
-         0u
-   };
-   writePM4(submitCommand, submitCommandNumWords, memWrite);
+   if (gpuLastReadPointer) {
+      auto memWrite =
+         latte::pm4::MemWrite {
+            latte::pm4::MW_ADDR_LO::get(0)
+               .ADDR_LO(OSEffectiveToPhysical(virt_cast<virt_addr>(gpuLastReadPointer)) >> 2)
+               .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN32),
+            latte::pm4::MW_ADDR_HI::get(0)
+               .CNTR_SEL(latte::pm4::MW_WRITE_DATA)
+               .DATA32(true),
+            static_cast<uint32_t>(virt_cast<virt_addr>(cbBase + cbSize)),
+            0u
+      };
+      writePM4(submitCommand, submitCommandNumWords, memWrite);
+   }
 
    if (getProfileMode() & GX2ProfileMode::SkipExecuteCommandBuffers) {
       // Change IndirectBufferCallPriv to a NOP
