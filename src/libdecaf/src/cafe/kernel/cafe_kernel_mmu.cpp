@@ -347,6 +347,12 @@ effectiveToPhysical(virt_addr address)
    auto addressSpace = internal::getActiveAddressSpace();
    auto view = addressSpace->perCoreView[cpu::this_core::id()];
 
+   if (addressSpace->overlayArenaEnabled &&
+       address >= OverlayArenaVirtualStart &&
+       address < OverlayArenaVirtualEnd) {
+      return OverlayArenaPhysicalStart + (address - OverlayArenaVirtualStart);
+   }
+
    // Lookup in our mappings
    for (auto i = 0u; i < view->numMappings; ++i) {
       if (address < view->mappings[i].vaddr ||
