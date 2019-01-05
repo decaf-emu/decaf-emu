@@ -56,8 +56,8 @@ struct RamPartitionAllocation
    phys_addr codeStart;
    phys_addr codeEnd;
    uint32_t codegen_core;
-   uint32_t unk0x18;
-   uint32_t unk0x1C;
+   phys_addr overlayStart;
+   phys_addr overlayEnd;
 };
 
 struct RamPartitionData

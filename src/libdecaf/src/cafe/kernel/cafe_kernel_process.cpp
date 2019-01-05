@@ -95,8 +95,8 @@ allocateRamPartition(RamPartitionId rampid,
    info->codeGenStart = align_down(info->codeStart - codegen_size, PageSize);
    info->availStart = align_down(info->codeGenStart - UnkReserveSize - avail_size, PageSize);
    info->codegen_core = codegen_core;
-   info->unk0x18 = 0;
-   info->unk0x1C = 0;
+   info->overlayStart = phys_addr { 0 };
+   info->overlayEnd = phys_addr { 0 };
    decaf_check(info->availStart - info->dataStart >= MinDataSize);
 }
 

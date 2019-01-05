@@ -13,8 +13,20 @@ namespace cafe::kernel
 constexpr auto MaxCodeGenSize = 0x2000000u;
 constexpr auto MaxTotalCodeSize = 0xE800000u;
 
+constexpr auto OverlayArenaVirtualStart = virt_addr { 0xA0000000 };
+constexpr auto OverlayArenaVirtualEnd = virt_addr { 0xBC000000 };
+constexpr auto OverlayArenaPhysicalStart = phys_addr { 0x34000000 };
+constexpr auto OverlayArenaPhysicalEnd = phys_addr { 0x50000000 };
+constexpr auto OverlayArenaSize = OverlayArenaPhysicalEnd - OverlayArenaPhysicalStart;
+
 static std::array<internal::AddressSpace *, 3>
 sCoreActiveAddressSpace = { nullptr, nullptr, nullptr };
+
+namespace internal
+{
+static bool loadMapping(MemoryMap &mapping);
+static bool unloadMapping(MemoryMap &mapping);
+}
 
 enum MemoryMapFlags
 {
@@ -137,17 +149,36 @@ enableOverlayArena()
    // process.
 
    if (!partitionData->addressSpace.overlayArenaEnabled) {
+      auto mapping = MemoryMap { };
+      mapping.vaddr = OverlayArenaVirtualStart;
+      mapping.paddr = OverlayArenaPhysicalStart;
+      mapping.size = OverlayArenaSize;
+      internal::loadMapping(mapping);
+
+      partitionData->ramPartitionAllocation.overlayStart = OverlayArenaPhysicalStart;
+      partitionData->ramPartitionAllocation.overlayEnd = OverlayArenaPhysicalEnd;
       partitionData->addressSpace.overlayArenaEnabled = true;
    }
 
-   return { virt_addr { 0xA0000000 }, 0x1C000000 };
+   return { OverlayArenaVirtualStart, OverlayArenaSize };
 }
 
 void
 disableOverlayArena()
 {
    auto partitionData = internal::getCurrentRamPartitionData();
-   partitionData->addressSpace.overlayArenaEnabled = false;
+
+   if (partitionData->addressSpace.overlayArenaEnabled) {
+      auto mapping = MemoryMap { };
+      mapping.vaddr = OverlayArenaVirtualStart;
+      mapping.paddr = OverlayArenaPhysicalStart;
+      mapping.size = OverlayArenaSize;
+      internal::unloadMapping(mapping);
+
+      partitionData->ramPartitionAllocation.overlayStart = phys_addr { 0 };
+      partitionData->ramPartitionAllocation.overlayEnd = phys_addr { 0 };
+      partitionData->addressSpace.overlayArenaEnabled = false;
+   }
 }
 
 std::pair<phys_addr, uint32_t>
@@ -502,7 +533,7 @@ initialiseAddressSpace(AddressSpace *addressSpace,
    return true;
 }
 
-static bool
+bool
 loadMapping(MemoryMap &mapping)
 {
    if (!cpu::allocateVirtualAddress(mapping.vaddr, mapping.size)) {
@@ -512,8 +543,26 @@ loadMapping(MemoryMap &mapping)
    }
 
    if (!cpu::mapMemory(mapping.vaddr, mapping.paddr, mapping.size, cpu::MapPermission::ReadWrite)) {
-      gLog->error("Unexpected failure allocating mapping virtual address {} to physical address {}",
+      gLog->error("Unexpected failure mapping virtual address {} to physical address {}",
                   mapping.vaddr, mapping.paddr);
+      return false;
+   }
+
+   return true;
+}
+
+bool
+unloadMapping(MemoryMap &mapping)
+{
+   if (!cpu::unmapMemory(mapping.vaddr, mapping.size)) {
+      gLog->error("Unexpected failure unmapping virtual address {} from physical address {}",
+                  mapping.vaddr, mapping.paddr);
+      return false;
+   }
+
+   if (!cpu::freeVirtualAddress(mapping.vaddr, mapping.size)) {
+      gLog->error("Unexpected failure freeing virtual address {} - {}",
+                  mapping.vaddr, mapping.vaddr + mapping.size);
       return false;
    }
 
