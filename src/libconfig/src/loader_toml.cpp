@@ -105,6 +105,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
    if (config.use_count() > 0) {
       debugger = config->get_table("debugger");
    }
+
    if (!debugger) {
       debugger = cpptoml::make_table();
    }
