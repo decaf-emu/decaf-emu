@@ -157,6 +157,7 @@ public:
    {
       mMutex.lock();
       mSettingsStorage = std::make_shared<Settings>(settings);
+      saveSettings(mPath, settings);
       mMutex.unlock();
 
       emit settingsChanged();
