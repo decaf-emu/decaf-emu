@@ -6,6 +6,7 @@
 #include <common/log.h>
 #include <common/platform_dir.h>
 #include <fstream>
+#include <vector>
 
 namespace vulkan
 {
@@ -233,26 +234,66 @@ Driver::getPixelShaderDesc()
    return shaderDesc;
 }
 
+struct ShaderBinaryEntry
+{
+   std::string name;
+   gsl::span<const uint8_t> binary;
+
+   ShaderBinaryEntry(std::string name, gsl::span<const uint8_t> binary) : name(name), binary(binary) {}
+};
+
+using ShaderBinaries = std::vector<ShaderBinaryEntry>;
+
+static void dumpRawShaderBinaries(const ShaderBinaries &shaderBinaries, std::string shaderName)
+{
+   // Write binary shaders to dump file
+   for (auto shaderBinary : shaderBinaries)
+   {
+      auto filePathBinarySuffix = shaderBinary.name.empty() ? "" : fmt::format("_{}", shaderBinary.name);
+      auto filePathBinary = fmt::format("dump/{}{}.bin", shaderName, filePathBinarySuffix);
+      if (!platform::fileExists(filePathBinary)) {
+         platform::createDirectory("dump");
+
+         // Write Binary Output
+         auto file = std::ofstream{ filePathBinary, std::ofstream::out | std::ofstream::binary };
+         file.write(reinterpret_cast<const char *>(shaderBinary.binary.data()), shaderBinary.binary.size());
+      }
+   }   
+}
+
 static void dumpRawShader(const spirv::ShaderDesc *desc)
 {
+   ShaderBinaries shaderBinaries;
+
    std::string shaderName;
    if (desc->type == spirv::ShaderType::Vertex) {
       auto vsDesc = reinterpret_cast<const spirv::VertexShaderDesc*>(desc);
       auto vsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->binary.data()));
       auto fsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()));
       shaderName = fmt::format("vs_{:08x}_{:08x}", vsAddr, fsAddr);
+      shaderBinaries.emplace_back("fs", vsDesc->fsBinary);
+      shaderBinaries.emplace_back("", vsDesc->binary);
    } else if (desc->type == spirv::ShaderType::Geometry) {
       auto gsDesc = reinterpret_cast<const spirv::GeometryShaderDesc*>(desc);
       auto gsAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->binary.data()));
       auto dcAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()));
       shaderName = fmt::format("gs_{:08x}_{:08x}", gsAddr, dcAddr);
+      shaderBinaries.emplace_back("dc", gsDesc->dcBinary);
+      shaderBinaries.emplace_back("", gsDesc->binary);
    } else if (desc->type == spirv::ShaderType::Pixel) {
       auto psDesc = reinterpret_cast<const spirv::PixelShaderDesc*>(desc);
       auto psAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(psDesc->binary.data()));
       shaderName = fmt::format("ps_{:08x}", psAddr);
+      shaderBinaries.emplace_back("", psDesc->binary);
    } else {
       decaf_abort("Unexpected shader type");
    }
+
+   // Dump binaries
+
+   dumpRawShaderBinaries(shaderBinaries, shaderName);
+   
+   // Dump disassembly
 
    std::string outputStr;
    if (desc->type == spirv::ShaderType::Vertex) {
@@ -274,11 +315,11 @@ static void dumpRawShader(const spirv::ShaderDesc *desc)
       auto gsDesc = reinterpret_cast<const spirv::GeometryShaderDesc*>(desc);
 
       std::string gsDisasm, dcDisasm;
-      if (!gsDesc->binary.empty()) {
-         gsDisasm = latte::disassemble(gsDesc->binary, false);
-      }
       if (!gsDesc->dcBinary.empty()) {
          dcDisasm = latte::disassemble(gsDesc->dcBinary, false);
+      }
+      if (!gsDesc->binary.empty()) {
+         gsDisasm = latte::disassemble(gsDesc->binary, false);
       }
 
       outputStr += "Geometry Shader:\n";
@@ -299,7 +340,7 @@ static void dumpRawShader(const spirv::ShaderDesc *desc)
       decaf_abort("Unexpected shader type");
    }
 
-   // Write to dump file
+   // Write shader disassembly to dump file
    auto filePath = fmt::format("dump/{}.txt", shaderName);
    if (!platform::fileExists(filePath)) {
       platform::createDirectory("dump");
@@ -394,7 +435,7 @@ Driver::checkCurrentVertexShader()
    foundShader->desc = currentDesc;
 
    if (mDumpShaders) {
-      dumpRawShader(&*currentDesc);
+      dumpRawShader(&*currentDesc, mDumpShaderBinariesOnly);
    }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
@@ -446,7 +487,7 @@ Driver::checkCurrentGeometryShader()
    foundShader->desc = currentDesc;
 
    if (mDumpShaders) {
-      dumpRawShader(&*currentDesc);
+      dumpRawShader(&*currentDesc, mDumpShaderBinariesOnly);
    }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
@@ -498,7 +539,7 @@ Driver::checkCurrentPixelShader()
    foundShader->desc = currentDesc;
 
    if (mDumpShaders) {
-      dumpRawShader(&*currentDesc);
+      dumpRawShader(&*currentDesc, mDumpShaderBinariesOnly);
    }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
