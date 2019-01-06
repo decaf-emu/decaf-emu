@@ -261,7 +261,7 @@ static void dumpRawShaderBinaries(const ShaderBinaries &shaderBinaries, std::str
    }   
 }
 
-static void dumpRawShader(const spirv::ShaderDesc *desc)
+static void dumpRawShader(const spirv::ShaderDesc *desc, bool onlyDumpBinaries)
 {
    ShaderBinaries shaderBinaries;
 
@@ -292,7 +292,10 @@ static void dumpRawShader(const spirv::ShaderDesc *desc)
    // Dump binaries
 
    dumpRawShaderBinaries(shaderBinaries, shaderName);
-   
+
+   if (onlyDumpBinaries)
+      return;
+
    // Dump disassembly
 
    std::string outputStr;

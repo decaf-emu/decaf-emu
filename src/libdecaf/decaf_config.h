@@ -18,6 +18,7 @@ struct Gx2Settings
 {
    bool dump_textures = false;
    bool dump_shaders = false;
+   bool dump_shader_binaries_only = false;
 };
 
 struct LogSettings

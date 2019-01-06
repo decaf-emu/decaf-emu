@@ -13,6 +13,9 @@ struct DebugSettings
 
    //! Dump shaders
    bool dump_shaders = false;
+
+   //! Only dump shader binaries
+   bool dump_shader_binaries_only = false;
 };
 
 struct OpenGLSettings

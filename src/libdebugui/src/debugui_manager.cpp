@@ -449,6 +449,12 @@ void Manager::drawMenu()
          gpu::setConfig(newConfig);
       }
 
+      if (ImGui::MenuItem("GPU Dump Shader Binaries Only", nullptr, gpuConfig->debug.dump_shader_binaries_only, true)) {
+         auto newConfig = *gpuConfig;
+         newConfig.debug.dump_shader_binaries_only = !gpuConfig->debug.dump_shader_binaries_only;
+         gpu::setConfig(newConfig);
+      }
+
       ImGui::Separator();
 
       if (ImGui::MenuItem("JIT Profiling Enabled", JitProfileHotKey, mJitProfilingEnabled, true)) {

@@ -51,6 +51,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
             [this](const gpu::Settings &settings) {
                mDebug = settings.debug.debug_enabled;
                mDumpShaders = settings.debug.dump_shaders;
+               mDumpShaderBinariesOnly = settings.debug.dump_shader_binaries_only;
             });
       });
 
@@ -58,6 +59,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    auto gpuConfig = gpu::config();
    mDebug = gpuConfig->debug.debug_enabled;
    mDumpShaders = gpuConfig->debug.dump_shaders;
+   mDumpShaderBinariesOnly = gpuConfig->debug.dump_shader_binaries_only;
 
    mPhysDevice = physDevice;
    mDevice = device;
