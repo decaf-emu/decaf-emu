@@ -41,29 +41,29 @@ bool
 saveSettings(const std::string &path,
              const Settings &settings)
 {
+   auto toml = std::shared_ptr<cpptoml::table> { };
    try {
-      // Read current file
-      auto toml = cpptoml::parse_file(path);
-
-      // Update it
-      config::saveToTOML(toml, settings.decaf);
-      config::saveToTOML(toml, settings.cpu);
-      config::saveToTOML(toml, settings.gpu);
-      saveToTOML(toml, settings.display);
-      saveToTOML(toml, settings.input);
-      saveToTOML(toml, settings.sound);
-
-      // Write to file
-      std::ofstream out { path };
-      if (!out.is_open()) {
-         return false;
-      }
-
-      out << (*toml);
-      return true;
+      // Read current file and modify that
+      toml = cpptoml::parse_file(path);
    } catch (cpptoml::parse_exception ex) {
+   }
+
+   // Update it
+   config::saveToTOML(toml, settings.decaf);
+   config::saveToTOML(toml, settings.cpu);
+   config::saveToTOML(toml, settings.gpu);
+   saveToTOML(toml, settings.display);
+   saveToTOML(toml, settings.input);
+   saveToTOML(toml, settings.sound);
+
+   // Write to file
+   std::ofstream out { path };
+   if (!out.is_open()) {
       return false;
    }
+
+   out << (*toml);
+   return true;
 }
 
 static const char *
