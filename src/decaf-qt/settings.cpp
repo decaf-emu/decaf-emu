@@ -46,6 +46,7 @@ saveSettings(const std::string &path,
       // Read current file and modify that
       toml = cpptoml::parse_file(path);
    } catch (cpptoml::parse_exception ex) {
+      toml = cpptoml::make_table();
    }
 
    // Update it
