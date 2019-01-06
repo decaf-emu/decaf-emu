@@ -997,6 +997,26 @@ convertTexture(const std::string &path)
    return true;
 }
 
+static bool
+disassembleShaderBinary(const std::string &path)
+{
+   std::vector<uint8_t> binary;
+   std::ifstream file;
+   file.open(path, std::fstream::binary);
+   if (!file.is_open()) {
+      return false;
+   }
+
+   file.seekg(0, std::fstream::end);
+   binary.resize(file.tellg());
+   file.seekg(0, std::fstream::beg);
+   file.read(reinterpret_cast<char *>(binary.data()), binary.size());
+   file.close();
+
+   std::cout << latte::disassemble(gsl::make_span(binary)) << std::endl;
+   return true;
+}
+
 int main(int argc, char **argv)
 {
    int result = -1;
@@ -1015,6 +1035,9 @@ int main(int argc, char **argv)
 
    parser.add_command("convert")
       .add_argument("src", excmd::value<std::string> { });
+
+   parser.add_command("disassemble")
+      .add_argument("shader", excmd::value<std::string> { });
 
    // Parse command line
    try {
@@ -1041,6 +1064,9 @@ int main(int argc, char **argv)
    } else if (options.has("convert")) {
       auto src = options.get<std::string>("src");
       result = convertTexture(src) ? 0 : -1;
+   } else if (options.has("disassemble")) {
+      auto src = options.get<std::string>("shader");
+      result = disassembleShaderBinary(src) ? 0 : -1;
    }
 
    return result;
