@@ -141,6 +141,13 @@ public:
       loadSettings(mPath, *mSettingsStorage);
    }
 
+   ~SettingsStorage()
+   {
+      if (mUpdated) { 
+         saveSettings(mPath, *mSettingsStorage);
+      }
+   }
+
    std::string path()
    {
       std::lock_guard<std::mutex> lock { mMutex };
@@ -159,6 +166,8 @@ public:
       mSettingsStorage = std::make_shared<Settings>(settings);
       mMutex.unlock();
 
+      mUpdated = true;
+
       emit settingsChanged();
    }
 
@@ -166,6 +175,7 @@ signals:
    void settingsChanged();
 
 private:
+   bool mUpdated = false;
    std::mutex mMutex;
    std::string mPath;
    std::shared_ptr<Settings> mSettingsStorage;
