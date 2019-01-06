@@ -262,7 +262,8 @@ dumpRawShaderBinaries(const ShaderBinaries &shaderBinaries,
 }
 
 static void
-dumpRawShader(const spirv::ShaderDesc *desc)
+dumpRawShader(const spirv::ShaderDesc *desc,
+              bool onlyDumpBinaries)
 {
    auto shaderBinaries = ShaderBinaries { };
    auto shaderName = std::string { };
@@ -300,6 +301,9 @@ dumpRawShader(const spirv::ShaderDesc *desc)
 
    // Dump binaries
    dumpRawShaderBinaries(shaderBinaries, shaderName);
+   if (onlyDumpBinaries) {
+      return;
+   }
 
    // Dump disassembly
    auto outputStr = std::string { };
@@ -459,7 +463,7 @@ Driver::checkCurrentVertexShader()
    foundShader->desc = currentDesc;
 
    if (mDumpShaders) {
-      dumpRawShader(&*currentDesc);
+      dumpRawShader(&*currentDesc, mDumpShaderBinariesOnly);
    }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
@@ -515,7 +519,7 @@ Driver::checkCurrentGeometryShader()
    foundShader->desc = currentDesc;
 
    if (mDumpShaders) {
-      dumpRawShader(&*currentDesc);
+      dumpRawShader(&*currentDesc, mDumpShaderBinariesOnly);
    }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {
@@ -570,7 +574,7 @@ Driver::checkCurrentPixelShader()
    foundShader->desc = currentDesc;
 
    if (mDumpShaders) {
-      dumpRawShader(&*currentDesc);
+      dumpRawShader(&*currentDesc, mDumpShaderBinariesOnly);
    }
 
    if (!spirv::translate(*currentDesc, &foundShader->shader)) {

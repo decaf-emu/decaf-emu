@@ -65,6 +65,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
    readValue(config, "gpu.debug", gpuSettings.debug.debug_enabled);
    readArray(config, "gpu.opengl_debug_filters", gpuSettings.opengl.debug_message_filters);
    readValue(config, "gpu.dump_shaders", gpuSettings.debug.dump_shaders);
+   readValue(config, "gpu.dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
    return true;
 }
 
@@ -190,6 +191,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
 
    gpu->insert("debug", gpuSettings.debug.debug_enabled);
    gpu->insert("dump_shaders", gpuSettings.debug.dump_shaders);
+   gpu->insert("dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
 
    auto debug_filters = cpptoml::make_array();
    for (auto &filter : gpuSettings.opengl.debug_message_filters) {

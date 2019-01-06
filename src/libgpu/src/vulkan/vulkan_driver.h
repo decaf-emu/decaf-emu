@@ -791,6 +791,7 @@ private:
 
    bool mDebug;
    bool mDumpShaders;
+   bool mDumpShaderBinariesOnly;
    bool mDumpTextures;
 };
 
