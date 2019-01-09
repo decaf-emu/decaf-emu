@@ -59,7 +59,7 @@ CodeCache::initialise(size_t codeSize,
    mDataAllocator.committed = 0;
    mDataAllocator.allocated = 0;
 
-   mFastIndex = new std::atomic<std::atomic<std::atomic<CodeBlockIndex> *> *>[Level1Size];
+   mFastIndex = new std::atomic<std::atomic<CodeBlockIndex> *>[Level1Size];
    std::memset(mFastIndex, 0, sizeof(mFastIndex[0]) * Level1Size);
    return true;
 }
@@ -92,13 +92,7 @@ CodeCache::clear()
          auto level2 = mFastIndex[i].load();
 
          for (auto j = 0u; level2 && j < Level2Size; ++j) {
-            auto level3 = level2[j].load();
-
-            for (auto k = 0u; level3 && k < Level3Size; ++k) {
-               level3[j].store(CodeBlockIndexUncompiled);
-            }
-
-            level2[i].store(nullptr);
+            level2[j].store(CodeBlockIndexUncompiled);
          }
 
          mFastIndex[i].store(nullptr);
@@ -150,14 +144,6 @@ CodeCache::free()
    if (mFastIndex) {
       for (auto i = 0u; i < Level1Size; ++i) {
          auto level2 = mFastIndex[i].load();
-
-         for (auto j = 0u; level2 && j < Level2Size; ++j) {
-            auto level3 = level2[j].load();
-
-            if (level3) {
-               delete[] level3;
-            }
-         }
 
          if (level2) {
             delete[] level2;
@@ -256,14 +242,13 @@ CodeCache::getIndexPointer(uint32_t address)
 {
    decaf_check((address & 0x3) == 0);
 
-   auto index1 = (address & 0xFF000000) >> 24;
-   auto index2 = (address & 0x00FF0000) >> 16;
-   auto index3 = (address & 0x0000FFFC) >> 2;
+   auto index1 = (address & 0xFFFF0000) >> 16;
+   auto index2 = (address & 0x0000FFFC) >> 2;
    auto level2 = mFastIndex[index1].load();
 
    if (UNLIKELY(!level2)) {
-      auto newLevel2 = new std::atomic<std::atomic<CodeBlockIndex> *>[Level2Size];
-      std::memset(newLevel2, 0, sizeof(newLevel2[0]) * Level2Size);
+      auto newLevel2 = new std::atomic<CodeBlockIndex>[Level2Size];
+      std::memset(newLevel2, CodeBlockIndexUncompiled, sizeof(newLevel2[0]) * Level2Size);
 
       if (mFastIndex[index1].compare_exchange_strong(level2, newLevel2)) {
          level2 = newLevel2;
@@ -273,21 +258,7 @@ CodeCache::getIndexPointer(uint32_t address)
       }
    }
 
-   auto level3 = level2[index2].load();
-
-   if (UNLIKELY(!level3)) {
-      auto newLevel3 = new std::atomic<CodeBlockIndex>[Level3Size];
-      std::memset(newLevel3, CodeBlockIndexUncompiled, sizeof(newLevel3[0]) * Level3Size);
-
-      if (level2[index2].compare_exchange_strong(level3, newLevel3)) {
-         level3 = newLevel3;
-      } else {
-         // compare_exchange updates level3 if we were preempted
-         delete[] newLevel3;
-      }
-   }
-
-   return &level3[index3];
+   return &level2[index2];
 }
 
 

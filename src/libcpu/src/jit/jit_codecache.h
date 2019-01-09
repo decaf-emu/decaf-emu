@@ -45,9 +45,8 @@ class CodeCache
    };
 
    // Fast Index level sizes
-   static constexpr size_t Level1Size = 0x100;
-   static constexpr size_t Level2Size = 0x100;
-   static constexpr size_t Level3Size = 0x4000;
+   static constexpr size_t Level1Size = 0x10000;
+   static constexpr size_t Level2Size = 0x4000;
 
 public:
    ~CodeCache();
@@ -106,21 +105,15 @@ public:
    const std::atomic<CodeBlockIndex> *
    getConstIndexPointer(uint32_t address)
    {
-      auto index1 = (address & 0xFF000000) >> 24;
-      auto index2 = (address & 0x00FF0000) >> 16;
-      auto index3 = (address & 0x0000FFFC) >> 2;
+      auto index1 = (address & 0xFFFF0000) >> 16;
+      auto index2 = (address & 0x0000FFFC) >> 2;
 
       auto level2 = mFastIndex[index1].load();
       if (UNLIKELY(!level2)) {
          return nullptr;
       }
 
-      auto level3 = level2[index2].load();
-      if (UNLIKELY(!level3)) {
-         return nullptr;
-      }
-
-      return &level3[index3];
+      return &level2[index2];
    }
 
    void
@@ -146,7 +139,7 @@ private:
    size_t mReserveSize = 0;
    FrameAllocator mCodeAllocator;
    FrameAllocator mDataAllocator;
-   std::atomic<std::atomic<std::atomic<CodeBlockIndex> *> *> *mFastIndex = nullptr;
+   std::atomic<std::atomic<CodeBlockIndex> *> *mFastIndex = nullptr;
 };
 
 } // namespace jit
