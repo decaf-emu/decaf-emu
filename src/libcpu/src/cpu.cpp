@@ -57,6 +57,9 @@ sJitOptFlags;
 std::array<Core *, 3>
 gCore;
 
+static thread_local uint32_t
+tCurrentCoreId = InvalidCoreId;
+
 static thread_local cpu::Core *
 tCurrentCore = nullptr;
 
@@ -192,6 +195,7 @@ installExceptionHandler()
 void
 coreEntryPoint(Core *core)
 {
+   tCurrentCoreId = core->id;
    tCurrentCore = core;
    gCoreEntryPointHandler(core);
 }
@@ -297,6 +301,12 @@ cpu::Core *
 state()
 {
    return tCurrentCore;
+}
+
+uint32_t
+id()
+{
+   return tCurrentCoreId;
 }
 
 void

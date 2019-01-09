@@ -139,16 +139,8 @@ setNextAlarm(std::chrono::steady_clock::time_point alarm_time);
 cpu::Core *
 state();
 
-static uint32_t id()
-{
-   auto core = state();
-
-   if (core) {
-      return core->id;
-   } else {
-      return InvalidCoreId;
-   }
-}
+uint32_t
+id();
 
 } // namespace this_core
 
