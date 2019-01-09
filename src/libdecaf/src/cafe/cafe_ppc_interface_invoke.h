@@ -95,10 +95,9 @@ writeParam(cpu::Core *core,
    writeParam<ArgType, regType, regIndex>(core, p, value.value());
 }
 
-template<typename HostFunctionType, typename FunctionTraitsType, std::size_t... I>
-constexpr void
+template<typename HostFunctionType, HostFunctionType HostFunc, typename FunctionTraitsType, std::size_t... I>
+inline cpu::Core *
 invoke_host_impl(cpu::Core *core,
-                 HostFunctionType &&func,
                  FunctionTraitsType &&,
                  std::index_sequence<I...>)
 {
@@ -109,26 +108,31 @@ invoke_host_impl(cpu::Core *core,
 
       if constexpr (FunctionTraitsType::is_member_function) {
          auto obj = readParam(core, typename FunctionTraitsType::object_info { });
-         auto result = (obj.getRawPointer()->*func)(readParam(core, std::get<I>(param_info))...);
+         auto result = (obj.getRawPointer()->*HostFunc)(readParam(core, std::get<I>(param_info))...);
          core = cpu::this_core::state();
          writeParam(core, return_info, result);
       } else {
-         auto result = func(readParam(core, std::get<I>(param_info))...);
+         auto result = HostFunc(readParam(core, std::get<I>(param_info))...);
          core = cpu::this_core::state();
          writeParam(core, return_info, result);
       }
+
+      return core;
    } else {
       if constexpr (FunctionTraitsType::is_member_function) {
          auto obj = readParam(core, typename FunctionTraitsType::object_info { });
-         (obj.getRawPointer()->*func)(readParam(core, std::get<I>(param_info))...);
+         (obj.getRawPointer()->*HostFunc)(readParam(core, std::get<I>(param_info))...);
       } else {
-         func(readParam(core, std::get<I>(param_info))...);
+         HostFunc(readParam(core, std::get<I>(param_info))...);
       }
+
+      // We must refresh our Core* as it may have changed during the kernel call
+      return cpu::this_core::state();
    }
 }
 
 template<typename FunctionTraitsType, std::size_t... I, typename... ArgTypes>
-constexpr decltype(auto)
+inline decltype(auto)
 invoke_guest_impl(cpu::Core *core,
                   cpu::VirtualAddress address,
                   FunctionTraitsType &&,
@@ -183,46 +187,45 @@ invoke_guest_impl(cpu::Core *core,
 } // namespace detail
 
 // Invoke a host function from a guest context
-template<typename FunctionType>
-void
-invoke(cpu::Core *core,
-       FunctionType fn)
+template<typename FunctionType, FunctionType Func>
+[[nodiscard]]
+inline cpu::Core *
+invoke(cpu::Core *core)
 {
    using func_traits = detail::function_traits<FunctionType>;
-   invoke_host_impl(core,
-                    fn,
-                    func_traits { },
-                    std::make_index_sequence<func_traits::num_args> {});
+   return detail::invoke_host_impl<FunctionType, Func>(core,
+                                                       func_traits { },
+                                                       std::make_index_sequence<func_traits::num_args> {});
 }
 
 // Invoke a guest function from a host context
 template<typename FunctionType, typename... ArgTypes>
-decltype(auto)
+inline decltype(auto)
 invoke(cpu::Core *core,
        cpu::FunctionPointer<cpu::VirtualAddress, FunctionType> fn,
        const ArgTypes &... args)
 {
    using func_traits = detail::function_traits<FunctionType>;
-   return invoke_guest_impl(core,
-                            fn.getAddress(),
-                            func_traits { },
-                            std::make_index_sequence<func_traits::num_args> {},
-                            args...);
+   return detail::invoke_guest_impl(core,
+                                    fn.getAddress(),
+                                    func_traits { },
+                                    std::make_index_sequence<func_traits::num_args> {},
+                                    args...);
 }
 
 // Invoke a be2_val guest function from a host context
 template<typename FunctionType, typename... ArgTypes>
-decltype(auto)
+inline decltype(auto)
 invoke(cpu::Core *core,
        be2_val<cpu::FunctionPointer<cpu::VirtualAddress, FunctionType>> fn,
        const ArgTypes &... args)
 {
    using func_traits = detail::function_traits<FunctionType>;
-   return invoke_guest_impl(core,
-                            fn.getAddress(),
-                            func_traits { },
-                            std::make_index_sequence<func_traits::num_args> {},
-                            args...);
+   return detail::invoke_guest_impl(core,
+                                    fn.getAddress(),
+                                    func_traits { },
+                                    std::make_index_sequence<func_traits::num_args> {},
+                                    args...);
 }
 
 } // namespace cafe

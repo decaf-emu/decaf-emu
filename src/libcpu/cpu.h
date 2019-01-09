@@ -39,7 +39,7 @@ using InterruptHandler = void (*)(Core *core, uint32_t interrupt_flags);
 using SegfaultHandler = void(*)(Core *core, uint32_t address, platform::StackTrace *hostStackTrace);
 using IllInstHandler = void(*)(Core *core, platform::StackTrace *hostStackTrace);
 using BranchTraceHandler = void(*)(Core *core, uint32_t target);
-using KernelCallHandler = void(*)(Core *core, uint32_t id);
+using KernelCallHandler = Core * (*)(Core *core, uint32_t id);
 
 void
 initialise();
@@ -71,7 +71,13 @@ void
 setBranchTraceHandler(BranchTraceHandler handler);
 
 void
-setKernelCallHandler(KernelCallHandler handler);
+setUnknownKernelCallHandler(KernelCallHandler handler);
+
+uint32_t
+registerKernelCallHandler(KernelCallHandler handler);
+
+uint32_t
+registerIllegalKernelCall();
 
 void
 start();

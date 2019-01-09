@@ -9,14 +9,17 @@
 #include <string>
 #include <vector>
 
+#define fnptr_decltype(Func) \
+    std::conditional<std::is_function<decltype(Func)>::value, std::add_pointer<decltype(Func)>::type, decltype(Func)>::type
+
 #define RegisterEntryPoint(fn) \
-   registerFunctionExport("rpl_entry", fn)
+   registerFunctionExport<fnptr_decltype(fn), fn>("rpl_entry")
 
 #define RegisterFunctionExport(fn) \
-   registerFunctionExport(#fn, fn)
+   registerFunctionExport<fnptr_decltype(fn), fn>(#fn)
 
 #define RegisterFunctionExportName(name, fn) \
-   registerFunctionExport(name, fn)
+   registerFunctionExport<fnptr_decltype(fn), fn>(name)
 
 #define RegisterDataExport(data) \
    registerDataExport(#data, data)
@@ -34,7 +37,7 @@
    registerDestructorExport<object>(name)
 
 #define RegisterFunctionInternal(fn, ptr) \
-   registerFunctionInternal("__internal__" # fn, fn, ptr)
+   registerFunctionInternal<fnptr_decltype(fn), fn>("__internal__" # fn, ptr)
 
 #define RegisterDataInternal(data) \
    registerDataInternal("__internal__" # data, data)
@@ -119,9 +122,9 @@ public:
    // We have 3 default suymbols: NULL, .text, .data
    static constexpr auto BaseSymbolIndex = uint32_t { 3 };
 
-   static void
-   handleKernelCall(cpu::Core *state,
-                    uint32_t id);
+   static cpu::Core *
+   handleUnknownKernelCall(cpu::Core *state,
+                           uint32_t id);
 
 public:
    Library(LibraryId id, std::string name) :
@@ -229,24 +232,22 @@ protected:
    void
    generateRpl();
 
-   template<typename FunctionType>
+   template<typename FunctionType, FunctionType Fn>
    void
    registerFunctionInternal(const char *name,
-                            FunctionType func,
                             virt_func_ptr<typename std::remove_pointer<FunctionType>::type> &hostPtr)
    {
-      auto symbol = internal::makeLibraryFunction(func);
+      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
       symbol->exported = false;
       symbol->hostPtr = reinterpret_cast<virt_ptr<void> *>(&hostPtr);
       registerSymbol(name, std::move(symbol));
    }
 
-   template<typename FunctionType>
+   template<typename FunctionType, FunctionType Fn>
    void
-   registerFunctionExport(const char *name,
-                          FunctionType func)
+   registerFunctionExport(const char *name)
    {
-      auto symbol = internal::makeLibraryFunction(func);
+      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
       symbol->exported = true;
       registerSymbol(name, std::move(symbol));
    }
@@ -255,7 +256,7 @@ protected:
    void
    registerConstructorExport(const char *name)
    {
-      auto symbol = internal::makeLibraryConstructorFunction<ObjectType, Args...>();
+      auto symbol = internal::makeLibraryConstructorFunction<ObjectType, Args...>(name);
       symbol->exported = true;
       registerSymbol(name, std::move(symbol));
    }
@@ -264,7 +265,7 @@ protected:
    void
    registerDestructorExport(const char *name)
    {
-      auto symbol = internal::makeLibraryDestructorFunction<ObjectType>();
+      auto symbol = internal::makeLibraryDestructorFunction<ObjectType>(name);
       symbol->exported = true;
       registerSymbol(name, std::move(symbol));
    }

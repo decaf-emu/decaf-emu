@@ -15,8 +15,7 @@ namespace rpl = cafe::loader::rpl;
 namespace cafe::hle
 {
 
-static std::vector<UnimplementedLibraryFunction *> sUnimplementedKernelCalls;
-static std::vector<LibraryFunction *> sKernelCalls;
+static std::unordered_map<uint32_t, UnimplementedLibraryFunction*> sUnimplementedKernelCalls;
 static virt_ptr<void> sUnimplementedFunctionStubMemory = nullptr;
 static uint32_t sUnimplementedFunctionStubPos = 0u;
 static uint32_t sUnimplementedFunctionStubSize = 0u;
@@ -46,7 +45,7 @@ registerUnimplementedSymbol(std::string_view module,
    // Create a new unimplemented function
    auto unimpl = new UnimplementedLibraryFunction { };
    unimpl->library = library;
-   unimpl->syscallID = static_cast<uint32_t>(sUnimplementedKernelCalls.size());
+   unimpl->syscallID = cpu::registerIllegalKernelCall();
    unimpl->name = name;
    unimpl->value = virt_cast<virt_addr>(sUnimplementedFunctionStubMemory)
                    + sUnimplementedFunctionStubPos;
@@ -54,7 +53,7 @@ registerUnimplementedSymbol(std::string_view module,
    // Generate a kc, blr stub
    auto stub = virt_cast<uint32_t *>(unimpl->value);
    auto kc = espresso::encodeInstruction(espresso::InstructionID::kc);
-   kc.kcn = 0x800000 | unimpl->syscallID;
+   kc.kcn = unimpl->syscallID;
    stub[0] = kc.value;
 
    auto bclr = espresso::encodeInstruction(espresso::InstructionID::bclr);
@@ -64,7 +63,7 @@ registerUnimplementedSymbol(std::string_view module,
 
    // Add to the list
    library->addUnimplementedFunctionExport(unimpl);
-   sUnimplementedKernelCalls.push_back(unimpl);
+   sUnimplementedKernelCalls[unimpl->syscallID] = unimpl;
    gLog->debug("Unimplemented function import {}::{} added at {}",
                module, name, unimpl->value);
    return unimpl->value;
@@ -79,14 +78,19 @@ setUnimplementedFunctionStubMemory(virt_ptr<void> base,
    sUnimplementedFunctionStubMemory = base;
 }
 
-void
-Library::handleKernelCall(cpu::Core *state,
-                          uint32_t id)
+cpu::Core *
+Library::handleUnknownKernelCall(cpu::Core *state,
+                                 uint32_t id)
 {
-   if (!(id & 0x800000)) {
-      sKernelCalls[id]->call(state);
-   } else {
-      auto unimpl = sUnimplementedKernelCalls[id & 0x7FFFFF];
+   // Because we register explicit handlers for all of the valid kernel
+   // calls, if we get an unknown kernel call it must either be one of
+   // the unimplemented functions we registered, or something has gone
+   // awry and we can't continue anyways...
+
+   auto unimplIter = sUnimplementedKernelCalls.find(id);
+   if (unimplIter != sUnimplementedKernelCalls.end()) {
+      auto &unimpl = unimplIter->second;
+
       gLog->warn("Unimplemented function call {}::{} from 0x{:08X}",
                  unimpl->library ? unimpl->library->name().c_str() : "<unknown>",
                  unimpl->name,
@@ -95,7 +99,11 @@ Library::handleKernelCall(cpu::Core *state,
       // Set r3 to some nonsense value to try and catch errors from
       // unimplemented functions sooner.
       state->gpr[3] = 0xC5C5C5C5u;
+
+      return state;
    }
+
+   decaf_abort("Unexpected kernel call");
 }
 
 void
@@ -104,8 +112,8 @@ Library::registerKernelCalls()
    for (auto const &[name, symbol] : mSymbolMap) {
       if (symbol->type == LibrarySymbol::Function) {
          auto funcSymbol = static_cast<LibraryFunction *>(symbol.get());
-         funcSymbol->syscallID = static_cast<uint32_t>(sKernelCalls.size());
-         sKernelCalls.push_back(funcSymbol);
+         auto newKcId = cpu::registerKernelCallHandler(funcSymbol->invokeHandler);
+         funcSymbol->syscallID = newKcId;
       }
    }
 }

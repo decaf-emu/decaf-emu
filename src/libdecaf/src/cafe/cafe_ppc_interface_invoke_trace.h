@@ -30,7 +30,6 @@ logParam(fmt::memory_buffer &message,
 template<typename HostFunctionType, typename FunctionTraitsType, std::size_t... I>
 void
 invoke_trace_host_impl(cpu::Core *core,
-                       HostFunctionType &&,
                        const char *name,
                        FunctionTraitsType &&,
                        std::index_sequence<I...>)
@@ -57,14 +56,11 @@ invoke_trace_host_impl(cpu::Core *core,
 template<typename FunctionType>
 void
 invoke_trace(cpu::Core *core,
-             FunctionType fn,
              const char *name)
 {
    using func_traits = detail::function_traits<FunctionType>;
-   invoke_trace_host_impl(core,
-                          fn, name,
-                          func_traits { },
-                          std::make_index_sequence<func_traits::num_args> {});
+   detail::invoke_trace_host_impl<FunctionType>(
+      core, name, func_traits { }, std::make_index_sequence<func_traits::num_args> {});
 }
 
 } // namespace cafe

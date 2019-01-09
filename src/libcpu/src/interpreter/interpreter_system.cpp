@@ -275,7 +275,10 @@ mtsrin(cpu::Core *state, Instruction instr)
 static void
 kc(cpu::Core *state, Instruction instr)
 {
-   cpu::onKernelCall(state, instr.kcn);
+   auto kcId = instr.kcn;
+
+   auto handler = cpu::getKernelCallHandler(kcId);
+   state = handler(state, kcId);
 }
 
 // Trap Word

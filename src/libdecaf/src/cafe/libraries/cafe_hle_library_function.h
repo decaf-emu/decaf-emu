@@ -21,8 +21,8 @@ struct UnimplementedLibraryFunction
 
 struct LibraryFunction : public LibrarySymbol
 {
-   LibraryFunction() :
-      LibrarySymbol(LibrarySymbol::Function)
+   LibraryFunction(cpu::KernelCallHandler _invokeHandler, bool& _traceEnabledRef) :
+      LibrarySymbol(LibrarySymbol::Function), invokeHandler(_invokeHandler), traceEnabled(_traceEnabledRef)
    {
    }
 
@@ -30,13 +30,15 @@ struct LibraryFunction : public LibrarySymbol
    {
    }
 
-   virtual void call(cpu::Core *state) = 0;
+   //! The actual handler for this function
+   cpu::KernelCallHandler invokeHandler;
+
+   //! Reference to the underlying invoke handler trace wrapper's trace enabled
+   // value, specifying whether trace logging is enabled for this function or not.
+   bool& traceEnabled;
 
    //! ID number of syscall.
    uint32_t syscallID = 0xFFFFFFFFu;
-
-   //! Whether trace logging is enabled for this function or not.
-   bool traceEnabled = true;
 
    //! Pointer to host function pointer, only set for internal functions.
    virt_ptr<void> *hostPtr = nullptr;
@@ -45,102 +47,100 @@ struct LibraryFunction : public LibrarySymbol
 namespace internal
 {
 
-/**
- * Handles call to both global functions and member functions.
- */
-template<typename FunctionType>
-struct LibraryFunctionCall : LibraryFunction
+template<typename FunctionType, FunctionType Func>
+struct StackReserveWrapper
 {
-   LibraryFunctionCall(FunctionType func) : func(func) {}
-
-   virtual ~LibraryFunctionCall()
+   static inline cpu::Core* wrapped(cpu::Core *core, uint32_t kcId)
    {
+      // Save our original stack pointer for the backchain
+      auto backchainSp = core->gpr[1];
+
+      // Allocate callee backchain and lr space.
+      auto newSp = backchainSp - 2 * 4;
+      core->gpr[1] = newSp;
+
+      // Write the backchain pointer
+      *virt_cast<uint32_t *>(virt_addr { newSp }) = backchainSp;
+
+      // Handle the HLE function call
+      core = invoke<FunctionType, Func>(core);
+
+      // Release callee backchain and lr space.
+      core->gpr[1] = backchainSp;
+
+      return core;
    }
+};
 
-   virtual void call(cpu::Core *state) override
+template<typename FunctionType, FunctionType Func>
+struct TracingWrapper
+{
+   static inline cpu::Core* wrapped(cpu::Core *core, uint32_t kcId)
    {
+      // Perform any tracing that is needed
       if (FunctionTraceEnabled && traceEnabled) {
-         invoke_trace(state, func, name.c_str());
+         invoke_trace<FunctionType>(core, traceName.c_str());
       }
 
-      invoke(state, func);
+      return StackReserveWrapper<FunctionType, Func>::wrapped(core, kcId);
    }
 
-   FunctionType func;
+   static inline std::string traceName = "_missingName";
+   static inline bool traceEnabled = false;
 };
+
+template<typename FunctionType, FunctionType Func>
+inline std::unique_ptr<LibraryFunction>
+makeLibraryFunction(const std::string &name)
+{
+   TracingWrapper<FunctionType, Func>::traceName = name;
+
+   auto libraryFunction = new LibraryFunction(
+      TracingWrapper<FunctionType, Func>::wrapped,
+      TracingWrapper<FunctionType, Func>::traceEnabled);
+   return std::unique_ptr<LibraryFunction> { libraryFunction };
+}
 
 /**
  * Handles calls to constructors.
  */
 template<typename ObjectType, typename... ArgTypes>
-struct LibraryConstructorFunction : LibraryFunction
+struct ConstructorWrapper
 {
-   virtual ~LibraryConstructorFunction()
-   {
-   }
-
-   static void wrapper(virt_ptr<ObjectType> obj, ArgTypes... args)
+   static inline void wrapped(virt_ptr<ObjectType> obj, ArgTypes... args)
    {
       ::new(static_cast<void *>(obj.getRawPointer())) ObjectType(args...);
    }
-
-   virtual void call(cpu::Core *state) override
-   {
-      if (FunctionTraceEnabled && traceEnabled) {
-         invoke_trace(state, &LibraryConstructorFunction::wrapper, name.c_str());
-      }
-
-      invoke(state, &LibraryConstructorFunction::wrapper);
-   }
 };
+
+template<typename ObjectType, typename... ArgTypes>
+inline std::unique_ptr<LibraryFunction>
+makeLibraryConstructorFunction(const std::string &name)
+{
+   return makeLibraryFunction<
+      decltype(ConstructorWrapper<ObjectType, ArgTypes...>::wrapped),
+      ConstructorWrapper<ObjectType, ArgTypes...>::wrapped>(name);
+}
 
 /**
  * Handles calls to destructors.
  */
 template<typename ObjectType>
-struct LibraryDestructorFunction : LibraryFunction
+struct DestructorWrapper
 {
-   virtual ~LibraryDestructorFunction()
-   {
-   }
-
-   static void wrapper(virt_ptr<ObjectType> obj)
+   static inline void wrapped(virt_ptr<ObjectType> obj)
    {
       (obj.getRawPointer())->~ObjectType();
    }
-
-   virtual void call(cpu::Core *state) override
-   {
-      if (FunctionTraceEnabled && traceEnabled) {
-         invoke_trace(state, &LibraryDestructorFunction::wrapper, name.c_str());
-      }
-
-      invoke(state, &LibraryDestructorFunction::wrapper);
-   }
 };
-
-template<typename FunctionType>
-inline std::unique_ptr<LibraryFunction>
-makeLibraryFunction(FunctionType func)
-{
-   auto libraryFunction = new LibraryFunctionCall<FunctionType>(func);
-   return std::unique_ptr<LibraryFunction> { libraryFunction };
-}
-
-template<typename ObjectType, typename... ArgTypes>
-inline std::unique_ptr<LibraryFunction>
-makeLibraryConstructorFunction()
-{
-   auto libraryFunction = new LibraryConstructorFunction<ObjectType, ArgTypes...>();
-   return std::unique_ptr<LibraryFunction> { libraryFunction };
-}
 
 template<typename ObjectType>
 inline std::unique_ptr<LibraryFunction>
-makeLibraryDestructorFunction()
+makeLibraryDestructorFunction(const std::string &name)
 {
-   auto libraryFunction = new LibraryDestructorFunction<ObjectType>();
-   return std::unique_ptr<LibraryFunction> { libraryFunction };
+   return makeLibraryFunction<
+      decltype(DestructorWrapper<ObjectType>::wrapped),
+      DestructorWrapper<ObjectType>::wrapped>(name);
 }
 
 } // namespace internal

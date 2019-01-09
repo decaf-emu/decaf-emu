@@ -500,10 +500,13 @@ void
 brSyscallHandler(BinrecCore *core)
 {
    auto instr = mem::read<espresso::Instruction>(core->nia - 4);
-   cpu::onKernelCall(core, instr.kcn);
+   auto kcId = instr.kcn;
+
+   auto handler = cpu::getKernelCallHandler(kcId);
+   auto newCore = handler(core, kcId);
 
    // We might have been rescheduled on a new core.
-   core = reinterpret_cast<BinrecCore *>(this_core::state());
+   core = reinterpret_cast<BinrecCore *>(newCore);
 
    // If the next instruction is a blr, execute it ourselves rather than
    // spending the overhead of calling into JIT for just that instruction.
