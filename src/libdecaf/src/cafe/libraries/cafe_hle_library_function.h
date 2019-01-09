@@ -118,7 +118,7 @@ inline std::unique_ptr<LibraryFunction>
 makeLibraryConstructorFunction(const std::string &name)
 {
    return makeLibraryFunction<
-      decltype(ConstructorWrapper<ObjectType, ArgTypes...>::wrapped),
+      decltype(&ConstructorWrapper<ObjectType, ArgTypes...>::wrapped),
       ConstructorWrapper<ObjectType, ArgTypes...>::wrapped>(name);
 }
 
@@ -139,7 +139,7 @@ inline std::unique_ptr<LibraryFunction>
 makeLibraryDestructorFunction(const std::string &name)
 {
    return makeLibraryFunction<
-      decltype(DestructorWrapper<ObjectType>::wrapped),
+      decltype(&DestructorWrapper<ObjectType>::wrapped),
       DestructorWrapper<ObjectType>::wrapped>(name);
 }
 
