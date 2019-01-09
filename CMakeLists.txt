@@ -15,7 +15,7 @@ find_package(ZLIB REQUIRED) # ZLIB::ZLIB
 option(DECAF_BUILD_TESTS "Build tests" OFF)
 option(DECAF_BUILD_TOOLS "Build tools" OFF)
 option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
-option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" ON)
+option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" OFF)
 option(DECAF_FFMPEG "Build with ffmpeg support" ON)
 option(DECAF_GL "Build with OpenGL rendering support" ON)
 option(DECAF_SDL "Build with SDL support" ON)
