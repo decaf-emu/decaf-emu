@@ -160,6 +160,11 @@ Driver::bindDescriptors()
       }
    }
 
+   if (descWrites.empty()) {
+      // If there are no descriptors for this draw, there is nothing to do.
+      return;
+   }
+
    if (!dSet) {
       mActiveCommandBuffer.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics,
                                                 mCurrentDraw->pipeline->pipelineLayout->pipelineLayout,
