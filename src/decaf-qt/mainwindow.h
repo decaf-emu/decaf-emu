@@ -12,6 +12,8 @@ class InputDriver;
 
 class QAction;
 class QInputDialog;
+class QLabel;
+class QTimer;
 class QVulkanInstance;
 
 class MainWindow : public QMainWindow
@@ -53,6 +55,8 @@ private slots:
    void softwareKeyboardInputStringChanged(QString text);
    void softwareKeyboardInputFinished(int result);
 
+   void updateStatusBar();
+
 protected:
    void closeEvent(QCloseEvent *event) override;
 
@@ -64,11 +68,14 @@ private:
    VulkanWindow *mVulkanWindow;
    DecafInterface *mDecafInterface;
    InputDriver *mInputDriver;
+   SoftwareKeyboardDriver *mSoftwareKeyboardDriver;
+   QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
+
    Ui::MainWindow mUi;
+   QTimer *mStatusTimer;
+   QLabel *mStatusFrameRate;
+   QLabel *mStatusFrameTime;
 
    QAction *mRecentFilesSeparator;
    std::array<QAction *, MaxRecentFiles> mRecentFileActions;
-
-   SoftwareKeyboardDriver *mSoftwareKeyboardDriver;
-   QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
 };

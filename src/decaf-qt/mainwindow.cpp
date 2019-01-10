@@ -2,7 +2,6 @@
 #include "aboutdialog.h"
 #include "vulkanwindow.h"
 #include "softwarekeyboarddriver.h"
-
 #include "settingsdialog/settingsdialog.h"
 
 #include <QCloseEvent>
@@ -10,6 +9,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QSettings>
+#include <QTimer>
 
 #include <libdecaf/decaf.h>
 
@@ -36,6 +36,13 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
 
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
+
+   // Setup status bar
+   mStatusTimer = new QTimer(this);
+   mUi.statusBar->addPermanentWidget(mStatusFrameRate = new QLabel());
+   mUi.statusBar->addPermanentWidget(mStatusFrameTime = new QLabel());
+   connect(mStatusTimer, SIGNAL(timeout()), this, SLOT(updateStatusBar()));
+   mStatusTimer->start(500);
 
    // Setup settings
    connect(mSettingsStorage, &SettingsStorage::settingsChanged,
@@ -274,4 +281,21 @@ MainWindow::closeEvent(QCloseEvent *event)
 #endif
    mDecafInterface->shutdown();
    event->accept();
+}
+
+void
+MainWindow::updateStatusBar()
+{
+   if (auto gpuDriver = decaf::getGraphicsDriver()) {
+      mStatusFrameRate->setText(
+         QString("FPS: %1")
+         .arg(gpuDriver->getAverageFPS(), 2, 'f', 0));
+
+      mStatusFrameTime->setText(
+         QString("Frametime: %1ms")
+         .arg(gpuDriver->getAverageFrametimeMS(), 7, 'f', 3));
+   } else {
+      mStatusFrameRate->setText("");
+      mStatusFrameTime->setText("");
+   }
 }
