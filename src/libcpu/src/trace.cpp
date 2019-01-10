@@ -7,9 +7,10 @@
 #include "espresso/espresso_spr.h"
 
 #include <common/log.h>
-#include <common/debuglog.h>
+#include <common/platform_debug.h>
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
+#include <mutex>
 
 using espresso::Instruction;
 using espresso::InstructionID;
@@ -28,6 +29,15 @@ struct Tracer
    std::vector<Trace> traces;
    cpu::CoreRegs prevState;
 };
+
+static inline void
+debugPrint(std::string out)
+{
+   gLog->debug(out);
+
+   out.push_back('\n');
+   platform::debugLog(out);
+}
 
 namespace cpu
 {
