@@ -22,7 +22,7 @@ option(DECAF_SDL "Build with SDL support" ON)
 option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_VULKAN "Build with Vulkan rendering support" ON)
 option(DECAF_QT "Build with Qt support" OFF)
-option(DECAF_ENABLE_LTCG "Build with LTCG on Windows" ON)
+option(DECAF_ENABLE_LTCG "Build with LTCG on Windows" OFF)
 
 set(DEVKITPPC $ENV{DEVKITPPC} CACHE STRING "Path to devkitPPC install")
 set(WUT_ROOT $ENV{WUT_ROOT} CACHE STRING "Path to wut install")
