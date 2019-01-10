@@ -70,6 +70,7 @@
 #include "decaf_config.h"
 #include "decaf_configstorage.h"
 
+#include <common/log.h>
 #include <array>
 #include <regex>
 

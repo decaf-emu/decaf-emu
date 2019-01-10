@@ -61,6 +61,15 @@ assertFailed(const char *file,
 }
 
 void
+assertWarnFailed(const char *file,
+                 unsigned line,
+                 const char *expression,
+                 const std::string &message)
+{
+   gLog->warn("Asserted `{}` ({}) at {}:{}", expression, message, __FILE__, __LINE__);
+}
+
+void
 hostFaultWithStackTrace(const std::string &fault,
                         platform::StackTrace *stackTrace)
 {
