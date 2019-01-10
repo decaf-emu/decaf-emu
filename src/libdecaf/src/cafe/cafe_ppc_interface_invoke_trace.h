@@ -1,7 +1,5 @@
 #pragma once
 #include "cafe_ppc_interface_invoke.h"
-
-#include <common/log.h>
 #include <fmt/format.h>
 
 namespace cafe
@@ -9,6 +7,9 @@ namespace cafe
 
 namespace detail
 {
+
+void
+logTraceMessage(const fmt::memory_buffer &entry);
 
 template<int argIndex, typename ArgType, RegisterType regType, int regIndex>
 inline void
@@ -47,7 +48,7 @@ invoke_trace_host_impl(cpu::Core *core,
    }
 
    fmt::format_to(message, ") from 0x{:08X}", core->lr);
-   gLog->debug(std::string_view { message.data(), message.size() });
+   logTraceMessage(message);
 }
 
 } // namespace detail
