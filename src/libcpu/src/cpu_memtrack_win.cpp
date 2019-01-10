@@ -24,6 +24,7 @@ namespace cpu
 {
 
 static constexpr uint64_t PhysTrackSetBit = 0x8000000000000000;
+static constexpr uint64_t PhysIsMappedBit = 0x4000000000000000;
 static constexpr uint32_t VirtTrackSetBit = 0x80000000;
 static constexpr uint32_t VirtIsMappedBit = 0x40000000;
 
@@ -46,13 +47,18 @@ namespace internal
 LONG writeExceptionHandler(_EXCEPTION_POINTERS *ExceptionInfo)
 {
    auto &ExceptionRecord = ExceptionInfo->ExceptionRecord;
-   if (ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
+   if (UNLIKELY(ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)) {
       return EXCEPTION_CONTINUE_SEARCH;
    }
 
-   if (!sTrackCount) {
-      return EXCEPTION_CONTINUE_SEARCH;
-   }
+   // We do not check to see if sTrackCount is initialized here because we can assume
+   // that it must be initialized if the vectored exeception handler was registered.
+
+   // We do not verify that the SET bit is set for physical or virtual since another
+   // thread may be racing us.  Instead we only check that the region was mapped at
+   // least once (via the IsMapped bits), and if its been mapped once we can assume
+   // that it was meant to be set up.  We also allow VirtualProtect to return an old
+   // protection of READ _OR_ READWRITE for the same reasons.
 
    auto MemoryAddress = ExceptionRecord->ExceptionInformation[1];
    if (MemoryAddress >= sVirtBaseAddress && MemoryAddress < sVirtBaseAddress + 0x100000000) {
@@ -62,10 +68,6 @@ LONG writeExceptionHandler(_EXCEPTION_POINTERS *ExceptionInfo)
       auto oldLookupValue = sVirtLookup[lookupIdx].fetch_and(~VirtTrackSetBit);
       if (!(oldLookupValue & VirtIsMappedBit)) {
          // This was an unmapped range to begin with.
-         return EXCEPTION_CONTINUE_SEARCH;
-      }
-      if (!(oldLookupValue & VirtTrackSetBit)) {
-         // There was no protection on this area.  Something else has gone wrong.
          return EXCEPTION_CONTINUE_SEARCH;
       }
 
@@ -80,7 +82,7 @@ LONG writeExceptionHandler(_EXCEPTION_POINTERS *ExceptionInfo)
 
       // Then we remove the tracking bit
       auto oldTrackValue = sTrackCount[trackIdx].fetch_and(~PhysTrackSetBit);
-      if (!(oldTrackValue & PhysTrackSetBit)) {
+      if (!(oldTrackValue & PhysIsMappedBit)) {
          // There was no protection on this area.  Something else has gone wrong.
          return EXCEPTION_CONTINUE_SEARCH;
       }
@@ -94,8 +96,9 @@ LONG writeExceptionHandler(_EXCEPTION_POINTERS *ExceptionInfo)
    // Finally we reprotect the memory to its normal state
    DWORD oldProtection;
    VirtualProtect(reinterpret_cast<void*>(MemoryAddress), 1, PAGE_READWRITE, &oldProtection);
-   if (oldProtection != PAGE_READONLY) {
-      decaf_abort("write tracker saw non-read-only memory");
+   if (oldProtection != PAGE_READONLY && oldProtection != PAGE_READWRITE) {
+      VirtualProtect(reinterpret_cast<void*>(MemoryAddress), 1, oldProtection, nullptr);
+      return EXCEPTION_CONTINUE_SEARCH;
    }
 
    return EXCEPTION_CONTINUE_EXECUTION;
@@ -290,7 +293,7 @@ getMemoryState(PhysicalAddress physicalAddress,
          });
 
       for (auto i = startPage; i <= lastPage; ++i) {
-         auto oldTrackValue = sVirtLookup[i].fetch_or(VirtTrackSetBit);
+         auto oldTrackValue = sVirtLookup[i].fetch_or(VirtTrackSetBit | VirtIsMappedBit);
          if (!(oldTrackValue & VirtIsMappedBit)) {
             decaf_abort("Attempted to write-track unmapped memory");
          }
