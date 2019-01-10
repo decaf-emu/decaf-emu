@@ -2,11 +2,9 @@
 #include "bit_cast.h"
 #include "bitutils.h"
 #include "decaf_assert.h"
-#include "fixed.h"
 
 #include <common/type_traits.h>
 #include <fmt/format.h>
-#include <type_traits>
 
 template<typename BitfieldType, typename ValueType, unsigned Position, unsigned Bits>
 struct BitfieldHelper
@@ -76,24 +74,6 @@ struct BitfieldHelper<BitfieldType, bool, Position, Bits>
       bitfield.value &= ~AbsoluteMask;
       bitfield.value |= (static_cast<typename BitfieldType::StorageType>(value ? 1 : 0)) << (Position);
       return bitfield;
-   }
-};
-
-// Specialise for fixed_point
-template<typename BitfieldType, unsigned Position, unsigned Bits, class Rep, int Exponent>
-struct BitfieldHelper<BitfieldType, sg14::fixed_point<Rep, Exponent>, Position, Bits>
-{
-   using FixedType = sg14::fixed_point<Rep, Exponent>;
-   using ValueBitfield = BitfieldHelper<BitfieldType, Rep, Position, Bits>;
-
-   static FixedType get(BitfieldType bitfield)
-   {
-      return FixedType::from_data(ValueBitfield::get(bitfield));
-   }
-
-   static inline BitfieldType set(BitfieldType bitfield, FixedType fixedValue)
-   {
-      return ValueBitfield::set(bitfield, fixedValue.data());
    }
 };
 
