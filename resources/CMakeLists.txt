@@ -5,10 +5,12 @@ set(Fonts
    fonts/CafeKr.ttf
    fonts/CafeStd.ttf
    fonts/CafeTw.ttf
-   fonts/NotoSansCJK.LICENSE
-   fonts/DejaVuSansMono.ttf
-   fonts/DejaVuSansMono.LICENSE)
-
+   fonts/DejaVuSansMono.ttf)
+set(Docs
+    fonts/DejaVuSansMono.LICENSE
+    fonts/NotoSansCJK.LICENSE
+    ../README.md
+    ../LICENSE.md)
 set(ResourceFiles ${Fonts})
 
 add_custom_target(resources ALL SOURCES ${ResourceFiles})
@@ -20,5 +22,5 @@ foreach(ResourceFile ${ResourceFiles})
                           $<TARGET_FILE_DIR:libdecaf>/resources/${ResourceFile})
 endforeach()
 
-install(FILES ${Fonts}
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/resources/fonts")
+install(FILES ${Fonts} DESTINATION "${DECAF_INSTALL_RESOURCESDIR}/fonts")
+install(FILES ${Docs} DESTINATION "${DECAF_INSTALL_DOCSDIR}")
