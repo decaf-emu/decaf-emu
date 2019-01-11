@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(decaf-cli)
 
 include_directories(".")
@@ -14,4 +16,4 @@ target_link_libraries(decaf-cli
     cpptoml
     excmd)
 
-install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(decaf-sdl)
 
 include_directories(".")
@@ -39,4 +41,4 @@ if(MSVC)
         LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 endif()
 
-install(TARGETS decaf-sdl RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS decaf-sdl RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

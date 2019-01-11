@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(gfd-tool)
 
 include_directories(".")
@@ -15,4 +17,4 @@ target_link_libraries(gfd-tool
     libgfd
     excmd)
 
-install(TARGETS gfd-tool RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS gfd-tool RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

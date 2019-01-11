@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(decaf-qt)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -78,4 +80,4 @@ if(MSVC)
            $<TARGET_FILE_DIR:decaf-qt>)
 endif()
 
-install(TARGETS decaf-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS decaf-qt RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(latte-assembler)
 
 include_directories(".")
@@ -37,4 +39,4 @@ set_target_properties(latte-assembler PROPERTIES FOLDER tools)
 GroupSources(src)
 GroupSources(resources)
 
-install(TARGETS latte-assembler RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS latte-assembler RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")

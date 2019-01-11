@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(pm4-replay)
 
 include_directories(".")
@@ -26,4 +28,4 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(pm4-replay X11)
 endif()
 
-install(TARGETS pm4-replay RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS pm4-replay RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
