@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 project(resources)
 
 set(Fonts
@@ -5,9 +7,13 @@ set(Fonts
    fonts/CafeKr.ttf
    fonts/CafeStd.ttf
    fonts/CafeTw.ttf
-   fonts/NotoSansCJK.LICENSE
-   fonts/DejaVuSansMono.ttf
-   fonts/DejaVuSansMono.LICENSE)
+   fonts/DejaVuSansMono.ttf)
+set(Docs
+    fonts/DejaVuSansMono.LICENSE
+    fonts/NotoSansCJK.LICENSE
+    ../README.md
+    ../LICENSE.md)
+set(PARENT_PROJECT_NAME decaf-emu)
 
 set(ResourceFiles ${Fonts})
 
@@ -20,5 +26,13 @@ foreach(ResourceFile ${ResourceFiles})
                           $<TARGET_FILE_DIR:libdecaf>/resources/${ResourceFile})
 endforeach()
 
-install(FILES ${Fonts}
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/resources/fonts")
+if(DECAF_RESOURCES_PATH)
+  install(FILES ${Fonts} DESTINATION "${DECAF_RESOURCES_PATH}")
+else()
+  install(FILES ${Fonts}
+          DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${PARENT_PROJECT_NAME}/resources/fonts")
+endif()
+
+if(DECAF_DOCS)
+  install(FILES ${Docs} DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/${PARENT_PROJECT_NAME}")
+endif()
