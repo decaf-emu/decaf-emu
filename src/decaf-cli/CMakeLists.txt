@@ -14,4 +14,4 @@ target_link_libraries(decaf-cli
     cpptoml
     excmd)
 
-install(TARGETS decaf-cli RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS decaf-cli RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

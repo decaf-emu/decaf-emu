@@ -26,4 +26,4 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(pm4-replay X11)
 endif()
 
-install(TARGETS pm4-replay RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS pm4-replay RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

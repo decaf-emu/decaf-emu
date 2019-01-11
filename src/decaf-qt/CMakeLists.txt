@@ -78,4 +78,4 @@ if(MSVC)
            $<TARGET_FILE_DIR:decaf-qt>)
 endif()
 
-install(TARGETS decaf-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS decaf-qt RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

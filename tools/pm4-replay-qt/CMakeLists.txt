@@ -23,4 +23,4 @@ target_link_libraries(pm4-replay-qt
 
 target_link_libraries(pm4-replay-qt Qt5::Widgets)
 
-install(TARGETS pm4-replay-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS pm4-replay-qt RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

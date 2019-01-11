@@ -15,4 +15,4 @@ target_link_libraries(gfd-tool
     libgfd
     excmd)
 
-install(TARGETS gfd-tool RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS gfd-tool RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")
