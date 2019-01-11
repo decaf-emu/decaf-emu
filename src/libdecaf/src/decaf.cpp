@@ -16,6 +16,7 @@
 #include "ios/ios.h"
 
 #include <chrono>
+#include <common/decaf_assert.h>
 #include <common/platform.h>
 #include <common/platform_dir.h>
 #include <condition_variable>
@@ -45,6 +46,27 @@ bool
 createConfigDirectory()
 {
    return platform::createParentDirectories(makeConfigPath("."));
+}
+
+std::string
+getResourcePath(const std::string &filename)
+{
+#ifdef PLATFORM_WINDOWS
+   return decaf::config()->system.resources_path + "/" + filename;
+#else
+   std::string userPath = decaf::config()->system.resources_path + "/" + filename;
+   std::string systemPath = std::string(DECAF_INSTALL_RESOURCESDIR) + "/" + filename;
+
+   if (platform::fileExists(userPath)) {
+      return userPath;
+   }
+
+   if (platform::fileExists(systemPath)) {
+      return systemPath;
+   }
+
+   decaf_abort(fmt::format("Failed to find resource {}", filename));
+#endif
 }
 
 bool

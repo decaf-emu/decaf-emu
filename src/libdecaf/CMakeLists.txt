@@ -9,6 +9,9 @@ file(GLOB_RECURSE HEADER_FILES *.h)
 add_library(libdecaf STATIC ${SOURCE_FILES} ${HEADER_FILES})
 GroupSources(src)
 
+target_compile_definitions(libdecaf PRIVATE
+    DECAF_INSTALL_RESOURCESDIR="${DECAF_INSTALL_RESOURCESDIR}")
+
 target_include_directories(libdecaf PRIVATE
     ${CURL_INCLUDE_DIRS})
 
