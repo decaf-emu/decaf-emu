@@ -35,9 +35,11 @@ GroupSources(ui)
 target_include_directories(decaf-qt PRIVATE
    ${SDL2_INCLUDE_DIRS})
 
+target_link_libraries(decaf-qt common)
+if(DECAF_SDL)
+    target_link_libraries(decaf-qt common-sdl)
+endif()
 target_link_libraries(decaf-qt
-   common
-   common-sdl
    libconfig
    libcpu
    libdebugui
