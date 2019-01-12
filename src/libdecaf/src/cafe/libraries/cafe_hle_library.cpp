@@ -103,7 +103,8 @@ Library::handleUnknownKernelCall(cpu::Core *state,
       return state;
    }
 
-   decaf_abort("Unexpected kernel call");
+   decaf_abort(fmt::format("Unexpected kernel call {} from 0x{:08X}",
+                           id, state->lr));
 }
 
 void
