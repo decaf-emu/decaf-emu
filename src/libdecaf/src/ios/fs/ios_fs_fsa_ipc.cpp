@@ -453,6 +453,61 @@ FSAMount(FSAHandle handle,
 }
 
 FSAStatus
+FSAMountWithProcess(FSAHandle handle,
+                    std::string_view src,
+                    std::string_view dst,
+                    uint32_t unk0x500,
+                    phys_ptr<FSAProcessInfo> process,
+                    phys_ptr<void> unkBuf,
+                    uint32_t unkBufLen)
+{
+   phys_ptr<FSAIpcData> ipcData;
+
+   auto status = allocFsaIpcData(&ipcData);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   ipcData->command = FSACommand::MountWithProcess;
+   ipcData->resourceHandle = handle;
+
+   // Setup request
+   auto request = phys_addrof(ipcData->request);
+   string_copy(phys_addrof(request->mountWithProcess.path).get(),
+               src.data(),
+               request->mountWithProcess.path.size());
+
+   string_copy(phys_addrof(request->mountWithProcess.target).get(),
+               dst.data(),
+               request->mountWithProcess.target.size());
+
+   request->mountWithProcess.process = *process;
+   request->mountWithProcess.unk0x500 = unk0x500;
+   request->mountWithProcess.unkBuf = nullptr;
+   request->mountWithProcess.unkBufLen = unkBufLen;
+
+   // Perform ioctlv
+   auto &vecs = ipcData->vecs;
+   vecs[0].paddr = phys_cast<phys_addr>(request);
+   vecs[0].len = static_cast<uint32_t>(sizeof(FSARequest));
+
+   vecs[1].paddr = phys_cast<phys_addr>(unkBuf);
+   vecs[1].len = unkBufLen;
+
+   vecs[2].paddr = phys_cast<phys_addr>(phys_addrof(ipcData->response));
+   vecs[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
+
+   auto error = IOS_Ioctlv(ipcData->resourceHandle,
+                           ipcData->command,
+                           2u,
+                           1u,
+                           phys_addrof(ipcData->vecs));
+
+   freeFsaIpcData(ipcData);
+   return static_cast<FSAStatus>(error);
+}
+
+FSAStatus
 FSAGetInfoByQuery(FSAHandle handle,
                   std::string_view name,
                   FSAQueryInfoType query,

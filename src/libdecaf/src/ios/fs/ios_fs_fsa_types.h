@@ -146,20 +146,18 @@ CHECK_OFFSET(FSAVolumeInfo, 0x13C, mountPath);
 CHECK_SIZE(FSAVolumeInfo, 0x1BC);
 
 /**
- * Owner information for FSAChangeOwner
+ * Process information.
  */
-struct FSAOwnerInfo
+struct FSAProcessInfo
 {
-   be2_val<uint32_t> unk_0x00;
-   be2_val<uint32_t> unk_0x04;
-   be2_val<ProcessId> pid;
-   be2_val<uint32_t> unk_0x0C;
+   be2_val<uint64_t> titleId;
+   be2_val<ProcessId> processId;
+   be2_val<uint32_t> groupId;
 };
-CHECK_OFFSET(FSAOwnerInfo, 0x00, unk_0x00);
-CHECK_OFFSET(FSAOwnerInfo, 0x04, unk_0x04);
-CHECK_OFFSET(FSAOwnerInfo, 0x08, pid);
-CHECK_OFFSET(FSAOwnerInfo, 0x0C, unk_0x0C);
-CHECK_SIZE(FSAOwnerInfo, 0x10);
+CHECK_OFFSET(FSAProcessInfo, 0x00, titleId);
+CHECK_OFFSET(FSAProcessInfo, 0x08, processId);
+CHECK_OFFSET(FSAProcessInfo, 0x0C, groupId);
+CHECK_SIZE(FSAProcessInfo, 0x10);
 
 #pragma pack(pop)
 

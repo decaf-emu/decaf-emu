@@ -169,6 +169,27 @@ CHECK_SIZE(FSARequestMount, 0x50C);
 
 
 /**
+ * Request data for Command::MountWithProcess
+ */
+struct FSARequestMountWithProcess
+{
+   be2_array<char, FSAPathLength + 1> path;
+   be2_array<char, FSAPathLength + 1> target;
+   be2_val<uint32_t> unk0x500;
+   be2_struct<FSAProcessInfo> process;
+   be2_virt_ptr<void> unkBuf;
+   be2_val<uint32_t> unkBufLen;
+};
+CHECK_OFFSET(FSARequestMountWithProcess, 0x0, path);
+CHECK_OFFSET(FSARequestMountWithProcess, 0x280, target);
+CHECK_OFFSET(FSARequestMountWithProcess, 0x500, unk0x500);
+CHECK_OFFSET(FSARequestMountWithProcess, 0x504, process);
+CHECK_OFFSET(FSARequestMountWithProcess, 0x514, unkBuf);
+CHECK_OFFSET(FSARequestMountWithProcess, 0x518, unkBufLen);
+CHECK_SIZE(FSARequestMountWithProcess, 0x51C);
+
+
+/**
  * Request data for Command::OpenDir
  */
 struct FSARequestOpenDir
@@ -357,6 +378,7 @@ struct FSARequest
       be2_struct<FSARequestMakeDir> makeDir;
       be2_struct<FSARequestMakeQuota> makeQuota;
       be2_struct<FSARequestMount> mount;
+      be2_struct<FSARequestMountWithProcess> mountWithProcess;
       be2_struct<FSARequestOpenDir> openDir;
       be2_struct<FSARequestOpenFile> openFile;
       be2_struct<FSARequestReadDir> readDir;
