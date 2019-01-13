@@ -93,6 +93,26 @@ initialiseClientCaps()
 }
 
 static Error
+initialiseProcessTitles()
+{
+   return static_cast<Error>(
+      IOS_SetProcessTitle(ProcessId::MCP, 0, 0) |
+      IOS_SetProcessTitle(ProcessId::BSP, 0x100000F8ull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::CRYPTO, 0x100000F9ull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::USB, 0x100000FAull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::FS, 0x100000F1ull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::PAD, 0x100000F2ull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::NET, 0x100000FBull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::ACP, 0x100000F6ull, 0x400u) |
+      IOS_SetProcessTitle(ProcessId::NSEC, 0x100000F4ull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::AUXIL, 0x100000F5ull, 0x100000FF) |
+      IOS_SetProcessTitle(ProcessId::NIM, 0x100000F3ull, 0x400u) |
+      IOS_SetProcessTitle(ProcessId::FPD, 0x100000F7ull, 0x400u) |
+      IOS_SetProcessTitle(ProcessId::TEST, 0x100000FCull, 0x100000FF));
+
+}
+
+static Error
 mainThreadLoop()
 {
    StackObject<Message> message;
@@ -182,6 +202,7 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    // Set process client caps
    internal::initialiseClientCaps();
+   internal::initialiseProcessTitles();
 
    // Stat mcp thread
    internal::startMcpThread();
