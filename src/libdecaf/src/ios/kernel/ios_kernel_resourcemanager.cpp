@@ -307,6 +307,24 @@ IOS_SetClientCapabilities(ProcessId pid,
    return internal::setClientCapability(pid, featureId, *mask);
 }
 
+Error
+IOS_SetProcessTitle(ProcessId process,
+                    TitleId title,
+                    GroupId group)
+{
+   if (internal::getCurrentProcessId() != ProcessId::MCP) {
+      return Error::Access;
+   }
+
+   auto resourceHandleManager = internal::getResourceHandleManager(process);
+   if (!resourceHandleManager) {
+      return Error::InvalidArg;
+   }
+
+   resourceHandleManager->titleId = title;
+   resourceHandleManager->groupId = group;
+   return Error::OK;
+}
 
 namespace internal
 {

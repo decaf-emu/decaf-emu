@@ -320,6 +320,11 @@ IOS_SetClientCapabilities(ProcessId pid,
                           FeatureId featureId,
                           phys_ptr<uint64_t> mask);
 
+Error
+IOS_SetProcessTitle(ProcessId process,
+                    TitleId title,
+                    GroupId group);
+
 namespace internal
 {
 
