@@ -21,14 +21,9 @@ namespace ios::mcp::internal
 using namespace ios::fs;
 using namespace ios::kernel;
 
-static std::string
-sCurrentLoadFilePath = { };
-
-static FSAHandle
-sCurrentLoadFileHandle = { };
-
-static size_t
-sCurrentLoadFileSize = 0u;
+static std::string sCurrentLoadFilePath = { };
+static FSAHandle sCurrentLoadFileHandle = { };
+static size_t sCurrentLoadFileSize = 0u;
 
 MCPError
 mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request)
@@ -181,7 +176,9 @@ MCPError
 mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
                   phys_ptr<MCPResponsePrepareTitle> response)
 {
+   auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto titleId = request->titleId;
+   auto groupId = GroupId { 0 };
    if (titleId == DefaultTitleId) {
       StackObject<MCPTitleAppXml> appXml;
       if (auto error = readTitleAppXml(appXml); error < MCPError::OK) {
@@ -190,27 +187,23 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
          return error;
       }
 
-      titleId = appXml->title_id;
+      titleInfoBuffer->titleId = appXml->title_id;
+      titleInfoBuffer->groupId = appXml->group_id;
    }
 
    // TODO: When we have title switching we will need to read the title id and
    // load the correct title, until then our title is already mounted on /vol
-   auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto error = readTitleCosXml(titleInfoBuffer);
    if (error < MCPError::OK) {
-      std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
-
       // If there is no cos.xml then let's grant full permissions
+      std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
       titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
       titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
-      return error;
    }
 
    std::memcpy(phys_addrof(response->titleInfo).get(),
                titleInfoBuffer.get(),
                sizeof(MCPPPrepareTitleInfo));
-   response->titleInfo.titleId = titleId;
-
    std::memset(phys_addrof(response->titleInfo.permissions).get(),
                0, sizeof(response->titleInfo.permissions));
    return MCPError::OK;
@@ -244,6 +237,10 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
          }
       }
    }
+
+   IOS_SetProcessTitle(processId,
+                       titleInfoBuffer->titleId,
+                       titleInfoBuffer->groupId);
 
    // Mount sdcard if title has permissions
    if (sdCardPermissions) {

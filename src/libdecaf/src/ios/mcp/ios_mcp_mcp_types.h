@@ -46,7 +46,7 @@ struct MCPPPrepareTitleInfo
    be2_val<uint32_t> version;
    UNKNOWN(8);
    be2_val<MCPTitleId> titleId;
-   UNKNOWN(4);
+   be2_val<uint32_t> groupId;
    be2_val<uint32_t> cmdFlags;
    be2_array<char, 4096> argstr;
    be2_array<virt_ptr<char>, 64> argv;
@@ -74,6 +74,7 @@ struct MCPPPrepareTitleInfo
 };
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x00, version);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x0C, titleId);
+CHECK_OFFSET(MCPPPrepareTitleInfo, 0x14, groupId);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x18, cmdFlags);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x1C, argstr);
 CHECK_OFFSET(MCPPPrepareTitleInfo, 0x101C, argv);
