@@ -17,10 +17,11 @@ constexpr auto OverlayArenaVirtualStart = virt_addr { 0xA0000000 };
 constexpr auto OverlayArenaVirtualEnd = virt_addr { 0xBC000000 };
 constexpr auto OverlayArenaPhysicalStart = phys_addr { 0x34000000 };
 constexpr auto OverlayArenaPhysicalEnd = phys_addr { 0x50000000 };
-constexpr auto OverlayArenaSize = OverlayArenaPhysicalEnd - OverlayArenaPhysicalStart;
+constexpr auto OverlayArenaSize =
+   static_cast<uint32_t>(OverlayArenaPhysicalEnd - OverlayArenaPhysicalStart);
 
-static std::array<internal::AddressSpace *, 3>
-sCoreActiveAddressSpace = { nullptr, nullptr, nullptr };
+static std::array<internal::AddressSpace *, 3> sCoreActiveAddressSpace =
+   { nullptr, nullptr, nullptr };
 
 namespace internal
 {
