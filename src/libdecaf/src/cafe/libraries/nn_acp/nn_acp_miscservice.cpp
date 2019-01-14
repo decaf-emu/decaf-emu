@@ -73,7 +73,7 @@ ACPGetTitleMetaXml(ACPTitleId titleId,
 }
 
 void
-Library::registerTitleSymbols()
+Library::registerMiscServiceSymbols()
 {
    RegisterFunctionExport(ACPGetNetworkTime);
    RegisterFunctionExport(ACPGetTitleIdOfMainApplication);

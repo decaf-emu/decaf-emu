@@ -19,7 +19,8 @@ private:
    void registerClientSymbols();
    void registerDeviceSymbols();
    void registerDriverSymbols();
-   void registerTitleSymbols();
+   void registerMiscServiceSymbols();
+   void registerSaveServiceSymbols();
 };
 
 } // namespace cafe::nn_acp

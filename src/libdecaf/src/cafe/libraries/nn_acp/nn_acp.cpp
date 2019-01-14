@@ -34,7 +34,8 @@ Library::registerSymbols()
    registerClientSymbols();
    registerDeviceSymbols();
    registerDriverSymbols();
-   registerTitleSymbols();
+   registerMiscServiceSymbols();
+   registerSaveServiceSymbols();
 }
 
 } // namespace cafe::nn_acp
