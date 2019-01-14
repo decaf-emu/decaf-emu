@@ -1,6 +1,12 @@
 #pragma once
-#include "filesystem/filesystem_path.h"
 #include "cafe/libraries/coreinit/coreinit_fs.h"
+#include "filesystem/filesystem_path.h"
+#include "nn/nn_result.h"
+#include "nn/act/nn_act_types.h"
+
+#include <cstdint>
+#include <libcpu/be2_struct.h>
+#include <string_view>
 
 namespace cafe::nn_save
 {
@@ -31,23 +37,27 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
 namespace internal
 {
 
-fs::Path
-getSaveDirectory(uint32_t slot);
+SaveStatus
+translateResult(nn::Result result);
+
+bool
+getPersistentId(nn::act::SlotNo slot,
+                uint32_t &outPersistentId);
 
 fs::Path
-getSavePath(uint32_t slot,
+getSaveDirectory(nn::act::SlotNo slot);
+
+fs::Path
+getSavePath(nn::act::SlotNo slot,
             std::string_view path);
 
 fs::Path
-getTitleSaveRoot(uint64_t title);
-
-fs::Path
 getTitleSaveDirectory(uint64_t title,
-                      uint32_t slot);
+                      nn::act::SlotNo slot);
 
 fs::Path
 getTitleSavePath(uint64_t title,
-                 uint32_t slot,
+                 nn::act::SlotNo slot,
                  std::string_view path);
 
 } // namespace internal

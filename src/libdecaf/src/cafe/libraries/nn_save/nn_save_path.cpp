@@ -1,79 +1,99 @@
 #include "nn_save.h"
 #include "nn_save_path.h"
 
+#include "cafe/libraries/coreinit/coreinit_fs_client.h"
+#include "cafe/libraries/coreinit/coreinit_mutex.h"
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
+#include "cafe/libraries/coreinit/coreinit_osreport.h"
 #include "cafe/libraries/nn_act/nn_act_lib.h"
+#include "cafe/libraries/nn_acp/nn_acp_client.h"
+#include "cafe/libraries/nn_acp/nn_acp_saveservice.h"
 
+#include "cafe/cafe_stackobject.h"
 #include "filesystem/filesystem.h"
 #include "kernel/kernel_filesystem.h"
 
 #include <fmt/format.h>
 
+using namespace cafe::coreinit;
+using namespace nn::act;
+using namespace nn::acp;
+
 namespace cafe::nn_save
 {
 
-struct StaticPathData
+struct StaticSaveData
 {
    be2_val<bool> initialised;
+   be2_struct<OSMutex> mutex;
+   be2_struct<FSClient> fsClient;
+   be2_struct<FSCmdBlock> fsCmdBlock;
+   be2_array<uint32_t, MaxSlot> persistentIdCache;
 };
 
-static virt_ptr<StaticPathData>
-sPathData = nullptr;
+static virt_ptr<StaticSaveData> sSaveData = nullptr;
 
 SaveStatus
 SAVEInit()
 {
-   if (sPathData->initialised) {
+   if (sSaveData->initialised) {
       return SaveStatus::OK;
    }
 
-   // Create title save folder
-   auto fs = ::kernel::getFileSystem();
-   auto titleID = coreinit::OSGetTitleID();
-   auto path = internal::getTitleSaveRoot(titleID);
-   auto titleFolder = fs->makeFolder(path);
+   OSInitMutex(virt_addrof(sSaveData->mutex));
 
-   if (!titleFolder) {
-      return SaveStatus::FatalError;
+   nn_act::Initialize();
+   nn_acp::ACPInitialize();
+   FSAddClient(virt_addrof(sSaveData->fsClient), FSErrorFlag::None);
+   FSInitCmdBlock(virt_addrof(sSaveData->fsCmdBlock));
+
+   for (auto i = SlotNo { 1 }; i <= MaxSlot; ++i) {
+      sSaveData->persistentIdCache[i - 1] = nn_act::GetPersistentIdEx(i);
    }
 
-   // Mount title save folder to /vol/save
-   if (!fs->makeLink("/vol/save", titleFolder)) {
-      return SaveStatus::FatalError;
+   // Mount external storage if it is required
+   if (OSGetUPID() == kernel::UniqueProcessId::Game) {
+      StackObject<int32_t> externalStorageRequired;
+      if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok() &&
+          *externalStorageRequired) {
+         nn_acp::ACPMountExternalStorage();
+      }
    }
 
-   // Create /vol/save/common
-   auto savePath = internal::getSaveDirectory(nn_act::SystemSlot);
-
-   if (!fs->makeFolder(savePath)) {
-      return SaveStatus::FatalError;
-   }
-
-   sPathData->initialised = true;
+   nn_acp::ACPMountSaveDir();
+   nn_acp::ACPRepairSaveMetaDir();
+   sSaveData->initialised = true;
    return SaveStatus::OK;
 }
 
 void
 SAVEShutdown()
 {
-   // TODO: Must we unmount /vol/save ?
-   sPathData->initialised = false;
+   if (sSaveData->initialised) {
+      FSDelClient(virt_addrof(sSaveData->fsClient), FSErrorFlag::None);
+      nn_acp::ACPFinalize();
+      nn_act::Finalize();
+      sSaveData->initialised = false;
+   }
 }
 
 SaveStatus
-SAVEInitSaveDir(uint8_t userID)
+SAVEInitSaveDir(uint8_t slotNo)
 {
-   decaf_check(sPathData->initialised);
-
-   // Create user's save folder
-   auto savePath = internal::getSaveDirectory(userID);
-   auto fs = ::kernel::getFileSystem();
-
-   if (!fs->makeFolder(savePath)) {
-      return SaveStatus::FatalError;
+   if (!sSaveData->initialised) {
+      coreinit::internal::OSPanic("save.cpp", 630,
+         "SAVE library is not initialized. Call SAVEInit() prior to this function.\n");
    }
 
-   return SaveStatus::OK;
+   auto persistentId = uint32_t { 0 };
+   if (!internal::getPersistentId(slotNo, persistentId)) {
+      return SaveStatus::NotFound;
+   }
+
+   auto result = nn_acp::ACPCreateSaveDir(persistentId,
+                                          ACPDeviceType::Unknown1);
+   // TODO: Update ACPGetApplicationBox
+   return internal::translateResult(result);
 }
 
 
@@ -83,11 +103,27 @@ SAVEGetSharedDataTitlePath(uint64_t titleID,
                            virt_ptr<char> buffer,
                            uint32_t bufferSize)
 {
+   if (!sSaveData->initialised) {
+      coreinit::internal::OSPanic("save.cpp", 2543,
+                                  "SAVE library is not initialized. Call SAVEInit() prior to this function.\n");
+   }
+
+   StackObject<int32_t> externalStorageRequired;
+   auto storage = "storage_mlc01";
+
+   if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok()) {
+      if (*externalStorageRequired) {
+         storage = "storage_hfiomlc01";
+      }
+   } else {
+      return SaveStatus::FatalError;
+   }
+
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
    auto result = snprintf(buffer.get(), bufferSize,
-                          "/vol/storage_mlc01/sys/title/%08x/%08x/content/%s",
-                          titleHi, titleLo, dir.get());
+                           "/vol/%s/sys/title/%08x/%08x/content/%s",
+                          storage, titleHi, titleLo, dir.get());
 
    if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;
@@ -103,11 +139,27 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
                           virt_ptr<char> buffer,
                           uint32_t bufferSize)
 {
+   if (!sSaveData->initialised) {
+      coreinit::internal::OSPanic("save.cpp", 2543,
+                                  "SAVE library is not initialized. Call SAVEInit() prior to this function.\n");
+   }
+
+   StackObject<int32_t> externalStorageRequired;
+   auto storage = "storage_mlc01";
+
+   if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok()) {
+      if (*externalStorageRequired) {
+         storage = "storage_hfiomlc01";
+      }
+   } else {
+      return SaveStatus::FatalError;
+   }
+
    auto titleLo = static_cast<uint32_t>(titleID & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(titleID >> 32);
    auto result = snprintf(buffer.get(), bufferSize,
-                          "/vol/storage_mlc01/usr/save/%08x/%08x/user/common/%s",
-                          titleHi, titleLo, dir.get());
+                          "/vol/%s/usr/save/%08x/%08x/content/%s",
+                          storage, titleHi, titleLo, dir.get());
 
    if (result < 0 || static_cast<uint32_t>(result) >= bufferSize) {
       return SaveStatus::FatalError;
@@ -120,51 +172,78 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
 namespace internal
 {
 
-fs::Path
-getSaveDirectory(uint32_t slot)
+SaveStatus
+translateResult(nn::Result result)
 {
-   if (slot == nn_act::SystemSlot) {
-      return fmt::format("/vol/save/common");
-   } else if (slot == nn_act::CurrentUserSlot) {
-      slot = nn_act::GetSlotNo();
+   if (result.ok()) {
+      return SaveStatus::OK;
    }
 
-   return fmt::format("/vol/save/{:08X}", nn_act::GetPersistentIdEx(slot));
+   if (result.code == 0xFFFFFE0C) {
+      return SaveStatus::NotFound;
+   } else if (result.code == 0xFFFFFA23) {
+      return SaveStatus::StorageFull;
+   }
+
+   return SaveStatus::MediaError;
+}
+
+bool
+getPersistentId(SlotNo slot,
+                uint32_t &outPersistentId)
+{
+   if (slot == SystemSlot) {
+      outPersistentId = 0;
+      return true;
+   } else if (slot >= 1 && slot <= MaxSlot) {
+      outPersistentId = sSaveData->persistentIdCache[slot - 1];
+      return true;
+   }
+
+   return false;
 }
 
 fs::Path
-getSavePath(uint32_t slot,
+getSaveDirectory(SlotNo slot)
+{
+   auto persistentId = uint32_t { 0 };
+   getPersistentId(slot, persistentId);
+
+   if (persistentId == 0) {
+      return fmt::format("/vol/save/common");
+   } else {
+      return fmt::format("/vol/save/{:08X}", persistentId);
+   }
+}
+
+fs::Path
+getSavePath(SlotNo slot,
             std::string_view path)
 {
    return getSaveDirectory(slot).join(path);
 }
 
 fs::Path
-getTitleSaveRoot(uint64_t title)
+getTitleSaveDirectory(uint64_t title,
+                      SlotNo slot)
 {
    auto titleLo = static_cast<uint32_t>(title & 0xffffffff);
    auto titleHi = static_cast<uint32_t>(title >> 32);
-   return fmt::format("/vol/storage_mlc01/usr/save/{:08x}/{:08x}/user", titleHi, titleLo);
-}
+   auto persistentId = uint32_t { 0 };
+   getPersistentId(slot, persistentId);
 
-fs::Path
-getTitleSaveDirectory(uint64_t title,
-                      uint32_t slot)
-{
-   auto root = getTitleSaveRoot(title);
-
-   if (slot == nn_act::SystemSlot) {
-      return root.join("common");
-   } else if (slot == nn_act::CurrentUserSlot) {
-      slot = nn_act::GetSlotNo();
+   if (persistentId == 0) {
+      return fmt::format("/vol/storage_mlc01/usr/save/{:08x}/{:08x}/user/common",
+                         titleHi, titleLo);
+   } else {
+      return fmt::format("/vol/storage_mlc01/usr/save/{:08x}/{:08x}/user/{:08X}",
+                         titleHi, titleLo, persistentId);
    }
-
-   return root.join(fmt::format("{:08X}", nn_act::GetPersistentIdEx(slot)));
 }
 
 fs::Path
 getTitleSavePath(uint64_t title,
-                 uint32_t slot,
+                 nn_act::SlotNo slot,
                  std::string_view path)
 {
    return getTitleSaveDirectory(title, slot).join(path);
@@ -181,7 +260,7 @@ Library::registerPathSymbols()
    RegisterFunctionExport(SAVEGetSharedDataTitlePath);
    RegisterFunctionExport(SAVEGetSharedSaveDataPath);
 
-   RegisterDataInternal(sPathData);
+   RegisterDataInternal(sSaveData);
 }
 
 } // namespace cafe::nn_save

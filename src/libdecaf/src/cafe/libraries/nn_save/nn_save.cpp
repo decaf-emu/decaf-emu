@@ -17,6 +17,10 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
+   registerLibraryDependency("coreinit");
+   registerLibraryDependency("nn_act");
+   registerLibraryDependency("nn_acp");
+
    registerCmdSymbols();
    registerPathSymbols();
 }
