@@ -388,6 +388,19 @@ FSADevice::mount(phys_ptr<FSARequestMount> request)
 
 
 FSAStatus
+FSADevice::mountWithProcess(phys_ptr<FSARequestMountWithProcess> request)
+{
+   auto devicePath = translatePath(phys_addrof(request->path));
+   auto targetPath = translatePath(phys_addrof(request->target));
+
+   // Device is already mounted as a filesystem node, so we just make a link to it
+   auto result = mFS->makeLink(targetPath, devicePath);
+
+   return translateError(result);
+}
+
+
+FSAStatus
 FSADevice::openDir(phys_ptr<FSARequestOpenDir> request,
                    phys_ptr<FSAResponseOpenDir> response)
 {
@@ -561,6 +574,15 @@ FSADevice::truncateFile(phys_ptr<FSARequestTruncateFile> request)
 
 FSAStatus
 FSADevice::unmount(phys_ptr<FSARequestUnmount> request)
+{
+   auto path = translatePath(phys_addrof(request->path));
+   auto result = mFS->remove(path);
+   return translateError(result);
+}
+
+
+FSAStatus
+FSADevice::unmountWithProcess(phys_ptr<FSARequestUnmountWithProcess> request)
 {
    auto path = translatePath(phys_addrof(request->path));
    auto result = mFS->remove(path);

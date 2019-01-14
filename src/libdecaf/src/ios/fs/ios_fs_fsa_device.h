@@ -55,6 +55,7 @@ public:
    FSAStatus makeDir(phys_ptr<FSARequestMakeDir> request);
    FSAStatus makeQuota(phys_ptr<FSARequestMakeQuota> request);
    FSAStatus mount(phys_ptr<FSARequestMount> request);
+   FSAStatus mountWithProcess(phys_ptr<FSARequestMountWithProcess> request);
    FSAStatus openDir(phys_ptr<FSARequestOpenDir> request, phys_ptr<FSAResponseOpenDir> response);
    FSAStatus openFile(phys_ptr<FSARequestOpenFile> request, phys_ptr<FSAResponseOpenFile> response);
    FSAStatus readDir(phys_ptr<FSARequestReadDir> request, phys_ptr<FSAResponseReadDir> response);
@@ -66,6 +67,7 @@ public:
    FSAStatus statFile(phys_ptr<FSARequestStatFile> request, phys_ptr<FSAResponseStatFile> response);
    FSAStatus truncateFile(phys_ptr<FSARequestTruncateFile> request);
    FSAStatus unmount(phys_ptr<FSARequestUnmount> request);
+   FSAStatus unmountWithProcess(phys_ptr<FSARequestUnmountWithProcess> request);
    FSAStatus writeFile(phys_ptr<FSARequestWriteFile> request, phys_ptr<const uint8_t> buffer, uint32_t bufferLen);
 
 private:

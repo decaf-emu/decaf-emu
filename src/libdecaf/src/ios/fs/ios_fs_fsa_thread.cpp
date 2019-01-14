@@ -268,6 +268,20 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
                device->truncateFile(phys_addrof(request->truncateFile)));
          });
       break;
+   case FSACommand::Unmount:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->unmount(phys_addrof(request->unmount)));
+         });
+      break;
+   case FSACommand::UnmountWithProcess:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->unmountWithProcess(phys_addrof(request->unmountWithProcess)));
+         });
+      break;
    default:
       IOS_ResourceReply(resourceRequest,
                         static_cast<Error>(FSAStatus::UnsupportedCmd));
@@ -332,6 +346,17 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
             fsaAsyncTaskComplete(
                resourceRequest,
                device->mount(phys_addrof(request->mount)));
+         });
+      break;
+   }
+   case FSACommand::MountWithProcess:
+   {
+      submitWorkerTask(
+         [=]()
+         {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->mountWithProcess(phys_addrof(request->mountWithProcess)));
          });
       break;
    }
