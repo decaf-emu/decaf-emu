@@ -12,27 +12,16 @@ using nn::ffl::FFLStoreData;
 namespace cafe::nn_act
 {
 
-static const uint8_t
-DeviceHash[] = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6 };
-
-static const uint8_t
-SystemId[] = { 0xBA, 0xAD, 0xF0, 0x0D, 0xDE, 0xAD, 0xBA, 0xBE };
-
-static uint8_t
-MiiAuthorId[] = { 8, 7, 6, 5, 4, 3, 2, 1 };
-
-static uint8_t
-MiiId[] = { 100, 90, 80, 70, 60, 50, 40, 30, 20, 10 };
-
-static std::u16string
-MiiCreatorsName = u"decafC";
-
-static std::u16string
-MiiName = u"decafM";
+static const uint8_t DeviceHash[] = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6 };
+static const uint8_t SystemId[] = { 0xBA, 0xAD, 0xF0, 0x0D, 0xDE, 0xAD, 0xBA, 0xBE };
+static uint8_t MiiAuthorId[] = { 8, 7, 6, 5, 4, 3, 2, 1 };
+static uint8_t MiiId[] = { 100, 90, 80, 70, 60, 50, 40, 30, 20, 10 };
+static std::u16string MiiCreatorsName = u"decafC";
+static std::u16string MiiName = u"decafM";
 
 struct Account
 {
-   uint8_t slot;
+   SlotNo slot;
    uint32_t parentalId;
    uint32_t persistentId;
    uint32_t principalId;
@@ -41,11 +30,8 @@ struct Account
    uint32_t transferableId;
 };
 
-static Account
-sUserAccount = { 1, 1, 0x80000001u, 1, 1, 1, 1 };
-
-static Account
-sSystemAccount = { SystemSlot, 0, 0, 0, 0, 0, 0 };
+static Account sUserAccount = { 1, 1, 0x80000001u, 1, 1, 1, 1 };
+static Account sSystemAccount = { SystemSlot, 0, 0, 0, 0, 0, 0 };
 
 nn::Result
 Initialize()
@@ -67,7 +53,7 @@ GetNumOfAccounts()
 }
 
 bool
-IsSlotOccupied(uint8_t slot)
+IsSlotOccupied(SlotNo slot)
 {
    if (slot == SystemSlot || slot == CurrentUserSlot || slot == sUserAccount.slot) {
       return true;
@@ -82,7 +68,7 @@ Cancel()
    return nn::ResultSuccess;
 }
 
-uint8_t
+SlotNo
 GetSlotNo()
 {
    return sUserAccount.slot;
@@ -96,7 +82,7 @@ GetUuid(virt_ptr<UUID> uuid)
 
 nn::Result
 GetUuidEx(virt_ptr<UUID> uuid,
-          uint8_t slot)
+          SlotNo slot)
 {
    // System account
    if (slot == SystemSlot) {
@@ -127,7 +113,7 @@ GetAccountId(virt_ptr<char> accountId)
 
 nn::Result
 GetAccountIdEx(virt_ptr<char> accountId,
-               uint8_t slot)
+               SlotNo slot)
 {
    if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
       return ResultAccountNotFound;
@@ -146,8 +132,8 @@ GetParentalControlSlotNo()
 }
 
 nn::Result
-GetParentalControlSlotNoEx(virt_ptr<uint8_t> parentSlot,
-                           uint8_t slot)
+GetParentalControlSlotNoEx(virt_ptr<SlotNo> parentSlot,
+                           SlotNo slot)
 {
    if (slot == SystemSlot) {
       *parentSlot = SystemSlot;
@@ -167,7 +153,7 @@ GetPersistentId()
 }
 
 uint32_t
-GetPersistentIdEx(uint8_t slot)
+GetPersistentIdEx(SlotNo slot)
 {
    if (slot == SystemSlot) {
       return sSystemAccount.persistentId;
@@ -188,7 +174,7 @@ GetPrincipalId()
 
 nn::Result
 GetPrincipalIdEx(virt_ptr<uint32_t> principalId,
-                 uint8_t slot)
+                 SlotNo slot)
 {
    if (slot == SystemSlot) {
       *principalId = sSystemAccount.principalId;
@@ -211,7 +197,7 @@ GetSimpleAddressId()
 
 nn::Result
 GetSimpleAddressIdEx(virt_ptr<uint32_t> simpleAddressId,
-                     uint8_t slot)
+                     SlotNo slot)
 {
    if (slot == SystemSlot) {
       *simpleAddressId = sSystemAccount.simpleAddressId;
@@ -235,7 +221,7 @@ GetTransferableId(uint32_t unk1)
 nn::Result
 GetTransferableIdEx(virt_ptr<uint64_t> transferableId,
                     uint32_t unk1,
-                    uint8_t slot)
+                    SlotNo slot)
 {
    if (slot == SystemSlot) {
       *transferableId = sSystemAccount.transferableId;
@@ -277,9 +263,11 @@ calculateMiiCRC(virt_ptr<const uint8_t> bytes,
 
 nn::Result
 GetMiiEx(virt_ptr<FFLStoreData> data,
-         uint8_t slot)
+         SlotNo slot)
 {
-   if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
+   if (slot != SystemSlot &&
+       slot != CurrentUserSlot &&
+       slot != sUserAccount.slot) {
       return ResultAccountNotFound;
    }
 
@@ -360,9 +348,11 @@ GetMiiName(virt_ptr<char16_t> name)
 
 nn::Result
 GetMiiNameEx(virt_ptr<char16_t> name,
-             uint8_t slot)
+             SlotNo slot)
 {
-   if (slot != SystemSlot && slot != CurrentUserSlot && slot != sUserAccount.slot) {
+   if (slot != SystemSlot &&
+       slot != CurrentUserSlot &&
+       slot != sUserAccount.slot) {
       return ResultAccountNotFound;
    }
 
@@ -385,7 +375,7 @@ IsNetworkAccount()
 }
 
 bool
-IsNetworkAccountEx(uint8_t slot)
+IsNetworkAccountEx(SlotNo slot)
 {
    return false;
 }
@@ -398,7 +388,7 @@ GetDeviceHash(virt_ptr<uint8_t> data)
 }
 
 nn::Result
-IsCommittedEx(uint8_t slot)
+IsCommittedEx(SlotNo slot)
 {
    return nn::ResultSuccess;
 }
