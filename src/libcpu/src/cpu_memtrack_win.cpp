@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "memtrack.h"
 #include "cpu_config.h"
 #include "cpu_internal.h"
