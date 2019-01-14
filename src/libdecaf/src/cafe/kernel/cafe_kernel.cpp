@@ -16,7 +16,6 @@
 #include "decaf_configstorage.h"
 #include "decaf_events.h"
 #include "decaf_game.h"
-#include "kernel/kernel_filesystem.h"
 #include "ios/mcp/ios_mcp_mcp_types.h"
 
 #include <atomic>

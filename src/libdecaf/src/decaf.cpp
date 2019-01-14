@@ -4,19 +4,16 @@
 #include "decaf_input.h"
 #include "decaf_slc.h"
 #include "decaf_sound.h"
-#include "debugger/debugger.h"
-#include "filesystem/filesystem.h"
-#include "input/input.h"
-#include "ios/ios.h"
-#include "kernel/kernel_filesystem.h"
-#include "libcpu/cpu.h"
-#include "libcpu/mem.h"
 
 #include "cafe/kernel/cafe_kernel.h"
 #include "cafe/kernel/cafe_kernel_process.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/swkbd/swkbd_keyboard.h"
+#include "debugger/debugger.h"
+#include "filesystem/filesystem.h"
+#include "input/input.h"
+#include "ios/ios.h"
 
 #include <chrono>
 #include <common/platform.h>
@@ -24,6 +21,8 @@
 #include <condition_variable>
 #include <curl/curl.h>
 #include <fmt/format.h>
+#include <libcpu/cpu.h>
+#include <libcpu/mem.h>
 #include <mutex>
 
 #ifdef PLATFORM_WINDOWS
@@ -156,7 +155,6 @@ initialise(const std::string &gamePath)
    internal::initialiseSlc(decaf::config()->system.slc_path);
 
    // Setup ios
-   kernel::setFileSystem(filesystem.get());
    ios::setFileSystem(std::move(filesystem));
    return true;
 }

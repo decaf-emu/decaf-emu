@@ -11,7 +11,6 @@
 #include "ios/fs/ios_fs_enum.h"
 #include "ios/mcp/ios_mcp_enum.h"
 #include "ios/mcp/ios_mcp_mcp_request.h"
-#include "kernel/kernel_filesystem.h"
 
 #include <libcpu/be2_struct.h>
 

@@ -1,6 +1,7 @@
 #include "nn_save.h"
 #include "nn_save_path.h"
 
+#include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_fs_client.h"
 #include "cafe/libraries/coreinit/coreinit_mutex.h"
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
@@ -8,10 +9,6 @@
 #include "cafe/libraries/nn_act/nn_act_lib.h"
 #include "cafe/libraries/nn_acp/nn_acp_client.h"
 #include "cafe/libraries/nn_acp/nn_acp_saveservice.h"
-
-#include "cafe/cafe_stackobject.h"
-#include "filesystem/filesystem.h"
-#include "kernel/kernel_filesystem.h"
 
 #include <fmt/format.h>
 

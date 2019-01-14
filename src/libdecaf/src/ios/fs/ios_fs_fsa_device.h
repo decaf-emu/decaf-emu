@@ -3,8 +3,9 @@
 #include "ios_fs_fsa_request.h"
 #include "ios_fs_fsa_response.h"
 #include "ios_fs_fsa_types.h"
+
 #include "ios/ios_device.h"
-#include "kernel/kernel_filesystem.h"
+#include "filesystem/filesystem.h"
 
 #include <common/structsize.h>
 #include <libcpu/be2_struct.h>
