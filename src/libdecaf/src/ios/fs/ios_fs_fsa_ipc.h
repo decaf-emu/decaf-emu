@@ -81,9 +81,15 @@ FSAMountWithProcess(FSAHandle handle,
                     std::string_view src,
                     std::string_view dst,
                     uint32_t unk0x500,
-                    phys_ptr<FSAProcessInfo> process,
+                    FSAProcessInfo *process,
                     phys_ptr<void> unkBuf,
                     uint32_t unkBufLen);
+
+FSAStatus
+FSAUnmountWithProcess(FSAHandle handle,
+                      std::string_view path,
+                      uint32_t unk0x280,
+                      FSAProcessInfo *process);
 
 FSAStatus
 FSAGetInfoByQuery(FSAHandle handle,

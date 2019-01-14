@@ -457,7 +457,7 @@ FSAMountWithProcess(FSAHandle handle,
                     std::string_view src,
                     std::string_view dst,
                     uint32_t unk0x500,
-                    phys_ptr<FSAProcessInfo> process,
+                    FSAProcessInfo *process,
                     phys_ptr<void> unkBuf,
                     uint32_t unkBufLen)
 {
@@ -502,6 +502,40 @@ FSAMountWithProcess(FSAHandle handle,
                            2u,
                            1u,
                            phys_addrof(ipcData->vecs));
+
+   freeFsaIpcData(ipcData);
+   return static_cast<FSAStatus>(error);
+}
+
+FSAStatus
+FSAUnmountWithProcess(FSAHandle handle,
+                      std::string_view path,
+                      uint32_t unk0x280,
+                      FSAProcessInfo *process)
+{
+   phys_ptr<FSAIpcData> ipcData;
+
+   auto status = allocFsaIpcData(&ipcData);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   ipcData->command = FSACommand::UnmountWithProcess;
+   ipcData->resourceHandle = handle;
+
+   // Setup request
+   auto request = phys_addrof(ipcData->request);
+   request->unmountWithProcess.path = path;
+   request->unmountWithProcess.unk0x280 = unk0x280;
+   request->unmountWithProcess.process = *process;
+
+   // Perform ioctl
+   auto error = IOS_Ioctl(ipcData->resourceHandle,
+                          ipcData->command,
+                          phys_addrof(ipcData->request),
+                          sizeof(FSARequest),
+                          phys_addrof(ipcData->response),
+                          sizeof(FSAResponse));
 
    freeFsaIpcData(ipcData);
    return static_cast<FSAStatus>(error);

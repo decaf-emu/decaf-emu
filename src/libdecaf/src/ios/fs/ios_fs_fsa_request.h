@@ -336,6 +336,21 @@ CHECK_SIZE(FSARequestUnmount, 0x284);
 
 
 /**
+ * Request data for Command::UnmountWithProcess
+ */
+struct FSARequestUnmountWithProcess
+{
+   be2_array<char, FSAPathLength + 1> path;
+   be2_val<uint32_t> unk0x280;
+   be2_struct<FSAProcessInfo> process;
+};
+CHECK_OFFSET(FSARequestUnmountWithProcess, 0x0, path);
+CHECK_OFFSET(FSARequestUnmountWithProcess, 0x280, unk0x280);
+CHECK_OFFSET(FSARequestUnmountWithProcess, 0x284, process);
+CHECK_SIZE(FSARequestUnmountWithProcess, 0x294);
+
+
+/**
  * Request data for Command::WriteFile
  */
 struct FSARequestWriteFile
@@ -390,6 +405,7 @@ struct FSARequest
       be2_struct<FSARequestStatFile> statFile;
       be2_struct<FSARequestTruncateFile> truncateFile;
       be2_struct<FSARequestUnmount> unmount;
+      be2_struct<FSARequestUnmountWithProcess> unmountWithProcess;
       be2_struct<FSARequestWriteFile> writeFile;
       UNKNOWN(0x51C);
    };
