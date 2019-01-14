@@ -108,6 +108,11 @@ union Result
       return static_cast<int32_t>(code) < 0;
    }
 
+   operator bool() const
+   {
+      return ok();
+   }
+
    struct
    {
       int32_t description : 20;
