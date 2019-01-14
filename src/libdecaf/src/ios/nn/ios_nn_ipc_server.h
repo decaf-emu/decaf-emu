@@ -23,6 +23,7 @@ namespace nn::ipc
 
 struct CommandHandlerArgs
 {
+   phys_ptr<ios::kernel::ResourceRequest> resourceRequest;
    phys_ptr<void> requestBuffer;
    uint32_t requestBufferSize;
    phys_ptr<void> responseBuffer;

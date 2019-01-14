@@ -164,6 +164,7 @@ Server::handleMessage(phys_ptr<ResourceRequest> request)
    auto responseHeader = phys_cast<ResponseHeader *>(ioctlv.vecs[0].paddr);
 
    CommandHandlerArgs args;
+   args.resourceRequest = request;
    args.requestBuffer = requestHeader + 1;
    args.requestBufferSize = ioctlv.vecs[ioctlv.numVecIn].len - sizeof(RequestHeader);
 
