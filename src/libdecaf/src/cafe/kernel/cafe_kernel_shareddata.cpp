@@ -2,6 +2,7 @@
 #include "cafe_kernel_shareddata.h"
 
 #include "decaf_config.h"
+#include "decaf.h"
 
 #include <common/align.h>
 #include <fstream>
@@ -49,7 +50,7 @@ loadResourcesFile(const char *filename,
                   SharedArea &area,
                   virt_addr addr)
 {
-   auto file = std::ifstream { decaf::config()->system.resources_path + "/fonts/" + filename,
+   auto file = std::ifstream { decaf::getResourcePath(std::string("/fonts/") + filename),
                                std::ifstream::in | std::ifstream::binary };
 
    if (!file.is_open()) {

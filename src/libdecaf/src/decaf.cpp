@@ -48,6 +48,27 @@ createConfigDirectory()
    return platform::createParentDirectories(makeConfigPath("."));
 }
 
+std::string
+getResourcePath(const std::string &filename)
+{
+#ifdef PLATFORM_WINDOWS
+   return decaf::config()->system.resources_path + "/" + filename;
+#else
+   std::string userPath = decaf::config()->system.resources_path + "/" + filename;
+   std::string systemPath = std::string(DECAF_PREFIX) + "/" + filename;
+
+   if (platform::fileExists(userPath)) {
+      return userPath;
+   }
+
+   if (platform::fileExists(systemPath)) {
+      return systemPath;
+   }
+
+   throw std::runtime_error("Failed to find resource");
+#endif
+}
+
 bool
 initialise(const std::string &gamePath)
 {

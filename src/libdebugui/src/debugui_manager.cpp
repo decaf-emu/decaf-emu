@@ -90,7 +90,7 @@ Manager::Manager(const std::string &configPath)
    static const ImWchar iconsRanges[] = { 0x2500, 0x25FF, 0 };
    auto config = ImFontConfig { };
    config.MergeMode = true;
-   auto fontPath = decaf::config()->system.resources_path + "/fonts/DejaVuSansMono.ttf";
+   auto fontPath = decaf::getResourcePath("fonts/DejaVuSansMono.ttf");
    io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 13.0f, &config, iconsRanges);
 
    // Set default syle

@@ -17,6 +17,9 @@ makeConfigPath(const std::string &filename);
 bool
 createConfigDirectory();
 
+std::string
+getResourcePath(const std::string &filename);
+
 bool
 initialise(const std::string &gamePath);
 
