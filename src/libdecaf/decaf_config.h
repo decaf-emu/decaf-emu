@@ -68,11 +68,7 @@ struct SystemSettings
    std::string sdcard_path = "sdcard";
    std::string hfio_path = "";
    std::string content_path = {};
-#ifndef DECAF_RESOURCES_PATH
    std::string resources_path = "resources";
-#else
-   std::string resources_path = DECAF_RESOURCES_PATH;
-#endif
    bool time_scale_enabled = false;
    double time_scale = 1.0;
    std::vector<std::string> lle_modules;
