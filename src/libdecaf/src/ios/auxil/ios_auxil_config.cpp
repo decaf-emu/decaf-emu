@@ -906,11 +906,13 @@ deleteItems(std::string_view fileSysPath,
 
    auto xmlStr = ss.str();
 
-   fileSize = static_cast<uint32_t>(xmlStr.size() + 1);
+   fileSize = static_cast<uint32_t>(xmlStr.size());
    fileBuffer = allocFileData(fileSize);
    if (!fileBuffer) {
       return UCError::Alloc;
    }
+
+   std::memcpy(fileBuffer.get(), xmlStr.data(), xmlStr.size());
 
    error = writeFile(path, fileBuffer, fileSize);
    freeFileData(fileBuffer, fileSize);
