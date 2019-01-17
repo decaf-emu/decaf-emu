@@ -237,7 +237,7 @@ loadRtcConfig()
    if (error < MCPError::OK || config->version < 21) {
       // Factory reset items
       std::memset(config.get(), 0, sizeof(RtcConfig));
-      config->version = 1u;
+      config->version = 21u;
       config->rtc_offset = 0x4EFFA200u;
 
       // Try save them to file
