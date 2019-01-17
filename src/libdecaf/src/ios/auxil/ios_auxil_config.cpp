@@ -619,7 +619,8 @@ writeItems(std::string_view fileSysPath,
       auto parseResult = doc.load_buffer(fileBuffer.get(), fileSize);
       freeFileData(fileBuffer, fileSize);
 
-      if (!parseResult) {
+      if (!parseResult &&
+          parseResult.status != pugi::xml_parse_status::status_no_document_element) {
          return UCError::MalformedXML;
       }
    }
