@@ -107,6 +107,7 @@ struct DisplaySettings
    ViewMode viewMode = ViewMode::Split;
    bool maintainAspectRatio = true;
    QColor backgroundColour = { 153, 51, 51 };
+   QString gamePath = "";
    double splitSeperation = 5.0;
 };
 

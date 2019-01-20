@@ -1,6 +1,7 @@
 #include "displaysettingswidget.h"
 
 #include <QDoubleValidator>
+#include <QFileDialog>
 
 DisplaySettingsWidget::DisplaySettingsWidget(QWidget *parent,
                                              Qt::WindowFlags f) :
@@ -29,6 +30,7 @@ DisplaySettingsWidget::loadSettings(const Settings &settings)
    mUi.checkBoxMaintainAspectRatio->setChecked(settings.display.maintainAspectRatio);
    mUi.lineEditSplitSeparation->setText(QString("%1").arg(settings.display.splitSeperation, 0, 'g', 2));
    mUi.lineEditBackgroundColour->setColour(settings.display.backgroundColour);
+   mUi.lineEditGamePaths->setText(settings.display.gamePath);
 }
 
 void
@@ -38,4 +40,14 @@ DisplaySettingsWidget::saveSettings(Settings &settings)
    settings.display.maintainAspectRatio = mUi.checkBoxMaintainAspectRatio->isChecked();
    settings.display.splitSeperation = mUi.lineEditSplitSeparation->text().toDouble();
    settings.display.backgroundColour = mUi.lineEditBackgroundColour->getColour();
+   settings.display.gamePath = mUi.lineEditGamePaths->text();
+}
+
+void
+DisplaySettingsWidget::browseGamePath()
+{
+   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditGamePaths->text());
+   if (!path.isEmpty()) {
+      mUi.lineEditGamePaths->setText(path);
+   }
 }

@@ -13,6 +13,9 @@ public:
    void loadSettings(const Settings &settings) override;
    void saveSettings(Settings &settings) override;
 
+private slots:
+   void browseGamePath();
+
 private:
    Ui::DisplaySettingsWidget mUi;
 };

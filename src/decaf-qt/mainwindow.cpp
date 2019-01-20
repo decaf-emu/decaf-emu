@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "aboutdialog.h"
 #include "vulkanwindow.h"
+#include "gamelist.h"
 #include "softwarekeyboarddriver.h"
 #include "settingsdialog/settingsdialog.h"
 
@@ -28,14 +29,22 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    // Setup UI
    mUi.setupUi(this);
 
+   mGameList = new GameList(this, settingsStorage);
+   mGameList->refreshGameDirectory();
+   mGameList->hide();
+   mUi.horizontalLayout->addWidget(mGameList);
+   
    mVulkanWindow = new VulkanWindow { vulkanInstance, settingsStorage, decafInterface, inputDriver };
-   auto wrapper = QWidget::createWindowContainer(static_cast<QWindow *>(mVulkanWindow));
-   wrapper->setFocusPolicy(Qt::StrongFocus);
-   wrapper->setFocus();
-   setCentralWidget(QWidget::createWindowContainer(mVulkanWindow));
+   mRenderWindow = QWidget::createWindowContainer(static_cast<QWindow *>(mVulkanWindow));
+   mRenderWindow->setFocusPolicy(Qt::StrongFocus);
+   mRenderWindow->setFocus();
+   mUi.horizontalLayout->addWidget(mRenderWindow);
 
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
+
+   connect(mGameList, &GameList::gameChosen, 
+           this, &MainWindow::openGame);
 
    // Setup status bar
    mStatusTimer = new QTimer(this);
@@ -74,6 +83,18 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    updateRecentFileActions();
 }
 
+void 
+MainWindow::showGameList()
+{
+   mGameList->show();
+}
+
+void 
+MainWindow::openGame(QString gamePath) {
+   if (!gamePath.isEmpty()) {
+      loadFile(gamePath);
+   }
+}
 void
 MainWindow::softwareKeyboardOpen(QString defaultText)
 {
@@ -128,6 +149,8 @@ bool
 MainWindow::loadFile(QString path)
 {
    // You only get one chance to run a game out here buddy.
+   setCentralWidget(mRenderWindow);
+
    mUi.actionOpen->setDisabled(true);
    for (auto i = 0u; i < mRecentFileActions.size(); ++i) {
       mRecentFileActions[i]->setDisabled(true);

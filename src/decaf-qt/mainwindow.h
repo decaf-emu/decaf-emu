@@ -9,6 +9,7 @@ class SettingsStorage;
 class SoftwareKeyboardDriver;
 class VulkanWindow;
 class InputDriver;
+class GameList;
 
 class QAction;
 class QInputDialog;
@@ -29,8 +30,11 @@ public:
                        InputDriver *inputDriver,
                        QWidget* parent = nullptr);
 
+   void showGameList();
+
 private slots:
    void openFile();
+   void openGame(QString game);
    void exit();
 
    void setViewModeGamepad1();
@@ -72,6 +76,10 @@ private:
    QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
 
    Ui::MainWindow mUi;
+
+   GameList *mGameList;
+   QWidget *mRenderWindow;
+
    QTimer *mStatusTimer;
    QLabel *mStatusFrameRate;
    QLabel *mStatusFrameTime;

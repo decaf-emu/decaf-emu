@@ -23,6 +23,22 @@
    <iconset resource="../resources.qrc">
     <normaloff>:/images/icon</normaloff>:/images/icon</iconset>
   </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+   </layout>
+  </widget>  
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
