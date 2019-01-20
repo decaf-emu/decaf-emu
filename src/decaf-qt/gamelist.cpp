@@ -86,7 +86,7 @@ GameList::GameList(QMainWindow* parent,
    connect(mWatcher, &QFileSystemWatcher::directoryChanged, this, &GameList::refreshGameDirectory);
 
    // We must register all custom types with the Qt Automoc system so that we are able to use it
-   // with signals/slots. In this case, QList falls under the umbrells of custom types.
+   // with signals/slots. In this case, QList falls under the umbrellas of custom types.
    qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
 
    mLayout->setContentsMargins(0, 0, 0, 0);
@@ -137,7 +137,7 @@ GameList::validateEntry(const QModelIndex& item)
       return;
    }
 
-   // Users usually want to run a diffrent game after closing one
+   // Users usually want to run a different game after closing one
    emit gameChosen(filePath);
 }
 
