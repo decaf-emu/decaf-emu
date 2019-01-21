@@ -37,6 +37,8 @@ private slots:
    void setViewModeSplit();
    void setViewModeTV();
 
+   void toggleFullscreen();
+
    void openSettings();
    void openDebugSettings();
    void openInputSettings();

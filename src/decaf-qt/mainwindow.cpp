@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QSettings>
+#include <QShortCut>
 #include <QTimer>
 
 #include <libdecaf/decaf.h>
@@ -49,6 +50,9 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
            this, &MainWindow::settingsChanged);
    settingsChanged();
 
+   QShortcut *shortcut = new QShortcut(QKeySequence("F11"), this);
+   connect(shortcut, &QShortcut::activated,
+           this, &MainWindow::toggleFullscreen);
    connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::open,
            this, &MainWindow::softwareKeyboardOpen);
    connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::close,
@@ -222,6 +226,20 @@ MainWindow::setViewModeGamepad1()
    auto settings = *mSettingsStorage->get();
    settings.display.viewMode = DisplaySettings::Gamepad1;
    mSettingsStorage->set(settings);
+}
+
+void
+MainWindow::toggleFullscreen()
+{
+   if (mUi.menuBar->isVisible()) {
+      mUi.menuBar->hide();
+      mUi.statusBar->hide();
+      showFullScreen();
+   } else {
+      mUi.menuBar->show();
+      mUi.statusBar->show();
+      showNormal();
+   }
 }
 
 void

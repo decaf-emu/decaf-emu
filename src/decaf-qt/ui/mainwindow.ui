@@ -61,7 +61,9 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="actionViewSplit"/>
+     <addaction name="actionViewFullScreen"/>
+     <addaction name="separator"/>
+     <addaction name="actionViewSplit"/>
     <addaction name="actionViewTV"/>
     <addaction name="actionViewGamepad1"/>
     <addaction name="actionViewGamepad2"/>
@@ -113,7 +115,12 @@
    </property>
   </action>
   <actiongroup name="viewActionGroup">
-   <action name="actionViewSplit">
+    <action name="actionViewFullScreen">
+      <property name="text">
+        <string>Full Screen</string>
+      </property>
+    </action>
+    <action name="actionViewSplit">
     <property name="checkable">
      <bool>true</bool>
     </property>
@@ -240,7 +247,23 @@
     </hint>
    </hints>
   </connection>
-  <connection>
+   <connection>
+     <sender>actionViewFullScreen</sender>
+     <signal>triggered()</signal>
+     <receiver>MainWindow</receiver>
+     <slot>toggleFullscreen()</slot>
+     <hints>
+       <hint type="sourcelabel">
+         <x>-1</x>
+         <y>-1</y>
+       </hint>
+       <hint type="destinationlabel">
+         <x>337</x>
+         <y>232</y>
+       </hint>
+     </hints>
+   </connection>
+   <connection>
    <sender>actionViewSplit</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
