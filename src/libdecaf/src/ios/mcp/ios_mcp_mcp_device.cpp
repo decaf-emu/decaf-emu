@@ -14,6 +14,8 @@
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
+#include "vfs/vfs_host_device.h"
+#include "vfs/vfs_virtual_device.h"
 
 namespace ios::mcp::internal
 {
@@ -214,7 +216,7 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
 {
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto processId = static_cast<ProcessId>(ProcessId::COSKERNEL + request->cafeProcessId);
-   auto sdCardPermissions = 0u;
+   auto sdCardPermissions = vfs::NoPermissions;
 
    // Apply title permissions
    for (auto &permission : titleInfoBuffer->permissions) {
@@ -229,11 +231,11 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
       if (permission.group == ResourcePermissionGroup::FS ||
           permission.group == ResourcePermissionGroup::All) {
          if (permission.mask & FSResourcePermissions::SdCardRead) {
-            sdCardPermissions |= ::fs::Permissions::Read;
+            sdCardPermissions = sdCardPermissions | vfs::OtherRead;
          }
 
          if (permission.mask & FSResourcePermissions::SdCardWrite) {
-            sdCardPermissions |= ::fs::Permissions::Write;
+            sdCardPermissions = sdCardPermissions | vfs::OtherWrite;
          }
       }
    }
@@ -243,11 +245,11 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
                        titleInfoBuffer->groupId);
 
    // Mount sdcard if title has permissions
-   if (sdCardPermissions) {
+   if (sdCardPermissions != vfs::NoPermissions) {
       auto filesystem = ios::getFileSystem();
-      auto sdcardPath = ::fs::HostPath { decaf::config()->system.sdcard_path };
-      filesystem->mountHostFolder("/dev/sdcard01", sdcardPath,
-                                  static_cast<::fs::Permissions>(sdCardPermissions));
+      filesystem->mountDevice({}, "/dev/sdcard01",
+                              std::make_shared<vfs::HostDevice>(decaf::config()->system.sdcard_path));
+      filesystem->setPermissions({}, "/dev/sdcard01", sdCardPermissions);
    }
 
    std::memset(titleInfoBuffer.get(),

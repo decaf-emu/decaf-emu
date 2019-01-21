@@ -18,7 +18,7 @@ macro(bin2c OUT_PATH OUT_NAME IN_FILES)
         COMMAND ${CMAKE_COMMAND} ARGS ${BIN2C_CMDLINE}
         DEPENDS ${IN_FILES} ${BIN2C}
         COMMENT "Running bin2c for ${IN_FILES} with ${BIN2C_CMDLINE}"
-        PRE_BUILD VERBATIM)
+        VERBATIM)
 endmacro()
 
 include_directories(".")

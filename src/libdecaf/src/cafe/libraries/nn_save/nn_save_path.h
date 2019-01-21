@@ -1,8 +1,8 @@
 #pragma once
 #include "cafe/libraries/coreinit/coreinit_fs.h"
-#include "filesystem/filesystem_path.h"
 #include "nn/nn_result.h"
 #include "nn/act/nn_act_types.h"
+#include "vfs/vfs_path.h"
 
 #include <cstdint>
 #include <libcpu/be2_struct.h>
@@ -44,18 +44,18 @@ bool
 getPersistentId(nn::act::SlotNo slot,
                 uint32_t &outPersistentId);
 
-fs::Path
+vfs::Path
 getSaveDirectory(nn::act::SlotNo slot);
 
-fs::Path
+vfs::Path
 getSavePath(nn::act::SlotNo slot,
             std::string_view path);
 
-fs::Path
+vfs::Path
 getTitleSaveDirectory(uint64_t title,
                       nn::act::SlotNo slot);
 
-fs::Path
+vfs::Path
 getTitleSavePath(uint64_t title,
                  nn::act::SlotNo slot,
                  std::string_view path);

@@ -1,18 +1,14 @@
 #include "ios_fs_fsa_device.h"
 #include "ios/ios.h"
 
+#include "vfs/vfs_error.h"
+#include "vfs/vfs_filehandle.h"
+#include "vfs/vfs_virtual_device.h"
+
 #include <common/strutils.h>
 
 namespace ios::fs::internal
 {
-
-using FSError = ::fs::Error;
-using Path = ::fs::Path;
-using File = ::fs::File;
-using FileSystem = ::fs::FileSystem;
-using FileHandle = ::fs::FileHandle;
-using FolderEntry = ::fs::FolderEntry;
-using FolderHandle = ::fs::FolderHandle;
 
 FSADevice::FSADevice() :
    mFS(ios::getFileSystem())
@@ -20,81 +16,98 @@ FSADevice::FSADevice() :
 }
 
 FSAStatus
-FSADevice::translateError(FSError error) const
+FSADevice::translateError(vfs::Error error) const
 {
    switch (error) {
-   case FSError::OK:
+   case vfs::Error::Success:
       return FSAStatus::OK;
-   case FSError::UnsupportedOperation:
-      return FSAStatus::UnsupportedCmd;
-   case FSError::NotFound:
-      return FSAStatus::NotFound;
-   case FSError::AlreadyExists:
+   case vfs::Error::EndOfDirectory:
+      return FSAStatus::EndOfDir;
+   case vfs::Error::EndOfFile:
+      return FSAStatus::EndOfFile;
+   case vfs::Error::AlreadyExists:
       return FSAStatus::AlreadyExists;
-   case FSError::InvalidPermission:
-      return FSAStatus::PermissionError;
-   case FSError::NotFile:
-      return FSAStatus::NotFile;
-   case FSError::NotDirectory:
+   case vfs::Error::InvalidPath:
+      return FSAStatus::InvalidPath;
+   case vfs::Error::InvalidSeekDirection:
+   case vfs::Error::InvalidSeekPosition:
+   case vfs::Error::InvalidTruncatePosition:
+      return FSAStatus::InvalidParam;
+   case vfs::Error::NotDirectory:
       return FSAStatus::NotDir;
-   default:
+   case vfs::Error::NotFile:
+      return FSAStatus::NotFile;
+   case vfs::Error::NotFound:
+      return FSAStatus::NotFound;
+   case vfs::Error::NotOpen:
+      return FSAStatus::InvalidFileHandle;
+   case vfs::Error::OperationNotSupported:
       return FSAStatus::UnsupportedCmd;
+   case vfs::Error::ExecutePermission:
+   case vfs::Error::ReadOnly:
+   case vfs::Error::ReadPermission:
+   case vfs::Error::WritePermission:
+      return FSAStatus::PermissionError;
+   default:
+      return FSAStatus::MediaError;
    }
 }
 
 
-Path
+vfs::Path
 FSADevice::translatePath(phys_ptr<const char> path) const
 {
    if (path[0] == '/') {
       return { path.get() };
    } else {
-      return mWorkingPath.join(path.get());
+      return mWorkingPath / path.get();
    }
 }
 
 
-File::OpenMode
+vfs::FileHandle::Mode
 FSADevice::translateMode(phys_ptr<const char> mode) const
 {
    auto result = 0u;
 
    if (std::strchr(mode.get(), 'r')) {
-      result |= File::Read;
+      result |= vfs::FileHandle::Read;
    }
 
    if (std::strchr(mode.get(), 'w')) {
-      result |= File::Write;
+      result |= vfs::FileHandle::Write;
    }
 
    if (std::strchr(mode.get(), 'a')) {
-      result |= File::Append;
+      result |= vfs::FileHandle::Append;
    }
 
    if (std::strchr(mode.get(), '+')) {
-      result |= File::Update;
+      result |= vfs::FileHandle::Update;
    }
 
-   return static_cast<File::OpenMode>(result);
+   return static_cast<vfs::FileHandle::Mode>(result);
 }
 
 
 void
-FSADevice::translateStat(const FolderEntry &entry,
+FSADevice::translateStat(const vfs::Status &entry,
                          phys_ptr<FSAStat> stat) const
 {
    std::memset(stat.get(), 0, sizeof(FSAStat));
 
-   if (entry.type == FolderEntry::Folder) {
-      stat->flags = FSAStatFlags::Directory;
-   } else {
-      stat->flags = static_cast<FSAStatFlags>(0);
+   if (entry.flags == vfs::Status::IsDirectory) {
+      stat->flags |= FSAStatFlags::Directory;
    }
 
+   if (entry.flags == vfs::Status::HasSize) {
+      stat->size = static_cast<uint32_t>(entry.size);
+   }
+
+   // TODO: Fill out this.
    stat->permission = 0x660u;
    stat->owner = 0u;
    stat->group = 0u;
-   stat->size = static_cast<uint32_t>(entry.size);
    stat->entryId = 0u;
    stat->created = 0;
    stat->modified = 0;
@@ -102,20 +115,20 @@ FSADevice::translateStat(const FolderEntry &entry,
 
 
 int32_t
-FSADevice::mapHandle(FileHandle file)
+FSADevice::mapHandle(std::unique_ptr<vfs::FileHandle> file)
 {
    auto index = 0;
 
    for (index = 0; index < mHandles.size(); ++index) {
       if (mHandles[index].type == Handle::Unused) {
          mHandles[index].type = Handle::File;
-         mHandles[index].file = file;
+         mHandles[index].file = std::move(file);
          break;
       }
    }
 
    if (index == mHandles.size()) {
-      mHandles.push_back({ Handle::File, file, nullptr });
+      mHandles.emplace_back(std::move(file));
    }
 
    return index + 1;
@@ -123,20 +136,20 @@ FSADevice::mapHandle(FileHandle file)
 
 
 int32_t
-FSADevice::mapHandle(FolderHandle folder)
+FSADevice::mapHandle(vfs::DirectoryIterator folder)
 {
    auto index = 0;
 
    for (index = 0; index < mHandles.size(); ++index) {
       if (mHandles[index].type == Handle::Unused) {
-         mHandles[index].type = Handle::Folder;
-         mHandles[index].folder = folder;
+         mHandles[index].type = Handle::Directory;
+         mHandles[index].directory = std::move(folder);
          break;
       }
    }
 
    if (index == mHandles.size()) {
-      mHandles.push_back({ Handle::Folder, nullptr, folder });
+      mHandles.emplace_back(std::move(folder));
    }
 
    return index + 1;
@@ -144,39 +157,35 @@ FSADevice::mapHandle(FolderHandle folder)
 
 
 FSAStatus
-FSADevice::mapHandle(int32_t index,
-                     FileHandle &file)
+FSADevice::mapFileHandle(int32_t index,
+                         Handle *&handle)
 {
    if (index <= 0 || index > mHandles.size()) {
       return FSAStatus::InvalidFileHandle;
    }
 
-   auto &handle = mHandles[index - 1];
-
-   if (handle.type != Handle::File) {
+   if (mHandles[index - 1].type != Handle::File) {
       return FSAStatus::NotFile;
    }
 
-   file = handle.file;
+   handle = &mHandles[index - 1];
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::mapHandle(int32_t index,
-                     FolderHandle &folder)
+FSADevice::mapFolderHandle(int32_t index,
+                           Handle *&handle)
 {
    if (index <= 0 || index > mHandles.size()) {
       return FSAStatus::InvalidDirHandle;
    }
 
-   auto &handle = mHandles[index - 1];
-
-   if (handle.type != Handle::Folder) {
-      return FSAStatus::NotDir;
+   if (mHandles[index - 1].type != Handle::Directory) {
+      return FSAStatus::NotFile;
    }
 
-   folder = handle.folder;
+   handle = &mHandles[index - 1];
    return FSAStatus::OK;
 }
 
@@ -194,7 +203,6 @@ FSADevice::removeHandle(int32_t index,
    }
 
    auto &handle = mHandles[index - 1];
-
    if (handle.type != type) {
       if (type == Handle::File) {
          return FSAStatus::NotFile;
@@ -204,74 +212,63 @@ FSADevice::removeHandle(int32_t index,
    }
 
    handle.type = Handle::Unused;
-   handle.file = nullptr;
-   handle.folder = nullptr;
+   handle.file = {};
+   handle.directory = {};
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::changeDir(phys_ptr<FSARequestChangeDir> request)
+FSADevice::changeDir(vfs::User user,
+                     phys_ptr<FSARequestChangeDir> request)
 {
-   mWorkingPath = translatePath(phys_addrof(request->path)).asDirectoryPath();
+   mWorkingPath = translatePath(phys_addrof(request->path));
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::closeDir(phys_ptr<FSARequestCloseDir> request)
+FSADevice::closeDir(vfs::User user,
+                    phys_ptr<FSARequestCloseDir> request)
 {
-   auto dir = FolderHandle {};
-   auto error = mapHandle(request->handle, dir);
-
-   if (error < 0) {
-      return error;
-   }
-
-   dir->close();
-   return removeHandle(request->handle, Handle::Folder);
+   return removeHandle(request->handle, Handle::Directory);
 }
 
 
 FSAStatus
-FSADevice::closeFile(phys_ptr<FSARequestCloseFile> request)
+FSADevice::closeFile(vfs::User user,
+                     phys_ptr<FSARequestCloseFile> request)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
-   if (error < 0) {
-      return error;
-   }
-
-   file->close();
    return removeHandle(request->handle, Handle::File);
 }
 
 
 FSAStatus
-FSADevice::flushFile(phys_ptr<FSARequestFlushFile> request)
+FSADevice::flushFile(vfs::User user,
+                     phys_ptr<FSARequestFlushFile> request)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   file->flush();
+   handle->file->flush();
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::flushQuota(phys_ptr<FSARequestFlushQuota> request)
+FSADevice::flushQuota(vfs::User user,
+                      phys_ptr<FSARequestFlushQuota> request)
 {
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::getCwd(phys_ptr<FSAResponseGetCwd> response)
+FSADevice::getCwd(vfs::User user,
+                  phys_ptr<FSAResponseGetCwd> response)
 {
    string_copy(phys_addrof(response->path).get(),
                mWorkingPath.path().c_str(),
@@ -282,7 +279,8 @@ FSADevice::getCwd(phys_ptr<FSAResponseGetCwd> response)
 
 
 FSAStatus
-FSADevice::getInfoByQuery(phys_ptr<FSARequestGetInfoByQuery> request,
+FSADevice::getInfoByQuery(vfs::User user,
+                          phys_ptr<FSARequestGetInfoByQuery> request,
                           phys_ptr<FSAResponseGetInfoByQuery> response)
 {
    auto path = translatePath(phys_addrof(request->path));
@@ -295,13 +293,12 @@ FSADevice::getInfoByQuery(phys_ptr<FSARequestGetInfoByQuery> request,
    }
    case FSAQueryInfoType::Stat:
    {
-      auto result = mFS->findEntry(path);
-
+      auto result = mFS->status(user, path);
       if (!result) {
-         return translateError(result);
+         return translateError(result.error());
       }
 
-      translateStat(result.value(), phys_addrof(response->stat));
+      translateStat(*result, phys_addrof(response->stat));
       break;
    }
    default:
@@ -313,32 +310,42 @@ FSADevice::getInfoByQuery(phys_ptr<FSARequestGetInfoByQuery> request,
 
 
 FSAStatus
-FSADevice::getPosFile(phys_ptr<FSARequestGetPosFile> request,
+FSADevice::getPosFile(vfs::User user,
+                      phys_ptr<FSARequestGetPosFile> request,
                       phys_ptr<FSAResponseGetPosFile> response)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   response->pos = static_cast<uint32_t>(file->tell());
+   auto result = handle->file->tell();
+   if (!result) {
+      return translateError(result.error());
+   }
+
+   response->pos = static_cast<uint32_t>(*result);
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::isEof(phys_ptr<FSARequestIsEof> request)
+FSADevice::isEof(vfs::User user,
+                 phys_ptr<FSARequestIsEof> request)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   if (file->eof()) {
+   auto result = handle->file->eof();
+   if (!result) {
+      return translateError(result.error());
+   }
+
+   if (*result) {
       error = FSAStatus::EndOfFile;
    } else {
       error = FSAStatus::OK;
@@ -349,12 +356,13 @@ FSADevice::isEof(phys_ptr<FSARequestIsEof> request)
 
 
 FSAStatus
-FSADevice::makeDir(phys_ptr<FSARequestMakeDir> request)
+FSADevice::makeDir(vfs::User user,
+                   phys_ptr<FSARequestMakeDir> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-
-   if (!mFS->makeFolder(path)) {
-      return FSAStatus::PermissionError;
+   auto error = mFS->makeFolder(user, path);
+   if (error != vfs::Error::Success) {
+      return translateError(error);
    }
 
    return FSAStatus::OK;
@@ -362,12 +370,13 @@ FSADevice::makeDir(phys_ptr<FSARequestMakeDir> request)
 
 
 FSAStatus
-FSADevice::makeQuota(phys_ptr<FSARequestMakeQuota> request)
+FSADevice::makeQuota(vfs::User user,
+                     phys_ptr<FSARequestMakeQuota> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-
-   if (!mFS->makeFolder(path)) {
-      return FSAStatus::PermissionError;
+   auto error = mFS->makeFolder(user, path);
+   if (error != vfs::Error::Success) {
+      return translateError(error);
    }
 
    return FSAStatus::OK;
@@ -375,171 +384,184 @@ FSADevice::makeQuota(phys_ptr<FSARequestMakeQuota> request)
 
 
 FSAStatus
-FSADevice::mount(phys_ptr<FSARequestMount> request)
+FSADevice::mount(vfs::User user,
+                 phys_ptr<FSARequestMount> request)
 {
-   auto devicePath = translatePath(phys_addrof(request->path));
-   auto targetPath = translatePath(phys_addrof(request->target));
+   auto linkDevice = mFS->getLinkDevice(user, translatePath(phys_addrof(request->path)));
+   if (!linkDevice) {
+      return translateError(linkDevice.error());
+   }
 
-   // Device is already mounted as a filesystem node, so we just make a link to it
-   auto result = mFS->makeLink(targetPath, devicePath);
+   auto error = mFS->mountDevice(user,
+                                 translatePath(phys_addrof(request->target)),
+                                 std::static_pointer_cast<vfs::Device>(*linkDevice));
+   if (error != vfs::Error::Success) {
+      return translateError(error);
+   }
 
-   return translateError(result);
+   return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::mountWithProcess(phys_ptr<FSARequestMountWithProcess> request)
+FSADevice::mountWithProcess(vfs::User user,
+                            phys_ptr<FSARequestMountWithProcess> request)
 {
-   auto devicePath = translatePath(phys_addrof(request->path));
-   auto targetPath = translatePath(phys_addrof(request->target));
+   auto linkDevice = mFS->getLinkDevice(user, translatePath(phys_addrof(request->path)));
+   if (!linkDevice) {
+      return translateError(linkDevice.error());
+   }
 
-   // Device is already mounted as a filesystem node, so we just make a link to it
-   auto result = mFS->makeLink(targetPath, devicePath);
+   auto error = mFS->mountDevice(user,
+                                 translatePath(phys_addrof(request->target)),
+                                 std::static_pointer_cast<vfs::Device>(*linkDevice));
+   if (error != vfs::Error::Success) {
+      return translateError(error);
+   }
 
-   return translateError(result);
+   return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::openDir(phys_ptr<FSARequestOpenDir> request,
+FSADevice::openDir(vfs::User user,
+                   phys_ptr<FSARequestOpenDir> request,
                    phys_ptr<FSAResponseOpenDir> response)
 {
    auto path = translatePath(phys_addrof(request->path));
-   auto result = mFS->openFolder(path);
-
+   auto result = mFS->openDirectory(user, path);
    if (!result) {
-      return translateError(result);
+      return translateError(result.error());
    }
 
-   response->handle = mapHandle(result);
+   response->handle = mapHandle(*result);
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::openFile(phys_ptr<FSARequestOpenFile> request,
+FSADevice::openFile(vfs::User user,
+                    phys_ptr<FSARequestOpenFile> request,
                     phys_ptr<FSAResponseOpenFile> response)
 {
    auto path = translatePath(phys_addrof(request->path));
    auto mode = translateMode(phys_addrof(request->mode));
-   auto result = mFS->openFile(path, mode);
-
+   auto result = mFS->openFile(user, path, mode);
    if (!result) {
-      return translateError(result);
+      return translateError(result.error());
    }
 
-   response->handle = mapHandle(result);
+   response->handle = mapHandle(std::move(*result));
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::readDir(phys_ptr<FSARequestReadDir> request,
+FSADevice::readDir(vfs::User user,
+                   phys_ptr<FSARequestReadDir> request,
                    phys_ptr<FSAResponseReadDir> response)
 {
-   auto entry = FolderEntry {};
-   auto folder = FolderHandle {};
-   auto error = mapHandle(request->handle, folder);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFolderHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   if (!folder->read(entry)) {
-      return FSAStatus::EndOfDir;
+   auto result = handle->directory.readEntry();
+   if (!result) {
+      return translateError(result.error());
    }
 
-   translateStat(entry, phys_addrof(response->entry.stat));
+   translateStat(*result, phys_addrof(response->entry.stat));
    string_copy(phys_addrof(response->entry.name).get(),
                response->entry.name.size(),
-               entry.name.c_str(),
-               entry.name.size());
+               result->name.c_str(),
+               result->name.size());
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::readFile(phys_ptr<FSARequestReadFile> request,
+FSADevice::readFile(vfs::User user,
+                    phys_ptr<FSARequestReadFile> request,
                     phys_ptr<uint8_t> buffer,
                     uint32_t bufferLen)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
    if (request->readFlags & FSAReadFlag::ReadWithPos) {
-      file->seek(request->pos);
+      handle->file->seek(vfs::FileHandle::SeekStart, request->pos);
    }
 
-   auto elemsRead = file->read(buffer.get(), request->size, request->count);
-   auto bytesRead = elemsRead * request->size;
+   auto result = handle->file->read(buffer.get(), request->size, request->count);
+   if (!result) {
+      return translateError(result.error());
+   }
+
+   auto bytesRead = (*result) * request->size;
    return static_cast<FSAStatus>(bytesRead);
 }
 
 
 FSAStatus
-FSADevice::remove(phys_ptr<FSARequestRemove> request)
+FSADevice::remove(vfs::User user,
+                  phys_ptr<FSARequestRemove> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   return translateError(mFS->remove(path));
+   return translateError(mFS->remove(user, path));
 }
 
 
 FSAStatus
-FSADevice::rename(phys_ptr<FSARequestRename> request)
+FSADevice::rename(vfs::User user,
+                  phys_ptr<FSARequestRename> request)
 {
    auto src = translatePath(phys_addrof(request->oldPath));
    auto dst = translatePath(phys_addrof(request->newPath));
-   auto result = mFS->move(src, dst);
-
-   if (!result) {
-      return translateError(result);
-   }
-
-   return FSAStatus::OK;
+   return translateError(mFS->rename(user, src, dst));
 }
 
 
 FSAStatus
-FSADevice::rewindDir(phys_ptr<FSARequestRewindDir> request)
+FSADevice::rewindDir(vfs::User user,
+                     phys_ptr<FSARequestRewindDir> request)
 {
-   auto folder = FolderHandle {};
-   auto error = mapHandle(request->handle, folder);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFolderHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   folder->rewind();
-   return FSAStatus::OK;
+   return translateError(handle->directory.rewind());
 }
 
 
 FSAStatus
-FSADevice::setPosFile(phys_ptr<FSARequestSetPosFile> request)
+FSADevice::setPosFile(vfs::User user,
+                      phys_ptr<FSARequestSetPosFile> request)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   file->seek(request->pos);
+   handle->file->seek(vfs::FileHandle::SeekStart, request->pos);
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::statFile(phys_ptr<FSARequestStatFile> request,
+FSADevice::statFile(vfs::User user,
+                    phys_ptr<FSARequestStatFile> request,
                     phys_ptr<FSAResponseStatFile> response)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
@@ -549,65 +571,78 @@ FSADevice::statFile(phys_ptr<FSARequestStatFile> request,
    response->stat.permission = 0x660u;
    response->stat.owner = 0u;
    response->stat.group = 0u;
-   response->stat.size = static_cast<uint32_t>(file->size());
    response->stat.entryId = 0u;
    response->stat.created = 0;
    response->stat.modified = 0;
+
+   auto result = handle->file->size();
+   if (result) {
+      response->stat.size = static_cast<uint32_t>(*result);
+   }
+
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::truncateFile(phys_ptr<FSARequestTruncateFile> request)
+FSADevice::truncateFile(vfs::User user,
+                        phys_ptr<FSARequestTruncateFile> request)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
-   file->truncate();
+   auto result = handle->file->truncate();
+   if (!result) {
+      return translateError(result.error());
+   }
+
    return FSAStatus::OK;
 }
 
 
 FSAStatus
-FSADevice::unmount(phys_ptr<FSARequestUnmount> request)
+FSADevice::unmount(vfs::User user,
+                   phys_ptr<FSARequestUnmount> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   auto result = mFS->remove(path);
-   return translateError(result);
+   return translateError(mFS->remove(user, path));
 }
 
 
 FSAStatus
-FSADevice::unmountWithProcess(phys_ptr<FSARequestUnmountWithProcess> request)
+FSADevice::unmountWithProcess(vfs::User user,
+                              phys_ptr<FSARequestUnmountWithProcess> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   auto result = mFS->remove(path);
-   return translateError(result);
+   return translateError(mFS->remove(user, path));
 }
 
 
 FSAStatus
-FSADevice::writeFile(phys_ptr<FSARequestWriteFile> request,
+FSADevice::writeFile(vfs::User user,
+                     phys_ptr<FSARequestWriteFile> request,
                      phys_ptr<const uint8_t> buffer,
                      uint32_t bufferLen)
 {
-   auto file = FileHandle {};
-   auto error = mapHandle(request->handle, file);
-
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
       return error;
    }
 
    if (request->writeFlags & FSAWriteFlag::WriteWithPos) {
-      file->seek(request->pos);
+      handle->file->seek(vfs::FileHandle::SeekStart, request->pos);
    }
 
-   auto elemsWritten = file->write(buffer.get(), request->size, request->count);
-   auto bytesWritten = elemsWritten * request->size;
+   auto result = handle->file->write(buffer.get(), request->size, request->count);
+   if (!result) {
+      return translateError(result.error());
+   }
+
+   auto bytesWritten = (*result) * request->size;
    return static_cast<FSAStatus>(bytesWritten);
 }
 

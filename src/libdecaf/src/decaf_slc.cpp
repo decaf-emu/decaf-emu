@@ -1,12 +1,12 @@
 #include "decaf_config.h"
 #include "decaf_slc.h"
 
-#include "filesystem/filesystem_host_path.h"
 #include "ios/auxil/ios_auxil_enum.h"
 
 #include <common/decaf_assert.h>
 #include <common/platform_dir.h>
 #include <common/strutils.h>
+#include <filesystem>
 #include <fmt/format.h>
 #include <pugixml.hpp>
 #include <vector>
@@ -175,12 +175,12 @@ writeDefaultConfig(pugi::xml_node &doc,
 }
 
 static void
-writeDefaultConfig(const fs::HostPath &path,
+writeDefaultConfig(const std::filesystem::path &path,
                    const InitialiseUCSysConfig *first,
                    const InitialiseUCSysConfig *last,
                    int formatArg = 0)
 {
-   if (platform::fileExists(path.path())) {
+   if (std::filesystem::exists(path)) {
       return;
    }
 
@@ -191,7 +191,7 @@ writeDefaultConfig(const fs::HostPath &path,
 
    writeDefaultConfig(doc, first, last, formatArg);
 
-   doc.save_file(path.path().c_str(),
+   doc.save_file(path.string().c_str(),
                  "  ", 1,
                  pugi::encoding_utf8);
 }
@@ -237,32 +237,31 @@ void
 initialiseSlc(std::string_view path)
 {
    // Ensure slc/proc/prefs exists
-   auto prefsPath = fs::HostPath { path }.join("proc").join("prefs");
-   platform::createDirectory(prefsPath.path());
+   auto prefsPath = std::filesystem::path { path } / "proc" / "prefs";
+   std::filesystem::create_directories(prefsPath);
 
    // Apply decaf region config to XML settings before we write them
    applyRegionSettings();
 
    // Write some default config settings if they don't already exist
-   writeDefaultConfig(prefsPath.join("cafe.xml"),
+   writeDefaultConfig(prefsPath / "cafe.xml",
                       std::begin(DefaultCafe),
                       std::end(DefaultCafe));
 
-   writeDefaultConfig(prefsPath.join("caffeine.xml"),
+   writeDefaultConfig(prefsPath / "caffeine.xml",
                       std::begin(DefaultCaffeine),
                       std::end(DefaultCaffeine));
 
-   writeDefaultConfig(prefsPath.join("parent.xml"),
+   writeDefaultConfig(prefsPath / "parent.xml",
                       std::begin(DefaultParent),
                       std::end(DefaultParent));
 
-   writeDefaultConfig(prefsPath.join("spotpass.xml"),
+   writeDefaultConfig(prefsPath / "spotpass.xml",
                       std::begin(DefaultSpotpass),
                       std::end(DefaultSpotpass));
 
    for (auto i = 1; i <= 12; ++i) {
-      auto name = fmt::format("p_acct{}.xml", i);
-      writeDefaultConfig(prefsPath.join(name),
+      writeDefaultConfig(prefsPath / fmt::format("p_acct{}.xml", i),
                          std::begin(DefaultParentalAccount),
                          std::end(DefaultParentalAccount),
                          i);

@@ -129,6 +129,7 @@ else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -stdlib=libc++ -D_DARWIN_C_SOURCE")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+        link_libraries(stdc++fs)
     endif()
 endif()
 

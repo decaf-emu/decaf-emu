@@ -121,54 +121,59 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       return;
    }
 
+   auto user = vfs::User { };
+   user.id = static_cast<vfs::OwnerId>(resourceRequest->requestData.titleId & 0xFFFFFFFF);
+   user.group = static_cast<vfs::GroupId>(resourceRequest->requestData.groupId);
+
    switch (command) {
    case FSACommand::ChangeDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->changeDir(phys_addrof(request->changeDir)));
+               device->changeDir(user, phys_addrof(request->changeDir)));
          });
       break;
    case FSACommand::CloseDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->closeDir(phys_addrof(request->closeDir)));
+               device->closeDir(user, phys_addrof(request->closeDir)));
          });
       break;
    case FSACommand::CloseFile:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->closeFile(phys_addrof(request->closeFile)));
+               device->closeFile(user, phys_addrof(request->closeFile)));
          });
       break;
    case FSACommand::FlushFile:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->flushFile(phys_addrof(request->flushFile)));
+               device->flushFile(user, phys_addrof(request->flushFile)));
          });
       break;
    case FSACommand::FlushQuota:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->flushQuota(phys_addrof(request->flushQuota)));
+               device->flushQuota(user, phys_addrof(request->flushQuota)));
          });
       break;
    case FSACommand::GetCwd:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->getCwd(phys_addrof(response->getCwd)));
+               device->getCwd(user, phys_addrof(response->getCwd)));
          });
       break;
    case FSACommand::GetInfoByQuery:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->getInfoByQuery(phys_addrof(request->getInfoByQuery),
+               device->getInfoByQuery(user,
+                                      phys_addrof(request->getInfoByQuery),
                                       phys_addrof(response->getInfoByQuery)));
          });
       break;
@@ -176,7 +181,8 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->getPosFile(phys_addrof(request->getPosFile),
+               device->getPosFile(user,
+                                  phys_addrof(request->getPosFile),
                                   phys_addrof(response->getPosFile)));
          });
       break;
@@ -184,28 +190,29 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->isEof(phys_addrof(request->isEof)));
+               device->isEof(user, phys_addrof(request->isEof)));
          });
       break;
    case FSACommand::MakeDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->makeDir(phys_addrof(request->makeDir)));
+               device->makeDir(user, phys_addrof(request->makeDir)));
          });
       break;
    case FSACommand::MakeQuota:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->makeQuota(phys_addrof(request->makeQuota)));
+               device->makeQuota(user, phys_addrof(request->makeQuota)));
          });
       break;
    case FSACommand::OpenDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->openDir(phys_addrof(request->openDir),
+               device->openDir(user,
+                               phys_addrof(request->openDir),
                                phys_addrof(response->openDir)));
          });
       break;
@@ -213,7 +220,8 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->openFile(phys_addrof(request->openFile),
+               device->openFile(user,
+                                phys_addrof(request->openFile),
                                 phys_addrof(response->openFile)));
          });
       break;
@@ -221,7 +229,8 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->readDir(phys_addrof(request->readDir),
+               device->readDir(user,
+                               phys_addrof(request->readDir),
                                phys_addrof(response->readDir)));
          });
       break;
@@ -229,35 +238,36 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->remove(phys_addrof(request->remove)));
+               device->remove(user, phys_addrof(request->remove)));
          });
       break;
    case FSACommand::Rename:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->rename(phys_addrof(request->rename)));
+               device->rename(user, phys_addrof(request->rename)));
          });
       break;
    case FSACommand::RewindDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->rewindDir(phys_addrof(request->rewindDir)));
+               device->rewindDir(user, phys_addrof(request->rewindDir)));
          });
       break;
    case FSACommand::SetPosFile:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->setPosFile(phys_addrof(request->setPosFile)));
+               device->setPosFile(user, phys_addrof(request->setPosFile)));
          });
       break;
    case FSACommand::StatFile:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->statFile(phys_addrof(request->statFile),
+               device->statFile(user,
+                                phys_addrof(request->statFile),
                                 phys_addrof(response->statFile)));
          });
       break;
@@ -265,21 +275,22 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->truncateFile(phys_addrof(request->truncateFile)));
+               device->truncateFile(user, phys_addrof(request->truncateFile)));
          });
       break;
    case FSACommand::Unmount:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->unmount(phys_addrof(request->unmount)));
+               device->unmount(user, phys_addrof(request->unmount)));
          });
       break;
    case FSACommand::UnmountWithProcess:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->unmountWithProcess(phys_addrof(request->unmountWithProcess)));
+               device->unmountWithProcess(user,
+                                          phys_addrof(request->unmountWithProcess)));
          });
       break;
    default:
@@ -308,6 +319,10 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
       return;
    }
 
+   auto user = vfs::User{ };
+   user.id = static_cast<vfs::OwnerId>(resourceRequest->requestData.titleId & 0xFFFFFFFF);
+   user.group = static_cast<vfs::GroupId>(resourceRequest->requestData.groupId);
+
    switch (command) {
    case FSACommand::ReadFile:
    {
@@ -318,7 +333,7 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
 
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->readFile(phys_addrof(request->readFile),
+               device->readFile(user, phys_addrof(request->readFile),
                                 buffer, length));
          });
       break;
@@ -333,7 +348,7 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
 
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->writeFile(phys_addrof(request->writeFile),
+               device->writeFile(user, phys_addrof(request->writeFile),
                                  buffer, length));
          });
       break;
@@ -345,7 +360,7 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
          {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->mount(phys_addrof(request->mount)));
+               device->mount(user, phys_addrof(request->mount)));
          });
       break;
    }
@@ -356,7 +371,7 @@ fsaDeviceIoctlv(phys_ptr<ResourceRequest> resourceRequest,
          {
             fsaAsyncTaskComplete(
                resourceRequest,
-               device->mountWithProcess(phys_addrof(request->mountWithProcess)));
+               device->mountWithProcess(user, phys_addrof(request->mountWithProcess)));
          });
       break;
    }

@@ -200,7 +200,7 @@ getPersistentId(SlotNo slot,
    return false;
 }
 
-fs::Path
+vfs::Path
 getSaveDirectory(SlotNo slot)
 {
    auto persistentId = uint32_t { 0 };
@@ -213,14 +213,14 @@ getSaveDirectory(SlotNo slot)
    }
 }
 
-fs::Path
+vfs::Path
 getSavePath(SlotNo slot,
             std::string_view path)
 {
-   return getSaveDirectory(slot).join(path);
+   return getSaveDirectory(slot) / path;
 }
 
-fs::Path
+vfs::Path
 getTitleSaveDirectory(uint64_t title,
                       SlotNo slot)
 {
@@ -238,12 +238,12 @@ getTitleSaveDirectory(uint64_t title,
    }
 }
 
-fs::Path
+vfs::Path
 getTitleSavePath(uint64_t title,
                  nn_act::SlotNo slot,
                  std::string_view path)
 {
-   return getTitleSaveDirectory(title, slot).join(path);
+   return getTitleSaveDirectory(title, slot) / path;
 }
 
 } // namespace internal

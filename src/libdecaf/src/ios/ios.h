@@ -1,5 +1,10 @@
 #pragma once
-#include "filesystem/filesystem.h"
+#include <memory>
+
+namespace vfs
+{
+class VirtualDevice;
+}
 
 namespace ios
 {
@@ -11,9 +16,9 @@ void
 join();
 
 void
-setFileSystem(std::unique_ptr<::fs::FileSystem> fs);
+setFileSystem(std::shared_ptr<vfs::VirtualDevice> fs);
 
-::fs::FileSystem *
+std::shared_ptr<vfs::VirtualDevice>
 getFileSystem();
 
 } // namespace ios

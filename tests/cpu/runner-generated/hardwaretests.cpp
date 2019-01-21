@@ -6,13 +6,13 @@
 #include <common/floatutils.h>
 #include <common/log.h>
 #include <common/strutils.h>
+#include <filesystem>
 #include <fstream>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libcpu/espresso/espresso_registerformats.h>
-#include <libdecaf/src/filesystem/filesystem.h>
 
 using namespace espresso;
 
@@ -148,25 +148,14 @@ int runTests(const std::string &path)
    bclr.bo = 0x1f;
    mem::write(baseAddress.getAddress() + 4, bclr.value);
 
-   fs::FileSystem filesystem;
-   fs::FolderEntry entry;
-   fs::HostPath base = path;
-   filesystem.mountHostFolder("/tests", base, fs::Permissions::Read);
-   auto fsResult = filesystem.openFolder("/tests");
-
-   if (!fsResult) {
-      return -1;
-   }
-
-   auto folder = fsResult.value();
-
-   while (folder->read(entry)) {
-      std::ifstream file(base.join(entry.name).path(), std::ifstream::in | std::ifstream::binary);
+   auto ec = std::error_code { };
+   for (auto itr = std::filesystem::directory_iterator { "/tests", ec }; itr != end(itr); ++itr) {
+      std::ifstream file(itr->path().string(), std::ifstream::in | std::ifstream::binary);
       cereal::BinaryInputArchive cerealInput(file);
       TestFile testFile;
 
       // Parse test file with cereal
-      testFile.name = entry.name;
+      testFile.name = itr->path().filename().string();
       cerealInput(testFile);
 
       // Run tests

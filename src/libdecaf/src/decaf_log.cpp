@@ -4,9 +4,9 @@
 
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
-#include "filesystem/filesystem_host_path.h"
 
 #include <common/log.h>
+#include <filesystem>
 #include <libcpu/cpu.h>
 #include <memory>
 #include <spdlog/async.h>
@@ -76,8 +76,8 @@ initialiseLogSinks(std::string_view filename)
                      time->tm_year + 1900, time->tm_mon, time->tm_mday,
                      time->tm_hour, time->tm_min, time->tm_sec);
 
-      auto path = fs::HostPath { decaf::config()->log.directory }.join(logFilename);
-      sLogSinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.path()));
+      auto path = std::filesystem::path { decaf::config()->log.directory } / logFilename;
+      sLogSinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.string()));
    }
 
    if (decaf::config()->log.async) {

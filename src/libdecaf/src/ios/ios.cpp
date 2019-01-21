@@ -1,15 +1,15 @@
 #include "ios.h"
 #include "ios_alarm_thread.h"
 #include "ios_worker_thread.h"
-#include "kernel/ios_kernel.h"
+#include "ios/kernel/ios_kernel.h"
+#include "vfs/vfs_virtual_device.h"
 
 #include <memory>
 
 namespace ios
 {
 
-static std::unique_ptr<::fs::FileSystem>
-sFileSystem;
+static std::shared_ptr<vfs::VirtualDevice> sFileSystem;
 
 void
 start()
@@ -28,15 +28,15 @@ join()
 }
 
 void
-setFileSystem(std::unique_ptr<::fs::FileSystem> fs)
+setFileSystem(std::shared_ptr<vfs::VirtualDevice> root)
 {
-   sFileSystem = std::move(fs);
+   sFileSystem = std::move(root);
 }
 
-::fs::FileSystem *
+std::shared_ptr<vfs::VirtualDevice>
 getFileSystem()
 {
-   return sFileSystem.get();
+   return sFileSystem;
 }
 
 } // namespace ios

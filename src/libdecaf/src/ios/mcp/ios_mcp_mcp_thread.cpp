@@ -441,8 +441,7 @@ mcpResume()
    fsaStatus = FSAMount(sData->fsaHandle, "/dev/ramdisk01", "/vol/system_ram", 0, nullptr, 0);
    if (fsaStatus < FSAStatus::OK) {
       gLog->error("Failed to mount /dev/ramdisk01 to /vol/system_ram");
-      // This is an expected failure for now
-      //return MCPError::Invalid;
+      return MCPError::Invalid;
    }
 
    auto securityLevel = IOS_GetSecurityLevel();

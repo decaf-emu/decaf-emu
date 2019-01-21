@@ -4,36 +4,41 @@ matrix:
   include:
     - os: linux
       sudo: required
-      dist: trusty
-    - os: osx
-      osx_image: xcode10.1
+      dist: xenial
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - CONAN_COMPILER=gcc
+        - CONAN_COMPILER_VERSION=8
+    - os: linux
+      sudo: required
+      dist: xenial
+      env:
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+        - CONAN_COMPILER=clang
+        - CONAN_COMPILER_VERSION=6.0
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - sourceline: 'ppa:cginternals/backports-ppa'
+      - sourceline: 'ppa:cginternals/ppa'
+      - sourceline: 'deb https://packages.lunarg.com/vulkan/1.1.97 xenial main'
+        key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
     packages:
-      - binutils-2.26
-      - g++-7
-      - gcc-7
+      - clang-6.0
+      - g++-8
+      - gcc-8
       - libasound2-dev
       - libcurl4-openssl-dev
+      - libjack-dev
+      - libpulse-dev
       - libglbinding-dbg
       - libglbinding-dev
       - libglu1-mesa-dev
-      - libjack-dev
-      - libpulse-dev
       - libssl-dev
-      - libva-dev
-      - libvdpau-dev
       - libx11-dev
-      - libxcb-icccm4-dev
-      - libxcb-keysyms1-dev
-      - libxcb1-dev
       - libxcursor-dev
-      - libxrandr-dev
-      - libxxf86vm-dev
+      - lunarg-vulkan-sdk
       - xorg-dev
 
 language: cpp
@@ -44,22 +49,18 @@ cache:
     - "$HOME/.local"
     - "$HOME/.conan"
 
+before_install:
+  - eval "${MATRIX_EVAL}"
+
 install:
-  - mkdir "$TRAVIS_BUILD_DIR/cbuild"
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir $HOME/vulkan; cd $HOME/vulkan; wget https://sdk.lunarg.com/sdk/download/1.1.92.1/linux/vulkansdk-linux-x86_64-1.1.92.1.tar.gz; tar zxf vulkansdk-linux-x86_64-1.1.92.1.tar.gz; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip install --user conan; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then conan user; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cd "$TRAVIS_BUILD_DIR/cbuild"; conan install .. --build=missing -o silent=True -o curl=False -o openssl=False; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update || true; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install curl openssl sdl2; fi
+  - mkdir "$TRAVIS_BUILD_DIR/build"
+  - pip install --user conan
+  - conan user
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
+  - cd "$TRAVIS_BUILD_DIR/build"; conan install .. --build=missing -s compiler=$CONAN_COMPILER -s compiler.version=$CONAN_COMPILER_VERSION -o silent=True -o curl=False -o openssl=False -o ffmpeg=False
 
 script:
-  - cd "$TRAVIS_BUILD_DIR/cbuild"
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=/usr/lib/binutils-2.26/bin:$PATH; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source ~/vulkan/1.1.92.1/setup-env.sh; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DDECAF_BUILD_TOOLS=ON -DCMAKE_BUILD_TYPE=Release ..; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_GL=OFF -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl ..; fi
+  - cd "$TRAVIS_BUILD_DIR/build"
+  - export PATH=/usr/lib/binutils-2.26/bin:$PATH
+  - cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DCMAKE_BUILD_TYPE=Release ..
   - make -j4

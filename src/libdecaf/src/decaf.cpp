@@ -11,7 +11,8 @@
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/swkbd/swkbd_keyboard.h"
 #include "debugger/debugger.h"
-#include "filesystem/filesystem.h"
+#include "vfs/vfs_host_device.h"
+#include "vfs/vfs_virtual_device.h"
 #include "input/input.h"
 #include "ios/ios.h"
 
@@ -21,6 +22,7 @@
 #include <common/platform_dir.h>
 #include <condition_variable>
 #include <curl/curl.h>
+#include <filesystem>
 #include <fmt/format.h>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
@@ -36,10 +38,8 @@ namespace decaf
 std::string
 makeConfigPath(const std::string &filename)
 {
-   return fs::HostPath { platform::getConfigDirectory() }
-      .join("decaf")
-      .join(filename)
-      .path();
+   auto configPath = std::filesystem::path { platform::getConfigDirectory() };
+   return (configPath / "decaf" / filename).string();
 }
 
 bool
@@ -93,84 +93,91 @@ initialise(const std::string &gamePath)
    debugger::initialise();
 
    // Setup filesystem
-   auto filesystem = std::make_unique<fs::FileSystem>();
+   auto filesystem = std::make_shared<vfs::VirtualDevice>("/");
+   auto user = vfs::User { 0, 0 };
 
    // Find a valid application to run
-   auto path = fs::HostPath { gamePath };
-   auto volPath = fs::HostPath { };
-   auto rpxPath = fs::HostPath { };
+   auto path = std::filesystem::path { gamePath };
+   auto volPath = std::filesystem::path { };
+   auto rpxPath = std::filesystem::path { };
 
-   if (platform::isDirectory(path.path())) {
-      if (platform::isFile(path.join("code").join("cos.xml").path())) {
+   if (std::filesystem::is_directory(path)) {
+      if (std::filesystem::is_regular_file(path / "code" / "cos.xml")) {
          // Found path/code/cos.xml
-         volPath = path.path();
-      } else if (platform::isFile(path.join("data").join("code").join("cos.xml").path())) {
+         volPath = path;
+      } else if (std::filesystem::is_regular_file(path / "data" / "code" / "cos.xml")) {
          // Found path/data/code/cos.xml
-         volPath = path.join("data").path();
+         volPath = path / "data";
       }
-   } else if (platform::isFile(path.path())) {
-      auto parent1 = fs::HostPath { path.parentPath() };
-      auto parent2 = fs::HostPath { parent1.parentPath() };
+   } else if (std::filesystem::is_regular_file(path)) {
+      auto parent1 = path.parent_path();
+      auto parent2 = parent1.parent_path();
 
-      if (platform::isFile(parent2.join("code").join("cos.xml").path())) {
+      if (std::filesystem::is_regular_file(parent2 / "code" / "cos.xml")) {
          // Found file/../code/cos.xml
-         volPath = parent2.path();
+         volPath = parent2;
       } else if (path.extension().compare("rpx") == 0) {
          // Found file.rpx
-         rpxPath = path.path();
+         rpxPath = path;
       }
    }
 
-   if (!volPath.path().empty()) {
-      filesystem->mountHostFolder("/vol/code", volPath.join("code"), fs::Permissions::Read);
-      filesystem->mountHostFolder("/vol/content", volPath.join("content"), fs::Permissions::Read);
-      filesystem->mountHostFolder("/vol/meta", volPath.join("meta"), fs::Permissions::Read);
-   } else if (!rpxPath.path().empty()) {
-      auto volCodePath = rpxPath.parentPath();
-      filesystem->mountHostFolder("/vol/code", volCodePath, fs::Permissions::Read);
+   // Initialise /vol
+   filesystem->makeFolder(user, "/vol");
+   filesystem->makeFolder(user, "/vol/sys");
+
+   if (!volPath.empty()) {
+      filesystem->mountDevice(user, "/vol/code", std::make_shared<vfs::HostDevice>(volPath / "code"));
+      filesystem->mountDevice(user, "/vol/content", std::make_shared<vfs::HostDevice>(volPath / "content"));
+      filesystem->mountDevice(user, "/vol/meta", std::make_shared<vfs::HostDevice>(volPath / "meta"));
+   } else if (!rpxPath.empty()) {
+      filesystem->mountDevice(user, "/vol/code", std::make_shared<vfs::HostDevice>(rpxPath.parent_path()));
 
       if (!decaf::config()->system.content_path.empty()) {
-         filesystem->mountHostFolder("/vol/content", decaf::config()->system.content_path, fs::Permissions::Read);
+         filesystem->mountDevice(user, "/vol/content", std::make_shared<vfs::HostDevice>(decaf::config()->system.content_path));
       }
 
-      cafe::kernel::setExecutableFilename(rpxPath.filename());
+      cafe::kernel::setExecutableFilename(rpxPath.filename().string());
    } else {
-      gLog->error("Could not find valid application at {}", path.path());
+      gLog->error("Could not find valid application at {}", path.string());
       return false;
    }
 
    // Ensure paths exist
    if (!decaf::config()->system.hfio_path.empty()) {
-      platform::createDirectory(decaf::config()->system.hfio_path);
+      auto ec = std::error_code { };
+      std::filesystem::create_directories(decaf::config()->system.hfio_path, ec);
    }
 
    if (!decaf::config()->system.mlc_path.empty()) {
-      platform::createDirectory(decaf::config()->system.mlc_path);
+      auto ec = std::error_code { };
+      std::filesystem::create_directories(decaf::config()->system.mlc_path, ec);
    }
 
    if (!decaf::config()->system.slc_path.empty()) {
-      platform::createDirectory(decaf::config()->system.slc_path);
+      auto ec = std::error_code { };
+      std::filesystem::create_directories(decaf::config()->system.slc_path, ec);
    }
 
    if (!decaf::config()->system.sdcard_path.empty()) {
-      platform::createDirectory(decaf::config()->system.sdcard_path);
+      auto ec = std::error_code { };
+      std::filesystem::create_directories(decaf::config()->system.sdcard_path, ec);
    }
 
    // Add device folder
-   filesystem->makeFolder("/dev");
+   filesystem->makeFolder(user, "/dev");
 
-   // Mount mlc device
-   auto mlcPath = fs::HostPath { decaf::config()->system.mlc_path };
-   filesystem->mountHostFolder("/dev/mlc01", mlcPath, fs::Permissions::ReadWrite);
-
-   // Mount slc device
-   auto slcPath = fs::HostPath { decaf::config()->system.slc_path };
-   filesystem->mountHostFolder("/dev/slc01", slcPath, fs::Permissions::ReadWrite);
+   // Mount devices
+   filesystem->mountDevice(user, "/dev/mlc01",
+                           std::make_shared<vfs::HostDevice>(decaf::config()->system.mlc_path));
+   filesystem->mountDevice(user, "/dev/slc01",
+                           std::make_shared<vfs::HostDevice>(decaf::config()->system.slc_path));
+   filesystem->mountDevice(user, "/dev/ramdisk01",
+                           std::make_shared<vfs::VirtualDevice>());
 
    if (!decaf::config()->system.hfio_path.empty()) {
-      // Optionally mount hfio device if path is set
-      auto hfioPath = fs::HostPath { decaf::config()->system.hfio_path };
-      filesystem->mountHostFolder("/dev/hfio01", hfioPath, fs::Permissions::ReadWrite);
+      filesystem->mountDevice(user, "/dev/hfio01",
+                              std::make_shared<vfs::HostDevice>(decaf::config()->system.hfio_path));
    }
 
    // Initialise file system with necessary files
