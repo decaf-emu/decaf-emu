@@ -11,7 +11,7 @@ environment:
   PYTHON: "C:\\Python36-x64"
   PYTHON_VERSION: "3.6.6"
   PYTHON_ARCH: "64"
-  VULKAN_SDK: "C:\\VulkanSDK\\1.1.92.1"
+  VULKAN_SDK: "C:\\VulkanSDK\\1.1.97.0"
 
 configuration:
   - Release
@@ -25,7 +25,8 @@ install:
   - cmd: pip.exe install conan
   - cmd: conan user
   - cmd: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan & exit 0
-  - cmd: appveyor DownloadFile https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe?u= -FileName vulkan-sdk.exe
+  - cmd: appveyor DownloadFile https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/1.1.97.0/windows/VulkanSDK-1.1.97.0-Installer.exe?u= -FileName vulkan-sdk.exe
+  
   - cmd: vulkan-sdk.exe /S
   - cmd: git submodule update --init --recursive
 
