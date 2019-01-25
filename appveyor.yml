@@ -26,7 +26,6 @@ install:
   - cmd: conan user
   - cmd: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan & exit 0
   - cmd: appveyor DownloadFile https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/1.1.97.0/windows/VulkanSDK-1.1.97.0-Installer.exe?u= -FileName vulkan-sdk.exe
-  
   - cmd: vulkan-sdk.exe /S
   - cmd: git submodule update --init --recursive
 
