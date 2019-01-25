@@ -1,0 +1,10 @@
+#pragma once
+
+#define GIT_REV      "@GIT_REV@"
+#define GIT_BRANCH   "@GIT_BRANCH@"
+#define GIT_DESC     "@GIT_DESC@"
+
+#define BUILD_NAME   "@REPO_NAME@"
+#define BUILD_DATE   "@BUILD_DATE@"
+#define BUILD_FULLNAME "@BUILD_FULLNAME@"
+#define BUILD_VERSION "@BUILD_VERSION@"

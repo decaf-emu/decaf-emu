@@ -148,6 +148,40 @@ macro(GroupSources curdir)
     endif()
 endmacro()
 
+# Generate build information
+include(GetGitRevisionDescription)
+
+function(get_timestamp _var)
+    string(TIMESTAMP timestamp UTC)
+    set(${_var} "${timestamp}" PARENT_SCOPE)
+endfunction()
+
+get_git_head_revision(GIT_REF_SPEC GIT_REV)
+git_describe(GIT_DESC --always --long --dirty)
+git_branch_name(GIT_BRANCH)
+get_timestamp(BUILD_DATE)
+
+set(BUILD_VERSION "0")
+if ($ENV{CI})
+   if ($ENV{TRAVIS})
+      set(BUILD_TAG $ENV{TRAVIS_TAG})
+   elseif($ENV{APPVEYOR})
+      set(BUILD_TAG $ENV{APPVEYOR_REPO_TAG_NAME})
+   endif()
+
+   if (BUILD_TAG)
+      string(REGEX MATCH "${CMAKE_MATCH_1}-([0-9]+)" OUTVAR ${BUILD_TAG})
+      if (${CMAKE_MATCH_COUNT} GREATER 0)
+          set(BUILD_VERSION ${CMAKE_MATCH_1})
+      endif()
+   endif()
+endif()
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/decaf_buildinfo.h.in"
+               "${CMAKE_CURRENT_BINARY_DIR}/generated/decaf_buildinfo.h" @ONLY)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+# Build stuff!
 add_subdirectory("libraries")
 add_subdirectory("src")
 add_subdirectory("resources")
