@@ -9,7 +9,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QSettings>
-#include <QShortCut>
+#include <QShortcut>
 #include <QTimer>
 
 #include <libdecaf/decaf.h>
