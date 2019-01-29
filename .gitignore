@@ -2,6 +2,8 @@ build/
 dump/
 mlc/
 slc/
+hfio/
+sdcard/
 docs/
 .vs/
 *.txt
