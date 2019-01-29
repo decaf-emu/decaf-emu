@@ -23,18 +23,18 @@ CHECK_OFFSET(SocketAddr, 0x00, sa_family);
 CHECK_OFFSET(SocketAddr, 0x02, sa_data);
 CHECK_SIZE(SocketAddr, 0x10);
 
-struct SockerInAddr
+struct SocketInAddr
 {
-   be2_val<uint32_t> s_addr;
+   be2_val<uint32_t> s_addr_;
 };
-CHECK_OFFSET(SockerInAddr, 0x00, s_addr);
-CHECK_SIZE(SockerInAddr, 0x04);
+CHECK_OFFSET(SocketInAddr, 0x00, s_addr_);
+CHECK_SIZE(SocketInAddr, 0x04);
 
 struct SocketAddrIn
 {
    be2_val<uint16_t> sin_family;
    be2_val<uint16_t> sin_port;
-   be2_struct<SockerInAddr> sin_addr;
+   be2_struct<SocketInAddr> sin_addr;
    be2_array<uint8_t, 8> sin_zero;
 };
 CHECK_OFFSET(SocketAddrIn, 0x00, sin_family);
