@@ -2,7 +2,6 @@
 #include "cafe_kernel_processid.h"
 
 #include <array>
-#include <common/log.h>
 #include <libcpu/be2_struct.h>
 #include <libcpu/mmu.h>
 #include <utility>

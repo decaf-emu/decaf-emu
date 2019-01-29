@@ -1,5 +1,4 @@
 #pragma once
-#include <atomic>
 #include <cstdint>
 #include <common/enum_start.inl>
 

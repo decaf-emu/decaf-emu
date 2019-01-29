@@ -1,7 +1,6 @@
 #include "cafe_tinyheap.h"
 
 #include <common/align.h>
-#include <common/log.h>
 #include <cstring>
 #include <libcpu/be2_struct.h>
 

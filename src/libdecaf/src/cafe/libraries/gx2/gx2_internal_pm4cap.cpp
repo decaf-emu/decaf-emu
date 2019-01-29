@@ -21,6 +21,7 @@
 #include <libgpu/latte/latte_pm4.h>
 #include <libgpu/latte/latte_pm4_commands.h>
 #include <libgpu/latte/latte_pm4_reader.h>
+#include <mutex>
 #include <vector>
 
 using decaf::pm4::CaptureMagic;

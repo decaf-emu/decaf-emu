@@ -4,7 +4,6 @@
 #include "cafe/cafe_ppc_interface_invoke_trace.h"
 
 #include <libcpu/cpu.h>
-#include <memory>
 
 namespace cafe::hle
 {

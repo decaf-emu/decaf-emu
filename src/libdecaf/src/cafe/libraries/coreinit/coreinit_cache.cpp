@@ -3,6 +3,7 @@
 #include "coreinit_memory.h"
 #include "cafe/libraries/gx2/gx2_internal_flush.h"
 
+#include <atomic>
 #include <common/align.h>
 
 namespace cafe::coreinit
