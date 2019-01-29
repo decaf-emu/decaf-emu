@@ -7,7 +7,9 @@
 #include <cstdlib>
 #include <errno.h>
 #include <fmt/format.h>
+#include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
