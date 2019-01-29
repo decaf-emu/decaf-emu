@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
 #include <cstdint>
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 namespace espresso
 {
@@ -303,4 +303,4 @@ union FixedPointExceptionRegister
 
 } // namespace espresso
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>

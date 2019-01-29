@@ -1,7 +1,7 @@
 #ifndef NN_NFP_ENUM_H
 #define NN_NFP_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(nn_nfp)
@@ -15,6 +15,6 @@ ENUM_END(State)
 ENUM_NAMESPACE_EXIT(nn_nfp)
 ENUM_NAMESPACE_EXIT(cafe)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef NN_NFP_ENUM_H

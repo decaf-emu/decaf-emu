@@ -1,7 +1,7 @@
 #ifndef H264_ENUM_H
 #define H264_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(h264)
@@ -83,6 +83,6 @@ ENUM_END(NaluType)
 ENUM_NAMESPACE_EXIT(h264)
 ENUM_NAMESPACE_EXIT(cafe)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef SWKBD_ENUM_H

@@ -1,7 +1,7 @@
 #ifndef IOS_KERNEL_ENUM_H
 #define IOS_KERNEL_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(ios)
 
@@ -130,6 +130,6 @@ ENUM_NAMESPACE_EXIT(kernel)
 
 ENUM_NAMESPACE_EXIT(ios)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef IOS_KERNEL_ENUM_H

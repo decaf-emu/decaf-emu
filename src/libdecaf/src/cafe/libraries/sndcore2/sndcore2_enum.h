@@ -1,7 +1,7 @@
 #ifndef CAFE_SNDCORE2_ENUM_H
 #define CAFE_SNDCORE2_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(sndcore2)
@@ -163,6 +163,6 @@ ENUM_NAMESPACE_EXIT(internal)
 ENUM_NAMESPACE_EXIT(sndcore2)
 ENUM_NAMESPACE_EXIT(cafe)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef CAFE_SNDCORE2_ENUM_H

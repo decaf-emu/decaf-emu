@@ -6,7 +6,7 @@
 namespace cafe::kernel
 {
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_BEG(ExceptionType, uint32_t)
    ENUM_VALUE(SystemReset, 0)
@@ -27,7 +27,7 @@ ENUM_BEG(ExceptionType, uint32_t)
    ENUM_VALUE(Max, 15)
 ENUM_END(ExceptionType)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 using ExceptionHandlerFn =
    void(*)(ExceptionType type,

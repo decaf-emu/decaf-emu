@@ -5,7 +5,7 @@
 namespace cafe::kernel
 {
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_BEG(InterruptType, uint32_t)
    ENUM_VALUE(Error,          0)
@@ -24,7 +24,7 @@ ENUM_BEG(InterruptType, uint32_t)
    ENUM_VALUE(Max,            13)
 ENUM_END(InterruptType)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 using UserInterruptHandlerFn =
    void(*)(InterruptType type,

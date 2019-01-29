@@ -1,7 +1,7 @@
 #ifndef LATTE_ENUM_SPI_H
 #define LATTE_ENUM_SPI_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(latte)
 
@@ -33,6 +33,6 @@ ENUM_END(SPI_PNT_SPRITE_SEL)
 
 ENUM_NAMESPACE_EXIT(latte)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef LATTE_ENUM_SPI_H

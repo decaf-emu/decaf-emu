@@ -1,7 +1,7 @@
 #ifndef CAFE_GX2_ENUM_H
 #define CAFE_GX2_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(gx2)
@@ -635,6 +635,6 @@ ENUM_END(GX2ShaderVarType)
 ENUM_NAMESPACE_EXIT(gx2)
 ENUM_NAMESPACE_EXIT(cafe)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef CAFE_GX2_ENUM_H

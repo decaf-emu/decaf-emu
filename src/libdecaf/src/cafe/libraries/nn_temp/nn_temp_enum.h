@@ -1,7 +1,7 @@
 #ifndef CAFE_TEMP_ENUM_H
 #define CAFE_TEMP_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(nn_temp)
@@ -46,6 +46,6 @@ ENUM_END(TEMPStatus)
 ENUM_NAMESPACE_EXIT(nn_temp)
 ENUM_NAMESPACE_EXIT(cafe)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef CAFE_TEMP_ENUM_H

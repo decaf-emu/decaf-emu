@@ -4,6 +4,6 @@
 #include "ios_enum.h"
 
 #undef IOS_ENUM_H
-#include <common/enum_string_declare.h>
+#include <common/enum_string_declare.inl>
 #include "ios_enum.h"
-#include <common/enum_end.h>
+#include <common/enum_end.inl>

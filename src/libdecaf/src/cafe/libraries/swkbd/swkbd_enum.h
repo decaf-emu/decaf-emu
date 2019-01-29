@@ -1,7 +1,7 @@
 #ifndef SWKBD_ENUM_H
 #define SWKBD_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(swkbd)
@@ -32,6 +32,6 @@ ENUM_END(State)
 ENUM_NAMESPACE_EXIT(swkbd)
 ENUM_NAMESPACE_EXIT(cafe)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef SWKBD_ENUM_H

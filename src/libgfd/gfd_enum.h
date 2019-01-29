@@ -1,7 +1,7 @@
 #ifndef GFD_ENUM_H
 #define GFD_ENUM_H
 
-#include <common/enum_start.h>
+#include <common/enum_start.inl>
 
 ENUM_NAMESPACE_ENTER(gfd)
 
@@ -24,6 +24,6 @@ ENUM_END(GFDBlockType)
 
 ENUM_NAMESPACE_EXIT(gfd)
 
-#include <common/enum_end.h>
+#include <common/enum_end.inl>
 
 #endif // ifdef GFD_ENUM_H
