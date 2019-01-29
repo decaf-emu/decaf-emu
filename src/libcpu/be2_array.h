@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <type_traits>
+#include <string_view>
 #include "be2_val.h"
 #include "pointer.h"
 

@@ -117,8 +117,14 @@ struct func_pointer_cast_impl<AddressType, FunctionPointer<AddressType, Function
 namespace fmt
 {
 
-template<typename AddressType, typename FunctionType>
-struct formatter<cpu::FunctionPointer<AddressType, FunctionType>>
+inline namespace v5
+{
+template<typename Type, typename Char, typename Enabled>
+struct formatter;
+}
+
+template<typename AddressType, typename FunctionType, typename Char>
+struct formatter<cpu::FunctionPointer<AddressType, FunctionType>, Char, void>
 {
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)

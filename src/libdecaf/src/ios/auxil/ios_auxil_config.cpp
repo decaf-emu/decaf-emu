@@ -9,6 +9,7 @@
 #include <common/strutils.h>
 #include <pugixml.hpp>
 #include <sstream>
+#include <fmt/format.h>
 
 namespace ios::auxil
 {

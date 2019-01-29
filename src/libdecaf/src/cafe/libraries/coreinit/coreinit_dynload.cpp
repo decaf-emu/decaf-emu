@@ -19,6 +19,7 @@
 #include "debug_api/debug_api_controller.h"
 
 #include <common/strutils.h>
+#include <fmt/format.h>
 
 namespace cafe::coreinit
 {

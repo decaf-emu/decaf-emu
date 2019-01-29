@@ -3,7 +3,6 @@
 #include "be2_val.h"
 #include "mmu.h"
 
-#include <fmt/format.h>
 #include <type_traits>
 
 template<typename Type>
@@ -504,6 +503,12 @@ struct pointer_cast_impl<AddressType, SrcTypePtr, AddressType,
 namespace fmt
 {
 
+inline namespace v5
+{
+template<typename Type, typename Char, typename Enabled>
+struct formatter;
+}
+
 template<typename OutputIt>
 auto format_escaped_string(OutputIt iter, const char *data)
 {
@@ -540,8 +545,8 @@ auto format_escaped_string(OutputIt iter, const char *data)
    return iter;
 }
 
-template<typename AddressType>
-struct formatter<cpu::Pointer<char, AddressType>>
+template<typename AddressType, typename Char>
+struct formatter<cpu::Pointer<char, AddressType>, Char, void>
 {
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)
@@ -561,8 +566,8 @@ struct formatter<cpu::Pointer<char, AddressType>>
    }
 };
 
-template<typename AddressType>
-struct formatter<cpu::Pointer<const char, AddressType>>
+template<typename AddressType, typename Char>
+struct formatter<cpu::Pointer<const char, AddressType>, Char, void>
 {
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)
@@ -582,8 +587,8 @@ struct formatter<cpu::Pointer<const char, AddressType>>
    }
 };
 
-template<typename ValueType, typename AddressType>
-struct formatter<cpu::Pointer<ValueType, AddressType>>
+template<typename ValueType, typename AddressType, typename Char>
+struct formatter<cpu::Pointer<ValueType, AddressType>, Char, void>
 {
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)

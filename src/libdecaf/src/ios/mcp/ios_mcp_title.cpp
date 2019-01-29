@@ -5,6 +5,8 @@
 #include "ios/auxil/ios_auxil_config.h"
 #include "ios/kernel/ios_kernel_process.h"
 
+#include <fmt/format.h>
+
 using namespace ios::auxil;
 using namespace ios::kernel;
 

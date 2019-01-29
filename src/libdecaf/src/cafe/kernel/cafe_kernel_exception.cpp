@@ -16,6 +16,7 @@
 #include <common/log.h>
 #include <common/platform_stacktrace.h>
 #include <common/platform_thread.h>
+#include <fmt/format.h>
 #include <libcpu/cpu.h>
 #include <vector>
 #include <queue>

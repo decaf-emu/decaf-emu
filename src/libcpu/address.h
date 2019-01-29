@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <common/align.h>
-#include <fmt/format.h>
 #include <type_traits>
 
 namespace cpu
@@ -198,8 +197,14 @@ align_down(cpu::Address<Type> value, size_t alignment)
 namespace fmt
 {
 
-template<typename AddressType>
-struct formatter<cpu::Address<AddressType>>
+inline namespace v5
+{
+template<typename Type, typename Char, typename Enabled>
+struct formatter;
+}
+
+template<typename AddressType, typename Char>
+struct formatter<cpu::Address<AddressType>, Char, void>
 {
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)

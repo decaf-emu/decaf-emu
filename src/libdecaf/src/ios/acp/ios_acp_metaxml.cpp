@@ -6,6 +6,7 @@
 #include "ios/kernel/ios_kernel_heap.h"
 
 #include <common/strutils.h>
+#include <fmt/format.h>
 #include <pugixml.hpp>
 
 using namespace ios::fs;

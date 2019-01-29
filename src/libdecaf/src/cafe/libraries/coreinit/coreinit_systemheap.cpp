@@ -5,6 +5,8 @@
 #include "coreinit_systemheap.h"
 #include "coreinit_systeminfo.h"
 
+#include <fmt/format.h>
+
 namespace cafe::coreinit
 {
 

@@ -10,7 +10,6 @@
 #include <cstdlib>
 #include <common/cbool.h>
 #include <common/structsize.h>
-#include <string_view>
 
 using virt_addr = cpu::VirtualAddress;
 using phys_addr = cpu::PhysicalAddress;

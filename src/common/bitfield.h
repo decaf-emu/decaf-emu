@@ -4,7 +4,7 @@
 #include "decaf_assert.h"
 
 #include <common/type_traits.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 template<typename BitfieldType, typename ValueType, unsigned Position, unsigned Bits>
 struct BitfieldHelper

@@ -1,7 +1,6 @@
 #pragma once
 #include <common/byte_swap.h>
 #include <common/type_traits.h>
-#include <fmt/format.h>
 
 template<typename Type>
 class be2_val
@@ -477,28 +476,38 @@ private:
 namespace fmt
 {
 
+inline namespace v5
+{
+template<typename Type, typename Char, typename Enabled>
+struct formatter;
+
+template <typename T, typename Char, typename Enable>
+struct convert_to_int;
+}
+
 // Disable automatic conversion to int in fmtlib
-template <typename T>
-struct convert_to_int<be2_val<T>, char> : std::false_type
+template <typename T, typename Char>
+struct convert_to_int<be2_val<T>, Char, void> : std::false_type
 {
 };
 
 // Provide a custom formatter for be2_val<T>
-template<typename ValueType>
-struct formatter<be2_val<ValueType>> : formatter<typename safe_underlying_type<ValueType>::type>
+template<typename ValueType, typename Char>
+struct formatter<be2_val<ValueType>, Char, void>
+   : formatter<typename safe_underlying_type<ValueType>::type, Char, void>
 {
    using value_type = typename safe_underlying_type<ValueType>::type;
 
    template<typename ParseContext>
    constexpr auto parse(ParseContext &ctx)
    {
-      return formatter<value_type>::parse(ctx);
+      return formatter<value_type, Char, void>::parse(ctx);
    }
 
    template<typename FormatContext>
    auto format(const be2_val<ValueType> &val, FormatContext &ctx)
    {
-      return formatter<value_type>::format(val, ctx);
+      return formatter<value_type, Char, void>::format(val, ctx);
    }
 };
 
