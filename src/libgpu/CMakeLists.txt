@@ -54,10 +54,17 @@ if(DECAF_VULKAN)
         bin2c("${SHDRBIN_BASEPATH}" "${OUTFILE}" "${OUTPATH}")
         list(APPEND VK_BIN_FILES "${SHDRBIN_BASEPATH}/${OUTFILE}.h")
         list(APPEND VK_BIN_FILES "${SHDRBIN_BASEPATH}/${OUTFILE}.cpp")
+        set_source_files_properties(
+            "${SHDRBIN_BASEPATH}/${OUTFILE}.h"
+            PROPERTIES GENERATED TRUE)
+        set_source_files_properties(
+            "${SHDRBIN_BASEPATH}/${OUTFILE}.cpp"
+            PROPERTIES GENERATED TRUE)
     endmacro()
 
     # compile the main retiling shader itself
     compile_vulkan_shader("gpu7_tiling.comp.spv" "gpu7_tiling.comp.glsl")
+    add_custom_target(libgpu-vulkan-shaders ALL DEPENDS ${VK_BIN_FILES})
 endif()
 
 add_library(libgpu STATIC ${SOURCE_FILES} ${HEADER_FILES} ${INLINE_FILES} ${VULKANSHADER_FILES} ${VK_BIN_FILES})
@@ -68,6 +75,7 @@ GroupSources(vulkan_shaders)
 # We have to do this manually as the files don't exist until the first
 # build occurs, which is after the solution is generated.
 if(DECAF_VULKAN)
+    add_dependencies(libgpu libgpu-vulkan-shaders)
     if (MSVC)
         source_group("vulkan_shaders_bin" FILES ${VK_BIN_FILES})
     endif()
