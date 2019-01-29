@@ -94,3 +94,5 @@ if(DECAF_VULKAN)
         vulkan
         ${SPIRV_LIBRARIES})
 endif()
+
+enable_pch(libgpu)

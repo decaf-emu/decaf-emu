@@ -27,3 +27,5 @@ else()
         m
         ${CMAKE_THREAD_LIBS_INIT})
 endif()
+
+enable_pch(libcpu)
