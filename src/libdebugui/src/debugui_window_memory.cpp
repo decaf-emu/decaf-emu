@@ -110,8 +110,9 @@ MemoryWindow::draw()
                ImGui::SetKeyboardFocusHere();
 
                uint32_t targetAddress = static_cast<uint32_t>(editAddress);
-               snprintf(addressInput, 32, "%08X", targetAddress);
-               snprintf(dataInput, 32, "%02X", mem::read<unsigned char>(targetAddress));
+               std::snprintf(addressInput, 32, "%08X", targetAddress);
+               std::snprintf(dataInput, 32, "%02X",
+                             mem::read<unsigned char>(targetAddress));
 
                mLastEditAddress = editAddress;
                newlyFocused = true;

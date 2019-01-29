@@ -10,8 +10,6 @@
 #include <vector>
 
 #ifdef PLATFORM_WINDOWS
-   #define snprintf sprintf_s
-   #define vsnprintf vsprintf_s
    #define strdup _strdup
 #endif
 
