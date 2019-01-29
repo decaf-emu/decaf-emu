@@ -3,6 +3,9 @@
 
 #ifdef PLATFORM_WINDOWS
 #include <string>
+#include <string_view>
+
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 namespace platform
@@ -12,7 +15,7 @@ namespace platform
  * Convert from UTF-8 string to UTF-16 string expected by Windows API.
  */
 static inline std::wstring
-toWinApiString(const std::string &utf8)
+toWinApiString(const std::string_view &utf8)
 {
    auto result = std::wstring { };
    auto size = MultiByteToWideChar(CP_UTF8, 0,
@@ -29,7 +32,7 @@ toWinApiString(const std::string &utf8)
  * Convert to UTF-8 string from UTF-16 string returned by Windows API.
  */
 static inline std::string
-fromWinApiString(const std::wstring &utf16)
+fromWinApiString(const std::wstring_view &utf16)
 {
    auto result = std::string { };
    auto size = WideCharToMultiByte(CP_UTF8, 0,
