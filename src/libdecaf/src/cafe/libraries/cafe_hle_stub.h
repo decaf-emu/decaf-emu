@@ -1,5 +1,4 @@
 #pragma once
-#include <common/log.h>
 
 #ifdef _MSC_VER
 #define PRETTY_FUNCTION_NAME __FUNCSIG__
@@ -11,7 +10,15 @@
    { \
       static bool warned = false; \
       if (!warned) { \
-         gLog->warn("Application invoked stubbed function `{}`", PRETTY_FUNCTION_NAME); \
+         cafe::hle::warnStubInvoked(PRETTY_FUNCTION_NAME); \
          warned = true; \
       } \
    }
+
+namespace cafe::hle
+{
+
+void
+warnStubInvoked(const char *name);
+
+} // namespace cafe::hle
