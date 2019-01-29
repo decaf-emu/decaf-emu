@@ -1,7 +1,7 @@
 #include "platform.h"
-#include "platform_time.h"
 
 #ifdef PLATFORM_WINDOWS
+#include "platform_time.h"
 
 namespace platform
 {

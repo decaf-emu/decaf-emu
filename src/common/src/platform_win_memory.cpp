@@ -1,9 +1,11 @@
-#include "decaf_assert.h"
-#include "log.h"
 #include "platform.h"
-#include "platform_memory.h"
 
 #ifdef PLATFORM_WINDOWS
+#include "decaf_assert.h"
+#include "log.h"
+#include "platform_memory.h"
+
+#define WIN32_LEAN_AND_MEAN
 #include <map>
 #include <mutex>
 #include <Windows.h>

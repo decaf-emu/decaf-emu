@@ -4,8 +4,11 @@
 #ifdef PLATFORM_WINDOWS
 #include <common/decaf_assert.h>
 #include <common/platform_winapi_string.h>
-#include <Windows.h>
+
 #include <string>
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #include <io.h>
 
 namespace fs

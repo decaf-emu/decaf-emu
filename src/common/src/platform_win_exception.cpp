@@ -1,9 +1,11 @@
-#include <vector>
 #include "platform.h"
+
+#ifdef PLATFORM_WINDOWS
 #include "platform_exception.h"
 #include "platform_fiber.h"
 
-#ifdef PLATFORM_WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <vector>
 #include <Windows.h>
 
 namespace platform

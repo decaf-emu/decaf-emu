@@ -1,7 +1,9 @@
 #include "platform.h"
-#include "platform_debug.h"
 
 #ifdef PLATFORM_WINDOWS
+#include "platform_debug.h"
+
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 namespace platform

@@ -3,6 +3,8 @@
 
 #ifdef PLATFORM_WINDOWS
 #include <common/platform_winapi_string.h>
+
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 namespace fs

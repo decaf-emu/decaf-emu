@@ -1,4 +1,7 @@
 #include "memtrack.h"
+
+#ifdef PLATFORM_WINDOWS
+
 #include "cpu_config.h"
 #include "cpu_internal.h"
 #include "mmu.h"
@@ -7,14 +10,6 @@
 #include <common/platform.h>
 #include <common/rangecombiner.h>
 #include <unordered_map>
-
-/*
-The windows memory protection based write tracker is implemented using
-ifdef blocks primarily due to the fact that we need our exception handles
-to be as short as possible, as they are an extreme hot-path.
-*/
-
-#ifdef PLATFORM_WINDOWS
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>

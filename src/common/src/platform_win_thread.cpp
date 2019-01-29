@@ -1,7 +1,9 @@
 #include "platform.h"
-#include "platform_thread.h"
 
 #ifdef PLATFORM_WINDOWS
+#include "platform_thread.h"
+
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 static const DWORD MS_VC_EXCEPTION = 0x406D1388;
