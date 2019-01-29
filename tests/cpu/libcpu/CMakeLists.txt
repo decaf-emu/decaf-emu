@@ -11,8 +11,6 @@ target_link_libraries(test-libcpu
     common
     libcpu)
 
-install(TARGETS test-libcpu RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/cpu")
-
 add_test(NAME tests_libcpu
          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
          COMMAND test-libcpu)

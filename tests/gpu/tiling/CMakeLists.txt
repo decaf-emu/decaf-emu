@@ -19,8 +19,6 @@ if(DECAF_VULKAN)
         ${SPIRV_LIBRARIES})
 endif()
 
-install(TARGETS test-gpu-tiling RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/gpu")
-
 add_test(NAME gpu-tiling
          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
          COMMAND test-gpu-tiling)

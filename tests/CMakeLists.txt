@@ -54,15 +54,6 @@ if(DECAF_BUILD_WUT_TESTS)
         DEPENDERS "build"
         ALWAYS 1)
 
-    install(DIRECTORY "${BINARY_DIR}/"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/hle"
-            FILES_MATCHING
-                PATTERN "coreinit/*.rpx"
-                PATTERN "CMakeFiles" EXCLUDE)
-
-    install(DIRECTORY "${HLE_TEST_CONTENT_PATH_DST}"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/tests/hle")
-
     # Add tests to CTests
     macro(add_coreinit_test source)
         get_filename_component(name ${source} NAME_WE)
