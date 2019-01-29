@@ -76,6 +76,13 @@ if(MSVC)
        COMMAND ${CMAKE_COMMAND} -E copy_if_different
            $<TARGET_FILE:Qt5::Widgets>
            $<TARGET_FILE_DIR:decaf-qt>)
+
+   install(FILES
+      $<TARGET_FILE:Qt5::Core>
+      $<TARGET_FILE:Qt5::Gui>
+      $<TARGET_FILE:Qt5::Svg>
+      $<TARGET_FILE:Qt5::Widgets>
+      DESTINATION "${DECAF_INSTALL_BINDIR}")
 endif()
 
 install(TARGETS decaf-qt RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")
