@@ -34,29 +34,29 @@ sDebugCaptureData = nullptr;
  * Initialise the debug capture interface.
  */
 BOOL
-GX2DebugSetCaptureInterface(virt_ptr<GX2DebugCaptureInterface> interface)
+GX2DebugSetCaptureInterface(virt_ptr<GX2DebugCaptureInterface> captureInterface)
 {
    // Normally this is only allowed when:
    // OSGetSecurityLevel () != 1 &&
    // OSGetConsoleType() != 0x13000048 &&
    // OSGetConsoleType() != 0x13000040
 
-   if (!interface ||
-       interface->version != GX2DebugCaptureInterfaceVersion::Version1 ||
-       !interface->onShutdown ||
-       !interface->setAllocator ||
-       !interface->onCaptureStart ||
-       !interface->onCaptureEnd ||
-       !interface->isCaptureEnabled ||
-       !interface->onAlloc ||
-       !interface->onInvalidate ||
-       !interface->setScanbuffer ||
-       !interface->onSwapScanBuffers ||
-       !interface->submitToRing) {
+   if (!captureInterface ||
+       captureInterface->version != GX2DebugCaptureInterfaceVersion::Version1 ||
+       !captureInterface->onShutdown ||
+       !captureInterface->setAllocator ||
+       !captureInterface->onCaptureStart ||
+       !captureInterface->onCaptureEnd ||
+       !captureInterface->isCaptureEnabled ||
+       !captureInterface->onAlloc ||
+       !captureInterface->onInvalidate ||
+       !captureInterface->setScanbuffer ||
+       !captureInterface->onSwapScanBuffers ||
+       !captureInterface->submitToRing) {
       return FALSE;
    }
 
-   sDebugCaptureData->captureInterface = *interface;
+   sDebugCaptureData->captureInterface = *captureInterface;
    sDebugCaptureData->enabled = TRUE;
    cafe::invoke(cpu::this_core::state(),
                 sDebugCaptureData->captureInterface.setAllocator,

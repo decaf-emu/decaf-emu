@@ -110,7 +110,7 @@ CHECK_OFFSET(GX2DebugCaptureInterface, 0x2C, submitToRing);
 CHECK_SIZE(GX2DebugCaptureInterface, 0x30);
 
 BOOL
-GX2DebugSetCaptureInterface(virt_ptr<GX2DebugCaptureInterface> interface);
+GX2DebugSetCaptureInterface(virt_ptr<GX2DebugCaptureInterface> captureInterface);
 
 void
 GX2DebugCaptureStart(virt_ptr<const char> filename,

@@ -17,7 +17,7 @@ struct StaticDriverData
    be2_val<BOOL> registered = FALSE;
    be2_val<BOOL> initialised = FALSE;
    be2_array<char, 16> name = "ACP";
-   be2_struct<OSDriverInterface> interface;
+   be2_struct<OSDriverInterface> driverInterface;
 };
 
 static virt_ptr<StaticDriverData> sDriverData = nullptr;
@@ -86,14 +86,14 @@ startDriver(OSDynLoad_ModuleHandle moduleHandle)
    }
 
    StackObject<BOOL> driversAlreadyInitialised;
-   sDriverData->interface.getName = sDriverGetName;
-   sDriverData->interface.onInit = sDriverOnInit;
-   sDriverData->interface.onAcquiredForeground = sDriverOnAcquiredForeground;
-   sDriverData->interface.onReleasedForeground = sDriverOnReleasedForeground;
-   sDriverData->interface.onDone = sDriverOnDone;
+   sDriverData->driverInterface.getName = sDriverGetName;
+   sDriverData->driverInterface.onInit = sDriverOnInit;
+   sDriverData->driverInterface.onAcquiredForeground = sDriverOnAcquiredForeground;
+   sDriverData->driverInterface.onReleasedForeground = sDriverOnReleasedForeground;
+   sDriverData->driverInterface.onDone = sDriverOnDone;
 
    OSDriver_Register(moduleHandle, 910,
-                     virt_addrof(sDriverData->interface),
+                     virt_addrof(sDriverData->driverInterface),
                      0,
                      nullptr, nullptr,
                      driversAlreadyInitialised);

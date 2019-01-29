@@ -7,7 +7,7 @@ namespace cafe::coreinit
 
 struct StaticFsDriverData
 {
-   be2_struct<OSDriverInterface> interface;
+   be2_struct<OSDriverInterface> driverInterface;
    be2_array<char, 4> name;
    be2_val<BOOL> isDone;
 };
@@ -62,16 +62,16 @@ initialiseFsDriver()
 {
    sFsDriverData->name = "FS";
    sFsDriverData->isDone = FALSE;
-   sFsDriverData->interface.getName = sFsDriverGetName;
-   sFsDriverData->interface.onInit = sFsDriverOnInit;
-   sFsDriverData->interface.onAcquiredForeground = sFsDriverOnAcquiredForeground;
-   sFsDriverData->interface.onReleasedForeground = sFsDriverOnReleasedForeground;
-   sFsDriverData->interface.onDone = sFsDriverOnDone;
+   sFsDriverData->driverInterface.getName = sFsDriverGetName;
+   sFsDriverData->driverInterface.onInit = sFsDriverOnInit;
+   sFsDriverData->driverInterface.onAcquiredForeground = sFsDriverOnAcquiredForeground;
+   sFsDriverData->driverInterface.onReleasedForeground = sFsDriverOnReleasedForeground;
+   sFsDriverData->driverInterface.onDone = sFsDriverOnDone;
 
    auto driverError =
       OSDriver_Register(-1,
                         40,
-                        virt_addrof(sFsDriverData->interface),
+                        virt_addrof(sFsDriverData->driverInterface),
                         0,
                         nullptr,
                         nullptr,
