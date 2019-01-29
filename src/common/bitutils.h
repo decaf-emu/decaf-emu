@@ -5,7 +5,7 @@
 #include <cstddef>
 
 #ifdef PLATFORM_WINDOWS
-#include <Windows.h>
+#include <intrin.h>
 #endif
 
 // Gets the value of a bit
