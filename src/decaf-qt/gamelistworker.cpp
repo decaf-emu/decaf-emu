@@ -35,25 +35,22 @@
 #include <tchar.h>
 #endif
 
-using DirectoryEntryCallable = std::function<bool(uint64_t* num_entries_out, 
-                                                  const std::string& directory, 
-                                                  const std::string& virtual_name)>;
+using DirectoryEntryCallable = std::function<bool(const QString &title,
+                                                  const QString &titleId, 
+                                                  const QString &path)>;
 
 namespace 
 {
 
 QString
-getMetaValue(QString path, 
-             const char *element, 
-             const char *attribute)
+getXmlElement(const std::string &path,
+              const char *element, 
+              const char *attribute)
 {
-   if (!platform::fileExists(path.toStdString())) {
-     return "";
-   }
-   
    auto doc = pugi::xml_document { };
   
-   doc.load_file(path.toStdString().c_str());
+   
+   doc.load_file(path.c_str(), 116u, pugi::xml_encoding::encoding_auto);
    auto menu = doc.child(element);
    if (!menu) {
      return "";
@@ -64,50 +61,24 @@ getMetaValue(QString path,
      return "";
    }
 
-   std::string str = child.text().get();
+   std::wstring str = pugi::as_wide(child.text().get());
    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
 
-   return QString::fromStdString(str);
-}
-
-QString
-getPath(QString path)
-{
-   path = path.replace("meta/meta.xml", "code/cos.xml");
-   if (!platform::fileExists(path.toStdString())) {
-     return "";
-   }
-
-   auto doc = pugi::xml_document{ };
-
-   doc.load_file(path.toStdString().c_str());
-   auto menu = doc.child("app");
-   if (!menu) {
-     return "";
-   }
-
-   auto child = menu.child("argstr");
-   if (!child) {
-     return "";
-   }
-
-   path = path.replace("cos.xml", child.text().get());
-   std::string str = path.toStdString();
-   return path;
+   return QString::fromWCharArray(str.c_str());
 }
 
 QList<QStandardItem*> 
-MakeGameListEntry(const std::string& path, 
-                  const std::string& title, 
-                  const std::string& titleId,
-                  const std::vector<uint8_t>& icon) 
+MakeGameListEntry(const QString &path, 
+                  const QString &title, 
+                  const QString &titleId,
+                  const std::vector<uint8_t> &icon) 
 {
    // The game list uses this as compatibility number for untested games
    QList<QStandardItem*> list{
-      new GameListItemPath(QString::fromStdString(path), icon,  QString::fromStdString(title)),
+      new GameListItemPath(path, icon, title),
       new GameListItemCompat("99"), 
-      new GameListItem(titleId.c_str()),
-      new GameListItem(path.c_str()),
+      new GameListItem(titleId.toStdString().c_str()),
+      new GameListItem(path.toStdString().c_str()),
    };
 
    return list;
@@ -123,7 +94,7 @@ GameListWorker::GameListWorker(QString dirPath,
 GameListWorker::~GameListWorker() = default;
 
 std::u16string 
-UTF8ToUTF16(const std::string& input) 
+UTF8ToUTF16(const std::string &input) 
 {
 #ifdef _MSC_VER
    // Workaround for missing char16_t/char32_t instantiations in MSVC2017
@@ -139,7 +110,7 @@ UTF8ToUTF16(const std::string& input)
 #ifdef _WIN32
 static std::wstring 
 CPToUTF16(uint32_t codePage, 
-          const std::string& input) 
+          const std::string &input) 
 {
    const auto size = MultiByteToWideChar(codePage, 
                                          0, 
@@ -164,49 +135,28 @@ CPToUTF16(uint32_t codePage,
 #endif
 
 std::wstring
-UTF8ToUTF16W(const std::string& input) 
+UTF8ToUTF16W(const std::string &input) 
 {
    return CPToUTF16(CP_UTF8, input);
 }
 
 std::string
-UTF16ToUTF8(const std::wstring& input) 
+UTF16ToUTF8(const wchar_t *input,
+            char dfault = '?',
+            const std::locale &loc = std::locale())
 {
-   const auto size = WideCharToMultiByte(CP_UTF8, 0, 
-                                         input.data(), 
-                                         static_cast<int>(input.size()),
-                                         nullptr, 0, nullptr, nullptr);
+   std::ostringstream stm;
 
-   if (size == 0) {
-     return "";
+   while (*input != L'\0') {
+      stm << std::use_facet< std::ctype<wchar_t> >(loc).narrow(*input++, dfault);
    }
-
-   std::string output(size, '\0');
-
-   if (size != WideCharToMultiByte(CP_UTF8, 
-                                   0, 
-                                   input.data(), 
-                                   static_cast<int>(input.size()),
-                                   &output[0], 
-                                   static_cast<int>(output.size()), 
-                                   nullptr,
-                                   nullptr)) {
-     output.clear();
-   }
-
-   return output;
+   return stm.str();
 }
 
-
 bool 
-ForeachDirectoryEntry(uint64_t* numEntriesOut, 
-                      const std::string& directory,
+ForeachDirectoryEntry(const std::string &directory,
                       DirectoryEntryCallable callback) 
 {
-
-   // How many files + directories we found
-   uint64_t foundEntries = 0;
-
    // Save the status of callback function
    bool callbackError = false;
 
@@ -222,6 +172,7 @@ ForeachDirectoryEntry(uint64_t* numEntriesOut,
    // windows loop
    do {
      const std::string virtualName(UTF16ToUTF8(ffd.cFileName));
+     QString fileName = QString::fromWCharArray(ffd.cFileName);
 #else
    DIR* dirp = opendir(directory.c_str());
    if (!dirp)
@@ -230,18 +181,31 @@ ForeachDirectoryEntry(uint64_t* numEntriesOut,
    // non windows loop
    while (struct dirent* result = readdir(dirp)) {
      const std::string virtual_name(result->d_name);
+     QString fileName = QString::fromStdString(virtual_name);
 #endif
 
      if (virtualName == "." || virtualName == "..") {
        continue;
      }
 
-     uint64_t retEntries = 0;
-     if (!callback(&retEntries, directory, virtualName)) {
+     // For some reason pugu doesn't like strings converted from QStrings
+     std::string cosFileName = directory + "/" + virtualName + "/code/cos.xml";
+     std::string metaFileName = directory + "/" + virtualName + "/meta/meta.xml";
+
+     QString fullPath = QString::fromStdString(directory) + "/" + fileName;
+
+     QString path = fullPath + "/code/" + getXmlElement(cosFileName, "app", "argstr");
+     QString title = getXmlElement(metaFileName, "menu", "longname_en");
+     QString titleId = getXmlElement(metaFileName, "menu", "title_id");
+
+     if (!QFileInfo::exists(path)) {
+        continue;
+     }
+
+     if (!callback(path, title, titleId)) {
        callbackError = true;
        break;
      }
-     foundEntries += retEntries;
 
 #ifdef _WIN32
    } while (FindNextFileW(handleFind, &ffd) != 0);
@@ -255,40 +219,34 @@ ForeachDirectoryEntry(uint64_t* numEntriesOut,
      return false;
    }
 
-   // num_entries_out is allowed to be specified nullptr, in which case we shouldn't try to set it
-   if (numEntriesOut != nullptr) {
-     *numEntriesOut = foundEntries;
-   }
    return true;
 }
 
 void 
-GameListWorker::addEntriesToGameList(const std::string& dirPath, 
+GameListWorker::addEntriesToGameList(const std::string &dirPath, 
                                      unsigned int recursion) 
 {
-   const auto callback = [this, recursion](uint64_t* numEntriesOut, 
-                                           const std::string& directory,
-                                           const std::string& virtualName) -> bool 
+   const auto callback = [this, recursion](const QString &path,
+                                           const QString &title,
+                                           const QString &titleId) -> bool
    {
       if (mStopProcessing) {
          // Breaks the callback loop.
          return false;
       }
 
-      const std::string physicalName = directory + "/" + virtualName + "/meta/meta.xml";
       std::vector<uint8_t> icon;
          
-      emit entryReady(MakeGameListEntry(getPath(physicalName.c_str()).toStdString(), 
-                                        getMetaValue(physicalName.c_str(), "menu", "longname_en").toStdString(),
-                                        getMetaValue(physicalName.c_str(), "menu", "title_id").toStdString(),
+      emit entryReady(MakeGameListEntry(path,
+                                        title,
+                                        titleId,
                                         icon));
 
       return true;
    };
 
-   ForeachDirectoryEntry(nullptr, dirPath, callback);
+   ForeachDirectoryEntry(dirPath, callback);
 }
-
 
 void 
 GameListWorker::run() 
