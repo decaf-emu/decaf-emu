@@ -104,5 +104,25 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButtonGamePath</sender>
+   <signal>clicked()</signal>
+   <receiver>DisplaySettingsWidget</receiver>
+   <slot>browseGamePath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>350</x>
+     <y>121</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>198</x>
+     <y>99</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>browseGamePath()</slot>
+ </slots>
 </ui>
