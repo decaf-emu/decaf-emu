@@ -481,12 +481,24 @@ inline namespace v5
 template<typename Type, typename Char, typename Enabled>
 struct formatter;
 
-template <typename T, typename Char, typename Enable>
+template<typename T, typename Char, typename Enable>
 struct convert_to_int;
+
+// Disable stream operator detection for be2_val
+namespace internal
+{
+template<typename T, typename Char>
+class is_streamable;
+
+template<typename T, typename Char>
+class is_streamable<be2_val<T>, Char> : public std::false_type
+{
+};
+}
 }
 
 // Disable automatic conversion to int in fmtlib
-template <typename T, typename Char>
+template<typename T, typename Char>
 struct convert_to_int<be2_val<T>, Char, void> : std::false_type
 {
 };
