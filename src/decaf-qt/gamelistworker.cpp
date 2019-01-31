@@ -16,7 +16,8 @@
 
 #include <QDir>
 #include <QFileInfo>
-
+#include <QStringList>
+#include <QDirIterator>
 #include <pugixml.hpp>
 #include <common/platform_dir.h>
 
@@ -46,13 +47,13 @@ namespace
 {
 
 QString
-getXmlElement(const std::string &path,
+getXmlElement(const QString &path,
               const char *element,
               const char *attribute)
 {
    auto doc = pugi::xml_document { };
 
-   doc.load_file(path.c_str(), 116u, pugi::xml_encoding::encoding_auto);
+   doc.load_file(path.toStdString().c_str());
    auto menu = doc.child(element);
    if (!menu) {
       return "";
@@ -69,7 +70,7 @@ getXmlElement(const std::string &path,
 }
 
 QList<QStandardItem*>
-MakeTitleListEntry(const QString &path,
+makeTitleListEntry(const QString &path,
                    const QString &iconPath,
                    const QString &title,
                    const QString &titleId, 
@@ -95,116 +96,36 @@ TitleListWorker::TitleListWorker(QString dirPath,
 {
 }
 
-TitleListWorker::~TitleListWorker() = default;
-
-std::u16string
-UTF8ToUTF16(const std::string &input)
-{
-#ifdef _MSC_VER
-   // Workaround for missing char16_t/char32_t instantiations in MSVC2017
-   std::wstring_convert<std::codecvt_utf8_utf16<__int16>, __int16> convert;
-   auto tmpBuffer = convert.from_bytes(input);
-   return std::u16string(tmpBuffer.cbegin(), tmpBuffer.cend());
-#else
-   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-   return convert.from_bytes(input);
-#endif
-}
-
-#ifdef _WIN32
-static std::wstring
-CPToUTF16(uint32_t codePage,
-          const std::string &input)
-{
-   const auto size = MultiByteToWideChar(codePage,
-                                         0,
-                                         input.data(),
-                                         static_cast<int>(input.size()),
-                                         nullptr,
-                                         0);
-
-   if (size == 0) {
-      return L"";
-   }
-
-   std::wstring output(size, L'\0');
-
-   if (size != MultiByteToWideChar(codePage, 0, input.data(), static_cast<int>(input.size()),
-      &output[0], static_cast<int>(output.size()))) {
-      output.clear();
-   }
-
-   return output;
-}
-#endif
-
-std::wstring
-UTF8ToUTF16W(const std::string &input)
-{
-   return CPToUTF16(CP_UTF8, input);
-}
-
-std::string
-UTF16ToUTF8(const wchar_t *input,
-            char dfault = '?',
-            const std::locale &loc = std::locale())
-{
-   std::ostringstream stm;
-
-   while (*input != L'\0') {
-      stm << std::use_facet< std::ctype<wchar_t> >(loc).narrow(*input++, dfault);
-   }
-   return stm.str();
-}
-
 bool
-ForeachDirectoryEntry(const std::string &directory,
+scanForTitles(QString &directory,
                       DirectoryEntryCallable callback)
 {
    // Save the status of callback function
    bool callbackError = false;
 
-#ifdef _WIN32
-   // Find the first file in the directory.
-   WIN32_FIND_DATAW ffd;
+   QDirIterator it(directory);
+   while (it.hasNext()) {
+      QFile f(it.next());
 
-   HANDLE handleFind = FindFirstFileW(UTF8ToUTF16W(directory + "\\*").c_str(), &ffd);
-   if (handleFind == INVALID_HANDLE_VALUE) {
-      FindClose(handleFind);
-      return false;
-   }
-   // windows loop
-   do {
-      const std::string virtualName(UTF16ToUTF8(ffd.cFileName));
-      QString fileName = QString::fromWCharArray(ffd.cFileName);
-#else
-      DIR *dirp = opendir(directory.c_str());
-      if (!dirp) {
-         return false;
-      }
+      QString fileName = it.fileName();
 
-      // non windows loop
-      while (struct dirent *result = readdir(dirp)) {
-         const std::string virtual_name(result->d_name);
-         QString fileName = QString::fromStdString(virtual_name);
-#endif
-
-      if (virtualName == "." || virtualName == "..") {
+      if (fileName == "." || fileName == "..") {
          continue;
       }
 
       // For some reason pugu doesn't like strings converted from QStrings
-      std::string cosFileName = directory + "/" + virtualName + "/code/cos.xml";
-      std::string appFileName = directory + "/" + virtualName + "/code/app.xml";
-      std::string metaFileName = directory + "/" + virtualName + "/meta/meta.xml";
+      QString cosFileName = directory + "/" + fileName + "/code/cos.xml";
+      QString appFileName = directory + "/" + fileName + "/code/app.xml";
+      QString metaFileName = directory + "/" + fileName + "/meta/meta.xml";
 
-      QString fullPath = QString::fromStdString(directory) + "/" + fileName;
+      QString fullPath = directory + "/" + fileName;
 
       QString path = fullPath + "/code/" + getXmlElement(cosFileName, "app", "argstr");
       QString iconPath = fullPath + "/meta/iconTex.tga";
       QString title = getXmlElement(metaFileName, "menu", "longname_en");
       QString titleId = getXmlElement(metaFileName, "menu", "title_id");
       QString publisher = getXmlElement(metaFileName, "menu", "publisher_en");
+
       bool ok; uint appId = getXmlElement(appFileName, "app", "title_version").toUInt(&ok, 16);
       QString version;
       version.setNum(appId);
@@ -217,14 +138,8 @@ ForeachDirectoryEntry(const std::string &directory,
          callbackError = true;
          break;
       }
-
-   #ifdef _WIN32
-   } while (FindNextFileW(handleFind, &ffd) != 0);
-   FindClose(handleFind);
-   #else
-   }
-   closedir(dirp);
-   #endif
+   } 
+  
 
    if (callbackError) {
       return false;
@@ -234,7 +149,7 @@ ForeachDirectoryEntry(const std::string &directory,
 }
 
 void
-TitleListWorker::addEntriesToTitleList(const std::string &dirPath,
+TitleListWorker::addEntriesToTitleList(QString &dirPath,
                                        unsigned int recursion)
 {
    const auto callback = [this, recursion](const QString &path,
@@ -259,7 +174,7 @@ TitleListWorker::addEntriesToTitleList(const std::string &dirPath,
       case 0x10: // System Application
       case 0x30: // Applet
          // We will show these types of title
-         emit entryReady(MakeTitleListEntry(path, iconPath, title, titleId, publisher, version));
+         emit entryReady(makeTitleListEntry(path, iconPath, title, titleId, publisher, version));
          break;
       case 0xb: // Data";
       case 0xc: // eShop title DLC
@@ -272,7 +187,7 @@ TitleListWorker::addEntriesToTitleList(const std::string &dirPath,
       return true;
    };
 
-   ForeachDirectoryEntry(dirPath, callback);
+   scanForTitles(dirPath, callback);
 }
 
 void
@@ -280,7 +195,7 @@ TitleListWorker::run()
 {
    mStopProcessing = false;
    mWatchList.append(mDirPath);
-   addEntriesToTitleList(mDirPath.toStdString(), mDeepScan ? 256 : 0);
+   addEntriesToTitleList(mDirPath, mDeepScan ? 256 : 0);
    emit finished(mWatchList);
 }
 

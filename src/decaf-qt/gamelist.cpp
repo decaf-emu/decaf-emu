@@ -77,8 +77,6 @@ TitleList::validateEntry(const QModelIndex &item)
       return;
    }
 
-   std::string path = childFile->data(TitleListItemPath::FullPathRole).toString().toStdString();
-
    const QFileInfo file_info{filePath};
    if (file_info.isDir()) {
       const QDir dir{filePath};
