@@ -20,50 +20,39 @@
 
 #include "settings.h"
 
-class GameListWorker;
+class TitleListWorker;
 class QMainWindow;
 
-enum class GameListOpenTarget 
-{
-   SaveData,
-   ModData,
-};
-
-class GameList : public QWidget 
+class TitleList : public QWidget
 {
    Q_OBJECT
 
 public:
-   enum 
+   enum
    {
       COLUMN_NAME,
-      COLUMN_COMPATIBILITY,
-      COLUMN_ADD_ONS,
-      COLUMN_FILE_TYPE,
-      COLUMN_SIZE,
+      COLUMN_VERSION,
+      COLUMN_TITLE_ID,
+      COLUMN_PATH,
+      COLUMN_PATH2,
       COLUMN_COUNT, // Number of columns
    };
 
-   explicit GameList(QMainWindow *parent, SettingsStorage *settingsStorage);
+   explicit TitleList(QMainWindow *parent, SettingsStorage *settingsStorage);
 
    void initialiseTreeView();
 
-   ~GameList() override;
+   ~TitleList() override;
 
-   void populateAsync(const QString &dirPath, 
+   void populateAsync(const QString &dirPath,
                       bool deepScan);
 
    void initialiseModel();
 
-   void refreshGameDirectory();
-
-   static bool GameList::splitPath(const std::string &fullPath, 
-                                   std::string *pPath, 
-                                   std::string *pFilename,
-                                   std::string *pExtension);
+   void refreshTitleDirectory();
 
 signals:
-   void gameChosen(QString gamePath);
+   void titleChosen(QString titlePath);
    void shouldCancelWorker();
 
 private:
@@ -75,9 +64,7 @@ private:
    QVBoxLayout *mLayout = nullptr;
    QTreeView *mTreeView = nullptr;
    QStandardItemModel *mItemModel = nullptr;
-   GameListWorker *mCurrentWorker = nullptr;
+   TitleListWorker *mCurrentWorker = nullptr;
    QFileSystemWatcher *mWatcher = nullptr;
    SettingsStorage *mSettingsStorage = nullptr;
 };
-
-Q_DECLARE_METATYPE(GameListOpenTarget);

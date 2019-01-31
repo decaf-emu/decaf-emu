@@ -171,6 +171,6 @@ int main(int argc, char *argv[])
    MainWindow mainWindow { &settings, &inst, &decafInterface, &inputDriver };
    mainWindow.resize(1024, 768);
    mainWindow.show();
-   mainWindow.showGameList();
+   mainWindow.showTitleList();
    return app.exec();
 }

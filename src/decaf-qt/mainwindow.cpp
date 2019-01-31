@@ -29,10 +29,10 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    // Setup UI
    mUi.setupUi(this);
 
-   mGameList = new GameList(this, settingsStorage);
-   mGameList->refreshGameDirectory();
-   mGameList->hide();
-   mUi.horizontalLayout->addWidget(mGameList);
+   mTitleList = new TitleList(this, settingsStorage);
+   mTitleList->refreshTitleDirectory();
+   mTitleList->hide();
+   mUi.horizontalLayout->addWidget(mTitleList);
    
    mVulkanWindow = new VulkanWindow { vulkanInstance, settingsStorage, decafInterface, inputDriver };
    mRenderWindow = QWidget::createWindowContainer(static_cast<QWindow *>(mVulkanWindow));
@@ -43,8 +43,8 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
 
-   connect(mGameList, &GameList::gameChosen, 
-           this, &MainWindow::openGame);
+   connect(mTitleList, &TitleList::titleChosen, 
+           this, &MainWindow::loadFile);
 
    // Setup status bar
    mStatusTimer = new QTimer(this);
@@ -84,17 +84,11 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
 }
 
 void 
-MainWindow::showGameList()
+MainWindow::showTitleList()
 {
-   mGameList->show();
+   mTitleList->show();
 }
 
-void 
-MainWindow::openGame(QString gamePath) {
-   if (!gamePath.isEmpty()) {
-      loadFile(gamePath);
-   }
-}
 void
 MainWindow::softwareKeyboardOpen(QString defaultText)
 {

@@ -17,26 +17,25 @@
 
 class QStandardItem;
 
-std::u16string UTF8ToUTF16(const std::string& input);
+std::u16string UTF8ToUTF16(const std::string &input);
 
 #ifdef _WIN32
-std::string UTF16ToUTF8(const std::wstring& input);
-std::wstring UTF8ToUTF16W(const std::string& str);
+std::string UTF16ToUTF8(const std::wstring &input);
+std::wstring UTF8ToUTF16W(const std::string &str);
 #endif
 
 /**
  * Asynchronous worker object for populating the game list.
  * Communicates with other threads through Qt's signal/slot system.
  */
-class GameListWorker : public QObject, public QRunnable 
+class TitleListWorker : public QObject, public QRunnable 
 {
    Q_OBJECT
 
 public:
-   GameListWorker(QString dirPath, 
-                  bool deepScan);
+   TitleListWorker(QString dirPath, bool deepScan);
 
-   ~GameListWorker() override;
+   ~TitleListWorker() override;
 
    /// Starts the processing of directory tree information.
    void run() override;
@@ -59,7 +58,7 @@ signals:
    void finished(QStringList watchList);
 
 private:
-   void addEntriesToGameList(const std::string& dirPath, unsigned int recursion = 0);
+   void addEntriesToTitleList(const std::string &dirPath, unsigned int recursion = 0);
 
    QStringList mWatchList;
    QString mDirPath;

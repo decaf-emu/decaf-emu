@@ -120,7 +120,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
       }
 
       if (auto viewModeText = display->get_as<std::string>("game_path"); viewModeText) {
-         displaySettings.gamePath = QString::fromStdString(viewModeText->c_str());
+         displaySettings.titlePath = QString::fromStdString(viewModeText->c_str());
       }
 
       if (auto backgroundColour = display->get_array_of<int64_t>("background_colour");
@@ -149,7 +149,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
    display->insert("view_mode", translateViewMode(displaySettings.viewMode));
    display->insert("maintain_aspect_ratio", displaySettings.maintainAspectRatio);
    display->insert("split_seperation", displaySettings.splitSeperation);
-   display->insert("game_path", displaySettings.gamePath.toStdString().c_str());
+   display->insert("game_path", displaySettings.titlePath.toStdString().c_str());
 
    auto backgroundColour = cpptoml::make_array();
    backgroundColour->push_back(displaySettings.backgroundColour.red());

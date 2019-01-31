@@ -14,7 +14,7 @@ public:
    void saveSettings(Settings &settings) override;
 
 private slots:
-   void browseGamePath();
+   void browseTitlePath();
 
 private:
    Ui::DisplaySettingsWidget mUi;

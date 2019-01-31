@@ -30,7 +30,7 @@ DisplaySettingsWidget::loadSettings(const Settings &settings)
    mUi.checkBoxMaintainAspectRatio->setChecked(settings.display.maintainAspectRatio);
    mUi.lineEditSplitSeparation->setText(QString("%1").arg(settings.display.splitSeperation, 0, 'g', 2));
    mUi.lineEditBackgroundColour->setColour(settings.display.backgroundColour);
-   mUi.lineEditGamePaths->setText(settings.display.gamePath);
+   mUi.lineEditTitlePaths->setText(settings.display.titlePath);
 }
 
 void
@@ -40,14 +40,14 @@ DisplaySettingsWidget::saveSettings(Settings &settings)
    settings.display.maintainAspectRatio = mUi.checkBoxMaintainAspectRatio->isChecked();
    settings.display.splitSeperation = mUi.lineEditSplitSeparation->text().toDouble();
    settings.display.backgroundColour = mUi.lineEditBackgroundColour->getColour();
-   settings.display.gamePath = mUi.lineEditGamePaths->text();
+   settings.display.titlePath = mUi.lineEditTitlePaths->text();
 }
 
 void
-DisplaySettingsWidget::browseGamePath()
+DisplaySettingsWidget::browseTitlePath()
 {
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditGamePaths->text());
+   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditTitlePaths->text());
    if (!path.isEmpty()) {
-      mUi.lineEditGamePaths->setText(path);
+      mUi.lineEditTitlePaths->setText(path);
    }
 }

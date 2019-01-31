@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="6" column="1">
-    <widget class="QLineEdit" name="lineEditGamePaths"/>
+    <widget class="QLineEdit" name="lineEditTitlePaths"/>
    </item>
    <item row="4" column="1">
     <widget class="ColourLineEdit" name="lineEditBackgroundColour"/>
@@ -34,7 +34,7 @@
     </spacer>
    </item>
    <item row="6" column="2">
-    <widget class="QPushButton" name="pushButtonGamePath">
+    <widget class="QPushButton" name="pushButtonTitlePath">
      <property name="text">
       <string>...</string>
      </property>
@@ -106,10 +106,10 @@
  <resources/>
  <connections>
   <connection>
-   <sender>pushButtonGamePath</sender>
+   <sender>pushButtonTitlePath</sender>
    <signal>clicked()</signal>
    <receiver>DisplaySettingsWidget</receiver>
-   <slot>browseGamePath()</slot>
+   <slot>browseTitlePath()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>350</x>
@@ -123,6 +123,6 @@
   </connection>
  </connections>
  <slots>
-  <slot>browseGamePath()</slot>
+  <slot>browseTitlePath()</slot>
  </slots>
 </ui>

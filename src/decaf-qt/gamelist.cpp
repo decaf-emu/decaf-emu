@@ -20,51 +20,8 @@
 #include "gamelistworker.h"
 #include "qmainwindow.h"
 
-bool 
-GameList::splitPath(const std::string& fullPath, 
-                    std::string* pPath, 
-                    std::string* pFilename,
-                    std::string* pExtension) 
-{
-   if (fullPath.empty()) {
-     return false;
-   }
-
-   std::size_t dirEnd = fullPath.find_last_of("/"
-     // windows needs the : included for something like just "C:" to be considered a directory
-#ifdef _WIN32
-     "\\:"
-#endif
-   );
-   if (std::string::npos == dirEnd) {
-     dirEnd = 0;
-   } else {
-     dirEnd += 1;
-   }
-
-   std::size_t fnameEnd = fullPath.rfind('.');
-
-   if (fnameEnd < dirEnd || std::string::npos == fnameEnd) {
-     fnameEnd = fullPath.size();
-   }
-
-   if (pPath) {
-     *pPath = fullPath.substr(0, dirEnd);
-   }
-
-   if (pFilename) {
-     *pFilename = fullPath.substr(dirEnd, fnameEnd - dirEnd);
-   }
-
-   if (pExtension) {
-     *pExtension = fullPath.substr(fnameEnd);
-   }
-
-   return true;
-}
-
-GameList::GameList(QMainWindow* parent, 
-                   SettingsStorage *settingsStorage) : 
+TitleList::TitleList(QMainWindow *parent,
+                     SettingsStorage *settingsStorage) :
    QWidget{ parent },
    mSettingsStorage(settingsStorage)
 {
@@ -77,13 +34,10 @@ GameList::GameList(QMainWindow* parent,
 
    initialiseTreeView();
 
-   mItemModel->setHeaderData(COLUMN_NAME, Qt::Horizontal, tr("Name"));
-   mItemModel->setHeaderData(COLUMN_COMPATIBILITY, Qt::Horizontal, tr("Compatibility"));  
-   mItemModel->setHeaderData(COLUMN_FILE_TYPE - 1, Qt::Horizontal, tr("Title ID"));
-   mItemModel->setHeaderData(COLUMN_SIZE - 1, Qt::Horizontal, tr("Path"));
+   initialiseModel();
 
-   connect(mTreeView, &QTreeView::activated, this, &GameList::validateEntry);
-   connect(mWatcher, &QFileSystemWatcher::directoryChanged, this, &GameList::refreshGameDirectory);
+   connect(mTreeView, &QTreeView::activated, this, &TitleList::validateEntry);
+   connect(mWatcher, &QFileSystemWatcher::directoryChanged, this, &TitleList::refreshTitleDirectory);
 
    // We must register all custom types with the Qt Automoc system so that we are able to use it
    // with signals/slots. In this case, QList falls under the umbrellas of custom types.
@@ -95,26 +49,25 @@ GameList::GameList(QMainWindow* parent,
    setLayout(mLayout);
 }
 
-GameList::~GameList() 
+TitleList::~TitleList()
 {
    emit shouldCancelWorker();
 }
 
 
-void 
-GameList::addEntry(const QList<QStandardItem*>& entryItems) 
+void
+TitleList::addEntry(const QList<QStandardItem*> &entryItems)
 {
    mItemModel->invisibleRootItem()->appendRow(entryItems);
-   mTreeView->resizeColumnToContents(0);
 }
 
-void 
-GameList::validateEntry(const QModelIndex& item) 
+void
+TitleList::validateEntry(const QModelIndex &item)
 {
    // We don't care about the individual QStandardItem that was selected, but its row.
    const int row = mItemModel->itemFromIndex(item)->row();
-   const QStandardItem* childFile = mItemModel->invisibleRootItem()->child(row, COLUMN_NAME);
-   const QString filePath = childFile->data(GameListItemPath::FullPathRole).toString();
+   const QStandardItem *childFile = mItemModel->invisibleRootItem()->child(row, COLUMN_NAME);
+   const QString filePath = childFile->data(TitleListItemPath::FullPathRole).toString();
 
    if (filePath.isEmpty()) {
       return;
@@ -124,7 +77,7 @@ GameList::validateEntry(const QModelIndex& item)
       return;
    }
 
-   std::string path = childFile->data(GameListItemPath::FullPathRole).toString().toStdString();
+   std::string path = childFile->data(TitleListItemPath::FullPathRole).toString().toStdString();
 
    const QFileInfo file_info{filePath};
    if (file_info.isDir()) {
@@ -132,17 +85,17 @@ GameList::validateEntry(const QModelIndex& item)
       const QStringList matchingMain = dir.entryList(QStringList("main"), QDir::Files);
 
       if (matchingMain.size() == 1) {
-         emit gameChosen(dir.path() + "/" + matchingMain[0]);
+         emit titleChosen(dir.path() + "/" + matchingMain[0]);
       }
       return;
    }
 
-   // Users usually want to run a different game after closing one
-   emit gameChosen(filePath);
+   // Users usually want to run a different title after closing one
+   emit titleChosen(filePath);
 }
 
-void 
-GameList::donePopulating(QStringList watchList) 
+void
+TitleList::donePopulating(QStringList watchList)
 {
    // Clear out the old directories to watch for changes and add the new ones
    auto watchDirs = mWatcher->directories();
@@ -163,12 +116,16 @@ GameList::donePopulating(QStringList watchList)
       QCoreApplication::processEvents();
    }
 
+   for (int i = 0; i < COLUMN_PATH; ++i) {
+      mTreeView->resizeColumnToContents(i);
+   }
+
    mTreeView->setEnabled(true);
 }
 
 void
-GameList::populateAsync(const QString& dirPath, 
-                        bool deepScan) 
+TitleList::populateAsync(const QString &dirPath,
+                        bool deepScan)
 {
    const QFileInfo dirInfo{dirPath};
 
@@ -182,20 +139,19 @@ GameList::populateAsync(const QString& dirPath,
 
    emit shouldCancelWorker();
 
-   GameListWorker* worker = new GameListWorker(dirPath, deepScan);
+   TitleListWorker *worker = new TitleListWorker(dirPath, deepScan);
 
-   // Use DirectConnection here because worker->Cancel() is thread-safe and we want it to cancel
-   // without delay.
-   connect(this, &GameList::shouldCancelWorker, worker, &GameListWorker::cancel, Qt::DirectConnection);
-   connect(worker, &GameListWorker::entryReady, this, &GameList::addEntry, Qt::QueuedConnection);
-   connect(worker, &GameListWorker::finished, this, &GameList::donePopulating, Qt::QueuedConnection);
+   // Use DirectConnection here because worker->Cancel() is thread-safe and we want it to cancel without delay.
+   connect(this, &TitleList::shouldCancelWorker, worker, &TitleListWorker::cancel, Qt::DirectConnection);
+   connect(worker, &TitleListWorker::entryReady, this, &TitleList::addEntry, Qt::QueuedConnection);
+   connect(worker, &TitleListWorker::finished, this, &TitleList::donePopulating, Qt::QueuedConnection);
 
    QThreadPool::globalInstance()->start(worker);
    mCurrentWorker = std::move(worker);
 }
 
-void 
-GameList::initialiseTreeView()
+void
+TitleList::initialiseTreeView()
 {
    mTreeView->setModel(mItemModel);
    mTreeView->setWordWrap(false);
@@ -213,10 +169,11 @@ GameList::initialiseTreeView()
    mItemModel->insertColumns(0, COLUMN_COUNT - 1);
    mTreeView->setColumnWidth(0, 400);
    mTreeView->setColumnWidth(1, 600);
+   mTreeView->setColumnWidth(2, 800);
 }
 
 void
-GameList::initialiseModel()
+TitleList::initialiseModel()
 {
    // Update the columns in case UISettings has changed
    mItemModel->removeColumns(0, mItemModel->columnCount());
@@ -224,23 +181,20 @@ GameList::initialiseModel()
    mItemModel->insertColumns(0, COLUMN_COUNT - 1);
 
    mItemModel->setHeaderData(COLUMN_NAME, Qt::Horizontal, tr("Name"));
-   mItemModel->setHeaderData(COLUMN_COMPATIBILITY, Qt::Horizontal, tr("Compatibility"));
-   mItemModel->setHeaderData(COLUMN_FILE_TYPE - 1, Qt::Horizontal, tr("Title ID"));
-   mItemModel->setHeaderData(COLUMN_SIZE - 1, Qt::Horizontal, tr("Path"));
-
-   mItemModel->removeColumns(COLUMN_COUNT - 1, 1);
+   mItemModel->setHeaderData(COLUMN_VERSION, Qt::Horizontal, tr("Version"));
+   mItemModel->setHeaderData(COLUMN_TITLE_ID, Qt::Horizontal, tr("Title ID"));
+   mItemModel->setHeaderData(COLUMN_PATH, Qt::Horizontal, tr("Path"));
 
    // Delete any rows that might already exist if we're repopulating
    mItemModel->removeRows(0, mItemModel->rowCount());
 }
 
-void 
-GameList::refreshGameDirectory() 
+void
+TitleList::refreshTitleDirectory()
 {
    auto settings = *mSettingsStorage->get();
 
-   if (!settings.display.gamePath.isEmpty())
-   {
-      populateAsync(settings.display.gamePath, false);
+   if (!settings.display.titlePath.isEmpty()) {
+      populateAsync(settings.display.titlePath, false);
    }
 }
