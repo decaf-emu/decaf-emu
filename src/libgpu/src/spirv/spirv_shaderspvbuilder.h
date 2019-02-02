@@ -1810,12 +1810,14 @@ public:
       return mFunctions.find(name) != mFunctions.end();
    }
 
-   spv::Function * getFunction(const std::string& name)
+   spv::Function *getFunction(const std::string& name)
    {
-      auto& func = mFunctions[name];
+      auto &func = mFunctions[name];
       if (!func) {
          auto savePos = getBuildPoint();
-         func = makeEntryPoint(name.c_str());
+         auto entryBlock = static_cast<spv::Block *>(nullptr);
+         func = makeFunctionEntry(spv::NoPrecision, makeVoidType(),
+                                  name.c_str(), {}, {}, &entryBlock);
          setBuildPoint(savePos);
       }
       return func;
