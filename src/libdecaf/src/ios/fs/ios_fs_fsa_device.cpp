@@ -402,7 +402,6 @@ FSADevice::mount(vfs::User user,
    return FSAStatus::OK;
 }
 
-
 FSAStatus
 FSADevice::mountWithProcess(vfs::User user,
                             phys_ptr<FSARequestMountWithProcess> request)
@@ -412,9 +411,12 @@ FSADevice::mountWithProcess(vfs::User user,
       return translateError(linkDevice.error());
    }
 
-   auto error = mFS->mountDevice(user,
-                                 translatePath(phys_addrof(request->target)),
-                                 std::static_pointer_cast<vfs::Device>(*linkDevice));
+   auto error =
+      mFS->mountOverlayDevice(
+         user,
+         static_cast<vfs::OverlayPriority>(request->priority),
+         translatePath(phys_addrof(request->target)),
+         std::static_pointer_cast<vfs::Device>(*linkDevice));
    if (error != vfs::Error::Success) {
       return translateError(error);
    }
@@ -608,7 +610,7 @@ FSADevice::unmount(vfs::User user,
                    phys_ptr<FSARequestUnmount> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   return translateError(mFS->remove(user, path));
+   return translateError(mFS->unmountDevice(user, path));
 }
 
 
@@ -617,7 +619,15 @@ FSADevice::unmountWithProcess(vfs::User user,
                               phys_ptr<FSARequestUnmountWithProcess> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   return translateError(mFS->remove(user, path));
+
+   if (request->priority == FSAMountPriority::UnmountAll) {
+      // unmountDevice will unmount the base overlay device, thus unmounting
+      // all overlay devices at path.
+      return translateError(mFS->unmountDevice(user, path));
+   } else {
+      // TODO: unmount overlay device with priority request->priority
+      return FSAStatus::UnsupportedCmd;
+   }
 }
 
 

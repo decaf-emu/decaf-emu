@@ -336,7 +336,7 @@ mountSaveDir(CommandHandlerArgs &args)
    auto fsaStatus =
       FSAMountWithProcess(getFsaHandle(),
                           fmt::format("/vol/storage_mlc01/usr/save/{:08x}/{:08x}/user", titleHi, titleLo),
-                          "/vol/save", 1,
+                          "/vol/save", FSAMountPriority::Base,
                           &processInfo, nullptr, 0u);
    if (fsaStatus != FSAStatus::OK) {
       return translateError(fsaStatus);
@@ -354,7 +354,8 @@ unmountSaveDir(CommandHandlerArgs &args)
    processInfo.groupId = args.resourceRequest->requestData.groupId;
 
    auto fsaStatus = FSAUnmountWithProcess(getFsaHandle(), "/vol/save",
-                                          0x80000000, &processInfo);
+                                          FSAMountPriority::UnmountAll,
+                                          &processInfo);
    if (fsaStatus != FSAStatus::OK) {
       return translateError(fsaStatus);
    }

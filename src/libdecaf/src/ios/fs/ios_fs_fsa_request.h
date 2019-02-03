@@ -175,14 +175,14 @@ struct FSARequestMountWithProcess
 {
    be2_array<char, FSAPathLength + 1> path;
    be2_array<char, FSAPathLength + 1> target;
-   be2_val<uint32_t> unk0x500;
+   be2_val<FSAMountPriority> priority;
    be2_struct<FSAProcessInfo> process;
    be2_virt_ptr<void> unkBuf;
    be2_val<uint32_t> unkBufLen;
 };
 CHECK_OFFSET(FSARequestMountWithProcess, 0x0, path);
 CHECK_OFFSET(FSARequestMountWithProcess, 0x280, target);
-CHECK_OFFSET(FSARequestMountWithProcess, 0x500, unk0x500);
+CHECK_OFFSET(FSARequestMountWithProcess, 0x500, priority);
 CHECK_OFFSET(FSARequestMountWithProcess, 0x504, process);
 CHECK_OFFSET(FSARequestMountWithProcess, 0x514, unkBuf);
 CHECK_OFFSET(FSARequestMountWithProcess, 0x518, unkBufLen);
@@ -341,11 +341,11 @@ CHECK_SIZE(FSARequestUnmount, 0x284);
 struct FSARequestUnmountWithProcess
 {
    be2_array<char, FSAPathLength + 1> path;
-   be2_val<uint32_t> unk0x280;
+   be2_val<FSAMountPriority> priority;
    be2_struct<FSAProcessInfo> process;
 };
 CHECK_OFFSET(FSARequestUnmountWithProcess, 0x0, path);
-CHECK_OFFSET(FSARequestUnmountWithProcess, 0x280, unk0x280);
+CHECK_OFFSET(FSARequestUnmountWithProcess, 0x280, priority);
 CHECK_OFFSET(FSARequestUnmountWithProcess, 0x284, process);
 CHECK_SIZE(FSARequestUnmountWithProcess, 0x294);
 

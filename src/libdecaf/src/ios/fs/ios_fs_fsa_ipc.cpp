@@ -456,7 +456,7 @@ FSAStatus
 FSAMountWithProcess(FSAHandle handle,
                     std::string_view src,
                     std::string_view dst,
-                    uint32_t unk0x500,
+                    FSAMountPriority priority,
                     FSAProcessInfo *process,
                     phys_ptr<void> unkBuf,
                     uint32_t unkBufLen)
@@ -482,7 +482,7 @@ FSAMountWithProcess(FSAHandle handle,
                request->mountWithProcess.target.size());
 
    request->mountWithProcess.process = *process;
-   request->mountWithProcess.unk0x500 = unk0x500;
+   request->mountWithProcess.priority = priority;
    request->mountWithProcess.unkBuf = nullptr;
    request->mountWithProcess.unkBufLen = unkBufLen;
 
@@ -510,7 +510,7 @@ FSAMountWithProcess(FSAHandle handle,
 FSAStatus
 FSAUnmountWithProcess(FSAHandle handle,
                       std::string_view path,
-                      uint32_t unk0x280,
+                      FSAMountPriority priority,
                       FSAProcessInfo *process)
 {
    phys_ptr<FSAIpcData> ipcData;
@@ -526,7 +526,7 @@ FSAUnmountWithProcess(FSAHandle handle,
    // Setup request
    auto request = phys_addrof(ipcData->request);
    request->unmountWithProcess.path = path;
-   request->unmountWithProcess.unk0x280 = unk0x280;
+   request->unmountWithProcess.priority = priority;
    request->unmountWithProcess.process = *process;
 
    // Perform ioctl

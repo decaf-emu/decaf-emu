@@ -83,6 +83,13 @@ ENUM_BEG(FSAMediaState, uint32_t)
    ENUM_VALUE(MediaError,              4)
 ENUM_END(FSAMediaState)
 
+ENUM_BEG(FSAMountPriority, uint32_t)
+   ENUM_VALUE(Base,                    1)
+   ENUM_VALUE(RamDiskCache,            4)
+   ENUM_VALUE(TitleUpdate,             9)
+   ENUM_VALUE(UnmountAll,              0x80000000)
+ENUM_END(FSAMountPriority)
+
 ENUM_BEG(FSAQueryInfoType, uint32_t)
    ENUM_VALUE(FreeSpaceSize,           0)
    ENUM_VALUE(DirSize,                 1)

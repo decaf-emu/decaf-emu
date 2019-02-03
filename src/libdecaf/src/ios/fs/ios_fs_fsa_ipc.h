@@ -80,7 +80,7 @@ FSAStatus
 FSAMountWithProcess(FSAHandle handle,
                     std::string_view src,
                     std::string_view dst,
-                    uint32_t unk0x500,
+                    FSAMountPriority priority,
                     FSAProcessInfo *process,
                     phys_ptr<void> unkBuf,
                     uint32_t unkBufLen);
@@ -88,7 +88,7 @@ FSAMountWithProcess(FSAHandle handle,
 FSAStatus
 FSAUnmountWithProcess(FSAHandle handle,
                       std::string_view path,
-                      uint32_t unk0x280,
+                      FSAMountPriority priority,
                       FSAProcessInfo *process);
 
 FSAStatus
