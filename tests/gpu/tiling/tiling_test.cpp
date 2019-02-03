@@ -12,9 +12,6 @@ bool vulkanBeforeStart() { return true;  }
 bool vulkanAfterComplete() { return true; }
 #endif
 
-std::shared_ptr<spdlog::logger>
-gLog;
-
 std::vector<uint8_t>
 sRandomData = generateRandomData(32 * 1024 * 1024);
 
