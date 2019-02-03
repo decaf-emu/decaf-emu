@@ -276,6 +276,12 @@ hasExited()
 void
 join()
 {
+   cpu::join();
+}
+
+void
+stop()
+{
    if (!sStopping) {
       sStopping = true;
       cpu::halt();

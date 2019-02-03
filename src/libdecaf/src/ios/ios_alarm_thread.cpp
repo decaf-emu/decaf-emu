@@ -55,7 +55,7 @@ startAlarmThread()
 }
 
 void
-joinAlarmThread()
+stopAlarmThread()
 {
    sAlarmThreadRunning.store(false);
    sAlarmCondition.notify_all();

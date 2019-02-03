@@ -18,6 +18,9 @@ start();
 void
 join();
 
+void
+stop();
+
 bool
 hasExited();
 

@@ -98,6 +98,9 @@ void
 joinHardwareThread();
 
 void
+stopHardwareThread();
+
+void
 initialiseStaticHardwareData();
 
 } // namespace internal

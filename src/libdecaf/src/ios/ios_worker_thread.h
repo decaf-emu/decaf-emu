@@ -9,7 +9,7 @@ void
 startWorkerThread();
 
 void
-joinWorkerThread();
+stopWorkerThread();
 
 void
 submitWorkerTask(WorkerTask task);

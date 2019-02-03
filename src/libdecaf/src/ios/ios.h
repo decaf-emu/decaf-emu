@@ -11,6 +11,9 @@ void
 join();
 
 void
+stop();
+
+void
 setFileSystem(std::unique_ptr<::fs::FileSystem> fs);
 
 ::fs::FileSystem *

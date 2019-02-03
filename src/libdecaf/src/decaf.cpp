@@ -216,10 +216,10 @@ shutdown()
    debugger::shutdown();
 
    // Wait for IOS to finish
-   ios::join();
+   //ios::join();
 
    // Wait for PPC to finish
-   cafe::kernel::join();
+   //cafe::kernel::join();
 
    // Stop graphics driver
    auto graphicsDriver = getGraphicsDriver();
