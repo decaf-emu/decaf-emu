@@ -22,9 +22,17 @@ start()
 void
 join()
 {
-   internal::joinWorkerThread();
-   internal::joinAlarmThread();
+   kernel::join();
+   internal::stopWorkerThread();
+   internal::stopAlarmThread();
+}
+
+void
+stop()
+{
    kernel::stop();
+   internal::stopWorkerThread();
+   internal::stopAlarmThread();
 }
 
 void

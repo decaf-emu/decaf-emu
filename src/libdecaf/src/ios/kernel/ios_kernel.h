@@ -8,6 +8,9 @@ Error
 start();
 
 void
+join();
+
+void
 stop();
 
 } // namespace ios::kernel

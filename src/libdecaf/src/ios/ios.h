@@ -16,6 +16,9 @@ void
 join();
 
 void
+stop();
+
+void
 setFileSystem(std::shared_ptr<vfs::VirtualDevice> fs);
 
 std::shared_ptr<vfs::VirtualDevice>

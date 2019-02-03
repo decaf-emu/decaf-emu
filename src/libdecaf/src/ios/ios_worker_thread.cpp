@@ -56,7 +56,7 @@ startWorkerThread()
 }
 
 void
-joinWorkerThread()
+stopWorkerThread()
 {
    sWorkerThreadRunning = false;
    sWorkerThreadConditionVariable.notify_all();

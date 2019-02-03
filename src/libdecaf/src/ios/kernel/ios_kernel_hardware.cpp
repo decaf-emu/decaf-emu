@@ -548,6 +548,12 @@ startHardwareThread()
 void
 joinHardwareThread()
 {
+   sHardwareThread.join();
+}
+
+void
+stopHardwareThread()
+{
    sRunning = false;
    sHardwareConditionVariable.notify_all();
    sHardwareThread.join();
