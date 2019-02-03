@@ -17,6 +17,8 @@
 #include "vfs/vfs_host_device.h"
 #include "vfs/vfs_virtual_device.h"
 
+#include <common/log.h>
+
 namespace ios::mcp::internal
 {
 
@@ -174,6 +176,40 @@ mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
    return static_cast<MCPError>(error);
 }
 
+static bool
+checkExistenceUsingOpenDir(std::string_view path)
+{
+   auto fsaHandle = getFsaHandle();
+   auto dirHandle = FSADirHandle { -1 };
+   auto result = FSAOpenDir(fsaHandle, path, &dirHandle);
+   if (result == FSAStatus::OK) {
+      FSACloseDir(fsaHandle, dirHandle);
+      return true;
+   }
+
+   if (result == FSAStatus::NotDir) {
+      return true;
+   }
+
+   return false;
+}
+
+static bool
+checkExistence(std::string_view path)
+{
+   StackObject<FSAStat> stat;
+   auto result = FSAGetStat(getFsaHandle(), path, stat);
+   if (result == FSAStatus::OK) {
+      return true;
+   }
+
+   if (result == FSAStatus::PermissionError) {
+      return checkExistenceUsingOpenDir(path);
+   }
+
+   return false;
+}
+
 MCPError
 mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
                   phys_ptr<MCPResponsePrepareTitle> response)
@@ -194,7 +230,7 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
    }
 
    // TODO: When we have title switching we will need to read the title id and
-   // load the correct title, until then our title is already mounted on /vol
+   // mount the correct title to /vol - until then libdecaf already mounted it.
    auto error = readTitleCosXml(titleInfoBuffer);
    if (error < MCPError::OK) {
       // If there is no cos.xml then let's grant full permissions
@@ -203,6 +239,56 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
       titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
    }
 
+   // Try mount updates for the title
+   auto titleIdLo = titleId & 0xFFFFFFFF;
+   auto titleUpdatePath = fmt::format("/vol/storage_mlc01/usr/title/0005000e/{:08x}",
+                                      (titleInfoBuffer->titleId & 0xFFFFFFFF));
+   if (false && checkExistence(titleUpdatePath)) {
+      gLog->info("Title update found at {}", titleUpdatePath);
+
+      auto processInfo = FSAProcessInfo { };
+      processInfo.groupId = titleInfoBuffer->groupId;
+      processInfo.titleId = titleInfoBuffer->titleId;
+      processInfo.processId = ios::ProcessId::COSKERNEL; // TODO: Use correct process id.
+
+      auto fsaHandle = getFsaHandle();
+      auto mountResult =
+         FSAMountWithProcess(fsaHandle, titleUpdatePath + "/code",
+                             "/vol/code", FSAMountPriority::TitleUpdate,
+                             &processInfo, nullptr, 0);
+      if (mountResult) {
+         gLog->warn("Error mounting update path {}/code to /vol/code",
+                    titleUpdatePath);
+      } else {
+         gLog->info("Mounted update {}/code to /vol/code", titleUpdatePath);
+      }
+
+      mountResult =
+         FSAMountWithProcess(fsaHandle, titleUpdatePath + "/content",
+                             "/vol/content", FSAMountPriority::TitleUpdate,
+                             &processInfo, nullptr, 0);
+      if (mountResult) {
+         gLog->warn("Error mounting update path {}/content to /vol/content",
+                    titleUpdatePath + "/content");
+      } else {
+         gLog->info("Mounted update {}/content to /vol/content", titleUpdatePath);
+      }
+
+      mountResult =
+         FSAMountWithProcess(fsaHandle, titleUpdatePath + "/meta",
+                             "/vol/meta", FSAMountPriority::TitleUpdate,
+                             &processInfo, nullptr, 0);
+      if (mountResult) {
+         gLog->warn("Error mounting update path {}/meta to /vol/meta",
+                    titleUpdatePath + "/meta");
+      } else {
+         gLog->info("Mounted update {}/meta to /vol/meta", titleUpdatePath);
+      }
+   } else {
+      gLog->info("No title update found at {}", titleUpdatePath);
+   }
+
+   // Return result
    std::memcpy(phys_addrof(response->titleInfo).get(),
                titleInfoBuffer.get(),
                sizeof(MCPPPrepareTitleInfo));
