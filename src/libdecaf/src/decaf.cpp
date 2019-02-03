@@ -116,7 +116,7 @@ initialise(const std::string &gamePath)
       if (std::filesystem::is_regular_file(parent2 / "code" / "cos.xml")) {
          // Found file/../code/cos.xml
          volPath = parent2;
-      } else if (path.extension().compare("rpx") == 0) {
+      } else if (path.extension().compare(".rpx") == 0) {
          // Found file.rpx
          rpxPath = path;
       }
