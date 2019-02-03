@@ -243,7 +243,7 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
    auto titleIdLo = titleId & 0xFFFFFFFF;
    auto titleUpdatePath = fmt::format("/vol/storage_mlc01/usr/title/0005000e/{:08x}",
                                       (titleInfoBuffer->titleId & 0xFFFFFFFF));
-   if (false && checkExistence(titleUpdatePath)) {
+   if (checkExistence(titleUpdatePath)) {
       gLog->info("Title update found at {}", titleUpdatePath);
 
       auto processInfo = FSAProcessInfo { };
