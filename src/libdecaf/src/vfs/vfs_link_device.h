@@ -30,6 +30,11 @@ public:
    Error
    unmountDevice(const User &user, const Path &path) override;
 
+   Error
+   unmountOverlayDevice(const User &user,
+                        OverlayPriority priority,
+                        const Path &path);
+
    Result<DirectoryIterator>
    openDirectory(const User &user, const Path &path) override;
 

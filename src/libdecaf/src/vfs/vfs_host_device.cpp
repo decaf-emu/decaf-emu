@@ -20,13 +20,15 @@ HostDevice::HostDevice(std::filesystem::path path) :
 }
 
 Result<std::shared_ptr<Device>>
-HostDevice::getLinkDevice(const User &user, const Path &path)
+HostDevice::getLinkDevice(const User &user,
+                          const Path &path)
 {
    return { std::make_shared<LinkDevice>(shared_from_this(), path) };
 }
 
 Error
-HostDevice::makeFolder(const User &user, const Path &path)
+HostDevice::makeFolder(const User &user,
+                       const Path &path)
 {
    if (mVirtualDevice) {
       mVirtualDevice->makeFolder(user, path);
@@ -45,7 +47,8 @@ HostDevice::makeFolder(const User &user, const Path &path)
 }
 
 Error
-HostDevice::makeFolders(const User &user, const Path &path)
+HostDevice::makeFolders(const User &user,
+                        const Path &path)
 {
    if (mVirtualDevice) {
       mVirtualDevice->makeFolders(user, path);
@@ -64,25 +67,40 @@ HostDevice::makeFolders(const User &user, const Path &path)
 }
 
 Error
-HostDevice::mountDevice(const User &user, const Path &path, std::shared_ptr<Device> device)
+HostDevice::mountDevice(const User &user,
+                        const Path &path,
+                        std::shared_ptr<Device> device)
 {
    return mVirtualDevice->mountDevice(user, path, device);
 }
 
 Error
-HostDevice::mountOverlayDevice(const User &user, OverlayPriority priority, const Path &path, std::shared_ptr<Device> device)
+HostDevice::mountOverlayDevice(const User &user,
+                               OverlayPriority priority,
+                               const Path &path,
+                               std::shared_ptr<Device> device)
 {
    return mVirtualDevice->mountOverlayDevice(user, priority, path, device);
 }
 
 Error
-HostDevice::unmountDevice(const User &user, const Path &path)
+HostDevice::unmountDevice(const User &user,
+                          const Path &path)
 {
    return mVirtualDevice->unmountDevice(user, path);
 }
 
+Error
+HostDevice::unmountOverlayDevice(const User &user,
+                                 OverlayPriority priority,
+                                 const Path &path)
+{
+   return mVirtualDevice->unmountOverlayDevice(user, priority, path);
+}
+
 Result<DirectoryIterator>
-HostDevice::openDirectory(const User &user, const Path &path)
+HostDevice::openDirectory(const User &user,
+                          const Path &path)
 {
    if (!checkReadPermission(user, path)) {
       return { Error::ReadPermission };
@@ -131,7 +149,9 @@ translateOpenMode(FileHandle::Mode mode)
 }
 
 Result<std::unique_ptr<FileHandle>>
-HostDevice::openFile(const User &user, const Path &path, FileHandle::Mode mode)
+HostDevice::openFile(const User &user,
+                     const Path &path,
+                     FileHandle::Mode mode)
 {
    // Check file permissions
    if ((mode & FileHandle::Read) || (mode & FileHandle::Update)) {
@@ -175,7 +195,8 @@ HostDevice::openFile(const User &user, const Path &path, FileHandle::Mode mode)
 }
 
 Error
-HostDevice::remove(const User &user, const Path &path)
+HostDevice::remove(const User &user,
+                   const Path &path)
 {
    if (!checkWritePermission(user, path)) {
       return { Error::WritePermission };
@@ -197,7 +218,9 @@ HostDevice::remove(const User &user, const Path &path)
 }
 
 Error
-HostDevice::rename(const User &user, const Path &src, const Path &dst)
+HostDevice::rename(const User &user,
+                   const Path &src,
+                   const Path &dst)
 {
    if (!checkReadPermission(user, src)) {
       return { Error::ReadPermission };
@@ -224,7 +247,9 @@ HostDevice::rename(const User &user, const Path &src, const Path &dst)
 }
 
 Error
-HostDevice::setGroup(const User &user, const Path &path, GroupId group)
+HostDevice::setGroup(const User &user,
+                     const Path &path,
+                     GroupId group)
 {
    auto ec = std::error_code { };
    if (std::filesystem::exists(makeHostPath(path), ec)) {
@@ -243,7 +268,9 @@ HostDevice::setGroup(const User &user, const Path &path, GroupId group)
 }
 
 Error
-HostDevice::setOwner(const User &user, const Path &path, OwnerId owner)
+HostDevice::setOwner(const User &user,
+                     const Path &path,
+                     OwnerId owner)
 {
    auto ec = std::error_code { };
    if (std::filesystem::exists(makeHostPath(path), ec)) {
@@ -262,7 +289,9 @@ HostDevice::setOwner(const User &user, const Path &path, OwnerId owner)
 }
 
 Error
-HostDevice::setPermissions(const User &user, const Path &path, Permissions mode)
+HostDevice::setPermissions(const User &user,
+                           const Path &path,
+                           Permissions mode)
 {
    auto ec = std::error_code { };
    if (std::filesystem::exists(makeHostPath(path), ec)) {
@@ -281,7 +310,8 @@ HostDevice::setPermissions(const User &user, const Path &path, Permissions mode)
 }
 
 Result<Status>
-HostDevice::status(const User &user, const Path &path)
+HostDevice::status(const User &user,
+                   const Path &path)
 {
    if (!checkReadPermission(user, path)) {
       return { Error::ReadPermission };
@@ -336,7 +366,8 @@ HostDevice::lookupPermissions(const Path &path) const
 }
 
 bool
-HostDevice::checkReadPermission(const User &user, const Path &path)
+HostDevice::checkReadPermission(const User &user,
+                                const Path &path)
 {
    auto itr = mPermissionsCache.find(path.path());
    if (itr == mPermissionsCache.end()) {
@@ -365,7 +396,8 @@ HostDevice::checkReadPermission(const User &user, const Path &path)
 }
 
 bool
-HostDevice::checkWritePermission(const User &user, const Path &path)
+HostDevice::checkWritePermission(const User &user,
+                                 const Path &path)
 {
    auto itr = mPermissionsCache.find(path.path());
    if (itr == mPermissionsCache.end()) {
@@ -394,7 +426,8 @@ HostDevice::checkWritePermission(const User &user, const Path &path)
 }
 
 bool
-HostDevice::checkExecutePermission(const User &user, const Path &path)
+HostDevice::checkExecutePermission(const User &user,
+                                   const Path &path)
 {
    auto itr = mPermissionsCache.find(path.path());
    if (itr == mPermissionsCache.end()) {

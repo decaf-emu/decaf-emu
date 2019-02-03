@@ -47,7 +47,7 @@ OverlayDevice::mountDevice(const User &user,
                            std::shared_ptr<Device> device)
 {
    // Overlay devices are read only.
-   return { Error::WritePermission };
+   return Error::WritePermission;
 }
 
 Error
@@ -57,18 +57,23 @@ OverlayDevice::mountOverlayDevice(const User &user,
                                   std::shared_ptr<Device> device)
 {
    if (path.depth() == 0) {
+      for (auto itr = mDevices.begin(); itr != mDevices.end(); ++itr) {
+         if (itr->first == priority) {
+            return Error::AlreadyExists;
+         }
+      }
+
       mDevices.emplace_back(priority, std::move(device));
       std::sort(mDevices.begin(), mDevices.end(),
                 [](const auto &lhs, const auto &rhs)
                 {
-                   return lhs.first < rhs.first;
+                   return lhs.first > rhs.first;
                 });
-      // Maybe we would want to error if we have 2 devices of same priority?
       return Error::Success;
    }
 
    // Overlay devices are read only.
-   return { Error::WritePermission };
+   return Error::WritePermission;
 }
 
 Error
@@ -77,6 +82,26 @@ OverlayDevice::unmountDevice(const User &user,
 {
    // Overlay devices are read only.
    return Error::OperationNotSupported;
+}
+
+Error
+OverlayDevice::unmountOverlayDevice(const User &user,
+                                    OverlayPriority priority,
+                                    const Path &path)
+{
+   if (path.depth() == 0) {
+      for (auto itr = mDevices.begin(); itr != mDevices.end(); ++itr) {
+         if (itr->first == priority) {
+            mDevices.erase(itr);
+            return Error::Success;
+         }
+      }
+
+      return Error::NotFound;
+   }
+
+   // Overlay devices are read only.
+   return Error::WritePermission;
 }
 
 Result<DirectoryIterator>

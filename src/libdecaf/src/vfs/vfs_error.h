@@ -19,6 +19,7 @@ enum class Error
    NotDirectory,
    NotFile,
    NotFound,
+   NotMountDevice,
    NotOpen,
    OperationNotSupported,
    ReadOnly,

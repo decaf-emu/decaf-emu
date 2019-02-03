@@ -28,14 +28,24 @@ public:
    {
    }
 
-   virtual Result<std::shared_ptr<Device>> getLinkDevice(const User &user, const Path &path) = 0;
+   virtual Result<std::shared_ptr<Device>> getLinkDevice(const User &user,
+                                                         const Path &path) = 0;
    virtual Error makeFolder(const User &user, const Path &path) = 0;
    virtual Error makeFolders(const User &user, const Path &path) = 0;
-   virtual Error mountDevice(const User &user, const Path &path, std::shared_ptr<Device> device) = 0;
-   virtual Error mountOverlayDevice(const User &user, OverlayPriority priority, const Path &path, std::shared_ptr<Device> device) = 0;
+   virtual Error mountDevice(const User &user, const Path &path,
+                             std::shared_ptr<Device> device) = 0;
+   virtual Error mountOverlayDevice(const User &user, OverlayPriority priority,
+                                    const Path &path,
+                                    std::shared_ptr<Device> device) = 0;
    virtual Error unmountDevice(const User &user, const Path &path) = 0;
-   virtual Result<DirectoryIterator> openDirectory(const User &user, const Path &path) = 0;
-   virtual Result<std::unique_ptr<FileHandle>> openFile(const User &user, const Path &path, FileHandle::Mode mode) = 0;
+   virtual Error unmountOverlayDevice(const User &user,
+                                      OverlayPriority priority,
+                                      const Path &path) = 0;
+   virtual Result<DirectoryIterator> openDirectory(const User &user,
+                                                   const Path &path) = 0;
+   virtual Result<std::unique_ptr<FileHandle>> openFile(const User &user,
+                                                        const Path &path,
+                                                        FileHandle::Mode mode) = 0;
    virtual Error remove(const User &user, const Path &path) = 0;
    virtual Error rename(const User &user, const Path &src, const Path &dst) = 0;
    virtual Error setGroup(const User &user, const Path &path, GroupId group) = 0;

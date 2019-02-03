@@ -61,6 +61,14 @@ LinkDevice::unmountDevice(const User &user,
    return mDevice->unmountDevice(user, mPath / path);
 }
 
+Error
+LinkDevice::unmountOverlayDevice(const User &user,
+                                 OverlayPriority priority,
+                                 const Path &path)
+{
+   return mDevice->unmountOverlayDevice(user, priority, mPath / path);
+}
+
 Result<DirectoryIterator>
 LinkDevice::openDirectory(const User &user,
                           const Path &path)

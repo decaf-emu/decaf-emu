@@ -135,7 +135,7 @@ VirtualDevice::mountOverlayDevice(const User &user,
       if (mountedDevice->device->type() != Device::Overlay) {
          // Remount the original device under an overlay device with priority 1
          auto overlayDevice = std::make_shared<OverlayDevice>();
-         overlayDevice->mountOverlayDevice(user, priority, {},
+         overlayDevice->mountOverlayDevice(user, 1, {},
                                            std::move(mountedDevice->device));
          mountedDevice->device = std::move(overlayDevice);
       }
@@ -184,6 +184,20 @@ VirtualDevice::unmountDevice(const User &user,
    auto parentDirectory = static_cast<VirtualDirectory *>(parentNode.get());
    parentDirectory->children.erase(relativePath.path());
    return Error::Success;
+}
+
+Error
+VirtualDevice::unmountOverlayDevice(const User &user,
+                                    vfs::OverlayPriority priority,
+                                    const Path &path)
+{
+   auto [node, relativePath] = findDeepest(user, path);
+   if (node->type != VirtualNode::MountedDevice) {
+      return Error::NotMountDevice;
+   }
+
+   auto mountedDevice = static_cast<VirtualMountedDevice *>(node.get());
+   return mountedDevice->device->unmountOverlayDevice(user, priority, relativePath);
 }
 
 Result<DirectoryIterator>
