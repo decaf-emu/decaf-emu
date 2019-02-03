@@ -97,6 +97,15 @@ void Transpiler::translateAluOp2_FLT_TO_INT(const ControlFlowInst &cf, const Alu
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
+void Transpiler::translateAluOp2_FLT_TO_UINT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::FLOAT);
+
+   auto output = mSpv->createUnaryOp(spv::OpConvertFToU, mSpv->uintType(), src0);
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
 void Transpiler::translateAluOp2_FRACT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
@@ -818,6 +827,15 @@ void Transpiler::translateAluOp2_TRUNC(const ControlFlowInst &cf, const AluInstr
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
 
    auto output = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Trunc, { src0 });
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
+void Transpiler::translateAluOp2_UINT_TO_FLT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::UINT);
+
+   auto output = mSpv->createUnaryOp(spv::OpConvertUToF, mSpv->floatType(), src0);
 
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
