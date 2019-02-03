@@ -70,7 +70,6 @@ mainCoreEntryPoint(cpu::Core *core)
    internal::initialiseIpc();
 
    // TODO: This is normally called by root.rpx
-   // TODO: Change this to use IPC file read commands.
    loadShared();
 
    // Prepare title
