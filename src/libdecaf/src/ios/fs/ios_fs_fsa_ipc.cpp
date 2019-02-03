@@ -62,6 +62,75 @@ FSAClose(FSAHandle handle)
    return IOS_Close(handle);
 }
 
+FSAStatus
+FSAOpenDir(FSAHandle handle,
+           std::string_view name,
+           FSADirHandle *outHandle)
+{
+   phys_ptr<FSAIpcData> ipcData;
+
+   if (name.size() == 0) {
+      return FSAStatus::InvalidPath;
+   }
+
+   if (!outHandle) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   auto status = allocFsaIpcData(&ipcData);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   ipcData->command = FSACommand::OpenDir;
+   ipcData->resourceHandle = handle;
+
+   auto request = phys_addrof(ipcData->request);
+   string_copy(phys_addrof(request->openDir.path).get(),
+               name.data(),
+               request->openDir.path.size());
+
+   auto error = IOS_Ioctl(ipcData->resourceHandle,
+                          ipcData->command,
+                          phys_addrof(ipcData->request),
+                          sizeof(FSARequest),
+                          phys_addrof(ipcData->response),
+                          sizeof(FSAResponse));
+
+   auto response = phys_addrof(ipcData->response);
+   *outHandle = response->openDir.handle;
+
+   freeFsaIpcData(ipcData);
+   return static_cast<FSAStatus>(error);
+}
+
+FSAStatus
+FSACloseDir(FSAHandle handle,
+            FSADirHandle dirHandle)
+{
+   phys_ptr<FSAIpcData> ipcData;
+
+   auto status = allocFsaIpcData(&ipcData);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   ipcData->command = FSACommand::CloseDir;
+   ipcData->resourceHandle = handle;
+
+   auto request = phys_addrof(ipcData->request);
+   request->closeDir.handle = dirHandle;
+
+   auto error = IOS_Ioctl(ipcData->resourceHandle,
+                          ipcData->command,
+                          phys_addrof(ipcData->request),
+                          sizeof(FSARequest),
+                          phys_addrof(ipcData->response),
+                          sizeof(FSAResponse));
+
+   freeFsaIpcData(ipcData);
+   return static_cast<FSAStatus>(error);
+}
 
 FSAStatus
 FSAOpenFile(FSAHandle handle,

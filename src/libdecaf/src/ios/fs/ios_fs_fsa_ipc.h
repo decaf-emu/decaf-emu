@@ -14,6 +14,15 @@ Error
 FSAClose(FSAHandle handle);
 
 FSAStatus
+FSAOpenDir(FSAHandle handle,
+           std::string_view name,
+           FSADirHandle *outHandle);
+
+FSAStatus
+FSACloseDir(FSAHandle handle,
+            FSADirHandle dirHandle);
+
+FSAStatus
 FSAOpenFile(FSAHandle handle,
             std::string_view name,
             std::string_view mode,
