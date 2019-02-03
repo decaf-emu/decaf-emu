@@ -642,6 +642,14 @@ FSAGetInfoByQuery(FSAHandle handle,
 }
 
 FSAStatus
+FSAGetStat(FSAHandle handle,
+           std::string_view name,
+           phys_ptr<FSAStat> output)
+{
+   return FSAGetInfoByQuery(handle, name, FSAQueryInfoType::Stat, output);
+}
+
+FSAStatus
 FSAReadFileIntoCrossProcessHeap(FSAHandle fsaHandle,
                                 std::string_view filename,
                                 uint32_t *outBytesRead,

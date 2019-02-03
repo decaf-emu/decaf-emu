@@ -98,6 +98,11 @@ FSAGetInfoByQuery(FSAHandle handle,
                   phys_ptr<void> output);
 
 FSAStatus
+FSAGetStat(FSAHandle handle,
+           std::string_view name,
+           phys_ptr<FSAStat> output);
+
+FSAStatus
 FSAReadFileIntoCrossProcessHeap(FSAHandle handle,
                                 std::string_view name,
                                 uint32_t *outBytesRead,
