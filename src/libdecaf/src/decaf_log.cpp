@@ -6,6 +6,7 @@
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <common/log.h>
+#include <decaf_buildinfo.h>
 #include <filesystem>
 #include <libcpu/cpu.h>
 #include <memory>
@@ -123,6 +124,8 @@ initialiseLogging(std::string_view filename)
 {
    initialiseLogSinks(filename);
    initialiseGlobalLogger();
+
+   gLog->info("Built on {} from {}", BUILD_DATE, GIT_DESC);
 }
 
 std::shared_ptr<spdlog::logger>
