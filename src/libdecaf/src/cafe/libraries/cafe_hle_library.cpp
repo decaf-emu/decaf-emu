@@ -212,7 +212,7 @@ generateTypeDescriptors(Library *library,
          if (!typeInfo.baseTypes.empty()) {
             // Reserve space for base types
             typeInfo.baseTypeOffset = static_cast<uint32_t>(data.size());
-            data.resize(data.size() + sizeof(BaseTypeDescriptor) * typeInfo.baseTypes.size());
+            data.resize(data.size() + sizeof(ghs::BaseTypeDescriptor) * typeInfo.baseTypes.size());
 
             // Last base type flags = 0x1600
             *reinterpret_cast<be2_val<uint32_t> *>(&data[data.size() - 4]) = 0x1600u;
@@ -220,7 +220,7 @@ generateTypeDescriptors(Library *library,
 
          // Insert type descriptor, all the values are filled via relocations
          typeInfo.typeDescriptorOffset = static_cast<uint32_t>(data.size());
-         data.resize(data.size() + sizeof(TypeDescriptor));
+         data.resize(data.size() + sizeof(ghs::TypeDescriptor));
          addDataRelocation(typeInfo.typeDescriptorOffset + 0x00, stdTypeInfoOffset);
          addDataRelocation(typeInfo.typeDescriptorOffset + 0x04, typeInfo.nameOffset);
          addDataRelocation(typeInfo.typeDescriptorOffset + 0x08, typeInfo.typeIdOffset);
@@ -234,7 +234,7 @@ generateTypeDescriptors(Library *library,
          {
             // First entry points to the type descriptor
             auto entryOffset = static_cast<uint32_t>(data.size());
-            data.resize(data.size() + sizeof(VirtualTable));
+            data.resize(data.size() + sizeof(ghs::VirtualTable));
             addDataRelocation(entryOffset + 4, typeInfo.typeDescriptorOffset);
          }
 
@@ -243,7 +243,7 @@ generateTypeDescriptors(Library *library,
             auto symbol = library->findSymbol(entry);
             decaf_assert(symbol,
                          fmt::format("Could not find vtable function {}", entry));
-            data.resize(data.size() + sizeof(VirtualTable));
+            data.resize(data.size() + sizeof(ghs::VirtualTable));
             addTextRelocation(entryOffset + 4, symbol->offset);
          }
 

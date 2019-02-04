@@ -100,48 +100,6 @@ makeLibraryFunction(const std::string &name)
    return std::unique_ptr<LibraryFunction> { libraryFunction };
 }
 
-/**
- * Handles calls to constructors.
- */
-template<typename ObjectType, typename... ArgTypes>
-struct ConstructorWrapper
-{
-   static inline void wrapped(virt_ptr<ObjectType> obj, ArgTypes... args)
-   {
-      ::new(static_cast<void *>(obj.getRawPointer())) ObjectType(args...);
-   }
-};
-
-template<typename ObjectType, typename... ArgTypes>
-inline std::unique_ptr<LibraryFunction>
-makeLibraryConstructorFunction(const std::string &name)
-{
-   return makeLibraryFunction<
-      decltype(&ConstructorWrapper<ObjectType, ArgTypes...>::wrapped),
-      ConstructorWrapper<ObjectType, ArgTypes...>::wrapped>(name);
-}
-
-/**
- * Handles calls to destructors.
- */
-template<typename ObjectType>
-struct DestructorWrapper
-{
-   static inline void wrapped(virt_ptr<ObjectType> obj)
-   {
-      (obj.getRawPointer())->~ObjectType();
-   }
-};
-
-template<typename ObjectType>
-inline std::unique_ptr<LibraryFunction>
-makeLibraryDestructorFunction(const std::string &name)
-{
-   return makeLibraryFunction<
-      decltype(&DestructorWrapper<ObjectType>::wrapped),
-      DestructorWrapper<ObjectType>::wrapped>(name);
-}
-
 } // namespace internal
 
 } // cafe::hle

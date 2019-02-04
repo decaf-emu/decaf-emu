@@ -9,49 +9,71 @@ using namespace nn::boss;
 namespace cafe::nn_boss
 {
 
-virt_ptr<hle::VirtualTable> PlayReportSetting::VirtualTable = nullptr;
-virt_ptr<hle::TypeDescriptor> PlayReportSetting::TypeDescriptor = nullptr;
+virt_ptr<ghs::VirtualTable> PlayReportSetting::VirtualTable = nullptr;
+virt_ptr<ghs::TypeDescriptor> PlayReportSetting::TypeDescriptor = nullptr;
 
-PlayReportSetting::PlayReportSetting() :
-   mPlayReportUnk1(0u),
-   mPlayReportUnk2(0u),
-   mPlayReportUnk3(0u),
-   mPlayReportUnk4(0u)
+virt_ptr<PlayReportSetting>
+PlayReportSetting_Constructor(virt_ptr<PlayReportSetting> self)
 {
-   mVirtualTable = PlayReportSetting::VirtualTable;
-}
+   if (!self) {
+      self = virt_cast<PlayReportSetting *>(ghs::malloc(sizeof(PlayReportSetting)));
+      if (!self) {
+         return nullptr;
+      }
+   }
 
-PlayReportSetting::~PlayReportSetting()
-{
+   RawUlTaskSetting_Constructor(virt_cast<RawUlTaskSetting *>(self));
+   self->virtualTable = PlayReportSetting::VirtualTable;
+   self->playReportUnk1 = 0u;
+   self->playReportUnk2 = 0u;
+   self->playReportUnk3 = 0u;
+   self->playReportUnk4 = 0u;
+   return self;
 }
 
 void
-PlayReportSetting::Initialize(virt_ptr<void> a1,
-                              uint32_t a2)
+PlayReportSetting_Destructor(virt_ptr<PlayReportSetting> self,
+                             ghs::DestructorFlags flags)
+{
+   RawUlTaskSetting_Destructor(virt_cast<RawUlTaskSetting *>(self),
+                               ghs::DestructorFlags::None);
+
+   if (flags & ghs::DestructorFlags::FreeMemory) {
+      ghs::free(self);
+   }
+}
+
+void
+PlayReportSetting_Initialize(virt_ptr<PlayReportSetting> self,
+                             virt_ptr<void> a1,
+                             uint32_t a2)
 {
    decaf_warn_stub();
 }
 
 nn::Result
-PlayReportSetting::RegisterPreprocess(uint32_t a1,
-                                      virt_ptr<TitleID> a2,
-                                      virt_ptr<const char> a3)
+PlayReportSetting_RegisterPreprocess(virt_ptr<PlayReportSetting> self,
+                                     uint32_t a1,
+                                     virt_ptr<TitleID> a2,
+                                     virt_ptr<const char> a3)
 {
    decaf_warn_stub();
    return ResultInvalidParameter;
 }
 
 bool
-PlayReportSetting::Set(virt_ptr<const char> key,
-                       uint32_t value)
+PlayReportSetting_Set(virt_ptr<PlayReportSetting> self,
+                      virt_ptr<const char> key,
+                      uint32_t value)
 {
    decaf_warn_stub();
    return true;
 }
 
 bool
-PlayReportSetting::Set(uint32_t key,
-                       uint32_t value)
+PlayReportSetting_Set(virt_ptr<PlayReportSetting> self,
+                      uint32_t key,
+                      uint32_t value)
 {
    decaf_warn_stub();
    return true;
@@ -60,19 +82,19 @@ PlayReportSetting::Set(uint32_t key,
 void
 Library::registerPlayReportSettingSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn4boss17PlayReportSettingFv",
-                             PlayReportSetting);
-   RegisterDestructorExport("__dt__Q3_2nn4boss17PlayReportSettingFv",
-                            PlayReportSetting);
+   RegisterFunctionExportName("__ct__Q3_2nn4boss17PlayReportSettingFv",
+                              PlayReportSetting_Constructor);
+   RegisterFunctionExportName("__dt__Q3_2nn4boss17PlayReportSettingFv",
+                              PlayReportSetting_Destructor);
 
    RegisterFunctionExportName("RegisterPreprocess__Q3_2nn4boss17PlayReportSettingFUiQ3_2nn4boss7TitleIDPCc",
-                              &PlayReportSetting::RegisterPreprocess);
+                              PlayReportSetting_RegisterPreprocess);
    RegisterFunctionExportName("Initialize__Q3_2nn4boss17PlayReportSettingFPvUi",
-                              &PlayReportSetting::Initialize);
+                              PlayReportSetting_Initialize);
    RegisterFunctionExportName("Set__Q3_2nn4boss17PlayReportSettingFPCcUi",
-                              static_cast<bool (PlayReportSetting::*)(virt_ptr<const char>, uint32_t)>(&PlayReportSetting::Set));
+                              static_cast<bool(*)(virt_ptr<PlayReportSetting>, virt_ptr<const char>, uint32_t)>(PlayReportSetting_Set));
    RegisterFunctionExportName("Set__Q3_2nn4boss17PlayReportSettingFUiT1",
-                              static_cast<bool (PlayReportSetting::*)(uint32_t, uint32_t)>(&PlayReportSetting::Set));
+                              static_cast<bool(*)(virt_ptr<PlayReportSetting>, uint32_t, uint32_t)>(PlayReportSetting_Set));
 }
 
 }  // namespace cafe::nn_boss

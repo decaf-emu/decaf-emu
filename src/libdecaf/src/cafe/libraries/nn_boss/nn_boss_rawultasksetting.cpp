@@ -9,36 +9,56 @@ using namespace nn::boss;
 namespace cafe::nn_boss
 {
 
-virt_ptr<hle::VirtualTable> RawUlTaskSetting::VirtualTable = nullptr;
-virt_ptr<hle::TypeDescriptor> RawUlTaskSetting::TypeDescriptor = nullptr;
+virt_ptr<ghs::VirtualTable> RawUlTaskSetting::VirtualTable = nullptr;
+virt_ptr<ghs::TypeDescriptor> RawUlTaskSetting::TypeDescriptor = nullptr;
 
-RawUlTaskSetting::RawUlTaskSetting() :
-   mRawUlUnk1(0u),
-   mRawUlUnk2(0u),
-   mRawUlUnk3(0u)
+virt_ptr<RawUlTaskSetting>
+RawUlTaskSetting_Constructor(virt_ptr<RawUlTaskSetting> self)
 {
-   mVirtualTable = RawUlTaskSetting::VirtualTable;
-   std::memset(virt_addrof(mRawUlData).get(), 0, mRawUlData.size());
+   if (!self) {
+      self = virt_cast<RawUlTaskSetting *>(ghs::malloc(sizeof(RawUlTaskSetting)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   NetTaskSetting_Constructor(virt_cast<NetTaskSetting *>(self));
+   self->virtualTable = RawUlTaskSetting::VirtualTable;
+   self->rawUlUnk1 = 0u;
+   self->rawUlUnk2 = 0u;
+   self->rawUlUnk3 = 0u;
+   std::memset(virt_addrof(self->rawUlData).get(), 0, self->rawUlData.size());
+   return self;
 }
 
-RawUlTaskSetting::~RawUlTaskSetting()
+void
+RawUlTaskSetting_Destructor(virt_ptr<RawUlTaskSetting> self,
+                            ghs::DestructorFlags flags)
 {
+   NetTaskSetting_Destructor(virt_cast<NetTaskSetting *>(self),
+                             ghs::DestructorFlags::None);
+
+   if (flags & ghs::DestructorFlags::FreeMemory) {
+      ghs::free(self);
+   }
 }
 
 nn::Result
-RawUlTaskSetting::RegisterPreprocess(uint32_t a1,
-                                     virt_ptr<TitleID> a2,
-                                     virt_ptr<const char> a3)
+RawUlTaskSetting_RegisterPreprocess(virt_ptr<RawUlTaskSetting> self,
+                                    uint32_t a1,
+                                    virt_ptr<TitleID> a2,
+                                    virt_ptr<const char> a3)
 {
    decaf_warn_stub();
    return ResultInvalidParameter;
 }
 
 void
-RawUlTaskSetting::RegisterPostprocess(uint32_t a1,
-                                      virt_ptr<TitleID> a2,
-                                      virt_ptr<const char> a3,
-                                      virt_ptr<nn::Result> a4)
+RawUlTaskSetting_RegisterPostprocess(virt_ptr<RawUlTaskSetting> self,
+                                     uint32_t a1,
+                                     virt_ptr<TitleID> a2,
+                                     virt_ptr<const char> a3,
+                                     virt_ptr<nn::Result> a4)
 {
    decaf_warn_stub();
 }
@@ -46,15 +66,15 @@ RawUlTaskSetting::RegisterPostprocess(uint32_t a1,
 void
 Library::registerRawUlTaskSettingSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn4boss16RawUlTaskSettingFv",
-                             RawUlTaskSetting);
-   RegisterDestructorExport("__dt__Q3_2nn4boss16RawUlTaskSettingFv",
-                            RawUlTaskSetting);
+   RegisterFunctionExportName("__ct__Q3_2nn4boss16RawUlTaskSettingFv",
+                              RawUlTaskSetting_Constructor);
+   RegisterFunctionExportName("__dt__Q3_2nn4boss16RawUlTaskSettingFv",
+                              RawUlTaskSetting_Destructor);
 
    RegisterFunctionExportName("RegisterPreprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCc",
-                              &RawUlTaskSetting::RegisterPreprocess);
+                              RawUlTaskSetting_RegisterPreprocess);
    RegisterFunctionExportName("RegisterPostprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result",
-                              &RawUlTaskSetting::RegisterPostprocess);
+                              RawUlTaskSetting_RegisterPostprocess);
 
    registerTypeInfo<TaskSetting>(
       "nn::boss::RawUlTaskSetting",

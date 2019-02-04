@@ -4,44 +4,45 @@
 namespace cafe::nn_boss
 {
 
-class TitleID
+struct TitleID
 {
-public:
-   TitleID();
-   TitleID(virt_ptr<TitleID> other);
-   TitleID(uint64_t id);
-
-   bool
-   IsValid();
-
-   uint64_t
-   GetValue();
-
-   uint32_t
-   GetTitleID();
-
-   uint32_t
-   GetTitleCode();
-
-   uint32_t
-   GetUniqueId();
-
-   bool
-   operator ==(virt_ptr<TitleID> other);
-
-   bool
-   operator !=(virt_ptr<TitleID> other);
-
-private:
-   be2_val<uint32_t> mLower;
-   be2_val<uint32_t> mUpper;
-
-protected:
-   CHECK_MEMBER_OFFSET_BEG
-      CHECK_OFFSET(TitleID, 0x00, mLower);
-      CHECK_OFFSET(TitleID, 0x04, mUpper);
-   CHECK_MEMBER_OFFSET_END
+   be2_val<uint64_t> value;
 };
+CHECK_OFFSET(TitleID, 0, value);
 CHECK_SIZE(TitleID, 8);
+
+virt_ptr<TitleID>
+TitleID_Constructor(virt_ptr<TitleID> self);
+
+virt_ptr<TitleID>
+TitleID_Constructor(virt_ptr<TitleID> self,
+                    virt_ptr<TitleID> other);
+
+virt_ptr<TitleID>
+TitleID_Constructor(virt_ptr<TitleID> self,
+                    uint64_t id);
+
+bool
+TitleID_IsValid(virt_ptr<TitleID> self);
+
+uint64_t
+TitleID_GetValue(virt_ptr<TitleID> self);
+
+uint32_t
+TitleID_GetTitleID(virt_ptr<TitleID> self);
+
+uint32_t
+TitleID_GetTitleCode(virt_ptr<TitleID> self);
+
+uint32_t
+TitleID_GetUniqueId(virt_ptr<TitleID> self);
+
+bool
+TitleID_OperatorEqual(virt_ptr<TitleID> self,
+                      virt_ptr<TitleID> other);
+
+bool
+TitleID_OperatorNotEqual(virt_ptr<TitleID> self,
+                         virt_ptr<TitleID> other);
 
 } // namespace cafe::nn_boss

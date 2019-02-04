@@ -27,15 +27,6 @@
 #define RegisterDataExportName(name, data) \
    registerDataExport(name, data)
 
-#define RegisterConstructorExport(name, object) \
-   registerConstructorExport<object>(name)
-
-#define RegisterConstructorExportArgs(name, object, ...) \
-   registerConstructorExport<object, __VA_ARGS__>(name)
-
-#define RegisterDestructorExport(name, object) \
-   registerDestructorExport<object>(name)
-
 #define RegisterFunctionInternal(fn, ptr) \
    registerFunctionInternal<fnptr_decltype(fn), fn>("__internal__" # fn, ptr)
 
@@ -248,24 +239,6 @@ protected:
    registerFunctionExport(const char *name)
    {
       auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
-      symbol->exported = true;
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename ObjectType, typename... Args>
-   void
-   registerConstructorExport(const char *name)
-   {
-      auto symbol = internal::makeLibraryConstructorFunction<ObjectType, Args...>(name);
-      symbol->exported = true;
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename ObjectType>
-   void
-   registerDestructorExport(const char *name)
-   {
-      auto symbol = internal::makeLibraryDestructorFunction<ObjectType>(name);
       symbol->exported = true;
       registerSymbol(name, std::move(symbol));
    }

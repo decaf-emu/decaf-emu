@@ -1,6 +1,7 @@
 #include "nn_olv.h"
 #include "nn_olv_downloadedcommunitydata.h"
 
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 #include "nn/olv/nn_olv_result.h"
 
 using namespace nn::olv;
@@ -9,33 +10,37 @@ using nn::ffl::FFLStoreData;
 namespace cafe::nn_olv
 {
 
-DownloadedCommunityData::DownloadedCommunityData() :
-   mFlags(0u),
-   mCommunityId(0u),
-   mOwnerPid(0u),
-   mTitleTextLength(0u),
-   mDescriptionTextLength(0u),
-   mAppDataLength(0u),
-   mIconDataLength(0u)
+virt_ptr<DownloadedCommunityData>
+DownloadedCommunityData_Constructor(virt_ptr<DownloadedCommunityData> self)
 {
+   if (!self) {
+      self = virt_cast<DownloadedCommunityData *>(ghs::malloc(sizeof(DownloadedCommunityData)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   std::memset(self.get(), 0, sizeof(DownloadedCommunityData));
+   return self;
 }
 
 uint32_t
-DownloadedCommunityData::GetAppDataSize()
+DownloadedCommunityData_GetAppDataSize(virt_ptr<DownloadedCommunityData> self)
 {
-   if (!TestFlags(HasAppData)) {
+   if (!DownloadedCommunityData_TestFlags(self, DownloadedCommunityData::HasAppData)) {
       return 0;
    }
 
-   return mAppDataLength;
+   return self->appDataLength;
 }
 
 nn::Result
-DownloadedCommunityData::GetAppData(virt_ptr<uint8_t> buffer,
-                                    virt_ptr<uint32_t> outDataSize,
-                                    uint32_t bufferSize)
+DownloadedCommunityData_GetAppData(virt_ptr<DownloadedCommunityData> self,
+                                   virt_ptr<uint8_t> buffer,
+                                   virt_ptr<uint32_t> outDataSize,
+                                   uint32_t bufferSize)
 {
-   if (!TestFlags(HasAppData)) {
+   if (!DownloadedCommunityData_TestFlags(self, DownloadedCommunityData::HasAppData)) {
       return ResultNoData;
    }
 
@@ -47,8 +52,8 @@ DownloadedCommunityData::GetAppData(virt_ptr<uint8_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mAppDataLength);
-   std::memcpy(buffer.get(), virt_addrof(mAppData).get(), length);
+   auto length = std::min<uint32_t>(bufferSize, self->appDataLength);
+   std::memcpy(buffer.get(), virt_addrof(self->appData).get(), length);
 
    if (outDataSize) {
       *outDataSize = length;
@@ -58,16 +63,17 @@ DownloadedCommunityData::GetAppData(virt_ptr<uint8_t> buffer,
 }
 
 uint32_t
-DownloadedCommunityData::GetCommunityId()
+DownloadedCommunityData_GetCommunityId(virt_ptr<DownloadedCommunityData> self)
 {
-   return mCommunityId;
+   return self->communityId;
 }
 
 nn::Result
-DownloadedCommunityData::GetDescriptionText(virt_ptr<char16_t> buffer,
-                                            uint32_t bufferSize)
+DownloadedCommunityData_GetDescriptionText(virt_ptr<DownloadedCommunityData> self,
+                                           virt_ptr<char16_t> buffer,
+                                           uint32_t bufferSize)
 {
-   if (!TestFlags(HasDescriptionText)) {
+   if (!DownloadedCommunityData_TestFlags(self, DownloadedCommunityData::HasDescriptionText)) {
       return ResultNoData;
    }
 
@@ -79,9 +85,9 @@ DownloadedCommunityData::GetDescriptionText(virt_ptr<char16_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mDescriptionTextLength);
+   auto length = std::min<uint32_t>(bufferSize, self->descriptionTextLength);
    std::memcpy(buffer.get(),
-               virt_addrof(mDescriptionText).get(),
+               virt_addrof(self->descriptionText).get(),
                length * sizeof(char16_t));
 
    if (length < bufferSize) {
@@ -92,11 +98,12 @@ DownloadedCommunityData::GetDescriptionText(virt_ptr<char16_t> buffer,
 }
 
 nn::Result
-DownloadedCommunityData::GetIconData(virt_ptr<uint8_t> buffer,
-                                     virt_ptr<uint32_t> outIconSize,
-                                     uint32_t bufferSize)
+DownloadedCommunityData_GetIconData(virt_ptr<DownloadedCommunityData> self,
+                                    virt_ptr<uint8_t> buffer,
+                                    virt_ptr<uint32_t> outIconSize,
+                                    uint32_t bufferSize)
 {
-   if (!TestFlags(HasIconData)) {
+   if (!DownloadedCommunityData_TestFlags(self, DownloadedCommunityData::HasIconData)) {
       return ResultNoData;
    }
 
@@ -108,8 +115,8 @@ DownloadedCommunityData::GetIconData(virt_ptr<uint8_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mIconDataLength);
-   std::memcpy(buffer.get(), virt_addrof(mIconData).get(), length);
+   auto length = std::min<uint32_t>(bufferSize, self->iconDataLength);
+   std::memcpy(buffer.get(), virt_addrof(self->iconData).get(), length);
 
    if (outIconSize) {
       *outIconSize = length;
@@ -119,9 +126,10 @@ DownloadedCommunityData::GetIconData(virt_ptr<uint8_t> buffer,
 }
 
 nn::Result
-DownloadedCommunityData::GetOwnerMiiData(virt_ptr<FFLStoreData> data)
+DownloadedCommunityData_GetOwnerMiiData(virt_ptr<DownloadedCommunityData> self,
+                                        virt_ptr<nn::ffl::FFLStoreData> data)
 {
-   if (!TestFlags(HasOwnerMiiData)) {
+   if (!DownloadedCommunityData_TestFlags(self, DownloadedCommunityData::HasOwnerMiiData)) {
       return ResultNoData;
    }
 
@@ -130,32 +138,33 @@ DownloadedCommunityData::GetOwnerMiiData(virt_ptr<FFLStoreData> data)
    }
 
    std::memcpy(data.get(),
-               virt_addrof(mOwnerMiiData).get(),
+               virt_addrof(self->ownerMiiData).get(),
                sizeof(FFLStoreData));
    return ResultSuccess;
 }
 
 virt_ptr<char16_t>
-DownloadedCommunityData::GetOwnerMiiNickname()
+DownloadedCommunityData_GetOwnerMiiNickname(virt_ptr<DownloadedCommunityData> self)
 {
-   if (!mOwnerMiiNickname[0]) {
+   if (!self->ownerMiiNickname[0]) {
       return nullptr;
    }
 
-   return virt_addrof(mOwnerMiiNickname);
+   return virt_addrof(self->ownerMiiNickname);
 }
 
 uint32_t
-DownloadedCommunityData::GetOwnerPid()
+DownloadedCommunityData_GetOwnerPid(virt_ptr<DownloadedCommunityData> self)
 {
-   return mOwnerPid;
+   return self->ownerPid;
 }
 
 nn::Result
-DownloadedCommunityData::GetTitleText(virt_ptr<char16_t> buffer,
-                                      uint32_t bufferSize)
+DownloadedCommunityData_GetTitleText(virt_ptr<DownloadedCommunityData> self,
+                                     virt_ptr<char16_t> buffer,
+                                     uint32_t bufferSize)
 {
-   if (!TestFlags(HasTitleText)) {
+   if (!DownloadedCommunityData_TestFlags(self, DownloadedCommunityData::HasTitleText)) {
       return ResultNoData;
    }
 
@@ -167,9 +176,9 @@ DownloadedCommunityData::GetTitleText(virt_ptr<char16_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mTitleTextLength);
+   auto length = std::min<uint32_t>(bufferSize, self->titleTextLength);
    std::memcpy(buffer.get(),
-               virt_addrof(mTitleText).get(),
+               virt_addrof(self->titleText).get(),
                length * sizeof(char16_t));
 
    if (length < bufferSize) {
@@ -180,36 +189,37 @@ DownloadedCommunityData::GetTitleText(virt_ptr<char16_t> buffer,
 }
 
 bool
-DownloadedCommunityData::TestFlags(uint32_t flags)
+DownloadedCommunityData_TestFlags(virt_ptr<DownloadedCommunityData> self,
+                                  uint32_t flags)
 {
-   return !!(mFlags & flags);
+   return !!(self->flags & flags);
 }
 
 void
 Library::registerDownloadedCommunityDataSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn3olv23DownloadedCommunityDataFv",
-                             DownloadedCommunityData);
+   RegisterFunctionExportName("__ct__Q3_2nn3olv23DownloadedCommunityDataFv",
+                              DownloadedCommunityData_Constructor);
    RegisterFunctionExportName("GetAppDataSize__Q3_2nn3olv23DownloadedCommunityDataCFv",
-                              &DownloadedCommunityData::GetAppDataSize);
+                              DownloadedCommunityData_GetAppDataSize);
    RegisterFunctionExportName("GetAppData__Q3_2nn3olv23DownloadedCommunityDataCFPUcPUiUi",
-                              &DownloadedCommunityData::GetAppData);
+                              DownloadedCommunityData_GetAppData);
    RegisterFunctionExportName("GetCommunityId__Q3_2nn3olv23DownloadedCommunityDataCFv",
-                              &DownloadedCommunityData::GetCommunityId);
+                              DownloadedCommunityData_GetCommunityId);
    RegisterFunctionExportName("GetDescriptionText__Q3_2nn3olv23DownloadedCommunityDataCFPwUi",
-                              &DownloadedCommunityData::GetDescriptionText);
+                              DownloadedCommunityData_GetDescriptionText);
    RegisterFunctionExportName("GetIconData__Q3_2nn3olv23DownloadedCommunityDataCFPUcPUiUi",
-                              &DownloadedCommunityData::GetIconData);
+                              DownloadedCommunityData_GetIconData);
    RegisterFunctionExportName("GetOwnerMiiData__Q3_2nn3olv23DownloadedCommunityDataCFP12FFLStoreData",
-                              &DownloadedCommunityData::GetOwnerMiiData);
+                              DownloadedCommunityData_GetOwnerMiiData);
    RegisterFunctionExportName("GetOwnerMiiNickname__Q3_2nn3olv23DownloadedCommunityDataCFv",
-                              &DownloadedCommunityData::GetOwnerMiiNickname);
+                              DownloadedCommunityData_GetOwnerMiiNickname);
    RegisterFunctionExportName("GetOwnerPid__Q3_2nn3olv23DownloadedCommunityDataCFv",
-                              &DownloadedCommunityData::GetOwnerPid);
+                              DownloadedCommunityData_GetOwnerPid);
    RegisterFunctionExportName("GetTitleText__Q3_2nn3olv23DownloadedCommunityDataCFPwUi",
-                              &DownloadedCommunityData::GetTitleText);
+                              DownloadedCommunityData_GetTitleText);
    RegisterFunctionExportName("TestFlags__Q3_2nn3olv23DownloadedCommunityDataCFUi",
-                              &DownloadedCommunityData::TestFlags);
+                              DownloadedCommunityData_TestFlags);
 }
 
 }  // namespace cafe::nn_olv

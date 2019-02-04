@@ -4,28 +4,23 @@
 namespace cafe::nn_olv
 {
 
-class DownloadedTopicData
+struct DownloadedTopicData
 {
-public:
-   DownloadedTopicData();
-
-   uint32_t
-   GetCommunityId();
-
-   uint32_t
-   GetUserCount();
-
-protected:
-   be2_val<uint32_t> mUnk1;
-   be2_val<uint32_t> mCommunityId;
+   be2_val<uint32_t> unk1;
+   be2_val<uint32_t> communityId;
    UNKNOWN(0xFF8);
-
-private:
-   CHECK_MEMBER_OFFSET_BEG
-   CHECK_OFFSET(DownloadedTopicData, 0x00, mUnk1);
-   CHECK_OFFSET(DownloadedTopicData, 0x04, mCommunityId);
-   CHECK_MEMBER_OFFSET_END
 };
+CHECK_OFFSET(DownloadedTopicData, 0x00, unk1);
+CHECK_OFFSET(DownloadedTopicData, 0x04, communityId);
 CHECK_SIZE(DownloadedTopicData, 0x1000);
+
+virt_ptr<DownloadedTopicData>
+DownloadedTopicData_Constructor(virt_ptr<DownloadedTopicData> self);
+
+uint32_t
+DownloadedTopicData_GetCommunityId(virt_ptr<const DownloadedTopicData> self);
+
+uint32_t
+DownloadedTopicData_GetUserCount(virt_ptr<const DownloadedTopicData> self);
 
 }  // namespace cafe::nn_olv

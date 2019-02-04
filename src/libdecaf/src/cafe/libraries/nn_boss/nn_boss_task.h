@@ -2,7 +2,7 @@
 #include "nn_boss_taskid.h"
 #include "nn_boss_titleid.h"
 
-#include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "cafe/libraries/ghs/cafe_ghs_typeinfo.h"
 #include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
@@ -48,63 +48,74 @@ nn::boss::Task::Wait(unsigned int, nn::boss::TaskWaitState)
 namespace cafe::nn_boss
 {
 
-class Task
+struct Task
 {
-public:
-   static virt_ptr<hle::VirtualTable> VirtualTable;
-   static virt_ptr<hle::TypeDescriptor> TypeDescriptor;
+   static virt_ptr<ghs::VirtualTable> VirtualTable;
+   static virt_ptr<ghs::TypeDescriptor> TypeDescriptor;
 
-public:
-   Task();
-   Task(virt_ptr<const char> taskId);
-   Task(virt_ptr<const char> taskId,
-        uint32_t accountId);
-   Task(uint8_t slot,
-        virt_ptr<const char> taskId);
-   ~Task();
-
-   nn::Result
-   Initialize(virt_ptr<const char> taskId);
-
-   nn::Result
-   Initialize(virt_ptr<const char> taskId,
-              uint32_t accountId);
-
-   nn::Result
-   Initialize(uint8_t slot,
-              virt_ptr<const char> taskId);
-
-   void
-   Finalize();
-
-   bool
-   IsRegistered();
-
-   uint32_t
-   GetAccountID();
-
-   void
-   GetTaskID(virt_ptr<TaskID> id);
-
-   void
-   GetTitleID(virt_ptr<TitleID> id);
-
-protected:
-   be2_val<uint32_t> mAccountId;
+   be2_val<uint32_t> accountId;
    UNKNOWN(4);
-   be2_struct<TaskID> mTaskId;
-   be2_struct<TitleID> mTitleId;
-   be2_virt_ptr<hle::VirtualTable> mVirtualTable;
+   be2_struct<TaskID> taskId;
+   be2_struct<TitleID> titleId;
+   be2_virt_ptr<ghs::VirtualTable> virtualTable;
    UNKNOWN(4);
-
-protected:
-   CHECK_MEMBER_OFFSET_BEG
-      CHECK_OFFSET(Task, 0x00, mAccountId);
-      CHECK_OFFSET(Task, 0x08, mTaskId);
-      CHECK_OFFSET(Task, 0x10, mTitleId);
-      CHECK_OFFSET(Task, 0x18, mVirtualTable);
-   CHECK_MEMBER_OFFSET_END
 };
+CHECK_OFFSET(Task, 0x00, accountId);
+CHECK_OFFSET(Task, 0x08, taskId);
+CHECK_OFFSET(Task, 0x10, titleId);
+CHECK_OFFSET(Task, 0x18, virtualTable);
 CHECK_SIZE(Task, 0x20);
+
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self);
+
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self,
+                 virt_ptr<const char> taskId);
+
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self,
+                 virt_ptr<const char> taskId,
+                 uint32_t accountId);
+
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self,
+                 uint8_t slot,
+                 virt_ptr<const char> taskId);
+
+void
+Task_Destructor(virt_ptr<Task> self,
+                ghs::DestructorFlags flags);
+
+nn::Result
+Task_Initialize(virt_ptr<Task> self,
+                virt_ptr<const char> taskId);
+
+nn::Result
+Task_Initialize(virt_ptr<Task> self,
+                virt_ptr<const char> taskId,
+                uint32_t accountId);
+
+nn::Result
+Task_Initialize(virt_ptr<Task> self,
+                uint8_t slot,
+                virt_ptr<const char> taskId);
+
+void
+Task_Finalize(virt_ptr<Task> self);
+
+bool
+Task_IsRegistered(virt_ptr<Task> self);
+
+uint32_t
+Task_GetAccountID(virt_ptr<Task> self);
+
+void
+Task_GetTaskID(virt_ptr<Task> self,
+               virt_ptr<TaskID> id);
+
+void
+Task_GetTitleID(virt_ptr<Task> self,
+                virt_ptr<TitleID> id);
 
 } // namespace cafe::nn_boss

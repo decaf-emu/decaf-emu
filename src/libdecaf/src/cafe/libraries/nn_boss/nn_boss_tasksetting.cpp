@@ -2,79 +2,95 @@
 #include "nn_boss_tasksetting.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 
 namespace cafe::nn_boss
 {
 
-virt_ptr<hle::VirtualTable> TaskSetting::VirtualTable = nullptr;
-virt_ptr<hle::TypeDescriptor> TaskSetting::TypeDescriptor = nullptr;
+virt_ptr<ghs::VirtualTable> TaskSetting::VirtualTable = nullptr;
+virt_ptr<ghs::TypeDescriptor> TaskSetting::TypeDescriptor = nullptr;
 
-TaskSetting::TaskSetting() :
-   mVirtualTable(TaskSetting::VirtualTable)
+virt_ptr<TaskSetting>
+TaskSetting_Constructor(virt_ptr<TaskSetting> self)
 {
-   InitializeSetting();
-}
+   if (!self) {
+      self = virt_cast<TaskSetting *>(ghs::malloc(sizeof(TaskSetting)));
+      if (!self) {
+         return nullptr;
+      }
+   }
 
-TaskSetting::~TaskSetting()
-{
-}
-
-void
-TaskSetting::InitializeSetting()
-{
-   decaf_warn_stub();
-   std::memset(virt_addrof(mTaskSettingData).get(), 0, sizeof(TaskSettingData));
-
-   mTaskSettingData.unk0x00 = 0u;
-   mTaskSettingData.unk0x08 = 0u;
-   mTaskSettingData.unk0x0C = 0u;
-   mTaskSettingData.unk0x2A = uint8_t { 125 };
-   mTaskSettingData.unk0x30 = 28800u;
-   mTaskSettingData.unk0x38 = 0u;
-   mTaskSettingData.unk0x3C = 7776000u;
+   self->virtualTable = TaskSetting::VirtualTable;
+   TaskSetting_InitializeSetting(self);
+   return self;
 }
 
 void
-TaskSetting::SetRunPermissionInParentalControlRestriction(bool value)
+TaskSetting_Destructor(virt_ptr<TaskSetting> self,
+                       ghs::DestructorFlags flags)
+{
+   if (flags & ghs::DestructorFlags::FreeMemory) {
+      ghs::free(self);
+   }
+}
+
+void
+TaskSetting_InitializeSetting(virt_ptr<TaskSetting> self)
+{
+   std::memset(self.get(), 0, 0x1000);
+   self->unk0x00 = 0u;
+   self->unk0x08 = 0u;
+   self->unk0x0C = 0u;
+   self->unk0x2A = uint8_t { 125 };
+   self->unk0x30 = 28800u;
+   self->unk0x38 = 0u;
+   self->unk0x3C = 7776000u;
+}
+
+void
+TaskSetting_SetRunPermissionInParentalControlRestriction(virt_ptr<TaskSetting> self,
+                                                         bool value)
 {
    if (value) {
-      mTaskSettingData.unk0x2C |= 2u;
+      self->unk0x2C |= 2u;
    } else {
-      mTaskSettingData.unk0x2C &= ~2u;
+      self->unk0x2C &= ~2u;
    }
 }
 
 nn::Result
-TaskSetting::RegisterPreprocess(uint32_t a1,
-                                virt_ptr<TitleID> a2,
-                                virt_ptr<const char> a3)
+TaskSetting_RegisterPreprocess(virt_ptr<TaskSetting> self,
+                               uint32_t a1,
+                               virt_ptr<TitleID> a2,
+                               virt_ptr<const char> a3)
 {
    return 2097280u;
 }
 
 void
-TaskSetting::RegisterPostprocess(uint32_t a1,
-                                 virt_ptr<TitleID> a2,
-                                 virt_ptr<const char> a3,
-                                 virt_ptr<nn::Result> a4)
+TaskSetting_RegisterPostprocess(virt_ptr<TaskSetting> self,
+                                uint32_t a1,
+                                virt_ptr<TitleID> a2,
+                                virt_ptr<const char> a3,
+                                virt_ptr<nn::Result> a4)
 {
 }
 
 void
 Library::registerTaskSettingSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn4boss11TaskSettingFv",
-                             TaskSetting);
-   RegisterDestructorExport("__dt__Q3_2nn4boss11TaskSettingFv",
-                            TaskSetting);
+   RegisterFunctionExportName("__ct__Q3_2nn4boss11TaskSettingFv",
+                              TaskSetting_Constructor);
+   RegisterFunctionExportName("__dt__Q3_2nn4boss11TaskSettingFv",
+                              TaskSetting_Destructor);
    RegisterFunctionExportName("InitializeSetting__Q3_2nn4boss11TaskSettingFv",
-                              &TaskSetting::InitializeSetting);
+                              TaskSetting_InitializeSetting);
    RegisterFunctionExportName("RegisterPreprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCc",
-                              &TaskSetting::RegisterPreprocess);
+                              TaskSetting_RegisterPreprocess);
    RegisterFunctionExportName("RegisterPostprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result",
-                              &TaskSetting::RegisterPostprocess);
+                              TaskSetting_RegisterPostprocess);
    RegisterFunctionExportName("SetRunPermissionInParentalControlRestriction__Q3_2nn4boss11TaskSettingFb",
-                              &TaskSetting::SetRunPermissionInParentalControlRestriction);
+                              TaskSetting_SetRunPermissionInParentalControlRestriction);
 
    registerTypeInfo<TaskSetting>(
       "nn::boss::TaskSetting",

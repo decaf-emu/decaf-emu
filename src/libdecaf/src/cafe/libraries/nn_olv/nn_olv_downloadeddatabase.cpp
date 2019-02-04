@@ -1,6 +1,7 @@
 #include "nn_olv.h"
 #include "nn_olv_downloadeddatabase.h"
 
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 #include "nn/olv/nn_olv_result.h"
 
 #include <common/strutils.h>
@@ -13,42 +14,61 @@ namespace cafe::nn_olv
 
 constexpr auto MinMemoBufferSize = 0x2582Cu;
 
-virt_ptr<hle::VirtualTable>
-DownloadedDataBase::VirtualTable = nullptr;
+virt_ptr<ghs::VirtualTable> DownloadedDataBase::VirtualTable = nullptr;
+virt_ptr<ghs::TypeDescriptor> DownloadedDataBase::TypeDescriptor = nullptr;
 
-virt_ptr<hle::TypeDescriptor>
-DownloadedDataBase::TypeDescriptor = nullptr;
 
-DownloadedDataBase::DownloadedDataBase()
+virt_ptr<DownloadedDataBase>
+DownloadedDataBase_Constructor(virt_ptr<DownloadedDataBase> self)
 {
-   std::memset(this, 0, sizeof(DownloadedDataBase));
-   mVirtualTable = DownloadedDataBase::VirtualTable;
+   if (!self) {
+      self = virt_cast<DownloadedDataBase *>(ghs::malloc(sizeof(DownloadedDataBase)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   std::memset(self.get(), 0, sizeof(DownloadedDataBase));
+   self->virtualTable = DownloadedDataBase::VirtualTable;
+   return self;
 }
 
-DownloadedDataBase::~DownloadedDataBase()
+void
+DownloadedDataBase_Destructor(virt_ptr<DownloadedDataBase> self,
+                              ghs::DestructorFlags flags)
 {
+   if (!self) {
+      return;
+   }
+
+   if (flags & ghs::DestructorFlags::FreeMemory) {
+      ghs::free(self);
+   }
 }
 
 nn::Result
-DownloadedDataBase::DownloadExternalBinaryData(virt_ptr<void> dataBuffer,
-                                               virt_ptr<uint32_t> outDataSize,
-                                               uint32_t dataBufferSize) const
-{
-   return ResultNotOnline;
-}
-
-nn::Result
-DownloadedDataBase::DownloadExternalImageData(virt_ptr<void> dataBuffer,
+DownloadedDataBase_DownloadExternalBinaryData(virt_ptr<const DownloadedDataBase> self,
+                                              virt_ptr<void> dataBuffer,
                                               virt_ptr<uint32_t> outDataSize,
-                                              uint32_t dataBufferSize) const
+                                              uint32_t dataBufferSize)
 {
    return ResultNotOnline;
 }
 
 nn::Result
-DownloadedDataBase::GetAppData(virt_ptr<uint32_t> dataBuffer,
-                               virt_ptr<uint32_t> outSize,
-                               uint32_t dataBufferSize) const
+DownloadedDataBase_DownloadExternalImageData(virt_ptr<const DownloadedDataBase> self,
+                                             virt_ptr<void> dataBuffer,
+                                             virt_ptr<uint32_t> outDataSize,
+                                             uint32_t dataBufferSize)
+{
+   return ResultNotOnline;
+}
+
+nn::Result
+DownloadedDataBase_GetAppData(virt_ptr<const DownloadedDataBase> self,
+                              virt_ptr<uint32_t> dataBuffer,
+                              virt_ptr<uint32_t> outSize,
+                              uint32_t dataBufferSize)
 {
    if (!dataBuffer) {
       return ResultInvalidPointer;
@@ -58,12 +78,12 @@ DownloadedDataBase::GetAppData(virt_ptr<uint32_t> dataBuffer,
       return ResultInvalidSize;
    }
 
-   if (!TestFlags(HasAppData)) {
+   if (!DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasAppData)) {
       return ResultNoData;
    }
 
-   auto copySize = std::min<uint32_t>(mAppDataSize, dataBufferSize);
-   std::memcpy(dataBuffer.get(), virt_addrof(mAppData).get(), copySize);
+   auto copySize = std::min<uint32_t>(self->appDataSize, dataBufferSize);
+   std::memcpy(dataBuffer.get(), virt_addrof(self->appData).get(), copySize);
 
    if (outSize) {
       *outSize = copySize;
@@ -73,19 +93,20 @@ DownloadedDataBase::GetAppData(virt_ptr<uint32_t> dataBuffer,
 }
 
 uint32_t
-DownloadedDataBase::GetAppDataSize() const
+DownloadedDataBase_GetAppDataSize(virt_ptr<const DownloadedDataBase> self)
 {
-   if (TestFlags(HasAppData)) {
-      return mAppDataSize;
+   if (DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasAppData)) {
+      return self->appDataSize;
    }
 
    return 0;
 }
 
 nn::Result
-DownloadedDataBase::GetBodyMemo(virt_ptr<uint8_t> memoBuffer,
-                                virt_ptr<uint32_t> outSize,
-                                uint32_t memoBufferSize) const
+DownloadedDataBase_GetBodyMemo(virt_ptr<const DownloadedDataBase> self,
+                               virt_ptr<uint8_t> memoBuffer,
+                               virt_ptr<uint32_t> outSize,
+                               uint32_t memoBufferSize)
 {
    if (!memoBuffer) {
       return ResultInvalidPointer;
@@ -95,7 +116,7 @@ DownloadedDataBase::GetBodyMemo(virt_ptr<uint8_t> memoBuffer,
       return ResultInvalidSize;
    }
 
-   if (!TestFlags(HasBodyMemo)) {
+   if (!DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasBodyMemo)) {
       return ResultNoData;
    }
 
@@ -104,8 +125,9 @@ DownloadedDataBase::GetBodyMemo(virt_ptr<uint8_t> memoBuffer,
 }
 
 nn::Result
-DownloadedDataBase::GetBodyText(virt_ptr<char16_t> textBuffer,
-                                uint32_t textBufferSize) const
+DownloadedDataBase_GetBodyText(virt_ptr<const DownloadedDataBase> self,
+                               virt_ptr<char16_t> textBuffer,
+                               uint32_t textBufferSize)
 {
    if (!textBuffer) {
       return ResultInvalidPointer;
@@ -115,69 +137,70 @@ DownloadedDataBase::GetBodyText(virt_ptr<char16_t> textBuffer,
       return ResultInvalidSize;
    }
 
-   if (!TestFlags(HasBodyText)) {
+   if (!DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasBodyText)) {
       return ResultNoData;
    }
 
    char16_copy(textBuffer.getRawPointer(),
                textBufferSize,
-               virt_addrof(mBodyText).getRawPointer(),
-               mBodyTextLength);
+               virt_addrof(self->bodyText).getRawPointer(),
+               self->bodyTextLength);
    return ResultSuccess;
 }
 
 uint8_t
-DownloadedDataBase::GetCountryId() const
+DownloadedDataBase_GetCountryId(virt_ptr<const DownloadedDataBase> self)
 {
-   return mCountryId;
+   return self->countryId;
 }
 
 uint32_t
-DownloadedDataBase::GetExternalBinaryDataSize() const
+DownloadedDataBase_GetExternalBinaryDataSize(virt_ptr<const DownloadedDataBase> self)
 {
-   if (TestFlags(HasExternalBinaryData)) {
-      return mExternalBinaryDataSize;
+   if (DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasExternalBinaryData)) {
+      return self->externalBinaryDataSize;
    }
 
    return 0;
 }
 
 uint32_t
-DownloadedDataBase::GetExternalImageDataSize() const
+DownloadedDataBase_GetExternalImageDataSize(virt_ptr<const DownloadedDataBase> self)
 {
-   if (TestFlags(HasExternalImageData)) {
-      return mExternalImageDataSize;
+   if (DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasExternalImageData)) {
+      return self->externalImageDataSize;
    }
 
    return 0;
 }
 
 virt_ptr<const char>
-DownloadedDataBase::GetExternalUrl() const
+DownloadedDataBase_GetExternalUrl(virt_ptr<const DownloadedDataBase> self)
 {
-   if (TestFlags(HasExternalUrl)) {
-      return virt_addrof(mExternalUrl);
+   if (DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasExternalUrl)) {
+      return virt_addrof(self->externalUrl);
    }
 
    return nullptr;
 }
 
 uint8_t
-DownloadedDataBase::GetFeeling() const
+DownloadedDataBase_GetFeeling(virt_ptr<const DownloadedDataBase> self)
 {
-   return mFeeling;
+   return self->feeling;
 }
 
 uint8_t
-DownloadedDataBase::GetLanguageId() const
+DownloadedDataBase_GetLanguageId(virt_ptr<const DownloadedDataBase> self)
 {
-   return mLanguageId;
+   return self->languageId;
 }
 
 nn::Result
-DownloadedDataBase::GetMiiData(virt_ptr<FFLStoreData> outData) const
+DownloadedDataBase_GetMiiData(virt_ptr<const DownloadedDataBase> self,
+                              virt_ptr<FFLStoreData> outData)
 {
-   if (!TestFlags(HasMiiData)) {
+   if (!DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasMiiData)) {
       return ResultNoData;
    }
 
@@ -186,124 +209,125 @@ DownloadedDataBase::GetMiiData(virt_ptr<FFLStoreData> outData) const
    }
 
    std::memcpy(outData.get(),
-               virt_addrof(mMiiData).get(),
+               virt_addrof(self->miiData).get(),
                sizeof(FFLStoreData));
    return ResultSuccess;
 }
 
-virt_ptr<FFLStoreData>
-DownloadedDataBase::GetMiiData() const
+virt_ptr<nn::ffl::FFLStoreData>
+DownloadedDataBase_GetMiiData(virt_ptr<const DownloadedDataBase> self)
 {
-   if (TestFlags(HasMiiData)) {
-      return virt_addrof(mMiiData);
+   if (DownloadedDataBase_TestFlags(self, DownloadedDataBase::HasMiiData)) {
+      return virt_addrof(self->miiData);
    }
 
    return nullptr;
 }
 
 virt_ptr<const char16_t>
-DownloadedDataBase::GetMiiNickname() const
+DownloadedDataBase_GetMiiNickname(virt_ptr<const DownloadedDataBase> self)
 {
-   if (mMiiNickname[0]) {
-      return virt_addrof(mMiiNickname);
+   if (self->miiNickname[0]) {
+      return virt_addrof(self->miiNickname);
    }
 
    return nullptr;
 }
 
 uint8_t
-DownloadedDataBase::GetPlatformId() const
+DownloadedDataBase_GetPlatformId(virt_ptr<const DownloadedDataBase> self)
 {
-   return mPlatformId;
+   return self->platformId;
 }
 
 uint64_t
-DownloadedDataBase::GetPostDate() const
+DownloadedDataBase_GetPostDate(virt_ptr<const DownloadedDataBase> self)
 {
-   return mPostDate;
+   return self->postDate;
 }
 
 virt_ptr<const uint8_t>
-DownloadedDataBase::GetPostId() const
+DownloadedDataBase_GetPostId(virt_ptr<const DownloadedDataBase> self)
 {
-   return virt_addrof(mPostId);
+   return virt_addrof(self->postId);
 }
 
 uint8_t
-DownloadedDataBase::GetRegionId() const
+DownloadedDataBase_GetRegionId(virt_ptr<const DownloadedDataBase> self)
 {
-   return mRegionId;
+   return self->regionId;
 }
 
 virt_ptr<const uint8_t>
-DownloadedDataBase::GetTopicTag() const
+DownloadedDataBase_GetTopicTag(virt_ptr<const DownloadedDataBase> self)
 {
-   return virt_addrof(mTopicTag);
+   return virt_addrof(self->topicTag);
 }
 
 uint32_t
-DownloadedDataBase::GetUserPid() const
+DownloadedDataBase_GetUserPid(virt_ptr<const DownloadedDataBase> self)
 {
-   return mUserPid;
+   return self->userPid;
 }
 
 bool
-DownloadedDataBase::TestFlags(uint32_t flagMask) const
+DownloadedDataBase_TestFlags(virt_ptr<const DownloadedDataBase> self,
+                             uint32_t flagMask)
 {
-   return (mFlags & flagMask) != 0;
+   return (self->flags & flagMask) != 0;
 }
 
 void
 Library::registerDownloadedDataBaseSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn3olv18DownloadedDataBaseFv",
-                             DownloadedDataBase);
-   RegisterDestructorExport("__dt__Q3_2nn3olv18DownloadedDataBaseFv",
-                            DownloadedDataBase);
+   RegisterFunctionExportName("__ct__Q3_2nn3olv18DownloadedDataBaseFv",
+                              DownloadedDataBase_Constructor);
+   RegisterFunctionExportName("__dt__Q3_2nn3olv18DownloadedDataBaseFv",
+                              DownloadedDataBase_Destructor);
    RegisterFunctionExportName("DownloadExternalBinaryData__Q3_2nn3olv18DownloadedDataBaseCFPvPUiUi",
-                              &DownloadedDataBase::DownloadExternalBinaryData);
+                              DownloadedDataBase_DownloadExternalBinaryData);
    RegisterFunctionExportName("DownloadExternalImageData__Q3_2nn3olv18DownloadedDataBaseCFPvPUiUi",
-                              &DownloadedDataBase::DownloadExternalImageData);
+                              DownloadedDataBase_DownloadExternalImageData);
    RegisterFunctionExportName("GetAppDataSize__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetAppDataSize);
+                              DownloadedDataBase_GetAppDataSize);
    RegisterFunctionExportName("GetAppData__Q3_2nn3olv18DownloadedDataBaseCFPUcPUiUi",
-                              &DownloadedDataBase::GetAppData);
+                              DownloadedDataBase_GetAppData);
    RegisterFunctionExportName("GetBodyMemo__Q3_2nn3olv18DownloadedDataBaseCFPUcPUiUi",
-                              &DownloadedDataBase::GetBodyMemo);
+                              DownloadedDataBase_GetBodyMemo);
    RegisterFunctionExportName("GetBodyText__Q3_2nn3olv18DownloadedDataBaseCFPwUi",
-                              &DownloadedDataBase::GetBodyText);
+                              DownloadedDataBase_GetBodyText);
    RegisterFunctionExportName("GetCountryId__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetCountryId);
+                              DownloadedDataBase_GetCountryId);
    RegisterFunctionExportName("GetExternalBinaryDataSize__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetExternalBinaryDataSize);
+                              DownloadedDataBase_GetExternalBinaryDataSize);
    RegisterFunctionExportName("GetExternalImageDataSize__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetExternalImageDataSize);
+                              DownloadedDataBase_GetExternalImageDataSize);
    RegisterFunctionExportName("GetExternalUrl__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetExternalUrl);
+                              DownloadedDataBase_GetExternalUrl);
    RegisterFunctionExportName("GetFeeling__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetFeeling);
+                              DownloadedDataBase_GetFeeling);
    RegisterFunctionExportName("GetLanguageId__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetLanguageId);
+                              DownloadedDataBase_GetLanguageId);
    RegisterFunctionExportName("GetMiiData__Q3_2nn3olv18DownloadedDataBaseCFP12FFLStoreData",
-                              static_cast<nn::Result (DownloadedDataBase::*)(virt_ptr<FFLStoreData>) const>(&DownloadedDataBase::GetMiiData));
+                              static_cast<nn::Result (*)(virt_ptr<const DownloadedDataBase>, virt_ptr<FFLStoreData>)>(DownloadedDataBase_GetMiiData));
    RegisterFunctionExportName("GetMiiData__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              static_cast<virt_ptr<FFLStoreData> (DownloadedDataBase::*)() const>(&DownloadedDataBase::GetMiiData));
+                              static_cast<virt_ptr<FFLStoreData> (*)(virt_ptr<const DownloadedDataBase>)>(DownloadedDataBase_GetMiiData));
    RegisterFunctionExportName("GetMiiNickname__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetMiiNickname);
+                              DownloadedDataBase_GetMiiNickname);
    RegisterFunctionExportName("GetPlatformId__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetPlatformId);
+                              DownloadedDataBase_GetPlatformId);
    RegisterFunctionExportName("GetPostDate__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetPostDate);
+                              DownloadedDataBase_GetPostDate);
    RegisterFunctionExportName("GetPostId__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetPostId);
+                              DownloadedDataBase_GetPostId);
    RegisterFunctionExportName("GetRegionId__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetRegionId);
+                              DownloadedDataBase_GetRegionId);
    RegisterFunctionExportName("GetTopicTag__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetTopicTag);
+                              DownloadedDataBase_GetTopicTag);
    RegisterFunctionExportName("GetUserPid__Q3_2nn3olv18DownloadedDataBaseCFv",
-                              &DownloadedDataBase::GetUserPid);
+                              DownloadedDataBase_GetUserPid);
    RegisterFunctionExportName("TestFlags__Q3_2nn3olv18DownloadedDataBaseCFUi",
-                              &DownloadedDataBase::TestFlags);
+                              DownloadedDataBase_TestFlags);
 
    registerTypeInfo<DownloadedDataBase>(
       "nn::olv::DownloadedDataBase",

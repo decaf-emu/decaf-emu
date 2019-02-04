@@ -1,7 +1,7 @@
 #pragma once
 #include "nn_boss_tasksetting.h"
 
-#include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "cafe/libraries/ghs/cafe_ghs_typeinfo.h"
 #include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
@@ -28,18 +28,18 @@ nn::boss::NetTaskSetting::SetServiceToken(unsigned char const *)
 namespace cafe::nn_boss
 {
 
-class NetTaskSetting : public TaskSetting
+struct NetTaskSetting : public TaskSetting
 {
-public:
-   static virt_ptr<hle::VirtualTable> VirtualTable;
-   static virt_ptr<hle::TypeDescriptor> TypeDescriptor;
-
-public:
-   NetTaskSetting();
-   ~NetTaskSetting();
-
-protected:
+   static virt_ptr<ghs::VirtualTable> VirtualTable;
+   static virt_ptr<ghs::TypeDescriptor> TypeDescriptor;
 };
 CHECK_SIZE(NetTaskSetting, 0x1004);
+
+virt_ptr<NetTaskSetting>
+NetTaskSetting_Constructor(virt_ptr<NetTaskSetting> self);
+
+void
+NetTaskSetting_Destructor(virt_ptr<NetTaskSetting> self,
+                          ghs::DestructorFlags flags);
 
 }  // namespace cafe::nn_boss

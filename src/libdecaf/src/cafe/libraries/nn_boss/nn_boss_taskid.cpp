@@ -1,86 +1,125 @@
 #include "nn_boss.h"
 #include "nn_boss_taskid.h"
 
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 #include <common/strutils.h>
 
 namespace cafe::nn_boss
 {
 
-TaskID::TaskID()
+virt_ptr<TaskID>
+TaskID_Constructor(virt_ptr<TaskID> self)
 {
-   mTaskID[0] = char { 0 };
-}
+   if (!self) {
+      self = virt_cast<TaskID *>(ghs::malloc(sizeof(TaskID)));
+      if (!self) {
+         return nullptr;
+      }
+   }
 
-TaskID::TaskID(virt_ptr<const char> id)
-{
-   string_copy(virt_addrof(mTaskID).get(), mTaskID.size(), id.get(), 7);
-   mTaskID[7] = char { 0 };
-}
-
-TaskID::TaskID(virt_ptr<TaskID> other)
-{
-   std::memcpy(virt_addrof(mTaskID).get(),
-               virt_addrof(other->mTaskID).get(),
-               8);
+   self->value[0] = char { 0 };
+   return self;
 }
 
 virt_ptr<TaskID>
-TaskID::operator =(virt_ptr<const char> id)
+TaskID_Constructor(virt_ptr<TaskID> self,
+                   virt_ptr<const char> id)
 {
-   string_copy(virt_addrof(mTaskID).get(), mTaskID.size(), id.get(), 7);
-   mTaskID[7] = char { 0 };
-   return virt_this(this);
+   if (!self) {
+      self = virt_cast<TaskID *>(ghs::malloc(sizeof(TaskID)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   string_copy(virt_addrof(self->value).get(), self->value.size(), id.get(), 8);
+   self->value[7] = char { 0 };
+   return self;
+}
+
+virt_ptr<TaskID>
+TaskID_Constructor(virt_ptr<TaskID> self,
+                   virt_ptr<TaskID> other)
+{
+   if (!self) {
+      self = virt_cast<TaskID *>(ghs::malloc(sizeof(TaskID)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   std::memcpy(virt_addrof(self->value).get(),
+               virt_addrof(other->value).get(),
+               8);
+   return self;
+}
+
+virt_ptr<TaskID>
+TaskID_OperatorAssign(virt_ptr<TaskID> self,
+                      virt_ptr<const char> id)
+{
+   string_copy(virt_addrof(self->value).get(), self->value.size(), id.get(), 8);
+   self->value[7] = char { 0 };
+   return self;
 }
 
 bool
-TaskID::operator ==(virt_ptr<const char> id)
+TaskID_OperatorEqual(virt_ptr<TaskID> self,
+                     virt_ptr<const char> id)
 {
-   return std::strncmp(virt_addrof(mTaskID).get(), id.get(), 8) == 0;
+   return std::strncmp(virt_addrof(self->value).get(), id.get(), 8) == 0;
 }
 
 bool
-TaskID::operator ==(virt_ptr<TaskID> other)
+TaskID_OperatorEqual(virt_ptr<TaskID> self,
+                     virt_ptr<TaskID> other)
 {
-   return std::strncmp(virt_addrof(mTaskID).get(),
-                       virt_addrof(other->mTaskID).get(),
+   return std::strncmp(virt_addrof(self->value).get(),
+                       virt_addrof(other->value).get(),
                        8) == 0;
 }
 
 bool
-TaskID::operator !=(virt_ptr<const char> id)
+TaskID_OperatorNotEqual(virt_ptr<TaskID> self,
+                        virt_ptr<const char> id)
 {
-   return !(*this == id);
+   return !TaskID_OperatorEqual(self, id);
 }
 
-bool TaskID::operator !=(virt_ptr<TaskID> other)
+bool
+TaskID_OperatorNotEqual(virt_ptr<TaskID> self,
+                        virt_ptr<TaskID> other)
 {
-   return !(*this == other);
+   return !TaskID_OperatorEqual(self, other);
 }
 
-TaskID::operator virt_ptr<const char>()
+virt_ptr<const char>
+TaskID_OperatorCastConstCharPtr(virt_ptr<TaskID> self)
 {
-   return virt_addrof(mTaskID);
+   return virt_addrof(self->value);
 }
 
 void
 Library::registerTaskIdSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn4boss6TaskIDFv",
-                             TaskID);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss6TaskIDFPCc",
-                                 TaskID, virt_ptr<const char>);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss6TaskIDFRCQ3_2nn4boss6TaskID",
-                                 TaskID, virt_ptr<TaskID>);
+   RegisterFunctionExportName("__ct__Q3_2nn4boss6TaskIDFv",
+                              static_cast<virt_ptr<TaskID> (*)(virt_ptr<TaskID>)>(TaskID_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss6TaskIDFPCc",
+                              static_cast<virt_ptr<TaskID>(*)(virt_ptr<TaskID>, virt_ptr<const char>)>(TaskID_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss6TaskIDFRCQ3_2nn4boss6TaskID",
+                              static_cast<virt_ptr<TaskID>(*)(virt_ptr<TaskID>, virt_ptr<TaskID>)>(TaskID_Constructor));
    RegisterFunctionExportName("__as__Q3_2nn4boss6TaskIDFPCc",
-                              static_cast<virt_ptr<TaskID> (TaskID::*)(virt_ptr<const char>)>(&TaskID::operator =));
+                              static_cast<virt_ptr<TaskID> (*)(virt_ptr<TaskID>, virt_ptr<const char>)>(TaskID_OperatorAssign));
    RegisterFunctionExportName("__eq__Q3_2nn4boss6TaskIDCFPCc",
-                              static_cast<bool (TaskID::*)(virt_ptr<const char>)>(&TaskID::operator ==));
+                              static_cast<bool (*)(virt_ptr<TaskID>, virt_ptr<const char>)>(TaskID_OperatorEqual));
    RegisterFunctionExportName("__eq__Q3_2nn4boss6TaskIDCFRCQ3_2nn4boss6TaskID",
-                              static_cast<bool (TaskID::*)(virt_ptr<TaskID>)>(&TaskID::operator ==));
+                              static_cast<bool (*)(virt_ptr<TaskID>, virt_ptr<TaskID>)>(TaskID_OperatorEqual));
    RegisterFunctionExportName("__ne__Q3_2nn4boss6TaskIDCFPCc",
-                              static_cast<bool (TaskID::*)(virt_ptr<const char>)>(&TaskID::operator !=));
+                              static_cast<bool (*)(virt_ptr<TaskID>, virt_ptr<const char>)>(TaskID_OperatorNotEqual));
+   RegisterFunctionExportName("__ne__Q3_2nn4boss6TaskIDCFRCQ3_2nn4boss6TaskID",
+                              static_cast<bool(*)(virt_ptr<TaskID>, virt_ptr<TaskID>)>(TaskID_OperatorNotEqual));
    RegisterFunctionExportName("__opPCc__Q3_2nn4boss6TaskIDCFv",
-                              &TaskID::operator virt_ptr<const char>);
+                              TaskID_OperatorCastConstCharPtr);
 }
 
 } // namespace cafe::nn_boss

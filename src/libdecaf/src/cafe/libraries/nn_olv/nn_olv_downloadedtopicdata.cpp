@@ -1,41 +1,47 @@
 #include "nn_olv.h"
 #include "nn_olv_downloadedtopicdata.h"
-#include "cafe/libraries/cafe_hle_stub.h"
+
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 
 namespace cafe::nn_olv
 {
 
-DownloadedTopicData::DownloadedTopicData()
+virt_ptr<DownloadedTopicData>
+DownloadedTopicData_Constructor(virt_ptr<DownloadedTopicData> self)
 {
-   decaf_warn_stub();
+   if (!self) {
+      self = virt_cast<DownloadedTopicData *>(ghs::malloc(sizeof(DownloadedTopicData)));
+      if (!self) {
+         return nullptr;
+      }
+   }
 
-   mUnk1 = 0u;
-   mCommunityId = 0u;
+   self->unk1 = 0u;
+   self->communityId = 0u;
+   return self;
 }
 
 uint32_t
-DownloadedTopicData::GetCommunityId()
+DownloadedTopicData_GetCommunityId(virt_ptr<const DownloadedTopicData> self)
 {
-   decaf_warn_stub();
-   return mCommunityId;
+   return self->communityId;
 }
 
 uint32_t
-DownloadedTopicData::GetUserCount()
+DownloadedTopicData_GetUserCount(virt_ptr<const DownloadedTopicData> self)
 {
-   decaf_warn_stub();
    return 0;
 }
 
 void
 Library::registerDownloadedTopicDataSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn3olv19DownloadedTopicDataFv",
-                             DownloadedTopicData);
+   RegisterFunctionExportName("__ct__Q3_2nn3olv19DownloadedTopicDataFv",
+                              DownloadedTopicData_Constructor);
    RegisterFunctionExportName("GetCommunityId__Q3_2nn3olv19DownloadedTopicDataCFv",
-                              &DownloadedTopicData::GetCommunityId);
+                              DownloadedTopicData_GetCommunityId);
    RegisterFunctionExportName("GetUserCount__Q3_2nn3olv19DownloadedTopicDataCFv",
-                              &DownloadedTopicData::GetUserCount);
+                              DownloadedTopicData_GetUserCount);
 }
 
 }  // namespace namespace cafe::nn_olv

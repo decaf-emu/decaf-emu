@@ -1,7 +1,7 @@
 #pragma once
 #include "nn_boss_titleid.h"
 
-#include "cafe/libraries/cafe_hle_library_typeinfo.h"
+#include "cafe/libraries/ghs/cafe_ghs_typeinfo.h"
 #include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
@@ -9,35 +9,36 @@
 namespace cafe::nn_boss
 {
 
-class Title
+struct Title
 {
-public:
-   static virt_ptr<hle::VirtualTable> VirtualTable;
-   static virt_ptr<hle::TypeDescriptor> TypeDescriptor;
+   static virt_ptr<ghs::VirtualTable> VirtualTable;
+   static virt_ptr<ghs::TypeDescriptor> TypeDescriptor;
 
-public:
-   Title();
-   Title(uint32_t accountId,
-         virt_ptr<TitleID> titleId);
-   ~Title();
-
-   nn::Result
-   ChangeAccount(uint8_t slot);
-
-private:
-   be2_val<uint32_t> mAccountID;
+   be2_val<uint32_t> accountID;
    UNKNOWN(4);
-   be2_val<TitleID> mTitleID;
-   be2_virt_ptr<hle::VirtualTable> mVirtualTable;
+   be2_val<TitleID> titleID;
+   be2_virt_ptr<ghs::VirtualTable> virtualTable;
    UNKNOWN(4);
-
-protected:
-   CHECK_MEMBER_OFFSET_BEG
-      CHECK_OFFSET(Title, 0x00, mAccountID);
-      CHECK_OFFSET(Title, 0x08, mTitleID);
-      CHECK_OFFSET(Title, 0x10, mVirtualTable);
-   CHECK_MEMBER_OFFSET_END
 };
+CHECK_OFFSET(Title, 0x00, accountID);
+CHECK_OFFSET(Title, 0x08, titleID);
+CHECK_OFFSET(Title, 0x10, virtualTable);
 CHECK_SIZE(Title, 0x18);
+
+virt_ptr<Title>
+Title_Constructor(virt_ptr<Title> self);
+
+virt_ptr<Title>
+Title_Constructor(virt_ptr<Title> self,
+                  uint32_t accountId,
+                  virt_ptr<TitleID> titleId);
+
+void
+Title_Destructor(virt_ptr<Title> self,
+                 ghs::DestructorFlags flags);
+
+nn::Result
+Title_ChangeAccount(virt_ptr<Title> self,
+                    uint8_t slot);
 
 } // namespace cafe::nn_boss

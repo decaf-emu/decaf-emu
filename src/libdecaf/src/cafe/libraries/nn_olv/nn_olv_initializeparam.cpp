@@ -1,6 +1,7 @@
 #include "nn_olv.h"
 #include "nn_olv_initializeparam.h"
 
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 #include "nn/olv/nn_olv_result.h"
 
 using namespace nn::olv;
@@ -10,26 +11,37 @@ namespace cafe::nn_olv
 
 constexpr auto MinWorkBufferSize = 0x10000u;
 
-InitializeParam::InitializeParam()
+virt_ptr<InitializeParam>
+InitializeParam_Constructor(virt_ptr<InitializeParam> self)
 {
-   mFlags = 0u;
-   mReportTypes = 0x1B7Fu;
-   mWorkBuffer = nullptr;
-   mWorkBufferSize = 0u;
-   mSysArgs = nullptr;
-   mSysArgsSize = 0u;
+   if (!self) {
+      self = virt_cast<InitializeParam *>(ghs::malloc(sizeof(InitializeParam)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   self->flags = 0u;
+   self->reportTypes = 0x1B7Fu;
+   self->workBuffer = nullptr;
+   self->workBufferSize = 0u;
+   self->sysArgs = nullptr;
+   self->sysArgsSize = 0u;
+   return self;
 }
 
 nn::Result
-InitializeParam::SetFlags(uint32_t flags)
+InitializeParam_SetFlags(virt_ptr<InitializeParam> self,
+                         uint32_t flags)
 {
-   mFlags = flags;
+   self->flags = flags;
    return ResultSuccess;
 }
 
 nn::Result
-InitializeParam::SetWork(virt_ptr<uint8_t> workBuffer,
-                         uint32_t workBufferSize)
+InitializeParam_SetWork(virt_ptr<InitializeParam> self,
+                        virt_ptr<uint8_t> workBuffer,
+                        uint32_t workBufferSize)
 {
    if (!workBuffer) {
       return ResultInvalidPointer;
@@ -39,21 +51,23 @@ InitializeParam::SetWork(virt_ptr<uint8_t> workBuffer,
       return ResultInvalidSize;
    }
 
-   mWorkBuffer = workBuffer;
-   mWorkBufferSize = workBufferSize;
+   self->workBuffer = workBuffer;
+   self->workBufferSize = workBufferSize;
    return ResultSuccess;
 }
 
 nn::Result
-InitializeParam::SetReportTypes(uint32_t types)
+InitializeParam_SetReportTypes(virt_ptr<InitializeParam> self,
+                               uint32_t types)
 {
-   mReportTypes = types;
+   self->reportTypes = types;
    return ResultSuccess;
 }
 
 nn::Result
-InitializeParam::SetSysArgs(virt_ptr<uint8_t> sysArgs,
-                            uint32_t sysArgsSize)
+InitializeParam_SetSysArgs(virt_ptr<InitializeParam> self,
+                           virt_ptr<uint8_t> sysArgs,
+                           uint32_t sysArgsSize)
 {
    if (!sysArgs) {
       return ResultInvalidPointer;
@@ -63,24 +77,24 @@ InitializeParam::SetSysArgs(virt_ptr<uint8_t> sysArgs,
       return ResultInvalidSize;
    }
 
-   mSysArgs = sysArgs;
-   mSysArgsSize = sysArgsSize;
+   self->sysArgs = sysArgs;
+   self->sysArgsSize = sysArgsSize;
    return ResultSuccess;
 }
 
 void
 Library::registerInitializeParamSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn3olv15InitializeParamFv",
-                             InitializeParam);
+   RegisterFunctionExportName("__ct__Q3_2nn3olv15InitializeParamFv",
+                              InitializeParam_Constructor);
    RegisterFunctionExportName("SetFlags__Q3_2nn3olv15InitializeParamFUi",
-                              &InitializeParam::SetFlags);
+                              InitializeParam_SetFlags);
    RegisterFunctionExportName("SetWork__Q3_2nn3olv15InitializeParamFPUcUi",
-                              &InitializeParam::SetWork);
+                              InitializeParam_SetWork);
    RegisterFunctionExportName("SetReportTypes__Q3_2nn3olv15InitializeParamFUi",
-                              &InitializeParam::SetReportTypes);
+                              InitializeParam_SetReportTypes);
    RegisterFunctionExportName("SetSysArgs__Q3_2nn3olv15InitializeParamFPCvUi",
-                              &InitializeParam::SetSysArgs);
+                              InitializeParam_SetSysArgs);
 }
 
 }  // namespace cafe::nn_olv

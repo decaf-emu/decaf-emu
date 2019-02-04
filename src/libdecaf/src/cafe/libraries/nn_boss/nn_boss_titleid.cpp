@@ -1,97 +1,128 @@
 #include "nn_boss.h"
 #include "nn_boss_titleid.h"
 
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
+
 namespace cafe::nn_boss
 {
 
-TitleID::TitleID() :
-   mLower(uint32_t { 0 }),
-   mUpper(uint32_t { 0 })
+virt_ptr<TitleID>
+TitleID_Constructor(virt_ptr<TitleID> self)
 {
+   if (!self) {
+      self = virt_cast<TitleID *>(ghs::malloc(sizeof(TitleID)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   self->value = 0ull;
+   return self;
 }
 
-TitleID::TitleID(virt_ptr<TitleID> other) :
-   mLower(other->mLower),
-   mUpper(other->mUpper)
+virt_ptr<TitleID>
+TitleID_Constructor(virt_ptr<TitleID> self,
+                    virt_ptr<TitleID> other)
 {
+   if (!self) {
+      self = virt_cast<TitleID *>(ghs::malloc(sizeof(TitleID)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   self->value = other->value;
+   return self;
 }
 
-TitleID::TitleID(uint64_t id) :
-   mLower(static_cast<uint32_t>(id)),
-   mUpper(static_cast<uint32_t>(id >> 32))
+virt_ptr<TitleID>
+TitleID_Constructor(virt_ptr<TitleID> self,
+                    uint64_t id)
 {
+   if (!self) {
+      self = virt_cast<TitleID *>(ghs::malloc(sizeof(TitleID)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   self->value = id;
+   return self;
 }
 
 bool
-TitleID::IsValid()
+TitleID_IsValid(virt_ptr<TitleID> self)
 {
-   return !!(mLower | mUpper);
+   return self->value != 0ull;
 }
 
 uint64_t
-TitleID::GetValue()
+TitleID_GetValue(virt_ptr<TitleID> self)
 {
-   return static_cast<uint64_t>(mUpper) << 32 | static_cast<uint64_t>(mLower);
+   return self->value;
 }
 
 uint32_t
-TitleID::GetTitleID()
+TitleID_GetTitleID(virt_ptr<TitleID> self)
 {
-   return mUpper;
+   return static_cast<uint32_t>(self->value & 0xFFFFFFFF);
 }
 
 uint32_t
-TitleID::GetTitleCode()
+TitleID_GetTitleCode(virt_ptr<TitleID> self)
 {
-   return GetTitleID();
+   return TitleID_GetTitleID(self);
 }
 
 uint32_t
-TitleID::GetUniqueId()
+TitleID_GetUniqueId(virt_ptr<TitleID> self)
 {
-   return (mUpper >> 8) & 0xFFFFFu;
+   return (TitleID_GetTitleID(self) >> 8) & 0xFFFF;
 }
 
 bool
-TitleID::operator ==(virt_ptr<TitleID> other)
+TitleID_OperatorEqual(virt_ptr<TitleID> self,
+                      virt_ptr<TitleID> other)
 {
-   if (mLower & 0x20) {
-      return (((mLower ^ other->mLower) | (mUpper ^ other->mUpper)) & 0xFFFFFF00) == 0;
-   } else {
-      return (mLower == other->mLower) && (mUpper == other->mUpper);
+   if (self->value & 0x2000000000ull) {
+      return (self->value  & 0xFFFFFF00FFFFFFFFull) ==
+             (other->value & 0xFFFFFF00FFFFFFFFull);
    }
+
+   return self->value == other->value;
 }
 
 bool
-TitleID::operator !=(virt_ptr<TitleID> other)
+TitleID_OperatorNotEqual(virt_ptr<TitleID> self,
+                         virt_ptr<TitleID> other)
 {
-   return !(*this == other);
+   return !TitleID_OperatorEqual(self, other);
 }
 
 void
 Library::registerTitleIdSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn4boss7TitleIDFv",
-                             TitleID);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss7TitleIDFRCQ3_2nn4boss7TitleID",
-                                 TitleID, virt_ptr<TitleID>);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss7TitleIDFUL",
-                                 TitleID, uint64_t);
+   RegisterFunctionExportName("__ct__Q3_2nn4boss7TitleIDFv",
+                              static_cast<virt_ptr<TitleID> (*)(virt_ptr<TitleID>)>(TitleID_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss7TitleIDFRCQ3_2nn4boss7TitleID",
+                              static_cast<virt_ptr<TitleID>(*)(virt_ptr<TitleID>, virt_ptr<TitleID>)>(TitleID_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss7TitleIDFUL",
+                              static_cast<virt_ptr<TitleID>(*)(virt_ptr<TitleID>, uint64_t)>(TitleID_Constructor));
 
    RegisterFunctionExportName("IsValid__Q3_2nn4boss7TitleIDCFv",
-                              &TitleID::IsValid);
+                              TitleID_IsValid);
    RegisterFunctionExportName("GetValue__Q3_2nn4boss7TitleIDCFv",
-                              &TitleID::GetValue);
+                              TitleID_GetValue);
    RegisterFunctionExportName("GetTitleId__Q3_2nn4boss7TitleIDCFv",
-                              &TitleID::GetTitleID);
+                              TitleID_GetTitleID);
    RegisterFunctionExportName("GetTitleCode__Q3_2nn4boss7TitleIDCFv",
-                              &TitleID::GetTitleCode);
+                              TitleID_GetTitleCode);
    RegisterFunctionExportName("GetUniqueId__Q3_2nn4boss7TitleIDCFv",
-                              &TitleID::GetUniqueId);
+                              TitleID_GetUniqueId);
    RegisterFunctionExportName("__eq__Q3_2nn4boss7TitleIDCFRCQ3_2nn4boss7TitleID",
-                              &TitleID::operator ==);
+                              TitleID_OperatorEqual);
    RegisterFunctionExportName("__ne__Q3_2nn4boss7TitleIDCFRCQ3_2nn4boss7TitleID",
-                              &TitleID::operator !=);
+                              TitleID_OperatorNotEqual);
 }
 
 } // namespace cafe::nn_boss

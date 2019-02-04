@@ -1,7 +1,7 @@
 #include "nn_olv.h"
 #include "nn_olv_uploadeddatabase.h"
 
-#include "cafe/libraries/cafe_hle_stub.h"
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 #include "nn/olv/nn_olv_result.h"
 
 using namespace nn::olv;
@@ -9,45 +9,62 @@ using namespace nn::olv;
 namespace cafe::nn_olv
 {
 
-virt_ptr<hle::VirtualTable>
-UploadedDataBase::VirtualTable = nullptr;
+virt_ptr<ghs::VirtualTable> UploadedDataBase::VirtualTable = nullptr;
+virt_ptr<ghs::TypeDescriptor> UploadedDataBase::TypeDescriptor = nullptr;
 
-virt_ptr<hle::TypeDescriptor>
-UploadedDataBase::TypeDescriptor = nullptr;
 
-UploadedDataBase::UploadedDataBase() :
-   mFlags(0u),
-   mBodyTextLength(0u),
-   mBodyMemoLength(0u),
-   mAppDataLength(0u),
-   mFeeling(int8_t { 0 }),
-   mCommonDataUnknown(0u),
-   mCommonDataLength(0u)
+virt_ptr<UploadedDataBase>
+UploadedDataBase_Constructor(virt_ptr<UploadedDataBase> self)
 {
-   mPostID[0] = char { 0 };
-   mVirtualTable = UploadedDataBase::VirtualTable;
+   if (!self) {
+      self = virt_cast<UploadedDataBase *>(ghs::malloc(sizeof(UploadedDataBase)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   self->virtualTable = UploadedDataBase::VirtualTable;
+   self->flags = 0u;
+   self->bodyTextLength = 0u;
+   self->bodyMemoLength = 0u;
+   self->appDataLength = 0u;
+   self->feeling = int8_t { 0 };
+   self->commonDataUnknown = 0u;
+   self->commonDataLength = 0u;
+   self->postID[0] = char { 0 };
+   return self;
 }
 
-UploadedDataBase::~UploadedDataBase()
+void
+UploadedDataBase_Destructor(virt_ptr<UploadedDataBase> self,
+                            ghs::DestructorFlags flags)
 {
+   if (!self) {
+      return;
+   }
+
+   if (flags & ghs::DestructorFlags::FreeMemory) {
+      ghs::free(self);
+   }
 }
 
 uint32_t
-UploadedDataBase::GetAppDataSize()
+UploadedDataBase_GetAppDataSize(virt_ptr<const UploadedDataBase> self)
 {
-   if (!TestFlags(HasAppData)) {
+   if (!UploadedDataBase_TestFlags(self, UploadedDataBase::HasAppData)) {
       return 0;
    }
 
-   return mAppDataLength;
+   return self->appDataLength;
 }
 
 nn::Result
-UploadedDataBase::GetAppData(virt_ptr<uint8_t> buffer,
-                             virt_ptr<uint32_t> outDatasize,
-                             uint32_t bufferSize)
+UploadedDataBase_GetAppData(virt_ptr<const UploadedDataBase> self,
+                            virt_ptr<uint8_t> buffer,
+                            virt_ptr<uint32_t> outDataSize,
+                            uint32_t bufferSize)
 {
-   if (!TestFlags(HasAppData)) {
+   if (!UploadedDataBase_TestFlags(self, UploadedDataBase::HasAppData)) {
       return ResultNoData;
    }
 
@@ -59,23 +76,24 @@ UploadedDataBase::GetAppData(virt_ptr<uint8_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mAppDataLength);
+   auto length = std::min<uint32_t>(bufferSize, self->appDataLength);
    std::memcpy(buffer.get(),
-               virt_addrof(mAppData).get(),
+               virt_addrof(self->appData).get(),
                length);
 
-   if (outDatasize) {
-      *outDatasize = length;
+   if (outDataSize) {
+      *outDataSize = length;
    }
 
    return ResultSuccess;
 }
 
 nn::Result
-UploadedDataBase::GetBodyText(virt_ptr<char16_t> buffer,
-                              uint32_t bufferSize)
+UploadedDataBase_GetBodyText(virt_ptr<const UploadedDataBase> self,
+                             virt_ptr<char16_t> buffer,
+                             uint32_t bufferSize)
 {
-   if (!TestFlags(HasBodyText)) {
+   if (!UploadedDataBase_TestFlags(self, UploadedDataBase::HasBodyText)) {
       return ResultNoData;
    }
 
@@ -87,9 +105,9 @@ UploadedDataBase::GetBodyText(virt_ptr<char16_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mBodyTextLength);
+   auto length = std::min<uint32_t>(bufferSize, self->bodyTextLength);
    std::memcpy(buffer.get(),
-               virt_addrof(mBodyText).get(),
+               virt_addrof(self->bodyText).get(),
                length * sizeof(char16_t));
 
    if (length < bufferSize) {
@@ -100,11 +118,12 @@ UploadedDataBase::GetBodyText(virt_ptr<char16_t> buffer,
 }
 
 nn::Result
-UploadedDataBase::GetBodyMemo(virt_ptr<uint8_t> buffer,
-                              virt_ptr<uint32_t> outMemoSize,
-                              uint32_t bufferSize)
+UploadedDataBase_GetBodyMemo(virt_ptr<const UploadedDataBase> self,
+                             virt_ptr<uint8_t> buffer,
+                             virt_ptr<uint32_t> outMemoSize,
+                             uint32_t bufferSize)
 {
-   if (!TestFlags(HasBodyMemo)) {
+   if (!UploadedDataBase_TestFlags(self, UploadedDataBase::HasBodyMemo)) {
       return ResultNoData;
    }
 
@@ -116,9 +135,9 @@ UploadedDataBase::GetBodyMemo(virt_ptr<uint8_t> buffer,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mBodyMemoLength);
+   auto length = std::min<uint32_t>(bufferSize, self->bodyMemoLength);
    std::memcpy(buffer.get(),
-               virt_addrof(mBodyMemo).get(),
+               virt_addrof(self->bodyMemo).get(),
                length);
 
    if (outMemoSize) {
@@ -129,12 +148,13 @@ UploadedDataBase::GetBodyMemo(virt_ptr<uint8_t> buffer,
 }
 
 nn::Result
-UploadedDataBase::GetCommonData(virt_ptr<uint32_t> unk,
-                                virt_ptr<uint8_t> buffer,
-                                virt_ptr<uint32_t> outDataSize,
-                                uint32_t bufferSize)
+UploadedDataBase_GetCommonData(virt_ptr<const UploadedDataBase> self,
+                               virt_ptr<uint32_t> unk,
+                               virt_ptr<uint8_t> buffer,
+                               virt_ptr<uint32_t> outDataSize,
+                               uint32_t bufferSize)
 {
-   if (!mCommonDataLength) {
+   if (!self->commonDataLength) {
       return ResultNoData;
    }
 
@@ -146,13 +166,13 @@ UploadedDataBase::GetCommonData(virt_ptr<uint32_t> unk,
       return ResultInvalidSize;
    }
 
-   auto length = std::min<uint32_t>(bufferSize, mCommonDataLength);
+   auto length = std::min<uint32_t>(bufferSize, self->commonDataLength);
    std::memcpy(buffer.get(),
-               virt_addrof(mCommonData).get(),
+               virt_addrof(self->commonData).get(),
                length);
 
    if (unk) {
-      *unk = mCommonDataUnknown;
+      *unk = self->commonDataUnknown;
    }
 
    if (outDataSize) {
@@ -163,30 +183,31 @@ UploadedDataBase::GetCommonData(virt_ptr<uint32_t> unk,
 }
 
 int32_t
-UploadedDataBase::GetFeeling()
+UploadedDataBase_GetFeeling(virt_ptr<const UploadedDataBase> self)
 {
-   return mFeeling;
+   return self->feeling;
 }
 
 virt_ptr<const char>
-UploadedDataBase::GetPostId()
+UploadedDataBase_GetPostId(virt_ptr<const UploadedDataBase> self)
 {
-   return virt_addrof(mPostID);
+   return virt_addrof(self->postID);
 }
 
 bool
-UploadedDataBase::TestFlags(uint32_t flag)
+UploadedDataBase_TestFlags(virt_ptr<const UploadedDataBase> self,
+                           uint32_t flag)
 {
-   return !!(mFlags & flag);
+   return !!(self->flags & flag);
 }
 
 void
 Library::registerUploadedDataBaseSymbols()
 {
-   RegisterDestructorExport("__dt__Q3_2nn3olv16UploadedDataBaseFv",
-                            UploadedDataBase);
+   RegisterFunctionExportName("__dt__Q3_2nn3olv16UploadedDataBaseFv",
+                              UploadedDataBase_Destructor);
    RegisterFunctionExportName("GetCommonData__Q3_2nn3olv16UploadedDataBaseFPUiPUcT1Ui",
-                              &UploadedDataBase::GetCommonData);
+                              UploadedDataBase_GetCommonData);
 
    registerTypeInfo<UploadedDataBase>(
       "nn::olv::UploadedDataBase",

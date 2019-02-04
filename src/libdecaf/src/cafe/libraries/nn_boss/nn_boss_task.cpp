@@ -2,6 +2,7 @@
 #include "nn_boss_task.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
+#include "cafe/libraries/ghs/cafe_ghs_malloc.h"
 #include "cafe/libraries/nn_act/nn_act_lib.h"
 #include "nn/boss/nn_boss_result.h"
 
@@ -10,137 +11,180 @@ using namespace nn::boss;
 namespace cafe::nn_boss
 {
 
-virt_ptr<hle::VirtualTable> Task::VirtualTable = nullptr;
-virt_ptr<hle::TypeDescriptor> Task::TypeDescriptor = nullptr;
+virt_ptr<ghs::VirtualTable> Task::VirtualTable = nullptr;
+virt_ptr<ghs::TypeDescriptor> Task::TypeDescriptor = nullptr;
 
-Task::Task() :
-   mAccountId(0u),
-   mTitleId(0ull)
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self)
 {
-   mVirtualTable = Task::VirtualTable;
+   if (!self) {
+      self = virt_cast<Task *>(ghs::malloc(sizeof(Task)));
+      if (!self) {
+         return nullptr;
+      }
+   }
+
+   self->virtualTable = Task::VirtualTable;
+   TaskID_Constructor(virt_addrof(self->taskId));
+   TitleID_Constructor(virt_addrof(self->titleId));
+   std::memset(virt_addrof(self->taskId).get(), 0, sizeof(TaskID));
+   return self;
 }
 
-Task::Task(virt_ptr<const char> taskId)
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self,
+                 virt_ptr<const char> taskId)
 {
-   mVirtualTable = Task::VirtualTable;
-   Initialize(taskId);
+   self = Task_Constructor(self);
+   if (self) {
+      Task_Initialize(self, taskId);
+   }
+
+   return self;
 }
 
-Task::Task(virt_ptr<const char> taskId,
-           uint32_t accountId)
-{
-   mVirtualTable = Task::VirtualTable;
-   Initialize(taskId, accountId);
-}
-
-Task::Task(uint8_t slot,
-           virt_ptr<const char> taskId)
-{
-   mVirtualTable = Task::VirtualTable;
-   Initialize(slot, taskId);
-}
-
-Task::~Task()
-{
-   mVirtualTable = Task::VirtualTable;
-   Finalize();
-}
-
-nn::Result
-Task::Initialize(virt_ptr<const char> taskId)
-{
-   return Initialize(taskId, 0u);
-}
-
-nn::Result
-Task::Initialize(virt_ptr<const char> taskId,
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self,
+                 virt_ptr<const char> taskId,
                  uint32_t accountId)
+{
+   self = Task_Constructor(self);
+   if (self) {
+      Task_Initialize(self, taskId, accountId);
+   }
+
+   return self;
+}
+
+virt_ptr<Task>
+Task_Constructor(virt_ptr<Task> self,
+                 uint8_t slot,
+                 virt_ptr<const char> taskId)
+{
+   self = Task_Constructor(self);
+   if (self) {
+      Task_Initialize(self, slot, taskId);
+   }
+
+   return self;
+}
+
+void
+Task_Destructor(virt_ptr<Task> self,
+                ghs::DestructorFlags flags)
+{
+   if (!self) {
+      return;
+   }
+
+   self->virtualTable = Task::VirtualTable;
+   Task_Finalize(self);
+
+   if (flags & ghs::DestructorFlags::FreeMemory) {
+      ghs::free(self);
+   }
+}
+
+nn::Result
+Task_Initialize(virt_ptr<Task> self,
+                virt_ptr<const char> taskId)
+{
+   return Task_Initialize(self, taskId, 0u);
+}
+
+nn::Result
+Task_Initialize(virt_ptr<Task> self,
+                virt_ptr<const char> taskId,
+                uint32_t accountId)
 {
    if (!taskId || strnlen(taskId.get(), 8) == 8) {
       return ResultInvalidParameter;
    }
 
-   mAccountId = accountId;
-   mTaskId = taskId;
+   self->accountId = accountId;
+   TaskID_OperatorAssign(virt_addrof(self->taskId), taskId);
    return ResultSuccess;
 }
 
 nn::Result
-Task::Initialize(uint8_t slot,
-                 virt_ptr<const char> taskId)
+Task_Initialize(virt_ptr<Task> self,
+                uint8_t slot,
+                virt_ptr<const char> taskId)
 {
    if (!slot) {
-      return Initialize(taskId, 0u);
+      return Task_Initialize(self, taskId, 0u);
    } else if (auto accountId = nn_act::GetPersistentIdEx(slot)) {
-      return Initialize(taskId, accountId);
-   } else {
-      return ResultInvalidParameter;
+      return Task_Initialize(self, taskId, accountId);
    }
+
+   return ResultInvalidParameter;
 }
 
 void
-Task::Finalize()
+Task_Finalize(virt_ptr<Task> self)
 {
-   mTitleId = TitleID { };
-   mTaskId = TaskID { };
+   decaf_warn_stub();
+   TitleID_Constructor(virt_addrof(self->titleId));
 }
 
 bool
-Task::IsRegistered()
+Task_IsRegistered(virt_ptr<Task> self)
 {
    decaf_warn_stub();
    return false;
 }
 
 uint32_t
-Task::GetAccountID()
+Task_GetAccountID(virt_ptr<Task> self)
 {
-   return mAccountId;
+   return self->accountId;
 }
 
 void
-Task::GetTaskID(virt_ptr<TaskID> id)
+Task_GetTaskID(virt_ptr<Task> self,
+               virt_ptr<TaskID> id)
 {
-   *id = mTaskId;
+   *id = self->taskId;
 }
 
 void
-Task::GetTitleID(virt_ptr<TitleID> id)
+Task_GetTitleID(virt_ptr<Task> self,
+                virt_ptr<TitleID> id)
 {
-   *id = mTitleId;
+   *id = self->titleId;
 }
 
 void
 Library::registerTaskSymbols()
 {
-   RegisterConstructorExport("__ct__Q3_2nn4boss4TaskFv",
-                             Task);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss4TaskFPCc",
-                                 Task, virt_ptr<const char>);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss4TaskFPCcUi",
-                                 Task, virt_ptr<const char>, uint32_t);
-   RegisterConstructorExportArgs("__ct__Q3_2nn4boss4TaskFUcPCc",
-                                 Task, uint8_t, virt_ptr<const char>);
-   RegisterDestructorExport("__dt__Q3_2nn4boss4TaskFv",
-                            Task);
+   RegisterFunctionExportName("__ct__Q3_2nn4boss4TaskFv",
+                              static_cast<virt_ptr<Task> (*)(virt_ptr<Task>)>(Task_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss4TaskFPCc",
+                              static_cast<virt_ptr<Task>(*)(virt_ptr<Task>, virt_ptr<const char>)>(Task_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss4TaskFPCcUi",
+                              static_cast<virt_ptr<Task>(*)(virt_ptr<Task>, virt_ptr<const char>, uint32_t)>(Task_Constructor));
+   RegisterFunctionExportName("__ct__Q3_2nn4boss4TaskFUcPCc",
+                              static_cast<virt_ptr<Task>(*)(virt_ptr<Task>, uint8_t, virt_ptr<const char>)>(Task_Constructor));
+   RegisterFunctionExportName("__dt__Q3_2nn4boss4TaskFv",
+                              Task_Destructor);
 
    RegisterFunctionExportName("Initialize__Q3_2nn4boss4TaskFPCc",
-                              static_cast<nn::Result (Task::*)(virt_ptr<const char>)>(&Task::Initialize));
+                              static_cast<nn::Result (*)(virt_ptr<Task>, virt_ptr<const char>)>(Task_Initialize));
    RegisterFunctionExportName("Initialize__Q3_2nn4boss4TaskFPCcUi",
-                              static_cast<nn::Result(Task::*)(virt_ptr<const char>, uint32_t)>(&Task::Initialize));
+                              static_cast<nn::Result (*)(virt_ptr<Task>, virt_ptr<const char>, uint32_t)>(Task_Initialize));
    RegisterFunctionExportName("Initialize__Q3_2nn4boss4TaskFUcPCc",
-                              static_cast<nn::Result(Task::*)(uint8_t, virt_ptr<const char>)>(&Task::Initialize));
+                              static_cast<nn::Result (*)(virt_ptr<Task>, uint8_t, virt_ptr<const char>)>(Task_Initialize));
    RegisterFunctionExportName("Finalize__Q3_2nn4boss4TaskFv",
-                              &Task::Finalize);
+                              Task_Finalize);
 
    RegisterFunctionExportName("IsRegistered__Q3_2nn4boss4TaskCFv",
-                              &Task::IsRegistered);
+                              Task_IsRegistered);
    RegisterFunctionExportName("GetAccountID__Q3_2nn4boss4TaskCFv",
-                              &Task::GetAccountID);
+                              Task_GetAccountID);
    RegisterFunctionExportName("GetTaskID__Q3_2nn4boss4TaskCFv",
-                              &Task::GetTaskID);
+                              Task_GetTaskID);
    RegisterFunctionExportName("GetTitleID__Q3_2nn4boss4TaskCFv",
-                              &Task::GetTitleID);
+                              Task_GetTitleID);
 
    registerTypeInfo<Task>(
       "nn::boss::Task",

@@ -4,31 +4,45 @@
 namespace cafe::nn_boss
 {
 
-class TaskID
+struct TaskID
 {
-public:
-   TaskID();
-   TaskID(virt_ptr<const char> id);
-   TaskID(virt_ptr<TaskID> other);
-
-   virt_ptr<TaskID> operator =(virt_ptr<const char> id);
-
-   bool operator ==(virt_ptr<const char> id);
-   bool operator ==(virt_ptr<TaskID> other);
-
-   bool operator !=(virt_ptr<const char> id);
-   bool operator !=(virt_ptr<TaskID> other);
-
-   operator virt_ptr<const char>();
-
-private:
-   be2_array<char, 8> mTaskID;
-
-protected:
-   CHECK_MEMBER_OFFSET_BEG
-      CHECK_OFFSET(TaskID, 0x00, mTaskID);
-   CHECK_MEMBER_OFFSET_END
+   be2_array<char, 8> value;
 };
+CHECK_OFFSET(TaskID, 0, value);
 CHECK_SIZE(TaskID, 8);
+
+virt_ptr<TaskID>
+TaskID_Constructor(virt_ptr<TaskID> self);
+
+virt_ptr<TaskID>
+TaskID_Constructor(virt_ptr<TaskID> self,
+                   virt_ptr<const char> id);
+
+virt_ptr<TaskID>
+TaskID_Constructor(virt_ptr<TaskID> self,
+                   virt_ptr<TaskID> other);
+
+virt_ptr<TaskID>
+TaskID_OperatorAssign(virt_ptr<TaskID> self,
+                      virt_ptr<const char> id);
+
+bool
+TaskID_OperatorEqual(virt_ptr<TaskID> self,
+                     virt_ptr<const char> id);
+
+bool
+TaskID_OperatorEqual(virt_ptr<TaskID> self,
+                     virt_ptr<TaskID> other);
+
+bool
+TaskID_OperatorNotEqual(virt_ptr<TaskID> self,
+                        virt_ptr<const char> id);
+
+bool
+TaskID_OperatorNotEqual(virt_ptr<TaskID> self,
+                        virt_ptr<TaskID> other);
+
+virt_ptr<const char>
+TaskID_OperatorCastConstCharPtr(virt_ptr<TaskID> self);
 
 } // namespace cafe::nn_boss
