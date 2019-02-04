@@ -35,7 +35,7 @@ HostDevice::makeFolder(const User &user,
    }
 
    if (!checkWritePermission(user, path)) {
-      return Error::ReadPermission;
+      return Error::WritePermission;
    }
 
    auto error = std::error_code { };
@@ -55,7 +55,7 @@ HostDevice::makeFolders(const User &user,
    }
 
    if (!checkWritePermission(user, path)) {
-      return Error::ReadPermission;
+      return Error::WritePermission;
    }
 
    auto error = std::error_code { };
