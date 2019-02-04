@@ -29,16 +29,28 @@ Error
 OverlayDevice::makeFolder(const User &user,
                           const Path &path)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->makeFolder(user, path);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
 OverlayDevice::makeFolders(const User &user,
                            const Path &path)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->makeFolders(user, path);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -46,8 +58,19 @@ OverlayDevice::mountDevice(const User &user,
                            const Path &path,
                            std::shared_ptr<Device> device)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   if (path.depth() == 0) {
+      // Should be using mountOverlayDevice, not mountDevice...
+      return Error::OperationNotSupported;
+   }
+
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->mountDevice(user, path, device);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -72,16 +95,37 @@ OverlayDevice::mountOverlayDevice(const User &user,
       return Error::Success;
    }
 
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->mountOverlayDevice(user, priority, path, device);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
 OverlayDevice::unmountDevice(const User &user,
                              const Path &path)
 {
-   // Overlay devices are read only.
-   return Error::OperationNotSupported;
+   if (mDevices.empty()) {
+      return Error::NotFound;
+   }
+
+   if (path.depth() == 0) {
+      // Should be using unmountOverlayDevice, not mountDevice...
+      return Error::OperationNotSupported;
+   }
+
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->unmountDevice(user, path);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -100,8 +144,14 @@ OverlayDevice::unmountOverlayDevice(const User &user,
       return Error::NotFound;
    }
 
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->unmountOverlayDevice(user, priority, path);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Result<DirectoryIterator>
@@ -136,8 +186,14 @@ Error
 OverlayDevice::remove(const User &user,
                       const Path &path)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->remove(user, path);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -145,8 +201,14 @@ OverlayDevice::rename(const User &user,
                       const Path &src,
                       const Path &dst)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->rename(user, src, dst);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -154,8 +216,14 @@ OverlayDevice::setGroup(const User &user,
                         const Path &path,
                         GroupId group)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->setGroup(user, path, group);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -163,8 +231,14 @@ OverlayDevice::setOwner(const User &user,
                         const Path &path,
                         OwnerId owner)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->setOwner(user, path, owner);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Error
@@ -172,8 +246,14 @@ OverlayDevice::setPermissions(const User &user,
                               const Path &path,
                               Permissions mode)
 {
-   // Overlay devices are read only.
-   return Error::WritePermission;
+   for (auto &[priority, device] : mDevices) {
+      auto result = device->setPermissions(user, path, mode);
+      if (result == Error::Success) {
+         return result;
+      }
+   }
+
+   return Error::NotFound;
 }
 
 Result<Status>
