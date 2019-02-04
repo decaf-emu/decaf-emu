@@ -297,7 +297,11 @@ FSADevice::getInfoByQuery(vfs::User user,
    switch (request->type) {
    case FSAQueryInfoType::FreeSpaceSize:
    {
-      response->freeSpaceSize = 128ull * 1024 * 1024;
+      if (!mFS->status(user, path)) {
+         response->freeSpaceSize = 0ull;
+      } else {
+         response->freeSpaceSize = 4096ull * 1024 * 1024;
+      }
       break;
    }
    case FSAQueryInfoType::Stat:
