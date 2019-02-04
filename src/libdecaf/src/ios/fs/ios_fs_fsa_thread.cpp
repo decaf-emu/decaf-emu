@@ -133,6 +133,13 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
                device->changeDir(user, phys_addrof(request->changeDir)));
          });
       break;
+   case FSACommand::ChangeMode:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->changeMode(user, phys_addrof(request->changeMode)));
+         });
+      break;
    case FSACommand::CloseDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(

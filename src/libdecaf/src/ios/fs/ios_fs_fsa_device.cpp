@@ -228,6 +228,15 @@ FSADevice::changeDir(vfs::User user,
 
 
 FSAStatus
+FSADevice::changeMode(vfs::User user,
+                      phys_ptr<FSARequestChangeMode> request)
+{
+   // TODO: Call mFS->setPermissions
+   return FSAStatus::OK;
+}
+
+
+FSAStatus
 FSADevice::closeDir(vfs::User user,
                     phys_ptr<FSARequestCloseDir> request)
 {

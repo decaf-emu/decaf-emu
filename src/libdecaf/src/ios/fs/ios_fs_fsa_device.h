@@ -56,6 +56,7 @@ public:
    FSADevice();
 
    FSAStatus changeDir(vfs::User user, phys_ptr<FSARequestChangeDir> request);
+   FSAStatus changeMode(vfs::User user, phys_ptr<FSARequestChangeMode> request);
    FSAStatus closeDir(vfs::User user, phys_ptr<FSARequestCloseDir> request);
    FSAStatus closeFile(vfs::User user, phys_ptr<FSARequestCloseFile> request);
    FSAStatus flushFile(vfs::User user, phys_ptr<FSARequestFlushFile> request);
