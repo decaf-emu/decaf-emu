@@ -319,6 +319,16 @@ void Transpiler::translateAluOp2_LSHL_INT(const ControlFlowInst &cf, const AluIn
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
+void Transpiler::translateAluOp2_LSHR_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0, latte::VarRefType::INT);
+   auto src1 = mSpv->readAluInstSrc(cf, group, inst, 1, latte::VarRefType::UINT);
+
+   auto output = mSpv->createBinOp(spv::OpShiftRightLogical, mSpv->intType(), src0, src1);
+
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
 void Transpiler::translateAluOp2_MAX(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
    auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
