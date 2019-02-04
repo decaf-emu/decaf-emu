@@ -647,7 +647,7 @@ TEMPGetDirPath(TEMPDirId dirId,
 
    if (std::snprintf(pathBuffer.get(),
                      pathBufferSize,
-                     "/vol/temp/%016" PRIu64 "x",
+                     "/vol/temp/%016" PRIx64,
                      dirId) >= DirPathMaxLength) {
       tempLogError("TEMPGetDirPath", 881, "Failed to generate path");
       return TEMPStatus::FatalError;
