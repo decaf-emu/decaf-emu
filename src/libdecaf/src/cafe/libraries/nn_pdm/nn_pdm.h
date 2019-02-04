@@ -16,6 +16,8 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerClientSymbols();
+   void registerCosServiceSymbols();
 };
 
 } // namespace cafe::nn_pdm

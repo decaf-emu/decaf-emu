@@ -5,9 +5,9 @@ namespace ios::acp::internal
 {
 
 Error
-startMainServer();
+startPdmServer();
 
 void
-initialiseStaticMainServerData();
+initialiseStaticPdmServerData();
 
 } // namespace ios::acp::internal

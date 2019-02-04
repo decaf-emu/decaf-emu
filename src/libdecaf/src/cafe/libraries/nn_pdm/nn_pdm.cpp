@@ -16,6 +16,9 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerClientSymbols();
+   registerCosServiceSymbols();
 }
 
 } // namespace cafe::nn_pdm

@@ -21,6 +21,12 @@ Client::initialise(virt_ptr<const char> device)
 }
 
 Result
+Client::close()
+{
+   return ios::convertError(IOS_Close(mHandle));
+}
+
+Result
 Client::sendSyncRequest(const detail::ClientCommandData &command)
 {
    auto error = IOS_Ioctlv(mHandle, 0,

@@ -3,12 +3,7 @@
 #include "ios_acp_nn_miscservice.h"
 #include "ios_acp_nn_saveservice.h"
 
-#include "ios/ios_handlemanager.h"
-#include "ios/ios_stackobject.h"
 #include "ios/kernel/ios_kernel_process.h"
-#include "ios/kernel/ios_kernel_resourcemanager.h"
-#include "ios/kernel/ios_kernel_thread.h"
-#include "ios/mcp/ios_mcp_ipc.h"
 #include "ios/nn/ios_nn_ipc_server.h"
 
 namespace ios::acp::internal
@@ -25,15 +20,6 @@ class AcpMainServer : public nn::ipc::Server
 public:
    AcpMainServer() :
       nn::ipc::Server(true)
-   {
-   }
-
-   void intialiseServer() override
-   {
-      // Asociate resource manager
-   }
-
-   void finaliseServer() override
    {
    }
 };

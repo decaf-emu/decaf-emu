@@ -3,6 +3,7 @@
 #include "ios_acp_log.h"
 #include "ios_acp_main_server.h"
 #include "ios_acp_nnsm.h"
+#include "ios_acp_pdm_server.h"
 
 #include "decaf_log.h"
 #include "ios/ios_stackobject.h"
@@ -131,6 +132,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    internal::initialiseStaticData();
    internal::initialiseStaticMainServerData();
    internal::initialiseStaticNnsmData();
+   internal::initialiseStaticPdmServerData();
 
    // Initialise nn for current process
    nn::initialiseProcess();
@@ -186,6 +188,14 @@ processEntryPoint(phys_ptr<void> /* context */)
    if (error < Error::OK) {
       internal::acpLog->error(
          "processEntryPoint: startMainServer failed with error = {}", error);
+      return error;
+   }
+
+   // Start nn::ipc::Server for /dev/pdm
+   error = internal::startPdmServer();
+   if (error < Error::OK) {
+      internal::acpLog->error(
+         "processEntryPoint: startPdmServer failed with error = {}", error);
       return error;
    }
 
