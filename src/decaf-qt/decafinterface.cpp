@@ -26,7 +26,7 @@ DecafInterface::DecafInterface(SettingsStorage *settingsStorage,
    decaf::setInputDriver(inputDriver);
    decaf::setSoundDriver(soundDriver);
 
-   gLog->info("Log file path {}", settingsStorage->path());
+   gLog->info("Config path {}", settingsStorage->path());
 }
 
 void
