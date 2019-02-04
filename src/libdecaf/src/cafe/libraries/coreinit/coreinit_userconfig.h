@@ -60,6 +60,12 @@ UCDeleteSysConfig(IOSHandle handle,
                   virt_ptr<UCSysConfig> settings);
 
 UCError
+UCDeleteSysConfigAsync(IOSHandle handle,
+                       uint32_t count,
+                       virt_ptr<UCSysConfig> settings,
+                       virt_ptr<UCAsyncParams> asyncParams);
+
+UCError
 UCReadSysConfig(IOSHandle handle,
                 uint32_t count,
                 virt_ptr<UCSysConfig> settings);

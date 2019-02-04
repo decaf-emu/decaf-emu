@@ -16,6 +16,17 @@ namespace ios::auxil
 
 #pragma pack(push, 1)
 
+struct UCDeleteSysConfigRequest
+{
+   be2_val<uint32_t> unk0x00;
+   be2_val<uint32_t> count;
+   be2_struct<UCSysConfig> settings[1]; // Size=N
+};
+CHECK_OFFSET(UCDeleteSysConfigRequest, 0x0, unk0x00);
+CHECK_OFFSET(UCDeleteSysConfigRequest, 0x4, count);
+CHECK_OFFSET(UCDeleteSysConfigRequest, 0x8, settings);
+CHECK_SIZE(UCDeleteSysConfigRequest, 0x5C);
+
 struct UCReadSysConfigRequest
 {
    be2_val<uint32_t> unk0x00;
@@ -42,6 +53,7 @@ struct UCRequest
 {
    union
    {
+      be2_struct<UCDeleteSysConfigRequest> deleteSysConfigRequest;
       be2_struct<UCReadSysConfigRequest> readSysConfigRequest;
       be2_struct<UCWriteSysConfigRequest> writeSysConfigRequest;
    };

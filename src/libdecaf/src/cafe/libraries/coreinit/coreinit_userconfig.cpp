@@ -12,6 +12,7 @@
 namespace cafe::coreinit
 {
 
+using ios::auxil::UCDeleteSysConfigRequest;
 using ios::auxil::UCReadSysConfigRequest;
 using ios::auxil::UCWriteSysConfigRequest;
 
@@ -151,7 +152,8 @@ ucHandleIosResult(UCError result,
                   }
                }
             }
-         } else if (command == UCCommand::WriteSysConfig) {
+         } else if (command == UCCommand::WriteSysConfig ||
+                    command == UCCommand::DeleteSysConfig) {
             auto request = virt_cast<UCWriteSysConfigRequest *>(vecs[0].vaddr);
 
             for (auto i = 0u; i < count; ++i) {
@@ -259,7 +261,120 @@ UCDeleteSysConfig(IOSHandle handle,
                   uint32_t count,
                   virt_ptr<UCSysConfig> settings)
 {
-   return UCError::OK;
+   return UCDeleteSysConfigAsync(handle, count, settings, nullptr);
+}
+
+
+UCError
+UCDeleteSysConfigAsync(IOSHandle handle,
+                       uint32_t count,
+                       virt_ptr<UCSysConfig> settings,
+                       virt_ptr<UCAsyncParams> asyncParams)
+{
+   auto result = UCError::OK;
+   uint32_t msgBufSize = 0, vecBufSize = 0;
+   virt_ptr<void> msgBuf = nullptr, vecBuf = nullptr;
+   virt_ptr<UCDeleteSysConfigRequest> request = nullptr;
+   virt_ptr<IOSVec> vecs = nullptr;
+
+   if (!settings) {
+      result = UCError::InvalidParam;
+      goto fail;
+   }
+
+   msgBufSize = static_cast<uint32_t>(count * sizeof(UCSysConfig) + sizeof(UCDeleteSysConfigRequest));
+   msgBuf = internal::ucAllocateMessage(msgBufSize);
+   if (!msgBuf) {
+      result = UCError::NoIPCBuffers;
+      goto fail;
+   }
+
+   request = virt_cast<UCDeleteSysConfigRequest *>(msgBuf);
+   request->unk0x00 = 0u;
+   request->count = count;
+   std::memcpy(request->settings,
+               settings.get(),
+               sizeof(UCSysConfig) * count);
+
+   vecBufSize = static_cast<uint32_t>((count + 1) * sizeof(IOSVec));
+   vecBuf = internal::ucAllocateMessage(vecBufSize);
+   if (!vecBuf) {
+      result = UCError::NoIPCBuffers;
+      goto fail;
+   }
+
+   vecs = virt_cast<IOSVec *>(vecBuf);
+   vecs[0].vaddr = virt_cast<virt_addr>(msgBuf);
+   vecs[0].len = msgBufSize;
+
+   for (auto i = 0u; i < count; ++i) {
+      auto size = settings[i].dataSize;
+      vecs[1 + i].len = size;
+
+      if (size > 0) {
+         vecs[1 + i].vaddr = virt_cast<virt_addr>(internal::ucAllocateMessage(size));
+         if (!vecs[1 + i].vaddr) {
+            result = UCError::NoIPCBuffers;
+            goto fail;
+         }
+      } else {
+         vecs[1 + i].vaddr = 0u;
+      }
+   }
+
+   if (!asyncParams) {
+      result = static_cast<UCError>(IOS_Ioctlv(handle,
+                                               UCCommand::DeleteSysConfig,
+                                               0,
+                                               count + 1,
+                                               vecs));
+   } else {
+      internal::ucSetupAsyncParams(UCCommand::DeleteSysConfig,
+                                   0,
+                                   count,
+                                   settings,
+                                   vecs,
+                                   asyncParams);
+
+      result = static_cast<UCError>(IOS_IoctlvAsync(handle,
+                                                    UCCommand::DeleteSysConfig,
+                                                    0,
+                                                    count + 1,
+                                                    vecs,
+                                                    sUcIosAsyncCallback,
+                                                    asyncParams));
+   }
+
+   goto out;
+
+fail:
+   if (msgBuf) {
+      internal::ucFreeMessage(msgBuf);
+      msgBuf = nullptr;
+   }
+
+   if (vecBuf) {
+      for (auto i = 0u; i < count; ++i) {
+         if (vecs[1 + i].vaddr) {
+            internal::ucFreeMessage(virt_cast<void *>(vecs[1 + i].vaddr));
+         }
+      }
+
+      internal::ucFreeMessage(vecBuf);
+      vecBuf = nullptr;
+      vecs = nullptr;
+   }
+
+out:
+   return internal::ucHandleIosResult(result,
+                                      UCCommand::DeleteSysConfig,
+                                      0,
+                                      count,
+                                      settings,
+                                      vecs,
+                                      asyncParams,
+                                      nullptr,
+                                      nullptr);
 }
 
 
@@ -511,6 +626,8 @@ Library::registerUserConfigSymbols()
 {
    RegisterFunctionExport(UCOpen);
    RegisterFunctionExport(UCClose);
+   RegisterFunctionExport(UCDeleteSysConfig);
+   RegisterFunctionExport(UCDeleteSysConfigAsync);
    RegisterFunctionExport(UCReadSysConfig);
    RegisterFunctionExport(UCReadSysConfigAsync);
    RegisterFunctionExport(UCWriteSysConfig);

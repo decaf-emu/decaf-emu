@@ -139,6 +139,31 @@ UCDevice::decrementRefCount()
 }
 
 UCError
+UCDevice::deleteSysConfig(uint32_t numVecIn,
+                          phys_ptr<IoctlVec> vecs)
+{
+   auto request = phys_cast<UCReadSysConfigRequest *>(vecs[0].paddr);
+   auto items = phys_cast<UCItem *>(phys_addrof(request->settings[0]));
+
+   if (request->count == 0) {
+      return UCError::OK;
+   }
+
+   auto name = std::string_view { phys_addrof(request->settings[0].name).get() };
+   auto fileSys = getFileSys(name);
+   if (fileSys == UCFileSys::Invalid) {
+      return UCError::InvalidLocation;
+   }
+
+   auto rootKey = getRootKey(name);
+   if (!isValidRootKey(rootKey)) {
+      return UCError::FileSysName;
+   }
+
+   return deleteItems(getFileSysPath(fileSys), items, request->count);
+}
+
+UCError
 UCDevice::readSysConfig(uint32_t numVecIn,
                         phys_ptr<IoctlVec> vecs)
 {

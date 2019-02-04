@@ -49,8 +49,8 @@ ENUM_BEG(UCCommand, uint32_t)
    ENUM_VALUE(ReadSysConfig,        0x30)
    ENUM_VALUE(WriteSysConfig,       0x31)
    ENUM_VALUE(DeleteSysConfig,      0x32)
-   // Unknown 0x33
-   // Unknown 0x34
+   ENUM_VALUE(QuerySysConfig,       0x33)
+   ENUM_VALUE(ListSysConfig,        0x34)
 ENUM_END(UCCommand)
 
 ENUM_BEG(UCDataType, uint32_t)
