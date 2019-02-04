@@ -35,7 +35,7 @@ HostDevice::makeFolder(const User &user,
    }
 
    if (!checkWritePermission(user, path)) {
-      return { Error::ReadPermission };
+      return Error::ReadPermission;
    }
 
    auto error = std::error_code { };
@@ -55,7 +55,7 @@ HostDevice::makeFolders(const User &user,
    }
 
    if (!checkWritePermission(user, path)) {
-      return { Error::ReadPermission };
+      return Error::ReadPermission;
    }
 
    auto error = std::error_code { };
@@ -199,7 +199,7 @@ HostDevice::remove(const User &user,
                    const Path &path)
 {
    if (!checkWritePermission(user, path)) {
-      return { Error::WritePermission };
+      return Error::WritePermission;
    }
 
    auto ec = std::error_code { };
@@ -223,11 +223,11 @@ HostDevice::rename(const User &user,
                    const Path &dst)
 {
    if (!checkReadPermission(user, src)) {
-      return { Error::ReadPermission };
+      return Error::ReadPermission;
    }
 
    if (!checkWritePermission(user, dst)) {
-      return { Error::WritePermission };
+      return Error::WritePermission;
    }
 
    auto ec = std::error_code { };

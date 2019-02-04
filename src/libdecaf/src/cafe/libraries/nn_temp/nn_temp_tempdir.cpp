@@ -184,9 +184,10 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
                   virt_addrof(deviceInfo->targetPath), error);
    }
 
-   if (error = TEMPGetDirGlobalPath(deviceInfo->dirId,
-                                    virt_addrof(sTempDirData->globalDirPath),
-                                    GlobalPathMaxLength)) {
+   error = TEMPGetDirGlobalPath(deviceInfo->dirId,
+                                virt_addrof(sTempDirData->globalDirPath),
+                                GlobalPathMaxLength);
+   if (error != TEMPStatus::OK) {
       goto out;
    }
    tempLogInfo("CreateAndMountTempDir", 325,
@@ -204,9 +205,10 @@ createAndMountTempDir(virt_ptr<TEMPDeviceInfo> deviceInfo)
       goto out;
    }
 
-   if (error = TEMPGetDirPath(deviceInfo->dirId,
-                              virt_addrof(sTempDirData->dirPath),
-                              sTempDirData->dirPath.size())) {
+   error = TEMPGetDirPath(deviceInfo->dirId,
+                          virt_addrof(sTempDirData->dirPath),
+                          sTempDirData->dirPath.size());
+   if (error != TEMPStatus::OK) {
       goto out;
    }
    tempLogInfo("CreateAndMountTempDir", 346,
