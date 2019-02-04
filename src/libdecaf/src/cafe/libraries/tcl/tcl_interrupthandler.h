@@ -32,13 +32,13 @@ TCLIHEnableInterrupt(TCLInterruptType type,
 
 TCLStatus
 TCLIHRegister(TCLInterruptType type,
-               TCLInterruptHandlerFn callback,
-               virt_ptr<void> userData);
+              TCLInterruptHandlerFn callback,
+              virt_ptr<void> userData);
 
 TCLStatus
 TCLIHUnregister(TCLInterruptType type,
-                  TCLInterruptHandlerFn callback,
-                  virt_ptr<void> userData);
+                TCLInterruptHandlerFn callback,
+                virt_ptr<void> userData);
 
 TCLStatus
 TCLGetInterruptCount(TCLInterruptType type,

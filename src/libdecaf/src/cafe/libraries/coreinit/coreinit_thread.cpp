@@ -409,14 +409,14 @@ OSCreateThread(virt_ptr<OSThread> thread,
 
 BOOL
 OSCreateThreadType(virt_ptr<OSThread> thread,
-                     OSThreadEntryPointFn entry,
-                     uint32_t argc,
-                     virt_ptr<void> argv,
-                     virt_ptr<uint32_t> stack,
-                     uint32_t stackSize,
-                     int32_t priority,
-                     OSThreadAttributes attributes,
-                     OSThreadType type)
+                   OSThreadEntryPointFn entry,
+                   uint32_t argc,
+                   virt_ptr<void> argv,
+                   virt_ptr<uint32_t> stack,
+                   uint32_t stackSize,
+                   int32_t priority,
+                   OSThreadAttributes attributes,
+                   OSThreadType type)
 {
    if (type != OSThreadType::AppIo && type != OSThreadType::App) {
       return FALSE;
