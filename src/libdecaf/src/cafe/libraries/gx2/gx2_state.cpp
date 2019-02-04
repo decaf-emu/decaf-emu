@@ -49,6 +49,7 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
    auto argc = 0u;
    auto profileMode = GX2ProfileMode::None;
    auto tossStage = GX2TossStage::None;
+   auto appIoThreadStackSize = 4096u;
 
    // Set main gx2 core
    sStateData->initialized = true;
@@ -86,6 +87,9 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
       case GX2InitAttrib::TossStage:
          tossStage = static_cast<GX2TossStage>(value);
          break;
+      case GX2InitAttrib::AppIoThreadStackSize:
+         appIoThreadStackSize = value;
+         break;
       default:
          gLog->warn("Unknown GX2InitAttrib {} = {}", id, value);
       }
@@ -101,8 +105,14 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
       cbPoolBase = virt_cast<uint32_t *>(MEMAllocFromDefaultHeapEx(cbPoolSize, 0x100));
    }
 
+   // Allocate AppIo stack from end of cbPool
+   auto appIoStackBuffer = align_up(virt_cast<virt_addr>(cbPoolBase) + cbPoolSize - appIoThreadStackSize, 64);
+   appIoThreadStackSize = static_cast<uint32_t>(virt_cast<virt_addr>(cbPoolBase) + cbPoolSize - appIoStackBuffer);
+   cbPoolSize = static_cast<uint32_t>(appIoStackBuffer - virt_cast<virt_addr>(cbPoolBase));
+
    // Init event handler stuff (vsync, flips, etc)
-   internal::initEvents();
+   internal::initEvents(virt_cast<void *>(appIoStackBuffer),
+                        appIoThreadStackSize);
 
    // Initialise GPU callbacks
    gpu::setFlipCallback(&internal::onFlip);

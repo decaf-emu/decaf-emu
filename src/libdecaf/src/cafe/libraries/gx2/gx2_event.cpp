@@ -7,11 +7,13 @@
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_alarm.h"
 #include "cafe/libraries/coreinit/coreinit_memheap.h"
+#include "cafe/libraries/coreinit/coreinit_messagequeue.h"
 #include "cafe/libraries/coreinit/coreinit_mutex.h"
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 #include "cafe/libraries/coreinit/coreinit_time.h"
+#include "cafe/libraries/tcl/tcl_interrupthandler.h"
 
 #include <atomic>
 #include <chrono>
@@ -21,6 +23,7 @@ namespace cafe::gx2
 {
 
 using namespace cafe::coreinit;
+using namespace cafe::tcl;
 
 struct StaticEventData
 {
@@ -30,19 +33,26 @@ struct StaticEventData
       virt_ptr<void> data;
    };
 
+   be2_struct<OSThread> appIoThread;
+   be2_array<OSMessage, 32> appIoMessageBuffer;
+   be2_struct<OSMessageQueue> appIoMessageQueue;
+   be2_struct<OSThreadQueue> vsyncThreadQueue;
+   be2_struct<OSThreadQueue> flipThreadQueue;
+   be2_struct<OSAlarm> vsyncAlarm;
+   be2_array<EventCallbackData, GX2EventType::Max> eventCallbacks;
+
    std::atomic<OSTime> lastVsync;
    std::atomic<OSTime> lastFlip;
    std::atomic<uint32_t> swapCount;
    std::atomic<uint32_t> flipCount;
    std::atomic<uint32_t> framesReady;
-   be2_struct<OSThreadQueue> vsyncThreadQueue;
-   be2_struct<OSThreadQueue> flipThreadQueue;
-   be2_struct<OSAlarm> vsyncAlarm;
-   be2_array<EventCallbackData, GX2EventType::Max> eventCallbacks;
 };
 
 static virt_ptr<StaticEventData> sEventData = nullptr;
-static AlarmCallbackFn VsyncAlarmHandler = nullptr;
+
+static OSThreadEntryPointFn sAppIoThreadEntry = nullptr;
+static AlarmCallbackFn sVsyncAlarmHandler = nullptr;
+static TCLInterruptHandlerFn sTclEventCallback = nullptr;
 
 /**
  * Sleep the current thread until the last submitted command buffer
@@ -64,12 +74,16 @@ GX2SetEventCallback(GX2EventType type,
                     GX2EventCallbackFunction func,
                     virt_ptr<void> userData)
 {
-   if (type == GX2EventType::EndOfPipeInterrupt || type == GX2EventType::StartOfPipeInterrupt) {
-      decaf_abort("Unsupported interrupt callback");
-   }
-
-   if (type == GX2EventType::DisplayListOverrun && !userData) {
-      gLog->error("DisplayListOverrun callback set with no valid userData");
+   if (type == GX2EventType::EndOfPipeInterrupt) {
+      if (func && !sEventData->eventCallbacks[type].func) {
+         TCLIHEnableInterrupt(TCLInterruptType::CP_EOP_EVENT, TRUE);
+         TCLIHRegister(TCLInterruptType::CP_EOP_EVENT, sTclEventCallback,
+                       virt_cast<void *>(static_cast<virt_addr>(GX2EventType::EndOfPipeInterrupt)));
+      } else if (!func && sEventData->eventCallbacks[type].func) {
+         TCLIHEnableInterrupt(TCLInterruptType::CP_EOP_EVENT, FALSE);
+         TCLIHUnregister(TCLInterruptType::CP_EOP_EVENT, sTclEventCallback,
+                         virt_cast<void *>(static_cast<virt_addr>(GX2EventType::EndOfPipeInterrupt)));
+      }
    }
 
    if (type < GX2EventType::Max) {
@@ -166,20 +180,114 @@ GX2WaitForFlip()
 namespace internal
 {
 
+/**
+ * TCL interrupt handler which forwards a message to the AppIo thread to
+ * perform the user callback.
+ */
+static void
+tclEventCallback(virt_ptr<TCLInterruptEntry> interruptEntry,
+                 virt_ptr<void> userData)
+{
+   auto eventType = static_cast<GX2EventType>(static_cast<uint32_t>(virt_cast<virt_addr>(userData)));
+   if (sEventData->eventCallbacks[eventType].func) {
+      StackObject<OSMessage> message;
+      message->message = nullptr;
+      message->args[0] = eventType;
+      message->args[1] = 0u;
+      message->args[2] = 0u;
+      OSSendMessage(virt_addrof(sEventData->appIoMessageQueue), message,
+                    OSMessageFlags::Blocking);
+   }
+}
+
 
 /**
- * Start a vsync alarm.
+ * Initialise GX2 events.
  */
 void
-initEvents()
+initEvents(virt_ptr<void> appIoThreadStackBuffer,
+           uint32_t appIoThreadStackSize)
 {
    OSInitThreadQueue(virt_addrof(sEventData->flipThreadQueue));
    OSInitThreadQueue(virt_addrof(sEventData->vsyncThreadQueue));
 
+   // Setup 60hz alarm to perform vsync
    auto ticks = static_cast<OSTime>(OSGetSystemInfo()->busSpeed / 4) / 60;
    OSCreateAlarm(virt_addrof(sEventData->vsyncAlarm));
    OSSetPeriodicAlarm(virt_addrof(sEventData->vsyncAlarm), OSGetTime(), ticks,
-                      VsyncAlarmHandler);
+                      sVsyncAlarmHandler);
+
+   // Create AppIo thread
+   OSInitMessageQueue(virt_addrof(sEventData->appIoMessageQueue),
+                      virt_addrof(sEventData->appIoMessageBuffer),
+                      sEventData->appIoMessageBuffer.size());
+   OSCreateThreadType(virt_addrof(sEventData->appIoThread),
+                      sAppIoThreadEntry, 0, nullptr,
+                      virt_cast<uint32_t *>(virt_cast<virt_addr>(appIoThreadStackBuffer) + appIoThreadStackSize),
+                      appIoThreadStackSize,
+                      16, OSThreadAttributes::Detached,
+                      OSThreadType::AppIo);
+   OSResumeThread(virt_addrof(sEventData->appIoThread));
+
+   // Register TCL interrupt handlers.
+   TCLIHRegister(TCLInterruptType::CP_IB1, sTclEventCallback,
+                 virt_cast<void *>(static_cast<virt_addr>(GX2EventType::StartOfPipeInterrupt)));
+   if (sEventData->eventCallbacks[GX2EventType::EndOfPipeInterrupt].func) {
+      TCLIHRegister(TCLInterruptType::CP_EOP_EVENT, sTclEventCallback,
+                    virt_cast<void *>(static_cast<virt_addr>(GX2EventType::EndOfPipeInterrupt)));
+   }
+}
+
+
+/**
+ * AppIo thread for GX2, receives messages and calls the appropriate callback.
+ */
+static uint32_t
+appIoThread(uint32_t argc,
+            virt_ptr<void> argv)
+{
+   StackObject<OSMessage> message;
+   while (true) {
+      OSReceiveMessage(virt_addrof(sEventData->appIoMessageQueue), message,
+                       OSMessageFlags::Blocking);
+      auto eventType = static_cast<GX2EventType>(message->args[0]);
+      if (eventType == GX2EventType::StopAppIoThread) {
+         break;
+      }
+
+      auto &callback = sEventData->eventCallbacks[eventType];
+      if (callback.func) {
+         cafe::invoke(cpu::this_core::state(),
+                      callback.func, eventType, callback.data);
+      }
+   }
+
+   return 0;
+}
+
+
+/**
+ * Send a message to stop appIoThread.
+ */
+void
+stopAppIoThread()
+{
+   // Unregister TCL interrupt handlers.
+   TCLIHUnregister(TCLInterruptType::CP_IB1, sTclEventCallback,
+                   virt_cast<void *>(static_cast<virt_addr>(GX2EventType::StartOfPipeInterrupt)));
+   if (sEventData->eventCallbacks[GX2EventType::EndOfPipeInterrupt].func) {
+      TCLIHUnregister(TCLInterruptType::CP_EOP_EVENT, sTclEventCallback,
+                      virt_cast<void *>(static_cast<virt_addr>(GX2EventType::EndOfPipeInterrupt)));
+   }
+
+   // Send stop message
+   StackObject<OSMessage> message;
+   message->message = nullptr;
+   message->args[0] = GX2EventType::StopAppIoThread;
+   message->args[1] = 0u;
+   message->args[2] = 0u;
+   OSSendMessage(virt_addrof(sEventData->appIoMessageQueue), message,
+                 OSMessageFlags::Blocking);
 }
 
 
@@ -288,7 +396,9 @@ Library::registerEventSymbols()
    RegisterFunctionExport(GX2GetSwapStatus);
 
    RegisterDataInternal(sEventData);
-   RegisterFunctionInternal(internal::vsyncAlarmHandler, VsyncAlarmHandler);
+   RegisterFunctionInternal(internal::vsyncAlarmHandler, sVsyncAlarmHandler);
+   RegisterFunctionInternal(internal::appIoThread, sAppIoThreadEntry);
+   RegisterFunctionInternal(internal::tclEventCallback, sTclEventCallback);
 }
 
 } // namespace cafe::gx2

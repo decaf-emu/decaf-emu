@@ -64,7 +64,11 @@ namespace internal
 {
 
 void
-initEvents();
+initEvents(virt_ptr<void> appIoThreadStackBuffer,
+           uint32_t appIoThreadStackSize);
+
+void
+stopAppIoThread();
 
 std::pair<virt_ptr<void>, uint32_t>
 displayListOverrun(virt_ptr<void> list,
