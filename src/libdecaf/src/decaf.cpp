@@ -125,6 +125,7 @@ initialise(const std::string &gamePath)
    // Initialise /vol
    filesystem->makeFolder(user, "/vol");
    filesystem->makeFolder(user, "/vol/sys");
+   filesystem->makeFolder(user, "/vol/temp");
 
    if (!volPath.empty()) {
       filesystem->mountDevice(user, "/vol/code", std::make_shared<vfs::HostDevice>(volPath / "code"));
