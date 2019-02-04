@@ -105,7 +105,7 @@ FSBindMountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (sourcePath[0] == '/') {
+   if (sourcePath[0] != '/') {
       internal::COSError(
          COSReportModule::Unknown5,
          fmt::format(
@@ -115,7 +115,7 @@ FSBindMountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (targetPath[0] == '/') {
+   if (targetPath[0] != '/') {
       internal::COSError(
          COSReportModule::Unknown5,
          fmt::format(
@@ -216,7 +216,7 @@ FSBindUnmountAsync(virt_ptr<FSClient> client,
       return FSStatus::FatalError;
    }
 
-   if (targetPath[0] == '/') {
+   if (targetPath[0] != '/') {
       internal::COSError(
          COSReportModule::Unknown5,
          fmt::format("FS: FSBindUnmount: target must be absolute path, specified path is {}",
