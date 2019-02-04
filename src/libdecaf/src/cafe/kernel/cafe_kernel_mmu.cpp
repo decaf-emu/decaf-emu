@@ -543,6 +543,17 @@ initialiseAddressSpace(AddressSpace *addressSpace,
 bool
 loadMapping(MemoryMap &mapping)
 {
+   if (mapping.paddr >= phys_addr { 0x0C000000 } &&
+       mapping.paddr <= phys_addr { 0x0D000000 }) {
+      // XXX: Physical register access is disabled for now.
+      return true;
+   }
+
+   if (mapping.paddr == phys_addr { 0xFFE80000 }) {
+      // XXX: Unknown memory
+      return true;
+   }
+
    if (!cpu::allocateVirtualAddress(mapping.vaddr, mapping.size)) {
       gLog->error("Unexpected failure allocating virtual address {} - {}",
                   mapping.vaddr, mapping.vaddr + mapping.size);
@@ -561,6 +572,17 @@ loadMapping(MemoryMap &mapping)
 bool
 unloadMapping(MemoryMap &mapping)
 {
+   if (mapping.paddr >= phys_addr { 0x0C000000 } &&
+       mapping.paddr <= phys_addr { 0x0D000000 }) {
+      // XXX: Physical register access is disabled for now.
+      return true;
+   }
+
+   if (mapping.paddr == phys_addr { 0xFFE80000 }) {
+      // XXX: Unknown memory
+      return true;
+   }
+
    if (!cpu::unmapMemory(mapping.vaddr, mapping.size)) {
       gLog->error("Unexpected failure unmapping virtual address {} from physical address {}",
                   mapping.vaddr, mapping.paddr);
