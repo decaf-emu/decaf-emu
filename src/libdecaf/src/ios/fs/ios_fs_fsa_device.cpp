@@ -307,9 +307,12 @@ FSAStatus
 FSADevice::getCwd(vfs::User user,
                   phys_ptr<FSAResponseGetCwd> response)
 {
-   string_copy(phys_addrof(response->path).get(),
-               mWorkingPath.path().c_str(),
-               response->path.size() - 1);
+   auto cwd = mWorkingPath.path();
+   if (cwd.empty() || cwd.back() != '/') {
+      cwd.push_back('/');
+   }
+   string_copy(phys_addrof(response->path).get(), cwd.c_str(),
+               response->path.size());
    response->path[response->path.size() - 1] = char { 0 };
    return FSAStatus::OK;
 }
