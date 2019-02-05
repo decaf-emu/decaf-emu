@@ -92,6 +92,14 @@ fsaShimSubmitRequestAsync(virt_ptr<FSAShimBuffer> shim,
                           virt_ptr<void> context);
 
 FSAStatus
+fsaShimPrepareRequestAppendFile(virt_ptr<FSAShimBuffer> shim,
+                                IOSHandle clientHandle,
+                                FSFileHandle handle,
+                                uint32_t size,
+                                uint32_t count,
+                                uint32_t unk);
+
+FSAStatus
 fsaShimPrepareRequestChangeDir(virt_ptr<FSAShimBuffer> shim,
                                IOSHandle clientHandle,
                                virt_ptr<const char> path);

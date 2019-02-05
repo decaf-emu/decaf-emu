@@ -52,6 +52,71 @@ getInfoByQueryAsync(virt_ptr<FSClient> client,
 
 
 /**
+ * Allocate space at end of file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSAppendFile(virt_ptr<FSClient> client,
+             virt_ptr<FSCmdBlock> block,
+             uint32_t size,
+             uint32_t count,
+             FSFileHandle handle,
+             FSErrorFlag errorMask)
+{
+   StackObject<FSAsyncData> asyncData;
+   internal::fsCmdBlockPrepareSync(client, block, asyncData);
+
+   auto result = FSAppendFileAsync(client, block, size, count, handle,
+                                   errorMask, asyncData);
+
+   return internal::fsClientHandleAsyncResult(client, block,
+                                              result, errorMask);
+}
+
+
+/**
+ * Allocate space at end of file.
+ *
+ * \return
+ * Returns negative FSStatus error code on failure, FSStatus::OK on success.
+ */
+FSStatus
+FSAppendFileAsync(virt_ptr<FSClient> client,
+                  virt_ptr<FSCmdBlock> block,
+                  uint32_t size,
+                  uint32_t count,
+                  FSFileHandle handle,
+                  FSErrorFlag errorMask,
+                  virt_ptr<const FSAsyncData> asyncData)
+{
+   auto clientBody = internal::fsClientGetBody(client);
+   auto blockBody = internal::fsCmdBlockGetBody(block);
+   auto result = internal::fsCmdBlockPrepareAsync(clientBody, blockBody,
+                                                  errorMask, asyncData);
+
+   if (result != FSStatus::OK) {
+      return result;
+   }
+
+   auto error = internal::fsaShimPrepareRequestAppendFile(virt_addrof(blockBody->fsaShimBuffer),
+                                                          clientBody->clientHandle,
+                                                          handle,
+                                                          size,
+                                                          count,
+                                                          0);
+
+   if (error) {
+      return internal::fsClientHandleShimPrepareError(clientBody, error);
+   }
+
+   internal::fsClientSubmitCommand(clientBody, blockBody, internal::FinishCmd);
+   return FSStatus::OK;
+}
+
+
+/**
  * Mount source path to target path.
  *
  * \return
@@ -2384,6 +2449,8 @@ writeFileWithPosAsync(virt_ptr<FSClient> client,
 void
 Library::registerFsCmdSymbols()
 {
+   RegisterFunctionExport(FSAppendFile);
+   RegisterFunctionExport(FSAppendFileAsync);
    RegisterFunctionExport(FSBindMount);
    RegisterFunctionExport(FSBindMountAsync);
    RegisterFunctionExport(FSBindUnmount);

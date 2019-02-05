@@ -156,6 +156,35 @@ fsaShimSubmitRequestAsync(virt_ptr<FSAShimBuffer> shim,
 
 
 /**
+ * Prepare a FSACommand::AppendFile request.
+ */
+FSAStatus
+fsaShimPrepareRequestAppendFile(virt_ptr<FSAShimBuffer> shim,
+                                IOSHandle clientHandle,
+                                FSFileHandle handle,
+                                uint32_t size,
+                                uint32_t count,
+                                uint32_t unk)
+{
+   if (!shim) {
+      return FSAStatus::InvalidBuffer;
+   }
+
+   shim->clientHandle = clientHandle;
+   shim->ipcReqType = FSAIpcRequestType::Ioctl;
+   shim->command = FSACommand::AppendFile;
+
+   auto request = virt_addrof(shim->request.appendFile);
+   request->size = size;
+   request->count = count;
+   request->handle = handle;
+   request->unk0x0C = unk;
+
+   return FSAStatus::OK;
+}
+
+
+/**
  * Prepare a FSACommand::ChangeDir request.
  */
 FSAStatus

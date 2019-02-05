@@ -6,6 +6,23 @@ namespace cafe::coreinit
 {
 
 FSStatus
+FSAppendFile(virt_ptr<FSClient> client,
+             virt_ptr<FSCmdBlock> block,
+             uint32_t size,
+             uint32_t count,
+             FSFileHandle handle,
+             FSErrorFlag errorMask);
+
+FSStatus
+FSAppendFileAsync(virt_ptr<FSClient> client,
+                  virt_ptr<FSCmdBlock> block,
+                  uint32_t size,
+                  uint32_t count,
+                  FSFileHandle handle,
+                  FSErrorFlag errorMask,
+                  virt_ptr<const FSAsyncData> asyncData);
+
+FSStatus
 FSBindMount(virt_ptr<FSClient> client,
             virt_ptr<FSCmdBlock> block,
             virt_ptr<const char> sourcePath,
