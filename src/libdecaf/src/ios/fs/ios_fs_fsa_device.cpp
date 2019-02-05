@@ -219,6 +219,34 @@ FSADevice::removeHandle(int32_t index,
 
 
 FSAStatus
+FSADevice::appendFile(vfs::User user,
+                     phys_ptr<FSARequestAppendFile> request)
+{
+   auto handle = static_cast<Handle *>(nullptr);
+   auto error = mapFileHandle(request->handle, handle);
+   if (error < 0) {
+      return error;
+   }
+
+   // Seek to (count*size - 1) past end of file then write 1 byte.
+   char emptyByte = 0;
+   auto seekResult =
+      handle->file->seek(vfs::FileHandle::SeekEnd,
+                         (request->count * request->size) - 1);
+   if (seekResult != vfs::Error::Success) {
+      return translateError(seekResult);
+   }
+
+   auto writeResult = handle->file->write(&emptyByte, 1, 1);
+   if (!writeResult) {
+      return translateError(writeResult.error());
+   }
+
+   return static_cast<FSAStatus>(request->count);
+}
+
+
+FSAStatus
 FSADevice::changeDir(vfs::User user,
                      phys_ptr<FSARequestChangeDir> request)
 {

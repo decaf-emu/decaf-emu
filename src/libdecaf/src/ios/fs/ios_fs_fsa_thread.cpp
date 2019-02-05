@@ -126,6 +126,13 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
    user.group = static_cast<vfs::GroupId>(resourceRequest->requestData.groupId);
 
    switch (command) {
+   case FSACommand::AppendFile:
+      submitWorkerTask([=]() {
+            fsaAsyncTaskComplete(
+               resourceRequest,
+               device->appendFile(user, phys_addrof(request->appendFile)));
+         });
+      break;
    case FSACommand::ChangeDir:
       submitWorkerTask([=]() {
             fsaAsyncTaskComplete(

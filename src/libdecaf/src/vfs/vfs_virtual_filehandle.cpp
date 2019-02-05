@@ -41,7 +41,7 @@ Error
 VirtualFileHandle::flush()
 {
    if (!mFile) {
-      return { Error::NotOpen };
+      return Error::NotOpen;
    }
 
    return Error::Success;

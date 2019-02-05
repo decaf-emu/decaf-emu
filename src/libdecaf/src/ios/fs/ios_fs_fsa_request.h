@@ -18,6 +18,23 @@ namespace ios::fs
 
 
 /**
+ * Request data for Command::AppendFile
+ */
+struct FSARequestAppendFile
+{
+   be2_val<uint32_t> size;
+   be2_val<uint32_t> count;
+   be2_val<FSAFileHandle> handle;
+   be2_val<uint32_t> unk0x0C;
+};
+CHECK_OFFSET(FSARequestAppendFile, 0x0, size);
+CHECK_OFFSET(FSARequestAppendFile, 0x4, count);
+CHECK_OFFSET(FSARequestAppendFile, 0x8, handle);
+CHECK_OFFSET(FSARequestAppendFile, 0xC, unk0x0C);
+CHECK_SIZE(FSARequestAppendFile, 0x10);
+
+
+/**
  * Request data for Command::ChangeDir
  */
 struct FSARequestChangeDir
@@ -381,6 +398,7 @@ struct FSARequest
 
    union
    {
+      be2_struct<FSARequestAppendFile> appendFile;
       be2_struct<FSARequestChangeDir> changeDir;
       be2_struct<FSARequestChangeMode> changeMode;
       be2_struct<FSARequestCloseDir> closeDir;
