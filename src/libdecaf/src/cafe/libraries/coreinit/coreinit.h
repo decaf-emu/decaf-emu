@@ -23,6 +23,7 @@ private:
    void registerBspSymbols();
    void registerCacheSymbols();
    void registerClipboardSymbols();
+   void registerCodeGenSymbols();
    void registerContextSymbols();
    void registerCoreSymbols();
    void registerCoroutineSymbols();

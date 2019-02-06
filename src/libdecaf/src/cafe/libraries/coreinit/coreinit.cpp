@@ -88,6 +88,7 @@ Library::registerSymbols()
    registerBspSymbols();
    registerCacheSymbols();
    registerClipboardSymbols();
+   registerCodeGenSymbols();
    registerContextSymbols();
    registerCoreSymbols();
    registerCoroutineSymbols();

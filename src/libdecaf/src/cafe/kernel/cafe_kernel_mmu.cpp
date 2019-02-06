@@ -206,6 +206,14 @@ getVirtualMapAddressRange()
             partitionData->addressSpace.virtualMapSize };
 }
 
+std::pair<virt_addr, uint32_t>
+getCodeGenVirtualRange()
+{
+   auto partitionData = internal::getCurrentRamPartitionData();
+   return { partitionData->addressSpace.codeGenView.mappings[0].vaddr,
+            partitionData->addressSpace.codeGenView.mappings[0].size };
+}
+
 static bool
 checkInVirtualMapRange(internal::AddressSpace *addressSpace,
                        virt_addr addr,

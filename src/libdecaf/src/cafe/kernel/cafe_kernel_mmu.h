@@ -97,6 +97,9 @@ getDataPhysicalAddressRange();
 std::pair<virt_addr, uint32_t>
 getVirtualMapAddressRange();
 
+std::pair<virt_addr, uint32_t>
+getCodeGenVirtualRange();
+
 virt_addr
 allocateVirtualAddress(virt_addr addr,
                        uint32_t size,
