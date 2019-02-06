@@ -684,12 +684,12 @@ OSJoinThread(virt_ptr<OSThread> thread,
              virt_ptr<int32_t> outExitValue)
 {
    internal::lockScheduler();
-   decaf_check(thread);
-   decaf_check(internal::isThreadActiveNoLock(thread));
 
    // If the thread has not ended, let's wait for it
    //  note only one thread is allowed in the join queue
-   if (thread->state != OSThreadState::Moribund && !thread->joinQueue.head) {
+   if (!(thread->attr & OSThreadAttributes::Detached) &&
+       thread->state != OSThreadState::Moribund &&
+       !thread->joinQueue.head) {
       internal::sleepThreadNoLock(virt_addrof(thread->joinQueue));
       internal::rescheduleSelfNoLock();
 
