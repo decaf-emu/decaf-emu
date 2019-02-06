@@ -20,7 +20,7 @@ DownloadedPostData_Constructor(virt_ptr<DownloadedPostData> self)
       }
    }
 
-   DownloadedPostData_Constructor(virt_cast<DownloadedPostData *>(self));
+   DownloadedDataBase_Constructor(virt_cast<DownloadedDataBase *>(self));
    self->virtualTable = DownloadedPostData::VirtualTable;
    self->communityId = 0u;
    self->empathyCount = 0u;
