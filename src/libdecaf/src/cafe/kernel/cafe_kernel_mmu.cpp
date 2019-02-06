@@ -505,9 +505,10 @@ initialiseAddressSpace(AddressSpace *addressSpace,
    sMemoryMap[3].size = dataSize;
 
    if (codeGenSize) {
-      auto codeGenMap = sMemoryMap[1];
+      auto &codeGenMap = sMemoryMap[1];
       codeGenMap.size = codeGenSize;
       codeGenMap.paddr = codeGenStart;
+      codeGenMap.flags |= (MapUnknown10 << 16);
       setAddressSpaceView(&addressSpace->codeGenView,
                           &codeGenMap,
                           1,
