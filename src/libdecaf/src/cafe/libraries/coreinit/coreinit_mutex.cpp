@@ -29,7 +29,6 @@ void
 OSInitMutexEx(virt_ptr<OSMutex> mutex,
               virt_ptr<const char> name)
 {
-   decaf_check(mutex);
    mutex->tag = OSMutex::Tag;
    mutex->name = name;
    mutex->owner = nullptr;
@@ -87,14 +86,6 @@ void
 OSLockMutex(virt_ptr<OSMutex> mutex)
 {
    internal::lockScheduler();
-   decaf_check(mutex);
-
-   // HACK: Naughty games not initialising mutex before using it.
-   //decaf_check(mutex->tag == OSMutex::Tag);
-   if (mutex->tag != OSMutex::Tag) {
-      OSInitMutex(mutex);
-   }
-
    internal::testThreadCancelNoLock();
    lockMutexNoLock(mutex);
    internal::unlockScheduler();
@@ -116,8 +107,6 @@ BOOL
 OSTryLockMutex(virt_ptr<OSMutex> mutex)
 {
    internal::lockScheduler();
-   decaf_check(mutex);
-
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
 
@@ -156,9 +145,6 @@ void
 OSUnlockMutex(virt_ptr<OSMutex> mutex)
 {
    internal::lockScheduler();
-   decaf_check(mutex);
-   decaf_check(mutex->tag == OSMutex::Tag);
-
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
    decaf_check(mutex->owner == thread);
@@ -219,7 +205,6 @@ void
 OSInitCondEx(virt_ptr<OSCondition> condition,
              virt_ptr<const char> name)
 {
-   decaf_check(condition);
    condition->tag = OSCondition::Tag;
    condition->name = name;
    OSInitThreadQueueEx(virt_addrof(condition->queue), condition);
@@ -239,11 +224,6 @@ OSWaitCond(virt_ptr<OSCondition> condition,
            virt_ptr<OSMutex> mutex)
 {
    internal::lockScheduler();
-   decaf_check(condition);
-   decaf_check(condition->tag == OSCondition::Tag);
-   decaf_check(mutex);
-   decaf_check(mutex->tag == OSMutex::Tag);
-
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
    decaf_check(mutex->owner == thread);
@@ -287,8 +267,6 @@ OSWaitCond(virt_ptr<OSCondition> condition,
 void
 OSSignalCond(virt_ptr<OSCondition> condition)
 {
-   decaf_check(condition);
-   decaf_check(condition->tag == OSCondition::Tag);
    OSWakeupThread(virt_addrof(condition->queue));
 }
 

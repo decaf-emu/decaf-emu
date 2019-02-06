@@ -16,7 +16,6 @@ void
 OSFastMutex_Init(virt_ptr<OSFastMutex> mutex,
                  virt_ptr<const char> name)
 {
-   decaf_check(mutex);
    mutex->tag = OSFastMutex::Tag;
    mutex->name = name;
    mutex->isContended = FALSE;
@@ -101,14 +100,6 @@ fastMutexHardLock(virt_ptr<OSFastMutex> mutex)
 void
 OSFastMutex_Lock(virt_ptr<OSFastMutex> mutex)
 {
-   decaf_check(mutex);
-
-   // HACK: Naughty games not initialising mutex before using it.
-   //decaf_check(mutex->tag == OSFastMutex::Tag);
-   if (mutex->tag != OSFastMutex::Tag) {
-      OSFastMutex_Init(mutex, nullptr);
-   }
-
    auto thread = OSGetCurrentThread();
 
    while (true) {
@@ -153,8 +144,6 @@ OSFastMutex_Lock(virt_ptr<OSFastMutex> mutex)
 static void
 fastMutexHardUnlock(virt_ptr<OSFastMutex> mutex)
 {
-   decaf_check(mutex->tag == OSFastMutex::Tag);
-
    // Grab our current thread and make sure we are running
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
@@ -203,8 +192,6 @@ fastMutexHardUnlock(virt_ptr<OSFastMutex> mutex)
 void
 OSFastMutex_Unlock(virt_ptr<OSFastMutex> mutex)
 {
-   decaf_check(mutex);
-   decaf_check(mutex->tag == OSFastMutex::Tag);
    decaf_check(mutex->count > 0);
 
    auto thread = OSGetCurrentThread();
@@ -312,7 +299,6 @@ void
 OSFastCond_Init(virt_ptr<OSFastCondition> condition,
                 virt_ptr<const char> name)
 {
-   decaf_check(condition);
    condition->tag = OSFastCondition::Tag;
    condition->name = name;
    condition->unk = 0u;
@@ -330,10 +316,6 @@ void
 OSFastCond_Wait(virt_ptr<OSFastCondition> condition,
                 virt_ptr<OSFastMutex> mutex)
 {
-   decaf_check(condition);
-   decaf_check(condition->tag == OSFastCondition::Tag);
-   decaf_check(mutex);
-   decaf_check(mutex->tag == OSFastMutex::Tag);
    internal::lockScheduler();
 
    auto thread = OSGetCurrentThread();
@@ -379,8 +361,6 @@ OSFastCond_Wait(virt_ptr<OSFastCondition> condition,
 void
 OSFastCond_Signal(virt_ptr<OSFastCondition> condition)
 {
-   decaf_check(condition);
-   decaf_check(condition->tag == OSFastCondition::Tag);
    OSWakeupThread(virt_addrof(condition->queue));
 }
 

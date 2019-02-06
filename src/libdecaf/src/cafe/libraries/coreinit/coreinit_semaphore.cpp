@@ -26,7 +26,6 @@ OSInitSemaphoreEx(virt_ptr<OSSemaphore> semaphore,
                   int32_t count,
                   virt_ptr<const char> name)
 {
-   decaf_check(semaphore);
    semaphore->tag = OSSemaphore::Tag;
    semaphore->name = name;
    semaphore->count = count;
@@ -44,8 +43,6 @@ int32_t
 OSWaitSemaphore(virt_ptr<OSSemaphore> semaphore)
 {
    internal::lockScheduler();
-   decaf_check(semaphore);
-   decaf_check(semaphore->tag == OSSemaphore::Tag);
 
    // Wait until we can decrease semaphore
    while (semaphore->count <= 0) {
@@ -76,9 +73,6 @@ int32_t
 OSTryWaitSemaphore(virt_ptr<OSSemaphore> semaphore)
 {
    internal::lockScheduler();
-   decaf_check(semaphore);
-   decaf_check(semaphore->tag == OSSemaphore::Tag);
-
    auto previous = semaphore->count;
 
    // Try to decrease semaphore
@@ -100,9 +94,6 @@ int32_t
 OSSignalSemaphore(virt_ptr<OSSemaphore> semaphore)
 {
    internal::lockScheduler();
-   decaf_check(semaphore);
-   decaf_check(semaphore->tag == OSSemaphore::Tag);
-
    auto previous = semaphore->count;
 
    // Increase semaphore
@@ -124,12 +115,7 @@ int32_t
 OSGetSemaphoreCount(virt_ptr<OSSemaphore> semaphore)
 {
    internal::lockScheduler();
-   decaf_check(semaphore);
-   decaf_check(semaphore->tag == OSSemaphore::Tag);
-
-   // Return count
    auto count = semaphore->count;
-
    internal::unlockScheduler();
    return count;
 }
