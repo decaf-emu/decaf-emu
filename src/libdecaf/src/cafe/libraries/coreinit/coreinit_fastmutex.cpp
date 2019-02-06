@@ -197,7 +197,11 @@ OSFastMutex_Unlock(virt_ptr<OSFastMutex> mutex)
    auto thread = OSGetCurrentThread();
    auto lockValue = mutex->lock.load();
    auto lockThread = virt_cast<OSThread *>(virt_addr { lockValue & ~1 });
-   decaf_check(lockThread == thread);
+
+   // Lock not currently held by this thread, ignore.
+   if (lockThread != thread) {
+      return;
+   }
 
    // Reduce mutex count
    mutex->count--;

@@ -147,7 +147,12 @@ OSUnlockMutex(virt_ptr<OSMutex> mutex)
    internal::lockScheduler();
    auto thread = OSGetCurrentThread();
    decaf_check(thread->state == OSThreadState::Running);
-   decaf_check(mutex->owner == thread);
+
+   // Not the owner, ignore this call.
+   if (mutex->owner != thread) {
+      internal::unlockScheduler();
+      return;
+   }
 
    // Decrement the mutexes lock count
    mutex->count--;
