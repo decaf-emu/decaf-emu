@@ -10,6 +10,12 @@ namespace cafe::kernel
 ios::Handle
 getMcpHandle();
 
+ios::Handle
+getPpcAppHandle();
+
+ios::Handle
+getCblHandle();
+
 namespace internal
 {
 

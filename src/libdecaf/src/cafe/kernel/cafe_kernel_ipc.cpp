@@ -307,7 +307,7 @@ initialiseIpc()
                                   nameBuffer,
                                   ios::OpenMode::None);
 
-   string_copy(nameBuffer.get(), "/dev/mcp", 0x20);
+   string_copy(nameBuffer.get(), "/dev/ppc_app", 0x20);
    sIpcData->ppcAppHandle = IOS_Open(RamPartitionId::Kernel,
                                      nameBuffer,
                                      ios::OpenMode::None);
@@ -335,6 +335,18 @@ ios::Handle
 getMcpHandle()
 {
    return internal::sIpcData->mcpHandle;
+}
+
+ios::Handle
+getPpcAppHandle()
+{
+   return internal::sIpcData->ppcAppHandle;
+}
+
+ios::Handle
+getCblHandle()
+{
+   return internal::sIpcData->cblHandle;
 }
 
 } // namespace cafe::kernel

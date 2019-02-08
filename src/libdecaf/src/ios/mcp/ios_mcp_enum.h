@@ -124,6 +124,12 @@ ENUM_BEG(PMCommand, uint32_t)
    ENUM_VALUE(RegisterResourceManager,    0xE1)
 ENUM_END(PMCommand)
 
+ENUM_BEG(PPCAppCommand, uint32_t)
+   ENUM_VALUE(StartupEvent,               0xB0)
+   ENUM_VALUE(PowerOff,                   0xB2)
+   ENUM_VALUE(UnrecoverableError,         0xB3)
+ENUM_END(PPCAppCommand)
+
 ENUM_BEG(ResourceManagerCommand, int32_t)
    ENUM_VALUE(Timeout,                    -32)  // ios::Error::Timeout
    ENUM_VALUE(ResumeReply,                8)    // ios::Command::Reply

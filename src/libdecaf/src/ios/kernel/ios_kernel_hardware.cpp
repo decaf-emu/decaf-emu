@@ -556,7 +556,6 @@ stopHardwareThread()
 {
    sRunning = false;
    sHardwareConditionVariable.notify_all();
-   sHardwareThread.join();
 }
 
 } // namespace internal

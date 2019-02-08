@@ -4,6 +4,7 @@
 
 #include "cafe/kernel/cafe_kernel.h"
 #include "ios/ios_stackobject.h"
+#include "ios/kernel/ios_kernel_hardware.h"
 #include "ios/kernel/ios_kernel_ipc.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
@@ -32,6 +33,26 @@ struct StaticPpcThreadData
 
 static phys_ptr<StaticPpcThreadData>
 sPpcThreadData;
+
+static Error
+mcpPpcIoctl(MCPCommand command,
+            phys_ptr<const void> inputBuffer,
+            uint32_t inputLength,
+            phys_ptr<void> outputBuffer,
+            uint32_t outputLength)
+{
+   auto error = Error::OK;
+
+   switch (command) {
+   case PPCAppCommand::PowerOff:
+      ios::kernel::internal::stopHardwareThread();
+      break;
+   default:
+      error = Error::InvalidArg;
+   }
+
+   return error;
+}
 
 static Error
 ppcThreadEntry(phys_ptr<void> /*context*/)
@@ -105,6 +126,16 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
 
          IOS_ResourceReply(request, Error::OK);
          break;
+      }
+
+      case Command::Ioctl:
+      {
+         error = mcpPpcIoctl(static_cast<MCPCommand>(request->requestData.args.ioctl.request),
+                             request->requestData.args.ioctl.inputBuffer,
+                             request->requestData.args.ioctl.inputLength,
+                             request->requestData.args.ioctl.outputBuffer,
+                             request->requestData.args.ioctl.outputLength);
+         IOS_ResourceReply(request, error);
       }
 
       default:
