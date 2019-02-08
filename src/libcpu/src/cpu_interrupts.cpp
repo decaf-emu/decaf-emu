@@ -9,23 +9,9 @@
 namespace cpu
 {
 
-InterruptHandler
-gInterruptHandler;
-
-std::mutex
-gInterruptMutex;
-
-std::condition_variable
-gInterruptCondition;
-
-std::mutex
-gTimerMutex;
-
-std::condition_variable
-gTimerCondition;
-
-std::thread
-gTimerThread;
+InterruptHandler gInterruptHandler;
+std::mutex gInterruptMutex;
+std::condition_variable gInterruptCondition;
 
 void
 setInterruptHandler(InterruptHandler handler)
@@ -34,42 +20,14 @@ setInterruptHandler(InterruptHandler handler)
 }
 
 void
-interrupt(int core_idx, uint32_t flags)
+interrupt(int coreIndex, uint32_t flags)
 {
    std::unique_lock<std::mutex> lock { gInterruptMutex };
-   if (gCore[core_idx]) {
-      gCore[core_idx]->interrupt.fetch_or(flags);
+   auto core = getCore(coreIndex);
+   if (core) {
+      core->interrupt.fetch_or(flags);
    }
    gInterruptCondition.notify_all();
-}
-
-void
-timerEntryPoint()
-{
-   while (gRunning.load()) {
-      std::unique_lock<std::mutex> lock{ gTimerMutex };
-      auto now = std::chrono::steady_clock::now();
-      auto next = std::chrono::steady_clock::time_point::max();
-      bool timedWait = false;
-
-      for (auto i = 0; i < 3; ++i) {
-         auto core = gCore[i];
-
-         if (core->next_alarm <= now) {
-            core->next_alarm = std::chrono::steady_clock::time_point::max();
-            cpu::interrupt(i, ALARM_INTERRUPT);
-         } else if (core->next_alarm < next) {
-            next = core->next_alarm;
-            timedWait = true;
-         }
-      }
-
-      if (timedWait) {
-         gTimerCondition.wait_until(lock, next);
-      } else {
-         gTimerCondition.wait(lock);
-      }
-   }
 }
 
 namespace this_core
@@ -161,15 +119,6 @@ waitNextInterrupt(std::chrono::steady_clock::time_point until)
    if (flags & mask) {
       gInterruptHandler(core, flags);
    }
-}
-
-void
-setNextAlarm(std::chrono::steady_clock::time_point time)
-{
-   auto core = this_core::state();
-   std::unique_lock<std::mutex> lock { gTimerMutex };
-   core->next_alarm = time;
-   gTimerCondition.notify_all();
 }
 
 } // namespace this_core

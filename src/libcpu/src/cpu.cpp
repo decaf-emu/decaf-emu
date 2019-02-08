@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "cpu_alarm.h"
 #include "cpu_config.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
@@ -21,9 +22,6 @@
 namespace cpu
 {
 
-std::atomic_bool
-gRunning;
-
 std::chrono::time_point<std::chrono::steady_clock>
 sStartupTime;
 
@@ -42,9 +40,8 @@ gBranchTraceHandler;
 static bool
 sJitEnabled = false;
 
-
-std::array<Core *, 3>
-gCore;
+static std::array<std::unique_ptr<Core>, 3>
+sCores { };
 
 static thread_local uint32_t
 tCurrentCoreId = InvalidCoreId;
@@ -183,46 +180,37 @@ void
 start()
 {
    installExceptionHandler();
-   gRunning.store(true);
 
-   for (auto i = 0u; i < gCore.size(); ++i) {
+   for (auto i = 0u; i < sCores.size(); ++i) {
       auto core = jit::initialiseCore(i);
       if (!core) {
          core = new Core {};
          core->id = i;
       }
 
+      sCores[i] = std::unique_ptr<Core> { core };
       core->thread = std::thread { coreEntryPoint, core };
       core->next_alarm = std::chrono::steady_clock::time_point::max();
-      gCore[i] = core;
 
       static const std::string coreNames[] = { "Core #0", "Core #1", "Core #2" };
       platform::setThreadName(&core->thread, coreNames[i]);
    }
 
-   gTimerThread = std::thread { timerEntryPoint };
-   platform::setThreadName(&gTimerThread, "Timer Thread");
+   internal::startAlarmThread();
 }
 
 void
 join()
 {
-   for (auto core : gCore) {
+   for (auto &core : sCores) {
       if (core && core->thread.joinable()) {
          core->thread.join();
+         core.reset();
       }
    }
 
-   // Mark the CPU as no longer running
-   gRunning.store(false);
-
-   // Notify the timer thread that something changed
-   gTimerCondition.notify_all();
-
-   // Wait for the timer thread to shut down
-   if (gTimerThread.joinable()) {
-      gTimerThread.join();
-   }
+   // Stop and join the alarm thread.
+   internal::stopAlarmThread();
 }
 
 void
@@ -231,6 +219,12 @@ halt()
    for (auto i = 0; i < 3; ++i) {
       interrupt(i, SRESET_INTERRUPT);
    }
+}
+
+Core *
+getCore(int index)
+{
+   return sCores[index].get();
 }
 
 void

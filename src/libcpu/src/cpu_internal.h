@@ -10,29 +10,12 @@
 namespace cpu
 {
 
-extern std::array<Core *, 3>
-gCore;
+extern EntrypointHandler gCoreEntryPointHandler;
+extern InterruptHandler gInterruptHandler;
+extern BranchTraceHandler gBranchTraceHandler;
 
-extern std::atomic_bool
-gRunning;
-
-extern EntrypointHandler
-gCoreEntryPointHandler;
-
-extern InterruptHandler
-gInterruptHandler;
-
-extern BranchTraceHandler
-gBranchTraceHandler;
-
-extern std::condition_variable
-gTimerCondition;
-
-extern std::thread
-gTimerThread;
-
-void
-timerEntryPoint();
+Core *
+getCore(int index);
 
 KernelCallHandler
 getKernelCallHandler(uint32_t id);
