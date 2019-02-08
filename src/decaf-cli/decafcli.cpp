@@ -35,13 +35,13 @@ DecafCLI::run(const std::string &gamePath)
    std::condition_variable timeoutCV;
 
    if (config::system::timeout_ms) {
-      std::mutex timeoutMutex;
       auto timeout = std::chrono::system_clock::now() + std::chrono::milliseconds(config::system::timeout_ms);
 
       timeoutThread = std::thread {
          [&]() {
+            std::mutex timeoutMutex;
             std::unique_lock<std::mutex> lock { timeoutMutex };
-            timeoutCV.wait_until(lock, timeout, [&]() { return running.load(); });
+            timeoutCV.wait_until(lock, timeout, [&]() { return !running.load(); });
 
             if (running) {
                timedOut.store(true);
