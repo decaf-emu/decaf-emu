@@ -37,7 +37,6 @@ static const uint32_t CALLBACK_ADDR = 0xFBADCDE0;
 using EntrypointHandler = std::function<void(Core *core)>;
 using InterruptHandler = void (*)(Core *core, uint32_t interrupt_flags);
 using SegfaultHandler = void(*)(Core *core, uint32_t address, platform::StackTrace *hostStackTrace);
-using IllInstHandler = void(*)(Core *core, platform::StackTrace *hostStackTrace);
 using BranchTraceHandler = void(*)(Core *core, uint32_t target);
 using KernelCallHandler = Core * (*)(Core *core, uint32_t id);
 
@@ -63,9 +62,6 @@ setInterruptHandler(InterruptHandler handler);
 
 void
 setSegfaultHandler(SegfaultHandler handler);
-
-void
-setIllInstHandler(IllInstHandler handler);
 
 void
 setBranchTraceHandler(BranchTraceHandler handler);

@@ -244,16 +244,6 @@ handleCpuSegfault(cpu::Core *core,
 }
 
 static void
-handleCpuIllegalInstruction(cpu::Core *core,
-                            platform::StackTrace *stackTrace)
-{
-   auto interruptedContext = getCurrentContext();
-   copyContextFromCpu(interruptedContext);
-   sExceptionStackTraces[core->id] = stackTrace;
-   dispatchException(ExceptionType::Program, interruptedContext);
-}
-
-static void
 handleDebugBreakException(ExceptionType type,
                           virt_ptr<Context> interruptedContext)
 {
@@ -318,7 +308,6 @@ initialiseExceptionHandlers()
 
    cpu::setInterruptHandler(&handleCpuInterrupt);
    cpu::setSegfaultHandler(&handleCpuSegfault);
-   cpu::setIllInstHandler(&handleCpuIllegalInstruction);
 }
 
 void

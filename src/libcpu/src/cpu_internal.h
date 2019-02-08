@@ -10,8 +10,6 @@
 namespace cpu
 {
 
-extern EntrypointHandler gCoreEntryPointHandler;
-extern InterruptHandler gInterruptHandler;
 extern BranchTraceHandler gBranchTraceHandler;
 
 Core *

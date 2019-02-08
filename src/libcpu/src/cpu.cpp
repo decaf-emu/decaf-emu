@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include "cpu_alarm.h"
 #include "cpu_config.h"
+#include "cpu_host_exception.h"
 #include "cpu_internal.h"
 #include "espresso/espresso_instructionset.h"
 #include "interpreter/interpreter.h"
@@ -9,15 +10,11 @@
 #include "mem.h"
 #include "mmu.h"
 
-#include <atomic>
 #include <cfenv>
 #include <chrono>
 #include <common/decaf_assert.h>
-#include <common/platform_exception.h>
 #include <common/platform_thread.h>
-#include <condition_variable>
 #include <memory>
-#include <vector>
 
 namespace cpu
 {
@@ -25,14 +22,8 @@ namespace cpu
 std::chrono::time_point<std::chrono::steady_clock>
 sStartupTime;
 
-EntrypointHandler
-gCoreEntryPointHandler;
-
-SegfaultHandler
-gSegfaultHandler;
-
-IllInstHandler
-gIllInstHandler;
+static EntrypointHandler
+sCoreEntryPointHandler;
 
 BranchTraceHandler
 gBranchTraceHandler;
@@ -48,12 +39,6 @@ tCurrentCoreId = InvalidCoreId;
 
 static thread_local cpu::Core *
 tCurrentCore = nullptr;
-
-static thread_local uint32_t
-sSegfaultAddr = 0;
-
-static thread_local platform::StackTrace *
-sSegfaultStackTrace = nullptr;
 
 void
 initialise()
@@ -99,87 +84,18 @@ addJitReadOnlyRange(virt_addr address,
    jit::addReadOnlyRange(static_cast<uint32_t>(address), size);
 }
 
-static void
-coreSegfaultEntry()
-{
-   auto core = tCurrentCore;
-   if (sSegfaultAddr == tCurrentCore->nia) {
-      core->srr0 = sSegfaultAddr;
-   } else {
-      core->srr0 = tCurrentCore->nia;
-      core->dar = sSegfaultAddr;
-      core->dsisr = 0u;
-   }
-
-   gSegfaultHandler(core, sSegfaultAddr, sSegfaultStackTrace);
-   decaf_abort("The CPU segfault handler must never return.");
-}
-
-static void
-coreIllInstEntry()
-{
-   auto core = tCurrentCore;
-   core->srr0 = tCurrentCore->nia;
-   gIllInstHandler(core, sSegfaultStackTrace);
-   decaf_abort("The CPU illegal instruction handler must never return.");
-}
-
-static platform::ExceptionResumeFunc
-exceptionHandler(platform::Exception *exception)
-{
-   // Handle illegal instructions!
-   if (exception->type == platform::Exception::InvalidInstruction) {
-      sSegfaultStackTrace = platform::captureStackTrace();
-      return coreIllInstEntry;
-   }
-
-   // Only handle AccessViolation exceptions
-   if (exception->type != platform::Exception::AccessViolation) {
-      return platform::UnhandledException;
-   }
-
-   // Only handle exceptions from the CPU cores
-   if (this_core::id() >= 0xFF) {
-      return platform::UnhandledException;
-   }
-
-   // Retreive the exception information
-   auto info = reinterpret_cast<platform::AccessViolationException *>(exception);
-   auto address = info->address;
-
-   // Only handle exceptions within the virtual memory bounds
-   auto memBase = getBaseVirtualAddress();
-   if (address != 0 && (address < memBase || address >= memBase + 0x100000000)) {
-      return platform::UnhandledException;
-   }
-
-   sSegfaultAddr = static_cast<uint32_t>(address - memBase);
-   sSegfaultStackTrace = platform::captureStackTrace();
-   return coreSegfaultEntry;
-}
-
-void
-installExceptionHandler()
-{
-   static bool handlerInstalled = false;
-   if (!handlerInstalled) {
-      handlerInstalled = true;
-      platform::installExceptionHandler(exceptionHandler);
-   }
-}
-
 void
 coreEntryPoint(Core *core)
 {
    tCurrentCoreId = core->id;
    tCurrentCore = core;
-   gCoreEntryPointHandler(core);
+   sCoreEntryPointHandler(core);
 }
 
 void
 start()
 {
-   installExceptionHandler();
+   internal::installHostExceptionHandler();
 
    for (auto i = 0u; i < sCores.size(); ++i) {
       auto core = jit::initialiseCore(i);
@@ -230,19 +146,13 @@ getCore(int index)
 void
 setCoreEntrypointHandler(EntrypointHandler handler)
 {
-   gCoreEntryPointHandler = handler;
+   sCoreEntryPointHandler = handler;
 }
 
 void
 setSegfaultHandler(SegfaultHandler handler)
 {
-   gSegfaultHandler = handler;
-}
-
-void
-setIllInstHandler(IllInstHandler handler)
-{
-   gIllInstHandler = handler;
+   internal::setUserSegfaultHandler(handler);
 }
 
 void

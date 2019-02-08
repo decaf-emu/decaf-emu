@@ -9,25 +9,27 @@
 namespace cpu
 {
 
-InterruptHandler gInterruptHandler;
-std::mutex gInterruptMutex;
-std::condition_variable gInterruptCondition;
+static void defaultInterruptHandler(Core *core, uint32_t interrupt_flags) { }
 
-void
-setInterruptHandler(InterruptHandler handler)
-{
-   gInterruptHandler = handler;
-}
+static InterruptHandler sUserInterruptHandler = &defaultInterruptHandler;
+static std::mutex sInterruptMutex;
+static std::condition_variable sInterruptCondition;
 
 void
 interrupt(int coreIndex, uint32_t flags)
 {
-   std::unique_lock<std::mutex> lock { gInterruptMutex };
+   std::unique_lock<std::mutex> lock { sInterruptMutex };
    auto core = getCore(coreIndex);
    if (core) {
       core->interrupt.fetch_or(flags);
    }
-   gInterruptCondition.notify_all();
+   sInterruptCondition.notify_all();
+}
+
+void
+setInterruptHandler(InterruptHandler handler)
+{
+   sUserInterruptHandler = handler;
 }
 
 namespace this_core
@@ -62,7 +64,7 @@ checkInterrupts()
    auto flags = core->interrupt.fetch_and(~mask);
 
    if (flags & mask) {
-      cpu::gInterruptHandler(core, flags);
+      sUserInterruptHandler(core, flags);
    }
 }
 
@@ -70,7 +72,7 @@ void
 waitForInterrupt()
 {
    auto core = this_core::state();
-   std::unique_lock<std::mutex> lock { gInterruptMutex };
+   std::unique_lock<std::mutex> lock { sInterruptMutex };
 
    while (true) {
       if (!(core->interrupt_mask & ~NONMASKABLE_INTERRUPTS)) {
@@ -82,10 +84,10 @@ waitForInterrupt()
 
       if (flags & mask) {
          lock.unlock();
-         gInterruptHandler(core, flags);
+         sUserInterruptHandler(core, flags);
          lock.lock();
       } else {
-         gInterruptCondition.wait(lock);
+         sInterruptCondition.wait(lock);
       }
    }
 }
@@ -94,7 +96,7 @@ void
 waitNextInterrupt(std::chrono::steady_clock::time_point until)
 {
    auto core = this_core::state();
-   std::unique_lock<std::mutex> lock { gInterruptMutex };
+   std::unique_lock<std::mutex> lock { sInterruptMutex };
 
    if (!(core->interrupt_mask & ~NONMASKABLE_INTERRUPTS)) {
       decaf_abort("WFI thread found all maskable interrupts were disabled");
@@ -105,9 +107,9 @@ waitNextInterrupt(std::chrono::steady_clock::time_point until)
 
    if (!(flags & mask)) {
       if (until == std::chrono::steady_clock::time_point { }) {
-         gInterruptCondition.wait(lock);
+         sInterruptCondition.wait(lock);
       } else {
-         gInterruptCondition.wait_until(lock, until);
+         sInterruptCondition.wait_until(lock, until);
       }
 
       mask = core->interrupt_mask | NONMASKABLE_INTERRUPTS;
@@ -117,7 +119,7 @@ waitNextInterrupt(std::chrono::steady_clock::time_point until)
    lock.unlock();
 
    if (flags & mask) {
-      gInterruptHandler(core, flags);
+      sUserInterruptHandler(core, flags);
    }
 }
 
