@@ -21,6 +21,7 @@ UploadedPostData_Constructor(virt_ptr<UploadedPostData> self)
 
    UploadedDataBase_Constructor(virt_cast<UploadedDataBase *>(self));
    self->virtualTable = UploadedPostData::VirtualTable;
+   return self;
 }
 
 void
