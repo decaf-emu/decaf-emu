@@ -39,20 +39,9 @@ gIllInstHandler;
 BranchTraceHandler
 gBranchTraceHandler;
 
-jit_mode
-gJitMode = jit_mode::disabled;
+static bool
+sJitEnabled = false;
 
-uint32_t
-gJitVerifyAddress = 0;
-
-static size_t
-sJitCodeCacheSize = 1024 * 1024 * 1024;
-
-static size_t
-sJitDataCacheSize = 512 * 1024 * 1024;
-
-static std::vector<std::string>
-sJitOptFlags;
 
 std::array<Core *, 3>
 gCore;
@@ -73,30 +62,20 @@ void
 initialise()
 {
    auto settings = config();
-
-   // Setup config options
-   if (settings->jit.enabled) {
-      if (settings->jit.verify) {
-         gJitMode = jit_mode::verify;
-         gJitVerifyAddress = settings->jit.verifyAddress;
-      } else {
-         gJitMode = jit_mode::enabled;
-      }
-
-      sJitCodeCacheSize = settings->jit.codeCacheSizeMB * 1024 * 1024;
-      sJitDataCacheSize = settings->jit.dataCacheSizeMB * 1024 * 1024;
-   } else {
-      gJitMode = jit_mode::disabled;
-   }
+   sJitEnabled = settings->jit.enabled;
 
    // Initalise cpu!
    initialiseMemory();
    espresso::initialiseInstructionSet();
    interpreter::initialise();
 
-   if (gJitMode != cpu::jit_mode::disabled) {
-      auto backend = new jit::BinrecBackend { sJitCodeCacheSize, sJitDataCacheSize };
+   if (sJitEnabled) {
+      auto backend = new jit::BinrecBackend {
+         settings->jit.codeCacheSizeMB * 1024 * 1024,
+         settings->jit.dataCacheSizeMB * 1024 * 1024
+      };
       backend->setOptFlags(settings->jit.optimisationFlags);
+      backend->setVerifyEnabled(settings->jit.verify, settings->jit.verifyAddress);
       jit::setBackend(backend);
    }
 
@@ -312,8 +291,7 @@ id()
 void
 resume()
 {
-   // Use appropriate jit mode
-   if (gJitMode != jit_mode::disabled) {
+   if (sJitEnabled) {
       jit::resume();
    } else {
       interpreter::resume();

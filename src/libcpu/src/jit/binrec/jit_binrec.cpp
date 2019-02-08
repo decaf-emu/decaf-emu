@@ -148,7 +148,7 @@ BinrecBackend::createBinrecHandle()
    handle->enable_branch_exit_test(true);
    handle->enable_chaining(mOptFlags.useChaining);
 
-   if (gJitMode == jit_mode::verify && gJitVerifyAddress == 0) {
+   if (mVerifyEnabled && mVerifyAddress == 0) {
       handle->set_pre_insn_callback(brVerifyPreHandler);
       handle->set_post_insn_callback(brVerifyPostHandler);
    }
@@ -246,8 +246,8 @@ BinrecBackend::getCodeBlock(BinrecCore *core, uint32_t address)
       mHandles[core->id] = handle;
    }
 
-   if (gJitMode == jit_mode::verify && gJitVerifyAddress != 0) {
-      if (address == gJitVerifyAddress) {
+   if (mVerifyEnabled && mVerifyAddress != 0) {
+      if (address == mVerifyAddress) {
          handle->set_pre_insn_callback(brVerifyPreHandler);
          handle->set_post_insn_callback(brVerifyPostHandler);
       } else {
@@ -339,7 +339,7 @@ BinrecBackend::resumeExecution()
    auto core = reinterpret_cast<BinrecCore *>(this_core::state());
    decaf_check(core->nia != CALLBACK_ADDR);
 
-   if (gJitMode == jit_mode::verify) {
+   if (mVerifyEnabled) {
       // Use a separate routine for verify mode so we don't have to check
       //  the current mode on every iteration through the loop.  Note that
       //  we don't attempt to profile while verifying.

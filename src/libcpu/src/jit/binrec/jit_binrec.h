@@ -91,6 +91,9 @@ public:
    void
    setOptFlags(const std::vector<std::string> &optList);
 
+   void
+   setVerifyEnabled(bool enabled, uint32_t address = 0);
+
    CodeBlock *
    getCodeBlock(BinrecCore *core, uint32_t address);
 
@@ -133,6 +136,8 @@ private:
    std::vector<std::pair<ppcaddr_t, uint32_t>> mReadOnlyRanges;
    std::atomic<uint64_t> mTotalProfileTime { 0 };
    uint32_t mProfilingMask = 0;
+   bool mVerifyEnabled = false;
+   uint32_t mVerifyAddress = 0;
 };
 
 } // namespace jit

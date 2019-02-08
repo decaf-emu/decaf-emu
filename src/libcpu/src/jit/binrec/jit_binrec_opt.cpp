@@ -133,6 +133,14 @@ BinrecBackend::setOptFlags(const std::vector<std::string> &optList)
    }
 }
 
+void
+BinrecBackend::setVerifyEnabled(bool enabled,
+                                uint32_t address)
+{
+   mVerifyEnabled = enabled;
+   mVerifyAddress = address;
+}
+
 } // namespace jit
 
 } // namespace cpu

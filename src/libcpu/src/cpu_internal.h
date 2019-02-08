@@ -25,12 +25,6 @@ gInterruptHandler;
 extern BranchTraceHandler
 gBranchTraceHandler;
 
-extern jit_mode
-gJitMode;
-
-extern uint32_t
-gJitVerifyAddress;
-
 extern std::condition_variable
 gTimerCondition;
 

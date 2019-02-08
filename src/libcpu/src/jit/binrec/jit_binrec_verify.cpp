@@ -68,7 +68,7 @@ BinrecBackend::resumeVerifyExecution()
       auto codeBlock = core->backend->getCodeBlock(core, core->nia);
 
       if (codeBlock) {
-         if (!gJitVerifyAddress || address == gJitVerifyAddress) {
+         if (!mVerifyAddress || address == mVerifyAddress) {
             verifyInit(core, core->verifyBuffer);
          }
 
