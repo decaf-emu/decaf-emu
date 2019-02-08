@@ -22,17 +22,10 @@ namespace cpu
 namespace jit
 {
 
-static void *
-brChainLookup(BinrecCore *core, ppcaddr_t address);
-
-static uint64_t
-brTimeBaseHandler(BinrecCore *core);
-
-static void
-brSyscallHandler(BinrecCore *core);
-
-static void
-brTrapHandler(BinrecCore *core);
+static void *brChainLookup(BinrecCore *core, ppcaddr_t address);
+static uint64_t brTimeBaseHandler(BinrecCore *core);
+static BinrecCore *brSyscallHandler(BinrecCore *core, espresso::Instruction instr);
+static BinrecCore *brTrapHandler(BinrecCore *core);
 
 static void
 brLog(void *, binrec::LogLevel level, const char *message);
@@ -123,26 +116,26 @@ BinrecBackend::createBinrecHandle()
 
    setup.host_features = binrec::native_features();
    setup.guest_memory_base = reinterpret_cast<void *>(getBaseVirtualAddress());
-   setup.state_offset_gpr = offsetof2(BinrecCore, gpr);
-   setup.state_offset_fpr = offsetof2(BinrecCore, fpr);
-   setup.state_offset_gqr = offsetof2(BinrecCore, gqr);
-   setup.state_offset_cr = offsetof2(BinrecCore, cr);
-   setup.state_offset_lr = offsetof2(BinrecCore, lr);
-   setup.state_offset_ctr = offsetof2(BinrecCore, ctr);
-   setup.state_offset_xer = offsetof2(BinrecCore, xer);
-   setup.state_offset_fpscr = offsetof2(BinrecCore, fpscr);
-   setup.state_offset_reserve_flag = offsetof2(BinrecCore, reserveFlag);
-   setup.state_offset_reserve_state = offsetof2(BinrecCore, reserveData);
-   setup.state_offset_nia = offsetof2(BinrecCore, nia);
-   setup.state_offset_timebase_handler = offsetof2(BinrecCore, mftbHandler);
-   setup.state_offset_sc_handler = offsetof2(BinrecCore, scHandler);
-   setup.state_offset_trap_handler = offsetof2(BinrecCore, trapHandler);
+   setup.state_offsets_ppc.gpr = offsetof2(BinrecCore, gpr);
+   setup.state_offsets_ppc.fpr = offsetof2(BinrecCore, fpr);
+   setup.state_offsets_ppc.gqr = offsetof2(BinrecCore, gqr);
+   setup.state_offsets_ppc.lr = offsetof2(BinrecCore, lr);
+   setup.state_offsets_ppc.ctr = offsetof2(BinrecCore, ctr);
+   setup.state_offsets_ppc.cr = offsetof2(BinrecCore, cr);
+   setup.state_offsets_ppc.xer = offsetof2(BinrecCore, xer);
+   setup.state_offsets_ppc.fpscr = offsetof2(BinrecCore, fpscr);
+   setup.state_offsets_ppc.pvr = offsetof2(BinrecCore, pvr);
+   setup.state_offsets_ppc.pir = offsetof2(BinrecCore, id);
+   setup.state_offsets_ppc.reserve_flag = offsetof2(BinrecCore, reserveFlag);
+   setup.state_offsets_ppc.reserve_state = offsetof2(BinrecCore, reserveData);
+   setup.state_offsets_ppc.nia = offsetof2(BinrecCore, nia);
+   setup.state_offsets_ppc.timebase_handler = offsetof2(BinrecCore, mftbHandler);
+   setup.state_offsets_ppc.sc_handler = offsetof2(BinrecCore, scHandler);
+   setup.state_offsets_ppc.trap_handler = offsetof2(BinrecCore, trapHandler);
+   setup.state_offsets_ppc.fres_lut = offsetof2(BinrecCore, fresTable);
+   setup.state_offsets_ppc.frsqrte_lut = offsetof2(BinrecCore, frsqrteTable);
    setup.state_offset_chain_lookup = offsetof2(BinrecCore, chainLookup);
    setup.state_offset_branch_exit_flag = offsetof2(BinrecCore, interrupt);
-   setup.state_offset_fres_lut = offsetof2(BinrecCore, fresTable);
-   setup.state_offset_frsqrte_lut = offsetof2(BinrecCore, frsqrteTable);
-   setup.state_offset_pvr = offsetof2(BinrecCore, pvr);
-   setup.state_offset_pir = offsetof2(BinrecCore, id);
    setup.log = brLog;
 
    auto handle = new BinrecHandle {};
@@ -376,28 +369,27 @@ BinrecBackend::resumeExecution()
 
          if (LIKELY(block)) {
             auto entry = reinterpret_cast<BinrecEntry>(block->code);
-            entry(core, memBase);
+            core = entry(core, memBase);
          } else {
             // Step over the current instruction, in case it's confusing
             // the translator.  TODO: Consider blacklisting the address to
             // avoid trying to translate it every time we encounter it.
             interpreter::step_one(core);
-         }
 
-         // If we just returned from a system call, we might have been
-         //  rescheduled onto a different core.
-         core = reinterpret_cast<BinrecCore *>(this_core::state());
+            // If we just returned from a system call, we might have been
+            //  rescheduled onto a different core.
+            core = reinterpret_cast<BinrecCore *>(this_core::state());
+         }
       } else { // mProfilingMask != 0
          const uint64_t start = rdtsc();
 
          if (block) {
             auto entry = reinterpret_cast<BinrecEntry>(block->code);
-            entry(core, memBase);
+            core = entry(core, memBase);
          } else {
             interpreter::step_one(core);
+            core = reinterpret_cast<BinrecCore *>(this_core::state());
          }
-
-         core = reinterpret_cast<BinrecCore *>(this_core::state());
 
          // Don't count profiling data for HLE calls since those have
          //  nothing to do with JIT performance (and might also have
@@ -496,14 +488,12 @@ brTimeBaseHandler(BinrecCore *core)
 /**
  * Callback from libbinrec to handle system calls.
  */
-void
-brSyscallHandler(BinrecCore *core)
+BinrecCore *
+brSyscallHandler(BinrecCore *core,
+                 espresso::Instruction instr)
 {
-   auto instr = mem::read<espresso::Instruction>(core->nia - 4);
-   auto kcId = instr.kcn;
-
-   auto handler = cpu::getKernelCallHandler(kcId);
-   auto newCore = handler(core, kcId);
+   auto handler = cpu::getKernelCallHandler(instr.kcn);
+   auto newCore = handler(core, instr.kcn);
 
    // We might have been rescheduled on a new core.
    core = reinterpret_cast<BinrecCore *>(newCore);
@@ -518,13 +508,14 @@ brSyscallHandler(BinrecCore *core)
 #ifdef DECAF_JIT_ALLOW_PROFILING
    core->calledHLE = true;  // Suppress profiling for this call.
 #endif
+   return core;
 }
 
 
 /**
  * Callback from libbinrec to handle PPC trap exceptions.
  */
-void
+BinrecCore *
 brTrapHandler(BinrecCore *core)
 {
    if (!cpu::hasBreakpoint(core->nia)) {
@@ -533,6 +524,7 @@ brTrapHandler(BinrecCore *core)
    }
 
    // If we have a breakpoint, we will fall back to interpreter to handle it.
+   return core;
 }
 
 

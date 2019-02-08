@@ -72,6 +72,8 @@ sOptFlags = {
                                  binrec::Optimize::GuestPPC::PAIRED_LWARX_STWCX}},
    {"PPC_PS_STORE_DENORMALS",   {OptFlagInfo::OPTFLAG_GUEST,
                                  binrec::Optimize::GuestPPC::PS_STORE_DENORMALS}},
+   {"PPC_SC_BLR",               {OptFlagInfo::OPTFLAG_GUEST,
+                                 binrec::Optimize::GuestPPC::SC_BLR}},
    {"PPC_SINGLE_PREC_INPUTS",   {OptFlagInfo::OPTFLAG_GUEST,
                                  binrec::Optimize::GuestPPC::SINGLE_PREC_INPUTS}},
    {"PPC_TRIM_CR_STORES",       {OptFlagInfo::OPTFLAG_GUEST,

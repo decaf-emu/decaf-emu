@@ -1,5 +1,6 @@
 #pragma once
 #include "state.h"
+#include "espresso/espresso_instruction.h"
 #include "jit/jit_codecache.h"
 #include "jit/jit_backend.h"
 
@@ -32,8 +33,8 @@ struct BinrecCore : public Core
    void *(*chainLookup)(BinrecCore *, ppcaddr_t);
    bool (*branchCallback)(BinrecCore *, ppcaddr_t);
    uint64_t (*mftbHandler)(BinrecCore *);
-   void (*scHandler)(BinrecCore *);
-   void (*trapHandler)(BinrecCore *);
+   BinrecCore *(*scHandler)(BinrecCore *, espresso::Instruction);
+   BinrecCore *(*trapHandler)(BinrecCore *);
 
    // Lookup tables for fres/frsqrte instructions
    const uint16_t *fresTable;
@@ -50,7 +51,7 @@ struct BinrecCore : public Core
 };
 
 using BinrecHandle = binrec::Handle<BinrecCore *>;
-using BinrecEntry = void (*)(BinrecCore *core, uintptr_t membase);
+using BinrecEntry = BinrecCore * (*)(BinrecCore *core, uintptr_t membase);
 
 class BinrecBackend : public JitBackend
 {
