@@ -318,6 +318,14 @@ idleCoreLoop(cpu::Core *core)
 void
 exit()
 {
+   // Cafe kernel is about to exit - IOS threads should also stop.
+   auto error = IOS_Ioctl(RamPartitionId::Kernel,
+                          RamPartitionId::Invalid,
+                          getPpcAppHandle(),
+                          ios::mcp::PPCAppCommand::PowerOff,
+                          nullptr, 0,
+                          nullptr, 0);
+
    // Set the running flag to false so idle loops exit.
    sStopping = true;
 
