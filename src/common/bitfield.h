@@ -105,7 +105,7 @@ struct BitfieldHelper<BitfieldType, bool, Position, Bits>
 #else
 
 #define BITFIELD_BEG(Name, Type)                                                  \
-   struct Name                                                                \
+   union Name                                                                 \
    {                                                                          \
       using BitfieldType = Name;                                              \
       using StorageType = Type;                                               \
