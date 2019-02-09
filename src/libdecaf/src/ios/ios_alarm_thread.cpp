@@ -20,7 +20,7 @@ static std::condition_variable
 sAlarmCondition;
 
 static std::atomic_bool
-sAlarmThreadRunning = true;
+sAlarmThreadRunning = false;
 
 static std::chrono::steady_clock::time_point
 sNextAlarm = std::chrono::steady_clock::time_point::max();
@@ -50,16 +50,20 @@ alarmThread()
 void
 startAlarmThread()
 {
-   sAlarmThreadRunning.store(true);
-   sAlarmThread = std::thread { alarmThread };
+   if(!sAlarmThreadRunning.load()) {
+      sAlarmThreadRunning.store(true);
+      sAlarmThread = std::thread { alarmThread };
+   }
 }
 
 void
 stopAlarmThread()
 {
-   sAlarmThreadRunning.store(false);
-   sAlarmCondition.notify_all();
-   sAlarmThread.join();
+   if(sAlarmThreadRunning.load()) {
+      sAlarmThreadRunning.store(false);
+      sAlarmCondition.notify_all();
+      sAlarmThread.join();
+   }
 }
 
 void

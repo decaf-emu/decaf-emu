@@ -285,8 +285,6 @@ stop()
       sStopping = true;
       cpu::halt();
    }
-
-   cpu::join();
 }
 
 void

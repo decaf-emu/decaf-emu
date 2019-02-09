@@ -60,14 +60,18 @@ startAlarmThread()
 }
 
 void
+joinAlarmThread()
+{
+   if (sAlarmData.thread.joinable()) {
+      sAlarmData.thread.join();
+   }
+}
+
+void
 stopAlarmThread()
 {
    sAlarmData.running = false;
    sAlarmData.cv.notify_all();
-
-   if (sAlarmData.thread.joinable()) {
-      sAlarmData.thread.join();
-   }
 }
 
 } // namespace cpu::internal

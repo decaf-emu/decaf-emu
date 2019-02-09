@@ -125,8 +125,7 @@ join()
       }
    }
 
-   // Stop and join the alarm thread.
-   internal::stopAlarmThread();
+   internal::joinAlarmThread();
 }
 
 void
@@ -135,6 +134,8 @@ halt()
    for (auto i = 0; i < 3; ++i) {
       interrupt(i, SRESET_INTERRUPT);
    }
+
+   internal::stopAlarmThread();
 }
 
 Core *
