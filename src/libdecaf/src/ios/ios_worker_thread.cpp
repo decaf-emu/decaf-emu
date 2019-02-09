@@ -51,17 +51,21 @@ iosWorkerThread()
 void
 startWorkerThread()
 {
-   sWorkerThreadRunning = true;
-   sWorkerThread = std::thread { iosWorkerThread };
+   if(!sWorkerThreadRunning) {
+      sWorkerThreadRunning = true;
+      sWorkerThread = std::thread { iosWorkerThread };
+   }
 }
 
 void
 stopWorkerThread()
 {
-   sWorkerThreadRunning = false;
-   sWorkerThreadConditionVariable.notify_all();
-   sWorkerThread.join();
-   sWorkerThreadTasks = {};
+   if(sWorkerThreadRunning) {
+      sWorkerThreadRunning = false;
+      sWorkerThreadConditionVariable.notify_all();
+      sWorkerThread.join();
+      sWorkerThreadTasks = {};
+   }
 }
 
 void

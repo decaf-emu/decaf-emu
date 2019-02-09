@@ -324,7 +324,6 @@ void
 stop()
 {
    internal::stopHardwareThread();
-   internal::joinHardwareThread();
 }
 
 } // namespace ios::kernel
