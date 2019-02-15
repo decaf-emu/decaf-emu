@@ -10,6 +10,10 @@
 namespace cafe::nn_boss
 {
 
+#pragma pack(push, 1)
+
+using TaskPriority = uint8_t;
+
 struct TaskSetting
 {
    static virt_ptr<ghs::VirtualTable> VirtualTable;
@@ -19,15 +23,16 @@ struct TaskSetting
    UNKNOWN(4);
    be2_val<uint32_t> unk0x08;
    be2_val<uint32_t> unk0x0C;
-   UNKNOWN(0x2A - 0x10);
-   be2_val<uint8_t> unk0x2A;
+   UNKNOWN(0x28 - 0x10);
+   be2_val<uint16_t> unk0x28;
+   be2_val<TaskPriority> priority;
    UNKNOWN(1);
-   be2_val<uint8_t> unk0x2C;
-   UNKNOWN(3);
-   be2_val<uint32_t> unk0x30;
+   be2_val<uint8_t> permission;
+   UNKNOWN(1);
+   be2_val<uint16_t> intervalSecForShortSpanRetry;
+   be2_val<uint32_t> intervalSec;
    UNKNOWN(4);
-   be2_val<uint32_t> unk0x38;
-   be2_val<uint32_t> unk0x3C;
+   be2_val<uint64_t> lifeTimeSec;
    UNKNOWN(0x18C - 0x40);
    be2_val<uint32_t> unk0x18C;
    UNKNOWN(0x1000 - 0x190);
@@ -36,14 +41,17 @@ struct TaskSetting
 CHECK_OFFSET(TaskSetting, 0x0, unk0x00);
 CHECK_OFFSET(TaskSetting, 0x8, unk0x08);
 CHECK_OFFSET(TaskSetting, 0xC, unk0x0C);
-CHECK_OFFSET(TaskSetting, 0x2A, unk0x2A);
-CHECK_OFFSET(TaskSetting, 0x2C, unk0x2C);
-CHECK_OFFSET(TaskSetting, 0x30, unk0x30);
-CHECK_OFFSET(TaskSetting, 0x38, unk0x38);
-CHECK_OFFSET(TaskSetting, 0x3C, unk0x3C);
+CHECK_OFFSET(TaskSetting, 0x28, unk0x28);
+CHECK_OFFSET(TaskSetting, 0x2A, priority);
+CHECK_OFFSET(TaskSetting, 0x2C, permission);
+CHECK_OFFSET(TaskSetting, 0x2E, intervalSecForShortSpanRetry);
+CHECK_OFFSET(TaskSetting, 0x30, intervalSec);
+CHECK_OFFSET(TaskSetting, 0x38, lifeTimeSec);
 CHECK_OFFSET(TaskSetting, 0x18C, unk0x18C);
 CHECK_OFFSET(TaskSetting, 0x1000, virtualTable);
 CHECK_SIZE(TaskSetting, 0x1004);
+
+#pragma pack(pop)
 
 virt_ptr<TaskSetting>
 TaskSetting_Constructor(virt_ptr<TaskSetting> self);
@@ -71,5 +79,25 @@ TaskSetting_RegisterPostprocess(virt_ptr<TaskSetting> self,
                                 virt_ptr<TitleID> a2,
                                 virt_ptr<const char> a3,
                                 virt_ptr<nn::Result> a4);
+
+nn::Result
+PrivateTaskSetting_SetIntervalSecForShortSpanRetry(virt_ptr<TaskSetting> self,
+                                                   uint16_t sec);
+
+nn::Result
+PrivateTaskSetting_SetIntervalSec(virt_ptr<TaskSetting> self,
+                                  uint32_t sec);
+
+nn::Result
+PrivateTaskSetting_SetLifeTimeSec(virt_ptr<TaskSetting> self,
+                                  uint64_t lifeTimeSec);
+
+nn::Result
+PrivateTaskSetting_SetPermission(virt_ptr<TaskSetting> self,
+                                 uint8_t permission);
+
+nn::Result
+PrivateTaskSetting_SetPriority(virt_ptr<TaskSetting> self,
+                               TaskPriority priority);
 
 }  // namespace namespace cafe::nn_boss
