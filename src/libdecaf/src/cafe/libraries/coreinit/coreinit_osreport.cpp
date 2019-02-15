@@ -1,9 +1,12 @@
 #include "coreinit.h"
 #include "coreinit_cosreport.h"
+#include "coreinit_dynload.h"
 #include "coreinit_ghs.h"
 #include "coreinit_osreport.h"
 #include "coreinit_snprintf.h"
 #include "coreinit_systeminfo.h"
+
+#include "cafe/cafe_stackobject.h"
 
 #include <common/log.h>
 #include <common/strutils.h>
@@ -120,7 +123,35 @@ OSPanic(std::string_view file,
         unsigned line,
         std::string_view msg)
 {
+   StackArray<char, 256> symbolNameBuffer;
    gLog->error("OSPanic in \"{}\" at line {}: {}.", file, line, msg);
+
+   // Format a guest stack trace
+   auto core = cpu::this_core::state();
+   auto stackAddress = virt_addr { core->gpr[1] };
+   auto stackTraceBuffer = fmt::memory_buffer { };
+   fmt::format_to(stackTraceBuffer, "Guest stack trace:\n");
+
+   for (auto i = 0; i < 16; ++i) {
+      if (!stackAddress || stackAddress == virt_addr { 0xFFFFFFFF }) {
+         break;
+      }
+
+      auto backchain = virt_cast<virt_addr *>(stackAddress)[0];
+      auto address = virt_cast<virt_addr *>(stackAddress)[1];
+      fmt::format_to(stackTraceBuffer, "{}: {}", stackAddress, address);
+
+      auto symbolAddress = OSGetSymbolName(address, symbolNameBuffer, 256);
+      if (symbolAddress) {
+         fmt::format_to(stackTraceBuffer, " {}+0x{:X}", symbolNameBuffer.get(),
+                        static_cast<uint32_t>(address - symbolAddress));
+      }
+
+      fmt::format_to(stackTraceBuffer, "\n");
+      stackAddress = backchain;
+   }
+
+   gLog->error("{}", fmt::to_string(stackTraceBuffer));
    ghs_PPCExit(-1);
 }
 
