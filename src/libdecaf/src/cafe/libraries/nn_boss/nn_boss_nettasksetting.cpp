@@ -46,7 +46,7 @@ Library::registerNetTaskSettingSymbols()
    RegisterFunctionExportName("__dt__Q3_2nn4boss14NetTaskSettingFv",
                               NetTaskSetting_Destructor);
 
-   registerTypeInfo<TaskSetting>(
+   registerTypeInfo<NetTaskSetting>(
       "nn::boss::NetTaskSetting",
       {
          "__dt__Q3_2nn4boss14NetTaskSettingFv",
