@@ -237,6 +237,20 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
       std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
       titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
       titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
+   } else {
+      // If there is cos.xml but it doesn't have any permissions then grant full permissions
+      bool havePermissions = false;
+      for (auto i = 0u; i <= 18; ++i) {
+         if (titleInfoBuffer->permissions[i].group != 0 ||
+             titleInfoBuffer->permissions[i].mask != 0) {
+            havePermissions = true;
+            break;
+         }
+      }
+      if (!havePermissions) {
+         titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
+         titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
+      }
    }
 
    // Try mount updates for the title
