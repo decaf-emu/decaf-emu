@@ -33,7 +33,7 @@ before_build:
   - mkdir build
   - cd build
   - conan install .. --build=missing -o silent=True
-  - cmake -G "Visual Studio 15 2017 Win64" -DDECAF_ENABLE_LTCG=OFF -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DQt5Widgets_DIR=C:/Qt/5.11.2/msvc2017_64/lib/cmake/Qt5Widgets -DQt5Svg_DIR=C:/Qt/5.11.2/msvc2017_64/lib/cmake/Qt5Svg ..
+  - cmake -G "Visual Studio 15 2017 Win64" -DDECAF_ENABLE_LTCG=OFF -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DQt5Widgets_DIR=C:/Qt/5.12/msvc2017_64/lib/cmake/Qt5Widgets -DQt5Svg_DIR=C:/Qt/5.12/msvc2017_64/lib/cmake/Qt5Svg ..
   - cd ..
 
 build:
@@ -43,7 +43,7 @@ build:
 
 after_build:
   - cd build\obj\Release
-  - C:/Qt/5.11.2/msvc2017_64/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
+  - C:/Qt/5.12/msvc2017_64/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
   - 7z a decaf-bin.zip
       "*.exe"
       "*.dll"
