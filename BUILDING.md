@@ -63,7 +63,17 @@ You may choose to use a mix of system dependenices such as if your system's ffmp
 - `make`
 
 ## MacOS
-Right now MacOS is not really supported as there are no graphics backends which support MacOS, the OpenGL drivers available on MacOS are too old and we have no Metal backend. MoltenVK has not yet been tested but it is an option to consider.
+Right now MacOS is not supported as there are no graphics backends which support MacOS, the OpenGL drivers available on MacOS are too old and we have no Metal backend. MoltenVK has not yet been tested but it is an option to consider. Additionally the latest Xcode as of writing does not support std::filesystem so you must use llvm from brew.
+
+Although I have had success at building with:
+- `brew install llvm openssl`
+- `export CPPFLAGS="-I/usr/local/opt/llvm/include -I/usr/local/opt/llvm/include/c++/v1"`
+- `export LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"`
+- `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
+- `cd decaf-emu`
+- `mkdir build && cd build`
+- `cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DDECAF_GL=OFF -DDECAF_VULKAN=OFF -DDECAF_FFMPEG=OFF ../`
+- `make`
 
 ## CMake
 Options interesting to users:
