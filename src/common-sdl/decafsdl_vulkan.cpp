@@ -202,7 +202,7 @@ DecafSDLVulkan::createInstance()
    mVulkan = vk::createInstance(instanceDesc);
 
    // Set up our dynamic loader for non-standard vulkan functions.
-   mVkDynLoader.init(mVulkan);
+   mVkDynLoader.init(mVulkan, ::vkGetInstanceProcAddr);
 
    // Set up our debugging callbacks
    if (mVkDynLoader.vkCreateDebugReportCallbackEXT) {
@@ -772,7 +772,7 @@ DecafSDLVulkan::initialise(int width, int height, bool renderDebugger)
 
    // Setup decaf driver
    mDecafDriver = reinterpret_cast<gpu::VulkanDriver*>(gpu::createVulkanDriver());
-   mDecafDriver->initialise(mPhysDevice, mDevice, mDriverQueue, mQueueFamilyIndex);
+   mDecafDriver->initialise(mVulkan, mPhysDevice, mDevice, mDriverQueue, mQueueFamilyIndex);
 
    // Set up the debug rendering system
    if (renderDebugger) {

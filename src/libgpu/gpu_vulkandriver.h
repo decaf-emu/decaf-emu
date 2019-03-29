@@ -24,7 +24,8 @@ public:
    virtual ~VulkanDriver() = default;
 
    virtual void
-   initialise(vk::PhysicalDevice physDevice,
+   initialise(vk::Instance instance,
+              vk::PhysicalDevice physDevice,
               vk::Device device,
               vk::Queue queue,
               uint32_t queueFamilyIndex) = 0;

@@ -37,7 +37,11 @@ Driver::notifyGpuFlush(phys_addr address,
 }
 
 void
-Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue queue, uint32_t queueFamilyIndex)
+Driver::initialise(vk::Instance instance,
+                   vk::PhysicalDevice physDevice,
+                   vk::Device device,
+                   vk::Queue queue,
+                   uint32_t queueFamilyIndex)
 {
    if (mRunState != RunState::None) {
       return;
@@ -69,7 +73,7 @@ Driver::initialise(vk::PhysicalDevice physDevice, vk::Device device, vk::Queue q
    validateDevice();
 
    // Initialize the dynamic loader we use for extensions
-   mVkDynLoader.init(nullptr, mDevice);
+   mVkDynLoader.init(instance, ::vkGetInstanceProcAddr, mDevice);
 
    // Initialize our GPU retiler
    mGpuRetiler.initialise(mDevice);

@@ -468,7 +468,11 @@ public:
    virtual ~Driver();
    virtual gpu::GraphicsDriverType type() override;
 
-   virtual void initialise(vk::PhysicalDevice physDevice, vk::Device drive, vk::Queue queue, uint32_t queueFamilyIndex) override;
+   virtual void initialise(vk::Instance instance,
+                           vk::PhysicalDevice physDevice,
+                           vk::Device drive,
+                           vk::Queue queue,
+                           uint32_t queueFamilyIndex) override;
    virtual void shutdown() override;
    virtual void getSwapBuffers(vk::Image &tvImage, vk::ImageView &tvView, vk::Image &drcImage, vk::ImageView &drcView) override;
 

@@ -247,7 +247,11 @@ void VulkanRenderer::initResources()
 
    // Create libgpu driver
    mDecafDriver = reinterpret_cast<gpu::VulkanDriver*>(gpu::createVulkanDriver());
-   mDecafDriver->initialise(m_window->physicalDevice(), mDevice, m_window->graphicsDriverQueue(), m_window->graphicsQueueFamilyIdx());
+   mDecafDriver->initialise(m_window->vulkanInstance()->vkInstance(),
+                            m_window->physicalDevice(),
+                            mDevice,
+                            m_window->graphicsDriverQueue(),
+                            m_window->graphicsQueueFamilyIdx());
    decaf::setGraphicsDriver(mDecafDriver);
    mGraphicsThread = std::thread { [this]() { mDecafDriver->run(); } };
 
