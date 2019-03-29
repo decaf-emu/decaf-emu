@@ -2,7 +2,7 @@
 #include "aboutdialog.h"
 #include "vulkanwindow.h"
 #include "softwarekeyboarddriver.h"
-#include "settingsdialog/settingsdialog.h"
+#include "settings/settingsdialog.h"
 
 #include <QCloseEvent>
 #include <QMessageBox>

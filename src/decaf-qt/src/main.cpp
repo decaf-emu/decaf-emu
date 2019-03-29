@@ -3,6 +3,7 @@
 #include "decafinterface.h"
 #include "inputdriver.h"
 #include "sounddriver.h"
+#include "debugger/debuggerwindow.h"
 
 #include <libconfig/config_toml.h>
 #include <libdecaf/decaf.h>
@@ -169,7 +170,9 @@ int main(int argc, char *argv[])
    DecafInterface decafInterface { &settings, &inputDriver, &soundDriver };
 
    MainWindow mainWindow { &settings, &inst, &decafInterface, &inputDriver };
-   mainWindow.resize(1024, 768);
    mainWindow.show();
+
+   DebuggerWindow debuggerWindow { };
+   debuggerWindow.show();
    return app.exec();
 }

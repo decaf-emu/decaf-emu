@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="images">
+    <file alias="logo">../../../resources/logo.svg</file>
+    <file alias="icon">../../../resources/decaf.ico</file>
+  </qresource>
+  <qresource prefix="icons">
+    <file alias="checkbox-blank-circle">icons/checkbox-blank-circle.svg</file>
+    <file alias="arrow-left">icons/arrow-left.svg</file>
+    <file alias="arrow-right">icons/arrow-right.svg</file>
+    <file alias="debug-step-into">icons/debug-step-into.svg</file>
+    <file alias="debug-step-out">icons/debug-step-out.svg</file>
+    <file alias="debug-step-over">icons/debug-step-over.svg</file>
+    <file alias="pause">icons/pause.svg</file>
+    <file alias="play">icons/play.svg</file>
+  </qresource>
+</RCC>

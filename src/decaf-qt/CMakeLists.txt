@@ -3,12 +3,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(".")
+include_directories("src")
 
-file(GLOB_RECURSE SOURCE_FILES *.cpp)
-file(GLOB_RECURSE HEADER_FILES *.h)
-file(GLOB_RECURSE UI_FILES *.ui)
-file(GLOB_RECURSE QRC_FILES *.qrc)
+file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
+file(GLOB_RECURSE HEADER_FILES src/*.h)
+file(GLOB_RECURSE UI_FILES ui/*.ui)
+file(GLOB_RECURSE QRC_FILES resources/*.qrc)
 
 if(MSVC)
    set(RESOURCE_FILES
@@ -26,8 +26,11 @@ add_executable(decaf-qt
    ${HEADER_FILES}
    ${UIS_HDRS}
    ${QT_RESOURCES}
-   ${RESOURCE_FILES})
-GroupSources(settingsdialog)
+   ${RESOURCE_FILES}
+   ${QHEXVIEW_HEADERS}
+   ${QHEXVIEW_SOURCES})
+GroupSources(resources)
+GroupSources(src)
 GroupSources(ui)
 
 target_include_directories(decaf-qt PRIVATE
@@ -43,6 +46,7 @@ target_link_libraries(decaf-qt
    ${CPPTOML_LIBRARIES}
    ${EXCMD_LIBRARIES}
    ${SDL2_LIBRARIES}
+   qtadvanceddocking
    Qt5::Svg
    Qt5::Widgets)
 

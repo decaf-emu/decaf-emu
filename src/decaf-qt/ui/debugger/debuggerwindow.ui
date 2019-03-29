@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DebuggerWindow</class>
+ <widget class="QMainWindow" name="DebuggerWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>decaf-emu Debugger</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionClose"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>&amp;Debug</string>
+    </property>
+    <addaction name="actionPause"/>
+    <addaction name="actionResume"/>
+    <addaction name="actionStepOver"/>
+    <addaction name="actionStepInto"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggleBreakpoint"/>
+    <addaction name="separator"/>
+    <addaction name="actionHleTraceEnabled"/>
+   </widget>
+   <widget class="QMenu" name="menuGraphics">
+    <property name="title">
+     <string>Graphics</string>
+    </property>
+    <addaction name="actionPm4CaptureNextFrame"/>
+    <addaction name="actionPm4TraceEnabled"/>
+    <addaction name="separator"/>
+    <addaction name="actionGx2TextureDumpEnabled"/>
+    <addaction name="actionGx2ShaderDumpEnabled"/>
+    <addaction name="actionGpuShaderDumpEnabled"/>
+    <addaction name="actionGpuShaderBinaryDumpOnly"/>
+   </widget>
+   <widget class="QMenu" name="menuNavigate">
+    <property name="title">
+     <string>Navigate</string>
+    </property>
+    <addaction name="actionNavigateBackward"/>
+    <addaction name="actionNavigateForward"/>
+    <addaction name="separator"/>
+    <addaction name="actionNavigateToOperand"/>
+    <addaction name="actionNavigateToAddress"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuDebug"/>
+   <addaction name="menuNavigate"/>
+   <addaction name="menuGraphics"/>
+   <addaction name="menuView"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBarNavigate">
+   <property name="windowTitle">
+    <string>toolBar_3</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNavigateBackward"/>
+   <addaction name="actionNavigateForward"/>
+  </widget>
+  <widget class="QToolBar" name="toolBarDebugActions">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionPause"/>
+   <addaction name="actionResume"/>
+   <addaction name="actionStepOver"/>
+   <addaction name="actionStepInto"/>
+  </widget>
+  <widget class="QToolBar" name="toolBarBreakpoints">
+   <property name="windowTitle">
+    <string>toolBar_2</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionToggleBreakpoint"/>
+  </widget>
+  <action name="actionClose">
+   <property name="text">
+    <string>&amp;Close</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
+  </action>
+  <action name="actionPause">
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/pause</normaloff>:/icons/pause</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Pause</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Cancel</string>
+   </property>
+   <property name="shortcutVisibleInContextMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionResume">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/play</normaloff>:/icons/play</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Resume</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionStepOver">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/debug-step-over</normaloff>:/icons/debug-step-over</iconset>
+   </property>
+   <property name="text">
+    <string>Step &amp;Over</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
+  <action name="actionStepInto">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/debug-step-into</normaloff>:/icons/debug-step-into</iconset>
+   </property>
+   <property name="text">
+    <string>Step &amp;Into</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="actionHleTraceEnabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;HLE Trace Enabled</string>
+   </property>
+  </action>
+  <action name="actionPm4CaptureNextFrame">
+   <property name="text">
+    <string>PM4 &amp;Capture Next Frame</string>
+   </property>
+  </action>
+  <action name="actionPm4TraceEnabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>PM4 Trace Enabled</string>
+   </property>
+  </action>
+  <action name="actionGx2TextureDumpEnabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GX2 Texture Dump Enabled</string>
+   </property>
+  </action>
+  <action name="actionGx2ShaderDumpEnabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GX2 Shader Dump Enabled</string>
+   </property>
+  </action>
+  <action name="actionGpuShaderDumpEnabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GPU Shader Dump Enabled</string>
+   </property>
+  </action>
+  <action name="actionGpuShaderBinaryDumpOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GPU Shader Binary Dump Only</string>
+   </property>
+  </action>
+  <action name="actionToggleBreakpoint">
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/checkbox-blank-circle</normaloff>:/icons/checkbox-blank-circle</iconset>
+   </property>
+   <property name="text">
+    <string>To&amp;ggle Breakpoint</string>
+   </property>
+   <property name="shortcut">
+    <string>F9</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
+  </action>
+  <action name="actionNavigateForward">
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/arrow-right</normaloff>:/icons/arrow-right</iconset>
+   </property>
+   <property name="text">
+    <string>Navigate forward</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Left</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
+  </action>
+  <action name="actionNavigateBackward">
+   <property name="icon">
+    <iconset resource="../../resources/resources.qrc">
+     <normaloff>:/icons/arrow-left</normaloff>:/icons/arrow-left</iconset>
+   </property>
+   <property name="text">
+    <string>Navigate backward</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Right</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
+  </action>
+  <action name="actionNavigateToAddress">
+   <property name="text">
+    <string>Navigate to address</string>
+   </property>
+   <property name="shortcut">
+    <string>G</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
+  </action>
+  <action name="actionNavigateToOperand">
+   <property name="text">
+    <string>Navigate to operand</string>
+   </property>
+   <property name="shortcut">
+    <string>Return</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetWithChildrenShortcut</enum>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../../resources/resources.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionClose</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionGpuShaderBinaryDumpOnly</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>setGpuShaderBinaryDumpOnly(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionGpuShaderDumpEnabled</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>setGpuShaderDumpEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionGx2ShaderDumpEnabled</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>setGx2ShaderDumpEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionGx2TextureDumpEnabled</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>setGx2TextureDumpEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionHleTraceEnabled</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>setHleTraceEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPause</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>debugPause()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionResume</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>debugResume()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPm4CaptureNextFrame</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>pm4CaptureNextFrame()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPm4TraceEnabled</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>setPm4TraceEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionStepInto</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>debugStepInto()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionStepOver</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>debugStepOver()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionToggleBreakpoint</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>debugToggleBreakpoint()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>debugPause()</slot>
+  <slot>debugResume()</slot>
+  <slot>debugStepOver()</slot>
+  <slot>debugStepInto()</slot>
+  <slot>setHleTraceEnabled(bool)</slot>
+  <slot>pm4CaptureNextFrame()</slot>
+  <slot>setPm4TraceEnabled(bool)</slot>
+  <slot>setGx2TextureDumpEnabled(bool)</slot>
+  <slot>setGx2ShaderDumpEnabled(bool)</slot>
+  <slot>setGpuShaderDumpEnabled(bool)</slot>
+  <slot>setGpuShaderBinaryDumpOnly(bool)</slot>
+  <slot>debugToggleBreakpoint()</slot>
+ </slots>
+</ui>

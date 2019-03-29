@@ -201,3 +201,14 @@ set_target_properties(pugixml PROPERTIES
 add_subdirectory(spdlog)
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
 set_target_properties(spdlog PROPERTIES FOLDER libraries)
+
+# Qt Advanced Docking System
+if(DECAF_QT)
+    set(BUILD_STATIC TRUE CACHE BOOL "ADS: Build the static library")
+    set(BUILD_EXAMPLES FALSE CACHE BOOL "ADS: Build the examples")
+    add_subdirectory(qtads)
+    set_target_properties(qtadvanceddocking PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/qtads/src"
+        INTERFACE_COMPILE_DEFINITIONS "ADS_STATIC"
+        FOLDER libraries)
+endif()

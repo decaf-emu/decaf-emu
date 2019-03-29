@@ -46,3 +46,6 @@
 [submodule "libraries/glslang"]
 	path = libraries/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "libraries/qtads"]
+	path = libraries/qtads
+	url = https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System.git
