@@ -73,7 +73,7 @@ Driver::initialise(vk::Instance instance,
    validateDevice();
 
    // Initialize the dynamic loader we use for extensions
-   mVkDynLoader.init(instance, ::vkGetInstanceProcAddr, mDevice);
+   mVkDynLoader.init(instance, ::vkGetInstanceProcAddr, mDevice, ::vkGetDeviceProcAddr);
 
    // Initialize our GPU retiler
    mGpuRetiler.initialise(mDevice);
