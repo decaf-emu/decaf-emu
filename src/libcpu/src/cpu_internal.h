@@ -15,8 +15,8 @@ extern BranchTraceHandler gBranchTraceHandler;
 Core *
 getCore(int index);
 
-KernelCallHandler
-getKernelCallHandler(uint32_t id);
+SystemCallHandler
+getSystemCallHandler(uint32_t id);
 
 bool
 initialiseMemory();

@@ -70,13 +70,19 @@ struct CoreRegs
 
 struct Core : CoreRegs
 {
-   // State data used by the CPU executors
+   // Core ID
    uint32_t id;
-   std::thread thread;
+
+   // Value of gpr[1] at time of system call
+   uint32_t systemCallStackHead;
+
    uint32_t interrupt_mask { 0xFFFFFFFF };
    std::atomic<uint32_t> interrupt { 0 };
+
    bool reserveFlag { false };
    uint32_t reserveData;
+
+   std::thread thread;
    std::chrono::steady_clock::time_point next_alarm;
 
    // Tracer used to record executed instructions

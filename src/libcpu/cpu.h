@@ -38,7 +38,7 @@ using EntrypointHandler = std::function<void(Core *core)>;
 using InterruptHandler = void (*)(Core *core, uint32_t interrupt_flags);
 using SegfaultHandler = void(*)(Core *core, uint32_t address, platform::StackTrace *hostStackTrace);
 using BranchTraceHandler = void(*)(Core *core, uint32_t target);
-using KernelCallHandler = Core * (*)(Core *core, uint32_t id);
+using SystemCallHandler = Core * (*)(Core *core, uint32_t id);
 
 void
 initialise();
@@ -67,13 +67,13 @@ void
 setBranchTraceHandler(BranchTraceHandler handler);
 
 void
-setUnknownKernelCallHandler(KernelCallHandler handler);
+setUnknownSystemCallHandler(SystemCallHandler handler);
 
 uint32_t
-registerKernelCallHandler(KernelCallHandler handler);
+registerSystemCallHandler(SystemCallHandler handler);
 
 uint32_t
-registerIllegalKernelCall();
+registerIllegalSystemCall();
 
 void
 start();

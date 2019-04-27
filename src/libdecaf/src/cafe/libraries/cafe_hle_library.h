@@ -114,7 +114,7 @@ public:
    static constexpr auto BaseSymbolIndex = uint32_t { 3 };
 
    static cpu::Core *
-   handleUnknownKernelCall(cpu::Core *state,
+   handleUnknownSystemCall(cpu::Core *state,
                            uint32_t id);
 
 public:
@@ -181,7 +181,7 @@ public:
    generate()
    {
       registerSymbols();
-      registerKernelCalls();
+      registerSystemCalls();
       generateRpl();
    }
 
@@ -218,7 +218,7 @@ protected:
    registerSymbols() = 0;
 
    void
-   registerKernelCalls();
+   registerSystemCalls();
 
    void
    generateRpl();

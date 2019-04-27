@@ -277,7 +277,8 @@ kc(cpu::Core *state, Instruction instr)
 {
    auto kcId = instr.kcn;
 
-   auto handler = cpu::getKernelCallHandler(kcId);
+   auto handler = cpu::getSystemCallHandler(kcId);
+   state->systemCallStackHead = state->gpr[1];
    state = handler(state, kcId);
 }
 

@@ -18,9 +18,8 @@ readGpr(cpu::Core *core)
    if constexpr (regIndex <= 10) {
       return core->gpr[regIndex];
    } else {
-      // Need to skip the backchain from the caller (8 bytes), plus the backchain we
-      //  precreate as part of our kcstub (8 bytes).  Args come after those.
-      auto addr = core->gpr[1] + 8 + 8 + 4 * static_cast<uint32_t>(regIndex - 11);
+      // Args come after the backchain from the caller (8 bytes).
+      auto addr = core->gpr[1] + 8 + 4 * static_cast<uint32_t>(regIndex - 11);
       return *virt_cast<uint32_t *>(virt_addr { addr });
    }
 }
@@ -145,17 +144,11 @@ invoke_guest_impl(cpu::Core *core,
       (writeParam(core, std::get<I>(param_info), args), ...);
    }
 
-   // Save a stack pointer so we can compare after to ensure no stack overflow
-   auto origStackAddress = core->gpr[1];
-
-   // Write LR to the previous backchain address
-   auto backchainAddress = *virt_cast<virt_addr *>(virt_addr { origStackAddress });
-
-   // This might be the very first call on a core...
-   if (backchainAddress) {
-      auto backchainPtr = virt_cast<virt_addr *>(virt_addr { backchainAddress + 4 });
-      *backchainPtr = core->lr;
-   }
+   // Write stack frame back chain
+   auto frame = virt_cast<uint32_t *>(virt_addr{ core->gpr[1] - 8 });
+   frame[0] = core->systemCallStackHead;
+   frame[1] = core->lr;
+   core->gpr[1] -= 8;
 
    // Save state
    auto cia = core->cia;
@@ -175,8 +168,8 @@ invoke_guest_impl(cpu::Core *core,
    core->cia = cia;
    core->nia = nia;
 
-   // Lets verify we did not corrupt the SP
-   decaf_check(core->gpr[1] == origStackAddress);
+   // Restore stack
+   core->gpr[1] += 8;
 
    // Return the result
    if constexpr (FunctionTraitsType::has_return_value) {

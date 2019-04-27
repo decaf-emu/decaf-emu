@@ -20,8 +20,11 @@ struct UnimplementedLibraryFunction
 
 struct LibraryFunction : public LibrarySymbol
 {
-   LibraryFunction(cpu::KernelCallHandler _invokeHandler, bool& _traceEnabledRef) :
-      LibrarySymbol(LibrarySymbol::Function), invokeHandler(_invokeHandler), traceEnabled(_traceEnabledRef)
+   LibraryFunction(cpu::SystemCallHandler _invokeHandler,
+                   bool& _traceEnabledRef) :
+      LibrarySymbol(LibrarySymbol::Function),
+      invokeHandler(_invokeHandler),
+      traceEnabled(_traceEnabledRef)
    {
    }
 
@@ -30,11 +33,11 @@ struct LibraryFunction : public LibrarySymbol
    }
 
    //! The actual handler for this function
-   cpu::KernelCallHandler invokeHandler;
+   cpu::SystemCallHandler invokeHandler;
 
    //! Reference to the underlying invoke handler trace wrapper's trace enabled
    // value, specifying whether trace logging is enabled for this function or not.
-   bool& traceEnabled;
+   bool &traceEnabled;
 
    //! ID number of syscall.
    uint32_t syscallID = 0xFFFFFFFFu;
@@ -47,41 +50,15 @@ namespace internal
 {
 
 template<typename FunctionType, FunctionType Func>
-struct StackReserveWrapper
-{
-   static inline cpu::Core* wrapped(cpu::Core *core, uint32_t kcId)
-   {
-      // Save our original stack pointer for the backchain
-      auto backchainSp = core->gpr[1];
-
-      // Allocate callee backchain and lr space.
-      auto newSp = backchainSp - 2 * 4;
-      core->gpr[1] = newSp;
-
-      // Write the backchain pointer
-      *virt_cast<uint32_t *>(virt_addr { newSp }) = backchainSp;
-
-      // Handle the HLE function call
-      core = invoke<FunctionType, Func>(core);
-
-      // Release callee backchain and lr space.
-      core->gpr[1] = backchainSp;
-
-      return core;
-   }
-};
-
-template<typename FunctionType, FunctionType Func>
 struct TracingWrapper
 {
-   static inline cpu::Core* wrapped(cpu::Core *core, uint32_t kcId)
+   static inline cpu::Core *wrapped(cpu::Core *core, uint32_t kcId)
    {
-      // Perform any tracing that is needed
       if (FunctionTraceEnabled && traceEnabled) {
          invoke_trace<FunctionType>(core, traceName.c_str());
       }
 
-      return StackReserveWrapper<FunctionType, Func>::wrapped(core, kcId);
+      return invoke<FunctionType, Func>(core);
    }
 
    static inline std::string traceName = "_missingName";

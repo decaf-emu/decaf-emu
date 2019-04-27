@@ -492,7 +492,8 @@ BinrecCore *
 brSyscallHandler(BinrecCore *core,
                  espresso::Instruction instr)
 {
-   auto handler = cpu::getKernelCallHandler(instr.kcn);
+   core->systemCallStackHead = core->gpr[1];
+   auto handler = cpu::getSystemCallHandler(instr.kcn);
    auto newCore = handler(core, instr.kcn);
 
    // We might have been rescheduled on a new core.

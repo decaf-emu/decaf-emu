@@ -205,10 +205,10 @@ cpuBranchTraceHandler(cpu::Core *core,
 }
 
 static cpu::Core *
-cpuUnknownKernelCallHandler(cpu::Core *core,
+cpuUnknownSystemCallHandler(cpu::Core *core,
                      uint32_t id)
 {
-   return cafe::hle::Library::handleUnknownKernelCall(core, id);
+   return cafe::hle::Library::handleUnknownSystemCall(core, id);
 }
 
 void
@@ -260,7 +260,7 @@ start()
       sBranchTraceHandlerSet = true;
    }
 
-   cpu::setUnknownKernelCallHandler(&cpuUnknownKernelCallHandler);
+   cpu::setUnknownSystemCallHandler(&cpuUnknownSystemCallHandler);
 
    // Start the cpu
    cpu::start();
