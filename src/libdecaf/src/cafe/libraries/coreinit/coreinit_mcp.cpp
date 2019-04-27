@@ -44,7 +44,8 @@ sMcpData = nullptr;
 IOSError
 MCP_Open()
 {
-   return IOS_Open(make_stack_string("/dev/mcp"), IOSOpenMode::None);
+   return IOS_Open(make_stack_string("/dev/mcp"),
+                   IOSOpenMode::None);
 }
 
 
@@ -160,7 +161,7 @@ MCP_GetTitleInfo(IOSHandle handle,
                  uint64_t titleId,
                  virt_ptr<MCPTitleListType> titleInfo)
 {
-   StackObject<MCPTitleListType> searchTitle;
+   auto searchTitle = StackObject<MCPTitleListType> { };
    std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->titleId = titleId;
 
@@ -205,7 +206,7 @@ MCP_TitleList(IOSHandle handle,
    if (!titleList || !titleListSizeBytes) {
       result = static_cast<IOSError>(MCP_TitleCount(handle));
    } else {
-      StackObject<MCPTitleListType> searchTitle;
+      auto searchTitle = StackObject<MCPTitleListType> { };
       std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
 
       result = internal::mcpSearchTitleList(handle,
@@ -231,7 +232,7 @@ MCP_TitleListByAppType(IOSHandle handle,
                        virt_ptr<MCPTitleListType> titleList,
                        uint32_t titleListSizeBytes)
 {
-   StackObject<MCPTitleListType> searchTitle;
+   auto searchTitle = StackObject<MCPTitleListType> { };
    std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->appType = appType;
 
@@ -257,7 +258,7 @@ MCP_TitleListByUniqueId(IOSHandle handle,
                         virt_ptr<MCPTitleListType> titleList,
                         uint32_t titleListSizeBytes)
 {
-   StackObject<MCPTitleListType> searchTitle;
+   auto searchTitle = StackObject<MCPTitleListType> { };
    std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->titleId = uniqueId << 8;
    searchTitle->appType = MCPAppType::Unk0x0800000E;
@@ -290,7 +291,7 @@ MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
                                                   virt_ptr<MCPTitleListType> titleList,
                                                   uint32_t titleListSizeBytes)
 {
-   StackObject<MCPTitleListType> searchTitle;
+   auto searchTitle = StackObject<MCPTitleListType> { };
    std::memset(searchTitle.get(), 0, sizeof(MCPTitleListType));
    searchTitle->titleId = uniqueId << 8;
    searchTitle->appType = appType;

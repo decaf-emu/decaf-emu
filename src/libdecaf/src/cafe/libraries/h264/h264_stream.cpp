@@ -188,7 +188,7 @@ readSequenceParameterSet(virt_ptr<H264StreamMemory> streamMemory,
                          virt_ptr<H264SequenceParameterSet> outSps,
                          size_t *outBytesRead)
 {
-   StackObject<H264SequenceParameterSet> sps;
+   auto sps = StackObject<H264SequenceParameterSet> { };
    auto bs = BitStream { buffer, bufferSize };
    sps->profile_idc = bs.readU8();
    if (sps->profile_idc != 66 &&
@@ -610,8 +610,8 @@ H264DECCheckDecunitLength(virt_ptr<void> memory,
 
       if (naluType == NaluType::Idr || naluType == NaluType::NonIdr) {
          auto bytesRead = size_t { 0 };
+         auto slice = StackObject<H264SliceHeader> { };
 
-         StackObject<H264SliceHeader> slice;
          if (internal::readSliceHeader(workMemory->streamMemory, naluType,
                                        readBuffer, readLength,
                                        slice, &bytesRead)) {
@@ -840,8 +840,9 @@ H264DECGetImageSize(virt_ptr<const uint8_t> buffer,
    }
 
    // Find and parse SPS
-   StackObject<H264SequenceParameterSet> sps;
-   auto result = internal::decodeNaluSps(buffer.get(), bufferLength, offset, sps);
+   auto sps = StackObject<H264SequenceParameterSet> { };
+   auto result = internal::decodeNaluSps(buffer.get(), bufferLength,
+                                         offset, sps);
    if (result != H264Error::OK) {
       return result;
    }

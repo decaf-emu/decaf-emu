@@ -65,14 +65,14 @@ FSAppendFile(virt_ptr<FSClient> client,
              FSFileHandle handle,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSAppendFileAsync(client, block, size, count, handle,
                                    errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -129,14 +129,14 @@ FSBindMount(virt_ptr<FSClient> client,
             virt_ptr<const char> targetPath,
             FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSBindMountAsync(client, block, sourcePath, targetPath,
                                   errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -240,14 +240,14 @@ FSBindUnmount(virt_ptr<FSClient> client,
               virt_ptr<const char> targetPath,
               FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSBindUnmountAsync(client, block, targetPath, errorMask,
                                     asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -327,13 +327,13 @@ FSChangeDir(virt_ptr<FSClient> client,
             virt_ptr<const char> path,
             FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSChangeDirAsync(client, block, path, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -391,13 +391,14 @@ FSChangeMode(virt_ptr<FSClient> client,
              uint32_t mode2,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSChangeModeAsync(client, block, path, mode1, mode2,
                                    errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -461,12 +462,13 @@ FSCloseDir(virt_ptr<FSClient> client,
            FSDirHandle handle,
            FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSCloseDirAsync(client, block, handle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -517,12 +519,13 @@ FSCloseFile(virt_ptr<FSClient> client,
             FSFileHandle handle,
             FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSCloseFileAsync(client, block, handle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -573,12 +576,13 @@ FSFlushFile(virt_ptr<FSClient> client,
             FSFileHandle handle,
             FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSFlushFileAsync(client, block, handle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -629,12 +633,13 @@ FSFlushQuota(virt_ptr<FSClient> client,
              virt_ptr<const char> path,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSFlushQuotaAsync(client, block, path, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -691,13 +696,14 @@ FSGetCwd(virt_ptr<FSClient> client,
          uint32_t bytes,
          FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetCwdAsync(client, block, returnedPath, bytes,
                                errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -765,13 +771,14 @@ FSGetDirSize(virt_ptr<FSClient> client,
              virt_ptr<uint64_t> outDirSize,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetDirSizeAsync(client, block, path, outDirSize,
                                    errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -812,13 +819,14 @@ FSGetFreeSpaceSize(virt_ptr<FSClient> client,
                    virt_ptr<uint64_t> outFreeSize,
                    FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetFreeSpaceSizeAsync(client, block, path, outFreeSize,
                                          errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -856,13 +864,14 @@ FSGetMountSource(virt_ptr<FSClient> client,
                  virt_ptr<FSMountSource> source,
                  FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetMountSourceAsync(client, block, type, source, errorMask,
                                        asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -914,13 +923,14 @@ FSGetMountSourceNext(virt_ptr<FSClient> client,
                      virt_ptr<FSMountSource> source,
                      FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetMountSourceNextAsync(client, block, source, errorMask,
                                            asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -983,13 +993,14 @@ FSGetPosFile(virt_ptr<FSClient> client,
              virt_ptr<FSFilePosition> outPos,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetPosFileAsync(client, block, handle, outPos,
                                    errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1051,13 +1062,14 @@ FSGetStat(virt_ptr<FSClient> client,
           virt_ptr<FSStat> outStat,
           FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetStatAsync(client, block, path, outStat,
                                 errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1094,13 +1106,14 @@ FSGetStatFile(virt_ptr<FSClient> client,
               virt_ptr<FSStat> outStat,
               FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSGetStatFileAsync(client, block, handle, outStat,
                                     errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1160,12 +1173,13 @@ FSIsEof(virt_ptr<FSClient> client,
         FSFileHandle handle,
         FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSIsEofAsync(client, block, handle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1216,13 +1230,14 @@ FSMakeDir(virt_ptr<FSClient> client,
           virt_ptr<const char> path,
           FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSMakeDirAsync(client, block, path,
                                 errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1282,13 +1297,14 @@ FSMount(virt_ptr<FSClient> client,
         uint32_t bytes,
         FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSMountAsync(client, block, source, target, bytes,
                               errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1395,13 +1411,14 @@ FSOpenDir(virt_ptr<FSClient> client,
           virt_ptr<FSDirHandle> outHandle,
           FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSOpenDirAsync(client, block, path, outHandle,
                                 errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1528,14 +1545,15 @@ FSOpenFileEx(virt_ptr<FSClient> client,
              virt_ptr<FSFileHandle> outHandle,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSOpenFileExAsync(client, block, path, mode,
                                    unk1, unk2, unk3,
                                    outHandle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1609,13 +1627,14 @@ FSReadDir(virt_ptr<FSClient> client,
           virt_ptr<FSDirEntry> outDirEntry,
           FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSReadDirAsync(client, block, handle, outDirEntry,
                                 errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1678,13 +1697,14 @@ FSReadFile(virt_ptr<FSClient> client,
            FSReadFlag readFlags,
            FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSReadFileAsync(client, block, buffer, size, count, handle,
                                  readFlags, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1735,14 +1755,15 @@ FSReadFileWithPos(virt_ptr<FSClient> client,
                   FSReadFlag readFlags,
                   FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSReadFileWithPosAsync(client, block, buffer, size, count,
                                         pos, handle, readFlags, errorMask,
                                         asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1789,13 +1810,13 @@ FSRemove(virt_ptr<FSClient> client,
          virt_ptr<const char> path,
          FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSRemoveAsync(client, block, path, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1855,14 +1876,14 @@ FSRename(virt_ptr<FSClient> client,
          virt_ptr<const char> newPath,
          FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSRenameAsync(client, block, oldPath, newPath,
                                errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1925,13 +1946,13 @@ FSRewindDir(virt_ptr<FSClient> client,
             FSDirHandle handle,
             FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSRewindDirAsync(client, block, handle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -1983,14 +2004,14 @@ FSSetPosFile(virt_ptr<FSClient> client,
              FSFilePosition pos,
              FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSSetPosFileAsync(client, block, handle, pos,
                                    errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block,
-                                              result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -2043,12 +2064,13 @@ FSTruncateFile(virt_ptr<FSClient> client,
                FSFileHandle handle,
                FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSTruncateFileAsync(client, block, handle, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -2099,12 +2121,13 @@ FSUnmount(virt_ptr<FSClient> client,
           virt_ptr<const char> target,
           FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSUnmountAsync(client, block, target, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -2178,13 +2201,14 @@ FSWriteFile(virt_ptr<FSClient> client,
             FSWriteFlag writeFlags,
             FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSWriteFileAsync(client, block, buffer, size, count, handle,
                                   writeFlags, errorMask, asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 
@@ -2235,14 +2259,15 @@ FSWriteFileWithPos(virt_ptr<FSClient> client,
                    FSWriteFlag writeFlags,
                    FSErrorFlag errorMask)
 {
-   StackObject<FSAsyncData> asyncData;
+   auto asyncData = StackObject<FSAsyncData> { };
    internal::fsCmdBlockPrepareSync(client, block, asyncData);
 
    auto result = FSWriteFileWithPosAsync(client, block, buffer, size, count,
                                          pos, handle, writeFlags, errorMask,
                                          asyncData);
 
-   return internal::fsClientHandleAsyncResult(client, block, result, errorMask);
+   return internal::fsClientHandleAsyncResult(client, block, result,
+                                              errorMask);
 }
 
 

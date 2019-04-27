@@ -85,7 +85,7 @@ startDriver(OSDynLoad_ModuleHandle moduleHandle)
       return;
    }
 
-   StackObject<BOOL> driversAlreadyInitialised;
+   auto driversAlreadyInitialised = StackObject<BOOL> { };
    sDriverData->driverInterface.getName = sDriverGetName;
    sDriverData->driverInterface.onInit = sDriverOnInit;
    sDriverData->driverInterface.onAcquiredForeground = sDriverOnAcquiredForeground;

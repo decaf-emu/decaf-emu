@@ -26,7 +26,7 @@ FSAStatus
 FSACloseFile(FSAClientHandle clientHandle,
              FSAFileHandle fileHandle)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -64,7 +64,7 @@ FSAMakeDir(FSAClientHandle clientHandle,
            virt_ptr<const char> path,
            uint32_t permissions)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -95,7 +95,7 @@ FSAMount(FSAClientHandle clientHandle,
          virt_ptr<void> unkBuf,
          uint32_t unkBufLen)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -127,7 +127,7 @@ FSAOpenFile(FSAClientHandle clientHandle,
             virt_ptr<const char> mode,
             virt_ptr<FSAFileHandle> outHandle)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -165,7 +165,7 @@ FSAReadFile(FSAClientHandle clientHandle,
              FSAFileHandle fileHandle,
              FSAReadFlag readFlags)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -197,7 +197,7 @@ FSAStatus
 FSARemove(FSAClientHandle clientHandle,
           virt_ptr<const char> path)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -227,7 +227,7 @@ FSAWriteFile(FSAClientHandle clientHandle,
              FSAFileHandle fileHandle,
              FSAWriteFlag writeFlags)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;
@@ -264,7 +264,7 @@ fsaGetInfoByQuery(FSAClientHandle clientHandle,
                   FSAQueryInfoType type,
                   virt_ptr<void> out)
 {
-   StackObject<virt_ptr<FSAShimBuffer>> shimBuffer;
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
 
    if (!FSAShimCheckClientHandle(clientHandle)) {
       return FSAStatus::InvalidClientHandle;

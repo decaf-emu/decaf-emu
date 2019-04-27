@@ -123,7 +123,7 @@ OSPanic(std::string_view file,
         unsigned line,
         std::string_view msg)
 {
-   StackArray<char, 256> symbolNameBuffer;
+   auto symbolNameBuffer = StackArray<char, 256> { };
    gLog->error("OSPanic in \"{}\" at line {}: {}.", file, line, msg);
 
    // Format a guest stack trace

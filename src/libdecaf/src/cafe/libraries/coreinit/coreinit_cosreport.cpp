@@ -42,7 +42,7 @@ COSVReport(COSReportModule module,
            virt_ptr<const char> fmt,
            virt_ptr<va_list> vaList)
 {
-   StackArray<char, 128> buffer;
+   auto buffer = StackArray<char, 128> { };
    internal::formatStringV(buffer, buffer.size(), fmt, vaList);
    handleReport(module, level, buffer);
 }
@@ -101,7 +101,7 @@ COSVReport(COSReportModule module,
            COSReportLevel level,
            const std::string_view &msg)
 {
-   StackArray<char, 128> buffer;
+   auto buffer = StackArray<char, 128> { };
    string_copy(buffer.get(), msg.data(), buffer.size());
    buffer[127] = char { 0 };
    handleReport(module, level, buffer);

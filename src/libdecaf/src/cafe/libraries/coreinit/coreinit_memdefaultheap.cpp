@@ -98,8 +98,8 @@ CoreInitDefaultHeap(virt_ptr<MEMHeapHandle> outHeapHandleMEM1,
                     virt_ptr<MEMHeapHandle> outHeapHandleFG,
                     virt_ptr<MEMHeapHandle> outHeapHandleMEM2)
 {
-   StackObject<virt_addr> addr;
-   StackObject<uint32_t> size;
+   auto addr = StackObject<virt_addr> { };
+   auto size = StackObject<uint32_t> { };
 
    *sMEMAllocFromDefaultHeap = sDefaultAllocFromDefaultHeap;
    *sMEMAllocFromDefaultHeapEx = sDefaultAllocFromDefaultHeapEx;

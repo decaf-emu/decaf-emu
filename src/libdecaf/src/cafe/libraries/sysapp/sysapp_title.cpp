@@ -107,7 +107,7 @@ sSysAppTitleId[][3] =
 uint64_t
 SYSGetSystemApplicationTitleId(SystemAppId id)
 {
-   StackObject<MCPSysProdSettings> settings;
+   auto settings = StackObject<MCPSysProdSettings> { };
    decaf_check(id < SystemAppId::Max);
 
    auto mcp = MCP_Open();

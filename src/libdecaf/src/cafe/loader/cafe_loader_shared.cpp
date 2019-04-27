@@ -80,9 +80,9 @@ static uint32_t sHleUnimplementedStubMemorySize = 0;
 static int32_t
 sLoadOneShared(std::string_view filename)
 {
-   StackObject<virt_ptr<char>> moduleName;
-   StackObject<uint32_t> moduleNameLen;
-   StackArray<char, 32> fileNameBuffer;
+   auto moduleName = StackObject<virt_ptr<char>> { };
+   auto moduleNameLen = StackObject<uint32_t> { };
+   auto fileNameBuffer = StackArray<char, 32> { };
    auto chunkSize = uint32_t { 0 };
    auto chunkBuffer = virt_ptr<void> { nullptr };
    auto rpl = virt_ptr<LOADED_RPL> { nullptr };
@@ -311,11 +311,10 @@ sLoadOneShared(std::string_view filename)
 static int32_t
 LiInitSharedForAll()
 {
-   virt_ptr<void> outAllocPtr;
-
    Loader_LogEntry(2, 1, 512, "LiInitSharedForAll");
 
    // Setup tracking compression block heap
+   auto outAllocPtr = virt_ptr<void> { nullptr };
    auto tinyHeapError = TinyHeap_Alloc(gpSharedCodeHeapTracking,
                                        0x430, -4,
                                        &outAllocPtr);

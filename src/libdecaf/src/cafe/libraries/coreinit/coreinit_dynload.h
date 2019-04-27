@@ -1,5 +1,6 @@
 #pragma once
 #include "coreinit_enum.h"
+
 #include <libcpu/be2_struct.h>
 
 namespace cafe::coreinit

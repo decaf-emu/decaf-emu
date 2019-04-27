@@ -1039,8 +1039,8 @@ void
 OSSleepTicks(OSTime ticks)
 {
    // Create an alarm to trigger wakeup
-   StackObject<OSAlarm> alarm;
-   StackObject<OSThreadQueue> queue;
+   auto alarm = StackObject<OSAlarm> { };
+   auto queue = StackObject<OSThreadQueue> { };
 
    OSCreateAlarm(alarm);
    OSInitThreadQueue(queue);

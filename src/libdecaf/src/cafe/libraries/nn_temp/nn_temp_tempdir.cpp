@@ -106,8 +106,8 @@ updatePreferentialDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
                              uint32_t maxSize,
                              TEMPDevicePreference devicePreference)
 {
-   StackObject<uint64_t> freeMlcSize;
-   StackObject<uint64_t> freeUsbSize;
+   auto freeMlcSize = StackObject<uint64_t> { };
+   auto freeUsbSize = StackObject<uint64_t> { };
 
    FSGetFreeSpaceSize(virt_addrof(sTempDirData->fsClient),
                       virt_addrof(sTempDirData->fsCmdBlock),
@@ -280,8 +280,8 @@ removeDirectoryEntry(virt_ptr<FSClient> client,
                      virt_ptr<char> path,
                      uint32_t pathBufferSize)
 {
-   StackObject<FSDirHandle> handle;
-   StackObject<FSDirEntry> entry;
+   auto handle = StackObject<FSDirHandle> { };
+   auto entry = StackObject<FSDirEntry> { };
    auto error = static_cast<TEMPStatus>(
       FSOpenDir(client, block, path, handle, FSErrorFlag::All));
    if (error) {
@@ -364,7 +364,7 @@ removeRecursive(virt_ptr<FSClient> client,
                 virt_ptr<char> path,
                 uint32_t pathBufferSize)
 {
-   StackObject<FSStat> stat;
+   auto stat = StackObject<FSStat> { };
    auto error = static_cast<TEMPStatus>(
       FSGetStat(client, block, path, stat, FSErrorFlag::All));
    if (error) {
@@ -458,7 +458,7 @@ forceRemoveTempDir(virt_ptr<const char> rootPath)
       return TEMPStatus::FatalError;
    }
 
-   StackObject<FSDirHandle> handle;
+   auto handle = StackObject<FSDirHandle> { };
    auto error = static_cast<TEMPStatus>(
       FSOpenDir(virt_addrof(sTempDirData->fsClient),
                 virt_addrof(sTempDirData->fsCmdBlock),
@@ -575,7 +575,7 @@ TEMPCreateAndInitTempDir(uint32_t maxSize,
                          TEMPDevicePreference devicePreference,
                          virt_ptr<TEMPDirId> outDirId)
 {
-   StackObject<TEMPDeviceInfo> deviceInfo;
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
    auto error = TEMPStatus::OK;
 
    tempLogInfo("TEMPCreateAndInitTempDir", 779,
@@ -628,7 +628,7 @@ TEMPGetDirPath(TEMPDirId dirId,
                virt_ptr<char> pathBuffer,
                uint32_t pathBufferSize)
 {
-   StackObject<TEMPDeviceInfo> deviceInfo;
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
 
    if (!internal::checkIsInitialised()) {
       return TEMPStatus::FatalError;
@@ -663,7 +663,7 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
                      virt_ptr<char> pathBuffer,
                      uint32_t pathBufferSize)
 {
-   StackObject<TEMPDeviceInfo> deviceInfo;
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
 
    if (!internal::checkIsInitialised()) {
       return static_cast<TEMPStatus>(TEMPStatus::FatalError);

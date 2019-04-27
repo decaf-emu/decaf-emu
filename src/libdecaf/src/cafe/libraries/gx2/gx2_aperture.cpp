@@ -38,7 +38,7 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
                             virt_ptr<GX2ApertureHandle> outHandle,
                             virt_ptr<virt_addr> outAddress)
 {
-   StackObject<ADDR_COMPUTE_SURFACE_INFO_OUTPUT> surfaceInfo;
+   auto surfaceInfo = StackObject<ADDR_COMPUTE_SURFACE_INFO_OUTPUT> { };
 
    if (endian == GX2EndianSwapMode::Default) {
       endian = GX2EndianSwapMode::None;
@@ -84,7 +84,7 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
 
       if (outAddress) {
          // Untile from surface memory to aperture memory
-         StackObject<GX2Surface> apertureSurface;
+         auto apertureSurface = StackObject<GX2Surface> { };
          *apertureSurface = *surface;
          apertureSurface->mipmaps = nullptr;
          apertureSurface->image = nullptr;
@@ -117,7 +117,7 @@ GX2FreeTilingAperture(GX2ApertureHandle handle)
    auto &info = sApertureData->apertureInfo[handle];
    if (info.address) {
       // Retile from aperture memory to surface memory
-      StackObject<GX2Surface> apertureSurface;
+      auto apertureSurface = StackObject<GX2Surface> { };
       *apertureSurface = info.surface;
       apertureSurface->mipmaps = virt_cast<uint8_t *>(info.address);
       apertureSurface->image = virt_cast<uint8_t *>(info.address);

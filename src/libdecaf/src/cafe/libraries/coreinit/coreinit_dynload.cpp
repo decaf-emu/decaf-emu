@@ -313,7 +313,7 @@ resetFatalErrorInfo()
 static void
 reportFatalError()
 {
-   StackObject<OSFatalError> error;
+   auto error = StackObject<OSFatalError> { };
 
    if (!sDynLoadData->fatalError.error) {
       OSPanic("OSDynLoad_DynInit.c", 122,
@@ -379,9 +379,9 @@ internalAcquire2(virt_ptr<const char> modulePath,
                  virt_ptr<OSDynLoad_ModuleHandle> outModuleHandle,
                  BOOL isCheckLoaded)
 {
-   StackObject<virt_ptr<RPL_DATA>> rplData;
-   StackObject<uint32_t> numEntryModules;
-   StackObject<virt_ptr<virt_ptr<RPL_DATA>>> entryModules;
+   auto rplData = StackObject<virt_ptr<RPL_DATA>> { };
+   auto numEntryModules = StackObject<uint32_t> { };
+   auto entryModules = StackObject<virt_ptr<virt_ptr<RPL_DATA>>> { };
    *rplData = nullptr;
    *numEntryModules = 0u;
    *entryModules = nullptr;
@@ -643,9 +643,9 @@ static void
 release(OSDynLoad_ModuleHandle moduleHandle,
         virt_ptr<virt_ptr<RPL_DATA>> unloadedModuleList)
 {
-   StackObject<virt_ptr<void>> userData1;
-   StackObject<uint32_t> refCount;
-   StackObject<virt_ptr<RPL_DATA>> rootUnloadedModuleList;
+   auto userData1 = StackObject<virt_ptr<void>> { };
+   auto refCount = StackObject<uint32_t> { };
+   auto rootUnloadedModuleList = StackObject<virt_ptr<RPL_DATA>> { };
 
    if (moduleHandle == OSDynLoad_CurrentModuleHandle ||
        !sDynLoadData->rplDataList) {
@@ -874,7 +874,7 @@ static int32_t
 setupPerm(virt_ptr<RPL_DATA> rplData,
           bool updateTlsModuleIndex)
 {
-   StackObject<loader::LOADER_MinFileInfo> minFileInfo;
+   auto minFileInfo = StackObject<loader::LOADER_MinFileInfo> { };
    std::memset(minFileInfo.get(), 0, sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->version = 4u;
@@ -1013,7 +1013,7 @@ static OSDynLoad_Error
 initialiseDefaultHeap(virt_ptr<RPL_DATA> rplData,
                       virt_ptr<const char> functionName)
 {
-   StackObject<virt_addr> funcAddr;
+   auto funcAddr = StackObject<virt_addr> { };
    auto error = OSDynLoad_FindExport(rplData->handle, FALSE, functionName,
                                      funcAddr);
    if (error != OSDynLoad_Error::OK) {
@@ -1026,8 +1026,8 @@ initialiseDefaultHeap(virt_ptr<RPL_DATA> rplData,
                 virt_addrof(sDynLoadData->preInitForegroundHeap),
                 virt_addrof(sDynLoadData->preInitMem2Heap));
 
-   StackObject<OSDynLoad_AllocFn> allocFn;
-   StackObject<OSDynLoad_FreeFn> freeFn;
+   auto allocFn = StackObject<OSDynLoad_AllocFn> { };
+   auto freeFn = StackObject<OSDynLoad_FreeFn> { };
    error = OSDynLoad_GetAllocator(allocFn, freeFn);
    if (error != OSDynLoad_Error::OK || !(*allocFn) || !(*freeFn)) {
       COSError(COSReportModule::Unknown2, fmt::format(
@@ -1155,7 +1155,7 @@ executeDynamicLink(virt_ptr<RPL_DATA> rpx,
                    virt_ptr<virt_ptr<virt_ptr<RPL_DATA>>> outEntryModules,
                    virt_ptr<RPL_DATA> rpl)
 {
-   StackObject<loader::LOADER_MinFileInfo> minFileInfo;
+   auto minFileInfo = StackObject<loader::LOADER_MinFileInfo> { };
    auto linkInfo = virt_ptr<loader::LOADER_LinkInfo> { nullptr };
    auto error = OSDynLoad_Error::OK;
 
@@ -1368,7 +1368,7 @@ prepareLoad(virt_ptr<RPL_DATA> *ptrRplData,
             OSDynLoad_AllocFn dynLoadAlloc,
             virt_ptr<loader::LOADER_MinFileInfo> *ptrMinFileInfo)
 {
-   StackObject<virt_ptr<void>> allocPtr;
+   auto allocPtr = StackObject<virt_ptr<void>> { };
    auto rplData = *ptrRplData;
    auto minFileInfo = *ptrMinFileInfo;
 
@@ -1674,8 +1674,8 @@ internalAcquire(virt_ptr<const char> name,
    }
 
    // Get the currently set allocator functions
-   StackObject<OSDynLoad_AllocFn> dynLoadAlloc;
-   StackObject<OSDynLoad_FreeFn> dynLoadFree;
+   auto dynLoadAlloc = StackObject<OSDynLoad_AllocFn> { };
+   auto dynLoadFree = StackObject<OSDynLoad_FreeFn> { };
    error = OSDynLoad_GetAllocator(dynLoadAlloc, dynLoadFree);
    if (error || !*dynLoadAlloc || !*dynLoadFree) {
       if (!error) {
@@ -1746,7 +1746,7 @@ internalAcquire(virt_ptr<const char> name,
       gsl::finally([&]() {
          if (rplData) {
             if (rplData->handle) {
-               StackObject<uint32_t> handleRefCount;
+               auto handleRefCount = StackObject<uint32_t> { };
                while (!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
                                         rplData->handle,
                                         handleRefCount) && *handleRefCount);
@@ -1785,7 +1785,7 @@ internalAcquire(virt_ptr<const char> name,
       });
 
    // Do loader prep
-   StackObject<loader::LOADER_Handle> kernelHandle;
+   auto kernelHandle = StackObject<loader::LOADER_Handle> { };
    std::memset(minFileInfo.get(), 0, sizeof(loader::LOADER_MinFileInfo));
    minFileInfo->version = 4u;
    minFileInfo->size = static_cast<uint32_t>(sizeof(loader::LOADER_MinFileInfo));
@@ -1860,7 +1860,7 @@ internalAcquire(virt_ptr<const char> name,
          // If prepareLoad returned an error then we need to clean up rplData
          // in the case that prepareLoad did not clean it up itself
          if (!rplData && *outRplData) {
-            StackObject<uint32_t> handleRefCount;
+            auto handleRefCount = StackObject<uint32_t> { };
             while (!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
                                      (*outRplData)->handle,
                                      handleRefCount) && *handleRefCount);
@@ -1881,7 +1881,7 @@ internalAcquire(virt_ptr<const char> name,
          rpl->next = nullptr;
 
          if (rpl->handle) {
-            StackObject<uint32_t> handleRefCount;
+            auto handleRefCount = StackObject<uint32_t> { };
             while(!OSHandle_Release(virt_addrof(sDynLoadData->handleTable),
                                     rpl->handle,
                                     handleRefCount));
@@ -2285,7 +2285,7 @@ OSDynLoad_FindExport(OSDynLoad_ModuleHandle moduleHandle,
    if (moduleHandle == OSDynLoad_CurrentModuleHandle) {
       rplData = sDynLoadData->rpxData;
    } else {
-      StackObject<virt_ptr<void>> handleData;
+      auto handleData = StackObject<virt_ptr<void>> { };
 
       if (OSHandle_TranslateAndAddRef(virt_addrof(sDynLoadData->handleTable),
                                       moduleHandle,
@@ -2398,7 +2398,7 @@ OSDynLoad_GetModuleName(OSDynLoad_ModuleHandle moduleHandle,
          buffer[bufferLength - 1] = char { 0 };
       }
    } else {
-      StackObject<virt_ptr<void>> handleUserData1;
+      auto handleUserData1 = StackObject<virt_ptr<void>> { };
 
       if (OSHandle_TranslateAndAddRef(virt_addrof(sDynLoadData->handleTable),
                                       moduleHandle,
@@ -2480,9 +2480,9 @@ OSGetSymbolName(virt_addr address,
                 virt_ptr<char> buffer,
                 uint32_t bufferSize)
 {
-   StackObject<uint32_t> symbolDistance;
-   StackArray<char, 256> symbolNameBuffer;
-   StackArray<char, 256> moduleNameBuffer;
+   auto symbolDistance = StackObject<uint32_t> { };
+   auto symbolNameBuffer = StackArray<char, 256> { };
+   auto moduleNameBuffer = StackArray<char, 256> { };
 
    *buffer = char { 0 };
    if (bufferSize < 16) {
@@ -2565,7 +2565,7 @@ tls_get_addr(virt_ptr<tls_index> index)
 
    auto thread = OSGetCurrentThread();
    if (thread->tlsSectionCount <= index->moduleIndex) {
-      StackObject<virt_ptr<void>> allocPtr;
+      auto allocPtr = StackObject<virt_ptr<void>> { };
 
       // Allocate new TLS section data
       if (auto error = cafe::invoke(cpu::this_core::state(),
@@ -2617,7 +2617,7 @@ tls_get_addr(virt_ptr<tls_index> index)
       }
 
       // Allocate tls image for this module
-      StackObject<virt_ptr<void>> allocPtr;
+      auto allocPtr = StackObject<virt_ptr<void>> { };
       if (auto error = cafe::invoke(cpu::this_core::state(),
                                     sDynLoadData->tlsAllocFn,
                                     module->userFileInfo->tlsSectionSize,
@@ -2662,7 +2662,7 @@ dynLoadTlsFree(virt_ptr<OSThread> thread)
 static void
 initCoreinitNotifyData(virt_ptr<RPL_DATA> rpl)
 {
-   StackObject<kernel::Info0> info0;
+   auto info0 = StackObject<kernel::Info0> { };
    kernel::getInfo(kernel::InfoType::Type0, info0, sizeof(kernel::Info0));
 
    rpl->notifyData = virt_cast<OSDynLoad_NotifyData *>(
@@ -2826,8 +2826,8 @@ initialiseDynLoad()
       reportFatalError();
    }
 
-   StackObject<uint32_t> numEntryModules;
-   StackObject<virt_ptr<virt_ptr<RPL_DATA>>> entryModules;
+   auto numEntryModules = StackObject<uint32_t> { };
+   auto entryModules = StackObject<virt_ptr<virt_ptr<RPL_DATA>>> { };
    if (auto error = executeDynamicLink(rpxData,
                                        numEntryModules, entryModules,
                                        rpxData)) {
@@ -2846,7 +2846,7 @@ initialiseDynLoad()
    kernel::loaderUserGainControl();
 
    // Notify debugger of entry points
-   StackObject<virt_addr> preinitAddr;
+   auto preinitAddr = StackObject<virt_addr> { };
    if (auto error = OSDynLoad_FindExport(rpxData->handle, FALSE,
                                           make_stack_string("__preinit_user"),
                                           preinitAddr) != OSDynLoad_Error::OK) {
@@ -2912,7 +2912,7 @@ initialiseDynLoad()
 OSDynLoad_Error
 relocateHleLibrary(OSDynLoad_ModuleHandle moduleHandle)
 {
-   StackObject<virt_ptr<void>> handleData;
+   auto handleData = StackObject<virt_ptr<void>> { };
    if (OSHandle_TranslateAndAddRef(virt_addrof(sDynLoadData->handleTable),
                                    moduleHandle,
                                    handleData,

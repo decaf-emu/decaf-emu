@@ -386,7 +386,7 @@ ipcDriverProcessReplies(kernel::InterruptType type,
       if (!request.asyncCallback) {
          OSSignalEvent(virt_addrof(request.finishEvent));
       } else {
-         StackObject<OSMessage> message;
+         auto message = StackObject<OSMessage> { };
          message->message = virt_cast<void *>(virt_func_cast<virt_addr>(request.asyncCallback));
          message->args[0] = static_cast<uint32_t>(request.ipcBuffer->request.reply.value());
          message->args[1] = static_cast<uint32_t>(virt_cast<virt_addr>(request.asyncContext));
@@ -408,7 +408,7 @@ static uint32_t
 ipcDriverThreadEntry(uint32_t coreId,
                      virt_ptr<void>)
 {
-   StackObject<OSMessage> msg;
+   auto msg = StackObject<OSMessage> { };
    auto &coreData = sIpcDriverData->perCoreData[coreId];
 
    while (true) {

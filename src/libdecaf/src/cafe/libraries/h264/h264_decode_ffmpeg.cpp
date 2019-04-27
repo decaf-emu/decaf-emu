@@ -46,10 +46,10 @@ namespace cafe::h264::ffmpeg
 static int
 receiveFrames(virt_ptr<H264WorkMemory> workMemory)
 {
-   auto result = 0;
    auto codecMemory = workMemory->codecMemory;
    auto streamMemory = workMemory->streamMemory;
    auto frame = codecMemory->frame;
+   auto result = 0;
 
    while (result == 0) {
       result = avcodec_receive_frame(codecMemory->context, frame);
@@ -63,7 +63,7 @@ receiveFrames(virt_ptr<H264WorkMemory> workMemory)
          (codecMemory->outputFrameIndex + 1) % streamMemory->decodedFrameInfos.size();
 
 
-      StackObject<H264DecodeResult> decodeResult;
+      auto decodeResult = StackObject<H264DecodeResult> { };
       decodeResult->status = 100;
       decodeResult->timestamp = decodedFrameInfo.timestamp;
 
@@ -149,8 +149,8 @@ receiveFrames(virt_ptr<H264WorkMemory> workMemory)
 
       // Invoke the frame output callback, right now this is 1 frame at a time
       // in future we may want to hoist this outside of the loop and emit N frames
-      StackArray<virt_ptr<H264DecodeResult>, 5> results;
-      StackObject<H264DecodeOutput> output;
+      auto results = StackArray<virt_ptr<H264DecodeResult>, 5> { };
+      auto output = StackObject<H264DecodeOutput> { };
       output->frameCount = 1;
       output->decodeResults = results;
       output->userMemory = streamMemory->paramUserMemory;
@@ -293,11 +293,9 @@ H264DECExecute(virt_ptr<void> memory,
    }
 
    // Parse the bitstream looking for any SPS to grab latest vui parameters
-   StackObject<H264SequenceParameterSet> sps;
-   if (internal::decodeNaluSps(bitStream->buffer.get(),
-                                 bitStream->buffer_length,
-                                 0,
-                                 sps) == H264Error::OK) {
+   auto sps = StackObject<H264SequenceParameterSet> { };
+   if (internal::decodeNaluSps(bitStream->buffer.get(), bitStream->buffer_length,
+                               0, sps) == H264Error::OK) {
       // Copy VUI parameters from the SPS
       codecMemory->vui_parameters_present_flag = sps->vui_parameters_present_flag;
 

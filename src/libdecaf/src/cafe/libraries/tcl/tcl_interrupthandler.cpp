@@ -180,7 +180,7 @@ static void
 gpuInterruptHandler(OSInterruptType type,
                     virt_ptr<OSContext> interruptedContext)
 {
-   StackObject<TCLInterruptEntry> interruptEntry;
+   auto interruptEntry = StackObject<TCLInterruptEntry> { };
    auto entries = gpu::ih::read();
 
    sInterruptHandlerData->interruptCount.fetch_add(1);

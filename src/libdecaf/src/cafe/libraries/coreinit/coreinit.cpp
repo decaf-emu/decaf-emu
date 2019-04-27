@@ -1,3 +1,4 @@
+#pragma optimize("", off)
 #include "coreinit.h"
 #include "coreinit_alarm.h"
 #include "coreinit_appio.h"

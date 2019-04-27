@@ -50,7 +50,7 @@ SAVEInit()
 
    // Mount external storage if it is required
    if (OSGetUPID() == kernel::UniqueProcessId::Game) {
-      StackObject<int32_t> externalStorageRequired;
+      auto externalStorageRequired = StackObject<int32_t> { };
       if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok() &&
           *externalStorageRequired) {
          nn_acp::ACPMountExternalStorage();
@@ -105,7 +105,7 @@ SAVEGetSharedDataTitlePath(uint64_t titleID,
                                   "SAVE library is not initialized. Call SAVEInit() prior to this function.\n");
    }
 
-   StackObject<int32_t> externalStorageRequired;
+   auto externalStorageRequired = StackObject<int32_t> { };
    auto storage = "storage_mlc01";
 
    if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok()) {
@@ -141,7 +141,7 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
                                   "SAVE library is not initialized. Call SAVEInit() prior to this function.\n");
    }
 
-   StackObject<int32_t> externalStorageRequired;
+   auto externalStorageRequired = StackObject<int32_t> { };
    auto storage = "storage_mlc01";
 
    if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok()) {

@@ -1,7 +1,6 @@
 #include "nn_acp.h"
 #include "nn_acp_internal_driver.h"
 
-#include "cafe/cafe_stackframe.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 #include "cafe/libraries/cafe_hle.h"
 
@@ -14,7 +13,6 @@ static int32_t
 rpl_entry(OSDynLoad_ModuleHandle moduleHandle,
           OSDynLoad_EntryReason reason)
 {
-   auto stackFrame = StackFrame { };
    coreinit::internal::relocateHleLibrary(moduleHandle);
 
    if (reason == OSDynLoad_EntryReason::Loaded) {

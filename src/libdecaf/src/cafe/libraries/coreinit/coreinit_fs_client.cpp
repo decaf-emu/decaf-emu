@@ -369,7 +369,7 @@ fsClientHandleAsyncResult(virt_ptr<FSClient> client,
    auto errorFlags = FSErrorFlag::All;
 
    if (result >= 0) {
-      StackObject<OSMessage> message;
+      auto message = StackObject<OSMessage> { };
       auto blockBody = fsCmdBlockGetBody(block);
       OSReceiveMessage(virt_addrof(blockBody->syncQueue),
                        message,

@@ -181,7 +181,7 @@ GX2DebugTagUserStringVA(GX2DebugUserTag tag,
                         virt_ptr<va_list> vaList)
 {
    if (internal::debugCaptureEnabled()) {
-      StackArray<char, 0x404> buffer;
+      auto buffer = StackArray<char, 0x404> { };
       std::memset(buffer.get(), 0, 0x404);
 
       if (fmt) {

@@ -126,7 +126,7 @@ GetAccountIdEx(virt_ptr<char> accountId,
 uint8_t
 GetParentalControlSlotNo()
 {
-   StackObject<uint8_t> parentSlot;
+   auto parentSlot = StackObject<uint8_t> { };
    GetParentalControlSlotNoEx(parentSlot, GetSlotNo());
    return *parentSlot;
 }
@@ -167,7 +167,7 @@ GetPersistentIdEx(SlotNo slot)
 uint32_t
 GetPrincipalId()
 {
-   StackObject<uint32_t> id;
+   auto id = StackObject<uint32_t> { };
    GetPrincipalIdEx(id, CurrentUserSlot);
    return *id;
 }
@@ -190,7 +190,7 @@ GetPrincipalIdEx(virt_ptr<uint32_t> principalId,
 uint32_t
 GetSimpleAddressId()
 {
-   StackObject<uint32_t> id;
+   auto id = StackObject<uint32_t> { };
    GetSimpleAddressIdEx(id, CurrentUserSlot);
    return *id;
 }
@@ -213,7 +213,7 @@ GetSimpleAddressIdEx(virt_ptr<uint32_t> simpleAddressId,
 uint64_t
 GetTransferableId(uint32_t unk1)
 {
-   StackObject<uint64_t> id;
+   auto id = StackObject<uint64_t> { };
    GetTransferableIdEx(id, unk1, CurrentUserSlot);
    return *id;
 }

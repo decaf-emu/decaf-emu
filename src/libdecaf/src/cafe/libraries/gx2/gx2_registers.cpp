@@ -1,3 +1,4 @@
+#pragma optimize("", off)
 #include "gx2.h"
 #include "gx2_cbpool.h"
 #include "gx2_registers.h"
@@ -14,7 +15,7 @@ GX2SetAAMask(uint8_t upperLeft,
              uint8_t lowerLeft,
              uint8_t lowerRight)
 {
-   StackObject<GX2AAMaskReg> reg;
+   auto reg = StackObject<GX2AAMaskReg> { };
    GX2InitAAMaskReg(reg,
                     upperLeft,
                     upperRight,
@@ -67,7 +68,7 @@ GX2SetAlphaTest(BOOL alphaTest,
                 GX2CompareFunction func,
                 float ref)
 {
-   StackObject<GX2AlphaTestReg> reg;
+   auto reg = StackObject<GX2AlphaTestReg> { };
    GX2InitAlphaTestReg(reg, alphaTest, func, ref);
    GX2SetAlphaTestReg(reg);
 }
@@ -120,7 +121,7 @@ void
 GX2SetAlphaToMask(BOOL alphaToMask,
                   GX2AlphaToMaskMode mode)
 {
-   StackObject<GX2AlphaToMaskReg> reg;
+   auto reg = StackObject<GX2AlphaToMaskReg> { };
    GX2InitAlphaToMaskReg(reg, alphaToMask, mode);
    GX2SetAlphaToMaskReg(reg);
 }
@@ -222,7 +223,7 @@ GX2SetBlendConstantColor(float red,
                          float blue,
                          float alpha)
 {
-   StackObject<GX2BlendConstantColorReg> reg;
+   auto reg = StackObject<GX2BlendConstantColorReg> { };
    GX2InitBlendConstantColorReg(reg, red, green, blue, alpha);
    GX2SetBlendConstantColorReg(reg);
 }
@@ -277,7 +278,7 @@ GX2SetBlendControl(GX2RenderTarget target,
                    GX2BlendMode alphaDstBlend,
                    GX2BlendCombineMode alphaCombine)
 {
-   StackObject<GX2BlendControlReg> reg;
+   auto reg = StackObject<GX2BlendControlReg> { };
    GX2InitBlendControlReg(reg,
                           target,
                           colorSrcBlend,
@@ -352,7 +353,7 @@ GX2SetColorControl(GX2LogicOp rop3,
                    BOOL multiWriteEnable,
                    BOOL colorWriteEnable)
 {
-   StackObject<GX2ColorControlReg> reg;
+   auto reg = StackObject<GX2ColorControlReg> { };
    GX2InitColorControlReg(reg,
                           rop3,
                           targetBlendEnable,
@@ -446,7 +447,7 @@ GX2SetDepthStencilControl(BOOL depthTest,
                           GX2StencilFunction backStencilZFail,
                           GX2StencilFunction backStencilFail)
 {
-   StackObject<GX2DepthStencilControlReg> reg;
+   auto reg = StackObject<GX2DepthStencilControlReg> { };
    GX2InitDepthStencilControlReg(reg,
                                  depthTest,
                                  depthWrite,
@@ -546,7 +547,7 @@ void GX2SetStencilMask(uint8_t frontMask,
                        uint8_t backWriteMask,
                        uint8_t backRef)
 {
-   StackObject<GX2StencilMaskReg> reg;
+   auto reg = StackObject<GX2StencilMaskReg> { };
    GX2InitStencilMaskReg(reg, frontMask, frontWriteMask, frontRef, backMask, backWriteMask, backRef);
    GX2SetStencilMaskReg(reg);
 }
@@ -608,7 +609,7 @@ void GX2SetStencilMaskReg(virt_ptr<GX2StencilMaskReg> reg)
 void
 GX2SetLineWidth(float width)
 {
-   StackObject<GX2LineWidthReg> reg;
+   auto reg = StackObject<GX2LineWidthReg> { };
    GX2InitLineWidthReg(reg, width);
    GX2SetLineWidthReg(reg);
 }
@@ -644,7 +645,7 @@ void
 GX2SetPointSize(float width,
                 float height)
 {
-   StackObject<GX2PointSizeReg> reg;
+   auto reg = StackObject<GX2PointSizeReg> { };
    GX2InitPointSizeReg(reg, width, height);
    GX2SetPointSizeReg(reg);
 }
@@ -684,7 +685,7 @@ void
 GX2SetPointLimits(float min,
                   float max)
 {
-   StackObject<GX2PointLimitsReg> reg;
+   auto reg = StackObject<GX2PointLimitsReg> { };
    GX2InitPointLimitsReg(reg, min, max);
    GX2SetPointLimitsReg(reg);
 }
@@ -747,7 +748,7 @@ GX2SetPolygonControl(GX2FrontFace frontFace,
                      BOOL polyOffsetBackEnable,
                      BOOL polyOffsetParaEnable)
 {
-   StackObject<GX2PolygonControlReg> reg;
+   auto reg = StackObject<GX2PolygonControlReg> { };
    GX2InitPolygonControlReg(reg,
                             frontFace,
                             cullFront,
@@ -827,7 +828,7 @@ GX2SetPolygonOffset(float frontOffset,
                     float backScale,
                     float clamp)
 {
-   StackObject<GX2PolygonOffsetReg> reg;
+   auto reg = StackObject<GX2PolygonOffsetReg> { };
    GX2InitPolygonOffsetReg(reg,
                            frontOffset,
                            frontScale,
@@ -916,7 +917,7 @@ GX2SetScissor(uint32_t x,
               uint32_t width,
               uint32_t height)
 {
-   StackObject<GX2ScissorReg> reg;
+   auto reg = StackObject<GX2ScissorReg> { };
    GX2InitScissorReg(reg, x, y, width, height);
    GX2SetScissorReg(reg);
 }
@@ -983,7 +984,7 @@ GX2SetTargetChannelMasks(GX2ChannelMask mask0,
                          GX2ChannelMask mask6,
                          GX2ChannelMask mask7)
 {
-   StackObject<GX2TargetChannelMaskReg> reg;
+   auto reg = StackObject<GX2TargetChannelMaskReg> { };
    GX2InitTargetChannelMasksReg(reg,
                                 mask0,
                                 mask1,
@@ -1060,7 +1061,7 @@ GX2SetViewport(float x,
                float nearZ,
                float farZ)
 {
-   StackObject<GX2ViewportReg> reg;
+   auto reg = StackObject<GX2ViewportReg> { };
    GX2InitViewportReg(reg, x, y, width, height, nearZ, farZ);
    GX2SetViewportReg(reg);
 }

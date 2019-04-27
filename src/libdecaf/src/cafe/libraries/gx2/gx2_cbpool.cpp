@@ -41,7 +41,7 @@ sCbPoolData = nullptr;
 GX2Timestamp
 GX2GetRetiredTimeStamp()
 {
-   StackObject<TCLTimestamp> timestamp;
+   auto timestamp = StackObject<TCLTimestamp> { };
    TCLReadTimestamp(TCLTimestampID::CPRetired, timestamp);
    return *timestamp;
 }
@@ -370,10 +370,11 @@ queueCommandBuffer(virt_ptr<uint32_t> cbBase,
                    virt_ptr<virt_addr> gpuLastReadPointer,
                    BOOL writeConfirmTimestamp)
 {
+   auto submitCommand = StackArray<uint32_t, 9> { };
+   auto submitCommandNumWords = uint32_t { 0u };
+
    decaf_check(cbBase);
    decaf_check(cbSize);
-   StackArray<uint32_t, 9> submitCommand;
-   auto submitCommandNumWords = uint32_t { 0u };
 
    auto indirectBufferCall =
       latte::pm4::IndirectBufferCallPriv {
@@ -409,7 +410,7 @@ queueCommandBuffer(virt_ptr<uint32_t> cbBase,
 
    // TODO: Call pm4 capture flush command buffer
 
-   StackObject<TCLSubmitFlags> submitFlags;
+   auto submitFlags = StackObject<TCLSubmitFlags> { };
    *submitFlags = TCLSubmitFlags::UpdateTimestamp;
    if (!writeConfirmTimestamp) {
       *submitFlags |= TCLSubmitFlags::NoWriteConfirmTimestamp;

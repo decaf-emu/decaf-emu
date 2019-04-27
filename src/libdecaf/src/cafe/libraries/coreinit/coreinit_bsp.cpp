@@ -40,7 +40,8 @@ prepareIpcBuffer(std::size_t responseSize,
 BSPError
 bspInitializeShimInterface()
 {
-   auto result = IOS_Open(make_stack_string("/dev/bsp"), ios::OpenMode::None);
+   auto result = IOS_Open(make_stack_string("/dev/bsp"),
+                          ios::OpenMode::None);
 
    if (IOS_FAILED(result)) {
       return BSPError::IosError;
@@ -53,7 +54,7 @@ bspInitializeShimInterface()
 BSPError
 bspGetHardwareVersion(virt_ptr<BSPHardwareVersion> version)
 {
-   StackObject<BSPIpcBuffer> buffer;
+   auto buffer = StackObject<BSPIpcBuffer> { };
    auto error = internal::prepareIpcBuffer(sizeof(BSPResponseGetHardwareVersion),
                                            buffer);
    if (error) {

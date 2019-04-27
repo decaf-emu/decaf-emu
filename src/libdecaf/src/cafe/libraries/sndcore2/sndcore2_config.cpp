@@ -55,7 +55,7 @@ sProtectLock = { 0 };
 void
 AXInit()
 {
-   StackObject<AXInitParams> params;
+   auto params = StackObject<AXInitParams> { };
    params->renderer = AXRendererFreq::Freq32khz;
    params->pipeline = AXInitPipeline::Single;
    AXInitWithParams(params);

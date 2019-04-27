@@ -5,9 +5,9 @@ namespace cafe::nn_acp::internal
 {
 
 void
-startDriver(cafe::coreinit::OSDynLoad_ModuleHandle moduleHandle);
+startDriver(coreinit::OSDynLoad_ModuleHandle moduleHandle);
 
 void
-stopDriver(cafe::coreinit::OSDynLoad_ModuleHandle moduleHandle);
+stopDriver(coreinit::OSDynLoad_ModuleHandle moduleHandle);
 
 } // namespace cafe::nn_acp::internal

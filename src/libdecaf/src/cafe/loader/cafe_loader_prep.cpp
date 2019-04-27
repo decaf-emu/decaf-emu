@@ -184,7 +184,7 @@ LOADER_Prep(kernel::UniqueProcessId upid,
       }
    }
 
-   StackArray<char, 64> filename;
+   auto filename = StackArray<char, 64> { };
    auto filenameLen = std::min<uint32_t>(minFileInfo->moduleNameBufferLen, 59);
    std::memcpy(filename.get(),
                minFileInfo->moduleNameBuffer.get(),

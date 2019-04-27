@@ -10,6 +10,8 @@
 namespace cafe
 {
 
+// #define DECAF_CHECK_STACK_CAFE_OBJECTS
+
 template<typename Type, size_t NumElements = 1>
 class StackObject : public virt_ptr<Type>
 {
@@ -21,35 +23,42 @@ public:
    StackObject()
    {
       auto core = cpu::this_core::state();
+
+      // Adjust stack
       auto oldStackTop = virt_addr { core->gpr[1] };
       auto newStackTop = oldStackTop - AlignedSize;
-      auto ptrAddr = newStackTop + 8;
+      core->gpr[1] = static_cast<uint32_t>(newStackTop);
 
-      memmove(virt_cast<void *>(newStackTop).get(),
-              virt_cast<void *>(oldStackTop).get(),
-              8);
-
-      core->gpr[1] = newStackTop.getAddress();
-      virt_ptr<Type>::mAddress = virt_addr { newStackTop + 8 };
+      // Initialise object
+      virt_ptr<Type>::mAddress = newStackTop;
       std::uninitialized_default_construct_n(virt_ptr<Type>::get(),
                                              NumElements);
    }
 
    ~StackObject()
    {
+      auto core = cpu::this_core::state();
+
+      // Destroy object
       std::destroy_n(virt_ptr<Type>::get(), NumElements);
 
-      auto core = cpu::this_core::state();
+      // Adjust stack
       auto oldStackTop = virt_addr { core->gpr[1] };
-      auto newStackTop = virt_addr { core->gpr[1] + AlignedSize };
-      auto ptrAddr = oldStackTop + 8;
-      decaf_check(virt_ptr<Type>::mAddress == ptrAddr);
-
+      auto newStackTop = oldStackTop + AlignedSize;
       core->gpr[1] = newStackTop.getAddress();
-      memmove(virt_cast<void *>(newStackTop).get(),
-              virt_cast<void *>(oldStackTop).get(),
-              8);
+
+#ifdef DECAF_CHECK_STACK_CAFE_OBJECTS
+      decaf_check(virt_ptr<Type>::mAddress == oldStackTop);
+#endif
    }
+
+   // Disable copy
+   StackObject(const StackObject &) = delete;
+   StackObject &operator=(const StackObject&) = delete;
+
+   // Disable move
+   StackObject(StackObject &&) noexcept = delete;
+   StackObject &operator=(StackObject&&) noexcept = delete;
 };
 
 template<typename Type, size_t NumElements>
@@ -57,6 +66,19 @@ class StackArray : public StackObject<Type, NumElements>
 {
 public:
    using StackObject<Type, NumElements>::StackObject;
+
+   StackArray() :
+      StackObject()
+   {
+   }
+
+   // Disable copy
+   StackArray(const StackArray &) = delete;
+   StackArray &operator=(const StackArray &) = delete;
+
+   // Disable move
+   StackArray(StackArray &&) noexcept = delete;
+   StackArray &operator=(StackArray &&) noexcept = delete;
 
    constexpr uint32_t size() const
    {
@@ -81,42 +103,43 @@ public:
       mSize(align_up(static_cast<uint32_t>(hostString.size()) + 1, 4))
    {
       auto core = cpu::this_core::state();
+
+      // Adjust stack
       auto oldStackTop = virt_addr { core->gpr[1] };
       auto newStackTop = oldStackTop - mSize;
-      auto ptrAddr = newStackTop + 8;
-
-      memmove(virt_cast<void *>(newStackTop).get(),
-              virt_cast<void *>(oldStackTop).get(),
-              8);
-
       core->gpr[1] = newStackTop.getAddress();
-      virt_ptr<char>::mAddress = virt_addr { newStackTop + 8 };
 
+      // Initialise string
+      virt_ptr<char>::mAddress = virt_addr { newStackTop };
       std::memcpy(virt_ptr<char>::get(), hostString.data(), hostString.size());
       virt_ptr<char>::get()[hostString.size()] = char { 0 };
-   }
-
-   StackString(StackString &&from) :
-      mSize(from.mSize)
-   {
-      from.mSize = 0u;
-      virt_ptr<char>::mAddress = from.mAddress;
    }
 
    ~StackString()
    {
       if (mSize) {
          auto core = cpu::this_core::state();
-         auto oldStackTop = virt_addr { core->gpr[1] };
-         auto newStackTop = virt_addr { core->gpr[1] + mSize };
-         auto ptrAddr = oldStackTop + 8;
-         decaf_check(virt_ptr<char>::mAddress == ptrAddr);
 
+         // Adjust stack
+         auto oldStackTop = virt_addr { core->gpr[1] };
+         auto newStackTop = oldStackTop + mSize;
          core->gpr[1] = newStackTop.getAddress();
-         memmove(virt_cast<void *>(newStackTop).get(),
-                 virt_cast<void *>(oldStackTop).get(),
-                 8);
+
+#ifdef DECAF_CHECK_STACK_CAFE_OBJECTS
+         decaf_check(virt_ptr<char>::mAddress == oldStackTop);
+#endif
       }
+   }
+
+   // Disable copy
+   StackString(const StackString &) = delete;
+   StackString &operator=(const StackString &) = delete;
+
+   StackString(StackString &&from) :
+      mSize(from.mSize)
+   {
+      from.mSize = 0u;
+      virt_ptr<char>::mAddress = from.mAddress;
    }
 
    StackString &operator =(StackString &&from)

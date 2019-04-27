@@ -34,8 +34,9 @@ sMemHeapData = nullptr;
 static virt_ptr<MEMList>
 findListContainingHeap(virt_ptr<MEMHeapHeader> heap)
 {
-   StackObject<virt_addr> start, end;
-   StackObject<uint32_t> size;
+   auto start = StackObject<virt_addr> { };
+   auto end = StackObject<virt_addr> { };
+   auto size = StackObject<uint32_t> { };
    OSGetForegroundBucket(start, size);
    *end = *start + *size;
 
@@ -58,8 +59,9 @@ findListContainingHeap(virt_ptr<MEMHeapHeader> heap)
 static virt_ptr<MEMList>
 findListContainingBlock(virt_ptr<void> block)
 {
-   StackObject<virt_addr> start, end;
-   StackObject<uint32_t> size;
+   auto start = StackObject<virt_addr> { };
+   auto end = StackObject<virt_addr> { };
+   auto size = StackObject<uint32_t> { };
    OSGetForegroundBucket(start, size);
    *end = *start + *size;
 

@@ -87,8 +87,9 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
                   virt_ptr<uint32_t> outUnk2,
                   virt_ptr<BOOL> outDidInit)
 {
-   StackObject<OSDynLoad_ModuleHandle> callerModule;
+   auto callerModule = StackObject<OSDynLoad_ModuleHandle> { };
    auto error = OSDriver_Error::OK;
+   auto dynloadError = OSDynLoad_Error::OK;
 
    if (outUnk1) {
       *outUnk1 = 0u;

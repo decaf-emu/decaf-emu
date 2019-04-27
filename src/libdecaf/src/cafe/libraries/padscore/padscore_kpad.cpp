@@ -60,7 +60,7 @@ KPADRead(KPADChan chan,
          uint32_t size)
 {
    decaf_warn_stub();
-   StackObject<KPADReadError> readError;
+   auto readError = StackObject<KPADReadError> { };
    auto result = KPADReadEx(chan, data, size, readError);
 
    if (*readError != KPADReadError::OK) {

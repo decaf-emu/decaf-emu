@@ -190,7 +190,7 @@ tclEventCallback(virt_ptr<TCLInterruptEntry> interruptEntry,
 {
    auto eventType = static_cast<GX2EventType>(static_cast<uint32_t>(virt_cast<virt_addr>(userData)));
    if (sEventData->eventCallbacks[eventType].func) {
-      StackObject<OSMessage> message;
+      auto message = StackObject<OSMessage> { };
       message->message = nullptr;
       message->args[0] = eventType;
       message->args[1] = 0u;
@@ -246,7 +246,7 @@ static uint32_t
 appIoThread(uint32_t argc,
             virt_ptr<void> argv)
 {
-   StackObject<OSMessage> message;
+   auto message = StackObject<OSMessage> { };
    while (true) {
       OSReceiveMessage(virt_addrof(sEventData->appIoMessageQueue), message,
                        OSMessageFlags::Blocking);
@@ -281,7 +281,7 @@ stopAppIoThread()
    }
 
    // Send stop message
-   StackObject<OSMessage> message;
+   auto message = StackObject<OSMessage> { };
    message->message = nullptr;
    message->args[0] = GX2EventType::StopAppIoThread;
    message->args[1] = 0u;

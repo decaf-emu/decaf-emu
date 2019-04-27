@@ -35,7 +35,7 @@ ACConnectAsync()
 nn::Result
 ACIsApplicationConnected(virt_ptr<BOOL> connected)
 {
-   StackObject<bool> isConnected;
+   auto isConnected = StackObject<bool> { };
    *isConnected = *connected ? true : false;
    auto result = IsApplicationConnected(isConnected);
    *connected = *isConnected ? TRUE : FALSE;

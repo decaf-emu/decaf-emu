@@ -456,7 +456,7 @@ IMDisableDim()
 IMError
 IMEnableAPD()
 {
-   cafe::StackObject<uint32_t> prevValue;
+   auto prevValue = StackObject<uint32_t> { };
    auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::APDEnabled,
                                                       prevValue);
 
@@ -475,7 +475,7 @@ IMEnableAPD()
 IMError
 IMEnableDim()
 {
-   cafe::StackObject<uint32_t> prevValue;
+   auto prevValue = StackObject<uint32_t> { };
    auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::DimEnabled,
                                                       prevValue);
    if (result != IMError::OK) {
@@ -586,7 +586,7 @@ IMSetDimEnableTv(BOOL value)
 IMError
 IMStartAPDVideoMode()
 {
-   StackObject<uint32_t> prevValue;
+   auto prevValue = StackObject<uint32_t> { };
    auto result = IM_GetNvParameterWithoutHandleAndItb(IMParameter::APDPeriod,
                                                       prevValue);
 

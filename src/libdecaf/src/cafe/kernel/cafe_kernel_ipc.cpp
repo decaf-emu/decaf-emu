@@ -154,7 +154,7 @@ IOS_Open(RamPartitionId clientProcessId,
          virt_ptr<const char> device,
          ios::OpenMode mode)
 {
-   StackObject<SynchronousCallback> synchronousReply;
+   auto synchronousReply = StackObject<SynchronousCallback> { };
    auto error = IOS_OpenAsync(clientProcessId,
                               device,
                               mode,
@@ -176,7 +176,7 @@ IOS_CloseAsync(RamPartitionId clientProcessId,
                virt_ptr<void> asyncCallbackData,
                uint32_t unkArg0)
 {
-   virt_ptr<IPCKDriverRequestBlock> requestBlock;
+   auto requestBlock = virt_ptr<IPCKDriverRequestBlock> { };
    auto driver = ipckDriverGetInstance();
    auto error = ipckDriverAllocateRequestBlock(clientProcessId,
                                                RamPartitionId::Invalid,
@@ -205,7 +205,7 @@ IOS_Close(RamPartitionId clientProcessId,
           ios::Handle handle,
           uint32_t unkArg0)
 {
-   StackObject<SynchronousCallback> synchronousReply;
+   auto synchronousReply = StackObject<SynchronousCallback> { };
    auto error = IOS_CloseAsync(clientProcessId,
                                handle,
                                &synchronousCallback,
@@ -230,7 +230,7 @@ IOS_IoctlAsync(RamPartitionId clientProcessId,
                IPCKDriverHostAsyncCallbackFn asyncCallback,
                virt_ptr<void> asyncCallbackData)
 {
-   virt_ptr<IPCKDriverRequestBlock> requestBlock;
+   auto requestBlock = virt_ptr<IPCKDriverRequestBlock> { };
    auto driver = ipckDriverGetInstance();
    auto error = ipckDriverAllocateRequestBlock(clientProcessId,
                                                loaderProcessId,
@@ -280,7 +280,7 @@ IOS_Ioctl(RamPartitionId clientProcessId,
           virt_ptr<void> outBuf,
           uint32_t outLen)
 {
-   StackObject<SynchronousCallback> synchronousReply;
+   auto synchronousReply = StackObject<SynchronousCallback> { };
    auto error = IOS_IoctlAsync(clientProcessId,
                                loaderProcessId,
                                handle,

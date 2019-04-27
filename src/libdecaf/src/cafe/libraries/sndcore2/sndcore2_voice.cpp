@@ -120,7 +120,7 @@ uint32_t
 AXGetVoiceCurrentOffsetEx(virt_ptr<AXVoice> voice,
                           virt_ptr<const void> samples)
 {
-   StackObject<AXVoiceOffsets> offsets;
+   auto offsets = StackObject<AXVoiceOffsets> { };
    AXGetVoiceOffsetsEx(voice, offsets, samples);
    return offsets->currentOffset;
 }
@@ -227,7 +227,7 @@ AXSetVoiceCurrentOffsetEx(virt_ptr<AXVoice> voice,
                           uint32_t offset,
                           virt_ptr<const void> samples)
 {
-   StackObject<AXVoiceOffsets> offsets;
+   auto offsets = StackObject<AXVoiceOffsets> { };
    voice->offsets.data = samples;
 
    AXGetVoiceOffsets(voice, offsets);
@@ -308,7 +308,7 @@ AXSetVoiceEndOffsetEx(virt_ptr<AXVoice> voice,
                       uint32_t offset,
                       virt_ptr<const void> samples)
 {
-   StackObject<AXVoiceOffsets> offsets;
+   auto offsets = StackObject<AXVoiceOffsets> { };
    voice->offsets.data = samples;
 
    AXGetVoiceOffsets(voice, offsets);
@@ -364,7 +364,7 @@ AXSetVoiceLoopOffsetEx(virt_ptr<AXVoice> voice,
 {
    voice->offsets.data = samples;
 
-   StackObject<AXVoiceOffsets> offsets;
+   auto offsets = StackObject<AXVoiceOffsets> { };
    AXGetVoiceOffsets(voice, offsets);
    AXSetVoiceLoopOffset(voice, offset);
 }
@@ -431,7 +431,7 @@ AXSetVoiceOffsetsEx(virt_ptr<AXVoice> voice,
                     virt_ptr<AXVoiceOffsets> offsets,
                     virt_ptr<void> samples)
 {
-   StackObject<AXVoiceOffsets> adjOffsets;
+   auto adjOffsets = StackObject<AXVoiceOffsets> { };
    *adjOffsets = *offsets;
    adjOffsets->data = samples;
    AXSetVoiceOffsets(voice, adjOffsets);

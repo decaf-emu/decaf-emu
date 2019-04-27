@@ -76,7 +76,7 @@ receiveFrames(virt_ptr<H264WorkMemory> workMemory)
          dst += pitch;
       }
 
-      StackObject<H264DecodeResult> decodeResult;
+      auto decodeResult = StackObject<H264DecodeResult> { };
       decodeResult->status = 100;
       decodeResult->timestamp = decodedFrameInfo.timestamp;
       decodeResult->framebuffer = frameBuffer;
@@ -107,8 +107,8 @@ receiveFrames(virt_ptr<H264WorkMemory> workMemory)
       }
 
       // Invoke the frame output callback
-      StackArray<virt_ptr<H264DecodeResult>, 5> results;
-      StackObject<H264DecodeOutput> output;
+      auto results = StackArray<virt_ptr<H264DecodeResult>, 5> { };
+      auto output = StackObject<H264DecodeOutput> { };
       output->frameCount = 1;
       output->decodeResults = results;
       output->userMemory = streamMemory->paramUserMemory;
@@ -217,8 +217,10 @@ H264DECExecute(virt_ptr<void> memory,
    }
 
    // Parse the bitstream looking for any SPS
-   StackObject<H264SequenceParameterSet> sps;
-   if (internal::decodeNaluSps(bitStream->buffer.get(), bitStream->buffer_length, 0, sps) == H264Error::OK) {
+   auto sps = StackObject<H264SequenceParameterSet> { };
+   if (internal::decodeNaluSps(bitStream->buffer.get(),
+                               bitStream->buffer_length,
+                               0, sps) == H264Error::OK) {
       codecMemory->width = sps->pic_width;
       codecMemory->height = sps->pic_height;
 

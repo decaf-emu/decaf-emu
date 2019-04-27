@@ -46,7 +46,7 @@ static uint32_t
 appIoThreadEntry(uint32_t coreId,
                  virt_ptr<void> arg2)
 {
-   StackObject<OSMessage> msg;
+   auto msg = StackObject<OSMessage> { };
    auto coreData = virt_addrof(sAppIoData->perCoreData[coreId]);
    auto queue = virt_addrof(coreData->queue);
    OSInitMessageQueue(queue,

@@ -339,9 +339,8 @@ LiLoadRPLBasics(virt_ptr<char> moduleName,
    }
 
    // Initialise temporary RPL basics
-   cafe::StackObject<LOADED_RPL> tmpLoadedRpl;
-   virt_ptr<LOADED_RPL> rpl;
-   rpl = tmpLoadedRpl;
+   auto tmpLoadedRpl = StackObject<LOADED_RPL> { };
+   auto rpl = virt_ptr<LOADED_RPL> { tmpLoadedRpl };
 
    std::memset(rpl.get(), 0, sizeof(LOADED_RPL));
    if (r9 == 0) {

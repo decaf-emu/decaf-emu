@@ -273,8 +273,8 @@ BOOL
 OSWaitEventWithTimeout(virt_ptr<OSEvent> event,
                        OSTimeNanoseconds timeout)
 {
-   StackObject<EventAlarmData> data;
-   StackObject<OSAlarm> alarm;
+   auto data = StackObject<EventAlarmData> { };
+   auto alarm = StackObject<OSAlarm> { };
 
    internal::lockScheduler();
 
