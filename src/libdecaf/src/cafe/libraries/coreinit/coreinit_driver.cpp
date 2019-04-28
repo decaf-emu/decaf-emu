@@ -120,18 +120,21 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       return OSDriver_Error::InvalidArgument;
    }
 
-   // Get the module handle for the caller of this function
-   auto dynloadError =
-      OSDynLoad_AcquireContainingModule(
-         virt_cast<void *>(virt_addr { cpu::this_core::state()->lr }),
-         OSDynLoad_SectionType::CodeOnly,
-         callerModule);
-   if (dynloadError != OSDynLoad_Error::OK) {
-      internal::OSPanic("OSDrivers.c", 288,
-                        "***OSDriver_Register could not find caller module.\n");
-   }
-
+   // Note on real coreinit.rpl it will try acquire callerModule from LR
+   // regardless of whether moduleHandle is set, however that makes it
+   // difficult for our HLE functions to call this function.
    if (!moduleHandle) {
+      // Get the module handle from the caller of this function
+      dynloadError =
+         OSDynLoad_AcquireContainingModule(
+            virt_cast<void *>(virt_addr { cpu::this_core::state()->lr }),
+            OSDynLoad_SectionType::CodeOnly,
+            callerModule);
+      if (dynloadError != OSDynLoad_Error::OK) {
+         internal::OSPanic("OSDrivers.c", 288,
+                           "***OSDriver_Register could not find caller module.\n");
+      }
+
       moduleHandle = *callerModule;
    }
 
