@@ -67,11 +67,6 @@ class StackArray : public StackObject<Type, NumElements>
 public:
    using StackObject<Type, NumElements>::StackObject;
 
-   StackArray() :
-      StackObject()
-   {
-   }
-
    // Disable copy
    StackArray(const StackArray &) = delete;
    StackArray &operator=(const StackArray &) = delete;
