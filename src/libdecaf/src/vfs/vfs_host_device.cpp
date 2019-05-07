@@ -39,7 +39,7 @@ HostDevice::makeFolder(const User &user,
    }
 
    auto error = std::error_code { };
-   if (std::filesystem::create_directory(makeHostPath(path), error)) {
+   if (std::filesystem::create_directories(makeHostPath(path), error)) {
       return Error::Success;
    }
 
