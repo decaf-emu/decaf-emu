@@ -36,6 +36,7 @@ addons:
       - libglbinding-dev
       - libglu1-mesa-dev
       - libssl-dev
+      - libsdl2-dev
       - libx11-dev
       - libxcursor-dev
       - lunarg-vulkan-sdk
@@ -57,7 +58,7 @@ install:
   - pip install --user conan
   - conan user
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
-  - cd "$TRAVIS_BUILD_DIR/build"; conan install .. --build=missing -s compiler=$CONAN_COMPILER -s compiler.version=$CONAN_COMPILER_VERSION -o silent=True -o curl=False -o openssl=False -o ffmpeg=False
+  - cd "$TRAVIS_BUILD_DIR/build"; conan install .. --build=missing -s compiler=$CONAN_COMPILER -s compiler.version=$CONAN_COMPILER_VERSION -o silent=True -o curl=False -o openssl=False -o ffmpeg=False -o sdl2=False
 
 script:
   - cd "$TRAVIS_BUILD_DIR/build"
