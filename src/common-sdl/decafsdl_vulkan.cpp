@@ -263,6 +263,7 @@ DecafSDLVulkan::createDevice()
    {
    };
 
+   // List required extensions
    std::vector<const char*> deviceExtensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME,
@@ -277,6 +278,40 @@ DecafSDLVulkan::createDevice()
       deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
    }
 
+   // Check if requiered extensions are available
+   // Get available extensions
+   uint32_t availableExtensionCount = 0;
+   vkEnumerateDeviceExtensionProperties(mPhysDevice, nullptr, &availableExtensionCount, nullptr);
+
+   std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
+   vkEnumerateDeviceExtensionProperties(mPhysDevice, nullptr, &availableExtensionCount, availableExtensions.data());
+
+   // List missing extensions
+   std::vector<const char*> missingExtentions;
+
+   for (const auto& requiredExtension : deviceExtensions) {
+      bool found = false;
+      for (const auto& availableExtension : availableExtensions) {
+         if (strcmp(requiredExtension, availableExtension.extensionName) == 0) {
+            found = true;
+            break;
+         }
+      }
+
+      if (!found) {
+         missingExtentions.push_back(requiredExtension);
+      }
+   }
+
+   if (!missingExtentions.empty()) {
+      mLog->error("Missing extensions detected");
+      for (const auto& extension : missingExtentions) {
+         mLog->error("  {}", extension);
+      }
+      return false;
+   }
+
+   // Setup queues
    auto queueFamilyProps = mPhysDevice.getQueueFamilyProperties();
    uint32_t queueFamilyIndex = 0;
    for (; queueFamilyIndex < queueFamilyProps.size(); ++queueFamilyIndex) {
