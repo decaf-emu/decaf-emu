@@ -601,12 +601,12 @@ protected:
    void _invalidateSurface(SurfaceObject *surface, SurfaceSubRange range);
    void _barrierSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range);
    SurfaceObject * getSurface(const SurfaceDesc& info);
-   void transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range, bool skipChangeCheck = false);
+   void transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range, bool checkSurfaceChanges = true);
 
    SurfaceViewObject * _allocateSurfaceView(const SurfaceViewDesc& info);
    void _releaseSurfaceView(SurfaceViewObject *surfaceView);
    SurfaceViewObject * getSurfaceView(const SurfaceViewDesc& info);
-   void transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout, bool skipChangeCheck = false);
+   void transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout, bool checkSurfaceChanges = true);
 
    // Vertex Buffers
    VertexBufferDesc getAttribBufferDesc(uint32_t bufferIndex);

@@ -888,7 +888,7 @@ Driver::getSurface(const SurfaceDesc& info)
 }
 
 void
-Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range, bool skipChangeCheck)
+Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::ImageLayout layout, SurfaceSubRange range, bool checkSurfaceChanges)
 {
    // We need to align our invalidation groups along a tickness boundary!
    auto alignedRange = range;
@@ -904,7 +904,7 @@ Driver::transitionSurface(SurfaceObject *surface, ResourceUsage usage, vk::Image
 
    bool forWrite = getResourceUsageMeta(usage).isWrite;
 
-   if (!skipChangeCheck) {
+   if (checkSurfaceChanges) {
       _refreshSurface(surface, alignedRange);
 
       if (forWrite) {
@@ -973,9 +973,9 @@ Driver::getSurfaceView(const SurfaceViewDesc& info)
 }
 
 void
-Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout, bool skipChangeCheck)
+Driver::transitionSurfaceView(SurfaceViewObject *surfaceView, ResourceUsage usage, vk::ImageLayout layout, bool checkSurfaceChanges)
 {
-   transitionSurface(surfaceView->surface, usage, layout, surfaceView->surfaceRange, skipChangeCheck);
+   transitionSurface(surfaceView->surface, usage, layout, surfaceView->surfaceRange, checkSurfaceChanges);
 
    if (surfaceView->boundImage == surfaceView->surface->image) {
       return;

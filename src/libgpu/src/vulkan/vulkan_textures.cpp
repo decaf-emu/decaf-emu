@@ -136,7 +136,7 @@ Driver::prepareCurrentTextures()
       auto& vsSurface = mCurrentDraw->textures[0][i];
       if (vsSurface) {
          if (!mCurrentDraw->textureDirty[0][i]) {
-            transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal, true);
+            transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal, false);
          } else {
             transitionSurfaceView(vsSurface, ResourceUsage::VertexTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
             mCurrentDraw->textureDirty[0][i] = false;
@@ -146,7 +146,7 @@ Driver::prepareCurrentTextures()
       auto& gsSurface = mCurrentDraw->textures[1][i];
       if (gsSurface) {
          if (!mCurrentDraw->textureDirty[1][i]) {
-            transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal, true);
+            transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal, false);
          } else {
             transitionSurfaceView(gsSurface, ResourceUsage::GeometryTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
             mCurrentDraw->textureDirty[1][i] = false;
@@ -156,7 +156,7 @@ Driver::prepareCurrentTextures()
       auto& psSurface = mCurrentDraw->textures[2][i];
       if (psSurface) {
          if (!mCurrentDraw->textureDirty[2][i]) {
-            transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal, true);
+            transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal, false);
          } else {
             transitionSurfaceView(psSurface, ResourceUsage::PixelTexture, vk::ImageLayout::eShaderReadOnlyOptimal);
             mCurrentDraw->textureDirty[2][i] = false;

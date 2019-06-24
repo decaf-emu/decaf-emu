@@ -178,12 +178,12 @@ Driver::prepareCurrentFramebuffer()
       // that the image layout is appropriate.
       for (auto &surfaceView : fb->colorSurfaces) {
          if (surfaceView) {
-            transitionSurfaceView(surfaceView, ResourceUsage::ColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, true);
+            transitionSurfaceView(surfaceView, ResourceUsage::ColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, false);
          }
       }
       if (fb->depthSurface) {
          auto &surfaceView = fb->depthSurface;
-         transitionSurfaceView(surfaceView, ResourceUsage::DepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, true);
+         transitionSurfaceView(surfaceView, ResourceUsage::DepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, false);
       }
       return;
    }
