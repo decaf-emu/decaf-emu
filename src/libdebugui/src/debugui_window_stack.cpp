@@ -234,7 +234,7 @@ StackWindow::draw()
       }
 
       auto symbolDistance = uint32_t { 0 };
-      auto error =
+      auto symbolFound =
          decaf::debug::findClosestSymbol(
             data,
             &symbolDistance,
@@ -243,7 +243,7 @@ StackWindow::draw()
             moduleNameBuffer.data(),
             static_cast<uint32_t>(moduleNameBuffer.size()));
 
-      if (!error && moduleNameBuffer[0] && symbolNameBuffer[0]) {
+      if (symbolFound && moduleNameBuffer[0] && symbolNameBuffer[0]) {
          ImGui::SetCursorPos(linePos);
          ImGui::Text("<%s|%s+0x%X>",
                      symbolNameBuffer.data(),

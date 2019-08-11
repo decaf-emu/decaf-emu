@@ -184,7 +184,7 @@ cpuBranchTraceHandler(cpu::Core *core,
 {
    if (sBranchTraceEnabled) {
       auto &data = sKernelData->coreData[core->id];
-      auto error =
+      auto symbolFound =
          internal::findClosestSymbol(virt_addr { target },
                                      virt_addrof(data.symbolDistance),
                                      virt_addrof(data.symbolNameBuffer),
@@ -192,7 +192,7 @@ cpuBranchTraceHandler(cpu::Core *core,
                                      virt_addrof(data.moduleNameBuffer),
                                      data.moduleNameBuffer.size());
 
-      if (!error && data.moduleNameBuffer[0] && data.symbolNameBuffer[0]) {
+      if (symbolFound && data.moduleNameBuffer[0] && data.symbolNameBuffer[0]) {
          gLog->trace("CPU branched to: 0x{:08X} {}|{}+0x{:X}",
                      target,
                      virt_addrof(data.moduleNameBuffer).get(),
