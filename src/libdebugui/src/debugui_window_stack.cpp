@@ -53,6 +53,11 @@ StackWindow::update()
          frame.start = addr;
          frame.end = mem::read<uint32_t>(addr - 8) + 8;
 
+         if (mStackFrames.find(frame.start) != mStackFrames.end()) {
+            // Prevent infinite loop with a buggy stack!
+            break;
+         }
+
          if (frame.end > stackStart) {
             // Stop when we go outside of the stack
             break;
