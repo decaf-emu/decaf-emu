@@ -109,13 +109,23 @@ getCurrentRamPartitionData()
 RamPartitionId
 getCurrentRamPartitionId()
 {
-   return sCoreProcessData[cpu::this_core::id()].rampid;
+   auto core = cpu::this_core::id();
+   if (core == cpu::InvalidCoreId) {
+      core = 1;
+   }
+
+   return sCoreProcessData[core].rampid;
 }
 
 KernelProcessId
 getCurrentKernelProcessId()
 {
-   return getCurrentRamPartitionData()->coreKernelProcessId[cpu::this_core::id()];
+   auto core = cpu::this_core::id();
+   if (core == cpu::InvalidCoreId) {
+      core = 1;
+   }
+
+   return getCurrentRamPartitionData()->coreKernelProcessId[core];
 }
 
 UniqueProcessId
