@@ -28,7 +28,7 @@
 #define decaf_handle_assert(x, e, m) \
    if (UNLIKELY(!(x))) { \
       assertFailed(__FILE__, __LINE__, e, m); \
-      __builtin_trap(); \
+      abort(); \
    }
 
 #define decaf_handle_warn_assert(x, e, m) \
@@ -38,7 +38,7 @@
 
 #define decaf_host_fault(f, t) \
    hostFaultWithStackTrace(f, t); \
-   __builtin_trap();
+   abort();
 
 #endif
 
