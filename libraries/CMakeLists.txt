@@ -49,70 +49,72 @@ add_subdirectory(fmt)
 set_target_properties(fmt PROPERTIES FOLDER libraries)
 
 # glbinding
-find_package(glbinding QUIET)
+if(DECAF_GL)
+    find_package(glbinding QUIET)
 
-if(NOT glbinding_FOUND)
-    set(GLBINDING_DIR "glbinding")
-    set(GLBINDING_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    if(NOT glbinding_FOUND)
+        set(GLBINDING_DIR "glbinding")
+        set(GLBINDING_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-    if (MSVC)
-        set(GLBINDING_BUILD_SHARED on)
-        set(GLBINDING_CXX_FLAGS "${GLBINDING_CXX_FLAGS} -D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING")
-    else ()
-        set(GLBINDING_BUILD_SHARED off)
-    endif ()
+        if (MSVC)
+            set(GLBINDING_BUILD_SHARED on)
+            set(GLBINDING_CXX_FLAGS "${GLBINDING_CXX_FLAGS} -D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING")
+        else ()
+            set(GLBINDING_BUILD_SHARED off)
+        endif ()
 
-    externalproject_add(glbinding
-        SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}"
-        CMAKE_CACHE_ARGS
-            -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
-            -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
-            -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
-            -DCMAKE_CXX_FLAGS:string=${GLBINDING_CXX_FLAGS}
-            -DBUILD_SHARED_LIBS:string=${GLBINDING_BUILD_SHARED}
-            -DOPTION_BUILD_DOCS:string=off
-            -DOPTION_BUILD_EXAMPLES:string=off
-            -DOPTION_BUILD_TESTS:string=off
-            -DOPTION_BUILD_TOOLS:string=off
-            -DOPTION_BUILD_GPU_TESTS:string=off
-        INSTALL_COMMAND "")
-    externalproject_get_property(glbinding BINARY_DIR)
-    externalproject_add_step(glbinding
-        copy_to_binary
-        DEPENDEES build
-        DEPENDERS install
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
-    set_target_properties(glbinding PROPERTIES FOLDER libraries)
+        externalproject_add(glbinding
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}"
+            CMAKE_CACHE_ARGS
+                -DCMAKE_C_COMPILER:string=${CMAKE_C_COMPILER}
+                -DCMAKE_C_FLAGS:string=${CMAKE_C_FLAGS}
+                -DCMAKE_CXX_COMPILER:string=${CMAKE_CXX_COMPILER}
+                -DCMAKE_CXX_FLAGS:string=${GLBINDING_CXX_FLAGS}
+                -DBUILD_SHARED_LIBS:string=${GLBINDING_BUILD_SHARED}
+                -DOPTION_BUILD_DOCS:string=off
+                -DOPTION_BUILD_EXAMPLES:string=off
+                -DOPTION_BUILD_TESTS:string=off
+                -DOPTION_BUILD_TOOLS:string=off
+                -DOPTION_BUILD_GPU_TESTS:string=off
+            INSTALL_COMMAND "")
+        externalproject_get_property(glbinding BINARY_DIR)
+        externalproject_add_step(glbinding
+            copy_to_binary
+            DEPENDEES build
+            DEPENDERS install
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
+        set_target_properties(glbinding PROPERTIES FOLDER libraries)
 
-    if (MSVC)
-        set(GLBINDING_IMPORTED_LOCATION
-            IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}glbindingd${CMAKE_FIND_LIBRARY_SUFFIXES}"
-            IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/Release/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}"
-            IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}"
-            IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}")
-    else ()
-        set(GLBINDING_IMPORTED_LOCATION
-            IMPORTED_LOCATION "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
-    endif ()
+        if (MSVC)
+            set(GLBINDING_IMPORTED_LOCATION
+                IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}glbindingd${CMAKE_FIND_LIBRARY_SUFFIXES}"
+                IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/Release/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}"
+                IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}"
+                IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding${CMAKE_FIND_LIBRARY_SUFFIXES}")
+        else ()
+            set(GLBINDING_IMPORTED_LOCATION
+                IMPORTED_LOCATION "${BINARY_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding.a")
+        endif ()
 
-    add_library(glbinding_import STATIC IMPORTED GLOBAL)
-    add_dependencies(glbinding_import glbinding)
-    set_target_properties(glbinding_import PROPERTIES ${GLBINDING_IMPORTED_LOCATION})
+        add_library(glbinding_import STATIC IMPORTED GLOBAL)
+        add_dependencies(glbinding_import glbinding)
+        set_target_properties(glbinding_import PROPERTIES ${GLBINDING_IMPORTED_LOCATION})
 
-    add_library(glbinding_final INTERFACE)
-    add_dependencies(glbinding_final glbinding_import)
-    target_include_directories(glbinding_final INTERFACE
-        "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}/source/glbinding/include"
-        "${BINARY_DIR}/source/glbinding/include")
-    target_link_libraries(glbinding_final INTERFACE glbinding_import)
-    set(GLBINDING_LIBRARIES glbinding_final PARENT_SCOPE)
+        add_library(glbinding_final INTERFACE)
+        add_dependencies(glbinding_final glbinding_import)
+        target_include_directories(glbinding_final INTERFACE
+            "${CMAKE_CURRENT_SOURCE_DIR}/${GLBINDING_DIR}/source/glbinding/include"
+            "${BINARY_DIR}/source/glbinding/include")
+        target_link_libraries(glbinding_final INTERFACE glbinding_import)
+        set(GLBINDING_LIBRARIES glbinding_final PARENT_SCOPE)
 
-    if (MSVC)
-        install(FILES "${BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding$<$<CONFIG:Debug>:d>${CMAKE_SHARED_LIBRARY_SUFFIX}"
-                DESTINATION "${CMAKE_INSTALL_PREFIX}")
-    endif ()
-else()
-    set(GLBINDING_LIBRARIES glbinding PARENT_SCOPE)
+        if (MSVC)
+            install(FILES "${BINARY_DIR}/\${CMAKE_INSTALL_CONFIG_NAME}/${CMAKE_FIND_LIBRARY_PREFIXES}glbinding$<$<CONFIG:Debug>:d>${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                    DESTINATION "${CMAKE_INSTALL_PREFIX}")
+        endif ()
+    else()
+        set(GLBINDING_LIBRARIES glbinding PARENT_SCOPE)
+    endif()
 endif()
 
 # glslang
