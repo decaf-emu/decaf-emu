@@ -22,7 +22,7 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:cginternals/ppa'
-      - sourceline: 'deb https://packages.lunarg.com/vulkan/1.1.101 xenial main'
+      - sourceline: 'deb https://packages.lunarg.com/vulkan/1.1.121 xenial main'
         key_url: 'http://packages.lunarg.com/lunarg-signing-key-pub.asc'
     packages:
       - clang-6.0
