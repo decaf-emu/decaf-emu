@@ -489,11 +489,11 @@ disassembleBranchInfo(InstructionID id,
          info.target += address;
       }
    } else if (id == InstructionID::bc) {
-      info = disassembleBranchInfoBX<BcCheckCtr | BcCheckCond>(address, ins, ctr, cr, lr);
+      info = disassembleBranchInfoBX<BcCheckCtr | BcCheckCond>(ins, address, ctr, cr, lr);
    } else if (id == InstructionID::bcctr) {
-      info = disassembleBranchInfoBX<BcBranchCTR | BcCheckCond>(address, ins, ctr, cr, lr);
+      info = disassembleBranchInfoBX<BcBranchCTR | BcCheckCond>(ins, address, ctr, cr, lr);
    } else if (id == InstructionID::bclr) {
-      info = disassembleBranchInfoBX<BcBranchLR | BcCheckCtr | BcCheckCond>(address, ins, ctr, cr, lr);
+      info = disassembleBranchInfoBX<BcBranchLR | BcCheckCtr | BcCheckCond>(ins, address, ctr, cr, lr);
    }
 
    return info;
