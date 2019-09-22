@@ -21,36 +21,52 @@ size_t
 readMemory(VirtualAddress address, void *dst, size_t size)
 {
    auto out = reinterpret_cast<uint8_t *>(dst);
-   auto bytesRead = size_t { 0 };
+   constexpr auto pageMask = ~(cpu::PageSize - 1);
+   auto bytesRemaining = size;
 
-   while (bytesRead < size) {
-      if (!cpu::isValidAddress(cpu::VirtualAddress { address })) {
+   // Copy bytes, checking validity of each memory page as we cross it
+   while (bytesRemaining > 0) {
+      auto currentPage = address & pageMask;
+      if (!cpu::isValidAddress(cpu::VirtualAddress { currentPage })) {
          break;
       }
 
-      *(out++) = mem::read<uint8_t>(address++);
-      ++bytesRead;
+      auto nextPage = currentPage + cpu::PageSize;
+      auto readBytes = std::min<size_t>(bytesRemaining, nextPage - address);
+
+      std::memcpy(out, mem::translate<uint8_t>(address), readBytes);
+      address += readBytes;
+      out += readBytes;
+      bytesRemaining -= readBytes;
    }
 
-   return bytesRead;
+   return size - bytesRemaining;
 }
 
 size_t
 writeMemory(VirtualAddress address, const void *src, size_t size)
 {
    auto in = reinterpret_cast<const uint8_t *>(src);
-   auto bytesWritten = size_t { 0 };
+   constexpr auto pageMask = ~(cpu::PageSize - 1);
+   auto bytesRemaining = size;
 
-   while (bytesWritten < size) {
-      if (!cpu::isValidAddress(cpu::VirtualAddress { address })) {
+   // Copy bytes, checking validity of each memory page as we cross it
+   while (bytesRemaining > 0) {
+      auto currentPage = address & pageMask;
+      if (!cpu::isValidAddress(cpu::VirtualAddress{ currentPage })) {
          break;
       }
 
-      mem::write<uint8_t>(address++, *(in++));
-      ++bytesWritten;
+      auto nextPage = currentPage + cpu::PageSize;
+      auto readBytes = std::min<size_t>(bytesRemaining, nextPage - address);
+
+      std::memcpy(mem::translate<uint8_t>(address), in, readBytes);
+      address += readBytes;
+      in += readBytes;
+      bytesRemaining -= readBytes;
    }
 
-   return bytesWritten;
+   return size - bytesRemaining;
 }
 
 } // namespace decaf::debug
