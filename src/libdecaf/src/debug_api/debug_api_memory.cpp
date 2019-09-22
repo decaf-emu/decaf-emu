@@ -5,6 +5,18 @@
 namespace decaf::debug
 {
 
+bool
+isValidVirtualAddress(VirtualAddress address)
+{
+   return cpu::isValidAddress(cpu::VirtualAddress { address });
+}
+
+size_t
+getMemoryPageSize()
+{
+   return cpu::PageSize;
+}
+
 size_t
 readMemory(VirtualAddress address, void *dst, size_t size)
 {

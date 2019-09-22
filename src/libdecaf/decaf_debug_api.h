@@ -333,6 +333,8 @@ bool addBreakpoint(VirtualAddress address);
 bool removeBreakpoint(VirtualAddress address);
 
 // Memory
+bool isValidVirtualAddress(VirtualAddress address);
+size_t getMemoryPageSize();
 size_t readMemory(VirtualAddress address, void *dst, size_t size);
 size_t writeMemory(VirtualAddress address, const void *src, size_t size);
 
