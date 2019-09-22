@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <common/bitutils.h>
 #include <iomanip>
-#include <list>
+#include <vector>
 #include <sstream>
 
 namespace espresso
@@ -40,11 +40,11 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
       break;
    case InstructionField::crfD:
       result.type = Disassembly::Argument::Register;
-      result.text = "crf" + std::to_string(instr.crfD);
+      result.registerName = "crf" + std::to_string(instr.crfD);
       break;
    case InstructionField::crfS:
       result.type = Disassembly::Argument::Register;
-      result.text = "crf" + std::to_string(instr.crfS);
+      result.registerName = "crf" + std::to_string(instr.crfS);
       break;
    case InstructionField::crm:
       result.type = Disassembly::Argument::ConstantUnsigned;
@@ -60,23 +60,23 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
       break;
    case InstructionField::frA:
       result.type = Disassembly::Argument::Register;
-      result.text = "f" + std::to_string(instr.frA);
+      result.registerName = "f" + std::to_string(instr.frA);
       break;
    case InstructionField::frB:
       result.type = Disassembly::Argument::Register;
-      result.text = "f" + std::to_string(instr.frB);
+      result.registerName = "f" + std::to_string(instr.frB);
       break;
    case InstructionField::frC:
       result.type = Disassembly::Argument::Register;
-      result.text = "f" + std::to_string(instr.frC);
+      result.registerName = "f" + std::to_string(instr.frC);
       break;
    case InstructionField::frD:
       result.type = Disassembly::Argument::Register;
-      result.text = "f" + std::to_string(instr.frD);
+      result.registerName = "f" + std::to_string(instr.frD);
       break;
    case InstructionField::frS:
       result.type = Disassembly::Argument::Register;
-      result.text = "f" + std::to_string(instr.frS);
+      result.registerName = "f" + std::to_string(instr.frS);
       break;
    case InstructionField::i:
       result.type = Disassembly::Argument::ConstantUnsigned;
@@ -112,19 +112,19 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
       break;
    case InstructionField::rA:
       result.type = Disassembly::Argument::Register;
-      result.text = "r" + std::to_string(instr.rA);
+      result.registerName = "r" + std::to_string(instr.rA);
       break;
    case InstructionField::rB:
       result.type = Disassembly::Argument::Register;
-      result.text = "r" + std::to_string(instr.rB);
+      result.registerName = "r" + std::to_string(instr.rB);
       break;
    case InstructionField::rD:
       result.type = Disassembly::Argument::Register;
-      result.text = "r" + std::to_string(instr.rD);
+      result.registerName = "r" + std::to_string(instr.rD);
       break;
    case InstructionField::rS:
       result.type = Disassembly::Argument::Register;
-      result.text = "r" + std::to_string(instr.rS);
+      result.registerName = "r" + std::to_string(instr.rS);
       break;
    case InstructionField::sh:
       result.type = Disassembly::Argument::ConstantUnsigned;
@@ -140,7 +140,7 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
       break;
    case InstructionField::spr: // TODO: Real SPR name
       result.type = Disassembly::Argument::Register;
-      result.text = "spr" + std::to_string(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
+      result.registerName = "spr" + std::to_string(((instr.spr << 5) & 0x3E0) | ((instr.spr >> 5) & 0x1F));
       break;
    case InstructionField::to:
       result.type = Disassembly::Argument::ConstantUnsigned;
@@ -148,7 +148,7 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
       break;
    case InstructionField::tbr:
       result.type = Disassembly::Argument::Register;
-      result.text = "tbr" + std::to_string(instr.spr);
+      result.registerName = "tbr" + std::to_string(instr.spr);
       break;
    case InstructionField::uimm:
       result.type = Disassembly::Argument::ValueUnsigned;
@@ -194,8 +194,26 @@ disassembleField(Disassembly::Argument &result, uint32_t cia, Instruction instr,
    return true;
 }
 
-static std::string
-argumentToText(Disassembly::Argument &arg)
+std::string
+disassemblyToText(const Disassembly &dis)
+{
+   auto text = dis.name;
+
+   for (auto &arg : dis.args) {
+      if (&arg == &dis.args[0]) {
+         text += " ";
+      } else {
+         text += ", ";
+      }
+
+      text += disassemblyArgumentToText(arg);
+   }
+
+   return text;
+}
+
+std::string
+disassemblyArgumentToText(const Disassembly::Argument &arg)
 {
    std::stringstream ss;
 
@@ -204,7 +222,7 @@ argumentToText(Disassembly::Argument &arg)
       ss << "@" << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << arg.address;
       return ss.str();
    case Disassembly::Argument::Register:
-      return arg.text;
+      return arg.registerName;
    case Disassembly::Argument::ValueUnsigned:
       if (arg.valueUnsigned > 9) {
          ss << "0x" << std::hex << arg.valueUnsigned;
@@ -278,9 +296,9 @@ checkBranchConditionAlias(Instruction instr, Disassembly &dis)
       dis.args.erase(dis.args.begin(), dis.args.begin() + 2);
 
       // Add crS argument
-      Disassembly::Argument cr;
+      auto cr = Disassembly::Argument { };
       cr.type = Disassembly::Argument::Register;
-      cr.text = "cr" + std::to_string(instr.bi / 4);
+      cr.registerName = "cr" + std::to_string(instr.bi / 4);
       dis.args.push_back(cr);
 
       // Update name
@@ -292,7 +310,6 @@ bool
 disassemble(Instruction instr, Disassembly &dis, uint32_t address)
 {
    auto data = decodeInstruction(instr);
-
    if (!data) {
       return false;
    }
@@ -302,7 +319,8 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    dis.instruction = data;
    dis.address = address;
 
-   std::list<InstructionField> args;
+   auto args = std::vector<InstructionField> { };
+   args.reserve(16);
 
    for (auto &field : data->write) {
       // Skip arguments that are in read list as well
@@ -333,11 +351,11 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
    }
 
    for (auto &field : args) {
-      Disassembly::Argument arg;
+      auto arg = Disassembly::Argument { };
 
       // If we have an alias, then skip the LHS field of each alias comparison
       if (alias) {
-         bool skipField = false;
+         auto skipField = false;
 
          for (auto &op : alias->opcode) {
             if (field == op.field) {
@@ -371,19 +389,6 @@ disassemble(Instruction instr, Disassembly &dis, uint32_t address)
       } else if (field == InstructionField::rc && instr.rc) {
          dis.name += '.';
       }
-   }
-
-   // Create text disassembly
-   dis.text = dis.name;
-
-   for (auto &arg : dis.args) {
-      if (&arg == &dis.args[0]) {
-         dis.text += " ";
-      } else {
-         dis.text += ", ";
-      }
-
-      dis.text += argumentToText(arg);
    }
 
    return true;

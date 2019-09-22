@@ -11,15 +11,34 @@
 namespace decaf::debug
 {
 
+struct FunctionListPredicate
+{
+   bool operator () (const AnalyseDatabase::Function &func, VirtualAddress addr) {
+      return func.start < addr;
+   }
+   bool operator () (VirtualAddress addr, const AnalyseDatabase::Function &func) {
+      return addr < func.start;
+   }
+};
+
+struct RFunctionListPredicate
+{
+   bool operator () (const AnalyseDatabase::Function &func, VirtualAddress addr) {
+      return func.start > addr;
+   }
+};
+
 const AnalyseDatabase::Function *
 analyseLookupFunction(const AnalyseDatabase &db,
                       VirtualAddress address)
 {
-   if (auto itr = db.functions.find(address); itr != db.functions.end()) {
-      return &itr->second;
+   auto itr = std::lower_bound(db.functions.begin(), db.functions.end(),
+                               address, FunctionListPredicate { });
+   if (itr == db.functions.end() || itr->start != address) {
+      return nullptr;
    }
 
-   return nullptr;
+   return &*itr;
 }
 
 template<typename ConstOptionalDatabase>
@@ -27,17 +46,10 @@ static auto
 findFunctionContainingAddress(ConstOptionalDatabase &db,
                               VirtualAddress address)
 {
-   using ReturnType =
-      typename std::conditional<std::is_const<ConstOptionalDatabase>::value,
-                       const AnalyseDatabase::Function *,
-                       AnalyseDatabase::Function *>::type;
-
-   if (db.functions.empty()) {
-      return static_cast<ReturnType>(nullptr);
-   }
-
-   if (auto itr = db.functions.lower_bound(address); itr != db.functions.end()) {
-      auto &func = itr->second;
+   auto itr = std::lower_bound(db.functions.rbegin(), db.functions.rend(),
+                               address, RFunctionListPredicate{ });
+   if (itr != db.functions.rend()) {
+      auto &func = *itr;
 
       if (address >= func.start && address < func.end) {
          // The function needs to have an end, or be the first two instructions
@@ -49,7 +61,7 @@ findFunctionContainingAddress(ConstOptionalDatabase &db,
       }
    }
 
-   return static_cast<ReturnType>(nullptr);
+   return static_cast<decltype(&*itr)>(nullptr);
 }
 
 AnalyseDatabase::Lookup
@@ -68,7 +80,7 @@ analyseLookupAddress(const AnalyseDatabase &db,
 uint32_t
 analyseScanFunctionEnd(VirtualAddress start)
 {
-   static const uint32_t MaxScannedBytes = 0x400u;
+   static const uint32_t MaxScannedBytes = 0x1000u;
    auto fnStart = start;
    auto fnMax = start;
    auto fnEnd = uint32_t { 0xFFFFFFFFu };
@@ -163,17 +175,22 @@ markAsFunction(AnalyseDatabase &db,
       func.name = name;
    }
 
-   db.functions.emplace(func.start, func);
+   db.functions.insert(
+      std::upper_bound(db.functions.begin(), db.functions.end(),
+                       func.start, FunctionListPredicate { }),
+      func);
 }
 
 void
 analyseToggleAsFunction(AnalyseDatabase &db,
                         VirtualAddress address)
 {
-   if (auto itr = db.functions.find(address); itr != db.functions.end()) {
-      db.functions.erase(itr);
-   } else {
+   auto itr = std::lower_bound(db.functions.begin(), db.functions.end(),
+                               address, FunctionListPredicate{ });
+   if (itr == db.functions.end() || itr->start != address) {
       markAsFunction(db, address);
+   } else {
+      db.functions.erase(itr);
    }
 }
 

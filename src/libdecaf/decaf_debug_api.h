@@ -42,7 +42,7 @@ struct AnalyseDatabase
       const Instruction *instruction = nullptr;
    };
 
-   std::map<uint32_t, Function, std::greater<uint32_t>> functions;
+   std::vector<Function> functions;
    std::unordered_map<uint32_t, Instruction> instructions;
 };
 

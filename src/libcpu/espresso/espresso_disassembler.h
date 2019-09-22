@@ -35,7 +35,7 @@ struct Disassembly
       };
 
       Type type;
-      std::string text;
+      std::string registerName;
 
       union
       {
@@ -51,10 +51,11 @@ struct Disassembly
    InstructionInfo *instruction;
    std::string name;
    std::vector<Argument> args;
-   std::string text;
 };
 
 bool disassemble(Instruction bin, Disassembly &out, uint32_t address);
+std::string disassemblyToText(const Disassembly &dis);
+std::string disassemblyArgumentToText(const Disassembly::Argument &arg);
 BranchInfo disassembleBranchInfo(InstructionID id, Instruction ins,
                                  uint32_t address, uint32_t ctr,
                                  uint32_t cr, uint32_t lr);

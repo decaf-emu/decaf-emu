@@ -420,15 +420,16 @@ DisassemblyWindow::draw()
       espresso::Disassembly dis;
 
       if (espresso::disassemble(instr, dis, addr)) {
+         auto text = espresso::disassemblyToText(dis);
          // TODO: Better integration with the disassembler,
          //  as well as providing per-arg highlighting?
-         auto cmdVsArgs = dis.text.find(' ');
+         auto cmdVsArgs = text.find(' ');
          if (cmdVsArgs != std::string::npos) {
-            auto cmd = dis.text.substr(0, cmdVsArgs);
-            auto args = dis.text.substr(cmdVsArgs + 1);
+            auto cmd = text.substr(0, cmdVsArgs);
+            auto args = text.substr(cmdVsArgs + 1);
             ImGui::Text("%-6s %s", cmd.c_str(), args.c_str());
          } else {
-            ImGui::Text("%-6s", dis.text.c_str());
+            ImGui::Text("%-6s", text.c_str());
          }
       } else {
          ImGui::Text("??");

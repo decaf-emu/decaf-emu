@@ -383,7 +383,7 @@ disassemble(uint32_t instr,
 {
    espresso::Disassembly disassembly;
    espresso::disassemble(static_cast<espresso::Instruction>(instr), disassembly, address);
-   return disassembly.text;
+   return espresso::disassemblyToText(disassembly);
 }
 
 static bool

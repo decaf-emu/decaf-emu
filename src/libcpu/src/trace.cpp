@@ -132,10 +132,11 @@ printFieldValue(fmt::memory_buffer &out, Instruction instr, TraceFieldType type,
 static void
 printInstruction(fmt::memory_buffer &out, const Trace& trace, int index)
 {
-   espresso::Disassembly dis;
+   auto dis = espresso::Disassembly { };
    espresso::disassemble(trace.instr, dis, trace.cia);
 
-   std::string addend = "";
+   auto disassemblyText = espresso::disassemblyToText(dis);
+   auto addend = std::string { };
 
    /*
    if (dis.instruction->id == InstructionID::kc) {
@@ -148,7 +149,7 @@ printInstruction(fmt::memory_buffer &out, const Trace& trace, int index)
       printFieldValue(out, trace.instr, write.type, write.value);
    }
 
-   fmt::format_to(out, "  [{}] {:08x} {}{}\n", index, trace.cia, dis.text.c_str(), addend.c_str());
+   fmt::format_to(out, "  [{}] {:08x} {}{}\n", index, trace.cia, disassemblyText.c_str(), addend.c_str());
 
    for (auto &read : trace.reads) {
       printFieldValue(out, trace.instr, read.type, read.value);
