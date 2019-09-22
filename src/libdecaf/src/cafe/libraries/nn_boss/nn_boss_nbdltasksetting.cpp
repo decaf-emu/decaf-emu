@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "nn_boss.h"
 #include "nn_boss_nbdltasksetting.h"
 #include "nn_boss_nettasksetting.h"

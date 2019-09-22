@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "gx2.h"
 #include "gx2_cbpool.h"
 #include "gx2_registers.h"
