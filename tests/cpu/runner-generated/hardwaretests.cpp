@@ -285,7 +285,7 @@ int runTests(const std::string &path)
 
             // Print disassembly
             disassemble(test.instr, dis, baseAddress.getAddress());
-            gLog->debug(dis.text);
+            gLog->debug(disassemblyToText(dis));
 
             // Print all test fields
             gLog->debug("{:08x}            Input         Hardware           Interp", test.instr.value);

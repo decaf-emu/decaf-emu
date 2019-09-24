@@ -71,7 +71,7 @@ runTests()
 
          espresso::Disassembly disassembly;
          espresso::disassemble(failedInstr, disassembly, failedAddr);
-         gLog->warn(" {:08x} = {:08x} failed - {}", failedAddr, failedInstr, disassembly.text);
+         gLog->warn(" {:08x} = {:08x} failed - {}", failedAddr, failedInstr, espresso::disassemblyToText(disassembly));
          gLog->warn("   {:08x} {:08x} {:08x} {:08x}", failedAux[0], failedAux[1], failedAux[2], failedAux[3]);
       }
 
