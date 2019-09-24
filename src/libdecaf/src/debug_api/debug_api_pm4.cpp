@@ -25,6 +25,10 @@ pm4CaptureState()
 bool
 pm4CaptureNextFrame()
 {
+   if (cafe::gx2::internal::captureState() != cafe::gx2::internal::CaptureState::Disabled) {
+      return false;
+   }
+
    cafe::gx2::internal::captureNextFrame();
    return true;
 }
@@ -32,6 +36,10 @@ pm4CaptureNextFrame()
 bool
 pm4CaptureBegin()
 {
+   if (cafe::gx2::internal::captureState() != cafe::gx2::internal::CaptureState::Disabled) {
+      return false;
+   }
+
    cafe::gx2::internal::captureStartAtNextSwap();
    return true;
 }
@@ -39,6 +47,10 @@ pm4CaptureBegin()
 bool
 pm4CaptureEnd()
 {
+   if (cafe::gx2::internal::captureState() != cafe::gx2::internal::CaptureState::Enabled) {
+      return false;
+   }
+
    cafe::gx2::internal::captureStopAtNextSwap();
    return true;
 }
