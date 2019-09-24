@@ -20,3 +20,7 @@ target_link_libraries(common-sdl
 if(UNIX)
     target_link_libraries(common-sdl dl)
 endif()
+
+if(MSVC)
+    target_link_libraries(common-sdl Setupapi)
+endif()
