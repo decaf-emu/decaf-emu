@@ -199,6 +199,10 @@ hasBreakpoint(VirtualAddress address)
 bool
 addBreakpoint(VirtualAddress address)
 {
+   if (!cpu::isValidAddress(static_cast<cpu::VirtualAddress>(address))) {
+      return false;
+   }
+
    cpu::addBreakpoint(address, cpu::Breakpoint::MultiFire);
    return true;
 }
@@ -206,6 +210,10 @@ addBreakpoint(VirtualAddress address)
 bool
 removeBreakpoint(VirtualAddress address)
 {
+   if (!cpu::isValidAddress(static_cast<cpu::VirtualAddress>(address))) {
+      return false;
+   }
+
    cpu::removeBreakpoint(address);
    return true;
 }
