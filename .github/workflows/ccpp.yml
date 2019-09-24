@@ -1,0 +1,123 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [
+          macOS-10.14-Xcode-11,
+          ubuntu-18.04-gcc-8,
+#          ubuntu-18.04-clang-7,
+          windows-2019-cl,
+        ]
+        include:
+          - name: macOS-10.14-Xcode-11
+            os: macOS-10.14
+            compiler: xcode
+            version: "11"
+          - name: ubuntu-18.04-gcc-8
+            os: ubuntu-18.04
+            compiler: gcc
+            version: "8"
+# Clang maybe using wrong std c++?
+#          - name: ubuntu-18.04-clang-7
+#            os: ubuntu-18.04
+#            compiler: clang
+#            version: "7"
+          - name: windows-2019-cl
+            os: windows-2019
+            compiler: cl
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+
+    - name: Initialise
+      run: mkdir build
+
+    - name: Install (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list
+        sudo apt-add-repository ppa:cginternals/ppa
+        sudo apt-get update
+        sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          sudo apt-get install -y g++-${{ matrix.version }}
+          echo ::set-env name=CC::gcc-${{ matrix.version }}
+          echo ::set-env name=CXX::g++-${{ matrix.version }}
+          echo ::set-env name=CONAN_ENV_COMPILER_LIBCXX::libstdc++11
+        else
+          sudo apt-get install -y clang-${{ matrix.version }}
+          echo ::set-env name=CC::clang-${{ matrix.version }}
+          echo ::set-env name=CXX::clang++-${{ matrix.version }}
+        fi
+        echo ::set-env name=CONAN_ENV_COMPILER::${{ matrix.compiler }}
+        echo ::set-env name=CONAN_ENV_COMPILER_VERSION::${{ matrix.version }}
+
+    - name: Install (macOS)
+      if: startsWith(matrix.os, 'macOS')
+      run: |
+        brew install openssl sdl2
+        sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
+
+    - name: Install (Windows)
+      if: startsWith(matrix.os, 'windows')
+      shell: powershell
+      run: |
+        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.101.0/windows/VulkanSDK-1.1.101.0-Installer.exe?u=" -OutFile "vulkan-sdk.exe"
+        Start-Process -Filepath "vulkan-sdk.exe" -ArgumentList "/S"
+        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.101.0"
+        echo "::set-env name=CONAN_ENV_COMPILER::Visual Studio"
+        echo "::set-env name=CONAN_ENV_COMPILER_VERSION::15"
+
+    - name: Conan (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        cd build
+        pip install --user conan
+        pip install urllib3==1.25.3
+        source ~/.profile
+        conan user
+        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
+        conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=True -o curl=False -o openssl=False -o sdl2=False -o zlib=False
+
+    - name: Conan (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        cd build
+        pip install conan
+        pip install urllib3==1.25.3
+        conan user
+        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
+        conan install .. -s compiler="Visual Studio" -s compiler.version=15 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
+
+    - name: Configure (macOS)
+      if: startsWith(matrix.os, 'macOS')
+      run: |
+        cd build
+        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: Configure (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        cd build
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: Configure (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        cd build
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release -j 2
+
