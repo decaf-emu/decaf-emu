@@ -25,7 +25,7 @@ sLogSinks;
 class GlobalLogFormatter : public spdlog::formatter
 {
 public:
-   virtual void format(const spdlog::details::log_msg &msg, fmt::memory_buffer &dest) override
+   virtual void format(const spdlog::details::log_msg &msg, spdlog::memory_buf_t &dest) override
    {
       auto tm_time = spdlog::details::os::localtime(spdlog::log_clock::to_time_t(msg.time));
       auto duration = msg.time.time_since_epoch();
@@ -33,7 +33,7 @@ public:
 
       fmt::format_to(dest, "[{:02}:{:02}:{:02}.{:06} {}:",
                      tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, micros,
-                     spdlog::level::to_c_str(msg.level));
+                     spdlog::level::to_string_view(msg.level));
 
       auto core = cpu::this_core::state();
       if (core) {
@@ -43,14 +43,14 @@ public:
          } else {
             fmt::format_to(dest, "p{:01X} t{:02X}", core->id, 0xFF);
          }
-      } else if (msg.logger_name) {
-         fmt::format_to(dest, "{}", *msg.logger_name);
+      } else if (msg.logger_name.size()) {
+         fmt::format_to(dest, "{}", msg.logger_name);
       } else {
          fmt::format_to(dest, "h{}", msg.thread_id);
       }
 
       fmt::format_to(dest, "] {}{}",
-                     std::string_view { msg.raw.data(), msg.raw.size() },
+                     std::string_view { msg.payload.data(), msg.payload.size() },
                      spdlog::details::os::default_eol);
    }
 
