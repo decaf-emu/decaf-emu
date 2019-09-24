@@ -117,7 +117,7 @@ struct func_pointer_cast_impl<AddressType, FunctionPointer<AddressType, Function
 namespace fmt
 {
 
-inline namespace v5
+inline namespace v6
 {
 template<typename Type, typename Char, typename Enabled>
 struct formatter;
@@ -136,7 +136,7 @@ struct formatter<cpu::FunctionPointer<AddressType, FunctionType>, Char, void>
    auto format(const cpu::FunctionPointer<AddressType, FunctionType> &ptr, FormatContext &ctx)
    {
       auto addr = cpu::func_pointer_cast_impl<AddressType, FunctionType>::cast(ptr);
-      return format_to(ctx.begin(), "{:08X}", static_cast<uint32_t>(addr));
+      return format_to(ctx.out(), "{:08X}", static_cast<uint32_t>(addr));
    }
 };
 

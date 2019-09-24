@@ -197,7 +197,7 @@ align_down(cpu::Address<Type> value, size_t alignment)
 namespace fmt
 {
 
-inline namespace v5
+inline namespace v6
 {
 template<typename Type, typename Char, typename Enabled>
 struct formatter;
@@ -215,7 +215,7 @@ struct formatter<cpu::Address<AddressType>, Char, void>
    template<typename FormatContext>
    auto format(const cpu::Address<AddressType> &addr, FormatContext &ctx)
    {
-      return format_to(ctx.begin(), "0x{:08X}", addr.getAddress());
+      return format_to(ctx.out(), "0x{:08X}", addr.getAddress());
    }
 };
 

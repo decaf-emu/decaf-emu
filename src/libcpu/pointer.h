@@ -503,7 +503,7 @@ struct pointer_cast_impl<AddressType, SrcTypePtr, AddressType,
 namespace fmt
 {
 
-inline namespace v5
+inline namespace v6
 {
 template<typename Type, typename Char, typename Enabled>
 struct formatter;
@@ -558,10 +558,10 @@ struct formatter<cpu::Pointer<char, AddressType>, Char, void>
    auto format(const cpu::Pointer<char, AddressType> &ptr, FormatContext &ctx)
    {
       if (!ptr) {
-         return format_to(ctx.begin(), "<NULL>");
+         return format_to(ctx.out(), "<NULL>");
       } else {
          auto bytes = ptr.getRawPointer();
-         return format_escaped_string(ctx.begin(), bytes);
+         return format_escaped_string(ctx.out(), bytes);
       }
    }
 };
@@ -579,10 +579,10 @@ struct formatter<cpu::Pointer<const char, AddressType>, Char, void>
    auto format(const cpu::Pointer<const char, AddressType> &ptr, FormatContext &ctx)
    {
       if (!ptr) {
-         return format_to(ctx.begin(), "<NULL>");
+         return format_to(ctx.out(), "<NULL>");
       } else {
          const char *bytes = ptr.getRawPointer();
-         return format_escaped_string(ctx.begin(), bytes);
+         return format_escaped_string(ctx.out(), bytes);
       }
    }
 };
@@ -600,7 +600,7 @@ struct formatter<cpu::Pointer<ValueType, AddressType>, Char, void>
    auto format(const cpu::Pointer<ValueType, AddressType> &ptr, FormatContext &ctx)
    {
       auto addr = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(ptr);
-      return format_to(ctx.begin(), "0x{:08X}", static_cast<uint32_t>(addr));
+      return format_to(ctx.out(), "0x{:08X}", static_cast<uint32_t>(addr));
    }
 };
 
