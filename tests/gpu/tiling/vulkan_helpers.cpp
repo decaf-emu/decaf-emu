@@ -127,7 +127,7 @@ initialiseVulkan()
 
    // Set up our debug reporting callback
    vk::DispatchLoaderDynamic vkDynLoader;
-   vkDynLoader.init(gVulkan);
+   vkDynLoader.init(gVulkan, ::vkGetInstanceProcAddr);
    if (vkDynLoader.vkCreateDebugReportCallbackEXT) {
       vk::DebugReportCallbackCreateInfoEXT dbgReportDesc;
       dbgReportDesc.flags =
