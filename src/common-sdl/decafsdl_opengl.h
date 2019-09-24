@@ -9,6 +9,9 @@
 #include <SDL.h>
 #include <spdlog/spdlog.h>
 
+#include <memory>
+#include <thread>
+
 class DecafSDLOpenGL : public DecafSDLGraphics
 {
 public:

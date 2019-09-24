@@ -8,6 +8,10 @@
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
+#include <memory>
+#include <thread>
+#include <vector>
+
 class DecafSDLVulkan : public DecafSDLGraphics
 {
 public:
