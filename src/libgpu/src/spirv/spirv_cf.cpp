@@ -163,7 +163,7 @@ void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
 
    mSpv->createBranch(loop.head);
    mSpv->setBuildPoint(loop.head);
-   mSpv->createLoopMerge(loop.merge, loop.continue_target, spv::LoopControlMaskNone, 0);
+   mSpv->createLoopMerge(loop.merge, loop.continue_target, spv::LoopControlMaskNone, {});
    mSpv->createBranch(loop.body);
    mSpv->setBuildPoint(loop.body);
 

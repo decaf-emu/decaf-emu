@@ -9,14 +9,16 @@ class Driver : public gpu::GraphicsDriver
 public:
    virtual ~Driver() = default;
 
+   virtual void setWindowSystemInfo(const gpu::WindowSystemInfo &wsi) override;
+   virtual void windowHandleChanged(void *handle) override;
+   virtual void windowSizeChanged(int width, int height) override;
+
    virtual void run() override;
-   virtual void stop() override;
    virtual void runUntilFlip() override;
+   virtual void stop() override;
 
    virtual gpu::GraphicsDriverType type() override;
-
-   virtual float getAverageFPS() override;
-   virtual float getAverageFrametimeMS() override;
+   virtual gpu::GraphicsDriverDebugInfo *getDebugInfo() override;
 
    virtual void notifyCpuFlush(phys_addr address, uint32_t size) override;
    virtual void notifyGpuFlush(phys_addr address, uint32_t size) override;

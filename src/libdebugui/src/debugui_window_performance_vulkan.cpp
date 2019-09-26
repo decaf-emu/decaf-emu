@@ -16,29 +16,24 @@ PerformanceWindowVulkan::PerformanceWindowVulkan(const std::string &name) :
    auto graphicsDriver = decaf::getGraphicsDriver();
    decaf_check(graphicsDriver->type() == gpu::GraphicsDriverType::Vulkan);
 
-   auto glGraphicsDriver = reinterpret_cast<gpu::VulkanDriver *>(graphicsDriver);
-   mInfo = glGraphicsDriver->getDebuggerInfo();
+   mInfo = *reinterpret_cast<gpu::VulkanDriverDebugInfo *>(graphicsDriver->getDebugInfo());
 }
 
 void PerformanceWindowVulkan::drawBackendInfo()
 {
-   if (!mInfo) {
-      return;
-   }
-
    ImGui::Columns(2);
 
-   drawTextAndValue("Vertex Shaders:", mInfo->numVertexShaders);
-   drawTextAndValue("Geom   Shaders:", mInfo->numGeometryShaders);
-   drawTextAndValue("Pixel  Shaders:", mInfo->numPixelShaders);
-   drawTextAndValue("Data Buffers:", mInfo->numDataBuffers);
+   drawTextAndValue("Vertex Shaders:", mInfo.numVertexShaders);
+   drawTextAndValue("Geom   Shaders:", mInfo.numGeometryShaders);
+   drawTextAndValue("Pixel  Shaders:", mInfo.numPixelShaders);
+   drawTextAndValue("Data Buffers:", mInfo.numDataBuffers);
 
    ImGui::NextColumn();
 
-   drawTextAndValue("Render Passes:", mInfo->numRenderPasses);
-   drawTextAndValue("Pipelines:", mInfo->numPipelines);
-   drawTextAndValue("Samplers:", mInfo->numSamplers);
-   drawTextAndValue("Surfaces:", mInfo->numSurfaces);
+   drawTextAndValue("Render Passes:", mInfo.numRenderPasses);
+   drawTextAndValue("Pipelines:", mInfo.numPipelines);
+   drawTextAndValue("Samplers:", mInfo.numSamplers);
+   drawTextAndValue("Surfaces:", mInfo.numSurfaces);
 }
 
 } // namespace debugui

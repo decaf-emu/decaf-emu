@@ -28,12 +28,6 @@ GLDriver::GLDriver()
    mRegisters.fill(0);
 }
 
-gpu::GraphicsDriverType
-GLDriver::type()
-{
-   return gpu::GraphicsDriverType::OpenGL;
-}
-
 void
 GLDriver::initialise()
 {
@@ -101,11 +95,6 @@ GLDriver::initialise()
    gl::GLint value;
    gl::glGetIntegerv(gl::GL_MAX_UNIFORM_BLOCK_SIZE, &value);
    MaxUniformBlockSize = value;
-}
-
-void
-GLDriver::shutdown()
-{
 }
 
 void
@@ -257,6 +246,7 @@ GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
    }
 
    updateDebuggerInfo();
+   renderDisplay();
 }
 
 void
@@ -454,48 +444,38 @@ GLDriver::surfaceSync(const latte::pm4::SurfaceSync &data)
    }
 }
 
-void
-GLDriver::getSwapBuffers(gl::GLuint *tv,
-                         gl::GLuint *drc)
+gpu::GraphicsDriverType
+GLDriver::type()
 {
-   *tv = mTvScanBuffers.object;
-   *drc = mDrcScanBuffers.object;
+   return gpu::GraphicsDriverType::OpenGL;
 }
 
-float
-GLDriver::getAverageFPS()
+gpu::GraphicsDriverDebugInfo *
+GLDriver::getDebugInfo()
 {
-   // TODO: This is not thread safe...
-   static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
-   auto avgFrameTime = mAverageFrameTime.count();
-
-   if (avgFrameTime == 0.0) {
-      return 0.0f;
-   } else {
-      return static_cast<float>(second / avgFrameTime);
-   }
-}
-
-float
-GLDriver::getAverageFrametimeMS()
-{
-   return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
-}
-
-gpu::OpenGLDriver::DebuggerInfo *
-GLDriver::getDebuggerInfo() {
-   return &mDebuggerInfo;
+   return &mDebugInfo;
 }
 
 void
 GLDriver::updateDebuggerInfo()
 {
-   mDebuggerInfo.numFetchShaders = mFetchShaders.size();
-   mDebuggerInfo.numVertexShaders = mVertexShaders.size();
-   mDebuggerInfo.numPixelShaders = mPixelShaders.size();
-   mDebuggerInfo.numShaderPipelines = mShaderPipelines.size();
-   mDebuggerInfo.numSurfaces = mSurfaces.size();
-   mDebuggerInfo.numDataBuffers = mDataBuffers.size();
+   auto averageFrameTime = std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count();
+   mDebugInfo.averageFrameTimeMS = averageFrameTime;
+
+   if (averageFrameTime > 0.0) {
+      static constexpr auto second =
+         std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
+      mDebugInfo.averageFps = second / averageFrameTime;
+   } else {
+      mDebugInfo.averageFps = 0.0;
+   }
+
+   mDebugInfo.numFetchShaders = mFetchShaders.size();
+   mDebugInfo.numVertexShaders = mVertexShaders.size();
+   mDebugInfo.numPixelShaders = mPixelShaders.size();
+   mDebugInfo.numShaderPipelines = mShaderPipelines.size();
+   mDebugInfo.numSurfaces = mSurfaces.size();
+   mDebugInfo.numDataBuffers = mDataBuffers.size();
 }
 
 void
@@ -808,6 +788,32 @@ GLDriver::notifyGpuFlush(phys_addr address,
 }
 
 void
+GLDriver::run()
+{
+   if (mRunState != RunState::None) {
+      return;
+   }
+
+   mRunState = RunState::Running;
+   mContext->makeCurrent();
+   glbinding::Binding::useCurrentContext();
+
+   while (mRunState == RunState::Running) {
+      if (mSyncList.empty()) {
+         gpu::ringbuffer::wait();
+      }
+
+      auto buffer = gpu::ringbuffer::read();
+      if (!buffer.empty()) {
+         executeBuffer(buffer);
+         checkSyncObjects(0);
+      } else {
+         checkSyncObjects(10000);  // 10 usec
+      }
+   }
+}
+
+void
 GLDriver::runUntilFlip()
 {
    auto startingSwap = mLastSwap;
@@ -830,30 +836,6 @@ GLDriver::runUntilFlip()
 
       if (mLastSwap > startingSwap) {
          break;
-      }
-   }
-}
-
-void
-GLDriver::run()
-{
-   if (mRunState != RunState::None) {
-      return;
-   }
-
-   mRunState = RunState::Running;
-
-   while (mRunState == RunState::Running) {
-      if (mSyncList.empty()) {
-         gpu::ringbuffer::wait();
-      }
-
-      auto buffer = gpu::ringbuffer::read();
-      if (!buffer.empty()) {
-         executeBuffer(buffer);
-         checkSyncObjects(0);
-      } else {
-         checkSyncObjects(10000);  // 10 usec
       }
    }
 }

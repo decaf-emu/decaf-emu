@@ -32,7 +32,7 @@ void InfoWindow::draw()
    ImGui::SetNextWindowSize(ImVec2 { 180.0f, 45.0f });
    ImGui::Begin("Info", nullptr, ImgGuiNoBorder);
 
-   auto fps = decaf::getGraphicsDriver()->getAverageFPS();
+   auto fps = decaf::getGraphicsDriver()->getDebugInfo()->averageFps;
    auto ms = (fps == 0.0f) ? 0.0f : (1000.0f / fps);
    ImGui::Text("FPS: %.1f (%.3f ms)", fps, ms);
 

@@ -132,6 +132,9 @@ Driver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
 
       // Update our debugging info every flip
       updateDebuggerInfo();
+
+      // Render the display!
+      renderDisplay();
    });
 }
 

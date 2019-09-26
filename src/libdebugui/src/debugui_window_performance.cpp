@@ -79,8 +79,9 @@ PerformanceWindow::draw()
 void
 PerformanceWindow::drawGraphs()
 {
-   auto fps = decaf::getGraphicsDriver()->getAverageFPS();
-   auto frameTime = decaf::getGraphicsDriver()->getAverageFrametimeMS();
+   auto debugInfo = decaf::getGraphicsDriver()->getDebugInfo();
+   auto fps = static_cast<float>(debugInfo->averageFps);
+   auto frameTime = static_cast<float>(debugInfo->averageFrameTimeMS);
 
    // Frame rate
    std::copy(mFpsValues.begin() + 1, mFpsValues.end(), mFpsValues.begin());

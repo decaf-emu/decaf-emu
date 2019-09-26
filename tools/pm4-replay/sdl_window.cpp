@@ -6,9 +6,6 @@
 #include <fstream>
 #include <common/log.h>
 #include <common/platform_dir.h>
-#include <common-sdl/decafsdl_config.h>
-#include <common-sdl/decafsdl_opengl.h>
-#include <common-sdl/decafsdl_vulkan.h>
 #include <libcpu/mmu.h>
 #include <libcpu/be2_struct.h>
 #include <libdecaf/decaf.h>
@@ -24,6 +21,7 @@
 #include <libgpu/latte/latte_pm4_reader.h>
 #include <libgpu/latte/latte_pm4_writer.h>
 #include <libgpu/latte/latte_pm4_sizer.h>
+#include <SDL_syswm.h>
 
 using namespace latte::pm4;
 
@@ -428,159 +426,86 @@ SDLWindow::initCore()
 }
 
 bool
-SDLWindow::initGlGraphics()
+SDLWindow::initGraphics()
 {
-#ifdef DECAF_GL
-   mRenderer = new DecafSDLOpenGL();
-   if (!mRenderer->initialise(WindowWidth, WindowHeight, false)) {
-      gCliLog->error("Failed to create GL graphics window");
+   mGraphicsDriver = gpu::createGraphicsDriver();
+   if (!mGraphicsDriver) {
       return false;
    }
 
-   mRendererName = "GL";
+   switch (mGraphicsDriver->type()) {
+   case gpu::GraphicsDriverType::Vulkan:
+      mRendererName = "Vulkan";
+      break;
+   case gpu::GraphicsDriverType::OpenGL:
+      mRendererName = "OpenGL";
+      break;
+   case gpu::GraphicsDriverType::Null:
+      mRendererName = "Null";
+      break;
+   default:
+      mRendererName = "Unknown";
+   }
+
    return true;
-#else
-   decaf_abort("GL support was not included in this build");
-#endif
-}
-
-bool
-SDLWindow::initVulkanGraphics()
-{
-#ifdef DECAF_VULKAN
-   mRenderer = new DecafSDLVulkan();
-   if (!mRenderer->initialise(WindowWidth, WindowHeight, false)) {
-      gCliLog->error("Failed to create Vulkan graphics window");
-      return false;
-   }
-
-   mRendererName = "Vulkan";
-   return true;
-#else
-   decaf_abort("Vulkan support was not included in this build");
-#endif
-}
-
-void
-SDLWindow::calculateScreenViewports(Viewport &tv, Viewport &drc)
-{
-   int TvWidth = 1280;
-   int TvHeight = 720;
-
-   int DrcWidth = 854;
-   int DrcHeight = 480;
-
-   int OuterBorder = 0;
-   int ScreenSeparation = 5;
-
-   int windowWidth, windowHeight;
-   int nativeHeight, nativeWidth;
-   int tvLeft, tvBottom, tvTop, tvRight;
-   int drcLeft, drcBottom, drcTop, drcRight;
-
-   auto tvVisible = true;
-   auto drcVisible = true;
-
-   mRenderer->getWindowSize(&windowWidth, &windowHeight);
-
-   if (config::display::layout == config::display::Toggle) {
-      // For toggle mode only one screen is visible at a time, so we calculate the
-      // screen position as if only the TV exists here
-      nativeHeight = TvHeight;
-      nativeWidth = TvWidth;
-      DrcWidth = 0;
-      DrcHeight = 0;
-      ScreenSeparation = 0;
-   } else {
-      nativeHeight = DrcHeight + TvHeight + ScreenSeparation + 2 * OuterBorder;
-      nativeWidth = std::max(DrcWidth, TvWidth) + 2 * OuterBorder;
-   }
-
-   if (windowWidth * nativeHeight >= windowHeight * nativeWidth) {
-      // Align to height
-      int drcBorder = (windowWidth * nativeHeight - windowHeight * DrcWidth + nativeHeight) / nativeHeight / 2;
-      int tvBorder = config::display::stretch ? 0 : (windowWidth * nativeHeight - windowHeight * TvWidth + nativeHeight) / nativeHeight / 2;
-
-      drcBottom = OuterBorder;
-      drcTop = OuterBorder + (DrcHeight * windowHeight + nativeHeight / 2) / nativeHeight;
-      drcLeft = drcBorder;
-      drcRight = windowWidth - drcBorder;
-
-      tvBottom = windowHeight - OuterBorder - (TvHeight * windowHeight + nativeHeight / 2) / nativeHeight;
-      tvTop = windowHeight - OuterBorder;
-      tvLeft = tvBorder;
-      tvRight = windowWidth - tvBorder;
-   } else {
-      // Align to width
-      int heightBorder = (windowHeight * nativeWidth - windowWidth * (DrcHeight + TvHeight + ScreenSeparation) + nativeWidth) / nativeWidth / 2;
-      int drcBorder = (windowWidth - DrcWidth * windowWidth / nativeWidth + 1) / 2;
-      int tvBorder = (windowWidth - TvWidth * windowWidth / nativeWidth + 1) / 2;
-
-      drcBottom = heightBorder;
-      drcTop = heightBorder + (DrcHeight * windowWidth + nativeWidth / 2) / nativeWidth;
-      drcLeft = drcBorder;
-      drcRight = windowWidth - drcBorder;
-
-      tvTop = windowHeight - heightBorder;
-      tvBottom = windowHeight - heightBorder - (TvHeight * windowWidth + nativeWidth / 2) / nativeWidth;
-      tvLeft = tvBorder;
-      tvRight = windowWidth - tvBorder;
-   }
-
-   if (config::display::layout == config::display::Toggle) {
-      // In toggle mode, DRC and TV size are the same
-      drcLeft = tvLeft;
-      drcRight = tvRight;
-      drcTop = tvTop;
-      drcBottom = tvBottom;
-
-      if (mToggleDRC) {
-         drcVisible = true;
-         tvVisible = false;
-      } else {
-         drcVisible = false;
-         tvVisible = true;
-      }
-   }
-
-   if (drcVisible) {
-      drc.x = static_cast<float>(drcLeft);
-      drc.y = static_cast<float>(drcBottom);
-      drc.width = static_cast<float>(drcRight - drcLeft);
-      drc.height = static_cast<float>(drcTop - drcBottom);
-   } else {
-      drc.x = 0.0f;
-      drc.y = 0.0f;
-      drc.width = 0.0f;
-      drc.height = 0.0f;
-   }
-
-   if (tvVisible) {
-      tv.x = static_cast<float>(tvLeft);
-      tv.y = static_cast<float>(tvBottom);
-      tv.width = static_cast<float>(tvRight - tvLeft);
-      tv.height = static_cast<float>(tvTop - tvBottom);
-   } else {
-      tv.x = 0.0f;
-      tv.y = 0.0f;
-      tv.width = 0.0f;
-      tv.height = 0.0f;
-   }
-
-   decaf_check(drc.x >= 0);
-   decaf_check(drc.y >= 0);
-   decaf_check(drc.x + drc.width <= windowWidth);
-   decaf_check(drc.y + drc.height <= windowHeight);
-   decaf_check(tv.x >= 0);
-   decaf_check(tv.y >= 0);
-   decaf_check(tv.x + tv.width <= windowWidth);
-   decaf_check(tv.y + tv.height <= windowHeight);
 }
 
 bool
 SDLWindow::run(const std::string &tracePath)
 {
    auto shouldQuit = false;
+
+   // Setup some basic window stuff
+   mWindow =
+      SDL_CreateWindow("pm4-replay",
+                       SDL_WINDOWPOS_UNDEFINED,
+                       SDL_WINDOWPOS_UNDEFINED,
+                       WindowWidth, WindowHeight,
+                       SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+
+   if (gpu::config()->display.screenMode == gpu::DisplaySettings::Fullscreen) {
+      SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   }
+
+   // Setup graphics driver
+   auto wsi = gpu::WindowSystemInfo { };
+   auto sysWmInfo = SDL_SysWMinfo { };
+
+   SDL_GetWindowWMInfo(mWindow, &sysWmInfo);
+   switch (sysWmInfo.subsystem) {
+#ifdef SDL_VIDEO_DRIVER_WINDOWS
+   case SDL_SYSWM_WINDOWS:
+      wsi.type = gpu::WindowSystemType::Windows;
+      wsi.renderSurface = static_cast<void *>(sysWmInfo.info.win.window);
+      break;
+#endif
+#ifdef SDL_VIDEO_DRIVER_X11
+   case SDL_SYSWM_X11:
+      wsi.type = gpu::WindowSystemType::X11;
+      wsi.renderSurface = static_cast<void *>(sysWmInfo.info.x11.window);
+      wsi.displayConnection = static_cast<void *>(sysWmInfo.info.x11.display);
+      break;
+#endif
+#ifdef SDL_VIDEO_DRIVER_COCOA
+   case SDL_SYSWM_COCOA:
+      wsi.type = gpu::WindowSystemType::Cocoa;
+      wsi.renderSurface = static_cast<void *>(sysWmInfo.info.cocoa.window);
+      break;
+#endif
+#ifdef SDL_VIDEO_DRIVER_WAYLAND
+   case SDL_SYSWM_WAYLAND:
+      wsi.type = gpu::WindowSystemType::Wayland;
+      wsi.renderSurface = static_cast<void *>(sysWmInfo.info.wl.surface);
+      wsi.displayConnection = static_cast<void *>(sysWmInfo.info.wl.display);
+      break;
+#endif
+   default:
+      decaf_abort(fmt::format("Unsupported SDL window subsystem %d", sysWmInfo.subsystem));
+   }
+
+   mGraphicsDriver->setWindowSystemInfo(wsi);
+   mGraphicsThread = std::thread { [this]() { mGraphicsDriver->run(); } };
+   decaf::setGraphicsDriver(mGraphicsDriver);
 
    // Setup replay heap
    sReplayHeap = phys_cast<cafe::TinyHeapPhysical *>(phys_addr { 0x34000000 });
@@ -589,13 +514,8 @@ SDLWindow::run(const std::string &tracePath)
                         phys_cast<void *>(phys_addr { 0x34000000 + 0x430 }),
                         0x1C000000 - 0x430);
 
-   // Setup graphics driver
-   auto graphicsDriver = mRenderer->getDecafDriver();
-   decaf::setGraphicsDriver(graphicsDriver);
-
    // Run the loop!
-   PM4Parser parser { graphicsDriver };
-
+   auto parser = PM4Parser { mGraphicsDriver };
    if (!parser.open(tracePath)) {
       return false;
    }
@@ -604,7 +524,7 @@ SDLWindow::run(const std::string &tracePath)
    SDL_GL_SetSwapInterval(1);
 
    while (!shouldQuit && !decaf::hasExited()) {
-      SDL_Event event;
+      auto event = SDL_Event { };
 
       while (SDL_PollEvent(&event)) {
          switch (event.type) {
@@ -630,9 +550,7 @@ SDLWindow::run(const std::string &tracePath)
          break;
       }
 
-      Viewport tvViewport, drcViewport;
-      calculateScreenViewports(tvViewport, drcViewport);
-      mRenderer->renderFrame(tvViewport, drcViewport);
+      mGraphicsDriver->runUntilFlip();
    }
 
    return true;

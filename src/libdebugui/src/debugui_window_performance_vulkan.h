@@ -16,7 +16,7 @@ public:
    void drawBackendInfo() override;
 
 private:
-   gpu::VulkanDriver::DebuggerInfo *mInfo;
+   gpu::VulkanDriverDebugInfo mInfo;
 };
 
 } // namespace debugui

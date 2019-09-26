@@ -1,5 +1,6 @@
 #pragma once
 #ifdef DECAF_GL
+#include <glbinding/gl/gl.h>
 
 #include "glsl2/glsl2_translate.h"
 #include "gpu_ringbuffer.h"
@@ -7,19 +8,21 @@
 #include "latte/latte_constants.h"
 #include "latte/latte_contextstate.h"
 #include "latte/latte_pm4_commands.h"
+#include "opengl_context.h"
 #include "opengl_resource.h"
 #include "pm4_processor.h"
 
+#include <atomic>
 #include <chrono>
 #include <common/log.h>
 #include <common/platform.h>
 #include <condition_variable>
 #include <exception>
-#include <glbinding/gl/gl.h>
 #include <gsl.h>
 #include <libcpu/mem.h>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
@@ -27,6 +30,18 @@
 
 namespace opengl
 {
+
+struct DisplayPipeline
+{
+   gl::GLuint vertexProgram = 0;
+   gl::GLuint fragmentProgram = 0;
+   gl::GLuint programPipeline = 0;
+   gl::GLuint vertexBuffer = 0;
+   gl::GLuint vertexArray = 0;
+   gl::GLuint sampler = 0;
+   std::atomic<int> width { 0 };
+   std::atomic<int> height { 0 };
+};
 
 enum class SurfaceUseState : uint32_t
 {
@@ -288,63 +303,34 @@ struct SyncObject
    }
 };
 
-using GLContext = uint64_t;
-
-class GLDriver : public gpu::OpenGLDriver, public Pm4Processor
+class GLDriver : public gpu::GraphicsDriver, public Pm4Processor
 {
 public:
    GLDriver();
    virtual ~GLDriver() = default;
 
+   virtual void setWindowSystemInfo(const gpu::WindowSystemInfo &wsi) override;
+   virtual void windowHandleChanged(void *handle) override;
+   virtual void windowSizeChanged(int width, int height) override;
 
-   virtual void
-   initialise() override;
+   virtual void run() override;
+   virtual void runUntilFlip() override;
+   virtual void stop() override;
 
-   virtual void
-   shutdown() override;
+   virtual gpu::GraphicsDriverType type() override;
+   virtual gpu::GraphicsDriverDebugInfo *getDebugInfo() override;
 
-   virtual void
-   run() override;
+   virtual void notifyCpuFlush(phys_addr address, uint32_t size) override;
+   virtual void notifyGpuFlush(phys_addr address, uint32_t size) override;
 
-   virtual void
-   stop() override;
-
-   virtual gpu::GraphicsDriverType
-   type() override;
-
-   virtual float
-   getAverageFPS() override;
-
-   virtual float
-   getAverageFrametimeMS() override;
-
-   virtual gpu::OpenGLDriver::DebuggerInfo *
-   getDebuggerInfo() override;
-
-   virtual void
-   notifyCpuFlush(phys_addr address,
-                  uint32_t size) override;
-
-   virtual void
-   notifyGpuFlush(phys_addr address,
-                  uint32_t size) override;
-
-   virtual void
-   getSwapBuffers(gl::GLuint *tv,
-                  gl::GLuint *drc) override;
-
-   virtual void
-   runUntilFlip() override;
-
-   virtual bool
-   startFrameCapture(const std::string &outPrefix,
-                     bool captureTV,
-                     bool captureDRC) override;
-
-   virtual size_t
-   stopFrameCapture() override;
+   virtual bool startFrameCapture(const std::string &outPrefix,
+                                  bool captureTV, bool captureDRC) override;
+   virtual size_t stopFrameCapture() override;
 
 private:
+   void initialise();
+   void renderDisplay();
+
    void executeBuffer(const gpu::ringbuffer::Buffer &buffer);
 
    void decafSetBuffer(const latte::pm4::DecafSetBuffer &data) override;
@@ -520,7 +506,9 @@ private:
    };
 
    volatile RunState mRunState = RunState::None;
-   std::thread mThread;
+   std::unique_ptr<GLContext> mContext;
+   std::unique_ptr<GLContext> mDisplayContext;
+   DisplayPipeline mDisplayPipeline;
 
    bool mDebug = false;
    bool mDumpShaders = false;
@@ -590,7 +578,7 @@ private:
    bool mFrameCaptureTV = false;
    bool mFrameCaptureDRC = false;
 
-   gpu::OpenGLDriver::DebuggerInfo mDebuggerInfo;
+   gpu::OpenGLDriverDebugInfo mDebugInfo;
 };
 
 } // namespace opengl

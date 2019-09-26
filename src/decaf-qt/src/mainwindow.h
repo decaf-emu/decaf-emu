@@ -4,17 +4,17 @@
 #include <array>
 #include <QMainWindow>
 
+class DebuggerWindow;
 class DecafInterface;
+class InputDriver;
+class RenderWidget;
 class SettingsStorage;
 class SoftwareKeyboardDriver;
-class VulkanWindow;
-class InputDriver;
 
 class QAction;
 class QInputDialog;
 class QLabel;
 class QTimer;
-class QVulkanInstance;
 
 class MainWindow : public QMainWindow
 {
@@ -24,7 +24,6 @@ class MainWindow : public QMainWindow
 
 public:
    explicit MainWindow(SettingsStorage *settingsStorage,
-                       QVulkanInstance *vulkanInstance,
                        DecafInterface *decafInterface,
                        InputDriver *inputDriver,
                        QWidget* parent = nullptr);
@@ -38,6 +37,8 @@ private slots:
    void setViewModeTV();
 
    void toggleFullscreen();
+
+   void openDebuggerWindow();
 
    void openSettings();
    void openDebugSettings();
@@ -67,11 +68,12 @@ protected:
 
 private:
    SettingsStorage *mSettingsStorage;
-   VulkanWindow *mVulkanWindow;
+   RenderWidget *mRenderWidget;
    DecafInterface *mDecafInterface;
    InputDriver *mInputDriver;
    SoftwareKeyboardDriver *mSoftwareKeyboardDriver;
    QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
+   DebuggerWindow *mDebuggerWindow = nullptr;
 
    Ui::MainWindow mUi;
    QTimer *mStatusTimer;

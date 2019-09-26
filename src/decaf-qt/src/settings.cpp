@@ -5,11 +5,6 @@
 #include <optional>
 
 static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
-                         DisplaySettings &displaySettings);
-static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
-                       const DisplaySettings &displaySettings);
-
-static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
                          InputConfiguration &inputConfiguration);
 static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
                        const InputConfiguration &inputConfiguration);
@@ -28,7 +23,6 @@ loadSettings(const std::string &path,
       config::loadFromTOML(toml, settings.cpu);
       config::loadFromTOML(toml, settings.decaf);
       config::loadFromTOML(toml, settings.gpu);
-      loadFromTOML(toml, settings.display);
       loadFromTOML(toml, settings.input);
       loadFromTOML(toml, settings.sound);
       return true;
@@ -53,7 +47,6 @@ saveSettings(const std::string &path,
    config::saveToTOML(toml, settings.decaf);
    config::saveToTOML(toml, settings.cpu);
    config::saveToTOML(toml, settings.gpu);
-   saveToTOML(toml, settings.display);
    saveToTOML(toml, settings.input);
    saveToTOML(toml, settings.sound);
 
@@ -64,95 +57,6 @@ saveSettings(const std::string &path,
    }
 
    out << (*toml);
-   return true;
-}
-
-static const char *
-translateViewMode(DisplaySettings::ViewMode mode)
-{
-   if (mode == DisplaySettings::ViewMode::TV) {
-      return "tv";
-   } else if (mode == DisplaySettings::ViewMode::Gamepad1) {
-      return "gamepad1";
-   } else if (mode == DisplaySettings::ViewMode::Gamepad2) {
-      return "gamepad2";
-   } else if (mode == DisplaySettings::ViewMode::Split) {
-      return "split";
-   }
-
-   return nullptr;
-}
-
-static std::optional<DisplaySettings::ViewMode>
-translateViewMode(const std::string &text)
-{
-   if (text == "tv") {
-      return DisplaySettings::ViewMode::TV;
-   } else if (text == "gamepad1") {
-      return DisplaySettings::ViewMode::Gamepad1;
-   } else if (text == "gamepad2") {
-      return DisplaySettings::ViewMode::Gamepad2;
-   } else if (text == "split") {
-      return DisplaySettings::ViewMode::Split;
-   }
-
-   return { };
-}
-
-bool
-loadFromTOML(std::shared_ptr<cpptoml::table> config,
-             DisplaySettings &displaySettings)
-{
-   auto display = config->get_table("display");
-   if (display) {
-      if (auto viewModeText = display->get_as<std::string>("view_mode"); viewModeText) {
-         if (auto viewMode = translateViewMode(*viewModeText); viewMode) {
-            displaySettings.viewMode = *viewMode;
-         }
-      }
-
-      if (auto maintainAspectRatio = display->get_as<bool>("maintain_aspect_ratio"); maintainAspectRatio) {
-         displaySettings.maintainAspectRatio = *maintainAspectRatio;
-      }
-
-      if (auto splitSeperation = display->get_as<double>("split_seperation"); splitSeperation) {
-         displaySettings.splitSeperation = *splitSeperation;
-      }
-
-      if (auto backgroundColour = display->get_array_of<int64_t>("background_colour");
-          backgroundColour && backgroundColour->size() >= 3) {
-         displaySettings.backgroundColour =
-            QColor {
-               static_cast<int>(backgroundColour->at(0)),
-               static_cast<int>(backgroundColour->at(1)),
-               static_cast<int>(backgroundColour->at(2))
-            };
-      }
-   }
-
-   return true;
-}
-
-bool
-saveToTOML(std::shared_ptr<cpptoml::table> config,
-           const DisplaySettings &displaySettings)
-{
-   auto display = config->get_table("display");
-   if (!display) {
-      display = cpptoml::make_table();
-   }
-
-   display->insert("view_mode", translateViewMode(displaySettings.viewMode));
-   display->insert("maintain_aspect_ratio", displaySettings.maintainAspectRatio);
-   display->insert("split_seperation", displaySettings.splitSeperation);
-
-   auto backgroundColour = cpptoml::make_array();
-   backgroundColour->push_back(displaySettings.backgroundColour.red());
-   backgroundColour->push_back(displaySettings.backgroundColour.green());
-   backgroundColour->push_back(displaySettings.backgroundColour.blue());
-   display->insert("background_colour", backgroundColour);
-
-   config->insert("display", display);
    return true;
 }
 

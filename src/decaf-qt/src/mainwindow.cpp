@@ -1,6 +1,9 @@
 #include "mainwindow.h"
+
 #include "aboutdialog.h"
-#include "vulkanwindow.h"
+#include "debugger/debuggerwindow.h"
+#include "decafinterface.h"
+#include "renderwidget.h"
 #include "softwarekeyboarddriver.h"
 #include "settings/settingsdialog.h"
 
@@ -15,7 +18,6 @@
 #include <libdecaf/decaf.h>
 
 MainWindow::MainWindow(SettingsStorage *settingsStorage,
-                       QVulkanInstance *vulkanInstance,
                        DecafInterface *decafInterface,
                        InputDriver *inputDriver,
                        QWidget* parent) :
@@ -29,11 +31,8 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    // Setup UI
    mUi.setupUi(this);
 
-   mVulkanWindow = new VulkanWindow { vulkanInstance, settingsStorage, decafInterface, inputDriver };
-   auto wrapper = QWidget::createWindowContainer(static_cast<QWindow *>(mVulkanWindow));
-   wrapper->setFocusPolicy(Qt::StrongFocus);
-   wrapper->setFocus();
-   setCentralWidget(QWidget::createWindowContainer(mVulkanWindow));
+   mRenderWidget = new RenderWidget { this };
+   setCentralWidget(mRenderWidget);
 
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
@@ -111,13 +110,13 @@ void
 MainWindow::settingsChanged()
 {
    auto settings = mSettingsStorage->get();
-   if (settings->display.viewMode == DisplaySettings::Split) {
+   if (settings->gpu.display.viewMode == gpu::DisplaySettings::Split) {
       mUi.actionViewSplit->setChecked(true);
-   } else if (settings->display.viewMode == DisplaySettings::TV) {
+   } else if (settings->gpu.display.viewMode == gpu::DisplaySettings::TV) {
       mUi.actionViewTV->setChecked(true);
-   } else if (settings->display.viewMode == DisplaySettings::Gamepad1) {
+   } else if (settings->gpu.display.viewMode == gpu::DisplaySettings::Gamepad1) {
       mUi.actionViewGamepad1->setChecked(true);
-   } else if (settings->display.viewMode == DisplaySettings::Gamepad2) {
+   } else if (settings->gpu.display.viewMode == gpu::DisplaySettings::Gamepad2) {
       mUi.actionViewGamepad2->setChecked(true);
    }
 }
@@ -138,6 +137,7 @@ MainWindow::loadFile(QString path)
    }
 
    // Tell decaf to start the game!
+   mRenderWidget->startGraphicsDriver();
    mDecafInterface->startGame(path);
 
    // Update recent files list
@@ -208,7 +208,7 @@ void
 MainWindow::setViewModeSplit()
 {
    auto settings = *mSettingsStorage->get();
-   settings.display.viewMode = DisplaySettings::Split;
+   settings.gpu.display.viewMode = gpu::DisplaySettings::Split;
    mSettingsStorage->set(settings);
 }
 
@@ -216,7 +216,7 @@ void
 MainWindow::setViewModeTV()
 {
    auto settings = *mSettingsStorage->get();
-   settings.display.viewMode = DisplaySettings::TV;
+   settings.gpu.display.viewMode = gpu::DisplaySettings::TV;
    mSettingsStorage->set(settings);
 }
 
@@ -224,7 +224,7 @@ void
 MainWindow::setViewModeGamepad1()
 {
    auto settings = *mSettingsStorage->get();
-   settings.display.viewMode = DisplaySettings::Gamepad1;
+   settings.gpu.display.viewMode = gpu::DisplaySettings::Gamepad1;
    mSettingsStorage->set(settings);
 }
 
@@ -240,6 +240,21 @@ MainWindow::toggleFullscreen()
       mUi.statusBar->show();
       showNormal();
    }
+}
+
+void
+MainWindow::openDebuggerWindow()
+{
+   if (mDebuggerWindow) {
+      return;
+   }
+
+   mDebuggerWindow = new DebuggerWindow { this };
+   mDebuggerWindow->setAttribute(Qt::WA_DeleteOnClose);
+   mDebuggerWindow->show();
+   connect(mDebuggerWindow, &DebuggerWindow::destroyed, [this]() {
+      mDebuggerWindow = nullptr;
+   });
 }
 
 void
@@ -305,13 +320,14 @@ void
 MainWindow::updateStatusBar()
 {
    if (auto gpuDriver = decaf::getGraphicsDriver()) {
+      auto debugInfo = gpuDriver->getDebugInfo();
       mStatusFrameRate->setText(
          QString("FPS: %1")
-         .arg(gpuDriver->getAverageFPS(), 2, 'f', 0));
+         .arg(debugInfo->averageFps, 2, 'f', 0));
 
       mStatusFrameTime->setText(
          QString("Frametime: %1ms")
-         .arg(gpuDriver->getAverageFrametimeMS(), 7, 'f', 3));
+         .arg(debugInfo->averageFrameTimeMS, 7, 'f', 3));
    } else {
       mStatusFrameRate->setText("");
       mStatusFrameTime->setText("");

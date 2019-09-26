@@ -461,35 +461,66 @@ struct PsPushConstants
    uint32_t needPremultiply;
 };
 
-class Driver : public gpu::VulkanDriver, public Pm4Processor
+struct VulkanDisplayPipeline
+{
+   vk::SurfaceKHR windowSurface;
+   vk::Format windowSurfaceFormat;
+   uint32_t queueFamilyIndex;
+
+   vk::RenderPass renderPass;
+
+   // Swapchain
+   vk::PresentModeKHR presentMode;
+   vk::SwapchainKHR swapchain;
+   vk::Extent2D swapchainExtents;
+   std::vector<vk::ImageView> swapchainImageViews;
+   std::vector<vk::Framebuffer> framebuffers;
+
+   vk::Sampler trivialSampler;
+   vk::DescriptorSetLayout descriptorSetLayout;
+   vk::PipelineLayout pipelineLayout;
+   vk::Pipeline graphicsPipeline;
+
+   vk::ShaderModule vertexShader;
+   vk::ShaderModule fragmentShader;
+
+   vk::Buffer vertexBuffer;
+   vk::DeviceMemory vertexBufferMemory;
+
+   vk::DescriptorPool descriptorPool;
+   std::vector<vk::DescriptorSet> descriptorSets;
+
+   int frameIndex;
+   std::vector<vk::Fence> renderFences;
+   std::vector<vk::Semaphore> imageAvailableSemaphores;
+   std::vector<vk::Semaphore> renderFinishedSemaphores;
+};
+
+class Driver : public gpu::GraphicsDriver, public Pm4Processor
 {
 public:
    Driver();
    virtual ~Driver();
-   virtual gpu::GraphicsDriverType type() override;
 
-   virtual void initialise(vk::Instance instance,
-                           vk::PhysicalDevice physDevice,
-                           vk::Device drive,
-                           vk::Queue queue,
-                           uint32_t queueFamilyIndex) override;
-   virtual void shutdown() override;
-   virtual void getSwapBuffers(vk::Image &tvImage, vk::ImageView &tvView, vk::Image &drcImage, vk::ImageView &drcView) override;
+   virtual void setWindowSystemInfo(const gpu::WindowSystemInfo &wsi) override;
+   virtual void windowHandleChanged(void *handle) override;
+   virtual void windowSizeChanged(int width, int height) override;
 
    virtual void run() override;
-   virtual void stop() override;
    virtual void runUntilFlip() override;
+   virtual void stop() override;
 
-   virtual float getAverageFPS() override;
-   virtual float getAverageFrametimeMS() override;
-
-   virtual gpu::VulkanDriver::DebuggerInfo *
-   getDebuggerInfo() override;
+   virtual gpu::GraphicsDriverType type() override;
+   virtual gpu::GraphicsDriverDebugInfo *getDebugInfo() override;
 
    virtual void notifyCpuFlush(phys_addr address, uint32_t size) override;
    virtual void notifyGpuFlush(phys_addr address, uint32_t size) override;
 
 protected:
+   void initialise(vk::Instance instance, vk::PhysicalDevice physDevice,
+                   vk::Device device, vk::Queue queue,
+                   uint32_t queueFamilyIndex);
+   void destroy();
    void initialiseBlankSampler();
    void initialiseBlankImage();
    void initialiseBlankBuffer();
@@ -498,6 +529,8 @@ protected:
    void validateDevice();
 
    ResourceUsageMeta getResourceUsageMeta(ResourceUsage usage);
+   void renderDisplay();
+   void destroyDisplayPipeline();
 
    // Command Buffer Stuff
    void beginCommandGroup();
@@ -707,10 +740,11 @@ private:
       Stopped
    };
 
+   VulkanDisplayPipeline mDisplayPipeline =  { };
+
    std::atomic<RunState> mRunState = RunState::None;
-   gpu::VulkanDriver::DebuggerInfo mDebuggerInfo;
+   gpu::VulkanDriverDebugInfo mDebugInfo;
    std::thread mFenceThread;
-   std::thread mThread;
    std::mutex mFenceMutex;
    std::list<SyncWaiter*> mFencesWaiting;
    std::list<SyncWaiter*> mFencesPending;

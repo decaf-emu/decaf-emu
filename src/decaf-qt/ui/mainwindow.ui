@@ -20,7 +20,7 @@
    <string>decaf-qt</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../resources.qrc">
+   <iconset resource="../resources/resources.qrc">
     <normaloff>:/images/icon</normaloff>:/images/icon</iconset>
   </property>
   <widget class="QMenuBar" name="menuBar">
@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>675</width>
-     <height>18</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -61,15 +61,22 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
-     <addaction name="actionViewFullScreen"/>
-     <addaction name="separator"/>
-     <addaction name="actionViewSplit"/>
+    <addaction name="actionViewFullScreen"/>
+    <addaction name="separator"/>
+    <addaction name="actionViewSplit"/>
     <addaction name="actionViewTV"/>
     <addaction name="actionViewGamepad1"/>
     <addaction name="actionViewGamepad2"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="actionDebugger"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuTools"/>
    <addaction name="menuOptions"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -114,13 +121,18 @@
     <string>&amp;Log Settings</string>
    </property>
   </action>
+  <action name="actionDebugger">
+   <property name="text">
+    <string>&amp;Debugger</string>
+   </property>
+  </action>
   <actiongroup name="viewActionGroup">
-    <action name="actionViewFullScreen">
-      <property name="text">
-        <string>Full Screen</string>
-      </property>
-    </action>
-    <action name="actionViewSplit">
+   <action name="actionViewFullScreen">
+    <property name="text">
+     <string>Full Screen</string>
+    </property>
+   </action>
+   <action name="actionViewSplit">
     <property name="checkable">
      <bool>true</bool>
     </property>
@@ -164,7 +176,7 @@
   </actiongroup>
  </widget>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../resources/resources.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -247,23 +259,23 @@
     </hint>
    </hints>
   </connection>
-   <connection>
-     <sender>actionViewFullScreen</sender>
-     <signal>triggered()</signal>
-     <receiver>MainWindow</receiver>
-     <slot>toggleFullscreen()</slot>
-     <hints>
-       <hint type="sourcelabel">
-         <x>-1</x>
-         <y>-1</y>
-       </hint>
-       <hint type="destinationlabel">
-         <x>337</x>
-         <y>232</y>
-       </hint>
-     </hints>
-   </connection>
-   <connection>
+  <connection>
+   <sender>actionViewFullScreen</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toggleFullscreen()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>actionViewSplit</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
@@ -359,6 +371,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDebugger</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openDebugger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openInputSettings()</slot>
@@ -372,5 +400,6 @@
   <slot>openSettings()</slot>
   <slot>openDebugSettings()</slot>
   <slot>openSystemSettings()</slot>
+  <slot>openDebugger()</slot>
  </slots>
 </ui>

@@ -14,8 +14,8 @@ DecafCLI::run(const std::string &gamePath)
    int result = 0;
 
    // Setup drivers
-   decaf::setGraphicsDriver(gpu::createNullDriver());
-   decaf::setInputDriver(new decaf::NullInputDriver());
+   decaf::setGraphicsDriver(gpu::createGraphicsDriver(gpu::GraphicsDriverType::Null));
+   decaf::setInputDriver(new decaf::NullInputDriver { });
 
    // Initialise emulator
    if (!decaf::initialise(gamePath)) {

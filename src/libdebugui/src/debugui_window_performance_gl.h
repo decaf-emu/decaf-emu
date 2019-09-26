@@ -16,7 +16,7 @@ public:
    void drawBackendInfo() override;
 
 private:
-   gpu::OpenGLDriver::DebuggerInfo *mInfo;
+   gpu::OpenGLDriverDebugInfo mInfo;
 };
 
 } // namespace debugui

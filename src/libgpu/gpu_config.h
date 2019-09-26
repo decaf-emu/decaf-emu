@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -18,6 +19,37 @@ struct DebugSettings
    bool dump_shader_binaries_only = false;
 };
 
+struct DisplaySettings
+{
+   enum Backend
+   {
+      Null,
+      OpenGL,
+      Vulkan,
+   };
+
+   enum ScreenMode
+   {
+      Windowed,
+      Fullscreen,
+   };
+
+   enum ViewMode
+   {
+      Split,
+      TV,
+      Gamepad1,
+      Gamepad2,
+   };
+
+   Backend backend = Backend::Vulkan;
+   std::array<int, 3> backgroundColour = { 153, 51, 51 };
+   bool maintainAspectRatio = true;
+   ScreenMode screenMode = ScreenMode::Windowed;
+   double splitSeperation = 5.0;
+   ViewMode viewMode = ViewMode::Split;
+};
+
 struct OpenGLSettings
 {
    //! OpenGL debug message IDs to filter out
@@ -27,6 +59,7 @@ struct OpenGLSettings
 struct Settings
 {
    DebugSettings debug;
+   DisplaySettings display;
    OpenGLSettings opengl;
 };
 

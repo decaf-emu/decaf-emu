@@ -1,13 +1,13 @@
 #include "config.h"
 #include "sdl_window.h"
 
-#include <common-sdl/decafsdl_config.h>
 #include <common/log.h>
 #include <excmd.h>
 #include <iostream>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
 #include <libdecaf/decaf.h>
+#include <libdecaf/decaf_config.h>
 #include <libdecaf/decaf_log.h>
 #include <libgpu/gpu_config.h>
 #include <spdlog/spdlog.h>
@@ -78,18 +78,8 @@ replay(const std::string &path)
       return -1;
    }
 
-   if (config::renderer == "vulkan") {
-      if (!sdl.initVulkanGraphics()) {
-         gCliLog->error("Failed to initialise Vulkan backend.");
-         return -1;
-      }
-   } else if (config::renderer == "opengl") {
-      if (!sdl.initGlGraphics()) {
-         gCliLog->error("Failed to initialise OpenGL backend.");
-         return -1;
-      }
-   } else {
-      gCliLog->error("Unknown display backend {}", config::renderer);
+   if (!sdl.initGraphics()) {
+      gCliLog->error("Failed to initialise graphics backend.");
       return -1;
    }
 
@@ -137,9 +127,6 @@ start(excmd::parser &parser,
    if (options.has("renderer")) {
       config::renderer = options.get<std::string>("renderer");
    }
-
-   // Always use force_sync for pm4-replay
-   config::display::force_sync = true;
 
    auto traceFile = options.get<std::string>("trace file");
 

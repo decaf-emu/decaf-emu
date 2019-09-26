@@ -38,7 +38,6 @@ target_include_directories(decaf-qt PRIVATE
 
 target_link_libraries(decaf-qt
    common
-   common-sdl
    libconfig
    libcpu
    libdebugui
@@ -52,6 +51,7 @@ target_link_libraries(decaf-qt
 
 if(MSVC)
    target_link_libraries(decaf-qt
+      Setupapi
       Qt5::WinMain)
 
    set_target_properties(decaf-qt PROPERTIES

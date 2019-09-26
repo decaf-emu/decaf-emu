@@ -11,7 +11,6 @@ add_subdirectory(libgpu)
 add_subdirectory(decaf-cli)
 
 if(DECAF_SDL)
-    add_subdirectory(common-sdl)
     add_subdirectory(decaf-sdl)
 endif()
 

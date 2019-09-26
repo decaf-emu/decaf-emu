@@ -2,8 +2,25 @@
 #include "gpu_event.h"
 #include "gpu_ringbuffer.h"
 
+#include <common/decaf_assert.h>
+
 namespace null
 {
+
+void
+Driver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
+{
+}
+
+void
+Driver::windowHandleChanged(void *handle)
+{
+}
+
+void
+Driver::windowSizeChanged(int width, int height)
+{
+}
 
 void
 Driver::run()
@@ -19,17 +36,16 @@ Driver::run()
 }
 
 void
+Driver::runUntilFlip()
+{
+   decaf_abort("NullDriver::runUntilFlip unimplemented");
+}
+
+void
 Driver::stop()
 {
    mRunning = false;
    gpu::ringbuffer::wake();
-}
-
-void
-Driver::runUntilFlip()
-{
-   // The null driver does not support "force sync"
-   decaf_check(0);
 }
 
 gpu::GraphicsDriverType
@@ -38,16 +54,10 @@ Driver::type()
    return gpu::GraphicsDriverType::Null;
 }
 
-float
-Driver::getAverageFPS()
+gpu::GraphicsDriverDebugInfo *
+Driver::getDebugInfo()
 {
-   return 0.0f;
-}
-
-float
-Driver::getAverageFrametimeMS()
-{
-   return 0.0f;
+   return nullptr;
 }
 
 void

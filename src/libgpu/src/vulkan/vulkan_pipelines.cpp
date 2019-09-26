@@ -2,6 +2,8 @@
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
 
+#include <common/log.h>
+
 static constexpr bool ForceDescriptorSets = false;
 
 namespace vulkan

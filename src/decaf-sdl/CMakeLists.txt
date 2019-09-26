@@ -22,7 +22,6 @@ target_include_directories(decaf-sdl PRIVATE
     ${SDL2_INCLUDE_DIRS})
 target_link_libraries(decaf-sdl
     common
-    common-sdl
     libconfig
     libdebugui
     libdecaf
@@ -37,6 +36,7 @@ endif()
 if(MSVC)
     set_target_properties(decaf-sdl PROPERTIES
         LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    target_link_libraries(decaf-sdl Setupapi)
 endif()
 
 install(TARGETS decaf-sdl RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

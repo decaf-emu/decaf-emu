@@ -1,5 +1,5 @@
-#include "decafsdl_config.h"
 #include "decafsdl_sound.h"
+#include "config.h"
 
 #include <common/decaf_assert.h>
 #include <SDL.h>

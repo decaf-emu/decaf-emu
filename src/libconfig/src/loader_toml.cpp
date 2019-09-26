@@ -1,9 +1,94 @@
 #include "config_toml.h"
 
 #include <string>
+#include <optional>
 
 namespace config
 {
+
+static const char *
+translateDisplayBackend(gpu::DisplaySettings::Backend backend)
+{
+   if (backend == gpu::DisplaySettings::Null) {
+      return "null";
+   } else if (backend == gpu::DisplaySettings::OpenGL) {
+      return "opengl";
+   } else if (backend == gpu::DisplaySettings::Vulkan) {
+      return "vulkan";
+   }
+
+   return "";
+}
+
+static std::optional<gpu::DisplaySettings::Backend>
+translateDisplayBackend(const std::string &text)
+{
+   if (text == "null") {
+      return gpu::DisplaySettings::Null;
+   } else if (text == "opengl") {
+      return gpu::DisplaySettings::OpenGL;
+   } else if (text == "vulkan") {
+      return gpu::DisplaySettings::Vulkan;
+   }
+
+   return { };
+}
+
+static const char *
+translateScreenMode(gpu::DisplaySettings::ScreenMode mode)
+{
+   if (mode == gpu::DisplaySettings::Windowed) {
+      return "windowed";
+   } else if (mode == gpu::DisplaySettings::Fullscreen) {
+      return "fullscreen";
+   }
+
+   return "";
+}
+
+static std::optional<gpu::DisplaySettings::ScreenMode>
+translateScreenMode(const std::string &text)
+{
+   if (text == "windowed") {
+      return gpu::DisplaySettings::Windowed;
+   } else if (text == "fullscreen") {
+      return gpu::DisplaySettings::Fullscreen;
+   }
+
+   return { };
+}
+
+static const char *
+translateViewMode(gpu::DisplaySettings::ViewMode mode)
+{
+   if (mode == gpu::DisplaySettings::TV) {
+      return "tv";
+   } else if (mode == gpu::DisplaySettings::Gamepad1) {
+      return "gamepad1";
+   } else if (mode == gpu::DisplaySettings::Gamepad2) {
+      return "gamepad2";
+   } else if (mode == gpu::DisplaySettings::Split) {
+      return "split";
+   }
+
+   return "";
+}
+
+static std::optional<gpu::DisplaySettings::ViewMode>
+translateViewMode(const std::string &text)
+{
+   if (text == "tv") {
+      return gpu::DisplaySettings::TV;
+   } else if (text == "gamepad1") {
+      return gpu::DisplaySettings::Gamepad1;
+   } else if (text == "gamepad2") {
+      return gpu::DisplaySettings::Gamepad2;
+   } else if (text == "split") {
+      return gpu::DisplaySettings::Split;
+   }
+
+   return { };
+}
 
 bool
 loadFromTOML(std::shared_ptr<cpptoml::table> config,
@@ -66,6 +151,45 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
    readArray(config, "gpu.opengl_debug_filters", gpuSettings.opengl.debug_message_filters);
    readValue(config, "gpu.dump_shaders", gpuSettings.debug.dump_shaders);
    readValue(config, "gpu.dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
+
+   auto display = config->get_table("display");
+   if (display) {
+      if (auto text = display->get_as<std::string>("backend"); text) {
+         if (auto backend = translateDisplayBackend(*text); backend) {
+            gpuSettings.display.backend = *backend;
+         }
+      }
+
+      if (auto text = display->get_as<std::string>("screen_mode"); text) {
+         if (auto screenMode = translateScreenMode(*text); screenMode) {
+            gpuSettings.display.screenMode = *screenMode;
+         }
+      }
+
+      if (auto text = display->get_as<std::string>("view_mode"); text) {
+         if (auto viewMode = translateViewMode(*text); viewMode) {
+            gpuSettings.display.viewMode = *viewMode;
+         }
+      }
+
+      if (auto maintainAspectRatio = display->get_as<bool>("maintain_aspect_ratio"); maintainAspectRatio) {
+         gpuSettings.display.maintainAspectRatio = *maintainAspectRatio;
+      }
+
+      if (auto splitSeperation = display->get_as<double>("split_seperation"); splitSeperation) {
+         gpuSettings.display.splitSeperation = *splitSeperation;
+      }
+
+      if (auto backgroundColour = display->get_array_of<int64_t>("background_colour");
+          backgroundColour && backgroundColour->size() >= 3) {
+         gpuSettings.display.backgroundColour = {
+               static_cast<int>(backgroundColour->at(0)),
+               static_cast<int>(backgroundColour->at(1)),
+               static_cast<int>(backgroundColour->at(2))
+            };
+      }
+   }
+
    return true;
 }
 
@@ -200,6 +324,26 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
 
    gpu->insert("opengl_debug_filters", debug_filters);
    config->insert("gpu", gpu);
+
+   // display
+   auto display = config->get_table("display");
+   if (!display) {
+      display = cpptoml::make_table();
+   }
+
+   display->insert("backend", translateDisplayBackend(gpuSettings.display.backend));
+   display->insert("screen_mode", translateScreenMode(gpuSettings.display.screenMode));
+   display->insert("view_mode", translateViewMode(gpuSettings.display.viewMode));
+   display->insert("maintain_aspect_ratio", gpuSettings.display.maintainAspectRatio);
+   display->insert("split_seperation", gpuSettings.display.splitSeperation);
+
+   auto backgroundColour = cpptoml::make_array();
+   backgroundColour->push_back(gpuSettings.display.backgroundColour[0]);
+   backgroundColour->push_back(gpuSettings.display.backgroundColour[1]);
+   backgroundColour->push_back(gpuSettings.display.backgroundColour[2]);
+   display->insert("background_colour", backgroundColour);
+
+   config->insert("display", display);
    return true;
 }
 

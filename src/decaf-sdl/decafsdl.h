@@ -1,10 +1,13 @@
 #pragma once
-#include <common-sdl/decafsdl_sound.h>
-#include <common-sdl/decafsdl_graphics.h>
+#include "decafsdl_sound.h"
+
 #include <libdecaf/decaf.h>
 #include <SDL.h>
+#include <thread>
 
 using namespace decaf::input;
+
+namespace gpu { class GraphicsDriver; }
 
 namespace config::input
 {
@@ -21,38 +24,27 @@ class DecafSDL : public decaf::InputDriver, public decaf::EventListener
 public:
    ~DecafSDL();
 
-   bool
-   initCore();
+   bool initCore();
+   bool initGraphics();
+   bool initSound();
 
-   bool
-   initGlGraphics();
-
-   bool
-   initVulkanGraphics();
-
-   bool
-   initSound();
-
-   bool
-   run(const std::string &gamePath);
+   bool run(const std::string &gamePath);
 
 private:
-   void
-   calculateScreenViewports(Viewport &tv, Viewport &drc);
-
-   void
-   openInputDevices();
+   void openInputDevices();
 
    void sampleVpadController(int channel, vpad::Status &status) override;
    void sampleWpadController(int channel, wpad::Status &status) override;
 
    // Events
-   virtual void
-   onGameLoaded(const decaf::GameInfo &info) override;
+   virtual void onGameLoaded(const decaf::GameInfo &info) override;
 
 protected:
    DecafSDLSound *mSoundDriver = nullptr;
-   DecafSDLGraphics *mGraphicsDriver = nullptr;
+
+   SDL_Window *mWindow = nullptr;
+   gpu::GraphicsDriver *mGraphicsDriver = nullptr;
+   std::thread mGraphicsThread;
 
    const config::input::InputDevice *mVpad0Config = nullptr;
    SDL_GameController *mVpad0Controller = nullptr;

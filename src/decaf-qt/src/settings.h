@@ -94,22 +94,6 @@ struct InputConfiguration
    std::array<Controller *, 2> vpad = { nullptr, nullptr };
 };
 
-struct DisplaySettings
-{
-   enum ViewMode
-   {
-      Split,
-      TV,
-      Gamepad1,
-      Gamepad2,
-   };
-
-   ViewMode viewMode = ViewMode::Split;
-   bool maintainAspectRatio = true;
-   QColor backgroundColour = { 153, 51, 51 };
-   double splitSeperation = 5.0;
-};
-
 struct SoundSettings
 {
    //! Whether audio playback is enabled.
@@ -122,7 +106,6 @@ struct Settings
    cpu::Settings cpu = { };
    gpu::Settings gpu = { };
 
-   DisplaySettings display = { };
    InputConfiguration input = { };
    SoundSettings sound = { };
 };

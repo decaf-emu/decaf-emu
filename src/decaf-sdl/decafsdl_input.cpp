@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include <common/decaf_assert.h>
+#include <libgpu/gpu7_displaylayout.h>
 
 void
 DecafSDL::openInputDevices()
@@ -140,21 +141,26 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
       int mouseX, mouseY;
       if (SDL_GetMouseState(&mouseX, &mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
          // Calculate screen position
-         Viewport tvViewport, drcViewport;
-         int windowWidth, windowHeight;
-         SDL_GetWindowSize(mGraphicsDriver->getWindow(), &windowWidth, &windowHeight);
-         calculateScreenViewports(tvViewport, drcViewport);
+         auto displayLayout = gpu7::DisplayLayout { };
+         auto windowWidth = 0, windowHeight = 0;
+         SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
+         gpu7::updateDisplayLayout(displayLayout,
+                                   static_cast<float>(windowWidth),
+                                   static_cast<float>(windowHeight));
 
          // Check that mouse is inside DRC screen
-         auto drcLeft = drcViewport.x;
-         auto drcBottom = windowHeight - drcViewport.y;
-         auto drcRight = drcLeft + drcViewport.width;
-         auto drcTop = drcBottom - drcViewport.height;
+         if (displayLayout.drc.visible) {
+            auto drcLeft = displayLayout.drc.x;
+            auto drcBottom = windowHeight - displayLayout.drc.y;
+            auto drcRight = drcLeft + displayLayout.drc.width;
+            auto drcTop = drcBottom - displayLayout.drc.height;
 
-         if (mouseX >= drcLeft && mouseX <= drcRight && mouseY >= drcTop && mouseY <= drcBottom) {
-            status.touch.down = true;
-            status.touch.x = (mouseX - drcLeft) / drcViewport.width;
-            status.touch.y = (mouseY - drcTop) / drcViewport.height;
+            if (mouseX >= drcLeft && mouseX <= drcRight &&
+                mouseY >= drcTop && mouseY <= drcBottom) {
+               status.touch.down = true;
+               status.touch.x = (mouseX - drcLeft) / displayLayout.drc.width;
+               status.touch.y = (mouseY - drcTop) / displayLayout.drc.height;
+            }
          }
       }
    } else if (mVpad0Controller && device->type == config::input::Joystick) {

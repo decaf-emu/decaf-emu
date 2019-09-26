@@ -1,6 +1,9 @@
 #pragma once
-#include <common-sdl/decafsdl_graphics.h>
+#include <SDL.h>
+#include <libgpu/gpu_graphicsdriver.h>
+
 #include <string>
+#include <thread>
 
 class SDLWindow
 {
@@ -10,23 +13,15 @@ class SDLWindow
 public:
    ~SDLWindow();
 
-   bool
-   run(const std::string &tracePath);
+   bool initCore();
+   bool initGraphics();
 
-   bool
-   initCore();
-
-   bool
-   initGlGraphics();
-
-   bool
-   initVulkanGraphics();
-
-   void
-   calculateScreenViewports(Viewport &tv, Viewport &drc);
+   bool run(const std::string &tracePath);
 
 private:
-   DecafSDLGraphics *mRenderer = nullptr;
+   SDL_Window *mWindow = nullptr;
+   gpu::GraphicsDriver *mGraphicsDriver = nullptr;
+   std::thread mGraphicsThread;
    std::string mRendererName;
    bool mToggleDRC = false;
 };

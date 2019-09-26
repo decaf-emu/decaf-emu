@@ -16,27 +16,22 @@ PerformanceWindowGL::PerformanceWindowGL(const std::string &name) :
    auto graphicsDriver = decaf::getGraphicsDriver();
    decaf_check(graphicsDriver->type() == gpu::GraphicsDriverType::OpenGL);
 
-   auto glGraphicsDriver = reinterpret_cast<gpu::OpenGLDriver *>(graphicsDriver);
-   mInfo = glGraphicsDriver->getDebuggerInfo();
+   mInfo = *reinterpret_cast<gpu::OpenGLDriverDebugInfo *>(graphicsDriver->getDebugInfo());
 }
 
 void PerformanceWindowGL::drawBackendInfo()
 {
-   if (!mInfo) {
-      return;
-   }
-
    ImGui::Columns(2);
 
-   drawTextAndValue("Vertex Shaders:", mInfo->numVertexShaders);
-   drawTextAndValue("Pixel  Shaders:", mInfo->numPixelShaders);
-   drawTextAndValue("Fetch  Shaders:", mInfo->numFetchShaders);
+   drawTextAndValue("Vertex Shaders:", mInfo.numVertexShaders);
+   drawTextAndValue("Pixel  Shaders:", mInfo.numPixelShaders);
+   drawTextAndValue("Fetch  Shaders:", mInfo.numFetchShaders);
 
    ImGui::NextColumn();
 
-   drawTextAndValue("Shader Pipelines:", mInfo->numShaderPipelines);
-   drawTextAndValue("Surfaces:", mInfo->numSurfaces);
-   drawTextAndValue("Data Buffers:", mInfo->numDataBuffers);
+   drawTextAndValue("Shader Pipelines:", mInfo.numShaderPipelines);
+   drawTextAndValue("Surfaces:", mInfo.numSurfaces);
+   drawTextAndValue("Data Buffers:", mInfo.numDataBuffers);
 }
 
 } // namespace debugui

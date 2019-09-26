@@ -77,6 +77,8 @@ Driver::executeSyncWaiter(SyncWaiter *syncWaiter)
    }
 }
 
+#pragma optimize("", off)
+
 void
 Driver::fenceWaiterThread()
 {
@@ -104,6 +106,7 @@ Driver::fenceWaiterThread()
          lock.lock();
       }
    }
+   printf("bye!");
 }
 
 void

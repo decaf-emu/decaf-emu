@@ -15,12 +15,16 @@ target_include_directories(pm4-replay PRIVATE
     ${SDL2_INCLUDE_DIRS})
 target_link_libraries(pm4-replay
     common
-    common-sdl
     libconfig
     libdecaf
     cpptoml
     excmd
     ${SDL2_LIBRARIES})
+
+if(MSVC)
+   target_link_libraries(pm4-replay
+      Setupapi)
+endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(pm4-replay X11)

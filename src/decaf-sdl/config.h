@@ -6,37 +6,6 @@
 namespace config
 {
 
-struct Colour
-{
-   int r;
-   int g;
-   int b;
-};
-
-namespace display
-{
-
-enum DisplayMode
-{
-   Windowed,
-   Fullscreen
-};
-
-enum DisplayLayout
-{
-   Split,
-   Toggle
-};
-
-extern DisplayMode mode;
-extern DisplayLayout layout;
-extern bool stretch;
-extern bool force_sync;
-extern Colour background_colour;
-extern std::string backend;
-
-} // namespace display
-
 namespace input
 {
 

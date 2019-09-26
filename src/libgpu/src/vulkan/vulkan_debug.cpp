@@ -4,43 +4,42 @@
 namespace vulkan
 {
 
-float
-Driver::getAverageFPS()
+gpu::GraphicsDriverType
+Driver::type()
 {
-   // TODO: This is not thread safe...
-   static const auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds { 1 }).count();
-   auto avgFrameTime = mAverageFrameTime.count();
-
-   if (avgFrameTime == 0.0) {
-      return 0.0f;
-   } else {
-      return static_cast<float>(second / avgFrameTime);
-   }
+   return gpu::GraphicsDriverType::Vulkan;
 }
 
-float
-Driver::getAverageFrametimeMS()
+gpu::GraphicsDriverDebugInfo *
+Driver::getDebugInfo()
 {
-   return static_cast<float>(std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count());
-}
-
-gpu::VulkanDriver::DebuggerInfo *
-Driver::getDebuggerInfo()
-{
-   return &mDebuggerInfo;
+   // TODO: This is not thread safe wrt updateDebuggerInfo, maybe it should
+   // be some sort of double buffered thing with a std atomic pointer to the
+   // latest filled out one
+   return &mDebugInfo;
 }
 
 void
 Driver::updateDebuggerInfo()
 {
-   mDebuggerInfo.numVertexShaders = mVertexShaders.size();
-   mDebuggerInfo.numGeometryShaders = mVertexShaders.size();
-   mDebuggerInfo.numPixelShaders = mPixelShaders.size();
-   mDebuggerInfo.numRenderPasses = mRenderPasses.size();
-   mDebuggerInfo.numPipelines = mPipelines.size();
-   mDebuggerInfo.numSamplers = mSamplers.size();
-   mDebuggerInfo.numSurfaces = mSurfaceGroups.size();
-   mDebuggerInfo.numDataBuffers = mMemCaches.size();
+   auto averageFrameTime = std::chrono::duration_cast<duration_ms>(mAverageFrameTime).count();
+   mDebugInfo.averageFrameTimeMS = averageFrameTime;
+
+   if (averageFrameTime > 0.0) {
+      static constexpr auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
+      mDebugInfo.averageFps = second / averageFrameTime;
+   } else {
+      mDebugInfo.averageFps = 0.0;
+   }
+
+   mDebugInfo.numVertexShaders = mVertexShaders.size();
+   mDebugInfo.numGeometryShaders = mVertexShaders.size();
+   mDebugInfo.numPixelShaders = mPixelShaders.size();
+   mDebugInfo.numRenderPasses = mRenderPasses.size();
+   mDebugInfo.numPipelines = mPipelines.size();
+   mDebugInfo.numSamplers = mSamplers.size();
+   mDebugInfo.numSurfaces = mSurfaceGroups.size();
+   mDebugInfo.numDataBuffers = mMemCaches.size();
 }
 
 template <typename ObjType>

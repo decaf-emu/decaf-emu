@@ -10,7 +10,32 @@ enum class GraphicsDriverType
 {
    Null,
    OpenGL,
-   Vulkan
+   Vulkan,
+};
+
+enum class WindowSystemType
+{
+   Headless,
+   Windows,
+   Cocoa,
+   X11,
+   Xcb,
+   Wayland,
+};
+
+struct WindowSystemInfo
+{
+   WindowSystemType type = WindowSystemType::Headless;
+   void *displayConnection = nullptr;
+   void *renderSurface = nullptr;
+   double renderSurfaceScale = 1.0;
+};
+
+struct GraphicsDriverDebugInfo
+{
+   GraphicsDriverType type = GraphicsDriverType::Null;
+   double averageFps = 0.0f;
+   double averageFrameTimeMS = 0.0f;
 };
 
 class GraphicsDriver
@@ -18,14 +43,16 @@ class GraphicsDriver
 public:
    virtual ~GraphicsDriver() = default;
 
+   virtual void setWindowSystemInfo(const WindowSystemInfo &wsi) = 0;
+   virtual void windowHandleChanged(void *handle) = 0;
+   virtual void windowSizeChanged(int width, int height) = 0;
+
    virtual void run() = 0;
-   virtual void stop() = 0;
    virtual void runUntilFlip() = 0;
+   virtual void stop() = 0;
 
    virtual GraphicsDriverType type() = 0;
-
-   virtual float getAverageFPS() = 0;
-   virtual float getAverageFrametimeMS() = 0;
+   virtual gpu::GraphicsDriverDebugInfo *getDebugInfo() = 0;
 
    // Called for stores to emulated physical RAM, such as via DCFlushRange().
    //  May be called from any CPU core!
@@ -54,12 +81,9 @@ public:
 };
 
 GraphicsDriver *
-createGLDriver();
+createGraphicsDriver();
 
 GraphicsDriver *
-createNullDriver();
-
-GraphicsDriver *
-createVulkanDriver();
+createGraphicsDriver(GraphicsDriverType type);
 
 } // namespace gpu

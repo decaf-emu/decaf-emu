@@ -25,6 +25,35 @@ getExcmdGroups(excmd::parser &parser)
                   description { "Enable extra gpu debug info." });
    groups.push_back(gpu_options.group);
 
+   auto display_options = parser.add_option_group("Display Options")
+      .add_option("background-colour",
+                  description { "Background colour." },
+                  default_value<std::string> { "153,51,51" })
+      .add_option("display-backend",
+                  description { "Which display backend to use." },
+                  default_value<std::string> { "vulkan" },
+                  allowed<std::string> { {
+                     "vulkan", "opengl", "null",
+                  } })
+      .add_option("screen-mode",
+                  description { "Screen display mode." },
+                  default_value<std::string> { "windowed" },
+                  allowed<std::string> { {
+                     "windowed", "fullscreen"
+                  } })
+      .add_option("split-separation",
+                  default_value<double> { 5.0 },
+                  description { "Gap between screens when view-mode is split." })
+      .add_option("stretch-screen",
+                  description { "Stretch the screen to fill window rather than maintaining aspect ratio." })
+      .add_option("view-mode",
+                  description { "View display mode." },
+                  default_value<std::string> { "split" },
+                  allowed<std::string> { {
+                     "split", "tv", "gamepad1", "gamepad2"
+                  } });
+   groups.push_back(display_options.group);
+
    auto jit_options = parser.add_option_group("JIT Options")
       .add_option("jit",
                   description { "Enable the JIT engine." })
@@ -262,6 +291,57 @@ loadFromExcmd(excmd::option_state &options,
 {
    if (options.has("gpu-debug")) {
       gpuSettings.debug.debug_enabled = true;
+   }
+
+   if (options.has("background-colour")) {
+      auto colour = std::vector<std::string> { };
+      split_string(options.get<std::string>("background-colour"), ',', colour);
+      if (colour.size() == 3) {
+         gpuSettings.display.backgroundColour[0] = std::atoi(colour[0].c_str());
+         gpuSettings.display.backgroundColour[1] = std::atoi(colour[1].c_str());
+         gpuSettings.display.backgroundColour[2] = std::atoi(colour[2].c_str());
+      }
+   }
+
+   if (options.has("display-backend")) {
+      auto mode = options.get<std::string>("screen-mode");
+      if (mode.compare("vulkan") == 0) {
+         gpuSettings.display.backend = gpu::DisplaySettings::Vulkan;
+      } else if (mode.compare("opengl") == 0) {
+         gpuSettings.display.backend = gpu::DisplaySettings::OpenGL;
+      } else if (mode.compare("null") == 0) {
+         gpuSettings.display.backend = gpu::DisplaySettings::Null;
+      }
+   }
+
+   if (options.has("screen-mode")) {
+      auto mode = options.get<std::string>("screen-mode");
+      if (mode.compare("windowed") == 0) {
+         gpuSettings.display.screenMode = gpu::DisplaySettings::Windowed;
+      } else if (mode.compare("fullscreen") == 0) {
+         gpuSettings.display.screenMode = gpu::DisplaySettings::Fullscreen;
+      }
+   }
+
+   if (options.has("stretch-screen")) {
+      gpuSettings.display.maintainAspectRatio = false;
+   }
+
+   if (options.has("split-separation")) {
+      gpuSettings.display.splitSeperation = options.get<double>("split-separation");
+   }
+
+   if (options.has("view-mode")) {
+      auto layout = options.get<std::string>("view-mode");
+      if (layout.compare("split") == 0) {
+         gpuSettings.display.viewMode = gpu::DisplaySettings::Split;
+      } else if (layout.compare("tv") == 0)  {
+         gpuSettings.display.viewMode = gpu::DisplaySettings::TV;
+      } else if (layout.compare("gamepad1") == 0) {
+         gpuSettings.display.viewMode = gpu::DisplaySettings::Gamepad1;
+      } else if (layout.compare("gamepad2") == 0) {
+         gpuSettings.display.viewMode = gpu::DisplaySettings::Gamepad2;
+      }
    }
 
    return true;

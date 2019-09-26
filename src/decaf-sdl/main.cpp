@@ -54,7 +54,7 @@ getCommandLineParser()
                      "split", "toggle"
                   } })
       .add_option("display-mode",
-                  description{ "Set the window display mode." },
+                  description { "Set the window display mode." },
                   default_value<std::string> { "windowed" },
                   allowed<std::string> { {
                      "windowed", "fullscreen"
@@ -180,48 +180,12 @@ start(excmd::parser &parser,
    config::loadFromExcmd(options, decafSettings);
 
    cpu::setConfig(cpuSettings);
-   gpu::setConfig(gpuSettings);
    decaf::setConfig(decafSettings);
+   gpu::setConfig(gpuSettings);
 
    // Now handle frontend config options
    if (options.has("vpad0")) {
-       config::input::vpad0 = options.get<std::string>("vpad0");
-   }
-
-   if (options.has("display-mode")) {
-       auto mode = options.get<std::string>("display-mode");
-
-       if (mode.compare("windowed") == 0) {
-           config::display::mode = config::display::Windowed;
-       } else if (mode.compare("fullscreen") == 0) {
-          config::display::mode = config::display::Fullscreen;
-       } else {
-           decaf_abort(fmt::format("Invalid display mode {}", mode));
-       }
-   }
-
-   if (options.has("display-layout")) {
-      auto layout = options.get<std::string>("display-layout");
-
-      if (layout.compare("split") == 0) {
-         config::display::layout = config::display::Split;
-      } else if (layout.compare("toggle") == 0) {
-         config::display::layout = config::display::Toggle;
-      } else {
-         decaf_abort(fmt::format("Invalid display layout {}", layout));
-      }
-   }
-
-   if (options.has("display-stretch")) {
-       config::display::stretch = true;
-   }
-
-   if (options.has("force-sync")) {
-      config::display::force_sync = true;
-   }
-
-   if (options.has("backend")) {
-      config::display::backend = options.get<std::string>("backend");
+      config::input::vpad0 = options.get<std::string>("vpad0");
    }
 
    if (options.has("timeout-ms")) {
@@ -273,18 +237,8 @@ start(excmd::parser &parser,
       return -1;
    }
 
-   if (config::display::backend == "vulkan") {
-      if (!sdl.initVulkanGraphics()) {
-         gCliLog->error("Failed to initialise Vulkan backend.");
-         return -1;
-      }
-   } else if (config::display::backend == "opengl") {
-      if (!sdl.initGlGraphics()) {
-         gCliLog->error("Failed to initialise OpenGL backend.");
-         return -1;
-      }
-   } else {
-      gCliLog->error("Unknown display backend {}", config::display::backend);
+   if (!sdl.initGraphics()) {
+      gCliLog->error("Failed to initialise graphics backend.");
       return -1;
    }
 
