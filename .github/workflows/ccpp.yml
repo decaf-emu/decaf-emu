@@ -80,9 +80,9 @@ jobs:
         echo "::set-env name=QTDIR::C:\\Qt\\Qt5.13.0\\5.13.0\\msvc2017_64"
         mkdir "C:\\VulkanSDK"
         cd "C:\\VulkanSDK"
-        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.101.0/windows/VulkanSDK-1.1.101.0-Installer.exe?u=" -OutFile "vulkan-sdk.exe"
+        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.121.2/windows/VulkanSDK-1.1.121.2-Installer.exe?u=" -OutFile "vulkan-sdk.exe"
         Start-Process -Filepath "vulkan-sdk.exe" -ArgumentList "/S"
-        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.101.0"
+        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.121.2"
         echo "::set-env name=CONAN_ENV_COMPILER::Visual Studio"
         echo "::set-env name=CONAN_ENV_COMPILER_VERSION::15"
 
