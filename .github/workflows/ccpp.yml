@@ -43,6 +43,7 @@ jobs:
     - name: Install (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
+        cd build
         wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
         sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list
         sudo apt-add-repository ppa:cginternals/ppa
@@ -64,6 +65,7 @@ jobs:
     - name: Install (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
+        cd build
         brew install openssl sdl2
         sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
 
@@ -71,6 +73,13 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       shell: powershell
       run: |
+        mkdir "C:\\Qt"
+        cd "C:\\Qt"
+        pip install aqtinstall
+        python -m aqt install 5.13.0 windows desktop win64_msvc2017_64
+        echo "::set-env name=QTDIR::C:\\Qt\\Qt5.13.0\\5.13.0\\msvc2017_64"
+        mkdir "C:\\VulkanSDK"
+        cd "C:\\VulkanSDK"
         Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.101.0/windows/VulkanSDK-1.1.101.0-Installer.exe?u=" -OutFile "vulkan-sdk.exe"
         Start-Process -Filepath "vulkan-sdk.exe" -ArgumentList "/S"
         echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.101.0"
@@ -95,7 +104,7 @@ jobs:
         pip install conan
         pip install urllib3==1.25.3
         conan user
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
+        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
         conan install .. -s compiler="Visual Studio" -s compiler.version=15 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
 
     - name: Configure (macOS)
@@ -114,10 +123,22 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release -DDECAF_QT=ON -DQt5Widgets_DIR=%QTDIR%/lib/cmake/Qt5Widgets -DQt5Svg_DIR=%QTDIR%/lib/cmake/Qt5Svg  ..
 
     - name: Build
       run: |
         cd build
         cmake --build . --config Release -j 2
 
+    - name: Package (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        cd build\obj\Release
+        %QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
+        7z a decaf-bin.zip "*.exe" "*.dll" "resources\*" "iconengines\*" "imageformats\*" "platforms\*" "styles\*"
+
+    - uses: actions/upload-artifact@master
+      if: startsWith(matrix.os, 'windows')
+      with:
+        name: decaf-bin
+        path: build/obj/Release/decaf-bin.zip
