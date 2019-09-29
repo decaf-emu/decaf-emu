@@ -2,6 +2,7 @@
 #include "gpu_config.h"
 
 #include <algorithm>
+#include <cmath>
 
 namespace gpu7
 {
@@ -100,9 +101,9 @@ updateDisplayLayout(DisplayLayout &layout,
    layout.backgroundColour[3] = 1.0f;
 
    // TODO: Only do if SRGB
-   layout.backgroundColour[0] = pow(layout.backgroundColour[0], 2.2f);
-   layout.backgroundColour[1] = pow(layout.backgroundColour[1], 2.2f);
-   layout.backgroundColour[2] = pow(layout.backgroundColour[2], 2.2f);
+   layout.backgroundColour[0] = std::pow(layout.backgroundColour[0], 2.2f);
+   layout.backgroundColour[1] = std::pow(layout.backgroundColour[1], 2.2f);
+   layout.backgroundColour[2] = std::pow(layout.backgroundColour[2], 2.2f);
 }
 
 } // namespace gpu7
