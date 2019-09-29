@@ -107,7 +107,6 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA")
 
     if(DECAF_ENABLE_LTCG)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
@@ -207,6 +206,13 @@ endmacro()
 
 # Build stuff!
 add_subdirectory("libraries")
+
+if(MSVC)
+    # Enable /GA only for .exe files we build, do not use it in external
+    # dependenices or .dll files
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA")
+endif()
+
 add_subdirectory("src")
 add_subdirectory("resources")
 
