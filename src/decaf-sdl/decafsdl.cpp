@@ -4,7 +4,6 @@
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
-#include <libdebugui/debugui.h>
 
 #include <libgpu/gpu_graphicsdriver.h>
 #include <SDL_syswm.h>
@@ -64,80 +63,6 @@ DecafSDL::initSound()
 
    mSoundDriver = new DecafSDLSound;
    return true;
-}
-
-static debugui::MouseButton
-translateMouseButton(int button)
-{
-   switch (button) {
-   case SDL_BUTTON_LEFT:
-      return debugui::MouseButton::Left;
-   case SDL_BUTTON_RIGHT:
-      return debugui::MouseButton::Right;
-   case SDL_BUTTON_MIDDLE:
-      return debugui::MouseButton::Middle;
-   default:
-      return debugui::MouseButton::Unknown;
-   }
-}
-
-static debugui::KeyboardKey
-translateKeyCode(SDL_Keysym sym)
-{
-   switch (sym.sym) {
-   case SDLK_TAB:
-      return debugui::KeyboardKey::Tab;
-   case SDLK_LEFT:
-      return debugui::KeyboardKey::LeftArrow;
-   case SDLK_RIGHT:
-      return debugui::KeyboardKey::RightArrow;
-   case SDLK_UP:
-      return debugui::KeyboardKey::UpArrow;
-   case SDLK_DOWN:
-      return debugui::KeyboardKey::DownArrow;
-   case SDLK_PAGEUP:
-      return debugui::KeyboardKey::PageUp;
-   case SDLK_PAGEDOWN:
-      return debugui::KeyboardKey::PageDown;
-   case SDLK_HOME:
-      return debugui::KeyboardKey::Home;
-   case SDLK_END:
-      return debugui::KeyboardKey::End;
-   case SDLK_DELETE:
-      return debugui::KeyboardKey::Delete;
-   case SDLK_BACKSPACE:
-      return debugui::KeyboardKey::Backspace;
-   case SDLK_RETURN:
-      return debugui::KeyboardKey::Enter;
-   case SDLK_ESCAPE:
-      return debugui::KeyboardKey::Escape;
-   case SDLK_LCTRL:
-      return debugui::KeyboardKey::LeftControl;
-   case SDLK_RCTRL:
-      return debugui::KeyboardKey::RightControl;
-   case SDLK_LSHIFT:
-      return debugui::KeyboardKey::LeftShift;
-   case SDLK_RSHIFT:
-      return debugui::KeyboardKey::RightShift;
-   case SDLK_LALT:
-      return debugui::KeyboardKey::LeftAlt;
-   case SDLK_RALT:
-      return debugui::KeyboardKey::RightAlt;
-   case SDLK_LGUI:
-      return debugui::KeyboardKey::LeftSuper;
-   case SDLK_RGUI:
-      return debugui::KeyboardKey::RightSuper;
-   default:
-      if (sym.sym >= SDLK_a && sym.sym <= SDLK_z) {
-         auto id = (sym.sym - SDLK_a) + static_cast<int>(debugui::KeyboardKey::A);
-         return static_cast<debugui::KeyboardKey>(id);
-      } else if (sym.sym >= SDLK_F1 && sym.sym <= SDLK_F12) {
-         auto id = (sym.sym - SDLK_F1) + static_cast<int>(debugui::KeyboardKey::F1);
-         return static_cast<debugui::KeyboardKey>(id);
-      }
-
-      return debugui::KeyboardKey::Unknown;
-   }
 }
 
 bool

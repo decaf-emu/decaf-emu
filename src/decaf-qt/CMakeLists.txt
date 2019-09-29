@@ -40,7 +40,6 @@ target_link_libraries(decaf-qt
    common
    libconfig
    libcpu
-   libdebugui
    libdecaf
    ${CPPTOML_LIBRARIES}
    ${EXCMD_LIBRARIES}

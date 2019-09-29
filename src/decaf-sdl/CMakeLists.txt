@@ -23,7 +23,6 @@ target_include_directories(decaf-sdl PRIVATE
 target_link_libraries(decaf-sdl
     common
     libconfig
-    libdebugui
     libdecaf
     cpptoml
     excmd
