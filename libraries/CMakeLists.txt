@@ -49,18 +49,25 @@ add_subdirectory(fmt)
 set_target_properties(fmt PROPERTIES FOLDER libraries)
 
 # glad
-if(DECAF_GLAD_DEBUG)
-    add_library(glad STATIC
-        "glad-debug/src/glad.c")
-    set_target_properties(glad PROPERTIES FOLDER libraries)
-    target_include_directories(glad
-        PUBLIC "glad-debug/include")
-else()
-    add_library(glad STATIC
-        "glad/src/glad.c")
-    set_target_properties(glad PROPERTIES FOLDER libraries)
-    target_include_directories(glad
-        PUBLIC "glad/include")
+if(DECAF_GL)
+    if(DECAF_GLAD_DEBUG)
+        add_library(glad STATIC
+            "glad-debug/src/glad.c")
+        set_target_properties(glad PROPERTIES FOLDER libraries)
+        target_include_directories(glad
+            PUBLIC "glad-debug/include")
+    else()
+        add_library(glad STATIC
+            "glad/src/glad.c")
+        set_target_properties(glad PROPERTIES FOLDER libraries)
+        target_include_directories(glad
+            PUBLIC "glad/include")
+    endif()
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        set_target_properties(glad PROPERTIES
+            INTERFACE_LINK_LIBRARIES dl)
+    endif()
 endif()
 
 # glslang
