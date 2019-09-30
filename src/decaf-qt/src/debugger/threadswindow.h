@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 namespace Ui
 {
@@ -16,6 +15,7 @@ class ThreadsWindow : public QWidget
 
 public:
    explicit ThreadsWindow(QWidget *parent = nullptr);
+   ~ThreadsWindow();
 
    void setDebugData(DebugData *debugData);
 
@@ -23,7 +23,7 @@ protected slots:
    void threadsViewDoubleClicked(const QModelIndex &index);
 
 private:
-   std::unique_ptr<Ui::ThreadsWindow> ui;
+   Ui::ThreadsWindow *ui;
 
    DebugData *mDebugData = nullptr;
    ThreadsModel *mThreadsModel = nullptr;

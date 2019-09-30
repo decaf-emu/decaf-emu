@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 namespace Ui
 {
@@ -16,11 +15,12 @@ class VoicesWindow : public QWidget
 
 public:
    explicit VoicesWindow(QWidget *parent = nullptr);
+   ~VoicesWindow();
 
    void setDebugData(DebugData *debugData);
 
 private:
-   std::unique_ptr<Ui::VoicesWindow> ui;
+   Ui::VoicesWindow *ui;
 
    DebugData *mDebugData = nullptr;
    VoicesModel *mVoicesModel = nullptr;

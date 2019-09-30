@@ -11,6 +11,11 @@ SegmentsWindow::SegmentsWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+SegmentsWindow::~SegmentsWindow()
+{
+   delete ui;
+}
+
 void
 SegmentsWindow::setDebugData(DebugData *debugData)
 {

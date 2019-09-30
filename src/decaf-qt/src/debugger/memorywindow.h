@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 namespace Ui
 {
@@ -13,6 +12,7 @@ class MemoryWindow : public QWidget
 
 public:
    MemoryWindow(QWidget *parent = nullptr);
+   ~MemoryWindow();
 
    void navigateToAddress(uint32_t address);
 
@@ -21,5 +21,5 @@ protected slots:
    void columnsChanged();
 
 private:
-   std::unique_ptr<Ui::MemoryWindow> ui;
+   Ui::MemoryWindow *ui;
 };

@@ -14,6 +14,11 @@ JitProfilingWindow::JitProfilingWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+JitProfilingWindow::~JitProfilingWindow()
+{
+   delete ui;
+}
+
 void
 JitProfilingWindow::setDebugData(DebugData *debugData)
 {

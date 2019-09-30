@@ -11,6 +11,11 @@ ThreadsWindow::ThreadsWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+ThreadsWindow::~ThreadsWindow()
+{
+   delete ui;
+}
+
 void
 ThreadsWindow::setDebugData(DebugData *debugData)
 {

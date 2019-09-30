@@ -10,6 +10,11 @@ DisassemblyWindow::DisassemblyWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+DisassemblyWindow::~DisassemblyWindow()
+{
+   delete ui;
+}
+
 void
 DisassemblyWindow::setDebugData(DebugData *debugData)
 {

@@ -16,6 +16,7 @@ class SegmentsWindow : public QWidget
 
 public:
    explicit SegmentsWindow(QWidget *parent = nullptr);
+   ~SegmentsWindow();
 
    void setDebugData(DebugData *debugData);
 
@@ -27,7 +28,7 @@ protected slots:
    void segmentsViewDoubleClicked(const QModelIndex &index);
 
 private:
-   std::unique_ptr<Ui::SegmentsWindow> ui;
+   Ui::SegmentsWindow *ui;
 
    DebugData *mDebugData = nullptr;
    SegmentsModel *mSegmentsModel = nullptr;

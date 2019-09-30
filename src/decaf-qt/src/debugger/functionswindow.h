@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 namespace Ui
 {
@@ -17,6 +16,7 @@ class FunctionsWindow : public QWidget
 
 public:
    explicit FunctionsWindow(QWidget *parent = nullptr);
+   ~FunctionsWindow();
 
    void setDebugData(DebugData *debugData);
 
@@ -28,7 +28,7 @@ public slots:
    void functionsViewDoubleClicked(const QModelIndex &index);
 
 private:
-   std::unique_ptr<Ui::FunctionsWindow> ui;
+   Ui::FunctionsWindow *ui;
 
    DebugData *mDebugData = nullptr;
    FunctionsModel *mFunctionsModel = nullptr;

@@ -11,6 +11,11 @@ VoicesWindow::VoicesWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+VoicesWindow::~VoicesWindow()
+{
+   delete ui;
+}
+
 void
 VoicesWindow::setDebugData(DebugData *debugData)
 {

@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 namespace Ui
 {
@@ -17,6 +16,7 @@ class JitProfilingWindow : public QWidget
 
 public:
    JitProfilingWindow(QWidget *parent = nullptr);
+   ~JitProfilingWindow();
 
    void setDebugData(DebugData *debugData);
 
@@ -32,7 +32,7 @@ public slots:
    void tableViewDoubleClicked(QModelIndex index);
 
 private:
-   std::unique_ptr<Ui::JitProfilingWindow> ui;
+   Ui::JitProfilingWindow *ui;
    DebugData *mDebugData = nullptr;
    JitProfilingModel *mJitProfilingModel = nullptr;
    QSortFilterProxyModel *mSortModel = nullptr;

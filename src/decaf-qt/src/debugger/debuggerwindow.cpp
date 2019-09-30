@@ -152,6 +152,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
 
 DebuggerWindow::~DebuggerWindow()
 {
+   delete ui;
 }
 
 void

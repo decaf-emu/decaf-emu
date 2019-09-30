@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 #include "debugdata.h"
 
@@ -17,6 +16,7 @@ class StackWindow : public QWidget
 
 public:
    StackWindow(QWidget *parent = nullptr);
+   ~StackWindow();
 
    void setDebugData(DebugData *debugData);
 
@@ -24,7 +24,7 @@ protected slots:
    void updateStatus();
 
 private:
-   std::unique_ptr<Ui::StackWindow> ui;
+   Ui::StackWindow *ui;
 
    DebugData *mDebugData = nullptr;
 };

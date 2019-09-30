@@ -13,6 +13,11 @@ FunctionsWindow::FunctionsWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+FunctionsWindow::~FunctionsWindow()
+{
+   delete ui;
+}
+
 void
 FunctionsWindow::setDebugData(DebugData *debugData)
 {

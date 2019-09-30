@@ -12,6 +12,11 @@ MemoryWindow::MemoryWindow(QWidget *parent) :
    ui->widget->navigateToAddress(0x02000000);
 }
 
+MemoryWindow::~MemoryWindow()
+{
+   delete ui;
+}
+
 void
 MemoryWindow::navigateToAddress(uint32_t address)
 {

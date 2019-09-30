@@ -94,9 +94,9 @@ public:
             return reinterpret_cast<quintptr>(stats.code);
          case 2:
          case 3:
-            return stats.profileData.time.load();
+            return static_cast<qulonglong>(stats.profileData.time.load());
          case 4:
-            return stats.profileData.count.load();
+            return static_cast<qulonglong>(stats.profileData.count.load());
          case 5:
          {
             auto count = stats.profileData.count.load();

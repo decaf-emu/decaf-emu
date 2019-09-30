@@ -1,7 +1,6 @@
 #pragma once
 #include <QMainWindow>
 #include <DockManager.h>
-#include <memory>
 
 #include <libdecaf/decaf_debug_api.h>
 
@@ -64,7 +63,7 @@ private:
    bool isDockWidgetFocused(QWidget *widget);
 
 private:
-   std::unique_ptr<Ui::DebuggerWindow> ui;
+   Ui::DebuggerWindow *ui;
    ads::CDockManager *mDockManager;
 
    DebugData *mDebugData;

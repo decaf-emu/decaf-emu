@@ -1,6 +1,5 @@
 #pragma once
 #include <QWidget>
-#include <memory>
 
 namespace Ui
 {
@@ -15,6 +14,7 @@ class DisassemblyWindow : public QWidget
 
 public:
    explicit DisassemblyWindow(QWidget *parent = nullptr);
+   ~DisassemblyWindow();
 
    void setDebugData(DebugData *debugData);
 
@@ -23,7 +23,7 @@ public slots:
    void toggleBreakpointUnderCursor();
 
 private:
-   std::unique_ptr<Ui::DisassemblyWindow> ui;
+   Ui::DisassemblyWindow *ui;
 
    DebugData *mDebugData = nullptr;
 };

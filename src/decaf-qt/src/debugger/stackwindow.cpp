@@ -8,6 +8,11 @@ StackWindow::StackWindow(QWidget *parent) :
    ui->setupUi(this);
 }
 
+StackWindow::~StackWindow()
+{
+   delete ui;
+}
+
 void
 StackWindow::setDebugData(DebugData *debugData)
 {
