@@ -6,10 +6,10 @@
 #include <common/decaf_assert.h>
 #include <common/platform.h>
 #include <fmt/format.h>
+#include <glad/glad.h>
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>
-#include <gl/GL.h>
 #include "wglext.h"
 #endif
 

@@ -16,8 +16,6 @@
 #include <common/tga_encoder.h>
 #include <fmt/format.h>
 #include <fstream>
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
 #include <gsl.h>
 
 namespace opengl
@@ -56,44 +54,44 @@ GLDriver::initialise()
    }
 
    mActiveShader = nullptr;
-   mDrawBuffers.fill(gl::GL_NONE);
+   mDrawBuffers.fill(GL_NONE);
    mGLStateCache.blendEnable.fill(false);
    mLastUniformUpdate.fill(0);
 
    // We always use the scissor test
-   gl::glEnable(gl::GL_SCISSOR_TEST);
+   glEnable(GL_SCISSOR_TEST);
 
    // We always use GL_UPPER_LEFT coordinates
-   gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
+   glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
 
    // The GL spec doesn't say whether these default to enabled or disabled.
    //  They're probably disabled, but let's play it safe.
-   gl::glDisable(gl::GL_DEPTH_CLAMP);
-   gl::glDisable(gl::GL_PRIMITIVE_RESTART);
+   glDisable(GL_DEPTH_CLAMP);
+   glDisable(GL_PRIMITIVE_RESTART);
 
    // Create our blit framebuffer
-   gl::glCreateFramebuffers(2, mBlitFrameBuffers);
+   glCreateFramebuffers(2, mBlitFrameBuffers);
 
    if (mDebug) {
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[0], -1, "blit target");
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mBlitFrameBuffers[1], -1, "blit source");
+      glObjectLabel(GL_FRAMEBUFFER, mBlitFrameBuffers[0], -1, "blit target");
+      glObjectLabel(GL_FRAMEBUFFER, mBlitFrameBuffers[1], -1, "blit source");
    }
 
    // Create our default framebuffer
-   gl::glGenFramebuffers(1, &mFrameBuffer);
-   gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, mFrameBuffer);
+   glGenFramebuffers(1, &mFrameBuffer);
+   glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
 
    // Create framebuffers for color-clear and depth-clear operations
-   gl::glCreateFramebuffers(1, &mColorClearFrameBuffer);
-   gl::glCreateFramebuffers(1, &mDepthClearFrameBuffer);
+   glCreateFramebuffers(1, &mColorClearFrameBuffer);
+   glCreateFramebuffers(1, &mDepthClearFrameBuffer);
 
    if (mDebug) {
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mColorClearFrameBuffer, -1, "color clear");
-      gl::glObjectLabel(gl::GL_FRAMEBUFFER, mDepthClearFrameBuffer, -1, "depth clear");
+      glObjectLabel(GL_FRAMEBUFFER, mColorClearFrameBuffer, -1, "color clear");
+      glObjectLabel(GL_FRAMEBUFFER, mDepthClearFrameBuffer, -1, "depth clear");
    }
 
-   gl::GLint value;
-   gl::glGetIntegerv(gl::GL_MAX_UNIFORM_BLOCK_SIZE, &value);
+   GLint value;
+   glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &value);
    MaxUniformBlockSize = value;
 }
 
@@ -111,7 +109,7 @@ GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
 
    // Destroy any old chain
    if (chain->object) {
-      gl::glDeleteTextures(1, &chain->object);
+      glDeleteTextures(1, &chain->object);
       chain->object = 0;
    }
 
@@ -120,21 +118,21 @@ GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
    //  the games buffering mode, but in practice this is probably meaningless.
 
    // Create the chain
-   gl::glCreateTextures(gl::GL_TEXTURE_2D, 1, &chain->object);
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_NEAREST));
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glTextureParameteri(chain->object, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glTextureStorage2D(chain->object, 1, gl::GL_RGBA8, data.width, data.height);
+   glCreateTextures(GL_TEXTURE_2D, 1, &chain->object);
+   glTextureParameteri(chain->object, GL_TEXTURE_MAG_FILTER, static_cast<int>(GL_NEAREST));
+   glTextureParameteri(chain->object, GL_TEXTURE_MIN_FILTER, static_cast<int>(GL_NEAREST));
+   glTextureParameteri(chain->object, GL_TEXTURE_WRAP_S, static_cast<int>(GL_CLAMP_TO_EDGE));
+   glTextureParameteri(chain->object, GL_TEXTURE_WRAP_T, static_cast<int>(GL_CLAMP_TO_EDGE));
+   glTextureStorage2D(chain->object, 1, GL_RGBA8, data.width, data.height);
 
    chain->width = data.width;
    chain->height = data.height;
 
    if (mDebug) {
       if (data.scanTarget == latte::pm4::ScanTarget::TV) {
-         gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, "TV framebuffer");
+         glObjectLabel(GL_TEXTURE, chain->object, -1, "TV framebuffer");
       } else if (data.scanTarget == latte::pm4::ScanTarget::DRC) {
-         gl::glObjectLabel(gl::GL_TEXTURE, chain->object, -1, "DRC framebuffer");
+         glObjectLabel(GL_TEXTURE, chain->object, -1, "DRC framebuffer");
       }
    }
 
@@ -149,7 +147,7 @@ GLDriver::decafSetBuffer(const latte::pm4::DecafSetBuffer &data)
       tmpClearBuf[i] = clearColor;
    }
 
-   gl::glTextureSubImage2D(chain->object, 0, 0, 0, data.width, data.height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE, tmpClearBuf);
+   glTextureSubImage2D(chain->object, 0, 0, 0, data.width, data.height, GL_RGBA, GL_UNSIGNED_BYTE, tmpClearBuf);
    delete[] tmpClearBuf;
 }
 
@@ -168,15 +166,15 @@ GLDriver::decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data)
       return;
    }
 
-   gl::glNamedFramebufferTexture(mBlitFrameBuffers[0], gl::GL_COLOR_ATTACHMENT0, target->object, 0);
-   gl::glNamedFramebufferTexture(mBlitFrameBuffers[1], gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
+   glNamedFramebufferTexture(mBlitFrameBuffers[0], GL_COLOR_ATTACHMENT0, target->object, 0);
+   glNamedFramebufferTexture(mBlitFrameBuffers[1], GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
 
-   gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
-                              0, 0, data.width, data.height,
-                              0, 0, target->width, target->height,
-                              gl::GL_COLOR_BUFFER_BIT, gl::GL_LINEAR);
-   gl::glEnable(gl::GL_SCISSOR_TEST);
+   glDisable(GL_SCISSOR_TEST);
+   glBlitNamedFramebuffer(mBlitFrameBuffers[1], mBlitFrameBuffers[0],
+                          0, 0, data.width, data.height,
+                          0, 0, target->width, target->height,
+                          GL_COLOR_BUFFER_BIT, GL_LINEAR);
+   glEnable(GL_SCISSOR_TEST);
 }
 
 bool
@@ -205,8 +203,8 @@ GLDriver::dumpScanBuffer(const std::string &filename, const ScanBufferChain &buf
 {
    std::vector<uint8_t> buffer;
    buffer.resize(buf.width * buf.height * 4);
-   gl::glGetTextureImage(buf.object, 0, gl::GL_BGRA, gl::GL_UNSIGNED_BYTE,
-                         static_cast<gl::GLsizei>(buffer.size()), buffer.data());
+   glGetTextureImage(buf.object, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                     static_cast<GLsizei>(buffer.size()), buffer.data());
    return tga::writeFile(filename, 32, 8, buf.width, buf.height, buffer.data());
 }
 
@@ -219,7 +217,7 @@ GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
    //  automatically with the vsync.  We do however need to make sure
    //  that we've finished all our OpenGL commands before we continue,
    //  otherwise, we may overwrite a buffer used on this frame.
-   gl::glFinish();
+   glFinish();
 
    // TODO: We should have a render chain of 2 buffers so that we don't render stuff
    //  until the game actually asked us to.
@@ -272,33 +270,33 @@ GLDriver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
       height = mDrcScanBuffers.height;
    }
 
-   gl::glTextureSubImage2D(texture, 0, 0, 0, width, height, gl::GL_RGBA, gl::GL_UNSIGNED_BYTE,
+   glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
                            gpu::internal::translateAddress(data.buffer));
    decafSwapBuffers(latte::pm4::DecafSwapBuffers {});
 }
 
 // TODO: Move all these GL things into a common place!
-static gl::GLenum
+static GLenum
 getTextureTarget(latte::SQ_TEX_DIM dim)
 {
    switch (dim)
    {
    case latte::SQ_TEX_DIM::DIM_1D:
-      return gl::GL_TEXTURE_1D;
+      return GL_TEXTURE_1D;
    case latte::SQ_TEX_DIM::DIM_2D:
-      return gl::GL_TEXTURE_2D;
+      return GL_TEXTURE_2D;
    case latte::SQ_TEX_DIM::DIM_3D:
-      return gl::GL_TEXTURE_3D;
+      return GL_TEXTURE_3D;
    case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      return gl::GL_TEXTURE_CUBE_MAP;
+      return GL_TEXTURE_CUBE_MAP;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      return gl::GL_TEXTURE_1D_ARRAY;
+      return GL_TEXTURE_1D_ARRAY;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-      return gl::GL_TEXTURE_2D_ARRAY;
+      return GL_TEXTURE_2D_ARRAY;
    case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-      return gl::GL_TEXTURE_2D_MULTISAMPLE;
+      return GL_TEXTURE_2D_MULTISAMPLE;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+      return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
    default:
       decaf_abort(fmt::format("Unimplemented SQ_TEX_DIM {}", dim));
    }
@@ -354,7 +352,7 @@ GLDriver::decafCopySurface(const latte::pm4::DecafCopySurface &data)
       copyDepth *= 6;
    }
 
-   gl::glCopyImageSubData(
+   glCopyImageSubData(
       srcBuffer->active->object,
       getTextureTarget(data.dstDim),
       data.srcLevel,
@@ -525,38 +523,38 @@ GLDriver::eventWrite(const latte::pm4::EventWrite &data)
          mLastOccQueryAddress = phys_addr { 0 };
 
          decaf_check(mOccQuery);
-         gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+         glEndQuery(GL_SAMPLES_PASSED);
 
          // Perform the write when it completes instead of blocking here.
          addQuerySync(mOccQuery, [=](){
             uint64_t result;
-            gl::glGetQueryObjectui64v(mOccQuery, gl::GL_QUERY_RESULT, &result);
+            glGetQueryObjectui64v(mOccQuery, GL_QUERY_RESULT, &result);
             result = latte::applyEndianSwap(result, data.addrLo.ENDIAN_SWAP());
             *reinterpret_cast<uint64_t *>(ptr) = result;
          });
       } else {
          if (mLastOccQueryAddress) {
             gLog->warn("Program started a new occlusion query (at 0x{:X}) while one was already in progress (at 0x{:X})", mLastOccQueryAddress, addr);
-            gl::glEndQuery(gl::GL_SAMPLES_PASSED);
+            glEndQuery(GL_SAMPLES_PASSED);
          }
          mLastOccQueryAddress = addr;
 
          if (!mOccQuery) {
-            gl::glGenQueries(1, &mOccQuery);
+            glGenQueries(1, &mOccQuery);
             decaf_check(mOccQuery);
          } else {
             // Ensure that any pending query has been written so we don't
             //  clobber the result.
-            gl::GLint isReady;
-            while (isReady = static_cast<gl::GLint>(gl::GL_TRUE),
-                   gl::glGetQueryObjectiv(mOccQuery, gl::GL_QUERY_RESULT_AVAILABLE, &isReady),
+            GLint isReady;
+            while (isReady = static_cast<GLint>(GL_TRUE),
+                   glGetQueryObjectiv(mOccQuery, GL_QUERY_RESULT_AVAILABLE, &isReady),
                    !isReady) {
                std::this_thread::sleep_for(std::chrono::microseconds(10));
             }
             checkSyncObjects(0);
          }
 
-         gl::glBeginQuery(gl::GL_SAMPLES_PASSED, mOccQuery);
+         glBeginQuery(GL_SAMPLES_PASSED, mOccQuery);
       }
       break;
    default:
@@ -638,25 +636,25 @@ GLDriver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 void
 GLDriver::addFenceSync(std::function<void()> func)
 {
-   auto sync = gl::glFenceSync(gl::GL_SYNC_GPU_COMMANDS_COMPLETE, static_cast<gl::UnusedMask>(0));
+   auto sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
    mSyncList.emplace_back(sync, func);
 }
 
 void
-GLDriver::addQuerySync(gl::GLuint query, std::function<void()> func)
+GLDriver::addQuerySync(GLuint query, std::function<void()> func)
 {
    mSyncList.emplace_back(query, func);
 }
 
 void
-GLDriver::checkSyncObjects(gl::GLuint64 timeout)
+GLDriver::checkSyncObjects(GLuint64 timeout)
 {
    if (mSyncList.empty()) {
       return;
    }
 
    // Ensure that all sync commands have been sent to the server.
-   gl::glFlush();
+   glFlush();
 
    bool anyComplete = false;
 
@@ -667,13 +665,13 @@ GLDriver::checkSyncObjects(gl::GLuint64 timeout)
       if (&*i == &mSyncList.front() && !anyComplete && timeout > 0) {
          switch (i->type) {
          case SyncObject::FENCE:
-            gl::GLenum result;
-            result = gl::glClientWaitSync(i->sync, static_cast<gl::SyncObjectMask>(0), timeout);
-            i->isComplete = (result != gl::GL_TIMEOUT_EXPIRED);
+            GLenum result;
+            result = glClientWaitSync(i->sync, 0, timeout);
+            i->isComplete = (result != GL_TIMEOUT_EXPIRED);
             break;
          case SyncObject::QUERY: {
-            gl::GLint isReady = static_cast<gl::GLint>(gl::GL_TRUE);
-            gl::glGetQueryObjectiv(mOccQuery, gl::GL_QUERY_RESULT_AVAILABLE, &isReady);
+            GLint isReady = static_cast<GLint>(GL_TRUE);
+            glGetQueryObjectiv(mOccQuery, GL_QUERY_RESULT_AVAILABLE, &isReady);
             if (isReady) {
                i->isComplete = true;
             } else {
@@ -685,15 +683,15 @@ GLDriver::checkSyncObjects(gl::GLuint64 timeout)
       } else {
          switch (i->type) {
          case SyncObject::FENCE: {
-            gl::GLint syncState;
-            syncState = static_cast<gl::GLint>(gl::GL_SIGNALED);  // avoid hanging on error
-            gl::glGetSynciv(i->sync, gl::GL_SYNC_STATUS, sizeof(syncState), nullptr, &syncState);
-            i->isComplete = (syncState == gl::GL_SIGNALED);
+            GLint syncState;
+            syncState = static_cast<GLint>(GL_SIGNALED);  // avoid hanging on error
+            glGetSynciv(i->sync, GL_SYNC_STATUS, sizeof(syncState), nullptr, &syncState);
+            i->isComplete = (syncState == GL_SIGNALED);
             break;
          }
          case SyncObject::QUERY: {
-            gl::GLint isReady = static_cast<int>(gl::GL_TRUE);
-            gl::glGetQueryObjectiv(mOccQuery, gl::GL_QUERY_RESULT_AVAILABLE, &isReady);
+            GLint isReady = static_cast<int>(GL_TRUE);
+            glGetQueryObjectiv(mOccQuery, GL_QUERY_RESULT_AVAILABLE, &isReady);
             i->isComplete = !!isReady;
             break;
          }
@@ -796,7 +794,6 @@ GLDriver::run()
 
    mRunState = RunState::Running;
    mContext->makeCurrent();
-   glbinding::Binding::useCurrentContext();
 
    while (mRunState == RunState::Running) {
       if (mSyncList.empty()) {

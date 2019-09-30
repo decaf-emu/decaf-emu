@@ -6,7 +6,6 @@
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
-#include <glbinding/gl/gl.h>
 
 namespace opengl
 {
@@ -52,10 +51,10 @@ bool GLDriver::checkActiveColorBuffer()
       if (surfaceObject != mColorBufferCache[i].object) {
          mColorBufferCache[i].object = surfaceObject;
 
-         gl::glFramebufferTexture(gl::GL_FRAMEBUFFER, gl::GL_COLOR_ATTACHMENT0 + i, surfaceObject, 0);
+         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, surfaceObject, 0);
          mFramebufferChanged = true;
 
-         auto drawBuffer = surfaceObject ? gl::GL_COLOR_ATTACHMENT0 + i : gl::GL_NONE;
+         auto drawBuffer = surfaceObject ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
          if (mDrawBuffers[i] != drawBuffer) {
             mDrawBuffers[i] = drawBuffer;
             drawBuffersChanged = true;
@@ -65,16 +64,16 @@ bool GLDriver::checkActiveColorBuffer()
       if (surfaceObject && thisMask != mColorBufferCache[i].mask) {
          mColorBufferCache[i].mask = thisMask;
 
-         gl::glColorMaski(i,
-                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 0))),
-                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 1))),
-                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 2))),
-                          static_cast<gl::GLboolean>(!!(thisMask & (1 << 3))));
+         glColorMaski(i,
+                      static_cast<GLboolean>(!!(thisMask & (1 << 0))),
+                      static_cast<GLboolean>(!!(thisMask & (1 << 1))),
+                      static_cast<GLboolean>(!!(thisMask & (1 << 2))),
+                      static_cast<GLboolean>(!!(thisMask & (1 << 3))));
       }
    }
 
    if (drawBuffersChanged) {
-      gl::glDrawBuffers(static_cast<gl::GLsizei>(mDrawBuffers.size()), &mDrawBuffers[0]);
+      glDrawBuffers(static_cast<GLsizei>(mDrawBuffers.size()), &mDrawBuffers[0]);
    }
 
    return true;

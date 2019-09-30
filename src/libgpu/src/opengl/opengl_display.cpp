@@ -7,85 +7,85 @@
 
 #include <common/log.h>
 #include <common/platform.h>
+#include <fmt/format.h>
 #include <memory>
-#include <glbinding/Binding.h>
-#include <glbinding/Meta.h>
+#include <glad/glad.h>
 
 namespace opengl
 {
 
 static std::string
-getGlDebugSource(gl::GLenum source)
+getGlDebugSource(GLenum source)
 {
    switch (source) {
-   case gl::GL_DEBUG_SOURCE_API:
+   case GL_DEBUG_SOURCE_API:
       return "API";
-   case gl::GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+   case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
       return "WINSYS";
-   case gl::GL_DEBUG_SOURCE_SHADER_COMPILER:
+   case GL_DEBUG_SOURCE_SHADER_COMPILER:
       return "COMPILER";
-   case gl::GL_DEBUG_SOURCE_THIRD_PARTY:
+   case GL_DEBUG_SOURCE_THIRD_PARTY:
       return "EXTERNAL";
-   case gl::GL_DEBUG_SOURCE_APPLICATION:
+   case GL_DEBUG_SOURCE_APPLICATION:
       return "APP";
-   case gl::GL_DEBUG_SOURCE_OTHER:
+   case GL_DEBUG_SOURCE_OTHER:
       return "OTHER";
    default:
-      return glbinding::Meta::getString(source);
+      return fmt::format("GL_DEBUG_SOURCE_UNKNOWN_{}", source);
    }
 }
 
 static std::string
-getGlDebugType(gl::GLenum severity)
+getGlDebugType(GLenum type)
 {
-   switch (severity) {
-   case gl::GL_DEBUG_TYPE_ERROR:
+   switch (type) {
+   case GL_DEBUG_TYPE_ERROR:
       return "ERROR";
-   case gl::GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+   case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
       return "DEPRECATED_BEHAVIOR";
-   case gl::GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+   case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
       return "UNDEFINED_BEHAVIOR";
-   case gl::GL_DEBUG_TYPE_PORTABILITY:
+   case GL_DEBUG_TYPE_PORTABILITY:
       return "PORTABILITY";
-   case gl::GL_DEBUG_TYPE_PERFORMANCE:
+   case GL_DEBUG_TYPE_PERFORMANCE:
       return "PERFORMANCE";
-   case gl::GL_DEBUG_TYPE_MARKER:
+   case GL_DEBUG_TYPE_MARKER:
       return "MARKER";
-   case gl::GL_DEBUG_TYPE_PUSH_GROUP:
+   case GL_DEBUG_TYPE_PUSH_GROUP:
       return "PUSH_GROUP";
-   case gl::GL_DEBUG_TYPE_POP_GROUP:
+   case GL_DEBUG_TYPE_POP_GROUP:
       return "POP_GROUP";
-   case gl::GL_DEBUG_TYPE_OTHER:
+   case GL_DEBUG_TYPE_OTHER:
       return "OTHER";
    default:
-      return glbinding::Meta::getString(severity);
+      return fmt::format("GL_DEBUG_TYPE_UNKNOWN_{}", type);
    }
 }
 
 static std::string
-getGlDebugSeverity(gl::GLenum severity)
+getGlDebugSeverity(GLenum severity)
 {
    switch (severity) {
-   case gl::GL_DEBUG_SEVERITY_HIGH:
+   case GL_DEBUG_SEVERITY_HIGH:
       return "HIGH";
-   case gl::GL_DEBUG_SEVERITY_MEDIUM:
+   case GL_DEBUG_SEVERITY_MEDIUM:
       return "MED";
-   case gl::GL_DEBUG_SEVERITY_LOW:
+   case GL_DEBUG_SEVERITY_LOW:
       return "LOW";
-   case gl::GL_DEBUG_SEVERITY_NOTIFICATION:
+   case GL_DEBUG_SEVERITY_NOTIFICATION:
       return "NOTIF";
    default:
-      return glbinding::Meta::getString(severity);
+      return fmt::format("GL_DEBUG_SEVERITY_UNKNOWN_{}", severity);
    }
 }
 
-static void GL_APIENTRY
-debugMessageCallback(gl::GLenum source,
-                     gl::GLenum type,
-                     gl::GLuint id,
-                     gl::GLenum severity,
-                     gl::GLsizei length,
-                     const gl::GLchar* message,
+static void
+debugMessageCallback(GLenum source,
+                     GLenum type,
+                     GLuint id,
+                     GLenum severity,
+                     GLsizei length,
+                     const GLchar* message,
                      const void *userParam)
 {
    for (auto filterID : gpu::config()->opengl.debug_message_filters) {
@@ -103,13 +103,13 @@ debugMessageCallback(gl::GLenum source,
          getGlDebugSeverity(severity),
          message);
 
-   if (severity == gl::GL_DEBUG_SEVERITY_HIGH) {
+   if (severity == GL_DEBUG_SEVERITY_HIGH) {
       gLog->warn(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_MEDIUM) {
+   } else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
       gLog->debug(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_LOW) {
+   } else if (severity == GL_DEBUG_SEVERITY_LOW) {
       gLog->trace(outputStr);
-   } else if (severity == gl::GL_DEBUG_SEVERITY_NOTIFICATION) {
+   } else if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
       gLog->info(outputStr);
    } else {
       gLog->info(outputStr);
@@ -147,20 +147,20 @@ createDisplayPipeline(DisplayPipeline &displayPipeline)
       })";
 
    // Create vertex program
-   displayPipeline.vertexProgram = gl::glCreateShaderProgramv(gl::GL_VERTEX_SHADER, 1, &vertexCode);
+   displayPipeline.vertexProgram = glCreateShaderProgramv(GL_VERTEX_SHADER, 1, &vertexCode);
 
    // Create pixel program
-   displayPipeline.fragmentProgram = gl::glCreateShaderProgramv(gl::GL_FRAGMENT_SHADER, 1, &pixelCode);
-   gl::glBindFragDataLocation(displayPipeline.fragmentProgram, 0, "ps_color");
+   displayPipeline.fragmentProgram = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 1, &pixelCode);
+   glBindFragDataLocation(displayPipeline.fragmentProgram, 0, "ps_color");
 
    // Create pipeline
-   gl::glGenProgramPipelines(1, &displayPipeline.programPipeline);
-   gl::glUseProgramStages(displayPipeline.programPipeline, gl::GL_VERTEX_SHADER_BIT, displayPipeline.vertexProgram);
-   gl::glUseProgramStages(displayPipeline.programPipeline, gl::GL_FRAGMENT_SHADER_BIT, displayPipeline.fragmentProgram);
+   glGenProgramPipelines(1, &displayPipeline.programPipeline);
+   glUseProgramStages(displayPipeline.programPipeline, GL_VERTEX_SHADER_BIT, displayPipeline.vertexProgram);
+   glUseProgramStages(displayPipeline.programPipeline, GL_FRAGMENT_SHADER_BIT, displayPipeline.fragmentProgram);
 
    // (TL, TR, BR)    (BR, BL, TL)
    // Create vertex buffer
-   static constexpr gl::GLfloat vertices[] = {
+   static constexpr GLfloat vertices[] = {
       -1.0f,  -1.0f,   0.0f, 1.0f,
       1.0f,  -1.0f,   1.0f, 1.0f,
       1.0f, 1.0f,   1.0f, 0.0f,
@@ -170,64 +170,29 @@ createDisplayPipeline(DisplayPipeline &displayPipeline)
       -1.0f,  -1.0f,   0.0f, 1.0f,
    };
 
-   gl::glCreateBuffers(1, &displayPipeline.vertexBuffer);
-   gl::glNamedBufferData(displayPipeline.vertexBuffer, sizeof(vertices), vertices, gl::GL_STATIC_DRAW);
+   glCreateBuffers(1, &displayPipeline.vertexBuffer);
+   glNamedBufferData(displayPipeline.vertexBuffer, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
    // Create vertex array
-   gl::glCreateVertexArrays(1, &displayPipeline.vertexArray);
+   glCreateVertexArrays(1, &displayPipeline.vertexArray);
 
-   auto fs_position = gl::glGetAttribLocation(displayPipeline.vertexProgram, "fs_position");
-   gl::glEnableVertexArrayAttrib(displayPipeline.vertexArray, fs_position);
-   gl::glVertexArrayAttribFormat(displayPipeline.vertexArray, fs_position, 2, gl::GL_FLOAT, gl::GL_FALSE, 0);
-   gl::glVertexArrayAttribBinding(displayPipeline.vertexArray, fs_position, 0);
+   auto fs_position = glGetAttribLocation(displayPipeline.vertexProgram, "fs_position");
+   glEnableVertexArrayAttrib(displayPipeline.vertexArray, fs_position);
+   glVertexArrayAttribFormat(displayPipeline.vertexArray, fs_position, 2, GL_FLOAT, GL_FALSE, 0);
+   glVertexArrayAttribBinding(displayPipeline.vertexArray, fs_position, 0);
 
-   auto fs_texCoord = gl::glGetAttribLocation(displayPipeline.vertexProgram, "fs_texCoord");
-   gl::glEnableVertexArrayAttrib(displayPipeline.vertexArray, fs_texCoord);
-   gl::glVertexArrayAttribFormat(displayPipeline.vertexArray, fs_texCoord, 2, gl::GL_FLOAT, gl::GL_FALSE, 2 * sizeof(gl::GLfloat));
-   gl::glVertexArrayAttribBinding(displayPipeline.vertexArray, fs_texCoord, 0);
+   auto fs_texCoord = glGetAttribLocation(displayPipeline.vertexProgram, "fs_texCoord");
+   glEnableVertexArrayAttrib(displayPipeline.vertexArray, fs_texCoord);
+   glVertexArrayAttribFormat(displayPipeline.vertexArray, fs_texCoord, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat));
+   glVertexArrayAttribBinding(displayPipeline.vertexArray, fs_texCoord, 0);
 
    // Create texture sampler
-   gl::glGenSamplers(1, &displayPipeline.sampler);
+   glGenSamplers(1, &displayPipeline.sampler);
 
-   gl::glSamplerParameteri(displayPipeline.sampler, gl::GL_TEXTURE_WRAP_S, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glSamplerParameteri(displayPipeline.sampler, gl::GL_TEXTURE_WRAP_T, static_cast<int>(gl::GL_CLAMP_TO_EDGE));
-   gl::glSamplerParameteri(displayPipeline.sampler, gl::GL_TEXTURE_MIN_FILTER, static_cast<int>(gl::GL_LINEAR));
-   gl::glSamplerParameteri(displayPipeline.sampler, gl::GL_TEXTURE_MAG_FILTER, static_cast<int>(gl::GL_LINEAR));
-}
-
-static void
-initialiseContext()
-{
-   glbinding::Binding::initialize();
-   if (gpu::config()->debug.debug_enabled) {
-      glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After | glbinding::CallbackMask::ParametersAndReturnValue, { "glGetError" });
-      glbinding::setAfterCallback([&](const glbinding::FunctionCall &call) {
-         auto error = gl::glGetError();
-         if (error != gl::GL_NO_ERROR) {
-            auto out = fmt::memory_buffer { };
-            fmt::format_to(out, "{}(", call.function->name());
-
-            for (unsigned i = 0; i < call.parameters.size(); ++i) {
-               fmt::format_to(out, "{}", call.parameters[i]->asString());
-               if (i < call.parameters.size() - 1) {
-                  fmt::format_to(out, ", ");
-               }
-            }
-
-            fmt::format_to(out, ")");
-
-            if (call.returnValue) {
-               fmt::format_to(out, " -> {}", call.returnValue->asString());
-            }
-
-            gLog->error("OpenGL error: {} with {}", glbinding::Meta::getString(error), out.data());
-         }
-      });
-
-      gl::glDebugMessageCallback(&debugMessageCallback, nullptr);
-      gl::glEnable(gl::GL_DEBUG_OUTPUT);
-      gl::glEnable(gl::GL_DEBUG_OUTPUT_SYNCHRONOUS);
-   }
+   glSamplerParameteri(displayPipeline.sampler, GL_TEXTURE_WRAP_S, static_cast<int>(GL_CLAMP_TO_EDGE));
+   glSamplerParameteri(displayPipeline.sampler, GL_TEXTURE_WRAP_T, static_cast<int>(GL_CLAMP_TO_EDGE));
+   glSamplerParameteri(displayPipeline.sampler, GL_TEXTURE_MIN_FILTER, static_cast<int>(GL_LINEAR));
+   glSamplerParameteri(displayPipeline.sampler, GL_TEXTURE_MAG_FILTER, static_cast<int>(GL_LINEAR));
 }
 
 void
@@ -236,14 +201,29 @@ GLDriver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
    // Setup display context
    mDisplayContext = createContext(wsi);
    mDisplayContext->setSwapInterval(0);
-   initialiseContext();
+
+   // Initialise glad
+   gladLoadGL();
+   if (gpu::config()->debug.debug_enabled) {
+      glad_set_post_callback([](const char* name, void* funcptr, int len_args, ...) {
+         auto error = glad_glGetError();
+         if (error != GL_NO_ERROR) {
+            gLog->error("OpenGL error: {} failed with error {}", name, error);
+         }
+         });
+
+      glDebugMessageCallback(&debugMessageCallback, nullptr);
+      glEnable(GL_DEBUG_OUTPUT);
+      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+   }
+
+   // Create display pipeline
    std::tie(mDisplayPipeline.width, mDisplayPipeline.height) = mDisplayContext->getDimensions();
    createDisplayPipeline(mDisplayPipeline);
 
    // Setup render context
    mContext = mDisplayContext->createSharedContext();
    mContext->setSwapInterval(0);
-   initialiseContext();
 
    // Initialise driver
    initialise();
@@ -270,20 +250,20 @@ GLDriver::renderDisplay()
    mDisplayContext->makeCurrent();
 
    // Set up some needed GL state
-   gl::glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
-   gl::glDisablei(gl::GL_BLEND, 0);
-   gl::glDisable(gl::GL_DEPTH_TEST);
-   gl::glDisable(gl::GL_STENCIL_TEST);
-   gl::glDisable(gl::GL_SCISSOR_TEST);
-   gl::glDisable(gl::GL_CULL_FACE);
+   glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+   glDisablei(GL_BLEND, 0);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_STENCIL_TEST);
+   glDisable(GL_SCISSOR_TEST);
+   glDisable(GL_CULL_FACE);
 
    // Clear screen
    auto config = gpu::config();
-   gl::glClearColor(config->display.backgroundColour[0] / 255.0f,
+   glClearColor(config->display.backgroundColour[0] / 255.0f,
                     config->display.backgroundColour[1] / 255.0f,
                     config->display.backgroundColour[2] / 255.0f,
                     1.0f);
-   gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+   glClear(GL_COLOR_BUFFER_BIT);
 
    // Setup display layout
    const auto displayWidth = mDisplayPipeline.width.load();
@@ -298,18 +278,18 @@ GLDriver::renderDisplay()
 
    // Draw displays
    auto drawScanBuffer =
-      [this](gl::GLuint object)
+      [this](GLuint object)
       {
          // Setup screen draw shader
-         gl::glBindVertexArray(mDisplayPipeline.vertexArray);
-         gl::glBindVertexBuffer(0, mDisplayPipeline.vertexBuffer, 0, 4 * sizeof(gl::GLfloat));
-         gl::glBindProgramPipeline(mDisplayPipeline.programPipeline);
+         glBindVertexArray(mDisplayPipeline.vertexArray);
+         glBindVertexBuffer(0, mDisplayPipeline.vertexBuffer, 0, 4 * sizeof(GLfloat));
+         glBindProgramPipeline(mDisplayPipeline.programPipeline);
 
          // Draw screen quad
-         gl::glBindSampler(0, mDisplayPipeline.sampler);
-         gl::glBindTextureUnit(0, object);
+         glBindSampler(0, mDisplayPipeline.sampler);
+         glBindTextureUnit(0, object);
 
-         gl::glDrawArrays(gl::GL_TRIANGLES, 0, 6);
+         glDrawArrays(GL_TRIANGLES, 0, 6);
       };
 
    if (layout.tv.visible) {
@@ -318,7 +298,7 @@ GLDriver::renderDisplay()
          layout.tv.width, layout.tv.height
       };
 
-      gl::glViewportArrayv(0, 1, viewportArray);
+      glViewportArrayv(0, 1, viewportArray);
       drawScanBuffer(mTvScanBuffers.object);
    }
 
@@ -328,7 +308,7 @@ GLDriver::renderDisplay()
          layout.drc.width, layout.drc.height
       };
 
-      gl::glViewportArrayv(0, 1, viewportArray);
+      glViewportArrayv(0, 1, viewportArray);
       drawScanBuffer(mDrcScanBuffers.object);
    }
 

@@ -13,9 +13,6 @@
 [submodule "libraries/ovsocket"]
 	path = libraries/ovsocket
 	url = https://github.com/exjam/ovsocket.git
-[submodule "libraries/glbinding"]
-	path = libraries/glbinding
-	url = https://github.com/cginternals/glbinding.git
 [submodule "libraries/gsl-lite"]
 	path = libraries/gsl-lite
 	url = https://github.com/decaf-emu/gsl-lite.git

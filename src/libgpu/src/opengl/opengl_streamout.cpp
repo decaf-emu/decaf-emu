@@ -8,7 +8,6 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <fmt/format.h>
-#include <glbinding/gl/gl.h>
 #include <libcpu/mem.h>
 
 namespace opengl
@@ -28,7 +27,7 @@ GLDriver::checkActiveFeedbackBuffers()
       if (!(vgt_strmout_buffer_en.value & (1 << index))) {
          if (mFeedbackBufferState[index].bound) {
             endTransformFeedback();
-            gl::glBindBufferBase(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, 0);
+            glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, index, 0);
             mFeedbackBufferState[index].bound = false;
          }
          continue;
@@ -57,7 +56,7 @@ GLDriver::checkActiveFeedbackBuffers()
       }
 
       endTransformFeedback();
-      gl::glBindBufferRange(gl::GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer.object, offset, buffer.allocatedSize - offset);
+      glBindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, index, buffer.object, offset, buffer.allocatedSize - offset);
 
       mFeedbackBufferState[index].bound = true;
       mFeedbackBufferState[index].object = buffer.object;
@@ -68,26 +67,26 @@ GLDriver::checkActiveFeedbackBuffers()
 }
 
 void
-GLDriver::beginTransformFeedback(gl::GLenum primitive)
+GLDriver::beginTransformFeedback(GLenum primitive)
 {
    decaf_check(!mFeedbackActive);
 
    // Must be a base primitive type (not strip/fan/etc.)
-   decaf_check(primitive == gl::GL_POINTS || primitive == gl::GL_LINES || primitive == gl::GL_TRIANGLES);
+   decaf_check(primitive == GL_POINTS || primitive == GL_LINES || primitive == GL_TRIANGLES);
 
    // Start a transform feedback counter query so we can properly return the
    //  buffer offsets when requested
    if (!mFeedbackQuery) {
-      gl::glCreateQueries(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
+      glCreateQueries(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, 1, &mFeedbackQuery);
       decaf_check(mFeedbackQuery);
 
       if (mDebug) {
-         gl::glObjectLabel(gl::GL_QUERY, mFeedbackQuery, -1, "transform feedback query");
+         glObjectLabel(GL_QUERY, mFeedbackQuery, -1, "transform feedback query");
       }
    }
-   gl::glBeginQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, mFeedbackQuery);
+   glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, mFeedbackQuery);
 
-   gl::glBeginTransformFeedback(primitive);
+   glBeginTransformFeedback(primitive);
    mFeedbackActive = true;
    mFeedbackPrimitive = primitive;
 }
@@ -99,10 +98,10 @@ GLDriver::endTransformFeedback()
       return;
    }
 
-   gl::glEndTransformFeedback();
+   glEndTransformFeedback();
    mFeedbackActive = false;
 
-   gl::glEndQuery(gl::GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+   glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
 
    auto vgt_strmout_buffer_en = getRegister<latte::VGT_STRMOUT_BUFFER_EN>(latte::Register::VGT_STRMOUT_BUFFER_EN);
    mFeedbackQueryBuffers = vgt_strmout_buffer_en.value & 0xF;
@@ -126,22 +125,22 @@ GLDriver::updateTransformFeedbackOffsets()
    //  indicate that it's a primitive count, so we treat it as such.
    //  We explicitly sleep until the query is ready because some drivers are
    //  bad at waiting for queries on their own and introduce extra delay.
-   gl::GLint done = false;
-   while (gl::glGetQueryObjectiv(mFeedbackQuery, gl::GL_QUERY_RESULT_AVAILABLE, &done), !done) {
+   GLint done = false;
+   while (glGetQueryObjectiv(mFeedbackQuery, GL_QUERY_RESULT_AVAILABLE, &done), !done) {
       std::this_thread::sleep_for(std::chrono::microseconds(10));
    }
-   gl::GLuint numPrimitives = 0;
-   glGetQueryObjectuiv(mFeedbackQuery, gl::GL_QUERY_RESULT, &numPrimitives);
+   GLuint numPrimitives = 0;
+   glGetQueryObjectuiv(mFeedbackQuery, GL_QUERY_RESULT, &numPrimitives);
 
    int numVertices;
    switch (mFeedbackPrimitive) {
-   case gl::GL_POINTS:
+   case GL_POINTS:
       numVertices = numPrimitives;
       break;
-   case gl::GL_LINES:
+   case GL_LINES:
       numVertices = numPrimitives * 2;
       break;
-   case gl::GL_TRIANGLES:
+   case GL_TRIANGLES:
       numVertices = numPrimitives * 3;
       break;
    default:

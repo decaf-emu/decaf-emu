@@ -7,29 +7,27 @@
 #include <common/log.h>
 #include <common/murmur3.h>
 #include <fmt/format.h>
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
 #include <gsl.h>
 
 namespace opengl
 {
 
-static gl::GLenum
+static GLenum
 getTextureSwizzle(latte::SQ_SEL sel)
 {
    switch (sel) {
    case latte::SQ_SEL::SEL_X:
-      return gl::GL_RED;
+      return GL_RED;
    case latte::SQ_SEL::SEL_Y:
-      return gl::GL_GREEN;
+      return GL_GREEN;
    case latte::SQ_SEL::SEL_Z:
-      return gl::GL_BLUE;
+      return GL_BLUE;
    case latte::SQ_SEL::SEL_W:
-      return gl::GL_ALPHA;
+      return GL_ALPHA;
    case latte::SQ_SEL::SEL_0:
-      return gl::GL_ZERO;
+      return GL_ZERO;
    case latte::SQ_SEL::SEL_1:
-      return gl::GL_ONE;
+      return GL_ONE;
    default:
       decaf_abort(fmt::format("Unimplemented compressed texture swizzle {}", sel));
    }
@@ -44,7 +42,7 @@ bool GLDriver::checkActiveTextures()
          // In debug mode, explicitly unbind the unit so tools like apitrace
          //  don't show lots of unused textures
          if (mDebug && mPixelTextureCache[i].surfaceObject != 0) {
-            gl::glBindTextureUnit(i, 0);
+            glBindTextureUnit(i, 0);
             mPixelTextureCache[i].surfaceObject = 0;
          }
 
@@ -63,7 +61,7 @@ bool GLDriver::checkActiveTextures()
 
       if (!baseAddress) {
          if (mPixelTextureCache[i].surfaceObject != 0) {
-            gl::glBindTextureUnit(i, 0);
+            glBindTextureUnit(i, 0);
             mPixelTextureCache[i].surfaceObject = 0;
          }
          continue;
@@ -118,32 +116,32 @@ bool GLDriver::checkActiveTextures()
          // In debug mode, first unbind the unit to remove any textures of
          //  different types (again, to reduce clutter in apitrace etc.)
          if (mDebug) {
-            gl::glBindTextureUnit(i, 0);
+            glBindTextureUnit(i, 0);
          }
 
-         gl::glBindTextureUnit(i, buffer->active->object);
+         glBindTextureUnit(i, buffer->active->object);
       }
    }
 
    return true;
 }
 
-static gl::GLenum
+static GLenum
 getTextureWrap(latte::SQ_TEX_CLAMP clamp)
 {
    switch (clamp) {
    case latte::SQ_TEX_CLAMP::WRAP:
-      return gl::GL_REPEAT;
+      return GL_REPEAT;
    case latte::SQ_TEX_CLAMP::MIRROR:
-      return gl::GL_MIRRORED_REPEAT;
+      return GL_MIRRORED_REPEAT;
    case latte::SQ_TEX_CLAMP::CLAMP_LAST_TEXEL:
-      return gl::GL_CLAMP_TO_EDGE;
+      return GL_CLAMP_TO_EDGE;
    case latte::SQ_TEX_CLAMP::MIRROR_ONCE_LAST_TEXEL:
-      return gl::GL_MIRROR_CLAMP_TO_EDGE;
+      return GL_MIRROR_CLAMP_TO_EDGE;
    case latte::SQ_TEX_CLAMP::CLAMP_BORDER:
-      return gl::GL_CLAMP_TO_BORDER;
+      return GL_CLAMP_TO_BORDER;
    case latte::SQ_TEX_CLAMP::MIRROR_ONCE_BORDER:
-      return gl::GL_MIRROR_CLAMP_TO_BORDER_EXT;
+      return GL_MIRROR_CLAMP_TO_BORDER_EXT;
    case latte::SQ_TEX_CLAMP::CLAMP_HALF_BORDER:
    case latte::SQ_TEX_CLAMP::MIRROR_ONCE_HALF_BORDER:
    default:
@@ -151,39 +149,39 @@ getTextureWrap(latte::SQ_TEX_CLAMP clamp)
    }
 }
 
-static gl::GLenum
+static GLenum
 getTextureXYFilter(latte::SQ_TEX_XY_FILTER filter)
 {
    switch (filter) {
    case latte::SQ_TEX_XY_FILTER::POINT:
-      return gl::GL_NEAREST;
+      return GL_NEAREST;
    case latte::SQ_TEX_XY_FILTER::BILINEAR:
-      return gl::GL_LINEAR;
+      return GL_LINEAR;
    default:
       decaf_abort(fmt::format("Unimplemented texture xy filter {}", filter));
    }
 }
 
-static gl::GLenum
+static GLenum
 getTextureCompareFunction(latte::REF_FUNC func)
 {
    switch (func) {
    case latte::REF_FUNC::NEVER:
-      return gl::GL_NEVER;
+      return GL_NEVER;
    case latte::REF_FUNC::LESS:
-      return gl::GL_LESS;
+      return GL_LESS;
    case latte::REF_FUNC::EQUAL:
-      return gl::GL_EQUAL;
+      return GL_EQUAL;
    case latte::REF_FUNC::LESS_EQUAL:
-      return gl::GL_LEQUAL;
+      return GL_LEQUAL;
    case latte::REF_FUNC::GREATER:
-      return gl::GL_GREATER;
+      return GL_GREATER;
    case latte::REF_FUNC::NOT_EQUAL:
-      return gl::GL_NOTEQUAL;
+      return GL_NOTEQUAL;
    case latte::REF_FUNC::GREATER_EQUAL:
-      return gl::GL_GEQUAL;
+      return GL_GEQUAL;
    case latte::REF_FUNC::ALWAYS:
-      return gl::GL_ALWAYS;
+      return GL_ALWAYS;
    default:
       decaf_abort(fmt::format("Unimplemented texture compare function {}", func));
    }
@@ -199,7 +197,7 @@ bool GLDriver::checkActiveSamplers()
       if (usage == glsl2::SamplerUsage::Invalid) {
          if (mPixelSamplerCache[i].usage != glsl2::SamplerUsage::Invalid) {
             mPixelSamplerCache[i].usage = glsl2::SamplerUsage::Invalid;
-            gl::glBindSampler(i, 0);
+            glBindSampler(i, 0);
          }
          continue;
       }
@@ -211,18 +209,18 @@ bool GLDriver::checkActiveSamplers()
 
       // Create sampler object if this is the first time we're using it
       if (!sampler.object) {
-         gl::glCreateSamplers(1, &sampler.object);
+         glCreateSamplers(1, &sampler.object);
 
          if (mDebug) {
             auto label = fmt::format("pixel sampler {}", i);
-            gl::glObjectLabel(gl::GL_SAMPLER, sampler.object, -1, label.c_str());
+            glObjectLabel(GL_SAMPLER, sampler.object, -1, label.c_str());
          }
       }
 
       // Bind sampler if necessary
       if (mPixelSamplerCache[i].usage != usage) {
          if (mPixelSamplerCache[i].usage == glsl2::SamplerUsage::Invalid) {
-            gl::glBindSampler(i, sampler.object);
+            glBindSampler(i, sampler.object);
          }
 
          mPixelSamplerCache[i].usage = usage;
@@ -235,17 +233,17 @@ bool GLDriver::checkActiveSamplers()
 
       if (mPixelSamplerCache[i].wrapS != clamp_x) {
          mPixelSamplerCache[i].wrapS = clamp_x;
-         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_S, static_cast<gl::GLint>(clamp_x));
+         glSamplerParameteri(sampler.object, GL_TEXTURE_WRAP_S, static_cast<GLint>(clamp_x));
       }
 
       if (mPixelSamplerCache[i].wrapT != clamp_y) {
          mPixelSamplerCache[i].wrapT = clamp_y;
-         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_T, static_cast<gl::GLint>(clamp_y));
+         glSamplerParameteri(sampler.object, GL_TEXTURE_WRAP_T, static_cast<GLint>(clamp_y));
       }
 
       if (mPixelSamplerCache[i].wrapR != clamp_z) {
          mPixelSamplerCache[i].wrapR = clamp_z;
-         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_WRAP_R, static_cast<gl::GLint>(clamp_z));
+         glSamplerParameteri(sampler.object, GL_TEXTURE_WRAP_R, static_cast<GLint>(clamp_z));
       }
 
       // Texture filter
@@ -254,12 +252,12 @@ bool GLDriver::checkActiveSamplers()
 
       if (mPixelSamplerCache[i].minFilter != xy_min_filter) {
          mPixelSamplerCache[i].minFilter = xy_min_filter;
-         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MIN_FILTER, static_cast<gl::GLint>(xy_min_filter));
+         glSamplerParameteri(sampler.object, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(xy_min_filter));
       }
 
       if (mPixelSamplerCache[i].magFilter != xy_mag_filter) {
          mPixelSamplerCache[i].magFilter = xy_mag_filter;
-         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_MAG_FILTER, static_cast<gl::GLint>(xy_mag_filter));
+         glSamplerParameteri(sampler.object, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(xy_mag_filter));
       }
 
       // Setup border color
@@ -310,25 +308,25 @@ bool GLDriver::checkActiveSamplers()
             mPixelSamplerCache[i].borderColorType = border_color_type;
             mPixelSamplerCache[i].borderColorValue = colors;
 
-            gl::glSamplerParameterfv(sampler.object, gl::GL_TEXTURE_BORDER_COLOR, &colors[0]);
+            glSamplerParameterfv(sampler.object, GL_TEXTURE_BORDER_COLOR, &colors[0]);
          }
       }
 
 
       // Depth compare
-      auto mode = usage == glsl2::SamplerUsage::Shadow ? gl::GL_COMPARE_REF_TO_TEXTURE : gl::GL_NONE;
+      auto mode = usage == glsl2::SamplerUsage::Shadow ? GL_COMPARE_REF_TO_TEXTURE : GL_NONE;
 
       if (mPixelSamplerCache[i].depthCompareMode != mode) {
          mPixelSamplerCache[i].depthCompareMode = mode;
-         gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_MODE, static_cast<gl::GLint>(mode));
+         glSamplerParameteri(sampler.object, GL_TEXTURE_COMPARE_MODE, static_cast<GLint>(mode));
       }
 
-      if (mode != gl::GL_NONE) {
+      if (mode != GL_NONE) {
          auto depth_compare_function = getTextureCompareFunction(sq_tex_sampler_word0.DEPTH_COMPARE_FUNCTION());
 
          if (mPixelSamplerCache[i].depthCompareFunc != depth_compare_function) {
             mPixelSamplerCache[i].depthCompareFunc = depth_compare_function;
-            gl::glSamplerParameteri(sampler.object, gl::GL_TEXTURE_COMPARE_FUNC, static_cast<gl::GLint>(depth_compare_function));
+            glSamplerParameteri(sampler.object, GL_TEXTURE_COMPARE_FUNC, static_cast<GLint>(depth_compare_function));
          }
       }
 
@@ -339,17 +337,17 @@ bool GLDriver::checkActiveSamplers()
 
       if (mPixelSamplerCache[i].minLod != min_lod) {
          mPixelSamplerCache[i].minLod = min_lod;
-         gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MIN_LOD, static_cast<float>(min_lod));
+         glSamplerParameterf(sampler.object, GL_TEXTURE_MIN_LOD, static_cast<float>(min_lod));
       }
 
       if (mPixelSamplerCache[i].maxLod != max_lod) {
          mPixelSamplerCache[i].maxLod = max_lod;
-         gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_MAX_LOD, static_cast<float>(max_lod));
+         glSamplerParameterf(sampler.object, GL_TEXTURE_MAX_LOD, static_cast<float>(max_lod));
       }
 
       if (mPixelSamplerCache[i].lodBias != lod_bias) {
          mPixelSamplerCache[i].lodBias = lod_bias;
-         gl::glSamplerParameterf(sampler.object, gl::GL_TEXTURE_LOD_BIAS, static_cast<float>(lod_bias));
+         glSamplerParameterf(sampler.object, GL_TEXTURE_LOD_BIAS, static_cast<float>(lod_bias));
       }
    }
 

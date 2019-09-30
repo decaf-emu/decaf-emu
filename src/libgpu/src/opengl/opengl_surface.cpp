@@ -8,14 +8,12 @@
 #include <common/decaf_assert.h>
 #include <common/murmur3.h>
 #include <fmt/format.h>
-#include <glbinding/gl/gl.h>
-#include <glbinding/Meta.h>
 #include <libcpu/mem.h>
 
 namespace opengl
 {
 
-static gl::GLenum
+static GLenum
 getGlFormat(latte::SQ_DATA_FORMAT format)
 {
    switch (format) {
@@ -28,7 +26,7 @@ getGlFormat(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_32_AS_8:
    case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
    case latte::SQ_DATA_FORMAT::FMT_BC4:
-      return gl::GL_RED;
+      return GL_RED;
 
    case latte::SQ_DATA_FORMAT::FMT_4_4:
    case latte::SQ_DATA_FORMAT::FMT_8_8:
@@ -41,7 +39,7 @@ getGlFormat(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_32_32:
    case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_BC5:
-      return gl::GL_RG;
+      return GL_RG;
 
    case latte::SQ_DATA_FORMAT::FMT_3_3_2:
    case latte::SQ_DATA_FORMAT::FMT_5_6_5:
@@ -55,7 +53,7 @@ getGlFormat(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_32_32_32:
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
-      return gl::GL_RGB;
+      return GL_RGB;
 
    case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
    case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
@@ -71,7 +69,7 @@ getGlFormat(latte::SQ_DATA_FORMAT format)
    case latte::SQ_DATA_FORMAT::FMT_BC1:
    case latte::SQ_DATA_FORMAT::FMT_BC2:
    case latte::SQ_DATA_FORMAT::FMT_BC3:
-      return gl::GL_RGBA;
+      return GL_RGBA;
 
       // case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
       // case latte::SQ_DATA_FORMAT::FMT_GB_GR:
@@ -81,7 +79,7 @@ getGlFormat(latte::SQ_DATA_FORMAT format)
    }
 }
 
-static gl::GLenum
+static GLenum
 getGlDataType(latte::SQ_DATA_FORMAT format,
               latte::SQ_FORMAT_COMP formatComp,
               uint32_t degamma)
@@ -93,67 +91,67 @@ getGlDataType(latte::SQ_DATA_FORMAT format,
    case latte::SQ_DATA_FORMAT::FMT_8_8:
    case latte::SQ_DATA_FORMAT::FMT_8_8_8:
    case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
-      return isSigned ? gl::GL_BYTE : gl::GL_UNSIGNED_BYTE;
+      return isSigned ? GL_BYTE : GL_UNSIGNED_BYTE;
 
    case latte::SQ_DATA_FORMAT::FMT_16:
    case latte::SQ_DATA_FORMAT::FMT_16_16:
    case latte::SQ_DATA_FORMAT::FMT_16_16_16:
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
-      return isSigned ? gl::GL_SHORT : gl::GL_UNSIGNED_SHORT;
+      return isSigned ? GL_SHORT : GL_UNSIGNED_SHORT;
 
    case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
-      return gl::GL_HALF_FLOAT;
+      return GL_HALF_FLOAT;
 
    case latte::SQ_DATA_FORMAT::FMT_32:
    case latte::SQ_DATA_FORMAT::FMT_32_32:
    case latte::SQ_DATA_FORMAT::FMT_32_32_32:
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
-      return isSigned ? gl::GL_INT : gl::GL_UNSIGNED_INT;
+      return isSigned ? GL_INT : GL_UNSIGNED_INT;
 
    case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
-      return gl::GL_FLOAT;
+      return GL_FLOAT;
 
    case latte::SQ_DATA_FORMAT::FMT_3_3_2:
-      return gl::GL_UNSIGNED_BYTE_3_3_2;
+      return GL_UNSIGNED_BYTE_3_3_2;
 
    case latte::SQ_DATA_FORMAT::FMT_5_6_5:
-      return gl::GL_UNSIGNED_SHORT_5_6_5;
+      return GL_UNSIGNED_SHORT_5_6_5;
 
    case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
-      return gl::GL_UNSIGNED_SHORT_5_5_5_1;
+      return GL_UNSIGNED_SHORT_5_5_5_1;
    case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
-      return gl::GL_UNSIGNED_SHORT_1_5_5_5_REV;
+      return GL_UNSIGNED_SHORT_1_5_5_5_REV;
 
    case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
-      return gl::GL_UNSIGNED_SHORT_4_4_4_4;
+      return GL_UNSIGNED_SHORT_4_4_4_4;
 
    case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
-      return gl::GL_UNSIGNED_INT_10_10_10_2;
+      return GL_UNSIGNED_INT_10_10_10_2;
    case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
-      return gl::GL_UNSIGNED_INT_2_10_10_10_REV;
+      return GL_UNSIGNED_INT_2_10_10_10_REV;
 
    case latte::SQ_DATA_FORMAT::FMT_10_11_11:
    case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
    case latte::SQ_DATA_FORMAT::FMT_11_11_10:
    case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
-      return gl::GL_UNSIGNED_INT_10F_11F_11F_REV;
+      return GL_UNSIGNED_INT_10F_11F_11F_REV;
 
    case latte::SQ_DATA_FORMAT::FMT_24_8:
    case latte::SQ_DATA_FORMAT::FMT_8_24:
-      return gl::GL_UNSIGNED_INT_24_8;
+      return GL_UNSIGNED_INT_24_8;
 
    default:
       decaf_abort(fmt::format("Unimplemented texture format {}", format));
    }
 }
 
-static gl::GLenum
+static GLenum
 getGlCompressedDataType(latte::SQ_DATA_FORMAT format,
                         latte::SQ_FORMAT_COMP formatComp,
                         uint32_t degamma)
@@ -163,34 +161,34 @@ getGlCompressedDataType(latte::SQ_DATA_FORMAT format,
    switch (format) {
    case latte::SQ_DATA_FORMAT::FMT_BC1:
       decaf_check(!isSigned);
-      return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+      return degamma ? GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT : GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
    case latte::SQ_DATA_FORMAT::FMT_BC2:
       decaf_check(!isSigned);
-      return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+      return degamma ? GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT : GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
    case latte::SQ_DATA_FORMAT::FMT_BC3:
       decaf_check(!isSigned);
-      return degamma ? gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT : gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+      return degamma ? GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT : GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
    case latte::SQ_DATA_FORMAT::FMT_BC4:
       decaf_check(!degamma);
-      return isSigned ? gl::GL_COMPRESSED_SIGNED_RED_RGTC1 : gl::GL_COMPRESSED_RED_RGTC1;
+      return isSigned ? GL_COMPRESSED_SIGNED_RED_RGTC1 : GL_COMPRESSED_RED_RGTC1;
    case latte::SQ_DATA_FORMAT::FMT_BC5:
       decaf_check(!degamma);
-      return isSigned ? gl::GL_COMPRESSED_SIGNED_RG_RGTC2 : gl::GL_COMPRESSED_RG_RGTC2;
+      return isSigned ? GL_COMPRESSED_SIGNED_RG_RGTC2 : GL_COMPRESSED_RG_RGTC2;
    default:
       decaf_abort(fmt::format("Unimplemented compressed texture format {}", format));
    }
 }
 
-static gl::GLenum
+static GLenum
 getGlStorageFormat(latte::SQ_NUM_FORMAT numFormat,
                    latte::SQ_FORMAT_COMP formatComp,
                    uint32_t degamma,
-                   gl::GLenum unorm,
-                   gl::GLenum snorm,
-                   gl::GLenum uint,
-                   gl::GLenum sint,
-                   gl::GLenum srgb,
-                   gl::GLenum scaled)
+                   GLenum unorm,
+                   GLenum snorm,
+                   GLenum uint,
+                   GLenum sint,
+                   GLenum srgb,
+                   GLenum scaled)
 {
    if (!degamma) {
       if (numFormat == latte::SQ_NUM_FORMAT::NORM) {
@@ -199,7 +197,7 @@ getGlStorageFormat(latte::SQ_NUM_FORMAT numFormat,
          } else if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
             return unorm;
          } else {
-            return gl::GL_INVALID_ENUM;
+            return GL_INVALID_ENUM;
          }
       } else if (numFormat == latte::SQ_NUM_FORMAT::INT) {
          if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
@@ -207,102 +205,102 @@ getGlStorageFormat(latte::SQ_NUM_FORMAT numFormat,
          } else if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
             return uint;
          } else {
-            return gl::GL_INVALID_ENUM;
+            return GL_INVALID_ENUM;
          }
       } else if (numFormat == latte::SQ_NUM_FORMAT::SCALED) {
          if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
             return scaled;
          } else {
-            return gl::GL_INVALID_ENUM;
+            return GL_INVALID_ENUM;
          }
       } else {
-         return gl::GL_INVALID_ENUM;
+         return GL_INVALID_ENUM;
       }
    } else {
       if (numFormat == 0 && formatComp == 0) {
          return srgb;
       } else {
-         return gl::GL_INVALID_ENUM;
+         return GL_INVALID_ENUM;
       }
    }
 }
 
-static gl::GLenum
+static GLenum
 getGlStorageFormat(latte::SQ_DATA_FORMAT format,
                    latte::SQ_NUM_FORMAT numFormat,
                    latte::SQ_FORMAT_COMP formatComp,
                    uint32_t degamma,
                    bool isDepthBuffer)
 {
-   static const auto BADFMT = gl::GL_INVALID_ENUM;
+   static const auto BADFMT = GL_INVALID_ENUM;
    auto getFormat =
-      [=](gl::GLenum unorm, gl::GLenum snorm, gl::GLenum uint, gl::GLenum sint, gl::GLenum srgb) {
+      [=](GLenum unorm, GLenum snorm, GLenum uint, GLenum sint, GLenum srgb) {
          return getGlStorageFormat(numFormat, formatComp, degamma, unorm, snorm, uint, sint, srgb, BADFMT);
       };
    auto getFormatF =
-      [=](gl::GLenum scaled) {
+      [=](GLenum scaled) {
          return getGlStorageFormat(numFormat, formatComp, degamma, BADFMT, BADFMT, BADFMT, BADFMT, BADFMT, scaled);
       };
 
    switch (format) {
    case latte::SQ_DATA_FORMAT::FMT_8:
-      return getFormat(gl::GL_R8, gl::GL_R8_SNORM, gl::GL_R8UI, gl::GL_R8I, gl::GL_SRGB8);
+      return getFormat(GL_R8, GL_R8_SNORM, GL_R8UI, GL_R8I, GL_SRGB8);
    //case latte::SQ_DATA_FORMAT::FMT_4_4:
    //case latte::SQ_DATA_FORMAT::FMT_3_3_2:
    case latte::SQ_DATA_FORMAT::FMT_16:
       if (isDepthBuffer) {
-         return gl::GL_DEPTH_COMPONENT16;
+         return GL_DEPTH_COMPONENT16;
       } else {
-         return getFormat(gl::GL_R16, gl::GL_R16_SNORM, gl::GL_R16UI, gl::GL_R16I, BADFMT);
+         return getFormat(GL_R16, GL_R16_SNORM, GL_R16UI, GL_R16I, BADFMT);
       }
    case latte::SQ_DATA_FORMAT::FMT_16_FLOAT:
-      return getFormatF(gl::GL_R16F);
+      return getFormatF(GL_R16F);
    case latte::SQ_DATA_FORMAT::FMT_8_8:
-      return getFormat(gl::GL_RG8, gl::GL_RG8_SNORM, gl::GL_RG8UI, gl::GL_RG8I, BADFMT);
+      return getFormat(GL_RG8, GL_RG8_SNORM, GL_RG8UI, GL_RG8I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_5_6_5:
-      return getFormat(gl::GL_RGB565, BADFMT, BADFMT, BADFMT, BADFMT);
+      return getFormat(GL_RGB565, BADFMT, BADFMT, BADFMT, BADFMT);
    //case latte::SQ_DATA_FORMAT::FMT_6_5_5:
    //case latte::SQ_DATA_FORMAT::FMT_1_5_5_5:
    case latte::SQ_DATA_FORMAT::FMT_4_4_4_4:
-      return getFormat(gl::GL_RGBA4, BADFMT, BADFMT, BADFMT, BADFMT);
+      return getFormat(GL_RGBA4, BADFMT, BADFMT, BADFMT, BADFMT);
    //case latte::SQ_DATA_FORMAT::FMT_5_5_5_1:
    case latte::SQ_DATA_FORMAT::FMT_32:
-      return getFormat(BADFMT, BADFMT, gl::GL_R32UI, gl::GL_R32I, BADFMT);
+      return getFormat(BADFMT, BADFMT, GL_R32UI, GL_R32I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_32_FLOAT:
       if (isDepthBuffer) {
-         return gl::GL_DEPTH_COMPONENT32F;
+         return GL_DEPTH_COMPONENT32F;
       }
 
-      return getFormatF(gl::GL_R32F);
+      return getFormatF(GL_R32F);
    case latte::SQ_DATA_FORMAT::FMT_16_16:
-      return getFormat(gl::GL_RG16, gl::GL_RG16_SNORM, gl::GL_RG16UI, gl::GL_RG16I, BADFMT);
+      return getFormat(GL_RG16, GL_RG16_SNORM, GL_RG16UI, GL_RG16I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_16_16_FLOAT:
-      return getFormatF(gl::GL_RG16F);
+      return getFormatF(GL_RG16F);
    //case latte::SQ_DATA_FORMAT::FMT_24_8:
    //case latte::SQ_DATA_FORMAT::FMT_24_8_FLOAT:
    //case latte::SQ_DATA_FORMAT::FMT_10_11_11:
    case latte::SQ_DATA_FORMAT::FMT_10_11_11_FLOAT:
-      return getFormatF(gl::GL_R11F_G11F_B10F);
+      return getFormatF(GL_R11F_G11F_B10F);
    //case latte::SQ_DATA_FORMAT::FMT_11_11_10:
    case latte::SQ_DATA_FORMAT::FMT_11_11_10_FLOAT:
-      return getFormatF(gl::GL_R11F_G11F_B10F);
+      return getFormatF(GL_R11F_G11F_B10F);
    case latte::SQ_DATA_FORMAT::FMT_10_10_10_2:
    case latte::SQ_DATA_FORMAT::FMT_2_10_10_10:
-      return getFormat(gl::GL_RGB10_A2, BADFMT, gl::GL_RGB10_A2UI, BADFMT, BADFMT);
+      return getFormat(GL_RGB10_A2, BADFMT, GL_RGB10_A2UI, BADFMT, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_8_8_8_8:
-      return getFormat(gl::GL_RGBA8, gl::GL_RGBA8_SNORM, gl::GL_RGBA8UI, gl::GL_RGBA8I, gl::GL_SRGB8_ALPHA8);
+      return getFormat(GL_RGBA8, GL_RGBA8_SNORM, GL_RGBA8UI, GL_RGBA8I, GL_SRGB8_ALPHA8);
    case latte::SQ_DATA_FORMAT::FMT_32_32:
-      return getFormat(BADFMT, BADFMT, gl::GL_RG32UI, gl::GL_RG32I, BADFMT);
+      return getFormat(BADFMT, BADFMT, GL_RG32UI, GL_RG32I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_32_32_FLOAT:
-      return getFormatF(gl::GL_RG32F);
+      return getFormatF(GL_RG32F);
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_16:
-      return getFormat(gl::GL_RGBA16, gl::GL_RGBA16_SNORM, gl::GL_RGBA16UI, gl::GL_RGBA16I, BADFMT);
+      return getFormat(GL_RGBA16, GL_RGBA16_SNORM, GL_RGBA16UI, GL_RGBA16I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_16_FLOAT:
-      return getFormatF(gl::GL_RGBA16F);
+      return getFormatF(GL_RGBA16F);
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_32:
-      return getFormat(BADFMT, BADFMT, gl::GL_RGBA32UI, gl::GL_RGBA32I, BADFMT);
+      return getFormat(BADFMT, BADFMT, GL_RGBA32UI, GL_RGBA32I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_32_FLOAT:
-      return getFormatF(gl::GL_RGBA32F);
+      return getFormatF(GL_RGBA32F);
    //case latte::SQ_DATA_FORMAT::FMT_1:
    //case latte::SQ_DATA_FORMAT::FMT_GB_GR:
    //case latte::SQ_DATA_FORMAT::FMT_BG_RG:
@@ -310,25 +308,25 @@ getGlStorageFormat(latte::SQ_DATA_FORMAT format,
    //case latte::SQ_DATA_FORMAT::FMT_32_AS_8_8:
    //case latte::SQ_DATA_FORMAT::FMT_5_9_9_9_SHAREDEXP:
    case latte::SQ_DATA_FORMAT::FMT_8_8_8:
-      return getFormat(gl::GL_RGB8, gl::GL_RGB8_SNORM, gl::GL_RGB8UI, gl::GL_RGB8I, gl::GL_SRGB8);
+      return getFormat(GL_RGB8, GL_RGB8_SNORM, GL_RGB8UI, GL_RGB8I, GL_SRGB8);
    case latte::SQ_DATA_FORMAT::FMT_16_16_16:
-      return getFormat(gl::GL_RGB16, gl::GL_RGB16_SNORM, gl::GL_RGB16UI, gl::GL_RGB16I, BADFMT);
+      return getFormat(GL_RGB16, GL_RGB16_SNORM, GL_RGB16UI, GL_RGB16I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_16_16_16_FLOAT:
-      return getFormatF(gl::GL_RGB16F);
+      return getFormatF(GL_RGB16F);
    case latte::SQ_DATA_FORMAT::FMT_32_32_32:
-      return getFormat(BADFMT, BADFMT, gl::GL_RGB32UI, gl::GL_RGB32I, BADFMT);
+      return getFormat(BADFMT, BADFMT, GL_RGB32UI, GL_RGB32I, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_32_32_32_FLOAT:
-      return getFormatF(gl::GL_RGB32F);
+      return getFormatF(GL_RGB32F);
    case latte::SQ_DATA_FORMAT::FMT_BC1:
-      return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT);
+      return getFormat(GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, BADFMT, BADFMT, BADFMT, GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT);
    case latte::SQ_DATA_FORMAT::FMT_BC2:
-      return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT);
+      return getFormat(GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, BADFMT, BADFMT, BADFMT, GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT);
    case latte::SQ_DATA_FORMAT::FMT_BC3:
-      return getFormat(gl::GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, BADFMT, BADFMT, BADFMT, gl::GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT);
+      return getFormat(GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, BADFMT, BADFMT, BADFMT, GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT);
    case latte::SQ_DATA_FORMAT::FMT_BC4:
-      return getFormat(gl::GL_COMPRESSED_RED_RGTC1, gl::GL_COMPRESSED_SIGNED_RED_RGTC1, BADFMT, BADFMT, BADFMT);
+      return getFormat(GL_COMPRESSED_RED_RGTC1, GL_COMPRESSED_SIGNED_RED_RGTC1, BADFMT, BADFMT, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_BC5:
-      return getFormat(gl::GL_COMPRESSED_RG_RGTC2, gl::GL_COMPRESSED_SIGNED_RG_RGTC2, BADFMT, BADFMT, BADFMT);
+      return getFormat(GL_COMPRESSED_RG_RGTC2, GL_COMPRESSED_SIGNED_RG_RGTC2, BADFMT, BADFMT, BADFMT);
    //case latte::SQ_DATA_FORMAT::FMT_APC0:
    //case latte::SQ_DATA_FORMAT::FMT_APC1:
    //case latte::SQ_DATA_FORMAT::FMT_APC2:
@@ -343,39 +341,39 @@ getGlStorageFormat(latte::SQ_DATA_FORMAT format,
    case latte::SQ_DATA_FORMAT::FMT_8_24:
    case latte::SQ_DATA_FORMAT::FMT_24_8:
       if (isDepthBuffer) {
-         return gl::GL_DEPTH24_STENCIL8;
+         return GL_DEPTH24_STENCIL8;
       }
 
-      return getFormat(gl::GL_DEPTH24_STENCIL8, BADFMT, gl::GL_UNSIGNED_INT_24_8, BADFMT, BADFMT);
+      return getFormat(GL_DEPTH24_STENCIL8, BADFMT, GL_UNSIGNED_INT_24_8, BADFMT, BADFMT);
    case latte::SQ_DATA_FORMAT::FMT_X24_8_32_FLOAT:
       decaf_check(isDepthBuffer);
-      return gl::GL_DEPTH32F_STENCIL8;
+      return GL_DEPTH32F_STENCIL8;
 
    default:
       decaf_abort(fmt::format("Invalid surface format {}", format));
    }
 }
 
-static gl::GLenum
+static GLenum
 getGlTarget(latte::SQ_TEX_DIM dim)
 {
    switch (dim) {
    case latte::SQ_TEX_DIM::DIM_1D:
-      return gl::GL_TEXTURE_1D;
+      return GL_TEXTURE_1D;
    case latte::SQ_TEX_DIM::DIM_2D:
-      return gl::GL_TEXTURE_2D;
+      return GL_TEXTURE_2D;
    case latte::SQ_TEX_DIM::DIM_2D_MSAA:
-      return gl::GL_TEXTURE_2D_MULTISAMPLE;
+      return GL_TEXTURE_2D_MULTISAMPLE;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-      return gl::GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+      return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-      return gl::GL_TEXTURE_2D_ARRAY;
+      return GL_TEXTURE_2D_ARRAY;
    case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      return gl::GL_TEXTURE_CUBE_MAP;
+      return GL_TEXTURE_CUBE_MAP;
    case latte::SQ_TEX_DIM::DIM_3D:
-      return gl::GL_TEXTURE_3D;
+      return GL_TEXTURE_3D;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      return gl::GL_TEXTURE_1D_ARRAY;
+      return GL_TEXTURE_1D_ARRAY;
    default:
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
    }
@@ -400,40 +398,40 @@ createHostSurface(phys_addr baseAddress,
 
    auto storageFormat = getGlStorageFormat(format, numFormat, formatComp, degamma, isDepthBuffer);
 
-   if (storageFormat == gl::GL_INVALID_ENUM) {
+   if (storageFormat == GL_INVALID_ENUM) {
       decaf_abort(fmt::format("Surface with unsupported format {} {} {} {}", format, numFormat, formatComp, degamma));
    }
 
    auto target = getGlTarget(dim);
-   gl::glCreateTextures(target, 1, &newSurface->object);
+   glCreateTextures(target, 1, &newSurface->object);
 
    if (isDebug) {
       auto label = fmt::format("surface @ {}", baseAddress);
-      gl::glObjectLabel(gl::GL_TEXTURE, newSurface->object, -1, label.c_str());
+      glObjectLabel(GL_TEXTURE, newSurface->object, -1, label.c_str());
    }
 
    switch (dim) {
    case latte::SQ_TEX_DIM::DIM_1D:
-      gl::glTextureStorage1D(newSurface->object, 1, storageFormat, width);
+      glTextureStorage1D(newSurface->object, 1, storageFormat, width);
       break;
    case latte::SQ_TEX_DIM::DIM_2D:
-      gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
+      glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
       break;
    case latte::SQ_TEX_DIM::DIM_2D_MSAA:
       // TODO: Figure out if last parameter should be GL_TRUE or GL_FALSE
-      gl::glTextureStorage2DMultisample(newSurface->object, samples, storageFormat, width, height, gl::GL_FALSE);
+      glTextureStorage2DMultisample(newSurface->object, samples, storageFormat, width, height, GL_FALSE);
       break;
    case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
-      gl::glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
+      glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
       break;
    case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-      gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
+      glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
       break;
    case latte::SQ_TEX_DIM::DIM_3D:
-      gl::glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
+      glTextureStorage3D(newSurface->object, 1, storageFormat, width, height, depth);
       break;
    case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
-      gl::glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
+      glTextureStorage2D(newSurface->object, 1, storageFormat, width, height);
       break;
    default:
       decaf_abort(fmt::format("Unsupported texture dim: {}", dim));
@@ -444,10 +442,10 @@ createHostSurface(phys_addr baseAddress,
    newSurface->depth = depth;
    newSurface->degamma = degamma;
    newSurface->isDepthBuffer = isDepthBuffer;
-   newSurface->swizzleR = gl::GL_RED;
-   newSurface->swizzleG = gl::GL_GREEN;
-   newSurface->swizzleB = gl::GL_BLUE;
-   newSurface->swizzleA = gl::GL_ALPHA;
+   newSurface->swizzleR = GL_RED;
+   newSurface->swizzleG = GL_GREEN;
+   newSurface->swizzleB = GL_BLUE;
+   newSurface->swizzleA = GL_ALPHA;
    newSurface->next = nullptr;
    return newSurface;
 }
@@ -462,7 +460,7 @@ copyHostSurface(HostSurface* dest,
    auto copyDepth = std::min(dest->depth, source->depth);
    auto target = getGlTarget(dim);
 
-   gl::glCopyImageSubData(
+   glCopyImageSubData(
       source->object, target, 0, 0, 0, 0,
       dest->object, target, 0, 0, 0, 0,
       copyWidth, copyHeight, copyDepth);
@@ -589,7 +587,7 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
       // Create texture
       auto compressed = latte::getDataFormatIsCompressed(format);
       auto target = getGlTarget(dim);
-      auto textureDataType = gl::GL_INVALID_ENUM;
+      auto textureDataType = GL_INVALID_ENUM;
       auto textureFormat = getGlFormat(format);
       auto size = untiledImage.size();
 
@@ -599,22 +597,22 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
          textureDataType = getGlDataType(format, formatComp, degamma);
       }
 
-      if (textureDataType == gl::GL_INVALID_ENUM || textureFormat == gl::GL_INVALID_ENUM) {
+      if (textureDataType == GL_INVALID_ENUM || textureFormat == GL_INVALID_ENUM) {
          decaf_abort(fmt::format("Texture with unsupported format {}", format));
       }
 
       switch (dim) {
       case latte::SQ_TEX_DIM::DIM_1D:
          if (compressed) {
-            gl::glCompressedTextureSubImage1D(buffer->active->object,
+            glCompressedTextureSubImage1D(buffer->active->object,
                0, /* level */
                0, /* xoffset */
                width,
                textureDataType,
-               gsl::narrow_cast<gl::GLsizei>(size),
+               gsl::narrow_cast<GLsizei>(size),
                untiledImage.data());
          } else {
-            gl::glTextureSubImage1D(buffer->active->object,
+            glTextureSubImage1D(buffer->active->object,
                0, /* level */
                0, /* xoffset */
                width,
@@ -625,16 +623,16 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
          break;
       case latte::SQ_TEX_DIM::DIM_2D:
          if (compressed) {
-            gl::glCompressedTextureSubImage2D(buffer->active->object,
+            glCompressedTextureSubImage2D(buffer->active->object,
                0, /* level */
                0, 0, /* xoffset, yoffset */
                width,
                height,
                textureDataType,
-               gsl::narrow_cast<gl::GLsizei>(size),
+               gsl::narrow_cast<GLsizei>(size),
                untiledImage.data());
          } else {
-            gl::glTextureSubImage2D(buffer->active->object,
+            glTextureSubImage2D(buffer->active->object,
                0, /* level */
                0, 0, /* xoffset, yoffset */
                width, height,
@@ -645,15 +643,15 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
          break;
       case latte::SQ_TEX_DIM::DIM_3D:
          if (compressed) {
-            gl::glCompressedTextureSubImage3D(buffer->active->object,
+            glCompressedTextureSubImage3D(buffer->active->object,
                0, /* level */
                0, 0, 0, /* xoffset, yoffset, zoffset */
                width, height, depth,
                textureDataType,
-               gsl::narrow_cast<gl::GLsizei>(size),
+               gsl::narrow_cast<GLsizei>(size),
                untiledImage.data());
          } else {
-            gl::glTextureSubImage3D(buffer->active->object,
+            glTextureSubImage3D(buffer->active->object,
                0, /* level */
                0, 0, 0, /* xoffset, yoffset, zoffset */
                width, height, depth,
@@ -666,15 +664,15 @@ GLDriver::uploadSurface(SurfaceBuffer *buffer,
          //decaf_check(uploadDepth == 6);
       case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
          if (compressed) {
-            gl::glCompressedTextureSubImage3D(buffer->active->object,
+            glCompressedTextureSubImage3D(buffer->active->object,
                0, /* level */
                0, 0, 0, /* xoffset, yoffset, zoffset */
                width, height, uploadDepth,
                textureDataType,
-               gsl::narrow_cast<gl::GLsizei>(size),
+               gsl::narrow_cast<GLsizei>(size),
                untiledImage.data());
          } else {
-            gl::glTextureSubImage3D(buffer->active->object,
+            glTextureSubImage3D(buffer->active->object,
                0, /* level */
                0, 0, 0, /* xoffset, yoffset, zoffset */
                width, height, uploadDepth,
@@ -923,10 +921,10 @@ GLDriver::getSurfaceBuffer(phys_addr baseAddress,
 
 void
 GLDriver::setSurfaceSwizzle(SurfaceBuffer *surface,
-                            gl::GLenum swizzleR,
-                            gl::GLenum swizzleG,
-                            gl::GLenum swizzleB,
-                            gl::GLenum swizzleA)
+                            GLenum swizzleR,
+                            GLenum swizzleG,
+                            GLenum swizzleB,
+                            GLenum swizzleA)
 {
    HostSurface *host = surface->active;
    decaf_check(host);
@@ -940,14 +938,14 @@ GLDriver::setSurfaceSwizzle(SurfaceBuffer *surface,
       host->swizzleB = swizzleB;
       host->swizzleA = swizzleA;
 
-      gl::GLint textureSwizzle[] = {
-         static_cast<gl::GLint>(swizzleR),
-         static_cast<gl::GLint>(swizzleG),
-         static_cast<gl::GLint>(swizzleB),
-         static_cast<gl::GLint>(swizzleA),
+      GLint textureSwizzle[] = {
+         static_cast<GLint>(swizzleR),
+         static_cast<GLint>(swizzleG),
+         static_cast<GLint>(swizzleB),
+         static_cast<GLint>(swizzleA),
       };
 
-      gl::glTextureParameteriv(host->object, gl::GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
+      glTextureParameteriv(host->object, GL_TEXTURE_SWIZZLE_RGBA, textureSwizzle);
    }
 }
 

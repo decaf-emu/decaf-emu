@@ -3,21 +3,20 @@
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
-#include <glbinding/gl/gl.h>
 
 namespace opengl
 {
 
-static gl::GLenum
+static GLenum
 getRefFunc(latte::REF_FUNC func);
 
-static gl::GLenum
+static GLenum
 getBlendFunc(latte::CB_BLEND_FUNC func);
 
-static gl::GLenum
+static GLenum
 getBlendEquation(latte::CB_COMB_FUNC func);
 
-static gl::GLenum
+static GLenum
 getStencilFunc(latte::DB_STENCIL_FUNC func);
 
 void
@@ -52,14 +51,14 @@ GLDriver::applyRegister(latte::Register reg)
       auto modeRGB = getBlendEquation(cb_blend_control.COLOR_COMB_FCN());
 
       if (!cb_blend_control.SEPARATE_ALPHA_BLEND()) {
-         gl::glBlendFunci(target, srcRGB, dstRGB);
-         gl::glBlendEquationi(target, modeRGB);
+         glBlendFunci(target, srcRGB, dstRGB);
+         glBlendEquationi(target, modeRGB);
       } else {
          auto dstAlpha = getBlendFunc(cb_blend_control.ALPHA_DESTBLEND());
          auto srcAlpha = getBlendFunc(cb_blend_control.ALPHA_SRCBLEND());
          auto modeAlpha = getBlendEquation(cb_blend_control.ALPHA_COMB_FCN());
-         gl::glBlendFuncSeparatei(target, srcRGB, dstRGB, srcAlpha, dstAlpha);
-         gl::glBlendEquationSeparatei(target, modeRGB, modeAlpha);
+         glBlendFuncSeparatei(target, srcRGB, dstRGB, srcAlpha, dstAlpha);
+         glBlendEquationSeparatei(target, modeRGB, modeAlpha);
       }
    } break;
 
@@ -72,9 +71,9 @@ GLDriver::applyRegister(latte::Register reg)
          if (enable != mGLStateCache.blendEnable[i]) {
             mGLStateCache.blendEnable[i] = enable;
             if (enable) {
-               gl::glEnablei(gl::GL_BLEND, i);
+               glEnablei(GL_BLEND, i);
             } else {
-               gl::glDisablei(gl::GL_BLEND, i);
+               glDisablei(GL_BLEND, i);
             }
          }
       }
@@ -96,7 +95,7 @@ GLDriver::applyRegister(latte::Register reg)
 
             auto backStencilFunc = getRefFunc(db_depth_control.STENCILFUNC_BF());
 
-            gl::glStencilFuncSeparate(gl::GL_BACK, backStencilFunc, backStencilRef, backStencilMask);
+            glStencilFuncSeparate(GL_BACK, backStencilFunc, backStencilRef, backStencilMask);
          }
       }
    } break;
@@ -116,9 +115,9 @@ GLDriver::applyRegister(latte::Register reg)
          auto frontStencilFunc = getRefFunc(db_depth_control.STENCILFUNC());
 
          if (!db_depth_control.BACKFACE_ENABLE()) {
-            gl::glStencilFuncSeparate(gl::GL_FRONT_AND_BACK, frontStencilFunc, frontStencilRef, frontStencilMask);
+            glStencilFuncSeparate(GL_FRONT_AND_BACK, frontStencilFunc, frontStencilRef, frontStencilMask);
          } else {
-            gl::glStencilFuncSeparate(gl::GL_FRONT, frontStencilFunc, frontStencilRef, frontStencilMask);
+            glStencilFuncSeparate(GL_FRONT, frontStencilFunc, frontStencilRef, frontStencilMask);
          }
       }
    } break;
@@ -130,33 +129,33 @@ GLDriver::applyRegister(latte::Register reg)
       if (mGLStateCache.depthEnable != db_depth_control.Z_ENABLE()) {
          mGLStateCache.depthEnable = db_depth_control.Z_ENABLE();
          if (db_depth_control.Z_ENABLE()) {
-            gl::glEnable(gl::GL_DEPTH_TEST);
+            glEnable(GL_DEPTH_TEST);
          } else {
-            gl::glDisable(gl::GL_DEPTH_TEST);
+            glDisable(GL_DEPTH_TEST);
          }
       }
 
       if (mGLStateCache.depthWrite != db_depth_control.Z_WRITE_ENABLE()) {
          mGLStateCache.depthWrite = db_depth_control.Z_WRITE_ENABLE();
          if (db_depth_control.Z_WRITE_ENABLE()) {
-            gl::glDepthMask(gl::GL_TRUE);
+            glDepthMask(GL_TRUE);
          } else {
-            gl::glDepthMask(gl::GL_FALSE);
+            glDepthMask(GL_FALSE);
          }
       }
 
       auto zfunc = getRefFunc(db_depth_control.ZFUNC());
       if (mGLStateCache.depthFunc != zfunc) {
          mGLStateCache.depthFunc = zfunc;
-         gl::glDepthFunc(zfunc);
+         glDepthFunc(zfunc);
       }
 
       if (mGLStateCache.stencilEnable != db_depth_control.STENCIL_ENABLE()) {
          mGLStateCache.stencilEnable = db_depth_control.STENCIL_ENABLE();
          if (db_depth_control.STENCIL_ENABLE()) {
-            gl::glEnable(gl::GL_STENCIL_TEST);
+            glEnable(GL_STENCIL_TEST);
          } else {
-            gl::glDisable(gl::GL_STENCIL_TEST);
+            glDisable(GL_STENCIL_TEST);
          }
       }
 
@@ -180,14 +179,14 @@ GLDriver::applyRegister(latte::Register reg)
             auto backStencilFail = getStencilFunc(db_depth_control.STENCILFAIL_BF());
             auto db_stencilrefmask_bf = getRegister<latte::DB_STENCILREFMASK_BF>(latte::Register::DB_STENCILREFMASK_BF);
 
-            gl::glStencilFuncSeparate(gl::GL_FRONT, frontStencilFunc, db_stencilrefmask_bf.STENCILREF_BF(), db_stencilrefmask_bf.STENCILMASK_BF());
-            gl::glStencilOpSeparate(gl::GL_FRONT, frontStencilFail, frontStencilZFail, frontStencilZPass);
+            glStencilFuncSeparate(GL_FRONT, frontStencilFunc, db_stencilrefmask_bf.STENCILREF_BF(), db_stencilrefmask_bf.STENCILMASK_BF());
+            glStencilOpSeparate(GL_FRONT, frontStencilFail, frontStencilZFail, frontStencilZPass);
 
-            gl::glStencilFuncSeparate(gl::GL_BACK, backStencilFunc, db_stencilrefmask_bf.STENCILREF_BF(), db_stencilrefmask_bf.STENCILMASK_BF());
-            gl::glStencilOpSeparate(gl::GL_BACK, backStencilFail, backStencilZFail, backStencilZPass);
+            glStencilFuncSeparate(GL_BACK, backStencilFunc, db_stencilrefmask_bf.STENCILREF_BF(), db_stencilrefmask_bf.STENCILMASK_BF());
+            glStencilOpSeparate(GL_BACK, backStencilFail, backStencilZFail, backStencilZPass);
          } else {
-            gl::glStencilFuncSeparate(gl::GL_FRONT_AND_BACK, frontStencilFunc, db_stencilrefmask.STENCILREF(), db_stencilrefmask.STENCILMASK());
-            gl::glStencilOpSeparate(gl::GL_FRONT_AND_BACK, frontStencilFail, frontStencilZFail, frontStencilZPass);
+            glStencilFuncSeparate(GL_FRONT_AND_BACK, frontStencilFunc, db_stencilrefmask.STENCILREF(), db_stencilrefmask.STENCILMASK());
+            glStencilOpSeparate(GL_FRONT_AND_BACK, frontStencilFail, frontStencilZFail, frontStencilZPass);
          }
       }
    } break;
@@ -202,7 +201,7 @@ GLDriver::applyRegister(latte::Register reg)
       auto cb_blend_blue = getRegister<latte::CB_BLEND_BLUE>(latte::Register::CB_BLEND_BLUE);
       auto cb_blend_alpha = getRegister<latte::CB_BLEND_ALPHA>(latte::Register::CB_BLEND_ALPHA);
 
-      gl::glBlendColor(cb_blend_red.BLEND_RED(),
+      glBlendColor(cb_blend_red.BLEND_RED(),
                        cb_blend_green.BLEND_GREEN(),
                        cb_blend_blue.BLEND_BLUE(),
                        cb_blend_alpha.BLEND_ALPHA());
@@ -230,38 +229,38 @@ GLDriver::applyRegister(latte::Register reg)
    case latte::Register::PA_SU_SC_MODE_CNTL:
    {
       auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL::get(value);
-      auto cullFace = gl::GL_NONE;
+      auto cullFace = GL_NONE;
 
       if (pa_su_sc_mode_cntl.CULL_FRONT() && pa_su_sc_mode_cntl.CULL_BACK()) {
-         cullFace = gl::GL_FRONT_AND_BACK;
+         cullFace = GL_FRONT_AND_BACK;
       } else if (pa_su_sc_mode_cntl.CULL_FRONT()) {
-         cullFace = gl::GL_FRONT;
+         cullFace = GL_FRONT;
       } else if (pa_su_sc_mode_cntl.CULL_BACK()) {
-         cullFace = gl::GL_BACK;
+         cullFace = GL_BACK;
       }
 
-      auto cullFaceEnable = (cullFace != gl::GL_NONE);
+      auto cullFaceEnable = (cullFace != GL_NONE);
 
       if (mGLStateCache.cullFaceEnable != cullFaceEnable) {
          mGLStateCache.cullFaceEnable = cullFaceEnable;
 
          if (cullFaceEnable) {
-            gl::glEnable(gl::GL_CULL_FACE);
+            glEnable(GL_CULL_FACE);
          } else {
-            gl::glDisable(gl::GL_CULL_FACE);
+            glDisable(GL_CULL_FACE);
          }
       }
 
       if (cullFaceEnable && mGLStateCache.cullFace != cullFace) {
          mGLStateCache.cullFace = cullFace;
-         gl::glCullFace(cullFace);
+         glCullFace(cullFace);
       }
 
-      auto frontFace = (pa_su_sc_mode_cntl.FACE() == latte::PA_FACE::CW ? gl::GL_CW : gl::GL_CCW);
+      auto frontFace = (pa_su_sc_mode_cntl.FACE() == latte::PA_FACE::CW ? GL_CW : GL_CCW);
 
       if (mGLStateCache.frontFace != frontFace) {
          mGLStateCache.frontFace = frontFace;
-         gl::glFrontFace(frontFace);
+         glFrontFace(frontFace);
       }
    } break;
 
@@ -272,9 +271,9 @@ GLDriver::applyRegister(latte::Register reg)
       if (mGLStateCache.rasterizerDiscard != pa_cl_clip_cntl.RASTERISER_DISABLE()) {
          mGLStateCache.rasterizerDiscard = pa_cl_clip_cntl.RASTERISER_DISABLE();
          if (pa_cl_clip_cntl.RASTERISER_DISABLE()) {
-            gl::glEnable(gl::GL_RASTERIZER_DISCARD);
+            glEnable(GL_RASTERIZER_DISCARD);
          } else {
-            gl::glDisable(gl::GL_RASTERIZER_DISCARD);
+            glDisable(GL_RASTERIZER_DISCARD);
          }
       }
 
@@ -285,9 +284,9 @@ GLDriver::applyRegister(latte::Register reg)
          mGLStateCache.depthClamp = !pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE();
 
          if (pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE()) {
-            gl::glEnable(gl::GL_DEPTH_CLAMP);
+            glEnable(GL_DEPTH_CLAMP);
          } else {
-            gl::glDisable(gl::GL_DEPTH_CLAMP);
+            glDisable(GL_DEPTH_CLAMP);
          }
       }
 
@@ -295,9 +294,9 @@ GLDriver::applyRegister(latte::Register reg)
          mGLStateCache.halfZClipSpace = pa_cl_clip_cntl.DX_CLIP_SPACE_DEF();
 
          if (pa_cl_clip_cntl.DX_CLIP_SPACE_DEF()) {
-            gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_ZERO_TO_ONE);
+            glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
          } else {
-            gl::glClipControl(gl::GL_UPPER_LEFT, gl::GL_NEGATIVE_ONE_TO_ONE);
+            glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
          }
       }
    } break;
@@ -310,9 +309,9 @@ GLDriver::applyRegister(latte::Register reg)
          mGLStateCache.primRestartEnable = vgt_multi_prim_ib_reset_en.RESET_EN();
 
          if (vgt_multi_prim_ib_reset_en.RESET_EN()) {
-            gl::glEnable(gl::GL_PRIMITIVE_RESTART);
+            glEnable(GL_PRIMITIVE_RESTART);
          } else {
-            gl::glDisable(gl::GL_PRIMITIVE_RESTART);
+            glDisable(GL_PRIMITIVE_RESTART);
          }
       }
    } break;
@@ -323,124 +322,124 @@ GLDriver::applyRegister(latte::Register reg)
 
       if (mGLStateCache.primRestartIndex != vgt_multi_prim_ib_reset_indx.RESET_INDX()) {
          mGLStateCache.primRestartIndex = vgt_multi_prim_ib_reset_indx.RESET_INDX();
-         gl::glPrimitiveRestartIndex(vgt_multi_prim_ib_reset_indx.RESET_INDX());
+         glPrimitiveRestartIndex(vgt_multi_prim_ib_reset_indx.RESET_INDX());
       }
    } break;
 
    }
 }
 
-gl::GLenum
+GLenum
 getRefFunc(latte::REF_FUNC func)
 {
    switch (func) {
    case latte::REF_FUNC::NEVER:
-      return gl::GL_NEVER;
+      return GL_NEVER;
    case latte::REF_FUNC::LESS:
-      return gl::GL_LESS;
+      return GL_LESS;
    case latte::REF_FUNC::EQUAL:
-      return gl::GL_EQUAL;
+      return GL_EQUAL;
    case latte::REF_FUNC::LESS_EQUAL:
-      return gl::GL_LEQUAL;
+      return GL_LEQUAL;
    case latte::REF_FUNC::GREATER:
-      return gl::GL_GREATER;
+      return GL_GREATER;
    case latte::REF_FUNC::NOT_EQUAL:
-      return gl::GL_NOTEQUAL;
+      return GL_NOTEQUAL;
    case latte::REF_FUNC::GREATER_EQUAL:
-      return gl::GL_GEQUAL;
+      return GL_GEQUAL;
    case latte::REF_FUNC::ALWAYS:
-      return gl::GL_ALWAYS;
+      return GL_ALWAYS;
    default:
       decaf_abort(fmt::format("Unimplemented REF_FUNC {}", func));
    }
 }
 
-gl::GLenum
+GLenum
 getBlendFunc(latte::CB_BLEND_FUNC func)
 {
    switch (func) {
    case latte::CB_BLEND_FUNC::ZERO:
-      return gl::GL_ZERO;
+      return GL_ZERO;
    case latte::CB_BLEND_FUNC::ONE:
-      return gl::GL_ONE;
+      return GL_ONE;
    case latte::CB_BLEND_FUNC::SRC_COLOR:
-      return gl::GL_SRC_COLOR;
+      return GL_SRC_COLOR;
    case latte::CB_BLEND_FUNC::ONE_MINUS_SRC_COLOR:
-      return gl::GL_ONE_MINUS_SRC_COLOR;
+      return GL_ONE_MINUS_SRC_COLOR;
    case latte::CB_BLEND_FUNC::SRC_ALPHA:
-      return gl::GL_SRC_ALPHA;
+      return GL_SRC_ALPHA;
    case latte::CB_BLEND_FUNC::ONE_MINUS_SRC_ALPHA:
-      return gl::GL_ONE_MINUS_SRC_ALPHA;
+      return GL_ONE_MINUS_SRC_ALPHA;
    case latte::CB_BLEND_FUNC::DST_ALPHA:
-      return gl::GL_DST_ALPHA;
+      return GL_DST_ALPHA;
    case latte::CB_BLEND_FUNC::ONE_MINUS_DST_ALPHA:
-      return gl::GL_ONE_MINUS_DST_ALPHA;
+      return GL_ONE_MINUS_DST_ALPHA;
    case latte::CB_BLEND_FUNC::DST_COLOR:
-      return gl::GL_DST_COLOR;
+      return GL_DST_COLOR;
    case latte::CB_BLEND_FUNC::ONE_MINUS_DST_COLOR:
-      return gl::GL_ONE_MINUS_DST_COLOR;
+      return GL_ONE_MINUS_DST_COLOR;
    case latte::CB_BLEND_FUNC::SRC_ALPHA_SATURATE:
-      return gl::GL_SRC_ALPHA_SATURATE;
+      return GL_SRC_ALPHA_SATURATE;
    case latte::CB_BLEND_FUNC::CONSTANT_COLOR:
-      return gl::GL_CONSTANT_COLOR;
+      return GL_CONSTANT_COLOR;
    case latte::CB_BLEND_FUNC::ONE_MINUS_CONSTANT_COLOR:
-      return gl::GL_ONE_MINUS_CONSTANT_COLOR;
+      return GL_ONE_MINUS_CONSTANT_COLOR;
    case latte::CB_BLEND_FUNC::SRC1_COLOR:
-      return gl::GL_SRC1_COLOR;
+      return GL_SRC1_COLOR;
    case latte::CB_BLEND_FUNC::ONE_MINUS_SRC1_COLOR:
-      return gl::GL_ONE_MINUS_SRC1_COLOR;
+      return GL_ONE_MINUS_SRC1_COLOR;
    case latte::CB_BLEND_FUNC::SRC1_ALPHA:
-      return gl::GL_SRC1_ALPHA;
+      return GL_SRC1_ALPHA;
    case latte::CB_BLEND_FUNC::ONE_MINUS_SRC1_ALPHA:
-      return gl::GL_ONE_MINUS_SRC1_ALPHA;
+      return GL_ONE_MINUS_SRC1_ALPHA;
    case latte::CB_BLEND_FUNC::CONSTANT_ALPHA:
-      return gl::GL_CONSTANT_ALPHA;
+      return GL_CONSTANT_ALPHA;
    case latte::CB_BLEND_FUNC::ONE_MINUS_CONSTANT_ALPHA:
-      return gl::GL_ONE_MINUS_CONSTANT_ALPHA;
+      return GL_ONE_MINUS_CONSTANT_ALPHA;
    default:
       decaf_abort(fmt::format("Unimplemented CB_BLEND_FUNC {}", func));
    }
 }
 
-gl::GLenum
+GLenum
 getBlendEquation(latte::CB_COMB_FUNC func)
 {
    switch (func) {
    case latte::CB_COMB_FUNC::DST_PLUS_SRC:
-      return gl::GL_FUNC_ADD;
+      return GL_FUNC_ADD;
    case latte::CB_COMB_FUNC::SRC_MINUS_DST:
-      return gl::GL_FUNC_SUBTRACT;
+      return GL_FUNC_SUBTRACT;
    case latte::CB_COMB_FUNC::MIN_DST_SRC:
-      return gl::GL_MIN;
+      return GL_MIN;
    case latte::CB_COMB_FUNC::MAX_DST_SRC:
-      return gl::GL_MAX;
+      return GL_MAX;
    case latte::CB_COMB_FUNC::DST_MINUS_SRC:
-      return gl::GL_FUNC_REVERSE_SUBTRACT;
+      return GL_FUNC_REVERSE_SUBTRACT;
    default:
       decaf_abort(fmt::format("Unimplemented CB_COMB_FUNC {}", func));
    }
 }
 
-gl::GLenum
+GLenum
 getStencilFunc(latte::DB_STENCIL_FUNC func)
 {
    switch (func) {
    case latte::DB_STENCIL_FUNC::KEEP:
-      return gl::GL_KEEP;
+      return GL_KEEP;
    case latte::DB_STENCIL_FUNC::ZERO:
-      return gl::GL_ZERO;
+      return GL_ZERO;
    case latte::DB_STENCIL_FUNC::REPLACE:
-      return gl::GL_REPLACE;
+      return GL_REPLACE;
    case latte::DB_STENCIL_FUNC::INCR_CLAMP:
-      return gl::GL_INCR;
+      return GL_INCR;
    case latte::DB_STENCIL_FUNC::DECR_CLAMP:
-      return gl::GL_DECR;
+      return GL_DECR;
    case latte::DB_STENCIL_FUNC::INVERT:
-      return gl::GL_INVERT;
+      return GL_INVERT;
    case latte::DB_STENCIL_FUNC::INCR_WRAP:
-      return gl::GL_INCR_WRAP;
+      return GL_INCR_WRAP;
    case latte::DB_STENCIL_FUNC::DECR_WRAP:
-      return gl::GL_DECR_WRAP;
+      return GL_DECR_WRAP;
    default:
       decaf_abort(fmt::format("Unimplemented DB_STENCIL_FUNC {}", func));
    }

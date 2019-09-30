@@ -4,8 +4,6 @@
 
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
-#include <glbinding/gl/gl.h>
-#include <glbinding/Meta.h>
 
 namespace opengl
 {
@@ -62,10 +60,9 @@ bool GLDriver::checkReadyDraw()
    }
 
    if (mFramebufferChanged) {
-      auto fbStatus = gl::glCheckFramebufferStatus(gl::GL_FRAMEBUFFER);
-
-      if (fbStatus != gl::GL_FRAMEBUFFER_COMPLETE) {
-         gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", glbinding::Meta::getString(fbStatus));
+      auto fbStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+      if (fbStatus != GL_FRAMEBUFFER_COMPLETE) {
+         gLog->warn("Draw attempted with an incomplete framebuffer, status {}.", fbStatus);
          return false;
       }
 
@@ -80,26 +77,26 @@ bool GLDriver::checkReadyDraw()
    return true;
 }
 
-static gl::GLenum
+static GLenum
 getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
 {
    switch (type) {
    case latte::VGT_DI_PRIMITIVE_TYPE::POINTLIST:
-      return gl::GL_POINTS;
+      return GL_POINTS;
    case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST:
-      return gl::GL_LINES;
+      return GL_LINES;
    case latte::VGT_DI_PRIMITIVE_TYPE::LINESTRIP:
-      return gl::GL_LINE_STRIP;
+      return GL_LINE_STRIP;
    case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:  // Quads are rendered as triangles
    case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:  // Rects are rendered as triangles
-      return gl::GL_TRIANGLES;
+      return GL_TRIANGLES;
    case latte::VGT_DI_PRIMITIVE_TYPE::TRIFAN:
-      return gl::GL_TRIANGLE_FAN;
+      return GL_TRIANGLE_FAN;
    case latte::VGT_DI_PRIMITIVE_TYPE::TRISTRIP:
-      return gl::GL_TRIANGLE_STRIP;
+      return GL_TRIANGLE_STRIP;
    case latte::VGT_DI_PRIMITIVE_TYPE::LINELOOP:
-      return gl::GL_LINE_LOOP;
+      return GL_LINE_LOOP;
    default:
       decaf_abort(fmt::format("Unimplemented VGT_PRIMITIVE_TYPE {}", type));
    }
@@ -107,7 +104,7 @@ getPrimitiveMode(latte::VGT_DI_PRIMITIVE_TYPE type)
 
 template<typename IndexType>
 static void
-drawPrimitives2(gl::GLenum mode,
+drawPrimitives2(GLenum mode,
                 uint32_t count,
                 const IndexType *indices,
                 uint32_t baseVertex,
@@ -118,19 +115,19 @@ drawPrimitives2(gl::GLenum mode,
 
    if (numInstances == 1) {
       if (!indices) {
-         gl::glDrawArrays(mode, baseVertex, count);
+         glDrawArrays(mode, baseVertex, count);
       } else if constexpr (std::is_same<IndexType, uint16_t>()) {
-         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_SHORT, indices, baseVertex);
+         glDrawElementsBaseVertex(mode, count, GL_UNSIGNED_SHORT, indices, baseVertex);
       } else if constexpr (std::is_same<IndexType, uint32_t>()) {
-         gl::glDrawElementsBaseVertex(mode, count, gl::GL_UNSIGNED_INT, indices, baseVertex);
+         glDrawElementsBaseVertex(mode, count, GL_UNSIGNED_INT, indices, baseVertex);
       }
    } else {
       if (!indices) {
-         gl::glDrawArraysInstancedBaseInstance(mode, 0, count, numInstances, baseInstance);
+         glDrawArraysInstancedBaseInstance(mode, 0, count, numInstances, baseInstance);
       } else if constexpr (std::is_same<IndexType, uint16_t>()) {
-         gl::glDrawElementsInstancedBaseInstance(mode, count, gl::GL_UNSIGNED_SHORT, indices, numInstances, baseInstance);
+         glDrawElementsInstancedBaseInstance(mode, count, GL_UNSIGNED_SHORT, indices, numInstances, baseInstance);
       } else if constexpr (std::is_same<IndexType, uint32_t>()) {
-         gl::glDrawElementsInstancedBaseInstance(mode, count, gl::GL_UNSIGNED_INT, indices, numInstances, baseInstance);
+         glDrawElementsInstancedBaseInstance(mode, count, GL_UNSIGNED_INT, indices, numInstances, baseInstance);
       }
    }
 }
@@ -195,7 +192,7 @@ unpackQuadRectList(uint32_t count,
       }
    }
 
-   drawPrimitives2(gl::GL_TRIANGLES, tris, unpacked.data(), baseVertex, numInstances, baseInstance);
+   drawPrimitives2(GL_TRIANGLES, tris, unpacked.data(), baseVertex, numInstances, baseInstance);
 }
 
 void
@@ -219,10 +216,10 @@ GLDriver::drawPrimitives(uint32_t count,
    if (vgt_strmout_en.STREAMOUT()) {
       auto baseMode = mode;
 
-      if (mode == gl::GL_TRIANGLE_STRIP || mode == gl::GL_TRIANGLE_FAN) {
-         baseMode = gl::GL_TRIANGLES;
-      } else if (mode == gl::GL_LINE_STRIP || mode == gl::GL_LINE_LOOP) {
-         baseMode = gl::GL_LINES;
+      if (mode == GL_TRIANGLE_STRIP || mode == GL_TRIANGLE_FAN) {
+         baseMode = GL_TRIANGLES;
+      } else if (mode == GL_LINE_STRIP || mode == GL_LINE_LOOP) {
+         baseMode = GL_LINES;
       }
 
       if (!mFeedbackActive || mFeedbackPrimitive != baseMode) {
@@ -232,7 +229,7 @@ GLDriver::drawPrimitives(uint32_t count,
          }
          beginTransformFeedback(baseMode);
       } else {
-         gl::glResumeTransformFeedback();
+         glResumeTransformFeedback();
       }
    }
 
@@ -257,7 +254,7 @@ GLDriver::drawPrimitives(uint32_t count,
    }
 
    if (vgt_strmout_en.STREAMOUT()) {
-      gl::glPauseTransformFeedback();
+      glPauseTransformFeedback();
    }
 }
 
@@ -352,24 +349,24 @@ GLDriver::decafClearColor(const latte::pm4::DecafClearColor &data)
    auto buffer = getColorBuffer(data.cb_color_base, data.cb_color_size, data.cb_color_info, true);
 
    // Bind color buffer
-   gl::glNamedFramebufferTexture(mColorClearFrameBuffer, gl::GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
+   glNamedFramebufferTexture(mColorClearFrameBuffer, GL_COLOR_ATTACHMENT0, buffer->active->object, 0);
 
    // Check color frame buffer is complete
-   auto status = gl::glCheckNamedFramebufferStatus(mColorClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+   auto status = glCheckNamedFramebufferStatus(mColorClearFrameBuffer, GL_DRAW_FRAMEBUFFER);
 
-   if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Skipping clear with invalid color buffer, status {}.", glbinding::Meta::getString(status));
+   if (status != GL_FRAMEBUFFER_COMPLETE) {
+      gLog->warn("Skipping clear with invalid color buffer, status {}.", status);
       return;
    }
 
    // Clear color buffer
-   glColorMaski(0, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE, gl::GL_TRUE);
+   glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
    mColorBufferCache[0].mask = 0xF; // Recheck mask on next color buffer update
-   gl::glDisable(gl::GL_SCISSOR_TEST);
+   glDisable(GL_SCISSOR_TEST);
 
-   gl::glClearNamedFramebufferfv(mColorClearFrameBuffer, gl::GL_COLOR, 0, colors);
+   glClearNamedFramebufferfv(mColorClearFrameBuffer, GL_COLOR, 0, colors);
 
-   gl::glEnable(gl::GL_SCISSOR_TEST);
+   glEnable(GL_SCISSOR_TEST);
 }
 
 void
@@ -387,17 +384,17 @@ GLDriver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
 
    // Bind depth buffer
    if (hasStencil) {
-      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL_ATTACHMENT, buffer->active->object, 0);
+      glNamedFramebufferTexture(mDepthClearFrameBuffer, GL_DEPTH_STENCIL_ATTACHMENT, buffer->active->object, 0);
    } else {
-      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_STENCIL_ATTACHMENT, 0, 0);
-      gl::glNamedFramebufferTexture(mDepthClearFrameBuffer, gl::GL_DEPTH_ATTACHMENT, buffer->active->object, 0);
+      glNamedFramebufferTexture(mDepthClearFrameBuffer, GL_STENCIL_ATTACHMENT, 0, 0);
+      glNamedFramebufferTexture(mDepthClearFrameBuffer, GL_DEPTH_ATTACHMENT, buffer->active->object, 0);
    }
 
    // Check depth frame buffer is complete
-   auto status = gl::glCheckNamedFramebufferStatus(mDepthClearFrameBuffer, gl::GL_DRAW_FRAMEBUFFER);
+   auto status = glCheckNamedFramebufferStatus(mDepthClearFrameBuffer, GL_DRAW_FRAMEBUFFER);
 
-   if (status != gl::GL_FRAMEBUFFER_COMPLETE) {
-      gLog->warn("Skipping clear with invalid depth buffer, status {}.", glbinding::Meta::getString(status));
+   if (status != GL_FRAMEBUFFER_COMPLETE) {
+      gLog->warn("Skipping clear with invalid depth buffer, status {}.", status);
       return;
    }
 
@@ -405,22 +402,22 @@ GLDriver::decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data)
    auto db_depth_control = getRegister<latte::DB_DEPTH_CONTROL>(latte::Register::DB_DEPTH_CONTROL);
 
    if (!db_depth_control.Z_WRITE_ENABLE()) {
-      gl::glDepthMask(gl::GL_TRUE);
+      glDepthMask(GL_TRUE);
    }
 
-   gl::glDisable(gl::GL_SCISSOR_TEST);
+   glDisable(GL_SCISSOR_TEST);
 
    if (hasStencil) {
-      gl::glClearNamedFramebufferfi(mDepthClearFrameBuffer, gl::GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR(), db_stencil_clear.CLEAR());
+      glClearNamedFramebufferfi(mDepthClearFrameBuffer, GL_DEPTH_STENCIL, 0, db_depth_clear.DEPTH_CLEAR(), db_stencil_clear.CLEAR());
    } else {
       auto depth_clear = db_depth_clear.DEPTH_CLEAR();
-      gl::glClearNamedFramebufferfv(mDepthClearFrameBuffer, gl::GL_DEPTH, 0, &depth_clear);
+      glClearNamedFramebufferfv(mDepthClearFrameBuffer, GL_DEPTH, 0, &depth_clear);
    }
 
-   gl::glEnable(gl::GL_SCISSOR_TEST);
+   glEnable(GL_SCISSOR_TEST);
 
    if (!db_depth_control.Z_WRITE_ENABLE()) {
-      gl::glDepthMask(gl::GL_FALSE);
+      glDepthMask(GL_FALSE);
    }
 }
 

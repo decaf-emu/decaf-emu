@@ -63,13 +63,8 @@ target_link_libraries(libgpu
 
 if(DECAF_GL)
     target_link_libraries(libgpu
-        ${GLBINDING_LIBRARIES}
+        glad
         ${OPENGL_LIBRARIES})
-
-   if(MSVC)
-       # GLbinding linker warning
-       target_compile_options(libgpu PUBLIC /wd4251)
-   endif()
 endif()
 
 if(DECAF_VULKAN)
