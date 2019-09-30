@@ -482,7 +482,7 @@ SDLWindow::run(const std::string &tracePath)
 #ifdef SDL_VIDEO_DRIVER_X11
    case SDL_SYSWM_X11:
       wsi.type = gpu::WindowSystemType::X11;
-      wsi.renderSurface = static_cast<void *>(sysWmInfo.info.x11.window);
+      wsi.renderSurface = reinterpret_cast<void *>(sysWmInfo.info.x11.window);
       wsi.displayConnection = static_cast<void *>(sysWmInfo.info.x11.display);
       break;
 #endif
