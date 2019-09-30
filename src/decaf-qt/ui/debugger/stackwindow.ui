@@ -77,7 +77,7 @@
   <customwidget>
    <class>StackWidget</class>
    <extends>QWidget</extends>
-   <header>stackwidget.h</header>
+   <header>debugger/stackwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

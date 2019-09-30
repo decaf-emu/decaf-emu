@@ -118,7 +118,7 @@
   <customwidget>
    <class>MemoryWidget</class>
    <extends>QWidget</extends>
-   <header>memorywidget.h</header>
+   <header>debugger/memorywidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

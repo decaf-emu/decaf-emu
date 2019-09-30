@@ -68,7 +68,7 @@
   <customwidget>
    <class>DisassemblyWidget</class>
    <extends>QWidget</extends>
-   <header>disassemblywidget.h</header>
+   <header>debugger/disassemblywidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
