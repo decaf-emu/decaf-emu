@@ -62,7 +62,7 @@ if(DECAF_GL)
         set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_wgl.c")
     endif()
 
-    if(LINUX)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_glx.c")
     endif()
 
@@ -70,7 +70,7 @@ if(DECAF_GL)
     set_target_properties(glad PROPERTIES FOLDER libraries)
     target_include_directories(glad PUBLIC "${GLAD_DIR}/include")
 
-    if(LINUX)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         set_target_properties(glad PROPERTIES INTERFACE_LINK_LIBRARIES dl)
     endif()
 endif()

@@ -57,12 +57,12 @@ void _post_call_callback_default(const char *name, void *funcptr, int len_args, 
     }
 }
 
-static GLADcallback _pre_call_callback = _pre_call_callback_default;
+GLADcallback _pre_call_callback = _pre_call_callback_default;
 void glad_set_pre_callback(GLADcallback cb) {
     _pre_call_callback = cb;
 }
 
-static GLADcallback _post_call_callback = _post_call_callback_default;
+GLADcallback _post_call_callback = _post_call_callback_default;
 void glad_set_post_callback(GLADcallback cb) {
     _post_call_callback = cb;
 }

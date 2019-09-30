@@ -29,26 +29,8 @@
 #include <string.h>
 #include <glad/glad_wgl.h>
 
-void _pre_call_callback_default(const char *name, void *funcptr, int len_args, ...) {
-    (void) name;
-    (void) funcptr;
-    (void) len_args;
-}
-void _post_call_callback_default(const char *name, void *funcptr, int len_args, ...) {
-    (void) name;
-    (void) funcptr;
-    (void) len_args;
-}
-
-static GLADcallback _pre_call_callback = _pre_call_callback_default;
-void glad_set_pre_callback(GLADcallback cb) {
-    _pre_call_callback = cb;
-}
-
-static GLADcallback _post_call_callback = _post_call_callback_default;
-void glad_set_post_callback(GLADcallback cb) {
-    _post_call_callback = cb;
-}
+extern GLADcallback _pre_call_callback;
+extern GLADcallback _post_call_callback;
 
 static void* get_proc(const char *namez);
 
