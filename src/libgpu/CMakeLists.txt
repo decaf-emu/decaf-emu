@@ -61,6 +61,10 @@ target_link_libraries(libgpu
     libcpu
     addrlib)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries(libgpu X11)
+endif()
+
 if(DECAF_GL)
     target_link_libraries(libgpu
         glad

@@ -28,10 +28,6 @@ target_link_libraries(decaf-sdl
     excmd
     ${SDL2_LIBRARIES})
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    target_link_libraries(decaf-sdl X11)
-endif()
-
 if(MSVC)
     set_target_properties(decaf-sdl PROPERTIES
         LINK_FLAGS "/SUBSYSTEM:WINDOWS")
