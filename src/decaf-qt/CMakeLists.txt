@@ -34,6 +34,7 @@ GroupSources(src)
 GroupSources(ui)
 
 target_include_directories(decaf-qt PRIVATE
+   ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
    ${SDL2_INCLUDE_DIRS})
 
 target_link_libraries(decaf-qt

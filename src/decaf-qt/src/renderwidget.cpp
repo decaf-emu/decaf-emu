@@ -11,6 +11,8 @@
 #include <libdecaf/decaf_graphics.h>
 #include <libgpu/gpu_graphicsdriver.h>
 
+#include <qpa/qplatformnativeinterface.h>
+
 RenderWidget::RenderWidget(QWidget *parent) :
    QWidget(parent)
 {
@@ -52,7 +54,7 @@ RenderWidget::startGraphicsDriver()
 #else
    auto pni = QGuiApplication::platformNativeInterface();
    wsi.displayConnection = pni->nativeResourceForWindow("display", window);
-   if (wsi.type == WindowSystemType::Wayland) {
+   if (wsi.type == gpu::WindowSystemType::Wayland) {
       wsi.renderSurface = pni->nativeResourceForWindow("surface", window);
    } else {
       wsi.renderSurface = reinterpret_cast<void *>(window->winId());
