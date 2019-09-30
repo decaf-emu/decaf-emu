@@ -117,6 +117,15 @@ debugMessageCallback(GLenum source,
 }
 
 static void
+gladPostCallback(const char* name, void* funcptr, int len_args, ...)
+{
+   auto error = glad_glGetError();
+   if (error != GL_NO_ERROR) {
+      gLog->error("OpenGL error: {} failed with error {}", name, error);
+   }
+}
+
+static void
 createDisplayPipeline(DisplayPipeline &displayPipeline)
 {
    static auto vertexCode = R"(
@@ -205,13 +214,7 @@ GLDriver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
    // Initialise glad
    gladLoadGL();
    if (gpu::config()->debug.debug_enabled) {
-      glad_set_post_callback([](const char* name, void* funcptr, int len_args, ...) {
-         auto error = glad_glGetError();
-         if (error != GL_NO_ERROR) {
-            gLog->error("OpenGL error: {} failed with error {}", name, error);
-         }
-         });
-
+      glad_set_post_callback(&gladPostCallback);
       glDebugMessageCallback(&debugMessageCallback, nullptr);
       glEnable(GL_DEBUG_OUTPUT);
       glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
