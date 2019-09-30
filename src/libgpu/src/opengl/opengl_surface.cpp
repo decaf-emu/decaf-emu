@@ -8,6 +8,7 @@
 #include <common/decaf_assert.h>
 #include <common/murmur3.h>
 #include <fmt/format.h>
+#include <libcpu/cpu_formatters.h>
 #include <libcpu/mem.h>
 
 namespace opengl

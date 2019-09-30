@@ -9,7 +9,9 @@
 #include "vfs/vfs_permissions.h"
 
 #include <common/structsize.h>
+#include <vector>
 #include <libcpu/be2_struct.h>
+#include <memory>
 
 namespace ios::fs::internal
 {

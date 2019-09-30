@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <common/decaf_assert.h>
+#include <common/log.h>
 #include <common/platform.h>
 #include <common/platform_dir.h>
 #include <condition_variable>

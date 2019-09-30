@@ -9,6 +9,7 @@
 #include <decaf_buildinfo.h>
 #include <filesystem>
 #include <libcpu/cpu.h>
+#include <libcpu/cpu_formatters.h>
 #include <memory>
 #include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>

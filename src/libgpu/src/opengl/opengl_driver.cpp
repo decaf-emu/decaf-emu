@@ -17,6 +17,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <gsl.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace opengl
 {

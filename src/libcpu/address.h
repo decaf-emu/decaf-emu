@@ -204,19 +204,6 @@ struct formatter;
 }
 
 template<typename AddressType, typename Char>
-struct formatter<cpu::Address<AddressType>, Char, void>
-{
-   template<typename ParseContext>
-   constexpr auto parse(ParseContext &ctx)
-   {
-      return ctx.begin();
-   }
-
-   template<typename FormatContext>
-   auto format(const cpu::Address<AddressType> &addr, FormatContext &ctx)
-   {
-      return format_to(ctx.out(), "0x{:08X}", addr.getAddress());
-   }
-};
+struct formatter<cpu::Address<AddressType>, Char, void>;
 
 } // namespace fmt

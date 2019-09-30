@@ -15,6 +15,7 @@
 #include <common/strutils.h>
 #include <fmt/format.h>
 #include <fstream>
+#include <libcpu/cpu_formatters.h>
 #include <libcpu/mem.h>
 
 namespace opengl

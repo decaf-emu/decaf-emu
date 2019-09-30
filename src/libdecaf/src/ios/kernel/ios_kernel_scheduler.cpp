@@ -6,6 +6,7 @@
 
 #include <common/log.h>
 #include <common/platform_fiber.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace ios::kernel::internal
 {

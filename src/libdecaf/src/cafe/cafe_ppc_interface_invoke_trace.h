@@ -1,6 +1,7 @@
 #pragma once
 #include "cafe_ppc_interface_invoke.h"
 #include <fmt/format.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe
 {

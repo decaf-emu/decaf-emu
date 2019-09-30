@@ -9,6 +9,8 @@
 #include "ios/kernel/ios_kernel_thread.h"
 #include "ios/mcp/ios_mcp_ipc.h"
 
+#include <libcpu/cpu_formatters.h>
+
 namespace ios::acp::internal
 {
 

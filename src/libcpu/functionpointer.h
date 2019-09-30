@@ -123,21 +123,8 @@ template<typename Type, typename Char, typename Enabled>
 struct formatter;
 }
 
+// Custom formatter defined in cpu_formatters.h
 template<typename AddressType, typename FunctionType, typename Char>
-struct formatter<cpu::FunctionPointer<AddressType, FunctionType>, Char, void>
-{
-   template<typename ParseContext>
-   constexpr auto parse(ParseContext &ctx)
-   {
-      return ctx.begin();
-   }
-
-   template<typename FormatContext>
-   auto format(const cpu::FunctionPointer<AddressType, FunctionType> &ptr, FormatContext &ctx)
-   {
-      auto addr = cpu::func_pointer_cast_impl<AddressType, FunctionType>::cast(ptr);
-      return format_to(ctx.out(), "{:08X}", static_cast<uint32_t>(addr));
-   }
-};
+struct formatter<cpu::FunctionPointer<AddressType, FunctionType>, Char, void>;
 
 } // namespace fmt

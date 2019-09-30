@@ -13,6 +13,7 @@
 #include "ios/mcp/ios_mcp_mcp_request.h"
 
 #include <libcpu/be2_struct.h>
+#include <libcpu/cpu_formatters.h>
 
 using namespace ios::mcp;
 using namespace cafe::kernel;

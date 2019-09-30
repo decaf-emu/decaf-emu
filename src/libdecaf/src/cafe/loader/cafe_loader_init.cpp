@@ -14,6 +14,8 @@
 #include "cafe_loader_utils.h"
 #include "cafe/cafe_stackobject.h"
 
+#include <libcpu/cpu_formatters.h>
+
 namespace cafe::loader::internal
 {
 

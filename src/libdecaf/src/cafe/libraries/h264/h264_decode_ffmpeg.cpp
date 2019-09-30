@@ -8,6 +8,7 @@
 
 #include <common/align.h>
 #include <common/decaf_assert.h>
+#include <common/log.h>
 #include <fmt/format.h>
 
 extern "C" {

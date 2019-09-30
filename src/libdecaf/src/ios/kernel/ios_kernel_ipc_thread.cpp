@@ -8,6 +8,7 @@
 
 #include <common/atomicqueue.h>
 #include <common/log.h>
+#include <libcpu/cpu_formatters.h>
 #include <mutex>
 #include <queue>
 

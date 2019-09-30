@@ -6,6 +6,7 @@
 #include "vfs/vfs_virtual_device.h"
 
 #include <common/strutils.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace ios::fs::internal
 {

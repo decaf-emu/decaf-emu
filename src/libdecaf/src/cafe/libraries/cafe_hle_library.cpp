@@ -5,8 +5,10 @@
 #include "decaf_config.h"
 
 #include <common/log.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <libcpu/cpu.h>
+#include <libcpu/cpu_formatters.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <zlib.h>
 

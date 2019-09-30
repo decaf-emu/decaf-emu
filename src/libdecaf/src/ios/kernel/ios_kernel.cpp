@@ -28,6 +28,7 @@
 #include "ios/ios_stackobject.h"
 
 #include <common/log.h>
+#include <libcpu/cpu_formatters.h>
 #include <functional>
 
 namespace ios::kernel

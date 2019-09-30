@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::loader::internal
 {

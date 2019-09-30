@@ -509,99 +509,14 @@ template<typename Type, typename Char, typename Enabled>
 struct formatter;
 }
 
-template<typename OutputIt>
-auto format_escaped_string(OutputIt iter, const char *data)
-{
-   iter = format_to(iter, "\"");
-
-   auto hasMoreBytes = true;
-   for (auto i = 0; i < 128; ++i) {
-      auto c = data[i];
-      if (c == 0) {
-         hasMoreBytes = false;
-         break;
-      }
-
-      if (c >= ' ' && c <= '~' && c != '\\' && c != '"') {
-         iter = format_to(iter, "{}", c);
-      } else {
-         switch (c) {
-         case '"': iter = format_to(iter, "\\\""); break;
-         case '\\': iter = format_to(iter, "\\\\"); break;
-         case '\t': iter = format_to(iter, "\\t"); break;
-         case '\r': iter = format_to(iter, "\\r"); break;
-         case '\n': iter = format_to(iter, "\\n"); break;
-         default: iter = format_to(iter, "\\x{:02x}", c); break;
-         }
-      }
-   }
-
-   if (!hasMoreBytes) {
-      iter = format_to(iter, "\"");
-   } else {
-      iter = format_to(iter, "\"...");
-   }
-
-   return iter;
-}
+// Custom formatter in cpu_formatters.h
+template<typename AddressType, typename Char>
+struct formatter<cpu::Pointer<char, AddressType>, Char, void>;
 
 template<typename AddressType, typename Char>
-struct formatter<cpu::Pointer<char, AddressType>, Char, void>
-{
-   template<typename ParseContext>
-   constexpr auto parse(ParseContext &ctx)
-   {
-      return ctx.begin();
-   }
-
-   template<typename FormatContext>
-   auto format(const cpu::Pointer<char, AddressType> &ptr, FormatContext &ctx)
-   {
-      if (!ptr) {
-         return format_to(ctx.out(), "<NULL>");
-      } else {
-         auto bytes = ptr.getRawPointer();
-         return format_escaped_string(ctx.out(), bytes);
-      }
-   }
-};
-
-template<typename AddressType, typename Char>
-struct formatter<cpu::Pointer<const char, AddressType>, Char, void>
-{
-   template<typename ParseContext>
-   constexpr auto parse(ParseContext &ctx)
-   {
-      return ctx.begin();
-   }
-
-   template<typename FormatContext>
-   auto format(const cpu::Pointer<const char, AddressType> &ptr, FormatContext &ctx)
-   {
-      if (!ptr) {
-         return format_to(ctx.out(), "<NULL>");
-      } else {
-         const char *bytes = ptr.getRawPointer();
-         return format_escaped_string(ctx.out(), bytes);
-      }
-   }
-};
+struct formatter<cpu::Pointer<const char, AddressType>, Char, void>;
 
 template<typename ValueType, typename AddressType, typename Char>
-struct formatter<cpu::Pointer<ValueType, AddressType>, Char, void>
-{
-   template<typename ParseContext>
-   constexpr auto parse(ParseContext &ctx)
-   {
-      return ctx.begin();
-   }
-
-   template<typename FormatContext>
-   auto format(const cpu::Pointer<ValueType, AddressType> &ptr, FormatContext &ctx)
-   {
-      auto addr = cpu::pointer_cast_impl<AddressType, ValueType *, AddressType>::cast(ptr);
-      return format_to(ctx.out(), "0x{:08X}", static_cast<uint32_t>(addr));
-   }
-};
+struct formatter<cpu::Pointer<ValueType, AddressType>, Char, void>;
 
 } // namespace fmt

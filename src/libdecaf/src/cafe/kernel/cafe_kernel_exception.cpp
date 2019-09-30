@@ -18,6 +18,7 @@
 #include <common/platform_thread.h>
 #include <fmt/format.h>
 #include <libcpu/cpu.h>
+#include <libcpu/cpu_formatters.h>
 #include <vector>
 #include <queue>
 

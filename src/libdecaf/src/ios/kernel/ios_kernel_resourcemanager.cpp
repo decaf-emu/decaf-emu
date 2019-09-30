@@ -8,6 +8,7 @@
 
 #include <common/log.h>
 #include <common/strutils.h>
+#include <libcpu/cpu_formatters.h>
 #include <map>
 #include <string>
 #include <string_view>

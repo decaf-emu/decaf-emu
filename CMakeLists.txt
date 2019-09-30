@@ -26,6 +26,7 @@ option(DECAF_SDL "Build with SDL support" ON)
 option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_VULKAN "Build with Vulkan rendering support" ON)
 option(DECAF_QT "Build with Qt support" OFF)
+option(DECAF_ENABLE_PCH "Build with precompild headers" ON)
 option(DECAF_ENABLE_LTCG "Build with LTCG on Windows" ON)
 
 set(DEVKITPPC $ENV{DEVKITPPC} CACHE STRING "Path to devkitPPC install")
@@ -184,22 +185,24 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}/generated")
 # cotire for build optimisation
 include(cotire)
 macro(enable_pch project_name)
-    set(IGNORED_PATHS "")
-    set(INCLUDED_PATHS "")
+    if(DECAF_ENABLE_PCH)
+        set(IGNORED_PATHS "")
+        set(INCLUDED_PATHS "")
 
-    list(APPEND IGNORED_PATHS  "${CMAKE_SOURCE_DIR}")
-    list(APPEND IGNORED_PATHS  "${AVCODEC_INCLUDE_DIR}")
-    list(APPEND IGNORED_PATHS  "${AVFILTER_INCLUDE_DIR}")
-    list(APPEND IGNORED_PATHS  "${AVUTIL_INCLUDE_DIR}")
-    list(APPEND IGNORED_PATHS  "${SWSCALE_INCLUDE_DIR}")
-    list(APPEND INCLUDED_PATHS "${CMAKE_SOURCE_DIR}/libraries")
-    list(APPEND INCLUDED_PATHS "${CMAKE_SOURCE_DIR}/src/common")
+        list(APPEND IGNORED_PATHS  "${CMAKE_SOURCE_DIR}")
+        list(APPEND IGNORED_PATHS  "${AVCODEC_INCLUDE_DIR}")
+        list(APPEND IGNORED_PATHS  "${AVFILTER_INCLUDE_DIR}")
+        list(APPEND IGNORED_PATHS  "${AVUTIL_INCLUDE_DIR}")
+        list(APPEND IGNORED_PATHS  "${SWSCALE_INCLUDE_DIR}")
+        list(APPEND INCLUDED_PATHS "${CMAKE_SOURCE_DIR}/libraries")
+        list(APPEND INCLUDED_PATHS "${CMAKE_SOURCE_DIR}/src/common")
 
-    set_target_properties(${project_name} PROPERTIES
-        COTIRE_ADD_UNITY_BUILD FALSE
-        COTIRE_PREFIX_HEADER_IGNORE_PATH "${IGNORED_PATHS}"
-        COTIRE_PREFIX_HEADER_INCLUDE_PATH "${INCLUDED_PATHS}")
-    cotire(${project_name})
+        set_target_properties(${project_name} PROPERTIES
+            COTIRE_ADD_UNITY_BUILD FALSE
+            COTIRE_PREFIX_HEADER_IGNORE_PATH "${IGNORED_PATHS}"
+            COTIRE_PREFIX_HEADER_INCLUDE_PATH "${INCLUDED_PATHS}")
+        cotire(${project_name})
+    endif()
 endmacro()
 
 # Build stuff!

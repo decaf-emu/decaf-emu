@@ -12,6 +12,7 @@
 #include "cafe/cafe_stackobject.h"
 
 #include <common/align.h>
+#include <libcpu/cpu_formatters.h>
 #include <zlib.h>
 
 namespace cafe::loader::internal
