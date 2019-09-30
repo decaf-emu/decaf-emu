@@ -9,41 +9,17 @@
 #include <glad/glad.h>
 
 #ifdef PLATFORM_WINDOWS
-#include <Windows.h>
-#include "wglext.h"
+#include <glad/glad_wgl.h>
+#endif
+
+#ifdef PLATFORM_LINUX
+#include <glad/glad_glx.h>
 #endif
 
 namespace opengl
 {
 
 #ifdef PLATFORM_WINDOWS
-static PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
-static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
-static PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
-static PFNWGLCREATEPBUFFERARBPROC wglCreatePbufferARB = nullptr;
-static PFNWGLGETPBUFFERDCARBPROC wglGetPbufferDCARB = nullptr;
-static PFNWGLRELEASEPBUFFERDCARBPROC wglReleasePbufferDCARB = nullptr;
-static PFNWGLDESTROYPBUFFERARBPROC wglDestroyPbufferARB = nullptr;
-
-static void
-loadWglExtensions()
-{
-   wglSwapIntervalEXT =
-      reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
-   wglCreateContextAttribsARB = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
-      wglGetProcAddress("wglCreateContextAttribsARB"));
-   wglChoosePixelFormatARB = reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(
-      wglGetProcAddress("wglChoosePixelFormatARB"));
-   wglCreatePbufferARB =
-      reinterpret_cast<PFNWGLCREATEPBUFFERARBPROC>(wglGetProcAddress("wglCreatePbufferARB"));
-   wglGetPbufferDCARB =
-      reinterpret_cast<PFNWGLGETPBUFFERDCARBPROC>(wglGetProcAddress("wglGetPbufferDCARB"));
-   wglReleasePbufferDCARB =
-      reinterpret_cast<PFNWGLRELEASEPBUFFERDCARBPROC>(wglGetProcAddress("wglReleasePbufferDCARB"));
-   wglDestroyPbufferARB =
-      reinterpret_cast<PFNWGLDESTROYPBUFFERARBPROC>(wglGetProcAddress("wglGetPbufferDCARB"));
-}
-
 class WglContext : public GLContext
 {
 public:
@@ -62,11 +38,7 @@ public:
       };
 
       if (!wglCreateContextAttribsARB) {
-         loadWglExtensions();
-
-         if (!wglCreateContextAttribsARB) {
-            return nullptr;
-         }
+         return nullptr;
       }
 
       return wglCreateContextAttribsARB(dc, nullptr, attribs);
@@ -112,7 +84,8 @@ public:
 
       self->mContext = ::wglCreateContext(self->mDeviceContext);
       ::wglMakeCurrent(self->mDeviceContext, self->mContext);
-      loadWglExtensions();
+
+      gladLoadWGL(self->mDeviceContext);
 
       if (auto coreContext = createCoreContext(self->mDeviceContext)) {
          ::wglMakeCurrent(self->mDeviceContext, coreContext);
@@ -172,6 +145,196 @@ private:
 };
 #endif // ifdef PLATFORM_WINDOWS
 
+#ifdef PLATFORM_LINUX
+class X11Window
+{
+public:
+   ~X11Window()
+   {
+      XUnmapWindow(mDisplay, mWindow);
+      XDestroyWindow(mDisplay, mWindow);
+      XFreeColormap(mDisplay, mColourMap);
+   }
+
+   std::pair<int, int> getDimensions()
+   {
+      auto attribs = XWindowAttributes { };
+      XGetWindowAttributes(mDisplay, mParentWindow, &attribs);
+      XResizeWindow(mDisplay, mWindow, attribs.width, attribs.height);
+      return { attribs.width, attribs.height };
+   }
+
+   Window getWindow()
+   {
+      return mWindow;
+   }
+
+   static std::unique_ptr<GLX11Window> create(Display *display, Window parent, XVisualInfo *vi)
+   {
+      auto self = std::make_unique<GLX11Window>();
+      self->mDisplay = display;
+      self->mParentWindow = parent;
+      self->mColourMap = XCreateColormap(self->mDisplay, self->mParentWindow, vi->visual, AllocNone);
+
+      auto attribs = XSetWindowAttributes { };
+      attribs.colormap = self->mColourMap;
+
+      // Get the dimensions from the parent window.
+      auto parentAttribs = XWindowAttributes { };
+      XGetWindowAttributes(self->mDisplay, self->mParentWindow, &parentAttribs);
+
+      // Create the window
+      self->mWindow =
+         XCreateWindow(self->mDisplay, self->mParentWindow, 0, 0, parentAttribs.width,
+                       parentAttribs.height, 0, vi->depth, InputOutput,
+                       vi->visual, CWColormap, &attribs);
+      XSelectInput(self->mDisplay, self->mParentWindow, StructureNotifyMask);
+      XMapWindow(self->mDisplay, self->mWindow);
+      XSync(self->mDisplay, True);
+
+      return std::make_unique<GLX11Window>(display, parent_window, color_map, window,
+         parent_attribs.width, parent_attribs.height);
+   }
+
+private:
+   Display *mDisplay = nullptr;
+   Window mParentWindow = nullptr;
+   Colormap mColourMap = nullptr;
+   Window mWindow = nullptr;
+};
+
+class X11Context : public GLContext
+{
+public:
+   virtual ~X11Context() {};
+
+   static std::unique_ptr<GLContext> create(const gpu::WindowSystemInfo &wsi)
+   {
+      auto self = std::make_unique<X11Context>();
+      self->mDisplay = static_cast<Display *>(wsi.displayConnection);
+
+      int fbAttribs[] = {
+         GLX_X_RENDERABLE, True,
+         GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+         GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+         GLX_RED_SIZE, 8,
+         GLX_GREEN_SIZE, 8,
+         GLX_BLUE_SIZE, 8,
+         GLX_DEPTH_SIZE, 0,
+         GLX_STENCIL_SIZE, 0,
+         GLX_DOUBLEBUFFER, True,
+         None
+      };
+      auto fbCount = int { 0 };
+      auto screen = DefaultScreen(display);
+      
+      if (!gladLoadGLX(self->mDisplay, screen)) {
+         return { };
+      }
+
+      auto chosenFbConfig = glXChooseFBConfig(display, screen, fbAttribs, &fbCount);
+      if (!chosenFbConfig) {
+         return { };
+      }
+      self->mFBConfig = *chosenFbConfig;
+
+      int contextAttribs[] = {
+         GLX_CONTEXT_MAJOR_VERSION_ARB, version.first,
+         GLX_CONTEXT_MINOR_VERSION_ARB, version.second,
+         GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+         GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+         None
+      };
+
+      self->mContext = glXCreateContextAttribs(self->mDisplay, self->mFBConfig, nullptr, True, contextAttribs);
+      if (!self->mContext) {
+         return { };
+      }
+      mContextAttribs.insert(mContextAttribs.end(), std::begin(contextAttribs), std::end(contextAttribs));
+
+      if (!self->createWindowSurface(reinterpret_cast<Window>(wsi.renderSurface))) {
+         return { };
+      }
+
+      self->makeCurrent();
+      return self;
+   }
+
+   bool createWindowSurface(Window window)
+   {
+      if (window) {
+         auto info = glXGetVisualFromFBConfig(mDisplay, mFBConfig);
+         mX11Window = X11Window::create(mDisplay, window, info);
+         mDrawable = static_cast<GLXDrawable>(mX11Window->getWindow());
+         XFree(info);
+      } else {
+         mPBuffer = glXCreateGLXPbufferSGIX(mDisplay, mFBConfig, 1, 1, nullptr);
+         if (!mPBuffer) {
+            return false;
+         }
+
+         mDrawable = static_cast<GLXDrawable>(mPBuffer);
+      }
+
+      return true;
+   }
+
+   void makeCurrent() override
+   {
+      glXMakeCurrent(mDisplay, mDrawable, mContext);
+   }
+
+   void clearCurrent() override
+   {
+      glXMakeCurrent(mDisplay, None, nullptr);
+   }
+
+   std::pair<int, int> getDimensions() override
+   {
+      return mX11Window->getDimensions();
+   }
+
+   void setSwapInterval(int interval) override
+   {
+      glXSwapIntervalEXT(mDisplay, mDrawable, interval);
+   }
+   
+   void swapBuffers() override
+   {
+      glXSwapBuffers(mDisplay, mDrawable);
+   }
+
+   std::unique_ptr<GLContext> createSharedContext() override
+   {
+      auto sharedContext = std::make_unique<X11Context>();
+      sharedContext->mDisplay = mDisplay;
+      sharedContext->mFBConfig = mFBConfig;
+      sharedContext->mContextAttribs = mContextAttribs;
+      sharedContext->mContext = glXCreateContextAttribs(sharedContext->mDisplay, sharedContext->mFBConfig, mContext, True, sharedContext->mContextAttribs.data());
+
+      if (!sharedContext->mContext) {
+         return { };
+      }
+
+      if (mPBuffer) {
+         sharedContext->createWindowSurface(nullptr);
+      }
+
+      return sharedContext;
+   }
+
+private:
+   Display *mDisplay = nullptr;
+   GLXFBConfig mFBConfig = { };
+   GLXContext mContext = nullptr;
+   GLXDrawable mDrawable = nullptr;
+   GLXPbufferSGIX mPBuffer = nullptr;
+   std::unique_ptr<X11Window> mX11Window;
+   std::vector<int> mContextAttribs;
+};
+
+#endif // ifdef PLATFORM_LINUX
+
 std::unique_ptr<GLContext>
 createContext(const gpu::WindowSystemInfo &wsi)
 {
@@ -180,6 +343,12 @@ createContext(const gpu::WindowSystemInfo &wsi)
    case gpu::WindowSystemType::Windows:
    {
       return WglContext::create(wsi);
+   }
+#endif
+#ifdef PLATFORM_LINUX
+   case gpu::WindowSystemType::Xcb:
+   {
+      return X11Context::create(wsi);
    }
 #endif
    default:

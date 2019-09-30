@@ -51,22 +51,27 @@ set_target_properties(fmt PROPERTIES FOLDER libraries)
 # glad
 if(DECAF_GL)
     if(DECAF_GLAD_DEBUG)
-        add_library(glad STATIC
-            "glad-debug/src/glad.c")
-        set_target_properties(glad PROPERTIES FOLDER libraries)
-        target_include_directories(glad
-            PUBLIC "glad-debug/include")
+        set(GLAD_DIR "glad-debug")
     else()
-        add_library(glad STATIC
-            "glad/src/glad.c")
-        set_target_properties(glad PROPERTIES FOLDER libraries)
-        target_include_directories(glad
-            PUBLIC "glad/include")
+        set(GLAD_DIR "glad")
     endif()
 
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        set_target_properties(glad PROPERTIES
-            INTERFACE_LINK_LIBRARIES dl)
+    set(GLAD_SOURCE_FILES "${GLAD_DIR}/src/glad.c")
+
+    if(WIN32)
+        set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_wgl.c")
+    endif()
+
+    if(LINUX)
+        set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_glx.c")
+    endif()
+
+    add_library(glad STATIC ${GLAD_SOURCE_FILES})
+    set_target_properties(glad PROPERTIES FOLDER libraries)
+    target_include_directories(glad PUBLIC "${GLAD_DIR}/include")
+
+    if(LINUX)
+        set_target_properties(glad PROPERTIES INTERFACE_LINK_LIBRARIES dl)
     endif()
 endif()
 
