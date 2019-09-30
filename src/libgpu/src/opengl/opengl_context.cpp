@@ -14,6 +14,7 @@
 
 #ifdef PLATFORM_LINUX
 #include <glad/glad_glx.h>
+#include <X11/Xlib.h>
 #endif
 
 namespace opengl
@@ -169,9 +170,9 @@ public:
       return mWindow;
    }
 
-   static std::unique_ptr<GLX11Window> create(Display *display, Window parent, XVisualInfo *vi)
+   static std::unique_ptr<X11Window> create(Display *display, Window parent, XVisualInfo *vi)
    {
-      auto self = std::make_unique<GLX11Window>();
+      auto self = std::make_unique<X11Window>();
       self->mDisplay = display;
       self->mParentWindow = parent;
       self->mColourMap = XCreateColormap(self->mDisplay, self->mParentWindow, vi->visual, AllocNone);
@@ -192,15 +193,14 @@ public:
       XMapWindow(self->mDisplay, self->mWindow);
       XSync(self->mDisplay, True);
 
-      return std::make_unique<GLX11Window>(display, parent_window, color_map, window,
-         parent_attribs.width, parent_attribs.height);
+      return self;
    }
 
 private:
    Display *mDisplay = nullptr;
-   Window mParentWindow = nullptr;
-   Colormap mColourMap = nullptr;
-   Window mWindow = nullptr;
+   Window mParentWindow = 0;
+   Colormap mColourMap = 0;
+   Window mWindow = 0;
 };
 
 class X11Context : public GLContext
@@ -226,31 +226,31 @@ public:
          None
       };
       auto fbCount = int { 0 };
-      auto screen = DefaultScreen(display);
+      auto screen = DefaultScreen(self->mDisplay);
       
       if (!gladLoadGLX(self->mDisplay, screen)) {
          return { };
       }
 
-      auto chosenFbConfig = glXChooseFBConfig(display, screen, fbAttribs, &fbCount);
+      auto chosenFbConfig = glXChooseFBConfig(self->mDisplay, screen, fbAttribs, &fbCount);
       if (!chosenFbConfig) {
          return { };
       }
       self->mFBConfig = *chosenFbConfig;
 
       int contextAttribs[] = {
-         GLX_CONTEXT_MAJOR_VERSION_ARB, version.first,
-         GLX_CONTEXT_MINOR_VERSION_ARB, version.second,
+         GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+         GLX_CONTEXT_MINOR_VERSION_ARB, 5,
          GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
          GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
          None
       };
 
-      self->mContext = glXCreateContextAttribs(self->mDisplay, self->mFBConfig, nullptr, True, contextAttribs);
+      self->mContext = glXCreateContextAttribsARB(self->mDisplay, self->mFBConfig, nullptr, True, contextAttribs);
       if (!self->mContext) {
          return { };
       }
-      mContextAttribs.insert(mContextAttribs.end(), std::begin(contextAttribs), std::end(contextAttribs));
+      self->mContextAttribs.insert(self->mContextAttribs.end(), std::begin(contextAttribs), std::end(contextAttribs));
 
       if (!self->createWindowSurface(reinterpret_cast<Window>(wsi.renderSurface))) {
          return { };
@@ -310,14 +310,14 @@ public:
       sharedContext->mDisplay = mDisplay;
       sharedContext->mFBConfig = mFBConfig;
       sharedContext->mContextAttribs = mContextAttribs;
-      sharedContext->mContext = glXCreateContextAttribs(sharedContext->mDisplay, sharedContext->mFBConfig, mContext, True, sharedContext->mContextAttribs.data());
+      sharedContext->mContext = glXCreateContextAttribsARB(sharedContext->mDisplay, sharedContext->mFBConfig, mContext, True, sharedContext->mContextAttribs.data());
 
       if (!sharedContext->mContext) {
          return { };
       }
 
       if (mPBuffer) {
-         sharedContext->createWindowSurface(nullptr);
+         sharedContext->createWindowSurface(0);
       }
 
       return sharedContext;
@@ -326,9 +326,9 @@ public:
 private:
    Display *mDisplay = nullptr;
    GLXFBConfig mFBConfig = { };
-   GLXContext mContext = nullptr;
-   GLXDrawable mDrawable = nullptr;
-   GLXPbufferSGIX mPBuffer = nullptr;
+   GLXContext mContext = 0;
+   GLXDrawable mDrawable = 0;
+   GLXPbufferSGIX mPBuffer = 0;
    std::unique_ptr<X11Window> mX11Window;
    std::vector<int> mContextAttribs;
 };
