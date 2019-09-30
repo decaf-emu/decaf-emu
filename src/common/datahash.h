@@ -35,8 +35,12 @@ public:
    inline DataHash& write(const std::vector<T> &data)
    {
       static_assert(std::is_trivially_copyable<T>::value, "Hashed types must be trivial");
+#ifdef DECAF_USE_STDLAYOUT_BITFIELD
+      // On vs2019 this fails without stdlayout bitfield, but non-stdlayout bitfield is
+      // nicer for debugging in visual studio
       static_assert(std::has_unique_object_representations<T>::value,
                     "Hashed types must have unique object representations");
+#endif
       return write(data.data(), data.size() * sizeof(T));
    }
 
@@ -44,8 +48,12 @@ public:
    inline DataHash& write(const T &data)
    {
       static_assert(std::is_trivially_copyable<T>::value, "Hashed types must be trivial");
+#ifdef DECAF_USE_STDLAYOUT_BITFIELD
+      // On vs2019 this fails without stdlayout bitfield, but non-stdlayout bitfield is
+      // nicer for debugging in visual studio
       static_assert(std::has_unique_object_representations<T>::value,
                     "Hashed types must have unique object representations");
+#endif
       return write(&data, sizeof(T));
    }
 
