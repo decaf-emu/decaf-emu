@@ -213,7 +213,7 @@ LiCpu_RelocAdd(bool isRpx,
       *virt_cast<uint32_t *>(target) = value;
       break;
    case rpl::R_PPC_GHS_REL16_HA:
-      *virt_cast<uint16_t *>(target) = static_cast<uint16_t>((value + 0x8000) >> 16);
+      *virt_cast<uint16_t *>(target) = static_cast<uint16_t>((relValue + 0x8000) >> 16);
       break;
    case rpl::R_PPC_GHS_REL16_HI:
       *virt_cast<uint16_t *>(target) = static_cast<uint16_t>(relValue >> 16);
