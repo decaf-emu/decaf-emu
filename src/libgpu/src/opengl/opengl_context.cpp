@@ -316,10 +316,7 @@ public:
          return { };
       }
 
-      if (mPBuffer) {
-         sharedContext->createWindowSurface(0);
-      }
-
+      sharedContext->createWindowSurface(0);
       return sharedContext;
    }
 
