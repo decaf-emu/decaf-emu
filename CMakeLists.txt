@@ -105,10 +105,14 @@ if(DECAF_QT)
     add_definitions(-DDECAF_QT)
 endif()
 
+# Build third party libraries
+add_subdirectory("libraries")
+
+# Setup compile options
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /FS") # Parallel source builds
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA") # Optimises TLS access
 
     if(DECAF_ENABLE_LTCG)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
@@ -127,7 +131,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
     if(APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
+        add_definitions(-D_DARWIN_C_SOURCE)
     else()
         link_libraries(stdc++fs)
     endif()
@@ -204,15 +208,6 @@ macro(enable_pch project_name)
         cotire(${project_name})
     endif()
 endmacro()
-
-# Build stuff!
-add_subdirectory("libraries")
-
-if(MSVC)
-    # Enable /GA only for .exe files we build, do not use it in external
-    # dependenices or .dll files
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA")
-endif()
 
 add_subdirectory("src")
 add_subdirectory("resources")
