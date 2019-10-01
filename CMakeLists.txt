@@ -80,6 +80,27 @@ if(DECAF_SDL)
     add_definitions(-DDECAF_SDL)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_package(XCB QUIET)
+    find_package(X11 QUIET)
+    find_package(WAYLAND QUIET)
+
+    if(${XCB_FOUND})
+        add_definitions(-DDECAF_PLATFORM_XCB)
+        set(DECAF_PLATFORM_XCB TRUE)
+    endif()
+
+    if(${X11_FOUND})
+        add_definitions(-DDECAF_PLATFORM_X11)
+        set(DECAF_PLATFORM_X11 TRUE)
+    endif()
+
+    if(${WAYLAND_FOUND})
+        add_definitions(-DDECAF_PLATFORM_WAYLAND)
+        set(DECAF_PLATFORM_WAYLAND TRUE)
+    endif()
+endif()
+
 if(DECAF_VULKAN)
     find_package(Vulkan 1.1.92.1 REQUIRED) # Vulkan_INCLUDE_DIRS and Vulkan_LIBRARIES
     add_library(vulkan INTERFACE IMPORTED)
@@ -88,8 +109,19 @@ if(DECAF_VULKAN)
         INTERFACE_LINK_LIBRARIES ${Vulkan_LIBRARIES})
 
     if(MSVC)
-        set_target_properties(vulkan PROPERTIES
-            INTERFACE_COMPILE_DEFINITIONS "VK_USE_PLATFORM_WIN32_KHR")
+        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WIN32_KHR")
+    endif()
+
+    if(DECAF_PLATFORM_XCB)
+        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_XCB_KHR")
+    endif()
+
+    if(DECAF_PLATFORM_X11)
+        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_X11_KHR")
+    endif()
+
+    if(DECAF_PLATFORM_WAYLAND)
+        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WAYLAND_KHR")
     endif()
 
     add_definitions(-DDECAF_VULKAN)

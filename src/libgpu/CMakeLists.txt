@@ -61,23 +61,29 @@ target_link_libraries(libgpu
     libcpu
     addrlib)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    target_link_libraries(libgpu X11)
+if(DECAF_PLATFORM_XCB)
+    target_link_libraries(libgpu ${XCB_LIBRARY})
+endif()
 
+if(DECAF_PLATFORM_X11)
+    target_link_libraries(libgpu ${X11_X11_LIB})
+endif()
+
+if(DECAF_PLATFORM_WAYLAND)
+    target_link_libraries(libgpu ${WAYLAND_CLIENT_LIBRARIES})
+endif()
+
+if(DECAF_GL)
+    target_link_libraries(libgpu glad ${OPENGL_LIBRARIES})
+endif()
+
+if(DECAF_VULKAN)
+    target_link_libraries(libgpu vulkan ${SPIRV_LIBRARIES})
+endif()
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     # GLSLANG is compiled with -fno-rtti, linking to this on Linux causes an error due to
     # missing typeid, so here we must disable rtti just for the files which use spv::Builder
     file(GLOB SPV_BUILDER_FILES "src/spirv/*.cpp")
     set_source_files_properties(${SPV_BUILDER_FILES} PROPERTIES COMPILE_FLAGS -fno-rtti)
-endif()
-
-if(DECAF_GL)
-    target_link_libraries(libgpu
-        glad
-        ${OPENGL_LIBRARIES})
-endif()
-
-if(DECAF_VULKAN)
-    target_link_libraries(libgpu
-        vulkan
-        ${SPIRV_LIBRARIES})
 endif()

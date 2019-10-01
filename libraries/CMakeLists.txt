@@ -62,7 +62,7 @@ if(DECAF_GL)
         set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_wgl.c")
     endif()
 
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    if(DECAF_PLATFORM_X11)
         set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_glx.c")
     endif()
 

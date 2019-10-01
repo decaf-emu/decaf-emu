@@ -12,7 +12,7 @@
 #include <glad/glad_wgl.h>
 #endif
 
-#ifdef PLATFORM_LINUX
+#ifdef DECAF_PLATFORM_X11
 #include <glad/glad_glx.h>
 #include <X11/Xlib.h>
 #endif
@@ -146,7 +146,7 @@ private:
 };
 #endif // ifdef PLATFORM_WINDOWS
 
-#ifdef PLATFORM_LINUX
+#ifdef DECAF_PLATFORM_X11
 class X11Window
 {
 public:
@@ -342,8 +342,7 @@ createContext(const gpu::WindowSystemInfo &wsi)
       return WglContext::create(wsi);
    }
 #endif
-#ifdef PLATFORM_LINUX
-   case gpu::WindowSystemType::Xcb:
+#ifdef DECAF_PLATFORM_X11
    case gpu::WindowSystemType::X11:
    {
       return X11Context::create(wsi);

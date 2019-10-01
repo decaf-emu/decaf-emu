@@ -237,29 +237,29 @@ createVulkanSurface(vk::Instance &instance, const gpu::WindowSystemInfo &wsi)
 #endif
 
 #if defined(VK_USE_PLATFORM_XCB_KHR)
-   if (wsi.type == WindowSystemType::Xcb) {
+   if (wsi.type == gpu::WindowSystemType::Xcb) {
       auto surfaceCreateInfo = vk::XcbSurfaceCreateInfoKHR { };
       surfaceCreateInfo.connection = static_cast<xcb_connection_t *>(wsi.displayConnection);
-      surfaceCreateInfo.window = static_cast<xcb_window_t>(wsi.renderSurface);
+      surfaceCreateInfo.window = static_cast<xcb_window_t>(reinterpret_cast<uintptr_t>(wsi.renderSurface));
       return instance.createXcbSurfaceKHR(surfaceCreateInfo);
    }
 #endif
 
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
-   if (wsi.type == WindowSystemType::X11) {
+   if (wsi.type == gpu::WindowSystemType::X11) {
       auto surfaceCreateInfo = vk::XlibSurfaceCreateInfoKHR { };
       surfaceCreateInfo.dpy = static_cast<Display *>(wsi.displayConnection);
-      surfaceCreateInfo.window = reinterpret_cast<Window >(wsi.renderSurface);
+      surfaceCreateInfo.window = reinterpret_cast<Window>(wsi.renderSurface);
       return instance.createXlibSurfaceKHR(surfaceCreateInfo);
    }
 #endif
 
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
-   if (wsi.type == WindowSystemType::Wayland) {
+   if (wsi.type == gpu::WindowSystemType::Wayland) {
       auto surfaceCreateInfo = vk::WaylandSurfaceCreateInfoKHR { };
       surfaceCreateInfo.display = static_cast<wl_display *>(wsi.displayConnection);
       surfaceCreateInfo.surface = static_cast<wl_surface *>(wsi.renderSurface);
-      return instance.createXcbSurfaceKHR(surfaceCreateInfo);
+      return instance.createWaylandSurfaceKHR(surfaceCreateInfo);
    }
 #endif
 
