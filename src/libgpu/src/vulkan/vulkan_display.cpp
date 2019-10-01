@@ -143,7 +143,6 @@ getWindowSystemExtensions(gpu::WindowSystemType wsiType, std::vector<const char*
    /*
     VK_USE_PLATFORM_ANDROID_KHR - Android
     VK_USE_PLATFORM_MIR_KHR - Mir
-    VK_USE_PLATFORM_XLIB_KHR - X Window System, using the Xlib library
     */
    switch (wsiType)
    {
@@ -151,6 +150,12 @@ getWindowSystemExtensions(gpu::WindowSystemType wsiType, std::vector<const char*
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
       extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
       extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#endif
+      break;
+   case gpu::WindowSystemType::X11:
+#if defined(VK_USE_PLATFORM_XLIB_KHR)
+      extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+      extensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
 #endif
       break;
    case gpu::WindowSystemType::Xcb:
@@ -237,6 +242,15 @@ createVulkanSurface(vk::Instance &instance, const gpu::WindowSystemInfo &wsi)
       surfaceCreateInfo.connection = static_cast<xcb_connection_t *>(wsi.displayConnection);
       surfaceCreateInfo.window = static_cast<xcb_window_t>(wsi.renderSurface);
       return instance.createXcbSurfaceKHR(surfaceCreateInfo);
+   }
+#endif
+
+#if defined(VK_USE_PLATFORM_XLIB_KHR)
+   if (wsi.type == WindowSystemType::X11) {
+      auto surfaceCreateInfo = vk::XlibSurfaceCreateInfoKHR { };
+      surfaceCreateInfo.dpy = static_cast<Display *>(wsi.displayConnection);
+      surfaceCreateInfo.window = reinterpret_cast<Window >(wsi.renderSurface);
+      return instance.createXlibSurfaceKHR(surfaceCreateInfo);
    }
 #endif
 

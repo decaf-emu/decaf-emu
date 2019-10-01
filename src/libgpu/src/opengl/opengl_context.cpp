@@ -344,6 +344,7 @@ createContext(const gpu::WindowSystemInfo &wsi)
 #endif
 #ifdef PLATFORM_LINUX
    case gpu::WindowSystemType::Xcb:
+   case gpu::WindowSystemType::X11:
    {
       return X11Context::create(wsi);
    }

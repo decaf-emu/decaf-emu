@@ -20,7 +20,7 @@ DecafSDL::~DecafSDL()
 bool
 DecafSDL::initCore()
 {
-   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
+   if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
       gCliLog->error("Failed to initialize SDL: {}", SDL_GetError());
       return false;
    }
@@ -31,6 +31,35 @@ DecafSDL::initCore()
 bool
 DecafSDL::initGraphics()
 {
+   auto videoInitialised = false;
+
+#ifdef SDL_VIDEO_DRIVER_X11
+   if (!videoInitialised) {
+      videoInitialised = SDL_VideoInit("x11") == 0;
+      if (!videoInitialised) {
+         gCliLog->error("Failed to initialize SDL Video with x11: {}", SDL_GetError());
+      }
+   }
+#endif
+
+#ifdef SDL_VIDEO_DRIVER_WAYLAND
+   if (!videoInitialised) {
+      videoInitialised = SDL_VideoInit("wayland") == 0;
+      if (!videoInitialised) {
+         gCliLog->error("Failed to initialize SDL Video with wayland: {}", SDL_GetError());
+      }
+   }
+#endif
+
+   if (!videoInitialised) {
+      if (SDL_VideoInit(NULL) != 0) {
+         gCliLog->error("Failed to initialize SDL Video: {}", SDL_GetError());
+         return false;
+      }
+   }
+
+   gCliLog->info("Using SDL video driver {}", SDL_GetCurrentVideoDriver());
+
    mGraphicsDriver = gpu::createGraphicsDriver();
    if (!mGraphicsDriver) {
       return false;
@@ -86,8 +115,11 @@ DecafSDL::run(const std::string &gamePath)
    // Setup graphics driver
    auto wsi = gpu::WindowSystemInfo { };
    auto sysWmInfo = SDL_SysWMinfo { };
+   SDL_VERSION(&sysWmInfo.version);
+   if (!SDL_GetWindowWMInfo(mWindow, &sysWmInfo)) {
+      gCliLog->error("SDL_GetWindowWMInfo failed: {}", SDL_GetError());
+   }
 
-   SDL_GetWindowWMInfo(mWindow, &sysWmInfo);
    switch (sysWmInfo.subsystem) {
 #ifdef SDL_VIDEO_DRIVER_WINDOWS
    case SDL_SYSWM_WINDOWS:
@@ -116,7 +148,7 @@ DecafSDL::run(const std::string &gamePath)
       break;
 #endif
    default:
-      decaf_abort(fmt::format("Unsupported SDL window subsystem %d", sysWmInfo.subsystem));
+      decaf_abort(fmt::format("Unsupported SDL window subsystem {}", sysWmInfo.subsystem));
    }
 
    mGraphicsDriver->setWindowSystemInfo(wsi);

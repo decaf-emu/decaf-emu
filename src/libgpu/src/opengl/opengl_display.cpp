@@ -234,7 +234,6 @@ GLDriver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
 
    // Setup render context
    mContext = mDisplayContext->createSharedContext();
-   mContext->setSwapInterval(0);
 
    // Initialise driver
    initialise();
