@@ -109,19 +109,19 @@ if(DECAF_VULKAN)
         INTERFACE_LINK_LIBRARIES ${Vulkan_LIBRARIES})
 
     if(MSVC)
-        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WIN32_KHR")
+        add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
     endif()
 
     if(DECAF_PLATFORM_XCB)
-        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_XCB_KHR")
+        add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
     endif()
 
     if(DECAF_PLATFORM_X11)
-        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_X11_KHR")
+        add_definitions(-DVK_USE_PLATFORM_X11_KHR)
     endif()
 
     if(DECAF_PLATFORM_WAYLAND)
-        target_compile_definitions(vulkan INTERFACE "VK_USE_PLATFORM_WAYLAND_KHR")
+        add_definitions(-DVK_USE_PLATFORM_WAYLAND_KHR)
     endif()
 
     add_definitions(-DDECAF_VULKAN)
