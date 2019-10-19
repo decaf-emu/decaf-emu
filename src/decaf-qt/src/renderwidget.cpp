@@ -43,7 +43,7 @@ RenderWidget::startGraphicsDriver()
    } else if (platformName == QStringLiteral("cocoa")) {
       wsi.type = gpu::WindowSystemType::Cocoa;
    } else if (platformName == QStringLiteral("xcb")) {
-      wsi.type = gpu::WindowSystemType::Xcb;
+      wsi.type = gpu::WindowSystemType::X11;
    } else if (platformName == QStringLiteral("wayland")) {
       wsi.type = gpu::WindowSystemType::Wayland;
    }
