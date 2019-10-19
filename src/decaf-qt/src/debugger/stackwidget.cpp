@@ -63,6 +63,7 @@ StackWidget::paintEvent(QPaintEvent *e)
 {
    AddressTextDocumentWidget::paintEvent(e);
    auto painter = QPainter { viewport() };
+   painter.translate(QPoint { -horizontalScrollBar()->value(), 0 });
 
    if (mVisibleColumns.outline) {
       auto offset = documentMargin();

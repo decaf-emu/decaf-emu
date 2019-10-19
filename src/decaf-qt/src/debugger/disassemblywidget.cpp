@@ -2,6 +2,7 @@
 
 #include <QtEndian>
 #include <QPainter>
+#include <QScrollBar>
 
 #include <libcpu/cpu_breakpoints.h>
 #include <libcpu/espresso/espresso_instructionset.h>
@@ -129,8 +130,8 @@ void
 DisassemblyWidget::paintEvent(QPaintEvent *e)
 {
    AddressTextDocumentWidget::paintEvent(e);
-
    auto painter = QPainter { viewport() };
+   painter.translate(QPoint { -horizontalScrollBar()->value(), 0 });
 
    if (mVisibleColumns.functionOutline) {
       auto offset = documentMargin();
