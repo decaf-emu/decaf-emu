@@ -204,15 +204,27 @@ createVulkanInstance(const gpu::WindowSystemInfo &wsi)
    }
 
    if (!getWindowSystemExtensions(wsi.type, extensions)) {
-      gLog->error("getWindowSystemExtensions failed");
-      return vk::Instance { };
+      gLog->error("createVulkanInstance: Failed to get window system extensions for type {}", wsi.type);
+      return { };
    }
 
-   for (auto ext : extensions) {
-      gLog->error("ext {}", ext);
-
+   if (!extensions.empty()) {
+      fmt::memory_buffer msg;
+      fmt::format_to(msg, "Creating instance with extensions:");
+      for (auto ext : extensions) {
+         fmt::format_to(msg, " {}", ext);
+      }
+      gLog->debug(msg.data());
    }
 
+   if (!layers.empty()) {
+      fmt::memory_buffer msg;
+      fmt::format_to(msg, "Creating instance with layers:");
+      for (auto layer : layers) {
+         fmt::format_to(msg, " {}", layer);
+      }
+      gLog->debug(msg.data());
+   }
 
    auto instanceCreateInfo = vk::InstanceCreateInfo { };
    instanceCreateInfo.pApplicationInfo = &appInfo;
@@ -411,7 +423,7 @@ createRenderPass(VulkanDisplayPipeline &displayPipeline,
    renderPassDesc.dependencyCount = 0;
    renderPassDesc.pDependencies = nullptr;
    displayPipeline.renderPass = device.createRenderPass(renderPassDesc);
-   return true;
+   return !!displayPipeline.renderPass;
 }
 
 static vk::PresentModeKHR
@@ -866,14 +878,37 @@ void
 Driver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
 {
    auto instance = createVulkanInstance(wsi);
+   if (!instance) {
+      decaf_abort("createVulkanInstance failed");
+   }
+
    mVkDynLoader.init(instance, ::vkGetInstanceProcAddr);
    registerDebugCallback(instance, mVkDynLoader, reinterpret_cast<void *>(this));
 
    auto physicalDevice = choosePhysicalDevice(instance);
+   if (!physicalDevice) {
+      decaf_abort("choosePhysicalDevice failed");
+   }
+
    auto windowSurface = createVulkanSurface(instance, wsi);
+   if (!windowSurface) {
+      decaf_abort("createVulkanSurface failed");
+   }
+
    auto surfaceFormat = chooseSurfaceFormat(physicalDevice, windowSurface);
+   if (!windowSurface) {
+      decaf_abort("chooseSurfaceFormat failed");
+   }
+
    auto [device, queueFamilyIndex] = createDevice(physicalDevice, windowSurface);
+   if (!device) {
+      decaf_abort("createDevice failed");
+   }
+
    auto queue = device.getQueue(queueFamilyIndex, 0);
+   if (!queue) {
+      decaf_abort("device.getQueue failed");
+   }
 
    initialise(instance, physicalDevice, device, queue, queueFamilyIndex);
 
@@ -883,14 +918,37 @@ Driver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
    mDisplayPipeline.queueFamilyIndex = queueFamilyIndex;
    mDisplayPipeline.presentMode = choosePresentMode(physicalDevice, windowSurface);
 
-   createRenderPass(mDisplayPipeline, device);
-   createSwapchain(mDisplayPipeline, physicalDevice, device);
-   createPipelineLayout(mDisplayPipeline, device);
-   createRenderPipeline(mDisplayPipeline, device);
-   createDescriptorPools(mDisplayPipeline, device);
-   createBuffers(mDisplayPipeline, physicalDevice, device);
-   createDescriptorSets(mDisplayPipeline, device);
-   createFences(mDisplayPipeline, device);
+   if (!createRenderPass(mDisplayPipeline, device)) {
+      decaf_abort("createRenderPass failed");
+   }
+
+   if (!createSwapchain(mDisplayPipeline, physicalDevice, device)) {
+      decaf_abort("createSwapchain failed");
+   }
+
+   if (!createPipelineLayout(mDisplayPipeline, device)) {
+      decaf_abort("createPipelineLayout failed");
+   }
+
+   if (!createRenderPipeline(mDisplayPipeline, device)) {
+      decaf_abort("createRenderPipeline failed");
+   }
+
+   if (!createDescriptorPools(mDisplayPipeline, device)) {
+      decaf_abort("createDescriptorPools failed");
+   }
+
+   if (!createBuffers(mDisplayPipeline, physicalDevice, device)) {
+      decaf_abort("createBuffers failed");
+
+   }
+   if (!createDescriptorSets(mDisplayPipeline, device)) {
+      decaf_abort("createDescriptorSets failed");
+   }
+
+   if (!createFences(mDisplayPipeline, device)) {
+      decaf_abort("createFences failed");
+   }
 }
 
 void
