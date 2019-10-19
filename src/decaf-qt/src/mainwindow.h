@@ -38,7 +38,7 @@ private slots:
 
    void toggleFullscreen();
 
-   void openDebuggerWindow();
+   void openDebugger();
 
    void openSettings();
    void openDebugSettings();

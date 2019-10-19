@@ -243,7 +243,7 @@ MainWindow::toggleFullscreen()
 }
 
 void
-MainWindow::openDebuggerWindow()
+MainWindow::openDebugger()
 {
    if (mDebuggerWindow) {
       return;
