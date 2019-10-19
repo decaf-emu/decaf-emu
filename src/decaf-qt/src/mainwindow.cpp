@@ -137,6 +137,7 @@ MainWindow::loadFile(QString path)
    }
 
    // Tell decaf to start the game!
+   mDecafInterface->startLogging();
    mRenderWidget->startGraphicsDriver();
    mDecafInterface->startGame(path);
 

@@ -32,11 +32,16 @@ DecafInterface::settingsChanged()
 }
 
 void
+DecafInterface::startLogging()
+{
+   decaf::initialiseLogging("decaf-qt");
+}
+
+void
 DecafInterface::startGame(QString path)
 {
    mStarted = true;
 
-   decaf::initialiseLogging("decaf-qt");
    decaf::addEventListener(this);
    decaf::setInputDriver(mInputDriver);
    decaf::setSoundDriver(mSoundDriver);

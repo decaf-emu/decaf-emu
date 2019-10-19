@@ -21,6 +21,7 @@ public:
                   SoundDriver *soundDriver);
 
 public slots:
+   void startLogging();
    void startGame(QString path);
    void shutdown();
    void settingsChanged();
