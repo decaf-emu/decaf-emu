@@ -182,13 +182,7 @@ HostFileHandle::truncate()
 Result<int64_t>
 HostFileHandle::read(void *buffer, int64_t size, int64_t count)
 {
-   auto result = static_cast<int64_t>(fread(buffer, size, count, mHandle));
-   if (result != size * count) {
-      auto eof = feof(mHandle);
-      auto err = ferror(mHandle);
-      printf("eof: %d, err: %d\n", eof, err);
-   }
-   return { result };
+   return { static_cast<int64_t>(fread(buffer, size, count, mHandle)) };
 }
 
 Result<int64_t>
