@@ -14,6 +14,7 @@
 #include "vulkan_memtracker.h"
 
 #include <atomic>
+#include <common/vulkan_hpp.h>
 #include <condition_variable>
 #include <functional>
 #include <gsl/gsl>
@@ -22,7 +23,6 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
-#include <vulkan/vulkan.hpp>
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

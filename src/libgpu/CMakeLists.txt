@@ -65,7 +65,7 @@ if(DECAF_PLATFORM_XCB)
     target_link_libraries(libgpu ${XCB_LIBRARY})
 endif()
 
-if(DECAF_PLATFORM_X11)
+if(DECAF_PLATFORM_XLIB)
     target_link_libraries(libgpu ${X11_X11_LIB})
 endif()
 

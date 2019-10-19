@@ -2,7 +2,7 @@
 #ifdef DECAF_VULKAN
 #include "latte/latte_formats.h"
 
-#include <vulkan/vulkan.hpp>
+#include <common/vulkan_hpp.h>
 
 namespace vulkan
 {

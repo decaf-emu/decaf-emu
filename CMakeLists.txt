@@ -91,8 +91,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     endif()
 
     if(${X11_FOUND})
-        add_definitions(-DDECAF_PLATFORM_X11)
-        set(DECAF_PLATFORM_X11 TRUE)
+        add_definitions(-DDECAF_PLATFORM_XLIB)
+        set(DECAF_PLATFORM_XLIB TRUE)
     endif()
 
     if(${WAYLAND_FOUND})
@@ -116,8 +116,8 @@ if(DECAF_VULKAN)
         add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
     endif()
 
-    if(DECAF_PLATFORM_X11)
-        add_definitions(-DVK_USE_PLATFORM_X11_KHR)
+    if(DECAF_PLATFORM_XLIB)
+        add_definitions(-DVK_USE_PLATFORM_XLIB_KHR)
     endif()
 
     if(DECAF_PLATFORM_WAYLAND)

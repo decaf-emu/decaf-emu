@@ -146,30 +146,30 @@ getWindowSystemExtensions(gpu::WindowSystemType wsiType, std::vector<const char*
     */
    switch (wsiType)
    {
-   case gpu::WindowSystemType::Windows:
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
+   case gpu::WindowSystemType::Windows:
       extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
       extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#endif
       break;
-   case gpu::WindowSystemType::X11:
+#endif
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
+   case gpu::WindowSystemType::X11:
       extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
       extensions.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-#endif
       break;
-   case gpu::WindowSystemType::Xcb:
+#endif
 #if defined(VK_USE_PLATFORM_XCB_KHR)
+   case gpu::WindowSystemType::Xcb:
       extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
       extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#endif
       break;
-   case gpu::WindowSystemType::Wayland:
+#endif
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
+   case gpu::WindowSystemType::Wayland:
       extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
       extensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-#endif
       break;
+#endif
    default:
       return false;
    }
@@ -204,7 +204,13 @@ createVulkanInstance(const gpu::WindowSystemInfo &wsi)
    }
 
    if (!getWindowSystemExtensions(wsi.type, extensions)) {
+      gLog->error("getWindowSystemExtensions failed");
       return vk::Instance { };
+   }
+
+   for (auto ext : extensions) {
+      gLog->error("ext {}", ext);
+
    }
 
 

@@ -3,8 +3,8 @@
 
 #include <common/platform.h>
 #include <common/platform_debug.h>
+#include <common/vulkan_hpp.h>
 #include <fmt/format.h>
-#include <vulkan/vulkan.hpp>
 
 extern vk::Instance gVulkan;
 extern vk::PhysicalDevice gPhysDevice;

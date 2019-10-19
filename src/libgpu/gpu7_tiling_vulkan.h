@@ -2,7 +2,7 @@
 #ifdef DECAF_VULKAN
 #include "gpu7_tiling.h"
 
-#include <vulkan/vulkan.hpp>
+#include <common/vulkan_hpp.h>
 #include <map>
 
 namespace gpu7::tiling::vulkan

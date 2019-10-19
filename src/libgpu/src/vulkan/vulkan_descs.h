@@ -7,8 +7,8 @@
 #include "latte/latte_registers_vgt.h"
 
 #include <common/datahash.h>
+#include <common/vulkan_hpp.h>
 #include <libcpu/be2_struct.h>
-#include <vulkan/vulkan.hpp>
 
 namespace vulkan
 {

@@ -1,7 +1,7 @@
 #pragma once
 #ifdef DECAF_VULKAN
 #include "gpu_graphicsdriver.h"
-#include <vulkan/vulkan.hpp>
+#include <common/vulkan_hpp.h>
 
 namespace gpu
 {
