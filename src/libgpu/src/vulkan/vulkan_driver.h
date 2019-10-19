@@ -783,10 +783,9 @@ private:
 
    std::vector<MemChangeRecord> mDirtyMemCaches;
 
+   std::vector<uint8_t> mScratchRetiling;
    std::vector<uint8_t> mScratchIdxSwap;
    std::vector<uint8_t> mScratchIdxDequad;
-   std::vector<vk::DescriptorImageInfo> mScratchImageInfos;
-   std::vector<vk::DescriptorBufferInfo> mScratchBufferInfos;
    std::vector<vk::WriteDescriptorSet> mScratchDescriptorWrites;
 
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;

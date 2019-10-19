@@ -72,12 +72,6 @@ Driver::initialise(vk::Instance instance,
    // Initialize our GPU retiler
    mGpuRetiler.initialise(mDevice);
 
-   // Preconfigure some of our scratch buffers
-   mDirtyMemCaches.resize(8092);
-   mScratchImageInfos.resize(3 * 16);
-   mScratchBufferInfos.resize(3 * 16);
-   mScratchDescriptorWrites.resize(3 * 32);
-
    // Allocate a command pool to use
    auto commandPoolCreateInfo = vk::CommandPoolCreateInfo { };
    commandPoolCreateInfo.flags =
