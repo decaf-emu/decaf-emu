@@ -5,9 +5,12 @@
 namespace cafe::coreinit
 {
 
+// TODO@: Enum with unknown values
+using OSFatalErrorMessageType = uint32_t;
+
 struct OSFatalError
 {
-   be2_val<uint32_t> messageType;
+   be2_val<OSFatalErrorMessageType> messageType;
    be2_val<uint32_t> errorCode;
    be2_val<uint32_t> processId;
    be2_val<uint32_t> internalErrorCode;

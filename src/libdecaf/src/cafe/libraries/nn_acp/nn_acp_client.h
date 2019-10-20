@@ -1,13 +1,13 @@
 #pragma once
+#include "nn_acp_acpresult.h"
+
 #include "cafe/nn/cafe_nn_ipc_client.h"
 #include "cafe/nn/cafe_nn_ipc_bufferallocator.h"
-
-#include "nn/nn_result.h"
 
 namespace cafe::nn_acp
 {
 
-nn::Result
+ACPResult
 ACPInitialize();
 
 void

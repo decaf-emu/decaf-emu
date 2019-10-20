@@ -30,7 +30,7 @@ struct StaticClientData
 
 static virt_ptr<StaticClientData> sClientData = nullptr;
 
-nn::Result
+ACPResult
 ACPInitialize()
 {
    OSLockMutex(virt_addrof(sClientData->mutex));
@@ -53,7 +53,7 @@ ACPInitialize()
 
    sClientData->refCount++;
    OSUnlockMutex(virt_addrof(sClientData->mutex));
-   return ResultSuccess;
+   return ACPResult::Success;
 }
 
 void

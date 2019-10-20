@@ -1,5 +1,5 @@
 #pragma once
-#include "nn/nn_result.h"
+#include "nn_acp_acpresult.h"
 #include "nn/acp/nn_acp_saveservice.h"
 
 #include <libcpu/be2_struct.h>
@@ -9,26 +9,26 @@ namespace cafe::nn_acp
 
 using ACPDeviceType = nn::acp::ACPDeviceType;
 
-nn::Result
+ACPResult
 ACPCreateSaveDir(uint32_t persistentId,
                  ACPDeviceType deviceType);
 
-nn::Result
+ACPResult
 ACPIsExternalStorageRequired(virt_ptr<int32_t> outRequired);
 
-nn::Result
+ACPResult
 ACPMountExternalStorage();
 
-nn::Result
+ACPResult
 ACPMountSaveDir();
 
-nn::Result
+ACPResult
 ACPRepairSaveMetaDir();
 
-nn::Result
+ACPResult
 ACPUnmountExternalStorage();
 
-nn::Result
+ACPResult
 ACPUnmountSaveDir();
 
 }  // namespace cafe::nn_acp

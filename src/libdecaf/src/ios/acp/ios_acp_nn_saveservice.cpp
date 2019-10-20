@@ -22,11 +22,11 @@ translateError(FSAStatus status)
    case FSAStatus::OK:
       return nn::ResultSuccess;
    case FSAStatus::NotInit:
-      return ResultFsNotInit;
+      return ResultNotInitialised;
    case FSAStatus::Busy:
-      return ResultFsBusy;
+      return ResultBusy;
    case FSAStatus::Cancelled:
-      return ResultFsCancelled;
+      return ResultCancelled;
    case FSAStatus::EndOfDir:
    case FSAStatus::EndOfFile:
    case FSAStatus::MaxVolumes:
@@ -36,26 +36,26 @@ translateError(FSAStatus status)
    case FSAStatus::MaxMountpoints:
    case FSAStatus::OutOfRange:
    case FSAStatus::OutOfResources:
-      return ResultFsEnd;
+      return ResultFsResource;
    case FSAStatus::NotFound:
-      return ResultFsNotFound;
+      return ResultNotFound;
    case FSAStatus::AlreadyOpen:
-      return ResultFsAlreadyOpen;
+      return ResultAlreadyDone;
    case FSAStatus::AlreadyExists:
-      return ResultFsAlreadyExists;
+      return ResultAlreadyExists;
    case FSAStatus::NotEmpty:
    case FSAStatus::FileTooBig:
-      return ResultFsUnexpectedFileSize;
+      return ResultInvalidFile;
    case FSAStatus::DataCorrupted:
       return ResultDataCorrupted;
    case FSAStatus::PermissionError:
-      return ResultFsPermissionError;
+      return ResultNoPermission;
    case FSAStatus::StorageFull:
-      return ResultStorageFull;
+      return ResultDeviceFull;
    case FSAStatus::JournalFull:
       return ResultJournalFull;
    case FSAStatus::AccessError:
-      return ResultFsAccessError;
+      return ResultFileAccessMode;
    case FSAStatus::UnavailableCmd:
    case FSAStatus::UnsupportedCmd:
    case FSAStatus::InvalidParam:
@@ -67,15 +67,15 @@ translateError(FSAStatus status)
    case FSAStatus::InvalidDirHandle:
    case FSAStatus::NotFile:
    case FSAStatus::NotDir:
-      return ResultFsInvalid;
+      return ResultInvalidParameter;
    case FSAStatus::MediaNotReady:
       return ResultMediaNotReady;
    case FSAStatus::MediaError:
-      return ResultMediaError;
+      return ResultMediaBroken;
    case FSAStatus::WriteProtected:
-      return ResultWriteProtected;
+      return ResultMediaWriteProtected;
    default:
-      return ResultFatalFilesystemError;
+      return ResultFsaFatal;
    }
 }
 

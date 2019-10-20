@@ -51,7 +51,7 @@ SAVEInit()
    // Mount external storage if it is required
    if (OSGetUPID() == kernel::UniqueProcessId::Game) {
       auto externalStorageRequired = StackObject<int32_t> { };
-      if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok() &&
+      if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired) == nn_acp::ACPResult::Success &&
           *externalStorageRequired) {
          nn_acp::ACPMountExternalStorage();
       }
@@ -108,7 +108,7 @@ SAVEGetSharedDataTitlePath(uint64_t titleID,
    auto externalStorageRequired = StackObject<int32_t> { };
    auto storage = "storage_mlc01";
 
-   if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok()) {
+   if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired) == nn_acp::ACPResult::Success) {
       if (*externalStorageRequired) {
          storage = "storage_hfiomlc01";
       }
@@ -144,7 +144,7 @@ SAVEGetSharedSaveDataPath(uint64_t titleID,
    auto externalStorageRequired = StackObject<int32_t> { };
    auto storage = "storage_mlc01";
 
-   if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired).ok()) {
+   if (nn_acp::ACPIsExternalStorageRequired(externalStorageRequired) == nn_acp::ACPResult::Success) {
       if (*externalStorageRequired) {
          storage = "storage_hfiomlc01";
       }
@@ -170,15 +170,20 @@ namespace internal
 {
 
 SaveStatus
-translateResult(nn::Result result)
+translateResult(nn_acp::ACPResult result)
 {
-   if (result.ok()) {
+   // TODO: Reverse this completely
+   if (result == nn_acp::ACPResult::Success) {
       return SaveStatus::OK;
    }
 
-   if (result.code == 0xFFFFFE0C) {
+   if (result == nn_acp::ACPResult::NotFound ||
+       result == nn_acp::ACPResult::DirNotFound ||
+       result == nn_acp::ACPResult::FileNotFound){
       return SaveStatus::NotFound;
-   } else if (result.code == 0xFFFFFA23) {
+   }
+
+   if (result == nn_acp::ACPResult::DeviceFull) {
       return SaveStatus::StorageFull;
    }
 

@@ -1,12 +1,12 @@
 #pragma once
-#include "nn/nn_result.h"
+#include "nn_acp_acpresult.h"
 
 #include <libcpu/be2_struct.h>
 
 namespace cafe::nn_acp
 {
 
-nn::Result
+ACPResult
 ACPCheckApplicationDeviceEmulation(virt_ptr<BOOL> outValue);
 
 }  // namespace cafe::nn_acp

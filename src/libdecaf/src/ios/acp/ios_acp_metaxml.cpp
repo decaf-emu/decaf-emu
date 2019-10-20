@@ -23,7 +23,7 @@ getU32(pugi::xml_node &node,
 {
    auto child = node.child(name);
    if (!child) {
-      return ResultXmlNodeNotFound;
+      return ResultXmlItemNotFound;
    }
 
    *outValue = static_cast<uint32_t>(strtoul(child.text().get(), nullptr, 10));
@@ -37,7 +37,7 @@ getHex32(pugi::xml_node &node,
 {
    auto child = node.child(name);
    if (!child) {
-      return ResultXmlNodeNotFound;
+      return ResultXmlItemNotFound;
    }
 
    *outValue = static_cast<uint32_t>(strtoul(child.text().get(), nullptr, 16));
@@ -51,7 +51,7 @@ getHex64(pugi::xml_node &node,
 {
    auto child = node.child(name);
    if (!child) {
-      return ResultXmlNodeNotFound;
+      return ResultXmlItemNotFound;
    }
 
    *outValue = static_cast<uint64_t>(strtoull(child.text().get(), nullptr, 16));
@@ -66,7 +66,7 @@ getString(pugi::xml_node &node,
 {
    auto child = node.child(name);
    if (!child) {
-      return ResultXmlNodeNotFound;
+      return ResultXmlItemNotFound;
    }
 
    if (!child.text()) {
@@ -96,12 +96,12 @@ loadMetaXMLFromPath(std::string_view path,
    IOS_HeapFree(CrossProcessHeapId, xmlData);
 
    if (!parseResult) {
-      return ResultXmlRootNodeNotFound;
+      return ResultInvalidXmlFile;
    }
 
    auto menu = doc.child("menu");
    if (!menu) {
-      return ResultXmlRootNodeNotFound;
+      return ResultInvalidXmlFile;
    }
 
    auto result = getU32(menu, "version", phys_addrof(metaXml->version));

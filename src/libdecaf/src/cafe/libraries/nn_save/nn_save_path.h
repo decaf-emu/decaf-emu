@@ -1,5 +1,6 @@
 #pragma once
 #include "cafe/libraries/coreinit/coreinit_fs.h"
+#include "cafe/libraries/nn_acp/nn_acp_acpresult.h"
 #include "nn/nn_result.h"
 #include "nn/act/nn_act_types.h"
 #include "vfs/vfs_path.h"
@@ -38,7 +39,7 @@ namespace internal
 {
 
 SaveStatus
-translateResult(nn::Result result);
+translateResult(nn_acp::ACPResult result);
 
 bool
 getPersistentId(nn::act::SlotNo slot,

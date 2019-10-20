@@ -13,96 +13,94 @@ using namespace nn::ipc;
 namespace cafe::nn_acp
 {
 
-nn::Result
+ACPResult
 ACPCreateSaveDir(uint32_t persistentId,
                  ACPDeviceType deviceType)
 {
    auto command = ClientCommand<services::SaveService::CreateSaveDir> { internal::getAllocator() };
    command.setParameters(persistentId, deviceType);
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
+   if (result.ok()) {
+      result = command.readResponse();
    }
 
-   return command.readResponse();
+   return ACPConvertToACPResult(result, "ACPCreateSaveDir", 771);
 }
 
-nn::Result
+ACPResult
 ACPIsExternalStorageRequired(virt_ptr<int32_t> outRequired)
 {
    auto command = ClientCommand<services::SaveService::IsExternalStorageRequired> { internal::getAllocator() };
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
-   }
-
-   auto required = int32_t { 0 };
-   result = command.readResponse(required);
    if (result.ok()) {
-      *outRequired = required;
+      auto required = int32_t{ 0 };
+      result = command.readResponse(required);
+      if (result.ok()) {
+         *outRequired = required;
+      }
    }
 
-   return result;
+   return ACPConvertToACPResult(result, "ACPIsExternalStorageRequired", 1464);
 }
 
-nn::Result
+ACPResult
 ACPMountExternalStorage()
 {
    auto command = ClientCommand<services::SaveService::MountExternalStorage> { internal::getAllocator() };
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
+   if (result.ok()) {
+      result = command.readResponse();
    }
 
-   return command.readResponse();
+   return ACPConvertToACPResult(result, "ACPMountExternalStorage", 1452);
 }
 
-nn::Result
+ACPResult
 ACPMountSaveDir()
 {
    auto command = ClientCommand<services::SaveService::MountSaveDir> { internal::getAllocator() };
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
+   if (result.ok()) {
+      result = command.readResponse();
    }
 
-   return command.readResponse();
+   return ACPConvertToACPResult(result, "ACPMountSaveDir", 96);
 }
 
-nn::Result
+ACPResult
 ACPRepairSaveMetaDir()
 {
    auto command = ClientCommand<services::SaveService::RepairSaveMetaDir> { internal::getAllocator() };
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
+   if (result.ok()) {
+      result = command.readResponse();
    }
 
-   return command.readResponse();
+   return ACPConvertToACPResult(result, "ACPRepairSaveMetaDir", 1538);
 }
 
-nn::Result
+ACPResult
 ACPUnmountExternalStorage()
 {
    auto command = ClientCommand<services::SaveService::UnmountExternalStorage> { internal::getAllocator() };
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
+   if (result.ok()) {
+      result = command.readResponse();
    }
 
-   return command.readResponse();
+   return ACPConvertToACPResult(result, "ACPUnmountExternalStorage", 1458);
 }
 
-nn::Result
+ACPResult
 ACPUnmountSaveDir()
 {
    auto command = ClientCommand<services::SaveService::UnmountSaveDir> { internal::getAllocator() };
    auto result = internal::getClient()->sendSyncRequest(command);
-   if (result.failed()) {
-      return result;
+   if (result.ok()) {
+      result = command.readResponse();
    }
 
-   return command.readResponse();
+   return ACPConvertToACPResult(result, "ACPUnmountSaveDir", 105);
 }
 
 void
