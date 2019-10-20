@@ -43,7 +43,7 @@ startMainServer()
    if (result.failed()) {
       internal::acpLog->error(
          "startMainServer: Server initialisation failed for /dev/acp_main, result = {}",
-         result.code);
+         result.code());
       return Error::FailInternal;
    }
 
@@ -57,7 +57,7 @@ startMainServer()
    if (result.failed()) {
       internal::acpLog->error(
          "startMainServer: Server start failed for /dev/acp_main, result = {}",
-         result.code);
+         result.code());
       return Error::FailInternal;
    }
 

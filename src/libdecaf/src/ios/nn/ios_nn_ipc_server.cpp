@@ -68,7 +68,7 @@ Error
 Server::threadEntryWrapper(phys_ptr<void> ptr)
 {
    auto self = phys_cast<Server *>(ptr);
-   return static_cast<Error>(self->threadEntry().code);
+   return static_cast<Error>(self->threadEntry().code());
 }
 
 Result
@@ -181,7 +181,7 @@ Server::handleMessage(phys_ptr<ResourceRequest> request)
       }
 
       auto result = service.handler(requestHeader->unk0x08, requestHeader->command, args);
-      responseHeader->result = result.code;
+      responseHeader->result = result.code();
       return Error::OK;
    }
 

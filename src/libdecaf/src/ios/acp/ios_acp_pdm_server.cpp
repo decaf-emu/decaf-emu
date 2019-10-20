@@ -42,7 +42,7 @@ startPdmServer()
    if (result.failed()) {
       internal::acpLog->error(
          "startPdmServer: Server initialisation failed for /dev/pdm, result = {}",
-         result.code);
+         result.code());
       return Error::FailInternal;
    }
 
@@ -55,7 +55,7 @@ startPdmServer()
    if (result.failed()) {
       internal::acpLog->error(
          "startPdmServer: Server start failed for /dev/pdm, result = {}",
-         result.code);
+         result.code());
       return Error::FailInternal;
    }
 
