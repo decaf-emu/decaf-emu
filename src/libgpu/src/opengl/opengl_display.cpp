@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #if DECAF_GL
 #include "opengl_driver.h"
 

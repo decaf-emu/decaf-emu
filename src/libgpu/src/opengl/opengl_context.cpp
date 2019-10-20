@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #if DECAF_GL
 #include "opengl_context.h"
 #include "gpu_config.h"
@@ -227,7 +226,7 @@ public:
       };
       auto fbCount = int { 0 };
       auto screen = DefaultScreen(self->mDisplay);
-      
+
       if (!gladLoadGLX(self->mDisplay, screen)) {
          return { };
       }
@@ -298,7 +297,7 @@ public:
    {
       glXSwapIntervalEXT(mDisplay, mDrawable, interval);
    }
-   
+
    void swapBuffers() override
    {
       glXSwapBuffers(mDisplay, mDrawable);
