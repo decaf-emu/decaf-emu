@@ -128,7 +128,7 @@ OSPanic(std::string_view file,
 
    // Format a guest stack trace
    auto core = cpu::this_core::state();
-   auto stackAddress = virt_addr { core->gpr[1] };
+   auto stackAddress = virt_addr { core->systemCallStackHead };
    auto stackTraceBuffer = fmt::memory_buffer { };
    fmt::format_to(stackTraceBuffer, "Guest stack trace:\n");
 
