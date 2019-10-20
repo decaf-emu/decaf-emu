@@ -553,7 +553,7 @@ OSGetDefaultThread(uint32_t coreID)
 virt_ptr<uint32_t>
 OSGetStackPointer()
 {
-   return virt_cast<uint32_t *>(virt_addr { cpu::this_core::state()->gpr[1] });
+   return virt_cast<uint32_t *>(virt_addr { cpu::this_core::state()->systemCallStackHead });
 }
 
 
