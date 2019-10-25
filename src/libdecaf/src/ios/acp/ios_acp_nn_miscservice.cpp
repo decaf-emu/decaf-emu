@@ -17,7 +17,7 @@ static nn::Result
 getNetworkTime(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<MiscService::GetNetworkTime> { args };
-   auto networkTime = std::chrono::microseconds(time(NULL)).count();
+   auto networkTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(time(NULL))).count();
    auto unkValue = 1;
    command.WriteResponse(networkTime, unkValue);
    return ResultSuccess;
