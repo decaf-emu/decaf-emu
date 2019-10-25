@@ -667,4 +667,7 @@ AddressTextDocumentWidget::updateTextDocument()
 
    // Search text for highlighted word
    updateHighlightedWord();
+
+   mTextDocumentFirstLineAddress = firstVisibleLineAddress;
+   mTextDocumentLastLineAddress = lastVisibleLineAddress;
 }
