@@ -24,6 +24,18 @@ MemoryWindow::navigateToAddress(uint32_t address)
 }
 
 void
+MemoryWindow::navigateForward()
+{
+   ui->widget->navigateForward();
+}
+
+void
+MemoryWindow::navigateBackward()
+{
+   ui->widget->navigateBackward();
+}
+
+void
 MemoryWindow::addressChanged()
 {
    auto text = ui->lineEditAddress->text();

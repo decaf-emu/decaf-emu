@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -517,6 +517,70 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionNavigateBackward</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>navigateBackward()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNavigateForward</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>navigateForward()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNavigateToAddress</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>navigateAddress()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNavigateToOperand</sender>
+   <signal>triggered()</signal>
+   <receiver>DebuggerWindow</receiver>
+   <slot>navigateOperand()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>debugPause()</slot>
@@ -531,5 +595,9 @@
   <slot>setGpuShaderDumpEnabled(bool)</slot>
   <slot>setGpuShaderBinaryDumpOnly(bool)</slot>
   <slot>debugToggleBreakpoint()</slot>
+  <slot>navigateBackward()</slot>
+  <slot>navigateForward()</slot>
+  <slot>navigateAddress()</slot>
+  <slot>navigateOperand()</slot>
  </slots>
 </ui>

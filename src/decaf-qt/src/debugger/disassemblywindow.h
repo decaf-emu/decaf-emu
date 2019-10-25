@@ -20,6 +20,9 @@ public:
 
 public slots:
    void navigateToAddress(uint32_t address);
+   void navigateForward();
+   void navigateBackward();
+   void navigateOperand();
    void toggleBreakpointUnderCursor();
 
 private:

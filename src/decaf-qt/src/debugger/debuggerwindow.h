@@ -59,6 +59,11 @@ public slots:
 
    void focusChanged(QWidget *old, QWidget *now);
 
+   void navigateBackward();
+   void navigateForward();
+   void navigateAddress();
+   void navigateOperand();
+
 private:
    bool isDockWidgetFocused(QWidget *widget);
 

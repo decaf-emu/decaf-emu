@@ -14,7 +14,10 @@ public:
    MemoryWindow(QWidget *parent = nullptr);
    ~MemoryWindow();
 
+public slots:
    void navigateToAddress(uint32_t address);
+   void navigateForward();
+   void navigateBackward();
 
 protected slots:
    void addressChanged();

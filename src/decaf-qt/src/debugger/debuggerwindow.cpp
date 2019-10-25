@@ -15,6 +15,8 @@
 
 #include <DockAreaWidget.h>
 #include <DockWidgetTab.h>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <QModelIndex>
 #include <QTimer>
 
@@ -346,6 +348,61 @@ DebuggerWindow::executionStateChanged(bool paused)
       if (threads[i].coreId == core) {
          mDebugData->setActiveThreadIndex(i);
       }
+   }
+}
+
+void
+DebuggerWindow::navigateBackward()
+{
+   if (isDockWidgetFocused(mDisassemblyWindow)) {
+      mDisassemblyWindow->navigateBackward();
+   } else if (isDockWidgetFocused(mMemoryWindow)) {
+      mMemoryWindow->navigateBackward();
+   }
+}
+
+void
+DebuggerWindow::navigateForward()
+{
+   if (isDockWidgetFocused(mDisassemblyWindow)) {
+      mDisassemblyWindow->navigateForward();
+   } else if (isDockWidgetFocused(mMemoryWindow)) {
+      mMemoryWindow->navigateForward();
+   }
+}
+
+void
+DebuggerWindow::navigateAddress()
+{
+   auto address = 0u;
+   while (true) {
+      auto ok = false;
+      auto text = QInputDialog::getText(this, tr("Navigate to Address"), tr("Address:"), QLineEdit::Normal, {}, &ok);
+      if (!ok) {
+         return; // Cancelled
+      }
+
+      address = text.toUInt(&ok, 16);
+      if (!ok) {
+         QMessageBox::warning(this, "Navigate to address", "Invalid address");
+         continue; // Try again
+      }
+
+      break;
+   }
+
+   if (isDockWidgetFocused(mDisassemblyWindow)) {
+      mDisassemblyWindow->navigateToAddress(address);
+   } else if (isDockWidgetFocused(mMemoryWindow)) {
+      mMemoryWindow->navigateToAddress(address);
+   }
+}
+
+void
+DebuggerWindow::navigateOperand()
+{
+   if (isDockWidgetFocused(mDisassemblyWindow)) {
+      mDisassemblyWindow->navigateOperand();
    }
 }
 

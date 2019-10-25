@@ -31,6 +31,24 @@ DisassemblyWindow::navigateToAddress(uint32_t address)
 }
 
 void
+DisassemblyWindow::navigateForward()
+{
+   ui->disassemblyWidget->navigateForward();
+}
+
+void
+DisassemblyWindow::navigateBackward()
+{
+   ui->disassemblyWidget->navigateBackward();
+}
+
+void
+DisassemblyWindow::navigateOperand()
+{
+   ui->disassemblyWidget->followSymbolUnderCursor();
+}
+
+void
 DisassemblyWindow::toggleBreakpointUnderCursor()
 {
    ui->disassemblyWidget->toggleBreakpointUnderCursor();
