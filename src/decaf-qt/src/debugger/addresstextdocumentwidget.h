@@ -80,6 +80,8 @@ protected:
 
    virtual void updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress, VirtualAddress lastLineAddress, int bytePerLine) = 0;
 
+   virtual QVector<QAbstractTextDocumentLayout::Selection>
+   getCustomSelections(QTextDocument *document) { return {}; }
 
    // We provide a default implementation for cursor / selection tracking which
    // works perfectly fine as long as bytesPerLine does not change.

@@ -127,6 +127,9 @@ AddressTextDocumentWidget::paintEvent(QPaintEvent *e)
    // Ensure text document is up to date
    updateTextDocument();
 
+   // Get latest selections
+   auto customSelections = getCustomSelections(mTextDocument);
+
    // Setup text document painting
    auto textDocumentRect = viewport()->rect();
    auto textDocumentOffsetX = horizontalScrollBar()->value();
@@ -135,7 +138,7 @@ AddressTextDocumentWidget::paintEvent(QPaintEvent *e)
 
    auto paintContext = QAbstractTextDocumentLayout::PaintContext { };
    paintContext.clip = textDocumentRect;
-   paintContext.selections = mHighlightedWordSelections;
+   paintContext.selections = customSelections + mHighlightedWordSelections;
    painter.setClipRect(textDocumentRect);
 
    // Process text selection
