@@ -12,6 +12,7 @@ struct RegisteredCallback
 
 struct MessagesData
 {
+   be2_val<BOOL> running;
    be2_val<BOOL> sentAcquireMessage;
    be2_val<ProcUISaveCallback> saveCallback;
    be2_val<ProcUISaveCallbackEx> saveCallbackEx;
@@ -28,6 +29,7 @@ ProcUIInit(ProcUISaveCallback saveCallback)
    sMessagesData->saveCallback = saveCallback;
    sMessagesData->saveCallbackEx = nullptr;
    sMessagesData->saveCallbackExUserArg = nullptr;
+   sMessagesData->running = TRUE;
 }
 
 void
@@ -37,6 +39,12 @@ ProcUIInitEx(ProcUISaveCallbackEx saveCallbackEx,
    sMessagesData->saveCallback = nullptr;
    sMessagesData->saveCallbackEx = saveCallbackEx;
    sMessagesData->saveCallbackExUserArg = arg;
+}
+
+BOOL
+ProcUIIsRunning()
+{
+   return sMessagesData->running;
 }
 
 ProcUIStatus
@@ -77,6 +85,7 @@ Library::registerMessagesFunctions()
 {
    RegisterFunctionExport(ProcUIInit);
    RegisterFunctionExport(ProcUIInitEx);
+   RegisterFunctionExport(ProcUIIsRunning);
    RegisterFunctionExport(ProcUIProcessMessages);
    RegisterFunctionExport(ProcUISubProcessMessages);
    RegisterFunctionExport(ProcUIRegisterCallback);

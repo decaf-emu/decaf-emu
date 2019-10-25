@@ -21,6 +21,9 @@ void
 ProcUIInitEx(ProcUISaveCallbackEx saveCallbackEx,
              virt_ptr<void> userArg);
 
+BOOL
+ProcUIIsRunning();
+
 ProcUIStatus
 ProcUIProcessMessages(BOOL block);
 
