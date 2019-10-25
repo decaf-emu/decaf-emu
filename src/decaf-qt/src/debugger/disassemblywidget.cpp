@@ -3,8 +3,8 @@
 #include <QtEndian>
 #include <QPainter>
 #include <QScrollBar>
+#include <QTextBlock>
 
-#include <libcpu/cpu_breakpoints.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libdecaf/decaf_debug_api.h>
 
@@ -15,8 +15,11 @@ DisassemblyWidget::DisassemblyWidget(QWidget *parent) :
    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
-   mTextFormats.breakpoint = QTextCharFormat{ };
+   mTextFormats.breakpoint = QTextCharFormat { };
    mTextFormats.breakpoint.setBackground(Qt::red);
+
+   mTextFormats.currentInstruction = QTextCharFormat { };
+   mTextFormats.currentInstruction.setBackground(Qt::darkGreen);
 
    mTextFormats.lineAddress = QTextCharFormat { };
    mTextFormats.lineAddress.setForeground(Qt::black);
@@ -130,6 +133,7 @@ void
 DisassemblyWidget::paintEvent(QPaintEvent *e)
 {
    AddressTextDocumentWidget::paintEvent(e);
+
    auto painter = QPainter { viewport() };
    painter.translate(QPoint { -horizontalScrollBar()->value(), 0 });
 
@@ -190,7 +194,6 @@ DisassemblyWidget::paintEvent(QPaintEvent *e)
       auto lineY = documentMargin() + lineHeight() / 2;
       auto outlineX = offset + characterWidth() / 2;
       auto arrowLeftX = offset + characterWidth() * 2 + 2;
-
       auto cursor = getDocumentCursor();
       auto ctr = 0u;
       auto cr = 0u;
@@ -279,22 +282,37 @@ DisassemblyWidget::keyPressEvent(QKeyEvent *e)
    }
 }
 
+QVector<QAbstractTextDocumentLayout::Selection>
+DisassemblyWidget::getCustomSelections(QTextDocument *document)
+{
+   auto line = 0;
+   auto activeThread = mDebugData->activeThread();
+   mCustomSelectionsBuffer.clear();
+
+   for (auto &item : mDisassemblyCache) {
+      if (activeThread && activeThread->nia == item.address) {
+         auto selection = QAbstractTextDocumentLayout::Selection { };
+         selection.cursor = QTextCursor { document->findBlockByLineNumber(line) };
+         selection.cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+         selection.format = mTextFormats.currentInstruction;
+         mCustomSelectionsBuffer.push_back(selection);
+      } else if (mDebugData->getBreakpoint(item.address)) {
+         auto selection = QAbstractTextDocumentLayout::Selection { };
+         selection.cursor = QTextCursor { document->findBlockByLineNumber(line) };
+         selection.cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+         selection.format = mTextFormats.breakpoint;
+         mCustomSelectionsBuffer.push_back(selection);
+      }
+
+      ++line;
+   }
+
+   return mCustomSelectionsBuffer;
+}
+
 void
 DisassemblyWidget::updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress, VirtualAddress lastLineAddress, int bytesPerLine)
 {
-   auto breakpoints = cpu::getBreakpoints();
-   auto getBreakPoint = [&](uint32_t address) -> cpu::Breakpoint * {
-      if (breakpoints) {
-         for (auto &breakpoint : *breakpoints) {
-            if (breakpoint.address == address) {
-               return &breakpoint;
-            }
-         }
-      }
-
-      return nullptr;
-   };
-
    mCacheStartAddress = firstLineAddress;
    mTextCursorPositionCache.clear();
    mDisassemblyCache.clear();
@@ -306,12 +324,12 @@ DisassemblyWidget::updateTextDocument(QTextCursor cursor, VirtualAddress firstLi
       item.address = static_cast<VirtualAddress>(address);
       item.valid = decaf::debug::readMemory(item.address, item.data.data(), bytesPerLine) == bytesPerLine;
 
-      auto breakpoint = getBreakPoint(item.address);
+      auto breakpoint = mDebugData->getBreakpoint(item.address);
       if (breakpoint) {
-         item.data[0] = (breakpoint->savedCode >> 0) & 0xFF;
-         item.data[1] = (breakpoint->savedCode >> 8) & 0xFF;
-         item.data[2] = (breakpoint->savedCode >> 16) & 0xFF;
-         item.data[3] = (breakpoint->savedCode >> 24) & 0xFF;
+         item.data[3] = (breakpoint->savedCode >> 0) & 0xFF;
+         item.data[2] = (breakpoint->savedCode >> 8) & 0xFF;
+         item.data[1] = (breakpoint->savedCode >> 16) & 0xFF;
+         item.data[0] = (breakpoint->savedCode >> 24) & 0xFF;
       }
 
       if (item.address != firstLineAddress) {
@@ -322,11 +340,9 @@ DisassemblyWidget::updateTextDocument(QTextCursor cursor, VirtualAddress firstLi
          cursorPositionCache.lineAddress.first = cursor.positionInBlock();
          cursor.insertText(
             QString { "%1" }.arg(item.address, 8, 16, QLatin1Char { '0' }),
-            breakpoint ?
-               mTextFormats.breakpoint :
-               (!item.valid ?
-                  mTextFormats.invalid :
-                  mTextFormats.lineAddress));
+            !item.valid ?
+               mTextFormats.invalid :
+               mTextFormats.lineAddress);
          cursorPositionCache.lineAddress.second = cursor.positionInBlock();
          cursor.insertText(mPunctuation.afterLineAddress, mTextFormats.punctuation);
       }

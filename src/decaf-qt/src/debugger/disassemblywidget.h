@@ -11,6 +11,7 @@
 #include <QStack>
 #include <QString>
 #include <QTextCharFormat>
+#include <QVector>
 
 class QTextDocument;
 
@@ -36,6 +37,9 @@ protected:
    void mouseReleaseEvent(QMouseEvent *e) override;
    void keyPressEvent(QKeyEvent *e) override;
 
+   QVector<QAbstractTextDocumentLayout::Selection>
+   getCustomSelections(QTextDocument *document) override;
+
    void updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress,
                            VirtualAddress lastLineAddress,
                            int bytePerLine) override;
@@ -44,6 +48,7 @@ private:
    DebugData *mDebugData;
 
    VirtualAddress mCacheStartAddress;
+   QVector<QAbstractTextDocumentLayout::Selection> mCustomSelectionsBuffer;
 
    // Cached disassembly information of current visible instructions
    struct DisassemblyCacheItem
@@ -96,6 +101,7 @@ private:
    // Formatting for each data type
    struct {
       QTextCharFormat breakpoint;
+      QTextCharFormat currentInstruction;
       QTextCharFormat lineAddress;
       QTextCharFormat instructionData;
       QTextCharFormat instructionName;
