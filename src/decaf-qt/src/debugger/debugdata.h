@@ -1,4 +1,5 @@
 #pragma once
+#include <libcpu/cpu_breakpoints.h>
 #include <libcpu/jit_stats.h>
 #include <libdecaf/decaf_debug_api.h>
 #include <vector>
@@ -23,12 +24,12 @@ public:
    {
    }
 
-   int activeThreadIndex()
+   int activeThreadIndex() const
    {
       return mActiveThreadIndex;
    }
 
-   const CafeThread *activeThread()
+   const CafeThread *activeThread() const
    {
       if (mActiveThreadIndex < 0 || mActiveThreadIndex >= mThreads.size()) {
          return nullptr;
@@ -37,37 +38,57 @@ public:
       return &mThreads[mActiveThreadIndex];
    }
 
-   const CafeModuleInfo &loadedModule()
+   const CafeModuleInfo &loadedModule() const
    {
       return mLoadedModule;
    }
 
-   const AnalyseDatabase &analyseDatabase()
+   const AnalyseDatabase &analyseDatabase() const
    {
       return mAnalyseDatabase;
    }
 
-   const JitStats &jitStats()
+   const JitStats &jitStats() const
    {
       return mJitStats;
    }
 
-   const std::vector<CafeThread> &threads()
+   const cpu::BreakpointList *breakpoints() const
+   {
+      return mBreakpoints.get();
+   }
+
+   const cpu::Breakpoint *getBreakpoint(VirtualAddress address) const
+   {
+      if (!mBreakpoints) {
+         return nullptr;
+      }
+
+      for (auto &breakpoint : *mBreakpoints) {
+         if (breakpoint.address == address) {
+            return &breakpoint;
+         }
+      }
+
+      return nullptr;
+   }
+
+   const std::vector<CafeThread> &threads() const
    {
       return mThreads;
    }
 
-   const std::vector<CafeMemorySegment> &segments()
+   const std::vector<CafeMemorySegment> &segments() const
    {
       return mSegments;
    }
 
-   const std::vector<CafeVoice> &voices()
+   const std::vector<CafeVoice> &voices() const
    {
       return mVoices;
    }
 
-   CafeMemorySegment *segmentForAddress(VirtualAddress address)
+   const CafeMemorySegment *segmentForAddress(VirtualAddress address) const
    {
       for (auto &segment : mSegments) {
          if (address >= segment.address && address - segment.address < segment.size) {
@@ -78,7 +99,7 @@ public:
       return nullptr;
    }
 
-   bool paused()
+   bool paused() const
    {
       return mPaused;
    }
@@ -108,6 +129,7 @@ private:
    std::vector<CafeMemorySegment> mSegments;
    std::vector<CafeVoice> mVoices;
 
+   std::shared_ptr<cpu::BreakpointList> mBreakpoints;
    cpu::jit::JitStats mJitStats = { };
 
    bool mPaused = false;

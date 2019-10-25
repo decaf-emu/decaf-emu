@@ -1,5 +1,8 @@
 #include "debugdata.h"
+
+#include <libcpu/cpu_breakpoints.h>
 #include <libcpu/jit_stats.h>
+#include <libdecaf/decaf_debug_api.h>
 
 bool
 DebugData::update()
@@ -17,6 +20,7 @@ DebugData::update()
    decaf::debug::sampleCafeVoices(mVoices);
 
    cpu::jit::sampleStats(mJitStats);
+   mBreakpoints = cpu::getBreakpoints();
 
    if (!mEntryHit) {
       if (decaf::debug::getLoadedModuleInfo(mLoadedModule)) {
