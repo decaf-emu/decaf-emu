@@ -1,5 +1,6 @@
 #include "nsysnet.h"
 #include "nsysnet_socket_lib.h"
+#include "nsysnet_nssl.h"
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
 namespace cafe::nsysnet
@@ -11,6 +12,7 @@ rpl_entry(coreinit::OSDynLoad_ModuleHandle moduleHandle,
 {
    coreinit::internal::relocateHleLibrary(moduleHandle);
    internal::initialiseSocketLib();
+   internal::initialiseNSSL();
    return 0;
 }
 
