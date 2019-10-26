@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>decaf-emu Debugger</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../../resources/resources.qrc">
+    <normaloff>:/images/debugger-icon</normaloff>:/images/debugger-icon</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
