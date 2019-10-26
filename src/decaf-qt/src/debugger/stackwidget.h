@@ -28,6 +28,8 @@ public:
 protected:
    void paintEvent(QPaintEvent *e) override;
 
+   QVector<QAbstractTextDocumentLayout::Selection>
+   getCustomSelections(QTextDocument *document) override;
    void updateStackFrames();
    void updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress,
                            VirtualAddress lastLineAddress,
@@ -41,6 +43,9 @@ private:
    DebugData *mDebugData;
 
    VirtualAddress mStackCurrentAddress;
+   VirtualAddress mStackFirstVisibleAddress;
+   VirtualAddress mStackLastVisibleAddress;
+   QVector<QAbstractTextDocumentLayout::Selection> mCustomSelectionsBuffer;
 
    // Cached stack frames
    std::map<VirtualAddress, StackFrame> mStackFrames;
@@ -65,7 +70,7 @@ private:
       QTextCharFormat invalid;
       QTextCharFormat punctuation;
       QTextCharFormat lineAddress;
-      QTextCharFormat activeLineAddress;
+      QTextCharFormat currentLine;
       QTextCharFormat data;
       QTextCharFormat symbolName;
       QTextCharFormat referencedAscii;

@@ -3,6 +3,8 @@
 #include <qendian.h>
 #include <QPainter>
 #include <QScrollBar>
+#include <QTextBlock>
+#include <QTextCursor>
 
 #include <libdecaf/decaf_debug_api.h>
 
@@ -27,8 +29,8 @@ StackWidget::StackWidget(QWidget *parent) :
    mTextFormats.referencedAscii = QTextCharFormat { };
    mTextFormats.referencedAscii.setForeground(Qt::gray);
 
-   mTextFormats.activeLineAddress = QTextCharFormat { };
-   mTextFormats.activeLineAddress.setBackground(Qt::green);
+   mTextFormats.currentLine = QTextCharFormat { };
+   mTextFormats.currentLine.setBackground(Qt::green);
 
    mTextFormats.stackOutline = Qt::darkBlue;
    mTextFormats.backchainOutline = Qt::black;
@@ -136,6 +138,30 @@ StackWidget::paintEvent(QPaintEvent *e)
    }
 }
 
+QVector<QAbstractTextDocumentLayout::Selection>
+StackWidget::getCustomSelections(QTextDocument *document)
+{
+   if (auto activeThread = mDebugData->activeThread()) {
+      mStackCurrentAddress = activeThread->gpr[1];
+   }
+
+   mCustomSelectionsBuffer.clear();
+
+   // Essentially we want to select the line with mStackCurrentAddress on
+   if (mStackCurrentAddress >= mStackFirstVisibleAddress &&
+       mStackCurrentAddress < mStackLastVisibleAddress) {
+      auto line = (mStackCurrentAddress - mStackFirstVisibleAddress) / 4;
+      auto block = document->findBlockByLineNumber(line);
+      auto selection = QAbstractTextDocumentLayout::Selection{ };
+      selection.cursor = QTextCursor{ document->findBlockByLineNumber(line) };
+      selection.cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+      selection.format = mTextFormats.currentLine;
+      mCustomSelectionsBuffer.push_back(selection);
+   }
+
+   return mCustomSelectionsBuffer;
+}
+
 void
 StackWidget::updateStackFrames()
 {
@@ -186,6 +212,8 @@ StackWidget::updateTextDocument(QTextCursor cursor,
    auto symbolNameBuffer = std::array<char, 256> { };
    auto moduleNameBuffer = std::array<char, 256> { };
 
+   mStackFirstVisibleAddress = firstLineAddress;
+   mStackLastVisibleAddress = lastLineAddress;
    updateStackFrames();
 
    for (auto address = static_cast<int64_t>(firstLineAddress);
