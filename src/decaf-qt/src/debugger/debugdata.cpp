@@ -36,9 +36,20 @@ DebugData::update()
    }
 
    auto paused = decaf::debug::isPaused();
-   if (paused != mPaused) {
+   auto pauseInitiatorCoreId = 0;
+   auto pauseNia = VirtualAddress { 0 };
+   if (paused) {
+      pauseInitiatorCoreId = decaf::debug::getPauseInitiatorCoreId();
+      pauseNia = decaf::debug::getPausedContext(pauseInitiatorCoreId)->nia;
+   }
+
+   if ((paused != mPaused) ||
+       (pauseInitiatorCoreId != mPauseInitiatorCoreId) ||
+       (pauseNia != mPauseNia)) {
       mPaused = paused;
-      emit executionStateChanged(paused);
+      mPauseNia = pauseNia;
+      mPauseInitiatorCoreId = pauseInitiatorCoreId;
+      emit executionStateChanged(paused, pauseInitiatorCoreId, pauseNia);
    }
 
    auto captureState = decaf::debug::pm4CaptureState();

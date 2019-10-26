@@ -325,7 +325,9 @@ DebuggerWindow::activeThreadChanged()
 }
 
 void
-DebuggerWindow::executionStateChanged(bool paused)
+DebuggerWindow::executionStateChanged(bool paused,
+                                      int pauseInitiatorCoreId,
+                                      decaf::debug::VirtualAddress pauseNia)
 {
    if (!paused) {
       ui->actionResume->setEnabled(false);
@@ -338,14 +340,11 @@ DebuggerWindow::executionStateChanged(bool paused)
    ui->actionStepInto->setEnabled(true);
    ui->actionStepOver->setEnabled(true);
 
-   auto core = decaf::debug::getPauseInitiatorCoreId();
-   if (core == -1) {
-      core = 1;
-   }
-
+   // Set active thread to the one that initiated pause - this will lead to
+   // activeThreadChanged being called and thus follow pauseNia implicitly
    auto &threads = mDebugData->threads();
    for (auto i = 0u; i < threads.size(); ++i) {
-      if (threads[i].coreId == core) {
+      if (threads[i].coreId == pauseInitiatorCoreId) {
          mDebugData->setActiveThreadIndex(i);
       }
    }

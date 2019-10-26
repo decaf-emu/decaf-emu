@@ -55,7 +55,8 @@ public slots:
    void pm4CaptureStateChanged(decaf::debug::Pm4CaptureState state);
 
    void activeThreadChanged();
-   void executionStateChanged(bool paused);
+   void executionStateChanged(bool paused, int pauseInitiatorCoreId,
+                              decaf::debug::VirtualAddress pauseNia);
 
    void focusChanged(QWidget *old, QWidget *now);
 

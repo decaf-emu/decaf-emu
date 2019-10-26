@@ -115,7 +115,8 @@ signals:
    void activeThreadIndexChanged();
 
    void pm4CaptureStateChanged(Pm4CaptureState state);
-   void executionStateChanged(bool paused);
+   void executionStateChanged(bool paused, int pauseInitiatorCoreId,
+                              VirtualAddress pauseNia);
    void jitProfilingStateChanged(bool core0, bool core1, bool core2);
 
 private:
@@ -133,6 +134,9 @@ private:
    cpu::jit::JitStats mJitStats = { };
 
    bool mPaused = false;
+   int mPauseInitiatorCoreId = -1;
+   VirtualAddress mPauseNia = 0u;
+
    Pm4CaptureState mPm4CaptureState = Pm4CaptureState::Disabled;
 
    unsigned mJitProfilingMask = 0u;

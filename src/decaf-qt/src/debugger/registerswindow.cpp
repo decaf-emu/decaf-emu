@@ -241,8 +241,8 @@ RegistersWindow::updateRegisterValue(QLineEdit *lineEdit,
 
 void
 RegistersWindow::updateRegisterValue(QLineEdit *lineEditFloat,
-                                   QLineEdit *lineEditHex,
-                                   double value)
+                                     QLineEdit *lineEditHex,
+                                     double value)
 {
    auto hexText = toHexString(*reinterpret_cast<uint64_t *>(&value), 64);
 
