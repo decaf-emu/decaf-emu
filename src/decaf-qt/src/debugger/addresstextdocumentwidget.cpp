@@ -125,7 +125,7 @@ AddressTextDocumentWidget::paintEvent(QPaintEvent *e)
    auto lastVisibleLine = firstVisibleLine + verticalScrollBar()->pageStep() - 1;
 
    // Ensure text document is up to date
-   updateTextDocument();
+   updateTextDocument(false);
 
    // Get latest selections
    auto customSelections = getCustomSelections(mTextDocument);
@@ -587,7 +587,7 @@ AddressTextDocumentWidget::ensureCursorVisible(bool centerOnCursor)
       verticalScrollBar()->setValue(targetLine);
    }
 
-   updateTextDocument();
+   updateTextDocument(false);
    viewport()->update();
    return true;
 }
@@ -643,7 +643,7 @@ AddressTextDocumentWidget::updateHighlightedWord()
 }
 
 void
-AddressTextDocumentWidget::updateTextDocument()
+AddressTextDocumentWidget::updateTextDocument(bool forceUpdate)
 {
    // Check if text document is representing current view
    auto firstVisibleLine = verticalScrollBar()->value();
@@ -651,9 +651,11 @@ AddressTextDocumentWidget::updateTextDocument()
    auto firstVisibleLineAddress = static_cast<VirtualAddress>(mStartAddress + (firstVisibleLine * mBytesPerLine));
    auto lastVisibleLineAddress = static_cast<VirtualAddress>(mStartAddress + (lastVisibleLine * mBytesPerLine));
 
-   if (firstVisibleLineAddress == mTextDocumentFirstLineAddress &&
-       lastVisibleLineAddress == mTextDocumentLastLineAddress) {
-      return;
+   if (!forceUpdate) {
+      if (firstVisibleLineAddress == mTextDocumentFirstLineAddress &&
+         lastVisibleLineAddress == mTextDocumentLastLineAddress) {
+         return;
+      }
    }
 
    // Generate new text document

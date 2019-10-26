@@ -62,7 +62,7 @@ protected:
    int characterWidth() { return mCharacterWidth; }
    int documentMargin() { return mDocumentMargin; }
    int lineHeight() { return mLineHeight; }
-   void updateTextDocument();
+   void updateTextDocument(bool forceUpdate);
 
 protected:
    void paintEvent(QPaintEvent *e) override;

@@ -45,7 +45,8 @@ StackWidget::setDebugData(DebugData *debugData)
 void
 StackWidget::dataChanged()
 {
-   AddressTextDocumentWidget::updateTextDocument();
+   AddressTextDocumentWidget::updateTextDocument(true);
+   viewport()->update();
 }
 
 void
@@ -54,7 +55,8 @@ StackWidget::activeThreadChanged()
    if (auto activeThread = mDebugData->activeThread()) {
       setAddressRange(activeThread->stackEnd, activeThread->stackStart);
       navigateToAddress(activeThread->gpr[1]);
-      AddressTextDocumentWidget::updateTextDocument();
+      AddressTextDocumentWidget::updateTextDocument(true);
+      viewport()->update();
    }
 }
 

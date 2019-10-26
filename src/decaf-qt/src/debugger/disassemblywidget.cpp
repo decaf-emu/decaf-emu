@@ -95,7 +95,7 @@ DisassemblyWidget::toggleBreakpointUnderCursor()
       decaf::debug::addBreakpoint(address);
    }
 
-   AddressTextDocumentWidget::updateTextDocument();
+   AddressTextDocumentWidget::updateTextDocument(true);
 }
 
 void
