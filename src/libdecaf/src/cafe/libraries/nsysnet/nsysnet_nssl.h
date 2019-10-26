@@ -4,9 +4,10 @@
 namespace cafe::nsysnet
 {
 
-using NSSLContextHandle = int32_t;
+using NSSLContextHandle = ios::nsec::NSSLContextHandle;
 using NSSLError = ios::nsec::NSSLError;
 using NSSLVersion = ios::nsec::NSSLVersion;
+using NSSLCertID = ios::nsec::NSSLCertID;
 
 NSSLError
 NSSLInit();
@@ -14,8 +15,21 @@ NSSLInit();
 NSSLError
 NSSLFinish();
 
-NSSLContextHandle
+NSSLError
 NSSLCreateContext(NSSLVersion version);
+
+NSSLError
+NSSLDestroyContext(NSSLContextHandle context);
+
+NSSLError
+NSSLAddServerPKI(NSSLContextHandle context,
+                 NSSLCertID certId);
+
+NSSLError
+NSSLAddServerPKIExternal(NSSLContextHandle context,
+                         virt_ptr<uint8_t> cert,
+                         uint32_t certSize,
+                         uint32_t unkArg4);
 
 namespace internal
 {

@@ -20,4 +20,19 @@ NSSLDevice::createContext(NSSLVersion version)
    return NSSLError::ProcessMaxContexts;
 }
 
+NSSLError
+NSSLDevice::addServerPKI(NSSLContextHandle context, NSSLCertID cert)
+{
+   return NSSLError::OK;
+}
+
+NSSLError
+NSSLDevice::addServerPKIExternal(NSSLContextHandle context,
+                                 phys_ptr<uint8_t> cert,
+                                 uint32_t certSize,
+                                 NSSLCertType certType)
+{
+   return NSSLError::OK;
+}
+
 } // namespace ios::nsec::internal

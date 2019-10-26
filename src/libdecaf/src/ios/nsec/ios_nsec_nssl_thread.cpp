@@ -123,6 +123,20 @@ nsslIoctl(phys_ptr<ResourceRequest> resourceRequest)
       error = static_cast<Error>(device->createContext(request->version));
       break;
    }
+   case NSSLCommand::AddServerPKI:
+   {
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(NSSLAddServerPKIRequest)) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctl.inputBuffer) {
+         return Error::InvalidArg;
+      }
+
+      auto request = phys_cast<NSSLAddServerPKIRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
+      error = static_cast<Error>(device->addServerPKI(request->context, request->cert));
+      break;
+   }
    default:
       error = Error::InvalidArg;
    }
@@ -131,20 +145,46 @@ nsslIoctl(phys_ptr<ResourceRequest> resourceRequest)
 }
 
 static Error
-nsslIoctlv(phys_ptr<ResourceRequest> request)
+nsslIoctlv(phys_ptr<ResourceRequest> resourceRequest)
 {
-   auto device = getDevice(request->requestData.handle);
+   auto error = Error::OK;
+   auto device = getDevice(resourceRequest->requestData.handle);
    if (!device) {
-      return Error::InvalidHandle;
+      return static_cast<Error>(NSSLError::InvalidHandle);
    }
 
-   /* TODO: Handle commands
-   switch (static_cast<NSSLCommand>(request->requestData.command)) {
+   switch (static_cast<NSSLCommand>(resourceRequest->requestData.args.ioctlv.request)) {
+   case NSSLCommand::AddServerPKIExternal:
+   {
+      if (resourceRequest->requestData.args.ioctlv.numVecIn != 2) {
+         return Error::InvalidArg;
+      }
+
+      if (resourceRequest->requestData.args.ioctlv.numVecOut != 0) {
+         return Error::InvalidArg;
+      }
+
+      if (resourceRequest->requestData.args.ioctlv.vecs[1].len != sizeof(NSSLAddServerPKIExternalRequest)) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctlv.vecs[1].paddr) {
+         return Error::InvalidArg;
+      }
+
+      auto request = phys_cast<NSSLAddServerPKIExternalRequest *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr);
+      auto cert = phys_cast<uint8_t *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
+      auto certSize = resourceRequest->requestData.args.ioctlv.vecs[0].len;
+
+      error = static_cast<Error>(
+         device->addServerPKIExternal(request->context, cert, certSize, request->certType));
+      break;
+   }
    default:
+      error = Error::InvalidArg;
    }
-   */
 
-   return Error::InvalidArg;
+   return error;
 }
 
 static Error

@@ -52,7 +52,7 @@ IPCBufPoolCreate(virt_ptr<void> buffer,
    // IPC messages should be 64 byte aligned
    messageSize = align_up(messageSize, 64);
 
-   auto alignedBuffer = align_up(buffer, 0x40);
+   auto alignedBuffer = align_up(buffer, 64);
    auto pool = virt_cast<IPCBufPool *>(alignedBuffer);
    pool->magic = IPCBufPool::MagicHeader;
    pool->buffer = buffer;
