@@ -25,8 +25,15 @@ public:
 
    void setDebugData(DebugData *debugData);
 
+public slots:
+   void navigateOperand();
+
+signals:
+   void navigateToTextAddress(uint32_t address);
+
 protected:
    void paintEvent(QPaintEvent *e) override;
+   void keyPressEvent(QKeyEvent *e) override;
 
    QVector<QAbstractTextDocumentLayout::Selection>
    getCustomSelections(QTextDocument *document) override;

@@ -87,6 +87,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    connect(mJitProfilingWindow, &JitProfilingWindow::navigateToTextAddress, this, &DebuggerWindow::gotoTextAddress);
    connect(mSegmentsWindow, &SegmentsWindow::navigateToDataAddress, this, &DebuggerWindow::gotoDataAddress);
    connect(mSegmentsWindow, &SegmentsWindow::navigateToTextAddress, this, &DebuggerWindow::gotoTextAddress);
+   connect(mStackWindow, &StackWindow::navigateToTextAddress, this, &DebuggerWindow::gotoTextAddress);
 
    // Setup default dock layout
    {
@@ -357,6 +358,8 @@ DebuggerWindow::navigateBackward()
       mDisassemblyWindow->navigateBackward();
    } else if (isDockWidgetFocused(mMemoryWindow)) {
       mMemoryWindow->navigateBackward();
+   } else if (isDockWidgetFocused(mStackWindow)) {
+      mStackWindow->navigateBackward();
    }
 }
 
@@ -367,6 +370,8 @@ DebuggerWindow::navigateForward()
       mDisassemblyWindow->navigateForward();
    } else if (isDockWidgetFocused(mMemoryWindow)) {
       mMemoryWindow->navigateForward();
+   } else if (isDockWidgetFocused(mStackWindow)) {
+      mStackWindow->navigateForward();
    }
 }
 
@@ -394,6 +399,8 @@ DebuggerWindow::navigateAddress()
       mDisassemblyWindow->navigateToAddress(address);
    } else if (isDockWidgetFocused(mMemoryWindow)) {
       mMemoryWindow->navigateToAddress(address);
+   } else if (isDockWidgetFocused(mStackWindow)) {
+      mStackWindow->navigateToAddress(address);
    }
 }
 
@@ -402,6 +409,8 @@ DebuggerWindow::navigateOperand()
 {
    if (isDockWidgetFocused(mDisassemblyWindow)) {
       mDisassemblyWindow->navigateOperand();
+   } else if (isDockWidgetFocused(mStackWindow)) {
+      mStackWindow->navigateOperand();
    }
 }
 
@@ -410,10 +419,11 @@ DebuggerWindow::focusChanged(QWidget *old, QWidget *now)
 {
    auto disassemblyFocused = isDockWidgetFocused(mDisassemblyWindow);
    auto memoryFocused = isDockWidgetFocused(mMemoryWindow);
+   auto stackFocused = isDockWidgetFocused(mStackWindow);
 
    ui->actionToggleBreakpoint->setEnabled(disassemblyFocused);
 
-   auto allowNavigation = memoryFocused || disassemblyFocused;
+   auto allowNavigation = memoryFocused || disassemblyFocused || stackFocused;
    ui->actionNavigateForward->setEnabled(allowNavigation);
    ui->actionNavigateBackward->setEnabled(allowNavigation);
    ui->actionNavigateToAddress->setEnabled(allowNavigation);

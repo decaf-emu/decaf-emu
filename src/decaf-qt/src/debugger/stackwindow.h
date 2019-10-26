@@ -20,6 +20,15 @@ public:
 
    void setDebugData(DebugData *debugData);
 
+signals:
+   void navigateToTextAddress(uint32_t address);
+
+public slots:
+   void navigateToAddress(uint32_t address);
+   void navigateForward();
+   void navigateBackward();
+   void navigateOperand();
+
 protected slots:
    void updateStatus();
 

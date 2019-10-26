@@ -63,6 +63,33 @@ StackWidget::activeThreadChanged()
 }
 
 void
+StackWidget::navigateOperand()
+{
+   auto address = getDocumentCursor().address;
+   auto data = std::array<uint8_t, 4> { };
+   auto symbolNameBuffer = std::array<char, 256> { };
+   auto moduleNameBuffer = std::array<char, 256> { };
+
+   auto valid = decaf::debug::readMemory(address, data.data(), data.size()) == data.size();
+   auto value = qFromBigEndian<VirtualAddress>(data.data());
+   if (value > 0 && value < 0x10000000) {
+      auto symbolDistance = uint32_t{ 0 };
+      auto symbolFound =
+         decaf::debug::findClosestSymbol(
+            value,
+            &symbolDistance,
+            symbolNameBuffer.data(),
+            static_cast<uint32_t>(symbolNameBuffer.size()),
+            moduleNameBuffer.data(),
+            static_cast<uint32_t>(moduleNameBuffer.size()));
+
+      if (symbolFound && moduleNameBuffer[0]) {
+         emit navigateToTextAddress(value);
+      }
+   }
+}
+
+void
 StackWidget::paintEvent(QPaintEvent *e)
 {
    AddressTextDocumentWidget::paintEvent(e);
@@ -135,6 +162,21 @@ StackWidget::paintEvent(QPaintEvent *e)
                mTextFormats.stackOutline });
          painter.drawLine(lineX1, currentLineStartY, lineX1, viewport()->height());
       }
+   }
+}
+
+void
+StackWidget::keyPressEvent(QKeyEvent *e)
+{
+   auto handled = false;
+
+   if (e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return) {
+      navigateOperand();
+      handled = true;
+   }
+
+   if (!handled) {
+      AddressTextDocumentWidget::keyPressEvent(e);
    }
 }
 
