@@ -33,8 +33,20 @@ GX2GetLastFrame(GX2ScanTarget scanTarget,
                 virt_ptr<GX2Texture> texture);
 
 BOOL
+GX2GetLastFrameB(GX2ScanTarget scanTarget,
+                virt_ptr<GX2Texture> texture);
+
+BOOL
 GX2GetLastFrameGamma(GX2ScanTarget scanTarget,
                      virt_ptr<float> outGamma);
+
+BOOL
+GX2GetLastFrameGammaA(GX2ScanTarget scanTarget,
+                      virt_ptr<float> outGamma);
+
+BOOL
+GX2GetLastFrameGammaB(GX2ScanTarget scanTarget,
+                      virt_ptr<float> outGamma);
 
 GX2TVScanMode
 GX2GetSystemTVScanMode();

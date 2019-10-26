@@ -184,8 +184,29 @@ GX2GetLastFrame(GX2ScanTarget scanTarget,
 }
 
 BOOL
+GX2GetLastFrameB(GX2ScanTarget scanTarget,
+                 virt_ptr<GX2Texture> texture)
+{
+   return FALSE;
+}
+
+BOOL
 GX2GetLastFrameGamma(GX2ScanTarget scanTarget,
                      virt_ptr<float> outGamma)
+{
+   return FALSE;
+}
+
+BOOL
+GX2GetLastFrameGammaA(GX2ScanTarget scanTarget,
+                      virt_ptr<float> outGamma)
+{
+   return GX2GetLastFrameGamma(scanTarget, outGamma);
+}
+
+BOOL
+GX2GetLastFrameGammaB(GX2ScanTarget scanTarget,
+                      virt_ptr<float> outGamma)
 {
    return FALSE;
 }
@@ -388,7 +409,10 @@ Library::registerDisplaySymbols()
    RegisterFunctionExport(GX2CalcTVSize);
    RegisterFunctionExport(GX2CopyColorBufferToScanBuffer);
    RegisterFunctionExport(GX2GetLastFrame);
+   RegisterFunctionExportName("_GX2GetLastFrameB", GX2GetLastFrameB);
    RegisterFunctionExport(GX2GetLastFrameGamma);
+   RegisterFunctionExport(GX2GetLastFrameGammaA);
+   RegisterFunctionExport(GX2GetLastFrameGammaB);
    RegisterFunctionExport(GX2GetSystemTVScanMode);
    RegisterFunctionExport(GX2GetSystemDRCMode);
    RegisterFunctionExport(GX2GetSystemTVAspectRatio);
