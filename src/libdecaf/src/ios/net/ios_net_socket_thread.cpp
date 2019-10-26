@@ -86,8 +86,7 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
    }
 
    auto request = phys_cast<SocketRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
-
-   switch (static_cast<SocketCommand>(resourceRequest->requestData.command)) {
+   switch (static_cast<SocketCommand>(resourceRequest->requestData.args.ioctl.request)) {
    case SocketCommand::Close:
       error = device->closeSocket(request->close.fd);
       break;
@@ -113,7 +112,7 @@ socketIoctlv(phys_ptr<ResourceRequest> request)
    }
 
    /* TODO: Handle commands
-   switch (static_cast<SocketCommand>(request->requestData.command)) {
+   switch (static_cast<SocketCommand>(resourceRequest->requestData.args.ioctlv.request)) {
    default:
    }
    */
