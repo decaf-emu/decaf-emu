@@ -16,10 +16,10 @@ DisassemblyWidget::DisassemblyWidget(QWidget *parent) :
    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
    mTextFormats.breakpoint = QTextCharFormat { };
-   mTextFormats.breakpoint.setBackground(Qt::red);
+   mTextFormats.breakpoint.setBackground(QColor { Qt::red }.lighter());
 
    mTextFormats.currentInstruction = QTextCharFormat { };
-   mTextFormats.currentInstruction.setBackground(Qt::darkGreen);
+   mTextFormats.currentInstruction.setBackground(QColor { Qt::green }.lighter());
 
    mTextFormats.lineAddress = QTextCharFormat { };
    mTextFormats.lineAddress.setForeground(Qt::black);

@@ -30,7 +30,7 @@ StackWidget::StackWidget(QWidget *parent) :
    mTextFormats.referencedAscii.setForeground(Qt::gray);
 
    mTextFormats.currentLine = QTextCharFormat { };
-   mTextFormats.currentLine.setBackground(Qt::green);
+   mTextFormats.currentLine.setBackground(QColor { Qt::green }.lighter());
 
    mTextFormats.stackOutline = Qt::darkBlue;
    mTextFormats.backchainOutline = Qt::black;
