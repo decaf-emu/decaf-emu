@@ -250,7 +250,7 @@ MainWindow::openDebugger()
       return;
    }
 
-   mDebuggerWindow = new DebuggerWindow { this };
+   mDebuggerWindow = new DebuggerWindow { };
    mDebuggerWindow->setAttribute(Qt::WA_DeleteOnClose);
    mDebuggerWindow->show();
    connect(mDebuggerWindow, &DebuggerWindow::destroyed, [this]() {
@@ -313,6 +313,10 @@ MainWindow::closeEvent(QCloseEvent *event)
       return;
    }
 #endif
+   if (mDebuggerWindow) {
+      mDebuggerWindow->close();
+   }
+
    mDecafInterface->shutdown();
    event->accept();
 }

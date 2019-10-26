@@ -17,6 +17,7 @@ DecafInterface::DecafInterface(SettingsStorage *settingsStorage,
    mSettingsStorage(settingsStorage),
    mSoundDriver(soundDriver)
 {
+   decaf::addEventListener(this);
    QObject::connect(mSettingsStorage, &SettingsStorage::settingsChanged,
                     this, &DecafInterface::settingsChanged);
    settingsChanged();
@@ -42,7 +43,6 @@ DecafInterface::startGame(QString path)
 {
    mStarted = true;
 
-   decaf::addEventListener(this);
    decaf::setInputDriver(mInputDriver);
    decaf::setSoundDriver(mSoundDriver);
    gLog->info("Config path {}", mSettingsStorage->path());
