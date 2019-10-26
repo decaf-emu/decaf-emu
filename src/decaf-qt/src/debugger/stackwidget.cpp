@@ -232,10 +232,10 @@ StackWidget::updateTextDocument(QTextCursor cursor,
 
             if (symbolFound && moduleNameBuffer[0]) {
                cursor.insertText(
-                  QString { "%1+0x%2 %3" }
+                  QString { "%1::%2+0x%3" }
                   .arg(moduleNameBuffer.data())
-                  .arg(symbolDistance, 0, 16)
-                  .arg(symbolNameBuffer.data()), mTextFormats.symbolName);
+                  .arg(symbolNameBuffer.data())
+                  .arg(symbolDistance, 0, 16), mTextFormats.symbolName);
             }
          } else if (value >= 0x10000000) {
             // TODO: Try read ASCII ?
