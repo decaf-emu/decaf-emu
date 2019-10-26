@@ -12,6 +12,7 @@ class DebuggerWindow;
 class DebugData;
 class QTimer;
 
+class BreakpointsWindow;
 class DisassemblyWindow;
 class FunctionsWindow;
 class JitProfilingWindow;
@@ -74,6 +75,9 @@ private:
 
    DebugData *mDebugData;
    QTimer *mUpdateModelTimer;
+
+   ads::CDockWidget *mBreakpointsDockWidget = nullptr;
+   BreakpointsWindow *mBreakpointsWindow = nullptr;
 
    ads::CDockWidget *mDisassemblyDockWidget = nullptr;
    DisassemblyWindow *mDisassemblyWindow = nullptr;

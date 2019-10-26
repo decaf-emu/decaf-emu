@@ -15,6 +15,7 @@ public:
    using CafeMemorySegment = decaf::debug::CafeMemorySegment;
    using CafeModuleInfo = decaf::debug::CafeModuleInfo;
    using CafeVoice = decaf::debug::CafeVoice;
+   using CpuBreakpoint = decaf::debug::CpuBreakpoint;
    using JitStats = cpu::jit::JitStats;
    using Pm4CaptureState = decaf::debug::Pm4CaptureState;
    using VirtualAddress = decaf::debug::VirtualAddress;
@@ -53,18 +54,14 @@ public:
       return mJitStats;
    }
 
-   const cpu::BreakpointList *breakpoints() const
+   const std::vector<CpuBreakpoint> breakpoints() const
    {
-      return mBreakpoints.get();
+      return mBreakpoints;
    }
 
-   const cpu::Breakpoint *getBreakpoint(VirtualAddress address) const
+   const CpuBreakpoint *getBreakpoint(VirtualAddress address) const
    {
-      if (!mBreakpoints) {
-         return nullptr;
-      }
-
-      for (auto &breakpoint : *mBreakpoints) {
+      for (auto &breakpoint : mBreakpoints) {
          if (breakpoint.address == address) {
             return &breakpoint;
          }
@@ -130,7 +127,7 @@ private:
    std::vector<CafeMemorySegment> mSegments;
    std::vector<CafeVoice> mVoices;
 
-   std::shared_ptr<cpu::BreakpointList> mBreakpoints;
+   std::vector<CpuBreakpoint> mBreakpoints;
    cpu::jit::JitStats mJitStats = { };
 
    bool mPaused = false;

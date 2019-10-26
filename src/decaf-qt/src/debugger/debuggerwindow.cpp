@@ -3,6 +3,7 @@
 
 #include "debugdata.h"
 
+#include "breakpointswindow.h"
 #include "disassemblywindow.h"
 #include "functionswindow.h"
 #include "jitprofilingwindow.h"
@@ -38,6 +39,11 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    connect(mDebugData, &DebugData::pm4CaptureStateChanged, this, &DebuggerWindow::pm4CaptureStateChanged);
    connect(mDebugData, &DebugData::executionStateChanged, this, &DebuggerWindow::executionStateChanged);
    connect(mDebugData, &DebugData::activeThreadIndexChanged, this, &DebuggerWindow::activeThreadChanged);
+
+   mBreakpointsDockWidget = new ads::CDockWidget{ tr("Breakpoints") };
+   mBreakpointsWindow = new BreakpointsWindow { mBreakpointsDockWidget };
+   mBreakpointsWindow->setDebugData(mDebugData);
+   mBreakpointsDockWidget->setWidget(mBreakpointsWindow, ads::CDockWidget::ForceNoScrollArea);
 
    mDisassemblyDockWidget = new ads::CDockWidget { tr("Disassembly") };
    mDisassemblyWindow = new DisassemblyWindow { mDisassemblyDockWidget };
@@ -83,6 +89,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    mVoicesWindow->setDebugData(mDebugData);
    mVoicesDockWidget->setWidget(mVoicesWindow, ads::CDockWidget::ForceNoScrollArea);
 
+   connect(mBreakpointsWindow, &BreakpointsWindow::navigateToTextAddress, this, &DebuggerWindow::gotoTextAddress);
    connect(mFunctionsWindow, &FunctionsWindow::navigateToTextAddress, this, &DebuggerWindow::gotoTextAddress);
    connect(mJitProfilingWindow, &JitProfilingWindow::navigateToTextAddress, this, &DebuggerWindow::gotoTextAddress);
    connect(mSegmentsWindow, &SegmentsWindow::navigateToDataAddress, this, &DebuggerWindow::gotoDataAddress);
@@ -97,6 +104,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
       mDockManager->addDockWidgetTabToArea(mSegmentsDockWidget, mainDockArea);
       mDockManager->addDockWidgetTabToArea(mVoicesDockWidget, mainDockArea);
       mDockManager->addDockWidgetTabToArea(mJitProfilingDockWidget, mainDockArea);
+      mDockManager->addDockWidgetTabToArea(mBreakpointsDockWidget, mainDockArea);
       mDisassemblyDockWidget->dockAreaWidget()->setCurrentDockWidget(mDisassemblyDockWidget);
 
       auto sizePolicy = mainDockArea->sizePolicy();
@@ -115,6 +123,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    }
 
    // Setup shortcuts
+   mBreakpointsDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+b"));
    mDisassemblyDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+i"));
    mMemoryDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+m"));
    mRegistersDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+r"));
@@ -137,6 +146,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    mMemoryDockWidget->addAction(ui->actionNavigateToOperand);
 
    // Add view toggles to menu
+   ui->menuView->addAction(mBreakpointsDockWidget->toggleViewAction());
    ui->menuView->addAction(mDisassemblyDockWidget->toggleViewAction());
    ui->menuView->addAction(mFunctionsDockWidget->toggleViewAction());
    ui->menuView->addAction(mThreadsDockWidget->toggleViewAction());

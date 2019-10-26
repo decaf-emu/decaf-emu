@@ -178,6 +178,24 @@ struct CafeThread
    uint32_t msr;
 };
 
+struct CpuBreakpoint
+{
+   enum Type
+   {
+      SingleFire,
+      MultiFire,
+   };
+
+   //! Breakpoint type.
+   Type type;
+
+   //! Address of breakpoint.
+   uint32_t address;
+
+   //! Code at address before we inserted a TW instruction.
+   uint32_t savedCode;
+};
+
 struct CpuContext
 {
    //! Current execution address
@@ -331,6 +349,9 @@ bool stepOver(int core);
 bool hasBreakpoint(VirtualAddress address);
 bool addBreakpoint(VirtualAddress address);
 bool removeBreakpoint(VirtualAddress address);
+
+// CPU
+void sampleCpuBreakpoints(std::vector<CpuBreakpoint> &breakpoints);
 
 // Memory
 bool isValidVirtualAddress(VirtualAddress address);

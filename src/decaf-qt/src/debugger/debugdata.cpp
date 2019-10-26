@@ -18,9 +18,8 @@ DebugData::update()
    decaf::debug::sampleCafeThreads(mThreads);
    decaf::debug::sampleCafeMemorySegments(mSegments);
    decaf::debug::sampleCafeVoices(mVoices);
-
+   decaf::debug::sampleCpuBreakpoints(mBreakpoints);
    cpu::jit::sampleStats(mJitStats);
-   mBreakpoints = cpu::getBreakpoints();
 
    if (!mEntryHit) {
       if (decaf::debug::getLoadedModuleInfo(mLoadedModule)) {
