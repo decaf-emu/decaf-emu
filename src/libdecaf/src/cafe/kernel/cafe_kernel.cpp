@@ -12,6 +12,7 @@
 #include "cafe_kernel_shareddata.h"
 
 #include "cafe/libraries/cafe_hle.h"
+#include "debug_api/debug_api_controller.h"
 #include "decaf_config.h"
 #include "decaf_configstorage.h"
 #include "decaf_events.h"
@@ -327,7 +328,11 @@ exit()
    sStopping = true;
 
    // Tell the CPU to stop.
-   cpu::halt();
+   if (decaf::config()->debugger.break_on_exit) {
+      decaf::debug::handleDebugBreakInterrupt();
+   } else {
+      cpu::halt();
+   }
 
    // Switch to idle context to prevent further execution.
    switchContext(nullptr);

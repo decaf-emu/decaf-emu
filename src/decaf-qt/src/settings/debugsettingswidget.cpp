@@ -15,6 +15,7 @@ void
 DebugSettingsWidget::loadSettings(const Settings &settings)
 {
    mUi.checkBoxBreakEntry->setChecked(settings.decaf.debugger.break_on_entry);
+   mUi.checkBoxBreakExit->setChecked(settings.decaf.debugger.break_on_exit);
    mUi.checkBoxGdbServerEnabled->setChecked(settings.decaf.debugger.gdb_stub);
    mUi.lineEditGdbServerPort->setText(QString("%1").arg(settings.decaf.debugger.gdb_stub_port));
 }
@@ -23,6 +24,7 @@ void
 DebugSettingsWidget::saveSettings(Settings &settings)
 {
    settings.decaf.debugger.break_on_entry = mUi.checkBoxBreakEntry->isChecked();
+   settings.decaf.debugger.break_on_exit = mUi.checkBoxBreakExit->isChecked();
    settings.decaf.debugger.gdb_stub = mUi.checkBoxGdbServerEnabled->isChecked();
    settings.decaf.debugger.gdb_stub_port = mUi.lineEditGdbServerPort->text().toInt();
 }

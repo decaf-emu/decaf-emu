@@ -3,6 +3,7 @@
 #include "coreinit_driver.h"
 #include "coreinit_memdefaultheap.h"
 #include "coreinit_mutex.h"
+#include "coreinit_scheduler.h"
 #include "coreinit_spinlock.h"
 #include "coreinit_interrupts.h"
 #include "coreinit_osreport.h"
@@ -150,6 +151,7 @@ void
 ghs_PPCExit(int32_t code)
 {
    internal::driverOnDone();
+   internal::pauseCoreTime(true);
    kernel::exitProcess(code);
 }
 

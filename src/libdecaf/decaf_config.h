@@ -10,6 +10,7 @@ struct DebuggerSettings
 {
    bool enabled = true;
    bool break_on_entry = false;
+   bool break_on_exit = true;
    bool gdb_stub = false;
    unsigned gdb_stub_port = 2159;
 };

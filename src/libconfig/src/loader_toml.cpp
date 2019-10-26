@@ -112,6 +112,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
 {
    readValue(config, "debugger.enabled", decafSettings.debugger.enabled);
    readValue(config, "debugger.break_on_entry", decafSettings.debugger.break_on_entry);
+   readValue(config, "debugger.break_on_exit", decafSettings.debugger.break_on_exit);
    readValue(config, "debugger.gdb_stub", decafSettings.debugger.gdb_stub);
    readValue(config, "debugger.gdb_stub_port", decafSettings.debugger.gdb_stub_port);
 
@@ -232,6 +233,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
 
    debugger->insert("enabled", decafSettings.debugger.enabled);
    debugger->insert("break_on_entry", decafSettings.debugger.break_on_entry);
+   debugger->insert("break_on_exit", decafSettings.debugger.break_on_exit);
    debugger->insert("gdb_stub", decafSettings.debugger.gdb_stub);
    debugger->insert("gdb_stub_port", decafSettings.debugger.gdb_stub_port);
    config->insert("debugger", debugger);
