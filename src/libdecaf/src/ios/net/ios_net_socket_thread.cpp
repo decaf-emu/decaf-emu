@@ -80,7 +80,6 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
 {
    auto error = Error::OK;
    auto device = getDevice(resourceRequest->requestData.handle);
-
    if (!device) {
       return Error::InvalidHandle;
    }
@@ -95,6 +94,16 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
                                    request->socket.type,
                                    request->socket.proto);
       break;
+   case SocketCommand::GetProcessSocketHandle:
+   {
+      if (request->getProcessSocketHandle.processId < sDevices.size() &&
+          sDevices[request->getProcessSocketHandle.processId]) {
+         error = static_cast<Error>(request->getProcessSocketHandle.processId);
+      } else {
+         error = Error::InvalidArg;
+      }
+      break;
+   }
    default:
       error = Error::InvalidArg;
    }

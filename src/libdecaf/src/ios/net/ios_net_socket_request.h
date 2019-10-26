@@ -2,6 +2,8 @@
 #include "ios_net_enum.h"
 #include "ios_net_socket_types.h"
 
+#include "ios/ios_ipc.h"
+
 #include <cstdint>
 #include <libcpu/be2_struct.h>
 #include <common/structsize.h>
@@ -45,6 +47,15 @@ CHECK_OFFSET(SocketConnectRequest, 0x04, addr);
 CHECK_OFFSET(SocketConnectRequest, 0x14, addrlen);
 CHECK_SIZE(SocketConnectRequest, 0x18);
 
+struct SocketGetProcessSocketHandle
+{
+   be2_val<ios::TitleId> titleId;
+   be2_val<ios::ProcessId> processId;
+};
+CHECK_OFFSET(SocketGetProcessSocketHandle, 0x00, titleId);
+CHECK_OFFSET(SocketGetProcessSocketHandle, 0x08, processId);
+CHECK_SIZE(SocketGetProcessSocketHandle, 0x0C);
+
 struct SocketSocketRequest
 {
    be2_val<int32_t> family;
@@ -64,6 +75,7 @@ struct SocketRequest
       be2_struct<SocketCloseRequest> close;
       be2_struct<SocketConnectRequest> connect;
       be2_struct<SocketSocketRequest> socket;
+      be2_struct<SocketGetProcessSocketHandle> getProcessSocketHandle;
    };
 };
 
