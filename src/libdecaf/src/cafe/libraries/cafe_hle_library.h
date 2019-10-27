@@ -296,6 +296,15 @@ protected:
 
    template<typename ObjectType>
    void
+   registerTypeInfo(const char *typeName)
+   {
+      auto &typeInfo = mTypeInfo.emplace_back();
+      typeInfo.name = typeName;
+      typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
+   }
+
+   template<typename ObjectType>
+   void
    registerTypeInfo(const char *typeName,
                     std::vector<const char *> &&virtualTable,
                     std::vector<const char *> &&baseTypes = {})
