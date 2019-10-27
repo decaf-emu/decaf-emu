@@ -1,6 +1,7 @@
 #include "cafe_hle.h"
 #include "cafe_hle_library.h"
 
+#include "cafe/libraries/ghs/cafe_ghs_typeinfo.h"
 #include "cafe/loader/cafe_loader_rpl.h"
 #include "decaf_config.h"
 
@@ -119,6 +120,22 @@ Library::registerSystemCalls()
          funcSymbol->syscallID = newKcId;
       }
    }
+}
+
+void
+Library::generate()
+{
+   registerSymbols();
+
+   if (!mTypeInfo.empty()) {
+      RegisterFunctionInternalName("__pure_virtual_called",
+                                   cafe::ghs::pure_virtual_called);
+      RegisterFunctionInternalName("__dt__Q2_3std9type_infoFv",
+                                   cafe::ghs::std_typeinfo_Destructor);
+   }
+
+   registerSystemCalls();
+   generateRpl();
 }
 
 void

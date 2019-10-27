@@ -14,19 +14,11 @@ rpl_entry(coreinit::OSDynLoad_ModuleHandle moduleHandle,
    return 0;
 }
 
-static void
-pure_virtual_called()
-{
-   coreinit::internal::OSPanic("nn_olv", 0, "__pure_virtual_called");
-   coreinit::ghs_exit(6);
-}
-
 void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
-   RegisterFunctionExportName("__pure_virtual_called", pure_virtual_called);
    registerDownloadedCommunityDataSymbols();
    registerDownloadedDataBaseSymbols();
    registerDownloadedPostDataSymbols();

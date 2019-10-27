@@ -47,4 +47,11 @@ CHECK_OFFSET(VirtualTable, 0x00, flags);
 CHECK_OFFSET(VirtualTable, 0x04, ptr);
 CHECK_SIZE(VirtualTable, 0x08);
 
+void
+std_typeinfo_Destructor(virt_ptr<void> self,
+                        ghs::DestructorFlags flags);
+
+void
+pure_virtual_called();
+
 } // namespace cafe::ghs

@@ -30,6 +30,9 @@
 #define RegisterFunctionInternal(fn, ptr) \
    registerFunctionInternal<fnptr_decltype(fn), fn>("__internal__" # fn, ptr)
 
+#define RegisterFunctionInternalName(name, fn) \
+   registerFunctionInternal<fnptr_decltype(fn), fn>(name)
+
 #define RegisterDataInternal(data) \
    registerDataInternal("__internal__" # data, data)
 
@@ -178,12 +181,7 @@ public:
    }
 
    void
-   generate()
-   {
-      registerSymbols();
-      registerSystemCalls();
-      generateRpl();
-   }
+   generate();
 
    void
    relocate(virt_addr textBaseAddress,
@@ -231,6 +229,15 @@ protected:
       auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
       symbol->exported = false;
       symbol->hostPtr = reinterpret_cast<virt_ptr<void> *>(&hostPtr);
+      registerSymbol(name, std::move(symbol));
+   }
+
+   template<typename FunctionType, FunctionType Fn>
+   void
+   registerFunctionInternal(const char *name)
+   {
+      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
+      symbol->exported = false;
       registerSymbol(name, std::move(symbol));
    }
 
