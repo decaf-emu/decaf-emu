@@ -16,6 +16,9 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerDrcTransferrerSymbols();
+   registerLibSymbols();
 }
 
 } // namespace cafe::nn_sl

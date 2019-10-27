@@ -16,6 +16,8 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerDrcTransferrerSymbols();
+   void registerLibSymbols();
 };
 
 } // namespace cafe::nn_sl
