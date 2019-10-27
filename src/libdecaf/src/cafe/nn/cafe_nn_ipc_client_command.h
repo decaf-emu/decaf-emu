@@ -42,7 +42,7 @@ struct ManagedBufferCount<InBuffer<T>, Ts...>
 template<typename T, typename... Ts>
 struct ManagedBufferCount<InOutBuffer<T>, Ts...>
 {
-   static constexpr auto Input = 1 + ManagedBufferCount<Ts...>::Input;
+   static constexpr auto Input = 0 + ManagedBufferCount<Ts...>::Input;
    static constexpr auto Output = 1 + ManagedBufferCount<Ts...>::Output;
 };
 
@@ -159,14 +159,14 @@ struct IpcSerialiser<ManagedBuffer>
       auto unalignedBufferIndex = uint8_t { 0 };
       auto bufferIndexOffset = uint8_t { 0 };
 
-      if (userBuffer.input) {
-         alignedBufferIndex = static_cast<uint8_t>(inputVecIdx++);
-         unalignedBufferIndex = static_cast<uint8_t>(inputVecIdx++);
-         bufferIndexOffset = 1 + data.numVecOut;
-      } else {
+      if (userBuffer.output) {
          alignedBufferIndex = static_cast<uint8_t>(outputVecIdx++);
          unalignedBufferIndex = static_cast<uint8_t>(outputVecIdx++);
          bufferIndexOffset = 1;
+      } else {
+         alignedBufferIndex = static_cast<uint8_t>(inputVecIdx++);
+         unalignedBufferIndex = static_cast<uint8_t>(inputVecIdx++);
+         bufferIndexOffset = 1 + data.numVecOut;
       }
 
       // Update our ioctlv vecs buffer
