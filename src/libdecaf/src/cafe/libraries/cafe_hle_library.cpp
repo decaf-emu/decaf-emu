@@ -153,11 +153,20 @@ Library::relocate(virt_addr textBaseAddress,
 
 static uint32_t
 addSectionString(std::vector<uint8_t> &data,
-                 std::string_view name)
+                 std::string_view name,
+                 int align = 1)
 {
    auto pos = data.size();
+
+   // Insert string with null terminator
    data.insert(data.end(), name.begin(), name.end());
    data.push_back(0);
+
+   // Pad to 4 byte alignment
+   while ((data.size() % align) != 0) {
+      data.push_back(0);
+   }
+
    return static_cast<uint32_t>(pos);
 }
 
