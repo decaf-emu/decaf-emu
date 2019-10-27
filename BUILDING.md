@@ -38,10 +38,11 @@ Required:
 Optional:
 - ffmpeg, disable by using `-DDECAF_FFMPEG=OFF`
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows), disable by using `-DDECAF_VULKAN=OFF`
+- Qt
 
 The dependencies, other than Vulkan, can either be acquired using your package manager such as:
 - Required: `apt install cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev`
-- Optional: `apt install libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev`
+- Optional: `apt install libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev qtbase5-dev qtbase5-private-dev libqt5svg5-dev`
 
 Or by using [Conan](https://conan.io), which is recommended to be installed using Python pip:
 - `pip install conan`
