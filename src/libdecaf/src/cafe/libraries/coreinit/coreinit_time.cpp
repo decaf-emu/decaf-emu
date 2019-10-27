@@ -94,10 +94,14 @@ OSTicksToCalendarTime(OSTime time,
    calendarTime->tm_year = tm.tm_year + 1900; // posix tm_year is year - 1900
    calendarTime->tm_wday = tm.tm_wday;
    calendarTime->tm_yday = tm.tm_yday;
-   calendarTime->tm_msec = 0;
-   calendarTime->tm_usec = 0;
 
-   // TODO: OSTicksToCalendarTime tm_usec, tm_msec
+   auto timeOffset =
+      std::chrono::duration_cast<std::chrono::microseconds>(chrono.time_since_epoch()) -
+      std::chrono::duration_cast<std::chrono::seconds>(chrono.time_since_epoch());
+   auto msOffset = std::chrono::duration_cast<std::chrono::milliseconds>(timeOffset);
+   auto uOffset = std::chrono::duration_cast<std::chrono::microseconds>(timeOffset - msOffset);
+   calendarTime->tm_msec = static_cast<int32_t>(msOffset.count());
+   calendarTime->tm_usec = static_cast<int32_t>(uOffset.count());
 }
 
 
@@ -108,7 +112,6 @@ OSTime
 OSCalendarTimeToTicks(virt_ptr<OSCalendarTime> calendarTime)
 {
    std::tm tm = { 0 };
-
    tm.tm_sec = calendarTime->tm_sec;
    tm.tm_min = calendarTime->tm_min;
    tm.tm_hour = calendarTime->tm_hour;
