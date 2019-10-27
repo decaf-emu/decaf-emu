@@ -45,6 +45,26 @@ struct MCPResponsePrepareTitle
 CHECK_OFFSET(MCPResponsePrepareTitle, 0x68, titleInfo);
 CHECK_SIZE(MCPResponsePrepareTitle, 0x12D8);
 
+struct MCPResponseUpdateProgress
+{
+   be2_struct<MCPUpdateProgress> progress;
+};
+CHECK_SIZE(MCPResponseUpdateProgress, 0x38);
+
+struct MCPResponseUpdateCheckContext
+{
+   be2_val<uint32_t> result;
+};
+CHECK_OFFSET(MCPResponseUpdateCheckContext, 0x00, result);
+CHECK_SIZE(MCPResponseUpdateCheckContext, 4);
+
+struct MCPResponseUpdateCheckResume
+{
+   be2_val<uint32_t> result;
+};
+CHECK_OFFSET(MCPResponseUpdateCheckResume, 0x00, result);
+CHECK_SIZE(MCPResponseUpdateCheckResume, 4);
+
 #pragma pack(pop)
 
 /** @} */

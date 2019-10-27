@@ -119,6 +119,12 @@ CHECK_OFFSET(MCPTitleListType, 0x56, indexedDevice);
 CHECK_OFFSET(MCPTitleListType, 0x60, unk0x60);
 CHECK_SIZE(MCPTitleListType, 0x61);
 
+struct MCPUpdateProgress
+{
+   UNKNOWN(0x38);
+};
+CHECK_SIZE(MCPUpdateProgress, 0x38);
+
 #pragma pack(pop)
 
 /** @} */

@@ -106,6 +106,22 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
          error = MCPError::InvalidParam;
       }
       break;
+   case MCPCommand::UpdateCheckContext:
+      if (ioctl.outputBuffer &&
+          ioctl.outputLength == sizeof(MCPResponseUpdateCheckContext)) {
+         error = mcpUpdateCheckContext(phys_cast<MCPResponseUpdateCheckContext *>(ioctl.outputBuffer));
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
+   case MCPCommand::UpdateCheckResume:
+      if (ioctl.outputBuffer &&
+          ioctl.outputLength == sizeof(MCPResponseUpdateCheckResume)) {
+         error = mcpUpdateCheckResume(phys_cast<MCPResponseUpdateCheckResume *>(ioctl.outputBuffer));
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
    default:
       error = MCPError::Opcode;
    }
@@ -126,6 +142,16 @@ mcpIoctlv(phys_ptr<ResourceRequest> request)
           ioctlv.vecs[0].paddr &&
           ioctlv.vecs[0].len == sizeof(MCPResponseGetSysProdSettings)) {
          error = mcpGetSysProdSettings(phys_cast<MCPResponseGetSysProdSettings *>(ioctlv.vecs[0].paddr));
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
+   case MCPCommand::UpdateGetProgress:
+      if (ioctlv.numVecIn == 0 &&
+          ioctlv.numVecOut == 1 &&
+          ioctlv.vecs[0].paddr &&
+          ioctlv.vecs[0].len == sizeof(MCPResponseUpdateProgress)) {
+         error = mcpUpdateGetProgress(phys_cast<MCPResponseUpdateProgress *>(ioctlv.vecs[0].paddr));
       } else {
          error = MCPError::InvalidParam;
       }

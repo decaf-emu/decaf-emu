@@ -358,4 +358,28 @@ mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
    return MCPError::OK;
 }
 
+MCPError
+mcpUpdateCheckContext(phys_ptr<MCPResponseUpdateCheckContext> response)
+{
+   // TODO: Implement mcpUpdateCheckContext
+   std::memset(response.get(), 0, sizeof(MCPResponseUpdateCheckContext));
+   return MCPError::OK;
+}
+
+MCPError
+mcpUpdateCheckResume(phys_ptr<MCPResponseUpdateCheckResume> response)
+{
+   // TODO: Implement mcpUpdateCheckResume
+   std::memset(response.get(), 0, sizeof(MCPResponseUpdateCheckResume));
+   return MCPError::OK;
+}
+
+MCPError
+mcpUpdateGetProgress(phys_ptr<MCPResponseUpdateProgress> response)
+{
+   // TODO: Implement mcpUpdateGetProgress
+   std::memset(response.get(), 0, sizeof(MCPResponseUpdateProgress));
+   return MCPError::OK;
+}
+
 } // namespace ios::mcp::internal

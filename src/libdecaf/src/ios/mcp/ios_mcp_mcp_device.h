@@ -29,4 +29,13 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
 MCPError
 mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request);
 
+MCPError
+mcpUpdateCheckContext(phys_ptr<MCPResponseUpdateCheckContext> response);
+
+MCPError
+mcpUpdateCheckResume(phys_ptr<MCPResponseUpdateCheckResume> response);
+
+MCPError
+mcpUpdateGetProgress(phys_ptr<MCPResponseUpdateProgress> response);
+
 } // namespace ios::mcp::internal

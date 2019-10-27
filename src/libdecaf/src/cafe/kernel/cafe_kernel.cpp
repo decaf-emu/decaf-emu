@@ -207,7 +207,7 @@ cpuBranchTraceHandler(cpu::Core *core,
 
 static cpu::Core *
 cpuUnknownSystemCallHandler(cpu::Core *core,
-                     uint32_t id)
+                            uint32_t id)
 {
    return cafe::hle::Library::handleUnknownSystemCall(core, id);
 }

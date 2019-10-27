@@ -21,6 +21,7 @@ using ios::mcp::MCPRegion;
 using ios::mcp::MCPSysProdSettings;
 using ios::mcp::MCPTitleListType;
 using ios::mcp::MCPTitleListSearchFlags;
+using ios::mcp::MCPUpdateProgress;
 
 IOSError
 MCP_Open();
@@ -80,6 +81,18 @@ MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
                                                   virt_ptr<uint32_t> outTitleCount,
                                                   virt_ptr<MCPTitleListType> titleList,
                                                   uint32_t titleListSizeBytes);
+
+MCPError
+MCP_UpdateCheckContext(IOSHandle handle,
+                       virt_ptr<uint32_t> outResult);
+
+MCPError
+MCP_UpdateCheckResume(IOSHandle handle,
+                      virt_ptr<uint32_t> outResult);
+
+MCPError
+MCP_UpdateGetProgress(IOSHandle handle,
+                      virt_ptr<MCPUpdateProgress> outUpdateProgress);
 
 namespace internal
 {

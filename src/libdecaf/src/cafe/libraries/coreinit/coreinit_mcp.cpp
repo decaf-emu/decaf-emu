@@ -12,6 +12,8 @@ namespace cafe::coreinit
 using ios::mcp::MCPCommand;
 using ios::mcp::MCPResponseGetTitleId;
 using ios::mcp::MCPResponseGetOwnTitleInfo;
+using ios::mcp::MCPResponseUpdateCheckContext;
+using ios::mcp::MCPResponseUpdateCheckResume;
 using ios::mcp::MCPRequestGetOwnTitleInfo;
 using ios::mcp::MCPRequestSearchTitleList;
 using ios::mcp::MCPTitleListSearchFlags;
@@ -340,6 +342,81 @@ MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType(IOSHandle handle,
 }
 
 
+MCPError
+MCP_UpdateCheckContext(IOSHandle handle,
+                       virt_ptr<uint32_t> outResult)
+{
+   auto message = internal::mcpAllocateMessage(sizeof(MCPResponseUpdateCheckContext));
+   if (!message) {
+      return MCPError::Alloc;
+   }
+
+   auto response = virt_cast<MCPResponseUpdateCheckContext *>(message);
+   auto result = IOS_Ioctl(handle,
+                           MCPCommand::UpdateCheckContext,
+                           nullptr, 0,
+                           response, sizeof(MCPResponseUpdateCheckContext));
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   internal::mcpFreeMessage(message);
+   *outResult = response->result;
+   return MCPError::OK;
+}
+
+
+MCPError
+MCP_UpdateCheckResume(IOSHandle handle,
+                      virt_ptr<uint32_t> outResult)
+{
+   auto message = internal::mcpAllocateMessage(sizeof(MCPResponseUpdateCheckResume));
+   if (!message) {
+      return MCPError::Alloc;
+   }
+
+   auto response = virt_cast<MCPResponseUpdateCheckResume *>(message);
+   auto result = IOS_Ioctl(handle,
+                           MCPCommand::UpdateCheckResume,
+                           nullptr, 0,
+                           response, sizeof(MCPResponseUpdateCheckResume));
+
+   if (result < 0) {
+      return internal::mcpDecodeIosErrorToMcpError(result);
+   }
+
+   internal::mcpFreeMessage(message);
+   *outResult = response->result;
+   return MCPError::OK;
+}
+
+
+MCPError
+MCP_UpdateGetProgress(IOSHandle handle,
+                      virt_ptr<MCPUpdateProgress> outUpdateProgress)
+{
+   if (!outUpdateProgress || !align_check(outUpdateProgress.get(), 64)) {
+      return MCPError::InvalidParam;
+   }
+
+   auto message = internal::mcpAllocateMessage(sizeof(IOSVec));
+   if (!message) {
+      return MCPError::Alloc;
+   }
+
+   auto outVecs = virt_cast<IOSVec *>(message);
+   outVecs[0].vaddr = virt_cast<virt_addr>(outUpdateProgress);
+   outVecs[0].len = static_cast<uint32_t>(sizeof(MCPUpdateProgress));
+
+   auto iosError = IOS_Ioctlv(handle, MCPCommand::UpdateGetProgress, 0, 1, outVecs);
+   auto mcpError = internal::mcpDecodeIosErrorToMcpError(iosError);
+
+   internal::mcpFreeMessage(message);
+   return mcpError;
+}
+
+
 namespace internal
 {
 
@@ -480,6 +557,9 @@ Library::registerMcpSymbols()
    RegisterFunctionExport(MCP_TitleListByAppType);
    RegisterFunctionExport(MCP_TitleListByUniqueId);
    RegisterFunctionExport(MCP_TitleListByUniqueIdAndIndexedDeviceAndAppType);
+   RegisterFunctionExport(MCP_UpdateCheckContext);
+   RegisterFunctionExport(MCP_UpdateCheckResume);
+   RegisterFunctionExport(MCP_UpdateGetProgress);
 
    RegisterDataInternal(sMcpData);
 }
