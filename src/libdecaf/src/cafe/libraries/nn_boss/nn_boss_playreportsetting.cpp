@@ -95,6 +95,17 @@ Library::registerPlayReportSettingSymbols()
                               static_cast<bool(*)(virt_ptr<PlayReportSetting>, virt_ptr<const char>, uint32_t)>(PlayReportSetting_Set));
    RegisterFunctionExportName("Set__Q3_2nn4boss17PlayReportSettingFUiT1",
                               static_cast<bool(*)(virt_ptr<PlayReportSetting>, uint32_t, uint32_t)>(PlayReportSetting_Set));
+
+   registerTypeInfo<PlayReportSetting>(
+      "nn::boss::PlayReportSetting",
+      {
+         "__dt__Q3_2nn4boss17PlayReportSettingFv",
+         "RegisterPreprocess__Q3_2nn4boss17PlayReportSettingFUiQ3_2nn4boss7TitleIDPCc",
+         "RegisterPostprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result",
+      },
+      {
+         "nn::boss::RawUlTaskSetting",
+      });
 }
 
 }  // namespace cafe::nn_boss
