@@ -194,17 +194,16 @@ generateTypeDescriptors(Library *library,
                         std::vector<uint8_t> &data,
                         std::vector<uint8_t> &relocations)
 {
-   auto stdTypeInfoOffset = uint32_t { 0u };
-
+   auto stdTypeInfo = LibraryTypeInfo { };
    auto addRelocation =
-      [&relocations](const int32_t srcOffset,
-                     const uint32_t dstOffset,
-                     const uint32_t symbol)
+      [&relocations](const uint32_t offset,
+                     const uint32_t symbol,
+                     const int32_t symbolAddend)
       {
          auto rela = rpl::Rela { };
          rela.info = rpl::R_PPC_ADDR32 | (symbol << 8);
-         rela.addend = srcOffset;
-         rela.offset = dstOffset;
+         rela.addend = symbolAddend;
+         rela.offset = offset;
          relocations.insert(relocations.end(),
                             reinterpret_cast<uint8_t *>(&rela),
                             reinterpret_cast<uint8_t *>(&rela) + sizeof(rpl::Rela));
@@ -212,26 +211,24 @@ generateTypeDescriptors(Library *library,
 
    // Add a relocation against symbol 1 ($TEXT)
    auto addTextRelocation =
-      [&addRelocation, dataBaseAddr](const uint32_t srcOffset,
-                                     const uint32_t dstOffset)
+      [&addRelocation, dataBaseAddr](const uint32_t offset,
+                                     const uint32_t relocationAddress)
       {
-         addRelocation(srcOffset,
-                       dstOffset + dataBaseAddr, 1);
+         addRelocation(offset + dataBaseAddr, 1, relocationAddress);
       };
 
    // Add a relocation against symbol 2 ($DATA)
    auto addDataRelocation =
-      [&addRelocation, dataBaseAddr](const uint32_t srcOffset,
-                                     const uint32_t dstOffset)
+      [&addRelocation, dataBaseAddr](const uint32_t offset,
+                                     const uint32_t relocationAddress)
       {
-         addRelocation(srcOffset,
-                       dstOffset + dataBaseAddr, 2);
+         addRelocation(offset + dataBaseAddr, 2, relocationAddress);
       };
 
    auto addTypeDescriptor =
       [&](LibraryTypeInfo &typeInfo)
       {
-         typeInfo.nameOffset = addSectionString(data, typeInfo.name);
+         typeInfo.nameOffset = addSectionString(data, typeInfo.name, 4);
 
          // Allocate some memory so the address acts as a unique type id
          typeInfo.typeIdOffset = static_cast<uint32_t>(data.size());
@@ -249,39 +246,42 @@ generateTypeDescriptors(Library *library,
          // Insert type descriptor, all the values are filled via relocations
          typeInfo.typeDescriptorOffset = static_cast<uint32_t>(data.size());
          data.resize(data.size() + sizeof(ghs::TypeDescriptor));
-         addDataRelocation(typeInfo.typeDescriptorOffset + 0x00, stdTypeInfoOffset);
+
+         // Create virtual table
+         if (!typeInfo.virtualTable.empty()) {
+            typeInfo.virtualTableOffset = static_cast<uint32_t>(data.size());
+
+            {
+               // First entry points to the type descriptor
+               auto entryOffset = static_cast<uint32_t>(data.size());
+               data.resize(data.size() + sizeof(ghs::VirtualTable));
+               addDataRelocation(entryOffset + 4, typeInfo.typeDescriptorOffset);
+            }
+
+            for (auto entry : typeInfo.virtualTable) {
+               auto entryOffset = static_cast<uint32_t>(data.size());
+               auto symbol = library->findSymbol(entry);
+               decaf_assert(symbol,
+                  fmt::format("Could not find vtable function {}", entry));
+               data.resize(data.size() + sizeof(ghs::VirtualTable));
+               addTextRelocation(entryOffset + 4, symbol->offset);
+            }
+         }
+
+         // Add type descriptor relocations, must be done after setting
+         // virtualTableOffset incase typeInfo == stdTypeInfo
+         addDataRelocation(typeInfo.typeDescriptorOffset + 0x00, stdTypeInfo.virtualTableOffset);
          addDataRelocation(typeInfo.typeDescriptorOffset + 0x04, typeInfo.nameOffset);
          addDataRelocation(typeInfo.typeDescriptorOffset + 0x08, typeInfo.typeIdOffset);
          if (!typeInfo.baseTypes.empty()) {
             addDataRelocation(typeInfo.typeDescriptorOffset + 0x0C, typeInfo.baseTypeOffset);
          }
-
-         // Create virtual table
-         auto virtualTableOffset = static_cast<uint32_t>(data.size());
-
-         {
-            // First entry points to the type descriptor
-            auto entryOffset = static_cast<uint32_t>(data.size());
-            data.resize(data.size() + sizeof(ghs::VirtualTable));
-            addDataRelocation(entryOffset + 4, typeInfo.typeDescriptorOffset);
-         }
-
-         for (auto entry : typeInfo.virtualTable) {
-            auto entryOffset = static_cast<uint32_t>(data.size());
-            auto symbol = library->findSymbol(entry);
-            decaf_assert(symbol,
-                         fmt::format("Could not find vtable function {}", entry));
-            data.resize(data.size() + sizeof(ghs::VirtualTable));
-            addTextRelocation(entryOffset + 4, symbol->offset);
-         }
-
-         return typeInfo.typeDescriptorOffset;
       };
 
    // Generate type descriptors
-   LibraryTypeInfo stdTypeInfo;
    stdTypeInfo.name = "std::type_info";
-   stdTypeInfoOffset = addTypeDescriptor(stdTypeInfo);
+   stdTypeInfo.virtualTable.push_back("__dt__Q2_3std9type_infoFv");
+   addTypeDescriptor(stdTypeInfo);
 
    for (auto &type : types) {
       addTypeDescriptor(type);
