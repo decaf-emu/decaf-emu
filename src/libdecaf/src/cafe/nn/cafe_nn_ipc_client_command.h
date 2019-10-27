@@ -126,20 +126,35 @@ struct IpcSerialiser<ManagedBuffer>
       auto alignedStart = align_up(unalignedStart, 64);
       auto alignedEnd = align_down(unalignedEnd, 64);
 
-      ioBuffer.alignedBuffer = virt_cast<void *>(alignedStart);
-      ioBuffer.alignedBufferSize =
-         static_cast<uint32_t>(alignedEnd - alignedStart);
+      if (unalignedEnd <= alignedStart) {
+         // Whole buffer is before alignment
+         ioBuffer.unalignedBeforeBufferSize = ioBuffer.userBufferSize;
+         ioBuffer.unalignedBeforeBuffer =
+            virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64
+                              - ioBuffer.unalignedBeforeBufferSize);
 
-      ioBuffer.unalignedBeforeBufferSize =
-         static_cast<uint32_t>(alignedStart - unalignedStart);
-      ioBuffer.unalignedBeforeBuffer =
-         virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64
-                           - ioBuffer.unalignedBeforeBufferSize);
+         ioBuffer.alignedBuffer = nullptr;
+         ioBuffer.alignedBufferSize = 0;
 
-      ioBuffer.unalignedAfterBufferSize =
-         static_cast<uint32_t>(unalignedEnd - alignedEnd);
-      ioBuffer.unalignedAfterBuffer =
-         virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64);
+         ioBuffer.unalignedAfterBuffer = nullptr;
+         ioBuffer.unalignedAfterBufferSize = 0;
+      } else {
+         // Split over unaligned before / aligned / unaligned after
+         ioBuffer.unalignedBeforeBufferSize =
+            static_cast<uint32_t>(alignedStart - unalignedStart);
+         ioBuffer.unalignedBeforeBuffer =
+            virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64
+                              - ioBuffer.unalignedBeforeBufferSize);
+
+         ioBuffer.alignedBuffer = virt_cast<void *>(alignedStart);
+         ioBuffer.alignedBufferSize =
+            static_cast<uint32_t>(alignedEnd - alignedStart);
+
+         ioBuffer.unalignedAfterBufferSize =
+            static_cast<uint32_t>(unalignedEnd - alignedEnd);
+         ioBuffer.unalignedAfterBuffer =
+            virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64);
+      }
 
       if (userBuffer.input) {
          // Copy the unaligned buffer input
