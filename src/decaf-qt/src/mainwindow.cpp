@@ -20,7 +20,7 @@
 MainWindow::MainWindow(SettingsStorage *settingsStorage,
                        DecafInterface *decafInterface,
                        InputDriver *inputDriver,
-                       QWidget* parent) :
+                       QWidget *parent) :
    QMainWindow(parent),
    mSettingsStorage(settingsStorage),
    mDecafInterface(decafInterface),
@@ -31,7 +31,7 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    // Setup UI
    mUi.setupUi(this);
 
-   mRenderWidget = new RenderWidget { this };
+   mRenderWidget = new RenderWidget { inputDriver, this };
    setCentralWidget(mRenderWidget);
 
    connect(decafInterface, &DecafInterface::titleLoaded,

@@ -106,4 +106,37 @@ updateDisplayLayout(DisplayLayout &layout,
    layout.backgroundColour[2] = std::pow(layout.backgroundColour[2], 2.2f);
 }
 
+
+DisplayTouchEvent
+translateDisplayTouch(DisplayLayout &layout,
+                      float x,
+                      float y)
+{
+   if (layout.tv.visible &&
+       x >= layout.tv.x &&
+       x  < layout.tv.x + layout.tv.width &&
+       y >= layout.tv.y &&
+       y  < layout.tv.y + layout.tv.height) {
+      return {
+         DisplayTouchEvent::Tv,
+         (x - layout.tv.x) / layout.tv.width,
+         (y - layout.tv.y) / layout.tv.height,
+      };
+   }
+
+   if (layout.drc.visible &&
+       x >= layout.drc.x &&
+       x  < layout.drc.x + layout.drc.width &&
+       y >= layout.drc.y &&
+       y  < layout.drc.y + layout.drc.height) {
+      return {
+         DisplayTouchEvent::Drc1,
+         (x - layout.drc.x) / layout.drc.width,
+         (y - layout.drc.y) / layout.drc.height,
+      };
+   }
+
+   return { DisplayTouchEvent::None, 0.0f, 0.0f };
+}
+
 } // namespace gpu7

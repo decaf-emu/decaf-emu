@@ -1,19 +1,24 @@
+#include "inputdriver.h"
 #include "renderwidget.h"
 
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QEvent>
 #include <QResizeEvent>
+#include <QMouseEvent>
+#include <QKeyEvent>
 #include <QWidget>
 #include <QWindow>
 #include <thread>
 
 #include <libdecaf/decaf_graphics.h>
 #include <libgpu/gpu_graphicsdriver.h>
+#include <libgpu/gpu7_displaylayout.h>
 
 #include <qpa/qplatformnativeinterface.h>
 
-RenderWidget::RenderWidget(QWidget *parent) :
+RenderWidget::RenderWidget(InputDriver *inputDriver, QWidget *parent) :
+   mInputDriver(inputDriver),
    QWidget(parent)
 {
    setAutoFillBackground(false);
@@ -86,6 +91,37 @@ RenderWidget::event(QEvent *event)
          mGraphicsDriver->windowHandleChanged(reinterpret_cast<void *>(winId()));
       }
       break;
+   case QEvent::KeyPress:
+   {
+      auto keyEvent = static_cast<QKeyEvent *>(event);
+      mInputDriver->keyPressEvent(keyEvent->key());
+      return true;
+   }
+   case QEvent::KeyRelease:
+   {
+      auto keyEvent = static_cast<QKeyEvent *>(event);
+      mInputDriver->keyReleaseEvent(keyEvent->key());
+      return true;
+   }
+   case QEvent::MouseMove:
+   case QEvent::MouseButtonPress:
+   case QEvent::MouseButtonRelease:
+   {
+      auto mouseEvent = static_cast<QMouseEvent *>(event);
+      auto layout = gpu7::getDisplayLayout(static_cast<float>(width()),
+                                           static_cast<float>(height()));
+      auto touchEvent =
+         gpu7::translateDisplayTouch(layout,
+                                     static_cast<float>(mouseEvent->x()),
+                                     static_cast<float>(mouseEvent->y()));
+
+      if (touchEvent.screen != gpu7::DisplayTouchEvent::None) {
+         mInputDriver->gamepadTouchEvent(
+            !!(mouseEvent->buttons() & Qt::LeftButton),
+            touchEvent.x, touchEvent.y);
+      }
+      break;
+   }
    case QEvent::Resize:
    {
       auto resizeEvent = static_cast<QResizeEvent *>(event);

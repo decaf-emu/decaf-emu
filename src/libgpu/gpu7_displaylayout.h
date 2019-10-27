@@ -20,9 +20,37 @@ struct DisplayLayout
    std::array<float, 4> backgroundColour;
 };
 
+struct DisplayTouchEvent
+{
+   enum Screen
+   {
+      None,
+      Tv,
+      Drc1,
+      Drc2,
+   };
+
+   Screen screen = None;
+   float x = 0;
+   float y = 0;
+};
+
 void
 updateDisplayLayout(DisplayLayout &layout,
                     float windowWidth,
                     float windowHeight);
+
+DisplayTouchEvent
+translateDisplayTouch(DisplayLayout &layout,
+                      float x,
+                      float y);
+
+static inline DisplayLayout
+getDisplayLayout(float width, float height)
+{
+   DisplayLayout layout;
+   updateDisplayLayout(layout, width, height);
+   return layout;
+}
 
 } // namespace gpu7

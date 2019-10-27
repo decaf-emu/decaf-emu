@@ -7,10 +7,12 @@ namespace gpu
 class GraphicsDriver;
 }
 
+class InputDriver;
+
 class RenderWidget : public QWidget
 {
 public:
-   RenderWidget(QWidget *parent = nullptr);
+   RenderWidget(InputDriver *inputDriver, QWidget *parent = nullptr);
    ~RenderWidget();
 
    void startGraphicsDriver();
@@ -21,5 +23,6 @@ protected:
 
 private:
    gpu::GraphicsDriver *mGraphicsDriver = nullptr;
+   InputDriver *mInputDriver = nullptr;
    std::thread mRenderThread;
 };
