@@ -166,6 +166,18 @@ Library::relocate(virt_addr textBaseAddress,
          }
       }
    }
+
+   for (auto &type : mTypeInfo) {
+      if (type.hostVirtualTablePtr) {
+         *type.hostVirtualTablePtr =
+            virt_cast<ghs::VirtualTable *>(dataBaseAddress + type.virtualTableOffset);
+      }
+
+      if (type.hostTypeDescriptorPtr) {
+         *type.hostTypeDescriptorPtr =
+            virt_cast<ghs::TypeDescriptor *>(dataBaseAddress + type.typeDescriptorOffset);
+      }
+   }
 }
 
 static uint32_t
