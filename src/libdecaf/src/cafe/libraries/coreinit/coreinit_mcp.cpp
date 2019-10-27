@@ -56,6 +56,26 @@ MCP_Close(IOSHandle handle)
 }
 
 
+int32_t
+MCP_GetErrorCodeForViewer(MCPError error)
+{
+   if (error >= 0) {
+      return 1629999;
+   }
+
+   auto group = (~static_cast<uint32_t>(error) >> 16) & 0x3FF;
+   if (group != 4) {
+      return 1629999;
+   }
+
+   if (error & 0x8000) {
+      return -0x47E0 - (error | 0xFFFF0000) + 0x190000;
+   } else {
+      return -0x47E0 - (error & 0xFFFF) + 0x190000;
+   }
+}
+
+
 MCPError
 MCP_GetOwnTitleInfo(IOSHandle handle,
                     virt_ptr<MCPTitleListType> titleInfo)
@@ -450,6 +470,7 @@ Library::registerMcpSymbols()
 {
    RegisterFunctionExport(MCP_Open);
    RegisterFunctionExport(MCP_Close);
+   RegisterFunctionExport(MCP_GetErrorCodeForViewer);
    RegisterFunctionExport(MCP_GetOwnTitleInfo);
    RegisterFunctionExport(MCP_GetSysProdSettings);
    RegisterFunctionExport(MCP_GetTitleId);

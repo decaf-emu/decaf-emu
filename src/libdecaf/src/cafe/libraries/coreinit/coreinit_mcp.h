@@ -28,6 +28,9 @@ MCP_Open();
 void
 MCP_Close(IOSHandle handle);
 
+int32_t
+MCP_GetErrorCodeForViewer(MCPError error);
+
 MCPError
 MCP_GetOwnTitleInfo(IOSHandle handle,
                     virt_ptr<MCPTitleListType> titleInfo);
