@@ -1,5 +1,6 @@
 #include "nn_acp_acpresult.h"
 #include "nn/acp/nn_acp_result.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 #include "cafe/libraries/coreinit/coreinit_cosreport.h"
 #include "cafe/libraries/coreinit/coreinit_osreport.h"
@@ -230,8 +231,7 @@ ACPConvertToACPResult(nn::Result result,
       ACPSendCOSFatalError(1, 0x187492, result, funcName, lineNo);
    } else if (result == ResultUcFatal) {
       ACPSendCOSFatalError(1, 0x187493, result, funcName, lineNo);
-   } else if (result == nn::ResultRange<nn::Result::MODULE_NN_IPC, nn::Result::LEVEL_FATAL, 89728, 93440>()) {
-      // TODO: Add this result to nn::ipc
+   } else if (result == nn::ipc::ResultCAPABILITY_FAILED) {
       ACPSendCOSFatalError(1, 0x187494, result, funcName, lineNo);
    } else if (result == ResultFatal) {
       ACPSendCOSFatalError(1, 0x18748c, result, funcName, lineNo);
