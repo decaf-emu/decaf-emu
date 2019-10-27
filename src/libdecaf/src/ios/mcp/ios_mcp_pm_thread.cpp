@@ -529,7 +529,7 @@ initialiseStaticPmThreadData()
          dummyRM,
          { ss("/dev/tcp_pcfs"),        1u, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
-         //{ ss("/dev/act"),             1u, rm(0x180000, ProcessId::FPD, 1) },
+         { ss("/dev/act"),             1u, rm(0x180000, ProcessId::FPD, 1) },
          dummyRM,
          //{ ss("/dev/fpd"),             1u, rm(0x180000, ProcessId::FPD, 1) },
          dummyRM,

@@ -23,6 +23,42 @@ struct ManagedBuffer
    {
    }
 
+   uint32_t totalSize()
+   {
+      return unalignedBeforeBufferSize + alignedBufferSize + unalignedAfterBufferSize;
+   }
+
+   void writeOutput(phys_ptr<void> data, uint32_t size)
+   {
+      writeOutput(data.get(), size);
+   }
+
+   void writeOutput(const void *data, size_t size)
+   {
+      auto ptr = reinterpret_cast<const uint8_t *>(data);
+
+      if (unalignedBeforeBufferSize && size) {
+         auto count = std::min<size_t>(unalignedBeforeBufferSize, size);
+         std::memcpy(unalignedBeforeBuffer.get(), ptr, count);
+         ptr += size;
+         size -= count;
+      }
+
+      if (alignedBufferSize && size) {
+         auto count = std::min<size_t>(alignedBufferSize, size);
+         std::memcpy(alignedBuffer.get(), ptr, count);
+         ptr += size;
+         size -= count;
+      }
+
+      if (unalignedAfterBufferSize && size) {
+         auto count = std::min<size_t>(unalignedAfterBufferSize, size);
+         std::memcpy(unalignedAfterBuffer.get(), ptr, count);
+         ptr += size;
+         size -= count;
+      }
+   }
+
    // For serialisation:
    virt_ptr<void> ptr = nullptr;
    uint32_t size = 0u;

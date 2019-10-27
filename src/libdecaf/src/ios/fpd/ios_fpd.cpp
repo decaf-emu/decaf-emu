@@ -1,12 +1,73 @@
 #include "ios_fpd.h"
+#include "ios_fpd_log.h"
+#include "ios_fpd_act_server.h"
+#include "ios_fpd_act_clientstandardservice.h"
+
+#include "decaf_log.h"
+#include "ios/kernel/ios_kernel_heap.h"
 
 namespace ios::fpd
 {
 
+using namespace ios::kernel;
+
+constexpr auto LocalHeapSize = 0xA0000u;
+constexpr auto CrossHeapSize = 0xC0000u;
+
+static phys_ptr<void> sLocalHeapBuffer = nullptr;
+
+namespace internal
+{
+
+std::shared_ptr<spdlog::logger> fpdLog = nullptr;
+
+void
+initialiseStaticData()
+{
+   sLocalHeapBuffer = allocProcessLocalHeap(LocalHeapSize);
+}
+
+} // namespace internal
+
 Error
 processEntryPoint(phys_ptr<void> /* context */)
 {
-   return Error::OK;
+   auto error = Error::OK;
+
+   // Initialise logger
+   if (!internal::fpdLog) {
+      internal::fpdLog = decaf::makeLogger("IOS_FPD");
+   }
+
+   internal::initialiseStaticData();
+   internal::initialiseStaticActServerData();
+   internal::initialiseStaticClientStandardServiceData();
+
+   // Initialise process heaps
+   error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
+   if (error < Error::OK) {
+      internal::fpdLog->error(
+         "processEntryPoint: IOS_CreateLocalProcessHeap failed with error = {}", error);
+      return error;
+   }
+
+   error = IOS_CreateCrossProcessHeap(CrossHeapSize);
+   if (error < Error::OK) {
+      internal::fpdLog->error(
+         "processEntryPoint: IOS_CreateCrossProcessHeap failed with error = {}", error);
+      return error;
+   }
+
+   error = internal::startActServer();
+   if (error < Error::OK) {
+      internal::fpdLog->error(
+         "processEntryPoint: startActServer failed with error = {}", error);
+      return error;
+   }
+
+   // TODO: Start /dev/fpd thread, Join /dev/fpd thread
+
+   return error;
 }
 
 } // namespace ios::fpd

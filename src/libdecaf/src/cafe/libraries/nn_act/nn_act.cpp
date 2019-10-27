@@ -17,7 +17,9 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
-   registerLibSymbols();
+   registerClientSymbols();
+   registerClientStandardServiceSymbols();
+   registerServerStandardServiceSymbols();
 }
 
 } // namespace cafe::nn_act

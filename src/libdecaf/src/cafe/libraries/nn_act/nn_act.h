@@ -16,7 +16,9 @@ protected:
    virtual void registerSymbols() override;
 
 private:
-   void registerLibSymbols();
+   void registerClientSymbols();
+   void registerClientStandardServiceSymbols();
+   void registerServerStandardServiceSymbols();
 };
 
 } // namespace cafe::nn_act

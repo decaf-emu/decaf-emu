@@ -3,7 +3,7 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/libraries/ghs/cafe_ghs_malloc.h"
-#include "cafe/libraries/nn_act/nn_act_lib.h"
+#include "cafe/libraries/nn_act/nn_act_clientstandardservice.h"
 #include "nn/boss/nn_boss_result.h"
 
 using namespace nn::boss;

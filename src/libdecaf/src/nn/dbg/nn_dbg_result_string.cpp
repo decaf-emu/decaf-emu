@@ -1,5 +1,6 @@
 #include "nn_dbg_result_string.h"
 #include "nn/acp/nn_acp_result.h"
+#include "nn/act/nn_act_result.h"
 
 namespace nn::dbg
 {
@@ -556,6 +557,594 @@ GetAcpDescriptionString(nn::Result result)
    return "<unknown>";
 }
 
+static const char *
+GetActDescriptionString(nn::Result result)
+{
+   if (result == act::ResultMailAddressNotConfirmed) {
+      return "MAIL_ADDRESS_NOT_CONFIRMED";
+   } else if (result == act::ResultLibraryError) {
+      return "LIBRARY_ERROR";
+   } else if (result == act::ResultNotInitialised) {
+      return "NOT_INITIALISED";
+   } else if (result == act::ResultAlreadyInitialised) {
+      return "ALREADY_INITIALISED";
+   } else if (result == act::ResultBusy) {
+      return "BUSY";
+   } else if (result == act::ResultNotImplemented) {
+      return "NOT_IMPLEMENTED";
+   } else if (result == act::ResultDeprecated) {
+      return "DEPRECATED";
+   } else if (result == act::ResultDevelopmentOnly) {
+      return "DEVELOPMENT_ONLY";
+   } else if (result == act::ResultInvalidArgument) {
+      return "INVALID_ARGUMENT";
+   } else if (result == act::ResultInvalidPointer) {
+      return "INVALID_POINTER";
+   } else if (result == act::ResultOutOfRange) {
+      return "OUT_OF_RANGE";
+   } else if (result == act::ResultInvalidSize) {
+      return "INVALID_SIZE";
+   } else if (result == act::ResultInvalidFormat) {
+      return "INVALID_FORMAT";
+   } else if (result == act::ResultInvalidHandle) {
+      return "INVALID_HANDLE";
+   } else if (result == act::ResultInvalidValue) {
+      return "INVALID_VALUE";
+   }
+
+   if (result == act::ResultInternalError) {
+      return "INTERNAL_ERROR";
+   } else if (result == act::ResultEndOfStream) {
+      return "END_OF_STREAM";
+   } else if (result == act::ResultFileError) {
+      return "FILE_ERROR";
+   } else if (result == act::ResultFileNotFound) {
+      return "FILE_NOT_FOUND";
+   } else if (result == act::ResultFileVersionMismatch) {
+      return "FILE_VERSION_MISMATCH";
+   } else if (result == act::ResultFileIoError) {
+      return "FILE_IO_ERROR";
+   } else if (result == act::ResultFileTypeMismatch) {
+      return "FILE_TYPE_MISMATCH";
+   } else if (result == act::ResultOutOfResource) {
+      return "OUT_OF_RESOURCE";
+   } else if (result == act::ResultShortOfBuffer) {
+      return "SHORT_OF_BUFFER";
+   } else if (result == act::ResultOutOfMemory) {
+      return "OUT_OF_MEMORY";
+   } else if (result == act::ResultOutOfGlobalHeap) {
+      return "OUT_OF_GLOBAL_HEAP";
+   } else if (result == act::ResultOutOfCrossProcessHeap) {
+      return "OUT_OF_CROSS_PROCESS_HEAP";
+   } else if (result == act::ResultOutOfProcessLocalHeap) {
+      return "OUT_OF_PROCESS_LOCAL_HEAP";
+   } else if (result == act::ResultOutOfMxmlHeap) {
+      return "OUT_OF_MXML_HEAP";
+   } else if (result == act::ResultUcError) {
+      return "UC_ERROR";
+   } else if (result == act::ResultUcReadSysConfigError) {
+      return "UC_READ_SYS_CONFIG_ERROR";
+   } else if (result == act::ResultMcpError) {
+      return "MCP_ERROR";
+   } else if (result == act::ResultMcpOpenError) {
+      return "MCP_OPEN_ERROR";
+   } else if (result == act::ResultMcpGetInfoError) {
+      return "MCP_GET_INFO_ERROR";
+   } else if (result == act::ResultIsoError) {
+      return "ISO_ERROR";
+   } else if (result == act::ResultIsoInitFailure) {
+      return "ISO_INIT_FAILURE";
+   } else if (result == act::ResultIsoGetCountryCodeFailure) {
+      return "ISO_GET_COUNTRY_CODE_FAILURE";
+   } else if (result == act::ResultIsoGetLanguageCodeFailure) {
+      return "ISO_GET_LANGUAGE_CODE_FAILURE";
+   } else if (result == act::ResultMXML_ERROR) {
+      return "MXML_ERROR";
+   } else if (result == act::ResultIOS_ERROR) {
+      return "IOS_ERROR";
+   } else if (result == act::ResultIOS_OPEN_ERROR) {
+      return "IOS_OPEN_ERROR";
+   }
+
+   if (result == act::ResultACCOUNT_MANAGEMENT_ERROR) {
+      return "ACCOUNT_MANAGEMENT_ERROR";
+   } else if (result == act::ResultACCOUNT_NOT_FOUND) {
+      return "ACCOUNT_NOT_FOUND";
+   } else if (result == act::ResultSLOTS_FULL) {
+      return "SLOTS_FULL";
+   } else if (result == act::ResultACCOUNT_NOT_LOADED) {
+      return "ACCOUNT_NOT_LOADED";
+   } else if (result == act::ResultACCOUNT_ALREADY_LOADED) {
+      return "ACCOUNT_ALREADY_LOADED";
+   } else if (result == act::ResultACCOUNT_LOCKED) {
+      return "ACCOUNT_LOCKED";
+   } else if (result == act::ResultNOT_NETWORK_ACCOUNT) {
+      return "NOT_NETWORK_ACCOUNT";
+   } else if (result == act::ResultNOT_LOCAL_ACCOUNT) {
+      return "NOT_LOCAL_ACCOUNT";
+   } else if (result == act::ResultACCOUNT_NOT_COMMITTED) {
+      return "ACCOUNT_NOT_COMMITTED";
+   } else if (result == act::ResultNETWORK_CLOCK_INVALID) {
+      return "NETWORK_CLOCK_INVALID";
+   } else if (result == act::ResultAUTHENTICATION_ERROR) {
+      return "AUTHENTICATION_ERROR";
+   }
+
+   if (result == act::ResultHTTP_ERROR) {
+      return "HTTP_ERROR";
+   } else if (result == act::ResultHTTP_UNSUPPORTED_PROTOCOL) {
+      return "HTTP_UNSUPPORTED_PROTOCOL";
+   } else if (result == act::ResultHTTP_FAILED_INIT) {
+      return "HTTP_FAILED_INIT";
+   } else if (result == act::ResultHTTP_URL_MALFORMAT) {
+      return "HTTP_URL_MALFORMAT";
+   } else if (result == act::ResultHTTP_NOT_BUILT_IN) {
+      return "HTTP_NOT_BUILT_IN";
+   } else if (result == act::ResultHTTP_COULDNT_RESOLVE_PROXY) {
+      return "HTTP_COULDNT_RESOLVE_PROXY";
+   } else if (result == act::ResultHTTP_COULDNT_RESOLVE_HOST) {
+      return "HTTP_COULDNT_RESOLVE_HOST";
+   } else if (result == act::ResultHTTP_COULDNT_CONNECT) {
+      return "HTTP_COULDNT_CONNECT";
+   } else if (result == act::ResultHTTP_FTP_WEIRD_SERVER_REPLY) {
+      return "HTTP_FTP_WEIRD_SERVER_REPLY";
+   } else if (result == act::ResultHTTP_REMOTE_ACCESS_DENIED) {
+      return "HTTP_REMOTE_ACCESS_DENIED";
+   } else if (result == act::ResultHTTP_OBSOLETE10) {
+      return "HTTP_OBSOLETE10";
+   } else if (result == act::ResultHTTP_FTP_WEIRD_PASS_REPLY) {
+      return "HTTP_FTP_WEIRD_PASS_REPLY";
+   } else if (result == act::ResultHTTP_OBSOLETE12) {
+      return "HTTP_OBSOLETE12";
+   } else if (result == act::ResultHTTP_FTP_WEIRD_PASV_REPLY) {
+      return "HTTP_FTP_WEIRD_PASV_REPLY";
+   } else if (result == act::ResultHTTP_FTP_WEIRD_227_FORMAT) {
+      return "HTTP_FTP_WEIRD_227_FORMAT";
+   } else if (result == act::ResultHTTP_FTP_CANT_GET_HOST) {
+      return "HTTP_FTP_CANT_GET_HOST";
+   } else if (result == act::ResultHTTP_OBSOLETE16) {
+      return "HTTP_OBSOLETE16";
+   } else if (result == act::ResultHTTP_FTP_COULDNT_SET_TYPE) {
+      return "HTTP_FTP_COULDNT_SET_TYPE";
+   } else if (result == act::ResultHTTP_PARTIAL_FILE) {
+      return "HTTP_PARTIAL_FILE";
+   } else if (result == act::ResultHTTP_FTP_COULDNT_RETR_FILE) {
+      return "HTTP_FTP_COULDNT_RETR_FILE";
+   } else if (result == act::ResultHTTP_OBSOLETE20) {
+      return "HTTP_OBSOLETE20";
+   } else if (result == act::ResultHTTP_QUOTE_ERROR) {
+      return "HTTP_QUOTE_ERROR";
+   } else if (result == act::ResultHTTP_HTTP_RETURNED_ERROR) {
+      return "HTTP_HTTP_RETURNED_ERROR";
+   } else if (result == act::ResultHTTP_WRITE_ERROR) {
+      return "HTTP_WRITE_ERROR";
+   } else if (result == act::ResultHTTP_OBSOLETE24) {
+      return "HTTP_OBSOLETE24";
+   } else if (result == act::ResultHTTP_UPLOAD_FAILED) {
+      return "HTTP_UPLOAD_FAILED";
+   } else if (result == act::ResultHTTP_READ_ERROR) {
+      return "HTTP_READ_ERROR";
+   } else if (result == act::ResultHTTP_OUT_OF_MEMORY) {
+      return "HTTP_OUT_OF_MEMORY";
+   } else if (result == act::ResultHTTP_OPERATION_TIMEDOUT) {
+      return "HTTP_OPERATION_TIMEDOUT";
+   } else if (result == act::ResultHTTP_OBSOLETE29) {
+      return "HTTP_OBSOLETE29";
+   } else if (result == act::ResultHTTP_FTP_PORT_FAILED) {
+      return "HTTP_FTP_PORT_FAILED";
+   } else if (result == act::ResultHTTP_FTP_COULDNT_USE_REST) {
+      return "HTTP_FTP_COULDNT_USE_REST";
+   } else if (result == act::ResultHTTP_OBSOLETE32) {
+      return "HTTP_OBSOLETE32";
+   } else if (result == act::ResultHTTP_RANGE_ERROR) {
+      return "HTTP_RANGE_ERROR";
+   } else if (result == act::ResultHTTP_HTTP_POST_ERROR) {
+      return "HTTP_HTTP_POST_ERROR";
+   } else if (result == act::ResultHTTP_SSL_CONNECT_ERROR) {
+      return "HTTP_SSL_CONNECT_ERROR";
+   } else if (result == act::ResultHTTP_BAD_DOWNLOAD_RESUME) {
+      return "HTTP_BAD_DOWNLOAD_RESUME";
+   } else if (result == act::ResultHTTP_FILE_COULDNT_READ_FILE) {
+      return "HTTP_FILE_COULDNT_READ_FILE";
+   } else if (result == act::ResultHTTP_LDAP_CANNOT_BIND) {
+      return "HTTP_LDAP_CANNOT_BIND";
+   } else if (result == act::ResultHTTP_LDAP_SEARCH_FAILED) {
+      return "HTTP_LDAP_SEARCH_FAILED";
+   } else if (result == act::ResultHTTP_OBSOLETE40) {
+      return "HTTP_OBSOLETE40";
+   } else if (result == act::ResultHTTP_FUNCTION_NOT_FOUND) {
+      return "HTTP_FUNCTION_NOT_FOUND";
+   } else if (result == act::ResultHTTP_ABORTED_BY_CALLBACK) {
+      return "HTTP_ABORTED_BY_CALLBACK";
+   } else if (result == act::ResultHTTP_BAD_FUNCTION_ARGUMENT) {
+      return "HTTP_BAD_FUNCTION_ARGUMENT";
+   } else if (result == act::ResultHTTP_OBSOLETE44) {
+      return "HTTP_OBSOLETE44";
+   } else if (result == act::ResultHTTP_INTERFACE_FAILED) {
+      return "HTTP_INTERFACE_FAILED";
+   } else if (result == act::ResultHTTP_OBSOLETE46) {
+      return "HTTP_OBSOLETE46";
+   } else if (result == act::ResultHTTP_TOO_MANY_REDIRECTS) {
+      return "HTTP_TOO_MANY_REDIRECTS";
+   } else if (result == act::ResultHTTP_UNKNOWN_OPTION) {
+      return "HTTP_UNKNOWN_OPTION";
+   } else if (result == act::ResultHTTP_TELNET_OPTION_SYNTAX) {
+      return "HTTP_TELNET_OPTION_SYNTAX";
+   } else if (result == act::ResultHTTP_OBSOLETE50) {
+      return "HTTP_OBSOLETE50";
+   } else if (result == act::ResultHTTP_PEER_FAILED_VERIFICATION) {
+      return "HTTP_PEER_FAILED_VERIFICATION";
+   } else if (result == act::ResultHTTP_GOT_NOTHING) {
+      return "HTTP_GOT_NOTHING";
+   } else if (result == act::ResultHTTP_SSL_ENGINE_NOTFOUND) {
+      return "HTTP_SSL_ENGINE_NOTFOUND";
+   } else if (result == act::ResultHTTP_SSL_ENGINE_SETFAILED) {
+      return "HTTP_SSL_ENGINE_SETFAILED";
+   } else if (result == act::ResultHTTP_SEND_ERROR) {
+      return "HTTP_SEND_ERROR";
+   } else if (result == act::ResultHTTP_RECV_ERROR) {
+      return "HTTP_RECV_ERROR";
+   } else if (result == act::ResultHTTP_OBSOLETE57) {
+      return "HTTP_OBSOLETE57";
+   } else if (result == act::ResultHTTP_SSL_CERTPROBLEM) {
+      return "HTTP_SSL_CERTPROBLEM";
+   } else if (result == act::ResultHTTP_SSL_CIPHER) {
+      return "HTTP_SSL_CIPHER";
+   } else if (result == act::ResultHTTP_SSL_CACERT) {
+      return "HTTP_SSL_CACERT";
+   } else if (result == act::ResultHTTP_BAD_CONTENT_ENCODING) {
+      return "HTTP_BAD_CONTENT_ENCODING";
+   } else if (result == act::ResultHTTP_LDAP_INVALID_URL) {
+      return "HTTP_LDAP_INVALID_URL";
+   } else if (result == act::ResultHTTP_FILESIZE_EXCEEDED) {
+      return "HTTP_FILESIZE_EXCEEDED";
+   } else if (result == act::ResultHTTP_USE_SSL_FAILED) {
+      return "HTTP_USE_SSL_FAILED";
+   } else if (result == act::ResultHTTP_SEND_FAIL_REWIND) {
+      return "HTTP_SEND_FAIL_REWIND";
+   } else if (result == act::ResultHTTP_SSL_ENGINE_INITFAILED) {
+      return "HTTP_SSL_ENGINE_INITFAILED";
+   } else if (result == act::ResultHTTP_LOGIN_DENIED) {
+      return "HTTP_LOGIN_DENIED";
+   } else if (result == act::ResultHTTP_TFTP_NOTFOUND) {
+      return "HTTP_TFTP_NOTFOUND";
+   } else if (result == act::ResultHTTP_TFTP_PERM) {
+      return "HTTP_TFTP_PERM";
+   } else if (result == act::ResultHTTP_REMOTE_DISK_FULL) {
+      return "HTTP_REMOTE_DISK_FULL";
+   } else if (result == act::ResultHTTP_TFTP_ILLEGAL) {
+      return "HTTP_TFTP_ILLEGAL";
+   } else if (result == act::ResultHTTP_TFTP_UNKNOWNID) {
+      return "HTTP_TFTP_UNKNOWNID";
+   } else if (result == act::ResultHTTP_REMOTE_FILE_EXISTS) {
+      return "HTTP_REMOTE_FILE_EXISTS";
+   } else if (result == act::ResultHTTP_TFTP_NOSUCHUSER) {
+      return "HTTP_TFTP_NOSUCHUSER";
+   } else if (result == act::ResultHTTP_CONV_FAILED) {
+      return "HTTP_CONV_FAILED";
+   } else if (result == act::ResultHTTP_CONV_REQD) {
+      return "HTTP_CONV_REQD";
+   } else if (result == act::ResultHTTP_SSL_CACERT_BADFILE) {
+      return "HTTP_SSL_CACERT_BADFILE";
+   } else if (result == act::ResultHTTP_REMOTE_FILE_NOT_FOUND) {
+      return "HTTP_REMOTE_FILE_NOT_FOUND";
+   } else if (result == act::ResultHTTP_SSH) {
+      return "HTTP_SSH";
+   } else if (result == act::ResultHTTP_SSL_SHUTDOWN_FAILED) {
+      return "HTTP_SSL_SHUTDOWN_FAILED";
+   } else if (result == act::ResultHTTP_AGAIN) {
+      return "HTTP_AGAIN";
+   } else if (result == act::ResultHTTP_SSL_CRL_BADFILE) {
+      return "HTTP_SSL_CRL_BADFILE";
+   } else if (result == act::ResultHTTP_SSL_ISSUER_ERROR) {
+      return "HTTP_SSL_ISSUER_ERROR";
+   } else if (result == act::ResultHTTP_FTP_PRET_FAILED) {
+      return "HTTP_FTP_PRET_FAILED";
+   } else if (result == act::ResultHTTP_RTSP_CSEQ_ERROR) {
+      return "HTTP_RTSP_CSEQ_ERROR";
+   } else if (result == act::ResultHTTP_RTSP_SESSION_ERROR) {
+      return "HTTP_RTSP_SESSION_ERROR";
+   } else if (result == act::ResultHTTP_FTP_BAD_FILE_LIST) {
+      return "HTTP_FTP_BAD_FILE_LIST";
+   } else if (result == act::ResultHTTP_CHUNK_FAILED) {
+      return "HTTP_CHUNK_FAILED";
+   } else if (result == act::ResultHTTP_NSSL_NO_CTX) {
+      return "HTTP_NSSL_NO_CTX";
+   }
+
+   if (result == act::ResultSO_ERROR) {
+      return "SO_ERROR";
+   } else if (result == act::ResultSO_SELECT_ERROR) {
+      return "SO_SELECT_ERROR";
+   } else if (result == act::ResultREQUEST_ERROR) {
+      return "REQUEST_ERROR";
+   } else if (result == act::ResultBAD_FORMAT_PARAMETER) {
+      return "BAD_FORMAT_PARAMETER";
+   } else if (result == act::ResultBAD_FORMAT_REQUEST) {
+      return "BAD_FORMAT_REQUEST";
+   } else if (result == act::ResultREQUEST_PARAMETER_MISSING) {
+      return "REQUEST_PARAMETER_MISSING";
+   } else if (result == act::ResultWRONG_HTTP_METHOD) {
+      return "WRONG_HTTP_METHOD";
+   } else if (result == act::ResultRESPONSE_ERROR) {
+      return "RESPONSE_ERROR";
+   } else if (result == act::ResultBAD_FORMAT_RESPONSE) {
+      return "BAD_FORMAT_RESPONSE";
+   } else if (result == act::ResultRESPONSE_ITEM_MISSING) {
+      return "RESPONSE_ITEM_MISSING";
+   } else if (result == act::ResultRESPONSE_TOO_LARGE) {
+      return "RESPONSE_TOO_LARGE";
+   } else if (result == act::ResultNOT_MODIFIED) {
+      return "NOT_MODIFIED";
+   } else if (result == act::ResultINVALID_COMMON_PARAMETER) {
+      return "INVALID_COMMON_PARAMETER";
+   } else if (result == act::ResultINVALID_PLATFORM_ID) {
+      return "INVALID_PLATFORM_ID";
+   } else if (result == act::ResultUNAUTHORIZED_DEVICE) {
+      return "UNAUTHORIZED_DEVICE";
+   } else if (result == act::ResultINVALID_SERIAL_ID) {
+      return "INVALID_SERIAL_ID";
+   } else if (result == act::ResultINVALID_MAC_ADDRESS) {
+      return "INVALID_MAC_ADDRESS";
+   } else if (result == act::ResultINVALID_REGION) {
+      return "INVALID_REGION";
+   } else if (result == act::ResultINVALID_COUNTRY) {
+      return "INVALID_COUNTRY";
+   } else if (result == act::ResultINVALID_LANGUAGE) {
+      return "INVALID_LANGUAGE";
+   } else if (result == act::ResultUNAUTHORIZED_CLIENT) {
+      return "UNAUTHORIZED_CLIENT";
+   } else if (result == act::ResultDEVICE_ID_EMPTY) {
+      return "DEVICE_ID_EMPTY";
+   } else if (result == act::ResultSERIAL_ID_EMPTY) {
+      return "SERIAL_ID_EMPTY";
+   } else if (result == act::ResultPLATFORM_ID_EMPTY) {
+      return "PLATFORM_ID_EMPTY";
+   } else if (result == act::ResultINVALID_UNIQUE_ID) {
+      return "INVALID_UNIQUE_ID";
+   } else if (result == act::ResultINVALID_CLIENT_ID) {
+      return "INVALID_CLIENT_ID";
+   } else if (result == act::ResultINVALID_CLIENT_KEY) {
+      return "INVALID_CLIENT_KEY";
+   } else if (result == act::ResultINVALID_NEX_CLIENT_ID) {
+      return "INVALID_NEX_CLIENT_ID";
+   } else if (result == act::ResultINVALID_GAME_SERVER_ID) {
+      return "INVALID_GAME_SERVER_ID";
+   } else if (result == act::ResultGAME_SERVER_ID_ENVIRONMENT_NOT_FOUND) {
+      return "GAME_SERVER_ID_ENVIRONMENT_NOT_FOUND";
+   } else if (result == act::ResultGAME_SERVER_ID_UNIQUE_ID_NOT_LINKED) {
+      return "GAME_SERVER_ID_UNIQUE_ID_NOT_LINKED";
+   } else if (result == act::ResultCLIENT_ID_UNIQUE_ID_NOT_LINKED) {
+      return "CLIENT_ID_UNIQUE_ID_NOT_LINKED";
+   } else if (result == act::ResultDEVICE_MISMATCH) {
+      return "DEVICE_MISMATCH";
+   } else if (result == act::ResultCOUNTRY_MISMATCH) {
+      return "COUNTRY_MISMATCH";
+   } else if (result == act::ResultEULA_NOT_ACCEPTED) {
+      return "EULA_NOT_ACCEPTED";
+   } else if (result == act::ResultUPDATE_REQUIRED) {
+      return "UPDATE_REQUIRED";
+   } else if (result == act::ResultSYSTEM_UPDATE_REQUIRED) {
+      return "SYSTEM_UPDATE_REQUIRED";
+   } else if (result == act::ResultAPPLICATION_UPDATE_REQUIRED) {
+      return "APPLICATION_UPDATE_REQUIRED";
+   } else if (result == act::ResultUNAUTHORIZED_REQUEST) {
+      return "UNAUTHORIZED_REQUEST";
+   } else if (result == act::ResultREQUEST_FORBIDDEN) {
+      return "REQUEST_FORBIDDEN";
+   } else if (result == act::ResultRESOURCE_NOT_FOUND) {
+      return "RESOURCE_NOT_FOUND";
+   } else if (result == act::ResultPID_NOT_FOUND) {
+      return "PID_NOT_FOUND";
+   } else if (result == act::ResultNEX_ACCOUNT_NOT_FOUND) {
+      return "NEX_ACCOUNT_NOT_FOUND";
+   } else if (result == act::ResultGENERATE_TOKEN_FAILURE) {
+      return "GENERATE_TOKEN_FAILURE";
+   } else if (result == act::ResultREQUEST_NOT_FOUND) {
+      return "REQUEST_NOT_FOUND";
+   } else if (result == act::ResultMASTER_PIN_NOT_FOUND) {
+      return "MASTER_PIN_NOT_FOUND";
+   } else if (result == act::ResultMAIL_TEXT_NOT_FOUND) {
+      return "MAIL_TEXT_NOT_FOUND";
+   } else if (result == act::ResultSEND_MAIL_FAILURE) {
+      return "SEND_MAIL_FAILURE";
+   } else if (result == act::ResultAPPROVAL_ID_NOT_FOUND) {
+      return "APPROVAL_ID_NOT_FOUND";
+   } else if (result == act::ResultINVALID_EULA_PARAMETER) {
+      return "INVALID_EULA_PARAMETER";
+   } else if (result == act::ResultINVALID_EULA_COUNTRY) {
+      return "INVALID_EULA_COUNTRY";
+   } else if (result == act::ResultINVALID_EULA_COUNTRY_AND_VERSION) {
+      return "INVALID_EULA_COUNTRY_AND_VERSION";
+   } else if (result == act::ResultEULA_NOT_FOUND) {
+      return "EULA_NOT_FOUND";
+   } else if (result == act::ResultPHRASE_NOT_ACCEPTABLE) {
+      return "PHRASE_NOT_ACCEPTABLE";
+   } else if (result == act::ResultACCOUNT_ID_ALREADY_EXISTS) {
+      return "ACCOUNT_ID_ALREADY_EXISTS";
+   } else if (result == act::ResultACCOUNT_ID_NOT_ACCEPTABLE) {
+      return "ACCOUNT_ID_NOT_ACCEPTABLE";
+   } else if (result == act::ResultACCOUNT_PASSWORD_NOT_ACCEPTABLE) {
+      return "ACCOUNT_PASSWORD_NOT_ACCEPTABLE";
+   } else if (result == act::ResultMII_NAME_NOT_ACCEPTABLE) {
+      return "MII_NAME_NOT_ACCEPTABLE";
+   } else if (result == act::ResultMAIL_ADDRESS_NOT_ACCEPTABLE) {
+      return "MAIL_ADDRESS_NOT_ACCEPTABLE";
+   } else if (result == act::ResultACCOUNT_ID_FORMAT_INVALID) {
+      return "ACCOUNT_ID_FORMAT_INVALID";
+   } else if (result == act::ResultACCOUNT_ID_PASSWORD_SAME) {
+      return "ACCOUNT_ID_PASSWORD_SAME";
+   } else if (result == act::ResultACCOUNT_ID_CHAR_NOT_ACCEPTABLE) {
+      return "ACCOUNT_ID_CHAR_NOT_ACCEPTABLE";
+   } else if (result == act::ResultACCOUNT_ID_SUCCESSIVE_SYMBOL) {
+      return "ACCOUNT_ID_SUCCESSIVE_SYMBOL";
+   } else if (result == act::ResultACCOUNT_ID_SYMBOL_POSITION_NOT_ACCEPTABLE) {
+      return "ACCOUNT_ID_SYMBOL_POSITION_NOT_ACCEPTABLE";
+   } else if (result == act::ResultACCOUNT_ID_TOO_MANY_DIGIT) {
+      return "ACCOUNT_ID_TOO_MANY_DIGIT";
+   } else if (result == act::ResultACCOUNT_PASSWORD_CHAR_NOT_ACCEPTABLE) {
+      return "ACCOUNT_PASSWORD_CHAR_NOT_ACCEPTABLE";
+   } else if (result == act::ResultACCOUNT_PASSWORD_TOO_FEW_CHAR_TYPES) {
+      return "ACCOUNT_PASSWORD_TOO_FEW_CHAR_TYPES";
+   } else if (result == act::ResultACCOUNT_PASSWORD_SUCCESSIVE_SAME_CHAR) {
+      return "ACCOUNT_PASSWORD_SUCCESSIVE_SAME_CHAR";
+   } else if (result == act::ResultMAIL_ADDRESS_DOMAIN_NAME_NOT_ACCEPTABLE) {
+      return "MAIL_ADDRESS_DOMAIN_NAME_NOT_ACCEPTABLE";
+   } else if (result == act::ResultMAIL_ADDRESS_DOMAIN_NAME_NOT_RESOLVED) {
+      return "MAIL_ADDRESS_DOMAIN_NAME_NOT_RESOLVED";
+   } else if (result == act::ResultREACHED_ASSOCIATION_LIMIT) {
+      return "REACHED_ASSOCIATION_LIMIT";
+   } else if (result == act::ResultREACHED_REGISTRATION_LIMIT) {
+      return "REACHED_REGISTRATION_LIMIT";
+   } else if (result == act::ResultCOPPA_NOT_ACCEPTED) {
+      return "COPPA_NOT_ACCEPTED";
+   } else if (result == act::ResultPARENTAL_CONTROLS_REQUIRED) {
+      return "PARENTAL_CONTROLS_REQUIRED";
+   } else if (result == act::ResultMII_NOT_REGISTERED) {
+      return "MII_NOT_REGISTERED";
+   } else if (result == act::ResultDEVICE_EULA_COUNTRY_MISMATCH) {
+      return "DEVICE_EULA_COUNTRY_MISMATCH";
+   } else if (result == act::ResultPENDING_MIGRATION) {
+      return "PENDING_MIGRATION";
+   } else if (result == act::ResultWRONG_USER_INPUT) {
+      return "WRONG_USER_INPUT";
+   } else if (result == act::ResultWRONG_ACCOUNT_PASSWORD) {
+      return "WRONG_ACCOUNT_PASSWORD";
+   } else if (result == act::ResultWRONG_MAIL_ADDRESS) {
+      return "WRONG_MAIL_ADDRESS";
+   } else if (result == act::ResultWRONG_ACCOUNT_PASSWORD_OR_MAIL_ADDRESS) {
+      return "WRONG_ACCOUNT_PASSWORD_OR_MAIL_ADDRESS";
+   } else if (result == act::ResultWRONG_CONFIRMATION_CODE) {
+      return "WRONG_CONFIRMATION_CODE";
+   } else if (result == act::ResultWRONG_BIRTH_DATE_OR_MAIL_ADDRESS) {
+      return "WRONG_BIRTH_DATE_OR_MAIL_ADDRESS";
+   } else if (result == act::ResultWRONG_ACCOUNT_MAIL) {
+      return "WRONG_ACCOUNT_MAIL";
+   } else if (result == act::ResultACCOUNT_ALREADY_DELETED) {
+      return "ACCOUNT_ALREADY_DELETED";
+   } else if (result == act::ResultACCOUNT_ID_CHANGED) {
+      return "ACCOUNT_ID_CHANGED";
+   } else if (result == act::ResultAUTHENTICATION_LOCKED) {
+      return "AUTHENTICATION_LOCKED";
+   } else if (result == act::ResultDEVICE_INACTIVE) {
+      return "DEVICE_INACTIVE";
+   } else if (result == act::ResultCOPPA_AGREEMENT_CANCELED) {
+      return "COPPA_AGREEMENT_CANCELED";
+   } else if (result == act::ResultDOMAIN_ACCOUNT_ALREADY_EXISTS) {
+      return "DOMAIN_ACCOUNT_ALREADY_EXISTS";
+   } else if (result == act::ResultACCOUNT_TOKEN_EXPIRED) {
+      return "ACCOUNT_TOKEN_EXPIRED";
+   } else if (result == act::ResultINVALID_ACCOUNT_TOKEN) {
+      return "INVALID_ACCOUNT_TOKEN";
+   } else if (result == act::ResultAUTHENTICATION_REQUIRED) {
+      return "AUTHENTICATION_REQUIRED";
+   } else if (result == act::ResultCONFIRMATION_CODE_EXPIRED) {
+      return "CONFIRMATION_CODE_EXPIRED";
+   } else if (result == act::ResultMAIL_ADDRESS_NOT_VALIDATED) {
+      return "MAIL_ADDRESS_NOT_VALIDATED";
+   } else if (result == act::ResultEXCESSIVE_MAIL_SEND_REQUEST) {
+      return "EXCESSIVE_MAIL_SEND_REQUEST";
+   } else if (result == act::ResultCREDIT_CARD_ERROR) {
+      return "CREDIT_CARD_ERROR";
+   } else if (result == act::ResultCREDIT_CARD_GENERAL_FAILURE) {
+      return "CREDIT_CARD_GENERAL_FAILURE";
+   } else if (result == act::ResultCREDIT_CARD_DECLINED) {
+      return "CREDIT_CARD_DECLINED";
+   } else if (result == act::ResultCREDIT_CARD_BLACKLISTED) {
+      return "CREDIT_CARD_BLACKLISTED";
+   } else if (result == act::ResultINVALID_CREDIT_CARD_NUMBER) {
+      return "INVALID_CREDIT_CARD_NUMBER";
+   } else if (result == act::ResultINVALID_CREDIT_CARD_DATE) {
+      return "INVALID_CREDIT_CARD_DATE";
+   } else if (result == act::ResultINVALID_CREDIT_CARD_PIN) {
+      return "INVALID_CREDIT_CARD_PIN";
+   } else if (result == act::ResultINVALID_POSTAL_CODE) {
+      return "INVALID_POSTAL_CODE";
+   } else if (result == act::ResultINVALID_LOCATION) {
+      return "INVALID_LOCATION";
+   } else if (result == act::ResultCREDIT_CARD_DATE_EXPIRED) {
+      return "CREDIT_CARD_DATE_EXPIRED";
+   } else if (result == act::ResultCREDIT_CARD_NUMBER_WRONG) {
+      return "CREDIT_CARD_NUMBER_WRONG";
+   } else if (result == act::ResultCREDIT_CARD_PIN_WRONG) {
+      return "CREDIT_CARD_PIN_WRONG";
+   }
+
+   if (result == act::ResultBANNED) {
+      return "BANNED";
+   } else if (result == act::ResultBANNED_ACCOUNT) {
+      return "BANNED_ACCOUNT";
+   } else if (result == act::ResultBANNED_ACCOUNT_ALL) {
+      return "BANNED_ACCOUNT_ALL";
+   } else if (result == act::ResultBANNED_ACCOUNT_IN_APPLICATION) {
+      return "BANNED_ACCOUNT_IN_APPLICATION";
+   } else if (result == act::ResultBANNED_ACCOUNT_IN_NEX_SERVICE) {
+      return "BANNED_ACCOUNT_IN_NEX_SERVICE";
+   } else if (result == act::ResultBANNED_ACCOUNT_IN_INDEPENDENT_SERVICE) {
+      return "BANNED_ACCOUNT_IN_INDEPENDENT_SERVICE";
+   } else if (result == act::ResultBANNED_DEVICE) {
+      return "BANNED_DEVICE";
+   } else if (result == act::ResultBANNED_DEVICE_ALL) {
+      return "BANNED_DEVICE_ALL";
+   } else if (result == act::ResultBANNED_DEVICE_IN_APPLICATION) {
+      return "BANNED_DEVICE_IN_APPLICATION";
+   } else if (result == act::ResultBANNED_DEVICE_IN_NEX_SERVICE) {
+      return "BANNED_DEVICE_IN_NEX_SERVICE";
+   } else if (result == act::ResultBANNED_DEVICE_IN_INDEPENDENT_SERVICE) {
+      return "BANNED_DEVICE_IN_INDEPENDENT_SERVICE";
+   } else if (result == act::ResultBANNED_ACCOUNT_TEMPORARILY) {
+      return "BANNED_ACCOUNT_TEMPORARILY";
+   } else if (result == act::ResultBANNED_ACCOUNT_ALL_TEMPORARILY) {
+      return "BANNED_ACCOUNT_ALL_TEMPORARILY";
+   } else if (result == act::ResultBANNED_ACCOUNT_IN_APPLICATION_TEMPORARILY) {
+      return "BANNED_ACCOUNT_IN_APPLICATION_TEMPORARILY";
+   } else if (result == act::ResultBANNED_ACCOUNT_IN_NEX_SERVICE_TEMPORARILY) {
+      return "BANNED_ACCOUNT_IN_NEX_SERVICE_TEMPORARILY";
+   } else if (result == act::ResultBANNED_ACCOUNT_IN_INDEPENDENT_SERVICE_TEMPORARILY) {
+      return "BANNED_ACCOUNT_IN_INDEPENDENT_SERVICE_TEMPORARILY";
+   } else if (result == act::ResultBANNED_DEVICE_TEMPORARILY) {
+      return "BANNED_DEVICE_TEMPORARILY";
+   } else if (result == act::ResultBANNED_DEVICE_ALL_TEMPORARILY) {
+      return "BANNED_DEVICE_ALL_TEMPORARILY";
+   } else if (result == act::ResultBANNED_DEVICE_IN_APPLICATION_TEMPORARILY) {
+      return "BANNED_DEVICE_IN_APPLICATION_TEMPORARILY";
+   } else if (result == act::ResultBANNED_DEVICE_IN_NEX_SERVICE_TEMPORARILY) {
+      return "BANNED_DEVICE_IN_NEX_SERVICE_TEMPORARILY";
+   } else if (result == act::ResultBANNED_DEVICE_IN_INDEPENDENT_SERVICE_TEMPORARILY) {
+      return "BANNED_DEVICE_IN_INDEPENDENT_SERVICE_TEMPORARILY";
+   }
+
+   if (result == act::ResultSERVICE_NOT_PROVIDED) {
+      return "SERVICE_NOT_PROVIDED";
+   } else if (result == act::ResultUNDER_MAINTENANCE) {
+      return "UNDER_MAINTENANCE";
+   } else if (result == act::ResultSERVICE_CLOSED) {
+      return "SERVICE_CLOSED";
+   } else if (result == act::ResultNINTENDO_NETWORK_CLOSED) {
+      return "NINTENDO_NETWORK_CLOSED";
+   } else if (result == act::ResultNOT_PROVIDED_COUNTRY) {
+      return "NOT_PROVIDED_COUNTRY";
+   } else if (result == act::ResultRESTRICTION_ERROR) {
+      return "RESTRICTION_ERROR";
+   } else if (result == act::ResultRESTRICTED_BY_AGE) {
+      return "RESTRICTED_BY_AGE";
+   } else if (result == act::ResultRESTRICTED_BY_PARENTAL_CONTROLS) {
+      return "RESTRICTED_BY_PARENTAL_CONTROLS";
+   } else if (result == act::ResultON_GAME_INTERNET_COMMUNICATION_RESTRICTED) {
+      return "ON_GAME_INTERNET_COMMUNICATION_RESTRICTED";
+   } else if (result == act::ResultINTERNAL_SERVER_ERROR) {
+      return "INTERNAL_SERVER_ERROR";
+   } else if (result == act::ResultUNKNOWN_SERVER_ERROR) {
+      return "UNKNOWN_SERVER_ERROR";
+   } else if (result == act::ResultUNAUTHENTICATED_AFTER_SALVAGE) {
+      return "UNAUTHENTICATED_AFTER_SALVAGE";
+   } else if (result == act::ResultAUTHENTICATION_FAILURE_UNKNOWN) {
+      return "AUTHENTICATION_FAILURE_UNKNOWN";
+   }
+
+   return "<unknown>";
+}
+
 const char *
 GetDescriptionString(nn::Result result)
 {
@@ -566,6 +1155,8 @@ GetDescriptionString(nn::Result result)
    switch (result.module()) {
    case nn::Result::MODULE_NN_ACP:
       return GetAcpDescriptionString(result);
+   case nn::Result::MODULE_NN_ACT:
+      return GetActDescriptionString(result);
    }
 
    return "<unknown>";

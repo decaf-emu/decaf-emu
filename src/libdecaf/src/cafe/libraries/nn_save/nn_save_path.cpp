@@ -6,7 +6,8 @@
 #include "cafe/libraries/coreinit/coreinit_mutex.h"
 #include "cafe/libraries/coreinit/coreinit_systeminfo.h"
 #include "cafe/libraries/coreinit/coreinit_osreport.h"
-#include "cafe/libraries/nn_act/nn_act_lib.h"
+#include "cafe/libraries/nn_act/nn_act_client.h"
+#include "cafe/libraries/nn_act/nn_act_clientstandardservice.h"
 #include "cafe/libraries/nn_acp/nn_acp_client.h"
 #include "cafe/libraries/nn_acp/nn_acp_saveservice.h"
 
@@ -25,7 +26,7 @@ struct StaticSaveData
    be2_struct<OSMutex> mutex;
    be2_struct<FSClient> fsClient;
    be2_struct<FSCmdBlock> fsCmdBlock;
-   be2_array<uint32_t, MaxSlot> persistentIdCache;
+   be2_array<uint32_t, NumSlots> persistentIdCache;
 };
 
 static virt_ptr<StaticSaveData> sSaveData = nullptr;
@@ -44,7 +45,7 @@ SAVEInit()
    FSAddClient(virt_addrof(sSaveData->fsClient), FSErrorFlag::None);
    FSInitCmdBlock(virt_addrof(sSaveData->fsCmdBlock));
 
-   for (auto i = SlotNo { 1 }; i <= MaxSlot; ++i) {
+   for (auto i = SlotNo { 1 }; i <= NumSlots; ++i) {
       sSaveData->persistentIdCache[i - 1] = nn_act::GetPersistentIdEx(i);
    }
 
@@ -197,7 +198,7 @@ getPersistentId(SlotNo slot,
    if (slot == SystemSlot) {
       outPersistentId = 0;
       return true;
-   } else if (slot >= 1 && slot <= MaxSlot) {
+   } else if (slot >= 1 && slot <= NumSlots) {
       outPersistentId = sSaveData->persistentIdCache[slot - 1];
       return true;
    }
