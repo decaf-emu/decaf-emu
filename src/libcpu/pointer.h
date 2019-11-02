@@ -433,13 +433,40 @@ using PhysicalPointer = Pointer<Value, PhysicalAddress>;
 
 template<typename AddressType, typename SrcTypePtr, typename DstTypePtr>
 struct pointer_cast_impl<AddressType, SrcTypePtr, DstTypePtr,
-   typename std::enable_if<std::is_pointer<SrcTypePtr>::value && std::is_pointer<DstTypePtr>::value>::type>
+   typename std::enable_if<
+      std::conjunction_v<
+         std::is_pointer<SrcTypePtr>,
+         std::is_pointer<DstTypePtr>,
+         std::negation<std::is_const<std::remove_pointer_t<SrcTypePtr>>>
+      >>::type>
 {
-   using DstType = typename std::remove_pointer<DstTypePtr>::type;
-   using SrcType = typename std::remove_pointer<SrcTypePtr>::type;
+   using DstType = std::remove_pointer_t<DstTypePtr>;
+   using SrcType = std::remove_pointer_t<SrcTypePtr>;
 
    // Pointer<X, AddressType> to Pointer<Y, AddressType>
    static constexpr Pointer<DstType, AddressType> cast(Pointer<SrcType, AddressType> src)
+   {
+      Pointer<DstType, AddressType> dst;
+      dst.mAddress = src.mAddress;
+      return dst;
+   }
+};
+
+template<typename AddressType, typename SrcTypePtr, typename DstTypePtr>
+struct pointer_cast_impl<AddressType, SrcTypePtr, DstTypePtr,
+   typename std::enable_if<
+      std::conjunction_v<
+         std::is_pointer<SrcTypePtr>,
+         std::is_pointer<DstTypePtr>,
+         std::is_const<std::remove_pointer_t<SrcTypePtr>>,
+         std::is_const<std::remove_pointer_t<DstTypePtr>>
+      >>::type>
+{
+   using DstType = std::remove_pointer_t<DstTypePtr>;
+   using SrcType = std::remove_pointer_t<SrcTypePtr>;
+
+   // Pointer<const X, AddressType> to Pointer<const Y, AddressType>
+   static constexpr Pointer<const DstType, AddressType> cast(Pointer<SrcType, AddressType> src)
    {
       Pointer<DstType, AddressType> dst;
       dst.mAddress = src.mAddress;
