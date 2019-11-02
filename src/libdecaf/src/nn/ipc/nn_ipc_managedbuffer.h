@@ -40,21 +40,21 @@ struct ManagedBuffer
       if (unalignedBeforeBufferSize && size) {
          auto count = std::min<size_t>(unalignedBeforeBufferSize, size);
          std::memcpy(unalignedBeforeBuffer.get(), ptr, count);
-         ptr += size;
+         ptr += count;
          size -= count;
       }
 
       if (alignedBufferSize && size) {
          auto count = std::min<size_t>(alignedBufferSize, size);
          std::memcpy(alignedBuffer.get(), ptr, count);
-         ptr += size;
+         ptr += count;
          size -= count;
       }
 
       if (unalignedAfterBufferSize && size) {
          auto count = std::min<size_t>(unalignedAfterBufferSize, size);
          std::memcpy(unalignedAfterBuffer.get(), ptr, count);
-         ptr += size;
+         ptr += count;
          size -= count;
       }
    }
