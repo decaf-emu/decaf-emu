@@ -91,8 +91,8 @@ public:
    }
 
    template<size_t N,
-            typename = typename std::enable_if<Size >= N && std::is_same<char, Type>::value>::type>
-   be2_array &operator =(const char (&src)[N])
+            typename = typename std::enable_if<Size >= N>::type>
+   be2_array &operator =(const Type (&src)[N])
    {
       std::copy_n(src, N, mValues);
       return *this;
