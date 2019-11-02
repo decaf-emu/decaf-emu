@@ -84,7 +84,7 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
       return Error::InvalidHandle;
    }
 
-   auto request = phys_cast<SocketRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
+   auto request = phys_cast<const SocketRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
    switch (static_cast<SocketCommand>(resourceRequest->requestData.args.ioctl.request)) {
    case SocketCommand::Close:
       error = device->closeSocket(request->close.fd);

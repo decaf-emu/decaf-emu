@@ -63,7 +63,7 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
           ioctl.inputLength == sizeof(MCPRequestGetFileLength) &&
           !ioctl.outputBuffer &&
           !ioctl.outputLength) {
-         error = mcpGetFileLength(phys_cast<MCPRequestGetFileLength *>(ioctl.inputBuffer));
+         error = mcpGetFileLength(phys_cast<const MCPRequestGetFileLength *>(ioctl.inputBuffer));
       } else {
          error = MCPError::InvalidParam;
       }
@@ -79,7 +79,7 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
    case MCPCommand::LoadFile:
       if (ioctl.inputLength >= sizeof(MCPResponseGetTitleId) &&
           ioctl.outputLength) {
-         error = mcpLoadFile(phys_cast<MCPRequestLoadFile *>(ioctl.inputBuffer),
+         error = mcpLoadFile(phys_cast<const MCPRequestLoadFile *>(ioctl.inputBuffer),
                              ioctl.outputBuffer,
                              ioctl.outputLength);
       } else {
@@ -91,7 +91,7 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
           ioctl.inputLength == sizeof(MCPRequestPrepareTitle) &&
           ioctl.outputBuffer &&
           ioctl.outputLength == sizeof(MCPResponsePrepareTitle)) {
-         error = mcpPrepareTitle52(phys_cast<MCPRequestPrepareTitle *>(ioctl.inputBuffer),
+         error = mcpPrepareTitle52(phys_cast<const MCPRequestPrepareTitle *>(ioctl.inputBuffer),
                                    phys_cast<MCPResponsePrepareTitle *>(ioctl.outputBuffer));
       } else {
          error = MCPError::InvalidParam;
@@ -101,7 +101,7 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
       if (ioctl.inputBuffer &&
           ioctl.inputLength == sizeof(MCPRequestSwitchTitle) &&
           !ioctl.outputBuffer && !ioctl.outputLength) {
-         error = mcpSwitchTitle(phys_cast<MCPRequestSwitchTitle *>(ioctl.inputBuffer));
+         error = mcpSwitchTitle(phys_cast<const MCPRequestSwitchTitle *>(ioctl.inputBuffer));
       } else {
          error = MCPError::InvalidParam;
       }

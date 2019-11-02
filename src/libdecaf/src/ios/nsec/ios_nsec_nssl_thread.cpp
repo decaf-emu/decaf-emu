@@ -119,7 +119,7 @@ nsslIoctl(phys_ptr<ResourceRequest> resourceRequest)
          return Error::InvalidArg;
       }
 
-      auto request = phys_cast<NSSLCreateContextRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
+      auto request = phys_cast<const NSSLCreateContextRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
       error = static_cast<Error>(device->createContext(request->version));
       break;
    }
@@ -133,7 +133,7 @@ nsslIoctl(phys_ptr<ResourceRequest> resourceRequest)
          return Error::InvalidArg;
       }
 
-      auto request = phys_cast<NSSLAddServerPKIRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
+      auto request = phys_cast<const NSSLAddServerPKIRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
       error = static_cast<Error>(device->addServerPKI(request->context, request->cert));
       break;
    }

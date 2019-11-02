@@ -30,7 +30,7 @@ static FSAHandle sCurrentLoadFileHandle = { };
 static size_t sCurrentLoadFileSize = 0u;
 
 MCPError
-mcpGetFileLength(phys_ptr<MCPRequestGetFileLength> request)
+mcpGetFileLength(phys_ptr<const MCPRequestGetFileLength> request)
 {
    auto path = std::string { };
    auto name = std::string_view { phys_addrof(request->name).get() };
@@ -95,7 +95,7 @@ mcpGetTitleId(phys_ptr<kernel::ResourceRequest> resourceRequest,
 }
 
 MCPError
-mcpLoadFile(phys_ptr<MCPRequestLoadFile> request,
+mcpLoadFile(phys_ptr<const MCPRequestLoadFile> request,
             phys_ptr<void> outputBuffer,
             uint32_t outputBufferLength)
 {
@@ -211,7 +211,7 @@ checkExistence(std::string_view path)
 }
 
 MCPError
-mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
+mcpPrepareTitle52(phys_ptr<const MCPRequestPrepareTitle> request,
                   phys_ptr<MCPResponsePrepareTitle> response)
 {
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
@@ -312,7 +312,7 @@ mcpPrepareTitle52(phys_ptr<MCPRequestPrepareTitle> request,
 }
 
 MCPError
-mcpSwitchTitle(phys_ptr<MCPRequestSwitchTitle> request)
+mcpSwitchTitle(phys_ptr<const MCPRequestSwitchTitle> request)
 {
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto processId = static_cast<ProcessId>(ProcessId::COSKERNEL + request->cafeProcessId);
