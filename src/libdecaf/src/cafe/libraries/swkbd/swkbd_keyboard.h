@@ -189,7 +189,7 @@ DrawTV();
 void
 GetDrawStringInfo(virt_ptr<DrawStringInfo> info);
 
-const virt_ptr<char16_t>
+virt_ptr<const char16_t>
 GetInputFormString();
 
 void

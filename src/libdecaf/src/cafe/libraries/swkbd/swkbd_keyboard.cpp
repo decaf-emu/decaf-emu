@@ -147,7 +147,7 @@ GetDrawStringInfo(virt_ptr<DrawStringInfo> info)
 }
 
 
-const virt_ptr<char16_t>
+virt_ptr<const char16_t>
 GetInputFormString()
 {
    auto workMemory = virt_cast<char16_t *>(sKeyboardData->workMemory);

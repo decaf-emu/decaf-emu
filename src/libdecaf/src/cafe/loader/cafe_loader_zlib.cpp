@@ -7,7 +7,7 @@ namespace cafe::loader::internal
 
 uint32_t
 LiCalcCRC32(uint32_t crc,
-            const virt_ptr<void> data,
+            virt_ptr<const void> data,
             uint32_t size)
 {
    LiCheckAndHandleInterrupts();
@@ -15,7 +15,7 @@ LiCalcCRC32(uint32_t crc,
       return crc;
    }
 
-   crc = crc32(crc, reinterpret_cast<Bytef *>(data.get()), size);
+   crc = crc32(crc, reinterpret_cast<const Bytef *>(data.get()), size);
    LiCheckAndHandleInterrupts();
    return crc;
 }

@@ -12,7 +12,7 @@ namespace internal
 
 uint32_t
 LiCalcCRC32(uint32_t crc,
-            const virt_ptr<void> data,
+            virt_ptr<const void> data,
             uint32_t size);
 
 int32_t

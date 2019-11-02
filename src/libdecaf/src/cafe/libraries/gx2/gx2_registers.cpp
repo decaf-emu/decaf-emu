@@ -93,7 +93,7 @@ GX2InitAlphaTestReg(virt_ptr<GX2AlphaTestReg> reg,
 }
 
 void
-GX2GetAlphaTestReg(const virt_ptr<GX2AlphaTestReg> reg,
+GX2GetAlphaTestReg(virt_ptr<const GX2AlphaTestReg> reg,
                    virt_ptr<BOOL> alphaTest,
                    virt_ptr<GX2CompareFunction> func,
                    virt_ptr<float> ref)
@@ -182,7 +182,7 @@ GX2InitAlphaToMaskReg(virt_ptr<GX2AlphaToMaskReg> reg,
 }
 
 void
-GX2GetAlphaToMaskReg(const virt_ptr<GX2AlphaToMaskReg> reg,
+GX2GetAlphaToMaskReg(virt_ptr<const GX2AlphaToMaskReg> reg,
                      virt_ptr<BOOL> alphaToMask,
                      virt_ptr<GX2AlphaToMaskMode> mode)
 {

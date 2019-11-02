@@ -439,7 +439,7 @@ OSDriver_CopyFromSaveArea(OSDriver_UserDriverId driverId,
 
 OSDriver_Error
 OSDriver_CopyToSaveArea(OSDriver_UserDriverId driverId,
-                        const virt_ptr<void> data,
+                        virt_ptr<const void> data,
                         uint32_t size)
 {
    return OSDriver_Error::DriverNotFound;
