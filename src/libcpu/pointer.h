@@ -256,44 +256,23 @@ public:
 
    template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, dereference_type>::type &
-   operator *()
+   operator *() const
    {
       return *internal::translate<dereference_type>(mAddress);
    }
 
    template<typename K = value_type>
-   typename std::enable_if<!std::is_void<K>::value, const dereference_type>::type &
-   operator *() const
-   {
-      return *internal::translate<const dereference_type>(mAddress);
-   }
-
-   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, dereference_type>::type *
-   operator ->()
+   operator ->() const
    {
       return internal::translate<dereference_type>(mAddress);
    }
 
    template<typename K = value_type>
-   typename std::enable_if<!std::is_void<K>::value, const dereference_type>::type *
-   operator ->() const
-   {
-      return internal::translate<const dereference_type>(mAddress);
-   }
-
-   template<typename K = value_type>
    typename std::enable_if<!std::is_void<K>::value, dereference_type>::type &
-   operator [](size_t index)
-   {
-      return internal::translate<dereference_type>(mAddress)[index];
-   }
-
-   template<typename K = value_type>
-   typename std::enable_if<!std::is_void<K>::value, const dereference_type>::type &
    operator [](size_t index) const
    {
-      return internal::translate<const dereference_type>(mAddress)[index];
+      return internal::translate<dereference_type>(mAddress)[index];
    }
 
    constexpr bool operator == (std::nullptr_t) const
