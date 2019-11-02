@@ -22,9 +22,9 @@ struct FFLCreateID
    //! Seconds since Jan 1st 2010
    uint32_t timestamp : 28;
 
-   uint8_t macAddress[6];
+   uint8_t deviceHash[6];
 };
-CHECK_OFFSET(FFLCreateID, 4, macAddress);
+CHECK_OFFSET(FFLCreateID, 4, deviceHash);
 CHECK_SIZE(FFLCreateID, 10);
 
 // This structure is intentionally little-endian as the data
