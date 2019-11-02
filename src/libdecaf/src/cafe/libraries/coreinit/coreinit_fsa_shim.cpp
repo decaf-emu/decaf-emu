@@ -909,7 +909,7 @@ fsaShimPrepareRequestWriteFile(virt_ptr<FSAShimBuffer> shim,
    shim->ioctlvVec[2].len = static_cast<uint32_t>(sizeof(FSAResponse));
 
    auto &request = shim->request.writeFile;
-   request.buffer = virt_cast<uint8_t *>(buffer);
+   request.buffer = virt_cast<const uint8_t *>(buffer);
    request.size = size;
    request.count = count;
    request.pos = pos;
