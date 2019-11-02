@@ -20,6 +20,7 @@ static constexpr SlotNo SystemSlot = 255;
 
 static constexpr uint32_t AccountIdSize = 17;
 static constexpr uint32_t NfsPasswordSize = 17;
-static constexpr uint32_t MiiNameSize = 22;
+static constexpr uint32_t MiiNameSize = 11;
+static constexpr uint32_t UuidSize = 16;
 
 } // namespace nn::act

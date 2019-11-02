@@ -17,6 +17,6 @@ void
 initialiseStaticClientStandardServiceData();
 
 void
-initialiseAccounts();
+loadAccounts();
 
 } // namespace ios::fpd::internal

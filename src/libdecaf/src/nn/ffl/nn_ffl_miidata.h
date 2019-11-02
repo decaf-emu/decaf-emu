@@ -1,9 +1,31 @@
 #pragma once
 #include <array>
+#include <cstdint>
 #include <libcpu/be2_struct.h>
 
 namespace nn::ffl
 {
+
+#pragma pack(push, 1)
+
+enum FFLCreateIDFlags : uint8_t
+{
+   IsWiiUMii = 0x1 | 0x4,
+   IsTemporaryMii = 0x2,
+   IsNormalMii = 0x8,
+};
+
+struct FFLCreateID
+{
+   uint32_t flags : 4;
+
+   //! Seconds since Jan 1st 2010
+   uint32_t timestamp : 28;
+
+   uint8_t macAddress[6];
+};
+CHECK_OFFSET(FFLCreateID, 4, macAddress);
+CHECK_SIZE(FFLCreateID, 10);
 
 // This structure is intentionally little-endian as the data
 //  is stored in a cross-platform manner for multiple devices.
@@ -27,10 +49,10 @@ struct FFLiMiiDataCore
    uint8_t mii_version;
 
    // 0x4
-   uint8_t author_id[8];
+   uint64_t author_id;
 
    // 0xC
-   uint8_t mii_id[10];
+   FFLCreateID mii_id;
 
    // 0x16
    uint16_t unk_0x16;
@@ -142,5 +164,7 @@ struct FFLStoreData : FFLiMiiDataOfficial
 CHECK_OFFSET(FFLStoreData, 0x5C, unk_0x5C);
 CHECK_OFFSET(FFLStoreData, 0x5E, checksum);
 CHECK_SIZE(FFLStoreData, 0x60);
+
+#pragma pack(pop)
 
 } // namespace nn::ffl

@@ -88,7 +88,7 @@ GetMiiNameEx(virt_ptr<char16_t> name,
       return ResultInvalidPointer;
    }
 
-   return internal::GetAccountInfo(slotNo, name, MiiNameSize,
+   return internal::GetAccountInfo(slotNo, name, MiiNameSize * sizeof(char16_t),
                                    InfoType::MiiName);
 }
 

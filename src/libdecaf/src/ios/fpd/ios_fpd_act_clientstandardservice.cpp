@@ -1,11 +1,17 @@
 #include "ios_fpd_act_clientstandardservice.h"
+#include "ios_fpd_act_server.h"
+#include "ios_fpd_log.h"
 
+#include "ios/fs/ios_fs_fsa_ipc.h"
+#include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/act/nn_act_result.h"
 #include "nn/ffl/nn_ffl_miidata.h"
 
 #include <array>
+#include <charconv>
+#include <chrono>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -13,11 +19,13 @@
 using namespace nn::ipc;
 using namespace nn::act;
 using namespace nn::ffl;
+using namespace ios::fs;
+using namespace ios::kernel;
 
 namespace ios::fpd::internal
 {
 
-static constexpr std::array<uint8_t, 8> DeviceHash = { 0x2C, 0x10, 0xC1, 0x67, 0xEB, 0xC6, 0x00, 0x00 };
+static constexpr std::array<uint8_t, 8> MacAddress = { 0xDE, 0xCA, 0xFA, 0xDD, 0xFE, 0x55, 0x00, 0x00 };
 
 struct Account
 {
@@ -30,12 +38,13 @@ struct Account
    be2_val<uint32_t> simpleAddressId;
    be2_val<uint64_t> localFriendCode;
    be2_struct<FFLStoreData> mii;
+   be2_array<char16_t, MiiNameSize> miiName;
    be2_val<uint32_t> birthday;
    be2_array<char, AccountIdSize> accountId;
    be2_val<uint8_t> gender;
    be2_array<char, NfsPasswordSize> nfsPassword;
    be2_val<uint8_t> isCommitted;
-   be2_struct<Uuid> uuid;
+   be2_array<char, UuidSize> uuid;
 };
 
 struct AccountData
@@ -183,11 +192,11 @@ getCommonInfo(CommandHandlerArgs &args)
    case static_cast<InfoType>(42):
       return ResultNotImplemented;
    case InfoType::DeviceHash:
-      if (buffer.totalSize() < DeviceHash.size()) {
+      if (buffer.totalSize() < MacAddress.size()) {
          return ResultInvalidSize;
       }
 
-      buffer.writeOutput(DeviceHash.data(), DeviceHash.size());
+      buffer.writeOutput(MacAddress.data(), MacAddress.size());
       break;
    case InfoType::NetworkTime:
       return ResultNotImplemented;
@@ -411,10 +420,12 @@ getUuid(CommandHandlerArgs &args)
 
    if (slotNo == SystemSlot) {
       auto uuid = Uuid { };
-      uuid.fill('X');
-      uuid[0] = 's';
-      uuid[1] = 'y';
-      uuid[2] = 's';
+      uuid.fill('b');
+      uuid[0] = 'd';
+      uuid[1] = 'e';
+      uuid[2] = 'c';
+      uuid[3] = 'a';
+      uuid[4] = 'f';
       buffer.writeOutput(uuid.data(), uuid.size());
       return nn::ResultSuccess;
    }
@@ -424,7 +435,7 @@ getUuid(CommandHandlerArgs &args)
       return ResultACCOUNT_NOT_FOUND;
    }
 
-   buffer.writeOutput(account->uuid.data(), account->uuid.size());
+   buffer.writeOutput(phys_addrof(account->uuid), account->uuid.size());
    return nn::ResultSuccess;
 }
 
@@ -447,10 +458,9 @@ ActClientStandardService::commandHandler(uint32_t unk1,
    }
 }
 
-// This is taken from http://wiibrew.org/wiki/Mii_Data
 static uint16_t
-calculateMiiCRC(phys_ptr<const uint8_t> bytes,
-                uint32_t length)
+FFLiGetCRC16(phys_ptr<const uint8_t> bytes,
+             uint32_t length)
 {
    auto crc = uint32_t { 0 };
 
@@ -468,104 +478,98 @@ calculateMiiCRC(phys_ptr<const uint8_t> bytes,
    return static_cast<uint16_t>(crc & 0xFFFF);
 }
 
-void
-initialiseStaticClientStandardServiceData()
+static void
+FFLiSetAuthorID(uint64_t *authorId)
 {
-   sAccountData = kernel::allocProcessStatic<AccountData>();
+   *authorId = sub_E30BD4F0(
+      static_cast<uint32_t>(sAccountData->systemLocalFriendCode >> 32),
+      static_cast<uint32_t>(sAccountData->systemLocalFriendCode),
+      0x4A0);
 }
 
-void
-initialiseAccounts()
+static void
+FFLiSetCreateID(FFLCreateID *createId)
+{
+   static constexpr tm MiiEpoch = { 0, 0, 0, 1, 0, 2010 - 1900, 0, 0, 0 };
+   auto epoch = std::chrono::system_clock::from_time_t(platform::make_gm_time(MiiEpoch));
+   auto secondsSinceMiiEpoch =
+      std::chrono::duration_cast<std::chrono::seconds>(
+         std::chrono::system_clock::now() - epoch);
+
+   createId->flags = FFLCreateIDFlags::IsNormalMii | FFLCreateIDFlags::IsWiiUMii;
+   createId->timestamp = static_cast<uint32_t>(secondsSinceMiiEpoch.count() & 0x0FFFFFFF);
+   std::memcpy(createId->macAddress, MacAddress.data(), 6);
+}
+
+static bool
+loadAccountsFromFile()
+{
+   // TODO: Load account.dat etc
+   return false;
+}
+
+static void
+createAccount()
 {
    auto account = allocateAccount();
+
+   // TODO: = PersistentIdManager::PersistentIdHead++
+   account->persistentId = 0x80000001u;
    account->parentalId = 1u;
-   account->persistentId = 1u;
    account->principalId = 1u;
    account->simpleAddressId = 1u;
    account->localFriendCode = 0x7573726C636C6672ull;
    account->accountId = "DecafAccountId";
    account->nfsPassword = "NfsPassword69";
    account->birthday = 1337u;
-   account->gender = uint8_t { 1 };
+   account->gender = uint8_t{ 1 };
    account->parentalControlSlot = InvalidSlot;
+
+   // TODO: Properly generate a uuid
    account->uuid.fill('A');
-   account->uuid[0] = 'u';
-   account->uuid[1] = 's';
-   account->uuid[2] = 'r';
+   account->uuid[0] = 'd';
+   account->uuid[1] = 'e';
+   account->uuid[2] = 'c';
+   account->uuid[3] = 'a';
+   account->uuid[4] = 'f';
 
-   const uint8_t miiAuthorId[] = { 8, 7, 6, 5, 4, 3, 2, 1 };
-   const uint8_t miiId[] = { 100, 90, 80, 70, 60, 50, 40, 30, 20, 10 };
-   const std::u16string miiCreatorsName = u"decafC";
-   const std::u16string miiName = u"decafM";
+   // Default Mii from IOS
+   static uint8_t DefaultMii[] = {
+      0x00, 0x01, 0x00, 0x40, 0x80, 0xF3, 0x41, 0x80, 0x02, 0x65, 0xA0, 0x92,
+      0xD2, 0x3B, 0x13, 0x36, 0xA4, 0xC0, 0xE1, 0xF8, 0x2D, 0x06, 0x00, 0x00,
+      0x00, 0x00, 0x3F, 0x00, 0x3F, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x40,
+      0x00, 0x00, 0x21, 0x01, 0x02, 0x68, 0x44, 0x18, 0x26, 0x34, 0x46, 0x14,
+      0x81, 0x12, 0x17, 0x68, 0x0D, 0x00, 0x00, 0x29, 0x00, 0x52, 0x48, 0x50,
+      0x00, 0x00, 0x61, 0x00, 0x72, 0x00, 0x61, 0x00, 0x68, 0x00, 0x00, 0x00,
+      0x67, 0x00, 0x68, 0x00, 0x69, 0x00, 0x6A, 0x00, 0x00, 0x00, 0xE4, 0x62,
+   };
 
-   std::memset(std::addressof(account->mii), 0, sizeof(FFLStoreData));
-
-   std::memcpy(account->mii.mii_name, miiName.c_str(), miiName.size() * 2 + 2);
-   std::memcpy(account->mii.creator_name, miiCreatorsName.c_str(), miiCreatorsName.size() * 2 + 2);
-   std::memcpy(account->mii.author_id, miiAuthorId, 8);
-   std::memcpy(account->mii.mii_id, miiId, 10);
-
-   account->mii.birth_platform = 3;
-   account->mii.font_region = 0;
-   account->mii.region_move = 0;
-   account->mii.copyable = 0;
-   account->mii.mii_version = 0x40;
-   account->mii.color = 4;
-   account->mii.birth_day = 10;
-   account->mii.birth_month = 8;
-   account->mii.gender = 0;
-   account->mii.size = 109;
-   account->mii.fatness = 65;
-   account->mii.blush_type = 0;
-   account->mii.face_style = 0;
-   account->mii.face_color = 0;
-   account->mii.face_type = 6;
-   account->mii.local_only = 1;
-   account->mii.hair_mirrored = 15;
-   account->mii.hair_color = 1;
-   account->mii.hair_type = 1;
-   account->mii.eye_thickness = 6;
-   account->mii.eye_scale = 0;
-   account->mii.eye_color = 2;
-   account->mii.eye_type = 26;
-   account->mii.eye_height = 68;
-   account->mii.eye_distance = 0;
-   account->mii.eye_rotation = 3;
-   account->mii.eyebrow_thickness = 12;
-   account->mii.eyebrow_scale = 2;
-   account->mii.eyebrow_color = 4;
-   account->mii.eyebrow_type = 6;
-   account->mii.eyebrow_height = 69;
-   account->mii.eyebrow_distance = 8;
-   account->mii.eyebrow_rotation = 2;
-   account->mii.nose_height = 1;
-   account->mii.nose_scale = 5;
-   account->mii.nose_type = 2;
-   account->mii.mouth_thickness = 6;
-   account->mii.mouth_scale = 2;
-   account->mii.mouth_color = 0;
-   account->mii.mouth_type = 26;
-   account->mii.unk_0x40 = 13;
-   account->mii.mustache_type = 0;
-   account->mii.mouth_height = 0;
-   account->mii.mustache_height = 8;
-   account->mii.mustache_scale = 4;
-   account->mii.beard_color = 2;
-   account->mii.beard_type = 1;
-   account->mii.glass_height = 0;
-   account->mii.glass_scale = 0;
-   account->mii.glass_color = 1;
-   account->mii.glass_type = 5;
-   account->mii.mole_ypos = 4;
-   account->mii.mole_xpos = 1;
-   account->mii.mole_scale = 10;
-   account->mii.mole_enabled = 0;
-   account->mii.checksum = calculateMiiCRC(phys_cast<uint8_t *>(phys_addrof(account->mii)),
-                                           sizeof(FFLStoreData) - 2);
+   static_assert(sizeof(DefaultMii) == sizeof(account->mii));
+   std::memcpy(std::addressof(account->mii), DefaultMii, sizeof(DefaultMii));
+   FFLiSetAuthorID(&account->mii.author_id);
+   FFLiSetCreateID(&account->mii.mii_id);
+   account->mii.checksum = FFLiGetCRC16(phys_cast<uint8_t *>(phys_addrof(account->mii)),
+      sizeof(FFLStoreData) - 2);
+   account->miiName = u"???";
 
    addAccount(account);
    sAccountData->currentAccount = account;
    sAccountData->defaultAccount = account;
+}
+
+void
+loadAccounts()
+{
+   if (!loadAccountsFromFile()) {
+      createAccount();
+   }
+}
+
+void
+initialiseStaticClientStandardServiceData()
+{
+   sAccountData = kernel::allocProcessStatic<AccountData>();
 }
 
 } // namespace ios::fpd::internal

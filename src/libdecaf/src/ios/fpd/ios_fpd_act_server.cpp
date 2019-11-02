@@ -5,6 +5,7 @@
 
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/nn/ios_nn_ipc_server.h"
+#include "ios/fs/ios_fs_fsa_ipc.h"
 
 namespace ios::fpd::internal
 {
@@ -22,6 +23,33 @@ public:
       nn::ipc::Server(true)
    {
    }
+
+   void intialiseServer() override
+   {
+      auto error = fs::FSAOpen();
+      if (error < Error::OK) {
+         internal::fpdLog->error("ActServer::intialiseServer: FSAOpen failed with error = {}", error);
+      } else {
+         mFsaHandle = static_cast<Handle>(error);
+      }
+
+      loadAccounts();
+   }
+
+   void finaliseServer() override
+   {
+      if (mFsaHandle >= 0) {
+         fs::FSAClose(mFsaHandle);
+      }
+   }
+
+   Handle getFsaHandle()
+   {
+      return mFsaHandle;
+   }
+
+private:
+   be2_val<Handle> mFsaHandle = -1;
 };
 
 struct StaticActServerData
@@ -36,8 +64,6 @@ static phys_ptr<StaticActServerData> sActServerData = nullptr;
 Error
 startActServer()
 {
-   initialiseAccounts();
-
    auto &server = sActServerData->server;
    auto result = server.initialise("/dev/act",
                                    phys_addrof(sActServerData->messageBuffer),
@@ -64,6 +90,12 @@ startActServer()
    }
 
    return Error::OK;
+}
+
+Handle
+getActFsaHandle()
+{
+   return sActServerData->server.getFsaHandle();
 }
 
 void
