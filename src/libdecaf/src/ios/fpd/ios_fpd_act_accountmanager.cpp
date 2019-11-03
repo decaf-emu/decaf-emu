@@ -175,7 +175,7 @@ parseHexString(std::string_view value, phys_ptr<uint8_t> out, size_t size)
    }
 }
 
-template<size_t Size>
+template<uint32_t Size>
 void
 parseStringProperty(std::string_view value, be2_array<char, Size> &out)
 {
