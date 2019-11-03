@@ -90,7 +90,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        pip install --user conan
+        pip install --user conan==1.19.2
         pip install urllib3==1.25.3
         source ~/.profile
         conan user
@@ -101,7 +101,7 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         cd build
-        pip install conan
+        pip install conan==1.19.2
         pip install urllib3==1.25.3
         conan user
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
