@@ -103,8 +103,8 @@ jobs:
         cd build
         pip install conan==1.19.2
         pip install urllib3==1.25.3
-        conan user || cd .
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || cd .
+        (conan user) -or ($true)
+        (conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan) -or ($true)
         conan install .. -s compiler="Visual Studio" -s compiler.version=15 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
 
     - name: Configure (macOS)
