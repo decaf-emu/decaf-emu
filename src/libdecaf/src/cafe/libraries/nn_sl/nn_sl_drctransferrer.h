@@ -9,6 +9,7 @@ namespace cafe::nn_sl
 
 struct ITransferrer
 {
+   static virt_ptr<ghs::TypeIDStorage> TypeID;
    static virt_ptr<ghs::TypeDescriptor> TypeDescriptor;
 
    be2_virt_ptr<ghs::VirtualTable> virtualTable;

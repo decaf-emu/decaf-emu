@@ -6,6 +6,8 @@
 
 namespace cafe::nn_sl
 {
+
+virt_ptr<ghs::TypeIDStorage> ITransferrer::TypeID = nullptr;
 virt_ptr<ghs::TypeDescriptor> ITransferrer::TypeDescriptor = nullptr;
 
 virt_ptr<ghs::VirtualTable> DrcTransferrer::VirtualTable = nullptr;
@@ -94,9 +96,10 @@ Library::registerDrcTransferrerSymbols()
                                 DrcTransferrer_UnkFunc4);
    RegisterFunctionInternalName("DrcTransferrer_DisplayNotification",
                                 DrcTransferrer_DisplayNotification);
+   RegisterDataExportName("__TID_Q3_2nn2sl12ITransferrer", ITransferrer::TypeID);
 
-   // TODO: Export typeid as __TID_Q3_2nn2sl12ITransferrer
    registerTypeInfo<ITransferrer>("nn::sl::ITransferrer");
+   associateTypeIdSymbol<ITransferrer>("__TID_Q3_2nn2sl12ITransferrer");
 
    registerTypeInfo<DrcTransferrer>(
       "nn::sl::core::detail::DrcTransferrer",
