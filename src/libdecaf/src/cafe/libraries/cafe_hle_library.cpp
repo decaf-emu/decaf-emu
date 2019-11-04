@@ -242,9 +242,19 @@ generateTypeDescriptors(Library *library,
       {
          typeInfo.nameOffset = addSectionString(data, typeInfo.name, 4);
 
-         // Allocate some memory so the address acts as a unique type id
-         typeInfo.typeIdOffset = static_cast<uint32_t>(data.size());
-         data.resize(data.size() + 4);
+         LibrarySymbol *typeIdSymbol = nullptr;
+         if (typeInfo.typeIdSymbol) {
+            typeIdSymbol = library->findSymbol(typeInfo.typeIdSymbol);
+         }
+
+         if (typeIdSymbol) {
+            // Use the given type id symbol
+            typeInfo.typeIdOffset = typeIdSymbol->offset;
+         } else {
+            // Allocate some memory so the address acts as a unique type id
+            typeInfo.typeIdOffset = static_cast<uint32_t>(data.size());
+            data.resize(data.size() + 4);
+         }
 
          if (!typeInfo.baseTypes.empty()) {
             // Reserve space for base types

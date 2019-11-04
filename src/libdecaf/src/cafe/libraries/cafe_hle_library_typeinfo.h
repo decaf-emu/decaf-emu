@@ -18,8 +18,10 @@ struct LibraryTypeInfo
    uint32_t nameOffset = 0u;
    uint32_t baseTypeOffset = 0u;
    uint32_t typeDescriptorOffset = 0u;
-   uint32_t typeIdOffset = 0u;
    uint32_t virtualTableOffset = 0u;
+
+   uint32_t typeIdOffset = 0u;
+   const char *typeIdSymbol = nullptr;
 };
 
 } // namespace cafe::hle

@@ -305,6 +305,20 @@ protected:
 
    template<typename ObjectType>
    void
+   associateTypeIdSymbol(const char *typeIdSymbol)
+   {
+      for (auto &typeInfo : mTypeInfo) {
+         if (typeInfo.hostTypeDescriptorPtr == &ObjectType::TypeDescriptor) {
+            typeInfo.typeIdSymbol = typeIdSymbol;
+            return;
+         }
+      }
+
+      decaf_abort("Could not find type info");
+   }
+
+   template<typename ObjectType>
+   void
    registerTypeInfo(const char *typeName,
                     std::vector<const char *> &&virtualTable,
                     std::vector<const char *> &&baseTypes = {})

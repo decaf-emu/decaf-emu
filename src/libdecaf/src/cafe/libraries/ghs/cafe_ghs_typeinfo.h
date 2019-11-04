@@ -8,6 +8,7 @@ namespace cafe::ghs
 struct BaseTypeDescriptor;
 struct TypeDescriptor;
 struct VirtualTable;
+using TypeIDStorage = uint32_t;
 
 struct BaseTypeDescriptor
 {
