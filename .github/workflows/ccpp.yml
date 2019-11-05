@@ -90,8 +90,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        pip install --user conan==1.19.2
-        pip install urllib3==1.25.3
+        pip install --user conan
         source ~/.profile
         conan user
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
@@ -99,12 +98,12 @@ jobs:
 
     - name: Conan (Windows)
       if: startsWith(matrix.os, 'windows')
+      shell: cmd
       run: |
         cd build
-        pip install conan==1.19.2
-        pip install urllib3==1.25.3
-        (conan user) -or ($true)
-        (conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan) -or ($true)
+        pip install conan
+        conan user
+        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
         conan install .. -s compiler="Visual Studio" -s compiler.version=15 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
 
     - name: Configure (macOS)
@@ -121,6 +120,7 @@ jobs:
 
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')
+      shell: cmd
       run: |
         cd build
         cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release -DDECAF_QT=ON -DQt5Widgets_DIR=%QTDIR%/lib/cmake/Qt5Widgets -DQt5Svg_DIR=%QTDIR%/lib/cmake/Qt5Svg  ..
@@ -132,6 +132,7 @@ jobs:
 
     - name: Package (Windows)
       if: startsWith(matrix.os, 'windows')
+      shell: cmd
       run: |
         cd build\obj\Release
         %QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
