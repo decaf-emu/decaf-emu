@@ -153,6 +153,34 @@ writePM4(const Type &command)
 }
 
 
+/**
+ * Write a PM4 command to the provided command buffer.
+ */
+template<typename Type>
+void
+writePM4(uint32_t *buffer,
+         uint32_t &bufferPosWords,
+         const Type &command)
+{
+   // Remove const for the .serialise function
+   auto &cmd = const_cast<Type &>(command);
+
+   // Calculate the total size this object will be
+   latte::pm4::PacketSizer sizer;
+   cmd.serialise(sizer);
+   auto totalSize = sizer.getSize() + 1;
+
+   // Serialize the packet to the given buffer
+   auto writer = latte::pm4::PacketWriter {
+      buffer,
+      bufferPosWords,
+      Type::Opcode,
+      totalSize
+   };
+   cmd.serialise(writer);
+}
+
+
 inline void
 writeType0(latte::Register baseIndex,
            gsl::span<uint32_t> values)

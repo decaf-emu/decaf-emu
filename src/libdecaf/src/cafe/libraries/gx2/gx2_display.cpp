@@ -13,6 +13,7 @@
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/decaf_assert.h>
+#include <libgpu/gpu_ringbuffer.h>
 #include <fmt/format.h>
 
 namespace cafe::gx2
@@ -269,14 +270,20 @@ GX2SetDRCBuffer(virt_ptr<void> buffer,
    sDisplayData->drcRenderMode = drcRenderMode;
    sDisplayData->drcBufferingMode = bufferingMode;
 
-   // bufferingMode is conveniently equal to the number of buffers
-   internal::writePM4(latte::pm4::DecafSetBuffer {
-      latte::pm4::ScanTarget::DRC,
-      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
-      bufferingMode,
-      static_cast<uint32_t>(width),
-      static_cast<uint32_t>(height)
-   });
+   // Using a command buffer is to communicate this data to the GPU is our
+   // decaf specific hack, therefore we must write it directly instead of
+   // infecting the GX2 command buffer with our fake command.
+   std::array<uint32_t, 6> commandBuffer;
+   auto commandBufferPos = 0u;
+   internal::writePM4(commandBuffer.data(), commandBufferPos,
+      latte::pm4::DecafSetBuffer {
+         latte::pm4::ScanTarget::DRC,
+         OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
+         bufferingMode, // bufferingMode is conveniently equal to the number of buffers
+         static_cast<uint32_t>(width),
+         static_cast<uint32_t>(height)
+      });
+   gpu::ringbuffer::write({ commandBuffer.data(), commandBufferPos });
 }
 
 GX2DRCConnectCallbackFunction
@@ -339,14 +346,20 @@ GX2SetTVBuffer(virt_ptr<void> buffer,
    AVMSetTVBufferAttr(bufferingMode, tvRenderMode, pitch);
    */
 
-   // bufferingMode is conveniently equal to the number of buffers
-   internal::writePM4(latte::pm4::DecafSetBuffer {
-      latte::pm4::ScanTarget::TV,
-      OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
-      bufferingMode,
-      static_cast<uint32_t>(width),
-      static_cast<uint32_t>(height)
-   });
+   // Using a command buffer is to communicate this data to the GPU is our
+   // decaf specific hack, therefore we must write it directly instead of
+   // infecting the GX2 command buffer with our fake command.
+   std::array<uint32_t, 6> commandBuffer;
+   auto commandBufferPos = 0u;
+   internal::writePM4(commandBuffer.data(), commandBufferPos,
+      latte::pm4::DecafSetBuffer {
+         latte::pm4::ScanTarget::TV,
+         OSEffectiveToPhysical(virt_cast<virt_addr>(buffer)),
+         bufferingMode, // bufferingMode is conveniently equal to the number of buffers
+         static_cast<uint32_t>(width),
+         static_cast<uint32_t>(height)
+      });
+   gpu::ringbuffer::write({ commandBuffer.data(), commandBufferPos });
 }
 
 void
