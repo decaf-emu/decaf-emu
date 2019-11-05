@@ -69,6 +69,10 @@ class DecafConan(ConanFile):
          ('sdl2/2.0.10@bincrafters/stable', 'yes' if self.options.sdl2 else 'no'),
          ('zlib/1.2.11@conan/stable', 'yes' if self.options.zlib else 'no'),
       ]
+      overrides = [
+         'libpng/1.6.37@bincrafters/stable',
+         'zlib/1.2.11@conan/stable',
+      ]
 
       print('Enabled dependencies:')
       for dependency, enabled in dependency_list:
@@ -89,4 +93,7 @@ class DecafConan(ConanFile):
       for dependency, enabled in dependency_list:
          if (silent and enabled == 'yes') or \
             (not silent and query_yes_no(dependency, default=enabled)):
-            self.requires(dependency)
+            if dependency in overrides:
+               self.requires(dependency, override=True)
+            else:
+               self.requires(dependency)
