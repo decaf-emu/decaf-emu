@@ -49,6 +49,7 @@ private slots:
 
    void openAboutDialog();
 
+   void debugInterrupt();
    void titleLoaded(quint64 id, const QString &name);
 
    void settingsChanged();

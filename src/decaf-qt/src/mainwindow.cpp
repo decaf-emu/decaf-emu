@@ -36,6 +36,8 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
 
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
+   connect(decafInterface, &DecafInterface::debugInterrupt,
+           this, &MainWindow::debugInterrupt);
 
    // Setup status bar
    mStatusTimer = new QTimer(this);
@@ -125,6 +127,12 @@ void
 MainWindow::titleLoaded(quint64 id, const QString &name)
 {
    setWindowTitle(QString("decaf-qt - %1").arg(name));
+}
+
+void
+MainWindow::debugInterrupt()
+{
+   openDebugger();
 }
 
 bool
@@ -247,6 +255,7 @@ void
 MainWindow::openDebugger()
 {
    if (mDebuggerWindow) {
+      mDebuggerWindow->show();
       return;
    }
 

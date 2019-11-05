@@ -45,6 +45,9 @@ struct Controller
    std::array<CpuContext, 3> contexts;
 
    bool entryPointFound = false;
+
+   //! Callback to call on debug interrupt
+   PauseCallback callback;
 } sController;
 
 static bool
@@ -100,6 +103,12 @@ bool
 ready()
 {
    return sController.entryPointFound;
+}
+
+void
+setPauseCallback(PauseCallback callback)
+{
+   sController.callback = callback;
 }
 
 bool
@@ -257,6 +266,11 @@ handleDebugBreakInterrupt()
       sController.isPaused.store(true);
       sController.coresPausing.store(0);
       sController.coresResuming.store(0);
+   }
+
+   // Call the pause callback
+   if (sController.callback) {
+      sController.callback();
    }
 
    // Spin around the release condition while we are paused

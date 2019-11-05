@@ -2,6 +2,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -14,6 +15,8 @@ using VirtualAddress = uint32_t;
 using PhysicalAddress = uint32_t;
 
 using CafeThreadHandle = VirtualAddress;
+
+using PauseCallback = std::function<void()>;
 
 struct AnalyseDatabase
 {
@@ -339,6 +342,7 @@ bool pm4CaptureBegin();
 bool pm4CaptureEnd();
 
 // Controller
+void setPauseCallback(PauseCallback callback);
 bool pause();
 bool resume();
 bool isPaused();

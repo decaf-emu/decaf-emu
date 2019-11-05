@@ -28,6 +28,7 @@ public slots:
 
 signals:
    void titleLoaded(quint64 id, const QString &name);
+   void debugInterrupt();
 
 protected:
    void onGameLoaded(const decaf::GameInfo &info) override;

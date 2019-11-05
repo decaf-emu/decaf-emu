@@ -7,6 +7,7 @@
 #include <common/log.h>
 #include <libconfig/config_toml.h>
 #include <libdecaf/decaf.h>
+#include <libdecaf/decaf_debug_api.h>
 #include <libdecaf/decaf_log.h>
 #include <libdecaf/decaf_nullinputdriver.h>
 
@@ -18,6 +19,10 @@ DecafInterface::DecafInterface(SettingsStorage *settingsStorage,
    mSoundDriver(soundDriver)
 {
    decaf::addEventListener(this);
+   decaf::debug::setPauseCallback([&]() {
+      this->debugInterrupt();
+   });
+
    QObject::connect(mSettingsStorage, &SettingsStorage::settingsChanged,
                     this, &DecafInterface::settingsChanged);
    settingsChanged();
