@@ -330,9 +330,9 @@ exit()
    // Tell the CPU to stop.
    if (decaf::config()->debugger.break_on_exit) {
       decaf::debug::handleDebugBreakInterrupt();
-   } else {
-      cpu::halt();
    }
+
+   cpu::halt();
 
    // Switch to idle context to prevent further execution.
    switchContext(nullptr);
