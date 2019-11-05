@@ -145,7 +145,7 @@ insertRetiredTimestamp(bool cacheFlushTimestamp,
          static_cast<uint32_t>(submitTimestamp & 0xFFFFFFFF),
          static_cast<uint32_t>(submitTimestamp >> 32)
       });
-   gpu::ringbuffer::write(buffer);
+   gpu::ringbuffer::write({ buffer.data(), bufferPos });
    return submitTimestamp;
 }
 
