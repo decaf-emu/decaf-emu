@@ -81,7 +81,7 @@ static constexpr Result ResultFileError {
 };
 
 static constexpr Result ResultFileNotFound {
-   nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x16380
+   nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_USAGE, 0x16380
 };
 
 static constexpr Result ResultFileVersionMismatch {
@@ -89,7 +89,7 @@ static constexpr Result ResultFileVersionMismatch {
 };
 
 static constexpr Result ResultFileIoError {
-   nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x16480
+   nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_FATAL, 0x16480
 };
 
 static constexpr Result ResultFileTypeMismatch {
