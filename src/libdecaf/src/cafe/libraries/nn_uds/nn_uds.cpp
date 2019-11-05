@@ -16,6 +16,8 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerApiSymbols();
 }
 
 } // namespace cafe::nn_uds
