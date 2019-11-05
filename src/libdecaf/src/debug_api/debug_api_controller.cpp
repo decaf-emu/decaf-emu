@@ -84,6 +84,15 @@ copyPauseContext(int core)
    context.dar = pauseContext->dar;
    context.dsisr = pauseContext->dsisr;
    context.srr0 = pauseContext->srr0;
+
+   // If we are inside a kernel call we need to adjust gpr[1] due to how we
+   // use lazy stack frame creation
+   auto instr = mem::read<espresso::Instruction>(pauseContext->nia - 4);
+   auto data = espresso::decodeInstruction(instr);
+   if (data && data->id == espresso::InstructionID::kc) {
+      context.gpr[1] = pauseContext->systemCallStackHead;
+   }
+
    return true;
 }
 
