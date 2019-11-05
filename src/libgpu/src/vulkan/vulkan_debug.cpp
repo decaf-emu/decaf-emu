@@ -26,8 +26,7 @@ Driver::updateDebuggerInfo()
    mDebugInfo.averageFrameTimeMS = averageFrameTime;
 
    if (averageFrameTime > 0.0) {
-      static constexpr auto second = std::chrono::duration_cast<duration_system_clock>(std::chrono::seconds{ 1 }).count();
-      mDebugInfo.averageFps = second / averageFrameTime;
+      mDebugInfo.averageFps = 1000.0 / mDebugInfo.averageFrameTimeMS;
    } else {
       mDebugInfo.averageFps = 0.0;
    }
