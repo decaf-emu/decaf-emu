@@ -3,6 +3,9 @@
 #include <cctype>
 #include <libdecaf/decaf_debug_api.h>
 
+#include <QApplication>
+#include <QClipboard>
+
 MemoryWidget::MemoryWidget(QWidget *parent) :
    AddressTextDocumentWidget(parent)
 {
@@ -85,8 +88,7 @@ void
 MemoryWidget::keyPressEvent(QKeyEvent *e)
 {
    if (e->matches(QKeySequence::Copy)) {
-   /*
-      if (mHasSelection) {
+      if (mSelectionBegin != mSelectionEnd) {
          auto startAddress = std::min(mSelectionBegin.address, mSelectionEnd.address);
          auto endAddress = std::max(mSelectionBegin.address, mSelectionEnd.address);
          auto count = endAddress - startAddress;
@@ -95,18 +97,31 @@ MemoryWidget::keyPressEvent(QKeyEvent *e)
          if (count <= 4 * 1024) {
             auto hexString = QString { };
             auto textString = QString { };
-            memoryToString(startAddress, count, hexString, textString);
+            auto buffer = QByteArray { };
+            buffer.resize(count);
+            buffer.resize(static_cast<int>(
+               decaf::debug::readMemory(startAddress, buffer.data(),
+                                        buffer.size())));
 
-            if (mSelectionEnd.type == HexCursor) {
-               qApp->clipboard()->setText(hexString);
-            } else if (mSelectionEnd.type == TextCursor) {
+            if (mSelectionEnd.type == MemoryCursor::Hex) {
+               qApp->clipboard()->setText(QString { buffer.toHex() });
+            } else if (mSelectionEnd.type == MemoryCursor::Text) {
+               auto textString = QString { };
+
+               for (auto c : buffer) {
+                  if (std::isprint(c)) {
+                     textString += c;
+                  } else {
+                     textString += '?';
+                  }
+               }
+
                qApp->clipboard()->setText(textString);
             }
          }
       }
 
       e->accept();
-      */
    } else {
       return AddressTextDocumentWidget::keyPressEvent(e);
    }
