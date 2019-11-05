@@ -48,6 +48,9 @@ ENUM_BEG(InfoType, int32_t)
    ENUM_VALUE(NetworkTime,                   46)
 ENUM_END(InfoType)
 
+ENUM_BEG(MiiImageType, int32_t)
+ENUM_END(MiiImageType)
+
 ENUM_NAMESPACE_EXIT(act)
 ENUM_NAMESPACE_EXIT(nn)
 

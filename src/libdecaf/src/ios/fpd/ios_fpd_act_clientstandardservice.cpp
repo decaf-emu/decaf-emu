@@ -510,6 +510,97 @@ getTransferableId(CommandHandlerArgs &args)
 }
 
 static nn::Result
+getMiiImage(CommandHandlerArgs &args)
+{
+   auto command = ServerCommand<ActClientStandardService::GetMiiImage> { args };
+   auto slotNo = InvalidSlot;
+   auto buffer = OutBuffer<void> { };
+   auto imageType = MiiImageType { 0 };
+   command.ReadRequest(slotNo, buffer, imageType);
+
+   auto account = getAccountBySlotNo(slotNo);
+   if (!account) {
+      return ResultACCOUNT_NOT_FOUND;
+   }
+
+   auto path = fmt::format(
+      "/vol/storage_mlc01/usr/save/system/act/{:08x}/miiimg{:02}.dat",
+      static_cast<uint32_t>(account->persistentId),
+      static_cast<int>(imageType));
+
+   // Check that the given buffer is large enough to read file into
+   auto stat = StackObject<FSAStat> { };
+   auto status = FSAGetInfoByQuery(getActFsaHandle(), path,
+                                   FSAQueryInfoType::Stat, stat);
+   if (status < FSAStatus::OK) {
+      if (status == FSAStatus::NotFound) {
+         return ResultFileNotFound;
+      } else {
+         return ResultFileIoError;
+      }
+   }
+
+   if (buffer.totalSize() < stat->size) {
+      return ResultInvalidSize;
+   }
+
+   // Read file split across buffer
+   auto fileHandle = FSAFileHandle { -1 };
+   status = FSAOpenFile(getActFsaHandle(), path, "r", &fileHandle);
+   if (status < FSAStatus::OK) {
+      if (status == FSAStatus::NotFound) {
+         return ResultFileNotFound;
+      } else {
+         return ResultFileIoError;
+      }
+   }
+
+   auto bytesRead = 0u;
+   if (bytesRead < stat->size && buffer.unalignedBeforeBufferSize > 0) {
+      auto readSize = std::min<uint32_t>(buffer.unalignedBeforeBufferSize,
+                                         stat->size - bytesRead);
+      status = FSAReadFile(getActFsaHandle(), buffer.unalignedBeforeBuffer,
+                           1, readSize, fileHandle, FSAReadFlag::None);
+      if (status < FSAStatus::OK || status != readSize) {
+         FSACloseFile(getActFsaHandle(), fileHandle);
+         return ResultFileIoError;
+      }
+
+      bytesRead += readSize;
+   }
+
+   if (bytesRead < stat->size && buffer.alignedBufferSize > 0) {
+      auto readSize = std::min<uint32_t>(buffer.alignedBufferSize,
+                                         stat->size - bytesRead);
+      status = FSAReadFile(getActFsaHandle(), buffer.alignedBuffer,
+                           1, readSize, fileHandle, FSAReadFlag::None);
+      if (status < FSAStatus::OK || status != readSize) {
+         FSACloseFile(getActFsaHandle(), fileHandle);
+         return ResultFileIoError;
+      }
+
+      bytesRead += readSize;
+   }
+
+   if (bytesRead < stat->size && buffer.unalignedAfterBufferSize > 0) {
+      auto readSize = std::min<uint32_t>(buffer.unalignedAfterBufferSize,
+                                         stat->size - bytesRead);
+      status = FSAReadFile(getActFsaHandle(), buffer.unalignedAfterBuffer,
+                           1, readSize, fileHandle, FSAReadFlag::None);
+      if (status < FSAStatus::OK || status != readSize) {
+         FSACloseFile(getActFsaHandle(), fileHandle);
+         return ResultFileIoError;
+      }
+
+      bytesRead += readSize;
+   }
+
+   FSACloseFile(getActFsaHandle(), fileHandle);
+   command.WriteResponse(bytesRead);
+   return nn::ResultSuccess;
+}
+
+static nn::Result
 getUuid(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActClientStandardService::GetUuid> { args };
@@ -551,6 +642,8 @@ ActClientStandardService::commandHandler(uint32_t unk1,
       return getAccountInfo(args);
    case GetTransferableId::command:
       return getTransferableId(args);
+   case GetMiiImage::command:
+      return getMiiImage(args);
    case GetUuid::command:
       return getUuid(args);
    default:

@@ -27,6 +27,11 @@ struct ClientStandardService : ipc::Service<0>
          ::Parameters<SlotNo, uint32_t>
          ::Response<TransferrableId>;
 
+   using GetMiiImage =
+      ipc::Command<ClientStandardService, 6>
+         ::Parameters<SlotNo, ipc::OutBuffer<void>, MiiImageType>
+         ::Response<uint32_t>;
+
    using GetUuid =
       ipc::Command<ClientStandardService, 22>
          ::Parameters<SlotNo, ipc::OutBuffer<Uuid>, int32_t>;
