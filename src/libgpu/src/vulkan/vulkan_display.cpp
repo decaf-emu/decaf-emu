@@ -213,7 +213,7 @@ createVulkanInstance(const gpu::WindowSystemInfo &wsi)
       for (auto ext : extensions) {
          fmt::format_to(msg, " {}", ext);
       }
-      gLog->debug(msg.data());
+      gLog->debug({ msg.data(), msg.size() });
    }
 
    if (!layers.empty()) {
@@ -222,7 +222,7 @@ createVulkanInstance(const gpu::WindowSystemInfo &wsi)
       for (auto layer : layers) {
          fmt::format_to(msg, " {}", layer);
       }
-      gLog->debug(msg.data());
+      gLog->debug({ msg.data(), msg.size() });
    }
 
    auto instanceCreateInfo = vk::InstanceCreateInfo { };
