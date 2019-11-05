@@ -170,7 +170,7 @@ MemoryWidget::convertCursor(const DocumentCursor documentCursor)
             memoryCursor.nibble = 2;
          }
 
-         if (static_cast<int>(endAddress - documentCursor.address) < byte) {
+         if (static_cast<int64_t>(endAddress) - static_cast<int64_t>(documentCursor.address) < byte) {
             memoryCursor.address = endAddress;
             memoryCursor.nibble = 2;
          } else {
