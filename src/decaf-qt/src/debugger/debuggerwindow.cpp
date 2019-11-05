@@ -21,6 +21,7 @@
 #include <QModelIndex>
 #include <QTimer>
 
+#include <libdecaf/decaf.h>
 #include <libdecaf/decaf_config.h>
 #include <libdecaf/decaf_debug_api.h>
 #include <libgpu/gpu_config.h>
@@ -347,9 +348,11 @@ DebuggerWindow::executionStateChanged(bool paused,
    }
 
    ui->actionPause->setEnabled(false);
-   ui->actionResume->setEnabled(true);
-   ui->actionStepInto->setEnabled(true);
-   ui->actionStepOver->setEnabled(true);
+
+   auto canResume = !decaf::hasExited();
+   ui->actionResume->setEnabled(canResume);
+   ui->actionStepInto->setEnabled(canResume);
+   ui->actionStepOver->setEnabled(canResume);
 
    // Set active thread to the one that initiated pause - this will lead to
    // activeThreadChanged being called and thus follow pauseNia implicitly
