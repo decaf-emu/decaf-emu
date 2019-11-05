@@ -39,6 +39,18 @@ GetAccountIdEx(virt_ptr<char> accountId,
                                    InfoType::AccountId);
 }
 
+SlotNo
+GetDefaultAccount()
+{
+   StackObject<SlotNo> slotNo;
+   if (!internal::GetAccountInfo(CurrentUserSlot, slotNo, sizeof(SlotNo),
+                                 InfoType::DefaultAccount)) {
+      return 0;
+   }
+
+   return *slotNo;
+}
+
 nn::Result
 GetDeviceHash(virt_ptr<uint64_t> hash)
 {
@@ -72,6 +84,28 @@ GetMiiEx(virt_ptr<nn::ffl::FFLStoreData> mii,
    return internal::GetAccountInfo(slotNo, mii,
                                    sizeof(nn::ffl::FFLStoreData),
                                    InfoType::Mii);
+}
+
+nn::Result
+GetMiiImageEx(virt_ptr<uint32_t> outImageSize,
+              virt_ptr<void> buffer,
+              uint32_t bufferSize,
+              MiiImageType miiImageType,
+              SlotNo slot)
+{
+   auto command = ClientCommand<services::ClientStandardService::GetMiiImage>{ internal::getAllocator() };
+   command.setParameters(slot, { buffer, bufferSize }, miiImageType);
+
+   auto result = internal::getClient()->sendSyncRequest(command);
+   if (result) {
+      auto imageSize = uint32_t { 0 };
+      result = command.readResponse(imageSize);
+      if (result) {
+         *outImageSize = imageSize;
+      }
+   }
+
+   return result;
 }
 
 nn::Result
@@ -297,6 +331,24 @@ IsCommittedEx(SlotNo slotNo)
 }
 
 bool
+IsPasswordCacheEnabled()
+{
+   return IsPasswordCacheEnabledEx(GetSlotNo());
+}
+
+bool
+IsPasswordCacheEnabledEx(SlotNo slotNo)
+{
+   StackObject<uint8_t> value;
+   if (!internal::GetAccountInfo(slotNo, value, sizeof(uint8_t),
+                                 InfoType::IsPasswordCacheEnabled)) {
+      return 0;
+   }
+
+   return *value != 0;
+}
+
+bool
 IsNetworkAccount()
 {
    StackArray<char, AccountIdSize> accountId;
@@ -316,6 +368,24 @@ IsNetworkAccountEx(SlotNo slotNo)
    }
 
    return accountId[0] != 0;
+}
+
+bool
+IsServerAccountActive()
+{
+   return IsServerAccountActiveEx(CurrentUserSlot);
+}
+
+bool
+IsServerAccountActiveEx(SlotNo slotNo)
+{
+   StackObject<uint32_t> value;
+   if (!internal::GetAccountInfo(slotNo, value, sizeof(uint32_t),
+                                 InfoType::ServerAccountStatus)) {
+      return 0;
+   }
+
+   return *value == 0;
 }
 
 bool
@@ -369,12 +439,16 @@ Library::registerClientStandardServiceSymbols()
                               GetAccountId);
    RegisterFunctionExportName("GetAccountIdEx__Q2_2nn3actFPcUc",
                               GetAccountIdEx);
+   RegisterFunctionExportName("GetDefaultAccount__Q2_2nn3actFv",
+                              GetDefaultAccount);
    RegisterFunctionExportName("GetDeviceHash__Q2_2nn3actFPUL",
                               GetDeviceHash);
    RegisterFunctionExportName("GetMii__Q2_2nn3actFP12FFLStoreData",
                               GetMii);
    RegisterFunctionExportName("GetMiiEx__Q2_2nn3actFP12FFLStoreDataUc",
                               GetMiiEx);
+   RegisterFunctionExportName("GetMiiImageEx__Q2_2nn3actFPUiPvUi15ACTMiiImageTypeUc",
+                              GetMiiImageEx);
    RegisterFunctionExportName("GetMiiName__Q2_2nn3actFPw",
                               GetMiiName);
    RegisterFunctionExportName("GetMiiNameEx__Q2_2nn3actFPwUc",
@@ -415,10 +489,18 @@ Library::registerClientStandardServiceSymbols()
                               IsCommitted);
    RegisterFunctionExportName("IsCommittedEx__Q2_2nn3actFUc",
                               IsCommittedEx);
+   RegisterFunctionExportName("IsPasswordCacheEnabled__Q2_2nn3actFv",
+                              IsPasswordCacheEnabled);
+   RegisterFunctionExportName("IsPasswordCacheEnabledEx__Q2_2nn3actFUc",
+                              IsPasswordCacheEnabledEx);
    RegisterFunctionExportName("IsNetworkAccount__Q2_2nn3actFv",
                               IsNetworkAccount);
    RegisterFunctionExportName("IsNetworkAccountEx__Q2_2nn3actFUc",
                               IsNetworkAccountEx);
+   RegisterFunctionExportName("IsServerAccountActive__Q2_2nn3actFv",
+                              IsServerAccountActive);
+   RegisterFunctionExportName("IsServerAccountActiveEx__Q2_2nn3actFUc",
+                              IsServerAccountActiveEx);
    RegisterFunctionExportName("IsSlotOccupied__Q2_2nn3actFUc",
                               IsSlotOccupied);
 }

@@ -9,6 +9,7 @@
 namespace cafe::nn_act
 {
 
+using nn::act::MiiImageType;
 using nn::act::PersistentId;
 using nn::act::PrincipalId;
 using nn::act::SlotNo;
@@ -21,7 +22,10 @@ GetAccountId(virt_ptr<char> accountId);
 
 nn::Result
 GetAccountIdEx(virt_ptr<char> accountId,
-               nn::act::SlotNo slotNo);
+               SlotNo slotNo);
+
+SlotNo
+GetDefaultAccount();
 
 nn::Result
 GetDeviceHash(virt_ptr<uint64_t> hash);
@@ -31,7 +35,14 @@ GetMii(virt_ptr<nn::ffl::FFLStoreData> mii);
 
 nn::Result
 GetMiiEx(virt_ptr<nn::ffl::FFLStoreData> mii,
-         nn::act::SlotNo slotNo);
+         SlotNo slotNo);
+
+nn::Result
+GetMiiImageEx(virt_ptr<uint32_t> outImageSize,
+              virt_ptr<void> buffer,
+              uint32_t bufferSize,
+              MiiImageType miiImageType,
+              SlotNo slot);
 
 nn::Result
 GetMiiName(virt_ptr<char16_t> name);
@@ -104,10 +115,22 @@ bool
 IsCommittedEx(SlotNo slotNo);
 
 bool
+IsPasswordCacheEnabled();
+
+bool
+IsPasswordCacheEnabledEx(SlotNo slotNo);
+
+bool
 IsNetworkAccount();
 
 bool
 IsNetworkAccountEx(SlotNo slotNo);
+
+bool
+IsServerAccountActive();
+
+bool
+IsServerAccountActiveEx(SlotNo slotNo);
 
 bool
 IsSlotOccupied(SlotNo slot);
