@@ -120,7 +120,7 @@ static nn::Result
 getCommonInfo(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActClientStandardService::GetCommonInfo> { args };
-   auto buffer = InOutBuffer<void> { };
+   auto buffer = OutBuffer<void> { };
    auto type = InfoType { 0 };
    command.ReadRequest(buffer, type);
 
@@ -200,7 +200,7 @@ getAccountInfo(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActClientStandardService::GetAccountInfo> { args };
    auto slotNo = InvalidSlot;
-   auto buffer = InOutBuffer<void> { };
+   auto buffer = OutBuffer<void> { };
    auto type = InfoType { 0 };
    command.ReadRequest(slotNo, buffer, type);
 
@@ -514,7 +514,7 @@ getUuid(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActClientStandardService::GetUuid> { args };
    auto slotNo = InvalidSlot;
-   auto buffer = InOutBuffer<Uuid> { nullptr };
+   auto buffer = OutBuffer<Uuid> { };
    auto unkArg3 = int32_t { 0 };
    command.ReadRequest(slotNo, buffer, unkArg3);
 

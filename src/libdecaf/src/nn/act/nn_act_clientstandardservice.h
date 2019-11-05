@@ -16,11 +16,11 @@ struct ClientStandardService : ipc::Service<0>
 {
    using GetCommonInfo =
       ipc::Command<ClientStandardService, 1>
-         ::Parameters<ipc::InOutBuffer<void>, InfoType>;
+         ::Parameters<ipc::OutBuffer<void>, InfoType>;
 
    using GetAccountInfo =
       ipc::Command<ClientStandardService, 2>
-         ::Parameters<SlotNo, ipc::InOutBuffer<void>, InfoType>;
+         ::Parameters<SlotNo, ipc::OutBuffer<void>, InfoType>;
 
    using GetTransferableId =
       ipc::Command<ClientStandardService, 4>
@@ -29,7 +29,7 @@ struct ClientStandardService : ipc::Service<0>
 
    using GetUuid =
       ipc::Command<ClientStandardService, 22>
-         ::Parameters<SlotNo, ipc::InOutBuffer<Uuid>, int32_t>;
+         ::Parameters<SlotNo, ipc::OutBuffer<Uuid>, int32_t>;
 
    using FindSlotNoByUuid =
       ipc::Command<ClientStandardService, 23>
