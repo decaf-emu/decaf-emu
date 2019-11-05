@@ -17,11 +17,13 @@ protected:
 
 private:
    void registerLibSymbols();
+   void registerAlmightyStorageSymbols();
    void registerNbdlTaskSettingSymbols();
    void registerNetTaskSettingSymbols();
    void registerPlayLogUploadTaskSettingSymbols();
    void registerPlayReportSettingSymbols();
    void registerRawUlTaskSettingSymbols();
+   void registerStorageSymbols();
    void registerTaskSymbols();
    void registerTaskIdSymbols();
    void registerTaskSettingSymbols();

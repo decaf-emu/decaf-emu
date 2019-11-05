@@ -18,11 +18,13 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerLibSymbols();
+   registerAlmightyStorageSymbols();
    registerNbdlTaskSettingSymbols();
    registerNetTaskSettingSymbols();
    registerPlayLogUploadTaskSettingSymbols();
    registerPlayReportSettingSymbols();
    registerRawUlTaskSettingSymbols();
+   registerStorageSymbols();
    registerTaskSymbols();
    registerTaskIdSymbols();
    registerTaskSettingSymbols();
