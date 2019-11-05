@@ -10,6 +10,7 @@ MemoryWindow::MemoryWindow(QWidget *parent) :
    ui->setupUi(this);
    ui->widget->setAddressRange(0, 0xFFFFFFFF);
    ui->widget->navigateToAddress(0x02000000);
+   ui->widget->setBytesPerLine(16);
 }
 
 MemoryWindow::~MemoryWindow()
