@@ -42,6 +42,9 @@ clearAndEnableInterrupt(InterruptType type);
 void
 disableInterrupt(InterruptType type);
 
+void
+checkInterrupts();
+
 namespace internal
 {
 
