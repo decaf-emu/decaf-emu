@@ -6,6 +6,7 @@
 #include "renderwidget.h"
 #include "softwarekeyboarddriver.h"
 #include "settings/settingsdialog.h"
+#include "titlelistwidget.h"
 
 #include <QCloseEvent>
 #include <QMessageBox>
@@ -25,14 +26,16 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    mSettingsStorage(settingsStorage),
    mDecafInterface(decafInterface),
    mInputDriver(inputDriver),
-   mSoftwareKeyboardDriver(new SoftwareKeyboardDriver(this)),
-   mSoftwareKeyboardInputDialog(new QInputDialog(this))
+   mSoftwareKeyboardDriver(new SoftwareKeyboardDriver { this }),
+   mSoftwareKeyboardInputDialog(new QInputDialog { this })
 {
    // Setup UI
    mUi.setupUi(this);
 
-   mRenderWidget = new RenderWidget { inputDriver, this };
-   setCentralWidget(mRenderWidget);
+   mTitleListWiget = new TitleListWidget { mSettingsStorage, this };
+   setCentralWidget(mTitleListWiget);
+   connect(mTitleListWiget, &TitleListWidget::launchTitle,
+           this, &MainWindow::loadFile);
 
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
@@ -121,6 +124,12 @@ MainWindow::settingsChanged()
    } else if (settings->gpu.display.viewMode == gpu::DisplaySettings::Gamepad2) {
       mUi.actionViewGamepad2->setChecked(true);
    }
+
+   if (settings->ui.titleListMode == UiSettings::TitleList) {
+      mUi.actionViewTitleList->setChecked(true);
+   } else if(settings->ui.titleListMode == UiSettings::TitleGrid) {
+      mUi.actionViewTitleGrid->setChecked(true);
+   }
 }
 
 void
@@ -144,15 +153,22 @@ MainWindow::loadFile(QString path)
       mRecentFileActions[i]->setDisabled(true);
    }
 
-   // Tell decaf to start the game!
+   // Change main widget to render widget
+   mTitleListWiget->deleteLater();
+   mTitleListWiget = nullptr;
+
+   mRenderWidget = new RenderWidget { mInputDriver, this };
+   setCentralWidget(mRenderWidget);
+
+   // Start the game
    mDecafInterface->startLogging();
    mRenderWidget->startGraphicsDriver();
    mDecafInterface->startGame(path);
 
    // Update recent files list
    {
-      QSettings settings;
-      QStringList files = settings.value("recentFileList").toStringList();
+      auto settings = QSettings { };
+      auto files = settings.value("recentFileList").toStringList();
       files.removeAll(path);
       files.prepend(path);
       while (files.size() > MaxRecentFiles) {
@@ -169,9 +185,10 @@ MainWindow::loadFile(QString path)
 void
 MainWindow::openFile()
 {
-   auto fileName = QFileDialog::getOpenFileName(this,
-                                                tr("Open Application"), "",
-                                                tr("RPX Files (*.rpx);;cos.xml (cos.xml);;"));
+   auto fileName =
+      QFileDialog::getOpenFileName(this,
+                                   tr("Open Application"), "",
+                                   tr("RPX Files (*.rpx);;cos.xml (cos.xml);;"));
    if (!fileName.isEmpty()) {
       loadFile(fileName);
    }
@@ -180,7 +197,7 @@ MainWindow::openFile()
 void
 MainWindow::openRecentFile()
 {
-   QAction *action = qobject_cast<QAction *>(sender());
+   auto action = qobject_cast<QAction *>(sender());
    if (action) {
       loadFile(action->data().toString());
    }
@@ -189,12 +206,12 @@ MainWindow::openRecentFile()
 void
 MainWindow::updateRecentFileActions()
 {
-   QSettings settings;
-   QStringList files = settings.value("recentFileList").toStringList();
-   int numRecentFiles = qMin(files.size(), MaxRecentFiles);
+   auto settings = QSettings { };
+   auto files = settings.value("recentFileList").toStringList();
+   auto numRecentFiles = qMin(files.size(), MaxRecentFiles);
 
    for (int i = 0; i < numRecentFiles; ++i) {
-      auto text = QString("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
+      auto text = QString { "&%1 %2" }.arg(i + 1).arg(QFileInfo { files[i] }.fileName());
       mRecentFileActions[i]->setText(text);
       mRecentFileActions[i]->setData(files[i]);
       mRecentFileActions[i]->setVisible(true);
@@ -234,6 +251,22 @@ MainWindow::setViewModeGamepad1()
 {
    auto settings = *mSettingsStorage->get();
    settings.gpu.display.viewMode = gpu::DisplaySettings::Gamepad1;
+   mSettingsStorage->set(settings);
+}
+
+void
+MainWindow::setTitleListModeList()
+{
+   auto settings = *mSettingsStorage->get();
+   settings.ui.titleListMode= UiSettings::TitleList;
+   mSettingsStorage->set(settings);
+}
+
+void
+MainWindow::setTitleListModeGrid()
+{
+   auto settings = *mSettingsStorage->get();
+   settings.ui.titleListMode = UiSettings::TitleGrid;
    mSettingsStorage->set(settings);
 }
 
@@ -303,9 +336,30 @@ MainWindow::openSystemSettings()
 }
 
 void
+MainWindow::openAudioSettings()
+{
+   SettingsDialog dialog { mSettingsStorage, mInputDriver, SettingsTab::Audio, this };
+   dialog.exec();
+}
+
+void
+MainWindow::openDisplaySettings()
+{
+   SettingsDialog dialog { mSettingsStorage, mInputDriver, SettingsTab::Display, this };
+   dialog.exec();
+}
+
+void
+MainWindow::openContentSettings()
+{
+   SettingsDialog dialog { mSettingsStorage, mInputDriver, SettingsTab::Content, this };
+   dialog.exec();
+}
+
+void
 MainWindow::openAboutDialog()
 {
-   AboutDialog dialog(this);
+   AboutDialog dialog { this };
    dialog.exec();
 }
 

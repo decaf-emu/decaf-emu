@@ -10,6 +10,7 @@ class InputDriver;
 class RenderWidget;
 class SettingsStorage;
 class SoftwareKeyboardDriver;
+class TitleListWidget;
 
 class QAction;
 class QInputDialog;
@@ -36,6 +37,9 @@ private slots:
    void setViewModeSplit();
    void setViewModeTV();
 
+   void setTitleListModeList();
+   void setTitleListModeGrid();
+
    void toggleFullscreen();
 
    void openDebugger();
@@ -46,6 +50,9 @@ private slots:
    void openLoggingSettings();
    void openRecentFile();
    void openSystemSettings();
+   void openAudioSettings();
+   void openDisplaySettings();
+   void openContentSettings();
 
    void openAboutDialog();
 
@@ -61,26 +68,27 @@ private slots:
 
    void updateStatusBar();
 
+   bool loadFile(QString path);
+
 protected:
    void closeEvent(QCloseEvent *event) override;
-
-   bool loadFile(QString path);
    void updateRecentFileActions();
 
 private:
-   SettingsStorage *mSettingsStorage;
-   RenderWidget *mRenderWidget;
-   DecafInterface *mDecafInterface;
-   InputDriver *mInputDriver;
-   SoftwareKeyboardDriver *mSoftwareKeyboardDriver;
+   SettingsStorage *mSettingsStorage = nullptr;
+   RenderWidget *mRenderWidget = nullptr;
+   TitleListWidget *mTitleListWiget = nullptr;
+   DecafInterface *mDecafInterface = nullptr;
+   InputDriver *mInputDriver = nullptr;
+   SoftwareKeyboardDriver *mSoftwareKeyboardDriver = nullptr;
    QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
    DebuggerWindow *mDebuggerWindow = nullptr;
 
    Ui::MainWindow mUi;
-   QTimer *mStatusTimer;
-   QLabel *mStatusFrameRate;
-   QLabel *mStatusFrameTime;
+   QTimer *mStatusTimer = nullptr;
+   QLabel *mStatusFrameRate = nullptr;
+   QLabel *mStatusFrameTime = nullptr;
 
-   QAction *mRecentFilesSeparator;
+   QAction *mRecentFilesSeparator = nullptr;
    std::array<QAction *, MaxRecentFiles> mRecentFileActions;
 };

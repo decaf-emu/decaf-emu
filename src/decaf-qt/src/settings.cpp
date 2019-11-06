@@ -14,6 +14,11 @@ static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
 static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
                        const SoundSettings &soundSettings);
 
+static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
+                         UiSettings &uiSettings);
+static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
+                       const UiSettings &uiSettings);
+
 bool
 loadSettings(const std::string &path,
              Settings &settings)
@@ -25,6 +30,7 @@ loadSettings(const std::string &path,
       config::loadFromTOML(toml, settings.gpu);
       loadFromTOML(toml, settings.input);
       loadFromTOML(toml, settings.sound);
+      loadFromTOML(toml, settings.ui);
       return true;
    } catch (cpptoml::parse_exception ex) {
       return false;
@@ -49,6 +55,7 @@ saveSettings(const std::string &path,
    config::saveToTOML(toml, settings.gpu);
    saveToTOML(toml, settings.input);
    saveToTOML(toml, settings.sound);
+   saveToTOML(toml, settings.ui);
 
    // Write to file
    std::ofstream out { path };
@@ -290,5 +297,62 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
 
    sound->insert("playback_enabled", soundSettings.playbackEnabled);
    config->insert("sound", sound);
+   return true;
+}
+
+
+static const char *
+translateTitleListMode(UiSettings::TitleListMode mode)
+{
+   if (mode == UiSettings::TitleListMode::TitleList) {
+      return "list";
+   } else if (mode == UiSettings::TitleListMode::TitleGrid) {
+      return "grid";
+   }
+
+   return "";
+}
+
+static std::optional<UiSettings::TitleListMode>
+translateTitleListMode(const std::string &text)
+{
+   if (text == "list") {
+      return UiSettings::TitleListMode::TitleList;
+   } else if (text == "grid") {
+      return UiSettings::TitleListMode::TitleGrid;
+   }
+
+   return { };
+}
+
+bool
+loadFromTOML(std::shared_ptr<cpptoml::table> config,
+             UiSettings &uiSettings)
+{
+   if (auto ui = config->get_table("ui")) {
+      if (auto text = ui->get_as<std::string>("title_list_mode"); text) {
+         if (auto mode = translateTitleListMode(*text); mode) {
+            uiSettings.titleListMode = *mode;
+         }
+      }
+   }
+
+   return true;
+}
+
+bool
+saveToTOML(std::shared_ptr<cpptoml::table> config,
+           const UiSettings &uiSettings)
+{
+   auto ui = config->get_table("ui");
+   if (!ui) {
+      ui = cpptoml::make_table();
+   }
+
+   if (auto text = translateTitleListMode(uiSettings.titleListMode); text) {
+      ui->insert("title_list_mode", text);
+   }
+
+   config->insert("ui", ui);
    return true;
 }

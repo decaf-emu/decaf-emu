@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>675</width>
-     <height>22</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -47,9 +47,12 @@
     <addaction name="actionSettings"/>
     <addaction name="separator"/>
     <addaction name="actionSystemSettings"/>
+    <addaction name="actionContentSettings"/>
     <addaction name="actionInputSettings"/>
     <addaction name="actionLogSettings"/>
     <addaction name="actionDebugSettings"/>
+    <addaction name="actionAudioSettings"/>
+    <addaction name="actionDisplaySettings"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -67,6 +70,9 @@
     <addaction name="actionViewTV"/>
     <addaction name="actionViewGamepad1"/>
     <addaction name="actionViewGamepad2"/>
+    <addaction name="separator"/>
+    <addaction name="actionViewTitleList"/>
+    <addaction name="actionViewTitleGrid"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -126,6 +132,39 @@
     <string>&amp;Debugger</string>
    </property>
   </action>
+  <action name="actionAudioSettings">
+   <property name="text">
+    <string>Audio Settings</string>
+   </property>
+  </action>
+  <action name="actionDisplaySettings">
+   <property name="text">
+    <string>Display Settings</string>
+   </property>
+  </action>
+  <action name="actionContentSettings">
+   <property name="text">
+    <string>Content Settings</string>
+   </property>
+  </action>
+  <actiongroup name="titleViewActionGroup">
+    <action name="actionViewTitleList">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Title List</string>
+     </property>
+    </action>
+    <action name="actionViewTitleGrid">
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Title Grid</string>
+     </property>
+    </action>
+  </actiongroup>
   <actiongroup name="viewActionGroup">
    <action name="actionViewFullScreen">
     <property name="text">
@@ -387,6 +426,86 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionContentSettings</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openContentSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAudioSettings</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openAudioSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDisplaySettings</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openDisplaySettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionViewTitleList</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>setTitleListModeList()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionViewTitleGrid</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>setTitleListModeGrid()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>337</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openInputSettings()</slot>
@@ -401,5 +520,10 @@
   <slot>openDebugSettings()</slot>
   <slot>openSystemSettings()</slot>
   <slot>openDebugger()</slot>
+  <slot>openDisplaySettings()</slot>
+  <slot>openAudioSettings()</slot>
+  <slot>openContentSettings()</slot>
+  <slot>setTitleListModeList()</slot>
+  <slot>setTitleListModeGrid()</slot>
  </slots>
 </ui>

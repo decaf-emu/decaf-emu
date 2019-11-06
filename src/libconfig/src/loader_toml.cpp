@@ -141,6 +141,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
    readValue(config, "system.time_scale", decafSettings.system.time_scale);
    readArray(config, "system.lle_modules", decafSettings.system.lle_modules);
    readValue(config, "system.dump_hle_rpl", decafSettings.system.dump_hle_rpl);
+   readArray(config, "system.title_directories", decafSettings.system.title_directories);
    return true;
 }
 
@@ -301,6 +302,14 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
    }
 
    system->insert("lle_modules", lle_modules);
+
+   auto title_directories = cpptoml::make_array();
+   for (auto &name : decafSettings.system.title_directories) {
+      title_directories->push_back(name);
+   }
+
+   system->insert("title_directories", title_directories);
+
    config->insert("system", system);
    return true;
 }

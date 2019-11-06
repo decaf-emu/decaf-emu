@@ -14,14 +14,6 @@ public:
    void loadSettings(const Settings &settings) override;
    void saveSettings(Settings &settings) override;
 
-private slots:
-   void browseContentPath();
-   void browseHfioPath();
-   void browseMlcPath();
-   void browseResourcesPath();
-   void browseSdcardPath();
-   void browseSlcPath();
-
 private:
    Ui::SystemSettingsWidget mUi;
 };

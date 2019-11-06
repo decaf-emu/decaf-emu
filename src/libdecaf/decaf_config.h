@@ -71,6 +71,7 @@ struct SystemSettings
    std::string hfio_path = "";
    std::string content_path = {};
    std::string resources_path = "resources";
+   std::vector<std::string> title_directories = {};
    bool time_scale_enabled = false;
    double time_scale = 1.0;
    std::vector<std::string> lle_modules;

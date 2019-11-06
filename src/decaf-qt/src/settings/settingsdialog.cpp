@@ -2,6 +2,7 @@
 #include "settings.h"
 
 #include "audiosettingswidget.h"
+#include "contentsettingswidget.h"
 #include "debugsettingswidget.h"
 #include "displaysettingswidget.h"
 #include "inputsettingswidget.h"
@@ -22,6 +23,10 @@ SettingsDialog::SettingsDialog(SettingsStorage *settingsStorage,
    mUi.tabWidget->addTab(inputSettings, tr("Input"));
    mSettings.push_back(inputSettings);
 
+   auto contentSettings = new ContentSettingsWidget { };
+   mUi.tabWidget->addTab(contentSettings, tr("Content"));
+   mSettings.push_back(contentSettings);
+
    auto systemSettings = new SystemSettingsWidget { };
    mUi.tabWidget->addTab(systemSettings, tr("System"));
    mSettings.push_back(systemSettings);
@@ -30,9 +35,9 @@ SettingsDialog::SettingsDialog(SettingsStorage *settingsStorage,
    mUi.tabWidget->addTab(displaySettings, tr("Display"));
    mSettings.push_back(displaySettings);
 
-   auto audioSettingsWidget = new AudioSettingsWidget { };
-   mUi.tabWidget->addTab(audioSettingsWidget, tr("Audio"));
-   mSettings.push_back(audioSettingsWidget);
+   auto audioSettings = new AudioSettingsWidget { };
+   mUi.tabWidget->addTab(audioSettings, tr("Audio"));
+   mSettings.push_back(audioSettings);
 
    auto loggingSettings = new LoggingSettingsWidget { };
    mUi.tabWidget->addTab(loggingSettings, tr("Logging"));
@@ -50,8 +55,14 @@ SettingsDialog::SettingsDialog(SettingsStorage *settingsStorage,
 
    if (tab == SettingsTab::Default || tab == SettingsTab::Input) {
       mUi.tabWidget->setCurrentWidget(inputSettings);
+   } else if (tab == SettingsTab::Content) {
+      mUi.tabWidget->setCurrentWidget(contentSettings);
    } else if (tab == SettingsTab::System) {
       mUi.tabWidget->setCurrentWidget(systemSettings);
+   } else if (tab == SettingsTab::Display) {
+      mUi.tabWidget->setCurrentWidget(displaySettings);
+   } else if (tab == SettingsTab::Audio) {
+      mUi.tabWidget->setCurrentWidget(audioSettings);
    } else if (tab == SettingsTab::Logging) {
       mUi.tabWidget->setCurrentWidget(loggingSettings);
    } else if (tab == SettingsTab::Debug) {

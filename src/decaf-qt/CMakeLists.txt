@@ -46,8 +46,11 @@ target_link_libraries(decaf-qt
    ${EXCMD_LIBRARIES}
    ${SDL2_LIBRARIES}
    qtadvanceddocking
+   Qt5::Core
+   Qt5::Concurrent
    Qt5::Svg
-   Qt5::Widgets)
+   Qt5::Widgets
+   Qt5::Xml)
 
 if(MSVC)
    target_link_libraries(decaf-qt

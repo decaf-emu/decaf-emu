@@ -8,6 +8,9 @@ DisplaySettingsWidget::DisplaySettingsWidget(QWidget *parent,
 {
    mUi.setupUi(this);
 
+   mUi.comboBoxTitleListMode->addItem(tr("Title List"), static_cast<int>(UiSettings::TitleList));
+   mUi.comboBoxTitleListMode->addItem(tr("Title Grid"), static_cast<int>(UiSettings::TitleGrid));
+
    mUi.comboBoxViewMode->addItem(tr("Split"), static_cast<int>(gpu::DisplaySettings::Split));
    mUi.comboBoxViewMode->addItem(tr("TV"), static_cast<int>(gpu::DisplaySettings::TV));
    mUi.comboBoxViewMode->addItem(tr("Gamepad 1"), static_cast<int>(gpu::DisplaySettings::Gamepad1));
@@ -19,7 +22,14 @@ DisplaySettingsWidget::DisplaySettingsWidget(QWidget *parent,
 void
 DisplaySettingsWidget::loadSettings(const Settings &settings)
 {
-   auto index = mUi.comboBoxViewMode->findData(static_cast<int>(settings.gpu.display.viewMode));
+   auto index = mUi.comboBoxTitleListMode->findData(static_cast<int>(settings.ui.titleListMode));
+   if (index != -1) {
+      mUi.comboBoxTitleListMode->setCurrentIndex(index);
+   } else {
+      mUi.comboBoxTitleListMode->setCurrentIndex(0);
+   }
+
+   index = mUi.comboBoxViewMode->findData(static_cast<int>(settings.gpu.display.viewMode));
    if (index != -1) {
       mUi.comboBoxViewMode->setCurrentIndex(index);
    } else {
@@ -42,6 +52,9 @@ DisplaySettingsWidget::loadSettings(const Settings &settings)
 void
 DisplaySettingsWidget::saveSettings(Settings &settings)
 {
+   settings.ui.titleListMode =
+      static_cast<UiSettings::TitleListMode>(mUi.comboBoxTitleListMode->currentData().toInt());
+
    settings.gpu.display.viewMode =
       static_cast<gpu::DisplaySettings::ViewMode>(mUi.comboBoxViewMode->currentData().toInt());
 

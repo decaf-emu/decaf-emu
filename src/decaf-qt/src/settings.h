@@ -51,6 +51,17 @@ enum class ControllerType
    ClassicController,
 };
 
+struct UiSettings
+{
+   enum TitleListMode
+   {
+      TitleList,
+      TitleGrid,
+   };
+
+   TitleListMode titleListMode = TitleList;
+};
+
 struct InputConfiguration
 {
    struct Input
@@ -106,6 +117,7 @@ struct Settings
    cpu::Settings cpu = { };
    gpu::Settings gpu = { };
 
+   UiSettings ui = { };
    InputConfiguration input = { };
    SoundSettings sound = { };
 };

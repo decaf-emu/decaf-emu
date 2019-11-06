@@ -16,7 +16,10 @@ enum class SettingsTab
 {
    Default = 0,
    System,
+   Content,
    Input,
+   Display,
+   Audio,
    Logging,
    Debug,
 };

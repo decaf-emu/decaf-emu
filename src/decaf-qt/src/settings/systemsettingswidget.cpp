@@ -111,21 +111,6 @@ SystemSettingsWidget::SystemSettingsWidget(QWidget *parent,
 void
 SystemSettingsWidget::loadSettings(const Settings &settings)
 {
-   mUi.lineEditContentPath->setText(QString::fromStdString(settings.decaf.system.content_path));
-   mUi.lineEditMlcPath->setText(QString::fromStdString(settings.decaf.system.mlc_path));
-   mUi.lineEditSlcPath->setText(QString::fromStdString(settings.decaf.system.slc_path));
-   mUi.lineEditSdcardPath->setText(QString::fromStdString(settings.decaf.system.sdcard_path));
-   mUi.lineEditHfioPath->setText(QString::fromStdString(settings.decaf.system.hfio_path));
-   mUi.lineEditResourcesPath->setText(QString::fromStdString(settings.decaf.system.resources_path));
-   mUi.lineEditTimeScale->setText(QString("%1").arg(settings.decaf.system.time_scale, 0, 'g', 2));
-
-   mUi.lineEditContentPath->setCursorPosition(0);
-   mUi.lineEditMlcPath->setCursorPosition(0);
-   mUi.lineEditSlcPath->setCursorPosition(0);
-   mUi.lineEditSdcardPath->setCursorPosition(0);
-   mUi.lineEditHfioPath->setCursorPosition(0);
-   mUi.lineEditResourcesPath->setCursorPosition(0);
-
    int index = mUi.comboBoxRegion->findData(static_cast<int>(settings.decaf.system.region));
    if (index != -1) {
       mUi.comboBoxRegion->setCurrentIndex(index);
@@ -148,12 +133,6 @@ SystemSettingsWidget::loadSettings(const Settings &settings)
 void
 SystemSettingsWidget::saveSettings(Settings &settings)
 {
-   settings.decaf.system.content_path = mUi.lineEditContentPath->text().toStdString();
-   settings.decaf.system.mlc_path = mUi.lineEditMlcPath->text().toStdString();
-   settings.decaf.system.slc_path = mUi.lineEditSlcPath->text().toStdString();
-   settings.decaf.system.sdcard_path = mUi.lineEditSdcardPath->text().toStdString();
-   settings.decaf.system.hfio_path = mUi.lineEditHfioPath->text().toStdString();
-   settings.decaf.system.resources_path = mUi.lineEditResourcesPath->text().toStdString();
    settings.decaf.system.time_scale = mUi.lineEditTimeScale->text().toDouble();
    settings.decaf.system.region = static_cast<SystemRegion>(mUi.comboBoxRegion->currentData().toInt());
 
@@ -163,59 +142,5 @@ SystemSettingsWidget::saveSettings(Settings &settings)
       if (item->checkState() == Qt::Checked) {
          settings.decaf.system.lle_modules.emplace_back(item->text().toStdString());
       }
-   }
-}
-
-void
-SystemSettingsWidget::browseContentPath()
-{
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditContentPath->text());
-   if (!path.isEmpty()) {
-      mUi.lineEditContentPath->setText(path);
-   }
-}
-
-void
-SystemSettingsWidget::browseHfioPath()
-{
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditHfioPath->text());
-   if (!path.isEmpty()) {
-      mUi.lineEditHfioPath->setText(path);
-   }
-}
-
-void
-SystemSettingsWidget::browseMlcPath()
-{
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditMlcPath->text());
-   if (!path.isEmpty()) {
-      mUi.lineEditMlcPath->setText(path);
-   }
-}
-
-void
-SystemSettingsWidget::browseResourcesPath()
-{
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditResourcesPath->text());
-   if (!path.isEmpty()) {
-      mUi.lineEditResourcesPath->setText(path);
-   }
-}
-
-void
-SystemSettingsWidget::browseSdcardPath()
-{
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditSdcardPath->text());
-   if (!path.isEmpty()) {
-      mUi.lineEditSdcardPath->setText(path);
-   }
-}
-
-void
-SystemSettingsWidget::browseSlcPath()
-{
-   auto path = QFileDialog::getExistingDirectory(this, tr("Open Directory"), mUi.lineEditSlcPath->text());
-   if (!path.isEmpty()) {
-      mUi.lineEditSlcPath->setText(path);
    }
 }
