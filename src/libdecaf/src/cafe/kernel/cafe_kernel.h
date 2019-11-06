@@ -22,7 +22,7 @@ void
 stop();
 
 bool
-hasExited();
+stopping();
 
 void
 setExecutableFilename(const std::string &name);

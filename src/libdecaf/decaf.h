@@ -26,7 +26,7 @@ void
 start();
 
 bool
-hasExited();
+stopping();
 
 int
 waitForExit();

@@ -349,7 +349,7 @@ DebuggerWindow::executionStateChanged(bool paused,
 
    ui->actionPause->setEnabled(false);
 
-   auto canResume = !decaf::hasExited();
+   auto canResume = !decaf::stopping();
    ui->actionResume->setEnabled(canResume);
    ui->actionStepInto->setEnabled(canResume);
    ui->actionStepOver->setEnabled(canResume);

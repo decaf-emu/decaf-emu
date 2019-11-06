@@ -198,9 +198,9 @@ start()
 }
 
 bool
-hasExited()
+stopping()
 {
-   return cafe::kernel::hasExited();
+   return cafe::kernel::stopping();
 }
 
 int

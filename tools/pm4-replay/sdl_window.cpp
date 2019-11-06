@@ -555,7 +555,7 @@ SDLWindow::run(const std::string &tracePath)
    // Set swap interval to 1 otherwise frames will render super fast!
    SDL_GL_SetSwapInterval(1);
 
-   while (!shouldQuit && !decaf::hasExited()) {
+   while (!shouldQuit && !decaf::stopping()) {
       auto event = SDL_Event { };
 
       while (SDL_PollEvent(&event)) {

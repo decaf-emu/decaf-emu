@@ -268,7 +268,7 @@ start()
 }
 
 bool
-hasExited()
+stopping()
 {
    return sStopping;
 }

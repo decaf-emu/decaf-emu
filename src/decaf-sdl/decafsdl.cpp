@@ -171,7 +171,7 @@ DecafSDL::run(const std::string &gamePath)
    // Start emulator
    decaf::start();
 
-   while (!shouldQuit && !decaf::hasExited()) {
+   while (!shouldQuit && !decaf::stopping()) {
       if (mVpad0Controller) {
          SDL_GameControllerUpdate();
       }
