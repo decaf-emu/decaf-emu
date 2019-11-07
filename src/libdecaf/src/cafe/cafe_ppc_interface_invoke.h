@@ -41,6 +41,8 @@ readParam(cpu::Core *core,
          return virt_func_cast<typename ArgType::function_type>(static_cast<virt_addr>(value));
       } else if constexpr (is_bitfield_type<ValueType>::value) {
          return ArgType::get(value);
+      } else if constexpr (std::is_same<bool, ValueType>::value) {
+         return !!value;
       } else {
          return static_cast<ArgType>(value);
       }
@@ -74,6 +76,8 @@ writeParam(cpu::Core *core,
          core->gpr[regIndex] = static_cast<uint32_t>(virt_func_cast<virt_addr>(value));
       } else if constexpr (is_bitfield_type<ValueType>::value) {
          core->gpr[regIndex] = static_cast<uint32_t>(value.value);
+      } else if constexpr (std::is_same<bool, ValueType>::value) {
+         core->gpr[regIndex] = static_cast<uint32_t>(value ? 1 : 0);
       } else {
          core->gpr[regIndex] = static_cast<uint32_t>(value);
       }

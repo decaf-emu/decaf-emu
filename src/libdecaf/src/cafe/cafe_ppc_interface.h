@@ -58,7 +58,7 @@ struct is_bitfield_type<T, typename void_t<typename T::BitfieldType>::type> : st
 
 /**
  * A type T is stored in a single GPR register if it is:
- * - sizeof(T) <= 4
+ * - sizeof(T) <= 4 or T is a bool (sizeof bool is not defined)
  * - Not a floating point
  * - Not a var_args type
  * - If it is a cpu function pointer
@@ -67,7 +67,7 @@ struct is_bitfield_type<T, typename void_t<typename T::BitfieldType>::type> : st
  */
 template<typename T>
 using is_gpr32_type = is_true<
-   sizeof(T) <= 4 &&
+   (sizeof(T) <= 4 || std::is_same<bool, T>::value) &&
    !std::is_floating_point<T>::value &&
    !std::is_pointer<T>::value &&
    !std::is_same<var_args, T>::value &&
