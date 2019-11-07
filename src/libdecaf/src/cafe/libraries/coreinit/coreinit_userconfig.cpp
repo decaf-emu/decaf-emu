@@ -125,15 +125,16 @@ ucHandleIosResult(UCError result,
 
                if (settings[i].error) {
                   result = settings[i].error;
+                  continue;
                }
 
-               if (!settings[i].data) {
-                  result = UCError::InvalidParam;
-               }
+               if (settings[i].dataSize) {
+                  if (!settings[i].data) {
+                     result = UCError::InvalidParam;
+                     continue;
+                  }
 
-               if (settings[i].error == UCError::OK) {
                   auto src = virt_cast<void *>(vecs[i + 1].vaddr);
-
                   switch (settings[i].dataSize) {
                   case 0:
                      continue;
