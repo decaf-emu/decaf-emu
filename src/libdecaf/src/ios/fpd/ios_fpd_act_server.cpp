@@ -1,5 +1,6 @@
 #include "ios_fpd_log.h"
 #include "ios_fpd_act_accountdata.h"
+#include "ios_fpd_act_accountloaderservice.h"
 #include "ios_fpd_act_accountmanagerservice.h"
 #include "ios_fpd_act_clientstandardservice.h"
 #include "ios_fpd_act_server.h"
@@ -80,7 +81,8 @@ startActServer()
    server.registerService<ActClientStandardService>();
    server.registerService<ActServerStandardService>();
    server.registerService<ActAccountManagerService>();
-   // TODO: Register services 3, 4, 5, 6
+   server.registerService<ActAccountLoaderService>();
+   // TODO: Register services 4, 5, 6
 
    result = server.start(phys_addrof(sActServerData->threadStack) + sActServerData->threadStack.size(),
                          static_cast<uint32_t>(sActServerData->threadStack.size()),
