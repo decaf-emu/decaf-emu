@@ -1,7 +1,8 @@
 #include "ios_fpd_log.h"
-#include "ios_fpd_act_server.h"
+#include "ios_fpd_act_accountdata.h"
 #include "ios_fpd_act_accountmanagerservice.h"
 #include "ios_fpd_act_clientstandardservice.h"
+#include "ios_fpd_act_server.h"
 #include "ios_fpd_act_serverstandardservice.h"
 
 #include "ios/kernel/ios_kernel_process.h"
@@ -34,7 +35,7 @@ public:
          mFsaHandle = static_cast<Handle>(error);
       }
 
-      loadAccounts();
+      initialiseAccounts();
    }
 
    void finaliseServer() override

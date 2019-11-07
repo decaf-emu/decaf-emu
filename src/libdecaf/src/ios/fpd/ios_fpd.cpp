@@ -1,7 +1,7 @@
 #include "ios_fpd.h"
 #include "ios_fpd_log.h"
 #include "ios_fpd_act_server.h"
-#include "ios_fpd_act_clientstandardservice.h"
+#include "ios_fpd_act_accountdata.h"
 
 #include "decaf_log.h"
 #include "ios/kernel/ios_kernel_heap.h"
@@ -41,7 +41,7 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    internal::initialiseStaticData();
    internal::initialiseStaticActServerData();
-   internal::initialiseStaticClientStandardServiceData();
+   internal::initialiseStaticAccountData();
 
    // Initialise process heaps
    error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);

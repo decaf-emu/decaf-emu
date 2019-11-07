@@ -13,10 +13,4 @@ struct ActClientStandardService : ::nn::act::services::ClientStandardService
                   nn::ipc::CommandHandlerArgs &args);
 };
 
-void
-initialiseStaticClientStandardServiceData();
-
-void
-loadAccounts();
-
 } // namespace ios::fpd::internal

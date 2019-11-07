@@ -1,3 +1,4 @@
+#include "ios_fpd_act_accountdata.h"
 #include "ios_fpd_act_accountmanagerservice.h"
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
@@ -13,16 +14,12 @@ static nn::Result
 createConsoleAccount(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActAccountManagerService::CreateConsoleAccount> { args };
+   auto account = createAccount();
+   if (!account) {
+      return ResultSLOTS_FULL;
+   }
 
-   /*
-   TODO: nn::act::CreateConsoleAccount
-   This seems to just do the same than our createAccount method in
-   ios_fps_clientstandardservice.cpp, but that seems weird to me as it does not
-   return the id or slot of the account created, just an error code. Maybe
-   there is some special distinguishment for _Console_ account which we have
-   yet to figure out?
-   */
-
+   account->isCommitted = uint8_t { 0 };
    return nn::ResultSuccess;
 }
 

@@ -97,20 +97,49 @@ struct AccountInstance
    be2_val<uint8_t> isCommitted;
 };
 
-bool
-loadTransferableIdManager(phys_ptr<TransferableIdManager> transferableIdManager);
+phys_ptr<TransferableIdManager>
+getTransferableIdManager();
 
-bool
-loadUuidManager(phys_ptr<UuidManager> uuidManager);
+phys_ptr<UuidManager>
+getUuidManager();
 
-bool
-loadPersistentIdManager(phys_ptr<PersistentIdManager> persistentIdManager);
+phys_ptr<PersistentIdManager>
+getPersistentIdManager();
 
-bool
-loadAccountManager(phys_ptr<AccountManager> accountManager);
+phys_ptr<AccountManager>
+getAccountManager();
 
-bool
-loadAccountInstance(phys_ptr<AccountInstance> accountInstance,
-                    PersistentId persistentId);
+phys_ptr<AccountInstance>
+getCurrentAccount();
+
+phys_ptr<AccountInstance>
+getDefaultAccount();
+
+std::array<uint8_t, 8>
+getDeviceHash();
+
+uint8_t
+getNumAccounts();
+
+SlotNo
+getSlotNoForAccount(phys_ptr<AccountInstance> account);
+
+phys_ptr<AccountInstance>
+getAccountBySlotNo(SlotNo slot);
+
+phys_ptr<AccountInstance>
+getAccountByPersistentId(PersistentId id);
+
+TransferrableId
+calculateTransferableId(uint64_t transferableIdBase, uint16_t a3);
+
+phys_ptr<AccountInstance>
+createAccount();
+
+void
+initialiseAccounts();
+
+void
+initialiseStaticAccountData();
 
 } // namespace ios::fpd::internal
