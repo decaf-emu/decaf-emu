@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "titlelistwidget.h"
 #include "titlelistmodel.h"
 #include "titlelistscanner.h"
