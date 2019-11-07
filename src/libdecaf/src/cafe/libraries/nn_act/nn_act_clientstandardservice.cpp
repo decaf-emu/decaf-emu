@@ -39,6 +39,36 @@ GetAccountIdEx(virt_ptr<char> accountId,
                                    InfoType::AccountId);
 }
 
+nn::Result
+GetBirthday(virt_ptr<uint16_t> year,
+            virt_ptr<uint8_t> month,
+            virt_ptr<uint8_t> day)
+{
+   return GetBirthdayEx(year, month, day, CurrentUserSlot);
+}
+
+nn::Result
+GetBirthdayEx(virt_ptr<uint16_t> year,
+              virt_ptr<uint8_t> month,
+              virt_ptr<uint8_t> day,
+              SlotNo slotNo)
+{
+   StackObject<Birthday> birthday;
+   if (!year || !month || !day) {
+      return ResultInvalidPointer;
+   }
+
+   auto result = internal::GetAccountInfo(CurrentUserSlot, birthday,
+                                          sizeof(Birthday), InfoType::Birthday);
+   if (result) {
+      *year = birthday->year;
+      *month = birthday->month;
+      *day = birthday->day;
+   }
+
+   return result;
+}
+
 SlotNo
 GetDefaultAccount()
 {
@@ -439,6 +469,10 @@ Library::registerClientStandardServiceSymbols()
                               GetAccountId);
    RegisterFunctionExportName("GetAccountIdEx__Q2_2nn3actFPcUc",
                               GetAccountIdEx);
+   RegisterFunctionExportName("GetBirthday__Q2_2nn3actFPUsPUcT2",
+                              GetBirthday);
+   RegisterFunctionExportName("GetBirthdayEx__Q2_2nn3actFPUsPUcT2Uc",
+                              GetBirthdayEx);
    RegisterFunctionExportName("GetDefaultAccount__Q2_2nn3actFv",
                               GetDefaultAccount);
    RegisterFunctionExportName("GetDeviceHash__Q2_2nn3actFPUL",

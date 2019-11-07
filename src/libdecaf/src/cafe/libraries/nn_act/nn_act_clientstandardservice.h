@@ -24,6 +24,17 @@ nn::Result
 GetAccountIdEx(virt_ptr<char> accountId,
                SlotNo slotNo);
 
+nn::Result
+GetBirthday(virt_ptr<uint16_t> year,
+            virt_ptr<uint8_t> month,
+            virt_ptr<uint8_t> day);
+
+nn::Result
+GetBirthdayEx(virt_ptr<uint16_t> year,
+              virt_ptr<uint8_t> month,
+              virt_ptr<uint8_t> day,
+              SlotNo slotNo);
+
 SlotNo
 GetDefaultAccount();
 
