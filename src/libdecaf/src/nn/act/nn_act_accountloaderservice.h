@@ -9,11 +9,11 @@
 namespace nn::act::services
 {
 
-struct AccountManagerService : ipc::Service<2>
+struct AccountLoaderService : ipc::Service<3>
 {
-   using CreateConsoleAccount =
-      ipc::Command<AccountManagerService, 1>
-         ::Parameters<>;
+   using LoadConsoleAccount =
+      ipc::Command<AccountLoaderService, 1>
+         ::Parameters<SlotNo, ACTLoadOption, ipc::InBuffer<const char>, bool>;
 };
 
 } // namespace nn::act::services

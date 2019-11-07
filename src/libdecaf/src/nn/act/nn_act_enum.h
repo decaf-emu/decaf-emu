@@ -6,6 +6,9 @@
 ENUM_NAMESPACE_ENTER(nn)
 ENUM_NAMESPACE_ENTER(act)
 
+ENUM_BEG(ACTLoadOption, int32_t)
+ENUM_END(ACTLoadOption)
+
 ENUM_BEG(InfoType, int32_t)
    ENUM_VALUE(NumOfAccounts,                 1)
    ENUM_VALUE(SlotNo,                        2)
