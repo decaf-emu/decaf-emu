@@ -18,6 +18,7 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerClientSymbols();
+   registerAccountManagerServiceSymbols();
    registerClientStandardServiceSymbols();
    registerServerStandardServiceSymbols();
 }
