@@ -17,6 +17,7 @@ protected:
 
 private:
    void registerClientSymbols();
+   void registerAccountLoaderServiceSymbols();
    void registerAccountManagerServiceSymbols();
    void registerClientStandardServiceSymbols();
    void registerServerStandardServiceSymbols();
