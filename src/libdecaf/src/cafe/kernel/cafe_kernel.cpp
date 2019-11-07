@@ -76,7 +76,8 @@ mainCoreEntryPoint(cpu::Core *core)
    // Prepare title
    auto titleInfo = virt_addrof(sKernelData->prepareTitleInfo);
    if (auto error = internal::mcpPrepareTitle(ios::mcp::DefaultTitleId,
-                                              titleInfo)) {
+                                              titleInfo);
+       error || titleInfo->argstr[0] == '\0') {
       // Not a full title - fill out some default values!
       titleInfo->version = 1u;
       titleInfo->cmdFlags = 0u;
