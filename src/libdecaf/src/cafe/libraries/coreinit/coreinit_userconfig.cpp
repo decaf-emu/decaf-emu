@@ -561,6 +561,12 @@ UCWriteSysConfigAsync(IOSHandle handle,
             result = UCError::NoIPCBuffers;
             goto fail;
          }
+
+         if (settings[i].data) {
+            std::memcpy(virt_cast<void *>(vecs[1 + i].vaddr).get(),
+                        settings[i].data.get(),
+                        settings[i].dataSize);
+         }
       } else {
          vecs[1 + i].vaddr = 0u;
       }
