@@ -1,7 +1,4 @@
 #include "coreinit_internal_idlock.h"
-
-#include "cafe/kernel/cafe_kernel_interrupts.h"
-
 #include <libcpu/cpu.h>
 
 namespace cafe::coreinit::internal
@@ -30,11 +27,10 @@ acquireIdLock(IdLock &lock,
    }
 
    while (!lock.owner.compare_exchange_weak(expected, id, std::memory_order_acquire)) {
-      cafe::kernel::checkInterrupts();
       expected = 0;
    }
 
-   return expected == 0;
+   return true;
 }
 
 bool

@@ -4,8 +4,6 @@
 
 #include "cafe/cafe_ppc_interface_invoke.h"
 
-#include <libcpu/cpu.h>
-
 namespace cafe::kernel
 {
 
@@ -44,12 +42,6 @@ clearAndEnableInterrupt(InterruptType type)
 void
 disableInterrupt(InterruptType type)
 {
-}
-
-void
-checkInterrupts()
-{
-   cpu::this_core::checkInterrupts();
 }
 
 namespace internal

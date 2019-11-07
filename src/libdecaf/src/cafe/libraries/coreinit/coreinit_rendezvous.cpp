@@ -1,8 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_rendezvous.h"
 #include "coreinit_time.h"
-
-#include "cafe/kernel/cafe_kernel_interrupts.h"
+#include <libcpu/cpu.h>
 
 namespace cafe::coreinit
 {
@@ -78,7 +77,8 @@ OSWaitRendezvousWithTimeout(virt_ptr<OSRendezvous> rendezvous,
 
       // We must manually check for interrupts here, as we are busy-looping.
       //  Note that this is only safe as no locks are held during the wait.
-      cafe::kernel::checkInterrupts();
+      cpu::this_core::checkInterrupts();
+      // TODO: Change this to something like cafe::kernel::checkInterrupts
    } while (true);
 
    return success;

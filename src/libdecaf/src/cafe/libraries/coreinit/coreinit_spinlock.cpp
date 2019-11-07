@@ -3,9 +3,7 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
-
-#include "cafe/kernel/cafe_kernel_interrupts.h"
-
+#include "libcpu/mem.h"
 #include <common/decaf_assert.h>
 #include <atomic>
 
@@ -43,12 +41,11 @@ spinAcquireLock(virt_ptr<OSSpinLock> spinlock)
    auto owner = virt_ptr<OSThread> { thread };
 
    while (!spinlock->owner.compare_exchange_weak(expected, owner, std::memory_order_release, std::memory_order_relaxed)) {
-      cafe::kernel::checkInterrupts();
       expected = nullptr;
    }
 
    increaseSpinLockCount(thread);
-   return (expected == nullptr);
+   return true;
 }
 
 static bool
@@ -90,7 +87,6 @@ spinTryLockWithTimeout(virt_ptr<OSSpinLock> spinlock,
          return false;
       }
 
-      cafe::kernel::checkInterrupts();
       expected = nullptr;
    }
 
@@ -129,7 +125,8 @@ BOOL
 OSAcquireSpinLock(virt_ptr<OSSpinLock> spinlock)
 {
    OSTestThreadCancel();
-   return spinAcquireLock(spinlock) ? TRUE : FALSE;
+   spinAcquireLock(spinlock);
+   return TRUE;
 }
 
 BOOL
