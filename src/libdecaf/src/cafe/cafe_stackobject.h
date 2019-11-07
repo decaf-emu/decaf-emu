@@ -35,6 +35,12 @@ public:
                                              NumElements);
    }
 
+   StackObject(const Type &value) :
+      StackObject()
+   {
+      std::memcpy(virt_ptr<Type>::get(), &value, sizeof(Type));
+   }
+
    ~StackObject()
    {
       auto core = cpu::this_core::state();
@@ -65,7 +71,14 @@ template<typename Type, size_t NumElements>
 class StackArray : public StackObject<Type, NumElements>
 {
 public:
-   using StackObject<Type, NumElements>::StackObject;
+   StackArray()
+   {
+   }
+
+   StackArray(const Type (&values)[NumElements])
+   {
+      std::memcpy(virt_ptr<Type>::get(), &values, sizeof(Type) * NumElements);
+   }
 
    // Disable copy
    StackArray(const StackArray &) = delete;
