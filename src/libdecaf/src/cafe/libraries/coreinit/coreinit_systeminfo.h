@@ -1,6 +1,7 @@
 #pragma once
 #include "coreinit_enum.h"
 #include "coreinit_time.h"
+#include "cafe/kernel/cafe_kernel_info.h"
 #include "cafe/kernel/cafe_kernel_process.h"
 
 #include <common/bitfield.h>
@@ -28,11 +29,15 @@ CHECK_SIZE(OSSystemInfo, 0x20);
 
 using OSAppFlags = kernel::ProcessFlags;
 using OSAppFlagsDebugLevel = kernel::DebugLevel;
+using OSSystemMode = kernel::SystemMode;
 
 #pragma pack(pop)
 
 virt_ptr<OSSystemInfo>
 OSGetSystemInfo();
+
+OSSystemMode
+OSGetSystemMode();
 
 BOOL
 OSSetScreenCapturePermission(BOOL enabled);

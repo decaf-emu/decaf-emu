@@ -13,6 +13,12 @@ enum class InfoType
    ArgStr = 3,
 };
 
+enum class SystemMode : int32_t
+{
+   Production = 1,
+   Debug = 2,
+};
+
 struct Info0
 {
    struct CoreinitInfo
@@ -122,5 +128,8 @@ void
 getInfo(InfoType type,
         virt_ptr<void> buffer,
         uint32_t size);
+
+SystemMode
+getSystemMode();
 
 } // namespace cafe::kernel

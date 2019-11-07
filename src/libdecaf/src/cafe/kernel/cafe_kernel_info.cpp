@@ -123,4 +123,10 @@ getInfo(InfoType type,
    }
 }
 
+SystemMode
+getSystemMode()
+{
+   return SystemMode::Production;
+}
+
 } // namespace cafe::kernel

@@ -29,6 +29,12 @@ OSGetSystemInfo()
    return virt_addrof(sSystemInfoData->systemInfo);
 }
 
+OSSystemMode
+OSGetSystemMode()
+{
+   return kernel::getSystemMode();
+}
+
 BOOL
 OSSetScreenCapturePermission(BOOL enabled)
 {
@@ -277,6 +283,7 @@ void
 Library::registerSystemInfoSymbols()
 {
    RegisterFunctionExport(OSGetSystemInfo);
+   RegisterFunctionExport(OSGetSystemMode);
    RegisterFunctionExport(OSSetScreenCapturePermission);
    RegisterFunctionExport(OSGetScreenCapturePermission);
    RegisterFunctionExport(OSGetConsoleType);
