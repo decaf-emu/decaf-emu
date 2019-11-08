@@ -61,6 +61,10 @@ jobs:
         fi
         echo ::set-env name=CONAN_ENV_COMPILER::${{ matrix.compiler }}
         echo ::set-env name=CONAN_ENV_COMPILER_VERSION::${{ matrix.version }}
+        pip3 install wheel
+        pip3 install aqtinstall
+        python3 -m aqt install 5.13.0 linux desktop
+        echo "::set-env name=QTDIR::$PWD/Qt5.13.0/5.13.0/gcc_64"
 
     - name: Install (macOS)
       if: startsWith(matrix.os, 'macOS')
@@ -116,14 +120,14 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=$QTDIR/lib/cmake/Qt5 ..
 
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DCMAKE_BUILD_TYPE=Release -DDECAF_QT=ON -DQt5_DIR=%QTDIR%/lib/cmake/Qt5  ..
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5  ..
 
     - name: Build
       run: |
