@@ -5,7 +5,7 @@
 class SettingsStorage;
 class TitleScanner;
 class TitleListModel;
-class QSortFilterProxyModel;
+class TitleSortFilterProxyModel;
 
 class QStackedLayout;
 
@@ -37,5 +37,5 @@ private:
    QThread mScanThread;
    TitleScanner *mTitleScanner = nullptr;
    TitleListModel *mTitleListModel = nullptr;
-   QSortFilterProxyModel *mProxyModel = nullptr;
+   TitleSortFilterProxyModel *mProxyModel = nullptr;
 };

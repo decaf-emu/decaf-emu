@@ -1,4 +1,6 @@
 #pragma once
+#include <libdecaf/decaf_content.h>
+
 #include <QAbstractTableModel>
 #include <QDir>
 #include <QString>
@@ -22,6 +24,7 @@ class TitleListModel : public QAbstractTableModel
 public:
    static constexpr auto TitleTypeRole = Qt::UserRole;
    static constexpr auto TitlePathRole = Qt::UserRole + 1;
+   static constexpr auto TitleIdRole = Qt::UserRole + 2;
 
    TitleListModel(QObject *parent = nullptr) :
       QAbstractTableModel(parent)
@@ -48,19 +51,18 @@ public:
    }
 
    static QString
-   getTypeString(qulonglong title_id)
+   getTypeString(qulonglong titleId)
    {
-      auto type = (title_id >> 32) & 0xf;
-      switch (type) {
-      case 0:
-         return tr("Title");
-      case 2:
+      switch (decaf::getTitleTypeFromID(titleId)) {
+      case decaf::TitleType::Application:
+         return tr("Application");
+      case decaf::TitleType::Demo:
          return tr("Demo");
-      case 0xB:
+      case decaf::TitleType::Data:
          return tr("Data");
-      case 0xC:
+      case decaf::TitleType::DLC:
          return tr("DLC");
-      case 0xE:
+      case decaf::TitleType::Update:
          return tr("Update");
       default:
          return tr("Unknown");
@@ -85,9 +87,9 @@ public:
          case 1:
             return title.publisher_en;
          case 2:
-            return QDir { title.code_path }.filePath(title.argstr);
-         case 3:
             return getTypeString(title.title_id);
+         case 3:
+            return QDir { title.code_path }.filePath(title.argstr);
          default:
             return QVariant { };
          }
@@ -99,6 +101,8 @@ public:
          return getTypeString(title.title_id);
       } else if (role == TitlePathRole) {
          return QDir { title.code_path }.filePath(title.argstr);
+      } else if (role == TitleIdRole) {
+         return title.title_id;
       }
 
       return QVariant { };
@@ -117,9 +121,9 @@ public:
          case 1:
             return tr("Publisher");
          case 2:
-            return tr("Path");
-         case 3:
             return tr("Type");
+         case 3:
+            return tr("Path");
          }
       }
 
