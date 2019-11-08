@@ -1,4 +1,4 @@
-#include "ContentSettingsWidget.h"
+#include "contentsettingswidget.h"
 
 #include <QFileDialog>
 
