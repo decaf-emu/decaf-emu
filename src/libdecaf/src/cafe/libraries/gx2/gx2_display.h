@@ -104,9 +104,6 @@ GX2SwapScanBuffers();
 namespace internal
 {
 
-void
-initialiseDisplay();
-
 virt_ptr<GX2Surface>
 getTvScanBuffer();
 

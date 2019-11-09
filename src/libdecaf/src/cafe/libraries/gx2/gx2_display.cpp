@@ -25,13 +25,13 @@ struct StaticDisplayData
 {
    be2_struct<GX2ColorBuffer> tvScanBuffer;
    be2_struct<GX2ColorBuffer> drcScanBuffer;
-   be2_val<GX2TVScanMode> tvScanMode;
-   be2_val<GX2TVRenderMode> tvRenderMode;
+   be2_val<GX2TVScanMode> tvScanMode = GX2TVScanMode::P1080;
+   be2_val<GX2TVRenderMode> tvRenderMode = GX2TVRenderMode::Disabled;
    be2_val<GX2BufferingMode> tvBufferingMode;
-   be2_val<GX2DrcRenderMode> drcRenderMode;
+   be2_val<GX2DrcRenderMode> drcRenderMode = GX2DrcRenderMode::Disabled;
    be2_val<GX2BufferingMode> drcBufferingMode;
    be2_val<GX2DRCConnectCallbackFunction> drcConnectCallback;
-   be2_val<uint32_t> swapInterval;
+   be2_val<uint32_t> swapInterval = 1u;
 };
 
 static virt_ptr<StaticDisplayData>
@@ -221,7 +221,7 @@ GX2GetSystemTVScanMode()
 GX2DrcRenderMode
 GX2GetSystemDRCMode()
 {
-   return GX2DrcRenderMode::Single;
+   return sDisplayData->drcRenderMode;
 }
 
 GX2AspectRatio
@@ -391,15 +391,6 @@ GX2SwapScanBuffers()
 
 namespace internal
 {
-
-void
-initialiseDisplay()
-{
-   sDisplayData->tvScanMode = GX2TVScanMode::P1080;
-   sDisplayData->tvRenderMode = GX2TVRenderMode::Disabled;
-   sDisplayData->drcRenderMode = GX2DrcRenderMode::Disabled;
-   sDisplayData->swapInterval = 1u;
-}
 
 virt_ptr<GX2Surface>
 getTvScanBuffer()
