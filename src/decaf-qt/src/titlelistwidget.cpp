@@ -26,8 +26,14 @@ public:
          sourceModel()->index(sourceRow, 0, sourceParent),
          TitleListModel::TitleIdRole).toULongLong();
 
-      if (decaf::isSystemTitle(titleId) && !showSystemTitles) {
-         return false;
+      if (decaf::isSystemTitle(titleId)) {
+         if (!showSystemTitles) {
+            return false;
+         }
+      } else {
+         if (!showNonSystemTitles) {
+            return false;
+         }
       }
 
       switch (decaf::getTitleTypeFromID(titleId)) {
@@ -51,6 +57,7 @@ public:
    bool showData = false;
    bool showDLC = false;
    bool showUpdates = false;
+   bool showNonSystemTitles = true;
    bool showSystemTitles = true;
    bool showUnknown = false;
 };
