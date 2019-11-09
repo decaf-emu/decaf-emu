@@ -36,6 +36,8 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    setCentralWidget(mTitleListWiget);
    connect(mTitleListWiget, &TitleListWidget::launchTitle,
            this, &MainWindow::loadFile);
+   connect(mTitleListWiget, &TitleListWidget::statusMessage,
+           this, &MainWindow::showStatusMessage);
 
    connect(decafInterface, &DecafInterface::titleLoaded,
            this, &MainWindow::titleLoaded);
@@ -47,7 +49,6 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    mUi.statusBar->addPermanentWidget(mStatusFrameRate = new QLabel());
    mUi.statusBar->addPermanentWidget(mStatusFrameTime = new QLabel());
    connect(mStatusTimer, SIGNAL(timeout()), this, SLOT(updateStatusBar()));
-   mStatusTimer->start(500);
 
    // Setup settings
    connect(mSettingsStorage, &SettingsStorage::settingsChanged,
@@ -159,6 +160,10 @@ MainWindow::loadFile(QString path)
 
    mRenderWidget = new RenderWidget { mInputDriver, this };
    setCentralWidget(mRenderWidget);
+
+   // Update status bar
+   mUi.statusBar->clearMessage();
+   mStatusTimer->start(500);
 
    // Start the game
    mDecafInterface->startLogging();
@@ -400,4 +405,10 @@ MainWindow::updateStatusBar()
       mStatusFrameRate->setText("");
       mStatusFrameTime->setText("");
    }
+}
+
+void
+MainWindow::showStatusMessage(QString message, int timeout)
+{
+   mUi.statusBar->showMessage(message, timeout);
 }

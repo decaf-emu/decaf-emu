@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <QDirIterator>
 #include <QDomDocument>
 #include <QPixmap>
@@ -12,6 +13,11 @@ class TitleScanner : public QObject
    Q_OBJECT
 
 public:
+   void cancel()
+   {
+      mCancel.store(true);
+   }
+
    void scanDirectoryList(QStringList directories)
    {
       for (auto scanDirectory : directories) {
@@ -21,7 +27,11 @@ public:
             QDir::Files | QDir::Readable, QDirIterator::Subdirectories
          };
 
-         while (itr.hasNext()) {
+         if (mCancel.load()) {
+            break;
+         }
+
+         while (itr.hasNext() && !mCancel.load()) {
             auto titleInfo = new TitleInfo { };
             auto rpx = QFileInfo { itr.next() };
             auto codeDirectory = QDir { rpx.path() };
@@ -79,8 +89,15 @@ public:
             emit titleFound(titleInfo);
          }
       }
+
+      mCancel = false;
+      emit scanFinished();
    }
 
 signals:
    void titleFound(TitleInfo *info);
+   void scanFinished();
+
+private:
+   std::atomic_bool mCancel { false };
 };

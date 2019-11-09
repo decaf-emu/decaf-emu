@@ -99,19 +99,7 @@ TitleListWidget::TitleListWidget(SettingsStorage *settingsStorage,
    connect(&mScanThread, &QThread::finished, mTitleScanner, &QObject::deleteLater);
    connect(this, &TitleListWidget::scanDirectoryList, mTitleScanner, &TitleScanner::scanDirectoryList);
    connect(mTitleScanner, &TitleScanner::titleFound, mTitleListModel, &TitleListModel::addTitle);
-
-   // Start scanning
-   auto directoryList = QStringList { };
-   auto settings = settingsStorage->get();
-   if (!settings->decaf.system.mlc_path.empty()) {
-      directoryList.push_back(QString::fromStdString(settings->decaf.system.mlc_path) + "/sys/title");
-      directoryList.push_back(QString::fromStdString(settings->decaf.system.mlc_path) + "/usr/title");
-   }
-
-   for (const auto &dir : settings->decaf.system.title_directories) {
-      directoryList.push_back(QString::fromStdString(dir));
-   }
-   scanDirectoryList(directoryList);
+   connect(mTitleScanner, &TitleScanner::scanFinished, this, &TitleListWidget::titleScanFinished);
 
    connect(mTitleList, &QListView::doubleClicked, [&](const QModelIndex &index) {
       auto data = mTitleList->model()->data(index, TitleListModel::TitlePathRole);
@@ -152,4 +140,57 @@ TitleListWidget::settingsChanged()
    } else {
       mStackedLayout->setCurrentIndex(0);
    }
+
+   startTitleScan();
+}
+
+void
+TitleListWidget::startTitleScan()
+{
+   auto settings = mSettingsStorage->get();
+   auto directoryList = QStringList { };
+
+   if (!settings->decaf.system.mlc_path.empty()) {
+      directoryList.push_back(QString::fromStdString(settings->decaf.system.mlc_path) + "/sys/title");
+      directoryList.push_back(QString::fromStdString(settings->decaf.system.mlc_path) + "/usr/title");
+   }
+
+   for (const auto &dir : settings->decaf.system.title_directories) {
+      directoryList.push_back(QString::fromStdString(dir));
+   }
+
+   if (mCurrentDirectoryList == directoryList) {
+      return;
+   }
+
+   if (mScanRunning) {
+      if (!mScanRequested) {
+         mTitleScanner->cancel();
+         mScanRequested = true;
+      }
+
+      return;
+   }
+
+   mScanRunning = true;
+   mScanRequested = false;
+   mCurrentDirectoryList = directoryList;
+   mTitleListModel->clear();
+
+   emit statusMessage("Scanning for titles...", 0);
+   scanDirectoryList(mCurrentDirectoryList);
+}
+
+void
+TitleListWidget::titleScanFinished()
+{
+   mScanRunning = false;
+
+   if (mScanRequested) {
+      startTitleScan();
+   }
+
+   emit statusMessage(
+      QString("Scanning complete, found %1 titles")
+         .arg(mTitleListModel->rowCount({})), 0);
 }

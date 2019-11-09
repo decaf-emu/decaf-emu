@@ -67,6 +67,7 @@ private slots:
    void softwareKeyboardInputFinished(int result);
 
    void updateStatusBar();
+   void showStatusMessage(QString message, int timeout);
 
    bool loadFile(QString path);
 

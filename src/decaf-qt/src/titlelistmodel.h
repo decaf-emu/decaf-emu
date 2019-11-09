@@ -36,6 +36,14 @@ public:
       qDeleteAll(mTitles);
    }
 
+   void clear()
+   {
+      beginResetModel();
+      qDeleteAll(mTitles);
+      mTitles.clear();
+      endResetModel();
+   }
+
    int rowCount(const QModelIndex &parent) const override
    {
       if (parent.isValid()) {
