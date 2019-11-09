@@ -419,6 +419,24 @@ IsServerAccountActiveEx(SlotNo slotNo)
 }
 
 bool
+IsServerAccountDeleted()
+{
+   return IsServerAccountDeletedEx(CurrentUserSlot);
+}
+
+bool
+IsServerAccountDeletedEx(SlotNo slotNo)
+{
+   StackObject<uint8_t> value;
+   if (!internal::GetAccountInfo(slotNo, value, sizeof(uint8_t),
+                                 InfoType::IsServerAccountDeleted)) {
+      return 0;
+   }
+
+   return !!*value;
+}
+
+bool
 IsSlotOccupied(SlotNo slot)
 {
    return GetPersistentIdEx(slot) != 0;
@@ -535,6 +553,10 @@ Library::registerClientStandardServiceSymbols()
                               IsServerAccountActive);
    RegisterFunctionExportName("IsServerAccountActiveEx__Q2_2nn3actFUc",
                               IsServerAccountActiveEx);
+   RegisterFunctionExportName("IsServerAccountDeleted__Q2_2nn3actFv",
+                              IsServerAccountDeleted);
+   RegisterFunctionExportName("IsServerAccountDeletedEx__Q2_2nn3actFUc",
+                              IsServerAccountDeletedEx);
    RegisterFunctionExportName("IsSlotOccupied__Q2_2nn3actFUc",
                               IsSlotOccupied);
 }

@@ -144,6 +144,12 @@ bool
 IsServerAccountActiveEx(SlotNo slotNo);
 
 bool
+IsServerAccountDeleted();
+
+bool
+IsServerAccountDeletedEx(SlotNo slotNo);
+
+bool
 IsSlotOccupied(SlotNo slot);
 
 namespace internal
