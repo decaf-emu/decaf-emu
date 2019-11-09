@@ -299,8 +299,6 @@ MEMCreateExpHeapEx(virt_ptr<void> base,
                    uint32_t size,
                    uint32_t flags)
 {
-   decaf_check(base);
-
    auto heapData = virt_cast<uint8_t *>(base);
    auto alignedStart = align_up(heapData, 4);
    auto alignedEnd = align_down(heapData + size, 4);
@@ -309,6 +307,8 @@ MEMCreateExpHeapEx(virt_ptr<void> base,
       // Not enough room for the header
       return nullptr;
    }
+
+   decaf_check(base);
 
    // Get our heap header
    auto heap = virt_cast<MEMExpHeap *>(alignedStart);

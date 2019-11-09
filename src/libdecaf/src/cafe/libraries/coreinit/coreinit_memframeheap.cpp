@@ -11,7 +11,6 @@ MEMCreateFrmHeapEx(virt_ptr<void> base,
                    uint32_t size,
                    uint32_t flags)
 {
-   decaf_check(base);
    auto baseMem = virt_cast<uint8_t *>(base);
 
    // Align start and end to 4 byte boundary
@@ -25,6 +24,8 @@ MEMCreateFrmHeapEx(virt_ptr<void> base,
    if (end - start < sizeof(MEMFrameHeap)) {
       return nullptr;
    }
+
+   decaf_check(base);
 
    // Setup the frame heap
    auto heap = virt_cast<MEMFrameHeap *>(start);

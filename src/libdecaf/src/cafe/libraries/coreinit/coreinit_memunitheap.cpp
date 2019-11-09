@@ -21,8 +21,6 @@ MEMCreateUnitHeapEx(virt_ptr<void> base,
                     int32_t alignment,
                     uint32_t flags)
 {
-   decaf_check(base);
-
    auto baseMem = virt_cast<uint8_t *>(base);
 
    // Align start and end to 4 byte boundary
@@ -48,6 +46,7 @@ MEMCreateUnitHeapEx(virt_ptr<void> base,
       return nullptr;
    }
 
+   decaf_check(base);
    auto heap = virt_cast<MEMUnitHeap *>(start);
 
    // Register Heap
