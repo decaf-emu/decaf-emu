@@ -4,12 +4,17 @@
 
 #include <coreinit/memexpheap.h>
 #include <coreinit/memheap.h>
+#include <coreinit/systeminfo.h>
+#include <coreinit/thread.h>
+#include <coreinit/time.h>
 #include <nn/ac/ac_c.h>
 #include <nsysnet/socket.h>
 #include <stdbool.h>
 #include <stdbool.h>
 #include <string.h>
 #include <whb/log.h>
+
+#define SEND_MAX_BYTES (1024)
 
 int
 serverStart(Server *server, int port)
@@ -127,7 +132,32 @@ serverAccept(Server *server)
 
 int serverSendPacket(Server *server, PacketWriter *packet)
 {
-   return send(server->client, packet->buffer, packet->pos, 0);
+   int sent = 0;
+   while (sent < packet->pos) {
+      int sendBytes = packet->pos - sent;
+      int result = 0;
+      if (sendBytes > SEND_MAX_BYTES) {
+         sendBytes = SEND_MAX_BYTES;
+      }
+
+      result = send(server->client, (uint8_t *)packet->buffer + sent, sendBytes, 0);
+      if (result > 0) {
+         sent += sendBytes;
+      }
+
+      if (result != sendBytes) {
+         int error = socketlasterr();
+         if (error == NSN_EWOULDBLOCK) {
+            OSSleepTicks(OSMillisecondsToTicks(1));
+            continue;
+         }
+
+         WHBLogPrintf("send returned %d instead of %d, error: %d", result, sendBytes, error);
+         break;
+      }
+   }
+
+   return sent;
 }
 
 static int
