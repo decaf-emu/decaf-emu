@@ -76,7 +76,7 @@ IPCBufPoolCreate(virt_ptr<void> buffer,
 
    auto messageIndex = virt_cast<virt_ptr<void> *>(virt_cast<uint8_t *>(alignedBuffer) + sizeof(IPCBufPool));
    auto messages = virt_cast<uint8_t *>(messageIndex) + messageIndexSize;
-   pool->messages = messageIndex;
+   pool->messages = messages;
    pool->messageIndexSize = messageIndexSize;
 
    // Initialise FIFO.
