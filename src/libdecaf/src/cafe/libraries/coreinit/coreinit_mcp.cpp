@@ -434,7 +434,10 @@ mcpAllocateMessage(uint32_t size)
       message = IPCBufPoolAllocate(sMcpData->largeMessagePool, size);
    }
 
-   std::memset(message.get(), 0, size);
+   if (message) {
+      std::memset(message.get(), 0, size);
+   }
+
    return message;
 }
 
