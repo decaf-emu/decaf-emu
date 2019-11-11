@@ -30,6 +30,63 @@ static FSAHandle sCurrentLoadFileHandle = { };
 static size_t sCurrentLoadFileSize = 0u;
 
 MCPError
+mcpDeviceList(phys_ptr<const MCPRequestDeviceList> request,
+              phys_ptr<MCPDevice> deviceList,
+              uint32_t deviceListSizeBytes)
+{
+   auto deviceListCount = deviceListSizeBytes / sizeof(MCPDevice);
+   auto devicesAdded = 0;
+   auto config = decaf::config();
+   auto deviceId = 0u;
+
+   /*
+   Example device list from my console:
+   path                    type      fs  flags  index uid
+   /vol/storage_usb01,     usb,      wfs,  0xF,     1   7
+   /vol/storage_bt00,      bt,       "",   0x3,     0   6
+   /vol/storage_drh00,     drh,      "",   0x3,     0   5
+   /vol/storage_slccmpt01, slccmpt,  isfs, 0x7,     1   4
+   /vol/storage_slc01,     slc,      isfs, 0xF,     1   3
+   /vol/storage_sdcard01,  sdcard,   fat,  0x7,     1   2
+   /vol/storage_ramdisk01, ramdisk,  wfs,  0x7,     1   1
+   /vol/storage_mlc01,     mlc,      wfs,  0xF,     1   0
+
+   Only mlc/ramdisk/usb had unk0x08 set to some sort of 7 character unique
+   identifier looking string.
+   */
+
+   if (devicesAdded < deviceListCount &&
+       (request->flags & MCPDeviceFlags::Unk1) &&
+       !config->system.mlc_path.empty()) {
+      auto &device = deviceList[devicesAdded++];
+      std::memset(std::addressof(device), 0, sizeof(MCPDevice));
+
+      device.type = "mlc";
+      device.filesystem = "wfs";
+      device.flags = MCPDeviceFlags::Unk1 | MCPDeviceFlags::Unk2 | MCPDeviceFlags::Unk4 | MCPDeviceFlags::Unk8;
+      device.index = 1u;
+      device.path = "/vol/storage_mlc01";
+      device.uid = deviceId++;
+   }
+
+   if (devicesAdded < deviceListCount &&
+       (request->flags & MCPDeviceFlags::Unk1) &&
+       !config->system.slc_path.empty()) {
+      auto &device = deviceList[devicesAdded++];
+      std::memset(std::addressof(device), 0, sizeof(MCPDevice));
+
+      device.type = "slc";
+      device.filesystem = "isfs";
+      device.flags = MCPDeviceFlags::Unk1 | MCPDeviceFlags::Unk2 | MCPDeviceFlags::Unk4 | MCPDeviceFlags::Unk8;
+      device.index = 1u;
+      device.path = "/vol/storage_slc01";
+      device.uid = deviceId++;
+   }
+
+   return static_cast<MCPError>(devicesAdded);
+}
+
+MCPError
 mcpGetFileLength(phys_ptr<const MCPRequestGetFileLength> request)
 {
    auto path = std::string { };

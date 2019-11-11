@@ -58,6 +58,18 @@ mcpIoctl(phys_ptr<ResourceRequest> request)
    auto &ioctl = request->requestData.args.ioctl;
 
    switch (static_cast<MCPCommand>(request->requestData.args.ioctl.request)) {
+   case MCPCommand::DeviceList:
+      if (ioctl.inputBuffer &&
+          ioctl.inputLength == sizeof(MCPRequestDeviceList) &&
+          ioctl.outputBuffer &&
+          ioctl.outputLength >= sizeof(MCPDevice)) {
+         error = mcpDeviceList(phys_cast<const MCPRequestDeviceList *>(ioctl.inputBuffer),
+                               phys_cast<MCPDevice *>(ioctl.outputBuffer),
+                               ioctl.outputLength);
+      } else {
+         error = MCPError::InvalidParam;
+      }
+      break;
    case MCPCommand::GetFileLength:
       if (ioctl.inputBuffer &&
           ioctl.inputLength == sizeof(MCPRequestGetFileLength) &&

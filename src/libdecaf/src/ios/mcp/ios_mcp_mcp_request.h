@@ -16,6 +16,13 @@ namespace ios::mcp
 
 #pragma pack(push, 1)
 
+struct MCPRequestDeviceList
+{
+   be2_val<uint32_t> flags;
+};
+CHECK_OFFSET(MCPRequestDeviceList, 0x00, flags);
+CHECK_SIZE(MCPRequestDeviceList, 0x04);
+
 struct MCPRequestGetFileLength
 {
    UNKNOWN(0x14);

@@ -8,6 +8,11 @@ namespace ios::mcp::internal
 {
 
 MCPError
+mcpDeviceList(phys_ptr<const MCPRequestDeviceList> request,
+              phys_ptr<MCPDevice> deviceList,
+              uint32_t deviceListSizeBytes);
+
+MCPError
 mcpGetFileLength(phys_ptr<const MCPRequestGetFileLength> request);
 
 MCPError

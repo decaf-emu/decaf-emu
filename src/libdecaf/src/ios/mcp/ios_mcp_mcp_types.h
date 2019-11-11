@@ -21,6 +21,38 @@ using MCPTitleId = uint64_t;
 
 constexpr MCPTitleId DefaultTitleId = -3;
 
+struct MCPDevice
+{
+   //! Device type e.g. mlc, slc, usb
+   be2_array<char, 8> type;
+
+   //! This seems to be some 7 character unique identifier which is only set
+   //! for mlc, ramdisk, usb
+   be2_array<char, 128> unk0x08;
+
+   //! Filesystem e.g. wfs, fat, isfs
+   be2_array<char, 8> filesystem;
+
+   //! Path, e.g. /vol/storage_mlc01
+   be2_array<char, 0x27F> path;
+
+   be2_val<MCPDeviceFlags> flags;
+
+   //! Unique index - incrementing id in order of device added to system
+   be2_val<uint32_t> uid;
+
+   //! Device type index, e.g. 3 for /vol/storage_mlc03
+   be2_val<uint32_t> index;
+};
+CHECK_OFFSET(MCPDevice, 0x00, type);
+CHECK_OFFSET(MCPDevice, 0x08, unk0x08);
+CHECK_OFFSET(MCPDevice, 0x88, filesystem);
+CHECK_OFFSET(MCPDevice, 0x90, path);
+CHECK_OFFSET(MCPDevice, 0x30F, flags);
+CHECK_OFFSET(MCPDevice, 0x313, uid);
+CHECK_OFFSET(MCPDevice, 0x317, index);
+CHECK_SIZE(MCPDevice, 0x31B);
+
 // Offsets of MCPTitleAppXml not verified.
 struct MCPTitleAppXml
 {
