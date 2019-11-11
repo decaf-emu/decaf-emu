@@ -16,6 +16,7 @@ namespace cafe::coreinit
 
 using ios::mcp::MCPAppType;
 using ios::mcp::MCPCountryCode;
+using ios::mcp::MCPDevice;
 using ios::mcp::MCPError;
 using ios::mcp::MCPRegion;
 using ios::mcp::MCPSysProdSettings;
@@ -28,6 +29,18 @@ MCP_Open();
 
 void
 MCP_Close(IOSHandle handle);
+
+IOSError
+MCP_DeviceList(IOSHandle handle,
+               virt_ptr<int32_t> numDevices,
+               virt_ptr<MCPDevice> deviceList,
+               uint32_t deviceListSizeBytes);
+
+IOSError
+MCP_FullDeviceList(IOSHandle handle,
+                   virt_ptr<int32_t> numDevices,
+                   virt_ptr<MCPDevice> deviceList,
+                   uint32_t deviceListSizeBytes);
 
 int32_t
 MCP_GetErrorCodeForViewer(MCPError error);

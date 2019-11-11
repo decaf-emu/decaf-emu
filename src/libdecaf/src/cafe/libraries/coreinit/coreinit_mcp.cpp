@@ -10,10 +10,12 @@ namespace cafe::coreinit
 {
 
 using ios::mcp::MCPCommand;
+using ios::mcp::MCPDeviceFlags;
 using ios::mcp::MCPResponseGetTitleId;
 using ios::mcp::MCPResponseGetOwnTitleInfo;
 using ios::mcp::MCPResponseUpdateCheckContext;
 using ios::mcp::MCPResponseUpdateCheckResume;
+using ios::mcp::MCPRequestDeviceList;
 using ios::mcp::MCPRequestGetOwnTitleInfo;
 using ios::mcp::MCPRequestSearchTitleList;
 using ios::mcp::MCPTitleListSearchFlags;
@@ -57,6 +59,70 @@ MCP_Close(IOSHandle handle)
    IOS_Close(handle);
 }
 
+IOSError
+MCP_DeviceList(IOSHandle handle,
+               virt_ptr<int32_t> numDevices,
+               virt_ptr<MCPDevice> deviceList,
+               uint32_t deviceListSizeBytes)
+{
+   if (!numDevices || !deviceList) {
+      return static_cast<IOSError>(MCPError::InvalidParam);
+   }
+
+   auto request = virt_cast<MCPRequestDeviceList *>(
+                     internal::mcpAllocateMessage(sizeof(MCPRequestDeviceList)));
+   if (!request) {
+      return static_cast<IOSError>(MCPError::Alloc);
+   }
+
+   request->flags = MCPDeviceFlags::Unk1;
+
+   auto result = IOS_Ioctl(handle,
+                           MCPCommand::DeviceList,
+                           request,
+                           sizeof(uint32_t),
+                           deviceList,
+                           deviceListSizeBytes);
+   if (result >= 0) {
+      *numDevices = static_cast<int32_t>(result);
+   }
+
+   internal::mcpFreeMessage(request);
+   return result; // This function does not translate result to MCPError
+
+}
+
+IOSError
+MCP_FullDeviceList(IOSHandle handle,
+                   virt_ptr<int32_t> numDevices,
+                   virt_ptr<MCPDevice> deviceList,
+                   uint32_t deviceListSizeBytes)
+{
+   if (!numDevices || !deviceList) {
+      return static_cast<IOSError>(MCPError::InvalidParam);
+   }
+
+   auto request = virt_cast<MCPRequestDeviceList *>(
+                     internal::mcpAllocateMessage(sizeof(MCPRequestDeviceList)));
+   if (!request) {
+      return static_cast<IOSError>(MCPError::Alloc);
+   }
+
+   request->flags = MCPDeviceFlags::Unk1 | MCPDeviceFlags::Unk2 | MCPDeviceFlags::Unk8;
+
+   auto result = IOS_Ioctl(handle,
+                           MCPCommand::DeviceList,
+                           request,
+                           sizeof(uint32_t),
+                           deviceList,
+                           deviceListSizeBytes);
+   if (result >= 0) {
+      *numDevices = static_cast<int32_t>(result);
+   }
+
+   internal::mcpFreeMessage(request);
+   return result; // This function does not translate result to MCPError
+}
 
 int32_t
 MCP_GetErrorCodeForViewer(MCPError error)
@@ -550,6 +616,8 @@ Library::registerMcpSymbols()
 {
    RegisterFunctionExport(MCP_Open);
    RegisterFunctionExport(MCP_Close);
+   RegisterFunctionExport(MCP_DeviceList);
+   RegisterFunctionExport(MCP_FullDeviceList);
    RegisterFunctionExport(MCP_GetErrorCodeForViewer);
    RegisterFunctionExport(MCP_GetOwnTitleInfo);
    RegisterFunctionExport(MCP_GetSysProdSettings);
