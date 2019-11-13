@@ -8,8 +8,10 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_systemheap.h"
 #include "coreinit_systeminfo.h"
+
 #include "cafe/cafe_ppc_interface_invoke.h"
 #include "cafe/cafe_stackobject.h"
+#include "cafe/kernel/cafe_kernel_userdrivers.h"
 
 #include <common/decaf_assert.h>
 #include <common/strutils.h>
@@ -29,26 +31,7 @@ struct StaticDriverData
    be2_virt_ptr<OSDriver> actionCallbackDriver;
 };
 
-static virt_ptr<StaticDriverData>
-sDriverData = nullptr;
-
-static int32_t
-unkRegisterSyscall0x3200(virt_ptr<const char> name,
-                         uint32_t nameLen,
-                         virt_ptr<uint32_t> outUnk1,
-                         virt_ptr<uint32_t> outUnk2)
-{
-   // TODO: Syscall 0x3200
-   return 0;
-}
-
-static int32_t
-unkDeregisterSyscall0x3300(virt_ptr<const char> name,
-                           uint32_t nameLen)
-{
-   // TODO: Syscall 0x3300
-   return 0;
-}
+static virt_ptr<StaticDriverData> sDriverData = nullptr;
 
 
 /**
@@ -66,11 +49,12 @@ unkDeregisterSyscall0x3300(virt_ptr<const char> name,
  * \param userDriverId
  * A user provided unique id to identify this driver.
  *
- * \param[out] outUnk1
- * Unknown, returned from registered driver with the kernel.
+ * \param[out] outCurrentUpid
+ * The unique process id of the current process.
  *
- * \param[out] outUnk2
- * Unknown, returned from registered driver with the kernel.
+ * \param[out] outOwnerUpid
+ * The unique process id of the process which first registered the driver with
+ * the kernel.
  *
  * \param[out] outDidInit
  * Set to 1 after internal:driverInitialise has been called, 0 before.
@@ -83,20 +67,20 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
                   uint32_t unk1, // Something like a priority
                   virt_ptr<OSDriverInterface> driverInterface,
                   OSDriver_UserDriverId userDriverId,
-                  virt_ptr<uint32_t> outUnk1,
-                  virt_ptr<uint32_t> outUnk2,
+                  virt_ptr<kernel::UniqueProcessId> outRegisteredUpid,
+                  virt_ptr<kernel::UniqueProcessId> outOwnerUpid,
                   virt_ptr<BOOL> outDidInit)
 {
    auto callerModule = StackObject<OSDynLoad_ModuleHandle> { };
    auto error = OSDriver_Error::OK;
    auto dynloadError = OSDynLoad_Error::OK;
 
-   if (outUnk1) {
-      *outUnk1 = 0u;
+   if (outRegisteredUpid) {
+      *outRegisteredUpid = kernel::UniqueProcessId::Kernel;
    }
 
-   if (outUnk2) {
-      *outUnk2 = 0u;
+   if (outOwnerUpid) {
+      *outOwnerUpid = kernel::UniqueProcessId::Kernel;
    }
 
    if (outDidInit) {
@@ -262,10 +246,10 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
    }
 
    dynloadError = static_cast<OSDynLoad_Error>(
-      unkRegisterSyscall0x3200(name,
+      kernel::registerUserDriver(name,
                                nameLen,
-                               virt_addrof(driver->unk0x40),
-                               virt_addrof(driver->unk0x44)));
+                               virt_addrof(driver->registeredUpid),
+                               virt_addrof(driver->ownerUpid)));
    OSLogPrintf(0, 1, 0, "%s: Reg=%s, ms=%d", "OSDriver_Register", name, 0);
    if (dynloadError == OSDynLoad_Error::OK) {
       // Initialise driver data
@@ -292,12 +276,12 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
       driver->next = sDriverData->registeredDrivers;
       sDriverData->registeredDrivers = driver;
 
-      if (outUnk1) {
-         *outUnk1 = driver->unk0x40;
+      if (outRegisteredUpid) {
+         *outRegisteredUpid = driver->registeredUpid;
       }
 
-      if (outUnk2) {
-         *outUnk2 = driver->unk0x44;
+      if (outOwnerUpid) {
+         *outOwnerUpid = driver->ownerUpid;
       }
 
       sDriverData->numRegistered++;
@@ -400,9 +384,9 @@ OSDriver_Deregister(OSDynLoad_ModuleHandle moduleHandle,
    auto startTicks = OSGetTick();
 
    // Deregister driver with the kernel
-   if (driver->unk0x40 == driver->unk0x44) {
-      unkDeregisterSyscall0x3300(name,
-                                 static_cast<uint32_t>(strlen(name.get())));
+   if (driver->registeredUpid == driver->ownerUpid) {
+      kernel::deregisterUserDriver(name,
+                                   static_cast<uint32_t>(strlen(name.get())));
    }
 
    // Free the dynload handles

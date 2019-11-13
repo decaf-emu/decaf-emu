@@ -1,6 +1,9 @@
 #pragma once
 #include "coreinit_dynload.h"
 #include "coreinit_enum.h"
+
+#include "cafe/kernel/cafe_kernel_processid.h"
+
 #include <libcpu/be2_struct.h>
 
 namespace cafe::coreinit
@@ -60,11 +63,11 @@ struct OSDriver
    //! Module handles for each interface function.
    be2_array<OSDynLoad_ModuleHandle, 5> interfaceModuleHandles;
 
-   //! Unknown, pointer to this passed as r5 to syscall 0x3200.
-   be2_val<uint32_t> unk0x40;
+   //! The current upid
+   be2_val<kernel::UniqueProcessId> registeredUpid;
 
-   //! Unknown, pointer to this passed as r6 to syscall 0x3200.
-   be2_val<uint32_t> unk0x44;
+   //! The current owner of this driver reigstered with the kernel
+   be2_val<kernel::UniqueProcessId> ownerUpid;
 
    //! Pointer to next OSDriver in linked list.
    be2_virt_ptr<OSDriver> next;
@@ -77,8 +80,8 @@ CHECK_OFFSET(OSDriver, 0x10, unk0x10);
 CHECK_OFFSET(OSDriver, 0x14, coreID);
 CHECK_OFFSET(OSDriver, 0x18, interfaceFunctions);
 CHECK_OFFSET(OSDriver, 0x2C, interfaceModuleHandles);
-CHECK_OFFSET(OSDriver, 0x40, unk0x40);
-CHECK_OFFSET(OSDriver, 0x44, unk0x44);
+CHECK_OFFSET(OSDriver, 0x40, registeredUpid);
+CHECK_OFFSET(OSDriver, 0x44, ownerUpid);
 CHECK_OFFSET(OSDriver, 0x48, next);
 CHECK_SIZE(OSDriver, 0x4C);
 
@@ -89,8 +92,8 @@ OSDriver_Register(OSDynLoad_ModuleHandle moduleHandle,
                   uint32_t unk1,
                   virt_ptr<OSDriverInterface> driverInterface,
                   OSDriver_UserDriverId userDriverId,
-                  virt_ptr<uint32_t> outUnk1,
-                  virt_ptr<uint32_t> outUnk2,
+                  virt_ptr<kernel::UniqueProcessId> outRegisteredUpid,
+                  virt_ptr<kernel::UniqueProcessId> outOwnerUpid,
                   virt_ptr<BOOL> outDidOSDriverInit);
 
 OSDriver_Error
