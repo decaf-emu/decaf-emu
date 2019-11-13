@@ -93,6 +93,7 @@ ENUM_BEG(ResourcePermissionGroup, int32_t)
    ENUM_VALUE(AC,                   20)
    ENUM_VALUE(NDM,                  21)
    ENUM_VALUE(NSEC,                 22)
+   ENUM_VALUE(PAD,                  1000)
    ENUM_VALUE(All,                  0x7FFFFFFF)
 ENUM_END(ResourcePermissionGroup)
 
