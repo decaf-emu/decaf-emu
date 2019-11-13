@@ -53,6 +53,7 @@ static void
 mainCoreEntryPoint(cpu::Core *core)
 {
    internal::setActiveAddressSpace(&sKernelAddressSpace);
+   internal::initialiseWorkAreaHeap();
    internal::initialiseCoreContext(core);
    internal::initialiseExceptionContext(core);
    internal::initialiseExceptionHandlers();
