@@ -10,6 +10,7 @@
 #include "cafe_kernel_mmu.h"
 #include "cafe_kernel_process.h"
 #include "cafe_kernel_shareddata.h"
+#include "cafe_kernel_userdrivers.h"
 
 #include "cafe/libraries/cafe_hle.h"
 #include "debug_api/debug_api_controller.h"
@@ -73,6 +74,7 @@ mainCoreEntryPoint(cpu::Core *core)
 
    // TODO: This is normally called by root.rpx
    loadShared();
+   internal::registerRootUserDrivers();
 
    // Prepare title
    auto titleInfo = virt_addrof(sKernelData->prepareTitleInfo);
@@ -253,6 +255,7 @@ start()
    internal::initialiseStaticExceptionData();
    internal::initialiseStaticIpckDriverData();
    internal::initialiseStaticIpcData();
+   internal::initialiseStaticUserDriversData();
 
    // Setup cpu
    cpu::setCoreEntrypointHandler(&cpuEntrypoint);
