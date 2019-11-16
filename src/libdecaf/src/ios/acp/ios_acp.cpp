@@ -17,12 +17,12 @@
 
 #include <common/log.h>
 
-namespace ios::acp
-{
-
 using namespace ios::fs;
 using namespace ios::kernel;
 using namespace ios::mcp;
+
+namespace ios::acp
+{
 
 constexpr auto LocalHeapSize = 0x20000u;
 constexpr auto CrossHeapSize = 0x80000u;

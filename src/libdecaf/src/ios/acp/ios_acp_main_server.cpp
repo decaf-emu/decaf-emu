@@ -2,6 +2,7 @@
 #include "ios_acp_main_server.h"
 #include "ios_acp_nn_miscservice.h"
 #include "ios_acp_nn_saveservice.h"
+#include "ios_acp_spm_extendedstorageservice.h"
 
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/nn/ios_nn_ipc_server.h"
@@ -47,9 +48,10 @@ startMainServer()
       return Error::FailInternal;
    }
 
-   // TODO: Services 1, 3, 4, 6, 301, 302, 303, 304
+   // TODO: Services 1, 3, 4, 6, 301, 302, 304
    server.registerService<MiscService>();
    server.registerService<SaveService>();
+   server.registerService<ExtendedStorageService>();
 
    result = server.start(phys_addrof(sMainServerData->threadStack) + sMainServerData->threadStack.size(),
                          static_cast<uint32_t>(sMainServerData->threadStack.size()),
