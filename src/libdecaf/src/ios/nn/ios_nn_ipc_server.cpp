@@ -254,14 +254,20 @@ Server::threadEntry()
 
 Result
 Server::start(phys_ptr<uint8_t> stackTop,
-                  uint32_t stackSize,
-                  kernel::ThreadPriority priority)
+              uint32_t stackSize,
+              kernel::ThreadPriority priority)
 {
    return mThread.start(Server::threadEntryWrapper,
                         phys_this(this),
                         stackTop,
                         stackSize,
                         priority);
+}
+
+void
+Server::join()
+{
+   mThread.join();
 }
 
 } // namespace nn::ipc

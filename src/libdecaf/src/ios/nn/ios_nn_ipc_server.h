@@ -69,8 +69,11 @@ public:
    Result initialise(std::string_view deviceName,
                      phys_ptr<::ios::kernel::Message> messageBuffer,
                      uint32_t numMessages);
+
    Result start(phys_ptr<uint8_t> stackTop, uint32_t stackSize,
                 ::ios::kernel::ThreadPriority priority);
+   void join();
+
    void registerService(ServiceId serviceId, CommandHandler commandHandler);
 
    template<typename ServiceType>
