@@ -16,6 +16,9 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerClientSymbols();
+   registerExtendedStorageServiceSymbols();
 }
 
 } // namespace cafe::nn_spm

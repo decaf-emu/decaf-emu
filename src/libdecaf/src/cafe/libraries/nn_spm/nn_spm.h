@@ -16,6 +16,8 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerClientSymbols();
+   void registerExtendedStorageServiceSymbols();
 };
 
 } // namespace cafe::nn_spm
