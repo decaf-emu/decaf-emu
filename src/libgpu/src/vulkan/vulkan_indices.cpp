@@ -81,30 +81,50 @@ Driver::maybeSwapIndices()
 }
 
 void
-Driver::maybeUnpackQuads()
+Driver::maybeUnpackPrimitiveIndices()
 {
    auto &drawDesc = *mCurrentDraw;
    auto &indices = mCurrentDraw->indices;
 
+
    if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST) {
-      uint32_t indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
-      mScratchIdxDequad.resize(indexBytes / 4 * 6);
+      auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);
+      mScratchIdxPrim.resize(indexBytes / 4 * 6);
 
       if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_16) {
          unpackQuadList(drawDesc.numIndices,
                         reinterpret_cast<uint16_t*>(indices),
-                        reinterpret_cast<uint16_t*>(mScratchIdxDequad.data()));
+                        reinterpret_cast<uint16_t*>(mScratchIdxPrim.data()));
       } else if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_32) {
          unpackQuadList(drawDesc.numIndices,
                         reinterpret_cast<uint32_t*>(indices),
-                        reinterpret_cast<uint32_t*>(mScratchIdxDequad.data()));
+                        reinterpret_cast<uint32_t*>(mScratchIdxPrim.data()));
       } else {
          decaf_abort("Unexpected index type");
       }
 
       drawDesc.primitiveType = latte::VGT_DI_PRIMITIVE_TYPE::TRILIST;
       drawDesc.numIndices = drawDesc.numIndices / 4 * 6;
-      indices = mScratchIdxDequad.data();
+      indices = mScratchIdxPrim.data();
+   } else if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::LINELOOP) {
+      auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices + 1);
+      mScratchIdxPrim.resize(indexBytes);
+
+      if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_16) {
+         auto dst = reinterpret_cast<uint16_t *>(mScratchIdxPrim.data());
+         std::memcpy(dst, indices, indexBytes - 2);
+         dst[drawDesc.numIndices] = dst[0];
+      } else if (drawDesc.indexType == latte::VGT_INDEX_TYPE::INDEX_32) {
+         auto dst = reinterpret_cast<uint32_t *>(mScratchIdxPrim.data());
+         std::memcpy(dst, indices, indexBytes - 4);
+         dst[drawDesc.numIndices] = dst[0];
+      } else {
+         decaf_abort("Unexpected index type");
+      }
+
+      drawDesc.primitiveType = latte::VGT_DI_PRIMITIVE_TYPE::LINESTRIP;
+      drawDesc.numIndices = drawDesc.numIndices + 1;
+      indices = mScratchIdxPrim.data();
    }
 }
 
@@ -134,7 +154,7 @@ Driver::checkCurrentIndices()
    mLastIndexBuffer.primitiveType = drawDesc.primitiveType;
 
    maybeSwapIndices();
-   maybeUnpackQuads();
+   maybeUnpackPrimitiveIndices();
 
    if (drawDesc.indices) {
       auto indexBytes = calculateIndexBufferSize(drawDesc.indexType, drawDesc.numIndices);

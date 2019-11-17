@@ -73,6 +73,7 @@ Driver::getPipelineDesc()
    case latte::VGT_DI_PRIMITIVE_TYPE::POINTLIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST_ADJ:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINELOOP:
    case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST_ADJ:
    case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:
@@ -591,6 +592,10 @@ Driver::checkCurrentPipeline()
    case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST:
       inputAssembly.topology = vk::PrimitiveTopology::eLineList;
       break;
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINELOOP:
+      // We handle translation of this during draw
+      inputAssembly.topology = vk::PrimitiveTopology::eLineStrip;
+      break;
    case latte::VGT_DI_PRIMITIVE_TYPE::LINESTRIP:
       inputAssembly.topology = vk::PrimitiveTopology::eLineStrip;
       break;
@@ -626,7 +631,6 @@ Driver::checkCurrentPipeline()
       break;
       //case latte::VGT_DI_PRIMITIVE_TYPE::NONE:
       //case latte::VGT_DI_PRIMITIVE_TYPE::TRI_WITH_WFLAGS:
-      //case latte::VGT_DI_PRIMITIVE_TYPE::LINELOOP:
       //case latte::VGT_DI_PRIMITIVE_TYPE::POLYGON:
       //case latte::VGT_DI_PRIMITIVE_TYPE::COPY_RECT_LIST_2D_V0:
       //case latte::VGT_DI_PRIMITIVE_TYPE::COPY_RECT_LIST_2D_V1:
