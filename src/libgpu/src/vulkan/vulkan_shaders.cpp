@@ -601,7 +601,7 @@ Driver::checkCurrentPixelShader()
 bool
 Driver::checkCurrentRectStubShader()
 {
-   if (!mCurrentDraw->isRectDraw) {
+   if (mCurrentDraw->primitiveType != latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST) {
       mCurrentDraw->rectStubShader = nullptr;
       return true;
    }

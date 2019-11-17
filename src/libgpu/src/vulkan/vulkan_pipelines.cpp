@@ -589,7 +589,7 @@ Driver::checkCurrentPipeline()
       break;
    case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:
       // We use a custom geometry shader to translate these
-      inputAssembly.topology = vk::PrimitiveTopology::eLineListWithAdjacency;
+      inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
       break;
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP:

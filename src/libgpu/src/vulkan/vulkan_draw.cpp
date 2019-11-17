@@ -283,7 +283,6 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    drawDesc.indexType = vgt_dma_index_type.INDEX_TYPE();
    drawDesc.indexSwapMode = vgt_dma_index_type.SWAP_MODE();
    drawDesc.primitiveType = vgt_primitive_type.PRIM_TYPE();
-   drawDesc.isRectDraw = false;
    drawDesc.numIndices = numIndices;
    drawDesc.baseVertex = sq_vtx_base_vtx_loc.OFFSET();
    drawDesc.numInstances = vgt_dma_num_instances.NUM_INSTANCES();
@@ -291,11 +290,6 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    drawDesc.streamOutEnabled = useStreamOut;
    drawDesc.streamOutContext = mStreamOutContext;
    mCurrentDraw = &drawDesc;
-
-   if (drawDesc.primitiveType == latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST) {
-      drawDesc.isRectDraw = true;
-      decaf_check(drawDesc.numIndices == 4);
-   }
 
    // Set up all the required state, ordering here is very important
    if (!checkCurrentVertexShader()) {

@@ -408,7 +408,6 @@ struct DrawDesc
    latte::VGT_INDEX_TYPE indexType;
    latte::VGT_DMA_SWAP indexSwapMode;
    latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
-   bool isRectDraw;
    uint32_t numIndices;
    uint32_t baseVertex;
    uint32_t numInstances;
