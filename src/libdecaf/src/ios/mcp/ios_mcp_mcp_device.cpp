@@ -279,6 +279,8 @@ mcpPrepareTitle52(phys_ptr<const MCPRequestPrepareTitle> request,
       if (auto error = readTitleAppXml(appXml); error < MCPError::OK) {
          auto titleInfoBuffer = getPrepareTitleInfoBuffer();
          std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
+         titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
+         titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
          return error;
       }
 
