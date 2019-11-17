@@ -61,6 +61,7 @@ Driver::getPipelineDesc()
    case latte::VGT_DI_PRIMITIVE_TYPE::POLYGON:
    case latte::VGT_DI_PRIMITIVE_TYPE::LINE_STRIP_2D:
    case latte::VGT_DI_PRIMITIVE_TYPE::TRI_STRIP_2D:
+   case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP:
    {
       auto vgt_multi_prim_ib_reset_en = getRegister<latte::VGT_MULTI_PRIM_IB_RESET_EN>(latte::Register::VGT_MULTI_PRIM_IB_RESET_EN);
       auto vgt_multi_prim_ib_reset_idx = getRegister<latte::VGT_MULTI_PRIM_IB_RESET_INDX>(latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX);
@@ -78,7 +79,6 @@ Driver::getPipelineDesc()
    case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST_ADJ:
    case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:
-   case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP: // Implemented with TriangleList
       desc.primitiveResetEnabled = false;
       desc.primitiveResetIndex = 0;
       break;
@@ -621,13 +621,16 @@ Driver::checkCurrentPipeline()
       inputAssembly.topology = vk::PrimitiveTopology::eTriangleStripWithAdjacency;
       break;
    case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:
-      // We use a custom geometry shader to translate these
+      // We handle translation of this during draw
       inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
       break;
    case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:
-   case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP:
-      // We handle translation of these types during draw
+      // We handle translation of this during draw
       inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
+      break;
+   case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP:
+      // We handle translation of this during draw
+      inputAssembly.topology = vk::PrimitiveTopology::eTriangleStrip;
       break;
       //case latte::VGT_DI_PRIMITIVE_TYPE::NONE:
       //case latte::VGT_DI_PRIMITIVE_TYPE::TRI_WITH_WFLAGS:
