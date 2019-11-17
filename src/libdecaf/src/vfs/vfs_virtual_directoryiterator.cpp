@@ -39,6 +39,8 @@ VirtualDirectoryIterator::readEntry()
    entry.owner = node->owner;
    entry.permission = node->permission;
    entry.flags = Status::HasPermissions;
+
+   ++mIterator;
    return entry;
 }
 
