@@ -48,7 +48,7 @@ jobs:
         sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list
         sudo apt-add-repository ppa:cginternals/ppa
         sudo apt-get update
-        sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk
+        sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk python3-setuptools
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           sudo apt-get install -y g++-${{ matrix.version }}
           echo ::set-env name=CC::gcc-${{ matrix.version }}
@@ -64,7 +64,7 @@ jobs:
         pip3 install wheel
         pip3 install aqtinstall
         python3 -m aqt install 5.13.0 linux desktop
-        echo "::set-env name=QTDIR::$PWD/Qt5.13.0/5.13.0/gcc_64"
+        echo "::set-env name=QTDIR::$PWD/5.13.0/gcc_64"
 
     - name: Install (macOS)
       if: startsWith(matrix.os, 'macOS')
@@ -81,7 +81,7 @@ jobs:
         cd "C:\\Qt"
         pip install aqtinstall
         python -m aqt install 5.13.0 windows desktop win64_msvc2017_64
-        echo "::set-env name=QTDIR::C:\\Qt\\Qt5.13.0\\5.13.0\\msvc2017_64"
+        echo "::set-env name=QTDIR::C:\\Qt\\5.13.0\\msvc2017_64"
         mkdir "C:\\VulkanSDK"
         cd "C:\\VulkanSDK"
         Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.121.2/windows/VulkanSDK-1.1.121.2-Installer.exe?u=" -OutFile "vulkan-sdk.exe"
