@@ -52,10 +52,38 @@ Driver::getPipelineDesc()
    desc.primitiveType = vgt_primitive_type.PRIM_TYPE();
 
    // -- Primitive Reset Stuff
-   auto vgt_multi_prim_ib_reset_en = getRegister<latte::VGT_MULTI_PRIM_IB_RESET_EN>(latte::Register::VGT_MULTI_PRIM_IB_RESET_EN);
-   auto vgt_multi_prim_ib_reset_idx = getRegister<latte::VGT_MULTI_PRIM_IB_RESET_INDX>(latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX);
-   desc.primitiveResetEnabled = vgt_multi_prim_ib_reset_en.RESET_EN();
-   desc.primitiveResetIndex = vgt_multi_prim_ib_reset_idx.RESET_INDX();
+   switch (desc.primitiveType) {
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINESTRIP:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRIFAN:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRISTRIP:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINESTRIP_ADJ:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRISTRIP_ADJ:
+   case latte::VGT_DI_PRIMITIVE_TYPE::POLYGON:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINE_STRIP_2D:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRI_STRIP_2D:
+   {
+      auto vgt_multi_prim_ib_reset_en = getRegister<latte::VGT_MULTI_PRIM_IB_RESET_EN>(latte::Register::VGT_MULTI_PRIM_IB_RESET_EN);
+      auto vgt_multi_prim_ib_reset_idx = getRegister<latte::VGT_MULTI_PRIM_IB_RESET_INDX>(latte::Register::VGT_MULTI_PRIM_IB_RESET_INDX);
+      desc.primitiveResetEnabled = vgt_multi_prim_ib_reset_en.RESET_EN();
+      if (desc.primitiveResetEnabled) {
+         desc.primitiveResetIndex = vgt_multi_prim_ib_reset_idx.RESET_INDX();
+      }
+      break;
+   }
+   case latte::VGT_DI_PRIMITIVE_TYPE::POINTLIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::LINELIST_ADJ:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::TRILIST_ADJ:
+   case latte::VGT_DI_PRIMITIVE_TYPE::RECTLIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::QUADLIST:
+   case latte::VGT_DI_PRIMITIVE_TYPE::QUADSTRIP: // Implemented with TriangleList
+      desc.primitiveResetEnabled = false;
+      desc.primitiveResetIndex = 0;
+      break;
+   default:
+      decaf_abort("Unexpected VGT primitive type");
+   }
 
    // -- Constants mode
    auto sq_config = getRegister<latte::SQ_CONFIG>(latte::Register::SQ_CONFIG);
@@ -614,7 +642,9 @@ Driver::checkCurrentPipeline()
    // Technically there is another valid configuration using 32-bit indices and a reset of 0xFFFF,
    // but checking for this requires more state input to the pipeline...
    inputAssembly.primitiveRestartEnable = currentDesc->primitiveResetEnabled;
-   decaf_check(currentDesc->primitiveResetIndex == 0xFFFF || currentDesc->primitiveResetIndex == 0xFFFFFFFF);
+   decaf_check(!currentDesc->primitiveResetEnabled ||
+               (currentDesc->primitiveResetIndex == 0xFFFF ||
+                currentDesc->primitiveResetIndex == 0xFFFFFFFF));
 
    // ------------------------------------------------------------
    // Viewports and Scissors
