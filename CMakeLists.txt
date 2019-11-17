@@ -110,6 +110,7 @@ if(DECAF_VULKAN)
     set_target_properties(vulkan PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${Vulkan_INCLUDE_DIRS}
         INTERFACE_LINK_LIBRARIES ${Vulkan_LIBRARIES})
+    add_definitions(-DVULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL=0)
 
     if(MSVC)
         add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
