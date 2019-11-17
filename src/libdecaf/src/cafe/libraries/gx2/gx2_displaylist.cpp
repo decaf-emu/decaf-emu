@@ -123,10 +123,10 @@ GX2PatchDisplayList(virt_ptr<void> displayList,
    {
       auto vertexShader = virt_cast<GX2VertexShader *>(shader);
 
-      if (vertexShader->gx2rData.buffer) {
-         addr = virt_cast<virt_addr>(vertexShader->gx2rData.buffer);
-      } else {
+      if (vertexShader->data) {
          addr = virt_cast<virt_addr>(vertexShader->data);
+      } else {
+         addr = virt_cast<virt_addr>(vertexShader->gx2rData.buffer);
       }
 
       break;
@@ -135,10 +135,10 @@ GX2PatchDisplayList(virt_ptr<void> displayList,
    {
       auto geometryShader = virt_cast<GX2GeometryShader *>(shader);
 
-      if (geometryShader->gx2rVertexShaderData.buffer) {
-         addr = virt_cast<virt_addr>(geometryShader->gx2rVertexShaderData.buffer);
-      } else {
+      if (geometryShader->vertexShaderData) {
          addr = virt_cast<virt_addr>(geometryShader->vertexShaderData);
+      } else {
+         addr = virt_cast<virt_addr>(geometryShader->gx2rVertexShaderData.buffer);
       }
 
       break;
@@ -147,10 +147,10 @@ GX2PatchDisplayList(virt_ptr<void> displayList,
    {
       auto geometryShader = virt_cast<GX2GeometryShader *>(shader);
 
-      if (geometryShader->gx2rData.buffer) {
-         addr = virt_cast<virt_addr>(geometryShader->gx2rData.buffer);
-      } else {
+      if (geometryShader->data) {
          addr = virt_cast<virt_addr>(geometryShader->data);
+      } else {
+         addr = virt_cast<virt_addr>(geometryShader->gx2rData.buffer);
       }
 
       break;
@@ -159,10 +159,10 @@ GX2PatchDisplayList(virt_ptr<void> displayList,
    {
       auto pixelShader = virt_cast<GX2PixelShader *>(shader);
 
-      if (pixelShader->gx2rData.buffer) {
-         addr = virt_cast<virt_addr>(pixelShader->gx2rData.buffer);
-      } else {
+      if (pixelShader->data) {
          addr = virt_cast<virt_addr>(pixelShader->data);
+      } else {
+         addr = virt_cast<virt_addr>(pixelShader->gx2rData.buffer);
       }
 
       break;
