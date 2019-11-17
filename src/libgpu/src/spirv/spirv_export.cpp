@@ -217,7 +217,6 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
                decaf_check(!pa_cl_vs_out_cntl.CULL_DIST_ENA_5());
                decaf_check(!pa_cl_vs_out_cntl.CULL_DIST_ENA_6());
                decaf_check(!pa_cl_vs_out_cntl.CULL_DIST_ENA_7());
-               decaf_check(!pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE());
                decaf_check(!pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG());
                decaf_check(!pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX());
                decaf_check(!pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG());

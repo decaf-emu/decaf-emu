@@ -8,6 +8,7 @@
 #include "latte/latte_formats.h"
 #include "latte/latte_constants.h"
 #include "spirv/spirv_translate.h"
+#include "spirv/spirv_pushconstants.h"
 #include "pm4_processor.h"
 #include "vk_mem_alloc.h"
 #include "vulkan_descs.h"
@@ -408,6 +409,7 @@ struct DrawDesc
    latte::VGT_INDEX_TYPE indexType;
    latte::VGT_DMA_SWAP indexSwapMode;
    latte::VGT_DI_PRIMITIVE_TYPE primitiveType;
+   uint32_t pointSize;
    uint32_t numIndices;
    uint32_t baseVertex;
    uint32_t numInstances;
@@ -437,27 +439,6 @@ struct DrawDesc
    std::array<std::array<DataBufferObject*, latte::MaxUniformBlocks>, 3> uniformBlocks = { { nullptr } };
    std::array<StreamContextObject*, latte::MaxStreamOutBuffers> streamOutContext = { nullptr };
    std::array<DataBufferObject*, latte::MaxStreamOutBuffers> streamOutBuffers = { nullptr };
-};
-
-struct Vec4
-{
-   float x;
-   float y;
-   float z;
-   float w;
-};
-
-struct VsPushConstants
-{
-   Vec4 posMulAdd;
-   Vec4 zSpaceMul;
-};
-
-struct PsPushConstants
-{
-   uint32_t alphaData;
-   float alphaRef;
-   uint32_t needPremultiply;
 };
 
 struct VulkanDisplayPipeline
@@ -764,9 +745,9 @@ private:
    uint64_t mActiveBatchIndex = 0;
 
    bool mActiveVsConstantsSet = false;
-   VsPushConstants mActiveVsConstants;
+   spirv::VertexPushConstants mActiveVsConstants;
    bool mActivePsConstantsSet = false;
-   PsPushConstants mActivePsConstants;
+   spirv::FragmentPushConstants mActivePsConstants;
 
    bool mLastIndexBufferSet = false;
    IndexBufferCache mLastIndexBuffer;

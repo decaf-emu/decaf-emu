@@ -148,6 +148,13 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
    writeGenericProlog(spvGen);
 
    auto oneConst = spvGen.makeIntConstant(1);
+   auto twoConst = spvGen.makeIntConstant(2);
+
+   if (desc.regs.pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE()) {
+      auto pointSizePtr = spvGen.createAccessChain(spv::StorageClass::StorageClassPushConstant, spvGen.vsPushConstVar(), { twoConst });
+      auto pointSizeVal = spvGen.createLoad(pointSizePtr);
+      spvGen.createStore(pointSizeVal, spvGen.pointSizeVar());
+   }
 
    // Note that because we use VertexIndex, we have to subtrack the base value
    // away from gl_VertexIndex to receive the same value we received in GL.

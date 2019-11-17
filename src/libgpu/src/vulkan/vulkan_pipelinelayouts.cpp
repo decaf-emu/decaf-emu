@@ -1,6 +1,7 @@
 #ifdef DECAF_VULKAN
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
+#include "spirv/spirv_pushconstants.h"
 
 namespace vulkan
 {
@@ -258,19 +259,14 @@ Driver::getPipelineLayout(const HashedDesc<PipelineLayoutDesc>& desc, bool forPu
    auto descriptorLayout = mDevice.createDescriptorSetLayout(descriptorSetLayoutDesc);
 
    // -- Push Descriptors
-   std::vector<vk::PushConstantRange> pushConstants;
+   std::array<vk::PushConstantRange, 2> pushConstants;
+   pushConstants[0].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry;
+   pushConstants[0].offset = spirv::VertexPushConstantsOffset;
+   pushConstants[0].size = spirv::VertexPushConstantsSize;
 
-   vk::PushConstantRange screenSpaceConstants;
-   screenSpaceConstants.stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry;
-   screenSpaceConstants.offset = 0;
-   screenSpaceConstants.size = 32;
-   pushConstants.push_back(screenSpaceConstants);
-
-   vk::PushConstantRange alphaRefConstants;
-   alphaRefConstants.stageFlags = vk::ShaderStageFlagBits::eFragment;
-   alphaRefConstants.offset = 32;
-   alphaRefConstants.size = 12;
-   pushConstants.push_back(alphaRefConstants);
+   pushConstants[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
+   pushConstants[1].offset = spirv::FragmentPushConstantsOffset;
+   pushConstants[1].size = spirv::FragmentPushConstantsSize;
 
    // -- Pipeline Layout
    vk::PipelineLayoutCreateInfo pipelineLayoutDesc;

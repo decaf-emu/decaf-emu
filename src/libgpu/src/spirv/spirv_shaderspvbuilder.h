@@ -2,6 +2,7 @@
 #ifdef DECAF_VULKAN
 #include "latte/latte_shaderparser.h"
 #include "spirv_spvbuilder.h"
+#include "spirv_pushconstants.h"
 #include "gpu_config.h"
 
 namespace spirv
@@ -1260,6 +1261,16 @@ public:
       return mLayerId;
    }
 
+   spv::Id pointSizeVar()
+   {
+      if (!mPointSize) {
+         mPointSize = createVariable(spv::StorageClassOutput, floatType(), "PointSize");
+         addDecoration(mPointSize, spv::DecorationBuiltIn, spv::BuiltInPointSize);
+         mEntryPoint->addIdOperand(mPointSize);
+      }
+      return mPointSize;
+   }
+
    spv::Id inputAttribVar(int semLocation, spv::Id attribType)
    {
       auto attribIdx = mAttribInputs.size();
@@ -1310,11 +1321,22 @@ public:
    spv::Id vsPushConstVar()
    {
       if (!mVsPushConsts) {
-         auto vsPushStruct = makeStructType({ float4Type(), float4Type() }, "VS_PUSH_CONSTANTS");
-         addMemberDecoration(vsPushStruct, 0, spv::DecorationOffset, 0);
+         auto vsPushStruct = makeStructType({
+               float4Type(), float4Type(), floatType()
+            }, "VS_PUSH_CONSTANTS");
+
+         addMemberDecoration(vsPushStruct, 0, spv::DecorationOffset,
+            spirv::VertexPushConstantsOffset + static_cast<int>(offsetof(spirv::VertexPushConstants, posMulAdd)));
          addMemberName(vsPushStruct, 0, "posMulAdd");
-         addMemberDecoration(vsPushStruct, 1, spv::DecorationOffset, 16);
+
+         addMemberDecoration(vsPushStruct, 1, spv::DecorationOffset,
+            spirv::VertexPushConstantsOffset + static_cast<int>(offsetof(spirv::VertexPushConstants, zSpaceMul)));
          addMemberName(vsPushStruct, 1, "zSpaceMul");
+
+         addMemberDecoration(vsPushStruct, 2, spv::DecorationOffset,
+            spirv::VertexPushConstantsOffset + static_cast<int>(offsetof(spirv::VertexPushConstants, pointSize)));
+         addMemberName(vsPushStruct, 2, "pointSize");
+
          addDecoration(vsPushStruct, spv::DecorationBlock);
          mVsPushConsts = createVariable(spv::StorageClassPushConstant, vsPushStruct, "VS_PUSH");
       }
@@ -1329,13 +1351,22 @@ public:
    spv::Id psPushConstVar()
    {
       if (!mPsPushConsts) {
-         auto psPushStruct = makeStructType({ uintType(), floatType(), uintType() }, "PS_PUSH_DATA");
-         addMemberDecoration(psPushStruct, 0, spv::DecorationOffset, 32 + 0);
+         auto psPushStruct = makeStructType({
+               uintType(), floatType(), uintType()
+            }, "PS_PUSH_DATA");
+
+         addMemberDecoration(psPushStruct, 0, spv::DecorationOffset,
+            spirv::FragmentPushConstantsOffset + static_cast<int>(offsetof(spirv::FragmentPushConstants, alphaFunc)));
          addMemberName(psPushStruct, 0, "alphaFunc");
-         addMemberDecoration(psPushStruct, 1, spv::DecorationOffset, 32 + 4);
+
+         addMemberDecoration(psPushStruct, 1, spv::DecorationOffset,
+            spirv::FragmentPushConstantsOffset + static_cast<int>(offsetof(spirv::FragmentPushConstants, alphaRef)));
          addMemberName(psPushStruct, 1, "alphaRef");
-         addMemberDecoration(psPushStruct, 2, spv::DecorationOffset, 32 + 8);
+
+         addMemberDecoration(psPushStruct, 2, spv::DecorationOffset,
+            spirv::FragmentPushConstantsOffset + static_cast<int>(offsetof(spirv::FragmentPushConstants, needsPremultiply)));
          addMemberName(psPushStruct, 2, "needsPremultiply");
+
          addDecoration(psPushStruct, spv::DecorationBlock);
          mPsPushConsts = createVariable(spv::StorageClassPushConstant, psPushStruct, "PS_PUSH");
       }
@@ -1884,6 +1915,7 @@ protected:
    spv::Id mFragCoord = spv::NoResult;
    spv::Id mFrontFacing = spv::NoResult;
    spv::Id mLayerId = spv::NoResult;
+   spv::Id mPointSize = spv::NoResult;
 
    spv::Id mRegistersBuffer = spv::NoResult;
    std::array<spv::Id, latte::MaxUniformBlocks> mUniformBuffers = { spv::NoResult };

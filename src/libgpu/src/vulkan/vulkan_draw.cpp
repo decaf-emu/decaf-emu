@@ -212,7 +212,7 @@ Driver::bindShaderParams()
 
    // This should probably be split to its own function
    if (mCurrentDraw->vertexShader) {
-      VsPushConstants vsConstData;
+      spirv::VertexPushConstants vsConstData;
       vsConstData.posMulAdd.x = mCurrentDraw->shaderViewportData.xMul;
       vsConstData.posMulAdd.y = mCurrentDraw->shaderViewportData.yMul;
       vsConstData.posMulAdd.z = mCurrentDraw->shaderViewportData.xAdd;
@@ -221,15 +221,17 @@ Driver::bindShaderParams()
       vsConstData.zSpaceMul.y = mCurrentDraw->shaderViewportData.zMul;
       *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.z) = mCurrentDraw->baseVertex;
       *reinterpret_cast<uint32_t*>(&vsConstData.zSpaceMul.w) = mCurrentDraw->baseInstance;
+      vsConstData.pointSize = mCurrentDraw->pointSize / 8.0f;
 
-      if (!mActiveVsConstantsSet || memcmp(&vsConstData, &mActiveVsConstants, sizeof(VsPushConstants)) != 0) {
+      if (!mActiveVsConstantsSet ||
+          memcmp(&vsConstData, &mActiveVsConstants, sizeof(vsConstData)) != 0) {
          mActiveVsConstants = vsConstData;
          mActiveVsConstantsSet = true;
 
-         mActiveCommandBuffer.pushConstants<VsPushConstants>(mPipelineLayout,
-                                                             vk::ShaderStageFlagBits::eVertex |
-                                                             vk::ShaderStageFlagBits::eGeometry,
-                                                             0, { vsConstData });
+         mActiveCommandBuffer.pushConstants<spirv::VertexPushConstants>(
+            mPipelineLayout,
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,
+            spirv::VertexPushConstantsOffset, { vsConstData });
       }
    }
 
@@ -238,23 +240,25 @@ Driver::bindShaderParams()
       auto alphaFunc = mCurrentDraw->pipeline->shaderAlphaFunc;
       auto alphaRef = mCurrentDraw->pipeline->shaderAlphaRef;
 
-      PsPushConstants psConstData;
-      psConstData.alphaData = (lopMode << 8) | static_cast<uint32_t>(alphaFunc);
+      spirv::FragmentPushConstants psConstData;
+      psConstData.alphaFunc = (lopMode << 8) | static_cast<uint32_t>(alphaFunc);
       psConstData.alphaRef = alphaRef;
-      psConstData.needPremultiply = 0;
+      psConstData.needsPremultiply = 0;
       for (auto i = 0; i < latte::MaxRenderTargets; ++i) {
-         if (mCurrentDraw->pipeline->needsPremultipliedTargets && !mCurrentDraw->pipeline->targetIsPremultiplied[i]) {
-            psConstData.needPremultiply |= (1 << i);
+         if (mCurrentDraw->pipeline->needsPremultipliedTargets &&
+             !mCurrentDraw->pipeline->targetIsPremultiplied[i]) {
+            psConstData.needsPremultiply |= (1 << i);
          }
       }
 
-      if (!mActivePsConstantsSet || memcmp(&psConstData, &mActivePsConstants, sizeof(PsPushConstants)) != 0) {
+      if (!mActivePsConstantsSet ||
+          memcmp(&psConstData, &mActivePsConstants, sizeof(psConstData)) != 0) {
          mActivePsConstants = psConstData;
          mActivePsConstantsSet = true;
 
-         mActiveCommandBuffer.pushConstants<PsPushConstants>(mPipelineLayout,
-                                                             vk::ShaderStageFlagBits::eFragment,
-                                                             32, { psConstData });
+         mActiveCommandBuffer.pushConstants<spirv::FragmentPushConstants>(
+            mPipelineLayout, vk::ShaderStageFlagBits::eFragment,
+            spirv::FragmentPushConstantsOffset, { psConstData });
       }
    }
 }
@@ -263,6 +267,7 @@ void
 Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndices, void *indices)
 {
    // First lets set up our draw description for everyone
+   auto pa_su_point_size = getRegister<latte::PA_SU_POINT_SIZE>(latte::Register::PA_SU_POINT_SIZE);
    auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
    auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
@@ -289,6 +294,7 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
    drawDesc.baseInstance = sq_vtx_start_inst_loc.OFFSET();
    drawDesc.streamOutEnabled = useStreamOut;
    drawDesc.streamOutContext = mStreamOutContext;
+   drawDesc.pointSize = pa_su_point_size.WIDTH();
    mCurrentDraw = &drawDesc;
 
    // Set up all the required state, ordering here is very important
