@@ -852,6 +852,7 @@ printInfo(const std::string &filename)
       }
    }
 
+   out.writer.push_back('\0');
    std::cout << out.writer.data();
    return true;
 }
