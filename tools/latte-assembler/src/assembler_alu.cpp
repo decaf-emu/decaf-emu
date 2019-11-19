@@ -142,11 +142,15 @@ assembleAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrc
                         if ((literal.flags & LiteralValue::ReadHex) == 0 || literal.hexValue == 0) {
                            sel = latte::SQ_ALU_SRC::IMM_0;
                         }
-                     } else if (literal.floatValue == 1.0f) {
+                     }
+                     /*
+                     AMD ShaderAnalyzer only seems to use IMM_0
+                     else if (literal.floatValue == 1.0f) {
                         sel = latte::SQ_ALU_SRC::IMM_1;
                      } else if (literal.floatValue == 0.5f) {
                         sel = latte::SQ_ALU_SRC::IMM_0_5;
                      }
+                     */
                   }
 
                   if (sel == latte::SQ_ALU_SRC::LITERAL) {

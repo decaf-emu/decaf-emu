@@ -31,7 +31,8 @@ target_link_libraries(latte-assembler
     libgfd
     libgpu
     excmd
-    peglib)
+    peglib
+    ${GLSLANG_LIBRARIES})
 
 set_target_properties(latte-assembler PROPERTIES FOLDER tools)
 GroupSources(src)

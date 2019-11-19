@@ -3,7 +3,7 @@
 
 bool
 assembleShaderCode(Shader &shader,
-                   std::vector<char> &src)
+                   std::string_view code)
 {
    peg::parser parser;
    parser.log = [&](size_t ln, size_t col, const std::string &msg) {
@@ -21,7 +21,7 @@ assembleShaderCode(Shader &shader,
    parser.enable_ast();
 
    std::shared_ptr<peg::Ast> ast;
-   if (!parser.parse_n(src.data(), src.size(), ast)) {
+   if (!parser.parse_n(code.data(), code.size(), ast)) {
       return false;
    }
 

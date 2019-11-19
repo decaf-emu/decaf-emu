@@ -76,7 +76,7 @@ if(DECAF_GL)
 endif()
 
 # glslang
-if(DECAF_VULKAN)
+if(DECAF_VULKAN OR DECAF_BUILD_TOOLS)
     set(GLSLANG_DIR "glslang")
     externalproject_add(glslang
         SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${GLSLANG_DIR}"
@@ -95,22 +95,75 @@ if(DECAF_VULKAN)
         )
     externalproject_get_property(glslang BINARY_DIR)
     externalproject_add_step(glslang
-        copy_to_binary
+        copy_to_binary_spirv
         DEPENDEES build
         DEPENDERS install
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/SPIRV/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
-    set_target_properties(glslang PROPERTIES FOLDER libraries)
+    externalproject_add_step(glslang
+        copy_to_binary_glslang
+        DEPENDEES build
+        DEPENDERS install
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/glslang/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
 
     if (MSVC)
+        externalproject_add_step(glslang
+            copy_to_binary_glslang_osdependent
+            DEPENDEES build
+            DEPENDERS install
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/glslang/OSDependent/Windows/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
+    else ()
+        externalproject_add_step(glslang
+            copy_to_binary_glslang_osdependent
+            DEPENDEES build
+            DEPENDERS install
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${BINARY_DIR}/glslang/OSDependent/Unix/${CMAKE_CFG_INTDIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}")
+    endif ()
+
+    set_target_properties(glslang PROPERTIES FOLDER libraries)
+
+    if(MSVC)
         set(SPIRV_IMPORTED_LOCATION
             IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/SPIRV/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRVd${CMAKE_FIND_LIBRARY_SUFFIXES}"
             IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/SPIRV/Release/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}"
             IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/SPIRV/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}"
             IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/SPIRV/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV${CMAKE_FIND_LIBRARY_SUFFIXES}")
-    else ()
+    else()
         set(SPIRV_IMPORTED_LOCATION
             IMPORTED_LOCATION "${BINARY_DIR}/SPIRV/${CMAKE_FIND_LIBRARY_PREFIXES}SPIRV.a")
-    endif ()
+    endif()
+
+    if(MSVC)
+        set(GLSLANG_IMPORTED_LOCATION
+            IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/glslang/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}glslangd${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/glslang/Release/${CMAKE_FIND_LIBRARY_PREFIXES}glslang${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/glslang/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}glslang${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/glslang/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}glslang${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    else()
+        set(GLSLANG_IMPORTED_LOCATION
+            IMPORTED_LOCATION "${BINARY_DIR}/glslang/${CMAKE_FIND_LIBRARY_PREFIXES}glslang.a")
+    endif()
+
+    if(MSVC)
+        set(GLSLANG_OSDEPENDENT_IMPORTED_LOCATION
+            IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/glslang/OSDependent/Windows/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}OSDependentd${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/glslang/OSDependent/Windows/Release/${CMAKE_FIND_LIBRARY_PREFIXES}OSDependent${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/glslang/OSDependent/Windows/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}OSDependent${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/glslang/OSDependent/Windows/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}OSDependent${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    else()
+        set(GLSLANG_OSDEPENDENT_IMPORTED_LOCATION
+            IMPORTED_LOCATION "${BINARY_DIR}/glslang/OSDependent/Unix/${CMAKE_FIND_LIBRARY_PREFIXES}OSDependent.a")
+    endif()
+
+    if(MSVC)
+        set(GLSLANG_OGLCOMPILER_IMPORTED_LOCATION
+            IMPORTED_LOCATION_DEBUG "${BINARY_DIR}/OGLCompilersDLL/Debug/${CMAKE_FIND_LIBRARY_PREFIXES}OGLCompilerd${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELEASE "${BINARY_DIR}/OGLCompilersDLL/Release/${CMAKE_FIND_LIBRARY_PREFIXES}OGLCompiler${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${BINARY_DIR}/OGLCompilersDLL/RelWithDebInfo/${CMAKE_FIND_LIBRARY_PREFIXES}OGLCompiler${CMAKE_FIND_LIBRARY_SUFFIXES}"
+            IMPORTED_LOCATION_MINSIZEREL "${BINARY_DIR}/OGLCompilersDLL/MinSizeRel/${CMAKE_FIND_LIBRARY_PREFIXES}OGLCompiler${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    else()
+        set(GLSLANG_OGLCOMPILER_IMPORTED_LOCATION
+            IMPORTED_LOCATION "${BINARY_DIR}/OGLCompilersDLL/${CMAKE_FIND_LIBRARY_PREFIXES}OGLCompiler.a")
+    endif()
 
     add_library(spirv_import STATIC IMPORTED GLOBAL)
     add_dependencies(spirv_import glslang)
@@ -122,6 +175,27 @@ if(DECAF_VULKAN)
         "${CMAKE_CURRENT_SOURCE_DIR}/${GLSLANG_DIR}/SPIRV")
     target_link_libraries(spirv_final INTERFACE spirv_import)
     set(SPIRV_LIBRARIES spirv_final PARENT_SCOPE)
+
+    add_library(glslang_import STATIC IMPORTED GLOBAL)
+    add_dependencies(glslang_import glslang)
+    set_target_properties(glslang_import PROPERTIES ${GLSLANG_IMPORTED_LOCATION})
+
+    add_library(glslang_os_import STATIC IMPORTED GLOBAL)
+    add_dependencies(glslang_os_import glslang)
+    set_target_properties(glslang_os_import PROPERTIES ${GLSLANG_OSDEPENDENT_IMPORTED_LOCATION})
+
+    add_library(glslang_oglcompiler_import STATIC IMPORTED GLOBAL)
+    add_dependencies(glslang_oglcompiler_import glslang)
+    set_target_properties(glslang_oglcompiler_import PROPERTIES ${GLSLANG_OGLCOMPILER_IMPORTED_LOCATION})
+
+    add_library(glslang_final INTERFACE)
+    add_dependencies(glslang_final glslang_import glslang_os_import)
+    target_include_directories(glslang_final INTERFACE
+        "${CMAKE_CURRENT_SOURCE_DIR}/${GLSLANG_DIR}/glslang/Public")
+    target_include_directories(glslang_final INTERFACE
+        "${CMAKE_CURRENT_SOURCE_DIR}/${GLSLANG_DIR}/glslang")
+    target_link_libraries(glslang_final INTERFACE glslang_import glslang_os_import glslang_oglcompiler_import)
+    set(GLSLANG_LIBRARIES glslang_final PARENT_SCOPE)
 endif()
 
 # gsl

@@ -101,26 +101,86 @@ GX2ShaderVarType
 parseShaderVarType(const std::string &v)
 {
    auto value = v;
-   std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+   std::transform(value.begin(), value.end(), value.begin(), ::tolower);
 
-   if (value == "INT") {
+   if (value == "void") {
+      return GX2ShaderVarType::Void;
+   } else if (value == "bool") {
+      return GX2ShaderVarType::Bool;
+   } else if (value == "int") {
       return GX2ShaderVarType::Int;
-   } else if (value == "INT2") {
-      return GX2ShaderVarType::Int2;
-   } else if (value == "INT3") {
-      return GX2ShaderVarType::Int3;
-   } else if (value == "INT4") {
-      return GX2ShaderVarType::Int4;
-   } else if (value == "FLOAT") {
+   } else if (value == "uint") {
+      return GX2ShaderVarType::Uint;
+   } else if (value == "float") {
       return GX2ShaderVarType::Float;
-   } else if (value == "FLOAT2") {
+   } else if (value == "double") {
+      return GX2ShaderVarType::Double;
+   } else if (value == "dvec2") {
+      return GX2ShaderVarType::Double2;
+   } else if (value == "dvec3") {
+      return GX2ShaderVarType::Double3;
+   } else if (value == "dvec4") {
+      return GX2ShaderVarType::Double4;
+   } else if (value == "vec2") {
       return GX2ShaderVarType::Float2;
-   } else if (value == "FLOAT3") {
+   } else if (value == "vec3") {
       return GX2ShaderVarType::Float3;
-   } else if (value == "FLOAT4") {
+   } else if (value == "vec4") {
       return GX2ShaderVarType::Float4;
-   } else if (value == "MATRIX4X4") {
-      return GX2ShaderVarType::Matrix4x4;
+   } else if (value == "bvec2") {
+      return GX2ShaderVarType::Bool2;
+   } else if (value == "bvec3") {
+      return GX2ShaderVarType::Bool3;
+   } else if (value == "bvec4") {
+      return GX2ShaderVarType::Bool4;
+   } else if (value == "ivec2") {
+      return GX2ShaderVarType::Int2;
+   } else if (value == "ivec3") {
+      return GX2ShaderVarType::Int3;
+   } else if (value == "ivec4") {
+      return GX2ShaderVarType::Int4;
+   } else if (value == "uvec2") {
+      return GX2ShaderVarType::Uint2;
+   } else if (value == "uvec3") {
+      return GX2ShaderVarType::Uint3;
+   } else if (value == "uvec4") {
+      return GX2ShaderVarType::Uint4;
+   } else if (value == "mat2x2" || value == "mat2") {
+      return GX2ShaderVarType::Float2x2;
+   } else if (value == "mat2x3") {
+      return GX2ShaderVarType::Float2x3;
+   } else if (value == "mat2x4") {
+      return GX2ShaderVarType::Float2x4;
+   } else if (value == "mat3x2") {
+      return GX2ShaderVarType::Float3x2;
+   } else if (value == "mat3x3" || value == "mat3") {
+      return GX2ShaderVarType::Float3x3;
+   } else if (value == "mat3x4") {
+      return GX2ShaderVarType::Float3x4;
+   } else if (value == "mat4x2") {
+      return GX2ShaderVarType::Float4x2;
+   } else if (value == "mat4x3") {
+      return GX2ShaderVarType::Float4x3;
+   } else if (value == "mat4x4" || value == "mat4") {
+      return GX2ShaderVarType::Float4x4;
+   } else if (value == "dmat2x2" || value == "dmat2") {
+      return GX2ShaderVarType::Double2x2;
+   } else if (value == "dmat2x3") {
+      return GX2ShaderVarType::Double2x3;
+   } else if (value == "dmat2x4") {
+      return GX2ShaderVarType::Double2x4;
+   } else if (value == "dmat3x2") {
+      return GX2ShaderVarType::Double3x2;
+   } else if (value == "dmat3x3" || value == "dmat3") {
+      return GX2ShaderVarType::Double3x3;
+   } else if (value == "dmat3x4") {
+      return GX2ShaderVarType::Double3x4;
+   } else if (value == "dmat4x2") {
+      return GX2ShaderVarType::Double4x2;
+   } else if (value == "dmat4x3") {
+      return GX2ShaderVarType::Double4x3;
+   } else if (value == "dmat4x4" || value == "dmat4") {
+      return GX2ShaderVarType::Double4x4;
    } else {
       throw gfd_header_parse_exception {
          fmt::format("Invalid GX2ShaderVarType {}", value)
@@ -463,6 +523,42 @@ gfdAddVertexShader(gfd::GFDFile &file,
 
    // Parse shader comments
    parseShaderComments(out, shader.comments);
+
+   // Set out pa_cl_vs_out_cntl properly
+   if (out.regs.pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE() ||
+       out.regs.pa_cl_vs_out_cntl.USE_VTX_EDGE_FLAG() ||
+       out.regs.pa_cl_vs_out_cntl.USE_VTX_RENDER_TARGET_INDX() ||
+       out.regs.pa_cl_vs_out_cntl.USE_VTX_VIEWPORT_INDX() ||
+       out.regs.pa_cl_vs_out_cntl.USE_VTX_KILL_FLAG() ||
+       out.regs.pa_cl_vs_out_cntl.USE_VTX_GS_CUT_FLAG()) {
+      out.regs.pa_cl_vs_out_cntl = out.regs.pa_cl_vs_out_cntl.
+         VS_OUT_MISC_VEC_ENA(true).
+         VS_OUT_MISC_SIDE_BUS_ENA(true);
+   }
+
+   if (out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_0() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_1() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_2() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_3() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_4() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_5() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_6() ||
+       out.regs.pa_cl_vs_out_cntl.CLIP_DIST_ENA_7()) {
+      out.regs.pa_cl_vs_out_cntl = out.regs.pa_cl_vs_out_cntl.
+         VS_OUT_CCDIST0_VEC_ENA(true);
+   }
+
+   if (out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_0() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_1() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_2() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_3() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_4() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_5() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_6() ||
+       out.regs.pa_cl_vs_out_cntl.CULL_DIST_ENA_7()) {
+      out.regs.pa_cl_vs_out_cntl = out.regs.pa_cl_vs_out_cntl.
+         VS_OUT_CCDIST1_VEC_ENA(true);
+   }
 
    // NUM_GPRS should be the number of GPRs used in the shader
    if (out.regs.sq_pgm_resources_vs.NUM_GPRS() != numGpr) {

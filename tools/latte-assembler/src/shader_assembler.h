@@ -5,6 +5,7 @@
 #include <peglib.h>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class parse_exception : public std::runtime_error
@@ -208,7 +209,7 @@ public:
 // assembler_parse
 bool
 assembleShaderCode(Shader &shader,
-                   std::vector<char> &code);
+                   std::string_view code);
 
 // assembler_cf
 void
