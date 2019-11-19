@@ -337,7 +337,10 @@ debugCaptureTagGroup(GX2DebugTag tagId,
       std::vector<uint32_t> buffer;
       buffer.resize(align_up(str.size() + 1, 4) / 4, 0u);
       std::memcpy(buffer.data(), str.data(), str.size());
-      internal::writePM4(latte::pm4::Nop { id, { buffer.data(), buffer.size() } });
+      internal::writePM4(latte::pm4::NopBE {
+         id,
+         { reinterpret_cast<be2_val<uint32_t> *>(buffer.data()), buffer.size() }
+      });
    }
 }
 
