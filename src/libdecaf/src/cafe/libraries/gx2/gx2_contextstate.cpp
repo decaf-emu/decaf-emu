@@ -3,6 +3,7 @@
 #include "gx2_debugcapture.h"
 #include "gx2_draw.h"
 #include "gx2_cbpool.h"
+#include "gx2_memory.h"
 #include "gx2_registers.h"
 #include "gx2_shaders.h"
 #include "gx2_state.h"
@@ -167,6 +168,10 @@ loadState(virt_ptr<GX2ContextState> state,
       OSEffectiveToPhysical(virt_cast<virt_addr>(virt_addrof(state->shadowState.sampler))),
       skipLoad ? EmptyRangeSpan : gsl::make_span(SamplerRange)
    });
+
+   if (!skipLoad) {
+      GX2Invalidate(GX2InvalidateMode::Shader, nullptr, 0xFFFFFFFF);
+   }
 }
 
 void
