@@ -1,4 +1,4 @@
-#include "shader_compiler.h"
+#include "shader_assembler.h"
 #include <fmt/format.h>
 
 static std::string
@@ -28,7 +28,7 @@ decodeOpcodeAlias(const std::string &op)
 }
 
 static void
-compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs)
+assembleAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs)
 {
    auto inst = latte::AluInst {};
    auto srcIndex = 0;
@@ -223,7 +223,7 @@ compileAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrcs
 }
 
 static void
-compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
+assembleAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
 {
    auto group = AluGroup {};
 
@@ -235,13 +235,13 @@ compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
             throw incorrect_clause_pc_exception { *child, group.clausePC, shader.clausePC };
          }
       } else if (child->name == "AluScalar0") {
-         compileAluInst(shader, group, *child, 0);
+         assembleAluInst(shader, group, *child, 0);
       } else if (child->name == "AluScalar1") {
-         compileAluInst(shader, group, *child, 1);
+         assembleAluInst(shader, group, *child, 1);
       } else if (child->name == "AluScalar2") {
-         compileAluInst(shader, group, *child, 2);
+         assembleAluInst(shader, group, *child, 2);
       } else if (child->name == "AluScalar3") {
-         compileAluInst(shader, group, *child, 3);
+         assembleAluInst(shader, group, *child, 3);
       } else {
          throw unhandled_node_exception { *child };
       }
@@ -258,7 +258,7 @@ compileAluGroup(Shader &shader, AluClause &clause, peg::Ast &node)
 }
 
 void
-compileAluClause(Shader &shader,
+assembleAluClause(Shader &shader,
                  peg::Ast &node)
 {
    auto cfInst = latte::ControlFlowInst { };
@@ -346,7 +346,7 @@ compileAluClause(Shader &shader,
             }
          }
       } else if (child->name == "AluGroup") {
-         compileAluGroup(shader, clause, *child);
+         assembleAluGroup(shader, clause, *child);
       } else {
          throw unhandled_node_exception { *child };
       }

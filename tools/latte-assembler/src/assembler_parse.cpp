@@ -1,9 +1,9 @@
-#include "shader_compiler.h"
+#include "shader_assembler.h"
 #include "grammar.h"
 
 bool
-compileShaderCode(Shader &shader,
-                  std::vector<char> &src)
+assembleShaderCode(Shader &shader,
+                   std::vector<char> &src)
 {
    peg::parser parser;
    parser.log = [&](size_t ln, size_t col, const std::string &msg) {
@@ -26,6 +26,6 @@ compileShaderCode(Shader &shader,
    }
 
    ast = peg::AstOptimizer(false).optimize(ast);
-   compileAST(shader, ast);
+   assembleAST(shader, ast);
    return true;
 }

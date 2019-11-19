@@ -205,32 +205,32 @@ public:
    }
 };
 
-// compiler_parse
+// assembler_parse
 bool
-compileShaderCode(Shader &shader,
-                  std::vector<char> &code);
+assembleShaderCode(Shader &shader,
+                   std::vector<char> &code);
 
-// compiler_cf
+// assembler_cf
 void
-compileAST(Shader &shader,
+assembleAST(Shader &shader,
            std::shared_ptr<peg::Ast> ast);
 
-// compiler_alu
+// assembler_alu
 void
-compileAluClause(Shader &shader,
-                 peg::Ast &node);
+assembleAluClause(Shader &shader,
+                  peg::Ast &node);
 
-// compiler_exp
+// assembler_exp
 void
-compileExpInst(Shader &shader,
-               peg::Ast &node);
+assembleExpInst(Shader &shader,
+                peg::Ast &node);
 
-// compiler_tex
+// assembler_tex
 void
-compileTexClause(Shader &shader,
-                 peg::Ast &node);
+assembleTexClause(Shader &shader,
+                  peg::Ast &node);
 
-// compiler_latte
+// assembler_latte
 latte::SQ_ALU_VEC_BANK_SWIZZLE
 parseAluBankSwizzle(peg::Ast &node);
 
@@ -260,7 +260,7 @@ latte::SQ_SEL
 parseSel(peg::Ast &node,
          unsigned index);
 
-// compiler_common
+// assembler_common
 float
 parseFloat(peg::Ast &node);
 

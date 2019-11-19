@@ -1,4 +1,4 @@
-#include "shader_compiler.h"
+#include "shader_assembler.h"
 
 #include <common/align.h>
 #include <common/bit_cast.h>
@@ -11,7 +11,7 @@ static const size_t
 TexClauseAlign = 128;
 
 static void
-compileCfInst(Shader &shader, peg::Ast &node)
+assembleCfInst(Shader &shader, peg::Ast &node)
 {
    auto inst = latte::ControlFlowInst { };
 
@@ -56,23 +56,23 @@ compileCfInst(Shader &shader, peg::Ast &node)
 }
 
 static void
-compileInstruction(Shader &shader, peg::Ast &node)
+assembleInstruction(Shader &shader, peg::Ast &node)
 {
    if (node.name == "CfInst") {
-      compileCfInst(shader, node);
+      assembleCfInst(shader, node);
    } else if (node.name == "CfExpInst") {
-      compileExpInst(shader, node);
+      assembleExpInst(shader, node);
    } else if (node.name == "AluClause") {
-      compileAluClause(shader, node);
+      assembleAluClause(shader, node);
    } else if (node.name == "TexClause") {
-      compileTexClause(shader, node);
+      assembleTexClause(shader, node);
    } else {
       throw unhandled_node_exception { node };
    }
 }
 
 static void
-compileClauses(Shader &shader)
+assembleClauses(Shader &shader)
 {
    auto aluClauseData = std::vector<uint32_t> {};
    auto texClauseData = std::vector<uint32_t> {};
@@ -182,7 +182,7 @@ compileClauses(Shader &shader)
 }
 
 static void
-compileEndOfProgram(Shader &shader)
+assembleEndOfProgram(Shader &shader)
 {
    if (shader.cfInsts.size()) {
       auto &last = shader.cfInsts.back();
@@ -202,7 +202,7 @@ compileEndOfProgram(Shader &shader)
 }
 
 void
-compileAST(Shader &shader,
+assembleAST(Shader &shader,
            std::shared_ptr<peg::Ast> ast)
 {
    auto foundEOP = false;
@@ -214,9 +214,9 @@ compileAST(Shader &shader,
    for (auto &node : ast->nodes) {
       if (node->name == "Instruction") {
          assert(node->nodes.size() == 1);
-         compileInstruction(shader, *node->nodes[0]);
+         assembleInstruction(shader, *node->nodes[0]);
       } else if (node->name == "EndOfProgram") {
-         compileEndOfProgram(shader);
+         assembleEndOfProgram(shader);
          foundEOP = true;
       } else if (node->name == "Comment") {
          if (node->token.size()) {
@@ -229,8 +229,8 @@ compileAST(Shader &shader,
 
    // If the user did not add a END_OF_PROGRAM, we should do it automatically
    if (!foundEOP) {
-      compileEndOfProgram(shader);
+      assembleEndOfProgram(shader);
    }
 
-   compileClauses(shader);
+   assembleClauses(shader);
 }

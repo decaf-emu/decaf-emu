@@ -1,4 +1,4 @@
-#include "shader_compiler.h"
+#include "shader_assembler.h"
 #include "gfd_comment_parser.h"
 #include <excmd.h>
 #include <fstream>
@@ -21,8 +21,8 @@ readFile(const std::string &path,
 }
 
 static bool
-compileFile(Shader &shader,
-            const std::string &path)
+assembleFile(Shader &shader,
+             const std::string &path)
 {
    std::vector<char> src;
 
@@ -30,7 +30,7 @@ compileFile(Shader &shader,
       return false;
    }
 
-   return compileShaderCode(shader, src);
+   return assembleShaderCode(shader, src);
 }
 
 int main(int argc, char **argv)
@@ -42,18 +42,18 @@ int main(int argc, char **argv)
    parser.global_options()
       .add_option("h,help", excmd::description { "Show the help." })
       .add_option("vsh",
-                  excmd::description { "Vertex shader to compile to gsh." },
+                  excmd::description { "Vertex shader input." },
                   excmd::value<std::string> {})
       .add_option("psh",
-                  excmd::description { "Pixel shader to compile to gsh." },
+                  excmd::description { "Pixel shader input." },
                   excmd::value<std::string> {})
       .add_option("align",
-                  excmd::description { "align data." });
+                  excmd::description { "Align data in gsh file." });
 
    parser.add_command("help")
       .add_argument("command", excmd::value<std::string> { });
 
-   parser.add_command("compile")
+   parser.add_command("assemble")
       .add_argument("gsh", excmd::value<std::string> { });
 
    // Parse command line
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
    Shader shader;
 
    try {
-      if (options.has("compile")) {
+      if (options.has("assemble")) {
          auto dst = options.get<std::string>("gsh");
          gfd::GFDFile gfd;
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
             shader.path = src;
             shader.type = ShaderType::VertexShader;
 
-            if (!compileFile(shader, src)) {
+            if (!assembleFile(shader, src)) {
                return -1;
             }
 
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
             shader.path = src;
             shader.type = ShaderType::PixelShader;
 
-            if (!compileFile(shader, src)) {
+            if (!assembleFile(shader, src)) {
                return -1;
             }
 

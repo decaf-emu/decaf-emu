@@ -1,7 +1,7 @@
-#include "shader_compiler.h"
+#include "shader_assembler.h"
 
 void
-compileExpInst(Shader &shader, peg::Ast &node)
+assembleExpInst(Shader &shader, peg::Ast &node)
 {
    auto inst = latte::ControlFlowInst { };
 

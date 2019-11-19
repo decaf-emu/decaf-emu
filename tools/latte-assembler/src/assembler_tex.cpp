@@ -1,7 +1,7 @@
-#include "shader_compiler.h"
+#include "shader_assembler.h"
 
 static void
-compileTexInst(Shader &shader,
+assembleTexInst(Shader &shader,
                TexClause &clause,
                peg::Ast &node)
 {
@@ -189,7 +189,7 @@ compileTexInst(Shader &shader,
 }
 
 void
-compileTexClause(Shader &shader,
+assembleTexClause(Shader &shader,
                  peg::Ast &node)
 {
    auto cfInst = latte::ControlFlowInst { };
@@ -249,7 +249,7 @@ compileTexClause(Shader &shader,
             }
          }
       } else if (child->name == "TexInst") {
-         compileTexInst(shader, clause, *child);
+         assembleTexInst(shader, clause, *child);
       } else {
          throw unhandled_node_exception { *child };
       }

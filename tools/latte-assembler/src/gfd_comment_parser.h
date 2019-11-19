@@ -70,7 +70,6 @@ parseValueNumber(const std::string &value);
 float
 parseValueFloat(const std::string &v);
 
-// compiler_gfd
 bool
 gfdAddVertexShader(gfd::GFDFile &file,
                    Shader &shader);
@@ -116,12 +115,10 @@ parseSamplerVars(std::vector<gfd::GFDSamplerVar> &samplerVars,
                  const std::string &member,
                  const std::string &value);
 
-// compiler_gfd_vsh
 bool
 parseShaderComments(gfd::GFDVertexShader &shader,
                     std::vector<std::string> &comments);
 
-// compiler_gfd_psh
 bool
 parseShaderComments(gfd::GFDPixelShader &shader,
                     std::vector<std::string> &comments);
