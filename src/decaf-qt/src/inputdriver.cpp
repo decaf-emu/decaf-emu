@@ -19,6 +19,9 @@ InputDriver::InputDriver(SettingsStorage *settingsStorage,
 
    // Start a timer for polling for SDL events
    QTimer::singleShot(100, Qt::PreciseTimer, this, SLOT(update()));
+
+   // Clear keyboard state
+   mKeyboardState.fill(false);
 }
 
 InputDriver::~InputDriver()
