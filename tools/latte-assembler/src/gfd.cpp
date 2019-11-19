@@ -226,6 +226,7 @@ parseUniformVars(std::vector<gfd::GFDUniformVar> &uniformVars,
       uniformVars.resize(index + 1);
       uniformVars[index].type = GX2ShaderVarType::Float4;
       uniformVars[index].count = 1;
+      uniformVars[index].block = -1;
    }
 
    if (member == "NAME") {
