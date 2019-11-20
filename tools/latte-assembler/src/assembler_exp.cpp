@@ -1,4 +1,5 @@
 #include "shader_assembler.h"
+#include "assembler_instructions.h"
 
 void
 assembleExpInst(Shader &shader, peg::Ast &node)
@@ -18,7 +19,7 @@ assembleExpInst(Shader &shader, peg::Ast &node)
          }
       } else if (child->name == "ExpOpcode") {
          auto &name = child->token;
-         auto opcode = latte::getCfExpInstructionByName(name);
+         auto opcode = getCfExpInstructionByName(name);
 
          if (opcode == latte::SQ_CF_EXP_INST_INVALID) {
             throw invalid_exp_inst_exception { *child };

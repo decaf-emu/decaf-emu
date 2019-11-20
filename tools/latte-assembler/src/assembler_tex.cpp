@@ -1,4 +1,5 @@
 #include "shader_assembler.h"
+#include "assembler_instructions.h"
 
 static void
 assembleTexInst(Shader &shader,
@@ -43,7 +44,7 @@ assembleTexInst(Shader &shader,
          shader.clausePC++;
       } else if (child->name == "TexOpcode") {
          auto &name = child->token;
-         auto opcode = latte::getTexInstructionByName(name);
+         auto opcode = getTexInstructionByName(name);
 
          if (opcode == latte::SQ_TEX_INST_INVALID) {
             throw invalid_tex_inst_exception { *child };
@@ -208,7 +209,7 @@ assembleTexClause(Shader &shader,
          }
       } else if (child->name == "TexClauseInstType") {
          auto &name = child->token;
-         auto opcode = latte::getCfInstructionByName(name);
+         auto opcode = getCfInstructionByName(name);
 
          if (opcode == latte::SQ_CF_INST_INVALID) {
             throw invalid_cf_tex_inst_exception { *child };

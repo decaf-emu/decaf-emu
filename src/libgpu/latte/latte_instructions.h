@@ -370,14 +370,6 @@ const char *getInstructionName(SQ_OP3_INST id);
 const char *getInstructionName(SQ_TEX_INST id);
 const char *getInstructionName(SQ_VTX_INST id);
 
-SQ_CF_INST getCfInstructionByName(const std::string &name);
-SQ_CF_EXP_INST getCfExpInstructionByName(const std::string &name);
-SQ_CF_ALU_INST getCfAluInstructionByName(const std::string &name);
-SQ_OP2_INST getAluOp2InstructionByName(const std::string &name);
-SQ_OP3_INST getAluOp3InstructionByName(const std::string &name);
-SQ_TEX_INST getTexInstructionByName(const std::string &name);
-SQ_VTX_INST getVtxInstructionByName(const std::string &name);
-
 uint32_t getInstructionNumSrcs(SQ_OP2_INST id);
 uint32_t getInstructionNumSrcs(SQ_OP3_INST id);
 

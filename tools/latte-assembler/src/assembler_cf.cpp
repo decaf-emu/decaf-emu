@@ -1,4 +1,5 @@
 #include "shader_assembler.h"
+#include "assembler_instructions.h"
 
 #include <common/align.h>
 #include <common/bit_cast.h>
@@ -28,7 +29,7 @@ assembleCfInst(Shader &shader, peg::Ast &node)
          }
       } else if (child->name == "CfOpcode") {
          auto &name = child->token;
-         auto opcode = latte::getCfInstructionByName(name);
+         auto opcode = getCfInstructionByName(name);
 
          if (opcode == latte::SQ_CF_INST_INVALID) {
             throw invalid_cf_inst_exception { *child };

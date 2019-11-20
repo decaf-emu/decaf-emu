@@ -1,4 +1,6 @@
 #include "shader_assembler.h"
+#include "assembler_instructions.h"
+
 #include <fmt/format.h>
 
 static std::string
@@ -48,7 +50,7 @@ assembleAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrc
          }
       } else if (child->name == "AluOpcode0" || child->name == "AluOpcode1" || child->name == "AluOpcode2") {
          const auto name = decodeOpcodeAlias(child->token);
-         const auto opcode = latte::getAluOp2InstructionByName(name);
+         const auto opcode = getAluOp2InstructionByName(name);
 
          if (opcode == latte::SQ_OP2_INST_INVALID) {
             throw invalid_alu_op2_inst_exception { *child };
@@ -60,7 +62,7 @@ assembleAluInst(Shader &shader, AluGroup &group, peg::Ast &node, unsigned numSrc
             .ALU_INST(opcode);
       } else if (child->name == "AluOpcode3") {
          const auto name = decodeOpcodeAlias(child->token);
-         const auto opcode = latte::getAluOp3InstructionByName(name);
+         const auto opcode = getAluOp3InstructionByName(name);
 
          if (opcode == latte::SQ_OP3_INST_INVALID) {
             throw invalid_alu_op3_inst_exception { *child };
@@ -280,7 +282,7 @@ assembleAluClause(Shader &shader,
          }
       } else if (child->name == "AluClauseInstType") {
          auto &name = child->token;
-         auto opcode = latte::getCfAluInstructionByName(name);
+         auto opcode = getCfAluInstructionByName(name);
 
          if (opcode == latte::SQ_CF_ALU_INST_INVALID) {
             throw invalid_cf_alu_inst_exception { *child };

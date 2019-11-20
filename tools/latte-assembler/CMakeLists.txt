@@ -29,7 +29,6 @@ add_executable(latte-assembler ${SOURCE_FILES} ${HEADER_FILES} ${GRAMMAR_HEADER}
 target_link_libraries(latte-assembler
     common
     libgfd
-    libgpu
     excmd
     peglib
     ${GLSLANG_LIBRARIES})
