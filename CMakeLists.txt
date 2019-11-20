@@ -17,7 +17,6 @@ find_package(ZLIB REQUIRED) # ZLIB::ZLIB
 
 option(DECAF_BUILD_TESTS "Build tests" OFF)
 option(DECAF_BUILD_TOOLS "Build tools" OFF)
-option(DECAF_BUILD_WUT_TESTS "Build tests which rely on wut" OFF)
 option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" OFF)
 option(DECAF_FFMPEG "Build with ffmpeg support" ON)
 option(DECAF_GL "Build with OpenGL rendering support" ON)
@@ -28,13 +27,6 @@ option(DECAF_VULKAN "Build with Vulkan rendering support" ON)
 option(DECAF_QT "Build with Qt support" OFF)
 option(DECAF_ENABLE_PCH "Build with precompild headers" ON)
 option(DECAF_ENABLE_LTCG "Build with LTCG on Windows" ON)
-
-set(DEVKITPPC $ENV{DEVKITPPC} CACHE STRING "Path to devkitPPC install")
-set(WUT_ROOT $ENV{WUT_ROOT} CACHE STRING "Path to wut install")
-
-if(DECAF_BUILD_WUT_TESTS AND (NOT DEVKITPPC OR NOT WUT_ROOT))
-    message(FATAL_ERROR "You must have defined DEVKITPPC and WUT_ROOT to build wut tests.")
-endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
@@ -251,7 +243,7 @@ if(DECAF_BUILD_TOOLS)
     add_subdirectory("tools")
 endif()
 
-if(DECAF_BUILD_TESTS OR DECAF_BUILD_WUT_TESTS)
+if(DECAF_BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
 endif()
