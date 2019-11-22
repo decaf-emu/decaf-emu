@@ -114,36 +114,35 @@ jobs:
       if: startsWith(matrix.os, 'macOS')
       run: |
         cd build
-        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_BUILD_TYPE=Release ..
+        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=$QTDIR/lib/cmake/Qt5 ..
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=$QTDIR/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5  ..
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_GL=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Build
       run: |
         cd build
-        cmake --build . --config Release -j 2
+        cmake --build . --config Release -j 2 --target install
 
     - name: Package (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
-        cd build\obj\Release
+        cd build/install
         %QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
-        7z a decaf-bin.zip "*.exe" "*.dll" "resources\*" "iconengines\*" "imageformats\*" "platforms\*" "styles\*"
 
     - uses: actions/upload-artifact@master
       if: startsWith(matrix.os, 'windows')
       with:
-        name: decaf-bin
-        path: build/obj/Release/decaf-bin.zip
+        name: decaf-emu-windows
+        path: build/install

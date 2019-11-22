@@ -238,7 +238,7 @@ set_target_properties(spdlog PROPERTIES FOLDER libraries)
 if(DECAF_QT)
     set(BUILD_STATIC TRUE CACHE BOOL "ADS: Build the static library")
     set(BUILD_EXAMPLES FALSE CACHE BOOL "ADS: Build the examples")
-    add_subdirectory(qtads)
+    add_subdirectory(qtads EXCLUDE_FROM_ALL)
     set_target_properties(qtadvanceddocking PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/qtads/src"
         INTERFACE_COMPILE_DEFINITIONS "ADS_STATIC"
