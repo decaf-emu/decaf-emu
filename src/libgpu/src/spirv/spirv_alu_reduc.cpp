@@ -16,16 +16,28 @@ void Transpiler::translateAluOp2_CUBE(const ControlFlowInst &cf, const AluInstru
    auto srcY = mSpv->readAluInstSrc(cf, group, *group.units[SQ_CHAN::W], 0);
    auto srcZ = mSpv->readAluInstSrc(cf, group, *group.units[SQ_CHAN::X], 0);
 
-   // Concise pseudocode (v2):
-   //    if (|x| >= |y| && |x| >= |z|) {
-   //       out = vec4(y, sign(x)*-z, 2x, x>=0 ? 0 : 1)
-   //    } else if (|y| >= |x| && |y| >= |z|) {
-   //       out = vec4(sign(y)*-z, x, 2y, y>=0 ? 2 : 3)
-   //    } else {
-   //       out = vec4(y, sign(z)*x, 2z, z>=0 ? 4 : 5)
-   //    }
-   // Note that CUBE reverses the order of the texture coordinates in the
-   // output: out.yx = face.st
+   /*
+   Concise pseudocode (v3):
+   if (|z| >= |x| && |z| >= |y|)
+     t = -y
+     s = sign(z) * x
+     ma = 2z
+     f = (z < 0) ? 5 : 4
+   else if (|y| >= |x|)
+     t = sign(y) * z
+     s = x
+     ma = 2y
+     f = (y < 0) ? 3 : 2
+   else
+     t = -y
+     s = sign(x) * z
+     ma = 2x
+     f = (x < 0) ? 1 : 0
+
+    Note that CUBE reverses the order of the texture coordinates in the
+    output: out.yx = face.st
+   */
+
 
    auto zeroFConst = mSpv->makeFloatConstant(0.0f);
    auto oneFConst = mSpv->makeFloatConstant(1.0f);
@@ -34,62 +46,48 @@ void Transpiler::translateAluOp2_CUBE(const ControlFlowInst &cf, const AluInstru
    auto fourFConst = mSpv->makeFloatConstant(4.0f);
    auto fiveFConst = mSpv->makeFloatConstant(5.0f);
 
-   // Normalize the inputs
-   auto srcAll = mSpv->createCompositeConstruct(mSpv->float3Type(), { srcX, srcY, srcZ });
-   auto normAll = mSpv->createBuiltinCall(mSpv->float3Type(), mSpv->glslStd450(), GLSLstd450::GLSLstd450Normalize, { srcAll });
-   srcX = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { normAll, 0 });
-   srcY = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { normAll, 1 });
-   srcZ = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { normAll, 2 });
-
    auto absX = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FAbs, { srcX });
    auto absY = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FAbs, { srcY });
    auto absZ = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FAbs, { srcZ });
 
-   // if (|x| >= |y| && |x| >= |z|) {
-   auto pred01_XY = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absX, absY);
-   auto pred01_XZ = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absX, absZ);
-   auto pred01 = mSpv->createBinOp(spv::OpLogicalAnd, mSpv->boolType(), pred01_XY, pred01_XZ);
+   // if (|z| >= |x| && |z| >= |y|) {
+   auto pred01_ZX = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absZ, absX);
+   auto pred01_ZY = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absZ, absY);
+   auto pred01 = mSpv->createBinOp(spv::OpLogicalAnd, mSpv->boolType(), pred01_ZX, pred01_ZY);
 
    auto pred01Block = spv::Builder::If { pred01, spv::SelectionControlMaskNone, *mSpv };
 
    spv::Id dstX01, dstY01, dstZ01, dstW01;
    {
-      // 0, 1
-      auto predXgt0 = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), srcX, zeroFConst);
-      dstW01 = mSpv->createOp(spv::OpSelect, mSpv->floatType(), { predXgt0, zeroFConst, oneFConst });
+      auto signZ = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FSign, { srcZ });
+      auto negY = mSpv->createUnaryOp(spv::OpFNegate, mSpv->floatType(), srcY);
 
-      // out = vec4(y, sign(x)*-z, 2x, x>=0 ? 0 : 1)
-      auto signX = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FSign, { srcX });
-      auto negZ = mSpv->createUnaryOp(spv::OpFNegate, mSpv->floatType(), srcZ);
+      dstX01 = negY;
+      dstY01 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), signZ, srcX);
+      dstZ01 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), srcZ, twoFConst);
 
-      dstX01 = srcY;
-      dstY01 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), signX, negZ);
-      dstZ01 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), srcX, twoFConst);
+      auto predZls0 = mSpv->createBinOp(spv::OpFOrdLessThan, mSpv->boolType(), srcZ, zeroFConst);
+      dstW01 = mSpv->createOp(spv::OpSelect, mSpv->floatType(), { predZls0, fiveFConst, fourFConst });
    }
    auto dst01Block = mSpv->getBuildPoint();
 
    pred01Block.makeBeginElse();
 
-   // } else if (|y| >= |x| && |y| >= |z|) {
-   auto pred23_YX = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absY, absX);
-   auto pred23_YZ = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absY, absZ);
-   auto pred23 = mSpv->createBinOp(spv::OpLogicalAnd, mSpv->boolType(), pred23_YX, pred23_YZ);
+   // } else if (|y| >= |x|) {
+   auto pred23 = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), absY, absX);
 
    auto pred23Block = spv::Builder::If { pred23, spv::SelectionControlMaskNone, *mSpv };
 
    spv::Id dstX23, dstY23, dstZ23, dstW23;
    {
-      // 2, 3
-      auto predYgt0 = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), srcY, zeroFConst);
-      dstW23 = mSpv->createOp(spv::OpSelect, mSpv->floatType(), { predYgt0, twoFConst, threeFConst });
-
-      // out = vec4(sign(y)*-z, x, 2y, y>=0 ? 2 : 3)
       auto signY = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FSign, { srcY });
-      auto negZ = mSpv->createUnaryOp(spv::OpFNegate, mSpv->floatType(), srcZ);
 
-      dstX23 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), signY, negZ);
+      dstX23 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), signY, srcZ);
       dstY23 = srcX;
       dstZ23 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), srcY, twoFConst);
+
+      auto predYls0 = mSpv->createBinOp(spv::OpFOrdLessThan, mSpv->boolType(), srcY, zeroFConst);
+      dstW23 = mSpv->createOp(spv::OpSelect, mSpv->floatType(), { predYls0, threeFConst, twoFConst });
    }
    auto dst23Block = mSpv->getBuildPoint();
 
@@ -98,16 +96,15 @@ void Transpiler::translateAluOp2_CUBE(const ControlFlowInst &cf, const AluInstru
    // } else {
    spv::Id dstX45, dstY45, dstZ45, dstW45;
    {
-      // 4, 5
-      auto predZgt0 = mSpv->createBinOp(spv::OpFOrdGreaterThanEqual, mSpv->boolType(), srcZ, zeroFConst);
-      dstW45 = mSpv->createOp(spv::OpSelect, mSpv->floatType(), { predZgt0, fourFConst, fiveFConst });
+      auto signX = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FSign, { srcX });
+      auto negY = mSpv->createUnaryOp(spv::OpFNegate, mSpv->floatType(), srcY);
 
-      // out = vec4(y, sign(z)*x, 2z, z>=0 ? 4 : 5)
-      auto signZ = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FSign, { srcZ });
+      dstX45 = negY;
+      dstY45 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), signX, srcZ);
+      dstZ45 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), srcX, twoFConst);
 
-      dstX45 = srcY;
-      dstY45 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), signZ, srcX);
-      dstZ45 = mSpv->createBinOp(spv::OpFMul, mSpv->floatType(), srcZ, twoFConst);
+      auto predXls0 = mSpv->createBinOp(spv::OpFOrdLessThan, mSpv->boolType(), srcX, zeroFConst);
+      dstW45 = mSpv->createOp(spv::OpSelect, mSpv->floatType(), { predXls0, oneFConst, zeroFConst });
    }
    auto dst45Block = mSpv->getBuildPoint();
 
@@ -127,12 +124,14 @@ void Transpiler::translateAluOp2_CUBE(const ControlFlowInst &cf, const AluInstru
    auto dstZ = mSpv->createOp(spv::OpPhi, mSpv->floatType(), { dstZ01, dst01Block->getId(), dstZ2345, dst2345Block->getId() });
    auto dstW = mSpv->createOp(spv::OpPhi, mSpv->floatType(), { dstW01, dst01Block->getId(), dstW2345, dst2345Block->getId() });
 
-   // We honestly have no bloody clue why we need to do this kind of translation to the CUBE
-   // data before we pass it back to the shader, but they do their own kinds of wierd translations
-   // so we will just pretend like this is a normal part of shader writing and move on?...
-   // It is worth mentioning that our translation is NOT the inverse of what they do, and is
-   // another set of operations entirely, which kind of relates to what they do, but we move
-   // the coordinates around differently...
+   // Okay, we now have a sorta bloody clue why we need to do this.  The CUBE instruction
+   // intentionally performs a some math to the values such that the values shift out of
+   // the 0.0-1.0 range and into the 1.0-2.0 range which has the benefit of a constant
+   // mantissa component to the floating point number.  Supposedly this improves the
+   // performance of the lookup for AMD hardware.  We would normally duplicate this
+   // behaviour, but need to undo it because the samplers are set to BORDER, which
+   // causes invalid values to be sampled.  We're not sure how its meant to work with a
+   // non-wrapping sampler, but thats a problem for another day.
    {
       auto absZ = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FAbs, { dstZ });
 
