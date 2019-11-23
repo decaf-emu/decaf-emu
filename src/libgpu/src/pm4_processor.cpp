@@ -291,13 +291,19 @@ Pm4Processor::setRegisters(latte::Register base,
                            const gsl::span<uint32_t> &values)
 {
    if (mNoRegisterNotify) {
-      memcpy(&mRegisters[base / 4], values.data(), values.size_bytes());
-
       if (latte::Register::SQ_VTX_SEMANTIC_CLEAR >= base &&
           latte::Register::SQ_VTX_SEMANTIC_CLEAR < base + values.size_bytes()) {
-         auto semanticRegs = &mRegisters[latte::Register::SQ_VTX_SEMANTIC_0 / 4];
-         memset(semanticRegs, 0xFF, 32 * sizeof(uint32_t));
+         auto clearRegBase = latte::Register::SQ_VTX_SEMANTIC_0 / 4;
+         auto valueIdx = (latte::Register::SQ_VTX_SEMANTIC_CLEAR - base) / 4;
+         auto clearFlags = values[valueIdx];
+         for (auto i = 0u; i < 32; ++i) {
+            if (clearFlags & (1 << i)) {
+               mRegisters[clearRegBase + i] = 0xffffffff;
+            }
+         }
       }
+
+      memcpy(&mRegisters[base / 4], values.data(), values.size_bytes());
    } else {
       for (auto i = 0u; i < values.size(); ++i) {
          auto regIdx = (base / 4) + i;
