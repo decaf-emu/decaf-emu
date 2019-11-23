@@ -1,5 +1,6 @@
 #ifdef DECAF_VULKAN
 #include "spirv_transpiler.h"
+#include "latte/latte_disassembler.h"
 
 #include <disassemble.h>
 #include <regex>
@@ -438,6 +439,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    }
 
    auto spvGen = ShaderSpvBuilder(spvExecModel);
+   spvGen.setSource(spv::SourceLanguageOpenCL_CPP, 0);
    spvGen.setSourceFile("none");
 
    state.mSpv = &spvGen;
@@ -450,6 +452,9 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    if (shaderDesc.type == ShaderType::Vertex) {
       auto &vsDesc = *reinterpret_cast<const VertexShaderDesc*>(&shaderDesc);
 
+      spvGen.setSourceText(latte::disassemble(shaderDesc.binary) + "\n\n" +
+                           latte::disassemble(vsDesc.fsBinary, true));
+
       spvGen.setBindingBase(32 * 0);
 
       state.mSqVtxSemantics = vsDesc.regs.sq_vtx_semantics;
@@ -460,6 +465,9 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
    } else if (shaderDesc.type == ShaderType::Geometry) {
       auto &gsDesc = *reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
 
+      spvGen.setSourceText(latte::disassemble(shaderDesc.binary) + "\n\n" +
+                           latte::disassemble(gsDesc.dcBinary));
+
       spvGen.setBindingBase(32 * 1);
 
       state.mPaClVsOutCntl = gsDesc.regs.pa_cl_vs_out_cntl;
@@ -468,6 +476,8 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
       Transpiler::writeGeometryProlog(spvGen, gsDesc);
    } else if (shaderDesc.type == ShaderType::Pixel) {
       auto &psDesc = *reinterpret_cast<const PixelShaderDesc*>(&shaderDesc);
+
+      spvGen.setSourceText(latte::disassemble(shaderDesc.binary));
 
       spvGen.setBindingBase(32 * 2);
 
