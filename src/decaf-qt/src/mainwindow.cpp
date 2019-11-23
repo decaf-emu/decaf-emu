@@ -9,6 +9,8 @@
 #include "titlelistwidget.h"
 
 #include <QCloseEvent>
+#include <QCommandLineParser>
+#include <QShowEvent>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QInputDialog>
@@ -18,11 +20,13 @@
 
 #include <libdecaf/decaf.h>
 
-MainWindow::MainWindow(SettingsStorage *settingsStorage,
+MainWindow::MainWindow(QCommandLineParser *options,
+                       SettingsStorage *settingsStorage,
                        DecafInterface *decafInterface,
                        InputDriver *inputDriver,
                        QWidget *parent) :
    QMainWindow(parent),
+   mOptions(options),
    mSettingsStorage(settingsStorage),
    mDecafInterface(decafInterface),
    mInputDriver(inputDriver),
@@ -366,6 +370,15 @@ MainWindow::openAboutDialog()
 {
    AboutDialog dialog { this };
    dialog.exec();
+}
+
+void 
+MainWindow::showEvent(QShowEvent *event)
+{
+   QString fileIn = mOptions->value("play");
+   if (!fileIn.isEmpty()) {
+      loadFile(fileIn);
+   }
 }
 
 void

@@ -12,8 +12,17 @@
 #include <SDL2/SDL.h>
 
 #include <QApplication>
+#include <QCommandLineParser>
 
 #include <common/platform_debug.h>
+
+void setupCommandLineOptions(QCommandLineParser *parser)
+{
+   parser->setApplicationDescription("decaf-qt");
+   parser->addHelpOption();
+
+   parser->addOption({ { "p", "play" }, "Loads the .RPX file specified in  <file name>.", "file" });
+}
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +31,11 @@ int main(int argc, char *argv[])
    QCoreApplication::setApplicationName("decaf-qt");
 
    auto app = QApplication { argc, argv };
+   auto options = QCommandLineParser();
+
+   setupCommandLineOptions(&options);
+
+   options.process(app);
 
    decaf::createConfigDirectory();
    auto settings = SettingsStorage { decaf::makeConfigPath("config.toml") };
@@ -30,7 +44,7 @@ int main(int argc, char *argv[])
    auto soundDriver = SoundDriver { &settings };
    auto decafInterface = DecafInterface { &settings, &inputDriver, &soundDriver };
 
-   auto mainWindow = MainWindow { &settings, &decafInterface, &inputDriver };
+   auto mainWindow = MainWindow { &options, &settings, &decafInterface, &inputDriver };
    mainWindow.show();
 
    return app.exec();

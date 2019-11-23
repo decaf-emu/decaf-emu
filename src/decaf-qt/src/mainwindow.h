@@ -13,6 +13,7 @@ class SoftwareKeyboardDriver;
 class TitleListWidget;
 
 class QAction;
+class QCommandLineParser;
 class QInputDialog;
 class QLabel;
 class QTimer;
@@ -24,7 +25,8 @@ class MainWindow : public QMainWindow
    static constexpr int MaxRecentFiles = 5;
 
 public:
-   explicit MainWindow(SettingsStorage *settingsStorage,
+   explicit MainWindow(QCommandLineParser *options,
+                       SettingsStorage *settingsStorage,
                        DecafInterface *decafInterface,
                        InputDriver *inputDriver,
                        QWidget* parent = nullptr);
@@ -73,9 +75,11 @@ private slots:
 
 protected:
    void closeEvent(QCloseEvent *event) override;
+   void showEvent(QShowEvent *event) override;
    void updateRecentFileActions();
 
 private:
+   QCommandLineParser *mOptions;
    SettingsStorage *mSettingsStorage = nullptr;
    RenderWidget *mRenderWidget = nullptr;
    TitleListWidget *mTitleListWiget = nullptr;
