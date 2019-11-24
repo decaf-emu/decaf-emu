@@ -87,7 +87,7 @@ void
 GX2CallDisplayList(virt_ptr<void> displayList,
                    uint32_t bytes)
 {
-   internal::writePM4(latte::pm4::IndirectBufferCall {
+   internal::writePM4(latte::pm4::IndirectBufferCallPriv {
       OSEffectiveToPhysical(virt_cast<virt_addr>(displayList)),
       bytes / 4
    });
