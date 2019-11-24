@@ -329,6 +329,10 @@ void
 debugCaptureTagGroup(GX2DebugTag tagId,
                      std::string_view str)
 {
+   if (!sDebugCaptureData->enabled) {
+      return;
+   }
+
    auto id = tagId | GX2DebugTag::Group;
 
    if (str.empty()) {
