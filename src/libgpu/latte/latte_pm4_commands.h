@@ -417,14 +417,32 @@ struct DrawIndexImmd
    }
 };
 
-// This structure should only be used to WRITE 16 bit little endian indices
-struct DrawIndexImmdWriteOnly16LE
+// This structure should only be used to WRITE
+struct DrawIndexImmdBE
 {
    static const auto Opcode = IT_OPCODE::DRAW_INDEX_IMMD;
 
    uint32_t count;                           // VGT_DMA_SIZE
    latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
-   gsl::span<uint16_t> indices;
+   gsl::span<be2_val<uint32_t>> indices;
+
+   template<typename Serialiser>
+   void serialise(Serialiser &se)
+   {
+      se(count);
+      se(drawInitiator);
+      se(indices);
+   }
+};
+
+// This structure should only be used to WRITE
+struct DrawIndexImmdBE16
+{
+   static const auto Opcode = IT_OPCODE::DRAW_INDEX_IMMD;
+
+   uint32_t count;                           // VGT_DMA_SIZE
+   latte::VGT_DRAW_INITIATOR drawInitiator;  // VGT_DRAW_INITIATOR
+   gsl::span<be2_val<uint32_t>> indices;
 
    template<typename Serialiser>
    void serialise(Serialiser &se)
@@ -432,17 +450,11 @@ struct DrawIndexImmdWriteOnly16LE
       se(count);
       se(drawInitiator);
 
-      // Hack in a custom write!
-      for (auto i = 0u; i < indices.size(); i += 2) {
-         auto index0 = static_cast<uint32_t>(indices[i + 0]);
-         auto index1 = uint32_t { 0 };
-
-         if (i + 1 < indices.size()) {
-            index1 = indices[i + 1];
-         }
-
-         auto word = static_cast<uint32_t>(index1 | (index0 << 16));
-         se(word);
+      // Swap around the two 16 bit indices
+      for (auto i = 0u; i < indices.size(); ++i) {
+         auto index = static_cast<uint32_t>(indices[i]);
+         index = static_cast<uint32_t>((index >> 16) | (index << 16));
+         se(index);
       }
    }
 };

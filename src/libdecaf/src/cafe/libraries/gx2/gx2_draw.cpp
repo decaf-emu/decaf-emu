@@ -254,17 +254,17 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
       decaf_abort(fmt::format("Invalid index_type {}", index_type));
    }
 
-   if (indexType == GX2IndexType::U16_LE) {
-      internal::writePM4(latte::pm4::DrawIndexImmdWriteOnly16LE {
+   if (indexType == GX2IndexType::U16) {
+      internal::writePM4(latte::pm4::DrawIndexImmdBE16 {
          count,
          vgt_draw_initiator,
-         gsl::make_span(reinterpret_cast<uint16_t *>(indices.getRawPointer()), count)
+         gsl::make_span(virt_cast<uint32_t *>(indices).get(), numWords)
       });
    } else {
-      internal::writePM4(latte::pm4::DrawIndexImmd {
+      internal::writePM4(latte::pm4::DrawIndexImmdBE {
          count,
          vgt_draw_initiator,
-         gsl::make_span(reinterpret_cast<uint32_t *>(indices.getRawPointer()), numWords)
+         gsl::make_span(virt_cast<uint32_t *>(indices).get(), numWords),
       });
    }
 }
