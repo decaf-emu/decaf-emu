@@ -523,6 +523,10 @@ initialiseAddressSpace(AddressSpace *addressSpace,
                           &codeGenMap,
                           1,
                           MapCodeGen | MapUnknown10);
+   } else {
+      // Disable codegen mapping
+      auto &codeGenMap = sMemoryMap[1];
+      codeGenMap.flags = 0;
    }
 
    setAddressSpaceView(&addressSpace->viewKernel,
