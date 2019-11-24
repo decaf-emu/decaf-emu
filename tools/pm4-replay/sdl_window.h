@@ -21,7 +21,6 @@ public:
 private:
    SDL_Window *mWindow = nullptr;
    gpu::GraphicsDriver *mGraphicsDriver = nullptr;
-   std::thread mGraphicsThread;
    std::string mRendererName;
    bool mToggleDRC = false;
 };

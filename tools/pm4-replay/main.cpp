@@ -142,22 +142,10 @@ start(excmd::parser &parser,
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Trace path {}", traceFile);
 
-   // Let's go boyssssss
-   int result = -1;
-
-   // We need to run the replay on a cpu core.
+   // Initialise CPU to setup physical memory
    cpu::initialise();
-   cpu::setCoreEntrypointHandler(
-      [&](cpu::Core *core) {
-         if (core->id == 1) {
-            result = replay(traceFile);
-         }
-      });
 
-   cpu::start();
-   cpu::join();
-
-   return result;
+   return replay(traceFile);
 }
 
 int main(int argc, char **argv)
