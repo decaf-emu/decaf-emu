@@ -968,8 +968,13 @@ struct EventWrite
    void serialise(Serialiser &se)
    {
       se(eventInitiator.value);
-      se(addrLo.value);
-      se(addrHi.value);
+
+      if (eventInitiator.EVENT_INDEX() == latte::VGT_EVENT_INDEX::ZPASS_DONE ||
+          eventInitiator.EVENT_INDEX() == latte::VGT_EVENT_INDEX::SAMPLE_PIPELINESTAT ||
+          eventInitiator.EVENT_INDEX() == latte::VGT_EVENT_INDEX::SAMPLE_STREAMOUTSTAT) {
+         se(addrLo.value);
+         se(addrHi.value);
+      }
    }
 };
 
