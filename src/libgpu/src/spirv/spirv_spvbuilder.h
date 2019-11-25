@@ -201,7 +201,7 @@ public:
       return vecType;
    }
 
-   spv::Id arrayType(spv::Id elemType, int elemCount = 0)
+   spv::Id arrayType(spv::Id elemType, int stride, int elemCount = 0)
    {
       auto arrPair = std::make_pair(elemType, elemCount);
       auto arrType = mArrType[arrPair];
@@ -210,8 +210,9 @@ public:
             arrType = makeRuntimeArray(elemType);
          } else {
             auto sizeId = makeUintConstant(elemCount);
-            arrType = makeArrayType(elemType, sizeId, 0);
+            arrType = makeArrayType(elemType, sizeId, stride);
          }
+         addDecoration(arrType, spv::Decoration::DecorationArrayStride, stride);
 
          auto baseTypeName = getTypeName(elemType);
          if (!baseTypeName.size()) {

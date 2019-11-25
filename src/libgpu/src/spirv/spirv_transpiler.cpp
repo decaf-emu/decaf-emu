@@ -557,7 +557,8 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          spvGen.setBuildPoint(dcFunc->getEntryBlock());
 
          // Need to save our GPRs first
-         auto gprType = spvGen.makeArrayType(spvGen.float4Type(), spvGen.makeUintConstant(128), 0);
+
+         auto gprType = spvGen.arrayType(spvGen.float4Type(), 16, 128);
          auto gprSaveVar = spvGen.createVariable(spv::StorageClass::StorageClassPrivate, gprType, "RVarSave");
          spvGen.createNoResultOp(spv::OpCopyMemory, { gprSaveVar, spvGen.gprVar() });
 
@@ -644,7 +645,7 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    spvGen.addDecoration(glInType, spv::DecorationBlock);
    spvGen.addMemberDecoration(glInType, 0, spv::DecorationBuiltIn, spv::BuiltInPosition);
    spvGen.addMemberName(glInType, 0, "gl_Position");
-   auto glInArrType = spvGen.makeArrayType(glInType, threeConst, 0);
+   auto glInArrType = spvGen.arrayType(glInType, 16, 3);
    auto glInArrVar = spvGen.createVariable(spv::StorageClassInput, glInArrType, "gl_in");
    entry->addIdOperand(glInArrVar);
 
@@ -671,7 +672,7 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
 
    for (auto i = 0u; i < shaderDesc.numVsExports; ++i) {
       auto paramType = spvGen.float4Type();
-      auto paramInVarType = spvGen.makeArrayType(paramType, threeConst, 0);
+      auto paramInVarType = spvGen.arrayType(paramType, 16, 3);
       auto paramInVar = spvGen.createVariable(spv::StorageClassInput, paramInVarType, fmt::format("PARAM_{}_IN", i).c_str());
       spvGen.addDecoration(paramInVar, spv::DecorationLocation, i);
       entry->addIdOperand(paramInVar);

@@ -1307,7 +1307,7 @@ public:
 
       auto inputVar = mRingInputs[index];
       if (!inputVar) {
-         inputVar = createVariable(spv::StorageClassInput, arrayType(float4Type(), 3),
+         inputVar = createVariable(spv::StorageClassInput, arrayType(float4Type(), 16, 3),
                                         fmt::format("RINGIN_{}", index).c_str());
          addDecoration(inputVar, spv::DecorationLocation, static_cast<int>(index));
 
@@ -1376,8 +1376,7 @@ public:
    spv::Id cfileVar()
    {
       if (!mRegistersBuffer) {
-         auto regsType = arrayType(float4Type(), 256);
-         addDecoration(regsType, spv::DecorationArrayStride, 16);
+         auto regsType = arrayType(float4Type(), 16, 256);
          auto structType = this->makeStructType({ regsType }, "CFILE_DATA");
          addMemberDecoration(structType, 0, spv::DecorationOffset, 0);
          addDecoration(structType, spv::DecorationBufferBlock);
@@ -1400,8 +1399,7 @@ public:
 
       auto cbuffer = mUniformBuffers[cbufferIdx];
       if (!cbuffer) {
-         auto valuesType = arrayType(float4Type(), 0);
-         addDecoration(valuesType, spv::DecorationArrayStride, 16);
+         auto valuesType = arrayType(float4Type(), 16, 0);
 
          auto structType = this->makeStructType({ valuesType }, fmt::format("CBUFFER_DATA_{}", cbufferIdx).c_str());
          addMemberDecoration(structType, 0, spv::DecorationOffset, 0);
@@ -1752,7 +1750,7 @@ public:
    spv::Id stackVar()
    {
       if (!mStack) {
-         auto stackType = makeArrayType(intType(), makeUintConstant(16), 0);
+         auto stackType = arrayType(intType(), 4, 16);
          mStack = createVariable(spv::StorageClass::StorageClassPrivate, stackType, "stackVar");
       }
       return mStack;
@@ -1769,7 +1767,7 @@ public:
    spv::Id gprVar()
    {
       if (!mGpr) {
-         auto gprType = makeArrayType(float4Type(), makeUintConstant(128), 0);
+         auto gprType = arrayType(float4Type(), 16, 128);
          mGpr = createVariable(spv::StorageClass::StorageClassPrivate, gprType, "RVar");
       }
       return mGpr;
@@ -1778,7 +1776,7 @@ public:
    spv::Id ringVar()
    {
       if (!mRing) {
-         auto ringType = makeArrayType(float4Type(), makeUintConstant(128), 0);
+         auto ringType = arrayType(float4Type(), 16, 128);
          mRing = createVariable(spv::StorageClass::StorageClassPrivate, ringType, "LocalRing");
       }
       return mRing;
