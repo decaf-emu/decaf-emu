@@ -1094,7 +1094,7 @@ GX2InitViewportReg(virt_ptr<GX2ViewportReg> reg,
    pa_cl_vport_xoffset = pa_cl_vport_xoffset
       .VPORT_XOFFSET(x + (width * 0.5f));
    pa_cl_vport_yscale = pa_cl_vport_yscale
-      .VPORT_YSCALE(height * 0.5f);
+      .VPORT_YSCALE(height * -0.5f);
    pa_cl_vport_yoffset = pa_cl_vport_yoffset
       .VPORT_YOFFSET(y + (height * 0.5f));
    pa_cl_vport_zscale = pa_cl_vport_zscale
@@ -1102,13 +1102,35 @@ GX2InitViewportReg(virt_ptr<GX2ViewportReg> reg,
    pa_cl_vport_zoffset = pa_cl_vport_zoffset
       .VPORT_ZOFFSET((farZ + nearZ) * 0.5f);
 
-   pa_cl_gb_vert_clip_adj = pa_cl_gb_vert_clip_adj
+   if (width == 0.0f || height == 0.0f) {
+      pa_cl_gb_vert_clip_adj = pa_cl_gb_vert_clip_adj
+         .DATA_REGISTER(1.0f);
+      pa_cl_gb_horz_clip_adj = pa_cl_gb_horz_clip_adj
+         .DATA_REGISTER(1.0f);
+   } else {
+      if (height < 0.0f) {
+         y += height;
+         height = -height;
+      }
+
+      auto horz_clip_adj = x + 8192.0f;
+      if (horz_clip_adj <= 0.0f) {
+         horz_clip_adj = 8192.0f - (width + x);
+      }
+      pa_cl_gb_horz_clip_adj = pa_cl_gb_horz_clip_adj
+         .DATA_REGISTER((horz_clip_adj + horz_clip_adj + width) / width);
+
+      auto vert_clip_adj = y + 8192.0f;
+      if (vert_clip_adj <= 0.0f) {
+         vert_clip_adj = 8192.0f - (height + y);
+      }
+      pa_cl_gb_vert_clip_adj = pa_cl_gb_vert_clip_adj
+         .DATA_REGISTER((vert_clip_adj + vert_clip_adj + height) / height);
+   }
+
+   pa_cl_gb_horz_disc_adj = pa_cl_gb_horz_disc_adj
       .DATA_REGISTER(1.0f);
    pa_cl_gb_vert_disc_adj = pa_cl_gb_vert_disc_adj
-      .DATA_REGISTER(1.0f);
-   pa_cl_gb_horz_clip_adj = pa_cl_gb_horz_clip_adj
-      .DATA_REGISTER(1.0f);
-   pa_cl_gb_horz_disc_adj = pa_cl_gb_horz_disc_adj
       .DATA_REGISTER(1.0f);
 
    pa_sc_vport_zmin = pa_sc_vport_zmin
