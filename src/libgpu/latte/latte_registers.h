@@ -47,6 +47,7 @@ enum Value : uint32_t
    VGT_GS_VERTEX_REUSE              = 0x088D4,
    VGT_GS_PER_VS                    = 0x088E8,
    VGT_PRIMITIVE_TYPE               = 0x08958,
+   VGT_INDEX_TYPE                   = 0x0895C,
    VGT_NUM_INDICES                  = 0x08970,
    SQ_CONFIG                        = 0x08C00,
    SQ_GPR_RESOURCE_MGMT_1           = 0x08C04,

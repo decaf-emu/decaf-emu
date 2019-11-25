@@ -268,11 +268,12 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
 {
    // First lets set up our draw description for everyone
    auto pa_su_point_size = getRegister<latte::PA_SU_POINT_SIZE>(latte::Register::PA_SU_POINT_SIZE);
-   auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
+   auto vgt_index_type = getRegister<latte::VGT_NODMA_INDEX_TYPE>(latte::Register::VGT_INDEX_TYPE);
    auto vgt_primitive_type = getRegister<latte::VGT_PRIMITIVE_TYPE>(latte::Register::VGT_PRIMITIVE_TYPE);
-   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
    auto sq_vtx_base_vtx_loc = getRegister<latte::SQ_VTX_BASE_VTX_LOC>(latte::Register::SQ_VTX_BASE_VTX_LOC);
    auto sq_vtx_start_inst_loc = getRegister<latte::SQ_VTX_START_INST_LOC>(latte::Register::SQ_VTX_START_INST_LOC);
+   auto vgt_dma_num_instances = getRegister<latte::VGT_DMA_NUM_INSTANCES>(latte::Register::VGT_DMA_NUM_INSTANCES);
+   auto vgt_dma_index_type = getRegister<latte::VGT_DMA_INDEX_TYPE>(latte::Register::VGT_DMA_INDEX_TYPE);
    auto vgt_strmout_en = getRegister<latte::VGT_STRMOUT_EN>(latte::Register::VGT_STRMOUT_EN);
 
    bool useStreamOut = vgt_strmout_en.STREAMOUT();
@@ -285,16 +286,23 @@ Driver::drawGenericIndexed(latte::VGT_DRAW_INITIATOR drawInit, uint32_t numIndic
 
    DrawDesc& drawDesc = mDrawCache;
    drawDesc.indices = indices;
-   drawDesc.indexType = vgt_dma_index_type.INDEX_TYPE();
-   drawDesc.indexSwapMode = vgt_dma_index_type.SWAP_MODE();
+   drawDesc.indexType = vgt_index_type.INDEX_TYPE();
+   drawDesc.indexSwapMode = latte::VGT_DMA_SWAP::NONE;
    drawDesc.primitiveType = vgt_primitive_type.PRIM_TYPE();
    drawDesc.numIndices = numIndices;
    drawDesc.baseVertex = sq_vtx_base_vtx_loc.OFFSET();
-   drawDesc.numInstances = vgt_dma_num_instances.NUM_INSTANCES();
+   drawDesc.numInstances = 1;
    drawDesc.baseInstance = sq_vtx_start_inst_loc.OFFSET();
    drawDesc.streamOutEnabled = useStreamOut;
    drawDesc.streamOutContext = mStreamOutContext;
    drawDesc.pointSize = pa_su_point_size.WIDTH();
+
+   if (drawInit.SOURCE_SELECT() == latte::VGT_DI_SRC_SEL::DMA) {
+      drawDesc.indexType = vgt_dma_index_type.INDEX_TYPE();
+      drawDesc.indexSwapMode = vgt_dma_index_type.SWAP_MODE();
+      drawDesc.numInstances = vgt_dma_num_instances.NUM_INSTANCES();
+   }
+
    mCurrentDraw = &drawDesc;
 
    // Set up all the required state, ordering here is very important

@@ -249,6 +249,7 @@ void Pm4Processor::nopPacket(const Nop &data)
 void
 Pm4Processor::indexType(const IndexType &data)
 {
+   mRegisters[latte::Register::VGT_INDEX_TYPE / 4] = data.type.value;
    mRegisters[latte::Register::VGT_DMA_INDEX_TYPE / 4] = data.type.value;
 }
 
