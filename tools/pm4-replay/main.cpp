@@ -138,6 +138,11 @@ start(excmd::parser &parser,
    decaf::setConfig(decafSettings);
    decaf::initialiseLogging("pm4-replay.txt");
 
+   auto gpuSettings = gpu::Settings{ };
+   gpuSettings.debug.dump_shaders = true;
+   gpuSettings.debug.debug_enabled = true;
+   gpu::setConfig(gpuSettings);
+
    gCliLog = decaf::makeLogger("decaf-pm4-replay");
    gCliLog->set_pattern("[%l] %v");
    gCliLog->info("Trace path {}", traceFile);
