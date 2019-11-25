@@ -638,6 +638,7 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    auto oneConst = spvGen.makeIntConstant(1);
    auto twoConst = spvGen.makeIntConstant(2);
    auto threeConst = spvGen.makeIntConstant(3);
+   auto twoFConst = spvGen.vectorizeConstant(spvGen.makeFloatConstant(2.0f), 4);
 
    auto glInType = spvGen.makeStructType({ spvGen.float4Type() }, "gl_in");
    spvGen.addDecoration(glInType, spv::DecorationBlock);
@@ -654,8 +655,19 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    auto perVertexVar = spvGen.createVariable(spv::StorageClassOutput, perVertexType, "gl_PerVertex");
    entry->addIdOperand(perVertexVar);
 
-   std::vector<spv::Id> inputParams;
-   std::vector<spv::Id> outputParams;
+   std::array<spv::Id, 3> posInVals;
+   std::vector<std::array<spv::Id, 3>> paramInVals;
+   spv::Id posOutPtr;
+   std::vector<spv::Id> paramOutPtrs;
+
+   auto posInPtr0 = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { zeroConst, zeroConst });
+   auto posInPtr1 = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { oneConst, zeroConst });
+   auto posInPtr2 = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { twoConst, zeroConst });
+   posInVals[0] = spvGen.createLoad(posInPtr0);
+   posInVals[1] = spvGen.createLoad(posInPtr1);
+   posInVals[2] = spvGen.createLoad(posInPtr2);
+
+   posOutPtr = spvGen.createAccessChain(spv::StorageClassOutput, perVertexVar, { zeroConst });
 
    for (auto i = 0u; i < shaderDesc.numVsExports; ++i) {
       auto paramType = spvGen.float4Type();
@@ -663,46 +675,59 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
       auto paramInVar = spvGen.createVariable(spv::StorageClassInput, paramInVarType, fmt::format("PARAM_{}_IN", i).c_str());
       spvGen.addDecoration(paramInVar, spv::DecorationLocation, i);
       entry->addIdOperand(paramInVar);
-      inputParams.push_back(paramInVar);
+
+      std::array<spv::Id, 3> paramInVal;
+      auto paramInPtr0 = spvGen.createAccessChain(spv::StorageClassInput, paramInVar, { zeroConst });
+      auto paramInPtr1 = spvGen.createAccessChain(spv::StorageClassInput, paramInVar, { oneConst });
+      auto paramInPtr2 = spvGen.createAccessChain(spv::StorageClassInput, paramInVar, { twoConst });
+      paramInVal[0] = spvGen.createLoad(paramInPtr0);
+      paramInVal[1] = spvGen.createLoad(paramInPtr1);
+      paramInVal[2] = spvGen.createLoad(paramInPtr2);
+      paramInVals.emplace_back(paramInVal);
 
       auto paramOutVar = spvGen.createVariable(spv::StorageClassOutput, paramType, fmt::format("PARAM_{}_OUT", i).c_str());
       spvGen.addDecoration(paramOutVar, spv::DecorationLocation, i);
       entry->addIdOperand(paramOutVar);
-      outputParams.push_back(paramOutVar);
+      paramOutPtrs.push_back(paramOutVar);
    }
 
-   std::array<spv::Id, 3> posInPtrs;
-   std::array<spv::Id, 4> posInVals;
+   // Reflects v across tangent created by t1/t2
+   auto reflectVec4 = [&](spv::Id v, spv::Id t1, spv::Id t2)
+   {
+      auto midPointAdd = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), t1, t2);
+      auto midPoint = spvGen.createBinOp(spv::OpFDiv, spvGen.float4Type(), midPointAdd, twoFConst);
+      auto cornerToMidPoint = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), midPoint, v);
+      return spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), midPoint, cornerToMidPoint);
+   };
 
-   posInPtrs[0] = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { zeroConst, zeroConst });
-   posInPtrs[1] = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { oneConst, zeroConst });
-   posInPtrs[2] = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { twoConst, zeroConst });
-
-   posInVals[0] = spvGen.createLoad(posInPtrs[0]);
-   posInVals[1] = spvGen.createLoad(posInPtrs[1]);
-   posInVals[2] = spvGen.createLoad(posInPtrs[2]);
-
+   // Emits a vertex that was sent as input
    auto emitVertex = [&](int vertexId) {
-      auto vtxIdConst = spvGen.makeIntConstant(vertexId);
-      auto posOutPtr = spvGen.createAccessChain(spv::StorageClassOutput, perVertexVar, { zeroConst });
       spvGen.createStore(posInVals[vertexId], posOutPtr);
 
-      for (auto i = 0u; i < shaderDesc.numVsExports; ++i) {
-         // TODO: This is not correct for vertexId == 3... need to figure out what is...?
-         auto paramInPtr = spvGen.createAccessChain(spv::StorageClassInput, inputParams[i], { vertexId == 3 ? oneConst : vtxIdConst });
-         auto paramOutPtr = outputParams[i];
-         auto paramInVal = spvGen.createLoad(paramInPtr);
-         spvGen.createStore(paramInVal, paramOutPtr);
+      for (auto paramIdx = 0u; paramIdx < shaderDesc.numVsExports; ++paramIdx) {
+         spvGen.createStore(paramInVals[paramIdx][vertexId], paramOutPtrs[paramIdx]);
       }
 
       spvGen.createNoResultOp(spv::OpEmitVertex);
    };
 
-   emitVertex(0);
-   emitVertex(1);
-   emitVertex(2);
+   // Emits a vertex generated by flipping v accross the tangent created by t1/t2
+   auto emitGenVertex = [&](int vId, int t1Id, int t2Id)
+   {
+      auto posVal = reflectVec4(posInVals[vId],
+                                posInVals[t1Id],
+                                posInVals[t2Id]);
+      spvGen.createStore(posVal, posOutPtr);
 
-   spvGen.createNoResultOp(spv::OpEndPrimitive);
+      for (auto paramIdx = 0u; paramIdx < shaderDesc.numVsExports; ++paramIdx) {
+         auto paramVal = reflectVec4(paramInVals[paramIdx][vId],
+                                     paramInVals[paramIdx][t1Id],
+                                     paramInVals[paramIdx][t2Id]);
+         spvGen.createStore(paramVal, paramOutPtrs[paramIdx]);
+      }
+
+      spvGen.createNoResultOp(spv::OpEmitVertex);
+   };
 
    /*
    len0 = | in[0] - in[1] |
@@ -718,6 +743,14 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    }
    */
 
+   // Generate the simplest initial triangle
+   emitVertex(0);
+   emitVertex(1);
+   emitVertex(2);
+
+   spvGen.createNoResultOp(spv::OpEndPrimitive);
+
+   // Identify the hypotenuse and generate the opposing triangle
    auto posDiff0to1 = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), posInVals[0], posInVals[1]);
    auto posDiff0to2 = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), posInVals[0], posInVals[2]);
    auto posDiff1to2 = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), posInVals[1], posInVals[2]);
@@ -730,18 +763,10 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    auto len0gt2 = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen0to1, posLen1to2);
    auto len0to1Longest = spvGen.createBinOp(spv::OpLogicalAnd, spvGen.boolType(), len0gt1, len0gt2);
 
-   auto vecConstant2 = spvGen.vectorizeConstant(spvGen.makeFloatConstant(2.0f), 4);
-
    auto block = spv::Builder::If { len0to1Longest, spv::SelectionControlMaskNone, spvGen };
    {
-      // Reflect 2 across 0->1
-      auto tmp = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), posInVals[0], posInVals[1]);
-      auto midpoint = spvGen.createBinOp(spv::OpFDiv, spvGen.float4Type(), tmp, vecConstant2);
-      auto cornerToMidpoint = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), midpoint, posInVals[2]);
-      posInVals[3] = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), midpoint, cornerToMidpoint);
-
       emitVertex(0);
-      emitVertex(3);
+      emitGenVertex(2, 0, 1);
       emitVertex(1);
    }
    block.makeBeginElse();
@@ -749,26 +774,14 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
       auto len0to2Longest = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen0to2, posLen1to2);
       auto block = spv::Builder::If { len0to2Longest, spv::SelectionControlMaskNone, spvGen };
       {
-         // Reflect 1 across 0->2
-         auto tmp = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), posInVals[0], posInVals[2]);
-         auto midpoint = spvGen.createBinOp(spv::OpFDiv, spvGen.float4Type(), tmp, vecConstant2);
-         auto cornerToMidpoint = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), midpoint, posInVals[1]);
-         posInVals[3] = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), midpoint, cornerToMidpoint);
-
          emitVertex(0);
-         emitVertex(3);
+         emitGenVertex(1, 0, 2);
          emitVertex(2);
       }
       block.makeBeginElse();
       {
-         // Reflect 0 across 1->2
-         auto tmp = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), posInVals[1], posInVals[2]);
-         auto midpoint = spvGen.createBinOp(spv::OpFDiv, spvGen.float4Type(), tmp, vecConstant2);
-         auto cornerToMidpoint = spvGen.createBinOp(spv::OpFSub, spvGen.float4Type(), midpoint, posInVals[0]);
-         posInVals[3] = spvGen.createBinOp(spv::OpFAdd, spvGen.float4Type(), midpoint, cornerToMidpoint);
-
          emitVertex(1);
-         emitVertex(3);
+         emitGenVertex(0, 1, 2);
          emitVertex(2);
       }
       block.makeEndIf();
