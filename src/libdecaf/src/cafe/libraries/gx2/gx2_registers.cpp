@@ -1170,27 +1170,14 @@ GX2GetViewportReg(virt_ptr<GX2ViewportReg> reg,
    auto pa_cl_vport_zscale = reg->pa_cl_vport_zscale.value();
    auto pa_cl_vport_zoffset = reg->pa_cl_vport_zoffset.value();
 
-   auto pa_cl_gb_vert_clip_adj = reg->pa_cl_gb_vert_clip_adj.value();
-   auto pa_cl_gb_vert_disc_adj = reg->pa_cl_gb_vert_disc_adj.value();
-   auto pa_cl_gb_horz_clip_adj = reg->pa_cl_gb_horz_clip_adj.value();
-   auto pa_cl_gb_horz_disc_adj = reg->pa_cl_gb_horz_disc_adj.value();
-
-   auto pa_sc_vport_zmin = reg->pa_sc_vport_zmin.value();
-   auto pa_sc_vport_zmax = reg->pa_sc_vport_zmax.value();
-
    *x = pa_cl_vport_xoffset.VPORT_XOFFSET() - pa_cl_vport_xscale.VPORT_XSCALE();
-   *y = pa_cl_vport_yoffset.VPORT_YOFFSET() - pa_cl_vport_yscale.VPORT_YSCALE();
+   *y = pa_cl_vport_yoffset.VPORT_YOFFSET() + pa_cl_vport_yscale.VPORT_YSCALE();
 
    *width = 2.0f * pa_cl_vport_xscale.VPORT_XSCALE();
-   *height = 2.0f * pa_cl_vport_yscale.VPORT_YSCALE();
+   *height = -2.0f * pa_cl_vport_yscale.VPORT_YSCALE();
 
-   if (pa_cl_vport_zscale.VPORT_ZSCALE() > 0.0f) {
-      *nearZ = pa_sc_vport_zmin.VPORT_ZMIN();
-      *farZ = pa_sc_vport_zmax.VPORT_ZMAX();
-   } else {
-      *farZ = pa_sc_vport_zmin.VPORT_ZMIN();
-      *nearZ = pa_sc_vport_zmax.VPORT_ZMAX();
-   }
+   *farZ = pa_cl_vport_zoffset.VPORT_ZOFFSET() + pa_cl_vport_zscale.VPORT_ZSCALE();
+   *nearZ = pa_cl_vport_zoffset.VPORT_ZOFFSET() - pa_cl_vport_zscale.VPORT_ZSCALE();
 }
 
 void
