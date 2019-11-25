@@ -6,5 +6,5 @@ class ReplayParser
 public:
    virtual ~ReplayParser() = default;
 
-   virtual bool readFrame() = 0;
+   virtual bool runUntilTimestamp(uint64_t timestamp) = 0;
 };

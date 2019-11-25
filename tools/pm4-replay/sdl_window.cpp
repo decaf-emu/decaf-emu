@@ -9,10 +9,15 @@
 #include <fstream>
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <future>
 #include <libgpu/gpu_config.h>
 #include <SDL_syswm.h>
 
 using namespace latte::pm4;
+
+RingBuffer *sRingBuffer = nullptr; // eww is global because of onGpuInterrupt
+
+void initialiseRegisters(RingBuffer *ringBuffer);
 
 SDLWindow::~SDLWindow()
 {
@@ -83,7 +88,12 @@ SDLWindow::initGraphics()
    return true;
 }
 
-void initialiseRegisters(RingBuffer* ringBuffer);
+static void
+onGpuInterrupt()
+{
+   auto entries = gpu::ih::read();
+   sRingBuffer->onGpuInterrupt();
+}
 
 bool
 SDLWindow::run(const std::string &tracePath)
@@ -150,16 +160,28 @@ SDLWindow::run(const std::string &tracePath)
                         phys_cast<void *>(phys_addr { 0x34000000 + 0x430 }),
                         0x1C000000 - 0x430);
    auto ringBuffer = std::make_unique<RingBuffer>(replayHeap);
+   sRingBuffer = ringBuffer.get();
 
    initialiseRegisters(ringBuffer.get());
 
-   auto parser = ReplayParserPM4::Create(mGraphicsDriver, ringBuffer.get(), replayHeap, tracePath);
+   auto parser = ReplayParserPM4::Create(mGraphicsDriver, ringBuffer.get(),
+                                         replayHeap, tracePath);
    if (!parser) {
       return false;
    }
 
-   // Set swap interval to 1 otherwise frames will render super fast!
-   SDL_GL_SetSwapInterval(1);
+   gpu::ih::enable(latte::CP_INT_CNTL::get(0xFFFFFFFF));
+   gpu::ih::setInterruptCallback(onGpuInterrupt);
+
+   auto replayThread = std::thread {
+      [&]() {
+         parser->runUntilTimestamp(0xFFFFFFFFFFFFFFFFull);
+      } };
+
+   auto graphicsThread = std::thread {
+      [&]() {
+         mGraphicsDriver->run();
+      } };
 
    while (!shouldQuit) {
       auto event = SDL_Event { };
@@ -183,14 +205,14 @@ SDLWindow::run(const std::string &tracePath)
          }
       }
 
-      if (!parser->readFrame()) {
-         shouldQuit = true;
-         break;
-      }
-
-      mGraphicsDriver->runUntilFlip();
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
    }
 
+   // We have to wait until replay is finished...
+   replayThread.join();
+
+   mGraphicsDriver->stop();
+   graphicsThread.join();
    return true;
 }
 

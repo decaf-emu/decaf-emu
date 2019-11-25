@@ -43,15 +43,12 @@ ReplayParserPM4::Create(gpu::GraphicsDriver *driver,
 }
 
 bool
-ReplayParserPM4::readFrame()
+ReplayParserPM4::runUntilTimestamp(uint64_t timestamp)
 {
    std::vector<char> buffer;
-   auto foundSwap = false;
+   bool reachedTimestamp = false;
 
-   // Clear ringbuffer
-   mRingBuffer->clear();
-
-   while (!foundSwap) {
+   while (true) {
       decaf::pm4::CapturePacket packet;
       mFile.read(reinterpret_cast<char *>(&packet), sizeof(decaf::pm4::CapturePacket));
       if (!mFile) {
@@ -68,7 +65,7 @@ ReplayParserPM4::readFrame()
             return false;
          }
 
-         foundSwap |= handleCommandBuffer(buffer.data(), packet.size);
+         handleCommandBuffer(buffer.data(), packet.size);
          break;
       }
       case decaf::pm4::CapturePacket::RegisterSnapshot:
@@ -83,7 +80,7 @@ ReplayParserPM4::readFrame()
          }
 
          handleRegisterSnapshot(mRegisterStorage, numRegisters);
-         mRingBuffer->flushCommandBuffer();
+         mRingBuffer->waitTimestamp(mRingBuffer->flushCommandBuffer());
          break;
       }
       case decaf::pm4::CapturePacket::SetBuffer:
@@ -92,7 +89,7 @@ ReplayParserPM4::readFrame()
          mFile.read(reinterpret_cast<char *>(&setBuffer), sizeof(decaf::pm4::CaptureSetBuffer));
 
          handleSetBuffer(setBuffer);
-         mRingBuffer->flushCommandBuffer();
+         mRingBuffer->waitTimestamp(mRingBuffer->flushCommandBuffer());
          break;
       }
       case decaf::pm4::CapturePacket::MemoryLoad:
@@ -117,11 +114,16 @@ ReplayParserPM4::readFrame()
       default:
          mFile.seekg(packet.size, std::ifstream::cur);
       }
+
+      if (packet.timestamp >= timestamp) {
+         reachedTimestamp = true;
+         break;
+      }
    }
 
    // Flush ringbuffer to gpu
-   mRingBuffer->flushCommandBuffer();
-   return foundSwap;
+   mRingBuffer->waitTimestamp(mRingBuffer->flushCommandBuffer());
+   return reachedTimestamp;
 }
 
 bool

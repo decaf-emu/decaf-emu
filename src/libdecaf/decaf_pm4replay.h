@@ -6,6 +6,8 @@
 namespace decaf::pm4
 {
 
+#pragma push(pack, 1)
+
 static const std::array<char, 4> CaptureMagic =
 {
    'D', 'P', 'M', '4'
@@ -24,6 +26,7 @@ struct CapturePacket
 
    Type type;
    uint32_t size;
+   uint64_t timestamp;
 };
 
 struct CaptureMemoryLoad
@@ -67,5 +70,7 @@ struct CaptureSetBuffer
    uint32_t width;
    uint32_t height;
 };
+
+#pragma push(pop)
 
 } // namespace decaf::pm4

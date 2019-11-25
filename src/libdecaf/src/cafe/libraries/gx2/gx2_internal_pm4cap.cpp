@@ -236,6 +236,7 @@ private:
    void
    writePacket(CapturePacket &packet)
    {
+      packet.timestamp = mPacketTimestamp++;
       mOut.write(reinterpret_cast<const char *>(&packet), sizeof(CapturePacket));
    }
 
@@ -969,6 +970,7 @@ private:
    std::array<uint32_t, 0x10000> mRegisters;
    size_t mCapturedFrames = 0;
    size_t mCaptureNumFrames = 0;
+   uint64_t mPacketTimestamp = 0ull;
 };
 
 static Recorder

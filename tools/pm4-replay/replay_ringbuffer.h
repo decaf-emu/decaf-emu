@@ -1,9 +1,15 @@
 #pragma once
 #include <libdecaf/src/cafe/cafe_tinyheap.h>
 #include <libgpu/gpu_ringbuffer.h>
+#include <libgpu/gpu_ih.h>
+#include <libgpu/latte/latte_pm4_commands.h>
 #include <libgpu/latte/latte_pm4_sizer.h>
 #include <libgpu/latte/latte_pm4_writer.h>
+
+#include <atomic>
 #include <cstring>
+#include <mutex>
+#include <condition_variable>
 
 class RingBuffer
 {
@@ -11,37 +17,70 @@ class RingBuffer
 
 public:
    RingBuffer(phys_ptr<cafe::TinyHeapPhysical> replayHeap) :
-      mBufferHeap(replayHeap)
+      mReplayHeap(replayHeap)
    {
       auto allocPtr = phys_ptr<void> { nullptr };
 
-      cafe::TinyHeap_Alloc(replayHeap, BufferSize * 4, 0x100, &allocPtr);
-      mBuffer = phys_cast<uint32_t *>(allocPtr);
-      mSize = BufferSize;
+      cafe::TinyHeap_Alloc(replayHeap, 8, 0x100, &allocPtr);
+      mRetireTimestampMemory = phys_cast<uint64_t *>(allocPtr);
+      *mRetireTimestampMemory = 0ull;
+      mRetireTimestamp = 0ull;
+      mSubmitTimestamp = 0ull;
    }
 
    ~RingBuffer()
    {
-      cafe::TinyHeap_Free(mBufferHeap, mBuffer);
+      if (mRetireTimestampMemory) {
+         cafe::TinyHeap_Free(mReplayHeap, mRetireTimestampMemory);
+      }
    }
 
-   void
-   clear()
+   uint64_t
+   insertRetiredTimestamp()
    {
-      decaf_check(mWritePosition == mSubmitPosition);
-      mWritePosition = 0u;
-      mSubmitPosition = 0u;
+      auto submitTimestamp = ++mSubmitTimestamp;
+      auto eventType = latte::VGT_EVENT_TYPE::CACHE_FLUSH_TS;
+      writePM4(
+         latte::pm4::EventWriteEOP {
+            latte::VGT_EVENT_INITIATOR::get(0)
+               .EVENT_TYPE(eventType)
+               .EVENT_INDEX(latte::VGT_EVENT_INDEX::TS),
+            latte::pm4::EW_ADDR_LO::get(0)
+               .ADDR_LO(static_cast<uint32_t>(phys_cast<phys_addr>(mRetireTimestampMemory)) >> 2)
+               .ENDIAN_SWAP(latte::CB_ENDIAN::SWAP_8IN64),
+            latte::pm4::EWP_ADDR_HI::get(0)
+               .DATA_SEL(latte::pm4::EWP_DATA_64)
+               .INT_SEL(latte::pm4::EWP_INT_WRITE_CONFIRM),
+            static_cast<uint32_t>(submitTimestamp & 0xFFFFFFFF),
+            static_cast<uint32_t>(submitTimestamp >> 32)
+         });
+      return submitTimestamp;
    }
 
-   void
+   uint64_t
    flushCommandBuffer()
    {
-      gpu::ringbuffer::write({
-         mBuffer.getRawPointer() + mSubmitPosition,
-         mWritePosition - mSubmitPosition
-      });
+      auto timestamp = insertRetiredTimestamp();
+      gpu::ringbuffer::write(mBuffer);
+      mBuffer.clear();
+      return timestamp;
+   }
 
-      mSubmitPosition = mWritePosition;
+   void
+   waitTimestamp(uint64_t timestamp)
+   {
+      std::unique_lock<std::mutex> lock{ mRetireMutex };
+      mRetireCV.wait(lock, [this]() {
+         return mRetireTimestamp >= mSubmitTimestamp.load();
+      });
+   }
+
+   void
+   onGpuInterrupt()
+   {
+      std::unique_lock<std::mutex> lock { mRetireMutex };
+      mRetireTimestamp = *mRetireTimestampMemory;
+      mRetireCV.notify_all();
    }
 
    template<typename Type>
@@ -55,29 +94,38 @@ public:
       ncValue.serialise(sizer);
       auto totalSize = sizer.getSize() + 1;
 
+      // Resize buffer
+      auto writePosition = static_cast<uint32_t>(mBuffer.size());
+      mBuffer.resize(mBuffer.size() + totalSize);
+
       // Serialize the packet to the active command buffer
-      decaf_check(mWritePosition + totalSize < mSize);
       auto writer = latte::pm4::PacketWriter {
-         mBuffer.getRawPointer(),
-         mWritePosition,
+         mBuffer.data(),
+         writePosition,
          Type::Opcode,
          totalSize
       };
       ncValue.serialise(writer);
+      decaf_check(writePosition == mBuffer.size());
    }
 
    void
-   writeBuffer(void *buffer, uint32_t numWords)
+   writeBuffer(const void *buffer, uint32_t numWords)
    {
-      decaf_check(mWritePosition + numWords < mSize);
-      std::memcpy(mBuffer.getRawPointer() + mWritePosition, buffer, numWords * 4);
-      mWritePosition += numWords;
+      auto offset = mBuffer.size();
+      mBuffer.resize(mBuffer.size() + numWords);
+      std::memcpy(mBuffer.data() + offset, buffer, numWords * 4);
    }
 
 private:
-   phys_ptr<cafe::TinyHeapPhysical> mBufferHeap = nullptr;
-   phys_ptr<uint32_t> mBuffer = nullptr;
-   uint32_t mSize = 0u;
-   uint32_t mSubmitPosition = 0u;
-   uint32_t mWritePosition = 0u;
+   std::vector<uint32_t> mBuffer;
+
+   phys_ptr<cafe::TinyHeapPhysical> mReplayHeap = nullptr;
+   phys_ptr<uint64_t> mRetireTimestampMemory = nullptr;
+
+   std::atomic<uint64_t> mSubmitTimestamp = 0ull;
+   std::atomic<uint64_t> mRetireTimestamp = 0ull;
+
+   std::mutex mRetireMutex;
+   std::condition_variable mRetireCV;
 };

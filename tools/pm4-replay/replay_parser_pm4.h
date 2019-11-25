@@ -24,7 +24,7 @@ class ReplayParserPM4 : public ReplayParser
 
 public:
    virtual ~ReplayParserPM4() = default;
-   bool readFrame() override;
+   bool runUntilTimestamp(uint64_t timestamp) override;
 
    static std::unique_ptr<ReplayParser>
    Create(gpu::GraphicsDriver *driver,
