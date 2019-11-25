@@ -314,6 +314,7 @@ createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
       VK_KHR_MAINTENANCE1_EXTENSION_NAME,
       VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
       VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+      VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME,
    };
 
    if (gpu::config()->debug.debug_enabled) {

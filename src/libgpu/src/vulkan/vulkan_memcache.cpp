@@ -85,7 +85,7 @@ Driver::_allocMemCache(phys_addr address, uint32_t numSections, uint32_t section
    bufferDesc.size = totalSize + 32;
    bufferDesc.usage =
       vk::BufferUsageFlagBits::eVertexBuffer |
-      vk::BufferUsageFlagBits::eUniformBuffer |
+      vk::BufferUsageFlagBits::eStorageBuffer |
       vk::BufferUsageFlagBits::eTransformFeedbackBufferEXT |
       vk::BufferUsageFlagBits::eStorageBuffer |
       vk::BufferUsageFlagBits::eTransferDst |

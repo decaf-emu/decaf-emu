@@ -1380,7 +1380,7 @@ public:
          addDecoration(regsType, spv::DecorationArrayStride, 16);
          auto structType = this->makeStructType({ regsType }, "CFILE_DATA");
          addMemberDecoration(structType, 0, spv::DecorationOffset, 0);
-         addDecoration(structType, spv::DecorationBlock);
+         addDecoration(structType, spv::DecorationBufferBlock);
          addMemberName(structType, 0, "values");
 
          auto bindingIdx = mBindingBase + latte::MaxTextures;
@@ -1388,6 +1388,7 @@ public:
          mRegistersBuffer = createVariable(spv::StorageClassUniform, structType, "CFILE");
          addDecoration(mRegistersBuffer, spv::DecorationDescriptorSet, 0);
          addDecoration(mRegistersBuffer, spv::DecorationBinding, bindingIdx);
+         addDecoration(mRegistersBuffer, spv::DecorationNonWritable);
       }
 
       return mRegistersBuffer;
@@ -1404,7 +1405,7 @@ public:
 
          auto structType = this->makeStructType({ valuesType }, fmt::format("CBUFFER_DATA_{}", cbufferIdx).c_str());
          addMemberDecoration(structType, 0, spv::DecorationOffset, 0);
-         addDecoration(structType, spv::DecorationBlock);
+         addDecoration(structType, spv::DecorationBufferBlock);
          addMemberName(structType, 0, "values");
 
          auto bindingIdx = mBindingBase + latte::MaxTextures + cbufferIdx;
@@ -1412,6 +1413,7 @@ public:
          cbuffer = createVariable(spv::StorageClassUniform, structType, fmt::format("CBUFFER_{}", cbufferIdx).c_str());
          addDecoration(cbuffer, spv::DecorationDescriptorSet, 0);
          addDecoration(cbuffer, spv::DecorationBinding, bindingIdx);
+         addDecoration(cbuffer, spv::DecorationNonWritable);
 
          mUniformBuffers[cbufferIdx] = cbuffer;
       }

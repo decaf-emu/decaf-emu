@@ -216,7 +216,7 @@ Driver::getPipelineLayout(const HashedDesc<PipelineLayoutDesc>& desc, bool forPu
       if (currentDesc->vsBufferUsed[i]) {
          vk::DescriptorSetLayoutBinding cbufferBindingDesc;
          cbufferBindingDesc.binding = (0 * 32) + 16 + i;
-         cbufferBindingDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+         cbufferBindingDesc.descriptorType = vk::DescriptorType::eStorageBuffer;
          cbufferBindingDesc.descriptorCount = 1;
          cbufferBindingDesc.stageFlags = vk::ShaderStageFlagBits::eVertex;
          cbufferBindingDesc.pImmutableSamplers = nullptr;
@@ -226,7 +226,7 @@ Driver::getPipelineLayout(const HashedDesc<PipelineLayoutDesc>& desc, bool forPu
       if (currentDesc->gsBufferUsed[i]) {
          vk::DescriptorSetLayoutBinding cbufferBindingDesc;
          cbufferBindingDesc.binding = (1 * 32) + 16 + i;
-         cbufferBindingDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+         cbufferBindingDesc.descriptorType = vk::DescriptorType::eStorageBuffer;
          cbufferBindingDesc.descriptorCount = 1;
          cbufferBindingDesc.stageFlags = vk::ShaderStageFlagBits::eGeometry;
          cbufferBindingDesc.pImmutableSamplers = nullptr;
@@ -236,7 +236,7 @@ Driver::getPipelineLayout(const HashedDesc<PipelineLayoutDesc>& desc, bool forPu
       if (currentDesc->psBufferUsed[i]) {
          vk::DescriptorSetLayoutBinding cbufferBindingDesc;
          cbufferBindingDesc.binding = (2 * 32) + 16 + i;
-         cbufferBindingDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+         cbufferBindingDesc.descriptorType = vk::DescriptorType::eStorageBuffer;
          cbufferBindingDesc.descriptorCount = 1;
          cbufferBindingDesc.stageFlags = vk::ShaderStageFlagBits::eFragment;
          cbufferBindingDesc.pImmutableSamplers = nullptr;

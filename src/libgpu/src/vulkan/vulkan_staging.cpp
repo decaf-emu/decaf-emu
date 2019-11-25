@@ -26,7 +26,7 @@ Driver::_allocStagingBuffer(uint32_t size, StagingBufferType type)
          vk::BufferUsageFlagBits::eTransferSrc |
          vk::BufferUsageFlagBits::eTransferDst |
          vk::BufferUsageFlagBits::eIndexBuffer |
-         vk::BufferUsageFlagBits::eUniformBuffer;
+         vk::BufferUsageFlagBits::eStorageBuffer;
    } else if (type == StagingBufferType::GpuToCpu) {
       allocUsage = VMA_MEMORY_USAGE_GPU_TO_CPU;
       bufferUsage =

@@ -183,7 +183,7 @@ Driver::bindDescriptors()
          writeDesc.dstBinding = bindingBase + i;
          writeDesc.dstArrayElement = 0;
          writeDesc.descriptorCount = 1;
-         writeDesc.descriptorType = vk::DescriptorType::eUniformBuffer;
+         writeDesc.descriptorType = vk::DescriptorType::eStorageBuffer;
          writeDesc.pImageInfo = nullptr;
          writeDesc.pBufferInfo = &bufferInfos[shaderStage][i];
          writeDesc.pTexelBufferView = nullptr;

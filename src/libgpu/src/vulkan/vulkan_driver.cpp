@@ -273,7 +273,7 @@ Driver::allocateDescriptorPool(uint32_t numDraws)
       std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
          vk::DescriptorPoolSize(vk::DescriptorType::eSampler, latte::MaxSamplers * 3 * numDraws),
          vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, latte::MaxTextures * 3 * numDraws),
-         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, latte::MaxAttribBuffers * 3 * numDraws),
+         vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, latte::MaxUniformBlocks * 3 * numDraws),
       };
 
       vk::DescriptorPoolCreateInfo descriptorPoolInfo;
