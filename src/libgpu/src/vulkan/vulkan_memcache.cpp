@@ -72,8 +72,17 @@ Driver::_allocMemCache(phys_addr address, uint32_t numSections, uint32_t section
       totalSize += sectionSize;
    }
 
+   // We add 32 bytes to all our buffers because in many cases, Vulkan will
+   // error if we attempt to read past the edges of our buffers (such as can
+   // happen with vertex buffers when the stride is 12 but the read is 16.
+   // This will allow us to correctly execute these cases like hardware does
+   // which sort of has free-range over memory.  Note that this won't copy
+   // hardware behaviour precisely, since hardware actually can access the
+   // real contents after the end of the buffer whereas we just shove garbage
+   // there.  Better than not executing the draw at all though!
+
    vk::BufferCreateInfo bufferDesc;
-   bufferDesc.size = totalSize;
+   bufferDesc.size = totalSize + 32;
    bufferDesc.usage =
       vk::BufferUsageFlagBits::eVertexBuffer |
       vk::BufferUsageFlagBits::eUniformBuffer |
