@@ -100,20 +100,20 @@ Driver::getPipelineDesc()
    auto pa_su_poly_offset_back_scale = getRegister<latte::PA_SU_POLY_OFFSET_FRONT_SCALE>(latte::Register::PA_SU_POLY_OFFSET_BACK_SCALE);
    auto pa_su_poly_offset_clamp = getRegister<latte::PA_SU_POLY_OFFSET_CLAMP>(latte::Register::PA_SU_POLY_OFFSET_CLAMP);
 
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_ENA_0());
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_ENA_1());
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_ENA_2());
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_ENA_3());
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_ENA_4());
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_ENA_5());
-   decaf_check_warn(!pa_cl_clip_cntl.PS_UCP_Y_SCALE_NEG());
-   decaf_check_warn(pa_cl_clip_cntl.PS_UCP_MODE() == latte::PA_PS_UCP_MODE::CULL_DISTANCE);
-   decaf_check_warn(!pa_cl_clip_cntl.UCP_CULL_ONLY_ENA());
-   decaf_check_warn(!pa_cl_clip_cntl.BOUNDARY_EDGE_FLAG_ENA());
-   decaf_check_warn(!pa_cl_clip_cntl.DIS_CLIP_ERR_DETECT());
-   decaf_check_warn(!pa_cl_clip_cntl.VTX_KILL_OR());
-   decaf_check_warn(!pa_cl_clip_cntl.DX_LINEAR_ATTR_CLIP_ENA());
-   decaf_check_warn(!pa_cl_clip_cntl.VTE_VPORT_PROVOKE_DISABLE());
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_ENA_0());
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_ENA_1());
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_ENA_2());
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_ENA_3());
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_ENA_4());
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_ENA_5());
+   decaf_check_warn_once(!pa_cl_clip_cntl.PS_UCP_Y_SCALE_NEG());
+   decaf_check_warn_once(pa_cl_clip_cntl.PS_UCP_MODE() == latte::PA_PS_UCP_MODE::CULL_DISTANCE);
+   decaf_check_warn_once(!pa_cl_clip_cntl.UCP_CULL_ONLY_ENA());
+   decaf_check_warn_once(!pa_cl_clip_cntl.BOUNDARY_EDGE_FLAG_ENA());
+   decaf_check_warn_once(!pa_cl_clip_cntl.DIS_CLIP_ERR_DETECT());
+   decaf_check_warn_once(!pa_cl_clip_cntl.VTX_KILL_OR());
+   decaf_check_warn_once(!pa_cl_clip_cntl.DX_LINEAR_ATTR_CLIP_ENA());
+   decaf_check_warn_once(!pa_cl_clip_cntl.VTE_VPORT_PROVOKE_DISABLE());
 
    // pa_cl_clip_cntl.CLIP_DISABLE() is really an optimization which
    // indicates that there will be no draws outside the boundary of
@@ -139,7 +139,7 @@ Driver::getPipelineDesc()
    // that this is the correct behaviour though, it would be better if
    // we supported splitting the polygons as needed.
 
-   // TODO: Use decaf_check_warn here instead...
+   // TODO: Use decaf_check_warn_once here instead...
 
    desc.polyPType = latte::PA_PTYPE::TRIANGLES;
 
@@ -153,7 +153,7 @@ Driver::getPipelineDesc()
       } else if (desc.cullFront) {
          desc.polyPType = pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE();
       } else {
-         decaf_check_warn(pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE() == pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE());
+         decaf_check_warn_once(pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE() == pa_su_sc_mode_cntl.POLYMODE_BACK_PTYPE());
          desc.polyPType = pa_su_sc_mode_cntl.POLYMODE_FRONT_PTYPE();
       }
    } else {
@@ -167,7 +167,7 @@ Driver::getPipelineDesc()
       } else if (desc.cullFront) {
          desc.polyBiasEnabled = pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE();
       } else {
-         decaf_check_warn(pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE() == pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE());
+         decaf_check_warn_once(pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE() == pa_su_sc_mode_cntl.POLY_OFFSET_BACK_ENABLE());
          desc.polyBiasEnabled = pa_su_sc_mode_cntl.POLY_OFFSET_FRONT_ENABLE();
       }
    } else {
@@ -184,8 +184,8 @@ Driver::getPipelineDesc()
          desc.polyBiasOffset = pa_su_poly_offset_back_offset.OFFSET();
          desc.polyBiasScale = pa_su_poly_offset_back_scale.SCALE();
       } else {
-         decaf_check_warn(pa_su_poly_offset_front_offset.value == pa_su_poly_offset_back_offset.value);
-         decaf_check_warn(pa_su_poly_offset_front_scale.value == pa_su_poly_offset_back_scale.value);
+         decaf_check_warn_once(pa_su_poly_offset_front_offset.value == pa_su_poly_offset_back_offset.value);
+         decaf_check_warn_once(pa_su_poly_offset_front_scale.value == pa_su_poly_offset_back_scale.value);
          desc.polyBiasOffset = pa_su_poly_offset_front_offset.OFFSET();
          desc.polyBiasScale = pa_su_poly_offset_front_scale.SCALE();
       }
@@ -196,7 +196,7 @@ Driver::getPipelineDesc()
    }
 
    // We only support zclip being on or off, not individually for near/far.
-   decaf_check_warn(pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE() == pa_cl_clip_cntl.ZCLIP_FAR_DISABLE());
+   decaf_check_warn_once(pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE() == pa_cl_clip_cntl.ZCLIP_FAR_DISABLE());
    desc.zclipDisabled = pa_cl_clip_cntl.ZCLIP_NEAR_DISABLE();
 
    // -- Depth/Stencil control stuff

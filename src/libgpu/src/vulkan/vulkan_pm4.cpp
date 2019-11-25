@@ -419,11 +419,11 @@ Driver::eventWrite(const latte::pm4::EventWrite &data)
       }
    } else if (data.eventInitiator.EVENT_TYPE() == latte::VGT_EVENT_TYPE::CACHE_FLUSH) {
       // This should flush all GPU-written data back to the CPU immediately.
-      decaf_check_warn(!"Use of VGT_EVENT_TYPE::CACHE_FLUSH");
+      decaf_check_warn_once(!"Use of VGT_EVENT_TYPE::CACHE_FLUSH");
    } else if (data.eventInitiator.EVENT_TYPE() == latte::VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_EVENT) {
       // This should flush all GPU-written data back to the CPU immediately
       // and then invalidate all GPU caches of textures so they are re-read.
-      decaf_check_warn(!"Use of VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_EVENT");
+      decaf_check_warn_once(!"Use of VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_EVENT");
    } else {
       gLog->warn("Unexpected eventWrite event type {}", latte::to_string(data.eventInitiator.EVENT_TYPE()));
    }
