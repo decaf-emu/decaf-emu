@@ -70,7 +70,7 @@ Driver::allocateStreamContext(uint32_t initialOffset)
    // Transition this buffer to being filled.
    _barrierStreamContextBuffer(mActiveCommandBuffer,
                                context->buffer,
-                               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+                               vk::PipelineStageFlagBits::eDrawIndirect,
                                vk::AccessFlagBits::eTransformFeedbackCounterReadEXT,
                                vk::PipelineStageFlagBits::eTransfer,
                                vk::AccessFlagBits::eTransferWrite);
@@ -86,7 +86,7 @@ Driver::allocateStreamContext(uint32_t initialOffset)
                                context->buffer,
                                vk::PipelineStageFlagBits::eTransfer,
                                vk::AccessFlagBits::eTransferWrite,
-                               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+                               vk::PipelineStageFlagBits::eDrawIndirect,
                                vk::AccessFlagBits::eTransformFeedbackCounterReadEXT);
 
    return context;

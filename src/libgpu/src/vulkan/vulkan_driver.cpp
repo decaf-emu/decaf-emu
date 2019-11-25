@@ -534,7 +534,7 @@ Driver::getResourceUsageMeta(ResourceUsage usage)
    case ResourceUsage::StreamOutCounterRead:
       return { false,
                vk::AccessFlagBits::eTransformFeedbackCounterReadEXT,
-               vk::PipelineStageFlagBits::eTransformFeedbackEXT,
+               vk::PipelineStageFlagBits::eDrawIndirect,
                vk::ImageLayout::eUndefined };
    case ResourceUsage::ComputeSsboRead:
       return { false,
