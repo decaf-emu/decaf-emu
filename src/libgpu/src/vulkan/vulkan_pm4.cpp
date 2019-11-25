@@ -424,6 +424,9 @@ Driver::eventWrite(const latte::pm4::EventWrite &data)
       // This should flush all GPU-written data back to the CPU immediately
       // and then invalidate all GPU caches of textures so they are re-read.
       decaf_check_warn_once(!"Use of VGT_EVENT_TYPE::CACHE_FLUSH_AND_INV_EVENT");
+   } else if (data.eventInitiator.EVENT_TYPE() == latte::VGT_EVENT_TYPE::VS_PARTIAL_FLUSH) {
+      // This should flush all data out of VS-specific pipelines, such as stream-out.
+      decaf_check_warn_once(!"Use of VGT_EVENT_TYPE::VS_PARTIAL_FLUSH");
    } else {
       gLog->warn("Unexpected eventWrite event type {}", latte::to_string(data.eventInitiator.EVENT_TYPE()));
    }
