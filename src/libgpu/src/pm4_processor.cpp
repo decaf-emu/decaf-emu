@@ -276,14 +276,8 @@ void Pm4Processor::copyDw(const CopyDw &data)
 void Pm4Processor::shadowWrite(phys_ptr<uint32_t> memory,
                                    const gsl::span<uint32_t> &registers)
 {
-   // We intentionally did not vectorize this loop as it would incur the cost
-   // of doubling the amount of memory accesses we are doing (once to swap
-   // and then again to memcpy into CPU memory).  Instead we simply byteswap
-   // as we are copying the list over...
-
-   for (auto i = 0u; i < registers.size(); ++i) {
-      memory[i] = registers[i];
-   }
+   // Shadow memory is not byte-swapped
+   memcpy(memory.getRawPointer(), registers.data(), registers.size_bytes());
 }
 
 void
@@ -431,15 +425,9 @@ void Pm4Processor::loadRegisters(latte::Register base,
       auto start = range.first;
       auto count = range.second;
 
-      // In order to reuse the setRegisters call, we do the byte swap first and then
-      // pass that through.  Once the OpenGL backend is gone and we no longer need
-      // applyRegister, we can turn this into a byte_swap loop into mRegisters and
-      // have a function on this class for checking for special register types. This
-      // will probably be quicker due to only moving the data once (in spite of the
-      // byte_swap cost).
-
-      auto values = byteSwapRegValues(src.getRawPointer() + start, count);
-      setRegisters(static_cast<latte::Register>(base + start * 4), gsl::make_span(values, count));
+      // We can directly call setRegisters since there is no byte-swapping for shadow.
+      setRegisters(static_cast<latte::Register>(base + start * 4),
+                   gsl::make_span(src.getRawPointer() + start, count));
    }
 }
 
