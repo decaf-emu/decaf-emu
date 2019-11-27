@@ -833,6 +833,11 @@ computeSurfaceInfo(const SurfaceDescription &surface,
    auto handle = getAddrLibHandle();
    decaf_check(handle);
    decaf_check(AddrComputeSurfaceInfo(handle, &input, &output) == ADDR_OK);
+
+   if (surface.dim == SurfaceDim::Texture3D) {
+      output.sliceSize /= output.depth;
+   }
+
    return SurfaceInfo(output);
 }
 
