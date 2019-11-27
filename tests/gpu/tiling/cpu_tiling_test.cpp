@@ -99,7 +99,11 @@ TEST_CASE("cpuTiling")
                      surface.numLevels = 9u;
                      surface.bankSwizzle = 0u;
                      surface.pipeSwizzle = 0u;
-                     surface.use = format.depth ? gpu7::tiling::SurfaceUse::DepthBuffer : gpu7::tiling::SurfaceUse::None;
+                     surface.dim = gpu7::tiling::SurfaceDim::Texture2DArray;
+                     surface.use = format.depth ?
+                        gpu7::tiling::SurfaceUse::DepthBuffer :
+                        gpu7::tiling::SurfaceUse::None;
+
                      compareTilingToAddrLib(surface,
                                             sRandomData,
                                             layout.testFirstSlice,
@@ -147,7 +151,10 @@ TEST_CASE("alibTilingPerf", "[!benchmark]")
          surface.numLevels = 9u;
          surface.bankSwizzle = 0u;
          surface.pipeSwizzle = 0u;
-         surface.use = format.depth ? gpu7::tiling::SurfaceUse::DepthBuffer : gpu7::tiling::SurfaceUse::None;
+         surface.dim = gpu7::tiling::SurfaceDim::Texture2DArray;
+         surface.use = format.depth ?
+            gpu7::tiling::SurfaceUse::DepthBuffer :
+            gpu7::tiling::SurfaceUse::None;
 
          auto info = addrLib.computeSurfaceInfo(surface, 0, 0);
 
@@ -201,7 +208,10 @@ TEST_CASE("cpuTilingPerf", "[!benchmark]")
          surface.numLevels = 9u;
          surface.bankSwizzle = 0u;
          surface.pipeSwizzle = 0u;
-         surface.use = format.depth ? gpu7::tiling::SurfaceUse::DepthBuffer : gpu7::tiling::SurfaceUse::None;
+         surface.dim = gpu7::tiling::SurfaceDim::Texture2DArray;
+         surface.use = format.depth ?
+            gpu7::tiling::SurfaceUse::DepthBuffer :
+            gpu7::tiling::SurfaceUse::None;
 
          auto info = addrLib.computeSurfaceInfo(surface, 0, 0);
 
