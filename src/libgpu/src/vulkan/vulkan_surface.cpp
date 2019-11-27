@@ -111,13 +111,15 @@ _getTilingSurfaceDesc(const SurfaceDesc &info)
    tilingDesc.width = info.pitch;
    tilingDesc.height = info.height;
    tilingDesc.numSlices = info.depth;
-   tilingDesc.flags.depth = (info.tileType == latte::SQ_TILE_TYPE::DEPTH);
-   tilingDesc.flags.volume = (info.dim == latte::SQ_TEX_DIM::DIM_3D);
    tilingDesc.numFrags = 0;
    tilingDesc.numLevels = 1;
    tilingDesc.pipeSwizzle = (swizzle >> 8) & 1;
    tilingDesc.bankSwizzle = (swizzle >> 9) & 3;
+   tilingDesc.dim = static_cast<gpu7::tiling::SurfaceDim>(info.dim);
 
+   if (info.tileType == latte::SQ_TILE_TYPE::DEPTH) {
+      tilingDesc.use |= gpu7::tiling::SurfaceUse::DepthBuffer;
+   }
    /*
    if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       tilingDesc.width = (tilingDesc.width + 3) / 4;

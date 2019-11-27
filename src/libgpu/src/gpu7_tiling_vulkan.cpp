@@ -134,7 +134,7 @@ calculateMicroRetileInfo(const SurfaceDescription &desc,
    retileInfo.numSlices = numSlices;
    retileInfo.isTiled = true;
    retileInfo.isMacroTiled = false;
-   retileInfo.isDepth = !!desc.flags.depth;
+   retileInfo.isDepth = !!(desc.use & gpu7::tiling::SurfaceUse::DepthBuffer);
    retileInfo.bitsPerElement = info.bpp;
    retileInfo.macroTileWidth = 1;
    retileInfo.macroTileHeight = 1;
@@ -199,7 +199,7 @@ calculateMacroRetileInfo(const SurfaceDescription &desc,
    retileInfo.numSlices = numSlices;
    retileInfo.isTiled = true;
    retileInfo.isMacroTiled = true;
-   retileInfo.isDepth = !!desc.flags.depth;
+   retileInfo.isDepth = !!(desc.use & gpu7::tiling::SurfaceUse::DepthBuffer);
    retileInfo.bitsPerElement = info.bpp;
    retileInfo.macroTileWidth = macroTileWidth;
    retileInfo.macroTileHeight = macroTileHeight;

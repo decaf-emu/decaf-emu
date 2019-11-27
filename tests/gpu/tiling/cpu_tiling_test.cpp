@@ -99,8 +99,7 @@ TEST_CASE("cpuTiling")
                      surface.numLevels = 9u;
                      surface.bankSwizzle = 0u;
                      surface.pipeSwizzle = 0u;
-                     surface.flags.inputBaseMap = 1;
-                     surface.flags.depth = format.depth ? 1 : 0;
+                     surface.use = format.depth ? gpu7::tiling::SurfaceUse::DepthBuffer : gpu7::tiling::SurfaceUse::None;
                      compareTilingToAddrLib(surface,
                                             sRandomData,
                                             layout.testFirstSlice,
@@ -148,8 +147,7 @@ TEST_CASE("alibTilingPerf", "[!benchmark]")
          surface.numLevels = 9u;
          surface.bankSwizzle = 0u;
          surface.pipeSwizzle = 0u;
-         surface.flags.inputBaseMap = 1;
-         surface.flags.depth = format.depth ? 1 : 0;
+         surface.use = format.depth ? gpu7::tiling::SurfaceUse::DepthBuffer : gpu7::tiling::SurfaceUse::None;
 
          auto info = addrLib.computeSurfaceInfo(surface, 0, 0);
 
@@ -203,8 +201,7 @@ TEST_CASE("cpuTilingPerf", "[!benchmark]")
          surface.numLevels = 9u;
          surface.bankSwizzle = 0u;
          surface.pipeSwizzle = 0u;
-         surface.flags.inputBaseMap = 1;
-         surface.flags.depth = format.depth ? 1 : 0;
+         surface.use = format.depth ? gpu7::tiling::SurfaceUse::DepthBuffer : gpu7::tiling::SurfaceUse::None;
 
          auto info = addrLib.computeSurfaceInfo(surface, 0, 0);
 

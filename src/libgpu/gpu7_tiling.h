@@ -96,20 +96,44 @@ getMicroTileThickness(AddrTileMode tileMode)
    return MicroTileThickness[static_cast<size_t>(tileMode)];
 }
 
+#include <common/enum_start.inl>
+
+ENUM_BEG(SurfaceDim, uint32_t)
+   ENUM_VALUE(Texture1D,               0)
+   ENUM_VALUE(Texture2D,               1)
+   ENUM_VALUE(Texture3D,               2)
+   ENUM_VALUE(TextureCube,             3)
+   ENUM_VALUE(Texture1DArray,          4)
+   ENUM_VALUE(Texture2DArray,          5)
+   ENUM_VALUE(Texture2DMSAA,           6)
+   ENUM_VALUE(Texture2DMSAAArray,      7)
+ENUM_END(SurfaceDim)
+
+FLAGS_BEG(SurfaceUse, uint32_t)
+   FLAGS_VALUE(None,             0)
+   FLAGS_VALUE(Texture,          1 << 0)
+   FLAGS_VALUE(ColorBuffer,      1 << 1)
+   FLAGS_VALUE(DepthBuffer,      1 << 2)
+   FLAGS_VALUE(ScanBuffer,       1 << 3)
+FLAGS_END(SurfaceUse)
+
+#include <common/enum_end.inl>
+
 struct SurfaceDescription
 {
-   AddrTileMode tileMode;
-   AddrFormat format;
-   uint32_t bpp;
-   uint32_t numSamples;
-   uint32_t width;
-   uint32_t height;
-   uint32_t numSlices;
-   ADDR_SURFACE_FLAGS flags;
-   uint32_t numFrags;
-   uint32_t numLevels;
-   uint32_t bankSwizzle;
-   uint32_t pipeSwizzle;
+   AddrTileMode tileMode = ADDR_TM_LINEAR_GENERAL;
+   AddrFormat format = ADDR_FMT_INVALID;
+   uint32_t bpp = 0u;
+   uint32_t numSamples = 0u;
+   uint32_t width = 0u;
+   uint32_t height = 0u;
+   uint32_t numSlices = 0u;
+   uint32_t numFrags = 0u;
+   uint32_t numLevels = 0u;
+   uint32_t bankSwizzle = 0u;
+   uint32_t pipeSwizzle = 0u;
+   SurfaceUse use = SurfaceUse::None;
+   SurfaceDim dim = SurfaceDim::Texture1D;
 };
 
 typedef ADDR_COMPUTE_SURFACE_INFO_OUTPUT SurfaceInfo;

@@ -88,7 +88,7 @@ public:
    }
 
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT
-   computeSurfaceInfo(const gpu7::tiling::SurfaceDescription &desc,
+   computeSurfaceInfo(const gpu7::tiling::SurfaceDescription &surface,
                       uint32_t slice,
                       uint32_t mipLevel)
    {
@@ -97,18 +97,36 @@ public:
 
       auto input = ADDR_COMPUTE_SURFACE_INFO_INPUT { };
       input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
-      input.tileMode = desc.tileMode;
-      input.format = desc.format;
-      input.bpp = desc.bpp;
-      input.numSamples = desc.numSamples;
-      input.width = desc.width;
-      input.height = desc.height;
-      input.numSlices = desc.numSlices;
-      input.flags = desc.flags;
-      input.numFrags = desc.numFrags;
-      input.slice = slice;
+      input.tileMode = surface.tileMode;
+      input.format = surface.format;
+      input.bpp = surface.bpp;
+      input.numSamples = surface.numSamples;
+      input.numFrags = surface.numFrags;
       input.mipLevel = mipLevel;
-      input.flags.inputBaseMap = (mipLevel == 0) ? 1 : 0;
+      input.slice = slice;
+      input.numSlices = surface.numSlices;
+
+      input.width = std::max(surface.width >> mipLevel, 1u);
+      input.height = std::max(surface.height >> mipLevel, 1u);
+      input.flags.inputBaseMap = mipLevel == 0 ? 1 : 0;
+
+      if (surface.use & gpu7::tiling::SurfaceUse::ScanBuffer) {
+         input.flags.display = 1;
+      }
+
+      if (surface.use & gpu7::tiling::SurfaceUse::DepthBuffer) {
+         input.flags.depth = 1;
+      }
+
+      if (surface.dim == gpu7::tiling::SurfaceDim::Texture3D) {
+         input.flags.volume = 1;
+         input.numSlices = std::max(surface.numSlices >> mipLevel, 1u);
+      }
+
+      if (surface.dim == gpu7::tiling::SurfaceDim::TextureCube) {
+         input.flags.cube = 1;
+      }
+
       REQUIRE(AddrComputeSurfaceInfo(mHandle, &input, &output) == ADDR_OK);
       return output;
    }
@@ -183,7 +201,7 @@ private:
       input.numSlices = info.depth;
       input.numSamples = desc.numSamples;
       input.tileMode = info.tileMode;
-      input.isDepth = !!desc.flags.depth;
+      input.isDepth = !!(desc.use & gpu7::tiling::SurfaceUse::DepthBuffer);
       input.tileBase = 0;
       input.compBits = 0;
       input.numFrags = desc.numFrags;

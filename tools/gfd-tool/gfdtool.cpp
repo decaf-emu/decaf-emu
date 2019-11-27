@@ -935,15 +935,12 @@ convertTexture(const std::string &path)
       surface.width = tex.surface.width;
       surface.height = tex.surface.height;
       surface.numSlices = tex.surface.depth;
-      surface.flags.depth = !!(tex.surface.use & cafe::gx2::GX2SurfaceUse::DepthBuffer);
-      surface.flags.display = !!(tex.surface.use & cafe::gx2::GX2SurfaceUse::ScanBuffer);
-      surface.flags.volume = (tex.surface.dim == cafe::gx2::GX2SurfaceDim::Texture3D);
-      surface.flags.cube = (tex.surface.dim == cafe::gx2::GX2SurfaceDim::TextureCube);
-      surface.flags.inputBaseMap = 1u;
+      surface.use  = static_cast<gpu7::tiling::SurfaceUse>(tex.surface.use);
+      surface.dim = static_cast<gpu7::tiling::SurfaceDim>(tex.surface.dim);
       surface.numFrags = 0;
       surface.numLevels = tex.surface.mipLevels;
 
-      // Not sure if needed or not.
+      /* Not sure if needed or not.*/
       if (format >= latte::SQ_DATA_FORMAT::FMT_BC1 &&
           format <= latte::SQ_DATA_FORMAT::FMT_BC5) {
          surface.width = (surface.width + 3) / 4;

@@ -388,7 +388,7 @@ untileMicroSurface(const SurfaceDescription &desc,
    const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
    const auto sampleSliceOffset = sliceOffset + sampleOffset + thickSliceOffset;
 
-   if (desc.flags.depth) {
+   if (desc.use & SurfaceUse::DepthBuffer) {
       // TODO: Implement depth tiling for sample > 0
       decaf_check(sample == 0);
 
@@ -617,7 +617,7 @@ untileMacroSurface(const SurfaceDescription &desc,
    }
 
    // Depth tiling is different for samples, not yet implemented
-   decaf_check(!desc.flags.depth || sample == 0);
+   decaf_check(!(desc.use & SurfaceUse::DepthBuffer) || sample == 0);
    const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
 
    // Calculate bank / pipe rotation
@@ -660,7 +660,7 @@ untileMacroSurface(const SurfaceDescription &desc,
       break;
    }
 
-   if (desc.flags.depth) {
+   if (desc.use & SurfaceUse::DepthBuffer) {
       // TODO: Implement depth tiling for sample > 0
       decaf_check(sample == 0);
 
@@ -804,13 +804,31 @@ computeSurfaceInfo(const SurfaceDescription &surface,
    input.format = surface.format;
    input.bpp = surface.bpp;
    input.numSamples = surface.numSamples;
-   input.width = surface.width;
-   input.height = surface.height;
-   input.numSlices = surface.numSlices;
-   input.flags = surface.flags;
    input.numFrags = surface.numFrags;
    input.mipLevel = mipLevel;
    input.slice = slice;
+   input.numSlices = surface.numSlices;
+
+   input.width = std::max(surface.width >> mipLevel, 1u);
+   input.height = std::max(surface.height >> mipLevel, 1u);
+   input.flags.inputBaseMap = mipLevel == 0 ? 1 : 0;
+
+   if (surface.use & SurfaceUse::ScanBuffer) {
+      input.flags.display = 1;
+   }
+
+   if (surface.use & SurfaceUse::DepthBuffer) {
+      input.flags.depth = 1;
+   }
+
+   if (surface.dim == SurfaceDim::Texture3D) {
+      input.flags.volume = 1;
+      input.numSlices = std::max(surface.numSlices >> mipLevel, 1u);
+   }
+
+   if (surface.dim == SurfaceDim::TextureCube) {
+      input.flags.cube = 1;
+   }
 
    auto handle = getAddrLibHandle();
    decaf_check(handle);
