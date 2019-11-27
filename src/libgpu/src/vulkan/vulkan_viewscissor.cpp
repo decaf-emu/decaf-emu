@@ -65,6 +65,10 @@ Driver::checkCurrentViewportAndScissor()
    viewport.width = vportSX * 2;
    viewport.height = vportSY * 2;
 
+   // the view port is 'flipped by default'
+   viewport.y = viewport.height + viewport.y;
+   viewport.height = -viewport.height;
+
    // TODO: Investigate whether we should be using ZOFFSET/ZSCALE to calculate these?
    viewport.minDepth = pa_sc_vport_zmin.VPORT_ZMIN();
    viewport.maxDepth = pa_sc_vport_zmax.VPORT_ZMAX();
@@ -84,8 +88,8 @@ Driver::checkCurrentViewportAndScissor()
    //pa_cl_vte_cntl.VTX_Z_FMT();
    //pa_cl_vte_cntl.VTX_W0_FMT();
 
-   auto screenSizeX = viewport.width - viewport.x;
-   auto screenSizeY = viewport.height - viewport.y;
+   auto screenSizeX = viewport.width;
+   auto screenSizeY = -viewport.height;
 
    if (pa_cl_vte_cntl.VPORT_X_OFFSET_ENA()) {
       shaderViewport.xAdd = 0.0f;
