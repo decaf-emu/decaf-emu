@@ -39,12 +39,12 @@ public:
    }
 
    void
-      untileSlices(const gpu7::tiling::SurfaceDescription &desc,
-                   uint32_t mipLevel,
-                   const uint8_t *src,
-                   uint8_t *dst,
-                   uint32_t firstSlice,
-                   uint32_t numSlices)
+   untileSlices(const gpu7::tiling::SurfaceDescription &desc,
+                uint32_t mipLevel,
+                const uint8_t *src,
+                uint8_t *dst,
+                uint32_t firstSlice,
+                uint32_t numSlices)
    {
       for (uint32_t sample = 0; sample < desc.numSamples; ++sample) {
          for (uint32_t slice = firstSlice; slice < firstSlice + numSlices; ++slice) {
@@ -63,12 +63,12 @@ public:
    }
 
    void
-      tileSlices(const gpu7::tiling::SurfaceDescription &desc,
-                 uint32_t mipLevel,
-                 uint8_t *src,
-                 uint8_t *dst,
-                 uint32_t firstSlice,
-                 uint32_t numSlices)
+   tileSlices(const gpu7::tiling::SurfaceDescription &desc,
+              uint32_t mipLevel,
+              uint8_t *src,
+              uint8_t *dst,
+              uint32_t firstSlice,
+              uint32_t numSlices)
    {
       for (uint32_t sample = 0; sample < desc.numSamples; ++sample) {
          for (uint32_t slice = firstSlice; slice < firstSlice + numSlices; ++slice) {
@@ -88,9 +88,9 @@ public:
    }
 
    ADDR_COMPUTE_SURFACE_INFO_OUTPUT
-      computeSurfaceInfo(const gpu7::tiling::SurfaceDescription &desc,
-                         uint32_t slice,
-                         uint32_t mipLevel)
+   computeSurfaceInfo(const gpu7::tiling::SurfaceDescription &desc,
+                      uint32_t slice,
+                      uint32_t mipLevel)
    {
       auto output = ADDR_COMPUTE_SURFACE_INFO_OUTPUT { };
       output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
@@ -114,23 +114,23 @@ public:
 
 private:
    static void *
-      addrLibAlloc(const ADDR_ALLOCSYSMEM_INPUT *pInput)
+   addrLibAlloc(const ADDR_ALLOCSYSMEM_INPUT *pInput)
    {
       return std::malloc(pInput->sizeInBytes);
    }
 
    static ADDR_E_RETURNCODE
-      addrLibFree(const ADDR_FREESYSMEM_INPUT *pInput)
+   addrLibFree(const ADDR_FREESYSMEM_INPUT *pInput)
    {
       std::free(pInput->pVirtAddr);
       return ADDR_OK;
    }
 
    void
-      copySurfacePixels(const uint8_t *src,
-                        ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &srcAddrInput,
-                        uint8_t *dst,
-                        ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &dstAddrInput)
+   copySurfacePixels(const uint8_t *src,
+                     ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &srcAddrInput,
+                     uint8_t *dst,
+                     ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT &dstAddrInput)
    {
       auto srcAddrOutput = ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT { };
       auto dstAddrOutput = ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT { };
@@ -160,8 +160,8 @@ private:
    }
 
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT
-      getUntiledAddrFromCoordInput(const gpu7::tiling::SurfaceDescription &desc,
-                                   const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info)
+   getUntiledAddrFromCoordInput(const gpu7::tiling::SurfaceDescription &desc,
+                                 const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info)
    {
       auto input = getTiledAddrFromCoordInput(desc, info);
       input.tileMode = AddrTileMode::ADDR_TM_LINEAR_GENERAL;
@@ -171,8 +171,8 @@ private:
    }
 
    ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT
-      getTiledAddrFromCoordInput(const gpu7::tiling::SurfaceDescription &desc,
-                                 const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info)
+   getTiledAddrFromCoordInput(const gpu7::tiling::SurfaceDescription &desc,
+                              const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info)
    {
       auto input = ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT { };
       input.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT);
