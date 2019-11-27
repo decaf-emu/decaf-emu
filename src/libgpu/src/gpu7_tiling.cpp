@@ -934,8 +934,9 @@ untileMip(const SurfaceDescription &desc,
           int level)
 {
    const auto info = computeSurfaceInfo(desc, level, 0);
+   auto numSlices = std::min(desc.numSlices, info.depth);
 
-   for (auto slice = 0u; slice < desc.numSlices; ++slice) {
+   for (auto slice = 0u; slice < numSlices; ++slice) {
       untileMipSlice(desc,
                      src,
                      reinterpret_cast<uint8_t *>(dst) + info.sliceSize * slice,
