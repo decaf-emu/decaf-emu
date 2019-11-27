@@ -8,7 +8,8 @@
 static inline void
 compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
                        std::vector<uint8_t> &untiled,
-                       uint32_t firstSlice, uint32_t numSlices)
+                       uint32_t firstSlice,
+                       uint32_t numSlices)
 {
    auto addrLib = AddrLib { };
 
@@ -35,8 +36,6 @@ compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
    }
 
    CHECK(compareImages(tiledImage, addrLibImage));
-
-   return;
 
    // Compare mipmaps
    auto addrLibMipMap = std::vector<uint8_t> { };
