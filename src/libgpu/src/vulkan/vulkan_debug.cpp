@@ -41,6 +41,16 @@ Driver::updateDebuggerInfo()
    mDebugInfo.numDataBuffers = mMemCaches.size();
 }
 
+void
+Driver::insertVkMarker(const std::string& text)
+{
+   if (mVkDynLoader.vkCmdDebugMarkerInsertEXT) {
+      vk::DebugMarkerMarkerInfoEXT testMarker;
+      testMarker.pMarkerName = text.c_str();
+      mActiveCommandBuffer.debugMarkerInsertEXT(testMarker, mVkDynLoader);
+   }
+}
+
 template <typename ObjType>
 static void
 _setVkObjectName(vk::Device device, ObjType object, vk::DebugReportObjectTypeEXT type, const char *name, const vk::DispatchLoaderDynamic& dispatch)

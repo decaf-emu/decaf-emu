@@ -682,6 +682,7 @@ protected:
    void endStreamOut();
 
    // Debug
+   void insertVkMarker(const std::string& text);
    void setVkObjectName(VkBuffer object, const char *name);
    void setVkObjectName(VkSampler object, const char *name);
    void setVkObjectName(VkImage object, const char *name);
