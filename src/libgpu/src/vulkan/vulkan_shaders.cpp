@@ -276,10 +276,10 @@ dumpRawShader(const spirv::ShaderDesc *desc,
          reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()));
 
       shaderName = fmt::format("vs_{:08x}_{:08x}", vsAddr, fsAddr);
-      if (reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()) & 0xFFFFFFFF != 0) {
+      if ((reinterpret_cast<uintptr_t>(vsDesc->fsBinary.data()) & 0xFFFFFFFF) != 0) {
          shaderBinaries.emplace_back("fs", vsDesc->fsBinary);
       }
-      if (reinterpret_cast<uintptr_t>(vsDesc->binary.data()) & 0xFFFFFFFF != 0) {
+      if ((reinterpret_cast<uintptr_t>(vsDesc->binary.data()) & 0xFFFFFFFF) != 0) {
          shaderBinaries.emplace_back("", vsDesc->binary);
       }
    } else if (desc->type == spirv::ShaderType::Geometry) {
@@ -290,10 +290,10 @@ dumpRawShader(const spirv::ShaderDesc *desc,
          reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()));
 
       shaderName = fmt::format("gs_{:08x}_{:08x}", gsAddr, dcAddr);
-      if (reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()) & 0xFFFFFFFF != 0) {
+      if ((reinterpret_cast<uintptr_t>(gsDesc->dcBinary.data()) & 0xFFFFFFFF) != 0) {
          shaderBinaries.emplace_back("dc", gsDesc->dcBinary);
       }
-      if (reinterpret_cast<uintptr_t>(gsDesc->binary.data()) & 0xFFFFFFFF != 0) {
+      if ((reinterpret_cast<uintptr_t>(gsDesc->binary.data()) & 0xFFFFFFFF) != 0) {
          shaderBinaries.emplace_back("", gsDesc->binary);
       }
    } else if (desc->type == spirv::ShaderType::Pixel) {
@@ -302,7 +302,7 @@ dumpRawShader(const spirv::ShaderDesc *desc,
          reinterpret_cast<uintptr_t>(psDesc->binary.data()));
 
       shaderName = fmt::format("ps_{:08x}", psAddr);
-      if (reinterpret_cast<uintptr_t>(psDesc->binary.data()) & 0xFFFFFFFF != 0) {
+      if ((reinterpret_cast<uintptr_t>(psDesc->binary.data()) & 0xFFFFFFFF) != 0) {
          shaderBinaries.emplace_back("", psDesc->binary);
       }
    } else {
