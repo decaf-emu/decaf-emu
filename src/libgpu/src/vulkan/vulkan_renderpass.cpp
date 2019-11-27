@@ -102,6 +102,19 @@ Driver::checkCurrentRenderPass()
 {
    HashedDesc<RenderPassDesc> currentDesc = getRenderPassDesc();
 
+   if (!currentDesc->colorTargets[0].isEnabled &&
+       !currentDesc->colorTargets[1].isEnabled &&
+       !currentDesc->colorTargets[2].isEnabled &&
+       !currentDesc->colorTargets[3].isEnabled &&
+       !currentDesc->colorTargets[4].isEnabled &&
+       !currentDesc->colorTargets[5].isEnabled &&
+       !currentDesc->colorTargets[6].isEnabled &&
+       !currentDesc->colorTargets[7].isEnabled &&
+       !currentDesc->depthTarget.isEnabled) {
+      decaf_check_warn_once(!"Draw executed with no render targets");
+      return false;
+   }
+
    if (mCurrentDraw->renderPass && mCurrentDraw->renderPass->desc == currentDesc) {
       // Already active, nothing to do.
       return true;

@@ -241,12 +241,6 @@ Driver::prepareCurrentFramebuffer()
       }
    } while (false);
 
-   // If no framebuffer has been created yet, we need to explicitly set
-   // needsRefresh to true since there isn't anything bound to trigger it.
-   if (!fb->framebuffer) {
-      needsRefresh = true;
-   }
-
    if (!needsRefresh) {
       return;
    }
