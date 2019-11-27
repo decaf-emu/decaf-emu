@@ -108,6 +108,7 @@ public:
       input.numFrags = desc.numFrags;
       input.slice = slice;
       input.mipLevel = mipLevel;
+      input.flags.inputBaseMap = (mipLevel == 0) ? 1 : 0;
       REQUIRE(AddrComputeSurfaceInfo(mHandle, &input, &output) == ADDR_OK);
       return output;
    }
