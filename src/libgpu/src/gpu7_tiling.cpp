@@ -1005,8 +1005,12 @@ computeUnpitchedMipMapSize(const SurfaceDescription &desc)
    for (auto level = 1u; level < desc.numLevels; ++level) {
       const auto width = desc.width >> level;
       const auto height = desc.height >> level;
+      auto numSlices = desc.numSlices;
+      if (desc.dim == SurfaceDim::Texture3D) {
+         numSlices >>= level;
+      }
 
-      size += width * height * (desc.bpp / 8) * desc.numSlices;
+      size += width * height * (desc.bpp / 8) * numSlices;
    }
 
    return size;
@@ -1026,10 +1030,14 @@ unpitchMipMap(const SurfaceDescription &desc,
       const auto width = desc.width >> level;
       const auto height = desc.height >> level;
       const auto unpitchedSliceSize = width * height * bytesPerElem;
+      auto numSlices = desc.numSlices;
+      if (desc.dim == SurfaceDim::Texture3D) {
+         numSlices >>= level;
+      }
 
       srcMipOffset = align_up(srcMipOffset, info.baseAlign);
 
-      for (auto slice = 0u; slice < desc.numSlices; ++slice) {
+      for (auto slice = 0u; slice < numSlices; ++slice) {
          auto src = reinterpret_cast<uint8_t *>(pitched) + srcMipOffset + info.sliceSize * slice;
          auto dst = reinterpret_cast<uint8_t *>(unpitched) + dstMipOffset + unpitchedSliceSize * slice;
 
@@ -1041,7 +1049,7 @@ unpitchMipMap(const SurfaceDescription &desc,
       }
 
       srcMipOffset += info.surfSize;
-      dstMipOffset += unpitchedSliceSize * desc.numSlices;
+      dstMipOffset += unpitchedSliceSize * numSlices;
    }
 }
 
