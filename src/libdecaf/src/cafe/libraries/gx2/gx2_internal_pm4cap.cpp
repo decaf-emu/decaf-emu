@@ -15,7 +15,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <gsl.h>
-#include <libgpu/gpu_tiling.h>
+#include <libgpu/gpu7_tiling.h>
 #include <libgpu/latte/latte_constants.h>
 #include <libgpu/latte/latte_formats.h>
 #include <libgpu/latte/latte_pm4.h>
@@ -313,98 +313,6 @@ private:
    {
    }
 
-   ADDR_COMPUTE_SURFACE_INFO_OUTPUT
-   getSurfaceInfo(uint32_t pitch,
-                  uint32_t height,
-                  uint32_t depth,
-                  uint32_t aa,
-                  uint32_t level,
-                  bool isScanBuffer,
-                  bool isDepthBuffer,
-                  SQ_TEX_DIM dim,
-                  SQ_DATA_FORMAT format,
-                  SQ_TILE_MODE tileMode)
-   {
-      ADDR_COMPUTE_SURFACE_INFO_OUTPUT output;
-      auto hwFormat = format;
-      auto width = std::max<uint32_t>(1u, pitch >> level);
-      auto numSlices = 1u;
-
-      switch (dim) {
-      case SQ_TEX_DIM::DIM_1D:
-         height = 1;
-         numSlices = 1;
-         break;
-      case SQ_TEX_DIM::DIM_2D:
-         height = std::max<uint32_t>(1u, height >> level);
-         numSlices = 1;
-         break;
-      case SQ_TEX_DIM::DIM_3D:
-         height = std::max<uint32_t>(1u, height >> level);
-         numSlices = std::max<uint32_t>(1u, depth >> level);
-         break;
-      case SQ_TEX_DIM::DIM_CUBEMAP:
-         height = std::max<uint32_t>(1u, height >> level);
-         numSlices = std::max<uint32_t>(6u, depth);
-         break;
-      case SQ_TEX_DIM::DIM_1D_ARRAY:
-         height = 1;
-         numSlices = depth;
-         break;
-      case SQ_TEX_DIM::DIM_2D_ARRAY:
-         height = std::max<uint32_t>(1u, height >> level);
-         numSlices = depth;
-         break;
-      case SQ_TEX_DIM::DIM_2D_MSAA:
-         height = std::max<uint32_t>(1u, height >> level);
-         numSlices = 1;
-         break;
-      case SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
-         height = std::max<uint32_t>(1u, height >> level);
-         numSlices = depth;
-         break;
-      }
-
-      std::memset(&output, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT));
-      output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
-
-      ADDR_COMPUTE_SURFACE_INFO_INPUT input;
-      memset(&input, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT));
-      input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
-      input.tileMode = static_cast<AddrTileMode>(tileMode & 0xF);
-      input.format = static_cast<AddrFormat>(hwFormat);
-      input.bpp = getDataFormatBitsPerElement(format);
-      input.width = width;
-      input.height = height;
-      input.numSlices = numSlices;
-
-      input.numSamples = 1 << aa;
-      input.numFrags = input.numSamples;
-
-      input.slice = 0;
-      input.mipLevel = level;
-
-      if (dim == SQ_TEX_DIM::DIM_CUBEMAP) {
-         input.flags.cube = 1;
-      }
-
-      if (dim == SQ_TEX_DIM::DIM_3D) {
-         input.flags.volume = 1;
-      }
-
-      if (isDepthBuffer) {
-         input.flags.depth = 1;
-      }
-
-      if (isScanBuffer) {
-         input.flags.display = 1;
-      }
-
-      input.flags.inputBaseMap = (level == 0);
-      AddrComputeSurfaceInfo(gpu::getAddrLibHandle(), &input, &output);
-      return output;
-   }
-
    void
    trackSurface(phys_addr baseAddress,
                 uint32_t pitch,
@@ -429,11 +337,26 @@ private:
          baseAddress &= ~(0x100 - 1);
       }
 
-      // Calculate size
-      auto info = getSurfaceInfo(pitch, height, depth, aa, level,
-                                 isDepthBuffer, isScanBuffer, dim, format,
-                                 tileMode);
+      auto desc = gpu7::tiling::SurfaceDescription{ };
+      desc.tileMode = static_cast<AddrTileMode>(tileMode);
+      desc.format = static_cast<AddrFormat>(format);
+      desc.bpp = getDataFormatBitsPerElement(format);
+      desc.numSamples = 1; // TODO: 1 << aa
+      desc.width = pitch;
+      desc.height = height;
+      desc.numSlices = depth;
+      desc.numLevels = 0;
+      desc.bankSwizzle = 0;
+      desc.pipeSwizzle = 0;
+      if (isDepthBuffer) {
+         desc.use |= gpu7::tiling::SurfaceUse::DepthBuffer;
+      }
+      if (isScanBuffer) {
+         desc.use |= gpu7::tiling::SurfaceUse::ScanBuffer;
+      }
+      desc.dim = static_cast<gpu7::tiling::SurfaceDim>(dim);
 
+      auto info = gpu7::tiling::computeSurfaceInfo(desc, 0, 0);
       // TODO: Use align? info.baseAlign;
 
       // Track that badboy
