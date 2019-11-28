@@ -40,8 +40,4 @@ void
 captureGpuFlush(phys_addr buffer,
                 uint32_t size);
 
-void
-captureSyncGpuRegisters(const uint32_t *registers,
-                        uint32_t size);
-
 } // namespace cafe::gx2::internal

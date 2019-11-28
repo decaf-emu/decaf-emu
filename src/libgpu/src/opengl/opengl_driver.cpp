@@ -249,12 +249,6 @@ GLDriver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
 }
 
 void
-GLDriver::decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data)
-{
-   gpu::onSyncRegisters(mRegisters.data(), static_cast<uint32_t>(mRegisters.size()));
-}
-
-void
 GLDriver::decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data)
 {
    auto texture = 0u;

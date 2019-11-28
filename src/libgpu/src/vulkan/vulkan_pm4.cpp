@@ -140,12 +140,6 @@ Driver::decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data)
 }
 
 void
-Driver::decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data)
-{
-   gpu::onSyncRegisters(mRegisters.data(), static_cast<uint32_t>(mRegisters.size()));
-}
-
-void
 Driver::decafClearColor(const latte::pm4::DecafClearColor &data)
 {
    flushPendingDraws();

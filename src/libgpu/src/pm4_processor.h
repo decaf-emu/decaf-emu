@@ -26,7 +26,6 @@ protected:
    virtual void decafSetBuffer(const DecafSetBuffer &data) = 0;
    virtual void decafCopyColorToScan(const DecafCopyColorToScan &data) = 0;
    virtual void decafSwapBuffers(const DecafSwapBuffers &data) = 0;
-   virtual void decafCapSyncRegisters(const DecafCapSyncRegisters &data) = 0;
    virtual void decafClearColor(const DecafClearColor &data) = 0;
    virtual void decafClearDepthStencil(const DecafClearDepthStencil &data) = 0;
    virtual void decafOSScreenFlip(const DecafOSScreenFlip &data) = 0;

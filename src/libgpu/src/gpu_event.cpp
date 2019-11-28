@@ -4,11 +4,7 @@
 namespace gpu
 {
 
-static FlipCallbackFn
-sFlipCallbackFn = nullptr;
-
-static SyncRegisterCallbackFn
-sSyncRegisterCallbackFn = nullptr;
+static FlipCallbackFn sFlipCallbackFn = nullptr;
 
 void
 setFlipCallback(FlipCallbackFn callback)
@@ -17,25 +13,10 @@ setFlipCallback(FlipCallbackFn callback)
 }
 
 void
-setSyncRegisterCallback(SyncRegisterCallbackFn callback)
-{
-   sSyncRegisterCallbackFn = callback;
-}
-
-void
 onFlip()
 {
    if (sFlipCallbackFn) {
       sFlipCallbackFn();
-   }
-}
-
-void
-onSyncRegisters(const uint32_t *registers,
-                uint32_t size)
-{
-   if (sSyncRegisterCallbackFn) {
-      sSyncRegisterCallbackFn(registers, size);
    }
 }
 

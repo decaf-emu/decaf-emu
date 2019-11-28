@@ -116,7 +116,6 @@ GX2Init(virt_ptr<GX2InitAttrib> attributes)
 
    // Initialise GPU callbacks
    gpu::setFlipCallback(&internal::onFlip);
-   gpu::setSyncRegisterCallback(&internal::captureSyncGpuRegisters);
 
    // Initialise command buffer pools
    internal::initialiseCommandBufferPool(cbPoolBase, cbPoolSize);

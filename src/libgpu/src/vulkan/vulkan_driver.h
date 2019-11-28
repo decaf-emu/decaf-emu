@@ -693,7 +693,6 @@ private:
    virtual void decafSetBuffer(const latte::pm4::DecafSetBuffer &data) override;
    virtual void decafCopyColorToScan(const latte::pm4::DecafCopyColorToScan &data) override;
    virtual void decafSwapBuffers(const latte::pm4::DecafSwapBuffers &data) override;
-   virtual void decafCapSyncRegisters(const latte::pm4::DecafCapSyncRegisters &data) override;
    virtual void decafClearColor(const latte::pm4::DecafClearColor &data) override;
    virtual void decafClearDepthStencil(const latte::pm4::DecafClearDepthStencil &data) override;
    virtual void decafOSScreenFlip(const latte::pm4::DecafOSScreenFlip &data) override;

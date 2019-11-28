@@ -96,9 +96,6 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::DECAF_SWAP_BUFFERS:
       decafSwapBuffers(read<DecafSwapBuffers>(reader));
       break;
-   case IT_OPCODE::DECAF_CAP_SYNC_REGISTERS:
-      decafCapSyncRegisters(read<DecafCapSyncRegisters>(reader));
-      break;
    case IT_OPCODE::DECAF_CLEAR_COLOR:
       decafClearColor(read<DecafClearColor>(reader));
       break;

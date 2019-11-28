@@ -154,15 +154,6 @@ public:
       // Not sure if we need to do something here...
    }
 
-   void
-   syncRegisters(const uint32_t *registers,
-                 uint32_t size)
-   {
-      decaf_check(mState == CaptureState::WaitStartNextFrame);
-      decaf_check(size == mRegisters.size());
-      std::memcpy(mRegisters.data(), registers, size * sizeof(uint32_t));
-   }
-
 private:
    void
    start()
@@ -1023,10 +1014,6 @@ captureState()
 void
 captureSwap()
 {
-   if (captureState() == CaptureState::WaitStartNextFrame) {
-      internal::writePM4(DecafCapSyncRegisters {});
-   }
-
    if (captureState() != CaptureState::Disabled) {
       gx2::GX2DrawDone();
       gRecorder.swap();
@@ -1061,13 +1048,6 @@ captureGpuFlush(phys_addr address,
        captureState() == CaptureState::WaitEndNextFrame) {
       gRecorder.gpuFlush(address, size);
    }
-}
-
-void
-captureSyncGpuRegisters(const uint32_t *registers,
-                        uint32_t size)
-{
-   gRecorder.syncRegisters(registers, size);
 }
 
 } // namespace cafe::gx2::internal
