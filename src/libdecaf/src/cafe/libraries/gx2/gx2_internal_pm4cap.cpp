@@ -533,7 +533,7 @@ private:
 
    void
    scanLoadRegisters(Register base,
-                     phys_ptr<uint32_t> src,
+                     uint32_t *src,
                      const gsl::span<std::pair<uint32_t, uint32_t>> &registers)
    {
       for (auto &range : registers) {
@@ -719,7 +719,8 @@ private:
       {
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::ConfigRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0xB00 * 4);
          break;
       }
@@ -727,7 +728,8 @@ private:
       {
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::ContextRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0x400 * 4);
          break;
       }
@@ -735,7 +737,8 @@ private:
       {
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::AluConstRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0x800 * 4);
          break;
       }
@@ -744,14 +747,16 @@ private:
          decaf_abort("Unsupported LOAD_BOOL_CONST");
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::BoolConstRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          break;
       }
       case IT_OPCODE::LOAD_LOOP_CONST:
       {
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::LoopConstRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0x60 * 4);
          break;
       }
@@ -759,7 +764,8 @@ private:
       {
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::ResourceRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0xD9E * 4);
          break;
       }
@@ -767,7 +773,8 @@ private:
       {
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::SamplerRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          trackMemory(CaptureMemoryLoad::ShadowState, data.addr, 0xA2 * 4);
          break;
       }
@@ -776,7 +783,8 @@ private:
          decaf_abort("Unsupported LOAD_CTL_CONST");
          auto data = read<LoadControlConst>(reader);
          scanLoadRegisters(Register::ControlRegisterBase,
-                           phys_cast<uint32_t *>(data.addr), data.values);
+                           phys_cast<uint32_t *>(data.addr).getRawPointer(),
+                           data.values);
          break;
       }
       case IT_OPCODE::INDIRECT_BUFFER:
