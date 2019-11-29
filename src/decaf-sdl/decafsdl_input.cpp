@@ -151,9 +151,9 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
          // Check that mouse is inside DRC screen
          if (displayLayout.drc.visible) {
             auto drcLeft = displayLayout.drc.x;
-            auto drcBottom = windowHeight - displayLayout.drc.y;
+            auto drcTop = displayLayout.drc.y;
             auto drcRight = drcLeft + displayLayout.drc.width;
-            auto drcTop = drcBottom - displayLayout.drc.height;
+            auto drcBottom = drcTop + displayLayout.drc.height;
 
             if (mouseX >= drcLeft && mouseX <= drcRight &&
                 mouseY >= drcTop && mouseY <= drcBottom) {
