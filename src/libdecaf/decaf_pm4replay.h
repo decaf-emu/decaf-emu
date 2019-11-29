@@ -6,7 +6,7 @@
 namespace decaf::pm4
 {
 
-#pragma push(pack, 1)
+#pragma pack(push, 1)
 
 static const std::array<char, 4> CaptureMagic =
 {
@@ -71,6 +71,6 @@ struct CaptureSetBuffer
    uint32_t height;
 };
 
-#pragma push(pop)
+#pragma pack(pop)
 
 } // namespace decaf::pm4
