@@ -47,6 +47,8 @@ ReplayParserPM4::runUntilTimestamp(uint64_t timestamp)
 {
    std::vector<char> buffer;
    bool reachedTimestamp = false;
+   mFile.clear();
+   mFile.seekg(4, std::fstream::beg);
 
    while (true) {
       decaf::pm4::CapturePacket packet;

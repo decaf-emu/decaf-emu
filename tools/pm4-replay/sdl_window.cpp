@@ -6,6 +6,7 @@
 #include "replay_parser_pm4.h"
 
 #include <array>
+#include <atomic>
 #include <fstream>
 #include <common/log.h>
 #include <common/platform_dir.h>
@@ -98,7 +99,7 @@ onGpuInterrupt()
 bool
 SDLWindow::run(const std::string &tracePath)
 {
-   auto shouldQuit = false;
+   std::atomic_bool shouldQuit = false;
 
    // Setup some basic window stuff
    mWindow =
@@ -173,9 +174,12 @@ SDLWindow::run(const std::string &tracePath)
    gpu::ih::enable(latte::CP_INT_CNTL::get(0xFFFFFFFF));
    gpu::ih::setInterruptCallback(onGpuInterrupt);
 
+   auto loopReplay = true;
    auto replayThread = std::thread {
       [&]() {
-         parser->runUntilTimestamp(0xFFFFFFFFFFFFFFFFull);
+         do {
+            parser->runUntilTimestamp(0xFFFFFFFFFFFFFFFFull);
+         } while (loopReplay && !shouldQuit);
       } };
 
    auto graphicsThread = std::thread {
