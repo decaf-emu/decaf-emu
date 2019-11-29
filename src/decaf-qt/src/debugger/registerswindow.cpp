@@ -1,15 +1,13 @@
 #include "registerswindow.h"
-#include "kcollapsiblegroupbox.h"
 
 #include <QFontDatabase>
-#include <QGridLayout>
+#include <QTextBlock>
+#include <QTextDocument>
 #include <QVBoxLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QDataWidgetMapper>
+#include <QScrollBar>
 
 RegistersWindow::RegistersWindow(QWidget *parent) :
-   QWidget(parent)
+   QPlainTextEdit(parent)
 {
    // Set to fixed width font
    auto font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -18,199 +16,21 @@ RegistersWindow::RegistersWindow(QWidget *parent) :
       font.setStyleHint(QFont::TypeWriter);
    }
    setFont(font);
+   setReadOnly(true);
+   setWordWrapMode(QTextOption::NoWrap);
 
-   auto baseLayout = new QVBoxLayout { };
-   setLayout(baseLayout);
+   mTextFormats.registerName = QTextCharFormat { };
+   mTextFormats.registerName.setForeground(Qt::darkBlue);
 
-   // TODO: Fpscr?
+   mTextFormats.punctuation = QTextCharFormat { };
+   mTextFormats.punctuation.setForeground(Qt::darkBlue);
 
-   // Text colour to red when changed
-   mChangedPalette.setColor(QPalette::Text, Qt::red);
+   mTextFormats.changedValue = QTextCharFormat { };
+   mTextFormats.changedValue.setForeground(Qt::red);
 
-   {
-      auto group = new KCollapsibleGroupBox { };
-      auto layout = new QGridLayout { };
-      group->setTitle(tr("General Purpose Registers"));
-      group->setExpanded(true);
-      group->setLayout(layout);
-
-      for (auto i = 0; i < 32; ++i) {
-         auto row = i % 16;
-         auto column = 2 * (i / 16);
-         auto label = new QLabel { QString { "r%1" }.arg(i) };
-         label->setToolTip(tr("General Purpose Register %1").arg(i));
-
-         auto value = new QLineEdit { "00000000" };
-         value->setInputMask("HHHHHHHH");
-         value->setReadOnly(true);
-
-         layout->addWidget(label, row, column + 0);
-         layout->addWidget(value, row, column + 1);
-         mRegisterWidgets.gpr[i] = value;
-      }
-
-      baseLayout->addWidget(group);
-      mGroups.gpr = group;
-   }
-
-   {
-      auto group = new KCollapsibleGroupBox { };
-      auto layout = new QGridLayout { };
-      group->setTitle(tr("Misc Registers"));
-      group->setExpanded(true);
-      group->setLayout(layout);
-
-      {
-         auto label = new QLabel { "LR" };
-         label->setToolTip(tr("Link Register"));
-
-         auto value = new QLineEdit { "00000000" };
-         value->setInputMask("HHHHHHHH");
-         value->setReadOnly(true);
-
-         layout->addWidget(label, 0, 0);
-         layout->addWidget(value, 0, 1);
-         mRegisterWidgets.lr = value;
-      }
-
-      {
-         auto label = new QLabel { "CTR" };
-         label->setToolTip(tr("Count Register"));
-
-         auto value = new QLineEdit { "00000000" };
-         value->setInputMask("HHHHHHHH");
-         value->setReadOnly(true);
-
-         layout->addWidget(label, 0, 2);
-         layout->addWidget(value, 0, 3);
-         mRegisterWidgets.ctr = value;
-      }
-
-      {
-         auto label = new QLabel { "XER" };
-         label->setToolTip(tr("Fixed Point Exception Register"));
-
-         auto value = new QLineEdit { "00000000" };
-         value->setInputMask("HHHHHHHH");
-         value->setReadOnly(true);
-
-         layout->addWidget(label, 1, 0);
-         layout->addWidget(value, 1, 1);
-         mRegisterWidgets.xer = value;
-      }
-
-      {
-         auto label = new QLabel { "MSR" };
-         label->setToolTip(tr("Machine State Register"));
-
-         auto value = new QLineEdit { "00000000" };
-         value->setInputMask("HHHHHHHH");
-         value->setReadOnly(true);
-
-         layout->addWidget(label, 1, 2);
-         layout->addWidget(value, 1, 3);
-         mRegisterWidgets.msr = value;
-      }
-
-      baseLayout->addWidget(group);
-      mGroups.misc = group;
-   }
-
-   {
-      auto group = new KCollapsibleGroupBox { };
-      auto layout = new QGridLayout { };
-      group->setTitle(tr("Condition Registers"));
-      group->setExpanded(true);
-      group->setLayout(layout);
-
-      for (auto i = 0; i < 2; ++i) {
-         auto header = new QLineEdit { "O Z + -" };
-         header->setStyleSheet("background: transparent; border: 0px;");
-         header->setFont(font);
-         header->setReadOnly(true);
-         header->setToolTip(tr("Overflow Zero Positive Negative"));
-         layout->addWidget(header, 0, 1 + i * 2);
-      }
-
-      for (auto i = 0; i < 8; ++i) {
-         auto row = 1 + i % 4;
-         auto column = 2 * (i / 4);
-         auto label = new QLabel { QString { "crf%1" }.arg(i) };
-         label->setToolTip(tr("Condition Register Field %1").arg(i));
-
-         auto value = new QLineEdit { "0 0 0 0" };
-         value->setInputMask("B B B B");
-         value->setReadOnly(true);
-
-         layout->addWidget(label, row, column + 0);
-         layout->addWidget(value, row, column + 1);
-
-         mRegisterWidgets.cr[i] = value;
-      }
-
-      baseLayout->addWidget(group);
-      mGroups.cr = group;
-   }
-
-   {
-      auto group = new KCollapsibleGroupBox { };
-      auto layout = new QGridLayout { };
-      group->setTitle(tr("Floating Point Registers"));
-      group->setExpanded(true);
-      group->setLayout(layout);
-
-      for (auto i = 0; i < 32; ++i) {
-         auto label = new QLabel { QString { "f%1" }.arg(i) };
-
-         auto hexValue = new QLineEdit { "0000000000000000" };
-         hexValue->setInputMask("HHHHHHHHHHHHHHHH");
-         hexValue->setReadOnly(true);
-
-         auto floatValue = new QLineEdit { "0.0" };
-         floatValue->setReadOnly(true);
-
-         layout->addWidget(label, i, 0);
-         layout->addWidget(hexValue, i, 1);
-         layout->addWidget(floatValue, i, 2);
-
-         mRegisterWidgets.fprFloat[i] = floatValue;
-         mRegisterWidgets.fprHex[i] = hexValue;
-      }
-
-      baseLayout->addWidget(group);
-      mGroups.fpr = group;
-   }
-
-   {
-      auto group = new KCollapsibleGroupBox { };
-      auto layout = new QGridLayout { };
-      group->setTitle(tr("Paired Single 1 Registers"));
-      group->setExpanded(true);
-      group->setLayout(layout);
-
-      for (auto i = 0; i < 32; ++i) {
-         auto label = new QLabel { QString { "p%1" }.arg(i) };
-
-         auto hexValue = new QLineEdit { "0000000000000000" };
-         hexValue->setInputMask("HHHHHHHHHHHHHHHH");
-         hexValue->setReadOnly(true);
-
-         auto floatValue = new QLineEdit { "0.0" };
-         floatValue->setReadOnly(true);
-
-         layout->addWidget(label, i, 0);
-         layout->addWidget(hexValue, i, 1);
-         layout->addWidget(floatValue, i, 2);
-
-         mRegisterWidgets.ps1Float[i] = floatValue;
-         mRegisterWidgets.ps1Hex[i] = hexValue;
-      }
-
-      baseLayout->addWidget(group);
-      mGroups.ps1 = group;
-   }
-
-   baseLayout->addStretch(1);
+   generateDocument();
+   verticalScrollBar()->triggerAction(QScrollBar::SliderToMinimum);
+   horizontalScrollBar()->triggerAction(QScrollBar::SliderToMinimum);
 }
 
 void
@@ -223,56 +43,98 @@ RegistersWindow::setDebugData(DebugData *debugData)
 template<typename T>
 static QString toHexString(T value, int width)
 {
-   return QString { "%1" }.arg(value, width / 4, 16, QLatin1Char{ '0' }).toUpper();
+   return QString { "%1" }.arg(value, width / 4, 16, QLatin1Char { '0' }).toUpper();
 }
 
 void
-RegistersWindow::updateRegisterValue(QLineEdit *lineEdit,
-                                     uint32_t value)
+RegistersWindow::generateDocument()
 {
-   auto text = toHexString(value, 32);
-   if (text != lineEdit->text()) {
-      lineEdit->setText(text);
-      lineEdit->setPalette(mChangedPalette);
-   } else if (!mDebugPaused) {
-      lineEdit->setPalette({ });
+   auto cursor = QTextCursor { document() };
+   cursor.beginEditBlock();
+   document()->clear();
+
+   auto registerNameWidth = 10;
+   for (auto i = 0; i < 32; ++i) {
+      if (i != 0) {
+         cursor.insertBlock();
+      }
+
+      cursor.insertText(QString { "R%1" }.arg(i, 2, 10, QLatin1Char { '0' }), mTextFormats.registerName);
+      cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+
+      mRegisterCursors.gpr[i] = { cursor.block(), cursor.positionInBlock() };
+      cursor.insertText(toHexString(0, 32), mTextFormats.value);
+      mRegisterCursors.gpr[i].end = cursor.positionInBlock();
    }
-}
 
-void
-RegistersWindow::updateRegisterValue(QLineEdit *lineEditFloat,
-                                     QLineEdit *lineEditHex,
-                                     double value)
-{
-   auto hexText = toHexString(*reinterpret_cast<uint64_t *>(&value), 64);
+   cursor.insertBlock();
 
-   if (hexText != lineEditHex->text()) {
-      lineEditFloat->setText(QString { "%1" }.arg(value));
-      lineEditFloat->setPalette(mChangedPalette);
+   cursor.insertBlock();
+   cursor.insertText(QString { "LR" }, mTextFormats.registerName);
+   cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+   mRegisterCursors.lr = { cursor.block(), cursor.positionInBlock() };
+   cursor.insertText(toHexString(0, 32), mTextFormats.value);
+   mRegisterCursors.lr.end = cursor.positionInBlock();
 
-      lineEditHex->setText(hexText);
-      lineEditHex->setPalette(mChangedPalette);
-   } else if (!mDebugPaused) {
-      lineEditFloat->setPalette({ });
-      lineEditHex->setPalette({ });
+   cursor.insertBlock();
+   cursor.insertText(QString { "CTR" }, mTextFormats.registerName);
+   cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+   mRegisterCursors.ctr = { cursor.block(), cursor.positionInBlock() };
+   cursor.insertText(toHexString(0, 32), mTextFormats.value);
+   mRegisterCursors.ctr.end = cursor.positionInBlock();
+
+   cursor.insertBlock();
+   cursor.insertText(QString { "XER" }, mTextFormats.registerName);
+   cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+   mRegisterCursors.xer = { cursor.block(), cursor.positionInBlock() };
+   cursor.insertText(toHexString(0, 32), mTextFormats.value);
+   mRegisterCursors.xer.end = cursor.positionInBlock();
+
+   cursor.insertBlock();
+   cursor.insertText(QString { "MSR" }, mTextFormats.registerName);
+   cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+   mRegisterCursors.msr = { cursor.block(), cursor.positionInBlock() };
+   cursor.insertText(toHexString(0, 32), mTextFormats.value);
+   mRegisterCursors.msr.end = cursor.positionInBlock();
+
+   cursor.insertBlock();
+
+   cursor.insertBlock();
+   cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+   cursor.insertText(QString { "O Z + -" });
+
+   for (auto i = 0; i < 8; ++i) {
+      cursor.insertBlock();
+      cursor.insertText(QString { "CRF%1" }.arg(i), mTextFormats.registerName);
+      cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+      mRegisterCursors.crf[i] = { cursor.block(), cursor.positionInBlock() };
+      cursor.insertText("0 0 0 0", mTextFormats.value);
+      mRegisterCursors.crf[i].end = cursor.positionInBlock();
    }
-}
 
-void
-RegistersWindow::updateConditionRegisterValue(QLineEdit *lineEdit, uint32_t value)
-{
-   auto text = QString { "%1 %2 %3 %4" }
-      .arg((value >> 0) & 1)
-      .arg((value >> 1) & 1)
-      .arg((value >> 2) & 1)
-      .arg((value >> 3) & 1);
+   cursor.insertBlock();
 
-   if (text != lineEdit->text()) {
-      lineEdit->setText(text);
-      lineEdit->setPalette(mChangedPalette);
-   } else if (!mDebugPaused) {
-      lineEdit->setPalette({ });
+   for (auto i = 0; i < 32; ++i) {
+      cursor.insertBlock();
+      cursor.insertText(QString { "F%1" }.arg(i, 2, 10, QLatin1Char { '0' }), mTextFormats.registerName);
+      cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+
+      mRegisterCursors.fpr[i] = { cursor.block(), cursor.positionInBlock() };
+      cursor.insertText(toHexString(0, 64) + QString { " 0.0f" }, mTextFormats.value);
+      mRegisterCursors.fpr[i].end = cursor.positionInBlock();
    }
+
+   for (auto i = 0; i < 32; ++i) {
+      cursor.insertBlock();
+      cursor.insertText(QString { "P%1" }.arg(i, 2, 10, QLatin1Char { '0' }), mTextFormats.registerName);
+      cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
+
+      mRegisterCursors.psf[i] = { cursor.block(), cursor.positionInBlock() };
+      cursor.insertText(toHexString(0, 64) + QString { " 0.0f" }, mTextFormats.value);
+      mRegisterCursors.psf[i].end = cursor.positionInBlock();
+   }
+
+   cursor.endEditBlock();
 }
 
 void
@@ -283,29 +145,71 @@ RegistersWindow::debugDataChanged()
       return;
    }
 
-   for (auto i = 0; i < mRegisterWidgets.gpr.size(); ++i) {
-      updateRegisterValue(mRegisterWidgets.gpr[i], thread->gpr[i]);
+   auto clearChangedHighlight = !mDebugData->paused() || mLastThreadState.nia != thread->nia;
+   auto cursor = QTextCursor { document() };
+   cursor.beginEditBlock();
+
+   auto updateRegisterText =
+      [&](RegisterCursor &reg, auto lastValue, auto currentValue, auto toString) {
+         cursor.setPosition(reg.block.position() + reg.start);
+         cursor.setPosition(reg.block.position() + reg.end, QTextCursor::KeepAnchor);
+
+         auto wasChangedValue = cursor.charFormat().foreground().color() == mTextFormats.changedValue.foreground().color();
+
+         if (lastValue != currentValue) {
+            cursor.insertText(toString(currentValue), mTextFormats.changedValue);
+         } else if (clearChangedHighlight) {
+            if (cursor.charFormat().foreground().color() == mTextFormats.changedValue.foreground().color()) {
+               cursor.setCharFormat(mTextFormats.value);
+            }
+         }
+      };
+
+   for (auto i = 0u; i < 32; ++i) {
+      updateRegisterText(mRegisterCursors.gpr[i], mLastThreadState.gpr[i], thread->gpr[i],
+                         [](auto value) { return toHexString(value, 32); });
    }
 
-   for (auto i = 0; i < mRegisterWidgets.cr.size(); ++i) {
+   updateRegisterText(mRegisterCursors.lr, mLastThreadState.lr, thread->lr,
+                      [](auto value) { return toHexString(value, 32); });
+   updateRegisterText(mRegisterCursors.ctr, mLastThreadState.ctr, thread->ctr,
+                      [](auto value) { return toHexString(value, 32); });
+   updateRegisterText(mRegisterCursors.xer, mLastThreadState.xer, thread->xer,
+                      [](auto value) { return toHexString(value, 32); });
+   updateRegisterText(mRegisterCursors.msr, mLastThreadState.msr, thread->msr,
+                      [](auto value) { return toHexString(value, 32); });
+
+   for (auto i = 0; i < 8; ++i) {
+      auto lastValue = (mLastThreadState.cr >> ((7 - i) * 4)) & 0xF;
       auto value = (thread->cr >> ((7 - i) * 4)) & 0xF;
-      updateConditionRegisterValue(mRegisterWidgets.cr[i], value);
+      updateRegisterText(mRegisterCursors.crf[i], lastValue, value,
+         [](auto value) {
+            return QString { "%1 %2 %3 %4" }
+               .arg((value >> 0) & 1)
+               .arg((value >> 1) & 1)
+               .arg((value >> 2) & 1)
+               .arg((value >> 3) & 1);
+         });
    }
 
-   updateRegisterValue(mRegisterWidgets.lr, thread->lr);
-   updateRegisterValue(mRegisterWidgets.ctr, thread->ctr);
-   updateRegisterValue(mRegisterWidgets.xer, thread->xer);
-   updateRegisterValue(mRegisterWidgets.msr, thread->msr);
-
-   for (auto i = 0; i < mRegisterWidgets.fprFloat.size(); ++i) {
-      updateRegisterValue(mRegisterWidgets.fprFloat[i],
-                          mRegisterWidgets.fprHex[i],
-                          thread->fpr[i]);
+   for (auto i = 0u; i < 32; ++i) {
+      updateRegisterText(mRegisterCursors.fpr[i], mLastThreadState.fpr[i], thread->fpr[i],
+         [](auto value) {
+            return QString { "%1 %2" }
+               .arg(toHexString(*reinterpret_cast<uint64_t *>(&value), 64).toUpper())
+               .arg(value);
+         });
    }
 
-   for (auto i = 0; i < mRegisterWidgets.ps1Float.size(); ++i) {
-      updateRegisterValue(mRegisterWidgets.ps1Float[i],
-                          mRegisterWidgets.ps1Hex[i],
-                          thread->ps1[i]);
+   for (auto i = 0u; i < 32; ++i) {
+      updateRegisterText(mRegisterCursors.psf[i], mLastThreadState.ps1[i], thread->ps1[i],
+         [](auto value) {
+            return QString { "%1 %2" }
+               .arg(toHexString(*reinterpret_cast<uint64_t *>(&value), 64).toUpper())
+               .arg(value);
+         });
    }
+
+   cursor.endEditBlock();
+   mLastThreadState = *thread;
 }
