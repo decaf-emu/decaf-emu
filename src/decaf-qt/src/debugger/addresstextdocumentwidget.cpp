@@ -254,34 +254,50 @@ AddressTextDocumentWidget::mousePressEvent(QMouseEvent *e)
 {
    auto handled = false;
 
-   if (e->buttons() & (Qt::LeftButton | Qt::RightButton)) {
+   if (e->buttons() == Qt::LeftButton || e->buttons() == Qt::RightButton) {
       if (auto hit = mouseEventHitTest(e)) {
          auto cursor = DocumentCursor { };
          cursor.address = hit->lineAddress;
          cursor.cursorPosition = hit->textCursor.positionInBlock();
 
-         // Update cursors
-         setDocumentCursor(cursor);
-         setDocumentSelectionBegin(cursor);
-         setDocumentSelectionEnd(cursor);
+         if (e->buttons() == Qt::RightButton) {
+            auto selectionBegin = getDocumentSelectionBegin();
+            auto selectionEnd = getDocumentSelectionEnd();
+            if (selectionBegin != selectionEnd) {
+               auto selectionFirst = std::min(selectionBegin, selectionEnd);
+               auto selectionLast = std::max(selectionBegin, selectionEnd);
 
-         // Start cursor blink timer
-         mBlinkTimer->start();
-         mBlinkCursorVisible = true;
-
-         // Update the currently highlighted word
-         auto character = mTextDocument->characterAt(hit->textCursor.position());
-         if (character.isSpace()) {
-            mHighlightedWord.clear();
-            updateHighlightedWord();
-         } else {
-            hit->textCursor.select(QTextCursor::WordUnderCursor);
-            mHighlightedWord = hit->textCursor.selectedText();
-            updateHighlightedWord();
+               if (selectionFirst < cursor && cursor < selectionLast) {
+                  handled = true;
+               }
+            }
          }
 
-         viewport()->update();
-         handled = true;
+         if (!handled) {
+            // Update cursors
+            setDocumentCursor(cursor);
+            setDocumentSelectionBegin(cursor);
+            setDocumentSelectionEnd(cursor);
+
+            // Start cursor blink timer
+            mBlinkTimer->start();
+            mBlinkCursorVisible = true;
+
+            // Update the currently highlighted word
+            auto character = mTextDocument->characterAt(hit->textCursor.position());
+            if (character.isSpace()) {
+               mHighlightedWord.clear();
+               updateHighlightedWord();
+            }
+            else {
+               hit->textCursor.select(QTextCursor::WordUnderCursor);
+               mHighlightedWord = hit->textCursor.selectedText();
+               updateHighlightedWord();
+            }
+
+            viewport()->update();
+            handled = true;
+         }
       }
    }
 
@@ -360,6 +376,9 @@ AddressTextDocumentWidget::mouseReleaseEvent(QMouseEvent *e)
       handled = true;
    } else if (e->button() == Qt::ForwardButton) {
       navigateForward();
+      handled = true;
+   } else if (e->button() == Qt::RightButton) {
+      showContextMenu(e);
       handled = true;
    }
 

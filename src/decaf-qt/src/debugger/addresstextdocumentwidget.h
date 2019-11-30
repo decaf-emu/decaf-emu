@@ -126,6 +126,10 @@ protected:
       mDefaultSelectionEnd = cursor;
    }
 
+   virtual void showContextMenu(QMouseEvent *e)
+   {
+   }
+
 private:
    void showAddress(VirtualAddress address);
    bool ensureCursorVisible(bool centerOnCursor);
