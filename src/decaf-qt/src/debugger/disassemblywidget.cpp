@@ -279,6 +279,8 @@ DisassemblyWidget::keyPressEvent(QKeyEvent *e)
 
    if (!handled) {
       AddressTextDocumentWidget::keyPressEvent(e);
+   } else {
+      e->accept();
    }
 }
 
@@ -311,7 +313,11 @@ DisassemblyWidget::getCustomSelections(QTextDocument *document)
 }
 
 void
-DisassemblyWidget::updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress, VirtualAddress lastLineAddress, int bytesPerLine)
+DisassemblyWidget::updateTextDocument(QTextCursor cursor,
+                                      VirtualAddress firstLineAddress,
+                                      VirtualAddress lastLineAddress,
+                                      int bytesPerLine,
+                                      bool forDisplay)
 {
    mCacheStartAddress = firstLineAddress;
    mTextCursorPositionCache.clear();

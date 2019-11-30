@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QAbstractTextDocumentLayout>
+#include <QClipboard>
 #include <QFontDatabase>
 #include <QScrollBar>
 #include <QTextBlock>
@@ -107,6 +108,28 @@ AddressTextDocumentWidget::navigateForward()
       mNavigationBackwardStack.push_back(cursorAddress);
       showAddress(address);
    }
+}
+
+void
+AddressTextDocumentWidget::copySelection()
+{
+   auto selectionBegin = getDocumentSelectionBegin();
+   auto selectionEnd = getDocumentSelectionEnd();
+   auto selectionFirst = std::min(selectionBegin, selectionEnd);
+   auto selectionLast = std::max(selectionBegin, selectionEnd);
+
+   auto tempDocument = QTextDocument{ };
+   auto cursor = QTextCursor{ &tempDocument };
+   cursor.beginEditBlock();
+   updateTextDocument(cursor, selectionFirst.address, selectionLast.address, mBytesPerLine, false);
+   cursor.endEditBlock();
+
+   cursor.movePosition(QTextCursor::End);
+   cursor.movePosition(QTextCursor::StartOfLine);
+   cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, selectionLast.cursorPosition);
+   cursor.setPosition(selectionFirst.cursorPosition, QTextCursor::KeepAnchor);
+
+   qApp->clipboard()->setText(cursor.selectedText());
 }
 
 void
@@ -516,6 +539,10 @@ AddressTextDocumentWidget::keyPressEvent(QKeyEvent *e)
       navigateForward();
       e->accept();
       return;
+   } else if (e->matches(QKeySequence::Copy)) {
+      copySelection();
+      e->accept();
+      return;
    } else {
       return QAbstractScrollArea::keyPressEvent(e);
    }
@@ -682,7 +709,7 @@ AddressTextDocumentWidget::updateTextDocument(bool forceUpdate)
 
    auto cursor = QTextCursor { mTextDocument };
    cursor.beginEditBlock();
-   updateTextDocument(cursor, firstVisibleLineAddress, lastVisibleLineAddress, mBytesPerLine);
+   updateTextDocument(cursor, firstVisibleLineAddress, lastVisibleLineAddress, mBytesPerLine, true);
    cursor.endEditBlock();
 
    // Update horizontal scroll

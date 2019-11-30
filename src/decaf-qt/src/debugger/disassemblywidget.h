@@ -42,7 +42,7 @@ protected:
 
    void updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress,
                            VirtualAddress lastLineAddress,
-                           int bytePerLine) override;
+                           int bytePerLine, bool forDisplay) override;
 
 private:
    DebugData *mDebugData;

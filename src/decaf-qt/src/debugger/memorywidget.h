@@ -9,6 +9,7 @@
 #include <vector>
 #include <optional>
 
+class QAction;
 class QTextDocument;
 
 class MemoryWidget : public AddressTextDocumentWidget
@@ -53,6 +54,9 @@ public:
    void setAutoBytesPerLine(bool enabled);
    bool autoBytesPerLine();
 
+   void copySelectionAsHex();
+   void copySelectionAsText();
+
 private:
    void updateAutoBytesPerLine();
 
@@ -72,7 +76,11 @@ private:
    void setDocumentSelectionBegin(DocumentCursor cursor) override;
    void setDocumentSelectionEnd(DocumentCursor cursor) override;
 
-   void updateTextDocument(QTextCursor cursor, VirtualAddress startAddress, VirtualAddress endAddress, int bytesPerLine) override;
+   void showContextMenu(QMouseEvent *e) override;
+
+   void updateTextDocument(QTextCursor cursor, VirtualAddress startAddress,
+                           VirtualAddress endAddress, int bytesPerLine,
+                           bool forDisplay) override;
 
 private:
    bool mAutoBytesPerLine = false;
@@ -107,4 +115,8 @@ private:
       bool hexData = true;
       bool textData = true;
    } mVisibleColumns;
+
+   QAction *mCopyAction;
+   QAction *mCopyHexAction;
+   QAction *mCopyTextAction;
 };

@@ -1,6 +1,6 @@
 #include "stackwidget.h"
 
-#include <qendian.h>
+#include <QtEndian>
 #include <QPainter>
 #include <QScrollBar>
 #include <QTextBlock>
@@ -177,6 +177,8 @@ StackWidget::keyPressEvent(QKeyEvent *e)
 
    if (!handled) {
       AddressTextDocumentWidget::keyPressEvent(e);
+   } else {
+      e->accept();
    }
 }
 
@@ -248,15 +250,18 @@ void
 StackWidget::updateTextDocument(QTextCursor cursor,
                                 VirtualAddress firstLineAddress,
                                 VirtualAddress lastLineAddress,
-                                int bytesPerLine)
+                                int bytesPerLine,
+                                bool forDisplay)
 {
    auto data = std::array<uint8_t, 4> { };
    auto symbolNameBuffer = std::array<char, 256> { };
    auto moduleNameBuffer = std::array<char, 256> { };
 
-   mStackFirstVisibleAddress = firstLineAddress;
-   mStackLastVisibleAddress = lastLineAddress;
-   updateStackFrames();
+   if (forDisplay) {
+      mStackFirstVisibleAddress = firstLineAddress;
+      mStackLastVisibleAddress = lastLineAddress;
+      updateStackFrames();
+   }
 
    for (auto address = static_cast<int64_t>(firstLineAddress);
         address <= lastLineAddress; address += bytesPerLine) {

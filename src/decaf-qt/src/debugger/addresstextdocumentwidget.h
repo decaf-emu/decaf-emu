@@ -56,6 +56,7 @@ public:
    void navigateToAddress(VirtualAddress address);
    void navigateBackward();
    void navigateForward();
+   void copySelection();
 
 protected:
    std::optional<MouseHitTest> mouseEventHitTest(QMouseEvent *e);
@@ -78,7 +79,10 @@ protected:
 
    void keyPressEvent(QKeyEvent *e) override;
 
-   virtual void updateTextDocument(QTextCursor cursor, VirtualAddress firstLineAddress, VirtualAddress lastLineAddress, int bytePerLine) = 0;
+   virtual void updateTextDocument(QTextCursor cursor,
+                                   VirtualAddress firstLineAddress,
+                                   VirtualAddress lastLineAddress,
+                                   int bytePerLine, bool forDisplay) = 0;
 
    virtual QVector<QAbstractTextDocumentLayout::Selection>
    getCustomSelections(QTextDocument *document) { return {}; }

@@ -3,8 +3,10 @@
 #include <cctype>
 #include <libdecaf/decaf_debug_api.h>
 
+#include <QAction>
 #include <QApplication>
 #include <QClipboard>
+#include <QMenu>
 
 MemoryWidget::MemoryWidget(QWidget *parent) :
    AddressTextDocumentWidget(parent)
@@ -24,6 +26,13 @@ MemoryWidget::MemoryWidget(QWidget *parent) :
 
    mTextFormats.punctuation = QTextCharFormat { };
    mTextFormats.punctuation.setForeground(Qt::darkBlue);
+
+   mCopyAction = new QAction(tr("&Copy"), this);
+   mCopyHexAction = new QAction(tr("Copy data as hex"), this);
+   mCopyTextAction = new QAction(tr("Copy data as text"), this);
+   connect(mCopyAction, &QAction::triggered, this, &MemoryWidget::copySelection);
+   connect(mCopyHexAction, &QAction::triggered, this, &MemoryWidget::copySelectionAsHex);
+   connect(mCopyTextAction, &QAction::triggered, this, &MemoryWidget::copySelectionAsText);
 }
 
 void
@@ -85,48 +94,69 @@ MemoryWidget::resizeEvent(QResizeEvent *e)
 }
 
 void
-MemoryWidget::keyPressEvent(QKeyEvent *e)
+MemoryWidget::copySelectionAsHex()
 {
-   if (e->matches(QKeySequence::Copy)) {
-      if (mSelectionBegin != mSelectionEnd) {
-         auto startAddress = std::min(mSelectionBegin.address, mSelectionEnd.address);
-         auto endAddress = std::max(mSelectionBegin.address, mSelectionEnd.address);
-         auto count = endAddress - startAddress;
+   if (mSelectionBegin != mSelectionEnd) {
+      auto startAddress = std::min(mSelectionBegin.address, mSelectionEnd.address);
+      auto endAddress = std::max(mSelectionBegin.address, mSelectionEnd.address);
+      auto count = endAddress - startAddress;
 
-         // Limit copy to 4 kb
-         if (count <= 4 * 1024) {
-            auto hexString = QString { };
-            auto textString = QString { };
-            auto buffer = QByteArray { };
-            buffer.resize(count);
-            buffer.resize(static_cast<int>(
-               decaf::debug::readMemory(startAddress, buffer.data(),
-                                        buffer.size())));
+      // Limit copy to 4 kb
+      if (count <= 4 * 1024) {
+         auto buffer = QByteArray { };
+         buffer.resize(count);
+         buffer.resize(static_cast<int>(
+            decaf::debug::readMemory(startAddress, buffer.data(),
+               buffer.size())));
+         qApp->clipboard()->setText(QString { buffer.toHex() });
+      }
+   }
+}
 
-            if (mSelectionEnd.type == MemoryCursor::Hex) {
-               qApp->clipboard()->setText(QString { buffer.toHex() });
-            } else if (mSelectionEnd.type == MemoryCursor::Text) {
-               auto textString = QString { };
+void
+MemoryWidget::copySelectionAsText()
+{
+   if (mSelectionBegin != mSelectionEnd) {
+      auto startAddress = std::min(mSelectionBegin.address, mSelectionEnd.address);
+      auto endAddress = std::max(mSelectionBegin.address, mSelectionEnd.address);
+      auto count = endAddress - startAddress;
 
-               for (auto c : buffer) {
-                  if (std::isprint(c)) {
-                     textString += c;
-                  } else {
-                     textString += '?';
-                  }
-               }
+      // Limit copy to 4 kb
+      if (count <= 4 * 1024) {
+         auto buffer = QByteArray { };
+         buffer.resize(count);
+         buffer.resize(static_cast<int>(
+            decaf::debug::readMemory(startAddress, buffer.data(),
+               buffer.size())));
 
-               qApp->clipboard()->setText(textString);
+         auto textString = QString { };
+         for (auto c : buffer) {
+            if (std::isprint(c)) {
+               textString += c;
+            } else {
+               textString += '?';
             }
          }
+
+         qApp->clipboard()->setText(textString);
       }
-
-      e->accept();
-   } else {
-      return AddressTextDocumentWidget::keyPressEvent(e);
    }
+}
 
-   e->accept();
+void
+MemoryWidget::keyPressEvent(QKeyEvent *e)
+{
+   return AddressTextDocumentWidget::keyPressEvent(e);
+}
+
+void
+MemoryWidget::showContextMenu(QMouseEvent *e)
+{
+   auto menu = QMenu { this };
+   menu.addAction(mCopyAction);
+   menu.addAction(mCopyHexAction);
+   menu.addAction(mCopyTextAction);
+   menu.exec(e->globalPos());
 }
 
 MemoryWidget::MemoryCursor
@@ -291,7 +321,8 @@ void
 MemoryWidget::updateTextDocument(QTextCursor cursor,
                                   VirtualAddress firstLineAddress,
                                   VirtualAddress lastLineAddress,
-                                  int bytesPerLine)
+                                  int bytesPerLine,
+                                  bool forDisplay)
 {
    // TODO: Cache line cursor position for Address, Hex, Text
    auto buffer = std::vector<uint8_t> { };
