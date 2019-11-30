@@ -120,7 +120,7 @@ RegistersWindow::generateDocument()
       cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
 
       mRegisterCursors.fpr[i] = { cursor.block(), cursor.positionInBlock() };
-      cursor.insertText(toHexString(0, 64) + QString { " 0.0f" }, mTextFormats.value);
+      cursor.insertText(toHexString(0, 64) + QString { " 0" }, mTextFormats.value);
       mRegisterCursors.fpr[i].end = cursor.positionInBlock();
    }
 
@@ -130,7 +130,7 @@ RegistersWindow::generateDocument()
       cursor.insertText(QString { ' ' }.repeated(registerNameWidth - cursor.positionInBlock()));
 
       mRegisterCursors.psf[i] = { cursor.block(), cursor.positionInBlock() };
-      cursor.insertText(toHexString(0, 64) + QString { " 0.0f" }, mTextFormats.value);
+      cursor.insertText(toHexString(0, 64) + QString { " 0" }, mTextFormats.value);
       mRegisterCursors.psf[i].end = cursor.positionInBlock();
    }
 
@@ -158,6 +158,7 @@ RegistersWindow::debugDataChanged()
 
          if (lastValue != currentValue) {
             cursor.insertText(toString(currentValue), mTextFormats.changedValue);
+            reg.end = cursor.selectionEnd() - reg.block.position();
          } else if (clearChangedHighlight) {
             if (cursor.charFormat().foreground().color() == mTextFormats.changedValue.foreground().color()) {
                cursor.setCharFormat(mTextFormats.value);
