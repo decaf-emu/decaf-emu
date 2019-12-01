@@ -26,7 +26,6 @@ struct StaticClientData
    be2_val<uint32_t> refCount = 0u;
    be2_struct<nn::ipc::Client> client;
    be2_struct<nn::ipc::BufferAllocator> allocator;
-   be2_val<bool> parentalControlCheckEnabled = true;
 };
 
 static virt_ptr<StaticClientData> sClientData = nullptr;
@@ -65,18 +64,6 @@ Finalize()
    return result;
 }
 
-bool
-IsParentalControlCheckEnabled()
-{
-   return sClientData->parentalControlCheckEnabled;
-}
-
-void
-EnableParentalControlCheck(bool enable)
-{
-   sClientData->parentalControlCheckEnabled = enable;
-}
-
 namespace internal
 {
 
@@ -99,10 +86,6 @@ Library::registerClientSymbols()
 {
    RegisterFunctionExportName("Initialize__Q2_2nn3actFv", Initialize);
    RegisterFunctionExportName("Finalize__Q2_2nn3actFv", Finalize);
-   RegisterFunctionExportName("IsParentalControlCheckEnabled__Q2_2nn3actFv",
-                              IsParentalControlCheckEnabled);
-   RegisterFunctionExportName("EnableParentalControlCheck__Q2_2nn3actFb",
-                              EnableParentalControlCheck);
 
    RegisterDataInternal(sClientData);
 }

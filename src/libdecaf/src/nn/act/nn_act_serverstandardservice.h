@@ -14,6 +14,10 @@ namespace nn::act::services
 
 struct ServerStandardService : ipc::Service<1>
 {
+   using AcquireNexServiceToken =
+      ipc::Command<ServerStandardService, 4>
+         ::Parameters<SlotNo, ipc::OutBuffer<NexAuthenticationResult>, uint32_t, bool>;
+
    using Cancel =
       ipc::Command<ServerStandardService, 100>
          ::Parameters<>;

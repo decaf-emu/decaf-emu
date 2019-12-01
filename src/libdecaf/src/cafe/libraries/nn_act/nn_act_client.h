@@ -13,12 +13,6 @@ Initialize();
 nn::Result
 Finalize();
 
-bool
-IsParentalControlCheckEnabled();
-
-void
-EnableParentalControlCheck(bool enable);
-
 namespace internal
 {
 

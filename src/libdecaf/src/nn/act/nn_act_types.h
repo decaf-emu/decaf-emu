@@ -37,6 +37,22 @@ CHECK_OFFSET(Birthday, 0x02, month);
 CHECK_OFFSET(Birthday, 0x03, day);
 CHECK_SIZE(Birthday, 0x4);
 
+struct NexAuthenticationResult
+{
+   be2_array<char, 513> token;
+   PADDING(3);
+   be2_array<char, 65> password;
+   PADDING(3);
+   be2_array<char, 16> host;
+   be2_val<uint16_t> port;
+   PADDING(2);
+};
+CHECK_OFFSET(NexAuthenticationResult, 0x000, token);
+CHECK_OFFSET(NexAuthenticationResult, 0x204, password);
+CHECK_OFFSET(NexAuthenticationResult, 0x248, host);
+CHECK_OFFSET(NexAuthenticationResult, 0x258, port);
+CHECK_SIZE(NexAuthenticationResult, 0x25C);
+
 #pragma pack(pop)
 
 } // namespace nn::act

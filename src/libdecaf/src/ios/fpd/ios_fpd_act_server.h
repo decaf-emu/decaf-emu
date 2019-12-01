@@ -11,6 +11,9 @@ startActServer();
 Handle
 getActFsaHandle();
 
+Handle
+getActUserConfigHandle();
+
 void
 initialiseStaticActServerData();
 

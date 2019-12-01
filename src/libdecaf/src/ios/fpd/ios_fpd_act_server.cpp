@@ -6,6 +6,7 @@
 #include "ios_fpd_act_server.h"
 #include "ios_fpd_act_serverstandardservice.h"
 
+#include "ios/auxil/ios_auxil_usr_cfg_ipc.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/nn/ios_nn_ipc_server.h"
 #include "ios/fs/ios_fs_fsa_ipc.h"
@@ -36,6 +37,13 @@ public:
          mFsaHandle = static_cast<Handle>(error);
       }
 
+      error = auxil::UCOpen();
+      if (error < Error::OK) {
+         internal::fpdLog->error("ActServer::intialiseServer: UCOpen failed with error = {}", error);
+      } else {
+         mUserConfigHandle = static_cast<Handle>(error);
+      }
+
       initialiseAccounts();
    }
 
@@ -51,8 +59,14 @@ public:
       return mFsaHandle;
    }
 
+   Handle getUserConfigHandle()
+   {
+      return mUserConfigHandle;
+   }
+
 private:
    be2_val<Handle> mFsaHandle = -1;
+   be2_val<Handle> mUserConfigHandle = -1;
 };
 
 struct StaticActServerData
@@ -101,6 +115,12 @@ Handle
 getActFsaHandle()
 {
    return sActServerData->server.getFsaHandle();
+}
+
+Handle
+getActUserConfigHandle()
+{
+   return sActServerData->server.getUserConfigHandle();
 }
 
 void

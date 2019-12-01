@@ -10,6 +10,13 @@ namespace ios::fpd::internal
 {
 
 static nn::Result
+acquireNexServiceToken(CommandHandlerArgs &args)
+{
+   return ResultUcError;
+};
+
+
+static nn::Result
 cancel(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActServerStandardService::Cancel> { args };
@@ -24,6 +31,8 @@ ActServerStandardService::commandHandler(uint32_t unk1,
    switch (command) {
    case Cancel::command:
       return cancel(args);
+   case AcquireNexServiceToken::command:
+      return acquireNexServiceToken(args);
    default:
       return nn::ResultSuccess;
    }
