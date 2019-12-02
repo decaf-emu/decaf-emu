@@ -181,7 +181,7 @@ mcpLoadFile(phys_ptr<const MCPRequestLoadFile> request,
       path = fmt::format("/vol/code/{}", name);
       break;
    case MCPFileType::CafeOS:
-      path = fmt::format("/vol/storage_mlc01/sys/title/00050010/1000400A/code/{}", name);
+      path = fmt::format("/vol/system_slc/title/00050010/1000400A/code/{}", name);
       break;
    case MCPFileType::SharedDataCode:
       path = fmt::format("/vol/storage_mlc01/sys/title/0005001B/10042400/code/{}", name);
