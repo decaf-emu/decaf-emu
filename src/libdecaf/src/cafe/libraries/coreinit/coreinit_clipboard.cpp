@@ -41,7 +41,7 @@ OSCopyFromClipboard(virt_ptr<void> buffer,
    if (OSDriver_CopyFromSaveArea(10,
                                  sClipboardSaveData,
                                  sizeof(ClipboardSaveData)) != OSDriver_Error::OK) {
-      return false;
+      return FALSE;
    }
 
    if (buffer && sClipboardSaveData->size) {

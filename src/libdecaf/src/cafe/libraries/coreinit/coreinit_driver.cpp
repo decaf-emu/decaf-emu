@@ -12,6 +12,7 @@
 #include "cafe/cafe_ppc_interface_invoke.h"
 #include "cafe/cafe_stackobject.h"
 #include "cafe/kernel/cafe_kernel_userdrivers.h"
+#include "cafe/libraries/cafe_hle_stub.h"
 
 #include <common/decaf_assert.h>
 #include <common/strutils.h>
@@ -418,7 +419,9 @@ OSDriver_CopyFromSaveArea(OSDriver_UserDriverId driverId,
                           virt_ptr<void> data,
                           uint32_t size)
 {
-   return OSDriver_Error::DriverNotFound;
+   decaf_warn_stub();
+   std::memset(data.get(), 0, size);
+   return OSDriver_Error::OK;
 }
 
 OSDriver_Error
@@ -426,7 +429,8 @@ OSDriver_CopyToSaveArea(OSDriver_UserDriverId driverId,
                         virt_ptr<const void> data,
                         uint32_t size)
 {
-   return OSDriver_Error::DriverNotFound;
+   decaf_warn_stub();
+   return OSDriver_Error::OK;
 }
 
 namespace internal
