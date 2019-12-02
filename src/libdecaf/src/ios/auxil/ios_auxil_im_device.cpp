@@ -149,7 +149,7 @@ initialiseImParameters()
       auto parameter = static_cast<IMParameter>(i);
       auto &cfg = sysConfig[i];
       cfg.name = std::string { "slc:im_cfg." } + sParameterKey[parameter];
-      cfg.data = virt_cast<void *>(virt_addr { phys_cast<phys_addr>(phys_addrof(sData->nvParameters[i])).getAddress() }); // EW!!!
+      cfg.data = phys_addrof(sData->nvParameters[i]);
       cfg.dataSize = 4u;
       cfg.dataType = UCDataType::UnsignedInt;
       cfg.error = UCError::OK;

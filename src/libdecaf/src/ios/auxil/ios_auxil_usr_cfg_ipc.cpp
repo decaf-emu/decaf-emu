@@ -101,7 +101,7 @@ UCReadSysConfig(UCHandle handle,
       settings[i].error = request->settings[i].error;
 
       if (auto len = vecs[i + 1].len) {
-         auto dst = phys_cast<void *>(phys_addr { virt_cast<virt_addr>(settings[i].data).getAddress() });
+         auto dst = phys_cast<void *>(settings[i].data);
          auto src = phys_cast<const void *>(vecs[i + 1].paddr);
          std::memcpy(dst.get(), src.get(), len);
       }
@@ -169,7 +169,7 @@ UCWriteSysConfig(UCHandle handle,
 
          vecs[1 + i].paddr = phys_cast<phys_addr>(dataBuffer);
 
-         auto src = phys_cast<const void *>(phys_addr { virt_cast<virt_addr>(settings[i].data).getAddress() });
+         auto src = phys_cast<const void *>(settings[i].data);
          auto dst = phys_cast<void *>(vecs[i + 1].paddr);
          std::memcpy(dst.get(), src.get(), size);
       } else {
