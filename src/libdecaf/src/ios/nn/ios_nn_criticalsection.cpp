@@ -234,6 +234,8 @@ initialiseProcessCriticalSectionData()
                        case TlsEntryEvent::Copy:
                           *data = *copyData;
                           return 0u;
+                       case TlsEntryEvent::GetSize:
+                          return sizeof(SemaphoreId);
                        }
 
                        return sizeof(SemaphoreId);
