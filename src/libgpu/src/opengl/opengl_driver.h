@@ -1,6 +1,7 @@
 #pragma once
 #ifdef DECAF_GL
 #include <glad/glad.h>
+#undef APIENTRY
 
 #include "glsl2/glsl2_translate.h"
 #include "gpu_ringbuffer.h"
