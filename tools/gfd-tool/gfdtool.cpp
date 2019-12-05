@@ -956,16 +956,30 @@ convertTexture(const std::string &path)
 
       // Untile image
       untiled.resize(tex.surface.image.size());
-      gpu7::tiling::cpu::untileImage(surface, tex.surface.image.data(),
-                                     untiled.data());
+
+      auto surfaceInfo = gpu7::tiling::computeSurfaceInfo(surface, 0);
+      auto retileInfo = gpu7::tiling::computeRetileInfo(surfaceInfo);
+      gpu7::tiling::cpu::untile(retileInfo, untiled.data(),
+                                tex.surface.image.data(),
+                                0, surface.numSlices);
 
       // Unpitch image
       imageData.resize(gpu7::tiling::computeUnpitchedImageSize(surface));
       gpu7::tiling::unpitchImage(surface, untiled.data(), imageData.data());
 
       // Untile mipmaps
+      auto mipOffset = 0u;
       untiled.resize(tex.surface.mipmap.size());
-      gpu7::tiling::cpu::untileMipMap(surface, tex.surface.mipmap.data(), untiled.data());
+
+      for (auto i = 1u; i < surface.numLevels; ++i) {
+         auto mipSurfaceInfo = gpu7::tiling::computeSurfaceInfo(surface, i);
+         auto mipRetileInfo = gpu7::tiling::computeRetileInfo(mipSurfaceInfo);
+         mipOffset = align_up(mipOffset, mipSurfaceInfo.baseAlign);
+         gpu7::tiling::cpu::untile(mipRetileInfo, untiled.data() + mipOffset,
+                                   tex.surface.mipmap.data() + mipOffset,
+                                   0, surface.numSlices);
+         mipOffset += mipSurfaceInfo.surfSize;
+      }
 
       // Unpitch mipmaps
       mipMapData.resize(gpu7::tiling::computeUnpitchedMipMapSize(surface));
