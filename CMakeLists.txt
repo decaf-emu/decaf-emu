@@ -155,6 +155,9 @@ if(MSVC)
     add_definitions(-DNOMINMAX)
     add_definitions(-DUNICODE -D_UNICODE)
 
+    # Disable warnings about using non-portable string function variants
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
     # Disable warnings about using deprecated std::wstring_convert
     add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
 else()
