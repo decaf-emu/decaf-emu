@@ -928,8 +928,8 @@ convertTexture(const std::string &path)
 
       // Fill out tiling surface information
       auto surface = gpu7::tiling::SurfaceDescription { };
-      surface.tileMode = static_cast<AddrTileMode>(tex.surface.tileMode);
-      surface.format = static_cast<AddrFormat>(format);
+      surface.tileMode = static_cast<gpu7::tiling::TileMode>(tex.surface.tileMode);
+      surface.format = static_cast<gpu7::tiling::DataFormat>(format);
       surface.bpp = bpp;
       surface.numSamples = 1u << static_cast<int>(tex.surface.aa);
       surface.width = tex.surface.width;

@@ -97,8 +97,8 @@ public:
 
       auto input = ADDR_COMPUTE_SURFACE_INFO_INPUT { };
       input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
-      input.tileMode = surface.tileMode;
-      input.format = surface.format;
+      input.tileMode = static_cast<AddrTileMode > (surface.tileMode);
+      input.format = static_cast<AddrFormat>(surface.format);
       input.bpp = surface.bpp;
       input.numSamples = surface.numSamples;
       input.numFrags = surface.numFrags;

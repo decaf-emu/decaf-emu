@@ -338,8 +338,8 @@ private:
       }
 
       auto desc = gpu7::tiling::SurfaceDescription{ };
-      desc.tileMode = static_cast<AddrTileMode>(tileMode);
-      desc.format = static_cast<AddrFormat>(format);
+      desc.tileMode = static_cast<gpu7::tiling::TileMode>(tileMode);
+      desc.format = static_cast<gpu7::tiling::DataFormat>(format);
       desc.bpp = getDataFormatBitsPerElement(format);
       desc.numSamples = 1; // TODO: 1 << aa
       desc.width = pitch;

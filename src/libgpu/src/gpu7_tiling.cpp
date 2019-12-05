@@ -5,6 +5,7 @@
 #include <cstring>
 #include <common/align.h>
 #include <common/decaf_assert.h>
+#include <addrlib/addrinterface.h>
 
 namespace gpu7::tiling
 {
@@ -324,7 +325,7 @@ struct MicroTilerDepth
 template<typename MicroTiler>
 static void
 applyMicroTiler(const SurfaceDescription &desc,
-                const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                const SurfaceInfo &info,
                 void *src,
                 void *dst,
                 int dstStrideBytes,
@@ -356,7 +357,7 @@ applyMicroTiler(const SurfaceDescription &desc,
 
 static void
 untileMicroSurface(const SurfaceDescription &desc,
-                   const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                   const SurfaceInfo &info,
                    void *src,
                    void *dst,
                    int slice,
@@ -457,7 +458,7 @@ untileMicroSurface(const SurfaceDescription &desc,
 template<typename MicroTiler>
 static void
 applyMacroTiling(const SurfaceDescription &desc,
-                 const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                 const SurfaceInfo &info,
                  void *src,
                  void *dst,
                  int dstStrideBytes,
@@ -537,7 +538,7 @@ applyMacroTiling(const SurfaceDescription &desc,
 }
 
 int
-computeSurfaceBankSwappedWidth(AddrTileMode tileMode,
+computeSurfaceBankSwappedWidth(TileMode tileMode,
                                uint32_t bpp,
                                uint32_t numSamples,
                                uint32_t pitch)
@@ -584,7 +585,7 @@ computeSurfaceBankSwappedWidth(AddrTileMode tileMode,
 
 static void
 untileMacroSurface(const SurfaceDescription &desc,
-                   const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                   const SurfaceInfo &info,
                    void *src,
                    void *dst,
                    int slice,
@@ -627,33 +628,33 @@ untileMacroSurface(const SurfaceDescription &desc,
    auto bankSwapWidth = 0;
 
    switch (info.tileMode) {
-   case ADDR_TM_2D_TILED_THIN1:
-   case ADDR_TM_2D_TILED_THIN2:
-   case ADDR_TM_2D_TILED_THIN4:
-   case ADDR_TM_2D_TILED_THICK:
-   case ADDR_TM_2B_TILED_THIN1:
-   case ADDR_TM_2B_TILED_THIN2:
-   case ADDR_TM_2B_TILED_THIN4:
-   case ADDR_TM_2B_TILED_THICK:
-      bankSliceRotation = ((NumBanks >> 1) - 1) * (slice / microTileThickness);
-      sampleSliceRotation = ((NumBanks >> 1) + 1) * sample;
+   case TileMode::Macro2DTiledThin1:
+   case TileMode::Macro2DTiledThin2:
+   case TileMode::Macro2DTiledThin4:
+   case TileMode::Macro2DTiledThick:
+   case TileMode::Macro2BTiledThin1:
+   case TileMode::Macro2BTiledThin2:
+   case TileMode::Macro2BTiledThin4:
+   case TileMode::Macro2BTiledThick:
+      bankSliceRotation = ((NumBanks >> 1) - 1)* (slice / microTileThickness);
+      sampleSliceRotation = ((NumBanks >> 1) + 1)* sample;
       break;
-   case ADDR_TM_3D_TILED_THIN1:
-   case ADDR_TM_3D_TILED_THICK:
-   case ADDR_TM_3B_TILED_THIN1:
-   case ADDR_TM_3B_TILED_THICK:
+   case TileMode::Macro3DTiledThin1:
+   case TileMode::Macro3DTiledThick:
+   case TileMode::Macro3BTiledThin1:
+   case TileMode::Macro3BTiledThick:
       bankSliceRotation = (slice / microTileThickness) / NumPipes;
       pipeSliceRotation = (slice / microTileThickness);
       break;
    }
 
    switch (info.tileMode) {
-   case ADDR_TM_2B_TILED_THIN1:
-   case ADDR_TM_2B_TILED_THIN2:
-   case ADDR_TM_2B_TILED_THIN4:
-   case ADDR_TM_2B_TILED_THICK:
-   case ADDR_TM_3B_TILED_THIN1:
-   case ADDR_TM_3B_TILED_THICK:
+   case TileMode::Macro2BTiledThin1:
+   case TileMode::Macro2BTiledThin2:
+   case TileMode::Macro2BTiledThin4:
+   case TileMode::Macro2BTiledThick:
+   case TileMode::Macro3BTiledThin1:
+   case TileMode::Macro3BTiledThick:
       bankSwapWidth = computeSurfaceBankSwappedWidth(info.tileMode, info.bpp,
                                                      desc.numSamples,
                                                      info.pitch);
@@ -800,8 +801,8 @@ computeSurfaceInfo(const SurfaceDescription &surface,
 
    auto input = ADDR_COMPUTE_SURFACE_INFO_INPUT { };
    input.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_INPUT);
-   input.tileMode = surface.tileMode;
-   input.format = surface.format;
+   input.tileMode = static_cast<AddrTileMode>(surface.tileMode);
+   input.format = static_cast<AddrFormat>(surface.format);
    input.bpp = surface.bpp;
    input.numSamples = surface.numSamples;
    input.numFrags = surface.numFrags;
@@ -838,7 +839,19 @@ computeSurfaceInfo(const SurfaceDescription &surface,
       output.sliceSize /= output.depth;
    }
 
-   return SurfaceInfo(output);
+   SurfaceInfo result;
+   result.tileMode = static_cast<TileMode>(output.tileMode);
+   result.bpp = output.bpp;
+   result.pitch = output.pitch;
+   result.height = output.height;
+   result.depth = output.depth;
+   result.surfSize = static_cast<uint32_t>(output.surfSize);
+   result.sliceSize = output.sliceSize;
+   result.baseAlign = output.baseAlign;
+   result.pitchAlign = output.pitchAlign;
+   result.heightAlign = output.heightAlign;
+   result.depthAlign = output.depthAlign;
+   return result;
 }
 
 
@@ -893,26 +906,26 @@ untileMipSlice(const SurfaceDescription &desc,
    auto sample = 0;
 
    switch (info.tileMode) {
-   case ADDR_TM_LINEAR_GENERAL:
-   case ADDR_TM_LINEAR_ALIGNED:
+   case TileMode::LinearGeneral:
+   case TileMode::LinearAligned:
       // Already "untiled"
       return;
-   case ADDR_TM_1D_TILED_THIN1:
-   case ADDR_TM_1D_TILED_THICK:
+   case TileMode::Micro1DTiledThin1:
+   case TileMode::Micro1DTiledThick:
       untileMicroSurface(desc, info, src, dst, slice, sample);
       break;
-   case ADDR_TM_2D_TILED_THIN1:
-   case ADDR_TM_2D_TILED_THIN2:
-   case ADDR_TM_2D_TILED_THIN4:
-   case ADDR_TM_2D_TILED_THICK:
-   case ADDR_TM_2B_TILED_THIN1:
-   case ADDR_TM_2B_TILED_THIN2:
-   case ADDR_TM_2B_TILED_THIN4:
-   case ADDR_TM_2B_TILED_THICK:
-   case ADDR_TM_3D_TILED_THIN1:
-   case ADDR_TM_3D_TILED_THICK:
-   case ADDR_TM_3B_TILED_THIN1:
-   case ADDR_TM_3B_TILED_THICK:
+   case TileMode::Macro2DTiledThin1:
+   case TileMode::Macro2DTiledThin2:
+   case TileMode::Macro2DTiledThin4:
+   case TileMode::Macro2DTiledThick:
+   case TileMode::Macro2BTiledThin1:
+   case TileMode::Macro2BTiledThin2:
+   case TileMode::Macro2BTiledThin4:
+   case TileMode::Macro2BTiledThick:
+   case TileMode::Macro3DTiledThin1:
+   case TileMode::Macro3DTiledThick:
+   case TileMode::Macro3BTiledThin1:
+   case TileMode::Macro3BTiledThick:
       untileMacroSurface(desc, info, src, dst, slice, sample);
       break;
    default:

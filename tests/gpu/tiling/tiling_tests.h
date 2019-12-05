@@ -5,6 +5,7 @@
 #include <random>
 #include <spdlog/spdlog.h>
 #include <vector>
+#include <libgpu/gpu7_tiling.h>
 
 extern std::vector<uint8_t> sRandomData;
 
@@ -19,14 +20,14 @@ struct TestLayout
 
 struct TestFormat
 {
-   AddrFormat format;
+   gpu7::tiling::DataFormat format;
    uint32_t bpp;
    bool depth;
 };
 
 struct TestTilingMode
 {
-   AddrTileMode tileMode;
+   gpu7::tiling::TileMode tileMode;
 };
 
 static constexpr TestLayout sTestLayout[] = {
@@ -43,68 +44,68 @@ static constexpr TestLayout sTestLayout[] = {
 static constexpr TestLayout sPerfTestLayout = { 338u, 309u, 8u, 0u, 8u };
 
 static constexpr TestTilingMode sTestTilingMode[] = {
-   { ADDR_TM_1D_TILED_THIN1 },
-   { ADDR_TM_1D_TILED_THICK },
-   { ADDR_TM_2D_TILED_THIN1 },
-   { ADDR_TM_2D_TILED_THIN2 },
-   { ADDR_TM_2D_TILED_THIN4 },
-   { ADDR_TM_2D_TILED_THICK },
-   { ADDR_TM_2B_TILED_THIN1 },
-   { ADDR_TM_2B_TILED_THIN2 },
-   { ADDR_TM_2B_TILED_THIN4 },
-   { ADDR_TM_2B_TILED_THICK },
-   { ADDR_TM_3D_TILED_THIN1 },
-   { ADDR_TM_3D_TILED_THICK },
-   { ADDR_TM_3B_TILED_THIN1 },
-   { ADDR_TM_3B_TILED_THICK },
+   { gpu7::tiling::TileMode::Micro1DTiledThin1 },
+   { gpu7::tiling::TileMode::Micro1DTiledThick },
+   { gpu7::tiling::TileMode::Macro2DTiledThin1 },
+   { gpu7::tiling::TileMode::Macro2DTiledThin2 },
+   { gpu7::tiling::TileMode::Macro2DTiledThin4 },
+   { gpu7::tiling::TileMode::Macro2DTiledThick },
+   { gpu7::tiling::TileMode::Macro2BTiledThin1 },
+   { gpu7::tiling::TileMode::Macro2BTiledThin2 },
+   { gpu7::tiling::TileMode::Macro2BTiledThin4 },
+   { gpu7::tiling::TileMode::Macro2BTiledThick },
+   { gpu7::tiling::TileMode::Macro3DTiledThin1 },
+   { gpu7::tiling::TileMode::Macro3DTiledThick },
+   { gpu7::tiling::TileMode::Macro3BTiledThin1 },
+   { gpu7::tiling::TileMode::Macro3BTiledThick },
 };
 
 static constexpr TestFormat sTestFormats[] = {
-   { AddrFormat::ADDR_FMT_8, 8u, false },
-   { AddrFormat::ADDR_FMT_8_8, 16u, false },
-   { AddrFormat::ADDR_FMT_8_8_8_8, 32u, false },
-   { AddrFormat::ADDR_FMT_32_32, 64u, false },
-   { AddrFormat::ADDR_FMT_32_32_32_32, 128u, false },
-   //{ AddrFormat::ADDR_FMT_16, 16u, true },
-   //{ AddrFormat::ADDR_FMT_32, 32u, true },
-   //{ AddrFormat::ADDR_FMT_X24_8_32_FLOAT, 64u, true },
+   { gpu7::tiling::DataFormat::FMT_8, 8u, false },
+   { gpu7::tiling::DataFormat::FMT_8_8, 16u, false },
+   { gpu7::tiling::DataFormat::FMT_8_8_8_8, 32u, false },
+   { gpu7::tiling::DataFormat::FMT_32_32, 64u, false },
+   { gpu7::tiling::DataFormat::FMT_32_32_32_32, 128u, false },
+   //{ gpu7::tiling::DataFormat::FMT_16, 16u, true },
+   //{ gpu7::tiling::DataFormat::FMT_32, 32u, true },
+   //{ gpu7::tiling::DataFormat::FMT_X24_8_32_FLOAT, 64u, true },
 };
 
 static const char *
-tileModeToString(AddrTileMode mode)
+tileModeToString(gpu7::tiling::TileMode mode)
 {
    switch (mode) {
-   case ADDR_TM_LINEAR_GENERAL:
+   case gpu7::tiling::TileMode::LinearGeneral:
       return "LinearGeneral";
-   case ADDR_TM_LINEAR_ALIGNED:
+   case gpu7::tiling::TileMode::LinearAligned:
       return "LinearAligned";
-   case ADDR_TM_1D_TILED_THIN1:
+   case gpu7::tiling::TileMode::Micro1DTiledThin1:
       return "Tiled1DThin1";
-   case ADDR_TM_1D_TILED_THICK:
+   case gpu7::tiling::TileMode::Micro1DTiledThick:
       return "Tiled1DThick";
-   case ADDR_TM_2D_TILED_THIN1:
+   case gpu7::tiling::TileMode::Macro2DTiledThin1:
       return "Tiled2DThin1";
-   case ADDR_TM_2D_TILED_THIN2:
+   case gpu7::tiling::TileMode::Macro2DTiledThin2:
       return "Tiled2DThin2";
-   case ADDR_TM_2D_TILED_THIN4:
+   case gpu7::tiling::TileMode::Macro2DTiledThin4:
       return "Tiled2DThin4";
-   case ADDR_TM_2D_TILED_THICK:
+   case gpu7::tiling::TileMode::Macro2DTiledThick:
       return "Tiled2DThick";
-   case ADDR_TM_2B_TILED_THIN1:
+   case gpu7::tiling::TileMode::Macro2BTiledThin1:
       return "Tiled2BThin1";
-   case ADDR_TM_2B_TILED_THIN2:
+   case gpu7::tiling::TileMode::Macro2BTiledThin2:
       return "Tiled2BThin2";
-   case ADDR_TM_2B_TILED_THIN4:
+   case gpu7::tiling::TileMode::Macro2BTiledThin4:
       return "Tiled2BThin4";
-   case ADDR_TM_2B_TILED_THICK:
+   case gpu7::tiling::TileMode::Macro2BTiledThick:
       return "Tiled2BThick";
-   case ADDR_TM_3D_TILED_THIN1:
+   case gpu7::tiling::TileMode::Macro3DTiledThin1:
       return "Tiled3DThin1";
-   case ADDR_TM_3D_TILED_THICK:
+   case gpu7::tiling::TileMode::Macro3DTiledThick:
       return "Tiled3DThick";
-   case ADDR_TM_3B_TILED_THIN1:
+   case gpu7::tiling::TileMode::Macro3BTiledThin1:
       return "Tiled3BThin1";
-   case ADDR_TM_3B_TILED_THICK:
+   case gpu7::tiling::TileMode::Macro3BTiledThick:
       return "Tiled3BThick";
    default:
       FAIL(fmt::format("Unknown tiling mode {}", static_cast<int>(mode)));

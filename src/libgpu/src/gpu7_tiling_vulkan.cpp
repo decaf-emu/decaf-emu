@@ -51,7 +51,7 @@ std::array<BppDepthInfo, 8> ValidBppDepths = { {
 
 struct TileModeInfo
 {
-   AddrTileMode tileMode;
+   TileMode tileMode;
    uint32_t microTileThickness;
    uint32_t macroTileWidth;
    uint32_t macroTileHeight;
@@ -60,27 +60,27 @@ struct TileModeInfo
 };
 
 std::array<TileModeInfo, 14> ValidTileConfigs = { {
-   { ADDR_TM_1D_TILED_THIN1, 1, 1, 1, false, false },
-   { ADDR_TM_1D_TILED_THICK, 4, 1, 1, false, false },
-   { ADDR_TM_2D_TILED_THIN1, 1, 4, 2, false, false },
-   { ADDR_TM_2D_TILED_THIN2, 1, 2, 4, false, false },
-   { ADDR_TM_2D_TILED_THIN4, 1, 1, 8, false, false },
-   { ADDR_TM_2D_TILED_THICK, 4, 4, 2, false, false },
-   { ADDR_TM_2B_TILED_THIN1, 1, 4, 2, false, true },
-   { ADDR_TM_2B_TILED_THIN2, 1, 2, 4, false, true },
-   { ADDR_TM_2B_TILED_THIN4, 1, 1, 8, false, true },
-   { ADDR_TM_2B_TILED_THICK, 4, 4, 2, false, true },
-   { ADDR_TM_3D_TILED_THIN1, 1, 4, 2, true, false },
-   { ADDR_TM_3D_TILED_THICK, 4, 4, 2, true, false },
-   { ADDR_TM_3B_TILED_THIN1, 1, 4, 2, true, true },
-   { ADDR_TM_3B_TILED_THICK, 4, 4, 2, true, true },
+   { TileMode::Micro1DTiledThin1, 1, 1, 1, false, false },
+   { TileMode::Micro1DTiledThick, 4, 1, 1, false, false },
+   { TileMode::Macro2DTiledThin1, 1, 4, 2, false, false },
+   { TileMode::Macro2DTiledThin2, 1, 2, 4, false, false },
+   { TileMode::Macro2DTiledThin4, 1, 1, 8, false, false },
+   { TileMode::Macro2DTiledThick, 4, 4, 2, false, false },
+   { TileMode::Macro2BTiledThin1, 1, 4, 2, false, true },
+   { TileMode::Macro2BTiledThin2, 1, 2, 4, false, true },
+   { TileMode::Macro2BTiledThin4, 1, 1, 8, false, true },
+   { TileMode::Macro2BTiledThick, 4, 4, 2, false, true },
+   { TileMode::Macro3DTiledThin1, 1, 4, 2, true, false },
+   { TileMode::Macro3DTiledThick, 4, 4, 2, true, false },
+   { TileMode::Macro3BTiledThin1, 1, 4, 2, true, true },
+   { TileMode::Macro3BTiledThick, 4, 4, 2, true, true },
 } };
 
 // TODO: This should be based on the GPU in use
 static const uint32_t GpuSubGroupSize = 6;
 
 static inline uint32_t
-getRetileSpecKey(uint32_t bpp, bool isDepth, AddrTileMode tileMode, bool isUntiling)
+getRetileSpecKey(uint32_t bpp, bool isDepth, TileMode tileMode, bool isUntiling)
 {
    uint32_t isDepthUint = isDepth ? 1 : 0;
    uint32_t tileModeUint = static_cast<uint32_t>(tileMode);
@@ -95,7 +95,7 @@ getRetileSpecKey(uint32_t bpp, bool isDepth, AddrTileMode tileMode, bool isUntil
 
 static inline RetileInfo
 calculateLinearRetileInfo(const SurfaceDescription &desc,
-                          const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                          const SurfaceInfo &info,
                           uint32_t firstSlice,
                           uint32_t numSlices)
 {
@@ -106,7 +106,7 @@ calculateLinearRetileInfo(const SurfaceDescription &desc,
 
 static inline RetileInfo
 calculateMicroRetileInfo(const SurfaceDescription &desc,
-                         const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                         const SurfaceInfo &info,
                          uint32_t firstSlice,
                          uint32_t numSlices)
 {
@@ -158,7 +158,7 @@ calculateMicroRetileInfo(const SurfaceDescription &desc,
 
 static inline RetileInfo
 calculateMacroRetileInfo(const SurfaceDescription &desc,
-                         const ADDR_COMPUTE_SURFACE_INFO_OUTPUT &info,
+                         const SurfaceInfo &info,
                          uint32_t firstSlice,
                          uint32_t numSlices)
 {
@@ -227,24 +227,24 @@ calculateRetileInfo(const SurfaceDescription &desc,
    const auto info = computeSurfaceInfo(desc, 0, firstSlice);
 
    switch (desc.tileMode) {
-   case ADDR_TM_LINEAR_ALIGNED:
-   case ADDR_TM_LINEAR_GENERAL:
+   case TileMode::LinearAligned:
+   case TileMode::LinearGeneral:
       return calculateLinearRetileInfo(desc, info, firstSlice, numSlices);
-   case ADDR_TM_1D_TILED_THIN1:
-   case ADDR_TM_1D_TILED_THICK:
+   case TileMode::Micro1DTiledThin1:
+   case TileMode::Micro1DTiledThick:
       return calculateMicroRetileInfo(desc, info, firstSlice, numSlices);
-   case ADDR_TM_2D_TILED_THIN1:
-   case ADDR_TM_2D_TILED_THIN2:
-   case ADDR_TM_2D_TILED_THIN4:
-   case ADDR_TM_2D_TILED_THICK:
-   case ADDR_TM_2B_TILED_THIN1:
-   case ADDR_TM_2B_TILED_THIN2:
-   case ADDR_TM_2B_TILED_THIN4:
-   case ADDR_TM_2B_TILED_THICK:
-   case ADDR_TM_3D_TILED_THIN1:
-   case ADDR_TM_3D_TILED_THICK:
-   case ADDR_TM_3B_TILED_THIN1:
-   case ADDR_TM_3B_TILED_THICK:
+   case TileMode::Macro2DTiledThin1:
+   case TileMode::Macro2DTiledThin2:
+   case TileMode::Macro2DTiledThin4:
+   case TileMode::Macro2DTiledThick:
+   case TileMode::Macro2BTiledThin1:
+   case TileMode::Macro2BTiledThin2:
+   case TileMode::Macro2BTiledThin4:
+   case TileMode::Macro2BTiledThick:
+   case TileMode::Macro3DTiledThin1:
+   case TileMode::Macro3DTiledThick:
+   case TileMode::Macro3BTiledThin1:
+   case TileMode::Macro3BTiledThick:
       return calculateMacroRetileInfo(desc, info, firstSlice, numSlices);
    default:
       decaf_abort("Invalid tile mode");

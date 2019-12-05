@@ -31,7 +31,7 @@ struct RetileInfo
 
    // Used only for micro tiling
    uint32_t sampleOffset;
-   AddrTileMode tileMode;
+   TileMode tileMode;
    uint32_t macroTileBytes;
    uint32_t bankSwizzle;
    uint32_t pipeSwizzle;

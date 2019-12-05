@@ -105,7 +105,7 @@ _getTilingSurfaceDesc(const SurfaceDesc &info)
 
    gpu7::tiling::SurfaceDescription tilingDesc;
    tilingDesc.tileMode = static_cast<gpu7::tiling::TileMode>(info.tileMode);
-   tilingDesc.format = static_cast<AddrFormat>(dataFormat);
+   tilingDesc.format = static_cast<gpu7::tiling::DataFormat>(dataFormat);
    tilingDesc.bpp = bpp;
    tilingDesc.numSamples = 1;
    tilingDesc.width = info.pitch;
