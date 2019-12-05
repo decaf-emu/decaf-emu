@@ -7,15 +7,6 @@
 namespace cafe::gx2
 {
 
-inline uint32_t
-floatToFixedPoint(float value,
-                  uint32_t bits,
-                  float min,
-                  float max)
-{
-   return static_cast<uint32_t>((value - min) * (static_cast<float>(1 << bits) / (max - min)));
-}
-
 void
 GX2InitSampler(virt_ptr<GX2Sampler> sampler,
                GX2TexClampMode clampMode,
