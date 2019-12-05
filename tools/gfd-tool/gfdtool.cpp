@@ -10,7 +10,7 @@
 #include <libcpu/cpu.h>
 #include <libgfd/gfd.h>
 #include <libgpu/gpu_tiling.h>
-#include <libgpu/gpu7_tiling.h>
+#include <libgpu/gpu7_tiling_cpu.h>
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgpu/latte/latte_formats.h>
 #include <libdecaf/src/cafe/libraries/gx2/gx2_debug_dds.h>
@@ -956,8 +956,8 @@ convertTexture(const std::string &path)
 
       // Untile image
       untiled.resize(tex.surface.image.size());
-      gpu7::tiling::untileImage(surface, tex.surface.image.data(),
-                                untiled.data());
+      gpu7::tiling::cpu::untileImage(surface, tex.surface.image.data(),
+                                     untiled.data());
 
       // Unpitch image
       imageData.resize(gpu7::tiling::computeUnpitchedImageSize(surface));
@@ -965,7 +965,7 @@ convertTexture(const std::string &path)
 
       // Untile mipmaps
       untiled.resize(tex.surface.mipmap.size());
-      gpu7::tiling::untileMipMap(surface, tex.surface.mipmap.data(), untiled.data());
+      gpu7::tiling::cpu::untileMipMap(surface, tex.surface.mipmap.data(), untiled.data());
 
       // Unpitch mipmaps
       mipMapData.resize(gpu7::tiling::computeUnpitchedMipMapSize(surface));

@@ -3,7 +3,7 @@
 #include "test_helpers.h"
 
 #include <common/align.h>
-#include <libgpu/gpu7_tiling.h>
+#include <libgpu/gpu7_tiling_cpu.h>
 
 static inline void
 compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
@@ -29,10 +29,10 @@ compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
    for (auto sliceIdx = firstSlice; sliceIdx < firstSlice + numSlices; ++sliceIdx) {
       auto sliceOffset = info.sliceSize * sliceIdx;
 
-      gpu7::tiling::untileImageSlice(desc,
-                                     untiled.data(),
-                                     tiledImage.data() + sliceOffset,
-                                     sliceIdx);
+      gpu7::tiling::cpu::untileImageSlice(desc,
+                                          untiled.data(),
+                                          tiledImage.data() + sliceOffset,
+                                          sliceIdx);
    }
 
    CHECK(compareImages(tiledImage, addrLibImage));
@@ -62,11 +62,11 @@ compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
       for (auto sliceIdx = firstSlice; sliceIdx < firstSlice + numSlices; ++sliceIdx) {
          auto sliceOffset = info.sliceSize * sliceIdx;
 
-         gpu7::tiling::untileMipSlice(desc,
-                                      untiled.data() + mipOffset,
-                                      tiledMipMap.data() + mipOffset + sliceOffset,
-                                      level,
-                                      sliceIdx);
+         gpu7::tiling::cpu::untileMipSlice(desc,
+                                           untiled.data() + mipOffset,
+                                           tiledMipMap.data() + mipOffset + sliceOffset,
+                                           level,
+                                           sliceIdx);
       }
 
       mipOffset += info.surfSize;
@@ -235,10 +235,10 @@ TEST_CASE("cpuTilingPerf", "[!benchmark]")
          auto lastSlice = test.firstSlice + test.numSlices;
          for (auto sliceIdx = firstSlice; sliceIdx < lastSlice; ++sliceIdx) {
             auto sliceOffset = test.info.sliceSize * sliceIdx;
-            gpu7::tiling::untileImageSlice(test.desc,
-                                           untiled.data(),
-                                           tiledImage.data() + sliceOffset,
-                                           sliceIdx);
+            gpu7::tiling::cpu::untileImageSlice(test.desc,
+                                                untiled.data(),
+                                                tiledImage.data() + sliceOffset,
+                                                sliceIdx);
          }
       }
    }

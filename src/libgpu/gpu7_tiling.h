@@ -248,35 +248,6 @@ computeSurfaceBankSwappedWidth(TileMode tileMode,
                                uint32_t numSamples,
                                uint32_t pitch);
 
-void
-untileImage(const SurfaceDescription &surface,
-            void *src,
-            void *dst);
-
-void
-untileImageSlice(const SurfaceDescription &surface,
-                 void *src,
-                 void *dst,
-                 int slice);
-
-void
-untileMipMap(const SurfaceDescription &desc,
-             void *src,
-             void *dst);
-
-void
-untileMip(const SurfaceDescription &surface,
-          void *src,
-          void *dst,
-          int level);
-
-void
-untileMipSlice(const SurfaceDescription &desc,
-               void *src,
-               void *dst,
-               int level,
-               int slice);
-
 size_t
 computeUnpitchedImageSize(const SurfaceDescription &desc);
 
