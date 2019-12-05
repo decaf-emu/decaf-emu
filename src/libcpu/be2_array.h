@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <cstdint>
+#include <stdexcept>
 #include <type_traits>
 #include <string_view>
 #include "be2_val.h"

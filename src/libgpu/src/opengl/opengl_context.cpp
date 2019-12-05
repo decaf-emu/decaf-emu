@@ -75,11 +75,11 @@ public:
 
       auto pixelFormat = ::ChoosePixelFormat(self->mDeviceContext, &pfd);
       if (!pixelFormat) {
-         return false;
+         return nullptr;
       }
 
       if (!::SetPixelFormat(self->mDeviceContext, pixelFormat, &pfd)) {
-         return false;
+         return nullptr;
       }
 
       self->mContext = ::wglCreateContext(self->mDeviceContext);
