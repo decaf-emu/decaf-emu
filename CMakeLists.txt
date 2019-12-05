@@ -160,6 +160,9 @@ if(MSVC)
 
     # Disable warnings about using deprecated std::wstring_convert
     add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
+
+    # Disable linker warnins about missing PDBs
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
 else()
     add_definitions(-DDECAF_USE_STDLAYOUT_BITFIELD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
