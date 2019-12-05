@@ -56,7 +56,7 @@ compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
 
    auto mipOffset = size_t { 0 };
    for (auto level = 1u; level < desc.numLevels; ++level) {
-      auto info = computeSurfaceInfo(desc, level, 0);
+      auto info = computeSurfaceInfo(desc, level);
       mipOffset = align_up(mipOffset, info.baseAlign);
 
       for (auto sliceIdx = firstSlice; sliceIdx < firstSlice + numSlices; ++sliceIdx) {

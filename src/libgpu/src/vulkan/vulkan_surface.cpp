@@ -470,7 +470,7 @@ Driver::_allocateSurface(const SurfaceDesc& info)
    subresRange.layerCount = realArrayLayers;
 
    auto tilingDesc = _getTilingSurfaceDesc(info);
-   auto tilingInfo = gpu7::tiling::computeSurfaceInfo(tilingDesc, 0, 0);
+   auto tilingInfo = gpu7::tiling::computeSurfaceInfo(tilingDesc, 0);
 
    // Grab a reference to the memory cache that backs this surface
    auto memCache = _getSurfaceMemCache(info, tilingInfo);

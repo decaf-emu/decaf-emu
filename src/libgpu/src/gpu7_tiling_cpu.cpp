@@ -748,7 +748,7 @@ untileMipSlice(const SurfaceDescription& desc,
                int level,
                int slice)
 {
-   const auto info = computeSurfaceInfo(desc, level, slice);
+   const auto info = computeSurfaceInfo(desc, level);
 
    // Multi-sample decoding is not supported yet.
    decaf_check(desc.numSamples == 1);
@@ -795,7 +795,7 @@ untileMip(const SurfaceDescription& desc,
           void* dst,
           int level)
 {
-   const auto info = computeSurfaceInfo(desc, level, 0);
+   const auto info = computeSurfaceInfo(desc, level);
    auto numSlices = std::min(desc.numSlices, info.depth);
 
    for (auto slice = 0u; slice < numSlices; ++slice) {
@@ -819,10 +819,10 @@ untileMipMap(const SurfaceDescription& desc,
              void* dst)
 {
    auto mipOffset = size_t { 0 };
-   auto baseInfo = computeSurfaceInfo(desc, 0, 0);
+   auto baseInfo = computeSurfaceInfo(desc, 0);
 
    for (auto level = 1u; level < desc.numLevels; ++level) {
-      auto info = computeSurfaceInfo(desc, level, 0);
+      auto info = computeSurfaceInfo(desc, level);
       mipOffset = align_up(mipOffset, info.baseAlign);
       untileMip(desc,
                 reinterpret_cast<uint8_t*>(src) + mipOffset,

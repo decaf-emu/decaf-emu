@@ -96,8 +96,7 @@ getAddrLibHandle()
 
 SurfaceInfo
 computeSurfaceInfo(const SurfaceDescription &surface,
-                   int mipLevel,
-                   int slice)
+                   int mipLevel)
 {
    auto output = ADDR_COMPUTE_SURFACE_INFO_OUTPUT { };
    output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
@@ -110,7 +109,7 @@ computeSurfaceInfo(const SurfaceDescription &surface,
    input.numSamples = surface.numSamples;
    input.numFrags = surface.numFrags;
    input.mipLevel = mipLevel;
-   input.slice = slice;
+   input.slice = 0;
    input.numSlices = surface.numSlices;
 
    input.width = std::max(surface.width >> mipLevel, 1u);
@@ -163,7 +162,7 @@ unpitchImage(const SurfaceDescription &desc,
              void *pitched,
              void *unpitched)
 {
-   const auto info = computeSurfaceInfo(desc, 0, 0);
+   const auto info = computeSurfaceInfo(desc, 0);
    const auto bytesPerElem = info.bpp / 8;
    const auto unpitchedSliceSize = desc.width * desc.height * bytesPerElem;
 
@@ -213,7 +212,7 @@ unpitchMipMap(const SurfaceDescription &desc,
    auto dstMipOffset = size_t { 0 };
 
    for (auto level = 1u; level < desc.numLevels; ++level) {
-      const auto info = computeSurfaceInfo(desc, level, 0);
+      const auto info = computeSurfaceInfo(desc, level);
       const auto bytesPerElem = info.bpp / 8;
       const auto width = desc.width >> level;
       const auto height = desc.height >> level;

@@ -237,8 +237,7 @@ struct SurfaceInfo
 
 SurfaceInfo
 computeSurfaceInfo(const SurfaceDescription &surface,
-                   int mipLevel,
-                   int slice);
+                   int mipLevel);
 
 // TODO(brett19): This should really be private, its only public
 // because we are using it from Vulkan retiler right now.

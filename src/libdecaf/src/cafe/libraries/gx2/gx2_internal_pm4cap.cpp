@@ -356,7 +356,7 @@ private:
       }
       desc.dim = static_cast<gpu7::tiling::SurfaceDim>(dim);
 
-      auto info = gpu7::tiling::computeSurfaceInfo(desc, 0, 0);
+      auto info = gpu7::tiling::computeSurfaceInfo(desc, 0);
       // TODO: Use align? info.baseAlign;
 
       // Track that badboy

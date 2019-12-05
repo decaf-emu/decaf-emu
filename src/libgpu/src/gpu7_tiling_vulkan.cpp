@@ -224,7 +224,7 @@ calculateRetileInfo(const SurfaceDescription &desc,
                     uint32_t firstSlice,
                     uint32_t numSlices)
 {
-   const auto info = computeSurfaceInfo(desc, 0, firstSlice);
+   const auto info = computeSurfaceInfo(desc, 0);
 
    switch (desc.tileMode) {
    case TileMode::LinearAligned:
