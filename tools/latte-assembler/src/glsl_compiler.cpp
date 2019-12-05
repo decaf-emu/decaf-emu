@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #include "shader_assembler.h"
 
 #include <common/align.h>
