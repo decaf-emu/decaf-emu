@@ -32,8 +32,9 @@ struct TestTilingMode
 
 static constexpr TestLayout sTestLayout[] = {
    { 1u, 1u, 1u, 0u, 1u },
+   { 1u, 1u, 11u, 5u, 5u },
    { 338u, 309u, 1u, 0u, 1u },
-   { 338u, 309u, 11u, 2u, 5u},
+   { 338u, 309u, 11u, 5u, 5u },
 
    // The variants above cover these, but they are useful for
    // debugging various errors in the algorithms.  The matrix
@@ -71,7 +72,7 @@ static constexpr TestFormat sTestFormats[] = {
    //{ gpu7::tiling::DataFormat::FMT_X24_8_32_FLOAT, 64u, true },
 };
 
-static const char *
+static const char*
 tileModeToString(gpu7::tiling::TileMode mode)
 {
    switch (mode) {

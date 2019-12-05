@@ -8,41 +8,6 @@
 namespace gpu7::tiling::vulkan
 {
 
-struct RetileInfo
-{
-   uint32_t firstSlice;
-   uint32_t numSlices;
-   bool isTiled;
-   bool isMacroTiled;
-   bool isDepth;
-   uint32_t bitsPerElement;
-   uint32_t macroTileWidth;
-   uint32_t macroTileHeight;
-
-   // Used for both micro and macro tiling
-   uint32_t dstStride;
-   uint32_t microTileBytes;
-   uint32_t numTilesPerRow;
-   uint32_t numTileRows;
-   uint32_t sliceOffset;
-   uint32_t sliceBytes;
-   uint32_t microTileThickness;
-   uint32_t bankSwapWidth;
-
-   // Used only for micro tiling
-   uint32_t sampleOffset;
-   TileMode tileMode;
-   uint32_t macroTileBytes;
-   uint32_t bankSwizzle;
-   uint32_t pipeSwizzle;
-};
-
-// Samples are not currently supported
-RetileInfo
-calculateRetileInfo(const SurfaceDescription &surface,
-                    uint32_t firstSlice,
-                    uint32_t numSlices);
-
 typedef void * RetileHandle;
 
 class Retiler
@@ -56,29 +21,33 @@ public:
    initialise(vk::Device device);
 
    RetileHandle
-   tile(vk::CommandBuffer &commandBuffer,
+   tile(const RetileInfo& retileInfo,
+        vk::CommandBuffer &commandBuffer,
         vk::Buffer dstBuffer, uint32_t dstOffset,
         vk::Buffer srcBuffer, uint32_t srcOffset,
-        const RetileInfo& retileInfo)
+        uint32_t firstSlice, uint32_t numSlices)
    {
       return retile(false,
+                    retileInfo,
                     commandBuffer,
                     dstBuffer, dstOffset,
                     srcBuffer, srcOffset,
-                    retileInfo);
+                    firstSlice, numSlices);
    }
 
    RetileHandle
-   untile(vk::CommandBuffer &commandBuffer,
+   untile(const RetileInfo& retileInfo,
+          vk::CommandBuffer &commandBuffer,
           vk::Buffer dstBuffer, uint32_t dstOffset,
           vk::Buffer srcBuffer, uint32_t srcOffset,
-          const RetileInfo& retileInfo)
+          uint32_t firstSlice, uint32_t numSlices)
    {
       return retile(true,
+                    retileInfo,
                     commandBuffer,
-                    dstBuffer, dstOffset,
                     srcBuffer, srcOffset,
-                    retileInfo);
+                    dstBuffer, dstOffset,
+                    firstSlice, numSlices);
    }
 
    void
@@ -102,10 +71,20 @@ private:
 
    RetileHandle
    retile(bool wantsUntile,
+          const RetileInfo& retileInfo,
           vk::CommandBuffer &commandBuffer,
-          vk::Buffer dstBuffer, uint32_t dstOffset,
-          vk::Buffer srcBuffer, uint32_t srcOffset,
-          const RetileInfo& retileInfo);
+          vk::Buffer tiledBuffer, uint32_t tiledOffset,
+          vk::Buffer untiledBuffer, uint32_t untiledOffset,
+          uint32_t firstSlice, uint32_t numSlices);
+
+   void
+   retile(bool wantsUntile,
+          const RetileInfo& retileInfo,
+          vk::DescriptorSet& descriptorSet,
+          vk::CommandBuffer& commandBuffer,
+          vk::Buffer tiledBuffer, uint32_t tiledOffset,
+          vk::Buffer untiledBuffer, uint32_t untiledOffset,
+          uint32_t firstSlice, uint32_t numSlices);
 
 protected:
    vk::Device mDevice;

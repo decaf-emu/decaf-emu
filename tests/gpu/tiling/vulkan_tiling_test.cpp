@@ -1,3 +1,4 @@
+#pragma optimize("", off)
 #ifdef DECAF_VULKAN
 
 #include "tiling_tests.h"
@@ -13,34 +14,52 @@
 static gpu7::tiling::vulkan::Retiler gVkRetiler;
 
 static inline void
-compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
-                       std::vector<uint8_t> &untiled,
+compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription& desc,
+                       std::vector<uint8_t>& input,
                        uint32_t firstSlice, uint32_t numSlices)
 {
    // Set up AddrLib to generate data to test against
    auto addrLib = AddrLib { };
 
-   // Compute some needed surface information
-   auto info = addrLib.computeSurfaceInfo(desc, 0, 0);
-   auto surfSize = static_cast<uint32_t>(info.surfSize);
+   auto alibUntiled = std::vector<uint8_t> { };
+   auto gpu7Untiled = std::vector<uint8_t> { };
+   auto alibTiled = std::vector<uint8_t> { };
+   auto gpu7Tiled = std::vector<uint8_t> { };
 
-   // Make sure our test data is big enough
-   REQUIRE(untiled.size() >= info.surfSize);
+   // Compute surface info
+   auto alibInfo = addrLib.computeSurfaceInfo(desc, 0, 0);
+   auto gpu7Info = gpu7::tiling::computeSurfaceInfo(desc, 0);
 
-   // Generate the correct version of the data
-   auto addrLibImage = std::vector<uint8_t> { };
-   addrLibImage.resize(info.surfSize);
-   addrLib.untileSlices(desc, 0, untiled.data(), addrLibImage.data(), firstSlice, numSlices);
+   REQUIRE(gpu7Info.surfSize == alibInfo.surfSize);
+   REQUIRE(input.size() >= gpu7Info.surfSize);
+
+   alibUntiled.resize(alibInfo.surfSize);
+   alibTiled.resize(alibInfo.surfSize);
+   gpu7Untiled.resize(gpu7Info.surfSize);
+   gpu7Tiled.resize(gpu7Info.surfSize);
+
+   // AddrLib
+   {
+      addrLib.untileSlices(desc, 0, input.data(), alibUntiled.data(), firstSlice, numSlices);
+      addrLib.tileSlices(desc, 0, alibUntiled.data(), alibTiled.data(), firstSlice, numSlices);
+   }
+
+   // Get the sizes we will use for our buffers.  We oversize the work
+   // buffers to avoid errors causing buffer overruns which crash my GPU.
+   auto surfSize = gpu7Info.surfSize;
+   auto uploadSize = gpu7Info.surfSize;
+   auto workSize = gpu7Info.surfSize * 2;
 
    // Create input/output buffers
-   auto untiledSize = static_cast<uint32_t>(untiled.size());
-   auto uploadBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::CpuToGpu);
-   auto inputBuffer = allocateSsboBuffer(untiledSize, SsboBufferUsage::Gpu);
-   auto outputBuffer = allocateSsboBuffer(untiledSize, SsboBufferUsage::Gpu);
-   auto downloadBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::CpuToGpu);
+   auto uploadBuffer = allocateSsboBuffer(uploadSize, SsboBufferUsage::CpuToGpu);
+   auto inputBuffer = allocateSsboBuffer(workSize, SsboBufferUsage::Gpu);
+   auto untiledOutputBuffer = allocateSsboBuffer(workSize, SsboBufferUsage::Gpu);
+   auto tiledOutputBuffer = allocateSsboBuffer(workSize, SsboBufferUsage::Gpu);
+   auto untiledDownloadBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::CpuToGpu);
+   auto tiledDownloadBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::CpuToGpu);
 
    // Upload to the upload buffer
-   uploadSsboBuffer(uploadBuffer, untiled.data(), surfSize);
+   uploadSsboBuffer(uploadBuffer, input.data(), uploadSize);
 
    {
       // Allocate a command buffer and fence
@@ -52,33 +71,46 @@ compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
 
       // Clear the input/output buffers to a known value so its obvious if something goes wrong
       cmdBuffer.cmds.fillBuffer(inputBuffer.buffer, 0, surfSize, 0xffffffff);
-      cmdBuffer.cmds.fillBuffer(inputBuffer.buffer, surfSize, untiledSize - surfSize, 0xfefefefe);
-      cmdBuffer.cmds.fillBuffer(outputBuffer.buffer, 0, surfSize, 0x00000000);
-      cmdBuffer.cmds.fillBuffer(outputBuffer.buffer, surfSize, untiledSize - surfSize, 0x01010101);
+      cmdBuffer.cmds.fillBuffer(inputBuffer.buffer, surfSize, workSize - surfSize, 0xfefefefe);
+      cmdBuffer.cmds.fillBuffer(untiledOutputBuffer.buffer, 0, surfSize, 0x00000000);
+      cmdBuffer.cmds.fillBuffer(untiledOutputBuffer.buffer, surfSize, workSize - surfSize, 0x01010101);
+      cmdBuffer.cmds.fillBuffer(tiledOutputBuffer.buffer, 0, surfSize, 0x00000000);
+      cmdBuffer.cmds.fillBuffer(tiledOutputBuffer.buffer, surfSize, workSize - surfSize, 0x01010101);
 
-      // Set up the input/output buffers on the GPU
-      cmdBuffer.cmds.copyBuffer(uploadBuffer.buffer, inputBuffer.buffer, { vk::BufferCopy(0, 0, surfSize) });
+      // Copy the data
+      cmdBuffer.cmds.copyBuffer(uploadBuffer.buffer, inputBuffer.buffer, { vk::BufferCopy(0, 0, uploadSize) });
 
       // Barrier our transfers to the shader reads
       globalVkMemoryBarrier(cmdBuffer.cmds, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
 
       // Dispatch the actual retile
-      auto retileInfo = gpu7::tiling::vulkan::calculateRetileInfo(desc, firstSlice, numSlices);
+      auto retileInfo = gpu7::tiling::computeRetileInfo(gpu7Info);
 
-      auto tiledFirstSlice = align_down(firstSlice, retileInfo.microTileThickness);
-      auto tiledOffset = tiledFirstSlice * retileInfo.sliceBytes / retileInfo.microTileThickness;
-      auto untiledOffset = firstSlice * retileInfo.sliceBytes / retileInfo.microTileThickness;
+      auto tiledFirstSliceIndex = align_down(firstSlice, retileInfo.microTileThickness);
+      auto tiledSliceOffset = tiledFirstSliceIndex * retileInfo.thinSliceBytes;
+      auto untiledSliceOffset = firstSlice * retileInfo.thinSliceBytes;
 
-      auto handle = gVkRetiler.untile(cmdBuffer.cmds,
-                                      outputBuffer.buffer, untiledOffset,
-                                      inputBuffer.buffer, tiledOffset,
-                                      retileInfo);
+      auto untileHandle = gVkRetiler.untile(retileInfo,
+                                            cmdBuffer.cmds,
+                                            untiledOutputBuffer.buffer, untiledSliceOffset,
+                                            inputBuffer.buffer, tiledSliceOffset,
+                                            firstSlice, numSlices);
+
+      // Barrier between these to force the pipeline flush
+      globalVkMemoryBarrier(cmdBuffer.cmds, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+
+      auto tileHandle = gVkRetiler.tile(retileInfo,
+                                        cmdBuffer.cmds,
+                                        tiledOutputBuffer.buffer, tiledSliceOffset,
+                                        untiledOutputBuffer.buffer, untiledSliceOffset,
+                                        firstSlice, numSlices);
 
       // Put a barrier from the shader writes to the transfers
       globalVkMemoryBarrier(cmdBuffer.cmds, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eTransferRead);
 
       // Copy the output buffer to the download buffer
-      cmdBuffer.cmds.copyBuffer(outputBuffer.buffer, downloadBuffer.buffer, { vk::BufferCopy(0, 0, surfSize) });
+      cmdBuffer.cmds.copyBuffer(untiledOutputBuffer.buffer, untiledDownloadBuffer.buffer, { vk::BufferCopy(0, 0, surfSize) });
+      cmdBuffer.cmds.copyBuffer(tiledOutputBuffer.buffer, tiledDownloadBuffer.buffer, { vk::BufferCopy(0, 0, surfSize) });
 
       // Put a barrier from the transfer writes to the host reads
       globalVkMemoryBarrier(cmdBuffer.cmds, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eHostRead);
@@ -89,35 +121,38 @@ compareTilingToAddrLib(const gpu7::tiling::SurfaceDescription &desc,
       freeSyncCmdBuffer(cmdBuffer);
 
       // Free the retiler resources we used
-      gVkRetiler.releaseHandle(handle);
+      gVkRetiler.releaseHandle(untileHandle);
+      gVkRetiler.releaseHandle(tileHandle);
    }
 
    // Capture the retiled data from the GPU
-   std::vector<uint8_t> outputData;
-   outputData.resize(surfSize);
-   downloadSsboBuffer(downloadBuffer, outputData.data(), surfSize);
-
-   // Compare that the images match
-   CHECK(compareImages(outputData, addrLibImage));
+   downloadSsboBuffer(untiledDownloadBuffer, gpu7Untiled.data(), surfSize);
+   downloadSsboBuffer(tiledDownloadBuffer, gpu7Tiled.data(), surfSize);
 
    // Free the buffers associated with this
    freeSsboBuffer(uploadBuffer);
    freeSsboBuffer(inputBuffer);
-   freeSsboBuffer(outputBuffer);
-   freeSsboBuffer(downloadBuffer);
+   freeSsboBuffer(untiledOutputBuffer);
+   freeSsboBuffer(tiledOutputBuffer);
+   freeSsboBuffer(untiledDownloadBuffer);
+   freeSsboBuffer(tiledDownloadBuffer);
+
+   // Compare that the images match
+   CHECK(compareImages(gpu7Untiled, alibUntiled));
+   CHECK(compareImages(gpu7Tiled, alibTiled));
 }
 
-TEST_CASE("vkTiling", "")
+TEST_CASE("vkTiling")
 {
-   for (auto &layout : sTestLayout) {
+   for (auto& layout : sTestLayout) {
       SECTION(fmt::format("{}x{}x{} s{}n{}",
                           layout.width, layout.height, layout.depth,
                           layout.testFirstSlice, layout.testNumSlices))
       {
-         for (auto &mode : sTestTilingMode) {
+         for (auto& mode : sTestTilingMode) {
             SECTION(fmt::format("{}", tileModeToString(mode.tileMode)))
             {
-               for (auto &format : sTestFormats) {
+               for (auto& format : sTestFormats) {
                   SECTION(fmt::format("{}bpp{}", format.bpp, format.depth ? " depth" : ""))
                   {
                      auto surface = gpu7::tiling::SurfaceDescription { };
@@ -154,7 +189,7 @@ struct PendingVkPerfEntry
    uint32_t firstSlice;
    uint32_t numSlices;
 
-   ADDR_COMPUTE_SURFACE_INFO_OUTPUT info;
+   gpu7::tiling::SurfaceInfo info;
    SsboBuffer uploadBuffer;
    SsboBuffer inputBuffer;
    SsboBuffer outputBuffer;
@@ -168,15 +203,15 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
    auto addrLib = AddrLib { };
 
    // Get some random data to use
-   auto &untiled = sRandomData;
+   auto& untiled = sRandomData;
 
    // Some place to store pending tests
    std::vector<PendingVkPerfEntry> pendingTests;
 
    // Generate all the test cases to run
-   auto &layout = sPerfTestLayout;
-   for (auto &mode : sTestTilingMode) {
-      for (auto &format : sTestFormats) {
+   auto& layout = sPerfTestLayout;
+   for (auto& mode : sTestTilingMode) {
+      for (auto& format : sTestFormats) {
          auto surface = gpu7::tiling::SurfaceDescription { };
          surface.tileMode = mode.tileMode;
          surface.format = format.format;
@@ -202,9 +237,9 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
    }
 
    // Set up all the tests
-   for (auto &test : pendingTests) {
+   for (auto& test : pendingTests) {
       // Compute some needed surface information
-      auto info = addrLib.computeSurfaceInfo(test.desc, 0, 0);
+      auto info = gpu7::tiling::computeSurfaceInfo(test.desc, 0);
       auto surfSize = static_cast<uint32_t>(info.surfSize);
 
       // Make sure our test data is big enough
@@ -231,7 +266,7 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
       auto cmdBuffer = allocSyncCmdBuffer();
       beginSyncCmdBuffer(cmdBuffer);
 
-      for (auto &test : pendingTests) {
+      for (auto& test : pendingTests) {
          auto surfSize = static_cast<uint32_t>(test.info.surfSize);
 
          // Barrier our host writes the transfer reads
@@ -256,21 +291,22 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
       auto cmdBuffer = allocSyncCmdBuffer();
       beginSyncCmdBuffer(cmdBuffer);
 
-      for (auto &test : pendingTests) {
+      for (auto& test : pendingTests) {
          auto surfSize = static_cast<uint32_t>(test.info.surfSize);
 
          // Calculate data on how to retile
-         auto retileInfo = gpu7::tiling::vulkan::calculateRetileInfo(test.desc, test.firstSlice, test.numSlices);
+         auto retileInfo = gpu7::tiling::computeRetileInfo(test.info);
 
-         auto tiledFirstSlice = align_down(test.firstSlice, retileInfo.microTileThickness);
-         auto tiledOffset = tiledFirstSlice * retileInfo.sliceBytes / retileInfo.microTileThickness;
-         auto untiledOffset = test.firstSlice * retileInfo.sliceBytes / retileInfo.microTileThickness;
+         auto tiledFirstSliceIndex = align_down(test.firstSlice, retileInfo.microTileThickness);
+         auto tiledSliceOffset = tiledFirstSliceIndex * retileInfo.thinSliceBytes;
+         auto untiledSliceOffset = test.firstSlice * retileInfo.thinSliceBytes;
 
          // Dispatch the actual retile
-         auto handle = gVkRetiler.untile(cmdBuffer.cmds,
-                                         test.outputBuffer.buffer, untiledOffset,
-                                         test.inputBuffer.buffer, tiledOffset,
-                                         retileInfo);
+         auto handle = gVkRetiler.untile(retileInfo,
+                                         cmdBuffer.cmds,
+                                         test.outputBuffer.buffer, untiledSliceOffset,
+                                         test.inputBuffer.buffer, tiledSliceOffset,
+                                         test.firstSlice, test.numSlices);
 
          // Save some information for freeing later
          test.handle = handle;
@@ -288,7 +324,7 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
    }
 
    // Clean up all our resources used...
-   for (auto &test : pendingTests) {
+   for (auto& test : pendingTests) {
       // Free the retiler resources we used
       gVkRetiler.releaseHandle(test.handle);
 

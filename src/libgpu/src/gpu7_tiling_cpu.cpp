@@ -6,831 +6,649 @@
 namespace gpu7::tiling::cpu
 {
 
-struct MicroTiler8
+template<
+   bool IsUntiling,
+   uint32_t MicroTileThickness,
+   uint32_t MacroTileWidth,
+   uint32_t MacroTileHeight,
+   bool IsMacro3X,
+   bool IsBankSwapped,
+   uint32_t BitsPerElement,
+   bool IsDepth
+>
+struct RetileCore
 {
-   /*
-      8 bits per element:
-       0:   0,  1,  2,  3,  4,  5,  6,  7,
-       8:  16, 17, 18, 19, 20, 21, 22, 23,
-      16:   8,  9, 10, 11, 12, 13, 14, 15,
-      24:  24, 25, 26, 27, 28, 29, 30, 31,
+   static constexpr bool IsMacroTiling = (MacroTileWidth > 1 || MacroTileHeight > 1);
+   static constexpr uint32_t BytesPerElement = BitsPerElement / 8;
+   static constexpr uint32_t MicroTileBytes = MicroTileWidth * MicroTileHeight * MicroTileThickness * BytesPerElement;
+   static constexpr uint32_t MacroTileBytes = MacroTileWidth * MacroTileHeight * MicroTileBytes;
 
-      32:  32, 33, 34, 35, 36, 37, 38, 39,
-      40:  48, 49, 50, 51, 52, 53, 54, 55,
-      48:  40, 41, 42, 43, 44, 45, 46, 47,
-      56:  56, 57, 58, 59, 60, 61, 62, 63,
-   */
-
+   template<uint32_t bytesPerElem>
    static inline void
-      apply(uint8_t* src,
-            int srcOffset,
-            int srcStrideBytes,
-            uint8_t* dst,
-            int dstOffset,
-            int dstStrideBytes)
+   copyElems(uint8_t *untiled, uint8_t *tiled, size_t numElems)
    {
-      static constexpr auto rowSize = MicroTileWidth * (8 / 8);
-      src += srcOffset;
-      dst += dstOffset;
-
-      for (int y = 0; y < MicroTileHeight; y += 4) {
-         std::memcpy(dst, src + 0 * srcStrideBytes, rowSize);
-         dst += dstStrideBytes;
-
-         std::memcpy(dst, src + 2 * srcStrideBytes, rowSize);
-         dst += dstStrideBytes;
-
-         std::memcpy(dst, src + 1 * srcStrideBytes, rowSize);
-         dst += dstStrideBytes;
-
-         std::memcpy(dst, src + 3 * srcStrideBytes, rowSize);
-         dst += dstStrideBytes;
-
-         src += 4 * srcStrideBytes;
+      if (IsUntiling) {
+         std::memcpy(untiled, tiled, bytesPerElem * numElems);
+      } else {
+         std::memcpy(tiled, untiled, bytesPerElem * numElems);
       }
    }
-};
-
-struct MicroTiler16
-{
-   /*
-      16 bits per element:
-       0:   0,  1,  2,  3,  4,  5,  6,  7,
-       8:   8,  9, 10, 11, 12, 13, 14, 15,
-      16:  16, 17, 18, 19, 20, 21, 22, 23,
-      24:  24, 25, 26, 27, 28, 29, 30, 31,
-      32:  32, 33, 34, 35, 36, 37, 38, 39,
-      40:  40, 41, 42, 43, 44, 45, 46, 47,
-      48:  48, 49, 50, 51, 52, 53, 54, 55,
-      56:  56, 57, 58, 59, 60, 61, 62, 63,
-   */
 
    static inline void
-      apply(uint8_t* src,
-            int srcOffset,
-            int srcStrideBytes,
-            uint8_t* dst,
-            int dstOffset,
-            int dstStrideBytes)
+   retileMicro8(uint8_t *tiled,
+                uint8_t *untiled,
+                uint32_t untiledStride)
    {
-      static constexpr auto rowSize = MicroTileWidth * (16 / 8);
-      src += srcOffset;
-      dst += dstOffset;
+      static constexpr auto tiledStride = MicroTileWidth;
+      static constexpr auto rowElems = MicroTileWidth / 8;
+
+      for (int y = 0; y < MicroTileHeight; y += 4) {
+         auto untiledRow0 = untiled + 0 * untiledStride;
+         auto untiledRow1 = untiled + 1 * untiledStride;
+         auto untiledRow2 = untiled + 2 * untiledStride;
+         auto untiledRow3 = untiled + 3 * untiledStride;
+
+         auto tiledRow0 = tiled + 0 * tiledStride;
+         auto tiledRow1 = tiled + 1 * tiledStride;
+         auto tiledRow2 = tiled + 2 * tiledStride;
+         auto tiledRow3 = tiled + 3 * tiledStride;
+
+         copyElems<8>(untiledRow0, tiledRow0, rowElems);
+         copyElems<8>(untiledRow1, tiledRow2, rowElems);
+         copyElems<8>(untiledRow2, tiledRow1, rowElems);
+         copyElems<8>(untiledRow3, tiledRow3, rowElems);
+
+         untiled += 4 * untiledStride;
+         tiled += 4 * tiledStride;
+      }
+   }
+
+   static inline void
+   retileMicro16(uint8_t *tiled,
+                 uint8_t *untiled,
+                 uint32_t untiledStride)
+   {
+      static constexpr auto tiledStride = MicroTileWidth * 2;
+      static constexpr auto rowElems = MicroTileWidth * 2 / 16;
 
       for (int y = 0; y < MicroTileHeight; ++y) {
-         std::memcpy(dst, src, rowSize);
-         src += srcStrideBytes;
-         dst += dstStrideBytes;
+         copyElems<16>(untiled, tiled, rowElems);
+
+         untiled += untiledStride;
+         tiled += tiledStride;
       }
    }
-};
-
-struct MicroTiler32
-{
-   /*
-      32 bits per element:
-       0:   0,  1,  2,  3,    8,  9, 10, 11,
-       8:   4,  5,  6,  7,   12, 13, 14, 15,
-
-      16:  16, 17, 18, 19,   24, 25, 26, 27,
-      24:  20, 21, 22, 23,   28, 29, 30, 31,
-
-      32:  32, 33, 34, 35,   40, 41, 42, 43,
-      40:  36, 37, 38, 39,   44, 45, 46, 47,
-
-      48:  48, 49, 50, 51,   56, 57, 58, 59,
-      56:  52, 53, 54, 55,   60, 61, 62, 63,
-   */
 
    static inline void
-      apply(uint8_t* src,
-            int srcOffset,
-            int srcStrideBytes,
-            uint8_t* dst,
-            int dstOffset,
-            int dstStrideBytes)
+   retileMicro32(uint8_t *tiled,
+                 uint8_t *untiled,
+                 uint32_t untiledStride)
    {
-      static constexpr auto groupSize = 4 * (32 / 8);
-      src += srcOffset;
-      dst += dstOffset;
+      static constexpr auto tiledStride = MicroTileWidth * 4;
+      static constexpr auto groupElems = 4 * 4 / 16;
 
       for (int y = 0; y < MicroTileHeight; y += 2) {
-         auto dstRow1 = reinterpret_cast<uint32_t*>(dst);
-         auto dstRow2 = reinterpret_cast<uint32_t*>(dst + dstStrideBytes);
+         auto untiledRow1 = untiled + 0 * untiledStride;
+         auto untiledRow2 = untiled + 1 * untiledStride;
 
-         auto srcRow1 = reinterpret_cast<uint32_t*>(src);
-         auto srcRow2 = reinterpret_cast<uint32_t*>(src + srcStrideBytes);
+         auto tiledRow1 = tiled + 0 * tiledStride;
+         auto tiledRow2 = tiled + 1 * tiledStride;
 
-         std::memcpy(dstRow1 + 0, srcRow1 + 0, groupSize);
-         std::memcpy(dstRow1 + 4, srcRow2 + 0, groupSize);
+         copyElems<16>(untiledRow1 + 0, tiledRow1 + 0, groupElems);
+         copyElems<16>(untiledRow1 + 16, tiledRow2 + 0, groupElems);
 
-         std::memcpy(dstRow2 + 0, srcRow1 + 4, groupSize);
-         std::memcpy(dstRow2 + 4, srcRow2 + 4, groupSize);
+         copyElems<16>(untiledRow2 + 0, tiledRow1 + 16, groupElems);
+         copyElems<16>(untiledRow2 + 16, tiledRow2 + 16, groupElems);
 
-         src += srcStrideBytes * 2;
-         dst += dstStrideBytes * 2;
+         tiled += tiledStride * 2;
+         untiled += untiledStride * 2;
       }
    }
-};
-
-template<bool MacroTiling>
-struct MicroTiler64
-{
-   /*
-      64 bits per element:
-       0:   0,  1,    4,  5,    8,  9,   12, 13,
-       8:   2,  3,    6,  7,   10, 11,   14, 15,
-
-      16:  16, 17,   20, 21,   24, 25,   28, 29,
-      24:  18, 19,   22, 23,   26, 27,   30, 31,
-
-      32:  32, 33,   36, 37,   40, 41,   44, 45,
-      40:  34, 35,   38, 39,   42, 43,   46, 47,
-
-      48:  48, 49,   52, 53,   56, 57,   60, 61,
-      56:  50, 51,   54, 55,   58, 59,   62, 63,
-   */
 
    static inline void
-      apply(uint8_t* src,
-            int srcOffset,
-            int srcStrideBytes,
-            uint8_t* dst,
-            int dstOffset,
-            int dstStrideBytes)
+   retileMicro64(uint8_t *tiled,
+                 uint8_t *untiled,
+                 uint32_t untiledStride)
    {
-      static constexpr auto groupBytes = 2 * (64 / 8);
-      const auto nextGroupOffset =
-         srcOffset + (0x100 << (NumBankBits + NumPipeBits));
+      static constexpr auto tiledStride = MicroTileWidth * 8;
+      static constexpr auto groupElems = 2 * (64 / 8) / 16;
+
+      const auto nextGroup =
+         tiled + (0x100 << (NumBankBits + NumPipeBits));
 
       for (int y = 0; y < MicroTileHeight; y += 2) {
-         if (MacroTiling && y == 4) {
+         if (IsMacroTiling && y == 4) {
             // At y == 4 we hit the next group (at element offset 256)
-            srcOffset = nextGroupOffset;
+            tiled = nextGroup;
          }
 
-         auto dstRow1 = reinterpret_cast<uint64_t*>(dst + dstOffset);
-         auto dstRow2 = reinterpret_cast<uint64_t*>(dst + dstOffset + dstStrideBytes);
+         auto untiledRow1 = untiled + 0 * untiledStride;
+         auto untiledRow2 = untiled + 1 * untiledStride;
 
-         auto srcRow1 = reinterpret_cast<uint64_t*>(src + srcOffset);
-         auto srcRow2 = reinterpret_cast<uint64_t*>(src + srcOffset + srcStrideBytes);
+         auto tiledRow1 = tiled + 0 * tiledStride;
+         auto tiledRow2 = tiled + 1 * tiledStride;
 
-         std::memcpy(dstRow1 + 0, srcRow1 + 0, groupBytes);
-         std::memcpy(dstRow2 + 0, srcRow1 + 2, groupBytes);
+         copyElems<16>(untiledRow1 + 0, tiledRow1 + 0, groupElems);
+         copyElems<16>(untiledRow2 + 0, tiledRow1 + 16, groupElems);
 
-         std::memcpy(dstRow1 + 2, srcRow1 + 4, groupBytes);
-         std::memcpy(dstRow2 + 2, srcRow1 + 6, groupBytes);
+         copyElems<16>(untiledRow1 + 16, tiledRow1 + 32, groupElems);
+         copyElems<16>(untiledRow2 + 16, tiledRow1 + 48, groupElems);
 
-         std::memcpy(dstRow1 + 4, srcRow2 + 0, groupBytes);
-         std::memcpy(dstRow2 + 4, srcRow2 + 2, groupBytes);
+         copyElems<16>(untiledRow1 + 32, tiledRow2 + 0, groupElems);
+         copyElems<16>(untiledRow2 + 32, tiledRow2 + 16, groupElems);
 
-         std::memcpy(dstRow1 + 6, srcRow2 + 4, groupBytes);
-         std::memcpy(dstRow2 + 6, srcRow2 + 6, groupBytes);
+         copyElems<16>(untiledRow1 + 48, tiledRow2 + 32, groupElems);
+         copyElems<16>(untiledRow2 + 48, tiledRow2 + 48, groupElems);
 
-         srcOffset += 2 * srcStrideBytes;
-         dstOffset += 2 * dstStrideBytes;
+         tiled += tiledStride * 2;
+         untiled += untiledStride * 2;
       }
    }
-};
-
-template<bool MacroTiling>
-struct MicroTiler128
-{
-   /*
-      128 bits per element:
-         0:   0,  2,    4,  6,    8, 10,   12, 14,
-         8:   1,  3,    5,  7,    9, 11,   13, 15,
-
-        16:  16, 18,   20, 22,   24, 26,   28, 30,
-        24:  17, 19,   21, 23,   25, 27,   29, 31,
-
-        32:  32, 34,   36, 38,   40, 42,   44, 46,
-        40:  33, 35,   37, 39,   41, 43,   45, 47,
-
-        48:  48, 50,   52, 54,   56, 58,   60, 62,
-        56:  49, 51,   53, 55,   57, 59,   61, 63,
-   */
 
    static inline void
-      apply(uint8_t* src,
-            int srcOffset,
-            int srcStrideBytes,
-            uint8_t* dst,
-            int dstOffset,
-            int dstStrideBytes)
+   retileMicro128(uint8_t *tiled,
+                  uint8_t *untiled,
+                  uint32_t untiledStride)
    {
-      static constexpr auto elemBytes = 128 / 8;
+      static constexpr auto tiledStride = MicroTileWidth * 16;
+      static constexpr auto groupBytes = 16;
+      static constexpr auto groupElems = 16 / 16;
 
       for (int y = 0; y < MicroTileHeight; y += 2) {
-         auto dstRow1 = reinterpret_cast<uint8_t*>(dst + dstOffset);
-         auto dstRow2 = reinterpret_cast<uint8_t*>(dst + dstOffset + dstStrideBytes);
+         auto untiledRow1 = untiled + 0 * untiledStride;
+         auto untiledRow2 = untiled + 1 * untiledStride;
 
-         auto srcRow1 = reinterpret_cast<uint8_t*>(src + srcOffset);
-         auto srcRow2 = reinterpret_cast<uint8_t*>(src + srcOffset + srcStrideBytes);
+         auto tiledRow1 = tiled + 0 * tiledStride;
+         auto tiledRow2 = tiled + 1 * tiledStride;
 
-         std::memcpy(dstRow1 + 0 * elemBytes, srcRow1 + 0 * elemBytes, elemBytes);
-         std::memcpy(dstRow1 + 1 * elemBytes, srcRow1 + 2 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 0 * elemBytes, srcRow1 + 1 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 1 * elemBytes, srcRow1 + 3 * elemBytes, elemBytes);
+         copyElems<16>(untiledRow1 + 0 * groupBytes, tiledRow1 + 0 * groupBytes, groupElems);
+         copyElems<16>(untiledRow1 + 1 * groupBytes, tiledRow1 + 2 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 0 * groupBytes, tiledRow1 + 1 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 1 * groupBytes, tiledRow1 + 3 * groupBytes, groupElems);
 
-         std::memcpy(dstRow1 + 2 * elemBytes, srcRow1 + 4 * elemBytes, elemBytes);
-         std::memcpy(dstRow1 + 3 * elemBytes, srcRow1 + 6 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 2 * elemBytes, srcRow1 + 5 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 3 * elemBytes, srcRow1 + 7 * elemBytes, elemBytes);
+         copyElems<16>(untiledRow1 + 2 * groupBytes, tiledRow1 + 4 * groupBytes, groupElems);
+         copyElems<16>(untiledRow1 + 3 * groupBytes, tiledRow1 + 6 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 2 * groupBytes, tiledRow1 + 5 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 3 * groupBytes, tiledRow1 + 7 * groupBytes, groupElems);
 
-         std::memcpy(dstRow1 + 4 * elemBytes, srcRow2 + 0 * elemBytes, elemBytes);
-         std::memcpy(dstRow1 + 5 * elemBytes, srcRow2 + 2 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 4 * elemBytes, srcRow2 + 1 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 5 * elemBytes, srcRow2 + 3 * elemBytes, elemBytes);
+         copyElems<16>(untiledRow1 + 4 * groupBytes, tiledRow2 + 0 * groupBytes, groupElems);
+         copyElems<16>(untiledRow1 + 5 * groupBytes, tiledRow2 + 2 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 4 * groupBytes, tiledRow2 + 1 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 5 * groupBytes, tiledRow2 + 3 * groupBytes, groupElems);
 
-         std::memcpy(dstRow1 + 6 * elemBytes, srcRow2 + 4 * elemBytes, elemBytes);
-         std::memcpy(dstRow1 + 7 * elemBytes, srcRow2 + 6 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 6 * elemBytes, srcRow2 + 5 * elemBytes, elemBytes);
-         std::memcpy(dstRow2 + 7 * elemBytes, srcRow2 + 7 * elemBytes, elemBytes);
+         copyElems<16>(untiledRow1 + 6 * groupBytes, tiledRow2 + 4 * groupBytes, groupElems);
+         copyElems<16>(untiledRow1 + 7 * groupBytes, tiledRow2 + 6 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 6 * groupBytes, tiledRow2 + 5 * groupBytes, groupElems);
+         copyElems<16>(untiledRow2 + 7 * groupBytes, tiledRow2 + 7 * groupBytes, groupElems);
 
-         if (MacroTiling) {
-            srcOffset += 0x100 << (NumBankBits + NumPipeBits);
+         if (IsMacroTiling) {
+            tiled += 0x100 << (NumBankBits + NumPipeBits);
          } else {
-            srcOffset += 2 * srcStrideBytes;
+            tiled += tiledStride * 2;
          }
 
-         dstOffset += 2 * dstStrideBytes;
+         untiled += untiledStride * 2;
       }
    }
-};
 
-template<int BytesPerElement>
-struct MicroTilerDepth
-{
+   static inline void
+   copyDepthXYGroup(uint8_t *tiled,
+                    uint8_t *untiled,
+                    uint32_t untiledStride,
+                    uint32_t tX, uint32_t tY,
+                    uint32_t uX, uint32_t uY)
+   {
+      static constexpr auto groupBytes = 2 * BytesPerElement;
+      static constexpr auto groupElems = 2 * BytesPerElement / 4;
+      static constexpr auto tiledStride = MicroTileWidth * BytesPerElement;
+
+      copyElems<4>(untiled + uY * untiledStride + uX * groupBytes, tiled + tY * tiledStride + tX * groupBytes, groupElems);
+   }
+
+   static inline void
+   retileMicroDepth(uint8_t *tiled,
+                    uint8_t *untiled,
+                    uint32_t untiledStride)
+   {
+      for (int y = 0; y < MicroTileHeight; y += 4) {
+         copyDepthXYGroup(tiled, untiled, untiledStride, 0, y + 0, 0, y + 0);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 1, y + 0, 0, y + 1);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 2, y + 0, 1, y + 0);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 3, y + 0, 1, y + 1);
+
+         copyDepthXYGroup(tiled, untiled, untiledStride, 0, y + 1, 0, y + 2);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 1, y + 1, 0, y + 3);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 2, y + 1, 1, y + 2);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 3, y + 1, 1, y + 3);
+
+         copyDepthXYGroup(tiled, untiled, untiledStride, 0, y + 2, 2, y + 0);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 1, y + 2, 2, y + 1);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 2, y + 2, 3, y + 0);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 3, y + 2, 3, y + 1);
+
+         copyDepthXYGroup(tiled, untiled, untiledStride, 0, y + 3, 2, y + 2);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 1, y + 3, 2, y + 3);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 2, y + 3, 3, y + 2);
+         copyDepthXYGroup(tiled, untiled, untiledStride, 3, y + 3, 3, y + 3);
+      }
+   }
+
+   struct Params
+   {
+      uint32_t firstSliceIndex;
+
+      // Micro tiling parameters
+      uint32_t numTilesPerRow;
+      uint32_t numTilesPerSlice;
+      uint32_t thinMicroTileBytes;
+      uint32_t thickSliceBytes;
+
+      // Macro tiling parameters
+      uint32_t bankSwizzle;
+      uint32_t pipeSwizzle;
+      uint32_t bankSwapWidth;
+   };
+
    /*
-      depth elements:
-          0:   0,  1,  4,  5,   16, 17, 20, 21,
-          8:   2,  3,  6,  7,   18, 19, 22, 23,
-         16:   8,  9, 12, 13,   24, 25, 28, 29,
-         24:  10, 11, 14, 15,   26, 27, 30, 31,
-
-         32:  32, 33, 36, 37,   48, 49, 52, 53,
-         40:  34, 35, 38, 39,   50, 51, 54, 55,
-         48:  40, 41, 44, 45,   56, 57, 60, 61,
-         56:  42, 43, 46, 47,   58, 59, 62, 63,
+   We always execute in a problem-space which starts at a thick-slice
+   boundary.  The tiled pointer will point to the start of that boundary
+   and the untiled pointer will point to the start of a specific slice
+   within it (if untiling on a not-thick-slice-aligned boundary).
    */
 
    static inline void
-      apply(uint8_t* src,
-            int srcOffset,
-            int srcStrideBytes,
-            uint8_t* dst,
-            int dstOffset,
-            int dstStrideBytes)
+   retileMicro(const Params& params,
+               uint32_t tileIndex,
+               uint8_t *untiled,
+               uint8_t *tiled)
    {
-      static constexpr auto elemBytes = BytesPerElement;
-      static constexpr auto groupBytes = elemBytes * 2;
+      const uint32_t thinSliceBytes = params.thickSliceBytes / MicroTileThickness;
+      const uint32_t untiledStride = params.numTilesPerRow * MicroTileWidth * BytesPerElement;
+      const uint32_t thickMicroTileBytes = params.thinMicroTileBytes * MicroTileThickness;
 
-      for (int y = 0; y < MicroTileHeight; y += 4) {
-         auto dstRow1 = dst + dstOffset;
-         auto dstRow2 = dst + dstOffset + dstStrideBytes;
-         auto dstRow3 = dst + dstOffset + dstStrideBytes * 2;
-         auto dstRow4 = dst + dstOffset + dstStrideBytes * 3;
+      const uint32_t dispatchSliceIndex = tileIndex / params.numTilesPerSlice;
+      const uint32_t sliceTileIndex = tileIndex % params.numTilesPerSlice;
 
-         for (int x = 0; x < MicroTileWidth; x += 4) {
-            auto srcRow1 = src + srcOffset;
-            auto srcRow2 = src + srcOffset + srcStrideBytes;
+      // Find the global slice index we are currently at.
+      const uint32_t srcSliceIndex = params.firstSliceIndex + dispatchSliceIndex;
 
-            std::memcpy(dstRow1 + 0 * elemBytes, srcRow1 + 0 * elemBytes, groupBytes);
-            std::memcpy(dstRow1 + 2 * elemBytes, srcRow1 + 4 * elemBytes, groupBytes);
-            std::memcpy(dstRow2 + 0 * elemBytes, srcRow1 + 2 * elemBytes, groupBytes);
-            std::memcpy(dstRow2 + 2 * elemBytes, srcRow1 + 6 * elemBytes, groupBytes);
+      // We need to identify where inside the current thick slice we are.
+      const uint32_t localSliceIndex = srcSliceIndex % MicroTileThickness;
 
-            std::memcpy(dstRow3 + 0 * elemBytes, srcRow2 + 0 * elemBytes, groupBytes);
-            std::memcpy(dstRow3 + 2 * elemBytes, srcRow2 + 4 * elemBytes, groupBytes);
-            std::memcpy(dstRow4 + 0 * elemBytes, srcRow2 + 2 * elemBytes, groupBytes);
-            std::memcpy(dstRow4 + 2 * elemBytes, srcRow2 + 6 * elemBytes, groupBytes);
+      // Calculate the offset to our untiled data starting from the thick slice
+      const uint32_t srcTileY = sliceTileIndex / params.numTilesPerRow;
+      const uint32_t srcTileX = sliceTileIndex % params.numTilesPerRow;
 
-            srcOffset += srcStrideBytes * 2;
-            dstRow1 += elemBytes * 4;
-            dstRow2 += elemBytes * 4;
-            dstRow3 += elemBytes * 4;
-            dstRow4 += elemBytes * 4;
+      uint32_t untiledOffset =
+         (localSliceIndex * thinSliceBytes) +
+         (srcTileX * MicroTileWidth * BytesPerElement) +
+         (srcTileY * params.numTilesPerRow * params.thinMicroTileBytes);
+
+      // Calculate the offset to our tiled data starting from the thick slice
+      uint32_t tiledOffset =
+         (localSliceIndex * params.thinMicroTileBytes) +
+         sliceTileIndex * thickMicroTileBytes;
+
+      // In the case that we are using thick micro tiles, we need to advance our
+      // offsets to the current thick slice boundary that we are at.
+      const uint32_t firstThickSliceIndex = params.firstSliceIndex / MicroTileThickness;
+      const uint32_t thickSliceIndex = srcSliceIndex / MicroTileThickness;
+      const uint32_t thickSliceOffset = (thickSliceIndex - firstThickSliceIndex) * params.thickSliceBytes;
+      tiledOffset += thickSliceOffset;
+      untiledOffset += thickSliceOffset;
+
+      // The untiled pointers are offset forward by the local slice index already,
+      // we need to back it up since our calculations above consider it.
+      const uint32_t firstThinSliceIndex = params.firstSliceIndex % MicroTileThickness;
+      untiledOffset -= firstThinSliceIndex * thinSliceBytes;
+
+      // Update our pointers based on the calculated offset.
+      tiled = tiled + tiledOffset;
+      untiled = untiled + untiledOffset;
+
+      if (IsDepth) {
+         retileMicroDepth(tiled, untiled, untiledStride);
+      } else {
+         if (BitsPerElement == 8) {
+            retileMicro8(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 16) {
+            retileMicro16(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 32) {
+            retileMicro32(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 64) {
+            retileMicro64(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 128) {
+            retileMicro128(tiled, untiled, untiledStride);
          }
+      }
+   }
 
-         dstOffset += dstStrideBytes * 4;
+   static inline void
+   retileMacro(const Params& params,
+               uint32_t tileIndex,
+               uint8_t *untiled,
+               uint8_t *tiled)
+   {
+      const uint32_t thinSliceBytes = params.thickSliceBytes / MicroTileThickness;
+      const uint32_t untiledStride = params.numTilesPerRow * MicroTileWidth * BytesPerElement;
+      const uint32_t thickMicroTileBytes = params.thinMicroTileBytes * MicroTileThickness;
+
+      const uint32_t dispatchSliceIndex = tileIndex / params.numTilesPerSlice;
+      const uint32_t sliceTileIndex = tileIndex % params.numTilesPerSlice;
+
+      // Find the global slice index we are currently at.
+      const uint32_t srcSliceIndex = params.firstSliceIndex + dispatchSliceIndex;
+
+      // We need to identify where inside the current thick slice we are.
+      const uint32_t localSliceIndex = srcSliceIndex % MicroTileThickness;
+
+      // Calculate the thickSliceIndex
+      const uint32_t thickSliceIndex = srcSliceIndex / MicroTileThickness;
+
+      // Calculate our tile positions
+      const uint32_t microTilesPerMacro = MacroTileWidth * MacroTileHeight;
+      const uint32_t macroTilesPerRow = params.numTilesPerRow / MacroTileWidth;
+      const uint32_t microTilesPerMacroRow = microTilesPerMacro * macroTilesPerRow;
+
+      const uint32_t srcMacroTileY = sliceTileIndex / microTilesPerMacroRow;
+      const uint32_t macroRowTileIndex = sliceTileIndex % microTilesPerMacroRow;
+
+      const uint32_t srcMacroTileX = macroRowTileIndex / microTilesPerMacro;
+      const uint32_t microTileIndex = macroRowTileIndex % microTilesPerMacro;
+
+      const uint32_t srcMicroTileY = microTileIndex / MacroTileWidth;
+      const uint32_t srcMicroTileX = microTileIndex % MacroTileWidth;
+
+      const uint32_t srcTileX = srcMacroTileX * MacroTileWidth + srcMicroTileX;
+      const uint32_t srcTileY = srcMacroTileY * MacroTileHeight + srcMicroTileY;
+
+      // Figure out what our untiled offset shall be
+      uint32_t untiledOffset =
+         (localSliceIndex * thinSliceBytes) +
+         (srcTileX * MicroTileWidth * BytesPerElement) +
+         (srcTileY * MicroTileHeight * untiledStride);
+
+      // Calculate the offset to our untiled data starting from the thick slice
+      const uint32_t macroTileIndex = (srcMacroTileY * macroTilesPerRow) + srcMacroTileX;
+      const uint32_t macroTileOffset = macroTileIndex * MacroTileBytes;
+      const uint32_t tiledBaseOffset =
+         (macroTileOffset >> (NumBankBits + NumPipeBits)) +
+         (localSliceIndex * params.thinMicroTileBytes);
+
+      const uint32_t offsetHigh = (tiledBaseOffset & ~GroupMask) << (NumBankBits + NumPipeBits);
+      const uint32_t offsetLow = tiledBaseOffset & GroupMask;
+
+      // Calculate our bank/pipe/sample rotations and swaps
+      uint32_t bankSliceRotation = 0;
+      uint32_t pipeSliceRotation = 0;
+      if (!IsMacro3X) {
+         // 2_ format
+         bankSliceRotation = ((NumBanks >> 1) - 1)* thickSliceIndex;
+      } else {
+         // 3_ format
+         bankSliceRotation = thickSliceIndex / NumPipes;
+         pipeSliceRotation = thickSliceIndex;
+      }
+
+      uint32_t bankSwapRotation = 0;
+      if (IsBankSwapped) {
+         const uint32_t bankSwapOrder[] = { 0, 1, 3, 2 };
+         const uint32_t swapIndex = ((srcMacroTileX * MicroTileWidth * MacroTileWidth) / params.bankSwapWidth);
+         bankSwapRotation = bankSwapOrder[swapIndex % NumBanks];
+      }
+
+      uint32_t bank = 0;
+      bank |= ((srcTileX >> 0) & 1) ^ ((srcTileY >> 2) & 1);
+      bank |= (((srcTileX >> 1) & 1) ^ ((srcTileY >> 1) & 1)) << 1;
+      bank ^= (params.bankSwizzle + bankSliceRotation) & (NumBanks - 1);
+      bank ^= bankSwapRotation;
+
+      uint32_t pipe = 0;
+      pipe |= ((srcTileX >> 0) & 1) ^ ((srcTileY >> 0) & 1);
+      pipe ^= (params.pipeSwizzle + pipeSliceRotation) & (NumPipes - 1);
+
+      uint32_t tiledOffset =
+         (bank << (NumGroupBits + NumPipeBits)) |
+         (pipe << NumGroupBits) |
+         offsetLow | offsetHigh;
+
+      // In the case that we are using thick micro tiles, we need to advance our
+      // offsets to the current thick slice boundary that we are at.
+      const uint32_t firstThickSliceIndex = params.firstSliceIndex / MicroTileThickness;
+      const uint32_t thickSliceOffset = (thickSliceIndex - firstThickSliceIndex) * params.thickSliceBytes;
+      tiledOffset += thickSliceOffset;
+      untiledOffset += thickSliceOffset;
+
+      // The untiled pointers are offset forward by the local slice index already,
+      // we need to back it up since our calculations above consider it.
+      const uint32_t firstThinSliceIndex = params.firstSliceIndex % MicroTileThickness;
+      untiledOffset -= firstThinSliceIndex * thinSliceBytes;
+
+      // Update our pointers based on the calculated offset.
+      tiled = tiled + tiledOffset;
+      untiled = untiled + untiledOffset;
+
+      if (IsDepth) {
+         retileMicroDepth(tiled, untiled, untiledStride);
+      } else {
+         if (BitsPerElement == 8) {
+            retileMicro8(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 16) {
+            retileMicro16(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 32) {
+            retileMicro32(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 64) {
+            retileMicro64(tiled, untiled, untiledStride);
+         } else if (BitsPerElement == 128) {
+            retileMicro128(tiled, untiled, untiledStride);
+         }
+      }
+   }
+
+   static inline void
+   retile(const Params& params,
+          uint32_t tileIndex,
+          uint8_t *untiled,
+          uint8_t *tiled)
+   {
+      if (IsMacroTiling) {
+         retileMacro(params, tileIndex, untiled, tiled);
+      } else {
+         retileMicro(params, tileIndex, untiled, tiled);
       }
    }
 };
 
-template<typename MicroTiler>
-static void
-applyMicroTiler(const SurfaceDescription& desc,
-                const SurfaceInfo& info,
-                void* src,
-                void* dst,
-                int dstStrideBytes,
-                int sliceOffset,
-                int microTilesPerRow,
-                int microTilesNumRows,
-                int microTileBytes)
+template<bool IsUntiling,
+   TileMode RetileMode,
+   uint32_t BitsPerElement,
+   bool IsDepth>
+   static inline void
+retileTiledSurface3(const RetileInfo& info,
+                    uint8_t *untiled,
+                    uint8_t *tiled,
+                    uint32_t firstSlice,
+                    uint32_t numSlices)
 {
-   const auto bytesPerElement = info.bpp / 8;
-   auto microTileOffset = sliceOffset;
+   using Retiler = RetileCore<
+      IsUntiling,
+      getMicroTileThickness(RetileMode),
+      getMacroTileWidth(RetileMode),
+      getMacroTileHeight(RetileMode),
+      getTileModeIs3X(RetileMode),
+      getTileModeIsBankSwapped(RetileMode),
+      BitsPerElement,
+      IsDepth>;
 
-   for (auto microTileY = 0; microTileY < microTilesNumRows; ++microTileY) {
-      for (auto microTileX = 0; microTileX < microTilesPerRow; ++microTileX) {
-         const auto pixelX = microTileX * MicroTileWidth;
-         const auto pixelY = microTileY * MicroTileHeight;
-         const auto dstOffset =
-            pixelX * bytesPerElement + pixelY * dstStrideBytes;
+   typename Retiler::Params params;
+   params.firstSliceIndex = firstSlice;
 
-         MicroTiler::apply(static_cast<uint8_t*>(src),
-                           microTileOffset,
-                           MicroTileWidth* bytesPerElement,
-                           static_cast<uint8_t*>(dst),
-                           dstOffset,
-                           dstStrideBytes);
-         microTileOffset += microTileBytes;
-      }
+   params.numTilesPerRow = info.numTilesPerRow;
+   params.numTilesPerSlice = info.numTilesPerSlice;
+   params.thinMicroTileBytes = info.thickMicroTileBytes / info.microTileThickness;
+   params.thickSliceBytes = info.thinSliceBytes * info.microTileThickness;
+
+   params.bankSwizzle = info.bankSwizzle;
+   params.pipeSwizzle = info.pipeSwizzle;
+   params.bankSwapWidth = info.bankSwapWidth;
+
+   uint32_t numTiles = numSlices * info.numTilesPerSlice;
+   for (auto tileIndex = 0u; tileIndex < numTiles; ++tileIndex) {
+      Retiler::retile(params, tileIndex, untiled, tiled);
    }
 }
 
-static void
-untileMicroSurface(const SurfaceDescription& desc,
-                   const SurfaceInfo& info,
-                   void* src,
-                   void* dst,
-                   int slice,
-                   int sample)
+template<bool IsUntiling, TileMode RetileMode>
+static inline void
+retileTiledSurface2(const RetileInfo& info,
+                    uint8_t *untiled,
+                    uint8_t *tiled,
+                    uint32_t firstSlice,
+                    uint32_t numSlices)
 {
-   const auto bytesPerElement = info.bpp / 8;
-
-   const auto microTileThickness = getMicroTileThickness(info.tileMode);
-   const auto microTileBytes =
-      MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * desc.numSamples;
-
-   const auto microTilesPerRow = info.pitch / MicroTileWidth;
-   const auto microTilesNumRows = info.height / MicroTileHeight;
-
-   const auto microTileIndexZ = slice / microTileThickness;
-   const  auto sliceBytes =
-      info.pitch * info.height * microTileThickness * bytesPerElement;
-   const auto sliceOffset = microTileIndexZ * sliceBytes;
-
-   // Calculate offset within thick slices for current slice
-   auto thickSliceOffset = 0;
-   if (microTileThickness > 1 && slice > 0) {
-      thickSliceOffset = (slice % microTileThickness) * (microTileBytes / microTileThickness);
-   }
-
-   const auto dstStrideBytes = info.pitch * bytesPerElement;
-
-   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
-   const auto sampleSliceOffset = sliceOffset + sampleOffset + thickSliceOffset;
-
-   if (desc.use & SurfaceUse::DepthBuffer) {
-      // TODO: Implement depth tiling for sample > 0
-      decaf_check(sample == 0);
-
-      switch (info.bpp) {
-      case 16:
-         applyMicroTiler<MicroTilerDepth<2>>(desc, info, src, dst, dstStrideBytes,
-                                             sampleSliceOffset,
-                                             microTilesPerRow, microTilesNumRows,
-                                             microTileBytes);
-         break;
-      case 32:
-         applyMicroTiler<MicroTilerDepth<4>>(desc, info, src, dst, dstStrideBytes,
-                                             sampleSliceOffset,
-                                             microTilesPerRow, microTilesNumRows,
-                                             microTileBytes);
-         break;
-      case 64:
-         applyMicroTiler<MicroTilerDepth<8>>(desc, info, src, dst, dstStrideBytes,
-                                             sampleSliceOffset,
-                                             microTilesPerRow, microTilesNumRows,
-                                             microTileBytes);
-         break;
-      default:
-         decaf_abort("Invalid depth bpp");
+   if (!info.isDepth) {
+      if (info.bitsPerElement == 8) {
+         retileTiledSurface3<IsUntiling, RetileMode, 8, false>(info, untiled, tiled, firstSlice, numSlices);
+      } else if (info.bitsPerElement == 16) {
+         retileTiledSurface3<IsUntiling, RetileMode, 16, false>(info, untiled, tiled, firstSlice, numSlices);
+      } else if (info.bitsPerElement == 32) {
+         retileTiledSurface3<IsUntiling, RetileMode, 32, false>(info, untiled, tiled, firstSlice, numSlices);
+      } else if (info.bitsPerElement == 64) {
+         retileTiledSurface3<IsUntiling, RetileMode, 64, false>(info, untiled, tiled, firstSlice, numSlices);
+      } else if (info.bitsPerElement == 128) {
+         retileTiledSurface3<IsUntiling, RetileMode, 128, false>(info, untiled, tiled, firstSlice, numSlices);
+      } else {
+         decaf_abort("Invalid color surface bpp");
       }
-
-      return;
-   }
-
-   switch (info.bpp) {
-   case 8:
-      applyMicroTiler<MicroTiler8>(desc, info, src, dst, dstStrideBytes,
-                                   sampleSliceOffset,
-                                   microTilesPerRow, microTilesNumRows,
-                                   microTileBytes);
-      break;
-   case 16:
-      applyMicroTiler<MicroTiler16>(desc, info, src, dst, dstStrideBytes,
-                                    sampleSliceOffset,
-                                    microTilesPerRow, microTilesNumRows,
-                                    microTileBytes);
-      break;
-   case 32:
-      applyMicroTiler<MicroTiler32>(desc, info, src, dst, dstStrideBytes,
-                                    sampleSliceOffset,
-                                    microTilesPerRow, microTilesNumRows,
-                                    microTileBytes);
-      break;
-   case 64:
-      applyMicroTiler<MicroTiler64<false>>(desc, info, src, dst, dstStrideBytes,
-                                           sampleSliceOffset,
-                                           microTilesPerRow, microTilesNumRows,
-                                           microTileBytes);
-      break;
-   case 128:
-      applyMicroTiler<MicroTiler128<false>>(desc, info, src, dst, dstStrideBytes,
-                                            sampleSliceOffset,
-                                            microTilesPerRow, microTilesNumRows,
-                                            microTileBytes);
-      break;
-   default:
-      decaf_abort("Invalid bpp");
-   }
-}
-
-template<typename MicroTiler>
-static void
-applyMacroTiling(const SurfaceDescription& desc,
-                 const SurfaceInfo& info,
-                 void* src,
-                 void* dst,
-                 int dstStrideBytes,
-                 int sampleOffset,
-                 int sliceOffset,
-                 int thickSliceOffset,
-                 int bankSliceRotation,
-                 int sampleSliceRotation,
-                 int pipeSliceRotation,
-                 int bankSwapWidth,
-                 int macroTileWidth,
-                 int macroTileHeight,
-                 int macroTilesPerRow,
-                 int macroTilesNumRows,
-                 int macroTileBytes,
-                 int microTileBytes)
-{
-   static const uint32_t bankSwapOrder[] = { 0, 1, 3, 2 };
-   const auto bytesPerElement = info.bpp / 8;
-   auto macroTileOffset = 0;
-   auto macroTileIndex = 0;
-
-   for (auto macroTileY = 0; macroTileY < macroTilesNumRows; ++macroTileY) {
-      for (auto macroTileX = 0; macroTileX < macroTilesPerRow; ++macroTileX) {
-         const auto totalOffset =
-            ((sliceOffset + macroTileOffset) >> (NumBankBits + NumPipeBits))
-            + sampleOffset + thickSliceOffset;
-         const auto offsetHigh =
-            (totalOffset & ~GroupMask) << (NumBankBits + NumPipeBits);
-         const auto offsetLow = totalOffset & GroupMask;
-
-         auto bankSwapRotation = 0;
-         if (bankSwapWidth) {
-            const auto swapIndex = ((macroTileX * macroTileWidth * MicroTileWidth) / bankSwapWidth);
-            bankSwapRotation = bankSwapOrder[swapIndex % NumBanks];
-         }
-
-         for (auto microTileY = 0; microTileY < macroTileHeight; ++microTileY) {
-            for (auto microTileX = 0; microTileX < macroTileWidth; ++microTileX) {
-               const  auto pixelX =
-                  (macroTileX * macroTileWidth + microTileX) * MicroTileWidth;
-               const auto pixelY =
-                  (macroTileY * macroTileHeight + microTileY) * MicroTileHeight;
-               const auto dstOffset =
-                  pixelX * bytesPerElement + pixelY * dstStrideBytes;
-
-               // Calculate bank & pipe
-               auto bank = ((pixelX >> 3) & 1) ^ ((pixelY >> 5) & 1);
-               bank |= (((pixelX >> 4) & 1) ^ ((pixelY >> 4) & 1)) << 1;
-               bank ^= (desc.bankSwizzle + bankSliceRotation) & (NumBanks - 1);
-               bank ^= sampleSliceRotation;
-
-               if (bankSwapWidth) {
-                  bank ^= bankSwapRotation;
-               }
-
-               auto pipe = ((pixelX >> 3) & 1) ^ ((pixelY >> 3) & 1);
-               pipe ^= (desc.pipeSwizzle + pipeSliceRotation) & (NumPipes - 1);
-
-               auto microTileOffset =
-                  (bank << (NumGroupBits + NumPipeBits))
-                  + (pipe << NumGroupBits) + offsetHigh + offsetLow;
-
-               MicroTiler::apply(static_cast<uint8_t*>(src),
-                                 microTileOffset,
-                                 MicroTileWidth* bytesPerElement,
-                                 static_cast<uint8_t*>(dst),
-                                 dstOffset,
-                                 dstStrideBytes);
-            }
-         }
-
-         macroTileOffset += macroTileBytes;
-         macroTileIndex++;
-      }
-   }
-}
-
-
-static void
-untileMacroSurface(const SurfaceDescription& desc,
-                   const SurfaceInfo& info,
-                   void* src,
-                   void* dst,
-                   int slice,
-                   int sample)
-{
-   const auto bytesPerElement = info.bpp / 8;
-
-   const auto microTileThickness = getMicroTileThickness(info.tileMode);
-   const auto microTileBytes =
-      MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * desc.numSamples;
-
-   const auto macroTileWidth = getMacroTileWidth(info.tileMode);
-   const auto macroTileHeight = getMacroTileHeight(info.tileMode);
-   const auto macroTileBytes =
-      macroTileWidth * macroTileHeight * microTileBytes;
-
-   const auto macroTilesPerRow = info.pitch / (macroTileWidth * MicroTileWidth);
-   const auto macroTilesNumRows = info.height / (macroTileHeight * MicroTileHeight);
-   const auto dstStrideBytes = info.pitch * bytesPerElement;
-
-   const auto macroTilesPerSlice = macroTilesPerRow * macroTilesNumRows;
-   const auto sliceOffset =
-      (slice / microTileThickness) * macroTilesPerSlice * macroTileBytes;
-
-   // Calculate offset within thick slices for current slice
-   auto thickSliceOffset = 0;
-   if (microTileThickness > 1 && slice > 0) {
-      thickSliceOffset = (slice % microTileThickness) * (microTileBytes / microTileThickness);
-   }
-
-   // Depth tiling is different for samples, not yet implemented
-   decaf_check(!(desc.use & SurfaceUse::DepthBuffer) || sample == 0);
-   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
-
-   // Calculate bank / pipe rotation
-   auto bankSliceRotation = 0;
-   auto sampleSliceRotation = 0;
-   auto pipeSliceRotation = 0;
-   auto bankSwapWidth = 0;
-
-   switch (info.tileMode) {
-   case TileMode::Macro2DTiledThin1:
-   case TileMode::Macro2DTiledThin2:
-   case TileMode::Macro2DTiledThin4:
-   case TileMode::Macro2DTiledThick:
-   case TileMode::Macro2BTiledThin1:
-   case TileMode::Macro2BTiledThin2:
-   case TileMode::Macro2BTiledThin4:
-   case TileMode::Macro2BTiledThick:
-      bankSliceRotation = ((NumBanks >> 1) - 1)* (slice / microTileThickness);
-      sampleSliceRotation = ((NumBanks >> 1) + 1)* sample;
-      break;
-   case TileMode::Macro3DTiledThin1:
-   case TileMode::Macro3DTiledThick:
-   case TileMode::Macro3BTiledThin1:
-   case TileMode::Macro3BTiledThick:
-      bankSliceRotation = (slice / microTileThickness) / NumPipes;
-      pipeSliceRotation = (slice / microTileThickness);
-      break;
-   }
-
-   switch (info.tileMode) {
-   case TileMode::Macro2BTiledThin1:
-   case TileMode::Macro2BTiledThin2:
-   case TileMode::Macro2BTiledThin4:
-   case TileMode::Macro2BTiledThick:
-   case TileMode::Macro3BTiledThin1:
-   case TileMode::Macro3BTiledThick:
-      bankSwapWidth = computeSurfaceBankSwappedWidth(info.tileMode, info.bpp,
-                                                     desc.numSamples,
-                                                     info.pitch);
-      break;
-   }
-
-   if (desc.use & SurfaceUse::DepthBuffer) {
-      // TODO: Implement depth tiling for sample > 0
-      decaf_check(sample == 0);
-
-      switch (info.bpp) {
-      case 16:
-         applyMacroTiling<MicroTilerDepth<2>>(desc, info, src, dst, dstStrideBytes,
-                                              sampleOffset, sliceOffset, thickSliceOffset,
-                                              bankSliceRotation, sampleSliceRotation,
-                                              pipeSliceRotation, bankSwapWidth,
-                                              macroTileWidth, macroTileHeight,
-                                              macroTilesPerRow, macroTilesNumRows,
-                                              macroTileBytes, microTileBytes);
-         break;
-      case 32:
-         applyMacroTiling<MicroTilerDepth<4>>(desc, info, src, dst, dstStrideBytes,
-                                              sampleOffset, sliceOffset, thickSliceOffset,
-                                              bankSliceRotation, sampleSliceRotation,
-                                              pipeSliceRotation, bankSwapWidth,
-                                              macroTileWidth, macroTileHeight,
-                                              macroTilesPerRow, macroTilesNumRows,
-                                              macroTileBytes, microTileBytes);
-         break;
-      case 64:
-         applyMacroTiling<MicroTilerDepth<8>>(desc, info, src, dst, dstStrideBytes,
-                                              sampleOffset, sliceOffset, thickSliceOffset,
-                                              bankSliceRotation, sampleSliceRotation,
-                                              pipeSliceRotation, bankSwapWidth,
-                                              macroTileWidth, macroTileHeight,
-                                              macroTilesPerRow, macroTilesNumRows,
-                                              macroTileBytes, microTileBytes);
-         break;
-      default:
+   } else {
+      if (info.bitsPerElement == 16) {
+         retileTiledSurface3<IsUntiling, RetileMode, 16, true>(info, untiled, tiled, firstSlice, numSlices);
+      } else if (info.bitsPerElement == 32) {
+         retileTiledSurface3<IsUntiling, RetileMode, 32, true>(info, untiled, tiled, firstSlice, numSlices);
+      } else if (info.bitsPerElement == 64) {
+         retileTiledSurface3<IsUntiling, RetileMode, 64, true>(info, untiled, tiled, firstSlice, numSlices);
+      } else {
          decaf_abort("Invalid depth surface bpp");
       }
-
-      return;
-   }
-
-   // Do the tiling
-   switch (info.bpp) {
-   case 8:
-      applyMacroTiling<MicroTiler8>(desc, info, src, dst, dstStrideBytes,
-                                    sampleOffset, sliceOffset, thickSliceOffset,
-                                    bankSliceRotation, sampleSliceRotation,
-                                    pipeSliceRotation, bankSwapWidth,
-                                    macroTileWidth, macroTileHeight,
-                                    macroTilesPerRow, macroTilesNumRows,
-                                    macroTileBytes, microTileBytes);
-      break;
-   case 16:
-      applyMacroTiling<MicroTiler16>(desc, info, src, dst, dstStrideBytes,
-                                     sampleOffset, sliceOffset, thickSliceOffset,
-                                     bankSliceRotation, sampleSliceRotation,
-                                     pipeSliceRotation, bankSwapWidth,
-                                     macroTileWidth, macroTileHeight,
-                                     macroTilesPerRow, macroTilesNumRows,
-                                     macroTileBytes, microTileBytes);
-      break;
-   case 32:
-      applyMacroTiling<MicroTiler32>(desc, info, src, dst, dstStrideBytes,
-                                     sampleOffset, sliceOffset, thickSliceOffset,
-                                     bankSliceRotation, sampleSliceRotation,
-                                     pipeSliceRotation, bankSwapWidth,
-                                     macroTileWidth, macroTileHeight,
-                                     macroTilesPerRow, macroTilesNumRows,
-                                     macroTileBytes, microTileBytes);
-      break;
-   case 64:
-      applyMacroTiling<MicroTiler64<true>>(desc, info, src, dst, dstStrideBytes,
-                                           sampleOffset, sliceOffset, thickSliceOffset,
-                                           bankSliceRotation, sampleSliceRotation,
-                                           pipeSliceRotation, bankSwapWidth,
-                                           macroTileWidth, macroTileHeight,
-                                           macroTilesPerRow, macroTilesNumRows,
-                                           macroTileBytes, microTileBytes);
-      break;
-   case 128:
-      applyMacroTiling<MicroTiler128<true>>(desc, info, src, dst, dstStrideBytes,
-                                            sampleOffset, sliceOffset, thickSliceOffset,
-                                            bankSliceRotation, sampleSliceRotation,
-                                            pipeSliceRotation, bankSwapWidth,
-                                            macroTileWidth, macroTileHeight,
-                                            macroTilesPerRow, macroTilesNumRows,
-                                            macroTileBytes, microTileBytes);
-      break;
-   default:
-      decaf_abort("Invalid surface bpp");
    }
 }
 
-
-/**
- * Untile all slices of an image (aka mip level = 0);
- *
- * @param src Points to image
- * @param dst Points to image slice
- */
-void
-untileImage(const SurfaceDescription& desc,
-            void* src,
-            void* dst)
+template<bool IsUntiling>
+static inline void
+retileTiledSurface(const RetileInfo& info,
+                   uint8_t *untiled,
+                   uint8_t *tiled,
+                   uint32_t firstSlice,
+                   uint32_t numSlices)
 {
-   untileMip(desc, src, dst, 0);
-}
-
-
-/**
- * Untile a single slice of an image (aka mip level = 0).
- *
- * @param src Points to image
- * @param dst Points to image slice
- */
-void
-untileImageSlice(const SurfaceDescription& desc,
-                 void* src,
-                 void* dst,
-                 int slice)
-{
-   untileMipSlice(desc, src, dst, 0, slice);
-}
-
-
-/**
- * Untile a single slice of a single mip level.
- *
- * @param src Points to mip
- * @param dst Points to mip slice
- */
-void
-untileMipSlice(const SurfaceDescription& desc,
-               void* src,
-               void* dst,
-               int level,
-               int slice)
-{
-   const auto info = computeSurfaceInfo(desc, level);
-
-   // Multi-sample decoding is not supported yet.
-   decaf_check(desc.numSamples == 1);
-   auto sample = 0;
-
    switch (info.tileMode) {
-   case TileMode::LinearGeneral:
-   case TileMode::LinearAligned:
-      // Already "untiled"
-      return;
    case TileMode::Micro1DTiledThin1:
+      retileTiledSurface2<IsUntiling, TileMode::Micro1DTiledThin1>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Micro1DTiledThick:
-      untileMicroSurface(desc, info, src, dst, slice, sample);
+      retileTiledSurface2<IsUntiling, TileMode::Micro1DTiledThick>(info, untiled, tiled, firstSlice, numSlices);
       break;
    case TileMode::Macro2DTiledThin1:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2DTiledThin1>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2DTiledThin2:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2DTiledThin2>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2DTiledThin4:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2DTiledThin4>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2DTiledThick:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2DTiledThick>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2BTiledThin1:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2BTiledThin1>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2BTiledThin2:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2BTiledThin2>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2BTiledThin4:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2BTiledThin4>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro2BTiledThick:
+      retileTiledSurface2<IsUntiling, TileMode::Macro2BTiledThick>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro3DTiledThin1:
+      retileTiledSurface2<IsUntiling, TileMode::Macro3DTiledThin1>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro3DTiledThick:
+      retileTiledSurface2<IsUntiling, TileMode::Macro3DTiledThick>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro3BTiledThin1:
+      retileTiledSurface2<IsUntiling, TileMode::Macro3BTiledThin1>(info, untiled, tiled, firstSlice, numSlices);
+      break;
    case TileMode::Macro3BTiledThick:
-      untileMacroSurface(desc, info, src, dst, slice, sample);
+      retileTiledSurface2<IsUntiling, TileMode::Macro3BTiledThick>(info, untiled, tiled, firstSlice, numSlices);
       break;
    default:
-      decaf_abort("Invalid tile mode");
+      decaf_abort("Unexpected tiled tile mode");
    }
 }
 
-
-/**
- * Untile all slices within a single mip.
- *
- * @param src Points to mip
- * @param dst Points to mip
- */
-void
-untileMip(const SurfaceDescription& desc,
-          void* src,
-          void* dst,
-          int level)
+template<bool IsUntiling>
+static void
+retileLinearSurface(const RetileInfo& info,
+                    uint8_t *untiled,
+                    uint8_t *tiled,
+                    uint32_t firstSlice,
+                    uint32_t numSlices)
 {
-   const auto info = computeSurfaceInfo(desc, level);
-   auto numSlices = std::min(desc.numSlices, info.depth);
+   // These functions assume that the tiled side is aligned to a thick slice
+   // boundary, since this is linear, we just pull that pointer forward.
+   uint32_t thinSliceAdjust = firstSlice % info.microTileThickness;
+   uint32_t thinMicroTileBytes = info.thickMicroTileBytes / info.microTileThickness;
+   tiled += thinSliceAdjust * info.numTilesPerSlice * thinMicroTileBytes;
 
-   for (auto slice = 0u; slice < numSlices; ++slice) {
-      untileMipSlice(desc,
-                     src,
-                     reinterpret_cast<uint8_t*>(dst) + info.sliceSize * slice,
-                     level, slice);
+   // Calculate the total number of tiles to copy.
+   uint32_t totalTiles = numSlices * info.numTilesPerSlice;
+
+   // Copy all the bytes from one place to the other.
+   uint32_t totalBytes = totalTiles * thinMicroTileBytes;
+   if (IsUntiling) {
+      std::memcpy(untiled, tiled, totalBytes);
+   } else {
+      std::memcpy(tiled, untiled, totalBytes);
    }
 }
 
-
-/**
- * Untile all slices at every mip level of a mipmap.
- *
- * @param src Points to mipmap
- * @param dst Points to mipmap
- */
-void
-untileMipMap(const SurfaceDescription& desc,
-             void* src,
-             void* dst)
+template<bool IsUntiling>
+static inline void
+retile(const RetileInfo& info,
+       uint8_t *untiled,
+       uint8_t *tiled,
+       uint32_t firstSlice,
+       uint32_t numSlices)
 {
-   auto mipOffset = size_t { 0 };
-   auto baseInfo = computeSurfaceInfo(desc, 0);
-
-   for (auto level = 1u; level < desc.numLevels; ++level) {
-      auto info = computeSurfaceInfo(desc, level);
-      mipOffset = align_up(mipOffset, info.baseAlign);
-      untileMip(desc,
-                reinterpret_cast<uint8_t*>(src) + mipOffset,
-                reinterpret_cast<uint8_t*>(dst) + mipOffset,
-                level);
-      mipOffset += info.surfSize;
+   if (info.tileMode == TileMode::LinearGeneral ||
+       info.tileMode == TileMode::LinearAligned) {
+      return retileLinearSurface<IsUntiling>(info, untiled, tiled, firstSlice, numSlices);
    }
+
+   retileTiledSurface<IsUntiling>(info, untiled, tiled, firstSlice, numSlices);
 }
 
+void
+untile(const RetileInfo& info,
+       uint8_t *untiled,
+       uint8_t *tiled,
+       uint32_t firstSlice,
+       uint32_t numSlices)
+{
+   retile<true>(info, untiled, tiled, firstSlice, numSlices);
+}
+
+void
+tile(const RetileInfo& info,
+     uint8_t *untiled,
+     uint8_t *tiled,
+     uint32_t firstSlice,
+     uint32_t numSlices)
+{
+   retile<false>(info, untiled, tiled, firstSlice, numSlices);
+}
 
 } // namespace gpu::tiling::cpu

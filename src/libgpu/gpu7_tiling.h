@@ -6,7 +6,6 @@ namespace gpu7::tiling
 
 #include <common/enum_start.inl>
 
-// TODO(bret19): Use this...
 ENUM_BEG(DataFormat, uint32_t)
    ENUM_VALUE(Invalid,                    0)
    ENUM_VALUE(FMT_8,                      1)
@@ -184,6 +183,63 @@ static constexpr int MicroTileThickness[] = {
    /* Tiled3BThick = */    4,
 };
 
+static constexpr bool TileModeIsMacro[] = {
+   /* LinearGeneral = */   false,
+   /* LinearAligned = */   false,
+   /* Tiled1DThin1 = */    false,
+   /* Tiled1DThick = */    false,
+   /* Tiled2DThin1 = */    true,
+   /* Tiled2DThin2 = */    true,
+   /* Tiled2DThin4 = */    true,
+   /* Tiled2DThick = */    true,
+   /* Tiled2BThin1 = */    true,
+   /* Tiled2BThin2 = */    true,
+   /* Tiled2BThin4 = */    true,
+   /* Tiled2BThick = */    true,
+   /* Tiled3DThin1 = */    true,
+   /* Tiled3DThick = */    true,
+   /* Tiled3BThin1 = */    true,
+   /* Tiled3BThick = */    true,
+};
+
+static constexpr bool TileModeIsMacro3X[] = {
+   /* LinearGeneral = */   false,
+   /* LinearAligned = */   false,
+   /* Tiled1DThin1 = */    false,
+   /* Tiled1DThick = */    false,
+   /* Tiled2DThin1 = */    false,
+   /* Tiled2DThin2 = */    false,
+   /* Tiled2DThin4 = */    false,
+   /* Tiled2DThick = */    false,
+   /* Tiled2BThin1 = */    false,
+   /* Tiled2BThin2 = */    false,
+   /* Tiled2BThin4 = */    false,
+   /* Tiled2BThick = */    false,
+   /* Tiled3DThin1 = */    true,
+   /* Tiled3DThick = */    true,
+   /* Tiled3BThin1 = */    true,
+   /* Tiled3BThick = */    true,
+};
+
+static constexpr bool TileModeIsBankSwapped[] = {
+   /* LinearGeneral = */   false,
+   /* LinearAligned = */   false,
+   /* Tiled1DThin1 = */    false,
+   /* Tiled1DThick = */    false,
+   /* Tiled2DThin1 = */    false,
+   /* Tiled2DThin2 = */    false,
+   /* Tiled2DThin4 = */    false,
+   /* Tiled2DThick = */    false,
+   /* Tiled2BThin1 = */    true,
+   /* Tiled2BThin2 = */    true,
+   /* Tiled2BThin4 = */    true,
+   /* Tiled2BThick = */    true,
+   /* Tiled3DThin1 = */    false,
+   /* Tiled3DThick = */    false,
+   /* Tiled3BThin1 = */    true,
+   /* Tiled3BThick = */    true,
+};
+
 static constexpr int
 getMacroTileWidth(TileMode tileMode)
 {
@@ -200,6 +256,24 @@ static constexpr int
 getMicroTileThickness(TileMode tileMode)
 {
    return MicroTileThickness[static_cast<size_t>(tileMode)];
+}
+
+static constexpr int
+getTileModeIsMacro(TileMode tileMode)
+{
+   return TileModeIsMacro[static_cast<size_t>(tileMode)];
+}
+
+static constexpr int
+getTileModeIs3X(TileMode tileMode)
+{
+   return TileModeIsMacro3X[static_cast<size_t>(tileMode)];
+}
+
+static constexpr int
+getTileModeIsBankSwapped(TileMode tileMode)
+{
+   return TileModeIsBankSwapped[static_cast<size_t>(tileMode)];
 }
 
 struct SurfaceDescription
@@ -222,6 +296,7 @@ struct SurfaceDescription
 struct SurfaceInfo
 {
    TileMode tileMode;
+   SurfaceUse use;
    uint32_t bpp;
 
    uint32_t pitch;
@@ -233,34 +308,57 @@ struct SurfaceInfo
    uint32_t pitchAlign;
    uint32_t heightAlign;
    uint32_t depthAlign;
+   uint32_t bankSwizzle;
+   uint32_t pipeSwizzle;
+};
+
+struct RetileInfo
+{
+   // Input values
+   TileMode tileMode;
+   uint32_t bitsPerElement;
+   bool isDepth;
+
+   // Some helpful stuff
+   uint32_t thinSliceBytes;
+
+   // Used for both micro and macro tiling
+   bool isTiled;
+   bool isMacroTiled;
+   uint32_t macroTileWidth;
+   uint32_t macroTileHeight;
+   uint32_t microTileThickness;
+   uint32_t thickMicroTileBytes;
+   uint32_t numTilesPerRow;
+   uint32_t numTilesPerSlice;
+
+   // Used only for macro tiling
+   uint32_t bankSwizzle;
+   uint32_t pipeSwizzle;
+   uint32_t bankSwapWidth;
 };
 
 SurfaceInfo
-computeSurfaceInfo(const SurfaceDescription &surface,
+computeSurfaceInfo(const SurfaceDescription& surface,
                    int mipLevel);
 
-// TODO(brett19): This should really be private, its only public
-// because we are using it from Vulkan retiler right now.
-int
-computeSurfaceBankSwappedWidth(TileMode tileMode,
-                               uint32_t bpp,
-                               uint32_t numSamples,
-                               uint32_t pitch);
+size_t
+computeUnpitchedImageSize(const SurfaceDescription& desc);
 
 size_t
-computeUnpitchedImageSize(const SurfaceDescription &desc);
-
-size_t
-computeUnpitchedMipMapSize(const SurfaceDescription &desc);
+computeUnpitchedMipMapSize(const SurfaceDescription& desc);
 
 void
-unpitchImage(const SurfaceDescription &desc,
-             void *pitched,
-             void *unpitched);
+unpitchImage(const SurfaceDescription& desc,
+             void* pitched,
+             void* unpitched);
 
 void
-unpitchMipMap(const SurfaceDescription &desc,
-              void *pitched,
-              void *unpitched);
+unpitchMipMap(const SurfaceDescription& desc,
+              void* pitched,
+              void* unpitched);
+
+RetileInfo
+computeRetileInfo(const SurfaceInfo& info);
 
 } // namespace gpu7::tiling

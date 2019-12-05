@@ -533,14 +533,16 @@ protected:
    void addRetireTask(std::function<void()> fn);
 
    // Retiling
-   void dispatchGpuTile(vk::CommandBuffer &commandBuffer,
+   void dispatchGpuTile(const gpu7::tiling::RetileInfo& retileInfo,
+                        vk::CommandBuffer &commandBuffer,
                         vk::Buffer dstBuffer, uint32_t dstOffset,
                         vk::Buffer srcBuffer, uint32_t srcOffset,
-                        const gpu7::tiling::vulkan::RetileInfo& retileInfo);
-   void dispatchGpuUntile(vk::CommandBuffer &commandBuffer,
+                        uint32_t firstSlice, uint32_t numSlices);
+   void dispatchGpuUntile(const gpu7::tiling::RetileInfo& retileInfo,
+                          vk::CommandBuffer& commandBuffer,
                           vk::Buffer dstBuffer, uint32_t dstOffset,
                           vk::Buffer srcBuffer, uint32_t srcOffset,
-                          const gpu7::tiling::vulkan::RetileInfo& retileInfo);
+                          uint32_t firstSlice, uint32_t numSlices);
 
    // Query Pools
    vk::QueryPool allocateOccQueryPool();

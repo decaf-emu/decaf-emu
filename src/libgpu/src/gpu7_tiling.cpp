@@ -55,14 +55,14 @@ computeSurfaceBankSwappedWidth(TileMode tileMode,
    return bankSwapWidth;
 }
 
-static void *
-addrLibAlloc(const ADDR_ALLOCSYSMEM_INPUT *pInput)
+static void*
+addrLibAlloc(const ADDR_ALLOCSYSMEM_INPUT* pInput)
 {
    return std::malloc(pInput->sizeInBytes);
 }
 
 static ADDR_E_RETURNCODE
-addrLibFree(const ADDR_FREESYSMEM_INPUT *pInput)
+addrLibFree(const ADDR_FREESYSMEM_INPUT* pInput)
 {
    std::free(pInput->pVirtAddr);
    return ADDR_OK;
@@ -95,7 +95,7 @@ getAddrLibHandle()
 }
 
 SurfaceInfo
-computeSurfaceInfo(const SurfaceDescription &surface,
+computeSurfaceInfo(const SurfaceDescription& surface,
                    int mipLevel)
 {
    auto output = ADDR_COMPUTE_SURFACE_INFO_OUTPUT { };
@@ -143,6 +143,7 @@ computeSurfaceInfo(const SurfaceDescription &surface,
 
    SurfaceInfo result;
    result.tileMode = static_cast<TileMode>(output.tileMode);
+   result.use = surface.use;
    result.bpp = output.bpp;
    result.pitch = output.pitch;
    result.height = output.height;
@@ -153,22 +154,24 @@ computeSurfaceInfo(const SurfaceDescription &surface,
    result.pitchAlign = output.pitchAlign;
    result.heightAlign = output.heightAlign;
    result.depthAlign = output.depthAlign;
+   result.bankSwizzle = surface.bankSwizzle;
+   result.pipeSwizzle = surface.pipeSwizzle;
    return result;
 }
 
 
 void
-unpitchImage(const SurfaceDescription &desc,
-             void *pitched,
-             void *unpitched)
+unpitchImage(const SurfaceDescription& desc,
+             void* pitched,
+             void* unpitched)
 {
    const auto info = computeSurfaceInfo(desc, 0);
    const auto bytesPerElem = info.bpp / 8;
    const auto unpitchedSliceSize = desc.width * desc.height * bytesPerElem;
 
    for (auto slice = 0u; slice < desc.numSlices; ++slice) {
-      auto src = reinterpret_cast<uint8_t *>(pitched) + info.sliceSize * slice;
-      auto dst = reinterpret_cast<uint8_t *>(unpitched) + unpitchedSliceSize * slice;
+      auto src = reinterpret_cast<uint8_t*>(pitched) + info.sliceSize * slice;
+      auto dst = reinterpret_cast<uint8_t*>(unpitched) + unpitchedSliceSize * slice;
 
       for (auto y = 0u; y < desc.height; ++y) {
          std::memcpy(dst, src, desc.width * bytesPerElem);
@@ -179,13 +182,13 @@ unpitchImage(const SurfaceDescription &desc,
 }
 
 size_t
-computeUnpitchedImageSize(const SurfaceDescription &desc)
+computeUnpitchedImageSize(const SurfaceDescription& desc)
 {
    return desc.width * desc.height * (desc.bpp / 8) * desc.numSlices;
 }
 
 size_t
-computeUnpitchedMipMapSize(const SurfaceDescription &desc)
+computeUnpitchedMipMapSize(const SurfaceDescription& desc)
 {
    auto size = size_t { 0 };
 
@@ -204,9 +207,9 @@ computeUnpitchedMipMapSize(const SurfaceDescription &desc)
 }
 
 void
-unpitchMipMap(const SurfaceDescription &desc,
-              void *pitched,
-              void *unpitched)
+unpitchMipMap(const SurfaceDescription& desc,
+              void* pitched,
+              void* unpitched)
 {
    auto srcMipOffset = size_t { 0 };
    auto dstMipOffset = size_t { 0 };
@@ -225,8 +228,8 @@ unpitchMipMap(const SurfaceDescription &desc,
       srcMipOffset = align_up(srcMipOffset, info.baseAlign);
 
       for (auto slice = 0u; slice < numSlices; ++slice) {
-         auto src = reinterpret_cast<uint8_t *>(pitched) + srcMipOffset + info.sliceSize * slice;
-         auto dst = reinterpret_cast<uint8_t *>(unpitched) + dstMipOffset + unpitchedSliceSize * slice;
+         auto src = reinterpret_cast<uint8_t*>(pitched) + srcMipOffset + info.sliceSize * slice;
+         auto dst = reinterpret_cast<uint8_t*>(unpitched) + dstMipOffset + unpitchedSliceSize * slice;
 
          for (auto y = 0u; y < height; ++y) {
             std::memcpy(dst, src, width * bytesPerElem);
@@ -237,6 +240,145 @@ unpitchMipMap(const SurfaceDescription &desc,
 
       srcMipOffset += info.surfSize;
       dstMipOffset += unpitchedSliceSize * numSlices;
+   }
+}
+
+RetileInfo
+computeLinearRetileInfo(const SurfaceInfo& info)
+{
+   const auto bytesPerElement = info.bpp / 8;
+   const auto pitch = info.pitch;
+   const auto height = info.height;
+
+   const auto thinSliceBytes =
+      pitch * height * bytesPerElement;
+
+   RetileInfo out;
+   out.tileMode = static_cast<TileMode>(info.tileMode);
+   out.bitsPerElement = info.bpp;
+   out.isDepth = !!(info.use & gpu7::tiling::SurfaceUse::DepthBuffer);
+   out.thinSliceBytes = thinSliceBytes;
+   out.isTiled = false;
+   out.isMacroTiled = false;
+   out.macroTileWidth = 0;
+   out.macroTileHeight = 0;
+   out.microTileThickness = 0;
+   out.thickMicroTileBytes = 0;
+   out.numTilesPerRow = 0;
+   out.numTilesPerSlice = 0;
+   out.bankSwizzle = 0;
+   out.pipeSwizzle = 0;
+   out.bankSwapWidth = 0;
+   return out;
+}
+
+RetileInfo
+computeMicroRetileInfo(const SurfaceInfo& info)
+{
+   const auto bytesPerElement = info.bpp / 8;
+   const auto pitch = info.pitch;
+   const auto height = info.height;
+
+   const auto microTileThickness = getMicroTileThickness(info.tileMode);
+   const auto microTileBytes =
+      MicroTileWidth * MicroTileHeight * microTileThickness * bytesPerElement;
+
+   const auto microTilesPerRow = pitch / MicroTileWidth;
+   const auto microTilesNumRows = height / MicroTileHeight;
+   const auto microTilesPerSlice = microTilesPerRow * microTilesNumRows;
+
+   const auto thinSliceBytes =
+      pitch * height * bytesPerElement;
+
+   RetileInfo out;
+   out.tileMode = static_cast<TileMode>(info.tileMode);
+   out.bitsPerElement = info.bpp;
+   out.isDepth = !!(info.use & gpu7::tiling::SurfaceUse::DepthBuffer);
+   out.thinSliceBytes = thinSliceBytes;
+   out.isTiled = true;
+   out.isMacroTiled = false;
+   out.macroTileWidth = 1;
+   out.macroTileHeight = 1;
+   out.microTileThickness = microTileThickness;
+   out.thickMicroTileBytes = microTileBytes;
+   out.numTilesPerRow = microTilesPerRow;
+   out.numTilesPerSlice = microTilesPerSlice;
+   out.bankSwizzle = 0;
+   out.pipeSwizzle = 0;
+   out.bankSwapWidth = 0;
+   return out;
+}
+
+RetileInfo
+computeMacroRetileInfo(const SurfaceInfo& info)
+{
+   const auto bytesPerElement = info.bpp / 8;
+   const auto pitch = info.pitch;
+   const auto height = info.height;
+
+   const auto macroTileWidth = getMacroTileWidth(info.tileMode);
+   const auto macroTileHeight = getMacroTileHeight(info.tileMode);
+   const auto microTileThickness = getMicroTileThickness(info.tileMode);
+
+   const auto microTileBytes =
+      MicroTileWidth * MicroTileHeight * microTileThickness * bytesPerElement;
+   const auto macroTileBytes =
+      macroTileWidth * macroTileHeight * microTileBytes;
+
+   const auto microTilesPerRow = pitch / MicroTileWidth;
+   const auto microTilesNumRows = height / MicroTileHeight;
+   const auto microTilesPerSlice = microTilesPerRow * microTilesNumRows;
+
+   auto bankSwapWidth = computeSurfaceBankSwappedWidth(
+      info.tileMode, info.bpp, 1, info.pitch);
+
+   const auto thinSliceBytes =
+      pitch * height * bytesPerElement;
+
+   RetileInfo out;
+   out.tileMode = static_cast<TileMode>(info.tileMode);
+   out.bitsPerElement = info.bpp;
+   out.isDepth = !!(info.use & gpu7::tiling::SurfaceUse::DepthBuffer);
+   out.thinSliceBytes = thinSliceBytes;
+   out.isTiled = true;
+   out.isMacroTiled = true;
+   out.macroTileWidth = macroTileWidth;
+   out.macroTileHeight = macroTileHeight;
+   out.microTileThickness = microTileThickness;
+   out.thickMicroTileBytes = microTileBytes;
+   out.numTilesPerRow = microTilesPerRow;
+   out.numTilesPerSlice = microTilesPerSlice;
+   out.bankSwizzle = info.bankSwizzle;
+   out.pipeSwizzle = info.pipeSwizzle;
+   out.bankSwapWidth = bankSwapWidth;
+   return out;
+}
+
+RetileInfo
+computeRetileInfo(const SurfaceInfo& info)
+{
+   switch (info.tileMode) {
+   case TileMode::LinearGeneral:
+   case TileMode::LinearAligned:
+      return computeLinearRetileInfo(info);
+   case TileMode::Micro1DTiledThin1:
+   case TileMode::Micro1DTiledThick:
+      return computeMicroRetileInfo(info);
+   case TileMode::Macro2DTiledThin1:
+   case TileMode::Macro2DTiledThin2:
+   case TileMode::Macro2DTiledThin4:
+   case TileMode::Macro2DTiledThick:
+   case TileMode::Macro2BTiledThin1:
+   case TileMode::Macro2BTiledThin2:
+   case TileMode::Macro2BTiledThin4:
+   case TileMode::Macro2BTiledThick:
+   case TileMode::Macro3DTiledThin1:
+   case TileMode::Macro3DTiledThick:
+   case TileMode::Macro3BTiledThin1:
+   case TileMode::Macro3BTiledThick:
+      return computeMacroRetileInfo(info);
+   default:
+      decaf_abort("Invalid tile mode");
    }
 }
 

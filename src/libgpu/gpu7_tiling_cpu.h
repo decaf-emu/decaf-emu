@@ -5,32 +5,17 @@ namespace gpu7::tiling::cpu
 {
 
 void
-untileImage(const SurfaceDescription& surface,
-            void* src,
-            void* dst);
+untile(const RetileInfo& desc,
+       uint8_t* untiled,
+       uint8_t* tiled,
+       uint32_t firstSlice,
+       uint32_t numSlices);
 
 void
-untileImageSlice(const SurfaceDescription& surface,
-                 void* src,
-                 void* dst,
-                 int slice);
-
-void
-untileMipMap(const SurfaceDescription& desc,
-             void* src,
-             void* dst);
-
-void
-untileMip(const SurfaceDescription& surface,
-          void* src,
-          void* dst,
-          int level);
-
-void
-untileMipSlice(const SurfaceDescription& desc,
-               void* src,
-               void* dst,
-               int level,
-               int slice);
+tile(const RetileInfo& desc,
+     uint8_t* untiled,
+     uint8_t* tiled,
+     uint32_t firstSlice,
+     uint32_t numSlices);
 
 }  // namespace gpu7::tiling::cpu

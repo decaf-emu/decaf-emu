@@ -1,3 +1,5 @@
+#pragma optimize("", off)
+
 #ifdef DECAF_VULKAN
 #include "gpu7_tiling_vulkan.h"
 
@@ -8,15 +10,18 @@
 namespace gpu7::tiling::vulkan
 {
 
-struct MicroTilePushConstants
+struct GeneralPushConstants
 {
-   uint32_t dstStride;
+   uint32_t firstSliceIndex;
+   uint32_t maxTiles;
+};
+
+struct MicroTilePushConstants : GeneralPushConstants
+{
    uint32_t numTilesPerRow;
-   uint32_t numTileRows;
-   uint32_t tiledSliceIndex;
-   uint32_t sliceIndex;
-   uint32_t numSlices;
-   uint32_t sliceBytes;
+   uint32_t numTilesPerSlice;
+   uint32_t thinMicroTileBytes;
+   uint32_t thickSliceBytes;
 };
 
 struct MacroTilePushConstants : MicroTilePushConstants
@@ -32,7 +37,7 @@ struct TileShaderSpecialisation
    uint32_t microTileThickness;
    uint32_t macroTileWidth;
    uint32_t macroTileHeight;
-   uint32_t isMacro3D;
+   uint32_t isMacro3X;
    uint32_t isBankSwapped;
    uint32_t bpp;
    uint32_t isDepth;
@@ -55,7 +60,7 @@ struct TileModeInfo
    uint32_t microTileThickness;
    uint32_t macroTileWidth;
    uint32_t macroTileHeight;
-   bool isMacro3D;
+   bool isMacro3X;
    bool isBankSwapped;
 };
 
@@ -77,178 +82,20 @@ std::array<TileModeInfo, 14> ValidTileConfigs = { {
 } };
 
 // TODO: This should be based on the GPU in use
-static const uint32_t GpuSubGroupSize = 6;
+static const uint32_t GpuSubGroupSize = 32;
 
 static inline uint32_t
 getRetileSpecKey(uint32_t bpp, bool isDepth, TileMode tileMode, bool isUntiling)
 {
-   uint32_t isDepthUint = isDepth ? 1 : 0;
-   uint32_t tileModeUint = static_cast<uint32_t>(tileMode);
-   uint32_t isUntilingUint = isUntiling ? 1 : 0;
+   uint32_t fmtKey = bpp + (isDepth ? 100 : 0);
+   uint32_t tileModeKey = static_cast<uint32_t>(tileMode);
+   uint32_t isUntilingKey = isUntiling ? 1 : 0;
 
    uint32_t key = 0;
-   key |= (bpp            << 0)  & 0x0000FFFF;
-   key |= (tileModeUint   << 16) & 0x0FFF0000;
-   key |= (isUntilingUint << 28) & 0xF0000000;
+   key |= (fmtKey << 0) & 0x0000FFFF;
+   key |= (tileModeKey << 16) & 0x0FFF0000;
+   key |= (isUntilingKey << 28) & 0xF0000000;
    return key;
-}
-
-static inline RetileInfo
-calculateLinearRetileInfo(const SurfaceDescription &desc,
-                          const SurfaceInfo &info,
-                          uint32_t firstSlice,
-                          uint32_t numSlices)
-{
-   RetileInfo retileInfo;
-   retileInfo.isTiled = false;
-   return retileInfo;
-}
-
-static inline RetileInfo
-calculateMicroRetileInfo(const SurfaceDescription &desc,
-                         const SurfaceInfo &info,
-                         uint32_t firstSlice,
-                         uint32_t numSlices)
-{
-   const auto bytesPerElement = info.bpp / 8;
-
-   const auto microTileThickness = getMicroTileThickness(info.tileMode);
-   const auto microTileBytes =
-      MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * desc.numSamples;
-
-   const auto pitch = info.pitch;
-   const auto height = info.height;
-   const auto microTilesPerRow = pitch / MicroTileWidth;
-   const auto microTilesNumRows = height / MicroTileHeight;
-
-   const auto microTileIndexZ = firstSlice / microTileThickness;
-   const  auto sliceBytes =
-      pitch * height * microTileThickness * bytesPerElement;
-   const auto sliceOffset = microTileIndexZ * sliceBytes;
-
-   const auto dstStrideBytes = pitch * bytesPerElement;
-
-   RetileInfo retileInfo;
-   retileInfo.firstSlice = firstSlice;
-   retileInfo.numSlices = numSlices;
-   retileInfo.isTiled = true;
-   retileInfo.isMacroTiled = false;
-   retileInfo.isDepth = !!(desc.use & gpu7::tiling::SurfaceUse::DepthBuffer);
-   retileInfo.bitsPerElement = info.bpp;
-   retileInfo.macroTileWidth = 1;
-   retileInfo.macroTileHeight = 1;
-   retileInfo.dstStride = dstStrideBytes;
-   retileInfo.microTileBytes = microTileBytes;
-   retileInfo.numTilesPerRow = microTilesPerRow;
-   retileInfo.numTileRows = microTilesNumRows;
-   retileInfo.sliceBytes = sliceBytes;
-   retileInfo.microTileThickness = microTileThickness;
-   retileInfo.sliceOffset = sliceOffset;
-   retileInfo.sampleOffset = 0;
-   retileInfo.tileMode = info.tileMode;
-   retileInfo.macroTileBytes = 0;
-   retileInfo.bankSwizzle = 0;
-   retileInfo.pipeSwizzle = 0;
-   retileInfo.bankSwapWidth = 0;
-
-   return retileInfo;
-}
-
-
-static inline RetileInfo
-calculateMacroRetileInfo(const SurfaceDescription &desc,
-                         const SurfaceInfo &info,
-                         uint32_t firstSlice,
-                         uint32_t numSlices)
-{
-   const auto bytesPerElement = info.bpp / 8;
-
-   const auto microTileThickness = getMicroTileThickness(info.tileMode);
-   const auto microTileBytes =
-      MicroTileWidth * MicroTileHeight * microTileThickness
-      * bytesPerElement * desc.numSamples;
-
-   const auto macroTileWidth = getMacroTileWidth(info.tileMode);
-   const auto macroTileHeight = getMacroTileHeight(info.tileMode);
-   const auto macroTileBytes =
-      macroTileWidth * macroTileHeight * microTileBytes;
-
-   const auto pitch = info.pitch;
-   const auto height = info.height;
-   const auto macroTilesPerRow = pitch / (macroTileWidth * MicroTileWidth);
-   const auto macroTilesNumRows = height / (macroTileHeight * MicroTileHeight);
-   const auto dstStrideBytes = pitch * bytesPerElement;
-
-   const auto macroTilesPerSlice = macroTilesPerRow * macroTilesNumRows;
-   const auto sliceOffset =
-      (firstSlice / microTileThickness) * macroTilesPerSlice * macroTileBytes;
-
-   // Depth tiling is different for samples, not yet implemented
-   auto sample = 0;
-   const auto sampleOffset = sample * (microTileBytes / desc.numSamples);
-
-   auto bankSwapWidth =
-      gpu7::tiling::computeSurfaceBankSwappedWidth(
-         info.tileMode, info.bpp, desc.numSamples, info.pitch);
-
-   const auto sliceBytes = pitch * height * microTileThickness * bytesPerElement;
-
-   RetileInfo retileInfo;
-   retileInfo.firstSlice = firstSlice;
-   retileInfo.numSlices = numSlices;
-   retileInfo.isTiled = true;
-   retileInfo.isMacroTiled = true;
-   retileInfo.isDepth = !!(desc.use & gpu7::tiling::SurfaceUse::DepthBuffer);
-   retileInfo.bitsPerElement = info.bpp;
-   retileInfo.macroTileWidth = macroTileWidth;
-   retileInfo.macroTileHeight = macroTileHeight;
-   retileInfo.numTilesPerRow = macroTilesPerRow;
-   retileInfo.numTileRows = macroTilesNumRows;
-   retileInfo.dstStride = dstStrideBytes;
-   retileInfo.microTileBytes = microTileBytes;
-   retileInfo.sliceBytes = sliceBytes;
-   retileInfo.microTileThickness = microTileThickness;
-   retileInfo.sampleOffset = sampleOffset;
-   retileInfo.sliceOffset = sliceOffset;
-   retileInfo.tileMode = info.tileMode;
-   retileInfo.macroTileBytes = macroTileBytes;
-   retileInfo.bankSwizzle = desc.bankSwizzle;
-   retileInfo.pipeSwizzle = desc.pipeSwizzle;
-   retileInfo.bankSwapWidth = bankSwapWidth;
-   return retileInfo;
-}
-
-RetileInfo
-calculateRetileInfo(const SurfaceDescription &desc,
-                    uint32_t firstSlice,
-                    uint32_t numSlices)
-{
-   const auto info = computeSurfaceInfo(desc, 0);
-
-   switch (desc.tileMode) {
-   case TileMode::LinearAligned:
-   case TileMode::LinearGeneral:
-      return calculateLinearRetileInfo(desc, info, firstSlice, numSlices);
-   case TileMode::Micro1DTiledThin1:
-   case TileMode::Micro1DTiledThick:
-      return calculateMicroRetileInfo(desc, info, firstSlice, numSlices);
-   case TileMode::Macro2DTiledThin1:
-   case TileMode::Macro2DTiledThin2:
-   case TileMode::Macro2DTiledThin4:
-   case TileMode::Macro2DTiledThick:
-   case TileMode::Macro2BTiledThin1:
-   case TileMode::Macro2BTiledThin2:
-   case TileMode::Macro2BTiledThin4:
-   case TileMode::Macro2BTiledThick:
-   case TileMode::Macro3DTiledThin1:
-   case TileMode::Macro3DTiledThick:
-   case TileMode::Macro3BTiledThin1:
-   case TileMode::Macro3BTiledThick:
-      return calculateMacroRetileInfo(desc, info, firstSlice, numSlices);
-   default:
-      decaf_abort("Invalid tile mode");
-   }
 }
 
 void
@@ -298,7 +145,7 @@ Retiler::initialise(vk::Device device)
       { 1, offsetof(TileShaderSpecialisation, microTileThickness), sizeof(uint32_t) },
       { 2, offsetof(TileShaderSpecialisation, macroTileWidth), sizeof(uint32_t) },
       { 3, offsetof(TileShaderSpecialisation, macroTileHeight), sizeof(uint32_t) },
-      { 4, offsetof(TileShaderSpecialisation, isMacro3D), sizeof(uint32_t) },
+      { 4, offsetof(TileShaderSpecialisation, isMacro3X), sizeof(uint32_t) },
       { 5, offsetof(TileShaderSpecialisation, isBankSwapped), sizeof(uint32_t) },
       { 6, offsetof(TileShaderSpecialisation, bpp), sizeof(uint32_t) },
       { 7, offsetof(TileShaderSpecialisation, isDepth), sizeof(uint32_t) },
@@ -318,7 +165,7 @@ Retiler::initialise(vk::Device device)
             specValues.microTileThickness = tileConfig.microTileThickness;
             specValues.macroTileWidth = tileConfig.macroTileWidth;
             specValues.macroTileHeight = tileConfig.macroTileHeight;
-            specValues.isMacro3D = tileConfig.isMacro3D ? 1 : 0;
+            specValues.isMacro3X = tileConfig.isMacro3X ? 1 : 0;
             specValues.isBankSwapped = tileConfig.isBankSwapped ? 1 : 0;
             specValues.bpp = bppDepth.bpp;
             specValues.isDepth = bppDepth.isDepth ? 1 : 0;
@@ -351,23 +198,22 @@ Retiler::initialise(vk::Device device)
 When retiling THICK tile modes, this algorithm assumes that you've aligned the tiled
 buffer to the edge of a group of 4 slices and the untiled buffer directly to the slice.
 */
-RetileHandle
+void
 Retiler::retile(bool wantsUntile,
-                vk::CommandBuffer &commandBuffer,
-                vk::Buffer dstBuffer, uint32_t dstOffset,
-                vk::Buffer srcBuffer, uint32_t srcOffset,
-                const RetileInfo& retileInfo)
+                const RetileInfo& retileInfo,
+                vk::DescriptorSet& descriptorSet,
+                vk::CommandBuffer& commandBuffer,
+                vk::Buffer tiledBuffer, uint32_t tiledOffset,
+                vk::Buffer untiledBuffer, uint32_t untiledOffset,
+                uint32_t firstSlice, uint32_t numSlices)
 {
-   auto handle = allocateHandle();
-   auto& descriptorSet = handle->descriptorSet;
-
    // Would be odd to dispatch a retile when we are not tiled...
    decaf_check(retileInfo.isTiled);
 
    // Calcualate the spec key for this retiler configuration
    // Due to know known issues with depth, we instead retile it normally.
    auto specKey = getRetileSpecKey(retileInfo.bitsPerElement,
-                                   false, // retileInfo.isDepth,
+                                   retileInfo.isDepth,
                                    retileInfo.tileMode,
                                    wantsUntile);
 
@@ -383,25 +229,19 @@ Retiler::retile(bool wantsUntile,
    // Calculate the sizing for our retiling space.  Note that we have to make sure
    // we are correctly aligning the location when the user is doing partial groups
    // of slices on thickness>1
-   auto alignedFirstSlice = align_down(retileInfo.firstSlice, retileInfo.microTileThickness);
-   auto alignedLastSlice = align_up(retileInfo.firstSlice + retileInfo.numSlices, retileInfo.microTileThickness);
+   auto alignedFirstSlice = align_down(firstSlice, retileInfo.microTileThickness);
+   auto alignedLastSlice = align_up(firstSlice + numSlices, retileInfo.microTileThickness);
    auto alignedNumSlices = alignedLastSlice - alignedFirstSlice;
-   uint32_t srcSize, dstSize;
-   if (wantsUntile) {
-      srcSize = alignedNumSlices / retileInfo.microTileThickness * retileInfo.sliceBytes;
-      dstSize = retileInfo.numSlices * retileInfo.sliceBytes / retileInfo.microTileThickness;
-   } else {
-      srcSize = retileInfo.numSlices * retileInfo.sliceBytes / retileInfo.microTileThickness;
-      dstSize = alignedNumSlices / retileInfo.microTileThickness * retileInfo.sliceBytes;
-   }
+   uint32_t tiledSize = alignedNumSlices * retileInfo.thinSliceBytes;
+   uint32_t untiledSize = numSlices * retileInfo.thinSliceBytes;
 
    std::array<vk::DescriptorBufferInfo, 2> descriptorBufferDescs;
-   descriptorBufferDescs[0].buffer = srcBuffer;
-   descriptorBufferDescs[0].offset = srcOffset;
-   descriptorBufferDescs[0].range = srcSize;
-   descriptorBufferDescs[1].buffer = dstBuffer;
-   descriptorBufferDescs[1].offset = dstOffset;
-   descriptorBufferDescs[1].range = dstSize;
+   descriptorBufferDescs[0].buffer = tiledBuffer;
+   descriptorBufferDescs[0].offset = tiledOffset;
+   descriptorBufferDescs[0].range = tiledSize;
+   descriptorBufferDescs[1].buffer = untiledBuffer;
+   descriptorBufferDescs[1].offset = untiledOffset;
+   descriptorBufferDescs[1].range = untiledSize;
 
    vk::WriteDescriptorSet setWriteDesc;
    setWriteDesc.dstSet = descriptorSet;
@@ -414,35 +254,31 @@ Retiler::retile(bool wantsUntile,
    // Bind our new descriptor set
    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, mPipelineLayout, 0, { descriptorSet }, {});
 
-   // Calculate the number of groups we need to dispatch!
-   uint32_t numDispatchGroups =
-      ((retileInfo.macroTileWidth * retileInfo.macroTileHeight *
-        retileInfo.numTilesPerRow * retileInfo.numTileRows *
-        retileInfo.numSlices) + GpuSubGroupSize - 1) / GpuSubGroupSize;
+   // Calculate the number of tiles we need to process!
+   uint32_t numDispatchTiles = numSlices * retileInfo.numTilesPerSlice;
 
-   // Actually dispatch the shader
+   // Setup our arguments
    if (!retileInfo.isMacroTiled) {
       MicroTilePushConstants pushConstants;
-      pushConstants.dstStride = retileInfo.dstStride;
+      pushConstants.firstSliceIndex = firstSlice;
+      pushConstants.maxTiles = numDispatchTiles;
+
       pushConstants.numTilesPerRow = retileInfo.numTilesPerRow;
-      pushConstants.numTileRows = retileInfo.numTileRows;
-      pushConstants.tiledSliceIndex = alignedFirstSlice;
-      pushConstants.sliceIndex = retileInfo.firstSlice;
-      pushConstants.numSlices = retileInfo.numSlices;
-      pushConstants.sliceBytes = retileInfo.sliceBytes;
+      pushConstants.numTilesPerSlice = retileInfo.numTilesPerSlice;
+      pushConstants.thinMicroTileBytes = retileInfo.thickMicroTileBytes / retileInfo.microTileThickness;
+      pushConstants.thickSliceBytes = retileInfo.thinSliceBytes * retileInfo.microTileThickness;
 
       commandBuffer.pushConstants<MicroTilePushConstants>(
          mPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pushConstants });
-      commandBuffer.dispatch(numDispatchGroups, 1, 1);
    } else {
       MacroTilePushConstants pushConstants;
-      pushConstants.dstStride = retileInfo.dstStride;
+      pushConstants.firstSliceIndex = firstSlice;
+      pushConstants.maxTiles = numDispatchTiles;
+
       pushConstants.numTilesPerRow = retileInfo.numTilesPerRow;
-      pushConstants.numTileRows = retileInfo.numTileRows;
-      pushConstants.tiledSliceIndex = alignedFirstSlice;
-      pushConstants.sliceIndex = retileInfo.firstSlice;
-      pushConstants.numSlices = retileInfo.numSlices;
-      pushConstants.sliceBytes = retileInfo.sliceBytes;
+      pushConstants.numTilesPerSlice = retileInfo.numTilesPerSlice;
+      pushConstants.thinMicroTileBytes = retileInfo.thickMicroTileBytes / retileInfo.microTileThickness;
+      pushConstants.thickSliceBytes = retileInfo.thinSliceBytes * retileInfo.microTileThickness;
 
       pushConstants.bankSwizzle = retileInfo.bankSwizzle;
       pushConstants.pipeSwizzle = retileInfo.pipeSwizzle;
@@ -450,16 +286,47 @@ Retiler::retile(bool wantsUntile,
 
       commandBuffer.pushConstants<MacroTilePushConstants>(
          mPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, { pushConstants });
-      commandBuffer.dispatch(numDispatchGroups, 1, 1);
    }
+
+   // Calculate the number of groups we need to dispatch!
+   uint32_t numDispatchGroups =
+      align_up(numDispatchTiles, GpuSubGroupSize) / GpuSubGroupSize;
+
+   // Actually dispatch the work to the GPU
+   commandBuffer.dispatch(numDispatchGroups, 1, 1);
+}
+
+RetileHandle
+Retiler::retile(bool wantsUntile,
+                const RetileInfo& retileInfo,
+                   vk::CommandBuffer& commandBuffer,
+                   vk::Buffer dstBuffer, uint32_t dstOffset,
+                   vk::Buffer srcBuffer, uint32_t srcOffset,
+                uint32_t firstSlice, uint32_t numSlices)
+{
+   auto handle = allocateHandle();
+
+   vk::DescriptorSetAllocateInfo allocInfo;
+   allocInfo.descriptorSetCount = 1;
+   allocInfo.pSetLayouts = &mDescriptorSetLayout;
+   allocInfo.descriptorPool = handle->descriptorPool;
+   auto descriptorSets = mDevice.allocateDescriptorSets(allocInfo);
+
+   retile(wantsUntile,
+          retileInfo,
+          descriptorSets[0],
+          commandBuffer,
+          dstBuffer, dstOffset,
+          srcBuffer, srcOffset,
+          firstSlice, numSlices);
 
    return handle;
 }
 
-Retiler::HandleImpl *
+Retiler::HandleImpl*
 Retiler::allocateHandle()
 {
-   Retiler::HandleImpl * handle = nullptr;
+   Retiler::HandleImpl* handle = nullptr;
 
    if (!mHandlesPool.empty()) {
       handle = mHandlesPool.back();
@@ -468,33 +335,26 @@ Retiler::allocateHandle()
 
    if (!handle) {
       std::vector<vk::DescriptorPoolSize> descriptorPoolSizes = {
-         vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, 2),
+         vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, 2 * 13),
       };
 
       vk::DescriptorPoolCreateInfo descriptorPoolInfo;
       descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
       descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
-      descriptorPoolInfo.maxSets = static_cast<uint32_t>(1);
+      descriptorPoolInfo.maxSets = static_cast<uint32_t>(13);
       auto descriptorPool = mDevice.createDescriptorPool(descriptorPoolInfo);
 
       handle = new Retiler::HandleImpl();
       handle->descriptorPool = descriptorPool;
    }
 
-   vk::DescriptorSetAllocateInfo allocInfo;
-   allocInfo.descriptorSetCount = 1;
-   allocInfo.pSetLayouts = &mDescriptorSetLayout;
-   allocInfo.descriptorPool = handle->descriptorPool;
-   handle->descriptorSet = mDevice.allocateDescriptorSets(allocInfo)[0];
-
    return handle;
 }
 
 void
-Retiler::releaseHandle(Retiler::HandleImpl *handle)
+Retiler::releaseHandle(Retiler::HandleImpl* handle)
 {
    mDevice.resetDescriptorPool(handle->descriptorPool);
-   handle->descriptorSet = vk::DescriptorSet();
    mHandlesPool.push_back(handle);
 }
 
