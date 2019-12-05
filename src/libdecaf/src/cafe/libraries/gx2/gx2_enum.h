@@ -191,9 +191,6 @@ ENUM_BEG(GX2DebugTag, uint32_t)
    ENUM_VALUE(Group,                         0xFEAE0000u)
 ENUM_END(GX2DebugTag)
 
-ENUM_BEG(GX2DebugUserTag, uint32_t)
-ENUM_END(GX2DebugUserTag)
-
 ENUM_BEG(GX2DrcRenderMode, uint32_t)
    ENUM_VALUE(Disabled,                0)
    ENUM_VALUE(Single,                  1)

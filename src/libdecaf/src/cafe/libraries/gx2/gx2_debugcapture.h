@@ -127,12 +127,12 @@ GX2DebugCaptureFrames(virt_ptr<const char> filename,
                       uint32_t numFrames);
 
 void
-GX2DebugTagUserString(GX2DebugUserTag tag,
+GX2DebugTagUserString(GX2DebugTag tag,
                       virt_ptr<const char> fmt,
                       var_args va);
 
 void
-GX2DebugTagUserStringVA(GX2DebugUserTag tag,
+GX2DebugTagUserStringVA(GX2DebugTag tag,
                         virt_ptr<const char> fmt,
                         virt_ptr<va_list> vaList);
 

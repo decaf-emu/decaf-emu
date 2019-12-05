@@ -158,7 +158,7 @@ GX2DebugCaptureFrames(virt_ptr<const char> filename,
  * Only written when debug capture is enabled.
  */
 void
-GX2DebugTagUserString(GX2DebugUserTag tag,
+GX2DebugTagUserString(GX2DebugTag tag,
                       virt_ptr<const char> fmt,
                       var_args va)
 {
@@ -176,7 +176,7 @@ GX2DebugTagUserString(GX2DebugUserTag tag,
  * Only written when debug capture is enabled.
  */
 void
-GX2DebugTagUserStringVA(GX2DebugUserTag tag,
+GX2DebugTagUserStringVA(GX2DebugTag tag,
                         virt_ptr<const char> fmt,
                         virt_ptr<va_list> vaList)
 {
