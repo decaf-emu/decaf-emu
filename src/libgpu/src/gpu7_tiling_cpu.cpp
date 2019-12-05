@@ -3,6 +3,8 @@
 #include <common/align.h>
 #include <common/decaf_assert.h>
 
+#include <cstring>
+
 namespace gpu7::tiling::cpu
 {
 
