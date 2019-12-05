@@ -641,7 +641,7 @@ gfdAddPixelShader(gfd::GFDFile &file,
 
    out.regs.sq_pgm_resources_ps = out.regs.sq_pgm_resources_ps
       .NUM_GPRS(numGpr)
-      .STACK_SIZE(out.loopVars.size() * 2);
+      .STACK_SIZE(static_cast<uint32_t>(out.loopVars.size() * 2));
 
    // Create binary
    out.data = getShaderBinary(shader);
