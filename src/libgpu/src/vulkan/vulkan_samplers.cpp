@@ -10,9 +10,9 @@ Driver::getSamplerDesc(ShaderStage shaderStage, uint32_t samplerIdx)
 {
    uint32_t samplerBaseIdx;
    if (shaderStage == ShaderStage::Vertex) {
-      samplerBaseIdx = 1;
+      samplerBaseIdx = 18;
    } else if (shaderStage == ShaderStage::Geometry) {
-      samplerBaseIdx = 2;
+      samplerBaseIdx = 36;
    } else if (shaderStage == ShaderStage::Pixel) {
       samplerBaseIdx = 0;
    } else {
