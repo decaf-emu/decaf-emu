@@ -1,4 +1,3 @@
-#pragma optimize("", off)
 #ifdef DECAF_VULKAN
 
 #include "tiling_tests.h"

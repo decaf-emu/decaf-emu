@@ -1,5 +1,3 @@
-#pragma optimize("", off)
-
 #ifdef DECAF_VULKAN
 #include "gpu7_tiling_vulkan.h"
 
