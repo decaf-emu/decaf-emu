@@ -29,12 +29,12 @@ computeSurfaceBankSwappedWidth(TileMode tileMode,
       numSamples = 4;
    }
 
-   if (tileMode == ADDR_TM_2B_TILED_THIN1 ||
-       tileMode == ADDR_TM_2B_TILED_THIN2 ||
-       tileMode == ADDR_TM_2B_TILED_THIN4 ||
-       tileMode == ADDR_TM_2B_TILED_THICK ||
-       tileMode == ADDR_TM_3B_TILED_THIN1 ||
-       tileMode == ADDR_TM_3B_TILED_THICK) {
+   if (tileMode == TileMode::Macro2BTiledThin1 ||
+       tileMode == TileMode::Macro2BTiledThin2 ||
+       tileMode == TileMode::Macro2BTiledThin4 ||
+       tileMode == TileMode::Macro2BTiledThick ||
+       tileMode == TileMode::Macro3BTiledThin1 ||
+       tileMode == TileMode::Macro3BTiledThick) {
       const auto swapTiles = std::max<uint32_t>(1u, (SwapSize >> 1) / bpp);
       const auto swapWidth = swapTiles * 8 * NumBanks;
 
