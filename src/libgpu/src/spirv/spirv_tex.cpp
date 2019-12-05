@@ -68,10 +68,10 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
    destGpr.mask[SQ_CHAN::Z] = inst.word1.DST_SEL_Z();
    destGpr.mask[SQ_CHAN::W] = inst.word1.DST_SEL_W();
 
-   auto lodBias = inst.word1.LOD_BIAS();
-   auto offsetX = inst.word2.OFFSET_X();
-   auto offsetY = inst.word2.OFFSET_Y();
-   auto offsetZ = inst.word2.OFFSET_Z();
+   auto lodBias = static_cast<float>(inst.word1.LOD_BIAS());
+   auto offsetX = static_cast<int>(inst.word2.OFFSET_X());
+   auto offsetY = static_cast<int>(inst.word2.OFFSET_Y());
+   auto offsetZ = static_cast<int>(inst.word2.OFFSET_Z());
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
 
@@ -107,7 +107,7 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       spv::Id offsetVal = spv::NoResult;
       switch (texDim) {
       case latte::SQ_TEX_DIM::DIM_1D:
-         offsetVal = mSpv->makeUintConstant(offsetX);
+         offsetVal = mSpv->makeIntConstant(offsetX);
          break;
       case latte::SQ_TEX_DIM::DIM_1D_ARRAY:
       case latte::SQ_TEX_DIM::DIM_2D:
@@ -115,15 +115,15 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
       case latte::SQ_TEX_DIM::DIM_2D_ARRAY:
       case latte::SQ_TEX_DIM::DIM_2D_ARRAY_MSAA:
       case latte::SQ_TEX_DIM::DIM_CUBEMAP:
-         offsetVal = mSpv->makeCompositeConstant(mSpv->uint2Type(), {
-                                                 mSpv->makeUintConstant(offsetX),
-                                                 mSpv->makeUintConstant(offsetY) });
+         offsetVal = mSpv->makeCompositeConstant(mSpv->int2Type(), {
+                                                 mSpv->makeIntConstant(offsetX),
+                                                 mSpv->makeIntConstant(offsetY) });
          break;
       case latte::SQ_TEX_DIM::DIM_3D:
-         offsetVal = mSpv->makeCompositeConstant(mSpv->uint3Type(), {
-                                                 mSpv->makeUintConstant(offsetX),
-                                                 mSpv->makeUintConstant(offsetY),
-                                                 mSpv->makeUintConstant(offsetZ) });
+         offsetVal = mSpv->makeCompositeConstant(mSpv->int3Type(), {
+                                                 mSpv->makeIntConstant(offsetX),
+                                                 mSpv->makeIntConstant(offsetY),
+                                                 mSpv->makeIntConstant(offsetZ) });
          break;
       default:
          decaf_abort("Unexpected texture sample dim");

@@ -28,6 +28,11 @@ add_library(cereal INTERFACE IMPORTED GLOBAL)
 set_target_properties(cereal PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
 
+# cnl
+add_library(cnl INTERFACE IMPORTED GLOBAL)
+set_target_properties(cnl PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cnl/include")
+	
 # cpptoml
 add_library(cpptoml INTERFACE IMPORTED GLOBAL)
 set_target_properties(cpptoml PROPERTIES
@@ -38,11 +43,6 @@ set_target_properties(cpptoml PROPERTIES
 add_library(excmd INTERFACE IMPORTED GLOBAL)
 set_target_properties(excmd PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/excmd/src")
-
-# fixed_point
-add_library(fixed_point INTERFACE IMPORTED GLOBAL)
-set_target_properties(fixed_point PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/fixed_point/include")
 
 # fmt
 add_subdirectory(fmt)

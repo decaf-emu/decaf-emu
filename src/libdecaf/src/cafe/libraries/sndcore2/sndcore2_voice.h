@@ -12,7 +12,7 @@
 namespace cafe::sndcore2
 {
 
-using Pcm16Sample = sg14::make_fixed<15, 0, int16_t>;
+using Pcm16Sample = sfixed_1_0_15_t;
 
 using AXVoiceCallbackFn = virt_func_ptr<
    virt_ptr<void>()
@@ -165,10 +165,10 @@ CHECK_SIZE(AXVoiceAdpcm, 0x28);
 struct AXVoiceSrc
 {
    // Playback rate
-   be2_val<ufixed1616_t> ratio;
+   be2_val<ufixed_16_16_t> ratio;
 
    // Used by the resampler
-   be2_val<ufixed016_t> currentOffsetFrac;
+   be2_val<ufixed_0_16_t> currentOffsetFrac;
    be2_array<int16_t, 4> lastSample;
 };
 CHECK_OFFSET(AXVoiceSrc, 0x0, ratio);

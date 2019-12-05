@@ -82,7 +82,7 @@ AXAcquireVoiceEx(uint32_t priority,
 
    auto extras = internal::getVoiceExtras(foundVoice->index);
    std::memset(extras.get(), 0, sizeof(internal::AXVoiceExtras));
-   extras->src.ratio = ufixed1616_t { 1.0 };
+   extras->src.ratio = ufixed_16_16_t { 1.0 };
 
    // Save this to the acquired voice list so that it can be
    //  forcefully freed if a higher priority voice is needed.
@@ -249,8 +249,8 @@ AXSetVoiceDeviceMix(virt_ptr<AXVoice> voice,
 
       for (auto c = 0; c < AXNumTvChannels; ++c) {
          for (auto b = 0; b < AXNumTvBus; ++b) {
-            extras->tvVolume[deviceId][c][b].volume = ufixed_1_15_t::from_data(mixData[c].bus[b].volume);
-            extras->tvVolume[deviceId][c][b].delta = ufixed_1_15_t::from_data(mixData[c].bus[b].delta);
+            extras->tvVolume[deviceId][c][b].volume = fixed_from_data<ufixed_1_15_t>(mixData[c].bus[b].volume);
+            extras->tvVolume[deviceId][c][b].delta = fixed_from_data<ufixed_1_15_t>(mixData[c].bus[b].delta);
          }
       }
 
@@ -260,8 +260,8 @@ AXSetVoiceDeviceMix(virt_ptr<AXVoice> voice,
 
       for (auto c = 0; c < AXNumDrcChannels; ++c) {
          for (auto b = 0; b < AXNumDrcBus; ++b) {
-            extras->drcVolume[deviceId][c][b].volume = ufixed_1_15_t::from_data(mixData[c].bus[b].volume);
-            extras->drcVolume[deviceId][c][b].delta = ufixed_1_15_t::from_data(mixData[c].bus[b].delta);
+            extras->drcVolume[deviceId][c][b].volume = fixed_from_data<ufixed_1_15_t>(mixData[c].bus[b].volume);
+            extras->drcVolume[deviceId][c][b].delta = fixed_from_data<ufixed_1_15_t>(mixData[c].bus[b].delta);
          }
       }
 
@@ -271,8 +271,8 @@ AXSetVoiceDeviceMix(virt_ptr<AXVoice> voice,
 
       for (auto c = 0; c < AXNumRmtChannels; ++c) {
          for (auto b = 0; b < AXNumRmtBus; ++b) {
-            extras->rmtVolume[deviceId][c][b].volume = ufixed_1_15_t::from_data(mixData[c].bus[b].volume);
-            extras->rmtVolume[deviceId][c][b].delta = ufixed_1_15_t::from_data(mixData[c].bus[b].delta);
+            extras->rmtVolume[deviceId][c][b].volume = fixed_from_data<ufixed_1_15_t>(mixData[c].bus[b].volume);
+            extras->rmtVolume[deviceId][c][b].delta = fixed_from_data<ufixed_1_15_t>(mixData[c].bus[b].delta);
          }
       }
 
@@ -477,7 +477,7 @@ AXSetVoiceSrcRatio(virt_ptr<AXVoice> voice,
    }
 
    auto extras = internal::getVoiceExtras(voice->index);
-   extras->src.ratio = ufixed1616_t { ratio };
+   extras->src.ratio = ufixed_16_16_t { ratio };
    voice->syncBits |= internal::AXVoiceSyncBits::SrcRatio;
 
    return AXVoiceSrcRatioResult::Success;

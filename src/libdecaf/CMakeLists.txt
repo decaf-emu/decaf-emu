@@ -18,7 +18,7 @@ target_include_directories(libdecaf PRIVATE
 target_link_libraries(libdecaf
     addrlib
     common
-    fixed_point
+    cnl
     imgui
     libcpu
     libgfd

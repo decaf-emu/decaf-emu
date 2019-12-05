@@ -25,9 +25,9 @@
 [submodule "libraries/imgui"]
 	path = libraries/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "libraries/fixed_point"]
-	path = libraries/fixed_point
-	url = https://github.com/johnmcfarlane/fixed_point
+[submodule "libraries/cnl"]
+	path = libraries/cnl
+	url = https://github.com/johnmcfarlane/cnl
 [submodule "libraries/catch"]
 	path = libraries/catch
 	url = https://github.com/philsquared/Catch.git

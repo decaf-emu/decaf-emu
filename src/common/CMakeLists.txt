@@ -9,7 +9,7 @@ add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})
 GroupSources(src)
 
 target_link_libraries(common
-    fixed_point
+    cnl
     fmt::fmt
     gsl
     spdlog)

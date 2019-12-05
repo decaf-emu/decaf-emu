@@ -55,13 +55,13 @@ Driver::updateDrawSampler(ShaderStage shaderStage, uint32_t samplerIdx)
    samplerDesc.addressModeU = getVkTextureAddressMode(currentDesc->texSamplerWord0.CLAMP_X());
    samplerDesc.addressModeV = getVkTextureAddressMode(currentDesc->texSamplerWord0.CLAMP_Y());
    samplerDesc.addressModeW = getVkTextureAddressMode(currentDesc->texSamplerWord0.CLAMP_Z());
-   samplerDesc.mipLodBias = currentDesc->texSamplerWord1.LOD_BIAS();
+   samplerDesc.mipLodBias = static_cast<float>(currentDesc->texSamplerWord1.LOD_BIAS());
    samplerDesc.anisotropyEnable = getVkAnisotropyEnabled(currentDesc->texSamplerWord0.MAX_ANISO_RATIO());
    samplerDesc.maxAnisotropy = getVkMaxAnisotropy(currentDesc->texSamplerWord0.MAX_ANISO_RATIO());
    samplerDesc.compareEnable = getVkCompareOpEnabled(currentDesc->texSamplerWord0.DEPTH_COMPARE_FUNCTION());
    samplerDesc.compareOp = getVkCompareOp(currentDesc->texSamplerWord0.DEPTH_COMPARE_FUNCTION());
-   samplerDesc.minLod = currentDesc->texSamplerWord1.MIN_LOD();
-   samplerDesc.maxLod = currentDesc->texSamplerWord1.MAX_LOD();
+   samplerDesc.minLod = static_cast<float>(currentDesc->texSamplerWord1.MIN_LOD());
+   samplerDesc.maxLod = static_cast<float>(currentDesc->texSamplerWord1.MAX_LOD());
    samplerDesc.borderColor = getVkBorderColor(currentDesc->texSamplerWord0.BORDER_COLOR_TYPE());
    samplerDesc.unnormalizedCoordinates = VK_FALSE;
    auto sampler = mDevice.createSampler(samplerDesc);
