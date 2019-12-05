@@ -137,11 +137,11 @@ IOS_ClearAndEnable(DeviceId id)
       enableAhbAll(AHBALL::get(0).NandInterface(true));
       break;
    case DeviceId::AesEngineAHBALL:
-      decaf_check(thread->pid == 3);
+      decaf_check(thread->pid == ProcessId::CRYPTO);
       enableAhbAll(AHBALL::get(0).AesEngine(true));
       break;
    case DeviceId::Sha1EngineAHBALL:
-      decaf_check(thread->pid == 3);
+      decaf_check(thread->pid == ProcessId::CRYPTO);
       enableAhbAll(AHBALL::get(0).Sha1Engine(true));
       break;
    case DeviceId::UsbEhci:
@@ -164,7 +164,7 @@ IOS_ClearAndEnable(DeviceId id)
       // TODO: latte gpio int mask |= 1
       break;
    case DeviceId::SysProt:
-      decaf_check(thread->pid == 0);
+      decaf_check(thread->pid == ProcessId::KERNEL);
       enableAhbAll(AHBALL::get(0).SysProt(true));
       break;
    case DeviceId::PowerButton:
@@ -180,7 +180,7 @@ IOS_ClearAndEnable(DeviceId id)
       enableAhbAll(AHBALL::get(0).Sata(true));
       break;
    case DeviceId::IpcStarbuckCompat:
-      decaf_check(thread->pid == 0);
+      decaf_check(thread->pid == ProcessId::KERNEL);
       enableAhbAll(AHBALL::get(0).IpcStarbuckCompat(true));
       break;
    case DeviceId::Unknown30:
@@ -208,11 +208,11 @@ IOS_ClearAndEnable(DeviceId id)
       enableAhbLatte(AHBLT::get(0).Unknown7(true));
       break;
    case DeviceId::AesEngineAHBLT:
-      decaf_check(thread->pid == 3);
+      decaf_check(thread->pid == ProcessId::CRYPTO);
       enableAhbLatte(AHBLT::get(0).AesEngine(true));
       break;
    case DeviceId::Sha1EngineAHBLT:
-      decaf_check(thread->pid == 3);
+      decaf_check(thread->pid == ProcessId::CRYPTO);
       enableAhbLatte(AHBLT::get(0).Sha1Engine(true));
       break;
    case DeviceId::Unknown40:
@@ -231,15 +231,15 @@ IOS_ClearAndEnable(DeviceId id)
       enableAhbLatte(AHBLT::get(0).I2CStarbuck(true));
       break;
    case DeviceId::IpcStarbuckCore2:
-      decaf_check(thread->pid == 0);
+      decaf_check(thread->pid == ProcessId::KERNEL);
       enableAhbLatte(AHBLT::get(0).IpcStarbuckCore2(true));
       break;
    case DeviceId::IpcStarbuckCore1:
-      decaf_check(thread->pid == 0);
+      decaf_check(thread->pid == ProcessId::KERNEL);
       enableAhbLatte(AHBLT::get(0).IpcStarbuckCore1(true));
       break;
    case DeviceId::IpcStarbuckCore0:
-      decaf_check(thread->pid == 0);
+      decaf_check(thread->pid == ProcessId::KERNEL);
       enableAhbLatte(AHBLT::get(0).IpcStarbuckCore0(true));
       break;
    default:

@@ -139,6 +139,7 @@ add_subdirectory("libraries")
 # Setup compile options
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive-")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /FS") # Parallel source builds
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA") # Optimises TLS access
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd26812") # Disable unscoped enum warning

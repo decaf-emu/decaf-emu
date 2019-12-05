@@ -46,7 +46,7 @@ getHeap(HeapId id,
       return Error::Invalid;
    }
 
-   if (sHeapData->heaps[id].pid < 0 || !sHeapData->heaps[id].base) {
+   if (sHeapData->heaps[id].pid < ProcessId::KERNEL || !sHeapData->heaps[id].base) {
       return Error::NoExists;
    }
 

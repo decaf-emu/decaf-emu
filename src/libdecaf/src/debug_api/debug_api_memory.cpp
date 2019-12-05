@@ -35,7 +35,7 @@ readMemory(VirtualAddress address, void *dst, size_t size)
       auto readBytes = std::min<size_t>(bytesRemaining, nextPage - address);
 
       std::memcpy(out, mem::translate<uint8_t>(address), readBytes);
-      address += readBytes;
+      address += static_cast<uint32_t>(readBytes);
       out += readBytes;
       bytesRemaining -= readBytes;
    }
@@ -61,7 +61,7 @@ writeMemory(VirtualAddress address, const void *src, size_t size)
       auto readBytes = std::min<size_t>(bytesRemaining, nextPage - address);
 
       std::memcpy(mem::translate<uint8_t>(address), in, readBytes);
-      address += readBytes;
+      address += static_cast<uint32_t>(readBytes);
       in += readBytes;
       bytesRemaining -= readBytes;
    }

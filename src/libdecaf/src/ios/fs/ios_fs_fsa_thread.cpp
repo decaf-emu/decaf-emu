@@ -115,7 +115,7 @@ fsaDeviceIoctl(phys_ptr<ResourceRequest> resourceRequest,
      return;
    }
 
-   if (request->emulatedError < 0) {
+   if (request->emulatedError < FSAStatus::OK) {
       IOS_ResourceReply(resourceRequest,
                         static_cast<Error>(request->emulatedError));
       return;

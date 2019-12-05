@@ -333,7 +333,7 @@ fsCmdBlockHandleResult(virt_ptr<FSCmdBlockBody> blockBody)
       return;
    }
 
-   if (blockBody->fsaStatus < 0) {
+   if (blockBody->fsaStatus < FSAStatus::OK) {
       auto errorFlags = FSErrorFlag::All;
 
       switch (blockBody->fsaStatus) {

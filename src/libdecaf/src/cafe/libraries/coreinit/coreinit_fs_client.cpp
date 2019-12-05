@@ -255,7 +255,7 @@ FSGetErrorCodeForViewer(virt_ptr<FSClient> client,
       }
    }
 
-   if (blockBody->iosError >= 0) {
+   if (blockBody->iosError >= IOSError::OK) {
       return static_cast<FSAStatus>(FSStatus::OK);
    } else {
       // TODO: Translate error block->unk0x9f4 for FSGetErrorCodeForViewer

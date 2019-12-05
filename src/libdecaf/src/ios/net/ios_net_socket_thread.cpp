@@ -96,7 +96,7 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
       break;
    case SocketCommand::GetProcessSocketHandle:
    {
-      if (request->getProcessSocketHandle.processId < sDevices.size() &&
+      if (static_cast<size_t>(request->getProcessSocketHandle.processId) < sDevices.size() &&
           sDevices[request->getProcessSocketHandle.processId]) {
          error = static_cast<Error>(request->getProcessSocketHandle.processId);
       } else {
