@@ -1,7 +1,5 @@
 #pragma once
 #ifdef DECAF_GL
-#include <glad/glad.h>
-#undef APIENTRY
 
 #include "glsl2/glsl2_translate.h"
 #include "gpu_ringbuffer.h"
@@ -28,6 +26,9 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+
+#include <glad/glad.h>
+#undef APIENTRY // Fix for glad/glad.h pollution warnings
 
 namespace opengl
 {

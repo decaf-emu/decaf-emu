@@ -1,11 +1,11 @@
 #if DECAF_GL
+#include "opengl_driver.h"
 #include "opengl_context.h"
 #include "gpu_config.h"
 
 #include <common/decaf_assert.h>
 #include <common/platform.h>
 #include <fmt/format.h>
-#include <glad/glad.h>
 
 #ifdef PLATFORM_WINDOWS
 #include <glad/glad_wgl.h>

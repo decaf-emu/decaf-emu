@@ -8,7 +8,6 @@
 #include <common/platform.h>
 #include <fmt/format.h>
 #include <memory>
-#include <glad/glad.h>
 
 namespace opengl
 {
