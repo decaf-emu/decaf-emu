@@ -18,7 +18,7 @@ template<typename FixedType, typename RepType>
 static constexpr
 FixedType fixed_from_data(RepType data)
 {
-   return cnl::from_rep<FixedType, FixedType::rep>{}(data);
+   return cnl::from_rep<FixedType, typename FixedType::rep>{}(data);
 }
 
 template<typename Rep, int Exponent, int Radix>
