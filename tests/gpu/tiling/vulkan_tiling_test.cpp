@@ -128,12 +128,12 @@ TEST_CASE("vkTiling", "")
                      surface.height = layout.height;
                      surface.numSlices = layout.depth;
                      surface.numSamples = 1u;
-                     surface.numLevels = 9u;
+                     surface.numLevels = 1u;
                      surface.bankSwizzle = 0u;
                      surface.pipeSwizzle = 0u;
                      surface.dim = gpu7::tiling::SurfaceDim::Texture2DArray;
-                     surface.use = format.depth ? 
-                        gpu7::tiling::SurfaceUse::DepthBuffer : 
+                     surface.use = format.depth ?
+                        gpu7::tiling::SurfaceUse::DepthBuffer :
                         gpu7::tiling::SurfaceUse::None;
 
                      compareTilingToAddrLib(surface,
@@ -185,7 +185,7 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
          surface.height = layout.height;
          surface.numSlices = layout.depth;
          surface.numSamples = 1u;
-         surface.numLevels = 9u;
+         surface.numLevels = 1u;
          surface.bankSwizzle = 0u;
          surface.pipeSwizzle = 0u;
          surface.dim = gpu7::tiling::SurfaceDim::Texture2DArray;
