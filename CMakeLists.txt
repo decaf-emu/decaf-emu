@@ -142,6 +142,7 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /FS") # Parallel source builds
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA") # Optimises TLS access
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd26812") # Disable unscoped enum warning
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4297") # Disable nothrow warning, VulkanSDK engineers dont know how to code
 
     if(DECAF_ENABLE_LTCG)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
