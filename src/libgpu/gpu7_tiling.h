@@ -339,26 +339,26 @@ struct RetileInfo
 };
 
 SurfaceInfo
-computeSurfaceInfo(const SurfaceDescription& surface,
+computeSurfaceInfo(const SurfaceDescription &surface,
                    int mipLevel);
 
 size_t
-computeUnpitchedImageSize(const SurfaceDescription& desc);
+computeUnpitchedImageSize(const SurfaceDescription &desc);
 
 size_t
-computeUnpitchedMipMapSize(const SurfaceDescription& desc);
+computeUnpitchedMipMapSize(const SurfaceDescription &desc);
 
 void
-unpitchImage(const SurfaceDescription& desc,
-             void* pitched,
-             void* unpitched);
+unpitchImage(const SurfaceDescription &desc,
+             const void *pitched,
+             void *unpitched);
 
 void
-unpitchMipMap(const SurfaceDescription& desc,
-              void* pitched,
-              void* unpitched);
+unpitchMipMap(const SurfaceDescription &desc,
+              const void *pitched,
+              void *unpitched);
 
 RetileInfo
-computeRetileInfo(const SurfaceInfo& info);
+computeRetileInfo(const SurfaceInfo &info);
 
 } // namespace gpu7::tiling
