@@ -6,6 +6,10 @@ namespace cafe::coreinit
 {
 
 FSAStatus
+FSAChangeDir(FSAClientHandle clientHandle,
+             virt_ptr<const char> path);
+
+FSAStatus
 FSACloseFile(FSAClientHandle clientHandle,
              FSAFileHandle fileHandle);
 
@@ -13,6 +17,11 @@ FSAStatus
 FSAGetStat(FSAClientHandle clientHandle,
            virt_ptr<const char> path,
            virt_ptr<FSAStat> stat);
+
+FSAStatus
+FSAGetStatFile(FSAClientHandle clientHandle,
+               FSFileHandle handle,
+               virt_ptr<FSStat> outStat);
 
 FSAStatus
 FSAMakeDir(FSAClientHandle clientHandle,

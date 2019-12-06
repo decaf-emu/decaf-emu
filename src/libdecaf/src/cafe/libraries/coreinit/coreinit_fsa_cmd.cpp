@@ -23,6 +23,32 @@ fsaGetInfoByQuery(FSAClientHandle clientHandle,
 } // namespace internal
 
 FSAStatus
+FSAChangeDir(FSAClientHandle clientHandle,
+             virt_ptr<const char> path)
+{
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
+
+   if (!FSAShimCheckClientHandle(clientHandle)) {
+      return FSAStatus::InvalidClientHandle;
+   }
+
+   auto status = FSAShimAllocateBuffer(shimBuffer);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   status = internal::fsaShimPrepareRequestChangeDir(*shimBuffer,
+                                                     clientHandle,
+                                                     path);
+   if (status >= FSAStatus::OK) {
+      status = internal::fsaShimSubmitRequest(*shimBuffer, FSAStatus::OK);
+   }
+
+   FSAShimFreeBuffer(*shimBuffer);
+   return status;
+}
+
+FSAStatus
 FSACloseFile(FSAClientHandle clientHandle,
              FSAFileHandle fileHandle)
 {
@@ -57,6 +83,37 @@ FSAGetStat(FSAClientHandle clientHandle,
                                       path,
                                       FSAQueryInfoType::Stat,
                                       stat);
+}
+
+FSAStatus
+FSAGetStatFile(FSAClientHandle clientHandle,
+               FSFileHandle handle,
+               virt_ptr<FSStat> outStat)
+{
+   auto shimBuffer = StackObject<virt_ptr<FSAShimBuffer>> { };
+
+   if (!FSAShimCheckClientHandle(clientHandle)) {
+      return FSAStatus::InvalidClientHandle;
+   }
+
+   auto status = FSAShimAllocateBuffer(shimBuffer);
+   if (status < FSAStatus::OK) {
+      return status;
+   }
+
+   auto error = internal::fsaShimPrepareRequestStatFile(*shimBuffer,
+                                                        clientHandle,
+                                                        handle);
+   if (status >= FSAStatus::OK) {
+      status = internal::fsaShimSubmitRequest(*shimBuffer, FSAStatus::OK);
+
+      if (status >= FSAStatus::OK) {
+         *outStat = (*shimBuffer)->response.statFile.stat;
+      }
+   }
+
+   FSAShimFreeBuffer(*shimBuffer);
+   return status;
 }
 
 FSAStatus
@@ -347,8 +404,10 @@ fsaGetInfoByQuery(FSAClientHandle clientHandle,
 void
 Library::registerFsaCmdSymbols()
 {
+   RegisterFunctionExport(FSAChangeDir);
    RegisterFunctionExport(FSACloseFile);
    RegisterFunctionExport(FSAGetStat);
+   RegisterFunctionExport(FSAGetStatFile);
    RegisterFunctionExport(FSAMakeDir);
    RegisterFunctionExport(FSAMount);
    RegisterFunctionExport(FSAOpenFile);
