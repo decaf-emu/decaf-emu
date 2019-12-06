@@ -9,6 +9,7 @@
 #include "nn/acp/nn_acp_miscservice.h"
 
 #include <chrono>
+#include <common/platform_time.h>
 
 using namespace nn::acp;
 using namespace nn::ipc;
