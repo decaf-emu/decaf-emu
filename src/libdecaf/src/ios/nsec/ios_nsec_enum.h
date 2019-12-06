@@ -7,6 +7,20 @@ ENUM_NAMESPACE_ENTER(ios)
 
 ENUM_NAMESPACE_ENTER(nsec)
 
+FLAGS_BEG(NSSLCertProperties, uint32_t)
+   FLAGS_VALUE(HasSecondPath,                      1 << 0)
+   FLAGS_VALUE(Exportable,                         1 << 1)
+   FLAGS_VALUE(Encrypted,                          1 << 2)
+FLAGS_END(NSSLCertProperties)
+
+ENUM_BEG(NSSLCertType, int32_t)
+   ENUM_VALUE(Unknown0,                            0)
+ENUM_END(NSSLCertType)
+
+ENUM_BEG(NSSLCertEncoding, int32_t)
+   ENUM_VALUE(Unknown1,                            1)
+ENUM_END(NSSLCertEncoding)
+
 ENUM_BEG(NSSLCommand, uint32_t)
    ENUM_VALUE(CreateContext,                       1)
    ENUM_VALUE(DestroyContext,                      2)
@@ -29,8 +43,8 @@ ENUM_BEG(NSSLCommand, uint32_t)
    ENUM_VALUE(GetCipherInfo,                       19)
    ENUM_VALUE(RemoveSession,                       20)
    ENUM_VALUE(NSECEncrypt,                         21)
-   ENUM_VALUE(ExportInternalServerCertification,   22)
-   ENUM_VALUE(ExportInternalClientCertification,   23)
+   ENUM_VALUE(ExportInternalServerCertificate,     22)
+   ENUM_VALUE(ExportInternalClientCertificate,     23)
 ENUM_END(NSSLCommand)
 
 ENUM_BEG(NSSLError, int32_t)

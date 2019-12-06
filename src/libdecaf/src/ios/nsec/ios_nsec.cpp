@@ -1,5 +1,6 @@
 #include "ios_nsec.h"
 #include "ios_nsec_log.h"
+#include "ios_nsec_nssl_certstore.h"
 #include "ios_nsec_nssl_thread.h"
 
 #include "decaf_log.h"
@@ -83,6 +84,7 @@ processEntryPoint(phys_ptr<void> context)
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticNsslData();
+   internal::initialiseStaticCertStoreData();
 
    // Initialise process heaps
    auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);

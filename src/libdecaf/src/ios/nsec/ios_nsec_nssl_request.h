@@ -48,6 +48,13 @@ CHECK_OFFSET(NSSLAddServerPKIExternalRequest, 0x00, context);
 CHECK_OFFSET(NSSLAddServerPKIExternalRequest, 0x04, certType);
 CHECK_SIZE(NSSLAddServerPKIExternalRequest, 0x08);
 
+struct NSSLExportInternalServerCertificateRequest
+{
+   be2_val<NSSLCertID> certId;
+};
+CHECK_OFFSET(NSSLExportInternalServerCertificateRequest, 0x00, certId);
+CHECK_SIZE(NSSLExportInternalServerCertificateRequest, 0x04);
+
 #pragma pack(pop)
 
 /** @} */
