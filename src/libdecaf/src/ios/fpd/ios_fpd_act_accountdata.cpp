@@ -8,6 +8,7 @@
 #include "nn/ffl/nn_ffl_miidata.h"
 #include "nn/act/nn_act_result.h"
 
+#include <common/platform_time.h>
 #include <algorithm>
 #include <array>
 #include <charconv>

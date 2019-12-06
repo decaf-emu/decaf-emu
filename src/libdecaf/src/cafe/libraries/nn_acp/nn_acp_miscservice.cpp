@@ -8,6 +8,7 @@
 #include "nn/acp/nn_acp_result.h"
 #include "nn/acp/nn_acp_miscservice.h"
 
+#include <common/platform_time.h>
 #include <chrono>
 #include <common/platform_time.h>
 
