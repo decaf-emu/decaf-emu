@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <chrono>
 #include <common/platform_time.h>
 #include <cstring>
 #include <string_view>
