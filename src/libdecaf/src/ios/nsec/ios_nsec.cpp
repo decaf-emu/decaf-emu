@@ -1,14 +1,14 @@
 #include "ios_nsec.h"
+#include "ios_nsec_log.h"
 #include "ios_nsec_nssl_thread.h"
 
+#include "decaf_log.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_thread.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
-
 #include "ios/mcp/ios_mcp_ipc.h"
-
 #include "ios/ios_enum.h"
 #include "ios/ios_stackobject.h"
 
@@ -41,6 +41,8 @@ sLocalHeapBuffer = nullptr;
 
 namespace internal
 {
+
+Logger nsecLog = { };
 
 static void
 initialiseStaticData()
@@ -75,6 +77,9 @@ processEntryPoint(phys_ptr<void> context)
    StackArray<Message, 10> messageBuffer;
    StackObject<Message> message;
 
+   // Initialise logger
+   internal::nsecLog = decaf::makeLogger("IOS_NSEC");
+
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticNsslData();
@@ -82,19 +87,19 @@ processEntryPoint(phys_ptr<void> context)
    // Initialise process heaps
    auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
-      gLog->error("NSEC: Failed to create local process heap, error = {}.", error);
+      internal::nsecLog->error("NSEC: Failed to create local process heap, error = {}.", error);
       return error;
    }
 
    error = IOS_CreateCrossProcessHeap(CrossHeapSize);
    if (error < Error::OK) {
-      gLog->error("NSEC: Failed to create cross process heap, error = {}.", error);
+      internal::nsecLog->error("NSEC: Failed to create cross process heap, error = {}.", error);
       return error;
    }
 
    error = internal::registerNsslResourceManager();
    if (error < Error::OK) {
-      gLog->error("NSEC: Failed to register NSSL resource manager, error = {}.", error);
+      internal::nsecLog->error("NSEC: Failed to register NSSL resource manager, error = {}.", error);
       return error;
    }
    // TODO: registerNssResourceManager
@@ -102,14 +107,14 @@ processEntryPoint(phys_ptr<void> context)
    // Setup nsec
    error = IOS_CreateMessageQueue(messageBuffer, messageBuffer.size());
    if (error < Error::OK) {
-      gLog->error("NSEC: Failed to create nsec proc message queue, error = {}.", error);
+      internal::nsecLog->error("NSEC: Failed to create nsec proc message queue, error = {}.", error);
       return error;
    }
    auto messageQueueId = static_cast<MessageQueueId>(error);
 
    error = mcp::MCP_RegisterResourceManager("/dev/nsec", messageQueueId);
    if (error < Error::OK) {
-      gLog->error("NSEC: Failed to register /dev/nsec, error = {}.", error);
+      internal::nsecLog->error("NSEC: Failed to register /dev/nsec, error = {}.", error);
       return error;
    }
 
