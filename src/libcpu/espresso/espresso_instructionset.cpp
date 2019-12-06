@@ -351,18 +351,29 @@ struct FieldIndex
 
 // Used to populate sInstructionInfo
 #define INS(name, write, read, flags, opcodes, fullname) \
-   sInstructionInfo.emplace_back(InstructionInfo { \
-                                    InstructionID::name, cleanInsName(#name), fullname, \
-                                    { PRINTOPS opcodes }, { PRINTOPS read }, \
-                                    { PRINTOPS write }, { PRINTOPS flags } \
-                                 });
+   static const InstructionInfo \
+   info_ ## name = InstructionInfo { \
+                      InstructionID::name, cleanInsName(#name), fullname, \
+                      { PRINTOPS opcodes }, { PRINTOPS read }, \
+                      { PRINTOPS write }, { PRINTOPS flags } \
+                   };
 
 // Used to populate sInstructionAlias
 #define INSA(name, op, opcodes) \
-   sAliasData.emplace_back(InstructionAlias { \
-                              #name, InstructionID::op, \
-                              { PRINTOPS opcodes } \
-                           });
+   static const InstructionAlias \
+   alias_ ## name = InstructionAlias { \
+                       #name, InstructionID::op, \
+                       { PRINTOPS opcodes } \
+                    };
+
+#  include "espresso_instruction_definitions.inl"
+#  include "espresso_instruction_aliases.inl"
+
+#undef INS
+#undef INSA
+
+#define INS(name, ...) sInstructionInfo.emplace_back(info_ ## name);
+#define INSA(name, ...) sAliasData.emplace_back(alias_ ## name);
 
 void
 initialiseInstructionSet()
