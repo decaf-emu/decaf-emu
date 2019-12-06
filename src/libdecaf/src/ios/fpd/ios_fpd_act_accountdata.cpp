@@ -687,13 +687,18 @@ loadAccountInstance(phys_ptr<AccountInstance> accountInstance,
          } else if (key == "TransferableIdBase") {
             parseIntegerProperty(value, accountInstance->transferableIdBase);
          } else if (key == "Uuid") {
-            parseHexString(value, phys_addrof(accountInstance->uuid), accountInstance->uuid.size());
+            parseHexString(value, phys_addrof(accountInstance->uuid),
+                           accountInstance->uuid.size());
          } else if (key == "ParentalControlSlotNo") {
             parseIntegerProperty(value, accountInstance->parentalControlSlotNo);
          } else if (key == "MiiData") {
-            parseHexString(value, phys_cast<uint8_t *>(phys_addrof(accountInstance->miiData)), sizeof(accountInstance->miiData));
+            parseHexString(value,
+                           phys_cast<uint8_t *>(phys_addrof(accountInstance->miiData)),
+                           sizeof(accountInstance->miiData));
          } else if (key == "MiiName") {
-            parseHexString(value, phys_cast<uint8_t *>(phys_addrof(accountInstance->miiName)), accountInstance->miiName.size() * 2);
+            parseHexString(value,
+                           phys_cast<uint8_t *>(phys_addrof(accountInstance->miiName)),
+                           accountInstance->miiName.size() * 2);
          } else if (key == "IsMiiUpdated") {
             parseBoolProperty(value, accountInstance->isMiiUpdated);
          } else if (key == "AccountId") {
@@ -729,11 +734,13 @@ loadAccountInstance(phys_ptr<AccountInstance> accountInstance,
          } else if (key == "MiiImageUrl") {
             parseStringProperty(value, accountInstance->miiImageUrl);
          } else if (key == "AccountPasswordHash") {
-            parseHexString(value, phys_addrof(accountInstance->accountPasswordHash), accountInstance->accountPasswordHash.size());
+            parseHexString(value, phys_addrof(accountInstance->accountPasswordHash),
+                           accountInstance->accountPasswordHash.size());
          } else if (key == "IsPasswordCacheEnabled") {
             parseBoolProperty(value, accountInstance->isPasswordCacheEnabled);
          } else if (key == "AccountPasswordCache") {
-            parseHexString(value, phys_addrof(accountInstance->accountPasswordCache), accountInstance->accountPasswordCache.size());
+            parseHexString(value, phys_addrof(accountInstance->accountPasswordCache),
+                           accountInstance->accountPasswordCache.size());
          } else if (key == "NnasType") {
             parseIntegerProperty(value, accountInstance->nnasType);
          } else if (key == "NfsType") {
