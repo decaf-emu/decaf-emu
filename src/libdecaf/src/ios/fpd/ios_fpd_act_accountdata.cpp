@@ -665,8 +665,8 @@ loadAccountManager(phys_ptr<AccountManager> accountManager)
    parseNnasSubDomain(phys_addrof(accountManager->defaultNnasSubDomain).get(),
                       accountManager->defaultNnasType);
 
-   accountManager->defaultNnasSubDomain.fill(0);
-   accountManager->defaultNnasSubDomain = "L1";
+   accountManager->defaultNnasNfsEnv.fill(0);
+   accountManager->defaultNnasNfsEnv = "L1";
    parseNnasNfsEnv(phys_addrof(accountManager->defaultNnasNfsEnv).get(),
                    accountManager->defaultNfsType,
                    accountManager->defaultNfsNo);
