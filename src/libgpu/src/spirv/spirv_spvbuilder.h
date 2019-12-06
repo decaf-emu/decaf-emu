@@ -1,7 +1,7 @@
 #pragma once
 #ifdef DECAF_VULKAN
-#include <SpvBuilder.h>
-#include <GLSL.std.450.h>
+#include <SPIRV/SpvBuilder.h>
+#include <SPIRV/GLSL.std.450.h>
 
 namespace spirv
 {

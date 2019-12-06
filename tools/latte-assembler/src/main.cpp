@@ -5,11 +5,11 @@
 #include <excmd.h>
 #include <fmt/format.h>
 #include <fstream>
+#include <glslang/Public/ShaderLang.h>
 #include <memory>
 #include <optional>
 #include <string>
 #include <spdlog/spdlog.h>
-#include <ShaderLang.h>
 
 static bool
 readFile(const std::string &path,

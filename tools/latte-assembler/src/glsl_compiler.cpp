@@ -4,11 +4,11 @@
 #include <common/platform.h>
 #include <common/platform_winapi_string.h>
 #include <fstream>
+#include <glslang/Include/Types.h>
+#include <glslang/Public/ShaderLang.h>
+#include <glslang/MachineIndependent/localintermediate.h>
 #include <iostream>
-#include <Include/Types.h>
-#include <MachineIndependent/localintermediate.h>
 #include <memory>
-#include <ShaderLang.h>
 #include <string>
 #include <vector>
 

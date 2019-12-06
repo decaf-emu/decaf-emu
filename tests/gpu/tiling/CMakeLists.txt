@@ -16,7 +16,7 @@ target_link_libraries(test-gpu-tiling
 if(DECAF_VULKAN)
     target_link_libraries(test-gpu-tiling
         vulkan
-        ${SPIRV_LIBRARIES})
+        SPIRV)
 endif()
 
 add_test(NAME gpu-tiling

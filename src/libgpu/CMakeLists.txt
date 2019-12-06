@@ -78,7 +78,7 @@ if(DECAF_GL)
 endif()
 
 if(DECAF_VULKAN)
-    target_link_libraries(libgpu vulkan ${SPIRV_LIBRARIES})
+    target_link_libraries(libgpu vulkan SPIRV)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
