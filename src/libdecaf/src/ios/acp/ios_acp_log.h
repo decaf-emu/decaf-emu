@@ -1,10 +1,9 @@
 #pragma once
-#include <spdlog/spdlog.h>
+#include <common/log.h>
 
 namespace ios::acp::internal
 {
 
-extern std::shared_ptr<spdlog::logger>
-acpLog;
+extern Logger acpLog;
 
 } // namespace ios::acp::internal

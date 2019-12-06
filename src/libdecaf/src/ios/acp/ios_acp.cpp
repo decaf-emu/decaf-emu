@@ -42,7 +42,7 @@ static phys_ptr<void> sLocalHeapBuffer = nullptr;
 namespace internal
 {
 
-std::shared_ptr<spdlog::logger> acpLog = nullptr;
+Logger acpLog = { };
 
 void
 initialiseStaticData()
@@ -124,9 +124,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    MessageQueueId messageQueueId;
 
    // Initialise logger
-   if (!internal::acpLog) {
-      internal::acpLog = decaf::makeLogger("IOS_ACP");
-   }
+   internal::acpLog = decaf::makeLogger("IOS_ACP");
 
    // Initialise static memory
    internal::initialiseStaticData();

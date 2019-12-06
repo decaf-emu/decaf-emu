@@ -21,7 +21,7 @@ static phys_ptr<void> sLocalHeapBuffer = nullptr;
 namespace internal
 {
 
-std::shared_ptr<spdlog::logger> nimLog = nullptr;
+Logger nimLog = { };
 
 void
 initialiseStaticData()
@@ -37,9 +37,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    auto error = Error::OK;
 
    // Initialise logger
-   if (!internal::nimLog) {
-      internal::nimLog = decaf::makeLogger("IOS_NIM");
-   }
+   internal::nimLog = decaf::makeLogger("IOS_NIM");
 
    // Initialise static memory
    internal::initialiseStaticData();

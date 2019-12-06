@@ -19,7 +19,7 @@ static phys_ptr<void> sLocalHeapBuffer = nullptr;
 namespace internal
 {
 
-std::shared_ptr<spdlog::logger> padLog = nullptr;
+Logger padLog = { };
 
 static void
 initialiseStaticData()
@@ -33,9 +33,7 @@ Error
 processEntryPoint(phys_ptr<void> /* context */)
 {
    // Initialise logger
-   if (!internal::padLog) {
-      internal::padLog = decaf::makeLogger("IOS_PAD");
-   }
+   internal::padLog = decaf::makeLogger("IOS_PAD");
 
    // Initialise static memory
    internal::initialiseStaticData();

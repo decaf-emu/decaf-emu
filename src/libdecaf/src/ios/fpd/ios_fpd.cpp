@@ -19,7 +19,7 @@ static phys_ptr<void> sLocalHeapBuffer = nullptr;
 namespace internal
 {
 
-std::shared_ptr<spdlog::logger> fpdLog = nullptr;
+Logger fpdLog = { };
 
 void
 initialiseStaticData()
@@ -35,9 +35,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    auto error = Error::OK;
 
    // Initialise logger
-   if (!internal::fpdLog) {
-      internal::fpdLog = decaf::makeLogger("IOS_FPD");
-   }
+   internal::fpdLog = decaf::makeLogger("IOS_FPD");
 
    internal::initialiseStaticData();
    internal::initialiseStaticActServerData();

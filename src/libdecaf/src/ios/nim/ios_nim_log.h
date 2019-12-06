@@ -1,10 +1,9 @@
 #pragma once
-#include <spdlog/spdlog.h>
+#include <common/log.h>
 
 namespace ios::nim::internal
 {
 
-extern std::shared_ptr<spdlog::logger>
-nimLog;
+extern Logger nimLog;
 
 } // namespace ios::nim::internal

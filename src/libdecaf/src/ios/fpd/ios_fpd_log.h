@@ -1,10 +1,9 @@
 #pragma once
-#include <spdlog/spdlog.h>
+#include <common/log.h>
 
 namespace ios::fpd::internal
 {
 
-extern std::shared_ptr<spdlog::logger>
-fpdLog;
+extern Logger fpdLog;
 
 } // namespace ios::fpd::internal
