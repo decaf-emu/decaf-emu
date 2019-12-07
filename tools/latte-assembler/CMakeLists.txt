@@ -34,7 +34,7 @@ target_link_libraries(latte-assembler
     glslang)
 
 set_target_properties(latte-assembler PROPERTIES FOLDER tools)
-GroupSources(src)
-GroupSources(resources)
+GroupSources("Source Files" src)
+GroupSources("Resource Files" resources)
 
 install(TARGETS latte-assembler RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

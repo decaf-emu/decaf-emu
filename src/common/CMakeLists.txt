@@ -6,7 +6,7 @@ file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h *.inl)
 
 add_library(common STATIC ${SOURCE_FILES} ${HEADER_FILES})
-GroupSources(src)
+GroupSources("Source Files" src)
 
 target_link_libraries(common
     cnl

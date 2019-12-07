@@ -20,6 +20,9 @@ endif()
 
 qt5_wrap_ui(UIS_HDRS ${UI_FILES})
 qt5_add_resources(QT_RESOURCES ${QRC_FILES})
+if(MSVC)
+    source_group("Generated Files" FILES ${UIS_HDRS})
+endif()
 
 add_executable(decaf-qt
    ${SOURCE_FILES}
@@ -29,9 +32,9 @@ add_executable(decaf-qt
    ${RESOURCE_FILES}
    ${QHEXVIEW_HEADERS}
    ${QHEXVIEW_SOURCES})
-GroupSources(resources)
-GroupSources(src)
-GroupSources(ui)
+GroupSources("Source Files" src)
+GroupSources("UI Files" ui)
+GroupSources("Resource Files" resources)
 
 target_include_directories(decaf-qt PRIVATE
    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}

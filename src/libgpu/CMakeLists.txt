@@ -43,16 +43,16 @@ if(DECAF_VULKAN)
 endif()
 
 add_library(libgpu STATIC ${SOURCE_FILES} ${HEADER_FILES} ${INLINE_FILES} ${VULKANSHADER_FILES} ${VK_BIN_FILES})
-GroupSources(latte)
-GroupSources(src)
-GroupSources(vulkan_shaders)
+GroupSources("Header Files/latte" latte)
+GroupSources("Source Files" src)
+GroupSources("Vulkan Shader Files" vulkan_shaders)
 
 # We have to do this manually as the files don't exist until the first
 # build occurs, which is after the solution is generated.
 if(DECAF_VULKAN)
     if (MSVC)
         add_dependencies(libgpu libgpu-shaders)
-        source_group("vulkan_shaders_bin" FILES ${VK_BIN_FILES})
+        source_group("Generated Files" FILES ${VK_BIN_FILES})
     endif()
 endif()
 

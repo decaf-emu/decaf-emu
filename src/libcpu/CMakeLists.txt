@@ -12,8 +12,8 @@ else()
     add_library(libcpu STATIC ${SOURCE_FILES} ${HEADER_FILES})
 endif()
 
-GroupSources(espresso)
-GroupSources(src)
+GroupSources("Header Files/expresso" espresso)
+GroupSources("Source Files" src)
 
 target_link_libraries(libcpu
     common
