@@ -11,8 +11,6 @@ translateDisplayBackend(gpu::DisplaySettings::Backend backend)
 {
    if (backend == gpu::DisplaySettings::Null) {
       return "null";
-   } else if (backend == gpu::DisplaySettings::OpenGL) {
-      return "opengl";
    } else if (backend == gpu::DisplaySettings::Vulkan) {
       return "vulkan";
    }
@@ -25,8 +23,6 @@ translateDisplayBackend(const std::string &text)
 {
    if (text == "null") {
       return gpu::DisplaySettings::Null;
-   } else if (text == "opengl") {
-      return gpu::DisplaySettings::OpenGL;
    } else if (text == "vulkan") {
       return gpu::DisplaySettings::Vulkan;
    }
@@ -150,7 +146,6 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
              gpu::Settings &gpuSettings)
 {
    readValue(config, "gpu.debug", gpuSettings.debug.debug_enabled);
-   readArray(config, "gpu.opengl_debug_filters", gpuSettings.opengl.debug_message_filters);
    readValue(config, "gpu.dump_shaders", gpuSettings.debug.dump_shaders);
    readValue(config, "gpu.dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
 
@@ -328,12 +323,6 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
    gpu->insert("dump_shaders", gpuSettings.debug.dump_shaders);
    gpu->insert("dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
 
-   auto debug_filters = cpptoml::make_array();
-   for (auto &filter : gpuSettings.opengl.debug_message_filters) {
-      debug_filters->push_back(filter);
-   }
-
-   gpu->insert("opengl_debug_filters", debug_filters);
    config->insert("gpu", gpu);
 
    // display

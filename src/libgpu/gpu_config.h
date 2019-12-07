@@ -24,8 +24,8 @@ struct DisplaySettings
    enum Backend
    {
       Null,
-      OpenGL,
-      Vulkan,
+      // Previously OpenGL = 1
+      Vulkan = 2,
    };
 
    enum ScreenMode
@@ -50,17 +50,10 @@ struct DisplaySettings
    ViewMode viewMode = ViewMode::Split;
 };
 
-struct OpenGLSettings
-{
-   //! OpenGL debug message IDs to filter out
-   std::vector<int64_t> debug_message_filters = { };
-};
-
 struct Settings
 {
    DebugSettings debug;
    DisplaySettings display;
-   OpenGLSettings opengl;
 };
 
 std::shared_ptr<const Settings> config();

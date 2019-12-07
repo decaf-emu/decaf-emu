@@ -18,7 +18,7 @@ namespace config
 bool dump_drc_frames = false;
 bool dump_tv_frames = false;
 std::string dump_frames_dir = "frames";
-std::string renderer = "opengl";
+std::string renderer = "vulkan";
 
 } // namespace config
 

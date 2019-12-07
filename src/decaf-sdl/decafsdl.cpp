@@ -69,9 +69,6 @@ DecafSDL::initGraphics()
    case gpu::GraphicsDriverType::Vulkan:
       sActiveGfx = "Vulkan";
       break;
-   case gpu::GraphicsDriverType::OpenGL:
-      sActiveGfx = "OpenGL";
-      break;
    case gpu::GraphicsDriverType::Null:
       sActiveGfx = "Null";
       break;

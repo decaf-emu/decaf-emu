@@ -73,10 +73,6 @@ if(DECAF_PLATFORM_WAYLAND)
     target_link_libraries(libgpu ${WAYLAND_CLIENT_LIBRARIES})
 endif()
 
-if(DECAF_GL)
-    target_link_libraries(libgpu glad ${OPENGL_LIBRARIES})
-endif()
-
 if(DECAF_VULKAN)
     target_link_libraries(libgpu vulkan SPIRV)
 endif()

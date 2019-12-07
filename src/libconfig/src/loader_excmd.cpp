@@ -33,7 +33,7 @@ getExcmdGroups(excmd::parser &parser)
                   description { "Which display backend to use." },
                   default_value<std::string> { "vulkan" },
                   allowed<std::string> { {
-                     "vulkan", "opengl", "null",
+                     "vulkan", "null",
                   } })
       .add_option("screen-mode",
                   description { "Screen display mode." },
@@ -307,8 +307,6 @@ loadFromExcmd(excmd::option_state &options,
       auto mode = options.get<std::string>("screen-mode");
       if (mode.compare("vulkan") == 0) {
          gpuSettings.display.backend = gpu::DisplaySettings::Vulkan;
-      } else if (mode.compare("opengl") == 0) {
-         gpuSettings.display.backend = gpu::DisplaySettings::OpenGL;
       } else if (mode.compare("null") == 0) {
          gpuSettings.display.backend = gpu::DisplaySettings::Null;
       }

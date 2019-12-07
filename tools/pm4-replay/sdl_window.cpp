@@ -76,9 +76,6 @@ SDLWindow::initGraphics()
    case gpu::GraphicsDriverType::Vulkan:
       mRendererName = "Vulkan";
       break;
-   case gpu::GraphicsDriverType::OpenGL:
-      mRendererName = "OpenGL";
-      break;
    case gpu::GraphicsDriverType::Null:
       mRendererName = "Null";
       break;

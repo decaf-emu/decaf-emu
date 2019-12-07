@@ -46,33 +46,6 @@ set_target_properties(excmd PROPERTIES
 add_subdirectory(fmt)
 set_target_properties(fmt PROPERTIES FOLDER libraries)
 
-# glad
-if(DECAF_GL)
-    if(DECAF_GLAD_DEBUG)
-        set(GLAD_DIR "glad-debug")
-    else()
-        set(GLAD_DIR "glad")
-    endif()
-
-    set(GLAD_SOURCE_FILES "${GLAD_DIR}/src/glad.c")
-
-    if(WIN32)
-        set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_wgl.c")
-    endif()
-
-    if(DECAF_PLATFORM_XLIB)
-        set(GLAD_SOURCE_FILES ${GLAD_SOURCE_FILES} "${GLAD_DIR}/src/glad_glx.c")
-    endif()
-
-    add_library(glad STATIC ${GLAD_SOURCE_FILES})
-    set_target_properties(glad PROPERTIES FOLDER libraries)
-    target_include_directories(glad PUBLIC "${GLAD_DIR}/include")
-
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        set_target_properties(glad PROPERTIES INTERFACE_LINK_LIBRARIES dl)
-    endif()
-endif()
-
 # glslang
 if(DECAF_VULKAN OR DECAF_BUILD_TOOLS)
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "glslang: BUILD_SHARED_LIBS" FORCE)

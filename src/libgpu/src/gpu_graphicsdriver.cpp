@@ -2,7 +2,6 @@
 #include "gpu_config.h"
 
 #include "null/null_driver.h"
-#include "opengl/opengl_driver.h"
 #include "vulkan/vulkan_driver.h"
 
 namespace gpu
@@ -14,8 +13,6 @@ createGraphicsDriver()
    switch (config()->display.backend) {
    case DisplaySettings::Null:
       return createGraphicsDriver(GraphicsDriverType::Null);
-   case DisplaySettings::OpenGL:
-      return createGraphicsDriver(GraphicsDriverType::OpenGL);
    case DisplaySettings::Vulkan:
       return createGraphicsDriver(GraphicsDriverType::Vulkan);
    default:
@@ -29,10 +26,6 @@ createGraphicsDriver(GraphicsDriverType type)
    switch (type) {
    case GraphicsDriverType::Null:
       return new null::Driver{};
-#ifdef DECAF_GL
-   case GraphicsDriverType::OpenGL:
-      return new opengl::GLDriver{};
-#endif
 #ifdef DECAF_VULKAN
    case GraphicsDriverType::Vulkan:
       return new vulkan::Driver{};

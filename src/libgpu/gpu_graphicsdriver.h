@@ -9,8 +9,8 @@ namespace gpu
 enum class GraphicsDriverType
 {
    Null,
-   OpenGL,
-   Vulkan,
+   // Previously OpenGL = 1
+   Vulkan = 2,
 };
 
 enum class WindowSystemType
