@@ -11,6 +11,7 @@
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_formatters.h>
 #include <libcpu/espresso/espresso_instructionset.h>
+#include <unordered_map>
 #include <zlib.h>
 
 namespace rpl = cafe::loader::rpl;
