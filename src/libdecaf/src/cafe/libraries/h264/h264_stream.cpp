@@ -6,6 +6,8 @@
 
 #include "cafe/cafe_stackobject.h"
 
+#include <cmath>
+
 namespace cafe::h264
 {
 
