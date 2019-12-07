@@ -13,11 +13,14 @@ namespace cafe::nsysnet
 
 using namespace coreinit;
 
+using ios::nsec::NSSLCertType;
 using ios::nsec::NSSLCommand;
 using ios::nsec::NSSLCreateContextRequest;
 using ios::nsec::NSSLDestroyContextRequest;
 using ios::nsec::NSSLAddServerPKIRequest;
 using ios::nsec::NSSLAddServerPKIExternalRequest;
+using ios::nsec::NSSLExportInternalServerCertificateRequest;
+using ios::nsec::NSSLExportInternalServerCertificateResponse;
 
 struct SslData
 {
@@ -177,10 +180,18 @@ NSSLError
 NSSLAddServerPKIExternal(NSSLContextHandle context,
                          virt_ptr<uint8_t> cert,
                          uint32_t certSize,
-                         uint32_t unkArg4)
+                         NSSLCertType certType)
 {
    if (!internal::isInitialised()) {
       return NSSLError::LibNotReady;
+   }
+
+   if (!cert || !certSize) {
+      return NSSLError::InvalidArg;
+   }
+
+   if (certType != NSSLCertType::Unknown0) {
+      return NSSLError::InvalidCertType;
    }
 
    auto buf = internal::allocateIpcBuffer(0x88);
@@ -197,13 +208,61 @@ NSSLAddServerPKIExternal(NSSLContextHandle context,
    vec[1].len = static_cast<uint32_t>(sizeof(NSSLAddServerPKIExternalRequest));
 
    request->context = context;
-   request->certType = 0;
+   request->certType = certType;
 
    auto error = IOS_Ioctlv(sSslData->handle,
                            NSSLCommand::AddServerPKIExternal,
                            2, 0, vec);
 
    internal::freeIpcBuffer(buf);
+   return static_cast<NSSLError>(error);
+}
+
+NSSLError
+NSSLExportInternalServerCertificate(NSSLCertID certId,
+                                    virt_ptr<uint8_t> certBuffer,
+                                    virt_ptr<uint32_t> certBufferSize,
+                                    virt_ptr<NSSLCertType> certType)
+{
+   if (!internal::isInitialised()) {
+      return NSSLError::LibNotReady;
+   }
+
+   auto buf = internal::allocateIpcBuffer(0x84);
+   if (!buf) {
+      return NSSLError::OutOfMemory;
+   }
+
+   auto bufResponse = internal::allocateIpcBuffer(0x8);
+   if (!bufResponse) {
+      internal::freeIpcBuffer(buf);
+      return NSSLError::OutOfMemory;
+   }
+
+   auto request = virt_cast<NSSLExportInternalServerCertificateRequest *>(virt_cast<virt_addr>(buf) + 0x80);
+   request->certId = certId;
+
+   auto vec = virt_cast<IOSVec *>(buf);
+   vec[0].vaddr = virt_cast<virt_addr>(request);
+   vec[0].len = static_cast<uint32_t>(sizeof(NSSLExportInternalServerCertificateRequest));
+
+   vec[1].vaddr = virt_cast<virt_addr>(certBuffer);
+   vec[1].len = *certBufferSize;
+
+   auto response = virt_cast<NSSLExportInternalServerCertificateResponse *>(bufResponse);
+   vec[2].vaddr = virt_cast<virt_addr>(response);
+   vec[2].len = static_cast<uint32_t>(sizeof(NSSLExportInternalServerCertificateResponse));
+
+   auto error = IOS_Ioctlv(sSslData->handle,
+                           NSSLCommand::ExportInternalServerCertificate,
+                           1, 2, vec);
+   if (error >= IOSError::OK) {
+      *certType = response->certType;
+      *certBufferSize = response->certSize;
+   }
+
+   internal::freeIpcBuffer(buf);
+   internal::freeIpcBuffer(bufResponse);
    return static_cast<NSSLError>(error);
 }
 
@@ -259,6 +318,7 @@ Library::registerSslSymbols()
    RegisterFunctionExport(NSSLDestroyContext);
    RegisterFunctionExport(NSSLAddServerPKI);
    RegisterFunctionExport(NSSLAddServerPKIExternal);
+   RegisterFunctionExport(NSSLExportInternalServerCertificate);
 
    RegisterDataInternal(sSslData);
 }

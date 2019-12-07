@@ -8,6 +8,7 @@ using NSSLContextHandle = ios::nsec::NSSLContextHandle;
 using NSSLError = ios::nsec::NSSLError;
 using NSSLVersion = ios::nsec::NSSLVersion;
 using NSSLCertID = ios::nsec::NSSLCertID;
+using NSSLCertType = ios::nsec::NSSLCertType;
 
 NSSLError
 NSSLInit();
@@ -29,7 +30,13 @@ NSSLError
 NSSLAddServerPKIExternal(NSSLContextHandle context,
                          virt_ptr<uint8_t> cert,
                          uint32_t certSize,
-                         uint32_t unkArg4);
+                         NSSLCertType certType);
+
+NSSLError
+NSSLExportInternalServerCertificate(NSSLCertID certId,
+                                    virt_ptr<uint8_t> certBuffer,
+                                    virt_ptr<uint32_t> certBufferSize,
+                                    virt_ptr<NSSLCertType> certType);
 
 namespace internal
 {
