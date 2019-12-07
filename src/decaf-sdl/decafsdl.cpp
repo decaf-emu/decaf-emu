@@ -51,6 +51,15 @@ DecafSDL::initGraphics()
    }
 #endif
 
+#ifdef SDL_VIDEO_DRIVER_COCOA
+   if (!videoInitialised) {
+      videoInitialised = SDL_VideoInit("cocoa") == 0;
+      if (!videoInitialised) {
+         gCliLog->error("Failed to initialize SDL Video with cocoa: {}", SDL_GetError());
+      }
+   }
+#endif
+
    if (!videoInitialised) {
       if (SDL_VideoInit(NULL) != 0) {
          gCliLog->error("Failed to initialize SDL Video: {}", SDL_GetError());
@@ -131,10 +140,10 @@ DecafSDL::run(const std::string &gamePath)
       wsi.displayConnection = static_cast<void *>(sysWmInfo.info.x11.display);
       break;
 #endif
-#ifdef SDL_VIDEO_DRIVER_COCOA
+#ifdef SDL_VIDEO_METAL
    case SDL_SYSWM_COCOA:
       wsi.type = gpu::WindowSystemType::Cocoa;
-      wsi.renderSurface = static_cast<void *>(sysWmInfo.info.cocoa.window);
+      wsi.renderSurface =  static_cast<void *>(SDL_Metal_CreateView(mWindow));
       break;
 #endif
 #ifdef SDL_VIDEO_DRIVER_WAYLAND
