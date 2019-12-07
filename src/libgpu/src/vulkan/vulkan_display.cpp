@@ -170,6 +170,12 @@ getWindowSystemExtensions(gpu::WindowSystemType wsiType, std::vector<const char*
       extensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
       break;
 #endif
+#if defined(VK_USE_PLATFORM_MACOS_MVK)
+   case gpu::WindowSystemType::Cocoa:
+      extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+      extensions.push_back(VK_MVK_MACOS_SURFACE_EXTENSION_NAME);
+      break;
+#endif
    default:
       return false;
    }
@@ -278,6 +284,14 @@ createVulkanSurface(vk::Instance &instance, const gpu::WindowSystemInfo &wsi)
       surfaceCreateInfo.display = static_cast<wl_display *>(wsi.displayConnection);
       surfaceCreateInfo.surface = static_cast<wl_surface *>(wsi.renderSurface);
       return instance.createWaylandSurfaceKHR(surfaceCreateInfo);
+   }
+#endif
+
+#if defined(VK_USE_PLATFORM_MACOS_MVK)
+   if (wsi.type == gpu::WindowSystemType::Cocoa) {
+      auto surfaceCreateInfo = vk::MacOSSurfaceCreateInfoMVK { };
+      surfaceCreateInfo.pView = static_cast<const void *>(wsi.renderSurface);
+      return instance.createMacOSSurfaceMVK(surfaceCreateInfo);
    }
 #endif
 

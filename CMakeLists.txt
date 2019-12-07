@@ -91,6 +91,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     endif()
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    add_definitions(-DDECAF_PLATFORM_COCOA)
+    set(DECAF_PLATFORM_COCOA TRUE)
+endif()
+
 if(DECAF_VULKAN)
     find_package(Vulkan 1.1.92.1 REQUIRED) # Vulkan_INCLUDE_DIRS and Vulkan_LIBRARIES
     add_library(vulkan INTERFACE IMPORTED)
@@ -113,6 +118,10 @@ if(DECAF_VULKAN)
 
     if(DECAF_PLATFORM_WAYLAND)
         add_definitions(-DVK_USE_PLATFORM_WAYLAND_KHR)
+    endif()
+
+    if(DECAF_PLATFORM_COCOA)
+        add_definitions(-DVK_USE_PLATFORM_MACOS_MVK)
     endif()
 
     add_definitions(-DDECAF_VULKAN)
