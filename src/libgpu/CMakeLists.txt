@@ -77,13 +77,6 @@ if(DECAF_VULKAN)
     target_link_libraries(libgpu vulkan SPIRV)
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    # GLSLANG is compiled with -fno-rtti, linking to this on Linux causes an error due to
-    # missing typeid, so here we must disable rtti just for the files which use spv::Builder
-    file(GLOB SPV_BUILDER_FILES "src/spirv/*.cpp")
-    set_source_files_properties(${SPV_BUILDER_FILES} PROPERTIES COMPILE_FLAGS -fno-rtti)
-endif()
-
 if(DECAF_ENABLE_PCH)
     target_precompile_headers(libgpu
       PRIVATE

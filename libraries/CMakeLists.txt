@@ -56,6 +56,17 @@ if(DECAF_VULKAN OR DECAF_BUILD_TOOLS)
     set(ENABLE_SPVREMAPPER OFF CACHE BOOL "glslang: ENABLE_SPVREMAPPER" FORCE)
     set(SKIP_GLSLANG_INSTALL ON CACHE BOOL "glslang: SKIP_GLSLANG_INSTALL" FORCE)
     add_subdirectory(glslang)
+
+    macro(remove_flag_from_target _target _flag)
+        get_target_property(_target_cxx_flags ${_target} COMPILE_OPTIONS)
+        if(_target_cxx_flags)
+            list(REMOVE_ITEM _target_cxx_flags ${_flag})
+            set_target_properties(${_target} PROPERTIES COMPILE_OPTIONS "${_target_cxx_flags}")
+        endif()
+    endmacro()
+
+    # As we inherit spv::Builder in libgpu, we must remove -fno-rtti
+    remove_flag_from_target(SPIRV -fno-rtti)
 endif()
 
 # gsl
