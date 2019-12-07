@@ -712,8 +712,6 @@ private:
    virtual void streamOutBufferUpdate(const latte::pm4::StreamOutBufferUpdate &data) override;
    virtual void surfaceSync(const latte::pm4::SurfaceSync &data) override;
 
-   virtual void applyRegister(latte::Register reg) override;
-
 private:
    enum class RunState
    {

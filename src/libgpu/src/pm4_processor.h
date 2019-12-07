@@ -11,15 +11,10 @@ using namespace latte::pm4;
 
 constexpr int MaxPm4IndirectDepth = 6;
 
-// TODO: Once the OpenGL backend is removed from our code, we can remove
-// the mNoRegisterNotify below, and the associated code from it.  Note
-// the comment in loadRegisters as well!
-
 class Pm4Processor
 {
 protected:
-   Pm4Processor(bool noRegisterNotify = false)
-      : mNoRegisterNotify(noRegisterNotify)
+   Pm4Processor()
    {
    }
 
@@ -52,9 +47,6 @@ protected:
    void numInstances(const NumInstances &data);
    void contextControl(const ContextControl &data);
    void copyDw(const CopyDw &data);
-
-   virtual void
-   applyRegister(latte::Register reg) = 0;
 
    void setAluConsts(const SetAluConsts &data);
    void setConfigRegs(const SetConfigRegs &data);
@@ -103,7 +95,6 @@ protected:
       decaf_abort("Unsupported register address fetch");
    }
 
-   bool mNoRegisterNotify = false;
    latte::ShadowState mShadowState;
    std::array<uint32_t, 0x10000> mRegisters = { 0 };
    phys_addr mRegAddr_VGT_STRMOUT_DRAW_OPAQUE_BUFFER_FILLED_SIZE = phys_addr { 0 };

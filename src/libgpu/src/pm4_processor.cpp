@@ -282,48 +282,19 @@ void
 Pm4Processor::setRegisters(latte::Register base,
                            const gsl::span<uint32_t> &values)
 {
-   if (mNoRegisterNotify) {
-      if (latte::Register::SQ_VTX_SEMANTIC_CLEAR >= base &&
-          latte::Register::SQ_VTX_SEMANTIC_CLEAR < base + values.size_bytes()) {
-         auto clearRegBase = latte::Register::SQ_VTX_SEMANTIC_0 / 4;
-         auto valueIdx = (latte::Register::SQ_VTX_SEMANTIC_CLEAR - base) / 4;
-         auto clearFlags = values[valueIdx];
-         for (auto i = 0u; i < 32; ++i) {
-            if (clearFlags & (1 << i)) {
-               mRegisters[clearRegBase + i] = 0xffffffff;
-            }
-         }
-      }
-
-      memcpy(&mRegisters[base / 4], values.data(), values.size_bytes());
-   } else {
-      for (auto i = 0u; i < values.size(); ++i) {
-         auto regIdx = (base / 4) + i;
-         auto reg = static_cast<latte::Register>(regIdx * 4);
-         auto value = values[i];
-
-         auto isChanged = (value != mRegisters[regIdx]);
-
-         // Save to local registers
-         mRegisters[regIdx] = value;
-
-         // Writing SQ_VTX_SEMANTIC_CLEAR has side effects, so process those
-         if (reg == latte::Register::SQ_VTX_SEMANTIC_CLEAR) {
-            auto clearRegBase = latte::Register::SQ_VTX_SEMANTIC_0 / 4;
-            for (auto i = 0u; i < 32; ++i) {
-               if (value & (1 << i)) {
-                  mRegisters[clearRegBase + i] = 0xffffffff;
-                  applyRegister(static_cast<latte::Register>(latte::Register::SQ_VTX_SEMANTIC_0 + i * 4));
-               }
-            }
-         }
-
-         // Apply changes directly to OpenGL state if appropriate
-         if (isChanged) {
-            applyRegister(reg);
+   if (latte::Register::SQ_VTX_SEMANTIC_CLEAR >= base &&
+         latte::Register::SQ_VTX_SEMANTIC_CLEAR < base + values.size_bytes()) {
+      auto clearRegBase = latte::Register::SQ_VTX_SEMANTIC_0 / 4;
+      auto valueIdx = (latte::Register::SQ_VTX_SEMANTIC_CLEAR - base) / 4;
+      auto clearFlags = values[valueIdx];
+      for (auto i = 0u; i < 32; ++i) {
+         if (clearFlags & (1 << i)) {
+            mRegisters[clearRegBase + i] = 0xffffffff;
          }
       }
    }
+
+   memcpy(&mRegisters[base / 4], values.data(), values.size_bytes());
 }
 
 void Pm4Processor::setAluConsts(const SetAluConsts &data)

@@ -550,13 +550,6 @@ Driver::surfaceSync(const latte::pm4::SurfaceSync &data)
 }
 
 void
-Driver::applyRegister(latte::Register reg)
-{
-   // Vulkan driver never directly applies register values
-}
-
-
-void
 Driver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
    decaf_check(!mActiveSyncWaiter);
