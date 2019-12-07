@@ -19,3 +19,12 @@ if(MSVC)
 elseif(UNIX AND NOT APPLE)
     target_link_libraries(common rt)
 endif()
+
+if(DECAF_ENABLE_PCH)
+    target_precompile_headers(common
+      PRIVATE
+        "pch.h"
+    )
+
+    AutoGroupPCHFiles()
+endif()

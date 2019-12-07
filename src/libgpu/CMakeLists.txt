@@ -83,3 +83,23 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     file(GLOB SPV_BUILDER_FILES "src/spirv/*.cpp")
     set_source_files_properties(${SPV_BUILDER_FILES} PROPERTIES COMPILE_FLAGS -fno-rtti)
 endif()
+
+if(DECAF_ENABLE_PCH)
+    target_precompile_headers(libgpu
+      PRIVATE
+        <common/pch.h>
+        "latte/latte_registers.h"
+        "latte/latte_pm4.h"
+        "latte/latte_pm4_commands.h"
+    )
+
+    if(DECAF_VULKAN)
+        target_precompile_headers(libgpu
+          PRIVATE
+            <common/vulkan_hpp.h>
+            "src/vulkan/vk_mem_alloc.h"
+        )
+    endif()
+
+    AutoGroupPCHFiles()
+endif()

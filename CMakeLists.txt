@@ -15,6 +15,14 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED) # OpenSSL::SSL
 find_package(ZLIB REQUIRED) # ZLIB::ZLIB
 
+# Disable PCH by default on older versions of CMake
+if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
+    set(DECAF_ENABLE_PCH_DEFAULT OFF)
+    message(WARNING "You are using a CMake which does not support PCH (<3.16).  This will adversely affect compile times.")
+else()
+    set(DECAF_ENABLE_PCH_DEFAULT ON)
+endif()
+
 option(DECAF_BUILD_TESTS "Build tests" OFF)
 option(DECAF_BUILD_TOOLS "Build tools" OFF)
 option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" OFF)
@@ -23,9 +31,9 @@ option(DECAF_SDL "Build with SDL support" ON)
 option(DECAF_VALGRIND "Build with Valgrind support" OFF)
 option(DECAF_VULKAN "Build with Vulkan rendering support" ON)
 option(DECAF_QT "Build with Qt support" OFF)
-option(DECAF_ENABLE_PCH "Build with precompild headers" ON)
 option(DECAF_ENABLE_LTCG "Build with LTCG on Windows" ON)
 option(DECAF_DISABLE_GIT_VERSION "Disables generation of version header from git state" OFF)
+option(DECAF_ENABLE_PCH "Build with precompiled headers" ${DECAF_ENABLE_PCH_DEFAULT})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
@@ -176,6 +184,14 @@ macro(GroupSources curdir)
     endif()
 endmacro()
 
+macro(AutoGroupPCHFiles)
+    if(MSVC)
+        source_group("CMake PCH" FILES
+            "${PROJECT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.dir/cmake_pch.hxx"
+            "${PROJECT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.dir/cmake_pch.cxx")
+    endif()
+endmacro()
+
 if(NOT DECAF_DISABLE_GIT_VERSION)
     # Generate build information
     include(GetGitRevisionDescription)
@@ -214,29 +230,6 @@ endif()
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/decaf_buildinfo.h.in"
                "${CMAKE_CURRENT_BINARY_DIR}/generated/decaf_buildinfo.h" @ONLY)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/generated")
-
-# cotire for build optimisation
-include(cotire)
-macro(enable_pch project_name)
-    if(DECAF_ENABLE_PCH)
-        set(IGNORED_PATHS "")
-        set(INCLUDED_PATHS "")
-
-        list(APPEND IGNORED_PATHS  "${CMAKE_SOURCE_DIR}")
-        list(APPEND IGNORED_PATHS  "${AVCODEC_INCLUDE_DIR}")
-        list(APPEND IGNORED_PATHS  "${AVFILTER_INCLUDE_DIR}")
-        list(APPEND IGNORED_PATHS  "${AVUTIL_INCLUDE_DIR}")
-        list(APPEND IGNORED_PATHS  "${SWSCALE_INCLUDE_DIR}")
-        list(APPEND INCLUDED_PATHS "${CMAKE_SOURCE_DIR}/libraries")
-        list(APPEND INCLUDED_PATHS "${CMAKE_SOURCE_DIR}/src/common")
-
-        set_target_properties(${project_name} PROPERTIES
-            COTIRE_ADD_UNITY_BUILD FALSE
-            COTIRE_PREFIX_HEADER_IGNORE_PATH "${IGNORED_PATHS}"
-            COTIRE_PREFIX_HEADER_INCLUDE_PATH "${INCLUDED_PATHS}")
-        cotire(${project_name})
-    endif()
-endmacro()
 
 add_subdirectory("src")
 add_subdirectory("resources")

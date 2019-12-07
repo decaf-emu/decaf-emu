@@ -28,4 +28,11 @@ else()
         ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-enable_pch(libcpu)
+if(DECAF_ENABLE_PCH)
+    target_precompile_headers(libcpu
+      PRIVATE
+        <common/pch.h>
+    )
+
+    AutoGroupPCHFiles()
+endif()

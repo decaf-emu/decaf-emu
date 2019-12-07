@@ -67,4 +67,11 @@ if(MSVC)
     target_compile_options(libdecaf PUBLIC /wd4251)
 endif()
 
-enable_pch(libdecaf)
+if(DECAF_ENABLE_PCH)
+    target_precompile_headers(libdecaf
+      PRIVATE
+        <common/pch.h>
+    )
+
+    AutoGroupPCHFiles()
+endif()

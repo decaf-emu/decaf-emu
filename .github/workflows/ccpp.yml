@@ -40,6 +40,36 @@ jobs:
     - name: Initialise
       run: mkdir build
 
+    - name: Install CMake 3.16.0 (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        wget https://github.com/Kitware/CMake/releases/download/v3.16.0/cmake-3.16.0-Linux-x86_64.sh
+        chmod +x cmake-3.16.0-Linux-x86_64.sh
+        sudo mkdir /opt/cmake
+        sudo ./cmake-3.16.0-Linux-x86_64.sh --skip-license --prefix=/opt/cmake /usr/local/bin/ccmake
+        sudo rm -f /usr/local/bin/cmake /usr/local/bin/ctest
+        sudo ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+        sudo ln -s /opt/cmake/bin/ctest /usr/local/bin/ctest
+        cmake --version
+
+    - name: Install CMake 3.16.0 (macOS)
+      if: startsWith(matrix.os, 'macOS')
+      run: |
+        wget https://github.com/Kitware/CMake/releases/download/v3.16.0/cmake-3.16.0-Darwin-x86_64.tar.gz
+        tar -xzf cmake-3.16.0-Darwin-x86_64.tar.gz
+        sudo mv cmake-3.16.0-Darwin-x86_64/CMake.app /Applications
+        sudo rm -f /usr/local/bin/cmake /usr/local/bin/ctest
+        sudo ln -s /Applications/CMake.app/Contents/bin/cmake /usr/local/bin/cmake
+        sudo ln -s /Applications/CMake.app/Contents/bin/ctest /usr/local/bin/ctest
+        cmake --version
+
+    - name: Install CMake 3.16.0 (Windows)
+      if: startsWith(matrix.os, 'Windows')
+      run: |
+        Invoke-WebRequest "https://github.com/Kitware/CMake/releases/download/v3.16.0/cmake-3.16.0-win64-x64.msi" -OutFile "cmake-3.16.0-win64-x64.msi"
+        Start-Process -Filepath "cmake-3.16.0-win64-x64.msi" -ArgumentList "/S"
+        cmake --version
+
     - name: Install (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
