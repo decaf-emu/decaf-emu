@@ -89,8 +89,8 @@ debugMessageCallback(VkDebugReportFlagsEXT flags,
    // Write this message to our normal logging
    if (!isKnownIssue) {
       gLog->warn("Vulkan Debug Report: {}, {}, {}, {}, {}, {}, {}",
-                 vk::to_string(vk::DebugReportFlagsEXT { flags }),
-                 vk::to_string(vk::DebugReportObjectTypeEXT { objectType }),
+                 vk::to_string(static_cast<vk::DebugReportFlagsEXT>(flags)),
+                 vk::to_string(static_cast<vk::DebugReportObjectTypeEXT>(objectType)),
                  object,
                  location,
                  messageCode,
