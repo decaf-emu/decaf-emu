@@ -1,4 +1,12 @@
 #pragma once
+
+#include <vulkan/vk_platform.h>
+
+#ifdef VK_USE_PLATFORM_XLIB_KHR
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#endif
+
 #include <vulkan/vulkan.hpp>
 
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
