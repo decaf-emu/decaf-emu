@@ -252,7 +252,7 @@ DownloadedDataBase_GetPostId(virt_ptr<const DownloadedDataBase> self)
    return virt_addrof(self->postId);
 }
 
-uint8_t
+uint32_t
 DownloadedDataBase_GetRegionId(virt_ptr<const DownloadedDataBase> self)
 {
    return self->regionId;

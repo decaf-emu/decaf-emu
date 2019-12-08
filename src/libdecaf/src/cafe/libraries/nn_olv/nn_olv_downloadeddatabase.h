@@ -156,7 +156,7 @@ DownloadedDataBase_GetPostDate(virt_ptr<const DownloadedDataBase> self);
 virt_ptr<const uint8_t>
 DownloadedDataBase_GetPostId(virt_ptr<const DownloadedDataBase> self);
 
-uint8_t
+uint32_t
 DownloadedDataBase_GetRegionId(virt_ptr<const DownloadedDataBase> self);
 
 virt_ptr<const uint8_t>
