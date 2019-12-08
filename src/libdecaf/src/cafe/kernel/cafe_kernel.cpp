@@ -330,6 +330,9 @@ exit()
                           ios::mcp::PPCAppCommand::PowerOff,
                           nullptr, 0,
                           nullptr, 0);
+   if (error != ios::Error::OK) {
+      gLog->warn("/dev/ppc_app power off ioctl failed with error: {}", error);
+   }
 
    // Set the running flag to false so idle loops exit.
    sStopping = true;

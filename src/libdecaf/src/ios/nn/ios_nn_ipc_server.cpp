@@ -79,36 +79,36 @@ Server::waitForResume()
    // Read Open
    auto error = IOS_ReceiveMessage(mQueueId, message, MessageFlags::None);
    if (error < Error::OK) {
-      return error;
+      return ::nn::ios::convertError(error);
    }
 
    auto request = parseMessage<ResourceRequest>(message);
    if (request->requestData.command != ::ios::Command::Open) {
-      return Error::FailInternal;
+      return ::nn::ios::convertError(Error::FailInternal);
    }
 
    if (error = IOS_ResourceReply(request, Error::OK); error < Error::OK) {
-      return error;
+      return ::nn::ios::convertError(error);
    }
 
    // Read Resume
    error = IOS_ReceiveMessage(mQueueId, message, MessageFlags::None);
    if (error < Error::OK) {
-      return error;
+      return ::nn::ios::convertError(error);
    }
 
    request = parseMessage<ResourceRequest>(message);
    if (request->requestData.command != ::ios::Command::Resume) {
-      return Error::FailInternal;
+      return ::nn::ios::convertError(Error::FailInternal);
    }
 
    mResumeArgs = request->ipcRequest->args.resume;
 
    if (error = IOS_ResourceReply(request, Error::OK); error < Error::OK) {
-      return error;
+      return ::nn::ios::convertError(error);
    }
 
-   return Error::OK;
+   return ::nn::ios::convertError(Error::OK);
 }
 
 Error
@@ -176,7 +176,7 @@ Server::handleMessage(phys_ptr<ResourceRequest> request)
    args.vecs = ioctlv.vecs;
 
    for (auto &service : mServices) {
-      if (service.id != requestHeader->service) {
+      if (service.id != static_cast<ServiceId>(requestHeader->service)) {
          continue;
       }
 

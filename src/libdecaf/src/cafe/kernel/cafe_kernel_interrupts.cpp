@@ -53,10 +53,10 @@ dispatchExternalInterrupt(InterruptType type,
 {
    auto &data = sPerCoreInterruptData[cpu::this_core::id()];
 
-   if (auto handler = data.kernelHandlers[type]) {
-      handler(type, interruptedContext);
-   } else if (auto handler = data.userHandlers[type]) {
-      handler(type, interruptedContext, data.userHandlerData[type]);
+   if (auto kernelHandler = data.kernelHandlers[type]) {
+      kernelHandler(type, interruptedContext);
+   } else if (auto userHandler = data.userHandlers[type]) {
+      userHandler(type, interruptedContext, data.userHandlerData[type]);
    }
 }
 

@@ -54,11 +54,6 @@ getCriticalSectionProcessSemaphore()
 {
    return getProcessCriticalSectionData().criticalSectionSemaphore;
 }
-static SemaphoreId
-getConditionVariableProcessSemaphore()
-{
-   return getProcessCriticalSectionData().conditionVariableSemaphore;
-}
 
 static SemaphoreId
 getConditionVariableThreadSemaphore()
@@ -85,7 +80,6 @@ bool CriticalSection::try_lock()
 void CriticalSection::lock()
 {
    auto processData = getProcessCriticalSectionData();
-   auto result = false;
 
    // Fast path, try lock with no contention
    IOS_WaitSemaphore(processData.criticalSectionSemaphore, FALSE);
@@ -177,7 +171,7 @@ void CriticalSection::signalWaiterConditionVariable(int wakeCount)
       auto start = processData.waiters;
       auto end = processData.waiters->next;
 
-      for (auto itr = processData.waiters; itr && itr != processData.waiters->next; itr = itr->prev) {
+      for (auto itr = start; itr && itr != end; itr = itr->prev) {
          decaf_check(itr->next && itr->prev);
 
          if (itr->waitObject == this) {

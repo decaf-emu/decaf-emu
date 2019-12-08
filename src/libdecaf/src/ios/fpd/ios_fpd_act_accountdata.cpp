@@ -358,7 +358,6 @@ readPropertyFile(std::string_view path,
       return FSAStatus::OutOfResources;
    }
 
-   auto bufferPos = 0u;
    auto lineStartPos = 0u;
    auto readBufferOffset = 0u;
    auto readFileHeader = false;

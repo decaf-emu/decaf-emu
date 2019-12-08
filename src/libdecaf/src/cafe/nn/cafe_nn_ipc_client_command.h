@@ -177,11 +177,11 @@ struct IpcSerialiser<ManagedBuffer>
       if (userBuffer.output) {
          alignedBufferIndex = static_cast<uint8_t>(outputVecIdx++);
          unalignedBufferIndex = static_cast<uint8_t>(outputVecIdx++);
-         bufferIndexOffset = 1;
+         bufferIndexOffset = 1u;
       } else {
          alignedBufferIndex = static_cast<uint8_t>(inputVecIdx++);
          unalignedBufferIndex = static_cast<uint8_t>(inputVecIdx++);
-         bufferIndexOffset = 1 + data.numVecOut;
+         bufferIndexOffset = static_cast<uint8_t>(1 + data.numVecOut);
       }
 
       // Update our ioctlv vecs buffer

@@ -119,7 +119,7 @@ void
 OSCancelAlarms(uint32_t group)
 {
    internal::lockScheduler();
-   internal::acquireIdLock(sAlarmData->lock, -2);
+   internal::acquireIdLock(sAlarmData->lock, static_cast<uint32_t>(-2));
 
    for (auto &perCoreData : sAlarmData->perCoreData) {
       for (auto alarm = perCoreData.alarmQueue.head; alarm; ) {
@@ -139,7 +139,7 @@ OSCancelAlarms(uint32_t group)
       }
    }
 
-   internal::releaseIdLock(sAlarmData->lock, -2);
+   internal::releaseIdLock(sAlarmData->lock, static_cast<uint32_t>(-2));
    internal::rescheduleAllCoreNoLock();
    internal::unlockScheduler();
 }
@@ -483,7 +483,6 @@ handleAlarmInterrupt(virt_ptr<OSContext> context)
 
    auto now = OSGetTime();
    auto next = std::chrono::time_point<std::chrono::system_clock>::max();
-   bool callbacksNeeded = false;
 
    internal::lockScheduler();
    acquireIdLockWithCoreId(sAlarmData->lock);

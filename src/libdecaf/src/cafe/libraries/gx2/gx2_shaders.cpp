@@ -95,10 +95,10 @@ GX2SetVertexShader(virt_ptr<GX2VertexShader> shader)
       internal::writePM4(SetContextReg { Register::SPI_VS_OUT_CONFIG, spi_vs_out_config.value });
       internal::writePM4(SetContextReg { Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
 
-      if (shader->regs.num_spi_vs_out_id > 0) {
+      if (num_spi_vs_out_id > 0) {
          internal::writePM4(SetContextRegs {
             Register::SPI_VS_OUT_ID_0,
-            gsl::make_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
+            gsl::make_span(&spi_vs_out_id[0].value, num_spi_vs_out_id)
          });
       }
 
@@ -119,10 +119,10 @@ GX2SetVertexShader(virt_ptr<GX2VertexShader> shader)
 
    internal::writePM4(SetContextReg { Register::SQ_VTX_SEMANTIC_CLEAR, sq_vtx_semantic_clear.value });
 
-   if (shader->regs.num_sq_vtx_semantic > 0) {
+   if (num_sq_vtx_semantic > 0) {
       internal::writePM4(SetContextRegs {
          Register::SQ_VTX_SEMANTIC_0,
-         gsl::make_span(&sq_vtx_semantic[0].value, shader->regs.num_sq_vtx_semantic)
+         gsl::make_span(&sq_vtx_semantic[0].value, num_sq_vtx_semantic)
       });
    }
 
@@ -270,10 +270,10 @@ GX2SetGeometryShader(virt_ptr<GX2GeometryShader> shader)
    internal::writePM4(SetContextRegs { Register::SQ_PGM_START_VS, gsl::make_span(vertexShaderRegData) });
    internal::writePM4(SetContextReg { Register::PA_CL_VS_OUT_CNTL, pa_cl_vs_out_cntl.value });
 
-   if (shader->regs.num_spi_vs_out_id > 0) {
+   if (num_spi_vs_out_id > 0) {
       internal::writePM4(SetContextRegs {
          Register::SPI_VS_OUT_ID_0,
-         gsl::make_span(&spi_vs_out_id[0].value, shader->regs.num_spi_vs_out_id)
+         gsl::make_span(&spi_vs_out_id[0].value, num_spi_vs_out_id)
       });
    }
 
@@ -639,7 +639,7 @@ GX2SetStreamOutContext(uint32_t index,
 
    auto control = SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(false)
-      .SELECT_BUFFER(index);
+      .SELECT_BUFFER(static_cast<uint8_t>(index));
 
    switch (mode) {
    case GX2StreamOutContextMode::Append:
@@ -672,7 +672,7 @@ GX2SaveStreamOutContext(uint32_t index,
    auto control = SBU_CONTROL::get(0)
       .STORE_BUFFER_FILLED_SIZE(true)
       .OFFSET_SOURCE(STRMOUT_OFFSET_NONE)
-      .SELECT_BUFFER(index);
+      .SELECT_BUFFER(static_cast<uint8_t>(index));
 
    internal::writePM4(StreamOutBufferUpdate { control, dstLo, 0, phys_addr { 0 }, 0 });
 }

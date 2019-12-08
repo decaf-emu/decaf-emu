@@ -101,9 +101,9 @@ FSAGetStatFile(FSAClientHandle clientHandle,
       return status;
    }
 
-   auto error = internal::fsaShimPrepareRequestStatFile(*shimBuffer,
-                                                        clientHandle,
-                                                        handle);
+   status = internal::fsaShimPrepareRequestStatFile(*shimBuffer,
+                                                    clientHandle,
+                                                    handle);
    if (status >= FSAStatus::OK) {
       status = internal::fsaShimSubmitRequest(*shimBuffer, FSAStatus::OK);
 

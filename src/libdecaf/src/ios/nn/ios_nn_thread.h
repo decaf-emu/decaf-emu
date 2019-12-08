@@ -35,7 +35,7 @@ public:
    }
 
 private:
-   native_handle_type mThreadId = -1;
+   native_handle_type mThreadId = static_cast<native_handle_type>(-1);
    bool mJoined = true;
 };
 

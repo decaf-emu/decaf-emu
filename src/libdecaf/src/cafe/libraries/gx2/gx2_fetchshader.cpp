@@ -222,7 +222,6 @@ GX2InitFetchShaderEx(virt_ptr<GX2FetchShader> fetchShader,
    auto aluCount = 0; // calcNumAluInsts(type, tessMode);
    auto cfCount = calcNumCFInsts(fetchCount, type);
 
-   auto fetchSize = fetchCount * sizeof(latte::VertexFetchInst);
    auto cfSize = cfCount * sizeof(latte::ControlFlowInst);
    auto aluSize = aluCount * sizeof(latte::AluInst);
 

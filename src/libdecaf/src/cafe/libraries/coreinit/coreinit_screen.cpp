@@ -171,7 +171,6 @@ OSScreenFlipBuffersEx(OSScreenID id)
 {
    decaf_check(id < OSScreenID::Max);
    auto buffer = sScreenData->buffers[id];
-   auto size = OSScreenGetBufferSizeEx(id);
 
    // Send the custom flip command
    gx2::internal::writePM4(latte::pm4::DecafOSScreenFlip {

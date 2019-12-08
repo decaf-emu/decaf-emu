@@ -17,7 +17,7 @@ RecursiveMutex::lock()
       mOwnerThread = threadId;
    }
 
-   if (mOwnerThread != threadId) {
+   if (mOwnerThread != static_cast<ThreadId>(threadId)) {
       mCriticalSection.lock();
       mOwnerThread = threadId;
       decaf_check(mRecursionCount == 0);
@@ -34,7 +34,7 @@ RecursiveMutex::try_lock()
       mOwnerThread = threadId;
    }
 
-   if (mOwnerThread != threadId) {
+   if (mOwnerThread != static_cast<ThreadId>(threadId)) {
       return false;
    }
 
@@ -49,7 +49,7 @@ RecursiveMutex::unlock()
    --mRecursionCount;
 
    if (mRecursionCount == 0) {
-      mOwnerThread = -1;
+      mOwnerThread = static_cast<ThreadId>(-1);
       mCriticalSection.unlock();
    }
 }
@@ -57,7 +57,7 @@ RecursiveMutex::unlock()
 bool
 RecursiveMutex::locked()
 {
-   return mRecursionCount > 0 && mOwnerThread == IOS_GetCurrentThreadId();
+   return mRecursionCount > 0 && mOwnerThread == static_cast<ThreadId>(IOS_GetCurrentThreadId());
 }
 
 } // namespace nn

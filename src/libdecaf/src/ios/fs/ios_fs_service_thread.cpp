@@ -83,9 +83,9 @@ serviceThreadEntry(phys_ptr<void> /*context*/)
    }
 
    while (true) {
-      auto error = IOS_ReceiveMessage(sData->messageQueue,
-                                      message,
-                                      MessageFlags::None);
+      error = IOS_ReceiveMessage(sData->messageQueue,
+                                 message,
+                                 MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }

@@ -620,6 +620,10 @@ getOpenResource(ProcessId pid,
    }
 
    auto error = getResourceHandle(id, resourceHandleManager, &resourceHandle);
+   if (error) {
+      return error;
+   }
+
    if (resourceHandle->state == ResourceHandleState::Closed) {
       return Error::StaleHandle;
    } else if (resourceHandle->state != ResourceHandleState::Open) {
@@ -806,18 +810,18 @@ dispatchIosClose(ResourceHandleId resourceHandleId,
    // we need to hack in a resource request.
    auto resourceManager = resourceHandle->resourceManager;
    if (!resourceManager) {
-      ios::StackObject<ResourceRequest> resourceRequest;
-      std::memset(resourceRequest.get(), 0, sizeof(ResourceRequest));
-      resourceRequest->requestData.command = Command::Close;
-      resourceRequest->requestData.cpuId = cpuId;
-      resourceRequest->requestData.processId = pid;
-      resourceRequest->requestData.handle = resourceHandleId;
-      resourceRequest->ipcRequest = ipcRequest;
-      resourceRequest->messageQueue = queue;
-      resourceRequest->messageQueueId = queue->uid;
+      ios::StackObject<ResourceRequest> directResourceRequest;
+      std::memset(directResourceRequest.get(), 0, sizeof(ResourceRequest));
+      directResourceRequest->requestData.command = Command::Close;
+      directResourceRequest->requestData.cpuId = cpuId;
+      directResourceRequest->requestData.processId = pid;
+      directResourceRequest->requestData.handle = resourceHandleId;
+      directResourceRequest->ipcRequest = ipcRequest;
+      directResourceRequest->messageQueue = queue;
+      directResourceRequest->messageQueueId = queue->uid;
 
       freeResourceHandle(resourceHandleManager, resourceHandleId);
-      return dispatchRequest(resourceRequest);
+      return dispatchRequest(directResourceRequest);
    }
 
    // Try allocate a resource request.

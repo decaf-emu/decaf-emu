@@ -28,34 +28,34 @@ struct ManagedBuffer
       return unalignedBeforeBufferSize + alignedBufferSize + unalignedAfterBufferSize;
    }
 
-   void writeOutput(phys_ptr<void> data, uint32_t size)
+   void writeOutput(phys_ptr<void> data, uint32_t writeSize)
    {
-      writeOutput(data.get(), size);
+      writeOutput(data.get(), writeSize);
    }
 
-   void writeOutput(const void *data, size_t size)
+   void writeOutput(const void *data, size_t writeSize)
    {
-      auto ptr = reinterpret_cast<const uint8_t *>(data);
+      auto writePtr = reinterpret_cast<const uint8_t *>(data);
 
-      if (unalignedBeforeBufferSize && size) {
-         auto count = std::min<size_t>(unalignedBeforeBufferSize, size);
-         std::memcpy(unalignedBeforeBuffer.get(), ptr, count);
-         ptr += count;
-         size -= count;
+      if (unalignedBeforeBufferSize && writeSize) {
+         auto count = std::min<size_t>(unalignedBeforeBufferSize, writeSize);
+         std::memcpy(unalignedBeforeBuffer.get(), writePtr, count);
+         writePtr += count;
+         writeSize -= count;
       }
 
-      if (alignedBufferSize && size) {
-         auto count = std::min<size_t>(alignedBufferSize, size);
-         std::memcpy(alignedBuffer.get(), ptr, count);
-         ptr += count;
-         size -= count;
+      if (alignedBufferSize && writeSize) {
+         auto count = std::min<size_t>(alignedBufferSize, writeSize);
+         std::memcpy(alignedBuffer.get(), writePtr, count);
+         writePtr += count;
+         writeSize -= count;
       }
 
-      if (unalignedAfterBufferSize && size) {
-         auto count = std::min<size_t>(unalignedAfterBufferSize, size);
-         std::memcpy(unalignedAfterBuffer.get(), ptr, count);
-         ptr += count;
-         size -= count;
+      if (unalignedAfterBufferSize && writeSize) {
+         auto count = std::min<size_t>(unalignedAfterBufferSize, writeSize);
+         std::memcpy(unalignedAfterBuffer.get(), writePtr, count);
+         writePtr += count;
+         writeSize -= count;
       }
    }
 

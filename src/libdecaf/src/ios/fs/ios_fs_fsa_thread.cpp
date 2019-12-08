@@ -419,21 +419,21 @@ fsaThreadMain(phys_ptr<void> /*context*/)
          origin->processId = request->requestData.processId;
          origin->groupId = request->requestData.groupId;
 
-         auto error = fsaDeviceOpen(origin,
-                                    &fsaHandle,
-                                    request->requestData.args.open.caps);
-         if (error >= FSAStatus::OK) {
-            error = static_cast<FSAStatus>(fsaHandle);
+         auto fsaError = fsaDeviceOpen(origin,
+                                       &fsaHandle,
+                                       request->requestData.args.open.caps);
+         if (fsaError >= FSAStatus::OK) {
+            fsaError = static_cast<FSAStatus>(fsaHandle);
          }
 
-         IOS_ResourceReply(request, static_cast<Error>(error));
+         IOS_ResourceReply(request, static_cast<Error>(fsaError));
          break;
       }
 
       case Command::Close:
       {
-         auto error = fsaDeviceClose(request->requestData.handle, request);
-         IOS_ResourceReply(request, static_cast<Error>(error));
+         auto fsaError = fsaDeviceClose(request->requestData.handle, request);
+         IOS_ResourceReply(request, static_cast<Error>(fsaError));
          break;
       }
 

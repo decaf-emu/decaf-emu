@@ -90,9 +90,9 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    while (true) {
       StackObject<Message> message;
-      auto error = IOS_ReceiveMessage(sBspData->messageQueue,
-                                      message,
-                                      MessageFlags::None);
+      error = IOS_ReceiveMessage(sBspData->messageQueue,
+                                 message,
+                                 MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }

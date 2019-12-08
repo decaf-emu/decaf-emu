@@ -9,6 +9,14 @@ namespace cafe
 namespace detail
 {
 
+// Because of the way the host invocations work, some of our functions
+// are no-return but they run through here anyways, causing the compiler
+// to become confused.  We disable those warnings for this section.
+#ifdef _MSC_VER
+#   pragma warning(push)
+#   pragma warning(disable: 4702)
+#endif
+
 template<typename HostFunctionType, HostFunctionType HostFunc, typename FunctionTraitsType, std::size_t... I>
 inline cpu::Core *
 invoke_host_impl(cpu::Core *core,
@@ -44,6 +52,10 @@ invoke_host_impl(cpu::Core *core,
       return cpu::this_core::state();
    }
 }
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
 
 } // namespace detail
 

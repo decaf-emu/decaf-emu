@@ -46,14 +46,6 @@ debugDumpData(const std::string &filename,
    file.close();
 }
 
-static void
-debugDumpData(std::ofstream &file,
-              virt_ptr<const void> data,
-              size_t size)
-{
-   file.write(reinterpret_cast<const char *>(data.get()), size);
-}
-
 void
 initialiseDebug()
 {
@@ -141,15 +133,6 @@ addShader(gfd::GFDFile &file,
    gfd::GFDPixelShader gfdShader;
    gx2ToGFDPixelShader(shader.get(), gfdShader);
    file.pixelShaders.emplace_back(std::move(gfdShader));
-}
-
-static void
-addShader(gfd::GFDFile &file,
-          virt_ptr<const GX2GeometryShader> shader)
-{
-   gfd::GFDGeometryShader gfdShader;
-   gx2ToGFDGeometryShader(shader.get(), gfdShader);
-   file.geometryShaders.emplace_back(std::move(gfdShader));
 }
 
 static void

@@ -320,7 +320,7 @@ getAccountInfo(CommandHandlerArgs &args)
       buffer.writeOutput(phys_addrof(account->nextAccountId),
                          sizeof(account->nextAccountId));
       break;
-   case static_cast<InfoType>(34):
+   case InfoType::Unk34:
       return ResultNotImplemented;
    case InfoType::IsServerAccountDeleted:
       if (buffer.totalSize() < sizeof(account->isServerAccountDeleted)) {
@@ -346,8 +346,8 @@ getAccountInfo(CommandHandlerArgs &args)
       buffer.writeOutput(phys_addrof(account->stickyPrincipalId),
                          sizeof(account->stickyPrincipalId));
       break;
-   case static_cast<InfoType>(40):
-   case static_cast<InfoType>(41):
+   case InfoType::Unk40:
+   case InfoType::Unk41:
       return ResultNotImplemented;
    case InfoType::ServerAccountStatus:
       if (buffer.totalSize() < sizeof(account->serverAccountStatus)) {
@@ -441,7 +441,7 @@ getMiiImage(CommandHandlerArgs &args)
                                          stat->size - bytesRead);
       status = FSAReadFile(getActFsaHandle(), buffer.unalignedBeforeBuffer,
                            1, readSize, fileHandle, FSAReadFlag::None);
-      if (status < FSAStatus::OK || status != readSize) {
+      if (status < FSAStatus::OK || static_cast<uint32_t>(status) != readSize) {
          FSACloseFile(getActFsaHandle(), fileHandle);
          return ResultFileIoError;
       }
@@ -454,7 +454,7 @@ getMiiImage(CommandHandlerArgs &args)
                                          stat->size - bytesRead);
       status = FSAReadFile(getActFsaHandle(), buffer.alignedBuffer,
                            1, readSize, fileHandle, FSAReadFlag::None);
-      if (status < FSAStatus::OK || status != readSize) {
+      if (status < FSAStatus::OK || static_cast<uint32_t>(status) != readSize) {
          FSACloseFile(getActFsaHandle(), fileHandle);
          return ResultFileIoError;
       }
@@ -467,7 +467,7 @@ getMiiImage(CommandHandlerArgs &args)
                                          stat->size - bytesRead);
       status = FSAReadFile(getActFsaHandle(), buffer.unalignedAfterBuffer,
                            1, readSize, fileHandle, FSAReadFlag::None);
-      if (status < FSAStatus::OK || status != readSize) {
+      if (status < FSAStatus::OK || static_cast<uint32_t>(status) != readSize) {
          FSACloseFile(getActFsaHandle(), fileHandle);
          return ResultFileIoError;
       }

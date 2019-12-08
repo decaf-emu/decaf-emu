@@ -63,8 +63,8 @@ OverlayDevice::mountDevice(const User &user,
       return Error::OperationNotSupported;
    }
 
-   for (auto &[priority, device] : mDevices) {
-      auto result = device->mountDevice(user, path, device);
+   for (auto &[basePriority, baseDevice] : mDevices) {
+      auto result = baseDevice->mountDevice(user, path, device);
       if (result == Error::Success) {
          return result;
       }
@@ -95,8 +95,8 @@ OverlayDevice::mountOverlayDevice(const User &user,
       return Error::Success;
    }
 
-   for (auto &[priority, device] : mDevices) {
-      auto result = device->mountOverlayDevice(user, priority, path, device);
+   for (auto &[basePriority, baseDevice] : mDevices) {
+      auto result = baseDevice->mountOverlayDevice(user, priority, path, device);
       if (result == Error::Success) {
          return result;
       }
@@ -144,8 +144,8 @@ OverlayDevice::unmountOverlayDevice(const User &user,
       return Error::NotFound;
    }
 
-   for (auto &[priority, device] : mDevices) {
-      auto result = device->unmountOverlayDevice(user, priority, path);
+   for (auto &[basePriority, baseDevice] : mDevices) {
+      auto result = baseDevice->unmountOverlayDevice(user, priority, path);
       if (result == Error::Success) {
          return result;
       }

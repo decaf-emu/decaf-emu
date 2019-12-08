@@ -287,7 +287,7 @@ GX2SetDefaultState()
 
    GX2SetLineWidth(1.0f);
 
-   GX2SetPrimitiveRestartIndex(-1);
+   GX2SetPrimitiveRestartIndex(0xffffffffu);
 
    GX2SetAlphaTest(FALSE,                    // alphaTest
                    GX2CompareFunction::Less, // func
@@ -567,10 +567,10 @@ initialiseRegisters()
 
    uint32_t values28400_28404[] = {
       latte::VGT_MAX_VTX_INDX::get(0)
-         .MAX_INDX(-1)
+         .MAX_INDX(0xffffffffu)
          .value,
       latte::VGT_MIN_VTX_INDX::get(0)
-         .MIN_INDX(0)
+         .MIN_INDX(0x00000000u)
          .value
    };
 

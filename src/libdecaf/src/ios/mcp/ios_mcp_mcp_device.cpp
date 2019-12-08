@@ -122,7 +122,6 @@ mcpGetFileLength(phys_ptr<const MCPRequestGetFileLength> request)
    }
 
    StackObject<FSAStat> stat;
-   auto fsaHandle = getFsaHandle();
    auto error = FSAGetInfoByQuery(getFsaHandle(),
                                   path,
                                   FSAQueryInfoType::Stat,
@@ -215,7 +214,6 @@ mcpLoadFile(phys_ptr<const MCPRequestLoadFile> request,
       sCurrentLoadFilePath = path;
    }
 
-   auto bytesRead = uint32_t { 0 };
    auto error = FSAReadFileWithPos(fsaHandle,
                                    outputBuffer,
                                    1,
@@ -273,11 +271,10 @@ mcpPrepareTitle52(phys_ptr<const MCPRequestPrepareTitle> request,
 {
    auto titleInfoBuffer = getPrepareTitleInfoBuffer();
    auto titleId = request->titleId;
-   auto groupId = GroupId { 0 };
    if (titleId == DefaultTitleId) {
       StackObject<MCPTitleAppXml> appXml;
       if (auto error = readTitleAppXml(appXml); error < MCPError::OK) {
-         auto titleInfoBuffer = getPrepareTitleInfoBuffer();
+         titleInfoBuffer = getPrepareTitleInfoBuffer();
          std::memset(titleInfoBuffer.get(), 0x0, sizeof(MCPPPrepareTitleInfo));
          titleInfoBuffer->permissions[0].group = static_cast<uint32_t>(ResourcePermissionGroup::All);
          titleInfoBuffer->permissions[0].mask = 0xFFFFFFFFFFFFFFFFull;
@@ -314,8 +311,7 @@ mcpPrepareTitle52(phys_ptr<const MCPRequestPrepareTitle> request,
 
    // Try mount updates for the title
    auto titleIdLo = titleId & 0xFFFFFFFF;
-   auto titleUpdatePath = fmt::format("/vol/storage_mlc01/usr/title/0005000e/{:08x}",
-                                      (titleInfoBuffer->titleId & 0xFFFFFFFF));
+   auto titleUpdatePath = fmt::format("/vol/storage_mlc01/usr/title/0005000e/{:08x}", titleIdLo);
    if (checkExistence(titleUpdatePath)) {
       gLog->info("Title update found at {}", titleUpdatePath);
 

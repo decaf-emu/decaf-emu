@@ -13,11 +13,19 @@
 #include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 
+// ffmpeg unfortunately does not validate with high warning levels
+#ifdef _MSC_VER
+#   pragma warning(push)
+#   pragma warning(disable: 4244)
+#endif
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavfilter/avfilter.h>
 #include <libswscale/swscale.h>
 }
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
 
 namespace cafe::h264
 {

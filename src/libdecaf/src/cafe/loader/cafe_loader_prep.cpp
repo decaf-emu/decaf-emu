@@ -96,7 +96,8 @@ LOADER_Prep(kernel::UniqueProcessId upid,
    }
 
    if (minFileInfo) {
-      if (auto error = LiValidateMinFileInfo(minFileInfo, "LOADER_Prep")) {
+      error = LiValidateMinFileInfo(minFileInfo, "LOADER_Prep");
+      if (error) {
          LiCloseBufferIfError();
          return error;
       }

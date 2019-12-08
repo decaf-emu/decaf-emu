@@ -122,9 +122,9 @@ processEntryPoint(phys_ptr<void> context)
 
    // Run nsec
    while (true) {
-      auto error = IOS_ReceiveMessage(messageQueueId,
-                                      message,
-                                      MessageFlags::None);
+      error = IOS_ReceiveMessage(messageQueueId,
+                                 message,
+                                 MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }
@@ -153,13 +153,12 @@ processEntryPoint(phys_ptr<void> context)
          if (sNsecData->started) {
             IOS_ResourceReply(request, Error::OK);
          } else {
-            auto error =
-               IOS_CreateThread(&internal::initThread,
-                                nullptr,
-                                phys_addrof(sNsecData->threadStack) + sNsecData->threadStack.size(),
-                                sNsecData->threadStack.size(),
-                                InitThreadPriority,
-                                ThreadFlags::Detached);
+            error = IOS_CreateThread(&internal::initThread,
+                                     nullptr,
+                                     phys_addrof(sNsecData->threadStack) + sNsecData->threadStack.size(),
+                                     sNsecData->threadStack.size(),
+                                     InitThreadPriority,
+                                     ThreadFlags::Detached);
             if (error >= 0) {
                sNsecData->initThreadId = static_cast<ThreadId>(error);
                error = IOS_StartThread(sNsecData->initThreadId);

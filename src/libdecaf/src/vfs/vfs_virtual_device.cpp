@@ -78,7 +78,7 @@ VirtualDevice::makeFolders(const User &user,
    auto parentDirectory = static_cast<VirtualDirectory *>(node.get());
    for (auto &childPath : relativePath) {
       auto childDirectory = new VirtualDirectory();
-      parentDirectory->children.emplace(relativePath.path(), childDirectory);
+      parentDirectory->children.emplace(childPath.path(), childDirectory);
       parentDirectory = childDirectory;
    }
 

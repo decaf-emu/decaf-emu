@@ -255,7 +255,8 @@ frameCallbackThreadEntry(uint32_t core_id,
                          virt_ptr<void>)
 {
    static const int NumOutputSamples = (48000 * 3) / 1000;
-   int numInputSamples = sConfigData->outputRate * 3 / 1000;
+   uint16_t numInputSamples = static_cast<uint16_t>(sConfigData->outputRate * 3 / 1000);
+   uint16_t numOutputChannels = static_cast<uint16_t>(sConfigData->outputChannels);
 
    while (true) {
       coreinit::internal::lockScheduler();
@@ -275,8 +276,8 @@ frameCallbackThreadEntry(uint32_t core_id,
          }
       }
 
-      decaf_check(static_cast<size_t>(NumOutputSamples * sConfigData->outputChannels) <= sConfigData->mixBuffer.size());
-      internal::mixOutput(&sConfigData->mixBuffer[0], numInputSamples, sConfigData->outputChannels);
+      decaf_check(static_cast<size_t>(NumOutputSamples * numOutputChannels) <= sConfigData->mixBuffer.size());
+      internal::mixOutput(&sConfigData->mixBuffer[0], numInputSamples, numOutputChannels);
 
       auto driver = decaf::getSoundDriver();
 

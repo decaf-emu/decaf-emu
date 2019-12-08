@@ -502,15 +502,13 @@ OSExitThread(int value)
    }
 
    // Disable interrupts and lock the scheduler
-   auto oldInterrupts = OSDisableInterrupts();
+   OSDisableInterrupts();
    internal::lockScheduler();
 
    // Actually proccess the thread exit
    internal::exitThreadNoLock(value);
 
-   // We should never reach here.  The scheduler handles unlocking
-   //  itself and restoring the interrupt state.
-   decaf_abort("exitThreadNoLock returned");
+   // noreturn
 }
 
 
@@ -1065,7 +1063,7 @@ OSSleepTicks(OSTime ticks)
  *
  * \returns Returns the thread's previous suspend counter value
  */
-uint32_t
+int32_t
 OSSuspendThread(virt_ptr<OSThread> thread)
 {
    internal::lockScheduler();
@@ -1375,7 +1373,7 @@ defaultThreadEntry(uint32_t coreId,
                     sThreadData->defaultThreadInitRendezvousWaitMask);
    initialiseDeallocatorThread();
    OSExitThread(0);
-   return 0;
+   // noreturn
 }
 
 static void

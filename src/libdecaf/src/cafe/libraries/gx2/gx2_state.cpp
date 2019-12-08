@@ -187,7 +187,7 @@ GX2GetMiscParam(GX2MiscParam param)
       return sStateData->hangResetSwapsOutstanding;
       break;
    default:
-      return -1;
+      return static_cast<uint32_t>(-1);
    }
 }
 

@@ -17,7 +17,7 @@ public:
 
 private:
    int mRecursionCount = 0;
-   ios::kernel::ThreadId mOwnerThread = -1;
+   ios::kernel::ThreadId mOwnerThread = static_cast<ios::kernel::ThreadId>(-1);
    CriticalSection mCriticalSection;
 };
 

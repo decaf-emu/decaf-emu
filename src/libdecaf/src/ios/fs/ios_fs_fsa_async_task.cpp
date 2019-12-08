@@ -86,9 +86,9 @@ fsaAsyncTaskThread(phys_ptr<void> /*unused*/)
    }
 
    while (true) {
-      auto error = IOS_ReceiveMessage(sFsaAsyncData->messageQueue,
-                                      message,
-                                      MessageFlags::None);
+      error = IOS_ReceiveMessage(sFsaAsyncData->messageQueue,
+                                 message,
+                                 MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }

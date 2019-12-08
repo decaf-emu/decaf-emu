@@ -66,7 +66,7 @@ networkLoop()
    }
 
    while (true) {
-      auto error = IOS_ReceiveMessage(messageQueueId, message, MessageFlags::None);
+      error = IOS_ReceiveMessage(messageQueueId, message, MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }

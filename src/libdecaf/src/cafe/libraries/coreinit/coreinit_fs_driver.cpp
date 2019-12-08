@@ -69,7 +69,7 @@ initialiseFsDriver()
    sFsDriverData->driverInterface.onDone = sFsDriverOnDone;
 
    auto driverError =
-      OSDriver_Register(-1,
+      OSDriver_Register(static_cast<OSDynLoad_ModuleHandle>(-1),
                         40,
                         virt_addrof(sFsDriverData->driverInterface),
                         0,

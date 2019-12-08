@@ -133,8 +133,8 @@ IPCBufPoolFree(virt_ptr<IPCBufPool> pool,
 
    if (index >= 0) {
       auto messages = virt_cast<uint8_t *>(pool->messages);
-      auto message = messages + index * pool->messageSize0x18;
-      internal::ipcBufPoolFifoPush(virt_addrof(pool->fifo), message);
+      auto ipcMessage = messages + index * pool->messageSize0x18;
+      internal::ipcBufPoolFifoPush(virt_addrof(pool->fifo), ipcMessage);
    } else {
       error = IOSError::Invalid;
    }

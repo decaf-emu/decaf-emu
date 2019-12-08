@@ -72,8 +72,8 @@ struct H264PictureParameterSet
    be2_val<uint8_t> transform_8x8_mode_flag;
    be2_val<uint8_t> pic_scaling_matrix_present_flag;
    be2_array<uint8_t, 8> pic_scaling_list_present_flag;
-   be2_array<int8_t, 6 * 16> scalingList4x4;
-   be2_array<int8_t, 2 * 64> scalingList8x8;
+   be2_array<uint8_t, 6 * 16> scalingList4x4;
+   be2_array<uint8_t, 2 * 64> scalingList8x8;
    UNKNOWN(1);
    be2_val<int16_t> second_chroma_qp_index_offset;
    UNKNOWN(4);
@@ -127,8 +127,8 @@ struct H264SequenceParameterSet
    be2_val<uint8_t> bit_depth_chroma_minus8;
    be2_val<uint8_t> qpprime_y_zero_transform_bypass_flag;
    be2_val<uint8_t> seq_scaling_matrix_present_flag;
-   be2_array<int8_t, 6 * 16> scalingList4x4;
-   be2_array<int8_t, 2 * 64> scalingList8x8;
+   be2_array<uint8_t, 6 * 16> scalingList4x4;
+   be2_array<uint8_t, 2 * 64> scalingList8x8;
    be2_val<uint16_t> log2_max_frame_num_minus4;
    be2_val<uint16_t> pic_order_cnt_type;
    be2_val<uint16_t> log2_max_pic_order_cnt_lsb_minus4;

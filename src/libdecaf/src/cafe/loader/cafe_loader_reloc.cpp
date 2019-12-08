@@ -90,7 +90,7 @@ sFixupOneSymbolTable(virt_ptr<LOADED_RPL> rpl,
       auto targetSectionHeader = getSectionHeader(rpl, symbol->shndx);
       auto targetSectionOffset = symbol->value - targetSectionHeader->addr;
       if (!imports || imports[symbol->shndx].numExports == 0 || targetSectionOffset < 8) {
-         auto binding = symbol->info >> 4;
+         // auto binding = symbol->info >> 4;
          auto type = symbol->info & 0xf;
 
          // Not really sure what this is doing tbh

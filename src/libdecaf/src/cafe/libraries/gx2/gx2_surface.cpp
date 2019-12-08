@@ -431,8 +431,8 @@ GX2InitDepthBufferRegs(virt_ptr<GX2DepthBuffer> depthBuffer)
       .DEPTH_HEIGHT_TILE_MAX(((depthBuffer->surface.height / 8) - 1) & 0x3FF);
 
    depthBuffer->regs.db_preload_control = latte::DB_PRELOAD_CONTROL::get(0)
-      .MAX_X(depthBuffer->surface.width / 32)
-      .MAX_Y(depthBuffer->surface.height / 32);
+      .MAX_X(static_cast<uint8_t>(depthBuffer->surface.width / 32))
+      .MAX_Y(static_cast<uint8_t>(depthBuffer->surface.height / 32));
 
    auto db_depth_info = latte::DB_DEPTH_INFO::get(0)
       .READ_SIZE(latte::BUFFER_READ_SIZE::READ_512_BITS)

@@ -16,7 +16,7 @@ Thread::Thread(Thread &&other) noexcept
    mThreadId = other.mThreadId;
    mJoined = other.mJoined;
 
-   other.mThreadId = -1;
+   other.mThreadId = static_cast<native_handle_type>(-1);
    other.mJoined = true;
 }
 
@@ -100,7 +100,7 @@ Thread::join()
 void
 Thread::detach()
 {
-   mThreadId = -1;
+   mThreadId = static_cast<native_handle_type>(-1);
    mJoined = true;
 }
 

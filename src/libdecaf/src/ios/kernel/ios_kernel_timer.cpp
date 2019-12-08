@@ -188,7 +188,6 @@ IOS_RestartTimer(TimerId timerId,
                  std::chrono::microseconds period)
 {
    phys_ptr<Timer> timer;
-   auto &timerManager = sData->timerManager;
 
    auto error = internal::getTimer(timerId, &timer);
    if (error < Error::OK) {

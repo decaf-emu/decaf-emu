@@ -26,14 +26,6 @@ namespace cafe::hle
 typedef int32_t(&RplEntryFunctionType)(coreinit::OSDynLoad_ModuleHandle moduleHandle,
                                        coreinit::OSDynLoad_EntryReason reason);
 
-static int32_t
-cafe_generic_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
-                     coreinit::OSDynLoad_EntryReason reason)
-{
-   coreinit::internal::relocateHleLibrary(moduleHandle);
-   return 0;
-}
-
 template<RplEntryFunctionType Fn>
 static int32_t
 cafe_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
@@ -41,6 +33,15 @@ cafe_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
 {
    coreinit::internal::relocateHleLibrary(moduleHandle);
    return Fn(moduleHandle, reason);
+}
+
+template<int dummy>
+static int32_t
+cafe_generic_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
+                     coreinit::OSDynLoad_EntryReason reason)
+{
+   coreinit::internal::relocateHleLibrary(moduleHandle);
+   return 0;
 }
 
 template<typename FunctionType, FunctionType Fn>
@@ -65,13 +66,6 @@ registerEntryPoint(hle::Library* library,
 
    static const std::string crtEntryName = "__rpl_crt";
    registerNoCrtEntryPoint<RplEntryFunctionType, cafe_rpl_crt<Fn>>(library, crtEntryName);
-}
-
-static void
-registerGenericEntryPoint(hle::Library* library)
-{
-   static const std::string crtEntryName = "__rpl_crt_generic";
-   registerNoCrtEntryPoint<RplEntryFunctionType, cafe_generic_rpl_crt>(library, crtEntryName);
 }
 
 template<typename FunctionType, FunctionType Fn>
@@ -177,7 +171,7 @@ registerTypeInfo(hle::Library *library,
    cafe::hle::registerNoCrtEntryPoint<fnptr_decltype(fn), fn>(this, #fn)
 
 #define RegisterGenericEntryPoint() \
-   cafe::hle::registerGenericEntryPoint(this);
+   RegisterNoCrtEntryPoint(cafe_generic_rpl_crt<0>)
 
 #define RegisterFunctionExport(fn) \
    cafe::hle::registerFunctionExport<fnptr_decltype(fn), fn>(this, #fn)

@@ -19,7 +19,7 @@ namespace ios::mcp
 using MCPSysProdSettings = internal::SysProdConfig;
 using MCPTitleId = uint64_t;
 
-constexpr MCPTitleId DefaultTitleId = -3;
+constexpr auto DefaultTitleId = static_cast<MCPTitleId>(-3);
 
 struct MCPDevice
 {

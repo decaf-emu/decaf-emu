@@ -15,7 +15,7 @@ namespace cafe::sndcore2
 {
 
 constexpr auto NumOutputSamples = 48000 * 3 / 1000;
-constexpr auto DefaultVolume = fixed_from_data<ufixed_1_15_t>(0x8000);
+constexpr auto DefaultVolume = ufixed_1_15_t { 1.0 };
 
 struct AuxData
 {
@@ -201,13 +201,13 @@ struct AudioDecoder
          auto clampedSample = std::min(std::max(adpcmSample, -32767), 32767);
 
          // Write to the output
-         return fixed_from_data<Pcm16Sample>(clampedSample);
+         return fixed_from_data<Pcm16Sample>(static_cast<int16_t>(clampedSample));
       } else if (offsets.format == AXVoiceFormat::LPCM16) {
          auto data = getMemPageAddress<be2_val<int16_t>>(offsets.memPageNumber);
          return fixed_from_data<Pcm16Sample>(data[sampleIndex]);
       } else if (offsets.format == AXVoiceFormat::LPCM8) {
          auto data = getMemPageAddress<uint8_t>(offsets.memPageNumber);
-         return fixed_from_data<Pcm16Sample>(data[sampleIndex] << 8);
+         return fixed_from_data<Pcm16Sample>(static_cast<int16_t>(data[sampleIndex] << 8));
       } else {
          decaf_abort("Unexpected AXVoice data format");
       }
@@ -345,7 +345,8 @@ invokeAuxCallback(AuxData &aux, uint32_t numChannels, uint32_t numSamples, Pcm16
 
       for (auto ch = 0u; ch < numChannels; ++ch) {
          for (auto i = 0u; i < numSamples; ++i) {
-            samples[ch][i] = fixed_from_data<Pcm16Sample>(sDeviceData->samples[ch][i]);
+            samples[ch][i] = fixed_from_data<Pcm16Sample>(
+               static_cast<int16_t>(sDeviceData->samples[ch][i]));
          }
       }
    }
@@ -387,7 +388,8 @@ invokeFinalMixCallback(DeviceTypeData &device,
             auto axChanId = (dev * numChannels) + ch;
 
             for (auto i = 0u; i < numSamples; ++i) {
-               samples[dev][ch][i] = fixed_from_data<Pcm16Sample>(sDeviceData->samples[axChanId][i]);
+               samples[dev][ch][i] = fixed_from_data<Pcm16Sample>(
+                  static_cast<int16_t>(sDeviceData->samples[axChanId][i]));
             }
          }
       }
@@ -436,32 +438,32 @@ getDeviceGroup(AXDeviceType type)
    }
 }
 
-static uint32_t
+static uint16_t
 getDeviceNumDevices(AXDeviceType type)
 {
    decaf_check(type < AXDeviceType::Max);
-   static const uint32_t devices[] = { AXNumTvDevices, AXNumDrcDevices, AXNumRmtDevices };
+   static const uint16_t devices[] = { AXNumTvDevices, AXNumDrcDevices, AXNumRmtDevices };
    return devices[type];
 }
 
-static uint32_t
+static uint16_t
 getDeviceNumBuses(AXDeviceType type)
 {
    decaf_check(type < AXDeviceType::Max);
-   static const uint32_t busses[] = { AXNumTvBus, AXNumDrcBus, AXNumRmtBus };
+   static const uint16_t busses[] = { AXNumTvBus, AXNumDrcBus, AXNumRmtBus };
    return busses[type];
 }
 
-static uint32_t
+static uint16_t
 getDeviceNumChannels(AXDeviceType type)
 {
    decaf_check(type < AXDeviceType::Max);
-   static const uint32_t channels[] = { AXNumTvChannels, AXNumDrcChannels, AXNumRmtChannels };
+   static const uint16_t channels[] = { AXNumTvChannels, AXNumDrcChannels, AXNumRmtChannels };
    return channels[type];
 }
 
 static void
-mixDevice(AXDeviceType type, uint32_t numSamples)
+mixDevice(AXDeviceType type, uint16_t numSamples)
 {
    static const auto AXMaxDevices = 4;
    static const auto AXMaxBuses = 4;
@@ -602,11 +604,9 @@ mixDevice(AXDeviceType type, uint32_t numSamples)
 
 void
 mixOutput(int32_t* buffer,
-          int numSamples,
-          int numChannels)
+          uint16_t numSamples,
+          uint16_t numChannels)
 {
-   static const int NumOutputSamples = 48000 * 3 / 1000;
-
    // Decode audio samples from the source voices
    decodeVoiceSamples(numSamples);
 

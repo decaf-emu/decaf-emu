@@ -18,16 +18,16 @@ static void
 clearPictureParameterSet(virt_ptr<H264PictureParameterSet> pps)
 {
    std::memset(pps.get(), 0, sizeof(H264PictureParameterSet));
-   pps->scalingList4x4.fill(16);
-   pps->scalingList8x8.fill(16);
+   pps->scalingList4x4.fill(16u);
+   pps->scalingList8x8.fill(16u);
 }
 
 static void
 clearSequenceParameterSet(virt_ptr<H264SequenceParameterSet> sps)
 {
    std::memset(sps.get(), 0, sizeof(H264SequenceParameterSet));
-   sps->scalingList4x4.fill(16);
-   sps->scalingList8x8.fill(16);
+   sps->scalingList4x4.fill(16u);
+   sps->scalingList8x8.fill(16u);
 }
 
 static bool
@@ -70,11 +70,11 @@ rbspReadTrailingBits(BitStream &bs)
 
 static void
 readScalingList(BitStream &bs,
-                int8_t *scalingList,
+                uint8_t *scalingList,
                 int sizeOfScalingList)
 {
-   int lastScale = 8;
-   int nextScale = 8;
+   uint8_t lastScale = 8;
+   uint8_t nextScale = 8;
 
    for (int i = 0; i < sizeOfScalingList; ++i) {
       if (nextScale != 0) {
@@ -191,6 +191,8 @@ readSequenceParameterSet(virt_ptr<H264StreamMemory> streamMemory,
                          size_t *outBytesRead)
 {
    auto sps = StackObject<H264SequenceParameterSet> { };
+   clearSequenceParameterSet(sps);
+
    auto bs = BitStream { buffer, bufferSize };
    sps->profile_idc = bs.readU8();
    if (sps->profile_idc != 66 &&

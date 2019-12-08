@@ -115,8 +115,8 @@ namespace internal
 
 void
 mixOutput(int32_t* buffer,
-          int numSamples,
-          int numChannels);
+          uint16_t numSamples,
+          uint16_t numChannels);
 
 void
 initDevices();

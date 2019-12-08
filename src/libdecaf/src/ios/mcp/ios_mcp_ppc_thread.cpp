@@ -43,7 +43,8 @@ mcpPpcIoctl(MCPCommand command,
 {
    auto error = Error::OK;
 
-   switch (command) {
+   auto ppcAppCommand = static_cast<PPCAppCommand>(command);
+   switch (ppcAppCommand) {
    case PPCAppCommand::PowerOff:
       ios::kernel::internal::stopHardwareThread();
       break;
@@ -91,7 +92,7 @@ ppcThreadEntry(phys_ptr<void> /*context*/)
       case Command::Open:
       {
          auto name = std::string_view { request->requestData.args.open.name.get() };
-         auto error = Error::InvalidArg;
+         error = Error::InvalidArg;
 
          if (name.compare("/dev/ppc_kernel") == 0) {
             error = static_cast<Error>(PpcKernelHandle);

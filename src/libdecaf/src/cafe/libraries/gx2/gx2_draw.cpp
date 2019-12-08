@@ -196,7 +196,6 @@ GX2DrawIndexedImmediateEx(GX2PrimitiveMode mode,
 {
    auto index_type = latte::VGT_INDEX_TYPE::INDEX_16;
    auto swap_mode = latte::VGT_DMA_SWAP::NONE;
-   auto indexBytes = 0u;
 
    switch (indexType) {
    case GX2IndexType::U16:

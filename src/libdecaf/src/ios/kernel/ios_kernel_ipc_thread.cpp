@@ -85,7 +85,7 @@ ipcThreadEntry(phys_ptr<void> context)
    IOS_ClearAndEnable(DeviceId::IpcStarbuckCompat);
 
    while (true) {
-      auto error = IOS_ReceiveMessage(queueId, message, MessageFlags::None);
+      error = IOS_ReceiveMessage(queueId, message, MessageFlags::None);
       if (error < Error::OK) {
          return error;
       }

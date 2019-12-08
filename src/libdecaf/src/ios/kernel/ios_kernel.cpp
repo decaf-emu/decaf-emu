@@ -188,9 +188,9 @@ kernelEntryPoint(phys_ptr<void> context)
 
    // Set initial process caps
    internal::setSecurityLevel(SecurityLevel::Normal);
-   internal::setClientCapability(ProcessId::KERNEL, FeatureId { 0x7FFFFFFF }, -1);
-   internal::setClientCapability(ProcessId::MCP, FeatureId { 0x7FFFFFFF }, -1);
-   internal::setClientCapability(ProcessId::BSP, FeatureId { 0x7FFFFFFF }, -1);
+   internal::setClientCapability(ProcessId::KERNEL, FeatureId { 0x7FFFFFFF }, 0xFFFFFFFFu);
+   internal::setClientCapability(ProcessId::MCP, FeatureId { 0x7FFFFFFF }, 0xFFFFFFFFu);
+   internal::setClientCapability(ProcessId::BSP, FeatureId { 0x7FFFFFFF }, 0xFFFFFFFFu);
 
    for (auto i = +ProcessId::CRYPTO; i < NumIosProcess; ++i) {
       internal::setClientCapability(ProcessId { i }, FeatureId { 1 }, 0xF);

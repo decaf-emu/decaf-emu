@@ -26,7 +26,9 @@ LiFindRPLByName(virt_ptr<char> name)
       resolvedName = resolvedName.substr(0, 63);
    }
 
-   std::transform(resolvedName.begin(), resolvedName.end(), buffer, ::tolower);
+   std::transform(resolvedName.begin(), resolvedName.end(),
+                  buffer,
+                  [](char x) { return static_cast<char>(::tolower(x)); });
    buffer[resolvedName.size()] = 0;
    resolvedName = buffer;
 
@@ -285,13 +287,15 @@ LOADER_Link(kernel::UniqueProcessId upid,
 
    auto linkModules = virt_ptr<virt_ptr<LOADED_RPL>> { nullptr };
    auto linkModulesAllocSize = uint32_t { 0 };
-   if (error = sValidateLinkData(globals, linkInfo, linkInfoSize, &linkModules, &linkModulesAllocSize)) {
+   error = sValidateLinkData(globals, linkInfo, linkInfoSize, &linkModules, &linkModulesAllocSize);
+   if (error) {
       Loader_ReportError("*** Link Data not valid.");
       sReportCodeHeap(globals, "link done");
       return error;
    }
 
-   if (error = LiValidateMinFileInfo(minFileInfo, "LOADER_Link")) {
+   error = LiValidateMinFileInfo(minFileInfo, "LOADER_Link");
+   if (error) {
       sReportCodeHeap(globals, "link done");
       return error;
    }
@@ -313,13 +317,14 @@ LOADER_Link(kernel::UniqueProcessId upid,
    auto allocSize = uint32_t { 0 };
    auto largestFree = uint32_t { 0 };
    auto allocPtr = virt_ptr<void> { nullptr };
-   if (error = LiCacheLineCorrectAllocEx(globals->processCodeHeap,
-                                         4 * numUnlinkedModules,
-                                         4,
-                                         &allocPtr, 1,
-                                         &allocSize,
-                                         &largestFree,
-                                         ios::mcp::MCPFileType::ProcessCode)) {
+   error = LiCacheLineCorrectAllocEx(globals->processCodeHeap,
+                                     4 * numUnlinkedModules,
+                                     4,
+                                     &allocPtr, 1,
+                                     &allocSize,
+                                     &largestFree,
+                                     ios::mcp::MCPFileType::ProcessCode);
+   if (error) {
       Loader_ReportError(
          "*** memory allocation failed {} bytes, for list of LOADED_RPL pointers actNumLink = {};  (needed {}, available {}).",
          4 * numUnlinkedModules,
@@ -362,14 +367,15 @@ LOADER_Link(kernel::UniqueProcessId upid,
    }
 
    // Allocate import tracking
-   if (error = LiCacheLineCorrectAllocEx(globals->processCodeHeap,
-                                         sizeof(LiImportTracking) * maxShnum,
-                                         4,
-                                         &allocPtr,
-                                         1,
-                                         &allocSize,
-                                         &largestFree,
-                                         ios::mcp::MCPFileType::ProcessCode)) {
+   error = LiCacheLineCorrectAllocEx(globals->processCodeHeap,
+                                     sizeof(LiImportTracking) * maxShnum,
+                                     4,
+                                     &allocPtr,
+                                     1,
+                                     &allocSize,
+                                     &largestFree,
+                                     ios::mcp::MCPFileType::ProcessCode);
+   if (error) {
       Loader_ReportError(
          "*** Could not allocate space for largest # of sections ({});  (needed {}, available {}).",
          maxShnum, allocSize, largestFree);
@@ -417,7 +423,8 @@ LOADER_Link(kernel::UniqueProcessId upid,
 
                   if ((rpl->loadStateFlags & LoaderStateFlag2) &&
                       (rpl->loadStateFlags & LoaderStateFlag8)) {
-                     if (error = LiFixupRelocOneRPL(rpl, nullptr, 1)) {
+                     error = LiFixupRelocOneRPL(rpl, nullptr, 1);
+                     if (error) {
                         Loader_ReportError(
                            "*** Error. Could not find module \"{}\" during linking!",
                            name);
@@ -503,7 +510,8 @@ LOADER_Link(kernel::UniqueProcessId upid,
 
          if (j == module->elfHeader.shnum) {
             auto unk = (module->loadStateFlags & LoaderStateFlag8) ? 2 : 0;
-            if (error = LiFixupRelocOneRPL(module, importTracking, unk)) {
+            error = LiFixupRelocOneRPL(module, importTracking, unk);
+            if (error) {
                break;
             }
          }

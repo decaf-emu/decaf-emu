@@ -333,9 +333,9 @@ private:
 
       // Adjust address for swizzling
       if (tileMode >= SQ_TILE_MODE::TILED_2D_THIN1) {
-         baseAddress &= ~(0x800 - 1);
+         baseAddress &= ~(0x800u - 1);
       } else {
-         baseAddress &= ~(0x100 - 1);
+         baseAddress &= ~(0x100u - 1);
       }
 
       auto desc = gpu7::tiling::SurfaceDescription{ };
@@ -380,10 +380,9 @@ private:
          return;
       }
 
-      auto format = static_cast<SQ_DATA_FORMAT>(cb_color_info.FORMAT());
-      auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
-
       // Disabled for now, because it's a pointless upload
+      // auto format = static_cast<SQ_DATA_FORMAT>(cb_color_info.FORMAT());
+      // auto tileMode = getArrayModeTileMode(cb_color_info.ARRAY_MODE());
       // trackSurface(addr, pitch, height, 1, SQ_TEX_DIM::DIM_2D, format, tileMode);
    }
 
@@ -403,10 +402,9 @@ private:
          return;
       }
 
-      auto format = static_cast<SQ_DATA_FORMAT>(db_depth_info.FORMAT());
-      auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
-
       // Disabled for now, because it's a pointless upload
+      // auto format = static_cast<SQ_DATA_FORMAT>(db_depth_info.FORMAT());
+      // auto tileMode = getArrayModeTileMode(db_depth_info.ARRAY_MODE());
       //trackSurface(addr, pitch, height, 1, SQ_TEX_DIM::DIM_2D, format, tileMode);
    }
 

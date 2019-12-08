@@ -48,7 +48,7 @@ curl_easy_setopt(virt_ptr<CURL> handle,
                  var_args args)
 {
    auto vaList = make_va_list(args);
-   auto curl = handle->hostHandle;
+   //auto curl = handle->hostHandle;
 
    // TODO: Translate to ::curl_easy_setopt
 

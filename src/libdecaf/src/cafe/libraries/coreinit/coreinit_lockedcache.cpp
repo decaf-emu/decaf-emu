@@ -116,13 +116,13 @@ LCAlloc(uint32_t size)
           (index == 0 && numBlocks == 32)) {
          // Do the allocation!
          auto mask = bitMask << index;
-         auto size = numBlocks * LCBlockSize;
+         auto blockSize = numBlocks * LCBlockSize;
 
          lcState->allocBitMask |= mask;
-         lcState->freeSize -= size;
+         lcState->freeSize -= blockSize;
 
          lcState->allocatedMasks[index] = mask;
-         lcState->allocatedSize[index] = size;
+         lcState->allocatedSize[index] = blockSize;
 
          result = virt_cast<void *>(lcState->baseAddress + index * LCBlockSize);
       }
