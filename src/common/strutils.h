@@ -140,7 +140,7 @@ char16_copy(char16_t *dst,
    dst[i] = char16_t { 0 };
 }
 
-static std::string_view
+inline std::string_view
 trim(std::string_view str)
 {
    while (!str.empty() && std::isspace(str[0])) {
