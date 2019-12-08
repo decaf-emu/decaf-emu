@@ -161,16 +161,15 @@ protected:
    SegmentMapIter
    _insertSegment(SegmentMapIter position, phys_addr address, uint32_t size)
    {
-      mDynamicSegments.push_front({});
-      Segment &segment = mDynamicSegments.front();
+      auto &segment = mDynamicSegments.emplace_front();
       segment.address = address;
       segment.size = size;
 
       auto newIter = mLookupMap.insert(position, { segment.address, &segment });
 
-      auto prevIter = newIter;
-      prevIter--;
-      if (prevIter != mLookupMap.end()) {
+      if (newIter != mLookupMap.begin()) {
+         auto prevIter = newIter;
+         prevIter--;
          prevIter->second->nextSegment = &segment;
       }
 
