@@ -16,7 +16,7 @@
 #include <common/byte_swap.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 // Define this to ignore differences in generated QNaN sign bits (PowerPC
 //  0x7FF8...0 vs Intel 0xFFF8...0) when any of the NATIVE_IEEE_NAN,

@@ -3,6 +3,7 @@
 #include <common/align.h>
 #include <common/platform.h>
 #include <common/platform_winapi_string.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <glslang/Include/Types.h>
 #include <glslang/Public/ShaderLang.h>

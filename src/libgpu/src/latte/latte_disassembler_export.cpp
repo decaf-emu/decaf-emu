@@ -1,5 +1,4 @@
-#include "latte/latte_disassembler.h"
-#include <fmt/format.h>
+#include "latte/latte_disassembler_state.h"
 
 namespace latte
 {

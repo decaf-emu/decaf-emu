@@ -3,7 +3,7 @@
 #include <cassert>
 #include <common/teenyheap.h>
 #include <excmd.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fstream>
 #include <gsl.h>
 #include <iostream>

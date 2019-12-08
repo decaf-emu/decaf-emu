@@ -10,7 +10,7 @@
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 using espresso::SPR;
 

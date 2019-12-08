@@ -3,7 +3,7 @@
 #include "cafe/loader/cafe_loader_entry.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libcpu/mem.h>

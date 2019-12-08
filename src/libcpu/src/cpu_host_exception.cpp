@@ -4,7 +4,7 @@
 #include <common/platform_exception.h>
 #include <common/platform_stacktrace.h>
 #include <common/platform_thread.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace cpu::internal
 {

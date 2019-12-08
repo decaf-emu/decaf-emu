@@ -8,7 +8,7 @@
 
 #include <common/align.h>
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libgpu/latte/latte_instructions.h>
 
 namespace cafe::gx2

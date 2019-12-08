@@ -13,7 +13,7 @@
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 #include <libgpu/gpu_ringbuffer.h>
 

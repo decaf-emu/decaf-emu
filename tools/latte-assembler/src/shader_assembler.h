@@ -1,7 +1,7 @@
 #pragma once
 #include "shader.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <peglib.h>
 #include <stdexcept>
 #include <string>

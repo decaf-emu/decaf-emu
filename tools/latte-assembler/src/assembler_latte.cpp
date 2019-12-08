@@ -1,5 +1,5 @@
 #include "shader_assembler.h"
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 latte::SQ_ALU_VEC_BANK_SWIZZLE
 parseAluBankSwizzle(peg::Ast &node)

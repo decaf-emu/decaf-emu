@@ -5,7 +5,7 @@
 #include "cafe/cafe_stackobject.h"
 
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace cafe::sysapp
 {

@@ -12,7 +12,7 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <cstdlib>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #define offsetof2(s, m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 

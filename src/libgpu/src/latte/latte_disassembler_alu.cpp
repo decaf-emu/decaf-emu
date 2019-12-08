@@ -1,10 +1,10 @@
-#include "latte/latte_disassembler.h"
+#include "latte/latte_disassembler_state.h"
 #include "latte_decoders.h"
 
 #include <common/bit_cast.h>
 #include <common/decaf_assert.h>
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace latte
 {

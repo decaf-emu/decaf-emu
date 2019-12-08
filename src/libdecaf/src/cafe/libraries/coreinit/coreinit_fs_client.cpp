@@ -10,7 +10,7 @@
 
 #include <common/align.h>
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit

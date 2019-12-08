@@ -5,7 +5,7 @@
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/cafe_stackobject.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace cafe::h264
 {

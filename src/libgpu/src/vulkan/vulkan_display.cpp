@@ -8,6 +8,7 @@
 #include <cstring>
 #include <optional>
 
+#include <fmt/format.h>
 #include <common/log.h>
 #include <common/platform_debug.h>
 

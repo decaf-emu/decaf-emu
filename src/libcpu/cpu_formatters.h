@@ -3,7 +3,7 @@
 #include "be2_val.h"
 #include "pointer.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace fmt
 {

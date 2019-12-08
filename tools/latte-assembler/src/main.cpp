@@ -3,7 +3,7 @@
 #include "glsl_compiler.h"
 
 #include <excmd.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fstream>
 #include <glslang/Public/ShaderLang.h>
 #include <memory>

@@ -1,7 +1,7 @@
-#include "latte/latte_disassembler.h"
+#include "latte/latte_disassembler_state.h"
 
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace latte
 {

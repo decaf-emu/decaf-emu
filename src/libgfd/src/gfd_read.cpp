@@ -2,7 +2,7 @@
 
 #include <common/byte_swap.h>
 #include <fstream>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <string>
 
 namespace gfd

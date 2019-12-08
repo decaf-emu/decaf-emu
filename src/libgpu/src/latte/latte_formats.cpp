@@ -2,7 +2,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace latte
 {

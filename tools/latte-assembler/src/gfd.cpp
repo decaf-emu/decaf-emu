@@ -2,7 +2,7 @@
 #include <libgpu/latte/latte_constants.h>
 
 #include <cstring>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libgfd/gfd.h>
 #include <regex>
 #include <vector>

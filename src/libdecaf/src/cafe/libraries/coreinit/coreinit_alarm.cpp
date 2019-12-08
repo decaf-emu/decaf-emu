@@ -13,7 +13,7 @@
 
 #include <array>
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace cafe::coreinit
 {

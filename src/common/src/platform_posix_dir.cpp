@@ -3,7 +3,7 @@
 
 #ifdef PLATFORM_POSIX
 #include <errno.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>

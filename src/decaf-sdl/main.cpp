@@ -6,7 +6,7 @@
 #include <common/log.h>
 #include <common/platform_dir.h>
 #include <excmd.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <iostream>
 #include <libconfig/config_excmd.h>
 #include <libconfig/config_toml.h>

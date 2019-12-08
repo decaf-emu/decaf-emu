@@ -11,7 +11,7 @@
 #include "cafe/libraries/coreinit/coreinit_osreport.h"
 
 #include <cinttypes>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 
 using namespace cafe::coreinit;

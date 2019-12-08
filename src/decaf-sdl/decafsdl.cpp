@@ -3,7 +3,7 @@
 #include "decafsdl.h"
 
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <libgpu/gpu_graphicsdriver.h>
 #include <SDL_syswm.h>

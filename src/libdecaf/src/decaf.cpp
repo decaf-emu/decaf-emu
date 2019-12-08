@@ -24,7 +24,7 @@
 #include <condition_variable>
 #include <curl/curl.h>
 #include <filesystem>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu.h>
 #include <libcpu/mem.h>
 #include <mutex>

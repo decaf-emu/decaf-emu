@@ -6,7 +6,7 @@
 #include <common/decaf_assert.h>
 #include <cstdlib>
 #include <errno.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>

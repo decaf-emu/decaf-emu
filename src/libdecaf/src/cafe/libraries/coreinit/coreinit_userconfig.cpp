@@ -6,7 +6,7 @@
 #include "cafe/cafe_ppc_interface_invoke.h"
 #include "cafe/cafe_stackobject.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu.h>
 
 namespace cafe::coreinit

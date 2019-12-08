@@ -4,7 +4,7 @@
 #include <common/align.h>
 #include <common/decaf_assert.h>
 #include <algorithm>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <gsl.h>
 #include <stdexcept>
 

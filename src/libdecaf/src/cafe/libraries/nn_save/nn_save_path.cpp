@@ -11,7 +11,7 @@
 #include "cafe/libraries/nn_acp/nn_acp_client.h"
 #include "cafe/libraries/nn_acp/nn_acp_saveservice.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 using namespace cafe::coreinit;
 using namespace nn::act;

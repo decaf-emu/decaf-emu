@@ -14,7 +14,7 @@
 #include "decaf_sound.h"
 
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 
 using namespace cafe::coreinit;

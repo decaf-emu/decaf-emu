@@ -7,7 +7,7 @@
 #include <common/platform_dir.h>
 #include <common/strutils.h>
 #include <filesystem>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <pugixml.hpp>
 #include <vector>
 

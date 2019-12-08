@@ -8,7 +8,7 @@
 
 #include <common/align.h>
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace cafe::h264
 {

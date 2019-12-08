@@ -24,6 +24,5 @@
 #include <utility>
 #include <vector>
 #include <cnl/fixed_point.h>
-#include <fmt/format.h>
 #include <fmt/core.h>
 #include <gsl.h>

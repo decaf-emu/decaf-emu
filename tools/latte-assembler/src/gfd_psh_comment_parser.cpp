@@ -1,5 +1,5 @@
 #include "gfd_comment_parser.h"
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 static void
 parseRegisterValue(latte::SQ_PGM_RESOURCES_PS &reg,

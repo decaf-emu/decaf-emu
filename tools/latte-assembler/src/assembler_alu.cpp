@@ -1,7 +1,7 @@
 #include "shader_assembler.h"
 #include "assembler_instructions.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 static std::string
 decodeOpcodeAlias(const std::string &op)

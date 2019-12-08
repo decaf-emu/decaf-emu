@@ -11,7 +11,7 @@
 #include <common/log.h>
 #include <common/strutils.h>
 #include <cstring>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_formatters.h>
 

@@ -5,7 +5,7 @@
 
 #include <array>
 #include <common/strutils.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <pugixml.hpp>
 #include <sstream>
 #include <string_view>

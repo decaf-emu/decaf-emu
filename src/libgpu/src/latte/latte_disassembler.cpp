@@ -1,8 +1,10 @@
-#include "latte/latte_instructions.h"
 #include "latte/latte_disassembler.h"
+#include "latte/latte_disassembler_state.h"
+
+#include "latte/latte_instructions.h"
 
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <gsl.h>
 
 namespace latte

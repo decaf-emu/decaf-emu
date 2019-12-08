@@ -8,7 +8,7 @@
 
 #include <common/decaf_assert.h>
 #include <cstring>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace cafe::gx2
 {

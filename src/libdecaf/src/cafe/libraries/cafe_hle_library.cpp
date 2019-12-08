@@ -6,7 +6,7 @@
 #include "decaf_config.h"
 
 #include <common/log.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fstream>
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_formatters.h>

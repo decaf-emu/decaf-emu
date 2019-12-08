@@ -1,7 +1,7 @@
 #pragma once
 
 #include <catch.hpp>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <random>
 #include <vector>
 

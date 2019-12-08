@@ -12,7 +12,7 @@
 #include <common/log.h>
 #include <common/platform_dir.h>
 #include <common/murmur3.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fstream>
 #include <gsl.h>
 #include <libcpu/cpu_formatters.h>

@@ -1,5 +1,5 @@
 #include "gfd_comment_parser.h"
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libgpu/latte/latte_constants.h>
 
 static void

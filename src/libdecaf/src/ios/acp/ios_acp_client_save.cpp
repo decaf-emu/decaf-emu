@@ -5,7 +5,7 @@
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/ios_stackobject.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace ios::acp::client::save
 {

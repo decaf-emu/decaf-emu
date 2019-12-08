@@ -19,7 +19,7 @@
 #include "debug_api/debug_api_controller.h"
 
 #include <common/strutils.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit

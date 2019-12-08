@@ -3,7 +3,7 @@
 #include "gx2_format.h"
 
 #include <common/decaf_assert.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <libgpu/latte/latte_enum_sq.h>
 
 namespace cafe::gx2

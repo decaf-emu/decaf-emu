@@ -8,7 +8,7 @@
 #include <common/bitutils.h>
 #include <common/decaf_assert.h>
 #include <common/floatutils.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <mutex>
 
 using espresso::QuantizedDataType;
