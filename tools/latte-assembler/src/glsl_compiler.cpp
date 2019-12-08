@@ -332,7 +332,6 @@ parseGlslFileToHeader(glslang::TShader &shader)
    std::vector<glslang::TObjectReflection> outputs;
    std::vector<glslang::TObjectReflection> uniformVars;
    std::vector<glslang::TObjectReflection> uniformBlocks;
-   auto vertexInt = program.getIntermediate(EShLanguage::EShLangVertex);
 
    for (auto i = 0; i < program.getNumPipeInputs(); ++i) {
       const auto &input = program.getPipeInput(i);
@@ -518,7 +517,7 @@ runAmdShaderAnalyzer(std::string shaderAnalyzerPath,
 
    WaitForSingleObject(pi.hProcess, INFINITE);
    if (!GetExitCodeProcess(pi.hProcess, &exitCode)) {
-      exitCode = -1;
+      exitCode = static_cast<DWORD>(-1);
    }
 
    if (exitCode != 0) {

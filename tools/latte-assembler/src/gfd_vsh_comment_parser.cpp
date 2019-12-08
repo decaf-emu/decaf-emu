@@ -95,16 +95,16 @@ parseRegisterValue(std::array<latte::SPI_VS_OUT_ID_N, 10> &spi_vs_out_id,
 
    if (member == "SEMANTIC_0") {
       spi_vs_out_id[index] = spi_vs_out_id[index]
-         .SEMANTIC_0(parseValueNumber(value));
+         .SEMANTIC_0(static_cast<uint8_t>(parseValueNumber(value)));
    } else if (member == "SEMANTIC_1") {
       spi_vs_out_id[index] = spi_vs_out_id[index]
-         .SEMANTIC_1(parseValueNumber(value));
+         .SEMANTIC_1(static_cast<uint8_t>(parseValueNumber(value)));
    } else if (member == "SEMANTIC_2") {
       spi_vs_out_id[index] = spi_vs_out_id[index]
-         .SEMANTIC_2(parseValueNumber(value));
+         .SEMANTIC_2(static_cast<uint8_t>(parseValueNumber(value)));
    } else if (member == "SEMANTIC_3") {
       spi_vs_out_id[index] = spi_vs_out_id[index]
-         .SEMANTIC_3(parseValueNumber(value));
+         .SEMANTIC_3(static_cast<uint8_t>(parseValueNumber(value)));
    } else {
       throw gfd_header_parse_exception {
          fmt::format("SPI_VS_OUT_ID[{}] does not have member {}",

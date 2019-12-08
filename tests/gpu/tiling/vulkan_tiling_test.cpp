@@ -245,7 +245,6 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
       REQUIRE(untiled.size() >= info.surfSize);
 
       // Create input/output buffers
-      auto untiledSize = static_cast<uint32_t>(untiled.size());
       auto uploadBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::CpuToGpu);
       auto inputBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::Gpu);
       auto outputBuffer = allocateSsboBuffer(surfSize, SsboBufferUsage::Gpu);
@@ -291,8 +290,6 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
       beginSyncCmdBuffer(cmdBuffer);
 
       for (auto& test : pendingTests) {
-         auto surfSize = static_cast<uint32_t>(test.info.surfSize);
-
          // Calculate data on how to retile
          auto retileInfo = gpu7::tiling::computeRetileInfo(test.info);
 

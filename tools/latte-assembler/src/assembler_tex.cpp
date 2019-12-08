@@ -8,7 +8,6 @@ assembleTexInst(Shader &shader,
 {
 
    auto inst = latte::TextureFetchInst { };
-   auto srcIndex = 0;
    std::memset(&inst, 0, sizeof(latte::TextureFetchInst));
 
    inst.word0 = inst.word0

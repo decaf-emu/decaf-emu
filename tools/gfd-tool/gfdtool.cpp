@@ -890,18 +890,6 @@ getFileBasename(const std::string &filename)
    }
 }
 
-static std::string
-getExtension(const std::string &filename)
-{
-   auto start = filename.find_last_of('.');
-
-   if (start == std::string::npos) {
-      return {};
-   } else {
-      return filename.substr(start);
-   }
-}
-
 static bool
 convertTexture(const std::string &path)
 {
@@ -924,7 +912,6 @@ convertTexture(const std::string &path)
    for (auto &tex : file.textures) {
       auto format = static_cast<latte::SQ_DATA_FORMAT>(tex.surface.format & 0x3f);
       auto bpp = latte::getDataFormatBitsPerElement(format);
-      auto bytesPerElement = bpp / 8;
 
       // Fill out tiling surface information
       auto surface = gpu7::tiling::SurfaceDescription { };

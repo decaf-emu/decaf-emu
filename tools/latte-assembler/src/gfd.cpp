@@ -101,7 +101,9 @@ GX2ShaderVarType
 parseShaderVarType(const std::string &v)
 {
    auto value = v;
-   std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+   std::transform(value.begin(), value.end(),
+                  value.begin(),
+                  [](char x) { return static_cast<char>(::tolower(x)); });
 
    if (value == "void") {
       return GX2ShaderVarType::Void;
