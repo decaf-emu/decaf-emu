@@ -2,7 +2,7 @@
 #include "sndcore2_config.h"
 #include "sndcore2_voice.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/libraries/coreinit/coreinit_alarm.h"

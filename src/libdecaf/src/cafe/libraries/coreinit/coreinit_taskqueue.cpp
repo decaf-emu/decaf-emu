@@ -3,6 +3,8 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_taskqueue.h"
 
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
+
 namespace cafe::coreinit
 {
 

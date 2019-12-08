@@ -11,6 +11,9 @@
 #include "coreinit_internal_queue.h"
 #include "coreinit_internal_idlock.h"
 
+
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
+
 #include <array>
 #include <common/decaf_assert.h>
 #include <fmt/core.h>

@@ -1,7 +1,7 @@
 #include "cafe_kernel_context.h"
 #include "cafe_kernel_heap.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/kernel/cafe_kernel.h"
 #include "cafe/libraries/cafe_hle.h"
 

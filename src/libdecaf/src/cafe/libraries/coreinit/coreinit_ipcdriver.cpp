@@ -5,6 +5,8 @@
 #include "coreinit_scheduler.h"
 #include "coreinit_thread.h"
 
+
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_stackobject.h"
 #include "cafe/kernel/cafe_kernel_ipckdriver.h"
 

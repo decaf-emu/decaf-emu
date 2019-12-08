@@ -23,7 +23,7 @@
 #include <common/log.h>
 
 #include "cafe/libraries/cafe_hle.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 
 namespace cafe::coreinit
 {

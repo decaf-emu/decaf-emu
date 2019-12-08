@@ -3,7 +3,7 @@
 #include "coreinit_ipcbufpool.h"
 #include "coreinit_mutex.h"
 #include "coreinit_userconfig.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_stackobject.h"
 
 #include <fmt/core.h>

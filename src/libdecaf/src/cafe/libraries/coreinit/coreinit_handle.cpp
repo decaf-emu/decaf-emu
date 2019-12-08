@@ -3,7 +3,7 @@
 #include "coreinit_spinlock.h"
 #include "coreinit_systemheap.h"
 #include "coreinit_time.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include <cstdlib>
 #include <libcpu/cpu.h>
 

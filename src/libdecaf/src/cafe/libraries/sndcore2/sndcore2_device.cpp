@@ -5,6 +5,8 @@
 #include "sndcore2_voice.h"
 #include "decaf_sound.h"
 
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
+
 #include <array>
 #include <common/fixed.h>
 #include <libcpu/mmu.h>

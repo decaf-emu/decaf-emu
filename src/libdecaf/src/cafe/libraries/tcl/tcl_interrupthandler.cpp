@@ -2,6 +2,7 @@
 #include "tcl_enum.h"
 #include "tcl_interrupthandler.h"
 
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_interrupts.h"
 

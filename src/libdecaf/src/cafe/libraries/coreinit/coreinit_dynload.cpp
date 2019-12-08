@@ -9,7 +9,7 @@
 #include "coreinit_systemheap.h"
 #include "coreinit_systeminfo.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/cafe_hle.h"
 #include "cafe/loader/cafe_loader_rpl.h"

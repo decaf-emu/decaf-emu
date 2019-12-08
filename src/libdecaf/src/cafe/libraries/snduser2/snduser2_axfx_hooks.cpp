@@ -1,7 +1,7 @@
 #include "snduser2.h"
 #include "snduser2_axfx_hooks.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/libraries/coreinit/coreinit_memdefaultheap.h"
 
 #include <libcpu/cpu.h>

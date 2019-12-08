@@ -5,6 +5,7 @@
 #include "cafe_kernel_process.h"
 
 #include "ios/mcp/ios_mcp_mcp_types.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/libraries/cafe_hle.h"
 #include "cafe/loader/cafe_loader_globals.h"
 #include "cafe/loader/cafe_loader_loaded_rpl.h"

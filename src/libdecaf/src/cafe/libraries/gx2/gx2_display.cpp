@@ -9,7 +9,7 @@
 #include "gx2_format.h"
 #include "gx2_surface.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/decaf_assert.h>

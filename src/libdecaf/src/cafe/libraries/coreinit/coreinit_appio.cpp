@@ -6,7 +6,7 @@
 #include "coreinit_thread.h"
 #include "coreinit_messagequeue.h"
 #include "cafe/cafe_stackobject.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 
 #include <fmt/core.h>
 #include <libcpu/cpu.h>

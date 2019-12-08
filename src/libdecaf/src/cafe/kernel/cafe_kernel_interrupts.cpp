@@ -2,7 +2,7 @@
 #include "cafe_kernel_interrupts.h"
 #include "cafe_kernel_process.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 
 namespace cafe::kernel
 {

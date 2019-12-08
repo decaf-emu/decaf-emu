@@ -5,7 +5,7 @@
 #include "coreinit_fs_driver.h"
 #include "coreinit_fs_cmdblock.h"
 #include "coreinit_fsa_shim.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 
 #include <common/align.h>
 #include <common/log.h>

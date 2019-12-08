@@ -1,5 +1,5 @@
 #include "zlib125.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/libraries/coreinit/coreinit_memdefaultheap.h"
 
 #include <common/decaf_assert.h>

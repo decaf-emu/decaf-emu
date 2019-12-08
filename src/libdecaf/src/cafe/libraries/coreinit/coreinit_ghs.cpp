@@ -8,7 +8,7 @@
 #include "coreinit_interrupts.h"
 #include "coreinit_osreport.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/kernel/cafe_kernel_process.h"
 
 #include <common/bitfield.h>

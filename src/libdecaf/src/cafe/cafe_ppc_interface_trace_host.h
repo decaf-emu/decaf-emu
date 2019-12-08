@@ -1,5 +1,7 @@
 #pragma once
-#include "cafe_ppc_interface_invoke.h"
+#include "cafe_ppc_interface.h"
+
+#include <libcpu/state.h>
 
 namespace cafe
 {

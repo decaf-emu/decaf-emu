@@ -1,4 +1,4 @@
-#include "cafe_ppc_interface_invoke_trace.h"
+#include "cafe_ppc_interface_trace_host.h"
 
 #include <common/log.h>
 #include <fmt/format.h>

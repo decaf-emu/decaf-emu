@@ -6,7 +6,7 @@
 #include "gx2_state.h"
 #include "gx2r_resource.h"
 
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_ppc_interface_varargs.h"
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_snprintf.h"

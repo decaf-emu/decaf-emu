@@ -3,7 +3,7 @@
 #include "cafe_kernel_interrupts.h"
 #include "cafe_kernel_heap.h"
 #include "cafe_kernel_ipckdriver.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 
 #include "decaf_config.h"
 #include "debug_api/debug_api_controller.h"

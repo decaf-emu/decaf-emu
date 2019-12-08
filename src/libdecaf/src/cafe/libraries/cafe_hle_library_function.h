@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe_hle_library_symbol.h"
-#include "cafe/cafe_ppc_interface_invoke.h"
-#include "cafe/cafe_ppc_interface_invoke_trace.h"
+#include "cafe/cafe_ppc_interface_invoke_host.h"
+#include "cafe/cafe_ppc_interface_trace_host.h"
 
 #include <libcpu/cpu.h>
 

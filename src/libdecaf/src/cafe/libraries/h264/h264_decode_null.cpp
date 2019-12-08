@@ -2,8 +2,9 @@
 #include "h264_decode.h"
 #include "h264_stream.h"
 
-#include "cafe/libraries/cafe_hle_stub.h"
+#include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include "cafe/cafe_stackobject.h"
+#include "cafe/libraries/cafe_hle_stub.h"
 
 #include <fmt/core.h>
 
