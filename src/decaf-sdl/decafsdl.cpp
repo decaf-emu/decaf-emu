@@ -7,6 +7,7 @@
 
 #include <libgpu/gpu_graphicsdriver.h>
 #include <SDL_syswm.h>
+#include <thread>
 
 static std::string
 sActiveGfx = "NOGFX";
@@ -100,6 +101,18 @@ DecafSDL::initSound()
    return true;
 }
 
+static Uint32
+windowTitleTimerCallback(Uint32 interval, void *param)
+{
+   auto event = SDL_Event { 0 };
+   event.type = static_cast<Uint32>(reinterpret_cast<uintptr_t>(param));
+   event.user.code = 0;
+   event.user.data1 = nullptr;
+   event.user.data2 = nullptr;
+   SDL_PushEvent(&event);
+   return interval;
+}
+
 bool
 DecafSDL::run(const std::string &gamePath)
 {
@@ -116,6 +129,13 @@ DecafSDL::run(const std::string &gamePath)
 
    if (gpu::config()->display.screenMode == gpu::DisplaySettings::Fullscreen) {
       SDL_SetWindowFullscreen(mWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   }
+
+   mDecafEventId = SDL_RegisterEvents(2);
+   if (mDecafEventId != -1) {
+      mUpdateWindowTitleEventId = mDecafEventId + 1;
+      mWindowTitleTimerId = SDL_AddTimer(100, &windowTitleTimerCallback,
+         reinterpret_cast<void *>(static_cast<uintptr_t>(mUpdateWindowTitleEventId)));
    }
 
    // Setup graphics driver
@@ -177,35 +197,56 @@ DecafSDL::run(const std::string &gamePath)
    // Start emulator
    decaf::start();
 
-   while (!shouldQuit && !decaf::stopping()) {
-      if (mVpad0Controller) {
-         SDL_GameControllerUpdate();
+   auto event = SDL_Event { };
+   while (!shouldQuit && !decaf::stopping() && SDL_WaitEvent(&event)) {
+      switch (event.type) {
+      case SDL_WINDOWEVENT:
+         if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+            shouldQuit = true;
+         } else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+            mGraphicsDriver->windowSizeChanged(event.window.data1, event.window.data2);
+         }
+
+         break;
+      case SDL_KEYUP:
+         if (event.key.keysym.sym == SDLK_TAB) {
+            mToggleDRC = !mToggleDRC;
+         }
+
+         if (event.key.keysym.sym == SDLK_ESCAPE) {
+            shouldQuit = true;
+         }
+         break;
+      case SDL_QUIT:
+         shouldQuit = true;
+         break;
       }
 
-      auto event = SDL_Event { };
-      while (SDL_PollEvent(&event)) {
-         switch (event.type) {
-         case SDL_WINDOWEVENT:
-            if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-               shouldQuit = true;
-            } else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-               mGraphicsDriver->windowSizeChanged(event.window.data1, event.window.data2);
-            }
-
-            break;
-         case SDL_KEYUP:
-            if (event.key.keysym.sym == SDLK_TAB) {
-               mToggleDRC = !mToggleDRC;
-            }
-
-            if (event.key.keysym.sym == SDLK_ESCAPE) {
-               shouldQuit = true;
-            }
-            break;
-         case SDL_QUIT:
-            shouldQuit = true;
-            break;
+      if (event.type == mDecafEventId) {
+         auto eventType = static_cast<decaf::EventType>(event.user.code);
+         if (eventType == decaf::EventType::GameLoaded) {
+            auto info = reinterpret_cast<decaf::GameInfo *>(event.user.data1);
+            mGameInfo = *info;
+            delete info;
          }
+      } else if (event.type == mUpdateWindowTitleEventId) {
+         fmt::memory_buffer title;
+         fmt::format_to(title, "decaf-sdl -");
+
+         if (mGameInfo.titleId) {
+            fmt::format_to(title, " {:08X}-{:08X}",
+                           mGameInfo.titleId >> 32,
+                           mGameInfo.titleId & 0xFFFFFFFF);
+         }
+
+         if (!mGameInfo.executable.empty()) {
+            fmt::format_to(title, " {}", mGameInfo.executable);
+         }
+
+         fmt::format_to(title, " ({} {} fps)", sActiveGfx,
+                        static_cast<int>(mGraphicsDriver->getDebugInfo()->averageFps));
+         auto titleStr = std::string { title.data(), title.size() };
+         SDL_SetWindowTitle(mWindow, titleStr.c_str());
       }
    }
 
@@ -222,21 +263,11 @@ DecafSDL::run(const std::string &gamePath)
 void
 DecafSDL::onGameLoaded(const decaf::GameInfo &info)
 {
-   fmt::memory_buffer title;
-   fmt::format_to(title, "decaf-sdl ({})", sActiveGfx);
-
-   if (info.titleId) {
-      fmt::format_to(title, " {:016X}", info.titleId);
+   if (mDecafEventId != -1) {
+      auto event = SDL_Event { 0 };
+      event.type = mDecafEventId;
+      event.user.code = static_cast<Sint32>(decaf::EventType::GameLoaded);
+      event.user.data1 = new decaf::GameInfo(info);
+      SDL_PushEvent(&event);
    }
-
-   if (!info.executable.empty()) {
-      fmt::format_to(title, " {}", info.executable);
-   }
-
-   auto titleStr = std::string { title.data(), title.size() };
-   SDL_SetWindowTitle(mWindow, titleStr.c_str());
-
-   // We have to be careful not to start rendering until the game is
-   // fully loaded, or we will block window messaging.
-   mGameLoaded = true;
 }

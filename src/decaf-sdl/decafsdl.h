@@ -50,5 +50,10 @@ protected:
    SDL_GameController *mVpad0Controller = nullptr;
 
    bool mToggleDRC = false;
-   bool mGameLoaded = false;
+
+   Uint32 mDecafEventId = -1;
+   Uint32 mUpdateWindowTitleEventId = -1;
+   SDL_TimerID mWindowTitleTimerId = -1;
+
+   decaf::GameInfo mGameInfo;
 };
