@@ -5,11 +5,14 @@
 namespace cafe::snduser2
 {
 
-enum AXFXDelayStateFlags
-{
-   Shutdown    = 1 << 0,
-   Initialised = 1 << 1,
-};
+#include "common/enum_start.inl"
+
+ENUM_BEG(AXFXDelayStateFlags, uint32_t)
+   ENUM_VALUE(Shutdown,      1 << 0)
+   ENUM_VALUE(Initialised,   1 << 1)
+ENUM_END(AXFXDelayStateFlags)
+
+#include "common/enum_end.inl"
 
 struct AXFXDelay
 {
