@@ -426,35 +426,32 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
    bool vxisi, vximz, vxidi, vxzdz, zx;
 
-   switch (op) {
-   case FPAdd:
+   if constexpr (op == FPAdd) {
       vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
       vximz = false;
       vxidi = false;
       vxzdz = false;
       zx = false;
-      break;
-   case FPSub:
+   } else if constexpr (op == FPSub) {
       vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) == std::signbit(b);
       vximz = false;
       vxidi = false;
       vxzdz = false;
       zx = false;
-      break;
-   case FPMul:
+   } else if constexpr (op == FPMul) {
       vxisi = false;
       vximz = (is_infinity(a) && is_zero(b)) || (is_zero(a) && is_infinity(b));
       vxidi = false;
       vxzdz = false;
       zx = false;
-      break;
-   case FPDiv:
+   } else if constexpr (op == FPDiv) {
       vxisi = false;
       vximz = false;
       vxidi = is_infinity(a) && is_infinity(b);
       vxzdz = is_zero(a) && is_zero(b);
       zx = !(vxzdz || vxsnan) && is_zero(b);
-      break;
+   } else {
+      static_assert("Unexpected flags for fpArithGeneric");
    }
 
    const uint32_t oldFPSCR = state->fpscr.value;
@@ -480,24 +477,21 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
          // The Espresso appears to use double precision arithmetic even for
          // single-precision instructions (for example, 2^128 * 0.5 does not
          // cause overflow), so we do the same here.
-         switch (op) {
-         case FPAdd:
+         if constexpr (op == FPAdd) {
             d = static_cast<Type>(a + b);
-            break;
-         case FPSub:
+         } else if constexpr (op == FPSub) {
             d = static_cast<Type>(a - b);
-            break;
-         case FPMul:
+         } else if constexpr (op == FPMul) {
             // But!  The second operand to a single-precision multiply
             // operation is rounded to 24 bits.
             if constexpr (std::is_same<Type, float>::value) {
                roundForMultiply(&a, &b);
             }
             d = static_cast<Type>(a * b);
-            break;
-         case FPDiv:
+         } else if constexpr (op == FPDiv) {
             d = static_cast<Type>(a / b);
-            break;
+         } else {
+            static_assert("Unexpected flags for fpArithGeneric");
          }
       }
 
@@ -520,20 +514,17 @@ fpArithGeneric(cpu::Core *state, Instruction instr)
          // and prevent the previous result from being reused.
          volatile double bTemp = b;
          volatile Type dummy;
-         switch (op) {
-         case FPAdd:
+         if constexpr (op == FPAdd) {
             dummy = static_cast<Type>(a + bTemp);
-            break;
-         case FPSub:
+         } else if constexpr (op == FPSub) {
             dummy = static_cast<Type>(a - bTemp);
-            break;
-         case FPMul:
+         } else if constexpr (op == FPMul) {
             // a and b have already been rounded if necessary.
             dummy = static_cast<Type>(a * bTemp);
-            break;
-         case FPDiv:
+         } else if constexpr (op == FPDiv) {
             dummy = static_cast<Type>(a / bTemp);
-            break;
+         } else {
+            static_assert("Unexpected flags for fpArithGeneric");
          }
 
          fesetround(oldRound);
@@ -750,14 +741,14 @@ fmaGeneric(cpu::Core *state, Instruction instr)
       } else if (vxisi || vximz) {
          d = make_nan<double>();
       } else {
-         if (flags & FMASinglePrec) {
+         if constexpr (!!(flags & FMASinglePrec)) {
             roundForMultiply(&a, &c);
          }
 
          d = std::fma(a, c, addend);
 
          bool checkUnderflow;
-         if (flags & FMASinglePrec) {
+         if constexpr (!!(flags & FMASinglePrec)) {
             checkUnderflow = possibleUnderflow<float>(static_cast<float>(d));
          } else {
             checkUnderflow = possibleUnderflow<double>(d);
@@ -768,7 +759,7 @@ fmaGeneric(cpu::Core *state, Instruction instr)
             fesetround(FE_TOWARDZERO);
 
             volatile double addendTemp = addend;
-            if (flags & FMASinglePrec) {
+            if constexpr (!!(flags & FMASinglePrec)) {
                volatile float dummy;
                dummy = static_cast<float>(std::fma(a, c, addendTemp));
             } else {
@@ -779,12 +770,12 @@ fmaGeneric(cpu::Core *state, Instruction instr)
             fesetround(oldRound);
          }
 
-         if (flags & FMANegate) {
+         if constexpr (!!(flags & FMANegate)) {
             d = -d;
          }
       }
 
-      if (flags & FMASinglePrec) {
+      if constexpr (!!(flags & FMASinglePrec)) {
          float dFloat;
          if (state->fpscr.rn == FloatingPointRoundMode::Nearest) {
             dFloat = roundFMAResultToSingle(d, a, addend, c);
@@ -907,6 +898,8 @@ fctiwGeneric(cpu::Core *state, Instruction instr, FloatingPointRoundMode roundMo
       case FloatingPointRoundMode::Negative:
          bi = static_cast<int32_t>(std::floor(b));
          break;
+      default:
+         decaf_abort("Unexpected floating point round mode");
       }
       fi = get_float_bits(b).exponent < 1075 && bi != b;
    }

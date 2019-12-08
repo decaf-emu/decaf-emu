@@ -622,9 +622,9 @@ BinrecBackend::verifyPost(Core *core,
    if (mOptFlags.guest & binrec::Optimize::GuestPPC::NO_FPSCR_STATE) {
       fpscrMask = 0xFF;
    } else if (mOptFlags.guest & binrec::Optimize::GuestPPC::USE_SPLIT_FIELDS) {
-      fpscrMask = ~0x0007F000;
+      fpscrMask = ~0x0007F000u;
    } else if (mOptFlags.common & binrec::Optimize::FOLD_FP_CONSTANTS) {
-      fpscrMask = ~0x00060000;
+      fpscrMask = ~0x00060000u;
    } else {
       fpscrMask = ~0u;
    }

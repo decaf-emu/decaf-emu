@@ -63,7 +63,7 @@ cmpGeneric(cpu::Core *state, Instruction instr)
 
    a = state->gpr[instr.rA];
 
-   if (flags & CmpImmediate) {
+   if constexpr (flags & CmpImmediate) {
       if (std::is_signed<Type>::value) {
          b = sign_extend<16>(instr.simm);
       } else {
@@ -127,7 +127,7 @@ fcmpGeneric(cpu::Core *state, Instruction instr)
    double a, b;
    uint32_t c;
 
-   if (flags & FCmpPS1) {
+   if constexpr (!!(flags & FCmpPS1)) {
       a = state->fpr[instr.frA].paired1;
       b = state->fpr[instr.frB].paired1;
    } else {
@@ -141,8 +141,10 @@ fcmpGeneric(cpu::Core *state, Instruction instr)
       c = ConditionRegisterFlag::Unordered;
       const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
       state->fpscr.vxsnan |= vxsnan;
-      if ((flags & FCmpOrdered) && !(vxsnan && state->fpscr.ve)) {
-         state->fpscr.vxvc = 1;
+      if constexpr (flags & FCmpOrdered) {
+         if (!(vxsnan && state->fpscr.ve)) {
+            state->fpscr.vxvc = 1;
+         }
       }
    } else if (a < b) {
       c = ConditionRegisterFlag::LessThan;

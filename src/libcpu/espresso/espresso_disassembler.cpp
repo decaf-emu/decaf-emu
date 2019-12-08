@@ -429,7 +429,7 @@ disassembleBranchInfoBX(Instruction instr,
 
    auto bo = instr.bo;
 
-   if (flags & BcCheckCtr) {
+   if constexpr (flags & BcCheckCtr) {
       if (!get_bit<NoCheckCtr>(bo)) {
          info.isConditional = true;
 
@@ -441,7 +441,7 @@ disassembleBranchInfoBX(Instruction instr,
       }
    }
 
-   if (flags & BcCheckCond) {
+   if constexpr (!!(flags & BcCheckCond)) {
       if (!get_bit<NoCheckCond>(bo)) {
          info.isConditional = true;
 
@@ -453,12 +453,12 @@ disassembleBranchInfoBX(Instruction instr,
       }
    }
 
-   if (flags & BcBranchCTR) {
+   if constexpr (!!(flags & BcBranchCTR)) {
       info.isVariable = true;
       if (ctr) {
          info.target = ctr & ~0x3;
       }
-   } else if (flags & BcBranchLR) {
+   } else if constexpr (!!(flags & BcBranchLR)) {
       info.isVariable = true;
       if (lr) {
          info.target = lr & ~0x3;

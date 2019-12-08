@@ -47,13 +47,17 @@ loadFloat(cpu::Core *state, Instruction instr)
 {
    uint32_t ea;
 
-   if ((flags & LoadZeroRA) && instr.rA == 0) {
-      ea = 0;
+   if constexpr (!!(flags & LoadZeroRA)) {
+      if (instr.rA == 0) {
+         ea = 0;
+      } else {
+         ea = state->gpr[instr.rA];
+      }
    } else {
       ea = state->gpr[instr.rA];
    }
 
-   if (flags & LoadIndexed) {
+   if constexpr (!!(flags & LoadIndexed)) {
       ea += state->gpr[instr.rB];
    } else {
       ea += sign_extend<16, int32_t>(instr.d);
@@ -63,7 +67,7 @@ loadFloat(cpu::Core *state, Instruction instr)
    state->fpr[instr.rD].paired0 = convertFloatToDouble(f);
    state->fpr[instr.rD].paired1 = convertFloatToDouble(f);
 
-   if (flags & LoadUpdate) {
+   if constexpr (!!(flags & LoadUpdate)) {
       state->gpr[instr.rA] = ea;
    }
 }
@@ -75,13 +79,17 @@ loadGeneric(cpu::Core *state, Instruction instr)
    uint32_t ea;
    Type d;
 
-   if ((flags & LoadZeroRA) && instr.rA == 0) {
-      ea = 0;
+   if constexpr (!!(flags & LoadZeroRA)) {
+      if (instr.rA == 0) {
+         ea = 0;
+      } else {
+         ea = state->gpr[instr.rA];
+      }
    } else {
       ea = state->gpr[instr.rA];
    }
 
-   if (flags & LoadIndexed) {
+   if constexpr (!!(flags & LoadIndexed)) {
       ea += state->gpr[instr.rB];
    } else {
       ea += sign_extend<16, int32_t>(instr.d);
@@ -89,20 +97,20 @@ loadGeneric(cpu::Core *state, Instruction instr)
 
    Type memd = mem::readNoSwap<Type>(ea);
 
-   if (flags & LoadByteReverse) {
+   if constexpr (!!(flags & LoadByteReverse)) {
       d = memd;
    } else {
       d = byte_swap(memd);
    }
 
-   if (flags & LoadReserve) {
+   if constexpr (!!(flags & LoadReserve)) {
       static_assert(!(flags & LoadReserve) || sizeof(Type) == 4, "Reserved reads are only valid on 32-bit values");
 
       state->reserveFlag = true;
       state->reserveData = *reinterpret_cast<uint32_t*>(&memd);
    }
 
-   if (std::is_floating_point<Type>::value) {
+   if constexpr (std::is_floating_point<Type>::value) {
       state->fpr[instr.rD].value = static_cast<double>(d);
       // Normally lfd instructions do not modify the second paired-single
       // slot (ps1) of an FPR, but if the lfd is immediately preceded or
@@ -115,14 +123,14 @@ loadGeneric(cpu::Core *state, Instruction instr)
       // unlikely this sort of instruction sequence would be found in real
       // software.)
    } else {
-      if (flags & LoadSignExtend) {
+      if constexpr (!!(flags & LoadSignExtend)) {
          state->gpr[instr.rD] = static_cast<uint32_t>(sign_extend<bit_width<Type>::value, uint64_t>(static_cast<uint64_t>(d)));
       } else {
          state->gpr[instr.rD] = static_cast<uint32_t>(d);
       }
    }
 
-   if (flags & LoadUpdate) {
+   if constexpr (!!(flags & LoadUpdate)) {
       state->gpr[instr.rA] = ea;
    }
 }
@@ -323,7 +331,7 @@ lswGeneric(cpu::Core *state, Instruction instr)
 
    ea = instr.rA ? state->gpr[instr.rA] : 0;
 
-   if (flags & LswIndexed) {
+   if constexpr (!!(flags & LswIndexed)) {
       ea += state->gpr[instr.rB];
       n = state->xer.byteCount;
    } else {
@@ -391,13 +399,17 @@ storeFloat(cpu::Core *state, Instruction instr)
 {
    uint32_t ea;
 
-   if ((flags & StoreZeroRA) && instr.rA == 0) {
-      ea = 0;
+   if constexpr (!!(flags & StoreZeroRA)) {
+      if (instr.rA == 0) {
+         ea = 0;
+      } else {
+         ea = state->gpr[instr.rA];
+      }
    } else {
       ea = state->gpr[instr.rA];
    }
 
-   if (flags & StoreIndexed) {
+   if constexpr (!!(flags & StoreIndexed)) {
       ea += state->gpr[instr.rB];
    } else {
       ea += sign_extend<16, int32_t>(instr.d);
@@ -406,7 +418,7 @@ storeFloat(cpu::Core *state, Instruction instr)
    const double d = state->fpr[instr.rS].value;
    storeDoubleAsFloat(ea, d);
 
-   if (flags & StoreUpdate) {
+   if constexpr (!!(flags & StoreUpdate)) {
       state->gpr[instr.rA] = ea;
    }
 }
@@ -462,27 +474,31 @@ storeGeneric(cpu::Core *state, Instruction instr)
    uint32_t ea;
    Type s;
 
-   if ((flags & StoreZeroRA) && instr.rA == 0) {
-      ea = 0;
+   if constexpr (!!(flags & StoreZeroRA)) {
+      if (instr.rA == 0) {
+         ea = 0;
+      } else {
+         ea = state->gpr[instr.rA];
+      }
    } else {
       ea = state->gpr[instr.rA];
    }
 
-   if (flags & StoreIndexed) {
+   if constexpr (!!(flags & StoreIndexed)) {
       ea += state->gpr[instr.rB];
    } else {
       ea += sign_extend<16, int32_t>(instr.d);
    }
 
-   if (flags & StoreFloatAsInteger) {
+   if constexpr (!!(flags & StoreFloatAsInteger)) {
       s = static_cast<Type>(state->fpr[instr.rS].iw1);
-   } else if (std::is_floating_point<Type>::value) {
+   } else if constexpr (std::is_floating_point<Type>::value) {
       s = static_cast<Type>(state->fpr[instr.rS].value);
    } else {
       s = static_cast<Type>(state->gpr[instr.rS]);
    }
 
-   if (!(flags & StoreByteReverse)) {
+   if constexpr (!(flags & StoreByteReverse)) {
       s = byte_swap(s);
    }
 
@@ -490,7 +506,7 @@ storeGeneric(cpu::Core *state, Instruction instr)
       return;
    }
 
-   if (flags & StoreUpdate) {
+   if constexpr (!!(flags & StoreUpdate)) {
       state->gpr[instr.rA] = ea;
    }
 }
@@ -673,7 +689,7 @@ stswGeneric(cpu::Core *state, Instruction instr)
 
    ea = instr.rA ? state->gpr[instr.rA] : 0;
 
-   if (flags & StswIndexed) {
+   if constexpr (!!(flags & StswIndexed)) {
       ea += state->gpr[instr.rB];
       n = state->xer.byteCount;
    } else {
@@ -810,19 +826,23 @@ psqLoad(cpu::Core *state, Instruction instr)
    uint32_t ea, ls, c, i, w;
    QuantizedDataType lt;
 
-   if ((flags & PsqLoadZeroRA) && instr.rA == 0) {
-      ea = 0;
+   if constexpr (!!(flags & PsqLoadZeroRA)) {
+      if (instr.rA == 0) {
+         ea = 0;
+      } else {
+         ea = state->gpr[instr.rA];
+      }
    } else {
       ea = state->gpr[instr.rA];
    }
 
-   if (flags & PsqLoadIndexed) {
+   if constexpr (!!(flags & PsqLoadIndexed)) {
       ea += state->gpr[instr.rB];
    } else {
       ea += sign_extend<12, int32_t>(instr.qd);
    }
 
-   if (flags & PsqLoadIndexed) {
+   if constexpr (!!(flags & PsqLoadIndexed)) {
       i = instr.qi;
       w = instr.qw;
    } else {
@@ -848,7 +868,7 @@ psqLoad(cpu::Core *state, Instruction instr)
       state->fpr[instr.frD].paired1 = 1.0;
    }
 
-   if (flags & PsqLoadUpdate) {
+   if constexpr (!!(flags & PsqLoadUpdate)) {
       state->gpr[instr.rA] = ea;
    }
 }
@@ -892,19 +912,23 @@ psqStore(cpu::Core *state, Instruction instr)
    uint32_t ea, sts, c, i, w;
    QuantizedDataType stt;
 
-   if ((flags & PsqStoreZeroRA) && instr.rA == 0) {
-      ea = 0;
+   if constexpr (flags & PsqStoreZeroRA) {
+      if (instr.rA == 0) {
+         ea = 0;
+      } else {
+         ea = state->gpr[instr.rA];
+      }
    } else {
       ea = state->gpr[instr.rA];
    }
 
-   if (flags & PsqStoreIndexed) {
+   if constexpr (!!(flags & PsqStoreIndexed)) {
       ea += state->gpr[instr.rB];
    } else {
       ea += sign_extend<12, int32_t>(instr.qd);
    }
 
-   if (flags & PsqStoreIndexed) {
+   if constexpr (!!(flags & PsqStoreIndexed)) {
       i = instr.qi;
       w = instr.qw;
    } else {
@@ -929,7 +953,7 @@ psqStore(cpu::Core *state, Instruction instr)
       quantize(ea, state->fpr[instr.frS].paired0, stt, sts);
    }
 
-   if (flags & PsqStoreUpdate) {
+   if constexpr (!!(flags & PsqStoreUpdate)) {
       state->gpr[instr.rA] = ea;
    }
 }

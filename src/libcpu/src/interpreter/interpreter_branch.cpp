@@ -48,7 +48,7 @@ bcGeneric(cpu::Core *state, Instruction instr)
    auto ctr_ok = true;
    auto cond_ok = true;
 
-   if (flags & BcCheckCtr) {
+   if constexpr (!!(flags & BcCheckCtr)) {
       if (!get_bit<NoCheckCtr>(bo)) {
          state->ctr--;
 
@@ -58,7 +58,7 @@ bcGeneric(cpu::Core *state, Instruction instr)
       }
    }
 
-   if (flags & BcCheckCond) {
+   if constexpr (!!(flags & BcCheckCond)) {
       if (!get_bit<NoCheckCond>(bo)) {
          auto crb = get_bit(state->cr.value, 31 - instr.bi);
          auto crv = get_bit<CondValue>(bo);
@@ -69,9 +69,9 @@ bcGeneric(cpu::Core *state, Instruction instr)
    if (ctr_ok && cond_ok) {
       uint32_t nia;
 
-      if (flags & BcBranchCTR) {
+      if constexpr (!!(flags & BcBranchCTR)) {
          nia = state->ctr & ~0x3;
-      } else if (flags & BcBranchLR) {
+      } else if constexpr (!!(flags & BcBranchLR)) {
          nia = state->lr & ~0x3;
       } else {
          nia = sign_extend<16>(instr.bd << 2);

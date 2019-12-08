@@ -62,28 +62,32 @@ addGeneric(cpu::Core *state, Instruction instr)
    uint32_t a, b, d;
 
    // Get a value
-   if ((flags & AddZeroRA) && instr.rA == 0) {
-      a = 0;
+   if constexpr (!!(flags & AddZeroRA)) {
+      if (instr.rA == 0) {
+         a = 0;
+      } else {
+         a = state->gpr[instr.rA];
+      }
    } else {
       a = state->gpr[instr.rA];
    }
 
-   if (flags & AddSubtract) {
+   if constexpr (!!(flags & AddSubtract)) {
       a = ~a;
    }
 
    // Get b value
-   if (flags & AddImmediate) {
+   if constexpr (!!(flags & AddImmediate)) {
       b = sign_extend<16>(instr.simm);
-   } else if (flags & AddToZero) {
+   } else if constexpr (!!(flags & AddToZero)) {
       b = 0;
-   } else if (flags & AddToMinusOne) {
-      b = -1;
+   } else if constexpr (!!(flags & AddToMinusOne)) {
+      b = static_cast<uint32_t>(-1);
    } else {
       b = state->gpr[instr.rB];
    }
 
-   if (flags & AddShifted) {
+   if constexpr (!!(flags & AddShifted)) {
       b <<= 16;
    }
 
@@ -91,28 +95,26 @@ addGeneric(cpu::Core *state, Instruction instr)
    d = a + b;
 
    // Add xer[ca] if needed
-   if (flags & AddExtended) {
+   if constexpr (!!(flags & AddExtended)) {
       d += state->xer.ca;
-   } else if (flags & AddSubtract) {
+   } else if constexpr (!!(flags & AddSubtract)) {
       d += 1;
    }
 
    // Update rD
    state->gpr[instr.rD] = d;
 
-   // Check for carry/overflow
-   auto carry = d < a || (d == a && b > 0);
-   auto overflow = !!get_bit<31>((a ^ d) & (b ^ d));
-
-   if (flags & AddCarry) {
+   if constexpr (!!(flags & AddCarry)) {
+      auto carry = d < a || (d == a && b > 0);
       updateCarry(state, carry);
    }
 
-   if (flags & AddAlwaysRecord) {
+   if constexpr (!!(flags & AddAlwaysRecord)) {
       // Always record only means update CR0, NOT overflow
       updateConditionRegister(state, d);
-   } else if (flags & AddCheckRecord) {
+   } else if constexpr (!!(flags & AddCheckRecord)) {
       if (instr.oe) {
+         auto overflow = !!get_bit<31>((a ^ d) & (b ^ d));
          updateOverflow(state, overflow);
       }
 
@@ -194,26 +196,26 @@ andGeneric(cpu::Core *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   if (flags & AndImmediate) {
+   if constexpr (!!(flags & AndImmediate)) {
       b = instr.uimm;
    } else {
       b = state->gpr[instr.rB];
    }
 
-   if (flags & AndShifted) {
+   if constexpr (!!(flags & AndShifted)) {
       b <<= 16;
    }
 
-   if (flags & AndComplement) {
+   if constexpr (!!(flags & AndComplement)) {
       b = ~b;
    }
 
    a = s & b;
    state->gpr[instr.rA] = a;
 
-   if (flags & AndAlwaysRecord) {
+   if constexpr (!!(flags & AndAlwaysRecord)) {
       updateConditionRegister(state, a);
-   } else if (flags & AndCheckRecord) {
+   } else if constexpr (!!(flags & AndCheckRecord)) {
       if (instr.rc) {
          updateConditionRegister(state, a);
       }
@@ -277,8 +279,10 @@ divGeneric(cpu::Core *state, Instruction instr)
 
    auto overflow = (b == 0);
 
-   if (std::is_signed<Type>::value && (a == 0x80000000 && b == -1)) {
-      overflow = true;
+   if constexpr (std::is_signed<Type>::value) {
+      if (a == 0x80000000 && b == -1) {
+         overflow = true;
+      }
    }
 
    if (!overflow) {
@@ -377,34 +381,40 @@ mulSignedGeneric(cpu::Core *state, Instruction instr)
 {
    int64_t a, b;
    int32_t d;
-   bool overflow;
    a = static_cast<int32_t>(state->gpr[instr.rA]);
 
-   if (flags & MulImmediate) {
+   if constexpr (!!(flags & MulImmediate)) {
       b = sign_extend<16>(instr.simm);
    } else {
       b = static_cast<int32_t>(state->gpr[instr.rB]);
    }
 
-   if (flags & MulLow) {
-      const int64_t product = a * b;
+   const int64_t product = a * b;
+   if constexpr (!!(flags & MulLow)) {
       d = static_cast<int32_t>(product);
-      if (flags & MulCheckOverflow) {
-         overflow = (product < INT64_C(-0x80000000) || product > 0x7FFFFFFF);
-      }
-   } else if (flags & MulHigh) {
-      d = (a * b) >> 32;
+   } else if constexpr (!!(flags & MulHigh)) {
+      d = product >> 32;
       // oe is ignored for mulhw* instructions.
+   } else {
+      static_assert("Unexpected flags for mulSignedGeneric");
    }
 
    state->gpr[instr.rD] = d;
 
-   if (flags & MulCheckOverflow) {
+   if constexpr (!!(flags & MulCheckOverflow)) {
+      bool overflow;
+
+      if constexpr (!!(flags & MulLow)) {
+         overflow = (product < INT64_C(-0x80000000) || product > 0x7FFFFFFF);
+      } else {
+         static_assert("Unexpected flags for mulSignedGeneric");
+      }
+
       if (instr.oe) {
          updateOverflow(state, overflow);
       }
    }
-   if (flags & MulCheckRecord) {
+   if constexpr (!!(flags & MulCheckRecord)) {
       if (instr.rc) {
          updateConditionRegister(state, d);
       }
@@ -421,15 +431,17 @@ mulUnsignedGeneric(cpu::Core *state, Instruction instr)
    a = state->gpr[instr.rA];
    b = state->gpr[instr.rB];
 
-   if (flags & MulLow) {
+   if constexpr (!!(flags & MulLow)) {
       d = static_cast<uint32_t>(a * b);
-   } else if (flags & MulHigh) {
+   } else if constexpr (!!(flags & MulHigh)) {
       d = (a * b) >> 32;
+   } else {
+      static_assert("Unexpected flags for mulUnsignedGeneric");
    }
 
    state->gpr[instr.rD] = d;
 
-   if (flags & MulCheckRecord) {
+   if constexpr (!!(flags & MulCheckRecord)) {
       if (instr.rc) {
          updateConditionRegister(state, d);
       }
@@ -534,26 +546,26 @@ orGeneric(cpu::Core *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   if (flags & OrImmediate) {
+   if constexpr (!!(flags & OrImmediate)) {
       b = instr.uimm;
    } else {
       b = state->gpr[instr.rB];
    }
 
-   if (flags & OrShifted) {
+   if constexpr (!!(flags & OrShifted)) {
       b <<= 16;
    }
 
-   if (flags & OrComplement) {
+   if constexpr (!!(flags & OrComplement)) {
       b = ~b;
    }
 
    a = s | b;
    state->gpr[instr.rA] = a;
 
-   if (flags & OrAlwaysRecord) {
+   if constexpr (!!(flags & OrAlwaysRecord)) {
       updateConditionRegister(state, a);
-   } else if (flags & OrCheckRecord) {
+   } else if constexpr (!!(flags & OrCheckRecord)) {
       if (instr.rc) {
          updateConditionRegister(state, a);
       }
@@ -601,7 +613,7 @@ rlwGeneric(cpu::Core *state, Instruction instr)
    s = state->gpr[instr.rS];
    a = state->gpr[instr.rA];
 
-   if (flags & RlwImmediate) {
+   if constexpr (!!(flags & RlwImmediate)) {
       n = instr.sh;
    } else {
       n = state->gpr[instr.rB] & 0x1f;
@@ -610,9 +622,9 @@ rlwGeneric(cpu::Core *state, Instruction instr)
    r = bit_rotate_left(s, n);
    m = make_ppc_bitmask(instr.mb, instr.me);
 
-   if (flags & RlwAnd) {
+   if constexpr (!!(flags & RlwAnd)) {
       a = (r & m);
-   } else if (flags & RlwInsert) {
+   } else if constexpr (!!(flags & RlwInsert)) {
       a = (r & m) | (a & ~m);
    }
 
@@ -660,7 +672,7 @@ shiftLogical(cpu::Core *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   if (flags & ShiftImmediate) {
+   if constexpr (!!(flags & ShiftImmediate)) {
       b = instr.sh;
    } else {
       b = state->gpr[instr.rB];
@@ -670,10 +682,14 @@ shiftLogical(cpu::Core *state, Instruction instr)
 
    if (b & 0x20) {
       a = 0;
-   } else if (flags & ShiftLeft) {
-      a = s << n;
-   } else if (flags & ShiftRight) {
-      a = s >> n;
+   } else {
+      if constexpr (!!(flags & ShiftLeft)) {
+         a = s << n;
+      } else if constexpr (!!(flags & ShiftRight)) {
+         a = s >> n;
+      } else {
+         static_assert("Unexpected flags for shiftLogical");
+      }
    }
 
    state->gpr[instr.rA] = a;
@@ -707,7 +723,7 @@ shiftArithmetic(cpu::Core *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   if (flags & ShiftImmediate) {
+   if constexpr (!!(flags & ShiftImmediate)) {
       b = instr.sh;
    } else {
       b = state->gpr[instr.rB];
@@ -808,20 +824,20 @@ xorGeneric(cpu::Core *state, Instruction instr)
 
    s = state->gpr[instr.rS];
 
-   if (flags & XorImmediate) {
+   if constexpr (!!(flags & XorImmediate)) {
       b = instr.uimm;
    } else {
       b = state->gpr[instr.rB];
    }
 
-   if (flags & XorShifted) {
+   if constexpr (!!(flags & XorShifted)) {
       b <<= 16;
    }
 
    a = s ^ b;
    state->gpr[instr.rA] = a;
 
-   if (flags & XorCheckRecord) {
+   if constexpr (!!(flags & XorCheckRecord)) {
       if (instr.rc) {
          updateConditionRegister(state, a);
       }

@@ -31,23 +31,20 @@ moveGeneric(cpu::Core *state, Instruction instr)
    // ps1 is always truncated, whether NaN or not.
    b1 = bit_cast<uint32_t>(truncate_double(state->fpr[instr.frB].paired1));
 
-   switch (mode) {
-   case MoveDirect:
+   if constexpr (mode == MoveDirect) {
       d0 = b0;
       d1 = b1;
-      break;
-   case MoveNegate:
+   } else if constexpr (mode == MoveNegate) {
       d0 = b0 ^ 0x80000000;
       d1 = b1 ^ 0x80000000;
-      break;
-   case MoveAbsolute:
+   } else if constexpr (mode == MoveAbsolute) {
       d0 = b0 & ~0x80000000;
       d1 = b1 & ~0x80000000;
-      break;
-   case MoveNegAbsolute:
+   } else if constexpr (mode == MoveNegAbsolute) {
       d0 = b0 | 0x80000000;
       d1 = b1 | 0x80000000;
-      break;
+   } else {
+      static_assert("Unexpected mode for moveGeneric");
    }
 
    if (!ps0_nan) {
@@ -109,12 +106,12 @@ static bool
 psArithSingle(cpu::Core *state, Instruction instr, float *result)
 {
    double a, b;
-   if (slotA == 0) {
+   if constexpr (slotA == 0) {
       a = state->fpr[instr.frA].paired0;
    } else {
       a = state->fpr[instr.frA].paired1;
    }
-   if (slotB == 0) {
+   if constexpr (slotB == 0) {
       b = state->fpr[op == PSMul ? instr.frC : instr.frB].paired0;
    } else {
       b = state->fpr[op == PSMul ? instr.frC : instr.frB].paired1;
@@ -122,35 +119,32 @@ psArithSingle(cpu::Core *state, Instruction instr, float *result)
 
    const bool vxsnan = is_signalling_nan(a) || is_signalling_nan(b);
    bool vxisi, vximz, vxidi, vxzdz, zx;
-   switch (op) {
-   case PSAdd:
+   if constexpr (op == PSAdd) {
       vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) != std::signbit(b);
       vximz = false;
       vxidi = false;
       vxzdz = false;
       zx = false;
-      break;
-   case PSSub:
+   } else if constexpr (op == PSSub) {
       vxisi = is_infinity(a) && is_infinity(b) && std::signbit(a) == std::signbit(b);
       vximz = false;
       vxidi = false;
       vxzdz = false;
       zx = false;
-      break;
-   case PSMul:
+   } else if constexpr (op == PSMul) {
       vxisi = false;
       vximz = (is_infinity(a) && is_zero(b)) || (is_zero(a) && is_infinity(b));
       vxidi = false;
       vxzdz = false;
       zx = false;
-      break;
-   case PSDiv:
+   } else if constexpr (op == PSDiv) {
       vxisi = false;
       vximz = false;
       vxidi = is_infinity(a) && is_infinity(b);
       vxzdz = is_zero(a) && is_zero(b);
       zx = !(vxzdz || vxsnan) && is_zero(b);
-      break;
+   } else {
+      static_assert("Unexpected flags for psArithSingle");
    }
 
    state->fpscr.vxsnan |= vxsnan;
@@ -174,22 +168,19 @@ psArithSingle(cpu::Core *state, Instruction instr, float *result)
    } else if (vxisi || vximz || vxidi || vxzdz) {
       d = make_nan<float>();
    } else {
-      switch (op) {
-      case PSAdd:
+      if constexpr (op == PSAdd) {
          d = static_cast<float>(a + b);
-         break;
-      case PSSub:
+      } else if constexpr (op == PSSub) {
          d = static_cast<float>(a - b);
-         break;
-      case PSMul:
-         if (slotB == 0) {
+      } else if constexpr (op == PSMul) {
+         if constexpr (slotB == 0) {
             roundForMultiply(&a, &b);  // Not necessary for slot 1.
          }
          d = static_cast<float>(a * b);
-         break;
-      case PSDiv:
+      } else if constexpr (op == PSDiv) {
          d = static_cast<float>(a / b);
-         break;
+      } else {
+         static_assert("Unexpected flags for psArithSingle");
       }
 
       if (possibleUnderflow<float>(d)) {
@@ -198,19 +189,16 @@ psArithSingle(cpu::Core *state, Instruction instr, float *result)
 
          volatile double bTemp = b;
          volatile float dummy;
-         switch (op) {
-         case PSAdd:
+         if constexpr (op == PSAdd) {
             dummy = static_cast<float>(a + bTemp);
-            break;
-         case PSSub:
+         } else if constexpr (op == PSSub) {
             dummy = static_cast<float>(a - bTemp);
-            break;
-         case PSMul:
+         } else if constexpr (op == PSMul) {
             dummy = static_cast<float>(a * bTemp);
-            break;
-         case PSDiv:
+         } else if constexpr (op == PSDiv) {
             dummy = static_cast<float>(a / bTemp);
-            break;
+         } else {
+            static_assert("Unexpected flags for psArithSingle");
          }
          fesetround(oldRound);
       }
@@ -294,7 +282,7 @@ psSumGeneric(cpu::Core *state, Instruction instr) CLANG_FPU_BUG_WORKAROUND
    if (psArithSingle<PSAdd, 0, 1>(state, instr, &d)) {
       updateFPRF(state, d);
 
-      if (slot == 0) {
+      if constexpr (slot == 0) {
           state->fpr[instr.frD].paired0 = extend_float(d);
           state->fpr[instr.frD].idw_paired1 = state->fpr[instr.frC].idw_paired1;
       } else {
@@ -357,14 +345,14 @@ static bool
 fmaSingle(cpu::Core *state, Instruction instr, float *result)
 {
    double a, b, c;
-   if (slotAB == 0) {
+   if constexpr (slotAB == 0) {
       a = state->fpr[instr.frA].paired0;
       b = state->fpr[instr.frB].paired0;
    } else {
       a = state->fpr[instr.frA].paired1;
       b = state->fpr[instr.frB].paired1;
    }
-   if (slotC == 0) {
+   if constexpr (slotC == 0) {
       c = state->fpr[instr.frC].paired0;
    } else {
       c = state->fpr[instr.frC].paired1;
@@ -395,7 +383,7 @@ fmaSingle(cpu::Core *state, Instruction instr, float *result)
    } else if (vxisi || vximz) {
       d = make_nan<float>();
    } else {
-      if (slotC == 0) {
+      if constexpr (slotC == 0) {
          roundForMultiply(&a, &c);  // Not necessary for slot 1.
       }
 
@@ -417,7 +405,7 @@ fmaSingle(cpu::Core *state, Instruction instr, float *result)
          fesetround(oldRound);
       }
 
-      if (flags & FMANegate) {
+      if constexpr (!!(flags & FMANegate)) {
          d = -d;
       }
    }
@@ -499,7 +487,7 @@ mergeGeneric(cpu::Core *state, Instruction instr)
 {
    float d0, d1;
 
-   if (flags & MergeValue0) {
+   if constexpr (!!(flags & MergeValue0)) {
       if (!is_signalling_nan(state->fpr[instr.frA].paired1)) {
          d0 = static_cast<float>(state->fpr[instr.frA].paired1);
       } else {
@@ -516,7 +504,7 @@ mergeGeneric(cpu::Core *state, Instruction instr)
    // When inserting a double-precision value into slot 1, the value is
    // truncated rather than rounded.
    double d1_double;
-   if (flags & MergeValue1) {
+   if constexpr (!!(flags & MergeValue1)) {
       d1_double = state->fpr[instr.frB].paired1;
    } else {
       d1_double = state->fpr[instr.frB].paired0;
@@ -579,7 +567,7 @@ ps_res(cpu::Core *state, Instruction instr)
    state->fpscr.vxsnan |= vxsnan0 || vxsnan1;
    state->fpscr.zx |= zx0 || zx1;
 
-   float d0, d1;
+   float d0 = 0.0, d1 = 0.0;
    auto write = true;
 
    if ((vxsnan0 && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
@@ -634,7 +622,7 @@ ps_rsqrte(cpu::Core *state, Instruction instr)
    state->fpscr.vxsqrt |= vxsqrt0 || vxsqrt1;
    state->fpscr.zx |= zx0 || zx1;
 
-   double d0, d1;
+   double d0 = 0.0, d1 = 0.0;
    bool write = true;
    if (((vxsnan0 || vxsqrt0) && state->fpscr.ve) || (zx0 && state->fpscr.ze)) {
       write = false;
