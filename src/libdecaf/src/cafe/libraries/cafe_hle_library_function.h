@@ -10,14 +10,6 @@ namespace cafe::hle
 
 extern volatile bool FunctionTraceEnabled;
 
-struct UnimplementedLibraryFunction
-{
-   class Library *library = nullptr;
-   std::string name;
-   uint32_t syscallID = 0xFFFFFFFFu;
-   virt_addr value;
-};
-
 struct LibraryFunction : public LibrarySymbol
 {
    LibraryFunction(cpu::SystemCallHandler _invokeHandler,

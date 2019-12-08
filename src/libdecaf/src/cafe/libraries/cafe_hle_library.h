@@ -1,52 +1,23 @@
 #pragma once
-#include "cafe_hle_library_data.h"
-#include "cafe_hle_library_function.h"
+#include "cafe_hle_library_symbol.h"
 #include "cafe_hle_library_typeinfo.h"
 
-#include "cafe/libraries/coreinit/coreinit_dynload.h"
+#include <libcpu/state.h>
 
 #include <map>
 #include <string>
 #include <vector>
 
-#define fnptr_decltype(Func) \
-    std::conditional<std::is_function<decltype(Func)>::value, std::add_pointer<decltype(Func)>::type, decltype(Func)>::type
-
-#define RegisterEntryPoint(fn) \
-   registerEntryPoint<fn>(#fn)
-
-#define RegisterNoCrtEntryPoint(fn) \
-   registerNoCrtEntryPoint<fnptr_decltype(fn), fn>(#fn)
-
-#define RegisterGenericEntryPoint() \
-   registerGenericEntryPoint();
-
-#define RegisterFunctionExport(fn) \
-   registerFunctionExport<fnptr_decltype(fn), fn>(#fn)
-
-#define RegisterFunctionExportName(name, fn) \
-   registerFunctionExport<fnptr_decltype(fn), fn>(name)
-
-#define RegisterDataExport(data) \
-   registerDataExport(#data, data)
-
-#define RegisterDataExportName(name, data) \
-   registerDataExport(name, data)
-
-#define RegisterFunctionInternal(fn, ptr) \
-   registerFunctionInternal<fnptr_decltype(fn), fn>("__internal__" # fn, ptr)
-
-#define RegisterFunctionInternalName(name, fn) \
-   registerFunctionInternal<fnptr_decltype(fn), fn>(name)
-
-#define RegisterDataInternal(data) \
-   registerDataInternal("__internal__" # data, data)
-
-#define RegisterTypeInfo(type, ...) \
-   registerTypeInfo<type>(__VA_ARGS__);
-
 namespace cafe::hle
 {
+
+struct UnimplementedLibraryFunction
+{
+   class Library* library = nullptr;
+   std::string name;
+   uint32_t syscallID = 0xFFFFFFFFu;
+   virt_addr value;
+};
 
 enum class LibraryId
 {
@@ -242,27 +213,13 @@ public:
       mTypeInfo.emplace_back(std::move(typeInfo));
    }
 
+   void
+   setEntryPointSymbolName(const std::string& name)
+   {
+      mEntryPointSymbolName = name;
+   }
+
 protected:
-   typedef int32_t(RplEntryFunctionType)(coreinit::OSDynLoad_ModuleHandle moduleHandle,
-                                         coreinit::OSDynLoad_EntryReason reason);
-
-   static int32_t
-   cafe_generic_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
-                        coreinit::OSDynLoad_EntryReason reason)
-   {
-      coreinit::internal::relocateHleLibrary(moduleHandle);
-      return 0;
-   }
-
-   template<RplEntryFunctionType Fn>
-   static int32_t
-   cafe_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
-                coreinit::OSDynLoad_EntryReason reason)
-   {
-      coreinit::internal::relocateHleLibrary(moduleHandle);
-      return Fn(moduleHandle, reason);
-   }
-
    virtual void
    registerSymbols() = 0;
 
@@ -271,122 +228,6 @@ protected:
 
    void
    generateRpl();
-
-   template<typename FunctionType, FunctionType Fn>
-   void
-   registerNoCrtEntryPoint(const std::string& name)
-   {
-      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
-      symbol->exported = true;
-      registerSymbol(name, std::move(symbol));
-
-      mEntryPointSymbolName = name;
-   }
-
-   template<RplEntryFunctionType Fn>
-   void
-   registerEntryPoint(const std::string& name)
-   {
-      auto symbol = internal::makeLibraryFunction<RplEntryFunctionType, Fn>(name);
-      symbol->exported = true;
-      registerSymbol(name, std::move(symbol));
-
-      static const std::string crtEntryName = "__rpl_crt";
-      registerNoCrtEntryPoint<RplEntryFunctionType, cafe_rpl_crt<Fn>>(crtEntryName);
-   }
-
-   void
-   registerGenericEntryPoint()
-   {
-      static const std::string crtEntryName = "__rpl_crt_generic";
-      registerNoCrtEntryPoint<RplEntryFunctionType, cafe_generic_rpl_crt>(crtEntryName);
-   }
-
-   template<typename FunctionType, FunctionType Fn>
-   void
-   registerFunctionInternal(const char *name,
-                            virt_func_ptr<typename std::remove_pointer<FunctionType>::type> &hostPtr)
-   {
-      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
-      symbol->exported = false;
-      symbol->hostPtr = reinterpret_cast<virt_ptr<void> *>(&hostPtr);
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename FunctionType, FunctionType Fn>
-   void
-   registerFunctionInternal(const char *name)
-   {
-      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
-      symbol->exported = false;
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename FunctionType, FunctionType Fn>
-   void
-   registerFunctionExport(const char *name)
-   {
-      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
-      symbol->exported = true;
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename DataType>
-   void
-   registerDataInternal(const char *name,
-                        virt_ptr<DataType> &data)
-   {
-      auto symbol = std::make_unique<LibraryData>();
-      symbol->exported = false;
-      symbol->hostPointer = reinterpret_cast<virt_ptr<void> *>(&data);
-      symbol->constructor = [](void *ptr) { new (ptr) DataType(); };
-      symbol->size = sizeof(DataType);
-      symbol->align = alignof(DataType);
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename DataType>
-   void
-   registerDataExport(const char *name,
-                      virt_ptr<DataType> &data)
-   {
-      auto symbol = std::make_unique<LibraryData>();
-      symbol->exported = true;
-      symbol->hostPointer = reinterpret_cast<virt_ptr<void> *>(&data);
-      symbol->constructor = [](void *ptr) { new (ptr) DataType(); };
-      symbol->size = sizeof(DataType);
-      symbol->align = alignof(DataType);
-      registerSymbol(name, std::move(symbol));
-   }
-
-   template<typename ObjectType>
-   void
-   registerTypeInfo(const char *typeName,
-                    const char* typeIdSymbol = nullptr)
-   {
-      LibraryTypeInfo typeInfo;
-      typeInfo.name = typeName;
-      typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
-      typeInfo.typeIdSymbol = typeIdSymbol;
-      registerTypeInfo(std::move(typeInfo));
-   }
-
-   template<typename ObjectType>
-   void
-   registerTypeInfo(const char *typeName,
-                    std::vector<const char *> &&virtualTable,
-                    std::vector<const char *> &&baseTypes = {},
-                    const char *typeIdSymbol = nullptr)
-   {
-      LibraryTypeInfo typeInfo;
-      typeInfo.name = typeName;
-      typeInfo.virtualTable = std::move(virtualTable);
-      typeInfo.baseTypes = std::move(baseTypes);
-      typeInfo.hostVirtualTablePtr = &ObjectType::VirtualTable;
-      typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
-      typeInfo.typeIdSymbol = typeIdSymbol;
-      registerTypeInfo(std::move(typeInfo));
-   }
 
 private:
    LibraryId mID;
@@ -409,3 +250,5 @@ setUnimplementedFunctionStubMemory(virt_ptr<void> base,
                                    uint32_t size);
 
 } // namespace cafe::hle
+
+#include "cafe_hle_library_register.h"
