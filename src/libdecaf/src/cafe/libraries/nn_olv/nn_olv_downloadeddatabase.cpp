@@ -329,7 +329,8 @@ Library::registerDownloadedDataBaseSymbols()
    RegisterFunctionExportName("TestFlags__Q3_2nn3olv18DownloadedDataBaseCFUi",
                               DownloadedDataBase_TestFlags);
 
-   registerTypeInfo<DownloadedDataBase>(
+   RegisterTypeInfo(
+      DownloadedDataBase,
       "nn::olv::DownloadedDataBase",
       {
          "__pure_virtual_called",

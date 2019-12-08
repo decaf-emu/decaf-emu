@@ -77,7 +77,8 @@ Library::registerPlayLogUploadTaskSettingSymbols()
    RegisterFunctionExportName("SetPlayLogUploadTaskSettingToRecord__Q3_2nn4boss24PlayLogUploadTaskSettingFv",
                               PlayLogUploadTaskSetting_SetPlayLogUploadTaskSettingToRecord);
 
-   registerTypeInfo<PlayLogUploadTaskSetting>(
+   RegisterTypeInfo(
+      PlayLogUploadTaskSetting,
       "nn::boss::PlayLogUploadTaskSetting",
       {
          "__dt__Q3_2nn4boss24PlayLogUploadTaskSettingFv",

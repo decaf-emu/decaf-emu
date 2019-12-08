@@ -186,7 +186,8 @@ Library::registerTaskSymbols()
    RegisterFunctionExportName("GetTitleID__Q3_2nn4boss4TaskCFv",
                               Task_GetTitleID);
 
-   registerTypeInfo<Task>(
+   RegisterTypeInfo(
+      Task,
       "nn::boss::Task",
       {
          "__dt__Q3_2nn4boss4TaskFv",

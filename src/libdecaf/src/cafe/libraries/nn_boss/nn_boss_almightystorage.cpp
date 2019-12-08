@@ -72,7 +72,8 @@ Library::registerAlmightyStorageSymbols()
    RegisterFunctionExportName("Initialize__Q3_2nn4boss15AlmightyStorageFQ3_2nn4boss7TitleIDPCcUiQ3_2nn4boss11StorageKind",
                               AlmightyStorage_Initialize);
 
-   registerTypeInfo<AlmightyStorage>(
+   RegisterTypeInfo(
+      AlmightyStorage,
       "nn::boss::AlmightyStorage",
       {
          "__dt__Q3_2nn4boss15AlmightyStorageFv",

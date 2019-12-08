@@ -209,7 +209,8 @@ Library::registerUploadedDataBaseSymbols()
    RegisterFunctionExportName("GetCommonData__Q3_2nn3olv16UploadedDataBaseFPUiPUcT1Ui",
                               UploadedDataBase_GetCommonData);
 
-   registerTypeInfo<UploadedDataBase>(
+   RegisterTypeInfo(
+      UploadedDataBase,
       "nn::olv::UploadedDataBase",
       {
          "__pure_virtual_called",

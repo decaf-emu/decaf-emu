@@ -47,7 +47,8 @@ Library::registerStorageSymbols()
    RegisterFunctionExportName("__dt__Q3_2nn4boss7StorageFv",
                               Storage_Destructor);
 
-   registerTypeInfo<Storage>(
+   RegisterTypeInfo(
+      Storage,
       "nn::boss::Storage",
       {
          "__dt__Q3_2nn4boss7StorageFv",

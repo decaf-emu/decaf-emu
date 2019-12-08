@@ -5,8 +5,6 @@
 
 #include "cafe/libraries/coreinit/coreinit_dynload.h"
 
-#include <common/decaf_assert.h>
-#include <libcpu/cpu.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -19,6 +17,9 @@
 
 #define RegisterNoCrtEntryPoint(fn) \
    registerNoCrtEntryPoint<fnptr_decltype(fn), fn>(#fn)
+
+#define RegisterGenericEntryPoint() \
+   registerGenericEntryPoint();
 
 #define RegisterFunctionExport(fn) \
    registerFunctionExport<fnptr_decltype(fn), fn>(#fn)
@@ -40,6 +41,9 @@
 
 #define RegisterDataInternal(data) \
    registerDataInternal("__internal__" # data, data)
+
+#define RegisterTypeInfo(type, ...) \
+   registerTypeInfo<type>(__VA_ARGS__);
 
 namespace cafe::hle
 {
@@ -216,6 +220,28 @@ public:
       return mSymbolMap;
    }
 
+   void
+   registerLibraryDependency(const char *name)
+   {
+      mLibraryDependencies.push_back(name);
+   }
+
+   void
+   registerSymbol(const std::string& name,
+                  std::unique_ptr<LibrarySymbol> symbol)
+   {
+      decaf_check(mSymbolMap.find(name) == mSymbolMap.end());
+      symbol->index = BaseSymbolIndex + static_cast<uint32_t>(mSymbolMap.size());
+      symbol->name = name;
+      mSymbolMap.emplace(name, std::move(symbol));
+   }
+
+   void
+   registerTypeInfo(const LibraryTypeInfo& typeInfo)
+   {
+      mTypeInfo.emplace_back(std::move(typeInfo));
+   }
+
 protected:
    typedef int32_t(RplEntryFunctionType)(coreinit::OSDynLoad_ModuleHandle moduleHandle,
                                          coreinit::OSDynLoad_EntryReason reason);
@@ -333,57 +359,33 @@ protected:
       registerSymbol(name, std::move(symbol));
    }
 
-   void
-   registerLibraryDependency(const char *name)
-   {
-      mLibraryDependencies.push_back(name);
-   }
-
-   void
-   registerSymbol(const std::string& name,
-                  std::unique_ptr<LibrarySymbol> symbol)
-   {
-      decaf_check(mSymbolMap.find(name) == mSymbolMap.end());
-      symbol->index = BaseSymbolIndex + static_cast<uint32_t>(mSymbolMap.size());
-      symbol->name = name;
-      mSymbolMap.emplace(name, std::move(symbol));
-   }
-
    template<typename ObjectType>
    void
-   registerTypeInfo(const char *typeName)
+   registerTypeInfo(const char *typeName,
+                    const char* typeIdSymbol = nullptr)
    {
-      auto &typeInfo = mTypeInfo.emplace_back();
+      LibraryTypeInfo typeInfo;
       typeInfo.name = typeName;
       typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
-   }
-
-   template<typename ObjectType>
-   void
-   associateTypeIdSymbol(const char *typeIdSymbol)
-   {
-      for (auto &typeInfo : mTypeInfo) {
-         if (typeInfo.hostTypeDescriptorPtr == &ObjectType::TypeDescriptor) {
-            typeInfo.typeIdSymbol = typeIdSymbol;
-            return;
-         }
-      }
-
-      decaf_abort("Could not find type info");
+      typeInfo.typeIdSymbol = typeIdSymbol;
+      registerTypeInfo(std::move(typeInfo));
    }
 
    template<typename ObjectType>
    void
    registerTypeInfo(const char *typeName,
                     std::vector<const char *> &&virtualTable,
-                    std::vector<const char *> &&baseTypes = {})
+                    std::vector<const char *> &&baseTypes = {},
+                    const char *typeIdSymbol = nullptr)
    {
-      auto &typeInfo = mTypeInfo.emplace_back();
+      LibraryTypeInfo typeInfo;
       typeInfo.name = typeName;
       typeInfo.virtualTable = std::move(virtualTable);
       typeInfo.baseTypes = std::move(baseTypes);
       typeInfo.hostVirtualTablePtr = &ObjectType::VirtualTable;
       typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
+      typeInfo.typeIdSymbol = typeIdSymbol;
+      registerTypeInfo(std::move(typeInfo));
    }
 
 private:
@@ -395,6 +397,7 @@ private:
    std::vector<uint8_t> mGeneratedRpl;
    std::vector<UnimplementedLibraryFunction *> mUnimplementedFunctionExports;
    std::string mEntryPointSymbolName;
+
 };
 
 virt_addr

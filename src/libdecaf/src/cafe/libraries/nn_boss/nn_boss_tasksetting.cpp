@@ -145,7 +145,8 @@ Library::registerTaskSettingSymbols()
    RegisterFunctionExportName("SetPriority__Q3_2nn4boss18PrivateTaskSettingSFRQ3_2nn4boss11TaskSettingQ3_2nn4boss12TaskPriority",
                               PrivateTaskSetting_SetPriority);
 
-   registerTypeInfo<TaskSetting>(
+   RegisterTypeInfo(
+      TaskSetting,
       "nn::boss::TaskSetting",
       {
          "__dt__Q3_2nn4boss11TaskSettingFv",

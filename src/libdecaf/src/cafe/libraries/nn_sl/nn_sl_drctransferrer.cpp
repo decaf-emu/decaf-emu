@@ -98,10 +98,13 @@ Library::registerDrcTransferrerSymbols()
                                 DrcTransferrer_DisplayNotification);
    RegisterDataExportName("__TID_Q3_2nn2sl12ITransferrer", ITransferrer::TypeID);
 
-   registerTypeInfo<ITransferrer>("nn::sl::ITransferrer");
-   associateTypeIdSymbol<ITransferrer>("__TID_Q3_2nn2sl12ITransferrer");
+   RegisterTypeInfo(
+      ITransferrer,
+      "nn::sl::ITransferrer",
+      "__TID_Q3_2nn2sl12ITransferrer");
 
-   registerTypeInfo<DrcTransferrer>(
+   RegisterTypeInfo(
+      DrcTransferrer,
       "nn::sl::core::detail::DrcTransferrer",
       {
          "__dt__Q5_2nn2sl4core6detail14DrcTransferrerFv",

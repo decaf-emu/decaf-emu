@@ -114,7 +114,8 @@ Library::registerUploadedPostDataSymbols()
    RegisterFunctionExportName("TestFlags__Q3_2nn3olv16UploadedPostDataCFUi",
                               UploadedPostData_TestFlags);
 
-   registerTypeInfo<UploadedPostData>(
+   RegisterTypeInfo(
+      UploadedPostData,
       "nn::olv::UploadedPostData",
       {
          "__dt__Q3_2nn3olv16UploadedPostDataFv",

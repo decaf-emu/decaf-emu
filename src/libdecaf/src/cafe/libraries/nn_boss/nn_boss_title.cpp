@@ -85,7 +85,8 @@ Library::registerTitleSymbols()
    RegisterFunctionExportName("ChangeAccount__Q3_2nn4boss5TitleFUc",
                               Title_ChangeAccount);
 
-   registerTypeInfo<Title>(
+   RegisterTypeInfo(
+      Title,
       "nn::boss::Title",
       {
          "__dt__Q3_2nn4boss5TitleFv",

@@ -96,7 +96,8 @@ Library::registerPlayReportSettingSymbols()
    RegisterFunctionExportName("Set__Q3_2nn4boss17PlayReportSettingFUiT1",
                               static_cast<bool(*)(virt_ptr<PlayReportSetting>, uint32_t, uint32_t)>(PlayReportSetting_Set));
 
-   registerTypeInfo<PlayReportSetting>(
+   RegisterTypeInfo(
+      PlayReportSetting,
       "nn::boss::PlayReportSetting",
       {
          "__dt__Q3_2nn4boss17PlayReportSettingFv",

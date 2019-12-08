@@ -141,7 +141,8 @@ Library::registerNbdlTaskSettingSymbols()
       "SetOption__Q3_2nn4boss22PrivateNbdlTaskSettingSFRQ3_2nn4boss15NbdlTaskSettingUc",
       PrivateNbdlTaskSetting_SetOption);
 
-   registerTypeInfo<NbdlTaskSetting>(
+   RegisterTypeInfo(
+      NbdlTaskSetting,
       "nn::boss::NbdlTaskSetting",
       {
          "__dt__Q3_2nn4boss15NbdlTaskSettingFv",

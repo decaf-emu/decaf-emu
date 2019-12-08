@@ -136,7 +136,7 @@ Library::generate()
    }
 
    if (mEntryPointSymbolName.empty()) {
-      registerGenericEntryPoint();
+      RegisterGenericEntryPoint();
    }
 
    registerSystemCalls();

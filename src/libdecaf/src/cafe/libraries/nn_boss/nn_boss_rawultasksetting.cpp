@@ -76,7 +76,8 @@ Library::registerRawUlTaskSettingSymbols()
    RegisterFunctionExportName("RegisterPostprocess__Q3_2nn4boss16RawUlTaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result",
                               RawUlTaskSetting_RegisterPostprocess);
 
-   registerTypeInfo<RawUlTaskSetting>(
+   RegisterTypeInfo(
+      RawUlTaskSetting,
       "nn::boss::RawUlTaskSetting",
       {
          "__dt__Q3_2nn4boss16RawUlTaskSettingFv",

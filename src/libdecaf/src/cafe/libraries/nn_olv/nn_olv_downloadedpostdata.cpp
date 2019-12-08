@@ -81,7 +81,8 @@ Library::registerDownloadedPostDataSymbols()
    RegisterFunctionExportName("GetPostId__Q3_2nn3olv18DownloadedPostDataCFv",
                               DownloadedPostData_GetPostId);
 
-   registerTypeInfo<DownloadedPostData>(
+   RegisterTypeInfo(
+      DownloadedPostData,
       "nn::olv::DownloadedPostData",
       {
          "__dt__Q3_2nn3olv18DownloadedPostDataFv",
