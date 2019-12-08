@@ -6,6 +6,7 @@
 #include "ios/ios_error.h"
 #include "ios/ios_ipc.h"
 
+#include <array>
 #include <common/bitfield.h>
 #include <libcpu/be2_struct.h>
 

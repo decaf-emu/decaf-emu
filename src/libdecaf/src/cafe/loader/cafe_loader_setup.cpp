@@ -11,6 +11,7 @@
 #include "cafe_loader_minfileinfo.h"
 #include "cafe/cafe_stackobject.h"
 
+#include <array>
 #include <common/align.h>
 #include <libcpu/cpu_formatters.h>
 #include <zlib.h>

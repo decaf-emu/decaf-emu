@@ -12,6 +12,7 @@
 #include "cafe/cafe_tinyheap.h"
 #include "cafe/cafe_stackobject.h"
 
+#include <array>
 #include <common/strutils.h>
 #include <libcpu/be2_struct.h>
 #include <libcpu/cpu_formatters.h>
