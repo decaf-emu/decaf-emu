@@ -5,7 +5,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/strutils.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit

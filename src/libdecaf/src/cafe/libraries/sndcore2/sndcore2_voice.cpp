@@ -11,7 +11,7 @@
 #include <common/decaf_assert.h>
 #include <common/platform_dir.h>
 #include <array>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <fstream>
 #include <libcpu/cpu_formatters.h>
 #include <queue>
