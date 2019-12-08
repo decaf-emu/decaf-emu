@@ -37,6 +37,20 @@ NSSLDevice::addServerPKIExternal(NSSLContextHandle context,
 }
 
 NSSLError
+NSSLDevice::exportInternalClientCertificate(
+   phys_ptr<NSSLExportInternalClientCertificateRequest> request,
+   phys_ptr<NSSLExportInternalClientCertificateResponse> response,
+   phys_ptr<uint8_t> certBuffer,
+   uint32_t certBufferSize,
+   phys_ptr<uint8_t> privateKeyBuffer,
+   uint32_t privateKeyBufferSize)
+{
+   // TODO: Implement client certificate exporting, requires /dev/crypto
+   //       decryption of private key
+   return NSSLError::CertNotExportable;
+}
+
+NSSLError
 NSSLDevice::exportInternalServerCertificate(
    phys_ptr<NSSLExportInternalServerCertificateRequest> request,
    phys_ptr<NSSLExportInternalServerCertificateResponse> response,

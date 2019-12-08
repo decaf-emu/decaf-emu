@@ -22,7 +22,10 @@ class NSSLDevice
    };
 
 public:
-   NSSLDevice(TitleId titleId, ProcessId processId, uint64_t caps, Handle socketHandle) :
+   NSSLDevice(TitleId titleId,
+              ProcessId processId,
+              uint64_t caps,
+              Handle socketHandle) :
       mTitleId(titleId),
       mProcessId(processId),
       mCapabilities(caps),
@@ -32,12 +35,18 @@ public:
 
    NSSLError createContext(NSSLVersion version);
    NSSLError addServerPKI(NSSLContextHandle context, NSSLCertID cert);
-   NSSLError addServerPKIExternal(NSSLContextHandle context, phys_ptr<uint8_t> cert, uint32_t certSize, NSSLCertType certType);
+   NSSLError addServerPKIExternal(NSSLContextHandle context,
+                                  phys_ptr<uint8_t> cert, uint32_t certSize,
+                                  NSSLCertType certType);
+   NSSLError exportInternalClientCertificate(
+      phys_ptr<NSSLExportInternalClientCertificateRequest> request,
+      phys_ptr<NSSLExportInternalClientCertificateResponse> response,
+      phys_ptr<uint8_t> certBuffer, uint32_t certBufferSize,
+      phys_ptr<uint8_t> privateKeyBuffer, uint32_t privateKeyBufferSize);
    NSSLError exportInternalServerCertificate(
       phys_ptr<NSSLExportInternalServerCertificateRequest> request,
       phys_ptr<NSSLExportInternalServerCertificateResponse> response,
-      phys_ptr<uint8_t> certBuffer,
-      uint32_t certBufferSize);
+      phys_ptr<uint8_t> certBuffer, uint32_t certBufferSize);
 
 private:
    TitleId mTitleId;

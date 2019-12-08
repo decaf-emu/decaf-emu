@@ -185,6 +185,43 @@ nsslIoctlv(phys_ptr<ResourceRequest> resourceRequest)
          device->addServerPKIExternal(request->context, cert, certSize, request->certType));
       break;
    }
+   case NSSLCommand::ExportInternalClientCertificate:
+   {
+      if (resourceRequest->requestData.args.ioctlv.numVecIn != 1) {
+         return Error::InvalidArg;
+      }
+
+      if (resourceRequest->requestData.args.ioctlv.numVecOut != 3) {
+         return Error::InvalidArg;
+      }
+
+      if (resourceRequest->requestData.args.ioctlv.vecs[0].len !=
+             sizeof(NSSLExportInternalClientCertificateRequest) ||
+          resourceRequest->requestData.args.ioctlv.vecs[3].len !=
+             sizeof(NSSLExportInternalClientCertificateResponse)) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctlv.vecs[0].paddr ||
+          !resourceRequest->requestData.args.ioctlv.vecs[3].paddr) {
+         return Error::InvalidArg;
+      }
+
+      auto request = phys_cast<NSSLExportInternalClientCertificateRequest *>(
+         resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
+      auto certBuffer = phys_cast<uint8_t *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr);
+      auto certBufferSize = resourceRequest->requestData.args.ioctlv.vecs[1].len;
+
+      auto privateKeyBuffer = phys_cast<uint8_t *>(resourceRequest->requestData.args.ioctlv.vecs[2].paddr);
+      auto privateKeyBufferSize = resourceRequest->requestData.args.ioctlv.vecs[2].len;
+
+      auto response = phys_cast<NSSLExportInternalClientCertificateResponse *>(
+         resourceRequest->requestData.args.ioctlv.vecs[3].paddr);
+      error = static_cast<Error>(device->exportInternalClientCertificate(
+         request, response, certBuffer, certBufferSize, privateKeyBuffer,
+         privateKeyBufferSize));
+      break;
+   }
    case NSSLCommand::ExportInternalServerCertificate:
    {
       if (resourceRequest->requestData.args.ioctlv.numVecIn != 1) {
@@ -195,8 +232,10 @@ nsslIoctlv(phys_ptr<ResourceRequest> resourceRequest)
          return Error::InvalidArg;
       }
 
-      if (resourceRequest->requestData.args.ioctlv.vecs[0].len != sizeof(NSSLExportInternalServerCertificateRequest) ||
-          resourceRequest->requestData.args.ioctlv.vecs[2].len != sizeof(NSSLExportInternalServerCertificateResponse)) {
+      if (resourceRequest->requestData.args.ioctlv.vecs[0].len !=
+             sizeof(NSSLExportInternalServerCertificateRequest) ||
+          resourceRequest->requestData.args.ioctlv.vecs[2].len !=
+             sizeof(NSSLExportInternalServerCertificateResponse)) {
          return Error::InvalidArg;
       }
 
@@ -205,12 +244,15 @@ nsslIoctlv(phys_ptr<ResourceRequest> resourceRequest)
          return Error::InvalidArg;
       }
 
-      auto request = phys_cast<NSSLExportInternalServerCertificateRequest *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
+      auto request = phys_cast<NSSLExportInternalServerCertificateRequest *>(
+         resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
       auto certBuffer = phys_cast<uint8_t *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr);
       auto certBufferSize = resourceRequest->requestData.args.ioctlv.vecs[1].len;
 
-      auto response = phys_cast<NSSLExportInternalServerCertificateResponse *>(resourceRequest->requestData.args.ioctlv.vecs[2].paddr);
-      error = static_cast<Error>(device->exportInternalServerCertificate(request, response, certBuffer, certBufferSize));
+      auto response = phys_cast<NSSLExportInternalServerCertificateResponse *>(
+         resourceRequest->requestData.args.ioctlv.vecs[2].paddr);
+      error = static_cast<Error>(device->exportInternalServerCertificate(
+         request, response, certBuffer, certBufferSize));
       break;
    }
    default:

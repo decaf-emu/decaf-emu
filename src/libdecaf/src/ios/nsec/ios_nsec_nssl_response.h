@@ -16,6 +16,19 @@ namespace ios::nsec
 
 #pragma pack(push, 1)
 
+struct NSSLExportInternalClientCertificateResponse
+{
+   be2_val<NSSLCertType> certType;
+   be2_val<uint32_t> certSize;
+   be2_val<NSSLPrivateKeyType> privateKeyType;
+   be2_val<uint32_t> privateKeySize;
+};
+CHECK_OFFSET(NSSLExportInternalClientCertificateResponse, 0x00, certType);
+CHECK_OFFSET(NSSLExportInternalClientCertificateResponse, 0x04, certSize);
+CHECK_OFFSET(NSSLExportInternalClientCertificateResponse, 0x08, privateKeyType);
+CHECK_OFFSET(NSSLExportInternalClientCertificateResponse, 0x0C, privateKeySize);
+CHECK_SIZE(NSSLExportInternalClientCertificateResponse, 0x10);
+
 struct NSSLExportInternalServerCertificateResponse
 {
    be2_val<NSSLCertType> certType;
