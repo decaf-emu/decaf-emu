@@ -4,27 +4,23 @@
 #include "platform_intrin.h"
 #include <vector>
 
-/*
-Note that the following code more or less assumes that the processor we
-are running on will support SSSE3 if the compiler does.  At some point,
-we may want to include constexpr variants that do not use SSSE3 (instead
-just doing unaligned always, or using architecture specific vectorized
-instructions).
-*/
-
 template<typename DataType>
 static inline void
-byte_swap_unaligned(DataType *dst, const DataType *srcStart, const DataType *srcEnd)
+byte_swap_unaligned(DataType *dst,
+                    const DataType *srcStart,
+                    const DataType *srcEnd)
 {
-   for (auto *src = srcStart; src < srcEnd; )
+   for (auto *src = srcStart; src < srcEnd; ) {
       *dst++ = byte_swap(*src++);
+   }
 }
 
 #ifdef PLATFORM_HAS_SSE3
-
 template<typename DataType>
 static inline void
-byte_swap_aligned(DataType *dst, const DataType *srcStart, const DataType *srcEnd)
+byte_swap_aligned(DataType *dst,
+                  const DataType *srcStart,
+                  const DataType *srcEnd)
 {
    auto sseDst = reinterpret_cast<__m128i *>(dst);
    auto sseSrc = reinterpret_cast<const __m128i *>(srcStart);
@@ -42,28 +38,24 @@ byte_swap_aligned(DataType *dst, const DataType *srcStart, const DataType *srcEn
 
    while (sseSrc < sseSrcEnd) {
       _mm_storeu_si128(sseDst++,
-                       _mm_shuffle_epi8(
-                          _mm_loadu_si128(sseSrc++),
-                          sseMask));
+                       _mm_shuffle_epi8(_mm_loadu_si128(sseSrc++), sseMask));
    }
 }
-
 #else
-
 template<typename DataType>
 static inline void
 byte_swap_aligned(DataType *dst, const DataType *srcStart, const DataType *srcEnd)
 {
    byte_swap_unaligned<DataType>(dst, srcStart, srcEnd);
 }
-
 #endif
 
 #ifdef PLATFORM_HAS_SSE3
-
 template<typename DataType>
 static inline void *
-byte_swap_to_scratch(const void *data, uint32_t numBytes, std::vector<uint8_t>& scratch)
+byte_swap_to_scratch(const void *data,
+                     uint32_t numBytes,
+                     std::vector<uint8_t> &scratch)
 {
    // We pad the output buffer to guarentee we can align it to any source address.
    scratch.resize(numBytes + 32);
@@ -83,23 +75,23 @@ byte_swap_to_scratch(const void *data, uint32_t numBytes, std::vector<uint8_t>& 
    // Calculate our aligned memory
    auto alignedSwapDest = align_up(swapDest, 16);
    auto alignedSwapSrc = align_up(swapSrc, 16);
+   auto alignedSwapSrcEnd = align_down(swapSrcEnd, 16);
+   auto alignedSize = alignedSwapSrcEnd - alignedSwapSrc;
 
-   // Do the unaligned portion
+   // Do the unaligned before portion
    byte_swap_unaligned<DataType>(swapDest, swapSrc, alignedSwapSrc);
 
    // Do the aligned portion
-   // Note that we pass an unaligned end point to this function, but since it assumes
-   // alignment, it will actually continue until it the alignment point, which is fine
-   // since we have pre-sized our destination to account for that.  This will fail if
-   // for some reason we cannot read the src past the end of it, but this will never
-   // happen with our CPU memory, which is highly aligned (way more than 16).
-   byte_swap_aligned<DataType>(alignedSwapDest, alignedSwapSrc, swapSrcEnd);
+   byte_swap_aligned<DataType>(alignedSwapDest, alignedSwapSrc, alignedSwapSrcEnd);
+
+   // Do the unaligned after portion
+   byte_swap_unaligned<DataType>(alignedSwapDest + alignedSize,
+                                 alignedSwapSrc + alignedSize,
+                                 swapSrcEnd);
 
    return alignMatchedScratch;
 }
-
 #else
-
 template<typename DataType>
 static inline void *
 byte_swap_to_scratch(const void *data, uint32_t numBytes, std::vector<uint8_t>& scratch)
@@ -111,5 +103,4 @@ byte_swap_to_scratch(const void *data, uint32_t numBytes, std::vector<uint8_t>& 
    byte_swap_unaligned<DataType>(swapDest, swapSrc, swapSrcEnd);
    return swapDest;
 }
-
 #endif
