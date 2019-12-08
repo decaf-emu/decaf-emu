@@ -333,11 +333,11 @@ CodeCache::allocate(FrameAllocator &allocator,
    auto alignedOffset = align_up(offset, alignment);
 
    // Check if we have gone past end of committed memory.
-   if (offset + alignedSize > allocator.committed.load()) {
+   if (alignedOffset + alignedSize > allocator.committed.load()) {
       std::lock_guard<std::mutex> lock { allocator.mutex };
       auto committed = allocator.committed.load();
 
-      while (offset + alignedSize > committed) {
+      while (alignedOffset + alignedSize > committed) {
          if (!platform::commitMemory(allocator.baseAddress + committed, allocator.growthSize, allocator.flags)) {
             decaf_abort("Failed to commit memory for JIT");
          }
@@ -348,7 +348,7 @@ CodeCache::allocate(FrameAllocator &allocator,
       allocator.committed.store(committed);
    }
 
-   return allocator.baseAddress + offset;
+   return allocator.baseAddress + alignedOffset;
 }
 
 } // namespace jit
