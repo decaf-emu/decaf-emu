@@ -51,8 +51,8 @@ protected:
 
    bool mToggleDRC = false;
 
-   Uint32 mDecafEventId = -1;
-   Uint32 mUpdateWindowTitleEventId = -1;
+   Uint32 mDecafEventId = static_cast<Uint32>(-1);
+   Uint32 mUpdateWindowTitleEventId = static_cast<Uint32>(-1);
    SDL_TimerID mWindowTitleTimerId = -1;
 
    decaf::GameInfo mGameInfo;
