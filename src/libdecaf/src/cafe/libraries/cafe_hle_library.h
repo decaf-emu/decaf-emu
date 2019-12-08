@@ -3,6 +3,8 @@
 #include "cafe_hle_library_function.h"
 #include "cafe_hle_library_typeinfo.h"
 
+#include "cafe/libraries/coreinit/coreinit_dynload.h"
+
 #include <common/decaf_assert.h>
 #include <libcpu/cpu.h>
 #include <map>
@@ -13,7 +15,10 @@
     std::conditional<std::is_function<decltype(Func)>::value, std::add_pointer<decltype(Func)>::type, decltype(Func)>::type
 
 #define RegisterEntryPoint(fn) \
-   registerFunctionExport<fnptr_decltype(fn), fn>("rpl_entry")
+   registerEntryPoint<fn>(#fn)
+
+#define RegisterNoCrtEntryPoint(fn) \
+   registerNoCrtEntryPoint<fnptr_decltype(fn), fn>(#fn)
 
 #define RegisterFunctionExport(fn) \
    registerFunctionExport<fnptr_decltype(fn), fn>(#fn)
@@ -212,6 +217,26 @@ public:
    }
 
 protected:
+   typedef int32_t(RplEntryFunctionType)(coreinit::OSDynLoad_ModuleHandle moduleHandle,
+                                         coreinit::OSDynLoad_EntryReason reason);
+
+   static int32_t
+   cafe_generic_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
+                        coreinit::OSDynLoad_EntryReason reason)
+   {
+      coreinit::internal::relocateHleLibrary(moduleHandle);
+      return 0;
+   }
+
+   template<RplEntryFunctionType Fn>
+   static int32_t
+   cafe_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
+                coreinit::OSDynLoad_EntryReason reason)
+   {
+      coreinit::internal::relocateHleLibrary(moduleHandle);
+      return Fn(moduleHandle, reason);
+   }
+
    virtual void
    registerSymbols() = 0;
 
@@ -220,6 +245,36 @@ protected:
 
    void
    generateRpl();
+
+   template<typename FunctionType, FunctionType Fn>
+   void
+   registerNoCrtEntryPoint(const std::string& name)
+   {
+      auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
+      symbol->exported = true;
+      registerSymbol(name, std::move(symbol));
+
+      mEntryPointSymbolName = name;
+   }
+
+   template<RplEntryFunctionType Fn>
+   void
+   registerEntryPoint(const std::string& name)
+   {
+      auto symbol = internal::makeLibraryFunction<RplEntryFunctionType, Fn>(name);
+      symbol->exported = true;
+      registerSymbol(name, std::move(symbol));
+
+      static const std::string crtEntryName = "__rpl_crt";
+      registerNoCrtEntryPoint<RplEntryFunctionType, cafe_rpl_crt<Fn>>(crtEntryName);
+   }
+
+   void
+   registerGenericEntryPoint()
+   {
+      static const std::string crtEntryName = "__rpl_crt_generic";
+      registerNoCrtEntryPoint<RplEntryFunctionType, cafe_generic_rpl_crt>(crtEntryName);
+   }
 
    template<typename FunctionType, FunctionType Fn>
    void
@@ -285,7 +340,7 @@ protected:
    }
 
    void
-   registerSymbol(const char *name,
+   registerSymbol(const std::string& name,
                   std::unique_ptr<LibrarySymbol> symbol)
    {
       decaf_check(mSymbolMap.find(name) == mSymbolMap.end());
@@ -339,6 +394,7 @@ private:
    std::vector<LibraryTypeInfo> mTypeInfo;
    std::vector<uint8_t> mGeneratedRpl;
    std::vector<UnimplementedLibraryFunction *> mUnimplementedFunctionExports;
+   std::string mEntryPointSymbolName;
 };
 
 virt_addr

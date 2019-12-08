@@ -1,5 +1,4 @@
 #include "gx2.h"
-#include "cafe/libraries/coreinit/coreinit_dynload.h"
 #include "gx2_debug.h"
 #include "gx2r_resource.h"
 
@@ -10,7 +9,6 @@ static int32_t
 rpl_entry(coreinit::OSDynLoad_ModuleHandle moduleHandle,
           coreinit::OSDynLoad_EntryReason reason)
 {
-   coreinit::internal::relocateHleLibrary(moduleHandle);
    internal::initialiseDebug();
    internal::initialiseGx2rAllocator();
    return 0;

@@ -29,7 +29,7 @@ namespace cafe::coreinit
 {
 
 static void
-rpl_entry(/* no args for coreinit entry point */)
+coreinit_entry(/* no args for coreinit entry point */)
 {
    auto coreId = cpu::this_core::id();
 
@@ -79,7 +79,7 @@ rpl_entry(/* no args for coreinit entry point */)
 void
 Library::registerSymbols()
 {
-   RegisterEntryPoint(rpl_entry);
+   RegisterNoCrtEntryPoint(coreinit_entry);
 
    registerAlarmSymbols();
    registerAppIoSymbols();

@@ -135,6 +135,10 @@ Library::generate()
                                    cafe::ghs::std_typeinfo_Destructor);
    }
 
+   if (mEntryPointSymbolName.empty()) {
+      registerGenericEntryPoint();
+   }
+
    registerSystemCalls();
    generateRpl();
 }
@@ -926,10 +930,10 @@ Library::generateRpl()
    fileHeader.shstrndx = static_cast<uint16_t>(shStrTabSectionIndex);
 
    // Find and set the entry point
-   auto entryPointAddr = 0u;
-   if (auto itr = mSymbolMap.find("rpl_entry"); itr != mSymbolMap.end()) {
-      entryPointAddr = textSection->header.addr + itr->second->offset;
-   }
+   decaf_check(!mEntryPointSymbolName.empty());
+   auto entryPointItr = mSymbolMap.find(mEntryPointSymbolName);
+   decaf_check(entryPointItr != mSymbolMap.end());
+   auto entryPointAddr = textSection->header.addr + entryPointItr->second->offset;
 
    fileHeader.entry = entryPointAddr;
 
