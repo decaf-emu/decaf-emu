@@ -1,6 +1,6 @@
 #pragma once
 #include <common/platform_fiber.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 #include <libcpu/be2_struct.h>
 
 namespace cafe::kernel

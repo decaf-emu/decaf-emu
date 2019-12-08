@@ -6,7 +6,7 @@
 #include "decaf_configstorage.h"
 
 #include <common/platform_time.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 #include <thread>
 
 namespace cafe::coreinit

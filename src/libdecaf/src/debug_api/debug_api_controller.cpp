@@ -7,7 +7,9 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
+#include <libcpu/mem.h>
+#include <libcpu/cpu_control.h>
 #include <libcpu/cpu_breakpoints.h>
 #include <libcpu/espresso/espresso_disassembler.h>
 #include <libcpu/espresso/espresso_instructionset.h>

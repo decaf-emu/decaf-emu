@@ -7,8 +7,8 @@
 #include "cafe/libraries/coreinit/coreinit_scheduler.h"
 #include "ios/kernel/ios_kernel_ipc_thread.h"
 
+#include <libcpu/cpu_control.h>
 #include <condition_variable>
-#include <libcpu/cpu.h>
 #include <mutex>
 #include <queue>
 

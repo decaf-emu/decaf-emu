@@ -12,7 +12,7 @@
 #include "cafe/kernel/cafe_kernel_process.h"
 
 #include <common/bitfield.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::coreinit
 {

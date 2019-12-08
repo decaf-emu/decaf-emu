@@ -5,7 +5,7 @@
 #include <common/log.h>
 #include <fmt/core.h>
 #include <libcpu/be2_struct.h>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 #include <libcpu/cpu_formatters.h>
 #include <libcpu/mmu.h>
 

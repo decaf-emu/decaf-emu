@@ -1,6 +1,6 @@
 #include "cafe_kernel_lock.h"
 #include <atomic>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe::kernel::internal
 {

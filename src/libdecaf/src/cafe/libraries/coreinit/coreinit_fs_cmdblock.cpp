@@ -12,7 +12,7 @@
 #include <common/strutils.h>
 #include <cstring>
 #include <fmt/core.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit

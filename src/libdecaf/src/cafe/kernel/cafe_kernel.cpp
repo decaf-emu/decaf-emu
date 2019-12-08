@@ -24,6 +24,7 @@
 #include <common/log.h>
 #include <common/platform_dir.h>
 #include <common/strutils.h>
+#include <libcpu/cpu.h>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::kernel

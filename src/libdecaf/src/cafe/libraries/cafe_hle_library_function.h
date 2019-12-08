@@ -3,16 +3,18 @@
 #include "cafe/cafe_ppc_interface_invoke_host.h"
 #include "cafe/cafe_ppc_interface_trace_host.h"
 
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe::hle
 {
 
 extern volatile bool FunctionTraceEnabled;
 
+using InvokeHandler = cpu::Core * (*)(cpu::Core * core, uint32_t id);
+
 struct LibraryFunction : public LibrarySymbol
 {
-   LibraryFunction(cpu::SystemCallHandler _invokeHandler,
+   LibraryFunction(InvokeHandler _invokeHandler,
                    bool& _traceEnabledRef) :
       LibrarySymbol(LibrarySymbol::Function),
       invokeHandler(_invokeHandler),
@@ -25,7 +27,7 @@ struct LibraryFunction : public LibrarySymbol
    }
 
    //! The actual handler for this function
-   cpu::SystemCallHandler invokeHandler;
+   InvokeHandler invokeHandler;
 
    //! Reference to the underlying invoke handler trace wrapper's trace enabled
    // value, specifying whether trace logging is enabled for this function or not.

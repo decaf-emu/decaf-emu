@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe_ppc_interface.h"
 
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 #include <libcpu/functionpointer.h>
 #include <libcpu/be2_val.h>
 

@@ -12,7 +12,7 @@
 #include <common/log.h>
 #include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
-#include <libcpu/mmu.h>
+#include <libcpu/mem.h>
 #include <numeric>
 
 namespace debugger

@@ -1,6 +1,8 @@
 #pragma once
 #include "cafe_ppc_interface_params.h"
 
+#include <libcpu/cpu_control.h>
+
 namespace cafe
 {
 

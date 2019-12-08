@@ -8,7 +8,7 @@
 
 #include <common/strutils.h>
 #include <cstdint>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe::kernel
 {

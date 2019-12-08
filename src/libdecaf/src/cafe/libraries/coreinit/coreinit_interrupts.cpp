@@ -7,7 +7,7 @@
 #include "cafe/kernel/cafe_kernel_exception.h"
 #include "cafe/kernel/cafe_kernel_interrupts.h"
 
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe::coreinit
 {

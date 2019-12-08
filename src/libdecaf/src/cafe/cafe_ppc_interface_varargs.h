@@ -2,7 +2,7 @@
 #include "cafe_ppc_interface.h"
 
 #include <libcpu/be2_struct.h>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe
 {

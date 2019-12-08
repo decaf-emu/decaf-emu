@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <common/cbool.h>
 #include <libcpu/be2_struct.h>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 using namespace ios::mcp;
 using namespace cafe::kernel;

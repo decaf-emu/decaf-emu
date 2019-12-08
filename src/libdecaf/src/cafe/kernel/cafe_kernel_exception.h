@@ -1,7 +1,7 @@
 #pragma once
 #include "cafe_kernel_context.h"
 #include <libcpu/be2_struct.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::kernel
 {

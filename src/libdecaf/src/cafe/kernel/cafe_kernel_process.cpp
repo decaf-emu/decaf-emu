@@ -11,6 +11,7 @@
 #include "cafe/loader/cafe_loader_loaded_rpl.h"
 
 #include <array>
+#include <libcpu/cpu_control.h>
 #include <libcpu/cpu_config.h>
 
 namespace cafe::kernel::internal
@@ -323,7 +324,7 @@ loadGameProcess(std::string_view rpx,
          if (shStrSection && sectionHeader->name) {
             auto name = shStrSection + sectionHeader->name;
             if (strcmp(name.get(), ".rodata") == 0) {
-               cpu::addJitReadOnlyRange(sectionAddress,
+               cpu::addJitReadOnlyRange(sectionAddress.getAddress(),
                                         sectionHeader->size);
                continue;
             }
@@ -333,7 +334,7 @@ loadGameProcess(std::string_view rpx,
             // TODO: Fix me
             // When we have a small section, e.g. .syscall section with
             // sectionHeader->size == 8, we seem to break binrec
-            //cpu::addJitReadOnlyRange(sectionAddress,
+            //cpu::addJitReadOnlyRange(sectionAddress.getAddress(),
             //                         sectionHeader->size);
          }
       }

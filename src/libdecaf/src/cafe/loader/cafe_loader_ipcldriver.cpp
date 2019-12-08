@@ -4,7 +4,7 @@
 #include "cafe/kernel/cafe_kernel_ipckdriver.h"
 #include "cafe/cafe_stackobject.h"
 
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 using namespace cafe::kernel;
 

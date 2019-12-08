@@ -5,7 +5,7 @@
 #include "coreinit_time.h"
 #include "cafe/cafe_ppc_interface_invoke_guest.h"
 #include <cstdlib>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::coreinit
 {

@@ -7,7 +7,7 @@
 #include "cafe/cafe_stackobject.h"
 
 #include <fmt/core.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::coreinit
 {

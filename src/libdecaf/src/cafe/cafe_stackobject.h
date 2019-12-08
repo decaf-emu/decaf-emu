@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <common/align.h>
 #include <common/decaf_assert.h>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 #include <libcpu/be2_struct.h>
 #include <memory>
 #include <string_view>

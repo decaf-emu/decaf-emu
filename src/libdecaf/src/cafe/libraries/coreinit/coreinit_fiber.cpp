@@ -2,7 +2,7 @@
 #include "coreinit_fiber.h"
 #include "coreinit_thread.h"
 #include "cafe/cafe_ppc_interface_invoke_guest.h"
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::coreinit
 {

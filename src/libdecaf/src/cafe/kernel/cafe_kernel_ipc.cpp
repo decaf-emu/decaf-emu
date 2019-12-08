@@ -10,7 +10,7 @@
 #include "ios/ios_ipc.h"
 
 #include <common/strutils.h>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 #include <mutex>
 
 namespace cafe::kernel::internal

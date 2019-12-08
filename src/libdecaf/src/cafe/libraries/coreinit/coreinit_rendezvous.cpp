@@ -1,7 +1,7 @@
 #include "coreinit.h"
 #include "coreinit_rendezvous.h"
 #include "coreinit_time.h"
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe::coreinit
 {

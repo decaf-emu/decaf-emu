@@ -78,10 +78,10 @@ invalidateInstructionCache(uint32_t address,
 }
 
 void
-addJitReadOnlyRange(virt_addr address,
+addJitReadOnlyRange(uint32_t address,
                     uint32_t size)
 {
-   jit::addReadOnlyRange(static_cast<uint32_t>(address), size);
+   jit::addReadOnlyRange(address, size);
 }
 
 void

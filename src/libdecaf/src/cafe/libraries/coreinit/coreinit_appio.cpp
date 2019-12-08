@@ -9,7 +9,7 @@
 #include "cafe/cafe_ppc_interface_invoke_guest.h"
 
 #include <fmt/core.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit

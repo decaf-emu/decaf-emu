@@ -8,7 +8,7 @@
 #include <common/log.h>
 #include <decaf_buildinfo.h>
 #include <filesystem>
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 #include <libcpu/cpu_formatters.h>
 #include <memory>
 #include <spdlog/async.h>

@@ -1,5 +1,5 @@
 #include "coreinit_internal_idlock.h"
-#include <libcpu/cpu.h>
+#include <libcpu/cpu_control.h>
 
 namespace cafe::coreinit::internal
 {

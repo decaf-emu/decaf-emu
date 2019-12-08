@@ -4,7 +4,7 @@
 #include "coreinit_fs_cmdqueue.h"
 #include "coreinit_internal_queue.h"
 #include "cafe/cafe_ppc_interface_invoke_guest.h"
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::coreinit
 {

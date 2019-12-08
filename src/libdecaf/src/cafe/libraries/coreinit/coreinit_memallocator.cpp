@@ -10,7 +10,7 @@
 
 #include <common/decaf_assert.h>
 #include <common/log.h>
-#include <libcpu/cpu.h>
+#include <libcpu/state.h>
 
 namespace cafe::coreinit
 {
