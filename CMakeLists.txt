@@ -145,7 +145,12 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive-")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /FS") # Parallel source builds
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GA") # Optimises TLS access
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd26812") # Disable unscoped enum warning
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4") # Lets be specific about warnings
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd26812") # Allow unscoped enums
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4201") # Allow the use of unnamed structs/unions
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4100") # Allow unreferenced formal parameters
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4366") # Allow unaligned uint64_t (permitted on x64)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4324") # Disable structure padding warnings
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4297") # Disable nothrow warning, VulkanSDK engineers dont know how to code
 
     if(DECAF_ENABLE_LTCG)

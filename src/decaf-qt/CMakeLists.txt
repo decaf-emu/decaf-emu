@@ -56,6 +56,8 @@ target_link_libraries(decaf-qt
    Qt5::Xml)
 
 if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3") # Qt disapproves
+
    target_link_libraries(decaf-qt
       Setupapi
       Qt5::WinMain)
