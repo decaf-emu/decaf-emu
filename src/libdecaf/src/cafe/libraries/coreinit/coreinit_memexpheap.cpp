@@ -1,7 +1,9 @@
 #include "coreinit.h"
 #include "coreinit_memexpheap.h"
 #include "coreinit_memory.h"
+
 #include <common/log.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

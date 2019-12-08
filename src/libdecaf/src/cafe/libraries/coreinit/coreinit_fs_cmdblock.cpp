@@ -13,6 +13,7 @@
 #include <cstring>
 #include <fmt/format.h>
 #include <libcpu/cpu.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

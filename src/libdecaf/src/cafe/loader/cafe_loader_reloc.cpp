@@ -10,7 +10,9 @@
 #include "cafe_loader_utils.h"
 
 #include "cafe/libraries/cafe_hle.h"
+
 #include <libcpu/be2_struct.h>
+#include <libcpu/cpu_formatters.h>
 #include <libcpu/espresso/espresso_instructionset.h>
 #include <libcpu/espresso/espresso_spr.h>
 #include <zlib.h>

@@ -7,6 +7,7 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <fmt/format.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

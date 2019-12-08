@@ -17,6 +17,7 @@
 #include <common/decaf_assert.h>
 #include <common/strutils.h>
 #include <libcpu/cpu.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

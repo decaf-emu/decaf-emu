@@ -5,6 +5,7 @@
 #include "cafe/cafe_ppc_interface_varargs.h"
 #include "cafe/libraries/tcl/tcl_ring.h"
 
+#include <fmt/core.h>
 #include <libcpu/be2_struct.h>
 #include <string_view>
 

@@ -10,6 +10,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <common/log.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

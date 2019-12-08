@@ -8,6 +8,7 @@
 #include "cafe/cafe_stackobject.h"
 
 #include <common/strutils.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

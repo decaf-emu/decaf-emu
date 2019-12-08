@@ -13,6 +13,7 @@
 #include <array>
 #include <fmt/format.h>
 #include <fstream>
+#include <libcpu/cpu_formatters.h>
 #include <queue>
 
 namespace cafe::sndcore2

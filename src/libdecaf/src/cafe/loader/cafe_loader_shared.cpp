@@ -17,6 +17,8 @@
 #include "cafe/cafe_stackobject.h"
 
 #include "cafe/libraries/cafe_hle_library.h"
+
+#include <libcpu/cpu_formatters.h>
 #include <zlib.h>
 
 namespace cafe::loader::internal

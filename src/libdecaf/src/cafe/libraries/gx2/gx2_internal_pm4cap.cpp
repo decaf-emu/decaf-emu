@@ -15,6 +15,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <gsl.h>
+#include <libcpu/cpu_formatters.h>
 #include <libgpu/gpu7_tiling.h>
 #include <libgpu/latte/latte_constants.h>
 #include <libgpu/latte/latte_formats.h>

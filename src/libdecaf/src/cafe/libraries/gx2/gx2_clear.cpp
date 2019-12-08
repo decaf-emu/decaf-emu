@@ -7,6 +7,7 @@
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/bit_cast.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::gx2
 {

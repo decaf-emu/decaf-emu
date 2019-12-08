@@ -18,6 +18,7 @@
 #include <common/log.h>
 #include <common/platform_dir.h>
 #include <fmt/format.h>
+#include <libcpu/cpu_formatters.h>
 #include <libcpu/mem.h>
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgfd/gfd.h>

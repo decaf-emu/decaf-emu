@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <common/log.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

@@ -13,8 +13,9 @@
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 
 #include <common/decaf_assert.h>
-#include <libgpu/gpu_ringbuffer.h>
 #include <fmt/format.h>
+#include <libcpu/cpu_formatters.h>
+#include <libgpu/gpu_ringbuffer.h>
 
 namespace cafe::gx2
 {

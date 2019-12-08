@@ -15,6 +15,7 @@
 
 #include <common/log.h>
 #include <common/platform_dir.h>
+#include <libcpu/cpu_formatters.h>
 #include <libgpu/gpu.h>
 #include <libgpu/latte/latte_pm4_commands.h>
 

@@ -7,6 +7,7 @@
 #include <common/strutils.h>
 #include <fmt/format.h>
 #include <fmt/printf.h>
+#include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
 {

@@ -72,6 +72,7 @@
 
 #include <common/log.h>
 #include <array>
+#include <libcpu/cpu_formatters.h>
 #include <regex>
 
 namespace cafe::hle
