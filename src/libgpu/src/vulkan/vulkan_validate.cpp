@@ -2,6 +2,8 @@
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
 
+#include <common/log.h>
+
 namespace vulkan
 {
 
@@ -84,6 +86,7 @@ auto supportedDepthFormats = {
 void
 Driver::validateDevice()
 {
+   // TODO: Decide what is a hard requirement and what is optional
    auto checkFormat = [&](latte::SurfaceFormat format, latte::SQ_TILE_TYPE tileType)
    {
       auto hostFormat = getVkSurfaceFormat(format, tileType);
@@ -92,32 +95,32 @@ Driver::validateDevice()
       auto formatProps = mPhysDevice.getFormatProperties(hostFormat);
 
       if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eTransferDst)) {
-         decaf_abort(fmt::format("Surface format {:03x}[{}]({}) does not support TransferDst feature",
-                                 format, tileType, vk::to_string(hostFormat)));
+         gLog->warn("Surface format {:03x}[{}]({}) does not support TransferDst feature",
+                    format, tileType, vk::to_string(hostFormat));
       }
       if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eTransferSrc)) {
-         decaf_abort(fmt::format("Surface format {:03x}[{}]({}) does not support TransferSrc feature",
-                                 format, tileType, vk::to_string(hostFormat)));
+         gLog->warn("Surface format {:03x}[{}]({}) does not support TransferSrc feature",
+                    format, tileType, vk::to_string(hostFormat));
       }
 
       if (tileType != latte::SQ_TILE_TYPE::DEPTH) {
          if (formatUsages & SurfaceFormatUsage::TEXTURE) {
             if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImage)) {
-               decaf_abort(fmt::format("Surface format {:03x}[{}]({}) does not support SampledImage feature",
-                                       format, tileType, vk::to_string(hostFormat)));
+               gLog->warn("Surface format {:03x}[{}]({}) does not support SampledImage feature",
+                          format, tileType, vk::to_string(hostFormat));
             }
          }
          if (formatUsages & SurfaceFormatUsage::COLOR) {
             if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eColorAttachment)) {
-               decaf_abort(fmt::format("Surface format {:03x}[{}]({}) does not support ColorAttachment feature",
-                                       format, tileType, vk::to_string(hostFormat)));
+               gLog->warn("Surface format {:03x}[{}]({}) does not support ColorAttachment feature",
+                          format, tileType, vk::to_string(hostFormat));
             }
          }
       } else {
          if (formatUsages & (SurfaceFormatUsage::DEPTH | SurfaceFormatUsage::STENCIL)) {
             if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment)) {
-               decaf_abort(fmt::format("Surface format {:03x}[{}]({}) does not support DepthStencilAttachement feature",
-                                       format, tileType, vk::to_string(hostFormat)));
+               gLog->warn("Surface format {:03x}[{}]({}) does not support DepthStencilAttachement feature",
+                          format, tileType, vk::to_string(hostFormat));
             }
          }
       }
@@ -131,7 +134,6 @@ Driver::validateDevice()
       checkFormat(format, latte::SQ_TILE_TYPE::DEPTH);
    }
 }
-
 
 } // namespace vulkan
 
