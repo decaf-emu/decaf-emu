@@ -125,15 +125,15 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
             // Calculate that the number of exports we expect matchs our number
             // of enabled rendertargets, or the search below will fail.
             auto numExports = mSqPgmExportsPs.EXPORT_MODE() >> 1;
-            auto rtExports = 0;
-            rtExports += mCbShaderControl.RT0_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT1_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT2_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT3_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT4_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT5_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT6_ENABLE() ? 1 : 0;
-            rtExports += mCbShaderControl.RT7_ENABLE() ? 1 : 0;
+            auto rtExports = 0u;
+            rtExports += mCbShaderControl.RT0_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT1_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT2_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT3_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT4_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT5_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT6_ENABLE() ? 1u : 0u;
+            rtExports += mCbShaderControl.RT7_ENABLE() ? 1u : 0u;
             decaf_check(rtExports == numExports);
 
             // Skip over render targets which are not being written.

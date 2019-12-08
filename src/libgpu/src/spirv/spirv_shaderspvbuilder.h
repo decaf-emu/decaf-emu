@@ -354,30 +354,30 @@ public:
       return createLoad(cfileChanPtr);
    }
 
-   spv::Id readSrcVarRef(const SrcVarRef& source)
+   spv::Id readSrcVarRef(const SrcVarRef& srcRef)
    {
       spv::Id srcId;
 
-      if (source.type == latte::SrcVarRef::Type::GPR) {
-         srcId = readGprChanRef(source.gprChan);
-      } else if (source.type == latte::SrcVarRef::Type::CBUFFER) {
-         srcId = readCbufferChanRef(source.cbufferChan);
-      } else if (source.type == latte::SrcVarRef::Type::CFILE) {
-         srcId = readCfileChanRef(source.cfileChan);
-      } else if (source.type == latte::SrcVarRef::Type::PREVRES) {
-         decaf_check(source.prevres.unit >= latte::SQ_CHAN::X);
-         decaf_check(source.prevres.unit <= latte::SQ_CHAN::T);
-         srcId = getPvId(source.prevres.unit);
-      } else if (source.type == latte::SrcVarRef::Type::VALUE) {
-         if (source.valueType == latte::VarRefType::FLOAT) {
+      if (srcRef.type == latte::SrcVarRef::Type::GPR) {
+         srcId = readGprChanRef(srcRef.gprChan);
+      } else if (srcRef.type == latte::SrcVarRef::Type::CBUFFER) {
+         srcId = readCbufferChanRef(srcRef.cbufferChan);
+      } else if (srcRef.type == latte::SrcVarRef::Type::CFILE) {
+         srcId = readCfileChanRef(srcRef.cfileChan);
+      } else if (srcRef.type == latte::SrcVarRef::Type::PREVRES) {
+         decaf_check(srcRef.prevres.unit >= latte::SQ_CHAN::X);
+         decaf_check(srcRef.prevres.unit <= latte::SQ_CHAN::T);
+         srcId = getPvId(srcRef.prevres.unit);
+      } else if (srcRef.type == latte::SrcVarRef::Type::VALUE) {
+         if (srcRef.valueType == latte::VarRefType::FLOAT) {
             // We write floats as UINT's which are bitcast to preserve precision
             // in the case that the value will be used as a uint.
-            auto srcFloatData = makeUintConstant(source.value.uintValue);
+            auto srcFloatData = makeUintConstant(srcRef.value.uintValue);
             srcId = createUnaryOp(spv::OpBitcast, floatType(), srcFloatData);
-         } else if (source.valueType == latte::VarRefType::INT) {
-            srcId = makeIntConstant(source.value.intValue);
-         } else if (source.valueType == latte::VarRefType::UINT) {
-            srcId = makeUintConstant(source.value.uintValue);
+         } else if (srcRef.valueType == latte::VarRefType::INT) {
+            srcId = makeIntConstant(srcRef.value.intValue);
+         } else if (srcRef.valueType == latte::VarRefType::UINT) {
+            srcId = makeUintConstant(srcRef.value.uintValue);
          } else {
             decaf_abort("Unexpected source value type");
          }
@@ -385,17 +385,17 @@ public:
          decaf_abort("Unexpected source var type");
       }
 
-      if (source.valueType == latte::VarRefType::FLOAT) {
+      if (srcRef.valueType == latte::VarRefType::FLOAT) {
          // We are naturally a float for SPIRV conversion
-      } else if (source.valueType == latte::VarRefType::INT) {
+      } else if (srcRef.valueType == latte::VarRefType::INT) {
          srcId = createUnaryOp(spv::Op::OpBitcast, intType(), srcId);
-      } else if (source.valueType == latte::VarRefType::UINT) {
+      } else if (srcRef.valueType == latte::VarRefType::UINT) {
          srcId = createUnaryOp(spv::Op::OpBitcast, uintType(), srcId);
       } else {
          decaf_abort("Unexpected source value type");
       }
 
-      if (source.isAbsolute) {
+      if (srcRef.isAbsolute) {
          if (getTypeId(srcId) == intType()) {
             srcId = createBuiltinCall(intType(), glslStd450(), GLSLstd450::GLSLstd450SAbs, { srcId });
          } else if (getTypeId(srcId) == floatType()) {
@@ -405,7 +405,7 @@ public:
          }
       }
 
-      if (source.isNegated) {
+      if (srcRef.isNegated) {
          if (getTypeId(srcId) == intType()) {
             srcId = createUnaryOp(spv::Op::OpSNegate, intType(), srcId);
          } else if (getTypeId(srcId) == floatType()) {
@@ -421,8 +421,8 @@ public:
    spv::Id readAluInstSrc(const latte::ControlFlowInst &cf, const latte::AluInstructionGroup &group, const latte::AluInst &inst,
                       uint32_t srcIndex, latte::VarRefType valueType = latte::VarRefType::FLOAT)
    {
-      auto source = makeSrcVar(cf, group, inst, srcIndex, valueType);
-      return readSrcVarRef(source);
+      auto srcRef = makeSrcVar(cf, group, inst, srcIndex, valueType);
+      return readSrcVarRef(srcRef);
    }
 
    spv::Id readAluReducSrc(const latte::ControlFlowInst &cf, const latte::AluInstructionGroup &group,
@@ -579,12 +579,12 @@ public:
       }
    }
 
-   spv::Id applySelMask(spv::Id dest, spv::Id source, std::array<SQ_SEL, 4> mask, uint32_t maxComponents = 4)
+   spv::Id applySelMask(spv::Id dest, spv::Id src, std::array<SQ_SEL, 4> mask, uint32_t maxComponents = 4)
    {
       // We only support doing masking against 4-component vectors.
-      decaf_check(getNumComponents(source) == 4);
+      decaf_check(getNumComponents(src) == 4);
 
-      auto sourceType = getTypeId(source);
+      auto sourceType = getTypeId(src);
       auto sourceBaseType = this->getContainedTypeId(sourceType);
 
       // For simplicity in the checking below, we set the unused mask values
@@ -600,7 +600,7 @@ public:
       isNoop &= (mask[2] == latte::SQ_SEL::SEL_Z);
       isNoop &= (mask[3] == latte::SQ_SEL::SEL_W);
       if (isNoop) {
-         return shrinkVector(source, maxComponents);
+         return shrinkVector(src, maxComponents);
       }
 
       // If the swizzle is ____, we should just skip processing entirely
@@ -668,17 +668,17 @@ public:
 
          if (dest == spv::NoResult) {
             decaf_check(isSwizzleFullyUnmasked(mask));
-            dest = source;
+            dest = src;
          }
 
          if (maxComponents == 1) {
-            return createOp(spv::OpCompositeExtract, sourceBaseType, { source, shuffleIdx[0] });
+            return createOp(spv::OpCompositeExtract, sourceBaseType, { src, shuffleIdx[0] });
          } else if (maxComponents == 2) {
-            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 2), { dest, source, shuffleIdx[0], shuffleIdx[1] });
+            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 2), { dest, src, shuffleIdx[0], shuffleIdx[1] });
          } else if (maxComponents == 2) {
-            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 3), { dest, source, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2] });
+            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 3), { dest, src, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2] });
          } else if (maxComponents == 4) {
-            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 4), { dest, source, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2], shuffleIdx[3] });
+            return createOp(spv::Op::OpVectorShuffle, vecType(sourceBaseType, 4), { dest, src, shuffleIdx[0], shuffleIdx[1], shuffleIdx[2], shuffleIdx[3] });
          } else {
             decaf_abort("Unexpected component count during swizzle");
          }
@@ -696,7 +696,7 @@ public:
       {
          auto& elem = sourceElems[elemIdx];
          if (!elem) {
-            elem = createOp(spv::OpCompositeExtract, floatType(), { source, elemIdx });
+            elem = createOp(spv::OpCompositeExtract, floatType(), { src, elemIdx });
          }
          return elem;
       };
@@ -1135,7 +1135,7 @@ public:
          auto logicOpVal = createBinOp(spv::OpShiftRightLogical, uintType(), alphaDataVal, makeUintConstant(8));
 
          auto lopSet = createBinOp(spv::Op::OpIEqual, boolType(), logicOpVal, makeUintConstant(1));
-         auto block = spv::Builder::If { lopSet, spv::SelectionControlMaskNone, *this };
+         auto eq1block = spv::Builder::If { lopSet, spv::SelectionControlMaskNone, *this };
          {
             if (sourceValType == float4Type()) {
                auto newValElem = makeFloatConstant(1.0f);
@@ -1153,10 +1153,10 @@ public:
                decaf_abort("Unexpected source pixel variable type");
             }
          }
-         block.makeBeginElse();
+         eq1block.makeBeginElse();
          {
             auto lopClear = createBinOp(spv::Op::OpIEqual, boolType(), logicOpVal, makeUintConstant(2));
-            auto block = spv::Builder::If { lopClear, spv::SelectionControlMaskNone, *this };
+            auto eq2block = spv::Builder::If { lopClear, spv::SelectionControlMaskNone, *this };
             {
                if (sourceValType == float4Type()) {
                   auto newValElem = makeFloatConstant(0.0f);
@@ -1174,15 +1174,13 @@ public:
                   decaf_abort("Unexpected source pixel variable type");
                }
             }
-            block.makeEndIf();
+            eq2block.makeEndIf();
          }
-         block.makeEndIf();
+         eq1block.makeEndIf();
 
          // We need to premultiply the alpha in cases where premultiplied alpha is enabled
          // globally but this specific target is not performing the premultiplication.
          if (sourceValType == float4Type()) {
-            auto zeroConst = makeUintConstant(0);
-            auto oneConst = makeUintConstant(1);
             auto twoConst = makeUintConstant(2);
             auto oneFConst = makeFloatConstant(1.0f);
 
@@ -1192,7 +1190,7 @@ public:
             auto targetBitConst = makeUintConstant(1 << ref.output.arrayBase);
             auto targetBitVal = createBinOp(spv::OpBitwiseAnd, uintType(), needsPremulVal, targetBitConst);
             auto pred = createBinOp(spv::OpINotEqual, boolType(), targetBitVal, zeroConst);
-            auto block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
+            auto eq0block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
             {
                exportVal = createLoad(pixelTmpVar);
 
@@ -1202,7 +1200,7 @@ public:
 
                createStore(premulExportVal, pixelTmpVar);
             }
-            block.makeEndIf();
+            eq0block.makeEndIf();
          }
 
          exportVal = createLoad(pixelTmpVar);

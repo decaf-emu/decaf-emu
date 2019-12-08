@@ -277,31 +277,31 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
    std::map<uint32_t, latte::SPI_PS_INPUT_CNTL_N*> inputCntlMap;
 
    auto numInputs = desc.regs.spi_ps_in_control_0.NUM_INTERP();
-   for (auto i = 0u; i < numInputs; ++i) {
-      auto &spi_ps_input_cntl = desc.regs.spi_ps_input_cntls[i];
-      auto gprRef = spvGen.getGprRef({ i, latte::GprIndexMode::None });
+   for (auto inputIdx = 0u; inputIdx < numInputs; ++inputIdx) {
+      auto &spi_ps_input_cntl = desc.regs.spi_ps_input_cntls[inputIdx];
+      auto gprRef = spvGen.getGprRef({ inputIdx, latte::GprIndexMode::None });
       auto inputSemantic = spi_ps_input_cntl.SEMANTIC();
 
       // Locate the vertex shader output that matches
       int semLocation = -1;
-      for (auto i = 0; i < 10; ++i) {
-         if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_0()) {
-            semLocation = i * 4 + 0;
+      for (auto semIdx = 0; semIdx < 10; ++semIdx) {
+         if (inputSemantic == desc.regs.spi_vs_out_ids[semIdx].SEMANTIC_0()) {
+            semLocation = semIdx * 4 + 0;
             break;
-         } else if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_1()) {
-            semLocation = i * 4 + 1;
+         } else if (inputSemantic == desc.regs.spi_vs_out_ids[semIdx].SEMANTIC_1()) {
+            semLocation = semIdx * 4 + 1;
             break;
-         } else if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_2()) {
-            semLocation = i * 4 + 2;
+         } else if (inputSemantic == desc.regs.spi_vs_out_ids[semIdx].SEMANTIC_2()) {
+            semLocation = semIdx * 4 + 2;
             break;
-         } else if (inputSemantic == desc.regs.spi_vs_out_ids[i].SEMANTIC_3()) {
-            semLocation = i * 4 + 3;
+         } else if (inputSemantic == desc.regs.spi_vs_out_ids[semIdx].SEMANTIC_3()) {
+            semLocation = semIdx * 4 + 3;
             break;
          }
       }
 
       if (desc.regs.spi_ps_in_control_0.POSITION_ENA() &&
-          desc.regs.spi_ps_in_control_0.POSITION_ADDR() == i) {
+          desc.regs.spi_ps_in_control_0.POSITION_ADDR() == inputIdx) {
          // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_CENTROID();
          // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_SAMPLE();
          spvGen.createStore(spvGen.createLoad(spvGen.fragCoordVar()), gprRef);
@@ -569,8 +569,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
 
          // We need to increment the ring offset at the end of each.  Note that we only
          // support striding in vec4 intervals.
-         auto gsDesc = reinterpret_cast<const GeometryShaderDesc*>(&shaderDesc);
-         auto ringItemStride = gsDesc->regs.sq_gs_vert_itemsize.ITEMSIZE();
+         auto ringItemStride = gsDesc.regs.sq_gs_vert_itemsize.ITEMSIZE();
          decaf_check(ringItemStride % 4 == 0);
          auto ringStride = ringItemStride / 4;
          auto ringStrideConst = spvGen.makeIntConstant(ringStride);
@@ -638,7 +637,6 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    auto zeroConst = spvGen.makeIntConstant(0);
    auto oneConst = spvGen.makeIntConstant(1);
    auto twoConst = spvGen.makeIntConstant(2);
-   auto threeConst = spvGen.makeIntConstant(3);
    auto twoFConst = spvGen.vectorizeConstant(spvGen.makeFloatConstant(2.0f), 4);
 
    auto glInType = spvGen.makeStructType({ spvGen.float4Type() }, "gl_in");
@@ -764,30 +762,30 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    auto len0gt2 = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen0to1, posLen1to2);
    auto len0to1Longest = spvGen.createBinOp(spv::OpLogicalAnd, spvGen.boolType(), len0gt1, len0gt2);
 
-   auto block = spv::Builder::If { len0to1Longest, spv::SelectionControlMaskNone, spvGen };
+   auto len0to1Block = spv::Builder::If { len0to1Longest, spv::SelectionControlMaskNone, spvGen };
    {
       emitVertex(0);
       emitGenVertex(2, 0, 1);
       emitVertex(1);
    }
-   block.makeBeginElse();
+   len0to1Block.makeBeginElse();
    {
       auto len0to2Longest = spvGen.createBinOp(spv::OpFOrdGreaterThan, spvGen.boolType(), posLen0to2, posLen1to2);
-      auto block = spv::Builder::If { len0to2Longest, spv::SelectionControlMaskNone, spvGen };
+      auto len0to2Block = spv::Builder::If { len0to2Longest, spv::SelectionControlMaskNone, spvGen };
       {
          emitVertex(0);
          emitGenVertex(1, 0, 2);
          emitVertex(2);
       }
-      block.makeBeginElse();
+      len0to2Block.makeBeginElse();
       {
          emitVertex(1);
          emitGenVertex(0, 1, 2);
          emitVertex(2);
       }
-      block.makeEndIf();
+      len0to2Block.makeEndIf();
    }
-   block.makeEndIf();
+   len0to1Block.makeEndIf();
 
    spvGen.createNoResultOp(spv::OpEndPrimitive);
 

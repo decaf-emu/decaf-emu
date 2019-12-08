@@ -136,7 +136,6 @@ Driver::_getSurfaceMemCache(const SurfaceDesc &info, const gpu7::tiling::Surface
    auto realAddr = info.calcAlignedBaseAddress();
 
    auto sliceSize = _unthickenedSliceSize(tilingInfo);
-   auto imageSize = static_cast<uint32_t>(tilingInfo.surfSize);
    auto alignedDepth = tilingInfo.depth;
 
    // Grab a memory cache object for this image
@@ -416,16 +415,11 @@ Driver::_allocateSurface(const SurfaceDesc& info)
       decaf_abort(fmt::format("Failed to pick vulkan dim for latte dim {}", info.dim));
    }
 
-   auto realAddr = info.calcAlignedBaseAddress();
-   auto swizzle = info.calcSwizzle();
    auto dataFormat = getSurfaceFormatDataFormat(info.format);
-   auto bpp = latte::getDataFormatBitsPerElement(dataFormat);
-   auto isDepthBuffer = (info.tileType == latte::SQ_TILE_TYPE::DEPTH);
 
    auto texelPitch = info.pitch;
    auto texelWidth = info.width;
    auto texelHeight = info.height;
-   auto texelDepth = info.depth;
 
    if (dataFormat >= latte::SQ_DATA_FORMAT::FMT_BC1 && dataFormat <= latte::SQ_DATA_FORMAT::FMT_BC5) {
       // Block compressed textures are tiled/untiled in terms of blocks

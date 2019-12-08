@@ -133,10 +133,10 @@ void Transpiler::translateAluOp2_CUBE(const ControlFlowInst &cf, const AluInstru
    // causes invalid values to be sampled.  We're not sure how its meant to work with a
    // non-wrapping sampler, but thats a problem for another day.
    {
-      auto absZ = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FAbs, { dstZ });
+      auto dstAbsZ = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FAbs, { dstZ });
 
-      dstX = mSpv->createBinOp(spv::OpFSub, mSpv->floatType(), dstX, absZ);
-      dstY = mSpv->createBinOp(spv::OpFSub, mSpv->floatType(), dstY, absZ);
+      dstX = mSpv->createBinOp(spv::OpFSub, mSpv->floatType(), dstX, dstAbsZ);
+      dstY = mSpv->createBinOp(spv::OpFSub, mSpv->floatType(), dstY, dstAbsZ);
    }
 
    mSpv->writeAluOpDest(cf, group, SQ_CHAN::X, *group.units[SQ_CHAN::X], dstX);

@@ -244,7 +244,7 @@ disassemble(const gsl::span<const uint8_t> &binary,
 
    for (auto i = 0; i < binary.size(); i += sizeof(ControlFlowInst)) {
       auto cf = *reinterpret_cast<const ControlFlowInst *>(binary.data() + i);
-      auto id = cf.word1.CF_INST();
+      // cf.word1.CF_INST();
       auto type = cf.word1.CF_INST_TYPE();
 
       switch (type) {

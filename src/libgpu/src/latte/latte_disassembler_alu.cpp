@@ -436,7 +436,6 @@ static void
 disassembleAluClause(State &state, const latte::ControlFlowInst &parent, uint32_t addr, uint32_t slots)
 {
    static char unitName[5] = { 'x', 'y', 'z', 'w', 't' };
-   auto result = true;
    auto clause = reinterpret_cast<const AluInst *>(state.binary.data() + 8 * addr);
 
    for (size_t slot = 0u; slot < slots; ) {
@@ -448,8 +447,6 @@ disassembleAluClause(State &state, const latte::ControlFlowInst &parent, uint32_
       for (auto j = 0u; j < group.instructions.size(); ++j) {
          auto &inst = group.instructions[j];
          auto unit = units.addInstructionUnit(inst);
-         const char *name = nullptr;
-         auto srcCount = 0u;
 
          if (j > 0) {
             fmt::format_to(state.out, "{}   ", state.indent);

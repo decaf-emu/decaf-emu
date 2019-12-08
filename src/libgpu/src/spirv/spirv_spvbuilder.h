@@ -67,13 +67,13 @@ public:
       return constVal;
    }
 
-   spv::Id vectorizeConstant(spv::Id source, int elemCount)
+   spv::Id vectorizeConstant(spv::Id srcId, int elemCount)
    {
       std::vector<spv::Id> sources(elemCount);
       for (auto i = 0u; i < sources.size(); ++i) {
-         sources[i] = source;
+         sources[i] = srcId;
       }
-      return makeCompositeConstant(makeVectorType(getTypeId(source), elemCount), sources);
+      return makeCompositeConstant(makeVectorType(getTypeId(srcId), elemCount), sources);
    }
 
 
@@ -274,9 +274,9 @@ public:
    // Byte Swapping
    // ------------------------------------------------------------
 
-   spv::Id bswap8in16(spv::Id source)
+   spv::Id bswap8in16(spv::Id srcId)
    {
-      auto sourceTypeId = getTypeId(source);
+      auto sourceTypeId = getTypeId(srcId);
 
       auto inputTypeId = sourceTypeId;
       auto numComps = getNumTypeComponents(inputTypeId);
@@ -295,8 +295,8 @@ public:
             shiftConst = vectorizeConstant(shiftConst, numComps);
          }
 
-         auto xoxoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, xoxoConst);
-         auto oxoxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, oxoxConst);
+         auto xoxoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, xoxoConst);
+         auto oxoxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, oxoxConst);
 
          auto oxoxBitsMoved = createBinOp(spv::Op::OpShiftRightLogical, sourceTypeId, xoxoBits, shiftConst);
          auto xoxoBitsMoved = createBinOp(spv::Op::OpShiftLeftLogical, sourceTypeId, oxoxBits, shiftConst);
@@ -313,8 +313,8 @@ public:
             shiftConst = vectorizeConstant(shiftConst, numComps);
          }
 
-         auto xoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, xoConst);
-         auto oxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, oxConst);
+         auto xoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, xoConst);
+         auto oxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, oxConst);
 
          auto oxBitsMoved = createBinOp(spv::Op::OpShiftRightLogical, sourceTypeId, xoBits, shiftConst);
          auto xoBitsMoved = createBinOp(spv::Op::OpShiftLeftLogical, sourceTypeId, oxBits, shiftConst);
@@ -325,9 +325,9 @@ public:
       }
    }
 
-   spv::Id bswap8in32(spv::Id source)
+   spv::Id bswap8in32(spv::Id srcId)
    {
-      auto sourceTypeId = getTypeId(source);
+      auto sourceTypeId = getTypeId(srcId);
 
       auto xoooConst = makeUintConstant(0xFF000000);
       auto oxooConst = makeUintConstant(0x00FF0000);
@@ -350,10 +350,10 @@ public:
       }
       decaf_check(inputTypeId == uintType());
 
-      auto xoooBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, xoooConst);
-      auto oxooBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, oxooConst);
-      auto ooxoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, ooxoConst);
-      auto oooxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, source, oooxConst);
+      auto xoooBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, xoooConst);
+      auto oxooBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, oxooConst);
+      auto ooxoBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, ooxoConst);
+      auto oooxBits = createBinOp(spv::Op::OpBitwiseAnd, sourceTypeId, srcId, oooxConst);
 
       auto xoooBitsMoved = createBinOp(spv::Op::OpShiftLeftLogical, sourceTypeId, oooxBits, bigShiftConst);
       auto oxooBitsMoved = createBinOp(spv::Op::OpShiftLeftLogical, sourceTypeId, ooxoBits, littleShiftConst);
@@ -389,14 +389,14 @@ public:
      }
    }
    */
-   spv::Id unpackFloat11(spv::Id source)
+   spv::Id unpackFloat11(spv::Id srcId)
    {
-      decaf_check(getTypeId(source) == uintType());
+      decaf_check(getTypeId(srcId) == uintType());
 
       auto resPtr = createVariable(spv::StorageClassPrivate, floatType(), "unpackF11Res");
 
-      auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), source, makeIntConstant(6));
-      auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), source, makeUintConstant(0x3F));
+      auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), srcId, makeIntConstant(6));
+      auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), srcId, makeUintConstant(0x3F));
 
       auto eIsZero = createBinOp(spv::Op::OpIEqual, boolType(), eVal, makeUintConstant(0));
       auto eIsZeroBlock = spv::Builder::If { eIsZero, spv::SelectionControlMaskNone, *this };
@@ -473,14 +473,14 @@ public:
      }
    }
    */
-   spv::Id unpackFloat10(spv::Id source)
+   spv::Id unpackFloat10(spv::Id srcId)
    {
-      decaf_check(getTypeId(source) == uintType());
+      decaf_check(getTypeId(srcId) == uintType());
 
       auto resPtr = createVariable(spv::StorageClassPrivate, floatType(), "unpackF11Res");
 
-      auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), source, makeIntConstant(5));
-      auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), source, makeUintConstant(0x1F));
+      auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), srcId, makeIntConstant(5));
+      auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), srcId, makeUintConstant(0x1F));
 
       auto eIsZero = createBinOp(spv::Op::OpIEqual, boolType(), eVal, makeUintConstant(0));
       auto eIsZeroBlock = spv::Builder::If { eIsZero, spv::SelectionControlMaskNone, *this };

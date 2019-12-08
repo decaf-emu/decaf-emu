@@ -359,7 +359,7 @@ void Transpiler::translateTex_SAMPLE_C_G_LZ(const ControlFlowInst &cf, const Tex
 void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const TextureFetchInst &inst)
 {
    auto textureId = inst.word0.RESOURCE_ID();
-   auto samplerId = inst.word2.SAMPLER_ID();
+   // inst.word2.SAMPLER_ID();
    auto texDim = mTexDims[textureId];
    auto texFormat = mTexFormats[textureId];
 

@@ -122,7 +122,7 @@ alignTiling(latte::SQ_TILE_MODE& tileMode,
    std::memset(&output, 0, sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT));
    output.size = sizeof(ADDR_COMPUTE_SURFACE_INFO_OUTPUT);
 
-   auto result = AddrComputeSurfaceInfo(gpu::getAddrLibHandle(), &input, &output);
+   auto result = AddrComputeSurfaceInfo(handle, &input, &output);
    decaf_check(result == ADDR_OK);
 
    pitch = output.pitch;

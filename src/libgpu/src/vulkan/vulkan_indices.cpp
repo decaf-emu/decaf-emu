@@ -13,11 +13,11 @@ unpackQuadList(uint32_t count,
 {
    // Unpack quad indices into triangle indices
    if (src) {
-      for (auto i = 0u; i < count / 4; ++i) {
-         auto index_0 = *src++;
-         auto index_1 = *src++;
-         auto index_2 = *src++;
-         auto index_3 = *src++;
+      for (IndexType i = 0u; i < count / 4; ++i) {
+         IndexType index_0 = *src++;
+         IndexType index_1 = *src++;
+         IndexType index_2 = *src++;
+         IndexType index_3 = *src++;
 
          *(dst++) = index_0;
          *(dst++) = index_1;
@@ -28,13 +28,14 @@ unpackQuadList(uint32_t count,
          *(dst++) = index_3;
       }
    } else {
-      auto index_0 = 0u;
-      auto index_1 = 1u;
-      auto index_2 = 2u;
-      auto index_3 = 3u;
+      IndexType index_0 = 0u;
+      IndexType index_1 = 1u;
+      IndexType index_2 = 2u;
+      IndexType index_3 = 3u;
 
-      for (auto i = 0u; i < count / 4; ++i) {
-         auto index = i * 4;
+      for (IndexType i = 0u; i < count / 4; ++i) {
+         IndexType index = i * 4;
+
          *(dst++) = index_0 + index;
          *(dst++) = index_1 + index;
          *(dst++) = index_2 + index;

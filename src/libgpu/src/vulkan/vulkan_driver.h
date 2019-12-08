@@ -10,7 +10,7 @@
 #include "spirv/spirv_translate.h"
 #include "spirv/spirv_pushconstants.h"
 #include "pm4_processor.h"
-#include "vk_mem_alloc.h"
+#include "vk_mem_alloc_decaf.h"
 #include "vulkan_descs.h"
 #include "vulkan_memtracker.h"
 

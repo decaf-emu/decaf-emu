@@ -184,6 +184,8 @@ ComputePixelIndexWithinMicroTile(uint32_t x,
                                  uint32_t y,
                                  uint32_t z)
 {
+   constexpr auto thickness = ComputeSurfaceThickness<TileMode>();
+
    uint32_t pixelBit0 = 0;
    uint32_t pixelBit1 = 0;
    uint32_t pixelBit2 = 0;
@@ -195,19 +197,17 @@ ComputePixelIndexWithinMicroTile(uint32_t x,
    uint32_t pixelBit8 = 0;
    uint32_t pixelNumber;
 
-   uint32_t x0 = _BIT(x, 0);
-   uint32_t x1 = _BIT(x, 1);
-   uint32_t x2 = _BIT(x, 2);
-   uint32_t y0 = _BIT(y, 0);
-   uint32_t y1 = _BIT(y, 1);
-   uint32_t y2 = _BIT(y, 2);
-   uint32_t z0 = _BIT(z, 0);
-   uint32_t z1 = _BIT(z, 1);
-   uint32_t z2 = _BIT(z, 2);
+   const uint32_t x0 = _BIT(x, 0);
+   const uint32_t x1 = _BIT(x, 1);
+   const uint32_t x2 = _BIT(x, 2);
+   const uint32_t y0 = _BIT(y, 0);
+   const uint32_t y1 = _BIT(y, 1);
+   const uint32_t y2 = _BIT(y, 2);
 
-   constexpr auto thickness = ComputeSurfaceThickness<TileMode>();
+   if constexpr (TileType == ADDR_THICK_TILING) {
+      const uint32_t z0 = _BIT(z, 0);
+      const uint32_t z1 = _BIT(z, 1);
 
-   if (TileType == ADDR_THICK_TILING) {
       pixelBit0 = x0;
       pixelBit1 = y0;
       pixelBit2 = z0;
@@ -217,7 +217,7 @@ ComputePixelIndexWithinMicroTile(uint32_t x,
       pixelBit6 = x2;
       pixelBit7 = y2;
    } else {
-      if (TileType == ADDR_NON_DISPLAYABLE) {
+      if constexpr (TileType == ADDR_NON_DISPLAYABLE) {
          pixelBit0 = x0;
          pixelBit1 = y0;
          pixelBit2 = x1;
@@ -271,13 +271,18 @@ ComputePixelIndexWithinMicroTile(uint32_t x,
          }
       }
 
-      if (thickness > 1) {
+      if constexpr (thickness > 1) {
+         const uint32_t z0 = _BIT(z, 0);
+         const uint32_t z1 = _BIT(z, 1);
+
          pixelBit6 = z0;
          pixelBit7 = z1;
       }
    }
 
-   if (thickness == 8) {
+   if constexpr (thickness == 8) {
+      const uint32_t z2 = _BIT(z, 2);
+
       pixelBit8 = z2;
    }
 
@@ -302,7 +307,6 @@ ComputePipeFromCoordWoRotation(uint32_t x,
    uint32_t pipeBit0 = 0;
    uint32_t pipeBit1 = 0;
    uint32_t pipeBit2 = 0;
-   uint32_t pipeBit3 = 0;
 
    uint32_t x3 = _BIT(x, 3);
    uint32_t x4 = _BIT(x, 4);
@@ -363,7 +367,7 @@ ComputeBankFromCoordWoRotation(uint32_t x,
    case 4:
       bankBit0 = (ty4 ^ x3);
 
-      if (UsesOptimalBankSwap == 1 && NumPipes == 8) {
+      if constexpr (UsesOptimalBankSwap == 1 && NumPipes == 8) {
          bankBit0 ^= x5;
       }
 
@@ -372,7 +376,7 @@ ComputeBankFromCoordWoRotation(uint32_t x,
    case 8:
       bankBit0 = (ty5 ^ x3);
 
-      if (UsesOptimalBankSwap == 1 && NumPipes == 8) {
+      if constexpr (UsesOptimalBankSwap == 1 && NumPipes == 8) {
          bankBit0 ^= tx3;
       }
 

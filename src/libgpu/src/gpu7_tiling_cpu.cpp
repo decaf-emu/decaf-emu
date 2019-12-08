@@ -115,13 +115,13 @@ struct RetileCore
       static constexpr auto tiledStride = MicroTileWidth * 8;
       static constexpr auto groupElems = 2 * (64 / 8) / 16;
 
-      const auto nextGroup =
-         tiled + (0x100 << (NumBankBits + NumPipeBits));
-
       for (int y = 0; y < MicroTileHeight; y += 2) {
-         if (IsMacroTiling && y == 4) {
-            // At y == 4 we hit the next group (at element offset 256)
-            tiled = nextGroup;
+         if constexpr (IsMacroTiling) {
+            if (y == 4) {
+               // At y == 4 we hit the next group (at element offset 256)
+               tiled -= tiledStride * y;
+               tiled += 0x100 << (NumBankBits + NumPipeBits);
+            }
          }
 
          auto untiledRow1 = untiled + 0 * untiledStride;
@@ -308,18 +308,18 @@ struct RetileCore
       tiled = tiled + tiledOffset;
       untiled = untiled + untiledOffset;
 
-      if (IsDepth) {
+      if constexpr (IsDepth) {
          retileMicroDepth(tiled, untiled, untiledStride);
       } else {
-         if (BitsPerElement == 8) {
+         if constexpr (BitsPerElement == 8) {
             retileMicro8(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 16) {
+         } else if constexpr (BitsPerElement == 16) {
             retileMicro16(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 32) {
+         } else if constexpr (BitsPerElement == 32) {
             retileMicro32(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 64) {
+         } else if constexpr (BitsPerElement == 64) {
             retileMicro64(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 128) {
+         } else if constexpr (BitsPerElement == 128) {
             retileMicro128(tiled, untiled, untiledStride);
          }
       }
@@ -430,18 +430,18 @@ struct RetileCore
       tiled = tiled + tiledOffset;
       untiled = untiled + untiledOffset;
 
-      if (IsDepth) {
+      if constexpr (IsDepth) {
          retileMicroDepth(tiled, untiled, untiledStride);
       } else {
-         if (BitsPerElement == 8) {
+         if constexpr (BitsPerElement == 8) {
             retileMicro8(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 16) {
+         } else if constexpr (BitsPerElement == 16) {
             retileMicro16(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 32) {
+         } else if constexpr (BitsPerElement == 32) {
             retileMicro32(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 64) {
+         } else if constexpr (BitsPerElement == 64) {
             retileMicro64(tiled, untiled, untiledStride);
-         } else if (BitsPerElement == 128) {
+         } else if constexpr (BitsPerElement == 128) {
             retileMicro128(tiled, untiled, untiledStride);
          }
       }
@@ -453,7 +453,7 @@ struct RetileCore
           uint8_t *untiled,
           uint8_t *tiled)
    {
-      if (IsMacroTiling) {
+      if constexpr (IsMacroTiling) {
          retileMacro(params, tileIndex, untiled, tiled);
       } else {
          retileMicro(params, tileIndex, untiled, tiled);

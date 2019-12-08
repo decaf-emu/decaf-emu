@@ -139,14 +139,14 @@ BITFIELD_END
 // Contains color component mask fields for writing the render targets. Red, green, blue, and alpha
 // are components 0, 1, 2, and 3 in the pixel shader and are enabled by bits 0, 1, 2, and 3 in each field
 BITFIELD_BEG(CB_TARGET_MASK, uint32_t)
-   BITFIELD_ENTRY(0, 4, uint32_t, TARGET0_ENABLE)
-   BITFIELD_ENTRY(4, 4, uint32_t, TARGET1_ENABLE)
-   BITFIELD_ENTRY(8, 4, uint32_t, TARGET2_ENABLE)
-   BITFIELD_ENTRY(12, 4, uint32_t, TARGET3_ENABLE)
-   BITFIELD_ENTRY(16, 4, uint32_t, TARGET4_ENABLE)
-   BITFIELD_ENTRY(20, 4, uint32_t, TARGET5_ENABLE)
-   BITFIELD_ENTRY(24, 4, uint32_t, TARGET6_ENABLE)
-   BITFIELD_ENTRY(28, 4, uint32_t, TARGET7_ENABLE)
+   BITFIELD_ENTRY(0, 4, uint8_t, TARGET0_ENABLE)
+   BITFIELD_ENTRY(4, 4, uint8_t, TARGET1_ENABLE)
+   BITFIELD_ENTRY(8, 4, uint8_t, TARGET2_ENABLE)
+   BITFIELD_ENTRY(12, 4, uint8_t, TARGET3_ENABLE)
+   BITFIELD_ENTRY(16, 4, uint8_t, TARGET4_ENABLE)
+   BITFIELD_ENTRY(20, 4, uint8_t, TARGET5_ENABLE)
+   BITFIELD_ENTRY(24, 4, uint8_t, TARGET6_ENABLE)
+   BITFIELD_ENTRY(28, 4, uint8_t, TARGET7_ENABLE)
 BITFIELD_END
 
 } // namespace latte

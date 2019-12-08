@@ -127,8 +127,6 @@ disassembleExpInstruction(fmt::memory_buffer &out, const ControlFlowInst &inst)
 void
 disassembleExport(State &state, const ControlFlowInst &inst)
 {
-   auto id = inst.exp.word1.CF_INST();
-   auto name = getInstructionName(id);
    fmt::format_to(state.out, "{}{:02} ", state.indent, state.cfPC);
    disassembleExpInstruction(state.out, inst);
    fmt::format_to(state.out, "\n");

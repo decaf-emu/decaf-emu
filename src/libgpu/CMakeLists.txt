@@ -94,7 +94,7 @@ if(DECAF_ENABLE_PCH)
         target_precompile_headers(libgpu
           PRIVATE
             <common/vulkan_hpp.h>
-            "src/vulkan/vk_mem_alloc.h"
+            "src/vulkan/vk_mem_alloc_decaf.h"
         )
     endif()
 

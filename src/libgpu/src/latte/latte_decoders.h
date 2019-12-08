@@ -11,6 +11,8 @@
 namespace latte
 {
 
+static constexpr auto InvalidGprIdx = static_cast<uint32_t>(-1);
+
 inline bool
 isTranscendentalOnly(SQ_ALU_FLAGS flags)
 {
@@ -561,7 +563,6 @@ makeSrcVar(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_ALU_S
                                                cf.alu.word1.KCACHE_MODE1(), cf.alu.word0.KCACHE_BANK1(), cf.alu.word1.KCACHE_ADDR1());
       out.cbufferChan.chan = chan;
    } else if (selId >= 256 && selId < 512) {
-      auto cfileIndex = selId - 256;
       out.type = SrcVarRef::Type::CFILE;
       out.cfileChan.cfile = makeCfileRef(selId - 256, rel, indexMode);
       out.cfileChan.chan = chan;
@@ -633,7 +634,7 @@ makeSrcVar(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_ALU_S
          break;
       case latte::SQ_ALU_SRC::IMM_M_1_INT:
          out.type = SrcVarRef::Type::VALUE;
-         out.value.uintValue = -1;
+         out.value.intValue = -1;
          break;
       case latte::SQ_ALU_SRC::IMM_0_5:
          out.type = SrcVarRef::Type::VALUE;
@@ -810,7 +811,7 @@ makeExportRef(SQ_EXPORT_TYPE type, uint32_t arrayBase)
    out.dataStride = 0;
    out.arraySize = 1;
    out.elemCount = 1;
-   out.indexGpr = -1;
+   out.indexGpr = InvalidGprIdx;
 
    if (type == SQ_EXPORT_TYPE::POS) {
       if (60 <= arrayBase && arrayBase <= 63) {
@@ -857,7 +858,7 @@ _makeGenericMemExportRef(ExportRef::Type refType, SQ_EXPORT_TYPE type,
    out.elemCount = elemCount;
    out.arrayBase = arrayBase;
    out.arraySize = arraySize;
-   out.indexGpr = -1;
+   out.indexGpr = InvalidGprIdx;
 
    switch(static_cast<SQ_MEM_EXPORT_TYPE>(type)) {
    case SQ_MEM_EXPORT_TYPE::WRITE:

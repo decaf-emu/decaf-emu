@@ -262,7 +262,7 @@ BITFIELD_END
 
 // Vertex fetch clause instruction word 1
 BITFIELD_BEG(SQ_VTX_WORD1_SEM, uint32_t)
-   BITFIELD_ENTRY(0, 8, uint32_t, SEMANTIC_ID);
+   BITFIELD_ENTRY(0, 8, uint8_t, SEMANTIC_ID);
 BITFIELD_END
 
 BITFIELD_BEG(SQ_VTX_WORD1_GPR, uint32_t)

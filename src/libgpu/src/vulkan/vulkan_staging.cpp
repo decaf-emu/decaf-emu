@@ -38,6 +38,8 @@ Driver::_allocStagingBuffer(uint32_t size, StagingBufferType type)
          vk::BufferUsageFlagBits::eTransferSrc |
          vk::BufferUsageFlagBits::eTransferDst |
          vk::BufferUsageFlagBits::eStorageBuffer;
+   } else {
+      decaf_abort("Unexpected staging buffer type");
    }
 
    vk::BufferCreateInfo bufferDesc;

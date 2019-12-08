@@ -576,52 +576,6 @@ getVkSampleCount(uint32_t samples)
    decaf_abort("Unexpected surface samples value");
 }
 
-static vk::Format
-getSurfaceFormat(latte::SQ_NUM_FORMAT numFormat,
-                 latte::SQ_FORMAT_COMP formatComp,
-                 uint32_t degamma,
-                 vk::Format unorm,
-                 vk::Format snorm,
-                 vk::Format uint,
-                 vk::Format sint,
-                 vk::Format srgb,
-                 vk::Format scaled)
-{
-   if (!degamma) {
-      if (numFormat == latte::SQ_NUM_FORMAT::NORM) {
-         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
-            return snorm;
-         } else if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
-            return unorm;
-         } else {
-            return vk::Format::eUndefined;
-         }
-      } else if (numFormat == latte::SQ_NUM_FORMAT::INT) {
-         if (formatComp == latte::SQ_FORMAT_COMP::SIGNED) {
-            return sint;
-         } else if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
-            return uint;
-         } else {
-            return vk::Format::eUndefined;
-         }
-      } else if (numFormat == latte::SQ_NUM_FORMAT::SCALED) {
-         if (formatComp == latte::SQ_FORMAT_COMP::UNSIGNED) {
-            return scaled;
-         } else {
-            return vk::Format::eUndefined;
-         }
-      } else {
-         return vk::Format::eUndefined;
-      }
-   } else {
-      if (numFormat == 0 && formatComp == 0) {
-         return srgb;
-      } else {
-         return vk::Format::eUndefined;
-      }
-   }
-}
-
 } // namespace vulkan
 
 #endif // ifdef DECAF_VULKAN
