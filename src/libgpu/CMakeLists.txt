@@ -20,6 +20,10 @@ if(DECAF_VULKAN)
 
     include_directories(${GENERATED_BASEPATH})
 
+    if(DECAF_PLATFORM_COCOA)
+        set(SHADER_DEFINES "-DDECAF_MVK_COMPAT")
+    endif()
+
     macro(compile_vulkan_shader OUTFILE INFILE)
         set(BIN2C "${CMAKE_SOURCE_DIR}/libraries/bin2c.cmake")
         set(INPATH "${PROJECT_SOURCE_DIR}/vulkan_shaders/${INFILE}")
@@ -27,7 +31,7 @@ if(DECAF_VULKAN)
         add_custom_command(
             OUTPUT "${OUTPATH}.h" "${OUTPATH}.cpp"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${SHDRBIN_BASEPATH}"
-            COMMAND ${GLSLANG_VALIDATOR} -V -o "${OUTPATH}" "${INPATH}"
+            COMMAND ${GLSLANG_VALIDATOR} -V ${SHADER_DEFINES} -o "${OUTPATH}" "${INPATH}"
             COMMAND ${CMAKE_COMMAND} ARGS "-DOUTPUT_C=${OUTPATH}.cpp" "-DOUTPUT_H=${OUTPATH}.h" "-DINPUT_FILES=${OUTPATH}" -P "${BIN2C}"
             DEPENDS "${INPATH}" "${BIN2C}"
             VERBATIM)

@@ -8,7 +8,9 @@ layout(constant_id = 4) const bool IsMacro3X = false;
 layout(constant_id = 5) const bool IsBankSwapped = false;
 layout(constant_id = 6) const uint BitsPerElement = 8;
 layout(constant_id = 7) const bool IsDepth = false;
+#ifndef DECAF_MVK_COMPAT
 layout(constant_id = 8) const uint SubGroupSize = 32;
+#endif
 
 // Specify our grouping setup
 layout(local_size_x_id = 8, local_size_y = 1, local_size_z = 1) in;
@@ -50,6 +52,7 @@ layout(push_constant) uniform Parameters {
 // Set up the shader inputs
 layout(std430, binding = 0) buffer tiledBuffer4 { uint tiled4[]; };
 layout(std430, binding = 1) buffer untiledBuffer4 { uint untiled4[]; };
+
 void copyElems4(uint untiledOffset, uint tiledOffset, uint numElems)
 {
    if (IsUntiling) {
@@ -63,8 +66,13 @@ void copyElems4(uint untiledOffset, uint tiledOffset, uint numElems)
    }
 }
 
+#ifndef DECAF_MVK_COMPAT
 layout(std430, binding = 0) buffer tiledBuffer8 { uvec2 tiled8[]; };
 layout(std430, binding = 1) buffer untiledBuffer8 { uvec2 untiled8[]; };
+
+layout(std430, binding = 0) buffer tiledBuffer16 { uvec4 tiled16[]; };
+layout(std430, binding = 1) buffer untiledBuffer16 { uvec4 untiled16[]; };
+
 void copyElems8(uint untiledOffset, uint tiledOffset, uint numElems)
 {
    if (IsUntiling) {
@@ -78,8 +86,6 @@ void copyElems8(uint untiledOffset, uint tiledOffset, uint numElems)
    }
 }
 
-layout(std430, binding = 0) buffer tiledBuffer16 { uvec4 tiled16[]; };
-layout(std430, binding = 1) buffer untiledBuffer16 { uvec4 untiled16[]; };
 void copyElems16(uint untiledOffset, uint tiledOffset, uint numElems)
 {
    if (IsUntiling) {
@@ -92,6 +98,17 @@ void copyElems16(uint untiledOffset, uint tiledOffset, uint numElems)
       }
    }
 }
+#else
+void copyElems8(uint untiledOffset, uint tiledOffset, uint numElems)
+{
+   copyElems4(untiledOffset, tiledOffset, numElems * 2);
+}
+
+void copyElems16(uint untiledOffset, uint tiledOffset, uint numElems)
+{
+   copyElems4(untiledOffset, tiledOffset, numElems * 4);
+}
+#endif
 
 void retileMicro8(uint tiledOffset, uint untiledOffset, uint untiledStride)
 {
@@ -330,7 +347,6 @@ void mainMacroTiling(uint tileIndex)
 {
    const uint thinSliceBytes = params.thickSliceBytes / MicroTileThickness;
    const uint untiledStride = params.numTilesPerRow * MicroTileWidth * BytesPerElement;
-   const uint thickMicroTileBytes = params.thinMicroTileBytes * MicroTileThickness;
 
    const uint dispatchSliceIndex = tileIndex / params.numTilesPerSlice;
    const uint sliceTileIndex = tileIndex % params.numTilesPerSlice;
