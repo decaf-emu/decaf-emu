@@ -721,6 +721,8 @@ private:
    };
 
    VulkanDisplayPipeline mDisplayPipeline =  { };
+   vk::PhysicalDeviceTransformFeedbackFeaturesEXT mSupportedFeaturesTransformFeedback;
+   vk::PhysicalDeviceFeatures2 mSupportedFeatures;
 
    std::atomic<RunState> mRunState = RunState::None;
    gpu::VulkanDriverDebugInfo mDebugInfo;

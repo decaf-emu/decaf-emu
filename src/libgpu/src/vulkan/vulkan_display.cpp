@@ -5,12 +5,15 @@
 #include "gpu_config.h"
 #include "gpu7_displaylayout.h"
 
-#include <cstring>
-#include <optional>
 
-#include <fmt/format.h>
 #include <common/log.h>
 #include <common/platform_debug.h>
+#include <common/strutils.h>
+#include <cstring>
+#include <fmt/format.h>
+#include <optional>
+#include <string_view>
+#include <tuple>
 
 namespace vulkan
 {
@@ -315,26 +318,133 @@ chooseSurfaceFormat(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
    return selected.format;
 }
 
-static std::pair<vk::Device, uint32_t>
+static std::tuple<vk::Device, uint32_t, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceTransformFeedbackFeaturesEXT>
 createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
 {
    std::vector<const char*> deviceLayers =
    {
    };
 
-   std::vector<const char*> deviceExtensions = {
+   std::vector<const char *> requiredExtensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME,
-      VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
       VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-      VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
       VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
       VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME,
    };
+   std::vector<const char *> missingRequiredExtensions = {};
+
+   std::vector<const char *> optionalExtensions = {
+      VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME,
+      VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
+   };
+   std::vector<const char *> missingOptionalExtensions = {};
+
+   std::vector<const char *> deviceExtensions = requiredExtensions;
 
    if (gpu::config()->debug.debug_enabled) {
       deviceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
-      deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+      optionalExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+   }
+
+   auto supportedDeviceExtensions = physicalDevice.enumerateDeviceExtensionProperties();
+   for (auto &name : requiredExtensions) {
+      auto hasExtension = false;
+      for (auto &ext : supportedDeviceExtensions) {
+         if (iequals(name, ext.extensionName)) {
+            hasExtension = true;
+            break;
+         }
+      }
+
+      if (!hasExtension) {
+         missingRequiredExtensions.push_back(name);
+      }
+   }
+
+   for (auto name : optionalExtensions) {
+      auto hasExtension = false;
+      for (auto &ext : supportedDeviceExtensions) {
+         if (iequals(name, ext.extensionName)) {
+            hasExtension = true;
+            break;
+         }
+      }
+
+      if (hasExtension) {
+         deviceExtensions.push_back(name);
+      } else {
+         missingOptionalExtensions.push_back(name);
+      }
+   }
+
+   if (!missingRequiredExtensions.empty() || !missingOptionalExtensions.empty()) {
+      fmt::memory_buffer msg;
+      fmt::format_to(msg, "Not all Vulkan {} extensions supported:\n", !missingRequiredExtensions.empty() ? "optional" : "required");
+      fmt::format_to(msg, "  Required:\n");
+      for (auto name : requiredExtensions) {
+         fmt::format_to(msg, "  - {}: {}\n",
+            name,
+            std::find(missingRequiredExtensions.begin(), missingRequiredExtensions.end(), name) == missingRequiredExtensions.end());
+      }
+
+      fmt::format_to(msg, "  Optional:\n");
+      for (auto name : optionalExtensions) {
+         fmt::format_to(msg, "  - {}: {}\n",
+            name,
+            std::find(missingOptionalExtensions.begin(), missingOptionalExtensions.end(), name) == missingOptionalExtensions.end());
+      }
+
+      if (!missingRequiredExtensions.empty()) {
+         gLog->error(std::string_view{ msg.data(), msg.size() });
+      } else {
+         gLog->warn(std::string_view{ msg.data(), msg.size() });
+      }
+   }
+
+   auto features = physicalDevice.getFeatures2<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceTransformFeedbackFeaturesEXT>();
+   auto supportedFeatures = features.get<vk::PhysicalDeviceFeatures2>();
+   auto supportedFeaturesTransformFeedback = features.get<vk::PhysicalDeviceTransformFeedbackFeaturesEXT>();
+
+   auto hasRequiredFeatures =
+      supportedFeatures.features.depthClamp &&
+      supportedFeatures.features.textureCompressionBC &&
+      supportedFeatures.features.independentBlend &&
+      supportedFeatures.features.fillModeNonSolid &&
+      supportedFeatures.features.samplerAnisotropy;
+
+   auto hasOptionalFeatures =
+      supportedFeatures.features.geometryShader &&
+      supportedFeatures.features.wideLines &&
+      supportedFeatures.features.logicOp &&
+      supportedFeaturesTransformFeedback.transformFeedback &&
+      supportedFeaturesTransformFeedback.geometryStreams;
+
+   if (!hasRequiredFeatures || !hasOptionalFeatures) {
+      fmt::memory_buffer msg;
+      fmt::format_to(msg, "Not all Vulkan {} features supported:\n", hasRequiredFeatures ? "optional" : "required");
+      fmt::format_to(msg, "  Required:\n");
+      fmt::format_to(msg, "  - depthClamp: {}\n", supportedFeatures.features.depthClamp);
+      fmt::format_to(msg, "  - textureCompressionBC: {}\n", supportedFeatures.features.textureCompressionBC);
+      fmt::format_to(msg, "  - independentBlend: {}\n", supportedFeatures.features.independentBlend);
+      fmt::format_to(msg, "  - fillModeNonSolid: {}\n", supportedFeatures.features.fillModeNonSolid);
+      fmt::format_to(msg, "  - samplerAnisotropy: {}\n", supportedFeatures.features.samplerAnisotropy);
+      fmt::format_to(msg, "  Optional:\n");
+      fmt::format_to(msg, "  - geometryShader: {}\n", supportedFeatures.features.geometryShader);
+      fmt::format_to(msg, "  - wideLines: {}\n", supportedFeatures.features.wideLines);
+      fmt::format_to(msg, "  - logicOp: {}\n", supportedFeatures.features.logicOp);
+      fmt::format_to(msg, "  - transformFeedback: {}\n", supportedFeaturesTransformFeedback.transformFeedback);
+      fmt::format_to(msg, "  - geometryStreams: {}\n", supportedFeaturesTransformFeedback.geometryStreams);
+
+      if (!hasRequiredFeatures) {
+         gLog->error(std::string_view { msg.data(), msg.size() });
+      } else {
+         gLog->warn(std::string_view{ msg.data(), msg.size() });
+      }
+   }
+
+   if (!missingRequiredExtensions.empty() || !hasRequiredFeatures) {
+      return {};
    }
 
    auto queueFamilyProps = physicalDevice.getQueueFamilyProperties();
@@ -356,6 +466,7 @@ createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
    }
 
    if (queueFamilyIndex >= queueFamilyProps.size()) {
+      gLog->error("Could not find compatible vulkan queue family");
       return { };
    }
 
@@ -368,36 +479,31 @@ createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
          queuePriorities.data()
       };
 
-   auto deviceFeatures = vk::PhysicalDeviceFeatures { };
-   deviceFeatures.depthClamp = true;
-   deviceFeatures.geometryShader = true;
-   deviceFeatures.textureCompressionBC = true;
-   deviceFeatures.independentBlend = true;
-   deviceFeatures.fillModeNonSolid = true;
-   deviceFeatures.samplerAnisotropy = true;
-   deviceFeatures.wideLines = true;
-   deviceFeatures.logicOp = true;
-
-   auto devicesFeaturesTF = vk::PhysicalDeviceTransformFeedbackFeaturesEXT { };
-   devicesFeaturesTF.transformFeedback = true;
-   devicesFeaturesTF.geometryStreams = true;
-
-   auto deviceFeatures2 = vk::PhysicalDeviceFeatures2 { };
-   deviceFeatures2.features = deviceFeatures;
-   deviceFeatures2.pNext = &devicesFeaturesTF;
-
-   auto deviceCreateInfo = vk::DeviceCreateInfo { };
+   auto createDeviceChain = vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceTransformFeedbackFeaturesEXT> { };
+   auto &deviceCreateInfo = createDeviceChain.get<vk::DeviceCreateInfo>();
    deviceCreateInfo.queueCreateInfoCount = 1;
    deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
    deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(deviceLayers.size());
    deviceCreateInfo.ppEnabledLayerNames = deviceLayers.data();
    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
-   deviceCreateInfo.pEnabledFeatures = nullptr;
-   deviceCreateInfo.pNext = &deviceFeatures2;
+
+   auto &deviceCreateFeatures = createDeviceChain.get<vk::PhysicalDeviceFeatures2>();
+   deviceCreateFeatures.features.depthClamp = true;
+   deviceCreateFeatures.features.textureCompressionBC = true;
+   deviceCreateFeatures.features.independentBlend = true;
+   deviceCreateFeatures.features.fillModeNonSolid = true;
+   deviceCreateFeatures.features.samplerAnisotropy = true;
+   deviceCreateFeatures.features.geometryShader = supportedFeatures.features.geometryShader;
+   deviceCreateFeatures.features.wideLines = supportedFeatures.features.wideLines;
+   deviceCreateFeatures.features.logicOp = supportedFeatures.features.logicOp;
+
+   auto &deviceCreateFeaturesTransformFeedback = createDeviceChain.get<vk::PhysicalDeviceTransformFeedbackFeaturesEXT>();
+   deviceCreateFeaturesTransformFeedback.transformFeedback = supportedFeaturesTransformFeedback.transformFeedback;
+   deviceCreateFeaturesTransformFeedback.geometryStreams = supportedFeaturesTransformFeedback.geometryStreams;
 
    auto device = physicalDevice.createDevice(deviceCreateInfo);
-   return { device, queueFamilyIndex };
+   return { device, queueFamilyIndex, supportedFeatures, supportedFeaturesTransformFeedback };
 }
 
 static bool
@@ -915,7 +1021,9 @@ Driver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
       decaf_abort("chooseSurfaceFormat failed");
    }
 
-   auto [device, queueFamilyIndex] = createDevice(physicalDevice, windowSurface);
+
+   auto [device, queueFamilyIndex, supportedFeatures, supportedFeaturesTransformFeedback] =
+      createDevice(physicalDevice, windowSurface);
    if (!device) {
       decaf_abort("createDevice failed");
    }
@@ -924,6 +1032,9 @@ Driver::setWindowSystemInfo(const gpu::WindowSystemInfo &wsi)
    if (!queue) {
       decaf_abort("device.getQueue failed");
    }
+
+   mSupportedFeatures = supportedFeatures;
+   mSupportedFeaturesTransformFeedback = supportedFeaturesTransformFeedback;
 
    initialise(instance, physicalDevice, device, queue, queueFamilyIndex);
 
