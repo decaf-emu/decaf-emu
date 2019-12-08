@@ -1,5 +1,6 @@
 #pragma once
 #include "state.h"
+#include "mem.h"
 #include "espresso/espresso_instruction.h"
 #include "jit/jit_codecache.h"
 #include "jit/jit_backend.h"
