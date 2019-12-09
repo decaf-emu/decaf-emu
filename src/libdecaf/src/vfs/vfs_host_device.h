@@ -23,6 +23,7 @@ class HostDevice : public Device, public std::enable_shared_from_this<HostDevice
 {
 public:
    HostDevice(std::filesystem::path path);
+   ~HostDevice() override = default;
 
    Result<std::shared_ptr<Device>>
    getLinkDevice(const User &user, const Path &path) override;

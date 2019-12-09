@@ -27,6 +27,7 @@ public:
       mType(type)
    {
    }
+   virtual ~Device() = default;
 
    virtual Result<std::shared_ptr<Device>> getLinkDevice(const User &user,
                                                          const Path &path) = 0;

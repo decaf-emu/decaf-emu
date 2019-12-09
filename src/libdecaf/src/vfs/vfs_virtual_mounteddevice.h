@@ -15,6 +15,7 @@ struct VirtualMountedDevice : public VirtualNode
       device(std::move(device))
    {
    }
+   ~VirtualMountedDevice() override = default;
 
    std::shared_ptr<Device> device;
 };

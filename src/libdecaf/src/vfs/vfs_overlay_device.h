@@ -19,6 +19,7 @@ public:
    using const_iterator = device_list::const_iterator;
 
    OverlayDevice();
+   ~OverlayDevice() override = default;
 
    Result<std::shared_ptr<Device>>
    getLinkDevice(const User &user, const Path &path) override;

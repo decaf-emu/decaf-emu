@@ -13,6 +13,7 @@ struct VirtualFile : public VirtualNode
       VirtualNode(VirtualNode::File)
    {
    }
+   ~VirtualFile() override = default;
 
    std::vector<uint8_t> data;
 };

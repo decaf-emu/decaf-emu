@@ -17,6 +17,7 @@ struct VirtualNode
       type(type)
    {
    }
+   virtual ~VirtualNode() = default;
 
    Type type;
    GroupId group = 0;
