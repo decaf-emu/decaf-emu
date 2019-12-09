@@ -9,7 +9,6 @@
 #include <iostream>
 #include <libcpu/cpu.h>
 #include <libgfd/gfd.h>
-#include <libgpu/gpu_tiling.h>
 #include <libgpu/gpu7_tiling_cpu.h>
 #include <libgpu/latte/latte_disassembler.h>
 #include <libgpu/latte/latte_formats.h>

@@ -2,7 +2,6 @@
 #include "vulkan_driver.h"
 #include "vulkan_utils.h"
 
-#include "gpu_tiling.h"
 #include "latte/latte_formats.h"
 #include <common/rangecombiner.h>
 
