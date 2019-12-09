@@ -230,8 +230,8 @@ class be2_array_iterator
 
 public:
    be2_array_iterator(be2_array<Type, Size> &arr, size_type index) :
-      mArray(arr),
-      mIndex(index)
+      mIndex(index),
+      mArray(arr)
    {
    }
 
