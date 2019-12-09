@@ -22,9 +22,9 @@ writeFile(const std::string &filename,
    FileHeader header;
    std::memset(&header, 0, sizeof(FileHeader));
    header.imageType = FileHeader::TrueColour;
-   header.width = width;
-   header.height = height;
-   header.bpp = bpp;
+   header.width = static_cast<uint16_t>(width);
+   header.height = static_cast<uint16_t>(height);
+   header.bpp = static_cast<uint8_t>(bpp);
    header.descriptor = alphaBits & 0b1111;
 
    out.write(reinterpret_cast<char *>(&header), sizeof(FileHeader));
