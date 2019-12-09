@@ -204,7 +204,7 @@ normalisePath(std::string_view path)
       normalised = ".";
    }
 
-   return std::move(normalised);
+   return normalised;
 }
 
 } // namespace vfs

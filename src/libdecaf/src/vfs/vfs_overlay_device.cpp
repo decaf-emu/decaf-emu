@@ -18,7 +18,7 @@ OverlayDevice::getLinkDevice(const User &user,
    for (auto &[priority, device] : mDevices) {
       auto result = device->getLinkDevice(user, path);
       if (result.error() != Error::NotFound) {
-         return std::move(result);
+         return result;
       }
    }
 
@@ -175,7 +175,7 @@ OverlayDevice::openFile(const User &user,
    for (auto &[priority, device] : mDevices) {
       auto result = device->openFile(user, path, mode);
       if (result.error() != Error::NotFound) {
-         return std::move(result);
+         return result;
       }
    }
 
@@ -263,7 +263,7 @@ OverlayDevice::status(const User &user,
    for (auto &[priority, device] : mDevices) {
       auto result = device->status(user, path);
       if (result.error() != Error::NotFound) {
-         return std::move(result);
+         return result;
       }
    }
 

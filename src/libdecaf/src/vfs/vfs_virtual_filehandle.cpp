@@ -10,8 +10,8 @@ namespace vfs
 VirtualFileHandle::VirtualFileHandle(std::shared_ptr<VirtualFile> file,
                                      Mode mode) :
    mFile(std::move(file)),
-   mMode(mode),
-   mPosition(0)
+   mPosition(0),
+   mMode(mode)
 {
 }
 

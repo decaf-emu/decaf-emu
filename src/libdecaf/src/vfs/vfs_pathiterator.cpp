@@ -35,7 +35,6 @@ const Path *PathIterator::operator ->() const
 
 PathIterator &PathIterator::operator++()
 {
-   auto pathBegin = mPath->mPath.begin();
    auto pathEnd = mPath->mPath.end();
    mPosition += mElement.mPath.size();
 
