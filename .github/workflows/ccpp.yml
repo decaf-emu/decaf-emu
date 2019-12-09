@@ -91,8 +91,11 @@ jobs:
     - name: Install Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
-        cd build
         brew install openssl sdl2
+        mkdir vulkan
+        cd vulkan
+        wget -q -O vulkansdk.tar.gz https://sdk.lunarg.com/sdk/download/1.1.126.0/mac/vulkansdk-macos-1.1.126.0.tar.gz?u=
+        tar -xzf vulkansdk.tar.gz
 
     - name: Load Cached Vulkan SDK (Windows)
       id: cache-vulkan-windows
@@ -162,6 +165,7 @@ jobs:
     - name: Setup Environment (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
+        echo "::set-env name=VULKAN_SDK::$PWD/vulkan/vulkansdk-macos-1.1.126.0/macOS"
         sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
 
     - name: Setup Environment (Windows)
@@ -203,7 +207,7 @@ jobs:
       if: startsWith(matrix.os, 'macOS')
       run: |
         cd build
-        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=ON -DDECAF_GL=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
