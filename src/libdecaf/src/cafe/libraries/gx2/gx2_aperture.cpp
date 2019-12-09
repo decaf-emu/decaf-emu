@@ -1,11 +1,14 @@
 #include "gx2.h"
-#include "gx2_addrlib.h"
 #include "gx2_aperture.h"
+#include "gx2_format.h"
 #include "gx2_surface.h"
 
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_memory.h"
 #include "cafe/libraries/tcl/tcl_aperture.h"
+
+#include <libgpu/gpu7_tiling.h>
+#include <libgpu/gpu7_tiling_cpu.h>
 
 namespace cafe::gx2
 {
@@ -15,11 +18,13 @@ using namespace cafe::tcl;
 
 struct ApertureInfo
 {
-   be2_struct<GX2Surface> surface;
-   be2_val<virt_addr> address;
-   be2_val<uint32_t> level;
-   be2_val<uint32_t> depth;
-   be2_val<uint32_t> size;
+   gpu7::tiling::RetileInfo retileInfo;
+   be2_val<virt_addr> tiledAddress;
+   be2_val<uint32_t> tiledSize;
+   be2_val<virt_addr> untiledAddress;
+   be2_val<uint32_t> untiledSize;
+   be2_val<uint32_t> slice;
+   be2_val<uint32_t> numSlices;
 };
 
 struct StaticApertureData
@@ -38,15 +43,27 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
                             virt_ptr<GX2ApertureHandle> outHandle,
                             virt_ptr<virt_addr> outAddress)
 {
-   auto surfaceInfo = StackObject<ADDR_COMPUTE_SURFACE_INFO_OUTPUT> { };
+   auto surfaceDescription = gpu7::tiling::SurfaceDescription{ };
+   surfaceDescription.tileMode = static_cast<gpu7::tiling::TileMode>(surface->tileMode);
+   surfaceDescription.format = static_cast<gpu7::tiling::DataFormat>(surface->format & 0x3f);
+   surfaceDescription.bpp = GX2GetSurfaceFormatBitsPerElement(surface->format) / 8;
+   surfaceDescription.numSlices = surface->depth;
+   surfaceDescription.numSamples = 1 << surface->aa;
+   surfaceDescription.numFrags = 1 << surface->aa;
+   surfaceDescription.numLevels = surface->mipLevels;
+   surfaceDescription.pipeSwizzle = (surface->swizzle >> 8) & 1;
+   surfaceDescription.bankSwizzle = (surface->swizzle >> 9) & 3;
+   surfaceDescription.width = surface->width;
+   surfaceDescription.height = surface->height;
+   surfaceDescription.use = static_cast<gpu7::tiling::SurfaceUse>(surface->use);
+   surfaceDescription.dim = static_cast<gpu7::tiling::SurfaceDim>(surface->dim);
 
-   if (endian == GX2EndianSwapMode::Default) {
-      endian = GX2EndianSwapMode::None;
+   if (GX2SurfaceIsCompressed(surface->format)) {
+      surfaceDescription.width = (surfaceDescription.width + 3) / 4;
+      surfaceDescription.height = (surfaceDescription.height + 3) / 4;
    }
 
-   internal::getSurfaceInfo(surface.get(),
-                            level,
-                            surfaceInfo.get());
+   auto surfaceInfo = gpu7::tiling::computeSurfaceInfo(surfaceDescription, level);
 
    auto addr = virt_addr { 0 };
    if (level == 0) {
@@ -54,60 +71,34 @@ GX2AllocateTilingApertureEx(virt_ptr<GX2Surface> surface,
    } else if (level == 1) {
       addr = virt_cast<virt_addr>(surface->mipmaps);
    } else if (level > 1) {
-      addr = virt_cast<virt_addr>(surface->mipmaps)
-             + surface->mipLevelOffset[level - 1];
+      addr = virt_cast<virt_addr>(surface->mipmaps) + surface->mipLevelOffset[level - 1];
    }
 
-   if (surface->tileMode >= GX2TileMode::Tiled2DThin1 &&
-       surface->tileMode != GX2TileMode::LinearSpecial) {
-      if (level < ((surface->swizzle >> 16) & 0xFF)) {
-         addr ^= internal::getSurfaceSliceSwizzle(surface->tileMode,
-                                                  surface->swizzle >> 8,
-                                                  depth) << 8;
-      } else {
-         addr ^= surface->swizzle;
-      }
-   }
+   // TODO: (addr + surfaceInfo.sliceSize * depth) is not actually correct for
+   //       all tile modes.
 
-   auto sliceSize = internal::calcSliceSize(surface.get(),
-                                            surfaceInfo.get());
-
-   if (TCLAllocTilingAperture(OSEffectiveToPhysical(addr + sliceSize * depth),
-                              surfaceInfo->pitch,
-                              surfaceInfo->height,
-                              surfaceInfo->bpp / 8,
-                              surfaceInfo->tileMode,
+   if (TCLAllocTilingAperture(OSEffectiveToPhysical(addr + surfaceInfo.sliceSize * depth),
+                              surfaceInfo.pitch,
+                              surfaceInfo.height,
+                              surfaceInfo.bpp,
+                              surfaceInfo.tileMode,
                               endian,
                               outHandle,
                               outAddress) == TCLStatus::OK) {
       auto &info = sApertureData->apertureInfo[*outHandle];
+      info.retileInfo = gpu7::tiling::computeRetileInfo(surfaceInfo);
+      info.tiledAddress = addr;
+      info.tiledSize = surfaceInfo.sliceSize;
+      info.untiledAddress = *outAddress;
+      info.untiledSize = surfaceInfo.sliceSize;
+      info.slice = depth;
+      info.numSlices = 1u;
 
-      if (outAddress) {
-         // Untile from surface memory to aperture memory
-         auto apertureSurface = StackObject<GX2Surface> { };
-         *apertureSurface = *surface;
-         apertureSurface->mipmaps = nullptr;
-         apertureSurface->image = nullptr;
-         apertureSurface->tileMode = GX2TileMode::LinearSpecial;
-         apertureSurface->swizzle &= 0xFFFF00FF;
-         GX2CalcSurfaceSizeAndAlignment(apertureSurface);
-
-         gx2::internal::copySurface(surface.get(),
-                                    level, depth,
-                                    apertureSurface.get(),
-                                    level, depth,
-                                    virt_cast<uint8_t *>(*outAddress).get(),
-                                    virt_cast<uint8_t *>(*outAddress).get());
-
-         info.address = *outAddress;
-      } else {
-         info.address = virt_addr { 0 };
-      }
-
-      info.surface = *surface;
-      info.level = level;
-      info.depth = depth;
-      info.size = surfaceInfo->pitch * surfaceInfo->height * (surfaceInfo->bpp / 8);
+      gpu7::tiling::cpu::untile(info.retileInfo,
+                                virt_cast<uint8_t *>(info.untiledAddress).get(),
+                                virt_cast<uint8_t *>(info.tiledAddress).get(),
+                                info.slice,
+                                info.numSlices);
    }
 }
 
@@ -115,50 +106,35 @@ void
 GX2FreeTilingAperture(GX2ApertureHandle handle)
 {
    auto &info = sApertureData->apertureInfo[handle];
-   if (info.address) {
-      // Retile from aperture memory to surface memory
-      auto apertureSurface = StackObject<GX2Surface> { };
-      *apertureSurface = info.surface;
-      apertureSurface->mipmaps = virt_cast<uint8_t *>(info.address);
-      apertureSurface->image = virt_cast<uint8_t *>(info.address);
-      apertureSurface->tileMode = GX2TileMode::LinearSpecial;
-      apertureSurface->swizzle &= 0xFFFF00FF;
-      GX2CalcSurfaceSizeAndAlignment(apertureSurface);
-
-      gx2::internal::copySurface(apertureSurface.get(),
-                                 info.level, info.depth,
-                                 virt_addrof(info.surface).get(),
-                                 info.level, info.depth,
-                                 info.surface.image.get(),
-                                 info.surface.mipmaps.get());
+   if (info.tiledAddress && info.untiledAddress) {
+      gpu7::tiling::cpu::tile(info.retileInfo,
+                              virt_cast<uint8_t *>(info.untiledAddress).get(),
+                              virt_cast<uint8_t *>(info.tiledAddress).get(),
+                              info.slice,
+                              info.numSlices);
    }
 
    TCLFreeTilingAperture(handle);
-   info.address = 0u;
-   info.size = 0u;
+   info.tiledAddress = virt_addr { 0u };
+   info.tiledSize = 0u;
+   info.untiledAddress = virt_addr { 0u };
+   info.untiledSize = 0u;
 }
 
 namespace internal
 {
 
-// TODO: Remove this once we move to using physical addresses in GPU
 bool
 translateAperture(virt_addr &address,
                   uint32_t &size)
 {
    for (auto i = 0u; i < sApertureData->apertureInfo.size(); ++i) {
       auto &info = sApertureData->apertureInfo[i];
-      if (address >= info.address &&
-          address < info.address + info.size) {
-         if (info.level == 0) {
-            size = info.surface.imageSize;
-            address = virt_cast<virt_addr>(info.surface.image);
-            return true;
-         } else if (info.level >= 1) {
-            size = info.surface.mipmapSize;
-            address = virt_cast<virt_addr>(info.surface.mipmaps);
-            return true;
-         }
+      if (address >= info.untiledAddress &&
+          address < info.untiledAddress + info.untiledSize) {
+         address = info.tiledAddress;
+         size = info.tiledSize;
+         return true;
       }
    }
 
