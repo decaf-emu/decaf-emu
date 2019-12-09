@@ -25,8 +25,6 @@ constexpr uint32_t UsesOptimalBankSwap = 0;
 constexpr uint32_t MicroTileWidth = 8;
 constexpr uint32_t MicroTileHeight = 8;
 constexpr uint32_t ThickTileThickness = 4;
-constexpr uint32_t XThickTileThickness = 8;
-constexpr uint32_t HtileCacheBits = 16384;
 constexpr uint32_t MicroTilePixels = MicroTileWidth * MicroTileHeight;
 
 #define BITS_PER_BYTE 8

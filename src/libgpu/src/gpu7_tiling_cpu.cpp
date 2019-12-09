@@ -1,4 +1,4 @@
-﻿#include "gpu7_tiling_cpu.h"
+#include "gpu7_tiling_cpu.h"
 
 #include <common/align.h>
 #include <common/decaf_assert.h>
@@ -333,7 +333,6 @@ struct RetileCore
    {
       const uint32_t thinSliceBytes = params.thickSliceBytes / MicroTileThickness;
       const uint32_t untiledStride = params.numTilesPerRow * MicroTileWidth * BytesPerElement;
-      const uint32_t thickMicroTileBytes = params.thinMicroTileBytes * MicroTileThickness;
 
       const uint32_t dispatchSliceIndex = tileIndex / params.numTilesPerSlice;
       const uint32_t sliceTileIndex = tileIndex % params.numTilesPerSlice;

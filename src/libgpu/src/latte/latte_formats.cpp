@@ -348,7 +348,6 @@ getDataFormatName(latte::SQ_DATA_FORMAT format)
 DataFormatMeta
 getDataFormatMeta(latte::SQ_DATA_FORMAT format)
 {
-   static const auto DFT_NONE = DataFormatMetaType::None;
    static const auto DFT_UINT = DataFormatMetaType::UINT;
    static const auto DFT_FLOAT = DataFormatMetaType::FLOAT;
    static const auto BADELEM = DataFormatMetaElem { 0, 0, 0 };

@@ -6,21 +6,6 @@ namespace spirv
 
 using namespace latte;
 
-static inline VarRefType
-getPixelVarType(PixelOutputType pixelType)
-{
-   switch (pixelType) {
-   case PixelOutputType::FLOAT:
-      return VarRefType::FLOAT;
-   case PixelOutputType::SINT:
-      return VarRefType::INT;
-   case PixelOutputType::UINT:
-      return VarRefType::UINT;
-   }
-
-   decaf_abort("Unexpected color output type")
-}
-
 static inline void
 calcSpecialVecPositions(latte::PA_CL_VS_OUT_CNTL pa_cl_vs_out_cntl, uint32_t *miscVec, uint32_t *ccdist0Vec, uint32_t *ccdist1Vec)
 {

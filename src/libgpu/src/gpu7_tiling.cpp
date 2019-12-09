@@ -326,8 +326,6 @@ computeMacroRetileInfo(const SurfaceInfo &info)
 
    const auto microTileBytes =
       MicroTileWidth * MicroTileHeight * microTileThickness * bytesPerElement;
-   const auto macroTileBytes =
-      macroTileWidth * macroTileHeight * microTileBytes;
 
    const auto microTilesPerRow = pitch / MicroTileWidth;
    const auto microTilesNumRows = height / MicroTileHeight;
