@@ -1,4 +1,3 @@
-#include "gpu_addrlibopt.h"
 #include "gpu_tiling.h"
 
 #include <common/decaf_assert.h>
@@ -7,9 +6,6 @@
 
 namespace gpu
 {
-
-static const bool
-USE_ADDRLIBOPT = true;
 
 static ADDR_HANDLE
 gAddrLibHandle = nullptr;
@@ -144,44 +140,29 @@ copySurfacePixels(uint8_t *dstBasePtr,
    decaf_check(srcAddrInput.bpp == dstAddrInput.bpp);
    auto bpp = dstAddrInput.bpp;
 
-   if (USE_ADDRLIBOPT) {
-      decaf_check(srcAddrInput.isDepth == dstAddrInput.isDepth);
-      decaf_check(srcAddrInput.numSamples == dstAddrInput.numSamples);
-      auto isDepth = dstAddrInput.isDepth;
-      auto numSamples = dstAddrInput.numSamples;
+   auto srcAddrOutput = ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT { 0 };
+   srcAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
 
-      return gpu::addrlibopt::copySurfacePixels(
-         dstBasePtr, dstWidth, dstHeight, dstAddrInput,
-         srcBasePtr, srcWidth, srcHeight, srcAddrInput,
-         bpp, isDepth, numSamples);
-   } else {
-      ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT srcAddrOutput;
-      ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT dstAddrOutput;
+   auto dstAddrOutput = ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT { 0 };
+   dstAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
 
-      std::memset(&srcAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
-      std::memset(&dstAddrOutput, 0, sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT));
+   for (auto y = 0u; y < dstHeight; ++y) {
+      for (auto x = 0u; x < dstWidth; ++x) {
+         srcAddrInput.x = srcWidth * x / dstWidth;
+         srcAddrInput.y = srcHeight * y / dstHeight;
+         AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
 
-      srcAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
-      dstAddrOutput.size = sizeof(ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT);
+         dstAddrInput.x = x;
+         dstAddrInput.y = y;
+         AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
 
-      for (auto y = 0u; y < dstHeight; ++y) {
-         for (auto x = 0u; x < dstWidth; ++x) {
-            srcAddrInput.x = srcWidth * x / dstWidth;
-            srcAddrInput.y = srcHeight * y / dstHeight;
-            AddrComputeSurfaceAddrFromCoord(handle, &srcAddrInput, &srcAddrOutput);
-
-            dstAddrInput.x = x;
-            dstAddrInput.y = y;
-            AddrComputeSurfaceAddrFromCoord(handle, &dstAddrInput, &dstAddrOutput);
-
-            auto src = &srcBasePtr[srcAddrOutput.addr];
-            auto dst = &dstBasePtr[dstAddrOutput.addr];
-            std::memcpy(dst, src, bpp / 8);
-         }
+         auto src = &srcBasePtr[srcAddrOutput.addr];
+         auto dst = &dstBasePtr[dstAddrOutput.addr];
+         std::memcpy(dst, src, bpp / 8);
       }
-
-      return true;
    }
+
+   return true;
 }
 
 bool
