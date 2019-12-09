@@ -480,9 +480,7 @@ handleAlarmInterrupt(virt_ptr<OSContext> context)
    auto queue = virt_addrof(coreAlarmData.alarmQueue);
    auto cbQueue = virt_addrof(coreAlarmData.callbackAlarmQueue);
    auto cbThreadQueue = virt_addrof(coreAlarmData.callbackThreadQueue);
-
    auto now = OSGetTime();
-   auto next = std::chrono::time_point<std::chrono::system_clock>::max();
 
    internal::lockScheduler();
    acquireIdLockWithCoreId(sAlarmData->lock);
@@ -548,7 +546,7 @@ initialiseAlarmThread()
                                 sAlarmCallbackThreadEntry,
                                 coreId,
                                 nullptr,
-                                virt_cast<uint32_t *>(virt_addrof(coreData.threadStack) + coreData.threadStack.size()),
+                                virt_cast<uint32_t *>(stack + coreData.threadStack.size()),
                                 coreData.threadStack.size(),
                                 1,
                                 static_cast<OSThreadAttributes>(1 << coreId),

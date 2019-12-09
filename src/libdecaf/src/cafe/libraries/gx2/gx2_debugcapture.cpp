@@ -191,7 +191,6 @@ GX2DebugTagUserStringVA(GX2DebugTag tag,
       // Convert string to words!
       auto length = static_cast<uint32_t>(strlen(buffer.get()));
       auto numWords = align_up(length + 1, 4) / 4;
-      auto bufferWords = virt_cast<uint32_t *>(buffer);
 
       // Write NOP packet
       internal::writePM4(latte::pm4::NopBE {

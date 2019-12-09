@@ -351,10 +351,6 @@ constexpr auto CodeBaseAddress = 0x02000000u;
 constexpr auto DataBaseAddress = 0x10000000u;
 constexpr auto LoadBaseAddress = 0xC0000000u;
 
-// NULL, .text, .fexports, .data, .dexports, .rela.fexports, .rela.dexports,
-// .symtab, .strtab, .shstrtab, SHT_RPL_CRCS, SHT_RPL_FILEINFO
-constexpr auto NumSections = 12;
-
 struct Section
 {
    rpl::SectionHeader header;
@@ -443,7 +439,6 @@ Library::generateRpl()
    auto sections = std::vector<Section> { };
    sections.resize(numSections);
 
-   auto nullSection = sections.begin() + nullSectionIndex;
    auto textSection = sections.begin() + textSectionIndex;
    auto fexportSection = sections.begin() + fexportSectionIndex;
    auto fexportRelaSection = sections.begin() + fexportRelaSectionIndex;

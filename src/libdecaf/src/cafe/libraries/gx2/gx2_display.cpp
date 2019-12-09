@@ -377,8 +377,6 @@ GX2SetTVScale(uint32_t x,
 void
 GX2SwapScanBuffers()
 {
-   // For Debugging
-   static uint32_t debugSwapCount = 0;
    internal::debugCaptureTagGroup(GX2DebugTag::SwapScanBuffers);
 
    internal::onSwap();

@@ -21,8 +21,6 @@
 namespace cafe::loader::internal
 {
 
-constexpr auto MaxModuleNameLen = 0x3Bu;
-
 int32_t
 LiLoadForPrep(virt_ptr<char> moduleName,
               uint32_t moduleNameLen,

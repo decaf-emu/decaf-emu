@@ -170,7 +170,7 @@ Error
 loadCertstoreMetadata()
 {
    auto openError = FSAOpen();
-   if (openError < FSAStatus::OK) {
+   if (openError < Error::OK) {
       nsecLog->warn("loadCertstoreMetadata: FSAOpen failed with error {}", openError);
       return openError;
    }

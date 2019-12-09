@@ -27,10 +27,6 @@ namespace ios::acp
 constexpr auto LocalHeapSize = 0x20000u;
 constexpr auto CrossHeapSize = 0x80000u;
 
-constexpr auto AcpProcNumMessages = 10u;
-constexpr auto AcpProcThreadStackSize = 0x2000u;
-constexpr auto AcpProcThreadPriority = 50u;
-
 struct StaticAcpData
 {
    be2_val<Handle> fsaHandle;

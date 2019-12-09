@@ -130,8 +130,7 @@ struct IpcSerialiser<ManagedBuffer>
          // Whole buffer is before alignment
          ioBuffer.unalignedBeforeBufferSize = ioBuffer.userBufferSize;
          ioBuffer.unalignedBeforeBuffer =
-            virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64
-                              - ioBuffer.unalignedBeforeBufferSize);
+            virt_cast<void *>(midPoint - ioBuffer.unalignedBeforeBufferSize);
 
          ioBuffer.alignedBuffer = nullptr;
          ioBuffer.alignedBufferSize = 0;
@@ -143,8 +142,7 @@ struct IpcSerialiser<ManagedBuffer>
          ioBuffer.unalignedBeforeBufferSize =
             static_cast<uint32_t>(alignedStart - unalignedStart);
          ioBuffer.unalignedBeforeBuffer =
-            virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64
-                              - ioBuffer.unalignedBeforeBufferSize);
+            virt_cast<void *>(midPoint - ioBuffer.unalignedBeforeBufferSize);
 
          ioBuffer.alignedBuffer = virt_cast<void *>(alignedStart);
          ioBuffer.alignedBufferSize =
@@ -153,7 +151,7 @@ struct IpcSerialiser<ManagedBuffer>
          ioBuffer.unalignedAfterBufferSize =
             static_cast<uint32_t>(unalignedEnd - alignedEnd);
          ioBuffer.unalignedAfterBuffer =
-            virt_cast<void *>(virt_cast<virt_addr>(ioBuffer.ipcBuffer) + 64);
+            virt_cast<void *>(midPoint);
       }
 
       if (userBuffer.input) {

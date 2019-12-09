@@ -205,7 +205,6 @@ fsCmdBlockPrepareSync(virt_ptr<FSClient> client,
                       virt_ptr<FSCmdBlock> block,
                       virt_ptr<FSAsyncData> asyncData)
 {
-   auto clientBody = internal::fsClientGetBody(client);
    auto blockBody = internal::fsCmdBlockGetBody(block);
    OSInitMessageQueue(virt_addrof(blockBody->syncQueue),
                       virt_addrof(blockBody->syncQueueMsgs),

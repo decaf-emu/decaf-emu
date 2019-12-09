@@ -338,16 +338,16 @@ initialiseProfiling(GX2ProfileMode profileMode,
 
    // TODO: Update these GX2ProfileMode values with enum named values
    switch (tossStage) {
-   case 1:
+   case GX2TossStage::Unk1:
       sStateData->profileMode |= 0x60;
       break;
-   case 2:
+   case GX2TossStage::Unk2:
       sStateData->profileMode |= 0x40;
       break;
-   case 7:
+   case GX2TossStage::Unk7:
       sStateData->profileMode |= 0x90;
       break;
-   case 8:
+   case GX2TossStage::Unk8:
       sStateData->profileMode |= 0x10;
       break;
    }

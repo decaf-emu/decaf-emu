@@ -65,8 +65,6 @@ private:
    std::string mChecksumBuffer;
    std::string mReadBuffer;
    std::string mLastCommand;
-
-   int32_t mStepSignal = -1;
 };
 
 } // namespace debugger

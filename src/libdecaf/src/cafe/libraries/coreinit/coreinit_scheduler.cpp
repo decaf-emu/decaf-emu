@@ -21,9 +21,6 @@
 namespace cafe::coreinit
 {
 
-static constexpr uint32_t
-SchedulerLockNonCpuCoreId = 1u << 31;
-
 struct StaticSchedulerData
 {
    struct PerCoreData

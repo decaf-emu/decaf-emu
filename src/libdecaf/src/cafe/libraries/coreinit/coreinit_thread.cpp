@@ -148,10 +148,7 @@ int32_t
 OSCheckActiveThreads()
 {
    internal::lockScheduler();
-   virt_ptr<OSThread> thread = OSGetCurrentThread();
-
    auto threadCount = internal::checkActiveThreadsNoLock();
-
    internal::unlockScheduler();
    return threadCount;
 }

@@ -339,7 +339,7 @@ GX2InitFetchShaderEx(virt_ptr<GX2FetchShader> fetchShader,
 
          auto swapMode = internal::getSwapModeEndian(static_cast<GX2EndianSwapMode>(attribs[i].endianSwap & 3));
 
-         if (attribs[i].endianSwap == latte::SQ_ENDIAN::AUTO) {
+         if (attribs[i].endianSwap == GX2EndianSwapMode::Default) {
             swapMode = internal::getAttribFormatEndian(attribs[i].format);
          }
 

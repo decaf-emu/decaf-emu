@@ -104,7 +104,6 @@ IOS_CreateTimer(std::chrono::microseconds delay,
    }
 
    if (delay.count() || period.count()) {
-      auto now = std::chrono::steady_clock::now();
       timer.nextTriggerTime = internal::getUpTime64() + internal::durationToTicks(delay);
       if (internal::startTimer(phys_addrof(timer)) == 0) {
          internal::setAlarm(timer.nextTriggerTime);
