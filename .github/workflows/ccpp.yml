@@ -70,7 +70,7 @@ jobs:
         Start-Process -Filepath "cmake-3.16.0-win64-x64.msi" -ArgumentList "/S"
         cmake --version
 
-    - name: Install (Ubuntu)
+    - name: Install Dependencies (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
@@ -81,46 +81,99 @@ jobs:
         sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk python3-setuptools
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           sudo apt-get install -y g++-${{ matrix.version }}
-          echo ::set-env name=CC::gcc-${{ matrix.version }}
-          echo ::set-env name=CXX::g++-${{ matrix.version }}
-          echo ::set-env name=CONAN_ENV_COMPILER_LIBCXX::libstdc++11
         else
           sudo apt-get install -y clang-${{ matrix.version }}
-          echo ::set-env name=CC::clang-${{ matrix.version }}
-          echo ::set-env name=CXX::clang++-${{ matrix.version }}
         fi
-        echo ::set-env name=CONAN_ENV_COMPILER::${{ matrix.compiler }}
-        echo ::set-env name=CONAN_ENV_COMPILER_VERSION::${{ matrix.version }}
         pip3 install wheel
         pip3 install aqtinstall
         python3 -m aqt install 5.13.0 linux desktop
-        echo "::set-env name=QTDIR::$PWD/5.13.0/gcc_64"
 
-    - name: Install (macOS)
+    - name: Install Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
         cd build
         brew install openssl sdl2
-        sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
 
-    - name: Install (Windows)
+    - name: Load Cached Vulkan SDK (Windows)
+      id: cache-vulkan-windows
       if: startsWith(matrix.os, 'windows')
+      uses: actions/cache@v1
+      with:
+        path: C:/VulkanSDK/1.1.126.0
+        key: ${{ runner.os }}-vulkan-1.1.126.0
+
+    - name: Install Vulkan SDK from web (Windows)
+      if: startsWith(matrix.os, 'windows') && steps.cache-vulkan-windows.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        mkdir "C:\\VulkanSDK"
+        cd "C:\\VulkanSDK"
+        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?u=" -OutFile "VulkanSDK.exe"
+        Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
+        cd "C:\\VulkanSDK\\1.1.126.0"
+        Remove-Item -Force -Recurse Bin32
+        Remove-Item -Force -Recurse Demos
+        Remove-Item -Force -Recurse Lib32
+        Remove-Item -Force -Recurse RunTimeInstaller
+        Remove-Item -Force -Recurse Samples
+        Remove-Item -Force -Recurse shaderc
+        Remove-Item -Force -Recurse Templates
+        Remove-Item -Force -Recurse Tools
+        Remove-Item -Force -Recurse Tools32
+        Remove-Item -Force -Recurse Third-Party
+        Remove-Item -Force Uninstall.exe
+        Remove-Item -Force Bin\\VkLayer*
+        Remove-Item -Force Lib\\shaderc*
+        dir
+
+    - name: Load Cached Qt (Windows)
+      id: cache-qt-windows
+      if: startsWith(matrix.os, 'windows')
+      uses: actions/cache@v1
+      with:
+        path: C:/Qt/5.13.0/msvc2017_64
+        key: ${{ runner.os }}-qt-5.13.0-msvc2017_64
+
+    - name: Install Qt from web (Windows)
+      if: startsWith(matrix.os, 'windows') && steps.cache-qt-windows.outputs.cache-hit != 'true'
       shell: powershell
       run: |
         mkdir "C:\\Qt"
         cd "C:\\Qt"
         pip install aqtinstall
         python -m aqt install 5.13.0 windows desktop win64_msvc2017_64
+        dir
+
+    - name: Setup Environment (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          echo ::set-env name=CC::gcc-${{ matrix.version }}
+          echo ::set-env name=CXX::g++-${{ matrix.version }}
+          echo "::set-env name=CONAN_ENV_COMPILER_LIBCXX::libstdc++11"
+        else
+          echo ::set-env name=CC::clang-${{ matrix.version }}
+          echo ::set-env name=CXX::clang++-${{ matrix.version }}
+        fi
+        echo "::set-env name=CONAN_ENV_COMPILER::${{ matrix.compiler }}"
+        echo "::set-env name=CONAN_ENV_COMPILER_VERSION::${{ matrix.version }}"
+        echo "::set-env name=QTDIR::$PWD/build/5.13.0/gcc_64"
+
+    - name: Setup Environment (macOS)
+      if: startsWith(matrix.os, 'macOS')
+      run: |
+        sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
+
+    - name: Setup Environment (Windows)
+      if: startsWith(matrix.os, 'windows')
+      shell: powershell
+      run: |
+        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.126.0"
         echo "::set-env name=QTDIR::C:\\Qt\\5.13.0\\msvc2017_64"
-        mkdir "C:\\VulkanSDK"
-        cd "C:\\VulkanSDK"
-        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.121.2/windows/VulkanSDK-1.1.121.2-Installer.exe?u=" -OutFile "vulkan-sdk.exe"
-        Start-Process -Filepath "vulkan-sdk.exe" -ArgumentList "/S"
-        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.121.2"
         echo "::set-env name=CONAN_ENV_COMPILER::Visual Studio"
         echo "::set-env name=CONAN_ENV_COMPILER_VERSION::15"
 
-    - name: Conan (Ubuntu)
+    - name: Install Conan Dependencies (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
@@ -130,7 +183,13 @@ jobs:
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
         conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=True -o curl=False -o openssl=False -o sdl2=False -o zlib=False
 
-    - name: Conan (Windows)
+    - name: Install Conan Dependencies (macOS)
+      if: startsWith(matrix.os, 'macOS')
+      run: |
+        echo "Happy days, nothing to get via conan on Mac OS X right now!"
+        echo "So we cheat and dont even bother calling it. XD"
+
+    - name: Install Conan Dependencies (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
