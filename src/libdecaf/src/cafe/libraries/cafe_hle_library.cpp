@@ -393,7 +393,6 @@ Library::generateRpl()
 
    // Calculate required number of sections
    auto numSections = 1u;
-   auto nullSectionIndex = 0u;
    auto textSectionIndex = 0u;
    auto fexportSectionIndex = 0u;
    auto fexportRelaSectionIndex = 0u;
