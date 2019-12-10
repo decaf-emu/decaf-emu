@@ -1,9 +1,11 @@
 #pragma once
 #include <algorithm>
 #include <cstdint>
+#include <initializer_list>
 #include <stdexcept>
 #include <type_traits>
 #include <string_view>
+
 #include "be2_val.h"
 #include "pointer.h"
 
@@ -82,6 +84,18 @@ public:
       auto count = (src.size() < Size) ? src.size() : Size - 1;
       std::copy_n(src.begin(), count, mValues);
       mValues[src.size()] = char { 0 };
+   }
+
+   be2_array(std::initializer_list<Type> list)
+   {
+      if (list.size() > Size) {
+         throw std::out_of_range("invalid be2_array<T, N> initializer_list");
+      }
+
+      auto i = 0u;
+      for (auto &item : list) {
+         mValues[i] = item;
+      }
    }
 
    be2_array(const std::array<Type, Size> &other)
