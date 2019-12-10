@@ -28,7 +28,7 @@ By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive 
 
 ### Dependencies
 Required:
-- A modern C++17 friendly compiler such as g++7
+- A modern C++17 friendly compiler such as g++8
 - CMake
 - libcurl
 - openssl
@@ -64,28 +64,29 @@ You may choose to use a mix of system dependenices such as if your system's ffmp
 - `make`
 
 ## MacOS
-Right now MacOS is not supported as there are no graphics backends which support MacOS, the OpenGL drivers available on MacOS are too old and we have no Metal backend. MoltenVK has not yet been tested but it is an option to consider. Additionally the latest Xcode as of writing does not support std::filesystem so you must use llvm from brew.
+Currently decaf-emu can build on MacOS using Xcode 11 although MoltenVK is missing crucial features which will prevent most games from rendering correctly, e.g. geometry shaders, transform feedback, logic op support, unrestricted depth range. This means the platform should be considered as unsupported.
 
-Although I have had success at building with:
-- `brew install llvm openssl`
-- `export CPPFLAGS="-I/usr/local/opt/llvm/include -I/usr/local/opt/llvm/include/c++/v1"`
-- `export LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"`
+I have had success at building with:
+- Install [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#mac)
+- `brew install openssl sdl2`
 - `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
 - `cd decaf-emu`
 - `mkdir build && cd build`
-- `cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DDECAF_GL=OFF -DDECAF_VULKAN=OFF -DDECAF_FFMPEG=OFF ../`
+- `cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..`
 - `make`
 
 ## CMake
 Options interesting to users:
-- DECAF_FFMPEG - Build with ffmpeg which is used for decoding h264 videos.
-- DECAF_GL - Build with OpenGL graphics backend.
+- DECAF_FFMPEG - Build with ffmpeg which is used for decoding h264 videos
 - DECAF_SDL - Build with SDL frontend.
+- DECAF_QT - Build with Qt frontend.
 - DECAF_VULKAN - Build with Vulkan backend.
 
 Options interesting to developers:
 - DECAF_BUILD_TESTS - Build tests.
 - DECAF_BUILD_TOOLS - Build tools.
 - DECAF_BUILD_WUT_TESTS - Build tests which require [wut](https://github.com/decaf-emu/wut).
-- DECAF_JIT_ALLOW_PROFILING - Build with JIT profiling SUPPORT.
-- DECAF_VALGRIND - Build with Valgrind.
+- DECAF_DISABLE_GIT_VERSION - Disable generating a header with current git version (if you don't want commiting to trigger a change that you have to build)
+- DECAF_ENABLE_PCH - Enable / disable pch (requires CMake v3.16)
+- DECAF_JIT_ALLOW_PROFILING - Build with JIT profiling support.
+- DECAF_VALGRIND - Build with Valgrind
