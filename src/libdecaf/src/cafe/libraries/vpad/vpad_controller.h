@@ -72,6 +72,19 @@ CHECK_OFFSET(VPADGyroStatus, 0x10, unk5);
 CHECK_OFFSET(VPADGyroStatus, 0x14, unk6);
 CHECK_SIZE(VPADGyroStatus, 0x18);
 
+struct VPADTouchCalibrationParam
+{
+   be2_val<uint16_t> adjustX;
+   be2_val<uint16_t> adjustY;
+   be2_val<float> scaleX;
+   be2_val<float> scaleY;
+};
+CHECK_OFFSET(VPADTouchCalibrationParam, 0x00, adjustX);
+CHECK_OFFSET(VPADTouchCalibrationParam, 0x02, adjustY);
+CHECK_OFFSET(VPADTouchCalibrationParam, 0x04, scaleX);
+CHECK_OFFSET(VPADTouchCalibrationParam, 0x08, scaleY);
+CHECK_SIZE(VPADTouchCalibrationParam, 0x0C);
+
 struct VPADTouchData
 {
    //! The x-coordinate of a touched point.
@@ -182,6 +195,10 @@ VPADRead(VPADChan chan,
          virt_ptr<VPADReadError> outError);
 
 void
+VPADGetTPCalibrationParam(VPADChan chan,
+                          virt_ptr<VPADTouchCalibrationParam> outParam);
+
+void
 VPADGetTPCalibratedPoint(VPADChan chan,
                          virt_ptr<VPADTouchData> calibratedData,
                          virt_ptr<VPADTouchData> uncalibratedData);
@@ -191,6 +208,10 @@ VPADGetTPCalibratedPointEx(VPADChan chan,
                            VPADTouchPadResolution tpReso,
                            virt_ptr<VPADTouchData> calibratedData,
                            virt_ptr<VPADTouchData> uncalibratedData);
+
+void
+VPADSetTPCalibrationParam(VPADChan chan,
+                          virt_ptr<const VPADTouchCalibrationParam> param);
 
 bool
 VPADBASEGetHeadphoneStatus(VPADChan chan);

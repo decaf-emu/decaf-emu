@@ -8,7 +8,20 @@
 namespace cafe::vpad
 {
 
-static VPADButtons sLastButtonState = VPADButtons { 0 };
+struct StaticControllerData
+{
+   be2_array<VPADTouchCalibrationParam, 2> calibrationParam {
+      VPADTouchCalibrationParam {
+         uint16_t { 0 }, uint16_t { 0 }, 1280.0f / 4096.0f, 720.0f / 4096.0f
+      },
+      VPADTouchCalibrationParam {
+         uint16_t { 0 }, uint16_t { 0 }, 1280.0f / 4096.0f, 720.0f / 4096.0f
+      }
+   };
+   be2_val<VPADButtons> lastButtonState = VPADButtons { 0 };
+};
+
+static virt_ptr<StaticControllerData> sControllerData = nullptr;
 
 void
 VPADInit()
@@ -93,9 +106,9 @@ VPADRead(VPADChan chan,
    if (status.buttons.stickL) { hold |= VPADButtons::StickL; }
 
    buffer.hold = hold;
-   buffer.trigger = (~sLastButtonState) & hold;
-   buffer.release = sLastButtonState & (~hold);
-   sLastButtonState = hold;
+   buffer.trigger = (~sControllerData->lastButtonState) & hold;
+   buffer.release = sControllerData->lastButtonState & (~hold);
+   sControllerData->lastButtonState = hold;
 
    // Update axis state
    buffer.leftStick.x = status.leftStickX;
@@ -130,6 +143,13 @@ VPADRead(VPADChan chan,
 }
 
 void
+VPADGetTPCalibrationParam(VPADChan chan,
+                          virt_ptr<VPADTouchCalibrationParam> outParam)
+{
+   *outParam = sControllerData->calibrationParam[chan];
+}
+
+void
 VPADGetTPCalibratedPoint(VPADChan chan,
                          virt_ptr<VPADTouchData> calibratedData,
                          virt_ptr<VPADTouchData> uncalibratedData)
@@ -151,6 +171,13 @@ VPADGetTPCalibratedPointEx(VPADChan chan,
    VPADGetTPCalibratedPoint(chan, calibratedData, uncalibratedData);
 }
 
+void
+VPADSetTPCalibrationParam(VPADChan chan,
+                          virt_ptr<const VPADTouchCalibrationParam> param)
+{
+   sControllerData->calibrationParam[chan] = *param;
+}
+
 bool
 VPADBASEGetHeadphoneStatus(VPADChan chan)
 {
@@ -164,9 +191,13 @@ Library::registerControllerSymbols()
    RegisterFunctionExport(VPADSetAccParam);
    RegisterFunctionExport(VPADSetBtnRepeat);
    RegisterFunctionExport(VPADRead);
+   RegisterFunctionExport(VPADGetTPCalibrationParam);
    RegisterFunctionExport(VPADGetTPCalibratedPoint);
    RegisterFunctionExport(VPADGetTPCalibratedPointEx);
+   RegisterFunctionExport(VPADSetTPCalibrationParam);
    RegisterFunctionExport(VPADBASEGetHeadphoneStatus);
+
+   RegisterDataInternal(sControllerData);
 }
 
 } // namespace cafe::vpad
