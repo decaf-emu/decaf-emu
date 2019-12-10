@@ -119,8 +119,8 @@ VPADRead(VPADChan chan,
    // Update touchpad data
    if (status.touch.down) {
       buffer.tpNormal.touched = uint16_t { 1 };
-      buffer.tpNormal.x = static_cast<uint16_t>(status.touch.x * 1280.0f);
-      buffer.tpNormal.y = static_cast<uint16_t>(status.touch.y * 720.0f);
+      buffer.tpNormal.x = static_cast<uint16_t>(status.touch.x * 4096.0f);
+      buffer.tpNormal.y = static_cast<uint16_t>((1.0f - status.touch.y) * 4096.0f);
       buffer.tpNormal.validity = VPADTouchPadValidity::Valid;
    } else {
       buffer.tpNormal.touched = uint16_t { 0 };
@@ -152,23 +152,47 @@ VPADGetTPCalibrationParam(VPADChan chan,
 void
 VPADGetTPCalibratedPoint(VPADChan chan,
                          virt_ptr<VPADTouchData> calibratedData,
-                         virt_ptr<VPADTouchData> uncalibratedData)
+                         virt_ptr<const VPADTouchData> uncalibratedData)
 {
-   // TODO: Actually I think we are meant to adjust uncalibratedData based
-   // off of what is set by VPADSetTPCalibrationParam
-   std::memcpy(calibratedData.get(),
-               uncalibratedData.get(),
-               sizeof(VPADTouchData));
+   auto &calibrationParam = sControllerData->calibrationParam[chan];
+   calibratedData->touched = uncalibratedData->touched;
+   calibratedData->validity = uncalibratedData->validity;
+
+   calibratedData->x = static_cast<uint16_t>(
+      static_cast<float>(uncalibratedData->x - calibrationParam.adjustX)
+      * calibrationParam.scaleX);
+
+   calibratedData->y = static_cast<uint16_t>(
+      static_cast<float>((4096 - uncalibratedData->y) - calibrationParam.adjustY)
+      * calibrationParam.scaleY);
 }
 
 void
 VPADGetTPCalibratedPointEx(VPADChan chan,
                            VPADTouchPadResolution tpReso,
                            virt_ptr<VPADTouchData> calibratedData,
-                           virt_ptr<VPADTouchData> uncalibratedData)
+                           virt_ptr<const VPADTouchData> uncalibratedData)
 {
-   // TODO: Actually use per resolution calibrated data
-   VPADGetTPCalibratedPoint(chan, calibratedData, uncalibratedData);
+   auto &calibrationParam = sControllerData->calibrationParam[chan];
+   calibratedData->touched = uncalibratedData->touched;
+   calibratedData->validity = uncalibratedData->validity;
+
+   auto scaleX = 1.0f, scaleY = 1.0f;
+   if (tpReso == VPADTouchPadResolution::Tp_1920x1080) {
+      scaleX = 1920.0f / 1280.0f;
+      scaleY = 1080.0f / 720.0f;
+   } else if (tpReso == VPADTouchPadResolution::Tp_854x480) {
+      scaleX = 854.0f / 1280.0f;
+      scaleY = 480.0f / 720.0f;
+   }
+
+   calibratedData->x = static_cast<uint16_t>(
+      static_cast<float>(uncalibratedData->x - calibrationParam.adjustX)
+      * calibrationParam.scaleX * scaleX);
+
+   calibratedData->y = static_cast<uint16_t>(
+      static_cast<float>((4096 - uncalibratedData->y) - calibrationParam.adjustY)
+      * calibrationParam.scaleY * scaleY);
 }
 
 void

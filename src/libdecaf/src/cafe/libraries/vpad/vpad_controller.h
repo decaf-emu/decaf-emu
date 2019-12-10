@@ -201,13 +201,13 @@ VPADGetTPCalibrationParam(VPADChan chan,
 void
 VPADGetTPCalibratedPoint(VPADChan chan,
                          virt_ptr<VPADTouchData> calibratedData,
-                         virt_ptr<VPADTouchData> uncalibratedData);
+                         virt_ptr<const VPADTouchData> uncalibratedData);
 
 void
 VPADGetTPCalibratedPointEx(VPADChan chan,
                            VPADTouchPadResolution tpReso,
                            virt_ptr<VPADTouchData> calibratedData,
-                           virt_ptr<VPADTouchData> uncalibratedData);
+                           virt_ptr<const VPADTouchData> uncalibratedData);
 
 void
 VPADSetTPCalibrationParam(VPADChan chan,
