@@ -90,7 +90,8 @@ Library::registerTitleSymbols()
       "nn::boss::Title",
       {
          "__dt__Q3_2nn4boss5TitleFv",
-      });
+      },
+      {});
 }
 
 } // namespace cafe::nn_boss

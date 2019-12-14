@@ -52,7 +52,8 @@ Library::registerStorageSymbols()
       "nn::boss::Storage",
       {
          "__dt__Q3_2nn4boss7StorageFv",
-      });
+      },
+      {});
 }
 
 } // namespace cafe::nn_boss

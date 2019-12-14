@@ -198,7 +198,7 @@ public:
    }
 
    void
-   registerSymbol(const std::string& name,
+   registerSymbol(const std::string &name,
                   std::unique_ptr<LibrarySymbol> symbol)
    {
       decaf_check(mSymbolMap.find(name) == mSymbolMap.end());
@@ -208,7 +208,7 @@ public:
    }
 
    void
-   registerTypeInfo(const LibraryTypeInfo& typeInfo)
+   registerTypeInfo(LibraryTypeInfo &&typeInfo)
    {
       mTypeInfo.emplace_back(std::move(typeInfo));
    }
@@ -238,7 +238,6 @@ private:
    std::vector<uint8_t> mGeneratedRpl;
    std::vector<UnimplementedLibraryFunction *> mUnimplementedFunctionExports;
    std::string mEntryPointSymbolName;
-
 };
 
 virt_addr

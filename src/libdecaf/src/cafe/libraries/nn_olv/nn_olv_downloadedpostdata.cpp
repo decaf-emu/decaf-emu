@@ -86,7 +86,8 @@ Library::registerDownloadedPostDataSymbols()
       "nn::olv::DownloadedPostData",
       {
          "__dt__Q3_2nn3olv18DownloadedPostDataFv",
-      });
+      },
+      {});
 }
 
 }  // namespace cafe::nn_olv

@@ -1,10 +1,10 @@
 #pragma once
-
 #include "cafe_hle_library.h"
 #include "cafe_hle_library_function.h"
 #include "cafe_hle_library_data.h"
 
 #include "coreinit/coreinit_enum.h"
+
 namespace cafe::coreinit
 {
 
@@ -45,9 +45,9 @@ cafe_generic_rpl_crt(coreinit::OSDynLoad_ModuleHandle moduleHandle,
 }
 
 template<typename FunctionType, FunctionType Fn>
-void
-registerNoCrtEntryPoint(hle::Library* library,
-                        const std::string& name)
+static void
+registerNoCrtEntryPoint(hle::Library *library,
+                        const std::string &name)
 {
    auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
    symbol->exported = true;
@@ -56,9 +56,9 @@ registerNoCrtEntryPoint(hle::Library* library,
 }
 
 template<RplEntryFunctionType Fn>
-void
-registerEntryPoint(hle::Library* library,
-                   const std::string& name)
+static void
+registerEntryPoint(hle::Library *library,
+                   const std::string &name)
 {
    auto symbol = internal::makeLibraryFunction<RplEntryFunctionType, Fn>(name);
    symbol->exported = true;
@@ -69,9 +69,9 @@ registerEntryPoint(hle::Library* library,
 }
 
 template<typename FunctionType, FunctionType Fn>
-void
-registerFunctionInternal(hle::Library* library,
-                         const char* name,
+static void
+registerFunctionInternal(hle::Library *library,
+                         const char *name,
                          virt_func_ptr<typename std::remove_pointer<FunctionType>::type>& hostPtr)
 {
    auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
@@ -81,9 +81,9 @@ registerFunctionInternal(hle::Library* library,
 }
 
 template<typename FunctionType, FunctionType Fn>
-void
-registerFunctionInternal(hle::Library* library,
-                         const char* name)
+static void
+registerFunctionInternal(hle::Library *library,
+                         const char *name)
 {
    auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
    symbol->exported = false;
@@ -91,9 +91,9 @@ registerFunctionInternal(hle::Library* library,
 }
 
 template<typename FunctionType, FunctionType Fn>
-void
-registerFunctionExport(hle::Library* library,
-                       const char* name)
+static void
+registerFunctionExport(hle::Library *library,
+                       const char *name)
 {
    auto symbol = internal::makeLibraryFunction<FunctionType, Fn>(name);
    symbol->exported = true;
@@ -101,10 +101,10 @@ registerFunctionExport(hle::Library* library,
 }
 
 template<typename DataType>
-void
-registerDataInternal(hle::Library* library,
-                     const char* name,
-                     virt_ptr<DataType>& data)
+static void
+registerDataInternal(hle::Library *library,
+                     const char *name,
+                     virt_ptr<DataType> &data)
 {
    auto symbol = std::make_unique<LibraryData>();
    symbol->exported = false;
@@ -116,10 +116,10 @@ registerDataInternal(hle::Library* library,
 }
 
 template<typename DataType>
-void
-registerDataExport(hle::Library* library,
-                   const char* name,
-                   virt_ptr<DataType>& data)
+static void
+registerDataExport(hle::Library *library,
+                   const char *name,
+                   virt_ptr<DataType> &data)
 {
    auto symbol = std::make_unique<LibraryData>();
    symbol->exported = true;
@@ -130,34 +130,40 @@ registerDataExport(hle::Library* library,
    library->registerSymbol(name, std::move(symbol));
 }
 
-template<typename ObjectType>
-void
-registerTypeInfo(hle::Library* library,
-                 const char* typeName,
-                 const char* typeIdSymbol = nullptr)
+namespace detail
 {
-   LibraryTypeInfo typeInfo;
-   typeInfo.name = typeName;
-   typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
-   typeInfo.typeIdSymbol = typeIdSymbol;
-   library->registerTypeInfo(std::move(typeInfo));
-}
+template<typename T>
+class has_ghs_virtual_table
+{
+    typedef char yes_type;
+    typedef long no_type;
+    template <typename U> static yes_type test(decltype(&U::VirtualTable));
+    template <typename U> static no_type  test(...);
+public:
+    static constexpr bool value = sizeof(test<T>(0)) == sizeof(yes_type);
+};
+} // namespace detail
 
 template<typename ObjectType>
-void
+static void
 registerTypeInfo(hle::Library *library,
-                 const char* typeName,
-                 std::vector<const char*>&& virtualTable,
-                 std::vector<const char*>&& baseTypes = {},
-                 const char* typeIdSymbol = nullptr)
+                 const char *typeName,
+                 std::vector<const char *> &&virtualTable,
+                 std::vector<const char *> &&baseTypes,
+                 const char *typeIdSymbol = nullptr)
 {
-   LibraryTypeInfo typeInfo;
+   auto typeInfo = LibraryTypeInfo { };
    typeInfo.name = typeName;
+   typeInfo.typeIdSymbol = typeIdSymbol;
+   typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
+
    typeInfo.virtualTable = std::move(virtualTable);
    typeInfo.baseTypes = std::move(baseTypes);
-   typeInfo.hostVirtualTablePtr = &ObjectType::VirtualTable;
-   typeInfo.hostTypeDescriptorPtr = &ObjectType::TypeDescriptor;
-   typeInfo.typeIdSymbol = typeIdSymbol;
+
+   if constexpr (detail::has_ghs_virtual_table<ObjectType>::value) {
+      typeInfo.hostVirtualTablePtr = &ObjectType::VirtualTable;
+   }
+
    library->registerTypeInfo(std::move(typeInfo));
 }
 
@@ -194,7 +200,7 @@ registerTypeInfo(hle::Library *library,
 #define RegisterDataInternal(data) \
    cafe::hle::registerDataInternal(this, "__internal__" # data, data)
 
-#define RegisterTypeInfo(type, ...) \
-   cafe::hle::registerTypeInfo<type>(this, __VA_ARGS__);
+#define RegisterTypeInfo(type, name, virtualTable, baseTypes, ...) \
+   cafe::hle::registerTypeInfo<type>(this, name, virtualTable, baseTypes, __VA_ARGS__);
 
 } // namespace cafe::hle

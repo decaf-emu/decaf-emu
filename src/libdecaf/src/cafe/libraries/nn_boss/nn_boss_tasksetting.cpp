@@ -152,7 +152,8 @@ Library::registerTaskSettingSymbols()
          "__dt__Q3_2nn4boss11TaskSettingFv",
          "RegisterPreprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCc",
          "RegisterPostprocess__Q3_2nn4boss11TaskSettingFUiQ3_2nn4boss7TitleIDPCcQ2_2nn6Result",
-      });
+      },
+      {});
 }
 
 }  // namespace namespace cafe::nn_boss

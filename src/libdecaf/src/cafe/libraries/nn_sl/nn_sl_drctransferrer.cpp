@@ -101,6 +101,8 @@ Library::registerDrcTransferrerSymbols()
    RegisterTypeInfo(
       ITransferrer,
       "nn::sl::ITransferrer",
+      {},
+      {},
       "__TID_Q3_2nn2sl12ITransferrer");
 
    RegisterTypeInfo(

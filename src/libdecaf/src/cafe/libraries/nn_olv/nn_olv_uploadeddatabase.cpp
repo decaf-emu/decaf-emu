@@ -214,7 +214,8 @@ Library::registerUploadedDataBaseSymbols()
       "nn::olv::UploadedDataBase",
       {
          "__pure_virtual_called",
-      });
+      },
+      {});
 }
 
 }  // namespace cafe::nn_olv

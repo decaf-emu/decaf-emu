@@ -191,7 +191,8 @@ Library::registerTaskSymbols()
       "nn::boss::Task",
       {
          "__dt__Q3_2nn4boss4TaskFv",
-      });
+      },
+      {});
 }
 
 } // namespace cafe::nn_boss
