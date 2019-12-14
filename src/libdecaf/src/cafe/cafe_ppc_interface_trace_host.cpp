@@ -66,6 +66,8 @@ invoke_trace_host_impl(cpu::Core *core, const char *name, bool is_member_functio
       case RegisterType::VarArgs:
          fmt::format_to(message, "...");
          break;
+      case RegisterType::Void:
+         break;
       }
    }
 
