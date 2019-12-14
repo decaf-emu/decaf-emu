@@ -296,6 +296,8 @@ FSStatus
 fsaDecodeFsaStatusToFsStatus(FSAStatus error)
 {
    switch (error) {
+   case FSAStatus::OK:
+      return FSStatus::OK;
    case FSAStatus::NotInit:
    case FSAStatus::Busy:
       return FSStatus::FatalError;
