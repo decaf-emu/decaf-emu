@@ -35,14 +35,14 @@ struct LogSettings
    std::vector<std::string> hle_trace_filters =
    {
       "+.*",
-      "-coreinit::__ghsLock",
-      "-coreinit::__ghsUnlock",
-      "-coreinit::__gh_errno_ptr",
-      "-coreinit::__gh_set_errno",
-      "-coreinit::__gh_get_errno",
-      "-coreinit::__get_eh_globals",
-      "-coreinit::OSGetTime",
-      "-coreinit::OSGetSystemTime",
+      "-coreinit.rpl::__ghsLock",
+      "-coreinit.rpl::__ghsUnlock",
+      "-coreinit.rpl::__gh_errno_ptr",
+      "-coreinit.rpl::__gh_set_errno",
+      "-coreinit.rpl::__gh_get_errno",
+      "-coreinit.rpl::__get_eh_globals",
+      "-coreinit.rpl::OSGetTime",
+      "-coreinit.rpl::OSGetSystemTime",
    };
 };
 
