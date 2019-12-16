@@ -8,6 +8,9 @@
 #ifdef PLATFORM_WINDOWS
 #include <winerror.h>
 #endif
+#ifdef PLATFORM_POSIX
+#include <errno.h>
+#endif
 
 namespace vfs
 {
@@ -470,6 +473,13 @@ HostDevice::translateError(const std::error_code &ec) const
 
    if (ec.category() == std::system_category()) {
       return translateError(std::system_error { ec });
+   }
+   else if (ec.category() == std::generic_category()) {
+#ifdef PLATFORM_POSIX
+      if (ec.value() == ENOENT) {
+         return Error::NotFound;
+      }
+#endif
    }
 
    return Error::GenericError;
