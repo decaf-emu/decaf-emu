@@ -347,7 +347,7 @@ MemoryWidget::updateTextDocument(QTextCursor cursor,
    auto nextPageValid = decaf::debug::isValidVirtualAddress(static_cast<VirtualAddress>(nextPage));
 
    // This code assumes you could only ever have 2 pages on a single line
-   assert(pageSize > mBytesPerLine);
+   assert(pageSize > bytesPerLine);
 
    for (auto address = beginAddress; address < endAddress; address += bytesPerLine) {
       auto firstValidByte = -1;
