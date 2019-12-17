@@ -48,12 +48,4 @@ NSSLExportInternalServerCertificate(NSSLCertID certId,
                                     virt_ptr<uint32_t> certBufferSize,
                                     virt_ptr<NSSLCertType> certType);
 
-namespace internal
-{
-
-void
-initialiseNSSL();
-
-} // namespace internal
-
 } // namespace cafe::nsysnet

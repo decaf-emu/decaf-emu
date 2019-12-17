@@ -29,8 +29,13 @@ struct SslData
    static constexpr uint32_t MessageCount = 0x40;
    static constexpr uint32_t MessageSize = 0x100;
 
+   SslData()
+   {
+      OSInitMutex(virt_addrof(lock));
+   }
+
    be2_struct<OSMutex> lock;
-   be2_val<IOSHandle> handle;
+   be2_val<IOSHandle> handle = IOSHandle { -1 };
    be2_virt_ptr<IPCBufPool> messagePool;
    be2_array<uint8_t, MessageCount * MessageSize> messageBuffer;
    be2_val<uint32_t> messageCount;
@@ -38,7 +43,6 @@ struct SslData
 
 static virt_ptr<SslData>
 sSslData;
-
 
 namespace internal
 {
@@ -364,13 +368,6 @@ static void
 freeIpcBuffer(virt_ptr<void> buf)
 {
    IPCBufPoolFree(sSslData->messagePool, buf);
-}
-
-void
-initialiseNSSL()
-{
-   sSslData->handle = -1;
-   OSInitMutex(virt_addrof(sSslData->lock));
 }
 
 } // namespace internal

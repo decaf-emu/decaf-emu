@@ -10,7 +10,6 @@ rpl_entry(coreinit::OSDynLoad_ModuleHandle moduleHandle,
           coreinit::OSDynLoad_EntryReason reason)
 {
    internal::initialiseSocketLib();
-   internal::initialiseNSSL();
    return 0;
 }
 
