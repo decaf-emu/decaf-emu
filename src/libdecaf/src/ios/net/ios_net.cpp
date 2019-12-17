@@ -1,7 +1,9 @@
 #include "ios_net.h"
+#include "ios_net_log.h"
 #include "ios_net_subsys.h"
 #include "ios_net_socket_thread.h"
 
+#include "decaf_log.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/mcp/ios_mcp_ipc.h"
@@ -36,6 +38,8 @@ sLocalHeapBuffer = nullptr;
 namespace internal
 {
 
+Logger netLog = { };
+
 static void
 initialiseStaticData()
 {
@@ -52,7 +56,7 @@ networkLoop()
    // Create message queue
    auto error = IOS_CreateMessageQueue(messageBuffer, messageBuffer.size());
    if (error < Error::OK) {
-      gLog->error("NET: Failed to create message queue, error = {}.", error);
+      netLog->error("NET: Failed to create message queue, error = {}.", error);
       return error;
    }
 
@@ -61,7 +65,7 @@ networkLoop()
    // Register resource manager
    error = MCP_RegisterResourceManager("/dev/network", messageQueueId);
    if (error < Error::OK) {
-      gLog->error("NET: Failed to register resource manager for /dev/network, error = {}.", error);
+      netLog->error("NET: Failed to register resource manager for /dev/network, error = {}.", error);
       return error;
    }
 
@@ -109,6 +113,9 @@ networkLoop()
 Error
 processEntryPoint(phys_ptr<void> /* context */)
 {
+   // Initialise logger
+   internal::netLog = decaf::makeLogger("IOS_NET");
+
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticSocketData();
@@ -117,13 +124,13 @@ processEntryPoint(phys_ptr<void> /* context */)
    // Initialise process heaps
    auto error = IOS_CreateLocalProcessHeap(sLocalHeapBuffer, LocalHeapSize);
    if (error < Error::OK) {
-      gLog->error("NET: Failed to create local process heap, error = {}.", error);
+      internal::netLog->error("NET: Failed to create local process heap, error = {}.", error);
       return error;
    }
 
    error = IOS_CreateCrossProcessHeap(CrossHeapSize);
    if (error < Error::OK) {
-      gLog->error("NET: Failed to create cross process heap, error = {}.", error);
+      internal::netLog->error("NET: Failed to create cross process heap, error = {}.", error);
       return error;
    }
 
@@ -135,7 +142,7 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    error = internal::initSubsys();
    if (error < Error::OK) {
-      gLog->error("NET: Failed to initialise subsystem, error = {}.", error);
+      internal::netLog->error("NET: Failed to initialise subsystem, error = {}.", error);
       return error;
    }
 
