@@ -29,6 +29,13 @@ namespace ios::net::internal
 class SocketDevice
 {
 public:
+   struct PendingWrite
+   {
+      phys_ptr<kernel::ResourceRequest> resourceRequest;
+      std::unique_ptr<uv_write_t> handle;
+      uint32_t sendBytes;
+   };
+
    struct Socket
    {
       enum Type
@@ -47,12 +54,19 @@ public:
       bool connected = false;
       Error except = Error::OK;
       std::vector<char> readBuffer;
+      std::vector<phys_ptr<kernel::ResourceRequest>> pendingReads;
+      std::vector<PendingWrite> pendingWrites;
    };
 
    struct PendingSelect
    {
-      std::chrono::system_clock::time_point expireTime;
+      ~PendingSelect() {
+         uv_timer_stop(&timer);
+      }
+
+      SocketDevice *device;
       phys_ptr<kernel::ResourceRequest> resourceRequest;
+      uv_timer_t timer;
    };
 
 public:
@@ -95,6 +109,26 @@ public:
                phys_ptr<SocketGetPeerNameResponse> response);
 
    std::optional<Error>
+   recv(phys_ptr<kernel::ResourceRequest> resourceRequest,
+        phys_ptr<const SocketRecvRequest> request,
+        phys_ptr<char> alignedBeforeBuffer,
+        uint32_t alignedBeforeLength,
+        phys_ptr<char> alignedBuffer,
+        uint32_t alignedLength,
+        phys_ptr<char> alignedAfterBuffer,
+        uint32_t alignedAfterLength);
+
+   std::optional<Error>
+   send(phys_ptr<kernel::ResourceRequest> resourceRequest,
+        phys_ptr<const SocketSendRequest> request,
+        phys_ptr<char> alignedBeforeBuffer,
+        uint32_t alignedBeforeLength,
+        phys_ptr<char> alignedBuffer,
+        uint32_t alignedLength,
+        phys_ptr<char> alignedAfterBuffer,
+        uint32_t alignedAfterLength);
+
+   std::optional<Error>
    setsockopt(phys_ptr<kernel::ResourceRequest> resourceRequest,
               phys_ptr<const SocketSetSockOptRequest> request,
               phys_ptr<void> optval,
@@ -110,16 +144,19 @@ public:
           SocketHandle fd,
           int32_t backlog);
 
-   void
-   checkPendingSelects();
+   void checkPendingSelects();
+   void checkPendingReads(Socket *socket);
 
 protected:
    Socket *getSocket(int sockfd);
    std::optional<Error> checkSelect(phys_ptr<kernel::ResourceRequest> resourceRequest);
+   std::optional<Error> checkRecv(phys_ptr<kernel::ResourceRequest> resourceRequest);
+
+   static void uvExpirePendingSelectCallback(uv_timer_t *timer);
 
 private:
    std::array<Socket, 64> mSockets;
-   std::vector<PendingSelect> mPendingSelects;
+   std::vector<std::unique_ptr<PendingSelect>> mPendingSelects;
 };
 
 /** @} */

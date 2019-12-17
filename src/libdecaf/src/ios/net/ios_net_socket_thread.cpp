@@ -243,6 +243,26 @@ socketIoctlv(phys_ptr<ResourceRequest> resourceRequest)
          return makeError(ErrorCategory::Socket, SocketError::Inval);
       }
       break;
+   case SocketCommand::Recv:
+      if (resourceRequest->requestData.args.ioctlv.numVecIn == 1 &&
+          resourceRequest->requestData.args.ioctlv.numVecOut == 3 &&
+          resourceRequest->requestData.args.ioctlv.vecs[0].len == sizeof(SocketRecvRequest)) {
+         submitNetworkTask([=]() {
+            completeSocketTask(
+               resourceRequest,
+               device->recv(resourceRequest,
+                            phys_cast<const SocketRecvRequest *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr),
+                            phys_cast<char *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr),
+                            resourceRequest->requestData.args.ioctlv.vecs[1].len,
+                            phys_cast<char *>(resourceRequest->requestData.args.ioctlv.vecs[2].paddr),
+                            resourceRequest->requestData.args.ioctlv.vecs[2].len,
+                            phys_cast<char *>(resourceRequest->requestData.args.ioctlv.vecs[3].paddr),
+                            resourceRequest->requestData.args.ioctlv.vecs[3].len));
+         });
+      } else {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+      break;
    case SocketCommand::SetSockOpt:
       if (resourceRequest->requestData.args.ioctlv.numVecIn == 2 &&
           resourceRequest->requestData.args.ioctlv.numVecOut == 0 &&
@@ -254,6 +274,26 @@ socketIoctlv(phys_ptr<ResourceRequest> resourceRequest)
                                   phys_cast<SocketSetSockOptRequest *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr),
                                   phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr),
                                   resourceRequest->requestData.args.ioctlv.vecs[0].len));
+         });
+      } else {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+      break;
+   case SocketCommand::Send:
+      if (resourceRequest->requestData.args.ioctlv.numVecIn == 4 &&
+          resourceRequest->requestData.args.ioctlv.numVecOut == 0 &&
+          resourceRequest->requestData.args.ioctlv.vecs[0].len == sizeof(SocketSendRequest)) {
+         submitNetworkTask([=]() {
+            completeSocketTask(
+               resourceRequest,
+               device->send(resourceRequest,
+                            phys_cast<const SocketSendRequest *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr),
+                            phys_cast<char *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr),
+                            resourceRequest->requestData.args.ioctlv.vecs[1].len,
+                            phys_cast<char *>(resourceRequest->requestData.args.ioctlv.vecs[2].paddr),
+                            resourceRequest->requestData.args.ioctlv.vecs[2].len,
+                            phys_cast<char *>(resourceRequest->requestData.args.ioctlv.vecs[3].paddr),
+                            resourceRequest->requestData.args.ioctlv.vecs[3].len));
          });
       } else {
          return makeError(ErrorCategory::Socket, SocketError::Inval);

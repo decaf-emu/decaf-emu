@@ -35,6 +35,9 @@ static constexpr int SO_IPPROTO_IP = 0;
 static constexpr int SO_IPPROTO_TCP = 6;
 static constexpr int SO_IPPROTO_UDP = 17;
 
+static constexpr int SO_MSG_PEEK = 0x2;
+static constexpr int SO_MSG_DONTWAIT = 0x20;
+
 static void *
 resourceRequestToHandleData(phys_ptr<ResourceRequest> resourceRequest)
 {
@@ -187,6 +190,7 @@ uvReadCallback(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
    }
 
    delete buf->base;
+   socket->device->checkPendingReads(socket);
    socket->device->checkPendingSelects();
 }
 
@@ -337,6 +341,173 @@ SocketDevice::getpeername(phys_ptr<kernel::ResourceRequest> resourceRequest,
 }
 
 std::optional<Error>
+SocketDevice::checkRecv(phys_ptr<kernel::ResourceRequest> resourceRequest)
+{
+   auto request = phys_cast<const SocketRecvRequest *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
+   auto socket = getSocket(request->fd);
+   if (!socket) {
+      return makeError(ErrorCategory::Socket, SocketError::BadFd);
+   }
+
+   auto alignedBeforeBuffer = phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr);
+   auto alignedBeforeLength = resourceRequest->requestData.args.ioctlv.vecs[1].len;
+
+   auto alignedBuffer = phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[2].paddr);
+   auto alignedLength = resourceRequest->requestData.args.ioctlv.vecs[2].len;
+
+   auto alignedAfterBuffer = phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[3].paddr);
+   auto alignedAfterLength = resourceRequest->requestData.args.ioctlv.vecs[3].len;
+
+   if (socket->readBuffer.empty()) {
+      auto nonBlocking = socket->nonBlocking || !!(request->flags & SO_MSG_DONTWAIT);
+      if (!nonBlocking) {
+         return makeError(ErrorCategory::Socket, SocketError::WouldBlock);
+      }
+
+      return {};
+   }
+
+   auto readBytes = size_t { 0u };
+   if (alignedBeforeBuffer && alignedBeforeLength) {
+      auto len = std::min<size_t>(socket->readBuffer.size() - readBytes, alignedBeforeLength);
+      std::memcpy(alignedBeforeBuffer.get(), socket->readBuffer.data() + readBytes, len);
+      readBytes += len;
+   }
+
+   if (alignedBuffer && alignedLength) {
+      auto len = std::min<size_t>(socket->readBuffer.size() - readBytes, alignedLength);
+      std::memcpy(alignedBuffer.get(), socket->readBuffer.data() + readBytes, len);
+      readBytes += len;
+   }
+
+   if (alignedAfterBuffer && alignedAfterLength) {
+      auto len = std::min<size_t>(socket->readBuffer.size() - readBytes, alignedAfterLength);
+      std::memcpy(alignedAfterBuffer.get(), socket->readBuffer.data() + readBytes, len);
+      readBytes += len;
+   }
+
+   if (!(request->flags & SO_MSG_PEEK)) {
+      if (readBytes == socket->readBuffer.size()) {
+         socket->readBuffer.clear();
+      } else {
+         std::memmove(socket->readBuffer.data(),
+                        socket->readBuffer.data() + readBytes,
+                        socket->readBuffer.size() - readBytes);
+         socket->readBuffer.resize(socket->readBuffer.size() - readBytes);
+      }
+   }
+
+   return static_cast<Error>(readBytes);
+}
+
+std::optional<Error>
+SocketDevice::recv(phys_ptr<ResourceRequest> resourceRequest,
+                   phys_ptr<const SocketRecvRequest> request,
+                   phys_ptr<char> alignedBeforeBuffer,
+                   uint32_t alignedBeforeLength,
+                   phys_ptr<char> alignedBuffer,
+                   uint32_t alignedLength,
+                   phys_ptr<char> alignedAfterBuffer,
+                   uint32_t alignedAfterLength)
+{
+   auto socket = getSocket(request->fd);
+   if (!socket) {
+      return makeError(ErrorCategory::Socket, SocketError::BadFd);
+   }
+
+   if (!socket->connected) {
+      return makeError(ErrorCategory::Socket, SocketError::NotConn);
+   }
+
+   auto result = checkRecv(resourceRequest);
+   if (result.has_value()) {
+      return result;
+   }
+
+   socket->pendingReads.push_back(resourceRequest);
+   return {};
+}
+
+static void
+uvWriteCallback(uv_write_t *req, int32_t status)
+{
+   auto socket = reinterpret_cast<SocketDevice::Socket *>(req->data);
+
+   for (auto itr = socket->pendingWrites.begin(); itr != socket->pendingWrites.end(); ++itr) {
+      if (itr->handle.get() == req) {
+         if (status != 0) {
+            completeSocketTask(itr->resourceRequest,
+               makeError(ErrorCategory::Socket, SocketError::GenericError));
+         } else {
+            completeSocketTask(itr->resourceRequest,
+                               static_cast<Error>(itr->sendBytes));
+         }
+
+         socket->pendingWrites.erase(itr);
+         break;
+      }
+   }
+}
+
+std::optional<Error>
+SocketDevice::send(phys_ptr<ResourceRequest> resourceRequest,
+                   phys_ptr<const SocketSendRequest> request,
+                   phys_ptr<char> alignedBeforeBuffer,
+                   uint32_t alignedBeforeLength,
+                   phys_ptr<char> alignedBuffer,
+                   uint32_t alignedLength,
+                   phys_ptr<char> alignedAfterBuffer,
+                   uint32_t alignedAfterLength)
+{
+   auto socket = getSocket(request->fd);
+   if (!socket) {
+      return makeError(ErrorCategory::Socket, SocketError::BadFd);
+   }
+
+   if (!socket->connected) {
+      return makeError(ErrorCategory::Socket, SocketError::NotConn);
+   }
+
+   auto buffers = std::array<uv_buf_t, 3> { };
+   auto numBuffers = 0;
+   auto sendBytes = 0u;
+
+   if (alignedBeforeBuffer && alignedBeforeLength) {
+      buffers[numBuffers].len = alignedBeforeLength;
+      buffers[numBuffers].base = alignedBeforeBuffer.get();
+      numBuffers++;
+      sendBytes += alignedBeforeLength;
+   }
+
+   if (alignedBuffer && alignedLength) {
+      buffers[numBuffers].len = alignedLength;
+      buffers[numBuffers].base = alignedBuffer.get();
+      numBuffers++;
+      sendBytes += alignedLength;
+   }
+
+   if (alignedAfterBuffer && alignedAfterLength) {
+      buffers[numBuffers].len = alignedAfterLength;
+      buffers[numBuffers].base = alignedAfterBuffer.get();
+      numBuffers++;
+      sendBytes += alignedAfterLength;
+   }
+
+   auto write = std::make_unique<uv_write_t>();
+   write->data = socket;
+
+   auto error = uv_write(write.get(),
+                         reinterpret_cast<uv_stream_t *>(socket->handle.get()),
+                         buffers.data(), numBuffers, &uvWriteCallback);
+   if (error) {
+      return makeError(ErrorCategory::Socket, SocketError::GenericError);
+   }
+
+   socket->pendingWrites.push_back({ resourceRequest, std::move(write), sendBytes });
+   return {};
+}
+
+std::optional<Error>
 SocketDevice::setsockopt(phys_ptr<kernel::ResourceRequest> resourceRequest,
                          phys_ptr<const SocketSetSockOptRequest> request,
                          phys_ptr<void> optval,
@@ -426,22 +597,48 @@ SocketDevice::checkSelect(phys_ptr<kernel::ResourceRequest> resourceRequest)
 }
 
 void
+SocketDevice::checkPendingReads(Socket *socket)
+{
+   auto itr = socket->pendingReads.begin();
+
+   while (itr != socket->pendingReads.end()) {
+      auto result = checkRecv(*itr);
+      if (result.has_value()) {
+         completeSocketTask(*itr, result);
+         itr = socket->pendingReads.erase(itr);
+      } else {
+         ++itr;
+      }
+   }
+}
+
+void
 SocketDevice::checkPendingSelects()
 {
    auto now = std::chrono::system_clock::now();
    auto itr = mPendingSelects.begin();
 
    while (itr != mPendingSelects.end()) {
-      auto result = checkSelect(itr->resourceRequest);
-      if (!result.has_value() && now >= itr->expireTime) {
-         result = makeError(ErrorCategory::Socket, SocketError::TimedOut);
-      }
-
+      auto result = checkSelect((*itr)->resourceRequest);
       if (result.has_value()) {
-         completeSocketTask(itr->resourceRequest, result);
+         completeSocketTask((*itr)->resourceRequest, result);
          itr = mPendingSelects.erase(itr);
       } else {
          ++itr;
+      }
+   }
+}
+
+void
+SocketDevice::uvExpirePendingSelectCallback(uv_timer_t *timer)
+{
+   auto pending = reinterpret_cast<PendingSelect *>(timer->data);
+   completeSocketTask(pending->resourceRequest,
+                      makeError(ErrorCategory::Socket, SocketError::TimedOut));
+
+   for (auto itr = pending->device->mPendingSelects.begin(); itr != pending->device->mPendingSelects.end(); ++itr) {
+      if (itr->get() == pending) {
+         pending->device->mPendingSelects.erase(itr);
       }
    }
 }
@@ -457,10 +654,24 @@ SocketDevice::select(phys_ptr<ResourceRequest> resourceRequest,
    }
 
    if (request->hasTimeout) {
-      auto expireTime = std::chrono::system_clock::now() +
-         std::chrono::seconds(request->timeout.tv_sec) +
-         std::chrono::microseconds(request->timeout.tv_usec);
-      mPendingSelects.push_back({ expireTime, resourceRequest });
+      if (request->timeout.tv_sec == 0 && request->timeout.tv_usec == 0) {
+         return makeError(ErrorCategory::Socket, SocketError::TimedOut);
+      }
+
+      auto pending = std::make_unique<PendingSelect>();
+      uv_timer_init(networkUvLoop(), &pending->timer);
+      pending->timer.data = resourceRequestToHandleData(resourceRequest);
+      pending->resourceRequest = resourceRequest;
+      pending->device = this;
+
+      auto expireMS = std::chrono::duration_cast<std::chrono::milliseconds>(
+         std::chrono::seconds(request->timeout.tv_sec)
+         + std::chrono::microseconds(request->timeout.tv_usec)
+         + (std::chrono::milliseconds(1) - std::chrono::microseconds(1)));
+      uv_timer_start(&pending->timer, &uvExpirePendingSelectCallback,
+                     static_cast<uint64_t>(expireMS.count()), 0ull);
+
+      mPendingSelects.push_back(std::move(pending));
       return {};
    }
 
