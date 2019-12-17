@@ -674,7 +674,7 @@ setsockopt(int32_t sockfd,
       return -1;
    }
 
-   if (optlen < 0 || optlen > optvalBuffer.size()) {
+   if (optlen < 0 || static_cast<unsigned>(optlen) > optvalBuffer.size()) {
       gh_set_errno(SocketError::Inval);
       return -1;
    }
