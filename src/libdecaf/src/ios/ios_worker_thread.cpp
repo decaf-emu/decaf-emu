@@ -51,7 +51,7 @@ iosWorkerThread()
 void
 startWorkerThread()
 {
-   if(!sWorkerThreadRunning) {
+   if (!sWorkerThreadRunning) {
       sWorkerThreadRunning = true;
       sWorkerThread = std::thread { iosWorkerThread };
    }
@@ -60,7 +60,7 @@ startWorkerThread()
 void
 stopWorkerThread()
 {
-   if(sWorkerThreadRunning) {
+   if (sWorkerThreadRunning) {
       sWorkerThreadRunning = false;
       sWorkerThreadConditionVariable.notify_all();
       sWorkerThread.join();

@@ -1,16 +1,22 @@
+#include "ios_net_socket_async_task.h"
 #include "ios_net_socket_device.h"
-#include "ios_net_socket_thread.h"
-#include "ios_net_socket_request.h"
 #include "ios_net_socket_response.h"
+#include "ios_net_socket_request.h"
+#include "ios_net_socket_thread.h"
 
 #include "ios/kernel/ios_kernel_messagequeue.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/kernel/ios_kernel_thread.h"
 
+#include "ios/ios_error.h"
 #include "ios/ios_stackobject.h"
+#include "ios/ios_network_thread.h"
 
 #include <array>
+#include <optional>
+
+using ios::internal::submitNetworkTask;
 
 namespace ios::net::internal
 {
@@ -75,58 +81,175 @@ socketClose(phys_ptr<ResourceRequest> request)
    return Error::OK;
 }
 
-static Error
+static std::optional<Error>
 socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
 {
-   auto error = Error::OK;
    auto device = getDevice(resourceRequest->requestData.handle);
    if (!device) {
       return Error::InvalidHandle;
    }
 
    auto request = phys_cast<const SocketRequest *>(resourceRequest->requestData.args.ioctl.inputBuffer);
+   auto response = phys_cast<SocketResponse *>(resourceRequest->requestData.args.ioctl.outputBuffer);
+
    switch (static_cast<SocketCommand>(resourceRequest->requestData.args.ioctl.request)) {
+   case SocketCommand::Accept:
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketAcceptRequest)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->accept(resourceRequest,
+                           request->accept.fd,
+                           phys_addrof(request->accept.addr),
+                           request->accept.addrlen));
+      });
+      break;
+   case SocketCommand::Bind:
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketBindRequest)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->bind(resourceRequest,
+                         request->bind.fd,
+                         phys_addrof(request->bind.addr),
+                         request->bind.addrlen));
+      });
+      break;
    case SocketCommand::Close:
-      error = device->closeSocket(request->close.fd);
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketCloseRequest)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->closeSocket(resourceRequest,
+                                request->close.fd));
+      });
+      break;
+   case SocketCommand::Connect:
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketConnectRequest)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->connect(resourceRequest,
+                            request->connect.fd,
+                            phys_addrof(request->connect.addr),
+                            request->connect.addrlen));
+      });
+      break;
+   case SocketCommand::Listen:
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketListenRequest)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->listen(resourceRequest,
+                           request->listen.fd,
+                           request->listen.backlog));
+      });
+      break;
+   case SocketCommand::Select:
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketSelectRequest) ||
+          resourceRequest->requestData.args.ioctl.outputLength != sizeof(SocketSelectResponse)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->select(resourceRequest,
+                           phys_addrof(request->select),
+                           phys_addrof(response->select)));
+      });
       break;
    case SocketCommand::Socket:
-      error = device->createSocket(request->socket.family,
-                                   request->socket.type,
-                                   request->socket.proto);
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketSocketRequest)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->createSocket(resourceRequest,
+                                 request->socket.family,
+                                 request->socket.type,
+                                 request->socket.proto));
+      });
       break;
    case SocketCommand::GetProcessSocketHandle:
-   {
       if (static_cast<size_t>(request->getProcessSocketHandle.processId) < sDevices.size() &&
           sDevices[request->getProcessSocketHandle.processId]) {
-         error = static_cast<Error>(request->getProcessSocketHandle.processId);
+         return static_cast<Error>(request->getProcessSocketHandle.processId);
       } else {
-         error = Error::InvalidArg;
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
       }
       break;
-   }
    default:
-      error = Error::InvalidArg;
+      return Error::Invalid;
    }
 
-   return error;
+   return {}; // async request
 }
 
-static Error
-socketIoctlv(phys_ptr<ResourceRequest> request)
+static std::optional<Error>
+socketIoctlv(phys_ptr<ResourceRequest> resourceRequest)
 {
-   auto device = getDevice(request->requestData.handle);
+   auto device = getDevice(resourceRequest->requestData.handle);
 
    if (!device) {
       return Error::InvalidHandle;
    }
 
-   /* TODO: Handle commands
    switch (static_cast<SocketCommand>(resourceRequest->requestData.args.ioctlv.request)) {
+   case SocketCommand::DnsQuery:
+      if (resourceRequest->requestData.args.ioctlv.numVecIn == 1 &&
+          resourceRequest->requestData.args.ioctlv.numVecOut == 1 &&
+          resourceRequest->requestData.args.ioctlv.vecs[0].len == sizeof(SocketDnsQueryRequest) &&
+          resourceRequest->requestData.args.ioctlv.vecs[1].len == sizeof(SocketDnsQueryResponse)) {
+         submitNetworkTask([=]() {
+            completeSocketTask(
+               resourceRequest,
+               device->dnsQuery(resourceRequest,
+                                phys_cast<SocketDnsQueryRequest *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr),
+                                phys_cast<SocketDnsQueryResponse *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr)));
+         });
+      } else {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+      break;
+   case SocketCommand::SetSockOpt:
+      if (resourceRequest->requestData.args.ioctlv.numVecIn == 2 &&
+          resourceRequest->requestData.args.ioctlv.numVecOut == 0 &&
+          resourceRequest->requestData.args.ioctlv.vecs[1].len == sizeof(SocketSetSockOptRequest)) {
+         submitNetworkTask([=]() {
+            completeSocketTask(
+               resourceRequest,
+               device->setsockopt(resourceRequest,
+                                  phys_cast<SocketSetSockOptRequest *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr),
+                                  phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr),
+                                  resourceRequest->requestData.args.ioctlv.vecs[0].len));
+         });
+      } else {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+      break;
    default:
+      return Error::Invalid;
    }
-   */
 
-   return Error::InvalidArg;
+   return {}; // async request
 }
 
 static Error
@@ -151,10 +274,14 @@ socketThreadEntry(phys_ptr<void> /*context*/)
          IOS_ResourceReply(request, socketClose(request));
          break;
       case Command::Ioctl:
-         IOS_ResourceReply(request, socketIoctl(request));
+         if (auto result = socketIoctl(request); result.has_value()) {
+            IOS_ResourceReply(request, result.value());
+         }
          break;
       case Command::Ioctlv:
-         IOS_ResourceReply(request, socketIoctlv(request));
+         if (auto result = socketIoctlv(request); result.has_value()) {
+            IOS_ResourceReply(request, result.value());
+         }
          break;
       case Command::Suspend:
          // TODO: Do any necessary cleanup!

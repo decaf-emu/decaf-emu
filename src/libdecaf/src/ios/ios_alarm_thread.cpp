@@ -50,7 +50,7 @@ alarmThread()
 void
 startAlarmThread()
 {
-   if(!sAlarmThreadRunning.load()) {
+   if (!sAlarmThreadRunning.load()) {
       sAlarmThreadRunning.store(true);
       sAlarmThread = std::thread { alarmThread };
    }
@@ -59,7 +59,7 @@ startAlarmThread()
 void
 stopAlarmThread()
 {
-   if(sAlarmThreadRunning.load()) {
+   if (sAlarmThreadRunning.load()) {
       sAlarmThreadRunning.store(false);
       sAlarmCondition.notify_all();
       sAlarmThread.join();

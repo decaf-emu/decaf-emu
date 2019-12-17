@@ -1,6 +1,7 @@
 #include "ios_net.h"
 #include "ios_net_log.h"
 #include "ios_net_subsys.h"
+#include "ios_net_socket_async_task.h"
 #include "ios_net_socket_thread.h"
 
 #include "decaf_log.h"
@@ -119,6 +120,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticSocketData();
+   internal::initialiseStaticSocketAsyncTaskData();
    internal::initialiseStaticSubsysData();
 
    // Initialise process heaps
@@ -139,6 +141,12 @@ processEntryPoint(phys_ptr<void> /* context */)
    // TODO: startWifi24Thread (/dev/wifi24)
    // TODO: startUdsThreads (/dev/ifuds /dev/udscntrl)
    // TODO: startSomeThreads (/dev/ac_main /dev/ndm /dev/dlp)
+
+   error = internal::startSocketAsyncTaskThread();
+   if (error < Error::OK) {
+      internal::netLog->error("NET: Failed to initialise socket async task thread, error = {}.", error);
+      return error;
+   }
 
    error = internal::initSubsys();
    if (error < Error::OK) {
