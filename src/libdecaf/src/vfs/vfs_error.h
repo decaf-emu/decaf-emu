@@ -23,8 +23,7 @@ enum class Error
    NotOpen,
    OperationNotSupported,
    ReadOnly,
-   ReadPermission,
-   WritePermission,
+   Permission,
 };
 
 } // namespace vfs

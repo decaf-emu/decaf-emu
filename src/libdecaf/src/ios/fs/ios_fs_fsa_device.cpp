@@ -46,8 +46,7 @@ FSADevice::translateError(vfs::Error error) const
       return FSAStatus::UnsupportedCmd;
    case vfs::Error::ExecutePermission:
    case vfs::Error::ReadOnly:
-   case vfs::Error::ReadPermission:
-   case vfs::Error::WritePermission:
+   case vfs::Error::Permission:
       return FSAStatus::PermissionError;
    default:
       return FSAStatus::MediaError;
