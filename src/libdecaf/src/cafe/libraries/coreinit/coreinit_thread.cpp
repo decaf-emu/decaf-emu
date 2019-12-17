@@ -476,7 +476,7 @@ OSDetachThread(virt_ptr<OSThread> thread)
  *
  * This function is implicitly called when the thread entry point returns.
  */
-void
+[[noreturn]] void
 OSExitThread(int value)
 {
    auto thread = OSGetCurrentThread();
@@ -1370,7 +1370,6 @@ defaultThreadEntry(uint32_t coreId,
                     sThreadData->defaultThreadInitRendezvousWaitMask);
    initialiseDeallocatorThread();
    OSExitThread(0);
-   // noreturn
 }
 
 static void

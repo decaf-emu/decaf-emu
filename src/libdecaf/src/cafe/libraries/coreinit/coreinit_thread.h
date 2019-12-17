@@ -385,7 +385,7 @@ coreinit__OSCreateThreadType(virt_ptr<OSThread> thread,
 void
 OSDetachThread(virt_ptr<OSThread> thread);
 
-void
+[[noreturn]] void
 OSExitThread(int value);
 
 void
