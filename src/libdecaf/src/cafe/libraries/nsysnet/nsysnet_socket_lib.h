@@ -77,6 +77,12 @@ recv(int32_t sockfd,
      int32_t flags);
 
 int32_t
+send(int32_t sockfd,
+     virt_ptr<const void> buffer,
+     int32_t len,
+     int32_t flags);
+
+int32_t
 setsockopt(int32_t sockfd,
            int32_t level,
            int32_t optname,

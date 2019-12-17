@@ -37,6 +37,7 @@ using ios::net::SocketDnsQueryRequest;
 using ios::net::SocketGetPeerNameRequest;
 using ios::net::SocketListenRequest;
 using ios::net::SocketRecvRequest;
+using ios::net::SocketSendRequest;
 using ios::net::SocketSetSockOptRequest;
 using ios::net::SocketSelectRequest;
 using ios::net::SocketSocketRequest;
@@ -569,7 +570,7 @@ listen(int32_t sockfd,
 }
 
 static void
-prepareUnalignedBuffer(virt_ptr<uint8_t> buffer,
+prepareUnalignedBuffer(virt_ptr<const uint8_t> buffer,
                        int32_t len,
                        virt_ptr<uint8_t> alignedBeforeBuffer,
                        virt_ptr<uint8_t> alignedAfterBuffer,
@@ -635,6 +636,7 @@ recv(int32_t sockfd,
      int32_t len,
      int32_t flags)
 {
+   auto alignedBuffers = StackArray<uint8_t, IOSVecAlign * 2, IOSVecAlign> { };
    if (!internal::isInitialised()) {
       gh_set_errno(SocketError::NotInitialised);
       return -1;
@@ -672,8 +674,7 @@ recv(int32_t sockfd,
       vecs[1].vaddr = virt_cast<virt_addr>(buffer);
       vecs[1].len = static_cast<uint32_t>(len);
    } else {
-      StackArray<uint8_t, IOSVecAlign * 3> alignedBuffers;
-      auto alignedBeforeBuffer = align_up(virt_ptr<uint8_t> { alignedBuffers }, IOSVecAlign);
+      auto alignedBeforeBuffer = virt_ptr<uint8_t> { alignedBuffers };
       auto alignedAfterBuffer = alignedBeforeBuffer + IOSVecAlign;
 
       prepareUnalignedBuffer(virt_cast<uint8_t *>(buffer), len,
@@ -692,6 +693,70 @@ recv(int32_t sockfd,
                            virt_addrof(vecs[3]));
    }
 
+   auto result = internal::decodeIosError(error);
+
+   internal::freeIpcBuffer(buf);
+   return result;
+}
+
+
+int32_t
+send(int32_t sockfd,
+     virt_ptr<const void> buffer,
+     int32_t len,
+     int32_t flags)
+{
+   auto alignedBuffers = StackArray<uint8_t, IOSVecAlign * 2, IOSVecAlign> { };
+   if (!internal::isInitialised()) {
+      gh_set_errno(SocketError::NotInitialised);
+      return -1;
+   }
+
+   if (!buffer || len < 0) {
+      gh_set_errno(SocketError::Inval);
+      return -1;
+   }
+
+   auto buf = internal::allocateIpcBuffer(0x88);
+   if (!buf) {
+      gh_set_errno(SocketError::NoMem);
+      return -1;
+   }
+
+   auto request = virt_cast<SocketSendRequest *>(virt_cast<char *>(buf) + 0x80);
+   request->fd = sockfd;
+   request->flags = flags;
+
+   auto vecs = virt_cast<IOSVec *>(buf);
+   vecs[0].vaddr = virt_cast<virt_addr>(request);
+   vecs[0].len = static_cast<uint32_t>(sizeof(SocketSendRequest));
+
+   vecs[1].vaddr = virt_addr { 0 };
+   vecs[1].len = 0u;
+
+   vecs[2].vaddr = virt_addr { 0 };
+   vecs[2].len = 0u;
+
+   vecs[3].vaddr = virt_addr{ 0 };
+   vecs[3].len = 0u;
+
+   if (align_check(buffer.get(), IOSVecAlign) && align_check(len, IOSVecAlign)) {
+      vecs[1].vaddr = virt_cast<virt_addr>(buffer);
+      vecs[1].len = static_cast<uint32_t>(len);
+   } else {
+      auto alignedBeforeBuffer = virt_ptr<uint8_t> { alignedBuffers };
+      auto alignedAfterBuffer = alignedBeforeBuffer + IOSVecAlign;
+
+      prepareUnalignedBuffer(virt_cast<const uint8_t *>(buffer), len,
+                             alignedBeforeBuffer, alignedAfterBuffer,
+                             virt_addrof(vecs[1]), virt_addrof(vecs[2]),
+                             virt_addrof(vecs[3]),
+                             true);
+   }
+
+   auto error = IOS_Ioctlv(sSocketLibData->handle,
+                           SocketCommand::Send,
+                           4, 0, vecs);
    auto result = internal::decodeIosError(error);
 
    internal::freeIpcBuffer(buf);
@@ -1087,6 +1152,7 @@ Library::registerSocketLibSymbols()
    RegisterFunctionExport(getpeername);
    RegisterFunctionExport(listen);
    RegisterFunctionExport(recv);
+   RegisterFunctionExport(send);
    RegisterFunctionExport(set_resolver_allocator);
    RegisterFunctionExport(setsockopt);
    RegisterFunctionExport(select);

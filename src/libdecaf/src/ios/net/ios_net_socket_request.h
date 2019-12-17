@@ -113,6 +113,15 @@ CHECK_OFFSET(SocketRecvRequest, 0x00, fd);
 CHECK_OFFSET(SocketRecvRequest, 0x04, flags);
 CHECK_SIZE(SocketRecvRequest, 0x08);
 
+struct SocketSendRequest
+{
+   be2_val<SocketHandle> fd;
+   be2_val<int32_t> flags;
+};
+CHECK_OFFSET(SocketSendRequest, 0x00, fd);
+CHECK_OFFSET(SocketSendRequest, 0x04, flags);
+CHECK_SIZE(SocketSendRequest, 0x08);
+
 struct SocketSelectRequest
 {
    be2_val<int32_t> nfds;
@@ -166,6 +175,7 @@ struct SocketRequest
       be2_struct<SocketGetPeerNameRequest> getpeername;
       be2_struct<SocketListenRequest> listen;
       be2_struct<SocketRecvRequest> recv;
+      be2_struct<SocketSendRequest> send;
       be2_struct<SocketSelectRequest> select;
       be2_struct<SocketSetSockOptRequest> setsockopt;
       be2_struct<SocketSocketRequest> socket;
