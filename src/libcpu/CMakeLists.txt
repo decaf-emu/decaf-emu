@@ -28,7 +28,7 @@ else()
         ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-if(DECAF_ENABLE_PCH)
+if(DECAF_PCH)
     target_precompile_headers(libcpu
       PRIVATE
         <common/pch.h>

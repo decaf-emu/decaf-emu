@@ -81,7 +81,7 @@ if(DECAF_VULKAN)
     target_link_libraries(libgpu vulkan SPIRV)
 endif()
 
-if(DECAF_ENABLE_PCH)
+if(DECAF_PCH)
     target_precompile_headers(libgpu
       PRIVATE
         <common/pch.h>

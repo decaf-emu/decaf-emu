@@ -17,23 +17,24 @@ find_package(ZLIB REQUIRED) # ZLIB::ZLIB
 
 # Disable PCH by default on older versions of CMake
 if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
-    set(DECAF_ENABLE_PCH_DEFAULT OFF)
+    set(DECAF_PCH_DEFAULT OFF)
     message(WARNING "You are using a CMake which does not support PCH (<3.16).  This will adversely affect compile times.")
 else()
-    set(DECAF_ENABLE_PCH_DEFAULT ON)
+    set(DECAF_PCH_DEFAULT ON)
 endif()
 
-option(DECAF_BUILD_TESTS "Build tests" OFF)
-option(DECAF_BUILD_TOOLS "Build tools" OFF)
-option(DECAF_JIT_ALLOW_PROFILING "Build with JIT profiling support" OFF)
-option(DECAF_FFMPEG "Build with ffmpeg support" ON)
-option(DECAF_SDL "Build with SDL support" ON)
-option(DECAF_VALGRIND "Build with Valgrind support" OFF)
-option(DECAF_VULKAN "Build with Vulkan rendering support" ON)
-option(DECAF_QT "Build with Qt support" OFF)
-option(DECAF_ENABLE_LTCG "Build with LTCG on Windows" ON)
-option(DECAF_DISABLE_GIT_VERSION "Disables generation of version header from git state" OFF)
-option(DECAF_ENABLE_PCH "Build with precompiled headers" ${DECAF_ENABLE_PCH_DEFAULT})
+option(DECAF_FFMPEG          "Build with ffmpeg support"                    ON)
+option(DECAF_SDL             "Build with SDL support"                       ON)
+option(DECAF_VULKAN          "Build with Vulkan rendering support"          ON)
+option(DECAF_QT              "Build with Qt support"                        ON)
+
+option(DECAF_BUILD_TESTS     "Build tests"                                  OFF)
+option(DECAF_BUILD_TOOLS     "Build tools"                                  OFF)
+
+option(DECAF_GIT_VERSION     "Generate a version header from git state"     ON)
+option(DECAF_JIT_PROFILING   "Build with JIT profiling support"             OFF)
+option(DECAF_VALGRIND        "Build with Valgrind support"                  OFF)
+option(DECAF_PCH             "Build with precompiled headers"               ${DECAF_PCH_DEFAULT})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
@@ -52,7 +53,7 @@ else()
     set(DECAF_INSTALL_RESOURCESDIR "${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/resources")
 endif()
 
-if(DECAF_JIT_ALLOW_PROFILING)
+if(DECAF_JIT_PROFILING)
     add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
 endif()
 
@@ -153,12 +154,11 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4324") # Disable structure padding warnings
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4297") # Disable nothrow warning, VulkanSDK engineers dont know how to code
 
-    if(DECAF_ENABLE_LTCG)
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
-        set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG")
-        set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
-        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
-    endif()
+    # Link time code generation
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
+    set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
 
     add_definitions(-DNOMINMAX)
     add_definitions(-DUNICODE -D_UNICODE)
@@ -206,7 +206,7 @@ macro(AutoGroupPCHFiles)
     endif()
 endmacro()
 
-if(NOT DECAF_DISABLE_GIT_VERSION)
+if(DECAF_GIT_VERSION)
     # Generate build information
     include(GetGitRevisionDescription)
 

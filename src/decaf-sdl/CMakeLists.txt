@@ -34,7 +34,7 @@ if(MSVC)
     target_link_libraries(decaf-sdl Setupapi)
 endif()
 
-if(DECAF_ENABLE_PCH)
+if(DECAF_PCH)
     target_precompile_headers(decaf-sdl
       PRIVATE
         <SDL.h>
