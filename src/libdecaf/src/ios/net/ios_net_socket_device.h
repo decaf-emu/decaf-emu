@@ -90,6 +90,11 @@ public:
             phys_ptr<SocketDnsQueryResponse> response);
 
    std::optional<Error>
+   getpeername(phys_ptr<kernel::ResourceRequest> resourceRequest,
+               phys_ptr<const SocketGetPeerNameRequest> request,
+               phys_ptr<SocketGetPeerNameResponse> response);
+
+   std::optional<Error>
    setsockopt(phys_ptr<kernel::ResourceRequest> resourceRequest,
               phys_ptr<const SocketSetSockOptRequest> request,
               phys_ptr<void> optval,

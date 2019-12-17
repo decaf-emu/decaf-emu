@@ -147,6 +147,20 @@ socketIoctl(phys_ptr<ResourceRequest> resourceRequest)
                             request->connect.addrlen));
       });
       break;
+   case SocketCommand::GetPeerName:
+      if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketGetPeerNameRequest) ||
+          resourceRequest->requestData.args.ioctl.outputLength != sizeof(SocketGetPeerNameResponse)) {
+         return makeError(ErrorCategory::Socket, SocketError::Inval);
+      }
+
+      submitNetworkTask([=]() {
+         completeSocketTask(
+            resourceRequest,
+            device->getpeername(resourceRequest,
+                                phys_addrof(request->getpeername),
+                                phys_addrof(response->getpeername)));
+      });
+      break;
    case SocketCommand::Listen:
       if (resourceRequest->requestData.args.ioctl.inputLength != sizeof(SocketListenRequest)) {
          return makeError(ErrorCategory::Socket, SocketError::Inval);
