@@ -175,7 +175,7 @@ jobs:
         echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.126.0"
         echo "::set-env name=QTDIR::C:\\Qt\\5.13.0\\msvc2017_64"
         echo "::set-env name=CONAN_ENV_COMPILER::Visual Studio"
-        echo "::set-env name=CONAN_ENV_COMPILER_VERSION::15"
+        echo "::set-env name=CONAN_ENV_COMPILER_VERSION::16"
 
     - name: Install Conan Dependencies (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
@@ -201,7 +201,7 @@ jobs:
         pip install conan
         conan user
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-        conan install .. -s compiler="Visual Studio" -s compiler.version=15 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
+        conan install .. -s compiler="Visual Studio" -s compiler.version=16 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
 
     - name: Configure (macOS)
       if: startsWith(matrix.os, 'macOS')
