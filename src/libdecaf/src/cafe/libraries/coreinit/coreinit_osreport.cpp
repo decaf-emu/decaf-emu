@@ -74,11 +74,11 @@ OSPanic(virt_ptr<const char> file,
    auto buffer = StackArray<char, 1024> { };
 
    auto vaList = make_va_list(args);
-   internal::formatStringV(buffer, buffer.size(), fmt, vaList);
+   size_t size = internal::formatStringV(buffer, buffer.size(), fmt, vaList);
    free_va_list(vaList);
 
    internal::OSPanic(file.get(), line,
-                     std::string_view { &buffer[0], buffer.size() });
+                     std::string_view { &buffer[0], size });
 }
 
 void
