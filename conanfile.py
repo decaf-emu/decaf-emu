@@ -48,6 +48,8 @@ class DecafConan(ConanFile):
       'openssl': [True, False],
       'sdl2': [True, False],
       'zlib': [True, False],
+      'libuv': [True, False],
+      'cares': [True, False],
    }
    default_options = {
       'silent': False,
@@ -56,22 +58,27 @@ class DecafConan(ConanFile):
       'openssl': True,
       'sdl2': True,
       'zlib': True,
+      'libuv': True,
+      'cares': True,
 
       'ffmpeg:shared': True,
    }
 
    def requirements(self):
       dependency_list = [
-         ('ffmpeg/4.2@bincrafters/stable', 'yes' if self.options.ffmpeg else 'no'),
-         ('libpng/1.6.37@bincrafters/stable', 'yes' if self.options.ffmpeg else 'no'),
-         ('libcurl/7.64.1@bincrafters/stable', 'yes' if self.options.curl else 'no'),
-         ('OpenSSL/1.1.1c@conan/stable', 'yes' if self.options.openssl else 'no'),
+         ('c-ares/1.15.0@conan/stable', 'yes' if self.options.cares else 'no'),
+         ('ffmpeg/4.2.1@bincrafters/stable', 'yes' if self.options.ffmpeg else 'no'),
+         ('libpng/1.6.37', 'yes' if self.options.ffmpeg else 'no'),
+         ('libcurl/7.66.0@bincrafters/stable', 'yes' if self.options.curl else 'no'),
+         ('libuv/1.31.0@bincrafters/stable', 'yes' if self.options.libuv else 'no'),
+         ('openssl/1.1.1d', 'yes' if self.options.openssl else 'no'),
          ('sdl2/2.0.10@bincrafters/stable', 'yes' if self.options.sdl2 else 'no'),
-         ('zlib/1.2.11@conan/stable', 'yes' if self.options.zlib else 'no'),
+         ('zlib/1.2.11', 'yes' if self.options.zlib else 'no'),
       ]
       overrides = [
-         'libpng/1.6.37@bincrafters/stable',
-         'zlib/1.2.11@conan/stable',
+         'libpng/1.6.37',
+         'openssl/1.1.1d',
+         'zlib/1.2.11',
       ]
 
       print('Enabled dependencies:')
