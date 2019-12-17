@@ -23,6 +23,8 @@ target_link_libraries(libdecaf
     libcpu
     libgfd
     libgpu
+    CARES::CARES
+    LibUV::LibUV
     OpenSSL::SSL
     pugixml
     ZLIB::ZLIB
@@ -63,7 +65,7 @@ if(DECAF_FFMPEG)
 endif()
 
 if(MSVC)
-    target_link_libraries(libdecaf Crypt32 ws2_32)
+    target_link_libraries(libdecaf Crypt32 ws2_32 Psapi IPHLPAPI userenv)
     target_compile_options(libdecaf PUBLIC /wd4251)
 endif()
 

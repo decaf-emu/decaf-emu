@@ -14,6 +14,8 @@ find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED) # OpenSSL::SSL
 find_package(ZLIB REQUIRED) # ZLIB::ZLIB
+find_package(LibUV REQUIRED) # LibUV::LibUV
+find_package(CARES REQUIRED) # CARES::CARES
 
 # Disable PCH by default on older versions of CMake
 if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
