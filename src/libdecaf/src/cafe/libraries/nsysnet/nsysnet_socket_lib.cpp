@@ -34,6 +34,7 @@ using ios::net::SocketBindRequest;
 using ios::net::SocketCloseRequest;
 using ios::net::SocketConnectRequest;
 using ios::net::SocketDnsQueryRequest;
+using ios::net::SocketGetPeerNameRequest;
 using ios::net::SocketListenRequest;
 using ios::net::SocketRecvRequest;
 using ios::net::SocketSetSockOptRequest;
@@ -41,6 +42,7 @@ using ios::net::SocketSelectRequest;
 using ios::net::SocketSocketRequest;
 
 using ios::net::SocketAcceptResponse;
+using ios::net::SocketGetPeerNameResponse;
 using ios::net::SocketSelectResponse;
 
 // We do not get this from ios::net because that uses phys_ptr, and here we
@@ -485,6 +487,48 @@ gethostbyname(virt_ptr<const char> name)
       .hostentIpaddrList[sSocketLibData->getHostByNameQuery.ipaddrs] = nullptr;
    sSocketLibData->getHostError = GetHostError::OK;
    return virt_addrof(sSocketLibData->getHostByNameQuery.hostent);
+}
+
+int32_t
+getpeername(int32_t sockfd,
+            virt_ptr<SocketAddr> addr,
+            virt_ptr<uint32_t> addrlen)
+{
+   if (!internal::isInitialised()) {
+      gh_set_errno(SocketError::NotInitialised);
+      return -1;
+   }
+
+   if (!addr || !addrlen || *addrlen < sizeof(SocketAddrIn)) {
+      gh_set_errno(SocketError::Inval);
+      return -1;
+   }
+
+   auto buf = internal::allocateIpcBuffer(sizeof(SocketGetPeerNameRequest));
+   if (!buf) {
+      gh_set_errno(SocketError::NoMem);
+      return -1;
+   }
+
+   auto response = virt_cast<SocketGetPeerNameRequest *>(buf);
+   auto request = virt_cast<SocketGetPeerNameRequest *>(buf);
+   request->fd = sockfd;
+   request->addrlen = *addrlen;
+
+   auto error = IOS_Ioctl(sSocketLibData->handle,
+                           SocketCommand::GetPeerName,
+                           request,
+                           sizeof(SocketGetPeerNameRequest),
+      response,
+                           sizeof(SocketGetPeerNameRequest));
+   if (error >= IOSError::OK) {
+      std::memcpy(addr.get(), std::addressof(response->addr), response->addrlen);
+      *addrlen = response->addrlen;
+   }
+
+   auto result = internal::decodeIosError(error);
+   internal::freeIpcBuffer(buf);
+   return result;
 }
 
 int32_t
@@ -1040,6 +1084,7 @@ Library::registerSocketLibSymbols()
    RegisterFunctionExport(connect);
    RegisterFunctionExport(get_h_errno);
    RegisterFunctionExport(gethostbyname);
+   RegisterFunctionExport(getpeername);
    RegisterFunctionExport(listen);
    RegisterFunctionExport(recv);
    RegisterFunctionExport(set_resolver_allocator);

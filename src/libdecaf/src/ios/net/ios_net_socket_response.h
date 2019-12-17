@@ -88,6 +88,17 @@ CHECK_OFFSET(SocketDnsQueryResponse, 0x2B4, next);
 CHECK_OFFSET(SocketDnsQueryResponse, 0x2B8, selfPointerOffset);
 CHECK_SIZE(SocketDnsQueryResponse, 0x2BC);
 
+struct SocketGetPeerNameResponse
+{
+   be2_val<SocketHandle> fd;
+   be2_struct<SocketAddrIn> addr;
+   be2_val<int32_t> addrlen;
+};
+CHECK_OFFSET(SocketGetPeerNameResponse, 0x00, fd);
+CHECK_OFFSET(SocketGetPeerNameResponse, 0x04, addr);
+CHECK_OFFSET(SocketGetPeerNameResponse, 0x14, addrlen);
+CHECK_SIZE(SocketGetPeerNameResponse, 0x18);
+
 struct SocketSelectResponse
 {
    be2_val<int32_t> nfds;
@@ -111,6 +122,7 @@ struct SocketResponse
    {
       be2_struct<SocketAcceptResponse> accept;
       be2_struct<SocketDnsQueryResponse> dnsQuery;
+      be2_struct<SocketGetPeerNameResponse> getpeername;
       be2_struct<SocketSelectResponse> select;
    };
 };

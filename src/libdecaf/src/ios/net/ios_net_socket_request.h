@@ -75,6 +75,17 @@ CHECK_OFFSET(SocketDnsQueryRequest, 0x88, unk0x88);
 CHECK_OFFSET(SocketDnsQueryRequest, 0x8C, unk0x8C);
 CHECK_SIZE(SocketDnsQueryRequest, 0x90);
 
+struct SocketGetPeerNameRequest
+{
+   be2_val<SocketHandle> fd;
+   be2_struct<SocketAddrIn> addr;
+   be2_val<int32_t> addrlen;
+};
+CHECK_OFFSET(SocketGetPeerNameRequest, 0x00, fd);
+CHECK_OFFSET(SocketGetPeerNameRequest, 0x04, addr);
+CHECK_OFFSET(SocketGetPeerNameRequest, 0x14, addrlen);
+CHECK_SIZE(SocketGetPeerNameRequest, 0x18);
+
 struct SocketGetProcessSocketHandle
 {
    be2_val<ios::TitleId> titleId;
@@ -152,6 +163,7 @@ struct SocketRequest
       be2_struct<SocketCloseRequest> close;
       be2_struct<SocketConnectRequest> connect;
       be2_struct<SocketDnsQueryRequest> dnsQuery;
+      be2_struct<SocketGetPeerNameRequest> getpeername;
       be2_struct<SocketListenRequest> listen;
       be2_struct<SocketRecvRequest> recv;
       be2_struct<SocketSelectRequest> select;

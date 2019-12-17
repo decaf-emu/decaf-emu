@@ -62,6 +62,11 @@ virt_ptr<SocketHostEnt>
 gethostbyname(virt_ptr<const char> name);
 
 int32_t
+getpeername(int32_t sockfd,
+            virt_ptr<SocketAddr> addr,
+            virt_ptr<uint32_t> addrlen);
+
+int32_t
 listen(int32_t sockfd,
        int32_t backlog);
 
