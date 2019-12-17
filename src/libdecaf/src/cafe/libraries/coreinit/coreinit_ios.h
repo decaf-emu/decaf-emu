@@ -44,6 +44,7 @@ using IOSOpenMode = ios::OpenMode;
 using IOSVec = ios::IoctlVec;
 using IOSAsyncCallbackFn = virt_func_ptr<void(IOSError status,
                                               virt_ptr<void> context)>;
+static constexpr uint32_t IOSVecAlign = ios::IoctlVecAlign;
 
 IOSError
 IOS_Open(virt_ptr<const char> device,

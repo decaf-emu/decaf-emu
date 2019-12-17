@@ -14,6 +14,8 @@ using GroupId = uint32_t;
 using Handle = int32_t;
 using TitleId = uint64_t;
 
+static constexpr uint32_t IoctlVecAlign = 0x40u;
+
 /**
  * Structure used for ioctlv arguments.
  */
