@@ -3,12 +3,13 @@
 - [Linux](#Linux)
 - [MacOS](#MacOS)
 - [CMake](#CMake)
+- [Troubleshooting](#Troubleshooting)
 
 ## Windows
 
 ### Dependencies
 Required:
-- [Visual Studio 2017](https://visualstudio.microsoft.com/vs/community/)
+- [Visual Studio 2019](https://visualstudio.microsoft.com/vs/community/)
 - [CMake](https://cmake.org/)
 - [Conan](https://conan.io/downloads.html)
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows)
@@ -68,12 +69,15 @@ Currently decaf-emu can build on MacOS using Xcode 11 although MoltenVK is missi
 
 I have had success at building with:
 - Install [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#mac)
-- `brew install openssl sdl2`
+- `brew install openssl sdl2 conan`
 - `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
 - `cd decaf-emu`
 - `mkdir build && cd build`
+- `conan install .. --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False`
 - `cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..`
 - `make`
+
+Or use `cmake -G "Xcode"` to generate an Xcode project.
 
 ## CMake
 Options interesting to users:
@@ -85,8 +89,11 @@ Options interesting to users:
 Options interesting to developers:
 - DECAF_BUILD_TESTS - Build tests.
 - DECAF_BUILD_TOOLS - Build tools.
-- DECAF_BUILD_WUT_TESTS - Build tests which require [wut](https://github.com/decaf-emu/wut).
-- DECAF_DISABLE_GIT_VERSION - Disable generating a header with current git version (if you don't want commiting to trigger a change that you have to build)
-- DECAF_ENABLE_PCH - Enable / disable pch (requires CMake v3.16)
-- DECAF_JIT_ALLOW_PROFILING - Build with JIT profiling support.
+- DECAF_GIT_VERSION - Set this to OFF to disable generating a header with current git version to avoid rebuilding decaf_log.cpp when you do commits locally.
+- DECAF_PCH - Enable / disable pch (requires CMake v3.16)
+- DECAF_JIT_PROFILING - Build with JIT profiling support.
 - DECAF_VALGRIND - Build with Valgrind
+
+## Troubleshooting
+
+Often conan requires updating to the latest version to fix various issues, so if it is failing to install dependencies then be sure to `pip install --upgrade conan` / `brew upgrade conan` / update conan manually.
