@@ -728,10 +728,10 @@ private:
    gpu::VulkanDriverDebugInfo mDebugInfo;
    std::thread mFenceThread;
    std::mutex mFenceMutex;
-   std::list<SyncWaiter*> mFencesWaiting;
-   std::list<SyncWaiter*> mFencesPending;
+   std::list<SyncWaiter *> mFencesWaiting;
+   std::list<SyncWaiter *> mFencesPending;
    std::condition_variable mFenceSignal;
-   std::vector<SyncWaiter*> mWaiterPool;
+   std::vector<SyncWaiter *> mWaiterPool;
    VmaAllocator mAllocator;
    uint64_t mMemChangeCounter = 0;
    uint64_t *mLastOccQueryAddr = nullptr;
@@ -757,9 +757,9 @@ private:
    vk::DescriptorSetLayout mBaseDescriptorSetLayout;
    vk::PipelineLayout mPipelineLayout;
 
-   std::array<StreamContextObject*, latte::MaxStreamOutBuffers> mStreamOutContext = { nullptr };
+   std::array<StreamContextObject *, latte::MaxStreamOutBuffers> mStreamOutContext = { nullptr };
    std::vector<DrawDesc> mPendingDraws;
-   DrawDesc *mCurrentDraw;
+   DrawDesc *mCurrentDraw = nullptr;
 
    DrawDesc mDrawCache;
 
@@ -773,7 +773,7 @@ private:
    using duration_system_clock = std::chrono::duration<double, std::chrono::system_clock::period>;
    using duration_ms = std::chrono::duration<double, std::chrono::milliseconds::period>;
    std::chrono::time_point<std::chrono::system_clock> mLastSwap;
-   duration_system_clock mAverageFrameTime;
+   duration_system_clock mAverageFrameTime { 0.0 };
 
    vk::PhysicalDevice mPhysDevice;
    vk::Device mDevice;
@@ -786,7 +786,7 @@ private:
    vk::Buffer mBlankBuffer;
    SwapChainObject *mTvSwapChain = nullptr;
    SwapChainObject *mDrcSwapChain = nullptr;
-   RenderPassObject *mRenderPass;
+   RenderPassObject *mRenderPass = nullptr;
    std::array<std::array<std::vector<StagingBuffer *>, 20>, 3> mStagingBuffers;
    std::vector<StreamContextObject *> mStreamOutContextPool;
    std::vector<vk::DescriptorPool> mDescriptorPools;
@@ -808,10 +808,10 @@ private:
    gpu7::tiling::vulkan::Retiler mGpuRetiler;
    DriverMemoryTracker mMemTracker;
 
-   bool mDebug;
-   bool mDumpShaders;
-   bool mDumpShaderBinariesOnly;
-   bool mDumpTextures;
+   bool mDebug = false;
+   bool mDumpShaders = false;
+   bool mDumpShaderBinariesOnly = false;
+   bool mDumpTextures = false;
 };
 
 } // namespace vulkan
