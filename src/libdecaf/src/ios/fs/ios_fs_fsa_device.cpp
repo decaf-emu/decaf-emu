@@ -1,6 +1,7 @@
 #include "ios_fs_fsa_device.h"
-#include "ios/ios.h"
+#include "ios_fs_log.h"
 
+#include "ios/ios.h"
 #include "vfs/vfs_error.h"
 #include "vfs/vfs_filehandle.h"
 #include "vfs/vfs_virtual_device.h"
@@ -220,13 +221,18 @@ FSADevice::removeHandle(int32_t index,
 
 FSAStatus
 FSADevice::appendFile(vfs::User user,
-                     phys_ptr<FSARequestAppendFile> request)
+                      phys_ptr<FSARequestAppendFile> request)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::appendFile[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
+
+   fsLog->trace("FSADevice::appendFile[{}] count: {} size: {}",
+                request->handle, request->count, request->size);
 
    // Seek to (count*size - 1) past end of file then write 1 byte.
    char emptyByte = 0;
@@ -234,11 +240,15 @@ FSADevice::appendFile(vfs::User user,
       handle->file->seek(vfs::FileHandle::SeekEnd,
                          (request->count * request->size) - 1);
    if (seekResult != vfs::Error::Success) {
+      fsLog->warn("FSADevice::appendFile[{}] unexpected seekResult {}",
+                  request->handle, seekResult);
       return translateError(seekResult);
    }
 
    auto writeResult = handle->file->write(&emptyByte, 1, 1);
    if (!writeResult) {
+      fsLog->warn("FSADevice::appendFile[{}] unexpected writeResult {}",
+                  request->handle, seekResult);
       return translateError(writeResult.error());
    }
 
@@ -251,6 +261,8 @@ FSADevice::changeDir(vfs::User user,
                      phys_ptr<FSARequestChangeDir> request)
 {
    mWorkingPath = translatePath(phys_addrof(request->path));
+   fsLog->debug("FSADevice::changeDir path: {}, new working path is: {}",
+                phys_addrof(request->path).get(), mWorkingPath.path());
    return FSAStatus::OK;
 }
 
@@ -259,6 +271,9 @@ FSAStatus
 FSADevice::changeMode(vfs::User user,
                       phys_ptr<FSARequestChangeMode> request)
 {
+   auto path = translatePath(phys_addrof(request->path));
+   fsLog->debug("FSADevice::changeMode path: {} mode1: {} mode2: {}",
+                path.path(), request->mode1, request->mode2);
    // TODO: Call mFS->setPermissions
    return FSAStatus::OK;
 }
@@ -268,6 +283,7 @@ FSAStatus
 FSADevice::closeDir(vfs::User user,
                     phys_ptr<FSARequestCloseDir> request)
 {
+   fsLog->trace("FSADevice::closeDir[{}]", request->handle);
    return removeHandle(request->handle, Handle::Directory);
 }
 
@@ -276,6 +292,7 @@ FSAStatus
 FSADevice::closeFile(vfs::User user,
                      phys_ptr<FSARequestCloseFile> request)
 {
+   fsLog->trace("FSADevice::closeFile[{}]", request->handle);
    return removeHandle(request->handle, Handle::File);
 }
 
@@ -285,11 +302,14 @@ FSADevice::flushFile(vfs::User user,
                      phys_ptr<FSARequestFlushFile> request)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::fluseFile[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
+   fsLog->trace("FSADevice::flushFile[{}] success", request->handle);
    handle->file->flush();
    return FSAStatus::OK;
 }
@@ -299,6 +319,8 @@ FSAStatus
 FSADevice::flushQuota(vfs::User user,
                       phys_ptr<FSARequestFlushQuota> request)
 {
+   auto path = translatePath(phys_addrof(request->path));
+   fsLog->trace("FSADevice::flushQuota path: {} success", path.path());
    return FSAStatus::OK;
 }
 
@@ -314,6 +336,7 @@ FSADevice::getCwd(vfs::User user,
    string_copy(phys_addrof(response->path).get(), cwd.c_str(),
                response->path.size());
    response->path[response->path.size() - 1] = char { 0 };
+   fsLog->trace("FSADevice::getCwd cwd: {}", cwd);
    return FSAStatus::OK;
 }
 
@@ -328,9 +351,13 @@ FSADevice::getInfoByQuery(vfs::User user,
    switch (request->type) {
    case FSAQueryInfoType::FreeSpaceSize:
    {
-      if (!mFS->status(user, path)) {
+      if (auto result = mFS->status(user, path); !result) {
+         fsLog->debug("FSADevice::getInfoByQuery cmd: FreeSpaceSize path: {} error: {}",
+                      path.path(), result.error());
          response->freeSpaceSize = 0ull;
       } else {
+         fsLog->debug("FSADevice::getInfoByQuery cmd: FreeSpaceSize path: {}",
+                      path.path());
          response->freeSpaceSize = 4096ull * 1024 * 1024;
       }
       break;
@@ -339,13 +366,18 @@ FSADevice::getInfoByQuery(vfs::User user,
    {
       auto result = mFS->status(user, path);
       if (!result) {
+         fsLog->debug("FSADevice::getInfoByQuery cmd: Stat path: {} error: {}",
+                      path.path(), result.error());
          return translateError(result.error());
       }
 
+      fsLog->debug("FSADevice::getInfoByQuery cmd: Stat path: {}", path.path());
       translateStat(*result, phys_addrof(response->stat));
       break;
    }
    default:
+      fsLog->warn("FSADevice::getInfoByQuery unsupported cmd: {} with path: {}",
+                  request->type, path.path());
       return FSAStatus::UnsupportedCmd;
    }
 
@@ -359,17 +391,23 @@ FSADevice::getPosFile(vfs::User user,
                       phys_ptr<FSAResponseGetPosFile> response)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::getPosFile[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
    auto result = handle->file->tell();
    if (!result) {
+      fsLog->warn("FSADevice::getPosFile[{}] failed with error {}",
+                   request->handle, result.error());
       return translateError(result.error());
    }
 
    response->pos = static_cast<uint32_t>(*result);
+   fsLog->trace("FSADevice::getPosFile[{}] pos: {}",
+                request->handle, response->pos);
    return FSAStatus::OK;
 }
 
@@ -379,23 +417,29 @@ FSADevice::isEof(vfs::User user,
                  phys_ptr<FSARequestIsEof> request)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::isEof[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
    auto result = handle->file->eof();
    if (!result) {
+      fsLog->warn("FSADevice::isEof[{}] eof failed with error {}",
+                  request->handle, result.error());
       return translateError(result.error());
    }
 
    if (*result) {
-      error = FSAStatus::EndOfFile;
+      status = FSAStatus::EndOfFile;
    } else {
-      error = FSAStatus::OK;
+      status = FSAStatus::OK;
    }
 
-   return error;
+   fsLog->trace("FSADevice::isEof[{}] eof: {}",
+                request->handle, *result ? "true" : "false");
+   return status;
 }
 
 
@@ -406,9 +450,13 @@ FSADevice::makeDir(vfs::User user,
    auto path = translatePath(phys_addrof(request->path));
    auto error = mFS->makeFolder(user, path);
    if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::makeDir path: {} permission: {} failed with "
+                   "error {}", path.path(), request->permission, error);
       return translateError(error);
    }
 
+   fsLog->debug("FSADevice::makeDir path: {} permission: {} success",
+                path.path(), request->permission);
    return FSAStatus::OK;
 }
 
@@ -420,9 +468,14 @@ FSADevice::makeQuota(vfs::User user,
    auto path = translatePath(phys_addrof(request->path));
    auto error = mFS->makeFolder(user, path);
    if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::makeQuota path: {} mode: {} size: {} "
+                   "failed with error {}",
+                   path.path(), request->mode, request->size, error);
       return translateError(error);
    }
 
+   fsLog->debug("FSADevice::makeQuota path: {} mode: {} size: {} success",
+                path.path(), request->mode, request->size);
    return FSAStatus::OK;
 }
 
@@ -431,18 +484,27 @@ FSAStatus
 FSADevice::mount(vfs::User user,
                  phys_ptr<FSARequestMount> request)
 {
-   auto linkDevice = mFS->getLinkDevice(user, translatePath(phys_addrof(request->path)));
+   auto sourcePath = translatePath(phys_addrof(request->path));
+   auto targetPath = translatePath(phys_addrof(request->target));
+   auto linkDevice = mFS->getLinkDevice(user, sourcePath);
    if (!linkDevice) {
+      fsLog->debug("FSADevice::mount source: {} target: {} getLinkDevice "
+                   "failed with error {}",
+                   sourcePath.path(), targetPath.path(), linkDevice.error());
       return translateError(linkDevice.error());
    }
 
-   auto error = mFS->mountDevice(user,
-                                 translatePath(phys_addrof(request->target)),
+   auto error = mFS->mountDevice(user, targetPath,
                                  std::static_pointer_cast<vfs::Device>(*linkDevice));
    if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::mount source: {} target: {} mountDevice "
+                   "failed with error {}",
+                   sourcePath.path(), targetPath.path(), error);
       return translateError(error);
    }
 
+   fsLog->debug("FSADevice::mount source: {} target: {} success",
+                sourcePath.path(), targetPath.path());
    return FSAStatus::OK;
 }
 
@@ -450,8 +512,14 @@ FSAStatus
 FSADevice::mountWithProcess(vfs::User user,
                             phys_ptr<FSARequestMountWithProcess> request)
 {
-   auto linkDevice = mFS->getLinkDevice(user, translatePath(phys_addrof(request->path)));
+   auto sourcePath = translatePath(phys_addrof(request->path));
+   auto targetPath = translatePath(phys_addrof(request->target));
+   auto linkDevice = mFS->getLinkDevice(user, sourcePath);
    if (!linkDevice) {
+      fsLog->debug("FSADevice::mountWithProcess source: {} target: {} "
+                   "priority: {} getLinkDevice failed with error {}",
+                   sourcePath.path(), targetPath.path(), request->priority,
+                   linkDevice.error());
       return translateError(linkDevice.error());
    }
 
@@ -459,12 +527,19 @@ FSADevice::mountWithProcess(vfs::User user,
       mFS->mountOverlayDevice(
          user,
          static_cast<vfs::OverlayPriority>(request->priority),
-         translatePath(phys_addrof(request->target)),
+         targetPath,
          std::static_pointer_cast<vfs::Device>(*linkDevice));
    if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::mountWithProcess source: {} target: {} "
+                   "priority: {} mountOverlayDevice failed with error {}",
+                   sourcePath.path(), targetPath.path(), request->priority,
+                   linkDevice.error());
       return translateError(error);
    }
 
+   fsLog->debug("FSADevice::mountWithProcess source: {} target: {} "
+                "priority: {} success",
+                sourcePath.path(), targetPath.path(), request->priority);
    return FSAStatus::OK;
 }
 
@@ -477,10 +552,14 @@ FSADevice::openDir(vfs::User user,
    auto path = translatePath(phys_addrof(request->path));
    auto result = mFS->openDirectory(user, path);
    if (!result) {
+      fsLog->debug("FSADevice::openDir path: {} failed with error {}",
+                   path.path(), result.error());
       return translateError(result.error());
    }
 
    response->handle = mapHandle(*result);
+   fsLog->debug("FSADevice::openDir[{}] path: {} handle: {}",
+                response->handle, path.path(), response->handle);
    return FSAStatus::OK;
 }
 
@@ -494,10 +573,14 @@ FSADevice::openFile(vfs::User user,
    auto mode = translateMode(phys_addrof(request->mode));
    auto result = mFS->openFile(user, path, mode);
    if (!result) {
+      fsLog->debug("FSADevice::openFile path: {} mode: {} failed with error {}",
+                   path.path(), mode, result.error());
       return translateError(result.error());
    }
 
    response->handle = mapHandle(std::move(*result));
+   fsLog->debug("FSADevice::openFile[{}] path: {} mode: {} handle: {}",
+                response->handle, path.path(), mode, response->handle);
    return FSAStatus::OK;
 }
 
@@ -508,13 +591,17 @@ FSADevice::readDir(vfs::User user,
                    phys_ptr<FSAResponseReadDir> response)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFolderHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFolderHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::readDir[{}] mapFolderHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
    auto result = handle->directory.readEntry();
    if (!result) {
+      fsLog->debug("FSADevice::readDir[{}] readEntry failed with error {}",
+                   request->handle, result.error());
       return translateError(result.error());
    }
 
@@ -523,6 +610,8 @@ FSADevice::readDir(vfs::User user,
                response->entry.name.size(),
                result->name.c_str(),
                result->name.size());
+   fsLog->debug("FSADevice::readDir[{}] name: {}",
+                request->handle, result->name);
    return FSAStatus::OK;
 }
 
@@ -534,9 +623,11 @@ FSADevice::readFile(vfs::User user,
                     uint32_t bufferLen)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::readFile[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
    if (request->readFlags & FSAReadFlag::ReadWithPos) {
@@ -545,10 +636,30 @@ FSADevice::readFile(vfs::User user,
 
    auto result = handle->file->read(buffer.get(), request->size, request->count);
    if (!result) {
+      if (request->readFlags & FSAReadFlag::ReadWithPos) {
+         fsLog->debug("FSADevice::readFile[{}] size: {} count: {} withPos: {} "
+                      "failed with error {}",
+                      request->handle, request->size, request->count,
+                      request->pos, result.error());
+      } else {
+         fsLog->debug("FSADevice::readFile[{}] size: {} count: {} failed with "
+                      "error {}",
+                      request->handle, request->size, request->count,
+                      result.error());
+      }
       return translateError(result.error());
    }
 
    auto bytesRead = (*result) * request->size;
+   if (request->readFlags & FSAReadFlag::ReadWithPos) {
+      fsLog->trace("FSADevice::readFile[{}] size: {} count: {} withPos: {} "
+                   "read bytes: {}",
+                   request->handle, request->size, request->count, request->pos,
+                   bytesRead);
+   } else {
+      fsLog->trace("FSADevice::readFile[{}] size: {} count: {} read bytes: {}",
+                   request->handle, request->size, request->count, bytesRead);
+   }
    return static_cast<FSAStatus>(bytesRead);
 }
 
@@ -558,7 +669,14 @@ FSADevice::remove(vfs::User user,
                   phys_ptr<FSARequestRemove> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   return translateError(mFS->remove(user, path));
+   auto error = mFS->remove(user, path);
+   if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::remove path: {} failed with error {}",
+                   path.path(), error);
+   } else {
+      fsLog->debug("FSADevice::remove path: {} success", path.path());
+   }
+   return translateError(error);
 }
 
 
@@ -568,7 +686,15 @@ FSADevice::rename(vfs::User user,
 {
    auto src = translatePath(phys_addrof(request->oldPath));
    auto dst = translatePath(phys_addrof(request->newPath));
-   return translateError(mFS->rename(user, src, dst));
+   auto error = mFS->rename(user, src, dst);
+   if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::rename source: {} target: {} failed with error {}",
+                   src.path(), dst.path(), error);
+   } else {
+      fsLog->debug("FSADevice::rename source: {} target: {} success",
+                   src.path(), dst.path());
+   }
+   return translateError(error);
 }
 
 
@@ -577,12 +703,22 @@ FSADevice::rewindDir(vfs::User user,
                      phys_ptr<FSARequestRewindDir> request)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFolderHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFolderHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::rewindDir[{}] mapFolderHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
-   return translateError(handle->directory.rewind());
+   auto error = handle->directory.rewind();
+   if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::rewindDir[{}] failed with error {}",
+                   error, request->handle);
+   } else {
+      fsLog->debug("FSADevice::rewindDir[{}] success", request->handle);
+   }
+
+   return translateError(error);
 }
 
 
@@ -591,12 +727,16 @@ FSADevice::setPosFile(vfs::User user,
                       phys_ptr<FSARequestSetPosFile> request)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::setPosFile[{}] mapFileHandle failed with error {}",
+                  request->handle, status);
+      return status;
    }
 
    handle->file->seek(vfs::FileHandle::SeekStart, request->pos);
+   fsLog->trace("FSADevice::setPosFile[{}] pos: {}",
+                request->handle, request->pos);
    return FSAStatus::OK;
 }
 
@@ -607,9 +747,11 @@ FSADevice::statFile(vfs::User user,
                     phys_ptr<FSAResponseStatFile> response)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::statFile[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
    std::memset(phys_addrof(response->stat).get(), 0, sizeof(response->stat));
@@ -626,6 +768,8 @@ FSADevice::statFile(vfs::User user,
       response->stat.size = static_cast<uint32_t>(*result);
    }
 
+   fsLog->trace("FSADevice::statFile[{}] size: {}",
+                request->handle, response->stat.size);
    return FSAStatus::OK;
 }
 
@@ -635,16 +779,21 @@ FSADevice::truncateFile(vfs::User user,
                         phys_ptr<FSARequestTruncateFile> request)
 {
    auto handle = static_cast<Handle *>(nullptr);
-   auto error = mapFileHandle(request->handle, handle);
-   if (error < 0) {
-      return error;
+   auto status = mapFileHandle(request->handle, handle);
+   if (status < 0) {
+      fsLog->info("FSADevice::truncateFile[{}] mapFileHandle failed with status {}",
+                  request->handle, status);
+      return status;
    }
 
    auto result = handle->file->truncate();
    if (!result) {
+      fsLog->info("FSADevice::truncateFile[{}] truncate failed with error {}",
+                  request->handle, result.error());
       return translateError(result.error());
    }
 
+   fsLog->trace("FSADevice::truncateFile[{}] success", request->handle);
    return FSAStatus::OK;
 }
 
@@ -654,7 +803,14 @@ FSADevice::unmount(vfs::User user,
                    phys_ptr<FSARequestUnmount> request)
 {
    auto path = translatePath(phys_addrof(request->path));
-   return translateError(mFS->unmountDevice(user, path));
+   auto error = mFS->unmountDevice(user, path);
+   if (error != vfs::Error::Success) {
+      fsLog->debug("FSADevice::unmount path: {} failed with error {}",
+                   path.path(), error);
+   } else {
+      fsLog->debug("FSADevice::unmount path: {} success", path.path());
+   }
+   return translateError(error);
 }
 
 
@@ -667,8 +823,20 @@ FSADevice::unmountWithProcess(vfs::User user,
    if (request->priority == FSAMountPriority::UnmountAll) {
       // unmountDevice will unmount the base overlay device, thus unmounting
       // all overlay devices at path.
-      return translateError(mFS->unmountDevice(user, path));
+      auto error = mFS->unmountDevice(user, path);
+      if (error != vfs::Error::Success) {
+         fsLog->debug("FSADevice::unmountWithProcess path: {} priority: {} "
+                      "failed with error {}",
+                      path.path(), request->priority, error);
+      } else {
+         fsLog->debug("FSADevice::unmountWithProcess path: {} priority: {} ",
+                      "success", path.path(), request->priority);
+      }
+      return translateError(error);
    } else {
+      fsLog->warn("FSADevice::unmountWithProcess path: {} priority: {} "
+                   "unsupported",
+                   path.path(), request->priority);
       // TODO: unmount overlay device with priority request->priority
       return FSAStatus::UnsupportedCmd;
    }
@@ -684,6 +852,8 @@ FSADevice::writeFile(vfs::User user,
    auto handle = static_cast<Handle *>(nullptr);
    auto error = mapFileHandle(request->handle, handle);
    if (error < 0) {
+      fsLog->info("FSADevice::writeFile[{}] mapFileHandle failed with error {}",
+                  request->handle, error);
       return error;
    }
 
@@ -693,10 +863,30 @@ FSADevice::writeFile(vfs::User user,
 
    auto result = handle->file->write(buffer.get(), request->size, request->count);
    if (!result) {
+      if (request->writeFlags & FSAWriteFlag::WriteWithPos) {
+         fsLog->debug("FSADevice::writeFile[{}] size: {} count: {} withPos: {} "
+                      "failed with error {}",
+                      request->handle, request->size, request->count,
+                      request->pos, result.error());
+      } else {
+         fsLog->debug("FSADevice::writeFile[{}] size: {} count: {} failed with "
+                      "error {}",
+                      request->handle, request->size, request->count,
+                      result.error());
+      }
       return translateError(result.error());
    }
 
    auto bytesWritten = (*result) * request->size;
+   if (request->writeFlags & FSAWriteFlag::WriteWithPos) {
+      fsLog->trace("FSADevice::writeFile[{}] size: {} count: {} withPos: {} "
+                   "write bytes: {}",
+                   request->handle, request->size, request->count, request->pos,
+                   bytesWritten);
+   } else {
+      fsLog->trace("FSADevice::writeFile[{}] size: {} count: {} write bytes: {}",
+                   request->handle, request->size, request->count, bytesWritten);
+   }
    return static_cast<FSAStatus>(bytesWritten);
 }
 

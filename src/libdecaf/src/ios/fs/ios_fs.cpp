@@ -1,8 +1,10 @@
 #include "ios_fs.h"
+#include "ios_fs_log.h"
 #include "ios_fs_fsa_async_task.h"
 #include "ios_fs_fsa_thread.h"
 #include "ios_fs_service_thread.h"
 
+#include "decaf_log.h"
 #include "ios/kernel/ios_kernel_heap.h"
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/kernel/ios_kernel_thread.h"
@@ -21,6 +23,8 @@ sLocalHeapBuffer = nullptr;
 namespace internal
 {
 
+Logger fsLog = { };
+
 static void
 initialiseStaticData()
 {
@@ -32,6 +36,9 @@ initialiseStaticData()
 Error
 processEntryPoint(phys_ptr<void> context)
 {
+   // Initialise logger
+   internal::fsLog = decaf::makeLogger("IOS_FS");
+
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticFsaAsyncTaskData();
