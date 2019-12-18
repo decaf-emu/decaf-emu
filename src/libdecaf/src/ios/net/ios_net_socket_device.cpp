@@ -156,6 +156,32 @@ SocketDevice::createSocket(phys_ptr<ResourceRequest> resourceRequest,
    return static_cast<Error>(fd);
 }
 
+void
+SocketDevice::uvCloseSocketCallback(uv_handle_t *handle)
+{
+   auto socket = reinterpret_cast<SocketDevice::Socket *>(handle->data);
+
+   // Abort any pending read requests
+   for (auto readRequest : socket->pendingReads) {
+      completeSocketTask(readRequest,
+                         makeError(ErrorCategory::Socket, SocketError::Aborted));
+   }
+   socket->pendingReads.clear();
+
+   // Complete the close request
+   completeSocketTask(socket->closeRequest,
+                      makeError(ErrorCategory::Socket, SocketError::OK));
+   socket->closeRequest = nullptr;
+
+   // Ensure that we never dangle any unanswered ResourceRequests!
+   decaf_check(socket->connectRequest == nullptr);
+   decaf_check(socket->closeRequest == nullptr);
+   decaf_check(socket->pendingReads.empty());
+   decaf_check(socket->pendingWrites.empty());
+
+   *socket = SocketDevice::Socket {};
+}
+
 std::optional<Error>
 SocketDevice::closeSocket(phys_ptr<ResourceRequest> resourceRequest,
                           SocketHandle fd)
@@ -165,13 +191,12 @@ SocketDevice::closeSocket(phys_ptr<ResourceRequest> resourceRequest,
       return makeError(ErrorCategory::Socket, SocketError::BadFd);
    }
 
-   // TODO: Do we need to make use of the close callback?
-   uv_close(socket->handle.get(), nullptr);
-   socket->handle.reset();
-   return Error::OK;
+   socket->closeRequest = resourceRequest;
+   uv_close(socket->handle.get(), uvCloseSocketCallback);
+   return {};
 }
 
-void
+static void
 uvReadAllocCallback(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf)
 {
    buf->base = new char[suggested_size];
@@ -428,19 +453,20 @@ SocketDevice::recv(phys_ptr<ResourceRequest> resourceRequest,
    return {};
 }
 
-static void
-uvWriteCallback(uv_write_t *req, int32_t status)
+void
+SocketDevice::uvWriteCallback(uv_write_t *req, int32_t status)
 {
-   auto socket = reinterpret_cast<SocketDevice::Socket *>(req->data);
+   auto write = reinterpret_cast<SocketDevice::PendingWrite *>(req->data);
+   auto socket = write->socket;
 
    for (auto itr = socket->pendingWrites.begin(); itr != socket->pendingWrites.end(); ++itr) {
-      if (itr->handle.get() == req) {
+      if (itr->get() == write) {
          if (status != 0) {
-            completeSocketTask(itr->resourceRequest,
+            completeSocketTask((*itr)->resourceRequest,
                makeError(ErrorCategory::Socket, SocketError::GenericError));
          } else {
-            completeSocketTask(itr->resourceRequest,
-                               static_cast<Error>(itr->sendBytes));
+            completeSocketTask((*itr)->resourceRequest,
+                               static_cast<Error>((*itr)->sendBytes));
          }
 
          socket->pendingWrites.erase(itr);
@@ -493,17 +519,20 @@ SocketDevice::send(phys_ptr<ResourceRequest> resourceRequest,
       sendBytes += alignedAfterLength;
    }
 
-   auto write = std::make_unique<uv_write_t>();
-   write->data = socket;
+   auto write = std::make_unique<PendingWrite>();
+   write->socket = socket;
+   write->handle.data = write.get();
+   write->resourceRequest = resourceRequest;
+   write->sendBytes = sendBytes;
 
-   auto error = uv_write(write.get(),
+   auto error = uv_write(&write->handle,
                          reinterpret_cast<uv_stream_t *>(socket->handle.get()),
                          buffers.data(), numBuffers, &uvWriteCallback);
    if (error) {
       return makeError(ErrorCategory::Socket, SocketError::GenericError);
    }
 
-   socket->pendingWrites.push_back({ resourceRequest, std::move(write), sendBytes });
+   socket->pendingWrites.push_back(std::move(write));
    return {};
 }
 

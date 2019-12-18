@@ -29,33 +29,14 @@ namespace ios::net::internal
 class SocketDevice
 {
 public:
+   struct Socket;
+
    struct PendingWrite
    {
+      Socket *socket;
       phys_ptr<kernel::ResourceRequest> resourceRequest;
-      std::unique_ptr<uv_write_t> handle;
+      uv_write_t handle;
       uint32_t sendBytes;
-   };
-
-   struct Socket
-   {
-      enum Type
-      {
-         Unused,
-         Tcp,
-         Udp,
-      };
-
-      SocketDevice *device = nullptr;
-      bool nonBlocking = false;
-      Type type = Unused;
-      std::unique_ptr<uv_handle_t> handle;
-      std::unique_ptr<uv_connect_t> connect;
-      phys_ptr<kernel::ResourceRequest> connectRequest = nullptr;
-      bool connected = false;
-      Error except = Error::OK;
-      std::vector<char> readBuffer;
-      std::vector<phys_ptr<kernel::ResourceRequest>> pendingReads;
-      std::vector<PendingWrite> pendingWrites;
    };
 
    struct PendingSelect
@@ -67,6 +48,29 @@ public:
       SocketDevice *device;
       phys_ptr<kernel::ResourceRequest> resourceRequest;
       uv_timer_t timer;
+   };
+
+   struct Socket
+   {
+      enum Type
+      {
+         Unused,
+         Tcp,
+         Udp,
+      };
+
+      Type type = Unused;
+      SocketDevice *device = nullptr;
+      bool nonBlocking = false;
+      std::unique_ptr<uv_handle_t> handle;
+      std::unique_ptr<uv_connect_t> connect;
+      phys_ptr<kernel::ResourceRequest> connectRequest = nullptr;
+      bool connected = false;
+      Error except = Error::OK;
+      std::vector<char> readBuffer;
+      std::vector<phys_ptr<kernel::ResourceRequest>> pendingReads;
+      std::vector<std::unique_ptr<PendingWrite>> pendingWrites;
+      phys_ptr<kernel::ResourceRequest> closeRequest = nullptr;
    };
 
 public:
@@ -152,7 +156,9 @@ protected:
    std::optional<Error> checkSelect(phys_ptr<kernel::ResourceRequest> resourceRequest);
    std::optional<Error> checkRecv(phys_ptr<kernel::ResourceRequest> resourceRequest);
 
+   static void uvCloseSocketCallback(uv_handle_t *handle);
    static void uvExpirePendingSelectCallback(uv_timer_t *timer);
+   static void uvWriteCallback(uv_write_t *req, int32_t status);
 
 private:
    std::array<Socket, 64> mSockets;
