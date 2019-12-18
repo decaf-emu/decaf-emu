@@ -14,7 +14,4 @@ std::shared_ptr<spdlog::logger>
 makeLogger(std::string name,
            std::vector<spdlog::sink_ptr> userSinks = {});
 
-void
-setLogLevel(spdlog::level::level_enum level);
-
 } // namespace decaf

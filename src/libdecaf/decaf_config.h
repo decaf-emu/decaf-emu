@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace decaf
 {
@@ -28,6 +29,9 @@ struct LogSettings
    bool to_file = false;
    bool to_stdout = false;
    std::string level = "debug";
+   std::vector<std::pair<std::string, std::string>> levels = {
+      { "ios_fs", "warn" },
+   };
    std::string directory = ".";
    bool branch_trace = false;
    bool hle_trace = false;

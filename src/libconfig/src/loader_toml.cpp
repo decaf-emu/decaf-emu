@@ -125,6 +125,16 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
    readValue(config, "log.to_file", decafSettings.log.to_file);
    readValue(config, "log.to_stdout", decafSettings.log.to_stdout);
 
+   auto logLevels = config->get_table_qualified("log.levels");
+   if (logLevels) {
+      decafSettings.log.levels.clear();
+      for (auto item : *logLevels) {
+         if (auto level = item.second->as<std::string>()) {
+            decafSettings.log.levels.emplace_back(item.first, level->get());
+         }
+      }
+   }
+
    readValue(config, "sound.dump_sounds", decafSettings.sound.dump_sounds);
 
    readValue(config, "system.region", decafSettings.system.region);
@@ -258,6 +268,12 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
    log->insert("level", decafSettings.log.level);
    log->insert("to_file", decafSettings.log.to_file);
    log->insert("to_stdout", decafSettings.log.to_stdout);
+
+   auto levels = cpptoml::make_table();
+   for (auto item : decafSettings.log.levels) {
+      levels->insert(item.first, item.second);
+   }
+   log->insert("levels", levels);
 
    auto hle_trace_filters = cpptoml::make_array();
    for (auto &filter : decafSettings.log.hle_trace_filters) {

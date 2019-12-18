@@ -6,6 +6,7 @@
 #include "cafe/libraries/coreinit/coreinit_thread.h"
 
 #include <common/log.h>
+#include <common/strutils.h>
 #include <decaf_buildinfo.h>
 #include <filesystem>
 #include <libcpu/cpu_control.h>
@@ -91,7 +92,16 @@ initialiseLogSinks(std::string_view filename)
       []() {
          decaf::registerConfigChangeListener(
             [](const decaf::Settings &settings) {
-               setLogLevel(spdlog::level::from_str(settings.log.level));
+               auto defaultLevel = spdlog::level::from_str(settings.log.level);
+               spdlog::apply_all([&](std::shared_ptr<spdlog::logger> logger) {
+                  auto level = defaultLevel;
+                  for (auto &item : settings.log.levels) {
+                     if (iequals(item.first, logger->name())) {
+                        level = spdlog::level::from_str(item.second);
+                     }
+                  }
+                  logger->set_level(level);
+               });
             });
       });
 }
@@ -133,10 +143,11 @@ std::shared_ptr<spdlog::logger>
 makeLogger(std::string name,
            std::vector<spdlog::sink_ptr> sinks)
 {
+   auto config = decaf::config();
    auto logger = std::shared_ptr<spdlog::logger> { };
    sinks.insert(sinks.end(), sLogSinks.begin(), sLogSinks.end());
 
-   if (decaf::config()->log.async) {
+   if (config->log.async) {
       logger = std::make_shared<spdlog::async_logger>(name,
                                                       std::begin(sinks),
                                                       std::end(sinks),
@@ -148,20 +159,17 @@ makeLogger(std::string name,
       logger->flush_on(spdlog::level::trace);
    }
 
-   auto logLevel = spdlog::level::from_str(decaf::config()->log.level);
-   logger->set_level(logLevel);
+   auto level = spdlog::level::from_str(config->log.level);
+   for (auto &item : config->log.levels) {
+      if (iequals(item.first, name)) {
+         level = spdlog::level::from_str(item.second);
+      }
+   }
+
+   logger->set_level(level);
    logger->set_formatter(std::make_unique<GlobalLogFormatter>());
    spdlog::register_logger(logger);
    return logger;
-}
-
-void
-setLogLevel(spdlog::level::level_enum level)
-{
-   spdlog::apply_all(
-      [=](std::shared_ptr<spdlog::logger> logger) {
-         logger->set_level(level);
-      });
 }
 
 } // namespace decaf
