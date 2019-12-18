@@ -106,7 +106,7 @@ jobs:
       run: |
         mkdir vulkan
         cd vulkan
-        curl -s -o vulkansdk.tar.gz "https://sdk.lunarg.com/sdk/download/1.1.126.0/mac/vulkansdk-macos-1.1.126.0.tar.gz?u="
+        curl -s -o vulkansdk.tar.gz "https://gstreamer.freedesktop.org/src/mirror/vulkansdk-macos-1.1.126.0.tar.gz"
         tar -xzf vulkansdk.tar.gz
         rm vulkansdk.tar.gz
 
