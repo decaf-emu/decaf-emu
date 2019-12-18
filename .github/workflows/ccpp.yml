@@ -10,14 +10,14 @@ jobs:
       fail-fast: false
       matrix:
         name: [
-          macOS-10.14-Xcode-11,
+          macOS-latest-Xcode-11,
           ubuntu-18.04-gcc-8,
 #          ubuntu-18.04-clang-7,
           windows-2019-cl,
         ]
         include:
-          - name: macOS-10.14-Xcode-11
-            os: macOS-10.14
+          - name: macOS-latest-Xcode-11
+            os: macOS-latest
             compiler: xcode
             version: "11"
           - name: ubuntu-18.04-gcc-8
