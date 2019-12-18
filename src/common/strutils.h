@@ -108,7 +108,7 @@ string_copy(char *dst,
 #ifdef PLATFORM_WINDOWS
    strncpy_s(dst, dstSize, src, maxCount);
 #else
-   std::strncpy(dst, src, maxCount);
+   std::strncpy(dst, src, dstSize);
 #endif
 }
 
