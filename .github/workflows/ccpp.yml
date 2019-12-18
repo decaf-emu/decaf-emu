@@ -92,10 +92,23 @@ jobs:
       if: startsWith(matrix.os, 'macOS')
       run: |
         brew install openssl sdl2 conan
+
+    - name: Load Cached Vulkan SDK (macOS)
+      id: cache-vulkan-macos
+      if: startsWith(matrix.os, 'macOS')
+      uses: actions/cache@v1
+      with:
+        path: vulkan
+        key: ${{ runner.os }}-vulkan-1.1.126.0
+
+    - name: Install Vulkan SDK from web (macOS)
+      if: startsWith(matrix.os, 'macOS') && steps.cache-vulkan-macos.outputs.cache-hit != 'true'
+      run: |
         mkdir vulkan
         cd vulkan
-        wget -q -O vulkansdk.tar.gz https://sdk.lunarg.com/sdk/download/1.1.126.0/mac/vulkansdk-macos-1.1.126.0.tar.gz?u=
+        curl -s -o vulkansdk.tar.gz "https://sdk.lunarg.com/sdk/download/1.1.126.0/mac/vulkansdk-macos-1.1.126.0.tar.gz?u="
         tar -xzf vulkansdk.tar.gz
+        rm vulkansdk.tar.gz
 
     - name: Load Cached Vulkan SDK (Windows)
       id: cache-vulkan-windows
