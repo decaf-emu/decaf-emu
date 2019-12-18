@@ -4,8 +4,10 @@
 #include "vfs_link_device.h"
 #include "vfs_virtual_device.h"
 
+#include <algorithm>
 #include <common/platform.h>
 #include <system_error>
+#include <vector>
 
 namespace vfs
 {
@@ -107,8 +109,40 @@ HostDevice::openDirectory(const User &user,
    auto ec = std::error_code { };
    auto itr = std::filesystem::directory_iterator { makeHostPath(path), ec };
    if (!ec) {
+      // Iterate through the whole directory building up a list of entries
+      // alphabetically sorted by name to ensure same behaviour across platforms
+      auto listing = std::vector<Status> {};
+
+      for (auto &hostEntry : itr) {
+         auto currentEntry = Status { };
+         currentEntry.name = hostEntry.path().filename().string();
+
+         if (auto size = hostEntry.file_size(ec); !ec) {
+            currentEntry.size = size;
+            currentEntry.flags = Status::HasSize;
+         }
+
+         if (hostEntry.is_directory()) {
+            currentEntry.flags = Status::IsDirectory;
+         }
+
+         if (auto result = lookupPermissions(currentEntry.name); result) {
+            currentEntry.group = result->group;
+            currentEntry.owner = result->owner;
+            currentEntry.permission = result->permission;
+            currentEntry.flags = Status::HasPermissions;
+         }
+
+         listing.insert(
+            std::upper_bound(listing.begin(), listing.end(), currentEntry,
+               [](const Status &lhs, const Status &rhs) {
+                  return lhs.name < rhs.name;
+               }),
+            std::move(currentEntry));
+      }
+
       return { DirectoryIterator {
-         std::make_shared<HostDirectoryIterator>(this, std::move(itr)) } };
+         std::make_shared<HostDirectoryIterator>(this, std::move(listing)) } };
    }
 
    if (mVirtualDevice) {

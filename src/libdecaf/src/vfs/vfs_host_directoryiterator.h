@@ -1,6 +1,8 @@
 #pragma once
 #include "vfs_directoryiterator.h"
+
 #include <filesystem>
+#include <vector>
 
 namespace vfs
 {
@@ -11,7 +13,7 @@ class HostDirectoryIterator : public DirectoryIteratorImpl
 {
 public:
    HostDirectoryIterator(HostDevice *hostDevice,
-                         std::filesystem::directory_iterator itr);
+                         std::vector<Status> listing);
    ~HostDirectoryIterator() override = default;
 
    Result<Status> readEntry() override;
@@ -19,8 +21,8 @@ public:
 
 private:
    class HostDevice *mHostDevice;
-   std::filesystem::directory_iterator mBegin;
-   std::filesystem::directory_iterator mIterator;
+   std::vector<Status> mListing;
+   std::vector<Status>::iterator mIterator;
 };
 
 } // namespace vfs

@@ -5,40 +5,21 @@ namespace vfs
 {
 
 HostDirectoryIterator::HostDirectoryIterator(HostDevice *hostDevice,
-                                             std::filesystem::directory_iterator itr) :
+                                             std::vector<Status> listing) :
    mHostDevice(hostDevice),
-   mBegin(itr),
-   mIterator(std::move(itr))
+   mListing(std::move(listing)),
+   mIterator(mListing.begin())
 {
 }
 
 Result<Status>
 HostDirectoryIterator::readEntry()
 {
-   if (mIterator == end(mIterator)) {
+   if (mIterator == mListing.end()) {
       return { Error::EndOfDirectory };
    }
 
-   auto ec = std::error_code{ };
-   auto currentEntry = Status{ };
-   currentEntry.name = mIterator->path().filename().string();
-
-   if (auto size = mIterator->file_size(ec); !ec) {
-      currentEntry.size = size;
-      currentEntry.flags = Status::HasSize;
-   }
-
-   if (mIterator->is_directory()) {
-      currentEntry.flags = Status::IsDirectory;
-   }
-
-   if (auto result = mHostDevice->lookupPermissions(currentEntry.name); result) {
-      currentEntry.group = result->group;
-      currentEntry.owner = result->owner;
-      currentEntry.permission = result->permission;
-      currentEntry.flags = Status::HasPermissions;
-   }
-
+   auto currentEntry = *mIterator;
    ++mIterator;
    return { currentEntry };
 }
@@ -46,7 +27,7 @@ HostDirectoryIterator::readEntry()
 Error
 HostDirectoryIterator::rewind()
 {
-   mIterator = mBegin;
+   mIterator = mListing.begin();
    return Error::Success;
 }
 
