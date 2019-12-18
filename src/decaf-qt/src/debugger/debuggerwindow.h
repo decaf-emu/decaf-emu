@@ -1,4 +1,6 @@
 #pragma once
+#include "debuggershortcuts.h"
+
 #include <QMainWindow>
 #include <DockManager.h>
 
@@ -72,6 +74,8 @@ private:
 private:
    Ui::DebuggerWindow *ui;
    ads::CDockManager *mDockManager;
+
+   DebuggerShortcuts mDebuggerShortcuts;
 
    DebugData *mDebugData;
    QTimer *mUpdateModelTimer;

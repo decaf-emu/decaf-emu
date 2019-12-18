@@ -33,6 +33,12 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    connect(qApp, &QApplication::focusChanged, this, &DebuggerWindow::focusChanged);
    ui->setupUi(this);
 
+   mDebuggerShortcuts.navigateBackward = ui->actionNavigateBackward;
+   mDebuggerShortcuts.navigateForward = ui->actionNavigateForward;
+   mDebuggerShortcuts.navigateToAddress = ui->actionNavigateToAddress;
+   mDebuggerShortcuts.navigateToOperand = ui->actionNavigateToOperand;
+   mDebuggerShortcuts.toggleBreakpoint = ui->actionToggleBreakpoint;
+
    mDockManager = new ads::CDockManager { this };
 
    mDebugData = new DebugData { this };
@@ -47,7 +53,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    mBreakpointsDockWidget->setWidget(mBreakpointsWindow, ads::CDockWidget::ForceNoScrollArea);
 
    mDisassemblyDockWidget = new ads::CDockWidget { tr("Disassembly") };
-   mDisassemblyWindow = new DisassemblyWindow { mDisassemblyDockWidget };
+   mDisassemblyWindow = new DisassemblyWindow { &mDebuggerShortcuts, mDisassemblyDockWidget };
    mDisassemblyWindow->setDebugData(mDebugData);
    mDisassemblyDockWidget->setWidget(mDisassemblyWindow, ads::CDockWidget::ForceNoScrollArea);
 
@@ -62,7 +68,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    mJitProfilingDockWidget->setWidget(mJitProfilingWindow, ads::CDockWidget::ForceNoScrollArea);
 
    mMemoryDockWidget = new ads::CDockWidget { tr("Memory") };
-   mMemoryWindow = new MemoryWindow { mRegistersDockWidget };
+   mMemoryWindow = new MemoryWindow { &mDebuggerShortcuts, mRegistersDockWidget };
    mMemoryDockWidget->setWidget(mMemoryWindow, ads::CDockWidget::ForceNoScrollArea);
 
    mRegistersDockWidget = new ads::CDockWidget { tr("Registers") };
@@ -76,7 +82,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    mSegmentsDockWidget->setWidget(mSegmentsWindow, ads::CDockWidget::ForceNoScrollArea);
 
    mStackDockWidget = new ads::CDockWidget { tr("Stack") };
-   mStackWindow = new StackWindow { mStackDockWidget };
+   mStackWindow = new StackWindow { &mDebuggerShortcuts, mStackDockWidget };
    mStackWindow->setDebugData(mDebugData);
    mStackDockWidget->setWidget(mStackWindow, ads::CDockWidget::ForceNoScrollArea);
 
@@ -133,18 +139,6 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
    mThreadsDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+t"));
    mVoicesDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+p"));
    mJitProfilingDockWidget->toggleViewAction()->setShortcut(tr("Ctrl+j"));
-
-   // Setup action contexts
-   mDisassemblyDockWidget->addAction(ui->actionToggleBreakpoint);
-   mDisassemblyDockWidget->addAction(ui->actionNavigateBackward);
-   mDisassemblyDockWidget->addAction(ui->actionNavigateForward);
-   mDisassemblyDockWidget->addAction(ui->actionNavigateToAddress);
-   mDisassemblyDockWidget->addAction(ui->actionNavigateToOperand);
-
-   mMemoryDockWidget->addAction(ui->actionNavigateBackward);
-   mMemoryDockWidget->addAction(ui->actionNavigateForward);
-   mMemoryDockWidget->addAction(ui->actionNavigateToAddress);
-   mMemoryDockWidget->addAction(ui->actionNavigateToOperand);
 
    // Add view toggles to menu
    ui->menuView->addAction(mBreakpointsDockWidget->toggleViewAction());
@@ -394,7 +388,9 @@ DebuggerWindow::navigateAddress()
    auto address = 0u;
    while (true) {
       auto ok = false;
-      auto text = QInputDialog::getText(this, tr("Navigate to Address"), tr("Address:"), QLineEdit::Normal, {}, &ok);
+      auto text = QInputDialog::getText(this, tr("Navigate to Address"),
+                                        tr("Address:"), QLineEdit::Normal, {},
+                                        &ok);
       if (!ok) {
          return; // Cancelled
       }
@@ -430,17 +426,23 @@ DebuggerWindow::navigateOperand()
 void
 DebuggerWindow::focusChanged(QWidget *old, QWidget *now)
 {
-   auto disassemblyFocused = isDockWidgetFocused(mDisassemblyWindow);
-   auto memoryFocused = isDockWidgetFocused(mMemoryWindow);
-   auto stackFocused = isDockWidgetFocused(mStackWindow);
+   const auto updateActionState =
+      [](QAction *action) {
+         for (auto widget : action->associatedWidgets()) {
+            if (widget->hasFocus()) {
+               action->setEnabled(true);
+               return;
+            }
+         }
 
-   ui->actionToggleBreakpoint->setEnabled(disassemblyFocused);
+         action->setEnabled(false);
+       };
 
-   auto allowNavigation = memoryFocused || disassemblyFocused || stackFocused;
-   ui->actionNavigateForward->setEnabled(allowNavigation);
-   ui->actionNavigateBackward->setEnabled(allowNavigation);
-   ui->actionNavigateToAddress->setEnabled(allowNavigation);
-   ui->actionNavigateToOperand->setEnabled(allowNavigation);
+   updateActionState(ui->actionToggleBreakpoint);
+   updateActionState(ui->actionNavigateForward);
+   updateActionState(ui->actionNavigateBackward);
+   updateActionState(ui->actionNavigateToAddress);
+   updateActionState(ui->actionNavigateToOperand);
 }
 
 bool

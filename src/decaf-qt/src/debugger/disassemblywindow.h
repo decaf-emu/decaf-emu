@@ -7,13 +7,14 @@ class DisassemblyWindow;
 }
 
 class DebugData;
+struct DebuggerShortcuts;
 
 class DisassemblyWindow : public QWidget
 {
    Q_OBJECT
 
 public:
-   explicit DisassemblyWindow(QWidget *parent = nullptr);
+   explicit DisassemblyWindow(DebuggerShortcuts *debuggerShortcuts, QWidget *parent = nullptr);
    ~DisassemblyWindow();
 
    void setDebugData(DebugData *debugData);

@@ -9,13 +9,14 @@ class StackWindow;
 }
 
 class QAbstractItemModel;
+struct DebuggerShortcuts;
 
 class StackWindow : public QWidget
 {
    Q_OBJECT
 
 public:
-   StackWindow(QWidget *parent = nullptr);
+   StackWindow(DebuggerShortcuts *debuggerShortcuts, QWidget *parent = nullptr);
    ~StackWindow();
 
    void setDebugData(DebugData *debugData);

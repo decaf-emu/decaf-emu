@@ -1,9 +1,11 @@
+#include "debuggershortcuts.h"
 #include "memorywindow.h"
 #include "memorywidget.h"
 
 #include "ui_memorywindow.h"
 
-MemoryWindow::MemoryWindow(QWidget *parent) :
+MemoryWindow::MemoryWindow(DebuggerShortcuts *debuggerShortcuts,
+                           QWidget *parent) :
    QWidget(parent),
    ui(new Ui::MemoryWindow { })
 {
@@ -11,6 +13,10 @@ MemoryWindow::MemoryWindow(QWidget *parent) :
    ui->widget->setAddressRange(0, 0xFFFFFFFF);
    ui->widget->navigateToAddress(0x02000000);
    ui->widget->setBytesPerLine(16);
+
+   ui->widget->addAction(debuggerShortcuts->navigateBackward);
+   ui->widget->addAction(debuggerShortcuts->navigateForward);
+   ui->widget->addAction(debuggerShortcuts->navigateToAddress);
 }
 
 MemoryWindow::~MemoryWindow()
@@ -51,6 +57,7 @@ MemoryWindow::addressChanged()
 
    if (valid) {
       ui->widget->navigateToAddress(value);
+      ui->widget->setFocus();
    }
 }
 

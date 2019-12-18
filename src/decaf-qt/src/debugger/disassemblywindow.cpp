@@ -1,13 +1,20 @@
+#include "debugdata.h"
+#include "debuggershortcuts.h"
 #include "disassemblywindow.h"
 #include "ui_disassemblywindow.h"
 
-#include "debugdata.h"
-
-DisassemblyWindow::DisassemblyWindow(QWidget *parent) :
+DisassemblyWindow::DisassemblyWindow(DebuggerShortcuts *debuggerShortcuts,
+                                     QWidget *parent) :
    QWidget(parent),
    ui(new Ui::DisassemblyWindow { })
 {
    ui->setupUi(this);
+
+   ui->disassemblyWidget->addAction(debuggerShortcuts->toggleBreakpoint);
+   ui->disassemblyWidget->addAction(debuggerShortcuts->navigateBackward);
+   ui->disassemblyWidget->addAction(debuggerShortcuts->navigateForward);
+   ui->disassemblyWidget->addAction(debuggerShortcuts->navigateToAddress);
+   ui->disassemblyWidget->addAction(debuggerShortcuts->navigateToOperand);
 }
 
 DisassemblyWindow::~DisassemblyWindow()

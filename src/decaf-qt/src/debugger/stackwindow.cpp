@@ -1,11 +1,19 @@
+#include "debuggershortcuts.h"
 #include "stackwindow.h"
 #include "ui_stackwindow.h"
 
-StackWindow::StackWindow(QWidget *parent) :
+StackWindow::StackWindow(DebuggerShortcuts *debuggerShortcuts,
+                         QWidget *parent) :
    QWidget(parent),
    ui(new Ui::StackWindow { })
 {
    ui->setupUi(this);
+
+   ui->stackWidget->addAction(debuggerShortcuts->navigateBackward);
+   ui->stackWidget->addAction(debuggerShortcuts->navigateForward);
+   ui->stackWidget->addAction(debuggerShortcuts->navigateToAddress);
+   ui->stackWidget->addAction(debuggerShortcuts->navigateToOperand);
+
    connect(ui->stackWidget, &StackWidget::navigateToTextAddress, this, &StackWindow::navigateToTextAddress);
 }
 

@@ -6,12 +6,14 @@ namespace Ui
 class MemoryWindow;
 }
 
+struct DebuggerShortcuts;
+
 class MemoryWindow : public QWidget
 {
    Q_OBJECT
 
 public:
-   MemoryWindow(QWidget *parent = nullptr);
+   MemoryWindow(DebuggerShortcuts *debuggerShortcuts, QWidget *parent = nullptr);
    ~MemoryWindow();
 
 public slots:
