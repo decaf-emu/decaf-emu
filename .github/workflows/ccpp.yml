@@ -91,7 +91,7 @@ jobs:
     - name: Install Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
-        brew install openssl sdl2
+        brew install openssl sdl2 conan
         mkdir vulkan
         cd vulkan
         wget -q -O vulkansdk.tar.gz https://sdk.lunarg.com/sdk/download/1.1.126.0/mac/vulkansdk-macos-1.1.126.0.tar.gz?u=
@@ -190,8 +190,10 @@ jobs:
     - name: Install Conan Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
-        echo "Happy days, nothing to get via conan on Mac OS X right now!"
-        echo "So we cheat and dont even bother calling it. XD"
+        cd build
+        conan user
+        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
+        conan install .. --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
 
     - name: Install Conan Dependencies (Windows)
       if: startsWith(matrix.os, 'windows')
