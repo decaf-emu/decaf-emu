@@ -113,6 +113,11 @@ public:
                phys_ptr<SocketGetPeerNameResponse> response);
 
    std::optional<Error>
+   getsockname(phys_ptr<kernel::ResourceRequest> resourceRequest,
+               phys_ptr<const SocketGetSockNameRequest> request,
+               phys_ptr<SocketGetSockNameResponse> response);
+
+   std::optional<Error>
    recv(phys_ptr<kernel::ResourceRequest> resourceRequest,
         phys_ptr<const SocketRecvRequest> request,
         phys_ptr<char> alignedBeforeBuffer,

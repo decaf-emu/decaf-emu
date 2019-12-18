@@ -95,6 +95,17 @@ CHECK_OFFSET(SocketGetProcessSocketHandle, 0x00, titleId);
 CHECK_OFFSET(SocketGetProcessSocketHandle, 0x08, processId);
 CHECK_SIZE(SocketGetProcessSocketHandle, 0x0C);
 
+struct SocketGetSockNameRequest
+{
+   be2_val<SocketHandle> fd;
+   be2_struct<SocketAddrIn> addr;
+   be2_val<int32_t> addrlen;
+};
+CHECK_OFFSET(SocketGetSockNameRequest, 0x00, fd);
+CHECK_OFFSET(SocketGetSockNameRequest, 0x04, addr);
+CHECK_OFFSET(SocketGetSockNameRequest, 0x14, addrlen);
+CHECK_SIZE(SocketGetSockNameRequest, 0x18);
+
 struct SocketListenRequest
 {
    be2_val<SocketHandle> fd;
@@ -173,6 +184,7 @@ struct SocketRequest
       be2_struct<SocketConnectRequest> connect;
       be2_struct<SocketDnsQueryRequest> dnsQuery;
       be2_struct<SocketGetPeerNameRequest> getpeername;
+      be2_struct<SocketGetSockNameRequest> getsockname;
       be2_struct<SocketListenRequest> listen;
       be2_struct<SocketRecvRequest> recv;
       be2_struct<SocketSendRequest> send;

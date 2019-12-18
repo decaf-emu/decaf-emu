@@ -366,6 +366,35 @@ SocketDevice::getpeername(phys_ptr<kernel::ResourceRequest> resourceRequest,
 }
 
 std::optional<Error>
+SocketDevice::getsockname(phys_ptr<kernel::ResourceRequest> resourceRequest,
+                          phys_ptr<const SocketGetSockNameRequest> request,
+                          phys_ptr<SocketGetSockNameResponse> response)
+{
+   auto socket = getSocket(request->fd);
+   if (!socket) {
+      return makeError(ErrorCategory::Socket, SocketError::BadFd);
+   }
+
+   if (!socket->connected) {
+      return makeError(ErrorCategory::Socket, SocketError::NotConn);
+   }
+
+   auto addr = sockaddr_in { };
+   auto addrlen = static_cast<int>(sizeof(sockaddr_in));
+   auto error = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(socket->handle.get()),
+                                   reinterpret_cast<struct sockaddr *>(&addr), &addrlen);
+   if (error) {
+      return makeError(ErrorCategory::Socket, SocketError::NotConn);
+   }
+
+   response->addr.sin_family = addr.sin_family;
+   response->addr.sin_port = ntohs(addr.sin_port);
+   response->addr.sin_addr.s_addr_ = addr.sin_addr.s_addr;
+   response->addrlen = static_cast<int32_t>(sizeof(SocketAddrIn));
+   return Error::OK;
+}
+
+std::optional<Error>
 SocketDevice::checkRecv(phys_ptr<kernel::ResourceRequest> resourceRequest)
 {
    auto request = phys_cast<const SocketRecvRequest *>(resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
