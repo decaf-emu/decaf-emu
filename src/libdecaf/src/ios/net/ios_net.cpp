@@ -1,4 +1,5 @@
 #include "ios_net.h"
+#include "ios_net_ac_main_server.h"
 #include "ios_net_log.h"
 #include "ios_net_subsys.h"
 #include "ios_net_socket_async_task.h"
@@ -119,6 +120,7 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    // Initialise static memory
    internal::initialiseStaticData();
+   internal::initialiseStaticAcMainServerData();
    internal::initialiseStaticSocketData();
    internal::initialiseStaticSocketAsyncTaskData();
    internal::initialiseStaticSubsysData();
@@ -138,9 +140,15 @@ processEntryPoint(phys_ptr<void> /* context */)
 
    // TODO: bspGetClockInfo
    // TODO: initIoBuf
-   // TODO: startWifi24Thread (/dev/wifi24)
-   // TODO: startUdsThreads (/dev/ifuds /dev/udscntrl)
-   // TODO: startSomeThreads (/dev/ac_main /dev/ndm /dev/dlp)
+   // TODO: start wifi24 thread (/dev/wifi24)
+   // TODO: start uds threads (/dev/ifuds /dev/udscntrl)
+   // TODO: start nn servers for /dev/ndm and /dev/dlp
+
+   error = internal::startAcMainServer();
+   if (error < Error::OK) {
+      internal::netLog->error("NET: Failed to start ac_main server, error = {}.", error);
+      return error;
+   }
 
    error = internal::startSocketAsyncTaskThread();
    if (error < Error::OK) {
@@ -154,7 +162,19 @@ processEntryPoint(phys_ptr<void> /* context */)
       return error;
    }
 
-   return internal::networkLoop();
+   error = internal::networkLoop();
+   if (error < Error::OK) {
+      internal::netLog->error("NET: networkLoop returned error = {}.", error);
+      return error;
+   }
+
+   error = internal::joinAcMainServer();
+   if (error < Error::OK) {
+      internal::netLog->error("NET: Failed to join ac_main server, error = {}.", error);
+      return error;
+   }
+
+   return IOS_SuspendThread(IOS_GetCurrentThreadId());
 }
 
 } // namespace ios::net

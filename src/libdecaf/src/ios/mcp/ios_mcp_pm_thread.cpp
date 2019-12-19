@@ -525,7 +525,7 @@ initialiseStaticPmThreadData()
          dummyRM,
          //{ ss("/dev/dlp"),             1u, rm(0x100000, ProcessId::NET, 0) },
          dummyRM,
-         //{ ss("/dev/ac_main"),         1u, rm(0x180000, ProcessId::NET, 1) },
+         { ss("/dev/ac_main"),         1u, rm(0x180000, ProcessId::NET, 1) },
          dummyRM,
          { ss("/dev/tcp_pcfs"),        1u, rm(0x1E8000, ProcessId::FS, 0) },
          dummyRM,
