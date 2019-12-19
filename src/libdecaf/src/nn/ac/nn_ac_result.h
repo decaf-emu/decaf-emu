@@ -9,15 +9,15 @@ static constexpr Result ResultSuccess {
 };
 
 static constexpr Result ResultInvalidArgument {
-   nn::Result::MODULE_NN_AC, nn::Result::LEVEL_USAGE, 51584
+   nn::Result::MODULE_NN_AC, nn::Result::LEVEL_USAGE, 0xC980
 };
 
 static constexpr Result ResultLibraryNotInitialiased {
-   nn::Result::MODULE_NN_AC, nn::Result::LEVEL_USAGE, 52224
+   nn::Result::MODULE_NN_AC, nn::Result::LEVEL_USAGE, 0xCC00
 };
 
 static constexpr Result ResultConnectFailed {
-   nn::Result::MODULE_NN_AC, nn::Result::LEVEL_STATUS, 65408
+   nn::Result::MODULE_NN_AC, nn::Result::LEVEL_STATUS, 0xFF80
 };
 
 } // namespace nn::ac
