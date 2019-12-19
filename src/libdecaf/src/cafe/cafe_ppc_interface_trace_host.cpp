@@ -40,7 +40,12 @@ invoke_trace_host_impl(cpu::Core *core, const char *name, bool is_member_functio
       switch (p.reg_type) {
       case RegisterType::Gpr32:
          if (p.is_string) {
-            fmt::format_to(message, "\"{}\"", virt_cast<const char *>(static_cast<virt_addr>(readGpr(core, p.reg_index))).get());
+            auto value = readGpr(core, p.reg_index);
+            if (value) {
+               fmt::format_to(message, "\"{}\"", virt_cast<const char *>(static_cast<virt_addr>(value)).get());
+            } else {
+               fmt::format_to(message, "{}", static_cast<virt_addr>(value));
+            }
          } else if (p.is_pointer) {
             fmt::format_to(message, "{}", static_cast<virt_addr>(readGpr(core, p.reg_index)));
          } else  if (p.is_signed) {
