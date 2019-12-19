@@ -1,3 +1,4 @@
+#pragma once
 #include "ios/ios_error.h"
 
 namespace ios::nim::internal
