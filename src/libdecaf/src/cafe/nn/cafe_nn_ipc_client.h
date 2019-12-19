@@ -15,7 +15,7 @@ public:
    Result close();
 
    template<typename CommandType>
-   Result sendSyncRequest(ClientCommand<CommandType> &command)
+   Result sendSyncRequest(const ClientCommand<CommandType> &command)
    {
       return sendSyncRequest(command.getCommandData());
    }

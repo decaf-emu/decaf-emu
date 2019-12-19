@@ -336,7 +336,7 @@ public:
    }
 
 public:
-   const ClientCommandData &getCommandData()
+   const ClientCommandData &getCommandData() const
    {
       return mData;
    }
