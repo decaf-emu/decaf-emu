@@ -26,6 +26,12 @@ Client::close()
    return ios::convertError(IOS_Close(mHandle));
 }
 
+bool
+Client::isInitialised() const
+{
+   return mHandle >= 0;
+}
+
 Result
 Client::sendSyncRequest(const detail::ClientCommandData &command)
 {
