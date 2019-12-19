@@ -17,7 +17,8 @@ protected:
 
 private:
    void registerCApiFunctions();
-   void registerLibFunctions();
+   void registerClientSymbols();
+   void registerServiceSymbols();
 };
 
 } // namespace cafe::nn_ac

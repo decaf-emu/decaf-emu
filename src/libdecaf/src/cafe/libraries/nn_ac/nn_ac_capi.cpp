@@ -1,6 +1,7 @@
 #include "nn_ac.h"
 #include "nn_ac_capi.h"
-#include "nn_ac_lib.h"
+#include "nn_ac_client.h"
+#include "nn_ac_service.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "cafe/cafe_stackobject.h"
@@ -43,6 +44,12 @@ ACIsApplicationConnected(virt_ptr<BOOL> connected)
 }
 
 nn::Result
+ACGetAssignedAddress(virt_ptr<uint32_t> outAddress)
+{
+   return GetAssignedAddress(outAddress);
+}
+
+nn::Result
 ACGetConnectStatus(virt_ptr<Status> outStatus)
 {
    return GetConnectStatus(outStatus);
@@ -81,6 +88,7 @@ Library::registerCApiFunctions()
    RegisterFunctionExport(ACConnect);
    RegisterFunctionExport(ACConnectAsync);
    RegisterFunctionExport(ACIsApplicationConnected);
+   RegisterFunctionExport(ACGetAssignedAddress);
    RegisterFunctionExport(ACGetConnectStatus);
    RegisterFunctionExport(ACGetLastErrorCode);
    RegisterFunctionExport(ACGetStatus);

@@ -16,7 +16,8 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerCApiFunctions();
-   registerLibFunctions();
+   registerClientSymbols();
+   registerServiceSymbols();
 }
 
 } // namespace cafe::nn_ac

@@ -1,6 +1,6 @@
 #pragma once
 #include "nn_ac_enum.h"
-#include "nn_ac_lib.h"
+#include "nn_ac_service.h"
 #include "nn/nn_result.h"
 
 #include <libcpu/be2_struct.h>
@@ -22,6 +22,9 @@ ACConnectAsync();
 
 nn::Result
 ACIsApplicationConnected(virt_ptr<BOOL> connected);
+
+nn::Result
+ACGetAssignedAddress(virt_ptr<uint32_t> outAddress);
 
 nn::Result
 ACGetConnectStatus(virt_ptr<Status> outStatus);

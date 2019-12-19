@@ -16,12 +16,6 @@ struct Config
 CHECK_SIZE(Config, 0x280);
 
 nn::Result
-Initialize();
-
-void
-Finalize();
-
-nn::Result
 Connect();
 
 nn::Result
@@ -29,6 +23,9 @@ ConnectAsync();
 
 nn::Result
 IsApplicationConnected(virt_ptr<bool> connected);
+
+nn::Result
+GetAssignedAddress(virt_ptr<uint32_t> outAddress);
 
 nn::Result
 GetConnectStatus(virt_ptr<Status> outStatus);

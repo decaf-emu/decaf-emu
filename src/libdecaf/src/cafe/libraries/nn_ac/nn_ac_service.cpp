@@ -1,26 +1,17 @@
 #include "nn_ac.h"
-#include "nn_ac_lib.h"
+#include "nn_ac_client.h"
+#include "nn_ac_service.h"
 
 #include "cafe/libraries/cafe_hle_stub.h"
 #include "nn/ac/nn_ac_result.h"
+#include "nn/ac/nn_ac_service.h"
+#include "nn/ipc/nn_ipc_command.h"
 
 using namespace nn::ac;
+using namespace nn::ipc;
 
 namespace cafe::nn_ac
 {
-
-nn::Result
-Initialize()
-{
-   decaf_warn_stub();
-   return ResultSuccess;
-}
-
-void
-Finalize()
-{
-   decaf_warn_stub();
-}
 
 nn::Result
 Connect()
@@ -43,6 +34,33 @@ IsApplicationConnected(virt_ptr<bool> connected)
    *connected = false;
    return ResultSuccess;
 }
+
+nn::Result
+GetAssignedAddress(virt_ptr<uint32_t> outAddress)
+{
+   if (!internal::getClient()->isInitialised()) {
+      return ResultLibraryNotInitialiased;
+   }
+
+   if (!outAddress) {
+      return ResultInvalidArgument;
+   }
+
+   auto command = ClientCommand<services::AcService::GetAssignedAddress> { internal::getAllocator() };
+   command.setParameters(0);
+
+   auto result = internal::getClient()->sendSyncRequest(command);
+   if (result.ok()) {
+      auto address = uint32_t{ 0 };
+      result = command.readResponse(address);
+      if (result.ok()) {
+         *outAddress = address;
+      }
+   }
+
+   return result;
+}
+
 
 nn::Result
 GetConnectStatus(virt_ptr<Status> outStatus)
@@ -86,18 +104,16 @@ ReadConfig(ConfigId id,
 }
 
 void
-Library::registerLibFunctions()
+Library::registerServiceSymbols()
 {
-   RegisterFunctionExportName("Initialize__Q2_2nn2acFv",
-                              Initialize);
-   RegisterFunctionExportName("Finalize__Q2_2nn2acFv",
-                              Finalize);
    RegisterFunctionExportName("Connect__Q2_2nn2acFv",
                               Connect);
    RegisterFunctionExportName("ConnectAsync__Q2_2nn2acFv",
                               ConnectAsync);
    RegisterFunctionExportName("IsApplicationConnected__Q2_2nn2acFPb",
                               IsApplicationConnected);
+   RegisterFunctionExportName("GetAssignedAddress__Q2_2nn2acFPUl",
+                              GetAssignedAddress);
    RegisterFunctionExportName("GetConnectStatus__Q2_2nn2acFPQ3_2nn2ac6Status",
                               GetConnectStatus);
    RegisterFunctionExportName("GetLastErrorCode__Q2_2nn2acFPUi",
