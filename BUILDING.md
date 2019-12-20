@@ -31,7 +31,9 @@ By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive 
 Required:
 - A modern C++17 friendly compiler such as g++8
 - CMake
+- c-ares
 - libcurl
+- libuv
 - openssl
 - sdl2
 - zlib
@@ -39,7 +41,7 @@ Required:
 Optional:
 - ffmpeg, disable by using `-DDECAF_FFMPEG=OFF`
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows), disable by using `-DDECAF_VULKAN=OFF`
-- Qt
+- Qt, disable by using `-DDECAF_QT=OFF`
 
 The dependencies, other than Vulkan, can either be acquired using your package manager such as:
 - Required: `apt install cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev`
@@ -61,7 +63,7 @@ You may choose to use a mix of system dependenices such as if your system's ffmp
 - `mkdir build`
 - `cd build`
 - If using conan: `conan install .. -o silent=True -o curl=False -o openssl=False`
-- `cmake -DCMAKE_BUILD_TYPE=Release -DDECAF_QT=ON ../`
+- `cmake -DCMAKE_BUILD_TYPE=Release ../`
 - `make`
 
 ## MacOS
@@ -95,5 +97,7 @@ Options interesting to developers:
 - DECAF_VALGRIND - Build with Valgrind
 
 ## Troubleshooting
+
+decaf-emu builds on github actions CI - so a good reference on how to build is always the CI script itself [.github/workflows/ccpp.yml](https://github.com/decaf-emu/decaf-emu/blob/master/.github/workflows/ccpp.yml)
 
 Often conan requires updating to the latest version to fix various issues, so if it is failing to install dependencies then be sure to `pip install --upgrade conan` / `brew upgrade conan` / update conan manually.
