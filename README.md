@@ -12,7 +12,7 @@ You can find us for developer discussion:
 - Linux with a modern C++17 friendly compiler
 - 64 bit
 - CMake v3.2+
-- OpenGL 4.5+ or Vulkan 1.1.92.1+
+- Vulkan 1.1.92.1+
 
 ## Support
 - None, this is an in-development project and user support is not provided.
