@@ -1,5 +1,7 @@
 #pragma once
 #ifdef DECAF_VULKAN
+#include <common/bit_cast.h>
+#include <common/strutils.h>
 #include <SPIRV/SpvBuilder.h>
 #include <SPIRV/GLSL.std.450.h>
 
@@ -24,15 +26,19 @@ public:
          return spv::Builder::makeFloatConstant(f, specConstant);
       }
 
-      auto constVal = mFloatConstants[f];
+      auto bitsValue = bit_cast<uint32_t>(f);
+      auto constVal = mFloatConstants[bitsValue];
       if (constVal) {
          return constVal;
       }
 
       constVal = spv::Builder::makeFloatConstant(f, specConstant);
-      addName(constVal, fmt::format("CONST_{}f", f).c_str());
+      auto name = fmt::format("CONST_{}f", f);
+      replace_all(name, '-', 'n');
+      replace_all(name, '.', 'p');
+      addName(constVal, name.c_str());
 
-      mFloatConstants[f] = constVal;
+      mFloatConstants[bitsValue] = constVal;
       return constVal;
    }
 
@@ -535,7 +541,7 @@ public:
    }
 protected:
    std::unordered_map<unsigned int, spv::Id> mUintConstants;
-   std::unordered_map<float, spv::Id> mFloatConstants;
+   std::unordered_map<uint32_t, spv::Id> mFloatConstants;
 
    spv::Id mSamplerType = spv::NoResult;
    spv::Id mBoolType = spv::NoResult;
