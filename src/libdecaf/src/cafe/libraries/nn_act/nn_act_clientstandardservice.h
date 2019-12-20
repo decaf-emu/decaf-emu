@@ -62,6 +62,13 @@ nn::Result
 GetMiiNameEx(virt_ptr<char16_t> name,
              SlotNo slotNo);
 
+nn::Result
+GetNfsPassword(virt_ptr<char> password);
+
+nn::Result
+GetNfsPasswordEx(virt_ptr<char> password,
+                 SlotNo slotNo);
+
 uint8_t
 GetNumOfAccounts();
 
@@ -118,6 +125,9 @@ GetUuid(virt_ptr<Uuid> uuid,
 
 nn::Result
 GetUuid(virt_ptr<Uuid> uuid);
+
+bool
+HasNfsAccount();
 
 bool
 IsCommitted();

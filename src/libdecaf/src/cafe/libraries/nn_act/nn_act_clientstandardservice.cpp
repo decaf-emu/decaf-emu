@@ -156,6 +156,23 @@ GetMiiNameEx(virt_ptr<char16_t> name,
                                    InfoType::MiiName);
 }
 
+nn::Result
+GetNfsPassword(virt_ptr<char> password)
+{
+   return GetNfsPasswordEx(password, CurrentUserSlot);
+}
+
+nn::Result
+GetNfsPasswordEx(virt_ptr<char> password,
+                 SlotNo slotNo)
+{
+   if (!password) {
+      return ResultInvalidPointer;
+   }
+
+   return internal::GetAccountInfo(slotNo, password, 17, InfoType::NfsPassword);
+}
+
 uint8_t
 GetNumOfAccounts()
 {
@@ -343,6 +360,17 @@ GetUuid(virt_ptr<Uuid> uuid)
 }
 
 bool
+HasNfsAccount()
+{
+   StackArray<char, 17> nfsPassword;
+   if (!GetNfsPassword(nfsPassword)) {
+      return false;
+   }
+
+   return nfsPassword[0] != '\0';
+}
+
+bool
 IsCommitted()
 {
    return IsCommittedEx(CurrentUserSlot);
@@ -505,6 +533,10 @@ Library::registerClientStandardServiceSymbols()
                               GetMiiName);
    RegisterFunctionExportName("GetMiiNameEx__Q2_2nn3actFPwUc",
                               GetMiiNameEx);
+   RegisterFunctionExportName("GetNfsPassword__Q2_2nn3actFPc",
+                              GetNfsPassword);
+   RegisterFunctionExportName("GetNfsPasswordEx__Q2_2nn3actFPcUc",
+                              GetNfsPasswordEx);
    RegisterFunctionExportName("GetNumOfAccounts__Q2_2nn3actFv",
                               GetNumOfAccounts);
    RegisterFunctionExportName("GetParentalControlSlotNo__Q2_2nn3actFv",
@@ -537,6 +569,8 @@ Library::registerClientStandardServiceSymbols()
                               static_cast<nn::Result(*)(virt_ptr<Uuid>, SlotNo)>(GetUuidEx));
    RegisterFunctionExportName("GetUuidEx__Q2_2nn3actFP7ACTUuidUcUi",
                               static_cast<nn::Result(*)(virt_ptr<Uuid>, SlotNo, int32_t)>(GetUuidEx));
+   RegisterFunctionExportName("HasNfsAccount__Q2_2nn3actFv",
+                              HasNfsAccount);
    RegisterFunctionExportName("IsCommitted__Q2_2nn3actFv",
                               IsCommitted);
    RegisterFunctionExportName("IsCommittedEx__Q2_2nn3actFUc",
