@@ -180,8 +180,13 @@ setTexture(virt_ptr<GX2Texture> texture,
    auto mipAddress = static_cast<uint32_t>(
       OSEffectiveToPhysical(virt_cast<virt_addr>(texture->surface.mipmaps)));
 
-   decaf_check(!(mipAddress & 0xff));
-   decaf_check(!(imageAddress & 0xff));
+   if (mipAddress & 0xff) {
+      decaf_check_warn_once(!"Game used unaligned mip address");
+   }
+
+   if (imageAddress & 0xff) {
+      decaf_check_warn_once(!"Game used unaligned image address");
+   }
 
    if (texture->surface.tileMode >= GX2TileMode::Tiled2DThin1 &&
        texture->surface.tileMode != GX2TileMode::LinearSpecial) {
