@@ -204,6 +204,8 @@ public:
    void translateGenericExport(const ControlFlowInst &cf);
    void translateGenericSample(const ControlFlowInst &cf, const TextureFetchInst &inst, uint32_t sampleMode);
 
+   void translateAluOp2RecipCommon(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst, bool isRecipSqrt, bool isFF);
+
    static void writeGenericProlog(ShaderSpvBuilder &spv);
    static void writeVertexProlog(ShaderSpvBuilder &spv, const VertexShaderDesc& desc);
    static void writeGeometryProlog(ShaderSpvBuilder &spv, const GeometryShaderDesc& desc);

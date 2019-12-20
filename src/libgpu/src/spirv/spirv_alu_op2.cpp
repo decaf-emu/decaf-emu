@@ -600,10 +600,56 @@ void Transpiler::translateAluOp2_PRED_SETNE_INT(const ControlFlowInst &cf, const
    mSpv->writeAluOpDest(cf, group, unit, inst, output);
 }
 
+void Transpiler::translateAluOp2RecipCommon(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst, bool isRecipSqrt, bool isFF)
+{
+   auto src0 = mSpv->readAluInstSrc(cf, group, inst, 0);
+   auto zeroPositive = mSpv->makeFloatConstant(0.0f);
+   auto zeroNegative = mSpv->makeFloatConstant(-0.0f);
+
+   auto valueZero = spv::Id {};
+   auto valueRecip = spv::Id {};
+   auto blockZero = static_cast<spv::Block *>(nullptr);
+   auto blockRecip = static_cast<spv::Block *>(nullptr);
+
+   auto predIsZero = mSpv->createBinOp(spv::Op::OpFOrdEqual, mSpv->boolType(), src0, zeroPositive);
+   auto condIsZero = spv::Builder::If { predIsZero, spv::SelectionControlMaskNone, *mSpv };
+   {
+      auto src0Sign = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450FSign, { src0 });
+      auto isNegative = mSpv->createBinOp(spv::Op::OpFOrdLessThan, mSpv->boolType(), src0Sign, zeroPositive);
+      if (isFF) {
+         valueZero = mSpv->createTriOp(spv::Op::OpSelect, mSpv->floatType(), isNegative, zeroNegative, zeroPositive);
+         blockZero = mSpv->getBuildPoint();
+      } else {
+         auto maxFloatNegative = mSpv->makeFloatConstant(std::numeric_limits<float>::lowest());
+         auto maxFloatPositive = mSpv->makeFloatConstant(std::numeric_limits<float>::max());
+         valueZero = mSpv->createTriOp(spv::Op::OpSelect, mSpv->floatType(), isNegative, maxFloatNegative, maxFloatPositive);
+         blockZero = mSpv->getBuildPoint();
+      }
+   }
+   condIsZero.makeBeginElse();
+   {
+      if (isRecipSqrt) {
+         valueRecip = mSpv->createBuiltinCall(mSpv->floatType(), mSpv->glslStd450(), GLSLstd450::GLSLstd450InverseSqrt, { src0 });
+         blockRecip = mSpv->getBuildPoint();
+      } else {
+         auto one = mSpv->makeFloatConstant(1.0f);
+         valueRecip = mSpv->createBinOp(spv::OpFDiv, mSpv->floatType(), one, src0);
+         blockRecip = mSpv->getBuildPoint();
+      }
+   }
+   condIsZero.makeEndIf();
+
+   auto output = mSpv->createOp(spv::OpPhi, mSpv->floatType(),
+      {
+         valueZero, blockZero->getId(),
+         valueRecip, blockRecip->getId(),
+      });
+   mSpv->writeAluOpDest(cf, group, unit, inst, output);
+}
+
 void Transpiler::translateAluOp2_RECIP_CLAMPED(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   // TODO: RECIP_CLAMPED
-   latte::ShaderParser::translateAluOp2_RECIP_CLAMPED(cf, group, unit, inst);
+   translateAluOp2RecipCommon(cf, group, unit, inst, false, false);
 }
 
 void Transpiler::translateAluOp2_RECIP_IEEE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -618,7 +664,7 @@ void Transpiler::translateAluOp2_RECIP_IEEE(const ControlFlowInst &cf, const Alu
 
 void Transpiler::translateAluOp2_RECIP_FF(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   latte::ShaderParser::translateAluOp2_RECIP_FF(cf, group, unit, inst);
+   translateAluOp2RecipCommon(cf, group, unit, inst, false, true);
 }
 
 void Transpiler::translateAluOp2_RECIP_INT(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -633,7 +679,7 @@ void Transpiler::translateAluOp2_RECIP_UINT(const ControlFlowInst &cf, const Alu
 
 void Transpiler::translateAluOp2_RECIPSQRT_CLAMPED(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   latte::ShaderParser::translateAluOp2_RECIPSQRT_CLAMPED(cf, group, unit, inst);
+   translateAluOp2RecipCommon(cf, group, unit, inst, true, false);
 }
 
 void Transpiler::translateAluOp2_RECIPSQRT_IEEE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
@@ -647,8 +693,7 @@ void Transpiler::translateAluOp2_RECIPSQRT_IEEE(const ControlFlowInst &cf, const
 
 void Transpiler::translateAluOp2_RECIPSQRT_FF(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
 {
-   // TODO: RECIPSQRT_FF
-   latte::ShaderParser::translateAluOp2_RECIPSQRT_FF(cf, group, unit, inst);
+   translateAluOp2RecipCommon(cf, group, unit, inst, true, true);
 }
 
 void Transpiler::translateAluOp2_RNDNE(const ControlFlowInst &cf, const AluInstructionGroup &group, SQ_CHAN unit, const AluInst &inst)
