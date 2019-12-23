@@ -44,8 +44,8 @@ public:
                if (document.setContent(&appXml)) {
                   auto app = document.documentElement();
                   if (app.tagName() == "app") {
-                     titleInfo->title_id = app.firstChildElement("title_id").text().toULongLong(nullptr, 16);
-                     titleInfo->title_version = app.firstChildElement("title_version").text().toInt(nullptr, 16);
+                     titleInfo->title_id = app.firstChildElement("title_id").text().trimmed().toULongLong(nullptr, 16);
+                     titleInfo->title_version = app.firstChildElement("title_version").text().trimmed().toInt(nullptr, 16);
                   }
                }
             }
@@ -56,7 +56,7 @@ public:
                if (document.setContent(&cosXml)) {
                   auto cos = document.documentElement();
                   if (cos.tagName() == "app") {
-                     titleInfo->argstr = cos.firstChildElement("argstr").text();
+                     titleInfo->argstr = cos.firstChildElement("argstr").text().trimmed();
                   }
                }
             }
@@ -69,8 +69,8 @@ public:
                   if (document.setContent(&metaXml)) {
                      auto meta = document.documentElement();
                      if (meta.tagName() == "menu") {
-                        titleInfo->longname_en = meta.firstChildElement("longname_en").text();
-                        titleInfo->publisher_en = meta.firstChildElement("publisher_en").text();
+                        titleInfo->longname_en = meta.firstChildElement("longname_en").text().trimmed();
+                        titleInfo->publisher_en = meta.firstChildElement("publisher_en").text().trimmed();
                      }
                   }
                }
