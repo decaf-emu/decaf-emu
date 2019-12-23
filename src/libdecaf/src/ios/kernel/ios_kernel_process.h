@@ -24,19 +24,6 @@ allocProcessStatic(ProcessId pid,
                    size_t align);
 
 phys_ptr<void>
-allocProcessStatic(size_t size,
-                   size_t align);
-
-template<typename Type>
-inline phys_ptr<Type>
-allocProcessStatic()
-{
-   auto data = allocProcessStatic(sizeof(Type), alignof(Type));
-   new (data.get()) Type { };
-   return phys_cast<Type *>(data);
-}
-
-phys_ptr<void>
 allocProcessLocalHeap(size_t size);
 
 phys_ptr<char>
@@ -52,5 +39,14 @@ void
 initialiseProcessStaticAllocators();
 
 } // namespace internal
+
+template<typename Type>
+inline phys_ptr<Type>
+allocProcessStatic()
+{
+   auto data = allocProcessStatic(internal::getCurrentProcessId(), sizeof(Type), alignof(Type));
+   new (data.get()) Type { };
+   return phys_cast<Type *>(data);
+}
 
 } // namespace ios::kernel
