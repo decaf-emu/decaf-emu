@@ -141,6 +141,20 @@ char16_copy(char16_t *dst,
 }
 
 inline std::string_view
+trim_view(std::string_view str)
+{
+   while (!str.empty() && std::isspace(str[0])) {
+      str.remove_prefix(1);
+   }
+
+   while (!str.empty() && std::isspace(str.back())) {
+      str.remove_suffix(1);
+   }
+
+   return str;
+}
+
+inline std::string
 trim(std::string_view str)
 {
    while (!str.empty() && std::isspace(str[0])) {

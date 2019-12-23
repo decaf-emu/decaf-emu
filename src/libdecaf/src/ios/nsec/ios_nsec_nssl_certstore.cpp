@@ -223,7 +223,7 @@ loadCertstoreMetadata()
          lineEndPosition = size;
       }
 
-      auto line = trim(contents.substr(position, lineEndPosition - position));
+      auto line = trim_view(contents.substr(position, lineEndPosition - position));
       if (!line.empty() && line[0] != '#') {
          auto linePosition = size_t { 0 };
          struct {
@@ -265,8 +265,8 @@ loadCertstoreMetadata()
             // Split the key=value pair
             auto eqPos = kvPair.find_first_of('=');
             if (eqPos != std::string_view::npos && eqPos + 1 < kvPair.size()) {
-               auto key = trim(kvPair.substr(0, eqPos));
-               auto value = trim(kvPair.substr(eqPos + 1));
+               auto key = trim_view(kvPair.substr(0, eqPos));
+               auto value = trim_view(kvPair.substr(eqPos + 1));
 
                if (iequals(key, "ID")) {
                   std::from_chars(value.data(), value.data() + value.size(), certData.id, 10);
