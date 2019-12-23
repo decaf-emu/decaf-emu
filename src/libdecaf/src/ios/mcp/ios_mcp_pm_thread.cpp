@@ -86,13 +86,13 @@ struct StaticPmThreadData
 };
 
 static phys_ptr<StaticPmThreadData>
-sData;
+sPmThreadData;
 
 static Error
 getResourceManagerId(std::string_view name)
 {
-   for (auto i = 0u; i < sData->resourceManagers.size(); ++i) {
-      auto &resourceManager = sData->resourceManagers[i];
+   for (auto i = 0u; i < sPmThreadData->resourceManagers.size(); ++i) {
+      auto &resourceManager = sPmThreadData->resourceManagers[i];
       if (resourceManager.data.isDummyRM || !resourceManager.name) {
          continue;
       }
@@ -108,11 +108,11 @@ getResourceManagerId(std::string_view name)
 static Error
 sendRegisterResourceManagerMessage(RegisteredResourceManagerId id)
 {
-   if (id < 0 || id >= static_cast<RegisteredResourceManagerId>(sData->resourceManagers.size())) {
+   if (id < 0 || id >= static_cast<RegisteredResourceManagerId>(sPmThreadData->resourceManagers.size())) {
       return Error::InvalidArg;
    }
 
-   auto &resourceManager = sData->resourceManagers[id];
+   auto &resourceManager = sPmThreadData->resourceManagers[id];
    if (resourceManager.data.isDummyRM) {
       return Error::InvalidArg;
    }
@@ -124,7 +124,7 @@ sendRegisterResourceManagerMessage(RegisteredResourceManagerId id)
    resourceManager.data.messageBuffer->command = static_cast<Command>(ResourceManagerCommand::Register);
    resourceManager.data.messageBuffer->handle = id;
 
-   return IOS_SendMessage(sData->resourceManagerMessageQueueId,
+   return IOS_SendMessage(sPmThreadData->resourceManagerMessageQueueId,
                           makeMessage(resourceManager.data.messageBuffer),
                           MessageFlags::None);
 }
@@ -224,28 +224,28 @@ Error
 startPmThread()
 {
    // Create resource manager message queue
-   auto error = IOS_CreateMessageQueue(phys_addrof(sData->resourceManagerMessageBuffer),
-                                       sData->resourceManagerMessageBuffer.size());
+   auto error = IOS_CreateMessageQueue(phys_addrof(sPmThreadData->resourceManagerMessageBuffer),
+                                       sPmThreadData->resourceManagerMessageBuffer.size());
    if (error < Error::OK) {
       return error;
    }
 
-   sData->resourceManagerMessageQueueId = static_cast<MessageQueueId>(error);
+   sPmThreadData->resourceManagerMessageQueueId = static_cast<MessageQueueId>(error);
 
    // Create resource manager timeout timer
    error = IOS_CreateTimer(std::chrono::microseconds { 0 },
                            std::chrono::microseconds { 0 },
-                           sData->resourceManagerMessageQueueId,
-                           makeMessage(phys_addrof(sData->resourceManagerTimeoutMessage)));
+                           sPmThreadData->resourceManagerMessageQueueId,
+                           makeMessage(phys_addrof(sPmThreadData->resourceManagerTimeoutMessage)));
    if (error < Error::OK) {
       return error;
    }
 
-   sData->resourceManagerTimerId = static_cast<TimerId>(error);
+   sPmThreadData->resourceManagerTimerId = static_cast<TimerId>(error);
 
    // Initialise resource manager registrations
-   for (auto i = 0u; i < sData->resourceManagers.size(); ++i) {
-      auto &rm = sData->resourceManagers[i];
+   for (auto i = 0u; i < sPmThreadData->resourceManagers.size(); ++i) {
+      auto &rm = sPmThreadData->resourceManagers[i];
       rm.data.state = ResourceManagerRegistrationState::NotRegistered;
       rm.data.resourceHandle = static_cast<ResourceHandleId>(Error::Invalid);
       rm.data.error = Error::Invalid;
@@ -263,18 +263,18 @@ startPmThread()
 
    // Create thread
    error = IOS_CreateThread(&pmThreadEntry, nullptr,
-                            phys_addrof(sData->threadStack) + sData->threadStack.size(),
-                            static_cast<uint32_t>(sData->threadStack.size()),
+                            phys_addrof(sPmThreadData->threadStack) + sPmThreadData->threadStack.size(),
+                            static_cast<uint32_t>(sPmThreadData->threadStack.size()),
                             PmThreadPriority,
                             ThreadFlags::Detached);
    if (error < Error::OK) {
       return error;
    }
 
-   sData->threadId = static_cast<ThreadId>(error);
-   kernel::internal::setThreadName(sData->threadId, "PmThread");
+   sPmThreadData->threadId = static_cast<ThreadId>(error);
+   kernel::internal::setThreadName(sPmThreadData->threadId, "PmThread");
 
-   return IOS_StartThread(sData->threadId);
+   return IOS_StartThread(sPmThreadData->threadId);
 }
 
 static Error
@@ -286,7 +286,7 @@ waitAsyncReplyWithTimeout(MessageQueueId queue,
       return IOS_ReceiveMessage(queue, message, MessageFlags::None);
    }
 
-   auto error = IOS_RestartTimer(sData->resourceManagerTimerId,
+   auto error = IOS_RestartTimer(sPmThreadData->resourceManagerTimerId,
                                  std::chrono::microseconds { timeout },
                                  std::chrono::microseconds { 0 });
    if (error < Error::OK) {
@@ -294,7 +294,7 @@ waitAsyncReplyWithTimeout(MessageQueueId queue,
    }
 
    error = IOS_ReceiveMessage(queue, message, MessageFlags::None);
-   IOS_StopTimer(sData->resourceManagerTimerId);
+   IOS_StopTimer(sPmThreadData->resourceManagerTimerId);
    return error;
 }
 
@@ -322,9 +322,9 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
    auto numPendingResumes = 0;
    auto error = Error::OK;
 
-   while (id < sData->resourceManagers.size()) {
-      if (sData->resourceManagers[id].data.isDummyRM) {
-         auto &dummyRm = sData->resourceManagers[id];
+   while (id < sPmThreadData->resourceManagers.size()) {
+      if (sPmThreadData->resourceManagers[id].data.isDummyRM) {
+         auto &dummyRm = sPmThreadData->resourceManagers[id];
 
          if (numPendingResumes == 0) {
             // We've processed all our resumes, on to the next resource manager id!
@@ -333,20 +333,20 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
             continue;
          }
       } else {
-         if (!sData->resourceManagers[id].name) {
+         if (!sPmThreadData->resourceManagers[id].name) {
             // Skip this unimplemented resource.
             ++id;
             continue;
          }
 
-         if ((sData->resourceManagers[id].data.systemModeFlags & systemModeFlags) == 0) {
+         if ((sPmThreadData->resourceManagers[id].data.systemModeFlags & systemModeFlags) == 0) {
             // Skip this device if it is not enable for the current system mode.
             ++id;
             continue;
          }
 
-         if (sData->resourceManagers[id].data.state == ResourceManagerRegistrationState::Registered) {
-            auto &rm = sData->resourceManagers[id];
+         if (sPmThreadData->resourceManagers[id].data.state == ResourceManagerRegistrationState::Registered) {
+            auto &rm = sPmThreadData->resourceManagers[id];
 
             // Send a resume request - transition from Registered to Pending.
             IOS_GetUpTime64(phys_addrof(rm.data.timeResumeStart));
@@ -356,7 +356,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
             error = IOS_ResumeAsync(rm.data.resourceHandle,
                                     systemModeFlags,
                                     bootFlags,
-                                    sData->resourceManagerMessageQueueId,
+                                    sPmThreadData->resourceManagerMessageQueueId,
                                     rm.data.messageBuffer);
             if (error < Error::OK) {
                gLog->error("Unexpected error for IOS_ResumeAsync on resource manager {}, error = {}",
@@ -375,7 +375,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
       }
 
       // Check for any pending messages
-      error = waitAsyncReplyWithTimeout(sData->resourceManagerMessageQueueId, message, 10000);
+      error = waitAsyncReplyWithTimeout(sPmThreadData->resourceManagerMessageQueueId, message, 10000);
       if (error < Error::OK) {
          gLog->error("Unexpected error for waitAsyncReplyWithTimeout, error = {}", error);
          return error;
@@ -387,7 +387,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
          gLog->error("Unexpected timeout whilst waiting for resource manager message");
          return Error::Timeout;
       } else if (command == ResourceManagerCommand::Register) {
-         auto &rm = sData->resourceManagers[request->handle];
+         auto &rm = sPmThreadData->resourceManagers[request->handle];
 
          // Open a resource handle
          IOS_GetUpTime64(phys_addrof(rm.data.timeOpenStart));
@@ -407,7 +407,7 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
       } else if (command == ResourceManagerCommand::ResumeReply) {
          // This is a reply to our resume request - transition from Pending to Resumed.
          auto resumeId = request->handle;
-         auto &resumeRm = sData->resourceManagers[resumeId];
+         auto &resumeRm = sPmThreadData->resourceManagers[resumeId];
 
          decaf_check(resumeRm.data.state == ResourceManagerRegistrationState::Pending);
          resumeRm.data.error = request->reply;
@@ -432,8 +432,8 @@ handleResourceManagerRegistrations(uint32_t systemModeFlags,
 void
 initialiseStaticPmThreadData()
 {
-   sData = allocProcessStatic<StaticPmThreadData>();
-   sData->resourceManagerTimeoutMessage.command = static_cast<Command>(Error::Timeout);
+   sPmThreadData = allocProcessStatic<StaticPmThreadData>();
+   sPmThreadData->resourceManagerTimeoutMessage.command = static_cast<Command>(Error::Timeout);
 
    auto dummyRM = ResourceManagerRegistration {
          nullptr, 0u,
@@ -459,10 +459,10 @@ initialiseStaticPmThreadData()
       };
 
    // This table was taken from firmware 5.5.1
-   sData->resourceManagers = std::array<ResourceManagerRegistration, 86>
+   sPmThreadData->resourceManagers = std::array<ResourceManagerRegistration, 86>
       {
          dummyRM,
-         //{ ss("/dev/crypto"),          1u, rm(0x1E8000, ProcessId::CRYPTO, 0) },
+         { ss("/dev/crypto"),          1u, rm(0x1E8000, ProcessId::CRYPTO, 0) },
          { ss("/dev/ahcimgr"),         1u, rm(0x1E8000, ProcessId::FS, 0) },
          //{ ss("/dev/usbproc1"),        1u, rm(0x1C0000, ProcessId::USB, 0) },
          dummyRM,
