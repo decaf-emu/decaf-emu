@@ -20,7 +20,7 @@ struct StaticSchedulerData
 static phys_ptr<StaticSchedulerData>
 sData = nullptr;
 
-static thread_local phys_ptr<Thread>
+static phys_ptr<Thread>
 sCurrentThreadContext = nullptr;
 
 static platform::Fiber *
