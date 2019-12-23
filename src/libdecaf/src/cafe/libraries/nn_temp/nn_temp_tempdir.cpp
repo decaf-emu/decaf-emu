@@ -3,6 +3,7 @@
 
 #include "cafe/cafe_stackobject.h"
 #include "cafe/libraries/coreinit/coreinit_cosreport.h"
+#include "cafe/libraries/coreinit/coreinit_event.h"
 #include "cafe/libraries/coreinit/coreinit_fs_client.h"
 #include "cafe/libraries/coreinit/coreinit_fs_cmdblock.h"
 #include "cafe/libraries/coreinit/coreinit_fs_cmd.h"
@@ -49,18 +50,37 @@ void tempLogError(const char *file, unsigned line, const char *msg,
 namespace cafe::nn_temp
 {
 
+constexpr uint32_t NumSyncEvents = 1u;
+
+struct TEMPSyncEventContext
+{
+   be2_virt_ptr<OSEvent> event;
+   be2_val<TEMPStatus> result;
+};
+
 struct TempDirData
 {
+   TempDirData()
+   {
+      OSInitCond(virt_addrof(syncEventListCond));
+      OSInitMutex(virt_addrof(syncEventListMutex));
+   }
+
    be2_val<int32_t> initCount;
    be2_struct<OSMutex> mutex;
    be2_struct<FSClient> fsClient;
    be2_struct<FSCmdBlock> fsCmdBlock;
    be2_array<char, FSMaxPathLength> globalDirPath;
    be2_array<char, DirPathMaxLength> dirPath;
+
+   be2_array<OSEvent, NumSyncEvents> syncEventList;
+   be2_struct<OSCondition> syncEventListCond;
+   be2_struct<OSMutex> syncEventListMutex;
+   be2_val<uint32_t> syncEventListFreeBitmask = static_cast<uint32_t>((1 << syncEventList.size()) - 1);
 };
 
-static virt_ptr<TempDirData>
-sTempDirData = nullptr;
+static virt_ptr<TempDirData> sTempDirData = nullptr;
+static FSAsyncCallbackFn sSyncEventCallbackFn = nullptr;
 
 namespace internal
 {
@@ -74,8 +94,60 @@ checkIsInitialised()
 
    coreinit::internal::OSPanic(
       "temp.cpp", 181,
-      "TEMP: [PANIC]:TEMP library is not initialized. Call TEMPInit() prior to this function.");
+      "TEMP: [PANIC]:TEMP library is not initialized. Call TEMPInit() prior to "
+      "this function.");
    return false;
+}
+
+static virt_ptr<OSEvent>
+acquireSyncEvent()
+{
+   auto event = virt_ptr<OSEvent> { nullptr };
+   OSLockMutex(virt_addrof(sTempDirData->syncEventListMutex));
+
+   while (!event) {
+      for (auto i = 0u; i < sTempDirData->syncEventList.size(); ++i) {
+         if (sTempDirData->syncEventListFreeBitmask & (1 << i)) {
+            event = virt_addrof(sTempDirData->syncEventList[i]);
+            sTempDirData->syncEventListFreeBitmask &= ~(1 << i);
+            break;
+         }
+      }
+
+      if (!event) {
+         // No free events, wait for one to become free
+         OSWaitCond(virt_addrof(sTempDirData->syncEventListCond),
+                    virt_addrof(sTempDirData->syncEventListMutex));
+      }
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->syncEventListMutex));
+   OSInitEvent(event, FALSE, OSEventMode::AutoReset);
+   return event;
+}
+
+static void
+releaseSyncEvent(virt_ptr<OSEvent> event)
+{
+   OSLockMutex(virt_addrof(sTempDirData->syncEventListMutex));
+   for (auto i = 0u; i < sTempDirData->syncEventList.size(); ++i) {
+      if (virt_addrof(sTempDirData->syncEventList[i]) == event) {
+         sTempDirData->syncEventListFreeBitmask |= (1 << i);
+      }
+   }
+   OSUnlockMutex(virt_addrof(sTempDirData->syncEventListMutex));
+   OSSignalCond(virt_addrof(sTempDirData->syncEventListCond));
+}
+
+static void
+syncEventCallback(virt_ptr<FSClient> client,
+                  virt_ptr<FSCmdBlock> cmd,
+                  FSStatus status,
+                  virt_ptr<void> context)
+{
+   auto syncEventContext = virt_cast<TEMPSyncEventContext *>(context);
+   syncEventContext->result = static_cast<TEMPStatus>(status);
+   OSSignalEvent(syncEventContext->event);
 }
 
 static TEMPDirId
@@ -700,6 +772,63 @@ TEMPGetDirGlobalPath(TEMPDirId dirId,
 }
 
 TEMPStatus
+TEMPGetFreeSpaceSize(virt_ptr<FSClient> client,
+                     virt_ptr<FSCmdBlock> block,
+                     TEMPDirId dirId,
+                     virt_ptr<uint64_t> outFreeSize,
+                     FSErrorFlag errorMask)
+{
+   auto syncEventContext = StackObject<TEMPSyncEventContext> { };
+   syncEventContext->event = internal::acquireSyncEvent();
+
+   auto asyncData = StackObject<FSAsyncData> { };
+   asyncData->ioMsgQueue = nullptr;
+   asyncData->userCallback = sSyncEventCallbackFn;
+   asyncData->userContext = syncEventContext;
+
+   auto error = TEMPGetFreeSpaceSizeAsync(client, block, dirId, outFreeSize,
+                                          errorMask, asyncData);
+   if (error >= TEMPStatus::OK) {
+      OSWaitEvent(syncEventContext->event);
+      error = syncEventContext->result;
+   }
+
+   internal::releaseSyncEvent(syncEventContext->event);
+   return error;
+}
+
+TEMPStatus
+TEMPGetFreeSpaceSizeAsync(virt_ptr<FSClient> client,
+                          virt_ptr<FSCmdBlock> block,
+                          TEMPDirId dirId,
+                          virt_ptr<uint64_t> outFreeSize,
+                          FSErrorFlag errorMask,
+                          virt_ptr<const FSAsyncData> asyncData)
+{
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
+
+   OSLockMutex(virt_addrof(sTempDirData->mutex));
+   if (!internal::checkIsInitialised()) {
+      OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+      return TEMPStatus::FatalError;
+   }
+
+   auto error = TEMPGetDirPath(dirId, virt_addrof(sTempDirData->dirPath),
+                               sTempDirData->dirPath.size());
+   if (error >= TEMPStatus::OK) {
+      tempLogInfo("TEMPGetFreeSpaceSizeAsync", 1730, "Path = {}",
+                  virt_addrof(sTempDirData->dirPath).get());
+      error = static_cast<TEMPStatus>(
+         FSGetFreeSpaceSizeAsync(client, block,
+                                 virt_addrof(sTempDirData->dirPath),
+                                 outFreeSize, errorMask, asyncData));
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+   return error;
+}
+
+TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id)
 {
    tempLogInfo("TEMPShutdownTempDir", 834, "(ENTR): dirID={}", id);
@@ -729,9 +858,12 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPCreateAndInitTempDir);
    RegisterFunctionExport(TEMPGetDirPath);
    RegisterFunctionExport(TEMPGetDirGlobalPath);
+   RegisterFunctionExport(TEMPGetFreeSpaceSize);
+   RegisterFunctionExport(TEMPGetFreeSpaceSizeAsync);
    RegisterFunctionExport(TEMPShutdownTempDir);
 
    RegisterDataInternal(sTempDirData);
+   RegisterFunctionInternal(internal::syncEventCallback, sSyncEventCallbackFn);
 }
 
 } // namespace cafe::nn_temp
