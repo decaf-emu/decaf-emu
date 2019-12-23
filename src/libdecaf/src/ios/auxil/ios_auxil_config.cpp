@@ -518,8 +518,8 @@ readItemsFromFile(std::string_view path,
       }
       case UCDataType::HexBinary:
       {
-         auto src = node.text().get();
-         auto size = strlen(src) / 2;
+         auto src = trim(node.text().get());
+         auto size = static_cast<uint32_t>(src.length() / 2u);
          static auto hexCharToValue =
             [](char c)
             {
