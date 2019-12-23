@@ -3,6 +3,7 @@
 #include "ios_kernel_hardware.h"
 #include "ios_kernel_heap.h"
 #include "ios_kernel_ipc_thread.h"
+#include "ios_kernel_otp.h"
 #include "ios_kernel_process.h"
 #include "ios_kernel_resourcemanager.h"
 #include "ios_kernel_semaphore.h"
@@ -283,6 +284,8 @@ start()
    internal::initialiseStaticSemaphoreData();
    internal::initialiseStaticThreadData();
    internal::initialiseStaticTimerData();
+
+   internal::initialiseOtp();
 
    sData = allocProcessStatic<StaticKernelData>();
    sData->rootTimerMessage.command = RootThreadCommand::Timer;

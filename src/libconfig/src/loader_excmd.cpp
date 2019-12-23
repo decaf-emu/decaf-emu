@@ -114,6 +114,9 @@ getExcmdGroups(excmd::parser &parser)
       .add_option("mlc-path",
                   description { "Sets which path to mount to /dev/mlc01." },
                   value<std::string> {})
+      .add_option("otp-path",
+                  description { "Path to otp.bin." },
+                  value<std::string> {})
       .add_option("sdcard-path",
                   description { "Sets which path to mount to /dev/sdcard01." },
                   value<std::string> {})
@@ -193,6 +196,10 @@ loadFromExcmd(excmd::option_state &options,
 
    if (options.has("slc-path")) {
       decafSettings.system.slc_path = options.get<std::string>("slc-path");
+   }
+
+   if (options.has("otp-path")) {
+      decafSettings.system.otp_path = options.get<std::string>("otp-path");
    }
 
    if (options.has("time-scale")) {

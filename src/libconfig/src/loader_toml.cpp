@@ -140,6 +140,7 @@ loadFromTOML(std::shared_ptr<cpptoml::table> config,
    readValue(config, "system.region", decafSettings.system.region);
    readValue(config, "system.hfio_path", decafSettings.system.hfio_path);
    readValue(config, "system.mlc_path", decafSettings.system.mlc_path);
+   readValue(config, "system.otp_path", decafSettings.system.otp_path);
    readValue(config, "system.resources_path", decafSettings.system.resources_path);
    readValue(config, "system.sdcard_path", decafSettings.system.sdcard_path);
    readValue(config, "system.slc_path", decafSettings.system.slc_path);
@@ -301,6 +302,7 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
    system->insert("region", static_cast<int>(decafSettings.system.region));
    system->insert("hfio_path", decafSettings.system.hfio_path);
    system->insert("mlc_path", decafSettings.system.mlc_path);
+   system->insert("otp_path", decafSettings.system.otp_path);
    system->insert("resources_path", decafSettings.system.resources_path);
    system->insert("sdcard_path", decafSettings.system.sdcard_path);
    system->insert("slc_path", decafSettings.system.slc_path);

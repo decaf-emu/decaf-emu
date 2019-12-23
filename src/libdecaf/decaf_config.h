@@ -69,12 +69,13 @@ enum class SystemRegion
 struct SystemSettings
 {
    SystemRegion region = SystemRegion::Europe;
-   std::string mlc_path = "mlc";
-   std::string slc_path = "slc";
-   std::string sdcard_path = "sdcard";
-   std::string hfio_path = "";
    std::string content_path = {};
+   std::string hfio_path = "";
+   std::string mlc_path = "mlc";
+   std::string otp_path = "otp.bin";
+   std::string sdcard_path = "sdcard";
    std::string resources_path = "resources";
+   std::string slc_path = "slc";
    std::vector<std::string> title_directories = {};
    bool time_scale_enabled = false;
    double time_scale = 1.0;

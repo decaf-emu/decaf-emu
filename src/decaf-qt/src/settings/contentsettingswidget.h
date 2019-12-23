@@ -15,9 +15,9 @@ public:
    void saveSettings(Settings &settings) override;
 
 private slots:
-   void browseContentPath();
    void browseHfioPath();
    void browseMlcPath();
+   void browseOtpPath();
    void browseResourcesPath();
    void browseSdcardPath();
    void browseSlcPath();
