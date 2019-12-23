@@ -26,7 +26,7 @@ constexpr auto MaxNumRmQueueMessages = 0x80u;
 constexpr auto MaxNumResourceManagers = 0x56u;
 
 constexpr auto PmThreadStackSize = 0x2000u;
-constexpr auto PmThreadPriority = 123u;
+constexpr auto PmThreadPriority = 124u;
 
 struct ResourceManagerRegistration
 {
