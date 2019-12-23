@@ -1,12 +1,13 @@
+#include "settings.h"
 #include "titlelistwidget.h"
 #include "titlelistmodel.h"
 #include "titlelistscanner.h"
-
-#include "settings.h"
 #include "ui_titlelist.h"
 
 #include <libdecaf/decaf_content.h>
-
+#include <QAction>
+#include <QApplication>
+#include <QClipboard>
 #include <QSortFilterProxyModel>
 #include <QStackedLayout>
 #include <QTreeView>
@@ -86,7 +87,7 @@ TitleListWidget::TitleListWidget(SettingsStorage *settingsStorage,
    mTitleList->header()->setStretchLastSection(false);
    mTitleList->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-   mTitleGrid = new QListView{ };
+   mTitleGrid = new QListView { };
    mTitleGrid->setViewMode(QListView::IconMode);
    mTitleGrid->setModel(mProxyModel);
    mTitleGrid->setWrapping(true);
@@ -95,6 +96,28 @@ TitleListWidget::TitleListWidget(SettingsStorage *settingsStorage,
 
    mStackedLayout->addWidget(mTitleList);
    mStackedLayout->addWidget(mTitleGrid);
+
+   mCopyPathAction = new QAction(tr("Copy title path"), this);
+   connect(mCopyPathAction, &QAction::triggered, [&]() {
+      auto data = QVariant { };
+      if (mStackedLayout->currentIndex() == 0) {
+         data = mTitleList->model()->data(mTitleList->currentIndex(), TitleListModel::TitlePathRole);
+      } else if (mStackedLayout->currentIndex() == 1) {
+         data = mTitleGrid->model()->data(mTitleGrid->currentIndex(), TitleListModel::TitlePathRole);
+      }
+
+      if (data.isValid()) {
+         auto path = data.toString();
+         if (!path.isEmpty()) {
+            qApp->clipboard()->setText(path);
+         }
+      }
+   });
+
+   for (auto widget : { (QWidget *)mTitleGrid , (QWidget *)mTitleList }) {
+      widget->addAction(mCopyPathAction);
+      widget->setContextMenuPolicy(Qt::ActionsContextMenu);
+   }
 
    connect(&mScanThread, &QThread::finished, mTitleScanner, &QObject::deleteLater);
    connect(this, &TitleListWidget::scanDirectoryList, mTitleScanner, &TitleScanner::scanDirectoryList);

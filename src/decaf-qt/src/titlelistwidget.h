@@ -22,14 +22,14 @@ public:
 
    void startTitleScan();
 
-protected slots:
-   void settingsChanged();
-   void titleScanFinished();
-
 signals:
    void scanDirectoryList(QStringList directories);
    void launchTitle(QString path);
    void statusMessage(QString message, int timeout);
+
+protected slots:
+   void settingsChanged();
+   void titleScanFinished();
 
 private:
    QStackedLayout *mStackedLayout = nullptr;
@@ -45,4 +45,6 @@ private:
    bool mScanRunning = false;
    bool mScanRequested = false;
    QStringList mCurrentDirectoryList;
+
+   QAction *mCopyPathAction;
 };
