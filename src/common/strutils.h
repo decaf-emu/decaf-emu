@@ -165,5 +165,5 @@ trim(std::string_view str)
       str.remove_suffix(1);
    }
 
-   return str;
+   return std::string { str };
 }
