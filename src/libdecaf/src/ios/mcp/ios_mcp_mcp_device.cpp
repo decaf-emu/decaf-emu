@@ -283,6 +283,8 @@ mcpPrepareTitle52(phys_ptr<const MCPRequestPrepareTitle> request,
 
       titleInfoBuffer->titleId = appXml->title_id;
       titleInfoBuffer->groupId = appXml->group_id;
+
+      titleId = appXml->title_id;
    }
 
    // TODO: When we have title switching we will need to read the title id and
