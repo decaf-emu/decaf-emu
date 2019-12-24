@@ -1089,6 +1089,33 @@ TEMPOpenFileAsync(virt_ptr<FSClient> client,
 }
 
 TEMPStatus
+TEMPOpenNewFile(virt_ptr<FSClient> client,
+                virt_ptr<FSCmdBlock> block,
+                TEMPDirId dirId,
+                virt_ptr<const char> path,
+                virt_ptr<const char> mode,
+                virt_ptr<FSFileHandle> outFileHandle,
+                FSErrorFlag errorMask)
+{
+   // Yes, this is the real implementation.
+   return TEMPStatus::UnsupportedCmd;
+}
+
+TEMPStatus
+TEMPOpenNewFileAsync(virt_ptr<FSClient> client,
+                     virt_ptr<FSCmdBlock> block,
+                     TEMPDirId dirId,
+                     virt_ptr<const char> path,
+                     virt_ptr<const char> mode,
+                     virt_ptr<FSFileHandle> outFileHandle,
+                     FSErrorFlag errorMask,
+                     virt_ptr<const FSAsyncData> asyncData)
+{
+   // Yes, this is the real implementation.
+   return TEMPStatus::UnsupportedCmd;
+}
+
+TEMPStatus
 TEMPRemove(virt_ptr<FSClient> client,
            virt_ptr<FSCmdBlock> block,
            TEMPDirId dirId,
@@ -1247,6 +1274,8 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPOpenDirAsync);
    RegisterFunctionExport(TEMPOpenFile);
    RegisterFunctionExport(TEMPOpenFileAsync);
+   RegisterFunctionExport(TEMPOpenNewFile);
+   RegisterFunctionExport(TEMPOpenNewFileAsync);
    RegisterFunctionExport(TEMPRemove);
    RegisterFunctionExport(TEMPRemoveAsync);
    RegisterFunctionExport(TEMPRename);
