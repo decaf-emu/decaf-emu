@@ -12,6 +12,8 @@
 #include "cafe/libraries/coreinit/coreinit_osreport.h"
 
 #include <cinttypes>
+#include <common/strutils.h>
+#include <cstring>
 #include <fmt/core.h>
 #include <libcpu/cpu_formatters.h>
 
@@ -338,6 +340,28 @@ getDeviceInfo(virt_ptr<TEMPDeviceInfo> deviceInfo,
    }
 
    return TEMPStatus::OK;
+}
+
+static TEMPStatus
+getTempAbsolutePath(TEMPDirId dirId,
+                    virt_ptr<const char> relativePath,
+                    virt_ptr<char> pathBuffer,
+                    uint32_t pathBufferSize)
+{
+   auto error = TEMPGetDirPath(dirId, pathBuffer, pathBufferSize);
+   if (error >= TEMPStatus::OK) {
+      auto tempDirLength = std::strlen(pathBuffer.get());
+      auto relPathLength = std::strlen(relativePath.get());
+      if (tempDirLength + relPathLength + 2 > pathBufferSize) {
+         return TEMPStatus::FatalError;
+      }
+
+      pathBuffer[tempDirLength++] = '/';
+      string_copy(pathBuffer.get() + tempDirLength, relativePath.get(),
+                  pathBufferSize - tempDirLength);
+   }
+
+   return error;
 }
 
 static TEMPStatus
@@ -829,6 +853,67 @@ TEMPGetFreeSpaceSizeAsync(virt_ptr<FSClient> client,
 }
 
 TEMPStatus
+TEMPOpenFile(virt_ptr<FSClient> client,
+             virt_ptr<FSCmdBlock> block,
+             TEMPDirId dirId,
+             virt_ptr<const char> path,
+             virt_ptr<const char> mode,
+             virt_ptr<FSFileHandle> outFileHandle,
+             FSErrorFlag errorMask)
+{
+   auto syncEventContext = StackObject<TEMPSyncEventContext> { };
+   syncEventContext->event = internal::acquireSyncEvent();
+
+   auto asyncData = StackObject<FSAsyncData> { };
+   asyncData->ioMsgQueue = nullptr;
+   asyncData->userCallback = sSyncEventCallbackFn;
+   asyncData->userContext = syncEventContext;
+
+   auto error = TEMPOpenFileAsync(client, block, dirId, path, mode,
+                                  outFileHandle, errorMask, asyncData);
+   if (error >= TEMPStatus::OK) {
+      OSWaitEvent(syncEventContext->event);
+      error = syncEventContext->result;
+   }
+
+   internal::releaseSyncEvent(syncEventContext->event);
+   return error;
+}
+
+TEMPStatus
+TEMPOpenFileAsync(virt_ptr<FSClient> client,
+                  virt_ptr<FSCmdBlock> block,
+                  TEMPDirId dirId,
+                  virt_ptr<const char> path,
+                  virt_ptr<const char> mode,
+                  virt_ptr<FSFileHandle> outFileHandle,
+                  FSErrorFlag errorMask,
+                  virt_ptr<const FSAsyncData> asyncData)
+{
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
+
+   OSLockMutex(virt_addrof(sTempDirData->mutex));
+   if (!internal::checkIsInitialised()) {
+      OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+      return TEMPStatus::FatalError;
+   }
+
+   auto error = internal::getTempAbsolutePath(dirId, path,
+                                              virt_addrof(sTempDirData->globalDirPath),
+                                              sTempDirData->globalDirPath.size());
+   if (error >= TEMPStatus::OK) {
+      error = static_cast<TEMPStatus>(
+         FSOpenFileAsync(client, block, virt_addrof(sTempDirData->globalDirPath),
+                         mode, outFileHandle, errorMask, asyncData));
+   } else {
+      error = TEMPStatus::NotFound;
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+   return error;
+}
+
+TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id)
 {
    tempLogInfo("TEMPShutdownTempDir", 834, "(ENTR): dirID={}", id);
@@ -860,6 +945,8 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPGetDirGlobalPath);
    RegisterFunctionExport(TEMPGetFreeSpaceSize);
    RegisterFunctionExport(TEMPGetFreeSpaceSizeAsync);
+   RegisterFunctionExport(TEMPOpenFile);
+   RegisterFunctionExport(TEMPOpenFileAsync);
    RegisterFunctionExport(TEMPShutdownTempDir);
 
    RegisterDataInternal(sTempDirData);

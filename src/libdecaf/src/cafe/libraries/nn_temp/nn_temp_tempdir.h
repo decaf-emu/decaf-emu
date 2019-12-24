@@ -62,6 +62,25 @@ TEMPGetFreeSpaceSizeAsync(virt_ptr<coreinit::FSClient> client,
                           virt_ptr<const coreinit::FSAsyncData> asyncData);
 
 TEMPStatus
+TEMPOpenFile(virt_ptr<coreinit::FSClient> client,
+             virt_ptr<coreinit::FSCmdBlock> block,
+             TEMPDirId dirId,
+             virt_ptr<const char> path,
+             virt_ptr<const char> mode,
+             virt_ptr<coreinit::FSFileHandle> outFileHandle,
+             coreinit::FSErrorFlag errorMask);
+
+TEMPStatus
+TEMPOpenFileAsync(virt_ptr<coreinit::FSClient> client,
+                  virt_ptr<coreinit::FSCmdBlock> block,
+                  TEMPDirId dirId,
+                  virt_ptr<const char> path,
+                  virt_ptr<const char> mode,
+                  virt_ptr<coreinit::FSFileHandle> outFileHandle,
+                  coreinit::FSErrorFlag errorMask,
+                  virt_ptr<const coreinit::FSAsyncData> asyncData);
+
+TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id);
 
 } // namespace cafe::nn_temp
