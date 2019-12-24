@@ -77,6 +77,23 @@ TEMPMakeDirAsync(virt_ptr<coreinit::FSClient> client,
                  virt_ptr<const coreinit::FSAsyncData> asyncData);
 
 TEMPStatus
+TEMPOpenDir(virt_ptr<coreinit::FSClient> client,
+            virt_ptr<coreinit::FSCmdBlock> block,
+            TEMPDirId dirId,
+            virt_ptr<const char> path,
+            virt_ptr<coreinit::FSDirHandle> outDirHandle,
+            coreinit::FSErrorFlag errorMask);
+
+TEMPStatus
+TEMPOpenDirAsync(virt_ptr<coreinit::FSClient> client,
+                 virt_ptr<coreinit::FSCmdBlock> block,
+                 TEMPDirId dirId,
+                 virt_ptr<const char> path,
+                 virt_ptr<coreinit::FSDirHandle> outDirHandle,
+                 coreinit::FSErrorFlag errorMask,
+                 virt_ptr<const coreinit::FSAsyncData> asyncData);
+
+TEMPStatus
 TEMPOpenFile(virt_ptr<coreinit::FSClient> client,
              virt_ptr<coreinit::FSCmdBlock> block,
              TEMPDirId dirId,
