@@ -504,12 +504,12 @@ readItemsFromFile(std::string_view path,
          break;
       case UCDataType::String:
       {
-         auto str = node.text().get();
-         auto size = strlen(str);
+         auto str = trim(node.text().get());
+         auto size = static_cast<uint32_t>(str.length());
 
          if (size < item->dataSize) {
-            std::memcpy(item->data.get(), str, size + 1);
-            item->dataSize = static_cast<uint32_t>(size + 1);
+            std::memcpy(item->data.get(), str.data(), size + 1);
+            item->dataSize = size + 1u;
          } else {
             item->error = UCError::StringTooLong;
             continue;
