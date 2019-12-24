@@ -668,6 +668,63 @@ TEMPShutdown()
 }
 
 TEMPStatus
+TEMPChangeDir(virt_ptr<FSClient> client,
+              virt_ptr<FSCmdBlock> block,
+              TEMPDirId dirId,
+              virt_ptr<const char> path,
+              FSErrorFlag errorMask)
+{
+   auto syncEventContext = StackObject<TEMPSyncEventContext> { };
+   syncEventContext->event = internal::acquireSyncEvent();
+
+   auto asyncData = StackObject<FSAsyncData> { };
+   asyncData->ioMsgQueue = nullptr;
+   asyncData->userCallback = sSyncEventCallbackFn;
+   asyncData->userContext = syncEventContext;
+
+   auto error = TEMPChangeDirAsync(client, block, dirId, path, errorMask,
+                                   asyncData);
+   if (error >= TEMPStatus::OK) {
+      OSWaitEvent(syncEventContext->event);
+      error = syncEventContext->result;
+   }
+
+   internal::releaseSyncEvent(syncEventContext->event);
+   return error;
+}
+
+TEMPStatus
+TEMPChangeDirAsync(virt_ptr<FSClient> client,
+                   virt_ptr<FSCmdBlock> block,
+                   TEMPDirId dirId,
+                   virt_ptr<const char> path,
+                   FSErrorFlag errorMask,
+                   virt_ptr<const FSAsyncData> asyncData)
+{
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
+
+   OSLockMutex(virt_addrof(sTempDirData->mutex));
+   if (!internal::checkIsInitialised()) {
+      OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+      return TEMPStatus::FatalError;
+   }
+
+   auto error = internal::getTempAbsolutePath(dirId, path,
+                                              virt_addrof(sTempDirData->globalDirPath),
+                                              sTempDirData->globalDirPath.size());
+   if (error >= TEMPStatus::OK) {
+      error = static_cast<TEMPStatus>(
+         FSChangeDirAsync(client, block, virt_addrof(sTempDirData->globalDirPath),
+                          errorMask, asyncData));
+   } else {
+      error = TEMPStatus::NotFound;
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+   return error;
+}
+
+TEMPStatus
 TEMPCreateAndInitTempDir(uint32_t maxSize,
                          TEMPDevicePreference devicePreference,
                          virt_ptr<TEMPDirId> outDirId)
@@ -1323,15 +1380,16 @@ TEMPUnmountTempDir(TEMPDirId dirId)
 void
 Library::registerTempDirSymbols()
 {
-   RegisterFunctionExport(TEMPInit);
-   RegisterFunctionExport(TEMPShutdown);
+   RegisterFunctionExport(TEMPChangeDir);
+   RegisterFunctionExport(TEMPChangeDirAsync);
    RegisterFunctionExport(TEMPCreateAndInitTempDir);
-   RegisterFunctionExport(TEMPGetDirPath);
    RegisterFunctionExport(TEMPGetDirGlobalPath);
+   RegisterFunctionExport(TEMPGetDirPath);
    RegisterFunctionExport(TEMPGetFreeSpaceSize);
    RegisterFunctionExport(TEMPGetFreeSpaceSizeAsync);
    RegisterFunctionExport(TEMPGetStat);
    RegisterFunctionExport(TEMPGetStatAsync);
+   RegisterFunctionExport(TEMPInit);
    RegisterFunctionExport(TEMPMakeDir);
    RegisterFunctionExport(TEMPMakeDirAsync);
    RegisterFunctionExport(TEMPMountTempDir);
@@ -1345,6 +1403,7 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPRemoveAsync);
    RegisterFunctionExport(TEMPRename);
    RegisterFunctionExport(TEMPRenameAsync);
+   RegisterFunctionExport(TEMPShutdown);
    RegisterFunctionExport(TEMPShutdownTempDir);
    RegisterFunctionExport(TEMPUnmountTempDir);
 

@@ -32,6 +32,21 @@ void
 TEMPShutdown();
 
 TEMPStatus
+TEMPChangeDir(virt_ptr<coreinit::FSClient> client,
+              virt_ptr<coreinit::FSCmdBlock> block,
+              TEMPDirId dirId,
+              virt_ptr<const char> path,
+              coreinit::FSErrorFlag errorMask);
+
+TEMPStatus
+TEMPChangeDirAsync(virt_ptr<coreinit::FSClient> client,
+                   virt_ptr<coreinit::FSCmdBlock> block,
+                   TEMPDirId dirId,
+                   virt_ptr<const char> path,
+                   coreinit::FSErrorFlag errorMask,
+                   virt_ptr<const coreinit::FSAsyncData> asyncData);
+
+TEMPStatus
 TEMPCreateAndInitTempDir(uint32_t maxSize,
                          TEMPDevicePreference pref,
                          virt_ptr<TEMPDirId> outDirId);
