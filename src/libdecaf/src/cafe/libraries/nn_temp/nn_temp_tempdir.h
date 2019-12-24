@@ -94,6 +94,9 @@ TEMPMakeDirAsync(virt_ptr<coreinit::FSClient> client,
                  virt_ptr<const coreinit::FSAsyncData> asyncData);
 
 TEMPStatus
+TEMPMountTempDir(TEMPDirId dirId);
+
+TEMPStatus
 TEMPOpenDir(virt_ptr<coreinit::FSClient> client,
             virt_ptr<coreinit::FSCmdBlock> block,
             TEMPDirId dirId,
@@ -182,5 +185,8 @@ TEMPRenameAsync(virt_ptr<coreinit::FSClient> client,
 
 TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id);
+
+TEMPStatus
+TEMPUnmountTempDir(TEMPDirId dirId);
 
 } // namespace cafe::nn_temp

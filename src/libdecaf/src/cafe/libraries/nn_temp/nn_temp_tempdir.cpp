@@ -969,6 +969,42 @@ TEMPMakeDirAsync(virt_ptr<FSClient> client,
 }
 
 TEMPStatus
+TEMPMountTempDir(TEMPDirId dirId)
+{
+   OSLockMutex(virt_addrof(sTempDirData->mutex));
+   if (!internal::checkIsInitialised()) {
+      OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+      return TEMPStatus::FatalError;
+   }
+
+   auto error = TEMPGetDirGlobalPath(dirId,
+                                     virt_addrof(sTempDirData->globalDirPath),
+                                     GlobalPathMaxLength);
+   if (error >= TEMPStatus::OK) {
+      tempLogInfo("TEMPMountTempDir", 1619,
+                  "Global Path={}", virt_addrof(sTempDirData->globalDirPath).get());
+      error = TEMPGetDirPath(dirId, virt_addrof(sTempDirData->dirPath),
+                             DirPathMaxLength);
+      if (error >= TEMPStatus::OK) {
+         tempLogInfo("TEMPMountTempDir", 1629,
+                     "Dir Path={}", virt_addrof(sTempDirData->dirPath).get());
+         error = static_cast<TEMPStatus>(
+            FSBindMount(virt_addrof(sTempDirData->fsClient),
+                        virt_addrof(sTempDirData->fsCmdBlock),
+                        virt_addrof(sTempDirData->globalDirPath),
+                        virt_addrof(sTempDirData->dirPath),
+                        FSErrorFlag::None));
+         tempLogInfo("TEMPMountTempDir", 1636,
+                     "Bind mount done to {}, returned {}",
+                     virt_addrof(sTempDirData->dirPath).get(), error);
+      }
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+   return error;
+}
+
+TEMPStatus
 TEMPOpenDir(virt_ptr<FSClient> client,
             virt_ptr<FSCmdBlock> block,
             TEMPDirId dirId,
@@ -1256,6 +1292,34 @@ TEMPShutdownTempDir(TEMPDirId id)
    return error;
 }
 
+TEMPStatus
+TEMPUnmountTempDir(TEMPDirId dirId)
+{
+   OSLockMutex(virt_addrof(sTempDirData->mutex));
+   if (!internal::checkIsInitialised()) {
+      OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+      return TEMPStatus::FatalError;
+   }
+
+   auto error = TEMPGetDirPath(dirId, virt_addrof(sTempDirData->globalDirPath),
+                               DirPathMaxLength);
+   if (error >= TEMPStatus::OK) {
+      tempLogInfo("TEMPUnmountTempDir", 1661,
+                  "Global Path={}", virt_addrof(sTempDirData->globalDirPath).get());
+      error = static_cast<TEMPStatus>(
+         FSBindUnmount(virt_addrof(sTempDirData->fsClient),
+                       virt_addrof(sTempDirData->fsCmdBlock),
+                       virt_addrof(sTempDirData->globalDirPath),
+                       FSErrorFlag::None));
+      tempLogInfo("TEMPUnmountTempDir", 1669,
+                  "Bind unmount done at {}",
+                  virt_addrof(sTempDirData->globalDirPath).get());
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+   return error;
+}
+
 void
 Library::registerTempDirSymbols()
 {
@@ -1270,6 +1334,7 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPGetStatAsync);
    RegisterFunctionExport(TEMPMakeDir);
    RegisterFunctionExport(TEMPMakeDirAsync);
+   RegisterFunctionExport(TEMPMountTempDir);
    RegisterFunctionExport(TEMPOpenDir);
    RegisterFunctionExport(TEMPOpenDirAsync);
    RegisterFunctionExport(TEMPOpenFile);
@@ -1281,6 +1346,7 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPRename);
    RegisterFunctionExport(TEMPRenameAsync);
    RegisterFunctionExport(TEMPShutdownTempDir);
+   RegisterFunctionExport(TEMPUnmountTempDir);
 
    RegisterDataInternal(sTempDirData);
    RegisterFunctionInternal(internal::syncEventCallback, sSyncEventCallbackFn);
