@@ -145,6 +145,23 @@ TEMPRemoveAsync(virt_ptr<coreinit::FSClient> client,
                 virt_ptr<const coreinit::FSAsyncData> asyncData);
 
 TEMPStatus
+TEMPRename(virt_ptr<coreinit::FSClient> client,
+           virt_ptr<coreinit::FSCmdBlock> block,
+           TEMPDirId dirId,
+           virt_ptr<const char> src,
+           virt_ptr<const char> dst,
+           coreinit::FSErrorFlag errorMask);
+
+TEMPStatus
+TEMPRenameAsync(virt_ptr<coreinit::FSClient> client,
+                virt_ptr<coreinit::FSCmdBlock> block,
+                TEMPDirId dirId,
+                virt_ptr<const char> src,
+                virt_ptr<const char> dst,
+                coreinit::FSErrorFlag errorMask,
+                virt_ptr<const coreinit::FSAsyncData> asyncData);
+
+TEMPStatus
 TEMPShutdownTempDir(TEMPDirId id);
 
 } // namespace cafe::nn_temp
