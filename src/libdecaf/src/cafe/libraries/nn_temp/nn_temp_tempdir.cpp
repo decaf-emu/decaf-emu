@@ -853,6 +853,63 @@ TEMPGetFreeSpaceSizeAsync(virt_ptr<FSClient> client,
 }
 
 TEMPStatus
+TEMPMakeDir(virt_ptr<FSClient> client,
+            virt_ptr<FSCmdBlock> block,
+            TEMPDirId dirId,
+            virt_ptr<const char> path,
+            FSErrorFlag errorMask)
+{
+   auto syncEventContext = StackObject<TEMPSyncEventContext> { };
+   syncEventContext->event = internal::acquireSyncEvent();
+
+   auto asyncData = StackObject<FSAsyncData> { };
+   asyncData->ioMsgQueue = nullptr;
+   asyncData->userCallback = sSyncEventCallbackFn;
+   asyncData->userContext = syncEventContext;
+
+   auto error = TEMPMakeDirAsync(client, block, dirId, path, errorMask,
+                                 asyncData);
+   if (error >= TEMPStatus::OK) {
+      OSWaitEvent(syncEventContext->event);
+      error = syncEventContext->result;
+   }
+
+   internal::releaseSyncEvent(syncEventContext->event);
+   return error;
+}
+
+TEMPStatus
+TEMPMakeDirAsync(virt_ptr<FSClient> client,
+                 virt_ptr<FSCmdBlock> block,
+                 TEMPDirId dirId,
+                 virt_ptr<const char> path,
+                 FSErrorFlag errorMask,
+                 virt_ptr<const FSAsyncData> asyncData)
+{
+   auto deviceInfo = StackObject<TEMPDeviceInfo> { };
+
+   OSLockMutex(virt_addrof(sTempDirData->mutex));
+   if (!internal::checkIsInitialised()) {
+      OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+      return TEMPStatus::FatalError;
+   }
+
+   auto error = internal::getTempAbsolutePath(dirId, path,
+                                              virt_addrof(sTempDirData->globalDirPath),
+                                              sTempDirData->globalDirPath.size());
+   if (error >= TEMPStatus::OK) {
+      error = static_cast<TEMPStatus>(
+         FSMakeDirAsync(client, block, virt_addrof(sTempDirData->globalDirPath),
+                        errorMask, asyncData));
+   } else {
+      error = TEMPStatus::NotFound;
+   }
+
+   OSUnlockMutex(virt_addrof(sTempDirData->mutex));
+   return error;
+}
+
+TEMPStatus
 TEMPOpenFile(virt_ptr<FSClient> client,
              virt_ptr<FSCmdBlock> block,
              TEMPDirId dirId,
@@ -945,6 +1002,8 @@ Library::registerTempDirSymbols()
    RegisterFunctionExport(TEMPGetDirGlobalPath);
    RegisterFunctionExport(TEMPGetFreeSpaceSize);
    RegisterFunctionExport(TEMPGetFreeSpaceSizeAsync);
+   RegisterFunctionExport(TEMPMakeDir);
+   RegisterFunctionExport(TEMPMakeDirAsync);
    RegisterFunctionExport(TEMPOpenFile);
    RegisterFunctionExport(TEMPOpenFileAsync);
    RegisterFunctionExport(TEMPShutdownTempDir);

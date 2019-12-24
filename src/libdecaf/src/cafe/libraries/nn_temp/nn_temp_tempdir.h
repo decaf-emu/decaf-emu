@@ -62,6 +62,21 @@ TEMPGetFreeSpaceSizeAsync(virt_ptr<coreinit::FSClient> client,
                           virt_ptr<const coreinit::FSAsyncData> asyncData);
 
 TEMPStatus
+TEMPMakeDir(virt_ptr<coreinit::FSClient> client,
+            virt_ptr<coreinit::FSCmdBlock> block,
+            TEMPDirId dirId,
+            virt_ptr<const char> path,
+            coreinit::FSErrorFlag errorMask);
+
+TEMPStatus
+TEMPMakeDirAsync(virt_ptr<coreinit::FSClient> client,
+                 virt_ptr<coreinit::FSCmdBlock> block,
+                 TEMPDirId dirId,
+                 virt_ptr<const char> path,
+                 coreinit::FSErrorFlag errorMask,
+                 virt_ptr<const coreinit::FSAsyncData> asyncData);
+
+TEMPStatus
 TEMPOpenFile(virt_ptr<coreinit::FSClient> client,
              virt_ptr<coreinit::FSCmdBlock> block,
              TEMPDirId dirId,
