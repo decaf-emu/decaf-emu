@@ -120,7 +120,7 @@ RenderWidget::event(QEvent *event)
             !!(mouseEvent->buttons() & Qt::LeftButton),
             touchEvent.x, touchEvent.y);
       }
-      break;
+      return true;
    }
    case QEvent::Resize:
    {
