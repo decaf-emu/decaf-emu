@@ -87,7 +87,7 @@ validateSurfaceFormat(SurfaceFormat format)
    case SurfaceFormat::NV12:
       return;
    default:
-      decaf_abort("Unexpected generated surface format");
+      decaf_abort(fmt::format("Unexpected generated surface format {}", format));
    }
 }
 
