@@ -2,13 +2,15 @@
 #include "addresstextdocumentwidget.h"
 #include "debugdata.h"
 
+#ifndef Q_MOC_RUN
+// moc struggles parsing espresso_disassembler.h on some platforms
 #include <libcpu/espresso/espresso_disassembler.h>
+#endif
 
 #include <array>
 #include <vector>
 #include <QColor>
 #include <QPainterPath>
-#include <QStack>
 #include <QString>
 #include <QTextCharFormat>
 #include <QVector>
@@ -56,7 +58,9 @@ private:
       bool valid = false;
       VirtualAddress address;
       std::array<uint8_t, 4> data;
+#ifndef Q_MOC_RUN
       espresso::Disassembly disassembly;
+#endif
       DebugData::AnalyseDatabase::Lookup addressLookup;
       const DebugData::AnalyseDatabase::Function *referenceLookup;
    };
