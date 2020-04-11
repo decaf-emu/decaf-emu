@@ -66,13 +66,13 @@ class DecafConan(ConanFile):
 
    def requirements(self):
       dependency_list = [
-         ('c-ares/1.15.0@conan/stable', 'yes' if self.options.cares else 'no'),
+         ('c-ares/1.15.0', 'yes' if self.options.cares else 'no'),
          ('ffmpeg/4.2.1@bincrafters/stable', 'yes' if self.options.ffmpeg else 'no'),
          ('libpng/1.6.37', 'yes' if self.options.ffmpeg else 'no'),
-         ('libcurl/7.66.0@bincrafters/stable', 'yes' if self.options.curl else 'no'),
-         ('libuv/1.31.0@bincrafters/stable', 'yes' if self.options.libuv else 'no'),
-         ('openssl/1.1.1d', 'yes' if self.options.openssl else 'no'),
-         ('sdl2/2.0.10@bincrafters/stable', 'yes' if self.options.sdl2 else 'no'),
+         ('libcurl/7.69.1', 'yes' if self.options.curl else 'no'),
+         ('libuv/1.34.2', 'yes' if self.options.libuv else 'no'),
+         ('openssl/1.1.1f', 'yes' if self.options.openssl else 'no'),
+         ('sdl2/2.0.12@bincrafters/stable', 'yes' if self.options.sdl2 else 'no'),
          ('zlib/1.2.11', 'yes' if self.options.zlib else 'no'),
       ]
       overrides = [

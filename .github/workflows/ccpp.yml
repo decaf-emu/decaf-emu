@@ -157,7 +157,7 @@ jobs:
         mkdir "C:\\Qt"
         cd "C:\\Qt"
         pip install aqtinstall
-        python -m aqt install 5.13.0 windows desktop win64_msvc2017_64
+        cmd /c 'python 2>&1' -m aqt install 5.13.0 windows desktop win64_msvc2017_64
         dir
 
     - name: Setup Environment (Ubuntu)

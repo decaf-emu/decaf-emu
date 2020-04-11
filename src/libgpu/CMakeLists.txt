@@ -65,12 +65,20 @@ target_link_libraries(libgpu
     libcpu
     addrlib)
 
-if(DECAF_PLATFORM_XCB)
-    target_link_libraries(libgpu ${XCB_LIBRARY})
+if(DECAF_PLATFORM_XLIB)
+    target_link_libraries(libgpu ${X11_LIBRARIES})
 endif()
 
-if(DECAF_PLATFORM_XLIB)
-    target_link_libraries(libgpu ${X11_X11_LIB})
+if(DECAF_PLATFORM_XCB)
+    target_link_libraries(libgpu ${XCB_LIBRARIES})
+
+    if(X11_Xau_FOUND)
+        target_link_libraries(libgpu ${X11_Xau_LIB})
+    endif()
+
+    if(X11_Xdmcp_FOUND)
+        target_link_libraries(libgpu ${X11_Xdmcp_LIB})
+    endif()
 endif()
 
 if(DECAF_PLATFORM_WAYLAND)
