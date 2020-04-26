@@ -13,8 +13,9 @@ Required:
 - [CMake](https://cmake.org/)
 - [Conan](https://conan.io/downloads.html)
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows)
+- [Qt](https://www.qt.io/download-qt-installer)
 
-By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive space it is recommend to set the `CONAN_USER_HOME` environment variable to a folder on a drive with more space.
+By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive space it is recommend to set the `CONAN_USER_HOME` environment variable to a folder on a drive with more space. Also make sure you have the %QTDIR% environmental variable set to your Qt installation if it does not exist already by running `setx QTDIR "path/to/qt/install"`
 
 ### Building
 - `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
@@ -24,6 +25,7 @@ By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive 
 - `conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan`
 - `conan install .. -o silent=True`
 - Use cmake-gui to generate a VS project file
+- `%QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe`
 
 ## Linux
 
@@ -31,6 +33,7 @@ By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive 
 Required:
 - A modern C++17 friendly compiler such as g++8
 - CMake
+- Qt
 - c-ares
 - libcurl
 - libuv
@@ -96,8 +99,13 @@ Options interesting to developers:
 - DECAF_JIT_PROFILING - Build with JIT profiling support.
 - DECAF_VALGRIND - Build with Valgrind
 
-## Troubleshooting
+## Troubleshooting - Common errors
 
+### Windows
+Sometimes decaf-qt will refuse to launch with the `no qt platform plugin could be initialized` error. If this occurs try to replace the `platform`, `style`, `iconengine` and `imageformats` folder with the ones present in your Qt installation directory.
+
+
+### Other
 decaf-emu builds on github actions CI - so a good reference on how to build is always the CI script itself [.github/workflows/ccpp.yml](https://github.com/decaf-emu/decaf-emu/blob/master/.github/workflows/ccpp.yml)
 
 Often conan requires updating to the latest version to fix various issues, so if it is failing to install dependencies then be sure to `pip install --upgrade conan` / `brew upgrade conan` / update conan manually.
