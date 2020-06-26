@@ -113,46 +113,47 @@ StackWidget::paintEvent(QPaintEvent *e)
       auto lineY = documentMargin() + lineHeight() / 2;
 
       auto itr = mStackFrames.lower_bound(startAddress + firstVisibleLine * 4);
+      if (itr != mStackFrames.end()) {
+         for (auto i = firstVisibleLine; i < lastVisibleLine; ++i) {
+            auto address = startAddress + i * 4;
 
-      for (auto i = firstVisibleLine; i < lastVisibleLine; ++i) {
-         auto address = startAddress + i * 4;
-
-         if (address >= itr->second.end) {
-            ++itr;
-         }
-
-         if (itr == mStackFrames.end()) {
-            break;
-         }
-
-         if (address == itr->second.start) {
-            // Start of frame
-            painter.setPen(mTextFormats.stackOutline);
-            painter.drawLine(lineX1, lineY, lineX2, lineY);
-            currentLineStartY = lineY;
-            currentLineIsBackchain = false;
-         } else if (address == itr->second.end - 12) {
-            // End of frame
-            painter.setPen(mTextFormats.stackOutline);
-            painter.drawLine(lineX1, currentLineStartY, lineX1, lineY);
-            painter.drawLine(lineX1, lineY, lineX2, lineY);
-            currentLineStartY = lineY;
-            currentLineIsBackchain = true;
-         } else if (address == itr->second.end - 4) {
-            // End of back chain
-            painter.setPen(mTextFormats.backchainOutline);
-            painter.drawLine(lineX1, currentLineStartY, lineX1, lineY);
-            painter.drawLine(lineX1, lineY, lineX2, lineY);
-            currentLineStartY = -1;
-         } else if (address > itr->second.start && address < itr->second.end) {
-            // Inside stack frame
-            if (currentLineStartY == -1) {
-               currentLineStartY = 0;
-               currentLineIsBackchain = false;
+            if (address >= itr->second.end) {
+               ++itr;
             }
-         }
 
-         lineY += lineHeight();
+            if (itr == mStackFrames.end()) {
+               break;
+            }
+
+            if (address == itr->second.start) {
+               // Start of frame
+               painter.setPen(mTextFormats.stackOutline);
+               painter.drawLine(lineX1, lineY, lineX2, lineY);
+               currentLineStartY = lineY;
+               currentLineIsBackchain = false;
+            } else if (address == itr->second.end - 12) {
+               // End of frame
+               painter.setPen(mTextFormats.stackOutline);
+               painter.drawLine(lineX1, currentLineStartY, lineX1, lineY);
+               painter.drawLine(lineX1, lineY, lineX2, lineY);
+               currentLineStartY = lineY;
+               currentLineIsBackchain = true;
+            } else if (address == itr->second.end - 4) {
+               // End of back chain
+               painter.setPen(mTextFormats.backchainOutline);
+               painter.drawLine(lineX1, currentLineStartY, lineX1, lineY);
+               painter.drawLine(lineX1, lineY, lineX2, lineY);
+               currentLineStartY = -1;
+            } else if (address > itr->second.start && address < itr->second.end) {
+               // Inside stack frame
+               if (currentLineStartY == -1) {
+                  currentLineStartY = 0;
+                  currentLineIsBackchain = false;
+               }
+            }
+
+            lineY += lineHeight();
+         }
       }
 
       if (currentLineStartY != -1) {
