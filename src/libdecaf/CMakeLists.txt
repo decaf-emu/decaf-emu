@@ -69,6 +69,10 @@ if(MSVC)
     target_compile_options(libdecaf PUBLIC /wd4251)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries(libdecaf dl)
+endif()
+
 if(DECAF_PCH)
     target_precompile_headers(libdecaf
       PRIVATE

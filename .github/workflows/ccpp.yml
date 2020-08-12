@@ -11,7 +11,7 @@ jobs:
       matrix:
         name: [
           macOS-latest-Xcode-11,
-          ubuntu-18.04-gcc-8,
+          ubuntu-20.04-gcc-9,
 #          ubuntu-18.04-clang-7,
           windows-2019-cl,
         ]
@@ -20,15 +20,10 @@ jobs:
             os: macOS-latest
             compiler: xcode
             version: "11"
-          - name: ubuntu-18.04-gcc-8
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-gcc-9
+            os: ubuntu-20.04
             compiler: gcc
-            version: "8"
-# Clang maybe using wrong std c++?
-#          - name: ubuntu-18.04-clang-7
-#            os: ubuntu-18.04
-#            compiler: clang
-#            version: "7"
+            version: "9"
           - name: windows-2019-cl
             os: windows-2019
             compiler: cl
@@ -78,7 +73,7 @@ jobs:
         sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list
         sudo apt-add-repository ppa:cginternals/ppa
         sudo apt-get update
-        sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk python3-setuptools
+        sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk python3-setuptools libavcodec-dev libavfilter-dev libswscale-dev libavutil-dev
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           sudo apt-get install -y g++-${{ matrix.version }}
         else
@@ -99,24 +94,25 @@ jobs:
       uses: actions/cache@v1
       with:
         path: vulkan
-        key: ${{ runner.os }}-vulkan-1.1.126.0
+        key: ${{ runner.os }}-vulkan-1.2.148.1
 
     - name: Install Vulkan SDK from web (macOS)
       if: startsWith(matrix.os, 'macOS') && steps.cache-vulkan-macos.outputs.cache-hit != 'true'
       run: |
         mkdir vulkan
         cd vulkan
-        curl -s -o vulkansdk.tar.gz "https://gstreamer.freedesktop.org/src/mirror/vulkansdk-macos-1.1.126.0.tar.gz"
-        tar -xzf vulkansdk.tar.gz
-        rm vulkansdk.tar.gz
+        curl -s -o vulkan-sdk.dmg "https://sdk.lunarg.com/sdk/download/1.2.148.1/mac/vulkansdk-macos-1.2.148.1.dmg?u="
+        hdiutil mount vulkan-sdk.dmg
+        cp -r /Volumes/vulkansdk-macos-1.2.148.1/macOS .
+        rm vulkan-sdk.dmg
 
     - name: Load Cached Vulkan SDK (Windows)
       id: cache-vulkan-windows
       if: startsWith(matrix.os, 'windows')
       uses: actions/cache@v1
       with:
-        path: C:/VulkanSDK/1.1.126.0
-        key: ${{ runner.os }}-vulkan-1.1.126.0
+        path: C:/VulkanSDK/1.2.148.1
+        key: ${{ runner.os }}-vulkan-1.2.148.1
 
     - name: Install Vulkan SDK from web (Windows)
       if: startsWith(matrix.os, 'windows') && steps.cache-vulkan-windows.outputs.cache-hit != 'true'
@@ -124,15 +120,13 @@ jobs:
       run: |
         mkdir "C:\\VulkanSDK"
         cd "C:\\VulkanSDK"
-        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?u=" -OutFile "VulkanSDK.exe"
+        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.2.148.1/windows/VulkanSDK-1.2.148.1-Installer.exe?u=" -OutFile "VulkanSDK.exe"
         Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
-        cd "C:\\VulkanSDK\\1.1.126.0"
+        cd "C:\\VulkanSDK\\1.2.148.1"
         Remove-Item -Force -Recurse Bin32
         Remove-Item -Force -Recurse Demos
         Remove-Item -Force -Recurse Lib32
-        Remove-Item -Force -Recurse RunTimeInstaller
         Remove-Item -Force -Recurse Samples
-        Remove-Item -Force -Recurse shaderc
         Remove-Item -Force -Recurse Templates
         Remove-Item -Force -Recurse Tools
         Remove-Item -Force -Recurse Tools32
@@ -178,14 +172,14 @@ jobs:
     - name: Setup Environment (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
-        echo "::set-env name=VULKAN_SDK::$PWD/vulkan/vulkansdk-macos-1.1.126.0/macOS"
+        echo "::set-env name=VULKAN_SDK::$PWD/vulkan/macOS"
         sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
 
     - name: Setup Environment (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: powershell
       run: |
-        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.1.126.0"
+        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.2.148.1"
         echo "::set-env name=QTDIR::C:\\Qt\\5.13.0\\msvc2017_64"
         echo "::set-env name=CONAN_ENV_COMPILER::Visual Studio"
         echo "::set-env name=CONAN_ENV_COMPILER_VERSION::16"
@@ -198,7 +192,7 @@ jobs:
         source ~/.profile
         conan user
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
-        conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=True -o curl=False -o openssl=False -o sdl2=False -o zlib=False
+        conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
 
     - name: Install Conan Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
