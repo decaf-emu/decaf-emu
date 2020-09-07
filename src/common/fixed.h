@@ -14,16 +14,29 @@ using sfixed_1_3_1_t = cnl::fixed_point<int8_t, -1>;
 using sfixed_1_3_3_t = cnl::fixed_point<int8_t, -3>;
 using sfixed_1_5_6_t = cnl::fixed_point<int16_t, -6>;
 
-template<typename FixedType, typename RepType>
-static constexpr
-FixedType fixed_from_data(RepType data)
+template<typename T>
+struct UnwrapFixedPoint;
+
+template<typename Rep, int Exponent, int Radix>
+struct UnwrapFixedPoint<cnl::fixed_point<Rep, Exponent, Radix>>
 {
-   return cnl::from_rep<FixedType, typename FixedType::rep>{}(data);
+   using rep = Rep;
+   static constexpr int exponent = Exponent;
+   static constexpr int radix = Radix;
+};
+
+template<typename FixedPointType>
+static constexpr FixedPointType
+fixed_from_data(typename UnwrapFixedPoint<FixedPointType>::rep data)
+{
+   return cnl::from_rep<FixedPointType,
+                        typename UnwrapFixedPoint<FixedPointType>::rep> {}
+      (data);
 }
 
 template<typename Rep, int Exponent, int Radix>
-static constexpr
-Rep fixed_to_data(cnl::fixed_point<Rep, Exponent, Radix> data)
+static constexpr Rep
+fixed_to_data(cnl::fixed_point<Rep, Exponent, Radix> data)
 {
    return cnl::to_rep<cnl::fixed_point<Rep, Exponent, Radix>>{}(data);
 }
