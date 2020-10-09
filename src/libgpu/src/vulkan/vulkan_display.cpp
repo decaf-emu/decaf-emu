@@ -1242,12 +1242,12 @@ Driver::renderDisplay()
 
    // Acquire the next frame to render into
    auto nextSwapImage = uint32_t { 0 };
-   try {
-      mDevice.acquireNextImageKHR(mDisplayPipeline.swapchain,
-                                  std::numeric_limits<uint64_t>::max(),
-                                  imageAvailableSemaphore, vk::Fence {},
-                                  &nextSwapImage);
-   } catch (vk::OutOfDateKHRError err) {
+   auto result = mDevice.acquireNextImageKHR(mDisplayPipeline.swapchain,
+                                             std::numeric_limits<uint64_t>::max(),
+                                             imageAvailableSemaphore,
+                                             vk::Fence {},
+                                             &nextSwapImage);
+   if (result == vk::Result::eErrorOutOfDateKHR) {
       // Recreate swapchain
       recreateSwapchain(mDisplayPipeline, mPhysDevice, mDevice);
 
@@ -1386,9 +1386,8 @@ Driver::renderDisplay()
       presentInfo.swapchainCount = 1;
       presentInfo.pSwapchains = &mDisplayPipeline.swapchain;
 
-      try {
-         mQueue.presentKHR(presentInfo);
-      } catch (vk::OutOfDateKHRError err) {
+      auto result = mQueue.presentKHR(presentInfo);
+      if (result == vk::Result::eErrorOutOfDateKHR) {
          recreateSwapchain(mDisplayPipeline, mPhysDevice, mDevice);
       }
    }
