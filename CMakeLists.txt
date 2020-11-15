@@ -100,7 +100,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 if(DECAF_VULKAN)
-    find_package(Vulkan 1.1.92.1 REQUIRED) # Vulkan_INCLUDE_DIRS and Vulkan_LIBRARIES
+    find_package(Vulkan 1.1.106.0 REQUIRED) # Vulkan_INCLUDE_DIRS and Vulkan_LIBRARIES
     add_library(vulkan INTERFACE IMPORTED)
     set_target_properties(vulkan PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${Vulkan_INCLUDE_DIRS}
