@@ -10,16 +10,15 @@ jobs:
       fail-fast: false
       matrix:
         name: [
-          macOS-latest-Xcode-11,
+          macOS-latest-Xcode-12,
           ubuntu-20.04-gcc-9,
-#          ubuntu-18.04-clang-7,
           windows-2019-cl,
         ]
         include:
-          - name: macOS-latest-Xcode-11
+          - name: macOS-latest-Xcode-12
             os: macOS-latest
             compiler: xcode
-            version: "11"
+            version: "12"
           - name: ubuntu-20.04-gcc-9
             os: ubuntu-20.04
             compiler: gcc
@@ -241,7 +240,7 @@ jobs:
       shell: cmd
       run: |
         cd build/install
-        %QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
+        $QTDIR/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
 
     - uses: actions/upload-artifact@master
       with:
