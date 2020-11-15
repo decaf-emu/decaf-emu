@@ -46,7 +46,7 @@ initialiseVulkan()
    std::vector<const char *> instanceExtensions = { };
 
    if (ENABLE_VALIDATION) {
-      instanceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+      instanceLayers.push_back("VK_LAYER_KHRONOS_validation");
       instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
    }
 
@@ -74,7 +74,7 @@ initialiseVulkan()
    std::vector<const char*> deviceExtensions = { };
 
    if (ENABLE_VALIDATION) {
-      deviceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+      deviceLayers.push_back("VK_LAYER_KHRONOS_validation");
    }
 
    // Find an appropriate queue
