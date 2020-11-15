@@ -208,7 +208,7 @@ createVulkanInstance(const gpu::WindowSystemInfo &wsi)
    };
 
    if (gpu::config()->debug.debug_enabled) {
-      layers.push_back("VK_LAYER_LUNARG_standard_validation");
+      layers.push_back("VK_LAYER_KHRONOS_validation");
       extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
    }
 
@@ -343,7 +343,7 @@ createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
    std::vector<const char *> deviceExtensions = requiredExtensions;
 
    if (gpu::config()->debug.debug_enabled) {
-      deviceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+      deviceLayers.push_back("VK_LAYER_KHRONOS_validation");
       optionalExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
    }
 
