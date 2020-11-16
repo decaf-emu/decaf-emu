@@ -240,7 +240,7 @@ jobs:
       shell: cmd
       run: |
         cd build/install
-        $QTDIR/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
+        %QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
 
     - uses: actions/upload-artifact@master
       with:
