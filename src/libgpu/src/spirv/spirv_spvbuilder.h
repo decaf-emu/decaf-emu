@@ -416,7 +416,7 @@ public:
          {
             auto mFlt = createUnaryOp(spv::OpConvertUToF, floatType(), mVal);
             auto mDiv64 = createBinOp(spv::OpFDiv, floatType(), mFlt, makeFloatConstant(64.0f));
-            auto resVal = createBinOp(spv::OpFMul, floatType(), mDiv64, makeFloatConstant(pow(2.0f, -14)));
+            auto resVal = createBinOp(spv::OpFMul, floatType(), mDiv64, makeFloatConstant(powf(2.0f, -14)));
             createStore(resVal, resPtr);
          }
          mIsZeroBlk.makeEndIf();
