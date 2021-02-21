@@ -37,4 +37,9 @@ set_target_properties(latte-assembler PROPERTIES FOLDER tools)
 GroupSources("Source Files" src)
 GroupSources("Resource Files" resources)
 
+if(MSVC)
+    # peglib checks __cplusplus macro
+    set_target_properties(latte-assembler PROPERTIES COMPILE_FLAGS "/Zc:__cplusplus")
+endif()
+
 install(TARGETS latte-assembler RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

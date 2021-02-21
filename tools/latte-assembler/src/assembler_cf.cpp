@@ -221,7 +221,7 @@ assembleAST(Shader &shader,
          foundEOP = true;
       } else if (node->name == "Comment") {
          if (node->token.size()) {
-            shader.comments.push_back(node->token);
+            shader.comments.push_back(std::string(node->token));
          }
       } else {
          throw unhandled_node_exception { *node };

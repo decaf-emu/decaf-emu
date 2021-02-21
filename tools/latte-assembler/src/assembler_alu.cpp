@@ -2,9 +2,10 @@
 #include "assembler_instructions.h"
 
 #include <fmt/core.h>
+#include <string_view>
 
 static std::string
-decodeOpcodeAlias(const std::string &op)
+decodeOpcodeAlias(const std::string_view op)
 {
    if (op == "SQRT_e") {
       return "SQRT_IEEE";
@@ -25,7 +26,7 @@ decodeOpcodeAlias(const std::string &op)
    } else if (op == "MULADD_e") {
       return "MULADD_IEEE";
    } else {
-      return op;
+      return std::string(op);
    }
 }
 
@@ -281,7 +282,7 @@ assembleAluClause(Shader &shader,
             throw incorrect_cf_pc_exception { *child, clause.cfPC, shader.cfInsts.size() };
          }
       } else if (child->name == "AluClauseInstType") {
-         auto &name = child->token;
+         auto name = child->token;
          auto opcode = getCfAluInstructionByName(name);
 
          if (opcode == latte::SQ_CF_ALU_INST_INVALID) {
