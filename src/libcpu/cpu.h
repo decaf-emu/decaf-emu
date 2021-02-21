@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <utility>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 struct Tracer;
 

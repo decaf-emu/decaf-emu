@@ -11,7 +11,7 @@
 #include <common/align.h>
 #include <common/log.h>
 #include <common/pow.h>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 #include <libgpu/gpu_tiling.h>
 #include <libgpu/latte/latte_enum_sq.h>
 

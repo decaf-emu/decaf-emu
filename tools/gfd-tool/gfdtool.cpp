@@ -5,7 +5,7 @@
 #include <excmd.h>
 #include <fmt/core.h>
 #include <fstream>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 #include <iostream>
 #include <libcpu/cpu.h>
 #include <libgfd/gfd.h>

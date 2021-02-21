@@ -4,7 +4,7 @@
 
 #include <common/decaf_assert.h>
 #include <libcpu/mem.h>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace latte
 {

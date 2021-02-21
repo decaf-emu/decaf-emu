@@ -6,7 +6,7 @@
 #include <common/bitfield.h>
 #include <libcpu/be2_struct.h>
 #include <cstdint>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 #pragma pack(push, 1)
 

@@ -2,7 +2,7 @@
 #include "latte/latte_instructions.h"
 
 #include <fmt/format.h>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace latte
 {

@@ -3,7 +3,7 @@
 #include "latte/latte_registers_cp.h"
 
 #include <cstdint>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace gpu::ih
 {

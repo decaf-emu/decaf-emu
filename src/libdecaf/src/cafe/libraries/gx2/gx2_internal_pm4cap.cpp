@@ -14,7 +14,7 @@
 #include <common/murmur3.h>
 #include <fmt/core.h>
 #include <fstream>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 #include <libcpu/cpu_formatters.h>
 #include <libgpu/gpu7_tiling.h>
 #include <libgpu/latte/latte_constants.h>

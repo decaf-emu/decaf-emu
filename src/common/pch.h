@@ -25,4 +25,4 @@
 #include <vector>
 #include <cnl/fixed_point.h>
 #include <fmt/core.h>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>

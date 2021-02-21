@@ -3,7 +3,7 @@
 #include <atomic>
 #include <common/platform.h>
 #include <cstdint>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 #ifdef PLATFORM_WINDOWS
 #define WIN32_LEAN_AND_MEAN

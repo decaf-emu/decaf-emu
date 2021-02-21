@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace latte
 {

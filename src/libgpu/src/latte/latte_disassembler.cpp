@@ -5,7 +5,7 @@
 
 #include <common/decaf_assert.h>
 #include <fmt/core.h>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace latte
 {

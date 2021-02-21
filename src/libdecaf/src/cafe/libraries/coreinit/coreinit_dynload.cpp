@@ -20,7 +20,7 @@
 
 #include <common/strutils.h>
 #include <fmt/core.h>
-#include <gsl.h>
+#include <gsl/gsl-lite.hpp>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
