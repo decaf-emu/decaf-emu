@@ -89,7 +89,8 @@ using is_gpr64_type = is_true<
    sizeof(T) == 8 &&
    !std::is_floating_point<T>::value &&
    !std::is_pointer<T>::value &&
-   std::is_constructible<typename safe_underlying_type<T>::type, uint64_t>::value>;
+   std::is_constructible<typename safe_underlying_type<T>::type, uint64_t>::value &&
+   !std::is_same<var_args, T>::value>;
 
 template<typename T>
 using is_var_args_type = is_true<
