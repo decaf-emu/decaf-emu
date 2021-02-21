@@ -157,31 +157,32 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
-          echo ::set-env name=CC::gcc-${{ matrix.version }}
-          echo ::set-env name=CXX::g++-${{ matrix.version }}
-          echo "::set-env name=CONAN_ENV_COMPILER_LIBCXX::libstdc++11"
+          echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "CXX=g++-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "CONAN_ENV_COMPILER_LIBCXX=libstdc++11" >> $GITHUB_ENV
         else
-          echo ::set-env name=CC::clang-${{ matrix.version }}
-          echo ::set-env name=CXX::clang++-${{ matrix.version }}
+          echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
         fi
-        echo "::set-env name=CONAN_ENV_COMPILER::${{ matrix.compiler }}"
-        echo "::set-env name=CONAN_ENV_COMPILER_VERSION::${{ matrix.version }}"
-        echo "::set-env name=QTDIR::$PWD/build/5.13.0/gcc_64"
+        echo "CONAN_ENV_COMPILER=${{ matrix.compiler }}" >> $GITHUB_ENV
+        echo "CONAN_ENV_COMPILER_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
+        echo "QTDIR=$PWD/build/5.13.0/gcc_64" >> $GITHUB_ENV
+        echo "VULKAN_SDK=$PWD/vulkan/macOS" >> $GITHUB_ENV
 
     - name: Setup Environment (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
-        echo "::set-env name=VULKAN_SDK::$PWD/vulkan/macOS"
+        echo "VULKAN_SDK=$PWD/vulkan/macOS" >> $GITHUB_ENV
         sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
 
     - name: Setup Environment (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: powershell
       run: |
-        echo "::set-env name=VULKAN_SDK::C:\\VulkanSDK\\1.2.148.1"
-        echo "::set-env name=QTDIR::C:\\Qt\\5.13.0\\msvc2017_64"
-        echo "::set-env name=CONAN_ENV_COMPILER::Visual Studio"
-        echo "::set-env name=CONAN_ENV_COMPILER_VERSION::16"
+        echo "VULKAN_SDK=C:\\VulkanSDK\\1.2.148.1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "QTDIR=C:\\Qt\\5.13.0\\msvc2017_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "CONAN_ENV_COMPILER=Visual Studio" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "CONAN_ENV_COMPILER_VERSION=16" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Install Conan Dependencies (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
