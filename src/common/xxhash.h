@@ -259,7 +259,7 @@ extern "C" {
 #if !defined (__VMS) \
   && (defined (__cplusplus) \
   || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */) )
-#   include <stdint.h>
+#   include <cstdint>
 
    struct XXH32_state_s
    {
