@@ -46,7 +46,7 @@ JitProfilingWindow::setDebugData(DebugData *debugData)
    ui->tableView->update();
 
    connect(mDebugData, &DebugData::entry, [&]{
-      ui->tableView->sortByColumn(3);
+      ui->tableView->sortByColumn(3, Qt::AscendingOrder);
       ui->tableView->resizeColumnToContents(0);
       ui->tableView->resizeColumnToContents(1);
       ui->tableView->resizeColumnToContents(2);

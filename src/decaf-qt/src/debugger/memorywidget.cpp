@@ -156,7 +156,11 @@ MemoryWidget::showContextMenu(QMouseEvent *e)
    menu.addAction(mCopyAction);
    menu.addAction(mCopyHexAction);
    menu.addAction(mCopyTextAction);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+   menu.exec(e->globalPosition().toPoint());
+#else
    menu.exec(e->globalPos());
+#endif
 }
 
 MemoryWidget::MemoryCursor

@@ -42,7 +42,7 @@ FunctionsWindow::setDebugData(DebugData *debugData)
 
    connect(mDebugData, &DebugData::entry, [&]{
       mFunctionsModel->debugDataChanged();
-      ui->tableView->sortByColumn(1);
+      ui->tableView->sortByColumn(1, Qt::AscendingOrder);
       ui->tableView->resizeColumnToContents(1);
       ui->tableView->resizeColumnToContents(2);
       ui->tableView->resizeColumnToContents(3);

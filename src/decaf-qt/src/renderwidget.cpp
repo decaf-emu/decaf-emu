@@ -2,7 +2,6 @@
 #include "renderwidget.h"
 
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QEvent>
 #include <QResizeEvent>
 #include <QMouseEvent>
@@ -15,7 +14,13 @@
 #include <libgpu/gpu_graphicsdriver.h>
 #include <libgpu/gpu7_displaylayout.h>
 
+#if QT_VERSION == QT_VERSION_CHECK(6, 0, 1)
+#include <QtGui/6.0.1/QtGui/qpa/qplatformnativeinterface.h>
+#elif QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <qpa/qplatformnativeinterface.h>
+#else
+#error "Unsupported QT_VERSION"
+#endif
 
 RenderWidget::RenderWidget(InputDriver *inputDriver, QWidget *parent) :
    mInputDriver(inputDriver),
@@ -108,12 +113,17 @@ RenderWidget::event(QEvent *event)
    case QEvent::MouseButtonRelease:
    {
       auto mouseEvent = static_cast<QMouseEvent *>(event);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+      auto mousePosition = mouseEvent->position();
+      auto mouseX = mousePosition.x();
+      auto mouseY = mousePosition.y();
+#else
+      auto mouseX = static_cast<float>(mouseEvent->x());
+      auto mouseY = static_cast<float>(mouseEvent->y());
+#endif
       auto layout = gpu7::getDisplayLayout(static_cast<float>(width()),
                                            static_cast<float>(height()));
-      auto touchEvent =
-         gpu7::translateDisplayTouch(layout,
-                                     static_cast<float>(mouseEvent->x()),
-                                     static_cast<float>(mouseEvent->y()));
+      auto touchEvent = gpu7::translateDisplayTouch(layout, mouseX, mouseY);
 
       if (touchEvent.screen != gpu7::DisplayTouchEvent::None) {
          mInputDriver->gamepadTouchEvent(
@@ -126,16 +136,10 @@ RenderWidget::event(QEvent *event)
    {
       auto resizeEvent = static_cast<QResizeEvent *>(event);
       auto newSize = resizeEvent->size();
-      auto desktop = QApplication::desktop();
-      auto screenNumber = desktop->screenNumber(this);
-      if (screenNumber == -1) {
-         screenNumber = desktop->screenNumber(parentWidget());
-      }
-
-      auto devicePixelRatio = desktop->screen(screenNumber)->devicePixelRatio();
+      auto ratio = devicePixelRatio();
       if (mGraphicsDriver) {
-         mGraphicsDriver->windowSizeChanged(newSize.width() * devicePixelRatio,
-                                             newSize.height() * devicePixelRatio);
+         mGraphicsDriver->windowSizeChanged(newSize.width() * ratio,
+                                            newSize.height() * ratio);
       }
       break;
    }

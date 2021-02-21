@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>675</width>
-     <height>18</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -148,22 +148,22 @@
    </property>
   </action>
   <actiongroup name="titleViewActionGroup">
-    <action name="actionViewTitleList">
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>Title List</string>
-     </property>
-    </action>
-    <action name="actionViewTitleGrid">
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>Title Grid</string>
-     </property>
-    </action>
+   <action name="actionViewTitleList">
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="text">
+     <string>Title List</string>
+    </property>
+   </action>
+   <action name="actionViewTitleGrid">
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="text">
+     <string>Title Grid</string>
+    </property>
+   </action>
   </actiongroup>
   <actiongroup name="viewActionGroup">
    <action name="actionViewFullScreen">
@@ -209,7 +209,7 @@
      <string>Gamepad 2</string>
     </property>
    </action>
-   <property name="exclusive">
+   <property name="exclusive" stdset="0">
     <bool>true</bool>
    </property>
   </actiongroup>
@@ -302,7 +302,7 @@
    <sender>actionViewFullScreen</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
-   <slot>toggleFullscreen()</slot>
+   <slot>toggleFullScreen()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -525,5 +525,6 @@
   <slot>openContentSettings()</slot>
   <slot>setTitleListModeList()</slot>
   <slot>setTitleListModeGrid()</slot>
+  <slot>toggleFullScreen()</slot>
  </slots>
 </ui>
