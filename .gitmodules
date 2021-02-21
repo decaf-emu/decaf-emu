@@ -27,7 +27,7 @@
 	url = https://github.com/ocornut/imgui.git
 [submodule "libraries/cnl"]
 	path = libraries/cnl
-	url = https://github.com/johnmcfarlane/cnl
+	url = https://github.com/decaf-emu/cnl.git
 [submodule "libraries/catch"]
 	path = libraries/catch
 	url = https://github.com/philsquared/Catch.git
