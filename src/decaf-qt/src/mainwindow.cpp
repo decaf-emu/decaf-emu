@@ -57,7 +57,7 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
 
    QShortcut *shortcut = new QShortcut(QKeySequence("F11"), this);
    connect(shortcut, &QShortcut::activated,
-           this, &MainWindow::toggleFullscreen);
+           this, &MainWindow::toggleFullScreen);
    connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::open,
            this, &MainWindow::softwareKeyboardOpen);
    connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::close,
@@ -276,7 +276,7 @@ MainWindow::setTitleListModeGrid()
 }
 
 void
-MainWindow::toggleFullscreen()
+MainWindow::toggleFullScreen()
 {
    if (mUi.menuBar->isVisible()) {
       mUi.menuBar->hide();
