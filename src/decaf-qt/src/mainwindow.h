@@ -40,7 +40,7 @@ private slots:
    void setTitleListModeList();
    void setTitleListModeGrid();
 
-   void toggleFullscreen();
+   void toggleFullScreen();
 
    void openDebugger();
 
