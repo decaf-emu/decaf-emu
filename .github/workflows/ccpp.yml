@@ -93,7 +93,6 @@ jobs:
         Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
         cd "C:\\VulkanSDK\\1.2.182.0"
         Remove-Item -Force -Recurse Bin32
-        Remove-Item -Force -Recurse Demos
         Remove-Item -Force -Recurse Lib32
         Remove-Item -Force -Recurse Samples
         Remove-Item -Force -Recurse Templates
