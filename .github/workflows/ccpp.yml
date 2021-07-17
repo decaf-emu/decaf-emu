@@ -63,16 +63,16 @@ jobs:
       uses: actions/cache@v1
       with:
         path: vulkan
-        key: ${{ runner.os }}-vulkan-1.2.148.1
+        key: ${{ runner.os }}-vulkan-1.2.182.0
 
     - name: Install Vulkan SDK from web (macOS)
       if: startsWith(matrix.os, 'macOS') && steps.cache-vulkan-macos.outputs.cache-hit != 'true'
       run: |
         mkdir vulkan
         cd vulkan
-        curl -s -o vulkan-sdk.dmg "https://sdk.lunarg.com/sdk/download/1.2.148.1/mac/vulkansdk-macos-1.2.148.1.dmg?u="
+        curl -s -o vulkan-sdk.dmg "https://sdk.lunarg.com/sdk/download/1.2.182.1/mac/vulkansdk-macos-1.2.182.0.dmg?u="
         hdiutil mount vulkan-sdk.dmg
-        cp -r /Volumes/vulkansdk-macos-1.2.148.1/macOS .
+        cp -r /Volumes/vulkansdk-macos-1.2.182.0/macOS .
         rm vulkan-sdk.dmg
 
     - name: Load Cached Vulkan SDK (Windows)
@@ -80,8 +80,8 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       uses: actions/cache@v1
       with:
-        path: C:/VulkanSDK/1.2.148.1
-        key: ${{ runner.os }}-vulkan-1.2.148.1
+        path: C:/VulkanSDK/1.2.182.0
+        key: ${{ runner.os }}-vulkan-1.2.182.0
 
     - name: Install Vulkan SDK from web (Windows)
       if: startsWith(matrix.os, 'windows') && steps.cache-vulkan-windows.outputs.cache-hit != 'true'
@@ -89,9 +89,9 @@ jobs:
       run: |
         mkdir "C:\\VulkanSDK"
         cd "C:\\VulkanSDK"
-        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.2.148.1/windows/VulkanSDK-1.2.148.1-Installer.exe?u=" -OutFile "VulkanSDK.exe"
+        Invoke-WebRequest "https://sdk.lunarg.com/sdk/download/1.2.182.0/windows/VulkanSDK-1.2.182.0-Installer.exe?u=" -OutFile "VulkanSDK.exe"
         Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
-        cd "C:\\VulkanSDK\\1.2.148.1"
+        cd "C:\\VulkanSDK\\1.2.182.0"
         Remove-Item -Force -Recurse Bin32
         Remove-Item -Force -Recurse Demos
         Remove-Item -Force -Recurse Lib32
@@ -149,7 +149,7 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       shell: powershell
       run: |
-        echo "VULKAN_SDK=C:\\VulkanSDK\\1.2.148.1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VULKAN_SDK=C:\\VulkanSDK\\1.2.182.0" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "QTDIR=C:\\Qt\\5.13.0\\msvc2017_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "CONAN_ENV_COMPILER=Visual Studio" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "CONAN_ENV_COMPILER_VERSION=16" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
