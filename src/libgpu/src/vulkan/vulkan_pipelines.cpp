@@ -917,7 +917,7 @@ Driver::checkCurrentPipeline()
    pipelineInfo.basePipelineIndex = -1;
    auto pipeline = mDevice.createGraphicsPipeline(mPipelineCache, pipelineInfo);
 
-   foundPipeline->pipeline = pipeline;
+   foundPipeline->pipeline = pipeline.value;
    foundPipeline->needsPremultipliedTargets = needsPremultipliedTargets;
    foundPipeline->targetIsPremultiplied = targetIsPremultiplied;
    foundPipeline->shaderLopMode = shaderLopMode;

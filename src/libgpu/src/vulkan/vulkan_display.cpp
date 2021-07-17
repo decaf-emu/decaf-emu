@@ -1237,25 +1237,31 @@ Driver::renderDisplay()
    auto &renderFinishedSemaphore = mDisplayPipeline.renderFinishedSemaphores[frameIndex];
 
    // Wait for the previous frame to finish
-   mDevice.waitForFences({ renderFence }, true, std::numeric_limits<uint64_t>::max());
+   auto result = mDevice.waitForFences({ renderFence }, true,
+                                       std::numeric_limits<uint64_t>::max());
    mDevice.resetFences({ renderFence });
 
    // Acquire the next frame to render into
    auto nextSwapImage = uint32_t { 0 };
-   auto result = mDevice.acquireNextImageKHR(mDisplayPipeline.swapchain,
-                                             std::numeric_limits<uint64_t>::max(),
-                                             imageAvailableSemaphore,
-                                             vk::Fence {},
-                                             &nextSwapImage);
+   try {
+      result = mDevice.acquireNextImageKHR(mDisplayPipeline.swapchain,
+                                           std::numeric_limits<uint64_t>::max(),
+                                           imageAvailableSemaphore,
+                                           vk::Fence {},
+                                           &nextSwapImage);
+   } catch (vk::OutOfDateKHRError err) {
+      result = vk::Result::eErrorOutOfDateKHR;
+   }
+
    if (result == vk::Result::eErrorOutOfDateKHR) {
       // Recreate swapchain
       recreateSwapchain(mDisplayPipeline, mPhysDevice, mDevice);
 
       // Try acquire again, this one will die if it fails :D
-      mDevice.acquireNextImageKHR(mDisplayPipeline.swapchain,
-                                  std::numeric_limits<uint64_t>::max(),
-                                  imageAvailableSemaphore, vk::Fence {},
-                                  &nextSwapImage);
+      result = mDevice.acquireNextImageKHR(mDisplayPipeline.swapchain,
+                                           std::numeric_limits<uint64_t>::max(),
+                                           imageAvailableSemaphore, vk::Fence {},
+                                           &nextSwapImage);
    }
 
    // Allocate a command buffer to use
@@ -1386,7 +1392,12 @@ Driver::renderDisplay()
       presentInfo.swapchainCount = 1;
       presentInfo.pSwapchains = &mDisplayPipeline.swapchain;
 
-      auto result = mQueue.presentKHR(presentInfo);
+      try {
+         result = mQueue.presentKHR(presentInfo);
+      } catch (vk::OutOfDateKHRError err) {
+         result = vk::Result::eErrorOutOfDateKHR;
+      }
+
       if (result == vk::Result::eErrorOutOfDateKHR) {
          recreateSwapchain(mDisplayPipeline, mPhysDevice, mDevice);
       }

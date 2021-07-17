@@ -186,7 +186,7 @@ Retiler::initialise(vk::Device device)
             pipelineDesc.layout = mPipelineLayout;
 
             auto pipeline = mDevice.createComputePipeline(vk::PipelineCache(), pipelineDesc);
-            mPipelines.insert({ specKey, pipeline });
+            mPipelines.insert({ specKey, pipeline.value });
          }
       }
    }
