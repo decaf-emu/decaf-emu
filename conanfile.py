@@ -72,7 +72,7 @@ class DecafConan(ConanFile):
          ('libcurl/7.69.1', 'yes' if self.options.curl else 'no'),
          ('libuv/1.34.2', 'yes' if self.options.libuv else 'no'),
          ('openssl/1.1.1g', 'yes' if self.options.openssl else 'no'),
-         ('sdl2/2.0.9@bincrafters/stable', 'yes' if self.options.sdl2 else 'no'),
+         ('sdl/2.0.14', 'yes' if self.options.sdl2 else 'no'),
          ('zlib/1.2.11', 'yes' if self.options.zlib else 'no'),
       ]
       overrides = [
