@@ -45,7 +45,7 @@ Optional:
 
 The dependencies, other than Vulkan, can either be acquired using your package manager such as:
 - Required: `apt install cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libuv1-dev libc-ares-dev`
-- Optional: `apt install libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev qtbase5-dev qtbase5-private-dev libqt5svg5-dev`
+- Optional: `apt install libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev qtbase5-dev qtbase5-private-dev libqt5svg5-dev libqt5x11extras5-dev`
 
 Or by using [Conan](https://conan.io), which is recommended to be installed using Python pip:
 - `pip install conan`
