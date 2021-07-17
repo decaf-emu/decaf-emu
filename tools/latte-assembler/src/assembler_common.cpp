@@ -4,19 +4,19 @@ unsigned long
 parseNumber(peg::Ast &node)
 {
    assert(node.is_token);
-   return std::stoul(std::string(node.token));
+   return std::stoul(node.token);
 }
 
 float
 parseFloat(peg::Ast &node)
 {
-   return std::stof(std::string(node.token));
+   return std::stof(node.token);
 }
 
 uint32_t
 parseHexNumber(peg::Ast &node)
 {
-   return static_cast<uint32_t>(std::stoul(std::string(node.token), 0, 0));
+   return static_cast<uint32_t>(std::stoul(node.token, 0, 0));
 }
 
 LiteralValue
