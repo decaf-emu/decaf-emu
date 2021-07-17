@@ -15,10 +15,6 @@ jobs:
           windows-2019-cl,
         ]
         include:
-          - name: macOS-latest-Xcode-12
-            os: macOS-latest
-            compiler: xcode
-            version: "12"
           - name: ubuntu-20.04-gcc-9
             os: ubuntu-20.04
             compiler: gcc
@@ -26,6 +22,10 @@ jobs:
           - name: windows-2019-cl
             os: windows-2019
             compiler: cl
+          #- name: macOS-latest-Xcode-12
+          #  os: macOS-latest
+          #  compiler: xcode
+          #  version: "12"
     steps:
     - uses: actions/checkout@v1
       with:
@@ -93,8 +93,8 @@ jobs:
         Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
         cd "C:\\VulkanSDK\\1.2.182.0"
         Remove-Item -Force -Recurse Bin32
+        Remove-Item -Force -Recurse Demos
         Remove-Item -Force -Recurse Lib32
-        Remove-Item -Force -Recurse Samples
         Remove-Item -Force -Recurse Templates
         Remove-Item -Force -Recurse Tools
         Remove-Item -Force -Recurse Tools32
