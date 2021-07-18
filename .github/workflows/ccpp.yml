@@ -159,7 +159,6 @@ jobs:
         pip install --user conan
         source ~/.profile
         conan user
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
         conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
 
     - name: Install Conan Dependencies (macOS)
@@ -167,7 +166,6 @@ jobs:
       run: |
         cd build
         conan user
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan || true
         conan install .. --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
 
     - name: Install Conan Dependencies (Windows)
@@ -177,8 +175,7 @@ jobs:
         cd build
         pip install conan
         conan user
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-        conan install .. -s compiler="Visual Studio" -s compiler.version=16 --build=missing -o silent=True -o ffmpeg=True -o curl=True -o openssl=True -o sdl2=True -o zlib=True
+        conan install .. -s compiler="Visual Studio" -s compiler.version=16 --build=missing -o silent=True -o ffmpeg=False -o curl=True -o openssl=True -o sdl2=True -o zlib=True
 
     - name: Configure (macOS)
       if: startsWith(matrix.os, 'macOS')
@@ -197,7 +194,7 @@ jobs:
       shell: cmd
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Build
       run: |

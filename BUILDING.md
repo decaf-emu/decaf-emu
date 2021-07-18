@@ -14,6 +14,9 @@ Required:
 - [Conan](https://conan.io/downloads.html)
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows)
 
+Optional:
+- ffmpeg, unfortunately there are no ffmpeg binaries on conan so this must be supplied yourself and enabled with -DDECAF_FFMPEG=ON
+
 By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive space it is recommend to set the `CONAN_USER_HOME` environment variable to a folder on a drive with more space.
 
 ### Building
@@ -21,7 +24,6 @@ By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive 
 - `cd decaf-emu`
 - `mkdir build`
 - `cd build`
-- `conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan`
 - `conan install .. -o silent=True`
 - Use cmake-gui to generate a VS project file
 
@@ -50,7 +52,6 @@ The dependencies, other than Vulkan, can either be acquired using your package m
 Or by using [Conan](https://conan.io), which is recommended to be installed using Python pip:
 - `pip install conan`
 - `conan user`
-- `conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan`
 
 It is recommended to use your system's openssl and curl even when using conan:
 - `conan install .. --build=missing -o curl=False -o openssl=False`
