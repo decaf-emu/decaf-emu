@@ -33,7 +33,7 @@
 	url = https://github.com/philsquared/Catch.git
 [submodule "libraries/cpptoml"]
 	path = libraries/cpptoml
-	url = https://github.com/skystrife/cpptoml.git
+	url = https://github.com/decaf-emu/cpptoml.git
 [submodule "libraries/cpp-peglib"]
 	path = libraries/cpp-peglib
 	url = https://github.com/yhirose/cpp-peglib.git
