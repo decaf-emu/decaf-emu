@@ -399,7 +399,7 @@ public:
    {
       decaf_check(getTypeId(srcId) == uintType());
 
-      auto resPtr = createVariable(spv::StorageClassPrivate, floatType(), "unpackF11Res");
+      auto resPtr = createVariable(spv::NoPrecision, spv::StorageClassPrivate, floatType(), "unpackF11Res");
 
       auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), srcId, makeIntConstant(6));
       auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), srcId, makeUintConstant(0x3F));
@@ -453,7 +453,7 @@ public:
       }
       eIsZeroBlock.makeEndIf();
 
-      return createLoad(resPtr);
+      return createLoad(resPtr, spv::NoPrecision);
    }
    /*
    // From OpenGL ES 3.0 spec 2.1.4
@@ -483,7 +483,7 @@ public:
    {
       decaf_check(getTypeId(srcId) == uintType());
 
-      auto resPtr = createVariable(spv::StorageClassPrivate, floatType(), "unpackF11Res");
+      auto resPtr = createVariable(spv::NoPrecision, spv::StorageClassPrivate, floatType(), "unpackF11Res");
 
       auto eVal = createBinOp(spv::OpShiftRightLogical, uintType(), srcId, makeIntConstant(5));
       auto mVal = createBinOp(spv::OpBitwiseAnd, uintType(), srcId, makeUintConstant(0x1F));
@@ -537,7 +537,7 @@ public:
       }
       eIsZeroBlock.makeEndIf();
 
-      return createLoad(resPtr);
+      return createLoad(resPtr, spv::NoPrecision);
    }
 protected:
    std::unordered_map<unsigned int, spv::Id> mUintConstants;

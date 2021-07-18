@@ -134,7 +134,7 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
 
    auto texVarType = mSpv->textureVarType(textureId, texDim, texFormat);
    auto texVar = mSpv->textureVar(textureId, texDim, texFormat);
-   auto texVal = mSpv->createLoad(texVar);
+   auto texVal = mSpv->createLoad(texVar, spv::NoPrecision);
 
    // Lets build our actual operation
    spv::Op sampleOp = spv::OpNop;
@@ -142,7 +142,7 @@ void Transpiler::translateGenericSample(const ControlFlowInst &cf, const Texture
 
    if (!(sampleMode & SampleMode::Load)) {
       auto sampVar = mSpv->samplerVar(samplerId);
-      auto sampVal = mSpv->createLoad(sampVar);
+      auto sampVal = mSpv->createLoad(sampVar, spv::NoPrecision);
       auto sampledType = mSpv->makeSampledImageType(texVarType);
       auto sampledVal = mSpv->createOp(spv::OpSampledImage, sampledType, { texVal, sampVal });
       sampleParams.push_back(sampledVal);
@@ -381,7 +381,7 @@ void Transpiler::translateTex_GET_TEXTURE_INFO(const ControlFlowInst &cf, const 
    mSpv->addCapability(spv::CapabilityImageQuery);
 
    auto texVar = mSpv->textureVar(textureId, texDim, texFormat);
-   auto image = mSpv->createLoad(texVar);
+   auto image = mSpv->createLoad(texVar, spv::NoPrecision);
 
    auto srcGprVal = mSpv->readGprMaskRef(srcGpr);
    auto srcLodValFloat = mSpv->createOp(spv::OpCompositeExtract, mSpv->floatType(), { srcGprVal, 0 });

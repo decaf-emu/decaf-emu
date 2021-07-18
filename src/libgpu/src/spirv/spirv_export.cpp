@@ -85,7 +85,7 @@ void Transpiler::translateGenericExport(const ControlFlowInst &cf)
    for (auto i = 0u; i < exportCount; ++i) {
       // Read the source GPR
       auto sourcePtr = mSpv->getGprRef(srcGpr);
-      auto sourceVal = mSpv->createLoad(sourcePtr);
+      auto sourceVal = mSpv->createLoad(sourcePtr, spv::NoPrecision);
 
       bool skipWrite = false;
 
@@ -288,7 +288,7 @@ void Transpiler::translateGenericStream(const ControlFlowInst &cf, int streamIdx
    for (auto i = 0u; i < exportCount; ++i) {
       // Read the source GPR
       auto sourcePtr = mSpv->getGprRef(srcGpr);
-      auto sourceVal = mSpv->createLoad(sourcePtr);
+      auto sourceVal = mSpv->createLoad(sourcePtr, spv::NoPrecision);
 
       // Write the exported data
       mSpv->writeExportRef(exportRef, sourceVal);
@@ -354,7 +354,7 @@ void Transpiler::translateCf_MEM_RING(const ControlFlowInst &cf)
    for (auto i = 0u; i < exportCount; ++i) {
       // Read the source GPR
       auto sourcePtr = mSpv->getGprRef(srcGpr);
-      auto sourceVal = mSpv->createLoad(sourcePtr);
+      auto sourceVal = mSpv->createLoad(sourcePtr, spv::NoPrecision);
 
       // Write the exported data
       mSpv->writeExportRef(exportRef, sourceVal);

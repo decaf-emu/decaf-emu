@@ -61,13 +61,13 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
          }
 
          auto outputPtr = mSpv->createAccessChain(spv::StorageClassInput, inputVar, { vertIdxVal });
-         auto outputVal = mSpv->createLoad(outputPtr);
+         auto outputVal = mSpv->createLoad(outputPtr, spv::NoPrecision);
 
          auto gprRef = mSpv->getGprRef(destGpr.gpr);
 
          auto destVal = spv::NoResult;
          if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
-            destVal = mSpv->createLoad(gprRef);
+            destVal = mSpv->createLoad(gprRef, spv::NoPrecision);
          }
 
          auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
@@ -79,7 +79,7 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
    } else if (mType == ShaderParser::Type::DataCache) {
       auto id = inst.word0.BUFFER_ID() + SQ_RES_OFFSET::GS_TEX_RESOURCE_0;
       if (id == SQ_RES_OFFSET::GS_GSIN_RESOURCE) {
-         auto ringOffsetVal = mSpv->createLoad(mSpv->ringOffsetVar());
+         auto ringOffsetVal = mSpv->createLoad(mSpv->ringOffsetVar(), spv::NoPrecision);
 
          // We check to make sure everything makes sense...
          decaf_check(srcGpr.gpr.number == 0);
@@ -93,7 +93,7 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
          auto realOffset = mSpv->createBinOp(spv::OpIAdd, mSpv->uintType(), ringOffsetVal, itemOffsetVal);
 
          auto outputPtr = mSpv->createAccessChain(spv::StorageClassPrivate, mSpv->ringVar(), { realOffset });
-         auto outputVal = mSpv->createLoad(outputPtr);
+         auto outputVal = mSpv->createLoad(outputPtr, spv::NoPrecision);
 
          auto gprRef = mSpv->getGprRef(destGpr.gpr);
 
@@ -101,7 +101,7 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
          // this into a centralized function in mSpv...
          auto destVal = spv::NoResult;
          if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
-            destVal = mSpv->createLoad(gprRef);
+            destVal = mSpv->createLoad(gprRef, spv::NoPrecision);
          }
 
          auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
@@ -152,7 +152,7 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
    // TODO: Should probably move this into SPV
    auto zeroConst = mSpv->makeUintConstant(0);
    auto cbufferPtr = mSpv->createAccessChain(spv::StorageClassUniform, cbufferVar, { zeroConst, indexVal });
-   auto outputVal = mSpv->createLoad(cbufferPtr);
+   auto outputVal = mSpv->createLoad(cbufferPtr, spv::NoPrecision);
 
    auto gprRef = mSpv->getGprRef(destGpr.gpr);
 
@@ -160,7 +160,7 @@ void Transpiler::translateVtx_FETCH(const ControlFlowInst &cf, const VertexFetch
    // this into a centralized function in mSpv...
    auto destVal = spv::NoResult;
    if (!latte::isSwizzleFullyUnmasked(destGpr.mask)) {
-      destVal = mSpv->createLoad(gprRef);
+      destVal = mSpv->createLoad(gprRef, spv::NoPrecision);
    }
 
    auto maskedVal = mSpv->applySelMask(destVal, outputVal, destGpr.mask);
@@ -304,7 +304,7 @@ void Transpiler::translateVtx_SEMANTIC(const ControlFlowInst &cf, const VertexFe
    auto sourceVar = mSpv->inputAttribVar(static_cast<uint32_t>(inputId), sourceType);
 
    // Load the input data
-   auto source = mSpv->createLoad(sourceVar);
+   auto source = mSpv->createLoad(sourceVar, spv::NoPrecision);
 
    // Perform byte swapping on the input data, where appropriate
    if (swapMode == SQ_ENDIAN::SWAP_8IN16) {

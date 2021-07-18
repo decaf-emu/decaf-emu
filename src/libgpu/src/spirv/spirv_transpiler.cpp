@@ -153,24 +153,24 @@ void Transpiler::writeVertexProlog(ShaderSpvBuilder &spvGen, const VertexShaderD
 
    if (desc.regs.pa_cl_vs_out_cntl.USE_VTX_POINT_SIZE()) {
       auto pointSizePtr = spvGen.createAccessChain(spv::StorageClass::StorageClassPushConstant, spvGen.vsPushConstVar(), { twoConst });
-      auto pointSizeVal = spvGen.createLoad(pointSizePtr);
+      auto pointSizeVal = spvGen.createLoad(pointSizePtr, spv::NoPrecision);
       spvGen.createStore(pointSizeVal, spvGen.pointSizeVar());
    }
 
    // Note that because we use VertexIndex, we have to subtrack the base value
    // away from gl_VertexIndex to receive the same value we received in GL.
    auto zSpaceMulPtr = spvGen.createAccessChain(spv::StorageClass::StorageClassPushConstant, spvGen.vsPushConstVar(), { oneConst });
-   auto zSpaceMulVal = spvGen.createLoad(zSpaceMulPtr);
+   auto zSpaceMulVal = spvGen.createLoad(zSpaceMulPtr, spv::NoPrecision);
    auto vertexBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 2 });
    auto vertexBaseVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.intType(), vertexBaseFlt);
    auto instanceBaseFlt = spvGen.createOp(spv::OpCompositeExtract, spvGen.floatType(), { zSpaceMulVal, 3 });
    auto instanceBaseVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.intType(), instanceBaseFlt);
 
-   auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar());
+   auto vertexIdVal = spvGen.createLoad(spvGen.vertexIdVar(), spv::NoPrecision);
    vertexIdVal = spvGen.createBinOp(spv::OpISub, spvGen.intType(), vertexIdVal, vertexBaseVal);
    vertexIdVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), vertexIdVal);
 
-   auto instanceIdVal = spvGen.createLoad(spvGen.instanceIdVar());
+   auto instanceIdVal = spvGen.createLoad(spvGen.instanceIdVar(), spv::NoPrecision);
    instanceIdVal = spvGen.createBinOp(spv::OpISub, spvGen.intType(), instanceIdVal, instanceBaseVal);
    instanceIdVal = spvGen.createUnaryOp(spv::OpBitcast, spvGen.floatType(), instanceIdVal);
 
@@ -304,7 +304,7 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
           desc.regs.spi_ps_in_control_0.POSITION_ADDR() == inputIdx) {
          // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_CENTROID();
          // TODO: Handle desc.regs.spi_ps_in_control_0.POSITION_SAMPLE();
-         spvGen.createStore(spvGen.createLoad(spvGen.fragCoordVar()), gprRef);
+         spvGen.createStore(spvGen.createLoad(spvGen.fragCoordVar(), spv::NoPrecision), gprRef);
          continue;
       }
 
@@ -377,7 +377,7 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
          }
       }
 
-      auto inputVal = spvGen.createLoad(inputVar);
+      auto inputVal = spvGen.createLoad(inputVar, spv::NoPrecision);
       spvGen.createStore(inputVal, gprRef);
    }
 
@@ -390,7 +390,7 @@ void Transpiler::writePixelProlog(ShaderSpvBuilder &spvGen, const PixelShaderDes
       ffRef.chan = static_cast<SQ_CHAN>(ffChanIdx);
 
       auto frontFacingVar = spvGen.frontFacingVar();
-      auto frontFacingVal = spvGen.createLoad(frontFacingVar);
+      auto frontFacingVal = spvGen.createLoad(frontFacingVar, spv::NoPrecision);
 
       spv::Id output = spv::NoResult;
 
@@ -559,7 +559,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          // Need to save our GPRs first
 
          auto gprType = spvGen.arrayType(spvGen.float4Type(), 16, 128);
-         auto gprSaveVar = spvGen.createVariable(spv::StorageClass::StorageClassPrivate, gprType, "RVarSave");
+         auto gprSaveVar = spvGen.createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, gprType, "RVarSave");
          spvGen.createNoResultOp(spv::OpCopyMemory, { gprSaveVar, spvGen.gprVar() });
 
          // Translate the shader
@@ -573,7 +573,7 @@ bool Transpiler::translate(const ShaderDesc& shaderDesc, Shader *shader)
          decaf_check(ringItemStride % 4 == 0);
          auto ringStride = ringItemStride / 4;
          auto ringStrideConst = spvGen.makeIntConstant(ringStride);
-         auto ringOffsetVal = spvGen.createLoad(spvGen.ringOffsetVar());
+         auto ringOffsetVal = spvGen.createLoad(spvGen.ringOffsetVar(), spv::NoPrecision);
          auto newRingOffset = spvGen.createBinOp(spv::OpIAdd, spvGen.uintType(), ringOffsetVal, ringStrideConst);
          spvGen.createStore(newRingOffset, spvGen.ringOffsetVar());
 
@@ -644,14 +644,14 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    spvGen.addMemberDecoration(glInType, 0, spv::DecorationBuiltIn, spv::BuiltInPosition);
    spvGen.addMemberName(glInType, 0, "gl_Position");
    auto glInArrType = spvGen.arrayType(glInType, 16, 3);
-   auto glInArrVar = spvGen.createVariable(spv::StorageClassInput, glInArrType, "gl_in");
+   auto glInArrVar = spvGen.createVariable(spv::NoPrecision, spv::StorageClassInput, glInArrType, "gl_in");
    entry->addIdOperand(glInArrVar);
 
    auto perVertexType = spvGen.makeStructType({ spvGen.float4Type() }, "gl_PerVertex");
    spvGen.addDecoration(perVertexType, spv::DecorationBlock);
    spvGen.addMemberDecoration(perVertexType, 0, spv::DecorationBuiltIn, spv::BuiltInPosition);
    spvGen.addMemberName(perVertexType, 0, "gl_Position");
-   auto perVertexVar = spvGen.createVariable(spv::StorageClassOutput, perVertexType, "gl_PerVertex");
+   auto perVertexVar = spvGen.createVariable(spv::NoPrecision, spv::StorageClassOutput, perVertexType, "gl_PerVertex");
    entry->addIdOperand(perVertexVar);
 
    std::array<spv::Id, 3> posInVals;
@@ -662,16 +662,16 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
    auto posInPtr0 = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { zeroConst, zeroConst });
    auto posInPtr1 = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { oneConst, zeroConst });
    auto posInPtr2 = spvGen.createAccessChain(spv::StorageClassInput, glInArrVar, { twoConst, zeroConst });
-   posInVals[0] = spvGen.createLoad(posInPtr0);
-   posInVals[1] = spvGen.createLoad(posInPtr1);
-   posInVals[2] = spvGen.createLoad(posInPtr2);
+   posInVals[0] = spvGen.createLoad(posInPtr0, spv::NoPrecision);
+   posInVals[1] = spvGen.createLoad(posInPtr1, spv::NoPrecision);
+   posInVals[2] = spvGen.createLoad(posInPtr2, spv::NoPrecision);
 
    posOutPtr = spvGen.createAccessChain(spv::StorageClassOutput, perVertexVar, { zeroConst });
 
    for (auto i = 0u; i < shaderDesc.numVsExports; ++i) {
       auto paramType = spvGen.float4Type();
       auto paramInVarType = spvGen.arrayType(paramType, 16, 3);
-      auto paramInVar = spvGen.createVariable(spv::StorageClassInput, paramInVarType, fmt::format("PARAM_{}_IN", i).c_str());
+      auto paramInVar = spvGen.createVariable(spv::NoPrecision, spv::StorageClassInput, paramInVarType, fmt::format("PARAM_{}_IN", i).c_str());
       spvGen.addDecoration(paramInVar, spv::DecorationLocation, i);
       entry->addIdOperand(paramInVar);
 
@@ -679,12 +679,12 @@ bool generateRectStub(const RectStubShaderDesc& shaderDesc, RectStubShader *shad
       auto paramInPtr0 = spvGen.createAccessChain(spv::StorageClassInput, paramInVar, { zeroConst });
       auto paramInPtr1 = spvGen.createAccessChain(spv::StorageClassInput, paramInVar, { oneConst });
       auto paramInPtr2 = spvGen.createAccessChain(spv::StorageClassInput, paramInVar, { twoConst });
-      paramInVal[0] = spvGen.createLoad(paramInPtr0);
-      paramInVal[1] = spvGen.createLoad(paramInPtr1);
-      paramInVal[2] = spvGen.createLoad(paramInPtr2);
+      paramInVal[0] = spvGen.createLoad(paramInPtr0, spv::NoPrecision);
+      paramInVal[1] = spvGen.createLoad(paramInPtr1, spv::NoPrecision);
+      paramInVal[2] = spvGen.createLoad(paramInPtr2, spv::NoPrecision);
       paramInVals.emplace_back(paramInVal);
 
-      auto paramOutVar = spvGen.createVariable(spv::StorageClassOutput, paramType, fmt::format("PARAM_{}_OUT", i).c_str());
+      auto paramOutVar = spvGen.createVariable(spv::NoPrecision, spv::StorageClassOutput, paramType, fmt::format("PARAM_{}_OUT", i).c_str());
       spvGen.addDecoration(paramOutVar, spv::DecorationLocation, i);
       entry->addIdOperand(paramOutVar);
       paramOutPtrs.push_back(paramOutVar);

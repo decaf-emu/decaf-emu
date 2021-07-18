@@ -43,7 +43,7 @@ public:
    void elseStack()
    {
       // stackIndexVal = *stackIndexVar
-      auto stackIdxVal = createLoad(stackIndexVar());
+      auto stackIdxVal = createLoad(stackIndexVar(), spv::NoPrecision);
       addName(stackIdxVal, "stackIdx");
 
       // prevStackIdxVal = stackIndexVal - 1
@@ -53,7 +53,7 @@ public:
       // prevStateVal = stack[stackIndexVal]
       auto prevStackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { prevStackIdxVal });
       addName(prevStackPtr, "prevStackPtr");
-      auto prevStateVal = createLoad(prevStackPtr);
+      auto prevStateVal = createLoad(prevStackPtr, spv::NoPrecision);
       addName(prevStateVal, "prevStackVal");
 
       // if (prevStackVal == Active) {
@@ -63,7 +63,7 @@ public:
       auto ifBuilder = spv::Builder::If { isActive, spv::SelectionControlMaskNone, *this };
 
       // state = *stateVar
-      auto stateVal = createLoad(stateVar());
+      auto stateVal = createLoad(stateVar(), spv::NoPrecision);
       addName(stateVal, "state");
 
       // newState = (state == Active) ? InactiveBreak : Active
@@ -80,11 +80,11 @@ public:
    void pushStack()
    {
       // stackIndexVal = *stackIndexVar
-      auto stackIdxVal = createLoad(stackIndexVar());
+      auto stackIdxVal = createLoad(stackIndexVar(), spv::NoPrecision);
       addName(stackIdxVal, "stackIdx");
 
       // state = *stateVar
-      auto stateVal = createLoad(stateVar());
+      auto stateVal = createLoad(stateVar(), spv::NoPrecision);
       addName(stateVal, "state");
 
       // stack[stackIndexVal] = stateVal
@@ -104,7 +104,7 @@ public:
    void popStack(int popCount)
    {
       // stateIdxVal = *stackIndexVar
-      auto stackIdxVal = createLoad(stackIndexVar());
+      auto stackIdxVal = createLoad(stackIndexVar(), spv::NoPrecision);
       addName(stackIdxVal, "stackIdx");
 
       if (popCount > 0) {
@@ -121,7 +121,7 @@ public:
       // newStateVal = stack[stackIndexVal]
       auto stackPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, stackVar(), { stackIdxVal });
       addName(stackPtr, "stackPtr");
-      auto newStateVal = createLoad(stackPtr);
+      auto newStateVal = createLoad(stackPtr, spv::NoPrecision);
       addName(newStateVal, "newState");
 
       // *stateVar = newStateVal
@@ -138,7 +138,7 @@ public:
       auto insideBlock = &makeNewBlock();
       auto afterBlock = &makeNewBlock();
 
-      auto state = createLoad(stateVar());
+      auto state = createLoad(stateVar(), spv::NoPrecision);
       auto pred = createBinOp(spv::OpIEqual, boolType(), state, stateActive());
 
       createSelectionMerge(afterBlock, spv::SelectionControlMaskNone);
@@ -195,7 +195,7 @@ public:
          // for R[{gprNumber} + AL]
 
          // AL = *ALVar
-         auto ALVal = createLoad(ALVar());
+         auto ALVal = createLoad(ALVar(), spv::NoPrecision);
          addName(ALVal, "AL");
 
          // regIdx = regIdx + AL
@@ -226,7 +226,7 @@ public:
 
       // $ = R[regIdx].{refChan}
       auto gprChanPtr = createAccessChain(spv::StorageClass::StorageClassPrivate, gprVar(), { regIdxVal, chanConst });
-      return createLoad(gprChanPtr);
+      return createLoad(gprChanPtr, spv::NoPrecision);
    }
 
    spv::Id readGprSelRef(const latte::GprSelRef &ref)
@@ -253,7 +253,7 @@ public:
    {
       // Read the source GPR
       auto srcGprPtr = getGprRef(ref.gpr);
-      auto srcGprVal = createLoad(srcGprPtr);
+      auto srcGprVal = createLoad(srcGprPtr, spv::NoPrecision);
 
       // Apply the source GPR swizzling
       decaf_check(isSwizzleFullyUnmasked(ref.mask));
@@ -269,7 +269,7 @@ public:
          // This is the default mode...
          break;
       case latte::CbufferIndexMode::AL:
-         indexVal = createBinOp(spv::OpIAdd, intType(), indexVal, createLoad(ALVar()));
+         indexVal = createBinOp(spv::OpIAdd, intType(), indexVal, createLoad(ALVar(), spv::NoPrecision));
          break;
       default:
          decaf_abort("Unexpected cfile index mode");
@@ -299,7 +299,7 @@ public:
       // $ = CBUFFER{bufferindex}[index].{refChan}
       auto zeroConst = makeUintConstant(0);
       auto cfileChanPtr = createAccessChain(spv::StorageClass::StorageClassUniform, thisCbufVar, { zeroConst, cbufIdxVal, chanConst });
-      return createLoad(cfileChanPtr);
+      return createLoad(cfileChanPtr, spv::NoPrecision);
    }
 
    spv::Id getCfileRefIndex(const latte::CfileRef &ref)
@@ -323,7 +323,7 @@ public:
          indexVal = createBinOp(spv::OpIAdd, intType(), indexVal, getArId(SQ_CHAN::W));
          break;
       case latte::CfileIndexMode::AL:
-         indexVal = createBinOp(spv::OpIAdd, intType(), indexVal, createLoad(ALVar()));
+         indexVal = createBinOp(spv::OpIAdd, intType(), indexVal, createLoad(ALVar(), spv::NoPrecision));
          break;
       default:
          decaf_abort("Unexpected cfile index mode");
@@ -351,7 +351,7 @@ public:
       // $ = CFILE[index].{refChan}
       auto zeroConst = makeUintConstant(0);
       auto cfileChanPtr = createAccessChain(spv::StorageClass::StorageClassUniform, cfileVar(), { zeroConst, cfileIdxVal, chanConst });
-      return createLoad(cfileChanPtr);
+      return createLoad(cfileChanPtr, spv::NoPrecision);
    }
 
    spv::Id readSrcVarRef(const SrcVarRef& srcRef)
@@ -464,7 +464,7 @@ public:
           (srcZ.gprChan.gpr.indexMode == srcW.gprChan.gpr.indexMode))
       {
          auto srcRegPtr = getGprRef(srcX.gprChan.gpr);
-         return createLoad(srcRegPtr);
+         return createLoad(srcRegPtr, spv::NoPrecision);
       }
 
       if (srcX.type == SrcVarRef::Type::CFILE &&
@@ -483,7 +483,7 @@ public:
           srcZ.cfileChan.cfile.indexMode == srcW.cfileChan.cfile.indexMode)
       {
          auto srcCfilePtr = getCfileRef(srcX.cfileChan.cfile);
-         return createLoad(srcCfilePtr);
+         return createLoad(srcCfilePtr, spv::NoPrecision);
       }
 
       if (srcX.type == SrcVarRef::Type::CBUFFER &&
@@ -504,7 +504,7 @@ public:
           srcY.cbufferChan.cbuffer.indexMode == srcZ.cbufferChan.cbuffer.indexMode &&
           srcZ.cbufferChan.cbuffer.indexMode == srcW.cbufferChan.cbuffer.indexMode) {
          auto srcCbufferPtr = getCbufferRef(srcX.cbufferChan.cbuffer);
-         return createLoad(srcCbufferPtr);
+         return createLoad(srcCbufferPtr, spv::NoPrecision);
       }
 
       return createCompositeConstruct(resultType, {
@@ -549,7 +549,7 @@ public:
       // If the swizzle masks anything, we need to load the original value
       // of the export so that we can preserve that data not being written.
       if (!isSwizzleFullyUnmasked(ref.mask)) {
-         writeVal = createLoad(gprRef);
+         writeVal = createLoad(gprRef, spv::NoPrecision);
       }
 
       writeVal = applySelMask(writeVal, srcId, ref.mask);
@@ -987,7 +987,7 @@ public:
       // shrink the object down to the expected size at the same time.
       // Note: We shouldn't be reading from outputs, but sometimes they
       // mask data into a write, which makes very little sense...
-      auto origData = createLoad(exportPtr);
+      auto origData = createLoad(exportPtr, spv::NoPrecision);
       auto exportVal = applySelMask(origData, srcId, ref.mask, numExportComps);
 
       auto sourceValType = getTypeId(exportVal);
@@ -1003,10 +1003,10 @@ public:
          auto oneFConst = makeFloatConstant(1.0f);
 
          auto posMulAddPtr = createAccessChain(spv::StorageClass::StorageClassPushConstant, vsPushConstVar(), { zeroConst });
-         auto posMulAddVal = createLoad(posMulAddPtr);
+         auto posMulAddVal = createLoad(posMulAddPtr, spv::NoPrecision);
 
          auto zSpaceMulPtr = createAccessChain(spv::StorageClass::StorageClassPushConstant, vsPushConstVar(), { oneConst });
-         auto zSpaceMulVal = createLoad(zSpaceMulPtr);
+         auto zSpaceMulVal = createLoad(zSpaceMulPtr, spv::NoPrecision);
 
          // pos.xy = (pos.xy * posMulAdd.xy) + posMulAdd.zw;
 
@@ -1053,11 +1053,11 @@ public:
             auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
 
             auto alphaFuncPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { zeroConst });
-            auto alphaDataVal = createLoad(alphaFuncPtr);
+            auto alphaDataVal = createLoad(alphaFuncPtr, spv::NoPrecision);
             auto alphaFuncVal = createBinOp(spv::OpBitwiseAnd, uintType(), alphaDataVal, makeUintConstant(0xFF));
 
             auto alphaRefPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { oneConst });
-            auto alphaRefVal = createLoad(alphaRefPtr);
+            auto alphaRefVal = createLoad(alphaRefPtr, spv::NoPrecision);
 
             auto makeCompareBlock = [&](spv::Op op)
             {
@@ -1127,11 +1127,11 @@ public:
             endSwitch(switchSegments);
          }
 
-         auto pixelTmpVar = createVariable(spv::StorageClass::StorageClassPrivate, sourceValType, "_pixelTmp");
+         auto pixelTmpVar = createVariable(spv::NoPrecision, spv::StorageClassPrivate, sourceValType, "_pixelTmp");
          createStore(exportVal, pixelTmpVar);
 
          auto alphaDataPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { zeroConst });
-         auto alphaDataVal = createLoad(alphaDataPtr);
+         auto alphaDataVal = createLoad(alphaDataPtr, spv::NoPrecision);
          auto logicOpVal = createBinOp(spv::OpShiftRightLogical, uintType(), alphaDataVal, makeUintConstant(8));
 
          auto lopSet = createBinOp(spv::Op::OpIEqual, boolType(), logicOpVal, makeUintConstant(1));
@@ -1185,14 +1185,14 @@ public:
             auto oneFConst = makeFloatConstant(1.0f);
 
             auto needsPremulPtr = createAccessChain(spv::StorageClassPushConstant, psPushConstVar(), { twoConst });
-            auto needsPremulVal = createLoad(needsPremulPtr);
+            auto needsPremulVal = createLoad(needsPremulPtr, spv::NoPrecision);
 
             auto targetBitConst = makeUintConstant(1 << ref.output.arrayBase);
             auto targetBitVal = createBinOp(spv::OpBitwiseAnd, uintType(), needsPremulVal, targetBitConst);
             auto pred = createBinOp(spv::OpINotEqual, boolType(), targetBitVal, zeroConst);
             auto eq0block = spv::Builder::If { pred, spv::SelectionControlMaskNone, *this };
             {
-               exportVal = createLoad(pixelTmpVar);
+               exportVal = createLoad(pixelTmpVar, spv::NoPrecision);
 
                auto exportAlpha = createOp(spv::OpCompositeExtract, floatType(), { exportVal, 3 });
                auto premulMul = createOp(spv::OpCompositeConstruct, float4Type(), { exportAlpha, exportAlpha, exportAlpha, oneFConst });
@@ -1203,7 +1203,7 @@ public:
             eq0block.makeEndIf();
          }
 
-         exportVal = createLoad(pixelTmpVar);
+         exportVal = createLoad(pixelTmpVar, spv::NoPrecision);
       }
 
       createStore(exportVal, exportPtr);
@@ -1212,7 +1212,7 @@ public:
    spv::Id vertexIdVar()
    {
       if (!mVertexId) {
-         mVertexId = createVariable(spv::StorageClassInput, intType(), "VertexID");
+         mVertexId = createVariable(spv::NoPrecision, spv::StorageClassInput, intType(), "VertexID");
          addDecoration(mVertexId, spv::DecorationBuiltIn, spv::BuiltInVertexIndex);
          mEntryPoint->addIdOperand(mVertexId);
       }
@@ -1222,7 +1222,7 @@ public:
    spv::Id instanceIdVar()
    {
       if (!mInstanceId) {
-         mInstanceId = createVariable(spv::StorageClassInput, intType(), "InstanceID");
+         mInstanceId = createVariable(spv::NoPrecision, spv::StorageClassInput, intType(), "InstanceID");
          addDecoration(mInstanceId, spv::DecorationBuiltIn, spv::BuiltInInstanceIndex);
          mEntryPoint->addIdOperand(mInstanceId);
       }
@@ -1232,7 +1232,7 @@ public:
    spv::Id fragCoordVar()
    {
       if (!mFragCoord) {
-         mFragCoord = createVariable(spv::StorageClassInput, float4Type(), "FragCoord");
+         mFragCoord = createVariable(spv::NoPrecision, spv::StorageClassInput, float4Type(), "FragCoord");
          addDecoration(mFragCoord, spv::DecorationBuiltIn, spv::BuiltInFragCoord);
          mEntryPoint->addIdOperand(mFragCoord);
       }
@@ -1242,7 +1242,7 @@ public:
    spv::Id frontFacingVar()
    {
       if (!mFrontFacing) {
-         mFrontFacing = createVariable(spv::StorageClassInput, boolType(), "FrontFacing");
+         mFrontFacing = createVariable(spv::NoPrecision, spv::StorageClassInput, boolType(), "FrontFacing");
          addDecoration(mFrontFacing, spv::DecorationBuiltIn, spv::BuiltInFrontFacing);
          mEntryPoint->addIdOperand(mFrontFacing);
       }
@@ -1252,7 +1252,7 @@ public:
    spv::Id layerIdVar()
    {
       if (!mLayerId) {
-         mLayerId = createVariable(spv::StorageClassOutput, intType(), "LayerID");
+         mLayerId = createVariable(spv::NoPrecision, spv::StorageClassOutput, intType(), "LayerID");
          addDecoration(mLayerId, spv::DecorationBuiltIn, spv::BuiltInLayer);
          mEntryPoint->addIdOperand(mLayerId);
       }
@@ -1262,7 +1262,7 @@ public:
    spv::Id pointSizeVar()
    {
       if (!mPointSize) {
-         mPointSize = createVariable(spv::StorageClassOutput, floatType(), "PointSize");
+         mPointSize = createVariable(spv::NoPrecision, spv::StorageClassOutput, floatType(), "PointSize");
          addDecoration(mPointSize, spv::DecorationBuiltIn, spv::BuiltInPointSize);
          mEntryPoint->addIdOperand(mPointSize);
       }
@@ -1273,7 +1273,7 @@ public:
    {
       auto attribIdx = mAttribInputs.size();
 
-      auto attribVar = createVariable(spv::StorageClassInput, attribType,
+      auto attribVar = createVariable(spv::NoPrecision, spv::StorageClassInput, attribType,
                                       fmt::format("INPUT_{}", attribIdx).c_str());
       addDecoration(attribVar, spv::DecorationLocation, static_cast<int>(semLocation));
 
@@ -1287,7 +1287,7 @@ public:
    {
       auto paramIdx = mParamInputs.size();
 
-      auto inputVar = createVariable(spv::StorageClassInput, float4Type(),
+      auto inputVar = createVariable(spv::NoPrecision, spv::StorageClassInput, float4Type(),
                                      fmt::format("PARAM_{}", paramIdx).c_str());
       addDecoration(inputVar, spv::DecorationLocation, static_cast<int>(semLocation));
 
@@ -1305,8 +1305,8 @@ public:
 
       auto inputVar = mRingInputs[index];
       if (!inputVar) {
-         inputVar = createVariable(spv::StorageClassInput, arrayType(float4Type(), 16, 3),
-                                        fmt::format("RINGIN_{}", index).c_str());
+         inputVar = createVariable(spv::NoPrecision, spv::StorageClassInput, arrayType(float4Type(), 16, 3),
+                                   fmt::format("RINGIN_{}", index).c_str());
          addDecoration(inputVar, spv::DecorationLocation, static_cast<int>(index));
 
          mEntryPoint->addIdOperand(inputVar);
@@ -1336,7 +1336,7 @@ public:
          addMemberName(vsPushStruct, 2, "pointSize");
 
          addDecoration(vsPushStruct, spv::DecorationBlock);
-         mVsPushConsts = createVariable(spv::StorageClassPushConstant, vsPushStruct, "VS_PUSH");
+         mVsPushConsts = createVariable(spv::NoPrecision, spv::StorageClassPushConstant, vsPushStruct, "VS_PUSH");
       }
       return mVsPushConsts;
    }
@@ -1366,7 +1366,7 @@ public:
          addMemberName(psPushStruct, 2, "needsPremultiply");
 
          addDecoration(psPushStruct, spv::DecorationBlock);
-         mPsPushConsts = createVariable(spv::StorageClassPushConstant, psPushStruct, "PS_PUSH");
+         mPsPushConsts = createVariable(spv::NoPrecision, spv::StorageClassPushConstant, psPushStruct, "PS_PUSH");
       }
       return mPsPushConsts;
    }
@@ -1382,7 +1382,7 @@ public:
 
          auto bindingIdx = mBindingBase + latte::MaxTextures;
 
-         mRegistersBuffer = createVariable(spv::StorageClassUniform, structType, "CFILE");
+         mRegistersBuffer = createVariable(spv::NoPrecision, spv::StorageClassUniform, structType, "CFILE");
          addDecoration(mRegistersBuffer, spv::DecorationDescriptorSet, 0);
          addDecoration(mRegistersBuffer, spv::DecorationBinding, bindingIdx);
          addDecoration(mRegistersBuffer, spv::DecorationNonWritable);
@@ -1406,7 +1406,7 @@ public:
 
          auto bindingIdx = mBindingBase + latte::MaxTextures + cbufferIdx;
 
-         cbuffer = createVariable(spv::StorageClassUniform, structType, fmt::format("CBUFFER_{}", cbufferIdx).c_str());
+         cbuffer = createVariable(spv::NoPrecision, spv::StorageClassUniform, structType, fmt::format("CBUFFER_{}", cbufferIdx).c_str());
          addDecoration(cbuffer, spv::DecorationDescriptorSet, 0);
          addDecoration(cbuffer, spv::DecorationBinding, bindingIdx);
          addDecoration(cbuffer, spv::DecorationNonWritable);
@@ -1423,7 +1423,7 @@ public:
 
       auto samplerId = mSamplers[samplerIdx];
       if (!samplerId) {
-         samplerId = createVariable(spv::StorageClassUniformConstant, samplerType());
+         samplerId = createVariable(spv::NoPrecision, spv::StorageClassUniformConstant, samplerType());
          addName(samplerId, fmt::format("SAMPLER_{}", samplerIdx).c_str());
 
          auto bindingIdx = mBindingBase + samplerIdx;
@@ -1490,7 +1490,7 @@ public:
 
       auto textureId = mTextures[textureIdx];
       if (!textureId) {
-         textureId = createVariable(spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim, texFormat));
+         textureId = createVariable(spv::NoPrecision, spv::StorageClassUniformConstant, textureVarType(textureIdx, texDim, texFormat));
          addName(textureId, fmt::format("TEXTURE_{}", textureIdx).c_str());
 
          auto bindingIdx = mBindingBase + textureIdx;
@@ -1512,7 +1512,7 @@ public:
 
       auto& exportId = mPixelExports[pixelIdx];
       if (!exportId) {
-         exportId = createVariable(spv::StorageClass::StorageClassOutput, exportType, fmt::format("PIXEL_{}", pixelIdx).c_str());
+         exportId = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassOutput, exportType, fmt::format("PIXEL_{}", pixelIdx).c_str());
          addDecoration(exportId, spv::Decoration::DecorationLocation, pixelIdx);
          mPixelExports[pixelIdx] = exportId;
 
@@ -1532,7 +1532,7 @@ public:
 
       auto& exportId = mPosExports[posIdx];
       if (!exportId) {
-         exportId = createVariable(spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("POS_{}", posIdx).c_str());
+         exportId = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("POS_{}", posIdx).c_str());
 
          if (posIdx == 0) {
             // Mark this as being the position output
@@ -1554,7 +1554,7 @@ public:
 
       auto& exportId = mParamExports[paramIdx];
       if (!exportId) {
-         exportId = createVariable(spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("PARAM_{}", paramIdx).c_str());
+         exportId = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassOutput, float4Type(), fmt::format("PARAM_{}", paramIdx).c_str());
          addDecoration(exportId, spv::Decoration::DecorationLocation, paramIdx);
 
          mEntryPoint->addIdOperand(exportId);
@@ -1568,7 +1568,7 @@ public:
       if (!mZExport) {
          addExecutionMode(mFunctions["main"], spv::ExecutionModeDepthReplacing);
 
-         mZExport = createVariable(spv::StorageClass::StorageClassOutput, floatType(), "Z_EXPORT");
+         mZExport = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassOutput, floatType(), "Z_EXPORT");
          addDecoration(mZExport, spv::DecorationBuiltIn, spv::BuiltInFragDepth);
          mEntryPoint->addIdOperand(mZExport);
       }
@@ -1624,7 +1624,7 @@ public:
 
          auto streamOutIndex = mNumStreamOut++;
 
-         exportId = createVariable(spv::StorageClassOutput, resultType, fmt::format("STREAMOUT_{}_{}", streamIdx, bufferOffset).c_str());
+         exportId = createVariable(spv::NoPrecision, spv::StorageClassOutput, resultType, fmt::format("STREAMOUT_{}_{}", streamIdx, bufferOffset).c_str());
          addDecoration(exportId, spv::DecorationLocation, 31 - streamOutIndex);
          addDecoration(exportId, spv::DecorationXfbBuffer, streamIdx);
          addDecoration(exportId, spv::DecorationXfbStride, dataStride);
@@ -1665,7 +1665,7 @@ public:
 
       auto& exportId = mRingWriteExports[bufferVec4Offset];
       if (!exportId) {
-         exportId = createVariable(spv::StorageClassOutput, resultType, fmt::format("VSRING_{}", bufferVec4Offset).c_str());
+         exportId = createVariable(spv::NoPrecision, spv::StorageClassOutput, resultType, fmt::format("VSRING_{}", bufferVec4Offset).c_str());
          addDecoration(exportId, spv::DecorationLocation, bufferVec4Offset);
 
          mEntryPoint->addIdOperand(exportId);
@@ -1712,7 +1712,7 @@ public:
    spv::Id stateVar()
    {
       if (!mState) {
-         mState = createVariable(spv::StorageClass::StorageClassPrivate, intType(), "stateVar");
+         mState = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, intType(), "stateVar");
       }
       return mState;
    }
@@ -1740,7 +1740,7 @@ public:
    spv::Id predicateVar()
    {
       if (!mPredicate) {
-         mPredicate = createVariable(spv::StorageClass::StorageClassPrivate, boolType(), "predVar");
+         mPredicate = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, boolType(), "predVar");
       }
       return mPredicate;
    }
@@ -1749,7 +1749,7 @@ public:
    {
       if (!mStack) {
          auto stackType = arrayType(intType(), 4, 16);
-         mStack = createVariable(spv::StorageClass::StorageClassPrivate, stackType, "stackVar");
+         mStack = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, stackType, "stackVar");
       }
       return mStack;
    }
@@ -1757,7 +1757,7 @@ public:
    spv::Id stackIndexVar()
    {
       if (!mStackIndex) {
-         mStackIndex = createVariable(spv::StorageClass::StorageClassPrivate, intType(), "stackIdxVar");
+         mStackIndex = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, intType(), "stackIdxVar");
       }
       return mStackIndex;
    }
@@ -1766,7 +1766,7 @@ public:
    {
       if (!mGpr) {
          auto gprType = arrayType(float4Type(), 16, 128);
-         mGpr = createVariable(spv::StorageClass::StorageClassPrivate, gprType, "RVar");
+         mGpr = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, gprType, "RVar");
       }
       return mGpr;
    }
@@ -1775,7 +1775,7 @@ public:
    {
       if (!mRing) {
          auto ringType = arrayType(float4Type(), 16, 128);
-         mRing = createVariable(spv::StorageClass::StorageClassPrivate, ringType, "LocalRing");
+         mRing = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, ringType, "LocalRing");
       }
       return mRing;
    }
@@ -1783,7 +1783,7 @@ public:
    spv::Id ringOffsetVar()
    {
       if (!mRingOffset) {
-         mRingOffset = createVariable(spv::StorageClass::StorageClassPrivate, uintType(), "RingIndex");
+         mRingOffset = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, uintType(), "RingIndex");
       }
       return mRingOffset;
    }
@@ -1791,7 +1791,7 @@ public:
    spv::Id ALVar()
    {
       if (!mAL) {
-         mAL = createVariable(spv::StorageClass::StorageClassPrivate, intType(), "ALVar");
+         mAL = createVariable(spv::NoPrecision, spv::StorageClass::StorageClassPrivate, intType(), "ALVar");
       }
       return mAL;
    }
@@ -1899,6 +1899,11 @@ public:
    int getNumPixelExports()
    {
       return (int)mPixelExports.size();
+   }
+
+   void makeDiscard()
+   {
+      makeStatementTerminator(spv::OpKill, "post-discard");
    }
 
 protected:

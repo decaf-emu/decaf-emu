@@ -44,7 +44,7 @@ void Transpiler::translateCf_ALU_CONTINUE(const ControlFlowInst &cf)
 
    // If state is set to Inactive, set it to InactiveContinue
    auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
-                                       mSpv->createLoad(mSpv->stateVar()),
+                                       mSpv->createLoad(mSpv->stateVar(), spv::NoPrecision),
                                        mSpv->stateInactive());
    auto ifBuilder = spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
    mSpv->createStore(mSpv->stateInactiveContinue(), mSpv->stateVar());
@@ -57,7 +57,7 @@ void Transpiler::translateCf_ALU_BREAK(const ControlFlowInst &cf)
 
    // If state is set to Inactive, set it to InactiveBreak
    auto isInactive = mSpv->createBinOp(spv::OpIEqual, mSpv->boolType(),
-                                       mSpv->createLoad(mSpv->stateVar()),
+                                       mSpv->createLoad(mSpv->stateVar(), spv::NoPrecision),
                                        mSpv->stateInactive());
    auto ifBuilder = spv::Builder::If { isInactive, spv::SelectionControlMaskNone, *mSpv };
    mSpv->createStore(mSpv->stateInactiveBreak(), mSpv->stateVar());
@@ -167,7 +167,7 @@ void Transpiler::translateCf_LOOP_START_DX10(const ControlFlowInst &cf)
    mSpv->createBranch(loop.body);
    mSpv->setBuildPoint(loop.body);
 
-   auto stateVal = mSpv->createLoad(mSpv->stateVar());
+   auto stateVal = mSpv->createLoad(mSpv->stateVar(), spv::NoPrecision);
 
    // If state is set to InactiveContinue, set it to Active
    {
@@ -206,7 +206,7 @@ void Transpiler::translateCf_LOOP_END(const ControlFlowInst &cf)
 
    // Continue while state != InactiveBreak
    auto predContinue = mSpv->createBinOp(spv::OpINotEqual, mSpv->boolType(),
-                                         mSpv->createLoad(mSpv->stateVar()),
+                                         mSpv->createLoad(mSpv->stateVar(), spv::NoPrecision),
                                          mSpv->stateInactiveBreak());
    mSpv->createConditionalBranch(predContinue, loop.head, loop.merge);
 
