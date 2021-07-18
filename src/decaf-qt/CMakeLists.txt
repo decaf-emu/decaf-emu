@@ -65,43 +65,50 @@ if(MSVC)
    set_target_properties(decaf-qt PROPERTIES
       LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 
-   add_custom_command(
-       TARGET decaf-qt POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           $<TARGET_FILE:Qt5::Core>
-           $<TARGET_FILE_DIR:decaf-qt>)
+   # Find windeployqt binary in the same directory as qmake
+   if(TARGET Qt5::qmake AND NOT TARGET Qt5::windeployqt)
+      get_target_property(_qt5_qmake_location Qt5::qmake IMPORTED_LOCATION)
 
-   add_custom_command(
-       TARGET decaf-qt POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           $<TARGET_FILE:Qt5::Gui>
-           $<TARGET_FILE_DIR:decaf-qt>)
+      execute_process(
+         COMMAND "${_qt5_qmake_location}" -query QT_INSTALL_PREFIX
+         RESULT_VARIABLE return_code
+         OUTPUT_VARIABLE qt5_install_prefix
+         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-   add_custom_command(
-       TARGET decaf-qt POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           $<TARGET_FILE:Qt5::Svg>
-           $<TARGET_FILE_DIR:decaf-qt>)
+      set(imported_location "${qt5_install_prefix}/bin/windeployqt.exe")
 
-   add_custom_command(
-       TARGET decaf-qt POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           $<TARGET_FILE:Qt5::Widgets>
-           $<TARGET_FILE_DIR:decaf-qt>)
+      if(EXISTS ${imported_location})
+         add_executable(Qt5::windeployqt IMPORTED)
 
-   add_custom_command(
-       TARGET decaf-qt POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-           $<TARGET_FILE:Qt5::Xml>
-           $<TARGET_FILE_DIR:decaf-qt>)
+         set_target_properties(Qt5::windeployqt PROPERTIES
+            IMPORTED_LOCATION ${imported_location})
+      endif()
+   endif()
 
-   install(FILES
-      $<TARGET_FILE:Qt5::Core>
-      $<TARGET_FILE:Qt5::Gui>
-      $<TARGET_FILE:Qt5::Svg>
-      $<TARGET_FILE:Qt5::Widgets>
-      $<TARGET_FILE:Qt5::Xml>
-      DESTINATION "${DECAF_INSTALL_BINDIR}")
+   # Windeployqt to the TARGET_FILE_DIR:decaf-qt
+   add_custom_command(TARGET decaf-qt
+      POST_BUILD
+      COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
+      COMMAND Qt5::windeployqt
+         --dir "$<TARGET_FILE_DIR:decaf-qt>"
+         "$<TARGET_FILE_DIR:decaf-qt>/$<TARGET_FILE_NAME:decaf-qt>"
+         --no-angle --no-opengl-sw --no-translations)
+
+   # Windeployqt to temporary directory which we can copy in install
+   add_custom_command(TARGET decaf-qt
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+      COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
+      COMMAND Qt5::windeployqt
+         --dir "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+         "$<TARGET_FILE_DIR:decaf-qt>/$<TARGET_FILE_NAME:decaf-qt>"
+         --no-angle --no-opengl-sw --no-translations)
+
+   # copy deployment directory during installation
+   install(
+       DIRECTORY
+       "${CMAKE_CURRENT_BINARY_DIR}/windeployqt/"
+       DESTINATION ${DECAF_INSTALL_BINDIR})
 endif()
 
 install(TARGETS decaf-qt RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")

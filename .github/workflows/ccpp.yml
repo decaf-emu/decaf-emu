@@ -201,13 +201,6 @@ jobs:
         cd build
         cmake --build . --config Release -j 2 --target install
 
-    - name: Package (Windows)
-      if: startsWith(matrix.os, 'windows')
-      shell: cmd
-      run: |
-        cd build/install
-        %QTDIR%/bin/windeployqt.exe --release --no-translations --no-angle --no-opengl-sw decaf-qt.exe
-
     - uses: actions/upload-artifact@master
       with:
         name: decaf-emu-${{ matrix.os }}
