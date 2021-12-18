@@ -371,7 +371,8 @@ invokeFinalMixCallback(DeviceTypeData &device,
             auto axChanId = (dev * numChannels) + ch;
 
             for (auto i = 0u; i < numSamples; ++i) {
-               sDeviceData->samples[axChanId][i] = static_cast<int32_t>(samples[dev][ch][i]);
+               int16_t sample = fixed_to_data(samples[dev][ch][i]);
+               sDeviceData->samples[axChanId][i] = static_cast<int32_t>(sample);
             }
 
             sDeviceData->samplePtrs[axChanId] = virt_addrof(sDeviceData->samples[axChanId][0]);
