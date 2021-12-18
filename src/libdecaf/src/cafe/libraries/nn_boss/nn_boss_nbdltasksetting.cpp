@@ -53,7 +53,7 @@ NbdlTaskSetting_Initialize(virt_ptr<NbdlTaskSetting> self,
       return ResultInvalidParameter;
    }
 
-   if (!directoryName || strnlen(directoryName.get(), 8) == 8) {
+   if (directoryName && strnlen(directoryName.get(), 8) == 8) {
       return ResultInvalidParameter;
    }
 
@@ -61,8 +61,10 @@ NbdlTaskSetting_Initialize(virt_ptr<NbdlTaskSetting> self,
    string_copy(reinterpret_cast<char *>(self.get()) + 0x7C0, 32, bossCode.get(), 32);
    *(reinterpret_cast<char *>(self.get()) + 0x7C0 + 32 - 1) = 0;
 
-   string_copy(reinterpret_cast<char *>(self.get()) + 0x7E0, 8, directoryName.get(), 8);
-   *(reinterpret_cast<char *>(self.get()) + 0x7E0 + 8 - 1) = 0;
+   if (directoryName) {
+      string_copy(reinterpret_cast<char *>(self.get()) + 0x7E0, 8, directoryName.get(), 8);
+      *(reinterpret_cast<char *>(self.get()) + 0x7E0 + 8 - 1) = 0;
+   }
 
    *virt_cast<int64_t *>(virt_cast<char *>(self) + 0x7F0) = a3;
    return ResultSuccess;
