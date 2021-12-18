@@ -584,7 +584,7 @@ mixDevice(AXDeviceType type, uint16_t numSamples)
          }
       }
 
-      invokeFinalMixCallback(*devices, numDevices, numChannels, numSamples, mainBus);
+      invokeFinalMixCallback(*devices, numDevices, numChannels, NumOutputSamples, mainBus);
    }
 
    // TODO: Apply compressor
