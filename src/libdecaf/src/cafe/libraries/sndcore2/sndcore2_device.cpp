@@ -185,9 +185,9 @@ struct AudioDecoder
          int sampleData = data[sampleIndex / 2];
 
          if (sampleIndex % 2 == 0) {
-            sampleData &= 0xF;
-         } else {
             sampleData >>= 4;
+         } else {
+            sampleData &= 0xF;
          }
 
          if (sampleData >= 8) {
