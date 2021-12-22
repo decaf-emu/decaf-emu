@@ -22,20 +22,21 @@ using ThreadEntryFn = Error(*)(phys_ptr<void>);
 
 constexpr auto CurrentThread = ThreadId { 0 };
 
-#ifdef IOS_EMULATE_ARM
 struct ContextLLE
 {
    be2_val<uint32_t> cpsr;
-   be2_val<uint32_t> gpr[14];
+   be2_val<uint32_t> gpr[13];
+   be2_val<uint32_t> stackPointer;
    be2_val<uint32_t> lr;
    be2_val<uint32_t> pc;
 };
 CHECK_OFFSET(ContextLLE, 0x00, cpsr);
 CHECK_OFFSET(ContextLLE, 0x04, gpr);
+CHECK_OFFSET(ContextLLE, 0x38, stackPointer);
 CHECK_OFFSET(ContextLLE, 0x3C, lr);
 CHECK_OFFSET(ContextLLE, 0x40, pc);
 CHECK_SIZE(ContextLLE, 0x44);
-#else
+
 struct ContextHLE
 {
    ThreadEntryFn entryPoint;
@@ -46,7 +47,6 @@ struct ContextHLE
    PADDING(0x24);
 };
 CHECK_SIZE(ContextHLE, 0x44);
-#endif
 
 struct ThreadLocalStorage
 {
@@ -76,9 +76,7 @@ struct Thread
    //! The thread queue this therad is currently in.
    be2_phys_ptr<ThreadQueue> threadQueue;
 
-   UNKNOWN(0xA4 - 0x6C);
-   be2_phys_ptr<void> stackPointer;
-   UNKNOWN(0x8);
+   be2_phys_ptr<ContextLLE> userContext;
    be2_phys_ptr<void> sysStackAddr;
    be2_phys_ptr<void> userStackAddr;
    be2_val<uint32_t> userStackSize;
@@ -97,7 +95,7 @@ CHECK_OFFSET(Thread, 0x5C, flags);
 CHECK_OFFSET(Thread, 0x60, exitValue);
 CHECK_OFFSET(Thread, 0x64, joinQueue);
 CHECK_OFFSET(Thread, 0x68, threadQueue);
-CHECK_OFFSET(Thread, 0xA4, stackPointer);
+CHECK_OFFSET(Thread, 0x6C, userContext);
 CHECK_OFFSET(Thread, 0xB0, sysStackAddr);
 CHECK_OFFSET(Thread, 0xB4, userStackAddr);
 CHECK_OFFSET(Thread, 0xB8, userStackSize);

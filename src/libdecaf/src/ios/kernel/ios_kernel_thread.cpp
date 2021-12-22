@@ -88,7 +88,7 @@ IOS_CreateThread(ThreadEntryFn entry,
    thread->userStackAddr = stackTop;
    thread->userStackSize = stackSize;
    // TODO: thread->sysStackAddr = systemStack + thread->id * 0x400;
-   thread->stackPointer = stackTop - 0x10;
+   thread->userContext.stackPointer = stackTop - 0x10;
 
    internal::memset32(stackTop - stackSize, 0xF5A5A5A5, stackSize);
 
