@@ -20,9 +20,9 @@ public:
    StackObject()
    {
       auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t *>(thread->stackPointer) - AlignedSize;
+      auto ptr = phys_cast<uint8_t *>(thread->userContext.stackPointer) - AlignedSize;
       phys_ptr<Type>::mAddress = phys_cast<phys_addr>(ptr);
-      thread->stackPointer = ptr;
+      thread->userContext.stackPointer = ptr;
 
       std::uninitialized_default_construct_n(phys_ptr<Type>::get(),
                                              NumElements);
@@ -33,9 +33,9 @@ public:
       std::destroy_n(phys_ptr<Type>::get(), NumElements);
 
       auto thread = kernel::internal::getCurrentThread();
-      auto ptr = phys_cast<uint8_t *>(thread->stackPointer);
+      auto ptr = phys_cast<uint8_t *>(thread->userContext.stackPointer);
       decaf_check(phys_cast<phys_addr>(ptr) == phys_ptr<Type>::mAddress);
-      thread->stackPointer = ptr + AlignedSize;
+      thread->userContext.stackPointer = ptr + AlignedSize;
    }
 };
 
