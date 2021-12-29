@@ -7,9 +7,9 @@ You can find us for developer discussion:
 - on discord using https://discord.gg/tPqFBnr
 
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/1302758/147675484-c0308d89-55a9-4927-8665-1826ee5d4771.png" width="275" />
-  <img src="https://user-images.githubusercontent.com/1302758/147674695-d8baf6ac-87e2-487c-8358-ef1588c5e5bf.png" width="275" />
-  <img src="https://user-images.githubusercontent.com/1302758/147674704-17767241-e0b4-497e-8841-aa968d14c8e3.png" width="275" />
+  <img src="https://user-images.githubusercontent.com/1302758/147675484-c0308d89-55a9-4927-8665-1826ee5d4771.png" width="250" />
+  <img src="https://user-images.githubusercontent.com/1302758/147674695-d8baf6ac-87e2-487c-8358-ef1588c5e5bf.png" width="250" />
+  <img src="https://user-images.githubusercontent.com/1302758/147674704-17767241-e0b4-497e-8841-aa968d14c8e3.png" width="250" />
 </p>
 
 ## Requirements
