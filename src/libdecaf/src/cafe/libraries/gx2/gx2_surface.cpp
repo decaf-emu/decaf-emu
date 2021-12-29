@@ -120,16 +120,29 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
             surface->mipLevelOffset[level - 1] = pad + prevSize + surface->mipLevelOffset[level - 2];
          }
       } else {
-         if (tileModeChanged && surface->width < output.pitchAlign && surface->height < output.heightAlign) {
-            if (surface->tileMode == GX2TileMode::Tiled2DThick) {
-               surface->tileMode = GX2TileMode::Tiled1DThick;
-            } else {
-               surface->tileMode = GX2TileMode::Tiled1DThin1;
+         if (tileModeChanged) {
+            if (surface->tileMode != output.tileMode) {
+               surface->tileMode = static_cast<GX2TileMode>(output.tileMode);
+
+               internal::getSurfaceInfo(surface.get(), level, &output);
+               if (surface->tileMode < GX2TileMode::Tiled2DThin1 ||
+                   surface->tileMode == GX2TileMode::LinearSpecial) {
+                  surface->swizzle &= 0xFF00FFFF;
+               }
+               lastTileMode = surface->tileMode;
             }
 
-            internal::getSurfaceInfo(surface.get(), level, &output);
-            surface->swizzle &= 0xFF00FFFF;
-            lastTileMode = surface->tileMode;
+            if (surface->width < output.pitchAlign && surface->height < output.heightAlign) {
+               if (surface->tileMode == GX2TileMode::Tiled2DThick) {
+                  surface->tileMode = GX2TileMode::Tiled1DThick;
+               } else {
+                  surface->tileMode = GX2TileMode::Tiled1DThin1;
+               }
+
+               internal::getSurfaceInfo(surface.get(), level, &output);
+               surface->swizzle &= 0xFF00FFFF;
+               lastTileMode = surface->tileMode;
+            }
          }
 
          surface->imageSize = static_cast<uint32_t>(output.surfSize);
