@@ -11,6 +11,7 @@
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QSettings>
 #include <QShortcut>
@@ -148,6 +149,20 @@ MainWindow::debugInterrupt()
 bool
 MainWindow::loadFile(QString path)
 {
+   // Ensure file exists before trying to load
+   if (!QFileInfo { path }.exists()) {
+      QMessageBox::warning(this, "File not found",
+                           "Could not find selected file: " + path);
+
+      // Delete path from recent files
+      auto settings = QSettings {};
+      auto files = settings.value("recentFileList").toStringList();
+      files.removeAll(path);
+      settings.setValue("recentFileList", files);
+      updateRecentFileActions();
+      return false;
+   }
+
    // You only get one chance to run a game out here buddy.
    mUi.actionOpen->setDisabled(true);
    for (auto i = 0u; i < mRecentFileActions.size(); ++i) {
