@@ -66,8 +66,10 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
    auto isDepthBuffer = !!(surface->use & GX2SurfaceUse::DepthBuffer);
    auto isColorBuffer = !!(surface->use & GX2SurfaceUse::ColorBuffer);
    auto tileModeChanged = false;
+   auto isBuggedTilemode = (surface->tileMode == GX2TileMode::DefaultBadAlign);
 
-   if (surface->tileMode == GX2TileMode::Default) {
+   if (surface->tileMode == GX2TileMode::Default ||
+       surface->tileMode == GX2TileMode::DefaultBadAlign) {
       if (surface->dim || surface->aa || isDepthBuffer) {
          if (surface->dim != GX2SurfaceDim::Texture3D || isColorBuffer) {
             surface->tileMode = GX2TileMode::Tiled2DThin1;
@@ -87,8 +89,14 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
    surface->mipLevelOffset[0] = 0u;
    surface->swizzle &= 0xFF00FFFF;
 
-   if (surface->tileMode >= GX2TileMode::Tiled2DThin1 && surface->tileMode != GX2TileMode::LinearSpecial) {
+   if (surface->tileMode >= GX2TileMode::Tiled2DThin1 &&
+       surface->tileMode != GX2TileMode::LinearSpecial) {
       surface->swizzle |= 0xD0000;
+   }
+
+   auto buggedAlignShiftFix = 0u;
+   if (isBuggedTilemode && GX2SurfaceIsCompressed(surface->format)) {
+      buggedAlignShiftFix = 2u;
    }
 
    auto lastTileMode = static_cast<GX2TileMode>(surface->tileMode);
@@ -101,7 +109,8 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
       if (level) {
          auto pad = 0u;
 
-         if (lastTileMode >= GX2TileMode::Tiled2DThin1 && lastTileMode != GX2TileMode::LinearSpecial) {
+         if (lastTileMode >= GX2TileMode::Tiled2DThin1 &&
+             lastTileMode != GX2TileMode::LinearSpecial) {
             if (output.tileMode < ADDR_TM_2D_TILED_THIN1) {
                surface->swizzle = (level << 16) | (surface->swizzle & 0xFF00FFFF);
                lastTileMode = static_cast<GX2TileMode>(output.tileMode);
@@ -117,7 +126,8 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
          if (level == 1) {
             offset0 = pad + prevSize;
          } else {
-            surface->mipLevelOffset[level - 1] = pad + prevSize + surface->mipLevelOffset[level - 2];
+            surface->mipLevelOffset[level - 1] =
+               pad + prevSize + surface->mipLevelOffset[level - 2];
          }
       } else {
          if (tileModeChanged) {
@@ -132,7 +142,8 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
                lastTileMode = surface->tileMode;
             }
 
-            if (surface->width < output.pitchAlign && surface->height < output.heightAlign) {
+            if (surface->width < (output.pitchAlign << buggedAlignShiftFix) &&
+                surface->height < (output.heightAlign << buggedAlignShiftFix)) {
                if (surface->tileMode == GX2TileMode::Tiled2DThick) {
                   surface->tileMode = GX2TileMode::Tiled1DThick;
                } else {
@@ -156,7 +167,8 @@ GX2CalcSurfaceSizeAndAlignment(virt_ptr<GX2Surface> surface)
    if (surface->mipLevels <= 1) {
       surface->mipmapSize = 0u;
    } else {
-      surface->mipmapSize = prevSize + surface->mipLevelOffset[surface->mipLevels - 2];
+      surface->mipmapSize =
+         prevSize + surface->mipLevelOffset[surface->mipLevels - 2];
    }
 
    surface->mipLevelOffset[0] = offset0;

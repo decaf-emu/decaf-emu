@@ -581,6 +581,7 @@ ENUM_BEG(GX2TileMode, uint32_t)
    ENUM_VALUE(Tiled3BThin1,      14)
    ENUM_VALUE(Tiled3BThick,      15)
    ENUM_VALUE(LinearSpecial,     16)
+   ENUM_VALUE(DefaultBadAlign,   0x20)
 ENUM_END(GX2TileMode)
 
 ENUM_BEG(GX2TossStage, uint32_t)
