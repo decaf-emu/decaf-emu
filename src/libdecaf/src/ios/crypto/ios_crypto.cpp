@@ -111,7 +111,7 @@ processEntryPoint(phys_ptr<void> /* context */)
          IOS_ResourceReply(request, error);
          break;
       case Command::Close:
-         if (request->requestData.handle < sCryptoData->handles.size()) {
+         if (request->requestData.handle < static_cast<Handle>(sCryptoData->handles.size())) {
             sCryptoData->handles[request->requestData.handle].used = FALSE;
          }
 
