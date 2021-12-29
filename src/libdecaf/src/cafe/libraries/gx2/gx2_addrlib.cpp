@@ -200,8 +200,8 @@ copySurface(GX2Surface *surfaceSrc,
    srcAddrInput.pipeSwizzle = srcSwizzleOutput.pipeSwizzle;
 
    // Setup dst
-   getSurfaceInfo(surfaceDst, srcLevel, &dstInfoOutput);
-   dstAddrInput.slice = srcSlice;
+   getSurfaceInfo(surfaceDst, dstLevel, &dstInfoOutput);
+   dstAddrInput.slice = dstSlice;
    dstAddrInput.sample = 0;
    dstAddrInput.bpp = bpp;
    dstAddrInput.pitch = dstInfoOutput.pitch;
