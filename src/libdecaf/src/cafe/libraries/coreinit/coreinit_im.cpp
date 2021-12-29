@@ -535,14 +535,14 @@ IMGetAPDPeriod(virt_ptr<uint32_t> outValue)
 
 
 IMError
-IMGetDimEnableDrc(virt_ptr<uint32_t> outValue)
+IMGetDimEnableDRC(virt_ptr<uint32_t> outValue)
 {
    return IM_GetRuntimeParameter(IMParameter::DimEnableDrc, outValue);
 }
 
 
 IMError
-IMGetDimEnableTv(virt_ptr<uint32_t> outValue)
+IMGetDimEnableTV(virt_ptr<uint32_t> outValue)
 {
    return IM_GetRuntimeParameter(IMParameter::DimEnableTv, outValue);
 }
@@ -570,14 +570,14 @@ IMGetTimeBeforeDimming(virt_ptr<uint32_t> outSeconds)
 
 
 IMError
-IMSetDimEnableDrc(BOOL value)
+IMSetDimEnableDRC(BOOL value)
 {
    return IM_SetRuntimeParameter(IMParameter::DimEnableTv, value);
 }
 
 
 IMError
-IMSetDimEnableTv(BOOL value)
+IMSetDimEnableTV(BOOL value)
 {
    return IM_SetRuntimeParameter(IMParameter::DimEnableTv, value);
 }
@@ -638,13 +638,13 @@ Library::registerImSymbols()
    RegisterFunctionExport(IMIsAPDEnabledBySysSettings);
    RegisterFunctionExport(IMIsDimEnabled);
    RegisterFunctionExport(IMGetAPDPeriod);
-   RegisterFunctionExport(IMGetDimEnableDrc);
-   RegisterFunctionExport(IMGetDimEnableTv);
+   RegisterFunctionExport(IMGetDimEnableDRC);
+   RegisterFunctionExport(IMGetDimEnableTV);
    RegisterFunctionExport(IMGetDimPeriod);
    RegisterFunctionExport(IMGetTimeBeforeAPD);
    RegisterFunctionExport(IMGetTimeBeforeDimming);
-   RegisterFunctionExport(IMSetDimEnableDrc);
-   RegisterFunctionExport(IMSetDimEnableTv);
+   RegisterFunctionExport(IMSetDimEnableDRC);
+   RegisterFunctionExport(IMSetDimEnableTV);
    RegisterFunctionExport(IMStartAPDVideoMode);
 
    RegisterDataInternal(sImData);
