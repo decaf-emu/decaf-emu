@@ -10,7 +10,7 @@ namespace ios::kernel
 
 Error
 IOS_ReadOTP(OtpFieldIndex fieldIndex,
-            phys_ptr<uint32_t> buffer,
+            phys_ptr<void> buffer,
             uint32_t bufferSize);
 
 namespace internal

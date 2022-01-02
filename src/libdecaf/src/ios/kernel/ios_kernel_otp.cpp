@@ -17,7 +17,7 @@ static std::array<std::byte, 0x400> sOtpData;
 
 Error
 IOS_ReadOTP(OtpFieldIndex fieldIndex,
-            phys_ptr<uint32_t> buffer,
+            phys_ptr<void> buffer,
             uint32_t bufferSize)
 {
    auto thread = internal::getCurrentThread();
