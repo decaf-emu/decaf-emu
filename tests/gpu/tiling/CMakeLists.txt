@@ -8,7 +8,7 @@ set_target_properties(test-gpu-tiling PROPERTIES FOLDER tests)
 
 target_link_libraries(test-gpu-tiling
     addrlib
-    catch2
+    Catch2::Catch2
     common
     libcpu
     libgpu)

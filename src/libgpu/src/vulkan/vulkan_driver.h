@@ -18,7 +18,7 @@
 #include <common/vulkan_hpp.h>
 #include <condition_variable>
 #include <functional>
-#include <gsl/gsl>
+#include <gsl/gsl-lite.hpp>
 #include <list>
 #include <map>
 #include <mutex>

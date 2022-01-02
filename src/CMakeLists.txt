@@ -8,10 +8,7 @@ add_subdirectory(libgfd)
 add_subdirectory(libgpu)
 
 add_subdirectory(decaf-cli)
-
-if(DECAF_SDL)
-    add_subdirectory(decaf-sdl)
-endif()
+add_subdirectory(decaf-sdl)
 
 if(DECAF_QT)
     add_subdirectory(decaf-qt)

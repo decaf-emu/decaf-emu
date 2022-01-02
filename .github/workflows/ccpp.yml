@@ -10,28 +10,58 @@ jobs:
       fail-fast: false
       matrix:
         name: [
-          ubuntu-20.04-gcc-9,
-          windows-2019-cl,
+          ubuntu-20.04-gcc-10,
+          windows-2019,
         ]
         include:
-          - name: ubuntu-20.04-gcc-9
+          - name: ubuntu-20.04-gcc-10
             os: ubuntu-20.04
             compiler: gcc
-            version: "9"
-          - name: windows-2019-cl
+            version: "10"
+            mono: 'mono'
+          - name: windows-2019
             os: windows-2019
             compiler: cl
-          #- name: macOS-latest-Xcode-12
-          #  os: macOS-latest
-          #  compiler: xcode
-          #  version: "12"
+            mono: ''
+
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+      VCPKG_BUILD_TYPE: 'release'
+      VCPKG_ROOT: '${{github.workspace}}/build/vcpkg'
+
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         submodules: true
 
     - name: Initialise
       run: mkdir build
+
+    - uses: actions/checkout@v2
+      with:
+        repository: 'microsoft/vcpkg'
+        path: 'build/vcpkg'
+
+    - name: 'Setup vcpkg (Ubuntu)'
+      if: startsWith(matrix.os, 'ubuntu')
+      run: ./build/vcpkg/bootstrap-vcpkg.sh
+
+    - name: 'Setup vcpkg (Windows)'
+      if: startsWith(matrix.os, 'windows')
+      run: ./build/vcpkg/bootstrap-vcpkg.bat
+
+    - name: 'Setup NuGet Credentials'
+      shell: 'bash'
+      run: >
+        cd build &&
+        ${{ matrix.mono }} `./vcpkg/vcpkg fetch nuget | tail -n 1`
+        sources add
+        -source "https://nuget.pkg.github.com/decaf-emu/index.json"
+        -storepasswordincleartext
+        -name "GitHub"
+        -username "decaf-emu"
+        -password "${{ secrets.GITHUB_TOKEN }}"
+        -Verbosity "detailed"
 
     - name: Install Dependencies (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
@@ -41,7 +71,7 @@ jobs:
         sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list
         sudo apt-add-repository ppa:cginternals/ppa
         sudo apt-get update
-        sudo apt-get install -y cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev vulkan-sdk python3-setuptools libavcodec-dev libavfilter-dev libswscale-dev libavutil-dev
+        sudo apt-get install -y cmake vulkan-sdk python3-setuptools nasm mesa-common-dev libglu1-mesa-dev ninja-build
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           sudo apt-get install -y g++-${{ matrix.version }}
         else
@@ -50,29 +80,6 @@ jobs:
         pip3 install wheel
         pip3 install aqtinstall
         python3 -m aqt install 5.13.0 linux desktop
-
-    - name: Install Dependencies (macOS)
-      if: startsWith(matrix.os, 'macOS')
-      run: |
-        brew install openssl sdl2 conan
-
-    - name: Load Cached Vulkan SDK (macOS)
-      id: cache-vulkan-macos
-      if: startsWith(matrix.os, 'macOS')
-      uses: actions/cache@v1
-      with:
-        path: vulkan
-        key: ${{ runner.os }}-vulkan-1.2.182.0
-
-    - name: Install Vulkan SDK from web (macOS)
-      if: startsWith(matrix.os, 'macOS') && steps.cache-vulkan-macos.outputs.cache-hit != 'true'
-      run: |
-        mkdir vulkan
-        cd vulkan
-        curl -s -o vulkan-sdk.dmg "https://sdk.lunarg.com/sdk/download/1.2.182.0/mac/vulkansdk-macos-1.2.182.0.dmg?u="
-        hdiutil mount vulkan-sdk.dmg
-        cp -r /Volumes/vulkansdk-macos-1.2.182.0/macOS .
-        rm vulkan-sdk.dmg
 
     - name: Load Cached Vulkan SDK (Windows)
       id: cache-vulkan-windows
@@ -127,21 +134,12 @@ jobs:
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
           echo "CXX=g++-${{ matrix.version }}" >> $GITHUB_ENV
-          echo "CONAN_ENV_COMPILER_LIBCXX=libstdc++11" >> $GITHUB_ENV
         else
           echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
           echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
         fi
-        echo "CONAN_ENV_COMPILER=${{ matrix.compiler }}" >> $GITHUB_ENV
-        echo "CONAN_ENV_COMPILER_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
         echo "QTDIR=$PWD/build/5.13.0/gcc_64" >> $GITHUB_ENV
-        echo "VULKAN_SDK=$PWD/vulkan/macOS" >> $GITHUB_ENV
-
-    - name: Setup Environment (macOS)
-      if: startsWith(matrix.os, 'macOS')
-      run: |
-        echo "VULKAN_SDK=$PWD/vulkan/macOS" >> $GITHUB_ENV
-        sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
+        echo "VULKAN_SDK=$PWD/vulkan" >> $GITHUB_ENV
 
     - name: Setup Environment (Windows)
       if: startsWith(matrix.os, 'windows')
@@ -149,52 +147,19 @@ jobs:
       run: |
         echo "VULKAN_SDK=C:\\VulkanSDK\\1.2.182.0" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "QTDIR=C:\\Qt\\5.13.0\\msvc2017_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "CONAN_ENV_COMPILER=Visual Studio" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "CONAN_ENV_COMPILER_VERSION=16" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    - name: Install Conan Dependencies (Ubuntu)
-      if: startsWith(matrix.os, 'ubuntu')
-      run: |
-        cd build
-        pip install --user conan
-        source ~/.profile
-        conan user
-        conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
-
-    - name: Install Conan Dependencies (macOS)
-      if: startsWith(matrix.os, 'macOS')
-      run: |
-        cd build
-        conan user
-        conan install .. --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
-
-    - name: Install Conan Dependencies (Windows)
-      if: startsWith(matrix.os, 'windows')
-      shell: cmd
-      run: |
-        cd build
-        pip install conan
-        conan user
-        conan install .. -s compiler="Visual Studio" -s compiler.version=16 --build=missing -o silent=True -o ffmpeg=False -o curl=True -o openssl=True -o sdl2=True -o zlib=True
-
-    - name: Configure (macOS)
-      if: startsWith(matrix.os, 'macOS')
-      run: |
-        cd build
-        cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=ON -DDECAF_QT=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=$QTDIR/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release -DVCPKG_HOST_TRIPLET=x64-linux-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DQt5_DIR=$QTDIR/lib/cmake/Qt5 -DQT_DIR=$QTDIR/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
         cd build
-        cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DQT_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Build
       run: |

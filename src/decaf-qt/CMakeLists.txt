@@ -37,6 +37,7 @@ GroupSources("UI Files" ui)
 GroupSources("Resource Files" resources)
 
 target_include_directories(decaf-qt PRIVATE
+   ${CPPTOML_INCLUDE_DIRS}
    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
    ${SDL2_INCLUDE_DIRS})
 
@@ -45,7 +46,6 @@ target_link_libraries(decaf-qt
    libconfig
    libcpu
    libdecaf
-   ${CPPTOML_LIBRARIES}
    ${EXCMD_LIBRARIES}
    ${SDL2_LIBRARIES}
    qtadvanceddocking

@@ -11,8 +11,8 @@ GroupSources("Source Files" src)
 target_link_libraries(common
     cnl
     fmt::fmt
-    gsl
-    spdlog)
+    gsl::gsl-lite
+    spdlog::spdlog)
 
 if(MSVC)
     target_link_libraries(common Dbghelp)

@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <common/platform_compiler.h>
 #include <common/platform_memory.h>
-#include <gsl/gsl>
+#include <gsl/gsl-lite.hpp>
 #include <mutex>
 
 namespace cpu

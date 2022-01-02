@@ -6,25 +6,26 @@ file(GLOB_RECURSE SOURCE_FILES *.cpp)
 file(GLOB_RECURSE HEADER_FILES *.h)
 
 if(MSVC)
-   set(RESOURCE_FILES
-      ${CMAKE_SOURCE_DIR}/resources/decaf-sdl.rc
-      ${CMAKE_SOURCE_DIR}/resources/hidpi.manifest)
+    set(RESOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/resources/decaf-sdl.rc
+        ${CMAKE_SOURCE_DIR}/resources/hidpi.manifest)
 else()
-   set(RESOURCE_FILES "")
+    set(RESOURCE_FILES "")
 endif()
 
 add_executable(decaf-sdl
-   ${SOURCE_FILES}
-   ${HEADER_FILES}
-   ${RESOURCE_FILES})
+    ${SOURCE_FILES}
+    ${HEADER_FILES}
+    ${RESOURCE_FILES})
 
 target_include_directories(decaf-sdl PRIVATE
+    ${CPPTOML_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS})
+
 target_link_libraries(decaf-sdl
     common
     libconfig
     libdecaf
-    cpptoml
     excmd
     ${SDL2_LIBRARIES})
 

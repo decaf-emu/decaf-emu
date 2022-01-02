@@ -10,12 +10,24 @@ if(USING_CONAN)
     conan_basic_setup(NO_OUTPUT_DIRS)
 endif()
 
-find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
-find_package(OpenSSL REQUIRED) # OpenSSL::SSL
+
+find_package(c-ares CONFIG REQUIRED) # c-ares::cares c-ares::cares_shared c-ares::cares_static
+find_package(Catch2 CONFIG REQUIRED) # Catch2::Catch2
+find_package(cereal CONFIG REQUIRED) # cereal
+find_package(CURL CONFIG REQUIRED) # CURL::libcurl
+find_package(fmt CONFIG REQUIRED) # fmt::fmt
+find_package(glslang CONFIG REQUIRED)
+find_package(gsl-lite CONFIG REQUIRED) # gsl::gsl-lite
+find_package(imgui CONFIG REQUIRED) # imgui::imgui
+find_package(OpenSSL REQUIRED) # OpenSSL::SSL OpenSSL::Crypto
+find_package(pugixml CONFIG REQUIRED) # pugixml pugixml::shared pugixml::pugixml
+find_package(SDL2 CONFIG REQUIRED) # SDL2::SDL2 SDL2::SDL2main
+find_package(spdlog CONFIG REQUIRED) # spdlog::spdlog spdlog::spdlog_header_only
+find_package(unofficial-libuv CONFIG REQUIRED) # unofficial::libuv::libuv
 find_package(ZLIB REQUIRED) # ZLIB::ZLIB
-find_package(LibUV REQUIRED) # LibUV::LibUV
-find_package(CARES REQUIRED) # CARES::CARES
+
+find_path(CPPTOML_INCLUDE_DIRS "cpptoml.h")
 
 # Disable PCH by default on older versions of CMake
 if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
@@ -25,8 +37,6 @@ else()
     set(DECAF_PCH_DEFAULT ON)
 endif()
 
-option(DECAF_FFMPEG          "Build with ffmpeg support"                    ON)
-option(DECAF_SDL             "Build with SDL support"                       ON)
 option(DECAF_VULKAN          "Build with Vulkan rendering support"          ON)
 option(DECAF_QT              "Build with Qt support"                        ON)
 
@@ -59,19 +69,9 @@ if(DECAF_JIT_PROFILING)
     add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
 endif()
 
-if(DECAF_FFMPEG)
-    find_package(FFMPEG REQUIRED)
-    add_definitions(-DDECAF_FFMPEG)
-endif()
-
-if(DECAF_SDL OR DECAF_QT)
-    # decaf-qt still uses SDL for input
-    find_package(SDL2 REQUIRED)
-endif()
-
-if(DECAF_SDL)
-    add_definitions(-DDECAF_SDL)
-endif()
+find_package(FFMPEG REQUIRED)
+add_definitions(-DDECAF_FFMPEG)
+add_definitions(-DDECAF_SDL)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     find_package(XCB QUIET)
@@ -173,6 +173,9 @@ if(MSVC)
 
     # Disable linker warnins about missing PDBs
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
+
+    # Set minimum windows version to enable newer APIs
+    add_definitions(-D_WIN32_WINNT=0x0600 -DWINVER=0x0600)
 else()
     add_definitions(-DDECAF_USE_STDLAYOUT_BITFIELD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")

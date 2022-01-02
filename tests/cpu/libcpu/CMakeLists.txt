@@ -7,7 +7,7 @@ add_executable(test-libcpu ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(test-libcpu PROPERTIES FOLDER tests)
 
 target_link_libraries(test-libcpu
-    catch2
+    Catch2::Catch2
     common
     libcpu)
 

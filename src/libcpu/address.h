@@ -197,7 +197,7 @@ align_down(cpu::Address<Type> value, size_t alignment)
 namespace fmt
 {
 
-inline namespace v6
+inline namespace v8
 {
 template<typename Type, typename Char, typename Enabled>
 struct formatter;

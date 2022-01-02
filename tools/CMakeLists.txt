@@ -7,9 +7,7 @@ add_subdirectory(gfd-tool)
 add_subdirectory(latte-assembler)
 
 if(DECAF_GL)
-   if(DECAF_SDL)
-       add_subdirectory(pm4-replay)
-   endif()
+   add_subdirectory(pm4-replay)
 
    if(DECAF_QT)
        # add_subdirectory(pm4-replay-qt)

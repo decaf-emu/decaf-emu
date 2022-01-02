@@ -10,7 +10,7 @@
 #include "latte/latte_registers_vgt.h"
 
 #include <common/datahash.h>
-#include <gsl/gsl>
+#include <gsl/gsl-lite.hpp>
 
 namespace spirv
 {

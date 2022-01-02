@@ -8,7 +8,7 @@
 #include <common/decaf_assert.h>
 #include <common/platform.h>
 #include <common/platform_memory.h>
-#include <gsl/gsl>
+#include <gsl/gsl-lite.hpp>
 #include <mutex>
 #include <thread>
 

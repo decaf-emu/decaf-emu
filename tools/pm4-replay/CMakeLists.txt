@@ -17,7 +17,6 @@ target_link_libraries(pm4-replay
     common
     libconfig
     libdecaf
-    cpptoml
     excmd
     ${SDL2_LIBRARIES})
 

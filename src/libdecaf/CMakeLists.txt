@@ -12,31 +12,26 @@ GroupSources("Source Files" src)
 target_compile_definitions(libdecaf PRIVATE
     DECAF_INSTALL_RESOURCESDIR="${DECAF_INSTALL_RESOURCESDIR}")
 
-target_include_directories(libdecaf PRIVATE
-    ${CURL_INCLUDE_DIRS})
-
 target_link_libraries(libdecaf
     addrlib
     common
-    cnl
-    imgui
     libcpu
     libgfd
-    libgpu
-    CARES::CARES
-    LibUV::LibUV
-    OpenSSL::SSL
-    pugixml
-    ZLIB::ZLIB
-    ${CURL_LIBRARIES})
+    libgpu)
 
-if(DECAF_FFMPEG)
-    target_link_libraries(libdecaf
-        FFMPEG::AVCODEC
-        FFMPEG::AVFILTER
-        FFMPEG::AVUTIL
-        FFMPEG::SWSCALE)
-endif()
+target_link_libraries(libdecaf
+    cnl
+    imgui::imgui
+    c-ares::cares
+    CURL::libcurl
+    OpenSSL::SSL
+    pugixml::pugixml
+    unofficial::libuv::libuv
+    ZLIB::ZLIB
+    FFMPEG::AVCODEC
+    FFMPEG::AVFILTER
+    FFMPEG::AVUTIL
+    FFMPEG::SWSCALE)
 
 if(MSVC)
     target_link_libraries(libdecaf Crypt32 ws2_32 Psapi IPHLPAPI userenv)

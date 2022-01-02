@@ -476,7 +476,7 @@ private:
 namespace fmt
 {
 
-inline namespace v6
+inline namespace v8
 {
 template<typename Type, typename Char, typename Enabled>
 struct formatter;
