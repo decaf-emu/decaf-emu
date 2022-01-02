@@ -1,0 +1,72 @@
+#ifndef IOS_CRYPTO_ENUM_H
+#define IOS_CRYPTO_ENUM_H
+
+#include <common/enum_start.inl>
+
+ENUM_NAMESPACE_ENTER(ios)
+ENUM_NAMESPACE_ENTER(crypto)
+
+ENUM_BEG(KeyId, uint32_t)
+   ENUM_VALUE(NgPrivateKey,               0x0)
+   ENUM_VALUE(NgId,                       0x1)
+   ENUM_VALUE(SlcKey,                     0x2)
+   ENUM_VALUE(SlcHmac,                    0x3)
+   ENUM_VALUE(WiiCommonKey,               0x4)
+   ENUM_VALUE(RngKey,                     0x5)
+   ENUM_VALUE(WiiSdKey,                   0x6)
+   ENUM_VALUE(SeepromKey,                 0x7)
+   ENUM_VALUE(WiiKoreanKey,               0xB)
+   ENUM_VALUE(DriveKey,                   0xC)
+   ENUM_VALUE(StarbuckAncastKey,          0xD)
+   ENUM_VALUE(StarbuckAncastModulus,      0xE)
+   ENUM_VALUE(Boot1AncastModulus,         0xF)
+   ENUM_VALUE(CommonKey,                  0x10)
+   ENUM_VALUE(MlcKey,                     0x11)
+   ENUM_VALUE(WiiNandKey,                 0x13)
+   ENUM_VALUE(WiiNandHmac,                0x14)
+   ENUM_VALUE(VwiiCommonKey,              0x15)
+   ENUM_VALUE(DrhWlanKey,                 0x16)
+   ENUM_VALUE(UdsLocalWlanCcmpKey,        0x17)
+   ENUM_VALUE(DlpKey,                     0x18)
+   ENUM_VALUE(AptWrapKey,                 0x19)
+   ENUM_VALUE(Unknown0x1A,                0x1A)
+   ENUM_VALUE(SslRsaKey,                  0x1B)
+   ENUM_VALUE(NssPrivateKey,              0x1C)
+   ENUM_VALUE(WiiNssPrivateKey,           0x1D)
+   ENUM_VALUE(NssPrivateKey2,             0x1E)
+   ENUM_VALUE(SpotPassKey,                0x1F)
+   ENUM_VALUE(SpotPassUnknown0x20,        0x20)
+   ENUM_VALUE(Unknown0x21,                0x21)
+   ENUM_VALUE(Unknown0x22,                0x22)
+   ENUM_VALUE(Unknown0x23,                0x23)
+   ENUM_VALUE(Unknown0x24,                0x24)
+   ENUM_VALUE(Unknown0x25,                0x25)
+   ENUM_VALUE(Unknown0x26,                0x26)
+   ENUM_VALUE(PushmoreKey,                0x27)
+ENUM_END(KeyId)
+
+ENUM_BEG(ObjectType, uint8_t)
+   ENUM_VALUE(SecretKey,                  0)
+   ENUM_VALUE(PublicKey,                  1)
+   ENUM_VALUE(Unknown0x2,                 2)
+   ENUM_VALUE(Data,                       3)
+   ENUM_VALUE(Invalid,                    0xFF)
+ENUM_END(ObjectType)
+
+ENUM_BEG(SubObjectType, uint8_t)
+   ENUM_VALUE(Aes128,                     0)
+   ENUM_VALUE(Mac,                        1)
+   ENUM_VALUE(Rsa2048,                    2)
+   ENUM_VALUE(Rsa4096,                    3)
+   ENUM_VALUE(Ecc233,                     4)
+   ENUM_VALUE(Data,                       5)
+   ENUM_VALUE(Version,                    6)
+   ENUM_VALUE(Unknown0x7,                 7)
+ENUM_END(SubObjectType)
+
+ENUM_NAMESPACE_EXIT(crypto)
+ENUM_NAMESPACE_EXIT(ios)
+
+#include <common/enum_end.inl>
+
+#endif // ifdef IOS_CRYPTO_ENUM_H
