@@ -11,6 +11,7 @@
 #include <common/strutils.h>
 #include <cstring>
 #include <fmt/format.h>
+#include <iterator>
 #include <optional>
 #include <string_view>
 #include <tuple>
@@ -219,18 +220,18 @@ createVulkanInstance(const gpu::WindowSystemInfo &wsi)
 
    if (!extensions.empty()) {
       fmt::memory_buffer msg;
-      fmt::format_to(msg, "Creating instance with extensions:");
+      fmt::format_to(std::back_inserter(msg), "Creating instance with extensions:");
       for (auto ext : extensions) {
-         fmt::format_to(msg, " {}", ext);
+         fmt::format_to(std::back_inserter(msg), " {}", ext);
       }
       gLog->debug({ msg.data(), msg.size() });
    }
 
    if (!layers.empty()) {
       fmt::memory_buffer msg;
-      fmt::format_to(msg, "Creating instance with layers:");
+      fmt::format_to(std::back_inserter(msg), "Creating instance with layers:");
       for (auto layer : layers) {
-         fmt::format_to(msg, " {}", layer);
+         fmt::format_to(std::back_inserter(msg), " {}", layer);
       }
       gLog->debug({ msg.data(), msg.size() });
    }
@@ -380,17 +381,17 @@ createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
 
    if (!missingRequiredExtensions.empty() || !missingOptionalExtensions.empty()) {
       fmt::memory_buffer msg;
-      fmt::format_to(msg, "Not all Vulkan {} extensions supported:\n", !missingRequiredExtensions.empty() ? "optional" : "required");
-      fmt::format_to(msg, "  Required:\n");
+      fmt::format_to(std::back_inserter(msg), "Not all Vulkan {} extensions supported:\n", !missingRequiredExtensions.empty() ? "optional" : "required");
+      fmt::format_to(std::back_inserter(msg), "  Required:\n");
       for (auto name : requiredExtensions) {
-         fmt::format_to(msg, "  - {}: {}\n",
+         fmt::format_to(std::back_inserter(msg), "  - {}: {}\n",
             name,
             std::find(missingRequiredExtensions.begin(), missingRequiredExtensions.end(), name) == missingRequiredExtensions.end());
       }
 
-      fmt::format_to(msg, "  Optional:\n");
+      fmt::format_to(std::back_inserter(msg), "  Optional:\n");
       for (auto name : optionalExtensions) {
-         fmt::format_to(msg, "  - {}: {}\n",
+         fmt::format_to(std::back_inserter(msg), "  - {}: {}\n",
             name,
             std::find(missingOptionalExtensions.begin(), missingOptionalExtensions.end(), name) == missingOptionalExtensions.end());
       }
@@ -422,19 +423,19 @@ createDevice(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
 
    if (!hasRequiredFeatures || !hasOptionalFeatures) {
       fmt::memory_buffer msg;
-      fmt::format_to(msg, "Not all Vulkan {} features supported:\n", hasRequiredFeatures ? "optional" : "required");
-      fmt::format_to(msg, "  Required:\n");
-      fmt::format_to(msg, "  - depthClamp: {}\n", supportedFeatures.features.depthClamp);
-      fmt::format_to(msg, "  - textureCompressionBC: {}\n", supportedFeatures.features.textureCompressionBC);
-      fmt::format_to(msg, "  - independentBlend: {}\n", supportedFeatures.features.independentBlend);
-      fmt::format_to(msg, "  - fillModeNonSolid: {}\n", supportedFeatures.features.fillModeNonSolid);
-      fmt::format_to(msg, "  - samplerAnisotropy: {}\n", supportedFeatures.features.samplerAnisotropy);
-      fmt::format_to(msg, "  Optional:\n");
-      fmt::format_to(msg, "  - geometryShader: {}\n", supportedFeatures.features.geometryShader);
-      fmt::format_to(msg, "  - wideLines: {}\n", supportedFeatures.features.wideLines);
-      fmt::format_to(msg, "  - logicOp: {}\n", supportedFeatures.features.logicOp);
-      fmt::format_to(msg, "  - transformFeedback: {}\n", supportedFeaturesTransformFeedback.transformFeedback);
-      fmt::format_to(msg, "  - geometryStreams: {}\n", supportedFeaturesTransformFeedback.geometryStreams);
+      fmt::format_to(std::back_inserter(msg), "Not all Vulkan {} features supported:\n", hasRequiredFeatures ? "optional" : "required");
+      fmt::format_to(std::back_inserter(msg), "  Required:\n");
+      fmt::format_to(std::back_inserter(msg), "  - depthClamp: {}\n", supportedFeatures.features.depthClamp);
+      fmt::format_to(std::back_inserter(msg), "  - textureCompressionBC: {}\n", supportedFeatures.features.textureCompressionBC);
+      fmt::format_to(std::back_inserter(msg), "  - independentBlend: {}\n", supportedFeatures.features.independentBlend);
+      fmt::format_to(std::back_inserter(msg), "  - fillModeNonSolid: {}\n", supportedFeatures.features.fillModeNonSolid);
+      fmt::format_to(std::back_inserter(msg), "  - samplerAnisotropy: {}\n", supportedFeatures.features.samplerAnisotropy);
+      fmt::format_to(std::back_inserter(msg), "  Optional:\n");
+      fmt::format_to(std::back_inserter(msg), "  - geometryShader: {}\n", supportedFeatures.features.geometryShader);
+      fmt::format_to(std::back_inserter(msg), "  - wideLines: {}\n", supportedFeatures.features.wideLines);
+      fmt::format_to(std::back_inserter(msg), "  - logicOp: {}\n", supportedFeatures.features.logicOp);
+      fmt::format_to(std::back_inserter(msg), "  - transformFeedback: {}\n", supportedFeaturesTransformFeedback.transformFeedback);
+      fmt::format_to(std::back_inserter(msg), "  - geometryStreams: {}\n", supportedFeaturesTransformFeedback.geometryStreams);
 
       if (!hasRequiredFeatures) {
          gLog->error(std::string_view { msg.data(), msg.size() });

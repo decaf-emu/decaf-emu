@@ -7,6 +7,7 @@
 
 #include <array>
 #include <common/strutils.h>
+#include <iterator>
 #include <pugixml.hpp>
 #include <sstream>
 #include <fmt/format.h>
@@ -254,7 +255,7 @@ to_string(uint8_t *data,
    fmt::memory_buffer out;
 
    for (auto i = 0u; i < size; ++i) {
-      fmt::format_to(out, "{:02X}", data[i]);
+      fmt::format_to(std::back_inserter(out), "{:02X}", data[i]);
    }
 
    return to_string(out);

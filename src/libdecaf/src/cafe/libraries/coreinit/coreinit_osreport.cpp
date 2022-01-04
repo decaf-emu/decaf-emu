@@ -11,6 +11,7 @@
 #include <fmt/format.h>
 #include <common/log.h>
 #include <common/strutils.h>
+#include <iterator>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
@@ -133,7 +134,7 @@ OSPanic(std::string_view file,
    auto core = cpu::this_core::state();
    auto stackAddress = virt_addr { core->systemCallStackHead };
    auto stackTraceBuffer = fmt::memory_buffer { };
-   fmt::format_to(stackTraceBuffer, "Guest stack trace:\n");
+   fmt::format_to(std::back_inserter(stackTraceBuffer), "Guest stack trace:\n");
 
    for (auto i = 0; i < 16; ++i) {
       if (!stackAddress || stackAddress == virt_addr { 0xFFFFFFFF }) {
@@ -142,15 +143,17 @@ OSPanic(std::string_view file,
 
       auto backchain = virt_cast<virt_addr *>(stackAddress)[0];
       auto address = virt_cast<virt_addr *>(stackAddress)[1];
-      fmt::format_to(stackTraceBuffer, "{}: {}", stackAddress, address);
+      fmt::format_to(std::back_inserter(stackTraceBuffer),
+                     "{}: {}", stackAddress, address);
 
       auto symbolAddress = OSGetSymbolName(address, symbolNameBuffer, 256);
       if (symbolAddress) {
-         fmt::format_to(stackTraceBuffer, " {}+0x{:X}", symbolNameBuffer.get(),
+         fmt::format_to(std::back_inserter(stackTraceBuffer),
+                        " {}+0x{:X}", symbolNameBuffer.get(),
                         static_cast<uint32_t>(address - symbolAddress));
       }
 
-      fmt::format_to(stackTraceBuffer, "\n");
+      fmt::format_to(std::back_inserter(stackTraceBuffer), "\n");
       stackAddress = backchain;
    }
 

@@ -4,9 +4,10 @@
 
 #include <common/decaf_assert.h>
 #include <fmt/core.h>
-
 #include <libgpu/gpu_graphicsdriver.h>
 #include <SDL_syswm.h>
+
+#include <iterator>
 #include <thread>
 
 static std::string
@@ -231,19 +232,19 @@ DecafSDL::run(const std::string &gamePath)
          }
       } else if (event.type == mUpdateWindowTitleEventId) {
          fmt::memory_buffer title;
-         fmt::format_to(title, "decaf-sdl -");
+         fmt::format_to(std::back_inserter(title), "decaf-sdl -");
 
          if (mGameInfo.titleId) {
-            fmt::format_to(title, " {:08X}-{:08X}",
+            fmt::format_to(std::back_inserter(title), " {:08X}-{:08X}",
                            mGameInfo.titleId >> 32,
                            mGameInfo.titleId & 0xFFFFFFFF);
          }
 
          if (!mGameInfo.executable.empty()) {
-            fmt::format_to(title, " {}", mGameInfo.executable);
+            fmt::format_to(std::back_inserter(title), " {}", mGameInfo.executable);
          }
 
-         fmt::format_to(title, " ({} {} fps)", sActiveGfx,
+         fmt::format_to(std::back_inserter(title), " ({} {} fps)", sActiveGfx,
                         static_cast<int>(mGraphicsDriver->getDebugInfo()->averageFps));
          auto titleStr = std::string { title.data(), title.size() };
          SDL_SetWindowTitle(mWindow, titleStr.c_str());

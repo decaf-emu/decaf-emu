@@ -11,6 +11,7 @@
 #include <common/strutils.h>
 #include <common/log.h>
 #include <fmt/core.h>
+#include <iterator>
 #include <libcpu/cpu_formatters.h>
 #include <libcpu/mem.h>
 #include <numeric>
@@ -163,17 +164,17 @@ void GdbServer::handleQuery(const std::string &command)
       auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
       if (firstThread) {
-         fmt::format_to(reply, "m");
+         reply.push_back('m');
       } else {
-         fmt::format_to(reply, "l");
+         reply.push_back('l');
       }
 
       for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
          if (thread != firstThread) {
-            fmt::format_to(reply, ",");
+            reply.push_back(',');
          }
 
-         fmt::format_to(reply, "{:04X}", thread->id.value());
+         fmt::format_to(std::back_inserter(reply), "{:04X}", thread->id.value());
       }
 
       cafe::coreinit::internal::unlockScheduler();
@@ -227,23 +228,23 @@ void GdbServer::handleQuery(const std::string &command)
       sendCommand(reply);
    } else if (begins_with(command, "qXfer:threads:read:")) {
       fmt::memory_buffer reply;
-      fmt::format_to(reply, "l<?xml version=\"1.0\"?>");
-      fmt::format_to(reply, "<threads>");
+      fmt::format_to(std::back_inserter(reply), "l<?xml version=\"1.0\"?>");
+      fmt::format_to(std::back_inserter(reply), "<threads>");
 
       cafe::coreinit::internal::lockScheduler();
       auto firstThread = cafe::coreinit::internal::getFirstActiveThread();
 
       for (auto thread = firstThread; thread; thread = thread->activeLink.next) {
-         fmt::format_to(reply, "<thread id=\"{}\" core=\"0\"", thread->id);
+         fmt::format_to(std::back_inserter(reply), "<thread id=\"{}\" core=\"0\"", thread->id);
 
          if (thread->name) {
-            fmt::format_to(reply, " name=\"{}\"", encodeXml(thread->name.get()));
+            fmt::format_to(std::back_inserter(reply), " name=\"{}\"", encodeXml(thread->name.get()));
          }
 
-         fmt::format_to(reply, "></thread>");
+         fmt::format_to(std::back_inserter(reply), "></thread>");
       }
 
-      fmt::format_to(reply, "</threads>");
+      fmt::format_to(std::back_inserter(reply), "</threads>");
       cafe::coreinit::internal::unlockScheduler();
 
       sendCommand(std::string_view { reply.data(), reply.size() });
@@ -310,7 +311,7 @@ void GdbServer::handleReadGeneralRegisters(const std::string &command)
       if (mCurrentThread.handle) {
          value = mCurrentThread.gpr[i];
       }
-      fmt::format_to(reply, "{:08X}", value);
+      fmt::format_to(std::back_inserter(reply), "{:08X}", value);
    }
 
    sendCommand(to_string(reply));
@@ -332,7 +333,7 @@ void GdbServer::handleReadMemory(const std::string &command)
          value = mem::read<uint8_t>(address + i);
       }
 
-      fmt::format_to(reply, "{:02X}", value);
+      fmt::format_to(std::back_inserter(reply), "{:02X}", value);
    }
 
    sendCommand(to_string(reply));

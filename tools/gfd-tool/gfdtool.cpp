@@ -7,6 +7,7 @@
 #include <fstream>
 #include <gsl/gsl-lite.hpp>
 #include <iostream>
+#include <iterator>
 #include <libcpu/cpu.h>
 #include <libgfd/gfd.h>
 #include <libgpu/gpu7_tiling_cpu.h>
@@ -40,7 +41,7 @@ decreaseIndent(OutputState &out)
 static void
 startGroup(OutputState &out, const std::string &group)
 {
-   fmt::format_to(out.writer, "{}{}\n", out.indent, group);
+   fmt::format_to(std::back_inserter(out.writer), "{}{}\n", out.indent, group);
    increaseIndent(out);
 }
 
@@ -54,7 +55,7 @@ template<typename Type>
 static void
 writeField(OutputState &out, const std::string &field, const Type &value)
 {
-   fmt::format_to(out.writer, "{}{:<30} = {}\n", out.indent, field, value);
+   fmt::format_to(std::back_inserter(out.writer), "{}{:<30} = {}\n", out.indent, field, value);
 }
 
 static bool
@@ -294,7 +295,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.data));
-         fmt::format_to(out.writer, "\n{}", disassembly);
+         fmt::format_to(std::back_inserter(out.writer), "\n{}", disassembly);
       }
       endGroup(out);
    }
@@ -507,7 +508,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.data));
-         fmt::format_to(out.writer, "\n{}", disassembly);
+         fmt::format_to(std::back_inserter(out.writer), "\n{}", disassembly);
       }
       endGroup(out);
    }
@@ -729,7 +730,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.data));
-         fmt::format_to(out.writer, "\n{}", disassembly);
+         fmt::format_to(std::back_inserter(out.writer), "\n{}", disassembly);
       }
       endGroup(out);
 
@@ -739,7 +740,7 @@ printInfo(const std::string &filename)
 
          std::string disassembly;
          disassembly = latte::disassemble(gsl::make_span(shader.vertexShaderData));
-         fmt::format_to(out.writer, "\n{}", disassembly);
+         fmt::format_to(std::back_inserter(out.writer), "\n{}", disassembly);
       }
       endGroup(out);
    }

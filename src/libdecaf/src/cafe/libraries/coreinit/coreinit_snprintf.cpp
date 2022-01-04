@@ -7,6 +7,7 @@
 #include <common/strutils.h>
 #include <fmt/format.h>
 #include <fmt/printf.h>
+#include <iterator>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
@@ -115,9 +116,9 @@ formatStringV(virt_ptr<const char> fmt,
       case 'c':
          formatter = "%" + flags + width + precision + length + specifier;
          if (length.compare("ll") == 0 && specifier != 'c') {
-            fmt::format_to(output, "{}", fmt::sprintf(formatter, args.next<uint64_t>()));
+            fmt::format_to(std::back_inserter(output), "{}", fmt::sprintf(formatter, args.next<uint64_t>()));
          } else {
-            fmt::format_to(output, "{}", fmt::sprintf(formatter, args.next<uint32_t>()));
+            fmt::format_to(std::back_inserter(output), "{}", fmt::sprintf(formatter, args.next<uint32_t>()));
          }
          break;
       case 'g':
@@ -130,22 +131,22 @@ formatStringV(virt_ptr<const char> fmt,
       case 'A':
          formatter = "%" + flags + width + precision + length + specifier;
          if (length.compare("L") == 0) {
-            fmt::format_to(output, "{}", fmt::sprintf(formatter, static_cast<long double>(args.next<double>())));
+            fmt::format_to(std::back_inserter(output), "{}", fmt::sprintf(formatter, static_cast<long double>(args.next<double>())));
          } else {
-            fmt::format_to(output, "{}", fmt::sprintf(formatter, args.next<double>()));
+            fmt::format_to(std::back_inserter(output), "{}", fmt::sprintf(formatter, args.next<double>()));
          }
          break;
       case 'p':
          // We actually ignore formatter and just use %08X for %p
          formatter = "%" + flags + width + precision + length + specifier;
-         fmt::format_to(output, "{:08X}", static_cast<uint32_t>(virt_cast<virt_addr>(args.next<virt_ptr<void>>())));
+         fmt::format_to(std::back_inserter(output), "{:08X}", static_cast<uint32_t>(virt_cast<virt_addr>(args.next<virt_ptr<void>>())));
          break;
       case 's': {
          auto s = args.next<virt_ptr<const char>>();
          if (s) {
-            fmt::format_to(output, "{}", s.get());
+            fmt::format_to(std::back_inserter(output), "{}", s.get());
          } else {
-            fmt::format_to(output, "<NULL>");
+            fmt::format_to(std::back_inserter(output), "<NULL>");
          }
       } break;
       case 'n':

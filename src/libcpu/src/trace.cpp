@@ -10,6 +10,7 @@
 #include <common/platform_debug.h>
 #include <common/decaf_assert.h>
 #include <fmt/format.h>
+#include <iterator>
 #include <mutex>
 
 using espresso::Instruction;
@@ -113,17 +114,19 @@ printFieldValue(fmt::memory_buffer &out, Instruction instr, TraceFieldType type,
    }
 
    if (type >= StateField::GPR0 && type <= StateField::GPR31) {
-      fmt::format_to(out, "    r{:02} = {:08x}\n", type - StateField::GPR, value.u32v0);
+      fmt::format_to(std::back_inserter(out),
+         "    r{:02} = {:08x}\n", type - StateField::GPR, value.u32v0);
    } else if (type == StateField::CR) {
       auto valX = [&](int i) { return (value.u32v0 >> ((i) * 4)) & 0xF; };
-      fmt::format_to(out, "    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}\n",
+      fmt::format_to(std::back_inserter(out),
+         "    CR = {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b} {:04b}\n",
          valX(7), valX(6), valX(5), valX(4), valX(3), valX(2), valX(1), valX(0));
    } else if (type == StateField::XER) {
-      fmt::format_to(out, "    XER = {:08x}\n", value.u32v0);
+      fmt::format_to(std::back_inserter(out), "    XER = {:08x}\n", value.u32v0);
    } else if (type == StateField::LR) {
-      fmt::format_to(out, "    LR = {:08x}\n", value.u32v0);
+      fmt::format_to(std::back_inserter(out), "    LR = {:08x}\n", value.u32v0);
    } else if (type == StateField::CTR) {
-      fmt::format_to(out, "    CTR = {:08x}\n", value.u32v0);
+      fmt::format_to(std::back_inserter(out), "    CTR = {:08x}\n", value.u32v0);
    } else {
       decaf_abort(fmt::format("Invalid TraceFieldType {}", static_cast<int>(type)));
    }
@@ -149,7 +152,8 @@ printInstruction(fmt::memory_buffer &out, const Trace& trace, int index)
       printFieldValue(out, trace.instr, write.type, write.value);
    }
 
-   fmt::format_to(out, "  [{}] {:08x} {}{}\n", index, trace.cia, disassemblyText.c_str(), addend.c_str());
+   fmt::format_to(std::back_inserter(out),
+      "  [{}] {:08x} {}{}\n", index, trace.cia, disassemblyText.c_str(), addend.c_str());
 
    for (auto &read : trace.reads) {
       printFieldValue(out, trace.instr, read.type, read.value);
@@ -509,7 +513,7 @@ tracePrint(cpu::Core *state, int start, int count)
    decaf_check(end <= tracerSize);
 
    fmt::memory_buffer out;
-   fmt::format_to(out, "Trace - Print {} to {}\n", start, end);
+   fmt::format_to(std::back_inserter(out), "Trace - Print {} to {}\n", start, end);
 
    for (auto i = start; i < end; ++i) {
       auto &trace = getTrace(tracer, i);
@@ -527,7 +531,8 @@ traceReg(cpu::Core *state, int start, int regIdx)
    bool found = false;
 
    fmt::memory_buffer out;
-   fmt::format_to(out, "Trace - Search {} to {} for write r{}\n", start, tracerSize, regIdx);
+   fmt::format_to(std::back_inserter(out),
+      "Trace - Search {} to {} for write r{}\n", start, tracerSize, regIdx);
 
    decaf_check(start >= 0);
    decaf_check(start < tracerSize);
@@ -551,7 +556,7 @@ traceReg(cpu::Core *state, int start, int regIdx)
    }
 
    if (!found) {
-      fmt::format_to(out, "  Nothing Found");
+      fmt::format_to(std::back_inserter(out), "  Nothing Found");
    }
 
    debugPrint(to_string(out));
@@ -652,11 +657,11 @@ tracePrintSyscall(int count)
    }
 
    fmt::memory_buffer out;
-   fmt::format_to(out, "Trace - Last {} syscalls\n", count);
+   fmt::format_to(std::back_inserter(out), "Trace - Last {} syscalls\n", count);
 
    int j = 0;
    for (auto i = gSyscallTrace.begin(); i != gSyscallTrace.end() && j < count; ++i, ++j) {
-      fmt::format_to(out, "  {}\n", *i);
+      fmt::format_to(std::back_inserter(out), "  {}\n", *i);
    }
 
    debugPrint(to_string(out));

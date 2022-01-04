@@ -17,6 +17,7 @@
 #include <common/platform_stacktrace.h>
 #include <common/platform_thread.h>
 #include <fmt/format.h>
+#include <iterator>
 #include <libcpu/cpu.h>
 #include <libcpu/cpu_formatters.h>
 #include <vector>
@@ -159,38 +160,44 @@ unhandledExceptionFiberEntryPoint(void *param)
 
    // Log the core state
    fmt::memory_buffer out;
-   fmt::format_to(out, "Unhandled exception {}\n", exceptionData->type);
-   fmt::format_to(out, "Warning: Register values may not be reliable when using JIT.\n");
+   fmt::format_to(std::back_inserter(out),
+                  "Unhandled exception {}\n", exceptionData->type);
+   fmt::format_to(std::back_inserter(out),
+                  "Warning: Register values may not be reliable when using JIT.\n");
 
    switch (exceptionData->type) {
    case ExceptionType::DSI:
-      fmt::format_to(out, "Core{} Instruction at 0x{:08X} (value from SRR0) attempted to access invalid address 0x{:08X} (value from DAR)\n",
+      fmt::format_to(std::back_inserter(out),
+                     "Core{} Instruction at 0x{:08X} (value from SRR0) attempted to access invalid address 0x{:08X} (value from DAR)\n",
                      exceptionData->coreId, context->srr0, context->dar);
       break;
    case ExceptionType::ISI:
-      fmt::format_to(out, "Core{} Attempted to fetch instruction from invalid address 0x{:08X} (value from SRR0)\n",
+      fmt::format_to(std::back_inserter(out),
+                     "Core{} Attempted to fetch instruction from invalid address 0x{:08X} (value from SRR0)\n",
                      exceptionData->coreId, context->srr0);
       break;
    case ExceptionType::Alignment:
-      fmt::format_to(out, "Core{} Instruction at 0x{:08X} (value from SRR0) attempted to access unaligned address 0x{:08X} (value from DAR)\n",
+      fmt::format_to(std::back_inserter(out),
+                     "Core{} Instruction at 0x{:08X} (value from SRR0) attempted to access unaligned address 0x{:08X} (value from DAR)\n",
                      exceptionData->coreId, context->srr0, context->dar);
       break;
    case ExceptionType::Program:
-      fmt::format_to(out, "Core{} Program exception: Possible illegal instruction/operation at or around 0x{:08X} (value from SRR0)\n",
+      fmt::format_to(std::back_inserter(out),
+                     "Core{} Program exception: Possible illegal instruction/operation at or around 0x{:08X} (value from SRR0)\n",
                      exceptionData->coreId, context->srr0);
       break;
    default:
       break;
    }
 
-   fmt::format_to(out, "nia: 0x{:08x}\n", context->nia);
-   fmt::format_to(out, "lr: 0x{:08x}\n", context->lr);
-   fmt::format_to(out, "cr: 0x{:08x}\n", context->cr);
-   fmt::format_to(out, "ctr: 0x{:08x}\n", context->ctr);
-   fmt::format_to(out, "xer: 0x{:08x}\n", context->xer);
+   fmt::format_to(std::back_inserter(out), "nia: 0x{:08x}\n", context->nia);
+   fmt::format_to(std::back_inserter(out), "lr: 0x{:08x}\n", context->lr);
+   fmt::format_to(std::back_inserter(out), "cr: 0x{:08x}\n", context->cr);
+   fmt::format_to(std::back_inserter(out), "ctr: 0x{:08x}\n", context->ctr);
+   fmt::format_to(std::back_inserter(out), "xer: 0x{:08x}\n", context->xer);
 
    for (auto i = 0u; i < 32; ++i) {
-      fmt::format_to(out, "gpr[{}]: 0x{:08x}\n", i, context->gpr[i]);
+      fmt::format_to(std::back_inserter(out), "gpr[{}]: 0x{:08x}\n", i, context->gpr[i]);
    }
 
    gLog->critical(std::string_view { out.data(), out.size() });

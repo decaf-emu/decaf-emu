@@ -9,6 +9,8 @@
 #include <common/platform_fiber.h>
 #include <libcpu/cpu_formatters.h>
 
+#include <iterator>
+
 namespace ios::kernel::internal
 {
 
@@ -111,28 +113,28 @@ reschedule(bool yielding)
    // Trace log the thread switch
    if (gLog->should_log(Logger::Level::trace)) {
       fmt::memory_buffer out;
-      fmt::format_to(out, "IOS leaving");
+      fmt::format_to(std::back_inserter(out), "IOS leaving");
 
       if (currentThread) {
-         fmt::format_to(out, " thread {}", currentThread->id);
+         fmt::format_to(std::back_inserter(out), " thread {}", currentThread->id);
 
          if (currentThread->context.threadName) {
-            fmt::format_to(out, " [{}]", currentThread->context.threadName);
+            fmt::format_to(std::back_inserter(out), " [{}]", currentThread->context.threadName);
          }
       } else {
-         fmt::format_to(out, " idle");
+         fmt::format_to(std::back_inserter(out), " idle");
       }
 
-      fmt::format_to(out, " to");
+      fmt::format_to(std::back_inserter(out), " to");
 
       if (nextThread) {
-         fmt::format_to(out, " thread {}", nextThread->id);
+         fmt::format_to(std::back_inserter(out), " thread {}", nextThread->id);
 
          if (nextThread->context.threadName) {
-            fmt::format_to(out, " [{}]", nextThread->context.threadName);
+            fmt::format_to(std::back_inserter(out), " [{}]", nextThread->context.threadName);
          }
       } else {
-         fmt::format_to(out, " idle");
+         fmt::format_to(std::back_inserter(out), " idle");
       }
 
       gLog->trace("{}", std::string_view { out.data(), out.size() });

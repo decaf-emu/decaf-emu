@@ -2,6 +2,7 @@
 
 #include <common/log.h>
 #include <fmt/format.h>
+#include <iterator>
 #include <libcpu/cpu_formatters.h>
 #include <string_view>
 
@@ -24,17 +25,18 @@ void
 invoke_trace_host_impl(cpu::Core *core, const char *name, bool is_member_function, const RuntimeParamInfo *params, size_t numParams)
 {
    fmt::memory_buffer message;
-   fmt::format_to(message, "{}(", name);
+   fmt::format_to(std::back_inserter(message), "{}(", name);
 
    if (is_member_function) {
-      fmt::format_to(message, "this = {}, ", static_cast<virt_addr>(readGpr(core, 3)));
+      fmt::format_to(std::back_inserter(message),
+         "this = {}, ", static_cast<virt_addr>(readGpr(core, 3)));
    }
 
    for (auto i = 0u; i < numParams; ++i) {
       auto &p = params[i];
 
       if (i > 0) {
-         fmt::format_to(message, ", ");
+         fmt::format_to(std::back_inserter(message), ", ");
       }
 
       switch (p.reg_type) {
@@ -42,16 +44,21 @@ invoke_trace_host_impl(cpu::Core *core, const char *name, bool is_member_functio
          if (p.is_string) {
             auto value = readGpr(core, p.reg_index);
             if (value) {
-               fmt::format_to(message, "\"{}\"", virt_cast<const char *>(static_cast<virt_addr>(value)).get());
+               fmt::format_to(std::back_inserter(message),
+                              "\"{}\"", virt_cast<const char *>(static_cast<virt_addr>(value)).get());
             } else {
-               fmt::format_to(message, "{}", static_cast<virt_addr>(value));
+               fmt::format_to(std::back_inserter(message),
+                              "{}", static_cast<virt_addr>(value));
             }
          } else if (p.is_pointer) {
-            fmt::format_to(message, "{}", static_cast<virt_addr>(readGpr(core, p.reg_index)));
+            fmt::format_to(std::back_inserter(message),
+                           "{}", static_cast<virt_addr>(readGpr(core, p.reg_index)));
          } else  if (p.is_signed) {
-            fmt::format_to(message, "{}", static_cast<int32_t>(readGpr(core, p.reg_index)));
+            fmt::format_to(std::back_inserter(message),
+                           "{}", static_cast<int32_t>(readGpr(core, p.reg_index)));
          } else {
-            fmt::format_to(message, "{}", readGpr(core, p.reg_index));
+            fmt::format_to(std::back_inserter(message),
+                           "{}", readGpr(core, p.reg_index));
          }
          break;
       case RegisterType::Gpr64:
@@ -59,24 +66,27 @@ invoke_trace_host_impl(cpu::Core *core, const char *name, bool is_member_functio
          auto hi = static_cast<uint64_t>(readGpr(core, p.reg_index)) << 32;
          auto lo = static_cast<uint64_t>(readGpr(core, p.reg_index + 1));
          if (p.is_signed) {
-            fmt::format_to(message, "{}", static_cast<int64_t>(hi | lo));
+            fmt::format_to(std::back_inserter(message),
+                           "{}", static_cast<int64_t>(hi | lo));
          } else {
-            fmt::format_to(message, "{}", static_cast<uint64_t>(hi | lo));
+            fmt::format_to(std::back_inserter(message),
+                           "{}", static_cast<uint64_t>(hi | lo));
          }
          break;
       }
       case RegisterType::Fpr:
-         fmt::format_to(message, "{}", core->fpr[p.reg_index].paired0);
+         fmt::format_to(std::back_inserter(message),
+                        "{}", core->fpr[p.reg_index].paired0);
          break;
       case RegisterType::VarArgs:
-         fmt::format_to(message, "...");
+         fmt::format_to(std::back_inserter(message), "...");
          break;
       case RegisterType::Void:
          break;
       }
    }
 
-   fmt::format_to(message, ") from 0x{:08X}", core->lr);
+   fmt::format_to(std::back_inserter(message), ") from 0x{:08X}", core->lr);
    gLog->debug(std::string_view { message.data(), message.size() });
 }
 

@@ -5,6 +5,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <fmt/format.h>
+#include <iterator>
 #include <memory>
 #include <Windows.h>
 #include <Dbghelp.h>
@@ -56,7 +57,7 @@ formatStackTrace(StackTrace *trace)
 
    for (auto i = 0u; i < trace->frames; ++i) {
       SymFromAddr(process, (DWORD64)trace->data[i], 0, symbol.get());
-      fmt::format_to(out, "{}: {} - 0x{:X}x\n",
+      fmt::format_to(std::back_inserter(out), "{}: {} - 0x{:X}x\n",
                      trace->frames - i - 1,
                      (const char*)symbol->Name,
                      symbol->Address);

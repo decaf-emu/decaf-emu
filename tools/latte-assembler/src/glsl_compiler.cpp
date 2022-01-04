@@ -8,6 +8,7 @@
 #include <glslang/Include/Types.h>
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/MachineIndependent/localintermediate.h>
+#include <iterator>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -369,8 +370,8 @@ parseGlslFileToHeader(glslang::TShader &shader)
    // Generate assembly annotation
    auto outVsh = fmt::memory_buffer { };
    auto outPsh = fmt::memory_buffer{ };
-   fmt::format_to(outVsh, "\n");
-   fmt::format_to(outPsh, "\n");
+   fmt::format_to(std::back_inserter(outVsh), "\n");
+   fmt::format_to(std::back_inserter(outPsh), "\n");
 
    // Process inputs for fragment shader
    auto pixelInputCount = 0;
@@ -381,9 +382,9 @@ parseGlslFileToHeader(glslang::TShader &shader)
    }
 
    if (pixelInputCount) {
-      fmt::format_to(outPsh, "; $NUM_SPI_PS_INPUT_CNTL = {}\n", pixelInputCount);
+      fmt::format_to(std::back_inserter(outPsh), "; $NUM_SPI_PS_INPUT_CNTL = {}\n", pixelInputCount);
       for (auto i = 0; i < pixelInputCount; ++i) {
-         fmt::format_to(outPsh, "; $SPI_PS_INPUT_CNTL[{}].SEMANTIC = {}\n", i, i);
+         fmt::format_to(std::back_inserter(outPsh), "; $SPI_PS_INPUT_CNTL[{}].SEMANTIC = {}\n", i, i);
       }
    }
 
@@ -399,15 +400,15 @@ parseGlslFileToHeader(glslang::TShader &shader)
       }
 
       if (input.stages & EShLanguageMask::EShLangVertexMask) {
-         fmt::format_to(outVsh, "; $ATTRIB_VARS[{}].name = \"{}\"\n", i, input.name);
-         fmt::format_to(outVsh, "; $ATTRIB_VARS[{}].type = \"{}\"\n", i, typeName);
-         fmt::format_to(outVsh, "; $ATTRIB_VARS[{}].location = {}\n", i, i);
+         fmt::format_to(std::back_inserter(outVsh), "; $ATTRIB_VARS[{}].name = \"{}\"\n", i, input.name);
+         fmt::format_to(std::back_inserter(outVsh), "; $ATTRIB_VARS[{}].type = \"{}\"\n", i, typeName);
+         fmt::format_to(std::back_inserter(outVsh), "; $ATTRIB_VARS[{}].location = {}\n", i, i);
 
          if (type->isArray()) {
-            fmt::format_to(outVsh, "; $ATTRIB_VARS[{}].count = {}\n", i, type->getCumulativeArraySize());
+            fmt::format_to(std::back_inserter(outVsh), "; $ATTRIB_VARS[{}].count = {}\n", i, type->getCumulativeArraySize());
          }
 
-         fmt::format_to(outVsh, "\n");
+         fmt::format_to(std::back_inserter(outVsh), "\n");
       }
    }
 
@@ -458,15 +459,15 @@ parseGlslFileToHeader(glslang::TShader &shader)
          if (qualifier.storage == glslang::EvqVaryingOut) {
             ++vertexOutputCount;
          } else if (qualifier.builtIn == glslang::EbvPointSize) {
-            fmt::format_to(outVsh, "; $PA_CL_VS_OUT_CNTL.USE_VTX_POINT_SIZE = true\n");
+            fmt::format_to(std::back_inserter(outVsh), "; $PA_CL_VS_OUT_CNTL.USE_VTX_POINT_SIZE = true\n");
          }
       }
    }
 
    if (vertexOutputCount) {
-      fmt::format_to(outVsh, "; $NUM_SPI_VS_OUT_ID = {}\n", (vertexOutputCount + 3) / 4);
+      fmt::format_to(std::back_inserter(outVsh), "; $NUM_SPI_VS_OUT_ID = {}\n", (vertexOutputCount + 3) / 4);
       for (auto i = 0; i < vertexOutputCount; ++i) {
-         fmt::format_to(outVsh, "; $SPI_VS_OUT_ID[{}].SEMANTIC_{} = {}\n", i / 4, i % 4, i);
+         fmt::format_to(std::back_inserter(outVsh), "; $SPI_VS_OUT_ID[{}].SEMANTIC_{} = {}\n", i / 4, i % 4, i);
       }
    }
 

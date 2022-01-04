@@ -9,6 +9,7 @@
 #include <common/strutils.h>
 #include <decaf_buildinfo.h>
 #include <filesystem>
+#include <iterator>
 #include <libcpu/cpu_control.h>
 #include <libcpu/cpu_formatters.h>
 #include <memory>
@@ -33,7 +34,7 @@ public:
       auto duration = msg.time.time_since_epoch();
       auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
 
-      fmt::format_to(dest, "[{:02}:{:02}:{:02}.{:06} {}:",
+      fmt::format_to(std::back_inserter(dest), "[{:02}:{:02}:{:02}.{:06} {}:",
                      tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, micros,
                      spdlog::level::to_string_view(msg.level));
 
@@ -41,17 +42,17 @@ public:
       if (core) {
          auto thread = cafe::coreinit::internal::getCurrentThread();
          if (thread) {
-            fmt::format_to(dest, "p{:01X} t{:02X}", core->id, thread->id);
+            fmt::format_to(std::back_inserter(dest), "p{:01X} t{:02X}", core->id, thread->id);
          } else {
-            fmt::format_to(dest, "p{:01X} t{:02X}", core->id, 0xFF);
+            fmt::format_to(std::back_inserter(dest), "p{:01X} t{:02X}", core->id, 0xFF);
          }
       } else if (msg.logger_name.size()) {
-         fmt::format_to(dest, "{}", msg.logger_name);
+         fmt::format_to(std::back_inserter(dest), "{}", msg.logger_name);
       } else {
-         fmt::format_to(dest, "h{}", msg.thread_id);
+         fmt::format_to(std::back_inserter(dest), "h{}", msg.thread_id);
       }
 
-      fmt::format_to(dest, "] {}{}",
+      fmt::format_to(std::back_inserter(dest), "] {}{}",
                      std::string_view { msg.payload.data(), msg.payload.size() },
                      spdlog::details::os::default_eol);
    }

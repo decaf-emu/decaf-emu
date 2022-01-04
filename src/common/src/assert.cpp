@@ -3,8 +3,9 @@
 #include "platform.h"
 #include "platform_stacktrace.h"
 
-#include <iostream>
 #include <fmt/format.h>
+#include <iterator>
+#include <iostream>
 
 #ifdef PLATFORM_WINDOWS
 #include "platform_winapi_string.h"
@@ -26,17 +27,17 @@ assertFailed(const char *file,
    platform::freeStackTrace(stackTrace);
 
    fmt::memory_buffer out;
-   fmt::format_to(out, "Assertion failed:\n");
-   fmt::format_to(out, "Expression: {}\n", expression);
-   fmt::format_to(out, "File: {}\n", file);
-   fmt::format_to(out, "Line: {}\n", line);
+   fmt::format_to(std::back_inserter(out), "Assertion failed:\n");
+   fmt::format_to(std::back_inserter(out), "Expression: {}\n", expression);
+   fmt::format_to(std::back_inserter(out), "File: {}\n", file);
+   fmt::format_to(std::back_inserter(out), "Line: {}\n", line);
 
    if (!message.empty()) {
-      fmt::format_to(out, "Message: {}\n", message);
+      fmt::format_to(std::back_inserter(out), "Message: {}\n", message);
    }
 
    if (trace.size()) {
-      fmt::format_to(out, "Stacktrace:\n{}\n", trace);
+      fmt::format_to(std::back_inserter(out), "Stacktrace:\n{}\n", trace);
    }
    out.push_back('\0');
 
@@ -76,11 +77,11 @@ hostFaultWithStackTrace(const std::string &fault,
    auto trace = platform::formatStackTrace(stackTrace);
 
    fmt::memory_buffer out;
-   fmt::format_to(out, "Encountered host cpu fault:\n");
-   fmt::format_to(out, "Fault: {}\n", fault);
+   fmt::format_to(std::back_inserter(out), "Encountered host cpu fault:\n");
+   fmt::format_to(std::back_inserter(out), "Fault: {}\n", fault);
 
    if (trace.size()) {
-      fmt::format_to(out, "Stacktrace:\n{}\n", trace);
+      fmt::format_to(std::back_inserter(out), "Stacktrace:\n{}\n", trace);
    }
    out.push_back('\0');
 

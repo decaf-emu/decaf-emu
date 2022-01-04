@@ -16,6 +16,7 @@
 #include <common/decaf_assert.h>
 #include <common/log.h>
 #include <fmt/format.h>
+#include <iterator>
 #include <libcpu/cpu_formatters.h>
 
 namespace cafe::coreinit
@@ -300,28 +301,28 @@ checkRunningThreadNoLock(bool yielding)
    // Trace log the thread switch
    if (gLog->should_log(Logger::Level::trace)) {
       fmt::memory_buffer out;
-      fmt::format_to(out, "Core {} leaving", coreId);
+      fmt::format_to(std::back_inserter(out), "Core {} leaving", coreId);
 
       if (currThread) {
-         fmt::format_to(out, " thread {}", currThread->id);
+         fmt::format_to(std::back_inserter(out), " thread {}", currThread->id);
 
          if (currThread->name) {
-            fmt::format_to(out, " [{}]", currThread->name);
+            fmt::format_to(std::back_inserter(out), " [{}]", currThread->name);
          }
       } else {
-         fmt::format_to(out, " idle");
+         fmt::format_to(std::back_inserter(out), " idle");
       }
 
-      fmt::format_to(out, " to");
+      fmt::format_to(std::back_inserter(out), " to");
 
       if (nextThread) {
-         fmt::format_to(out, " thread {}", nextThread->id);
+         fmt::format_to(std::back_inserter(out), " thread {}", nextThread->id);
 
          if (nextThread->name) {
-            fmt::format_to(out, " [{}]", nextThread->name);
+            fmt::format_to(std::back_inserter(out), " [{}]", nextThread->name);
          }
       } else {
-         fmt::format_to(out, " idle");
+         fmt::format_to(std::back_inserter(out), " idle");
       }
 
       gLog->trace("{}", std::string_view { out.data(), out.size() });

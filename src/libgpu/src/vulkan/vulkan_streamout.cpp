@@ -51,7 +51,7 @@ Driver::allocateStreamContext(uint32_t initialOffset)
       allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
       VkBuffer buffer;
-      VmaAllocation allocation;
+      VmaAllocation allocation = nullptr;
       vmaCreateBuffer(mAllocator,
                       reinterpret_cast<VkBufferCreateInfo*>(&bufferDesc),
                       &allocInfo,
