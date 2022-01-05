@@ -135,9 +135,13 @@ if(DECAF_VALGRIND)
 endif()
 
 if(DECAF_QT)
-    find_package(Qt5 COMPONENTS Core Concurrent Widgets Svg Xml REQUIRED)
+    find_package(Qt6 COMPONENTS Core Concurrent Widgets Svg SvgWidgets Xml)
+    if(NOT Qt6_FOUND)
+        find_package(Qt5 5.15 COMPONENTS Core Concurrent Widgets Svg Xml REQUIRED)
+    endif()
+
+    set(QT_DIR Qt${QT_VERSION_MAJOR}_DIR)
     add_definitions(-DDECAF_QT)
-    set(QT_DIR ${Qt5_DIR}) # qtads expects QT_DIR not QT5_DIR
 endif()
 
 # Build third party libraries

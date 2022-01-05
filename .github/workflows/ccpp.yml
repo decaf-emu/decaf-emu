@@ -79,7 +79,7 @@ jobs:
         fi
         pip3 install wheel
         pip3 install aqtinstall
-        python3 -m aqt install 5.13.0 linux desktop
+        python3 -m aqt install 5.15.0 linux desktop
 
     - name: Load Cached Vulkan SDK (Windows)
       id: cache-vulkan-windows
@@ -115,8 +115,8 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       uses: actions/cache@v1
       with:
-        path: C:/Qt/5.13.0/msvc2017_64
-        key: ${{ runner.os }}-qt-5.13.0-msvc2017_64
+        path: C:/Qt/5.15.0/msvc2019_64
+        key: ${{ runner.os }}-qt-5.15.0-msvc2019_64
 
     - name: Install Qt from web (Windows)
       if: startsWith(matrix.os, 'windows') && steps.cache-qt-windows.outputs.cache-hit != 'true'
@@ -125,7 +125,7 @@ jobs:
         mkdir "C:\\Qt"
         cd "C:\\Qt"
         pip install aqtinstall
-        cmd /c 'python 2>&1' -m aqt install 5.13.0 windows desktop win64_msvc2017_64
+        cmd /c 'python 2>&1' -m aqt install 5.15.0 windows desktop win64_msvc2019_64
         dir
 
     - name: Setup Environment (Ubuntu)
@@ -138,7 +138,7 @@ jobs:
           echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
           echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
         fi
-        echo "QTDIR=$PWD/build/5.13.0/gcc_64" >> $GITHUB_ENV
+        echo "QTDIR=$PWD/build/5.15.0/gcc_64" >> $GITHUB_ENV
         echo "VULKAN_SDK=$PWD/vulkan" >> $GITHUB_ENV
 
     - name: Setup Environment (Windows)
@@ -146,20 +146,20 @@ jobs:
       shell: powershell
       run: |
         echo "VULKAN_SDK=C:\\VulkanSDK\\1.2.182.0" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "QTDIR=C:\\Qt\\5.13.0\\msvc2017_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "QTDIR=C:\\Qt\\5.15.0\\msvc2019_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Configure (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release -DVCPKG_HOST_TRIPLET=x64-linux-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DQt5_DIR=$QTDIR/lib/cmake/Qt5 -DQT_DIR=$QTDIR/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release -DVCPKG_HOST_TRIPLET=x64-linux-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_PREFIX_PATH=$QTDIR -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
         cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DQT_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_PREFIX_PATH=%QTDIR% -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Build
       run: |

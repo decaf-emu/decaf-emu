@@ -14,13 +14,7 @@
 #include <libgpu/gpu_graphicsdriver.h>
 #include <libgpu/gpu7_displaylayout.h>
 
-#if QT_VERSION == QT_VERSION_CHECK(6, 0, 1)
-#include <QtGui/6.0.1/QtGui/qpa/qplatformnativeinterface.h>
-#elif QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <qpa/qplatformnativeinterface.h>
-#else
-#error "Unsupported QT_VERSION"
-#endif
 
 RenderWidget::RenderWidget(InputDriver *inputDriver, QWidget *parent) :
    mInputDriver(inputDriver),

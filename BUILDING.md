@@ -15,24 +15,23 @@ Required:
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 
 Optional:
-- [Qt] (https://www.qt.io/download-qt-installer), disable by using `-DDECAF_QT=OFF`
+- [Qt 5.15+ / 6+] (https://www.qt.io/download-qt-installer), disable by using `-DDECAF_QT=OFF`
 
 ### Building
 - `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
 
 Use cmake-gui to generate a VS project file:
-- Set `"Where is the source code` to `[path to decaf-emu.git]`
-- Set `"Where to build the binaries"` to `[path to decaf-emu.git]/build`
+- Set `Where is the source code` to `[path to decaf-emu.git]`
+- Set `Where to build the binaries` to `[path to decaf-emu.git]/build`
+- Click `Add Entry` and set `Name: CMAKE_PREFIX_PATH`, `Type: PATH`, `Value` to a Qt5 or Qt6 installation directory, e.g. `Value: C:\Qt\5.15.2\msvc2019_64`
 - Click `Configure`
 - Ensure `Specify the generator for this project` is set to a version of Visual Studio installed on your computer
 - Select `Specify toolchain for cross-compiling`
 - Click `Next`
 - Set `Specify the toolchain file` to `[path to vcpkg]/scripts/buildsystems/vcpkg.cmake`
 - Click `Finish`
-- Configure will run, which may take a while as vcpkg acquires the dependencies
-- Eventually it will probably fail because it cannot find Qt5, so set the Qt5_DIR variable to `[path to Qt]\lib\cmake\Qt5`, for example this might be `C:\Qt\5.15.2\msvc2019_64\lib\cmake\Qt5`, alternatively you can set DECAF_QT to OFF if you do not want to build with Qt
-- Click `Configure` again, if all works the console should say "Configuring done"
-- Click `Generate`, if all works the console should say "Generating done"
+- Configure will run, which may take a while as vcpkg acquires the dependencies, if all works the console should say `Configuring done`
+- Click `Generate`, if all works the console should say `Generating done`
 - Click `Open Project` to open the generated project in Visual sStudio where you can develop and build.
 
 ## Linux
@@ -45,7 +44,7 @@ Required:
 
 Optional:
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home), disable by using `-DDECAF_VULKAN=OFF`
-- [Qt] (https://www.qt.io/download-qt-installer), disable by using `-DDECAF_QT=OFF`
+- [Qt 5.15+ / 6+] (https://www.qt.io/download-qt-installer), disable by using `-DDECAF_QT=OFF`
 
 For some systems, Qt can be installed with:
 - `apt install qtbase5-dev qtbase5-private-dev libqt5svg5-dev libqt5x11extras5-dev mesa-common-dev libglu1-mesa-dev`

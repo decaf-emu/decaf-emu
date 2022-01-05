@@ -18,6 +18,7 @@ You can find us for developer discussion:
 - 64 bit only
 - CMake v3.2+
 - Vulkan 1.1.106.0+
+- Qt 5.15+ / 6+
 
 ## Support
 - None, this is an in-development project and user support is not provided.
