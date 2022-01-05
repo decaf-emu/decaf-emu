@@ -137,6 +137,7 @@ endif()
 if(DECAF_QT)
     find_package(Qt5 COMPONENTS Core Concurrent Widgets Svg Xml REQUIRED)
     add_definitions(-DDECAF_QT)
+    set(QT_DIR ${Qt5_DIR}) # qtads expects QT_DIR not QT5_DIR
 endif()
 
 # Build third party libraries

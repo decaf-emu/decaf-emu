@@ -11,81 +11,60 @@
 Required:
 - [Visual Studio 2019](https://visualstudio.microsoft.com/vs/community/)
 - [CMake](https://cmake.org/)
-- [Conan](https://conan.io/downloads.html)
-- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows)
+- [vcpkg](https://vcpkg.io/en/getting-started.html)
+- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 
 Optional:
-- ffmpeg, unfortunately there are no ffmpeg binaries on conan so this must be supplied yourself and enabled with -DDECAF_FFMPEG=ON
-
-By default conan will use `%USERPROFILE%/.conan`, if you have limited C:/ drive space it is recommend to set the `CONAN_USER_HOME` environment variable to a folder on a drive with more space.
+- [Qt] (https://www.qt.io/download-qt-installer), disable by using `-DDECAF_QT=OFF`
 
 ### Building
 - `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
-- `cd decaf-emu`
-- `mkdir build`
-- `cd build`
-- `conan install .. -o silent=True`
-- Use cmake-gui to generate a VS project file
+
+Use cmake-gui to generate a VS project file:
+- Set `"Where is the source code` to `[path to decaf-emu.git]`
+- Set `"Where to build the binaries"` to `[path to decaf-emu.git]/build`
+- Click `Configure`
+- Ensure `Specify the generator for this project` is set to a version of Visual Studio installed on your computer
+- Select `Specify toolchain for cross-compiling`
+- Click `Next`
+- Set `Specify the toolchain file` to `[path to vcpkg]/scripts/buildsystems/vcpkg.cmake`
+- Click `Finish`
+- Configure will run, which may take a while as vcpkg acquires the dependencies
+- Eventually it will probably fail because it cannot find Qt5, so set the Qt5_DIR variable to `[path to Qt]\lib\cmake\Qt5`, for example this might be `C:\Qt\5.15.2\msvc2019_64\lib\cmake\Qt5`, alternatively you can set DECAF_QT to OFF if you do not want to build with Qt
+- Click `Configure` again, if all works the console should say "Configuring done"
+- Click `Generate`, if all works the console should say "Generating done"
+- Click `Open Project` to open the generated project in Visual sStudio where you can develop and build.
 
 ## Linux
 
 ### Dependencies
 Required:
-- A modern C++17 friendly compiler such as g++8
+- A modern C++17 friendly compiler such as g++9
 - CMake
-- c-ares
-- libcurl
-- libuv
-- openssl
-- sdl2
-- zlib
+- [vcpkg](https://vcpkg.io/en/getting-started.html)
 
 Optional:
-- ffmpeg, disable by using `-DDECAF_FFMPEG=OFF`
-- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows), disable by using `-DDECAF_VULKAN=OFF`
-- Qt, disable by using `-DDECAF_QT=OFF`
+- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home), disable by using `-DDECAF_VULKAN=OFF`
+- [Qt] (https://www.qt.io/download-qt-installer), disable by using `-DDECAF_QT=OFF`
 
-The dependencies, other than Vulkan, can either be acquired using your package manager such as:
-- Required: `apt install cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libuv1-dev libc-ares-dev`
-- Optional: `apt install libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev qtbase5-dev qtbase5-private-dev libqt5svg5-dev libqt5x11extras5-dev`
-
-Or by using [Conan](https://conan.io), which is recommended to be installed using Python pip:
-- `pip install conan`
-- `conan user`
-
-It is recommended to use your system's openssl and curl even when using conan:
-- `conan install .. --build=missing -o curl=False -o openssl=False`
-
-You may choose to use a mix of system dependenices such as if your system's ffmpeg is too old, you can interactively customise which dependencies to acquire when using `conan install ..` or you can specifiy on the command line. So for example to acquire only ffmpeg you might use `conan install .. --build=missing -o silent=True -o ffmpeg=True -o curl=False -o openssl=False -o sdl2=False -o zlib=False`
+For some systems, Qt can be installed with:
+- `apt install qtbase5-dev qtbase5-private-dev libqt5svg5-dev libqt5x11extras5-dev mesa-common-dev libglu1-mesa-dev`
 
 ### Building
 - `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
 - `cd decaf-emu`
 - `mkdir build`
 - `cd build`
-- If using conan: `conan install .. -o silent=True -o curl=False -o openssl=False`
-- `cmake -DCMAKE_BUILD_TYPE=Release ../`
+- `cmake -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../`
 - `make`
+
+You might want to use `cmake -G Ninja <...>` and build with Ninja instead of Make for faster builds.
 
 ## MacOS
 Currently decaf-emu can build on MacOS using Xcode 11 although MoltenVK is missing crucial features which will prevent most games from rendering correctly, e.g. geometry shaders, transform feedback, logic op support, unrestricted depth range. This means the platform should be considered as unsupported.
 
-I have had success at building with:
-- Install [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#mac)
-- `brew install openssl sdl2 conan`
-- `git clone --recursive https://github.com/decaf-emu/decaf-emu.git`
-- `cd decaf-emu`
-- `mkdir build && cd build`
-- `conan install .. --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False`
-- `cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=OFF -DDECAF_GL=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..`
-- `make`
-
-Or use `cmake -G "Xcode"` to generate an Xcode project.
-
 ## CMake
 Options interesting to users:
-- DECAF_FFMPEG - Build with ffmpeg which is used for decoding h264 videos
-- DECAF_SDL - Build with SDL frontend.
 - DECAF_QT - Build with Qt frontend.
 - DECAF_VULKAN - Build with Vulkan backend.
 
@@ -100,5 +79,3 @@ Options interesting to developers:
 ## Troubleshooting
 
 decaf-emu builds on github actions CI - so a good reference on how to build is always the CI script itself [.github/workflows/ccpp.yml](https://github.com/decaf-emu/decaf-emu/blob/master/.github/workflows/ccpp.yml)
-
-Often conan requires updating to the latest version to fix various issues, so if it is failing to install dependencies then be sure to `pip install --upgrade conan` / `brew upgrade conan` / update conan manually.
