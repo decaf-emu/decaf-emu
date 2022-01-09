@@ -269,19 +269,19 @@ loadCertstoreMetadata()
                auto value = trim_view(kvPair.substr(eqPos + 1));
 
                if (iequals(key, "ID")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.id, 10);
+                  certData.id = std::stol(std::string(value), nullptr, 0);
                   certData.hasId = true;
                } else if (iequals(key, "TYPE")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.type, 10);
+                  certData.type = std::stol(std::string(value), nullptr, 0);
                   certData.hasType = true;
                } else if (iequals(key, "ENCODING")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.encoding, 10);
+                  certData.encoding = std::stol(std::string(value), nullptr, 0);
                   certData.hasEncoding = true;
                } else if (iequals(key, "PROPERTIES")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.properties, 16);
+                  certData.properties = std::stol(std::string(value), nullptr, 0);
                   certData.hasProperties = true;
                } else if (iequals(key, "CAPABILITY_MASK")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.capabilityMask, 16);
+                  certData.capabilityMask = std::stol(std::string(value), nullptr, 0);
                   certData.hasCapabilityMask = true;
                } else if (iequals(key, "PID")) {
                   auto pidPosition = size_t { 0 };
@@ -289,7 +289,7 @@ loadCertstoreMetadata()
                   while (pidPosition < value.size() && pidIndex < certData.processIds.size() - 1) {
                      auto pidEndPosition = std::min(value.find_first_of(','), value.size());
                      auto pid = value.substr(pidPosition, pidEndPosition - pidPosition);
-                     std::from_chars(pid.data(), pid.data() + pid.size(), certData.processIds[pidIndex++], 10);
+                     certData.processIds[pidIndex++] = std::stol(std::string(pid), nullptr, 0);
                      pidPosition = pidEndPosition + 1;
                   }
 
@@ -301,7 +301,7 @@ loadCertstoreMetadata()
                   while (tidPosition < value.size() && tidIndex < certData.titleIds.size() - 1) {
                      auto tidEndPosition = std::min(value.find_first_of(','), value.size());
                      auto tid = value.substr(tidPosition, tidEndPosition - tidPosition);
-                     std::from_chars(tid.data(), tid.data() + tid.size(), certData.titleIds[tidIndex++], 16);
+                     certData.titleIds[tidIndex++] = std::stol(std::string(tid), nullptr, 0);
                      tidPosition = tidEndPosition + 1;
                   }
 
@@ -324,13 +324,13 @@ loadCertstoreMetadata()
 
                   certData.hasPaths = true;
                } else if (iequals(key, "GROUPS")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.groups, 10);
+                  certData.groups = std::stol(std::string(value), nullptr, 0);
                   certData.hasGroups = true;
                } else if (iequals(key, "RAW_E0_SIZE") || iequals(key, "RAW_SIZE")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.rawE0Size, 10);
+                  certData.rawE0Size = std::stol(std::string(value), nullptr, 0);
                   certData.hasRawE0Size = true;
                } else if (iequals(key, "RAW_E1_SIZE") || iequals(key, "KEYSIZEDER")) {
-                  std::from_chars(value.data(), value.data() + value.size(), certData.rawE1Size, 10);
+                  certData.rawE1Size = std::stol(std::string(value), nullptr, 0);
                   certData.hasRawE1Size = true;
                } else {
                   nsecLog->warn("CERTSTORE: Unrecognized property name '{}' on line {}", key, lineIndex);
