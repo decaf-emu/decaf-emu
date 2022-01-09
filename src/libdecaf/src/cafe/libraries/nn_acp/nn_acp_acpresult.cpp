@@ -27,7 +27,8 @@ ACPSendCOSFatalError(coreinit::OSFatalErrorMessageType type,
    if (OSGetUPID() == cafe::kernel::UniqueProcessId::ErrorDisplay) {
       internal::COSWarn(COSReportModule::Unknown1,
          fmt::format("ACP: Skip to call OSSendFatalError from {} (UPID={}).\n",
-            funcName, cafe::kernel::UniqueProcessId::ErrorDisplay));
+            funcName,
+            static_cast<int>(cafe::kernel::UniqueProcessId::ErrorDisplay)));
       return;
    }
 
