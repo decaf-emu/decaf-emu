@@ -138,7 +138,7 @@ NSSLDevice::exportInternalServerCertificate(
       return NSSLError::CertNoAccess;
    }
 
-   if (checkCertExportable(certMetaData)) {
+   if (!checkCertExportable(certMetaData)) {
       return NSSLError::CertNotExportable;
    }
 
