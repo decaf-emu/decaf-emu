@@ -1,6 +1,7 @@
 #include "ios_crypto.h"
 #include "ios_crypto_enum.h"
 #include "ios_crypto_log.h"
+#include "ios_crypto_request.h"
 
 #include "decaf_log.h"
 #include "ios/ios_stackobject.h"
@@ -10,6 +11,10 @@
 #include "ios/kernel/ios_kernel_otp.h"
 #include "ios/kernel/ios_kernel_resourcemanager.h"
 #include "ios/mcp/ios_mcp_ipc.h"
+
+#include <gsl/gsl-lite.hpp>
+#include <openssl/err.h>
+#include <openssl/evp.h>
 
 using namespace ios::kernel;
 using namespace ios::mcp;
@@ -21,7 +26,7 @@ constexpr auto kCryptoHeapSize = 0x1000u;
 constexpr auto kCrossHeapSize = 0x10000u;
 constexpr auto kMainThreadNumMessages = 260u;
 
-struct CryptoHandle
+struct CryptoDevice
 {
    be2_val<BOOL> used = FALSE;
    be2_val<ProcessId> processId;
@@ -76,7 +81,7 @@ struct StaticCryptoData
    be2_val<HeapId> cryptoHeapId = -1;
    be2_val<MessageQueueId> messageQueueId;
    be2_array<Message, kMainThreadNumMessages> messages;
-   be2_array<CryptoHandle, 32> handles;
+   be2_array<CryptoDevice, 32> handles;
    be2_struct<OtpKeys> otpKeys;
 
    be2_array<KeyData, 256> keyDataList;
@@ -97,6 +102,34 @@ initialiseStaticData()
 {
    sCryptoData = allocProcessStatic<StaticCryptoData>();
    sCryptoHeap = allocProcessLocalHeap(kCryptoHeapSize);
+}
+
+static phys_ptr<CryptoDevice>
+getCryptoDevice(uint32_t handle)
+{
+   if (handle < 0 || handle >= sCryptoData->handles.size()) {
+      return nullptr;
+   }
+
+   if (!sCryptoData->handles[handle].used) {
+      return nullptr;
+   }
+
+   return phys_addrof(sCryptoData->handles[handle]);
+}
+
+static phys_ptr<KeyHandle>
+getCryptoKey(uint32_t handle)
+{
+   if (handle < 0 || handle >= sCryptoData->keyHandleList.size()) {
+      return nullptr;
+   }
+
+   if (!sCryptoData->keyHandleList[handle].used) {
+      return nullptr;
+   }
+
+   return phys_addrof(sCryptoData->keyHandleList[handle]);
 }
 
 static phys_ptr<KeyData>
@@ -647,6 +680,116 @@ initialiseCrypto()
    return Error::OK;
 }
 
+static IOSCError
+ioscDecrypt(phys_ptr<ResourceRequest> resourceRequest,
+            phys_ptr<IOSCRequestDecrypt> decryptRequest,
+            phys_ptr<void> iv, uint32_t ivSize,
+            phys_ptr<void> input, uint32_t inputSize,
+            phys_ptr<void> output, uint32_t outputSize)
+{
+   auto cryptoDevice = getCryptoDevice(resourceRequest->requestData.handle);
+   if (!cryptoDevice) {
+      return static_cast<IOSCError>(Error::Invalid);
+   }
+
+   if (cryptoDevice->processId > ProcessId::COSKERNEL) {
+      return IOSCError::InvalidParam;
+   }
+
+   auto cryptoKey = getCryptoKey(decryptRequest->keyHandle);
+   if (!cryptoKey) {
+      return static_cast<IOSCError>(Error::Invalid);
+   }
+
+   if (!(cryptoKey->permission & (1 << static_cast<int>(cryptoDevice->processId)))) {
+      return IOSCError::Permission;
+   }
+
+   EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+   auto _ = gsl::finally([&]() { EVP_CIPHER_CTX_free(ctx); });
+   if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL,
+                           reinterpret_cast<unsigned char *>(cryptoKey->data.get()),
+                           reinterpret_cast<unsigned char *>(iv.get()))) {
+      return IOSCError::CryptoError;
+   }
+
+   EVP_CIPHER_CTX_set_key_length(ctx, 16);
+   EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+   int updateLength = static_cast<int>(0);
+   int finalLength = static_cast<int>(0);
+   if (!EVP_DecryptUpdate(ctx,
+                          reinterpret_cast<unsigned char *>(output.get()),
+                          &updateLength,
+                          reinterpret_cast<unsigned char *>(input.get()),
+                          static_cast<int>(inputSize))) {
+      return IOSCError::CryptoError;
+   }
+
+   if (!EVP_DecryptFinal_ex(ctx,
+                            reinterpret_cast<unsigned char *>(output.get()) + updateLength,
+                            &finalLength)) {
+      return IOSCError::CryptoError;
+   }
+
+   return IOSCError::OK;
+}
+
+static Error
+cryptoIoctlv(phys_ptr<ResourceRequest> resourceRequest)
+{
+   auto error = Error::OK;
+
+   switch (static_cast<IOSCCommand>(resourceRequest->requestData.args.ioctlv.request)) {
+   case IOSCCommand::Decrypt:
+   {
+      if (resourceRequest->requestData.args.ioctlv.numVecIn != 3) {
+         return Error::InvalidArg;
+      }
+
+      if (resourceRequest->requestData.args.ioctlv.numVecOut != 1) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctlv.vecs[0].paddr ||
+           resourceRequest->requestData.args.ioctlv.vecs[0].len != sizeof(IOSCRequestDecrypt)) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctlv.vecs[1].paddr ||
+           resourceRequest->requestData.args.ioctlv.vecs[1].len != 16) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctlv.vecs[2].paddr ||
+          !resourceRequest->requestData.args.ioctlv.vecs[2].len) {
+         return Error::InvalidArg;
+      }
+
+      if (!resourceRequest->requestData.args.ioctlv.vecs[3].paddr ||
+          !resourceRequest->requestData.args.ioctlv.vecs[3].len) {
+         return Error::InvalidArg;
+      }
+
+      auto decryptRequest = phys_cast<IOSCRequestDecrypt *>(
+         resourceRequest->requestData.args.ioctlv.vecs[0].paddr);
+      error = static_cast<Error>(
+         ioscDecrypt(resourceRequest, decryptRequest,
+            phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[1].paddr),
+            resourceRequest->requestData.args.ioctlv.vecs[1].len,
+            phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[2].paddr),
+            resourceRequest->requestData.args.ioctlv.vecs[2].len,
+            phys_cast<void *>(resourceRequest->requestData.args.ioctlv.vecs[3].paddr),
+            resourceRequest->requestData.args.ioctlv.vecs[3].len));
+      break;
+   }
+   default:
+      error = Error::InvalidArg;
+   }
+
+   return error;
+}
+
 } // namespace internal
 
 Error
@@ -726,6 +869,9 @@ processEntryPoint(phys_ptr<void> /* context */)
       case Command::Resume:
          internal::initialiseCrypto();
          IOS_ResourceReply(request, Error::OK);
+         break;
+      case Command::Ioctlv:
+         IOS_ResourceReply(request, internal::cryptoIoctlv(request));
          break;
       default:
          IOS_ResourceReply(request, Error::Invalid);

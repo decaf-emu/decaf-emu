@@ -6,6 +6,17 @@
 ENUM_NAMESPACE_ENTER(ios)
 ENUM_NAMESPACE_ENTER(crypto)
 
+ENUM_BEG(IOSCError, int32_t)
+   ENUM_VALUE(OK,                   0)
+   ENUM_VALUE(Permission,           -2000)
+   ENUM_VALUE(InvalidParam,         -2002)
+   ENUM_VALUE(CryptoError,          -2012)
+ENUM_END(IOSCError)
+
+ENUM_BEG(IOSCCommand, uint32_t)
+   ENUM_VALUE(Decrypt,                    0xE)
+ENUM_END(IOSCCommand)
+
 ENUM_BEG(KeyId, uint32_t)
    ENUM_VALUE(NgPrivateKey,               0x0)
    ENUM_VALUE(NgId,                       0x1)
