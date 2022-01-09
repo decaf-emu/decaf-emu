@@ -68,7 +68,7 @@ getCertFileSize(phys_ptr<CertStoreMetaData> certMetaData,
 std::optional<uint32_t>
 getCertFileData(phys_ptr<CertStoreMetaData> certMetaData,
                 int32_t pathIndex,
-                phys_ptr<uint8_t> certBuffer,
+                phys_ptr<void> certBuffer,
                 uint32_t certBufferSize);
 
 phys_ptr<CertStoreMetaData>

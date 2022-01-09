@@ -10,6 +10,7 @@
 #include <array>
 #include <charconv>
 #include <common/strutils.h>
+#include <gsl/gsl-lite.hpp>
 #include <string_view>
 
 using namespace ios::fs;
@@ -102,7 +103,7 @@ getCertFileSize(phys_ptr<CertStoreMetaData> certMetaData,
 std::optional<uint32_t>
 getCertFileData(phys_ptr<CertStoreMetaData> certMetaData,
                 int32_t pathIndex,
-                phys_ptr<uint8_t> certBuffer,
+                phys_ptr<void> certBuffer,
                 uint32_t certBufferSize)
 {
    // Read file data 4096 bytes at a time into allocated buffer copying into certbuiffer
@@ -111,6 +112,7 @@ getCertFileData(phys_ptr<CertStoreMetaData> certMetaData,
    if (!heapBuffer) {
       return {};
    }
+   auto _ = gsl::finally([&]() { IOS_HeapFree(CrossProcessHeapId, heapBuffer); });
 
    auto path = std::string { "/vol/storage_mlc01/sys/title/0005001b/10054000/content/" };
    if (pathIndex == 0) {
@@ -124,17 +126,22 @@ getCertFileData(phys_ptr<CertStoreMetaData> certMetaData,
    if (error < FSAStatus::OK) {
       return {};
    }
+   auto _2 = gsl::finally([&]() {
+         FSACloseFile(sCertStoreData->fsaHandle, fileHandle);
+      });
 
    auto certSize = 0;
 
    while (true) {
-      error = FSAReadFile(sCertStoreData->fsaHandle, heapBuffer, 1, heapBufferSize, fileHandle, FSAReadFlag::None);
+      error = FSAReadFile(sCertStoreData->fsaHandle, heapBuffer, 1,
+                          heapBufferSize, fileHandle, FSAReadFlag::None);
       if (error < 0) {
          break;
       }
 
       auto bytesRead = static_cast<uint32_t>(error);
-      std::memcpy(certBuffer.get() + certSize, heapBuffer.get(), error);
+      std::memcpy(reinterpret_cast<uint8_t *>(certBuffer.get()) + certSize,
+                  heapBuffer.get(), error);
       certSize += bytesRead;
 
       if (bytesRead < heapBufferSize) {
@@ -142,8 +149,6 @@ getCertFileData(phys_ptr<CertStoreMetaData> certMetaData,
          break;
       }
    }
-
-   IOS_HeapFree(CrossProcessHeapId, heapBuffer);
 
    if (error < FSAStatus::OK && error != FSAStatus::EndOfFile) {
       return {};
@@ -192,6 +197,7 @@ loadCertstoreMetadata()
       nsecLog->warn("loadCertstoreMetadata: Failed to allocate file buffer of size {}", size);
       return Error::QFull;
    }
+   auto _ = gsl::finally([&]() { IOS_HeapFree(CrossProcessHeapId, fileBuffer); });
 
    auto fileHandle = FSAFileHandle { -1 };
    error = FSAOpenFile(sCertStoreData->fsaHandle, path, "r", &fileHandle);
@@ -201,14 +207,13 @@ loadCertstoreMetadata()
    }
 
    error = FSAReadFile(sCertStoreData->fsaHandle, fileBuffer, 1, size, fileHandle, FSAReadFlag::None);
+   FSACloseFile(sCertStoreData->fsaHandle, fileHandle);
    if (error < FSAStatus::OK) {
       nsecLog->warn("loadCertstoreMetadata: FSAReadFile failed with error {}", error);
-      FSACloseFile(sCertStoreData->fsaHandle, fileHandle);
       return static_cast<Error>(error);
    }
 
    size = static_cast<uint32_t>(error);
-   FSACloseFile(sCertStoreData->fsaHandle, fileHandle);
 
    // Now parse fileBuffer, size bytes for metadata
    auto contents = std::string_view { phys_cast<char *>(fileBuffer).get(), size };
@@ -398,7 +403,6 @@ loadCertstoreMetadata()
       sCertStoreData->metaData[certIndex].id = -1;
    }
 
-   IOS_HeapFree(LocalProcessHeapId, fileBuffer);
    return Error::OK;
 }
 
