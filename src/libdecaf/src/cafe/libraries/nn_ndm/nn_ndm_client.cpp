@@ -60,9 +60,7 @@ Finalize()
 bool
 IsInitialized()
 {
-   // TODO: This should actuallly be sClientData->client.isInitialised();
-   //       however we have not implemented /dev/ndm in IOS
-   return sClientData->refCount > 0;
+   return sClientData->client.isInitialised();
 }
 
 nn::Result
