@@ -14,6 +14,8 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerClientSymbols();
 }
 
 } // namespace cafe::nn_vctl
