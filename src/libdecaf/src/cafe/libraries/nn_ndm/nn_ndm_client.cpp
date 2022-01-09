@@ -43,7 +43,7 @@ Initialize()
    return nn::ResultSuccess;
 }
 
-nn::Result
+void
 Finalize()
 {
    OSLockMutex(virt_addrof(sClientData->mutex));

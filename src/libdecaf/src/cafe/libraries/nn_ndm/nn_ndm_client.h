@@ -7,7 +7,7 @@ namespace cafe::nn_ndm
 nn::Result
 Initialize();
 
-nn::Result
+void
 Finalize();
 
 bool
