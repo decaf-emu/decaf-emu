@@ -541,7 +541,7 @@ initialiseStaticPmThreadData()
          dummyRM,
          { ss("/dev/nim"),             1u, rm(0x180000, ProcessId::NIM, 1) },
          dummyRM,
-         //{ ss("/dev/ndm"),             1u, rm(0x180000, ProcessId::NET, 1) },
+         { ss("/dev/ndm"),             1u, rm(0x180000, ProcessId::NET, 1) },
          dummyRM,
          //{ ss("/dev/emd"),             1u, rm(0x180000, ProcessId::ACP, 1) },
          dummyRM,

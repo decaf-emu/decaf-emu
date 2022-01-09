@@ -1,6 +1,7 @@
 #include "ios_net.h"
 #include "ios_net_ac_main_server.h"
 #include "ios_net_log.h"
+#include "ios_net_ndm_server.h"
 #include "ios_net_subsys.h"
 #include "ios_net_socket_async_task.h"
 #include "ios_net_socket_thread.h"
@@ -121,6 +122,7 @@ processEntryPoint(phys_ptr<void> /* context */)
    // Initialise static memory
    internal::initialiseStaticData();
    internal::initialiseStaticAcMainServerData();
+   internal::initialiseStaticNdmServerData();
    internal::initialiseStaticSocketData();
    internal::initialiseStaticSocketAsyncTaskData();
    internal::initialiseStaticSubsysData();
@@ -142,7 +144,13 @@ processEntryPoint(phys_ptr<void> /* context */)
    // TODO: initIoBuf
    // TODO: start wifi24 thread (/dev/wifi24)
    // TODO: start uds threads (/dev/ifuds /dev/udscntrl)
-   // TODO: start nn servers for /dev/ndm and /dev/dlp
+   // TODO: start nn servers for /dev/dlp
+
+   error = internal::startNdmServer();
+   if (error < Error::OK) {
+      internal::netLog->error("NET: Failed to start ndm server, error = {}.", error);
+      return error;
+   }
 
    error = internal::startAcMainServer();
    if (error < Error::OK) {
