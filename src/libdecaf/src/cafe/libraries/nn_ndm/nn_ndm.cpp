@@ -15,7 +15,7 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
-   registerNdmSymbols();
+   registerClientSymbols();
 }
 
 } // namespace cafe::nn_ndm

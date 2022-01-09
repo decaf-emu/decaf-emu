@@ -16,7 +16,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
-   void registerNdmSymbols();
+   void registerClientSymbols();
 };
 
 } // namespace cafe::nn_ndm
