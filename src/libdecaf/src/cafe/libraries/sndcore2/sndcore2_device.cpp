@@ -195,7 +195,7 @@ struct AudioDecoder
          }
 
          // Calculate sample
-         auto adpcmSample = (scale * sampleData) + ((0x400 + (coeff1 * yn1) + (coeff2 * yn2)) >> 11);
+         auto adpcmSample = (scale * sampleData << 11) + ((0x400 + (coeff1 * yn1) + (coeff2 * yn2)) >> 11);
 
          // Clamp the output
          auto clampedSample = std::min(std::max(adpcmSample, -32767), 32767);
