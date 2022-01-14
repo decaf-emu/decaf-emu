@@ -23,7 +23,7 @@ You can find us for developer discussion:
 - None, this is an in-development project and user support is not provided.
 
 ## Binaries
-The latest Windows and Linux binaries are available via [Actions artifacts](https://github.com/decaf-emu/decaf-emu/actions?query=branch%3Amaster+is%3Asuccess).
+The latest Windows and Linux binaries are available via [Actions artifacts](https://github.com/decaf-emu/decaf-emu/actions?query=branch%3Amaster+is%3Asuccess). You must be logged into GitHub in order to download the artifacts.
 
 MacOS builds are currently not provided due to complications with Vulkan.
 
