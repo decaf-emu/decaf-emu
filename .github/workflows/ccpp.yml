@@ -50,12 +50,10 @@ jobs:
         pip3 install wheel
         pip3 install aqtinstall
         python3 -m aqt install 5.13.0 linux desktop
-
     - name: Install Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
         brew install openssl sdl2 conan
-
     - name: Load Cached Vulkan SDK (macOS)
       id: cache-vulkan-macos
       if: startsWith(matrix.os, 'macOS')
@@ -73,7 +71,6 @@ jobs:
         hdiutil mount vulkan-sdk.dmg
         cp -r /Volumes/vulkansdk-macos-1.2.182.0/macOS .
         rm vulkan-sdk.dmg
-
     - name: Load Cached Vulkan SDK (Windows)
       id: cache-vulkan-windows
       if: startsWith(matrix.os, 'windows')
@@ -102,7 +99,6 @@ jobs:
         Remove-Item -Force Bin\\VkLayer*
         Remove-Item -Force Lib\\shaderc*
         dir
-
     - name: Load Cached Qt (Windows)
       id: cache-qt-windows
       if: startsWith(matrix.os, 'windows')
@@ -120,7 +116,6 @@ jobs:
         pip install aqtinstall
         cmd /c 'python 2>&1' -m aqt install 5.13.0 windows desktop win64_msvc2017_64
         dir
-
     - name: Setup Environment (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
@@ -136,13 +131,11 @@ jobs:
         echo "CONAN_ENV_COMPILER_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
         echo "QTDIR=$PWD/build/5.13.0/gcc_64" >> $GITHUB_ENV
         echo "VULKAN_SDK=$PWD/vulkan/macOS" >> $GITHUB_ENV
-
     - name: Setup Environment (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
         echo "VULKAN_SDK=$PWD/vulkan/macOS" >> $GITHUB_ENV
         sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
-
     - name: Setup Environment (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: powershell
@@ -151,7 +144,6 @@ jobs:
         echo "QTDIR=C:\\Qt\\5.13.0\\msvc2017_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "CONAN_ENV_COMPILER=Visual Studio" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "CONAN_ENV_COMPILER_VERSION=16" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
     - name: Install Conan Dependencies (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
@@ -160,14 +152,12 @@ jobs:
         source ~/.profile
         conan user
         conan install .. -s compiler=${{ matrix.compiler }} -s compiler.version=${{ matrix.version }} -s compiler.libcxx=libstdc++11 --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
-
     - name: Install Conan Dependencies (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
         cd build
         conan user
         conan install .. --build=missing -o silent=True -o ffmpeg=False -o curl=False -o openssl=False -o sdl2=False -o zlib=False
-
     - name: Install Conan Dependencies (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
@@ -176,32 +166,54 @@ jobs:
         pip install conan
         conan user
         conan install .. -s compiler="Visual Studio" -s compiler.version=16 --build=missing -o silent=True -o ffmpeg=False -o curl=True -o openssl=True -o sdl2=True -o zlib=True
-
     - name: Configure (macOS)
       if: startsWith(matrix.os, 'macOS')
       run: |
         cd build
         cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=ON -DDECAF_QT=OFF -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DSDL2_DIR=/usr/local/opt/sdl2 -DCMAKE_INSTALL_PREFIX=install ..
-
     - name: Configure (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
         cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=$QTDIR/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
-
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: cmd
       run: |
         cd build
         cmake -DDECAF_BUILD_TOOLS=ON -DDECAF_FFMPEG=OFF -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_BUILD_TYPE=Release -DQt5_DIR=%QTDIR%/lib/cmake/Qt5 -DCMAKE_INSTALL_PREFIX=install ..
-
     - name: Build
       run: |
         cd build
         cmake --build . --config Release -j 2 --target install
-
     - uses: actions/upload-artifact@master
       with:
         name: decaf-emu-${{ matrix.os }}
         path: build/install
+
+  create-release:
+    needs: [build]
+    runs-on: "ubuntu-20.04"
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+      
+      - name: Upload
+        shell: bash
+        run: |
+          mkdir artifacts/
+          files=$(find . -name "decaf-emu-*" ! -iname "*.zip")
+          for f in $files; do
+            echo "Compressing $f"
+            (cd $(basename $f) && zip -r ../artifacts/$(basename $f).zip *)
+          done
+          ls -al artifacts/
+          wget -c https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_linux_amd64.tar.gz
+          tar xfv ghr_v0.14.0_linux_amd64.tar.gz
+          ghr_v0.14.0_linux_amd64/ghr -u decaf-emu -r decaf-emu -recreate -n 'decaf-emu CI builds' -b "Corresponding commit: ${{ github.sha }}" continuous artifacts/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
