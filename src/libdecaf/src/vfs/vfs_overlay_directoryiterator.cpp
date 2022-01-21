@@ -17,40 +17,51 @@ OverlayDirectoryIterator::OverlayDirectoryIterator(User user,
 Result<Status>
 OverlayDirectoryIterator::readEntry()
 {
-   while (true) {
-      auto result = mIterator.readEntry();
+   while (mDeviceIterator != mDevice->end()) {
+      if (!mIterator.has_value()) {
+         auto result = mDeviceIterator->second->openDirectory(mUser, mPath);
+         if (!result) {
+            mDeviceIterator++;
+            continue;
+         }
+
+         mIterator = std::move(*result);
+      }
+
+      auto result = mIterator->readEntry();
       if (result) {
          return result;
       }
 
-      if (result.error() != Error::EndOfDirectory) {
-         return result;
-      }
-
-      if (mDeviceIterator == mDevice->end()) {
-         return Error::EndOfDirectory;
-      }
-
-      if (auto openResult = mDeviceIterator->second->openDirectory(mUser, mPath); !openResult) {
-         return openResult.error();
-      } else {
+      if (result.error() == Error::EndOfDirectory) {
+         mIterator.reset();
          mDeviceIterator++;
-         mIterator = std::move(*openResult);
+         continue;
       }
    }
+
+   return Error::EndOfDirectory;
 }
 
 Error
 OverlayDirectoryIterator::rewind()
 {
    mDeviceIterator = mDevice->begin();
-   auto result = mDeviceIterator->second->openDirectory(mUser, mPath);
-   if (!result) {
-      return result.error();
+   mIterator.reset();
+
+   // Find first device which can open directory
+   while (mDeviceIterator != mDevice->end()) {
+      auto result = mDeviceIterator->second->openDirectory(mUser, mPath);
+      if (!result) {
+         mDeviceIterator++;
+         continue;
+      }
+
+      mIterator = std::move(*result);
+      break;
    }
 
-   mIterator = std::move(*result);
-   return Error::Success;
+   return mIterator.has_value() ? Error::Success : Error::NotFound;
 }
 
 } // namespace vfs

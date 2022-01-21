@@ -3,6 +3,8 @@
 #include "vfs_overlay_device.h"
 #include "vfs_path.h"
 
+#include <optional>
+
 namespace vfs
 {
 
@@ -23,7 +25,7 @@ private:
    Path mPath;
    OverlayDevice *mDevice;
    OverlayDevice::iterator mDeviceIterator;
-   DirectoryIterator mIterator;
+   std::optional<DirectoryIterator> mIterator;
 };
 
 } // namespace vfs
