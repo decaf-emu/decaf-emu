@@ -1201,9 +1201,13 @@ BITFIELD_BEG(MEM_SPACE_FUNCTION, uint32_t)
    BITFIELD_ENTRY(8, 1, WRM_ENGINE, ENGINE);
 BITFIELD_END
 
+BITFIELD_BEG(WRM_ADDR_LO, uint32_t)
+   BITFIELD_ENTRY(0, 2, latte::CB_ENDIAN, ENDIAN_SWAP);
+   BITFIELD_ENTRY(2, 30, uint32_t, ADDR_LO);
+BITFIELD_END
+
 BITFIELD_BEG(WRM_ADDR_HI, uint32_t)
    BITFIELD_ENTRY(0, 8, uint8_t, ADDR_HI);
-   BITFIELD_ENTRY(29, 3, latte::CB_ENDIAN, SWAP);
 BITFIELD_END
 
 struct WaitReg
@@ -1234,7 +1238,7 @@ struct WaitMem
    static constexpr auto Opcode = IT_OPCODE::WAIT_REG_MEM;
 
    MEM_SPACE_FUNCTION memSpaceFunction;
-   phys_addr addrLo;
+   WRM_ADDR_LO addrLo;
    WRM_ADDR_HI addrHi;
    uint32_t reference;
    uint32_t mask;

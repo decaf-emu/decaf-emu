@@ -550,6 +550,53 @@ Driver::surfaceSync(const latte::pm4::SurfaceSync &data)
 }
 
 void
+Driver::waitMem(const latte::pm4::WaitMem &data)
+{
+   auto addr = phys_addr { data.addrLo.ADDR_LO() << 2 };
+   auto ptr = gpu::internal::translateAddress(addr);
+
+   while (true) {
+      auto value = *reinterpret_cast<volatile uint32_t *>(ptr);
+      value = static_cast<uint32_t>(
+         latte::applyEndianSwap(value, data.addrLo.ENDIAN_SWAP()));
+      value &= data.mask;
+
+      bool result;
+      switch (data.memSpaceFunction.FUNCTION()) {
+      case WRM_FUNCTION::FUNCTION_ALWAYS:
+         result = true;
+         break;
+      case WRM_FUNCTION::FUNCTION_LESS_THAN:
+         result = value < data.reference;
+         break;
+      case WRM_FUNCTION::FUNCTION_LESS_THAN_EQUAL:
+         result = value <= data.reference;
+         break;
+      case WRM_FUNCTION::FUNCTION_EQUAL:
+         result = value == data.reference;
+         break;
+      case WRM_FUNCTION::FUNCTION_NOT_EQUAL:
+         result = value != data.reference;
+         break;
+      case WRM_FUNCTION::FUNCTION_GREATER_THAN_EQUAL:
+         result = value >= data.reference;
+         break;
+      case WRM_FUNCTION::FUNCTION_GREATER_THAN:
+         result = value > data.reference;
+         break;
+      default:
+         result = true;
+      }
+
+      if (result) {
+         break;
+      }
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+   }
+}
+
+void
 Driver::executeBuffer(const gpu::ringbuffer::Buffer &buffer)
 {
    decaf_check(!mActiveSyncWaiter);

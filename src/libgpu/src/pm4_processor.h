@@ -29,6 +29,7 @@ protected:
    virtual void drawIndexAuto(const DrawIndexAuto &data) = 0;
    virtual void drawIndex2(const DrawIndex2 &data) = 0;
    virtual void drawIndexImmd(const DrawIndexImmd &data) = 0;
+   virtual void waitMem(const WaitMem &data) = 0;
    virtual void memWrite(const MemWrite &data) = 0;
    virtual void eventWrite(const EventWrite &data) = 0;
    virtual void eventWriteEOP(const EventWriteEOP &data) = 0;

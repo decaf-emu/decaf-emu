@@ -180,6 +180,9 @@ Pm4Processor::handlePacketType3(HeaderType3 header, const gsl::span<uint32_t> &d
    case IT_OPCODE::INDIRECT_BUFFER_PRIV:
       indirectBufferCallPriv(read<IndirectBufferCallPriv>(reader));
       break;
+   case IT_OPCODE::WAIT_REG_MEM:
+      waitMem(read<WaitMem>(reader));
+      break;
    case IT_OPCODE::MEM_WRITE:
       memWrite(read<MemWrite>(reader));
       break;

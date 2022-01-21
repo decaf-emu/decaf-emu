@@ -26,6 +26,7 @@ private:
    void registerDisplayListSymbols();
    void registerDrawSymbols();
    void registerEventSymbols();
+   void registerFenceSymbols();
    void registerFetchShadersSymbols();
    void registerFormatSymbols();
    void registerMemorySymbols();

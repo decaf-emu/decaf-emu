@@ -32,6 +32,7 @@ Library::registerSymbols()
    registerDisplayListSymbols();
    registerDrawSymbols();
    registerEventSymbols();
+   registerFenceSymbols();
    registerFetchShadersSymbols();
    registerFormatSymbols();
    registerMemorySymbols();
