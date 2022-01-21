@@ -176,6 +176,7 @@ if(MSVC)
 else()
     add_definitions(-DDECAF_USE_STDLAYOUT_BITFIELD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 
     if(APPLE)
         add_definitions(-D_DARWIN_C_SOURCE)
