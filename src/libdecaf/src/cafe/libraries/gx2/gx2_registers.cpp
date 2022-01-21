@@ -776,7 +776,7 @@ GX2InitPolygonControlReg(virt_ptr<GX2PolygonControlReg> reg,
    auto pa_su_sc_mode_cntl = latte::PA_SU_SC_MODE_CNTL::get(0);
 
    pa_su_sc_mode_cntl = pa_su_sc_mode_cntl
-      .FACE(static_cast<latte::PA_FACE>(frontFace))
+      .FACE(static_cast<latte::PA_FACE>(!!frontFace))
       .CULL_FRONT(!!cullFront)
       .CULL_BACK(!!cullBack)
       .POLY_MODE(!!polyMode)
