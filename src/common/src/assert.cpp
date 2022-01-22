@@ -67,7 +67,7 @@ assertWarnFailed(const char *file,
                  const char *expression,
                  const std::string &message)
 {
-   gLog->warn("Asserted `{}` ({}) at {}:{}", expression, message, __FILE__, __LINE__);
+   gLog->warn("Asserted `{}` ({}) at {}:{}", expression, message, file, line);
 }
 
 void
