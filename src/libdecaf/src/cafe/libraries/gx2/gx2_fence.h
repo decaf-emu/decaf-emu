@@ -12,8 +12,6 @@ namespace cafe::gx2
  * @{
  */
 
-#pragma pack(push, 1)
-
 void
 GX2SetGPUFence(virt_ptr<uint32_t> memory,
                uint32_t mask,
