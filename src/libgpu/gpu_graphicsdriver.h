@@ -1,7 +1,10 @@
 #pragma once
-#include <cstdint>
-#include <functional>
+#include <fmt/format.h>
 #include <libcpu/be2_struct.h>
+
+#include <cstdint>
+#include <string>
+#include <string_view>
 
 namespace gpu
 {
@@ -52,7 +55,7 @@ public:
    virtual void stop() = 0;
 
    virtual GraphicsDriverType type() = 0;
-   virtual gpu::GraphicsDriverDebugInfo *getDebugInfo() = 0;
+   virtual GraphicsDriverDebugInfo *getDebugInfo() = 0;
 
    // Called for stores to emulated physical RAM, such as via DCFlushRange().
    //  May be called from any CPU core!
@@ -87,3 +90,34 @@ GraphicsDriver *
 createGraphicsDriver(GraphicsDriverType type);
 
 } // namespace gpu
+
+template <>
+struct fmt::formatter<gpu::WindowSystemType> :
+   fmt::formatter<std::string_view>
+{
+   template <typename FormatContext>
+   auto format(gpu::WindowSystemType value, FormatContext& ctx) {
+      std::string_view name = "unknown";
+      switch (value) {
+      case gpu::WindowSystemType::Headless:
+         name = "Headless";
+         break;
+      case gpu::WindowSystemType::Windows:
+         name = "Windows";
+         break;
+      case gpu::WindowSystemType::Cocoa:
+         name = "Cocoa";
+         break;
+      case gpu::WindowSystemType::X11:
+         name = "X11";
+         break;
+      case gpu::WindowSystemType::Xcb:
+         name = "Xcb";
+         break;
+      case gpu::WindowSystemType::Wayland:
+         name = "Wayland";
+         break;
+      }
+      return fmt::formatter<string_view>::format(name, ctx);
+   }
+};
