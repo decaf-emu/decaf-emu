@@ -766,7 +766,7 @@ GX2InitPolygonControlReg(virt_ptr<GX2PolygonControlReg> reg,
                          GX2FrontFace frontFace,
                          BOOL cullFront,
                          BOOL cullBack,
-                         BOOL polyMode,
+                         uint32_t polyMode,
                          GX2PolygonMode polyModeFront,
                          GX2PolygonMode polyModeBack,
                          BOOL polyOffsetFrontEnable,
@@ -779,7 +779,7 @@ GX2InitPolygonControlReg(virt_ptr<GX2PolygonControlReg> reg,
       .FACE(static_cast<latte::PA_FACE>(!!frontFace))
       .CULL_FRONT(!!cullFront)
       .CULL_BACK(!!cullBack)
-      .POLY_MODE(!!polyMode)
+      .POLY_MODE(polyMode)
       .POLYMODE_FRONT_PTYPE(static_cast<latte::PA_PTYPE>(polyModeFront))
       .POLYMODE_BACK_PTYPE(static_cast<latte::PA_PTYPE>(polyModeBack))
       .POLY_OFFSET_FRONT_ENABLE(!!polyOffsetFrontEnable)
@@ -1301,6 +1301,7 @@ Library::registerRegistersSymbols()
    RegisterFunctionExport(GX2SetCullOnlyControl);
    RegisterFunctionExport(GX2SetPolygonControl);
    RegisterFunctionExport(GX2InitPolygonControlReg);
+   RegisterFunctionExport(GX2GetPolygonControlReg);
    RegisterFunctionExport(GX2SetPolygonControlReg);
    RegisterFunctionExport(GX2SetPolygonOffset);
    RegisterFunctionExport(GX2InitPolygonOffsetReg);
