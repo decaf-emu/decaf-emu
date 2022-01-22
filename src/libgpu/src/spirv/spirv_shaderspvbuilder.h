@@ -35,6 +35,14 @@ public:
       mEntryPoint = entry;
    }
 
+   spv::Id createAccessChain(spv::StorageClass storageClass,
+                             spv::Id base, const std::vector<spv::Id> &offsets)
+   {
+      SpvBuilder::accessChain.base = base;
+      SpvBuilder::accessChain.indexChain = offsets;
+      return SpvBuilder::createAccessChain(storageClass, base, offsets);
+   }
+
    void setBindingBase(int bindingBase)
    {
       mBindingBase = bindingBase;
