@@ -3,19 +3,58 @@
 
 #include "cafe/libraries/cafe_hle_stub.h"
 
+#include "decaf_erreula.h"
+
+#include <mutex>
+
 namespace cafe::nn_erreula
 {
 
-void
-ErrEulaAppearError(virt_ptr<AppearArg> args)
+struct StaticErrEulaData
 {
-   decaf_warn_stub();
+   be2_val<ErrorViewerState> errorViewerState;
+   be2_val<bool> buttonPressed;
+   be2_val<bool> button2Pressed;
+   be2_virt_ptr<uint8_t> workMemory;
+};
+
+static virt_ptr<StaticErrEulaData> sErrEulaData = nullptr;
+
+// Uses a real mutex because we interact with outside world via ErrEulaDriver
+static std::mutex sMutex;
+
+void
+ErrEulaAppearError(virt_ptr<const AppearArg> args)
+{
+   {
+      std::unique_lock<std::mutex> lock { sMutex };
+      sErrEulaData->errorViewerState = ErrorViewerState::Visible;
+   }
+
+   if (auto driver = decaf::errEulaDriver()) {
+      switch (args->errorArg.errorType) {
+      case ErrorType::Code:
+         driver->onOpenErrorCode(args->errorArg.errorCode);
+         break;
+      case ErrorType::Message:
+         driver->onOpenErrorMessage(args->errorArg.errorMessage.getRawPointer());
+         break;
+      case ErrorType::Message1Button:
+         driver->onOpenErrorMessage(args->errorArg.errorMessage.getRawPointer(),
+                                    args->errorArg.button1Label.getRawPointer());
+         break;
+      case ErrorType::Message2Button:
+         driver->onOpenErrorMessage(args->errorArg.errorMessage.getRawPointer(),
+                                    args->errorArg.button1Label.getRawPointer(),
+                                    args->errorArg.button2Label.getRawPointer());
+         break;
+      }
+   }
 }
 
 void
-ErrEulaCalc(virt_ptr<ControllerInfo> info)
+ErrEulaCalc(virt_ptr<const ControllerInfo> info)
 {
-   decaf_warn_stub();
 }
 
 BOOL
@@ -24,60 +63,63 @@ ErrEulaCreate(virt_ptr<uint8_t> workMemory,
               LangType language,
               virt_ptr<coreinit::FSClient> fsClient)
 {
-   decaf_warn_stub();
    return TRUE;
 }
 
 void
 ErrEulaDestroy()
 {
-   decaf_warn_stub();
 }
 
 void
 ErrEulaDisappearError()
 {
-   decaf_warn_stub();
+   {
+      std::unique_lock<std::mutex> lock { sMutex };
+      sErrEulaData->errorViewerState = ErrorViewerState::Hidden;
+   }
+
+   if (auto driver = decaf::errEulaDriver()) {
+      driver->onClose();
+   }
 }
 
 void
 ErrEulaDrawDRC()
 {
-   decaf_warn_stub();
 }
 
 void
 ErrEulaDrawTV()
 {
-   decaf_warn_stub();
 }
 
 ErrorViewerState
 ErrEulaGetStateErrorViewer()
 {
-   decaf_warn_stub();
-   return ErrorViewerState::None;
+   std::unique_lock<std::mutex> lock { sMutex };
+   return sErrEulaData->errorViewerState;
 }
 
 BOOL
 ErrEulaIsDecideSelectButtonError()
 {
-   decaf_warn_stub();
-   return FALSE;
+   std::unique_lock<std::mutex> lock { sMutex };
+   return sErrEulaData->buttonPressed;
 }
 
 BOOL
 ErrEulaIsDecideSelectLeftButtonError()
 {
-   decaf_warn_stub();
-   return FALSE;
+   std::unique_lock<std::mutex> lock{ sMutex };
+   return sErrEulaData->buttonPressed;
 }
 
 BOOL
 ErrEulaIsDecideSelectRightButtonError()
 {
-   decaf_warn_stub();
-   return FALSE;
+   std::unique_lock<std::mutex> lock{ sMutex };
+   return sErrEulaData->button2Pressed;
 }
 
 void
@@ -87,7 +129,7 @@ ErrEulaSetControllerRemo(ControllerType type)
 }
 
 void
-ErrEulaAppearHomeNixSign(virt_ptr<HomeNixSignArg> arg)
+ErrEulaAppearHomeNixSign(virt_ptr<const HomeNixSignArg> arg)
 {
    decaf_warn_stub();
 }
@@ -152,12 +194,50 @@ ErrEulaPlayAppearSE(bool value)
 }
 
 bool
-ErrEulaJump(virt_ptr<char const> a1,
+ErrEulaJump(virt_ptr<const char> a1,
             uint32_t a2)
 {
    decaf_warn_stub();
    return false;
 }
+
+namespace internal
+{
+
+void
+buttonClicked()
+{
+   std::unique_lock<std::mutex> lock { sMutex };
+   if (sErrEulaData->errorViewerState != ErrorViewerState::Visible) {
+      return;
+   }
+
+   sErrEulaData->buttonPressed = true;
+}
+
+void
+button1Clicked()
+{
+   std::unique_lock<std::mutex> lock { sMutex };
+   if (sErrEulaData->errorViewerState != ErrorViewerState::Visible) {
+      return;
+   }
+
+   sErrEulaData->buttonPressed = true;
+}
+
+void
+button2Clicked()
+{
+   std::unique_lock<std::mutex> lock{ sMutex };
+   if (sErrEulaData->errorViewerState != ErrorViewerState::Visible) {
+      return;
+   }
+
+   sErrEulaData->button2Pressed = true;
+}
+
+} // internal
 
 void Library::registerErrorViewerSymbols()
 {
@@ -207,6 +287,8 @@ void Library::registerErrorViewerSymbols()
                               ErrEulaPlayAppearSE);
    RegisterFunctionExportName("ErrEulaJump__3RplFPCcUi",
                               ErrEulaJump);
+
+   RegisterDataInternal(sErrEulaData);
 }
 
 } // namespace cafe::nn_erreula

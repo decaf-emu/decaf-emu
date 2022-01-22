@@ -3,6 +3,7 @@
 #include "aboutdialog.h"
 #include "debugger/debuggerwindow.h"
 #include "decafinterface.h"
+#include "erreuladriver.h"
 #include "renderwidget.h"
 #include "softwarekeyboarddriver.h"
 #include "settings/settingsdialog.h"
@@ -27,6 +28,8 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    mSettingsStorage(settingsStorage),
    mDecafInterface(decafInterface),
    mInputDriver(inputDriver),
+   mErrEulaDriver(new ErrEulaDriver { this }),
+   mErrEulaDialog(new QMessageBox { this }),
    mSoftwareKeyboardDriver(new SoftwareKeyboardDriver { this }),
    mSoftwareKeyboardInputDialog(new QInputDialog { this })
 {
@@ -59,6 +62,15 @@ MainWindow::MainWindow(SettingsStorage *settingsStorage,
    QShortcut *shortcut = new QShortcut(QKeySequence("F11"), this);
    connect(shortcut, &QShortcut::activated,
            this, &MainWindow::toggleFullScreen);
+
+   connect(mErrEulaDriver, &ErrEulaDriver::openWithErrorCode,
+           this, &MainWindow::erreulaOpenWithErrorCode);
+   connect(mErrEulaDriver, &ErrEulaDriver::openWithMessage,
+           this, &MainWindow::erreulaOpenWithMessage);
+   connect(mErrEulaDriver, &ErrEulaDriver::close,
+           this, &MainWindow::erreulaClose);
+   decaf::setErrEulaDriver(mErrEulaDriver);
+
    connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::open,
            this, &MainWindow::softwareKeyboardOpen);
    connect(mSoftwareKeyboardDriver, &SoftwareKeyboardDriver::close,
@@ -110,6 +122,75 @@ MainWindow::softwareKeyboardInputFinished(int result)
       mSoftwareKeyboardDriver->acceptInput(mSoftwareKeyboardInputDialog->textValue());
    } else {
       mSoftwareKeyboardDriver->rejectInput();
+   }
+}
+
+void
+MainWindow::erreulaOpenWithErrorCode(int32_t errorCode)
+{
+   mErrEulaDialog->setWindowTitle("ErrEula");
+   mErrEulaDialog->setIcon(QMessageBox::Critical);
+   mErrEulaDialog->setText(QString("Error code: %1").arg(errorCode));
+
+   mErrEulaButton1 = nullptr;
+   mErrEulaButton2 = nullptr;
+   for (auto button : mErrEulaDialog->buttons()) {
+      mErrEulaDialog->removeButton(button);
+      delete button;
+   }
+
+   mErrEulaDialog->setStandardButtons(QMessageBox::Ok);
+   mErrEulaDialog->show();
+}
+
+void
+MainWindow::erreulaOpenWithMessage(QString message,
+                                   QString button1,
+                                   QString button2)
+{
+   mErrEulaDialog->setWindowTitle("ErrEula");
+   mErrEulaDialog->setIcon(QMessageBox::Critical);
+   mErrEulaDialog->setText(QString("Error message: %1").arg(message));
+
+   mErrEulaButton1 = nullptr;
+   mErrEulaButton2 = nullptr;
+   for (auto button : mErrEulaDialog->buttons()) {
+      mErrEulaDialog->removeButton(button);
+      delete button;
+   }
+
+   if (button2.isEmpty()) {
+      if (button1.isEmpty()) {
+         mErrEulaDialog->setStandardButtons(QMessageBox::Ok);
+      } else {
+         mErrEulaButton1 = reinterpret_cast<QAbstractButton *>(
+            mErrEulaDialog->addButton(button1, QMessageBox::AcceptRole));
+      }
+   } else {
+      mErrEulaButton1 = reinterpret_cast<QAbstractButton *>(
+         mErrEulaDialog->addButton(button1, QMessageBox::AcceptRole));
+      mErrEulaButton2 = reinterpret_cast<QAbstractButton *>(
+         mErrEulaDialog->addButton(button2, QMessageBox::RejectRole));
+   }
+
+   mErrEulaDialog->show();
+}
+
+void
+MainWindow::erreulaClose()
+{
+   mErrEulaDialog->close();
+}
+
+void
+MainWindow::erreulaButtonClicked(QAbstractButton *button)
+{
+   if (button == mErrEulaButton1) {
+      mErrEulaDriver->button1Clicked();
+   } else if (button == mErrEulaButton2) {
+      mErrEulaDriver->button2Clicked();
+   } else {
+      mErrEulaDriver->buttonClicked();
    }
 }
 

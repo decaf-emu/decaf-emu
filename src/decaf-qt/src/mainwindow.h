@@ -6,15 +6,18 @@
 
 class DebuggerWindow;
 class DecafInterface;
+class ErrEulaDriver;
 class InputDriver;
 class RenderWidget;
 class SettingsStorage;
 class SoftwareKeyboardDriver;
 class TitleListWidget;
 
+class QAbstractButton;
 class QAction;
 class QInputDialog;
 class QLabel;
+class QMessageBox;
 class QTimer;
 
 class MainWindow : public QMainWindow
@@ -66,6 +69,11 @@ private slots:
    void softwareKeyboardInputStringChanged(QString text);
    void softwareKeyboardInputFinished(int result);
 
+   void erreulaOpenWithErrorCode(int32_t errorCode);
+   void erreulaOpenWithMessage(QString message, QString button1, QString button2);
+   void erreulaClose();
+   void erreulaButtonClicked(QAbstractButton *button);
+
    void updateStatusBar();
    void showStatusMessage(QString message, int timeout);
 
@@ -81,6 +89,10 @@ private:
    TitleListWidget *mTitleListWiget = nullptr;
    DecafInterface *mDecafInterface = nullptr;
    InputDriver *mInputDriver = nullptr;
+   ErrEulaDriver *mErrEulaDriver = nullptr;
+   QMessageBox *mErrEulaDialog = nullptr;
+   QAbstractButton *mErrEulaButton1 = nullptr;
+   QAbstractButton *mErrEulaButton2 = nullptr;
    SoftwareKeyboardDriver *mSoftwareKeyboardDriver = nullptr;
    QInputDialog *mSoftwareKeyboardInputDialog = nullptr;
    DebuggerWindow *mDebuggerWindow = nullptr;
