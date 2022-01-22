@@ -425,16 +425,24 @@ parseGlslFileToHeader(glslang::TShader &shader)
       }
 
       auto out = fmt::memory_buffer { };
-      fmt::format_to(out, "; $UNIFORM_VARS[{}].name = \"{}\"\n", i, uniform.name);
-      fmt::format_to(out, "; $UNIFORM_VARS[{}].type = \"{}\"\n", i, typeName);
-      fmt::format_to(out, "; $UNIFORM_VARS[{}].offset = {}\n", i, uniformVarsOffset / 4);
+      fmt::format_to(std::back_inserter(out),
+                     "; $UNIFORM_VARS[{}].name = \"{}\"\n",
+                     i, uniform.name);
+      fmt::format_to(std::back_inserter(out),
+                     "; $UNIFORM_VARS[{}].type = \"{}\"\n",
+                     i, typeName);
+      fmt::format_to(std::back_inserter(out),
+                     "; $UNIFORM_VARS[{}].offset = {}\n",
+                     i, uniformVarsOffset / 4);
       uniformVarsOffset += align_up(typeBytes, 4);
 
       if (type->isArray()) {
-         fmt::format_to(out, "; $UNIFORM_VARS[{}].count = {}\n", i, type->getCumulativeArraySize());
+         fmt::format_to(std::back_inserter(out),
+                        "; $UNIFORM_VARS[{}].count = {}\n",
+                        i, type->getCumulativeArraySize());
       }
 
-      fmt::format_to(out, "\n");
+      fmt::format_to(std::back_inserter(out), "\n");
 
       if (uniform.stages & EShLanguageMask::EShLangVertexMask) {
          outVsh.append(out.begin(), out.end());
