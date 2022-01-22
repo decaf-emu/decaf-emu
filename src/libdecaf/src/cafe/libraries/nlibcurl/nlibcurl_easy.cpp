@@ -2,6 +2,7 @@
 #include "nlibcurl_easy.h"
 
 #include "cafe/cafe_ppc_interface_varargs.h"
+#include "cafe/libraries/cafe_hle_stub.h"
 
 #include <curl/curl.h>
 
@@ -51,6 +52,7 @@ curl_easy_setopt(virt_ptr<CURL> handle,
    //auto curl = handle->hostHandle;
 
    // TODO: Translate to ::curl_easy_setopt
+   decaf_warn_stub();
 
    free_va_list(vaList);
    return ::CURLE_OK;
