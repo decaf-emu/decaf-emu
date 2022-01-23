@@ -1,6 +1,7 @@
 #pragma once
 #include <libconfig/config_toml.h>
 #include <string>
+#include <toml++/toml.h>
 
 namespace config
 {
@@ -13,9 +14,9 @@ extern int timeout_ms;
 } // namespace system
 
 bool
-loadFrontendToml(std::shared_ptr<cpptoml::table> config);
+loadFrontendToml(const toml::table &config);
 
 bool
-saveFrontendToml(std::shared_ptr<cpptoml::table> config);
+saveFrontendToml(toml::table &config);
 
 } // namespace config

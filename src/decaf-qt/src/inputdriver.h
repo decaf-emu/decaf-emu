@@ -7,7 +7,6 @@
 #include <array>
 #include <libdecaf/decaf_input.h>
 #include <mutex>
-#include <cpptoml.h>
 
 class QKeyEvent;
 class SettingsStorage;

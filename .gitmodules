@@ -31,9 +31,6 @@
 [submodule "libraries/catch"]
 	path = libraries/catch
 	url = https://github.com/philsquared/Catch.git
-[submodule "libraries/cpptoml"]
-	path = libraries/cpptoml
-	url = https://github.com/decaf-emu/cpptoml.git
 [submodule "libraries/cpp-peglib"]
 	path = libraries/cpp-peglib
 	url = https://github.com/yhirose/cpp-peglib.git
@@ -46,3 +43,6 @@
 [submodule "libraries/qtads"]
 	path = libraries/qtads
 	url = https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System.git
+[submodule "libraries/tomlplusplus"]
+	path = libraries/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

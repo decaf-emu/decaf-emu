@@ -156,22 +156,22 @@ start(excmd::parser &parser,
 
    // If config file does not exist, create a default one.
    if (!platform::fileExists(configPath)) {
-      auto toml = cpptoml::make_table();
+      auto toml = toml::table();
       config::saveToTOML(toml, cpuSettings);
       config::saveToTOML(toml, gpuSettings);
       config::saveToTOML(toml, decafSettings);
       config::saveFrontendToml(toml);
       std::ofstream out { configPath };
-      out << (*toml);
+      out << toml;
    }
 
    try {
-      auto toml = cpptoml::parse_file(configPath);
+      auto toml = toml::parse_file(configPath);
       config::loadFromTOML(toml, cpuSettings);
       config::loadFromTOML(toml, gpuSettings);
       config::loadFromTOML(toml, decafSettings);
       config::loadFrontendToml(toml);
-   } catch (cpptoml::parse_exception ex) {
+   } catch (const toml::parse_error &ex) {
       configError = ex.what();
    }
 

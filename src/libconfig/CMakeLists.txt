@@ -14,5 +14,5 @@ target_link_libraries(libconfig
     libcpu
     libdecaf
     libgpu
-    cpptoml
+    tomlplusplus
     excmd)

@@ -3,20 +3,21 @@
 
 #include <libconfig/config_toml.h>
 #include <optional>
+#include <toml++/toml.h>
 
-static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
+static bool loadFromTOML(const toml::table &config,
                          InputConfiguration &inputConfiguration);
-static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
+static bool saveToTOML(toml::table &config,
                        const InputConfiguration &inputConfiguration);
 
-static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
+static bool loadFromTOML(const toml::table &config,
                          SoundSettings &soundSettings);
-static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
+static bool saveToTOML(toml::table &config,
                        const SoundSettings &soundSettings);
 
-static bool loadFromTOML(std::shared_ptr<cpptoml::table> config,
+static bool loadFromTOML(const toml::table &config,
                          UiSettings &uiSettings);
-static bool saveToTOML(std::shared_ptr<cpptoml::table> config,
+static bool saveToTOML(toml::table &config,
                        const UiSettings &uiSettings);
 
 bool
@@ -24,7 +25,7 @@ loadSettings(const std::string &path,
              Settings &settings)
 {
    try {
-      auto toml = cpptoml::parse_file(path);
+      toml::table toml = toml::parse_file(path);
       config::loadFromTOML(toml, settings.cpu);
       config::loadFromTOML(toml, settings.decaf);
       config::loadFromTOML(toml, settings.gpu);
@@ -32,7 +33,7 @@ loadSettings(const std::string &path,
       loadFromTOML(toml, settings.sound);
       loadFromTOML(toml, settings.ui);
       return true;
-   } catch (cpptoml::parse_exception ex) {
+   } catch (const toml::parse_error &) {
       return false;
    }
 }
@@ -41,12 +42,11 @@ bool
 saveSettings(const std::string &path,
              const Settings &settings)
 {
-   auto toml = std::shared_ptr<cpptoml::table> { };
+   toml::table toml;
    try {
       // Read current file and modify that
-      toml = cpptoml::parse_file(path);
-   } catch (cpptoml::parse_exception ex) {
-      toml = cpptoml::make_table();
+      toml = toml::parse_file(path);
+   } catch (const toml::parse_error &) {
    }
 
    // Update it
@@ -63,7 +63,7 @@ saveSettings(const std::string &path,
       return false;
    }
 
-   out << (*toml);
+   out << toml;
    return true;
 }
 
@@ -129,105 +129,111 @@ getConfigButtonName(ButtonType type)
 }
 
 bool
-loadFromTOML(std::shared_ptr<cpptoml::table> config,
+loadFromTOML(const toml::table &config,
              InputConfiguration &inputConfiguration)
 {
-   auto controllers = config->get_table_array_qualified("input.controller");
+   auto controllers = config.at_path("input.controller").as_array();
+   if (!controllers) {
+      return true;
+   }
 
-   if (controllers) {
-      for (const auto &controllerConfig : *controllers) {
-         auto controllerType = controllerConfig->get_as<std::string>("type").value_or("");
-         auto &controller = inputConfiguration.controllers.emplace_back();
+   for (const auto &controllerConfig : *controllers) {
+      auto controllerConfigTable = controllerConfig.as_table();
+      if (!controllerConfigTable) {
+         continue;
+      }
+      auto &controller = inputConfiguration.controllers.emplace_back();
 
-         if (controllerType == "gamepad") {
-            controller.type = ControllerType::Gamepad;
-         } else if (controllerType == "wiimote") {
-            controller.type = ControllerType::WiiMote;
-         } else if (controllerType == "pro") {
-            controller.type = ControllerType::ProController;
-         } else if (controllerType == "classic") {
-            controller.type = ControllerType::ClassicController;
-         } else {
-            continue;
-         }
+      auto controllerType = controllerConfigTable->get_as<std::string>("type");
+      if (!controllerType) {
+         continue;
+      } else if (**controllerType == "gamepad") {
+         controller.type = ControllerType::Gamepad;
+      } else if (**controllerType == "wiimote") {
+         controller.type = ControllerType::WiiMote;
+      } else if (**controllerType == "pro") {
+         controller.type = ControllerType::ProController;
+      } else if (**controllerType == "classic") {
+         controller.type = ControllerType::ClassicController;
+      } else {
+         continue;
+      }
 
-         auto readInputConfig = [](std::shared_ptr<cpptoml::table> controllerConfig, InputConfiguration::Controller &controller, ButtonType buttonType)
+      auto readInputConfig =
+         [](const toml::table &controllerConfig,
+            InputConfiguration::Controller &controller,
+            ButtonType buttonType)
          {
             auto &input = controller.inputs[static_cast<size_t>(buttonType)];
-            auto buttonConfig = controllerConfig->get_table(getConfigButtonName(buttonType));
+            auto buttonConfig = controllerConfig.get_as<toml::table>(getConfigButtonName(buttonType));
             if (buttonConfig) {
                if (auto guid = buttonConfig->get_as<std::string>("sdl_joystick_guid"); guid) {
-                  input.joystickGuid = SDL_JoystickGetGUIDFromString(guid->c_str());
+                  input.joystickGuid = SDL_JoystickGetGUIDFromString(guid->get().c_str());
                }
 
-               if (auto id = buttonConfig->get_as<int>("sdl_joystick_duplicate_id"); id) {
-                  input.joystickDuplicateId = *id;
+               if (auto id = buttonConfig->get_as<int64_t>("sdl_joystick_duplicate_id"); id) {
+                  input.joystickDuplicateId = id->get();
                }
 
-               if (auto key = buttonConfig->get_as<int>("key"); key) {
+               if (auto key = buttonConfig->get_as<int64_t>("key"); key) {
                   input.source = InputConfiguration::Input::KeyboardKey;
-                  input.id = *key;
+                  input.id = key->get();
                }
 
-               if (auto button = buttonConfig->get_as<int>("button"); button) {
+               if (auto button = buttonConfig->get_as<int64_t>("button"); button) {
                   input.source = InputConfiguration::Input::JoystickButton;
-                  input.id = *button;
+                  input.id = button->get();
                }
 
-               if (auto axis = buttonConfig->get_as<int>("axis"); axis) {
+               if (auto axis = buttonConfig->get_as<int64_t>("axis"); axis) {
                   input.source = InputConfiguration::Input::JoystickAxis;
-                  input.id = *axis;
+                  input.id = axis->get();
                }
 
-               if (auto hat = buttonConfig->get_as<int>("hat"); hat) {
+               if (auto hat = buttonConfig->get_as<int64_t>("hat"); hat) {
                   input.source = InputConfiguration::Input::JoystickHat;
-                  input.id = *hat;
+                  input.id = hat->get();
                   input.hatValue = 0;
                }
 
-               if (auto hatValue = buttonConfig->get_as<int>("hat_value"); hatValue) {
-                  input.hatValue = *hatValue;
+               if (auto hatValue = buttonConfig->get_as<int64_t>("hat_value"); hatValue) {
+                  input.hatValue = hatValue->get();
                }
 
                if (auto invert = buttonConfig->get_as<bool>("invert"); invert) {
-                  input.invert = *invert;
+                  input.invert = invert->get();
                }
             }
          };
 
-         for (auto i = 0u; i < static_cast<size_t>(ButtonType::MaxButtonType); ++i) {
-            readInputConfig(controllerConfig, controller, static_cast<ButtonType>(i));
-         }
+      for (auto i = 0u; i < static_cast<size_t>(ButtonType::MaxButtonType); ++i) {
+         readInputConfig(*controllerConfigTable, controller, static_cast<ButtonType>(i));
       }
    }
-
    return true;
 }
 
 bool
-saveToTOML(std::shared_ptr<cpptoml::table> config,
+saveToTOML(toml::table &config,
            const InputConfiguration &inputConfiguration)
 {
-   auto input = config->get_table("input");
-   if (!input) {
-      input = cpptoml::make_table();
-   }
+   auto input = config.insert("input", toml::table()).first->second.as_table();
 
-   auto controllers = cpptoml::make_table_array();
-   if (input->get_table_array("controller")) {
+   auto controllers = toml::array();
+   if (input->contains("controller")) {
       input->erase("controller");
    }
 
    for (auto &controller : inputConfiguration.controllers) {
-      auto controllerConfig = cpptoml::make_table();
+      auto controllerConfig = toml::table();
       if (controller.type == ControllerType::Gamepad) {
-         controllerConfig->insert("type", "gamepad");
+         controllerConfig.insert("type", "gamepad");
       } else if (controller.type == ControllerType::WiiMote) {
-         controllerConfig->insert("type", "wiimote");
+         controllerConfig.insert("type", "wiimote");
       } else if (controller.type == ControllerType::ProController) {
-         controllerConfig->insert("type", "pro");
+         controllerConfig.insert("type", "pro");
       } else if (controller.type == ControllerType::ClassicController) {
-         controllerConfig->insert("type", "classic");
+         controllerConfig.insert("type", "classic");
       } else {
          continue;
       }
@@ -235,68 +241,57 @@ saveToTOML(std::shared_ptr<cpptoml::table> config,
       for (auto i = 0u; i < static_cast<size_t>(ButtonType::MaxButtonType); ++i) {
          auto buttonType = static_cast<ButtonType>(i);
          auto &input = controller.inputs[i];
-         auto inputConfig = cpptoml::make_table();
+         auto inputConfig = toml::table();
          if (input.source == InputConfiguration::Input::Unassigned) {
             continue;
          } else if (input.source == InputConfiguration::Input::KeyboardKey) {
-            inputConfig->insert("key", input.id);
+            inputConfig.insert("key", input.id);
          } else if (input.source == InputConfiguration::Input::JoystickAxis) {
             char guidBuffer[33];
             SDL_JoystickGetGUIDString(input.joystickGuid, guidBuffer, 33);
-            inputConfig->insert("sdl_joystick_guid", guidBuffer);
-            inputConfig->insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
-            inputConfig->insert("axis", input.id);
-            inputConfig->insert("invert", input.invert);
+            inputConfig.insert("sdl_joystick_guid", guidBuffer);
+            inputConfig.insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
+            inputConfig.insert("axis", input.id);
+            inputConfig.insert("invert", input.invert);
          } else if (input.source == InputConfiguration::Input::JoystickButton) {
             char guidBuffer[33];
             SDL_JoystickGetGUIDString(input.joystickGuid, guidBuffer, 33);
-            inputConfig->insert("sdl_joystick_guid", guidBuffer);
-            inputConfig->insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
-            inputConfig->insert("button", input.id);
+            inputConfig.insert("sdl_joystick_guid", guidBuffer);
+            inputConfig.insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
+            inputConfig.insert("button", input.id);
          } else if (input.source == InputConfiguration::Input::JoystickHat) {
             char guidBuffer[33];
             SDL_JoystickGetGUIDString(input.joystickGuid, guidBuffer, 33);
-            inputConfig->insert("sdl_joystick_guid", guidBuffer);
-            inputConfig->insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
-            inputConfig->insert("hat", input.id);
-            inputConfig->insert("hat_value", input.hatValue);
+            inputConfig.insert("sdl_joystick_guid", guidBuffer);
+            inputConfig.insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
+            inputConfig.insert("hat", input.id);
+            inputConfig.insert("hat_value", input.hatValue);
          }
 
-         controllerConfig->insert(getConfigButtonName(buttonType), inputConfig);
+         controllerConfig.insert(getConfigButtonName(buttonType), inputConfig);
       }
 
-      controllers->push_back(controllerConfig);
+      controllers.push_back(std::move(controllerConfig));
    }
 
-   input->insert("controller", controllers);
-   config->insert("input", input);
+   input->insert("controller", std::move(controllers));
    return true;
 }
 
 bool
-loadFromTOML(std::shared_ptr<cpptoml::table> config,
+loadFromTOML(const toml::table &config,
              SoundSettings &soundSettings)
 {
-   if (auto sound = config->get_table("sound")) {
-      if (auto playbackEnabled = sound->get_as<bool>("playback_enabled"); playbackEnabled) {
-         soundSettings.playbackEnabled = *playbackEnabled;
-      }
-   }
-
+   config::readValue(config, "sound.playback_enabled", soundSettings.playbackEnabled);
    return true;
 }
 
 bool
-saveToTOML(std::shared_ptr<cpptoml::table> config,
+saveToTOML(toml::table &config,
            const SoundSettings &soundSettings)
 {
-   auto sound = config->get_table("sound");
-   if (!sound) {
-      sound = cpptoml::make_table();
-   }
-
+   auto sound = config.insert("sound", toml::table()).first->second.as_table();
    sound->insert("playback_enabled", soundSettings.playbackEnabled);
-   config->insert("sound", sound);
    return true;
 }
 
@@ -326,33 +321,27 @@ translateTitleListMode(const std::string &text)
 }
 
 bool
-loadFromTOML(std::shared_ptr<cpptoml::table> config,
+loadFromTOML(const toml::table &config,
              UiSettings &uiSettings)
 {
-   if (auto ui = config->get_table("ui")) {
-      if (auto text = ui->get_as<std::string>("title_list_mode"); text) {
-         if (auto mode = translateTitleListMode(*text); mode) {
-            uiSettings.titleListMode = *mode;
-         }
-      }
+   std::string titleListModeText;
+   config::readValue(config, "ui.title_list_mode", titleListModeText);
+   if (auto mode = translateTitleListMode(titleListModeText); mode) {
+      uiSettings.titleListMode = *mode;
    }
 
    return true;
 }
 
 bool
-saveToTOML(std::shared_ptr<cpptoml::table> config,
+saveToTOML(toml::table &config,
            const UiSettings &uiSettings)
 {
-   auto ui = config->get_table("ui");
-   if (!ui) {
-      ui = cpptoml::make_table();
-   }
+   auto ui = config.insert("ui", toml::table()).first->second.as_table();
 
    if (auto text = translateTitleListMode(uiSettings.titleListMode); text) {
       ui->insert("title_list_mode", text);
    }
 
-   config->insert("ui", ui);
    return true;
 }

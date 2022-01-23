@@ -31,12 +31,6 @@ add_library(cnl INTERFACE IMPORTED GLOBAL)
 set_target_properties(cnl PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cnl/include")
 
-# cpptoml
-add_library(cpptoml INTERFACE IMPORTED GLOBAL)
-set_target_properties(cpptoml PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "CPPTOML_USE_MAP"
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpptoml/include")
-
 # excmd
 add_library(excmd INTERFACE IMPORTED GLOBAL)
 set_target_properties(excmd PROPERTIES
@@ -93,6 +87,11 @@ set_target_properties(pugixml PROPERTIES
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
 add_subdirectory(spdlog)
 set_target_properties(spdlog PROPERTIES FOLDER libraries)
+
+# tomlplusplus
+add_library(tomlplusplus INTERFACE IMPORTED GLOBAL)
+set_target_properties(tomlplusplus PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/tomlplusplus/include")
 
 # Qt Advanced Docking System
 if(DECAF_QT)

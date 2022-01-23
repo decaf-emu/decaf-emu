@@ -104,35 +104,36 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
       status.rightStickX = 0.0f;
       status.rightStickY = 0.0f;
 
-      if (getState(device->keyboard.left_stick_up)) {
+      auto &deviceKeyboard = std::get<config::input::InputDeviceKeyboard>(device->typeExtra);
+      if (getState(deviceKeyboard.left_stick_up)) {
          status.leftStickY += 1.0f;
       }
 
-      if (getState(device->keyboard.left_stick_down)) {
+      if (getState(deviceKeyboard.left_stick_down)) {
          status.leftStickY -= 1.0f;
       }
 
-      if (getState(device->keyboard.left_stick_left)) {
+      if (getState(deviceKeyboard.left_stick_left)) {
          status.leftStickX -= 1.0f;
       }
 
-      if (getState(device->keyboard.left_stick_right)) {
+      if (getState(deviceKeyboard.left_stick_right)) {
          status.leftStickX += 1.0f;
       }
 
-      if (getState(device->keyboard.right_stick_up)) {
+      if (getState(deviceKeyboard.right_stick_up)) {
          status.rightStickY += 1.0f;
       }
 
-      if (getState(device->keyboard.right_stick_down)) {
+      if (getState(deviceKeyboard.right_stick_down)) {
          status.rightStickY -= 1.0f;
       }
 
-      if (getState(device->keyboard.right_stick_left)) {
+      if (getState(deviceKeyboard.right_stick_left)) {
          status.rightStickX -= 1.0f;
       }
 
-      if (getState(device->keyboard.right_stick_right)) {
+      if (getState(deviceKeyboard.right_stick_right)) {
          status.rightStickX += 1.0f;
       }
 
@@ -214,25 +215,26 @@ DecafSDL::sampleVpadController(int channel, vpad::Status &status)
       status.buttons.b = getState(device->button_b, SDL_CONTROLLER_BUTTON_A);
       status.buttons.a = getState(device->button_a, SDL_CONTROLLER_BUTTON_B);
 
-      status.leftStickX = getAxis(device->joystick.left_stick_x, SDL_CONTROLLER_AXIS_LEFTX);
-      status.leftStickY = getAxis(device->joystick.left_stick_y, SDL_CONTROLLER_AXIS_LEFTY);
+      auto &deviceJoystick = std::get<config::input::InputDeviceJoystick>(device->typeExtra);
+      status.leftStickX = getAxis(deviceJoystick.left_stick_x, SDL_CONTROLLER_AXIS_LEFTX);
+      status.leftStickY = getAxis(deviceJoystick.left_stick_y, SDL_CONTROLLER_AXIS_LEFTY);
 
-      if (device->joystick.left_stick_x_invert) {
+      if (deviceJoystick.left_stick_x_invert) {
          status.leftStickX = -status.leftStickX;
       }
 
-      if (device->joystick.left_stick_y_invert) {
+      if (deviceJoystick.left_stick_y_invert) {
          status.leftStickY = -status.leftStickY;
       }
 
-      status.rightStickX = getAxis(device->joystick.right_stick_x, SDL_CONTROLLER_AXIS_RIGHTX);
-      status.rightStickY = getAxis(device->joystick.right_stick_y, SDL_CONTROLLER_AXIS_RIGHTY);
+      status.rightStickX = getAxis(deviceJoystick.right_stick_x, SDL_CONTROLLER_AXIS_RIGHTX);
+      status.rightStickY = getAxis(deviceJoystick.right_stick_y, SDL_CONTROLLER_AXIS_RIGHTY);
 
-      if (device->joystick.right_stick_x_invert) {
+      if (deviceJoystick.right_stick_x_invert) {
          status.rightStickX = -status.rightStickX;
       }
 
-      if (device->joystick.right_stick_y_invert) {
+      if (deviceJoystick.right_stick_y_invert) {
          status.rightStickY = -status.rightStickY;
       }
    } else {

@@ -1,6 +1,7 @@
 #pragma once
 #include <libconfig/config_toml.h>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace config
@@ -16,62 +17,67 @@ enum ControllerType
    Joystick,
 };
 
+/*
+ * For keyboard input, each entry is an SDL_SCANCODE_ *constant; for
+ * joystick input, each entry is the button number, or -2 to let SDL
+ * choose an appropriate button.  In both cases, -1 means nothing is
+ * assigned.
+ */
+
+struct InputDeviceKeyboard
+{
+   int left_stick_up = -1;
+   int left_stick_down = -1;
+   int left_stick_left = -1;
+   int left_stick_right = -1;
+
+   int right_stick_up = -1;
+   int right_stick_down = -1;
+   int right_stick_left = -1;
+   int right_stick_right = -1;
+};
+
+struct InputDeviceJoystick
+{
+   int left_stick_x = -1;
+   bool left_stick_x_invert = false;
+
+   int left_stick_y = -1;
+   bool left_stick_y_invert = false;
+
+   int right_stick_x = -1;
+   bool right_stick_x_invert = false;
+
+   int right_stick_y = -1;
+   bool right_stick_y_invert = false;
+};
+
 struct InputDevice
 {
    ControllerType type;
    std::string id;
    std::string device_name;
 
-   // For keyboard input, each entry is an SDL_SCANCODE_* constant; for
-   //  joystick input, each entry is the button number, or -2 to let SDL
-   //  choose an appropriate button.  In both cases, -1 means nothing is
-   //  assigned.
+   int button_up = -1;
+   int button_down = -1;
+   int button_left = -1;
+   int button_right = -1;
+   int button_a = -1;
+   int button_b = -1;
+   int button_x = -1;
+   int button_y = -1;
+   int button_trigger_r = -1;
+   int button_trigger_l = -1;
+   int button_trigger_zr = -1;
+   int button_trigger_zl = -1;
+   int button_stick_l = -1;
+   int button_stick_r = -1;
+   int button_plus = -1;
+   int button_minus = -1;
+   int button_home = -1;
+   int button_sync = -1;
 
-   int button_up;
-   int button_down;
-   int button_left;
-   int button_right;
-   int button_a;
-   int button_b;
-   int button_x;
-   int button_y;
-   int button_trigger_r;
-   int button_trigger_l;
-   int button_trigger_zr;
-   int button_trigger_zl;
-   int button_stick_l;
-   int button_stick_r;
-   int button_plus;
-   int button_minus;
-   int button_home;
-   int button_sync;
-
-   union
-   {
-      struct
-      {
-         int left_stick_up;
-         int left_stick_down;
-         int left_stick_left;
-         int left_stick_right;
-         int right_stick_up;
-         int right_stick_down;
-         int right_stick_left;
-         int right_stick_right;
-      } keyboard;
-
-      struct
-      {
-         int left_stick_x;
-         bool left_stick_x_invert;
-         int left_stick_y;
-         bool left_stick_y_invert;
-         int right_stick_x;
-         bool right_stick_x_invert;
-         int right_stick_y;
-         bool right_stick_y_invert;
-      } joystick;
-   };
+   std::variant<InputDeviceKeyboard, InputDeviceJoystick> typeExtra;
 };
 
 extern std::vector<InputDevice> devices;
@@ -112,9 +118,9 @@ void
 setupDefaultInputDevices();
 
 bool
-loadFrontendToml(std::shared_ptr<cpptoml::table> config);
+loadFrontendToml(const toml::table &config);
 
 bool
-saveFrontendToml(std::shared_ptr<cpptoml::table> config);
+saveFrontendToml(toml::table &config);
 
 } // namespace config
