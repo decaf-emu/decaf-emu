@@ -74,6 +74,7 @@ Currently decaf-emu can build on MacOS using Xcode 11 although MoltenVK is missi
 
 ## CMake
 Options interesting to users:
+- DECAF_FFMPEG - Build with ffmpeg which is used for decoding h264 videos
 - DECAF_QT - Build with Qt frontend.
 - DECAF_VULKAN - Build with Vulkan backend.
 
