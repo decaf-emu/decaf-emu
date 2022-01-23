@@ -1,5 +1,5 @@
 macro(find_component COMPONENT LIBRARY HEADER)
-   find_path(${COMPONENT}_INCLUDE_DIR NAMES "${HEADER}")
+   find_path(${COMPONENT}_INCLUDE_DIR NAMES "${HEADER}" HINTS "/usr/include/ffmpeg")
    find_library(${COMPONENT}_LIBRARY NAMES "${LIBRARY}")
 
    if(${COMPONENT}_INCLUDE_DIR AND ${COMPONENT}_LIBRARY)
