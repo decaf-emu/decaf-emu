@@ -27,7 +27,7 @@ jobs:
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
       VCPKG_BUILD_TYPE: 'release'
-      VCPKG_ROOT: '${{github.workspace}}/build/vcpkg'
+      VCPKG_ROOT: '${{github.workspace}}/libraries/vcpkg'
 
     steps:
     - uses: actions/checkout@v2
@@ -37,21 +37,16 @@ jobs:
     - name: Initialise
       run: mkdir build
 
-    - uses: actions/checkout@v2
-      with:
-        repository: 'microsoft/vcpkg'
-        path: 'build/vcpkg'
-
     - name: 'Setup vcpkg (Windows)'
       if: startsWith(matrix.os, 'windows')
-      run: ./build/vcpkg/bootstrap-vcpkg.bat
+      run: ./libraries/vcpkg/bootstrap-vcpkg.bat
 
     - name: 'Setup NuGet Credentials'
       if: startsWith(matrix.os, 'windows')
       shell: 'bash'
       run: >
         cd build &&
-        ${{ matrix.mono }} `./vcpkg/vcpkg fetch nuget | tail -n 1`
+        ${{ matrix.mono }} `../libraries/vcpkg/vcpkg fetch nuget | tail -n 1`
         sources add
         -source "https://nuget.pkg.github.com/decaf-emu/index.json"
         -storepasswordincleartext
@@ -156,7 +151,7 @@ jobs:
       shell: cmd
       run: |
         cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_PREFIX_PATH=%QTDIR% -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -DCMAKE_TOOLCHAIN_FILE=../libraries/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-release -DVCPKG_HOST_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_PREFIX_PATH=%QTDIR% -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Build
       run: |

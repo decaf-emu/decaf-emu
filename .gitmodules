@@ -46,3 +46,6 @@
 [submodule "libraries/tomlplusplus"]
 	path = libraries/tomlplusplus
 	url = https://github.com/marzer/tomlplusplus.git
+[submodule "libraries/vcpkg"]
+	path = libraries/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
