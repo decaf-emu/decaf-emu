@@ -5,6 +5,7 @@
 namespace cafe::nn_ec
 {
 
+template<>
 virt_ptr<ghs::TypeDescriptor> NonCopyable<ItemList>::TypeDescriptor = nullptr;
 
 virt_ptr<ghs::VirtualTable> ItemList::VirtualTable = nullptr;

@@ -200,7 +200,7 @@ registerTypeInfo(hle::Library *library,
 #define RegisterDataInternal(data) \
    cafe::hle::registerDataInternal(this, "__internal__" # data, data)
 
-#define RegisterTypeInfo(type, name, virtualTable, baseTypes, ...) \
-   cafe::hle::registerTypeInfo<type>(this, name, virtualTable, baseTypes, __VA_ARGS__);
+#define RegisterTypeInfo(type, name, ...) \
+   cafe::hle::registerTypeInfo<type>(this, name, __VA_ARGS__);
 
 } // namespace cafe::hle
