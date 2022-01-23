@@ -9,6 +9,7 @@
 #include "settings/settingsdialog.h"
 #include "titlelistwidget.h"
 
+#include <QAbstractButton>
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QFileDialog>
