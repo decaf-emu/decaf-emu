@@ -19,7 +19,6 @@ add_executable(decaf-sdl
     ${RESOURCE_FILES})
 
 target_include_directories(decaf-sdl PRIVATE
-    ${CPPTOML_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS})
 
 target_link_libraries(decaf-sdl

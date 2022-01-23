@@ -2,7 +2,7 @@
 #include "spirv_transpiler.h"
 #include "latte/latte_disassembler.h"
 
-#include <glslang/SPIRV/disassemble.h>
+#include <SPIRV/disassemble.h>
 #include <regex>
 
 namespace spirv

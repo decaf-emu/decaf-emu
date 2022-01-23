@@ -7,9 +7,6 @@ file(GLOB_RECURSE HEADER_FILES *.h)
 
 add_executable(decaf-cli ${SOURCE_FILES} ${HEADER_FILES})
 
-target_include_directories(decaf-cli PRIVATE
-    ${CPPTOML_INCLUDE_DIRS})
-
 target_link_libraries(decaf-cli
     common
     libconfig

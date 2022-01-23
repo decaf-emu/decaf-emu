@@ -21,17 +21,14 @@ target_link_libraries(libdecaf
 
 target_link_libraries(libdecaf
     cnl
-    imgui::imgui
-    c-ares::cares
-    CURL::libcurl
-    OpenSSL::SSL
-    pugixml::pugixml
-    unofficial::libuv::libuv
-    ZLIB::ZLIB
-    FFMPEG::AVCODEC
-    FFMPEG::AVFILTER
-    FFMPEG::AVUTIL
-    FFMPEG::SWSCALE)
+    imgui
+    pugixml
+    ${CARES_LIBRARY}
+    ${CURL_LIBRARY}
+    ${OPENSSL_LIBRARY}
+    ${LIBUV_LIBRARY}
+    ${ZLIB_LIBRARY}
+    ${FFMPEG_LIBRARY})
 
 if(MSVC)
     target_link_libraries(libdecaf Crypt32 ws2_32 Psapi IPHLPAPI userenv)

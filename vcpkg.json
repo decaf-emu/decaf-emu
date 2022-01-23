@@ -8,19 +8,10 @@
       "features": ["avcodec", "avfilter", "swscale"]
     },
     "c-ares",
-    "catch2",
-    "cereal",
-    "cpptoml",
     "curl",
-    "fmt",
-    "glslang",
-    "gsl-lite",
-    "imgui",
     "libuv",
     "openssl",
-    "pugixml",
     "sdl2",
-    "spdlog",
     "zlib"
   ]
 }

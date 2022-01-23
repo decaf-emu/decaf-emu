@@ -11,7 +11,7 @@ GroupSources("Source Files" src)
 target_link_libraries(common
     cnl
     fmt::fmt
-    gsl::gsl-lite
+    gsl
     spdlog::spdlog)
 
 if(MSVC)

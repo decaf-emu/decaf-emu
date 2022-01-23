@@ -1,21 +1,48 @@
+[submodule "libraries/pugixml"]
+	path = libraries/pugixml
+	url = https://github.com/zeux/pugixml.git
 [submodule "libraries/libbinrec"]
 	path = libraries/libbinrec
 	url = https://github.com/decaf-emu/libbinrec.git
+[submodule "libraries/spdlog"]
+	path = libraries/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "libraries/cereal"]
+	path = libraries/cereal
+	url = https://github.com/USCiLab/cereal.git
 [submodule "libraries/ovsocket"]
 	path = libraries/ovsocket
 	url = https://github.com/exjam/ovsocket.git
+[submodule "libraries/gsl-lite"]
+	path = libraries/gsl-lite
+	url = https://github.com/decaf-emu/gsl-lite.git
 [submodule "libraries/addrlib"]
 	path = libraries/addrlib
 	url = https://github.com/decaf-emu/addrlib.git
 [submodule "libraries/excmd"]
 	path = libraries/excmd
 	url = https://github.com/exjam/excmd
+[submodule "libraries/imgui"]
+	path = libraries/imgui
+	url = https://github.com/ocornut/imgui.git
 [submodule "libraries/cnl"]
 	path = libraries/cnl
 	url = https://github.com/decaf-emu/cnl.git
+[submodule "libraries/catch"]
+	path = libraries/catch
+	url = https://github.com/philsquared/Catch.git
+[submodule "libraries/cpptoml"]
+	path = libraries/cpptoml
+	url = https://github.com/decaf-emu/cpptoml.git
 [submodule "libraries/cpp-peglib"]
 	path = libraries/cpp-peglib
 	url = https://github.com/yhirose/cpp-peglib.git
+[submodule "libraries/fmt"]
+	path = libraries/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "libraries/glslang"]
+	path = libraries/glslang
+	url = https://github.com/KhronosGroup/glslang.git
 [submodule "libraries/qtads"]
 	path = libraries/qtads
 	url = https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System.git

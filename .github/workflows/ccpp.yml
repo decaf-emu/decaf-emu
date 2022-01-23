@@ -42,15 +42,12 @@ jobs:
         repository: 'microsoft/vcpkg'
         path: 'build/vcpkg'
 
-    - name: 'Setup vcpkg (Ubuntu)'
-      if: startsWith(matrix.os, 'ubuntu')
-      run: ./build/vcpkg/bootstrap-vcpkg.sh
-
     - name: 'Setup vcpkg (Windows)'
       if: startsWith(matrix.os, 'windows')
       run: ./build/vcpkg/bootstrap-vcpkg.bat
 
     - name: 'Setup NuGet Credentials'
+      if: startsWith(matrix.os, 'windows')
       shell: 'bash'
       run: >
         cd build &&
@@ -71,7 +68,7 @@ jobs:
         sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-bionic.list http://packages.lunarg.com/vulkan/lunarg-vulkan-bionic.list
         sudo apt-add-repository ppa:cginternals/ppa
         sudo apt-get update
-        sudo apt-get install -y cmake vulkan-sdk python3-setuptools nasm mesa-common-dev libglu1-mesa-dev ninja-build
+        sudo apt-get install -y cmake vulkan-sdk python3-setuptools mesa-common-dev libglu1-mesa-dev ninja-build libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libuv1-dev libc-ares-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           sudo apt-get install -y g++-${{ matrix.version }}
         else
@@ -152,7 +149,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd build
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release -DVCPKG_HOST_TRIPLET=x64-linux-release -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_PREFIX_PATH=$QTDIR -DCMAKE_INSTALL_PREFIX=install ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DDECAF_BUILD_TOOLS=ON -DDECAF_VULKAN=ON -DDECAF_QT=ON -DCMAKE_PREFIX_PATH=$QTDIR -DCMAKE_INSTALL_PREFIX=install ..
 
     - name: Configure (Windows)
       if: startsWith(matrix.os, 'windows')

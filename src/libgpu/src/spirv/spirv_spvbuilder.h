@@ -2,8 +2,8 @@
 #ifdef DECAF_VULKAN
 #include <common/bit_cast.h>
 #include <common/strutils.h>
-#include <glslang/SPIRV/SpvBuilder.h>
-#include <glslang/SPIRV/GLSL.std.450.h>
+#include <SPIRV/SpvBuilder.h>
+#include <SPIRV/GLSL.std.450.h>
 
 namespace spirv
 {

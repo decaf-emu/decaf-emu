@@ -40,7 +40,18 @@ Use cmake-gui to generate a VS project file:
 Required:
 - A modern C++17 friendly compiler such as g++9
 - CMake
-- [vcpkg](https://vcpkg.io/en/getting-started.html)
+
+Required dependencies which can be acquired from system or vcpkg:
+- c-ares
+- curl
+- ffmpeg
+- libuv
+- openssl
+- sdl2
+- zlib
+
+For some systems, these can be installed with:
+- `apt install cmake libcurl4-openssl-dev libsdl2-dev libssl-dev zlib1g-dev libuv1-dev libc-ares-dev libavcodec-dev libavfilter-dev libavutil-dev libswscale-dev`
 
 Optional:
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home), disable by using `-DDECAF_VULKAN=OFF`
@@ -54,7 +65,7 @@ For some systems, Qt can be installed with:
 - `cd decaf-emu`
 - `mkdir build`
 - `cd build`
-- `cmake -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../`
+- `cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../`
 - `make`
 
 You might want to use `cmake -G Ninja <...>` and build with Ninja instead of Make for faster builds.

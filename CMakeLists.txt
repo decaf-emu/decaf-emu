@@ -10,25 +10,6 @@ if(USING_CONAN)
     conan_basic_setup(NO_OUTPUT_DIRS)
 endif()
 
-find_package(Threads REQUIRED)
-
-find_package(c-ares CONFIG REQUIRED) # c-ares::cares c-ares::cares_shared c-ares::cares_static
-find_package(Catch2 CONFIG REQUIRED) # Catch2::Catch2
-find_package(cereal CONFIG REQUIRED) # cereal
-find_package(CURL CONFIG REQUIRED) # CURL::libcurl
-find_package(fmt CONFIG REQUIRED) # fmt::fmt
-find_package(glslang CONFIG REQUIRED)
-find_package(gsl-lite CONFIG REQUIRED) # gsl::gsl-lite
-find_package(imgui CONFIG REQUIRED) # imgui::imgui
-find_package(OpenSSL REQUIRED) # OpenSSL::SSL OpenSSL::Crypto
-find_package(pugixml CONFIG REQUIRED) # pugixml pugixml::shared pugixml::pugixml
-find_package(SDL2 CONFIG REQUIRED) # SDL2::SDL2 SDL2::SDL2main
-find_package(spdlog CONFIG REQUIRED) # spdlog::spdlog spdlog::spdlog_header_only
-find_package(unofficial-libuv CONFIG REQUIRED) # unofficial::libuv::libuv
-find_package(ZLIB REQUIRED) # ZLIB::ZLIB
-
-find_path(CPPTOML_INCLUDE_DIRS "cpptoml.h")
-
 # Disable PCH by default on older versions of CMake
 if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
     set(DECAF_PCH_DEFAULT OFF)
@@ -69,10 +50,6 @@ if(DECAF_JIT_PROFILING)
     add_definitions(-DDECAF_JIT_ALLOW_PROFILING)
 endif()
 
-find_package(FFMPEG REQUIRED)
-add_definitions(-DDECAF_FFMPEG)
-add_definitions(-DDECAF_SDL)
-
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     find_package(XCB QUIET)
     find_package(X11 QUIET)
@@ -98,6 +75,49 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions(-DDECAF_PLATFORM_COCOA)
     set(DECAF_PLATFORM_COCOA TRUE)
 endif()
+
+find_package(Threads REQUIRED)
+
+
+if(VCPKG_TARGET_TRIPLET)
+    find_package(c-ares CONFIG REQUIRED)
+    find_package(CURL CONFIG REQUIRED)
+    find_package(FFMPEG REQUIRED)
+    find_package(OpenSSL REQUIRED)
+    find_package(SDL2 CONFIG REQUIRED)
+    find_package(unofficial-libuv CONFIG REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    set(CARES_LIBRARY c-ares::cares)
+    set(CURL_LIBRARY CURL::libcurl)
+    set(FFMPEG_LIBRARY FFMPEG::AVCODEC FFMPEG::AVFILTER FFMPEG::AVUTIL FFMPEG::SWSCALE)
+    set(LIBUV_LIBRARY unofficial::libuv::libuv)
+    set(OPENSSL_LIBRARY OpenSSL::SSL)
+    set(SDL2_LIBRARY SDL2::SDL2)
+    set(SDL2_MAIN_LIBRARY SDL2::SDL2main)
+    set(ZLIB_LIBRARY ZLIB::ZLIB)
+else()
+    find_package(CARES REQUIRED)
+    find_package(CURL REQUIRED)
+    find_package(FFMPEG REQUIRED)
+    find_package(LibUV REQUIRED)
+    find_package(OpenSSL REQUIRED)
+    find_package(SDL2 REQUIRED)
+    find_package(ZLIB REQUIRED)
+
+    set(CARES_LIBRARY CARES::CARES)
+    set(CURL_LIBRARY CURL::libcurl)
+    set(FFMPEG_LIBRARY FFMPEG::AVCODEC FFMPEG::AVFILTER FFMPEG::AVUTIL FFMPEG::SWSCALE)
+    set(LIBUV_LIBRARY LibUV::LibUV)
+    set(OPENSSL_LIBRARY OpenSSL::SSL)
+    set(SDL2_LIBRARY SDL2::SDL2)
+    set(SDL2_MAIN_LIBRARY SDL2::SDL2main)
+    set(ZLIB_LIBRARY ZLIB::ZLIB)
+endif()
+
+# TODO: Remove these definitions as they are no longer optional
+add_definitions(-DDECAF_FFMPEG)
+add_definitions(-DDECAF_SDL)
 
 if(DECAF_VULKAN)
     find_package(Vulkan 1.1.106.0 REQUIRED) # Vulkan_INCLUDE_DIRS and Vulkan_LIBRARIES

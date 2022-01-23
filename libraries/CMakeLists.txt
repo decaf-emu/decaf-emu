@@ -16,15 +16,61 @@ set(BINREC_ENABLE_ASSERT FALSE CACHE BOOL "Enable basic assertion checks")
 add_subdirectory(libbinrec)
 set_target_properties(binrec PROPERTIES FOLDER libraries)
 
+# catch
+add_library(catch2 INTERFACE IMPORTED GLOBAL)
+set_target_properties(catch2 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/catch/single_include/catch2")
+
+# cereal
+add_library(cereal INTERFACE IMPORTED GLOBAL)
+set_target_properties(cereal PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
+
 # cnl
 add_library(cnl INTERFACE IMPORTED GLOBAL)
 set_target_properties(cnl PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cnl/include")
 
+# cpptoml
+add_library(cpptoml INTERFACE IMPORTED GLOBAL)
+set_target_properties(cpptoml PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "CPPTOML_USE_MAP"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpptoml/include")
+
 # excmd
 add_library(excmd INTERFACE IMPORTED GLOBAL)
 set_target_properties(excmd PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/excmd/src")
+
+# fmt
+add_subdirectory(fmt)
+set_target_properties(fmt PROPERTIES FOLDER libraries)
+
+# glslang
+if(DECAF_VULKAN OR DECAF_BUILD_TOOLS)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "glslang: BUILD_SHARED_LIBS" FORCE)
+    set(BUILD_TESTING OFF CACHE BOOL "glslang: BUILD_TESTING" FORCE)
+    set(ENABLE_HLSL OFF CACHE BOOL "glslang: ENABLE_HLSL" FORCE)
+    set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "glslang: ENABLE_GLSLANG_BINARIES" FORCE)
+    set(ENABLE_OPT ON CACHE BOOL "glslang: ENABLE_OPT" FORCE)
+    set(ENABLE_SPVREMAPPER OFF CACHE BOOL "glslang: ENABLE_SPVREMAPPER" FORCE)
+    set(SKIP_GLSLANG_INSTALL ON CACHE BOOL "glslang: SKIP_GLSLANG_INSTALL" FORCE)
+    add_subdirectory(glslang)
+endif()
+
+# gsl
+add_library(gsl INTERFACE IMPORTED GLOBAL)
+set_target_properties(gsl PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "GSL_THROWS_FOR_TESTING"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/gsl-lite/include")
+
+# imgui
+add_library(imgui STATIC
+    "imgui/imgui.cpp"
+    "imgui/imgui_draw.cpp")
+set_target_properties(imgui PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/imgui"
+    FOLDER libraries)
 
 # ovsocket
 add_library(ovsocket INTERFACE IMPORTED GLOBAL)
@@ -35,6 +81,18 @@ set_target_properties(ovsocket PROPERTIES
 add_library(peglib INTERFACE IMPORTED GLOBAL)
 set_target_properties(peglib PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpp-peglib")
+
+# pugixml
+add_library(pugixml STATIC
+    "pugixml/src/pugixml.cpp")
+set_target_properties(pugixml PROPERTIES
+    FOLDER libraries
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
+
+# spdlog
+set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
+add_subdirectory(spdlog)
+set_target_properties(spdlog PROPERTIES FOLDER libraries)
 
 # Qt Advanced Docking System
 if(DECAF_QT)

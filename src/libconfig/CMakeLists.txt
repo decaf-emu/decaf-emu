@@ -9,11 +9,10 @@ file(GLOB_RECURSE HEADER_FILES *.h)
 add_library(libconfig STATIC ${SOURCE_FILES} ${HEADER_FILES})
 GroupSources("Source Files" src)
 
-target_include_directories(libconfig PRIVATE ${CPPTOML_INCLUDE_DIRS})
-
 target_link_libraries(libconfig
     common
     libcpu
     libdecaf
     libgpu
+    cpptoml
     excmd)
