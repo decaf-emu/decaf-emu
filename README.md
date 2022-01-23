@@ -12,16 +12,11 @@ You can find us for developer discussion:
   <img src="https://user-images.githubusercontent.com/1302758/147674704-17767241-e0b4-497e-8841-aa968d14c8e3.png" width="250" />
 </p>
 
-## Requirements
-- Windows with Visual Studio 2019 or newer
-- Linux with a modern C++17 friendly compiler
-- 64 bit only
-- CMake v3.2+
-- Vulkan 1.1.106.0+
-- Qt 5.15+ / 6+
-
 ## Support
-- None, this is an in-development project and user support is not provided.
+None, this is an in-development project and user support is not provided.
+
+## Building from Source
+See [BUILDING.md](BUILDING.md)
 
 ## Binaries
 The latest Windows and Linux binaries are available via [Actions artifacts](https://github.com/decaf-emu/decaf-emu/actions?query=branch%3Amaster+is%3Asuccess). You must be logged into GitHub in order to download the artifacts.
@@ -29,7 +24,6 @@ The latest Windows and Linux binaries are available via [Actions artifacts](http
 MacOS builds are currently not provided due to complications with Vulkan.
 
 ## Running
-
 Run the `decaf-qt` executable, it is recommended to run the emulator from the root git directory so that it is able to access `resources/fonts/*`.  Alternatively, set `resources_path` in the configuration file to point to the resources directory.
 
 Configuration files can be found at:
@@ -40,6 +34,3 @@ On Linux, a "Bus error" crash usually indicates an out-of-space error in the tem
 
 Additionally there is an SDL command line application which can be used by `./decaf-sdl play <path to game>`
 
-## Building from Source
-
-See [BUILDING.md](BUILDING.md)
