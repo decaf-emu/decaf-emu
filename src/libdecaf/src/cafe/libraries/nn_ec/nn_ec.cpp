@@ -14,6 +14,13 @@ void
 Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
+
+   registerCatalogSymbols();
+   registerItemListSymbols();
+   registerMemoryManagerSymbols();
+   registerMoneySymbols();
+   registerRootObjectSymbols();
+   registerShoppingCatalogSymbols();
 }
 
 } // namespace cafe::nn_ec

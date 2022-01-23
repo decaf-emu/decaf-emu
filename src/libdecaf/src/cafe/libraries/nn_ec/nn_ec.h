@@ -15,6 +15,13 @@ public:
 protected:
    virtual void registerSymbols() override;
 
+   void registerCatalogSymbols();
+   void registerItemListSymbols();
+   void registerMemoryManagerSymbols();
+   void registerMoneySymbols();
+   void registerRootObjectSymbols();
+   void registerShoppingCatalogSymbols();
+
 private:
 };
 
