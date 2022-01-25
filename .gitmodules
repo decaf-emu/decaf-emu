@@ -15,7 +15,7 @@
 	url = https://github.com/exjam/ovsocket.git
 [submodule "libraries/gsl-lite"]
 	path = libraries/gsl-lite
-	url = https://github.com/decaf-emu/gsl-lite.git
+	url = https://github.com/gsl-lite/gsl-lite
 [submodule "libraries/addrlib"]
 	path = libraries/addrlib
 	url = https://github.com/decaf-emu/addrlib.git
