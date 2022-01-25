@@ -8,6 +8,7 @@
 
 #include "be2_val.h"
 #include "pointer.h"
+#include "common/fixed.h"
 
 template<typename Type>
 struct be2_struct;
@@ -22,6 +23,13 @@ struct is_cpu_ptr<cpu::Pointer<T, A>> : std::true_type { };
 template<typename T, typename A>
 struct is_cpu_ptr<cpu::FunctionPointer<T, A>> : std::true_type { };
 
+// Equivalent to std:true_type if type T is a cnl::fixed_point
+template<typename>
+struct is_fixed_point : std::false_type { };
+
+template<typename Rep, int Exponent, int Radix>
+struct is_fixed_point<cnl::fixed_point<Rep, Exponent, Radix>> : std::true_type { };
+
 // Detects the actual type to be used for be2_array members.
 template <typename T, typename = void>
 struct be2_array_item_type;
@@ -29,13 +37,15 @@ struct be2_array_item_type;
 template <typename T>
 struct be2_array_item_type<T, typename std::enable_if<std::is_arithmetic<T>::value
                                                    || std::is_enum<T>::value
-                                                   || is_cpu_ptr<std::remove_cv_t<T>>::value>::type>
+                                                   || is_cpu_ptr<std::remove_cv_t<T>>::value
+                                                   || is_fixed_point<std::remove_cv_t<T>>::value>::type>
 {
    using type = be2_val<T>;
 };
 
 template <typename T>
 struct be2_array_item_type<T, typename std::enable_if<!is_cpu_ptr<std::remove_cv_t<T>>::value
+                                                   && !is_fixed_point<std::remove_cv_t<T>>::value
                                                    && std::is_class<T>::value
                                                    && !std::is_union<T>::value>::type>
 {
