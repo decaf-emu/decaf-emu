@@ -382,6 +382,41 @@ AXSetVoiceLoop(virt_ptr<AXVoice> voice,
    extras->syncBits |= internal::AXVoiceSyncBits::Loop;
 }
 
+void
+AXSetVoiceLpf(virt_ptr<AXVoice> voice,
+              virt_ptr<AXVoiceLpf> lpf)
+{
+   auto extras = internal::getVoiceExtras(voice->index);
+   extras->lpf = *lpf;
+   extras->syncBits |= internal::AXVoiceSyncBits::Lpf;
+}
+
+void
+AXSetVoiceLpfCoefs(virt_ptr<AXVoice> voice,
+                   sfixed_1_0_15_t invCoef,
+                   sfixed_1_0_15_t coef)
+{
+   auto extras = internal::getVoiceExtras(voice->index);
+   auto& lpf = extras->lpf;
+   lpf.invCoef = invCoef;
+   lpf.coef = coef;
+   extras->syncBits |= internal::AXVoiceSyncBits::LpfCoefs;
+}
+
+void
+AXComputeLpfCoefs(int32_t frequency,
+                  virt_ptr<sfixed_1_0_15_t> invCoef,
+                  virt_ptr<sfixed_1_0_15_t> coef)
+{
+   int rate = AXGetInputSamplesPerSec();
+   double omega = 2.0 * M_PI * (double)frequency;
+   double x = 2.0 - cos(omega / (double)rate);
+   double result = sqrt(x*x - 1) - x;
+
+   *invCoef = 1 + result;
+   *coef = -result;
+}
+
 uint32_t
 AXSetVoiceMixerSelect(virt_ptr<AXVoice> voice,
                       uint32_t mixerSelect)
@@ -641,6 +676,7 @@ Library::registerVoiceSymbols()
    RegisterFunctionExport(AXAcquireVoice);
    RegisterFunctionExport(AXAcquireVoiceEx);
    RegisterFunctionExport(AXCheckVoiceOffsets);
+   RegisterFunctionExport(AXComputeLpfCoefs);
    RegisterFunctionExport(AXFreeVoice);
    RegisterFunctionExport(AXGetMaxVoices);
    RegisterFunctionExport(AXGetVoiceCurrentOffsetEx);
@@ -659,6 +695,8 @@ Library::registerVoiceSymbols()
    RegisterFunctionExport(AXSetVoiceLoopOffset);
    RegisterFunctionExport(AXSetVoiceLoopOffsetEx);
    RegisterFunctionExport(AXSetVoiceLoop);
+   RegisterFunctionExport(AXSetVoiceLpf);
+   RegisterFunctionExport(AXSetVoiceLpfCoefs);
    RegisterFunctionExport(AXSetVoiceMixerSelect);
    RegisterFunctionExport(AXSetVoiceOffsets);
    RegisterFunctionExport(AXSetVoiceOffsetsEx);

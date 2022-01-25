@@ -161,6 +161,21 @@ CHECK_OFFSET(AXVoiceAdpcm, 0x22, predScale);
 CHECK_OFFSET(AXVoiceAdpcm, 0x24, prevSample);
 CHECK_SIZE(AXVoiceAdpcm, 0x28);
 
+struct AXVoiceLpf
+{
+   be2_val<AXVoiceLpfType> type;
+   be2_val<Pcm16Sample> prevSample;
+   //inverted coef, 1 - coef
+   be2_val<sfixed_1_0_15_t> invCoef;
+   //IIR coef
+   be2_val<sfixed_1_0_15_t> coef;
+};
+CHECK_OFFSET(AXVoiceLpf, 0x0, type);
+CHECK_OFFSET(AXVoiceLpf, 0x2, prevSample);
+CHECK_OFFSET(AXVoiceLpf, 0x4, invCoef);
+CHECK_OFFSET(AXVoiceLpf, 0x6, coef);
+CHECK_SIZE(AXVoiceLpf, 0x8);
+
 // Note: "Src" = "sample rate converter", not "source"
 struct AXVoiceSrc
 {
@@ -190,6 +205,11 @@ AXAcquireVoiceEx(uint32_t priority,
 
 BOOL
 AXCheckVoiceOffsets(virt_ptr<AXVoiceOffsets> offsets);
+
+void
+AXComputeLpfCoefs(int32_t frequency,
+                  virt_ptr<sfixed_1_0_15_t> invCoef,
+                  virt_ptr<sfixed_1_0_15_t> coef);
 
 void
 AXFreeVoice(virt_ptr<AXVoice> voice);
@@ -267,6 +287,15 @@ AXSetVoiceLoopOffsetEx(virt_ptr<AXVoice> voice,
 void
 AXSetVoiceLoop(virt_ptr<AXVoice> voice,
                AXVoiceLoop loop);
+
+void
+AXSetVoiceLpf(virt_ptr<AXVoice> voice,
+              virt_ptr<AXVoiceLpf> lpf);
+
+void
+AXSetVoiceLpfCoefs(virt_ptr<AXVoice> voice,
+                   sfixed_1_0_15_t invCoef,
+                   sfixed_1_0_15_t coef);
 
 uint32_t
 AXSetVoiceMixerSelect(virt_ptr<AXVoice> voice,
@@ -377,7 +406,9 @@ struct AXCafeVoiceExtras
 
    AXVoiceAdpcmLoopData adpcmLoop;
 
-   UNKNOWN(0xe4);
+   AXVoiceLpf lpf;
+
+   UNKNOWN(0xdc);
 
    uint32_t syncBits;
 
@@ -394,6 +425,7 @@ CHECK_OFFSET(AXCafeVoiceExtras, 0x17e, data);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x190, adpcm);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x1b8, src);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x1c6, adpcmLoop);
+CHECK_OFFSET(AXCafeVoiceExtras, 0x1cc, lpf);
 CHECK_OFFSET(AXCafeVoiceExtras, 0x2b0, syncBits);
 CHECK_SIZE(AXCafeVoiceExtras, 0x2c0);
 

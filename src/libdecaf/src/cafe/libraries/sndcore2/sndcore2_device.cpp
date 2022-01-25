@@ -296,6 +296,24 @@ sampleVoice(virt_ptr<AXVoice> voice,
 }
 
 void
+applyLpf(virt_ptr<AXVoice> voice,
+         Pcm16Sample *samples,
+         int numSamples)
+{
+   auto extras = getVoiceExtras(voice->index);
+   auto& lpf = extras->lpf;
+
+   if (lpf.type != AXVoiceLpfType::IIR) return;
+
+   for (auto i = 0; i < numSamples; i++) {
+      Pcm16Sample sample = samples[i];
+      sample = (sample * lpf.coef.value()) + (lpf.prevSample.value() * lpf.invCoef.value());
+      lpf.prevSample = sample;
+      samples[i] = sample;
+   }
+}
+
+void
 decodeVoiceSamples(int numSamples)
 {
    const auto voices = getAcquiredVoices();
@@ -310,6 +328,7 @@ decodeVoiceSamples(int numSamples)
 
       extras->numSamples = numSamples;
       sampleVoice(voice, extras->samples, numSamples);
+      applyLpf(voice, extras->samples, numSamples);
    }
 
    // TODO: Apply Volume Evelope (ADSR)
