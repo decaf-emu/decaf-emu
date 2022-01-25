@@ -44,3 +44,7 @@ if(DECAF_PCH)
 endif()
 
 install(TARGETS decaf-sdl RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")
+
+if(COMMAND x_vcpkg_install_local_dependencies)
+   x_vcpkg_install_local_dependencies(TARGETS decaf-sdl DESTINATION "${DECAF_INSTALL_BINDIR}")
+endif()

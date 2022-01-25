@@ -139,3 +139,7 @@ if(MSVC)
 endif()
 
 install(TARGETS decaf-qt RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")
+
+if(COMMAND x_vcpkg_install_local_dependencies)
+   x_vcpkg_install_local_dependencies(TARGETS decaf-qt DESTINATION "${DECAF_INSTALL_BINDIR}")
+endif()

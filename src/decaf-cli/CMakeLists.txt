@@ -14,3 +14,7 @@ target_link_libraries(decaf-cli
     excmd)
 
 install(TARGETS decaf-cli RUNTIME DESTINATION "${DECAF_INSTALL_BINDIR}")
+
+if(COMMAND x_vcpkg_install_local_dependencies)
+   x_vcpkg_install_local_dependencies(TARGETS decaf-cli DESTINATION "${DECAF_INSTALL_BINDIR}")
+endif()
