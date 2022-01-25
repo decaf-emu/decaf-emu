@@ -50,15 +50,15 @@ CHECK_SIZE(ConfigArg, 0xA8);
 struct ReceiverArg
 {
    be2_val<uint32_t> unk_0x00;
-   be2_val<uint32_t> unk_0x04;
-   be2_val<uint32_t> unk_0x08;
+   be2_virt_ptr<char16_t> textBuffer;
+   be2_val<uint32_t> textBufferSize;
    be2_val<int32_t> unk_0x0C;
    be2_val<uint32_t> unk_0x10;
    be2_val<int32_t> unk_0x14;
 };
 CHECK_OFFSET(ReceiverArg, 0x00, unk_0x00);
-CHECK_OFFSET(ReceiverArg, 0x04, unk_0x04);
-CHECK_OFFSET(ReceiverArg, 0x08, unk_0x08);
+CHECK_OFFSET(ReceiverArg, 0x04, textBuffer);
+CHECK_OFFSET(ReceiverArg, 0x08, textBufferSize);
 CHECK_OFFSET(ReceiverArg, 0x0C, unk_0x0C);
 CHECK_OFFSET(ReceiverArg, 0x10, unk_0x10);
 CHECK_OFFSET(ReceiverArg, 0x14, unk_0x14);

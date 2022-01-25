@@ -1,6 +1,7 @@
 #include "swkbd.h"
 #include "swkbd_keyboard.h"
 
+#include "common/strutils.h"
 #include "decaf_softwarekeyboard.h"
 
 #include <codecvt>
@@ -18,11 +19,25 @@ struct StaticKeyboardData
    be2_val<bool> okButtonPressed;
    be2_val<bool> cancelButtonPressed;
    be2_virt_ptr<uint8_t> workMemory;
+   be2_virt_ptr<char16_t> textBuffer;
+   be2_val<uint32_t> textBufferSize;
 };
 
 static virt_ptr<StaticKeyboardData> sKeyboardData = nullptr;
 static std::mutex sMutex;
-static std::u16string sInputBuffer;
+
+static void
+setReceiverArg(const ReceiverArg &receiverArg)
+{
+   if (receiverArg.textBuffer && receiverArg.textBufferSize) {
+      sKeyboardData->textBuffer = receiverArg.textBuffer;
+      sKeyboardData->textBufferSize = receiverArg.textBufferSize;
+   } else {
+      sKeyboardData->textBuffer =
+         virt_cast<char16_t *>(sKeyboardData->workMemory);
+      sKeyboardData->textBufferSize = 0xFFFFu;
+   }
+}
 
 bool
 AppearInputForm(virt_ptr<const AppearArg> arg)
@@ -33,7 +48,7 @@ AppearInputForm(virt_ptr<const AppearArg> arg)
       sKeyboardData->keyboardState = State::Visible;
       sKeyboardData->okButtonPressed = false;
       sKeyboardData->cancelButtonPressed = false;
-      sInputBuffer.clear();
+      setReceiverArg(arg->keyboardArg.receiverArg);
    }
 
    if (auto driver = decaf::softwareKeyboardDriver()) {
@@ -52,7 +67,7 @@ AppearKeyboard(virt_ptr<const KeyboardArg> arg)
       sKeyboardData->keyboardState = State::Visible;
       sKeyboardData->okButtonPressed = false;
       sKeyboardData->cancelButtonPressed = false;
-      sInputBuffer.clear();
+      setReceiverArg(arg->receiverArg);
    }
 
    if (auto driver = decaf::softwareKeyboardDriver()) {
@@ -150,14 +165,7 @@ GetDrawStringInfo(virt_ptr<DrawStringInfo> info)
 virt_ptr<const char16_t>
 GetInputFormString()
 {
-   auto workMemory = virt_cast<char16_t *>(sKeyboardData->workMemory);
-
-   for (auto i = 0; i < sInputBuffer.size(); ++i) {
-      workMemory[i] = sInputBuffer[i];
-   }
-
-   workMemory[sInputBuffer.size()] = char16_t { 0 };
-   return workMemory;
+   return virt_cast<const char16_t *>(sKeyboardData->textBuffer);
 }
 
 
@@ -271,15 +279,13 @@ void
 SetInputFormString(virt_ptr<const char16_t> str)
 {
    std::unique_lock<std::mutex> lock { sMutex };
-   sInputBuffer.clear();
-
-   while (auto c = *str) {
-      sInputBuffer.push_back(c);
-      ++str;
-   }
+   string_copy<char16_t>(sKeyboardData->textBuffer.get(),
+                         static_cast<size_t>(sKeyboardData->textBufferSize),
+                         str.get(),
+                         static_cast<size_t>(sKeyboardData->textBufferSize - 1));
 
    if (auto driver = decaf::softwareKeyboardDriver()) {
-      driver->onInputStringChanged(sInputBuffer);
+      driver->onInputStringChanged(sKeyboardData->textBuffer.getRawPointer());
    }
 }
 
@@ -391,7 +397,10 @@ setInputString(std::u16string_view text)
       return;
    }
 
-   sInputBuffer = text;
+   string_copy<char16_t>(sKeyboardData->textBuffer.get(),
+                         static_cast<size_t>(sKeyboardData->textBufferSize),
+                         text.data(),
+                         text.size());
 }
 
 } // namespace internal

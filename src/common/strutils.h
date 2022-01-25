@@ -120,11 +120,11 @@ string_copy(char *dst,
    string_copy(dst, maxCount, src, maxCount);
 }
 
-// strcpy_s for char16_t
+template<typename CharT, typename DstCharT, typename SrcCharT>
 inline void
-char16_copy(char16_t *dst,
+string_copy(DstCharT *dst,
             size_t dstSize,
-            const char16_t *src,
+            const SrcCharT *src,
             size_t maxCount)
 {
    if (dstSize <= maxCount) {
@@ -133,11 +133,11 @@ char16_copy(char16_t *dst,
 
    auto i = size_t { 0 };
    while (src[i] && i < maxCount) {
-      dst[i] = src[i];
+      dst[i] = static_cast<DstCharT>(src[i]);
       i++;
    }
 
-   dst[i] = char16_t { 0 };
+   dst[i] = static_cast<CharT>('\0');
 }
 
 inline std::string_view

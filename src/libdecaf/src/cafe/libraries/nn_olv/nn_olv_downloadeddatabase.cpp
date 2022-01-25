@@ -141,10 +141,10 @@ DownloadedDataBase_GetBodyText(virt_ptr<const DownloadedDataBase> self,
       return ResultNoData;
    }
 
-   char16_copy(textBuffer.getRawPointer(),
-               textBufferSize,
-               virt_addrof(self->bodyText).getRawPointer(),
-               self->bodyTextLength);
+   string_copy<char16_t>(textBuffer.get(),
+                         textBufferSize,
+                         virt_addrof(self->bodyText).get(),
+                         static_cast<size_t>(self->bodyTextLength));
    return ResultSuccess;
 }
 
