@@ -46,11 +46,6 @@ if(DECAF_VULKAN)
     add_custom_target(libgpu-shaders DEPENDS ${VK_BIN_FILES})
 endif()
 
-if(NOT MSVC)
-    file(GLOB LIBGPU_SPIRV_SRC_FILES "src/spirv/*.cpp")
-    set_property(SOURCE ${LIBGPU_SPIRV_SRC_FILES} PROPERTY COMPILE_FLAGS -fno-rtti)
-endif()
-
 add_library(libgpu STATIC ${SOURCE_FILES} ${HEADER_FILES} ${INLINE_FILES} ${VULKANSHADER_FILES} ${VK_BIN_FILES})
 GroupSources("Header Files/latte" latte)
 GroupSources("Source Files" src)
