@@ -227,13 +227,13 @@ saveToTOML(toml::table &config,
    for (auto &controller : inputConfiguration.controllers) {
       auto controllerConfig = toml::table();
       if (controller.type == ControllerType::Gamepad) {
-         controllerConfig.insert("type", "gamepad");
+         controllerConfig.insert_or_assign("type", "gamepad");
       } else if (controller.type == ControllerType::WiiMote) {
-         controllerConfig.insert("type", "wiimote");
+         controllerConfig.insert_or_assign("type", "wiimote");
       } else if (controller.type == ControllerType::ProController) {
-         controllerConfig.insert("type", "pro");
+         controllerConfig.insert_or_assign("type", "pro");
       } else if (controller.type == ControllerType::ClassicController) {
-         controllerConfig.insert("type", "classic");
+         controllerConfig.insert_or_assign("type", "classic");
       } else {
          continue;
       }
@@ -245,36 +245,36 @@ saveToTOML(toml::table &config,
          if (input.source == InputConfiguration::Input::Unassigned) {
             continue;
          } else if (input.source == InputConfiguration::Input::KeyboardKey) {
-            inputConfig.insert("key", input.id);
+            inputConfig.insert_or_assign("key", input.id);
          } else if (input.source == InputConfiguration::Input::JoystickAxis) {
             char guidBuffer[33];
             SDL_JoystickGetGUIDString(input.joystickGuid, guidBuffer, 33);
-            inputConfig.insert("sdl_joystick_guid", guidBuffer);
-            inputConfig.insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
-            inputConfig.insert("axis", input.id);
-            inputConfig.insert("invert", input.invert);
+            inputConfig.insert_or_assign("sdl_joystick_guid", guidBuffer);
+            inputConfig.insert_or_assign("sdl_joystick_duplicate_id", input.joystickDuplicateId);
+            inputConfig.insert_or_assign("axis", input.id);
+            inputConfig.insert_or_assign("invert", input.invert);
          } else if (input.source == InputConfiguration::Input::JoystickButton) {
             char guidBuffer[33];
             SDL_JoystickGetGUIDString(input.joystickGuid, guidBuffer, 33);
-            inputConfig.insert("sdl_joystick_guid", guidBuffer);
-            inputConfig.insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
-            inputConfig.insert("button", input.id);
+            inputConfig.insert_or_assign("sdl_joystick_guid", guidBuffer);
+            inputConfig.insert_or_assign("sdl_joystick_duplicate_id", input.joystickDuplicateId);
+            inputConfig.insert_or_assign("button", input.id);
          } else if (input.source == InputConfiguration::Input::JoystickHat) {
             char guidBuffer[33];
             SDL_JoystickGetGUIDString(input.joystickGuid, guidBuffer, 33);
-            inputConfig.insert("sdl_joystick_guid", guidBuffer);
-            inputConfig.insert("sdl_joystick_duplicate_id", input.joystickDuplicateId);
-            inputConfig.insert("hat", input.id);
-            inputConfig.insert("hat_value", input.hatValue);
+            inputConfig.insert_or_assign("sdl_joystick_guid", guidBuffer);
+            inputConfig.insert_or_assign("sdl_joystick_duplicate_id", input.joystickDuplicateId);
+            inputConfig.insert_or_assign("hat", input.id);
+            inputConfig.insert_or_assign("hat_value", input.hatValue);
          }
 
-         controllerConfig.insert(getConfigButtonName(buttonType), inputConfig);
+         controllerConfig.insert_or_assign(getConfigButtonName(buttonType), inputConfig);
       }
 
       controllers.push_back(std::move(controllerConfig));
    }
 
-   input->insert("controller", std::move(controllers));
+   input->insert_or_assign("controller", std::move(controllers));
    return true;
 }
 
@@ -291,7 +291,7 @@ saveToTOML(toml::table &config,
            const SoundSettings &soundSettings)
 {
    auto sound = config.insert("sound", toml::table()).first->second.as_table();
-   sound->insert("playback_enabled", soundSettings.playbackEnabled);
+   sound->insert_or_assign("playback_enabled", soundSettings.playbackEnabled);
    return true;
 }
 
@@ -340,7 +340,7 @@ saveToTOML(toml::table &config,
    auto ui = config.insert("ui", toml::table()).first->second.as_table();
 
    if (auto text = translateTitleListMode(uiSettings.titleListMode); text) {
-      ui->insert("title_list_mode", text);
+      ui->insert_or_assign("title_list_mode", text);
    }
 
    return true;

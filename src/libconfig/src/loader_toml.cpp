@@ -218,24 +218,20 @@ bool
 saveToTOML(toml::table &config,
            const cpu::Settings &cpuSettings)
 {
-   auto jit = config.get_as<toml::table>("jit");
-   if (!jit) {
-      jit = config.insert("jit", toml::table()).first->second.as_table();
-   }
-
-   jit->insert("enabled", cpuSettings.jit.enabled);
-   jit->insert("verify", cpuSettings.jit.verify);
-   jit->insert("verify_addr", cpuSettings.jit.verifyAddress);
-   jit->insert("code_cache_size_mb", cpuSettings.jit.codeCacheSizeMB);
-   jit->insert("data_cache_size_mb", cpuSettings.jit.dataCacheSizeMB);
-   jit->insert("rodata_read_only", cpuSettings.jit.rodataReadOnly);
+   auto jit = config.insert("jit", toml::table()).first->second.as_table();
+   jit->insert_or_assign("enabled", cpuSettings.jit.enabled);
+   jit->insert_or_assign("verify", cpuSettings.jit.verify);
+   jit->insert_or_assign("verify_addr", cpuSettings.jit.verifyAddress);
+   jit->insert_or_assign("code_cache_size_mb", cpuSettings.jit.codeCacheSizeMB);
+   jit->insert_or_assign("data_cache_size_mb", cpuSettings.jit.dataCacheSizeMB);
+   jit->insert_or_assign("rodata_read_only", cpuSettings.jit.rodataReadOnly);
 
    auto opt_flags = toml::array();
    for (auto &flag : cpuSettings.jit.optimisationFlags) {
       opt_flags.push_back(flag);
    }
 
-   jit->insert("opt_flags", opt_flags);
+   jit->insert_or_assign("opt_flags", opt_flags);
    return true;
 }
 
@@ -245,68 +241,68 @@ saveToTOML(toml::table &config,
 {
    // debugger
    auto debugger = config.insert("debugger", toml::table()).first->second.as_table();
-   debugger->insert("enabled", decafSettings.debugger.enabled);
-   debugger->insert("break_on_entry", decafSettings.debugger.break_on_entry);
-   debugger->insert("break_on_exit", decafSettings.debugger.break_on_exit);
-   debugger->insert("gdb_stub", decafSettings.debugger.gdb_stub);
-   debugger->insert("gdb_stub_port", decafSettings.debugger.gdb_stub_port);
+   debugger->insert_or_assign("enabled", decafSettings.debugger.enabled);
+   debugger->insert_or_assign("break_on_entry", decafSettings.debugger.break_on_entry);
+   debugger->insert_or_assign("break_on_exit", decafSettings.debugger.break_on_exit);
+   debugger->insert_or_assign("gdb_stub", decafSettings.debugger.gdb_stub);
+   debugger->insert_or_assign("gdb_stub_port", decafSettings.debugger.gdb_stub_port);
 
    // gx2
    auto gx2 = config.insert("gx2", toml::table()).first->second.as_table();
-   gx2->insert("dump_textures", decafSettings.gx2.dump_textures);
-   gx2->insert("dump_shaders", decafSettings.gx2.dump_shaders);
+   gx2->insert_or_assign("dump_textures", decafSettings.gx2.dump_textures);
+   gx2->insert_or_assign("dump_shaders", decafSettings.gx2.dump_shaders);
 
    // log
    auto log = config.insert("log", toml::table()).first->second.as_table();
-   log->insert("async", decafSettings.log.async);
-   log->insert("branch_trace", decafSettings.log.branch_trace);
-   log->insert("directory", decafSettings.log.directory);
-   log->insert("hle_trace", decafSettings.log.hle_trace);
-   log->insert("hle_trace_res", decafSettings.log.hle_trace_res);
-   log->insert("level", decafSettings.log.level);
-   log->insert("to_file", decafSettings.log.to_file);
-   log->insert("to_stdout", decafSettings.log.to_stdout);
+   log->insert_or_assign("async", decafSettings.log.async);
+   log->insert_or_assign("branch_trace", decafSettings.log.branch_trace);
+   log->insert_or_assign("directory", decafSettings.log.directory);
+   log->insert_or_assign("hle_trace", decafSettings.log.hle_trace);
+   log->insert_or_assign("hle_trace_res", decafSettings.log.hle_trace_res);
+   log->insert_or_assign("level", decafSettings.log.level);
+   log->insert_or_assign("to_file", decafSettings.log.to_file);
+   log->insert_or_assign("to_stdout", decafSettings.log.to_stdout);
 
    auto levels = toml::table();
    for (auto item : decafSettings.log.levels) {
-      levels.insert(item.first, item.second);
+      levels.insert_or_assign(item.first, item.second);
    }
-   log->insert("levels", std::move(levels));
+   log->insert_or_assign("levels", std::move(levels));
 
    auto hle_trace_filters = toml::array();
    for (auto &filter : decafSettings.log.hle_trace_filters) {
       hle_trace_filters.push_back(filter);
    }
 
-   log->insert("hle_trace_filters", std::move(hle_trace_filters));
+   log->insert_or_assign("hle_trace_filters", std::move(hle_trace_filters));
 
    // sound
    auto sound = config.insert("sound", toml::table()).first->second.as_table();
-   sound->insert("dump_sounds", decafSettings.sound.dump_sounds);
+   sound->insert_or_assign("dump_sounds", decafSettings.sound.dump_sounds);
 
    // system
    auto system = config.insert("system", toml::table()).first->second.as_table();
-   system->insert("region", static_cast<int>(decafSettings.system.region));
-   system->insert("hfio_path", decafSettings.system.hfio_path);
-   system->insert("mlc_path", decafSettings.system.mlc_path);
-   system->insert("otp_path", decafSettings.system.otp_path);
-   system->insert("resources_path", decafSettings.system.resources_path);
-   system->insert("sdcard_path", decafSettings.system.sdcard_path);
-   system->insert("slc_path", decafSettings.system.slc_path);
-   system->insert("content_path", decafSettings.system.content_path);
-   system->insert("time_scale", decafSettings.system.time_scale);
+   system->insert_or_assign("region", static_cast<int>(decafSettings.system.region));
+   system->insert_or_assign("hfio_path", decafSettings.system.hfio_path);
+   system->insert_or_assign("mlc_path", decafSettings.system.mlc_path);
+   system->insert_or_assign("otp_path", decafSettings.system.otp_path);
+   system->insert_or_assign("resources_path", decafSettings.system.resources_path);
+   system->insert_or_assign("sdcard_path", decafSettings.system.sdcard_path);
+   system->insert_or_assign("slc_path", decafSettings.system.slc_path);
+   system->insert_or_assign("content_path", decafSettings.system.content_path);
+   system->insert_or_assign("time_scale", decafSettings.system.time_scale);
 
    auto lle_modules = toml::array();
    for (auto &name : decafSettings.system.lle_modules) {
       lle_modules.push_back(name);
    }
-   system->insert("lle_modules", std::move(lle_modules));
+   system->insert_or_assign("lle_modules", std::move(lle_modules));
 
    auto title_directories = toml::array();
    for (auto &name : decafSettings.system.title_directories) {
       title_directories.push_back(name);
    }
-   system->insert("title_directories", std::move(title_directories));
+   system->insert_or_assign("title_directories", std::move(title_directories));
    return true;
 }
 
@@ -316,23 +312,23 @@ saveToTOML(toml::table &config,
 {
    // gpu
    auto gpu = config.insert("gpu", toml::table()).first->second.as_table();
-   gpu->insert("debug", gpuSettings.debug.debug_enabled);
-   gpu->insert("dump_shaders", gpuSettings.debug.dump_shaders);
-   gpu->insert("dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
+   gpu->insert_or_assign("debug", gpuSettings.debug.debug_enabled);
+   gpu->insert_or_assign("dump_shaders", gpuSettings.debug.dump_shaders);
+   gpu->insert_or_assign("dump_shader_binaries_only", gpuSettings.debug.dump_shader_binaries_only);
 
    // display
    auto display = config.insert("display", toml::table()).first->second.as_table();
-   display->insert("backend", translateDisplayBackend(gpuSettings.display.backend));
-   display->insert("screen_mode", translateScreenMode(gpuSettings.display.screenMode));
-   display->insert("view_mode", translateViewMode(gpuSettings.display.viewMode));
-   display->insert("maintain_aspect_ratio", gpuSettings.display.maintainAspectRatio);
-   display->insert("split_seperation", gpuSettings.display.splitSeperation);
+   display->insert_or_assign("backend", translateDisplayBackend(gpuSettings.display.backend));
+   display->insert_or_assign("screen_mode", translateScreenMode(gpuSettings.display.screenMode));
+   display->insert_or_assign("view_mode", translateViewMode(gpuSettings.display.viewMode));
+   display->insert_or_assign("maintain_aspect_ratio", gpuSettings.display.maintainAspectRatio);
+   display->insert_or_assign("split_seperation", gpuSettings.display.splitSeperation);
 
    auto backgroundColour = toml::array();
    backgroundColour.push_back(gpuSettings.display.backgroundColour[0]);
    backgroundColour.push_back(gpuSettings.display.backgroundColour[1]);
    backgroundColour.push_back(gpuSettings.display.backgroundColour[2]);
-   display->insert("background_colour", std::move(backgroundColour));
+   display->insert_or_assign("background_colour", std::move(backgroundColour));
    return true;
 }
 

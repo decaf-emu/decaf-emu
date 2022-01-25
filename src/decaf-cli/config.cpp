@@ -21,7 +21,7 @@ bool
 saveFrontendToml(toml::table &config)
 {
    auto system = config.insert("system", toml::table()).first->second.as_table();
-   system->insert("timeout_ms", system::timeout_ms);
+   system->insert_or_assign("timeout_ms", system::timeout_ms);
    return true;
 }
 

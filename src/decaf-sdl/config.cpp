@@ -229,63 +229,63 @@ saveFrontendToml(toml::table &config)
 
    // input
    auto input = config.insert("input", toml::table()).first->second.as_table();
-   input->insert("vpad0", config::input::vpad0);
+   input->insert_or_assign("vpad0", config::input::vpad0);
 
    auto devices = config.insert("devices", toml::array()).first->second.as_array();
    for (const auto &device : config::input::devices) {
       auto cfgDevice = toml::table();
 
       if (device.type == config::input::ControllerType::Joystick) {
-         cfgDevice.insert("type", "joystick");
+         cfgDevice.insert_or_assign("type", "joystick");
       } else if (device.type == config::input::ControllerType::Keyboard) {
-         cfgDevice.insert("type", "keyboard");
+         cfgDevice.insert_or_assign("type", "keyboard");
       } else {
-         cfgDevice.insert("type", "unknown");
+         cfgDevice.insert_or_assign("type", "unknown");
       }
 
-      cfgDevice.insert("id", device.id);
-      cfgDevice.insert("device_name", device.device_name);
-      cfgDevice.insert("button_up", device.button_up);
-      cfgDevice.insert("button_down", device.button_down);
-      cfgDevice.insert("button_left", device.button_left);
-      cfgDevice.insert("button_right", device.button_right);
-      cfgDevice.insert("button_a", device.button_a);
-      cfgDevice.insert("button_b", device.button_b);
-      cfgDevice.insert("button_x", device.button_x);
-      cfgDevice.insert("button_y", device.button_y);
-      cfgDevice.insert("button_trigger_r", device.button_trigger_r);
-      cfgDevice.insert("button_trigger_l", device.button_trigger_l);
-      cfgDevice.insert("button_trigger_zr", device.button_trigger_zr);
-      cfgDevice.insert("button_trigger_zl", device.button_trigger_zl);
-      cfgDevice.insert("button_stick_l", device.button_stick_l);
-      cfgDevice.insert("button_stick_r", device.button_stick_r);
-      cfgDevice.insert("button_plus", device.button_plus);
-      cfgDevice.insert("button_minus", device.button_minus);
-      cfgDevice.insert("button_home", device.button_home);
-      cfgDevice.insert("button_sync", device.button_sync);
+      cfgDevice.insert_or_assign("id", device.id);
+      cfgDevice.insert_or_assign("device_name", device.device_name);
+      cfgDevice.insert_or_assign("button_up", device.button_up);
+      cfgDevice.insert_or_assign("button_down", device.button_down);
+      cfgDevice.insert_or_assign("button_left", device.button_left);
+      cfgDevice.insert_or_assign("button_right", device.button_right);
+      cfgDevice.insert_or_assign("button_a", device.button_a);
+      cfgDevice.insert_or_assign("button_b", device.button_b);
+      cfgDevice.insert_or_assign("button_x", device.button_x);
+      cfgDevice.insert_or_assign("button_y", device.button_y);
+      cfgDevice.insert_or_assign("button_trigger_r", device.button_trigger_r);
+      cfgDevice.insert_or_assign("button_trigger_l", device.button_trigger_l);
+      cfgDevice.insert_or_assign("button_trigger_zr", device.button_trigger_zr);
+      cfgDevice.insert_or_assign("button_trigger_zl", device.button_trigger_zl);
+      cfgDevice.insert_or_assign("button_stick_l", device.button_stick_l);
+      cfgDevice.insert_or_assign("button_stick_r", device.button_stick_r);
+      cfgDevice.insert_or_assign("button_plus", device.button_plus);
+      cfgDevice.insert_or_assign("button_minus", device.button_minus);
+      cfgDevice.insert_or_assign("button_home", device.button_home);
+      cfgDevice.insert_or_assign("button_sync", device.button_sync);
 
       if (device.type == config::input::ControllerType::Keyboard) {
          const auto &keyboard =
             std::get<config::input::InputDeviceKeyboard>(device.typeExtra);
-         cfgDevice.insert("left_stick_up", keyboard.left_stick_up);
-         cfgDevice.insert("left_stick_down", keyboard.left_stick_down);
-         cfgDevice.insert("left_stick_left", keyboard.left_stick_left);
-         cfgDevice.insert("left_stick_right", keyboard.left_stick_right);
-         cfgDevice.insert("right_stick_up", keyboard.right_stick_up);
-         cfgDevice.insert("right_stick_down", keyboard.right_stick_down);
-         cfgDevice.insert("right_stick_left", keyboard.right_stick_left);
-         cfgDevice.insert("right_stick_right", keyboard.right_stick_right);
+         cfgDevice.insert_or_assign("left_stick_up", keyboard.left_stick_up);
+         cfgDevice.insert_or_assign("left_stick_down", keyboard.left_stick_down);
+         cfgDevice.insert_or_assign("left_stick_left", keyboard.left_stick_left);
+         cfgDevice.insert_or_assign("left_stick_right", keyboard.left_stick_right);
+         cfgDevice.insert_or_assign("right_stick_up", keyboard.right_stick_up);
+         cfgDevice.insert_or_assign("right_stick_down", keyboard.right_stick_down);
+         cfgDevice.insert_or_assign("right_stick_left", keyboard.right_stick_left);
+         cfgDevice.insert_or_assign("right_stick_right", keyboard.right_stick_right);
       } else if (device.type == config::input::ControllerType::Joystick) {
          const auto &joystick =
             std::get<config::input::InputDeviceJoystick>(device.typeExtra);
-         cfgDevice.insert("left_stick_x", joystick.left_stick_x);
-         cfgDevice.insert("left_stick_x_invert", joystick.left_stick_x_invert);
-         cfgDevice.insert("left_stick_y", joystick.left_stick_y);
-         cfgDevice.insert("left_stick_y_invert", joystick.left_stick_y_invert);
-         cfgDevice.insert("right_stick_x", joystick.right_stick_x);
-         cfgDevice.insert("right_stick_x_invert", joystick.right_stick_x_invert);
-         cfgDevice.insert("right_stick_y", joystick.right_stick_y);
-         cfgDevice.insert("right_stick_y_invert", joystick.right_stick_y_invert);
+         cfgDevice.insert_or_assign("left_stick_x", joystick.left_stick_x);
+         cfgDevice.insert_or_assign("left_stick_x_invert", joystick.left_stick_x_invert);
+         cfgDevice.insert_or_assign("left_stick_y", joystick.left_stick_y);
+         cfgDevice.insert_or_assign("left_stick_y_invert", joystick.left_stick_y_invert);
+         cfgDevice.insert_or_assign("right_stick_x", joystick.right_stick_x);
+         cfgDevice.insert_or_assign("right_stick_x_invert", joystick.right_stick_x_invert);
+         cfgDevice.insert_or_assign("right_stick_y", joystick.right_stick_y);
+         cfgDevice.insert_or_assign("right_stick_y_invert", joystick.right_stick_y_invert);
       }
 
       devices->push_back(cfgDevice);
@@ -293,15 +293,15 @@ saveFrontendToml(toml::table &config)
 
    // sound
    auto sound = config.insert("sound", toml::table()).first->second.as_table();
-   sound->insert("frame_length", config::sound::frame_length);
+   sound->insert_or_assign("frame_length", config::sound::frame_length);
 
    // test
    auto test = config.insert("test", toml::table()).first->second.as_table();
-   test->insert("timeout_ms", config::test::timeout_ms);
-   test->insert("timeout_frames", config::test::timeout_frames);
-   test->insert("dump_drc_frames", config::test::dump_drc_frames);
-   test->insert("dump_tv_frames", config::test::dump_tv_frames);
-   test->insert("dump_frames_dir", config::test::dump_frames_dir);
+   test->insert_or_assign("timeout_ms", config::test::timeout_ms);
+   test->insert_or_assign("timeout_frames", config::test::timeout_frames);
+   test->insert_or_assign("dump_drc_frames", config::test::dump_drc_frames);
+   test->insert_or_assign("dump_tv_frames", config::test::dump_tv_frames);
+   test->insert_or_assign("dump_frames_dir", config::test::dump_frames_dir);
    return true;
 }
 
