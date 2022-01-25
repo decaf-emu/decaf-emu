@@ -15,6 +15,7 @@
 #include <fstream>
 #include <libcpu/cpu_formatters.h>
 #include <queue>
+#include <math.h>
 
 namespace cafe::sndcore2
 {
