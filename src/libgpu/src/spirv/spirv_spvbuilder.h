@@ -16,6 +16,14 @@ public:
    {
    }
 
+   spv::Id createAccessChain(spv::StorageClass storageClass,
+                             spv::Id base, const std::vector<spv::Id> &offsets)
+   {
+      SpvBuilder::accessChain.base = base;
+      SpvBuilder::accessChain.indexChain = offsets;
+      return spv::Builder::createAccessChain(storageClass, base, offsets);
+   }
+
    // ------------------------------------------------------------
    // Constants
    // ------------------------------------------------------------
