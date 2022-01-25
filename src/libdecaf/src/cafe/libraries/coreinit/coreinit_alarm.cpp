@@ -227,7 +227,7 @@ OSSetAlarm(virt_ptr<OSAlarm> alarm,
  * The alarm to set.
  *
  * \param start
- * The duration until the alarm should first be triggered.
+ * The absolute time the alarm should first be triggered.
  *
  * \param interval
  * The interval between triggers after the first trigger.
@@ -245,6 +245,10 @@ OSSetPeriodicAlarm(virt_ptr<OSAlarm> alarm,
                    AlarmCallbackFn callback)
 {
    internal::acquireIdLock(sAlarmData->lock, alarm);
+
+   if (!start) {
+      start = OSGetTime() + interval;
+   }
 
    // Set alarm
    alarm->nextFire = start;
