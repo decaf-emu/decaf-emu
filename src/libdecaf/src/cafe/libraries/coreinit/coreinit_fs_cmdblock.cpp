@@ -178,6 +178,10 @@ fsCmdBlockPrepareAsync(virt_ptr<FSClientBody> clientBody,
    decaf_check(clientBody);
    decaf_check(blockBody);
 
+   if (!internal::fsInitialised()) {
+      return FSStatus::FatalError;
+   }
+
    if (blockBody->status != FSCmdBlockStatus::Initialised &&
        blockBody->status != FSCmdBlockStatus::Cancelled) {
       gLog->error("Invalid FSCmdBlockData state {}", blockBody->status.value());
