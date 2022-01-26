@@ -540,10 +540,10 @@ AXSetVoiceVe(virt_ptr<AXVoice> voice,
 
 void
 AXSetVoiceVeDelta(virt_ptr<AXVoice> voice,
-                  int16_t delta)
+                  sfixed_1_0_15_t delta)
 {
    auto extras = internal::getVoiceExtras(voice->index);
-   if (extras->ve.delta != delta) {
+   if (extras->ve.delta.value() != delta) {
       extras->ve.delta = delta;
       voice->syncBits |= internal::AXVoiceSyncBits::VeDelta;
    }

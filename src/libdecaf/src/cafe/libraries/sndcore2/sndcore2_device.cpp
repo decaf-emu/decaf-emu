@@ -295,6 +295,19 @@ sampleVoice(virt_ptr<AXVoice> voice,
    extras->src.currentOffsetFrac = ufixed_0_16_t { offsetFrac };
 }
 
+void applyADSR(virt_ptr<AXVoice> voice,
+               Pcm16Sample *samples,
+               int numSamples)
+{
+   auto extras = getVoiceExtras(voice->index);
+
+   for (int i = 0; i < numSamples; i++) {
+      samples[i] = samples[i] * (extras->ve.volume.value() + extras->ve.delta.value() * i);
+   }
+
+   extras->ve.volume += extras->ve.delta.value() * numSamples;
+}
+
 void
 decodeVoiceSamples(int numSamples)
 {
@@ -310,6 +323,7 @@ decodeVoiceSamples(int numSamples)
 
       extras->numSamples = numSamples;
       sampleVoice(voice, extras->samples, numSamples);
+      applyADSR(voice, extras->samples, numSamples);
    }
 
    // TODO: Apply Volume Evelope (ADSR)
