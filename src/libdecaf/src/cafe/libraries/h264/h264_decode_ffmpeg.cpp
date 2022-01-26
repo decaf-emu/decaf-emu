@@ -366,18 +366,20 @@ H264DECExecute(virt_ptr<void> memory,
    }
 
    // Submit packet to ffmpeg
-   auto packet = AVPacket { };
-   av_init_packet(&packet);
-   packet.data = bitStream->buffer.get();
-   packet.size = bitStream->buffer_length;
+   auto* packet = av_packet_alloc();
+   packet->data = bitStream->buffer.get();
+   packet->size = bitStream->buffer_length;
 
-   auto result = avcodec_send_packet(codecMemory->context, &packet);
+   auto result = avcodec_send_packet(codecMemory->context, packet);
    if (result != 0) {
       char buffer[255];
       av_strerror(result, buffer, 255);
       gLog->error("H264DECExecute avcodec_send_packet error: {}", buffer);
+      av_packet_free(&packet);
       return static_cast<H264Error>(result);
    }
+
+   av_packet_free(&packet);
 
    bitStream->buffer_length = 0u;
 
@@ -409,11 +411,12 @@ H264DECFlush(virt_ptr<void> memory)
 
    if (workMemory->codecMemory->context) {
       // Send a null packet to flush ffmpeg decoder
-      auto packet = AVPacket { };
-      av_init_packet(&packet);
-      packet.data = nullptr;
-      packet.size = 0;
-      avcodec_send_packet(workMemory->codecMemory->context, &packet);
+      auto* packet = av_packet_alloc();
+      packet->data = nullptr;
+      packet->size = 0;
+      avcodec_send_packet(workMemory->codecMemory->context, packet);
+
+      av_packet_free(&packet);
 
       // Receive the flushed frames
       receiveFrames(workMemory);
