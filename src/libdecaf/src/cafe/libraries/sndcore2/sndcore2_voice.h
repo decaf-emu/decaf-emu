@@ -132,8 +132,8 @@ CHECK_SIZE(AXVoiceDeviceMixData, 0x10);
 
 struct AXVoiceVeData
 {
-   be2_val<uint16_t> volume;
-   be2_val<int16_t> delta;
+   be2_val<ufixed_0_16_t> volume;
+   be2_val<sfixed_1_0_15_t> delta;
 };
 CHECK_OFFSET(AXVoiceVeData, 0x0, volume);
 CHECK_OFFSET(AXVoiceVeData, 0x2, delta);
@@ -320,7 +320,7 @@ AXSetVoiceVe(virt_ptr<AXVoice> voice,
 
 void
 AXSetVoiceVeDelta(virt_ptr<AXVoice> voice,
-                  int16_t delta);
+                  sfixed_1_0_15_t delta);
 
 namespace internal
 {
