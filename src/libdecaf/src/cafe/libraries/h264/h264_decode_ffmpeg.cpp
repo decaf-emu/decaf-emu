@@ -409,17 +409,9 @@ H264DECFlush(virt_ptr<void> memory)
       return H264Error::InvalidParameter;
    }
 
+   // Discard internal state and buffered frames
    if (workMemory->codecMemory->context) {
-      // Send a null packet to flush ffmpeg decoder
-      auto* packet = av_packet_alloc();
-      packet->data = nullptr;
-      packet->size = 0;
-      avcodec_send_packet(workMemory->codecMemory->context, packet);
-
-      av_packet_free(&packet);
-
-      // Receive the flushed frames
-      receiveFrames(workMemory);
+      avcodec_flush_buffers(workMemory->codecMemory->context);
    }
 
    return H264Error::OK;
@@ -443,11 +435,6 @@ H264DECEnd(virt_ptr<void> memory)
 
    // Flush the stream
    H264DECFlush(memory);
-
-   // Reset the context
-   if (workMemory->codecMemory->context) {
-      avcodec_flush_buffers(workMemory->codecMemory->context);
-   }
 
    if (workMemory->codecMemory->parser) {
       av_parser_close(workMemory->codecMemory->parser);
