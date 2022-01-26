@@ -124,6 +124,11 @@ ENUM_BEG(AXVoiceSrcRatioResult, int32_t)
    ENUM_VALUE(RatioGreaterThanSomething,  -2)
 ENUM_END(AXVoiceSrcRatioResult)
 
+ENUM_BEG(AXVoiceLpfType, uint16_t)
+   ENUM_VALUE(None, 0)
+   ENUM_VALUE(IIR, 1)
+ENUM_END(AXVoiceLpfType)
+
 ENUM_NAMESPACE_ENTER(internal)
 
 ENUM_BEG(AXVoiceSyncBits, uint32_t)
