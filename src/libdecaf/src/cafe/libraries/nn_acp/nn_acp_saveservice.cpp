@@ -28,6 +28,21 @@ ACPCreateSaveDir(uint32_t persistentId,
 }
 
 ACPResult
+ACPCreateSaveDirEx(uint32_t persistentId,
+                   ACPTitleId titleId,
+                   ACPDeviceType deviceType)
+{
+   auto command = ClientCommand<services::SaveService::CreateSaveDirEx> { internal::getAllocator() };
+   command.setParameters(persistentId, titleId, deviceType);
+   auto result = internal::getClient()->sendSyncRequest(command);
+   if (result.ok()) {
+      result = command.readResponse();
+   }
+
+   return ACPConvertToACPResult(result, "ACPCreateSaveDirEx", 783);
+}
+
+ACPResult
 ACPIsExternalStorageRequired(virt_ptr<int32_t> outRequired)
 {
    auto command = ClientCommand<services::SaveService::IsExternalStorageRequired> { internal::getAllocator() };
@@ -107,6 +122,7 @@ void
 Library::registerSaveServiceSymbols()
 {
    RegisterFunctionExport(ACPCreateSaveDir);
+   RegisterFunctionExport(ACPCreateSaveDirEx);
    RegisterFunctionExport(ACPIsExternalStorageRequired);
    RegisterFunctionExport(ACPMountExternalStorage);
    RegisterFunctionExport(ACPMountSaveDir);

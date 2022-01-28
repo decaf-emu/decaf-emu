@@ -308,6 +308,23 @@ createSaveDir(CommandHandlerArgs &args)
 }
 
 static nn::Result
+createSaveDirEx(CommandHandlerArgs &args)
+{
+   auto command = ServerCommand<SaveService::CreateSaveDirEx> { args };
+   auto deviceType = ACPDeviceType { };
+   auto titleId = ACPTitleId { };
+   auto persistentId = uint32_t { 0 };
+   command.ReadRequest(persistentId, titleId, deviceType);
+
+   // TODO: Check that account with persistentId exists
+   // 0xA0335200 = AccountNotExist
+   return createSaveDirInternalEx(persistentId,
+                                  titleId,
+                                  args.resourceRequest->requestData.processId,
+                                  args.resourceRequest->requestData.groupId);
+}
+
+static nn::Result
 repairSaveMetaDir(CommandHandlerArgs &args)
 {
    // TODO: repairSaveMetaDir
@@ -391,6 +408,8 @@ SaveService::commandHandler(uint32_t unk1,
    switch (command) {
    case CreateSaveDir::command:
       return createSaveDir(args);
+   case CreateSaveDirEx::command:
+      return createSaveDirEx(args);
    case IsExternalStorageRequired::command:
       return isExternalStorageRequired(args);
    case MountExternalStorage::command:

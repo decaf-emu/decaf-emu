@@ -23,6 +23,10 @@ struct SaveService : ipc::Service<2>
       ipc::Command<SaveService, 103>
       ::Parameters<uint32_t, ACPDeviceType>;
 
+   using CreateSaveDirEx =
+      ipc::Command<SaveService, 108>
+      ::Parameters<uint32_t, ACPTitleId, ACPDeviceType>;
+
    using RepairSaveMetaDir =
       ipc::Command<SaveService, 125>
       ::Parameters<>;
