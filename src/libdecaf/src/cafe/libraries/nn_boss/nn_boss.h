@@ -18,6 +18,7 @@ protected:
 private:
    void registerLibSymbols();
    void registerAlmightyStorageSymbols();
+   void registerDataNameSymbols();
    void registerNbdlTaskSettingSymbols();
    void registerNetTaskSettingSymbols();
    void registerPlayLogUploadTaskSettingSymbols();

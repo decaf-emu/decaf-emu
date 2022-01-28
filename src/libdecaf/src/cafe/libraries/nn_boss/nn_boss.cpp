@@ -16,6 +16,7 @@ Library::registerSymbols()
    RegisterEntryPoint(rpl_entry);
 
    registerLibSymbols();
+   registerDataNameSymbols();
    registerAlmightyStorageSymbols();
    registerNbdlTaskSettingSymbols();
    registerNetTaskSettingSymbols();
