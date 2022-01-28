@@ -17,8 +17,10 @@ Library::registerSymbols()
 
    registerCatalogSymbols();
    registerItemListSymbols();
+   registerLibSymbols();
    registerMemoryManagerSymbols();
    registerMoneySymbols();
+   registerQuerySymbols();
    registerRootObjectSymbols();
    registerShoppingCatalogSymbols();
 }

@@ -11,14 +11,14 @@ struct MemoryManager
    using AllocFn = virt_func_ptr<virt_ptr<void>(uint32_t size, uint32_t align)>;
    using FreeFn = virt_func_ptr<void(virt_ptr<void> ptr)>;
 
-   be2_struct<nn::os::CriticalSection> _mutex;
-   be2_val<AllocFn> _allocFn;
-   be2_val<FreeFn> _freeFn;
+   be2_struct<nn::os::CriticalSection> mutex;
+   be2_val<AllocFn> allocFn;
+   be2_val<FreeFn> freeFn;
    UNKNOWN(0x48 - 0x34);
 };
-CHECK_OFFSET(MemoryManager, 0x00, _mutex);
-CHECK_OFFSET(MemoryManager, 0x2C, _allocFn);
-CHECK_OFFSET(MemoryManager, 0x30, _freeFn);
+CHECK_OFFSET(MemoryManager, 0x00, mutex);
+CHECK_OFFSET(MemoryManager, 0x2C, allocFn);
+CHECK_OFFSET(MemoryManager, 0x30, freeFn);
 CHECK_SIZE(MemoryManager, 0x48);
 
 virt_ptr<MemoryManager>
@@ -35,5 +35,14 @@ MemoryManager_Allocate(virt_ptr<MemoryManager> self,
 void
 MemoryManager_Free(virt_ptr<MemoryManager> self,
                    virt_ptr<void> ptr);
+
+namespace internal
+{
+
+void
+MemoryManager_SetAllocator(MemoryManager::AllocFn allocFn,
+                           MemoryManager::FreeFn freeFn);
+
+} // internal
 
 } // namespace cafe::nn_ec

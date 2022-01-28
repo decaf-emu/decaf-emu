@@ -33,8 +33,8 @@ MemoryManager_GetSingleton()
 virt_ptr<MemoryManager>
 MemoryManager_Constructor(virt_ptr<MemoryManager> self)
 {
-   self->_allocFn = sDefaultAllocFn;
-   self->_freeFn = sDefaultFreeFn;
+   self->allocFn = sDefaultAllocFn;
+   self->freeFn = sDefaultFreeFn;
    return self;
 }
 
@@ -43,20 +43,31 @@ MemoryManager_Allocate(virt_ptr<MemoryManager> self,
                        uint32_t size,
                        uint32_t align)
 {
-   std::unique_lock<nn::os::CriticalSection> lock { self->_mutex };
-   return cafe::invoke(cpu::this_core::state(), self->_allocFn, size, align);
+   std::unique_lock<nn::os::CriticalSection> lock { self->mutex };
+   return cafe::invoke(cpu::this_core::state(), self->allocFn, size, align);
 }
 
 void
 MemoryManager_Free(virt_ptr<MemoryManager> self,
                    virt_ptr<void> ptr)
 {
-   std::unique_lock<nn::os::CriticalSection> lock { self->_mutex };
-   return cafe::invoke(cpu::this_core::state(), self->_freeFn, ptr);
+   std::unique_lock<nn::os::CriticalSection> lock { self->mutex };
+   return cafe::invoke(cpu::this_core::state(), self->freeFn, ptr);
 }
 
 namespace internal
 {
+
+void
+MemoryManager_SetAllocator(MemoryManager::AllocFn allocFn,
+                           MemoryManager::FreeFn freeFn)
+{
+   auto memoryManager = MemoryManager_GetSingleton();
+
+   std::unique_lock<nn::os::CriticalSection> lock { memoryManager->mutex };
+   memoryManager->allocFn = allocFn;
+   memoryManager->freeFn = freeFn;
+}
 
 static virt_ptr<void> defaultAllocFn(uint32_t size, uint32_t align)
 {

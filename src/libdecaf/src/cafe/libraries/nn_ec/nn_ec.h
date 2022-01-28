@@ -17,8 +17,10 @@ protected:
 
    void registerCatalogSymbols();
    void registerItemListSymbols();
+   void registerLibSymbols();
    void registerMemoryManagerSymbols();
    void registerMoneySymbols();
+   void registerQuerySymbols();
    void registerRootObjectSymbols();
    void registerShoppingCatalogSymbols();
 
