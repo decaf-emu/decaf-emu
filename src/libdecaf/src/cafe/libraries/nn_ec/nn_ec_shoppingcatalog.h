@@ -12,8 +12,6 @@ struct ShoppingCatalog : Catalog
 {
    static virt_ptr<ghs::VirtualTable> VirtualTable;
    static virt_ptr<ghs::TypeDescriptor> TypeDescriptor;
-
-   be2_virt_ptr<ghs::VirtualTable> virtualTable;
 };
 
 virt_ptr<ShoppingCatalog>
