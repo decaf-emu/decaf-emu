@@ -46,9 +46,9 @@ assembleCfInst(Shader &shader, peg::Ast &node)
                inst.word1 = inst.word1.VALID_PIXEL_MODE(true);
             } else if (prop->name == "CF_CONST") {
                inst.word1 = inst.word1.CF_CONST(parseNumber(*prop));
-            } else if (prop->name == "FAIL_JUMP_ADDR") {
-               inst.word0 = inst.word0.ADDR(parseNumber(*prop));
-            } else if (prop->name == "PASS_JUMP_ADDR") {
+            } else if (prop->name == "POP_CNT") {
+               inst.word1 = inst.word1.POP_COUNT(parseNumber(*prop));
+            } else if (prop->name == "ADDR" || prop->name == "PASS_JUMP_ADDR" || prop->name == "FAIL_JUMP_ADDR") {
                inst.word0 = inst.word0.ADDR(parseNumber(*prop));
             } else {
                throw invalid_cf_property_exception { *prop };
