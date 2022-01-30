@@ -15,9 +15,9 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
-   registerLibSymbols();
-   registerDataNameSymbols();
    registerAlmightyStorageSymbols();
+   registerClientSymbols();
+   registerDataNameSymbols();
    registerNbdlTaskSettingSymbols();
    registerNetTaskSettingSymbols();
    registerPlayLogUploadTaskSettingSymbols();

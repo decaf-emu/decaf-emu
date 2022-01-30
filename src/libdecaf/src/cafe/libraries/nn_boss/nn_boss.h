@@ -16,8 +16,8 @@ protected:
    virtual void registerSymbols() override;
 
 private:
-   void registerLibSymbols();
    void registerAlmightyStorageSymbols();
+   void registerClientSymbols();
    void registerDataNameSymbols();
    void registerNbdlTaskSettingSymbols();
    void registerNetTaskSettingSymbols();

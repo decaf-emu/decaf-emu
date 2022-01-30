@@ -7,6 +7,7 @@ ENUM_NAMESPACE_ENTER(cafe)
 ENUM_NAMESPACE_ENTER(nn_boss)
 
 ENUM_BEG(BossState, uint32_t)
+   ENUM_VALUE(Unknown0,       0)
 ENUM_END(BossState)
 
 ENUM_BEG(StorageKind, uint32_t)
