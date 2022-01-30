@@ -3,12 +3,17 @@
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/acp/nn_acp_result.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 #include <chrono>
 #include <ctime>
 
 using namespace nn::acp;
-using namespace nn::ipc;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::acp::internal
 {
@@ -68,7 +73,7 @@ MiscService::commandHandler(uint32_t unk1,
    case GetTitleMetaXml::command:
       return getTitleMetaXml(args);
    default:
-      return ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 

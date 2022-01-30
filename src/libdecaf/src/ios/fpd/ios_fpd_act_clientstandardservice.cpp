@@ -11,6 +11,7 @@
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/act/nn_act_result.h"
 #include "nn/ffl/nn_ffl_miidata.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 #include <array>
 #include <charconv>
@@ -19,11 +20,15 @@
 #include <memory>
 #include <string>
 
-using namespace nn::ipc;
 using namespace nn::act;
 using namespace nn::ffl;
 using namespace ios::fs;
 using namespace ios::kernel;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::fpd::internal
 {
@@ -527,7 +532,7 @@ ActClientStandardService::commandHandler(uint32_t unk1,
    case GetUuid::command:
       return getUuid(args);
    default:
-      return nn::ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 

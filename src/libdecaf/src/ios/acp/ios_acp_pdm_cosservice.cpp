@@ -1,13 +1,18 @@
 #include "ios_acp_pdm_cosservice.h"
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
+#include "nn/ipc/nn_ipc_result.h"
 #include "nn/pdm/nn_pdm_result.h"
 
 #include <chrono>
 #include <ctime>
 
-using namespace nn::ipc;
 using namespace nn::pdm;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::acp::internal
 {
@@ -39,7 +44,7 @@ PdmCosService::commandHandler(uint32_t unk1,
    case GetPlayStatsMaxLength::command:
       return getPlayStatsMaxLength(args);
    default:
-      return nn::ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 

@@ -2,11 +2,16 @@
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/act/nn_act_result.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 #include <common/decaf_assert.h>
 
-using namespace nn::ipc;
 using namespace nn::act;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::fpd::internal
 {
@@ -31,7 +36,7 @@ ActAccountLoaderService::commandHandler(uint32_t unk1,
    case LoadConsoleAccount::command:
       return loadConsoleAccount(args);
    default:
-      return nn::ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 

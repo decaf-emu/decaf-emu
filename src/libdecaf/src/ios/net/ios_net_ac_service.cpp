@@ -2,13 +2,18 @@
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/ac/nn_ac_result.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 #include <chrono>
 #include <ctime>
 #include <uv.h>
 
 using namespace nn::ac;
-using namespace nn::ipc;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::net::internal
 {
@@ -52,7 +57,7 @@ AcService::commandHandler(uint32_t unk1,
    case GetAssignedAddress::command:
       return getAssignedAddress(args);
    default:
-      return nn::ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 

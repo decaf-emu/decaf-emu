@@ -5,12 +5,17 @@
 #include "ios/fs/ios_fs_fsa_ipc.h"
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/acp/nn_acp_result.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 #include <fmt/core.h>
 
 using namespace ios::fs;
 using namespace nn::acp;
-using namespace nn::ipc;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::acp::internal
 {
@@ -423,7 +428,7 @@ SaveService::commandHandler(uint32_t unk1,
    case RepairSaveMetaDir::command:
       return repairSaveMetaDir(args);
    default:
-      return ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 

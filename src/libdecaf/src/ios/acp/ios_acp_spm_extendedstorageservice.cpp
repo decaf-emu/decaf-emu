@@ -2,9 +2,14 @@
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/nn_result.h"
+#include "nn/ipc/nn_ipc_result.h"
 
 using namespace nn::spm;
-using namespace nn::ipc;
+
+using nn::ipc::CommandHandlerArgs;
+using nn::ipc::CommandId;
+using nn::ipc::OutBuffer;
+using nn::ipc::ServerCommand;
 
 namespace ios::acp::internal
 {
@@ -28,7 +33,7 @@ ExtendedStorageService::commandHandler(uint32_t unk1,
    case SetAutoFatal::command:
       return setAutoFatal(args);
    default:
-      return nn::ResultSuccess;
+      return nn::ipc::ResultInvalidMethodTag;
    }
 }
 
