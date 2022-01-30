@@ -25,7 +25,7 @@ private:
    Result sendSyncRequest(const detail::ClientCommandData &command);
 
 private:
-   cafe::coreinit::IOSHandle mHandle;
+   cafe::coreinit::IOSHandle mHandle { -1 };
 };
 
 } // namespace nn::ipc
