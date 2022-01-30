@@ -16,6 +16,7 @@ protected:
    virtual void registerSymbols() override;
 
 private:
+   void registerAccountSymbols();
    void registerAlmightyStorageSymbols();
    void registerClientSymbols();
    void registerDataNameSymbols();

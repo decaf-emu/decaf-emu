@@ -15,6 +15,7 @@ Library::registerSymbols()
 {
    RegisterEntryPoint(rpl_entry);
 
+   registerAccountSymbols();
    registerAlmightyStorageSymbols();
    registerClientSymbols();
    registerDataNameSymbols();
