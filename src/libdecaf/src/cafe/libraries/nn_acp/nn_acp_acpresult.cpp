@@ -232,7 +232,7 @@ ACPConvertToACPResult(nn::Result result,
       ACPSendCOSFatalError(1, 0x187492, result, funcName, lineNo);
    } else if (result == ResultUcFatal) {
       ACPSendCOSFatalError(1, 0x187493, result, funcName, lineNo);
-   } else if (result == nn::ipc::ResultCAPABILITY_FAILED) {
+   } else if (result == nn::ipc::ResultCapabilityFailed) {
       ACPSendCOSFatalError(1, 0x187494, result, funcName, lineNo);
    } else if (result == ResultFatal) {
       ACPSendCOSFatalError(1, 0x18748c, result, funcName, lineNo);
