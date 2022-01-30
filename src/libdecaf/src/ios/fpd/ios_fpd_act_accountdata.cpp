@@ -126,6 +126,10 @@ getAccountBySlotNo(SlotNo slot)
       return nullptr;
    }
 
+   if (!sAccountData->accountUsed[index]) {
+      return nullptr;
+   }
+
    return phys_addrof(sAccountData->accounts[index]);
 }
 
