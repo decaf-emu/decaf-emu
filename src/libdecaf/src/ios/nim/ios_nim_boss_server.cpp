@@ -1,5 +1,6 @@
 #include "ios_nim_log.h"
 #include "ios_nim_boss_server.h"
+#include "ios_nim_boss_privilegedservice.h"
 
 #include "ios/kernel/ios_kernel_process.h"
 #include "ios/nn/ios_nn_ipc_server.h"
@@ -45,7 +46,8 @@ startBossServer()
       return Error::FailInternal;
    }
 
-   // TODO: Services 0, 1, 2, 3, 4
+   // TODO: Services 0, 2, 3, 4
+   server.registerService<PrivilegedService>();
 
    result = server.start(phys_addrof(sBossServerData->threadStack) + sBossServerData->threadStack.size(),
                          static_cast<uint32_t>(sBossServerData->threadStack.size()),
