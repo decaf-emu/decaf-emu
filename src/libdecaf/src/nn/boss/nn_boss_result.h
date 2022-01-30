@@ -8,15 +8,15 @@ static constexpr Result ResultSuccess {
    Result::MODULE_NN_BOSS, Result::LEVEL_SUCCESS, 0x00080
 };
 
-static constexpr Result ResultNOT_INITIALIZED {
+static constexpr Result ResultNotInitialised {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03200
 };
 
-static constexpr Result ResultLIBRARY_NOT_INITIALIZED {
+static constexpr Result ResultLibraryNotInitialiased {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03280
 };
 
-static constexpr Result ResultINVALID {
+static constexpr Result ResultInvalid {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03700
 };
 
@@ -24,319 +24,319 @@ static constexpr Result ResultInvalidParameter {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03780
 };
 
-static constexpr Result ResultINVALID_FORMAT {
+static constexpr Result ResultInvalidFormat {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03800
 };
 
-static constexpr Result ResultINVALID_ACCOUNT {
+static constexpr Result ResultInvalidAccount {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03880
 };
 
-static constexpr Result ResultINVALID_TITLE {
+static constexpr Result ResultInvalidTitle {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x03900
 };
 
-static constexpr Result ResultNO_SUPPORT {
+static constexpr Result ResultNoSupport {
    Result::MODULE_NN_BOSS, Result::LEVEL_USAGE, 0x04100
 };
 
-static constexpr Result ResultINITIALIZED {
+static constexpr Result ResultInitialized {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x1f400
 };
 
-static constexpr Result ResultNOT_EXIST {
+static constexpr Result ResultNotExist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x1f900
 };
 
-static constexpr Result ResultFILE_NOT_EXIST {
+static constexpr Result ResultFileNotExist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x1f980
 };
 
-static constexpr Result ResultBOSS_STORAGE_NOT_EXIST {
+static constexpr Result ResultBossStorageNotExist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x1fa00
 };
 
-static constexpr Result ResultDB_NOT_EXIST {
+static constexpr Result ResultDbNotExist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x1fa80
 };
 
-static constexpr Result ResultRECORD_NOT_EXIST {
+static constexpr Result ResultRecordNotExist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x1fb00
 };
 
-static constexpr Result ResultNOT_COMPLETED {
+static constexpr Result ResultNotCompleted {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x20300
 };
 
-static constexpr Result ResultNOT_PERMITTED {
+static constexpr Result ResultNotPermitted {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x20800
 };
 
-static constexpr Result ResultFULL {
+static constexpr Result ResultFull {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x20d00
 };
 
-static constexpr Result ResultSIZE_FULL {
+static constexpr Result ResultSizeFull {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x20d80
 };
 
-static constexpr Result ResultCOUNT_FULL {
+static constexpr Result ResultCountFull {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x20e00
 };
 
-static constexpr Result ResultFINISHED {
+static constexpr Result ResultFinished {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x21200
 };
 
-static constexpr Result ResultSERVICE_FINISHED {
+static constexpr Result ResultServiceFinished {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x21280
 };
 
-static constexpr Result ResultCANCELED {
+static constexpr Result ResultCanceled {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x21700
 };
 
-static constexpr Result ResultSTOPPED_BY_POLICYLIST {
+static constexpr Result ResultStoppedByPolicylist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x21c00
 };
 
-static constexpr Result ResultALREADY_EXIST {
+static constexpr Result ResultAlreadyExist {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x22100
 };
 
-static constexpr Result ResultCANNOT_GET_NETWORK_TIME {
+static constexpr Result ResultCannotGetNetworkTime {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x22600
 };
 
-static constexpr Result ResultNOT_NETWORK_ACCOUNT {
+static constexpr Result ResultNotNetworkAccount {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x22b00
 };
 
-static constexpr Result ResultRESTRICTED_BY_PARENTAL_CONTROL {
+static constexpr Result ResultRestrictedByParentalControl {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x23000
 };
 
-static constexpr Result ResultDISABLE_UPLOAD_CONSOLE_INFORMATION {
+static constexpr Result ResultDisableUploadConsoleInformation {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x23500
 };
 
-static constexpr Result ResultNOT_CONNECT_NETWORK {
+static constexpr Result ResultNotConnectNetwork {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x23a00
 };
 
-static constexpr Result ResultRESTRICTED_BY_PARENTAL_CONTROL_TOTAL_ENABLE {
+static constexpr Result ResultRestrictedByParentalControlTotalEnable {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x23f00
 };
 
-static constexpr Result ResultNOT_FOUND {
+static constexpr Result ResultNotFound {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x24400
 };
 
-static constexpr Result ResultBOSS_STORAGE_NOT_FOUND {
+static constexpr Result ResultBossStorageNotFound {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x24480
 };
 
-static constexpr Result ResultHTTP_ERROR {
+static constexpr Result ResultHTTPError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x3e800
 };
 
-static constexpr Result ResultFS_ERROR {
+static constexpr Result ResultFsError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4E200
 };
 
-static constexpr Result ResultFS_ERROR_NOT_INIT {
+static constexpr Result ResultFsErrorNotInit {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e280
 };
 
-static constexpr Result ResultFS_ERROR_BUSY {
+static constexpr Result ResultFsErrorBusy {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e300
 };
 
-static constexpr Result ResultFS_ERROR_CANCELED {
+static constexpr Result ResultFsErrorCanceled {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e380
 };
 
-static constexpr Result ResultFS_ERROR_END_OF_DIRECTORY {
+static constexpr Result ResultFsErrorEndOfDirectory {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e400
 };
 
-static constexpr Result ResultFS_ERROR_END_OF_FILE {
+static constexpr Result ResultFsErrorEndOfFile {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e480
 };
 
-static constexpr Result ResultFS_ERROR_MAX_MOUNTPOINTS {
+static constexpr Result ResultFsErrorMaxMountpoints {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e500
 };
 
-static constexpr Result ResultFS_ERROR_MAX_VOLUMES {
+static constexpr Result ResultFsErrorMaxVolumes {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e580
 };
 
-static constexpr Result ResultFS_ERROR_MAX_CLIENTS {
+static constexpr Result ResultFsErrorMaxClients {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e600
 };
 
-static constexpr Result ResultFS_ERROR_MAX_FILES {
+static constexpr Result ResultFsErrorMaxFiles {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e680
 };
 
-static constexpr Result ResultFS_ERROR_MAX_DIRS {
+static constexpr Result ResultFsErrorMaxDirs {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e700
 };
 
-static constexpr Result ResultFS_ERROR_ALREADY_OPEN {
+static constexpr Result ResultFsErrorAlreadyOpen {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e780
 };
 
-static constexpr Result ResultFS_ERROR_ALREADY_EXISTS {
+static constexpr Result ResultFsErrorAlreadyExists {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e800
 };
 
-static constexpr Result ResultFS_ERROR_NOT_FOUND {
+static constexpr Result ResultFsErrorNotFound {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e880
 };
 
-static constexpr Result ResultFS_ERROR_NOT_EMPTY {
+static constexpr Result ResultFsErrorNotEmpty {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e900
 };
 
-static constexpr Result ResultFS_ERROR_ACCESS_ERROR {
+static constexpr Result ResultFsErrorAccessError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4e980
 };
 
-static constexpr Result ResultFS_ERROR_PERMISSION_ERROR {
+static constexpr Result ResultFsErrorPermissionError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ea00
 };
 
-static constexpr Result ResultFS_ERROR_DATA_CORRUPTED {
+static constexpr Result ResultFsErrorDataCorrupted {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ea80
 };
 
-static constexpr Result ResultFS_ERROR_STORAGE_FULL {
+static constexpr Result ResultFsErrorStorageFull {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4eb00
 };
 
-static constexpr Result ResultFS_ERROR_JOURNAL_FULL {
+static constexpr Result ResultFsErrorJournalFull {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4eb80
 };
 
-static constexpr Result ResultFS_ERROR_UNAVAILABLE_CMD {
+static constexpr Result ResultFsErrorUnavailableCmd {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ec00
 };
 
-static constexpr Result ResultFS_ERROR_UNSUPPORTED_CMD {
+static constexpr Result ResultFsErrorUnsupportedCmd {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ec80
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_PARAM {
+static constexpr Result ResultFsErrorInvalidParam {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ed00
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_PATH {
+static constexpr Result ResultFsErrorInvalidPath {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ed80
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_BUFFER {
+static constexpr Result ResultFsErrorInvalidBuffer {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ee00
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_ALIGNMENT {
+static constexpr Result ResultFsErrorInvalidAlignment {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ee80
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_CLIENT_HANDLE {
+static constexpr Result ResultFsErrorInvalidClientHandle {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ef00
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_FILE_HANDLE {
+static constexpr Result ResultFsErrorInvalidFileHandle {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4ef80
 };
 
-static constexpr Result ResultFS_ERROR_INVALID_DIR_HANDLE {
+static constexpr Result ResultFsErrorInvalidDirHandle {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f000
 };
 
-static constexpr Result ResultFS_ERROR_NOT_FILE {
+static constexpr Result ResultFsErrorNotFile {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f080
 };
 
-static constexpr Result ResultFS_ERROR_NOT_DIR {
+static constexpr Result ResultFsErrorNotDir {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f100
 };
 
-static constexpr Result ResultFS_ERROR_FILE_TOO_BIG {
+static constexpr Result ResultFsErrorFileTooBig {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f180
 };
 
-static constexpr Result ResultFS_ERROR_OUT_OF_RANGE {
+static constexpr Result ResultFsErrorOutOfRange {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f200
 };
 
-static constexpr Result ResultFS_ERROR_OUT_OF_RESOURCES {
+static constexpr Result ResultFsErrorOutOfResources {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f280
 };
 
-static constexpr Result ResultFS_ERROR_MEDIA_NOT_READY {
+static constexpr Result ResultFsErrorMediaNotReady {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f300
 };
 
-static constexpr Result ResultFS_ERROR_MEDIA_ERROR {
+static constexpr Result ResultFsErrorMediaError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f380
 };
 
-static constexpr Result ResultFS_ERROR_WRITE_PROTECTED {
+static constexpr Result ResultFsErrorWriteProtected {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f400
 };
 
-static constexpr Result ResultFS_ERROR_UNKNOWN {
+static constexpr Result ResultFsErrorUnknown {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x4f480
 };
 
-static constexpr Result ResultFAIL {
+static constexpr Result ResultFail {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5aa00
 };
 
-static constexpr Result ResultMEMORY_ALLOCATE_ERROR {
+static constexpr Result ResultMemoryAllocateError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5dc00
 };
 
-static constexpr Result ResultINITIALIZE_ERROR {
+static constexpr Result ResultInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e100
 };
 
-static constexpr Result ResultSSL_INITIALIZE_ERROR {
+static constexpr Result ResultSslInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e180
 };
 
-static constexpr Result ResultACP_INITIALIZE_ERROR {
+static constexpr Result ResultAcpInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e200
 };
 
-static constexpr Result ResultACT_INITIALIZE_ERROR {
+static constexpr Result ResultActInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e280
 };
 
-static constexpr Result ResultPDM_INITIALIZE_ERROR {
+static constexpr Result ResultPdmInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e300
 };
 
-static constexpr Result ResultCONFIG_INITIALIZE_ERROR {
+static constexpr Result ResultConfigInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e380
 };
 
-static constexpr Result ResultFS_INITIALIZE_ERROR {
+static constexpr Result ResultFsInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e400
 };
 
-static constexpr Result ResultHTTP_INITIALIZE_ERROR {
+static constexpr Result ResultHTTPInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e480
 };
 
-static constexpr Result ResultAC_INITIALIZE_ERROR {
+static constexpr Result ResultAcInitializeError {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x5e500
 };
 
-static constexpr Result ResultUNEXPECT {
+static constexpr Result ResultUnexpect {
    Result::MODULE_NN_BOSS, Result::LEVEL_STATUS, 0x7ff80
 };
 
