@@ -134,6 +134,14 @@ Task_IsRegistered(virt_ptr<Task> self)
    return false;
 }
 
+nn::Result
+Task_Register(virt_ptr<Task> self,
+              virt_ptr<TaskSetting> taskSetting)
+{
+   decaf_warn_stub();
+   return ResultSuccess;
+}
+
 uint32_t
 Task_GetAccountID(virt_ptr<Task> self)
 {
@@ -179,6 +187,8 @@ Library::registerTaskSymbols()
 
    RegisterFunctionExportName("IsRegistered__Q3_2nn4boss4TaskCFv",
                               Task_IsRegistered);
+   RegisterFunctionExportName("Register__Q3_2nn4boss4TaskFRQ3_2nn4boss11TaskSetting",
+                              Task_Register);
    RegisterFunctionExportName("GetAccountID__Q3_2nn4boss4TaskCFv",
                               Task_GetAccountID);
    RegisterFunctionExportName("GetTaskID__Q3_2nn4boss4TaskCFv",

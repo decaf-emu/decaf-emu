@@ -1,5 +1,6 @@
 #pragma once
 #include "nn_boss_taskid.h"
+#include "nn_boss_tasksetting.h"
 #include "nn_boss_titleid.h"
 
 #include "cafe/libraries/ghs/cafe_ghs_typeinfo.h"
@@ -33,7 +34,6 @@ nn::boss::Task::GetUrl(char *, unsigned int) const
 nn::boss::Task::IsFinished(void) const
 nn::boss::Task::Reconfigure(nn::boss::TaskSetting const &)
 nn::boss::Task::RegisterForImmediateRun(nn::boss::TaskSetting const &)
-nn::boss::Task::Register(nn::boss::TaskSetting &)
 nn::boss::Task::RestoreLifeTime(void)
 nn::boss::Task::Run(bool)
 nn::boss::Task::StartScheduling(bool)
@@ -106,6 +106,10 @@ Task_Finalize(virt_ptr<Task> self);
 
 bool
 Task_IsRegistered(virt_ptr<Task> self);
+
+nn::Result
+Task_Register(virt_ptr<Task> self,
+              virt_ptr<TaskSetting> taskSetting);
 
 uint32_t
 Task_GetAccountID(virt_ptr<Task> self);
