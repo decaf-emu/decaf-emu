@@ -17,12 +17,14 @@ Library::registerSymbols()
 
    registerAccountSymbols();
    registerAlmightyStorageSymbols();
+   registerAlmightyTaskSymbols();
    registerClientSymbols();
    registerDataNameSymbols();
    registerNbdlTaskSettingSymbols();
    registerNetTaskSettingSymbols();
    registerPlayLogUploadTaskSettingSymbols();
    registerPlayReportSettingSymbols();
+   registerPrivilegedTaskSymbols();
    registerRawUlTaskSettingSymbols();
    registerStorageSymbols();
    registerTaskSymbols();

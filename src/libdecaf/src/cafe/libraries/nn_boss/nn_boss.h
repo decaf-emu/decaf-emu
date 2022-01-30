@@ -18,12 +18,14 @@ protected:
 private:
    void registerAccountSymbols();
    void registerAlmightyStorageSymbols();
+   void registerAlmightyTaskSymbols();
    void registerClientSymbols();
    void registerDataNameSymbols();
    void registerNbdlTaskSettingSymbols();
    void registerNetTaskSettingSymbols();
    void registerPlayLogUploadTaskSettingSymbols();
    void registerPlayReportSettingSymbols();
+   void registerPrivilegedTaskSymbols();
    void registerRawUlTaskSettingSymbols();
    void registerStorageSymbols();
    void registerTaskSymbols();
