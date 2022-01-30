@@ -76,6 +76,12 @@ getCurrentAccount()
    return sAccountData->currentAccount;
 }
 
+void
+setCurrentAccount(phys_ptr<AccountInstance> account)
+{
+   sAccountData->currentAccount = account;
+}
+
 phys_ptr<AccountInstance>
 getDefaultAccount()
 {

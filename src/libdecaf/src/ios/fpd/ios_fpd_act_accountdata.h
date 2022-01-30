@@ -112,6 +112,9 @@ getAccountManager();
 phys_ptr<AccountInstance>
 getCurrentAccount();
 
+void
+setCurrentAccount(phys_ptr<AccountInstance> account);
+
 phys_ptr<AccountInstance>
 getDefaultAccount();
 

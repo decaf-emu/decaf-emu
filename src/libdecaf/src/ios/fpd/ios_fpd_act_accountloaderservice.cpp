@@ -1,4 +1,5 @@
 #include "ios_fpd_act_accountloaderservice.h"
+#include "ios_fpd_act_accountdata.h"
 
 #include "ios/nn/ios_nn_ipc_server_command.h"
 #include "nn/act/nn_act_result.h"
@@ -10,7 +11,7 @@ using namespace nn::act;
 
 using nn::ipc::CommandHandlerArgs;
 using nn::ipc::CommandId;
-using nn::ipc::OutBuffer;
+using nn::ipc::InBuffer;
 using nn::ipc::ServerCommand;
 
 namespace ios::fpd::internal
@@ -20,10 +21,23 @@ static nn::Result
 loadConsoleAccount(CommandHandlerArgs &args)
 {
    auto command = ServerCommand<ActAccountLoaderService::LoadConsoleAccount> { args };
+   auto slotNo = SlotNo { 0 };
+   auto loadOption = ACTLoadOption { };
+   auto unkInBuffer = InBuffer<const char> { };
+   auto unkBool = bool { false };
+   command.ReadRequest(slotNo, loadOption, unkInBuffer, unkBool);
+
+   auto account = getAccountBySlotNo(slotNo);
+   if (!account) {
+      return ResultACCOUNT_NOT_FOUND;
+   }
+
    /*
    TODO: nn::act::LoadConsoleAccount
    Not really sure what this does tbh.
    */
+
+   setCurrentAccount(account);
    return nn::ResultSuccess;
 }
 
