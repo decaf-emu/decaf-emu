@@ -130,7 +130,7 @@ getAccountInfo(CommandHandlerArgs &args)
 
    auto account = getAccountBySlotNo(slotNo);
    if (!account) {
-      return ResultACCOUNT_NOT_FOUND;
+      return ResultAccountNotFound;
    }
 
    switch (type) {
@@ -383,7 +383,7 @@ getTransferableId(CommandHandlerArgs &args)
    } else {
       auto account = getAccountBySlotNo(slotNo);
       if (!account) {
-         return ResultACCOUNT_NOT_FOUND;
+         return ResultAccountNotFound;
       }
 
       transferableIdBase = account->transferableIdBase;
@@ -405,7 +405,7 @@ getMiiImage(CommandHandlerArgs &args)
 
    auto account = getAccountBySlotNo(slotNo);
    if (!account) {
-      return ResultACCOUNT_NOT_FOUND;
+      return ResultAccountNotFound;
    }
 
    auto path = fmt::format(
@@ -508,7 +508,7 @@ getUuid(CommandHandlerArgs &args)
 
    auto account = getAccountBySlotNo(slotNo);
    if (!account) {
-      return ResultACCOUNT_NOT_FOUND;
+      return ResultAccountNotFound;
    }
 
    buffer.writeOutput(phys_addrof(account->uuid), account->uuid.size());

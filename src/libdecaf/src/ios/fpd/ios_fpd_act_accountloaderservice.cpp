@@ -29,7 +29,7 @@ loadConsoleAccount(CommandHandlerArgs &args)
 
    auto account = getAccountBySlotNo(slotNo);
    if (!account) {
-      return ResultACCOUNT_NOT_FOUND;
+      return ResultAccountNotFound;
    }
 
    /*

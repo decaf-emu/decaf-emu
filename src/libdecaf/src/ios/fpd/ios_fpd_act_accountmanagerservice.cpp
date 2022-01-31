@@ -21,7 +21,7 @@ createConsoleAccount(CommandHandlerArgs &args)
    auto command = ServerCommand<ActAccountManagerService::CreateConsoleAccount> { args };
    auto account = createAccount();
    if (!account) {
-      return ResultSLOTS_FULL;
+      return ResultSlotsFull;
    }
 
    account->isCommitted = uint8_t { 0 };

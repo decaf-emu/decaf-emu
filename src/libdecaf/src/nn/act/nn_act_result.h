@@ -164,987 +164,987 @@ static constexpr Result ResultIsoGetLanguageCodeFailure {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x19B80
 };
 
-static constexpr Result ResultMXML_ERROR {
+static constexpr Result ResultMxmlError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1a900
 };
 
-static constexpr Result ResultIOS_ERROR {
+static constexpr Result ResultIosError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1c200
 };
 
-static constexpr Result ResultIOS_OPEN_ERROR {
+static constexpr Result ResultIosOpenError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1c280
 };
 
-static constexpr Result ResultACCOUNT_MANAGEMENT_ERROR {
+static constexpr Result ResultAccountManagementError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1f400
 };
 
-static constexpr Result ResultACCOUNT_NOT_FOUND {
+static constexpr Result ResultAccountNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1f480
 };
 
-static constexpr Result ResultSLOTS_FULL {
+static constexpr Result ResultSlotsFull {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1f500
 };
 
-static constexpr Result ResultACCOUNT_NOT_LOADED {
+static constexpr Result ResultAccountNotLoaded {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1f980
 };
 
-static constexpr Result ResultACCOUNT_ALREADY_LOADED {
+static constexpr Result ResultAccountAlreadyLoaded {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1fa00
 };
 
-static constexpr Result ResultACCOUNT_LOCKED {
+static constexpr Result ResultAccountLocked {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1fa80
 };
 
-static constexpr Result ResultNOT_NETWORK_ACCOUNT {
+static constexpr Result ResultNotNetworkAccount {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1fe80
 };
 
-static constexpr Result ResultNOT_LOCAL_ACCOUNT {
+static constexpr Result ResultNotLocalAccount {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1ff00
 };
 
-static constexpr Result ResultACCOUNT_NOT_COMMITTED {
+static constexpr Result ResultAccountNotCommitted {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x1ff80
 };
 
-static constexpr Result ResultNETWORK_CLOCK_INVALID {
+static constexpr Result ResultNetworkClockInvalid {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x22680
 };
 
-static constexpr Result ResultAUTHENTICATION_ERROR {
+static constexpr Result ResultAuthenticationError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x3e800
 };
 
-static constexpr Result ResultHTTP_ERROR {
+static constexpr Result ResultHttpError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41a00
 };
 
-static constexpr Result ResultHTTP_UNSUPPORTED_PROTOCOL {
+static constexpr Result ResultHttpUnsupportedProtocol {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41a80
 };
 
-static constexpr Result ResultHTTP_FAILED_INIT {
+static constexpr Result ResultHttpFailedInit {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41b00
 };
 
-static constexpr Result ResultHTTP_URL_MALFORMAT {
+static constexpr Result ResultHttpURLMalformat {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41b80
 };
 
-static constexpr Result ResultHTTP_NOT_BUILT_IN {
+static constexpr Result ResultHttpNotBuiltIn {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41c00
 };
 
-static constexpr Result ResultHTTP_COULDNT_RESOLVE_PROXY {
+static constexpr Result ResultHttpCouldntResolveProxy {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41c80
 };
 
-static constexpr Result ResultHTTP_COULDNT_RESOLVE_HOST {
+static constexpr Result ResultHttpCouldntResolveHost {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41d00
 };
 
-static constexpr Result ResultHTTP_COULDNT_CONNECT {
+static constexpr Result ResultHttpCouldntConnect {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41d80
 };
 
-static constexpr Result ResultHTTP_FTP_WEIRD_SERVER_REPLY {
+static constexpr Result ResultHttpFtpWeirdServerReply {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41e00
 };
 
-static constexpr Result ResultHTTP_REMOTE_ACCESS_DENIED {
+static constexpr Result ResultHttpRemoteAccessDenied {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41e80
 };
 
-static constexpr Result ResultHTTP_OBSOLETE10 {
+static constexpr Result ResultHttpObsolete10 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41f00
 };
 
-static constexpr Result ResultHTTP_FTP_WEIRD_PASS_REPLY {
+static constexpr Result ResultHttpFtpWeirdPassReply {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x41f80
 };
 
-static constexpr Result ResultHTTP_OBSOLETE12 {
+static constexpr Result ResultHttpObsolete12 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42000
 };
 
-static constexpr Result ResultHTTP_FTP_WEIRD_PASV_REPLY {
+static constexpr Result ResultHttpFtpWeirdPasvReply {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42080
 };
 
-static constexpr Result ResultHTTP_FTP_WEIRD_227_FORMAT {
+static constexpr Result ResultHttpFtpWeird227Format {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42100
 };
 
-static constexpr Result ResultHTTP_FTP_CANT_GET_HOST {
+static constexpr Result ResultHttpFtpCantGetHost {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42180
 };
 
-static constexpr Result ResultHTTP_OBSOLETE16 {
+static constexpr Result ResultHttpObsolete16 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42200
 };
 
-static constexpr Result ResultHTTP_FTP_COULDNT_SET_TYPE {
+static constexpr Result ResultHttpFtpCouldntSetType {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42280
 };
 
-static constexpr Result ResultHTTP_PARTIAL_FILE {
+static constexpr Result ResultHttpPartialFile {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42300
 };
 
-static constexpr Result ResultHTTP_FTP_COULDNT_RETR_FILE {
+static constexpr Result ResultHttpFtpCouldntRetrFile {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42380
 };
 
-static constexpr Result ResultHTTP_OBSOLETE20 {
+static constexpr Result ResultHttpObsolete20 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42400
 };
 
-static constexpr Result ResultHTTP_QUOTE_ERROR {
+static constexpr Result ResultHttpQuoteError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42480
 };
 
-static constexpr Result ResultHTTP_HTTP_RETURNED_ERROR {
+static constexpr Result ResultHttpHttpReturnedError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42500
 };
 
-static constexpr Result ResultHTTP_WRITE_ERROR {
+static constexpr Result ResultHttpWriteError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42580
 };
 
-static constexpr Result ResultHTTP_OBSOLETE24 {
+static constexpr Result ResultHttpObsolete24 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42600
 };
 
-static constexpr Result ResultHTTP_UPLOAD_FAILED {
+static constexpr Result ResultHttpUploadFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42680
 };
 
-static constexpr Result ResultHTTP_READ_ERROR {
+static constexpr Result ResultHttpReadError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42700
 };
 
-static constexpr Result ResultHTTP_OUT_OF_MEMORY {
+static constexpr Result ResultHttpOutOfMemory {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42780
 };
 
-static constexpr Result ResultHTTP_OPERATION_TIMEDOUT {
+static constexpr Result ResultHttpOperationTimedout {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42800
 };
 
-static constexpr Result ResultHTTP_OBSOLETE29 {
+static constexpr Result ResultHttpObsolete29 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42880
 };
 
-static constexpr Result ResultHTTP_FTP_PORT_FAILED {
+static constexpr Result ResultHttpFtpPortFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42900
 };
 
-static constexpr Result ResultHTTP_FTP_COULDNT_USE_REST {
+static constexpr Result ResultHttpFtpCouldntUseRest {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42980
 };
 
-static constexpr Result ResultHTTP_OBSOLETE32 {
+static constexpr Result ResultHttpObsolete32 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42a00
 };
 
-static constexpr Result ResultHTTP_RANGE_ERROR {
+static constexpr Result ResultHttpRangeError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42a80
 };
 
-static constexpr Result ResultHTTP_HTTP_POST_ERROR {
+static constexpr Result ResultHttpHttpPostError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42b00
 };
 
-static constexpr Result ResultHTTP_SSL_CONNECT_ERROR {
+static constexpr Result ResultHttpSslConnectError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42b80
 };
 
-static constexpr Result ResultHTTP_BAD_DOWNLOAD_RESUME {
+static constexpr Result ResultHttpBadDownloadResume {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42c00
 };
 
-static constexpr Result ResultHTTP_FILE_COULDNT_READ_FILE {
+static constexpr Result ResultHttpFileCouldntReadFile {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42c80
 };
 
-static constexpr Result ResultHTTP_LDAP_CANNOT_BIND {
+static constexpr Result ResultHttpLdapCannotBind {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42d00
 };
 
-static constexpr Result ResultHTTP_LDAP_SEARCH_FAILED {
+static constexpr Result ResultHttpLdapSearchFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42d80
 };
 
-static constexpr Result ResultHTTP_OBSOLETE40 {
+static constexpr Result ResultHttpObsolete40 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42e00
 };
 
-static constexpr Result ResultHTTP_FUNCTION_NOT_FOUND {
+static constexpr Result ResultHttpFunctionNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42e80
 };
 
-static constexpr Result ResultHTTP_ABORTED_BY_CALLBACK {
+static constexpr Result ResultHttpAbortedByCallback {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42f00
 };
 
-static constexpr Result ResultHTTP_BAD_FUNCTION_ARGUMENT {
+static constexpr Result ResultHttpBadFunctionArgument {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x42f80
 };
 
-static constexpr Result ResultHTTP_OBSOLETE44 {
+static constexpr Result ResultHttpObsolete44 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43000
 };
 
-static constexpr Result ResultHTTP_INTERFACE_FAILED {
+static constexpr Result ResultHttpInterfaceFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43080
 };
 
-static constexpr Result ResultHTTP_OBSOLETE46 {
+static constexpr Result ResultHttpObsolete46 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43100
 };
 
-static constexpr Result ResultHTTP_TOO_MANY_REDIRECTS {
+static constexpr Result ResultHttpTooManyRedirects {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43180
 };
 
-static constexpr Result ResultHTTP_UNKNOWN_OPTION {
+static constexpr Result ResultHttpUnknownOption {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43200
 };
 
-static constexpr Result ResultHTTP_TELNET_OPTION_SYNTAX {
+static constexpr Result ResultHttpTelnetOptionSyntax {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43280
 };
 
-static constexpr Result ResultHTTP_OBSOLETE50 {
+static constexpr Result ResultHttpObsolete50 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43300
 };
 
-static constexpr Result ResultHTTP_PEER_FAILED_VERIFICATION {
+static constexpr Result ResultHttpPeerFailedVerification {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43380
 };
 
-static constexpr Result ResultHTTP_GOT_NOTHING {
+static constexpr Result ResultHttpGotNothing {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43400
 };
 
-static constexpr Result ResultHTTP_SSL_ENGINE_NOTFOUND {
+static constexpr Result ResultHttpSslEngineNotfound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43480
 };
 
-static constexpr Result ResultHTTP_SSL_ENGINE_SETFAILED {
+static constexpr Result ResultHttpSslEngineSetfailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43500
 };
 
-static constexpr Result ResultHTTP_SEND_ERROR {
+static constexpr Result ResultHttpSendError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43580
 };
 
-static constexpr Result ResultHTTP_RECV_ERROR {
+static constexpr Result ResultHttpRecvError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43600
 };
 
-static constexpr Result ResultHTTP_OBSOLETE57 {
+static constexpr Result ResultHttpObsolete57 {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43680
 };
 
-static constexpr Result ResultHTTP_SSL_CERTPROBLEM {
+static constexpr Result ResultHttpSslCertproblem {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43700
 };
 
-static constexpr Result ResultHTTP_SSL_CIPHER {
+static constexpr Result ResultHttpSslCipher {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43780
 };
 
-static constexpr Result ResultHTTP_SSL_CACERT {
+static constexpr Result ResultHttpSslCacert {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43800
 };
 
-static constexpr Result ResultHTTP_BAD_CONTENT_ENCODING {
+static constexpr Result ResultHttpBadContentEncoding {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43880
 };
 
-static constexpr Result ResultHTTP_LDAP_INVALID_URL {
+static constexpr Result ResultHttpLdapInvalidURL {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43900
 };
 
-static constexpr Result ResultHTTP_FILESIZE_EXCEEDED {
+static constexpr Result ResultHttpFilesizeExceeded {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43980
 };
 
-static constexpr Result ResultHTTP_USE_SSL_FAILED {
+static constexpr Result ResultHttpUseSslFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43a00
 };
 
-static constexpr Result ResultHTTP_SEND_FAIL_REWIND {
+static constexpr Result ResultHttpSendFailRewind {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43a80
 };
 
-static constexpr Result ResultHTTP_SSL_ENGINE_INITFAILED {
+static constexpr Result ResultHttpSslEngineInitfailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43b00
 };
 
-static constexpr Result ResultHTTP_LOGIN_DENIED {
+static constexpr Result ResultHttpLoginDenied {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43b80
 };
 
-static constexpr Result ResultHTTP_TFTP_NOTFOUND {
+static constexpr Result ResultHttpTftpNotfound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43c00
 };
 
-static constexpr Result ResultHTTP_TFTP_PERM {
+static constexpr Result ResultHttpTftpPerm {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43c80
 };
 
-static constexpr Result ResultHTTP_REMOTE_DISK_FULL {
+static constexpr Result ResultHttpRemoteDiskFull {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43d00
 };
 
-static constexpr Result ResultHTTP_TFTP_ILLEGAL {
+static constexpr Result ResultHttpTftpIllegal {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43d80
 };
 
-static constexpr Result ResultHTTP_TFTP_UNKNOWNID {
+static constexpr Result ResultHttpTftpUnknownid {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43e00
 };
 
-static constexpr Result ResultHTTP_REMOTE_FILE_EXISTS {
+static constexpr Result ResultHttpRemoteFileExists {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43e80
 };
 
-static constexpr Result ResultHTTP_TFTP_NOSUCHUSER {
+static constexpr Result ResultHttpTftpNosuchuser {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43f00
 };
 
-static constexpr Result ResultHTTP_CONV_FAILED {
+static constexpr Result ResultHttpConvFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x43f80
 };
 
-static constexpr Result ResultHTTP_CONV_REQD {
+static constexpr Result ResultHttpConvReqd {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44000
 };
 
-static constexpr Result ResultHTTP_SSL_CACERT_BADFILE {
+static constexpr Result ResultHttpSslCacertBadfile {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44080
 };
 
-static constexpr Result ResultHTTP_REMOTE_FILE_NOT_FOUND {
+static constexpr Result ResultHttpRemoteFileNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44100
 };
 
-static constexpr Result ResultHTTP_SSH {
+static constexpr Result ResultHttpSsh {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44180
 };
 
-static constexpr Result ResultHTTP_SSL_SHUTDOWN_FAILED {
+static constexpr Result ResultHttpSslShutdownFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44200
 };
 
-static constexpr Result ResultHTTP_AGAIN {
+static constexpr Result ResultHttpAgain {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44280
 };
 
-static constexpr Result ResultHTTP_SSL_CRL_BADFILE {
+static constexpr Result ResultHttpSslCrlBadfile {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44300
 };
 
-static constexpr Result ResultHTTP_SSL_ISSUER_ERROR {
+static constexpr Result ResultHttpSslIssuerError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44380
 };
 
-static constexpr Result ResultHTTP_FTP_PRET_FAILED {
+static constexpr Result ResultHttpFtpPretFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44400
 };
 
-static constexpr Result ResultHTTP_RTSP_CSEQ_ERROR {
+static constexpr Result ResultHttpRtspCseqError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44480
 };
 
-static constexpr Result ResultHTTP_RTSP_SESSION_ERROR {
+static constexpr Result ResultHttpRtspSessionError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44500
 };
 
-static constexpr Result ResultHTTP_FTP_BAD_FILE_LIST {
+static constexpr Result ResultHttpFtpBadFileList {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44580
 };
 
-static constexpr Result ResultHTTP_CHUNK_FAILED {
+static constexpr Result ResultHttpChunkFailed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44600
 };
 
-static constexpr Result ResultHTTP_NSSL_NO_CTX {
+static constexpr Result ResultHttpNsslNoCtx {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x44680
 };
 
-static constexpr Result ResultSO_ERROR {
+static constexpr Result ResultSoError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x45100
 };
 
-static constexpr Result ResultSO_SELECT_ERROR {
+static constexpr Result ResultSoSelectError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x45180
 };
 
-static constexpr Result ResultREQUEST_ERROR {
+static constexpr Result ResultRequestError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4b000
 };
 
-static constexpr Result ResultBAD_FORMAT_PARAMETER {
+static constexpr Result ResultBadFormatParameter {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4b080
 };
 
-static constexpr Result ResultBAD_FORMAT_REQUEST {
+static constexpr Result ResultBadFormatRequest {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4b100
 };
 
-static constexpr Result ResultREQUEST_PARAMETER_MISSING {
+static constexpr Result ResultRequestParameterMissing {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4b180
 };
 
-static constexpr Result ResultWRONG_HTTP_METHOD {
+static constexpr Result ResultWrongHttpMethod {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4b200
 };
 
-static constexpr Result ResultRESPONSE_ERROR {
+static constexpr Result ResultResponseError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ba00
 };
 
-static constexpr Result ResultBAD_FORMAT_RESPONSE {
+static constexpr Result ResultBadFormatResponse {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ba80
 };
 
-static constexpr Result ResultRESPONSE_ITEM_MISSING {
+static constexpr Result ResultResponseItemMissing {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4bb00
 };
 
-static constexpr Result ResultRESPONSE_TOO_LARGE {
+static constexpr Result ResultResponseTooLarge {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4bb80
 };
 
-static constexpr Result ResultNOT_MODIFIED {
+static constexpr Result ResultNotModified {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4c480
 };
 
-static constexpr Result ResultINVALID_COMMON_PARAMETER {
+static constexpr Result ResultInvalidCommonParameter {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4c900
 };
 
-static constexpr Result ResultINVALID_PLATFORM_ID {
+static constexpr Result ResultInvalidPlatformID {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4c980
 };
 
-static constexpr Result ResultUNAUTHORIZED_DEVICE {
+static constexpr Result ResultUnauthorizedDevice {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ca00
 };
 
-static constexpr Result ResultINVALID_SERIAL_ID {
+static constexpr Result ResultInvalidSerialID {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ca80
 };
 
-static constexpr Result ResultINVALID_MAC_ADDRESS {
+static constexpr Result ResultInvalidMacAddress {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4cb00
 };
 
-static constexpr Result ResultINVALID_REGION {
+static constexpr Result ResultInvalidRegion {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4cb80
 };
 
-static constexpr Result ResultINVALID_COUNTRY {
+static constexpr Result ResultInvalidCountry {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4cc00
 };
 
-static constexpr Result ResultINVALID_LANGUAGE {
+static constexpr Result ResultInvalidLanguage {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4cc80
 };
 
-static constexpr Result ResultUNAUTHORIZED_CLIENT {
+static constexpr Result ResultUnauthorizedClient {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4cd00
 };
 
-static constexpr Result ResultDEVICE_ID_EMPTY {
+static constexpr Result ResultDeviceIDEmpty {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4cd80
 };
 
-static constexpr Result ResultSERIAL_ID_EMPTY {
+static constexpr Result ResultSerialIDEmpty {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ce00
 };
 
-static constexpr Result ResultPLATFORM_ID_EMPTY {
+static constexpr Result ResultPlatformIDEmpty {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ce80
 };
 
-static constexpr Result ResultINVALID_UNIQUE_ID {
+static constexpr Result ResultInvalidUniqueID {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4d380
 };
 
-static constexpr Result ResultINVALID_CLIENT_ID {
+static constexpr Result ResultInvalidClientID {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4d400
 };
 
-static constexpr Result ResultINVALID_CLIENT_KEY {
+static constexpr Result ResultInvalidClientKey {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4d480
 };
 
-static constexpr Result ResultINVALID_NEX_CLIENT_ID {
+static constexpr Result ResultInvalidNexClientID {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4d880
 };
 
-static constexpr Result ResultINVALID_GAME_SERVER_ID {
+static constexpr Result ResultInvalidGameServerID {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4d900
 };
 
-static constexpr Result ResultGAME_SERVER_ID_ENVIRONMENT_NOT_FOUND {
+static constexpr Result ResultGameServerIDEnvironmentNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4d980
 };
 
-static constexpr Result ResultGAME_SERVER_ID_UNIQUE_ID_NOT_LINKED {
+static constexpr Result ResultGameServerIDUniqueIDNotLinked {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4da00
 };
 
-static constexpr Result ResultCLIENT_ID_UNIQUE_ID_NOT_LINKED {
+static constexpr Result ResultClientIDUniqueIDNotLinked {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4da80
 };
 
-static constexpr Result ResultDEVICE_MISMATCH {
+static constexpr Result ResultDeviceMismatch {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4e280
 };
 
-static constexpr Result ResultCOUNTRY_MISMATCH {
+static constexpr Result ResultCountryMismatch {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4e300
 };
 
-static constexpr Result ResultEULA_NOT_ACCEPTED {
+static constexpr Result ResultEulaNotAccepted {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4e380
 };
 
-static constexpr Result ResultUPDATE_REQUIRED {
+static constexpr Result ResultUpdateRequired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4e700
 };
 
-static constexpr Result ResultSYSTEM_UPDATE_REQUIRED {
+static constexpr Result ResultSystemUpdateRequired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4e780
 };
 
-static constexpr Result ResultAPPLICATION_UPDATE_REQUIRED {
+static constexpr Result ResultApplicationUpdateRequired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4e800
 };
 
-static constexpr Result ResultUNAUTHORIZED_REQUEST {
+static constexpr Result ResultUnauthorizedRequest {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ec00
 };
 
-static constexpr Result ResultREQUEST_FORBIDDEN {
+static constexpr Result ResultRequestForbidden {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4ed00
 };
 
-static constexpr Result ResultRESOURCE_NOT_FOUND {
+static constexpr Result ResultResourceNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f100
 };
 
-static constexpr Result ResultPID_NOT_FOUND {
+static constexpr Result ResultPidNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f180
 };
 
-static constexpr Result ResultNEX_ACCOUNT_NOT_FOUND {
+static constexpr Result ResultNexAccountNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f200
 };
 
-static constexpr Result ResultGENERATE_TOKEN_FAILURE {
+static constexpr Result ResultGenerateTokenFailure {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f280
 };
 
-static constexpr Result ResultREQUEST_NOT_FOUND {
+static constexpr Result ResultRequestNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f300
 };
 
-static constexpr Result ResultMASTER_PIN_NOT_FOUND {
+static constexpr Result ResultMasterPinNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f380
 };
 
-static constexpr Result ResultMAIL_TEXT_NOT_FOUND {
+static constexpr Result ResultMailTextNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f400
 };
 
-static constexpr Result ResultSEND_MAIL_FAILURE {
+static constexpr Result ResultSendMailFailure {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f480
 };
 
-static constexpr Result ResultAPPROVAL_ID_NOT_FOUND {
+static constexpr Result ResultApprovalIDNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f500
 };
 
-static constexpr Result ResultINVALID_EULA_PARAMETER {
+static constexpr Result ResultInvalidEulaParameter {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f600
 };
 
-static constexpr Result ResultINVALID_EULA_COUNTRY {
+static constexpr Result ResultInvalidEulaCountry {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f680
 };
 
-static constexpr Result ResultINVALID_EULA_COUNTRY_AND_VERSION {
+static constexpr Result ResultInvalidEulaCountryAndVersion {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f700
 };
 
-static constexpr Result ResultEULA_NOT_FOUND {
+static constexpr Result ResultEulaNotFound {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x4f780
 };
 
-static constexpr Result ResultPHRASE_NOT_ACCEPTABLE {
+static constexpr Result ResultPhraseNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50500
 };
 
-static constexpr Result ResultACCOUNT_ID_ALREADY_EXISTS {
+static constexpr Result ResultAccountIDAlreadyExists {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50580
 };
 
-static constexpr Result ResultACCOUNT_ID_NOT_ACCEPTABLE {
+static constexpr Result ResultAccountIDNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50600
 };
 
-static constexpr Result ResultACCOUNT_PASSWORD_NOT_ACCEPTABLE {
+static constexpr Result ResultAccountPasswordNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50680
 };
 
-static constexpr Result ResultMII_NAME_NOT_ACCEPTABLE {
+static constexpr Result ResultMiiNameNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50700
 };
 
-static constexpr Result ResultMAIL_ADDRESS_NOT_ACCEPTABLE {
+static constexpr Result ResultMailAddressNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50780
 };
 
-static constexpr Result ResultACCOUNT_ID_FORMAT_INVALID {
+static constexpr Result ResultAccountIDFormatInvalid {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50800
 };
 
-static constexpr Result ResultACCOUNT_ID_PASSWORD_SAME {
+static constexpr Result ResultAccountIDPasswordSame {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50880
 };
 
-static constexpr Result ResultACCOUNT_ID_CHAR_NOT_ACCEPTABLE {
+static constexpr Result ResultAccountIDCharNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50900
 };
 
-static constexpr Result ResultACCOUNT_ID_SUCCESSIVE_SYMBOL {
+static constexpr Result ResultAccountIDSuccessiveSymbol {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50980
 };
 
-static constexpr Result ResultACCOUNT_ID_SYMBOL_POSITION_NOT_ACCEPTABLE {
+static constexpr Result ResultAccountIDSymbolPositionNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50a00
 };
 
-static constexpr Result ResultACCOUNT_ID_TOO_MANY_DIGIT {
+static constexpr Result ResultAccountIDTooManyDigit {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50a80
 };
 
-static constexpr Result ResultACCOUNT_PASSWORD_CHAR_NOT_ACCEPTABLE {
+static constexpr Result ResultAccountPasswordCharNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50b00
 };
 
-static constexpr Result ResultACCOUNT_PASSWORD_TOO_FEW_CHAR_TYPES {
+static constexpr Result ResultAccountPasswordTooFewCharTypes {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50b80
 };
 
-static constexpr Result ResultACCOUNT_PASSWORD_SUCCESSIVE_SAME_CHAR {
+static constexpr Result ResultAccountPasswordSuccessiveSameChar {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50c00
 };
 
-static constexpr Result ResultMAIL_ADDRESS_DOMAIN_NAME_NOT_ACCEPTABLE {
+static constexpr Result ResultMailAddressDomainNameNotAcceptable {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50c80
 };
 
-static constexpr Result ResultMAIL_ADDRESS_DOMAIN_NAME_NOT_RESOLVED {
+static constexpr Result ResultMailAddressDomainNameNotResolved {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50d00
 };
 
-static constexpr Result ResultREACHED_ASSOCIATION_LIMIT {
+static constexpr Result ResultReachedAssociationLimit {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x50f80
 };
 
-static constexpr Result ResultREACHED_REGISTRATION_LIMIT {
+static constexpr Result ResultReachedRegistrationLimit {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51000
 };
 
-static constexpr Result ResultCOPPA_NOT_ACCEPTED {
+static constexpr Result ResultCoppaNotAccepted {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51080
 };
 
-static constexpr Result ResultPARENTAL_CONTROLS_REQUIRED {
+static constexpr Result ResultParentalControlsRequired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51100
 };
 
-static constexpr Result ResultMII_NOT_REGISTERED {
+static constexpr Result ResultMiiNotRegistered {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51180
 };
 
-static constexpr Result ResultDEVICE_EULA_COUNTRY_MISMATCH {
+static constexpr Result ResultDeviceEulaCountryMismatch {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51200
 };
 
-static constexpr Result ResultPENDING_MIGRATION {
+static constexpr Result ResultPendingMigration {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51280
 };
 
-static constexpr Result ResultWRONG_USER_INPUT {
+static constexpr Result ResultWrongUserInput {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51900
 };
 
-static constexpr Result ResultWRONG_ACCOUNT_PASSWORD {
+static constexpr Result ResultWrongAccountPassword {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51980
 };
 
-static constexpr Result ResultWRONG_MAIL_ADDRESS {
+static constexpr Result ResultWrongMailAddress {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51a00
 };
 
-static constexpr Result ResultWRONG_ACCOUNT_PASSWORD_OR_MAIL_ADDRESS {
+static constexpr Result ResultWrongAccountPasswordOrMailAddress {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51a80
 };
 
-static constexpr Result ResultWRONG_CONFIRMATION_CODE {
+static constexpr Result ResultWrongConfirmationCode {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51b00
 };
 
-static constexpr Result ResultWRONG_BIRTH_DATE_OR_MAIL_ADDRESS {
+static constexpr Result ResultWrongBirthDateOrMailAddress {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51b80
 };
 
-static constexpr Result ResultWRONG_ACCOUNT_MAIL {
+static constexpr Result ResultWrongAccountMail {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x51c00
 };
 
-static constexpr Result ResultACCOUNT_ALREADY_DELETED {
+static constexpr Result ResultAccountAlreadyDeleted {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52380
 };
 
-static constexpr Result ResultACCOUNT_ID_CHANGED {
+static constexpr Result ResultAccountIDChanged {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52400
 };
 
-static constexpr Result ResultAUTHENTICATION_LOCKED {
+static constexpr Result ResultAuthenticationLocked {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52480
 };
 
-static constexpr Result ResultDEVICE_INACTIVE {
+static constexpr Result ResultDeviceInactive {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52500
 };
 
-static constexpr Result ResultCOPPA_AGREEMENT_CANCELED {
+static constexpr Result ResultCoppaAgreementCanceled {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52580
 };
 
-static constexpr Result ResultDOMAIN_ACCOUNT_ALREADY_EXISTS {
+static constexpr Result ResultDomainAccountAlreadyExists {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52600
 };
 
-static constexpr Result ResultACCOUNT_TOKEN_EXPIRED {
+static constexpr Result ResultAccountTokenExpired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52880
 };
 
-static constexpr Result ResultINVALID_ACCOUNT_TOKEN {
+static constexpr Result ResultInvalidAccountToken {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52900
 };
 
-static constexpr Result ResultAUTHENTICATION_REQUIRED {
+static constexpr Result ResultAuthenticationRequired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52980
 };
 
-static constexpr Result ResultCONFIRMATION_CODE_EXPIRED {
+static constexpr Result ResultConfirmationCodeExpired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x52d80
 };
 
-static constexpr Result ResultMAIL_ADDRESS_NOT_VALIDATED {
+static constexpr Result ResultMailAddressNotValidated {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53280
 };
 
-static constexpr Result ResultEXCESSIVE_MAIL_SEND_REQUEST {
+static constexpr Result ResultExcessiveMailSendRequest {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53300
 };
 
-static constexpr Result ResultCREDIT_CARD_ERROR {
+static constexpr Result ResultCreditCardError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53700
 };
 
-static constexpr Result ResultCREDIT_CARD_GENERAL_FAILURE {
+static constexpr Result ResultCreditCardGeneralFailure {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53780
 };
 
-static constexpr Result ResultCREDIT_CARD_DECLINED {
+static constexpr Result ResultCreditCardDeclined {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53800
 };
 
-static constexpr Result ResultCREDIT_CARD_BLACKLISTED {
+static constexpr Result ResultCreditCardBlacklisted {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53880
 };
 
-static constexpr Result ResultINVALID_CREDIT_CARD_NUMBER {
+static constexpr Result ResultInvalidCreditCardNumber {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53900
 };
 
-static constexpr Result ResultINVALID_CREDIT_CARD_DATE {
+static constexpr Result ResultInvalidCreditCardDate {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53980
 };
 
-static constexpr Result ResultINVALID_CREDIT_CARD_PIN {
+static constexpr Result ResultInvalidCreditCardPin {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53a00
 };
 
-static constexpr Result ResultINVALID_POSTAL_CODE {
+static constexpr Result ResultInvalidPostalCode {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53a80
 };
 
-static constexpr Result ResultINVALID_LOCATION {
+static constexpr Result ResultInvalidLocation {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53b00
 };
 
-static constexpr Result ResultCREDIT_CARD_DATE_EXPIRED {
+static constexpr Result ResultCreditCardDateExpired {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53b80
 };
 
-static constexpr Result ResultCREDIT_CARD_NUMBER_WRONG {
+static constexpr Result ResultCreditCardNumberWrong {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53c00
 };
 
-static constexpr Result ResultCREDIT_CARD_PIN_WRONG {
+static constexpr Result ResultCreditCardPinWrong {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x53c80
 };
 
-static constexpr Result ResultBANNED {
+static constexpr Result ResultBanned {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57800
 };
 
-static constexpr Result ResultBANNED_ACCOUNT {
+static constexpr Result ResultBannedAccount {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57880
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_ALL {
+static constexpr Result ResultBannedAccountAll {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57900
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_IN_APPLICATION {
+static constexpr Result ResultBannedAccountInApplication {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57980
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_IN_NEX_SERVICE {
+static constexpr Result ResultBannedAccountInNexService {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57a00
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_IN_INDEPENDENT_SERVICE {
+static constexpr Result ResultBannedAccountInIndependentService {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57a80
 };
 
-static constexpr Result ResultBANNED_DEVICE {
+static constexpr Result ResultBannedDevice {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57d80
 };
 
-static constexpr Result ResultBANNED_DEVICE_ALL {
+static constexpr Result ResultBannedDeviceAll {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57e00
 };
 
-static constexpr Result ResultBANNED_DEVICE_IN_APPLICATION {
+static constexpr Result ResultBannedDeviceInApplication {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57e80
 };
 
-static constexpr Result ResultBANNED_DEVICE_IN_NEX_SERVICE {
+static constexpr Result ResultBannedDeviceInNexService {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57f00
 };
 
-static constexpr Result ResultBANNED_DEVICE_IN_INDEPENDENT_SERVICE {
+static constexpr Result ResultBannedDeviceInIndependentService {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x57f80
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_TEMPORARILY {
+static constexpr Result ResultBannedAccountTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58280
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_ALL_TEMPORARILY {
+static constexpr Result ResultBannedAccountAllTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58300
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_IN_APPLICATION_TEMPORARILY {
+static constexpr Result ResultBannedAccountInApplicationTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58380
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_IN_NEX_SERVICE_TEMPORARILY {
+static constexpr Result ResultBannedAccountInNexServiceTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58400
 };
 
-static constexpr Result ResultBANNED_ACCOUNT_IN_INDEPENDENT_SERVICE_TEMPORARILY {
+static constexpr Result ResultBannedAccountInIndependentServiceTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58480
 };
 
-static constexpr Result ResultBANNED_DEVICE_TEMPORARILY {
+static constexpr Result ResultBannedDeviceTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58780
 };
 
-static constexpr Result ResultBANNED_DEVICE_ALL_TEMPORARILY {
+static constexpr Result ResultBannedDeviceAllTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58800
 };
 
-static constexpr Result ResultBANNED_DEVICE_IN_APPLICATION_TEMPORARILY {
+static constexpr Result ResultBannedDeviceInApplicationTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58880
 };
 
-static constexpr Result ResultBANNED_DEVICE_IN_NEX_SERVICE_TEMPORARILY {
+static constexpr Result ResultBannedDeviceInNexServiceTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58900
 };
 
-static constexpr Result ResultBANNED_DEVICE_IN_INDEPENDENT_SERVICE_TEMPORARILY {
+static constexpr Result ResultBannedDeviceInIndependentServiceTemporarily {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x58980
 };
 
-static constexpr Result ResultSERVICE_NOT_PROVIDED {
+static constexpr Result ResultServiceNotProvided {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5a000
 };
 
-static constexpr Result ResultUNDER_MAINTENANCE {
+static constexpr Result ResultUnderMaintenance {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5a080
 };
 
-static constexpr Result ResultSERVICE_CLOSED {
+static constexpr Result ResultServiceClosed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5a100
 };
 
-static constexpr Result ResultNINTENDO_NETWORK_CLOSED {
+static constexpr Result ResultNintendoNetworkClosed {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5a180
 };
 
-static constexpr Result ResultNOT_PROVIDED_COUNTRY {
+static constexpr Result ResultNotProvidedCountry {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5a200
 };
 
-static constexpr Result ResultRESTRICTION_ERROR {
+static constexpr Result ResultRestrictionError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5aa00
 };
 
-static constexpr Result ResultRESTRICTED_BY_AGE {
+static constexpr Result ResultRestrictedByAge {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5aa80
 };
 
-static constexpr Result ResultRESTRICTED_BY_PARENTAL_CONTROLS {
+static constexpr Result ResultRestrictedByParentalControls {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5af00
 };
 
-static constexpr Result ResultON_GAME_INTERNET_COMMUNICATION_RESTRICTED {
+static constexpr Result ResultOnGameInternetCommunicationRestricted {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5af80
 };
 
-static constexpr Result ResultINTERNAL_SERVER_ERROR {
+static constexpr Result ResultInternalServerError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5b980
 };
 
-static constexpr Result ResultUNKNOWN_SERVER_ERROR {
+static constexpr Result ResultUnknownServerError {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5ba00
 };
 
-static constexpr Result ResultUNAUTHENTICATED_AFTER_SALVAGE {
+static constexpr Result ResultUnauthenticatedAfterSalvage {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5db00
 };
 
-static constexpr Result ResultAUTHENTICATION_FAILURE_UNKNOWN {
+static constexpr Result ResultAuthenticationFailureUnknown {
    nn::Result::MODULE_NN_ACT, nn::Result::LEVEL_STATUS, 0x5db80
 };
 
