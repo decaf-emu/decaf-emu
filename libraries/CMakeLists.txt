@@ -37,8 +37,10 @@ set_target_properties(excmd PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/excmd/src")
 
 # fmt
-add_subdirectory(fmt)
-set_target_properties(fmt PROPERTIES FOLDER libraries)
+if(not ${fmt_FOUND})
+	add_subdirectory(fmt)
+	set_target_properties(fmt PROPERTIES FOLDER libraries)
+endif()
 
 # glslang
 if(DECAF_VULKAN OR DECAF_BUILD_TOOLS)
