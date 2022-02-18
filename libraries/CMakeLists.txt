@@ -22,9 +22,11 @@ set_target_properties(catch2 PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/catch/single_include/catch2")
 
 # cereal
-add_library(cereal INTERFACE IMPORTED GLOBAL)
-set_target_properties(cereal PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
+if(NOT ${cereal_FOUND})
+    add_library(cereal INTERFACE IMPORTED GLOBAL)
+    set_target_properties(cereal PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
+endif()
 
 # cnl
 add_library(cnl INTERFACE IMPORTED GLOBAL)

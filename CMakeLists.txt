@@ -166,6 +166,7 @@ if(DECAF_QT)
     add_definitions(-DDECAF_QT)
 endif()
 
+find_package(cereal 1.3.1)
 find_package(fmt 8.1.1)
 
 # Build third party libraries
