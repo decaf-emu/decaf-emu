@@ -99,9 +99,12 @@ set_target_properties(pugixml PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
 
 # spdlog
-set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
-add_subdirectory(spdlog)
-set_target_properties(spdlog PROPERTIES FOLDER libraries)
+find_package(spdlog 1.9.2)
+if(NOT ${spdlog_FOUND})
+    set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
+    add_subdirectory(spdlog)
+    set_target_properties(spdlog PROPERTIES FOLDER libraries)
+endif()
 
 # tomlplusplus
 add_library(tomlplusplus INTERFACE IMPORTED GLOBAL)
