@@ -92,11 +92,14 @@ set_target_properties(peglib PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpp-peglib")
 
 # pugixml
-add_library(pugixml STATIC
-    "pugixml/src/pugixml.cpp")
-set_target_properties(pugixml PROPERTIES
-    FOLDER libraries
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
+find_package(pugixml 1.11.4)
+if(NOT ${pugixml_FOUND})
+    add_library(pugixml STATIC
+    	"pugixml/src/pugixml.cpp")
+    set_target_properties(pugixml PROPERTIES
+    	FOLDER libraries
+    	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
+endif()
 
 # spdlog
 find_package(spdlog 1.9.2)
