@@ -155,6 +155,8 @@ mfspr(cpu::Core *state, Instruction instr)
       break;
    default:
       gLog->error("Invalid mfspr SPR {}", static_cast<uint32_t>(spr));
+      state->interrupt.fetch_or(cpu::PROGRAM_INTERRUPT);
+      cpu::this_core::checkInterrupts();
    }
 
    state->gpr[instr.rD] = value;
@@ -202,7 +204,9 @@ mtspr(cpu::Core *state, Instruction instr)
       state->gqr[7].value = value;
       break;
    default:
-      decaf_abort(fmt::format("Invalid mtspr SPR {}", static_cast<uint32_t>(spr)));
+      gLog->error("Invalid mtspr SPR {}", static_cast<uint32_t>(spr));
+      state->interrupt.fetch_or(cpu::PROGRAM_INTERRUPT);
+      cpu::this_core::checkInterrupts();
    }
 }
 
