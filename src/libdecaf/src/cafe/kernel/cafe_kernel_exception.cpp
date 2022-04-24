@@ -121,6 +121,10 @@ handleCpuInterrupt(cpu::Core *core,
       dispatchException(ExceptionType::Breakpoint, interruptedContext);
    }
 
+   if (flags & cpu::PROGRAM_INTERRUPT) {
+      dispatchException(ExceptionType::Program, interruptedContext);
+   }
+
    // Disable interrupts
    auto originalInterruptMask =
       cpu::this_core::setInterruptMask(cpu::SRESET_INTERRUPT |
