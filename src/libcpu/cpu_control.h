@@ -12,6 +12,7 @@ const uint32_t ALARM_INTERRUPT = 1 << 2;
 const uint32_t DBGBREAK_INTERRUPT = 1 << 3;
 const uint32_t GPU7_INTERRUPT = 1 << 4;
 const uint32_t IPC_INTERRUPT = 1 << 5;
+const uint32_t PROGRAM_INTERRUPT = 1 << 6;
 const uint32_t INTERRUPT_MASK = 0xFFFFFFFF;
 const uint32_t NONMASKABLE_INTERRUPTS = SRESET_INTERRUPT;
 
