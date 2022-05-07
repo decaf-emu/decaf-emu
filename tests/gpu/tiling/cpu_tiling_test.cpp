@@ -154,16 +154,15 @@ TEST_CASE("alibTilingPerf", "[!benchmark]")
    auto addrLibImage = std::vector<uint8_t> { };
    addrLibImage.resize(untiled.size());
 
-   auto benchTitle = fmt::format("processing ({} retiles)", pendingTests.size());
-   BENCHMARK(benchTitle)
+   BENCHMARK(fmt::format("processing ({} retiles)", pendingTests.size()))
    {
-      for (auto& test : pendingTests) {
+      for (auto &test : pendingTests) {
          // Compare image
          addrLib.untileSlices(test.desc, 0,
-                              untiled.data(), addrLibImage.data(),
-                              test.firstSlice, test.numSlices);
+            untiled.data(), addrLibImage.data(),
+            test.firstSlice, test.numSlices);
       }
-   }
+   };
 }
 
 struct PendingCpuPerfEntry
@@ -222,8 +221,7 @@ TEST_CASE("cpuTilingPerf", "[!benchmark]")
 
    static constexpr auto TestIterMulti = 10;
 
-   auto benchTitle = fmt::format("processing ({} retiles)", pendingTests.size() * TestIterMulti);
-   BENCHMARK(benchTitle)
+   BENCHMARK(fmt::format("processing ({} retiles)", pendingTests.size() * TestIterMulti))
    {
       for (auto i = 0; i < TestIterMulti; ++i) {
          for (auto& test : pendingTests) {
@@ -241,6 +239,6 @@ TEST_CASE("cpuTilingPerf", "[!benchmark]")
                                       test.numSlices);
          }
       }
-   }
+   };
 }
 

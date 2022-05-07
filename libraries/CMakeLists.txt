@@ -19,6 +19,7 @@ set_target_properties(binrec PROPERTIES FOLDER libraries)
 # catch
 add_library(catch2 INTERFACE IMPORTED GLOBAL)
 set_target_properties(catch2 PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "CATCH_CONFIG_ENABLE_BENCHMARKING"
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/catch/single_include/catch2")
 
 # cereal

@@ -310,11 +310,10 @@ TEST_CASE("vkTilingPerf", "[!benchmark]")
 
       endSyncCmdBuffer(cmdBuffer);
 
-      auto benchTitle = fmt::format("processing ({} retiles)", pendingTests.size());
-      BENCHMARK(benchTitle)
+      BENCHMARK(fmt::format("processing ({} retiles)", pendingTests.size()))
       {
          execSyncCmdBuffer(cmdBuffer);
-      }
+      };
 
       freeSyncCmdBuffer(cmdBuffer);
    }
