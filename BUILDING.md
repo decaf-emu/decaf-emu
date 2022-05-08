@@ -27,7 +27,7 @@ Use cmake-gui to generate a VS project file:
 - Ensure `Specify the generator for this project` is set to a version of Visual Studio installed on your computer
 - Select `Specify toolchain for cross-compiling`
 - Click `Next`
-- Set `Specify the toolchain file` to `[path to decaf-emu.git]/libraries/scripts/buildsystems/vcpkg.cmake`
+- Set `Specify the toolchain file` to `[path to decaf-emu.git]/libraries/vcpkg/scripts/buildsystems/vcpkg.cmake`
 - Click `Finish`
 - Configure will run, which may take a while as vcpkg acquires the dependencies, if all works the console should say `Configuring done`
 - Click `Generate`, if all works the console should say `Generating done`
