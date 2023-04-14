@@ -30,9 +30,7 @@
 
 // Evaluate f and if result is not a success throw proper vk exception.
 #define CHECK_VK_RESULT(x) do { \
-   vk::Result res = vk::Result(x); \
-   int tmp = 0; \
-   vk::createResultValue(res, tmp, __FILE__ ":" TOSTRING(__LINE__)); \
+   vk::resultCheck(static_cast<vk::Result>(x), __FILE__ ":" TOSTRING(__LINE__)); \
 } while (0)
 
 namespace vulkan
