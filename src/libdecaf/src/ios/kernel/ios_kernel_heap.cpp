@@ -449,6 +449,11 @@ IOS_HeapRealloc(HeapId heapId,
    }
 
    auto block = phys_cast<HeapBlock *>(phys_cast<uint8_t *>(ptr) - sizeof(HeapBlock));
+   if (block->state != HeapBlockState::Allocated && block->state != HeapBlockState::InnerBlock) {
+      heap->errorCountExpandInvalidBlock++;
+      return nullptr;
+   }
+
    auto blockSize = block->size;
    size = align_up(size, HeapAllocSizeAlign);
 
