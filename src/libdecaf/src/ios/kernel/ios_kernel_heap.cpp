@@ -438,6 +438,11 @@ IOS_HeapRealloc(HeapId heapId,
       return nullptr;
    }
 
+   // Allocate a new block if ptr is null
+   if (!ptr) {
+      return IOS_HeapAllocAligned(heapId, size, HeapAllocAlignAlign);
+   }
+
    if (!heapContainsPtr(heap, ptr)) {
       heap->errorCountExpandInvalidBlock++;
       return nullptr;
