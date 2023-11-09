@@ -23,9 +23,11 @@ set_target_properties(catch2 PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/catch/single_include/catch2")
 
 # cereal
-add_library(cereal INTERFACE IMPORTED GLOBAL)
-set_target_properties(cereal PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
+if(NOT ${cereal_FOUND})
+    add_library(cereal INTERFACE IMPORTED GLOBAL)
+    set_target_properties(cereal PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cereal/include")
+endif()
 
 # cnl
 add_library(cnl INTERFACE IMPORTED GLOBAL)
@@ -38,8 +40,10 @@ set_target_properties(excmd PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/excmd/src")
 
 # fmt
-add_subdirectory(fmt)
-set_target_properties(fmt PROPERTIES FOLDER libraries)
+if(not ${fmt_FOUND})
+	add_subdirectory(fmt)
+	set_target_properties(fmt PROPERTIES FOLDER libraries)
+endif()
 
 # glslang
 if(DECAF_VULKAN OR DECAF_BUILD_TOOLS)
@@ -89,16 +93,22 @@ set_target_properties(peglib PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/cpp-peglib")
 
 # pugixml
-add_library(pugixml STATIC
-    "pugixml/src/pugixml.cpp")
-set_target_properties(pugixml PROPERTIES
-    FOLDER libraries
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
+find_package(pugixml 1.11.4)
+if(NOT ${pugixml_FOUND})
+    add_library(pugixml STATIC
+    	"pugixml/src/pugixml.cpp")
+    set_target_properties(pugixml PROPERTIES
+    	FOLDER libraries
+    	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/pugixml/src")
+endif()
 
 # spdlog
-set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
-add_subdirectory(spdlog)
-set_target_properties(spdlog PROPERTIES FOLDER libraries)
+find_package(spdlog 1.9.2)
+if(NOT ${spdlog_FOUND})
+    set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "Use external fmt library instead of bundled" FORCE)
+    add_subdirectory(spdlog)
+    set_target_properties(spdlog PROPERTIES FOLDER libraries)
+endif()
 
 # tomlplusplus
 add_library(tomlplusplus INTERFACE IMPORTED GLOBAL)

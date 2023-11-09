@@ -166,6 +166,11 @@ if(DECAF_QT)
     add_definitions(-DDECAF_QT)
 endif()
 
+find_package(cereal 1.3.1)
+find_package(fmt 8.1.1)
+find_package(pugixml 1.11.4)
+find_package(spdlog 1.9.2)
+
 # Build third party libraries
 add_subdirectory("libraries")
 
