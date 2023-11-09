@@ -28,7 +28,7 @@ jobs:
 
     - name: "Fetch full history for vcpkg submodule"
       run: |
-        cd dependencies/vcpkg
+        cd libraries/vcpkg
         git fetch --unshallow
         git pull --all
 
